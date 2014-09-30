@@ -1,0 +1,87 @@
+<html>
+<head>
+<style>
+.container{
+  padding: 10px;
+}
+</style>
+<title>JS9 Known Issues</title>
+</head>
+<body>
+<div class="container">
+<h3><center>JS9 Known Issues</center></h3>
+
+<ol>
+<li><b>All platforms, especially Chrome (June 21, 2014 : NOT resolved)</b>
+<p>
+Available memory can be a problem when loading very large gzip'ed FITS
+files, especially in 32-bit Chrome. JS9 currently reads the entire
+FITS file or gzip'ed file and inflates parts as needed. It can process
+files up to approx. 200Mb in size before Chrome runs out of heap
+space.  Note that Chrome often will load an ungzip'ed FITS file in
+cases where the gzip'ed file fails (though there still are upper
+limits on the total space available).  We hope that the 64-bit version
+of Chrome (in early Canary release as of 7/1/2014) will alleviate
+these problems. Otherwise, we will take a more drastic approach to
+memory management within JS9 (at the expense of speed).
+
+<li><b>All platforms (June 21, 2014 : NOT resolved)</b>
+<p>
+The zscale algorithm requires allocation of a fixed-size static memory
+buffer. We have limited the size of this secondary buffer to be large
+enough to handle a 4096 x 4096 x 4-byte image. If your image is larger
+than this, zscale will not run. We will revisit the size of the
+static buffer as we gain more experience with the size of images being
+analyzed (or eventually rewrite the algorithm).
+
+<li><b>All platforms (June 13, 2014 : NOT resolved)</b>
+<p>
+When resizing a box region in one direction only (i.e., width or
+height), the width of the region's border will be different in each
+direction.  This is due to the underlying graphics algorithm used to
+resize the region, which changes the scale factor in each direction
+individually and ties the border width to that scale factor. We will
+fix this in a future release.
+
+<li><b>All platforms using Chrome (March 27, 2014 : resolved)</b>
+<p>
+One of the simplest ways to use JS9 locally is by means of the file://
+URL scheme, e.g., point your browser to file:///home/me/js9/js9basics.html.
+<p>
+This does not work in Google Chrome because Chrome does not permit a
+local HTML file to read other local files. You can read a relatively
+emotional argument about this restriction at:
+<pre>
+    https://code.google.com/p/chromium/issues/detail?id=37586
+</pre>
+<p>
+The workaround is to start Chrome with the 
+--allow-file-access-from-files switch. On Linux:
+<pre>
+    chrome --allow-file-access-from-files
+</pre>
+On a Mac:
+<pre>
+    open /Applications/Google\ Chrome.app --args --allow-file-access-from-files
+</pre>
+
+<li><b>All platforms (May 20, 2013: resolved)</b>
+<p>
+If the "load image" command is part of a group of commands passed to
+the js9 script, a race condition can occur when subsequent commands
+are executed before the image is fully loaded. To avoid this problem,
+images should be loaded in a separate js9 command and the load status
+checked for completion before proceeding to manipulate the image.  See
+the <b>js9load</b> script for details (or just use the script itself
+to load images). (Technical details: images are loaded asynchronously,
+so that other parts of the Web page are available during the load
+process. A synchronous load could freeze the Web page while
+loading. To avoid this situation, external processes should use the
+"status load" command to check for a completed load before sending
+further processing commands).
+
+<h5>Last updated: September 4, 2014</h5>
+</div>
+
+</body>
+</html>

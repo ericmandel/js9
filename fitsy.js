@@ -1,0 +1,1 @@
+./plugins/fitsy/fitsy.js

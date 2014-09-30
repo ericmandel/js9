@@ -1,0 +1,205 @@
+<html>
+<head>
+<style>
+.container{
+  padding: 10px;
+}
+</style>
+<title>JS9 ChangeLog</title>
+</head>
+<body>
+
+<div class="container">
+<h3><center>JS9 ChangeLog</center></h3>
+
+<h3> Public Release 1.0 (September 30, 2014)</h3>
+<ul>
+<li> NB: change to the Public API: id is no longer first argument. See API doc.
+<li> infobox plugin upgraded to a tabular display
+<li> node.js server sends unique pageid back to JS9
+<li> JS9 menus now cover light windows (higher zindex)
+<li> improved accuracy of polygon points for contours
+<li> moving a polygon point now calls listRegion
+<li> added missing commas in WCS display of polygon points
+<li> corrected WCS for drag/drop of sections of FITS binary tables
+<li> fixed incorrect region size when binning FITS binary tables
+<li> fixed memory leak in astroem reg2wcs routine
+<li> plugin divs can now set height and width using CSS
+<li> added defensive code to remove bash functions from CGI and node calls
+<li> updated fabric.js to 1.4.11
+</ul>
+
+<h3> Release 1-epsilon (July 28, 2014)</h3>
+<ul>
+<li> JS9.Load() can now load FITS files directly (rather than converting to PNG)
+<li> added support for FITS binary tables, including binning and filtering
+<li> added support for gzip'ed FITS files
+<li> added support for "physical" coordinates (i.e., tied to original data file)
+<li> changed 2D graphics subsystem from Kinetic.js to fabric.js
+<li> added generalized shape layer support for regions, catalogs, contours, etc.
+<li> region context menu is now a light-weight web page with many new features
+<li> added text and point regions
+<li> position of a pixel is now in the center of the pixel
+<li> accelerator key changed from shift key to meta key (command on Mac, control elsewhere)
+<li> reduced number of js9 files to load in a web page
+<li> redesigned and flattened returned region object
+<li> redesigned public API
+<li> changed Public routines JS9.Pix2WCS and JS9.WCS2Pix to be 1-indexed
+<li> added ability to group and move regions
+<li> box rotation is now around the center of the region
+<li> all image coordinate are now 1-indexed throughout
+<li> fixed bug where adding a polygon pt didn't show until region was selected
+<li> changed polygon points to an array of objects {x, y} instead of just x, y
+<li> fixed various layout bugs in plugins
+<li> updated emscripten to latest version
+<li> updated flot to latest version
+<li> updated jquery to 1.11.1
+</ul>
+
+<h3> Beta Release 13 (April 6, 2014)</h3>
+<ul>
+<li> added support for handling NaN values
+</ul>
+
+<h3> Beta Release 12 (March 10, 2014)</h3>
+<ul>
+<li> added support for browser-based analysis via plugins (JS9.RegisterPlugin)
+<li> converted Menubar, Info, Panner, Magnifier to plugins
+<li> initial version of imexam plugin available (in plugins directory)
+<li> initial version of archive/catalog server plugin available
+<li> added support for zscale (IRAF min/max algorithm for scaling)
+<li> added support for user scale limits
+<li> regions can now be moved off the image
+<li> shift key disables mouse plugin callbacks
+<li> zooming a small image will use all of the available display canvas
+<li> added support for sub-pixel zooming
+<li> added ability to process all keys in keypress callback
+<li> added arrow key support for moving regions
+<li> added fractional pixel positions for zoomed images
+<li> fixed bug which reset pan when changing colormaps on a zoomed image
+<li> added strict mode
+<li> upgrade emscripten to 1.8.2
+</ul>
+
+<h3> Beta Release 11 (December 18, 2013)</h3>
+<ul>
+<li> initial port to iPad
+<li> removed notifyHelper message when mouse enters image window
+<li> fixed tpos crash when converting really large images
+<li> updated jquery.contextMenu.js
+</ul>
+
+<h3> Beta Release 10 (December 9, 2013)</h3>
+<ul>
+<li> added support for RGB composite display
+<li> added support for reading in auxiliary files via auxFiles preference
+<li> added support for overlaying FITS image masks
+<li> added support so that drag and drop files can be found by local analysis
+<li> added analOpts.dataPath to specify where to look for drag and drop files
+<li> box regions need to rotate around upper left point to ensure consistency
+<li> changed name of fitshelper to js9helper
+<li> changed JS9.submitAnalysis() to JS9.SubmitAnalysis()
+<li> changed analOpts.datadir to analOpts.dataDir
+<li> removed wcs event processing from node and CGI helper (use browser wcs)
+<li> js9helper not run as a server from js9Helper.js any more (scales better)
+<li> added ability to turn off redraw when creating a large number of regions
+<li> fixed bug in panner display for non-square images
+<li> added work-around for Google Chrome v31 bug (regions not drawn)
+</ul>
+
+<h3> Beta Release 9 (October 23, 2013)</h3>
+<ul>
+<li> added support for client-based WCS using emscripten 1.5.6
+<li> added drag and drop of FITS images (binary tables are coming)
+<li> added support for region callbacks (executed when a region changes)
+<li> added JS9.Regions() public routine to retrieve and modify selected regions
+<li> added Close Image button to File menu
+<li> reduced size of panner when created by View menu
+<li> updated Kinetic.js to v4.7.2
+<li> minor bug fixes (e.g., annuli strokeWidth not resizing properly)
+</ul>
+
+<h3> Beta Release 8 (September 23, 2013)</h3>
+<ul>
+<li> fixed security in node.js support by requiring use of wrapper scripts
+<li> added support for CGI-based back-end helpers
+<li> implemented automatic discovery of analysis definitions
+<li> added timer-based management of WCS update requests
+<li> updated socket.io to 0.9.16
+<li> changed routine name from JS9.preloadImages() back to JS9.Preload()!
+</ul>
+
+<h3> Beta Release 7 (August 19, 2013)</h3>
+<ul>
+<li> fits2png: added support for "%cookie" in odir specification
+<li> js9.js and js9Helper.js both now use js9Prefs.json for setting preferences
+<li> fixed bug in display/manipulation of panner when image is zoomed
+<li> added "none" as an analysis return type to support hidden analysis
+<li> changed routine name JS9.Preload() to JS9.preloadImages()
+<li> added clipping to region manipulation
+<li> fixed region strokewidth problem when zooming image
+<li> fixed magnifier and panner where multiple instances of js9 are present
+<li> numerous changes to pass new JSLint rules
+<li> upgraded jquery to 1.10.2
+<li> upgraded jquery.flot to 0.8.2
+<li> removed references to of jquery-ui in demo files (its not used)
+</ul>
+
+<h3> Beta Release 6 (July 22, 2013)</h3>
+<ul>
+<li> added support for panner window, including ability to zoom the panner
+<li> added support for magnifier window, including ability to change magnification
+<li> implemented zoom menu (zoomIn, zoomOut, zoom1, zoom2, zoom4, zoom8)
+<li> added support for all FITS data types (silrd) in js9.js and tpos.c
+<li> png file now contains FITS header in json format
+<li> NB: the format of the PNG representation file has changed substantially!
+<li> raw arrays now implemented as a typed array, using DataView to unpack it
+<li> updated Kinetic.js to v4.5.4 (multiple changes required to code)
+</ul>
+
+<h3> Beta Release 5 (May 20, 2013)</h3>
+<ul> 
+<li> added support for dynamic creation of js9 instances (new or light window)
+<li> added support for pre-loading images into a js9 on page load
+<li> added support for running analysis Web page buttons, forms, etc.
+<li> added support for printing the image
+<li> added new demo pages
+<li> changed js9msg script name to js9
+<li> loading javascript files is "generic" (no version numbers in filenames)
+<li> updated Kinetic.js to v4.5.1
+</ul>
+
+<h3> Beta Release 4 (April 26, 2013)</h3>
+<ul>
+<li> added support for polygon regions
+<li> added support for fixing (i.e. freezing) regions in place
+<li> added support for container regions (constrain position of other regions)
+<li> added support for shift key accelerator
+<li> fixed multiple bugs in region listOnChange support
+<li> updated Kinetic.js to v4.4.3
+</ul>
+
+<h3> Beta Release 3 (April 2, 2013)</h3>
+<ul>
+<li> updated Kinetic.js to v4.4.0 to fix new chrome v26.0.1410.43 (whoah!)
+</ul>
+
+<h3> Beta Release 2 (April 1, 2013)</h3>
+<ul>
+<li> added support for executing analysis from console window
+<li> added support for messaging to js9 via Node-based js9Msg.js
+<li> added ability to specify params to region creation
+<li> added server mode and input from stdin to js9Msg.js
+</ul>
+
+<h3> Beta Release 1 (February 27, 2013)</h3>
+<ul>
+<li> initial beta release with support for displaying FITS images, scaling,
+colormaps, external analysis, regions, wcs
+</ul>
+
+<h5>Last updated: June 14, 2014</h5>
+</div>
+
+</body>
+</html>

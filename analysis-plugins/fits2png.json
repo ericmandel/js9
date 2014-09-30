@@ -1,0 +1,8 @@
+[
+  {"name"   : "fits2png",
+   "title"  : "Convert FITS to PNG", 
+   "files"  : "*",
+   "action" : "js9Xeq fits2png -js9 -odir ./png",
+   "hidden" : true,
+   "rtype"  : "text"}
+]

@@ -1,0 +1,126 @@
+#!/bin/sh
+# set -x
+
+# make sure we have minimum arg count
+if [ $# -lt 1 ]; then
+    echo "$0 [cmd] [args ...]"
+    exit 1
+fi
+
+# on entry, the following JS9 environment variables will be available:
+# JS9_HOST	host ip of client
+# JS9_ID	id (from js9 div) of client
+
+# if we are being called via CGI, send stderr to stdout
+if [ x"$QUERY_STRING" != x ]; then
+  exec 2>&1
+fi
+
+# error handler: send to stderr(which will go to stdout for CGI)
+error() {
+  echo "ERROR: $1" >&2
+  exit 1
+}
+
+# process standard arguments
+CMD="$1";     shift;
+case $CMD in
+counts)
+    if [ $# -eq 1 ]; then
+      funcnts "$1" "$2"
+    else
+      funcnts "$1" "$2" "$3"
+    fi
+    exit 0
+    ;;
+
+fits2png)
+    fits2png $*
+    exit 0
+    ;;
+
+fitshead)
+    funhead -a "$1"
+    exit 0
+    ;;
+
+hist)
+    if [ $# -lt 4 ]; then
+      error "funhist filename norm width [column] [bin] [$#]"
+    fi
+    ARGS=""
+    FILE="$1"; shift
+    NORM="$1"; shift;
+    if [ $NORM = "true" ]; then
+      ARGS="$ARGS -n"
+    fi
+    WIDTH=$1; shift;
+    if [ $WIDTH = "true" ]; then
+      ARGS="$ARGS -w"
+    fi
+    if [ $# -eq 1 ]; then
+	funhist $ARGS "$FILE" "$1"
+    else
+	funhist $ARGS "$FILE" "$1" "$2"
+    fi
+    exit 0
+    ;;
+
+radialplot)
+    if [ $# = 0 ]; then
+      error "funcnts filename [source] [bkgd] [$#]"
+      exit 1
+    fi
+    if [ $# -eq 1 ]; then
+      funcnts -rG "$1" "$2" | funcnts2flot -title "$TITLE" -file "$1"
+    else
+      funcnts -rG "$1" "$2" "$3" | funcnts2flot -title "$TITLE" -file "$1"
+    fi
+    exit 0
+    ;;
+
+histplot)
+    if [ $# -lt 4 ]; then
+      error "funhist filename norm width [column] [bin] [$#]"
+      exit 1
+    fi
+    ARGS=""
+    FILE="$1"; shift;
+    NORM="$1"; shift;
+    if [ $NORM = "true" ]; then
+      ARGS="$ARGS -n"
+    fi
+    WIDTH=$1; shift
+    if [ $WIDTH = "true" ]; then
+      if [ "x$2" = x0 ]; then
+        error "please don't use a bin width of 0"
+      fi
+      ARGS="$ARGS -w"
+    fi
+    TITLE="`echo "$FILE" | tr [a-z] [A-Z]` Plot"
+    if [ $# -eq 1 ]; then
+	funhist $ARGS "$FILE" "$1" | 
+	funhist2flot -title "$TITLE" -file "$FILE"
+    else
+	funhist $ARGS "$FILE" "$1" "$2" | 
+	funhist2flot -title "$TITLE" -file "$FILE"
+    fi
+    exit 0
+    ;;
+
+macros)
+    echo "
+    png:      [$1]
+    id:       [$2]
+    foo:      [$3] (not expanded)
+    sregions: [$4]
+    bregions: [$5]"
+    exit 0
+    ;;
+
+*)
+    error "unknown function: $CMD"
+    exit 1
+    ;;
+esac
+

@@ -1,0 +1,10 @@
+prefix=/soft/saord
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: js9
+Description: Node helper for js9.js
+Version: 1.0
+Libs: -L${libdir} -lfuntools  -ldl -lm
+Cflags: -I${includedir}

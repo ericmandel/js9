@@ -1,0 +1,54 @@
+#!/bin/sh
+
+# defaults
+DEFPREFS="js9Prefs.json"
+HELPER="./js9Helper.js"
+LOG="./node.log"
+
+# process command line switches
+while [ x"$1" != x ]; do
+    case $1 in
+    -h) HELPER="$2"
+        shift
+	shift
+        if [ ! -r "$HELPER" ]; then
+          echo "ERROR: can't find prefs file: $HELPER"
+          exit 1
+        fi
+        ;;
+
+    -l) LOG="$2"
+        shift
+        shift
+        ;;
+
+    -p) PREFS="$2"
+        shift
+        shift
+        if [ -r "$PREFS" ]; then
+	  if [ -f $DEFPREFS ]; then
+	      X=`diff -q $DEFPREFS $PREFS`
+	      if [ x"$X" != x ]; then
+		  mv $DEFPREFS $DEFPREFS-prev
+	          ln -s $PREFS $DEFPREFS
+	      fi
+	  else
+	      ln -s $PREFS $DEFPREFS
+          fi
+          PSTR="with prefs file $PREFS"
+        else
+          echo "ERROR: can't find prefs file: $PREFS"
+          exit 1
+        fi
+        ;;
+
+    *)  echo "ERROR: unknown argument: $1"
+	exit 1
+        ;;
+    esac
+done
+
+killp js9Helper.js >& /dev/null
+
+echo "starting node $HELPER $PSTR"
+node $HELPER 2>&1 > $LOG &

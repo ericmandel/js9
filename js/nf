@@ -1,0 +1,26 @@
+#!/bin/sh
+
+error() {
+  echo "ERROR: $*"
+  exit 1
+}
+
+if [ $# != 1 ]; then
+  error "$0 [version]"
+fi
+
+VERSION="$1"
+
+K="fabric-v$VERSION.js"
+KM="fabric-v$VERSION.min.js"
+if [ ! -r "$K" ]; then
+  error "$K not found"
+fi
+if [ ! -r "$KM" ]; then
+  error "$KM not found"
+fi
+
+rm -f fabric.js     && ln -s $K fabric.js
+rm -f fabric.min.js && ln -s $KM fabric.min.js
+
+ls -l fabric.js fabric.min.js

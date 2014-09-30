@@ -1,0 +1,23 @@
+[
+  {"name"   : "counts",
+   "title"  : "Counts in Regions", 
+   "files"  : "fits",
+   "action" : "js9Xeq counts $filename $sregions $bregions",
+   "rtype"  : "text"},
+  {"name"   : "radialprofile",
+   "title"  : "Radial Profile",
+   "files"  : "fits",
+   "action" : "js9Xeq radialplot $filename $sregions $bregions",
+   "rtype"  : "plot"},
+  {"name"   : "energyplot",
+   "title"  : "Energy Spectrum",
+   "files"  : "fits",
+   "action" : "js9Xeq histplot $filename[$regions] false false pi 0",
+   "rtype"  : "plot"},
+  {"name"   : "histplot",
+   "title"  : "Histogram Plot",
+   "files"  : "fits",
+   "purl"   : "./params/histplot.html",
+   "action" : "js9Xeq histplot $filename[$regions] $norm $bwidth $column $bins",
+   "rtype"  : "plot"}
+]

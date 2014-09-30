@@ -1,0 +1,319 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="fitsy.min.js"></script>
+  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <style>
+      #myAnalysisDiv {
+        background: #E9E9E9;
+        border-width: 0px;
+        width: 440px;
+        padding: 10px;
+        overflow: auto;
+      }
+      #myAnalysisResults {
+        height: 400px;
+      }
+      #myButtonsDiv {
+        background: lightgrey;
+        border-width: 0px;
+        padding-left: 10px;
+        padding-right: 10px;
+        overflow: auto;
+      }
+  </style>
+</head>
+<body onload="initMyAnalysis()">
+    <script type="text/javascript">
+    var aname, im;
+    var lastim, lastreg;
+    var ncall = 0;
+    // this is the callback for all region changes
+    JS9.Regions.opts.onchange = "runMyAnalysis";
+    // called when the function changes to redo the last display
+    function redo(){
+      if( lastim && lastreg ){
+        runMyAnalysis(lastim, lastreg);
+      }
+    }
+    // add event handlers to the analysis buttons to execute the specified task
+    // note that jQuery is available automatically
+    function initMyAnalysis(){
+        $("#counts").on("click", function(evt){
+            aname = "counts"; redo();
+        });
+        $("#enplot").on("click", function(evt){
+            aname = "enplot"; redo();
+        });
+        $("#modify").on("click", function(evt){
+            aname = "modify"; redo();
+        });
+        $("#disp").on("click", function(evt){
+            aname = "disp"; redo();
+        });
+        $("#dispAll").on("click", function(evt){
+            aname = "dispAll"; redo();
+        });
+    }
+    // display analysis arguments
+    function dispMyRegions(im, reg){
+      var i, xreg, oxeq, wcs;
+      var t="";
+      var rarr=[];
+      var rdiv = $("#myAnalysisResults")[0];
+      // if reg is an array (i.e. contains all regions for this image),
+      // use it as the array to display
+      if( Object.prototype.toString.call(reg) === '[object Array]' ) {
+        rarr = reg;
+      } else {
+        // for a single region, construct an array
+        rarr.push(reg);
+      }
+      t = sprintf("image: %s size=%s,%s bitpix=%s<br>", 
+	           im.file, im.raw.width, im.raw.height, im.raw.bitpix);
+      // process all regions in the array
+      for(i=0; i<rarr.length; i++){
+        xreg = rarr[i];
+        t += sprintf("region: mode=%s shape=%s id=%s",
+	             xreg.mode, xreg.shape, xreg.id);
+        t += sprintf("\n        tag(s)=%s color=%s ", 
+                    xreg.tags.filter(function(n){return n;}).join(","),
+                    xreg.color);
+        t += sprintf("\n        impos=%.2f,%.2f physpos=%.2f,%.2f", 
+	             xreg.x, xreg.y, xreg.lcs.x, xreg.lcs.y);
+	wcs = JS9.PixToWCS(xreg.x, xreg.y, {display: im});
+	if( wcs ){
+            t += sprintf("\n        wcs=%s", wcs.str.trim());
+        }
+        switch(xreg.shape){
+        case "annulus":
+	  t += sprintf("\n        radii=%s", xreg.radii);
+        break;
+        case "box":
+	  t += sprintf("\n        size=%.2f,%.2f angle=%.2f",
+                       xreg.width, xreg.height, xreg.angle);
+        break;
+        case "circle":
+	  t += sprintf("\n        radius=%.2f", xreg.radius);
+        break;
+        case "ellipse":
+	  t += sprintf("\n        eradius=%.2f,%.2f angle=%.2f", 
+                       xreg.r1, xreg.r2, xreg.angle);
+        break;
+        case "point":
+        break;
+        case "polygon":
+          t += sprintf("\n        pts=");
+          for(j=0; j<xreg.pts.length; j++){
+            t += sprintf("%.2f,%.2f ", xreg.pts[j].x, xreg.pts[j].y);
+          }
+        break;
+        case "text":
+	  t += sprintf("\n        text=%s", xreg.text);
+        break;
+        }
+	t += "\n";
+      }
+      // display all regions
+      rdiv.innerHTML = "<pre>" + t + "</pre>";
+    }
+    //
+    function modifyMyRegion(im, xreg){
+      var swidth, oxeq, tag, angle, color;
+      var swidths=[2, 4, 6, 8];
+      var angles=[7, 15, 30, 60, 90, 120, 180, 270, 360];
+      var colors=["red", "orange", "yellow", "green", "blue"];
+      var tags=["include,source", "exclude,source", "include,background", "exclude,background", "defcolor"];
+      // change region to test JS9.Regions()
+      tag = tags[ncall%tags.length];
+      angle = angles[ncall%angles.length];
+      color = colors[ncall%colors.length];
+      // temporarily disable onchange callback, since we are going to change
+      // the region and we don't want an infinite loop!
+      switch(xreg.shape){
+        case "annulus":
+          JS9.ChangeRegions(xreg.id,
+		            {x: xreg.x + 5, y: xreg.y + 5}, 
+			    {display: im});
+        break;
+        case "box":
+          JS9.ChangeRegions(xreg.id,
+			    {color: color, angle: angle}, 
+			    {display: im});
+        break;
+        case "circle":
+          JS9.ChangeRegions(xreg.id,
+		            {radius: xreg.radius + 2, tag: tag}, 
+			    {display: im});
+        break;
+        case "ellipse":
+          JS9.ChangeRegions(xreg.id, 
+		            {r1: xreg.r1 + 4, r2: xreg.r2 + 2, angle: angle}, 
+			    {display: im});
+        break;
+        case "polygon":
+          JS9.ChangeRegions(xreg.id, 
+		            {angle: angle},
+		            {display: im});
+        break;
+      }
+      dispMyRegions(im, xreg);     
+      ncall += 1;
+    }
+    // run analysis on current image, defining a function to display results
+    function runMyAnalysis(im, xreg){
+        var rarr = [];
+        lastim = im;
+        lastreg = xreg;
+        if( aname ){
+          switch(aname){
+          case "counts":
+            JS9.RunAnalysis("counts", null, dispMyAnalysis);
+            break;
+          case "enplot":
+            JS9.RunAnalysis("energyplot", null, dispMyAnalysis);
+            break;
+          case "modify":
+            modifyMyRegion(im, xreg);
+            break;
+          case "disp":
+            dispMyRegions(im, xreg);
+            break;
+          case "dispAll":
+            rarr = JS9.GetRegions();
+            dispMyRegions(im, rarr);
+            break;
+          default:
+            JS9.error("unknown analysis task: "+aname);
+            break;
+          }
+        }
+    }
+    function runMyAnalysis2(im, xreg){
+      runMyAnalysis(im, xreg);
+    }
+    // display function passed to JS9.RunAnalysis
+    // when the analysis task is complete, this callback displays results
+    function dispMyAnalysis(stdout, stderr, a){
+      var rdiv = $("#myAnalysisResults")[0];
+      if( !rdiv ){
+        alert("the analysis results area is missing on this web page");
+      }
+      else if( stderr ){
+        alert(stderr);
+      } else {
+        switch(a.rtype){
+        case "text":
+          // text can just get shoved into the div
+          rdiv.innerHTML = "<pre>" + stdout + "</pre>";
+          break;
+        case "plot":
+          // plot can make use of the already-loaded flot routines
+          // ( and JS9.plotOpts is defined in js9-version.js)
+          try{ 
+	    // retrieve plot object (should contain a data object)
+	    pobj = JSON.parse(stdout);
+            if( pobj && pobj.data ){
+              // erase explanatory text
+              rdiv.innerHTML = "";
+    	      // plot the data
+	      $.plot(rdiv, [pobj], JS9.plotOpts);
+	    } else {
+              alert("no analysis data returned");
+            }
+          }
+	  catch(e){ alert("can't plot data: "+e+" "+stdout)};
+          break;
+        }
+      }
+    }
+    </script>
+    <font size="+1"><center>
+    <b>JS9 Demo: running tasks in response to region changes</b>
+    </center></font>
+    <table cellspacing="20">
+    <tr valign="top">
+    <td>
+    PNG files (already converted from FITS):
+    <ul>
+    <li> <a href='javascript:JS9.Load("png/casa.png");'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("png/snr.png", {colormap:"heat"});'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'>m13 (via SkyView)</a>
+    <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y)</a>
+    </ul>
+    </td>
+    <td>
+    FITS images and binary tables:
+    <ul>
+    <li> <a href='javascript:JS9.Load("fits/3c58.fits");'>3c58 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/3c273.fits");'>3c273 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngkper.fits");'>gkper (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngc1316.fits", {scale:"linear"});'>ngc1316 (AIPS)</a>
+    </ul>
+    </td>
+    </tr>
+    <tr valign="top">
+    <td>
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    </td>
+    <td>
+    <form autocomplete="off" action="">
+    <div id="myButtonsDiv">
+    <div id="myButtonsBox">
+    <input type="radio" name="onchange" id="disp">Display a Region</input>
+    <input type="radio" name="onchange" id="dispAll">Display all Regions</input>
+    <input type="radio" name="onchange" id="modify">Modify a Region</input>
+    <br>
+    <input type="radio" name="onchange" id="enplot">Energy Spectrum</input>
+    <input type="radio" name="onchange" id="counts">Counts in Regions</input>
+    </div>
+    </div>
+    </form>
+    <div id="myAnalysisDiv">
+    <div id="myAnalysisResults">
+      JS9 can perform local and remote tasks in response to region changes:
+      <ul>
+      <li> choose a task by clicking one of the analysis buttons above
+      <ul>
+      <li> the region tasks are local (browser-based) tasks
+      <li> spectrum, counts are remote tasks (requiring the back-end helper to be running)
+      </ul>
+      <li> display an image by clicking on one of the data files
+      <li> create a region using the JS9 Region menu
+      <li> as you move/resize the region, the task will run on that region
+      <li> you can suspend task execution by unselecting xeqOnChange in the JS9 Region menu
+      </ul>
+      See the page source for implementation details.
+    </div>
+    </div>
+    </td>
+    </tr>
+    </table>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</ul>
+</body>
+</html>

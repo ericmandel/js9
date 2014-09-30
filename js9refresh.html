@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="fitsy.min.js"></script>
+  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <style>
+      #myAnalysisDiv {
+        background: #E9E9E9;
+        border-color: black;
+        border-style: solid;
+        border-width: 1px;
+        width: 100%;
+        padding: 10px;
+        overflow: auto;
+      }
+      #myAnalysisResults {
+        width: 600px;
+        height: 400px;
+      }
+      #myButtonsDiv {
+        background: lightgrey;
+        border-color: black;
+        border-style: solid;
+        border-width: 1px;
+        width: 100%;
+        padding-left: 10px;
+        padding-right: 10px;
+        overflow: auto;
+      }
+      #myButtonsBox {
+        width: 600px;
+      }
+  </style>
+</head>
+<body onload="JS9.Preload('./kes75/kes75.png'); initMyAnalysis()">
+    <script type="text/javascript">
+    var im, doblink;
+    var hds = [];
+    var btime = 30;
+    function initMyAnalysis(){
+        $("#efull").on("click", function(evt){
+          console.log("refreshing kes75 fill ...");
+          im = JS9.GetImage();
+          if( !im ){JS9.error("no image");}
+          if( !hds[0] ){JS9.error("no efull");}
+          JS9.Refresh(im, hds[0]);
+        });
+        $("#e1").on("click", function(evt){
+          console.log("refreshing kes75 e1 ...");
+          im = JS9.GetImage();
+          if( !im ){JS9.error("no image");}
+          if( !hds[1] ){JS9.error("no e1hd");}
+          JS9.Refresh(im, hds[1]);
+        });
+        $("#e2").on("click", function(evt){
+          console.log("refreshing kes75 e2 ...");
+          im = JS9.GetImage();
+          if( !im ){JS9.error("no image");}
+          if( !hds[2] ){JS9.error("no e2hd");}
+          JS9.Refresh(im, hds[2]);
+        });
+        $("#e3").on("click", function(evt){
+          console.log("refreshing kes75 e3 ...");
+          im = JS9.GetImage();
+          if( !im ){JS9.error("no image");}
+          if( !hds[3] ){JS9.error("no e3hd");}
+          JS9.Refresh(im, hds[3]);
+        });
+        $("#eblink").on("click", function(evt){
+          var i = 0;
+          im = JS9.GetImage();
+          doblink = true;
+          (function(){
+            JS9.Refresh(im, hds[i%hds.length]);
+            i++;
+            if( doblink ){
+              setTimeout(arguments.callee, btime);
+            }
+          })();
+        });
+        $("#eunblink").on("click", function(evt){
+          doblink = false;
+        });
+        console.log('retrieving Fitsy data ...');
+        Fitsy.fetchURL('kes75.fits', './kes75/kes75.fits', null,
+        function(hd){ hds[0] = hd; });
+        Fitsy.fetchURL('kes75_e1.fits', './kes75/kes75_e1.fits', null,
+        function(hd){ hds[1] = hd; });
+        Fitsy.fetchURL('kes75_e2.fits', './kes75/kes75_e2.fits', null,
+        function(hd){ hds[2] = hd; });
+        Fitsy.fetchURL('kes75_e3.fits', './kes75/kes75_e3.fits', null,
+        function(hd){ hds[3] = hd; });
+    }
+    </script>
+    <div id="msg"></div>
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    <div id="myButtonsBox">
+    <p>
+    <button id="efull">Full Image</button>
+    <button id="e1">E=500:1500</button>
+    <button id="e2">E=1500:2500</button>
+    <button id="e3">E=2500:8000</button>
+    <button id="eblink">Blink</button>
+    <button id="eunblink">Stop</button>
+    </div>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<p>
+<a name="rgstat">
+<h3>Region Statistics </h3>
+
+A rectangular box of image pixels is selected and some statical values 
+are computed from the data.  The selected box may be rotated for box and 
+ellipse regions.
+
+<p>
+<b>N.B.:</b> Currently the region shape is ignored and the values reflect a rectangular section of image pixels.
+<p>
+
+<blockquote>
+    <h4>Notes</h4>
+
+    <ul>
+     <li><b>Background and Noise</b>
+     <p>
+	    The background and noise are obtained from the outer 4 pixel-wide
+	    perimeter of the selected region.  The background value is the median 
+	    value of this area and the noise value is the RMS.
+     </li>
+     <li><b>Centroid</b>
+     <p>
+	    The centroid is obtained by locating the brightest 9 pixel box and 
+	    computing the centroid of the background subtracted data about this point.
+     </li>
+     <li><b>FWHM</b>
+     <p>
+	    The FWHM is estimated from the image moments about the centroid, assuming 
+	    a Gaussian distribution.
+     </li>
+</blockquote>
+
+<p>
+<a name="xyproj">
+<h3>X and Y Projection Plot</h3>
+
+A rectangular box of image pixels is selected and the projection along the
+region's X or Y axis is plotted.  The sum, average or median of the projected
+pixels may be selected.  The selected box may be rotated for box and ellipse
+regions.
+
+
+<p>
+<a name="r_proj">
+<h3>Radial Profile</h3>
+
+A rectangular box of image pixels is selected and the pixels values are
+plotted against their respective radii.  A Gaussian is fit to the radial profile
+data and the result is also plotted.  The fitted results of the 4 parameter fit
+are displayed with the plot.  The selected box may be rotated for box and 
+ellipse regions.
+
+<p>
+The center pixel from which the radii are computed is determined from the
+background subtracted centroid taken about the brightest 9 pixels in the data
+(same centroid as is displayed in the region stats plugin).
+
+
+<p>
+<a name="rghist">
+<h3>Pixel Value Histogram</h3>
+
+A rectangular box of image pixels is selected and a histogram of the values
+is plotted.  The selected box may be rotated for box and 
+ellipse regions.
+
+The selected pixels are binned into 250 bins between the minimum and maximum value
+found in the selected region.
+
+<p>
+<a name="enener">
+<h3>Encircled Energy</h3>
+
+A rectangular box of image pixels is selected and background subtracted.  The 
+analysis radius is determined from the region as follows:
+
+    <ul>
+     <li><b>circle</b>: region radius</li>
+     <li><b>annulus</b>: max annulus radius</li>
+     <li><b>box</b>: half the average height an width</li>
+     <li><b>ellipse</b>: average axis radius</li>
+     <li><b>polygon</b>: half the average of the height and width of polygon bounding box</li>
+    </ul>
+
+The values within the analysis radius are binned in 1 pixel radial bins.  The
+bins are normalized by the sum of all pixels and the result is plotted.
+
+<p>
+The background is obtained as the median from the outer 4 pixel wide perimeter of the
+selected region.
+
+<p>
+The center pixel from which the encircled energy is computed is determined from
+the background subtracted centroid taken about the brightest 9 pixels in the
+data (same centroid as is displayed in the region stats plugin).
+
+<p>
+The 50 and 80 percent encircled energy points are displayed over the plot.
+
+<p>
+<a name="3dplot">
+<h3>3d Surface Plot</h3>
+
+A rectangular box of image pixels is selected and plotted as a surface.
+The selected box may be rotated for box and ellipse regions.
+
+
+

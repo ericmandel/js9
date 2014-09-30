@@ -1,0 +1,102 @@
+<html>
+<header>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+</header>
+
+<body>
+<title>Histogram Plot</title>
+
+<form id="histplotForm" name="histplotForm" class="js9AnalysisForm">
+
+<div class="linegroup">
+<span class="column_A">
+<b>Enter column name</b>
+</span>
+<span class="column_B">
+<input type="text" class="text_B" id="column" name="column" value="pi" />
+</span>
+<span class="column_C">
+(column name must be contained in the data file)
+</span>
+</div>
+
+<div class="linegroup">
+<span class="column_A">
+<b>Enter [min:max:]bins</b>
+</span>
+<span class="column_B">
+<input type="text" class="text_B" id="bins" name="bins" value="0" />
+</span>
+<span class="column_C">
+(use '0' to specify the default number of bins)
+</span>
+</div>
+
+<div class="linegroup">
+<span class="column_A">
+Use bin width instead of number of bins?
+</span>
+<span class="column_B">
+<input type="checkbox" id="bwidth" name="bwidth" value="true"/>
+</span>
+<span class="column_C">
+</span>
+</div>
+
+<div class="linegroup">
+<span class="column_A">
+Normalize by bin size?
+</span>
+<span class="column_B">
+<input type="checkbox" id="norm" name="norm" value="true"/>
+</span>
+<span class="column_C">
+</span>
+</div>
+
+<p>
+<input id="run" name="run" type="button" class="button" value="Run" onclick="return JS9.SubmitAnalysis(this);">
+
+<input id="close" name="Close" type="button" class="button" value="Close" 
+onclick="var form = $(this).closest('form');
+var dhtml = form.closest('.dhtmlwindow')[0];
+dhtml.close();
+return false;" style="float: right;">
+
+</form>
+
+<p>
+
+<div class="js9HelpText">
+
+<center><b>Help for Histogram Plot</b></center>
+
+<p>
+The histogram plot task will create a 1D histogram from the specfied
+column and display it as a plot. Of course, the column name is
+required and must be contained in the data file.
+
+<p>
+The required <b>bin</b> parameter specifies the number of bins to use in
+creating the histogram and, if desired, the range of bin values.  The
+range should specify the desired min and max data values.  If this
+argument is omitted, the number of output bins is calculated
+either from the TLMIN/TLMAX headers values (if these exist in the
+table FITS header for the specified column) or by going through the
+data to calculate the min and max value.
+
+<p>
+The optional <b>bin width</b> parameter can be used
+to specify the width of each bin rather than the number of bins. Without
+<b>bin width</b>, a bin value of <i>1:100:5</i> means that 5 bins of width 20 are used in the histogram. Using <b>bin width</b>, a bin value of <i>1:100:5</i>
+means that 20 bins of width 5 are used in the histogram.
+
+<p>
+The optional <b>normalize</b> parameter can be used to normalize the bin value
+by the width of the bin. This could used, for example, to produce a
+light curve with values having units of counts/second instead of
+counts.
+</div>
+
+</body>
+</html>

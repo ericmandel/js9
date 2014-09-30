@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="fitsy.min.js"></script>
+  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <style>
+      #centerdiv {
+      width: 512px;
+      margin-left: auto ;
+      margin-right: auto ;
+      }
+  </style>
+</head>
+<body>
+    <font size="+1">
+    <center><b>JS9 Demo: RGB composites </b></center>
+    </font>
+    <p>
+    If you have three images of the same size, scale, and pointing
+    direction (e.g. three energy cuts of a Chandra data set), you can
+    display each one separately and assign to them one of the <b>red,
+    green, or blue</b> colormaps. If you then select the menu
+    option <b>Color->rgbMode</b>, they will be displayed as one RGB
+    composite image. The <b>current</b> image (as shown in
+    the <b>File</b> menu) determines which of the three independent
+    colormaps is changed by contrast/bias mouse manipulation. To remove an
+    image from the RGB composite, give it a different
+    colormap. Re-join (or add a new image) by assigning one of the RGB
+    colormaps. Turn off rgbMode to display the images separately.
+    <div id="centerdiv">
+    <ul>
+    <li> <a href='javascript:JS9.Load("kes75/kes75.png",{colormap: "grey"});'>Kes 75, all energies (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("kes75/kes75_e1.png",{colormap: "grey"});'>Kes 75, energies 500:1500 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("kes75/kes75_e2.png",{colormap: "grey"});'>Kes 75, energies 1500:2500 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("kes75/kes75_e3.png",{colormap: "grey"});'>Kes 75, energies 2500:8000 (Chandra)</a>
+    </ul>
+    </td>
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    </div>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>

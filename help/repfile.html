@@ -1,0 +1,262 @@
+<html>
+<head>
+<style>
+.container{
+  padding: 10px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<title>The PNG Representation File</title>
+<center><h3>The PNG Representation File</h3></center>
+
+<p>
+X-ray archives present special problems for displaying data. Instead
+of images, X-ray data consists of detected photons stored in FITS
+binary tables. This means that the file size is related to the number
+of detected photons, not the image dimensions. Indeed, X-ray data
+files can be hundreds of megabytes in size.  Downloading (and then
+binning) these tables can be painfully slow, especially if the aim
+simply is to offer a quick look at the data. On the other hand, simply
+generating a FITS image from the binary table for download breaks the
+connection with the original events, which might be needed for
+server-side analysis.
+
+<p>
+To remedy this situation, JS9 supports use of a special
+PNG <b>representation file</b>, explicitly tied to the original event
+data.  Once downloaded into JS9, the image can be reconstructed
+from this file for display. The file maintains information about the
+original FITS binary table for use in remote analysis. The idea is
+that you create a representation file from the original FITS
+binary table and use that file for display in JS9, while supporting
+server-side analysis on the original FITS event file.
+<p>
+Display of a representation file is fully integrated into JS9:
+<ul>
+<li> The relatively small PNG file is downloaded and read using
+standard, optimized browser support.
+<li> RGB image values are retrieved using <b>getImageData()</b> into an
+off-screen (non-visible) canvas. This is the packed representation of the FITS file.
+<li> The FITS header is extracted into a JavaScript object, and actual image dimensions and datatype are determined.
+<li> The original image data is unpacked into an HTML5 typed array of the specified data type, with endian conversion applied as necessary.
+<li> The standard DS9 algorithm is applied to this array to convert pixel 
+values to an array of RGB values. 
+<li> The converted RGB array is sent to the screen using  <b>putImageData()</b>
+and displayed by the browser.
+</ul>
+
+<p>
+Using this representation file, image data values are available to the
+client JavaScript code without having to download the much larger
+binary table. This means that the contrast/bias conversion can be
+performed, image positions/values displayed, etc. using standard
+browser capabilities and relatively straight-forward array
+manipulation code.  Browser-based image plugins can process the image
+data, and JS9 can communicate with a back-end server to provide more
+sophisticated FITS-based analysis support.
+
+<p>
+Note that JS9 is able to distinguish between PNG representation files and
+ordinary PNG files and will correctly load either type.
+
+<h3>The PNG Representation File</h3>
+<p>
+The PNG
+<b>representation file</b> contains the following information</b>:
+<ul>
+<li><b>fitsfile:</b> the pathname of the FITS file used to generate this PNG 
+file, including the FITS bracket extension (if present)
+<li><b>fitsheader:</b> a FITS header containing the WCS information
+for the generated image
+<li><b>image:</b> a PNG image containing a json version of the FITS header and image data (in its native data type) packed into RGB triplets
+</ul>
+
+<h3>Generating the PNG file using tpos and fits2png</h3>
+<p>
+A PNG representation file can be created either statically or
+dynamically at display time as needed. The low-level <b>tpos</b>
+program and high-level <b>fits2png</b> script facilitate this conversion:
+<pre>
+    tpos [ifits] [opng]
+or
+    fits2png [switches] [ifits] [opng]
+    switches:
+    -abs	# convert relative path to absolute path for storage in PNG
+    -gzip       # assume the file is in gzip format, regardless of its extension
+    -dim	# dimension for PNG image (use to calculate block factor)
+    -js9	# set dim, odir, repl parameters for automatic JS9  conversion
+    -odir	# specify output directory (default: from opng path)
+    -repl	# replace existing PNG? (default: true)
+</pre>
+
+<p>
+The fits2png switches are meant to provide flexibility when running
+tpos in batch mode. The fits2png script also is used to generate PNG
+files on the fly (i.e., when offering FITS files on your Web page
+directly instead of the PNG representation.)
+
+<p>
+By default, tpos and fits2png will convert a FITS image or binary
+table to a PNG representation file having the same image dimensions:
+<pre>
+    tpos m13.fits m13.png
+</pre>
+However, current browsers have a working limit to the image size they
+can reasonably handle: 2048x2048 works well; anything larger can be
+subject to performance degradation. For maximum flexibility, you can
+use Funtools syntax to limit the size of the generated PNG file. For
+example:
+<pre>
+    tpos 'casa.fits[1024@4027,1024@3944,2]' casa.png
+</pre>
+Here, the PNG file is generated by extracting a 1024x1024 image
+centered on a specific point (4027,3994) and then blocking it by a
+factor of 2 to create a final 512x512 image.
+
+<p>
+For automatic processing with fits2png, specifying the -dims
+switch will tell fits2png to calculate the block factor in such a way
+as to generate an image of the specified size:
+<pre>
+    fits2png -dims 512 512 casa.fits casa.png
+</pre>
+This will block the 8192x8192 Chandra ACIS data by a factor of 16 to
+make a 512x512 image centered on the the point (4096,4096).
+
+<p>
+In addition to the image, the (generated) FITS image header and the
+FITS pathname are stored in the PNG file for use by both the browser
+and the server-side helper programs. The image header is used to
+provide WCS information for individual pixels as the mouse is moved
+across the image. It also is used to provide region information in WCS
+format (i.e. independent of block factor). The FITS pathname is used
+to locate the original FITS file in order to execute analysis tasks.
+
+<p>
+In order to run analysis tasks, the FITS data must be accessible to the
+server-side helper program.  Therefore, it seems preferable to store
+an absolute pathname in the PNG file, but more experience is needed on
+this score. You can specify the absolute pathname on the tpos command line,
+or else specify the -abs switch on fits2png and it will be determined by the
+script.
+
+<p>
+If you store a relative path in the PNG file, note that this
+path will be utilized by the server-side JS9 helper to locate the FITS
+file.  This means that if the helper is not started in the same
+directory that tpos (fits2png) was run, the relative path will not be
+correct. In this case, you can set the <b>JS9.analOpts.dataDir</b>
+parameter in the <b>js9Prefs.json</b> file to a path that will be used
+instead of the relative path.
+
+<p>
+You also must decide where to store the PNG files, e.g. with the FITS
+data or in a separate directory. Clearly, this will depend on how your
+archive is set up and where you have write access. By default, PNG files
+will simply be stored in the path specified on the tpos command
+line. You can use the -odir switch on the fits2png script to specify a
+generic location:
+<pre>
+    tpos ./png ./fits/casa.fits ./png/casa.png    # store in png subdirectory
+    tpos -odir ./png ./fits/casa.fits casa.png    # same
+</pre>
+
+<p>
+The <b>-odir</b> switch can be used to specify a session-based
+directory in which to store PNG files. This facility could be used,
+for example, in a case where each user has files stored in her or her
+own directory, which might be removed at the end of the session. To
+facilitate session-based directory specification, a standard HTML cookie
+is used to pass the session information between client and server as follows:
+<ul>
+<li> When a JS9-enabled page is loaded, a cookie is set containing the
+session id in the Web page. For example, one might a set a cookie
+whose name is <b>JS9_ID</b> and whose values is <b>0x1234</b>.
+<li> The odir switch is given a directory value containing the cookie
+name as part of the string, preceded by a percent sign, <b>%</b>. For
+example, odir might be set to <b>./png/%JS9_ID</b>.
+<li> When fits2png is executed, the <b>%cookie</b> name is replaced by the
+cookie value. In the example above, the resulting odir value is 
+<b>./png/0x1234</b>.
+<li> The PNG representation file is stored in this odir directory, as usual.
+</ul>
+Note that the name of the cookie is arbitrary, but is case sensitive.
+
+<p>
+Finally, the special value of <b>@IFILE@</b> tells fits2png to
+store the PNG file in the same directory as the FITS file:
+<pre>
+    tpos -odir @IFILE@ .../casa.fits casa.png     # store PNG with FITS file
+</pre>
+Again, these switches are meant to provide initial flexibility while we gain
+more experience with community needs. Please let us know how to improve this
+part of the system.
+
+<p>
+Regardless of where the PNG files are stored, <b>you must adhere to
+the W3C "same-origin" security policy, i.e. the PNG data files must be
+hosted on the same Web server as the JS9 code</b>. This means that your PNG
+files must either be stored in the Web site directory tree, or you
+must make a link within the Web site tree to the top level PNG directory.
+Also note that Google Chrome's implementation of this policy prevents
+you from using JS9 with a
+<b>file://</b> URL. (On Linux and Macs, you can start Chrome with the
+--allow-file-access-from-files switch to work around this restriction.)
+
+<h3>Loading a PNG File From Your Web Page</h3>
+<p>
+Once you have generated your PNG files, you can make them available on your
+JS9 Web page by creating URLs that call the <b>JS9.Load()</b> routine:
+<pre>
+    href='javascript:JS9.Load(filename, opts);'
+</pre>
+where <b>filename</b> is the file to load and
+<b>opts</b> is an object containing params to be merged with the
+default JS9.imageOpts object.
+</ul>
+<p>
+For example:
+<pre>
+    href='javascript:JS9.Load("png/casa.png", {scale: "log"});'
+</pre>
+Clicking on this URL will cause the casa.png file (here, stored in the
+png directory) to be loaded into JS9, using the log scale as a
+default. If the JS9 server-side helper is running, it will be alerted
+about this new file so that it can run analysis, etc.
+<p>
+See <a href="publicapi.html">JS9 Public API</a> for complete
+documentation about the <b>JS9.Load()</b> routine.
+
+<h3>Run-time Conversion of FITS to PNG</h3>
+<p>
+If you don't generate PNG files beforehand, you can still specify a
+FITS file as the first argument to <b>JS9.Load()</b> and have the JS9
+server-side helper run fits2png at run-time.. To do this, you set
+the <b>fits2png</b> property in js9Prefs.json:
+<pre>
+{
+  "globalOpts": {"fits2png": true ...}
+}
+</pre>
+This tells JS9 to convert FITS files instead of downloading them
+directly. Then you can use <b>JS9.Load()</b> as usual:
+<pre>
+    href='javascript:JS9.Load("fits/3c58.fits");'
+</pre>
+The default command for this conversion is contained in the js9Helper.js file:
+<pre>
+    fits2png -js9 -odir ./png
+</pre>
+The -js9 switch will calculate a block factor to generate a 512x512
+PNG image. It will not replace an existing PNG file, if it
+exists. Note that the output directory is set explicitly to be the png
+subdirectory of the sample installation. You can change this command
+to suite your site needs.
+
+<h5>Last updated: September 4, 2014</h5>
+</div>
+
+</body>
+</html>

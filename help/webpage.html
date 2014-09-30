@@ -1,0 +1,166 @@
+<html>
+<head>
+<style>
+.container{
+  padding: 10px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<title>Creating a JS9 Web Page</title>
+
+<h3><center>Creating a JS9 Web Page</center></h3>
+
+<h3>Adding JS9 to Your Web Page</h3>
+<p>
+The sample js9basics.html file shows how to add JS9 to a Web page by
+assigning JS9 CSS classes to "div" elements.  The js9multi.html Web
+page goes further by showing how multiple instances of JS9 can be
+added to a Web page using unique IDs.
+
+<p>
+To start, a few JavaScript and CSS files must be loaded into the Web
+page.  Ordinarily this is done in the page's header, which typically
+will look something like this:
+<pre>
+  <head>
+  &lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8"&gt;
+  &lt;meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" &gt; 
+  &lt;link type="image/x-icon" rel="shortcut icon" href="./favicon.ico"&gt;
+  &lt;link type="text/css" rel="stylesheet" href="js9support.css"&gt;
+  &lt;link type="text/css" rel="stylesheet" href="js9.css"&gt;
+  &lt;script type="text/javascript" src="js9support.min.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="fitsy.min.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="js9.min.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="js9plugins.js"&gt;&lt;/script&gt;
+  &lt;/head&gt;
+</pre>
+Order is important: you must load js9support.min.js before you load
+js9.min.js. You must load the plugin files after you load js9.min.js.
+You can simply copy the order of files as specified in the JS9 demo files.
+
+<p>
+The text file <b>js9support.txt</b> is a list of the files contained
+in js9support.css, js9support.js, js9support.min,js, and
+js9plugins.js. Note that jquery v1.11.1 is one of the files loaded by
+js9support.js. All of these files are contained in the js and css
+sub-directories.
+
+<p>
+The <b>fitsy.js</b> and <b>js9.js</b> files (or their minified counterparts)
+are loaded separately so that we can offer easy updates. as needed.
+Fitsy.js contains basic FITS support and js9.js is the core JS9 module.
+
+<p>
+Instances of JS9 are placed on a Web page by assigning JS9 classes
+to ordinary "div" elements. The two important JS9 classes are:
+<ul>
+<li><b>JS9:</b> this class will display the main JS9 image window
+<li><b>JS9Menubar:</b> this class will display the JS9 menu bar
+</ul>
+
+<p>
+You also can use these classes:
+<ul>
+<li><b>JS9Console:</b> this class will display a console window for executing
+typed commands (very retro, but often quite useful!)
+<li><b>JS9Info:</b> this class will display position, value, and
+region information (patterned after DS9's display window). It's nicer
+and more complete than the default display in the upper left of the
+image, but takes up more screen real estate.
+<li><b>JS9Magnifier:</b> this class will display the magnifier window
+<li><b>JS9Panner:</b> this class will display panner window
+</ul>
+<p>
+NB: all of these secondary windows can be displayed as light windows
+using the appropriate <b>View</b> menu options. Light windows can
+moved around on the page. Also note that if a window is declared
+statically in a page, it will not be made available in the <b>View</b>
+menu.
+
+<p>
+Placement of JS9 div elements should follow standard Web page rules
+and constraints.  This means that div elements can be placed in any
+order to create different graphical views. For example, the
+js9basics.html page places the menubar above the image display, in
+keeping with the traditional layout of DS9. The entire JS9 construct
+is placed in a data cell of a table, next to a data cell containing
+data URLs.
+
+<p>
+Multiple instances of JS9 can be added to a single Web page. This is done by
+giving each JS9 div element a unique ID. In order to tie otherwise separate
+JS9 components together, the IDs should be specified as follows:
+<ul>
+<li> start with a unique ID name, e.g. "myJS9".
+<li> follow with an optional dash or underscore (not needed for the main window)
+<li> finish with the type of JS9 element:
+"Menubar", "Panner", "Magnifier" "Info", or "Console"
+</ul>
+
+<p> An example of how to define multiple instances of JS9 is found in
+the js9multi.html file. Two DS9 instances are defined, having IDs of
+"JS9" (the default) and "myJS9". When "myJS9" is the display ID,
+"myJS9-Menubar" specifies the associated menu bar and "myJS9Console"
+specifies the associated console.  
+
+<p>
+The ID is not required if there is only one JS9 instance on the page,
+since it defaults to "JS9". However, if your site needs to communicate
+with clients using the <b>js9 script</b> for external communication,
+you can differentiate between clients loading the same JS9-enabled Web
+page by supplying a unique ID when the JS9 page is served.
+
+<p>
+The js9.css file contains CSS directives for various parts of
+JS9. These can be modified (or overwritten) as needed, subject to
+ordinary CSS rules. In general, we recommend overwriting CSS rules by
+loading a site-specific CSS file after the js9.css file. This makes
+updating much easier.
+
+<p>
+<h3>Adding Server-side Analysis Tasks to Your Web Page</h3>
+</a>
+<p>
+Server-side JS9 analysis tasks can be executed using
+the <b>Analysis</b> menu, but they also can be executed directly from
+the Web page using HTML elements (buttons, forms, etc.) To do this, a
+Web page author simply creates the Web interface and calls
+either <b>JS9.RunAnalysis()</b> (for buttons, menus, etc.)
+or <b>JS9.SubmitAnalysis()</b> (for forms). These are described
+in the <a href="localtasks.html">Local Tasks</a> web page.
+
+<p>
+<h3>Adding Local Analysis Tasks to Your Web Page</h3>
+</a>
+<p>
+JS9 also supports the ability to perform local analysis, i.e.,
+analysis tasks defined and executed right on your Web page, rather
+than being executed by a back-end server.  This is accomplished by
+offering access to the image data and region information via
+a <b>public JS9 API</b>. See the
+<a href="localtasks.html">Local Tasks</a> for more information.
+
+<p>
+<h3>Adding JS9 Display Windows Dynamically</h3>
+<p>
+JS9 display windows can be created dynamically using the JS9 Public API call
+<b>JS9.LoadWindow()</b>. You can create a light window to hold a new
+JS9 display on the same page or you can create an entirely separate
+pop-up window. See the
+<a href="publicapi.html">JS9 Public API</a> for more information.
+
+<p>
+<h3>Adding Data Files to a Web page</h3> 
+<p>
+Data files are added to a Web page by supplying URLs that call
+the <b>JS9.Load()</b> routine. See:
+<a href="yourdata.html">Adding Data Files To a Web Page</a> for more
+information.
+
+<h5>Last updated: September 4, 2014</h5>
+</div>
+
+</body>
+</html>

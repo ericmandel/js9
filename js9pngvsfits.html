@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="fitsy.min.js"></script>
+  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+</head>
+<body>
+    <font size="+1"><center>
+    <b>JS9 Demo: PNG Representation Files vs FITS Files</b>
+    </center></font> 
+<p>
+X-ray archives present special problems for displaying data. Instead
+of images pixels, X-ray data files consist of detected photons stored
+in FITS binary tables. These can be hundreds of megabytes in size,
+regardless of the image dimensions.  Downloading (and then binning)
+these tables on the fly can be painfully slow.
+<p>
+To remedy this situation, JS9 supports a special PNG <b>representation
+file</b>, explicitly tied to the original FITS file. The idea is that
+you can create a representation image from the original FITS data and use
+that file for display in JS9, while still supporting server-side
+analysis using the original file.
+<p>
+Other benefits include:
+<ul>
+<li> The compressed PNG representation file will be decompressed
+automatically by the browser's optimized PNG support code.
+<li> The representation file takes less memory than a downloaded FITS image.
+<li> PNG files can be generated statically or dynamically.
+<li> PNG files can be tailored to the specific observation (compare the 3c58 files).
+</ul>
+<p>
+See <a href="js9/help/repfile.html" target="_blank">The PNG Representation
+File</a> for more information.
+
+    <table cellspacing="30">
+    <tr valign="top">
+    <td>
+    Compressed FITS binary table files:
+    <ul>
+    <li> <a href='javascript:JS9.Load("fits/casa.fits.gz", {fits2png: false});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/3c58.fits.gz", {fits2png: false});'>3c58 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngkper.fits.gz", {fits2png: false});'>gkper (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/snr.fits.gz", {fits2png: false});'>CTB 109 (Einstein)</a>
+    </ul>
+    </td>
+    <td>
+    FITS files with dynamic fits2png conversion:
+    <ul>
+    <li> <a href='javascript:JS9.Load("fits/casa.fits", {fits2png: true}, {display: "myJS9"});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/3c58.fits", {fits2png: true}, {display: "myJS9"});'>3c58 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngkper.fits", {fits2png: true}, {display: "myJS9"});'>gkper (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/snr.fits", {fits2png: true}, {display: "myJS9"});'>CTB 109 (Einstein)</a>
+    </ul>
+    </td>
+    </tr>
+    <tr valign="top">
+    <td>
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="myJS9Menubar"></div>
+    <div class="JS9" id="myJS9"></div>
+    </tr>
+    </table>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>

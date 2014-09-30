@@ -1,0 +1,245 @@
+<html>
+<header>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+</header>
+
+<body>
+<title>Configure a Region</title>
+
+<form id="regionsConfigForm" name="regionsConfigForm" class="js9AnalysisForm">
+
+<div class="linegroup">
+<span class="column_R1">
+<b>Id:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" id="id" name="id" value="" readonly="readonly" />
+</span>
+<span class="column_R5">
+(read-only)
+</span>
+</div>
+
+<div class="linegroup">
+<span class="column_R1">
+<b>Shape:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" id="shape" name="shape" value="" readonly="readonly" />
+</span>
+<span class="column_R5">
+(see Region menu)
+</span>
+</div>
+
+<div class="linegroup">
+<span class="column_R1">
+<b>Image Center:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" id="x" name="x" value="" />
+</span>
+<span class="column_R3">
+<input type="text" class="val text_R" id="y" name="y" value="" />
+</span>
+<span class="column_R5">
+(image pixels)
+</span>
+</div>
+
+<div class="nodisplay wcs">
+<div class="linegroup">
+<span class="column_R1">
+<b>WCS Center:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" id="ra" name="ra" value="" />
+</span>
+<span class="column_R3">
+<input type="text" class="val text_R" id="dec" name="dec" value="" />
+</span>
+<span class="column_R4">
+<input type="text" class="val text_R" id="wcssys" name="wcssys" value=""/>
+</span>
+<span class="column_R5">
+(using this wcs system)
+</span>
+</div>
+</div>
+
+<div class="nodisplay annulus">
+<div class="linegroup">
+<span class="column_R1">
+<b>Radii:</b>
+</span>
+<span class="column_R2L">
+<input type="text" class="val text_R" id="radii" name="radii" value="" />
+</span>
+<span class="column_R5">
+(image pixels)
+</span>
+</div>
+</div>
+
+<div class="nodisplay box">
+<div class="linegroup">
+<span class="column_R1">
+<b>Width, Height:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" id="width" name="width" value="" />
+</span>
+<span class="column_R3">
+<input type="text" class="val text_R" id="height" name="height" value="" />
+</span>
+<span class="column_R5">
+(image pixels)
+</span>
+</div>
+</div>
+
+<div class="nodisplay circle">
+<div class="linegroup">
+<span class="column_R1">
+<b>Radius:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" id="radius" name="radius" value="" />
+</span>
+<span class="column_R5">
+(image pixels)
+</span>
+</div>
+</div>
+
+<div class="nodisplay ellipse">
+<div class="linegroup">
+<span class="column_R1">
+<b>Radii:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" id="r1" name="r1" value="" />
+</span>
+<span class="column_R3">
+<input type="text" class="val text_R" id="r2" name="r2" value="" />
+</span>
+<span class="column_R5">
+(image pixels)
+</span>
+</div>
+</div>
+
+<div class="nodisplay polygon">
+<div class="linegroup">
+<span class="column_R1">
+<b>Points:</b>
+</span>
+<span class="column_R2L">
+<input type="text" class="val text_R" id="pts" name="pts" value="" />
+</span>
+<span class="column_R5">
+(image pixels)
+</span>
+</div>
+</div>
+
+<div class="nodisplay text">
+<div class="linegroup">
+<span class="column_R1">
+<b>Text:</b>
+</span>
+<span class="column_R2L">
+<input type="text" class="val text_R" id="text" name="text" value="" />
+</span>
+</div>
+</div>
+
+<div class="nodisplay angle">
+<div class="linegroup">
+<span class="column_R1">
+<b>Angle:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" id="angle" name="angle" value="" />
+</span>
+<span class="column_R5">
+(degrees)
+</span>
+</div>
+</div>
+
+<div class="linegroup">
+<span class="column_R1">
+<b>Tags:</b>
+</span>
+<span class="column_R2L">
+<input type="text" class="val text_R" id="tags" name="tags" value="" />
+</span>
+</div>
+
+<div class="nodisplay wcs">
+<div class="linegroup">
+<span class="column_R1">
+<b>WCS Region:</b>
+</span>
+<span class="column_R2L">
+<input type="text" class="val text_R" id="wcsstr" name="wcsstr" value="" readonly="readonly" />
+</span>
+<span class="column_R5">
+(read-only)
+</span>
+</div>
+</div>
+
+<div class="linegroup">
+<span class="column_R1">
+<b>Image Region:</b>
+</span>
+<span class="column_R2L">
+<input type="text" class="val text_R" id="imstr" name="imstr" value="" readonly="readonly" />
+</span>
+<span class="column_R5">
+(read-only)
+</span>
+</div>
+
+<div class="linegroup">
+<span class="column_R1">
+<b>Options:</b>
+</span>
+<span class="column_R2l">
+<input type="checkbox" name="listonchange" value="true"/>List on Change
+</span>
+<span class="column_R3l">
+<input type="checkbox" name="fixinplace" value="true"/>Fix in Place
+</span>
+<span class="column_R4">
+<input type="checkbox" name="remove" value="true"/>Delete
+</span>
+</div>
+
+<input id="apply" name="Apply" type="button" class="button" value="Apply" 
+onclick="var form = $(this).closest('form');
+var arr = form.serializeArray();
+var im = form.data('im');
+var shape = form.data('shape');
+var winid = form.data('winid');
+arr = arr.concat(
+  $('#' + form.attr('id') + ' input[type=checkbox]:not(:checked)').map(
+    function(){return {'name': this.name, 'value': 'false'};}
+  ).get());
+JS9.Regions.processConfigForm.call(im, shape, winid, arr);
+return false;">
+
+<input id="close" name="Close" type="button" class="button" value="Close" 
+onclick="var form = $(this).closest('form');
+var shape = form.data('shape');
+var winid = form.data('winid');
+shape.params.winid = null;
+winid.close();
+return false;" style="float: right;">
+
+</form>
+
+</body>
+</html>

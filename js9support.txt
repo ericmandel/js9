@@ -1,0 +1,6 @@
+css files in js9support.css: 
+css/jquery.contextMenu.css css/dhtmlwindow.css
+js files in js9support.js: 
+js/jquery.min.js js/jquery.contextMenu.min.js js/jquery.flot.min.js js/jquery.flot.errorbars.min.js js/jquery.flot.selection.min.js js/flot-zoom.min.js js/sprintf.min.js js/dhtmlwindow.min.js js/dhtmlwindow_blurb.js js/fabric.min.js js/pako_inflate.min.js js/astroem.js
+plugin files in js9plugins.js: 
+plugins/archive/archive.js plugins/fitsy/binning.js plugins/imexam/imexam.js plugins/imexam/encircled.js plugins/imexam/pixtable.js plugins/imexam/radproj.js plugins/imexam/reghist.js plugins/imexam/regstat.js plugins/imexam/xyproj.js plugins/imexam/3dplot.js

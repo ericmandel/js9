@@ -1,0 +1,30 @@
+<html>
+<header>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+</header>
+
+<body>
+<title>Set or Modify the Drag and Drop Data Path</title>
+
+<form id="dataPathForm" name="dataPathForm" class="js9AnalysisForm">
+<b>The Data Path is a colon-separated list of directories to search when performing local analysis on your drag and drop files:</b>
+<p>
+<textarea id="dataPath" name="dataPath" rows="2" cols="90%"></textarea>
+<p>
+<input id="run" name="run" type="button" class="button" value="Submit" 
+onclick="var arr = $('#dataPathForm').serializeArray();
+var form = $(this).closest('form');
+var dhtml = form.closest('.dhtmlwindow')[0];
+JS9.globalOpts.dataPath = arr[0].value;
+dhtmlwindow.close(dhtml);
+return false;">
+
+<input id="close" name="Close" type="button" class="button" value="Close" 
+onclick="var form = $(this).closest('form');
+var dhtml = form.closest('.dhtmlwindow')[0];
+dhtml.close();
+return false;" style="float: right;">
+</form>
+
+</body>
+</html>

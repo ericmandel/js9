@@ -1,0 +1,219 @@
+<html>
+<head>
+<style>
+.container{
+  padding: 10px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<title>Local (Browser-Based) Analysis Tasks</title>
+<center><h3>Adding Local (Browser-Based) Analysis Tasks to JS9</h3></center>
+
+<p>
+JS9 supports the ability to perform local analysis, i.e.  tasks
+executed in your browser (not on the back-end server).  This is
+accomplished by offering access to the image data and region
+information via a 
+<a href="publicapi.html">JS9 Public API</a>. Obviously, all of JS9
+JavaScript code is available to you within a Web page, but the public
+API is designed to stable and well-documented.
+
+<p>
+<b>Adding Simple Analysis Tasks to Your Web Page</b>
+<p>
+For simple analysis (i.e., no mouse or keyboard event processing), it
+often is sufficient to define GUI elements directly on the Web page,
+adding Javascript code to interact with these elements and call the
+public JS9 functions as needed. In particular,
+the <b>JS9.GetImage()</b> function will return a handle for the
+currently displayed image and the the various <b>JS9.Region</b>
+functions allow you to manipulate regions.  These routines are
+described in the <a href="publicapi.html">JS9 Public API</a>.
+
+<p>
+The js9onchange.html demo Web page illustrates these simple
+capabilities.  It shows how to run a task every time a region
+changes, i.e. when it is moved, resized, or deleted. This is
+accomplished by setting the <b>JS9.Regions.opts.onchange</b>
+parameter to a function (if you are setting via JavaScript) or a
+string routine name (if you are setting via json in the prefs file):
+<pre>
+    // via JavaScript    
+    JS9.Regions.opts.onchange = myRegionChanged;
+</pre>
+or:
+<pre>
+    // from within js9Prefs.json
+    { ... "Regions.opts":  {"onchange": "myRegionChanged"} ... }
+</pre>
+The calling sequence of the xeqonchange function is:
+<pre>
+    function myRegionChanged(im, xreg)
+</pre>
+where <b>im</b> is the image handle of the currently displayed image, and
+<b>xreg</b> is an object containing information about the changed region.
+See <a href="#xreg">below</a> for a description of the returned region
+object. Note that you can turn off region change processing for
+individual regions or for all regions by means of the <b>xeqonchange</b>
+menu option in a given region's context menu or the global <b>Regions</b> menu,
+respectively.
+
+<p>
+The js9onchange.html demo Web page also shows how
+server-side JS9 analysis tasks can be executed directly from the
+Web page using HTML elements (buttons, forms, etc.) instead of the
+<b>Analysis</b> menu. See <a href="serverside.html"> Server-side
+Analysis Tasks</a> for more information.
+
+<p>
+<h3>Adding Plugins to Your Web Page</h3>
+<p>
+For anything other than the simplest analysis, you can write a JS9
+<b>Plugin</b> module. A plugin is a Javascript module that contains
+a <b>constructor</b> function to create a plugin GUI, and, optionally,
+one or more <b>event callbacks</b> to process desired events. At the
+end of the file, the plugin calls <b>RegisterPlugin()</b> to make
+itself known to JS9. Plugin modules should be stored in the
+js9/plugins directory (or in a sub-directory therein) and should be
+loaded into JS9-enabled Web pages after js9.js itself is loaded.
+
+<p>
+To create instances of the plugin GUI, the constructor function gets
+called for each plugin div defined on the Web page.
+The <b>this</b> context is seeded with a few JS9 properties, including:
+<ul>
+<li><b>this.div:</b>      the DOM element representing the div for this plugin
+<li><b>this.divjq:</b>    the jquery object representing the div for this plugin
+<li><b>this.id:</b>       the id of the div (or the plugin name as a default)
+<li><b>this.winType:</b>  "div" (in-page div element) or "light" (from view menu)
+<li><b>this.winHandle:</b> handle returned from light window create routine
+<li><b>this.display:</b>  the display object associated with this plugin
+<li><b>this.plugin:</b>   plugin class object (contains user opts in opts sub-object)
+<li><b>this.status:</b>   "active" or "inactive" or undefined
+</ul>
+The most important of these properties is the <b>div</b> property
+specifying the DOM element of the containing div. You add your GUI
+(HTML elements) to <b>this.div</b> and use the events to control
+the action. The <b>type</b> property tells you whether the instance is
+being created for an in-page div element or from the View menu, in
+case configuration is different for these cases.
+The <a href="../plugins/plugintest.js">plugintest.js</a> module
+provides a fairly complete example and should be studied in
+conjunction with this help page.
+
+<p>
+A JS9 plugin is registered at the end of the module using
+the <b>JS9.RegisterPlugin()</b> public routine:
+<pre>
+  JS9.RegisterPlugin(xclass, xname, func, opts)
+</pre>
+where:
+<ul>
+<li><b>xclass</b>: class of the plugin
+<li><b>xname</b>: name of plugin
+<li><b>func</b>: the constructor function
+<li><b>opts</b>: an object containing plugin options
+</ul>
+The <b>xclass</b> and <b>xname</b> values together make up
+the <b>class</b> of the div element. Thus, if the plugin <b>xclass</b>
+is "JS9" and the plugin <b>xname</b> is "Menubar", then the div which
+will hold the menubar has a class of "JS9Menubar". Note that these
+strings must adhere to CSS grammar rules, e.g. start with a letter,
+followed by letters, numbers, dashes and underscores, no spaces allowed.
+<p>
+This class/name separation has been made so that multiple plugins can
+be written as part of one class and processed together as part of that
+class, e.g., displayed together in the <b>View</b> and <b>Help</b> menus.
+<p>
+The optional <b>opts</b> object contains the following elements, 
+all of which also are optional:
+<ul>
+<li><b>onmouseup</b>: callback function(im, ipos, evt) for mouse up events
+<li><b>onmousedown</b>: callback function(im, ipos, evt) for mouse down events
+<li><b>onmousemove</b>: callback function(im, ipos, evt) for mouse move events
+<li><b>onmouseover</b>: callback function(im, ipos, evt) for mouse over events
+<li><b>onmouseout</b>: callback function(im, ipos, evt) for mouse out events
+<li><b>onkeypress</b>: callback function(im, ipos, evt) for keypress events
+<li><b>on[layer]change</b>: function(im, xreg) for when a shapes changes in a layer (e.g. onregionschange for region changes)
+<li><b>onimageload</b>: callback function(im) when an image is loaded
+<li><b>onimagedisplay</b>: callback function(im) when an image is (re)displayed
+<li><b>divArgs</b>: [arg1, arg2, ...] arguments passed to div-based constructor
+<li><b>menuItem</b>: menuname in specified menu (default is View menu)
+<li><b>menu</b>: add plugin to this menu (only View or Analysis right now!)
+<li><b>winDims</b>: [width, height]
+<li><b>winTitle</b>: string
+<li><b>toolbarHTML</b>: string
+<li><b>toolbarSeparate</b>: boolean
+<li><b>help</b>: path html file for help, relative to js9/plugins directory
+</ul>
+<p>
+Each of the callback functions are routines which get executed when
+the specified event takes place. The routines are passed the following
+arguments: current image object handle, the 1-indexed image position
+of the mouse and, for all but the <b>on[layer]change</b>,
+<b>onimageload</b> and <b>onimagedisplay</b> routines, the original event
+that triggered the callback. The <b>on[layer]change</b> callback gets
+passed the same <b>xreg</b> object as is used for the
+<b>JS9.Regions()</b> routine and the <b>JS9.Regions.opts.onchange</b>
+parameter. See <a href="#xreg">below </a> for a description of its contents.
+
+<p>
+Holding down the Shift key (where available) will turn off execution of all
+mouse event callbacks. This allows you to move the mouse to a specific
+location, and then move away without triggering a callback. The
+<b>xeqonchange</b> menu option in the <b>Regions</b> menu and each region's
+context menu can be used to turn off execution of the region onchange callback.
+The former does this globally, the latter only for the specific region.
+
+<p>
+The <b>divArgs</b> is an array specifying arguments to pass to the constructor
+function, when a div element is found in the Web page. For example, the Panner
+and Magnifier plugins pass a width and height to the constructor in this way.
+
+<p>
+The <b>menuItem</b> is a string which specifies the name that will be
+used in the <b>View</b> menu when a plugin div is not found on the Web
+page. If no <b>menuItem</b> is specified, the plugin will not appear
+in the <b>View</b> menu. 
+
+<p>
+Furthermore, the <b>menu</b> property can be used to change the menu
+in which the above-mentioned <b>menuItem</b> plugin will be
+placed. For example, an Imexam plugin situates
+its plugins in the Analysis menu instead of the View menu. NB: At the
+moment, only the <b>View</b> and <b>Analysis</b> menus are supported
+for placement.
+
+<p>
+The <b>winDims</b> is an array specifying the width and height of the
+light window that will get created for this plugin via the <b>View</b> menu.
+The <b>winTitle</b> is a string specifying the title of the light window.
+The default is no title.
+
+<p>
+You can add HTML (e.g. command buttons) to the light window titlebar
+by putting an HTML string into the <b>toolbarHTML</b> property. The
+panner and magnifier use this technique to add zoom buttons. You also
+can add HTML onto a Web-page plugin div, but in this case, where the
+HTML is placed depends on the value of the <b>toolbarSeparate</b>
+property. If the value of <b>toolbarSeparate</b> is true, then a
+titlebar is created above the plugin and the HTML is added to it.
+Otherwise, the HTML is placed in top of the plugin itself.
+
+<p>
+The <b>help</b> property specifies the pathname of an html file that will
+be placed in the <b>Help</b> menu. This pathname should be relative to
+the plugins directory.
+
+<p>
+Within a callback, you can use the JS9 Public API to manipulate data, as
+detailed in the <a href="publicapi.html">JS9 Public API</a>.
+
+<p>
+<h5>Last updated: September 4, 2014</h5>
+</div>
+
+</body>
+</html>

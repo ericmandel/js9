@@ -1,0 +1,13 @@
+[
+  {"name"   : "fitshead",
+   "title"  : "FITS Header(s)", 
+   "files"  : "fits",
+   "action" : "js9Xeq fitshead $filename",
+   "rtype"  : "text"},
+  {"name"   : "macros",
+   "title"  : "Display Macros", 
+   "files"  : "*",
+   "action" : "js9Xeq macros $png $id $foo $sregions $bregions",
+   "hidden" : true,
+   "rtype"  : "text"}
+]

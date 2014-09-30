@@ -1,0 +1,167 @@
+#!/bin/bash
+# set -x
+
+# error routine
+error () {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+ODIR=""
+SWITCHES=""
+REPLACE=true
+# switch processing
+while [ x"$1" != x ]; do
+    case $1 in
+	-abs) shift
+	      ABSPATH=$1
+	      shift
+	      continue;;
+
+	-dim) shift
+	      XDIM=$1
+	      YDIM=$2
+	      shift
+	      shift
+  	      continue;;
+
+	-js9) shift
+	      XDIM=1024
+	      YDIM=1024
+	      VERBOSE=ofile
+	      ODIR="@IDIR@"
+	      REPLACE=false
+  	      continue;;
+
+	-odir) shift
+ 	       ODIR=$1
+	       shift
+  	       continue;;
+
+	-repl) shift
+ 	       REPLACE=$1
+	       shift
+  	       continue;;
+
+	-id) shift
+ 	     ID="/""$1"
+	     shift
+  	     continue;;
+
+	-gz) shift
+	     FTYPE="gzip:"
+  	     continue;;
+
+	-ftype) shift
+ 	     FTYPE="$1"
+	     shift
+  	     continue;;
+
+	-v) shift
+  	    VERBOSE=$1
+	    shift
+	    continue;;
+
+	*)  break;;
+    esac
+done
+
+# required first arg: input FITS file
+if [ x"$1" != x ]; then
+  F=$1
+else
+  echo "usage: $0 ifits [opng]" >&2
+  exit 1
+fi
+
+# get input file without extension
+IFILE=`echo $F | sed 's#\[.*##'`
+# make sure input file exits
+if [ ! -r $IFILE ]; then
+  error "can't locate file: $IFILE"
+fi
+# get extension
+IEXT=`echo $F | sed 's#^[^[]*##'`
+
+# get absolute path
+if [ x$ABSPATH = xtrue ]; then
+  ADIR=$PWD
+  MYDIR=`dirname $IFILE`
+  MYFILE=`basename $IFILE`
+  cd $MYDIR 2>/dev/null || error "can't cd to $MYDIR (for absolute directory)"
+  IFILE=$PWD/$MYFILE
+  cd $ADIR || exit
+fi
+
+# optional second arg: output PNG file
+if [ x"$2" != x ]; then
+  OFILE=$2
+else
+  OFILE=`basename $IFILE .fits`
+  OFILE=${OFILE}.png  
+fi
+
+# where to put the png file ...
+# put png is same directory as fits?
+if [ x"$ODIR" = 'x@IDIR@' ]; then
+  ODIR=`dirname $F`
+fi
+
+# look for %X string in odir, which will be replaced by a cookie value
+KEY=`echo $ODIR | sed -n 's#.*%\([A-Za-z0-9_][A-Za-z0-9_]*\).*#\1#p'`
+if [ x"$KEY" != x ]; then
+    VAL=""
+    OFS="$IFS"
+    if [ "$HTTP_COOKIE" != "" ] ; then
+        IFS=";"; set $HTTP_COOKIE; IFS="$OFS"; COOKIES=$*
+        for COOK in $COOKIES ; do
+            IFS="="; set $COOK; IFS="$OFS"
+	    # check for a key of the same name, set value if present
+            case $1 in 
+              $KEY) VAL="$2";;
+            esac
+        done
+  fi
+  # make replacement
+  if [ x"$VAL" != x ]; then
+      ODIR=`echo $ODIR | sed 's#%'$KEY'#'$VAL'#'`
+  else
+      error "no cookie found with key: $KEY"
+  fi
+fi
+
+# make sure output directory exists
+if [ x$ODIR != x ]; then
+  mkdir -p $ODIR
+  # final form for output file
+  OFILE=${ODIR}/${OFILE}
+fi
+
+# if output file already exists, do we replace it?
+if [ x$REPLACE = xtrue -o ! -r $OFILE ]; then
+
+# for js9 processing, determine block factor
+if [ x$XDIM != x -a x$YDIM != x ]; then
+  BL=8
+  DIMS=`funimage ${FTYPE}$IFILE'[*,*,'$BL']' stdout bitpix=8 2>/dev/null | dd bs=80 count=10 2>/dev/null | sed -e 's/.\{80\}/&@/g' | tr '@' '\012' | egrep NAXIS'[1,2]' | sed 's# /.*##g;s# ##g'`
+  eval $DIMS
+  if [ $NAXIS1 -gt $NAXIS2 ]; then
+    BLOCK=`echo "($NAXIS1 * $BL + ($XDIM - 1)) / $XDIM" | bc`
+  else
+    BLOCK=`echo "($NAXIS2 * $BL + ($XDIM - 1)) / $XDIM" | bc`
+  fi
+  IEXT="[*,*,$BLOCK]"$IEXT
+fi
+
+# create png file (filter out the annoying warning about dimensions!)
+{ tpos $SWITCHES "${FTYPE}$IFILE""$IEXT" "$OFILE" 2>&1 1>&3 | egrep -v WARNING 1>&2; } 3>&1
+
+fi
+
+# verbose output
+case $VERBOSE in
+  ofile) echo "$OFILE";;
+  cmd)   echo tpos "${FTYPE}$IFILE""$IEXT" "$OFILE";;
+  * )    ;;
+esac
+

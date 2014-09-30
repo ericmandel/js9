@@ -1,0 +1,292 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <link type="text/css" rel="stylesheet" href="plugins/plugintest.css">
+  <link type="text/css" rel="stylesheet" href="js9debugextras/jquery.datetimepicker.css">
+  <script type="text/javascript" src="js9support.js"></script>
+  <script type="text/javascript" src="fitsy.js"></script>
+  <script type="text/javascript" src="js9.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <script type="text/javascript" src="plugins/plugintest.js"></script>
+  <script type="text/javascript" src="plugins/imexam/contour.js"></script>
+  <script type="text/javascript" src="js9debugextras/jquery_ujs.js"></script>
+  <script type="text/javascript" src="js9debugextras/jquery.datetimepicker.js"></script>
+  <style>
+    .catdiv{
+      background: #99FFCC;
+      padding: 10px;
+    }
+    .datepickerText{
+      font-size: 12px;
+      font-family: monospace;
+      overflow-x: hidden;
+      background: #E9E9E9;
+      border: 0px;
+      padding: 2px;
+    }
+  </style>
+</head>
+<body onload="init();">
+    <font size="+1"><center>
+    <b>JS9 Debugging Page</b>
+    </center></font>
+    <table  cellspacing="10px">
+    <tr valign="top">
+    <td>
+    <table  cellspacing="2px">
+    <tr>
+    <td>
+    <ul>
+    <li> <a href='javascript:JS9.Load("png/casa.png");'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("png/3c58.png", {colormap: "heat"}, {display: "JS9"});'>3c58 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'>M13 (via SkyView)</a>
+    <li> <a href='javascript:JS9.Load("png/snr.png");'>CTB 109 (Einstein)</a>
+    </ul>
+    </td>
+    <td>
+    <ul>
+    <li> <a href='javascript:JS9.Load("png/s100.png", {scale:"linear", colormap:"grey"});'>s100 (v=x*100+y)</a>
+    <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y)</a>
+    <li> <a href='javascript:JS9.Load("png/f1000.png");'>float 1000x1000 (v=x.y/1000)</a>
+    <li> <a href='javascript:JS9.Load("png/d1000.png");'>double 1000x1000 (v=x.y/1000)</a>
+    </ul>
+    </td>
+    </table>
+    </td>
+
+    <td>
+    <ul>
+    <li> <a href='javascript:JS9.Load("fits/casa.fits", {display: "myJS9"});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/3c58.fits", {colormap: "heat", fits2png: false}, {display: "myJS9"});'>3c58 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/m13.fits", {fits2png: true}, {display: "myJS9"});'>M13 (via SkyView)</a>
+    <li> <a href='javascript:JS9.Load("fits/f1000.fits", {display: "myJS9"});'>float 1000x1000 (v=x.y/1000)</a>
+    </ul>
+    </td>
+    </tr>
+    <tr valign="bottom">
+    <td>
+    <input type="text" id="datetimepicker" size="44" value="datepicker test: 3rd party event-handling" class="datepickerText">
+    <p>
+    <div class="JS9Info"></div>
+    </td>
+    <td>
+    <table>
+    <tr valign="top">
+    <td>
+    <div class="JS9Panner" id="myJS9Panner" data-toolbarseparate="true"></div>
+    </td>
+    <td>
+    <div class="JS9Magnifier" id="myJS9Magnifier" style="width:150px; height:150px"></div>
+    </td>
+    </table>
+    </td>
+    </tr>
+    <tr valign="top">
+    <td>
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="myJS9Menubar"></div>
+    <div class="JS9" id="myJS9"></div>
+    </td>
+    </tr>
+    <tr valign="top">
+    <td>
+    <div class="PLUGINtest" data-js9id="JS9"></div>
+    <p>
+    <div class="catdiv">
+    <select id="display">
+      <option value="" selected="selected" style="display:none">Display</option>
+      <option value="box">Box Catalog</option>
+      <option value="circle">Circle Catalog</option>
+      <option value="both">Both Catalogs</option>
+    </select> 
+    <select id="hide">
+      <option value="" selected="selected" style="display:none">Hide</option>
+      <option value="box">Box Catalog</option>
+      <option value="circle">Circle Catalog</option>
+      <option value="both">Both Catalogs</option>
+    </select> 
+    <select id="show">
+      <option value="" selected="selected" style="display:none">Show</option>
+      <option value="box">Box Catalog</option>
+      <option value="circle">Circle Catalog</option>
+      <option value="both">Both Catalogs</option>
+    </select> 
+    <p>
+    <b>Move circle catalog: </b>
+    <button id="up">Up</button>
+    <button id="down">Down</button>
+    <button id="left">Left</button>
+    <button id="right">Right</button>
+    <p>
+    </div>
+    </td>
+    <td>
+    <div class="JS9Console" id="myJS9Console" style="width: 512px; height:300px"></div>
+    </td>
+    </tr>
+    </table>
+    <script type="text/javascript">
+    var n = 2000;
+    var inc = 4;
+    // on an ipad, the click handler reload the page!
+    var click= 'ontouchstart' in document.documentElement ? 'touchstart': 'click';
+    function init(){
+        JS9.Preload("png/casa.png", {colormap: "cool"});
+        JS9.Preload("fits/snr.fits", {colormap: "sls", fits2png: false}, {display: "myJS9"});
+        $("#display").on("change", function(evt){
+          try{doit("display", this.value);}
+          finally{$("#display").prop('selectedIndex', 0);
+          return false;}
+        });
+        $("#show").on("change", function(evt){
+          try{doit("show", this.value);}
+          finally{$("#show").prop('selectedIndex', 0);
+          return false;}
+        });
+        $("#hide").on("change", function(evt){
+          try{doit("hide", this.value);}
+          finally{$("#hide").prop('selectedIndex', 0);
+          return false;}
+        });
+        $("#up").on(click, function(evt){
+          try{doit("up");}
+          finally{return false;}
+        });
+        $("#down").on(click, function(evt){
+          try{doit("down");}
+          finally{return false;}
+        });
+        $("#left").on(click, function(evt){
+          try{doit("left");}
+          finally{return false;}
+        });
+        $("#right").on(click, function(evt){
+          try{doit("right");}
+          finally{return false;}
+        });
+        $('#datetimepicker').datetimepicker({
+          format:'d.m.Y H:i'
+        });
+    }
+    function mkrandom(arr, n, xdim, ydim, shape, color){
+        var i, x, y;
+        for(i=0; i<n; i++){
+            x = Math.random() * xdim;
+            y = Math.random() * ydim;
+	    if( i % 2 === 0 ){
+                arr[i] = {x: x, y: y, shape: shape, color: color, 
+		          width: 5, height: 2};
+            } else {
+                arr[i] = {x: x, y: y};
+            }
+        }
+    }
+    function mkspirals(arr, n, xcen, ycen, shape, color){
+        var i, x, y;
+        var angle_incr = 2 * Math.PI/180;
+        var cx = xcen;
+        var cy = ycen;
+        var outer_rad = 512*0.48;
+        for(i=0; i<n; i++){
+            var ratio = i/n;
+            var angle = i*angle_incr;
+            var spiral_rad = ratio * outer_rad;
+            x = cx + Math.cos(angle) * spiral_rad;
+            y = cy + Math.sin(angle) * spiral_rad;
+            // if( i < 10 ) console.log("%s: %s %s", i, x, y);
+            // if( (n - i) < 10 ) console.log("%s: %s %s", i, x, y);
+	    if( i % 2 === 0 ){
+                arr[i] = {x: x, y: y, shape: shape, color: color, radius: 2};
+            } else {
+                arr[i] = {x: x, y: y};
+            }
+        }
+    }
+    function doit(what, who){
+        switch(what){
+          case "display":
+	    var circles = [];
+            var boxes = [];
+            var im = JS9.GetImage();
+            if( !im ){
+                JS9.error("please display an image first!");
+            }
+            var xdim = Math.max(512, im.raw.width);
+            var ydim = Math.max(512, im.raw.height);
+            var xcen = im.raw.width/2;
+            var ycen = im.raw.height/2;
+            switch(who){
+                case "box":
+                    mkrandom(boxes, n, xdim, ydim, "box", "red");
+	            JS9.NewShapeLayer("box", JS9.Catalogs.opts);
+                    JS9.AddShapes("box", boxes, {color: "yellow"});
+                    break;
+                case "circle":
+                    mkspirals(circles, n, xcen, ycen, "circle", "blue");
+	            JS9.NewShapeLayer("circle", JS9.Catalogs.opts);
+                    JS9.AddShapes("circle", circles);
+                    break;
+                case "both":
+                    mkrandom(boxes, n, xdim, ydim, "box", "red");
+	            JS9.NewShapeLayer("box", JS9.Catalogs.opts);
+                    JS9.AddShapes("box", boxes, {color: "yellow"});
+                    mkspirals(circles, n, xcen, ycen, "circle", "blue");
+	            JS9.NewShapeLayer("circle", JS9.Catalogs.opts);
+                    JS9.AddShapes("circle", circles);
+                    break;
+            }
+            break;
+          case "show":
+          case "hide":
+            switch(who){
+                case "both":
+                    JS9.ShowShapeLayer("box", what);
+                    JS9.ShowShapeLayer("circle", what);
+                    break;
+	        default:
+                    JS9.ShowShapeLayer(who, what);
+	            break;
+            }
+            break;
+          case "up":
+            JS9.ChangeShapes("circle", "all", {dx: 0, dy: inc});
+            break;
+          case "down":
+            JS9.ChangeShapes("circle", "all", {dx: 0, dy: -inc});
+            break;
+          case "left":
+            JS9.ChangeShapes("circle", "all", {dx: -inc, dy: 0});
+            break;
+          case "right":
+            JS9.ChangeShapes("circle", "all", {dx: inc, dy: 0});
+            break;
+        }
+    }
+    </script>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>

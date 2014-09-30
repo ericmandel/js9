@@ -1,0 +1,78 @@
+#!/bin/sh
+# set -x
+
+error() {
+  echo "ERROR: $1" 1>&2
+  exit 1
+}
+
+# local variables
+DONE=false
+VERBOSE=false
+TRIES=10
+SLEEP=1
+
+while [ x"$1" != x ]; do
+    case $1 in
+   -id) shift
+        XARGS="$XARGS -id $1"
+	shift;;
+
+    -s) shift
+        SLEEP=$1
+        shift;;
+
+    -t) shift
+        TRIES=$1
+        shift;;
+
+    -v) VERBOSE=true
+	shift;;
+
+     *) break;;
+    esac
+done
+
+# check for required args
+if [ $# -lt 1 ]; then
+  echo "usage:  $0 filename"
+  exit 1
+else
+  PATHNAME="$1"
+fi
+ROOT=`basename $PATHNAME .fits`
+
+# start the image load
+GOT=`js9 $XARGS load $PATHNAME`
+if [ x"$GOT" != xOK ]; then
+  error "$GOT"
+fi
+
+# wait for completion
+while [ $DONE = false ]; do
+  # get status of current image
+  GOT=`js9 $XARGS status $ROOT load`
+  case $GOT in
+    error)
+      error "could not load: $PATHNAME";;
+    loading|please)
+      if [ x$VERBOSE = xtrue ] ; then
+        echo "loading ..."
+      fi
+      sleep $SLEEP
+      continue;;
+    complete)
+      if [ x$VERBOSE = xtrue ] ; then
+        echo "success!"
+      fi
+      DONE=true
+      continue;;
+  esac
+  TRIES=`echo "$TRIES - 1" | bc`
+  if [ $TRIES -le 0 ]; then
+      error "timeout while loading: $PATHNAME"
+  fi
+done
+
+# signal success
+exit 0

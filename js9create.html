@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="fitsy.min.js"></script>
+  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <style>
+      .colA {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 10px;
+      }
+      .colB {
+	position: absolute;
+	top: 0;
+	left: 20px;
+	width: 130px;
+      }
+      .colC {
+	position: absolute;
+	top: 0;
+	left: 150px;
+	width: 500px;
+      }
+  </style>
+</head>
+<body onload="myLoadInit()">
+    <script type="text/javascript">
+    var loadtype;
+    function myLoadInit() {
+        loadtype = "standard";
+        $(".loadLabel").html("");
+        $("#standardLabel").html("<font size='+1'>*</font>");
+        $("#standardButton").on("click", function(evt){
+          loadtype = "standard";
+          $(".loadLabel").html("");
+          $("#standardLabel").html("<font size='+1'>*</font>");
+        });
+        $("#lightButton").on("click", function(evt){
+          loadtype = "light";
+          $(".loadLabel").html("");
+          $("#lightLabel").html("<font size='+1'>*</font>");
+        });
+        $("#newButton").on("click", function(evt){
+          loadtype = "new";
+          $(".loadLabel").html("");
+          $("#newLabel").html("<font size='+1'>*</font>");
+        });
+    }
+    // create js9 instance, if necessary, and load image
+    function myLoad(file, opts){
+      var id, did, head, body, html, doc;
+      var myopts = opts || {};
+      switch(loadtype){
+        // regular old div in this page: JS9 must be installed on this page
+        case "standard":
+          // hardwire the display to use in this case
+          myopts.display = "standard";
+          // just the standard load
+          JS9.Load(file, myopts);
+          break;
+        // lightweight window in this page
+        case "light":
+          JS9.LoadWindow(file, myopts, "light");
+          break;
+        // completely new window
+        case "new":
+          JS9.LoadWindow(file, myopts, "new");
+          break;
+        default:
+          alert("unknown load type: "+loadtype);
+      }
+    }
+    </script>
+    <font size="+1"><center>
+    <b>JS9 Demo: creating a JS9 instance dynamically</b>
+    </center></font>
+    <p>
+    Choose a method of creating a JS9 instance:
+    <div class="linegroup">
+    <span class="colA">
+    <label class="loadLabel" id="standardLabel">
+    </span>
+    <span class="colB">
+    <button id="standardButton">Standard Div</button> 
+    </span>
+    <span class="colC">
+    display image in the existing visible canvas below
+    </span>
+    </div>
+
+    <p>
+    <div class="linegroup">
+    <span class="colA">
+    <label class="loadLabel" id="lightLabel">
+    </span>
+    <span class="colB">
+    <button id="lightButton">Light Window</button> 
+    </span>
+    <span class="colC">
+    display image in a dynamically created light-weight window
+    </span>
+    </div>
+
+    <div class="linegroup">
+    <span class="colA">
+    <label class="loadLabel" id="newLabel">
+    </span>
+    <span class="colB">
+    <button id="newButton">New Window</button> 
+    </span>
+    <span class="colC">
+    display image in a dynamically created new window
+    </span>
+    </div>
+
+    <p>
+    Choose an image to load using the current method:
+    <table cellspacing="10">
+    <tr valign="top">
+    <td>
+    PNG files (converted from FITS):
+    <ul> <li> <a href='javascript:myLoad("png/casa.png");'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:myLoad("png/snr.png", {colormap:"heat"});'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:myLoad("png/m13.png", {scale:"linear", colormap:"sls"});'>m13 (via SkyView)</a>
+    <li> <a href='javascript:myLoad("png/i1000.png", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y)</a>
+    </ul>
+    </td>
+    <td>
+    FITS files:
+    <ul>
+    <li> <a href='javascript:myLoad("fits/3c58.fits");'>3c58 (Chandra)</a>
+    <li> <a href='javascript:myLoad("fits/3c273.fits");'>3c273 (Chandra)</a>
+    <li> <a href='javascript:myLoad("fits/ngkper.fits");'>gkper (Chandra)</a>
+    <li> <a href='javascript:myLoad("fits/ngc1316.fits", {scale:"linear"});'>ngc1316 (AIPS)</a>
+    </ul>
+    </td>
+    </tr>
+    <tr valign="top">
+    <td colspan="2">
+    <div class="JS9Menubar" id="standardMenubar"></div>
+    <div class="JS9" id="standard"></div>
+    </td>
+    </tr>
+    </table>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>

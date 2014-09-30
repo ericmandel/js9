@@ -1,0 +1,41 @@
+<p>
+<a name="contours">
+<h3>Contours</h3>
+
+Contours levels can be overlaid on the displayed image.
+
+<p>
+The <b>N</b> entry box controls the number of contours levels to draw.
+
+<p>
+Pressing the <b>Draw Contours</b> button will draw contours at the image levels
+currently listed in the <b>Levels:</b> list.
+
+<p>
+Pressing the <b>Set Min/Max</b> button will fill in the min and max entry boxes
+from the minimum and maximum values of the image.
+
+<p>
+Pressing the <b>Make Levels</b> will fill in the levels list with an evenly
+spaced list of level values from min to max excluding the min and max values
+themselves.
+
+<p>
+The <b>Binning</b> option allows the image data to be binned before
+the contours are computed.  Contours will be computed more quickly for
+binned images.  However, binning will cause the positions of the contours
+to be less accurate.
+
+<p>
+The <b>Smooth</b> option causes the image data to be smoothed by a Gaussian kernel
+with the specified sigma number of pixels before the contours are computed.
+This technique often is necessary to achieve good results for sparse data
+(e.g. event files).  However, it can affect the accuracy of the contours.
+
+<p>
+The <b>Quality</b> radio button chooses between one of two contouring methods.
+The faster option selects contours with up to 4 points per pixel.  The quality
+option selects contours with up to 8 points to pixel.
+
+
+

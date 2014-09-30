@@ -1,0 +1,104 @@
+<p>
+<a name="binning">
+<h3>Fits Binary Table Binning</h3>
+
+The rows in a FITS binary table must be binned before being displayed
+as an image.  By default, JS9 used a bin factor of 1 to extract the
+central 1024 x 1024 section of the data for display.
+
+<p>
+The Binning plugin allows you to bin FITS binary table data in other
+ways, by choosing the bin factor, the center and the image dimensions.
+It also allows you to filter rows of the table by means of arithmetic
+and boolean operations on the table columns.
+
+<p>
+When binning, you can set one or more of the following options:
+<ul>
+<li> <b>Bin Factor:</b> determines how many physical pixels are summed into
+an image pixel.
+<li> <b>Center:</b> the physical (i.e. file) coordinates around
+which to perform the binning.
+<li> <b>Dimensions:</b> the size of the image to display (i.e., the
+size after binning is performed).
+</ul>
+<p>
+For example, if a table has FITS (tlmin, tlmax) dimensions 4096 x 4096, then:
+<ul>
+<li> <b>bin: 4, dimensions: 1024 x 1024</b> will bin the entire file by 4 to
+produce a 1024 x 1024 image.
+<li> <b>bin: 2, dimensions: 1024 x 1024</b> will bin the central 2048 x 2048 
+section of the image by 2 to produce a 1024 x 1024 image.
+<li> <b>bin: 2, dimensions: 1024 x 1024, center: 1024, 1024</b> will bin the upper left
+2048 x 2048 section of the image by 2 to produce a 1024 x 1024 image.
+</ul> 
+
+<p>
+Table filtering allows you  to select rows from an FITS binary table
+(e.g., an X-ray event list) by checking each row against an expression
+involving the columns in the table. When a table is filtered, only
+valid rows satisfying these expressions are used to make the image.
+
+<p>
+A filter expression consists of an arithmetic or logical operation
+involving one or more column values from a table. Columns can be
+compared to other columns or to numeric constants. Standard JavaScript
+math functions can be applied to columns. JavaScript (or C) semantics
+are used when constructing expressions, with the usual precedence and
+associativity rules holding sway:
+<pre>
+  Operator                                Associativity
+  --------                                -------------
+  ()                                      left to right
+  !  (bitwise not) - (unary minus)        right to left
+  *  /                                    left to right
+  +  -                                    left to right
+  &lt; &lt;= &gt; &gt;=                               left to right
+  == !=                                   left to right
+  &  (bitwise and)                        left to right
+  ^  (bitwise exclusive or)               left to right
+  |  (bitwise inclusive or)               left to right
+  && (logical and)                        left to right
+  || (logical or)                         left to right
+  =                                       right to left
+</pre>
+For example, if energy and pha are columns in a table, 
+then the following are valid expressions:
+<pre>
+  pha > 1
+  energy == pha
+  pha > 1 && energy <= 2
+  Math.max(pha,energy)>=2.5
+</pre>
+
+<p>
+In addition to the standard JavaScript/C syntax, filter expressions can make use of
+IRAF-style <b>range lists</b> which specify a range of values. The
+syntax requires that the column name be followed by an '=' sign, which
+is followed by a range expression of the form:
+<pre>
+  col = :v            # col <= v in range
+  col = v:            # col >= v in range
+  col = v1:v2         # v1 <= col <= v2 in range
+</pre>
+The v values above must be numeric constants. 
+<p>
+[A note for DS9/funtools users: the DS9/funtools syntax supported a
+comma operator, which I now consider to be one of the bigger design
+mistakes of my career. The problem is that the operator either meant
+logical AND or logical OR, depending on context. This led to a lot of
+confusion. For JS9, the comma operator has been removed, so that you
+now explicitly and clearly specify the logical operator:
+<pre>
+  pi=1:4 || pi=7:9    # equivalent to DS9's pi=1:4,7:9
+  pi > 5 || pha > 6   # equivalent to DS9's pi > 5, pha > 6
+  pi > 5 && pha > 6   # this had no comma equivalent and caused confusion!
+</pre>
+Hmmm ... I might have mixed up the last two examples. QED]
+
+<p>
+Once the desired parameters have been set, pressing the <b>Rebin</b>
+button will filter, bin and display the data.
+
+
+

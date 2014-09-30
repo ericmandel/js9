@@ -1,0 +1,5609 @@
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals $, JS9, Option */ 
+
+"use strict";
+
+(function() {
+
+    var xhr = require("./xhr");
+
+    var Remote = require("./remote-service");
+
+    require("./image-services");
+    require("./catalog-services");
+
+
+    function serviceGo(div, display) {
+	function status(text) {
+	    $(div).find(".status").html(text);
+	}
+		
+	
+	var form = $(div).find(".JS9Archive-form")[0];
+
+	if ( form.ra.value === "" || form.dec.value === "" ) {
+	    return;
+	}
+
+	var w = parseFloat(form.width.value);
+	var h = parseFloat(form.height.value);
+
+	if ( form.dec.value[0] !== "-" && form.dec.value[0] !== "+" ) {
+	    form.dec.value  = "+" + form.dec.value;
+	}
+	if ( w > 60 ) {
+	    form.width.value = "60";
+	    w = 60;
+	}
+	if ( h > 60 ) {
+	    form.height.value = "60";
+	    h = 60;
+	}
+
+	var msrv = $(form).find(".server-menu")[0];
+	var msrc = $(form).find(".source-menu")[0];
+
+	var service = msrv.options[msrv.selectedIndex].value;
+	var source  = msrc.options[msrc.selectedIndex].value;
+	var server  = Remote.Services[service];
+
+	var text    = msrc.options[msrc.selectedIndex].innerHTML;
+	
+
+	server.retrieve({ name: form.object.value, e: "J2000", h: h.toString(), w: w.toString()
+			, r: form.ra.value, d: form.dec.value
+			, c: form.gzip.checked
+			, s: source
+			, source : text
+
+			, CORS: form.CORS.checked
+			, display: display
+		      }
+		    , status);
+    }
+
+    function getRADec(div, display) {
+	function status(text) {
+	    $(div).find(".status").html(text);
+	}
+
+	var form = $(div).find(".JS9Archive-form")[0];
+
+	if ( form.object.value !== "" ) {
+	    var simbad = encodeURI('http://hopper.si.edu/http/simbad?' + form.object.value);
+
+	    xhr({ url: simbad, title: "Name", status: status }, function(e, xhr) {
+		var coords = xhr.responseText.trim().split(" ");
+
+		if ( coords[0][1] !== ":" ) {
+		    form.ra.value  = coords[0];
+		    form.dec.value = coords[1];
+		} else {
+		    status("<span style='color: red;'>Object not found?</span>");
+		}
+	    });
+	} else {
+	    var im = JS9.GetImage({display: display});
+
+	    var coords = JS9.pix2wcs(im.wcs, im.raw.header.NAXIS1/2, im.raw.header.NAXIS2/2).split(/ +/);
+
+	    var c0     = JS9.PixToWCS(im.raw.header.NAXIS1/2+1, im.raw.header.NAXIS2/2+1, {display: im});
+	    //var coords = c0.str.split(" ");
+
+	    form.ra.value  = coords[0] || "";
+	    form.dec.value = coords[1] || "";
+
+	    var c1 = JS9.PixToWCS(1,                      im.raw.header.NAXIS2/2+1, {display: im});
+	    var c2 = JS9.PixToWCS(im.raw.header.NAXIS1+1, im.raw.header.NAXIS2/2+1, {display: im});
+
+	    form.width.value = Math.floor(Math.abs((c1.ra-c2.ra)*60)*Math.cos(c0.dec/57.2958)*10)/10;
+
+	    c1 = JS9.PixToWCS(im.raw.header.NAXIS1/2+1, 1, {display: im});
+	    c2 = JS9.PixToWCS(im.raw.header.NAXIS1/2+1, im.raw.header.NAXIS2+1, {display: im});
+
+	    form.height.value = Math.floor(Math.abs((c1.dec-c2.dec)*60)*10)/10;
+	}
+    }
+
+    function populateOptions(s) {
+	var select = s[0];
+	var dataArray = $(s).data("menu");
+	var submenu   = $(s).data("submenu");
+
+	select.options.length = 0;
+	$.each(dataArray, function(index, data) {
+	    select.options[select.options.length] = new Option(data.text, data.value);
+	});
+
+	
+
+	if ( submenu !== undefined ) {
+
+	    $(submenu).data("menu", dataArray[select.selectedIndex].subdata);
+	    populateOptions(submenu);
+
+	    s.change(function() {
+		$(submenu).data("menu", dataArray[select.selectedIndex].subdata);
+		populateOptions(submenu);
+	    });
+	}
+    }
+
+    function archInit() {
+
+	var div = this.div;
+
+	div.innerHTML = '<form class="JS9Archive-form">\
+	    <select class="service-menu"></select>\
+	    <select class="server-menu"></select>\
+	    <select class="source-menu"></select>\
+	    <span style="float: right;"><input type=button value="Set RA/Dec" class="get-ra-dec"><input type=button value="Retrieve Data" class="service-go"></span>	\
+	    <p>											\
+												\
+	    <table width="98%">									\
+	    <tr><td> Object: </td> <td> <input type=text name=object size=10> </td>		\
+		<td></td>									\
+		<td></td>									\
+		<td>&nbsp;&nbsp;</td>								\
+		<td> <input type=checkbox name=gzip> Use Compression</td>			\
+	    </tr>										\
+	    <tr><td> RA:  	</td><td>	<input type=text name=ra	size=10> </td>	\
+		<td> Dec: 	</td><td>	<input type=text name=dec	size=10> </td>	\
+		<td></td>									\
+		<td> <input type=checkbox name=CORS checked> Use CORS Proxy</td>		\
+	    <tr><td> Width: </td><td>	<input type=text name=width	size=10 value=15> </td>	\
+		<td> Height: </td><td>	<input type=text name=height	size=10 value=15> </td>	\
+	    </tr>										\
+	    </table>										\
+	    <div class=controls></div>								\
+	    <p><span class=status></span>							\
+	    </form>';
+
+	var mtyp = $(div).find(".service-menu");
+	var msrv = $(div).find(".server-menu");
+	var msrc = $(div).find(".source-menu");
+
+	$(mtyp).data("submenu", msrv);
+	$(msrv).data("submenu", msrc);
+
+	var display = this.display;
+
+	$(div).find(".service-go").on("mouseup", function () { serviceGo(div, display); });
+	$(div).find(".get-ra-dec").on("mouseup", function () { getRADec (div, display); });
+	
+	var imgmenu = [];
+	$.each(Remote.Services, function(i, service) {
+	    if ( service.type !== "image-service" ) { return; }
+
+	    imgmenu.push({ text: service.params.text, value: service.params.value, subdata: service.params.surveys });
+	});
+
+	var catmenu = [];
+	$.each(Remote.Services, function(i, service) {
+	    if ( service.type !== "catalog-service" ) { return; }
+
+	    catmenu.push({ text: service.params.text, value: service.params.value, subdata: service.params.surveys });
+	});
+
+	$(mtyp).data("menu", [ { text: "Image Servers",   value: "imgserv", subdata: imgmenu }
+			     , { text: "Catalog Servers", value: "catserv", subdata: catmenu }]);
+
+	populateOptions(mtyp);
+    }
+
+    JS9.RegisterPlugin("DataSources", "ArchivesCatalogs", archInit, {
+
+	    menu:     "view",
+
+	    menuItem: "Archives & Catalogs",
+	    winTitle: "Archives & Catalogs",
+	    winDims: [625, 175],
+
+	    help:	"archive/archive.html"
+    });
+
+}());
+
+
+
+},{"./catalog-services":3,"./image-services":5,"./remote-service":6,"./xhr":10}],2:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals $, JS9 */
+
+"use strict";
+
+
+var RemoteService = require("./remote-service");
+
+var Starbase = require("./starbase");
+var strtod   = require("./strtod");
+var template = require("./template");
+var xhr      = require("./xhr");
+
+function CatalogService(params) {
+    RemoteService.Register(params.value, this);
+
+    this.type   = "catalog-service";
+    this.params = params;
+
+    this.table2cat = function(im, table) {
+	var i;
+	var shape = this.params.shape;
+
+	var xcol = table[this.params.xcol];
+	var ycol = table[this.params.ycol];
+
+	var wcol = 1;
+	var hcol = 1;
+
+
+	var pos_func = function(im, x, y) {
+	    var coords = JS9.WCSToPix(x, y, {display: im});
+
+	    return { x: coords.x, y: coords.y };
+	};
+	var sizefunc;
+
+	switch ( shape ) {
+	 case "box":
+	    sizefunc = function(row) {
+		    return { width: 5, height: 5 };
+		};
+	    break;
+	 case "circle":
+	    sizefunc = function(row) {
+		    return { radius: 2.5 };
+		};
+	    break;
+	 case "ellipse":
+	    sizefunc = function(row) {
+		    return { width: 5, height: 5 };
+		};
+	    break;
+	}
+
+	var regs = [], pos, siz, reg;
+	for ( i = 0; i < table.data.length; i++ ) {
+	    pos = pos_func(im, table.data[i][xcol]*15, table.data[i][ycol]);
+	    siz = sizefunc(im, table.data[i][wcol], table.data[i][hcol]);
+
+	    reg = {   id: i.toString(), shape: shape
+			, x: pos.x, y: pos.y
+			, width: siz.width, height: siz.height, radius: siz.radius
+			, angle: 0
+		};
+
+	    regs[i] = reg;
+	}
+
+	return regs;
+    };
+
+    this.retrieve = function (values, messages) {
+
+	this.params.calc(values);
+	values.units = this.params.units;
+
+	var url = template(this.params.url, values);
+	
+	var catalog = this;
+
+	var reply = xhr({ url: url, title: "Catalog", status: messages, CORS: values.CORS }, function(e) {
+	    var table = new Starbase(reply.responseText, { type: { default: strtod }, units: values.units });
+	    var im    = JS9.GetImage({display: values.display});
+
+	    JS9.NewShapeLayer(values.name, JS9.Catalogs.opts, {display: im});
+	    JS9.RemoveShapes(values.name, {display: im});
+
+	    var shapes = catalog.table2cat(im, table);
+
+	    JS9.AddShapes(values.name, shapes, {color: "yellow"}, {display: im});
+	});
+    };
+}
+
+module.exports = CatalogService;
+
+
+
+},{"./remote-service":6,"./starbase":7,"./strtod":8,"./template":9,"./xhr":10}],3:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals */
+
+"use strict";
+
+var strtod   = require("./strtod");
+
+var CatalogService = require("./catalog-service");
+
+	var saoCat = new CatalogService({
+	      text:  "SAO"
+	    , value: "saoCat"		
+	    , surveys: [   { value: "tmc",	text: "Two Mass Catalog"	}
+			 , { value: "gsc2",	text: "Guide Star Catalog 2"		}
+			]
+	    , url: "http://www.cfa.harvard.edu/catalog/scat?catalog={s}&ra={r}&dec={d}&width={w}&height={h}&system={e}&compress={c}"
+	    , calc: function(values) {
+		    if ( values.c ) {
+			values.c = "gzip";
+		    }
+		    values.w    = values.w*60;
+		    values.h    = values.h*60;
+		    values.name = values.source + "@" + this.text;
+		}
+
+	    , shape: "circle"
+	    , xcol:  "ra", ycol: "dec"
+	
+	});
+
+	var vizCat = new CatalogService({
+	      text: "Vizier"
+	    , value: "vizCat"		
+	    , surveys: [   { value: "II/246",		text: "2MASS"				}
+			 , { value: "2MASX",		text: "2MASS Extended Source"		}
+			 , { value: "B/DENIS",		text: "DENIS 3rd Release 2005"		}
+			 , { value: "GLIMPSE",		text: "Spitzer's GLIMPSE"		}
+			 , { value: "GSC2.3",		text: "GSC-II Catalog, Version 2.3.2"	}
+			 , { value: "HIP2",		text: "Hipparcos (2007)"		}
+			 , { value: "IRAS",		text: "IRAS "				}
+			 , { value: "NVSS",		text: "NRAO VLA Sky Survey"		}
+			 , { value: "SDSS-DR9",		text: "SDSS Photometric Catalog"	}
+			 , { value: "Tycho-2",		text: "Tycho-2"				}
+			 , { value: "UCAC4",		text: "UCAC 4th Release"		}
+			 , { value: "USNO-A2",		text: "USNO-A2"				}
+			 , { value: "USNO-B1",		text: "USNO-B1"				}
+			 , { value: "WISE",		text: "WISE"				}
+			]
+	    , url: "http://vizier.u-strasbg.fr/viz-bin/asu-tsv?-source={s}&-out.add=_RAJ,_DEJ&-c={r}{d}&-c.bm={w}x{h}&-oc.form=s&-out.meta=h"
+	    , calc: function(values) {
+		    if ( values.c ) {
+			values.c = "gzip";
+		    }
+		    //values.r = (strtod(values.r) * 15).toFixed(4);
+		    //values.d =  strtod(values.d);
+		    //values.d = (values.d < 0 ? "-" : "+" ) + values.d.toFixed(4);
+
+		    values.name = values.source + "@" + this.text;
+		}
+
+	    , shape: "circle"
+	    , xcol:  "_RAJ2000", ycol: "_DEJ2000"
+	
+	});
+
+},{"./catalog-service":2,"./strtod":8}],4:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals xhr, Blob, Fitsy */
+
+"use strict";
+
+
+var RemoteService = require("./remote-service");
+var template      = require("./template");
+var xhr           = require("./xhr");
+
+function ImageService(params) {
+    RemoteService.Register(params.value, this);
+
+    this.type   = "image-service";
+    this.params = params;
+
+    this.retrieve = function (values, messages) {
+
+	var display = values.display;
+
+	params.calc(values);
+
+	var url = template(params.url, values);
+
+	
+	xhr({ url: url, title: "Image", status: messages, type: 'blob', CORS: values.CORS }, function(e, xhr) {
+
+	    if ( params.handler === undefined ) {
+		var blob      = new Blob([xhr.response]);
+		blob.name = values.name;
+
+		if ( Fitsy.handleFITSFile === undefined ) {
+		    Fitsy.handleFITSFiles(undefined, [blob], { display: display });
+		} else {
+		    Fitsy.handleFITSFile(blob, { display: display });
+		}
+	    } else {
+	    	params.handler(e, xhr, params, values);
+	    }
+	});
+    };
+}
+
+module.exports = ImageService;
+
+},{"./remote-service":6,"./template":9,"./xhr":10}],5:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals */
+
+"use strict";
+
+var ImageService = require("./image-service");
+
+	var imageName = function (values) {
+	    var plus = "";
+	    var name;
+
+	    if ( values.name !== "" ) {
+		name = values.name + " " + values.source;
+	    } else {
+	        name = values.source + " " + values.r + plus + values.d;
+	    }
+
+	    return name;
+	};
+
+	var saoDSS = new ImageService({
+	      text: "DSS1@SAO"
+	    , value: "saoDSS"
+	    , surveys: [ { value: "DSS1", text: "DSS1" } ]
+	    , url: "http://www.cfa.harvard.edu/archive/dss?r={r}&d={d}&w={w}&h={h}&e={e}&c={c}"
+	    , calc: function(values) {
+		    if ( values.c ) {
+			values.c = "gzip";
+		    }
+		    values.name  = imageName(values);
+		}
+	});
+
+	var stsDSS = new ImageService({
+	      text: "DSS@Stsci"
+	    , value: "stsDSS"
+	    , surveys: [   { value: "poss2ukstu_ir",	text: "StSci DSS2 IR"	}
+			 , { value: "poss2ukstu_red",	text: "StSci DSS2 Red"	}
+			 , { value: "poss2ukstu_blue",	text: "StSci DSS2 Blue"	}
+			 , { value: "poss1_red", 	text: "StSci DSS1 Red"	}
+			 , { value: "poss1_blue",	text: "StSci DSS1 Blue"	}
+			]
+	    , url: "http://stdatu.stsci.edu/cgi-bin/dss_search?r={r}&d={d}&w={w}&h={h}&e={e}&c={c}&v={s}&f=fits"
+	    , calc: function(values) {
+		    if ( values.c ) {
+			values.c = "gz";
+		    } else {
+			values.c = "none";
+		    }
+		    values.name  = imageName(values);
+		}
+	});
+
+	var esoDSS = new ImageService({
+	      text: "DSS@ESO"
+	    , value: "esoDSS"
+	    , surveys: [   { value: "DSS2-infrared",	text: "ESO DSS2 IR"	}
+			 , { value: "DSS2-red",    	text: "ESO DSS2 Red"	}
+			 , { value: "DSS2-blue",	text: "ESO DSS2 Blue"	}
+			 , { value: "DSS1",		text: "ESO DSS1"	}
+			]
+	    , url: "http://archive.eso.org/dss/dss?ra={r}&dec={d}&equinox=J2000&x={w}&y={h}&mime-type={c}&Sky-Survey={s}"
+	    , calc: function(values) {
+		    if ( values.c ) {
+			values.c = "display/gz-fits";
+		    } else {
+			values.c = "application/x-fits";
+		    }
+		    values.name  = imageName(values);
+		}
+	});
+
+	var ipac2m  = new ImageService({
+	      text: "2Mass@IPAC"
+	    , value: "ipac2m"
+	    , surveys: [   { value: "j", 		text: "IPAC 2Mass J"		}
+			 , { value: "h", 		text: "IPAC 2Mass H"		}
+			 , { value: "k", 		text: "IPAC 2Mass K"		}
+			]
+	    , url: "http://irsa.ipac.caltech.edu/cgi-bin/Oasis/2MASSImg/nph-2massimg?objstr={r},{d}&size={radius}&band={s}"
+	    , calc: function(values) {
+		    values.radius = Math.floor(Math.sqrt(values.w*values.w+values.h*values.h)*60);
+		    values.name   = imageName(values);
+		}
+	});
+
+	var dasch  = new ImageService({
+	      text: "DASCH"
+	    , value: "dasch"
+	    , surveys: [   { value: "plates", 		text: "Plates"		} ]
+
+	    , url: "http://dasch.rc.fas.harvard.edu/showtext.php?listflag=0&dateflag=dateform=j%20&coordflag=&radius=200&daterange=&seriesflag=&plateNumberflag=&classflag=&typeflag=%20-T%20wcsfit%20&pessimisticflag=&bflag=-j&nstars=5000&locstring=12:00:00%2030:00:00%20J2000"
+
+	    , calc: function(values) {
+		    values.radius = Math.min(Math.floor(Math.sqrt(values.w*values.w+values.h*values.h)*60), 600);
+		    values.name   = imageName(values);
+	    }
+
+	    , picker: "<input type=button value='pick' class='picker'>"
+	    , controls: "<tr>><td>Series</td>   <td><input type=text size=10 name=series></td>		\n\
+	    		      <td>Plate No</td> <td><input type=text size=10 name=plate></td>           \n\
+	    		      <td>Class</td>    <td><input type=text size=10 name=class></td></tr>      \n\
+	    		  <tr><td>Date From</td><td><input type=text size=10 name=datefr></td>          \n\
+	    		      <td>Date To</td>  <td><input type=text size=10 name=dateto></td></tr>      \n\
+			 "
+	    , handler: function (e, xhr, params, values) {
+	    	
+	    }
+	});
+
+//	var cds = new ImageService({
+//	      text: "CDS Aladin Server"
+//	    , value: "aladin@cds"
+//	    , surveys: [   { value: "j", 		text: "IPAC 2Mass J"		}
+//			 , { value: "h", 		text: "IPAC 2Mass H"		}
+//			 , { value: "k", 		text: "IPAC 2Mass K"		}
+//			]
+//	    , url: "http://irsa.ipac.caltech.edu/cgi-bin/Oasis/2MASSImg/nph-2massimg?objstr={r},{d}&size={radius}&band={s}"
+//	    , calc: function(values) {
+//		    values.radius = Math.floor(Math.sqrt(values.w*values.w+values.h*values.h)*60);
+//		    values.name   = imageName(values);
+//		}
+//	});
+
+//	skyvew  = new ImageService({
+//	      id: "skyvew"
+//	    , "surveys", [ ]
+//	    , url: "http://skys.gsfc.nasa.gov/cgi-bin/images?VCOORD={ra},{dec}&SURVEY={s}&SFACTR={size}&RETURN=FITS"
+//	    , calc: function(values) {
+//		    values.size = Math.floor((values.w+values.h)/2)
+//		    values.name = values.name + " " + values.source;
+//		}
+//	})
+
+
+},{"./image-service":4}],6:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+
+"use strict";
+
+
+exports.Services = {};
+
+exports.Register = function(name, obj) {
+	exports.Services[name] = obj;
+};
+
+},{}],7:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+
+"use strict";
+
+
+function I(x) { return x; }
+
+function starbase_Dashline(dash) {
+    var i;
+
+    for ( i = 0; i < dash.length; i++ ) {
+	if ( dash[i].match(/^-+$/) === null ) {
+	    return 0;
+	}
+    }
+
+    return i;
+}
+
+function Starbase(data, options) {
+    var i, j;
+
+    this.head = {};
+    this.type = [];
+    this.data = [];
+
+    data = data.replace(/\s+$/,"").split("\n");
+    var line = 0;
+
+    if ( options && options.skip ) {
+	while ( data[line][0] === options.skip ) { line++; }
+    }
+
+    this.headline = data[line++].trim().split(/ *\t */);
+    if ( options.units ) {
+	this.unitline = data[line++].trim().split(/ *\t */);
+    }
+    this.dashline = data[line++].trim().split(/ *\t */);
+
+    var dashes = starbase_Dashline(this.dashline);
+
+    // Read lines until the dashline is found
+    //
+    while ( dashes === 0 || dashes !== this.headline.length ) {
+
+	if ( !options.units ) {
+	    this.headline = this.dashline;
+	} else {
+	    this.headline = this.unitline;
+	    this.unitline = this.dashline;
+	}
+
+	this.dashline = data[line++].trim().split(/ *\t */);
+
+
+	dashes = starbase_Dashline(this.dashline);
+    }
+
+    // Create a vector of type converters
+    //
+    for ( i = 0; i < this.headline.length; i++ ) {
+	if ( options && options.type && options.type[this.headline[i]] ) {
+	    this.type[i] = options.type[this.headline[i]];
+	} else {
+	    if ( options && options.type && options.type.default ) {
+		this.type[i] = options.type.default;
+	    } else {
+		this.type[i] = I;
+	    }
+	}
+    }
+
+    // Read the data in and convert to type[]
+    //
+    for ( j = 0; line < data.length; line++, j++ ) {
+	this.data[j] = data[line].split('\t');
+
+	for ( i = 0; i < this.data[j].length; i++ ) {
+	    this.data[j][i] = this.type[i](this.data[j][i]);
+	}
+    }
+
+    for ( i = 0; i < this.headline.length; i++ ) {
+	this[this.headline[i]] = i;
+    }
+}
+
+module.exports = Starbase;
+
+
+},{}],8:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals */ 
+
+'use strict';
+
+function Strtod(str) {
+    var l = str.trim().split(/[: ]/);
+    var x;
+
+    if ( l.length === 3 ) {
+	var sign = 1;
+
+	if ( l[0].substr(0, 1) === "-" ) {
+	    sign = -1;
+	}
+
+	var h = parseFloat(l[0]);
+	var m = parseFloat(l[1]);
+	var s = parseFloat(l[2]);
+
+	x = sign * (Math.abs(h) + m/60.0 + s/3600.0);
+    } else {
+	x = parseFloat(str);
+    }
+
+    if ( isNaN(x) ) { return str; }
+
+    return x;
+}
+
+module.exports = Strtod;
+
+},{}],9:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+
+"use strict";
+
+
+    function strrep(str, n) {
+	var i, s = '';
+
+	for ( i = 0; i < n; i++ ) { s += str; }
+
+	return s;
+    }
+
+function template(text,data) {
+	    
+    return text.replace(/\{([a-zA-Z0-9_.%]*)\}/g,
+	function(m,key){
+	    var type, prec, widt = 0, fmt, i;
+	    var val = data;
+	
+	    key = key.split("%");
+
+	    if ( key.length <= 1 ) {
+		fmt = "%s";
+	    } else {
+		fmt = key[1];
+	    }
+
+	    key = key[0];
+	    key = key.split(".");
+
+	    for ( i = 0; i < key.length; i++ ) {
+		if ( val.hasOwnProperty(key[i]) ) {
+		    val = val[key[i]];
+		} else {
+		    return "";
+		}
+	    }
+
+	    type = fmt.substring(fmt.length-1);
+	    prec = fmt.substring(0, fmt.length-1);
+
+	    prec = prec.split(".");
+
+	    widt = prec[0] | 0;
+	    prec = prec[1] | 0;
+
+	    switch ( type ) {
+	     case "s":
+		val = val.toString();
+		break;
+	     case "f":
+		val = val.toFixed(prec);
+		break;
+	     case "d":
+		val = val.toFixed(0);
+		break;
+	    }
+
+	    if ( widt !== 0 && widt > val.length ) {
+		if ( widt > 0 ) {
+		    val = strrep(" ", widt-val.length) + val;
+		} else {
+		    val = val + strrep(" ", widt-val.length);
+		}
+	    }
+
+	    return val;
+	}
+    );
+}
+
+module.exports = template;
+
+},{}],10:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals XMLHttpRequest */ 
+
+'use strict';
+
+    function xhr(params, func) {
+	var status = params.status;
+	var title = "";
+
+	if ( params.CORS ) {
+	    params.url = params.url.replace(/\?/g, "@");
+	    params.url = params.url.replace(/&/g, "!");
+	    //params.url = params.url.replace(/\+/g, "");
+
+	    params.url = encodeURI(params.url);
+
+	    params.url="http://hopper.si.edu/http/CORS-proxy?Q=" + params.url;
+	}
+
+	var _xhr = new XMLHttpRequest();
+
+	_xhr.open('GET', params.url, true);
+
+	if ( params.title ) {
+	    title = params.title;
+	}
+	if ( params.type ) {
+	    _xhr.responseType = params.type;
+	}
+
+	if ( status !== undefined ) {
+	    
+	    _xhr.addEventListener("progress"	, function(e) { status(title + " progress " + e.loaded.toString());	});
+	    _xhr.addEventListener("error"	, function(e) { status(title + " service error"); 			});
+	    _xhr.addEventListener("abort"	, function(e) { status(title + " service aborted"); 			});
+	}
+	_xhr.onload = function(e) {
+	    if ( this.readyState === 4 ) {
+		if ( this.status === 200 || this.status === 0 ) {
+		    if ( status !== undefined ) { status(""); }
+
+		    func(e, this);
+		}
+	    }
+	};
+	_xhr.send();
+
+	return _xhr;
+    }
+
+module.exports = xhr;
+
+
+},{}]},{},[1])
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals $, JS9 */ 
+
+"use strict";
+
+
+(function() {
+
+    function reBinImage(div, display) {
+
+    JS9.debug = 2;
+
+	var i, j;
+	var im   = JS9.GetImage({display: display});
+	var form = $(div).find(".binning-form")[0];
+
+	if ( !im ) { return; }
+
+	var options = $.extend(true, {}, Fitsy.options
+	    , { table: { cx: form.cx.value , cy: form.cy.value  
+	    	       , nx: form.nx.value , ny: form.ny.value
+		       , bin: form.bin.value , filter: form.filter.value }
+	      });
+
+	var hdu = im.raw.hdu;
+
+	if ( hdu.type === "image" ) {
+
+	    var bin = Math.round(Number(form.bin.value));
+	    hdu.bin        = bin;
+	    form.bin.value = bin;
+
+	    var nx = hdu.head["NAXIS1"]
+	    var ny = hdu.head["NAXIS2"]
+
+	    var xx = Math.round(nx/bin);
+	    var yy = Math.round(ny/bin);
+
+	    hdu.image = new Float32Array(nx*ny);
+
+	    for ( j = 0; j < ny; j++ ) {
+	    for ( i = 0; i < nx; i++ ) {
+		hdu.image[Math.floor(j/bin)*xx+Math.floor(i/bin)] += hdu.filedata[j*nx+i];
+	    }
+	    }
+
+	    hdu.dmin = Number.MAX_VALUE;
+	    hdu.dmax = Number.MIN_VALUE;
+
+	    for ( i = 0; i < xx*yy; i++ ) {
+		hdu.dmin    = Math.min(hdu.dmin, hdu.image[i]);
+		hdu.dmax    = Math.max(hdu.dmax, hdu.image[i]);
+	    }
+
+	    hdu.axis[1] = xx;
+	    hdu.axis[2] = yy;
+	    hdu.bitpix  = -32;
+
+	    hdu.head  = Fitsy.clone(hdu.filehead);
+	    hdu.card  = Fitsy.clone(hdu.filecard);
+
+	    // Simple standard FITS WCS
+	    //
+	    Fitsy.cardcopy(hdu, "CDELT1",   hdu, "CDELT1", undefined, function(x) { return x*bin; });
+	    Fitsy.cardcopy(hdu, "CRPIX1",   hdu, "CRPIX1", undefined, function(x) { return x/bin; });
+	    Fitsy.cardcopy(hdu, "CDELT2",   hdu, "CDELT2", undefined, function(x) { return x*bin; });
+	    Fitsy.cardcopy(hdu, "CRPIX2",   hdu, "CRPIX2", undefined, function(x) { return x/bin; });
+
+	    // Adjust the CD Matrix
+	    //
+	    Fitsy.cardcopy(hdu, "CD1_1",    hdu, "CD1_1", undefined, function(x) { return x/bin; });
+	    Fitsy.cardcopy(hdu, "CD1_2",    hdu, "CD1_2", undefined, function(x) { return x/bin; });
+	    Fitsy.cardcopy(hdu, "CD2_1",    hdu, "CD2_1", undefined, function(x) { return x/bin; });
+	    Fitsy.cardcopy(hdu, "CD2_2",    hdu, "CD2_2", undefined, function(x) { return x/bin; });
+
+
+	    // DSS-II image - this is just a guess
+	    //
+	    Fitsy.cardcopy(hdu, "PLTSCALE", hdu, "PLTSCALE", undefined, function(x) { return x*bin; });
+	    Fitsy.cardcopy(hdu, "XPIXELSZ", hdu, "XPIXELSZ", undefined, function(x) { return x*bin; });
+	    Fitsy.cardcopy(hdu, "CNPIX1",   hdu, "CNPIX1",   undefined, function(x) { return x/bin; });
+	    Fitsy.cardcopy(hdu, "YPIXELSZ", hdu, "YPIXELSZ", undefined, function(x) { return x*bin; });
+	    Fitsy.cardcopy(hdu, "CNPIX2",   hdu, "CNPIX2",   undefined, function(x) { return x/bin; });
+
+	    // Fix up some random commonly used keywords
+	    //
+	    Fitsy.cardcopy(hdu, "PIXSCALE", hdu, "PIXSCALE", undefined, function(x) { return x*bin; });
+	    Fitsy.cardcopy(hdu, "SECPIX",   hdu, "SECPIX",   undefined, function(x) { return x*bin; });
+	    Fitsy.cardcopy(hdu, "SECPIX1",  hdu, "SECPIX1",  undefined, function(x) { return x*bin; });
+	    Fitsy.cardcopy(hdu, "SECPIX2",  hdu, "SECPIX2",  undefined, function(x) { return x*bin; });
+	    Fitsy.cardcopy(hdu, "XPIXSIZE", hdu, "XPIXSIZE", undefined, function(x) { return x*bin; });
+	    Fitsy.cardcopy(hdu, "YPIXSIZE", hdu, "YPIXSIZE", undefined, function(x) { return x*bin; });
+	    Fitsy.cardcopy(hdu, "PIXSCAL1", hdu, "PIXSCAL1", undefined, function(x) { return x*bin; });
+	    Fitsy.cardcopy(hdu, "PIXSCAL2", hdu, "PIXSCAL2", undefined, function(x) { return x*bin; });
+
+	    Fitsy.cardcopy(hdu, "LTM1_1",   hdu, "LTM1_1", 1.0, function(x) { return x/bin; });
+	    Fitsy.cardcopy(hdu, "LTM1_2",   hdu, "LTM1_2", 0.0, function(x) { return x/bin; });
+	    Fitsy.cardcopy(hdu, "LTM2_1",   hdu, "LTM2_1", 0.0, function(x) { return x/bin; });
+	    Fitsy.cardcopy(hdu, "LTM2_2",   hdu, "LTM2_2", 1.0, function(x) { return x/bin; });
+
+	    Fitsy.cardcopy(hdu, "LTV1",     hdu, "LTV1",   0.0, function(x) { return x/bin; });
+	    Fitsy.cardcopy(hdu, "LTV2",     hdu, "LTV2",   0.0, function(x) { return x/bin; });
+
+	    JS9.RefreshImage(hdu, {display: display});
+	} else {
+	    Fitsy.readTableHDUData(hdu.fits, hdu, options, function (hdu) {
+	        JS9.RefreshImage(hdu, {display: display});
+	    });
+	}
+    }
+
+    function getBinParams(div, display) {
+	if ( display === undefined ) {
+	    div     = this.div;
+	    display = this.display;
+	}
+	var im   = JS9.GetImage({display: display});
+
+	if ( im ) {
+	    var form = $(div).find(".binning-form")[0];
+
+	    if ( im.raw.hdu !== undefined ) {
+		form.rebin.disabled = false;
+		form.bin.disabled = false;
+
+	        if ( im.raw.hdu.table !== undefined ) {
+		    form.bin.value = im.raw.hdu.table.bin;
+		     form.cx.value = im.raw.hdu.table.cx;
+		     form.cy.value = im.raw.hdu.table.cy;
+		     form.nx.value = im.raw.hdu.table.nx;
+		     form.ny.value = im.raw.hdu.table.ny;
+		     form.filter.value = im.raw.hdu.table.filter || "";
+
+
+		     form.cx.disabled = false;
+		     form.cy.disabled = false;
+		     form.nx.disabled = false;
+		     form.ny.disabled = false;
+		     form.filter.disabled = false;
+		} else {
+		    if ( im.raw.hdu.bin != undefined ) {
+			form.bin.value = im.raw.hdu.bin;
+		    } else {
+			form.bin.value = 1;
+		    }
+
+		     form.cx.disabled = true;
+		     form.cy.disabled = true;
+		     form.nx.disabled = true;
+		     form.ny.disabled = true;
+		     form.filter.disabled = true;
+		}
+	    } else {
+		form.rebin.disabled = true;
+		  form.bin.disabled = true;
+	    }
+	}
+    }
+
+    function binningInit() {
+	var div = this.div;
+	var display = this.display;
+	var win = this.winHandle;
+	var disclose = "";
+	var im  = JS9.GetImage({display: this.display});
+
+	if( !im || (im && (!im.raw.hdu || !im.raw.hdu.table)) ){
+	    div.innerHTML = '<p><center>Binning is available for FITS binary tables.</center>';
+	    return;
+	}
+
+	if( !win ){
+	    disclose = 'disabled="disabled"';
+	}
+
+	$(div).html('<form class="binning-form" style="margin: 5px">				\
+	    <table><tr>	<td>Bin&nbsp;Factor</td>							\
+			<td><input type=text name=bin value=1 size=10 style="text-align:right;"></td>	\
+			<td>&nbsp;</td>									\
+			<td>&nbsp;</td>									\
+		   </tr>										\
+	           <tr>	<td>Center</td>									\
+			<td><input type=text name=cx size=10 style="text-align:right;"></td>		\
+			<td><input type=text name=cy size=10 style="text-align:right;"></td>    	\
+			<td>&nbsp;</td>									\
+		   </tr>										\
+	           <tr>	<td>Image&nbsp;Size</td>								\
+			<td><input type=text name=nx size=10 style="text-align:right;"></td>		\
+			<td><input type=text name=ny size=10 style="text-align:right;"></td>		\
+			<td>&nbsp;</td>									\
+		   </tr>										\
+	           <tr>	<td>Filter</td>									\
+			<td colspan="2"><input type=text name=filter size="24" style="text-align:left;"></td>	\
+			<td>&nbsp;</td>									\
+			<td>&nbsp;</td>									\
+		   </tr>										\
+	           <tr>	<td>&nbsp;</td>									\
+			<td>&nbsp;</td>									\
+			<td>&nbsp;</td>									\
+			<td>&nbsp;</td>									\
+		   </tr>										\
+		   <tr>											\
+		       	<td><input type=button name=rebin value="Rebin" class="rebin-image"></td>	\
+			<td>&nbsp;</td>									\
+			<td>&nbsp;</td>									\
+		       	<td><input type=button name=close value="Close" class="close-image" ' + disclose + '></td>	\
+		   </tr>										\
+	    </table>											\
+	    </form>');
+
+// 	click doesn't work on localhost on a Mac using Chrome/Safari, but mouseup does!
+//	$(div).find(".rebin-image").on("click", function () { reBinImage(div, display); });
+//	$(div).find(".close-image").on("click", function () { if( win ){ win.close(); } });
+	$(div).find(".rebin-image").on("mouseup", function () { reBinImage(div, display); });
+	$(div).find(".close-image").on("mouseup", function () { if( win ){ win.close(); } });
+
+	if ( im ) {
+	    getBinParams(div, display);
+	}
+    }
+
+    JS9.RegisterPlugin("Fits", "Binning", binningInit, {
+	    menu: "view",
+
+            winTitle: "FITS Binary Table Binning",
+	    winResize: true,
+
+            menuItem: "Binning",
+
+	    onimageload:    binningInit,
+	    onimagedisplay: binningInit,
+
+	    help:     "fitsy/binning.html",
+
+            winDims: [400, 180],
+    });
+}());
+require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"Ll8vMw":[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, bitwise: true */
+/*globals Float32Array, Int32Array, JS9, $ */ 
+
+"use strict";
+
+var ndops =                     require("typed-array-function");
+    ndops = ndops.extend(ndops, require("typed-array-ops"));
+    ndops = ndops.extend(ndops, require("typed-numeric-uncmin"));
+
+    ndops.rotate  = require("typed-array-rotate");
+
+ndops.mask    = require("./mask.js");
+var template  = require("./template");
+
+var typed = ndops;
+
+ndops.zeros   = function zeros(shape, Type) {
+  var i, sz = 1;
+  if ( Type === undefined ) {
+	Type = Float32Array;
+  }
+
+  for(i=0; i<shape.length; ++i) {
+    sz *= shape[i];
+  }
+
+  return ndops.ndarray(new Type(sz), shape);
+};
+
+ndops.fill = typed(function (a, func) {
+    var index = [];
+    // ----
+	a = func.apply(undefined, index);
+});
+
+
+
+
+      exports.fixupDiv = function (plugin) {
+
+	if ( plugin.winType === "div" ) {
+	    plugin.outerdivjq.find(".drag-handle").html(plugin.plugin.opts.winTitle);
+
+	    var toolbar = plugin.outerdivjq.find(".JS9PluginToolbar-div");
+
+	    toolbar.css("cursor", "default");
+	    toolbar.css("right", 0);
+	}
+      };
+
+var imops = {};
+
+ndops.maxvalue = ndops.sup;
+ndops.minvalue = ndops.inf;
+
+ndops.size = function(shape) {
+        var i;
+        var size = 1;
+        for ( i = 0; i < shape.length; i++ ) {
+            size *= shape[i];
+        }
+
+        return size;
+};
+
+
+ndops.reshape = function(a, shape) {
+
+    if ( a.size !== ndops.size(shape) ) {
+        throw new Error("sizes not equil " + a.size + " != ", + ndops.size(shape));
+    }
+
+    return ndops.ndarray(a.data, shape);
+};
+
+ndops.section = function(a, sect) {
+        var x1 = sect[0][0];
+        var x2 = sect[0][1];
+        var y1 = sect[1][0];
+        var y2 = sect[1][1];
+
+        return a.lo(y1, x1).hi(y2-y1, x2-x1);
+};
+
+ndops.print = function(a, width, prec) {
+    var x, y;
+    var line;
+
+    if ( width === undefined ) { width = 7; }
+    if ( prec === undefined  ) { prec  = 3; }
+
+    if ( a.shape.length === 1 ) {
+        line = "";
+        for (x=0;x<a.shape[0];++x) {
+            line += a.get(x).toFixed(prec) + " ";
+            //if ( x > 17 ) { break;}
+        }
+        console.log(line);
+    } else {
+        for ( y = a.shape[0]-1; y >= 0; --y ) {
+          line = "";
+          for ( x = 0; x < a.shape[1]; ++x ) {
+            line += a.get(y, x).toFixed(prec) + " ";
+          }
+
+          console.log(line);
+        }
+        console.log("\n");
+    }
+};
+
+ndops._hist = typed(function (a, width , min, max) {
+    var size = (max-min) / width;
+    var  h   = new Int32Array(size+1);
+
+    // -----
+        var bin = Math.max(0, Math.min(size, Math.round((a-min)/width))) | 0;	// | is truncate
+        h[bin]++;
+
+    // -----
+
+   return h;
+});
+
+
+
+ndops.hist = function(a, width, min, max) {
+    var hist = {};
+    var reply;
+
+    if ( min === undefined ) {
+        min = ndops.minvalue(a);
+    }
+    if ( max === undefined ) {
+        max = ndops.maxvalue(a);
+    }
+    if ( width === undefined ) {
+        width = Math.max(1, (max-min) / 250);
+    }
+
+    hist.raw   = a;
+
+    hist.min   = min;
+    hist.max   = max;
+    hist.width = width;
+
+    reply = ndops._hist(a, width, min, max);
+    hist.data = ndops.ndarray(reply, [reply.length]);
+
+    return hist;
+};
+
+ndops.proj = function(a, axis) {
+        var sect;
+	var i;
+
+        //var proj = ndops.ndarray(ndops._proj(a, axis, new Float32Array(a.shape[axis === 0 ? 1 : 0]), [a.shape[axis === 0 ? 1 : 0]]));
+        
+	var proj = {};
+        proj.n   = a.shape[axis === 1 ? 0 : 1];
+	proj.x   = a.shape[axis];
+
+        proj.sum = [];
+        proj.avg = [];
+        proj.med = [];
+
+        var copy = ndops.assign(ndops.zeros(a.shape), a);
+
+        for ( i = 0; i < proj.n; i++ ) {
+            if ( axis === 0 ) {
+                sect = ndops.section(copy, [[i, i+1], [0, proj.x]]);
+            } else {
+                sect = ndops.section(copy, [[0, proj.x], [i, i+1]]);
+            }
+
+            proj.sum[i] = ndops.sum(sect);
+            proj.avg[i] = ndops.sum(sect)/proj.n;
+            proj.med[i] = ndops.median(sect);
+        }
+
+        return proj;
+};
+
+ndops.qcenter = typed(function (a) {
+	var start = [], end = [];
+	var max = Number.MIN_VALUE;
+	var idx;
+	var iX = 0, iY = 0;
+
+	start[0]++;
+	start[1]++;
+	  end[0]--;
+	  end[1]--;
+
+	// ----
+	    var sum = 
+		    + a[iY-1][iX-1] 
+		    + a[iY-1][iX  ] 
+		    + a[iY-1][iX+1] 
+		    + a[iY  ][iX-1] 
+	    	    + a[iY  ][iX  ]
+		    + a[iY  ][iX+1] 
+		    + a[iY+1][iX-1] 
+		    + a[iY+1][iX  ] 
+		    + a[iY+1][iX+1];
+
+	    if ( max < sum ) {
+		max = sum;
+		idx = [iX, iY];
+	    }
+	// ----
+
+	return idx;
+});
+
+ndops._imcnts = typed({ consider: { c: false } }, function (c, a, b) { c[b] += a; });
+
+ndops.imcnts = function (a, b, n) {
+    var reply = {};
+    reply.cnts = ndops.ndarray(ndops._imcnts(new Float32Array(n), a, b));
+    reply.area = ndops.hist(b, 1, 0, n-1).data;
+
+    return reply;
+};
+
+
+ndops._centroid = typed(function (a, nx, ny) {
+    var sum   = 0;
+    var sumx  = 0;
+    var sumy  = 0;
+    var sumxx = 0;
+    var sumyy = 0;
+
+    var r = nx*nx+ny*ny;
+
+    var iX = 0, iY = 0;
+
+    // ----
+	if ( a > 0 && iX*iX + iY*iY < r ) {
+	    sum    += a;
+	    sumx   += a * iX;
+	    sumxx  += a * iX * iX;
+	    sumy   += a * iY;
+	    sumyy  += a * iY * iY;
+	}
+
+    // ----
+
+    var reply = {};
+
+    reply.sum  = sum;
+    reply.cenx = sumx/sum;
+    reply.ceny = sumy/sum;
+
+    reply.rmom = ( sumxx - sumx * sumx / sum + sumyy - sumy * sumy / sum ) / sum;
+
+    if ( reply.rmom <= 0 ) {
+	reply.fwhm = -1.0;
+    } else {
+	reply.fwhm = Math.sqrt(reply.rmom)  * 2.354 / Math.sqrt(2.0);
+    }
+
+    return reply;
+});
+
+ndops.centroid = function(a) {
+    var reply = ndops._centroid(a, a.shape[0], a.shape[1]);
+
+    return reply;
+};
+
+ndops.flatten = function() {
+        var size = 0;
+	var i, n, a;
+
+        for ( i = 0; i < arguments.length; i++ ) {
+            size += arguments[i].size;
+        }
+
+        var reply = ndops.zeros([size]);
+        var off   = 0;
+
+        for ( n = 0; n < arguments.length; n++ ) {
+            a = arguments[n];
+
+            ndops.assign(ndops.ndarray(reply.data, a.shape, undefined, off), a);
+
+            off += a.size;
+        }
+
+        return reply;
+};
+
+ndops.median = function(a) {
+        var data = ndops.assign(ndops.zeros(a.shape), a);
+
+	Array.prototype.sort.call(data.data, function(a, b) { return a-b; });
+
+        var reply = data.data[Math.round((data.size-1)/2.0)];
+
+        return reply;
+};
+
+
+ndops.rms = typed(function (a) {
+    var sum = 0;
+    var squ = 0;
+    // ----
+	sum +=   a;
+	squ += a*a;
+    // ----
+
+    var mean = sum/a.size;
+
+    return Math.sqrt((squ - 2*mean*sum + a.size*mean*mean)/(a.size-1));
+});
+
+ndops.rmsClipped = typed(function (a, min, max) {
+    var n = 0;
+    var sum = 0;
+    var squ = 0;
+    // ----
+	if ( (min === null || a > min) && (max === null || a < max) ) {
+	    n++;
+	    sum +=   a;
+	    squ += a*a;
+	}
+    // ----
+
+    var mean = sum/n;
+
+    return Math.sqrt((squ - 2*mean*sum + n*mean*mean)/(n-1));
+});
+
+ndops.meanClipped = typed(function (a, min, max) {
+    var n = 0;
+    var sum = 0;
+    // ----
+	if ( (min === null || a > min) && (max === null || a < max) ) {
+	    n++;
+	    sum +=   a;
+	}
+    // ----
+
+    return sum/n;
+});
+
+imops.backgr = function(data, width) {
+        var back = {};
+
+        var pixels = ndops.flatten(
+                             ndops.section(data, [[0, width], [0, data.shape[1]]])
+                           , ndops.section(data, [[data.shape[0]-width, data.shape[0]], [0, data.shape[1]]])
+                           , ndops.section(data, [[width, data.shape[0]-width], [0, width]])
+                           , ndops.section(data, [[width, data.shape[0]-width], [data.shape[1]-width, data.shape[1]]]));
+
+
+        back.noise = ndops.rms(pixels);
+        back.value = ndops.median(pixels);
+
+        return back;
+};
+
+imops.mksection = function(x, y, w, h) {
+        return [[x-(w/2), x+(w/2)], [y-(h/2), y+(h/2)]];
+};
+
+imops._rproj = typed(function(a, cx, cy, radius, length) {
+    var rad = new Float32Array(length);
+    var val = new Float32Array(length);
+    var r = Math.sqrt(radius*radius);
+    var i = 0;
+
+    var iX = 0, iY = 0;
+
+    // ----
+	var d = Math.sqrt((iY-cy)*(iY-cy) + (iX-cx)*(iX-cx));
+
+	if ( d <= r ) { 
+	    rad[i] = d;
+	    val[i] = a;
+
+	    i++;
+	}
+    // ----
+    
+    return { rad: rad.subarray(0, i), val: val.subarray(0, i), n: i };
+});
+
+function sortArrays(a, b) {
+    var indexed;
+
+    indexed = Array.prototype.map.call(a, function(itm, i){ return [itm, i, b[i]]; });
+
+    indexed.sort(function(a, b){ return a[0]-b[0]; });
+
+    indexed.map(function(itm, i) {
+	a[i] = itm[0];
+	b[i] = itm[2];
+    });
+}
+
+imops.rproj = function(im, center) {
+    var radius = (im.shape[0]/2 + im.shape[1]/2) / 2;
+    var data   = imops._rproj(im, center[1], center[0], radius, im.size);
+
+    sortArrays(data.rad, data.val);
+
+    return { radi: ndops.ndarray(data.rad, [data.rad.length])
+	   , data: ndops.ndarray(data.val, [data.rad.length]), radius: radius };
+};
+
+
+imops._encen = typed(function (a, cx, cy, radius) {
+    var reply = new Float32Array(radius);
+    var sum = 0;
+    var RSq = radius*radius;
+
+    var tot = 0;
+    var i;
+
+    var iX = 0, iY = 0;
+
+    // ----
+	var x = iX - cx;
+	var y = iY - cy;
+
+	var rsq = x*x+y*y;
+
+	if ( a > 0 && rsq < RSq ) { 
+	    reply[Math.round(Math.sqrt(rsq))] += a;
+	    sum += a;
+	}
+    // ----
+
+
+    for ( i = 0; i < radius; i++ ) {
+	tot += reply[i];
+
+	reply[i] = tot / sum;
+    }
+
+    return reply;
+});
+
+
+
+imops.encen = function(im, center) {
+    var radius = (im.shape[0]/2 + im.shape[1]/2) / 2;
+
+    var reply = imops._encen(im, center[1], center[0], radius);
+
+    return ndops.ndarray(reply, [reply.length]);
+};
+
+ndops.indexof = function(a, x) {
+    var i;
+
+    for ( i = 0; i < a.shape[0]; i++ ) {
+
+	if ( x < a.get(i) ) { break; }
+    }
+
+    if ( i === 0          ) { return 0; }
+    if ( i === a.shape[0] ) { return a.shape[0]; }
+
+    return i + (x - a.get(i))/(a.get(i) - a.get(i-1));
+};
+
+ndops.gauss1d = function(radi, x0) {
+    var reply = ndops.zeros(radi.shape);
+
+    var a = x0[0];
+    var b = 0; 		// x0[1];
+    var c = x0[1];
+    var d = x0[2];
+
+    ndops.fill(reply, function(i) {
+        var x = radi.data[i]-b;
+
+        return a * Math.pow(2.71828, - x*x / (2*c*c)) + d;
+    });
+
+    return reply;    
+};
+
+ndops.gsfit1d = function(radi, data, x0) {
+
+    var reply = typed.uncmin(function(x) {
+	var modl = ndops.gauss1d(radi, x);
+
+	ndops.sub(modl, modl, data);
+	ndops.mul(modl, modl, modl);
+	ndops.fill(modl, function(i) {
+	    return modl.get(i)/(radi.get(i)*radi.get(i));
+	});
+
+	var sum = ndops.sum(modl);
+
+	return Math.sqrt(sum/radi.shape[0]);
+
+    }, x0, 0.000001);
+
+    console.log(reply.message);
+
+    return reply.solution;
+};
+
+function reg2section(xreg) {
+
+    switch ( xreg.shape ) {
+
+	case "annulus":
+            xreg.width  = xreg.radii[xreg.radii.length-1]*2;
+            xreg.height = xreg.radii[xreg.radii.length-1]*2;
+
+            break;
+
+       	case "circle":
+            xreg.width  = xreg.radius*2;
+            xreg.height = xreg.radius*2;
+
+            break;
+
+       	case "ellipse":
+            xreg.width  = xreg.r1*2;
+            xreg.height = xreg.r2*2;
+
+            break;
+
+       	case "polygon":
+	    var i, xx = 0, yy = 0, minx = 1000000, maxx = 0, miny = 1000000, maxy = 0;
+
+	    for ( i = 0; i < xreg.pts.length; i++ ) {
+		xx += xreg.pts[i].x;
+		yy += xreg.pts[i].y;
+
+		if ( xreg.pts[i].x > maxx ) { maxx = xreg.pts[i].x; }
+		if ( xreg.pts[i].x < minx ) { minx = xreg.pts[i].x; }
+		if ( xreg.pts[i].y > maxy ) { maxy = xreg.pts[i].y; }
+		if ( xreg.pts[i].y < miny ) { miny = xreg.pts[i].y; }
+	    }
+
+	    xreg.x = xx/xreg.pts.length;
+	    xreg.y = yy/xreg.pts.length;
+
+	    xreg.width  = maxx - minx;
+	    xreg.height = maxy - miny;
+
+	    break;
+
+       	default:
+    }
+
+    return imops.mksection(xreg.x, xreg.y, xreg.width, xreg.height);
+}
+
+exports.getRegionData = function (im, xreg) {
+    var section = reg2section(xreg);
+    var im_2d   = ndops.ndarray(im.raw.data, [im.raw.height, im.raw.width]);
+    var imag;
+
+    if ( xreg.angle && xreg.angle !== 0 ) {
+	imag = ndops.zeros([xreg.width, xreg.height]);
+
+	ndops.rotate(imag, im_2d, xreg.angle/57.29577951, xreg.y, xreg.x);
+    } else {
+	imag = ndops.section(im_2d, section);
+    }
+
+    return imag;
+};
+
+exports.convolve1d = typed(function(kernel, data, output) {
+    var i, j, x;
+    var half = Math.round(kernel.shape[0]/2.0);
+
+    for ( i = 0; i < data.shape[0]; i++ ) {
+	for ( j = 0; j < kernel.shape[0]; j++ ) {
+	    x = i+j-half;
+
+	    if ( x >= 0 && x < data.shape[0] ) {
+		output[i] += kernel[j] * data[x];
+	    }
+	}
+    }
+});
+
+exports.convolve2dSep = function(kernel, data, output) {
+    var x, y, i, xx, yy; 
+
+    var nx =   data.shape[1];
+    var ny =   data.shape[0];
+    var nk = kernel.shape[0];
+
+    var half = Math.floor(nk/2.0);
+
+    // Run the kernel 1d over each row
+    //
+    for ( y = 0; y < ny; y++ ) {
+        for ( x = 0; x < nx; x++ ) {
+	    output[y][x] = 0;
+
+    	    for ( i = 0; i < nk; i++ ) {
+		xx = x+i-half;
+
+		if ( xx > 0 && xx < nx ) {
+		    output[y][x] += data[y][xx]*kernel[i];
+		}
+	    }
+	}
+    }
+
+    // Run the kernel 1d over each column
+    //
+    for ( x = 0; x < nx; x++ ) {
+	for ( y = 0; y < ny; y++ ) {
+
+    	    for ( i = 0; i < nk; i++ ) {
+		yy = y+i-half;
+
+		if ( yy > 0 && yy < ny ) {
+		    output[y][x] += data[y+i][x]*kernel[i];
+		}
+	    }
+	}
+    }
+};
+
+
+exports.reg2section = reg2section;
+exports.template = template;
+
+exports.ndops    = ndops;
+exports.typed    = ndops;
+exports.imops    = imops;
+
+
+},{"./mask.js":3,"./template":11,"typed-array-function":4,"typed-array-ops":5,"typed-array-rotate":6,"typed-numeric-uncmin":9}],"./imexam":[function(require,module,exports){
+module.exports=require('Ll8vMw');
+},{}],3:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals $ */ 
+
+"use strict";
+
+// source
+// background
+// exclude
+
+(function() {
+    var raster = require("./raster");
+
+    function hasTag(reg, tag) {
+	var i;
+
+	for ( i = 0; i < reg.tags.length; i++ ) {
+	    if ( reg.tags[i] === tag ) { return true; }
+	}
+
+	return false;
+    }
+    exports.hasTag = hasTag;
+
+    exports.listRegions = function (regs) {
+	var i, j;
+	var reg, regno = 1;
+
+	var reply = [];
+
+	for ( i = 0; i < regs.length; i++ ) {
+	    reg = regs[i];
+
+	    switch ( reg.shape ) {
+	     case "annulus":
+		for ( j = 0; j < reg.radii.length; j++ ) {
+		    if ( reg.radii[j] !== 0.0 ) {
+			reply[regno-1] = $.extend($.extend({}, reg), { regno: regno++, shape: "circle", radius: reg.radii[j] });
+		    }
+		}
+	     	break;
+	     default:
+		reply[regno-1] = $.extend({ regno: regno++ }, reg);
+		break;
+	    }
+	}
+
+	return reply;
+    };
+
+    exports.drawRegions = function (regs, buffer, width) {
+	var reg, t, i;
+
+	var type = [ "include", "exclude" ];
+
+	for ( t = 0; t < 2; t++ ) {
+	    for ( i = regs.length - 1; i >= 0; i-- ) {
+		reg = regs[i];
+
+		if ( hasTag(reg, type[t]) ) {
+		    switch ( reg.shape ) {
+		     case "polygon": raster.drawPolygon(buffer, width, reg.pts,                          reg.regno); 				 break;
+		     case "circle":  raster.drawCircle( buffer, width, reg.x, reg.y, reg.radius, reg.regno); 				 break;
+		     case "box":     raster.drawBox(    buffer, width, reg.x, reg.y, reg.width,  reg.height, reg.angle, reg.regno); break;
+		     case "ellipse": raster.drawEllipse(buffer, width, reg.x, reg.y, reg.r1,     reg.r2,   reg.angle, reg.regno); break;
+		    }
+		}
+	    }
+	}
+    };
+}());
+
+
+},{"./raster":10}],4:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, evil: true, regexp: true, bitwise: true */
+/*jshint node: true, -W099: true, laxbreak:true, laxcomma:true, multistr:true, smarttabs:true */
+/*globals typed, Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array */ 
+
+"use strict";
+
+(function() {
+    var ndarray = require("ndarray-nobuffer");
+
+    var types = {
+	    int8  :   Int8Array
+	  , uint8 :  Uint8Array
+	  , int16 :  Int16Array
+	  , uint16:  Uint16Array
+	  , int32:   Int32Array
+	  , uint32:  Uint32Array
+	  , float32: Float32Array
+	  , float64: Float64Array
+    };
+
+    function dim(x) {
+    	if ( x.shape ) { return x.shape; }
+
+	var ret = [];
+	while( typeof x === "object" ) {
+	    ret.push(x.length);
+	    x = x[0];
+	}
+
+	return ret;
+    }
+
+    function rep(s,v,k) {
+	if ( v === undefined ) { v = 0; }
+	if ( k === undefined ) { k = 0; }
+	var n = s[k], ret = [], i;
+	if(k === s.length-1) {
+	    for(i=n-2;i>=0;i-=2) { ret[i+1] = v; ret[i] = v; }
+	    if(i===-1) { ret[0] = v; }
+	    return ret;
+	}
+	for(i=n-1;i>=0;i--) { ret[i] = rep(s,v,k+1); }
+	return ret;
+    }
+
+    function repeat(pattern, count) {
+	if (count < 1) { return ''; }
+
+	var result = '';
+	while (count > 0) {
+	    if ( count & 1 ) { result += pattern; }
+
+	    count >>= 1; pattern += pattern;
+	}
+	return result;
+    }
+
+
+
+
+    function replaceIdentifierRefs(str, func) {
+	var reply = "";
+
+	var state = -1, match, index, first, i = 0, x;
+
+	while ( i < str.length ) {
+	    match = str.match(/[a-zA-Z_][a-zA-Z0-9_]*/);		// Find an identifier in the string.
+
+	    if ( !match ) { break; }
+
+	    reply += str.substr(i, match.index);
+
+	    index = [];
+	    i     = match.index + match[0].length;
+
+	    x = true;
+	    while ( x && i < str.length ) {
+		while ( str[i] === ' ' ) { i++; }
+
+		switch ( str[i] ) {
+		 case "[": 
+		    state = 1;
+		    first = i+1;
+		    i++;
+
+		    while ( state ) {
+			if ( str[i] === ']' ) {
+			    if ( state === 1 ) { index.push(str.substring(first, i)); }
+			    state--;
+			}
+			if ( str[i] === '[' ) { state++; }
+			i++;
+		    }
+		    break;
+		 case "." : 
+		    first = i;
+		    i++;
+		    while ( str[i] === ' ' ) { i++; }
+		    while ( str[i].match(/[ a-zA-Z0-9_]/) !== null ) { i++; }
+
+		    index.push(str.substring(first, i));
+
+		    break;
+		 default: 
+		    x = false;
+		    break;
+		}
+	    }
+
+	    reply += func(match[0], index);
+	    str    = str.substr(i);
+	    i = 0;
+	}
+
+	return reply + str.substr(i);
+    }
+
+
+    function typedArrayFunctionConstructor() {
+        var actuals = arguments;
+	var i, j;
+	var args;
+	var text;
+	var hash = {};
+
+	var body;
+
+	if ( this.cache === undefined ) {
+	    if ( typeof this.func === "string" ) {
+		text = this.func;
+	    } else {
+		text = this.func.toString();
+	    }
+	    this.text = text;
+
+	    var x = text.match(/function [A-Za-z0-9_]*\(([^()]*)\)[^{]*\{([\S\s]*)\}[\S\s]*/);	// }
+
+	    args = x[1].split(",").map(function(s) { return s.trim(); });
+	    this.args = args;
+
+	    this.prep = "";
+	    this.post = "";
+
+	    body = x[2].split(/\/\/ ----+/);
+
+	    if ( body.length > 1 ) {
+		this.prep = body[0];
+		this.post = body[2];
+		this.body = body[1];
+	    } else {
+		this.body = body[0];
+	    }
+	    if ( this.post === "" || this.post === undefined ) {
+		this.post = "\nreturn " + args[0] + ";";
+	    }
+	} 
+	args = this.args;
+	text = this.text;
+
+	var opts = this.opts;
+
+	if ( opts === undefined ) { opts = {}; }
+
+	var type = "";
+	var dime = 0;
+	var func;
+
+	for ( i = 0; i < args.length; i++ ) {
+	    if ( actuals[i] !== null && actuals[i] !== undefined && typeof actuals[i] === "object"
+	     && (opts.consider === undefined || ( typeof opts.consider === "object" && opts.consider[args[i]] !== false )) ) {
+
+		hash[args[i]] = actuals[i];
+
+		if ( !actuals[i].shape ) {
+		    actuals[i].shape = dim(actuals[i]);
+		}
+
+		dime = Math.max(actuals[i].shape.length, dime);
+
+		if ( actuals[i].data ) {
+		    type += " " + actuals[i].dtype + " " + actuals[i].offset + " " + " " + actuals[i].stride;
+		} else {
+		    type += " O";
+		}
+
+	    } else {
+		type += " X";
+	    }
+       	}
+	type = dime + type;
+
+	if ( this.cache ) {
+	    func = this.cache[type];
+
+	    if ( func ) { return func; }
+	}
+
+	var prep = this.prep;
+	    body = this.body;
+	var post = this.post;
+	var dims = [];
+
+	var indicies = [ "iW", "iV", "iU", "iZ", "iY", "iX" ];
+	var hasIndex = false;
+
+	// Match each source code identifier and any associated array indexing.  Extract
+	// the indicies and recursivly replace them also.
+	//
+	function replaceArrayRefs(text) {
+
+	    return replaceIdentifierRefs(text, function (id, indx) {
+		var k, offset, reply;
+
+		if ( id === "index" ) { hasIndex = true; }
+
+		for ( k = 0; k < indx.length; k++ ) {
+		    indx[k] = replaceArrayRefs(indx[k]);
+		}
+
+		var arg = hash[id];
+		var dimen;
+		var joinStr, bracket, fixindx;
+
+
+		if ( arg !== undefined && typeof arg === "object" ) {
+
+		    if ( indx.length >= 1 && indx[indx.length-1].trim() === ".length" ) {
+		        indx[0] = ".shape";
+			indx[1] = indx.length-1;
+			indx.length = 2;
+		    }
+
+		    if ( indx.length >= 1 && indx[0][0] === "." ) {
+		        if ( indx.length >= 2 && indx[0].trim() === ".shape" ) {
+			    if ( arg.data ) {
+				reply = id + ".shape[" + indx[1] + "]";
+			    } else {
+				reply = id + repeat("[0]", indx[1]) + ".length";
+			    } 
+			} else {
+			    reply = id + indx[0].trim();
+			}
+		    } else {
+			if ( arg.data ) {
+			    dimen = arg.dimension;
+
+
+			    if ( indx.length !== 0 && indx.length < arg.dimension ) {
+				id = id + ".data.subarray";
+				bracket = "()";
+				fixindx = indx.length;
+			    } else {
+				id = id + ".data";
+				bracket = "[]";
+				fixindx = arg.dimension;
+			    }
+
+			    joinStr = " + ";
+			} else {
+			    dimen = arg.shape.length;
+			    joinStr = "][";
+			    offset  = "";
+			    bracket = "[]";
+			}
+
+			var indi = indicies.slice(6-dimen);
+
+			if ( ( opts.loops === undefined || opts.loops === true ) && ( indx.length === 0 || dimen === indx.length ) ) {
+			    for ( i = 0; i < dimen; i++ ) {
+				if ( indx[i] === undefined ) { indx[i] = indi[i]; } 
+				if ( dims[i] === undefined ) { dims[i] = 0; }
+
+				dims[i] = Math.max(dims[i], arg.shape[i]);
+			    }
+			}
+
+			if ( arg.data ) {
+			    for ( i = 0; i < fixindx; i++ ) {
+				if ( arg.stride[i] !== 1 ) { indx[i] =  "(" + indx[i] + ")*" + arg.stride[i]; }
+			    }
+
+			    if ( arg.offset !== 0 ) { 	offset = arg.offset + " + ";
+			    } else {			offset = ""; }
+			}
+
+			if ( indx.length ) {
+			    reply = id + bracket[0] + offset + indx.join(joinStr) + bracket[1] + " ";
+			} else {
+			    reply = id;
+			}
+		    }
+		} else {
+		    reply = id;
+
+		    for ( i = 0; i <  indx.length; i++ ) {
+			if ( indx[i][0] === "." ) {
+			    reply += indx[i].trim();
+			} else {
+			    reply += "[" + indx[i].trim() + "]";
+			}
+		    }
+		    reply += " ";
+		}
+		
+		return reply;
+	    });
+	}
+
+	body = replaceArrayRefs(body);
+
+	var indx = indicies.slice(6-dims.length);
+	var indi = indicies.slice(6-dims.length).reverse();
+	dims.reverse();
+
+	var init = "\n";
+	var setp = "\n";
+
+	var indxZero = "";
+	var indxIncr = "";
+
+	if ( opts.loops === undefined || opts.loops === true ) {
+	    init += "	var index = [" + rep([dims.length], 0).join(",") + "];\n";
+	    init += "	var start = [" + rep([dims.length], 0).join(",") + "];\n";
+	    init += "	var   end = [" + rep([dims.length], 0).join(",") + "];\n\n";
+
+	    for ( i = 0; i < dims.length; i++ ) {
+
+		for ( j = 0; j < args.length; j++ ) {
+		    if ( hash[args[j]] && actuals[j] !== undefined && typeof actuals[j] === "object" ) {
+			init += "	end[" + i + "] = " + args[j] + ".shape[" + i + "];\n";
+			break;
+		    }
+		}
+	    }
+	    init += "\n";
+
+	    for ( i = 0; i < dims.length; i++ ) {
+		setp += "	var "   + indx[i] + "start = start[" + i + "];\n";
+		setp += "	var   " + indx[i] + "end =   end[" + i + "];\n";
+
+	    }
+	    setp += "\n";
+	    for ( i = 0; i < dims.length; i++ ) {
+		if ( hasIndex ) {
+		    indxZero = "index[" + (dims.length - i - 1) + "] = 0;\n";
+		    indxIncr = "	index[" + (dims.length - i - 1) + "]++\n";
+		}
+		    
+		body = indxZero + "for ( var " + indi[i] + " = " + indi[i] + "start; " + indi[i] + " < " + indi[i] + "end; " + indi[i] + "++ ) {\n	" + body + "\n" + indxIncr + "\n    }";
+	    }
+	}
+
+	func  = "// Array optimized funciton\n";
+	func += "// " + type + "\n";
+	func += "return function (" + args.join(",") + ") {\n'use strict';\n\n" + init + prep + setp + body + post + "\n}";
+
+	if ( typed.debug ) { console.log(func); }
+
+	if ( this.cache === undefined ) { this.cache = {}; }
+
+	func = new Function(func)();
+	this.cache[type] = func;
+
+	return func;
+    }
+
+
+    function typedArrayFunctionExecute() {
+	var func  = typedArrayFunctionConstructor.apply(this, arguments);
+
+	var reply = func.apply(typed, arguments);
+
+	return reply;
+    }
+
+    function typed(opts, func) {
+	if ( func === undefined ) {
+	    func = opts;
+	    opts = undefined;
+	}
+
+	var objst = { func: func, opts: opts };
+	var reply = typedArrayFunctionExecute.bind(objst);
+
+	reply.baked = typedArrayFunctionConstructor.bind(objst);
+
+	return reply;
+    }
+
+    var size = typed(function (a) {
+	var prd = 1;
+	// ----
+	    prd *= a;
+	// ----
+	return prd;
+    });
+
+    function array(shape, DType, value) {
+        var reply;
+	var i, n;
+
+	if ( typeof value !== "number" ) {
+	    value = 0;
+	}
+
+	if ( DType && DType.dtype ) 	 { DType = DType.dtype;  }
+	if ( typeof DType === "string" ) { DType = types[DType]; }
+
+        if ( typeof DType === "function" ) {
+	    n = size(shape);
+	    reply = ndarray(new DType(n), shape);
+
+	    for ( i = 0; i < n; i++ ) { reply.data[i] = value; }
+	} else {
+	    reply = rep(shape, value);
+	}
+
+	reply.shape = shape;
+
+	return reply;
+    }
+
+    function clone (x) {
+	return typed.assign(typed.array(typed.dim(x), x), x);
+    }
+
+    function iota(i, n) {
+	if ( n === undefined ) {
+	    n = i;
+	    i = 0;
+	}
+	var j, result = [];
+	for ( j = 0; j<n; j++ ) { result[j] = i; i += 1; }   
+
+	return result;
+    }
+
+
+    function extend(obj) {
+	var i, key;
+
+	for( i = 1; i < arguments.length; i++) {
+	    for ( key in arguments[i] ) {
+		if ( arguments[i].hasOwnProperty(key) ) {
+		    obj[key] = arguments[i][key];
+		}
+	    }
+	}
+	return obj;
+    }
+
+    function print(a, width, prec) {
+	var x, y;
+	var line;
+
+	if ( width === undefined ) { width = 7; }
+	if ( prec === undefined  ) { prec  = 3; }
+
+	if ( a.shape.length === 1 ) {
+	    line = "";
+	    for (x=0;x<a.shape[0];++x) {
+		line += a.get(x).toFixed(prec) + " ";
+		//if ( x > 17 ) { break;}
+	    }
+	    console.log(line);
+	} else {
+	    for ( y = a.shape[0]-1; y >= 0; --y ) {
+	      line = "";
+	      for ( x = 0; x < a.shape[1]; ++x ) {
+		line += a.get(y, x).toFixed(prec) + " ";
+	      }
+
+	      console.log(line);
+	    }
+	    console.log("\n");
+	}
+    }
+
+    function section(a, sect) {
+	    var x1 = sect[0][0];
+	    var x2 = sect[0][1];
+	    var y1 = sect[1][0];
+	    var y2 = sect[1][1];
+
+	    return a.lo(y1, x1).hi(y2-y1, x2-x1);
+    }
+
+    module.exports         = typed;
+    module.exports.ndarray = ndarray;
+    module.exports.section = section;
+    module.exports.extend  = extend;
+    module.exports.array   = array;
+    module.exports.clone   = clone;
+    module.exports.print   = print;
+    module.exports.iota    = iota;
+    module.exports.rep     = rep;
+    module.exports.dim     = dim;
+
+    module.exports.epsilon = 2.220446049250313e-16;
+}());
+
+
+},{"ndarray-nobuffer":13}],5:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, evil: true, regexp: true */
+/*globals */ 
+
+"use strict";
+
+(function () {
+    var i;
+    var typed = require("typed-array-function");
+
+    var ops = {}, opname, op;
+    module.exports = ops;
+
+    function twofourthr(ops) {				// Allocate an output array as needed
+        var dima, dimb, shape;
+
+	return function (a, b, c) {
+	    if ( c === undefined ) {
+	 	dima = typed.dim(a);
+	 	dimb = typed.dim(b);
+
+		if ( dima.length > dimb.length ) {
+		    shape = dima;
+		} else {
+		    shape = dimb;
+		} 
+	    	c = b; b = a; a = typed.array(shape, b);
+	    }
+
+	    return ops(a, b, c);
+	};
+    }
+    function onefourtwo(ops) {				// Allocate an output array as needed
+	return function (a, b) {
+	    if ( b === undefined ) { b = a; a = typed.array(typed.dim(b), b); }
+
+	    return ops(a, b);
+	};
+    }
+
+    function twofourthr_bake(op) {
+	return function(a, b, c) {
+	    if ( c === undefined )  { return twofourthr(op.baked(a, b, c)); }
+
+	    return op.baked(a, b, c);
+	};
+    }
+    function onefourtwo_bake(op) {
+	return function(a, b) {
+	    if ( b === undefined )  { return onefourtwo(op.baked(a, b)); }
+
+	    return op.baked(a, b);
+	};
+    }
+
+
+    var assign_ops = { add:  "+", sub:  "-", mul:  "*", div:  "/",
+		       mod:  "%", band: "&", bor:  "|", bxor: "^",
+		       lshift: "<<", rshift: ">>", rrshift: ">>>"
+    };
+
+      for(opname in assign_ops) {
+	if ( assign_ops.hasOwnProperty(opname) ) {
+	    op = assign_ops[opname];
+
+	    ops[opname + "3"]       = typed("function (a, b, c)    {            a = b " + op + " c; }");
+	    ops[opname + "_mask"]   = typed("function (a, b, c, m) { if ( m ) { a = b " + op + " c; } }");
+	    ops[opname + "eq"]      = typed("function (a, b   )    {            a " + op + "= b;    }  ");
+	    ops[opname + "eq_mask"] = typed("function (a, b   , m) { if ( m ) { a " + op + "= b;    } }");
+
+	    ops[opname]       = twofourthr     (ops[opname + "3"]);
+	    ops[opname].baked = twofourthr_bake(ops[opname + "3"]);
+
+	    ops[opname + "s"]   = ops[opname];
+	    ops[opname + "seq"] = ops[opname + "eq"];
+	}
+      }
+
+    var binary_ops = { and: "&&", or: "||",
+		       eq: "===", neq: "!==", lt: "<",
+		       gt: ">", leq: "<=", geq: ">=" };
+
+      for(opname in binary_ops) {
+	if ( binary_ops.hasOwnProperty(opname) ) {
+	    op = binary_ops[opname];
+
+	    ops[opname + "3"]            = typed("function (a, b, c)    {            a = b " + op + " c; }");
+	    ops[opname + "_mask"]        = typed("function (a, b, c, m) { if ( m ) { a = b " + op + " c; } }");
+	    ops[opname + "eq"]           = typed("function (a, b   )    {            a = a " + op + " b; }  ");
+	    ops[opname + "eq_mask"]      = typed("function (a, b   , m) { if ( m ) { a = a " + op + " b; } }");
+
+	    ops[opname]       = twofourthr     (ops[opname + "3"]);
+	    ops[opname].baked = twofourthr_bake(ops[opname + "3"]);
+
+	    ops[opname + "s"]   = ops[opname];
+	    ops[opname + "seq"] = ops[opname + "eq"];
+	}
+      }
+
+
+    var unary_ops = { not: "!", bnot: "~", neg: "-", recip: "1.0/" };
+
+      for(opname in unary_ops) {
+	if ( unary_ops.hasOwnProperty(opname) ) {
+	    op = unary_ops[opname];
+		
+	    ops[opname + "2"]            = typed("function (a, b   )    {            a = " + op + " b; }");
+	    ops[opname + "_mask"]        = typed("function (a, b   , m) { if ( m ) { a = " + op + " b; } }");
+	    ops[opname + "eq"]           = typed("function (a      )    {            a = " + op + " a; }");
+	    ops[opname + "eq" + "_mask"] = typed("function (a      , m) { if ( m ) { a = " + op + " a; } }");
+
+	    ops[opname]       = onefourtwo     (ops[opname + "2"]);
+	    ops[opname].baked = onefourtwo_bake(ops[opname + "2"]);
+	}
+      }
+
+    var math_unary = [ "Math.abs", "Math.exp", "Math.floor", "Math.log", "Math.round", "Math.sqrt"
+		    , "Math.acos", "Math.asin", "Math.atan", "Math.ceil", "Math.cos", "Math.sin", "Math.tan"
+		    , "isFinite", "isNaN" ]; 
+
+      for( i = 0; i < math_unary.length; i++ ) {
+	    op = math_unary[i];
+
+	    opname = op.split(".")
+
+	    if ( opname.length == 2 ) {
+		opname = opname[1]
+	    } else {
+		opname = opname[0]
+	    }
+
+	    ops[opname + "2"]            = typed("function (a, b   )    {            a = " + op + "(b); }");
+	    ops[opname + "_mask"]        = typed("function (a, b   , m) { if ( m ) { a = " + op + "(b); } }");
+	    ops[opname + "eq"]           = typed("function (a      )    {            a = " + op + "(a); }");
+	    ops[opname + "eq" + "_mask"] = typed("function (a      , m) { if ( m ) { a = " + op + "(a); } }");
+
+	    ops[opname]       = onefourtwo     (ops[opname + "2"]);
+	    ops[opname].baked = onefourtwo_bake(ops[opname + "2"]);
+      }
+
+    var math_comm = [ "max", "min" ];
+
+      for( i = 0; i < math_comm.length; i++ ) {
+	opname = op = math_comm[i];
+
+	ops[opname + "3"]            = typed("function (a, b, c)    {            a = Math." + op + "(b, c); }");
+	ops[opname + "_mask"]        = typed("function (a, b, c, m) { if ( m ) { a = Math." + op + "(b, c); } }");
+
+	ops[opname]       = twofourthr     (ops[opname + "3"]);
+	ops[opname].baked = twofourthr_bake(ops[opname + "3"]);
+
+	ops[opname + "s"]        = ops[opname];
+	ops[opname + "s" + "eq"] = ops[opname];
+      }
+
+    var math_noncomm = [ "atan2", "pow" ];
+
+      for( i = 0; i < math_noncomm.length; i++ ) {
+	opname = op = math_noncomm[i];
+
+	ops[opname + "3"]            = typed("function (a, b, c)    {            a = Math." + op + "(b, c); }");
+	ops[opname + "_mask"]        = typed("function (a, b, c, m) { if ( m ) { a = Math." + op + "(b, c); } }");
+
+	ops[opname]       = twofourthr     (ops[opname + "3"]);
+	ops[opname].baked = twofourthr_bake(ops[opname + "3"]);
+
+	ops[opname + "s"]        = ops[opname];
+	ops[opname + "s" + "eq"] = ops[opname];
+      }
+
+    ops.assign   = typed(function (a, b) { a = b; });
+    ops.equals   = typed(function (a, b) { if ( a !== b )   { return false; } });
+    ops.any      = typed(function (a) { if ( a )            { return true;  } });
+    ops.all      = typed(function (a) { if (!a )            { return false; } });
+    ops.random   = typed(function (a)    { a = Math.random(); });
+    ops.sum  = typed(function (a) {
+	var sum = 0; 
+	// ----
+	    sum += a;
+	// ----
+	return sum;
+    });
+    ops.prod = typed(function (a) {
+	var prd = 1;
+	// ----
+	    prd *= a;
+	// ----
+	return prd;
+    });
+
+    ops.inf  = typed(function (a) {
+	var inf =  Infinity;
+	// ----
+	    if ( a < inf ) { inf = a; }
+	// ----
+	return inf;
+    });
+    ops.sup  = typed(function (a) {
+	var sup = -Infinity;
+	// ----
+	    if ( a > sup ) { sup = a; }
+	// ----
+	return sup;
+    });
+
+
+    ops.norm2Squared = typed(function (a) {
+	var norm2 = 0;
+	// ----    
+	    norm2 += a*a;
+	// ----    
+	return norm2;
+    });
+    ops.norm2 = function (a) { return Math.sqrt(ops.norm2Squared(a)); };
+
+	//norm1
+	//norminf
+
+	//argmin
+	//argmax
+
+}());
+ 
+
+},{"typed-array-function":4}],6:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, bitwise: true */
+
+"use strict";
+
+var warp = require("typed-array-warp");
+
+
+function rotateImage(out, inp, theta, iX, iY, oX, oY) {
+  var c = Math.cos(theta);
+  var s = Math.sin(-theta);
+  iX = iX || inp.shape[0]/2.0;
+  iY = iY || inp.shape[1]/2.0;
+  oX = oX || out.shape[0]/2.0;
+  oY = oY || out.shape[1]/2.0;
+  var a = iX - c * oX + s * oY;
+  var b = iY - s * oX - c * oY;
+  warp(out, inp, function(y,x) {
+    y[0] = c * x[0] - s * x[1] + a;
+    y[1] = s * x[0] + c * x[1] + b;
+  });
+  return out;
+}
+
+module.exports = rotateImage;
+
+},{"typed-array-warp":7}],7:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, bitwise: true */
+
+"use strict";
+
+var interp = require("ndarray-linear-interpolate");
+var typed = require("typed-array-function");
+
+var do_warp = typed(function (dest, func, interp) {
+    var warped = dest.shape.slice(0);
+
+    var iX = 0, iY = 0, iZ = 0;
+
+    // ----
+	func(warped, [iX, iY, iZ]);
+	dest = interp.apply(undefined, warped);
+    // ----
+});
+        
+var do_warp_1 = typed(function (dest, func, interp, src) {
+    var warped = [0];
+    var SRC = src;
+
+    var iX = 0;
+
+    // ----
+	func(warped, [iX]);
+	dest = interp(SRC, warped[0]);
+    // ----
+});
+
+var do_warp_2 = typed(function (dest, func, interp, src) {
+    var warped = [0, 0];
+    var SRC = src;
+
+    var iX = 0, iY = 0;
+
+    // ----
+	func(warped, [iY, iX]);
+	dest = interp(SRC, warped[0], warped[1]);
+    // ----
+});
+
+var do_warp_3 = typed(function (dest, func, interp, src) {
+    var warped = [0, 0, 0];
+    var SRC = src;
+
+    var iX = 0, iY = 0, iZ = 0;
+
+    // ----
+	func(warped, [iZ, iY, iX]);
+	dest = interp(SRC, warped[0], warped[1], warped[2]);
+    // ----
+});
+
+module.exports = function warp(dest, src, func) {
+  switch(src.shape.length) {
+    case 1:
+      do_warp_1(dest, func, interp.d1, src);
+      break;
+    case 2:
+      do_warp_2(dest, func, interp.d2, src);
+      break;
+    case 3:
+      do_warp_3(dest, func, interp.d3, src);
+      break;
+    default:
+      do_warp(dest, func, interp.bind(undefined, src));
+      break;
+  }
+  return dest;
+};
+
+},{"ndarray-linear-interpolate":12,"typed-array-function":4}],8:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, evil: true, regexp: true, bitwise: true */
+/*jshint node: true, -W099: true, laxbreak:true, laxcomma:true, multistr:true, smarttabs:true */
+/*globals */ 
+
+"use strict";
+
+var typed   = require("typed-array-function");
+var numeric = typed;
+
+
+typed.dot = function dot(x,y) {
+    var d = numeric.dim;
+
+    var dimx = d(x);
+    var dimy = d(y);
+
+    switch(d(x).length*1000+d(y).length) {
+	case 2002: return numeric.dotMM(numeric.array([dimx[0], dimy[1]], x.dtype), x,y);
+	case 2001: return numeric.dotMV(x,y);
+	case 1002: return numeric.dotVM(x,y);
+	case 1001: return numeric.dotVV(x,y);
+	case 1000: return numeric.mulVS(x,y);
+	case 1: return numeric.mulSV(x,y);
+	case 0: return x*y;
+	default: throw new Error('numeric.dot only works on vectors and matrices');
+    }
+};
+
+numeric.dotVV = function dotVV(x,y) {
+    var i,n=x.length,i1,ret = x[n-1]*y[n-1];
+
+    for(i=n-2;i>=1;i-=2) {
+	i1 = i-1;
+	ret += x[i]*y[i] + x[i1]*y[i1];
+    }
+    if(i===0) { ret += x[0]*y[0]; }
+
+    return ret;
+};
+
+numeric.dotMV = function dotMV(x,y) {
+    var i, p = x.length;
+    var ret = this.array([p], x.dtype), dotVV = this.dotVV;
+    for(i=p-1;i>=0;i--) { ret[i] = dotVV(x[i],y); }
+    return ret;
+};
+
+numeric.dotVM = function dotVM(x,y) {
+    var j,k,p,q,ret,woo,i0;
+    p = x.length; q = y[0].length;
+    ret = numeric.array([q], x.dtype);
+    for(k=q-1;k>=0;k--) {
+	woo = x[p-1]*y[p-1][k];
+	for(j=p-2;j>=1;j-=2) {
+	    i0 = j-1;
+	    woo += x[j]*y[j][k] + x[i0]*y[i0][k];
+	}
+	if(j===0) { woo += x[0]*y[0][k]; }
+	ret[k] = woo;
+    }
+    return ret;
+};
+
+numeric.dotMM = function dotMM(reply,x,y) {
+    var i,j,k,r=reply.shape[1],foo,bar,woo,i0;
+
+    var p = x.length;
+    var q = y.length;
+
+    for(i=p-1;i>=0;i--) {
+	foo = reply[i];
+	bar = x[i];
+
+	for(k=r-1;k>=0;k--) {
+	    woo = bar[q-1]*y[q-1][k];
+	    for(j=q-2;j>=1;j-=2) {
+		i0 = j-1;
+		woo += bar[j]*y[j][k] + bar[i0]*y[i0][k];
+	    }
+	    if(j===0) { woo += bar[0]*y[0][k]; }
+	    foo[k] = woo;
+	}
+	//ret[i] = foo;
+    }
+};
+
+numeric.diag = function diag(d) {
+    var i,i1,j,n = d.length, A = this.array([n, n], d.dtype), Ai;
+    for(i=n-1;i>=0;i--) {
+	Ai = A[i];
+	i1 = i+2;
+	for(j=n-1;j>=i1;j-=2) {
+	    Ai[j] = 0;
+	    Ai[j-1] = 0;
+	}
+	if(j>i) { Ai[j] = 0; }
+	Ai[i] = d[i];
+	for(j=i-1;j>=1;j-=2) {
+	    Ai[j] = 0;
+	    Ai[j-1] = 0;
+	}
+	if(j===0) { Ai[0] = 0; }
+	//A[i] = Ai;
+    }
+    return A;
+};
+numeric.identity = function identity(n, type) { return this.diag(this.array([n],type,1)); };
+
+numeric.tensorXX = function tensor(A,x,y) {
+    var m = x.length, n = y.length, Ai, i,j,xi;
+
+
+    for(i=m-1;i>=0;i--) {
+	Ai = A[i];
+	xi = x[i];
+	for(j=n-1;j>=3;--j) {
+	    Ai[j] = xi * y[j];
+	    --j;
+	    Ai[j] = xi * y[j];
+	    --j;
+	    Ai[j] = xi * y[j];
+	    --j;
+	    Ai[j] = xi * y[j];
+	}
+	while(j>=0) { Ai[j] = xi * y[j]; --j; }
+    }
+
+    //console.log(x, y, A[0], A[1]);
+};
+numeric.tensorXX = typed({ loops: false }, numeric.tensorXX);
+numeric.tensor   = function tensor(x,y) {
+
+    if(typeof x === "number" || typeof y === "number") { return numeric.mul(x,y); }
+    var s1 = numeric.dim(x);
+    var s2 = numeric.dim(y);
+    if(s1.length !== 1 || s2.length !== 1) {
+	throw new Error('numeric: tensor product is only defined for vectors');
+    }
+    
+    return numeric.tensorXX(numeric.array([s1[0], s2[0]], x.dtype), x, y);
+};
+
+
+numeric.dotVV = typed({ loops: false }, numeric.dotVV);
+numeric.dotVM = typed({ loops: false }, numeric.dotVM);
+numeric.dotMV = typed({ loops: false }, numeric.dotMV);
+numeric.dotMM = typed({ loops: false }, numeric.dotMM);
+numeric.diag  = typed({ loops: false }, numeric.diag);
+
+
+},{"typed-array-function":4}],9:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, evil: true, regexp: true, bitwise: true, continue:true */
+
+"use strict";
+
+var numeric =                         require("typed-array-function");
+    numeric = numeric.extend(numeric, require("typed-array-ops"));
+    numeric = numeric.extend(numeric, require("typed-matrix-ops"));
+
+//9. Unconstrained optimization
+exports.gradient = function gradient(f,x) {
+    var n = x.length;
+    var f0 = f(x);
+    if(isNaN(f0)) { throw new Error('gradient: f(x) is a NaN!'); }
+    var i,x0 = numeric.clone(x),f1,f2, J = new [].constructor(n);
+    var errest,max = Math.max,eps = 1e-3,abs = Math.abs, min = Math.min;
+    var t0,t1,t2,it=0,d1,d2,N,h;
+    for(i=0;i<n;i++) {
+        h = max(1e-6*f0,1e-8);
+        while(true) {
+            ++it;
+            if(it>20) { throw new Error("Numerical gradient fails"); }
+            x0[i] = x[i]+h;
+            f1 = f(x0);
+            x0[i] = x[i]-h;
+            f2 = f(x0);
+            x0[i] = x[i];
+            if(isNaN(f1) || isNaN(f2)) { h/=16; continue; }
+            J[i] = (f1-f2)/(2*h);
+            t0 = x[i]-h;
+            t1 = x[i];
+            t2 = x[i]+h;
+            d1 = (f1-f0)/h;
+            d2 = (f0-f2)/h;
+            N = max(abs(J[i]),abs(f0),abs(f1),abs(f2),abs(t0),abs(t1),abs(t2),1e-8);
+            errest = min(max(abs(d1-J[i]),abs(d2-J[i]),abs(d1-d2))/N,h/N);
+            if(errest>eps) { h/=16;
+	    } else { break; }
+            }
+    }
+    return J;
+};
+exports.uncmin = function uncmin(f,x0,tol,gradient,maxit,callback,options) {
+    var grad = exports.gradient;
+    if(options  === undefined) { options = {}; }
+    if(tol      === undefined) { tol = 1e-8; }
+    if(gradient === undefined) { gradient = function(x) { return grad(f,x); }; }
+    if(maxit    === undefined) { maxit = 1000; }
+    x0 = numeric.clone(x0);
+    var n = x0.length;
+    var f0 = f(x0),f1,df0;
+    if(isNaN(f0)) { throw new Error('uncmin: f(x0) is a NaN!'); }
+    var max = Math.max, norm2 = numeric.norm2;
+    tol = max(tol,numeric.epsilon);
+    var step,g0,g1,H1 = options.Hinv || numeric.identity(n);
+    var dot = numeric.dot, sub = numeric.sub, add = numeric.add, ten = numeric.tensor, div = numeric.div, mul = numeric.mul;
+
+    var all = numeric.all, isfinite = numeric.isFinite, neg = numeric.neg;
+    var it=0,s,x1,y,Hy,ys,t,nstep;
+    var msg = "";
+    g0 = gradient(x0);
+    while(it<maxit) {
+        if(typeof callback === "function") { if(callback(it,x0,f0,g0,H1)) { msg = "Callback returned true"; break; } }
+        if(!all(isfinite(g0))) { msg = "Gradient has Infinity or NaN"; break; }
+        step = neg(dot(H1,g0));
+        if(!all(isfinite(step))) { msg = "Search direction has Infinity or NaN"; break; }
+        nstep = norm2(step);
+        if(nstep < tol) { msg="Newton step smaller than tol"; break; }
+        t = 1;
+        df0 = dot(g0,step);
+        // line search
+        x1 = x0;
+        while(it < maxit) {
+            if(t*nstep < tol) { break; }
+            s  = mul(step,t);
+            x1 = add(x0,s);
+            f1 = f(x1);
+            if(f1-f0 >= 0.1*t*df0 || isNaN(f1)) {
+                t *= 0.5;
+                ++it;
+                continue;
+            }
+            break;
+        }
+        if(t*nstep < tol) { msg = "Line search step size smaller than tol"; break; }
+        if(it === maxit) { msg = "maxit reached during line search"; break; }
+        g1 = gradient(x1);
+
+        y  = sub(g1,g0);
+        ys = dot(y,s);
+        Hy = dot(H1,y);
+
+        H1 = sub(add(H1,
+                mul(
+                        (ys+dot(y,Hy))/(ys*ys),
+                        ten(s,s)    )),
+                div(add(ten(Hy,s),ten(s,Hy)),ys));
+        x0 = x1;
+        f0 = f1;
+        g0 = g1;
+        ++it;
+
+    }
+    return {solution: x0, f: f0, gradient: g0, invHessian: H1, iterations:it, message: msg};
+};
+
+},{"typed-array-function":4,"typed-array-ops":5,"typed-matrix-ops":8}],10:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals */ 
+
+"use strict";
+
+(function() {
+
+    // http://cogsandlevers.blogspot.com/2013/11/scanline-based-filled-polygons.html
+    //
+    function drawHLine(buffer, width, x1, x2, y, k, rop) {
+
+	if ( x1 < 0     ) { x1 = 0;     }
+	if ( x2 > width ) { x2 = width; }
+
+	var ofs = x1 + y * width; 			// calculate the offset into the buffer
+        var x;
+
+	switch ( rop ) { 				// draw all of the pixels
+	 case undefined:
+	 case "set": for (x = x1; x < x2; x++) { buffer[ofs++]  = k; } break;
+	 case "add": for (x = x1; x < x2; x++) { buffer[ofs++] += k; } break;
+	}
+    }
+
+    function scanline(x1, y1, x2, y2, miny, edges) {
+	var x, y, xi;
+
+	if (y1 > y2) { 					// flip the points if need be
+	     y = y1; y1 = y2; y2 = y;
+	     x = x1; x1 = x2; x2 = x;
+	}
+
+	y1 = Math.floor(y1)+1;
+	y2 = Math.floor(y2);
+
+	//if ( y2 < y1 ) { y2++ }
+
+	x = x1; 					// start at the start
+	var dx = (x2 - x1) / (y2 - y1); 		// change in x over change in y will give us the gradient
+	var ofs = Math.round(y1 - miny); 		// the offset the start writing at (into the array)
+
+	for ( y = y1; y <= y2; y++ ) { 		// cover all y co-ordinates in the line
+
+	    xi = Math.floor(x) + 1;
+
+	    // check if we've gone over/under the max/min
+	    //
+	    if ( edges[ofs].minx > xi ) { edges[ofs].minx = xi; }
+	    if ( edges[ofs].maxx < xi ) { edges[ofs].maxx = xi; }
+
+	    x += dx; 					// move along the gradient
+	    ofs ++; 					// move along the buffer
+
+	}
+    }
+
+    function _drawPolygon(buffer, width, points, color, rop) {
+	var i;
+	var miny = points[0].y-1; 			// work out the minimum and maximum y values
+	var maxy = points[0].y-1;
+
+	for ( i = 1; i < points.length; i++ ) {
+	    if ( points[i].y-1 < miny) { miny = points[i].y-1; }
+	    if ( points[i].y-1 > maxy) { maxy = points[i].y-1; }
+	}
+
+	var h = maxy - miny; 				// the height is the size of our edges array
+	var edges = [];
+
+	for ( i = 0; i <= h+1; i++ ) { 			// build the array with unreasonable limits
+	    edges.push({ minx:  1000000, maxx: -1000000 });
+	}
+
+	for ( i = 0; i < points.length-1; i++ ) { 	// process each line in the polygon
+	    scanline(points[i  ].x-1, points[i  ].y-1
+		   , points[i+1].x-1, points[i+1].y-1, miny, edges);
+	}
+	scanline(points[i].x-1, points[i].y-1, points[0].x-1, points[0].y-1, miny, edges);
+
+	// draw each horizontal line
+	for ( i = 0; i < edges.length; i++ ) {
+	    drawHLine( buffer, width
+		     , Math.floor(edges[i].minx)
+		     , Math.floor(edges[i].maxx)
+		     , Math.floor(i + miny), color, rop);
+	}
+    }
+
+    function d2r(d) { return d * (Math.PI / 180); }
+
+    function rotPoints(points, angle, about) {
+	var x, y, i;
+	var reply = [];
+
+	angle = d2r(angle);
+
+	var sin = Math.sin(angle);
+	var cos = Math.cos(angle);
+
+	for ( i = 0; i < points.length; i++ ) {
+	    x = about.x + (((points[i].x-about.x) * cos) - ((points[i].y-about.y) * sin));
+	    y = about.y + (((points[i].x-about.x) * sin) + ((points[i].y-about.y) * cos));
+
+	    reply.push({ x: x, y: y });
+	}
+
+	return reply;
+    }
+
+    function polyEllipse(x, y, w, h) {
+	var ex, ey, i;
+	var reply = [];
+
+	for ( i = 0; i < 2 * Math.PI; i += 0.01 ) {
+	    ex = x + w*Math.cos(i);
+	    ey = y + h*Math.sin(i);
+
+	    reply.push({ x: ex, y: ey });
+	}
+
+	return reply;
+    }
+
+    function polyBox(x, y, w, h) {
+	return [  { x: x-w/2, y: y-h/2 }
+		, { x: x-w/2, y: y+h/2 }
+		, { x: x+w/2, y: y+h/2 }
+		, { x: x+w/2, y: y-h/2 } ];
+    }
+
+    exports.drawPolygon = function (buffer, width, points,    color, rop)       { _drawPolygon(buffer, width, points,                      color, rop); };
+    exports.drawCircle  = function (buffer, width, x, y, rad, color, rop)       { _drawPolygon(buffer, width, polyEllipse(x, y, rad, rad), color, rop); };
+    exports.drawEllipse = function (buffer, width, x, y, h, w, rot, color, rop) { _drawPolygon(buffer, width, rotPoints(polyEllipse(x, y, h, w), rot, { x: x, y: y }), color, rop); };
+    exports.drawBox     = function (buffer, width, x, y, h, w, rot, color, rop) { _drawPolygon(buffer, width, rotPoints(polyBox    (x, y, h, w), rot, { x: x, y: y }), color, rop); };
+}());
+
+},{}],11:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+
+"use strict";
+
+
+    function strrep(str, n) {
+	var i, s = '';
+
+	for ( i = 0; i < n; i++ ) { s += str; }
+
+	return s;
+    }
+
+function template(text,data) {
+    return text.replace(/\{([a-zA-Z0-9_.%]*)\}/g,
+	function(m,key){
+	    var type, prec, widt = 0, fmt, i;
+	    var val = data;
+	
+	    key = key.split("%");
+
+	    if ( key.length <= 1 ) {
+		fmt = "%s";
+	    } else {
+		fmt = key[1];
+	    }
+
+	    key = key[0];
+	    key = key.split(".");
+
+	    for ( i = 0; i < key.length; i++ ) {
+		if ( val.hasOwnProperty(key[i]) ) {
+		    val = val[key[i]];
+		} else {
+		    return "";
+		}
+	    }
+
+	    type = fmt.substring(fmt.length-1);
+	    prec = fmt.substring(0, fmt.length-1);
+
+	    prec = prec.split(".");
+
+	    widt = prec[0] | 0;
+	    prec = prec[1] | 0;
+
+	    switch ( type ) {
+	     case "s":
+		val = val.toString();
+		break;
+	     case "f":
+		val = val.toFixed(prec);
+		break;
+	     case "d":
+		val = val.toFixed(0);
+		break;
+	    }
+
+	    if ( widt !== 0 && widt > val.length ) {
+		if ( widt > 0 ) {
+		    val = strrep(" ", widt-val.length) + val;
+		} else {
+		    val = val + strrep(" ", widt-val.length);
+		}
+	    }
+
+	    return val;
+	}
+    );
+}
+
+module.exports = template;
+
+},{}],12:[function(require,module,exports){
+"use strict"
+
+function interp1d(arr, x) {
+  var ix = Math.floor(x)
+    , fx = x - ix
+    , s0 = 0 <= ix   && ix   < arr.shape[0]
+    , s1 = 0 <= ix+1 && ix+1 < arr.shape[0]
+    , w0 = s0 ? +arr.get(ix)   : 0.0
+    , w1 = s1 ? +arr.get(ix+1) : 0.0
+  return (1.0-fx)*w0 + fx*w1
+}
+
+function interp2d(arr, x, y) {
+  var ix = Math.floor(x)
+    , fx = x - ix
+    , s0 = 0 <= ix   && ix   < arr.shape[0]
+    , s1 = 0 <= ix+1 && ix+1 < arr.shape[0]
+    , iy = Math.floor(y)
+    , fy = y - iy
+    , t0 = 0 <= iy   && iy   < arr.shape[1]
+    , t1 = 0 <= iy+1 && iy+1 < arr.shape[1]
+    , w00 = s0&&t0 ? arr.get(ix  ,iy  ) : 0.0
+    , w01 = s0&&t1 ? arr.get(ix  ,iy+1) : 0.0
+    , w10 = s1&&t0 ? arr.get(ix+1,iy  ) : 0.0
+    , w11 = s1&&t1 ? arr.get(ix+1,iy+1) : 0.0
+  return (1.0-fy) * ((1.0-fx)*w00 + fx*w10) + fy * ((1.0-fx)*w01 + fx*w11)
+}
+
+function interp3d(arr, x, y, z) {
+  var ix = Math.floor(x)
+    , fx = x - ix
+    , s0 = 0 <= ix   && ix   < arr.shape[0]
+    , s1 = 0 <= ix+1 && ix+1 < arr.shape[0]
+    , iy = Math.floor(y)
+    , fy = y - iy
+    , t0 = 0 <= iy   && iy   < arr.shape[1]
+    , t1 = 0 <= iy+1 && iy+1 < arr.shape[1]
+    , iz = Math.floor(z)
+    , fz = z - iz
+    , u0 = 0 <= iz   && iz   < arr.shape[2]
+    , u1 = 0 <= iz+1 && iz+1 < arr.shape[2]
+    , w000 = s0&&t0&&u0 ? arr.get(ix,iy,iz)       : 0.0
+    , w010 = s0&&t1&&u0 ? arr.get(ix,iy+1,iz)     : 0.0
+    , w100 = s1&&t0&&u0 ? arr.get(ix+1,iy,iz)     : 0.0
+    , w110 = s1&&t1&&u0 ? arr.get(ix+1,iy+1,iz)   : 0.0
+    , w001 = s0&&t0&&u1 ? arr.get(ix,iy,iz+1)     : 0.0
+    , w011 = s0&&t1&&u1 ? arr.get(ix,iy+1,iz+1)   : 0.0
+    , w101 = s1&&t0&&u1 ? arr.get(ix+1,iy,iz+1)   : 0.0
+    , w111 = s1&&t1&&u1 ? arr.get(ix+1,iy+1,iz+1) : 0.0
+  return (1.0-fz) * ((1.0-fy) * ((1.0-fx)*w000 + fx*w100) + fy * ((1.0-fx)*w010 + fx*w110)) + fz * ((1.0-fy) * ((1.0-fx)*w001 + fx*w101) + fy * ((1.0-fx)*w011 + fx*w111))
+}
+
+function interpNd(arr) {
+  var d = arr.shape.length|0
+    , ix = new Array(d)
+    , fx = new Array(d)
+    , s0 = new Array(d)
+    , s1 = new Array(d)
+    , i, t
+  for(i=0; i<d; ++i) {
+    t = +arguments[i+1]
+    ix[i] = Math.floor(t)
+    fx[i] = t - ix[i]
+    s0[i] = (0 <= ix[i]   && ix[i]   < arr.shape[i])
+    s1[i] = (0 <= ix[i]+1 && ix[i]+1 < arr.shape[i])
+  }
+  var r = 0.0, j, w, idx
+i_loop:
+  for(i=0; i<(1<<d); ++i) {
+    w = 1.0
+    idx = arr.offset
+    for(j=0; j<d; ++j) {
+      if(i & (1<<j)) {
+        if(!s1[j]) {
+          continue i_loop
+        }
+        w *= fx[j]
+        idx += arr.stride[j] * (ix[j] + 1)
+      } else {
+        if(!s0[j]) {
+          continue i_loop
+        }
+        w *= 1.0 - fx[j]
+        idx += arr.stride[j] * ix[j]
+      }
+    }
+    r += w * arr.data[idx]
+  }
+  return r
+}
+
+function interpolate(arr, x, y, z) {
+  switch(arr.shape.length) {
+    case 0:
+      return 0.0
+    case 1:
+      return interp1d(arr, x)
+    case 2:
+      return interp2d(arr, x, y)
+    case 3:
+      return interp3d(arr, x, y, z)
+    default:
+      return interpNd.apply(undefined, arguments)
+  }
+}
+module.exports = interpolate
+module.exports.d1 = interp1d
+module.exports.d2 = interp2d
+module.exports.d3 = interp3d
+
+},{}],13:[function(require,module,exports){
+"use strict"
+
+var iota = require("iota-array")
+
+var arrayMethods = [
+  "concat",
+  "join",
+  "slice",
+  "toString",
+  "indexOf",
+  "lastIndexOf",
+  "forEach",
+  "every",
+  "some",
+  "filter",
+  "map",
+  "reduce",
+  "reduceRight"
+]
+
+function compare1st(a, b) {
+  return a[0] - b[0]
+}
+
+function order() {
+  var stride = this.stride
+  var terms = new Array(stride.length)
+  var i
+  for(i=0; i<terms.length; ++i) {
+    terms[i] = [Math.abs(stride[i]), i]
+  }
+  terms.sort(compare1st)
+  var result = new Array(terms.length)
+  for(i=0; i<result.length; ++i) {
+    result[i] = terms[i][1]
+  }
+  return result
+}
+
+function compileConstructor(dtype, dimension) {
+  var className = ["View", dimension, "d", dtype].join("")
+  if(dimension < 0) {
+    className = "View_Nil" + dtype
+  }
+  var useGetters = (dtype === "generic")
+  
+  if(dimension === -1) {
+    //Special case for trivial arrays
+    var code = 
+      "function "+className+"(a){this.data=a;};\
+var proto="+className+".prototype;\
+proto.dtype='"+dtype+"';\
+proto.index=function(){return -1};\
+proto.size=0;\
+proto.dimension=-1;\
+proto.shape=proto.stride=proto.order=[];\
+proto.lo=proto.hi=proto.transpose=proto.step=\
+function(){return new "+className+"(this.data);};\
+proto.get=proto.set=function(){};\
+proto.pick=function(){return null};\
+return function construct_"+className+"(a){return new "+className+"(a);}"
+    var procedure = new Function(code)
+    return procedure()
+  } else if(dimension === 0) {
+    //Special case for 0d arrays
+    var code =
+      "function "+className+"(a,d) {\
+this.data = a;\
+this.offset = d\
+};\
+var proto="+className+".prototype;\
+proto.dtype='"+dtype+"';\
+proto.index=function(){return this.offset};\
+proto.dimension=0;\
+proto.size=1;\
+proto.shape=\
+proto.stride=\
+proto.order=[];\
+proto.lo=\
+proto.hi=\
+proto.transpose=\
+proto.step=function "+className+"_copy() {\
+return new "+className+"(this.data,this.offset)\
+};\
+proto.pick=function "+className+"_pick(){\
+return TrivialArray(this.data);\
+};\
+proto.valueOf=proto.get=function "+className+"_get(){\
+return "+(useGetters ? "this.data.get(this.offset)" : "this.data[this.offset]")+
+"};\
+proto.set=function "+className+"_set(v){\
+return "+(useGetters ? "this.data.set(this.offset,v)" : "this.data[this.offset]=v")+"\
+};\
+return function construct_"+className+"(a,b,c,d){return new "+className+"(a,d)}"
+    var procedure = new Function("TrivialArray", code)
+    return procedure(CACHED_CONSTRUCTORS[dtype][0])
+  }
+
+  var code = ["'use strict'"]
+    
+  //Create constructor for view
+  var indices = iota(dimension)
+  var args = indices.map(function(i) { return "i"+i })
+  var index_str = "this.offset+" + indices.map(function(i) {
+        return ["this._stride", i, "*i",i].join("")
+      }).join("+")
+  code.push("function "+className+"(a,"+
+    indices.map(function(i) {
+      return "b"+i
+    }).join(",")+","+
+    indices.map(function(i) {
+      return "c"+i
+    }).join(",")+",d){this.data=a")
+  for(var i=0; i<dimension; ++i) {
+    code.push("this._shape"+i+"=b"+i+"|0")
+  }
+  for(var i=0; i<dimension; ++i) {
+    code.push("this._stride"+i+"=c"+i+"|0")
+  }
+  code.push("this.offset=d|0}",
+    "var proto="+className+".prototype",
+    "proto.dtype='"+dtype+"'",
+    "proto.dimension="+dimension)
+  
+  //view.stride and view.shape
+  var strideClassName = "VStride" + dimension + "d" + dtype
+  var shapeClassName = "VShape" + dimension + "d" + dtype
+  var props = {"stride":strideClassName, "shape":shapeClassName}
+  for(var prop in props) {
+    var arrayName = props[prop]
+    code.push(
+      "function " + arrayName + "(v) {this._v=v} var aproto=" + arrayName + ".prototype",
+      "aproto.length="+dimension)
+    
+    var array_elements = []
+    for(var i=0; i<dimension; ++i) {
+      array_elements.push(["this._v._", prop, i].join(""))
+    }
+    code.push(
+      "aproto.toJSON=function " + arrayName + "_toJSON(){return [" + array_elements.join(",") + "]}",
+      "aproto.valueOf=aproto.toString=function " + arrayName + "_toString(){return [" + array_elements.join(",") + "].join()}")
+    
+    for(var i=0; i<dimension; ++i) {
+      code.push(["Object.defineProperty(aproto,", i, ",{get:function(){return this._v._", prop, i, "},set:function(v){return this._v._", prop, i, "=v|0},enumerable:true})"].join(""))
+    }
+    for(var i=0; i<arrayMethods.length; ++i) {
+      if(arrayMethods[i] in Array.prototype) {
+        code.push(["aproto.", arrayMethods[i], "=Array.prototype.", arrayMethods[i]].join(""))
+      }
+    }
+    code.push(["Object.defineProperty(proto,'",prop,"',{get:function ", arrayName, "_get(){return new ", arrayName, "(this)},set: function ", arrayName, "_set(v){"].join(""))
+    for(var i=0; i<dimension; ++i) {
+      code.push(["this._", prop, i, "=v[", i, "]|0"].join(""))
+    }
+    code.push("return v}})")
+  }
+  
+  //view.size:
+  code.push(["Object.defineProperty(proto,'size',{get:function ",className,"_size(){\
+return ", indices.map(function(i) { return ["this._shape", i].join("") }).join("*"),
+"}})"].join(""))
+
+  //view.order:
+  if(dimension === 1) {
+    code.push("proto.order=[0]")
+  } else {
+    code.push("Object.defineProperty(proto,'order',{get:")
+    if(dimension < 4) {
+      code.push(["function ",className,"_order(){"].join(""))
+      if(dimension === 2) {
+        code.push("return (Math.abs(this._stride0)>Math.abs(this._stride1))?[1,0]:[0,1]}})")
+      } else if(dimension === 3) {
+        code.push(
+"var s0=Math.abs(this._stride0),s1=Math.abs(this._stride1),s2=Math.abs(this._stride2);\
+if(s0>s1){\
+if(s1>s2){\
+return [2,1,0];\
+}else if(s0>s2){\
+return [1,2,0];\
+}else{\
+return [1,0,2];\
+}\
+}else if(s0>s2){\
+return [2,0,1];\
+}else if(s2>s1){\
+return [0,1,2];\
+}else{\
+return [0,2,1];\
+}}})")
+      }
+    } else {
+      code.push("ORDER})")
+    }
+  }
+  
+  //view.set(i0, ..., v):
+  code.push([
+"proto.set=function ",className,"_set(", args.join(","), ",v){"].join(""))
+  if(useGetters) {
+    code.push(["return this.data.set(", index_str, ",v)}"].join(""))
+  } else {
+    code.push(["return this.data[", index_str, "]=v}"].join(""))
+  }
+  
+  //view.get(i0, ...):
+  code.push(["proto.get=function ",className,"_get(", args.join(","), "){"].join(""))
+  if(useGetters) {
+    code.push(["return this.data.get(", index_str, ")}"].join(""))
+  } else {
+    code.push(["return this.data[", index_str, "]}"].join(""))
+  }
+  
+  //view.index:
+  code.push([
+    "proto.index=function ",
+      className,
+      "_index(", args.join(), "){return ", 
+      index_str, "}"].join(""))
+
+  //view.hi():
+  code.push(["proto.hi=function ",className,"_hi(",args.join(","),"){return new ", className, "(this.data,",
+    indices.map(function(i) {
+      return ["(typeof i",i,"!=='number'||i",i,"<0)?this._shape", i, ":i", i,"|0"].join("")
+    }).join(","), ",",
+    indices.map(function(i) {
+      return "this._stride"+i
+    }).join(","), ",this.offset)}"].join(""))
+  
+  //view.lo():
+  var a_vars = indices.map(function(i) { return "a"+i+"=this._shape"+i })
+  var c_vars = indices.map(function(i) { return "c"+i+"=this._stride"+i })
+  code.push(["proto.lo=function ",className,"_lo(",args.join(","),"){var b=this.offset,d=0,", a_vars.join(","), ",", c_vars.join(",")].join(""))
+  for(var i=0; i<dimension; ++i) {
+    code.push([
+"if(typeof i",i,"==='number'&&i",i,">=0){\
+d=i",i,"|0;\
+b+=c",i,"*d;\
+a",i,"-=d}"].join(""))
+  }
+  code.push(["return new ", className, "(this.data,",
+    indices.map(function(i) {
+      return "a"+i
+    }).join(","),",",
+    indices.map(function(i) {
+      return "c"+i
+    }).join(","), ",b)}"].join(""))
+  
+  //view.step():
+  code.push(["proto.step=function ",className,"_step(",args.join(","),"){var ",
+    indices.map(function(i) {
+      return "a"+i+"=this._shape"+i
+    }).join(","), ",",
+    indices.map(function(i) {
+      return "b"+i+"=this._stride"+i
+    }).join(","),",c=this.offset,d=0,ceil=Math.ceil"].join(""))
+  for(var i=0; i<dimension; ++i) {
+    code.push([
+"if(typeof i",i,"==='number'){\
+d=i",i,"|0;\
+if(d<0){\
+c+=b",i,"*(a",i,"-1);\
+a",i,"=ceil(-a",i,"/d)\
+}else{\
+a",i,"=ceil(a",i,"/d)\
+}\
+b",i,"*=d\
+}"].join(""))
+  }
+  code.push(["return new ", className, "(this.data,",
+    indices.map(function(i) {
+      return "a" + i
+    }).join(","), ",",
+    indices.map(function(i) {
+      return "b" + i
+    }).join(","), ",c)}"].join(""))
+  
+  //view.transpose():
+  var tShape = new Array(dimension)
+  var tStride = new Array(dimension)
+  for(var i=0; i<dimension; ++i) {
+    tShape[i] = ["a[i", i, "]"].join("")
+    tStride[i] = ["b[i", i, "]"].join("")
+  }
+  code.push(["proto.transpose=function ",className,"_transpose(",args,"){", 
+    args.map(function(n,idx) { return n + "=(" + n + "===undefined?" + idx + ":" + n + "|0)"}).join(";"),
+    ";var a=this.shape,b=this.stride;return new ", className, "(this.data,", tShape.join(","), ",", tStride.join(","), ",this.offset)}"].join(""))
+  
+  //view.pick():
+  code.push(["proto.pick=function ",className,"_pick(",args,"){var a=[],b=[],c=this.offset"].join(""))
+  for(var i=0; i<dimension; ++i) {
+    code.push(["if(typeof i",i,"==='number'&&i",i,">=0){c=(c+this._stride",i,"*i",i,")|0}else{a.push(this._shape",i,");b.push(this._stride",i,")}"].join(""))
+  }
+  code.push("var ctor=CTOR_LIST[a.length+1];return ctor(this.data,a,b,c)}")
+    
+  //Add return statement
+  code.push(["return function construct_",className,"(data,shape,stride,offset){return new ", className,"(data,",
+    indices.map(function(i) {
+      return "shape["+i+"]"
+    }).join(","), ",",
+    indices.map(function(i) {
+      return "stride["+i+"]"
+    }).join(","), ",offset)}"].join(""))
+
+  //Compile procedure
+  var procedure = new Function("CTOR_LIST", "ORDER", code.join("\n"))
+  return procedure(CACHED_CONSTRUCTORS[dtype], order)
+}
+
+function arrayDType(data) {
+  if(data instanceof Float64Array) {
+    return "float64";
+  } else if(data instanceof Float32Array) {
+    return "float32"
+  } else if(data instanceof Int32Array) {
+    return "int32"
+  } else if(data instanceof Uint32Array) {
+    return "uint32"
+  } else if(data instanceof Uint8Array) {
+    return "uint8"
+  } else if(data instanceof Uint16Array) {
+    return "uint16"
+  } else if(data instanceof Int16Array) {
+    return "int16"
+  } else if(data instanceof Int8Array) {
+    return "int8"
+  } else if(data instanceof Uint8ClampedArray) {
+    return "uint8_clamped"
+  } else if(data instanceof Array) {
+    return "array"
+  }
+  return "generic"
+}
+
+var CACHED_CONSTRUCTORS = {
+  "float32":[],
+  "float64":[],
+  "int8":[],
+  "int16":[],
+  "int32":[],
+  "uint8":[],
+  "uint16":[],
+  "uint32":[],
+  "array":[],
+  "uint8_clamped":[],
+  "generic":[]
+}
+
+;(function() {
+  for(var id in CACHED_CONSTRUCTORS) {
+    CACHED_CONSTRUCTORS[id].push(compileConstructor(id, -1))
+  }
+});
+
+function wrappedNDArrayCtor(data, shape, stride, offset) {
+  if(data === undefined) {
+    var ctor = CACHED_CONSTRUCTORS.array[0]
+    return ctor([])
+  } else if(typeof data === "number") {
+    data = [data]
+  }
+  if(shape === undefined) {
+    shape = [ data.length ]
+  }
+  var d = shape.length
+  if(stride === undefined) {
+    stride = new Array(d)
+    for(var i=d-1, sz=1; i>=0; --i) {
+      stride[i] = sz
+      sz *= shape[i]
+    }
+  }
+  if(offset === undefined) {
+    offset = 0
+    for(var i=0; i<d; ++i) {
+      if(stride[i] < 0) {
+        offset -= (shape[i]-1)*stride[i]
+      }
+    }
+  }
+  var dtype = arrayDType(data)
+  var ctor_list = CACHED_CONSTRUCTORS[dtype]
+  while(ctor_list.length <= d+1) {
+    ctor_list.push(compileConstructor(dtype, ctor_list.length-1))
+  }
+  var ctor = ctor_list[d+1]
+  return ctor(data, shape, stride, offset)
+}
+
+module.exports = wrappedNDArrayCtor
+
+},{"iota-array":14}],14:[function(require,module,exports){
+"use strict"
+
+function iota(n) {
+  var result = new Array(n)
+  for(var i=0; i<n; ++i) {
+    result[i] = i
+  }
+  return result
+}
+
+module.exports = iota
+},{}]},{},[])
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals $, JS9 */ 
+
+"use strict";
+
+
+(function() {
+    var imexam = require("./imexam");
+
+    var encen_template = " 						\
+    	<div style='position:absolute;right: 10px;bottom:50px'>		\
+        <table>								\
+	    <tr><td>ee50</td><td align=right>{ee50%.2f}</td><tr>	\
+	    <tr><td>ee80</td><td align=right>{ee80%.2f}</td><tr>	\
+        </table>							\
+	</div>";
+
+    function energUpdate(im, xreg) {
+        var div = this.div;
+
+	    var imag = imexam.getRegionData(im, xreg);
+
+            var backgr  = imexam.imops.backgr(imag, 4).value;
+            var data    = imexam.ndops.assign(imexam.ndops.zeros(imag.shape), imag);
+
+            imexam.ndops.subs(data, imag, backgr);
+
+            var qcenter  = imexam.ndops.qcenter(data);
+            var centroid = imexam.ndops.centroid(data, qcenter);
+
+	    var encen = imexam.imops.encen(data, [centroid.ceny, centroid.cenx]);
+
+	    var stat       = {};
+	    stat.ee80  = imexam.ndops.indexof(encen, 0.80);
+	    stat.ee50  = imexam.ndops.indexof(encen, 0.50);
+
+	    var edata = [];
+	    var i;
+
+	    for ( i = 0;  i < encen.shape[0]; i++ ) {
+		edata[i] = [i, encen.get(i)];
+	    }
+
+            $(div).empty();
+	    var plot = $.plot(div, [edata]
+		    , { selection: { mode: "xy" } });
+
+	    $(div).append(imexam.template(encen_template, stat));
+    }
+
+    function energInit() {
+	imexam.fixupDiv(this);
+        $(this.div).append("Create a region to see encircled energy<br>");
+    }
+
+    JS9.RegisterPlugin("ImExam", "EncEnergy", energInit, {
+	    menu: "analysis",
+
+            menuItem: "Encircled Energy",
+            winTitle: "Encircled Energy",
+	    help:     "imexam/imexam.html#enener",
+
+	    toolbarSeparate: true,
+
+            onregionschange: energUpdate,
+            winDims: [250, 250],
+    });
+
+}());
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, continue: true */
+/*globals $, JS9, greg */ 
+
+"use strict";
+
+
+(function () {
+    var imexam = require("./imexam");
+
+/*
+    $("table").delegate('td','mouseover mouseleave', function(e) {
+	if (e.type == 'mouseover') {
+	    $(this).parent().addClass("hover");
+	    $("colgroup").eq($(this).index()).addClass("hover");
+	} else {
+	    $(this).parent().removeClass("hover");
+	    $("colgroup").eq($(this).index()).removeClass("hover");
+	}
+    });
+ */
+
+    function strrep(str, n, x) {
+        var i;
+	var rx = new RegExp(x, "g");
+
+	var s = '';
+	for ( i = 0; i < n; i++ ) {
+	    s += str.replace(rx, i);
+	}
+	return s;
+    }
+
+    function htmlTable(x, y) {
+	var t = "<table cellpadding=0 cellspacing=0>";
+
+	t      += strrep( "<tr>"
+		+ strrep("<td ><input class='col%x row%y' type=entry size=6 name=cell%y.%x value=0></td>", x, "%x") 
+		+ "</tr>\n", y, "%y");
+	t    += "</table>";
+
+	return t;
+    }
+
+
+  //   $(this).css({"font-size" : newFontSize, "line-height" : newFontSize/1.2 + "px"});
+
+    function pxtablUpdate(im, point) {
+            var im_2d   = imexam.ndops.ndarray(im.raw.data, [im.raw.height, im.raw.width]);
+	    var i = 0, j = 0;
+	    var x, y;
+
+
+	    var pxtabl = $(this.div).find(".pxtabl")[0];
+
+	    pxtabl["cell" + j + "." + i].value = "col\\row";
+
+	    j = 0;
+	    for ( i = 1; i < 10; i++ ) {
+		x = point.x + i - 5;
+
+		if ( x > 0 && x <= im.raw.width ) {
+		    pxtabl["cell" + j + "." + i].value = x.toFixed(0);
+		} else {
+		    pxtabl["cell" + j + "." + i].value = "";
+		}
+	    }
+
+	    i = 0;
+	    for ( j = 1; j < 10; j++ ) {
+		y = point.y + j - 5;
+
+		if ( y > 0 && y <= im.raw.height ) {
+		    pxtabl["cell" + (10-j) + "." + i].value = y.toFixed(0);
+		} else {
+		    pxtabl["cell" + (10-j) + "." + i].value = "";
+		}
+	    }
+
+	    for ( j = 1; j < 10; j++ ) {
+	    for ( i = 1; i < 10; i++ ) {
+		x = (point.x + i - 5 - 0.5)|0;
+		y = (point.y + j - 5 - 0.5)|0;
+
+		if ( x >= 0 && x < im.raw.width && y >= 0 && y < im.raw.height ) {
+		    pxtabl["cell" + (10-j) + "." + i].value = im_2d.get(y, x).toPrecision(4);
+		} else {
+		    pxtabl["cell" + (10-j) + "." + i].value = "";
+		}
+	    }
+	    }
+    }
+
+    function pxtablInit() {
+	imexam.fixupDiv(this);
+
+	$(this.div).html("<form class=pxtabl>" + htmlTable(10, 10) + "</form>");
+	$(this.div).find(".row5").css("background", "lightblue");
+	$(this.div).find(".col5").css("background", "lightblue");
+	$(this.div).find(":input").css("font-size", "11");
+    }
+
+    JS9.RegisterPlugin("ImExam", "PxTabl", pxtablInit, {
+	    menu: "view",
+
+            menuItem: "Pixel Table",
+            winTitle: "Pixel Table",
+	    winResize: true,
+
+	    toolbarSeparate: true,
+
+            onmousemove: pxtablUpdate,
+            winDims: [625, 240],
+    });
+}());
+
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals $, JS9 */ 
+
+"use strict";
+
+
+(function() {
+    var imexam = require("./imexam");
+
+    var rproj_template = "<div style='position:absolute;right: 10px;top:30px'> \
+                    <table> \
+                                    <tr><td>peak        </td><td align=right>{a%.2f}</td><tr> \
+                                    <tr><td>sigma       </td><td align=right>{c%.2f}</td><tr> \
+                                    <tr><td>bias        </td><td align=right>{d%.2f}</td><tr> \
+                    </table> \
+                    </div>";
+
+    function rprojUpdate(im, xreg) {
+        var div = this.div;
+
+	    var imag = imexam.getRegionData(im, xreg);
+
+            var max     = imexam.ndops.maxvalue(imag);
+            var backgr  = imexam.imops.backgr(imag, 4).value;
+            var data    = imexam.ndops.assign(imexam.ndops.zeros(imag.shape), imag);
+
+            imexam.ndops.subs(data, imag, backgr);
+
+            var qcenter  = imexam.ndops.qcenter(data);
+            var centroid = imexam.ndops.centroid(data, qcenter);
+
+            var rproj    = imexam.imops.rproj(imag, [centroid.ceny, centroid.cenx]);
+
+            var fit = imexam.ndops.gsfit1d(rproj.radi, rproj.data, [max, centroid.fwhm/2.355, backgr]);
+	
+            var fitv = { a: fit[0], b: 0, c: fit[1], d: fit[2] };
+
+            var rdata = [];
+            var rfdat = [];
+            var r;
+
+            for ( r = 0;  r < rproj.radi.shape[0]; r++ ) {
+                    rdata[r] = [rproj.radi.get(r), rproj.data.get(r)];
+            }
+
+            rproj.samp = imexam.ndops.zeros([div.offsetWidth/2]);
+
+            imexam.ndops.fill(rproj.samp, function(r) { return rproj.radius*r/(div.offsetWidth/2); });
+
+
+            rproj.modl = imexam.ndops.gauss1d(rproj.samp, fit);
+
+            for ( r = 0;  r < rproj.modl.shape[0]; r++ ) {
+		rfdat[r] = [rproj.samp.get(r), rproj.modl.get(r)];
+            }
+
+            $(div).empty();
+            var plot = $.plot(div, [{ data: rdata, points: { radius: 1, show: true } }, { data: rfdat }]
+		    , { zoomStack: true, selection: { mode: "xy" } });
+
+            $(div).append(imexam.template(rproj_template, fitv));
+    }
+
+    function rprojInit() {
+	imexam.fixupDiv(this);
+        $(this.div).append("Create a region to see radial projection<br>");
+    }
+
+    JS9.RegisterPlugin("ImExam", "RadialProj", rprojInit, {
+	    menu: "analysis",
+
+            menuItem: "Radial Proj",
+            winTitle: "Radial Proj",
+	    help:     "imexam/imexam.html#r_proj",
+
+	    toolbarSeparate: true,
+
+            onregionschange: rprojUpdate,
+            winDims: [250, 250],
+    });
+
+}());
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals $, JS9 */ 
+
+"use strict";
+
+
+(function() {
+    var imexam = require("./imexam");
+
+    var reghistemplate = "<div class='annotation' style='position:absolute;right: 10px;top:30px'> \
+                    <table> \
+                                    <tr><td>rms        </td><td align=right>{rms%.2f}</td><tr> \
+                                    <tr><td>mean       </td><td align=right>{mean%.2f}</td><tr> \
+                    </table> \
+                    </div>";
+
+    function histStats(div, plot, range) {
+        var i, j = 0;
+        var axes = plot.getAxes();
+
+    	var xmin = axes.xaxis.options.min;
+    	var xmax = axes.xaxis.options.max;
+	var hist = $(div).data("hist");
+ 	var data = hist.raw;
+
+	var rms  = imexam.ndops.rmsClipped( data, xmin, xmax);
+	var mean = imexam.ndops.meanClipped(data, xmin, xmax);
+
+	$(div).find(".annotation").empty();
+
+	$(div).append(imexam.template(reghistemplate, { rms: rms, mean: mean }));
+    }
+
+    function histUpdate(im, xreg) {
+        var div = this.div;
+
+	    var imag = imexam.getRegionData(im, xreg);
+
+            var hist    = imexam.ndops.hist(imag);
+            hist.sum    = imexam.ndops.sum(hist.data);
+
+	    $(div).data("hist", hist);
+
+            var n = 0;
+            var skip = hist.sum * 0.001;
+            var h = 0, i, value;
+
+            $(div).empty();
+
+            var hdata = [];
+
+            for ( i = 0; i < hist.data.shape[0]; i++ ) {
+                n += hist.data.get(i);
+
+                if ( n > skip &&  n < hist.sum - skip ) { 
+		    value = hist.data.get(i);
+
+		    hdata[h] = [i*hist.width+hist.min, value];
+		    h++;
+		}
+            }
+
+            var plot = $.plot(div, [hdata], { zoomStack: true, zoomFunc: histStats, selection: { mode: "x" } });
+
+	    histStats(div, plot, undefined);
+
+//	    $.plot.zoomStackIn(plot, undefined, { xaxis: { from: xmin 		, to: xmax }
+//		    				, yaxis: { from: axes.yaxis.min , to: axes.yaxis.max } }
+//					, histStats);
+    }
+
+    function histInit() {
+	imexam.fixupDiv(this);
+        $(this.div).append("Create a region to see histogram<br>");
+    }
+
+    JS9.RegisterPlugin("ImExam", "Histogram", histInit, {
+	    menu: "analysis",
+
+            menuItem: "Histogram",
+            winTitle: "Histogram",
+	    help:     "imexam/imexam.html#rghist",
+
+	    toolbarSeparate: true,
+	    toolbarHTML: " ",
+
+            onregionschange: histUpdate,
+            winDims: [250, 250],
+    });
+
+}());
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals $, JS9 */ 
+
+"use strict";
+
+
+(function() {
+    var imexam = require("./imexam");
+
+
+    var statTemplate = "                                                                                \
+        <table width=100%>                                                                              \
+            <tr><td align=right>Position x</td> <td align=right>{reg.x%.2f}              </td>          \
+            <td align=right>y</td>              <td align=right>{reg.y%.2f}             </td></tr>      \
+            <tr><td align=right>width</td>      <td align=right>{reg.width%.2f}         </td>           \
+            <td align=right>height</td>         <td align=right>{reg.height%.2f}        </td></tr>      \
+            <tr><td align=right>min</td>        <td align=right>{min%.2f}               </td>           \
+            <td align=right>max</td>            <td align=right>{max%.2f}               </td></tr>      \
+            <tr><td align=right>counts</td>     <td align=right colspan=3>{centroid.sum%.2f}</tr>       \
+            <tr><td align=right>bkgrnd</td>     <td align=right>{backgr.value%.2f}      </td>           \
+            <td align=right>noise</td>          <td align=right>{backgr.noise%.2f}      </td></tr>      \
+            <tr><td align=right>Centroid x</td> <td align=right>{centroid.cenx%.2f}     </td>           \
+            <td align=right>y</td>              <td align=right>{centroid.ceny%.2f}     </td></tr>      \
+            <tr><td align=right>FWHM</td>       <td align=right>{centroid.fwhm%.2f}     </td>           \
+            <td align=right></td>            <td align=right>{centroid.rms%.2f}      </td></tr>         \
+        </table>";
+
+    function statUpdate(im, xreg) {
+        var div = this.div;
+
+            var section = imexam.reg2section(xreg);
+	    var imag    = imexam.getRegionData(im, xreg);
+
+            var data    = imexam.ndops.assign(imexam.ndops.zeros(imag.shape), imag);
+
+            var stat    = {};
+
+            stat.reg = xreg;
+            stat.min = imexam.ndops.minvalue(imag);
+            stat.max = imexam.ndops.maxvalue(imag);
+            stat.backgr  = imexam.imops.backgr(imag, 4);
+
+            imexam.ndops.subs(data, imag, stat.backgr.value);
+
+            stat.qcenter  = imexam.ndops.qcenter(data);
+            stat.centroid = imexam.ndops.centroid(data, imexam.ndops.qcenter(data));
+
+            stat.centroid.cenx += section[0][0];
+            stat.centroid.ceny += section[1][0];
+
+            $(div).html(imexam.template(statTemplate, stat));
+    }
+
+    function statInit() {
+	imexam.fixupDiv(this);
+        $(this.div).append("Create a region to see stats<br>");
+    }
+
+    JS9.RegisterPlugin("ImExam", "RegionStats", statInit, {
+	    menu: "analysis",
+
+            winTitle: "Region Stats",
+            menuItem: "Region Stats",
+	    help:     "imexam/imexam.html#rgstat",
+
+	    toolbarSeparate: true,
+
+            onregionschange: statUpdate,
+            winDims: [250, 250],
+    });
+}());
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
+/*globals $, JS9 */ 
+
+"use strict";
+
+
+(function() {
+    var imexam = require("./imexam");
+
+
+    var projToolbar = "                                	\
+		<div style='float: right;'>		\
+                 <select  class='proj_menu'>		\
+                        <option>sum</option>            \
+                        <option>avg</option>            \
+                        <option>med</option>            \
+		 </select>				\
+		</div>";
+
+
+		// <input type=checkbox class='proj_chek' name=fit><span style='width: 40px; float:right; text-align: left;'>fit</span>	\
+
+    function projUpdate(im, xreg) {
+	var div, proj, menx, chek;
+
+        if ( im === undefined ) {
+	    div  = xreg.div;
+	    proj = xreg.proj;
+	    menx = xreg.menu;
+	    chek = xreg.chek;
+	} else {
+	    div  = this.div; 
+	    menx = this.outerdivjq.find(".proj_menu")[0];
+	    chek = this.outerdivjq.find(".proj_chek")[0];
+
+            proj = imexam.ndops.proj(imexam.getRegionData(im, xreg), this.plugin.opts.xyproj);
+
+	    $(menx).change(function (event) {
+		    projUpdate(undefined, { div: div, proj: proj, menu: menx, chek: chek });
+		});
+	    $(chek).change(function (event) {
+		    projUpdate(undefined, { div: div, proj: proj, menu: menx, chek: chek });
+		});
+	}
+
+
+	var xdata = [];
+	var  data;
+	var x;
+
+	var proj_type = menx.options[menx.selectedIndex].value;
+	
+
+	$(div).empty();
+
+	if ( proj_type === "sum" ) {
+		data = proj.sum;
+	}
+	if ( proj_type === "avg" ) {
+		data = proj.avg;
+	}
+	if ( proj_type === "med" ) {
+		data = proj.med;
+	}
+
+
+	for ( x = 0;  x < data.length; x++ ) {
+		xdata[x] = [x, data[x]];
+	}
+
+	$.plot(div, [xdata], { zoomStack: true, selection: { mode: "xy" } });
+    }
+
+    function projInit() {
+	imexam.fixupDiv(this);
+        $(this.div).append("Create a region to see projection<br>");
+    }
+
+    JS9.RegisterPlugin("ImExam", "XProj", projInit, {
+	    menu: "analysis",
+
+            menuItem: "X Projection",
+	    winTitle: "X Projection",
+	    help:     "imexam/imexam.html#xyproj",
+
+	    toolbarSeparate: true,
+	    toolbarHTML: projToolbar,
+
+            onregionschange: projUpdate,
+
+            winDims: [250, 250],
+
+            xyproj: 0
+    });
+
+    JS9.RegisterPlugin("ImExam", "YProj", projInit, {
+	    menu: "analysis",
+
+            menuItem: "Y Projection",
+	    winTitle: "Y Projection",
+	    help:     "imexam/imexam.html#xyproj",
+
+	    toolbarSeparate: true,
+	    toolbarHTML: projToolbar,
+
+            onregionschange: projUpdate,
+
+            winDims: [250, 250],
+
+            xyproj: 1
+    });
+}());
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, continue: true */
+/*globals $, JS9, imexam, greg */ 
+
+"use strict";
+
+
+(function () {
+    var imexam = require("./imexam");
+
+    require("./JSSurfacePlot-V1.7/javascript/SurfacePlot");
+    require("./JSSurfacePlot-V1.7/javascript/ColourGradient");
+
+    function surface(div, data) {
+
+        var surf     = imexam.ndops.zeros(data.shape),
+            minvalue = imexam.ndops.minvalue(data),
+            maxvalue = imexam.ndops.maxvalue(data),
+            range    = maxvalue - minvalue;
+
+        var  surfacePlot = $(div).data("surfplot");
+        var fillPly = true;
+        
+
+        surf.getNumberOfRows = function () {
+            return this.shape[1];
+        };
+        surf.getNumberOfColumns = function () {
+            return this.shape[0];
+        };
+        surf.getFormattedValue = function (i, j) {
+            return this.get(j, i).toString();
+        };
+
+
+        if ( surfacePlot === undefined ) {
+            div.innerHTML = "";
+
+            surfacePlot = new greg.ross.visualisation.SurfacePlot(div);
+
+            $(div).data("surfplot", surfacePlot);
+        }
+
+        // Define a colour gradient.
+        var colour1 = {red:   0, green:   0, blue: 255};
+        var colour2 = {red:   0, green: 255, blue: 255};
+        var colour3 = {red:   0, green: 255, blue:   0};
+        var colour4 = {red: 255, green: 255, blue:   0};
+        var colour5 = {red: 255, green:   0, blue:   0};
+        var colours = [colour1, colour2, colour3, colour4, colour5];
+        
+        // Axis labels.
+        var xAxisHeader = "X";
+        var yAxisHeader = "Y";
+        var zAxisHeader = "Z";
+
+        var tooltipStrings = [];
+
+        var numRows = surf.getNumberOfRows();
+        var numCols = surf.getNumberOfColumns();
+        var idx = 0;
+
+        var height = div.offsetHeight;
+        var width  = div.offsetWidth;
+        var i, j, value;
+
+        for (i = 0; i < numRows; i++) {
+            for (j = 0; j < numCols; j++) {
+                value = data.get(j, i);
+
+                surf.set(j, i, (value-minvalue)/(range*2.25));
+
+                if ( value !== undefined ) {
+		    tooltipStrings[idx] = "x:" + i + ", y:" + j + " = " + value.toFixed(2);
+		}
+                idx++;
+            }
+        }
+        
+        var options = {xPos: 0, yPos: 0, width: width, height: height, colourGradient: colours, fillPolygons: fillPly,
+                tooltips: tooltipStrings, xTitle: xAxisHeader, yTitle: yAxisHeader, zTitle: zAxisHeader, restrictXRotation: false};
+
+        surfacePlot.draw(surf, options);
+    }
+
+    function pluginUpdate(im, xreg) {
+            surface(this.div, imexam.getRegionData(im, xreg));
+    }
+
+    function pluginInit() {
+	imexam.fixupDiv(this);
+        $(this.div).append("Create a region to see 3d plot<br>");
+    }
+
+    JS9.RegisterPlugin("ImExam", "3dPlot", pluginInit, {
+	    menu: "analysis",
+
+            menuItem: "3dPlot",
+            winTitle: "3dPlot",
+	    help:     "imexam/imexam.html#3dplot",
+
+	    toolbarSeparate: true,
+
+            onregionschange: pluginUpdate,
+            winDims: [250, 250],
+    });
+}());
+
+},{"./JSSurfacePlot-V1.7/javascript/ColourGradient":2,"./JSSurfacePlot-V1.7/javascript/SurfacePlot":3}],2:[function(require,module,exports){
+/*
+ * ColourGradient.js
+ *
+ *
+ * Copyright (c) 2011 Greg Ross
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ *
+ * Neither the name of the project's author nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/**
+ * Class that is used to define a path through RGB space.
+ * @author Greg Ross
+ * @constructor
+ * @param minValue the value that will return the first colour on the path in RGB space
+ * @param maxValue the value that will return the last colour on the path in RGB space
+ * @param rgbColourArray the set of colours that defines the dirctional path through RGB space.
+ * The length of the array must be greater than two.
+ */
+greg.ross.visualisation.ColourGradient = function(minValue, maxValue, rgbColourArray)
+{
+	function RGB2HTML(red, green, blue)
+	{
+	    var decColor = red + 256 * green + 65536 * blue;
+	    return decColor.toString(16);
+	}
+
+	/**
+	 * Return a colour from a position on the path in RGB space that is proportioal to
+	 * the number specified in relation to the minimum and maximum values from which the
+	 * bounds of the path are derived.
+	 * @member greg.ross.visualisation.ColourGradient
+	 * @param value
+	 */
+	this.getColour = function(value)
+	{
+		if ( isNaN(value) || value < minValue || value > maxValue || rgbColourArray.length == 1)
+		{
+			var colr = {
+				red: rgbColourArray[0].red,
+				green:rgbColourArray[0].green,
+				blue:rgbColourArray[0].blue
+			};
+			
+			return colr;
+		}
+			
+		var scaledValue = mapValueToZeroOneInterval(value, minValue, maxValue);
+		
+		return getPointOnColourRamp(scaledValue);
+	}
+	
+	function getPointOnColourRamp(value)
+	{
+		var numberOfColours = rgbColourArray.length;
+		var scaleWidth = 1 / (numberOfColours - 1);
+		var index = (value / scaleWidth);
+		var index = parseInt(index + "");
+
+		index = index >=  (numberOfColours - 1) ? (numberOfColours - 2): index;
+
+		var rgb1 = rgbColourArray[index];
+		var rgb2 = rgbColourArray[index + 1];
+		
+		var closestToOrigin, furthestFromOrigin;
+		
+		if (distanceFromRgbOrigin(rgb1) > distanceFromRgbOrigin(rgb2))
+		{
+			closestToOrigin = rgb2;
+			furthestFromOrigin = rgb1;
+		}
+		else
+		{
+			closestToOrigin = rgb1;
+			furthestFromOrigin = rgb2;
+		}
+		
+		var t;
+		
+		if (closestToOrigin == rgb2)
+			t = 1 - mapValueToZeroOneInterval(value, index * scaleWidth, (index + 1) * scaleWidth);
+		else
+			t = mapValueToZeroOneInterval(value, index * scaleWidth, (index + 1) * scaleWidth);
+			
+		var diff = [
+			t * (furthestFromOrigin.red - closestToOrigin.red),
+			t * (furthestFromOrigin.green - closestToOrigin.green), 
+			t * (furthestFromOrigin.blue - closestToOrigin.blue)];
+		
+		var r = closestToOrigin.red + diff[0];
+		var g = closestToOrigin.green + diff[1];
+		var b = closestToOrigin.blue + diff[2];
+		
+		r = parseInt(r);
+		g = parseInt(g);
+		b = parseInt(b);
+		
+		var colr = {
+			red:r,
+			green:g,
+			blue:b
+		};
+		
+		return colr;
+	}
+
+	function distanceFromRgbOrigin(rgb)
+	{
+		return (rgb.red * rgb.red) + (rgb.green * rgb.green) + (rgb.blue * rgb.blue);
+	}
+
+	function mapValueToZeroOneInterval(value, minValue, maxValue)
+	{
+		if (minValue == maxValue) return 0;
+		
+		var factor = (value - minValue) / (maxValue - minValue);
+		return factor;
+	}
+}
+
+
+},{}],3:[function(require,module,exports){
+/*
+ * SurfacePlot.js
+ *
+ *
+ * Copyright (c) 2011 Greg Ross
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ *
+ * Neither the name of the project's author nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+/*
+ * Register the name space
+ * ***********************
+ */
+function registerNameSpace(ns){
+    var nsParts = ns.split(".");
+    var root = window;
+    var n = nsParts.length;
+    
+    for (var i = 0; i < n; i++) {
+        if (typeof root[nsParts[i]] == "undefined") 
+            root[nsParts[i]] = new Object();
+        
+        root = root[nsParts[i]];
+    }
+}
+
+registerNameSpace("greg.ross.visualisation");
+
+/*
+ * This is the main class and entry point of the tool
+ * and represents the Google viz API.
+ * ***************************************************
+ */
+greg.ross.visualisation.SurfacePlot = function(container){
+    this.containerElement = container;
+}
+
+greg.ross.visualisation.SurfacePlot.prototype.draw = function(data, options) {
+    var xPos = options.xPos;
+    var yPos = options.yPos;
+    var w = options.width;
+    var h = options.height;
+    var colourGradient = options.colourGradient;
+    var fillPolygons = options.fillPolygons;
+    var tooltips = options.tooltips;
+    var xTitle = options.xTitle;
+    var yTitle = options.yTitle;
+    var zTitle = options.zTitle;
+	var restrictXRotation = options.restrictXRotation;
+    
+    if (this.surfacePlot == undefined) 
+        this.surfacePlot = new greg.ross.visualisation.JSSurfacePlot(xPos, yPos, w, h, colourGradient, this.containerElement, tooltips, fillPolygons, xTitle, yTitle, zTitle, restrictXRotation);
+    
+    this.surfacePlot.redraw(data);
+}
+
+/*
+ * This class does most of the work.
+ * *********************************
+ */
+greg.ross.visualisation.JSSurfacePlot = function(x, y, width, height, colourGradient, targetElement, tooltips, fillRegions, xTitle, yTitle, zTitle, restrictXRotation){
+    this.targetDiv;
+    var id = allocateId();
+    var canvas;
+    var canvasContext = null;
+    
+    var scale = greg.ross.visualisation.JSSurfacePlot.DEFAULT_SCALE;
+    
+    var currentZAngle = greg.ross.visualisation.JSSurfacePlot.DEFAULT_Z_ANGLE;
+    var currentXAngle = greg.ross.visualisation.JSSurfacePlot.DEFAULT_X_ANGLE;
+    
+    this.data = null;
+	var canvas_support_checked = false;
+	var canvas_supported = true;
+    var data3ds = null;
+    var displayValues = null;
+    var numXPoints;
+    var numYPoints;
+    var transformation;
+    var cameraPosition;
+    var colourGradient;
+    var colourGradientObject;
+    var renderPoints = false;
+    
+    var mouseDown1 = false;
+    var mouseDown3 = false;
+    var mousePosX = null;
+    var mousePosY = null;
+    var lastMousePos = new greg.ross.visualisation.Point(0, 0);
+    var mouseButton1Up = null;
+    var mouseButton3Up = null;
+    var mouseButton1Down = new greg.ross.visualisation.Point(0, 0);
+    var mouseButton3Down = new greg.ross.visualisation.Point(0, 0);
+    var closestPointToMouse = null;
+    var xAxisHeader = "";
+    var yAxisHeader = "";
+    var zAxisHeader = "";
+    var xAxisTitleLabel = new greg.ross.visualisation.Tooltip(true);
+    var yAxisTitleLabel = new greg.ross.visualisation.Tooltip(true);
+    var zAxisTitleLabel = new greg.ross.visualisation.Tooltip(true);
+    var tTip = new greg.ross.visualisation.Tooltip(false);
+    
+    function init(){
+        transformation = new greg.ross.visualisation.Th3dtran();
+        
+        createTargetDiv();
+        
+        if (!targetDiv) 
+            return;
+        
+        createCanvas();
+    }
+    
+    function hideTooltip(){
+        tTip.hide();
+    }
+    
+    function displayTooltip(e){
+        var position = new greg.ross.visualisation.Point(e.x, e.y);
+        tTip.show(tooltips[closestPointToMouse], 200);
+    }
+    
+    function render(data){
+        canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+        canvasContext.fillStyle = '#000';
+        canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+        this.data = data;
+        
+        var canvasWidth = width;
+        var canvasHeight = height;
+        
+        var minMargin = 20;
+        var drawingDim = canvasWidth - minMargin * 2;
+        var marginX = minMargin;
+        var marginY = minMargin;
+        
+        transformation.init();
+        transformation.rotate(currentXAngle, 0.0, currentZAngle);
+        transformation.scale(scale);
+        transformation.translate(drawingDim / 2.0 + marginX, (drawingDim / 3.0*2) + marginY, 0.0);
+        
+        cameraPosition = new greg.ross.visualisation.Point3D(drawingDim / 2.0 + marginX, drawingDim / 2.0 + marginY, -1000.0);
+        
+        if (renderPoints) {
+            for (i = 0; i < data3ds.length; i++) {
+                var point3d = data3ds[i];
+                canvasContext.fillStyle = '#ff2222';
+                var transformedPoint = transformation.ChangeObjectPoint(point3d);
+                transformedPoint.dist = distance(transformedPoint, cameraPosition);
+                
+                var x = transformedPoint.ax;
+                var y = transformedPoint.ay;
+                
+                canvasContext.beginPath();
+                var dotSize = greg.ross.visualisation.JSSurfacePlot.DATA_DOT_SIZE;
+                
+                canvasContext.arc((x - (dotSize / 2)), (y - (dotSize / 2)), 1, 0, self.Math.PI * 2, true);
+                canvasContext.fill();
+            }
+        }
+        
+        var axes = createAxes();
+        var polygons = createPolygons(data3ds);
+        
+        for (i = 0; i < axes.length; i++) {
+            polygons[polygons.length] = axes[i];
+        }
+        
+        // Sort the polygons so that the closest ones are rendered last
+        // and therefore are not occluded by those behind them.
+        // This is really Painter's algorithm.
+        polygons.sort(greg.ross.visualisation.PolygonComaparator);
+        //polygons = sort(polygons);
+        
+        canvasContext.lineWidth = 1;
+        canvasContext.strokeStyle = '#888';
+        canvasContext.lineJoin = "round";
+        
+        for (i = 0; i < polygons.length; i++) {
+            var polygon = polygons[i];
+            
+            if (polygon.isAnAxis()) {
+                var p1 = polygon.getPoint(0);
+                var p2 = polygon.getPoint(1);
+                
+                canvasContext.beginPath();
+                canvasContext.moveTo(p1.ax, p1.ay);
+                canvasContext.lineTo(p2.ax, p2.ay);
+                canvasContext.stroke();
+            }
+            else {
+                var p1 = polygon.getPoint(0);
+                var p2 = polygon.getPoint(1);
+                var p3 = polygon.getPoint(2);
+                var p4 = polygon.getPoint(3);
+                
+                var colourValue = (p1.lz * 1.0 + p2.lz * 1.0 + p3.lz * 1.0 + p4.lz * 1.0) / 4.0;
+                
+                // if (colourValue < 0) 
+                    // colourValue *= -1;
+                
+                var rgbColour = colourGradientObject.getColour(colourValue);
+                var colr = "rgb(" + rgbColour.red + "," + rgbColour.green + "," + rgbColour.blue + ")";
+                canvasContext.fillStyle = colr;
+                
+                canvasContext.beginPath();
+                canvasContext.moveTo(p1.ax, p1.ay);
+                canvasContext.lineTo(p2.ax, p2.ay);
+                canvasContext.lineTo(p3.ax, p3.ay);
+                canvasContext.lineTo(p4.ax, p4.ay);
+                canvasContext.lineTo(p1.ax, p1.ay);
+                
+                if (fillRegions) 
+                    canvasContext.fill();
+                else 
+                    canvasContext.stroke();
+            }
+        }
+        
+        canvasContext.stroke();
+        
+        if (supports_canvas()) 
+            renderAxisText(axes);
+    }
+    
+    function renderAxisText(axes){
+        var xLabelPoint = new greg.ross.visualisation.Point3D(0.0, 0.5, 0.0);
+        var yLabelPoint = new greg.ross.visualisation.Point3D(-0.5, 0.0, 0.0);
+        var zLabelPoint = new greg.ross.visualisation.Point3D(-0.5, 0.5, 0.5);
+        
+        var transformedxLabelPoint = transformation.ChangeObjectPoint(xLabelPoint);
+        var transformedyLabelPoint = transformation.ChangeObjectPoint(yLabelPoint);
+        var transformedzLabelPoint = transformation.ChangeObjectPoint(zLabelPoint);
+        
+        var xAxis = axes[0];
+        var yAxis = axes[1];
+        var zAxis = axes[2];
+        
+        canvasContext.fillStyle = '#fff';
+        
+        if (xAxis.distanceFromCamera > yAxis.distanceFromCamera) {
+            var xAxisLabelPosX = transformedxLabelPoint.ax;
+            var xAxisLabelPosY = transformedxLabelPoint.ay;
+            canvasContext.fillText(xTitle, xAxisLabelPosX, xAxisLabelPosY);
+        }
+        
+        if (xAxis.distanceFromCamera < yAxis.distanceFromCamera) {
+            var yAxisLabelPosX = transformedyLabelPoint.ax;
+            var yAxisLabelPosY = transformedyLabelPoint.ay;
+            canvasContext.fillText(yTitle, yAxisLabelPosX, yAxisLabelPosY);
+        }
+        
+        if (xAxis.distanceFromCamera < zAxis.distanceFromCamera) {
+            var zAxisLabelPosX = transformedzLabelPoint.ax;
+            var zAxisLabelPosY = transformedzLabelPoint.ay;
+            canvasContext.fillText(zTitle, zAxisLabelPosX, zAxisLabelPosY);
+        }
+    }
+    
+    var sort = function(array){
+        var len = array.length;
+        
+        if (len < 2) {
+            return array;
+        }
+        
+        var pivot = Math.ceil(len / 2);
+        return merge(sort(array.slice(0, pivot)), sort(array.slice(pivot)));
+    }
+    
+    var merge = function(left, right){
+        var result = [];
+        while ((left.length > 0) && (right.length > 0)) {
+            if (left[0].distanceFromCamera < right[0].distanceFromCamera) {
+                result.push(left.shift());
+            }
+            else {
+                result.push(right.shift());
+            }
+        }
+        
+        result = result.concat(left, right);
+        return result;
+    }
+    
+    
+    function createAxes(){
+        var axisOrigin = new greg.ross.visualisation.Point3D(-0.5, 0.5, 0);
+        var xAxisEndPoint = new greg.ross.visualisation.Point3D(0.5, 0.5, 0);
+        var yAxisEndPoint = new greg.ross.visualisation.Point3D(-0.5, -0.5, 0);
+        var zAxisEndPoint = new greg.ross.visualisation.Point3D(-0.5, 0.5, 1);
+        
+        var transformedAxisOrigin = transformation.ChangeObjectPoint(axisOrigin);
+        var transformedXAxisEndPoint = transformation.ChangeObjectPoint(xAxisEndPoint);
+        var transformedYAxisEndPoint = transformation.ChangeObjectPoint(yAxisEndPoint);
+        var transformedZAxisEndPoint = transformation.ChangeObjectPoint(zAxisEndPoint);
+        
+        var axes = new Array();
+        
+        var xAxis = new greg.ross.visualisation.Polygon(cameraPosition, true);
+        xAxis.addPoint(transformedAxisOrigin);
+        xAxis.addPoint(transformedXAxisEndPoint);
+        xAxis.calculateCentroid();
+        xAxis.calculateDistance();
+        axes[axes.length] = xAxis;
+        
+        var yAxis = new greg.ross.visualisation.Polygon(cameraPosition, true);
+        yAxis.addPoint(transformedAxisOrigin);
+        yAxis.addPoint(transformedYAxisEndPoint);
+        yAxis.calculateCentroid();
+        yAxis.calculateDistance();
+        axes[axes.length] = yAxis;
+        
+        var zAxis = new greg.ross.visualisation.Polygon(cameraPosition, true);
+        zAxis.addPoint(transformedAxisOrigin);
+        zAxis.addPoint(transformedZAxisEndPoint);
+        zAxis.calculateCentroid();
+        zAxis.calculateDistance();
+        axes[axes.length] = zAxis;
+        
+        return axes;
+    }
+    
+    function createPolygons(data3D){
+        var i;
+        var j;
+        var polygons = new Array();
+        var index = 0;
+        
+        for (i = 0; i < numXPoints - 1; i++) {
+            for (j = 0; j < numYPoints - 1; j++) {
+                var polygon = new greg.ross.visualisation.Polygon(cameraPosition, false);
+                
+                var p1 = transformation.ChangeObjectPoint(data3D[j + (i * numYPoints)]);
+                var p2 = transformation.ChangeObjectPoint(data3D[j + (i * numYPoints) + numYPoints]);
+                var p3 = transformation.ChangeObjectPoint(data3D[j + (i * numYPoints) + numYPoints + 1]);
+                var p4 = transformation.ChangeObjectPoint(data3D[j + (i * numYPoints) + 1]);
+                
+                polygon.addPoint(p1);
+                polygon.addPoint(p2);
+                polygon.addPoint(p3);
+                polygon.addPoint(p4);
+                polygon.calculateCentroid();
+                polygon.calculateDistance();
+                
+                polygons[index] = polygon;
+                index++;
+            }
+        }
+        
+        return polygons;
+    }
+    
+    function getDefaultColourRamp(){
+        var colour1 = {
+            red: 0,
+            green: 0,
+            blue: 255
+        };
+        var colour2 = {
+            red: 0,
+            green: 255,
+            blue: 255
+        };
+        var colour3 = {
+            red: 0,
+            green: 255,
+            blue: 0
+        };
+        var colour4 = {
+            red: 255,
+            green: 255,
+            blue: 0
+        };
+        var colour5 = {
+            red: 255,
+            green: 0,
+            blue: 0
+        };
+        return [colour1, colour2, colour3, colour4, colour5];
+    }
+    
+    this.redraw = function(data){
+        numXPoints = data.getNumberOfRows() * 1.0;
+        numYPoints = data.getNumberOfColumns() * 1.0;
+        
+        var minZValue = Number.MAX_VALUE;
+        var maxZValue = Number.MIN_VALUE;
+        
+        for (var i = 0; i < numXPoints; i++) {
+            for (var j = 0; j < numYPoints; j++) {
+                var value = data.getFormattedValue(i, j) * 1.0;
+                
+                if (value < minZValue) 
+                    minZValue = value;
+                
+                if (value > maxZValue) 
+                    maxZValue = value;
+            }
+        }
+        
+        var cGradient;
+        
+        if (colourGradient) 
+            cGradient = colourGradient;
+        else 
+            cGradient = getDefaultColourRamp();
+            
+        // if (minZValue < 0 && (minZValue*-1) > maxZValue)
+          // maxZValue = minZValue*-1;
+          
+        colourGradientObject = new greg.ross.visualisation.ColourGradient(minZValue, maxZValue, cGradient);
+        
+        var canvasWidth = width;
+        var canvasHeight = height;
+        
+        var minMargin = 20;
+        var drawingDim = canvasWidth - minMargin * 2;
+        var marginX = minMargin;
+        var marginY = minMargin;
+        
+        if (canvasWidth > canvasHeight) {
+            drawingDim = canvasHeight - minMargin * 2;
+            marginX = (canvasWidth - drawingDim) / 2;
+        }
+        else 
+            if (canvasWidth < canvasHeight) {
+                drawingDim = canvasWidth - minMargin * 2;
+                marginY = (canvasHeight - drawingDim) / 2;
+            }
+        
+        var xDivision = 1 / (numXPoints - 1);
+        var yDivision = 1 / (numYPoints - 1);
+        var xPos, yPos;
+        var i, j;
+        var numPoints = numXPoints * numYPoints;
+        data3ds = new Array();
+        var index = 0;
+        
+        // Calculate 3D points.
+        for (i = 0, xPos = -0.5; i < numXPoints; i++, xPos += xDivision) {
+            for (j = 0, yPos = 0.5; j < numYPoints; j++, yPos -= yDivision) {
+                var x = xPos;
+                var y = yPos;
+                
+                data3ds[index] = new greg.ross.visualisation.Point3D(x, y, data.getFormattedValue(i, j));
+                index++;
+            }
+        }
+        
+        render(data);
+    }
+    
+    function allocateId(){
+        var count = 0;
+        var name = "surfacePlot";
+        
+        do {
+            count++;
+        }
+        while (document.getElementById(name + count))
+        
+        return name + count;
+    }
+    
+    function createTargetDiv(){
+        this.targetDiv = document.createElement("div");
+        this.targetDiv.id = id;
+        this.targetDiv.className = "surfaceplot";
+        this.targetDiv.style.background = '#ffffff'
+        this.targetDiv.style.position = 'absolute';
+        
+        if (!targetElement) 
+            document.body.appendChild(this.targetDiv);
+        else {
+            this.targetDiv.style.position = 'relative';
+            targetElement.appendChild(this.targetDiv);
+        }
+        
+        this.targetDiv.style.left = x + "px";
+        this.targetDiv.style.top = y + "px";
+    }
+    
+    function getInternetExplorerVersion()    // Returns the version of Internet Explorer or a -1
+    // (indicating the use of another browser).
+    {
+        var rv = -1; // Return value assumes failure.
+        if (navigator.appName == 'Microsoft Internet Explorer') {
+            var ua = navigator.userAgent;
+            var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+            if (re.exec(ua) != null) 
+                rv = parseFloat(RegExp.$1);
+        }
+        return rv;
+    }
+    
+    function supports_canvas(){
+		if (canvas_support_checked) return canvas_supported;
+		
+		 canvas_support_checked = true;
+         canvas_supported = !!document.createElement('canvas').getContext;
+		 return canvas_supported;
+    }
+    
+    function createCanvas(){
+        canvas = document.createElement("canvas");
+        
+        if (!supports_canvas()) {
+            G_vmlCanvasManager.initElement(canvas);
+            canvas.style.width = width;
+            canvas.style.height = height;
+        }
+        
+        canvas.className = "surfacePlotCanvas";
+        canvas.setAttribute("width", width);
+        canvas.setAttribute("height", height);
+        canvas.style.left = '0px';
+        canvas.style.top = '0px';
+        
+        targetDiv.appendChild(canvas);
+        
+        canvasContext = canvas.getContext("2d");
+        canvasContext.font = "bold 18px sans-serif";
+        canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+        
+        canvasContext.fillStyle = '#000';
+        
+        canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+        
+        canvasContext.beginPath();
+        canvasContext.rect(0, 0, canvas.width, canvas.height);
+        canvasContext.strokeStyle = '#888';
+        canvasContext.stroke();
+        
+        canvas.onmousemove = mouseIsMoving;
+        canvas.onmouseout = hideTooltip;
+        canvas.onmousedown = mouseDownd;
+        canvas.onmouseup = mouseUpd;
+
+        //added by edupont
+        canvas.addEventListener("touchstart", mouseDownd, false);
+		canvas.addEventListener("touchmove", mouseIsMoving, false);
+		canvas.addEventListener("touchend", mouseUpd, false);
+		canvas.addEventListener("touchcancel", hideTooltip, false);
+    }
+    
+    function mouseDownd(e){
+        if (isShiftPressed(e)) {
+            mouseDown3 = true;
+            mouseButton3Down = getMousePositionFromEvent(e);
+        }
+        else {
+            mouseDown1 = true;
+            mouseButton1Down = getMousePositionFromEvent(e);
+        }
+    }
+    
+    function mouseUpd(e){
+        if (mouseDown1) {
+            mouseButton1Up = lastMousePos;
+        }
+        else 
+            if (mouseDown3) {
+                mouseButton3Up = lastMousePos;
+            }
+        
+        mouseDown1 = false;
+        mouseDown3 = false;
+    }
+    
+    function mouseIsMoving(e){
+        var currentPos = getMousePositionFromEvent(e);
+        
+        if (mouseDown1) {
+            hideTooltip();
+            calculateRotation(currentPos);
+        }
+        else 
+            if (mouseDown3) {
+                hideTooltip();
+                calculateScale(currentPos);
+            }
+            else {
+                closestPointToMouse = null;
+                var closestDist = Number.MAX_VALUE;
+                
+                for (var i = 0; i < data3ds.length; i++) {
+                    var point = data3ds[i];
+                    var dist = distance({
+                        x: point.ax,
+                        y: point.ay
+                    }, currentPos);
+                    
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closestPointToMouse = i;
+                    }
+                }
+                
+                if (closestDist > 16) {
+                    hideTooltip();
+                    return;
+                }
+                
+                displayTooltip(currentPos);
+            }
+			
+			return false;
+    }
+    
+    function isShiftPressed(e){
+        var shiftPressed = 0;
+        
+        if (parseInt(navigator.appVersion) > 3) {
+            var evt = navigator.appName == "Netscape" ? e : event;
+            
+            if (navigator.appName == "Netscape" && parseInt(navigator.appVersion) == 4) {
+                // NETSCAPE 4 CODE
+                var mString = (e.modifiers + 32).toString(2).substring(3, 6);
+                shiftPressed = (mString.charAt(0) == "1");
+            }
+            else {
+                // NEWER BROWSERS [CROSS-PLATFORM]
+                shiftPressed = evt.shiftKey;
+            }
+            
+            if (shiftPressed) 
+                return true;
+        }
+        
+        return false;
+    }
+    
+    function getMousePositionFromEvent(e){
+        if (getInternetExplorerVersion() > -1) {
+            var e = window.event;
+            
+            if (e.srcElement.getAttribute('Stroked') == true) {
+                if (mousePosX == null || mousePosY == null) 
+                    return;
+            }
+            else {
+                mousePosX = e.offsetX;
+                mousePosY = e.offsetY;
+            }
+        }
+        else 
+            if (e.layerX || e.layerX == 0) // Firefox
+            {
+                mousePosX = e.layerX;
+                mousePosY = e.layerY;
+            }
+            else if (e.offsetX || e.offsetX == 0) // Opera
+            {
+                mousePosX = e.offsetX;
+                mousePosY = e.offsetY;
+            }
+			else if (e.touches[0].pageX || e.touches[0].pageX == 0) //touch events
+            {
+	            mousePosX = e.touches[0].pageX;
+	            mousePosY = e.touches[0].pageY;
+            }
+        
+        var currentPos = new greg.ross.visualisation.Point(mousePosX, mousePosY);
+        
+        return currentPos;
+    }
+    
+    function calculateRotation(e){
+        lastMousePos = new greg.ross.visualisation.Point(greg.ross.visualisation.JSSurfacePlot.DEFAULT_Z_ANGLE, greg.ross.visualisation.JSSurfacePlot.DEFAULT_X_ANGLE);
+        
+        if (mouseButton1Up == null) {
+            mouseButton1Up = new greg.ross.visualisation.Point(greg.ross.visualisation.JSSurfacePlot.DEFAULT_Z_ANGLE, greg.ross.visualisation.JSSurfacePlot.DEFAULT_X_ANGLE);
+        }
+        
+        if (mouseButton1Down != null) {
+            lastMousePos = new greg.ross.visualisation.Point(mouseButton1Up.x + (mouseButton1Down.x - e.x),//
+ mouseButton1Up.y + (mouseButton1Down.y - e.y));
+        }
+        
+        currentZAngle = lastMousePos.x % 360;
+        currentXAngle = lastMousePos.y % 360;
+		
+		if (restrictXRotation) {
+			
+			if (currentXAngle < 0) 
+				currentXAngle = 0;
+			else 
+				if (currentXAngle > 90) 
+					currentXAngle = 90;
+					
+		}
+        
+        closestPointToMouse = null;
+        render(data);
+    }
+    
+    function calculateScale(e){
+        lastMousePos = new greg.ross.visualisation.Point(0, greg.ross.visualisation.JSSurfacePlot.DEFAULT_SCALE / greg.ross.visualisation.JSSurfacePlot.SCALE_FACTOR);
+        
+        if (mouseButton3Up == null) {
+            mouseButton3Up = new greg.ross.visualisation.Point(0, greg.ross.visualisation.JSSurfacePlot.DEFAULT_SCALE / greg.ross.visualisation.JSSurfacePlot.SCALE_FACTOR);
+        }
+        
+        if (mouseButton3Down != null) {
+            lastMousePos = new greg.ross.visualisation.Point(mouseButton3Up.x + (mouseButton3Down.x - e.x),//
+ mouseButton3Up.y + (mouseButton3Down.y - e.y));
+        }
+        
+        scale = lastMousePos.y * greg.ross.visualisation.JSSurfacePlot.SCALE_FACTOR;
+        
+        if (scale < greg.ross.visualisation.JSSurfacePlot.MIN_SCALE) 
+            scale = greg.ross.visualisation.JSSurfacePlot.MIN_SCALE + 1;
+        else 
+            if (scale > greg.ross.visualisation.JSSurfacePlot.MAX_SCALE) 
+                scale = greg.ross.visualisation.JSSurfacePlot.MAX_SCALE - 1;
+        
+        lastMousePos.y = scale / greg.ross.visualisation.JSSurfacePlot.SCALE_FACTOR;
+        
+        closestPointToMouse = null;
+        render(data);
+    }
+    
+    init();
+}
+
+/**
+ * Given two coordinates, return the Euclidean distance
+ * between them
+ */
+function distance(p1, p2){
+    return Math.sqrt(((p1.x - p2.x) *
+    (p1.x -
+    p2.x)) +
+    ((p1.y - p2.y) * (p1.y - p2.y)));
+}
+
+/*
+ * Matrix3d: This class represents a 3D matrix.
+ * ********************************************
+ */
+greg.ross.visualisation.Matrix3d = function(){
+    this.matrix = new Array();
+    this.numRows = 4;
+    this.numCols = 4;
+    
+    this.init = function(){
+        this.matrix = new Array();
+        
+        for (var i = 0; i < this.numRows; i++) {
+            this.matrix[i] = new Array();
+        }
+    }
+    
+    this.getMatrix = function(){
+        return this.matrix;
+    }
+    
+    this.matrixReset = function(){
+        for (var i = 0; i < this.numRows; i++) {
+            for (var j = 0; j < this.numCols; j++) {
+                this.matrix[i][j] = 0;
+            }
+        }
+    }
+    
+    this.matrixIdentity = function(){
+        this.matrixReset();
+        this.matrix[0][0] = this.matrix[1][1] = this.matrix[2][2] = this.matrix[3][3] = 1;
+    }
+    
+    this.matrixCopy = function(newM){
+        var temp = new greg.ross.visualisation.Matrix3d();
+        var i, j;
+        
+        for (i = 0; i < this.numRows; i++) {
+            for (j = 0; j < this.numCols; j++) {
+                temp.getMatrix()[i][j] = (this.matrix[i][0] * newM.getMatrix()[0][j]) + (this.matrix[i][1] * newM.getMatrix()[1][j]) + (this.matrix[i][2] * newM.getMatrix()[2][j]) + (this.matrix[i][3] * newM.getMatrix()[3][j]);
+            }
+        }
+        
+        for (i = 0; i < this.numRows; i++) {
+            this.matrix[i][0] = temp.getMatrix()[i][0];
+            this.matrix[i][1] = temp.getMatrix()[i][1];
+            this.matrix[i][2] = temp.getMatrix()[i][2];
+            this.matrix[i][3] = temp.getMatrix()[i][3];
+        }
+    }
+    
+    this.matrixMult = function(m1, m2){
+        var temp = new greg.ross.visualisation.Matrix3d();
+        var i, j;
+        
+        for (i = 0; i < this.numRows; i++) {
+            for (j = 0; j < this.numCols; j++) {
+                temp.getMatrix()[i][j] = (m2.getMatrix()[i][0] * m1.getMatrix()[0][j]) + (m2.getMatrix()[i][1] * m1.getMatrix()[1][j]) + (m2.getMatrix()[i][2] * m1.getMatrix()[2][j]) + (m2.getMatrix()[i][3] * m1.getMatrix()[3][j]);
+            }
+        }
+        
+        for (i = 0; i < this.numRows; i++) {
+            m1.getMatrix()[i][0] = temp.getMatrix()[i][0];
+            m1.getMatrix()[i][1] = temp.getMatrix()[i][1];
+            m1.getMatrix()[i][2] = temp.getMatrix()[i][2];
+            m1.getMatrix()[i][3] = temp.getMatrix()[i][3];
+        }
+    }
+    
+    this.init();
+}
+
+/*
+ * Point3D: This class represents a 3D point.
+ * ******************************************
+ */
+greg.ross.visualisation.Point3D = function(x, y, z){
+    this.displayValue = "";
+    
+    this.lx;
+    this.ly;
+    this.lz;
+    this.lt;
+    
+    this.wx;
+    this.wy;
+    this.wz;
+    this.wt;
+    
+    this.ax;
+    this.ay;
+    this.az;
+    this.at;
+    
+    this.dist;
+    
+    this.initPoint = function(){
+        this.lx = this.ly = this.lz = this.ax = this.ay = this.az = this.at = this.wx = this.wy = this.wz = 0;
+        this.lt = this.wt = 1;
+    }
+    
+    this.init = function(x, y, z){
+        this.initPoint();
+        this.lx = x;
+        this.ly = y;
+        this.lz = z;
+        
+        this.ax = this.lx;
+        this.ay = this.ly;
+        this.az = this.lz;
+    }
+    
+    function multiply(p){
+        var Temp = new Point3D();
+        Temp.lx = this.lx * p.lx;
+        Temp.ly = this.ly * p.ly;
+        Temp.lz = this.lz * p.lz;
+        return Temp;
+    }
+    
+    function getDisplayValue(){
+        return displayValue;
+    }
+    
+    function setDisplayValue(displayValue){
+        this.displayValue = displayValue;
+    }
+    
+    this.init(x, y, z);
+}
+
+/*
+ * Polygon: This class represents a polygon on the surface plot.
+ * ************************************************************
+ */
+greg.ross.visualisation.Polygon = function(cameraPosition, isAxis){
+    this.points = new Array();
+    this.cameraPosition = cameraPosition;
+    this.isAxis = isAxis;
+    this.centroid = null;
+    this.distanceFromCamera = null;
+    
+    this.isAnAxis = function(){
+        return this.isAxis;
+    }
+    
+    this.addPoint = function(point){
+        this.points[this.points.length] = point;
+    }
+    
+    this.distance = function(){
+        return this.distance2(this.cameraPosition, this.centroid);
+    }
+    
+    this.calculateDistance = function(){
+        this.distanceFromCamera = this.distance();
+    }
+    
+    this.calculateCentroid = function(){
+        var xCentre = 0;
+        var yCentre = 0;
+        var zCentre = 0;
+        
+        var numPoints = this.points.length * 1.0;
+        
+        for (var i = 0; i < numPoints; i++) {
+            xCentre += this.points[i].ax;
+            yCentre += this.points[i].ay;
+            zCentre += this.points[i].az;
+        }
+        
+        xCentre /= numPoints;
+        yCentre /= numPoints;
+        zCentre /= numPoints;
+        
+        this.centroid = new greg.ross.visualisation.Point3D(xCentre, yCentre, zCentre);
+    }
+    
+    this.distance2 = function(p1, p2){
+        return ((p1.ax - p2.ax) * (p1.ax - p2.ax)) + ((p1.ay - p2.ay) * (p1.ay - p2.ay)) + ((p1.az - p2.az) * (p1.az - p2.az));
+    }
+    
+    this.getPoint = function(i){
+        return this.points[i];
+    }
+}
+
+/*
+ * PolygonComaparator: Class used to sort arrays of polygons.
+ * ************************************************************
+ */
+greg.ross.visualisation.PolygonComaparator = function(p1, p2){
+    var diff = p1.distanceFromCamera - p2.distanceFromCamera;
+    
+    if (diff == 0) 
+        return 0;
+    else 
+        if (diff < 0) 
+            return -1;
+        else 
+            if (diff > 0) 
+                return 1;
+    
+    return 0;
+}
+
+/*
+ * Th3dtran: Class for matrix manipuation.
+ * ************************************************************
+ */
+greg.ross.visualisation.Th3dtran = function(){
+    this.matrix;
+    this.rMat;
+    this.rMatrix;
+    this.objectMatrix;
+    this.local = true;
+    
+    this.init = function(){
+        this.matrix = new greg.ross.visualisation.Matrix3d();
+        this.rMat = new greg.ross.visualisation.Matrix3d();
+        this.rMatrix = new greg.ross.visualisation.Matrix3d();
+        this.objectMatrix = new greg.ross.visualisation.Matrix3d();
+        
+        this.initMatrix();
+    }
+    
+    this.initMatrix = function(){
+        this.matrix.matrixIdentity();
+        this.objectMatrix.matrixIdentity();
+    }
+    
+    this.translate = function(x, y, z){
+        this.rMat.matrixIdentity();
+        this.rMat.getMatrix()[3][0] = x;
+        this.rMat.getMatrix()[3][1] = y;
+        this.rMat.getMatrix()[3][2] = z;
+        
+        if (this.local) {
+            this.objectMatrix.matrixCopy(this.rMat);
+        }
+        else {
+            this.matrix.matrixCopy(this.rMat);
+        }
+    }
+    
+    this.rotate = function(x, y, z){
+        var rx = x * (Math.PI / 180.0);
+        var ry = y * (Math.PI / 180.0);
+        var rz = z * (Math.PI / 180.0);
+        
+        this.rMatrix.matrixIdentity();
+        this.rMat.matrixIdentity();
+        this.rMat.getMatrix()[1][1] = Math.cos(rx);
+        this.rMat.getMatrix()[1][2] = Math.sin(rx);
+        this.rMat.getMatrix()[2][1] = -(Math.sin(rx));
+        this.rMat.getMatrix()[2][2] = Math.cos(rx);
+        this.rMatrix.matrixMult(this.rMatrix, this.rMat);
+        
+        this.rMat.matrixIdentity();
+        this.rMat.getMatrix()[0][0] = Math.cos(ry);
+        this.rMat.getMatrix()[0][2] = -(Math.sin(ry));
+        this.rMat.getMatrix()[2][0] = Math.sin(ry);
+        this.rMat.getMatrix()[2][2] = Math.cos(ry);
+        this.rMat.matrixMult(this.rMatrix, this.rMat);
+        
+        this.rMat.matrixIdentity();
+        this.rMat.getMatrix()[0][0] = Math.cos(rz);
+        this.rMat.getMatrix()[0][1] = Math.sin(rz);
+        this.rMat.getMatrix()[1][0] = -(Math.sin(rz));
+        this.rMat.getMatrix()[1][1] = Math.cos(rz);
+        this.rMat.matrixMult(this.rMatrix, this.rMat);
+        
+        if (this.local) {
+            this.objectMatrix.matrixCopy(this.rMatrix);
+        }
+        else {
+            this.matrix.matrixCopy(this.rMatrix);
+        }
+    }
+    
+    this.scale = function(scale){
+        this.rMat.matrixIdentity();
+        this.rMat.getMatrix()[0][0] = scale;
+        this.rMat.getMatrix()[1][1] = scale;
+        this.rMat.getMatrix()[2][2] = scale;
+        
+        if (this.local) {
+            this.objectMatrix.matrixCopy(this.rMat);
+        }
+        else {
+            this.matrix.matrixCopy(this.rMat);
+        }
+    }
+    
+    this.changeLocalObject = function(p){
+        p.wx = (p.ax * this.matrix.getMatrix()[0][0] + p.ay * this.matrix.getMatrix()[1][0] + p.az * this.matrix.getMatrix()[2][0] + this.matrix.getMatrix()[3][0]);
+        p.wy = (p.ax * this.matrix.getMatrix()[0][1] + p.ay * this.matrix.getMatrix()[1][1] + p.az * this.matrix.getMatrix()[2][1] + this.matrix.getMatrix()[3][1]);
+        p.wz = (p.ax * this.matrix.getMatrix()[0][2] + p.ay * this.matrix.getMatrix()[1][2] + p.az * this.matrix.getMatrix()[2][2] + this.matrix.getMatrix()[3][2]);
+        
+        return p;
+    }
+    
+    this.ChangeObjectPoint = function(p){
+        p.ax = (p.lx * this.objectMatrix.getMatrix()[0][0] + p.ly * this.objectMatrix.getMatrix()[1][0] + p.lz * this.objectMatrix.getMatrix()[2][0] + this.objectMatrix.getMatrix()[3][0]);
+        p.ay = (p.lx * this.objectMatrix.getMatrix()[0][1] + p.ly * this.objectMatrix.getMatrix()[1][1] + p.lz * this.objectMatrix.getMatrix()[2][1] + this.objectMatrix.getMatrix()[3][1]);
+        p.az = (p.lx * this.objectMatrix.getMatrix()[0][2] + p.ly * this.objectMatrix.getMatrix()[1][2] + p.lz * this.objectMatrix.getMatrix()[2][2] + this.objectMatrix.getMatrix()[3][2]);
+        
+        return p;
+    }
+    
+    this.init();
+}
+
+/*
+ * Point: A simple 2D point.
+ * ************************************************************
+ */
+greg.ross.visualisation.Point = function(x, y){
+    this.x = x;
+    this.y = y;
+}
+
+/*
+ * This function displays tooltips and was adapted from original code by Michael Leigeber.
+ * See http://www.leigeber.com/
+ */
+greg.ross.visualisation.Tooltip = function(useExplicitPositions){
+    var top = 3;
+    var left = 3;
+    var maxw = 300;
+    var speed = 10;
+    var timer = 20;
+    var endalpha = 95;
+    var alpha = 0;
+    var tt, t, c, b, h;
+    var ie = document.all ? true : false;
+    
+    this.show = function(v, w){
+        if (tt == null) {
+            tt = document.createElement('div');
+            tt.style.color = "#fff";
+            
+            tt.style.position = 'absolute';
+            tt.style.display = 'block';
+            
+            t = document.createElement('div');
+            
+            t.style.display = 'block';
+            t.style.height = '5px';
+            t.style.marginleft = '5px';
+            t.style.overflow = 'hidden';
+            
+            c = document.createElement('div');
+            
+            b = document.createElement('div');
+            
+            tt.appendChild(t);
+            tt.appendChild(c);
+            tt.appendChild(b);
+            document.body.appendChild(tt);
+            
+            if (!ie) {
+                tt.style.opacity = 0;
+                tt.style.filter = 'alpha(opacity=0)';
+            }
+            else 
+                tt.style.opacity = 1;
+            
+            
+        }
+        
+        if (!useExplicitPositions) 
+            document.onmousemove = this.pos;
+        
+        tt.style.display = 'block';
+        c.innerHTML = '<span style="font-weight:bold; font-family: arial;">' + v + '</span>';
+        tt.style.width = w ? w + 'px' : 'auto';
+        
+        if (!w && ie) {
+            t.style.display = 'none';
+            b.style.display = 'none';
+            tt.style.width = tt.offsetWidth;
+            t.style.display = 'block';
+            b.style.display = 'block';
+        }
+        
+        if (tt.offsetWidth > maxw) {
+            tt.style.width = maxw + 'px';
+        }
+        
+        h = parseInt(tt.offsetHeight) + top;
+        
+        if (!ie) {
+            clearInterval(tt.timer);
+            tt.timer = setInterval(function(){
+                fade(1)
+            }, timer);
+        }
+    }
+    
+    this.setPos = function(e){
+        tt.style.top = e.y + 'px';
+        tt.style.left = e.x + 'px';
+    }
+    
+    this.pos = function(e){
+        var u = ie ? event.clientY + document.documentElement.scrollTop : e.pageY;
+        var l = ie ? event.clientX + document.documentElement.scrollLeft : e.pageX;
+        tt.style.top = (u - h) + 'px';
+        tt.style.left = (l + left) + 'px';
+    }
+    
+    function fade(d){
+        var a = alpha;
+        
+        if ((a != endalpha && d == 1) || (a != 0 && d == -1)) {
+            var i = speed;
+            
+            if (endalpha - a < speed && d == 1) {
+                i = endalpha - a;
+            }
+            else 
+                if (alpha < speed && d == -1) {
+                    i = a;
+                }
+            
+            alpha = a + (i * d);
+            tt.style.opacity = alpha * .01;
+            tt.style.filter = 'alpha(opacity=' + alpha + ')';
+        }
+        else {
+            clearInterval(tt.timer);
+            
+            if (d == -1) {
+                tt.style.display = 'none';
+            }
+        }
+    }
+    
+    this.hide = function(){
+        if (tt == null) 
+            return;
+        
+        if (!ie) {
+            clearInterval(tt.timer);
+            tt.timer = setInterval(function(){
+                fade(-1)
+            }, timer);
+        }
+        else {
+            tt.style.display = 'none';
+        }
+    }
+}
+
+greg.ross.visualisation.JSSurfacePlot.DEFAULT_X_ANGLE = 47;
+greg.ross.visualisation.JSSurfacePlot.DEFAULT_Z_ANGLE = 47;
+greg.ross.visualisation.JSSurfacePlot.DATA_DOT_SIZE = 3;
+greg.ross.visualisation.JSSurfacePlot.DEFAULT_SCALE = 350;
+greg.ross.visualisation.JSSurfacePlot.MIN_SCALE = 50;
+greg.ross.visualisation.JSSurfacePlot.MAX_SCALE = 1100;
+greg.ross.visualisation.JSSurfacePlot.SCALE_FACTOR = 1.4;
+
+
+},{}]},{},[1])

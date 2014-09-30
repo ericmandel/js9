@@ -1,0 +1,238 @@
+<html>
+<head>
+<style>
+.container{
+  padding: 10px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<title>Server-side Analysis Tasks</title>
+
+<center><h3>Adding Server-side Analysis Tasks to JS9</h3></center>
+
+<p>
+A JS9 Web site can define analysis tools that will be loaded into the
+user's JS9 <b>Analysis</b> menu. These analysis tasks are then
+executed by the back-end (CGI or node.js) server using the original
+FITS data, with results sent back to the browser for display.
+
+<p> To learn how to install the back-end helper, see:
+<a href="./helper.html">Installing a Server-side Helper</a>.
+
+<p>
+Analysis tools are defined within files contained in the
+<b>analysis-plugins</b> directory. If a file in this directory
+ends with a ".json" extension, it is assumed to be an analysis
+definition file. The following sample analysis definition files will
+be found in the <b>analysis-plugins</b> directory by default:
+<ul>
+<li><b>fits2png.json: </b>the command line for converting FITS to PNG files
+<li><b>js9Analysis-fits.json: </b> generic FITS tasks (e.g. display header)
+<li><b>js9Analysis-funtools.json: </b> funtools-based analysis tasks
+</ul>
+If you plan to allow dynamic conversion of FITS files to PNG
+representation files, the <b>fits2png.json</b> file should be left in
+the plugin directory. The other two are optional and should be removed
+if funtools is not available.
+
+<p>
+Analysis definition files are in JSON format
+(http://www.json.org/) and consist of an array of JavaScript objects,
+one for each analysis tool. The properties which define an analysis
+tool are:
+<ul>
+<li><b>name:</b> a short identifier string (typically one word)
+<li><b>title:</b> a longer string that will be displayed in the Analysis menu
+<li><b>files:</b> a rule that a filename will be matched against to determine
+whether this task is available for the current image (not yet implemented)
+<li><b>purl:</b> a URL pointing to a Web page containing a user parameter form
+<li><b>action:</b> The command to execute on the server side
+<li><b>rtype:</b> a return type, which can be <b>text</b> or <b>plot</b>
+<li><b>hidden:</b> if true, the analysis task is not shown in the Analysis menu
+</ul>
+See the sample json files in the analysis-plugins directory for the
+JSON syntax of this file.
+
+<p>
+The <b>action</b> string contains the command to execute. For security
+reasons, this action is never executed directly. Instead, the first
+argument of the command <b>must</b> be a wrapper script contained in
+the <b>analysis-wrappers</b> directory. The <b>js9Xeq</b> wrapper
+script contained therein is the default script for running JS9
+analysis. The second argument in the action string is a command id,
+which is executed within the command-processing case statement of
+the <b>js9Xeq</b>. This wrapper script checks for valid commands and
+arguments, and then executes the specified command in a way that
+protects against malicious attack. You can modify this script to meet
+your needs by adding case statements for each of the new tasks you
+want to run.
+
+<p>
+Alternatively, you can run your analysis tasks through your own
+wrapper script, by placing it in the <b>analysis-wrappers</b>
+directory. Using your own wrapper script allows you to perform your
+own special setup (e.g., setting environment variables, cd to work
+directory) before executing a task.  Obviously you can
+use <b>js9Xeq</b> as an example and modify it to suit your needs.
+
+<p>
+In either case, note that execution of a wrapper script is
+accomplished by pre-pending the path of the analysis wrapper directory
+to the wrapper script name and executing that full pathname directly.
+This prevents a would-be attacker from executing anything except the
+wrapper itself. Of course, you still have to be careful to avoid
+insecure shell coding in your wrapper script.
+See <a href="http://www.w3.org/Security/faq/wwwsf4.html"> The World
+Wide Web Security FAQ</a> for advice on writing CGI scripts.
+
+Note that JS9 scripts generally use bash or sh.  Please make sure your
+bash and sh programs are properly patched to protect against the <b>bash
+bug</b> (CVE-2014-6271).
+
+<p>
+The <b>action</b> command line can contain <b>macros</b> (strings prefixed
+with the <b>$</b> character) that will be expanded by the browser before
+the action is sent to the server for processing. Typically, these macros are
+used to specify filenames, regions, and (possibly) user parameters. The
+following intrinsic macros are defined:
+<ul>
+<li><b>$filename:</b> pathname of the original FITS file
+<li><b>$regions:</b> all currently defined regions
+<li><b>$sregions:</b> all source regions
+<li><b>$bregions:</b> all background regions
+</ul>
+For example, to run the funcnts program, specifying the original FITS
+file as well as source and background regions, use:
+<pre>
+    funcnts $filename $sregions $bregions
+</pre>
+
+<p>
+Many analysis tasks do not require the user to select additional parameter
+options and can can be executed immediately. Other command require
+user-selected options. These latter options should be put into a Web
+form, whose location is specified by the <b>purl</b> option. See
+the <b>params/histplot.html</b> file for an example.
+
+<p>
+Parameter options in a parameter form should have unique ids. These
+ids can then be added as macros to the <b>action</b> command line by
+prefixing them with a <b>$</b>.  For example, the histplot command is:
+<pre>
+    js9Xeq histplot '$filename[$regions]' '$norm $bwidth' $column $bins
+</pre>
+Here, the <b>norm</b>, <b>bwidth</b>, <b>column</b>, and <b>bins</b>
+parameters are taken from the Web form for histplot. The <b>$filename</b>
+and <b>$regions</b> macros are intrinsic to JS9.
+
+<p>
+The <b>input</b> element of the analysis form should run
+the <b>JS9.SubmitAnalysis()</b> command, which will serialize the form,
+pass it to the macro expander, and then send the resulting command string
+to the server for execution.  See <b>histplot.html</b> for sample syntax.
+
+<p>
+The <b>rtype</b> property determine how JS9 handles return values:
+<ul>
+<li><b>text:</b> the returned text is displayed in a lightweight window
+<li><b>plot:</b> the returned plot data is plotted using the jQuery 
+<b>flot</b> widget (see http://www.flotcharts.org/)
+</ul>
+Sample scripts such as <b>funcnts2flot</b> and <b>funhist2plot</b>
+generate a JSON string that contains a valid flot object. For
+example, the radial profile plot contains x, y, and error values:
+<pre>
+{
+  "color": "green", 
+  "label" : "surf_bri(...) vs. avg_radius(...)", 
+  "points" : {"errorbars" : "y", 
+              "yerr" : {"show" : "true", "color" : "red"}},
+  "data": [[x1, y1, e1], [x2, y2, e2], ... [xn, xn, en]]
+}
+</pre>
+while the histogram plot contains only x and y values:
+<pre>
+{
+  "color": "blue", 
+  "label" : "counts vs. ...bin", 
+  "data": [[x1, y1], [x2, y2], ... [xn, xn]]
+}
+</pre>
+If your analysis task generates one of these two plot formats, JS9
+will display the plot data. Plotting is still somewhat experimental
+and rudimentary. We will be adding features with time (e.g. ability to
+change scales between linear and log). Please work with us to improve
+plotting support.
+
+<p>
+Finally, the <b>hidden</b> value determines whether or not a task is
+displayed in the Analysis menu. If <b>hidden</b> value is true, the
+analysis task is not shown. However, it still is available to the
+<b>JS9.RunAnalysis()</b> routine. The <b>fits2png</b> command in the
+<b>fits2png.json</b> definition file is an example of a hidden
+command: it is run indirectly by JS9 and need not be listed as a user
+task.
+
+<p>
+<h3>Adding Analysis Tasks Directly to Your Web Page</h3>
+<p>
+By default, server-side JS9 analysis tasks are executed using
+the <b>Analysis</b> menu, but they also can be executed directly from
+the Web page by means of HTML elements (buttons, forms, etc.) To do
+this, a Web page author simply creates the desired interface and calls
+either <b>JS9.RunAnalysis()</b> (for buttons, menus, etc.)
+or <b>JS9.SubmitAnalysis()</b> (for forms). These are described
+below. See the js9analysis.html page for an example.
+
+<p>
+The <b>JS9.RunAnalysis()</b> routine is used to execute an analysis task and
+return the results for further processing within the Web page. The
+<b>JS9.SubmitAnalysis()</b> routine works similarly, but it is used
+with a form: it automatically serializes the form values and passes
+them to the analysis macro expander so that these values can be put
+into the analysis command line.  The calling sequences for these
+routines are similar:
+<pre>
+    JS9.RunAnalysis(aname, [options], returnFunc);
+    JS9.SubmitAnalysis(this, aname, returnFunc);
+</pre>
+where:
+<ul>
+<li><b>aname:</b> the <b>name</b> value of the task (as defined in the js9Analysis.json file)
+<li><b>options:</b> an optional array of parameters to pass to the analysis
+macro expander. The array is in jQuery name/value serialized object
+format, which is described here:
+<pre>
+    http://api.jquery.com/serializeArray/
+</pre>
+<li><b>returnFunc:</b> a function to process the returned data when the task is
+completed
+<li><b>this:</b> the 'this' value of the form element
+</ul>
+<p>
+The returnFunc() routine is a callback function to process the returned
+data from the analysis task.  The calling sequence is:
+<pre>
+    returnFunc(stdout, stderr, aobj)
+</pre>
+where:
+<ul>
+<li><b>stdout:</b> a string containing the standard output from the task
+<li><b>stderr:</b> a string containing the standard error from the task
+<li><b>aobj:</b> the analysis object from the js9Analysis.json file, containing
+     the <b>rtype</b> (e.g. "text" or "plot") property
+</ul>
+Typically, you would check the stderr string first and issue an error
+message if there is an error. Otherwise, the stdout string can be
+processed based on the return type (rtype) of output (e.g., "text" or
+"plot"). For plotting, you can use the <b>flot</b> functionality that
+is loaded into JS9, or you can use your own chosen plotting
+package. See js9analysis.html for a simple example.
+
+<h5>Last updated: September 4, 2014</h5>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+#!/bin/bash
+# set -x
+
+# get helper type
+if [ x"$1" != x ]; then
+  HELPER="$1"
+  shift
+else
+  echo "no helper type specified"
+  exit 1
+fi
+
+case "$HELPER" in
+
+none)
+# js9Prefs.json: preference file
+IPREFS=js9Prefs.json
+OPREFS=js9Prefs-none.json
+echo "Editing $IPREFS for no helper ..."
+sed 's#\("helperType" *:.*"\)[^"]*\("\)#\1none\2#' < $IPREFS > $OPREFS && mv $IPREFS{,-orig} && mv $OPREFS $IPREFS
+;;
+
+nodejs|socket.io)
+# js9Prefs.json: preference file
+IPREFS=js9Prefs.json
+OPREFS=js9Prefs-nodejs.json
+echo "Editing $IPREFS for Node.js helper ..."
+sed 's#\("helperType" *:.*"\)[^"]*\("\)#\1nodejs\2#' < $IPREFS > $OPREFS && mv $IPREFS{,-orig} && mv $OPREFS $IPREFS
+;;
+
+get|post)
+if [ x"$1" != x ]; then
+  CGIDIR="$1"
+  shift
+else
+  echo "CGI install directory not configured"
+  exit 1
+fi
+
+if [ x"$1" != x ]; then
+    CGIURL="$1"
+    shift
+fi
+
+if [ x"$1" != x ]; then
+    CGIXPATH="$1"
+    shift
+fi
+
+# js9Prefs.json: preference file
+IPREFS=js9Prefs.json
+OPREFS=js9Prefs-cgi.json
+
+# js9Prefs.cgi: CGI helper script
+ICGISCR="js9Helper-default.cgi"
+OCGISCR="js9Helper.cgi"
+
+# temp
+myplugins="./analysis-plugins"
+
+echo "Editing $IPREFS for CGI ($HELPER) helper ..."
+
+jroot=`egrep "WEBDIR *=" Makefile | awk '{print $3}' | sed 's/^[ 	]*//;s/[ 	]*$//'`
+if [ x"$jroot" != x ]; then
+  X="$X;s#^JROOT=\".*\"#JROOT=\"$jroot\"#"
+fi
+
+jprefix=`egrep "^prefix *=" Makefile | awk '{print $3}' | sed 's/^[ 	]*//;s/[ 	]*$//'`
+if [ x"$jprefix" != x ]; then
+  jbin="$jprefix/bin"
+fi
+if [ x"$jbin" != x ]; then
+  X="$X;s#^JBIN=\".*\"#JBIN=\"$jbin\"#"
+fi
+
+jwrappers=`egrep '"analysisWrappers" *:' js9Prefs.json | awk -F: '{print $NF}' |sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
+if [ x"$jwrappers" != x ]; then
+  if [ x${jwrappers:0:1} != "x/" ]; then
+    jwrappers="${jroot}/${jwrappers}"
+  fi
+  X="$X;s#^JWRAPPERS=\".*\"#JWRAPPERS=\"$jwrappers\"#"
+fi
+
+jplugins=`egrep '"analysisPlugins" *:' js9Prefs.json | awk -F: '{print $NF}' | sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
+if [ x"$jplugins" != x ]; then
+  if [ x${jplugins:0:1} != "x/" ]; then
+    jplugins="${jroot}/${jplugins}"
+  fi
+  X="$X;s#^JPLUGINS=\".*\"#JPLUGINS=\"$jplugins\"#"
+  if [ -d "$myplugins" -a -f "$myplugins/fits2png.json" ]; then
+    jfits2png=`egrep '"action" *:' $myplugins/fits2png.json | awk -F: '{print $NF}' | sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
+    if [ x"$jfits2png" != x ]; then
+      X="$X;s#^JFITS2PNG=\".*\"#JFITS2PNG=\"$jfits2png\"#"
+    fi
+  fi
+fi
+
+jdatapath=`egrep '"dataPath" *:' js9Prefs.json | \
+awk -F: '
+{
+  for(i=2; i<=NF; i++){
+    if( X != "" ){
+      X = X ":"
+    }
+    X = X $i
+  }
+}
+END{
+  print X
+}' | \
+sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
+if [ x"$jdatapath" != x ]; then
+  # expand $HOME so that we can specify $HOME/Desktop, etc.
+  jdatapath=`echo $jdatapath | sed 's#\$HOME#'$HOME'#g'`
+  X="$X;s#^JDATAPATH=\".*\"#JDATAPATH=\"$jdatapath\"#"
+fi
+
+if [ x"$CGIXPATH" != x ]; then
+    X="$X;s#^JXPATH=\".*\"#JXPATH=\"$CGIXPATH\"#"
+fi
+
+echo "Creating $OCGISCR ..."
+sed "$X" < $ICGISCR > $OCGISCR
+chmod +x $OCGISCR
+
+# if CGIURL was not specified or was specified as the default, use the prefs val
+if [ x"$CGIURL" = x ]; then
+  CGIURL=`egrep '"helperCGI" *:' js9Prefs.json | awk -F: '{print $NF}' | sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
+  if [ x"$CGIURL" != x ]; then
+    if [ x${CGIURL:0:1} != "x/" ]; then
+      CGIURL="${jroot}/${CGIURL}"
+    fi
+  fi
+fi
+
+echo "Editing $IPREFS for CGI ..."
+sed 's#\("helperCGI" *:.*"\)[^"]*\("\)#\1'"$CGIURL"'/js9Helper.cgi\2#;s#\("helperType":.*"\)[^"]*\("\)#\1get\2#' < $IPREFS > $OPREFS && mv $IPREFS{,-orig} && mv $OPREFS $IPREFS
+;;
+
+esac
+
+exit 0

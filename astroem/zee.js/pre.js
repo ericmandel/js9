@@ -1,0 +1,5 @@
+
+var Module = {
+  'noExitRuntime': true
+};
+

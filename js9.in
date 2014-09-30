@@ -1,0 +1,43 @@
+#!/bin/sh
+# set -x
+
+# default will be filled in by mkjs9
+JTYPE=""
+JPORT=""
+WEBDIR=""
+
+# sanity check: type must be nodejs
+if [ x"$JTYPE" != xnodejs ]; then
+    echo "JS9 helper type must be 'nodejs' for messaging (not '$JTYPE')"
+    exit 1
+fi
+
+# add webdir to module path
+if [ x${JS9_NODE_PATH} != x ]; then
+  NODE_PATH="${JS9_NODE_PATH}"
+else
+  # look in current directory first
+  if [ -r ./js9Msg.js -a -d ./node_modules ]; then
+    NODE_PATH="."
+  else
+    NODE_PATH="${WEBDIR:-.}"
+  fi
+fi
+export NODE_PATH
+
+# set up helper port, if possible
+if [ x"$JPORT" != x ]; then
+  export JS9_HELPER_PORT="$JPORT"
+fi
+
+# make sure we're set up correctly
+if [ ! -r ${NODE_PATH}/js9Msg.js ]; then
+  echo "ERROR: can't find js9Msg.js in '$NODE_PATH'"
+  exit 1
+elif [ ! -d ${NODE_PATH}/node_modules ]; then
+  echo "ERROR: can't find node_modules directory in '$NODE_PATH'"
+  exit 2
+fi
+
+# run node with the msg script
+exec node $NODE_PATH/js9Msg.js $*

@@ -1,0 +1,124 @@
+#!/bin/sh
+# set -x
+rm -rf ./config.cache
+
+if [ x"$1" = x ]; then
+  name=`uname -n`
+else
+  if [ x"$1" = x"--" ]; then
+    name=`uname -n`
+  else
+    name="$1"
+  fi
+  shift
+fi
+
+if [ x"$CFLAGS" = x ]; then
+  CFLAGS="-g"
+  export CFLAGS
+fi
+if [ x"$LDFLAGS" = x ]; then
+  LDFLAGS="-g"
+  export LDFLAGS
+fi
+
+GCCFLAGS="-W -Wall -Wno-implicit-int"
+STRICTFLAGS="-pedantic -Wall -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wredundant-decls -Wnested-externs -Wconversion -Wno-implicit-int"
+CF="--config-cache"
+
+echo "configure for: " $name
+
+case $name in
+  strict)
+  ./configure	$CF					\
+		CC=gcc CFLAGS="$CFLAGS $STRICTFLAGS" $*
+  ;;
+
+  bokhara*)
+  ./configure 	$CF							\
+		--prefix=/soft/saord					\
+		--with-webdir=/home/mred/public_html/htdocs/js9		\
+		--with-helper=get					\
+		--with-funtools=/soft/saord				\
+		--with-png=/proj/rd/linux64				\
+		--with-cgidir=/home/mred/public_html/cgi-bin/js9	\
+		--with-cgiurl=./cgi-bin/js9				\
+		--with-cgixpath=/soft/saord/bin				\
+  		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
+ 		$*
+  ;;
+
+  mred*)
+  ./configure 	$CF							\
+		--prefix=/export/eric					\
+		--with-webdir=/home/mred/public_html/htdocs/js9		\
+		--with-helper="nodejs"					\
+		--with-funtools=/home/mred/pub/usr/local		\
+  		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
+ 		$*
+  ;;
+
+  smartx*)
+  ./configure 	$CF							\
+		--prefix=/smartx					\
+		--with-webdir=/smartx/www/html/js9			\
+		--with-helper=nodejs					\
+		--with-funtools=/smartx					\
+		--with-png=/smartx					\
+  		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
+ 		$*
+  ;;
+
+  baba.local|baba-nodejs)
+  ./configure 	$CF							\
+		--prefix=$HOME						\
+		--with-webdir=/Users/eric/Sites/js9			\
+		--with-helper="socket.io"				\
+		--with-funtools=/usr/local				\
+		--with-png=/usr/local					\
+		--with-saodir=/Users/eric/Sites				\
+		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
+  ;;
+
+  baba-cgi)
+  ./configure 	$CF							\
+		--prefix=$HOME						\
+		--with-webdir=/Users/eric/Sites/js9			\
+		--with-helper=get					\
+		--with-funtools=/usr/local				\
+		--with-png=/usr/local					\
+		--with-cgidir=/Users/eric/Sites/cgi-bin			\
+		--with-cgiurl="~eric/cgi-bin"				\
+		--with-cgixpath=/usr/local/bin				\
+		--with-saodir=/Users/eric/Sites			\
+		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
+  ;;
+
+  baba-none)
+  ./configure 	$CF --with-webdir=/Users/eric/Sites/js9
+  ;;
+
+  hopper*)
+  ./configure 	$CF							\
+		--prefix=$HOME						\
+		--with-webdir=$HOME/http/js9				\
+		--with-helper=nodejs					\
+		--with-funtools=$HOME					\
+		--with-saodir=$HOME/http				\
+		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
+  ;;
+
+  ascpub*)
+  ASCPUB=/proj/web-chandra/htdocs/edu/stop/js9
+  ./configure 	$CF							\
+		--with-webdir=$ASCPUB					\
+		--with-helper=none					\
+  		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
+ 		$*
+  ;;
+
+  *)
+  ./configure 	$CF $*
+  ;;
+
+esac

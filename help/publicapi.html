@@ -1,0 +1,1130 @@
+<html>
+<head>
+<style>
+.container{
+  padding: 10px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<title>The JS9 Public API</title>
+<center><h3>The JS9 Public API</h3></center>
+
+<p>
+The JS9 Public API provides a JavaScript programming interface for
+interacting with JS9. Obviously, all of JS9 JavaScript code is
+available to you within a Web page, but the public API is designed to
+stable and well-documented for users and Web designers. It also will
+provide the basis for planned language bindings (python, perhaps C/Fortran).
+<p>
+In general, the public API routines act on the current image being
+displayed in the default JS9 div element. Since most Web pages will
+have only a single JS9 div element, this behavior is usually what you
+want. It parallels DS9's behavior in which XPA commands act on the
+currently displayed image. For example, to change the colormap of the
+current image, use:
+<pre>
+  JS9.SetColormap("cool");
+</pre>
+
+<p>
+However, for cases where multiple JS9 div elements are defined on a
+single page, you can specify the specific div element to process by
+adding an <b> display object</b> argument to the calling sequence with
+a single <b>display</b> property:
+<pre>
+  {display: [div_id]}
+</pre>
+where [div_id] is the id of the target JS9 div element. For example,
+if two JS9 divs with ids "JS9" and "myJS9", respectively, are present
+on a single Web page, you can set the colormap of the second one this way:
+<pre>
+  JS9.SetColormap("cool", {display: "myJS9"})
+</pre>
+Note that this <b>display object</b> contains only the <b>display</b>
+property and always is specified as the final argument in a call.
+<p>
+The display property can specify an image handle instead of
+a JS9 div element id. This is a minor optimization for cases where you want
+to call a routine such as JS9.WCSToPix() or JS9.PixtoWCS() many times:
+<pre>
+  var im = JS9.GetImage({display: "myJS9"});
+  for(i=0; i<1000; i++){
+    x = ...
+    y = ... 
+    wcs = JS9.PixtoWCS(x, y, {display: im});
+    console.log("%s %s -> %s %s", x, y, wcs.ra, wcs.dec);
+  }
+</pre>
+Passing the image handle will speed up processing very slightly, but
+it makes us programmers feel much better.
+<p>
+The optional <b>display object</b> argument is not explicitly
+documented in the routines below (except as an example
+in <b>JS9.Load()</b>), but it is always available.
+
+<p>
+Choose from the following sections:
+<ul>
+<li><a href="#load">Loading Images</a>
+<li><a href="#images">Working with Images</a>
+<li><a href="#regions">Working with Regions</a>
+<li><a href="#shapes">Working with Shape Layers</a>
+<li><a href="#server">Server-side Analysis</a>
+<li><a href="#misc">Miscellaneous</a>
+<li><a href="#proto">Prototypes (in development)</a>
+</ul>
+
+<hr><p>
+<font size="+1"><center><b>
+<a name="load">Loading Images</a>
+</b></center></font>
+
+<p>
+<font size="+1"><b>&#9679; Load an image into JS9</b></font>
+<p> 
+<code><font size="+1">JS9.Load(url, opts, func)</font></code>
+<p>
+where:
+<ul>
+<li><b>url</b>: url to load
+<li><b>opts</b>: object containing image parameters
+<li><b>func</b>: optional function to call when image load is complete
+</ul>
+<p>
+Load a FITS file or a PNG <b>representation file</b> into JS9.
+To override default image parameters, pass the image opts argument:
+<pre>
+    href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'
+</pre>
+<p>
+If a callback function is specified, it will be called after the image
+is loaded:
+<pre>
+    href='javascript:JS9.Load("fits/3c273.fits", {scale: "linear"}, func);'
+</pre>
+The image handle is passed as the first argument to the callback.
+<p>
+To load an image into a specified display, pass the <b>display object</b> as the last argument:
+<pre>
+    href='javascript:JS9.Load("fits/3c273.fits", {scale: "linear"}, {display: "myJS9"});'
+</pre>
+<p>
+<p>
+See <a href="./yourdata.html">Displaying Your Data</a> for further discussion of
+how to use this routine.
+
+<p>
+<font size="+1"><b>&#9679; Load an image into a light window or a new (separate) window</b></font>
+<p>
+<code><font size="+1">JS9.LoadWindow(url, opts, type, html, winopts)</font></code>
+<p>
+where:
+<ul>
+<li><b>url</b>: url to load
+<li><b>opts</b>: optional object containing image parameters
+<li><b>type</b>: "light" or "new" 
+<li><b>html</b>: html for the new page (default is to display a menubar above the image)
+<li><b>winopts</b>: for "light", optional dhtml window options
+</ul>
+This routine will load an image into a light-weight window or an entirely new
+window. The <b>url</b> and <b>opts</b> arguments are identical to the standard
+<b>JS9.Load()</b> call. The <b>type</b> argument determines whether to create
+a light-weight window or a new (separate) window.
+<p>
+By default, the new window will contain a Menubar above an image display area:
+<pre>
+    &lt;div class='JS9Menubar' id='[id]Menubar'&gt;&lt;/div&gt;
+    &lt;div class='JS9' id='[id]'&gt;&lt;/div&gt;
+</pre>
+You can use the <b>html</b> argument to supply different Web page elements
+for the window. Furthermore, if you create a light window, a default
+set of DynamicDrive dhtmlwindow parameters will be used to make the
+window the correct size for the default html:
+<pre>
+    "width=512px,height=542px,center=1,resize=1,scrolling=1"
+</pre>
+You can supply your own parameters for the new dhtmlwindow using the
+<b>winOpts</b> argument. See:
+<a href="http://www.dynamicdrive.com/dynamicindex8/dhtmlwindow/index.htm">
+DynamicDrive</a> for more information about their light-weight window.
+<p>
+See js9create.html for examples of how to use this routine.
+
+<p>
+<font size="+1"><b>&#9679; Load one or more images when the Web page is ready</b></font>
+<p>
+<code><font size="+1">JS9.Preload(url1, opts1, url2, opts2, ... url2, optsn)</font></code>
+<p>
+where:
+<ul>
+<li><b>url</b>: url to load
+<li><b>opts</b>: optional object containing image parameters
+</ul>
+This routine will pre-load images into a JS9 display when the Web page
+is loaded and JS9 is initialized. It can be added to the Web page body
+element using the onload() JavaScript call or called directly in a
+JavaScript init routine. See index.html and js9preload.html for examples.
+
+<hr><p>
+<font size="+1"><center><b>
+<a name="images">Working with Images</a>
+</b></center></font>
+<p>
+
+<p>
+<font size="+1"><b>&#9679; Get image handle for the current image</b></font>
+<p>
+<code><font size="+1">im = JS9.GetImage()</font></code>
+<ul>
+<li><b>im</b>: image handle
+</ul>
+<p>
+The routine returns the image handle associated with the current image.
+<p>
+The returned image handle can be passed in the display object.  This
+is marginally more efficient than the default behavior, which is to
+determine the current image for each call.
+
+<p>
+<font size="+1"><b>&#9679; Get image data and auxiliary info for the specified image</b></font>
+<p>
+<code><font size="+1">imgdata = JS9.GetImageData(dflag)</font></code>
+where:
+<ul>
+<li><b>dflag</b>: true if you want the data returned (as an HTML5 typed array)
+</ul>
+<p>
+The image data object contains the following information:
+<ul>
+<li><b>id</b>: the id of the file that was loaded into JS9
+<li><b>file</b>: the file or URL that was loaded into JS9
+<li><b>source</b>: "fits" if a FITS file was downloaded, "fits2png" if a representation file was retrieved
+<li><b>imtab</b>: "image" for FITS images and png files, "table" for FITS binary tables
+<li><b>width</b>: x dimension of image
+<li><b>height</b>: y dimension of image
+<li><b>bitpix</b>: FITS bits/pixel of each image element (8 for unsigned char, 16, 32 for signed integer, -32 or -64 for float)
+<li><b>header</b>: JavaScript object containing FITS header values
+<li><b>data</b>: if <b>dflag</b> is true, a pointer to HTML5 typed array
+containing image data
+</ul>
+This call returns raw data for subsequent use in local analysis tasks. The data
+buffer is a reference to the real data, so be careful about changing values.
+<p>
+Given a FITS-standard 1-indexed image pixel x,y, you can find the data value 
+at that location using:
+<pre>
+    val = obj.data[Math.floor(y-0.5) * obj.width + Math.floor(x-0.5)];
+</pre>
+Note the need to integerize the x and y values: JavaScript arrays are
+objects and so floating point array indices do not get truncated
+automatically as in C. They will return null values.
+<p>
+Also note that since we need 0-based data array indexes, we subtract 1 from
+the 1-based image position.  But then we must add 0.5 before rounding because
+by convention, x.0, y.0 is the middle of the pixel.
+<p>
+<font size="+1"><b>&#9679; Display an image</b></font>
+<p>
+<code><font size="+1">JS9.DisplayImage(step)</font></code>
+<p>
+where:
+<ul>
+<li><b>step</b>: starting step to take when displaying the image
+</ul>
+The display steps are: "colors" (remake color data when cmap has changed),
+"scaled" (rescale data values), "primary" (convert scaled data values
+to color values), and "display" (write color values to the Web page).
+<p>
+The default step is "primary", which displays the image without recalculating
+color data, scaled data, etc. This generally is what you want, unless you have
+explicitly changed parameter(s) used in a prior step.
+
+<p>
+<font size="+1"><b>&#9679; Re-read the data from a FITS file and re-display</b></font>
+<p>
+<code><font size="+1">JS9.RefreshImage(fitsobj, func)</font></code>
+<p>
+where:
+<ul>
+<li><b>fitsobj</b>: new FITS object from which to take raw data for display
+<li><b>func</b>: optional function to call when image load is complete
+</ul>
+This routine can be used, for example, in laboratory settings where
+data is being gathered in real-time and the JS9 display needs to be
+refreshed periodically. The call takes a fits object as the second
+argument. It will refresh the display using the new data contained in that
+object.
+<p>
+The fits object should contains the following properties:
+<ul>
+<li><b>naxis</b>: number of axes in the image
+<li><b>axis</b>: array of image dimensions for each axis
+<li><b>bitpix</b>: FITS bitpix value
+<li><b>image</b>: typed data array containing current image data
+<li><b>head</b>: object containing header keywords as properties
+<li><b>card</b>: string version of the header with comments (optional)
+<li><b>dmin</b>: data min (optional)
+<li><b>dmax</b>: data max (optional)
+</ul>
+
+<p>
+<font size="+1"><b>&#9679; Clear the image from the display and mark resources for release</b></font>
+<p>
+<code><font size="+1">JS9.CloseImage()</font></code>
+<p>
+Each loaded image claims a non-trivial amount of memory from a finite
+amount of browser heap space. For example, the default 32-bit version
+of Google Chrome has a memory limit of approximately 500Mb. If you are
+finished viewing an image, closing it tells the browser that the
+image's memory can be freed. In principle, this is can help reduce
+overall memory usage as successive images are loaded and
+discarded. Note, however, that closing an image only provides a hint
+to the browser, since this sort of garbage collection is not directly
+accessible to JavaScript programming.
+<p>
+Some day, all browsers will support full 64-bit addressing and this problem will
+go away ...
+<p>
+<font size="+1"><b>&#9679; Get the image colormap</b></font>
+<p>
+<code><font size="+1">cmap = JS9.GetColormap()</font></code>
+<p>
+returns:
+<ul>
+<li><b>cmap</b>: string containing colormap name
+</ul>
+Get the current colormap name.
+
+<p>
+<font size="+1"><b>&#9679; Set the image colormap</b></font>
+<p>
+<code><font size="+1">JS9.SetColormap(cmap, [contrast, bias])</font></code>
+<p>
+where:
+<ul>
+<li><b>cmap</b>: colormap name
+<li><b>contrast</b>: contrast value (range: 0 to 10)
+<li><b>bias</b>: bias value (range 0 to 1)
+</ul>
+Set the current colormap, contrast/bias, or both. This call takes one
+(colormap), two (contrast, bias) or three (colormap, contrast, bias)
+arguments.
+
+<p>
+<font size="+1"><b>&#9679; Get the image scale</b></font>
+<p>
+<code><font size="+1">scale = JS9.GetScale()</font></code>
+<p>
+returns:
+<ul>
+<li><b>scale</b>: string containing scale name
+</ul>
+Get the current scale name.
+
+<p>
+<font size="+1"><b>&#9679; Set the image scale</b></font>
+<p>
+<code><font size="+1">JS9.SetScale(scale, smin, smax)</font></code>
+<p>
+where:
+<ul>
+<li><b>scale</b>: scale name
+<li><b>smin</b>: scale min value
+<li><b>smax</b>: scale max value
+</ul>
+Set the current scale, min/max, or both. This call takes one
+(scale), two (smin, max) or three (scale, smin, smax) arguments.
+
+<p>
+<font size="+1"><b>&#9679; Get the image zoom factor</b></font>
+<p>
+<code><font size="+1">zoom = JS9.GetZoom()</font></code>
+<p>
+returns:
+<ul>
+<li><b>zoom</b>: floating point zoom factor
+</ul>
+Get the zoom factor.
+
+<p>
+<font size="+1"><b>&#9679; Set the image zoom factor</b></font>
+<p>
+<code><font size="+1">JS9.SetZoom(zoom)</font></code>
+<p>
+where:
+<ul>
+<li><b>zoom</b>: floating or integer zoom factor or zoom directive string
+</ul>
+The zoom directives are:
+<ul>
+<li><b>x[n]|X[n]</b>: multiply the zoom by n (e.g. "x2")
+<li><b>/[n]</b>: divide the zoom by n (e.g. "/2")
+<li><b>in|In</b>: zoom in by a factor of two
+<li><b>out|Out</b>: zoom out by a factor of two
+<li><b>toFit|ToFit</b>: zoom to fit image in display
+</ul>
+
+<p>
+<font size="+1"><b>&#9679; Get the image pan position</b></font>
+<p>
+<code><font size="+1">ipos = JS9.GetPan()</font></code>
+<p>
+returns:
+<ul>
+<li><b>ipos</b>: image position object containing x and y image
+coordinate values
+</ul>
+Get the current pan position in image coordinates.
+
+<p>
+<font size="+1"><b>&#9679; Set the image pan position</b></font>
+<p>
+<code><font size="+1">JS9.SetPan(x, y)</font></code>
+<p>
+where:
+<ul>
+<li><b>x</b>: x image coordinate
+<li><b>y</b>: y image coordinate
+</ul>
+Set the current pan position using image coordinates.  
+Note that you can use <b>JS9.WCSToPix()</b> and <b>JS9.PixToWCS()</b> to
+convert between image and WCS coordinates.
+
+<p>
+<font size="+1"><b>&#9679; Get the display coordinates from an event</b></font>
+<p>
+<code><font size="+1">dpos = JS9.EventToDisplayPos(evt)</font></code>
+<p>
+where:
+<ul>
+<li><b>evt</b>: a JavaScript event
+</ul>
+returns:
+<ul>
+<li><b>dpos</b>: display position object containing x and y display
+coordinate values
+</ul>
+If you define your own event callbacks, you can use this routine to convert
+the event position to a display position, which can then be used to get the
+image position (see below).
+
+<p>
+<font size="+1"><b>&#9679; Get the image coordinates from the display coordinates</b></font>
+<p>
+<code><font size="+1">ipos = JS9.DisplayToImagePos(dpos)</font></code>
+<p>
+where:
+<ul>
+<li><b>dpos</b>: display position object containing x and y display
+coordinate values
+</ul>
+returns:
+<ul>
+<li><b>ipos</b>: image position object containing x and y image
+coordinate values
+</ul>
+Note that image coordinates are one-indexed, as per FITS conventions, while
+display coordinate are 0-indexed.
+<p>
+<font size="+1"><b>&#9679; Get the display coordinates from the image coordinates</b></font>
+<p>
+<code><font size="+1">dpos = JS9.ImageToDisplayPos(ipos)</font></code>
+<p>
+where:
+<ul>
+<li><b>ipos</b>: image position object containing x and y image
+coordinate values
+</ul>
+returns:
+<ul>
+<li><b>dpos</b>: display position object containing x and y display
+coordinate values
+</ul>
+Get display (screen) coordinates from image coordinates.  Note that
+image coordinates are one-indexed, as per FITS conventions, while
+display coordinate are 0-indexed.
+
+<p>
+<font size="+1"><b>&#9679; Update value/position information</b></font>
+<p>
+<code><font size="+1">valpos = JS9.UpdateValpos(ipos, display)</font></code>
+<p>
+where:
+<ul>
+<li><b>ipos</b>: image position object containing x and y image
+coordinate values
+<li><b>display</b>: boolean value specifying whether the info box display should be updated (default is true)
+</ul>
+This routine determines the data value at a given image position
+and returns an object containing the following information:
+<ul>
+<li><b>ix</b>: image x coordinate
+<li><b>iy</b>: image y coordinate
+<li><b>isys</b>: image system (i.e. "image")
+<li><b>px</b>: physical x coordinate
+<li><b>py</b>: physical y coordinate
+<li><b>psys</b>: currently selected pixel-based system (i.e. "image"
+or "physical") for the above px, py values
+<li><b>ra</b>: ra in degrees (if WCS is available)
+<li><b>dec</b>: dec in degrees  (if WCS is available)
+<li><b>wcssys</b>: wcs system (if WCS is available)
+<li><b>val</b>: floating point pixel value
+<li><b>val3</b>: pixel value as a string truncated to 3 decimal digits
+<li><b>vstr</b>: string containing value and position info
+<li><b>id</b>: id of the image
+<li><b>file</b>: filename of the image
+<li><b>object</b>: object name of the image from the FITS header
+</ul>
+
+<p>
+<font size="+1"><b>&#9679; Get the current WCS units</b></font>
+<p>
+<code><font size="+1">unitsstr = JS9.GetWCSUnits()</font></code>
+<p>
+returns:
+<ul>
+<li><b>unitstr</b>: "pixels", "degrees" or "sexagesimal"
+</ul>
+Get the current WCS units.
+
+<p>
+<font size="+1"><b>&#9679; Set the current WCS units</b></font>
+<p>
+<code><font size="+1">JS9.SetWCSUnits(unitsstr)</font></code>
+<p>
+where:
+<ul>
+<li><b>unitstr</b>: "pixels", "degrees" or "sexagesimal"
+</ul>
+Set the current WCS units.
+
+<p>
+<font size="+1"><b>&#9679; Get the current World Coordinate System</b></font>
+<p>
+<code><font size="+1">sysstr = JS9.GetWCSSys()</font></code>
+<p>
+returns:
+<ul>
+<li><b>sysstr</b>: current World Coordinate System ("FK4", "FK5", "ICRS",
+"galactic", "ecliptic", "image", or "physical");
+</ul>
+Get current WCS system.
+
+<p>
+<font size="+1"><b>&#9679; Set the current World Coordinate System</b></font>
+<p>
+<code><font size="+1">JS9.SetWCSSys(sysstr)</font></code>
+<p>
+where:
+<ul>
+<li><b>sysstr</b>: World Coordinate System ("FK4", "FK5", "ICRS",
+"galactic", "ecliptic", "image", or "physical")
+</ul>
+Set current WCS system. The WCS systems are available only if WCS
+information is contained in the FITS header. Also note that "physical"
+coordinates are the coordinates tied to the original file. They are
+mainly used in X-ray astronomy where individually detected photon
+events are binned into an image, possibly using a blocking factor.
+For optical images, image and physical coordinate usually are identical.
+
+<p>
+<font size="+1"><b>&#9679; Convert image pixel position to WCS position</b></font>
+<p>
+<code><font size="+1">wcsobj = JS9.PixToWCS(x, y)</font></code>
+<p>
+where:
+<ul>
+<li><b>x</b>: x image coordinate
+<li><b>y</b>: y image coordinate
+</ul>
+returns:
+<ul>
+<li><b>wcsobj</b>: world coordinate system object
+</ul>
+<p>
+The wcs object contains the following properties:
+</a>
+<ul>
+<li><b>ra</b>: right ascension in floating point degrees
+<li><b>dec</b>: declination in floating point degrees 
+<li><b>sys</b>: current world coordinate system being used
+<li><b>str</b>: string of wcs in current system ("[ra] [dec] [sys]")
+</ul>
+
+<p>
+<font size="+1"><b>&#9679; Convert WCS position to image pixel position</b></font>
+<p>
+<code><font size="+1">pixobj = JS9.WCSToPix(ra, dec)</font></code>
+<p>
+where:
+<ul>
+<li><b>ra</b>: right ascension in floating point degrees
+<li><b>dec</b>: declination in floating point degrees 
+</ul>
+returns:
+<ul>
+<li><b>pixobj</b>: pixel object
+</ul>
+The pixel object contains the following properties:
+</a>
+<ul>
+<li><b>x</b>: x image coordinate
+<li><b>y</b>: y image coordinate
+<li><b>str</b>: string of pixel values ("[x]" "[y]")
+</ul>
+
+<hr><p>
+<font size="+1"><center><b>
+<a name="regions">Working with Regions</a>
+</b></center></font>
+<p>
+Spatial regions of interest are a crucial part of astronomical data
+analysis.  The regions layer is a special case of the more generalized
+shape layers, automatically created by JS9 to support the options in
+the <b>Regions</b> menu, as well as local and server-side data analysis
+using regions.
+<p>
+The regions layer has the special property that, by default,
+its <b>z-index</b> is higher than other shape layers, so that regions
+are displayed on top of other shape layers.
+<p>
+Note that the <b>GetRegions(), ChangeRegions(), RemoveRegions()</b> calls
+all take a regions specification as the second argument, which can be
+any of the following (in order of precedence):
+<ul>
+<li><b>"all"</b>: all regions
+<li><b>[id]</b>: a specific region id returned by <b>JS9.AddRegions()</b>
+<li><b>"selected"</b>: the selected region (or all regions in the selected group)
+<li><b>[color]</b>: all regions having the specified color (e.g., "red")
+<li><b>[shape]</b>: all regions having the specified shape (e.g., "circle")
+<li><b>[tag]</b>: all regions containing the specified tag (e.g., "source")
+</ul>
+Thus, it is possible to act on multiple regions at the same time.
+
+<p>
+<font size="+1"><b>&#9679; Add one or more regions to the regions layer</b></font>
+<p>
+<code><font size="+1">id = JS9.AddRegions(rarr, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>rarr</b>: a shape string, region object or an array of region objects
+<li><b>opts</b>: global values to apply to each created region
+</ul>
+returns:
+<ul>
+<li><b>id</b>: id of last region created
+</ul>
+The <b>rarr</b> argument can be a region shape ("annulus", "box",
+"circle", "ellipse", "point", "polygon", "text"), a single region
+object, or an array of region objects. Region objects contain one or
+more properties, of which the most important are:
+<ul>
+<li><b>shape</b>: "annulus", "box", "circle", "ellipse", "point", "polygon", "text" <b>[REQUIRED]</b>
+<li><b>x</b>: image x position
+<li><b>y</b>: image y position
+<li><b>lcs</b>: object containing logical x, y and sys (e.g. "physical")
+<li><b>dx</b>: increment from current image x position
+<li><b>dy</b>: increment from current image y position
+<li><b>tags</b>: comma separated list of tag strings
+<li><b>radii</b>: array of radii for annulus region
+<li><b>width</b>: width for box region
+<li><b>height</b>: height for box region
+<li><b>radius</b>: radius value for circle region
+<li><b>r1</b>:  x radius for ellipse region (misnomer noted)
+<li><b>r2</b>:  y radius for ellipse region (misnomer noted)
+<li><b>pts</b>: array of objects containing x and y positions for polygons
+<li><b>points</b>: array of objects containing x and y offsets from the center for polygons
+<li><b>angle</b>: angle in degrees for box and ellipse regions
+<li><b>color</b>: region color (string name or #rrggbb syntax)
+<li><b>text</b>: text associated with text region
+</ul>
+Other available properties include:
+<ul>
+<li><b>fixinplace</b>: if true, region cannot be moved or resized
+<li><b>lockMovementX</b>: region cannot be moved in the x direction
+<li><b>lockMovementY</b>: region cannot be moved in the y direction
+<li><b>lockRotation</b>: region cannot be rotated
+<li><b>lockScalingX</b>: region cannot be resized in the x direction
+<li><b>lockScalingY</b>: region cannot be resized in the y direction
+<li><b>fontFamily</b>: font parameter for text region
+<li><b>fontSize</b>: font parameter for text region
+<li><b>fontStyle</b>: font parameter for text region
+<li><b>fontWeight</b>: font parameter for text region
+</ul>
+
+<p>
+<font size="+1"><b>&#9679; Get information about one or more regions</b></font>
+<p>
+<code><font size="+1">rarr = JS9.GetRegions(regions)</font></code>
+<p>
+where:
+<ul>
+<li><b>regions</b>: which regions to retrieve
+</ul>
+returns:
+<ul>
+<li><b>rarr</b>: array of region objects
+</ul>
+<p>
+Each returned region object contains the following properties:
+</a>
+<ul>
+<li><b>id</b>: numeric region id (assigned by JS9 automatically)
+<li><b>mode</b>: "add", "remove" or "change"
+<li><b>shape</b>: region shape ("annulus", "box", "circle", "ellipse",
+"point", "polygon", "text")
+<li><b>tags</b>: comma delimited list of region tags (e.g., "source", "include")
+<li><b>color</b>: region color
+<li><b>x,y</b>: image coordinates of region
+<li><b>radii</b>: array of radii for annulus region
+<li><b>width</b>: width for box region
+<li><b>height</b>: height for box region
+<li><b>radius</b>: radius value for circle region
+<li><b>r1</b>:  x radius for ellipse region (misnomer noted)
+<li><b>r2</b>:  y radius for ellipse region (misnomer noted)
+<li><b>pts</b>: array of objects containing x and y positions, for polygons
+<li><b>points</b>: array of objects containing x and y offsets from the specified center, for polygons
+<li><b>angle</b>: angle in degrees for box and ellipse regions
+<li><b>wcsstr</b>: region string in wcs coordinates
+<li><b>wcssys</b>: wcs system (e.g. "FK5")
+<li><b>imstr</b>: region string in image or physical coordinates
+<li><b>imsys</b>: image system ("image" or "physical")
+</ul>
+The image position can be used to access the image data returned by the
+<b>JS9.GetImageData()</b> routine:
+<pre>
+    obj = JS9.GetImageData();
+    xreg = JS9.GetRegions("selected")[0];
+    val = obj.data[Math.floor(xreg.y-0.5) * obj.width + Math.floor(xreg.x-0.5)];
+</pre>
+<p>
+Note the need to integerize the x and y values: JavaScript arrays are
+objects and so floating point array indices do not get truncated
+automatically as in C. They will return null values.
+<p>
+Also note that since we need 0-based data array indexes, we subtract 1 from
+the 1-based image position.  But then we must add 0.5 before rounding because
+by convention, x.0, y.0 is the middle of the pixel.
+
+<p>
+<font size="+1"><b>&#9679; Change one or more regions</b></font>
+<p>
+<code><font size="+1">JS9.ChangeRegions(regions, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>regions</b>: which regions to change
+<li><b>opts</b>: object containing options to change in each region
+</ul>
+Change one or more regions. The opts object can contain the parameters 
+described in the <b>JS9.AddRegions()</b> section. However, you cannot (yet)
+change the shape itself (e.g. from "box" to "circle"). See js9onchange.html
+for examples of how to use this routine.
+
+<p>
+<font size="+1"><b>&#9679; Remove one or more regions from the region layer</b></font>
+<p>
+<code><font size="+1">JS9.RemoveRegions(regions)</font></code>
+<p>
+where:
+<ul>
+<li><b>regions</b>: which regions to remove
+</ul>
+
+<hr><p>
+<font size="+1"><center><b>
+<a name="shapes">Working with Shape Layers</a>
+</b></center></font>
+<p>
+<p>
+JS9 supports individual layers for drawing 2D graphics. The regions
+layer is a special case of a shape layer, created automatically by
+JS9. The Catalog plugin creates a separate layer for each catalog.
+You can define your own shape layer using the <b>NewShapeLayer()</b>
+call and then add geometric shapes to it.
+<p>
+Note that the <b>JS9.GetShapes(), JS9.ChangeShapes(), JS9.RemoveShapes()</b> 
+calls all take a shape specification as the second argument, which can
+be any of the following (in order of precedence):
+<ul>
+<li><b>"all"</b>: all regions
+<li><b>[id]</b>: a specific region id returned by <b>JS9.AddRegions()</b>
+<li><b>"selected"</b>: the selected region (or all regions in the selected group)
+<li><b>[color]</b>: all regions having the specified color (e.g., "red")
+<li><b>[shape]</b>: all regions having the specified shape (e.g., "circle")
+<li><b>[tag]</b>: all regions containing the specified tag (e.g., "source")
+</ul>
+Thus, it is possible to act on multiple shapes at the same time.
+
+<p>
+<font size="+1"><b>&#9679; Create a new shape layer</b></font>
+<p>
+<code><font size="+1">lid = JS9.NewShapeLayer(layer, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>layer</b>: name of the layer to create
+<li><b>opts</b>: default options for this layer
+</ul>
+returns:
+<ul>
+<li><b>lid</b>: layer id
+</ul>
+This routine creates a new named shape layer. You can then, add, change,
+and remove shapes in this layer using the routines below. The catalogs
+displayed by the Catalog plugin are examples of separate shape layers.
+<p>
+The optional <b>opts</b> parameter allows you to specify default
+options for this layer. You can set a default for any property needed
+by your shape layer. See JS9.Regions.opts in js9.js for an example of
+the default options for the regions layer.
+
+<p>
+<font size="+1"><b>&#9679; Show or hide the specified shape layer</b></font>
+<p>
+<code><font size="+1">JS9.ShowShapeLayer(layer, mode)</font></code>
+<p>
+where:
+<ul>
+<li><b>layer</b>: name of layer
+<li><b>mode</b>: true (show layer) or false (hide layer)
+</ul>
+Shape layers can be hidden from display. This could be useful, for
+example, if you have several catalogs loaded into a display and
+want to view one at a time.
+
+<p>
+<font size="+1"><b>&#9679; Add one or more shapes to the specified layer</b></font>
+<p>
+<code><font size="+1">JS9.AddShapes(layer, sarr, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>layer</b>: name of layer
+<li><b>sarr</b>: a shape string, shape object, or an array of shape objects
+<li><b>opts</b>: global values to apply to each created shape
+</ul>
+returns:
+<ul>
+<li><b>id</b>: id of last shape created
+</ul>
+The <b>sarr</b> argument can be a shape ("annulus", "box",
+"circle", "ellipse", "point", "polygon", "text"), a single shape
+object, or an array of shape objects. Shape objects contain one or
+more properties, of which the most important are:
+<ul>
+<li><b>shape</b>: "annulus", "box", "circle", "ellipse", "point", "polygon", "text" <b>[REQUIRED]</b>
+<li><b>x</b>: image x position
+<li><b>y</b>: image y position
+<li><b>dx</b>: increment from current image x position
+<li><b>dy</b>: increment from current image y position
+<li><b>tags</b>: comma separated list of tag strings
+<li><b>radii</b>: array of radii for annulus shape
+<li><b>width</b>: width for box shape
+<li><b>height</b>: height for box shape
+<li><b>radius</b>: radius value for circle shape
+<li><b>r1</b>:  x radius for ellipse shape (misnomer noted)
+<li><b>r2</b>:  y radius for ellipse shape (misnomer noted)
+<li><b>pts</b>: array of objects containing x and y positions, for polygons
+<li><b>points</b>: array of objects containing x and y offsets from the specified center, for polygons
+<li><b>angle</b>: angle in degrees for box and ellipse shapes
+<li><b>color</b>: shape color (string name or #rrggbb syntax)
+<li><b>text</b>: text associated with text shape
+</ul>
+Other available properties include:
+<ul>
+<li><b>fixinplace</b>: if true, shape cannot be moved or resized
+<li><b>lockMovementX</b>: shape cannot be moved in the x direction
+<li><b>lockMovementY</b>: shape cannot be moved in the y direction
+<li><b>lockRotation</b>: shape cannot be rotated
+<li><b>lockScalingX</b>: shape cannot be resized in the x direction
+<li><b>lockScalingY</b>: shape cannot be resized in the y direction
+<li><b>fontFamily</b>: font parameter for text shape
+<li><b>fontSize</b>: font parameter for text shape
+<li><b>fontStyle</b>: font parameter for text shape
+<li><b>fontWeight</b>: font parameter for text shape
+</ul>
+
+<p>
+<font size="+1"><b>&#9679; Remove one or more shapes from the specified shape layer</b></font>
+<p>
+<code><font size="+1">JS9.RemoveShapes(layer, shapes)</font></code>
+<p>
+where:
+<ul>
+<li><b>layer</b>: name of layer
+<li><b>shapes</b>: which shapes to remove
+</ul>
+
+<p>
+<font size="+1"><b>&#9679; Get information about one or more shapes in the specified shape layer</b></font>
+<p>
+<code><font size="+1">JS9.GetShapes(layer, shapes)</font></code>
+<p>
+where:
+<ul>
+<li><b>layer</b>: name of layer
+<li><b>shapes</b>: which shapes to retrieve
+</ul>
+returns:
+<ul>
+<li><b>sarr</b>: array of shape objects
+</ul>
+<p>
+Each returned shape object contains the following properties:
+</a>
+<ul>
+<li><b>id</b>: numeric region id (assigned by JS9 automatically)
+<li><b>mode</b>: "add", "remove", or "change"
+<li><b>shape</b>: region shape ("annulus", "box", "circle", "ellipse",
+"point", "polygon", "text")
+<li><b>tags</b>: comma delimited list of region tags (e.g., "source", "include")
+<li><b>color</b>: region color
+<li><b>x,y</b>: image coordinates of region
+<li><b>size</b>: object containing width and height for box region
+<li><b>radius</b>: radius value for circle region
+<li><b>radii</b>: array of radii for annulus region
+<li><b>eradius</b>: object containing x and y radii for ellipse regions
+<li><b>pts</b>: array of objects containing x and y positions, for polygons
+<li><b>angle</b>: angle in degrees for box and ellipse regions
+</ul>
+
+<p>
+<font size="+1"><b>&#9679; Change one or more shapes in the specified layer</b></font>
+<p>
+<code><font size="+1">JS9.ChangeShapes(layer, shapes, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>layer</b>: name of layer
+<li><b>shapes</b>: which shapes to change
+<li><b>opts</b>: object containing options to change in each shape
+</ul>
+Change one or more shapes. The opts object can contain the parameters 
+described in the <b>JS9.AddShapes()</b> section. However, you cannot (yet)
+change the shape itself (e.g. from "box" to "circle").
+
+<hr><p>
+<font size="+1"><center><b>
+<a name="server">Server-side Analysis</a>
+</b></center></font>
+<p>
+
+<p>
+<font size="+1"><b>&#9679; Run a simple server-side analysis task</b></font>
+<p>
+<code><font size="+1">JS9.RunAnalysis(aname, parr, func)</font></code>
+<p>
+where:
+<ul>
+<li><b>aname</b>: name of analysis tool
+<li><b>parr</b>: optional array of macro-expansion options for command line
+<li><b>func</b>: optional routine to call when analysis is completed on server
+</ul>
+The <b>JS9.RunAnalysis()</b> routine is used to execute a server-side
+analysis task and return the results for further processing within the
+Web page.
+<li> The optional <b>parr</b> array of parameters is passed to the JS9
+analysis macro expander so that values can be added to the command
+line.  The array is in jQuery name/value serialized object format,
+which is described here:
+<pre>
+    http://api.jquery.com/serializeArray/
+</pre>
+<li>func: a function to process the returned data when the task is complete.
+</ul>
+<p>
+The <b>func()</b> routine is a callback function to process the returned
+results from the analysis task.  The calling sequence is:
+<pre>
+    func(stdout, stderr, aobj)
+</pre>
+where:
+<ul>
+<li> stdout: a string containing the standard output from the task
+<li> stderr: a string containing the standard error from the task
+<li> aobj: the analysis object from the js9Analysis.json file, containing,
+     among other things, the important <b>rtype</b>: "text" or "plot"
+</ul>
+Typically, you would check stderr string first and issue an error
+message if there is an error. Otherwise, the stdout string can be
+processed based on the return type (rtype) property of the output
+(e.g., "text" or "plot"). For plotting, you can use <b>flot</b>
+functionality already loaded into JS9, or you can use your own chosen
+plotting package.
+<p>
+If no <b>func</b> callback is specified, the default processing will
+display "text" in a new light window.  If the return type is "plot",
+the results are assumed to be in <b>flot</b> format and will be plotted.
+
+<p>
+<font size="+1"><b>&#9679; Run a server-side analysis task utilizing
+parameters in a form</b></font>
+<p>
+<code><font size="+1">JS9.SubmitAnalysis(el, aname, func)</font></code>
+<p>
+where:
+<ul>
+<li><b>el</b>: form element (unused at present)
+<li><b>aname</b>: name of analysis tool
+<li><b>func</b>: optional routine to call when analysis is completed on server
+</ul>
+The <b>JS9.SubmitAnalysis()</b> routine is used to run an analysis
+task with input parameters from a form. Typically used as
+the <b>Run</b> button action in a form, it automatically serializes
+the form values and passes them to the JS9 analysis macro expander so
+that these values can be integrated into the analysis command line.
+See js9analysis.html for a simple example.
+<p>
+The <b>func</b> callback is the same as for <b>JS9.RunAnalysis()</b> above.
+
+<hr><p>
+<font size="+1"><center><b>
+<a name="misc">Miscellaneous</a>
+</b></center></font>
+<p>
+
+<p>
+<font size="+1"><b>&#9679; Print an image</b></font>
+<p>
+<code><font size="+1">JS9.Print()</font></code>
+<p>
+Print the currently displayed image. A new window is displayed
+containing the image, along with regions and other graphical layers
+(the 2D graphics having been converted to a re-scalable format).  The
+standard Print dialog box also is displayed and can be used to print
+this new window.  Dismiss both windows when you are finished.
+
+<p>
+<font size="+1"><b>&#9679; Display help in a light window</b></font>
+<p>
+<code><font size="+1">JS9.DisplayHelp(name)</font></code>
+<p>
+where:
+<ul>
+<li><b>name</b>: name of a help file or url of a Web site to display
+</ul>
+The help file names are the property names in JS9.helpOpts (e.g., "user" for
+the user page, "install" for the install page, etc.). Alternatively, you can
+specify an arbitrary URL to display (just because).
+
+<p>
+<font size="+1"><b>&#9679; Get location of JS9 installation directory</b></font>
+<p>
+<code><font size="+1">rpath = JS9.InstallDir(file)</font></code>
+<p>
+where:
+<ul>
+<li><b>file</b>: file or directory to convert
+</ul>
+returns:
+<ul>
+<li><b>rpath</b>: path of the file relative to the JS9 install directory
+</ul>
+Sometimes a plugin needs to load an auxiliary file inside the plugins
+sub-directory. The Web page loading the plugin has an arbitrary
+location relative to the JS9 install directory, so this routine
+returns a relative path to the js9 install directory.
+
+<hr><p>
+<font size="+1"><center><b>
+<a name="proto">Prototype Routines (not ready for prime time)</a>
+</b></center></font>
+<p>
+NB: The routines in this section are prototypes and therefore are
+subject to change. Feel free to contact us to discuss your needs so
+that we can gain a better understanding of is required in these cases.
+<p>
+<font size="+1"><b>&#9679; Load an auxiliary file</b></font>
+<p>
+<code><font size="+1">JS9.LoadAuxFile(name, func)</font></code>
+<p>
+where:
+<ul>
+<li><b>name</b>: class name of auxiliary file to load
+<li><b>func</b>: function to call once the file is loaded
+</ul>
+<p> It sometimes is desirable to process auxiliary files when an image
+is first loaded.  Examples include overlaying an image mask on an
+image, and pre-loading regions from a region file.
+The <b>JS9.LoadAuxFile</b> prototypes this sort of functionality.
+<p>
+Auxiliary files are defined in the js9Prefs.json file by means of the
+JS9.auxfiles array containing one or more auxfile objects.  Each
+auxfile specification has the following properties:
+<ul>
+<li><b>type</b>: type of auxiliary file: currently "mask" or "region"
+<li><b>name</b>: the class name of the auxiliary file
+<li><b>image</b>: image (or template) for which this auxfile is valid
+<li><b>url</b>: URL of the auxfile
+</ul>
+For example, the following defines two auxfiles:
+<pre>
+  "auxFiles":   [{"type":	     "mask",
+		  "name":	     "sciencemasks",
+		  "image": 	     "casa.*.png",
+		  "url":	     "../myauxfiles/casa-mask.png"},
+		 {"type":	     "regions",
+		  "name":	     "scienceregions",
+		  "image": 	     "casa.*.png",
+		  "url":	     "../myauxfiles/casa.reg"}],
+</pre>
+Here, a mask auxfile and a regions auxfile are defined for Cas-A
+dataset(s). These auxfiles are brought into play as follows:
+<pre>
+    // run this routine after loading each image
+    function onImageLoad(im){
+      JS9.LoadAuxFile("sciencemasks", function(im, aux){
+        // if we succeed in loading the mask, set up the onchange callback
+        im.onregionschange = regionOnChange;
+        // view the image through the mask data
+        im.maskData = aux.im.raw.data;
+        // I mean now!
+	im.displayImage("all");
+      });
+    JS9.LoadAuxFile("scienceregions");
+  }
+
+  // tell JS9 about the onload callback
+  JS9.imageOpts.onload = onImageLoad;
+</pre>
+An onImageLoad function is defined that will try to load auxfiles of
+types "sciencemasks" and "scienceregions". This routine is set to
+be called whenever a new image is loaded.
+<p>
+On image load, when <b>JS9.LoadAuxFile()</b> is called, it looks in
+the list of known auxfiles for an entry that matches both
+the class name and the image name.  If found (in the example above,
+for Cas-A datasets), the associated auxfile URL is loaded and
+type-specific processing is performed:
+<ul>
+<li><b>masks</b>: the mask file is loaded into the Web page as an
+off-screen image and an aux object is created as a property of the
+image object. This aux object can be used for subsequent processing
+(see below).
+<li><b>regions</b>: the regions in the region file are created and
+displayed on the image.
+</ul>
+Once the initial auxfile processing has been performed, the optional
+callback function will be called. For the "mask" example above, the
+onregionchange property is set to call a JavaScript function (not
+shown here) whenever a region changes. The maskData property is set to
+point to the raw data of the auxfile (i.e., aux.im.raw.data). Finally,
+the image is redisplayed. Setting the maskData property and
+redisplaying the image causes the auxfile's data to be displayed as an
+opaque overlay on top of the currently displayed image.
+<p>
+As should be clear from the description above, considerable "black
+magic" currently is involved when processing auxiliary files.
+Visibility is required into the inner properties of the image
+object. Please contact us if you want to work with auxiliary files, so
+that we can continue to think about what is required for their support.
+
+<h5>Last updated: September 4, 2014</h5>
+</div>
+
+</body>
+</html>

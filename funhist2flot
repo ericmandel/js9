@@ -1,0 +1,79 @@
+#!/bin/sh
+
+LC_NUMERIC=en_US.ISO8859-1
+export LC_NUMERIC
+
+files="None"
+while [ x"$1" != x ]; do
+    case $1 in
+	-title)
+	    title="$2"
+	    shift
+	    shift
+	    continue;;
+	-file)
+            files="$2"
+	    shift
+	    shift
+	    continue;;
+	*)  
+            break;;
+    esac
+done
+
+awk -v title="$title" '
+BEGIN{
+  mode=1
+  initparam=0
+  npts=0
+}
+mode==1{
+  if( initparam == 0 ){
+    if( files == "None" ){
+      files=""
+      dofile="true"
+    }
+    else{
+      dofile="false"
+    }
+    initparam=1
+    if( title == "" ){
+      title = "Funhist"
+    }
+  }
+  if( dofile == "true" && $1 == "#" && $2 == "data" && $3 == "file:" ){
+    if( files != "" ) files = files ","
+    files = files $4
+  }
+  else if( $1 == "#" && $2 == "column:" ){
+    column = $3
+  }
+  else if( $1 == "------" ){
+    gsub(/"/,"\\\"", files)
+    printf "{\042color\042: \042blue\042, \042label\042 : \042counts vs %s_bin\042, ", column
+    mode = 2
+    next
+  }
+}
+mode==2{
+  if( NF == 4 ){
+    if( npts == 0 ){
+      printf "\042data\042 : ["
+    } else {
+      printf ","
+    }
+    npts = npts + 1
+    printf "[%.2f, %s]", ($3+$4)/2, $2
+  }
+  else{
+    mode = 3
+  }
+  next
+}
+END{
+  if( mode > 1 ){
+    printf "]}"
+  }
+}
+' files="$files"
+exit 0

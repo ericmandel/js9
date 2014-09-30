@@ -1,0 +1,77 @@
+<html>
+<head>
+<style>
+.container{
+  padding: 10px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<title>Displaying Your Data</title>
+
+<center><h3>Displaying Your Data With JS9</h3></center>
+
+<h3>Loading a FITS File From Your Web Page</h3>
+<p>
+Once you have your Web page set up, you can make your FITS data files
+available on your JS9 Web page by creating URLs that call
+the <b>JS9.Load()</b> routine:
+<pre>
+    href='javascript:JS9.Load(filename, opts);'
+</pre>
+where opts can be:
+<ul>
+<li><b>filename</b> is the path relative to the current Web page location
+<li><b>imageOpts</b>: an object containing params to be merged with the
+default JS9.imageOpts object
+</ul>
+<p>
+For example:
+<pre>
+    href='javascript:JS9.Load("fits/casa.fits");'
+</pre>
+Clicking on this URL will load the casa.fits file (here, stored in the
+fits directory directly beneath the Web page location). If the JS9
+server-side helper is running, it will be alerted about this new file
+so that it can run analysis, etc.
+<p>
+To override default image parameters, specify imgOpts parameters as the second argument:
+<pre>
+    href='javascript:JS9.Load("fits/m13.fits", {scale:"linear", colormap:"sls"});'
+</pre>
+<p>
+To load an image into a specified display, pass the display id in an object as
+the <b>last</b> argument in the call. This can be the second or third argument,
+depending whether the image object also is passed:
+<pre>
+    # the display object can be passed as the second argument ...
+    href='javascript:JS9.Load("fits/casa.fits", {display: "myJS9"});'
+    # but when image opts is also passed, it's the third argument  
+    href='javascript:JS9.Load("fits/3c273.fits", {scale: "linear"}, {display: "myJS9"});'
+</pre>
+<p>
+
+<h3>Pre-Loading a File From Your Web Page</h3>
+<p>
+You can pre-load one or more data files into JS9 when the Web page
+itself is loaded by adding the <b>JS9.Preload()</b> routine to
+the <b>onload</b> event in your Web page <b>body</b> element:
+<pre>
+&lt;body onload="JS9.Preload('fits/casa.fits', 
+		          'fits/snr.fits', {colormap:'heat'},
+		          'fits/3c58.fits',
+		          'fits/m13.fits', {scale:'linear', colormap:'sls'},
+		          'fits/3c273.fits',
+		          'fits/ngc1316.fits', {scale:'linear'},
+		          'fits/ngkper.fits', {colormap:'grey'});"&gt;
+</pre>
+Note that this routine takes a list of images, each of which
+optionally can have an associated <b>imgOpts</b> argument. The display
+opts can be passed as the final argument and will apply to all images.
+
+<h5>Last updated: September 4, 2014</h5>
+</div>
+
+</body>
+</html>

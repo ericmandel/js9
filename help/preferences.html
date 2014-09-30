@@ -1,0 +1,74 @@
+<html>
+<head>
+<style>
+.container{
+  padding: 10px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<title>Site Preferences</title>
+<center><h3>Configuring JS9 Site Preferences</h3></center>
+
+<p>
+JS9 supports a site configuration file that is read after the
+JavaScript variables are loaded but before JavaScript code is compiled
+and executed. This file allow you to tailor JS9 to meet the needs of
+your site without having to modify the js9.js file directly.
+
+<p>
+To support site configuration, JS9 tries to load a json file called 
+<b>js9Prefs.json</b> from the same server on which the main
+js9-[version].js file resides. The file will be looked for first in
+the same directory as the Web page and then in the js9 install directory.
+
+<p>
+This preference file can be used to override the default parameter
+settings for JS9.  A look through the beginning of JS9 code will show
+a number of Javascript objects containing these default
+parameters. They all have names ending in <b>Opts</b>,
+i.e. JS9.imageOpts, JS9.analysisOpts, etc. A description of some of
+these objects is given below:
+
+<ol>
+<li><p><b>JS9.globalOpts:</b> this JavaScript object contains global
+information, including parameters concerned with the back-end services
+used by JS9. Currently, it allows you to specify the <b>helperPort</b>
+on which to connect. Note that this same preference file is read the
+Node-based js9Helper, so changing the helper port in this file will
+change both the client and server.
+
+<p>
+<li><p><b>JS9.imageOpts:</b> This JavaScript object contains initial
+values for image parameters such as: <b>contrast</b>, <b>bias</b>,
+whether to <b>invert</b> the
+colormap, <b>colormap</b>, <b>scale</b>, <b>WCS system</b> , <b>WCS
+units</b>, whether to display <b>value/position</b>, and whether to
+list regions when they change (<b>listonchange</b>).
+
+<li><p><b>JS9.analOpts</b> This JavaScript object contains
+the <b>dataDir</b> option, which specifies the pathname prefix to add
+to each FITS filename instead of the pathname stored in the PNG
+file. You can set this variable if you have moved the location of the
+raw FITS files after generating the PNG files.
+
+<li><p><b>JS9.Regions.opts:</b> This JavaScript object contains default
+values for regions, including the initial size of various regions,
+initial inner and outer radii for annuli, initial angle, etc.
+
+<li><p><b>JS9.menuButtonOptsArr:</b> this JavaScript array of objects allows
+you to change and re-arrange which menu options are provided. If you
+prefix the name of a menu option with '<b>#</b>', that option is disabled.
+
+</ol>
+In addition to the above-mentioned objects, the preference file can be
+used to set some internal variables. The <b>JS9.DEBUG</b> parameter is an
+example, as shown in the default preference file. Ordinarily, users
+need not be concerned with these variables.
+
+<h5>Last updated: September 4, 2014</h5>
+</div>
+
+</body>
+</html>

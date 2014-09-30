@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="fitsy.min.js"></script>
+  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <style>
+      #centerdiv {
+      width: 512px;
+      margin-left: auto ;
+      margin-right: auto ;
+      }
+  </style>
+</head>
+<body>
+    <div id="centerdiv">
+    <font size="+1">
+    <center><b>JS9 Demo: the basics</b></center>
+    </font>
+    <table cellspacing="15">
+    <tr valign="top">
+    <td>
+    PNG files (converted from FITS):
+    <ul>
+    <li> <a href='javascript:JS9.Load("png/casa.png");'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("png/3c58.png", {colormap:"heat"});'>3c58 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'>m13 (via SkyView)</a>
+    <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y)</a>
+    </ul>
+    </td>
+    <td>
+    FITS images and binary tables:
+    <ul>
+    <li> <a href='javascript:JS9.Load("fits/snr.fits", {colormap:"heat"});'>CTB 109 (Einstein, small)</a>
+    <li> <a href='javascript:JS9.Load("fits/3c273.fits");'>3c273 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngkper.fits");'>gkper (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngc1316.fits", {scale:"linear"});'>ngc1316 (AIPS)</a>
+    </ul>
+    </td>
+    </tr>
+    </table>
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    </div>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</ul>
+</body>
+</html>

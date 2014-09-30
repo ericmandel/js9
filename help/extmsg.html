@@ -1,0 +1,192 @@
+<html>
+<head>
+<style>
+.container{
+  padding: 10px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<title>External Communication with JS9</title>
+<center><h3>External Communication with JS9</h3></center>
+
+<p>
+The JS9 <b>Analysis menu</b> provides flexible support for running a
+macro-expanded external analysis command on the Web server and
+displaying results in the browser. But there are other scenarios in which
+it might be desirable for an external process to communicate with the
+JS9 client:
+
+<ul>
+<li> JS9 might be part of a larger Web-based analysis system
+(i.e. instead of the analysis being incorporated into the Analysis
+menu). An analysis task might want to query JS9 for its regions.
+<li> A Web site might offer "live" tutorials in which JS9 in the
+browser is manipulated automatically from the server.
+<li> A Web site might wish to modify a JS9 client's user interface based
+on the level of expertise of a given user.
+<li> A user running JS9 locally might want to interact with her JS9 client from within a local analysis script.
+<li> A remote user might want to interact with her JS9 client in a similar way.
+</ul>
+
+<p>
+If you run the Node.js-based helper (instead of the CGI helper), this
+sort of external communication is supported by the <b>js9 script</b>
+and its underlying <b>js9Msg.js</b>. The script runs
+<b>Node.js</b> with js9Msg.js as its first argument. Using command
+line syntax, it will send a single JS9 command to the browser and
+return the results:
+<pre>
+  sh> js9 cmap heat        # change colormap to heat
+  OK
+  sh> js9 cmap             # return the current colormap
+  heat
+</pre>
+<p>
+Alternatively, if no command-line arguments are specified, js9 will
+enter a "read-line" loop, executing commands as they are input:
+<pre>
+  sh> js9 
+  JS9> cmap heat
+  OK
+  JS9> cmap
+  heat
+</pre>
+<p>
+You also can send multiple commands to the script's standard input:
+<pre>
+  sh> cat test.reg
+  region circle {"x":588, "y":590, "radius":30, "tags":"source"}
+  region circle {"x":588, "y":590, "radius":10, "tags":"exclude"}
+  region circle {"x":390, "y":430, "radius":50, "tags":"background"}
+  region circle {"x":390, "y":430, "radius":10, "tags":"background,exclude"}
+  sh> cat test.reg | js9    # send regions to JS9
+</pre>
+(Note: currently, redirecting to stdin does not appear to display
+return messages. We'll fix this in a future release.)
+
+<p> 
+A list of available JS9 commands can be retrieved using the ''help' command:
+<pre>
+  sh> js9 help
+  analysis     	run/list analysis for current image (ana)
+  colormap     	set/get colormap for current image (cmap)
+  colormaps    	get list of available colormaps (cmaps)
+  help     	get list of available commands
+  helper     	get/set helper connection
+  image     	get name of currently loaded image or display specified image
+  images     	get list of currently loaded images
+  load     	load image(s)
+  pan     	set/get pan location for current image
+  pix2wcs     	get image pixel value for specified wcs position
+  print     	print image window
+  regions     	add region to current image or list all regions (reg, region)
+  scale     	set/get scaling for current image
+  scales     	get list of available scales
+  url     	display a url
+  wcssys     	set/get wcs system for current image
+  wcsu     	set/get wcs units used for current image
+  wcssystems   	get list of available wcs systems
+  wcsunits     	get list of available wcs units
+  wcs2pix     	get wcs position for specified image pixel
+  zoom     	set/get zoom for current image
+</pre>
+These are the same commands that are available to the JS9 light-weight 
+<b>Console</b> window.
+
+<p>
+One of the most important JS9 commands is the 'region' command, which
+will create a new region or display the current region(s):
+<pre>
+  sh> js9 region circle
+  OK
+  sh> js9 regions
+  ICRS; circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
+</pre>
+<p>
+Region-specific properties can be supplied in JSON format after the
+shape is specified (see http://www.json.org/). You can pass any
+property value found in the JS9.Regions.opts object. For example:
+<pre>
+  sh> js9 region circle '{"x":495, "y":495, "radius":25, "color":"yellow"}'
+  OK
+</pre>
+<p>
+The <b>js9 script</b> can talk to a JS9 instance if the script is run from:
+<ul>
+<li> the local host running the Web service and back-end helper
+<li> the same host that is running the target browser, regardless of
+where the helper resides
+</ul>
+Note that the <b>js9 script</b> on one host cannot communicate with a
+target browser on another host (unless the first host is the helper host).
+<p>
+If a JS9 instance is connected to a helper on a remote host, you can
+use the <b>-helper</b> switch to specify the remote host to
+contact. For example, if the helper is running on js9.cfa.harvard.edu,
+you can send a command to your instance of JS9 this way:
+<pre>
+  sh> js9 -helper js9.cfa.harvard.edu region circle
+  OK
+</pre>
+<p>
+If more than one instance of JS9 appears on a single Web page, the 
+<b>-id</b> switch can differentiate between instances. The value of
+the id switch is the div id for that JS9 instance.  For example, if
+two instances of JS9 having div ids of "JS9" and "myJS9" are defined
+on the same page, then js9 can communicate with the latter in this way:
+<pre>
+  sh> js9 -id myJS9 region circle
+  OK
+  sh> js9 -id myJS9 region 
+  ICRS; circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
+</pre>
+or, from the readline loop:
+<pre>
+  sh> js9 -id myJS9
+  JS9> region circle
+  OK
+  JS9> region -id myJS9
+  ICRS; circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
+</pre>
+<p>
+Putting the last two techniques together, you can talk to one of many JS9
+instances on a page connected to a remote helper this way:
+<pre>
+  sh> js9 -helper js9.cfa.harvard.edu -id myJS9 cmap heat
+  OK
+</pre>
+<p>
+A final esoteric note: special considerations are required when a helper
+host wants to talk to one of several instances of JS9 connected to the
+helper. Being on the same host as the helper, the <b>js9 script</b> is
+allowed to send messages to any of these clients. But for security
+reasons, it can only send a message to an individual browser, not to all
+browsers at once. If the target browser's ip address is known,
+the <b>-browser</b> switch can be used to differentiate browsers
+running the same page. For example, if you want to talk to the JS9
+client browser on bynars:
+<pre>
+  sh> js9 -browser bynars.cfa.harvard.edu -id myJS9 region circle
+  OK
+  sh> js9 -browser bynars.cfa.harvard.edu -id JS9 region 
+  ICRS; circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
+</pre>
+or, from the readline loop:
+<pre>
+  sh> js9 -browser bynars.cfa.harvard.edu -id myJS9
+  JS9> region circle
+  OK
+  JS9> region 
+  ICRS; circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
+</pre>
+<p>
+The js9 interface will evolve to meet the needs of the astronomical
+community.
+
+<h5>Last updated: September 4, 2014</h5>
+</div>
+
+</body>
+</html>

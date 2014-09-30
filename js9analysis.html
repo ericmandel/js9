@@ -1,0 +1,228 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="fitsy.min.js"></script>
+  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <style>
+      #myAnalysisDiv {
+        background: #E9E9E9;
+        border-width: 0px;
+        width: 440px;
+        padding: 10px;
+        overflow: auto;
+      }
+      #myAnalysisResults {
+        height: 440px;
+      }
+      #myButtonsDiv {
+        background: lightgrey;
+        border-width: 0px;
+        padding-left: 10px;
+        padding-right: 10px;
+        overflow: auto;
+        width: 440px;
+      }
+      .myButton {
+        font: normal 12px Arial;
+      }
+      #myHistPlotForm {
+        margin-left: 0px;
+        border-width: 0px;
+        width: 600px;
+      }
+  </style>
+</head>
+<body onload="initMyAnalysis()">
+    <script type="text/javascript">
+    // add event handlers to the analysis buttons to execute the specified task
+    // note that jQuery is available automatically
+    function initMyAnalysis(){
+        $("#counts").on("click", function(evt){
+          runMyAnalysis("counts");
+        });
+        $("#radialprofile").on("click", function(evt){
+          runMyAnalysis("radialprofile");
+        });
+        $("#energyplot").on("click", function(evt){
+          runMyAnalysis("energyplot");
+        });
+        $("#histplot").on("click", function(evt){
+          $("#myHistParams").toggle();
+        });
+    }
+    // run ananlysis on current image, defining a function to display results
+    function runMyAnalysis(aname){
+        JS9.RunAnalysis(aname, null, displayMyAnalysis);
+    }
+    // display function passed to JS9.RunAnalysis and JS9.SubmitAnalysis
+    // when the analysis task is complete, this callback displays results
+    function displayMyAnalysis(stdout, stderr, a){
+      var rdiv = $("#myAnalysisResults")[0];
+      if( !rdiv ){
+        alert("the analysis results area is missing on this web page");
+      }
+      else if( stderr ){
+        alert(stderr);
+      } else {
+        switch(a.rtype){
+        case "text":
+          // text can just get shoved into the div
+          rdiv.innerHTML = "<pre>" + stdout + "</pre>";
+          break;
+        case "plot":
+          // plot can make use of the already-loaded flot routines
+          // ( and JS9.plotOpts is defined in js9-version.js)
+          try{ 
+	    // retrieve plot object (should contain a data object)
+	    pobj = JSON.parse(stdout);
+            if( pobj && pobj.data ){
+              // erase explanatory text
+              rdiv.innerHTML = "";
+    	      // plot the data
+	      $.plot(rdiv, [pobj], JS9.plotOpts);
+	    } else {
+              alert("no analysis data returned");
+            }
+          }
+	  catch(e){ alert("can't plot data: "+e+" "+stdout)};
+          break;
+        }
+      }
+    }
+    </script>
+    <font size="+1"><center>
+    <b>JS9 Demo: two ways of doing remote (server-based) data analysis</b>
+    </center></font>
+    <table cellspacing="20">
+    <tr valign="top">
+    <td>
+    PNG files (converted from FITS):
+    <ul>
+    <li> <a href='javascript:JS9.Load("png/casa.png");'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("png/snr.png", {colormap:"heat"});'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'>m13 (via SkyView)</a>
+    <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y)</a>
+    </ul>
+    </td>
+    <td>
+    FITS images and binary tables:
+    <ul>
+    <li> <a href='javascript:JS9.Load("fits/3c58.fits");'>3c58 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/3c273.fits");'>3c273 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngkper.fits");'>gkper (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngc1316.fits", {scale:"linear"});'>ngc1316 (AIPS)</a>
+    </ul>
+    </td>
+    </tr>
+    <tr valign="top">
+    <td>
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    </td>
+    <td>
+    <div id="myButtonsDiv">
+    <div id="myButtonsBox">
+    <button id="energyplot" class="myButton">EnergySpectrum</button>
+    <button id="counts" class="myButton">Counts</button>
+    <button id="radialprofile" class="myButton">RadialProfile</button>
+    <button id="histplot" class="myButton">HistogramPlot</button>
+    </div>
+    </div>
+    <div id="myHistParams", style="display:none">
+    <form id="myHistPlotForm" name="myHistPlotForm" class="js9AnalysisForm">
+    <div class="linegroup">
+    <span class="column_A">
+    <b>Enter column name</b>
+    </span>
+    <span class="column_B">
+    <input type="text" class="text_B" id="column" name="column" value="pi" />
+    </span>
+    <span class="column_C">
+    <font size="-1">(column must be in file)</font>
+    </span>
+    </div>
+    <div class="linegroup">
+    <span class="column_A">
+    <b>Enter [min:max:]bins</b>
+    </span>
+    <span class="column_B">
+    <input type="text" class="text_B" id="bins" name="bins" value="0" />
+    </span>
+    <span class="column_C">
+    <font size="-1">(0 => default # of bins)</font>
+    </span>
+    </div>
+    <div class="linegroup">
+    <span class="column_A">
+    Bin width instead of # of bins?
+    </span>
+    <span class="column_B">
+    <input type="checkbox" id="bwidth" name="bwidth" value="true"/>
+    </span>
+    <span class="column_C">
+    </span>
+    </div>
+    <div class="linegroup">
+    <span class="column_A">
+    Normalize by bin size?
+    </span>
+    <span class="column_B">
+    <input type="checkbox" id="norm" name="norm" value="true"/>
+    </span>
+    <span class="column_C">
+    </span>
+    </div>
+    <input id="run" name="run" type="button" class="button" value="Run" onclick="return JS9.SubmitAnalysis(this, 'histplot', displayMyAnalysis);">
+    </form>
+    </div>
+    <div id="myAnalysisDiv">
+    <div id="myAnalysisResults">
+      JS9 can perform remote data analysis in two ways:
+      <ul>
+      <li> The JS9 Analysis menu will run remote analysis tasks and
+	   display results in light-weight windows. This option is
+	   self-contained and does not require any additional Web
+	   programming or HTML display elements.
+      <li> The Web page author can create a user interface to execute
+	   remote analysis on the current image and display the
+	   returned results.  In this case, the author sets up
+	   buttons, forms, etc., and supplies JavaScript code to
+	   display results in the page.
+      </ul>
+      The buttons located above, along with this 'results' window, illustrate
+      option #2: a Web interface to JS9 data analysis. See the page source for
+      implementation details.
+      <p>
+      JS9 also support local (browser-based) analysis using plugins. See the
+      plugins and imexam demos below.
+    </div>
+    </div>
+    </td>
+    </tr>
+    </table>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>

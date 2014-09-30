@@ -1,0 +1,24 @@
+#!/bin/bash
+
+ADIR="./archive"
+
+D=`date +%Y%m%d`
+
+AD=$ADIR/$D
+N=0
+while [ -d $AD ]; do
+  N=`expr $N + 1`
+  AD=$ADIR/$D-$N
+done
+mkdir -p $AD
+
+echo "archive directory: $AD"
+for f in $*
+do
+  echo "	archiving $f ..."
+  cp -p $f $AD/.
+done
+
+cd $ADIR
+rm -f latest
+ln -s `basename $AD` latest

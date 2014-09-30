@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <link type="text/css" rel="stylesheet" href="plugins/plugintest.css">
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="fitsy.min.js"></script>
+  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <script type="text/javascript" src="plugins/plugintest.js"></script>
+</head>
+<body>
+    <font size="+1"><center>
+    <b>JS9 Plugins: browser-based analysis using JS9 plugins</b>
+    </center></font>
+    <p>
+    You can add browser-based analysis to a JS9 Web page by writing a
+    JS9 Plugin module, consisting of a constructor function that gets called
+    for each div of the plugin class, and one or more event callbacks to
+    process the desired events. The <b>this</b> context of the constructor
+    is seeded with a few properties, the most important of which is the
+    <b>div</b> property specifying the DOM element of the containing div.
+    Add your GUI (in the form of HTML elements) to this div and use events to
+    control the action.  A plugin is registered using the 
+    <b>JS9.RegisterPlugin()</b> public routine.
+    <p>
+    If the Web page does not contain a div for this plugin class and if the
+    registration routine is passed a viewMenu property specifying a menu name,
+    the plugin will be added to the View menu. In the examples below, the
+    The first two examples define their own static divs for pluginTest.
+    The last instance of JS9 uses the View menu to bring up pluginTest in a
+    light window. 
+    <p>
+    See plugins/plugintest.js for the example plugin code.
+    <table cellspacing="30">
+
+    <tr valign="top">
+    <td>
+    <div class="JS9Menubar" id="JS9Menubar"></div>
+    <div class="JS9" id="JS9"></div>
+    </td>
+    <td>
+      An example of a Plugin div element already defined to hold the
+      Plugin message divs, which will be created by the Plugin constructor.
+    <ul>
+    <li> <a href='javascript:JS9.Load("png/casa.png");'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("png/snr.png", {colormap:"heat"});'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'>m13 (via SkyView)</a>
+    <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y)</a>
+    </ul>
+    Load an image, then move the mouse, or create and manipulate a
+    region, or press a key to see callbacks fire in the blue display region:
+    <p>
+    <div class="PLUGINtest" data-js9id="JS9"></div>
+    </td>
+    </tr>
+
+    <tr valign="top">
+    <td>
+    <div class="JS9Menubar" id="myJS9Menubar"></div>
+    <div class="JS9" id="myJS9"></div>
+    </td>
+    <td>
+      An example of a Plugin div element already defined to hold the
+      Plugin message divs, which will be created by the Plugin constructor.
+    <ul>
+    <li> <a href='javascript:JS9.Load("png/casa.png", {display: "myJS9"});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("png/snr.png", {colormap:"heat"}, {display: "myJS9"});'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"}, {display: "myJS9"});'>m13 (via SkyView)</a>
+    <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"}, {display: "myJS9"});'>i1000 (v=x*1000+y)</a>
+    </ul>
+    Load an image, then move the mouse, or create and manipulate a
+    region, or press a key to see callbacks fire in the blue display region:
+    <p>
+    <div class="PLUGINtest" data-js9id="myJS9">
+    </div>
+    </td>
+    </tr>
+
+    <tr valign="top">
+    <td>
+    <div class="JS9Menubar" id="otherJS9Menubar"></div>
+    <div class="JS9" id="otherJS9"></div>
+    </td>
+    <td>
+      In this example, no Plugin div element has been defined on the page.
+      It therefore will be offered in the View menu as a light window.
+    <ul>
+    <li> <a href='javascript:JS9.Load("png/casa.png", {display: "otherJS9"});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("png/snr.png", {colormap:"heat"}, {display: "otherJS9"});'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"}, {display: "otherJS9"});'>m13 (via SkyView)</a>
+    <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"}, {display: "otherJS9"});'>i1000 (v=x*1000+y)</a>
+    </ul>
+    Load an image and choose View->pluginTest, then move the mouse,
+    or create and manipulate a region, or press a key to see
+    callbacks fire in the light window.
+    </td>
+    </tr>
+
+    </table>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>
