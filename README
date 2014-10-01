@@ -26,7 +26,7 @@ For installation instructions, start with help/install.html.
 
 JS9 can change how we think about image display and analysis, moving
 beyond the Desktop into the Web. You can simply drag and drop a FITS
-image from your computer onto this JS9 display. All of basic JS9/DS9
+image from your computer onto the JS9 display. All of basic JS9/DS9
 functionality is immediately available: zoom, pan, colormaps, scaling,
 regions, WCS, etc.
 
