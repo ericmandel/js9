@@ -30,8 +30,8 @@ image from your computer onto the JS9 display. All of basic JS9/DS9
 functionality is immediately available: zoom, pan, colormaps, scaling,
 regions, WCS, etc.
 
-You can extend JS9 using the plugin facility in combination with the
-JS9 public API. For example, you can perform browser-based analysis on
+You can extend JS9 using the Plugin facility in combination with the
+JS9 Public API. For example, you can perform browser-based analysis on
 the displayed image. On the JS9 Website, click the Plugins tab, create
 a region, and move it around ...
 
