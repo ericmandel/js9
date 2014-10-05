@@ -15,8 +15,10 @@
 onclick="var arr = $('#dataPathForm').serializeArray();
 var form = $(this).closest('form');
 var dhtml = form.closest('.dhtmlwindow')[0];
+var dispid = $(dhtml).data('dispid');
 JS9.globalOpts.dataPath = arr[0].value;
-dhtmlwindow.close(dhtml);
+JS9.DisplayImage('display', {display: dispid});
+dhtml.close();
 return false;">
 
 <input id="close" name="Close" type="button" class="button" value="Close" 
