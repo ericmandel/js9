@@ -1579,6 +1579,9 @@ JS9.Image.prototype.displayImage = function(imode){
 	imode = "primary";
     } else if( imode === "all" ){
 	imode = "colors,scaled,primary,display,plugins";
+	mode.notify = true;
+    } else if( imode === "display" ){
+	mode.notify = true;
     }
     // get mode as elements in an object
     imode.split(",").forEach(modeFunc);
@@ -1614,7 +1617,9 @@ JS9.Image.prototype.displayImage = function(imode){
 	// display layers for this image
 	this.displayShapeLayers();
 	// notify the helper
-	this.notifyHelper();
+	if( mode.notify ){
+	    this.notifyHelper();
+	}
 	// mark this image as being in this display
 	display.image = this;
     }
@@ -4217,12 +4222,14 @@ JS9.Menubar = function(width){
 				did = tim.displayAnalysis("dpath",
 					 JS9.InstallDir(JS9.analOpts.dpathURL),
 					 "Data Path for Drag and Drop");
+				// save display id
+				$(did).data("dispid", tdisp.id);
 				break;
 			    default:
 				// look for analysis routine
 				a = tim.lookupAnalysis(key);
 				if( a ){
-				    // load param url, which will run analysis task
+				    // load param url to run analysis task
 				    // param url is relative to js9 install dir
 				    if( a.purl ){
 					did = tim.displayAnalysis("params",
@@ -4230,7 +4237,7 @@ JS9.Menubar = function(width){
 						  a.title+": "+tim.fitsFile);
 					// save info for running the task
 					$(did).data("dispid", tdisp.id)
-				            .data("aname", a.name);
+				              .data("aname", a.name);
 				    } else {
 					// else run task directly
 					tim.runAnalysis(a.name);
@@ -9316,7 +9323,7 @@ JS9.mkPublic("Load", function(file, opts){
     im = JS9.lookupImage(file, display);
     if( im ){
 	// display image, 2D graphics, etc.
-	im.displayImage("plugins");
+	im.displayImage("display");
 	im.clearMessage();
 	return;
     }
