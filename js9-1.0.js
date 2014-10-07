@@ -1150,10 +1150,10 @@ JS9.Image.prototype.mkRawDataFromHDU = function(hdu, file){
     // try to init the logical coordinate system
     this.initLCS(this.raw.header);
     // set initial scaling values if not done already
-    if( isNaN(this.params.scalemin) ){
+    if( isNaN(this.params.scalemin) || (this.params.scaleclipping === "dataminmax") ){
 	this.params.scalemin = this.raw.dmin;
     }
-    if( isNaN(this.params.scalemax) ){
+    if( isNaN(this.params.scalemax) || (this.params.scaleclipping === "dataminmax") ){
 	this.params.scalemax = this.raw.dmax;
     }
     // allow chaining 

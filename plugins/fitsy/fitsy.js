@@ -629,7 +629,7 @@ Fitsy.readHeaderBlock = function(fits) {
 	    for ( i = 1; i <= hdu.head.TFIELDS; i++ ) {
 		form = hdu.head["TFORM"+i].match(/([0-9]*)([LXBIJKAEDCMPQ])/);
 
-		rept = form[0] === "" ? 1 : +form[1];
+		rept = form[1] === "" ? 1 : +form[1];
 		type = TableTFORM[form[2]].type;
 		size = TableTFORM[form[2]].size;
 		width = rept * size;
