@@ -1,0 +1,34 @@
+<html>
+<body>
+<h3>Archives & Catalog Retrieval</h3>
+
+The Archives & Catalog Retrieval plugin provides access to remote
+image and star catalog services.
+
+<p>
+Use the menus in the top left to select a data source: 
+<ul>
+<li> Select either <b>Image Servers</b> or 
+<b>Catalog Servers</b> for image or catalog retrieval.
+<li> For a given type of server, select the institution from which to retrieve.
+<li> For a given institution, select the specific archive or catalog.
+</ul>
+
+<p>
+You then can fill in the RA and Dec of the target in one of three ways:
+<ul>
+<li> Set the RA and Dec manually in hh:mm:ss dd:mm:ss format.
+<li> Specify an object name in <b>Object</b> field and click
+the <b>Set RA/Dec</b> button to retrieve the field center.
+<li> If an image is displayed in JS9 (and <b>Object</b> is blank),
+click the <b>Set RA/Dec</b> button to retrieve the field center and
+size from the image.
+</ul>
+
+<p>
+Once the RA and Dec have been filled in, pressing <b>Retrieve Data</b>
+button will start the appropriate data retrieval. Images will be
+loaded directly into the JS9 display.  Catalogs will be loaded on top
+of the currently displayed image (so obviously, you need to have the
+appropriate image displayed in JS9 before overlaying a catalog).
+
