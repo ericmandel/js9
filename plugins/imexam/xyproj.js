@@ -1,10 +1,11 @@
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 /*globals $, JS9 */ 
 
-"use strict";
 
 
 (function() {
+    "use strict";
+
     var imexam = require("./imexam");
 
 

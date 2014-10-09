@@ -1,10 +1,10 @@
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 /*globals $, JS9, Fitsy, imexam */ 
 
-"use strict";
-
 
 (function() {
+    "use strict";
+
 
     function hxrgReadPixelStack(fits, n, index, deliver, data) {
         var last, i;

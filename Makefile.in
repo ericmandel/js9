@@ -141,7 +141,8 @@ PLUGINFILES =	plugins/archive/archive.js \
 		plugins/imexam/reghist.js \
 		plugins/imexam/regstat.js \
 		plugins/imexam/xyproj.js \
-		plugins/imexam/3dplot.js
+		plugins/imexam/3dplot.js \
+		plugins/imexam/contour.js
 
 PREFFILES =	js9Prefs.json
 

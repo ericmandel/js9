@@ -1,4 +1,4 @@
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"Ll8vMw":[function(require,module,exports){
+require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"./imexam":[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, bitwise: true */
 /*globals Float32Array, Int32Array, JS9, $ */ 
 
@@ -637,9 +637,7 @@ exports.typed    = ndops;
 exports.imops    = imops;
 
 
-},{"./mask.js":3,"./template":11,"typed-array-function":4,"typed-array-ops":5,"typed-array-rotate":6,"typed-numeric-uncmin":9}],"./imexam":[function(require,module,exports){
-module.exports=require('Ll8vMw');
-},{}],3:[function(require,module,exports){
+},{"./mask.js":1,"./template":9,"typed-array-function":2,"typed-array-ops":3,"typed-array-rotate":4,"typed-numeric-uncmin":7}],1:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 /*globals $ */ 
 
@@ -712,7 +710,7 @@ module.exports=require('Ll8vMw');
 }());
 
 
-},{"./raster":10}],4:[function(require,module,exports){
+},{"./raster":8}],2:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, evil: true, regexp: true, bitwise: true */
 /*jshint node: true, -W099: true, laxbreak:true, laxcomma:true, multistr:true, smarttabs:true */
 /*globals typed, Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array */ 
@@ -1215,7 +1213,7 @@ module.exports=require('Ll8vMw');
 }());
 
 
-},{"ndarray-nobuffer":13}],5:[function(require,module,exports){
+},{"ndarray-nobuffer":11}],3:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, evil: true, regexp: true */
 /*globals */ 
 
@@ -1439,7 +1437,7 @@ module.exports=require('Ll8vMw');
 }());
  
 
-},{"typed-array-function":4}],6:[function(require,module,exports){
+},{"typed-array-function":2}],4:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, bitwise: true */
 
 "use strict";
@@ -1465,7 +1463,7 @@ function rotateImage(out, inp, theta, iX, iY, oX, oY) {
 
 module.exports = rotateImage;
 
-},{"typed-array-warp":7}],7:[function(require,module,exports){
+},{"typed-array-warp":5}],5:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, bitwise: true */
 
 "use strict";
@@ -1538,7 +1536,7 @@ module.exports = function warp(dest, src, func) {
   return dest;
 };
 
-},{"ndarray-linear-interpolate":12,"typed-array-function":4}],8:[function(require,module,exports){
+},{"ndarray-linear-interpolate":10,"typed-array-function":2}],6:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, evil: true, regexp: true, bitwise: true */
 /*jshint node: true, -W099: true, laxbreak:true, laxcomma:true, multistr:true, smarttabs:true */
 /*globals */ 
@@ -1689,7 +1687,7 @@ numeric.dotMM = typed({ loops: false }, numeric.dotMM);
 numeric.diag  = typed({ loops: false }, numeric.diag);
 
 
-},{"typed-array-function":4}],9:[function(require,module,exports){
+},{"typed-array-function":2}],7:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, evil: true, regexp: true, bitwise: true, continue:true */
 
 "use strict";
@@ -1795,7 +1793,7 @@ exports.uncmin = function uncmin(f,x0,tol,gradient,maxit,callback,options) {
     return {solution: x0, f: f0, gradient: g0, invHessian: H1, iterations:it, message: msg};
 };
 
-},{"typed-array-function":4,"typed-array-ops":5,"typed-matrix-ops":8}],10:[function(require,module,exports){
+},{"typed-array-function":2,"typed-array-ops":3,"typed-matrix-ops":6}],8:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 /*globals */ 
 
@@ -1932,7 +1930,7 @@ exports.uncmin = function uncmin(f,x0,tol,gradient,maxit,callback,options) {
     exports.drawBox     = function (buffer, width, x, y, h, w, rot, color, rop) { _drawPolygon(buffer, width, rotPoints(polyBox    (x, y, h, w), rot, { x: x, y: y }), color, rop); };
 }());
 
-},{}],11:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 
 "use strict";
@@ -2006,7 +2004,7 @@ function template(text,data) {
 
 module.exports = template;
 
-},{}],12:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict"
 
 function interp1d(arr, x) {
@@ -2117,7 +2115,7 @@ module.exports.d1 = interp1d
 module.exports.d2 = interp2d
 module.exports.d3 = interp3d
 
-},{}],13:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict"
 
 var iota = require("iota-array")
@@ -2508,7 +2506,7 @@ function wrappedNDArrayCtor(data, shape, stride, offset) {
 
 module.exports = wrappedNDArrayCtor
 
-},{"iota-array":14}],14:[function(require,module,exports){
+},{"iota-array":12}],12:[function(require,module,exports){
 "use strict"
 
 function iota(n) {
@@ -2520,4 +2518,5 @@ function iota(n) {
 }
 
 module.exports = iota
-},{}]},{},[])
+},{}]},{},[]);
+
