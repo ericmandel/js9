@@ -236,7 +236,7 @@ minify:		FORCE
 		@minify js9-$(VERSION).js
 
 js9support:	FORCE
-		@(echo "remaking js9support ..."; minify fitsy.js; \
+		@(echo "remaking js9support ..."; \
 		  echo "css files in js9support.css: " > js9support.txt; \
 		  echo $(CSSFILES) >>  js9support.txt; \
 		  cat $(CSSFILES)  >  js9support.css;  \
@@ -253,7 +253,10 @@ js9support:	FORCE
 js9min:		FORCE
 		@(echo "remaking js9.min.js ..."; touch js9-$(VERSION).js; minify js9-$(VERSION).js)
 
-refresh:	js9support js9min
+fitsymin:	FORCE
+		@(echo "remaking fitsy.min.js ..."; touch fitsy.js; minify fitsy.js)
+
+refresh:	js9support fitsymin js9min
 
 jslint:		FORCE
 		@(jslint js9.js; jslint fitsy.js)
@@ -407,7 +410,7 @@ install-sao:	saoprefs
 install-smartx:	FORCE
 		@(echo "install smartx"; cd smartx; make install);
 
-release:	refresh js9support links prefs
+release:	refresh links prefs
 		(mkdir -p $(DISTDIR)/$(DISTNAME); \
 		tar cf - $(WEBFILES) $(WEBDIRS) $(BEDIRS) $(WEBHELP) js9*.html \
 			 $(SRCS) $(INCLUDES) $(SCRIPTS) $(MFILES) | \
