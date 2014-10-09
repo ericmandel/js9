@@ -4988,7 +4988,7 @@ JS9.Fabric.getShapeLayer = function(layerName, opts){
 // process options, separating into fabric opts and paramsJ
 // call using image context
 JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
-    var i, j, tags, pos, cpos, len, zoom;
+    var i, j, tags, pos, cpos, len, zoom, bin, zfactor;
     var key, shape, radinc, nrad, radius, tf, arr;
     var nopts = {}, nparams = {};
     var YFUDGE = 1;
@@ -4998,6 +4998,13 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     } else {
 	zoom = 1;
     }
+    if( this.display.layers[layerName].dtype === "main" ){
+	bin = this.binning.bin || 1;
+    } else {
+	bin = 1;
+    }
+    // combined zoom/bin factor
+    zfactor = zoom / bin;
     // get color for a given shape tag
     var tagColor = function(tags, tagcolors, obj){
 	var tkey, ctags, color;
@@ -5130,10 +5137,10 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	} else {
 	    if( opts.ireg && JS9.SCALEIREG ){
 		if( opts.iradius ){
-		    opts.iradius /= zoom;
+		    opts.iradius /= zfactor;
 		}
 		if( opts.oradius ){
-		    opts.oradius /= zoom;
+		    opts.oradius /= zfactor;
 		}
 	    }
 	    radinc = (opts.oradius - opts.iradius) / opts.nannuli;
@@ -5147,27 +5154,27 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     case "box":
 	if( opts.ireg && JS9.SCALEIREG ){
 	    if( opts.width ){
-		opts.width /= zoom;
+		opts.width /= zfactor;
 	    }
 	    if( opts.height ){
-		opts.height /= zoom;
+		opts.height /= zfactor;
 	    }
 	}
 	break;
     case "circle":
 	if( opts.ireg && JS9.SCALEIREG ){
 	    if( opts.radius ){
-		opts.radius /= zoom;
+		opts.radius /= zfactor;
 	    }
 	}
 	break;
     case "ellipse":
 	if( opts.ireg && JS9.SCALEIREG ){
 	    if( opts.r1 ){
-		opts.r1 /= zoom;
+		opts.r1 /= zfactor;
 	    }
 	    if( opts.r2 ){
-		opts.r2 /= zoom;
+		opts.r2 /= zfactor;
 	    }
 	}
 	break;
@@ -5233,8 +5240,8 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	if( opts.ireg && JS9.SCALEIREG ){
 	    len = opts.points.length;
 	    for(i=0; i<len; i++){
-		opts.points[i].x /= zoom;
-		opts.points[i].y /= zoom;
+		opts.points[i].x /= zfactor;
+		opts.points[i].y /= zfactor;
 	    }
 	}
 	break;
@@ -5665,7 +5672,7 @@ JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
 // call using image context
 JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     var i, pname, pinst, popts, xname, s, scalex, scaley, px, py, lcs;
-    var display, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius;
+    var display, bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius;
     var pub ={};
     var layer = this.layers[layerName];
     var tr = function(x){
@@ -5678,8 +5685,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
 	zoom = this.primary.sect.zoom;
+	bin = this.binning.bin || 1;
     } else {
 	zoom = 1;
+	bin = 1;
     }
     // fill in the blanks
     pub.mode = mode;
@@ -5720,9 +5729,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     while( pub.angle > 360 ){
 	pub.angle -= 360;
     }
-    // the parts of the obj.scale[XY] values related to size (not zoom)
-    scalex = obj.scaleX / zoom;
-    scaley = obj.scaleY / zoom;
+    // the parts of the obj.scale[XY] values related to size (not zoom, binning)
+    scalex = obj.scaleX / zoom * bin;
+    scaley = obj.scaleY / zoom * bin;
     if( ginfo.group ){
 	scalex *= ginfo.group.scaleX;
 	scaley *= ginfo.group.scaleY;
@@ -5936,13 +5945,13 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
 	zoom = this.primary.sect.zoom;
-	// bin = this.binning.bin || 1;
+	bin = this.binning.bin || 1;
     } else {
 	zoom = 1;
-	// bin = 1;
+	bin = 1;
     }
     // binning is part of panner scale (is this really right???)
-    bin = this.binning.bin || 1;
+    // bin = this.binning.bin || 1;
     // active object
     ao = canvas.getActiveObject();
     // process the specified shapes
@@ -6047,7 +6056,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 // update shape layer a change in panning, zooming, binning
 // call using image context
 JS9.Fabric.refreshShapes = function(layerName){
-    var dpos, ao;
+    var dpos, ao, bin, zoom;
     var that = this;
     var layer, canvas;
     layer = this.getShapeLayer(layerName);
@@ -6055,6 +6064,12 @@ JS9.Fabric.refreshShapes = function(layerName){
     if( !layer ){
 	return;
     }
+    if( this.display.layers[layerName].dtype === "main" ){
+	bin = this.binning.bin || 1;
+    } else {
+	bin = 1;
+    }
+    zoom = this.primary.sect.zoom;
     canvas = layer.canvas;
     ao = canvas.getActiveObject();
     // process the specified shapes
@@ -6073,7 +6088,7 @@ JS9.Fabric.refreshShapes = function(layerName){
 	case "text":
 	    break;
 	default:
-	    obj.scale(that.primary.sect.zoom/that.binning.bin);
+	    obj.scale(zoom/bin);
 	    // rescale the width of the stroke lines
 	    obj.rescaleBorder();
 	    break;
