@@ -1507,7 +1507,7 @@ imops._encen = typed(function (a, cx, cy, radius) {
 
 
 imops.encen = function(im, center) {
-    var radius = (im.shape[0]/2 + im.shape[1]/2) / 2;
+    var radius = Math.floor((im.shape[0]/2 + im.shape[1]/2) / 2);
 
     var reply = imops._encen(im, center[1], center[0], radius);
 
