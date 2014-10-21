@@ -367,7 +367,7 @@ JS9.Image = function(file, params, func){
     // array of aux file pointers
     this.aux = {};
     // binning parameters
-    this.binning = {bin: 1};
+    this.binning = {bin: 1, obin: 1};
     // temp flag determines if we should update shapes at end of this call
     this.updateshapes = false;
     // file argument can be an object containing raw data or
@@ -1107,6 +1107,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(hdu, file){
     } else {
 	this.file = hdu.filename;
     }
+    this.file = this.file || "unknown";
     this.id = this.file.split("/").reverse()[0];
     // fill in raw data directly from the fitsy object
     this.raw = {};
@@ -1193,6 +1194,7 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	break;
     case 3:
 	// three args: x, y, zoom
+	sect.ozoom = sect.zoom;
 	sect.xcen   = parseInt(xcen, 10);
 	sect.ycen   = parseInt(ycen, 10);
 	sect.zoom = zoom;
@@ -1644,13 +1646,13 @@ JS9.Image.prototype.displayImage = function(imode){
 // refresh data for an existing image
 // input obj is a fitsy object
 JS9.Image.prototype.refreshImage = function(obj, func){
-    var key, oldbin, dobin;
-    oldbin = this.binning.bin || 1;
+    var key, dobin;
+    this.binning.obin = this.binning.bin;
     this.mkRawDataFromHDU(obj);
-    dobin = (oldbin !== this.binning.bin);
+    dobin = (this.binning.obin !== this.binning.bin);
     this.mkSection();
     this.displayImage("colors");
-    // pan/zoom the shape layers
+    // redraw the shape layers to reflect new pan/zoom/bin
     for( key in this.layers ){
 	if( this.layers.hasOwnProperty(key) ){
 	    if( this.layers[key].show &&
@@ -6054,23 +6056,43 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 };
 
 // update shape layer a change in panning, zooming, binning
+// This routine is more complicated that one would want because fabric.js mixes
+// regions resize, zoom, and binning all in the same scale factor. So when 
+// we want to adjust a region for pan, zoom, or bin, we first have to untangle
+// the old zoom and bin values from the scale before applying new ones.
+// Current approach is to save the old bin and zoom factors when changing them,
+// use the old ones here, and then reset the old ones to the new ones. Hmmm ...
 // call using image context
 JS9.Fabric.refreshShapes = function(layerName){
-    var dpos, ao, bin, zoom;
-    var that = this;
+    var dpos, ao, bin, zoom, scaleX, scaleY, tscaleX, tscaleY;
     var layer, canvas;
+    var ismain = false;
+    var that = this;
     layer = this.getShapeLayer(layerName);
     // sanity check
     if( !layer ){
 	return;
     }
     if( this.display.layers[layerName].dtype === "main" ){
-	bin = this.binning.bin || 1;
+	ismain = true;
+    }
+    if( ismain ){
+	bin = this.binning.bin;
+	zoom = this.primary.sect.zoom;
+	// scale factor removes the old values and applies the new ones
+	scaleX = (this.binning.obin / this.primary.sect.ozoom) * zoom / bin;
+	scaleY = (this.binning.obin / this.primary.sect.ozoom) * zoom / bin;
     } else {
 	bin = 1;
+	zoom = this.primary.sect.zoom;
+	scaleX = zoom;
+	scaleY = zoom;
     }
-    zoom = this.primary.sect.zoom;
     canvas = layer.canvas;
+    // have to discard active groups before changing position of shapes
+    if( canvas.getActiveGroup() ){
+	canvas.discardActiveGroup();
+    }
     ao = canvas.getActiveObject();
     // process the specified shapes
     this.selectShapes(layerName, "all", function(obj, ginfo){
@@ -6088,7 +6110,16 @@ JS9.Fabric.refreshShapes = function(layerName){
 	case "text":
 	    break;
 	default:
-	    obj.scale(zoom/bin);
+	    // rescale the region
+	    tscaleX = scaleX;
+	    tscaleY = scaleY;
+	    if( ismain ){
+		// tscale is the resize part of old scale * new bin & zoom
+		tscaleX *= obj.scaleX;
+		tscaleY *= obj.scaleY;
+	    }
+	    obj.scaleX = tscaleX;
+	    obj.scaleY = tscaleY;
 	    // rescale the width of the stroke lines
 	    obj.rescaleBorder();
 	    break;
@@ -6105,6 +6136,11 @@ JS9.Fabric.refreshShapes = function(layerName){
 	    break;
 	}
     });
+    // only use the old bin and zoom once (until they change again)
+    if( ismain ){
+	this.binning.obin = this.binning.bin;
+	this.primary.sect.ozoom = this.primary.sect.zoom;
+    }
     // redraw regions
     if( canvas ){
 	canvas.renderAll();
