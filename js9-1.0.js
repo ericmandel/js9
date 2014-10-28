@@ -9762,7 +9762,7 @@ JS9.mkPublic("SubmitAnalysis", function(el, aname, func){
     return false;
 });
 
-// get display position from event
+// send a message to the back-end server
 JS9.mkPublic("Send", function(msg, obj, cb){
     if( JS9.helper.connected ){
 	JS9.helper.send(msg, obj, cb);
