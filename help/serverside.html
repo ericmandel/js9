@@ -215,23 +215,24 @@ completed
 The returnFunc() routine is a callback function to process the returned
 data from the analysis task.  The calling sequence is:
 <pre>
-    returnFunc(stdout, stderr, aobj)
+    returnFunc(stdout, stderr, errcode, aobj)
 </pre>
 where:
 <ul>
 <li><b>stdout:</b> a string containing the standard output from the task
 <li><b>stderr:</b> a string containing the standard error from the task
+<li><b>errcode:</b> error code value from the task or 0
 <li><b>aobj:</b> the analysis object from the js9Analysis.json file, containing
      the <b>rtype</b> (e.g. "text" or "plot") property
 </ul>
-Typically, you would check the stderr string first and issue an error
-message if there is an error. Otherwise, the stdout string can be
-processed based on the return type (rtype) of output (e.g., "text" or
-"plot"). For plotting, you can use the <b>flot</b> functionality that
-is loaded into JS9, or you can use your own chosen plotting
-package. See js9analysis.html for a simple example.
+Typically, you would check the errcode and/or stderr string first and
+issue an error message if there is an error. Otherwise, the stdout
+string can be processed based on the return type (rtype) of output
+(e.g., "text" or "plot"). For plotting, you can use the <b>flot</b>
+functionality that is loaded into JS9, or you can use your own chosen
+plotting package. See js9analysis.html for a simple example.
 
-<h5>Last updated: September 4, 2014</h5>
+<h5>Last updated: October 28, 2014</h5>
 </div>
 
 </body>

@@ -14,6 +14,10 @@
 
 <h3> Public Release 1.1 (TBD)</h3>
 <ul>
+<li> NB: added errcode to argument list of JS9.RunAnalysis() callback
+<li> re-factor js9Helper.js: each analysis task is its own top-level msg
+<li> allow user-defined msgs to be added to analysis tasks more easily
+<li> add JS9.Send() to send msgs programmatically (useful for 3rd party helpers)
 <li> ensure correct region size during RefreshImage() and table binning
 <li> add contour plugin to default plugins in js9plugins.js
 <li> fix bug in encircled energy preventing calculation for non-integer radii
@@ -209,7 +213,7 @@
 colormaps, external analysis, regions, wcs
 </ul>
 
-<h5>Last updated: June 14, 2014</h5>
+<h5>Last updated: October 28, 2014</h5>
 </div>
 
 </body>

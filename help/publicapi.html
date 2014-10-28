@@ -940,14 +940,16 @@ which is described here:
 The <b>func()</b> routine is a callback function to process the returned
 results from the analysis task.  The calling sequence is:
 <pre>
-    func(stdout, stderr, aobj)
+    func(stdout, stderr, errcode, aobj)
 </pre>
 where:
 <ul>
-<li> stdout: a string containing the standard output from the task
-<li> stderr: a string containing the standard error from the task
-<li> aobj: the analysis object from the js9Analysis.json file, containing,
-     among other things, the important <b>rtype</b>: "text" or "plot"
+<li> <b>stdout</b>: a string containing the standard output from the task
+<li> <b>stderr</b>: a string containing the standard error from the task
+<li> <b>errcode</b>: error code value from the task or 0
+<li> <b>aobj</b>: the analysis object from the js9Analysis.json file,
+     containing, among other things, the important <b>rtype</b>:
+     "text" or "plot"
 </ul>
 Typically, you would check stderr string first and issue an error
 message if there is an error. Otherwise, the stdout string can be
@@ -1028,6 +1030,54 @@ Sometimes a plugin needs to load an auxiliary file inside the plugins
 sub-directory. The Web page loading the plugin has an arbitrary
 location relative to the JS9 install directory, so this routine
 returns a relative path to the js9 install directory.
+
+<p>
+<font size="+1"><b>&#9679; Send a message to a back-end server</b></font>
+<p>
+<code><font size="+1">JS9.Send(msg, obj, cb)</font></code>
+<p>
+where:
+<ul>
+<li><b>msg</b>: name of the msg, as defined in the back-end server
+<li><b>obj</b>: object containing msg parameters
+<li><b>cb</b>: callback to call when back-end server returns its results
+</ul>
+JS9 sends various internal messages to the back-end server using either
+socket.io protocol (in the Node.js implementation) or CGI. For
+example, when a remote analysis call is made, JS9 sends a message to the
+back-end server detailing the task to call, parameters to pass, etc. Results
+are then returned to JS9 for display. JS9 also sends messages to the
+back-end server when a new image is displayed, when a FITS file is to 
+be converted into a PNG representation file, etc.
+<p>
+Communication with the back-end is usually done behind the scenes and
+need not concern users or application programmers. However, if you
+write your own socket.io-based server, you might want to add
+project-specific messages to your implementation. For example, a
+Perl-based or Python-based server might add its own special messages
+that execute Perl or Python commands within the server in response to
+JS9 messages. In this case, you can use <b>JS9.Send()</b> to send a
+message to these message handlers.
+<p>
+The <b>msg</b> name is the name of the message, as defined by the
+server. By convention, an object is usually passed to the
+message handler. JS9 will add a <b>dataPath</b> property to this
+object to indicate the current list of directories in which to
+search for data. All other properties are specific to the message being handled.
+You can pass a null instead of an object and <b>JS9.Send()</b> will generate
+a temporary object to hold the dataPath.
+<p>
+The <b>cb</b> function will be called if the message sends an
+acknowledgment.  The arguments passed to this function call by the server
+are specific to the message being handled.
+<p>
+For example, you can send a message to the back-end server to retrieve the
+list of available analysis tasks and then display this list using the call:
+<pre>
+JS9.Send("getAnalysis", null, function(s){alert(s)});
+</pre>
+The "getAnalysis" message passes no parameters to the server. The
+server returns a list of available analysis tasks in JSON format.
 
 <hr><p>
 <font size="+1"><center><b>
@@ -1123,7 +1173,35 @@ Visibility is required into the inner properties of the image
 object. Please contact us if you want to work with auxiliary files, so
 that we can continue to think about what is required for their support.
 
-<h5>Last updated: September 4, 2014</h5>
+
+<hr><p>
+<font size="+1"><center><b>
+<a name="proto">API Change History</a>
+</b></center></font>
+<p>
+The JS9 Public API is meant to be stable and well-documented. If we are
+forced to make an incompatible change to the API, it will be documented here.
+
+<p><font size="+1"><b>&#9679; 
+20141028: callback function to RunAnalysis and SubmitAnalysis
+</b></font>
+<p>
+Due to an oversight, the signature of the callback function supplied to
+<b>RunAnalysis()</b> (and its derivative function, 
+<b>SubmitAnalysis()</b>) was missing the errcode argument. 
+To correct this mistake, the signature was changed from:
+<pre>
+    func(stdout, stderr, aobj)
+</pre>
+to:
+<pre>
+    func(stdout, stderr, errcode, aobj)
+</pre>
+See js9onchange.html for an example of using this callbback function.
+
+<hr><p>
+
+<h5>Last updated: October 28, 2014</h5>
 </div>
 
 </body>

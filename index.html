@@ -130,7 +130,7 @@
         }
     }
     // display function passed to JS9.RunAnalysis when the task is complete.
-    function dispMyAnalysis(stdout, stderr, a){
+    function dispMyAnalysis(stdout, stderr, errcode, a){
       var rdiv = $("#myAnalysisResults")[0];
       if( !rdiv ){
         alert("the analysis results area is missing on this web page");

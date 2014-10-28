@@ -1,8 +1,14 @@
 /*
  *
- * js9Helper: Node-based server (September 4, 2012)
+ * js9Helper: Node-based back-end server for JS9 (September 4, 2012)
  *
- * requires: socket.io
+ * Principals: Eric Mandel
+ * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
+ * Contact: saord@cfa.harvard.edu
+ *
+ * Copyright (c) 2012 - 2014 Smithsonian Astrophysical Observatory
+ *
+ * Utilizes: socket.io, node-uuid
  *
  */
 
@@ -19,11 +25,10 @@ var sockio = require("socket.io"),
     uuid   = require('node-uuid');
 
 // internal variables
-var i, s, obj, opt, arr, otype, jtype;
-var fits2png = {};
-var analysis = {str:[], tasks:[]};
-var envs = JSON.stringify(process.env);
 var prefsfile = "js9Prefs.json";
+var fits2png = {};
+var analysis = {str:[], pkgs:[]};
+var envs = JSON.stringify(process.env);
 
 // default options ... change as necessary in prefsfile
 var globalOpts = {
@@ -34,105 +39,50 @@ var globalOpts = {
     remoteMsgs:       1 // 0 => none, 1 => samehost, 2 => all
 };
 
-// load preference file, if possible
-if( fs.existsSync(prefsfile) ){
-    s = fs.readFileSync(prefsfile, "utf-8");
-    if( s ){
-	try{ obj = JSON.parse(s.toString()); }
-	catch(e){console.log("can't parse: "+prefsfile, e);}
-	// look for globalOpts and merge
-	if( obj && obj.globalOpts ){
-	    for( opt in obj.globalOpts ){
-		if( obj.globalOpts.hasOwnProperty(opt) ){
-		    otype = typeof obj.globalOpts[opt];
-		    jtype = typeof globalOpts[opt]; 
-		    if( (jtype === otype) || (jtype === "undefined") ){
-			switch(otype){
-			case "number":
-			    globalOpts[opt] = obj.globalOpts[opt];
-			    break;
-			case "string":
-			    globalOpts[opt] = obj.globalOpts[opt];
-			    break;
-			default:
-			    break;
-			}
-		    }
-		}
-	    }
-	}
-    }
+//
+// functions that might depend on specific implementations of socket.io
+//
+
+// get ip address and port of the current socket connection
+function getHost(io, socket){
+    return [socket.handshake.address.address, socket.handshake.address.port];
 }
 
-// load analysis plugin files, if available
-if( fs.existsSync(globalOpts.analysisPlugins) ){
-    fs.readdir(globalOpts.analysisPlugins, function(err, files){
-	var i, j, jstr, pathname;
-	for(i=0, j=0; i<files.length; i++){
-	    pathname = globalOpts.analysisPlugins + "/" + files[i];
-	    if( fs.existsSync(pathname) ){
-		// only json files, please
-		if( !pathname.match(/.json$/) ){
-		    continue;
-		}
-		analysis.temp = fs.readFileSync(pathname, "utf-8");
-		jstr = analysis.temp.toString().trim();
-		if( analysis.temp ){
-		    switch(files[i]){
-		    case "fits2png.json":
-			try{ fits2png = JSON.parse(jstr); }
-			catch(e1){console.log("can't parse: "+pathname, e1);}
-			break;
-		    default:
-			try{ 
-			    analysis.str[j] = jstr;
-			    analysis.tasks[j] = JSON.parse(jstr);
-			    j++;
-			}
-			catch(e2){console.log("can't parse: "+pathname, e2);}
-			break;
-		    }
-		}
-	    }
-	}
-	if( files.length > 0 ){
-	    analysis.strs = "[" + analysis.str.join(",") + "]";
-	}
-    });
-}    
-
-// listen on the helper port
-var io = sockio.listen(globalOpts.helperPort);
-
-// errors and warnings only for 0.9.x
-if( typeof io.set === "function" ){
-    io.set("log level", 2);
+// get list of all clients currently connected
+function getClients(io, socket){
+    return io.sockets.clients();
 }
 
-// display version
-console.log("socket.io version: %s", sockio.version);
+// utility functions
 
-// identify target(s) of an external msg
-function getTargets(msg, clients, myip){
+// getTargets: identify target(s) for an external msg for a given ip
+function getTargets(io, socket, msg){
     var i, j, c, clip;
     var displays;
     var browserip = msg.browserip || "*";
     var targets = [];
+    // ip associated with this socket
+    var myip = getHost(io, socket)[0];
+    // list of all clients connected on this socket
+    var clients = getClients(io, socket);
+    // authentication function
     var authenticate = function(myip, clip){
-	var doit = false;
 	// if I'm localhost, I can send to anyone
 	if( myip === "127.0.0.1" ){
-	    doit = true;
-	    // I can send to myself, if we configured that way
-	} else if( (myip === clip) && 
-		   (globalOpts.remoteMsgs > 0) ){
-	    doit = true;
-	    // security risk: anyone can send to anyone
-	} else if( globalOpts.remoteMsgs > 1 ){
-	    doit = true;
+	    return true;
 	}
-	return doit;
+	// I can send to myself, if we configured that way
+	if( (myip === clip) && (globalOpts.remoteMsgs > 0) ){
+	    return true;
+	}
+	// security risk: anyone can send to anyone
+	if( globalOpts.remoteMsgs > 1 ){
+	    return true;
+	}
+	// can't send to anyone
+	return false;
     };
+    // look at all clients
     for(i=0; i<clients.length; i++){
 	// current client
 	c = clients[i];
@@ -141,7 +91,7 @@ function getTargets(msg, clients, myip){
 	    continue;
 	}
 	// client ip
-	clip = c.handshake.address.address;
+	clip = getHost(io, c)[0];
 	if( !authenticate(myip, clip) ){
 	    continue;
 	}
@@ -165,201 +115,331 @@ function getTargets(msg, clients, myip){
     return targets;
 }
 
-// clean incoming environment variables
-// should match cleaning in js9Helper.cgi
-function envclean(s) {
+// envClean: clean incoming environment variables
+// this should match cleaning in js9Helper.cgi
+function envClean(s) {
     if( typeof s === "string" ){
 	return s.replace(/[`&]/g, "").replace(/\(\)[ 	]*\{.*/g, "");
     }
     return s;
 }
 
-// after any socket connects, receive and process custom events
+// load preference file, if possible
+function loadPreferences(prefsfile){
+    var s, obj, opt, otype, jtype;
+    if( fs.existsSync(prefsfile) ){
+	s = fs.readFileSync(prefsfile, "utf-8");
+	if( s ){
+	    try{ obj = JSON.parse(s.toString()); }
+	    catch(e){console.log("can't parse: "+prefsfile, e);}
+	    // look for globalOpts and merge
+	    if( obj && obj.globalOpts ){
+		for( opt in obj.globalOpts ){
+		    if( obj.globalOpts.hasOwnProperty(opt) ){
+			otype = typeof obj.globalOpts[opt];
+			jtype = typeof globalOpts[opt];
+			if( (jtype === otype) || (jtype === "undefined") ){
+			    switch(otype){
+			    case "number":
+				globalOpts[opt] = obj.globalOpts[opt];
+				break;
+			    case "string":
+				globalOpts[opt] = obj.globalOpts[opt];
+				break;
+			    default:
+				break;
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+// load analysis plugin files, if available
+function loadAnalysisTasks(pluginsfile){
+    if( fs.existsSync(pluginsfile) ){
+	fs.readdir(pluginsfile, function(err, files){
+	    var i, jstr, pathname;
+	    for(i=0; i<files.length; i++){
+		pathname = globalOpts.analysisPlugins + "/" + files[i];
+		if( fs.existsSync(pathname) ){
+		    // only json files, please
+		    if( !pathname.match(/.json$/) ){
+			continue;
+		    }
+		    analysis.temp = fs.readFileSync(pathname, "utf-8");
+		    if( analysis.temp ){
+			jstr = analysis.temp.toString().trim();
+			switch(files[i]){
+			case "fits2png.json":
+			    try{ fits2png = JSON.parse(jstr); }
+			    catch(e1){console.log("can't parse: "+pathname,e1);}
+			    break;
+			default:
+			    try{
+				analysis.pkgs.push(JSON.parse(jstr));
+				analysis.str.push(jstr);
+			    }
+			    catch(e2){console.log("can't parse: "+pathname,e2);}
+			    break;
+			}
+		    }
+		}
+	    }
+	});
+    }
+}
+
+// addAnalysisTask: add to the list of analysis tasks sent to browser
+function addAnalysisTask(obj) {
+    analysis.pkgs.push(obj);
+    analysis.str.push("[" + JSON.stringify(obj) + "]");
+}
+
+//
+// message callbacks
+//
+
+// execCmd: exec a analysis wrapper function to run a command
+// this is the default callback for server-side analysis tasks
+function execCmd(io, socket, obj, cbfunc) {
+    var i, cmd, argstr, args;
+    var myip = getHost(io, socket)[0];
+    var myid = obj.id;
+    var myenv = JSON.parse(envs);
+    // sanity check
+    if( !obj.cmd ){
+	return;
+    }
+    // id of js9 display
+    myenv.JS9_ID = envClean(myid);
+    // host ip
+    myenv.JS9_HOST = envClean(myip);
+    // js9 cookie in the sending browser
+    if( obj.cookie ){
+	myenv.HTTP_COOKIE = envClean(obj.cookie);
+    }
+    // datapath (for finding data files)
+    if( obj.dataPath ){
+	myenv.JS9_DATAPATH = envClean(obj.dataPath);
+    } else if( globalOpts.dataPath ){
+	myenv.JS9_DATAPATH = envClean(globalOpts.dataPath);
+    }
+    // the command string
+    argstr = obj.cmd;
+    // split arguments on spaces
+    args = argstr.split(" ");
+    // remove dangerous characters
+    for(i=0; i<args.length; i++){
+	args[i] = args[i].replace(/[`$]/g, "");
+    }
+    // get commmand to execute
+    if( args[0] === globalOpts.cmd ){
+	// handle fitshelper specially
+	cmd = args[0];
+    } else {
+	// use a wrapper
+	cmd = globalOpts.analysisWrappers + "/" + args[0];
+    }
+    // log what we are about to do
+    console.log("exec: %s [%s]", cmd, args.slice(1));
+    // execute the analysis script with cmd arguments
+    cproc.execFile(cmd, args.slice(1),
+		   { encoding: "ascii",
+		     timeout: 0,
+		     maxBuffer: 2000*1024,
+		     killSignal: "SIGTERM",
+		     cwd: null,
+		     env: myenv
+		   },
+		   // return from exec
+		   function(errcode, stdout, stderr) {
+		       var res={};
+		       res.errcode = errcode;
+		       if( stdout ){
+			   res.stdout = stdout.toString();
+		       }
+		       if( stderr ){
+			   res.stderr = stderr.toString();
+			   console.log("run: %s", res.stderr);
+		       }
+		       // send results back to browser
+		       if( cbfunc ){ cbfunc(res); }
+		   });
+}
+
+// sendAnalysis: send list of analysis routines to browser
+function sendAnalysisTasks(io, socket, obj, cbfunc) {
+    var s;
+    if( analysis && analysis.str.length ){
+	s = "[" + analysis.str.join(",") + "]";
+	if( cbfunc ){ cbfunc(s); }
+    }
+}
+
+// sendMsg: send a message to the browser
+// this is the default callback for external communication with JS9
+function sendMsg(io, socket, obj, cbfunc) {
+    var i, targets;
+    // callback function
+    var myfunc = function(s){
+	if( cbfunc ){ cbfunc(s); }
+    };
+    // get list of targets to send to
+    targets = getTargets(io, socket, obj);
+    // look for one target (or else that multi is allowed)
+    if( (targets.length === 1) || obj.multi ){
+	for(i=0; i<targets.length; i++){
+	    targets[i].emit("msg", obj, myfunc);
+	}
+    } else {
+	if( cbfunc ){
+            cbfunc("ERROR: "+targets.length+" JS9 instance(s) found with" +
+		   " id " + obj.id + " (" + obj.cmd+")");
+	}
+    }
+}
+
+//
+// initialization
+//
+
+// display version
+console.log("socket.io version: %s", sockio.version);
+
+// load preference file
+loadPreferences(prefsfile);
+
+// load analysis plugins
+loadAnalysisTasks(globalOpts.analysisPlugins);
+
+// start listening on the helper port
+var io = sockio.listen(globalOpts.helperPort);
+
+// errors and warnings only for 0.9.x
+if( typeof io.set === "function" ){
+    io.set("log level", 2);
+}
+
+// for each connection, receive and process custom events
 io.sockets.on("connection", function(socket) {
-    // on disconnect, kill the helper
+    var i, j, m, a;
+    // function outside loop needed to make jslint happy
+    var xfunc = function(obj, cbfunc) {
+	// exec the analysis task (via a wrapper function)
+	execCmd(io, socket, obj, cbfunc);
+    };
+    // on disconnect: display a console message
+    // returns: N/A
+    // for other implementations, this is needed if you want to:
+    //   show disconnects in the log
     socket.on("disconnect", function() {
-	var addr = socket.handshake.address;
+	var myhost = getHost(io, socket);
 	// only show disconnect for displays (not js9 msgs)
 	if( socket.js9 && socket.js9.displays ){
             console.log("disconnect: %s:%s (%s) [%s]", 
-			addr.address, addr.port, 
-			socket.js9.displays,
+			myhost[0], myhost[1], socket.js9.displays,
 			new Date().toLocaleString());
 	}
     });
-    // list of displays for this connection
-    socket.on("displays", function(s, cbfunc) {
-	var addr = socket.handshake.address;
+    // on displays: get the list of displays for this connection
+    // returns: unique page id (not currently used)
+    // for other implementations, this is needed if you want to:
+    //   support sending external messages to JS9 (i.e., via js9 script)
+    socket.on("displays", function(obj, cbfunc) {
+	var myhost = getHost(io, socket);
 	socket.js9 = {};
-	socket.js9.displays = s.split(",");
+	socket.js9.displays = obj.displays;
 	socket.js9.pageid = uuid.v4();
-	cbfunc(socket.js9.pageid);
         console.log("connect: %s:%s (%s) [%s]", 
-		    addr.address, addr.port, 
+		    myhost[0], myhost[1],
 		    socket.js9.displays,
 		    new Date().toLocaleString());
+	if( cbfunc ){ cbfunc(socket.js9.pageid); }
     });
-    socket.on("msg", function(msg, cbfunc) {
-	var i, targets;
-	var clients = io.sockets.clients();
-	var myip = socket.handshake.address.address;
-	var myfunc = function(s){cbfunc(s);};
-	// get target(s) for this message
-	targets = getTargets(msg, clients, myip);
-	// look for one target (or else that multi is allowed)
-	if( (targets.length === 1) || msg.multi ){
-	    for(i=0; i<targets.length; i++){
-		targets[i].emit("msg", msg, myfunc);
-	    }
-	} else {
-          cbfunc("ERROR: "+targets.length+" JS9 instance(s) found with" + 
-		 " id " + msg.id + " (" + msg.cmd+")");
-	}
-    });
-    // new image file
+    // on image: signal from JS9 that a new or redisplayed image is active
+    // returns: [input file path, fits file path, "wcs"|"pix", wcs system]
+    // for other implementations, this is needed if you want to:
+    //   tell JS9 about default wcs system for this data file
+    //   get FITS filename associated with PNG representation files
     socket.on("image", function(obj, cbfunc) {
-	var cmd, args;
-	var image = obj.image;
-	// var myhost = socket.handshake.address.address;
-	var myenv = JSON.parse(envs);
-	if( obj.dataPath ){
-	    myenv.JS9_DATAPATH = envclean(obj.dataPath);
-	} else if( globalOpts.dataPath ){
-	    myenv.JS9_DATAPATH = envclean(globalOpts.dataPath);
+	if( globalOpts.cmd ){
+	    // make up js9helper command
+	    obj.cmd = globalOpts.cmd + " -i " + obj.image;
+	    // exec the command
+	    execCmd(io, socket, obj, cbfunc);
 	}
-	cmd = globalOpts.cmd;
-	args = [cmd, "-i", image];
-	console.log("exec: %s [%s] [%s]", 
-		    cmd, args.slice(1), myenv.JS9_DATAPATH);
-	// see if we can find the FITS file associated with this png
-	cproc.execFile(cmd, args.slice(1),
-		       { encoding: "ascii",
-			 timeout: 0,
-			 maxBuffer: 2000*1024,
-			 killSignal: "SIGTERM",
-			 cwd: null,
-			 env: myenv 
-		       },
-		       function(error, stdout, stderr) {
-			   var res={};
-			   res.error = error;
-			   if( stdout ){
-			       res.stdout = stdout.toString();
-			   }
-			   if( stderr ){
-			       res.stderr = stderr.toString();
-			       console.log("image: %s", res.stderr);
-			   }
-			   cbfunc(res);
-		       });
     });
-    // get analysis task definitions
+    // on getAnalysis: get analysis task definitions
+    // returns: json string containing analysis task definitions
+    // for other implementations, this is needed if you want to:
+    //   support default server-side analysis (i.e. exec a wrapper script)
     socket.on("getAnalysis", function(obj, cbfunc) {
-	// send list of analysis tasks to image
-	if( analysis.strs ){
-	    cbfunc(analysis.strs);
-	}
+	sendAnalysisTasks(io, socket, obj, cbfunc);
     });
-    // run an analysis task
-    socket.on("runAnalysis", function(obj, cbfunc) {
-	var i, cmd, argstr, args;
-	var myid = obj.id;
-	var myhost = socket.handshake.address.address;
-	var myenv = JSON.parse(envs);
-	myenv.JS9_ID = envclean(myid);
-	myenv.JS9_HOST = envclean(myhost);
-	if( obj.cookie ){
-	    myenv.HTTP_COOKIE = envclean(obj.cookie);
+    // on runAnalysis: run an analysis task
+    // returns: object w/ errcode, stderr (error string), stdout (results)
+    // for other implementations, this is needed if you want to:
+    //   support default server-side analysis (i.e. exec a wrapper script)
+    // socket.on("runAnalysis", function(obj, cbfunc){
+	// exec the analysis task (via a wrapper function)
+	// execCmd(io, socket, obj, cbfunc);
+    // });
+    // instead of a single runAnalysis handler: add a handler for each task
+    // returns: object w/ errcode, stderr (error string), stdout (results)
+    // for other implementations, this is needed if you want to:
+    //   support default server-side analysis (i.e. exec a wrapper script)
+    for(j=0; j<analysis.pkgs.length; j++){
+	for(i=0; i<analysis.pkgs[j].length; i++){
+	    a = analysis.pkgs[j][i];
+	    m = a.xclass ? (a.xclass + ":" + a.name) : a.name;
+	    socket.on(m, xfunc);
 	}
-	if( obj.dataPath ){
-	    myenv.JS9_DATAPATH = envclean(obj.dataPath);
-	} else if( globalOpts.dataPath ){
-	    myenv.JS9_DATAPATH = envclean(globalOpts.dataPath);
-	}
-	argstr = obj.cmd;
-	// split arguments on spaces
-	args = argstr.split(" ");
-	// remove dangerous characters
-	for(i=0; i<args.length; i++){
-	    args[i] = args[i].replace(/[`$]/g, "");
-	}
-	cmd = globalOpts.analysisWrappers + "/" + args[0];
-	console.log("exec: %s [%s]", cmd, args.slice(1));
-	// execute the analysis script with cmd arguments
-	cproc.execFile(cmd, args.slice(1),
-		       { encoding: "ascii",
-			 timeout: 0,
-			 maxBuffer: 2000*1024,
-			 killSignal: "SIGTERM",
-			 cwd: null,
-			 env: myenv 
-		       },
-		       function(error, stdout, stderr) {
-			   var res={};
-			   res.error = error;
-			   if( stdout ){
-			       res.stdout = stdout.toString();
-			   }
-			   if( stderr ){
-			       res.stderr = stderr.toString();
-			       console.log("run: %s", res.stderr);
-			   }
-			   cbfunc(res);
-		       });
-    });
-    // convert raw fits to png
+    }
+    // on fits2png: convert raw fits to png
+    // returns: object w/ errcode, stderr (error string), stdout (results)
+    // for other implementations, this is needed if you want to:
+    //   support conversion of fits to png representation
     socket.on("fits2png", function(obj, cbfunc) {
-	var i, cmd, argstr, args;
-	var myid = obj.id;
-	var myhost = socket.handshake.address.address;
-	var myenv = JSON.parse(envs);
-	myenv.JS9_ID = envclean(myid);
-	myenv.JS9_HOST = envclean(myhost);
-	if( obj.cookie ){
-	    myenv.HTTP_COOKIE = envclean(obj.cookie);
+	if( fits2png[0] && fits2png[0].action ){
+	    // make up fits2png command string from defined fits2png action
+	    obj.cmd = fits2png[0].action + " " + obj.fits;
+	    // exec the conversion task (via a wrapper function)
+	    execCmd(io, socket, obj, cbfunc);
 	}
-	if( obj.dataPath ){
-	    myenv.JS9_DATAPATH = envclean(obj.dataPath);
-	} else if( globalOpts.dataPath ){
-	    myenv.JS9_DATAPATH = envclean(globalOpts.dataPath);
-	}
-	// sanity check
-	if( !fits2png[0] || !fits2png[0].action ){
-	    cbfunc({stderr: "ERROR: fits2png is not available"});
-	}
-	// make up argument string
-	argstr = fits2png[0].action + " " + obj.fits;
-	// split arguments on spaces
-	args = argstr.split(" ");
-	// remove dangerous characters
-	for(i=0; i<args.length; i++){
-	    args[i] = args[i].replace(/[`$]/g, "");
-	}
-	cmd = globalOpts.analysisWrappers + "/" + args[0];
-	console.log("fits2png: %s [%s]", cmd, args.slice(1));
-	// execute the fits2png command with args
-	cproc.execFile(cmd, args.slice(1),
-		       { encoding: "ascii",
-			 timeout: 0,
-			 maxBuffer: 2000*1024,
-			 killSignal: "SIGTERM",
-			 cwd: null,
-			 env: myenv
-		       },
-		       function(error, stdout, stderr) {
-			   var res={};
-			   res.error = error;
-			   if( stdout ){
-			       res.stdout = stdout.toString();
-			   }
-			   if( stderr ){
-			       res.stderr = stderr.toString();
-			       console.log("fits2png: %s", res.stderr);
-			   }
-			   cbfunc(res);
-		       });
     });
+    // on msg: send a command from an external source to a JS9 browser
+    // nb: this msg comes from an external source, not from js9 itself
+    // returns: results from JS9
+    // for other implementations, this is needed if you want to:
+    //   support sending external messages to JS9 (i.e., via js9 script)
+    socket.on("msg", function(obj, cbfunc) {
+	sendMsg(io, socket, obj, cbfunc);
+    });
+    // an example of site-specific in-line messsages
+    if( process.env.NODEJS_FOO ){
+	// After defining a foo message, you can do this in javascript:
+	// JS9.Send("FOO:foo",{keys:{"x":1,"y":2}},function(r){console.log(r)});
+	socket.on("FOO:foo", function(obj, cbfunc) {
+	    var s = "foo: " + JSON.stringify(obj.keys);
+	    // analysis tasks should return an object containing one or more:
+	    // error (error code), stdout (string result), stderr (error msg)
+	    if( cbfunc ){ cbfunc({stdout: s}); }
+	});
+    }
 });
+
+// an example of adding an in-line messsage to the analysis task list
+if( process.env.NODEJS_FOO === "analysis" ){
+    // add foo to the list of analysis tasks sent to JS9
+    // it will go into the analysis menu and will be treated as analysis, i.e.
+    // automatic macro expansion, light-window to display of text/plot, etc.
+    // keys is an array macros to expand; they will be returned as an object
+    addAnalysisTask({xclass: "FOO", name: "foo", title: "Do Foo",
+		     keys: ["filename", "regions", "id"]});
+}
 
 // last ditch attempt to keep the server up
 process.on("uncaughtException", function(e){

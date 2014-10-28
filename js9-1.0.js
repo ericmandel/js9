@@ -1,9 +1,9 @@
 /*
  * JS9 module (December 10, 2012) via SAOimage module (June 18, 2012)
  *
- * Principals: Eric Mandel, John Roll, Alexey Vikhlinin
+ * Principals: Eric Mandel, Alexey Vikhlinin
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
- * Contact: eric@cfa.harvard.edu
+ * Contact: saord@cfa.harvard.edu
  *
  * Copyright (c) 2012 - 2014 Smithsonian Astrophysical Observatory
  *
@@ -1652,17 +1652,16 @@ JS9.Image.prototype.refreshImage = function(obj, func){
     dobin = (this.binning.obin !== this.binning.bin);
     this.mkSection();
     this.displayImage("colors");
-    // redraw the shape layers to reflect new pan/zoom/bin
-    for( key in this.layers ){
-	if( this.layers.hasOwnProperty(key) ){
-	    if( this.layers[key].show &&
-		(this.layers[key].opts.panzoom || dobin) ){
-		this.refreshShapes(key);
+    // update shape layers if we changed the binning params
+    if( dobin ){
+	for( key in this.layers ){
+	    if( this.layers.hasOwnProperty(key) ){
+		if( this.layers[key].show ){
+		    this.refreshShapes(key);
+		}
 	    }
 	}
-    }
-    // update regions if we changed the binning params
-    if( dobin ){
+	// also update region values
 	this.updateShapes("regions", "all", "binning");
     }
     if( func ){
@@ -2016,8 +2015,7 @@ JS9.Image.prototype.queryHelper = function(which){
 	if( (what === "all") || (what === "getAnalysis") ){
 	    // only retrieve analysis tasks once per image
 	    if( !this.analysisPackages ){
-		JS9.helper.send("getAnalysis", 
-		{"fits": this.fitsFile},
+		JS9.helper.send("getAnalysis", {"fits": this.fitsFile},
 	        function(s){
 		    if( s ){
 			try{
@@ -2039,6 +2037,10 @@ JS9.Image.prototype.queryHelper = function(which){
 JS9.Image.prototype.expandMacro = function(s, opts){
     var cmd, olen;
     var that = this;
+    // sanity check
+    if( !s ){
+	return;
+    }
     // process each $ token
     cmd = s.replace(/\$(\w+)/g, function(m, t, o){
 	var i, r;
@@ -2100,6 +2102,22 @@ JS9.Image.prototype.lookupAnalysis = function(name){
     var a = null;
     // look for the named analysis task
     if( this.analysisPackages ){
+	// look for xclass:name
+	for(j=0; j<this.analysisPackages.length && !a; j++){
+	    tasks = this.analysisPackages[j];
+	    for(i=0; i<tasks.length; i++){
+		// the analysis command we are using
+		a = tasks[i];
+		if( a.xclass && ((a.xclass + ":" + a.name) === name) ){
+		    break;
+		}
+		a = null;
+	    }
+	}
+	if( a ){
+	    return a;
+	}
+	// look for name
 	for(j=0; j<this.analysisPackages.length && !a; j++){
 	    tasks = this.analysisPackages[j];
 	    for(i=0; i<tasks.length; i++){
@@ -2117,7 +2135,7 @@ JS9.Image.prototype.lookupAnalysis = function(name){
 
 // execute analysis task
 JS9.Image.prototype.runAnalysis = function(name, opts, func){
-    var a;
+    var i, a, m;
     var that = this;
     var obj = {};
     // sanity checks
@@ -2134,14 +2152,36 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	return;
     }
     // get command line using macro expansion
-    obj.cmd = this.expandMacro(a.action, opts);
+    if( a.action ){
+	obj.cmd = this.expandMacro(a.action, opts);
+    }
+    // macro expand the strings in the keys array
+    if( a.keys ){
+	obj.keys = {};
+	for(i=0; i<a.keys.length; i++){
+	    obj.keys[a.keys[i]] = this.expandMacro("$"+a.keys[i], opts);
+	}
+    }
     // add some needed parameters
     obj.id = this.expandMacro("$id");
     obj.image = this.file;
     obj.fits = this.fitsFile;
+    // For socket.io communication, we have flattened the message space so that
+    // each analysis tool utilizes its own message. This allows easier addition
+    // of non-exec'ed, in-line analysis. The cgi support utilizes the
+    // 'runAnalysis' message to exec a task (there are no in-line additions)
+    switch(JS9.helper.type){
+    case 'nodejs':
+    case 'socket.io':
+	m = a.xclass ? (a.xclass + ":" + a.name) : a.name;
+	break;
+    default:
+	m = "runAnalysis";
+	break;
+    }
     // ask the helper to run the command
-    JS9.helper.send("runAnalysis", obj, function(r){
-	var robj;
+    JS9.helper.send(m, obj, function(r){
+	var s, robj;
 	// return type can be string or object
 	if( typeof r === "object" ){
 	    // object from node.js
@@ -2154,17 +2194,25 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		robj = {stdout: r};
 	    }
 	}
+	robj.errcode = robj.errcode || 0;
 	// if a processing function was supplied, call it and don't display
 	if( func ){
-	    func(robj.stdout, robj.stderr, a);
+	    func(robj.stdout, robj.stderr, robj.errcode, a);
 	} else {
 	    // handle errors before we start
-	    if( robj.stderr ){
-		JS9.error(robj.stderr, JS9.analOpts.epattern);
+	    if( robj.errcode || robj.stderr ){
+		if( robj.stderr ){
+		    s = robj.stderr;
+		} else {
+		    s = sprintf("ERROR: code %s, while executing %s", 
+				robj.errcode, a.name);
+		}
+		JS9.error(s, JS9.analOpts.epattern);
 	    }
 	    // display according to type
 	    switch(a.rtype){
 	    case "text":
+	    case undefined:
 		that.displayAnalysis("text", robj.stdout);
 		break;
 	    case "plot":
@@ -2179,7 +2227,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	    case "none":
 		break;
 	    default:
-		JS9.error("unknown analysis result type: " + a.result);
+		JS9.error("unknown analysis result type: " + a.rtype);
 	    break;
 	    }
 	}
@@ -4390,19 +4438,16 @@ JS9.Helper.prototype.connect = function(type){
 	    dataType: "script",
 	    success:  function(data, textStatus, jqXHR){
 		var ii;
-		var s="";
+		var d = [];
 		that.socket = io.connect(that.url);
 		that.socket.on("connect", function(){
 		    that.connected = true;
 		    that.helper = true;
 		    for(ii=0; ii<JS9.displays.length; ii++){
-			if( s ){
-			    s += ",";
-			}
-			s += JS9.displays[ii].id;
+			d.push(JS9.displays[ii].id);
 		    }
-		    that.socket.emit("displays", s, function(pageid){
-			    that.pageid = pageid;
+		    that.socket.emit("displays", {displays: d}, function(pid){
+			that.pageid = pid;
 		    });
 		    JS9.Preload(true);
 		    if( JS9.DEBUG ){
@@ -7924,12 +7969,11 @@ JS9.loadPrefs = function(url, doerr) {
       },
       error:  function(jqXHR, textStatus, errorThrown){
 	if( doerr ){	       
-	    if( (doerr > 1) && 
-		(JS9.BROWSER[0] === "Chrome") && (document.domain === "") ){
-	    JS9.log("When using the file:// URI, Chrome must be run with the --allow-file-access-from-files switch to permit JS9 to access the preference file.");
-	  } else {
-	      JS9.log("JS9 pref file not available: %s", url);
-	  }
+	    if( (JS9.BROWSER[0] === "Chrome") && (document.domain === "") ){
+		JS9.log("When using the file:// URI, Chrome must be run with the --allow-file-access-from-files switch to permit JS9 to access the preference file.");
+	    } else {
+		JS9.log("JS9 prefs file not available: %s", url);
+	    }
 	}
       }
     }); 
@@ -8667,9 +8711,9 @@ JS9.Init = function(){
 				JS9.InstallDir("images/resize.gif")];
     }
     // load site preferences, if possible
-    JS9.loadPrefs(JS9.InstallDir(JS9.PREFSFILE), 2);
+    JS9.loadPrefs(JS9.InstallDir(JS9.PREFSFILE), 1);
     // load page preferences, if possible
-    JS9.loadPrefs(JS9.PREFSFILE, 1);
+    JS9.loadPrefs(JS9.PREFSFILE, 0);
     // set debug flag
     JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
     // init primary display(s)
@@ -8862,18 +8906,19 @@ JS9.Init = function(){
 	alias: "run",
 	help: "list/run analysis for current image",
 	get: function(){
-		    var i, j, tasks, task;
+	    var i, j, n, t, tasks;
 	    var result="";
 	    var im = this.image;
 	    if( im && im.analysisPackages ){
 		for(j=0; j<im.analysisPackages.length; j++){
 		    tasks = im.analysisPackages[j];
 		    for(i=0; i<tasks.length; i++){
-			task = tasks[i];
+			t = tasks[i];
 			if( result ){
 			    result += ", ";
 			}
-			result += sprintf("%s (%s)", task.title, task.name);
+			n = t.xclass ? (t.xclass + ":" + t.name) : t.name;
+			result += sprintf("%s (%s)", t.title, n);
 		    }
 		    if( j < (im.analysisPackages.length-1) ){
 			result += "\n";
@@ -9715,6 +9760,15 @@ JS9.mkPublic("SubmitAnalysis", function(el, aname, func){
     }
     // prevent form from being submitted
     return false;
+});
+
+// get display position from event
+JS9.mkPublic("Send", function(msg, obj, cb){
+    if( JS9.helper.connected ){
+	JS9.helper.send(msg, obj, cb);
+    } else {
+	JS9.error("no helper available");
+    }
 });
 
 // get display position from event
