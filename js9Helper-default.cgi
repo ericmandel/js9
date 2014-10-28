@@ -145,7 +145,7 @@ case $CGIkey in
 	    JDEFS=""
 	    for f in `ls $JPLUGINS/*.json`; do
 		case $f in
-		    fits2png.json) continue;;
+		    */fits2png.json) continue;;
 		    *) JDEF="`cat $f`"
 		       if [ x"$JDEFS" = x ]; then
 	    	         JDEFS="[$JDEF"
