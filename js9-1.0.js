@@ -1652,22 +1652,21 @@ JS9.Image.prototype.refreshImage = function(obj, func){
     dobin = (this.binning.obin !== this.binning.bin);
     this.mkSection();
     this.displayImage("colors");
-    // redraw the shape layers to reflect new pan/zoom/bin
-    for( key in this.layers ){
-	if( this.layers.hasOwnProperty(key) ){
-	    if( this.layers[key].show &&
-		(this.layers[key].opts.panzoom || dobin) ){
-		this.refreshShapes(key);
-	    }
-	}
-    }
-    // update regions if we changed the binning params
+    // update shape layers if we changed the binning params
     if( dobin ){
-	this.updateShapes("regions", "all", "binning");
+    for( key in this.layers ){
+        if( this.layers.hasOwnProperty(key) ){
+        if( this.layers[key].show ){
+            this.refreshShapes(key);
+        }
+        }
+    }
+    // also update region values
+    this.updateShapes("regions", "all", "binning");
     }
     if( func ){
-	try{ JS9.xeqByName(func, window, this); }
-	catch(e){ JS9.error("in image refresh callback", e); }
+    try{ JS9.xeqByName(func, window, this); }
+    catch(e){ JS9.error("in image refresh callback", e); }
     }
 };
     
