@@ -383,11 +383,12 @@ io.sockets.on("connection", function(socket) {
     // returns: object w/ errcode, stderr (error string), stdout (results)
     // for other implementations, this is needed if you want to:
     //   support default server-side analysis (i.e. exec a wrapper script)
-    // socket.on("runAnalysis", function(obj, cbfunc){
+    // NB: retained for backward compatibility with old (cached) versions of JS9
+    socket.on("runAnalysis", function(obj, cbfunc){
 	// exec the analysis task (via a wrapper function)
-	// execCmd(io, socket, obj, cbfunc);
-    // });
-    // instead of a single runAnalysis handler: add a handler for each task
+	execCmd(io, socket, obj, cbfunc);
+    });
+    // NB: instead of runAnalysis, now we use a handler for each separate task
     // returns: object w/ errcode, stderr (error string), stdout (results)
     // for other implementations, this is needed if you want to:
     //   support default server-side analysis (i.e. exec a wrapper script)
