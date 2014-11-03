@@ -123,6 +123,9 @@ JS9.imageOpts = {
     valpos: true,			// whether to display value/position
     alpha1: 100,			// alpha for masked out pixels
     alpha2: 255,			// alpha for unmasked pixels
+    // xcen: 0,                         // default x center pos to pan to
+    // ycen: 0,                         // default y center pos to pan to
+    zoom: 1,				// default zoom factor
     zooms: 5,				// how many zooms in each direction?
     nancolor: "#000000",		// 6-digit #hex color for NaN values
     listonchange: false			// whether to list after a reg change
@@ -299,6 +302,7 @@ if( (JS9.BROWSER[0] === "Chrome") ){
 // JS9 Image object to manage images
 // ---------------------------------------------------------------------
 JS9.Image = function(file, params, func){
+    var sarr = [];
     var display;
     var pname, pinst, popts;
     var that = this;
@@ -360,6 +364,8 @@ JS9.Image = function(file, params, func){
     this.status = {};
     // primary image
     this.primary = {};
+    // section parameters
+    this.primary.sect = {zoom: 1, ozoom: 1};
     // graphical layers
     this.layers = {};
     // no logical coordinate systems
@@ -370,6 +376,16 @@ JS9.Image = function(file, params, func){
     this.binning = {bin: 1, obin: 1};
     // temp flag determines if we should update shapes at end of this call
     this.updateshapes = false;
+    // make up section array from default values
+    if( localOpts.xcen !== undefined ){
+	sarr.push(localOpts.xcen);
+    }
+    if( localOpts.ycen !== undefined ){
+	sarr.push(localOpts.ycen);
+    }
+    if( localOpts.zoom !== undefined ){
+	sarr.push(localOpts.zoom);
+    }
     // file argument can be an object containing raw data or
     // a string containing a URL of a PNG image
     switch( typeof file ){
@@ -382,14 +398,25 @@ JS9.Image = function(file, params, func){
 	if( this.params.scaleclipping === "zscale" ){
 	    this.zscale(true);
 	}
-	// set up initial section (usually, the center of the image)
+	// set up initial section
 	this.mkSection();
+	// change center and zoom if necessary
+	if( sarr.length ){
+	    this.mkSection.apply(this, sarr);
+	}
 	// display image, 2D graphics, etc.
 	this.displayImage("all");
 	// clear previous messages
 	this.clearMessage();
 	// load is complete
 	this.status.load = "complete";
+	// add to list of images
+	JS9.images.push(this);
+	// call function, if necessary
+	if( func ){
+	    try{ JS9.xeqByName(func, window, this); }
+	    catch(e){ JS9.error("in image onload callback", e, false); }
+	}
 	// done loading, reset wait cursor
 	JS9.waiting(false);
 	// plugin callbacks
@@ -407,8 +434,6 @@ JS9.Image = function(file, params, func){
 	if( this.updateshapes ){
 	    this.updateShapes("regions", "all", "update");
 	}
-	// add to list of images
-	JS9.images.push(this);
 	break;
     case "string":
 	// save source
@@ -436,8 +461,12 @@ JS9.Image = function(file, params, func){
 	    if( that.params.scaleclipping === "zscale" ){
 		that.zscale(true);
 	    }
-	    // set up initial section (usually, the center of the image)
+	    // set up initial section
 	    that.mkSection();
+	    // change center and zoom if necessary
+	    if( sarr.length ){
+		that.mkSection.apply(that, sarr);
+	    }
 	    // display image, 2D graphics, etc.
 	    that.displayImage("all");
 	    // clear previous messages
@@ -1163,12 +1192,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(hdu, file){
 
 // store section information
 JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
-    var sect;
-    // add section object
-    if( !this.primary.sect ){
-	this.primary.sect = {zoom: 1, ozoom: 1};
-    }	
-    sect = this.primary.sect;
+    var sect = this.primary.sect;
     // process arguments
     switch(arguments.length){
     case 0:
@@ -1676,7 +1700,7 @@ JS9.Image.prototype.getPan = function(panx, pany){
 	    y: (this.primary.sect.y0 + this.primary.sect.y1)/2+1};
 };
 
-// set pan location of primary image
+// set pan location of primary image (using image coordinates)
 JS9.Image.prototype.setPan = function(panx, pany){
     var key;
     if( arguments.length === 0 ){
@@ -9414,6 +9438,7 @@ JS9.mkPublic("Load", function(file, opts){
 	func = opts.onload;
     } else if( JS9.imageOpts.onload ){
 	func = JS9.imageOpts.onload;
+	opts.onload = func;
     }
     // if this file is already loaded, just redisplay
     im = JS9.lookupImage(file, display);
@@ -9439,7 +9464,7 @@ JS9.mkPublic("Load", function(file, opts){
 		// change the cursor to show the waiting status
 		JS9.waiting(true);
 		// ask fitsy to load the file
-		Fitsy.fetchURL(null, file, opts, JS9.NewImage);
+		Fitsy.fetchURL(null, file, opts, JS9.NewFitsImage);
 	    } else {
 		JS9.error("no FITS module available to load this png: " + file);
 	    }
@@ -9492,7 +9517,7 @@ JS9.mkPublic("Load", function(file, opts){
 		// change the cursor to show the waiting status
 		JS9.waiting(true);
 		// ask fitsy to load the file
-		Fitsy.fetchURL(file, file, opts, JS9.NewImage);
+		Fitsy.fetchURL(file, file, opts, JS9.NewFitsImage);
 	    } else {
 		JS9.error("no FITS module available to load this image: " + file);
 	    }
@@ -9682,8 +9707,12 @@ JS9.mkPublic("OpenFileMenu", function(display){
 });
 
 // call the image constructor as a function
-JS9.mkPublic("NewImage", function(opts, func){
-    JS9.checkNew(new JS9.Image(opts, func));
+JS9.mkPublic("NewFitsImage", function(hdu, opts){
+    var func;
+    if( opts && opts.onload ){
+	func = opts.onload;
+    }
+    JS9.checkNew(new JS9.Image(hdu, opts, func));
 });
 
 // return the image object for the specified image name or the display id

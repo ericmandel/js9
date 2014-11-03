@@ -162,11 +162,16 @@ where:
 <li><b>url</b>: url to load
 <li><b>opts</b>: optional object containing image parameters
 </ul>
-This routine will pre-load images into a JS9 display when the Web page
-is loaded and JS9 is initialized. It can be added to the Web page body
-element using the onload() JavaScript call or called directly in a
-JavaScript init routine. See index.html and js9preload.html for examples.
-
+This routine will pre-load images into a JS9 display. It can be added
+to the Web page body element using the onload() JavaScript call or
+called in a JavaScript init routine tied to onload. See index.html and
+js9preload.html for examples.
+<p>
+It is worth emphasizing that <b>JS9.Preload()</b> should not be called
+until the Web page is fully loaded, since JS9 itself is not fully
+initialized until then. It is for this reason that <b>JS9.Preload()</b>
+generally is called using an onload routine tied to the Web page body.
+  
 <hr><p>
 <font size="+1"><center><b>
 <a name="images">Working with Images</a>
@@ -1197,7 +1202,7 @@ to:
 <pre>
     func(stdout, stderr, errcode, aobj)
 </pre>
-See js9onchange.html for an example of using this callbback function.
+See js9onchange.html for an example of using this callback function.
 
 <hr><p>
 
