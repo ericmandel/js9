@@ -260,7 +260,7 @@ fitsymin:	FORCE
 refresh:	js9support fitsymin js9min
 
 jslint:		FORCE
-		@(jslint js9.js; jslint fitsy.js)
+		@(jslint js9.js fitsy.js js9Helper.js)
 
 archive:	FORCE
 		@jsarchive $(ARCFILES) $(SCRIPTS) $(SRCS)
