@@ -75,6 +75,7 @@ JS9.SCALEIREG = true;		// scale interactive regions by zoom factor?
 JS9.NOMOVE = 3;			// number of pixels before we recognize movement
 JS9.DBLCLICK = 500;		// milliseconds for double-click
 JS9.TIMEOUT = 250;		// ms before assuming light window is up
+JS9.SUPERMENU = new RegExp("^_SUPERMENU"); // base of supermenu id 
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 JS9.BROWSER = (function(){
@@ -3472,6 +3473,23 @@ JS9.Menubar = function(width){
 		tdisp.image.displayImage("primary");
 	    }
 	}
+	function getDisplays() {
+	    var i, s, disp;
+	    var arr = [];
+	    if( that.id.search(JS9.SUPERMENU) >= 0 ){
+		s = that.divjq.data("displays").split(",");
+		for(i=0; i<s.length; i++){
+		    disp = JS9.lookupDisplay(s[i]);
+		    if( disp ){
+			arr.push(disp);
+		    }
+		}
+	    }
+	    if( !arr.length ){
+		arr.push(that.display);
+	    }
+	    return arr;
+	}
 	// file: make button open the contextMenu
 	$("#fileMenu" + that.id).on("mousedown", function(evt){
             evt.preventDefault();
@@ -3485,7 +3503,7 @@ JS9.Menubar = function(width){
 		var i, im, name, imlen, prefix;
 		var n = 0;
 		var items = {};
-		var tdisp = that.display;
+		var tdisp = getDisplays()[0];
 		imlen = JS9.images.length;
 		for(i=0; i<imlen; i++){
 		    im = JS9.images[i];
@@ -3524,8 +3542,9 @@ JS9.Menubar = function(width){
 		items.close = {name: "close image"};
 		return {
                     callback: function(key, opt){
+		    getDisplays().forEach(function(val, idx, array){
 			var j, s;
-			var udisp = that.display;
+			var udisp = val;
 			var uim = udisp.image;
 			opt.lastmenukey = key;
 			switch(key){
@@ -3552,7 +3571,7 @@ JS9.Menubar = function(width){
 					 JS9.lightOpts[JS9.LIGHTWIN].lineWin);
 			    break;
 			case "open":
-			    JS9.OpenFileMenu(that.display);
+			    JS9.OpenFileMenu(udisp);
 			    break;
 			case "print":
 			    if( uim ){
@@ -3562,7 +3581,7 @@ JS9.Menubar = function(width){
 			default:
 			    for(j=0; j<JS9.images.length; j++){
 				uim = JS9.images[j];
-				if( (that.display.id === uim.display.id) &&
+				if( (udisp.id === uim.display.id) &&
 				    ((uim.fitsFile && 
 				     (uim.fitsFile.indexOf(key) >=0)) ||
 				     (uim.id.indexOf(key) >=0)) ){
@@ -3574,6 +3593,7 @@ JS9.Menubar = function(width){
 			    }
 			    break;
 			}
+		    });
                     },
 		    items: items
 		};
@@ -3595,7 +3615,7 @@ JS9.Menubar = function(width){
 		var n = 0;
 		var nkey = 0;
 		var items = {};
-		var tdisp = that.display;
+		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
 		// plugins
 		for(i=0; i<JS9.plugins.length; i++){
@@ -3642,8 +3662,9 @@ JS9.Menubar = function(width){
 		}
 		return {
 		    callback: function(key, opt){
+		    getDisplays().forEach(function(val, idx, array){
 			var jj, ucat, umode, uplugin;
-			var udisp = that.display;
+			var udisp = val;
 			var uim = udisp.image;
 			opt.lastmenukey = key;
 			switch(key){
@@ -3672,7 +3693,7 @@ JS9.Menubar = function(width){
 			    for(jj=0; jj<JS9.plugins.length; jj++){
 				uplugin = JS9.plugins[jj];
 				if( uplugin.name === key ){
-				    tdisp.displayPlugin(uplugin);
+				    udisp.displayPlugin(uplugin);
 				    return;
 				}
 			    }
@@ -3691,6 +3712,7 @@ JS9.Menubar = function(width){
 			    }
 			    break;
 			}
+		    });
 		    },
 		    items: items
 		};
@@ -3709,7 +3731,7 @@ JS9.Menubar = function(width){
             build: function($trigger, evt){
 		var i, zoom, zoomp, name, name2;
 		var n = 0;
-		var tdisp = that.display;
+		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
 		var editZoom = function(im, obj){
 		    if( !isNaN(obj.zoom) ){
@@ -3767,7 +3789,8 @@ JS9.Menubar = function(width){
 		items.reset = {name: "reset zoom/pan"};
 		return {
 		    callback: function(key, opt){
-			var udisp = that.display;
+		    getDisplays().forEach(function(val, idx, array){
+			var udisp = val;
 			var uim = udisp.image;
 			opt.lastmenukey = key;
 			if( uim ){
@@ -3796,6 +3819,7 @@ JS9.Menubar = function(width){
 				break;
 			    }
 			}
+		    });
 		    },
 		    events: {
 			show: function(opt){
@@ -3841,7 +3865,7 @@ JS9.Menubar = function(width){
 		var i, s1, s2;
 		var n = 0;
 		var items = {};
-		var tdisp = that.display;
+		var tdisp = getDisplays()[0];
 		var editScale = function(im, obj){
 		    if( !isNaN(obj.scalemin) ){
 			im.params.scalemin = obj.scalemin;
@@ -3893,7 +3917,8 @@ JS9.Menubar = function(width){
 		};
 		return {
                     callback: function(key, opt){
-			var udisp = that.display;
+		    getDisplays().forEach(function(val, idx, array){
+			var udisp = val;
 			var uim = udisp.image;
 			opt.lastmenukey = key;
 			if( uim ){
@@ -3924,6 +3949,7 @@ JS9.Menubar = function(width){
 				break;
 			    }
 			}
+		    });
 		    },
 		    events: {
 			show: function(opt){
@@ -3971,7 +3997,7 @@ JS9.Menubar = function(width){
 		var i, s1, s2;
 		var n = 0;
 		var items = {};
-		var tdisp = that.display;
+		var tdisp = getDisplays()[0];
 		var editColor = function(im, obj){
 		    if( !isNaN(obj.contrast) ){
 			im.params.contrast = obj.contrast;
@@ -4027,12 +4053,14 @@ JS9.Menubar = function(width){
 		}
 		return {
 		    callback: function(key, opt){
-			var udisp = that.display;
+		    getDisplays().forEach(function(val, idx, array){
+			var udisp = val;
 			var uim = udisp.image;
 			opt.lastmenukey = key;
 			if( uim ){
 			    uim.setColormap(key);
 			}
+		    });
 		    },
 		    events: {
 			show: function(opt){
@@ -4077,7 +4105,7 @@ JS9.Menubar = function(width){
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
             build: function($trigger, evt){
-		var tdisp = that.display;
+		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
 		var items = {
 		    "regiontitle": {name: "Regions:", disabled: true},
@@ -4102,7 +4130,8 @@ JS9.Menubar = function(width){
 		}
 		return {
 		    callback: function(key, opt){
-			var udisp = that.display;
+		    getDisplays().forEach(function(val, idx, array){
+			var udisp = val;
 			var uim = udisp.image;
 			opt.lastmenukey = key;
 			if( uim ){
@@ -4125,6 +4154,7 @@ JS9.Menubar = function(width){
 				break;
 			    }
 			}
+		    });
 		    },
 		    items: items
 		};
@@ -4144,7 +4174,7 @@ JS9.Menubar = function(width){
 		var i, s1, s2;
 		var n = 0;
 		var items = {};
-		var tdisp = that.display;
+		var tdisp = getDisplays()[0];
 		items.wcssystitle = {name: "WCS Systems:", disabled: true};
 		for(i=0; i<JS9.wcssyss.length; i++){
 		    s1 = JS9.wcssyss[i];
@@ -4166,8 +4196,9 @@ JS9.Menubar = function(width){
 		}
 		return {
                     callback: function(key, opt){
+		    getDisplays().forEach(function(val, idx, array){
 			var rexp = new RegExp(key);
-			var udisp = that.display;
+			var udisp = val;
 			var uim = udisp.image;
 			opt.lastmenukey = key;
 			if( uim ){
@@ -4179,6 +4210,7 @@ JS9.Menubar = function(width){
 				JS9.error("unknown wcs sys/units: " + key);
 			    }
 			}
+		    });
 		    },
 		    items: items
 		};
@@ -4201,7 +4233,7 @@ JS9.Menubar = function(width){
 		var n = 0;
 		// var m = 0;
 		var items = {};
-		var tdisp = that.display;
+		var tdisp = getDisplays()[0];
 		var im = tdisp.image;
 		var lastxclass="";
 		for(i=0; i<JS9.plugins.length; i++){
@@ -4273,19 +4305,21 @@ JS9.Menubar = function(width){
 		items.dpath = {name: "set data path ..."};
 		return {
                     callback: function(key, opt){
+		    getDisplays().forEach(function(val, idx, array){
 			var a, did, jj, tplugin;
-			var tim = tdisp.image;
+			var udisp = val;
+			var uim = udisp.image;
 			opt.lastmenukey = key;
 			// first look for a plugin -- no image rquired
 			for(jj=0; jj<JS9.plugins.length; jj++){
 			    tplugin = JS9.plugins[jj];
 			    if( tplugin.name === key ){
-				tdisp.displayPlugin(tplugin);
+				udisp.displayPlugin(tplugin);
 				return;
 			    }
 			}
 			// the rest need an image loaded
-			if( tim ){
+			if( uim ){
 			    switch(key){
 			    case "dpath":
 				// call this once window is loaded
@@ -4293,32 +4327,33 @@ JS9.Menubar = function(width){
 				    $('#dataPath').val(JS9.globalOpts.dataPath);
 				};
 				JS9.globalOpts.dhtmlloadid  = "dataPathForm";
-				did = tim.displayAnalysis("dpath",
+				did = uim.displayAnalysis("dpath",
 					 JS9.InstallDir(JS9.analOpts.dpathURL),
 					 "Data Path for Drag and Drop");
 				// save display id
-				$(did).data("dispid", tdisp.id);
+				$(did).data("dispid", udisp.id);
 				break;
 			    default:
 				// look for analysis routine
-				a = tim.lookupAnalysis(key);
+				a = uim.lookupAnalysis(key);
 				if( a ){
 				    // load param url to run analysis task
 				    // param url is relative to js9 install dir
 				    if( a.purl ){
-					did = tim.displayAnalysis("params",
+					did = uim.displayAnalysis("params",
 						  JS9.InstallDir(a.purl), 
-						  a.title+": "+tim.fitsFile);
+						  a.title+": "+uim.fitsFile);
 					// save info for running the task
-					$(did).data("dispid", tdisp.id)
+					$(did).data("dispid", udisp.id)
 				              .data("aname", a.name);
 				    } else {
 					// else run task directly
-					tim.runAnalysis(a.name);
+					uim.runAnalysis(a.name);
 				    }
 				}
 			    }
 			}
+		    });
 		    },
 		    items: items
 		};
@@ -7689,10 +7724,11 @@ JS9.lookupImage = function(id, display){
 };
 
 // return the display for the specified id
+// id can be a display object or an id from a display object    
 JS9.lookupDisplay = function(id){
     var i;
     var regexp = new RegExp(sprintf("[-_]?(%s)$", JS9.PLUGINS));
-    if( id && (id !== "*") ){
+    if( id && (id !== "*") && (id.toString().search(JS9.SUPERMENU) < 0) ){
 	// look for whole id
 	for(i=0; i<JS9.displays.length; i++){
 	    if( (id === JS9.displays[i]) || (id === JS9.displays[i].id) ){

@@ -120,8 +120,41 @@ loading a site-specific CSS file after the js9.css file. This makes
 updating much easier.
 
 <p>
+<h3>One Menubar to Rule Them All</h3>
+By default, each menubar controls one JS9 display. You can, however,
+create a menubar that controls multiple displays, so that a given menu
+selection is applied to each display. This is done by creating a
+menubar div with two special characteristics:
+<ul>
+<li> the id of the menu bar starts with <b>_SUPERMENU</b> (it can end with anything)
+<li> an HTML5 data attribute called <b>data-displays</b> lists the JS9 displays to control
+</ul>
+For example, to control two JS9 displays:
+<pre>
+  &lt;div class="JS9Menubar" id="_SUPERMENU_" data-displays="JS9,myJS9"&gt;&lt;/div&gt;
+</pre>
+As shown, the <b>data-displays</b> attribute is a comma-separated list
+of JS9 display ids to control with this super-menu.
+<p>
+A super-menu acts like an ordinary menu, except that it will control
+all of the JS9 displays in the list. Thus, you can change multiple
+colormaps at once, run analysis on all displays, etc.
+<p>
+You still can define a menubar for each display in order to control
+them individually. Since the actions of an ordinary menu and a
+super-menu can be mixed for a given JS9 display, the displays will not
+always be perfectly synchronized. In such a case, the super-menu's
+selected values will be tied to the first display in the
+<b>data-displays</b> list.  For example, if the first display listed
+is at zoom 2 and the second is at zoom 4, the Zoom menu will show
+a current zoom value of 2.
+<p>
+Finally, note that regions created with a super-menu are not tied to
+one another across displays.  We will tie together events across
+displays in a future release.
+
+<p>
 <h3>Adding Server-side Analysis Tasks to Your Web Page</h3>
-</a>
 <p>
 Server-side JS9 analysis tasks can be executed using
 the <b>Analysis</b> menu, but they also can be executed directly from
@@ -133,7 +166,6 @@ in the <a href="localtasks.html">Local Tasks</a> web page.
 
 <p>
 <h3>Adding Local Analysis Tasks to Your Web Page</h3>
-</a>
 <p>
 JS9 also supports the ability to perform local analysis, i.e.,
 analysis tasks defined and executed right on your Web page, rather
@@ -154,12 +186,15 @@ pop-up window. See the
 <p>
 <h3>Adding Data Files to a Web page</h3> 
 <p>
-Data files are added to a Web page by supplying URLs that call
-the <b>JS9.Load()</b> routine. See:
+Data file links are added to a Web page by supplying URLs that call
+the <b>JS9.Load()</b> routine.
+You also can load images automatically when the Web page loads using the
+<b>JS9.Preload()</b> routine.
+See:
 <a href="yourdata.html">Adding Data Files To a Web Page</a> for more
 information.
 
-<h5>Last updated: September 4, 2014</h5>
+<h5>Last updated: November 4, 2014</h5>
 </div>
 
 </body>
