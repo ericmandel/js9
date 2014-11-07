@@ -1082,6 +1082,7 @@ ndops.zeros   = function zeros(shape, Type) {
   }
 
   for(i=0; i<shape.length; ++i) {
+    shape[i] = Math.floor(shape[i]);
     sz *= shape[i];
   }
 
