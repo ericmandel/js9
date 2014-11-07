@@ -17,16 +17,17 @@ var typed = ndops;
 
 ndops.zeros   = function zeros(shape, Type) {
   var i, sz = 1;
+  var ishape = [];
   if ( Type === undefined ) {
 	Type = Float32Array;
   }
 
   for(i=0; i<shape.length; ++i) {
-    shape[i] = Math.floor(shape[i]);
-    sz *= shape[i];
+    ishape.push(Math.floor(shape[i]));
+    sz *= ishape[i];
   }
 
-  return ndops.ndarray(new Type(sz), shape);
+  return ndops.ndarray(new Type(sz), ishape);
 };
 
 ndops.fill = typed(function (a, func) {
@@ -116,9 +117,10 @@ ndops._hist = typed(function (a, width , min, max) {
     var  h   = new Int32Array(size+1);
 
     // -----
+    if( !isNaN(a) ){
         var bin = Math.max(0, Math.min(size, Math.round((a-min)/width))) | 0;	// | is truncate
         h[bin]++;
-
+    }
     // -----
 
    return h;
@@ -200,7 +202,7 @@ ndops.qcenter = typed(function (a) {
 		    + a[iY-1][iX  ] 
 		    + a[iY-1][iX+1] 
 		    + a[iY  ][iX-1] 
-	    	    + a[iY  ][iX  ]
+		    + a[iY  ][iX  ]
 		    + a[iY  ][iX+1] 
 		    + a[iY+1][iX-1] 
 		    + a[iY+1][iX  ] 
@@ -308,8 +310,10 @@ ndops.rms = typed(function (a) {
     var sum = 0;
     var squ = 0;
     // ----
-	sum +=   a;
-	squ += a*a;
+    if( !isNaN(a) ){
+        sum +=   a;
+	    squ += a*a;
+    }
     // ----
 
     var mean = sum/a.size;
@@ -322,7 +326,7 @@ ndops.rmsClipped = typed(function (a, min, max) {
     var sum = 0;
     var squ = 0;
     // ----
-	if ( (min === null || a > min) && (max === null || a < max) ) {
+	if ( !isNaN(a) && (min === null || a > min) && (max === null || a < max) ) {
 	    n++;
 	    sum +=   a;
 	    squ += a*a;
@@ -338,7 +342,7 @@ ndops.meanClipped = typed(function (a, min, max) {
     var n = 0;
     var sum = 0;
     // ----
-	if ( (min === null || a > min) && (max === null || a < max) ) {
+	if ( !isNaN(a) && (min === null || a > min) && (max === null || a < max) ) {
 	    n++;
 	    sum +=   a;
 	}
@@ -378,7 +382,7 @@ imops._rproj = typed(function(a, cx, cy, radius, length) {
     // ----
 	var d = Math.sqrt((iY-cy)*(iY-cy) + (iX-cx)*(iX-cx));
 
-	if ( d <= r ) { 
+	if ( (d <= r) && !isNaN(a) ) { 
 	    rad[i] = d;
 	    val[i] = a;
 
@@ -1104,7 +1108,9 @@ exports.imops    = imops;
     var size = typed(function (a) {
 	var prd = 1;
 	// ----
+    if( !isNaN(a) ){
 	    prd *= a;
+    }
 	// ----
 	return prd;
     });
@@ -1392,14 +1398,18 @@ exports.imops    = imops;
     ops.sum  = typed(function (a) {
 	var sum = 0; 
 	// ----
+    if( !isNaN(a) ){
 	    sum += a;
+    }
 	// ----
 	return sum;
     });
     ops.prod = typed(function (a) {
 	var prd = 1;
 	// ----
+    if( !isNaN(a) ){
 	    prd *= a;
+    }
 	// ----
 	return prd;
     });
@@ -1423,7 +1433,9 @@ exports.imops    = imops;
     ops.norm2Squared = typed(function (a) {
 	var norm2 = 0;
 	// ----    
+    if( !isNaN(a) ){
 	    norm2 += a*a;
+    }
 	// ----    
 	return norm2;
     });
