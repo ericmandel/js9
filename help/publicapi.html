@@ -1097,11 +1097,11 @@ You can add new JS9 displays and/or plugins dynamically. To do this, you
 create the new divs, add them to the Web page, and then call this routine to
 incorporate them into JS9.
 <p>
-The routine will accept a list of JS9 display divs to initialize. You do not
-need to create any new JS9 display divs, if all you are doing is adding plugins
-to an existing display. 
+The routine will accept a list of JS9 display divs to initialize.  If
+all you are doing is adding one or more plugins to an existing display,
+leave the argument list empty.
 <p>
-For example, to add a new JS9 display and menubar to the end of a Web
+For example, to add a new JS9 display and menubar at the end of a Web
 page and load an image into that display:
 <pre>
   var html = "&lt;div class='JS9Menubar' id='myJS9Menubar'&gt;&lt;/div&gt;&lt;div class='JS9' id='myJS9'&gt;&lt;/div&gt;";
@@ -1112,7 +1112,8 @@ page and load an image into that display:
   // just a standard load to that display
   JS9.Load("foo.fits", {scale: "log"}, {display: "myJS9"});
 </pre>
-See also <b>JS9.LoadWindow()</b> for a nice way to load images into light-weight or completely new window.
+See also <b>JS9.LoadWindow()</b> for a nice way to load images into a
+light-weight or completely new window.
 
 <hr>
 <font size="+1"><center><b>
@@ -1236,7 +1237,7 @@ See js9onchange.html for an example of using this callback function.
 
 <hr><p>
 
-<h5>Last updated: October 28, 2014</h5>
+<h5>Last updated: November 14, 2014</h5>
 </div>
 
 </body>
