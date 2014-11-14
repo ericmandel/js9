@@ -8692,7 +8692,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 };
 
 // instantiate all plugins -- can be called repeatedly if new divs are added
-JS9.InstantiatePlugins = function(){
+JS9.instantiatePlugins = function(){
     var i;
     var newPlugin = function(plugin){
 	// instantiate any divs not yet done
@@ -8716,7 +8716,7 @@ JS9.InstantiatePlugins = function(){
 // the init routine to start up JS9
 // ---------------------------------------------------------------------
 
-JS9.Init = function(){
+JS9.init = function(){
     // check for HTML5 canvas, which we need
     if( !window.HTMLCanvasElement ){
 	JS9.error("sorry: your browser does not support JS9 (no HTML5 canvas support). Try a modern version of Firefox, Chrome, or Safari.");
@@ -8817,7 +8817,7 @@ JS9.Init = function(){
 			winDims: [JS9.PANWIDTH, JS9.PANHEIGHT],
 			divArgs: [JS9.DS9WIDTH, JS9.DS9HEIGHT]});
     // find divs associated with each plugin and run the constructor
-    JS9.InstantiatePlugins();
+    JS9.instantiatePlugins();
     // load colormaps
     JS9.checkNew(new JS9.Colormap("grey",
 	[[0,0], [1,1]],
@@ -9579,7 +9579,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
         // create the new JS9 Display
         JS9.checkNew(new JS9.Display(id));
         // instantiate new plugins (create menubar, etc)
-        JS9.InstantiatePlugins();
+        JS9.instantiatePlugins();
         // load the image into this display
         opts.display = id;
         // just becomes a standard load
@@ -9968,6 +9968,16 @@ JS9.mkPublic("InstallDir", function(dir){
     return JS9.INSTALLDIR + dir;
 });
 
+// add new display divs and/or new plugins
+JS9.mkPublic("AddDivs", function(){
+    var i;
+    var obj = JS9.parsePublicArgs(arguments);
+    for(i=0; i< obj.argv.length; i++){
+	JS9.checkNew(new JS9.Display(obj.argv[i]));
+    }
+    JS9.instantiatePlugins();
+});
+
 // end of Public Interface
 
 // return namespace
@@ -9977,5 +9987,5 @@ return JS9;
 // INIT: after document is loaded, perform js9 initialization
 $(document).ready(function(){
 "use strict";
-JS9.Init();
+JS9.init();
 });

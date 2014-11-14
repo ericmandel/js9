@@ -1084,7 +1084,37 @@ JS9.Send("getAnalysis", null, function(s){alert(s)});
 The "getAnalysis" message passes no parameters to the server. The
 server returns a list of available analysis tasks in JSON format.
 
-<hr><p>
+<p>
+<font size="+1"><b>&#9679; Add a JS9 display div and/or associated plugins</b></font>
+<p>
+<code><font size="+1">JS9.AddDivs(id1, id2, ...)</font></code>
+<p>
+where:
+<ul>
+<li><b>id1, id2, ...</b>: optional name(s) of new JS9 display div(s)
+</ul>
+You can add new JS9 displays and/or plugins dynamically. To do this, you
+create the new divs, add them to the Web page, and then call this routine to
+incorporate them into JS9.
+<p>
+The routine will accept a list of JS9 display divs to initialize. You do not
+need to create any new JS9 display divs, if all you are doing is adding plugins
+to an existing display. 
+<p>
+For example, to add a new JS9 display and menubar to the end of a Web
+page and load an image into that display:
+<pre>
+  var html = "<div class='JS9Menubar' id='myJS9Menubar'></div><div class='JS9' id='myJS9'></div>";
+  // jquery append to end of page
+  $(html).appendTo($("body"));
+  // create the new JS9 display, with associated plugins
+  JS9.AddDivs(id);
+  // just a standard load to that display
+  JS9.Load("foo.fits", {scale: "log"}, {display: "myJS9"});
+</pre>
+See also <b>JS9.LoadWindow()</b> for a nice way to load images into light-weight or completely new window.
+
+<hr>
 <font size="+1"><center><b>
 <a name="proto">Prototype Routines (not ready for prime time)</a>
 </b></center></font>

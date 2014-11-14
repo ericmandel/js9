@@ -34,6 +34,7 @@
 <body onload="myLoadInit()">
     <script type="text/javascript">
     var loadtype;
+    var ndiv = 0;
     function myLoadInit() {
         loadtype = "standard";
         $(".loadLabel").html("");
@@ -42,6 +43,11 @@
           loadtype = "standard";
           $(".loadLabel").html("");
           $("#standardLabel").html("<font size='+1'>*</font>");
+        });
+        $("#divButton").on("click", function(evt){
+          loadtype = "div";
+          $(".loadLabel").html("");
+          $("#divLabel").html("<font size='+1'>*</font>");
         });
         $("#lightButton").on("click", function(evt){
           loadtype = "light";
@@ -61,10 +67,8 @@
       switch(loadtype){
         // regular old div in this page: JS9 must be installed on this page
         case "standard":
-          // hardwire the display to use in this case
-          myopts.display = "standard";
           // just the standard load
-          JS9.Load(file, myopts);
+          JS9.Load(file, myopts, {display: "standard"});
           break;
         // lightweight window in this page
         case "light":
@@ -74,6 +78,18 @@
         case "new":
           JS9.LoadWindow(file, myopts, "new");
           break;
+        case "div":
+          // make a reasonably unique id for the JS9 divs
+          id = "divJS9_" + ndiv++;
+          // make up the html with the unique id
+          html = sprintf("<p><div class='JS9Menubar' id='%sMenubar'></div><div class='JS9' id='%s'></div>", id, id);
+	  // append to end of page
+	  $(html).appendTo($("body"));
+          // create the new JS9 display, with associated plugins
+          JS9.AddDivs(id);
+          // just a standard load to that display
+          JS9.Load(file, myopts, {display: id});
+    	  break;
         default:
           alert("unknown load type: "+loadtype);
       }
@@ -118,6 +134,19 @@
     </span>
     <span class="colC">
     display image in a dynamically created new window
+    </span>
+    </div>
+
+    <p>
+    <div class="linegroup">
+    <span class="colA">
+    <label class="loadLabel" id="divLabel">
+    </span>
+    <span class="colB">
+    <button id="divButton">Append Div</button> 
+    </span>
+    <span class="colC">
+    display image in a new div, which is appended to the page
     </span>
     </div>
 
