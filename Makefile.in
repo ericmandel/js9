@@ -120,7 +120,7 @@ WEBDIRS	=	plugins params js css images
 
 BEDIRS =	node_modules analysis-plugins analysis-wrappers
 
-WEBFILES =	js9.js js9.min.js js9-$(VERSION).js js9-$(VERSION).min.js \
+WEBFILES =	js9.js js9.min.js \
 		js9support.js js9support.min.js js9support.css js9plugins.js \
 		js9support.txt js9.css fitsy.js fitsy.min.js \
 		js9Msg.js js9Helper.js js9Prefs-default.json \
@@ -164,13 +164,6 @@ SCRIPTS =	funhist2flot funcnts2flot fits2png
 
 SCRIPTS2 =	js9
 
-ARCFILES =	js9-$(VERSION).js js9-$(VERSION).min.js js9Msg.js \
-		js9.css js9Helper.js js9Prefs-default.json \
-		js9basics.html js9panzoom.html js9analysis.html js9multi.html \
-		js9create.html js9preload.html js9bitpix.html \
-		js9onchange.html js9rgb.html js9cat.html js9plugins.html \
-		index.html js9Helper-default.cgi fitsy.js
-
 MFILES =	Makefile Makefile.in conf.h conf.h.in config.guess config.sub \
 		configure configure.ac install-sh js9helper.pc.in js9.in \
 		saoconfig saoprefs.sed nnode mkhelper mkjs9 \
@@ -194,11 +187,6 @@ js9helper:	js9helper.o
 
 pngdisp:	pngdisp.o
 		$(CC) $(LDFLAGS) pngdisp.o -o pngdisp $(LIBS)
-
-links:		FORCE
-		@(rm -f js9.js js9.min.js; \
-		  ln -s js9-$(VERSION).js js9.js; \
-		  ln -s js9-$(VERSION).min.js js9.min.js;)
 
 prefs:		FORCE
 		@(echo "copying default preferences to js9Prefs.json"; \
@@ -233,9 +221,6 @@ js9:		FORCE
 		    ./mkjs9 "$(WEBDIR)"; \
 		  fi;)
 
-minify:		FORCE
-		@minify js9-$(VERSION).js
-
 js9support:	FORCE
 		@(echo "remaking js9support ..."; \
 		  echo "css files in js9support.css: " > js9support.txt; \
@@ -252,7 +237,7 @@ js9support:	FORCE
 
 
 js9min:		FORCE
-		@(echo "remaking js9.min.js ..."; touch js9-$(VERSION).js; minify js9-$(VERSION).js)
+		@(echo "remaking js9.min.js ..."; touch js9.js; minify js9.js)
 
 fitsymin:	FORCE
 		@(echo "remaking fitsy.min.js ..."; touch fitsy.js; minify fitsy.js)
@@ -261,9 +246,6 @@ refresh:	js9support fitsymin js9min
 
 jslint:		FORCE
 		@(jslint js9.js fitsy.js js9Helper.js)
-
-archive:	FORCE
-		@jsarchive $(ARCFILES) $(SCRIPTS) $(SRCS)
 
 tar:		FORCE
 		($(RM) config.cache; \
@@ -411,7 +393,11 @@ install-sao:	saoprefs
 install-smartx:	FORCE
 		@(echo "install smartx"; cd smartx; make install);
 
-release:	refresh links prefs
+gitprefs:	FORCE
+		(git checkout -- js9Prefs-sao.json; \
+		 git checkout -- js9Prefs.json;)
+
+release:	gitprefs
 		(mkdir -p $(DISTDIR)/$(DISTNAME); \
 		tar cf - $(WEBFILES) $(WEBDIRS) $(BEDIRS) $(WEBHELP) js9*.html \
 			 $(SRCS) $(INCLUDES) $(SCRIPTS) $(MFILES) | \
