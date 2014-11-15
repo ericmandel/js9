@@ -33,7 +33,7 @@ if( JS9 && (typeof JS9 !== "object" || JS9.NAME) ){
 // create the module and seed with standard values
 var JS9 = {};
 JS9.NAME = "JS9";		// The name of this namespace
-JS9.VERSION = "1.0";		// The version of this namespace
+JS9.VERSION = "1.1";		// The version of this namespace
 JS9.COPYRIGHT = "Copyright (c) 2012-2014 Smithsonian Institution";
 
 // use the module augmentation pattern, passing in our already-defined module

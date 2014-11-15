@@ -12,16 +12,16 @@
 <div class="container">
 <h3><center>JS9 ChangeLog</center></h3>
 
-<h3> Public Release 1.1 (TBD)</h3>
+<h3> Public Release 1.1 (November 15, 2014)</h3>
 <ul>
-<li> NB: added errcode to argument list of JS9.RunAnalysis() callback
+<li> NB: api change: added errcode to argument list of RunAnalysis() callback
+<li> new api: AddDivs() to add JS9 displays and/or plugins to the Web page
+<li> new api: Send() sends msgs programmatically (useful for 3rd party helpers)
 <li> add support for super-menus that can control multiple JS9 displays
 <li> add support for onload callback when displaying FITS files
-<li> new public api: AddDivs() to add JS9 displays and/or plugins to the page
 <li> allow xcen, ycen (in image coords), zoom to be passed in obj to JS9.Load()
 <li> re-factor js9Helper.js: each analysis task is its own top-level msg
 <li> allow user-defined msgs to be added to analysis tasks more easily
-<li> add JS9.Send() to send msgs programmatically (useful for 3rd party helpers)
 <li> ensure correct region size during RefreshImage() and table binning
 <li> add contour plugin to default plugins in js9plugins.js
 <li> add checks for NaN values to imexam plugins

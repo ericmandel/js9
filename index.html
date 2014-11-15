@@ -323,23 +323,24 @@
 	</ul>
     </div>
     <div id="status" class="tabcontent">
-      <b>Release 1.0</b> marks the first official public release of
-      JS9.  The core system (images, regions, pan, zoom, scaling,
-      local plugins, remote analysis) has benefited from more than a
-      year of beta testing . The Public API is stable and will provide
-      a solid basis for community-driven extensions. We believe that
-      JS9 is ready to serve the evolving needs of the astronomical 
-      community.
+      <b>Release 1.1</b> is a minor bug-fix release and also the beginning
+      of community-driven development. The js9Helper.js server was
+      re-factored and extended to make it easier to write third-party
+      back-ends (e.g. Perl).  The menubar now can control multiple
+      instances of JS9. A new JS9.AddDivs routine allows you to add
+      JS9 displays dynamically to the page. And after fixing a typo,
+      we can now display XMM data (good grief!)
       <p>
-      JS9 work on browsers that support the HTML5 canvas element. It
+      JS9 works on Web browsers that support the HTML5 canvas element. It
       has been tested on the following browsers:
       <ul>
       <li> Firefox 18+
       <li> Chrome
-      <li> Safari (including the iPad)
+      <li> Safari (including the iPad and iPhone 6)
       <li> IE9 (IE8 doesn't support the HTML5 canvas element)
       </ul>
-      JS9 is powered by the following technologies, to whom grateful acknowledgment is made:
+      JS9 is powered by the following technologies, to whom grateful
+      acknowledgment is made:
       <ul>
       <li> emscripten for C-to-JavaScript (https://github.com/kripken/emscripten)
       <li> dynamic drive for light windows (http://www.dynamicdrive.com/dynamicindex8/dhtmlwindow/index.htm)
@@ -350,7 +351,7 @@
       <li> jquery.contextMenu for menus (http://medialize.github.io/jQuery-contextMenu/)
       </ul>
       <p>
-	JS9 is distributed under the terms of The MIT License.
+      JS9 is distributed under the terms of The MIT License.
       <p>
       If you have questions or comments, please contact:<br>
 	<a href="mailto:saord@cfa.harvard.edu?subject=JS9 inquiry">Eric Mandel</a>, Harvard-Smithsonian Center for Astrophysics
@@ -369,7 +370,7 @@
       download the <b>funtools</b> tar file.
       <br>
       <ul>
-      <li><a href="downloads/js9-1.0.tar.gz">js9 v1.0</a>
+      <li><a href="downloads/js9-1.1.tar.gz">js9 v1.1</a>
       <li><a href="downloads/js9-data.tar.gz">js9 data</a>
       <li><a href="downloads/funtools-1.4.6.tar.gz">funtools</a>
       </ul>
