@@ -1,6 +1,6 @@
 /*
  *
- * js9msg: send messages to js9 via Node-based server (March 20, 2013)
+ * js9Msg.js: send messages to js9 via Node-based server (March 20, 2013)
  *
  * requires: socket.io
  *
@@ -30,7 +30,7 @@ var msgType = "msg";
 
 // ever-present
 function usage() {
-  var prog = "js9msg";
+  var prog = "js9";
   console.log("usage: %s [switches] [cmd] [args]", prog);
   console.log("  switches:");
   console.log("    -h|-help                  # print this message");
