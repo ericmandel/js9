@@ -88,12 +88,30 @@ Choose from the following sections:
 <p>
 where:
 <ul>
-<li><b>url</b>: url to load
+<li><b>url</b>: url, fitsy object, in-memory FITS
 <li><b>opts</b>: object containing image parameters
 <li><b>func</b>: optional function to call when image load is complete
 </ul>
 <p>
 Load a FITS file or a PNG <b>representation file</b> into JS9.
+You also can pass an in-memory buffer containing a FITS file, or a string
+containing a base64-encoded FITS file.
+<p>
+Finally, you can pass a fits object containing the following properties:
+<ul>
+<li><b>naxis</b>: number of axes in the image
+<li><b>axis</b>: array of image dimensions for each axis or ...
+<li><b>naxis[n]</b> image dimensions of each axis (naxis1, naxis2, ...)
+<li><b>bitpix</b>: FITS bitpix value
+<li><b>head</b>: object containing header keywords as properties
+<li><b>image</b>: typed data array containing image data (native format)
+<li><b>dmin</b>: data min (optional)
+<li><b>dmax</b>: data max (optional)
+</ul>
+The difference between <b>JS9.RefreshImage()</b> and <b>JS9.Load()</b> is
+that the former updates the data into an existing image, while the latter adds
+a completely new image to the display.
+<p>
 To override default image parameters, pass the image opts argument:
 <pre>
     href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'
@@ -198,24 +216,44 @@ determine the current image for each call.
 <code><font size="+1">imgdata = JS9.GetImageData(dflag)</font></code>
 where:
 <ul>
-<li><b>dflag</b>: true if you want the data returned (as an HTML5 typed array)
+<li><b>dflag</b>: if true, the data is returned as well.
 </ul>
 <p>
 The image data object contains the following information:
 <ul>
 <li><b>id</b>: the id of the file that was loaded into JS9
 <li><b>file</b>: the file or URL that was loaded into JS9
+<li><b>fits</b>: the FITS file associated with this image
 <li><b>source</b>: "fits" if a FITS file was downloaded, "fits2png" if a representation file was retrieved
 <li><b>imtab</b>: "image" for FITS images and png files, "table" for FITS binary tables
 <li><b>width</b>: x dimension of image
 <li><b>height</b>: y dimension of image
 <li><b>bitpix</b>: FITS bits/pixel of each image element (8 for unsigned char, 16, 32 for signed integer, -32 or -64 for float)
 <li><b>header</b>: JavaScript object containing FITS header values
-<li><b>data</b>: if <b>dflag</b> is true, a pointer to HTML5 typed array
-containing image data
+<li><b>card</b>: string version of the FITS header with comments
+<li><b>data</b>: buffer containing raw data values
 </ul>
-This call returns raw data for subsequent use in local analysis tasks. The data
-buffer is a reference to the real data, so be careful about changing values.
+This call can return raw data for subsequent use in local analysis
+tasks. The format of the returned data depends on the exact value
+of <b>dflag</b>. If <b>dflag</b> is the boolean value true, an HTML5
+typed array is returned. In JavaScript, typed arrays are more
+efficient than ordinary JavaScript arrays, and, in this case, the
+returned data is actually just reference to the real JS9 image data
+(so be careful about changing values). If <b>dflag</b> is the string
+"array", a JavaScript array is returned instead. This is not a
+reference to the real data and will utilize additional memory, but the
+values can be manipulated safely.
+<p>
+The <b>file</b> value can be a FITS file or a representation PNG file. The
+<b>fits</b> value will be the path of the FITS file associated with
+this image. For a presentation PNG file, the path generally will be
+relative to the JS9 install directory. For a normal FITS file, the path
+usually is an absolute path to the FITS file.
+<p>
+If you are calling <b>JS9.GetImageData()</b> from an external process (via
+the msg protocol), you almost certainly want to set <b>dflag</b> to "array". 
+Doing so will serialize the data as an array instead of as an object, saving
+a considerable amount of transfer data.
 <p>
 Given a FITS-standard 1-indexed image pixel x,y, you can find the data value 
 at that location using:
@@ -265,15 +303,17 @@ object.
 The fits object should contains the following properties:
 <ul>
 <li><b>naxis</b>: number of axes in the image
-<li><b>axis</b>: array of image dimensions for each axis
+<li><b>axis</b>: array of image dimensions for each axis or ...
+<li><b>naxis[n]</b> image dimensions of each axis (naxis1, naxis2, ...)
 <li><b>bitpix</b>: FITS bitpix value
-<li><b>image</b>: typed data array containing current image data
 <li><b>head</b>: object containing header keywords as properties
-<li><b>card</b>: string version of the header with comments (optional)
+<li><b>image</b>: typed data array containing current image data
 <li><b>dmin</b>: data min (optional)
 <li><b>dmax</b>: data max (optional)
 </ul>
-
+The difference between <b>JS9.RefreshImage()</b> and <b>JS9.Load()</b> is
+that the former updates the data into an existing image, while the latter adds
+a completely new image to the display.
 <p>
 <font size="+1"><b>&#9679; Clear the image from the display and mark resources for release</b></font>
 <p>
@@ -1199,7 +1239,7 @@ callback function will be called. For the "mask" example above, the
 onregionchange property is set to call a JavaScript function (not
 shown here) whenever a region changes. The maskData property is set to
 point to the raw data of the auxfile (i.e., aux.im.raw.data). Finally,
-the image is redisplayed. Setting the maskData property and
+the image is re-displayed. Setting the maskData property and
 redisplaying the image causes the auxfile's data to be displayed as an
 opaque overlay on top of the currently displayed image.
 <p>
@@ -1217,6 +1257,15 @@ that we can continue to think about what is required for their support.
 <p>
 The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.
+
+<p><font size="+1"><b>&#9679; 
+20141117: The Set routines now return "OK" instead of true on success
+</b></font>
+<p>
+The public Set routines (<b>SetZoom()</b>, <b>SetColormap()</b>, etc)
+were returning a boolean true when successful. This has been changed
+to "OK", to make it clear that the return value is a status value,
+not a boolean data value.
 
 <p><font size="+1"><b>&#9679; 
 20141028: callback function to RunAnalysis and SubmitAnalysis
