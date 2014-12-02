@@ -273,6 +273,11 @@ Fitsy.xtypeof = function(obj) {
         return Object.prototype.toString.call(obj).slice(8, -1);
 };
 
+// http://stackoverflow.com/questions/3885817/how-to-check-if-a-number-is-float-or-integer
+Fitsy.isFloat = function(n) {
+    return n === +n && n !== (n|0);
+};
+
 Fitsy.cardpars = function(card){
     var name, value;
     if ( card[8] !== "=" ){ 
@@ -854,6 +859,7 @@ Fitsy.readTableHDUDataBinner = function (fits, hdu, nev, options, handler) {
 
 	hdu.axis[1] = image.nx;
 	hdu.axis[2] = image.ny;
+	hdu.bitpix  = 32;
 
 	// Update card and head to match image
 	//
@@ -933,7 +939,10 @@ Fitsy.cardfmt = function (name, nth, value, comment) {
 	value = "'" + value + "'";
 	break;
      case 'Number':
-	value = value.toPrecision(15);
+	// set precision for float values
+	if( Fitsy.isFloat(value) ){
+	    value = value.toPrecision(15);
+	}
 	break;
     }
 
