@@ -20,6 +20,9 @@
 
 // load required modules
 var sockio = require("socket.io"),
+    http = require("http"),
+    url = require('url'),
+    qs = require('querystring'),
     cproc  = require("child_process"),
     fs     = require("fs"),
     uuid   = require('node-uuid');
@@ -33,6 +36,7 @@ var envs = JSON.stringify(process.env);
 // default options ... change as necessary in prefsfile
 var globalOpts = {
     helperPort:       2718,
+    httpPort:         27182,
     cmd:              "js9helper",
     analysisPlugins:  "./analysis-plugins",
     analysisWrappers: "./analysis-wrappers",
@@ -43,9 +47,17 @@ var globalOpts = {
 // functions that might depend on specific implementations of socket.io
 //
 
-// get ip address and port of the current socket connection
-function getHost(io, socket){
-    return [socket.handshake.address.address, socket.handshake.address.port];
+// get ip address and port of the current socket or http connection
+function getHost(io, req){
+    // v0.9.16
+    if( req.handshake ){
+	return [req.handshake.address.address, req.handshake.address.port];
+    }
+    // http server
+    return [req.headers['x-forwarded-for'] ||
+	    req.connection.remoteAddress ||
+	    req.socket.remoteAddress ||
+	    req.connection.socket.remoteAddress, 0];
 }
 
 // get list of all clients currently connected
@@ -131,7 +143,7 @@ function loadPreferences(prefsfile){
 	s = fs.readFileSync(prefsfile, "utf-8");
 	if( s ){
 	    try{ obj = JSON.parse(s.toString()); }
-	    catch(e){console.log("can't parse: "+prefsfile, e);}
+	    catch(e){ console.log("can't parse: "+prefsfile, e); }
 	    // look for globalOpts and merge
 	    if( obj && obj.globalOpts ){
 		for( opt in obj.globalOpts ){
@@ -228,7 +240,7 @@ function execCmd(io, socket, obj, cbfunc) {
 	myenv.JS9_DATAPATH = envClean(globalOpts.dataPath);
     }
     // the command string
-    argstr = obj.cmd;
+    argstr = obj.cmd || "";
     // split arguments on spaces
     args = argstr.split(" ");
     // remove dangerous characters
@@ -328,6 +340,7 @@ io.sockets.on("connection", function(socket) {
     var i, j, m, a;
     // function outside loop needed to make jslint happy
     var xfunc = function(obj, cbfunc) {
+	if( !obj ){return;}
 	// exec the analysis task (via a wrapper function)
 	execCmd(io, socket, obj, cbfunc);
     };
@@ -350,6 +363,7 @@ io.sockets.on("connection", function(socket) {
     //   support sending external messages to JS9 (i.e., via js9 script)
     socket.on("displays", function(obj, cbfunc) {
 	var myhost = getHost(io, socket);
+	if( !obj ){return;}
 	socket.js9 = {};
 	socket.js9.displays = obj.displays;
 	socket.js9.pageid = uuid.v4();
@@ -359,12 +373,17 @@ io.sockets.on("connection", function(socket) {
 		    new Date().toLocaleString());
 	if( cbfunc ){ cbfunc(socket.js9.pageid); }
     });
+    // on alive: return "OK" to signal a valid connection
+    socket.on("alive", function(obj, cbfunc) {
+	    if( cbfunc ){ cbfunc("OK"); }
+    });
     // on image: signal from JS9 that a new or redisplayed image is active
     // returns: [input file path, fits file path, "wcs"|"pix", wcs system]
     // for other implementations, this is needed if you want to:
     //   tell JS9 about default wcs system for this data file
     //   get FITS filename associated with PNG representation files
     socket.on("image", function(obj, cbfunc) {
+	if( !obj ){return;}
 	if( globalOpts.cmd ){
 	    // make up js9helper command
 	    obj.cmd = globalOpts.cmd + " -i " + obj.image;
@@ -377,6 +396,7 @@ io.sockets.on("connection", function(socket) {
     // for other implementations, this is needed if you want to:
     //   support default server-side analysis (i.e. exec a wrapper script)
     socket.on("getAnalysis", function(obj, cbfunc) {
+	if( !obj ){return;}
 	sendAnalysisTasks(io, socket, obj, cbfunc);
     });
     // on runAnalysis: run an analysis task
@@ -385,6 +405,7 @@ io.sockets.on("connection", function(socket) {
     //   support default server-side analysis (i.e. exec a wrapper script)
     // NB: retained for backward compatibility with old (cached) versions of JS9
     socket.on("runAnalysis", function(obj, cbfunc){
+	if( !obj ){return;}
 	// exec the analysis task (via a wrapper function)
 	execCmd(io, socket, obj, cbfunc);
     });
@@ -404,6 +425,7 @@ io.sockets.on("connection", function(socket) {
     // for other implementations, this is needed if you want to:
     //   support conversion of fits to png representation
     socket.on("fits2png", function(obj, cbfunc) {
+	if( !obj ){return;}
 	if( fits2png[0] && fits2png[0].action ){
 	    // make up fits2png command string from defined fits2png action
 	    obj.cmd = fits2png[0].action + " " + obj.fits;
@@ -417,6 +439,7 @@ io.sockets.on("connection", function(socket) {
     // for other implementations, this is needed if you want to:
     //   support sending external messages to JS9 (i.e., via js9 script)
     socket.on("msg", function(obj, cbfunc) {
+	if( !obj ){return;}
 	sendMsg(io, socket, obj, cbfunc);
     });
     // an example of site-specific in-line messsages
@@ -431,6 +454,119 @@ io.sockets.on("connection", function(socket) {
 	});
     }
 });
+
+// start http server to field pseudo-socket.io requests
+// public api:
+// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}'
+// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "GetColormap"}'
+// js9 command line:
+// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom", "args": [2]}'
+// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom"}'
+// analysis commands:
+// wget $MYHOST'/counts?{"id": "'$ID'", "cmd": "counts", "args": ["counts"]}'
+if( globalOpts.httpPort ){
+http.createServer(function(req, res){
+    var cmd, gobj, s, jstr;
+    var body = "";
+    // return error into to browser
+    var err = function(s){
+	res.writeHead(400, s, {"Content-Type": "text/plain"});
+	res.end();
+    };
+    // call-back function returning info to browser
+    var cbfunc = function(s){
+	switch(typeof s){
+	case "string":
+	    break;
+	case "object":
+	    s = JSON.stringify(s);
+	    break;
+	default:
+	    s = s.toString();
+	    break;
+	}
+	res.writeHead(200, {"Content-Type": "text/plain"});
+	res.write(s);
+	res.end();
+    };
+    // generate object and run the cmd
+    var docmd = function(cmd, jstr){
+	var a, i, j, m, obj;
+	// the constructed string is stringified json, so
+	// just parse it into an object
+	try{ obj = JSON.parse(jstr); }
+	catch(e){
+	    err("can't parse JSON object in http POST request: " + jstr); 
+	    return;
+	}
+	// check for id and set default
+	obj.id = obj.id || "JS9";
+	// process the command
+	switch(cmd){
+	case "alive":
+	    if( cbfunc ){ cbfunc("OK"); }
+	    break;
+	case "runAnalysis":
+	    // exec the conversion task (via a wrapper function)
+	    execCmd(io, req, obj, cbfunc);
+	    break;
+	case "msg":
+	    // send a command from an external source to a JS9 browser
+	    sendMsg(io, req, obj, cbfunc);
+	    break;
+	default:
+	    for(j=0; j<analysis.pkgs.length; j++){
+		for(i=0; i<analysis.pkgs[j].length; i++){
+		    a = analysis.pkgs[j][i];
+		    m = a.xclass ? (a.xclass + ":" + a.name) : a.name;
+		    if( m === cmd ){
+			execCmd(io, req, obj, cbfunc);
+			return;
+		    }
+		}
+	    }
+	    err("unknown command in " + req.method + " request: " + cmd);
+	    break;
+	}
+    };
+    // parse url to get object for easier handling
+    gobj = url.parse(req.url);
+    // get command from pathname
+    if( gobj.pathname ){
+	cmd = gobj.pathname.replace(/^\//, "");
+    }
+    // method-specific processing
+    switch(req.method){
+    case "GET":
+	// fix some awkwardness in qs.parse
+	if( gobj.query ){
+	    gobj.query = gobj.query.replace(/\+/g, "%2B");
+	}
+	// we pass the stringified json data directly command type,
+	// so prepend an obj so we can parse it
+	s = "obj=" + gobj.query;
+	try{ jstr = qs.parse(s).obj; }
+	catch(e){
+	    err("can't parse JSON object in http GET request: " + s); 
+	    return;
+	}
+	docmd(cmd, jstr);
+	break;
+    case "POST":
+	req.on('data', function(chunk){
+	    body += chunk;
+	});
+	req.on('end', function(){
+	    jstr = body.toString();
+	    docmd(cmd, jstr);
+	});
+	break;
+    default:
+	err("unsupported method: " + req.method);
+	return;
+    }
+}).listen(globalOpts.httpPort);
+}
 
 // an example of adding an in-line messsage to the analysis task list
 if( process.env.NODEJS_FOO === "analysis" ){
