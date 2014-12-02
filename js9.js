@@ -21,7 +21,7 @@
 
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 
-/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, ArrayBuffer, Uint8Array, Uint16Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, Fitsy, Astroem, Module, dhtmlwindow */
+/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, Fitsy, Astroem, Module, dhtmlwindow */
 
 /*jshint smarttabs:true */
 
@@ -444,7 +444,9 @@ JS9.Image = function(file, params, func){
 	// downloaded image file
 	this.file = file;
 	// take file but discard path (or scheme) up to slashes
-	this.id = this.file.split("/").reverse()[0];
+	this.oid = this.file.split("/").reverse()[0];
+	// save id in case we have to change it for uniqueness
+	this.id = JS9.getImageID(this.oid, this.display.id);
 	// load status
 	this.status.load = "loading";
 	// change the cursor to show the waiting status
@@ -518,6 +520,7 @@ JS9.Image.prototype.closeImage = function(){
     var i, tim, key;
     var pname, pinst, popts;
     var ilen= JS9.images.length;
+    var display = this.display;
     // look for an image and remove it
     for(i=0; i<ilen; i++){
 	if( this === JS9.images[i] ){
@@ -570,17 +573,14 @@ JS9.Image.prototype.closeImage = function(){
 	    break;
 	}
     }
-    // display previous image, if available
-    if( JS9.images.length > 0 ){
-	// look for previous image
-	i = i - 1;
-	if( i < 0  ){
-	    i = JS9.images.length - 1;
-	}
-	// display it
+    // display another image, if available
+    for(i=0; i<JS9.images.length; i++){
 	tim = JS9.images[i];
-	// display image, 2D graphics, etc.
-	tim.displayImage("display");
+	if( display === tim.display ){
+	    // display image, 2D graphics, etc.
+	    tim.displayImage("display");
+	    break;
+	}
     }
 };
 
@@ -1121,13 +1121,13 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 
 // read a (fitsy) HDU object and convert to image data
 JS9.Image.prototype.mkRawDataFromHDU = function(hdu, file){
-    var s;
+    var i, s, ui, dlen;
     if( !hdu ){
 	JS9.error("no hdu found");
     }
     // handle (Fitsy) object containing raw image data immediately
-    if( !hdu.head || !hdu.image ){
-	JS9.error("header or data missing from JS9.Reload object");
+    if( !hdu.image ){
+	JS9.error("data missing from JS9 FITS object");
     }
     if( hdu.naxis < 2 ){
 	JS9.error("can't image a FITS file with less than 2 dimensions");
@@ -1137,19 +1137,84 @@ JS9.Image.prototype.mkRawDataFromHDU = function(hdu, file){
     } else {
 	this.file = hdu.filename;
     }
-    this.file = this.file || "unknown";
-    this.id = this.file.split("/").reverse()[0];
+    this.file = this.file || "[anonymous]";
+    // save id in case we have to change it for uniqueness
+    this.oid = this.file.split("/").reverse()[0];
+    // get a unique id for this image
+    this.id = JS9.getImageID(this.oid, this.display.id);
     // fill in raw data directly from the fitsy object
     this.raw = {};
     this.raw.hdu = hdu;
-    this.raw.width  = hdu.axis[1];
-    this.raw.height = hdu.axis[2];
+    if( hdu.axis ){
+	this.raw.width  = hdu.axis[1];
+	this.raw.height = hdu.axis[2];
+    } else {
+	this.raw.width  = hdu.naxis1;
+	this.raw.height = hdu.naxis2;
+    }
     this.raw.bitpix = hdu.bitpix;
-    this.raw.data = hdu.image;
-    this.raw.header = hdu.head;
+    // if the data is base64-encoded, decode it now
+    if( hdu.base64 ){
+	s = window.atob(hdu.image);
+	// make an arraybuffer to hold the bytes from the decoded string
+	hdu.image = new ArrayBuffer(s.length);
+	ui = new Uint8Array(hdu.image);
+	// to be turned into the right datatyped typed array, below
+	for(i=0; i<s.length; i++){
+	   ui[i] = s.charCodeAt(i);
+	}
+    }
+    // convert string/array into a typed array
+    if( hdu.base64 || $.isArray(hdu.image) ){
+	switch(this.raw.bitpix){
+	case 8:
+	    this.raw.data = new Uint8Array(hdu.image);
+	break;
+	case 16:
+	    this.raw.data = new Int16Array(hdu.image);
+	break;
+	case -16:
+	    this.raw.data = new Uint16Array(hdu.image);
+	break;
+	case 32:
+	    this.raw.data = new Int32Array(hdu.image);
+	break;
+	case -32:
+	    this.raw.data = new Float32Array(hdu.image);
+	break;
+	case -64:
+	    this.raw.data = new Float64Array(hdu.image);
+	break;
+	}
+    } else {
+	this.raw.data = hdu.image;
+    }
+    // look for header
+    if( hdu.head ){
+	this.raw.header = hdu.head;
+    } else {
+	// simplest FITS header imaginable
+	this.raw.header = {};
+	this.raw.header.SIMPLE = true;
+	this.raw.header.NAXIS = 2;
+	this.raw.header.NAXIS1 = this.raw.width;
+	this.raw.header.NAXIS2 = this.raw.height;
+	this.raw.header.BITPIX = this.raw.bitpix;
+    }
     this.raw.card = hdu.card;
-    this.raw.dmin = hdu.dmin || Number.MIN_VALUE;
-    this.raw.dmax = hdu.dmax || Number.MAX_VALUE;
+    if( hdu.dmin && hdu.dmax ){
+	this.raw.dmin = hdu.dmin;
+	this.raw.dmax = hdu.dmax;
+    } else {
+	this.raw.dmin = Number.MAX_VALUE;
+	this.raw.dmax = Number.MIN_VALUE;
+	dlen = this.raw.width * this.raw.height;
+	// find data min and max
+	for(i=0; i<dlen; i++) {
+	    this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
+	    this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
+	}
+    }
     // image or table
     this.imtab = hdu.table ? "table" : "image";
     // object name
@@ -1968,7 +2033,7 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
 JS9.Image.prototype.notifyHelper = function(){
     var that = this;
     // notify the helper
-    if( JS9.helper.connected ){
+    if( JS9.helper.connected && (this.file !== "[anonymous]") ){
 	JS9.helper.send("image", {"image": this.file},
         function(res){
 	    var rstr, r, s, cc, im;
@@ -3500,7 +3565,7 @@ JS9.Menubar = function(width){
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
             build: function($trigger, evt){
-		var i, im, name, imlen, prefix;
+		var i, im, name, imlen;
 		var n = 0;
 		var items = {};
 		var tdisp = getDisplays()[0];
@@ -3508,19 +3573,7 @@ JS9.Menubar = function(width){
 		for(i=0; i<imlen; i++){
 		    im = JS9.images[i];
 		    if( im.display === tdisp ){
-			if( im.fitsFile ){
-			    name = im.fitsFile.split("/").reverse()[0];
-			    // name sure its unique in the menu
-			    if( items[name] ){
-				prefix = im.fitsFile.split("/").reverse()[1];
-				name =  prefix + "/" + name;
-			    }
-			} else {
-			    name = im.id;
-			}
-			if( items[name] ){
-			    name += "_" + String(i);
-			}
+			name = im.id;
 			items[name] = {name: name};
 			if( tdisp.image && (tdisp.image.id === im.id) ){
 			    items[name].icon = "sun";
@@ -3582,9 +3635,7 @@ JS9.Menubar = function(width){
 			    for(j=0; j<JS9.images.length; j++){
 				uim = JS9.images[j];
 				if( (udisp.id === uim.display.id) &&
-				    ((uim.fitsFile && 
-				     (uim.fitsFile.indexOf(key) >=0)) ||
-				     (uim.id.indexOf(key) >=0)) ){
+				    (uim.id === key) ){
 				    // display image, 2D graphics, etc.
 				    uim.displayImage("display");
 				    uim.clearMessage();
@@ -4530,10 +4581,16 @@ JS9.Helper.prototype.connect = function(type){
 		    JS9.globalOpts.alerts = false;
 		    // look for a public API call
 		    if( JS9.publics[cmd] ){
+			// check for non-array first argument
+			if( !$.isArray(msg.args) ){
+			    msg.args = [ msg.args];
+			}
 			// deep copy of arg array
 			args = $.extend(true, [], msg.args);
-			// add current image to front of arglist
-			args.unshift(null);
+			// make up display object
+			if( id ){
+			    args.push({display: id});
+			}
 			// call public API
 			try{ res = JS9.publics[cmd].apply(null, args); }
 			catch(e){ res = sprintf("ERROR: %s", e.message); }
@@ -4550,7 +4607,7 @@ JS9.Helper.prototype.connect = function(type){
 			if( msg.args ){
 			    // deep copy of arg array
 			    args = $.extend(true, [], msg.args);
-			} else if( msg.paramlist !== "" ){
+			} else if( msg.paramlist ){
 			    args = msg.paramlist.split(/ +/);
 			}
 			switch(obj.getWhich(args)){
@@ -7547,6 +7604,31 @@ if( typeof Object.create !== "function" ){
     };
 }
 
+// return a unique value for a given image id by appending <n> to the id
+JS9.getImageID = function(imid, dispid){
+    var i, im, s;
+    var ids = 0;
+    var idmax = 1;
+    var imlen = JS9.images.length;
+    var rexp = new RegExp(".*<([0-9][0-9]*)>$");
+    for(i=0; i<imlen; i++){
+	im = JS9.images[i];
+	if( im.display.id === dispid ){
+	    if( imid === im.oid ){
+		if( im.id.search(rexp) >= 0 ){
+		    s = im.id.replace(rexp, "$1");
+		    idmax = Math.max(idmax, parseInt(s, 10));
+		}
+		ids++;
+	    }
+	}
+    }
+    if( ids ){
+	return imid + "<" + String(idmax+1) + ">";
+    }
+    return imid;
+};
+
 // return a unique value for ids
 JS9.uniqueID = (function(){
     var id = 1; // initial value
@@ -7559,7 +7641,7 @@ JS9.uniqueID = (function(){
 JS9.listev = function(s){
     s = s || "body";
     var elem = $(s)[0];
-    var data = jQuery.hasData( elem ) && jQuery._data( elem );
+    var data = $.hasData(elem) && $._data(elem);
     JS9.log(data.events);
 };
 
@@ -7926,6 +8008,7 @@ JS9.log = function(){
 // convert obj to FITS-style string
 JS9.raw2FITS = function(raw, forDisplay){
     var i, obj, key, val;
+    var hasend=false;
     var t="";
     // raw.card has comments, so use this if we are displaying header
     if( raw.card ){
@@ -7940,6 +8023,12 @@ JS9.raw2FITS = function(raw, forDisplay){
 	obj = raw.header;
 	for( key in obj ){
 	    if( obj.hasOwnProperty(key) ){
+		if( key === "js9Protocol" || key === "js9Endian" ){
+		    continue;
+		}
+		if( key === "END" ){
+		    hasend = true;
+		}
 		val = obj[key];
 		if( val === true ){
 		    val = "T";
@@ -7948,6 +8037,13 @@ JS9.raw2FITS = function(raw, forDisplay){
 		if( forDisplay ){
 		    t += "\n";
 		}
+	    }
+	}
+	// add end card, if necessary
+	if( !hasend ){
+	    t += sprintf("%-8s%-72s", "END", " ");
+	    if( forDisplay ){
+		t += "\n";
 	    }
 	}
     }
@@ -9401,7 +9497,7 @@ JS9.mkPublic = function(name, s){
 		    got = im[s].apply(im, obj.argv);
 		    // don't return image handle, it can't be serialized
 		    if( got === im ){
-			return true;
+			return "OK";
 		    }
 		    return got;
 		}
@@ -9448,7 +9544,7 @@ JS9.mkPublic("RunAnalysis", "runAnalysis");
 
 // display in-page FITS images and png files
 JS9.mkPublic("Load", function(file, opts){
-    var im, ext, display, func;
+    var i, im, ext, display, func, blob, bytes;
     var obj = JS9.parsePublicArgs(arguments);
     // sanity check
     if( !file ){
@@ -9476,17 +9572,42 @@ JS9.mkPublic("Load", function(file, opts){
 	func = JS9.imageOpts.onload;
 	opts.onload = func;
     }
+    // handle raw (fitsy) data objects
+    if( typeof file === "object" ){
+	JS9.checkNew(new JS9.Image(file, opts, func));
+	return;
+    }
+    // it's gotta be a string: in-memory FITS, url, or filename
+    if( typeof file !== "string" ){
+	JS9.error("unknown file type for Load: " + typeof file);
+    }
+    // convert in-memory base64-encoded FITS to a binary string
+    if( file.slice(0,12) === "U0lNUExFICA9" ){
+	file = window.atob(file);
+    }
+    // handle in-memory FITS by converting to a blob of a typed array
+    if( file.slice(0,9) === "SIMPLE  =" ){
+	bytes = [];
+	for(i=0; i<file.length; i++){
+	    bytes[i] = file.charCodeAt(i);
+	}
+	blob = new Blob([new Uint8Array(bytes)]);
+	if( opts.filename ){
+	    blob.name = opts.filename;
+	} else if( opts.name ){
+	    blob.name = opts.name;
+	} else {
+	    blob.name = "memoryFITS" + JS9.uniqueID();
+	}
+	Fitsy.onFile([blob], opts, JS9.NewFitsImage);
+	return;
+    }
     // if this file is already loaded, just redisplay
     im = JS9.lookupImage(file, display);
     if( im ){
 	// display image, 2D graphics, etc.
 	im.displayImage("display");
 	im.clearMessage();
-	return;
-    }
-    // handle raw (fitsy) data objects
-    if( typeof file === "object" ){
-	JS9.checkNew(new JS9.Image(file, opts, func));
 	return;
     }
     // check file extension
@@ -9765,17 +9886,27 @@ JS9.mkPublic("GetImage", function(id){
 JS9.mkPublic("GetImageData", function(dflag){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
+    var data = null;
     // return data and auxiliary info
     if( im ){
+	if( obj.argv[0] ){
+	    if( obj.argv[0] === "array" ){
+		data = Array.prototype.slice.call(im.raw.data);
+	    } else if( obj.argv[0] && (obj.argv[0] !== "false") ) {
+		data = im.raw.data;
+	    }
+	}
 	return {id: im.id,
 		file: im.file,
+		fits: im.fitsFile || "",
 		source: im.source,
 		imtab: im.imtab,
 		width: im.raw.width, 
 		height: im.raw.height,
 		bitpix: im.raw.bitpix,
 		header: im.raw.header, 
-		data: (dflag ? im.raw.data : null)};
+		cards: JS9.raw2FITS(im.raw),
+		data: data};
     }
 });
 
@@ -9941,7 +10072,9 @@ JS9.mkPublic("RemoveRegions", function(region){
     if( im ){
 	im.removeShapes("regions", region);
 	im.clearMessage("regions");
+	return "OK";
     }
+    return null;
 });
 
 // get one or more regions
@@ -9949,7 +10082,8 @@ JS9.mkPublic("GetRegions", function(region){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
-	return im.getShapes("regions", region);
+	obj.argv.unshift("regions");
+	return im.getShapes.apply(im, obj.argv);
     }
     return null;
 });
@@ -9961,6 +10095,7 @@ JS9.mkPublic("ChangeRegions", function(region, opts){
     if( im ){
 	im.changeShapes("regions", region, opts);
     }
+    return null;
 });
 
 // construct directory starting with where JS9 is installed
