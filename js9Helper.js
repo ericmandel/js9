@@ -19,8 +19,8 @@
 "use strict";
 
 // load required modules
-var sockio = require("socket.io"),
-    http = require("http"),
+var http = require('http'),
+    sockio = require('socket.io'),
     url = require('url'),
     qs = require('querystring'),
     cproc  = require("child_process"),
@@ -28,6 +28,7 @@ var sockio = require("socket.io"),
     uuid   = require('node-uuid');
 
 // internal variables
+var app, io;
 var prefsfile = "js9Prefs.json";
 var fits2png = {};
 var analysis = {str:[], pkgs:[]};
@@ -36,7 +37,6 @@ var envs = JSON.stringify(process.env);
 // default options ... change as necessary in prefsfile
 var globalOpts = {
     helperPort:       2718,
-    httpPort:         27182,
     cmd:              "js9helper",
     analysisPlugins:  "./analysis-plugins",
     analysisWrappers: "./analysis-wrappers",
@@ -49,20 +49,42 @@ var globalOpts = {
 
 // get ip address and port of the current socket or http connection
 function getHost(io, req){
-    // v0.9.16
+    // socket.io
     if( req.handshake ){
-	return [req.handshake.address.address, req.handshake.address.port];
+	return req.client.conn.remoteAddress;
     }
     // http server
-    return [req.headers['x-forwarded-for'] ||
-	    req.connection.remoteAddress ||
-	    req.socket.remoteAddress ||
-	    req.connection.socket.remoteAddress, 0];
+    return req.headers['x-forwarded-for'] ||
+	   req.connection.remoteAddress   ||
+	   req.socket.remoteAddress       ||
+	   req.connection.socket.remoteAddress;
+}
+
+// http://stackoverflow.com/questions/6563885/socket-io-how-do-i-get-a-list-of-connected-sockets-clients
+function findClientsSocket(io, namespace, roomId){
+    var id, index;
+    var res = [];
+    var ns = io.of(namespace ||"/");    // the default namespace is "/"
+    if(ns){
+        for(id in ns.connected){
+	    if( ns.connected.hasOwnProperty(id) ){
+		if(roomId){
+                    index = ns.connected[id].rooms.indexOf(roomId) ;
+                    if(index !== -1){
+			res.push(ns.connected[id]);
+                    }
+		} else {
+                    res.push(ns.connected[id]);
+		}
+	    }
+        }
+    }
+    return res;
 }
 
 // get list of all clients currently connected
 function getClients(io, socket){
-    return io.sockets.clients();
+    return findClientsSocket(io);
 }
 
 // utility functions
@@ -74,7 +96,7 @@ function getTargets(io, socket, msg){
     var browserip = msg.browserip || "*";
     var targets = [];
     // ip associated with this socket
-    var myip = getHost(io, socket)[0];
+    var myip = getHost(io, socket);
     // list of all clients connected on this socket
     var clients = getClients(io, socket);
     // authentication function
@@ -103,7 +125,7 @@ function getTargets(io, socket, msg){
 	    continue;
 	}
 	// client ip
-	clip = getHost(io, c)[0];
+	clip = getHost(io, c);
 	if( !authenticate(myip, clip) ){
 	    continue;
 	}
@@ -218,7 +240,7 @@ function addAnalysisTask(obj) {
 // this is the default callback for server-side analysis tasks
 function execCmd(io, socket, obj, cbfunc) {
     var i, cmd, argstr, args;
-    var myip = getHost(io, socket)[0];
+    var myip = getHost(io, socket);
     var myid = obj.id;
     var myenv = JSON.parse(envs);
     // sanity check
@@ -314,148 +336,8 @@ function sendMsg(io, socket, obj, cbfunc) {
     }
 }
 
-//
-// initialization
-//
 
-// display version
-console.log("socket.io version: %s", sockio.version);
-
-// load preference file
-loadPreferences(prefsfile);
-
-// load analysis plugins
-loadAnalysisTasks(globalOpts.analysisPlugins);
-
-// start listening on the helper port
-var io = sockio.listen(globalOpts.helperPort);
-
-// errors and warnings only for 0.9.x
-if( typeof io.set === "function" ){
-    io.set("log level", 2);
-}
-
-// for each connection, receive and process custom events
-io.sockets.on("connection", function(socket) {
-    var i, j, m, a;
-    // function outside loop needed to make jslint happy
-    var xfunc = function(obj, cbfunc) {
-	if( !obj ){return;}
-	// exec the analysis task (via a wrapper function)
-	execCmd(io, socket, obj, cbfunc);
-    };
-    // on disconnect: display a console message
-    // returns: N/A
-    // for other implementations, this is needed if you want to:
-    //   show disconnects in the log
-    socket.on("disconnect", function() {
-	var myhost = getHost(io, socket);
-	// only show disconnect for displays (not js9 msgs)
-	if( socket.js9 && socket.js9.displays ){
-            console.log("disconnect: %s:%s (%s) [%s]", 
-			myhost[0], myhost[1], socket.js9.displays,
-			new Date().toLocaleString());
-	}
-    });
-    // on displays: get the list of displays for this connection
-    // returns: unique page id (not currently used)
-    // for other implementations, this is needed if you want to:
-    //   support sending external messages to JS9 (i.e., via js9 script)
-    socket.on("displays", function(obj, cbfunc) {
-	var myhost = getHost(io, socket);
-	if( !obj ){return;}
-	socket.js9 = {};
-	socket.js9.displays = obj.displays;
-	socket.js9.pageid = uuid.v4();
-        console.log("connect: %s:%s (%s) [%s]", 
-		    myhost[0], myhost[1],
-		    socket.js9.displays,
-		    new Date().toLocaleString());
-	if( cbfunc ){ cbfunc(socket.js9.pageid); }
-    });
-    // on alive: return "OK" to signal a valid connection
-    socket.on("alive", function(obj, cbfunc) {
-	    if( cbfunc ){ cbfunc("OK"); }
-    });
-    // on image: signal from JS9 that a new or redisplayed image is active
-    // returns: [input file path, fits file path, "wcs"|"pix", wcs system]
-    // for other implementations, this is needed if you want to:
-    //   tell JS9 about default wcs system for this data file
-    //   get FITS filename associated with PNG representation files
-    socket.on("image", function(obj, cbfunc) {
-	if( !obj ){return;}
-	if( globalOpts.cmd ){
-	    // make up js9helper command
-	    obj.cmd = globalOpts.cmd + " -i " + obj.image;
-	    // exec the command
-	    execCmd(io, socket, obj, cbfunc);
-	}
-    });
-    // on getAnalysis: get analysis task definitions
-    // returns: json string containing analysis task definitions
-    // for other implementations, this is needed if you want to:
-    //   support default server-side analysis (i.e. exec a wrapper script)
-    socket.on("getAnalysis", function(obj, cbfunc) {
-	if( !obj ){return;}
-	sendAnalysisTasks(io, socket, obj, cbfunc);
-    });
-    // on runAnalysis: run an analysis task
-    // returns: object w/ errcode, stderr (error string), stdout (results)
-    // for other implementations, this is needed if you want to:
-    //   support default server-side analysis (i.e. exec a wrapper script)
-    // NB: retained for backward compatibility with old (cached) versions of JS9
-    socket.on("runAnalysis", function(obj, cbfunc){
-	if( !obj ){return;}
-	// exec the analysis task (via a wrapper function)
-	execCmd(io, socket, obj, cbfunc);
-    });
-    // NB: instead of runAnalysis, now we use a handler for each separate task
-    // returns: object w/ errcode, stderr (error string), stdout (results)
-    // for other implementations, this is needed if you want to:
-    //   support default server-side analysis (i.e. exec a wrapper script)
-    for(j=0; j<analysis.pkgs.length; j++){
-	for(i=0; i<analysis.pkgs[j].length; i++){
-	    a = analysis.pkgs[j][i];
-	    m = a.xclass ? (a.xclass + ":" + a.name) : a.name;
-	    socket.on(m, xfunc);
-	}
-    }
-    // on fits2png: convert raw fits to png
-    // returns: object w/ errcode, stderr (error string), stdout (results)
-    // for other implementations, this is needed if you want to:
-    //   support conversion of fits to png representation
-    socket.on("fits2png", function(obj, cbfunc) {
-	if( !obj ){return;}
-	if( fits2png[0] && fits2png[0].action ){
-	    // make up fits2png command string from defined fits2png action
-	    obj.cmd = fits2png[0].action + " " + obj.fits;
-	    // exec the conversion task (via a wrapper function)
-	    execCmd(io, socket, obj, cbfunc);
-	}
-    });
-    // on msg: send a command from an external source to a JS9 browser
-    // nb: this msg comes from an external source, not from js9 itself
-    // returns: results from JS9
-    // for other implementations, this is needed if you want to:
-    //   support sending external messages to JS9 (i.e., via js9 script)
-    socket.on("msg", function(obj, cbfunc) {
-	if( !obj ){return;}
-	sendMsg(io, socket, obj, cbfunc);
-    });
-    // an example of site-specific in-line messsages
-    if( process.env.NODEJS_FOO ){
-	// After defining a foo message, you can do this in javascript:
-	// JS9.Send("FOO:foo",{keys:{"x":1,"y":2}},function(r){console.log(r)});
-	socket.on("FOO:foo", function(obj, cbfunc) {
-	    var s = "foo: " + JSON.stringify(obj.keys);
-	    // analysis tasks should return an object containing one or more:
-	    // error (error code), stdout (string result), stderr (error msg)
-	    if( cbfunc ){ cbfunc({stdout: s}); }
-	});
-    }
-});
-
-// start http server to field pseudo-socket.io requests
+// httpd handler: to field pseudo-socket.io requests
 // public api:
 // wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}'
 // wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "GetColormap"}'
@@ -464,8 +346,7 @@ io.sockets.on("connection", function(socket) {
 // wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom"}'
 // analysis commands:
 // wget $MYHOST'/counts?{"id": "'$ID'", "cmd": "counts", "args": ["counts"]}'
-if( globalOpts.httpPort ){
-http.createServer(function(req, res){
+function httpHandler(req, res){
     var cmd, gobj, s, jstr;
     var body = "";
     // return error into to browser
@@ -565,8 +446,144 @@ http.createServer(function(req, res){
 	err("unsupported method: " + req.method);
 	return;
     }
-}).listen(globalOpts.httpPort);
 }
+
+//
+// initialization
+//
+
+// load preference file
+loadPreferences(prefsfile);
+
+// load analysis plugins
+loadAnalysisTasks(globalOpts.analysisPlugins);
+
+// start up http and socket.io
+app = http.createServer(httpHandler);
+io = new sockio(app);
+
+// start listening on the helper port
+app.listen(globalOpts.helperPort);
+
+// for each socket.io connection, receive and process custom events
+io.on("connection", function(socket) {
+    var i, j, m, a;
+    // function outside loop needed to make jslint happy
+    var xfunc = function(obj, cbfunc) {
+	if( !obj ){return;}
+	// exec the analysis task (via a wrapper function)
+	execCmd(io, socket, obj, cbfunc);
+    };
+    // on disconnect: display a console message
+    // returns: N/A
+    // for other implementations, this is needed if you want to:
+    //   show disconnects in the log
+    socket.on("disconnect", function() {
+	var myhost = getHost(io, socket);
+	// only show disconnect for displays (not js9 msgs)
+	if( socket.js9 && socket.js9.displays ){
+            console.log("disconnect: %s (%s) [%s]",
+			myhost, socket.js9.displays,
+			new Date().toLocaleString());
+	}
+    });
+    // on displays: get the list of displays for this connection
+    // returns: unique page id (not currently used)
+    // for other implementations, this is needed if you want to:
+    //   support sending external messages to JS9 (i.e., via js9 script)
+    socket.on("displays", function(obj, cbfunc) {
+	var myhost = getHost(io, socket);
+	if( !obj ){return;}
+	socket.js9 = {};
+	socket.js9.displays = obj.displays;
+	socket.js9.pageid = uuid.v4();
+        console.log("connect: %s (%s) [%s]",
+		    myhost,
+		    socket.js9.displays,
+		    new Date().toLocaleString());
+	if( cbfunc ){ cbfunc(socket.js9.pageid); }
+    });
+    // on alive: return "OK" to signal a valid connection
+    socket.on("alive", function(obj, cbfunc) {
+	    if( cbfunc ){ cbfunc("OK"); }
+    });
+    // on image: signal from JS9 that a new or redisplayed image is active
+    // returns: [input file path, fits file path, "wcs"|"pix", wcs system]
+    // for other implementations, this is needed if you want to:
+    //   tell JS9 about default wcs system for this data file
+    //   get FITS filename associated with PNG representation files
+    socket.on("image", function(obj, cbfunc) {
+	if( !obj ){return;}
+	if( globalOpts.cmd ){
+	    // make up js9helper command
+	    obj.cmd = globalOpts.cmd + " -i " + obj.image;
+	    // exec the command
+	    execCmd(io, socket, obj, cbfunc);
+	}
+    });
+    // on getAnalysis: get analysis task definitions
+    // returns: json string containing analysis task definitions
+    // for other implementations, this is needed if you want to:
+    //   support default server-side analysis (i.e. exec a wrapper script)
+    socket.on("getAnalysis", function(obj, cbfunc) {
+	if( !obj ){return;}
+	sendAnalysisTasks(io, socket, obj, cbfunc);
+    });
+    // on runAnalysis: run an analysis task
+    // returns: object w/ errcode, stderr (error string), stdout (results)
+    // for other implementations, this is needed if you want to:
+    //   support default server-side analysis (i.e. exec a wrapper script)
+    // NB: retained for backward compatibility with old (cached) versions of JS9
+    socket.on("runAnalysis", function(obj, cbfunc){
+	if( !obj ){return;}
+	// exec the analysis task (via a wrapper function)
+	execCmd(io, socket, obj, cbfunc);
+    });
+    // NB: instead of runAnalysis, now we use a handler for each separate task
+    // returns: object w/ errcode, stderr (error string), stdout (results)
+    // for other implementations, this is needed if you want to:
+    //   support default server-side analysis (i.e. exec a wrapper script)
+    for(j=0; j<analysis.pkgs.length; j++){
+	for(i=0; i<analysis.pkgs[j].length; i++){
+	    a = analysis.pkgs[j][i];
+	    m = a.xclass ? (a.xclass + ":" + a.name) : a.name;
+	    socket.on(m, xfunc);
+	}
+    }
+    // on fits2png: convert raw fits to png
+    // returns: object w/ errcode, stderr (error string), stdout (results)
+    // for other implementations, this is needed if you want to:
+    //   support conversion of fits to png representation
+    socket.on("fits2png", function(obj, cbfunc) {
+	if( !obj ){return;}
+	if( fits2png[0] && fits2png[0].action ){
+	    // make up fits2png command string from defined fits2png action
+	    obj.cmd = fits2png[0].action + " " + obj.fits;
+	    // exec the conversion task (via a wrapper function)
+	    execCmd(io, socket, obj, cbfunc);
+	}
+    });
+    // on msg: send a command from an external source to a JS9 browser
+    // nb: this msg comes from an external source, not from js9 itself
+    // returns: results from JS9
+    // for other implementations, this is needed if you want to:
+    //   support sending external messages to JS9 (i.e., via js9 script)
+    socket.on("msg", function(obj, cbfunc) {
+	if( !obj ){return;}
+	sendMsg(io, socket, obj, cbfunc);
+    });
+    // an example of site-specific in-line messsages
+    if( process.env.NODEJS_FOO ){
+	// After defining a foo message, you can do this in javascript:
+	// JS9.Send("FOO:foo",{keys:{"x":1,"y":2}},function(r){console.log(r)});
+	socket.on("FOO:foo", function(obj, cbfunc) {
+	    var s = "foo: " + JSON.stringify(obj.keys);
+	    // analysis tasks should return an object containing one or more:
+	    // error (error code), stdout (string result), stderr (error msg)
+	    if( cbfunc ){ cbfunc({stdout: s}); }
+	});
+    }
+});
 
 // an example of adding an in-line messsage to the analysis task list
 if( process.env.NODEJS_FOO === "analysis" ){

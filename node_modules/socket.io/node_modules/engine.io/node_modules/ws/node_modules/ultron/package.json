@@ -1,0 +1,67 @@
+{
+  "name": "ultron",
+  "version": "1.0.0",
+  "description": "Ultron is high-intelligence robot. It gathers intel so it can start improving upon his rudimentary design",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --reporter spec --ui bdd test.js",
+    "watch": "mocha --watch --reporter spec --ui bdd test.js",
+    "coverage": "istanbul cover ./node_modules/.bin/_mocha -- --reporter spec --ui bdd test.js",
+    "test-travis": "istanbul cover node_modules/.bin/_mocha --report lcovonly -- --reporter spec --ui bdd test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unshiftio/ultron"
+  },
+  "keywords": [
+    "Ultron",
+    "robot",
+    "gather",
+    "intelligence",
+    "event",
+    "events",
+    "eventemitter",
+    "emitter",
+    "cleanup"
+  ],
+  "author": {
+    "name": "Arnout Kazemier"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "assume": "0.0.x",
+    "eventemitter3": "0.1.x",
+    "istanbul": "0.3.x",
+    "mocha": "2.0.x",
+    "pre-commit": "0.0.x"
+  },
+  "bugs": {
+    "url": "https://github.com/unshiftio/ultron/issues"
+  },
+  "homepage": "https://github.com/unshiftio/ultron",
+  "gitHead": "beb83f1e8d6fe6b1aed8dd23e3591b3842cfa356",
+  "_id": "ultron@1.0.0",
+  "_shasum": "3a35f50db230083e3d33ae9492967e030f87899c",
+  "_from": "ultron@1.0.x",
+  "_npmVersion": "1.4.28",
+  "_npmUser": {
+    "name": "unshift",
+    "email": "npm@unshift.io"
+  },
+  "maintainers": [
+    {
+      "name": "V1",
+      "email": "info@3rd-Eden.com"
+    },
+    {
+      "name": "unshift",
+      "email": "npm@unshift.io"
+    }
+  ],
+  "dist": {
+    "shasum": "3a35f50db230083e3d33ae9492967e030f87899c",
+    "tarball": "http://registry.npmjs.org/ultron/-/ultron-1.0.0.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/ultron/-/ultron-1.0.0.tgz"
+}
