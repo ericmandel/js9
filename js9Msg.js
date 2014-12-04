@@ -33,11 +33,13 @@ function usage() {
   var prog = "js9";
   console.log("usage: %s [switches] [cmd] [args]", prog);
   console.log("  switches:");
-  console.log("    -h|-help                  # print this message");
-  console.log("    -browser [hostname]       # client browser name/ip");
-  console.log("    -id [id]                  # client JS9 id (from div)");
-  console.log("    -multi                    # send to multiple clients");
-  console.log("    -pageid [id]              # unique page id from server");
+  console.log("    -h|-help               # print this message");
+  console.log("    -browser [hostname]    # this client's host name/ip");
+  console.log("    -helper [host]         # helper host name (def: localhost)");
+  console.log("    -helperPort [port]     # helper port (def: 2718)");
+  console.log("    -id [id]               # client JS9 id (def: JS9)");
+  console.log("    -multi                 # send to multiple clients");
+  console.log("    -pageid [id]           # unique page id from server");
   console.log("  examples:");
   console.log("    %s help               # list available commands", prog);
   console.log("    %s cmap heat          # change colormap to 'heat'", prog);
