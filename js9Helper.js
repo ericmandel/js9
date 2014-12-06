@@ -20,7 +20,7 @@
 
 // load required modules
 var http = require('http'),
-    sockio = require('socket.io'),
+    Sockio = require('socket.io'),
     url = require('url'),
     qs = require('querystring'),
     cproc  = require("child_process"),
@@ -336,137 +336,8 @@ function sendMsg(io, socket, obj, cbfunc) {
     }
 }
 
-
-// httpd handler: to field pseudo-socket.io requests
-// public api:
-// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}'
-// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "GetColormap"}'
-// js9 command line:
-// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom", "args": [2]}'
-// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom"}'
-// analysis commands:
-// wget $MYHOST'/counts?{"id": "'$ID'", "cmd": "counts", "args": ["counts"]}'
-function httpHandler(req, res){
-    var cmd, gobj, s, jstr;
-    var body = "";
-    // return error into to browser
-    var err = function(s){
-	res.writeHead(400, s, {"Content-Type": "text/plain"});
-	res.end();
-    };
-    // call-back function returning info to browser
-    var cbfunc = function(s){
-	switch(typeof s){
-	case "string":
-	    break;
-	case "object":
-	    s = JSON.stringify(s);
-	    break;
-	default:
-	    s = s.toString();
-	    break;
-	}
-	res.writeHead(200, {"Content-Type": "text/plain"});
-	res.write(s);
-	res.end();
-    };
-    // generate object and run the cmd
-    var docmd = function(cmd, jstr){
-	var a, i, j, m, obj;
-	// the constructed string is stringified json, so
-	// just parse it into an object
-	try{ obj = JSON.parse(jstr); }
-	catch(e){
-	    err("can't parse JSON object in http POST request: " + jstr); 
-	    return;
-	}
-	// check for id and set default
-	obj.id = obj.id || "JS9";
-	// process the command
-	switch(cmd){
-	case "alive":
-	    if( cbfunc ){ cbfunc("OK"); }
-	    break;
-	case "runAnalysis":
-	    // exec the conversion task (via a wrapper function)
-	    execCmd(io, req, obj, cbfunc);
-	    break;
-	case "msg":
-	    // send a command from an external source to a JS9 browser
-	    sendMsg(io, req, obj, cbfunc);
-	    break;
-	default:
-	    for(j=0; j<analysis.pkgs.length; j++){
-		for(i=0; i<analysis.pkgs[j].length; i++){
-		    a = analysis.pkgs[j][i];
-		    m = a.xclass ? (a.xclass + ":" + a.name) : a.name;
-		    if( m === cmd ){
-			execCmd(io, req, obj, cbfunc);
-			return;
-		    }
-		}
-	    }
-	    err("unknown command in " + req.method + " request: " + cmd);
-	    break;
-	}
-    };
-    // parse url to get object for easier handling
-    gobj = url.parse(req.url);
-    // get command from pathname
-    if( gobj.pathname ){
-	cmd = gobj.pathname.replace(/^\//, "");
-    }
-    // method-specific processing
-    switch(req.method){
-    case "GET":
-	// fix some awkwardness in qs.parse
-	if( gobj.query ){
-	    gobj.query = gobj.query.replace(/\+/g, "%2B");
-	}
-	// we pass the stringified json data directly command type,
-	// so prepend an obj so we can parse it
-	s = "obj=" + gobj.query;
-	try{ jstr = qs.parse(s).obj; }
-	catch(e){
-	    err("can't parse JSON object in http GET request: " + s); 
-	    return;
-	}
-	docmd(cmd, jstr);
-	break;
-    case "POST":
-	req.on('data', function(chunk){
-	    body += chunk;
-	});
-	req.on('end', function(){
-	    jstr = body.toString();
-	    docmd(cmd, jstr);
-	});
-	break;
-    default:
-	err("unsupported method: " + req.method);
-	return;
-    }
-}
-
-//
-// initialization
-//
-
-// load preference file
-loadPreferences(prefsfile);
-
-// load analysis plugins
-loadAnalysisTasks(globalOpts.analysisPlugins);
-
-// start up http and socket.io
-app = http.createServer(httpHandler);
-io = new sockio(app);
-
-// start listening on the helper port
-app.listen(globalOpts.helperPort);
-
-// for each socket.io connection, receive and process custom events
-io.on("connection", function(socket) {
+// socketio handler: field socket.io requests
+function socketioHandler(socket) {
     var i, j, m, a;
     // function outside loop needed to make jslint happy
     var xfunc = function(obj, cbfunc) {
@@ -583,7 +454,140 @@ io.on("connection", function(socket) {
 	    if( cbfunc ){ cbfunc({stdout: s}); }
 	});
     }
-});
+}
+
+// httpd handler: field pseudo-socket.io http requests
+// public api:
+// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}'
+// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "GetColormap"}'
+// js9 command line:
+// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom", "args": [2]}'
+// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom"}'
+// analysis commands:
+// wget $MYHOST'/counts?{"id": "'$ID'", "cmd": "counts", "args": ["counts"]}'
+function httpHandler(req, res){
+    var cmd, gobj, s, jstr;
+    var body = "";
+    // return error into to browser
+    var err = function(s){
+	res.writeHead(400, s, {"Content-Type": "text/plain"});
+	res.end();
+    };
+    // call-back function returning info to the client
+    var cbfunc = function(s){
+	switch(typeof s){
+	case "string":
+	    break;
+	case "object":
+	    s = JSON.stringify(s);
+	    break;
+	default:
+	    s = s.toString();
+	    break;
+	}
+	res.writeHead(200, {"Content-Type": "text/plain"});
+	res.write(s);
+	res.end();
+    };
+    // generate object and run the cmd
+    var docmd = function(cmd, jstr){
+	var a, i, j, m, obj;
+	// the constructed string is stringified json, so
+	// just parse it into an object
+	try{ obj = JSON.parse(jstr); }
+	catch(e){
+	    err("can't parse JSON object in http request: " + jstr); 
+	    return;
+	}
+	// check for id and set default
+	obj.id = obj.id || "JS9";
+	// process the command
+	switch(cmd){
+	case "alive":
+	    if( cbfunc ){ cbfunc("OK"); }
+	    break;
+	case "runAnalysis":
+	    // exec the conversion task (via a wrapper function)
+	    execCmd(io, req, obj, cbfunc);
+	    break;
+	case "msg":
+	    // send a command from an external source to a JS9 browser
+	    sendMsg(io, req, obj, cbfunc);
+	    break;
+	default:
+	    for(j=0; j<analysis.pkgs.length; j++){
+		for(i=0; i<analysis.pkgs[j].length; i++){
+		    a = analysis.pkgs[j][i];
+		    m = a.xclass ? (a.xclass + ":" + a.name) : a.name;
+		    if( m === cmd ){
+			execCmd(io, req, obj, cbfunc);
+			return;
+		    }
+		}
+	    }
+	    err("unknown command in " + req.method + " request: " + cmd);
+	    break;
+	}
+    };
+    // parse url to get object for easier handling
+    gobj = url.parse(req.url);
+    // get command from pathname
+    if( gobj.pathname ){
+	cmd = gobj.pathname.replace(/^\//, "");
+    }
+    // method-specific processing
+    switch(req.method){
+    case "GET":
+	// fix some awkwardness in qs.parse
+	if( gobj.query ){
+	    gobj.query = gobj.query.replace(/\+/g, "%2B");
+	}
+	// we pass the stringified json data directly command type,
+	// so prepend an obj so we can parse it
+	s = "obj=" + gobj.query;
+	try{ jstr = qs.parse(s).obj; }
+	catch(e){
+	    err("can't parse JSON object in http GET request: " + s); 
+	    return;
+	}
+	docmd(cmd, jstr);
+	break;
+    case "POST":
+	req.on('data', function(chunk){
+	    body += chunk;
+	});
+	req.on('end', function(){
+	    jstr = body.toString();
+	    docmd(cmd, jstr);
+	});
+	break;
+    default:
+	err("unsupported method: " + req.method);
+	return;
+    }
+}
+
+//
+// initialization
+//
+
+// load preference file
+loadPreferences(prefsfile);
+
+// load analysis plugins
+loadAnalysisTasks(globalOpts.analysisPlugins);
+
+// start up http server
+app = http.createServer(httpHandler);
+
+// and connect with the socket.io server
+io = new Sockio(app);
+
+// for each socket.io connection, receive and process custom events
+io.on("connection", socketioHandler);
+
+// start listening on the helper port
+app.listen(globalOpts.helperPort);
 
 // an example of adding an in-line messsage to the analysis task list
 if( process.env.NODEJS_FOO === "analysis" ){
