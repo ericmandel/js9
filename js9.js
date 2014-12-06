@@ -56,6 +56,7 @@ JS9.MAGWIDTH = JS9.WIDTH/2;	// width of js9Mag canvas
 JS9.MAGHEIGHT = JS9.HEIGHT/2;	// height of js9Mag canvas
 JS9.DS9WIDTH = 250;		// width of small js9Pan canvas
 JS9.DS9HEIGHT = 250;		// height of small js9Pan canvas
+JS9.ANON = "[anonymous]";	// name to use for images with no name
 
 // internal defaults (not usually changed by users)
 JS9.PREFSFILE = "js9Prefs.json";// prefs file to load
@@ -1137,7 +1138,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(hdu, file){
     } else {
 	this.file = hdu.filename;
     }
-    this.file = this.file || "[anonymous]";
+    this.file = this.file || JS9.ANON;
     // save id in case we have to change it for uniqueness
     this.oid = this.file.split("/").reverse()[0];
     // get a unique id for this image
@@ -2033,7 +2034,7 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
 JS9.Image.prototype.notifyHelper = function(){
     var that = this;
     // notify the helper
-    if( JS9.helper.connected && (this.file !== "[anonymous]") ){
+    if( JS9.helper.connected && (this.file !== JS9.ANON) ){
 	JS9.helper.send("image", {"image": this.file},
         function(res){
 	    var rstr, r, s, cc, im;
@@ -7580,6 +7581,7 @@ JS9.Catalogs.opts = {
 // Misc. Utilities
 // ---------------------------------------------------------------------
 
+
 // http://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible/#1608546
 // Invoke new operator with arbitrary arguments
 // Holy Grail pattern
@@ -9597,7 +9599,7 @@ JS9.mkPublic("Load", function(file, opts){
 	} else if( opts.name ){
 	    blob.name = opts.name;
 	} else {
-	    blob.name = "memoryFITS" + JS9.uniqueID();
+	    blob.name = JS9.ANON;
 	}
 	Fitsy.onFile([blob], opts, JS9.NewFitsImage);
 	return;
@@ -9887,12 +9889,27 @@ JS9.mkPublic("GetImageData", function(dflag){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     var data = null;
+    var atob64 = function(a){
+	var i;
+	var s = '';
+	var bytes = new Uint8Array(a.buffer);
+	var len = bytes.byteLength;
+	for(i=0; i<len; i++){
+            s += String.fromCharCode(bytes[i]);
+	}
+	return window.btoa(s);
+    };
     // return data and auxiliary info
     if( im ){
 	if( obj.argv[0] ){
+	    // return an array for IPC, since python mangles the typed array
 	    if( obj.argv[0] === "array" ){
 		data = Array.prototype.slice.call(im.raw.data);
+	    } else if( obj.argv[0] === "base64" ){
+		// NB: this seems to be the fastest method for IPC!
+		data = atob64(im.raw.data);
 	    } else if( obj.argv[0] && (obj.argv[0] !== "false") ) {
+		// use this for javascript programming on the web page itself
 		data = im.raw.data;
 	    }
 	}
@@ -9905,7 +9922,6 @@ JS9.mkPublic("GetImageData", function(dflag){
 		height: im.raw.height,
 		bitpix: im.raw.bitpix,
 		header: im.raw.header, 
-		cards: JS9.raw2FITS(im.raw),
 		data: data};
     }
 });

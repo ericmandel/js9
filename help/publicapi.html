@@ -216,7 +216,7 @@ determine the current image for each call.
 <code><font size="+1">imgdata = JS9.GetImageData(dflag)</font></code>
 where:
 <ul>
-<li><b>dflag</b>: if true, the data is returned as well.
+<li><b>dflag</b>: specifies whether the data should also be returned
 </ul>
 <p>
 The image data object contains the following information:
@@ -230,7 +230,6 @@ The image data object contains the following information:
 <li><b>height</b>: y dimension of image
 <li><b>bitpix</b>: FITS bits/pixel of each image element (8 for unsigned char, 16, 32 for signed integer, -32 or -64 for float)
 <li><b>header</b>: JavaScript object containing FITS header values
-<li><b>card</b>: string version of the FITS header with comments
 <li><b>data</b>: buffer containing raw data values
 </ul>
 This call can return raw data for subsequent use in local analysis
@@ -239,10 +238,18 @@ of <b>dflag</b>. If <b>dflag</b> is the boolean value true, an HTML5
 typed array is returned. In JavaScript, typed arrays are more
 efficient than ordinary JavaScript arrays, and, in this case, the
 returned data is actually just reference to the real JS9 image data
-(so be careful about changing values). If <b>dflag</b> is the string
-"array", a JavaScript array is returned instead. This is not a
-reference to the real data and will utilize additional memory, but the
-values can be manipulated safely.
+(so be careful about changing values).
+<p>
+If <b>dflag</b> is the string "array", a JavaScript array is returned.
+This is not a reference to the real data and will utilize
+additional memory, but the values can be manipulated safely.
+<p>
+If <b>dflag</b> is the string "base64", a base64-encoded string is
+returned.  Oddly, this seems to be the fastest method of transferring
+data to an external process such as Python, and, in fact, is the
+method used by the pyjs9.py interface. (The "array" method also can be
+used, but seems to be slower.)
+
 <p>
 The <b>file</b> value can be a FITS file or a representation PNG file. The
 <b>fits</b> value will be the path of the FITS file associated with
