@@ -38,6 +38,7 @@ function usage() {
   console.log("    -helper [host]         # helper host name (def: localhost)");
   console.log("    -helperPort [port]     # helper port (def: 2718)");
   console.log("    -id [id]               # client JS9 id (def: JS9)");
+  console.log("    -msgType [type]        # message type (def: 'msg')");
   console.log("    -multi                 # send to multiple clients");
   console.log("    -pageid [id]           # unique page id from server");
   console.log("  examples:");
@@ -69,10 +70,9 @@ JS9Msg.prototype.reset = function() {
 JS9Msg.prototype.setArgs = function(args) {
     switch(msgType){
     case "msg":
+    default:
         this.cmd = args[0];
         this.args = args.slice(1) || [];
-    break;
-    default:
     break;
     }
 };
