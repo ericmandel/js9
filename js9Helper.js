@@ -94,6 +94,25 @@ function getClients(io, socket){
 
 // utility functions
 
+// create a nice date/time string for logging
+function datestr(){
+    return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ' UTC');
+}
+// output a log message on the console
+function clog(){
+    var args = Array.prototype.slice.call(arguments, 0);
+    args.push(" [" + datestr() + "]");
+    console.log.apply(null, args);
+}
+
+// output an error message on the console
+function cerr(){
+    var args = Array.prototype.slice.call(arguments, 0);
+    args.unshift("ERROR: ");
+    args.push(" [" + datestr() + "]");
+    console.log.apply(null, args);
+}
+
 // getTargets: identify target(s) for an external msg for a given ip
 function getTargets(io, socket, msg){
     var i, j, c, clip;
@@ -170,7 +189,7 @@ function loadPreferences(prefsfile){
 	s = fs.readFileSync(prefsfile, "utf-8");
 	if( s ){
 	    try{ obj = JSON.parse(s.toString()); }
-	    catch(e){ console.log("can't parse: "+prefsfile, e); }
+	    catch(e){ cerr("can't parse: ", prefsfile, e); }
 	    // look for globalOpts and merge
 	    if( obj && obj.globalOpts ){
 		for( opt in obj.globalOpts ){
@@ -214,14 +233,14 @@ function loadAnalysisTasks(dir){
 			switch(files[i]){
 			case "fits2png.json":
 			    try{ fits2png = JSON.parse(jstr); }
-			    catch(e1){console.log("can't parse: "+pathname,e1);}
+			    catch(e1){cerr("can't parse: ", pathname, e1);}
 			    break;
 			default:
 			    try{
 				analysis.pkgs.push(JSON.parse(jstr));
 				analysis.str.push(jstr);
 			    }
-			    catch(e2){console.log("can't parse: "+pathname,e2);}
+			    catch(e2){cerr("can't parse: ", pathname, e2);}
 			    break;
 			}
 		    }
@@ -252,7 +271,7 @@ function loadHelperPlugins(dir){
 		    // name of message
 		    name = files[i].replace(/.js$/, "");
 		    try{ x = require(pathname); }
-		    catch(e){ console.log("warning: can't load: " + pathname); }
+		    catch(e){ cerr("warning: can't load: ", pathname); }
 		    if( x ){
 			plugins.push({name: name,
 				      sockio: x.sockio,
@@ -324,7 +343,7 @@ function execCmd(io, socket, obj, cbfunc) {
 	cmd = globalOpts.analysisWrappers + "/" + args[0];
     }
     // log what we are about to do
-    console.log("exec: %s [%s]", cmd, args.slice(1));
+    clog("exec: %s [%s]", cmd, args.slice(1));
     // execute the analysis script with cmd arguments
     cproc.execFile(cmd, args.slice(1),
 		   { encoding: globalOpts.textEncoding,
@@ -418,9 +437,7 @@ function socketioHandler(socket) {
 	var myhost = getHost(io, socket);
 	// only show disconnect for displays (not js9 msgs)
 	if( socket.js9 && socket.js9.displays ){
-            console.log("disconnect: %s (%s) [%s]",
-			myhost, socket.js9.displays,
-			new Date().toLocaleString());
+            clog("disconnect: %s (%s)",	myhost, socket.js9.displays);
 	}
     });
     // on displays: get the list of displays for this connection
@@ -433,10 +450,7 @@ function socketioHandler(socket) {
 	socket.js9 = {};
 	socket.js9.displays = obj.displays;
 	socket.js9.pageid = uuid.v4();
-        console.log("connect: %s (%s) [%s]",
-		    myhost,
-		    socket.js9.displays,
-		    new Date().toLocaleString());
+        clog("connect: %s (%s)", myhost, socket.js9.displays);
 	if( cbfunc ){ cbfunc(socket.js9.pageid); }
     });
     // on alive: return "OK" to signal a valid connection
@@ -511,7 +525,7 @@ function socketioHandler(socket) {
     // an example of site-specific in-line messsages
     if( process.env.NODEJS_FOO ){
 	// After defining a foo message, you can do this in javascript:
-	// JS9.Send("FOO:foo",{keys:{"x":1,"y":2}},function(r){console.log(r)});
+	// JS9.Send("FOO:foo",{keys:{"x":1,"y":2}},function(r){dofunc(r)});
 	socket.on("FOO:foo", function(obj, cbfunc) {
 	    var s = "foo: " + JSON.stringify(obj.keys);
 	    // analysis tasks should return an object containing one or more:
@@ -523,7 +537,7 @@ function socketioHandler(socket) {
     for(i=0; i<plugins.length; i++){
 	if( plugins[i].sockio ){
 	    try{ plugins[i].sockio(io, socket); }
-	    catch(e){ console.log("warning: can't add %s", plugins[i].name); }
+	    catch(e){ cerr("can't add %s", plugins[i].name); }
 	}
     }
 }
@@ -696,5 +710,5 @@ if( process.env.NODEJS_FOO === "analysis" ){
 
 // last ditch attempt to keep the server up
 process.on("uncaughtException", function(e){
-    console.log("uncaughtException: %s [%s]", e, e.stack || e.stacktrace || "");
+    cerr("uncaughtException: %s [%s]", e, e.stack || e.stacktrace || "");
 });
