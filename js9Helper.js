@@ -33,6 +33,7 @@ var prefsfile = "js9Prefs.json";
 var fits2png = {};
 var analysis = {str:[], pkgs:[]};
 var envs = JSON.stringify(process.env);
+var plugins = [];
 
 // default options ... change as necessary in prefsfile
 var globalOpts = {
@@ -40,6 +41,10 @@ var globalOpts = {
     cmd:              "js9helper",
     analysisPlugins:  "./analysis-plugins",
     analysisWrappers: "./analysis-wrappers",
+    helperPlugins:    "./helper-plugins",
+    maxBinaryBuffer:  150*1024000, // exec buffer: good for 4096^2 64-bit image
+    maxTextBuffer:    200*1024,    // exec buffer: good for text
+    textEncoding:     "ascii",      // encoding for returned stdout from exec
     remoteMsgs:       1 // 0 => none, 1 => samehost, 2 => all
 };
 
@@ -192,12 +197,12 @@ function loadPreferences(prefsfile){
 }
 
 // load analysis plugin files, if available
-function loadAnalysisTasks(pluginsfile){
-    if( fs.existsSync(pluginsfile) ){
-	fs.readdir(pluginsfile, function(err, files){
+function loadAnalysisTasks(dir){
+    if( fs.existsSync(dir) ){
+	fs.readdir(dir, function(err, files){
 	    var i, jstr, pathname;
 	    for(i=0; i<files.length; i++){
-		pathname = globalOpts.analysisPlugins + "/" + files[i];
+		pathname = dir + "/" + files[i];
 		if( fs.existsSync(pathname) ){
 		    // only json files, please
 		    if( !pathname.match(/.json$/) ){
@@ -232,6 +237,34 @@ function addAnalysisTask(obj) {
     analysis.str.push("[" + JSON.stringify(obj) + "]");
 }
 
+// load user-defined plugins, if possible
+function loadHelperPlugins(dir){
+    if( fs.existsSync(dir) ){
+	fs.readdir(dir, function(err, files){
+	    var i, x, pathname, name;
+	    for(i=0; i<files.length; i++){
+		pathname = dir + "/" + files[i];
+		if( fs.existsSync(pathname) ){
+		    // only js files, please
+		    if( !pathname.match(/.js$/) ){
+			continue;
+		    }
+		    // name of message
+		    name = files[i].replace(/.js$/, "");
+		    try{ x = require(pathname); }
+		    catch(e){ console.log("warning: can't load: " + pathname); }
+		    if( x ){
+			plugins.push({name: name,
+				      sockio: x.sockio,
+				      http: x.http,
+				      httpList: x.httpList});
+		    }
+		}
+	    }
+	});
+    }
+}
+
 //
 // message callbacks
 //
@@ -239,9 +272,10 @@ function addAnalysisTask(obj) {
 // execCmd: exec a analysis wrapper function to run a command
 // this is the default callback for server-side analysis tasks
 function execCmd(io, socket, obj, cbfunc) {
-    var i, cmd, argstr, args;
+    var i, cmd, argstr, args, maxbuf;
     var myip = getHost(io, socket);
     var myid = obj.id;
+    var myrtype = obj.rtype || "binary";
     var myenv = JSON.parse(envs);
     // sanity check
     if( !obj.cmd ){
@@ -261,6 +295,18 @@ function execCmd(io, socket, obj, cbfunc) {
     } else if( globalOpts.dataPath ){
 	myenv.JS9_DATAPATH = envClean(globalOpts.dataPath);
     }
+    // set max buffer size
+    switch(myrtype){
+    case "text":
+    case "plot":
+    case "alert":
+	maxbuf = globalOpts.maxTextBuffer;
+	break;
+    default:
+	maxbuf = globalOpts.maxBinaryBuffer;
+	break;
+    }
+
     // the command string
     argstr = obj.cmd || "";
     // split arguments on spaces
@@ -281,23 +327,37 @@ function execCmd(io, socket, obj, cbfunc) {
     console.log("exec: %s [%s]", cmd, args.slice(1));
     // execute the analysis script with cmd arguments
     cproc.execFile(cmd, args.slice(1),
-		   { encoding: "ascii",
+		   { encoding: globalOpts.textEncoding,
 		     timeout: 0,
-		     maxBuffer: 2000*1024,
+		     maxBuffer: maxbuf,
 		     killSignal: "SIGTERM",
 		     cwd: null,
 		     env: myenv
 		   },
 		   // return from exec
 		   function(errcode, stdout, stderr) {
-		       var res={};
+		       var res={stdout: null, stderr: null};
 		       res.errcode = errcode;
 		       if( stdout ){
-			   res.stdout = stdout.toString();
+			   switch(myrtype){
+			   case "text":
+			   case "plot":
+			   case "alert":
+			       res.encoding = globalOpts.textEncoding;
+			       res.stdout = stdout.toString(res.encoding);
+			       break;
+			   case "binary":
+			       res.encoding = "buffer";
+			       res.stdout = stdout;
+			       break;
+			   default:
+			       res.encoding = "base64";
+			       res.stdout = stdout.toString(res.encoding);
+			       break;
+			   }
 		       }
 		       if( stderr ){
 			   res.stderr = stderr.toString();
-			   console.log("run: %s", res.stderr);
 		       }
 		       // send results back to browser
 		       if( cbfunc ){ cbfunc(res); }
@@ -335,6 +395,11 @@ function sendMsg(io, socket, obj, cbfunc) {
 	}
     }
 }
+
+
+//
+// protocol handlers
+//
 
 // socketio handler: field socket.io requests
 function socketioHandler(socket) {
@@ -454,6 +519,13 @@ function socketioHandler(socket) {
 	    if( cbfunc ){ cbfunc({stdout: s}); }
 	});
     }
+    // add plugins
+    for(i=0; i<plugins.length; i++){
+	if( plugins[i].sockio ){
+	    try{ plugins[i].sockio(io, socket); }
+	    catch(e){ console.log("warning: can't add %s", plugins[i].name); }
+	}
+    }
 }
 
 // httpd handler: field pseudo-socket.io http requests
@@ -492,12 +564,16 @@ function httpHandler(req, res){
     // generate object and run the cmd
     var docmd = function(cmd, jstr){
 	var a, i, j, m, obj;
-	// the constructed string is stringified json, so
-	// just parse it into an object
-	try{ obj = JSON.parse(jstr); }
-	catch(e){
-	    err("can't parse JSON object in http request: " + jstr); 
-	    return;
+	// the constructed string is stringified json, if it exists
+	// try to parse it into an object
+	if( jstr && jstr !== "null" ){
+	    try{ obj = JSON.parse(jstr); }
+	    catch(e){
+		err("can't parse JSON object in http request: " + jstr); 
+		return;
+	    }
+	} else {
+	    obj = {};
 	}
 	// check for id and set default
 	obj.id = obj.id || "JS9";
@@ -522,6 +598,22 @@ function httpHandler(req, res){
 		    if( m === cmd ){
 			execCmd(io, req, obj, cbfunc);
 			return;
+		    }
+		}
+	    }
+	    for(j=0; j<plugins.length; j++){
+		// simple plugin: name is the same as the plugin filename
+		if( plugins[j].http && (cmd === plugins[j].name) ){
+		    plugins[j].http(io, req, obj, cbfunc);
+		    return;
+		}
+		if( plugins[j].httpList ){
+		    // list of plugins, each with their own name
+		    for(i=0; i<plugins[j].httpList.length; i++){
+			if( cmd === plugins[j].httpList[i].name ){
+			    plugins[j].httpList[i].func(io, req, obj, cbfunc);
+			    return;
+			}
 		    }
 		}
 	    }
@@ -576,6 +668,9 @@ loadPreferences(prefsfile);
 
 // load analysis plugins
 loadAnalysisTasks(globalOpts.analysisPlugins);
+
+// load user-defined plugins
+loadHelperPlugins(globalOpts.helperPlugins);
 
 // start up http server
 app = http.createServer(httpHandler);

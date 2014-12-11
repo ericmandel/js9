@@ -1,7 +1,7 @@
 {
   "globalOpts": {"helperType":	     "nodejs",
   		 "helperPort":       2718, 
-		 "helperCGI":        "./cgi-bin/js9Helper.cgi",
+		 "helperCGI":        "./cgi-bin/js9/js9Helper.cgi",
 		 "fits2png":         true,
 		 "debug":	     0,
 		 "dataPath":	     "$HOME/Desktop:$HOME/data",

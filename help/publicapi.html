@@ -88,7 +88,7 @@ Choose from the following sections:
 <p>
 where:
 <ul>
-<li><b>url</b>: url, fitsy object, in-memory FITS
+<li><b>url</b>: url, fitsy object, in-memory FITS, or FITS blob
 <li><b>opts</b>: object containing image parameters
 <li><b>func</b>: optional function to call when image load is complete
 </ul>
@@ -190,6 +190,36 @@ until the Web page is fully loaded, since JS9 itself is not fully
 initialized until then. It is for this reason that <b>JS9.Preload()</b>
 generally is called using an onload routine tied to the Web page body.
   
+<p>
+<font size="+1"><b>&#9679; Get Load Status</b></font>
+<p> 
+<code><font size="+1">JS9.GetLoadStatus(id)</font></code>
+<p>
+where:
+<ul>
+<li><b>id</b>: the id of the file that was loaded into JS9
+</ul>
+This routine returns the status of the load process for this image. A
+status of "complete" means that the image is fully loaded. Other statuses
+include:
+<ul>
+<li> loading: the image is in process of loading
+<li> error: image did not load due to an error
+<li> other: another image is loaded into this display
+<li> none: no image is loaded into this display
+</ul>
+Thus, to check for image load, one can do this in python:
+<pre>
+    tfits = "foo.fits"
+    hdul = fits.open(tfits)
+    ...
+    j = JS9()
+    j.SetFITS(hdul, tfits)
+    while j.GetLoadStatus(tfits) != "complete":
+        time.sleep(0.1)
+    j.SetZoom(2)
+</pre>
+
 <hr><p>
 <font size="+1"><center><b>
 <a name="images">Working with Images</a>
@@ -294,33 +324,53 @@ explicitly changed parameter(s) used in a prior step.
 <p>
 <font size="+1"><b>&#9679; Re-read the data from a FITS file and re-display</b></font>
 <p>
-<code><font size="+1">JS9.RefreshImage(fitsobj, func)</font></code>
+<code><font size="+1">JS9.RefreshImage(input, func)</font></code>
 <p>
 where:
 <ul>
-<li><b>fitsobj</b>: new FITS object from which to take raw data for display
-<li><b>func</b>: optional function to call when image load is complete
+<li><b>input</b>: object, javascript array, typed array, or FITS blob
+<li><b>func</b>: optional function to call when image refresh is complete
 </ul>
 This routine can be used, for example, in laboratory settings where
 data is being gathered in real-time and the JS9 display needs to be
-refreshed periodically. The call takes a fits object as the second
-argument. It will refresh the display using the new data contained in that
-object.
-<p>
-The fits object should contains the following properties:
+refreshed periodically. The first <b>input</b> argument can be one of the following:
+<ul>
+<li> a javascript array containing raw data
+<li> a typed array containing raw data
+<li> a blob containing a FITS file
+<li> an object containing a required <b>image</b> property and any of the
+following optional properties:
 <ul>
 <li><b>naxis</b>: number of axes in the image
 <li><b>axis</b>: array of image dimensions for each axis or ...
 <li><b>naxis[n]</b> image dimensions of each axis (naxis1, naxis2, ...)
 <li><b>bitpix</b>: FITS bitpix value
 <li><b>head</b>: object containing header keywords as properties
-<li><b>image</b>: typed data array containing current image data
 <li><b>dmin</b>: data min (optional)
 <li><b>dmax</b>: data max (optional)
 </ul>
-The difference between <b>JS9.RefreshImage()</b> and <b>JS9.Load()</b> is
-that the former updates the data into an existing image, while the latter adds
-a completely new image to the display.
+</ul>
+When passing an object as <b>input</b>, the required <b>image</b>
+property containing the image data can be a javascript array or a
+typed data array. It also can contain a base64-encoded string
+containing an array. This latter can be useful when calling
+JS9.RefreshImage() via HTTP.
+<p>
+Ordinarily, when refreshing an image, there is no need to specify the
+optional axis, bitpix, or header properties.  But note that you actually
+can change these values on the fly, and JS9 will process the new data
+correctly.  Also, if you do not pass <b>dmin</b> or <b>dmax</b>, they
+will be calculated by JS9.
+<p>
+Note that you can pass a <b>blob</b> containing a complete FITS file to this
+routine. The blob will be passed to the underlying FITS-handler before
+being displayed. Thus, processing time is slightly greater than if you just
+pass the image data directly.
+<p>
+The main difference between <b>JS9.RefreshImage()</b>
+and <b>JS9.Load()</b> is that the former updates the data into an
+existing image, while the latter adds a completely new image to the
+display.
 <p>
 <font size="+1"><b>&#9679; Clear the image from the display and mark resources for release</b></font>
 <p>

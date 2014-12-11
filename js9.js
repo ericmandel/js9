@@ -410,8 +410,6 @@ JS9.Image = function(file, params, func){
 	this.displayImage("all");
 	// clear previous messages
 	this.clearMessage();
-	// load is complete
-	this.status.load = "complete";
 	// add to list of images
 	JS9.images.push(this);
 	// call function, if necessary
@@ -419,8 +417,6 @@ JS9.Image = function(file, params, func){
 	    try{ JS9.xeqByName(func, window, this); }
 	    catch(e){ JS9.error("in image onload callback", e, false); }
 	}
-	// done loading, reset wait cursor
-	JS9.waiting(false);
 	// plugin callbacks
 	for( pname in this.display.pluginInstances ){
 	    if( this.display.pluginInstances.hasOwnProperty(pname) ){
@@ -436,6 +432,10 @@ JS9.Image = function(file, params, func){
 	if( this.updateshapes ){
 	    this.updateShapes("regions", "all", "update");
 	}
+	// load is complete
+	this.status.load = "complete";
+	// done loading, reset wait cursor
+	JS9.waiting(false);
 	break;
     case "string":
 	// save source
@@ -455,8 +455,6 @@ JS9.Image = function(file, params, func){
 	// callback to fire when image is loaded (do this before setting src)
 	$(this.png.image).on("load", function(evt){
 	    var ppname, ppinst, ppopts;
-	    // done loading, reset wait cursor
-	    JS9.waiting(false);
 	    // populate the image data array from RGB values
 	    that.mkOffScreenCanvas();
 	    // populate the raw image data array from RGB values
@@ -475,8 +473,6 @@ JS9.Image = function(file, params, func){
 	    that.displayImage("all");
 	    // clear previous messages
 	    that.clearMessage();
-	    // load is complete
-	    that.status.load = "complete";
 	    // add to list of images
 	    JS9.images.push(that);
 	    // call function, if necessary
@@ -495,6 +491,10 @@ JS9.Image = function(file, params, func){
 		    }
 		}
 	    }
+	    // load is complete
+	    that.status.load = "complete";
+	    // done loading, reset wait cursor
+	    JS9.waiting(false);
 	    // debugging
 	    if( JS9.DEBUG ){
 		JS9.log("JS9 image: %s dims(%d,%d) min/max(%d,%d)",
@@ -1120,42 +1120,71 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     return this;
 };
 
-// read a (fitsy) HDU object and convert to image data
-JS9.Image.prototype.mkRawDataFromHDU = function(hdu, file){
-    var i, s, ui, dlen;
-    if( !hdu ){
-	JS9.error("no hdu found");
+// read input object and convert to image data
+JS9.Image.prototype.mkRawDataFromHDU = function(obj, file){
+    var i, s, ui, dlen, hdu;
+    var owidth, oheight, obitpix;
+    if( $.isArray(obj) || JS9.isTypedArray(obj) || obj instanceof ArrayBuffer ){
+	// javascript array or typed array
+	hdu = {image: obj};
+    } else if( typeof obj === "object" ){
+	// fitsy object
+	hdu = obj;
+    } else {
+	JS9.error("unknown or missing input for HDU creation");
     }
-    // handle (Fitsy) object containing raw image data immediately
+    // allow image to be passed in data property
+    if( hdu.data && !hdu.image ){
+	hdu.image = hdu.data;
+    }
+    // better have the image ...
     if( !hdu.image ){
 	JS9.error("data missing from JS9 FITS object");
     }
+    // quick check for 1D images (in case naxis is defined)
     if( hdu.naxis < 2 ){
 	JS9.error("can't image a FITS file with less than 2 dimensions");
     }
+    // look for a filename
     if( file ){
 	this.file = file;
-    } else {
+    } else if( hdu.filename ){
 	this.file = hdu.filename;
     }
     this.file = this.file || JS9.ANON;
-    // save id in case we have to change it for uniqueness
-    this.oid = this.file.split("/").reverse()[0];
-    // get a unique id for this image
-    this.id = JS9.getImageID(this.oid, this.display.id);
-    // fill in raw data directly from the fitsy object
+    // look for an id
+    if( !this.id ){
+	// save id in case we have to change it for uniqueness
+	this.oid = this.file.split("/").reverse()[0];
+	// get a unique id for this image
+	this.id = JS9.getImageID(this.oid, this.display.id);
+    }
+    // save old essential values, if possible (for use as defaults)
+    if( this.raw ){
+	owidth = this.raw.width;
+	oheight = this.raw.height;
+	obitpix = this.raw.bitpix;
+    }
+    // fill in raw data info directly from the fitsy object
     this.raw = {};
     this.raw.hdu = hdu;
     if( hdu.axis ){
 	this.raw.width  = hdu.axis[1];
 	this.raw.height = hdu.axis[2];
-    } else {
+    } else if( hdu.naxis1 && hdu.naxis2 ){
 	this.raw.width  = hdu.naxis1;
 	this.raw.height = hdu.naxis2;
+    } else if( owidth && oheight ){
+	this.raw.width  = owidth;
+	this.raw.height = oheight;
     }
-    this.raw.bitpix = hdu.bitpix;
+    if( hdu.bitpix ){
+	this.raw.bitpix = hdu.bitpix;
+    } else if( obitpix ){
+	this.raw.bitpix = obitpix;
+    }
     // if the data is base64-encoded, decode it now
-    if( hdu.base64 ){
+    if( hdu.encoding === "base64" ){
 	s = window.atob(hdu.image);
 	// make an arraybuffer to hold the bytes from the decoded string
 	hdu.image = new ArrayBuffer(s.length);
@@ -1165,8 +1194,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(hdu, file){
 	   ui[i] = s.charCodeAt(i);
 	}
     }
-    // convert string/array into a typed array
-    if( hdu.base64 || $.isArray(hdu.image) ){
+    // convert encoded string/array into a typed array
+    if( $.isArray(hdu.image) || hdu.image instanceof ArrayBuffer ){
 	switch(this.raw.bitpix){
 	case 8:
 	    this.raw.data = new Uint8Array(hdu.image);
@@ -1203,14 +1232,15 @@ JS9.Image.prototype.mkRawDataFromHDU = function(hdu, file){
 	this.raw.header.BITPIX = this.raw.bitpix;
     }
     this.raw.card = hdu.card;
+    // min and max data values
     if( hdu.dmin && hdu.dmax ){
 	this.raw.dmin = hdu.dmin;
 	this.raw.dmax = hdu.dmax;
     } else {
+	// find data min and max
 	this.raw.dmin = Number.MAX_VALUE;
 	this.raw.dmax = Number.MIN_VALUE;
 	dlen = this.raw.width * this.raw.height;
-	// find data min and max
 	for(i=0; i<dlen; i++) {
 	    this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
 	    this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
@@ -1735,7 +1765,7 @@ JS9.Image.prototype.displayImage = function(imode){
 };
 
 // refresh data for an existing image
-// input obj is a fitsy object
+// input obj is a fitsy object, array, typed array, etc.
 JS9.Image.prototype.refreshImage = function(obj, func){
     var key, dobin;
     this.binning.obin = this.binning.bin;
@@ -2257,6 +2287,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     obj.id = this.expandMacro("$id");
     obj.image = this.file;
     obj.fits = this.fitsFile;
+    obj.rtype = a.rtype;
     // For socket.io communication, we have flattened the message space so that
     // each analysis tool utilizes its own message. This allows easier addition
     // of non-exec'ed, in-line analysis. The cgi support utilizes the
@@ -2286,6 +2317,11 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	    }
 	}
 	robj.errcode = robj.errcode || 0;
+	// convert base64-encoded stdout, if necessary
+	if( robj.stdout && robj.encoding === "base64" ){
+	    robj.stdout = window.atob(robj.stdout);
+	}
+
 	// if a processing function was supplied, call it and don't display
 	if( func ){
 	    func(robj.stdout, robj.stderr, robj.errcode, a);
@@ -2314,7 +2350,12 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    alert(robj.stdout);
 		}
 		break;
-	    case "other":
+	    case "image":
+	        JS9.RefreshImage(robj.stdout, {display: that.display});
+		break;
+	    case "fits":
+	        JS9.Load(robj.stdout, {display: that.display});
+		break;
 	    case "none":
 		break;
 	    default:
@@ -2976,7 +3017,7 @@ JS9.Display = function(el){
 	Fitsy.options.waiting = JS9.waiting;
     }
     if( window.hasOwnProperty("Fitsy") ){
-	this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){ Fitsy.handleFITSFile(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
+	this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.Load(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
     }
     // add to list of displays
     JS9.displays.push(this);
@@ -8137,6 +8178,24 @@ JS9.loadPrefs = function(url, doerr) {
     }); 
 };
 
+// is this object a typed array?
+JS9.isTypedArray = function(obj) {
+    var type;
+    var types = {
+        "[object Int8Array]": true,
+        "[object Uint8Array]": true,
+        "[object Uint8ClampedArray]": true,
+        "[object Int16Array]": true,
+        "[object Uint16Array]": true,
+        "[object Int32Array]": true,
+        "[object Uint32Array]": true,
+        "[object Float32Array]": true,
+        "[object Float64Array]": true
+    };
+    type = Object.prototype.toString.call(obj);
+    return types.hasOwnProperty(type);
+};
+
 // ---------------------------------------------------------------------
 // global event handlers
 // ---------------------------------------------------------------------
@@ -9518,7 +9577,6 @@ JS9.mkPublic = function(name, s){
 
 JS9.mkPublic("CloseImage", "closeImage");
 JS9.mkPublic("DisplayImage", "displayImage");
-JS9.mkPublic("RefreshImage", "refreshImage");
 JS9.mkPublic("GetColormap", "getColormap");
 JS9.mkPublic("SetColormap", "setColormap");
 JS9.mkPublic("GetZoom", "getZoom");
@@ -9574,6 +9632,27 @@ JS9.mkPublic("Load", function(file, opts){
 	func = JS9.imageOpts.onload;
 	opts.onload = func;
     }
+    // handle blob containing FITS
+    if( file instanceof Blob ){
+	if( file.name ){
+	    // see if file is already loaded
+	    im = JS9.lookupImage(file.name, display);
+	    if( im ){
+		// display image, 2D graphics, etc.
+		im.displayImage("display");
+		im.clearMessage();
+		return;
+	    }
+	    // new file
+	    opts.filename = file.name;
+	}
+	if( !opts.filename ){
+	    opts.filename = JS9.ANON;
+	}
+	file.name = opts.filename;
+	Fitsy.handleFITSFile(file, opts, JS9.NewFitsImage);
+	return;
+    }
     // handle raw (fitsy) data objects
     if( typeof file === "object" ){
 	JS9.checkNew(new JS9.Image(file, opts, func));
@@ -9587,21 +9666,18 @@ JS9.mkPublic("Load", function(file, opts){
     if( file.slice(0,12) === "U0lNUExFICA9" ){
 	file = window.atob(file);
     }
-    // handle in-memory FITS by converting to a blob of a typed array
+    // handle in-memory FITS by converting to a blob
     if( file.slice(0,9) === "SIMPLE  =" ){
 	bytes = [];
 	for(i=0; i<file.length; i++){
 	    bytes[i] = file.charCodeAt(i);
 	}
 	blob = new Blob([new Uint8Array(bytes)]);
-	if( opts.filename ){
-	    blob.name = opts.filename;
-	} else if( opts.name ){
-	    blob.name = opts.name;
-	} else {
-	    blob.name = JS9.ANON;
+	if( !opts.filename ){
+	    opts.filename = JS9.ANON;
 	}
-	Fitsy.onFile([blob], opts, JS9.NewFitsImage);
+	blob.name = opts.filename;
+	Fitsy.handleFITSFile(blob, opts, JS9.NewFitsImage);
 	return;
     }
     // if this file is already loaded, just redisplay
@@ -9858,6 +9934,37 @@ JS9.mkPublic("Preload", function(arg1){
     default:
 	break;
     }
+});
+
+// refresh existing image
+JS9.mkPublic("RefreshImage", function(fits, func){
+    var obj = JS9.parsePublicArgs(arguments);
+    var im = JS9.getImage(obj.display);
+    var retry = function(hdu){
+	JS9.Image.prototype.refreshImage.call(im, hdu, obj.argv[1]);
+    };
+    if( im ){
+	if( fits instanceof Blob ){
+	    Fitsy.handleFITSFile(fits, Fitsy.options, retry);
+	    return;
+	}
+	JS9.Image.prototype.refreshImage.apply(im, obj.argv);
+    } else if( fits instanceof Blob ){
+	JS9.Load.apply(null, arguments);
+    }
+});
+
+// get status of a Load ("complete" means ... complete)
+JS9.mkPublic("GetLoadStatus", function(id){
+    var obj = JS9.parsePublicArgs(arguments);
+    var im = JS9.getImage(obj.display);
+    if( im ){
+	if( !id || (im.oid === id) ){
+	    return im.status.load;
+	}
+	return "other";
+    }
+    return "none";
 });
 
 // bring up the file menu and open selected file(s)

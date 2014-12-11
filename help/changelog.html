@@ -15,9 +15,12 @@
 <h3> Public Release 1.2 (TBD)</h3>
 <ul>
 <li> upgrade socket.io to the new Engine.IO-driven v1.x (specifically v1.2.1)
-<li> add http support to js9Helper.js so that messages could be sent via http
-<li> extend GetImageData() so that the returned data can be an array copy
+<li> add http support to js9Helper.js so messages can be sent via GET, POST
+<li> JS9.Load: accepts FITS files as blobs and base64-encoded strings
+<li> JS9.RefreshImage: accepts blobs (FITS files), js arrays and typed arrays
+<li> JS9.GetImageData(): returned data can be array or base64-encoded string
 <li> fix bug in arguments to public api routines sent via external message
+<li> fix bug in File List: clicking on same file multiple times now redisplays
 </ul>
 
 <h3> Public Release 1.1 (November 15, 2014)</h3>
