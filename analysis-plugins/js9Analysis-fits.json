@@ -7,7 +7,7 @@
   {"name"   : "macros",
    "title"  : "Display Macros", 
    "files"  : "*",
-   "action" : "js9Xeq macros $png $id $foo $sregions $bregions",
+   "action" : "js9Xeq macros $png $filename $id $foo $sregions $bregions",
    "hidden" : true,
    "rtype"  : "text"}
 ]
