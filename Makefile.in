@@ -426,7 +426,7 @@ clean:		FORCE
 			analysis-wrappers/*~ analysis-plugins/*~ \
 			plugins/*~ plugins/*/*~ \
 			astroem/*~ astroem/*.o astroem/zee.js/*.o 
-		$(RM) -rf autom4te.cache a.out.dSYM
+		$(RM) -rf autom4te.cache a.out.dSYM tmp/*
 
 distclean:	clean
 		$(RM) Makefile config.status config.cache config.log \

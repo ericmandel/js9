@@ -111,10 +111,11 @@ histplot)
 macros)
     echo "
     png:      [$1]
-    id:       [$2]
-    foo:      [$3] (not expanded)
-    sregions: [$4]
-    bregions: [$5]"
+    filename: [$2]
+    id:       [$3]
+    foo:      [$4] (not expanded)
+    sregions: [$5]
+    bregions: [$6]"
     exit 0
     ;;
 
