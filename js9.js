@@ -139,8 +139,10 @@ JS9.analOpts = {
     epattern: new RegExp("^(ERROR:[^\n]*)\n"),
     // location of datapath's param html file
     dpathURL: "params/datapath.html",
+    // prepend $JS9_DIR to relative fitsFile paths?
+    prependJS9Dir: true,
     // use as path to FITS data or use incoming path if not set
-    dataDir:	""
+    dataDir: null
 };
 
 // light window opts
@@ -2089,8 +2091,12 @@ JS9.Image.prototype.notifyHelper = function(){
 	    if( im && !im.fitsFile ){
 		s = r[1];
 		if( s !== "?" ){
-		    if( JS9.analOpts.dataDir === "" ){
+		    if( !JS9.analOpts.dataDir ){
 			im.fitsFile = s;
+			if( JS9.analOpts.prependJS9Dir &&
+			    im.fitsFile.charAt(0) !== "/" ){
+			    im.fitsFile = "$JS9_DIR/" + im.fitsFile;
+			}
 		    } else {
 			cc = s.lastIndexOf("/") + 1;
 			im.fitsFile = JS9.analOpts.dataDir + "/" + s.slice(cc);
@@ -2166,10 +2172,6 @@ JS9.Image.prototype.expandMacro = function(s, opts){
     cmd = s.replace(/\$(\w+)/g, function(m, t, o){
 	var i, r;
 	switch(t){
-	case "host":
-	    // node will fill this in on the server side
-	    r = m;
-	    break;
 	case "id":
 	    r = that.display.divjq.attr("id");
 	    break;
@@ -2331,8 +2333,8 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		if( robj.stderr ){
 		    s = robj.stderr;
 		} else {
-		    s = sprintf("ERROR: code %s, while executing %s", 
-				robj.errcode, a.name);
+		    s = sprintf("ERROR: while executing %s [%s]",
+				a.name, robj.errcode);
 		}
 		JS9.error(s, JS9.analOpts.epattern);
 	    }

@@ -25,6 +25,9 @@ JXPATH=""
 # taken from analysisWrappers in js9Prefs.json
 JDATAPATH=""
 
+# this is passed to scripts (it is the prefix to $filename in a command line)
+export JS9_DIR="$JROOT"
+
 # append path(s) where JS9 and analysis tools are located
 export PATH="$PATH:$JBIN:$JXPATH"
 
