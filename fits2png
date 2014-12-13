@@ -20,6 +20,12 @@ while [ x"$1" != x ]; do
 
 	-dim) shift
 	      XDIM=$1
+	      YDIM=$1
+	      shift
+	      continue;;
+
+	-dims) shift
+	      XDIM=$1
 	      YDIM=$2
 	      shift
 	      shift
