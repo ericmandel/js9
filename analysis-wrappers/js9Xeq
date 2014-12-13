@@ -16,9 +16,9 @@ if [ x"$QUERY_STRING" != x ]; then
   exec 2>&1
 fi
 
-# error handler: send to stderr(which will go to stdout for CGI)
+# error handler: send to stderr (which will go to stdout for CGI)
 error() {
-  echo "ERROR: $1" >&2
+  echo "ERROR: $*" >&2
   exit 1
 }
 
@@ -69,7 +69,6 @@ hist)
 radialplot)
     if [ $# = 0 ]; then
       error "funcnts filename [source] [bkgd] [$#]"
-      exit 1
     fi
     if [ $# -eq 1 ]; then
       funcnts -rG "$1" "$2" | funcnts2flot -title "$TITLE" -file "$1"
@@ -82,7 +81,6 @@ radialplot)
 histplot)
     if [ $# -lt 4 ]; then
       error "funhist filename norm width [column] [bin] [$#]"
-      exit 1
     fi
     ARGS=""
     FILE="$1"; shift;
@@ -108,6 +106,45 @@ histplot)
     exit 0
     ;;
 
+evfilter)
+    # required args
+    if [ "$#" -lt 3 ]; then
+	error "evfilter ifile ext filter [$*]"
+    fi
+    OTYPE="png"
+    IFILE="$1"; shift
+    EXT="$1"; shift
+    # remove spaces
+    FILTER=`echo $* | sed 's/ //g'`
+    # try to get a base name for output
+    IBASE=`basename $IFILE .fits`
+    if [ x"$IFILE" = x"$IBASE" ]; then
+	IBASE=`basename $IFILE .fits.gz`
+    fi
+    if [ x"$IFILE" = x"$IBASE" ]; then
+	IBASE="$IFILE"
+    fi
+    # make up output file base
+    EXPR="${FILTER}"_filt
+    OBASE=`echo ${IBASE}_${EXPR} | awk -F/ '{print $NF}' | sed 's/[,]/_/g'`
+    # create the filtered FITS file
+    if [ x$OTYPE = xfits ]; then
+	# create the filtered FITS file for analysis
+	funimage $IFILE"[EVENTS+,${FILTER}]" $OBASE.fits
+	# sending as binary will result in high bit being stripped! why??
+	# cat $OBASE.fits
+	base64 < $OBASE.fits
+    else
+	# create the filtered FITS file for analysis
+	funtable $IFILE"[EVENTS+,${FILTER}]" $OBASE.fits
+	# created the associated PNG file for display (using original ext)
+	fits2png $OBASE.fits"$EXT" $OBASE.png
+	# send back relative path to the PNG file
+	echo "${JS9_WORKDIR:-.}/$OBASE.png"
+    fi
+    exit 0
+    ;;
+
 macros)
     echo "
     png:      [$1]
@@ -121,7 +158,5 @@ macros)
 
 *)
     error "unknown function: $CMD"
-    exit 1
     ;;
 esac
-
