@@ -111,6 +111,9 @@ evfilter)
     if [ "$#" -lt 3 ]; then
 	error "evfilter ifile ext filter [$*]"
     fi
+    if [ x"${JS9_WORKDIR:-.}" = "x." ]; then
+	error "evfilter requires configuration of a temporary work directory"
+    fi
     OTYPE="png"
     IFILE="$1"; shift
     EXT="$1"; shift
@@ -125,8 +128,7 @@ evfilter)
 	IBASE="$IFILE"
     fi
     # make up output file base
-    EXPR="${FILTER}"_filt
-    OBASE=`echo ${IBASE}_${EXPR} | awk -F/ '{print $NF}' | sed 's/[,]/_/g'`
+    OBASE=`echo ${IBASE}_${FILTER} | awk -F/ '{print $NF}' | sed 's/[,]/_/g'`
     # create the filtered FITS file
     if [ x$OTYPE = xfits ]; then
 	# create the filtered FITS file for analysis
