@@ -358,8 +358,10 @@ static int ProcessCmd(char *cmd, char *args, int node, int tty)
       FinfoSetCurrent(finfo);
       if( node ) fprintf(stdout, "image\r");
       /* return the FITS file name, if possible */
-      fprintf(stdout, "%s %s ", 
-	      finfo->fname, finfo->fitsfile? finfo->fitsfile : "?");
+      fprintf(stdout, "%s %s %s ", 
+	      finfo->fname,
+	      finfo->fitsfile? finfo->fitsfile : "?",
+	      finfo->ofitsfile? finfo->ofitsfile : "?");
       /* client needs to know whether or not we have wcs */
       if( finfo->wcs ){
      	fprintf(stdout, "wcs %s\n", getradecsys(finfo->wcs));
