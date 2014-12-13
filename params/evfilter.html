@@ -1,0 +1,89 @@
+<html>
+<header>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+</header>
+
+<body>
+<title>Event (Column) Filter for PNG Files</title>
+
+<form id="evfilterForm" name="evfilterForm" class="js9AnalysisForm">
+
+<div class="linegroup">
+<span class="column_A">
+<b>Enter event filter</b>
+</span>
+<span class="column_R2L">
+<input type="text" class="text_R" id="filter" name="filter" value="" />
+</span>
+</div>
+
+<p>
+<input id="run" name="run" type="button" class="button" value="Run" onclick="return JS9.SubmitAnalysis(this);">
+
+<input id="close" name="Close" type="button" class="button" value="Close" 
+onclick="var form = $(this).closest('form');
+var dhtml = form.closest('.dhtmlwindow')[0];
+dhtml.close();
+return false;" style="float: right;">
+
+</form>
+
+<p>
+
+<div class="js9HelpText">
+
+<center><b>Help for Event Filter</b></center>
+
+<p>
+Table filtering allows you  to select rows from an FITS binary table
+(e.g., an X-ray event list) by checking each row against an expression
+involving the columns in the table. When a table is filtered, only
+valid rows satisfying these expressions are used to make the image.
+
+<p>
+A filter expression consists of an arithmetic or logical operation
+involving one or more column values from a table. Columns can be
+compared to other columns or to numeric constants. Standard JavaScript
+math functions can be applied to columns. JavaScript (or C) semantics
+are used when constructing expressions, with the usual precedence and
+associativity rules holding sway:
+<pre>
+  Operator                                Associativity
+  --------                                -------------
+  ()                                      left to right
+  !  (bitwise not) - (unary minus)        right to left
+  *  /                                    left to right
+  +  -                                    left to right
+  &lt; &lt;= &gt; &gt;=                               left to right
+  == !=                                   left to right
+  &  (bitwise and)                        left to right
+  ^  (bitwise exclusive or)               left to right
+  |  (bitwise inclusive or)               left to right
+  && (logical and)                        left to right
+  || (logical or)                         left to right
+  =                                       right to left
+</pre>
+For example, if energy and pha are columns in a table, 
+then the following are valid expressions:
+<pre>
+  pha > 1
+  energy == pha
+  pha > 1 && energy <= 2
+  max(pha,energy)>=2.5
+</pre>
+
+<p>
+In addition to the standard JavaScript/C syntax, filter expressions can make use of
+IRAF-style <b>range lists</b> which specify a range of values. The
+syntax requires that the column name be followed by an '=' sign, which
+is followed by a range expression of the form:
+<pre>
+  col = :v            # col <= v in range
+  col = v:            # col >= v in range
+  col = v1:v2         # v1 <= col <= v2 in range
+</pre>
+The v values above must be numeric constants. 
+</div>
+
+</body>
+</html>
