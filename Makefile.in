@@ -194,7 +194,10 @@ prefs:		FORCE
 
 saoprefs:	FORCE
 		@(echo "editing js9Prefs for SAO installations ..."; \
-		sed -f saoprefs.sed < js9Prefs.json > js9Prefs-sao.json)
+		sed -f saoprefs.sed < js9Prefs.json > js9Prefs-sao.json; \
+		echo "editing helper file for SAO installations ..."; \
+		./mkhelper "$(HELPER)" \
+		"$(CGIDIR)" "$(CGIURL)" "$(CGIXPATH)" js9Prefs-sao.json;)
 
 helper:		FORCE
 		@(./mkhelper "$(HELPER)" \
@@ -303,7 +306,7 @@ install-scripts: $(SCRIPTS) $(SCRIPTS2)
 	    echo "nothing to install for 'scripts' (no helper configured)"; \
 	  fi;)
 
-install-web:		install-webdirs install-webfiles
+install-web:		install-webdirs install-webfiles install-webcgi
 
 install-webdirs:	FORCE
 	@(echo "Installing web directories ..."; \
@@ -344,13 +347,16 @@ install-webfiles:	FORCE
 		fi; \
 		tar cf - $$i | (cd $(WEBDIR); tar xf -); \
 	    fi; \
-        done; \
-	if [ -d "$(CGIDIR)" ]; then \
+        done;)
+
+install-webcgi:	FORCE
+	@(if [ -d "$(CGIDIR)" ]; then \
+	    echo "Installing web CGI files ..."; \
 	    for i in $(CGIFILES) ; do\
 	        if [ -f $$i ]; then \
 		    if [ -d $$i ] ; then \
 		        echo "installing cgi directory: $$i" ; \
-	  	    elif [ -f $$i ] ; then \
+		    elif [ -f $$i ] ; then \
 		        echo "installing cgi file: $$i" ; \
 		    fi; \
 		    tar cf - $$i | (cd $(CGIDIR); tar xf -); \
@@ -373,7 +379,7 @@ install-webdata:	FORCE
 	    fi; \
          done;)
 
-install-sao:	saoprefs
+install-sao:	saoprefs install-webcgi
 		@(if [ -d "$(SAODIR)" ]; then \
 		    for i in $(SAOFILES) ; \
 		    do \

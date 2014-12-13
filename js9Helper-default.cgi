@@ -21,12 +21,15 @@ JFITS2PNG=""
 JPLUGINS=""
 # directory(/ies) where your CGI analysis tools are installed
 JXPATH=""
+# work directory
+JWORKDIR=""
 # directory(/ies) where your local data files are stored
 # taken from analysisWrappers in js9Prefs.json
 JDATAPATH=""
 
-# this is passed to scripts (it is the prefix to $filename in a command line)
+# these are passed to scripts
 export JS9_DIR="$JROOT"
+export JS9_WORKDIR="$JWORKDIR"
 
 # append path(s) where JS9 and analysis tools are located
 export PATH="$PATH:$JBIN:$JXPATH"
@@ -167,6 +170,10 @@ case $CGIkey in
 
     runAnalysis)
 	if [ -d "$JWRAPPERS" ]; then
+	    # cd to the work directory, if necessary
+	    if [ -d "$JS9_WORKDIR" ]; then
+		cd "$JS9_WORKDIR" || error "can't find work dir: $JS9_WORKDIR"
+	    fi
 	    OFS="$IFS"
 	    IFS=" "
 	    set -- $CGIcmd

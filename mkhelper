@@ -48,7 +48,12 @@ if [ x"$1" != x ]; then
 fi
 
 # js9Prefs.json: preference file
-IPREFS=js9Prefs.json
+if [ x"$1" != x ]; then
+    IPREFS="$1"
+    shift
+else
+    IPREFS=js9Prefs.json
+fi
 OPREFS=js9Prefs-cgi.json
 
 # js9Prefs.cgi: CGI helper script
@@ -73,7 +78,12 @@ if [ x"$jbin" != x ]; then
   X="$X;s#^JBIN=\".*\"#JBIN=\"$jbin\"#"
 fi
 
-jwrappers=`egrep '"analysisWrappers" *:' js9Prefs.json | awk -F: '{print $NF}' |sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
+jworkdir=`egrep '"workDir" *:' $IPREFS | awk -F: '{print $NF}' |sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
+if [ x"$jworkdir" != x ]; then
+  X="$X;s#^JWORKDIR=\".*\"#JWORKDIR=\"$jworkdir\"#"
+fi
+
+jwrappers=`egrep '"analysisWrappers" *:' $IPREFS | awk -F: '{print $NF}' |sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
 if [ x"$jwrappers" != x ]; then
   if [ x${jwrappers:0:1} != "x/" ]; then
     jwrappers="${jroot}/${jwrappers}"
@@ -81,7 +91,7 @@ if [ x"$jwrappers" != x ]; then
   X="$X;s#^JWRAPPERS=\".*\"#JWRAPPERS=\"$jwrappers\"#"
 fi
 
-jplugins=`egrep '"analysisPlugins" *:' js9Prefs.json | awk -F: '{print $NF}' | sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
+jplugins=`egrep '"analysisPlugins" *:' $IPREFS | awk -F: '{print $NF}' | sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
 if [ x"$jplugins" != x ]; then
   if [ x${jplugins:0:1} != "x/" ]; then
     jplugins="${jroot}/${jplugins}"
@@ -95,7 +105,7 @@ if [ x"$jplugins" != x ]; then
   fi
 fi
 
-jdatapath=`egrep '"dataPath" *:' js9Prefs.json | \
+jdatapath=`egrep '"dataPath" *:' $IPREFS | \
 awk -F: '
 {
   for(i=2; i<=NF; i++){
@@ -125,7 +135,7 @@ chmod +x $OCGISCR
 
 # if CGIURL was not specified or was specified as the default, use the prefs val
 if [ x"$CGIURL" = x ]; then
-  CGIURL=`egrep '"helperCGI" *:' js9Prefs.json | awk -F: '{print $NF}' | sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
+  CGIURL=`egrep '"helperCGI" *:' $IPREFS | awk -F: '{print $NF}' | sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
   if [ x"$CGIURL" != x ]; then
     if [ x${CGIURL:0:1} != "x/" ]; then
       CGIURL="${jroot}/${CGIURL}"
