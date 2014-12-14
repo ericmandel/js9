@@ -29,7 +29,6 @@ JDATAPATH=""
 
 # these are passed to scripts
 export JS9_DIR="$JROOT"
-export JS9_WORKDIR="$JWORKDIR"
 
 # append path(s) where JS9 and analysis tools are located
 export PATH="$PATH:$JBIN:$JXPATH"
@@ -171,7 +170,8 @@ case $CGIkey in
     runAnalysis)
 	if [ -d "$JWRAPPERS" ]; then
 	    # cd to the work directory, if necessary
-	    if [ -d "$JS9_WORKDIR" ]; then
+	    if [ -d "$JWORKDIR" ]; then
+		export JS9_WORKDIR="$JWORKDIR"
 		cd "$JS9_WORKDIR" || error "can't find work dir: $JS9_WORKDIR"
 	    fi
 	    OFS="$IFS"
