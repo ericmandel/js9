@@ -230,6 +230,8 @@ Thus, to check for image load, one can do this in python:
 <font size="+1"><b>&#9679; Get image handle for the current image</b></font>
 <p>
 <code><font size="+1">im = JS9.GetImage()</font></code>
+<p>
+returns:
 <ul>
 <li><b>im</b>: image handle
 </ul>
@@ -247,6 +249,11 @@ determine the current image for each call.
 where:
 <ul>
 <li><b>dflag</b>: specifies whether the data should also be returned
+</ul>
+<p>
+returns:
+<ul>
+<li><b>imgdata</b>: image data object
 </ul>
 <p>
 The image data object contains the following information:
@@ -558,6 +565,10 @@ where:
 <li><b>ipos</b>: image position object containing x and y image
 coordinate values
 <li><b>display</b>: boolean value specifying whether the info box display should be updated (default is true)
+</ul>
+returns:
+<ul>
+<li><b>valpos</b>: value/position object
 </ul>
 This routine determines the data value at a given image position
 and returns an object containing the following information:
