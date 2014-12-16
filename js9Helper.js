@@ -25,7 +25,8 @@ var http = require('http'),
     qs = require('querystring'),
     cproc  = require("child_process"),
     fs     = require("fs"),
-    uuid   = require('node-uuid');
+    uuid   = require('node-uuid'),
+    rmdir = require('rimraf');
 
 // internal variables
 var app, io;
@@ -34,6 +35,7 @@ var fits2png = {};
 var analysis = {str:[], pkgs:[]};
 var envs = JSON.stringify(process.env);
 var plugins = [];
+var cdir = process.cwd();
 
 // default options ... change as necessary in prefsfile
 var globalOpts = {
@@ -44,7 +46,9 @@ var globalOpts = {
     helperPlugins:    "./helper-plugins",
     maxBinaryBuffer:  150*1024000, // exec buffer: good for 4096^2 64-bit image
     maxTextBuffer:    200*1024,    // exec buffer: good for text
-    textEncoding:     "ascii",      // encoding for returned stdout from exec
+    textEncoding:     "ascii",     // encoding for returned stdout from exec
+    workDir:          "",        // top-level working directory for exec
+    rmWorkDir:        true,        // remove workdir on disconnect?
     remoteMsgs:       1 // 0 => none, 1 => samehost, 2 => all
 };
 
@@ -59,10 +63,9 @@ function getHost(io, req){
 	return req.client.conn.remoteAddress;
     }
     // http server
-    return req.headers['x-forwarded-for'] ||
-	   req.connection.remoteAddress   ||
-	   req.socket.remoteAddress       ||
-	   req.connection.socket.remoteAddress;
+    // http://stackoverflow.com/questions/19266329/node-js-get-clients-ip
+    return (req.headers['x-forwarded-for'] || '').split(',')[0] ||
+            req.connection.remoteAddress;
 }
 
 // http://stackoverflow.com/questions/6563885/socket-io-how-do-i-get-a-list-of-connected-sockets-clients
@@ -292,6 +295,7 @@ function loadHelperPlugins(dir){
 // this is the default callback for server-side analysis tasks
 function execCmd(io, socket, obj, cbfunc) {
     var i, cmd, argstr, args, maxbuf;
+    var myworkdir = null;
     var myip = getHost(io, socket);
     var myid = obj.id;
     var myrtype = obj.rtype || "binary";
@@ -304,6 +308,8 @@ function execCmd(io, socket, obj, cbfunc) {
     myenv.JS9_ID = envClean(myid);
     // host ip
     myenv.JS9_HOST = envClean(myip);
+    // JS9 base dir
+    myenv.JS9_DIR = cdir;
     // js9 cookie in the sending browser
     if( obj.cookie ){
 	myenv.HTTP_COOKIE = envClean(obj.cookie);
@@ -332,46 +338,56 @@ function execCmd(io, socket, obj, cbfunc) {
     args = argstr.split(" ");
     // remove dangerous characters
     for(i=0; i<args.length; i++){
-	args[i] = args[i].replace(/[`$]/g, "");
+	args[i] = args[i].replace(/[`&]/g, "");
     }
     // get commmand to execute
     if( args[0] === globalOpts.cmd ){
 	// handle fitshelper specially
 	cmd = args[0];
     } else {
-	// use a wrapper
+	// start in the appropriate work directory, if possible
+	if( socket.js9 && socket.js9.workDir ){
+	    myworkdir = socket.js9.workDir;
+	    // working directory relative to JS9 dir
+	    myenv.JS9_WORKDIR = myworkdir;
+	}
+	// construct wrapper
 	cmd = globalOpts.analysisWrappers + "/" + args[0];
+	// make path absolute in case we change directories
+	if( cmd.charAt(0) !== "/" ){
+	    cmd = cdir + "/" + cmd;
+	}
     }
     // log what we are about to do
     clog("exec: %s [%s]", cmd, args.slice(1));
     // execute the analysis script with cmd arguments
+    // NB: can't use exec because it's shell breaks, e.g. region command lines
     cproc.execFile(cmd, args.slice(1),
-		   { encoding: globalOpts.textEncoding,
+		   { encoding: "utf8",
 		     timeout: 0,
 		     maxBuffer: maxbuf,
 		     killSignal: "SIGTERM",
-		     cwd: null,
+		     cwd: myworkdir,
 		     env: myenv
 		   },
 		   // return from exec
 		   function(errcode, stdout, stderr) {
 		       var res={stdout: null, stderr: null};
-		       res.errcode = errcode;
+		       if( errcode ){
+			   res.errcode = errcode.errno || errcode.code;
+		       }
 		       if( stdout ){
 			   switch(myrtype){
 			   case "text":
 			   case "plot":
+			   case "png":
 			   case "alert":
 			       res.encoding = globalOpts.textEncoding;
 			       res.stdout = stdout.toString(res.encoding);
 			       break;
-			   case "binary":
-			       res.encoding = "buffer";
-			       res.stdout = stdout;
-			       break;
 			   default:
-			       res.encoding = "base64";
-			       res.stdout = stdout.toString(res.encoding);
+			       res.encoding = "binary";
+			       res.stdout = stdout;
 			       break;
 			   }
 		       }
@@ -438,6 +454,14 @@ function socketioHandler(socket) {
 	// only show disconnect for displays (not js9 msgs)
 	if( socket.js9 && socket.js9.displays ){
             clog("disconnect: %s (%s)",	myhost, socket.js9.displays);
+	    // clean up working directory
+	    if( socket.js9.workDir && globalOpts.rmWorkDir ){
+		rmdir(socket.js9.workDir, function(error){
+		    if( error ){
+			cerr("can't delete workDir: ", error);
+		    }
+		});
+	    }
 	}
     });
     // on displays: get the list of displays for this connection
@@ -450,6 +474,15 @@ function socketioHandler(socket) {
 	socket.js9 = {};
 	socket.js9.displays = obj.displays;
 	socket.js9.pageid = uuid.v4();
+	socket.js9.workDir = null;
+	if( fs.existsSync(globalOpts.workDir) ){
+	    socket.js9.workDir = globalOpts.workDir + "/" + socket.js9.pageid;
+	    try{ fs.mkdirSync(socket.js9.workDir, parseInt('0755',8)); }
+	    catch(e){
+		cerr("can't create workDir: ", e.message);
+		socket.js9.workDir = null;
+	    }
+	}
         clog("connect: %s (%s)", myhost, socket.js9.displays);
 	if( cbfunc ){ cbfunc(socket.js9.pageid); }
     });
@@ -555,7 +588,7 @@ function httpHandler(req, res){
     var cmd, gobj, s, jstr;
     var body = "";
     // return error into to browser
-    var err = function(s){
+    var htmlerr = function(s){
 	res.writeHead(400, s, {"Content-Type": "text/plain"});
 	res.end();
     };
@@ -583,7 +616,7 @@ function httpHandler(req, res){
 	if( jstr && jstr !== "null" ){
 	    try{ obj = JSON.parse(jstr); }
 	    catch(e){
-		err("can't parse JSON object in http request: " + jstr); 
+		htmlerr("can't parse JSON object in http request: " + jstr); 
 		return;
 	    }
 	} else {
@@ -631,7 +664,7 @@ function httpHandler(req, res){
 		    }
 		}
 	    }
-	    err("unknown command in " + req.method + " request: " + cmd);
+	    htmlerr("unknown command in " + req.method + " request: " + cmd);
 	    break;
 	}
     };
@@ -653,7 +686,7 @@ function httpHandler(req, res){
 	s = "obj=" + gobj.query;
 	try{ jstr = qs.parse(s).obj; }
 	catch(e){
-	    err("can't parse JSON object in http GET request: " + s); 
+	    htmlerr("can't parse JSON object in http GET request: " + s); 
 	    return;
 	}
 	docmd(cmd, jstr);
@@ -668,7 +701,7 @@ function httpHandler(req, res){
 	});
 	break;
     default:
-	err("unsupported method: " + req.method);
+	htmlerr("unsupported method: " + req.method);
 	return;
     }
 }
