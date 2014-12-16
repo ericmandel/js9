@@ -2064,12 +2064,13 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
 
 // notify the helper that a new image was displayed
 JS9.Image.prototype.notifyHelper = function(){
+    var basedir;
     var that = this;
     // notify the helper
     if( JS9.helper.connected && (this.file !== JS9.ANON) ){
 	JS9.helper.send("image", {"image": this.file},
         function(res){
-	    var rstr, r, s, cc, im;
+	    var rstr, r, s, t, cc, im;
 	    if( typeof res === "object" ){
 		// from node.js, we get an object with stdout and stderr
 		rstr = res.stdout;
@@ -2093,6 +2094,15 @@ JS9.Image.prototype.notifyHelper = function(){
 		if( s !== "?" ){
 		    if( !JS9.analOpts.dataDir ){
 			im.fitsFile = s;
+			// prepend base of png path if fits file has no path
+			// is this a bad "feature" in tpos??
+			if( im.fitsFile.indexOf("/") < 0 ){
+			    basedir = im.file.match( /.*\// );
+			    if( basedir ){
+				im.fitsFile =  basedir + im.fitsFile;
+			    }
+			}
+			// prepend JS9 macro for dir if fits is not absolute
 			if( JS9.analOpts.prependJS9Dir &&
 			    im.fitsFile.charAt(0) !== "/" ){
 			    im.fitsFile = "$JS9_DIR/" + im.fitsFile;
@@ -2105,17 +2115,21 @@ JS9.Image.prototype.notifyHelper = function(){
 			JS9.log("JS9 fitsFile: %s %s", im.file, im.fitsFile);
 		    }
 		}
+		t = r[2];
+		if( t !== "?" ){
+		    im.fitsExt = t.match(/\[.*\]/);
+		}
 	    }
-	    if( r[2] === "wcs" ){
+	    if( r[3] === "wcs" ){
 		that.helperCoords = "wcs";
-		that.params.wcssys0 = r[3];
+		that.params.wcssys0 = r[4];
 		if( !that.params.wcssys ){
 		    // set the wcs system
 		    that.setWCSSys(that.params.wcssys);
 		    // set the wcs units
 		    that.setWCSUnits(that.params.wcsunits);
 		}
-	    } else if( r[2] === "pix" ){
+	    } else if( r[3] === "pix" ){
 		that.helperCoords = "pix";
 		that.params.wcssys0 = that.params.lcs;
 		if( that.params.wcssys !== "image" ){
@@ -2183,6 +2197,9 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 		JS9.error("no FITS file for " + that.id);
 	    }
 	    r = that.fitsFile;
+	    break;
+	case "ext":
+	    r = that.fitsExt || "[]";
 	    break;
 	case "sregions":
 	    r = that.listRegions("source", false).replace(/\s+/g,"");
@@ -2319,11 +2336,6 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	    }
 	}
 	robj.errcode = robj.errcode || 0;
-	// convert base64-encoded stdout, if necessary
-	if( robj.stdout && robj.encoding === "base64" ){
-	    robj.stdout = window.atob(robj.stdout);
-	}
-
 	// if a processing function was supplied, call it and don't display
 	if( func ){
 	    func(robj.stdout, robj.stderr, robj.errcode, a);
@@ -2352,10 +2364,10 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    alert(robj.stdout);
 		}
 		break;
-	    case "image":
-	        JS9.RefreshImage(robj.stdout, {display: that.display});
-		break;
 	    case "fits":
+	        JS9.Load(robj.stdout, {display: that.display});
+		break;
+	    case "png":
 	        JS9.Load(robj.stdout, {display: that.display});
 		break;
 	    case "none":
@@ -4371,7 +4383,12 @@ JS9.Menubar = function(width){
 			    if( atasks[i].hidden ){
 				continue;
 			    }
-			    if( (atasks[i].files === "fits") && !im.fitsFile ){
+			    if( (atasks[i].files === "fits") &&
+				!im.fitsFile ){
+				continue;
+			    }
+			    if( (atasks[i].files === "png") &&
+				im.source !== "fits2png"){
 				continue;
 			    }
 			    s = atasks[i].title;
@@ -4609,11 +4626,17 @@ JS9.Helper.prototype.connect = function(type){
 		    }
 		});
 		that.socket.on("disconnect", function(){
-		    that.socket = null;
 		    that.connected = false;
 		    that.helper = false;
 		    if( JS9.DEBUG > 1 ){
 			JS9.log("JS9 helper: disconnect");
+		    }
+		});
+		that.socket.on("reconnect", function(){
+		    that.connected = true;
+		    that.helper = true;
+		    if( JS9.DEBUG > 1 ){
+			JS9.log("JS9 helper: reconnect");
 		    }
 		});
 		that.socket.on("msg", function(msg, mcb){
@@ -9690,6 +9713,8 @@ JS9.mkPublic("Load", function(file, opts){
 	im.clearMessage();
 	return;
     }
+    // save to get rid of whitespace
+    file = file.trim();
     // check file extension
     ext = file.split(".").pop().toLowerCase();
     if( ext === "png" ){
@@ -9961,7 +9986,7 @@ JS9.mkPublic("GetLoadStatus", function(id){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
-	if( !id || (im.oid === id) ){
+	if( !obj.argv[0] || (im.oid === obj.argv[0]) ){
 	    return im.status.load;
 	}
 	return "other";
