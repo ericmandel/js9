@@ -9424,6 +9424,11 @@ JS9.init = function(){
 		im = this.image;
 	    }
 	    if( im ){
+		// no args -> load
+		if( first > args.length ){
+		    return im.status.load;
+		}
+		// process specific status
 		for(i=first; i<args.length; i++){
 		    cmd = args[i].toLowerCase().trim();
 		    switch(cmd){
