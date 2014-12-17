@@ -54,7 +54,7 @@ function usage() {
 function JS9Msg(){
     this.cmd = "*";
     this.args = [];
-    this.id = "*";
+    this.id = "JS9";
     this.browserip = "*";
     this.multi = false;
     this.pageid = null;
