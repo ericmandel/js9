@@ -629,25 +629,12 @@ function httpHandler(req, res){
 	case "alive":
 	    if( cbfunc ){ cbfunc("OK"); }
 	    break;
-	case "runAnalysis":
-	    // exec the conversion task (via a wrapper function)
-	    execCmd(io, req, obj, cbfunc);
-	    break;
 	case "msg":
 	    // send a command from an external source to a JS9 browser
 	    sendMsg(io, req, obj, cbfunc);
 	    break;
 	default:
-	    for(j=0; j<analysis.pkgs.length; j++){
-		for(i=0; i<analysis.pkgs[j].length; i++){
-		    a = analysis.pkgs[j][i];
-		    m = a.xclass ? (a.xclass + ":" + a.name) : a.name;
-		    if( m === cmd ){
-			execCmd(io, req, obj, cbfunc);
-			return;
-		    }
-		}
-	    }
+	    // plugin messages: NB needs authentication!
 	    for(j=0; j<plugins.length; j++){
 		// simple plugin: name is the same as the plugin filename
 		if( plugins[j].http && (cmd === plugins[j].name) ){
