@@ -2791,7 +2791,7 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
 	    JS9.error("unknown scale: " + s);
 	}
     };
-    if( s0 ){
+    if( arguments.length ){
 	switch(arguments.length){
 	case 1:
 	    newscale(s0);
