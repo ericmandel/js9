@@ -10136,6 +10136,7 @@ JS9.mkPublic("PixToWCS", function(ix, iy){
     var im = JS9.getImage(obj.display);
     if( im ){
 	if( im.wcs > 0 ){
+	    // convert to 0-indexed units in wcslib
 	    s = JS9.pix2wcs(im.wcs, ix-1, iy-1).trim();
 	    arr = s.split(/ +/);
 	    if( (im.params.wcsunits === "sexagesimal") &&
@@ -10156,16 +10157,17 @@ JS9.Pix2WCS = JS9.PixToWCS;
 // convert wcs to image position
 // NB: returned image coordinates are 1-indexed
 JS9.mkPublic("WCSToPix", function(ra, dec){
-    var s, arr;
+    var s, x, y, arr;
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
 	if( im.wcs > 0 ){
-	    s = JS9.wcs2pix(im.wcs, ra, dec).trim();
-	    arr = s.split(/ +/);
-	    return {x: parseFloat(arr[0])+1, 
-		    y: parseFloat(arr[1])+1,
-		    str: s};
+	    arr = JS9.wcs2pix(im.wcs, ra, dec).trim().split(/ +/);
+	    // convert from 0-indexed units in wcslib
+	    x = parseFloat(arr[0]) + 1;
+	    y = parseFloat(arr[1]) + 1;
+	    s = sprintf("%f %f", x, y);
+	    return {x: x, y: y, str: s};
 	}
     }
     return null;
