@@ -610,7 +610,7 @@ function httpHandler(req, res){
     };
     // generate object and run the cmd
     var docmd = function(cmd, jstr){
-	var a, i, j, m, obj;
+	var i, j, obj;
 	// the constructed string is stringified json, if it exists
 	// try to parse it into an object
 	if( jstr && jstr !== "null" ){
