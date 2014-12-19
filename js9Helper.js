@@ -709,6 +709,9 @@ loadHelperPlugins(globalOpts.helperPlugins);
 // start up http server
 app = http.createServer(httpHandler);
 
+// never timeout, analysis requests can be very long
+app.setTimeout(0);
+
 // and connect with the socket.io server
 io = new Sockio(app);
 
