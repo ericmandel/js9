@@ -4616,12 +4616,12 @@ JS9.Helper.prototype.connect = function(type){
 	    url: this.sockurl,
 	    dataType: "script",
 	    success:  function(data, textStatus, jqXHR){
-		var ii;
-		var d = [];
+		var ii, d;
 		that.socket = io.connect(that.url);
 		that.socket.on("connect", function(){
 		    that.connected = true;
 		    that.helper = true;
+		    d = [];
 		    for(ii=0; ii<JS9.displays.length; ii++){
 			d.push(JS9.displays[ii].id);
 		    }
