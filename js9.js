@@ -1202,6 +1202,10 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, file){
     }
     // convert encoded string/array into a typed array
     if( $.isArray(hdu.image) || hdu.image instanceof ArrayBuffer ){
+	// flatten if necessary
+	if( $.isArray(hdu.image[0]) ){
+	    hdu.image = hdu.image.reduce(function(a, b){return a.concat(b);});
+	}
 	switch(this.raw.bitpix){
 	case 8:
 	    this.raw.data = new Uint8Array(hdu.image);
