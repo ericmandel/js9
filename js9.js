@@ -9552,6 +9552,14 @@ JS9.init = function(){
 	JS9.saostrtod = Astroem.saostrtod;
 	JS9.zscale = Astroem.zscale;
     }
+    //  for analysis forms, Enter should not Submit
+    $(document).on("keyup keypress", ".js9AnalysisForm", function(e){
+	var code = e.keyCode || e.which;
+	if( code === 13 ){
+	    e.preventDefault();
+	    return false;
+	}
+    });
     // scroll to top
     $(document).scrollTop(0);
 };
