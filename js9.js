@@ -1127,6 +1127,10 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, file){
     var i, s, ui, dlen, hdu;
     var owidth, oheight, obitpix;
     if( $.isArray(obj) || JS9.isTypedArray(obj) || obj instanceof ArrayBuffer ){
+	// flatten if necessary
+	if( $.isArray(obj[0]) ){
+	    obj = obj.reduce(function(a, b){return a.concat(b);});
+	}
 	// javascript array or typed array
 	hdu = {image: obj};
     } else if( typeof obj === "object" ){
