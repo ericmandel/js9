@@ -323,13 +323,11 @@
 	</ul>
     </div>
     <div id="status" class="tabcontent">
-      <b>Release 1.1</b> is a minor bug-fix release and also the beginning
-      of community-driven development. The js9Helper.js server was
-      re-factored and extended to make it easier to write third-party
-      back-ends (e.g. Perl).  The menubar now can control multiple
-      instances of JS9. A new JS9.AddDivs routine allows you to add
-      JS9 displays dynamically to the page. And after fixing a typo,
-      we can now display XMM data (good grief!)
+      <b>Release 1.2</b> adds support for the new
+      <a href="https://github.com/ericmandel/pyjs9">pyjs9</a> Python interface
+      via GET/POST support in the back-end Node.js server. Other improvements
+      include support for blobs, typed arrays, and base64-encoded strings
+      in JS9.Load() and JS9.RefreshImage(), and a few bug fixes.
       <p>
       JS9 works on Web browsers that support the HTML5 canvas element. It
       has been tested on the following browsers:
@@ -375,7 +373,7 @@
       download the <b>funtools</b> tar file.
       <br>
       <ul>
-      <li><a href="downloads/js9-1.1.tar.gz">js9 v1.1</a>
+      <li><a href="downloads/js9-1.2.tar.gz">js9 v1.2</a>
       <li><a href="downloads/pyjs9-1.0.tar.gz">pyjs9 v1.0</a>
       <li><a href="downloads/js9-data.tar.gz">js9 data</a>
       <li><a href="downloads/funtools-1.4.6.tar.gz">funtools</a>
