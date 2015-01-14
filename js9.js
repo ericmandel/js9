@@ -1781,7 +1781,14 @@ JS9.Image.prototype.refreshImage = function(obj, func){
     this.binning.obin = this.binning.bin;
     this.mkRawDataFromHDU(obj);
     dobin = (this.binning.obin !== this.binning.bin);
+    // use the previous image's section settings
+    var image = JS9.GetImage();
+    if( image ) {
+    this.mkSection(image.primary.sect.xcen, image.primary.sect.ycen,
+                   image.primary.sect.zoom);
+    } else {
     this.mkSection();
+    }
     this.displayImage("colors");
     // update shape layers if we changed the binning params
     if( dobin ){
