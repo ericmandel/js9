@@ -5,7 +5,7 @@
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
  * Contact: saord@cfa.harvard.edu
  *
- * Copyright (c) 2012 - 2014 Smithsonian Astrophysical Observatory
+ * Copyright (c) 2012 - 2015 Smithsonian Astrophysical Observatory
  *
  * Utilizes: jquery.js
  *           jquery.contextMenu.js
@@ -34,7 +34,7 @@ if( JS9 && (typeof JS9 !== "object" || JS9.NAME) ){
 var JS9 = {};
 JS9.NAME = "JS9";		// The name of this namespace
 JS9.VERSION = "1.1";		// The version of this namespace
-JS9.COPYRIGHT = "Copyright (c) 2012-2014 Smithsonian Institution";
+JS9.COPYRIGHT = "Copyright (c) 2012-2015 Smithsonian Institution";
 
 // use the module augmentation pattern, passing in our already-defined module
 JS9 = (function(JS9){
@@ -1781,7 +1781,7 @@ JS9.Image.prototype.refreshImage = function(obj, func){
     this.binning.obin = this.binning.bin;
     this.mkRawDataFromHDU(obj);
     dobin = (this.binning.obin !== this.binning.bin);
-    this.mkSection();
+    // this.mkSection();
     this.displayImage("colors");
     // update shape layers if we changed the binning params
     if( dobin ){
