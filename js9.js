@@ -9695,7 +9695,6 @@ JS9.mkPublic("Load", function(file, opts){
 	if( !opts.filename ){
 	    opts.filename = JS9.ANON;
 	}
-	file.name = opts.filename;
 	Fitsy.handleFITSFile(file, opts, JS9.NewFitsImage);
 	return;
     }
