@@ -1777,11 +1777,19 @@ JS9.Image.prototype.displayImage = function(imode){
 // refresh data for an existing image
 // input obj is a fitsy object, array, typed array, etc.
 JS9.Image.prototype.refreshImage = function(obj, func){
-    var key, dobin;
+    var key, oxcen, oycen, ozoom, dobin;
+    // save section in case it gets reset
+    oxcen = this.primary.sect.xcen;
+    oycen = this.primary.sect.ycen;
+    ozoom = this.primary.sect.zoom;
+    // save old binning
     this.binning.obin = this.binning.bin;
+    // generate new data
     this.mkRawDataFromHDU(obj);
     dobin = (this.binning.obin !== this.binning.bin);
-    // this.mkSection();
+    // restore section
+    this.mkSection(oxcen, oycen, ozoom);
+    // display new image data with old section
     this.displayImage("colors");
     // update shape layers if we changed the binning params
     if( dobin ){
