@@ -1,5 +1,6 @@
 
 var Module = {
-    'noExitRuntime': true
+    'noExitRuntime': true,
+    'memoryInitializerPrefixURL': './js/'
 };
 
