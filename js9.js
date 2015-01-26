@@ -2837,11 +2837,16 @@ JS9.Image.prototype.zscale = function(setvals){
 	return this;
     }
     rawdata = this.raw.data;
+    // get size of raw image data in bytes
     size = rawdata.length * rawdata.BYTES_PER_ELEMENT;
+    // allocate this much space in the emscripten heap (check limits)
     try{ ptr = Module._malloc(size); }
     catch(e){ JS9.error("image too large for zscale"); }
+    // get a uint8 view to the space allocated in the emscripten heap
     heapptr= new Uint8Array(Module.HEAPU8.buffer, ptr, size);
+    // copy the raw data to the heap using (using a uint8 view of the data)
     heapptr.set(new Uint8Array(rawdata.buffer));
+    // call the zscale routine
     s = JS9.zscale(heapptr.byteOffset,
 		   this.raw.width, 
 		   this.raw.height,
@@ -2849,7 +2854,9 @@ JS9.Image.prototype.zscale = function(setvals){
 		   this.params.zscalecontrast,
 		   this.params.zscalesamples,
 		   this.params.zscaleline);
+    // free empscripten heap space
     Module._free(heapptr.byteOffset);
+    // clean up return values
     vals = s.trim().split(" ");
     // save z1 and z2
     this.params.z1 = parseFloat(vals[0]);
