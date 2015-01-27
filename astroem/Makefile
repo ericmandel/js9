@@ -7,7 +7,7 @@ JS9	= ..
 
 # emcc compiler flags
 # NB: -O2 is the recommended optimization (not -O3, as of 1/27/2015)
-# can't use mem file because we don't know where the js directory resides
+# can't use mem file: we don't know where the mem file will resides
 EMFLAGS	= 	-O2 --memory-init-file 0
 
 # support zscale up to 2048 * 2048 * 4-byte images
@@ -81,6 +81,7 @@ install:	FORCE
 		      echo "also installing $(ASTROEMEXTRA): $(JS9)/js"; \
 		      cp -p $(ASTROEMEXTRA) $(JS9)/js/.; \
 		    fi; \
+		    cd .. && $(MAKE) js9support; \
 		  else \
 		    echo "could not find JS9 directory: $(JS9)"; \
 		  fi;)
