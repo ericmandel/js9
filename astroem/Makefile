@@ -1,12 +1,12 @@
 # output files
 ASTROEM	=	astroem.js
-ASTROEMEXTRA =	astroem.raw.js.mem
+# ASTROEMEXTRA =	astroem.raw.js.mem
 
 # where is JS9 directory
 JS9	= ..
 
 # emcc compiler flags
-EMFLAGS	= 	-O3
+EMFLAGS	= 	-O3 --memory-init-file 0
 
 # support zscale up to 2048 * 2048 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=33554432
@@ -75,8 +75,10 @@ install:	FORCE
 		@(if [ -d $(JS9)/js ]; then \
 		    echo "installing $(ASTROEM) in JS9 directory: $(JS9)/js"; \
 		    cp -p $(ASTROEM) $(JS9)/js/.; \
-		    echo "also installing $(ASTROEMEXTRA): $(JS9)/js"; \
-		    cp -p $(ASTROEMEXTRA) $(JS9)/js/.; \
+		    if [ x"$(ASTROEMEXTRA)" != x ]; then \
+		      echo "also installing $(ASTROEMEXTRA): $(JS9)/js"; \
+		      cp -p $(ASTROEMEXTRA) $(JS9)/js/.; \
+		    fi; \
 		  else \
 		    echo "could not find JS9 directory: $(JS9)"; \
 		  fi;)
