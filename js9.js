@@ -2831,7 +2831,7 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
 
 // the zsale calculation
 JS9.Image.prototype.zscale = function(setvals){
-    var s, rawdata, size, buf, vals;
+    var s, rawdata, buf, vals;
     // sanity check
     if( !JS9.zscale || !this.raw || !this.raw.data ){
 	return this;
