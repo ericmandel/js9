@@ -6,7 +6,9 @@ ASTROEM	=	astroem.js
 JS9	= ..
 
 # emcc compiler flags
-EMFLAGS	= 	-O3 --memory-init-file 0
+# NB: -O2 is the recommended optimization (not -O3, as of 1/27/2015)
+# can't use mem file because we don't know where the js directory resides
+EMFLAGS	= 	-O2 --memory-init-file 0
 
 # support zscale up to 2048 * 2048 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=33554432
