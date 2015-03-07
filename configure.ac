@@ -132,16 +132,14 @@ if test x"$havelib" = x1 ; then
       FUNTOOLSINC=$FUNTOOLSBASE/include
       AC_MSG_RESULT(yes ($FUNTOOLSBASE))
   else
-    AC_MSG_RESULT(no: back-end programs will not be built)
-    USEHELPER="no"
+    AC_MSG_RESULT(no)
   fi
 else
-  AC_MSG_RESULT(no: back-end programs will not be built)
-  USEHELPER="no"
+  AC_MSG_RESULT(no)
 fi
 # make up the final switches
 if test x$FUNTOOLSINC != x; then
-  FUNINC="-I$FUNTOOLSINC"
+  FUNINC="-I$FUNTOOLSINC -DHAVE_FUNTOOLS"
 fi
 if test x$FUNTOOLSLIB != x; then
   FUNLIB="-L $FUNTOOLSLIB -lfuntools"
@@ -149,6 +147,49 @@ fi
 # results from funtools search
 AC_SUBST(FUNINC)
 AC_SUBST(FUNLIB)
+
+# check for external cfitsio libraries
+AC_MSG_CHECKING(for cfitsio)
+AC_ARG_WITH(cfitsio,
+    [ --with-cfitsio=<path> cfitsio directory e.g. /soft/cfitsio], havelib=1, havelib=0)
+if test x"$havelib" = x1 ; then
+  CFITSIOBASE=$withval
+  # make sure essential libraries are present
+  if test -r $CFITSIOBASE/lib$LSUFFIX/libcfitsio.a -o \
+	    -r $CFITSIOBASE/lib$LSUFFIX/libcfitsio.so -o \
+	    -r $CFITSIOBASE/lib$LSUFFIX/libcfitsio.dylib; then
+      CFITSIOLIB=$CFITSIOBASE/lib$LSUFFIX
+      CFITSIOINC=$CFITSIOBASE/include
+      AC_MSG_RESULT(yes ($CFITSIOBASE))
+  elif test -r $CFITSIOBASE/lib/libcfitsio.a -o \
+	    -r $CFITSIOBASE/lib/libcfitsio.so -o \
+	    -r $CFITSIOBASE/lib/libcfitsio.dylib; then
+      CFITSIOLIB=$CFITSIOBASE/lib
+      CFITSIOINC=$CFITSIOBASE/include
+      AC_MSG_RESULT(yes ($CFITSIOBASE))
+  else
+    AC_MSG_RESULT(no)
+  fi
+else
+  AC_MSG_RESULT(no)
+fi
+# make up the final switches
+if test x$CFITSIOINC != x; then
+  CFITSIOINC="-I$CFITSIOINC -DHAVE_CFITSIO"
+fi
+if test x$CFITSIOLIB != x; then
+  CFITSIOLIB="-L $CFITSIOLIB -lcfitsio"
+  CFITSIOOBJS="jsfitsio.o"
+fi
+# results from cfitsio search
+AC_SUBST(CFITSIOINC)
+AC_SUBST(CFITSIOLIB)
+AC_SUBST(CFITSIOOBJS)
+
+if test x"${CFITSIOINC}${FUNINC}" = x; then
+  AC_MSG_RESULT(no funtools or cfitsio: back-end programs will not be built)
+  USEHELPER="no"
+fi
 
 # check for external png libraries
 AC_MSG_CHECKING(for png)

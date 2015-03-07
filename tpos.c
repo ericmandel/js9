@@ -1,6 +1,14 @@
-#include <png.h>
+#if HAVE_CFITSIO
+#include <fitsio.h>
+#include "./astroem/jsfitsio.h"
+#include <ctype.h>
+#define FT_CARDLEN 80
+#elif HAVE_FUNTOOLS
 #include <funtoolsP.h>
+#endif
+#include <png.h>
 #include <swap.h>
+#include <errno.h>
 
 #if HAVE_CONFIG_H
 #include <conf.h>
@@ -26,12 +34,16 @@ extern int optind;
 #endif
 
 #define ABS(x) ((x)<0?(-x):(x))
+#define DEF_EVTLIST "EVENTS STDEVT"
 
 /* NB: if you change the format of the png file, update the version number:
  * update major version number for an incompatible change
  * update minor version number for a backwards-compatible change
  */
-#define JS9_PROTOCOL "1.0"
+/* 1.0 (js9 1.0): send header params in a javascript object (w/o comments) */
+/* 1.1 (js9 1.3): send header as a string of cards (including comments)
+   NB: js9 1.3 will read either protocol */
+#define JS9_PROTOCOL "1.1"
 /* endian: little or big */
 #define JS9_ENDIAN "little"
 /* 3 bytes per png pixel. NB: RGBA is bad because of precalculated alpha */
@@ -48,9 +60,6 @@ typedef struct optinforec{
   char *fitsname;
   char *fitsheader;
 } *Optinfo, OptinfoRec;
-
-/* writePNG can be made funtools-clean by unsetting this variable */
-#define GIO_IN_PNG 1
 
 /* scat -- append a string onto another, reallocating space as needed */
 static void scat(char *str, char **ostr)
@@ -73,24 +82,11 @@ static void scat(char *str, char **ostr)
     olen += SZ_LINE;
   }
   if( blen == 0 )
-    *ostr = (char *)xcalloc(olen, sizeof(char));
+    *ostr = (char *)calloc(olen, sizeof(char));
   else
-    *ostr = (char *)xrealloc(*ostr, olen);
+    *ostr = (char *)realloc(*ostr, olen);
   strcat(*ostr, str);
 }
-
-/* generate JS9-specific parameters to add to header */
-static char *_js9Params=NULL;
-static char *js9Params()
-{
-  char tbuf[SZ_LINE];
-  snprintf(tbuf, SZ_LINE-1, "\"js9Protocol\":%s, ", JS9_PROTOCOL);
-  scat(tbuf, &_js9Params);
-  snprintf(tbuf, SZ_LINE-1, "\"js9Endian\":\"%s\", ", JS9_ENDIAN);
-  scat(tbuf, &_js9Params);
-  return _js9Params;
-}
-
 
 /*
  * image is width x height buffer containing int data of size COLOR_CHANNELS
@@ -123,20 +119,16 @@ int writePNG(FILE *ofp, void *image, int width, int height, Optinfo optinfo)
    */
   png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
   if (png_ptr == NULL){
-#if GIO_IN_PNG
-    gerror(stderr, "can't create PNG write structure");
-#endif
-    return 1;
+    fprintf(stderr, "ERROR: can't create PNG write structure");
+    exit(1);
   }
   
   /* Allocate/initialize the image information data.  REQUIRED */
   info_ptr = png_create_info_struct(png_ptr);
   if (info_ptr == NULL){
     png_destroy_write_struct(&png_ptr,  NULL);
-#if GIO_IN_PNG
-    gerror(stderr, "can't create PNG info structure");
-#endif
-    return 1;
+    fprintf(stderr, "ERRORL can't create PNG info structure");
+    exit(1);
   }
   
   /* Set error handling.  REQUIRED if you aren't supplying your own
@@ -145,10 +137,8 @@ int writePNG(FILE *ofp, void *image, int width, int height, Optinfo optinfo)
   if (setjmp(png_jmpbuf(png_ptr))){
     /* If we get here, we had a problem writing the file */
     png_destroy_write_struct(&png_ptr, &info_ptr);
-#if GIO_IN_PNG
-    gerror(stderr, "PNG error (via setjmp)");
-#endif
-    return 1;
+    fprintf(stderr, "ERROR: PNG error (via setjmp)");
+    exit(1);
   }
   
   /* Set up the output control if you are using standard C streams */
@@ -201,37 +191,108 @@ int writePNG(FILE *ofp, void *image, int width, int height, Optinfo optinfo)
   /* It is REQUIRED to call this to finish writing the rest of the file */
   png_write_end(png_ptr, info_ptr);
   
+  // clean up 
+  png_destroy_write_struct(&png_ptr, &info_ptr);
+
   return 0;
 }
 
+// from fitsy/cardpar.c
+int getCardType(char *card){
+  int i=0, j=0;
+  int type=0;
+  if ( !strncmp(card, "HISTORY ",  8) || !strncmp(card, "COMMENT ", 8)
+       || !strncmp(card, "CONTINUE ", 9)
+       || !strncmp(card, "        ",  8) || card[8] != '=' ) {
+    type  = 'c';
+  } else {
+    if ( card[10] == '\'' ) {
+      type = 's';
+    } else {
+      type = 'i';
+      for(i = 10; i< FT_CARDLEN; i++ )
+	if ( card[i] != ' ' )
+	  break;
+      if ( ( card[i] == 'T' || card[i] == 'F' ||
+	     card[i] == 't' || card[i] == 'f' ) )
+	   type = 'l';
+      for(j=0; i<FT_CARDLEN; i++, j++ ) {
+	if ( card[i] == '/' ) break;
+	if ( card[i] == '.' ) type = 'r';
+      }
+    }
+  }
+  return type;
+}
+
+#if HAVE_CFITSIO
+int nowhite (char *c, char *cr)
+{
+  char *cr0;    /* initial value of cr */
+  int n;        /* the number of characters */
+
+  /* skip leading white space */
+  while(*c && isspace((int)*c))
+    c++;
+  /* copy up to the null */
+  cr0 = cr;
+  while(*c)
+    *cr++ = *c++;
+  n = cr - cr0;   /* the number of characters */
+  *cr-- = '\0';   /* Null and point to the last character */
+  /* remove trailing white space */
+  while( n && isspace((int)*cr) ){
+    *cr-- = '\0';
+    n--;
+  }
+  return(n);
+}
+
+void errchk(int status) {
+    if (status){
+      fits_report_error(stderr, status);
+      exit(status);
+    }
+}
+#endif
+
 int main(int argc, char **argv)
 {
-  int c, i, j, got, dtype, args, bitpix, jsonlen, len, istart;
-  int idim1, idim2, odim1, odim2, pad;
-  size_t totbytes;
+  int c, i, j, got, args, jsonlen, istart;
+  int odim1, odim2, blen, pad;
+  int idim1=0, idim2=0, bitpix=0, ncard=0;
+  size_t totbytes, dlen;
   int verbose=0;
-  char *buf=NULL;
-  char *s;
   char tbuf[SZ_LINE];
-  char tbuf2[SZ_LINE];
-  char tbuf3[SZ_LINE];
-  char tbuf4[SZ_LINE];
+  char *buf=NULL;
   char *jsonheader=NULL;
   char *iname=NULL, *oname=NULL;
-  Fun ifun=NULL, tfun=NULL;
+  char *evtlist = NULL;
   FILE *ofp=NULL;
   Optinfo optinfo;
-
-  /* exit on gio errors */
-  setgerror(2);
+#if HAVE_CFITSIO
+  int status = 0;
+  int hdutype;
+  int maxcard, morekeys;
+  void *dbuf;
+  char card[81];
+  fitsfile *fptr=NULL, *ofptr=NULL;
+#elif HAVE_FUNTOOLS
+  char *s=NULL;
+  int dtype;
+  Fun ifun=NULL, tfun=NULL;
+#endif
 
   /* we want the args in the same order in which they arrived, and
      gnu getopt sometimes changes things without this */
   putenv("POSIXLY_CORRECT=true");
 
   /* process switch arguments */
-  while ((c = getopt(argc, argv, "v")) != -1){
+  while ((c = getopt(argc, argv, "e:v")) != -1){
     switch(c){
+    case 'e':
+      evtlist = optarg;
+      break;
     case 'v':
       verbose++;
       break;
@@ -240,21 +301,35 @@ int main(int argc, char **argv)
 
   /* check for required arguments */
   args = argc - optind;
-  if( args < 2 )
-    gerror(stderr, "usage: %s iname oname\n", argv[0]);
+  if( args < 2 ){
+    fprintf(stderr, "usage: %s iname oname\n", argv[0]);
+    exit(1);
+  }
   iname = argv[optind++];
   oname = argv[optind++];
 
+  // ensure a reasonable list of binary table extensions
+  if( !evtlist ){
+    evtlist = DEF_EVTLIST;
+  }
+
   /* optional info */
-  if( !(optinfo = (Optinfo)xcalloc(sizeof(OptinfoRec), 1)) ){
-    gerror(stderr, "can't allocate optional info rec\n");
+  if( !(optinfo = (Optinfo)calloc(sizeof(OptinfoRec), 1)) ){
+    fprintf(stderr, "ERROR: can't allocate optional info rec\n");
+    exit(1);
   }
 
   /* open the input FITS file */
+#if HAVE_CFITSIO
+  fptr = openFITSFile(iname, evtlist, &hdutype, &status);
+  errchk(status);
+#elif HAVE_FUNTOOLS
   if( !(ifun = FunOpen(iname, "r", NULL)) ){
-    gerror(stderr, "could not open input FITS file: %s (%s)\n", 
-	   iname, strerror(errno));
+    fprintf(stderr, "ERROR could not open input FITS file: %s (%s)\n", 
+	    iname, strerror(errno));
+    exit(1);
   }
+#endif
 
   /* save the input filename in the png file */
   optinfo->fitsname = iname;
@@ -263,88 +338,77 @@ int main(int argc, char **argv)
   if( !strcmp(oname, "-") || !strcmp(oname, "stdout") ){
     ofp = stdout;
   } else if( !(ofp = fopen(oname, "w")) ){
-    gerror(stderr, "could not create output PNG file: %s (%s)\n", 
-	   oname, strerror(errno));
+    fprintf(stderr, "ERROR: could not create output PNG file: %s (%s)\n", 
+	    oname, strerror(errno));
+    exit(1);
   }
 
+#if HAVE_CFITSIO
+  switch(hdutype){
+  case IMAGE_HDU:
+    // get image array
+    dbuf = getImageToArray(fptr, NULL, NULL, 
+			   &idim1, &idim2, &bitpix, &status);
+    errchk(status);
+    fits_get_hdrspace(fptr, &maxcard, &morekeys, &status);
+    errchk(status);
+    ofptr = fptr;
+    break;
+  default:
+    ofptr = filterTableToImage(fptr, NULL, NULL, NULL, NULL, &status);
+    errchk(status);
+    // get image array
+    dbuf = getImageToArray(ofptr, NULL, NULL, 
+			   &idim1, &idim2, &bitpix, &status);
+    errchk(status);
+    fits_get_hdrspace(ofptr, &maxcard, &morekeys, &status);
+    errchk(status);
+    break;
+  }
+
+#elif HAVE_FUNTOOLS
   /* copy the input fits header into a FITS image header */
-  if( !(tfun = (Fun)xcalloc(1, sizeof(FunRec))) ){
-      gerror(stderr, "could not create tfun struct\n");
+  if( !(tfun = (Fun)calloc(1, sizeof(FunRec))) ){
+      fprintf(stderr, "ERROR: could not create tfun struct\n");
+      exit(1);
   }
   _FunCopy2ImageHeader(ifun, tfun);
   /* and save for storage in the png file */
   optinfo->fitsheader = (char *)tfun->header->cards;
 
-  /* get image parameters. its safe to do this before callingimage get
+  /* get image parameters. its safe to do this before calling image get
      so long as we don't change bitpix before that call */
   FunInfoGet(ifun,
 	     FUN_SECT_BITPIX,  &bitpix,
 	     FUN_SECT_DIM1,    &idim1,
 	     FUN_SECT_DIM2,    &idim2,
 	     0);
+#endif
 
   /* convert FITS header into a json string */
-  for(*tbuf3='\0', i=1; ;i++){
-    if( (s = FunParamGets(tfun, NULL, i, NULL, &dtype)) ){
-      snprintf(tbuf, SZ_LINE-1, "%8.8s", s);
-      nowhite(tbuf, tbuf);
-      nowhite((char *)ft_cardget((FITSCard)s), tbuf2);
-      len = strlen(tbuf2);
-      /* pre-processing of values */
-      switch(dtype){
-      case 'l':
-	if( strchr(tbuf2, 'F') ){
-	  strcpy(tbuf2, "false");
-	} else {
-	  strcpy(tbuf2, "true");
-	}
-	break;
-      case 'r':
-	if( tbuf2[len-1] == '.' ){
-	  strcat(tbuf2, "0");
-	}
-	break;
-      case 's':
-	/* change single quotes to double quotes */
-	if( *tbuf2 == '\'' ){
-	  *tbuf2 = '"';
-	}
-	if( tbuf[len-1] == '\'' ){
-	  tbuf[len-1] = '"';
-	}
-	break;
-      default:
-	break;
-      }
-      /* skip some repeating keywords */
-      if( dtype != 'c' 			&&
-	  strncmp(tbuf, "        ", 8)	&& 
-	  (*tbuf2 != '\0') ){
-	if( *tbuf3 == '\0' ){
-	  snprintf(tbuf4, SZ_LINE, "{%s", js9Params());
-	  scat(tbuf4, &jsonheader);
-	} else {
-	  scat(", ", &jsonheader);
-	}
-	/* format key/value pair */
-	switch(dtype){
-	case 's':
-	  snprintf(tbuf3, SZ_LINE, "\"%s\":\"%s\"", tbuf, tbuf2);
-	  break;
-	default:
-	  snprintf(tbuf3, SZ_LINE, "\"%s\":%s", tbuf, tbuf2);
-	  break;
-	}
-	scat(tbuf3, &jsonheader);
-      }
-      xfree(s);
-    }
-    else{
-      /* end of input */
-      scat("}", &jsonheader);
-      break;
-    }
+  snprintf(tbuf, SZ_LINE-1, "{\"js9Protocol\": %s, ", JS9_PROTOCOL);
+  scat(tbuf, &jsonheader);
+  snprintf(tbuf, SZ_LINE-1, "\"js9Endian\": \"%s\", ", JS9_ENDIAN);
+  scat(tbuf, &jsonheader);
+  snprintf(tbuf, SZ_LINE-1, "\"cardstr\": \"");
+  scat(tbuf, &jsonheader);
+  // concat header cards into a single string
+#if HAVE_CFITSIO
+  while( ++ncard <= maxcard ){
+    fits_read_record(ofptr, ncard, card, &status);
+    errchk(status);
+    snprintf(tbuf, SZ_LINE-1, "%-80s", card);
+    scat(tbuf, &jsonheader);
   }
+#elif HAVE_FUNTOOLS
+  while( (s = FunParamGets(tfun, NULL, ++ncard, NULL, &dtype)) ){
+    scat(s, &jsonheader);
+    if( s ) free(s);
+  }
+#endif
+  // end with the number of cards
+  snprintf(tbuf, SZ_LINE-1, "\", \"ncard\": %d}", ncard);
+  scat(tbuf, &jsonheader);
 
   /* we want the image buffer to start on an 8-byte boundary, 
      so make jsonheader + null byte end on one */
@@ -356,7 +420,9 @@ int main(int argc, char **argv)
   jsonlen = strlen(jsonheader);
 
   /* total length of the header + null + image we are storing */
-  totbytes = jsonlen + 1 + ((size_t)idim1 * ft_sizeof(bitpix) * (size_t)idim2);
+  blen = ABS(bitpix/8);
+  dlen = (size_t)idim1 * (size_t)idim2 * blen;
+  totbytes = jsonlen + 1 + dlen;
 
   /* all of this should now fit into the png image */
   /* somewhat arbitrarily, we use idim1 for odim1, and adjust odim2 to fit */
@@ -364,8 +430,9 @@ int main(int argc, char **argv)
   odim2 = (int)(((totbytes + odim1 - 1) / odim1) + (COLOR_CHANNELS-1)) / COLOR_CHANNELS;
 
   /* allocate buf to hold json header + null byte + RGB image */
-  if( !(buf=xcalloc(COLOR_CHANNELS, odim1 * odim2)) ){
-    gerror(stderr, "can't allocate image buf\n");
+  if( !(buf=calloc(COLOR_CHANNELS, odim1 * odim2)) ){
+    fprintf(stderr, "ERROR: can't allocate image buf\n");
+    exit(1);
   }
 
   /* move the json header into the output buffer */
@@ -381,12 +448,56 @@ int main(int argc, char **argv)
     fprintf(stderr, 
     "idim=%d,%d (bitpix=%d jsonlen=%d istart=%d endian=%s) [%ld] -> odim=%d,%d [%d]\n", 
 	    idim1, idim2, bitpix, jsonlen, istart, JS9_ENDIAN, totbytes, 
-    odim1, odim2, odim1 * odim2 * COLOR_CHANNELS);
+	    odim1, odim2, odim1 * odim2 * COLOR_CHANNELS);
   }
 
+#if HAVE_CFITSIO
+  /* move the json header into the output buffer */
+  memmove(&buf[istart], dbuf, dlen);
+#elif HAVE_FUNTOOLS
   /* extract and bin the data section into an image buffer */
   if( !FunImageGet(ifun, &buf[istart], NULL) ){
-    gerror(stderr, "could not FunImageGet: %s\n", iname);
+    fprintf(stderr, "ERROR: could not FunImageGet: %s\n", iname);
+    exit(1);
+  }
+#endif
+
+  /* debugging output to check against javascript input */
+  if( verbose > 1 ){
+    fprintf(stderr, "jsonheader: %s\n", jsonheader);
+    for(j=0; j<idim2; j++){
+      fprintf(stderr, "data #%d: ", j);
+      for(i=0; i<idim1; i++){
+	switch(bitpix){
+	case 8:
+	  fprintf(stderr, "%d ", 
+		  *(unsigned char *)(buf + istart + ((j * idim1) + i) * blen));
+	  break;
+	case 16:
+	  fprintf(stderr, "%d ", 
+		  *(short *)(buf + istart + ((j * idim1) + i) * blen));
+	  break;
+	case -16:
+	  fprintf(stderr, "%d ", 
+		  *(unsigned short *)(buf + istart + ((j * idim1) + i) * blen));
+	  break;
+	case 32:
+	  fprintf(stderr, "%d ",
+		  *(int *)(buf + istart + ((j * idim1) + i) * blen));
+	  break;
+	case -32:
+	  fprintf(stderr, "%.3f ",
+		  *(float *)(buf + istart + ((j * idim1) + i) * blen));
+	  break;
+	case -64:
+	  fprintf(stderr, "%.3f ", 
+		  *(double *)(buf + istart + ((j * idim1) + i) * blen));
+	  break;
+	}
+      }
+      fprintf(stderr, "\n");
+    }
+    fprintf(stderr, "\n");
   }
 
   /* might have to swap to preferred endian for png creation */
@@ -395,29 +506,27 @@ int main(int argc, char **argv)
     swap_data(&buf[istart], idim1 * idim2, bitpix/8);
   }
 
-  /* debugging output to check against javascript input */
-  if( verbose > 1 ){
-    fprintf(stderr, "jsonheader: %s\n", jsonheader);
-    for(j=0; j<4; j++){
-      fprintf(stderr, "data #%d: ", j);
-      for(i=0; i<ABS(bitpix)/8; i++){
-	fprintf(stderr, "%02d ",
-		(unsigned char)buf[istart + (j*ABS(bitpix/8))+i]);
-      }
-      fprintf(stderr, "\n");
-    }
-  }
-
   /* write the PNG file */
   got = writePNG(ofp, buf, odim1, odim2, optinfo);
 
   /* free up space */
-  if( buf ) xfree(buf);
-  if( optinfo ) xfree(optinfo);
+  if( buf ) free(buf);
+  if( optinfo ) free(optinfo);
+  if( jsonheader ) free(jsonheader);
 
   /* close files */
+#if HAVE_CFITSIO
+  status = 0;
+  if( ofptr && (ofptr != fptr) ) closeFITSFile(ofptr, &status);
+  if( fptr ) closeFITSFile(fptr, &status);
+  if( dbuf ) free(dbuf);
+#elif HAVE_FUNTOOLS
   if( ifun ) FunClose(ifun);
-  if( tfun ) FunClose(tfun);
+  if( tfun ){
+    FunClose(tfun);
+    free(tfun);
+  }
+#endif
   if( ofp) fclose(ofp);
 
   /* return the news */

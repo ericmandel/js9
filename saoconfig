@@ -74,6 +74,7 @@ case $name in
 		--prefix=$HOME						\
 		--with-webdir=/Users/eric/Sites/js9			\
 		--with-helper="socket.io"				\
+		--with-cfitsio=/usr/local				\
 		--with-funtools=/usr/local				\
 		--with-png=/usr/local					\
 		--with-saodir=/Users/eric/Sites				\

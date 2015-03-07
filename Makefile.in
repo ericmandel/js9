@@ -13,6 +13,7 @@ DDISTNAME = ${PACKAGE}-data
 
 DISTDIR	= ../export
 FTPDIR	= ../ftp
+EM	= astroem
 
 #----------------------------------------------------------------
 # Things you can change to personalize the Makefile for your own
@@ -57,9 +58,9 @@ MAN1_INSTALL_DIR =	$(MAN_INSTALL_DIR)/man1
 MAN3_INSTALL_DIR =	$(MAN_INSTALL_DIR)/man3
 
 # extra Libs required to link (e.g. socket libraries)
-LIBS =            	@FUNLIB@ @PNGLIB@ @EXTRA_LIBS@ -lm
+LIBS =            	@CFITSIOLIB@ @FUNLIB@ @PNGLIB@ @EXTRA_LIBS@ -lm
 
-INCS =			@FUNINC@ @PNGINC@
+INCS =			@CFITSIOINC@ @FUNINC@ @PNGINC@
 
 # To change the compiler switches, for example to change from -O
 # to -g, change the following line:
@@ -100,9 +101,9 @@ CP =		cp -p
 
 CC =		@CC@
 
-CC_SWITCHES =	${CFLAGS} -I. ${AC_FLAGS} ${INCS}
+CC_SW =	${CFLAGS} -I. ${AC_FLAGS} ${INCS}
 
-DEPEND_SWITCHES = ${CFLAGS} -I. ${AC_FLAGS}
+DEPEND_SW = ${CFLAGS} -I. ${AC_FLAGS}
 
 # type of backend server (or none)
 HELPER =	@HELPER@
@@ -169,6 +170,12 @@ MFILES =	Makefile Makefile.in conf.h conf.h.in config.guess config.sub \
 		saoconfig saoprefs.sed nnode mkhelper mkjs9 \
 		js9Helper-default.cgi js9load README
 
+UTILLIB	=	libutil.a
+
+TPOSOBJS =	tpos.o @CFITSIOOBJS@
+
+HELPEROBJS =	js9helper.o
+
 all:		progs-$(USEHELPER) helper
 
 progs-yes:	$(PROGS)
@@ -179,11 +186,11 @@ testall:	$(TESTPROGS)
 
 All:		all testall
 
-tpos:		tpos.o
-		$(CC) $(LDFLAGS) tpos.o -o tpos $(LIBS)
+tpos:		$(TPOSOBJS) $(UTILLIB)
+		$(CC) $(LDFLAGS) $(TPOSOBJS) $(UTILLIB) -o tpos $(LIBS)
 
-js9helper:	js9helper.o
-		$(CC) $(LDFLAGS) js9helper.o -o js9helper $(LIBS)
+js9helper:	$(HELPEROBJS) $(UTILLIB)
+		$(CC) $(LDFLAGS) $(HELPEROBJS) -o js9helper $(UTILLIB) $(LIBS)
 
 pngdisp:	pngdisp.o
 		$(CC) $(LDFLAGS) pngdisp.o -o pngdisp $(LIBS)
@@ -431,7 +438,9 @@ clean:		FORCE
 			doc/*~ notes/*~ test/*~ help/*~ help/*.bak \
 			analysis-wrappers/*~ analysis-plugins/*~ \
 			plugins/*~ plugins/*/*~ \
-			astroem/*~ astroem/*.o astroem/zee.js/*.o 
+			$(EM)/*~ $(EM)/*.o $(EM)/zee.js/*.o \
+			util/*.o util/*~
+
 		$(RM) -rf autom4te.cache a.out.dSYM tmp/*
 
 distclean:	clean
@@ -449,22 +458,33 @@ make:		Makefile.in
 		$(SHELL) config.status
 
 depend:		FORCE
-		makedepend -- $(DEPEND_SWITCHES) -- $(SRCS)
+		makedepend -- $(DEPEND_SW) -- $(SRCS)
 
-tpos.o:		tpos.c $(INCL)
-		$(CC) -c $(CC_SWITCHES) tpos.c
+$(UTILLIB):	FORCE
+		@(cd util; \
+		env CC="$(CC)" CFLAGS="$(CC_SW)" make; \
+		mv libutil.a ..)
 
-js9helper.o:	js9helper.c $(INCL)
-		$(CC) -c $(CC_SWITCHES) js9helper.c
+tpos.o:		tpos.c
+		$(CC) -c $(CC_SW) tpos.c
 
-pngdisp.o:	pngdisp.c $(INCL)
-		$(CC) -c $(CC_SWITCHES) pngdisp.c
+jsfitsio.o:	$(EM)/jsfitsio.c
+		$(CC) -c $(CC_SW) -I./$(EM) -o jsfitsio.o $(EM)/jsfitsio.c
+
+js9helper.o:	js9helper.c
+		$(CC) -c $(CC_SW) js9helper.c
+
+pngdisp.o:	pngdisp.c
+		$(CC) -c $(CC_SW) pngdisp.c
 
 configure:	configure.ac
 		autoconf
 
 errcheck:	FORCE
 		@-egrep 'error|warning' foo | egrep -v "^lex.*but not used"
+
+valgrind:	FORCE
+		@(echo "see: https://developer.mozilla.org/en-US/docs/Mozilla/Testing/Valgrind"; echo "for Macs: valgrind --dsymutil=yes --show-mismatched-frees=no --leak-check=yes --track-origins=yes [prog] [args]";)
 
 FORCE:
 

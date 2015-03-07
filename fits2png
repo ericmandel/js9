@@ -7,6 +7,18 @@ error () {
   exit 1
 }
 
+hash fkeyprint 1>/dev/null 2>&1
+if [ $? = 0 ]; then
+  XEQ=ftools
+else
+  hash funimage 1>/dev/null 2>&1
+  if [ $? = 0 ]; then
+    XEQ=funtools
+  else
+    error "requires either ftools (fkeyprint) or funtools (fumimage)"
+  fi
+fi
+
 ODIR=""
 SWITCHES=""
 REPLACE=true
@@ -66,6 +78,10 @@ while [ x"$1" != x ]; do
 	-v) shift
   	    VERBOSE=$1
 	    shift
+	    continue;;
+
+	-d) shift
+  	    DEBUG=1
 	    continue;;
 
 	*)  break;;
@@ -149,14 +165,38 @@ if [ x$REPLACE = xtrue -o ! -r $OFILE ]; then
 # for js9 processing, determine block factor
 if [ x$XDIM != x -a x$YDIM != x ]; then
   BL=8
-  DIMS=`funimage ${FTYPE}$IFILE'[*,*,'$BL']' stdout bitpix=8 2>/dev/null | dd bs=80 count=10 2>/dev/null | sed -e 's/.\{80\}/&@/g' | tr '@' '\012' | egrep NAXIS'[1,2]' | sed 's# /.*##g;s# ##g'`
-  eval $DIMS
+  case $XEQ in
+      ftools)
+	NAXIS1=`fkeyprint infile=${FTYPE}$IFILE'[events][bin '$BL']' keynam=NAXIS1 | egrep = | awk -F= '{print $2}' | awk -F/ '{print $1}' | sed 's/^  *//g;s/  *$//g'`
+	NAXIS2=`fkeyprint infile=${FTYPE}$IFILE'[events][bin '$BL']' keynam=NAXIS2 | egrep = | awk -F= '{print $2}' | awk -F/ '{print $1}' | sed 's/^  *//g;s/  *$//g'`
+	;;
+      funtools)
+	DIMS=`funimage ${FTYPE}$IFILE'[*,*,'$BL']' stdout bitpix=8 2>/dev/null | dd bs=80 count=10 2>/dev/null | sed -e 's/.\{80\}/&@/g' | tr '@' '\012' | egrep NAXIS'[1,2]' | sed 's# /.*##g;s# ##g'`
+	eval $DIMS
+	;;
+  esac
+
   if [ $NAXIS1 -gt $NAXIS2 ]; then
     BLOCK=`echo "($NAXIS1 * $BL + ($XDIM - 1)) / $XDIM" | bc`
   else
     BLOCK=`echo "($NAXIS2 * $BL + ($XDIM - 1)) / $XDIM" | bc`
   fi
-  IEXT="[*,*,$BLOCK]"$IEXT
+
+  case $XEQ in
+      ftools)
+	IEXT="[events][bin $BLOCK]"$IEXT
+	;;
+      funtools)
+	IEXT="[*,*,$BLOCK]"$IEXT
+	;;
+  esac
+fi
+
+# don't execute
+if [ x$DEBUG = x1 ]; then
+  echo "ifile: ${FTYPE}$IFILE""$IEXT"
+  echo "(xeq: $XEQ; naxes: $NAXIS1 $NAXIS2; dims: $XDIM $YDIM)"
+  exit
 fi
 
 # create png file (filter out the annoying warning about dimensions!)

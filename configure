@@ -311,7 +311,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS WEBDIR HELPER USEHELPER build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT RANLIB ac_ct_RANLIB CPP EGREP CGIDIR CGIURL CGIXPATH FUNINC FUNLIB PNGLIB PNGINC EXTRA_LIBS SAODIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS WEBDIR HELPER USEHELPER build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT RANLIB ac_ct_RANLIB CPP EGREP CGIDIR CGIURL CGIXPATH FUNINC FUNLIB CFITSIOINC CFITSIOLIB CFITSIOOBJS PNGLIB PNGINC EXTRA_LIBS SAODIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -854,6 +854,7 @@ Optional Packages:
  --with-cgiurl=<url> cgi relative url e.g. ./cgi-bin
  --with-cgixpath=<dir1;dir2;...> directories to add to cgi path
  --with-funtools=<path> funtools directory e.g. /soft/funtools
+ --with-cfitsio=<path> cfitsio directory e.g. /soft/cfitsio
  --with-png=<path> directory containing lib/libpng e.g. /usr/local
  --with-saodir=<path> top install directory e.g. /var/www/public_html
 
@@ -4553,18 +4554,16 @@ echo "${ECHO_T}yes ($FUNTOOLSBASE)" >&6
       echo "$as_me:$LINENO: result: yes ($FUNTOOLSBASE)" >&5
 echo "${ECHO_T}yes ($FUNTOOLSBASE)" >&6
   else
-    echo "$as_me:$LINENO: result: no: back-end programs will not be built" >&5
-echo "${ECHO_T}no: back-end programs will not be built" >&6
-    USEHELPER="no"
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
   fi
 else
-  echo "$as_me:$LINENO: result: no: back-end programs will not be built" >&5
-echo "${ECHO_T}no: back-end programs will not be built" >&6
-  USEHELPER="no"
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
 fi
 # make up the final switches
 if test x$FUNTOOLSINC != x; then
-  FUNINC="-I$FUNTOOLSINC"
+  FUNINC="-I$FUNTOOLSINC -DHAVE_FUNTOOLS"
 fi
 if test x$FUNTOOLSLIB != x; then
   FUNLIB="-L $FUNTOOLSLIB -lfuntools"
@@ -4572,6 +4571,61 @@ fi
 # results from funtools search
 
 
+
+# check for external cfitsio libraries
+echo "$as_me:$LINENO: checking for cfitsio" >&5
+echo $ECHO_N "checking for cfitsio... $ECHO_C" >&6
+
+# Check whether --with-cfitsio or --without-cfitsio was given.
+if test "${with_cfitsio+set}" = set; then
+  withval="$with_cfitsio"
+  havelib=1
+else
+  havelib=0
+fi;
+if test x"$havelib" = x1 ; then
+  CFITSIOBASE=$withval
+  # make sure essential libraries are present
+  if test -r $CFITSIOBASE/lib$LSUFFIX/libcfitsio.a -o \
+	    -r $CFITSIOBASE/lib$LSUFFIX/libcfitsio.so -o \
+	    -r $CFITSIOBASE/lib$LSUFFIX/libcfitsio.dylib; then
+      CFITSIOLIB=$CFITSIOBASE/lib$LSUFFIX
+      CFITSIOINC=$CFITSIOBASE/include
+      echo "$as_me:$LINENO: result: yes ($CFITSIOBASE)" >&5
+echo "${ECHO_T}yes ($CFITSIOBASE)" >&6
+  elif test -r $CFITSIOBASE/lib/libcfitsio.a -o \
+	    -r $CFITSIOBASE/lib/libcfitsio.so -o \
+	    -r $CFITSIOBASE/lib/libcfitsio.dylib; then
+      CFITSIOLIB=$CFITSIOBASE/lib
+      CFITSIOINC=$CFITSIOBASE/include
+      echo "$as_me:$LINENO: result: yes ($CFITSIOBASE)" >&5
+echo "${ECHO_T}yes ($CFITSIOBASE)" >&6
+  else
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+  fi
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+# make up the final switches
+if test x$CFITSIOINC != x; then
+  CFITSIOINC="-I$CFITSIOINC -DHAVE_CFITSIO"
+fi
+if test x$CFITSIOLIB != x; then
+  CFITSIOLIB="-L $CFITSIOLIB -lcfitsio"
+  CFITSIOOBJS="jsfitsio.o"
+fi
+# results from cfitsio search
+
+
+
+
+if test x"${CFITSIOINC}${FUNINC}" = x; then
+  echo "$as_me:$LINENO: result: no funtools or cfitsio: back-end programs will not be built" >&5
+echo "${ECHO_T}no funtools or cfitsio: back-end programs will not be built" >&6
+  USEHELPER="no"
+fi
 
 # check for external png libraries
 echo "$as_me:$LINENO: checking for png" >&5
@@ -5797,6 +5851,9 @@ s,@CGIURL@,$CGIURL,;t t
 s,@CGIXPATH@,$CGIXPATH,;t t
 s,@FUNINC@,$FUNINC,;t t
 s,@FUNLIB@,$FUNLIB,;t t
+s,@CFITSIOINC@,$CFITSIOINC,;t t
+s,@CFITSIOLIB@,$CFITSIOLIB,;t t
+s,@CFITSIOOBJS@,$CFITSIOOBJS,;t t
 s,@PNGLIB@,$PNGLIB,;t t
 s,@PNGINC@,$PNGINC,;t t
 s,@EXTRA_LIBS@,$EXTRA_LIBS,;t t

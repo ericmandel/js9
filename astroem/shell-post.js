@@ -15,7 +15,11 @@
       gzclose: Module.cwrap('gzclose', 'number', ['number']),
       gzseek: Module.cwrap('gzseek', 'number', ['number', 'number', 'number']),
       compress: Module['gzcompress'],
-      decompress: Module['gzdecompress']
+      decompress: Module['gzdecompress'],
+      handleFITSFile: Module["handleFITSFile"],
+      cleanupFITSFile: Module["cleanupFITSFile"],
+      getFITSImage: Module["getFITSImage"],
+      options: Module["options"]
   };
 })();
 

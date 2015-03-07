@@ -1,8 +1,13 @@
+#if HAVE_CFITSIO
+#include <fitsio.h>
+#elif HAVE_FUNTOOLS
 #include <funtools.h>
-#include <strtod.h>
-#include <word.h>
+#endif
+#include <file.h>
 #include <find.h>
-#include <swap.h>
+#include <macro.h>
+#include <word.h>
+#include <xalloc.h>
 #include <png.h>
 
 #if HAVE_CONFIG_H
@@ -29,11 +34,11 @@ extern int optind;
 #endif
 
 /* warning format strings */
-#define WRONGARGS "wrong # of args for '%s' (expected %d, got %d)\n"
-#define WRONGARGS2 "wrong # of args for '%s' (expected at least %d)\n"
-#define NONEW "can't allocate new struct for '%s'\n"
-#define NOFINFO "no current image for '%s'\n"
-#define NOIMAGE "no image found with name '%s'\n"
+#define WRONGARGS "ERROR: wrong # of args for '%s' (expected %d, got %d)\n"
+#define WRONGARGS2 "ERROR: wrong # of args for '%s' (expected at least %d)\n"
+#define NONEW "ERROR: can't allocate new struct for '%s'\n"
+#define NOFINFO "ERROR: no current image for '%s'\n"
+#define NOIMAGE "ERROR: no image found with name '%s'\n"
 
 /* supported file types */
 #define FTYPE_PNG	1
@@ -57,16 +62,20 @@ typedef struct finforec{
   struct finforec *next;
   char *fname;
   int ftype;
+#if HAVE_CFITSIO
+  fitsfile *fptr;
+#elif HAVE_FUNTOOLS
   Fun fun;
+#endif
   FILE *fp;
   char *ofitsfile;
   char *fitsfile;
-  char *fitscards;
   png_structp png_ptr;
   png_infop info_ptr;
   png_textp text_ptr;
   int num_text;
-  void *wcs;
-  int wcsunits;
 } *Finfo, FinfoRec;
 
+#ifndef SZ_LINE
+#define SZ_LINE 4096
+#endif

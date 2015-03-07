@@ -5,20 +5,27 @@ ASTROEM	=	astroem.js
 # where is JS9 directory
 JS9	= ..
 
+# where JS version of cfitsio is located
+CFITSIO = ../../cfitsio
+
+# where C version of cfitsion is located
+CFITSIOC = ../../soft/cfitsio
+
 # emcc compiler flags
 # NB: -O2 is the recommended optimization (not -O3, as of 1/27/2015)
 # can't use mem file: we don't know where the mem file will resides
-EMFLAGS	= 	-O2 --memory-init-file 0
+# EMFLAGS	= 	-g --memory-init-file 0 -I$(CFITSIO)
+EMFLAGS	= 	-O2 --memory-init-file 0 -I$(CFITSIO)
 
 # support zscale up to 2048 * 2048 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=33554432
 # support zscale up to 4096 * 4096 * 4-byte images
-EMOPTS =	-s TOTAL_MEMORY=67108864
-# support zscale in semi-arbitrarily large files
-# but disables asm.js compilation
-# EMOPTS =	-s TOTAL_MEMORY=33554432 -s ALLOW_MEMORY_GROWTH=1
+# EMOPTS =	-s TOTAL_MEMORY=67108864
+# semi-arbitrarily large files, but disables asm.js compilation
+# cfitsio requires this:
+EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1
 
-EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_initwcs', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek']"
+EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_initwcs', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek', '_openFITSFile', '_openFITSMem', '_getImageToArray', '_filterTableToImage', '_getHeaderToString', '_closeFITSFile', '_ffgerr']"
 
 EMEXTRAS =	--pre-js pre.js --post-js post.js
 
@@ -34,7 +41,8 @@ SRCS =  	wrappers.c wcsinit.c wcs.c wcscon.c \
 	        wcslib.c lin.c cel.c proj.c sph.c wcstrig.c \
 		dateutil.c distort.c \
 		strtod.c \
-		cdlzscale.c
+		cdlzscale.c \
+		jsfitsio.c
 
 OBJS =  	wrappers.o wcsinit.o wcs.o wcscon.o \
 		hget.o hput.o iget.o worldpos.o platepos.o \
@@ -42,7 +50,8 @@ OBJS =  	wrappers.o wcsinit.o wcs.o wcscon.o \
 	        wcslib.o lin.o cel.o proj.o sph.o wcstrig.o \
 		dateutil.o distort.o \
 		strtod.o \
-		cdlzscale.o
+		cdlzscale.o \
+		jsfitsio.o
 
 ZOBJS = 	./zee.js/adler32.o \
 		./zee.js/compress.o \
@@ -60,12 +69,14 @@ ZOBJS = 	./zee.js/adler32.o \
 		./zee.js/uncompr.o \
 		./zee.js/zutil.o
 
+LIBS =		libcfitsio.a
+
 all:		$(ASTROEM)
 
-astroem.bc:	$(OBJS) $(ZOBJS)
-		$(EMCC) $(OBJS) $(ZOBJS) -o $@
+astroem.bc:	$(OBJS) $(ZOBJS) $(LIBS)
+		$(EMCC) $(OBJS) $(ZOBJS) $(LIBS) -o $@
 
-$(ASTROEM):	astroem.bc
+$(ASTROEM):	astroem.bc pre.js post.js shell-pre.js shell-post.js Makefile
 		@(echo "generating raw astroem.js ..."; \
 		$(EMCC) astroem.bc -o astroem.raw.js; \
 		echo "adding shell wrapper to generate astroem.js ..."; \
@@ -86,8 +97,25 @@ install:	FORCE
 		    echo "could not find JS9 directory: $(JS9)"; \
 		  fi;)
 
+LIBCFLAGS =	-fno-common -D__x86_64__
+
+cfitsio:	FORCE
+		@(CDIR=`pwd`; cd $(CFITSIO); \
+		emconfigure ./configure; \
+		emmake make CFLAGS="$(LIBCFLAGS)" clean all-nofitsio ;\
+		cp -p libcfitsio.a $${CDIR};)
+
+zlib:		FORCE
+		@(CDIR=`pwd`; cd $(Z); \
+		emconfigure ./configure; \
+		emmake make CFLAGS="$(LIBCFLAGS)" clean all;\
+		cp -p libz.a $${CDIR};)
+
 clean:		FORCE
-		rm -rf *.o *~ a.out* foo* *.map \#* zee.js/*.o
+		rm -rf *.o *~ a.out* foo* *.map \#* zee.js/*.o \
+		cimtest cimtest.js cimtest.html \
+		cnodetest cnodetest.js cnodetest.html
+
 
 # make c version for testing
 LDFLAGS	= -g

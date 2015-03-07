@@ -375,7 +375,7 @@ var CatalogService = require("./catalog-service");
 
 },{"./catalog-service":2,"./strtod":8}],4:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
-/*globals xhr, Blob, Fitsy */
+/*globals xhr, Blob, JS9 */
 
 "use strict";
 
@@ -404,12 +404,7 @@ function ImageService(params) {
 	    if ( params.handler === undefined ) {
 		var blob      = new Blob([xhr.response]);
 		blob.name = values.name;
-
-		if ( Fitsy.handleFITSFile === undefined ) {
-		    Fitsy.handleFITSFiles(undefined, [blob], { display: display });
-		} else {
-		    Fitsy.handleFITSFile(blob, { display: display });
-		}
+		JS9.fits.handleFITSFile(blob, { display: display });
 	    } else {
 	    	params.handler(e, xhr, params, values);
 	    }
@@ -839,7 +834,7 @@ module.exports = xhr;
 
 	if ( !im ) { return; }
 
-	var options = $.extend(true, {}, Fitsy.options
+	var options = $.extend(true, {}, JS9.fits.options
 	    , { table: { cx: form.cx.value , cy: form.cy.value  
 	    	       , nx: form.nx.value , ny: form.ny.value
 		       , bin: form.bin.value , filter: form.filter.value }
@@ -849,6 +844,8 @@ module.exports = xhr;
 
 	if ( hdu.type === "image" ) {
 
+	  switch(JS9.fitsLibrary()){
+	  case "fitsy":
 	    var bin = Math.round(Number(form.bin.value));
 	    hdu.bin        = bin;
 	    form.bin.value = bin;
@@ -925,10 +922,24 @@ module.exports = xhr;
 	    Fitsy.cardcopy(hdu, "LTV2",     hdu, "LTV2",   0.0, function(x) { return x/bin; });
 
 	    JS9.RefreshImage(hdu, {display: display});
+	    break;
+	    case "cfitsio":
+	      JS9.error("image binning not yet implemented using cfitsio");
+	      break;
+          }
 	} else {
-	    Fitsy.readTableHDUData(hdu.fits, hdu, options, function (hdu) {
-	        JS9.RefreshImage(hdu, {display: display});
-	    });
+	    switch(JS9.fitsLibrary()){
+	    case "fitsy":
+		Fitsy.readTableHDUData(hdu.fits, hdu, options, function(hdu){
+	            JS9.RefreshImage(hdu, {display: display});
+		});
+		break;
+	    case "cfitsio":
+		JS9.fits.getFITSImage(hdu.fits, hdu, options, function(hdu){
+		    JS9.RefreshImage(hdu, {display: display});
+		});
+		break;
+	    }
 	}
     }
 
