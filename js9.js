@@ -41,21 +41,6 @@ JS9 = (function(JS9){
 "use strict";
 // display defaults (not usually changed by users)
 JS9.DEFID = "JS9";		// default JS9 display id
-JS9.WIDTH = 512;		// width of js9 canvas
-JS9.HEIGHT = 512;		// height of js9 canvas
-// JS9.INFOWIDTH = 390;		// width of js9Info box
-JS9.INFOWIDTH = 345;		// width of js9Info box
-JS9.INFOHEIGHT = 265;		// height of js9Info box
-JS9.MENUWIDTH = JS9.WIDTH;	// width of js9Menubar
-JS9.MENUHEIGHT = 50;		// height of js9Menubar
-JS9.CONWIDTH = JS9.WIDTH;	// width of js9Console
-JS9.CONHEIGHT = 180;		// height of js9Console
-JS9.PANWIDTH = Math.floor(JS9.WIDTH/1.6);	// width of js9Pan canvas
-JS9.PANHEIGHT = Math.floor(JS9.HEIGHT/1.6);	// height of js9Pan canvas
-JS9.MAGWIDTH = JS9.WIDTH/2;	// width of js9Mag canvas
-JS9.MAGHEIGHT = JS9.HEIGHT/2;	// height of js9Mag canvas
-JS9.DS9WIDTH = 250;		// width of small js9Pan canvas
-JS9.DS9HEIGHT = 250;		// height of small js9Pan canvas
 JS9.ANON = "[anonymous]";	// name to use for images with no name
 
 // internal defaults (not usually changed by users)
@@ -2970,13 +2955,20 @@ JS9.Display = function(el){
     }
     // save id
     this.id = this.divjq.attr("id");
+    // add class
+    this.divjq.addClass("JS9");
     // set width and height on div
-    this.divjq
-	.addClass("JS9")
-	.css("width", JS9.WIDTH)
-	.css("height", JS9.HEIGHT);
-    // convenience variables
+    this.width = this.divjq.attr("data-width");
+    if( !this.width  ){
+	this.width  = JS9.WIDTH;
+    }
+    this.divjq.css("width", this.width);
     this.width = parseInt(this.divjq.css("width"), 10);
+    this.height = this.divjq.attr("data-height");
+    if( !this.height ){
+	this.height = JS9.HEIGHT;
+    }
+    this.divjq.css("height", this.height);
     this.height = parseInt(this.divjq.css("height"), 10);
     // create DOM canvas element
     this.canvas = document.createElement("canvas");
@@ -2984,8 +2976,8 @@ JS9.Display = function(el){
     this.canvasjq = $(this.canvas)
 	.addClass("JS9Image")
 	.css("z-index", JS9.ZINDEX)
-	.attr("width", JS9.WIDTH)
-	.attr("height", JS9.HEIGHT);
+	.attr("width", this.width)
+	.attr("height", this.height);
     // add container to the high-level div
     this.displayConjq = $("<div>")
 	.addClass("JS9Container")
@@ -3249,16 +3241,18 @@ JS9.Console = function(width, height){
     // for others, we need to set the size
     if( this.winType !== "light" ){
 	// set height and width
-	this.width = parseInt(this.divjq.css("width"), 10);
+	this.width = this.divjq.attr("data-width");
 	if( !this.width  ){
-	    this.width  = width  || JS9.CONWIDTH;
-	    this.divjq.css("width", this.width);
+	    this.width  = width || JS9.CONWIDTH;
 	}
-	this.height = parseInt(this.divjq.css("height"), 10);
+	this.divjq.css("width", this.width);
+	this.width = parseInt(this.divjq.css("width"), 10);
+	this.height = this.divjq.attr("data-height");
 	if( !this.height ){
 	    this.height = height || JS9.CONHEIGHT;
-	    this.divjq.css("height", this.height);
 	}
+	this.divjq.css("height", this.height);
+	this.height = parseInt(this.divjq.css("height"), 10);
 	this.consoleConjq
 	    .css("width", this.width)
 	    .css("height", this.height);
@@ -3414,16 +3408,18 @@ JS9.Info.opts = {
 };
 
 JS9.Info.init = function(width, height){
-    this.width = parseInt(this.divjq.css("width"), 10);
+    this.width = this.divjq.attr("data-width");
     if( !this.width  ){
 	this.width  = width || JS9.INFOWIDTH;
-	this.divjq.css("width", this.width);
     }
-    this.height = parseInt(this.divjq.css("height"), 10);
+    this.divjq.css("width", this.width);
+    this.width = parseInt(this.divjq.css("width"), 10);
+    this.height = this.divjq.attr("data-height");
     if( !this.height ){
 	this.height = height || JS9.INFOHEIGHT;
-	this.divjq.css("height", this.height);
     }
+    this.divjq.css("height", this.height);
+    this.height = parseInt(this.divjq.css("height"), 10);
     // add container to the high-level div
     this.infoConjq = $("<div>")
 	.addClass("JS9Container")
@@ -3570,12 +3566,23 @@ JS9.Info.clearMain = function(im){
 // ---------------------------------------------------------------------
 // JS9 menubar to manage menubar and its menus
 // ---------------------------------------------------------------------
-JS9.Menubar = function(width){
+JS9.Menubar = function(width, height){
     var ii, ss, tt;
     var menubarHTML;
     var that = this;
     // set size
-    this.divjq.css("width", width || JS9.MENUWIDTH);
+    this.width = this.divjq.attr("data-width");
+    if( !this.width  ){
+	this.width = width || JS9.MENUWIDTH;
+    }
+    this.divjq.css("width", this.width);
+    this.width = parseInt(this.divjq.css("width"), 10);
+    this.height = this.divjq.attr("data-height");
+    if( !this.height  ){
+	this.height = height || JS9.MENUHEIGHT;
+    }
+    this.divjq.css("height", this.height);
+    this.height = parseInt(this.divjq.css("height"), 10);
     // init menubarHTML, if necessary
     if( JS9.menubarHTML === "" ){
 	JS9.menubarHTML = "<span id='JS9Menus_@@ID@@' class='ui-widget-header ui-corner-all'>";
@@ -3602,8 +3609,8 @@ JS9.Menubar = function(width){
     // add container to the high-level div
     this.menuConjq = $("<div>")
 	.addClass("JS9MenubarContainer")
-	.attr("width", JS9.MENUWIDTH)
-	.attr("height", JS9.MENUHEIGHT)
+	.attr("width", this.width)
+	.attr("height", this.height)
 	.html(menubarHTML)
 	.appendTo(this.divjq);
     $(function(){
@@ -7169,16 +7176,18 @@ JS9.Magnifier.HTML =
 // JS9 Magnifier constructor
 JS9.Magnifier.init = function(width, height){
     // set height and width
-    this.width = parseInt(this.divjq.css("width"), 10);
+    this.width = this.divjq.attr("data-width");
     if( !this.width  ){
-	this.width  = width  || JS9.MAGWIDTH;
-	this.divjq.css("width", this.width);
+	this.width = width || JS9.MAGWIDTH;
     }
-    this.height = parseInt(this.divjq.css("height"), 10);
+    this.divjq.css("width", this.width);
+    this.width = parseInt(this.divjq.css("width"), 10);
+    this.height = this.divjq.attr("data-height");
     if( !this.height ){
 	this.height = height || JS9.MAGHEIGHT;
-	this.divjq.css("height", this.height);
     }
+    this.divjq.css("height", this.height);
+    this.height = parseInt(this.divjq.css("height"), 10);
     // create DOM canvas element
     this.canvas = document.createElement("canvas");
     // jquery version for event handling and DOM manipulation
@@ -7363,16 +7372,18 @@ JS9.Panner.init = function(width, height){
     var dlayer;
     var that = this;
     // set height and width
-    this.width = parseInt(this.divjq.css("width"), 10);
+    this.width = this.divjq.attr("data-width");
     if( !this.width  ){
 	this.width  = width  || JS9.PANWIDTH;
-	this.divjq.css("width", this.width);
     }
-    this.height = parseInt(this.divjq.css("height"), 10);
+    this.divjq.css("width", this.width);
+    this.width = parseInt(this.divjq.css("width"), 10);
+    this.height = this.divjq.attr("data-height");
     if( !this.height ){
 	this.height = height || JS9.PANHEIGHT;
-	this.divjq.css("height", this.height);
     }
+    this.divjq.css("height", this.height);
+    this.height = parseInt(this.divjq.css("height"), 10);
     // create DOM canvas element
     this.canvas = document.createElement("canvas");
     // jquery version for event handling and DOM manipulation
@@ -8941,6 +8952,21 @@ JS9.init = function(){
     if( window.hasOwnProperty("Kinetic") && !window.hasOwnProperty("fabric") ){
 	JS9.error("please load fabric.js instead of Kinetic.js");
     }
+    // set up sizes, if not already done
+    JS9.WIDTH = JS9.WIDTH || 512;	        // width of js9 canvas
+    JS9.HEIGHT = JS9.HEIGHT || 512;		// height of js9 canvas
+    JS9.INFOWIDTH = JS9.INFOWIDTH || 345;	// width of js9Info box
+    JS9.INFOHEIGHT = JS9.INFOHEIGHT || 265;	// height of js9Info box
+    JS9.MENUWIDTH = JS9.MENUWIDTH || JS9.WIDTH;	// width of js9Menubar
+    JS9.MENUHEIGHT = JS9.MENUHEIGHT || 25;	// height of js9Menubar
+    JS9.CONWIDTH = JS9.CONWIDTH || JS9.WIDTH;	// width of js9Console
+    JS9.CONHEIGHT = JS9.CONHEIGHT || 180;	// height of js9Console
+    JS9.MAGWIDTH = JS9.MAGWIDTH || JS9.WIDTH/2;	// width of js9Mag canvas
+    JS9.MAGHEIGHT = JS9.MAGHEIGHT || JS9.HEIGHT/2; // height of js9Mag canvas
+    JS9.PANWIDTH = JS9.PANWIDTH || 320;		// width of js9Pan canvas
+    JS9.PANHEIGHT = JS9.PANHEIGHT || 320;	// height of js9Pan canvas
+    JS9.DS9WIDTH = JS9.DS9WIDTH || 250;		// width of small js9Pan canvas
+    JS9.DS9HEIGHT = JS9.DS9HEIGHT || 250;	// height of small js9Pan canvas
     // set up the dynamic drive html window
     if( JS9.LIGHTWIN === "dhtml" ){
 	// Creation of dhtmlwindowholder was done by a document.write in 
@@ -9829,7 +9855,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
         // and a second one for controlling the light window
         did = "d" + id;
         // make up the html with the unique id
-        html = html || sprintf("<hr class='hline0'><div class='JS9Menubar' id='%sMenubar'></div><div class='JS9' id='%s'></div>", id, id);
+        html = html || sprintf("<hr class='hline0'><div class='JS9Menubar' id='%sMenubar' style='width:0px;'></div><div class='JS9' id='%s' style='width:0px; height:0px'></div>", id, id);
         winopts = winopts || JS9.lightOpts[JS9.LIGHTWIN].imageWin;
         // create the light window
         JS9.lightWin(did, "inline", html, file, winopts);
