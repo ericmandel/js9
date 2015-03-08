@@ -3255,7 +3255,7 @@ JS9.Console = function(width, height){
     // light wins: size is set by containing window
     // for others, we need to set the size
     if( this.winType !== "light" ){
-	// set height and width
+	// set width and height on div
 	this.width = this.divjq.attr("data-width");
 	if( !this.width  ){
 	    this.width  = width || JS9.CONWIDTH;
@@ -3423,6 +3423,7 @@ JS9.Info.opts = {
 };
 
 JS9.Info.init = function(width, height){
+    // set width and height on div
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
 	this.width  = width || JS9.INFOWIDTH;
@@ -3585,7 +3586,7 @@ JS9.Menubar = function(width, height){
     var ii, ss, tt;
     var menubarHTML;
     var that = this;
-    // set size
+    // set width and height on div
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
 	this.width = width || JS9.MENUWIDTH;
@@ -7190,7 +7191,7 @@ JS9.Magnifier.HTML =
 
 // JS9 Magnifier constructor
 JS9.Magnifier.init = function(width, height){
-    // set height and width
+    // set width and height on div
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
 	this.width = width || JS9.MAGWIDTH;
@@ -7386,7 +7387,7 @@ JS9.Panner.HTML =
 JS9.Panner.init = function(width, height){
     var dlayer;
     var that = this;
-    // set height and width
+    // set width and height on div
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
 	this.width  = width  || JS9.PANWIDTH;
@@ -9179,7 +9180,7 @@ JS9.init = function(){
     if( window.hasOwnProperty("Kinetic") && !window.hasOwnProperty("fabric") ){
 	JS9.error("please load fabric.js instead of Kinetic.js");
     }
-    // set up sizes, if not already done
+    // set up sizes, if not already done (i.e. in Web page or prefs file)
     JS9.WIDTH = JS9.WIDTH || 512;	        // width of js9 canvas
     JS9.HEIGHT = JS9.HEIGHT || 512;		// height of js9 canvas
     JS9.INFOWIDTH = JS9.INFOWIDTH || 345;	// width of js9Info box
