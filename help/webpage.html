@@ -31,7 +31,6 @@ will look something like this:
   &lt;link type="text/css" rel="stylesheet" href="js9support.css"&gt;
   &lt;link type="text/css" rel="stylesheet" href="js9.css"&gt;
   &lt;script type="text/javascript" src="js9support.min.js"&gt;&lt;/script&gt;
-  &lt;script type="text/javascript" src="fitsy.min.js"&gt;&lt;/script&gt;
   &lt;script type="text/javascript" src="js9.min.js"&gt;&lt;/script&gt;
   &lt;script type="text/javascript" src="js9plugins.js"&gt;&lt;/script&gt;
   &lt;/head&gt;
@@ -48,18 +47,17 @@ js9support.js. All of these files are contained in the js and css
 sub-directories.
 
 <p>
-The <b>fitsy.js</b> and <b>js9.js</b> files (or their minified counterparts)
-are loaded separately so that we can offer easy updates. as needed.
-Fitsy.js contains basic FITS support and js9.js is the core JS9 module.
-
-<p>
 Instances of JS9 are placed on a Web page by assigning JS9 classes
 to ordinary "div" elements. The two important JS9 classes are:
 <ul>
 <li><b>JS9:</b> this class will display the main JS9 image window
 <li><b>JS9Menubar:</b> this class will display the JS9 menu bar
 </ul>
-
+Thus, for example, to place a menubar on top of a JS9 display, use:
+<pre>
+  &lt;div class="JS9Menubar"&gt;
+  &lt;div class="JS9"&gt;
+</pre>
 <p>
 You also can use these classes:
 <ul>
@@ -87,6 +85,16 @@ js9basics.html page places the menubar above the image display, in
 keeping with the traditional layout of DS9. The entire JS9 construct
 is placed in a data cell of a table, next to a data cell containing
 data URLs.
+
+<p>
+The JS9 display has a default width and height of 512x512. You can
+change this by adding <b>data-width</b> and <b>data-height</b>
+attributes to the div. For example, to create a display of size 256x256, use:
+<pre>
+  &lt;div class="JS9" data-width="256px" data-height="256px"&gt;
+</pre>
+The <b>data-width</b> and <b>data-height</b> attributes can be applied
+to the other JS9 divs (which can be especially useful for the menubar).
 
 <p>
 Multiple instances of JS9 can be added to a single Web page. This is done by

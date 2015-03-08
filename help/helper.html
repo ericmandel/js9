@@ -67,8 +67,10 @@ helper you are using. Other important switches are:
 --with-cgidir=[path]     cgi install directory e.g. /var/www/public_html/cgi-bin
 --with-cgiurl=[url]      cgi url relative to the Web root, e.g. ./cgi-bin/js9
 --with-cgixpath=[dirs]   directories to add to cgi path
---with-funtools=[path]   funtools directory for build e.g. /soft/funtools
 --with-png=[path]        directory containing lib/png e.g. /usr/local
+--with-cfitsio=[path]    cfitsio directory for build e.g. /usr/local
+or:
+--with-funtools=[path]   funtools directory for build e.g. /soft/funtools
 </pre>
 
 <p>
@@ -125,8 +127,20 @@ where to look for the libraries and include files of one version only
 using the <b>--with-png=[dir]</b> switch.]
 
 <p>
-The build of the JS9 tpos program also requires the funtools package.
-Funtools is available on the JS9 Web site:
+The build of the JS9 tpos program also requires either the cfitsio library
+or the funtools package. Cfitsio is the de facto standard FITS library. It
+is available from NASA/HEASARC at the Goddard Space Flight Center:
+<pre>
+    http://heasarc.gsfc.nasa.gov/fitsio/fitsio.html
+</pre>
+To tell configure where cfitsio libraries and executables are
+located, use the --with-cfitsio=[dir] switch,
+e.g. --with-cfitsio=/usr/local will find the cfitsio libraries in
+/usr/local/lib.
+
+<p>
+Funtools is a FITS library and analysis package that was used in
+versions of JS9 prior to v1.3. It is available on the JS9 Web site:
 <pre>
     http://js9.si.edu
 </pre>
@@ -134,6 +148,7 @@ To tell configure where funtools libraries and executables are
 located, use the --with-funtools=[dir] switch,
 e.g. --with-funtools=/usr/local will find the funtools libraries in
 /usr/local/lib.
+
 <p>
 Example configure commands are shown below for a typical Linux Apache setup
 and for a personal Mac setup:
@@ -153,7 +168,7 @@ and for a personal Mac setup:
   ./configure 	--prefix=$HOME						\
 		--with-helper=nodejs					\
 		--with-webdir=/Users/me/Sites/js9			\
-		--with-funtools=/usr/local				\
+		--with-cfitsio=/usr/local				\
 		CC=gcc $*
 
 </pre>
@@ -162,8 +177,8 @@ installed in a js9 sub-directory of htdocs in the /var/www directory
 or in the Mac user's personal Sites directory.  JS9 CGI files will be
 installed in a subdirectory of the cgi-bin directory. C programs and
 shell scripts will be installed in sub-directories of the user's home
-directory. Funtools is located in /soft/saord or /usr/local (i.e. with
-executables in /soft/saord/bin and libraries in /soft/saord/lib. etc.).
+directory. Funtools and cfitsio are located in /soft/saord or
+/usr/local respectively.
 
 <h3>Build the JS9 System</h3>
 <p> Once the configure arguments are set up, you run configure, etc.
