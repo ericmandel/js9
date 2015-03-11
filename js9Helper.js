@@ -45,9 +45,9 @@ var globalOpts = {
     analysisWrappers: "./analysis-wrappers",
     helperPlugins:    "./helper-plugins",
     maxBinaryBuffer:  150*1024000, // exec buffer: good for 4096^2 64-bit image
-    maxTextBuffer:    200*1024,    // exec buffer: good for text
+    maxTextBuffer:    5*1024000,   // exec buffer: good for text
     textEncoding:     "ascii",     // encoding for returned stdout from exec
-    workDir:          "",        // top-level working directory for exec
+    workDir:          "",          // top-level working directory for exec
     rmWorkDir:        true,        // remove workdir on disconnect?
     remoteMsgs:       1 // 0 => none, 1 => samehost, 2 => all
 };
