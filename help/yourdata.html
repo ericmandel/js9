@@ -35,6 +35,23 @@ Clicking on this URL will load the casa.fits file (here, stored in the
 fits directory directly beneath the Web page location). If the JS9
 server-side helper is running, it will be alerted about this new file
 so that it can run analysis, etc.
+
+<p>
+As of version 1.3, the cfitsio library is used to process FITS files
+in JS9. (Technical note: we used emscripten to compile cfitsio to
+JavaScript, and then added thin C and JavaScript layers to provide an
+interface to J9.)  Thus, you can utilize the cfitsio <b>extended file
+name syntax</b> to tailor the image data being displayed. For example:
+<pre>
+    href='javascript:JS9.Load("fits/snr.fits[events][pi==pha]");'
+</pre>
+will display display all photons in the EVENTS binary table having the
+same pi and pha values. Cfitsio also supports display of arbitrary
+image extensions, gzip'ed files, tile compressed files, image
+sections, etc.  See the
+ <a href="http://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/cfitsio.html">
+cfitsio documentation</a> for more information.
+
 <p>
 To override default image parameters, specify imgOpts parameters as the second argument:
 <pre>
@@ -59,7 +76,7 @@ itself is loaded by adding the <b>JS9.Preload()</b> routine to
 the <b>onload</b> event in your Web page <b>body</b> element:
 <pre>
 &lt;body onload="JS9.Preload('fits/casa.fits', 
-		          'fits/snr.fits', {colormap:'heat'},
+		          'fits/snr.fits[events][pi==pha]', {colormap:'heat'},
 		          'fits/3c58.fits',
 		          'fits/m13.fits', {scale:'linear', colormap:'sls'},
 		          'fits/3c273.fits',
@@ -70,7 +87,7 @@ Note that this routine takes a list of images, each of which
 optionally can have an associated <b>imgOpts</b> argument. The display
 opts can be passed as the final argument and will apply to all images.
 
-<h5>Last updated: September 4, 2014</h5>
+<h5>Last updated: March 12, 2015</h5>
 </div>
 
 </body>
