@@ -295,11 +295,29 @@ if( (JS9.BROWSER[0] === "Chrome") ){
 // JS9 Image object to manage images
 // ---------------------------------------------------------------------
 JS9.Image = function(file, params, func){
-    var sarr = [];
+    var sarr;
     var display;
     var pname, pinst, popts;
     var that = this;
     var localOpts=null;
+    var mksect = function(that, localOpts){
+	var zoom;
+	var arr = [];
+	// make up section array from default values
+	if( localOpts.xcen !== undefined ){
+	    arr.push(localOpts.xcen);
+	}
+	if( localOpts.ycen !== undefined ){
+	    arr.push(localOpts.ycen);
+	}
+	if( localOpts.zoom !== undefined ){
+	    zoom = that.parseZoom(localOpts.zoom);
+	    if( zoom ){
+		arr.push(zoom);
+	    }
+	}
+	return arr;
+    };
     // params can be an object containing local params, or the display string
     if( params ){
 	if( typeof params === "object" ){
@@ -367,16 +385,6 @@ JS9.Image = function(file, params, func){
     this.binning = {bin: 1, obin: 1};
     // temp flag determines if we should update shapes at end of this call
     this.updateshapes = false;
-    // make up section array from default values
-    if( localOpts.xcen !== undefined ){
-	sarr.push(localOpts.xcen);
-    }
-    if( localOpts.ycen !== undefined ){
-	sarr.push(localOpts.ycen);
-    }
-    if( localOpts.zoom !== undefined ){
-	sarr.push(localOpts.zoom);
-    }
     // file argument can be an object containing raw data or
     // a string containing a URL of a PNG image
     switch( typeof file ){
@@ -392,6 +400,7 @@ JS9.Image = function(file, params, func){
 	// set up initial section
 	this.mkSection();
 	// change center and zoom if necessary
+	sarr = mksect(this, localOpts);
 	if( sarr.length ){
 	    this.mkSection.apply(this, sarr);
 	}
@@ -455,6 +464,7 @@ JS9.Image = function(file, params, func){
 	    // set up initial section
 	    that.mkSection();
 	    // change center and zoom if necessary
+	    sarr = mksect(that, localOpts);
 	    if( sarr.length ){
 		that.mkSection.apply(that, sarr);
 	    }
@@ -1865,9 +1875,9 @@ JS9.Image.prototype.getZoom = function(){
     return this.primary.sect.zoom;
 };
 
-// set zoom of primary image
-JS9.Image.prototype.setZoom = function(zval){
-    var ozoom, nzoom, key;
+// return zoom from zoom string
+JS9.Image.prototype.parseZoom = function(zval){
+    var ozoom, nzoom;
     // get old zoom
     ozoom = this.primary.sect.zoom;
     // determine new zoom
@@ -1905,6 +1915,16 @@ JS9.Image.prototype.setZoom = function(zval){
     default:
 	return;
     } 
+    return nzoom;
+};
+
+// set zoom of primary image
+JS9.Image.prototype.setZoom = function(zval){
+    var nzoom, key;
+    nzoom = this.parseZoom(zval);
+    if( !nzoom ){
+	return;
+    }
     // remake section
     this.mkSection(nzoom);
     // redisplay the image

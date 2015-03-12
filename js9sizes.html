@@ -20,7 +20,7 @@
 <body onload="JS9.Preload(
     'png/casa.png', {colormap: 'red', scale: 'log', display: 'JS9'},
     'png/m13.png', {scale:'linear', colormap:'heat', display: 'JS9-128'},
-    'fits/ngc1316.fits', {scale:'linear', colormap: 'cool', display: 'JS9-256'},
+    'fits/ngc1316.fits', {zoom: 'toFit', scale:'linear', colormap: 'cool', display: 'JS9-256'},
     'png/ngkper.png', {scale: 'log', display: 'JS9-1024'});">
     <font size="+1">
     <center>
@@ -36,7 +36,11 @@
     &lt;div class="JS9" data-width="256px" data-height="256px"&gt;
     </pre>
     The <b>data-width</b> and <b>data-height</b> attributes can be
-    applied to other JS9 divs, such as the menubar.
+    applied to other JS9 divs, such as the menubar. For smaller menubars,
+    make sure you specify a height value as well:
+    <pre>
+    &lt;div class="JS9Menubar" id="JS9-256_Menubar" data-width="256px" data-height="48px"&gt;
+    </pre>
     </div>
     <p>
     <div id="size128">
@@ -48,7 +52,7 @@
     </div>
     <p>
     <div id="size256">
-    <div class="JS9Menubar" id="JS9-256_Menubar" data-width="256px"></div>
+    <div class="JS9Menubar" id="JS9-256_Menubar" data-width="256px" data-height="48px"></div>
     <div class="JS9" id="JS9-256" data-width="256px" data-height="256px"></div>
     </div>
     <p>
