@@ -11,12 +11,12 @@
   <script type="text/javascript" src="js9plugins.js"></script>
 </head>
 <body onload="JS9.Preload('png/casa.png', 
-		          'png/snr.png', {colormap:'heat'},
-		          'fits/3c58.fits',
-		          'png/m13.png', {scale:'linear', colormap:'sls'},
-		          'fits/3c273.fits',
-		          'fits/ngc1316.fits', {scale:'linear'},
-		          'fits/ngkper.fits', {colormap:'grey'});">
+		'fits/snr.fits[events][pi==pha]', {scale:'log'},
+		'png/m13.png', {scale:'linear', colormap:'sls'},
+		'fits/3c273.fits',
+		'png/3c58.png',
+		'fits/ngc1316.fits', {scale:'linear'},
+		'fits/ngkper.fits', {zoom: 'toFit', scale:'log'});">
     <font size="+1"><center>
     <b>JS9 Demo: preloading images into JS9</b>
     </center></font>
