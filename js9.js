@@ -8074,14 +8074,13 @@ JS9.fitsLibrary = function(s){
     case "cfitsio":
 	JS9.fits = Astroem;
 	// set up default options
-	JS9.fits.options = {
-	    handler: JS9.NewFitsImage,
-	    extlist: JS9.globalOpts.extlist,
-	    table: {
-		// size of extracted image
-		nx: JS9.globalOpts.dims[0],
-		ny: JS9.globalOpts.dims[1]
-	    }
+	JS9.fits.options = JS9.fits.options || {};
+	JS9.fits.options.handler = JS9.NewFitsImage;
+	JS9.fits.options.extlist = JS9.globalOpts.extlist;
+	JS9.fits.options.table = {
+	    // size of extracted image
+	    nx: JS9.globalOpts.dims[0],
+	    ny: JS9.globalOpts.dims[1]
 	};
 	break;
     default:
