@@ -19,6 +19,7 @@
       handleFITSFile: Module["handleFITSFile"],
       cleanupFITSFile: Module["cleanupFITSFile"],
       getFITSImage: Module["getFITSImage"],
+      maxFITSMemory: Module["maxFITSMemory"],
       options: Module["options"]
   };
 })();

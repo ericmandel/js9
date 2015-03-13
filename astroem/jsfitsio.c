@@ -18,16 +18,17 @@ https://groups.google.com/forum/#!topic/emscripten-discuss/JDaNHIRQ_G4
 #include <emscripten.h>
 #endif
 
-// the emscripten heap is about 1Gb, so we have to place limits on memory
-// somewhat arbitrarily, this size allows for a 10600 x 10600 4-byte image
-#define MAX_MEMORY 450000000
-
 #define IDIM 2
 #define IFILE "mem://";
 #define MFILE "foo"
 
 #define max(a,b) (a>=b?a:b)
 #define min(a,b) (a<=b?a:b)
+
+// the emscripten heap is about 1Gb, so we have to place limits on memory
+// somewhat arbitrarily, this size allows for a 10600 x 10600 4-byte image
+#define MAX_MEMORY 450000000
+static int max_memory = MAX_MEMORY;
 
 // ffhist3: same as ffhist2, but does not close the original file,
 // and/or replace the original file pointer 
@@ -320,7 +321,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
     return NULL;
   }
   // sanity check on memory limits
-  if( totbytes > MAX_MEMORY ){
+  if( totbytes > max_memory ){
     return NULL;
   }
   // try to allocate that much memory
@@ -478,4 +479,15 @@ void getHeaderToString(fitsfile *fptr, char **cardstr, int *ncard, int *status){
 // closeFITSFile: close a FITS file or memory object
 void closeFITSFile(fitsfile *fptr, int *status){
   fits_close_file(fptr, status);
+}
+
+// maxFITSMemory: set limit of size of memory available for a FITS image
+int maxFITSMemory(int limit){
+  int old = max_memory;
+  // if 0, don't set, just return current
+  if( limit ){
+    max_memory = limit;
+  }
+  // return prev value
+  return old;
 }

@@ -92,6 +92,7 @@ JS9.globalOpts = {
     xtimeout: 1000,		// connection timeout for xhr requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     dims: [2048, 2048],		// dims of extracted images
+    maxMemory: 450000000,	// max heap memory to allocate for a fits image
     debug: 0			// debug level
 };
 
@@ -8082,6 +8083,9 @@ JS9.fitsLibrary = function(s){
 	    nx: JS9.globalOpts.dims[0],
 	    ny: JS9.globalOpts.dims[1]
 	};
+	if( JS9.fits.maxFITSMemory && JS9.globalOpts.maxMemory ){
+	    JS9.fits.maxFITSMemory(JS9.globalOpts.maxMemory);
+	}
 	break;
     default:
 	JS9.error("unknown fits library: " + s);

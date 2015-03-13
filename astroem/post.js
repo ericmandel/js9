@@ -116,7 +116,7 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     status  = getValue(hptr+20, 'i32'); 
     _free(hptr);
     if( !bufptr ){
-      Module["error"]("image too large (max is approx. 10600x10600 x 4-byte)");
+      Module["error"]("image too large (max is JS9.globalOpts.maxMemory)");
     }
     Module["errchk"](status);
     // save pointer to section data
@@ -251,6 +251,12 @@ Module["cleanupFITSFile"] = function(fits, all) {
 	_free(hptr);
 	Module["errchk"](status);
     }
+};
+
+// set the amount of max memory for a FITS image
+Module["maxFITSMemory"] = function(bytes) {
+    bytes = bytes || 0;
+    return ccall("maxFITSMemory", "number", ["number"], [bytes]);
 };
 
 // error handler
