@@ -69,6 +69,15 @@ depending whether the image object also is passed:
 </pre>
 <p>
 
+Web browsers do not permit allocation of unlimited memory, regardless
+of the amount available on the given host. It seems that 1Gb is a
+limit often encountered; trying to allocate more memory can result in
+a browser hanging (e.g. the Mac spinning wheel being displayed
+indefinitely.) To avoid such hangs, JS9 enforces an image size limit
+of approximately 10600 x 10600 x 4-bytes. Memory availability is a
+fast-moving part of browser technology and we will revise the JS9
+limit as it becomes safe to do so.
+
 <h3>Pre-Loading a File From Your Web Page</h3>
 <p>
 You can pre-load one or more data files into JS9 when the Web page

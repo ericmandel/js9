@@ -115,6 +115,9 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     hdu.bitpix  = getValue(hptr+16, 'i32'); 
     status  = getValue(hptr+20, 'i32'); 
     _free(hptr);
+    if( !bufptr ){
+      Module["error"]("image too large (max is approx. 10600x10600 x 4-byte)");
+    }
     Module["errchk"](status);
     // save pointer to section data
     datalen = hdu.naxis1 * hdu.naxis2;
@@ -279,4 +282,4 @@ Module["error"] = function(s, e) {
     }
 };
 
-Module["options"] = {};
+Module["options"] = {"library": "cfitsio"};

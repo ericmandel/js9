@@ -18,6 +18,10 @@ https://groups.google.com/forum/#!topic/emscripten-discuss/JDaNHIRQ_G4
 #include <emscripten.h>
 #endif
 
+// the emscripten heap is about 1Gb, so we have to place limits on memory
+// somewhat arbitrarily, this size allows for a 10600 x 10600 4-byte image
+#define MAX_MEMORY 450000000
+
 #define IDIM 2
 #define IFILE "mem://";
 #define MFILE "foo"
@@ -167,7 +171,9 @@ fitsfile *ffhist3(fitsfile *fptr, /* I - ptr to table with X and Y cols*/
     return(histptr);
 }
 
-
+// gotoFITSHDU: try to go to a reasonable HDU if the primary is useless
+// we look for specified extensions and if not found, go to hdu #2
+// this is how xray binary tables are imaged automatically
 fitsfile *gotoFITSHDU(fitsfile *fptr, char *extlist, int *hdutype, int *status){
   int hdunum, naxis, thdutype, gotext;
   char *ext, *textlist;
@@ -233,7 +239,8 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   int naxis=IDIM;
   int xcen, ycen, dim1, dim2, type;
   void *obuf;
-  long naxes[IDIM], totpix, fpixel[IDIM], lpixel[IDIM], inc[IDIM]={1,1};
+  long totpix, totbytes;
+  long naxes[IDIM], fpixel[IDIM], lpixel[IDIM], inc[IDIM]={1,1};
 
   // get image dimensions and type
   fits_get_img_dim(fptr, &naxis, status);
@@ -283,33 +290,41 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   switch(*bitpix){
     case 8:
       type = TBYTE;
-      if(!(obuf = (void *)malloc(totpix * sizeof(char)))){return NULL;}
+      totbytes = totpix * sizeof(char);
       break;
     case 16:
       type = TSHORT;
-      if(!(obuf = (void *)malloc(totpix * sizeof(short)))){return NULL;}
+      totbytes = totpix * sizeof(short);
       break;
     case -16:
       type = TUSHORT;
-      if(!(obuf = (void *)malloc(totpix*sizeof(unsigned short)))){return NULL;}
+      totbytes = totpix * sizeof(unsigned short);
       break;
     case 32:
       type = TINT;
-      if(!(obuf = (void *)malloc(totpix * sizeof(int)))){return NULL;}
+      totbytes = totpix * sizeof(int);
       break;
     case 64:
       type = TLONGLONG;
-      if(!(obuf = (void *)malloc(totpix * sizeof(long long)))){return NULL;}
+      totbytes = totpix * sizeof(long long);
       break;
     case -32:
       type = TFLOAT;
-      if(!(obuf = (void *)malloc(totpix * sizeof(float)))){return NULL;}
+      totbytes = totpix * sizeof(float);
       break;
     case -64:
       type = TDOUBLE;
-      if(!(obuf = (void *)malloc(totpix * sizeof(double)))){return NULL;}
+      totbytes = totpix * sizeof(double);
       break;
   default:
+    return NULL;
+  }
+  // sanity check on memory limits
+  if( totbytes > MAX_MEMORY ){
+    return NULL;
+  }
+  // try to allocate that much memory
+  if(!(obuf = (void *)malloc(totbytes))){
     return NULL;
   }
   /* read the image section */
