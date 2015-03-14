@@ -50,6 +50,7 @@ hist)
     fi
     ARGS=""
     FILE="$1"; shift
+    FILE=`echo $FILE | sed 's/\]\[/,/g'`
     NORM="$1"; shift;
     if [ $NORM = "true" ]; then
       ARGS="$ARGS -n"
@@ -84,6 +85,7 @@ histplot)
     fi
     ARGS=""
     FILE="$1"; shift;
+    FILE=`echo $FILE | sed 's/\]\[/,/g'`
     NORM="$1"; shift;
     if [ $NORM = "true" ]; then
       ARGS="$ARGS -n"
