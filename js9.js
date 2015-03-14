@@ -1211,34 +1211,30 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, file){
 	   ui[i] = s.charCodeAt(i);
 	}
     }
-    // convert encoded string/array into a typed array
-    if( $.isArray(hdu.image) || hdu.image instanceof ArrayBuffer ){
-	// flatten if necessary
-	if( $.isArray(hdu.image[0]) ){
-	    hdu.image = hdu.image.reduce(function(a, b){return a.concat(b);});
-	}
-	switch(this.raw.bitpix){
-	case 8:
-	    this.raw.data = new Uint8Array(hdu.image);
+    // make sure we have a typed array
+    // flatten if necessary
+    if( $.isArray(hdu.image[0]) ){
+	hdu.image = hdu.image.reduce(function(a, b){return a.concat(b);});
+    }
+    switch(this.raw.bitpix){
+    case 8:
+	this.raw.data = new Uint8Array(hdu.image);
 	break;
-	case 16:
-	    this.raw.data = new Int16Array(hdu.image);
+    case 16:
+	this.raw.data = new Int16Array(hdu.image);
 	break;
-	case -16:
-	    this.raw.data = new Uint16Array(hdu.image);
+    case -16:
+	this.raw.data = new Uint16Array(hdu.image);
 	break;
-	case 32:
-	    this.raw.data = new Int32Array(hdu.image);
+    case 32:
+	this.raw.data = new Int32Array(hdu.image);
 	break;
-	case -32:
-	    this.raw.data = new Float32Array(hdu.image);
+    case -32:
+	this.raw.data = new Float32Array(hdu.image);
 	break;
-	case -64:
-	    this.raw.data = new Float64Array(hdu.image);
+    case -64:
+	this.raw.data = new Float64Array(hdu.image);
 	break;
-	}
-    } else {
-	this.raw.data = hdu.image;
     }
     // array of cards
     this.raw.card = hdu.card;
