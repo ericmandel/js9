@@ -3718,7 +3718,6 @@ JS9.Menubar = function(width, height){
 			var j, s;
 			var udisp = val;
 			var uim = udisp.image;
-			opt.lastmenukey = key;
 			switch(key){
 			case "close":
 			    if( uim ){
@@ -3836,7 +3835,6 @@ JS9.Menubar = function(width, height){
 			var jj, ucat, umode, uplugin;
 			var udisp = val;
 			var uim = udisp.image;
-			opt.lastmenukey = key;
 			switch(key){
 			case "valpos":
 			    if( uim ){
@@ -3921,6 +3919,8 @@ JS9.Menubar = function(width, height){
 			}
 			break;
 		    }
+		    // key was pressed
+		    e.data.edited = true;
 		};
 		var items = {};
 		items.zoomtitle = {name: "Zoom Factors:", disabled: true};
@@ -3962,7 +3962,6 @@ JS9.Menubar = function(width, height){
 		    getDisplays().forEach(function(val, idx, array){
 			var udisp = val;
 			var uim = udisp.image;
-			opt.lastmenukey = key;
 			if( uim ){
 			    switch(key){
 			    case "zoomIn":
@@ -4007,13 +4006,12 @@ JS9.Menubar = function(width, height){
 			    var udisp = that.display;
 			    var uim = udisp.image;
 			    if( uim ){
-				// if a menu option was selected, we're done
-				if( opt.lastmenukey ){
-				    delete opt.lastmenukey;
-				    return;
+				// if a key was pressed, do the edit
+				if( opt.edited ){
+				    delete opt.edited;
+				    obj = $.contextMenu.getInputValues(opt);
+				    editZoom(uim, obj);
 				}
-				obj = $.contextMenu.getInputValues(opt);
-				editZoom(uim, obj);
 			    }
 			}
 		    },
@@ -4056,6 +4054,8 @@ JS9.Menubar = function(width, height){
 			editScale(vim, obj);
 			break;
 		    }
+		    // key was pressed
+		    e.data.edited = true;
 		};
 		items.scaletitle = {name: "Scaling Algorithms:", 
 				    disabled: true};
@@ -4070,27 +4070,26 @@ JS9.Menubar = function(width, height){
 		items["sep" + n++] = "------";
 		items.scalemin = {
 		    events: {keyup: keyScale},
-		    name: "low value for clipping:", 
+		    name: "low limit for clipping:",
 		    type: "text"
 		};
 		items.scalemax = {
 		    events: {keyup: keyScale},
-		    name: "high value for clipping:", 
+		    name: "high limit for clipping:",
 		    type: "text"
 		};
 		items["sep" + n++] = "------";
 		items.dminmax = {
-		    name: "set values to data min/max"
+		    name: "set limits to data min/max"
 		};
 		items.zscale = {
-		    name: "set values to zscale z1/z2"
+		    name: "set limits to zscale z1/z2"
 		};
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val, idx, array){
 			var udisp = val;
 			var uim = udisp.image;
-			opt.lastmenukey = key;
 			if( uim ){
 			    switch(key){
 			    case "dminmax":
@@ -4139,13 +4138,12 @@ JS9.Menubar = function(width, height){
 			    var udisp = that.display;
 			    var uim = udisp.image;
 			    if( uim ){
-				// if a menu option was selected, we're done
-				if( opt.lastmenukey ){
-				    delete opt.lastmenukey;
-				    return;
+				// if a key was pressed, do the edit
+				if( opt.edited ){
+				    delete opt.edited;
+				    obj = $.contextMenu.getInputValues(opt);
+				    editScale(uim, obj);
 				}
-				obj = $.contextMenu.getInputValues(opt);
-				editScale(uim, obj);
 			    }
 			}
 		    },
@@ -4188,6 +4186,8 @@ JS9.Menubar = function(width, height){
 			editColor(vim, obj);
 			break;
 		    }
+		    // key was pressed
+		    e.data.edited = true;
 		};
 		items.cmaptitle = {name: "Colormaps:", disabled: true};
 		for(i=0; i<JS9.colormaps.length; i++){
@@ -4226,7 +4226,6 @@ JS9.Menubar = function(width, height){
 		    getDisplays().forEach(function(val, idx, array){
 			var udisp = val;
 			var uim = udisp.image;
-			opt.lastmenukey = key;
 			if( uim ){
 			    uim.setColormap(key);
 			}
@@ -4250,13 +4249,12 @@ JS9.Menubar = function(width, height){
 			    var udisp = that.display;
 			    var uim = udisp.image;
 			    if( uim ){
-				// if a menu option was selected, we're done
-				if( opt.lastmenukey ){
-				    delete opt.lastmenukey;
-				    return;
+				// if a key was pressed, do the edit
+				if( opt.edited ){
+				    delete opt.edited;
+				    obj = $.contextMenu.getInputValues(opt);
+				    editColor(uim, obj);
 				}
-				obj = $.contextMenu.getInputValues(opt);
-				editColor(uim, obj);
 			    }
 			}
 		    },
@@ -4303,7 +4301,6 @@ JS9.Menubar = function(width, height){
 		    getDisplays().forEach(function(val, idx, array){
 			var udisp = val;
 			var uim = udisp.image;
-			opt.lastmenukey = key;
 			if( uim ){
 			    switch(key){
 			    case "deleteRegions":
@@ -4370,7 +4367,6 @@ JS9.Menubar = function(width, height){
 			var rexp = new RegExp(key);
 			var udisp = val;
 			var uim = udisp.image;
-			opt.lastmenukey = key;
 			if( uim ){
 			    if( JS9.wcssyss.join("@").search(rexp) >=0 ){
 				uim.setWCSSys(key);
@@ -4484,7 +4480,6 @@ JS9.Menubar = function(width, height){
 			var a, did, jj, tplugin;
 			var udisp = val;
 			var uim = udisp.image;
-			opt.lastmenukey = key;
 			// first look for a plugin -- no image rquired
 			for(jj=0; jj<JS9.plugins.length; jj++){
 			    tplugin = JS9.plugins[jj];
