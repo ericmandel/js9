@@ -116,14 +116,14 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     status  = getValue(hptr+20, 'i32'); 
     _free(hptr);
     if( !bufptr ){
-      Module["error"]("image too large (max is JS9.globalOpts.maxMemory)");
+      Module["error"]("image is too large (max is JS9.globalOpts.maxMemory)");
     }
     Module["errchk"](status);
     // save pointer to section data
     datalen = hdu.naxis1 * hdu.naxis2;
     switch(hdu.bitpix){
     case 8:
-	hdu.image = HEAPU8.subarray(bufptr, bufptr+datalen);
+	hdu.image = HEAPU8.subarray(bufptr, bufptr + datalen);
 	break;
     case 16:
 	hdu.image = HEAP16.subarray(bufptr/2, bufptr/2 + datalen);
@@ -196,20 +196,23 @@ Module["handleFITSFile"] = function(blob, options, handler) {
     fileReader.onload = function() {
 	// filename or assume gzip'ed file: cfitsio will do the right thing ...
 	if( options.filename ){
-	    hdu.vname = options.filename
-		.replace(/\//, "_")
-		.replace(/\[.*\]/, "");
-	    fitsname = options.filename.replace(/\//, "_")
+	    // filename with extension to pass to cfitsio
+	    fitsname = options.filename
+		.replace(/^\.\.*/, "X")
+		.replace(/\//g, "_")
+	    // virtual file name without extension
+	    hdu.vname = fitsname.replace(/\[.*\]/g, "");
 	} else {
-	    hdu.vname = "myblob.gz";
 	    fitsname = "myblob.gz";
+	    hdu.vname = fitsname;
 	}
 	// delete old version, ignoring errors
 	try{ FS.unlink("/" + hdu.vname); }
 	catch(ignore){ }
 	// create a file in the emscripten virtual file system from the blob
 	arr = new Uint8Array(this.result);
-	FS.createDataFile("/", hdu.vname, arr, true, true);
+	try { FS.createDataFile("/", hdu.vname, arr, true, true); }
+	catch(e){ Module["error"]("can't create virtual file: " + hdu.vname); }
 	// open the virtual file as a FITS file
 	hptr = _malloc(8);
 	setValue(hptr+4, 0, 'i32');
