@@ -68,14 +68,23 @@ then the following are valid expressions:
   pha > 1
   energy == pha
   pha > 1 && energy <= 2
-  Math.max(pha,energy)>=2.5
+  max(pha,energy)>=2.5
 </pre>
 
 <p>
-In addition to the standard JavaScript/C syntax, filter expressions can make use of
-IRAF-style <b>range lists</b> which specify a range of values. The
-syntax requires that the column name be followed by an '=' sign, which
-is followed by a range expression of the form:
+NB: when using cfitsio (the default, instead of fitsy.js), table
+filtering follows cfitsio conventions, which is documented
+<a href="http://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/node97.html">here</a>.
+
+<p>
+NB: the range list support described below works only when using
+fitsy.js. It does not work for cfitsio.
+
+<p>
+In addition to the standard JavaScript/C syntax, fitsy.js filter expressions
+can make use of IRAF-style <b>range lists</b> which specify a range of
+values. The syntax requires that the column name be followed by an '='
+sign, which is followed by a range expression of the form:
 <pre>
   col = :v            # col <= v in range
   col = v:            # col >= v in range
