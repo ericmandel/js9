@@ -3073,7 +3073,7 @@ JS9.Display = function(el){
 	return JS9.dragexit(this.id, evt.originalEvent);
     });
     this.divjq.on("drop", this, function(evt){
-	return JS9.dragdrop(this.id, evt.originalEvent, JS9.Load);
+	return JS9.dragdrop(this.id, evt.originalEvent, JS9.NewFITSImage);
     });
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.Load(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
     // add to list of displays
@@ -10019,6 +10019,7 @@ JS9.mkPublic("Load", function(file, opts){
 	} else {
 	    JS9.error("no FITS module available to process this memory FITS");
 	}
+	return;
     }
     // if this file is already loaded, just redisplay
     im = JS9.lookupImage(file, display);
@@ -10254,6 +10255,8 @@ JS9.mkPublic("Preload", function(arg1){
 	}
 	JS9.globalOpts.alerts = true;
 	if( emsg ){ JS9.error("could not preload image(s): " + emsg); }
+	// remove saved arguments so we don't reload them on reconnect
+	JS9.preloads = [];
 	break;
     case 3:
 	// do nothing
