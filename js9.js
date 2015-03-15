@@ -15,7 +15,7 @@
  *           fabric.js
  *           dhtmlwindow.js
  *           sprintf.js
- *           astroem.js
+ *           astroem.js (includes cfitsio, wcslib)
  *           fitsy.js
  *
  */
