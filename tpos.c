@@ -355,7 +355,7 @@ int main(int argc, char **argv)
     ofptr = fptr;
     break;
   default:
-    ofptr = filterTableToImage(fptr, NULL, NULL, NULL, NULL, &status);
+    ofptr = filterTableToImage(fptr, NULL, NULL, NULL, NULL, 1, &status);
     errchk(status);
     // get image array
     dbuf = getImageToArray(ofptr, NULL, NULL, 
@@ -397,6 +397,12 @@ int main(int argc, char **argv)
   while( ++ncard <= maxcard ){
     fits_read_record(ofptr, ncard, card, &status);
     errchk(status);
+    // change " to '
+    for(i=0; i<80; i++){
+      if( card[i] == '"' ){
+	card[i] = '\'';
+      }
+    }
     snprintf(tbuf, SZ_LINE-1, "%-80s", card);
     scat(tbuf, &jsonheader);
   }

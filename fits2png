@@ -169,18 +169,23 @@ if [ x$XDIM != x -a x$YDIM != x ]; then
       ftools)
 	NAXIS1=`fkeyprint infile=${FTYPE}$IFILE'[events][bin '$BL']' keynam=NAXIS1 | egrep = | awk -F= '{print $2}' | awk -F/ '{print $1}' | sed 's/^  *//g;s/  *$//g'`
 	NAXIS2=`fkeyprint infile=${FTYPE}$IFILE'[events][bin '$BL']' keynam=NAXIS2 | egrep = | awk -F= '{print $2}' | awk -F/ '{print $1}' | sed 's/^  *//g;s/  *$//g'`
+	if [ $NAXIS1 -gt $NAXIS2 ]; then
+	    BLOCK=`echo "($NAXIS1 * $BL) / $XDIM" | bc`
+	else
+	    BLOCK=`echo "($NAXIS2 * $BL) / $XDIM" | bc`
+	fi
 	;;
       funtools)
 	DIMS=`funimage ${FTYPE}$IFILE'[*,*,'$BL']' stdout bitpix=8 2>/dev/null | dd bs=80 count=10 2>/dev/null | sed -e 's/.\{80\}/&@/g' | tr '@' '\012' | egrep NAXIS'[1,2]' | sed 's# /.*##g;s# ##g'`
 	eval $DIMS
+	if [ $NAXIS1 -gt $NAXIS2 ]; then
+	    BLOCK=`echo "($NAXIS1 * $BL + ($XDIM - 1)) / $XDIM" | bc`
+	else
+	    BLOCK=`echo "($NAXIS2 * $BL + ($XDIM - 1)) / $XDIM" | bc`
+	fi
 	;;
   esac
 
-  if [ $NAXIS1 -gt $NAXIS2 ]; then
-    BLOCK=`echo "($NAXIS1 * $BL + ($XDIM - 1)) / $XDIM" | bc`
-  else
-    BLOCK=`echo "($NAXIS2 * $BL + ($XDIM - 1)) / $XDIM" | bc`
-  fi
 
   case $XEQ in
       ftools)
