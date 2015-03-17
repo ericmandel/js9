@@ -59,6 +59,7 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     var fptr = fits.fptr;
     var cens = [0, 0];
     var dims = [0, 0];
+    var bin = 1;
     // clean up previous image section (but not the FITS file itself)
     if( hdu.fits ){
 	Module["cleanupFITSFile"](hdu.fits, false);
@@ -81,6 +82,7 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	    if( options.table.cy ){ cens[1] = options.table.cy; }
 	    if( options.table.nx ){ dims[0] = options.table.nx; }
 	    if( options.table.ny ){ dims[1] = options.table.ny; }
+	    if( options.table.bin ){ bin = options.table.bin; }
 	}
 	hptr = _malloc(28);
 	setValue(hptr,    dims[0], 'i32');
@@ -89,13 +91,13 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	setValue(hptr+16, cens[1], 'double');
 	setValue(hptr+24, 0, 'i32');
 	ofptr = ccall("filterTableToImage", "number",
-	        ["number", "string", "number", "number", "number", "number"], 
-	        [fptr, filter, 0, hptr, hptr+8, hptr+24]);
+        ["number", "string", "number", "number", "number", "number", "number"], 
+        [fptr, filter, 0, hptr, hptr+8, bin, hptr+24]);
 	hdu.table.nx = getValue(hptr,     'i32');
 	hdu.table.ny = getValue(hptr+4,   'i32');
 	hdu.table.cx = getValue(hptr+8,   'double');
 	hdu.table.cy = getValue(hptr+16,  'double');
-	hdu.table.bin = 1;
+	hdu.table.bin = bin;
 	hdu.table.filter = filter;
 	status  = getValue(hptr+24, 'i32'); 
 	_free(hptr);

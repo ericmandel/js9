@@ -336,7 +336,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
 
 // filterTableToImage: filter a binary table, create a temp image
 fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
-			     int *dims, double *cens, int *status){
+			     int *dims, double *cens, int bin, int *status){
   int i, dim1, dim2;
   int imagetype=TINT, naxis=IDIM, recip=0;
   int tstatus;
@@ -361,6 +361,7 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   fitsfile *ofptr;
 
   // set up defaults
+  if( !bin ) bin = 1;
   wtcol[0] = '\0';
   if( cols && cols[0] && cols[1] ){
     strcpy(colname[0], cols[0]);
@@ -372,7 +373,7 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   for(i=0; i<IDIM; i++){
     minin[i] = DOUBLENULLVALUE;
     maxin[i] = DOUBLENULLVALUE;
-    binsizein[i] = DOUBLENULLVALUE;
+    binsizein[i] = (double)bin;
     minname[i][0] = '\0';
     maxname[i][0] = '\0';
     binname[i][0] = '\0';
@@ -436,7 +437,7 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   dvalue = (dim2 / 2) - ycen; tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTV2", &dvalue, comment, &tstatus);
 
-  dvalue = 1.0; *comment = '\0'; tstatus = 0;
+  dvalue = 1.0 / bin; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTM1_1", &dvalue, comment, &tstatus); 
   tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTM1_1", &dvalue, comment, &tstatus);
@@ -451,7 +452,7 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTM2_1", &dvalue, comment, &tstatus);
 
-  dvalue = 1.0; *comment = '\0'; tstatus = 0;
+  dvalue = 1.0 / bin; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTM2_2", &dvalue, comment, &tstatus); 
   tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTM2_2", &dvalue, comment, &tstatus);
