@@ -35,6 +35,7 @@ net/
 notes/
 old/
 png/
+png-v[0-9]*/
 rites/
 sfs/
 smartx/
