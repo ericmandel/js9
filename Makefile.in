@@ -167,7 +167,7 @@ SCRIPTS2 =	js9
 
 MFILES =	Makefile Makefile.in conf.h conf.h.in config.guess config.sub \
 		configure configure.ac install-sh js9helper.pc.in js9.in \
-		saoconfig saoprefs.sed nnode mkhelper mkjs9 \
+		saoconfig saoprefs.sed nnode mkhelper mkjs9 util astroem \
 		js9Helper-default.cgi js9load README
 
 UTILLIB	=	libutil.a
