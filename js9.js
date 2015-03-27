@@ -7306,17 +7306,18 @@ JS9.Magnifier.display = function(im, ipos){
     // display magnifier image
     magDisp.context.clear();
     magDisp.context.drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh);
-    // add the center point to the magnifier, if necessary
+    // stuff we only do once
     if( !im.magnifier.boxid ){
+	// add the center point to the magnifier, if necessary
 	im.magnifier.boxid = im.addShapes("magnifier", "box");
+	// make background black, which looks better at the edge
+	$(magDisp.canvas).css("background-color", "black");
     }
     // set size and position based on zoom
     nx = magDisp.width/2;
     ny = magDisp.height/2;
     im.changeShapes("magnifier", im.magnifier.boxid,
 	{left: nx, top:  ny, width: zoom, height: zoom});
-    // make background black, which looks better at the edge
-    $(magDisp.canvas).css("background-color", "black");
 };
 
 // zoom the rectangle inside the magnifier (RGB) image
