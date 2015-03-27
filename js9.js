@@ -7315,6 +7315,8 @@ JS9.Magnifier.display = function(im, ipos){
     ny = magDisp.height/2;
     im.changeShapes("magnifier", im.magnifier.boxid,
 	{left: nx, top:  ny, width: zoom, height: zoom});
+    // make background black, which looks better at the edge
+    $(magDisp.canvas).css("background-color", "black");
 };
 
 // zoom the rectangle inside the magnifier (RGB) image
