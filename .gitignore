@@ -10,6 +10,7 @@ goo*
 node.log
 Makefile
 !astroem/Makefile
+!util/Makefile
 conf.h
 config.status
 config.log
