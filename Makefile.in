@@ -151,7 +151,7 @@ CGIFILES =	js9Helper.cgi
 
 WEBHELP	=	help
 
-WEBDATA	=	fits png kes75
+WEBDATA	=	fits png kes75 m13
 
 SRCS =		tpos.c js9helper.c
 
