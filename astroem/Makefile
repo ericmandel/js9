@@ -113,7 +113,7 @@ cfitsio:	FORCE
 
 clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#* $(ZLIB)/*.o  \
-		astroem*.js astroem*.mem \
+		astroem*.js astroem*.mem astroem.bc \
 		cimtest cimtest.js cimtest.html \
 		cnodetest cnodetest.js cnodetest.html)
 
