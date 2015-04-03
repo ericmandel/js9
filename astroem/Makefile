@@ -11,6 +11,9 @@ CFITSIO = ../../cfitsio
 # where C version of cfitsion is located
 CFITSIOC = ../../soft/cfitsio
 
+# where zlib sources are located
+ZLIB=./zee.js
+
 # emcc compiler flags
 # NB: -O2 is the recommended optimization (not -O3, as of 1/27/2015)
 # can't use mem file: we don't know where the mem file will resides
@@ -47,23 +50,23 @@ SRCS =  	wrappers.c wcsinit.c wcs.c wcscon.c \
 
 OBJS = 		$(SRCS:%.c=%.o)
 
-ZSRCS = 	./zee.js/adler32.c \
-		./zee.js/compress.c \
-		./zee.js/crc32.c \
-		./zee.js/deflate.c \
-		./zee.js/gzclose.c \
-		./zee.js/gzlib.c \
-		./zee.js/gzread.c \
-		./zee.js/gzwrite.c \
-		./zee.js/infback.c \
-		./zee.js/inffast.c \
-		./zee.js/inflate.c \
-		./zee.js/inftrees.c \
-		./zee.js/trees.c \
-		./zee.js/uncompr.c \
-		./zee.js/zutil.c \
-		./zee.js/zcompress.c \
-		./zee.js/zuncompress.c
+ZSRCS = 	$(ZLIB)/adler32.c \
+		$(ZLIB)/compress.c \
+		$(ZLIB)/crc32.c \
+		$(ZLIB)/deflate.c \
+		$(ZLIB)/gzclose.c \
+		$(ZLIB)/gzlib.c \
+		$(ZLIB)/gzread.c \
+		$(ZLIB)/gzwrite.c \
+		$(ZLIB)/infback.c \
+		$(ZLIB)/inffast.c \
+		$(ZLIB)/inflate.c \
+		$(ZLIB)/inftrees.c \
+		$(ZLIB)/trees.c \
+		$(ZLIB)/uncompr.c \
+		$(ZLIB)/zutil.c \
+		$(ZLIB)/zcompress.c \
+		$(ZLIB)/zuncompress.c
 
 ZOBJS = 	$(ZSRCS:%.c=%.o)
 
@@ -109,9 +112,10 @@ cfitsio:	FORCE
 		cp -p libcfitsio.a $${CDIR};)
 
 clean:		FORCE
-		rm -rf *.o *~ a.out* foo* *.map \#* zee.js/*.o \
+		@(rm -rf *.o *~ a.out* foo* *.map \#* $(ZLIB)/*.o  \
+		astroem*.js astroem*.mem \
 		cimtest cimtest.js cimtest.html \
-		cnodetest cnodetest.js cnodetest.html
+		cnodetest cnodetest.js cnodetest.html)
 
 # make c version for testing
 LDFLAGS	= -g
