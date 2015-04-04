@@ -2420,6 +2420,18 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     });
 };
 
+// save image as a png file
+JS9.Image.prototype.savePNG = function(fname){
+    if( window.hasOwnProperty("saveAs") ){
+	fname = fname || "js9.png";
+	this.display.canvas.toBlob(function(blob) {
+	    saveAs(blob, fname);
+	});
+    } else {
+	JS9.error("no saveAs function available to save PNG file");
+    }
+};
+
 // display analysis results (text or plot)
 JS9.Image.prototype.displayAnalysis = function(type, s, title){
     var id, did, hstr, pobj, divjq;
@@ -3705,6 +3717,7 @@ JS9.Menubar = function(width, height){
 		items["sep" + n++] = "------";
 		items.open = {name: "open ..."};
 		items.print = {name: "print ..."};
+		items.savepng = {name: "save as PNG"};
 		items.header = {name: "display FITS header"};
 		items.pageid = {name: "display pageid"};
 		items.close = {name: "close image"};
@@ -3739,6 +3752,11 @@ JS9.Menubar = function(width, height){
 			    break;
 			case "open":
 			    JS9.OpenFileMenu(udisp);
+			    break;
+			case "savepng":
+			    if( uim ){
+				uim.savePNG();
+			    }
 			    break;
 			case "print":
 			    if( uim ){
@@ -7101,7 +7119,11 @@ JS9.Regions.saveRegions = function(which, disp){
     var regstr = this.listRegions(which, 1);
     var s = sprintf("%s\n%s\n", header, regstr.replace(/; */g, "\n"));
     var blob = new Blob([s], {type: "text/plain;charset=utf-8"});
-    saveAs(blob, "js9.reg");
+    if( window.hasOwnProperty("saveAs") ){
+	saveAs(blob, "js9.reg");
+    } else {
+	JS9.error("no saveAs function available to save region file");
+    }
     return regstr;
 };
 
