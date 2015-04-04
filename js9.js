@@ -22,7 +22,7 @@
 
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 
-/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, Module, dhtmlwindow */
+/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, Module, dhtmlwindow, saveAs */
 
 /*jshint smarttabs:true */
 
@@ -46,9 +46,9 @@ JS9.DEFID = "JS9";		// default JS9 display id
 JS9.ANON = "[anonymous]";	// name to use for images with no name
 JS9.PREFSFILE = "js9Prefs.json";// prefs file to load
 JS9.ZINDEX = 0;			// z-index of image canvas: on bottom of js9
-JS9.SHAPEZINDEX = 4;		// 2-8: z-index of 2d graphics (4 is default)
+JS9.SHAPEZINDEX = 7;		// z-index of 2d graphics (regions is +2)
 JS9.MESSZINDEX = 8;		// z-index of messages: above graphics
-JS9.BTNZINDEX = 8;		// z-index of buttons on top of plugin canvases
+JS9.BTNZINDEX = 10;		// z-index of buttons on top of plugin canvases
 JS9.MENUZINDEX = 1000;		// z-index of menus: always on top!
 JS9.COLORSIZE = 1024;		// size of contrast/biased color array
 JS9.SCALESIZE = 16384;		// size of scaled color array
@@ -2242,13 +2242,13 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    r = that.fitsExt || "[]";
 	    break;
 	case "sregions":
-	    r = that.listRegions("source", false).replace(/\s+/g,"");
+	    r = that.listRegions("source", 0).replace(/\s+/g,"");
 	    break;
 	case "bregions":
-	    r = that.listRegions("background", false).replace(/\s+/g,"");
+	    r = that.listRegions("background", 0).replace(/\s+/g,"");
 	    break;
 	case "regions":
-	    r = that.listRegions("all", false).replace(/\s+/g,"");
+	    r = that.listRegions("all", 0).replace(/\s+/g,"");
 	    break;
 	default:
 	    // look for keyword in the serialized opts array
@@ -4281,6 +4281,7 @@ JS9.Menubar = function(width, height){
 		    "polygon": {name: "polygon"},
 		    "text": {name: "text"},
 		    "sep2": "------",
+		    "saveRegions" : {name: "saveRegions"},
 		    "listRegions" : {name: "listRegions"},
 		    "listonchange" : {name: "listOnChange"},
 		    "xeqonchange" : {name: "xeqOnChange"},
@@ -4303,8 +4304,11 @@ JS9.Menubar = function(width, height){
 				uim.removeShapes("regions", "all");
 				uim.clearMessage("regions");
 				break;
+			    case "saveRegions":
+				uim.saveRegions("all", true);
+				break;
 			    case "listRegions":
-				uim.listRegions("all", true);
+				uim.listRegions("all", 2);
 				break;
 			    case "xeqonchange":
 				uim.params.xeqonchange = !uim.params.xeqonchange;
@@ -6581,7 +6585,7 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	JS9.Fabric._updateShape.call(im, poly.params.layerName, poly, 
 				     null, "update");
 	if( im && (im.params.listonchange || poly.params.listonchange) ){
-	    im.listRegions(poly, true);
+	    im.listRegions(poly, 2);
 	}
 
 
@@ -6842,6 +6846,7 @@ JS9.Regions.init = function(layerName){
     // get layer name
     layerName = layerName || "regions";
     // add to image prototypes
+    JS9.Image.prototype.saveRegions = JS9.Regions.saveRegions;
     JS9.Image.prototype.listRegions = JS9.Regions.listRegions;
     // init the display shape layer
     dlayer = this.display.newShapeLayer(layerName, JS9.Regions.opts);
@@ -6863,9 +6868,9 @@ JS9.Regions.init = function(layerName){
 	    for(i=0; i<objs.length; i++){
 		if( objs[i].params ){
 		    if( tim.params.listonchange ){
-			tim.listRegions("all", true);
+			tim.listRegions("all", 2);
 		    } else if( objs[i].params.listonchange ){
-			tim.listRegions("selected", true);
+			tim.listRegions("selected", 2);
 		    }
 		    break;
 		}
@@ -7023,26 +7028,26 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 // ---------------------------------------------------------------------------
 
 // list one or more regions
-JS9.Regions.listRegions = function(which, disp){
+JS9.Regions.listRegions = function(which, mode){
     var i, region, rlen;
-    var bsstr, iestr;
+    var tags, tagstr, iestr;
     var regstr="", sepstr="; ";
-    var lasttype="none", dobsstr = false;
+    var lasttype="none", dotags = false;
     var pubs = [];
-    // default is to display
-    if( disp === undefined ){
-	disp = true;
+    // default is to display, including non-source tags
+    if( mode === undefined ){
+	mode = 2;
     }
     // get specified regions into an array
     pubs = this.getShapes("regions", which);
     // loop through shapes
     rlen = pubs.length;
-    // for display, differentiate between source and bkgd, if we have a bkgd
-    if( disp ){
+    // differentiate between source and bkgd, if we have a bkgd
+    if( mode ){
 	for(i=0; i<rlen; i++){
 	    region = pubs[i];
-	    if( region.tags.indexOf("background") > 0 ){
-		dobsstr = true;
+	    if( $.inArray("source", region.tags) === -1 ){
+		dotags = true;
 		break;
 	    }
 	}
@@ -7050,17 +7055,16 @@ JS9.Regions.listRegions = function(which, disp){
     // process all regions
     for(i=0; i<rlen; i++){
 	region = pubs[i];
-	if( region.tags.indexOf("exclude") >= 0 ){
+	tagstr = region.tags.join(",");
+	if( tagstr.indexOf("exclude") >= 0 ){
 	    iestr = "-";
 	} else {
 	    iestr = "";
 	}
-	if( dobsstr ){
-	    if( region.tags.indexOf("source") >= 0 ){
-		bsstr = " # source";
-	    } else {
-		bsstr = " # bkgd";
-	    }
+	if( dotags && tagstr.indexOf("source") >= 0 ){
+	    tags = "";
+	} else {
+	    tags = " # " + tagstr;
 	}
 	// use wcs string, if available
 	if( region.wcsstr && 
@@ -7079,15 +7083,25 @@ JS9.Regions.listRegions = function(which, disp){
 	    }
 	    regstr += (sepstr + iestr + region.imstr);
 	}
-	if( dobsstr ){
-	    regstr += bsstr;
+	if( dotags ){
+	    regstr += tags;
 	}
     }
     // display the region string, if necessary
-    if( disp ){
+    if( mode > 1 ){
 	this.displayMessage("regions", regstr);
     }
     // always return the region string
+    return regstr;
+};
+
+// save regions to a file
+JS9.Regions.saveRegions = function(which, disp){
+    var header = sprintf("# Region file format: JS9 version 1.0");
+    var regstr = this.listRegions(which, 1);
+    var s = sprintf("%s\n%s\n", header, regstr.replace(/; */g, "\n"));
+    var blob = new Blob([s], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, "js9.reg");
     return regstr;
 };
 
@@ -8615,7 +8629,7 @@ JS9.mouseMoveCB = function(evt){
 	if( sel ){
 	    if( im.params.listonchange || sel.params.listonchange ){
 		im.updateShape("regions", sel, null, "update", true);
-		im.listRegions("selected", true);
+		im.listRegions("selected", 2);
 	    }
 	}
     }
@@ -9670,7 +9684,7 @@ JS9.init = function(){
 	get: function(){
 	    var im = this.image;
 	    if( im ){
-		return im.listRegions("all", false) || "";
+		return im.listRegions("all", 0) || "";
 	    }
 	},
 	set: function(args){
