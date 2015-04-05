@@ -88,12 +88,12 @@ it in the menu.  The menu contains an <b>open ...</b> options which
 displays a file browser for loading FITS files (compressed or
 uncompressed).  It also contains options to:
 <ul>
-<li><b>print ...</b> to print the current image display window
+<li><b>print ...</b> print the current image display window (including 2D graphics)
+<li><b>display FITS header</b> display FITS header of the current image
+<li><b>display pageID</b>, a unique ID that can be used when communicating with JS9 externally
+<li><b>save as FITS</b> save the current image data as a FITS file (limited Safari support)
 <li><b>save as PNG</b> save the current image data as a PNG file (limited Safari support)
-<li><b>display FITS header</b> for the current image
-<li><b>display pageID</b>, a unique ID that can be used when
-communicating with JS9 externally
-<li><b>close image</b> to close the image and release browser resources
+<li><b>close image</b> to clear the image and release browser resources
 </ul>
 
 <li><p><b>View:</b> The <b>display value/position</b> option specifies whether
@@ -411,7 +411,7 @@ server is on your local host machine. In this case, you must set your
 DataPath variable in the Analysis menu to help JS9 locate the original 
 data file.
 
-<h5>Last updated: September 4, 2014</h5>
+<h5>Last updated: April 5, 2015</h5>
 </div>
 
 </body>

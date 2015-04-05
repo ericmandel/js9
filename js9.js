@@ -22,7 +22,7 @@
 
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 
-/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, Module, dhtmlwindow, saveAs */
+/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, Module, dhtmlwindow, saveAs */
 
 /*jshint smarttabs:true */
 
@@ -2420,18 +2420,6 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     });
 };
 
-// save image as a png file
-JS9.Image.prototype.savePNG = function(fname){
-    if( window.hasOwnProperty("saveAs") ){
-	fname = fname || "js9.png";
-	this.display.canvas.toBlob(function(blob) {
-	    saveAs(blob, fname);
-	});
-    } else {
-	JS9.error("no saveAs function available to save PNG file");
-    }
-};
-
 // display analysis results (text or plot)
 JS9.Image.prototype.displayAnalysis = function(type, s, title){
     var id, did, hstr, pobj, divjq;
@@ -2653,6 +2641,69 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
 	default:
 	    break;
 	}
+    }
+};
+
+// save image as a fits file
+JS9.Image.prototype.saveFITS = function(fname){
+    var i, j, k, bpe, idx, le;
+    var blob, header, npad, arr, buf, dbuf, _dbuf;
+    if( window.hasOwnProperty("saveAs") ){
+	dbuf = this.raw.data.buffer;
+	fname = fname || "js9.fits";
+	// get header
+	header = JS9.raw2FITS(this.raw);
+	// append padding to header now
+	npad = 2880 - (header.length % 2880);
+	if( npad === 2880 ){ npad = 0; }
+	for(i=0; i<npad; i++){ header += " "; }
+	// calculate padding for data for later
+	npad = 2880 - (dbuf.byteLength % 2880);
+	if( npad === 2880 ){ npad = 0; }
+	// make an array buffer to hold the whole FITS file
+	arr = new ArrayBuffer(header.length + dbuf.byteLength + npad);
+	// and a view of that array to manipulate
+	buf = new Uint8Array(arr);
+	// copy the header
+	for(i=0; i<header.length; i++){ buf[i] = header.charCodeAt(i); }
+	// copy data
+	// if necessary, swap data bytes to get FITS big-endian
+	le = new Int8Array(new Int16Array([1]).buffer)[0] > 0;
+	if( le ){
+	    idx = header.length;
+	    bpe = Math.abs(this.raw.bitpix)/8;
+	    _dbuf = new Uint8Array(dbuf);
+	    // swap bytes to big-endian
+	    for(i=0; i<_dbuf.byteLength; i+= bpe){
+		for(j=i+bpe-1, k=0; k<bpe; j--, k++){
+		    buf[idx++] = _dbuf[j];
+		}
+	    }
+	} else {
+	    // already big-endian, just copy the data
+	    buf.set(new Uint8Array(dbuf), header.length);
+	}
+	// now we can add data padding
+	idx = header.length + dbuf.byteLength;
+	for(i=0; i<npad; i++){ buf[idx++] = 0; }
+	// convert to blob
+	blob = new Blob([buf], {type: "application/octet-binary"});
+	// and save
+	saveAs(blob, fname);
+    } else {
+	JS9.error("no saveAs function available to save FITS file");
+    }
+};
+
+// save image as a png file
+JS9.Image.prototype.savePNG = function(fname){
+    if( window.hasOwnProperty("saveAs") ){
+	fname = fname || "js9.png";
+	this.display.canvas.toBlob(function(blob) {
+	    saveAs(blob, fname);
+	});
+    } else {
+	JS9.error("no saveAs function available to save PNG file");
     }
 };
 
@@ -3717,9 +3768,10 @@ JS9.Menubar = function(width, height){
 		items["sep" + n++] = "------";
 		items.open = {name: "open ..."};
 		items.print = {name: "print ..."};
-		items.savepng = {name: "save as PNG"};
 		items.header = {name: "display FITS header"};
 		items.pageid = {name: "display pageid"};
+		items.savefits = {name: "save image as FITS"};
+		items.savepng = {name: "save image as PNG"};
 		items.close = {name: "close image"};
 		return {
                     callback: function(key, opt){
@@ -3753,9 +3805,20 @@ JS9.Menubar = function(width, height){
 			case "open":
 			    JS9.OpenFileMenu(udisp);
 			    break;
+			case "savefits":
+			    if( uim ){
+				s = uim.id.replace(/png/, "fits")
+				          .replace(/.gz$/, "")
+				          .replace(/\[.*\]/,"");
+				uim.saveFITS(s);
+			    }
+			    break;
 			case "savepng":
 			    if( uim ){
-				uim.savePNG();
+				s = uim.id.replace(/fits/, "png")
+				          .replace(/.gz$/, "")
+				          .replace(/\[.*\]/,"");
+				uim.savePNG(s);
 			    }
 			    break;
 			case "print":
@@ -8353,13 +8416,17 @@ JS9.cardpars = function(card){
 
 // convert obj to FITS-style string
 JS9.raw2FITS = function(raw, forDisplay){
-    var i, obj, key, val;
+    var i, obj, key, val, card;
     var hasend=false;
     var t="";
     if( raw.card ){
 	// raw.card has comments, so use this if we are displaying header
 	for(i=0; i<raw.card.length; i++){
-	    t += raw.card[i];
+	    card = raw.card[i];
+	    t += card;
+	    if( card.substring(0,4) === "END " ){
+		hasend = true;
+	    }
 	    if( forDisplay ){
 		t += "\n";
 	    }
@@ -8367,7 +8434,11 @@ JS9.raw2FITS = function(raw, forDisplay){
     } else if( raw.cardstr ){
 	// raw.cardstr has comments, so use this if we are displaying header
 	for(i=0; i<raw.ncard; i++){
-	    t += raw.cardstr.slice(i*80, (i+1)*80);
+	    card = raw.cardstr.slice(i*80, (i+1)*80);
+	    t += card;
+	    if( card.substring(0,4) === "END " ){
+		hasend = true;
+	    }
 	    if( forDisplay ){
 		t += "\n";
 	    }
@@ -8393,12 +8464,12 @@ JS9.raw2FITS = function(raw, forDisplay){
 		}
 	    }
 	}
-	// add end card, if necessary
-	if( !hasend ){
-	    t += sprintf("%-8s%-72s", "END", " ");
-	    if( forDisplay ){
-		t += "\n";
-	    }
+    }
+    // add end card, if necessary
+    if( !hasend ){
+	t += sprintf("%-8s%-72s", "END", " ");
+	if( forDisplay ){
+	    t += "\n";
 	}
     }
     return t;
