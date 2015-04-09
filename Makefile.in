@@ -95,7 +95,7 @@ RANLIB =		@RANLIB@
 # script won't modify it and you shouldn't need to modify it
 # either.
 #----------------------------------------------------------------
-RM =		rm -f
+RM =		rm -rf
 
 CP =		cp -p
 
