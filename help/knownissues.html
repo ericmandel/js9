@@ -12,6 +12,17 @@
 <h3><center>JS9 Known Issues</center></h3>
 
 <ol>
+
+<li><b>Safari Mobile platforms (April 9, 2015 : NOT resolved)</b>
+<p>
+A maximim image size is enforced by Apple on Safari mobile devices.
+(See https://discussions.apple.com/thread/4975106 for a discussion.)
+If you want your JS9 PNG representation files to display on iPhones
+and iPads, they should be restricted to a size of less than
+approximately 1900x1900, depending on the size of the FITS header. So
+a PNG file of size 1024x1024 should be fine, while a file of size
+2048x2048 certainly will be too large.
+
 <li><b>All platforms, especially Chrome (June 21, 2014 : NOT resolved)</b>
 <p>
 Available memory can be a problem when loading very large gzip'ed FITS
@@ -24,15 +35,6 @@ limits on the total space available).  We hope that the 64-bit version
 of Chrome (in early Canary release as of 7/1/2014) will alleviate
 these problems. Otherwise, we will take a more drastic approach to
 memory management within JS9 (at the expense of speed).
-
-<li><b>All platforms (June 21, 2014 : NOT resolved)</b>
-<p>
-The zscale algorithm requires allocation of a fixed-size static memory
-buffer. We have limited the size of this secondary buffer to be large
-enough to handle a 4096 x 4096 x 4-byte image. If your image is larger
-than this, zscale will not run. We will revisit the size of the
-static buffer as we gain more experience with the size of images being
-analyzed (or eventually rewrite the algorithm).
 
 <li><b>All platforms (June 13, 2014 : NOT resolved)</b>
 <p>
@@ -80,7 +82,7 @@ loading. To avoid this situation, external processes should use the
 "status load" command to check for a completed load before sending
 further processing commands).
 
-<h5>Last updated: September 4, 2014</h5>
+<h5>Last updated: April 9, 2015</h5>
 </div>
 
 </body>

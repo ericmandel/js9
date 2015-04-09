@@ -75,6 +75,15 @@ for the generated image
 
 <h3>Generating the PNG file using tpos and fits2png</h3>
 <p>
+
+[<b>NB:</b> A maximim image size is enforced by Apple on Safari mobile
+devices.  (See https://discussions.apple.com/thread/4975106 for a
+discussion.)  If you want your JS9 PNG representation files to display
+on iPhones and iPads, they should be restricted to a size of less than
+approximately 1900x1900, depending on the size of the FITS header. So
+a PNG file of size 1024x1024 should be fine, while a file of size
+2048x2048 certainly will be too large. (April 9, 2015)]
+
 A PNG representation file can be created either statically or
 dynamically at display time as needed. The low-level <b>tpos</b>
 program and high-level <b>fits2png</b> script facilitate this conversion:
