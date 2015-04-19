@@ -451,6 +451,14 @@ canvas.surfacePlotCanvas {
     width: 150px;
 }
 
+.column_R3L
+{
+    position: absolute;
+    top: 0;
+    left: 300px;
+    width: 300px;
+}
+
 .column_R4
 {
     position: absolute;
