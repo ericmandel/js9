@@ -34,6 +34,7 @@
     <script type="text/javascript">
     var loadtype;
     var ndiv = 0;
+    var lastid;
     function myLoadInit() {
         loadtype = "standard";
         $(".loadLabel").html("");
@@ -63,6 +64,7 @@
     function myLoad(file, opts){
       var id, did, head, body, html, doc;
       var myopts = opts || {};
+      var nwin=1;
       switch(loadtype){
         // regular old div in this page: JS9 must be installed on this page
         case "standard":
@@ -71,11 +73,13 @@
           break;
         // lightweight window in this page
         case "light":
-          JS9.LoadWindow(file, myopts, "light");
+          myopts.id = "mylight" + nwin++;
+          lastid = JS9.LoadWindow(file, myopts, "light");
           break;
         // completely new window
         case "new":
-          JS9.LoadWindow(file, myopts, "new");
+          myopts.id = "mynew" + nwin++;
+          lastid = JS9.LoadWindow(file, myopts, "new");
           break;
         case "div":
           // make a reasonably unique id for the JS9 divs
