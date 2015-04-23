@@ -10206,10 +10206,16 @@ JS9.mkPublic("Load", function(file, opts){
 // nb: unlike JS9.Load, this required the opts param
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     var id, did, head, body, win, doc;
+    opts = opts || {};
     switch(type){
     case "light":
-        // make a reasonably unique id for the JS9 elements
-        id = "lite" + JS9.uniqueID();
+        // use supplied id or make a reasonably unique id for the JS9 elements
+	if( opts.id ){
+	    id = opts.id;
+	    delete opts.id;
+	} else {
+            id = "lite" + JS9.uniqueID();
+	}
         // and a second one for controlling the light window
         did = "d" + id;
         // make up the html with the unique id
@@ -10225,10 +10231,16 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
         opts.display = id;
         // just becomes a standard load
         JS9.Load(file, opts);
-        break;
+	// return the id
+	return id;
     case "new":
-        // make a reasonably unique id for the JS9 elements
-        id = "new" + JS9.uniqueID();
+        // use supplied id or make a reasonably unique id for the JS9 elements
+	if( opts.id ){
+	    id = opts.id;
+	    delete opts.id;
+	} else {
+            id = "new" + JS9.uniqueID();
+	}
         // get our own file's header for css and js files
         // if this page is generated on the server side, hardwire this ...
         // if JS9 is not installed, hardwire this ...
@@ -10250,7 +10262,8 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
         doc.write(html);
         // must close!
         doc.close();
-        break;
+	// return the id
+	return id;
     }
 });
 
