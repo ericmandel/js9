@@ -141,14 +141,22 @@ how to use this routine.
 where:
 <ul>
 <li><b>url</b>: url to load
-<li><b>opts</b>: optional object containing image parameters
+<li><b>opts</b>: optional object containing image parameters and/or the div id
 <li><b>type</b>: "light" or "new" 
 <li><b>html</b>: html for the new page (default is to display a menubar above the image)
 <li><b>winopts</b>: for "light", optional dhtml window options
 </ul>
+returns:
+<ul>
+<li><b>id</b>: the id of the JS9 display div
+</ul>
 This routine will load an image into a light-weight window or an entirely new
 window. The <b>url</b> and <b>opts</b> arguments are identical to the standard
-<b>JS9.Load()</b> call. The <b>type</b> argument determines whether to create
+<b>JS9.Load()</b> call, except that <b>opts</b> can contain an <b>id</b>
+string to specify the id of the JS9 div being created. If no id is specified,
+a unique id is generated. In either case, the id is returned by the call.
+<p>
+The <b>type</b> argument determines whether to create
 a light-weight window or a new (separate) window.
 <p>
 By default, the new window will contain a Menubar above an image display area:
