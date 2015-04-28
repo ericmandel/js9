@@ -249,6 +249,7 @@ JS9.auxFiles = [];		// array of auxiliary files
 JS9.publics = {};		// object containing defined public API calls
 JS9.helper = {};		// only one helper per page, please
 JS9.fits = {};			// object holding FITS access routines
+JS9.userOpts = {};		// object to hold localStorage opts
 
 // misc params
 // list of scales in mkScaledCells
@@ -8162,7 +8163,7 @@ JS9.fitsLibrary = function(s){
     case "fitsy":
 	JS9.fits = Fitsy;
 	JS9.fits.datahandler(JS9.NewFitsImage);
-	JS9.fits.options = JS9.fits.options || {};
+	JS9.fits.options = JS9.userOpts.fits || JS9.fits.options || {};
 	break;
     case "astroem":
     case "cfitsio":
@@ -8170,12 +8171,21 @@ JS9.fitsLibrary = function(s){
 	// set up default options
 	JS9.fits.options = JS9.fits.options || {};
 	JS9.fits.options.handler = JS9.NewFitsImage;
-	JS9.fits.options.extlist = JS9.globalOpts.extlist;
-	JS9.fits.options.table = {
-	    // size of extracted image
-	    nx: JS9.globalOpts.dims[0],
-	    ny: JS9.globalOpts.dims[1]
-	};
+	if( JS9.userOpts.fits ){
+	    JS9.fits.options.extlist =  JS9.userOpts.fits.extlist;
+	    JS9.fits.options.table = {
+		// size of extracted image
+		nx: JS9.userOpts.fits.table.nx,
+		ny: JS9.userOpts.fits.table.ny
+	    };
+	} else {
+	    JS9.fits.options.extlist =  JS9.globalOpts.extlist;
+	    JS9.fits.options.table = {
+		// size of extracted image
+		nx: JS9.globalOpts.dims[0],
+		ny: JS9.globalOpts.dims[1]
+	    };
+	}
 	if( JS9.fits.maxFITSMemory && JS9.globalOpts.maxMemory ){
 	    JS9.fits.maxFITSMemory(JS9.globalOpts.maxMemory);
 	}
@@ -9281,6 +9291,7 @@ JS9.instantiatePlugins = function(){
 // ---------------------------------------------------------------------
 
 JS9.init = function(){
+    var uopts;
     // check for HTML5 canvas, which we need
     if( !window.HTMLCanvasElement ){
 	JS9.error("sorry: your browser does not support JS9 (no HTML5 canvas support). Try a modern version of Firefox, Chrome, or Safari.");
@@ -9356,6 +9367,31 @@ JS9.init = function(){
 	// load page preferences, if possible
 	JS9.loadPrefs(JS9.PREFSFILE, 0);
     }
+    // replace with global opts with user opts, if necessary
+    if( window.hasOwnProperty("localStorage") ){
+	uopts = localStorage.getItem("images");
+	if( uopts ){
+	    try{ JS9.userOpts.images = JSON.parse(uopts); }
+	    catch(ignore){}
+	    if( JS9.userOpts.images ){
+		JS9.imageOpts = JS9.userOpts.images;
+	    }
+	}
+	uopts = localStorage.getItem("regions");
+	if( uopts ){
+	    try{ JS9.userOpts.regions = JSON.parse(uopts); }
+	    catch(ignore){}
+	    if( JS9.userOpts.regions ){
+		JS9.Regions.opts = JS9.userOpts.regions;
+	    }
+	}
+	// this gets replaced below
+	uopts = localStorage.getItem("fits");
+	if( uopts ){
+	    try{ JS9.userOpts.fits = JSON.parse(uopts); }
+	    catch(ignore){}
+	}
+   }
     // set debug flag
     JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
     // initialize astronomy emscripten routines (wcslib, etc), if possible

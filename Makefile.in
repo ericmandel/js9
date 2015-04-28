@@ -129,11 +129,13 @@ WEBFILES =	js9.js js9.min.js \
 
 SAOFILES =	index.html
 
-CSSFILES =	css/jquery.contextMenu.css css/dhtmlwindow.css
+CSSFILES =	css/jquery.contextMenu.css css/dhtmlwindow.css  \
+		css/tabcontent.css
 
-JSFILES =	js/jquery.min.js js/jquery.contextMenu.min.js js/jquery.flot.min.js js/jquery.flot.errorbars.min.js js/jquery.flot.selection.min.js js/flot-zoom.min.js js/sprintf.min.js js/dhtmlwindow.min.js js/dhtmlwindow_blurb.js js/fabric.min.js js/pako_inflate.min.js js/FileSaver.min.js js/canvas-toBlob.js js/astroem.js
+JSFILES =	js/jquery.min.js js/jquery.contextMenu.min.js js/jquery.flot.min.js js/jquery.flot.errorbars.min.js js/jquery.flot.selection.min.js js/flot-zoom.min.js js/sprintf.min.js js/dhtmlwindow.min.js js/dhtmlwindow_blurb.js js/fabric.min.js js/pako_inflate.min.js js/FileSaver.min.js js/canvas-toBlob.js js/tabcontent.js js/astroem.js
 
-PLUGINFILES =	plugins/archive/archive.js \
+PLUGINFILES =	plugins/core/prefs.js \
+		plugins/archive/archive.js \
 		plugins/fitsy/binning.js \
 		plugins/imexam/imexam.js \
 		plugins/imexam/encircled.js \
