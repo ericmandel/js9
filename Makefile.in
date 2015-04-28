@@ -176,6 +176,8 @@ UTILLIB	=	libutil.a
 
 TPOSOBJS =	tpos.o @CFITSIOOBJS@
 
+CIMTESTOBJS =	cimtest.o @CFITSIOOBJS@
+
 HELPEROBJS =	js9helper.o
 
 all:		progs-$(USEHELPER) helper
@@ -196,6 +198,9 @@ js9helper:	$(HELPEROBJS) $(UTILLIB)
 
 pngdisp:	pngdisp.o
 		$(CC) $(LDFLAGS) pngdisp.o -o pngdisp $(LIBS)
+
+cimtest:	$(CIMTESTOBJS)
+		$(CC) $(LDFLAGS) $(CIMTESTOBJS) -o cimtest $(LIBS)
 
 prefs:		FORCE
 		@(echo "copying default preferences to js9Prefs.json"; \
