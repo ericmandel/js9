@@ -159,7 +159,7 @@ SRCS =		tpos.c js9helper.c
 
 PROGS =		tpos js9helper
 
-TESTPROGS =	pngdisp
+TESTPROGS =	pngdisp cimtest
 
 INCLUDES =	js9helper.h
 
