@@ -416,6 +416,8 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
 	dim2 = dims[1];
       }
     }
+    dim1 *= bin;
+    dim2 *= bin;
     minin[0] = (int)(xcen - ((dim1+1)/2) + 1);
     minin[1] = (int)(ycen - ((dim2+1)/2) + 1);
     maxin[0] = (int)(xcen + (dim1/2));
@@ -429,12 +431,12 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   // update/add LTM and LTV header params
   dvalue = 0.0; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTV1", &dvalue, comment, &tstatus); 
-  dvalue = (dim1 / 2) - xcen; tstatus = 0;
+  dvalue = ((dim1 / 2) - xcen) / bin; tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTV1", &dvalue, comment, &tstatus);
 
   dvalue = 0.0; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTV2", &dvalue, comment, &tstatus); 
-  dvalue = (dim2 / 2) - ycen; tstatus = 0;
+  dvalue = ((dim2 / 2) - ycen) / bin; tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTV2", &dvalue, comment, &tstatus);
 
   dvalue = 1.0 / bin; *comment = '\0'; tstatus = 0;
@@ -459,8 +461,8 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
 
   // return the center and dims used
   if( dims ){
-    dims[0] = dim1;
-    dims[1] = dim2;
+    dims[0] = dim1 / bin;
+    dims[1] = dim2 / bin;
   }
   if( cens ){
     cens[0] = xcen;

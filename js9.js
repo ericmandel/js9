@@ -91,7 +91,7 @@ JS9.globalOpts = {
     internalValPos: true,	// a fancy info plugin can turns this off
     xtimeout: 1000,		// connection timeout for xhr requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
-    dims: [2048, 2048],		// dims of extracted images
+    dims: [1024, 1024],		// dims of extracted images
     maxMemory: 450000000,	// max heap memory to allocate for a fits image
     debug: 0			// debug level
 };
@@ -1808,22 +1808,30 @@ JS9.Image.prototype.displayImage = function(imode){
 // refresh data for an existing image
 // input obj is a fits object, array, typed array, etc.
 JS9.Image.prototype.refreshImage = function(obj, func){
-    var key, oxcen, oycen, ozoom, dobin;
+    var key, oxcen, oycen, owidth, oheight, ozoom, doreg;
     // save section in case it gets reset
     oxcen = this.primary.sect.xcen;
     oycen = this.primary.sect.ycen;
     ozoom = this.primary.sect.zoom;
+    owidth = this.raw.width;
+    oheight = this.raw.height;
     // save old binning
     this.binning.obin = this.binning.bin;
     // generate new data
     this.mkRawDataFromHDU(obj);
-    dobin = (this.binning.obin !== this.binning.bin);
-    // restore section
-    this.mkSection(oxcen, oycen, ozoom);
+    // doreg = (this.binning.obin !== this.binning.bin);
+    doreg = true;
+    // restore section unless dimensions changed
+    if( (this.raw.width === owidth) && (this.raw.height === oheight) ){
+	this.mkSection(oxcen, oycen, ozoom);
+    } else {
+	this.mkSection();
+	this.mkSection(ozoom);
+    }
     // display new image data with old section
     this.displayImage("colors");
-    // update shape layers if we changed the binning params
-    if( dobin ){
+    // update shape layers if necessary
+    if( doreg ){
 	for( key in this.layers ){
 	    if( this.layers.hasOwnProperty(key) ){
 		if( this.layers[key].show ){
@@ -7669,7 +7677,6 @@ JS9.Panner.display = function(im){
     panner = im.panner;
     panDisp = im.display.pluginInstances.JS9Panner;
     sect = im.primary.sect;
-    var bin = im.binning.bin;
     // we're done if there is no panner image
     if( !panner.img ){
 	return;
@@ -7690,8 +7697,10 @@ JS9.Panner.display = function(im){
     tblkx = panner.zoom / panner.xblock;
     tblky = panner.zoom / panner.yblock;
     // size of rectangle
-    nwidth = sect.width * tblkx / sect.zoom * bin;
-    nheight = sect.height * tblky / sect.zoom * bin;
+    // nwidth = sect.width * tblkx / sect.zoom * bin;
+    // nheight = sect.height * tblky / sect.zoom * bin;
+    nwidth = sect.width * tblkx / sect.zoom;
+    nheight = sect.height * tblky / sect.zoom;
     // position of the rectangle
     nx = (sect.x0 - panner.x0) * tblkx + panner.ix;
     ny = (panDisp.height - 1) - ((sect.y1 - panner.y0) * tblky + panner.iy);
@@ -7699,9 +7708,8 @@ JS9.Panner.display = function(im){
     nx  += FUDGE;
     ny  += FUDGE;
     // convert to center pos
-    // not sure why bin factor comes in here???
-    nx += nwidth / bin / 2;
-    ny += nheight / bin / 2;
+    nx += nwidth / 2;
+    ny += nheight / 2;
     // nice integer values
     nx = Math.floor(nx);
     ny = Math.floor(ny);
