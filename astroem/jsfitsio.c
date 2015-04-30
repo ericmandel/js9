@@ -148,7 +148,7 @@ fitsfile *ffhist3(fitsfile *fptr, /* I - ptr to table with X and Y cols*/
         return(NULL);
     }
 
-    /* copy header keywords, converting pixel list WCS keywords to image WCS form */
+    /* copy header keywords, converting pixel list WCS keywords to image WCS */
     if (fits_copy_pixlist2image(fptr, histptr, 9, naxis, colnum, status) > 0)
     {
         ffpmsg("failed to copy pixel list keywords to new histogram header");
@@ -260,8 +260,8 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       xcen = dim1/2;
       ycen = dim2/2;
     }
-    fpixel[0] = (int)(xcen - ((dim1+1)/2) + 1);
-    fpixel[1] = (int)(ycen - ((dim2+1)/2) + 1);
+    fpixel[0] = (int)(xcen - (dim1+1)/2);
+    fpixel[1] = (int)(ycen - (dim2+1)/2);
     lpixel[0] = (int)(xcen + (dim1/2));
     lpixel[1] = (int)(ycen + (dim2/2));
   } else {
@@ -418,8 +418,8 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
     }
     dim1 *= bin;
     dim2 *= bin;
-    minin[0] = (int)(xcen - ((dim1+1)/2) + 1);
-    minin[1] = (int)(ycen - ((dim2+1)/2) + 1);
+    minin[0] = (int)(xcen - ((dim1+1)/2));
+    minin[1] = (int)(ycen - ((dim2+1)/2));
     maxin[0] = (int)(xcen + (dim1/2));
     maxin[1] = (int)(ycen + (dim2/2));
   }

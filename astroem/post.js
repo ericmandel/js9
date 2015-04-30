@@ -228,7 +228,7 @@ Module["handleFITSFile"] = function(blob, options, handler) {
 	// extract image section and call handler
 	Module["getFITSImage"]({fptr: fptr}, hdu, options, handler);
     };
-    // this start it all!
+    // this starts it all!
     fileReader.readAsArrayBuffer(blob);
 };
 

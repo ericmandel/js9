@@ -5474,9 +5474,6 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    nopts.left = obj.left;
 	} else {
 	    nopts.left = this.display.canvasjq.attr("width") / 2 - 1;
-	    if( zoom > 1 ){
-		nopts.left += (0.5 * zoom);
-	    }
 	}
     }
     if( nopts.top === undefined ){
@@ -5485,9 +5482,6 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	} else {
 	    // why is this fudge needed?
 	    nopts.top =  this.display.canvasjq.attr("height") / 2 - 1 + YFUDGE;
-	    if( zoom > 1 ){
-		nopts.top -= (0.5 * zoom);
-	    }
 	}
     }
     // relative movement requires opts left/top or an existing object
@@ -6063,7 +6057,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
 	zoom = this.primary.sect.zoom;
-	bin = this.binning.bin || 1;
+	// bin = this.binning.bin || 1;
+	bin = 1;
     } else {
 	zoom = 1;
 	bin = 1;
