@@ -1,0 +1,37 @@
+#!/bin/bash
+# mkpng: generate our standard set of png files 
+
+FILES1="b10 s100 i1000 f1000 d1000 f512 line512 snr m13 ngc1316"
+FILES2="3c273 3c58 ngkper"
+
+if [ x"$1" = x ]; then
+  PDIR="./png"
+else
+  PDIR="$1"
+fi
+mkdir -p $PDIR
+echo "creating png files in $PDIR ..."
+
+for f in $FILES1; do
+  FITS="./fits/${f}.fits"
+  p=`basename $f fits`
+  PNG="${PDIR}/${p}.png"
+  echo "$FITS -> $PNG"
+  $X ./tpos $FITS $PNG
+done
+
+for f in $FILES2; do
+  FITS="./fits/${f}.fits"
+  p=`basename $f fits`
+  PNG="${PDIR}/${p}.png"
+  echo "$FITS -> $PNG"
+  $X ./fits2png -js9 -odir ${PDIR} -v no $FITS
+done
+
+if [ x"HEADAS" != x ]; then
+  echo "./fits/casa.fits -s '1024@4027,1024@3944' -> ${PDIR}/casa.png (cfitsio)"
+  $X ./tpos -s '1024@4027,1024@3944' ./fits/casa.fits ${PDIR}/casa.png
+else
+  echo "./fits/casa.fits[1024@4027,1024@3944] -> ${PDIR}/casa.png (funtools)"
+  $X ./tpos ./fits/casa.fits'[1024@4027,1024@3944]' ${PDIR}/casa.png
+fi
