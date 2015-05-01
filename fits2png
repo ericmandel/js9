@@ -189,7 +189,8 @@ if [ x$XDIM != x -a x$YDIM != x ]; then
 
   case $XEQ in
       ftools)
-	IEXT="[events][bin $BLOCK]"$IEXT
+	IEXT="[events]"$IEXT
+	SWITCHES="-b $BLOCK"
 	;;
       funtools)
 	IEXT="[*,*,$BLOCK]"$IEXT

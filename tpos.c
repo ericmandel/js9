@@ -35,6 +35,7 @@ extern int optind;
 
 #define ABS(x) ((x)<0?(-x):(x))
 #define DEF_EVTLIST "EVENTS STDEVT"
+#define BUFLEN 1024
 
 /* NB: if you change the format of the png file, update the version number:
  * update major version number for an incompatible change
@@ -260,21 +261,28 @@ int main(int argc, char **argv)
 {
   int c, i, j, got, args, jsonlen, istart;
   int odim1, odim2, blen, pad;
-  int idim1=0, idim2=0, bitpix=0, ncard=0;
-  size_t totbytes, dlen;
+  int n;
+  char s1[BUFLEN], s2[BUFLEN], s3[BUFLEN], s4[BUFLEN];
+  int idim1=0, idim2=0, bitpix=0, ncard=0, block=1;
   int verbose=0;
+  size_t totbytes, dlen;
   char tbuf[SZ_LINE];
   char *buf=NULL;
   char *jsonheader=NULL;
   char *iname=NULL, *oname=NULL;
-  char *evtlist = NULL;
+  char *evtlist = DEF_EVTLIST;
   FILE *ofp=NULL;
   Optinfo optinfo;
 #if HAVE_CFITSIO
   int status = 0;
   int hdutype;
   int maxcard, morekeys;
+  int dims[2] = {0, 0};
   void *dbuf;
+  double d1, d2, d3, d4;
+  double cens[2] = {0.0, 0.0};
+  char *s;
+  char *filter=NULL;
   char card[81];
   fitsfile *fptr=NULL, *ofptr=NULL;
 #elif HAVE_FUNTOOLS
@@ -288,11 +296,53 @@ int main(int argc, char **argv)
   putenv("POSIXLY_CORRECT=true");
 
   /* process switch arguments */
-  while ((c = getopt(argc, argv, "e:v")) != -1){
+  while ((c = getopt(argc, argv, "b:e:f:s:v")) != -1){
     switch(c){
+    case 'b':
+#if HAVE_CFITSIO
+      block = atoi(optarg);
+#else
+      fprintf(stderr, "warning: -b switch only for cfitsio (ignoring)\n");
+#endif
+      break;
     case 'e':
       evtlist = optarg;
       break;
+    case 'f':
+#if HAVE_CFITSIO
+      filter = optarg;
+#else
+      fprintf(stderr, "warning: -f switch only for cfitsio (ignoring)\n");
+#endif
+      break;
+    case 's':
+#if HAVE_CFITSIO
+      s = strdup(optarg);
+      if( strlen(s) > BUFLEN ) s[BUFLEN-1] = '\0';
+      if( sscanf(s, "%[0-9.*] @ %[-0-9.*] , %[0-9.*] @ %[-0-9.*]%n",
+		 s1, s2, s3, s4, &n) == 4){
+	dims[0] = atof(s1);
+	cens[0] = atof(s2);
+	dims[1] = atof(s3);
+	cens[1] = atof(s4);
+      }  else if(sscanf(s, "%[-0-9.*] : %[-0-9.*] , %[-0-9.*] : %[-0-9.*]%n",
+			s1, s2, s3, s4, &n) == 4){
+	d1 = atof(s1);
+	d2 = atof(s2);
+	d3 = atof(s3);
+	d4 = atof(s4);
+	dims[0] = d2 - d1 + 1;
+	cens[0] = dims[0] / 2;
+	dims[1] = d4 - d3 + 1;
+	cens[1] = dims[1] / 2;
+      } else {
+	fprintf(stderr, "warning: unknown arg for -s switch (ignoring)\n");
+      }
+      if( s ) free(s);
+#else
+      fprintf(stderr, "warning: -s switch only for cfitsio (ignoring)\n");
+#endif
+     break;
     case 'v':
       verbose++;
       break;
@@ -307,11 +357,6 @@ int main(int argc, char **argv)
   }
   iname = argv[optind++];
   oname = argv[optind++];
-
-  // ensure a reasonable list of binary table extensions
-  if( !evtlist ){
-    evtlist = DEF_EVTLIST;
-  }
 
   /* optional info */
   if( !(optinfo = (Optinfo)calloc(sizeof(OptinfoRec), 1)) ){
@@ -347,20 +392,19 @@ int main(int argc, char **argv)
   switch(hdutype){
   case IMAGE_HDU:
     // get image array
-    dbuf = getImageToArray(fptr, NULL, NULL, 
-			   &idim1, &idim2, &bitpix, &status);
+    dbuf = getImageToArray(fptr, NULL, NULL, &idim1, &idim2, &bitpix, &status);
     errchk(status);
     fits_get_hdrspace(fptr, &maxcard, &morekeys, &status);
     errchk(status);
     ofptr = fptr;
     break;
   default:
-    ofptr = filterTableToImage(fptr, NULL, NULL, NULL, NULL, 1, &status);
+    ofptr = filterTableToImage(fptr, filter, NULL, dims, cens, block, &status);
     errchk(status);
     // get image array
-    dbuf = getImageToArray(ofptr, NULL, NULL, 
-			   &idim1, &idim2, &bitpix, &status);
+    dbuf = getImageToArray(ofptr, NULL, NULL, &idim1, &idim2, &bitpix, &status);
     errchk(status);
+    // get number of keys
     fits_get_hdrspace(ofptr, &maxcard, &morekeys, &status);
     errchk(status);
     break;
