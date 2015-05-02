@@ -261,9 +261,7 @@ int main(int argc, char **argv)
 {
   int c, i, j, got, args, jsonlen, istart;
   int odim1, odim2, blen, pad;
-  int n;
-  char s1[BUFLEN], s2[BUFLEN], s3[BUFLEN], s4[BUFLEN];
-  int idim1=0, idim2=0, bitpix=0, ncard=0, block=1;
+  int idim1=0, idim2=0, bitpix=0, ncard=0;
   int verbose=0;
   size_t totbytes, dlen;
   char tbuf[SZ_LINE];
@@ -275,15 +273,18 @@ int main(int argc, char **argv)
   Optinfo optinfo;
 #if HAVE_CFITSIO
   int status = 0;
+  int n;
   int hdutype;
   int maxcard, morekeys;
   int dims[2] = {0, 0};
+  int block = 1;
   void *dbuf;
   double d1, d2, d3, d4;
   double cens[2] = {0.0, 0.0};
   char *s;
   char *filter=NULL;
   char card[81];
+  char s1[BUFLEN], s2[BUFLEN], s3[BUFLEN], s4[BUFLEN];
   fitsfile *fptr=NULL, *ofptr=NULL;
 #elif HAVE_FUNTOOLS
   char *s=NULL;
