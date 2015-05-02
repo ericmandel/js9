@@ -346,7 +346,7 @@ function execCmd(io, socket, obj, cbfunc) {
 	cmd = args[0];
     } else {
 	// start in the appropriate work directory, if possible
-	if( socket.js9 && socket.js9.workDir ){
+	if( (obj.useWorkDir !== false) && socket.js9 && socket.js9.workDir ){
 	    myworkdir = socket.js9.workDir;
 	    // working directory relative to JS9 dir
 	    myenv.JS9_WORKDIR = myworkdir;
@@ -542,6 +542,8 @@ function socketioHandler(socket) {
 	if( fits2png[0] && fits2png[0].action ){
 	    // make up fits2png command string from defined fits2png action
 	    obj.cmd = fits2png[0].action + " " + obj.fits;
+	    // don't use a workdir
+	    obj.useWorkDir = false;
 	    // exec the conversion task (via a wrapper function)
 	    execCmd(io, socket, obj, cbfunc);
 	}
