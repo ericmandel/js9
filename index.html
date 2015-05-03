@@ -53,7 +53,7 @@
       #intro, #docs, #demos, #status, #download {
         padding: 10px;
       }
-      .tabcontent {
+      .mytabcontent {
         max-width: 440px;
       }
       .pluginContainer {
@@ -92,8 +92,7 @@
         js9tabs.setpersist(false); //toogle persistence of the tabs' state
         js9tabs.setselectedClassTarget("link"); //"link" or "linkparent"
         js9tabs.init();
-        JS9.Preload('js9/png/casa.png', 
-    	{colormap: 'grey', scale: 'log', contrast: 1.75, bias: 0.8});
+        JS9.Preload('js9/png/casa.png', {scale:'log', contrast:1.75, bias:0.8});
     }
     // run analysis on current image, defining a function to display results
     function runMyAnalysis(im, xreg){
@@ -195,7 +194,7 @@
     </div>
 
     <div id="myTabsDiv">
-    <div id="intro" class="tabcontent">
+    <div id="intro" class="tabcontent mytabcontent">
       JS9 is our Web-based implementation of DS9:
       <ul>
 	<li> display URL-based FITS images and binary tables
@@ -231,7 +230,7 @@
       region, and move it around ...
       <p>
     </div>
-    <div id="analysis" class="tabcontent">
+    <div id="analysis" class="tabcontent mytabcontent">
       <div id="myButtonsDiv">
 	<input type="radio" name="onchange" id="spectrum" autocomplete="off">Energy Spectrum</input>
 	<input type="radio" name="onchange" id="counts" autocomplete="off">Counts in Regions</input>
@@ -268,7 +267,7 @@
 	</div>
       </div>
     </div>
-    <div id="plugins" class="tabcontent">
+    <div id="plugins" class="tabcontent mytabcontent">
     <div class="pluginContainer">
     <p>
     JS9 plugins allow you to perform browser-based analysis: create a
@@ -285,7 +284,7 @@
     <p>
     </div>
     </div>
-    <div id="docs" class="tabcontent">
+    <div id="docs" class="tabcontent mytabcontent">
       <ul>
       <li><a href="js9/help/user.html" target="_blank">JS9 User Manual</a>
       <li><a href="js9/help/install.html" target="_blank">Installing JS9</a>
@@ -302,7 +301,7 @@
       <li><a href="js9/help/knownissues.html" target="_blank">Known Issues</a>
       </ul>
     </div>
-    <div id="demos" class="tabcontent">
+    <div id="demos" class="tabcontent mytabcontent">
       <ul>
 	<li><a href='js9/js9basics.html' target='_blank'>JS9 Demo: the basics</a>
 	<li><a href='js9/js9plugins.html' target='_blank'>JS9 Demo: adding plugins to JS9</a> 
@@ -319,7 +318,7 @@
 	<li><a href='js9/js9pngvsfits.html' target='_blank'>JS9 Demo: PNG representation files vs FITS files</a>
 	</ul>
     </div>
-    <div id="status" class="tabcontent">
+    <div id="status" class="tabcontent mytabcontent">
       <b>Release 1.4</b> provides bug fixes for the binning plugin, adds
       a user preference plugin, and supports export to FITS and PNG files.
       <p>
@@ -356,7 +355,7 @@
       If you have questions or comments, please contact:<br>
 	<a href="mailto:saord@cfa.harvard.edu?subject=JS9 inquiry">Eric Mandel</a>, Harvard-Smithsonian Center for Astrophysics
     </div>
-    <div id="download" class="tabcontent">
+    <div id="download" class="tabcontent mytabcontent">
       The current <b>JS9 source</b> tar file is available
       below. By itself, the tar file will suffice to display FITS
       images via drag-and-drop and URL-based access, and to utilize
