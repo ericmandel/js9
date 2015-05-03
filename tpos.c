@@ -268,7 +268,6 @@ int main(int argc, char **argv)
   char *buf=NULL;
   char *jsonheader=NULL;
   char *iname=NULL, *oname=NULL;
-  char *evtlist = DEF_EVTLIST;
   FILE *ofp=NULL;
   Optinfo optinfo;
 #if HAVE_CFITSIO
@@ -283,6 +282,7 @@ int main(int argc, char **argv)
   double cens[2] = {0.0, 0.0};
   char *s;
   char *filter=NULL;
+  char *evtlist = DEF_EVTLIST;
   char card[81];
   char s1[BUFLEN], s2[BUFLEN], s3[BUFLEN], s4[BUFLEN];
   fitsfile *fptr=NULL, *ofptr=NULL;
@@ -307,7 +307,11 @@ int main(int argc, char **argv)
 #endif
       break;
     case 'e':
+#if HAVE_CFITSIO
       evtlist = optarg;
+#else
+      fprintf(stderr, "warning: -e switch only for cfitsio (ignoring)\n");
+#endif
       break;
     case 'f':
 #if HAVE_CFITSIO
