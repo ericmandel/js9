@@ -457,6 +457,11 @@ int main(int argc, char **argv)
   }
 #elif HAVE_FUNTOOLS
   while( (s = FunParamGets(tfun, NULL, ++ncard, NULL, &dtype)) ){
+    for(i=0; i<80; i++){
+      if( s[i] == '"' ){
+	s[i] = '\'';
+      }
+    }
     scat(s, &jsonheader);
     if( s ) free(s);
   }
