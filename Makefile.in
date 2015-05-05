@@ -419,8 +419,11 @@ gitprefs:	FORCE
 
 release:	gitprefs
 		(mkdir -p $(DISTDIR)/$(DISTNAME); \
-		tar cf - $(WEBFILES) $(WEBDIRS) $(BEDIRS) $(WEBHELP) js9*.html \
-			 $(SRCS) $(INCLUDES) $(SCRIPTS) $(MFILES) | \
+		tar cf - \
+			 --exclude='node_modules/selenium-webdriver' \
+			 --exclude='node_modules/socket.io-*' \
+			 $(WEBFILES) $(WEBDIRS) $(BEDIRS) $(WEBHELP) js9*.html \
+			 $(SRCS) $(INCLUDES) $(SCRIPTS) $(MFILES) |\
 		(cd $(DISTDIR)/$(DISTNAME); tar xf -); \
 		cd $(DISTDIR) ; \
 		tar cf - $(DISTNAME) | gzip -c > $(DISTNAME).tar.gz; \
