@@ -40,6 +40,7 @@ var cdir = process.cwd();
 // default options ... change as necessary in prefsfile
 var globalOpts = {
     helperPort:       2718,
+    helperHost:       "0.0.0.0",
     cmd:              "js9helper",
     analysisPlugins:  "./analysis-plugins",
     analysisWrappers: "./analysis-wrappers",
@@ -129,7 +130,7 @@ function getTargets(io, socket, msg){
     // authentication function
     var authenticate = function(myip, clip){
 	// if I'm localhost, I can send to anyone
-	if( myip === "127.0.0.1" ){
+	if( (myip === "127.0.0.1") || (myip === "::ffff:127.0.0.1") ){
 	    return true;
 	}
 	// I can send to myself, if we configured that way
@@ -721,7 +722,7 @@ io = new Sockio(app);
 io.on("connection", socketioHandler);
 
 // start listening on the helper port
-app.listen(globalOpts.helperPort);
+app.listen(globalOpts.helperPort, globalOpts.helperHost);
 
 // an example of adding an in-line messsage to the analysis task list
 if( process.env.NODEJS_FOO === "analysis" ){
