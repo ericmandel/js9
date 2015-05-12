@@ -34,6 +34,7 @@
     <script type="text/javascript">
     var loadtype;
     var ndiv = 0;
+    var nwin=1;
     var lastid;
     function myLoadInit() {
         loadtype = "standard";
@@ -64,7 +65,6 @@
     function myLoad(file, opts){
       var id, did, head, body, html, doc;
       var myopts = opts || {};
-      var nwin=1;
       switch(loadtype){
         // regular old div in this page: JS9 must be installed on this page
         case "standard":
