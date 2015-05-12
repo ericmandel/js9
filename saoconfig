@@ -109,6 +109,17 @@ case $name in
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
+  js9*)
+  BASE=/proj/web-js9
+  ./configure 	$CF							\
+		--prefix=$BASE						\
+		--with-webdir=$BASE/prod/js9				\
+		--with-helper=nodejs					\
+		--with-funtools=$BASE/soft				\
+		--with-saodir=$BASE/prod				\
+		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
+  ;;
+
   ascpub*)
   ASCPUB=/proj/web-chandra/htdocs/edu/stop/js9
   ./configure 	$CF							\
