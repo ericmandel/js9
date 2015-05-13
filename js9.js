@@ -5889,7 +5889,7 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 	    s = new fabric.Text(params.text, opts);
 	    break;
 	default:
-	    JS9.error("unknown shape: "+params.shape);
+	    JS9.error("unknown shape: "+sobj.shape);
 	    break;
 	}
 	// add new shape to canvas
