@@ -43,6 +43,7 @@ node_modules/socket.io-*
 node_modules/selenium-webdriver/
 rites/
 sfs/
+svc/
 smartx/
 smartxNode/
 test/
