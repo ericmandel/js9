@@ -25,8 +25,12 @@ var helperURL=""; // will be composed after getting user options
 var istty = process.stdin.isTTY  || false;
 var rl = null;
 var socket = null;
+var debug = false;
 var verify = false;
 var msgType = "msg";
+var nsendexit = false;
+var nsend = 0;
+
 
 // ever-present
 function usage() {
@@ -70,10 +74,13 @@ JS9Msg.prototype.reset = function() {
 JS9Msg.prototype.setArgs = function(args) {
     switch(msgType){
     case "msg":
+        this.cmd = args[0];
+        this.args = args.slice(1) || [];
+	break;
     default:
         this.cmd = args[0];
         this.args = args.slice(1) || [];
-    break;
+	break;
     }
 };
 
@@ -85,7 +92,12 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
     // now reset cmd parameters for next time
     this.reset();
     // send msg to js9
+    if( debug ){
+	console.log(msgType + ": " + JSON.stringify(msg));
+    }
+    nsend++;
     socket.emit(msgType, msg, function(s){
+	nsend--;
 	// post-processing of results
 	switch(msg.cmd){
 	case "help":
@@ -115,6 +127,9 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
 	    }
 	    break;
 	}
+	if( nsendexit && !nsend ){
+	    that.exit(socket, rl, 0);
+	}
     });
 };
 
@@ -130,6 +145,9 @@ JS9Msg.prototype.server = function(socket, rl) {
     rl.on('line', function(line) {
 	rl.pause();
 	line = line.trim();
+	if( debug ){
+	    console.log("new line: " + line);
+	}
 	switch(line) {
 	case 'exit':
 	case 'quit':
@@ -153,6 +171,10 @@ JS9Msg.prototype.server = function(socket, rl) {
 // clean exit
 JS9Msg.prototype.exit = function(socket, rl, errno) {
     var res = errno || 0;
+    if( nsend > 0 ){
+	nsendexit = true;
+	return;
+    }
     if( rl ){
 	rl.close();
     }
@@ -216,6 +238,11 @@ while( !done ){
     case '-pageid':
       args.shift();
       msg.pageid = args.shift();
+      break;
+    case '-d':
+      args.shift();
+      debug = true;
+      verify = true;
       break;
     case '-v':
       args.shift();
