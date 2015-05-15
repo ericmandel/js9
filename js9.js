@@ -1809,6 +1809,11 @@ JS9.Image.prototype.displayImage = function(imode){
 // input obj is a fits object, array, typed array, etc.
 JS9.Image.prototype.refreshImage = function(obj, func){
     var key, oxcen, oycen, owidth, oheight, ozoom, doreg;
+    var pname, pinst, popts;
+    // check for refresh function
+    if( !func && JS9.imageOpts.onrefresh ){
+	func = JS9.imageOpts.onrefresh;
+    }
     // save section in case it gets reset
     oxcen = this.primary.sect.xcen;
     oycen = this.primary.sect.ycen;
@@ -1842,9 +1847,21 @@ JS9.Image.prototype.refreshImage = function(obj, func){
 	// also update region values
 	this.updateShapes("regions", "all", "binning");
     }
+    // call function, if necessary
     if( func ){
 	try{ JS9.xeqByName(func, window, this); }
 	catch(e){ JS9.error("in image refresh callback", e); }
+    }
+    // plugin callbacks
+    for( pname in this.display.pluginInstances ){
+	if( this.display.pluginInstances.hasOwnProperty(pname) ){
+	    pinst = this.display.pluginInstances[pname];
+	    popts = pinst.plugin.opts;
+	    if( pinst.isActive("onimagerefresh") ){
+		try{ popts.onimagerefresh.call(pinst, this); }
+		catch(e){ pinst.errLog("onimagerefresh", e); }
+	    }
+	}
     }
 };
     
