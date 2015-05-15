@@ -1,0 +1,15 @@
+Selenium-based tests for JS9. To run:
+
+    cd  to top level JS9 directory
+    node ./js9Test/js9Test.js --all
+or
+    node ./js9Test/js9Test.js [switches] test1.js test2.js ...
+
+See js9Test.js for switches, or contact saord@cfa.harvard.edu.
+		  
+NB: This test setup requires installation of selenium-webdriver for Node.js.
+We don't supply this by default because it's very large (20Mb). To install:
+
+       npm install selenium-webdriver
+
+See https://www.npmjs.com/package/selenium-webdriver for details.

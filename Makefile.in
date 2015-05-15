@@ -117,7 +117,7 @@ CGIXPATH =   	@CGIXPATH@
 # this is for SAO install only ... I think!
 SAODIR =	@SAODIR@
 
-WEBDIRS	=	plugins params js css images
+WEBDIRS	=	plugins params js css images js9Test
 
 BEDIRS =	node_modules analysis-plugins analysis-wrappers
 
@@ -448,7 +448,7 @@ clean:		FORCE
 			doc/*~ notes/*~ test/*~ help/*~ help/*.bak \
 			analysis-wrappers/*~ analysis-plugins/*~ \
 			plugins/*~ plugins/*/*~ \
-			util/*.o util/*~ \
+			util/*.o util/*~ js9Test/*~ \
 			autom4te.cache a.out.dSYM tmp/*; \
 			cd astroem && $(MAKE) clean;)
 
