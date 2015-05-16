@@ -1,6 +1,7 @@
 exports.dotest = function(js9Test){
     var image = js9Test.image || "CTB 109 FITS";
     js9Test.doImageURL(image, null, function(){
+	var d = "bin2/zoom2 region is the same as original region";
 	js9Test.doMenuItem("wcs", "pixels");
 	js9Test.doMenuItem("region", "circle");
 	js9Test.doMenuItem("view", "Binning");
@@ -23,10 +24,11 @@ exports.dotest = function(js9Test){
 		r2 = arr[2].trim();
 	    }
 	    if( r1 === r2 ){
-		js9Test.results("success");
+		js9Test.results("success", d);
 	    } else {
-		js9Test.results("FAILURE", r1, r2);
+		js9Test.results("FAILURE", d, r1, r2);
 	    }
 	});
+	js9Test.doMenuItem("file", "close image");
     });
 }

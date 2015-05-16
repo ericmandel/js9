@@ -199,11 +199,42 @@ js9Test.doMsg = function(msg, opts, func){
     });
 };
 
+// get html from specified xpath
+js9Test.getHTML = function(item, opts, func){
+    var itemXPath, xpath, timeout;
+    opts = opts || {};
+    // wait until the right element is available
+    timeout = js9Test.timeout;
+    if( opts.xpath ){
+	// make your own!
+	itemXPath = opts.xpath.replace(/\$item/, "'" + item + "'");
+    } else {
+	// default for a JS9menu item
+	itemXPath = "//pre[@class='" + item + "']" ;
+    }
+    xpath = By.xpath(itemXPath);
+    // wait for the element to be located ...
+    driver.wait(until.elementLocated(xpath), timeout).then(function(el){
+	// ... then get the innerHTML ...
+	el.getAttribute("innerHTML").then(function(html){
+	    // ... and call user function
+	    if( func ){
+		func(item, opts, html);
+	    }
+	});
+    });
+};
+
 // display results from a test
-js9Test.results = function(s){
+js9Test.results = function(s, d){
     var i;
-    console.log(js9Test.test + ": " + s);
-    for(i=1; i<arguments.length; i++){
+    if( d ){
+	d = " [" + d + "]";
+    } else {
+	d = "";
+    }
+    console.log(js9Test.test + d + ": " + s);
+    for(i=2; i<arguments.length; i++){
 	console.log("  #" + i + ": " + arguments[i]);
     }
 };
