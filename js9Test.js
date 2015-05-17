@@ -10,7 +10,7 @@
  *
  * Utilizes: minimist, selenium
  *
- * call: node ./js9Test/js9Test.js --id "myJS9" ./js9Test/t1.js ...
+ * call: node js9Test.js --all
  */
 
 /*jslint bitwise: true, plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, node: true, stupid: true, nomen: true */
@@ -93,19 +93,20 @@ var driver = new webdriver.Builder()
 // NB: requires onload and onrefresh functions defined in the html file
 // see js9Test.html for the canonical example
 js9Test.waitImage = function(func){
+    var that = this;
     var rid, s;
     var itemXPath, xpath, timeout;
     // set variable used by the Web page to determine which div to display in
-    driver.executeScript("JS9.mydisp = '" + js9Test.id + "';").then(function(){
+    driver.executeScript("JS9.mydisp = '" + this.id + "';").then(function(){
 	// once that is done, click the url
 	// wait for "ready" div to appear on the page
-	timeout = js9Test.timeout;
-	rid = js9Test.id + "Ready";
+	timeout = that.timeout;
+	rid = that.id + "Ready";
 	itemXPath = "//div[@id='" + rid + "']";
 	xpath = By.xpath(itemXPath);
 	driver.wait(until.elementLocated(xpath), timeout).then(function(){
 	    // delete the "ready" div (for the next image to be loaded)
-	    if( js9Test.debug ){
+	    if( that.debug ){
 		console.log("found div element: " + rid);
 	    }
 	    s = "var el = document.getElementById('" +
@@ -124,7 +125,7 @@ js9Test.waitImage = function(func){
 js9Test.doImageURL = function(text, opts, func){
     opts = opts || {};
     driver.findElement(By.partialLinkText(text)).click();
-    js9Test.waitImage();
+    this.waitImage();
     // call user function, if necessary
     if( func ){
 	func(text, opts);
@@ -137,12 +138,12 @@ js9Test.doMenuItem = function(menu, item, opts, func){
     var itemXPath, xpath, timeout;
     opts = opts || {};
     if( menu ){
-	menuName =  menu + "Menu" + js9Test.id + "Menubar";
+	menuName =  menu + "Menu" + this.id + "Menubar";
 	// click the menu
 	driver.findElement(By.id(menuName)).click();
     }
     // wait until the right menu item is available
-    timeout = js9Test.timeout;
+    timeout = this.timeout;
     if( opts.xpath ){
 	// make your own!
 	itemXPath = opts.xpath.replace(/\$item/, "'" + item + "'");
@@ -173,18 +174,19 @@ js9Test.doMenuItem = function(menu, item, opts, func){
 };
 
 js9Test.doMsg = function(msg, opts, func){
+    var that = this;
     var buf, s, cmd, encoding;
     var itemXPath, xpath, timeout;
     opts = opts || {};
     encoding = opts.encoding || "ascii";
-    cmd = "./js9 -id " + js9Test.id + " " + msg;
+    cmd = "./js9 -id " + this.id + " " + msg;
     // wait until the right menu item is available
-    timeout = js9Test.timeout;
-    itemXPath = "//div[@id='" + js9Test.id + "']";
+    timeout = this.timeout;
+    itemXPath = "//div[@id='" + this.id + "']";
     xpath = By.xpath(itemXPath);
     driver.wait(until.elementLocated(xpath), timeout).then(function(){
 	// execute the command synchronously
-	if( js9Test.debug ){
+	if( that.debug ){
 	    console.log("cmd: " + cmd);
 	}
 	buf = cproc.execSync(cmd);
@@ -204,7 +206,7 @@ js9Test.getHTML = function(item, opts, func){
     var itemXPath, xpath, timeout;
     opts = opts || {};
     // wait until the right element is available
-    timeout = js9Test.timeout;
+    timeout = this.timeout;
     if( opts.xpath ){
 	// make your own!
 	itemXPath = opts.xpath.replace(/\$item/, "'" + item + "'");
@@ -233,7 +235,7 @@ js9Test.results = function(s, d){
     } else {
 	d = "";
     }
-    console.log(js9Test.test + d + ": " + s);
+    console.log(this.test + d + ": " + s);
     for(i=2; i<arguments.length; i++){
 	console.log("  #" + i + ": " + arguments[i]);
     }
