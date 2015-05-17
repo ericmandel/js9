@@ -22,13 +22,13 @@
 // local variables
 var i, s;
 var cdir = process.cwd();
-var tdir = cdir + "/js9Test";
+var tdir = cdir + "/js9Tests";
 
 // js9Test object contains everything, gets passed to each command line script
 var js9Test = {};
 
 // defaults passed to the tests
-js9Test.defpage = "file://" + cdir + "/js9Test/js9Test.html";
+js9Test.defpage = "file://" + cdir + "/js9Test.html";
 js9Test.files = [];
 
 // command line arguments

@@ -438,8 +438,8 @@ spell:		FORCE
 			aspell -c $$f; \
 		  done)
 
-test:		FORCE
-		@(node ./js9Test/js9Test.js --all)
+js9test:	FORCE
+		@(node js9Test.js --all)
 
 clean:		FORCE
 		@($(RM) *.a *.so *.dylib *.o *.exe core errs *pure* .nfs* \
