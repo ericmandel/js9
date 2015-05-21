@@ -7173,6 +7173,9 @@ JS9.Regions.listRegions = function(which, mode){
 	    (this.params.wcssys !== "image") &&
 	    (this.params.wcssys !== "physical") ){
 	    if( lasttype !== "wcs" ){
+		if( lasttype !== "none" ){
+		    regstr += sepstr;
+		}
 		regstr += this.params.wcssys;
 		lasttype = "wcs";
 	    }
@@ -7180,6 +7183,9 @@ JS9.Regions.listRegions = function(which, mode){
 	} else if( region.imstr ){
 	    // else use image string, if available
 	    if( lasttype !== region.imsys ){
+		if( lasttype !== "none" ){
+		    regstr += sepstr;
+		}
 		regstr += region.imsys;
 		lasttype = region.imsys;
 	    }
