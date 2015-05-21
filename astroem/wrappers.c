@@ -306,9 +306,12 @@ char *reg2wcsstr(int n, char *regstr){
 	  strncat(str, tbuf, SZ_LINE-1);
 	  break;
 	}
-	/* convert more positions */
-	if( !strcmp(s, "polygon") ){
-	  /* convert successive image values to RA, Dec */
+	/* for text, just copy the rest */
+	if( !strcmp(s, "text") ){
+	  snprintf(tbuf, SZ_LINE, ",%s", s1);
+	  strncat(str, tbuf, SZ_LINE-1);
+	} else if( !strcmp(s, "polygon") ){
+	  /* for polygons, convert successive image values to RA, Dec */
 	  while( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) ){
 	    /* convert image x,y to ra,dec */
 	    pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);

@@ -6198,8 +6198,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.imstr += ")";
         break;
     case "text":
-	pub.imstr = "# text(" + tr(pub.x) + ", " + tr(pub.y) + ") text={" + obj.text + "}";
+	pub.imstr = "text(" + tr(pub.x) + ", " + tr(pub.y) + ', "' + obj.text + '")';
 	pub.text = obj.text;
+	tstr = "text " + pub.x + " " + pub.y + ' "' + obj.text + '"';
 	break;
     default:
 	break;
