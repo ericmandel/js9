@@ -7145,11 +7145,11 @@ JS9.Regions.listRegions = function(which, mode){
     pubs = this.getShapes("regions", which);
     // loop through shapes
     rlen = pubs.length;
-    // differentiate between source and bkgd, if we have a bkgd
+    // display tags if at least one is not standard "source,include"
     if( mode ){
 	for(i=0; i<rlen; i++){
 	    region = pubs[i];
-	    if( $.inArray("source", region.tags) === -1 ){
+	    if( region.tags.join(",") !== "source,include" ){
 		dotags = true;
 		break;
 	    }
@@ -7164,9 +7164,7 @@ JS9.Regions.listRegions = function(which, mode){
 	} else {
 	    iestr = "";
 	}
-	if( dotags && tagstr.indexOf("source") >= 0 ){
-	    tags = "";
-	} else {
+	if( dotags ){
 	    tags = " # " + tagstr;
 	}
 	// use wcs string, if available
