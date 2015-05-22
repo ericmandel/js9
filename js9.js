@@ -9428,6 +9428,7 @@ JS9.init = function(){
 	JS9.wcs2pix = Astroem.wcs2pix;
 	JS9.reg2wcs = Astroem.reg2wcs;
 	JS9.saostrtod = Astroem.saostrtod;
+	JS9.saodtype = Astroem.saodtype;
 	JS9.zscale = Astroem.zscale;
     }
     // configure fits library
