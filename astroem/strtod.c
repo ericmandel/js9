@@ -68,9 +68,15 @@ double	SAOstrtod(str, ptr)
 		}
  
             return sign * (d + m / 60 + s / 3600);
-        }
+        } else if( (c = **ptr) &&
+		   (c == 'd' || c == 'r' || c == '\'' || c == '"') && 
+		   ((*((*ptr)+1)) == '\0') ){
+	  SAOdtype = c;
+	  (*ptr)++;
+	  return d;
+	}
  
-        /* I guess that there wern't really any units.
+        /* I guess that there weren't really any units.
 	 */
 	return d;
 }

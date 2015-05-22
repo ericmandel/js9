@@ -7,6 +7,7 @@
       wcs2pix: Module.cwrap('wcs2pixstr', 'string', ['number', 'number', 'number']),
       reg2wcs: Module.cwrap('reg2wcsstr', 'string', ['number', 'string']),
       saostrtod: Module.cwrap('saostrtod', 'number', ['string']),
+      saodtype:  Module.cwrap('saodtype', 'number'),
       zscale: Module.cwrap('zscale', 'string', ['number', 'number', 'number', 'number', 'number', 'number', 'number']),
       arrfile: Module["arrfile"],
       gzopen: Module.cwrap('gzopen', 'number', ['string', 'string']),

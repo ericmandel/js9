@@ -384,6 +384,11 @@ double saostrtod(char *s){
   return SAOstrtod(s, NULL);
 }
 
+/* return last delimiter from saostrtod call */
+int saodtype(){
+  return SAOdtype;
+}
+
 /* required by cdlzscale.c */
 int cdl_debug=0;
 
