@@ -153,6 +153,36 @@ int initwcs(char *s, int n){
   return newinfo(wcs);
 }
 
+/* return important info about the wcs (used by region parsing) */
+char *wcsinfo(int n){
+  Info info = getinfo(n);
+  char *str = NULL;
+  int imflip=0;
+  double cdelt1=0.0, cdelt2=0.0, crot=0.0;
+  if( info->wcs ){
+    if( !info->wcs->coorflip ){
+      cdelt1 = info->wcs->cdelt[0];
+      cdelt2 = info->wcs->cdelt[1];
+    }
+    else{
+      cdelt1 = info->wcs->cdelt[1];
+      cdelt2 = info->wcs->cdelt[0];
+    }
+    if ( info->wcs->imflip ) {
+	crot = -info->wcs->rot;
+    } else {
+	crot =  info->wcs->rot;
+    }
+    imflip = info->wcs->imflip;
+  }
+  // convert to 1-indexed image coords
+  str = info->str;
+  snprintf(str, SZ_LINE-1,
+  "{\"cdelt1\": %.14g, \"cdelt2\": %.14g, \"crot\": %.14g, \"imflip\": %d}",
+   cdelt1, cdelt2, crot, imflip);
+  return str;
+}
+
 /* convert pixels to wcs and return string */
 char *pix2wcsstr(int n, double xpix, double ypix){
   Info info = getinfo(n);

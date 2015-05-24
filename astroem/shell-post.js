@@ -1,6 +1,7 @@
 
   return {
       initwcs:  Module.cwrap('initwcs', 'number', ['string', 'number']),
+      wcsinfo:  Module.cwrap('wcsinfo', 'string', ['number']),
       wcssys:  Module.cwrap('wcssys', 'string', ['number', 'string']),
       wcsunits:  Module.cwrap('wcsunits', 'string', ['number', 'string']),
       pix2wcs: Module.cwrap('pix2wcsstr', 'string', ['number', 'number', 'number']),
