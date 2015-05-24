@@ -18,6 +18,7 @@ var msg, host;
 var args = process.argv.slice(2);
 var done = false;
 var doserver = false;
+var dopipe = false;
 var helperScheme = "http://";
 var helperHost = "localhost";
 var helperPort = 2718;
@@ -30,7 +31,7 @@ var verify = false;
 var msgType = "msg";
 var nsendexit = false;
 var nsend = 0;
-
+var content = "";
 
 // ever-present
 function usage() {
@@ -44,6 +45,7 @@ function usage() {
   console.log("    -id [id]               # client JS9 id (def: JS9)");
   console.log("    -msgType [type]        # message type (def: 'msg')");
   console.log("    -multi                 # send to multiple clients");
+  console.log("    -p or -pipe            # read argument list from stdin");
   console.log("    -pageid [id]           # unique page id from server");
   console.log("  examples:");
   console.log("    %s help               # list available commands", prog);
@@ -235,6 +237,14 @@ while( !done ){
       args.shift();
       msgType = args.shift();
       break;
+    case '-p':
+      args.shift();
+      dopipe = true;
+      break;
+    case '-pipe':
+      args.shift();
+      dopipe = true;
+      break;
     case '-pageid':
       args.shift();
       msg.pageid = args.shift();
@@ -323,8 +333,21 @@ dns.lookup(host, 4, function (err, address, family) {
 		}
 		console.log("message: %s", msg.cmd);
 	    }
-	    // send message and display results
-	    msg.send(socket, null, "exit");
+	    if( dopipe ){
+		process.stdin.resume();
+		process.stdin.on("data", function(buf) {
+		    content += buf.toString();
+		});
+		process.stdin.on("end", function() {
+		    // the contents of stdin is now the arg array
+		    msg.args = [content];
+		    // send message and display results
+		    msg.send(socket, null, "exit");
+		});
+	    } else {
+		// send message and display results
+		msg.send(socket, null, "exit");
+	    }
 	}
     });
 });
