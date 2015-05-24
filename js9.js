@@ -61,7 +61,7 @@ JS9.SCALEIREG = true;		// scale interactive regions by zoom factor?
 JS9.NOMOVE = 3;			// number of pixels before we recognize movement
 JS9.DBLCLICK = 500;		// milliseconds for double-click
 JS9.TIMEOUT = 250;		// ms before assuming light window is up
-JS9.SUPERMENU = new RegExp("^_SUPERMENU"); // base of supermenu id 
+JS9.SUPERMENU = /^_SUPERMENU/;  // base of supermenu id 
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 JS9.BROWSER = (function(){
@@ -125,7 +125,7 @@ JS9.imageOpts = {
 // defaults for analysis (macro expansion)
 JS9.analOpts = {
     // if this pattern is matched in stderr, throw a real error
-    epattern: new RegExp("^(ERROR:[^\n]*)\n"),
+    epattern: /^(ERROR:[^\n]*)\n/,
     // location of datapath's param html file
     dpathURL: "params/datapath.html",
     // prepend $JS9_DIR to relative fitsFile paths?
@@ -3165,6 +3165,7 @@ JS9.Display = function(el){
 	return JS9.dragdrop(this.id, evt.originalEvent, JS9.NewFITSImage);
     });
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.Load(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalRegions-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadRegions(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
     // add to list of displays
     JS9.displays.push(this);
     // debugging
@@ -4388,11 +4389,12 @@ JS9.Menubar = function(width, height){
 		    "polygon": {name: "polygon"},
 		    "text": {name: "text"},
 		    "sep2": "------",
-		    "saveRegions" : {name: "saveRegions"},
-		    "listRegions" : {name: "listRegions"},
-		    "listonchange" : {name: "listOnChange"},
-		    "xeqonchange" : {name: "xeqOnChange"},
-		    "deleteRegions" : {name: "deleteRegions"}
+		    "loadRegions" : {name: "load regions"},
+		    "saveRegions" : {name: "save regions"},
+		    "listRegions" : {name: "list regions"},
+		    "deleteRegions" : {name: "delete regions"},
+		    "listonchange" : {name: "list on change"},
+		    "xeqonchange" : {name: "xeq on change"}
 		};
 		if( tim && tim.params.listonchange ){
 		    items.listonchange.icon = "sun";
@@ -4410,6 +4412,9 @@ JS9.Menubar = function(width, height){
 			    case "deleteRegions":
 				uim.removeShapes("regions", "all");
 				uim.clearMessage("regions");
+				break;
+			    case "loadRegions":
+				JS9.OpenRegionsMenu(udisp);
 				break;
 			    case "saveRegions":
 				uim.saveRegions("all", true);
@@ -5788,7 +5793,15 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
     }
     // figure out the first argument
     if( typeof shape === "string" ){
-	sarr = [{shape: shape}];
+	// look for a region string
+	s = this.parseRegions(shape);
+	if( typeof s === "string" ){
+	    // nope, normal shape string
+	    sarr = [{shape: shape}];
+	} else {
+	    // parsed array of shape objects from regions string
+	    sarr = s;
+	}
     } else if( $.isArray(shape) ){
 	sarr = shape;
     } else if( typeof shape === "object" ){
@@ -5883,6 +5896,9 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 	    case "ellipse":
 		s = new fabric.Ellipse(opts);
 		break;
+	    default:
+		s = new fabric.Rect(opts);
+		break;
 	    }
 	    break;
 	case "polygon":
@@ -5893,7 +5909,7 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 	case "text":
 	    // save shape
 	    params.shape = "text";
-	    params.text = params.text || "Double-click to add text here";
+	    params.text = opts.text || "Double-click to add text here";
 	    if( window.hasOwnProperty("fabric") ){
 		if( !myopts || !myopts.strokeWidth ){
 		    if( fabric.version === "1.4.0" ){
@@ -6907,7 +6923,7 @@ JS9.Regions.opts = {
     // circle
     radius: 30,
     // ellipse:
-    // use r1, r2 to avoid confusion with r1, r2 for rounding in boxes!
+    // use r1, r2 to avoid confusion with rad1, rad2 for rounding in boxes!
     r1: 30,
     r2: 20,
     // point
@@ -6949,6 +6965,7 @@ JS9.Regions.init = function(layerName){
     // get layer name
     layerName = layerName || "regions";
     // add to image prototypes
+    JS9.Image.prototype.parseRegions = JS9.Regions.parseRegions;
     JS9.Image.prototype.saveRegions = JS9.Regions.saveRegions;
     JS9.Image.prototype.listRegions = JS9.Regions.listRegions;
     // init the display shape layer
@@ -7200,6 +7217,251 @@ JS9.Regions.listRegions = function(which, mode){
     }
     // always return the region string
     return regstr;
+};
+
+// parse a string containing a subset of DS9/Funtools regions
+JS9.Regions.parseRegions = function(s){
+    var regions = [];
+    var i, j, k, lines, separators, obj, robj;
+    var owcssys, wcssys, iswcs, pos, wcsinfo, alen;
+    var regrexp = /(annulus|box|circle|ellipse|polygon|point|text)/;
+    var wcsrexp = /(fk4|fk5|icrs|galactic|ecliptic|image|physical)/;
+    var parrexp = /\(\s*([^)]+?)\s*\)/;
+    var optsrexp = /(\{[^}]*\})/;
+    var argsrexp = /\s*,\s*/;
+    var charrexp = /(\C|\{|#)/;
+    // parse region line into cmd (shape or wcs), arguments, opts, comment
+    var regparse1 = function(s){
+	var tarr;
+	var tobj = {};
+	// initalize the return object
+	tobj.opts = {};
+	tobj.args = [];
+	tobj.isregion = 0;
+	// look for a command
+	if( s.indexOf("(") >=0 ){
+	    tobj.cmd = s.split("(")[0].trim().toLowerCase();
+	} else if( s.indexOf("{") >=0 ){
+	    tobj.cmd = s.split("{")[0].trim().toLowerCase();
+	} else if( s.indexOf("#") >=0 ){
+	    tobj.cmd = s.split("#")[0].trim().toLowerCase();
+	} else {
+	    tobj.cmd = s.trim().toLowerCase();
+	}
+	// got regions?
+	if( tobj.cmd ){
+	    tobj.isregion = (tobj.cmd.search(regrexp) >=0);
+	}
+	// look for comments
+	tobj.comment = s.split("#")[1];
+	if( tobj.comment ){
+	    tobj.comment = tobj.comment.trim().toLowerCase();
+	}
+	// look for json opts after the argument list
+	tarr = optsrexp.exec(s);
+	if( tarr && tarr[1] ){
+	    // convert to object
+	    try{ tobj.opts = JSON.parse(tarr[1].trim()); }
+	    catch(e){ tobj.opts = {}; }
+	}
+	// separate the region arguments into an array
+	tarr = parrexp.exec(s);
+	if( tarr && tarr[1] ){
+	    // arguments without json opts
+	    tobj.args = tarr[1].split(argsrexp);
+	}
+	return tobj;
+    };
+    // convert string to double, returning value and (units) delim
+    var strtod = function(s){
+	var dval = JS9.saostrtod(s);
+	var dtype = String.fromCharCode(JS9.saodtype());
+	// scale for certain units
+	switch(dtype){
+	case '"':
+	    dval /= 3600.0;
+	    break;
+	case "'":
+	    dval /= 60.0;
+	    break;
+	case "r":
+	    dval *= (180.0 / Math.PI) ;
+	    break;
+	default:
+	    break;
+	}
+	return {dval: dval, dtype: dtype};
+    };
+    // get image position using delim type to ascertain input units
+    var getipos = function(ix, iy){
+	var vt, sarr, ox, oy;
+	var v1 = strtod(ix);
+	var v2 = strtod(iy);
+	if( iswcs ){
+	    /* arg1 coords are hms, but ecliptic, galactic are deg */
+	    if( (v1.dtype === ":") &&
+		(wcssys !== "galactic") && (wcssys !== "ecliptic") ){
+		v1.dval *= 15.0;
+	    }
+	    sarr = JS9.wcs2pix(this.wcs, v1.dval, v2.dval).split(/ +/);
+	    // returns 1-indexed, I guess ...
+	    ox = parseFloat(sarr[0]) - 1;
+	    oy = parseFloat(sarr[1]) - 1;
+	} else {
+	    if( wcssys === "physical" ){
+		vt = this.logicalToImagePos({x: v1.dval, y: v2.dval});
+		ox = vt.x;
+		oy = vt.y;
+	    } else {
+		ox = v1.dval;
+		oy = v2.dval;
+	    }
+	}
+	return [ox, oy];
+    };
+    // get image length
+    var getilen = function(len, which){
+	var cstr;
+	var v = strtod(len);
+	if( iswcs ){
+	    if( v.dtype && (v.dtype !== ".") ){
+		cstr = "cdelt" + which;
+		v.dval = Math.abs(v.dval / wcsinfo[cstr]);
+	    }
+	}
+	return v.dval;
+    };
+    // get image angle
+    var getang = function(a){
+	var v = strtod(a);
+	if( iswcs ){
+	    v.dval += wcsinfo.crot;
+	    if( wcsinfo.imflip ){
+		v.dval = -v.dval;
+	    }
+	}
+	return v.dval;
+    };
+    // get cleaned-up string
+    var getstr = function(s){
+	var t = s.replace(/^['"]/, "").replace(/['"]$/, "");
+	return t;
+    };
+    // sanity check
+    if( !s.match(charrexp) ){
+	return s;
+    }
+    // get wcs info
+    try{ wcsinfo = JSON.parse(JS9.wcsinfo(this.wcs)); }
+    catch(e){ wcsinfo = {cdelt1: 1, cdelt2: 1, crot: 0, imflip: 0}; }
+    // save original wcs
+    owcssys = this.getWCSSys();
+    // this is the default wcs for regions
+    wcssys = "physical";
+    // set default for regions
+    this.setWCSSys(wcssys);
+    // do we have a real wcs?
+    iswcs = (wcssys !== "image" && wcssys !== "physical");
+    separators = ['\n', ';'];
+    // get individual "lines" (new-line or semi-colon separated)
+    lines = s.split(new RegExp(separators.join('|'), 'g'));
+    // for each region or cmd lines
+    for(i=0; i<lines.length; i++){
+	// ignore comments
+	if( lines[i].trim().substr(0,1) !== "#" ){
+	    // parse the linbe
+	    robj = regparse1(lines[i]);
+	    alen = robj.args.length;
+	    // if this is a region ...
+	    if( robj.isregion ){
+		// start afresh or with opts from the region string
+		obj = $.extend(true, {}, robj.opts);
+		// save the shape
+		obj.shape = robj.cmd;
+		// arguments are not required!
+		if( alen >= 2 ){
+		    // get image position
+		    pos = getipos.call(this, robj.args[0], robj.args[1]);
+		    obj.x = pos[0];
+		    obj.y = pos[1];
+		}
+		// region arguments are optional
+		switch(robj.cmd){
+		case 'annulus':
+		    obj.radii = [];
+		    for(j=2; j<alen; j++){
+			obj.radii.push(getilen.call(this, robj.args[j], 1));
+		    }
+		    break;
+		case 'box':
+		    if( alen >= 3 ){
+			obj.width = getilen.call(this, robj.args[2], 1);
+		    }
+		    if( alen >= 4 ){
+			obj.height = getilen.call(this, robj.args[3], 2);
+		    }
+		    if( alen >= 5 ){
+			obj.angle = getang.call(this, robj.args[4]);
+		    }
+		    break;
+		case 'circle':
+		    if( alen >= 3 ){
+			obj.radius = getilen.call(this, robj.args[2], 1);
+		    }
+		    break;
+		case 'ellipse':
+		    if( alen >= 3 ){
+			obj.r1 = getilen.call(this, robj.args[2], 1);
+		    }
+		    if( alen >= 4 ){
+			obj.r2 = getilen.call(this, robj.args[3], 2);
+		    }
+		    if( alen >= 5 ){
+			obj.angle = getang.call(this, robj.args[4]);
+		    }
+		    break;
+		case 'polygon':
+		    obj.pts = [];
+		    for(j=0, k=0; j<alen; j+=2, k++){
+			pos = getipos.call(this, robj.args[j], robj.args[j+1]);
+			obj.pts[k] = {x: pos[0], y: pos[1]};
+		    }
+		    delete obj.x;
+		    delete obj.y;
+		    break;
+		case 'point':
+		    break;
+		case 'text':
+		    if( alen >= 3 ){
+			obj.text = getstr.call(this, robj.args[2]);
+		    }
+		    break;
+		default:
+		    break;
+		}
+		// comment contains the tags
+		if( robj.comment ){
+		    obj.tags = robj.comment;
+		}
+		// save this region
+		regions.push(obj);
+	    } else {
+		// if its a wcs command
+		if( robj.cmd.match(wcsrexp) ){
+		    // reset the wcs system
+		    this.setWCSSys(robj.cmd);
+		    // get new wcssys
+		    wcssys = this.getWCSSys();
+		    // is this a real wcs?
+		    iswcs = (wcssys !== "image" && wcssys !== "physical");
+		}
+	    }
+	}
+    }
+    // restore original wcs
+    this.setWCSSys(owcssys);
+    // return the generated object
+    return regions;
 };
 
 // save regions to a file
@@ -7863,7 +8125,7 @@ JS9.getImageID = function(imid, dispid){
     var ids = 0;
     var idmax = 1;
     var imlen = JS9.images.length;
-    var rexp = new RegExp(".*<([0-9][0-9]*)>$");
+    var rexp = /.*<([0-9][0-9]*)>$/;
     for(i=0; i<imlen; i++){
 	im = JS9.images[i];
 	if( im.display.id === dispid ){
@@ -8134,23 +8396,35 @@ JS9.onFileList = function(files, options, handler){
 
 // fetch a file URL (as a blob) and process it
 // (as of 2/2015: can't use $.ajax to retrieve a blob, so use low-level xhr)
-JS9.fetchURL = function(name, url, options, handler) {
+JS9.fetchURL = function(name, url, opts, handler) {
     var xhr = new XMLHttpRequest();
-    var toptions;
+    var topts;
     if( !url ){
 	url = name;
 	name = /([^\\\/]+)$/.exec(url)[1];
     }
-    toptions = $.extend(true, {}, options, JS9.fits.options);
+    topts = $.extend(true, {}, opts, JS9.fits.options);
     xhr.open('GET', url, true);
-    xhr.responseType = 'blob';
+    if( opts.responseType ){
+	xhr.responseType = opts.responseType;
+    } else {
+	xhr.responseType = 'blob';
+    }
     xhr.onload = function(e) {
 	var blob;
         if( this.readyState === 4 ){
 	    if( this.status === 200 || this.status === 0 ){
-	        blob = new Blob([this.response]);
-		blob.name = name;
-		JS9.onFileList([blob], toptions, handler);
+		if( xhr.responseType === "blob" ){
+	            blob = new Blob([this.response]);
+		    blob.name = name;
+		    JS9.onFileList([blob], topts, handler);
+		} else {
+		    if( opts.display ){
+			handler(this.response, opts, {display: opts.display});
+		    } else {
+			handler(this.response, opts);
+		    }
+		}
 	    } else if( this.status === 404 ) {
 		JS9.error("could not find " + url);
 	    } else {
@@ -9422,6 +9696,7 @@ JS9.init = function(){
     // initialize astronomy emscripten routines (wcslib, etc), if possible
     if( window.hasOwnProperty("Astroem") ){
 	JS9.initwcs = Astroem.initwcs;
+	JS9.wcsinfo = Astroem.wcsinfo;
 	JS9.wcssys = Astroem.wcssys;
 	JS9.wcsunits = Astroem.wcsunits;
 	JS9.pix2wcs = Astroem.pix2wcs;
@@ -9843,19 +10118,11 @@ JS9.init = function(){
 	    }
 	},
 	set: function(args){
-	    var s, robj;
+	    var s;
 	    var im = this.image;
 	    if( im ){
-		if( args.length > 1 ){
-		    try{
-			s = args.slice(1).join(" ");
-			robj = JSON.parse(s);
-		    } 
-		    catch(e){
-			JS9.error("bad json format for region params: "+s, e);
-		    }
-		}
-		im.addShapes("regions", args[0], robj);
+		s = args.join(" ");
+		im.addShapes("regions", s);
 	    }
 	}
     }));
@@ -10264,6 +10531,47 @@ JS9.mkPublic("Load", function(file, opts){
     }
 });
 
+// load a DS9/funtools regions file
+JS9.mkPublic("LoadRegions", function(file, opts){
+    var display, reader;
+    var obj = JS9.parsePublicArgs(arguments);
+    // sanity check
+    if( !file ){
+	JS9.error("JS9.LoadRegions: no file specified for regions load");
+	return;
+    }
+    // check for display
+    if( obj.display ){
+	display = obj.display;
+    } else {
+	if( JS9.displays.length > 0 ){
+	    display = JS9.displays[0].id;
+	} else {
+	    display = JS9.DEFID;
+	}
+    }
+    // make sure we can look for properties in opts
+    opts = opts || {};
+    // if display was implicit, add it to opts
+    opts.display = opts.display || display;
+    // convert blob to string
+    if( typeof file === "object" ){
+	// file reader object
+	reader = new FileReader();
+	reader.onload = function(ev){
+	    JS9.AddRegions(ev.target.result, opts);
+	};
+	reader.readAsText(file);
+    } else if( typeof file === "string" ){
+	// url string
+	opts.responseType = "text";
+	JS9.fetchURL(null, file, opts, JS9.AddRegions);
+    } else {
+	// oops!
+	JS9.error("unknown file type for LoadRegions: " + typeof file);
+    }
+});
+
 // create a new instance of JS9 in a window (light or new)
 // nb: unlike JS9.Load, this required the opts param
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
@@ -10488,6 +10796,11 @@ JS9.mkPublic("GetLoadStatus", function(id){
 // bring up the file menu and open selected file(s)
 JS9.mkPublic("OpenFileMenu", function(display){
     $('#openLocalFile-' + display.id).click();
+});
+
+// bring up the file menu and open selected file(s)
+JS9.mkPublic("OpenRegionsMenu", function(display){
+    $('#openLocalRegions-' + display.id).click();
 });
 
 // call the image constructor as a function
