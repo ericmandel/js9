@@ -397,7 +397,7 @@ install-webdata:	FORCE
 	    fi; \
          done;)
 
-install-sao:	saoprefs install-webcgi
+install-sao:	saoprefs install-webcgi install-js9tests
 		@(if [ -d "$(SAODIR)" ]; then \
 		    for i in $(SAOFILES) ; \
 		    do \
@@ -415,7 +415,8 @@ install-sao:	saoprefs install-webcgi
 		  fi)
 
 install-js9tests:	FORCE
-		@(tar cf - $(JS9TESTS) | (cd $(WEBDIR) && tar xf -))
+		@(echo "installing js9tests ..."; \
+		  tar cf - $(JS9TESTS) | (cd $(WEBDIR) && tar xf -))
 
 install-smartx:	FORCE
 		@(echo "installing smartx"; cd smartx; make install);
