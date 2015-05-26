@@ -173,6 +173,29 @@ js9Test.doMenuItem = function(menu, item, opts, func){
     });
 };
 
+// click (or add text to) an item known by its XPath
+js9Test.doXPath = function(xpath, opts, func){
+    var timeout, textItem;
+    opts = opts || {};
+    // wait until the right menu item is available
+    timeout = this.timeout;
+    xpath = By.xpath(xpath);
+    driver.wait(until.elementLocated(xpath), timeout).then(function(el){
+	// click the item
+	el.click();
+	// send text, if necessary
+	if( opts.text ){
+	    textItem = el.findElement(By.xpath("../input"));
+	    textItem.clear();
+	    textItem.sendKeys(opts.text, webdriver.Key.TAB);
+	}
+	// call user function, if necessary
+	if( func ){
+	    func(xpath, opts);
+	}
+    });
+};
+
 js9Test.doMsg = function(msg, opts, func){
     var that = this;
     var buf, s, cmd, encoding;
