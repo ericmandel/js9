@@ -117,7 +117,7 @@ CGIXPATH =   	@CGIXPATH@
 # this is for SAO install only ... I think!
 SAODIR =	@SAODIR@
 
-WEBDIRS	=	plugins params js css images js9Test
+WEBDIRS	=	plugins params js css images
 
 BEDIRS =	node_modules analysis-plugins analysis-wrappers
 
@@ -155,9 +155,13 @@ WEBHELP	=	help
 
 WEBDATA	=	fits png kes75 m13
 
+WEBSITE =	http://js9.si.edu
+
 SRCS =		tpos.c js9helper.c
 
 PROGS =		tpos js9helper
+
+JS9TESTS =	js9Test.js js9Test.html js9Tests
 
 TESTPROGS =	pngdisp cimtest
 
@@ -410,8 +414,11 @@ install-sao:	saoprefs install-webcgi
 		    tar cf - js9debugextras | (cd $(WEBDIR); tar xf -); \
 		  fi)
 
+install-js9tests:	FORCE
+		@(tar cf - $(JS9TESTS) | (cd $(WEBDIR) && tar xf -))
+
 install-smartx:	FORCE
-		@(echo "install smartx"; cd smartx; make install);
+		@(echo "installing smartx"; cd smartx; make install);
 
 gitprefs:	FORCE
 		(git checkout -- js9Prefs-sao.json; \
@@ -422,7 +429,8 @@ release:	gitprefs
 		tar cf - \
 			 --exclude='node_modules/selenium-webdriver' \
 			 --exclude='node_modules/socket.io-*' \
-			 $(WEBFILES) $(WEBDIRS) $(BEDIRS) $(WEBHELP) js9*.html \
+			 $(WEBFILES) $(WEBDIRS) $(BEDIRS) $(WEBHELP) \
+			 $(JS9TESTS) js9*.html \
 			 $(SRCS) $(INCLUDES) $(SCRIPTS) $(MFILES) |\
 		(cd $(DISTDIR)/$(DISTNAME); tar xf -); \
 		cd $(DISTDIR) ; \
@@ -438,8 +446,17 @@ spell:		FORCE
 			aspell -c $$f; \
 		  done)
 
-js9test:	FORCE
+js9tests:	FORCE
 		@(node js9Test.js --all)
+
+ckwebsite:	FORCE
+		@(got=`node js9Test.js --webpage $(WEBSITE)/js9/js9Test.html countsTest.js`; \
+		if [ x"$$got" != x"countsTest.js [counts in regions]: success" ]; then \
+		  echo "ERROR: there is a problem with js9.si.edu ..."; \
+		  echo "return: $$got"; \
+		else \
+		  echo "OK"; \
+		fi;)
 
 clean:		FORCE
 		@($(RM) *.a *.so *.dylib *.o *.exe core errs *pure* .nfs* \
