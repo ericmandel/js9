@@ -26,6 +26,5 @@ exports.dotest = function(js9Test){
 		    js9Test.results("FAILURE", d, s);
 	    }
 	});
-	js9Test.doMenuItem("file", "close image");
     });
 }

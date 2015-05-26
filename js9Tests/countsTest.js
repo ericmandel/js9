@@ -28,7 +28,7 @@ exports.dotest = function(js9Test){
 	    } else {
 		js9Test.results("FAILURE (nothing to compare to)", d, c);
 	    }
+	    js9Test.doXPath("//div[starts-with(@id, 'Analysis')]//img[@title='Close']");
 	});
-	js9Test.doMenuItem("file", "close image");
     });
 }
