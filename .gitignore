@@ -40,7 +40,7 @@ old/
 png/
 png-v[0-9]*/
 node_modules/socket.io-*
-node_modules/selenium-webdriver/
+node_modules/selenium-webdriver*/
 rites/
 sfs/
 svc/
