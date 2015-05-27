@@ -1,4 +1,4 @@
-exports.dotest = function(js9Test){
+exports.dotest = function(js9Test, s){
     var cnts = {
 	"CAS-A PNG": 5562, 
 	"CAS-A FITS": 5562, 
@@ -21,12 +21,12 @@ exports.dotest = function(js9Test){
 	    c = parseFloat(arr2[1]);
 	    if( cnts[image] ){
 		if( cnts[image] === c ){
-		    js9Test.results("success", d);
+		    js9Test.results("success", s, d);
 		} else {
-		    js9Test.results("FAILURE", d, cnts[image], c);
+		    js9Test.results("FAILURE", s, d, cnts[image], c);
 		}
 	    } else {
-		js9Test.results("FAILURE (nothing to compare to)", d, c);
+		js9Test.results("FAILURE (nothing to compare to)", s, d, c);
 	    }
 	    js9Test.doXPath("//div[starts-with(@id, 'Analysis')]//img[@title='Close']");
 	});

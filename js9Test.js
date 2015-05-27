@@ -75,7 +75,7 @@ if( !js9Test.scripts.length ){
     }
 } else {
     for(i=0; i<js9Test.scripts.length; i++){
-	s = js9Test.scripts[i];
+	s = js9Test.scripts[i] + ".js";
 	if( fs.existsSync(tdir + "/" + s) ){
 	    js9Test.files.push(s);
 	} else {
@@ -251,16 +251,16 @@ js9Test.getHTML = function(item, opts, func){
 };
 
 // display results from a test
-js9Test.results = function(s, d){
+js9Test.results = function(r, s, d){
     var i;
     if( d ){
 	d = " [" + d + "]";
     } else {
 	d = "";
     }
-    console.log(this.test + d + ": " + s);
-    for(i=2; i<arguments.length; i++){
-	console.log("  #" + i + ": " + arguments[i]);
+    console.log(s.replace(/\.js$/,"") + d + ": " + r);
+    for(i=3; i<arguments.length; i++){
+	console.log("  #" + i-2 + ": " + arguments[i]);
     }
 };
 
@@ -279,7 +279,7 @@ driver.executeScript("return JS9.helper.connected").then(function(s){
 	    console.log("processing: %s", js9Test.files[i]);
 	}
 	js9Test.test = js9Test.files[i];
-	require(tdir + "/" + js9Test.files[i]).dotest(js9Test);
+	require(tdir + "/" + js9Test.files[i]).dotest(js9Test,js9Test.files[i]);
     }
 });
 

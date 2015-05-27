@@ -1,4 +1,4 @@
-exports.dotest = function(js9Test){
+exports.dotest = function(js9Test, s){
     var image = js9Test.image || "CAS-A FITS";
     js9Test.doImageURL(image, null, function(){
 	var d = "regions are the same after zoom";
@@ -8,15 +8,15 @@ exports.dotest = function(js9Test){
 	js9Test.doMenuItem("region", "box");
 	js9Test.doMenuItem("region", "ellipse");
 	js9Test.doMenuItem("region", "polygon");
-	js9Test.doMsg("regions", null, function(msg, opts, s){
-	    r = s;
+	js9Test.doMsg("regions", null, function(msg, opts, a){
+	    r = a;
 	});
 	js9Test.doMenuItem("zoom", "zoom 2");
-	js9Test.doMsg("regions", null, function(msg, opts, s){
-	    if( r === s ){
-		js9Test.results("success", d);
+	js9Test.doMsg("regions", null, function(msg, opts, a){
+	    if( r === a ){
+		js9Test.results("success", s, d);
 	    } else {
-		js9Test.results("FAILURE", d, r, s);
+		js9Test.results("FAILURE", s, d, r, a);
 	    }
 	});
     });
