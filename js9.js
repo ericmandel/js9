@@ -7270,6 +7270,15 @@ JS9.Regions.parseRegions = function(s){
 	    // arguments without json opts
 	    tobj.args = tarr[1].split(argsrexp);
 	}
+	// look for - sign signifying an exclude region
+	if( tobj.isregion && tobj.cmd.indexOf("-") === 0 ){
+	    tobj.cmd = tobj.cmd.slice(1);
+	    if( tobj.comment ){
+		tobj.comment += ",exclude";
+	    } else {
+		tobj.comment = "exclude";
+	    }
+	}
 	return tobj;
     };
     // convert string to double, returning value and (units) delim
