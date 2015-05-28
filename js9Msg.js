@@ -339,8 +339,8 @@ dns.lookup(host, 4, function (err, address, family) {
 		    content += buf.toString();
 		});
 		process.stdin.on("end", function() {
-		    // the contents of stdin is now the arg array
-		    msg.args = [content];
+		    // push the contents of stdin onto the arg array
+		    msg.args.push(content);
 		    // send message and display results
 		    msg.send(socket, null, "exit");
 		});
