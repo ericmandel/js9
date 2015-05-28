@@ -5797,7 +5797,7 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 	s = this.parseRegions(shape);
 	if( typeof s === "string" ){
 	    // nope, normal shape string
-	    sarr = [{shape: shape}];
+	    sarr = [{shape: s}];
 	} else {
 	    // parsed array of shape objects from regions string
 	    sarr = s;
@@ -7357,6 +7357,7 @@ JS9.Regions.parseRegions = function(s){
 	return t;
     };
     // sanity check
+    s = s.trim();
     if( !s.match(charrexp) ){
 	return s;
     }
@@ -10130,8 +10131,13 @@ JS9.init = function(){
 	    var s;
 	    var im = this.image;
 	    if( im ){
-		s = args.join(" ");
-		im.addShapes("regions", s);
+		if( args[0] === "delete" || args[0] === "remove" ){
+		    s = args.slice(1).join(" ");
+		    im.removeShapes("regions", s);
+		} else {
+		    s = args.join(" ");
+		    im.addShapes("regions", s);
+		}
 	    }
 	}
     }));
