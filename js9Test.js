@@ -198,16 +198,19 @@ js9Test.doXPath = function(xpath, opts, func){
 
 js9Test.doMsg = function(msg, opts, func){
     var that = this;
-    var buf, s, cmd, encoding;
-    var itemXPath, xpath, timeout;
+    var buf, s, cmd, itemXPath, xpath, timeout;
     opts = opts || {};
-    encoding = opts.encoding || "ascii";
-    cmd = "./js9 -id " + this.id + " " + msg;
+    if( opts.cat ){
+	cmd = "cat " + opts.cat + " | ./js9 -p -id " + this.id + " " + msg;
+    } else {
+	cmd = "./js9 -id " + this.id + " " + msg;
+    }
     // wait until the right menu item is available
     timeout = this.timeout;
     itemXPath = "//div[@id='" + this.id + "']";
     xpath = By.xpath(itemXPath);
     driver.wait(until.elementLocated(xpath), timeout).then(function(){
+	var encoding = opts.encoding || "ascii";
 	// execute the command synchronously
 	if( that.debug ){
 	    console.log("cmd: " + cmd);
@@ -260,7 +263,7 @@ js9Test.results = function(r, s, d){
     }
     console.log(s.replace(/\.js$/,"") + d + ": " + r);
     for(i=3; i<arguments.length; i++){
-	console.log("  #" + i-2 + ": " + arguments[i]);
+	console.log("  #" + i-1 + ": " + arguments[i]);
     }
 };
 
