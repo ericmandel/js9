@@ -4820,7 +4820,7 @@ JS9.Helper.prototype.connect = function(type){
 		    if( JS9.publics[cmd] ){
 			// check for non-array first argument
 			if( !$.isArray(msg.args) ){
-			    msg.args = [ msg.args];
+			    msg.args = [msg.args];
 			}
 			// deep copy of arg array
 			args = $.extend(true, [], msg.args);
@@ -5835,8 +5835,13 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 	opts = $.extend(true, {}, bopts, sarr[ns]);
 	// parse options and generate opts and params objects
 	sobj = JS9.Fabric._parseShapeOptions.call(this, layerName, opts);
-	// sanity checks
-	if( !sobj.shape || sobj.remove ){
+	// remove means remove previous shapes
+	if( sobj.remove ){
+	    this.removeShapes(layerName, "all");
+	    continue;
+	}
+	// sanity check
+	if( !sobj.shape ){
 	    continue;
 	}
 	// convenience variables
@@ -6080,9 +6085,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     var display, bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius;
     var pub ={};
     var layer = this.layers[layerName];
-    var tr = function(x){
-	return x.toFixed(2);
-    };
+    var tr  = function(x){return x.toFixed(1);};
+    var tr4 = function(x){return x.toFixed(4);};
     ginfo = ginfo || {};
     opts = opts || {};
     mode = mode || "update";
@@ -6167,7 +6171,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.shape = "box";
 	pub.width =  obj.width * scalex;
 	pub.height = obj.height * scaley;
-	pub.imstr = "box(" + tr(px) + ", " + tr(py) + ", " + tr(pub.width) + ", " + tr(pub.height) + ", " + tr(pub.angle) + ")";
+	pub.imstr = "box(" + tr(px) + ", " + tr(py) + ", " + tr(pub.width) + ", " + tr(pub.height) + ", " + tr4(pub.angle) + ")";
 	tstr = "box " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + pub.width) + " " + pub.y + " " + pub.x + " " + pub.y + " " + pub.x + " " + (pub.y + pub.height) + " " + (pub.angle * Math.PI / 180.0);
 	break;
     case "circle":
@@ -6178,7 +6182,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     case "ellipse":
 	pub.r1 = obj.width * scalex / 2;
 	pub.r2 = obj.height * scaley / 2;
-	pub.imstr = "ellipse(" + tr(px) + ", " + tr(py) + ", " + tr(pub.r1) + ", " + tr(pub.r2) + ", " + tr(pub.angle) + ")";
+	pub.imstr = "ellipse(" + tr(px) + ", " + tr(py) + ", " + tr(pub.r1) + ", " + tr(pub.r2) + ", " + tr4(pub.angle) + ")";
 	tstr = "ellipse " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + pub.r1) + " " + pub.y + " " + pub.x + " " + pub.y + " " + pub.x + " " + (pub.y + pub.r2) + " " + (pub.angle * Math.PI / 180.0);
 	break;
     case "point":
@@ -6214,7 +6218,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.imstr += ")";
         break;
     case "text":
-	pub.imstr = "text(" + tr(pub.x) + ", " + tr(pub.y) + ', "' + obj.text + '")';
+	pub.imstr = "text(" + tr(px) + ", " + tr(py) + ', "' + obj.text + '")';
 	pub.text = obj.text;
 	tstr = "text " + pub.x + " " + pub.y + ' "' + obj.text + '"';
 	break;
@@ -6367,10 +6371,10 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	bopts = $.extend(true, {}, obj.params, opts);
 	// parse options and generate new obj and params
 	sobj = JS9.Fabric._parseShapeOptions.call(this, layerName, bopts, obj);
-	// remove means nothing else needs be done
+	// remove means remove previous shapes
 	if( sobj.remove ){
-	    this.removeShapes(layerName, obj);
-	    return this;
+	    this.removeShapes(layerName, "all");
+	    return;
 	}
 	// change the shape
 	obj.set(sobj.opts);
@@ -7222,14 +7226,15 @@ JS9.Regions.listRegions = function(which, mode){
 // parse a string containing a subset of DS9/Funtools regions
 JS9.Regions.parseRegions = function(s){
     var regions = [];
-    var i, j, k, lines, separators, obj, robj;
+    var i, j, k, lines, obj, robj;
     var owcssys, wcssys, iswcs, pos, wcsinfo, alen;
-    var regrexp = /(annulus|box|circle|ellipse|polygon|point|text)/;
-    var wcsrexp = /(fk4|fk5|icrs|galactic|ecliptic|image|physical)/;
+    var regrexp = /(annulus)|(box)|(circle)|(ellipse)|(polygon)|(point)|(text)/;
+    var wcsrexp = /(fk4)|(fk5)|(icrs)|(galactic)|(ecliptic)|(image)|(physical)/;
     var parrexp = /\(\s*([^)]+?)\s*\)/;
+    var seprexp = /\n|;/;
     var optsrexp = /(\{[^}]*\})/;
     var argsrexp = /\s*,\s*/;
-    var charrexp = /(\C|\{|#)/;
+    var charrexp = /(\C|\{|#|;|\n)/;
     // parse region line into cmd (shape or wcs), arguments, opts, comment
     var regparse1 = function(s){
 	var tarr;
@@ -7372,14 +7377,13 @@ JS9.Regions.parseRegions = function(s){
     this.setWCSSys(wcssys);
     // do we have a real wcs?
     iswcs = (wcssys !== "image" && wcssys !== "physical");
-    separators = ['\n', ';'];
     // get individual "lines" (new-line or semi-colon separated)
-    lines = s.split(new RegExp(separators.join('|'), 'g'));
-    // for each region or cmd lines
+    lines = s.split(seprexp);
+    // for each region or cmd
     for(i=0; i<lines.length; i++){
 	// ignore comments
 	if( lines[i].trim().substr(0,1) !== "#" ){
-	    // parse the linbe
+	    // parse the line
 	    robj = regparse1(lines[i]);
 	    alen = robj.args.length;
 	    // if this is a region ...
@@ -7464,6 +7468,8 @@ JS9.Regions.parseRegions = function(s){
 		    wcssys = this.getWCSSys();
 		    // is this a real wcs?
 		    iswcs = (wcssys !== "image" && wcssys !== "physical");
+		} else if( robj.cmd === "remove" || robj.cmd === "delete" ){
+		    regions.push({remove: true});
 		}
 	    }
 	}
