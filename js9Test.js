@@ -41,8 +41,10 @@ js9Test.webpage = js9Test.argv.webpage || js9Test.defpage;
 js9Test.width = js9Test.argv.width || 1200;
 js9Test.height = js9Test.argv.height  || 1500;
 js9Test.timeout = js9Test.argv.timeout  || 10000;
+js9Test.delay = js9Test.argv.delay  || 10;
 js9Test.exitwait = (js9Test.argv.exitwait * 1000) || 0;
 js9Test.image = js9Test.argv.image;
+js9Test.images = [];
 // the list of scripts (comes after the switches, or use --all for all tests)
 js9Test.scripts = js9Test.argv._;
 
@@ -67,7 +69,7 @@ if( !js9Test.scripts.length ){
 	    for(ii=0; ii<files.length; ii++){
 		f = files[ii];
 		// only test files, please
-		if( f.match(/Test.js$/) && (f !== "js9Test.js") ){
+		if( f.match(/Test.js$/) ){
 		    js9Test.files.push(f);
 		}
 	    }
@@ -75,7 +77,7 @@ if( !js9Test.scripts.length ){
     }
 } else {
     for(i=0; i<js9Test.scripts.length; i++){
-	s = js9Test.scripts[i] + ".js";
+	s = js9Test.scripts[i] + "Test.js";
 	if( fs.existsSync(tdir + "/" + s) ){
 	    js9Test.files.push(s);
 	} else {
@@ -92,22 +94,25 @@ var driver = new webdriver.Builder()
 // wait for an image to be ready (loaded or refreshed)
 // NB: requires onload and onrefresh functions defined in the html file
 // see js9Test.html for the canonical example
-js9Test.waitImage = function(func){
+js9Test.waitImage = function(opt, func){
     var that = this;
     var rid, s;
     var itemXPath, xpath, timeout;
+    opt = opt || {};
     // set variable used by the Web page to determine which div to display in
     driver.executeScript("JS9.mydisp = '" + this.id + "';").then(function(){
-	// once that is done, click the url
 	// wait for "ready" div to appear on the page
 	timeout = that.timeout;
 	rid = that.id + "Ready";
 	itemXPath = "//div[@id='" + rid + "']";
 	xpath = By.xpath(itemXPath);
+	if( that.debug ){
+	    console.log("waiting for div element %s for %s", rid, opt.script);
+	}
 	driver.wait(until.elementLocated(xpath), timeout).then(function(){
 	    // delete the "ready" div (for the next image to be loaded)
 	    if( that.debug ){
-		console.log("found div element: " + rid);
+		console.log("found div element %s for %s", rid, opt.script);
 	    }
 	    s = "var el = document.getElementById('" +
 		rid +
@@ -122,25 +127,42 @@ js9Test.waitImage = function(func){
 };
 
 // click on a URL to load an image (wait for completion)
-js9Test.doImageURL = function(text, opts, func){
+js9Test.clickImageURL = function(text, opts, func){
+    var that = this;
+    var i;
     opts = opts || {};
-    driver.findElement(By.partialLinkText(text)).click();
-    this.waitImage();
-    // call user function, if necessary
-    if( func ){
-	func(text, opts);
-    }
+    driver.findElement(By.partialLinkText(text)).click().then(function(){
+	for(i=0; i<js9Test.images.length; i++){
+	    if( text === js9Test.images[i] ){
+		// image is already loaded
+		if( func ){
+		    if( that.debug ){
+			console.log("don't wait for div element: %s",
+				    opts.script);
+		    }
+		    func();
+		    return;
+		}
+	    }
+	}
+	// signal that we have loaded the image ...
+	js9Test.images.push(text);
+	// ... and wait for it to load
+	that.waitImage(opts, func);
+    });
 };
 
 // click (or add text to) menu item
-js9Test.doMenuItem = function(menu, item, opts, func){
+js9Test.clickMenuItem = function(menu, item, opts, func){
     var menuItem, textItem, menuName;
     var itemXPath, xpath, timeout;
     opts = opts || {};
     if( menu ){
 	menuName =  menu + "Menu" + this.id + "Menubar";
 	// click the menu
-	driver.findElement(By.id(menuName)).click();
+	driver.findElement(By.id(menuName)).click().then(function(){
+	    driver.sleep(js9Test.delay);
+	});
     }
     // wait until the right menu item is available
     timeout = this.timeout;
@@ -159,7 +181,9 @@ js9Test.doMenuItem = function(menu, item, opts, func){
 	    menuItem = el.findElement(By.xpath(".."));
 	}
 	// process the menu item
-	menuItem.click();
+	menuItem.click().then(function(){
+	    driver.sleep(js9Test.delay);
+	});
 	// send text, if necessary
 	if( opts.text ){
 	    textItem = el.findElement(By.xpath("../input"));
@@ -174,7 +198,7 @@ js9Test.doMenuItem = function(menu, item, opts, func){
 };
 
 // click (or add text to) an item known by its XPath
-js9Test.doXPath = function(xpath, opts, func){
+js9Test.clickXPath = function(xpath, opts, func){
     var timeout, textItem;
     opts = opts || {};
     // wait until the right menu item is available
@@ -182,7 +206,9 @@ js9Test.doXPath = function(xpath, opts, func){
     xpath = By.xpath(xpath);
     driver.wait(until.elementLocated(xpath), timeout).then(function(el){
 	// click the item
-	el.click();
+	el.click().then(function(){
+	    driver.sleep(js9Test.delay);
+	});
 	// send text, if necessary
 	if( opts.text ){
 	    textItem = el.findElement(By.xpath("../input"));
@@ -196,35 +222,28 @@ js9Test.doXPath = function(xpath, opts, func){
     });
 };
 
-js9Test.doMsg = function(msg, opts, func){
-    var that = this;
-    var buf, s, cmd, itemXPath, xpath, timeout;
+js9Test.sendMsg = function(msg, opts, func){
+    var encoding, cmd, buf, s;
     opts = opts || {};
-    if( opts.cat ){
-	cmd = "cat " + opts.cat + " | ./js9 -p -id " + this.id + " " + msg;
+    encoding = opts.encoding || "ascii";
+    if( opts.pipe ){
+	cmd = "cat " + opts.pipe + " | ./js9 -p -id " + this.id + " " + msg;
     } else {
 	cmd = "./js9 -id " + this.id + " " + msg;
     }
-    // wait until the right menu item is available
-    timeout = this.timeout;
-    itemXPath = "//div[@id='" + this.id + "']";
-    xpath = By.xpath(itemXPath);
-    driver.wait(until.elementLocated(xpath), timeout).then(function(){
-	var encoding = opts.encoding || "ascii";
-	// execute the command synchronously
-	if( that.debug ){
-	    console.log("cmd: " + cmd);
-	}
-	buf = cproc.execSync(cmd);
-	s = buf.toString(encoding);
-	if( encoding === "ascii" ){
-	    s = s.trim();
-	}
-	// call user function, if necessary
-	if( func ){
-	    func(msg, opts, s);
-	}
-    });
+    if( this.debug ){
+	console.log("cmd: " + cmd);
+    }
+    // execute the command synchronously
+    buf = cproc.execSync(cmd);
+    s = buf.toString(encoding);
+    if( encoding === "ascii" ){
+	s = s.trim();
+    }
+    if( func ){
+	func(s, msg, opts);
+    }
+    return s;
 };
 
 // get html from specified xpath
@@ -247,10 +266,16 @@ js9Test.getHTML = function(item, opts, func){
 	el.getAttribute("innerHTML").then(function(html){
 	    // ... and call user function
 	    if( func ){
-		func(item, opts, html);
+		func(html, item, opts);
 	    }
 	});
     });
+};
+
+// delay for specified number of milliseconds
+js9Test.delay = function(s, func){
+    s = s || js9Test.delay;
+    driver.sleep(s).then(func);
 };
 
 // display results from a test
@@ -261,9 +286,9 @@ js9Test.results = function(r, s, d){
     } else {
 	d = "";
     }
-    console.log(s.replace(/\.js$/,"") + d + ": " + r);
+    console.log("%s%s: %s", s, d, r);
     for(i=3; i<arguments.length; i++){
-	console.log("  #" + i-1 + ": " + arguments[i]);
+	console.log("  #%s: %s", i-2, arguments[i]);
     }
 };
 
@@ -281,8 +306,8 @@ driver.executeScript("return JS9.helper.connected").then(function(s){
 	if( js9Test.debug ){
 	    console.log("processing: %s", js9Test.files[i]);
 	}
-	js9Test.test = js9Test.files[i];
-	require(tdir + "/" + js9Test.files[i]).dotest(js9Test,js9Test.files[i]);
+	require(tdir + "/" + js9Test.files[i])
+	    .dotest(js9Test, {script: js9Test.files[i]});
     }
 });
 
@@ -292,4 +317,4 @@ if( js9Test.exitwait ){
 }
 
 // that's all, folks!
-driver.quit();
+// driver.quit();
