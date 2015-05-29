@@ -478,7 +478,7 @@ clean:		FORCE
 			doc/*~ notes/*~ test/*~ help/*~ help/*.bak \
 			analysis-wrappers/*~ analysis-plugins/*~ \
 			plugins/*~ plugins/*/*~ \
-			util/*.o util/*~ js9Test/*~ \
+			util/*.o util/*~ js9Tests/*~ \
 			autom4te.cache a.out.dSYM tmp/*; \
 			cd astroem && $(MAKE) clean;)
 
