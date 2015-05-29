@@ -340,7 +340,12 @@ dns.lookup(host, 4, function (err, address, family) {
 		});
 		process.stdin.on("end", function() {
 		    // push the contents of stdin onto the arg array
-		    msg.args.push(content);
+		    // msg.args.push(content);
+		    if( msg.args.length > 0 ){
+			msg.args[msg.args.length-1] += "\n" + content;
+		    } else {
+			msg.args[0] = content;
+		    }
 		    // send message and display results
 		    msg.send(socket, null, "exit");
 		});
