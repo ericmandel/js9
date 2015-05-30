@@ -197,37 +197,33 @@
     <div id="intro" class="tabcontent mytabcontent">
       JS9 is our Web-based implementation of DS9:
       <ul>
-	<li> display URL-based FITS images and binary tables
-	<li> drag and drop FITS images and binary tables
+	<li> display URL-based FITS images and tables
+	<li> drag and drop FITS images and tables
 	<li> change the colormap and scale
-	<li> manipulate the contrast/bias with the mouse
-	<li> display pixel values and WCS position information
-	<li> create and manipulate geometric regions of interest
-	<li> add your own extensions using plugins and the Public API
+	<li> mouse move displays pixel values, WCS info
+	<li> one finger displays pixel values, WCS info
+	<li> mouse press/move changes the contrast/bias
+	<li> two fingers changes the contrast/bias
+	<li> create and manipulate regions of interest
+	<li> extend JS9 using plugins and the public API
 	<li> perform data analysis (local and server-side)
-	<li> display RGB composite images
-	<li> control JS9 from the command line
-	<li> print images
+	<li> control JS9 from a command shell or Python
+	<li> print images, create RGB images, ...
       </ul>
       <p>
       JS9 can change how we think about image display and analysis,
-      moving beyond the Desktop into the Web. You can simply drag and
-      drop a FITS image from your computer onto this JS9 display. All
-      of basic JS9 functionality is immediately available: zoom, pan,
-      colormaps, scaling, regions, WCS, analysis ...
+      moving beyond the Desktop into the Web. Drag and drop a FITS
+      image onto this JS9 display and all basic JS9 functionality is
+      immediately available: zoom, pan, colormaps, scaling, regions ...
       <p>
-      You can extend JS9 using the plugin facility in combination
-      with the JS9 Public API. For example, you can perform
-      browser-based analysis on the displayed image. Click the
-      Plugins tab, create a region, and move it around ...
+      By extending JS9 with the plugin facility and the public API, you
+      can perform browser-based analysis on the displayed image. Click
+      the Plugins tab, create a region, and move it around ...
       <p>
-      In addition, data files loaded from the server support
-      server-side analysis (using the original data files on the
-      back-end server).  Server-side analysis can be run, for example,
-      in response to region changes, with the results displayed back
-      in your browser.  For the Cas-A X-ray image currently being
-      displayed, click the Analysis tab, choose a task, create a
-      region, and move it around ...
+      In addition, data files loaded from a server support server-side
+      analysis. Analysis can be run, for example, when a region changes, 
+      with the results displayed back in your browser.  Click the Analysis
+      tab, choose a task, create a region, and move it around ...
       <p>
     </div>
     <div id="analysis" class="tabcontent mytabcontent">
@@ -322,7 +318,7 @@
       <b>Release 1.4</b> provides bug fixes for the binning plugin, adds
       a user preference plugin, and supports export to FITS and PNG files.
       <p>
-      <b>Release 1.3</b> incorporates the de facto standard
+      <b>Release 1.3</b> incorporates the standard
       <a href="http://heasarc.gsfc.nasa.gov/docs/software/fitsio/">cfitsio</a>
       FITS library, using Emscripten to compile to JavaScript.
       <p>
@@ -330,51 +326,42 @@
       <a href="https://github.com/ericmandel/pyjs9">pyjs9</a> Python interface
       via GET/POST support in the back-end Node.js server.
       <p>
-      JS9 works on Web browsers that support the HTML5 canvas element. It
-      has been tested on the following browsers:
-      <ul>
-      <li> Firefox 18+
-      <li> Chrome
-      <li> Safari (including the iPad and iPhone 6)
-      <li> IE9 (IE8 doesn't support the HTML5 canvas element)
-      </ul>
+      JS9 works on Web browsers that support the HTML5 canvas element, including
+      all recent versions of FireFox, Chrome, Safari, and IE.
+      <p>
       JS9 is powered by the following technologies, to whom grateful
       acknowledgment is made:
       <ul>
-      <li> emscripten for C-to-JavaScript (https://github.com/kripken/emscripten)
-      <li> dynamic drive for light windows (http://www.dynamicdrive.com/dynamicindex8/dhtmlwindow/index.htm)
-      <li> fabric.js for regions and other 2D graphics (http://fabricjs.com/)
-      <li> flot for internal plotting (http://www.flotcharts.org/)
       <li> HTML5 for image display and most everything
-      <li> jquery for programming ease (http://jquery.com/)
-      <li> jquery.contextMenu for menus (http://medialize.github.io/jQuery-contextMenu/)
+      <li> emscripten C-to-JavaScript ( http://emscripten.org)
+      <li> dynamic drive light windows (http://www.dynamicdrive.com)
+      <li> fabric.js 2D graphics (http://fabricjs.com/)
+      <li> flot plotting (http://www.flotcharts.org/)
+      <li> jquery programming ease (http://jquery.com/)
+      <li> jquery.contextMenu (http://medialize.github.io/jQuery-contextMenu/)
       </ul>
       <p>
       JS9 is distributed under the terms of The MIT License.
       <p>
-      If you have questions or comments, please contact:<br>
-	<a href="mailto:saord@cfa.harvard.edu?subject=JS9 inquiry">Eric Mandel</a>, Harvard-Smithsonian Center for Astrophysics
+      Contact: <a href="mailto:saord@cfa.harvard.edu?subject=JS9 inquiry">Eric Mandel</a>, Harvard-Smithsonian Center for Astrophysics
     </div>
     <div id="download" class="tabcontent mytabcontent">
-      The current <b>JS9 source</b> tar file is available
-      below. By itself, the tar file will suffice to display FITS
-      images via drag-and-drop and URL-based access, and to utilize
+      The current <b>JS9 source</b> tar file is available below.
+      This will allow you to display FITS images (drag-and-drop
+      and URL-based access) with all essential functionality, including
       browser-based plugins.
       <p>
-      Also available below is the <b>pyjs9 Python interface</b>.  The
-      pyjs9 module supports the JS9 Public API and the short-cut
-      command interfaces, utilizing urllib to communicate with the
-      back-end Node server (which communicates with the browser itself).
+      Also available is the <b>pyjs9 Python interface</b>.  This
+      module supports the JS9 Public API and the short-cut command
+      interface by communicating with the back-end Node helper.
       <p>
-      If you want the JS9 demo pages to work at your site, you will
-      need to download the (100Mb) JS9 <b>data</b> tar file.
+      If you want the JS9 demo pages to work at your site, 
+      download the (100Mb) <b>data</b> tar file.
       <p>
-      If you want to configure a back-end helper (for server-side analysis
-      and creation of png representation files), you will need to install the
-      de facto standard
+      To configure a back-end Node helper (for server-side analysis and
+      external control), install the
       <a href="http://heasarc.gsfc.nasa.gov/docs/software/fitsio">cfitsio</a>
-      library or the <b>funtools</b> package (below).
-      <br>
+      library or the <b>funtools</b> package:
       <ul>
       <li><a href="downloads/js9-1.4.tar.gz">js9 v1.4</a>
       <li><a href="downloads/pyjs9-1.0.tar.gz">pyjs9 v1.0</a>
@@ -382,17 +369,14 @@
       <li><a href="downloads/funtools-1.4.6.tar.gz">funtools</a>
       </ul>
       <p>
-      JS9 and pyjs9 also are available on GitHub, where their respective
-      repositories contain the very latest bug fixes and enhancements (see
-      the Help/JS9 Changelog for details):
-      <br>
+      JS9 and pyjs9 also are available on GitHub, where the
+      repositories contain the very latest bug fixes and enhancements:
       <ul>
       <li><a href="https://github.com/ericmandel/js9">js9</a>
       <li><a href="https://github.com/ericmandel/pyjs9">pyjs9</a>
       <li><a href="https://github.com/ericmandel/js9data">js9 data</a>
       <li><a href="https://github.com/ericmandel/funtools">funtools</a>
       </ul>
-      We look forward to your pull requests ...
       <p>
       JS9 development at the
       <a href="http://www.cfa.harvard.edu">Harvard-Smithsonian Center for Astrophysics</a> 
