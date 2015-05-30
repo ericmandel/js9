@@ -1,10 +1,10 @@
 exports.dotest = function(js9Test, opts){
     var cnts = {
-	"CAS-A PNG": 5562, 
-	"CAS-A FITS": 5562, 
-	"CTB 109 PNG": 4930, 
+	"CAS-A PNG": 5550, 
+	"CAS-A FITS": 13389, 
+	"CTB 109 PNG": 4913, 
 	"CTB 109 FITS": 4930, 
-	"m13 PNG": 804012,
+	"m13 PNG": 804226,
 	"m13 FITS": 804012,
 	"i1000 PNG": 1363404500,
 	"i1000 FITS": 1363404500,

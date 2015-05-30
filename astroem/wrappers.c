@@ -378,7 +378,7 @@ char *reg2wcsstr(int n, char *regstr){
 	    /* calculate and output separation between the two points */
 	    sep = wcsdist(rval1, rval2, rval3, rval4)*3600.0;
 	    if( sep <= 60 ){
-	      snprintf(tbuf, SZ_LINE, ", %.2f\"", sep);
+	      snprintf(tbuf, SZ_LINE, ", %.6f\"", sep);
 	      strncat(str, tbuf, SZ_LINE-1);
 	    } else if( sep <= 3600 ){
 	      snprintf(tbuf, SZ_LINE, ", %.6f'", sep/60.0);
@@ -392,7 +392,7 @@ char *reg2wcsstr(int n, char *regstr){
 	/* output angle, as needed */
 	if( !strcmp(s, "box") || !strcmp(s, "ellipse") ){
 	  while( dval1 < 0 ) dval1 += (2.0 * PI);
-	  snprintf(tbuf, SZ_LINE, ", %.3f", RAD2DEG(dval1));
+	  snprintf(tbuf, SZ_LINE, ", %.6f", RAD2DEG(dval1));
 	  strncat(str, tbuf, SZ_LINE-1);
 	}
 	/* close region */
