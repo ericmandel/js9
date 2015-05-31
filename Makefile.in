@@ -460,7 +460,7 @@ js9tests-firefox:FORCE
 		@(node js9Test.js --webpage $(LWEBSITE)/js9/js9Test.html --all --browser=firefox)
 
 ckwebsite:	FORCE
-		@(got=`node js9Test.js --webpage $(WEBSITE)/js9/js9Test.html countsTest`; \
+		@(got=`node js9Test.js --webpage $(WEBSITE)/js9/js9Test.html counts`; \
 		if [ x"$$got" != x"countsTest [counts in regions]: success" ]; then \
 		  echo "ERROR: there is a problem with js9.si.edu ..."; \
 		  echo "return: $$got"; \
