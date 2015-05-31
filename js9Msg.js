@@ -99,6 +99,7 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
     }
     nsend++;
     socket.emit(msgType, msg, function(s){
+	var t;
 	nsend--;
 	// post-processing of results
 	switch(msg.cmd){
@@ -113,7 +114,14 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
 	}
 	// display results
         if( s ){
-	    console.log(s);
+	    // on stab at converting objects to json
+	    if( typeof s === "object" ){
+		try{ t = JSON.stringify(s); }
+		catch(e){ t = s; }
+	    } else {
+		t = s;
+	    }
+	    console.log(t);
 	}
 	// post-processing
 	switch(postproc){
