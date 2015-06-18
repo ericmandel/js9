@@ -201,20 +201,25 @@ region of type <b>annulus</b>, <b>box</b>, <b>circle</b>, <b>ellipse</b>,
 be created and manipulated on a single image.
 
 <p>
-The <b>saveRegions</b> menu option will save all regions to a file
+The <b>load legions</b> menu option will load a file of regions and
+display them on the current image. Regions can be specified using the
+widely-used DS9/Funtools regions format, as described 
+<a href="regions.html">here</a>.
+
+<p>
+The <b>save regions</b> menu option will save all regions to a file
 named js9.reg. The file will be saved in the folder where your other
 browser downloads are stored. NB: As of 4/2015, Safari does not permit
-this sort of file saving. The <b>saveRegions</b> command therefore
+this sort of file saving. The <b>save regions</b> command therefore
 displays the region text in a new tab (or window). Use Safari's 
 <b>File:Save As</b> option to save the regions to disk.
 
 <p>
-The <b>listRegions</b> menu option will display all regions.
-The <b>listOnChange</b> menu option will cause all regions to be listed
-whenever one changes.The <b>deleteRegions</b> menu option will delete
-all regions.  Note that each individual region has a configuration
-menu (double-click inside the region) that supports
-these options for that region only.
+The <b>list regions</b> menu option will display all regions.
+The <b>delete regions</b> menu option will delete all regions.
+The <b>list on change</b> menu option will cause all regions to be
+listed whenever one changes.
+
 
 <li><p><b>WCS:</b> Use this menu option to select a world coordinate
 system when displaying pixel positions and regions (assuming
@@ -378,6 +383,8 @@ The <b>text</b> region supports:
 <li><b>Text:</b> change the text of the region
 <li><b>Angle:</b> change the angle of the region (in degrees, counter-clockwise)
 </ul>
+A discussion of how JS9 implements DS9/Funtools regions syntax can be found
+<a href="regions.html">here</a>.
 
 <p>
 <h3>Meta Key Accelerator</h3>
