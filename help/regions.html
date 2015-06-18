@@ -1,0 +1,181 @@
+<html>
+<head>
+<style>
+.container{
+  padding: 10px;
+}
+</style>
+<TITLE>DS9/Funtools Spatial Regions</TITLE>
+</head>
+<body>
+
+<div class="container">
+<h3><A NAME="regions">DS9/Funtools Spatial Regions</A></h3>
+In many X-ray astronomical analysis software suites (e.g., fitsio, ciao,
+funtools), spatial regions allows one to select regions of an image or
+rows of a table by means of simple geometric shapes.  When an image is
+filtered, only pixels found within these shapes are processed. When a
+table is filtered, only rows found within these shapes are processed.
+
+<p>
+In these systems, spatial region filtering is accomplished by means
+of <b>region specifications</b>. Typically, region specifications use
+bracket notation appended to the filename of the data being processed:
+<pre>
+  funcnts "foo.fits[circle(512,512,100)]"
+</pre>
+
+<p>
+JS9 implements a subset of the widely-used DS9/Funtools regions syntax,
+as described below.
+
+<h3>Region Expressions</h3>
+
+Spatial region specifications consist of one or more lines containing:
+<pre>
+  # comment until end of line
+  # each region expression contains shapes and optional local json objects
+  [region_expression1] {local json object}  # tags
+  [region_expression2] # tags
+</pre>
+
+<p>
+A single region expression consists of:
+<pre>
+  # shape name and parens are required
+  # arguments are separated by commas. spaces are optional, as is the + sign
+  [+-]shape(val, val, ...)
+</pre>
+where regions shapes can be:
+
+<pre>
+  shape:        arguments:
+  -----         ----------------------------------------
+  annulus       (xcenter, ycenter, inner_radius, outer_radius)
+  box           (xcenter, ycenter, xwidth, yheight[, angle])
+  circle        (xcenter, ycenter, radius)
+  ellipse       (xcenter, ycenter, xwidth, yheight[, angle])
+  text          (x1, x2, text)
+  point         (x1, y1)
+  polygon       (x1, y1, x2, y2, ..., xn yn)
+</pre>
+
+<p>
+All arguments to regions are real values; integer values are
+automatically converted to real where necessary.  All angles are in
+degrees and run from the positive image x-axis to the positive image
+y-axis.
+
+<h3>Region Exclusion</h3>
+<p>
+Shapes also can be globally excluded from a region descriptor by using
+a minus sign before a region:
+
+<pre>
+  operator      arguments:
+  --------      -----------
+  -             Globally exclude the region expression following '-' sign
+                from ALL regions specified in this file
+</pre>
+
+<h3>Local Properties of Regions</h3>
+DS9/Funtools regions utilize a key=value syntax within an in-line comment to
+specify secondary properties such as color. It also uses single tokens
+in the in-line comments to specify tags such as "source" and "background".
+<p>
+JS9 retains the use of comments to specify tags, but utilizes a JSON
+object to specify secondary properties. This optional object follows
+the region specification:
+<pre>
+    point(4300.00, 4250.00) {"color": "red"} # background,include
+    point(350.897859, 58.835164) {"ptshape": "circle", "ptsize": 5}
+</pre>
+See the JS9.Regions.opts object in the JS9 source code for a list of properties
+that can be passed in this JSON object.
+
+<h3> Coordinate Systems</h3>
+
+For each region, it is important to specify the coordinate system
+used to interpret the region, i.e., to set the context in which position and
+size values are interpreted. For this purpose, the following keywords
+are recognized:
+
+<pre>
+  name                  description
+  ----                  ------------------------------------------
+  physical              pixel coords of original file using LTM/LTV
+  image                 pixel coords of current file
+  FK4                   sky coordinate system
+  FK5                   sky coordinate system
+  galactic              sky coordinate system
+  ecliptic              sky coordinate system
+  ICRS                  currently same as J2000
+</pre>
+If no coordinate system is specified, physical is assumed.  The
+coordinate system specifier should appear at the beginning of the
+region description, separated by semi-colon, or on a separate line.
+Note that multiple coordinate systems can be in the same
+specifier. Each one pertains to the region following until the next
+coordinate system is defined:
+<pre>
+  # Region file format: JS9 version 1.0
+  ICRS
+  point(23:23:27.815, +58:48:42.017)
+  box(23:23:27.815, +58:48:42.017, 29.51", 29.51", 0.000)
+  physical
+  ellipse(4300.00, 4250.00, 30.00, 20.00, 0.00)
+  box(4300.00, 4250.00, 60.00, 60.00, 0.00)
+  ICRS
+  circle(350.897859, 58.835164, 0.76')
+  ellipse(350.897859, 58.835164, 14.76", 9.84", 0.000)
+</pre>
+
+<p>
+<h3>Specifying Positions, Sizes, and Angles</h3>
+
+The arguments to region shapes can be floats or integers describing
+positions and sizes.  They can be specified as pure numbers or using
+explicit formatting directives:
+
+<pre>
+  position arguments    description
+  ------------------    ------------------------------
+  [num]                 context-dependent (see below)
+  [num]d                degrees
+  [num]r                radians
+  [num]p                physical pixels
+  [num]i                image pixels
+  [num]:[num]:[num]     hms for 'odd' position arguments
+  [num]:[num]:[num]     dms for 'even' position arguments
+  [num]h[num]m[num]s    explicit hms
+  [num]d[num]m[num]s    explicit dms
+
+  size arguments        description
+  --------------        -----------
+  [num]                 context-dependent (see below)
+  [num]"                arc seconds
+  [num]'                arc minutes
+  [num]d                degrees
+  [num]r                radians
+</pre>
+
+When a "pure number" (i.e. one without a format directive such as 'd'
+for 'degrees') is specified, its interpretation depends on the context
+defined by the 'coordsys' keyword. In general, the rule is:
+
+<p>
+<b>All pure numbers have implied units corresponding to the current
+coordinate system.
+</b>
+
+<p>
+If no such system is explicitly specified, the default system is
+implicitly assumed to be PHYSICAL. In practice this all means that for
+IMAGE and PHYSICAL systems, pure numbers are pixels. Otherwise, for
+all systems, pure numbers are degrees.
+
+<h5>Last updated: June 17, 2015</h5>
+</div>
+
+</body>
+</html>
