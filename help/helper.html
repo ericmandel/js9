@@ -239,7 +239,35 @@ is loaded into JS9. The server-side helper listens on a port specified
 in the js9Prefs.json file by the globalOpts.helper.Port value. The
 default is 2718, but you can change this to any open port you like.
 
-<h5>Last updated: September 4, 2014</h5>
+<p>
+If you are running in a secure environment (i.e. your web pages use
+<b>https</b> protocol instead of <b>http</b>), then node server also
+must be run securely.  This is because modern browsers block "active
+mixed content".  To run the Node.js helper using https protocol
+instead of http, create a js9Secure.json file containing path names to
+your private key, certificate, and certificate authority files:
+<pre>
+  {
+      "key":  "/path/to/private.key",
+      "cert": "/path/to/server.certificate",
+      "ca":   "/path/to//certifcate.authority"
+  }
+</pre>
+This file will reside in the directory in which the Node.js helper is started.
+<p>
+<b>It is imperative that you keep your private key file secure!</b> If
+this key is accessed by unauthorized parties, they can masquerade as
+your site. The standard recommendation is to change files permission so
+that only the Node.js user can read it:
+<pre>
+   chmod 400 private.key
+</pre>
+and keep that user's password safe!
+<p>
+Also note that Node.js https support appears to missing a needed routine
+in v0.10. Please use v0.12 or above for https.
+
+<h5>Last updated: June 23, 2015</h5>
 </div>
 
 </body>

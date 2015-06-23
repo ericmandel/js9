@@ -20,6 +20,7 @@
 
 // load required modules
 var http = require('http'),
+    https = require('https'),
     Sockio = require('socket.io'),
     url = require('url'),
     qs = require('querystring'),
@@ -29,13 +30,21 @@ var http = require('http'),
     rmdir = require('rimraf');
 
 // internal variables
-var app, io;
+var app, io, secure;
 var prefsfile = "js9Prefs.json";
+var securefile = "js9Secure.json";
 var fits2png = {};
 var analysis = {str:[], pkgs:[]};
 var envs = JSON.stringify(process.env);
 var plugins = [];
 var cdir = process.cwd();
+
+// secure options ... change as necessary in securefile
+var secureOpts = {
+    // key: "path_to_private.key",          // openssl genrsa -out file 2014
+    // cert: "path_to_certificate_file",    // from the certificate authority
+    // ca: "path_to_certificate_authority"  // can be a chain file
+};
 
 // default options ... change as necessary in prefsfile
 var globalOpts = {
@@ -184,6 +193,44 @@ function envClean(s) {
 	return s.replace(/[`&]/g, "").replace(/\(\)[ 	]*\{.*/g, "");
     }
     return s;
+}
+
+function loadSecurePreferences(securefile){
+    var s, obj, opt;
+    var secure = false;
+    if( fs.existsSync(securefile) ){
+	s = fs.readFileSync(securefile, "utf-8");
+	if( s ){
+	    try{ obj = JSON.parse(s.toString()); }
+	    catch(e){ cerr("can't parse: ", securefile, e); }
+	    // merge opts into secureOpts
+	    for( opt in obj ){
+		if( obj.hasOwnProperty(opt) ){
+		    switch(opt){
+		    case "key":
+			secureOpts.key = fs.readFileSync(obj[opt]);
+			break;
+		    case "cert":
+			secureOpts.cert = fs.readFileSync(obj[opt]);
+			break;
+		    case "ca":
+			secureOpts.ca = fs.readFileSync(obj[opt]);
+			break;
+		    default:
+			cerr("unknown secure option: ", opt);
+			break;
+		    }
+		}
+	    }
+	    // if we have a prefs file, we need to have defined required props
+	    if( secureOpts.key && secureOpts.cert ){
+		secure = true;
+	    } else {
+		cerr("missing one or more required secure properties");
+	    }
+	}
+    }
+    return secure;
 }
 
 // load preference file, if possible
@@ -700,6 +747,9 @@ function httpHandler(req, res){
 // initialization
 //
 
+// load secure preferences
+secure = loadSecurePreferences(securefile);
+
 // load preference file
 loadPreferences(prefsfile);
 
@@ -710,7 +760,11 @@ loadAnalysisTasks(globalOpts.analysisPlugins);
 loadHelperPlugins(globalOpts.helperPlugins);
 
 // start up http server
-app = http.createServer(httpHandler);
+if( secure ){
+    app = https.createServer(secureOpts, httpHandler);
+} else {
+    app = http.createServer(httpHandler);
+}
 
 // never timeout, analysis requests can be very long
 app.setTimeout(0);

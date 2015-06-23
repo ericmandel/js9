@@ -92,6 +92,7 @@ JS9.globalOpts = {
     xtimeout: 1000,		// connection timeout for xhr requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     dims: [1024, 1024],		// dims of extracted images
+    helperProtocol: location.protocol,// http: or https:
     maxMemory: 450000000,	// max heap memory to allocate for a fits image
     debug: 0			// debug level
 };
@@ -4740,11 +4741,15 @@ JS9.Helper.prototype.connect = function(type){
     }
     // base of helper url is either specified, same as current domain, or local
     if( JS9.globalOpts.helperURL ){
-	this.url = "http://" + JS9.globalOpts.helperURL;
-    } else if( document.domain === "" ){
-	this.url = "http://localhost";
+	if( JS9.globalOpts.helperURL.search(/:\/\//) >=0 ){
+	    this.url = JS9.globalOpts.helperURL;
+	} else {
+	    this.url = JS9.globalOpts.helperProtocol + JS9.globalOpts.helperURL;
+	}
+    } else if( document.domain ){
+	this.url = JS9.globalOpts.helperProtocol + document.domain;
     } else {
-	this.url = "http://" + document.domain;
+	this.url = JS9.globalOpts.helperProtocol + "localhost";
     }
     // try to establish connection, based on connection type
     switch(this.type){
@@ -9682,6 +9687,12 @@ JS9.init = function(){
 	// load page preferences, if possible
 	JS9.loadPrefs(JS9.PREFSFILE, 0);
     }
+    // reset protocol for file:
+    if( JS9.globalOpts.helperProtocol === "file:" ){
+	JS9.globalOpts.helperProtocol = "http:";
+    }
+    // add suffix
+    JS9.globalOpts.helperProtocol += "//";
     // replace with global opts with user opts, if necessary
     if( window.hasOwnProperty("localStorage") ){
 	uopts = localStorage.getItem("images");
