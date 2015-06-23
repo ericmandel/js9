@@ -4049,9 +4049,9 @@ JS9.Menubar = function(width, height){
 		}
 		items["sep" + n++] = "------";
 		items.zoomiotitle = {name: "Zoom In/Out:", disabled: true};
-		items.zoomIn = {name: "zoomIn"};
-		items.zoomOut = {name: "zoomOut"};
-		items.zoomToFit = {name: "zoomToFit"};
+		items.zoomIn = {name: "zoom in"};
+		items.zoomOut = {name: "zoom out"};
+		items.zoomToFit = {name: "zoom to fit"};
 		items["sep" + n++] = "------";
 		items.zoom = {
 		    events: {keyup: keyZoom},
