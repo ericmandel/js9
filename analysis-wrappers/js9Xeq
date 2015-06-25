@@ -156,7 +156,9 @@ macros)
     id:       [$3]
     foo:      [$4] (not expanded)
     sregions: [$5]
-    bregions: [$6]"
+    bregions: [$6]
+    string1:  [$7] (passed on command line)
+    string2:  [$8] (passed on command line)"
     exit 0
     ;;
 
