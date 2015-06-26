@@ -335,6 +335,57 @@ function loadHelperPlugins(dir){
     }
 }
 
+// parse an argument string into an array of arguments, where
+// spaces and quotes are delimiters
+function parseArgs(argstr){
+    var targs, i, j, ci, c1, c2, s;
+    var args = [];
+    // split arguments on spaces
+    targs = argstr.split(" ");
+    // now re-combine quoted args into one arg
+    for(i=0, j=0, ci=-1; i<targs.length; i++){
+	// remove or rename dangerous characters
+	s = targs[i].replace(/`/g, "").replace(/&/g, "__ampersand__");
+	// are we re-combining?
+	if( ci >= 0 ){
+	    // yes, add to current arg
+	    args[ci] = args[ci] + " " + s;
+	} else {
+	    // no, add another arg
+	    args[j] = s;
+	}
+	if( ci === -1 ){
+	    // new quoted string?
+	    c1 = s.charAt(0);
+	    c2 = s.charAt(s.length-1);
+	    if( c1 === "'" || c1 === '"' ){
+		// spread across more than one arg, so we need to recombine?
+		if( c2 === c1 ){
+		    // no just remove the quotes from this one
+		    args[j] = args[j].substr(1,args[j].length-2);
+		    j++;
+		} else {
+		    // yes
+		    ci = j;
+		}
+	    } else {
+		// no
+		j++;
+	    }
+	} else {
+	    // end of current quoted string?
+	    c2 = s.charAt(s.length-1);
+	    if( c2 === c1 ){
+		// yes, remove enclosing quotes
+		args[ci] = args[ci].substr(1,args[ci].length-2);
+		ci = -1;
+		j++;
+	    }
+	}
+    }
+    return args;
+}
+
 //
 // message callbacks
 //
@@ -342,7 +393,7 @@ function loadHelperPlugins(dir){
 // execCmd: exec a analysis wrapper function to run a command
 // this is the default callback for server-side analysis tasks
 function execCmd(io, socket, obj, cbfunc) {
-    var i, cmd, argstr, args, maxbuf;
+    var cmd, argstr, args, maxbuf;
     var myworkdir = null;
     var myip = getHost(io, socket);
     var myid = obj.id;
@@ -358,6 +409,8 @@ function execCmd(io, socket, obj, cbfunc) {
     myenv.JS9_HOST = envClean(myip);
     // JS9 base dir
     myenv.JS9_DIR = cdir;
+    // JS9 unique page id
+    myenv.JS9_PAGEID = 	socket.js9.pageid;
     // js9 cookie in the sending browser
     if( obj.cookie ){
 	myenv.HTTP_COOKIE = envClean(obj.cookie);
@@ -379,15 +432,10 @@ function execCmd(io, socket, obj, cbfunc) {
 	maxbuf = globalOpts.maxBinaryBuffer;
 	break;
     }
-
     // the command string
     argstr = obj.cmd || "";
-    // split arguments on spaces
-    args = argstr.split(" ");
-    // remove dangerous characters
-    for(i=0; i<args.length; i++){
-	args[i] = args[i].replace(/[`&]/g, "");
-    }
+    // split arguments on spaces, respecting quotes
+    args = parseArgs(argstr);
     // get commmand to execute
     if( args[0] === globalOpts.cmd ){
 	// handle fitshelper specially
