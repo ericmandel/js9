@@ -45,7 +45,7 @@ function usage() {
   console.log("    -id [id]               # client JS9 id (def: JS9)");
   console.log("    -msgType [type]        # message type (def: 'msg')");
   console.log("    -multi                 # send to multiple clients");
-  console.log("    -p or -pipe            # read argument list from stdin");
+  console.log("    - or -pipe             # read argument list from stdin");
   console.log("    -pageid [id]           # unique page id from server");
   console.log("  examples:");
   console.log("    %s help               # list available commands", prog);
@@ -245,7 +245,7 @@ while( !done ){
       args.shift();
       msgType = args.shift();
       break;
-    case '-p':
+    case '-':
       args.shift();
       dopipe = true;
       break;
