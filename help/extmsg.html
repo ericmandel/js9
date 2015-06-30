@@ -19,7 +19,7 @@ it might be desirable for an external process to communicate with the
 JS9 client:
 
 <ul>
-<li> JS9 might be part of a larger Web-based analysis system
+<li> JS9 might be part of an analysis system
 (i.e. instead of the analysis being incorporated into the Analysis
 menu). An analysis task might want to query JS9 for its regions.
 <li> A Web site might offer "live" tutorials in which JS9 in the
@@ -33,7 +33,7 @@ on the level of expertise of a given user.
 <p>
 If you run the Node.js-based helper (instead of the CGI helper), this
 sort of external communication is supported by the <b>js9 script</b>
-and its underlying <b>js9Msg.js</b>. The script runs
+and its underlying <b>js9Msg.js</b> module. The script runs
 <b>Node.js</b> with js9Msg.js as its first argument. Using command
 line syntax, it will send a single JS9 command to the browser and
 return the results:
@@ -54,17 +54,48 @@ enter a "read-line" loop, executing commands as they are input:
   heat
 </pre>
 <p>
-You also can send multiple commands to the script's standard input:
+When no arguments are supplied, js9 will read stdin. You can send
+multiple commands to the script's standard input (comments and blank
+lines are ignored):
 <pre>
-  sh> cat test.reg
+  sh> cat test.cmds
+  # colormap
+  cmap heat
+  # scale
+  scale log
+  # regions using image coords
   region circle {"x":588, "y":590, "radius":30, "tags":"source"}
-  region circle {"x":588, "y":590, "radius":10, "tags":"exclude"}
   region circle {"x":390, "y":430, "radius":50, "tags":"background"}
-  region circle {"x":390, "y":430, "radius":10, "tags":"background,exclude"}
-  sh> cat test.reg | js9    # send regions to JS9
+  sh> cat test.cmds | js9
 </pre>
-(Note: currently, redirecting to stdin does not appear to display
-return messages. We'll fix this in a future release.)
+<p>
+Note that DS9/funtools region syntax can also be used for regions:
+<pre>
+  sh> cat test2.cmds
+  cmap heat
+  scale log
+  wcssys fk5
+  region box(23:23:35.236,+58:50:00.95,39.352",20.1679",24.0163)
+  region ellipse(23:23:33.323,+58:47:41.50,29.6394",11.0139",25.7599)
+  region polygon(23:23:19.379,+58:49:30.02,23:23:17.270,+58:49:40.93,23:23:14.834,+58:49:38.59,23:23:17.974,+58:49:13.64) {"tags": "background"}
+  sh> cat test2.cmds | js9
+</pre>
+<p>
+Finally, the <b>-</b> (or <b>-pipe</b>) switch allows you to specify a
+string on the JS9 command line that will prefix all lines read from
+stdin. This allows you to send a regions file to JS9:
+<pre>
+  sh> cat ds9.reg
+  # Region file format: DS9 version 4.1
+  global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
+  fk5
+  box(23:23:35.236,+58:50:00.95,39.352",20.1679",24.0163)
+  ellipse(23:23:33.323,+58:47:41.50,29.6394",11.0139",25.7599)
+  polygon(23:23:19.379,+58:49:30.02,23:23:17.270,+58:49:40.93,23:23:14.834,+58:49:38.59,23:23:17.974,+58:49:13.64) # background
+  sh> cat ds9.reg | js9 - region
+</pre>
+(Without the <b>-<b> switch, standard input will not be read. The
+"region" command will be executed to return current regions.)
 
 <p> 
 A list of available JS9 commands can be retrieved using the ''help' command:
@@ -95,23 +126,6 @@ A list of available JS9 commands can be retrieved using the ''help' command:
 These are the same commands that are available to the JS9 light-weight 
 <b>Console</b> window.
 
-<p>
-One of the most important JS9 commands is the 'region' command, which
-will create a new region or display the current region(s):
-<pre>
-  sh> js9 region circle
-  OK
-  sh> js9 regions
-  ICRS; circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
-</pre>
-<p>
-Region-specific properties can be supplied in JSON format after the
-shape is specified (see http://www.json.org/). You can pass any
-property value found in the JS9.Regions.opts object. For example:
-<pre>
-  sh> js9 region circle '{"x":495, "y":495, "radius":25, "color":"yellow"}'
-  OK
-</pre>
 <p>
 The <b>js9 script</b> can talk to a JS9 instance if the script is run from:
 <ul>
@@ -145,9 +159,9 @@ on the same page, then js9 can communicate with the latter in this way:
 or, from the readline loop:
 <pre>
   sh> js9 -id myJS9
-  JS9> region circle
+  JS9> region circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
   OK
-  JS9> region -id myJS9
+  JS9> region
   ICRS; circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
 </pre>
 <p>
@@ -158,15 +172,15 @@ instances on a page connected to a remote helper this way:
   OK
 </pre>
 <p>
-A final esoteric note: special considerations are required when a helper
-host wants to talk to one of several instances of JS9 connected to the
-helper. Being on the same host as the helper, the <b>js9 script</b> is
-allowed to send messages to any of these clients. But for security
-reasons, it can only send a message to an individual browser, not to all
-browsers at once. If the target browser's ip address is known,
-the <b>-browser</b> switch can be used to differentiate browsers
-running the same page. For example, if you want to talk to the JS9
-client browser on bynars:
+A final esoteric security note: special considerations are required
+when a helper host wants to talk to one of several instances of JS9
+connected to the helper. Being on the same host as the helper,
+the <b>js9 script</b> is allowed to send messages to any of these
+clients. But for security reasons, it can only send a message to an
+individual browser, not to all browsers at once. If the target
+browser's ip address is known, the <b>-browser</b> switch can be used
+to differentiate browsers running the same page. For example, if you
+want to talk to the JS9 client browser on bynars:
 <pre>
   sh> js9 -browser bynars.cfa.harvard.edu -id myJS9 region circle
   OK
@@ -182,10 +196,10 @@ or, from the readline loop:
   ICRS; circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
 </pre>
 <p>
-The js9 interface will evolve to meet the needs of the astronomical
+The JS9 interface will evolve to meet the needs of the astronomical
 community.
 
-<h5>Last updated: September 4, 2014</h5>
+<h5>Last updated: June 30, 2015</h5>
 </div>
 
 </body>

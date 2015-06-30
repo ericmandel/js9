@@ -3478,7 +3478,7 @@ JS9.Console.prototype.xeq = function(){
 		break;
 	    }
 	} else {
-	    msg = sprintf("unknown command '%s'", tokens[0]);
+	    msg = sprintf("unknown command '%s'", cmd);
 	    if( args.length > 0 ){
 		msg = msg + " " + args;
 	    }
@@ -4839,6 +4839,15 @@ JS9.Helper.prototype.connect = function(type){
 			if( mcb ){
 			    mcb(res);
 			}
+			JS9.globalOpts.alerts = true;
+			return;
+		    }
+		    // skip blank lines and comments
+		    if( !cmd || (cmd === "#") ){
+			if( mcb ){
+			    mcb("");
+			}
+			JS9.globalOpts.alerts = true;
 			return;
 		    }
 		    // get command and display
@@ -4884,7 +4893,7 @@ JS9.Helper.prototype.connect = function(type){
 			}
 		    }
 		    // turn on alerts
-		    JS9.globalOpts.alerts = false;
+		    JS9.globalOpts.alerts = true;
 		    // message callback, if necessary
 		    if( mcb ){
 			mcb(res);
@@ -7232,14 +7241,14 @@ JS9.Regions.listRegions = function(which, mode){
 JS9.Regions.parseRegions = function(s){
     var regions = [];
     var i, j, k, lines, obj, robj;
-    var owcssys, wcssys, iswcs, pos, wcsinfo, alen;
+    var owcssys, wcssys, iswcs, liswcs, pos, wcsinfo, alen;
     var regrexp = /(annulus)|(box)|(circle)|(ellipse)|(polygon)|(point)|(text)/;
     var wcsrexp = /(fk4)|(fk5)|(icrs)|(galactic)|(ecliptic)|(image)|(physical)/;
     var parrexp = /\(\s*([^)]+?)\s*\)/;
     var seprexp = /\n|;/;
     var optsrexp = /(\{[^}]*\})/;
     var argsrexp = /\s*,\s*/;
-    var charrexp = /(\C|\{|#|;|\n)/;
+    var charrexp = /(\(|\{|#|;|\n)/;
     // parse region line into cmd (shape or wcs), arguments, opts, comment
     var regparse1 = function(s){
 	var tarr;
@@ -7316,7 +7325,11 @@ JS9.Regions.parseRegions = function(s){
 	var vt, sarr, ox, oy;
 	var v1 = strtod(ix);
 	var v2 = strtod(iy);
-	if( iswcs ){
+	// local override of wcs if we used sexagesimal
+	if( (v1.dtype === ":") || (v2.dtype === ":") ){
+	    liswcs = true;
+	}
+	if( iswcs || liswcs ){
 	    /* arg1 coords are hms, but ecliptic, galactic are deg */
 	    if( (v1.dtype === ":") &&
 		(wcssys !== "galactic") && (wcssys !== "ecliptic") ){
@@ -7342,7 +7355,7 @@ JS9.Regions.parseRegions = function(s){
     var getilen = function(len, which){
 	var cstr;
 	var v = strtod(len);
-	if( iswcs ){
+	if( iswcs || liswcs ){
 	    if( v.dtype && (v.dtype !== ".") ){
 		cstr = "cdelt" + which;
 		v.dval = Math.abs(v.dval / wcsinfo[cstr]);
@@ -7353,7 +7366,7 @@ JS9.Regions.parseRegions = function(s){
     // get image angle
     var getang = function(a){
 	var v = strtod(a);
-	if( iswcs ){
+	if( iswcs || liswcs ){
 	    v.dval += wcsinfo.crot;
 	    if( wcsinfo.imflip ){
 		v.dval = -v.dval;
@@ -7388,6 +7401,8 @@ JS9.Regions.parseRegions = function(s){
     for(i=0; i<lines.length; i++){
 	// ignore comments
 	if( lines[i].trim().substr(0,1) !== "#" ){
+	    // reset temp wcs 
+	    liswcs = false;
 	    // parse the line
 	    robj = regparse1(lines[i]);
 	    alen = robj.args.length;
