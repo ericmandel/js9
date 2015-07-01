@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="js9.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <style>
+      #centerdiv {
+      width: 512px;
+      margin-left: auto ;
+      margin-right: auto ;
+      }
+  </style>
+</head>
+<body onload="JS9.Preload('./png/casa.png'); return false">
+    <div id="centerdiv">
+    <font size="+1">
+    <center><b>JS9 Demo: an HTML interface (instead of a menubar) </b></center>
+    </font>
+    <p>
+    The menubar is only one way to interface with JS9.
+    Web designers can create their own graphical inteface, using standard
+    HTML elements that call the
+    <a href="help/publicapi.html" target="_blank">JS9 Public API</a>
+    to perform the appropriate actions. 
+
+    <table cellspacing="15">
+
+    <tr valign="bottom">
+    <td>
+    <table cellspacing="3">
+    <tr valign="bottom">
+    <td colspan="4">
+    Choose a JS9 menu action to perform:
+    </td>
+    </tr>
+    <tr valign="top">
+    <td>
+    zoom:
+    </td>
+    <td>
+    <button id="1" class="zoom">zoom1</button>
+    </td>
+    <td>
+    <button id="2" class="zoom">zoom2</button>
+    </td>
+    <td>
+    <button id="4" class="zoom">zoom4</button> 
+    </td>
+    </tr>
+
+    <tr valign="top">
+    <td>
+    scale:
+    </td>
+    <td>
+    <button id="log" class="scale">log</button> 
+    </td>
+    <td>
+    <button id="linear" class="scale">linear</button>
+    </td>
+    <td>
+    <button id="squared" class="scale">squared</button>
+    </td>
+    </tr>
+
+    <tr valign="top">
+    <td>
+    cmap:   
+    </td>
+    <td>
+    <button id="grey" class="color">grey</button>
+    </td>
+    <td>
+    <button id="heat" class="color">heat</button>
+    </td>
+    <td>
+    <button id="cool" class="color">cool</button>
+    </td>
+    </tr>
+
+    <tr valign="top">
+    <td>
+    regions:
+    </td>
+    <td>
+    <button id="circle" class="region">circle</button>
+    </td>
+    <td>
+    <button id="box" class="region">box</button>
+    </td>
+    <td>
+    <button id="ellipse" class="region">ellipse</button>
+    </td>
+    </tr>
+
+    <tr valign="top">
+    <td>
+    analysis:
+    </td>
+    <td>
+    <button id="counts" class="analysis">counts</button>
+    </td>
+    <td>
+    <button id="energyplot" class="analysis">spectrum</button>
+    </td>
+    <td>
+    <button id="fitshead" class="analysis">fitsheader</button>
+    </td>
+    </tr>
+
+    </table>
+
+    <td>
+    <div class="JS9Panner" data-width="200px" data-height="200px"></div>
+    </td>
+
+    </tr>
+    </table>
+
+    <p>
+    <div class="JS9"></div>
+    </div>
+    <script>
+      var click;
+      if( "ontouchstart" in document.documentElement ){
+          click = "touchstart";
+      } else {
+          click = "click";
+      }
+      $(".zoom").on(click, function(evt){
+          var s = $(evt.currentTarget).attr("id");
+          JS9.SetZoom(s);
+          return false;
+      });
+      $(".scale").on(click, function(evt){
+          var s = $(evt.currentTarget).attr("id");
+          JS9.SetScale(s);
+          return false;
+      });
+      $(".color").on(click, function(evt){
+          var s = $(evt.currentTarget).attr("id");
+          JS9.SetColormap(s);
+          return false;
+      });
+      $(".region").on(click, function(evt){
+          var s = $(evt.currentTarget).attr("id");
+          JS9.AddRegions(s);
+          return false;
+      });
+      $(".analysis").on(click, function(evt){
+          var s = $(evt.currentTarget).attr("id");
+          JS9.RunAnalysis(s);
+          return false;
+      });
+      JS9.Panner.HTML = "";
+      </script>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9bespoke.html'>JS9 Demo: web page control of JS9</a>
+<li><a href='js9sizes.html'>JS9 Demo: setting the size of the JS9 display</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>
