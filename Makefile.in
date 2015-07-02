@@ -469,7 +469,7 @@ ckwebsite:	FORCE
 		fi;)
 
 clean:		FORCE
-		@($(RM) *.a *.so *.dylib *.o *.exe core errs *pure* .nfs* \
+		@($(RM) *.a *.so *.dylib *.o *.exe core errs *pure* \
 			foo* *~ \#* TAGS *.E a.out errors \
 			$(PROGS) $(CGIFILES) $(TESTPROGS) \
 			gmon.out *.pg *.bak  *js9Prefs.json-orig \
