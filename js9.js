@@ -205,6 +205,10 @@ JS9.helpOpts = {
 	type: "help", url:"serverside.html",
 	title: "Server-side Analysis with JS9"
     },
+    regions: {
+	type: "help", url:"regions.html",
+	title: "JS9 Regions Format"
+    },
     extmsg: {
 	type: "help", url:"extmsg.html",
 	title: "JS9 External Messaging"
