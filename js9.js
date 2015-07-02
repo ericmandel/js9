@@ -7366,12 +7366,13 @@ JS9.Regions.parseRegions = function(s){
     // get image angle
     var getang = function(a){
 	var v = strtod(a);
-	if( iswcs || liswcs ){
-	    v.dval += wcsinfo.crot;
-	    if( wcsinfo.imflip ){
-		v.dval = -v.dval;
-	    }
-	}
+// this is in funtools/filter, but why??
+//	if( iswcs || liswcs ){
+//	    v.dval += wcsinfo.crot;
+//	    if( wcsinfo.imflip ){
+//		v.dval = -v.dval;
+//	    }
+//	}
 	return v.dval;
     };
     // get cleaned-up string
