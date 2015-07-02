@@ -137,11 +137,12 @@ Note that the <b>js9 script</b> on one host cannot communicate with a
 target browser on another host (unless the first host is the helper host).
 <p>
 If a JS9 instance is connected to a helper on a remote host, you can
-use the <b>-helper</b> switch to specify the remote host to
-contact. For example, if the helper is running on js9.cfa.harvard.edu,
-you can send a command to your instance of JS9 this way:
+use the <b>-host</b> or <b>-helper</b> switch to specify the remote
+host to contact. For example, if the helper is running on
+js9.cfa.harvard.edu, you can send a command to your instance of JS9
+this way:
 <pre>
-  sh> js9 -helper js9.cfa.harvard.edu region circle
+  sh> js9 -host js9.cfa.harvard.edu region circle
   OK
 </pre>
 <p>
@@ -168,7 +169,7 @@ or, from the readline loop:
 Putting the last two techniques together, you can talk to one of many JS9
 instances on a page connected to a remote helper this way:
 <pre>
-  sh> js9 -helper js9.cfa.harvard.edu -id myJS9 cmap heat
+  sh> js9 -host js9.cfa.harvard.edu -id myJS9 cmap heat
   OK
 </pre>
 <p>

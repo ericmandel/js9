@@ -40,7 +40,7 @@ function usage() {
   console.log("  switches:");
   console.log("    -h|-help               # print this message");
   console.log("    -browser [hostname]    # this client's host name/ip");
-  console.log("    -helper [host]         # helper host name (def: localhost)");
+  console.log("    -host|-helper [host]   # helper host name (def: localhost)");
   console.log("    -helperPort [port]     # helper port (def: 2718)");
   console.log("    -id [id]               # client JS9 id (def: JS9)");
   console.log("    -msgType [type]        # message type (def: 'msg')");
@@ -216,8 +216,6 @@ while( !done ){
       usage();
       break;
     case '-browser':
-    // backwards compatibility
-    case '-host':
       args.shift();
       msg.browserip = args.shift();
       break;
@@ -230,6 +228,7 @@ while( !done ){
       msg.multi = true;
       break;
     case '-helper':
+    case '-host':
       args.shift();
       helperHost = args.shift();
       break;
