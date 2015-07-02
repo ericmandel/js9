@@ -6444,13 +6444,13 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    break;
 	case "ellipse":
 	    if( opts.r1 ){
-		obj.rx = obj.r1;
+		obj.rx = opts.r1;
 		obj.scaleX = zoom / bin;
 		// why is this not done automatically???
 		obj.width = obj.rx * 2;
 	    }
 	    if( opts.r2 ){
-		obj.ry = obj.r2;
+		obj.ry = opts.r2;
 		obj.scaleY = zoom / bin;
 		obj.height = obj.ry * 2;
 	    }
