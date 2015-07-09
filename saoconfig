@@ -113,10 +113,11 @@ case $name in
   BASE=/proj/web-js9
   ./configure 	$CF							\
 		--prefix=$BASE						\
-		--with-webdir=$BASE/prod/js9				\
+		--with-funtools=$BASE					\
+		--with-png=$BASE					\
+		--with-webdir=$BASE/www/js9				\
+		--with-saodir=$BASE/www					\
 		--with-helper=nodejs					\
-		--with-funtools=$BASE/soft				\
-		--with-saodir=$BASE/prod				\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
