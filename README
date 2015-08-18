@@ -22,7 +22,7 @@ Of course, JS9 also is available on GitHub:
 
     https://github.com/ericmandel/js9
 
-For installation instructions, start with help/install.
+For installation instructions, start with help/install.html
 
 (If you are utilizing the JS9 Public API, please see APICHANGES for a
 list of rare but important changes that might require mods to your code.)
