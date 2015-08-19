@@ -454,7 +454,6 @@ The returned scale object will contain the following properties:
 <li><b>scalemax</b>: max value for scaling
 </ul>
 
-
 <p>
 <font size="+1"><b><u>Set the image scale</u></b></font>
 <p>
@@ -667,6 +666,17 @@ or "physical") for the above px, py values
 </ul>
 
 <p>
+<font size="+1"><b><u>Set the value/position display mode</u></b></font>
+<p>
+<code><font size="+1">JS9.SetValPos(mode)</font></code>
+<p>
+where:
+<ul>
+<li><b>mode</b>: true (show valpos display) or false (hide valpos display)
+</ul>
+Set the display mode of the value/position display for the specified image.
+
+<p>
 <font size="+1"><b><u>Get the current WCS units</u></b></font>
 <p>
 <code><font size="+1">unitsstr = JS9.GetWCSUnits()</font></code>
@@ -762,6 +772,20 @@ The pixel object contains the following properties:
 <li><b>y</b>: y image coordinate
 <li><b>str</b>: string of pixel values ("[x]" "[y]")
 </ul>
+
+<p>
+<font size="+1"><b><u>Display a text message</u></b></font>
+<p>
+<code><font size="+1">JS9.DisplayMessage(which, text)</font></code>
+<p>
+where:
+<ul>
+<li><b>which</b>: "info" or "regions"
+<li><b>text</b>: text to display
+</ul>
+The text string is displayed in the "info" area (usually occupied by the
+valpos display) or the "region" area (where regions are displayed). The
+empty string will clear the previous message.
 
 <hr><p>
 <font size="+1"><center><b>

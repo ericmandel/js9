@@ -10424,6 +10424,19 @@ JS9.mkPublic("GetShapes", "getShapes");
 JS9.mkPublic("ChangeShapes", "changeShapes");
 JS9.mkPublic("Print", "print");
 JS9.mkPublic("RunAnalysis", "runAnalysis");
+JS9.mkPublic("DisplayMessage", "displayMessage");
+
+// set/clear valpos flag
+JS9.mkPublic("SetValPos", function(mode){
+    var got = null;
+    var obj = JS9.parsePublicArgs(arguments);
+    var im = JS9.getImage(obj.display);
+    if( im ){
+	got = im.params.valpos;
+	im.params.valpos = mode;
+    }
+    return got;
+});
 
 // display in-page FITS images and png files
 JS9.mkPublic("Load", function(file, opts){
