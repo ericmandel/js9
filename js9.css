@@ -40,11 +40,17 @@ div.JS9Container
 /* containers used internally to wrap around div plugin content */
 div.JS9PluginContainer
 {
-    /* background: white; */
-    background: #E9E9E9;
+    /* background: #E9E9E9; */
+    background: transparent;
     position: relative;
     display: inline-block;
     outline: none;
+}
+
+/* this is the plugin div itself */
+div.JS9Plugin
+{
+    background: #E9E9E9;
 }
 
 /* commands and buttons on top of plugins */
