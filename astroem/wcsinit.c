@@ -1,8 +1,8 @@
 /*** File libwcs/wcsinit.c
- *** October 19, 2012
+ *** July 24, 2013
  *** By Jessica Mink, jmink@cfa.harvard.edu
  *** Harvard-Smithsonian Center for Astrophysics
- *** Copyright (C) 1998-2012
+ *** Copyright (C) 1998-2013
  *** Smithsonian Astrophysical Observatory, Cambridge, MA, USA
 
     This library is free software; you can redistribute it and/or
@@ -52,6 +52,7 @@ static void wcseqm();
 static void wcsioset();
 void wcsrotset();
 char wcschar();
+char *uppercase();
 
 /* set up a WCS structure from a FITS image header lhstring bytes long 
  * for a specified WCS name */
@@ -100,7 +101,7 @@ const char *hstring;	/* character string containing FITS header information
 const char *name;		/* Name of WCS conversion to be matched
 			   (case-independent) */
 {
-    char *upname, *uppercase();
+    char *upname;
     char cwcs, charwcs;
     int iwcs;
     char keyword[12];
@@ -143,7 +144,7 @@ const char *name;		/* Name of WCS conversion to be matched
 
 char *
 uppercase (string)
-char *string;
+const char *string;
 {
     int lstring, i;
     char *upstring;
@@ -758,7 +759,7 @@ char *wchar;		/* Suffix character for one of multiple WCS */
 
 	/* SCAMP convention */
 	if (wcs->prjcode == WCS_TAN && wcs->naxis == 2) { 
-	    int n=0;
+	    int n = 0;
 	    if (wcs->inv_x) {
 		poly_end(wcs->inv_x);
 		wcs->inv_x = NULL;
@@ -783,8 +784,8 @@ char *wchar;		/* Suffix character for one of multiple WCS */
 		    }
 		}
 
-	    /* If any PVi_j are set, add them to the structure */
-	    if (n > 0) {
+	    /* If any PVi_j are set, add them in the structure if no SIRTF distortion*/
+	    if (n > 0 && wcs->distcode != DISTORT_SIRTF) {
 		n = 0;
 
 		for (k = MAXPV; k >= 0; k--) {
@@ -1608,4 +1609,8 @@ char	*mchar;		/* Suffix character for one of multiple WCS */
  * Sep  1 2011	Add TPV as TAN with SCAMP PVs
  *
  * Oct 19 2012	Drop unused variable iszpx; fix bug in latmin assignment
+ *
+ * Feb  1 2013	Externalize uppercase()
+ * Feb 07 2013	Avoid SWARP distortion if SIRTF distortion is present
+ * Jul 25 2013	Initialize n=0 when checking for SCAMP distortion terms (fix from Martin Kuemmel)
  */

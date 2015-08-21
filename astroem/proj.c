@@ -3370,7 +3370,7 @@ double *phi, *theta;
       *theta = 0.0;
    } else if (fabs(w-90.0) < tol) {
       *phi = 0.0;
-      *theta = copysgni (90.0,y);
+      *theta = copysgn (90.0,y);
    } else {
       /* Iterative solution using weighted division of the interval. */
       if (y > 0.0) {
