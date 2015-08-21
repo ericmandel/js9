@@ -227,7 +227,7 @@ js9Test.sendMsg = function(msg, opts, func){
     opts = opts || {};
     encoding = opts.encoding || "ascii";
     if( opts.pipe ){
-	cmd = "cat " + opts.pipe + " | ./js9 -p -id " + this.id + " " + msg;
+	cmd = "cat " + opts.pipe + " | ./js9 -pipe -id " + this.id + " " + msg;
     } else {
 	cmd = "./js9 -id " + this.id + " " + msg;
     }
