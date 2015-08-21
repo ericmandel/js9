@@ -3,19 +3,19 @@ ASTROEM	=	astroem.js
 # ASTROEMEXTRA =	astroem.raw.js.mem
 
 # where is JS9 directory
-JS9	= ..
+JS9 =		..
 
 # where JS version of cfitsio is located
-CFITSIO = ../cfitsio
+CFITSIO =	../cfitsio
 
 # where zlib sources are located
-ZLIB=./zee.js
+ZLIB =		./zee.js
 
 # emcc compiler flags
 # NB: -O2 is the recommended optimization (not -O3, as of 1/27/2015)
 # can't use mem file: we don't know where the mem file will resides
-# EMFLAGS	= 	-g --memory-init-file 0
-# EMFLAGS	= 	-DEM -g --memory-init-file 0
+# EMFLAGS = 	-g --memory-init-file 0
+# EMFLAGS = 	-DEM -g --memory-init-file 0
 EMFLAGS	= 	-DEM -O2 --memory-init-file 0
 
 # support zscale up to 2048 * 2048 * 4-byte images
