@@ -1,6 +1,6 @@
 /*
  *
- * cfitsio_extra.c -- extra routines for javascript version
+ * jsfitsio.c -- extra routines for javascript version
  *
  */
 
@@ -176,7 +176,7 @@ fitsfile *ffhist3(fitsfile *fptr, /* I - ptr to table with X and Y cols*/
 // we look for specified extensions and if not found, go to hdu #2
 // this is how xray binary tables are imaged automatically
 fitsfile *gotoFITSHDU(fitsfile *fptr, char *extlist, int *hdutype, int *status){
-  int hdunum, naxis, thdutype, gotext;
+  int hdunum, naxis, thdutype, gotext=0;
   char *ext, *textlist;
   // if this is the primary array and it does not contain an image,
   // try to move to something more reasonble
@@ -320,12 +320,16 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   default:
     return NULL;
   }
+#if EM
   // sanity check on memory limits
   if( totbytes > max_memory ){
+    *status = MEMORY_ALLOCATION;
     return NULL;
   }
+#endif
   // try to allocate that much memory
   if(!(obuf = (void *)malloc(totbytes))){
+    *status = MEMORY_ALLOCATION;
     return NULL;
   }
   /* read the image section */
@@ -431,12 +435,12 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   // update/add LTM and LTV header params
   dvalue = 0.0; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTV1", &dvalue, comment, &tstatus); 
-  dvalue = ((dim1 / 2) - xcen) / bin; tstatus = 0;
+  tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTV1", &dvalue, comment, &tstatus);
 
   dvalue = 0.0; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTV2", &dvalue, comment, &tstatus); 
-  dvalue = ((dim2 / 2) - ycen) / bin; tstatus = 0;
+  tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTV2", &dvalue, comment, &tstatus);
 
   dvalue = 1.0 / bin; *comment = '\0'; tstatus = 0;
