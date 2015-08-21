@@ -6,10 +6,7 @@ ASTROEM	=	astroem.js
 JS9	= ..
 
 # where JS version of cfitsio is located
-CFITSIO = ../../cfitsio
-
-# where C version of cfitsion is located
-CFITSIOC = ../../soft/cfitsio
+CFITSIO = ../cfitsio
 
 # where zlib sources are located
 ZLIB=./zee.js
@@ -36,7 +33,7 @@ EMEXTRAS =	--pre-js pre.js --post-js post.js
 # combine into EMCC command
 EMCC =		emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMEXTRAS) -I$(CFITSIO)
 
-# needed to generate emcc objects
+# needed to generate all emcc objects (i.e. so $(CC) runs emcc)
 CC =		emcc $(EMFLAGS) -I$(CFITSIO)
 
 SRCS =  	wrappers.c wcsinit.c wcs.c wcscon.c \
@@ -75,7 +72,7 @@ LIBS =		libcfitsio.a
 all:		$(ASTROEM)
 
 astroem.bc:	$(OBJS) $(ZOBJS) $(LIBS)
-		$(EMCC) $(OBJS) $(ZOBJS) $(LIBS) -o $@
+		$(EMCC) -o $@ $?
 
 $(ASTROEM):	astroem.bc pre.js post.js shell-pre.js shell-post.js Makefile
 		@(echo "generating raw astroem.js ..."; \
@@ -115,7 +112,8 @@ clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#* $(ZLIB)/*.o  \
 		astroem*.js astroem*.mem astroem.bc \
 		cimtest cimtest.js cimtest.html \
-		cnodetest cnodetest.js cnodetest.html)
+		cnodetest cnodetest.js cnodetest.html; \
+		cd $(CFITSIO) && make clean 2>&1 >/dev/null)
 
 # make c version for testing
 LDFLAGS	= -g
