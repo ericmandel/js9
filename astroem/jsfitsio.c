@@ -435,12 +435,12 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   // update/add LTM and LTV header params
   dvalue = 0.0; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTV1", &dvalue, comment, &tstatus); 
-  tstatus = 0;
+  dvalue = ((dim1 / 2) - xcen) / bin; tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTV1", &dvalue, comment, &tstatus);
 
   dvalue = 0.0; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTV2", &dvalue, comment, &tstatus); 
-  tstatus = 0;
+  dvalue = ((dim2 / 2) - ycen) / bin; tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTV2", &dvalue, comment, &tstatus);
 
   dvalue = 1.0 / bin; *comment = '\0'; tstatus = 0;
