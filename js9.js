@@ -3810,6 +3810,9 @@ JS9.Menubar = function(width, height){
 		items.savefits = {name: "save image as FITS"};
 		items.savepng = {name: "save image as PNG"};
 		items.close = {name: "close image"};
+		items["sep" + n++] = "------";
+		items.lite = {name: "new JS9 light window"};
+		items.xnew = {name: "new JS9 separate window"};
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val, idx, array){
@@ -3832,6 +3835,12 @@ JS9.Menubar = function(width, height){
 				    JS9.error("no FITS header for " + uim.id);
 				}
 			    }
+			    break;
+			case "lite":
+			    JS9.LoadWindow(null, null, "light");
+			    break;
+			case "xnew":
+			    JS9.LoadWindow(null, null, "new");
 			    break;
 			case "pageid":
 			    s = "<center><p>Usage: js9 -pageid [pageid] ...<p>" + JS9.helper.pageid || "none" + "</center>";
@@ -10653,6 +10662,7 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 // nb: unlike JS9.Load, this required the opts param
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     var id, did, head, body, win, doc;
+    var idbase = JS9.helper.pageid || type || "win";
     opts = opts || {};
     switch(type){
     case "light":
@@ -10661,7 +10671,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    id = opts.id;
 	    delete opts.id;
 	} else {
-            id = "lite" + JS9.uniqueID();
+            id = idbase + JS9.uniqueID();
 	}
         // and a second one for controlling the light window
         did = "d" + id;
@@ -10677,7 +10687,9 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
         // load the image into this display
         opts.display = id;
         // just becomes a standard load
-        JS9.Load(file, opts);
+	if( file ){
+            JS9.Load(file, opts);
+	}
 	// return the id
 	return id;
     case "new":
@@ -10686,19 +10698,28 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    id = opts.id;
 	    delete opts.id;
 	} else {
-            id = "new" + JS9.uniqueID();
+            id = idbase + JS9.uniqueID();
 	}
         // get our own file's header for css and js files
         // if this page is generated on the server side, hardwire this ...
         // if JS9 is not installed, hardwire this ...
         head = document.getElementsByTagName('head')[0].innerHTML;
         // but why doesn't the returned header contain the js9 js file??
-        head += sprintf('<%s type="text/javascript" src="js9.min.js"></%s>',
-                        "script", "script");
+	// umm... it seems to have it, at least FF does as of 8/25/15 ...
+	if( !head.match(/src=["'].*js9\.js/)      && 
+	    !head.match(/src=["'].*js9\.min\.js/) ){
+            head += sprintf('<%s type="text/javascript" src="js9.min.js"></%s>',
+                            "script", "script");
+	}
         // make a body containing the JS9 elements and the preload call
         body = html || sprintf("<div class='JS9Menubar' id='%sMenubar'></div><div class='JS9' id='%s'></div>", id, id);
         // combine head and body into a full html file
-        html = sprintf("<html><head>%s</head><body onload='JS9.Preload(\"%s\",%s);'>%s</body></html>", head, file, JSON.stringify(opts), body);
+        html = sprintf("<html><head>%s</head><body", head);
+	if( file ){
+            html += sprintf(" onload='JS9.Preload(\"%s\",%s);'", 
+			    file, JSON.stringify(opts));
+	}
+        html += sprintf(">%s</body></html>\n", body);
         // open the new window
         win = window.open(null, id, "width=540, height=560");
         // this is the document associated with the new window
