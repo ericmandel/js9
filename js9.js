@@ -9721,6 +9721,7 @@ JS9.init = function(){
 	    catch(ignore){}
 	    if( JS9.userOpts.images ){
 		JS9.imageOpts = JS9.userOpts.images;
+		$.extend(true, JS9.imageOpts, JS9.userOpts.images);
 	    }
 	}
 	uopts = localStorage.getItem("regions");
@@ -9728,7 +9729,7 @@ JS9.init = function(){
 	    try{ JS9.userOpts.regions = JSON.parse(uopts); }
 	    catch(ignore){}
 	    if( JS9.userOpts.regions ){
-		JS9.Regions.opts = JS9.userOpts.regions;
+		$.extend(true, JS9.Regions.opts, JS9.userOpts.regions);
 	    }
 	}
 	// this gets replaced below
