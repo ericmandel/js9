@@ -9720,7 +9720,6 @@ JS9.init = function(){
 	    try{ JS9.userOpts.images = JSON.parse(uopts); }
 	    catch(ignore){}
 	    if( JS9.userOpts.images ){
-		JS9.imageOpts = JS9.userOpts.images;
 		$.extend(true, JS9.imageOpts, JS9.userOpts.images);
 	    }
 	}
