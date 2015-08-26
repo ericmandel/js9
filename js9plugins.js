@@ -68,9 +68,13 @@ JS9.Prefs.imagesSchema = {
 	    "type": "string",
 	    "helper": "default logical coordinate system"
 	},
+	"alpha": {
+	    "type": "number",
+	    "helper": "alpha for images"
+	},
 	"alpha1": {
 	    "type": "number",
-	    "helper": "alpha for masked out pixels"
+	    "helper": "alpha for masked pixels"
 	},
 	"alpha2": {
 	    "type": "number",

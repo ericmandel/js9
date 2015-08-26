@@ -113,7 +113,8 @@ JS9.imageOpts = {
     wcsunits: "sexagesimal",		// default WCS units
     lcs: "physical",			// default logical coordinate system
     valpos: true,			// whether to display value/position
-    alpha1: 100,			// alpha for masked out pixels
+    alpha:  255,                        // alpha for this image
+    alpha1: 100,			// alpha for masked pixels
     alpha2: 255,			// alpha for unmasked pixels
     // xcen: 0,                         // default x center pos to pan to
     // ycen: 0,                         // default y center pos to pan to
@@ -1603,11 +1604,10 @@ JS9.Image.prototype.mkPrimaryImage = function(){
     var primary, sect, img;
     var xIn, yIn, xOut, yOut, xOutIdx, yOutIdx;
     var yZoom, xZoom, idx, odx, yLen, zx, zy, zyLen;
-    var alpha1, alpha2;
+    var alpha, alpha1, alpha2;
     var ridx, gidx, bidx;
     var rthis=this, gthis=this, bthis=this;
     var dorgb = false;
-    var alpha = 255;
     // sanity check
     if( !this.primary || !this.psColors ){
 	return this;
@@ -1636,13 +1636,18 @@ JS9.Image.prototype.mkPrimaryImage = function(){
 							   sect.height);
     }
     img = primary.img;
-    // reverse alphas, if necessary 
-    if( this.params.maskInvert ){
-	alpha1 = this.params.alpha2;
-	alpha2 = this.params.alpha1;
-    } else {
-	alpha1 = this.params.alpha1;
-	alpha2 = this.params.alpha2;
+    // primary alpha for this image
+    // alpha = this.params.alpha || 255;
+    alpha = this.params.alpha;
+    // reverse maskData alphas, if necessary 
+    if( this.maskData ){
+	if( this.params.maskInvert ){
+	    alpha1 = this.params.alpha2;
+	    alpha2 = this.params.alpha1;
+	} else {
+	    alpha1 = this.params.alpha1;
+	    alpha2 = this.params.alpha2;
+	}
     }
     // index into scaled data using previously calc'ed data value to get rgb
     // reverse y lines
@@ -4282,6 +4287,9 @@ JS9.Menubar = function(width, height){
 		    if( !isNaN(obj.bias) ){
 			im.params.bias = obj.bias;
 		    }
+		    if( !isNaN(obj.alpha) ){
+			im.params.alpha = obj.alpha;
+		    }
 		    im.displayImage("colors");
 		};
 		var keyColor = function(e){
@@ -4318,6 +4326,11 @@ JS9.Menubar = function(width, height){
 		    name: "bias value:", 
 		    type: "text"
 		};
+		items.alpha = {
+		    events: {keyup: keyColor},
+		    name: "alpha value:", 
+		    type: "text"
+		};
 		items["sep" + n++] = "------";
 		items.reset = {name: "reset contrast/bias"};
 		items["sep" + n++] = "------";
@@ -4346,10 +4359,9 @@ JS9.Menubar = function(width, height){
 			    var uim = udisp.image;
 			    var obj = {};
 			    if( uim  ){
-				obj.contrast = 
-				    String(uim.params.contrast);
-				obj.bias = 
-				    String(uim.params.bias);
+				obj.contrast = String(uim.params.contrast);
+				obj.bias = String(uim.params.bias);
+				obj.alpha = String(uim.params.alpha);
 			    }
 			    $.contextMenu.setInputValues(opt, obj);
 			}, 
