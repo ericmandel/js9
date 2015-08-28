@@ -770,8 +770,10 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
     this.raw.dmax = Number.MIN_VALUE;
     // find data min and max
     for(i=0; i<h*w; i++) {
-	this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
-	this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
+	if( !isNaN(this.raw.data[i]) ){
+	    this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
+	    this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
+	}
     }
     // set initial scaling values if not done already
     if( isNaN(this.params.scalemin) ){
@@ -1291,8 +1293,10 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, file){
 	this.raw.dmax = Number.MIN_VALUE;
 	dlen = this.raw.width * this.raw.height;
 	for(i=0; i<dlen; i++) {
-	    this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
-	    this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
+	    if( !isNaN(this.raw.data[i]) ){
+		this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
+		this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
+	    }
 	}
     }
     // image or table
