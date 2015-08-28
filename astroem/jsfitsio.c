@@ -18,7 +18,8 @@ https://groups.google.com/forum/#!topic/emscripten-discuss/JDaNHIRQ_G4
 #include <emscripten.h>
 #endif
 
-#define IDIM 2
+/* must match what cfitsio expects (i.e., 4 for histogramming) */
+#define IDIM 4
 #define IFILE "mem://";
 #define MFILE "foo"
 
@@ -237,17 +238,22 @@ fitsfile *openFITSMem(void **buf, size_t *buflen, char *extlist,
 // getImageToArray: extract a sub-section from an image HDU, return array
 void *getImageToArray(fitsfile *fptr, int *dims, double *cens, 
 		      int *odim1, int *odim2, int *bitpix, int *status){
-  int naxis=IDIM;
+  int i, naxis;
   int xcen, ycen, dim1, dim2, type;
   void *obuf;
   long totpix, totbytes;
-  long naxes[IDIM], fpixel[IDIM], lpixel[IDIM], inc[IDIM]={1,1};
+  long naxes[IDIM], fpixel[IDIM], lpixel[IDIM], inc[IDIM];
 
   // get image dimensions and type
   fits_get_img_dim(fptr, &naxis, status);
-  fits_get_img_size(fptr, IDIM, naxes, status);
+  fits_get_img_size(fptr, min(IDIM,naxis), naxes, status);
   fits_get_img_type(fptr, bitpix, status);
-
+  // seed buffers
+  for(i=0; i<IDIM; i++){
+    fpixel[i] = 1;
+    lpixel[i] = 1;
+    inc[i] = 1;
+  }
   // get limits of extracted section
   if( dims && dims[0] && dims[1] ){
     dim1 = min(dims[0], naxes[0]);
@@ -342,7 +348,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
 fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
 			     int *dims, double *cens, int bin, int *status){
   int i, dim1, dim2;
-  int imagetype=TINT, naxis=IDIM, recip=0;
+  int imagetype=TINT, naxis=2, recip=0;
   int tstatus;
   long nirow, norow;
   float weight=1;
