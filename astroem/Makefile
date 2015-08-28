@@ -113,7 +113,9 @@ clean:		FORCE
 		astroem*.js astroem*.mem astroem.bc \
 		cimtest cimtest.js cimtest.html \
 		cnodetest cnodetest.js cnodetest.html; \
-		cd $(CFITSIO) && make clean 2>&1 >/dev/null)
+		if [ -d $(CFITSIO) ]; then \
+		    cd $(CFITSIO) && make clean 2>&1 >/dev/null; \
+		fi;)
 
 # make c version for testing
 LDFLAGS	= -g
