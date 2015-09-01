@@ -2277,6 +2277,10 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 		JS9.error("no FITS file for " + that.id);
 	    }
 	    r = that.fitsFile;
+	    // for tables, we might need to add the binning filter
+	    if( (that.imtab === "table") && (that.raw.hdu.table.filter) ){
+		r += '[EVENTS,' + that.raw.hdu.table.filter + ']';
+	    }
 	    break;
 	case "ext":
 	    r = that.fitsExt || "[]";
