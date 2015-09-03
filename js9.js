@@ -3766,10 +3766,16 @@ JS9.Menubar = function(width, height){
 	    var arr = [];
 	    if( that.id.search(JS9.SUPERMENU) >= 0 ){
 		s = that.divjq.data("displays").split(",");
-		for(i=0; i<s.length; i++){
-		    disp = JS9.lookupDisplay(s[i]);
-		    if( disp ){
-			arr.push(disp);
+		if( s[0] === "*" ){
+		    for(i=0; i<JS9.displays.length; i++){
+			arr.push(JS9.displays[i]);
+		    }
+		} else {
+		    for(i=0; i<s.length; i++){
+			disp = JS9.lookupDisplay(s[i]);
+			if( disp ){
+			    arr.push(disp);
+			}
 		    }
 		}
 	    }
