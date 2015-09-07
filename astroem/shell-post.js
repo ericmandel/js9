@@ -22,6 +22,9 @@
       cleanupFITSFile: Module["cleanupFITSFile"],
       getFITSImage: Module["getFITSImage"],
       maxFITSMemory: Module["maxFITSMemory"],
+      HEAPU8: Module["HEAPU8"],
+      _malloc: Module["_malloc"],
+      _free: Module["_free"],
       options: Module["options"]
   };
 })();

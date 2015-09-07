@@ -22,7 +22,7 @@
 
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 
-/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, Module, dhtmlwindow, saveAs */
+/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs */
 
 /*jshint smarttabs:true */
 
@@ -2969,10 +2969,11 @@ JS9.Image.prototype.zscale = function(setvals){
     }
     rawdata = this.raw.data;
     // allocate space for the image in the emscripten heap
-    try{ buf = Module._malloc(rawdata.length * rawdata.BYTES_PER_ELEMENT); }
-    catch(e){ JS9.error("image too large for zscale"); }
+    try{ buf = Astroem._malloc(rawdata.length * rawdata.BYTES_PER_ELEMENT); }
+    catch(e){ JS9.error("image too large for zscale", e); }
     // copy the raw image data to the heap
-    Module.HEAPU8.set(new Uint8Array(rawdata.buffer), buf);
+    try{ Astroem.HEAPU8.set(new Uint8Array(rawdata.buffer), buf); }
+    catch(e){ JS9.error("can't transfer image to heap for zscale", e); }
     // call the zscale routine
     s = JS9.zscale(buf,
 		   this.raw.width, 
@@ -2982,7 +2983,7 @@ JS9.Image.prototype.zscale = function(setvals){
 		   this.params.zscalesamples,
 		   this.params.zscaleline);
     // free empscripten heap space
-    Module._free(buf);
+    Astroem._free(buf);
     // clean up return values
     vals = s.trim().split(" ");
     // save z1 and z2
