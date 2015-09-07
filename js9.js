@@ -10885,8 +10885,9 @@ JS9.mkPublic("RefreshImage", function(fits, func){
 	    } else {
 		JS9.error("no FITS module available to refresh this image");
 	    }
+	} else {
+	    JS9.Image.prototype.refreshImage.apply(im, obj.argv);
 	}
-	JS9.Image.prototype.refreshImage.apply(im, obj.argv);
     } else if( fits instanceof Blob ){
 	JS9.Load.apply(null, arguments);
     }
