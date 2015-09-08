@@ -74,6 +74,7 @@
 
     <td>
     <ul>
+    <li> <a href='javascript:JS9.Load("fits/bzero.fits", {fits2png: false, colormap: "grey"}, {display: "myJS9"});'>bzero.fits</a>
     <li> <a href='javascript:JS9.Load("m13/m13_gzip.fits", {fits2png: false, colormap: "red"}, {display: "myJS9"});'>M13 (gzip tile compress)</a>
     <li> <a href='javascript:JS9.Load("m13/m13_hcomp.fits", {fits2png: false, colormap: "green"}, {display: "myJS9"});'>M13 (hcomp tile compress)</a>
     <li> <a href='javascript:JS9.Load("m13/m13_plio.fits", {fits2png: false, colormap: "blue"}, {display: "myJS9"});'>M13 (plio tile compress)</a>
@@ -163,6 +164,7 @@
     // on an ipad, the click handler reload the page!
     var click= 'ontouchstart' in document.documentElement ? 'touchstart': 'click';
     function init(){
+        JS9.DEBUG = 3;
         JS9.Preload("png/casa.png", {colormap: "cool"});
         JS9.Preload("fits/snr.fits[events][pi==pha]", {colormap: "heat", fits2png: false, onload: function(im){JS9.SetZoom(2,{display: "myJS9"});}}, "fits/casa.fits", {fits2png: false}, {display: "myJS9"});
         $("#display").on("change", function(evt){
