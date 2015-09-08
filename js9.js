@@ -3184,6 +3184,7 @@ JS9.Display = function(el){
 	return JS9.dragdrop(this.id, evt.originalEvent, JS9.NewFITSImage);
     });
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.Load(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="refreshLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.RefreshImage(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalRegions-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadRegions(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
     // add to list of displays
     JS9.displays.push(this);
@@ -3828,6 +3829,10 @@ JS9.Menubar = function(width, height){
 		items["sep" + n++] = "------";
 		items.lite = {name: "new JS9 light window"};
 		items.xnew = {name: "new JS9 separate window"};
+		if( JS9.DEBUG > 2 ){
+		  items["sep" + n++] = "------";
+		  items.refresh = {name: "debug: refresh ..."};
+		}
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val, idx, array){
@@ -3865,6 +3870,9 @@ JS9.Menubar = function(width, height){
 			    break;
 			case "open":
 			    JS9.OpenFileMenu(udisp);
+			    break;
+			case "refresh":
+			    $('#refreshLocalFile-' + udisp.id).click();
 			    break;
 			case "savefits":
 			    if( uim ){
