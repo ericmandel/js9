@@ -240,9 +240,14 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
 		      int *odim1, int *odim2, int *bitpix, int *status){
   int i, naxis;
   int xcen, ycen, dim1, dim2, type;
+  int tstatus = 0;
+  int doscale = 0;
   void *obuf;
   long totpix, totbytes;
   long naxes[IDIM], fpixel[IDIM], lpixel[IDIM], inc[IDIM];
+  double bscale = 1.0;
+  double bzero = 0.0;
+  char comment[81];
 
   // get image dimensions and type
   fits_get_img_dim(fptr, &naxis, status);
@@ -293,27 +298,70 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   *odim1 = lpixel[0] - fpixel[0] + 1;
   *odim2 = lpixel[1] - fpixel[1] + 1;
   totpix = *odim1 * *odim2;
+  // are we scaling?
+  fits_read_key(fptr, TDOUBLE, "BSCALE", &bscale, comment, &tstatus);
+  if( tstatus != VALUE_UNDEFINED ){
+    fits_read_key(fptr, TDOUBLE, "BZERO", &bzero, comment, &tstatus);
+  }
+  if( (bscale != 1.0) || (bzero != 0.0) ){
+    doscale = 1;
+  }
   // allocate space for the pixel array
   switch(*bitpix){
     case 8:
-      type = TBYTE;
-      totbytes = totpix * sizeof(char);
+      if( doscale ){
+	// scaled data has to be float
+	*bitpix = -32;
+	type = TFLOAT;
+	totbytes = totpix * sizeof(float);
+      } else {
+	type = TBYTE;
+	totbytes = totpix * sizeof(char);
+      }
       break;
     case 16:
-      type = TSHORT;
-      totbytes = totpix * sizeof(short);
+      if( doscale ){
+	// scaled data has to be float
+	*bitpix = -32;
+	type = TFLOAT;
+	totbytes = totpix * sizeof(float);
+      } else {
+	type = TSHORT;
+	totbytes = totpix * sizeof(short);
+      }
       break;
     case -16:
-      type = TUSHORT;
-      totbytes = totpix * sizeof(unsigned short);
+      if( doscale ){
+	// scaled data has to be float
+	*bitpix = -32;
+	type = TFLOAT;
+	totbytes = totpix * sizeof(float);
+      } else {
+	type = TUSHORT;
+	totbytes = totpix * sizeof(unsigned short);
+      }
       break;
     case 32:
-      type = TINT;
-      totbytes = totpix * sizeof(int);
+      if( doscale ){
+	// scaled data has to be float
+	*bitpix = -32;
+	type = TFLOAT;
+	totbytes = totpix * sizeof(float);
+      } else {
+	type = TINT;
+	totbytes = totpix * sizeof(int);
+      }
       break;
     case 64:
-      type = TLONGLONG;
-      totbytes = totpix * sizeof(long long);
+      if( doscale ){
+	// scaled data has to be float
+	*bitpix = -32;
+	type = TFLOAT;
+	totbytes = totpix * sizeof(float);
+      } else {
+	type = TLONGLONG;
+	totbytes = totpix * sizeof(long long);
+      }
       break;
     case -32:
       type = TFLOAT;
