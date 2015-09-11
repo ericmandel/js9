@@ -97,7 +97,8 @@
     <td>
     <input type="text" id="datetimepicker" size="44" value="datepicker test: 3rd party event-handling" class="datepickerText">
     <p>
-    <input type="file" value="heap test" onchange="javascript:HeapTest(this.files[0])">
+    heap test:
+    <input type="file" multiple="true" onchange="javascript:HeapTest(this.files)">
     <p>
     <div class="JS9Info"></div>
     </td>
@@ -299,28 +300,39 @@
         }
     }
     // heap test
-    var heapBlob, heapBuf, heapAlloc = 1024000, heapTimeout=100;
-    var HeapTest = function(blob){
-      heapBlob = blob;
+    var heapBlobs, heapBuf, heapStart, heapCur, heapIter;
+    var heapAlloc = 1024000, heapTimeout=100;
+    var HeapTest = function(files){
+      heapBlobs = files;
       heapBuf = new ArrayBuffer(heapAlloc);
       heapTest(1000);
     }
     var heapTest = function(nn, ii){
         var buf;
         var im = JS9.GetImage();
-        ii = ii || 0;
-        if( heapBlob ){
-            JS9.RefreshImage(heapBlob);
+        if( ii === undefined ){
+          ii = 0;
+          heapIter = nn;
+        }
+        if( heapBlobs ){
+            JS9.RefreshImage(heapBlobs[ii%heapBlobs.length]);
         } else {
             JS9.error("please choose an image to refresh");
         }
         if( ii++ < nn ){
 	    buf = Astroem._malloc(heapAlloc);
+            if( !heapStart ){
+                heapStart = buf;
+            }
+            heapCur = buf;
 	    console.log("buf[%s]: %s", ii, buf);
             Astroem.HEAPU8.set(new Uint8Array(heapBuf), buf);
 	    Astroem._free(buf);
             setTimeout(function(){heapTest(nn, ii);}, heapTimeout);
-	};
+	} else {
+            console.log("bytes added to heap in %s iterations: %s = %s - %s", 
+                         heapIter, heapCur - heapStart, heapCur, heapStart);
+        };
      }
     </script>
 <p>
