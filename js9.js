@@ -569,7 +569,8 @@ JS9.Image.prototype.closeImage = function(){
 		break;
 	    }
 	    // cleanup FITS file support, if necessary
-	    if( JS9.fits.cleanupFITSFile && tim.raw.hdu.fits ){
+	    if( JS9.fits.cleanupFITSFile && 
+		tim.raw.hdu && tim.raw.hdu.fits ){
 		JS9.fits.cleanupFITSFile(tim.raw.hdu.fits, true);
 	    }
 	    // good hints to the garbage collector
