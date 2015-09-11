@@ -54,7 +54,7 @@ Module['gzdecompress'] = function(data) {
 
 Module["getFITSImage"] = function(fits, hdu, options, handler) {
     var i, ofptr, hptr, status, datalen;
-    var buf, bufptr, buflen;
+    var buf, bufptr, buflen, bufptr2;
     var filter = null;
     var fptr = fits.fptr;
     var cens = [0, 0];
@@ -150,8 +150,8 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	  ["number", "number", "number", "number"],
 	  [ofptr, hptr, hptr+8, hptr+12]);
     hdu.ncard  = getValue(hptr+8, 'i32'); 
-    bufptr = getValue(hptr, '*');
-    buf = HEAPU8.subarray(bufptr, bufptr+(hdu.ncard*80));
+    bufptr2 = getValue(hptr, '*');
+    buf = HEAPU8.subarray(bufptr2, bufptr2+(hdu.ncard*80));
     buflen = buf.byteLength;
     hdu.cardstr = "";
     for(i=0; i<buflen; i++){
@@ -176,7 +176,7 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	hdu.filename = options.filename;
     }
     // make up the fits object (used in cleanup)
-    hdu.fits = {fptr: fptr, vname: hdu.vname, heap: hdu.image,
+    hdu.fits = {fptr: fptr, vname: hdu.vname, heap: bufptr,
 		cardstr: hdu.cardstr };
     // call the handler
     if( handler ){
@@ -234,15 +234,21 @@ Module["handleFITSFile"] = function(blob, options, handler) {
 
 Module["cleanupFITSFile"] = function(fits, all) {
     var hptr, status;
+    // sanity check
+    if( !fits ){
+	return;
+    }
     // free up heap space from image section
     if( fits.heap ){
 	Module._free(fits.heap);
+	fits.heap = null;
     }
     // free up header card string
     if( fits.cardstr ){
 	Module._free(fits.cardstr);
+	fits.cardstr = null;
     }
-    if( all ){
+    if( all && fits.fptr ){
 	// close FITS file
 	hptr = _malloc(4);
 	setValue(hptr, 0, 'i32');
@@ -252,6 +258,7 @@ Module["cleanupFITSFile"] = function(fits, all) {
 	status  = getValue(hptr, 'i32'); 
 	_free(hptr);
 	Module["errchk"](status);
+	fits.fptr = null;
 	// delete virtual FITS file
 	try{ FS.unlink("/" + fits.vname); }
 	catch(ignore){ }

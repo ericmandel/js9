@@ -1836,10 +1836,6 @@ JS9.Image.prototype.refreshImage = function(obj, func){
     oheight = this.raw.height;
     // save old binning
     this.binning.obin = this.binning.bin;
-    // cleanup previous FITS file support, if necessary
-    if( JS9.fits.cleanupFITSFile && this.raw.hdu.fits ){
-	JS9.fits.cleanupFITSFile(this.raw.hdu.fits, true);
-    }
     // generate new data
     this.mkRawDataFromHDU(obj);
     // doreg = (this.binning.obin !== this.binning.bin);
@@ -10894,6 +10890,12 @@ JS9.mkPublic("RefreshImage", function(fits, func){
     if( im ){
 	if( fits instanceof Blob ){
 	    if( JS9.fits.handleFITSFile ){
+		// cleanup previous FITS file support, if necessary
+		// do this before we handle the new FITS file, or else
+		// we end up with a memory leak in the emscripten heap!
+		if( JS9.fits.cleanupFITSFile && im.raw.hdu.fits ){
+		    JS9.fits.cleanupFITSFile(im.raw.hdu.fits, true);
+		}
 		JS9.fits.handleFITSFile(fits, JS9.fits.options, retry);
 	    } else {
 		JS9.error("no FITS module available to refresh this image");
