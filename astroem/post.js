@@ -243,9 +243,6 @@ Module["cleanupFITSFile"] = function(fits, all) {
 	Module._free(fits.cardstr);
     }
     if( all ){
-	// delete virtual FITS file
-	try{ FS.unlink("/" + fits.vname); }
-	catch(ignore){ }
 	// close FITS file
 	hptr = _malloc(4);
 	setValue(hptr, 0, 'i32');
@@ -255,6 +252,9 @@ Module["cleanupFITSFile"] = function(fits, all) {
 	status  = getValue(hptr, 'i32'); 
 	_free(hptr);
 	Module["errchk"](status);
+	// delete virtual FITS file
+	try{ FS.unlink("/" + fits.vname); }
+	catch(ignore){ }
     }
 };
 
