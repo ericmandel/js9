@@ -97,6 +97,8 @@
     <td>
     <input type="text" id="datetimepicker" size="44" value="datepicker test: 3rd party event-handling" class="datepickerText">
     <p>
+    <input type="file" value="heap test" onchange="javascript:HeapTest(this.files[0])">
+    <p>
     <div class="JS9Info"></div>
     </td>
     <td>
@@ -164,7 +166,7 @@
     // on an ipad, the click handler reload the page!
     var click= 'ontouchstart' in document.documentElement ? 'touchstart': 'click';
     function init(){
-        JS9.DEBUG = 3;
+        JS9.DEBUG = 2;
         JS9.Preload("png/casa.png", {colormap: "cool"});
         JS9.Preload("fits/snr.fits[events][pi==pha]", {colormap: "heat", fits2png: false, onload: function(im){JS9.SetZoom(2,{display: "myJS9"});}}, "fits/casa.fits", {fits2png: false}, {display: "myJS9"});
         $("#display").on("change", function(evt){
@@ -296,6 +298,30 @@
             break;
         }
     }
+    // heap test
+    var heapBlob, heapBuf, heapAlloc = 1024000, heapTimeout=100;
+    var HeapTest = function(blob){
+      heapBlob = blob;
+      heapBuf = new ArrayBuffer(heapAlloc);
+      heapTest(1000);
+    }
+    var heapTest = function(nn, ii){
+        var buf;
+        var im = JS9.GetImage();
+        ii = ii || 0;
+        if( heapBlob ){
+            JS9.RefreshImage(heapBlob);
+        } else {
+            JS9.error("please choose an image to refresh");
+        }
+        if( ii++ < nn ){
+	    buf = Astroem._malloc(heapAlloc);
+	    console.log("buf[%s]: %s", ii, buf);
+            Astroem.HEAPU8.set(new Uint8Array(heapBuf), buf);
+	    Astroem._free(buf);
+            setTimeout(function(){heapTest(nn, ii);}, heapTimeout);
+	};
+     }
     </script>
 <p>
 JS9 Demos:
