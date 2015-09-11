@@ -569,7 +569,7 @@ JS9.Image.prototype.closeImage = function(){
 		break;
 	    }
 	    // cleanup FITS file support, if necessary
-	    if( JS9.fits.cleanupFITSFile ){
+	    if( JS9.fits.cleanupFITSFile && tim.raw.hdu.fits ){
 		JS9.fits.cleanupFITSFile(tim.raw.hdu.fits, true);
 	    }
 	    // good hints to the garbage collector
@@ -1837,7 +1837,7 @@ JS9.Image.prototype.refreshImage = function(obj, func){
     // save old binning
     this.binning.obin = this.binning.bin;
     // cleanup previous FITS file support, if necessary
-    if( JS9.fits.cleanupFITSFile ){
+    if( JS9.fits.cleanupFITSFile && this.raw.hdu.fits ){
 	JS9.fits.cleanupFITSFile(this.raw.hdu.fits, true);
     }
     // generate new data
