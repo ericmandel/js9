@@ -10893,7 +10893,8 @@ JS9.mkPublic("RefreshImage", function(fits, func){
 		// cleanup previous FITS file support, if necessary
 		// do this before we handle the new FITS file, or else
 		// we end up with a memory leak in the emscripten heap!
-		if( JS9.fits.cleanupFITSFile && im.raw.hdu.fits ){
+		if( JS9.fits.cleanupFITSFile && 
+		    im.raw.hdu && im.raw.hdu.fits ){
 		    JS9.fits.cleanupFITSFile(im.raw.hdu.fits, true);
 		}
 		JS9.fits.handleFITSFile(fits, JS9.fits.options, retry);
