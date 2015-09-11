@@ -1836,6 +1836,10 @@ JS9.Image.prototype.refreshImage = function(obj, func){
     oheight = this.raw.height;
     // save old binning
     this.binning.obin = this.binning.bin;
+    // cleanup previous FITS file support, if necessary
+    if( JS9.fits.cleanupFITSFile ){
+	JS9.fits.cleanupFITSFile(this.raw.hdu.fits, true);
+    }
     // generate new data
     this.mkRawDataFromHDU(obj);
     // doreg = (this.binning.obin !== this.binning.bin);
