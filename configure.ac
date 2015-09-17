@@ -32,7 +32,6 @@ AC_SUBST(USEHELPER)
 # if no back-end, we don't need a compiler, etc.
 if [ test x"$USEHELPER" = xyes ]; then
 
-AC_CONFIG_HEADERS([conf.h])
 AC_CONFIG_SRCDIR(./tpos.c)
 AC_CANONICAL_HOST
 
