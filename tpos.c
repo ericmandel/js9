@@ -7,25 +7,11 @@
 #include <funtoolsP.h>
 #endif
 #include <png.h>
-#include <swap.h>
 #include <errno.h>
 
-#if HAVE_CONFIG_H
-#include <conf.h>
-#endif
-#include <stdio.h>
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_MALLOC_H
-#include <malloc.h>
-#endif
+#include <xutil.h>
+#include <swap.h>
+
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #else
