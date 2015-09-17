@@ -60,7 +60,7 @@ MAN3_INSTALL_DIR =	$(MAN_INSTALL_DIR)/man3
 # extra Libs required to link (e.g. socket libraries)
 LIBS =            	@CFITSIOLIB@ @FUNLIB@ @PNGLIB@ @EXTRA_LIBS@ -lm
 
-INCS =			@CFITSIOINC@ @FUNINC@ @PNGINC@
+INCS =			-I. @CFITSIOINC@ @FUNINC@ @PNGINC@ -I./util
 
 # To change the compiler switches, for example to change from -O
 # to -g, change the following line:
@@ -101,7 +101,7 @@ CP =		cp -p
 
 CC =		@CC@
 
-CC_SW =	${CFLAGS} -I. ${AC_FLAGS} ${INCS}
+CC_SW =	${CFLAGS} ${AC_FLAGS} ${INCS}
 
 DEPEND_SW = ${CFLAGS} -I. ${AC_FLAGS}
 
