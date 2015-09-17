@@ -174,7 +174,7 @@ SCRIPTS =	funhist2flot funcnts2flot fits2png
 
 SCRIPTS2 =	js9
 
-MFILES =	Makefile Makefile.in conf.h conf.h.in config.guess config.sub \
+MFILES =	Makefile Makefile.in config.guess config.sub \
 		configure configure.ac install-sh js9helper.pc.in js9.in \
 		saoconfig saoprefs.sed nnode mkhelper mkjs9 util astroem \
 		js9Helper-default.cgi js9load README
