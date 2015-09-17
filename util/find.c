@@ -8,20 +8,25 @@
  * (and related routines)
  *
  */
-#include <find.h>
+#include "find.h"
 
 /*
  *
  * 	private routines 
  *
  */
-
 #define MAXBUFSIZE 8192
 
-#ifndef HAVE_UNISTD_H
+#ifndef F_OK
 #define F_OK            0       /* does file exist */
+#endif
+#ifndef X_OK
 #define X_OK            1       /* is it executable by caller */
+#endif
+#ifndef W_OK
 #define W_OK            2       /* is it writable by caller */
+#endif
+#ifndef R_OK
 #define R_OK            4       /* is it readable by caller */
 #endif
 
@@ -31,35 +36,17 @@
 #endif
 #define D_OK            256       /* is it a directory */
 
-#ifdef ANSI_FUNC
-static int 
-amparse (char *mode)
-#else
-static int amparse(mode)
-     char *mode;
-#endif
-{
+static int amparse (char *mode){
   int xmode = 0;
-
   xmode |= ( strpbrk(mode, "r") != NULL ? R_OK 	: 0 );
   xmode |= ( strpbrk(mode, "w") != NULL ? W_OK 	: 0 );
   xmode |= ( strpbrk(mode, "x") != NULL ? X_OK	: 0 );
   xmode |= ( strpbrk(mode, "f") != NULL ? F_OK 	: 0 );
   xmode |= ( strpbrk(mode, "d") != NULL ? D_OK 	: 0 );
-
   return xmode;
 }	
 
-#ifdef ANSI_FUNC
-static char *
-findpath (char *name, char *mode, char *path)
-#else
-static char *findpath(name, mode, path)
-     char *name;
-     char *mode;
-     char *path;
-#endif
-{
+static char *findpath (char *name, char *mode, char *path){
   char	pathbuff[MAXBUFSIZE];
   char	namebuff[MAXBUFSIZE];
   char	tempbuff[MAXBUFSIZE];
@@ -70,58 +57,61 @@ static char *findpath(name, mode, path)
   int	 skip = strpbrk(mode, ">") != NULL;
   int	 pick = strpbrk(mode, "<") != NULL;
 
-  if ( skip && pick ) return NULL;
-
-  if ( (path==NULL) || ( name[0] == '.' && name[1] == '/' ) || name[0] == '/' )
+  if( skip && pick ){
+    return NULL;
+  }
+  if( (path==NULL) || ( name[0] == '.' && name[1] == '/' ) || name[0] == '/' ){
     return Access(name, mode);
-
+  }
   strncpy(pathbuff, path, MAXBUFSIZE-1);
   pathbuff[MAXBUFSIZE-1] = '\0';
   path = pathbuff;
-
-  if ( (here = strpbrk(pathbuff, ":;")) ) {
+  if( (here = strpbrk(pathbuff, ":;")) ){
     mark = *here;
     *here++ = '\0';
   }
-  while ( path ) {
+  while( path ){
     /* if there is an environment variable ... */
-    if ( strchr(path, '$') ) {
+    if( strchr(path, '$') ){
       /* exand it */
       ExpandEnv(path, tempbuff, MAXBUFSIZE);
       /* make sure we could expand it (otherwise we get an infinite loop) */
       if( !strchr(tempbuff, '$') ){
-	if ( (found = findpath(name, mode, tempbuff)) )
+	if( (found = findpath(name, mode, tempbuff)) ){
 	  return found;
+	}
       }
     } else {      
-      if ( !skip ) {      
-	if ( !strcmp(".", path) ) path[0] = '\0';
-
+      if( !skip ){
+	if( !strcmp(".", path) ){
+	  path[0] = '\0';
+	}
 	strncpy(namebuff, path, MAXBUFSIZE-1);
 	namebuff[MAXBUFSIZE-1] = '\0';
 	len = strlen(namebuff);
-	if ( namebuff[0] && namebuff[len-1] != '/' ){
+	if( namebuff[0] && namebuff[len-1] != '/' ){
 	  if( (len+1) <= (MAXBUFSIZE-1) ){
 	    strcat(namebuff, "/");
 	    len++;
 	  }
 	  /* filename is too large, so we can't find it */
-	  else
+	  else{
 	    return NULL;
+	  }
 	}
-	if( len+strlen(name) <= MAXBUFSIZE-1 )
+	if( len+strlen(name) <= MAXBUFSIZE-1 ){
 	  strcat(namebuff, name);
-	/* filename is too large, so we can't find it */
-	else
+	} else{
+	  /* filename is too large, so we can't find it */
 	  return NULL;
-
-	if ( (found = Access(namebuff, mode)) )
+	}
+	if( (found = Access(namebuff, mode)) ){
 	  return found;
+	}
       }
     }
-
-    if ( mark == ';' ) {
-      if ( skip ) {
+    if( mark == ';' ){
+      if( skip ){
 	skip = 0;
 	/* Knock down the skip mode to select all
 	 * directories in path after the first ";"
@@ -130,16 +120,16 @@ static char *findpath(name, mode, path)
 	backmode[MAXBUFSIZE-1] = '\0';
 	mode = backmode;
       }
-      if ( pick ) return NULL;
+      if( pick ){
+	return NULL;
+      }
     }
-
     path = here;
-    if ( here && (here = strpbrk(here, ":;")) ) {
+    if( here && (here = strpbrk(here, ":;")) ){
       mark = *here;
       *here++ = '\0';
     }
   }
-
   return NULL;
 }
 
@@ -155,16 +145,7 @@ static char *findpath(name, mode, path)
  * ResolvePath -- resolve the path to remove . and .. entries
  *
  */
-#ifdef ANSI_FUNC
-char *
-ResolvePath (char *ibuf, char *obuf, int maxlen)
-#else
-char *ResolvePath(ibuf, obuf, maxlen)
-     char *ibuf;
-     char *obuf;
-     int  maxlen;
-#endif
-{
+char *ResolvePath (char *ibuf, char *obuf, int maxlen){
   char path[MAXBUFSIZE];
   char *part[MAXBUFSIZE];
   char *tbuf;
@@ -178,19 +159,16 @@ char *ResolvePath(ibuf, obuf, maxlen)
     obuf[maxlen-1] = '\0';
     return(obuf);
   }
-
   /* if its just "/" or "/.", its easy */
   if( !strcmp(ibuf, "/") || !strcmp(ibuf, "/.") ){
     strncpy(obuf, "/", maxlen-1);
     obuf[maxlen-1] = '\0';
     return(obuf);
   }
-
   /* if we have a relative path to deal with, get current directory */
   if( (*ibuf == '.') || ( (strchr(ibuf, '/') != NULL) && (*ibuf != '/') ) ){
     getcwd(path, MAXBUFSIZE);
-  }
-  else{
+  } else{
     *path = '\0';
   }
 
@@ -201,8 +179,7 @@ char *ResolvePath(ibuf, obuf, maxlen)
     strcpy(tbuf, path);
     strcat(tbuf, "/");
     strcat(tbuf, ibuf);
-  }
-  else{
+  } else{
     strcpy(tbuf, ibuf);
   }
   
@@ -212,12 +189,13 @@ char *ResolvePath(ibuf, obuf, maxlen)
     if( tbuf[i] == '/' ){
       tbuf[i] = '\0';
       /* skip adjacent slashes */
-      if( tbuf[i+1] == '/' ) continue;
+      if( tbuf[i+1] == '/' ){
+	continue;
+      }
       part[npart] = &tbuf[i+1];
       npart++;
     }
   }
-
   /* loop through the parts array and resolve the  . and .. entries */
   for(i=0; i<npart; i++){
     /* for ".", just remove it */
@@ -235,7 +213,6 @@ char *ResolvePath(ibuf, obuf, maxlen)
       }
     }
   }
-
   /* construct a new string from the remaining parts */
   *obuf = '\0';
   len = 0;
@@ -245,30 +222,21 @@ char *ResolvePath(ibuf, obuf, maxlen)
 	strcat(obuf, "/");
 	strcat(obuf, part[i]);
 	len += strlen(part[i])+1;
-      }
-      else{
+      } else{
 	break;
       }
     }
   }
 
   /* free up buffer space */
-  if( tbuf ) free(tbuf);
-
+  if( tbuf ){
+    free(tbuf);
+  }
   /* return the string */
-  return(obuf);
+  return obuf;
 }
 
-#ifdef ANSI_FUNC
-void
-ExpandEnv (char *name, char *envname, int maxlen)
-#else
-void ExpandEnv(name, envname, maxlen)
-     char *name;
-     char *envname;
-     int maxlen;
-#endif
-{
+void ExpandEnv (char *name, char *envname, int maxlen){
   char brace[2];
   char tbuf[MAXBUFSIZE];
   char *fullname=NULL;
@@ -279,8 +247,9 @@ void ExpandEnv(name, envname, maxlen)
   int i=0, j=0;
 
   /* allocate temp working buffer (so dest can be same as source) */
-  if( !(fullname=(char *)xcalloc(maxlen, sizeof(char))) ) return;
-
+  if( !(fullname=(char *)xcalloc(maxlen, sizeof(char))) ){
+    return;
+  }
   /* process each character */
   for(ip=name; *ip; ip++){
     /* if its not beginning of an env, just store and loop */
@@ -325,43 +294,33 @@ void ExpandEnv(name, envname, maxlen)
 	i += strlen(s);
 	if( i <= maxlen )
 	  strcat(fullname, s);
-      }
-      /* if we don't recognize this macro, put it back onto the string */
-      else{
+      } else{
+	/* if we don't recognize this macro, put it back onto the string */
 	len = ip - mip + 1;
 	i += len;
-	if( i <= maxlen )
+	if( i <= maxlen ){
 	  strncat(fullname, mip, len);
+	}
       }
     }
   }
-
   /* transfer to output buffer */
   strncpy(envname, fullname, maxlen);
-
   /* free up temp space */
   if( fullname ) xfree(fullname);
 }
 
-#ifdef ANSI_FUNC
-char *
-Access (char *name, char *mode)
-#else
-char *Access (name, mode)
-     char *name;
-     char *mode;
-#endif
-{
+char *Access (char *name, char *mode){
   struct stat info;
   char fullname[MAXBUFSIZE];
   char AccessName[MAXBUFSIZE];
 
-
   ExpandEnv(name, fullname, MAXBUFSIZE);
-  if ( stat(fullname, &info) !=0 ) return NULL;
-
-#if HAVE_MINGW32==0 && HAVE_CYGWIN==0
-  if ( mode ) {
+  if ( stat(fullname, &info) !=0 ){
+    return NULL;
+  }
+#if !defined(__CYGWIN__) && !defined(__MINGW32__)
+  if( mode ){
     int m = amparse(mode);
 
     /* distinguish between directories and files */
@@ -384,73 +343,59 @@ char *Access (name, mode)
       }
   }
 #endif
-
   ResolvePath(fullname, AccessName, MAXBUFSIZE);
   return(xstrdup(AccessName));
 }
 
-#ifdef ANSI_FUNC
-char *
-Find (char *name, char *mode, char *exten, char *path)
-#else
-char *Find (name, mode, exten, path)
-     char *name;
-     char *mode;
-     char *exten;
-     char *path;
-#endif
-{
+
+char *Find (char *name, char *mode, char *exten, char *path){
   char	extenbuff[MAXBUFSIZE];
   char	namebuff[MAXBUFSIZE];
   char 	*here, *found;
   int    len;
 
   /* sanity check */
-  if( !name || !*name )
+  if( !name || !*name ){
     return NULL;
-
+  }
   /* if its a WWW file, we just say 'yes' */
   if( !strncmp(name, "ftp://",  6) ||
       !strncmp(name, "http://", 7) ){
-    return(xstrdup(name));
+    return xstrdup(name);
   }
-
-  if ( exten == NULL )
+  if( exten == NULL ){
     return findpath(name, mode, path);
-  
+  }
   strncpy(extenbuff, exten, MAXBUFSIZE-1);
   extenbuff[MAXBUFSIZE-1] = '\0';
   exten = extenbuff;
-
   if ( (here = strpbrk(extenbuff, ":;")) ) *here++ = '\0';
-
   while ( exten ) {
     if ( exten[0] == '$' ) {
-      if ( (exten = (char *)getenv(&exten[1])) )
-	if ( (found = Find(name, mode, exten, path)) )
+      if( (exten = (char *)getenv(&exten[1])) ){
+	if( (found = Find(name, mode, exten, path)) ){
 	  return found;
+	}
+      }
     } else {
       char *e = strstr(name, exten);
-      
       strncpy(namebuff, name, MAXBUFSIZE-1);
       namebuff[MAXBUFSIZE-1] = '\0';
       len = strlen(namebuff);
       if ( (e==NULL) || ( e && *(e + len)) ){
-	if( len+strlen(exten) <= MAXBUFSIZE-1 )
+	if( len+strlen(exten) <= MAXBUFSIZE-1 ){
 	  strcat(namebuff, exten);
-	/* filename is too large, so we can't find it */
-	else
+	} else{
+	  /* filename is too large, so we can't find it */
 	  return NULL;
+	}
       }
-
-      if ( (found = findpath(namebuff, mode, path)) )
+      if( (found = findpath(namebuff, mode, path)) ){
 	return found;
-      
+      }
     }
-    
     exten = here;
     if ( here && (here = strpbrk(here, ":;")) ) *here++ = '\0';
   }
-  
   return NULL;
 }

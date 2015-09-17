@@ -8,18 +8,8 @@
  *
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <word.h>
-
-/* SAOMOD_CTYPE -- work around Slackware/RedHat incompatibility */
-#ifdef linux
-#ifdef isalnum
-#undef isalnum
-#define isalnum(c) (isalpha(c)||isdigit(c))
-#endif
-#endif
+#include "xutil.h"
+#include "word.h"
 
 /* **************************************************************************
  *
@@ -58,16 +48,7 @@ static int ndtable=0;
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-static int 
-checkrange (char *xtemplate, int *ptr, int c)
-#else
-static int checkrange(xtemplate, ptr, c)
-     char *xtemplate;
-     int *ptr;
-     int c;
-#endif
-{
+static int checkrange (char *xtemplate, int *ptr, int c){
   int inrange, notrange;
   char lorange, hirange;
   int tptr;
@@ -120,17 +101,7 @@ static int checkrange(xtemplate, ptr, c)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-static void 
-addstring (char **buf, int *blen, int *maxlen, char *str)
-#else
-static void addstring(buf, blen, maxlen, str)
-     char **buf;
-     int *blen;
-     int *maxlen;
-     char *str;
-#endif
-{
+static void addstring (char **buf, int *blen, int *maxlen, char *str){
   int slen;
 
   slen = strlen(str) + 1;
@@ -153,17 +124,7 @@ static void addstring(buf, blen, maxlen, str)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-static void 
-addchar (char **buf, int *blen, int *maxlen, int c)
-#else
-static void addchar(buf, blen, maxlen, c)
-     char **buf;
-     int *blen;
-     int *maxlen;
-     int c;
-#endif
-{
+static void addchar (char **buf, int *blen, int *maxlen, int c){
   char tbuf[2];
 
   tbuf[0] = c;
@@ -182,17 +143,7 @@ static void addchar(buf, blen, maxlen, c)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-static char *
-lookupkeywords (char *name, char **keyword, char **value, int nkey)
-#else
-static char *lookupkeywords(name, keyword, value, nkey)
-     char *name;
-     char **keyword;
-     char **value;
-     int nkey;
-#endif
-{
+static char *lookupkeywords (char *name, char **keyword, char **value, int nkey){
   int i;
   for(i=0; i<nkey; i++){
     if( !strcmp(name, keyword[i]) )
@@ -212,14 +163,7 @@ static char *lookupkeywords(name, keyword, value, nkey)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-static int
-hexval (int c)
-#else
-static int hexval(c)
-     int c;
-#endif
-{
+static int hexval (int c){
   switch(c){
   case '0':     return  0;
   case '1':     return  1;
@@ -266,16 +210,7 @@ static int hexval(c)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-int 
-word (char *lbuf, char *tbuf, int *lptr)
-#else
-int word(lbuf, tbuf, lptr)
-     char *lbuf;
-     char *tbuf;
-     int *lptr;
-#endif
-{
+int word (char *lbuf, char *tbuf, int *lptr){
   int ip;
   int i;
   char quotes;
@@ -362,14 +297,7 @@ int word(lbuf, tbuf, lptr)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-int 
-newdtable (char *s)
-#else
-int newdtable(s)
-     char *s;
-#endif
-{
+int newdtable (char *s){
   int i;
   char *cur;
 
@@ -406,13 +334,7 @@ int newdtable(s)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-int 
-freedtable (void)
-#else
-int freedtable()
-#endif
-{
+int freedtable (void){
   int i;
   char *cur;
 
@@ -443,14 +365,7 @@ int freedtable()
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-void 
-newdelim (char *s)
-#else
-void newdelim(s)
-     char *s;
-#endif
-{
+void newdelim (char *s){
   if( s != NULL ){
     for(; *s; s++)
       dtable[(int)*s] = 1;
@@ -468,14 +383,7 @@ void newdelim(s)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-void 
-freedelim (char *s)
-#else
-void freedelim(s)
-     char *s;
-#endif
-{
+void freedelim (char *s){
   int i;
 
   if( s ){
@@ -501,13 +409,7 @@ void freedelim(s)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-int 
-lastdelim (void)
-#else
-int lastdelim()
-#endif
-{
+int lastdelim (void){
   return((int)lastd);
 }
 
@@ -530,15 +432,7 @@ int lastdelim()
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-int 
-tmatch (char *string, char *xtemplate)
-#else
-int tmatch(string, xtemplate)
-     char *string;
-     char *xtemplate;
-#endif
-{
+int tmatch (char *string, char *xtemplate){
   char *lastmeta=0;
   char *nonabsorbed=0;
   int sptr=0;
@@ -640,17 +534,7 @@ int tmatch(string, xtemplate)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-int 
-keyword (char *ibuf, char *key, char *obuf, int maxlen)
-#else
-int keyword(ibuf, key, obuf, maxlen)
-     char *ibuf;
-     char *key;
-     char *obuf;
-     int maxlen;
-#endif
-{
+int keyword (char *ibuf, char *key, char *obuf, int maxlen){
   int len;
   int qlev;
   char *s;
@@ -762,20 +646,8 @@ int keyword(ibuf, key, obuf, maxlen)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-char *
-macro (char *icmd, char **keyword, char **value, int nkey,
-       MacroCB client_callback, void *client_data)
-#else
-char *macro(icmd, keyword, value, nkey, client_callback, client_data)
-     char *icmd;
-     char **keyword;
-     char **value;
-     int nkey;
-     MacroCB client_callback;
-     void *client_data;
-#endif
-{
+char *macro (char *icmd, char **keyword, char **value, int nkey,
+	     MacroCB client_callback, void *client_data){
   int  i, j;
   int  maxlen;
   char brace;
@@ -876,14 +748,7 @@ char *macro(icmd, keyword, value, nkey, client_callback, client_data)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-void 
-cluc (char *s)
-#else
-void cluc(s)
-     char *s;
-#endif
-{
+void cluc (char *s){
   while(*s){
     if( islower((int)*s) )
       *s = toupper(*s);
@@ -902,14 +767,7 @@ void cluc(s)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-void 
-culc (char *s)
-#else
-void culc(s)
-     char *s;
-#endif
-{
+void culc (char *s){
   while(*s){
     if( isupper((int)*s) )
       *s = tolower(*s);
@@ -928,18 +786,10 @@ void culc(s)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-int 
-nowhite (
+int nowhite (
     char *c,      /* buffer to be cleaned */
     char *cr     /* buffer for returned string */
-)
-#else
-int nowhite(c,cr)
-char *c;      /* buffer to be cleaned */
-char *cr;     /* buffer for returned string */
-#endif
-{
+){
   char *cr0;    /* initial value of cr */
   int n;        /* the number of characters */
 
@@ -971,14 +821,7 @@ char *cr;     /* buffer for returned string */
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-void 
-nocr (char *s)
-#else
-void nocr(s)
-     char *s;
-#endif
-{
+void nocr (char *s){
   int len;
 
   if( (s==NULL) || (*s=='\0') )
@@ -999,14 +842,7 @@ void nocr(s)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-int 
-istrue (char *s)
-#else
-int istrue(s)
-     char *s;
-#endif
-{
+int istrue (char *s){
   char *t;
   int result;
 
@@ -1067,14 +903,7 @@ int isfalse(s)
  *
  *----------------------------------------------------------------------------
  */
-#ifdef ANSI_FUNC
-unsigned long strtoul16 (char *s, char **t)
-#else
-unsigned long strtoul16(s, t)
-     char *s;
-     char **t;
-#endif
-{
+unsigned long strtoul16 (char *s, char **t){
   unsigned long v=0;
   int h;
 

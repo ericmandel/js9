@@ -10,8 +10,7 @@
  */
 
 #include <stdio.h>
-#include <prsetup.h>
-#include <swap.h>
+#include "swap.h"
 
 /*
  *

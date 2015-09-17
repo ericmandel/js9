@@ -8,7 +8,7 @@
  *
  */
 
-#include <macro.h>
+#include "macro.h"
 
 /* SAOMOD_CTYPE -- work around Slackware/RedHat incompatibility */
 #ifdef linux
@@ -32,20 +32,12 @@
  * AddString -- add a string to a buffer
  *
  */
-#ifdef ANSI_FUNC
-static void
-AddString(char **buf, int *blen, int *maxlen, char *str)
-#else
-static void AddString(buf, blen, maxlen, str)
-     char **buf;
-     int *blen;
-     int *maxlen;
-     char *str;
-#endif
-{
+static void AddString(char **buf, int *blen, int *maxlen, char *str){
   int slen;
 
-  if( !str || !*str ) return;
+  if( !str || !*str ){
+    return;
+  }
   slen = strlen(str) + 1;
   while( (*blen + slen) >= *maxlen ){
     *maxlen += BUFINC;
@@ -60,17 +52,7 @@ static void AddString(buf, blen, maxlen, str)
  * AddChar -- add a single char to a buffer
  *
  */
-#ifdef ANSI_FUNC
-static void
-AddChar(char **buf, int *blen, int *maxlen, int c)
-#else
-static void AddChar(buf, blen, maxlen, c)
-     char **buf;
-     int *blen;
-     int *maxlen;
-     int c;
-#endif
-{
+static void AddChar(char **buf, int *blen, int *maxlen, int c){
   char tbuf[2];
 
   tbuf[0] = (char)c;
@@ -85,23 +67,14 @@ static void AddChar(buf, blen, maxlen, c)
  * (Should use quarks ...)
  *
  */
-#ifdef ANSI_FUNC
-static char *
-LookupKeywords(char *name, char **keyword, char **value, int nkey)
-#else
-static char *LookupKeywords(name, keyword, value, nkey)
-     char *name;
-     char **keyword;
-     char **value;
-     int nkey;
-#endif
-{
+static char *LookupKeywords(char *name, char **keyword, char **value, int nkey){
   int i;
   for(i=0; i<nkey; i++){
-    if( keyword[i] && !strcmp(name, keyword[i]) )
+    if( keyword[i] && !strcmp(name, keyword[i]) ){
       return(value[i]);
+    }
   }
-  return(NULL);
+  return NULL;
 }
 
 /*
@@ -117,20 +90,8 @@ static char *LookupKeywords(name, keyword, value, nkey)
  * returns: expanded macro as an allocated string
  *
  */
-#ifdef ANSI_FUNC
-char *
-ExpandMacro(char *icmd, char **keyword, char **value, int nkey,
-	    MacroCall client_callback, void *client_data)
-#else
-char *ExpandMacro(icmd, keyword, value, nkey, client_callback, client_data)
-     char *icmd;
-     char **keyword;
-     char **value;
-     int nkey;
-     MacroCall client_callback;
-     void *client_data;
-#endif
-{
+char *ExpandMacro(char *icmd, char **keyword, char **value, int nkey,
+		  MacroCall client_callback, void *client_data){
   int  i, j;
   int  maxlen;
   char brace;
@@ -149,8 +110,7 @@ char *ExpandMacro(icmd, keyword, value, nkey, client_callback, client_data)
   for(i=0, ip=icmd; *ip; ip++){
     if( *ip != '$' ){
       AddChar(&result, &i, &maxlen, (int)*ip);
-    }
-    else{
+    } else{
       /* save beginning of macro */
       mip = ip;
       /* skip past '$' */
@@ -159,25 +119,22 @@ char *ExpandMacro(icmd, keyword, value, nkey, client_callback, client_data)
       if( *ip == '{' ){
 	brace = '{';
 	ip++;
-      }
-      else if( *ip == '(' ){
+      } else if( *ip == '(' ){
 	brace = '(';
 	ip++;
-      }
-      else
+      } else{
 	brace = '\0';
+      }
       /* get variable up to next non-alpha character or close brace */
       for(*tbuf='\0', j=0; *ip; ip++ ){
 	/* if we are in brace mode, look for trailing brace */
 	if( brace && *ip == (brace == '(' ? ')' : '}') ){
 	  ip++;
 	  break;
-	}
-	/* else look for a non-alpha character */
-	else if( !isalnum((int)*ip) && *ip != '_'){
+	} else if( !isalnum((int)*ip) && *ip != '_'){
+	  /* else look for a non-alpha character */
 	  break;
-	}
-	else{
+	} else{
 	  tbuf[j++] = *ip;
 	  tbuf[j] = '\0';
 	}
@@ -211,6 +168,6 @@ char *ExpandMacro(icmd, keyword, value, nkey, client_callback, client_data)
   /* null terminate and save the string */
   result[i] = '\0';
   result = (char *)realloc(result, i+1);
-  return(result);
+  return result;
 }
 
