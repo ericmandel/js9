@@ -428,7 +428,7 @@ gitprefs:	FORCE
 		(git checkout -- js9Prefs-sao.json; \
 		 git checkout -- js9Prefs.json;)
 
-release:	gitprefs
+release:	clean gitprefs
 		(mkdir -p $(DISTDIR)/$(DISTNAME); \
 		tar cf - \
 			 --exclude='node_modules/selenium-webdriver' \
@@ -502,7 +502,7 @@ depend:		FORCE
 $(UTILLIB):	FORCE
 		@(cd util; \
 		env CC="$(CC)" CFLAGS="$(CC_SW)" make; \
-		mv libutil.a ..)
+		mv libutil.a ..; rm *.o)
 
 tpos.o:		tpos.c
 		$(CC) -c $(CC_SW) tpos.c
