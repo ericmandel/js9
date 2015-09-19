@@ -89,11 +89,12 @@ JS9.globalOpts = {
     fits2png: false,		// do we convert FITS to  PNG representation?
     alerts: true,		// set to false to turn off alerts
     internalValPos: true,	// a fancy info plugin can turns this off
-    xtimeout: 1000,		// connection timeout for xhr requests
+    xtimeout: 10000,		// connection timeout for xhr requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     dims: [1024, 1024],		// dims of extracted images
     helperProtocol: location.protocol,// http: or https:
     maxMemory: 450000000,	// max heap memory to allocate for a fits image
+    sharedURL: "params/opencors.html",     // location of param html file
     debug: 0			// debug level
 };
 
@@ -2509,7 +2510,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title){
     case "params":
 	did = JS9.lightWin(id, "ajax", s, title, a.paramWin);
 	break;
-    case "dpath":
+    case "textline":
 	did = JS9.lightWin(id, "ajax", s, title, a.dpathWin);
 	break;
     default:
@@ -3820,7 +3821,8 @@ JS9.Menubar = function(width, height){
 		    };
 		}
 		items["sep" + n++] = "------";
-		items.open = {name: "open ..."};
+		items.open = {name: "open local file ..."};
+		items.openshared = {name: "open shared link ..."};
 		items.print = {name: "print ..."};
 		items.header = {name: "display FITS header"};
 		items.pageid = {name: "display pageid"};
@@ -3837,7 +3839,7 @@ JS9.Menubar = function(width, height){
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val, idx, array){
-			var j, s;
+			var j, s, did;
 			var udisp = val;
 			var uim = udisp.image;
 			switch(key){
@@ -3871,6 +3873,15 @@ JS9.Menubar = function(width, height){
 			    break;
 			case "open":
 			    JS9.OpenFileMenu(udisp);
+			    break;
+			case "openshared":
+			    JS9.globalOpts.dhtmlloadid  = "sharedURLForm";
+			    did = JS9.Image.prototype.displayAnalysis.call(null,
+				      "textline",
+				      JS9.InstallDir(JS9.globalOpts.sharedURL),
+				      "Open a shared link");
+			    // save display id
+			    $(did).data("dispid", udisp.id);
 			    break;
 			case "refresh":
 			    $('#refreshLocalFile-' + udisp.id).click();
@@ -4659,7 +4670,7 @@ JS9.Menubar = function(width, height){
 				    $('#dataPath').val(JS9.globalOpts.dataPath);
 				};
 				JS9.globalOpts.dhtmlloadid  = "dataPathForm";
-				did = uim.displayAnalysis("dpath",
+				did = uim.displayAnalysis("textline",
 					 JS9.InstallDir(JS9.analOpts.dpathURL),
 					 "Data Path for Drag and Drop");
 				// save display id
@@ -8502,7 +8513,14 @@ JS9.fetchURL = function(name, url, opts, handler) {
 	    if( this.status === 200 || this.status === 0 ){
 		if( xhr.responseType === "blob" ){
 	            blob = new Blob([this.response]);
-		    blob.name = name;
+		    // discard path (or scheme) up to slashes
+		    // remove trailing ? params
+		    blob.name = name.split('/').reverse()[0]
+			            .replace(/\?.*$/, "");
+		    // hack for Google Drive's lack of a filename
+		    if( blob.name === "uc" ){
+			blob.name = "shared_" + JS9.uniqueID();
+		    }
 		    JS9.onFileList([blob], topts, handler);
 		} else {
 		    if( opts.display ){
