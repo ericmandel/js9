@@ -8507,6 +8507,9 @@ JS9.fetchURL = function(name, url, opts, handler) {
     } else {
 	xhr.responseType = 'blob';
     }
+    if( JS9.globalOpts.xtimeout ){
+	xhr.timeout = JS9.globalOpts.xtimeout;
+    }
     xhr.onload = function(e) {
 	var blob;
         if( this.readyState === 4 ){
@@ -8532,27 +8535,20 @@ JS9.fetchURL = function(name, url, opts, handler) {
 	    } else if( this.status === 404 ) {
 		JS9.error("could not find " + url);
 	    } else {
-		JS9.error("can't load: " + url + " (" + this.status + ")");
+		JS9.error(sprintf("can't load: %s %s (%s)  ",
+				  url, xhr.statusText,  xhr.status));
 	    }
 	}
     };
-    xhr.onerror = function(e) {
-	JS9.error("can't load: " + url);
+    xhr.onerror = function() {
+	JS9.error(sprintf("cannot load: %s %s (%s)  ",
+			  url, xhr.statusText,  xhr.status));
     };
-    xhr.onreadystatechange=function() {
-        // any response from the server will do
-	if( xhr.xtimeout ){
-	    clearTimeout(xhr.xtimeout);
-	    delete xhr.xtimeout;
-	}
+    xhr.ontimeout = function() {
+	JS9.error("timeout awaiting response from server: " + url);
     };
     try{ xhr.send(); }
     catch(e){ JS9.error("request to load " + url + " failed", e); }
-    // set a timeout to catch when Mac ignores the connect request entirely
-    xhr.xtimeout=setTimeout(function(){
-	JS9.error("timeout while waiting for response from server; " + 
-		  url + " might not exist");
-    }, JS9.globalOpts.xtimeout);
 };
 
 // configure or return the fits library
