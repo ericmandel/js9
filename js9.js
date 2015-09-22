@@ -3072,10 +3072,18 @@ JS9.Colormap.prototype.mkColorCell = function(ii){
 	var size = this.colors.length;
 	// index into the evenly spaced RGB values
 	var index = Math.floor((ii*size/count) + 0.5);
-	if( (index >= 0) && (index < size) ){
+	if( index < 0 ){
+	    rgb[0] = this.colors[0][0] * umax;
+	    rgb[1] = this.colors[0][1] * umax;
+	    rgb[2] = this.colors[0][2] * umax;
+ 	} else if( index < size ){
 	    rgb[0] = this.colors[index][0] * umax;
 	    rgb[1] = this.colors[index][1] * umax;
 	    rgb[2] = this.colors[index][2] * umax;
+	} else {
+	    rgb[0] = this.colors[size-1][0] * umax;
+	    rgb[1] = this.colors[size-1][1] * umax;
+	    rgb[2] = this.colors[size-1][2] * umax;
 	}
 	break;
     default:
