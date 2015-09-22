@@ -89,7 +89,7 @@ JS9.globalOpts = {
     fits2png: false,		// do we convert FITS to  PNG representation?
     alerts: true,		// set to false to turn off alerts
     internalValPos: true,	// a fancy info plugin can turns this off
-    xtimeout: 30000,		// connection timeout for xhr requests
+    xtimeout: 60000,		// connection timeout for xhr requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     dims: [1024, 1024],		// dims of extracted images
     helperProtocol: location.protocol,// http: or https:
