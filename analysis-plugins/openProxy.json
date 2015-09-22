@@ -1,0 +1,11 @@
+[
+  {"name"   : "openproxy",
+   "title"  : "Open Link via Server Proxy",
+   "files"  : "*",
+   "purl"   : "./params/openproxy.html",
+   "action" : "js9Xeq openproxy $url",
+   "hidden" : true,
+   "rtype"  : "fits"
+  }
+]
+

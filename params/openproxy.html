@@ -1,0 +1,56 @@
+<html>
+<header>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+</header>
+
+<body>
+<title>Load a shared URL</title>
+
+<form id="proxyURLForm" name="proxyURLForm" class="js9AnalysisForm">
+<b>
+Links which do not support
+<a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing">Cross-Origin Resource Sharing</a> cannot be displayed directly by JS9. 
+However, the JS9 back-end server can act as a proxy, retrieving and
+storing the file temporarily, so that JS9 can display it.
+<p>
+Enter a link to a FITS file:
+</b>
+<p>
+<textarea id="proxyURL" name="proxyURL" rows="2" cols="90%"></textarea>
+<p>
+<input id="run" name="run" type="button" class="button" value="Load"
+onclick="var arr = $('#proxyURLForm').serializeArray();
+var form = $(this).closest('form');
+var dhtml = form.closest('.dhtmlwindow')[0];
+var dispid = $(dhtml).data('dispid');
+var url = arr[0].value.trim();
+if( url.match(/dropbox\.com/) ){
+  // http://stackoverflow.com/questions/20757891/cross-origin-image-load-from-cross-enabled-site-is-denied
+  url = url.replace('www.dropbox.com', 'dl.dropboxusercontent.com')
+  // https://blogs.dropbox.com/developers/2013/08/programmatically-download-content-from-share-links/
+  url = url.replace('?dl=0', '') + '?raw=1';
+} else if( url.match(/drive\.google\.com/) ){
+  url=url.replace(/\/file\/d\/(\w+)\/\w+\?usp=sharing/,
+                  '/uc?export=download&id=$1');
+}
+JS9.Send('openproxy', {'cmd': 'js9Xeq openproxy ' + url}, function(r){
+  if( r.stderr ){
+    JS9.error(r.stderr);
+  } else if( r.stdout ){
+    JS9.Load(r.stdout, {fits2png: false}, {display: dispid});
+  } else {
+    JS9.error('internal error: no return from openproxy command');
+  }
+});
+dhtml.close();
+return false;
+">
+<input id="close" name="Close" type="button" class="button" value="Close" 
+onclick="var form = $(this).closest('form');
+var dhtml = form.closest('.dhtmlwindow')[0];
+dhtml.close();
+return false;" style="float: right;">
+</form>
+
+</body>
+</html>

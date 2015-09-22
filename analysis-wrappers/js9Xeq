@@ -149,6 +149,37 @@ evfilter)
     exit 0
     ;;
 
+openproxy)
+    # required args
+    if [ "$#" -lt 1 ]; then
+	error "openproxy url"
+    fi
+    if [ x"${JS9_WORKDIR}" = x ]; then
+	error "openproxy requires configuration of a temporary work directory"
+    fi
+    URL=`echo $1 | sed 's/__ampersand__/\&/g'`
+    OFILE=`basename $URL | sed 's/\?.*//g'`
+    # hack for google drive
+    if [ x"$OFILE" = xuc ]; then
+      OFILE="google_"$RANDOM".fits"
+    fi
+    # retrieve the FITS file via URL
+    wget -q --output-document="$OFILE" "$URL"
+    if [ $? != 0 ]; then
+      error "could not retrieve: $URL"
+    else
+      # look for a compressed file (and change filename)
+      s=`file $OFILE`
+      f=`echo $s | sed -n 's/.*gzip compressed data, was "\([^"]*\)".*/\1/gp'`
+      if [ x"$f" != x ]; then
+        NFILE="$f".gz
+        mv $OFILE $NFILE && OFILE="$NFILE"
+      fi
+      echo "${JS9_WORKDIR:-.}/$OFILE"
+    fi
+    exit 0
+    ;;
+
 macros)
     echo "
     png:      [$1]
