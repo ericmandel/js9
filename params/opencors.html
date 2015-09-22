@@ -8,8 +8,13 @@
 
 <form id="sharedURLForm" name="sharedURLForm" class="js9AnalysisForm">
 <b>
-Dropboxs allow you to share files using public links (URLs) that can be given
-to others. Enter a Dropbox link here to display a shared FITS file:
+Dropbox allows you to share files using public links that can be given
+to others. These links support
+<a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing">
+Cross-Origin Resource Sharing
+</a>, so JS9 can display them directly.
+<p>
+Enter a Dropbox shared link to a FITS file:
 </b>
 <p>
 <textarea id="sharedURL" name="sharedURL" rows="2" cols="90%"></textarea>
@@ -24,10 +29,10 @@ if( url.match(/dropbox\.com/) ){
   // http://stackoverflow.com/questions/20757891/cross-origin-image-load-from-cross-enabled-site-is-denied
   url = url.replace('www.dropbox.com', 'dl.dropboxusercontent.com')
   // https://blogs.dropbox.com/developers/2013/08/programmatically-download-content-from-share-links/
-  url = url.replace('?dl=0', '') + '?raw=1';
+  url = url.replace('?dl=0', '').strip() + '?raw=1';
 } else if( url.match(/drive\.google\.com/) ){
   url=url.replace(/\/file\/d\/(\w+)\/\w+\?usp=sharing/,
-                  '/uc?export=download&id=$1');
+                  '/uc?export=download&id=$1').strip();
   JS9.error('Google Drive does not support CORS');
 }
 JS9.Load(url, {display: dispid});
