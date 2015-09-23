@@ -12,11 +12,9 @@ Links which do not support
 <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing">Cross-Origin Resource Sharing</a> cannot be displayed directly by JS9. 
 However, the JS9 back-end server can act as a proxy, retrieving and
 storing the file temporarily, so that JS9 can display it.
-<p>
-Enter a link to a FITS file:
 </b>
 <p>
-<textarea id="proxyURL" name="proxyURL" rows="2" cols="90%"></textarea>
+<input type="text" placeholder="Enter a link to a FITS file" id="proxyURL" name="proxyURL" size="90%">
 <p>
 <input id="run" name="run" type="button" class="button" value="Load"
 onclick="var arr = $('#proxyURLForm').serializeArray();
