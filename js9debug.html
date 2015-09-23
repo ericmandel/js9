@@ -175,7 +175,7 @@
     function init(){
         JS9.DEBUG = 2;
         JS9.Preload("png/casa.png", {colormap: "cool"});
-        JS9.Preload("fits/snr.fits[events][pi==pha]", {colormap: "heat", fits2png: false, onload: function(im){JS9.SetZoom(2,{display: "myJS9"});}}, "fits/casa.fits", {fits2png: false}, {display: "myJS9"});
+        JS9.Preload("fits/snr.fits[events][pi==pha]", {colormap: "heat", fits2png: false, onload: function(im){JS9.SetZoom(2,{display: "myJS9"});}}, {display: "myJS9"});
         $("#display").on("change", function(evt){
           try{doit("display", this.value);}
           finally{$("#display").prop('selectedIndex', 0);
