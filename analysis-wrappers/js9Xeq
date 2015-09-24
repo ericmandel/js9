@@ -183,7 +183,9 @@ openproxy)
       f=`echo $s | sed -n 's/.*gzip compressed data, was "\([^"]*\)".*/\1/gp'`
       if [ x"$f" != x ]; then
         NFILE="$f".gz
-        mv $OFILE $NFILE && OFILE="$NFILE"
+        if [ x"$NFILE" != x"$OFILE" ]; then
+          mv $OFILE $NFILE && OFILE="$NFILE"
+        fi
       fi
       echo "${JS9_WORKDIR:-.}/$OFILE"
     fi
