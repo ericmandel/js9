@@ -21,25 +21,8 @@ onclick="var arr = $('#proxyURLForm').serializeArray();
 var form = $(this).closest('form');
 var dhtml = form.closest('.dhtmlwindow')[0];
 var dispid = $(dhtml).data('dispid');
-var url = arr[0].value.trim();
-if( url.match(/dropbox\.com/) ){
-  // http://stackoverflow.com/questions/20757891/cross-origin-image-load-from-cross-enabled-site-is-denied
-  url = url.replace('www.dropbox.com', 'dl.dropboxusercontent.com')
-  // https://blogs.dropbox.com/developers/2013/08/programmatically-download-content-from-share-links/
-  url = url.replace('?dl=0', '') + '?raw=1';
-} else if( url.match(/drive\.google\.com/) ){
-  url=url.replace(/\/file\/d\/(\w+)\/\w+\?usp=sharing/,
-                  '/uc?export=download&id=$1');
-}
-JS9.Send('openproxy', {'cmd': 'js9Xeq openproxy ' + url}, function(r){
-  if( r.stderr ){
-    JS9.error(r.stderr);
-  } else if( r.stdout ){
-    JS9.Load(r.stdout, {fits2png: false}, {display: dispid});
-  } else {
-    JS9.error('internal error: no return from openproxy command');
-  }
-});
+var url = arr[0].value;
+JS9.LoadProxy(url, null, {display: dispid});
 dhtml.close();
 return false;
 ">

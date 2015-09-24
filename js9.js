@@ -94,8 +94,9 @@ JS9.globalOpts = {
     dims: [1024, 1024],		// dims of extracted images
     helperProtocol: location.protocol,// http: or https:
     maxMemory: 450000000,	// max heap memory to allocate for a fits image
-    corsURL: "params/opencors.html",     // location of param html file
-    proxyURL: "params/openproxy.html",     // location of param html file
+    corsURL: "params/loadcors.html",     // location of param html file
+    proxyURL: "params/loadproxy.html",     // location of param html file
+    loadProxy: false,           // do we allow proxy load requests to server?
     debug: 0			// debug level
 };
 
@@ -3831,11 +3832,11 @@ JS9.Menubar = function(width, height){
 		}
 		items["sep" + n++] = "------";
 		items.open = {name: "open local file ..."};
-		items.opencors = {name: "open link via CORS ..."};
+		items.loadcors = {name: "open link via CORS ..."};
 		if( JS9.globalOpts.workDir          &&
 		    (JS9.helper.type === "nodejs"   ||
 		     JS9.helper.type === "sock.io") ){
-		    items.openproxy = {name: "open link via proxy ..."};
+		    items.loadproxy = {name: "open link via proxy ..."};
 		}
 		items.print = {name: "print ..."};
 		items.header = {name: "display FITS header"};
@@ -3888,16 +3889,16 @@ JS9.Menubar = function(width, height){
 			case "open":
 			    JS9.OpenFileMenu(udisp);
 			    break;
-			case "opencors":
+			case "loadcors":
 			    JS9.globalOpts.dhtmlloadid  = "sharedURLForm";
 			    did = JS9.Image.prototype.displayAnalysis.call(null,
 				      "textline",
 				      JS9.InstallDir(JS9.globalOpts.corsURL),
-				      "Open a shared link");
+				      "Open a shared CORS link");
 			    // save display id
 			    $(did).data("dispid", udisp.id);
 			    break;
-			case "openproxy":
+			case "loadproxy":
 			    // load param url to run analysis task
 			    // param url is relative to js9 install dir
 			    JS9.globalOpts.dhtmlloadid  = "proxyURLForm";
@@ -3907,7 +3908,7 @@ JS9.Menubar = function(width, height){
 				      "Open a link via server proxy");
 			    // save info for running the task
 			    $(did).data("dispid", udisp.id)
-				  .data("aname", "openproxy");
+				  .data("aname", "loadproxy");
 			    break;
 			case "refresh":
 			    $('#refreshLocalFile-' + udisp.id).click();
@@ -10675,7 +10676,7 @@ JS9.mkPublic("Load", function(file, opts){
 		});
 	    } else {
 		// no helper to do conversion
-		JS9.error("no helper available to convert this image: " + file);
+		JS9.error("no JS9 helper available to convert image: " + file);
 	    }
 	} else {
 	    JS9.waiting(true);
@@ -10802,6 +10803,44 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	// return the id
 	return id;
     }
+});
+
+// load a link using back-end server as a proxy
+JS9.mkPublic("LoadProxy", function(url, opts){
+    var obj = JS9.parsePublicArgs(arguments);
+    if( !JS9.globalOpts.loadProxy ){
+	JS9.error("proxy load not available for this server");
+    }
+    if( !JS9.globalOpts.workDir ){
+	JS9.error("proxy load requires a temp workDir this server");
+    }
+    if( !url ){
+	JS9.error("no url specified for proxy load");
+    }
+    url = url.trim();
+    if( url.match(/dropbox\.com/) ){
+	// http://stackoverflow.com/questions/20757891/cross-origin-image-load-from-cross-enabled-site-is-denied
+	url = url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+	// https://blogs.dropbox.com/developers/2013/08/programmatically-download-content-from-share-links/
+	url = url.replace('?dl=0', '') + '?raw=1';
+    } else if( url.match(/drive\.google\.com/) ){
+	url=url.replace(/\/file\/d\/(\w+)\/\w+\?usp=sharing/,
+			'/uc?export=download&id=$1');
+    }
+    JS9.waiting(true);
+    JS9.Send('loadproxy', {'cmd': 'js9Xeq loadproxy ' + url}, function(r){
+	if( r.stderr ){
+	    JS9.error(r.stderr);
+	} else if( r.stdout ){
+	    opts = opts || {};
+	    if( opts.fits2png === undefined ){
+		opts.fits2png = false;
+	    }
+	    JS9.Load(r.stdout, opts, {display: obj.display});
+	} else {
+	    JS9.error('internal error: no return from load proxy command');
+	}
+    });
 });
 
 // save array of files to preload or preload immediately, 
@@ -11092,7 +11131,7 @@ JS9.mkPublic("Send", function(msg, obj, cb){
     if( JS9.helper.connected ){
 	JS9.helper.send(msg, obj, cb);
     } else {
-	JS9.error("no helper available");
+	JS9.error("no JS9 helper available");
     }
 });
 

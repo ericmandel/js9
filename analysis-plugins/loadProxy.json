@@ -1,0 +1,11 @@
+[
+  {"name"   : "loadproxy",
+   "title"  : "Open a Link via Server Proxy",
+   "files"  : "*",
+   "purl"   : "./params/loadproxy.html",
+   "action" : "js9Xeq loadproxy $url",
+   "hidden" : true,
+   "rtype"  : "fits"
+  }
+]
+

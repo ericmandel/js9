@@ -5,6 +5,7 @@
 		 "fits2png":         false,
 		 "debug":	     0,
 		 "workDir":	     "./tmp",
+		 "loadProxy":	     true,
 		 "dataPath":	     "$HOME/Desktop:$HOME/data",
 		 "analysisPlugins":  "./analysis-plugins",
 		 "analysisWrappers": "./analysis-wrappers"},

@@ -149,7 +149,7 @@ evfilter)
     exit 0
     ;;
 
-openproxy)
+loadproxy)
     # required args
     if [ "$#" -lt 1 ]; then
 	error "openproxy url"
@@ -178,15 +178,30 @@ openproxy)
     if [ $? != 0 ]; then
       error "could not retrieve: $URL"
     else
-      # look for a compressed file (and change filename)
+      # look for a compressed file (and add .gz extension, if necessary)
       s=`file $OFILE`
+      f=`echo $s | egrep "HTML document text" 1>/dev/null 2>&1`
+      if [ $? = 0 ]; then
+	f=`cat $OFILE | sed -n 's/.*\(The document has moved\) <A HREF="\([^"]*\)".*/\1 to: \2/gp'`
+        if [ x"$f" != x ]; then
+          error "$f"
+        else
+	  error `cat $OFILE`
+        fi
+      fi
       f=`echo $s | sed -n 's/.*gzip compressed data, was "\([^"]*\)".*/\1/gp'`
       if [ x"$f" != x ]; then
-        NFILE="$f".gz
+	ext="${f##*.}"
+        if [ x"$ext" = xgz ]; then
+          NFILE="$f"
+        else
+          NFILE="$f".gz
+        fi
         if [ x"$NFILE" != x"$OFILE" ]; then
           mv $OFILE $NFILE && OFILE="$NFILE"
         fi
       fi
+      # tell JS9 the new file name to load
       echo "${JS9_WORKDIR:-.}/$OFILE"
     fi
     exit 0
