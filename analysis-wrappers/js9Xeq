@@ -164,7 +164,17 @@ openproxy)
       OFILE="google_"$RANDOM".fits"
     fi
     # retrieve the FITS file via URL
-    wget -q --output-document="$OFILE" "$URL"
+    hash curl 1>/dev/null 2>&1
+    if [ $? = 0 ]; then
+      curl -s -o "$OFILE" "$URL"
+    else
+      hash wget 1>/dev/null 2>&1
+      if [ $? = 0 ]; then
+        wget -q --output-document="$OFILE" "$URL"
+      else
+        error "requires either curl or wget"
+      fi
+    fi
     if [ $? != 0 ]; then
       error "could not retrieve: $URL"
     else
