@@ -252,6 +252,9 @@ function loadPreferences(prefsfile){
 			    case "number":
 				globalOpts[opt] = obj.globalOpts[opt];
 				break;
+			    case "boolean":
+				globalOpts[opt] = obj.globalOpts[opt];
+				break;
 			    case "string":
 				globalOpts[opt] = obj.globalOpts[opt];
 				break;
@@ -625,6 +628,11 @@ function socketioHandler(socket) {
     for(j=0; j<analysis.pkgs.length; j++){
 	for(i=0; i<analysis.pkgs[j].length; i++){
 	    a = analysis.pkgs[j][i];
+	    // add loadproxy if explicitly enabled
+	    if( a.name === "loadproxy" && !globalOpts.loadProxy ){
+console.log("skipping loadproxy");
+		continue;
+	    }
 	    m = a.xclass ? (a.xclass + ":" + a.name) : a.name;
 	    socket.on(m, xfunc);
 	}
