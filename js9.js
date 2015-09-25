@@ -97,6 +97,7 @@ JS9.globalOpts = {
     corsURL: "params/loadcors.html",     // location of param html file
     proxyURL: "params/loadproxy.html",     // location of param html file
     loadProxy: false,           // do we allow proxy load requests to server?
+    archivesURL: "help/archives.html",     // location of archives help file
     debug: 0			// debug level
 };
 
@@ -3838,6 +3839,7 @@ JS9.Menubar = function(width, height){
 		    (JS9.helper.type === "nodejs"   ||
 		     JS9.helper.type === "sock.io") ){
 		    items.loadproxy = {name: "open link via proxy ..."};
+		    items.archives = {name: "access data archives ..."};
 		}
 		items.print = {name: "print ..."};
 		items.header = {name: "display FITS header"};
@@ -3898,6 +3900,9 @@ JS9.Menubar = function(width, height){
 				      "Open a shared CORS link");
 			    // save display id
 			    $(did).data("dispid", udisp.id);
+			    break;
+			case "archives":
+			    JS9.DisplayHelp(JS9.globalOpts.archivesURL);
 			    break;
 			case "loadproxy":
 			    // load param url to run analysis task
