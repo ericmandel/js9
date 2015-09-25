@@ -84,13 +84,12 @@ Choose from the following sections:
 <p>
 <font size="+1"><b><u>Load an image into JS9</u></b></font>
 <p> 
-<code><font size="+1">JS9.Load(url, opts, func)</font></code>
+<code><font size="+1">JS9.Load(url, opts)</font></code>
 <p>
 where:
 <ul>
 <li><b>url</b>: url, fitsy object, in-memory FITS, or FITS blob
 <li><b>opts</b>: object containing image parameters
-<li><b>func</b>: optional function to call when image load is complete
 </ul>
 <p>
 Load a FITS file or a PNG <b>representation file</b> into JS9.
@@ -117,10 +116,10 @@ To override default image parameters, pass the image opts argument:
     href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'
 </pre>
 <p>
-If a callback function is specified, it will be called after the image
-is loaded:
+If an onload callback function is specified in opts, it will be called
+after the image is loaded:
 <pre>
-    href='javascript:JS9.Load("fits/3c273.fits", {scale: "linear"}, func);'
+    href='javascript:JS9.Load("fits/3c273.fits", {scale: "linear", onload: func});'
 </pre>
 The image handle is passed as the first argument to the callback.
 <p>
@@ -128,7 +127,6 @@ To load an image into a specified display, pass the <b>display object</b> as the
 <pre>
     href='javascript:JS9.Load("fits/3c273.fits", {scale: "linear"}, {display: "myJS9"});'
 </pre>
-<p>
 <p>
 See <a href="./yourdata.html">Displaying Your Data</a> for further discussion of
 how to use this routine.
@@ -177,6 +175,79 @@ You can supply your own parameters for the new dhtmlwindow using the
 DynamicDrive</a> for more information about their light-weight window.
 <p>
 See js9create.html for examples of how to use this routine.
+
+<p>
+<font size="+1"><b><u>Load an FITS image link into JS9 using a proxy server</u></b></font>
+<p> 
+<code><font size="+1">JS9.LoadProxy(url, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>url</b>: remote URL link to load
+<li><b>opts</b>: object containing image parameters
+</ul>
+<p>
+Load a FITS file specified by an arbitrary URL into JS9 using the
+JS9 back-end helper as a proxy server.
+<p>
+For security reasons, JavaScript contained in one Web page can
+access data in another Web page only if both Web pages have the
+same origin (i.e., basically coming from the same host).  This
+policy is called the 
+<a href="https://en.wikipedia.org/wiki/Same-origin_policy">
+Same Origin Policy</a>. This means that JS9 cannot load a FITS file from
+an arbitrary URL without using special techniques.
+<p>
+One such technique is
+<a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing">
+Cross-Origin Resource Sharing</a>, by which the second server grants
+permission to access its image data. Dropbox is CORS-enabled, so that
+FITS files can be loaded directly into JS9. But obviously this requires
+that explicit permission be granted by the other server.
+<p>
+A second technique is to use a proxy server: the URL is not
+loaded directly into JS9, but instead is copied back to the
+server from which JS9 itself was loaded. The file is then retrieved by
+JS9 from this server so that the "same origin" rules are not violated.
+<p>
+The JS9 Node.js back-end helper can be configured to support
+proxy server mode by setting the <b>JS9.globalOpts.loadProxy</b>
+property. In addition, the back-end server must be configured to
+support temporary working directories for each loaded page by setting
+the <b>JS9.globalOpts.workDir</b> property. If the back-end server is
+thus configured as a proxy server, JS9 will support the <b>JS9.LoadProxy()</b>
+call and allow you to load FITS files from arbitrary URLs. JS9 also
+will display a <b>open link via proxy</b> menu option in the <b>File</b> menu.
+<p>
+The <b>JS9.LoadProxy()</b> call takes a URL as its first
+argument. This URL will be retrieved using curl or wget and stored on
+the back-end server in a directory specifically tied to the Web
+page. (The directory and its contents will be deleted when the page is
+unloaded.) JS9 then will load the file from this directory. Note that
+since the file reside on the back-end server, all back-end analysis 
+defined on that server is available.
+<p>
+To override default image parameters, pass the image opts argument:
+<pre>
+    href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'
+</pre>
+<p>
+If an onload callback function is specified in opts, it will be called
+after the image is loaded:
+<pre>
+    href='javascript:JS9.Load("http://hea-www.cfa.harvard.edu/~eric/coma.fits", {scale: "linear", onload: func});'
+</pre>
+The image handle is passed as the first argument to the callback.
+<p>
+To load an image into a specified display, pass the <b>display object</b> as the last argument:
+<pre>
+    href='javascript:JS9.LoadProxy("http://hea-www.cfa.harvard.edu/~eric/coma.fits", {scale: "linear"}, {display: "myJS9"});'
+</pre>
+<p>
+Note again that not all back-end servers support the proxy functionality.
+The main 
+<a href="http://js9.si.edu">JS9 Web site<a/> does support proxy service, and
+can be used to view images from arbitrary URLs.
 
 <p>
 <font size="+1"><b><u>Load one or more images when the Web page is ready</u></b></font>
@@ -951,7 +1022,6 @@ where:
 <a name="shapes">Working with Shape Layers</a>
 </b></center></font>
 <p>
-<p>
 JS9 supports individual layers for drawing 2D graphics. The regions
 layer is a special case of a shape layer, created automatically by
 JS9. The Catalog plugin creates a separate layer for each catalog.
@@ -1453,7 +1523,7 @@ See js9onchange.html for an example of using this callback function.
 
 <hr><p>
 
-<h5>Last updated: November 14, 2014</h5>
+<h5>Last updated: September 25, 2015</h5>
 </div>
 
 </body>
