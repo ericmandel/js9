@@ -3833,7 +3833,8 @@ JS9.Menubar = function(width, height){
 		items["sep" + n++] = "------";
 		items.open = {name: "open local file ..."};
 		items.loadcors = {name: "open link via CORS ..."};
-		if( JS9.globalOpts.workDir          &&
+		if( JS9.globalOpts.loadProxy        &&
+		    JS9.globalOpts.workDir          &&
 		    (JS9.helper.type === "nodejs"   ||
 		     JS9.helper.type === "sock.io") ){
 		    items.loadproxy = {name: "open link via proxy ..."};
