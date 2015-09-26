@@ -2364,7 +2364,7 @@ JS9.Image.prototype.lookupAnalysis = function(name){
 
 // execute analysis task
 JS9.Image.prototype.runAnalysis = function(name, opts, func){
-    var i, a, m;
+    var i, a, f, m;
     var that = this;
     var obj = {};
     // sanity checks
@@ -2454,10 +2454,12 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		}
 		break;
 	    case "fits":
-	        JS9.Load(robj.stdout, {display: that.display});
-		break;
 	    case "png":
-	        JS9.Load(robj.stdout, {display: that.display});
+		f = robj.stdout.trim();
+		if( f.charAt(0) !== "/" ){
+		    f = JS9.InstallDir(f);
+		}
+	        JS9.Load(f, {display: that.display});
 		break;
 	    case "none":
 		break;
@@ -3902,7 +3904,7 @@ JS9.Menubar = function(width, height){
 			    $(did).data("dispid", udisp.id);
 			    break;
 			case "archives":
-			    JS9.DisplayHelp(JS9.globalOpts.archivesURL);
+			    JS9.DisplayHelp(JS9.InstallDir(JS9.globalOpts.archivesURL));
 			    break;
 			case "loadproxy":
 			    // load param url to run analysis task
@@ -10813,6 +10815,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 
 // load a link using back-end server as a proxy
 JS9.mkPublic("LoadProxy", function(url, opts){
+    var f;
     var obj = JS9.parsePublicArgs(arguments);
     if( !JS9.globalOpts.loadProxy ){
 	JS9.error("proxy load not available for this server");
@@ -10842,7 +10845,11 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 	    if( opts.fits2png === undefined ){
 		opts.fits2png = false;
 	    }
-	    JS9.Load(r.stdout, opts, {display: obj.display});
+	    f = r.stdout.trim();
+	    if( f.charAt(0) !== "/" ){
+		f = JS9.InstallDir(f);
+	    }
+	    JS9.Load(f, opts, {display: obj.display});
 	} else {
 	    JS9.error('internal error: no return from load proxy command');
 	}
