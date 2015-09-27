@@ -116,6 +116,12 @@ evfilter)
     if [ x"${JS9_WORKDIR}" = x ]; then
 	error "evfilter requires configuration of a temporary work directory"
     fi
+    mb=`du -sk . | awk '{printf("%d", ($1 + 500) / 1000)}'`
+    if [ ${JS9_WORKDIR_QUOTA:-0} -gt 0 ]; then
+      if [ ${mb:-0} -ge ${JS9_WORKDIR_QUOTA} ]; then
+       error "disk quota exceeded. Please close one or more displayed images."
+      fi
+    fi
     OTYPE="png"
     IFILE="$1"; shift
     EXT="$1"; shift
@@ -152,10 +158,16 @@ evfilter)
 loadproxy)
     # required args
     if [ "$#" -lt 1 ]; then
-	error "openproxy url"
+	error "loadproxy url"
     fi
     if [ x"${JS9_WORKDIR}" = x ]; then
-	error "openproxy requires configuration of a temporary work directory"
+	error "loadproxy requires configuration of a temporary work directory"
+    fi
+    mb=`du -sk . | awk '{printf("%d", ($1 + 500) / 1000)}'`
+    if [ ${JS9_WORKDIR_QUOTA:-0} -gt 0 ]; then
+      if [ ${mb:-0} -ge ${JS9_WORKDIR_QUOTA} ]; then
+       error "disk quota exceeded. Please close one or more displayed images."
+      fi
     fi
     URL=`echo $1 | sed 's/__ampersand__/\&/g'`
     OFILE=`basename $URL | sed 's/\?.*//g'`
@@ -203,6 +215,31 @@ loadproxy)
       fi
       # tell JS9 the new file name to load
       echo "${JS9_WORKDIR:-.}/$OFILE"
+    fi
+    exit 0
+    ;;
+
+removeproxy)
+    # required args
+    if [ "$#" -lt 1 ]; then
+	error "removeproxy file"
+    else
+      PROXY=`echo $1 | sed 's/__ampersand__/\&/g'`
+      FILE=`basename $PROXY`
+      DIR=`dirname $PROXY`
+    fi
+    if [ x"${JS9_WORKDIR}" = x ]; then
+	error "removeproxy requires configuration of a temporary work directory"
+    fi
+    if [ x"$DIR" != x"$JS9_WORKDIR" ]; then
+      error "can't remove proxy file from someone else's working directory"
+    fi
+    # remove files that match a template of the input file (without extension),
+    # but avoid removing files with a similar name
+    TMPL=`echo $FILE | rev | cut -f 2- -d '.' | rev`
+    rm -rf `ls ${TMPL}.* | egrep -v "${TMPL}\..*\..*"`
+    if [ $? != 0 ]; then
+      error "can't remove proxy file: $FILE"
     fi
     exit 0
     ;;

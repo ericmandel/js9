@@ -6,6 +6,13 @@
    "action" : "js9Xeq loadproxy $url",
    "hidden" : true,
    "rtype"  : "fits"
+  },
+  {"name"   : "removeproxy",
+   "title"  : "Remove a File from the Proxy Server",
+   "files"  : "*",
+   "action" : "js9Xeq removeproxy $proxyfile",
+   "hidden" : true,
+   "rtype"  : "fits"
   }
 ]
 

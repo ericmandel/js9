@@ -365,6 +365,10 @@ JS9.Image = function(file, params, func){
     this.rclick = 0;
     // no helper queried yet
     this.queried = false;
+    // is this a proxy image?
+    if( localOpts && localOpts.proxyFile ){
+	this.proxyFile = localOpts.proxyFile;
+    }
     // offsets into canvas to display
     this.ix = 0;
     this.iy = 0;
@@ -533,6 +537,13 @@ JS9.Image.prototype.closeImage = function(){
     var pname, pinst, popts;
     var ilen= JS9.images.length;
     var display = this.display;
+    var func = function(r){
+	if( r.stderr ){
+	    JS9.error(r.stderr);
+	} else if( r.stdout ){
+	    JS9.warning(r.stdout);
+	}
+    };
     // look for an image and remove it
     for(i=0; i<ilen; i++){
 	if( this === JS9.images[i] ){
@@ -576,6 +587,11 @@ JS9.Image.prototype.closeImage = function(){
 	    if( JS9.fits.cleanupFITSFile && 
 		tim.raw.hdu && tim.raw.hdu.fits ){
 		JS9.fits.cleanupFITSFile(tim.raw.hdu.fits, true);
+	    }
+	    // remove proxy image from server, if necessary
+	    if( tim.proxyFile ){
+		JS9.Send('removeproxy',
+			 {'cmd': 'js9Xeq removeproxy ' + tim.proxyFile}, func);
 	    }
 	    // good hints to the garbage collector
 	    tim.primary = null;
@@ -2459,7 +2475,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		if( f.charAt(0) !== "/" ){
 		    f = JS9.InstallDir(f);
 		}
-	        JS9.Load(f, {display: that.display});
+	        JS9.Load(f, {proxyFile: f}, {display: that.display});
 		break;
 	    case "none":
 		break;
@@ -10849,6 +10865,7 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 	    if( f.charAt(0) !== "/" ){
 		f = JS9.InstallDir(f);
 	    }
+	    opts.proxyFile = f;
 	    JS9.Load(f, opts, {display: obj.display});
 	} else {
 	    JS9.error('internal error: no return from load proxy command');

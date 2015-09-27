@@ -58,6 +58,7 @@ var globalOpts = {
     maxTextBuffer:    5*1024000,   // exec buffer: good for text
     textEncoding:     "ascii",     // encoding for returned stdout from exec
     workDir:          "",          // top-level working directory for exec
+    workDirQuota:     50,          // quota on working directory (Mb)
     rmWorkDir:        true,        // remove workdir on disconnect?
     remoteMsgs:       1 // 0 => none, 1 => samehost, 2 => all
 };
@@ -449,6 +450,7 @@ function execCmd(io, socket, obj, cbfunc) {
 	    myworkdir = socket.js9.workDir;
 	    // working directory relative to JS9 dir
 	    myenv.JS9_WORKDIR = myworkdir;
+	    myenv.JS9_WORKDIR_QUOTA = globalOpts.workDirQuota;
 	}
 	// construct wrapper
 	cmd = globalOpts.analysisWrappers + "/" + args[0];
@@ -630,7 +632,6 @@ function socketioHandler(socket) {
 	    a = analysis.pkgs[j][i];
 	    // add loadproxy if explicitly enabled
 	    if( a.name === "loadproxy" && !globalOpts.loadProxy ){
-console.log("skipping loadproxy");
 		continue;
 	    }
 	    m = a.xclass ? (a.xclass + ":" + a.name) : a.name;
