@@ -35,7 +35,7 @@
     }
   </style>
 </head>
-<body onload="init();">
+<body>
     <font size="+1"><center>
     <b>JS9 Debugging Page</b>
     </center></font>
@@ -83,8 +83,8 @@
     <li> <a href='javascript:JS9.Load("fits/bzero.fits", {fits2png: false, colormap: "grey"}, {display: "myJS9"});'>bzero.fits</a>
     <li> <a href='javascript:JS9.Load("m13/m13_gzip.fits", {fits2png: false, colormap: "red"}, {display: "myJS9"});'>M13 (gzip tile compress)</a>
     <li> <a href='javascript:JS9.Load("m13/m13_hcomp.fits", {fits2png: false, colormap: "green"}, {display: "myJS9"});'>M13 (hcomp tile compress)</a>
-    <li> <a href='javascript:JS9.Load("m13/m13_plio.fits", {fits2png: false, colormap: "blue"}, {display: "myJS9"});'>M13 (plio tile compress)</a>
     <li> <a href='javascript:JS9.Load("m13/m13_rice.fits", {fits2png: false, colormap: "grey"}, {display: "myJS9"});'>M13 (rice tile compress)</a>
+    <li> <a href='javascript:JS9.LoadProxy("http://hea-www.cfa.harvard.edu/~eric/coma.fits", {scale: "linear"}, {display: "myJS9"});'>coma.fits (proxy)</a>
     </ul>
     </td>
     </tr>
@@ -319,27 +319,30 @@
         if( ii === undefined ){
           ii = 0;
           heapIter = nn;
-        }
-        if( heapBlobs ){
-            JS9.RefreshImage(heapBlobs[ii%heapBlobs.length]);
+         }
+         if( heapBlobs ){
+           JS9.RefreshImage(heapBlobs[ii%heapBlobs.length]);
+         } else {
+           JS9.error("please choose an image to refresh");
+         }
+         if( ii++ < nn ){
+           buf = Astroem._malloc(heapAlloc);
+           if( !heapStart ){
+             heapStart = buf;
+           }
+           heapCur = buf;
+	   console.log("buf[%s]: %s", ii, buf);
+           Astroem.HEAPU8.set(new Uint8Array(heapBuf), buf);
+	   Astroem._free(buf);
+           setTimeout(function(){heapTest(nn, ii);}, heapTimeout);
         } else {
-            JS9.error("please choose an image to refresh");
-        }
-        if( ii++ < nn ){
-	    buf = Astroem._malloc(heapAlloc);
-            if( !heapStart ){
-                heapStart = buf;
-            }
-            heapCur = buf;
-	    console.log("buf[%s]: %s", ii, buf);
-            Astroem.HEAPU8.set(new Uint8Array(heapBuf), buf);
-	    Astroem._free(buf);
-            setTimeout(function(){heapTest(nn, ii);}, heapTimeout);
-	} else {
-            console.log("bytes added to heap in %s iterations: %s = %s - %s", 
-                         heapIter, heapCur - heapStart, heapCur, heapStart);
+          console.log("bytes added to heap in %s iterations: %s = %s - %s", 
+                       heapIter, heapCur - heapStart, heapCur, heapStart);
         };
-     }
+    }
+    $(document).ready(function(){
+      init();
+    });
     </script>
 <p>
 JS9 Demos:
