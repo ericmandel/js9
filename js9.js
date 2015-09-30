@@ -98,6 +98,7 @@ JS9.globalOpts = {
     proxyURL: "params/loadproxy.html",     // location of param html file
     loadProxy: false,           // do we allow proxy load requests to server?
     archivesURL: "help/archives.html",     // location of archives help file
+    postMessage: false,        // allow communication through iframes?
     debug: 0			// debug level
 };
 
@@ -4925,91 +4926,7 @@ JS9.Helper.prototype.connect = function(type){
 			JS9.log("JS9 helper: reconnect");
 		    }
 		});
-		that.socket.on("msg", function(msg, mcb){
-		    var obj, tdisp, res;
-		    var args = [];
-		    var cmd = msg.cmd;
-		    var id = msg.id;
-		    // turn off alerts
-		    JS9.globalOpts.alerts = false;
-		    // look for a public API call
-		    if( JS9.publics[cmd] ){
-			// check for non-array first argument
-			if( !$.isArray(msg.args) ){
-			    msg.args = [msg.args];
-			}
-			// deep copy of arg array
-			args = $.extend(true, [], msg.args);
-			// make up display object
-			if( id ){
-			    args.push({display: id});
-			}
-			// call public API
-			try{ res = JS9.publics[cmd].apply(null, args); }
-			catch(e){ res = sprintf("ERROR: %s", e.message); }
-			if( mcb ){
-			    mcb(res);
-			}
-			JS9.globalOpts.alerts = true;
-			return;
-		    }
-		    // skip blank lines and comments
-		    if( !cmd || (cmd === "#") ){
-			if( mcb ){
-			    mcb("");
-			}
-			JS9.globalOpts.alerts = true;
-			return;
-		    }
-		    // get command and display
-		    obj = JS9.lookupCommand(cmd);
-		    tdisp = JS9.lookupDisplay(id);
-		    if( obj && tdisp ){
-			obj.getDisplayInfo(tdisp);
-			if( msg.args ){
-			    // deep copy of arg array
-			    args = $.extend(true, [], msg.args);
-			} else if( msg.paramlist ){
-			    args = msg.paramlist.split(/ +/);
-			}
-			switch(obj.getWhich(args)){
-			case "get":
-			    // execute get call
-			    try{
-				res = obj.get(args) || "";
-			    }
-			    catch(e){
-				res = "ERROR: " + e.message;
-			    }
-			    break;
-			case "set":
-			    // execute set call
-			    try{
-				res = obj.set(args) || "OK";
-			    }
-			    catch(e){
-				res = "ERROR: " + e.message;
-			    }
-			    break;
-			default:
-			    res = sprintf("ERROR: unknown cmd type for '%s'", 
-					  cmd);
-			}
-		    } else {
-			if( !obj ){
-			    res = sprintf("ERROR: unknown cmd '%s'", cmd);
-			}
-			if( !tdisp ){
-			    res = sprintf("ERROR: unknown display (%s)", id);
-			}
-		    }
-		    // turn on alerts
-		    JS9.globalOpts.alerts = true;
-		    // message callback, if necessary
-		    if( mcb ){
-			mcb(res);
-		    }
-		});
+		that.socket.on("msg", JS9.msgHandler);
 	    },
 	    error:  function(jqXHR, textStatus, errorThrown){
 		if( JS9.DEBUG ){
@@ -8320,6 +8237,88 @@ JS9.waiting = function(mode){
     }
 };
 
+// msg coming from socket.io or postMessage
+JS9.msgHandler =  function(msg, cb){
+    var obj, tdisp, res;
+    var args = [];
+    var cmd = msg.cmd;
+    var id = msg.id;
+    // turn off alerts
+    if( cb ){
+	JS9.globalOpts.alerts = false;
+    }
+    // look for a public API call
+    if( JS9.publics[cmd] ){
+	// check for non-array first argument
+	if( !$.isArray(msg.args) ){
+	    msg.args = [msg.args];
+	}
+	// deep copy of arg array
+	args = $.extend(true, [], msg.args);
+	// make up display object
+	if( id ){
+	    args.push({display: id});
+	}
+	// call public API
+	try{ res = JS9.publics[cmd].apply(null, args); }
+	catch(e){ res = sprintf("ERROR: %s", e.message); }
+	if( cb ){
+	    JS9.globalOpts.alerts = true;
+	    cb(res);
+	}
+	return res;
+    }
+    // skip blank lines and comments
+    if( !cmd || (cmd === "#") ){
+	if( cb ){
+	    cb("");
+	}
+	if( cb ){
+	    JS9.globalOpts.alerts = true;
+	}
+	return;
+    }
+    // get command and display
+    obj = JS9.lookupCommand(cmd);
+    tdisp = JS9.lookupDisplay(id);
+    if( obj && tdisp ){
+	obj.getDisplayInfo(tdisp);
+	if( msg.args ){
+	    // deep copy of arg array
+	    args = $.extend(true, [], msg.args);
+	} else if( msg.paramlist ){
+	    args = msg.paramlist.split(/ +/);
+	}
+	switch(obj.getWhich(args)){
+	case "get":
+	    // execute get call
+	    try{ res = obj.get(args) || ""; }
+	    catch(e){ res = "ERROR: " + e.message; }
+	    break;
+	case "set":
+	    // execute set call
+	    try{ res = obj.set(args) || "OK"; }
+	    catch(e){ res = "ERROR: " + e.message; }
+	    break;
+	default:
+	    res = sprintf("ERROR: unknown cmd type for '%s'", cmd);
+	}
+    } else {
+	if( !obj ){
+	    res = sprintf("ERROR: unknown cmd '%s'", cmd);
+	}
+	if( !tdisp ){
+	    res = sprintf("ERROR: unknown display (%s)", id);
+	}
+    }
+    // turn on alerts, do message callback, if necessary
+    if( cb ){
+	JS9.globalOpts.alerts = true;
+	cb(res);
+    }
+    return res;
+};
+
 // create a light window
 // someday we might want other options ...
 JS9.lightWin = function(id, type, s, title, opts){
@@ -9852,6 +9851,31 @@ JS9.init = function(){
 	    catch(ignore){}
 	}
    }
+    // add handler for postMessage events, if necessary
+    if( JS9.globalOpts.postMessage ){
+	window.addEventListener("message", function(ev){
+	    var msg, res;
+	    var data = ev.data;
+	    // var origin = ev.origin;
+	    // var source = ev.source;
+	    if( typeof data === "string" ){
+		// json string passed (we hope)
+		try{ msg = JSON.parse(data); }
+		catch(e){ JS9.error("can't parse msg: "+data, e); }
+	    } else if( typeof data === "object" ){
+		// object was passed directly
+		msg = data;
+	    } else {
+		JS9.error("invalid msg from postMessage");
+	    }
+	    // call the msg handler
+	    res = JS9.msgHandler(msg);
+	    // send results back to parent (sender)
+	    if( res ){
+		parent.postMessage({cmd: msg.cmd, res: res}, "*");
+	    }
+	}, false);
+    }
     // set debug flag
     JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
     // initialize astronomy emscripten routines (wcslib, etc), if possible
