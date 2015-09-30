@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <script type="text/javascript" src="js9PostMessage.js"></script>
+  <style>
+      body {
+        background: lightgreen;
+      }
+      #left {
+        float: left;
+        width: 300px;
+      }
+      #center {
+        float: left;
+        width: 600px;
+      }
+      #right {
+        float: left;
+        width: 300px;
+      }
+      #load {
+        display:block;
+        margin:auto;
+      }
+      #overlay {
+        position: absolute;
+        top:   275px;
+        left:  0px;
+        width: 100%;
+        text-align: center;
+      }
+      #js9 {
+        border: 0px;
+        background: none transparent;
+        allowTransparency: true;
+      }
+  </style>
+</head>
+<body onload="init()">
+    <script>
+      var pm;
+      function init(){
+        pm = JS9PM.init("js9");
+      }
+    </script>
+    <center><font size="+1"><b>JS9 Demo: JS9 in an iframe</b></font></center>
+    <p>
+    If your Web site has been configured to allow postMessages to JS9,
+    you can load JS9 into an iframe and communicate via the JS9
+    PostMessage module. All of the Public API routines are available
+    (the gets require a callback).  You also can send a postMessage
+    directly by passing an object with a <b>cmd</b> property (the name
+    of the Public API call) and an <b>args</b> property (an array of
+    call arguments):
+    <pre>
+        ctx = window.document.getElementById("js9iframe").contentWindow; ctx.postMessage({cmd: "SetColormap", args: ["cool"]}, "*");
+    </pre>
+    <p>
+    The startling fact that JS9 light windows can be moved beyond the
+    JS9 display is a CSS trick: the large iframe utilizes a
+    transparent background, so you can move light windows anywhere
+    below the top of the image display (but you cannot interact with
+    the main page). Not sure how all this can be used but ...
+    <p>
+    <div id="lcr">
+
+    <div id="left">
+<b>The Solitary Reaper, William Wordsworth</b><p>
+<font size="-1">
+Behold her, single in the field,<br/>Yon solitary Highland Lass!<br/>Reaping and singing by herself;<br/>Stop here, or gently pass!<br/>Alone she cuts and binds the grain,<br/>And sings a melancholy strain;<br/>O listen! for the Vale profound<br/>Is overflowing with the sound.<br/><br/>No Nightingale did ever chaunt<br/>More welcome notes to weary bands<br/>Of travellers in some shady haunt,<br/>Among Arabian sands:<br/>A voice so thrilling ne'er was heard<br/>In spring-time from the Cuckoo-bird,<br/>Breaking the silence of the seas<br/>Among the farthest Hebrides.<br/><br/>Will no one tell me what she sings?—<br/>Perhaps the plaintive numbers flow<br/>For old, unhappy, far-off things,<br/>And battles long ago:<br/>Or is it some more humble lay,<br/>Familiar matter of to-day?<br/>Some natural sorrow, loss, or pain,<br/>That has been, and may be again?<br/><br/>Whate'er the theme, the Maiden sang<br/>As if her song could have no ending;<br/>I saw her singing at her work,<br/>And o'er the sickle bending;—<br/>I listened, motionless and still;<br/>And, as I mounted up the hill,<br/>The music in my heart I bore,<br/>Long after it was heard no more.<br/><br/>
+</font>
+    </div>
+
+    <div id="center">
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    <b>Load an image:</b>
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    <a href="javascript:JS9PM.send(pm, 'Load', './png/casa.png');">casa.png</a>
+    &nbsp;&nbsp;
+    <a href="javascript:JS9PM.send(pm, 'Load', './fits/snr.fits');">snr.fits</a>
+    &nbsp;&nbsp;
+    <a href="javascript:JS9PM.send(pm, 'LoadProxy', ['http://hea-www.cfa.harvard.edu/~eric/coma.fits', {scale: 'linear'}]);">coma.fits (via proxy)</a>
+    <br>
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    <b>Pick a colormap:</b>
+    &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    <a href="javascript:JS9PM.send(pm, 'SetColormap', 'cool');">cool</a>
+    &nbsp;&nbsp;
+    <a href="javascript:JS9PM.send(pm, 'SetColormap', 'heat');">heat</a>
+    &nbsp;&nbsp;
+    <a href="javascript:JS9PM.send(pm, 'SetColormap', 'grey');">grey</a>
+    </div>
+
+    <div id="right">
+<b>Dover Beach, Mathew Arnold</b><p>
+<font size="-1">
+The sea is calm tonight.<br/>The tide is full, the moon lies fair <br/>Upon the straits; on the French coast the light <br/>Gleams and is gone; the cliffs of England stand, <br/>Glimmering and vast, out in the tranquil bay. <br/>Come to the window, sweet is the night-air! <br/>Only, from the long line of spray <br/>Where the sea meets the moon-blanched land, <br/>Listen! you hear the grating roar <br/>Of pebbles which the waves draw back, and fling, <br/>At their return, up the high strand, <br/>Begin, and cease, and then again begin, <br/>With tremulous cadence slow, and bring <br/>The eternal note of sadness in. <br/><br/>Sophocles long ago <br/>Heard it on the &AElig;gean, and it brought <br/>Into his mind the turbid ebb and flow <br/>Of human misery; we <br/>Find also in the sound a thought, <br/>Hearing it by this distant northern sea. <br/><br/>The Sea of Faith <br/>Was once, too, at the full, and round earth&#8217;s shore <br/>Lay like the folds of a bright girdle furled. <br/>But now I only hear <br/>Its melancholy, long, withdrawing roar, <br/>Retreating, to the breath <br/>Of the night-wind, down the vast edges drear <br/>And naked shingles of the world. <br/><br/>Ah, love, let us be true <br/>To one another! for the world, which seems <br/>To lie before us like a land of dreams, <br/>So various, so beautiful, so new, <br/>Hath really neither joy, nor love, nor light, <br/>Nor certitude, nor peace, nor help for pain; <br/>And we are here as on a darkling plain <br/>Swept with confused alarms of struggle and flight, <br/>Where ignorant armies clash by night.<br/>
+</font>
+    </div>
+    </div>
+    <div id="overlay">
+    <iframe id="js9" src="js9_center_top.html" height="1024px" width="100%"></iframe>
+    </div>
+</body>
+</html>
