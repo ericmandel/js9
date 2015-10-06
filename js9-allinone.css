@@ -1,0 +1,896 @@
+/* JS9 allinone: v1.5, Tue Oct  6 10:15:12 EDT 2015 */
+/*!
+ * jQuery contextMenu - Plugin for simple contextMenu handling
+ *
+ * Version: git-master
+ *
+ * Authors: Rodney Rehm, Addy Osmani (patches for FF)
+ * Web: http://medialize.github.com/jQuery-contextMenu/
+ *
+ * Licensed under
+ *   MIT License http://www.opensource.org/licenses/mit-license
+ *   GPL v3 http://opensource.org/licenses/GPL-3.0
+ *
+ */
+
+.context-menu-list {
+    margin:0; 
+    padding:0;
+    
+    min-width: 120px;
+    max-width: 250px;
+    display: inline-block;
+    position: absolute;
+    list-style-type: none;
+    
+    border: 1px solid #DDD;
+    background: #EEE;
+    
+    -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+       -moz-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        -ms-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+         -o-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+}
+
+.context-menu-item {
+    padding: 2px 2px 2px 24px;
+    background-color: #EEE;
+    position: relative;
+    -webkit-user-select: none;
+       -moz-user-select: -moz-none;
+        -ms-user-select: none;
+            user-select: none;
+}
+
+.context-menu-separator {
+    padding-bottom:0;
+    border-bottom: 1px solid #DDD;
+}
+
+.context-menu-item > label > input,
+.context-menu-item > label > textarea {
+    -webkit-user-select: text;
+       -moz-user-select: text;
+        -ms-user-select: text;
+            user-select: text;
+}
+
+.context-menu-item.hover {
+    cursor: pointer;
+    background-color: #39F;
+}
+
+.context-menu-item.disabled {
+    color: #666;
+}
+
+.context-menu-input.hover,
+.context-menu-item.disabled.hover {
+    cursor: default;
+    background-color: #EEE;
+}
+
+.context-menu-submenu:after {
+    content: ">";
+    color: #666;
+    position: absolute;
+    top: 0;
+    right: 3px;
+    z-index: 1;
+}
+
+/* icons
+    #protip:
+    In case you want to use sprites for icons (which I would suggest you do) have a look at
+    http://css-tricks.com/13224-pseudo-spriting/ to get an idea of how to implement 
+    .context-menu-item.icon:before {}
+ */
+.context-menu-item.icon { min-height: 18px; background-repeat: no-repeat; background-position: 4px 2px; }
+.context-menu-item.icon-edit { background-image: url(images/page_white_edit.png); }
+.context-menu-item.icon-cut { background-image: url(images/cut.png); }
+.context-menu-item.icon-copy { background-image: url(images/page_white_copy.png); }
+.context-menu-item.icon-paste { background-image: url(images/page_white_paste.png); }
+.context-menu-item.icon-delete { background-image: url(images/page_white_delete.png); }
+.context-menu-item.icon-add { background-image: url(images/page_white_add.png); }
+.context-menu-item.icon-quit { background-image: url(images/door.png); }
+
+/* vertically align inside labels */
+.context-menu-input > label > * { vertical-align: top; }
+
+/* position checkboxes and radios as icons */
+.context-menu-input > label > input[type="checkbox"],
+.context-menu-input > label > input[type="radio"] {
+    margin-left: -17px;
+}
+.context-menu-input > label > span {
+    margin-left: 5px;
+}
+
+.context-menu-input > label,
+.context-menu-input > label > input[type="text"],
+.context-menu-input > label > textarea,
+.context-menu-input > label > select {
+    display: block;
+    width: 100%;
+    
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+        -ms-box-sizing: border-box;
+         -o-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+.context-menu-input > label > textarea {
+    height: 100px;
+}
+.context-menu-item > .context-menu-list {
+    display: none;
+    /* re-positioned by js */
+    right: -5px;
+    top: 5px;
+}
+
+.context-menu-item.hover > .context-menu-list {
+    display: block;
+}
+
+.context-menu-accesskey {
+    text-decoration: underline;
+}
+.dhtmlwindow{
+position: absolute;
+border: 2px solid black;
+visibility: hidden;
+background-color: white;
+}
+
+.drag-handle{ /*CSS for Drag Handle*/
+padding: 1px;
+text-indent: 3px;
+font: bold 14px Arial;
+background-color: #CA0000;
+color: white;
+cursor: move;
+overflow: hidden;
+width: auto;
+filter:progid:DXImageTransform.Microsoft.alpha(opacity=100);
+-moz-opacity: 1;
+opacity: 1;
+}
+
+.drag-handle .drag-controls{ /*CSS for controls (min, close etc) within Drag Handle*/
+position: absolute;
+right: 1px;
+top: 2px;
+cursor: hand;
+cursor: pointer;
+}
+
+* html .drag-handle{ /*IE6 and below CSS hack. Width must be set to 100% in order for opaque title bar to render*/
+width: 100%;
+}
+
+
+.drag-contentarea{ /*CSS for Content Display Area div*/
+border-top: 1px solid brown;
+background-color: white;
+color: black;
+height: 150px;
+padding: 2px;
+overflow: auto;
+}
+
+.drag-statusarea{ /*CSS for Status Bar div (includes resizearea)*/
+border-top: 1px solid gray;
+background-color: #F8F8F8;
+height: 13px; /*height of resize image*/
+}
+
+
+.drag-resizearea{ /*CSS for Resize Area itself*/
+float: right;
+width: 13px; /*width of resize image*/
+height: 13px; /*height of resize image*/
+cursor: nw-resize;
+font-size: 0;
+}/* ######### CSS for Shade Tabs. Remove if not using ######### */
+
+.shadetabs{
+padding: 3px 0;
+margin-left: 0;
+margin-top: 1px;
+margin-bottom: 0;
+font: bold 12px Verdana;
+list-style-type: none;
+text-align: left; /*set to left, center, or right to align the menu as desired*/
+}
+
+.shadetabs li{
+display: inline;
+margin: 0;
+}
+
+.shadetabs li a{
+text-decoration: none;
+position: relative;
+z-index: 1;
+padding: 3px 7px;
+margin-right: 3px;
+border: 1px solid #778;
+color: #2d2b2b;
+background: white url(shade.gif) top left repeat-x;
+}
+
+.shadetabs li a:visited{
+color: #2d2b2b;
+}
+
+.shadetabs li a:hover{
+text-decoration: underline;
+color: #2d2b2b;
+}
+
+.shadetabs li a.selected{ /*selected main tab style */
+position: relative;
+top: 1px;
+}
+
+.shadetabs li a.selected{ /*selected main tab style */
+background-image: url(shadeactive.gif);
+border-bottom-color: white;
+}
+
+.shadetabs li a.selected:hover{ /*selected main tab style */
+text-decoration: none;
+}
+
+.tabcontent{
+display:none;
+}
+
+@media print {
+.tabcontent {
+display:block !important;
+}
+}
+
+/* ######### CSS for Inverted Modern Bricks II Tabs. Remove if not using ######### */
+
+.modernbricksmenu2{
+padding: 0;
+width: 362px;
+border-top: 5px solid #D25A0B; /*Brown color theme*/ 
+background: transparent;
+voice-family: "\"}\"";
+voice-family: inherit;
+}
+
+.modernbricksmenu2 ul{
+margin:0;
+margin-left: 10px; /*margin between first menu item and left browser edge*/
+padding: 0;
+list-style: none;
+}
+
+.modernbricksmenu2 li{
+display: inline;
+margin: 0 2px 0 0;
+padding: 0;
+text-transform:uppercase;
+}
+
+.modernbricksmenu2 a{
+float: left;
+display: block;
+font: bold 11px Arial;
+color: white;
+text-decoration: none;
+margin: 0 1px 0 0; /*Margin between each menu item*/
+padding: 5px 10px;
+background-color: black; /*Brown color theme*/ 
+border-top: 1px solid white;
+}
+
+.modernbricksmenu2 a:hover{
+background-color: #D25A0B; /*Brown color theme*/ 
+color: white;
+}
+
+.modernbricksmenu2 a.selected{ /*currently selected tab*/
+background-color: #D25A0B; /*Brown color theme*/ 
+color: white;
+border-color: #D25A0B; /*Brown color theme*/ 
+}
+
+.tabcontent{
+display:none;
+}
+
+@media print {
+.tabcontent {
+display:block !important;
+}
+}
+
+/* ######### CSS for Indented CSS Tabs. Remove if not using ######### */
+
+
+.indentmenu{
+font: bold 13px Arial;
+width: 100%; /*leave this value as is in most cases*/
+}
+
+.indentmenu ul{
+margin: 0;
+padding: 0;
+float: left;
+/* width: 80%; width of menu*/
+border-top: 1px solid navy; /*navy border*/
+background: black url(indentbg.gif) center center repeat-x;
+}
+
+.indentmenu ul li{
+display: inline;
+}
+
+.indentmenu ul li a{
+float: left;
+color: white; /*text color*/
+padding: 5px 11px;
+text-decoration: none;
+border-right: 1px solid navy; /*navy divider between menu items*/
+}
+
+.indentmenu ul li a:visited{
+color: white;
+}
+
+.indentmenu ul li a.selected{
+color: white !important;
+padding-top: 6px; /*shift text down 1px*/
+padding-bottom: 4px;
+background: black url(indentbg2.gif) center center repeat-x;
+}
+
+
+.tabcontentstyle{ /*style of tab content oontainer*/
+border: 1px solid gray;
+width: 450px;
+margin-bottom: 1em;
+padding: 10px;
+}
+
+.tabcontent{
+display:none;
+}
+
+@media print {
+.tabcontent {
+display:block !important;
+}
+}/*
+ *
+ * JS9 CSS specifications
+ *
+ */
+
+/* high-level divs used by Web designers */
+div.JS9
+{
+    /* relative pos top/left for container, Flanagan's JavaScript, p 357 */
+    position: relative;
+    top:  0px;
+    left: 0px;
+    display: block;
+    padding: 0px;
+}
+
+/* plugin divs */
+div.JS9Panner, div.JS9Magnifier, div.JS9Menubar, div.JS9Console, div.JS9Info
+{
+    /* relative pos top/left for container, Flanagan's JavaScript, p 357 */
+    position: relative;
+    top:  0px;
+    left: 0px;
+    display: block;
+    padding: 0px;
+}
+
+/* containers used internally to place content inside high-level divs */
+div.JS9Container
+{
+    /* absolute pos top/left for positioning, Flanagan's JavaScript, p 357 */
+    position: absolute;
+    top:  0px;
+    left: 0px;
+    outline: none;
+    background-color: transparent;
+}
+
+/* containers used internally to wrap around div plugin content */
+div.JS9PluginContainer
+{
+    /* background: #E9E9E9; */
+    background: transparent;
+    position: relative;
+    display: inline-block;
+    outline: none;
+}
+
+/* this is the plugin div itself */
+div.JS9Plugin
+{
+    background: #E9E9E9;
+}
+
+/* commands and buttons on top of plugins */
+div.JS9PluginToolbar-div
+{
+    /* absolute positioning places the toolbar on the dhtml title bar */
+    position:absolute;
+    display:inline-block;
+    top: 0px;
+    overflow: auto;
+    cursor: default;
+    text-align: center;
+    left: 10px;
+}
+
+div.JS9PluginToolbar-light
+{
+    /* absolute positioning places the toolbar on the dhtml title bar */
+    position:absolute;
+    display:inline-block;
+    top: 0px;
+    right: 40px;
+    overflow: auto;
+    text-align: center;
+}
+
+div.JS9MenubarContainer
+{
+    /* absolute pos top/left for positioning, Flanagan's JavaScript, p 357 */
+    /* why is this relative?? absolute positions the menu under the canvas!! */
+    position: relative;
+    /* sigh ... why does this make the menubar too short?? */
+    display: block;
+    top: 0px;
+    left: 0px;
+    /* height: 25px; */
+    background: lightgrey;
+    text-align: center;
+    padding: 2px 10px;
+}
+
+div.JS9ConsoleContainer
+{
+    /* absolute pos top/left for positioning, Flanagan's JavaScript, p 357 */
+    /* why is this relative?? absolute positions make it tiny!! */
+    position: relative;
+    display: block;
+    top: 0px;
+    left: 0px;
+    background: #E9E9E9;
+    text-align: left;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    overflow-x: hidden;
+}
+
+/* canvas elements */
+canvas.JS9Image, canvas.JS9Panner, canvas.JS9Magnifier, canvas.JS9Info
+{
+    /* absolute positioning of canvas is required to overlay/align with 
+       graphics canvas (which is positioned relative) */
+    position:absolute;
+    top:  0px;
+    left: 0px;
+    background: #E9E9E9;
+}
+
+/* canvas element for transparent layers */
+canvas.JS9Layer
+{
+    /* absolute positioning of canvas is required to overlay/align with 
+       graphics canvas (which is positioned relative) */
+    position:absolute;
+    top:  0px;
+    left: 0px;
+    background-color: transparent;
+}
+
+/* printing support */
+@media print {
+  body * {
+    visibility:hidden;
+  }
+  div.PrintJS9, div.PrintJS9 * {
+    visibility:visible;
+  }
+  div.PrintJS9 {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    margin: 0;
+  }
+}
+
+/* message display */
+div.JS9Message
+{
+    padding-top: 10px;
+    padding-left: 10px;
+    font-family: Helvetica, sans-serif;
+    font-size: 10pt;
+    font-weight: 300;
+}
+
+.JS9Button
+{
+    font: normal 12px Arial;
+    padding: 2px;
+    margin: 2px;
+}
+
+/* ipad button font is too large */
+@media all and (device-width: 768px) and (device-height: 1024px) {
+.JS9Button
+{
+    font: normal 10px Arial;
+    padding: 2px;
+    margin: 2px;
+}
+}
+
+/* the commands inside a console */
+.JS9CmdForm
+{
+    border: 0px;
+    padding: 1px;
+    font-size: 12px;
+    font-family: monospace;
+    width:100%;
+}
+
+.JS9CmdTable
+{
+    vertical-align:top;
+    width:100%;
+}
+
+.JS9CmdTd 
+{
+    width:100%;
+}
+
+.JS9CmdIn, .JS9CmdOut
+{
+    border: 0px;
+    padding-top: 0px;
+    padding-left: 4px;
+    margin-left: 2px;
+    font-size: 12px;
+    font-family: monospace;
+    width:97%;
+    background: #E9E9E9;
+}
+
+/* get rid of blue border for input in Safari, Chrome */
+input:focus.JS9CmdIn{
+    outline: none;
+}
+
+.JS9CmdError
+{
+    border: 0px;
+    padding-top: 2px;
+    padding-left: 4px;
+    margin-left: 2px;
+    font-size: 12px;
+    font-family: monospace;
+    width:100%;
+    color: red;
+}
+
+.JS9CmdWarning
+{
+    border: 0px;
+    padding-top: 2px;
+    padding-left: 4px;
+    margin-left: 2px;
+    font-size: 12px;
+    font-family: monospace;
+    width:100%;
+    color: yellow;
+}
+
+.JS9CmdInfo
+{
+    border: 0px;
+    padding-top: 2px;
+    padding-left: 4px;
+    margin-left: 4px;
+    font-size: 12px;
+    font-family: monospace;
+    width:100%;
+    color: #3333FF;
+}
+
+.JS9CmdPrompt
+{ 
+    color: #777;
+    font-size: 12px;
+    font-family: monospace;
+    white-space:nowrap;
+}
+
+.JS9AnalysisText
+{
+    padding-left: 10px;
+}
+
+.JS9Plot
+{
+    width:  800px;
+    height: 400px;
+    margin: 10px;
+}
+
+/* context menu overrides */
+.context-menu-list 
+{
+    border: 1px solid black;
+}
+
+.context-menu-item.icon-sun
+{
+   background-image: url(images/sun.png);
+}
+
+.context-menu-separator
+{
+    border-bottom: 1px solid #AAA;
+}
+
+.context-menu-input > label > input[type="text"]
+{
+   width: 85%;
+}
+
+/* dhtml window overrides */
+.dhtmlwindow
+{
+    border: 1px solid grey;
+    padding: 0px;
+}
+
+.drag-handle
+{
+    /* height: 25px; */
+    height: 30px;
+    background: lightgrey;
+    text-align: left;
+    color: black;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.drag-contentarea
+{
+    background: #E9E9E9;
+    border-width: 0px;
+    padding: 0px;
+}
+
+.indentmenu{
+    font: normal 12px Arial;
+}
+
+.indentmenu ul{
+    border-top: 0px;
+    background: black url(./images/indentbg_grey.png) center center repeat-x;
+}
+
+.indentmenu ul li a{
+    border-right: 3px solid #E9E9E9;
+}
+
+.indentmenu ul li a.selected{
+    background: black url(./images/indentbg2_grey.png) center center repeat-x;
+}
+
+/* 3d surface plot bug */
+canvas.surfacePlotCanvas {
+    position: absolute;
+}
+
+/* js9 info */
+.js9InfoTable
+{
+    border: 0px;
+    margin: 0px;
+    padding: 8px;
+    font-size: 12px;
+    font-family: monospace;
+    border-spacing: 4px;
+}
+
+.js9InfoTable input,  .js9InfoTable textarea{
+    font-size: 12px;
+    font-family: monospace;
+    overflow-x: hidden;
+}
+
+/* js9Analysis forms */
+.js9AnalysisForm
+{
+    border: solid grey 1px;
+    margin: 8px;
+    padding: 8px;
+    background: #E9E9E9;
+}
+
+.JS9Archive-form {
+    background: #E9E9E9;
+    padding: 8px;
+}
+
+.linegroup
+{
+    float: left;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 24px;
+    padding: 0;
+    margin: 0 0 1.25em 0;
+}
+
+.column_A
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 300px;
+}
+
+.column_B
+{
+    position: absolute;
+    top: 0;
+    left: 300px;
+    width: 100px;
+}
+
+.text_B
+{
+    width: 100px;
+}
+
+.column_C
+{
+    position: absolute;
+    top: 0;
+    left: 450px;
+    width: 340px;
+}
+
+.column_R1
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 140px;
+}
+
+.column_R2
+{
+    position: absolute;
+    top: 0;
+    left: 150px;
+    width: 100px;
+}
+
+.column_R2l
+{
+    position: absolute;
+    top: 0;
+    left: 150px;
+    width: 250px;
+}
+
+.column_R2L
+{
+    position: absolute;
+    top: 0;
+    left: 150px;
+    width: 400px;
+}
+
+.column_R3
+{
+    position: absolute;
+    top: 0;
+    left: 300px;
+    width: 100px;
+}
+
+.column_R3l
+{
+    position: absolute;
+    top: 0;
+    left: 300px;
+    width: 150px;
+}
+
+.column_R3L
+{
+    position: absolute;
+    top: 0;
+    left: 300px;
+    width: 300px;
+}
+
+.column_R4
+{
+    position: absolute;
+    top: 0;
+    left: 450px;
+    width: 100px;
+}
+
+.column_R5
+{
+    position: absolute;
+    top: 0;
+    left: 600px;
+    width: 200px;
+}
+
+.text_R
+{
+    width: 100%;
+}
+
+.nodisplay
+{
+  display: none;
+}
+
+.control
+{
+    border: transparent 1px;
+    padding: 2px;
+} 
+
+.js9HelpText
+{
+    border: solid grey 1px;
+    margin: 8px;
+    padding: 8px;
+    background: #E9E9E9;
+}
+
+.hline0
+{
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid black;
+    margin: 0;
+    padding: 0;
+}
+
+/* to make wait cursor override other element cursors (e.g. fabric.js canvas) */
+body.waiting, body.waiting *
+{ 
+    cursor: wait !important;
+}
