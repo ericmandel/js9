@@ -3852,14 +3852,14 @@ JS9.Menubar = function(width, height){
 		}
 		items["sep" + n++] = "------";
 		items.open = {name: "open local file ..."};
-		items.loadcors = {name: "open link via CORS ..."};
 		if( JS9.globalOpts.loadProxy        &&
 		    JS9.globalOpts.workDir          &&
 		    (JS9.helper.type === "nodejs"   ||
 		     JS9.helper.type === "sock.io") ){
+		    items.archives = {name: " accessing data archives ..."};
 		    items.loadproxy = {name: "open link via proxy ..."};
-		    items.archives = {name: "access data archives ..."};
 		}
+		items.loadcors = {name: "open link via CORS ..."};
 		items.print = {name: "print ..."};
 		items.header = {name: "display FITS header"};
 		items.pageid = {name: "display pageid"};
