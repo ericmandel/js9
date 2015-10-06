@@ -22,7 +22,7 @@
       }
       #myTabsContainer {
         background: #E9E9E9;
-        padding-top: 10px;
+        padding-top: 5px;
         padding-left: 10px;
         padding-right: 10px;
       }
@@ -50,7 +50,7 @@
         font: normal 14px Arial;
         height: 25px;
       }
-      #intro, #docs, #demos, #status, #download {
+      #intro, #docs, #demos, #status, #get, #thanks {
         padding: 10px;
       }
       .mytabcontent {
@@ -162,7 +162,8 @@
       }
     }
     </script>
-    <h2><center>JS9: image display right in your browser</center></h2>
+    <h2><center>JS9: astronomical image display right in your
+    browser</center></h2>
     <table cellspacing="30">
     <tr valign="top">
     <td>
@@ -181,13 +182,14 @@
     <div id="myTabsContainer">
     <div id="js9tabs" class="indentmenu">
     <ul>
-      <li><a href="#" rel="intro" class="selected">Introduction</a></li>
+      <li><a href="#" rel="intro" class="selected">Intro</a></li>
       <li><a href="#" rel="plugins">Plugins</a></li>
       <li><a href="#" rel="analysis">Analysis</a></li>
       <li><a href="#" rel="demos">Demos</a></li>
       <li><a href="#" rel="docs">Help</a></li>
       <li><a href="#" rel="status">Status</a></li>
-      <li><a href="#" rel="download">Download</a></li>
+      <li><a href="#" rel="get">Get</a></li>
+      <li><a href="#" rel="thanks">Thanks</a></li>
     </ul>
     <br style="clear: left" />
     </div>
@@ -195,11 +197,13 @@
 
     <div id="myTabsDiv">
     <div id="intro" class="tabcontent mytabcontent">
-      JS9 is our Web-based implementation of DS9:
+      JS9 brings our Desktop
+      <a href="http://ds9.si.edu" target="_blank">DS9</a> 
+      image display into your browser:
       <ul>
-	<li> display URL-based FITS images and tables
+	<li> display FITS images and tables in a Web page
 	<li> drag and drop FITS images and tables
-	<li> access FITS files from data archives
+	<li> retrieve FITS files from data archives
 	<li> change the colormap and scale
 	<li> mouse move displays pixel values, WCS info
 	<li> one finger displays pixel values, WCS info
@@ -243,7 +247,7 @@
 	  desired location. (Use an annulus for radial profiles.)
 	  <li> Resize or rotate the region by clicking to
 	       select it, and then moving one of the handles.
-	  <li> Temporarily group regions by pressing the meta key
+	  <li> Group regions by pressing the meta key
 	    and using mouse selection. You then can
 	    move/resize/rotate them together.
 	  <li> Choose an analysis to run on the back-end server:
@@ -267,8 +271,9 @@
     <div id="plugins" class="tabcontent mytabcontent">
     <div class="pluginContainer">
     <p>
-    JS9 plugins allow you to perform browser-based analysis: create a
-    region and move it around ...
+    For browser-based analysis, create a region and move it around ...
+    <br>
+    (See the <a href="js9/help/localtasks.html" target="_blank">Local Analysis Tasks</a> help page for info about plugins.)
     <p>
     <table>
     <tr><td><div class="ImExamRegionStats plugin" data-js9id="JS9"></div></td>
@@ -276,9 +281,6 @@
     <tr><td><div class="ImExamXProj plugin" data-js9id="JS9"></div></td>
         <td><div class="ImExamYProj plugin" data-js9id="JS9"></div></td></tr>
     </table>
-    <p>
-    See the Local Analysis Tasks help page for info about plugins.
-    <p>
     </div>
     </div>
     <div id="docs" class="tabcontent mytabcontent">
@@ -301,26 +303,25 @@
     </div>
     <div id="demos" class="tabcontent mytabcontent">
       <ul>
-	<li><a href='js9/js9basics.html' target='_blank'>JS9 Demo: the basics</a>
-	<li><a href='js9/js9bespoke.html' target='_blank'>JS9 Demo: web page control of JS9</a>
-	<li><a href='js9/js9plugins.html' target='_blank'>JS9 Demo: adding plugins to JS9</a> 
-	<li><a href='js9/js9imexam.html' target='_blank'>JS9 Demo: the imexam plugin for JS9</a> 
-	<li><a href='js9/js9cat.html' target='_blank'>JS9 Demo: overlaying catalogs</a>
-	<li><a href='js9/js9panzoom.html' target='_blank'>JS9 Demo: pan and zoom</a> 
-	<li><a href='js9/js9rgb.html' target='_blank'>JS9 Demo: RGB composite images</a> 
-	<li><a href='js9/js9multi.html' target='_blank'>JS9 Demo: independent instances of JS9</a> 
-	<li><a href='js9/js9analysis.html' target='_blank'>JS9 Demo: server-side data analysis</a> 
-	<li><a href='js9/js9onchange.html' target='_blank'>JS9 Demo: running tasks when a region changes</a>
-	<li><a href='js9/js9create.html' target='_blank'>JS9 Demo: creating a JS9 instance dynamically</a> 
-	<li><a href='js9/js9preload.html' target='_blank'>JS9 Demo: preloading images into JS9</a>
-	<li><a href='js9/js9bitpix.html' target='_blank'>JS9 Demo: displaying different FITS datatypes</a> 
-	<li><a href='js9/js9pngvsfits.html' target='_blank'>JS9 Demo: PNG representation files vs FITS files</a>
-	</ul>
+      <li><a href='js9/js9basics.html' target='_blank'>JS9 Demo: the basics</a>
+      <li><a href='js9/js9bespoke.html' target='_blank'>JS9 Demo: web page control of JS9</a>
+      <li><a href='js9/js9plugins.html' target='_blank'>JS9 Demo: adding plugins to JS9</a>
+      <li><a href='js9/js9imexam.html' target='_blank'>JS9 Demo: the imexam plugin for JS9</a>
+      <li><a href='js9/js9cat.html' target='_blank'>JS9 Demo: overlaying catalogs</a>
+      <li><a href='js9/js9panzoom.html' target='_blank'>JS9 Demo: pan and zoom</a>
+      <li><a href='js9/js9rgb.html' target='_blank'>JS9 Demo: RGB composite images</a>
+      <li><a href='js9/js9multi.html' target='_blank'>JS9 Demo: independent instances of JS9</a>
+      <li><a href='js9/js9analysis.html' target='_blank'>JS9 Demo: server-side data analysis</a>
+      <li><a href='js9/js9onchange.html' target='_blank'>JS9 Demo: running tasks when a region changes</a>
+      <li><a href='js9/js9create.html' target='_blank'>JS9 Demo: creating a JS9 instance dynamically</a>
+      <li><a href='js9/js9preload.html' target='_blank'>JS9 Demo: preloading images into JS9</a>
+      <li><a href='js9/js9bitpix.html' target='_blank'>JS9 Demo: displaying different FITS datatypes</a>
+      <li><a href='js9/js9pngvsfits.html' target='_blank'>JS9 Demo: PNG representation files vs FITS files</a>
+      </ul>
     </div>
     <div id="status" class="tabcontent mytabcontent">
-      <b>Release 1.5 (7/9/15)</b> adds support for importing
-      DS9/Funtools regions, and for running the back-end helper using
-      https.
+      <b>Release 1.5 (7/9/15)</b> adds support for importing DS9/Funtools
+      regions, and for running the back-end helper using https.
       <p>
       <b>Release 1.4 (5/3/15)</b> provides bug fixes for the binning
       plugin, adds a user preference plugin, and supports export to
@@ -337,34 +338,22 @@
       JS9 works on Web browsers that support the HTML5 canvas element, including
       all recent versions of FireFox, Chrome, Safari, and IE.
       <p>
-      JS9 is powered by the following technologies, to whom grateful
-      acknowledgment is made:
-      <ul>
-      <li> HTML5 for image display and most everything
-      <li> emscripten C-to-JavaScript ( http://emscripten.org)
-      <li> dynamic drive light windows (http://www.dynamicdrive.com)
-      <li> fabric.js 2D graphics (http://fabricjs.com/)
-      <li> flot plotting (http://www.flotcharts.org/)
-      <li> jquery programming ease (http://jquery.com/)
-      <li> jquery.contextMenu (http://medialize.github.io/jQuery-contextMenu/)
-      </ul>
-      <p>
       JS9 is distributed under the terms of The MIT License.
       <p>
       Contact: <a href="mailto:saord@cfa.harvard.edu?subject=JS9 inquiry">Eric Mandel</a>, Harvard-Smithsonian Center for Astrophysics
     </div>
-    <div id="download" class="tabcontent mytabcontent">
+    <div id="get" class="tabcontent mytabcontent">
       The current <b>JS9 source</b> tar file is available below.
       This will allow you to display FITS images (drag-and-drop
       and URL-based access) with all essential functionality, including
       browser-based plugins.
       <p>
-      Also available is the <b>pyjs9 Python interface</b>.  This
-      module supports the JS9 Public API and the short-cut command
-      interface by communicating with the back-end Node helper.
+      The <b>pyjs9 Python interface</b> supports the JS9 Public API
+      and a short-cut command interface, communicating with JS9 through
+      the back-end Node helper.
       <p>
-      If you want the JS9 demo pages to work at your site, 
-      download the (100Mb) <b>data</b> tar file.
+      To run the demo pages at your site, download the
+      <b>data</b> tar file.
       <p>
       To configure a back-end Node helper (for server-side analysis and
       external control), install the
@@ -386,13 +375,26 @@
       <li><a href="https://github.com/ericmandel/funtools" target="_blank">funtools</a>
       </ul>
       <p>
+    </div>
+    <div id="thanks" class="tabcontent mytabcontent">
+      JS9 is powered by the following technologies, to whom grateful
+      acknowledgment is made:
+      <ul>
+      <li> HTML5 for image display and most everything
+      <li> emscripten C-to-JavaScript ( http://emscripten.org)
+      <li> dynamic drive light windows (http://www.dynamicdrive.com)
+      <li> fabric.js 2D graphics (http://fabricjs.com/)
+      <li> flot plotting (http://www.flotcharts.org/)
+      <li> jquery programming ease (http://jquery.com/)
+      <li> jquery.contextMenu (http://medialize.github.io/jQuery-contextMenu/)
+      </ul>
+      <p>
       JS9 development at the
       <a href="http://www.cfa.harvard.edu" target="_blank">Harvard-Smithsonian Center for Astrophysics</a> 
       is supported by 
       <a href="http://www.si.edu" target="_blank">Smithsonian Institution</a>
       and the
       <a href="http://chandra.harvard.edu" target="_blank">Chandra X-ray Science Center</a>.
-      <p>
     </div>
     </div>
     </td>
