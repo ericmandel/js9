@@ -14,6 +14,7 @@ DDISTNAME = ${PACKAGE}-data
 DISTDIR	= ../export
 FTPDIR	= ../ftp
 EM	= astroem
+ALLIN1	= js9-allinone
 
 #----------------------------------------------------------------
 # Things you can change to personalize the Makefile for your own
@@ -124,6 +125,7 @@ BEDIRS =	node_modules analysis-plugins analysis-wrappers
 WEBFILES =	js9.js js9.min.js \
 		js9support.js js9support.min.js js9support.css js9plugins.js \
 		js9support.txt js9.css fitsy.js fitsy.min.js \
+		$(ALLIN1).js $(ALLIN1).css \
 		js9Msg.js js9Helper.js js9Prefs-default.json \
 		js9Prefs.json favicon.ico index.html
 
@@ -424,11 +426,23 @@ install-js9tests:	FORCE
 install-smartx:	FORCE
 		@(echo "installing smartx"; cd smartx; make install);
 
-gitprefs:	FORCE
-		(git checkout -- js9Prefs-sao.json; \
-		 git checkout -- js9Prefs.json;)
+allinone:	FORCE
+		@(echo "/* JS9 allinone: v$(VERSION), `date` */" > \
+		  $(ALLIN1).css; \
+		  cat js9support.css js9.css >> \
+		  $(ALLIN1).css; \
+		  echo "/* JS9 allinone: v$(VERSION), `date` */" > \
+		  $(ALLIN1).js; \
+		  cat js9support.min.js js9.min.js js9plugins.js >> \
+		  $(ALLIN1).js)
 
-release:	clean gitprefs
+gitprefs:	FORCE
+		@(if [ -d .git ]; then \
+                     git checkout -- js9Prefs-sao.json; \
+		     git checkout -- js9Prefs.json; \
+		  fi;)
+
+release:	clean gitprefs allinone
 		(mkdir -p $(DISTDIR)/$(DISTNAME); \
 		tar cf - \
 			 --exclude='node_modules/selenium-webdriver' \
