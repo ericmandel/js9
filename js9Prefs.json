@@ -6,7 +6,6 @@
 		 "debug":	     0,
 		 "workDir":	     "./tmp",
 		 "loadProxy":	     true,
-		 "postMessage":      true,
 		 "dataPath":	     "$HOME/Desktop:$HOME/data",
 		 "analysisPlugins":  "./analysis-plugins",
 		 "analysisWrappers": "./analysis-wrappers"},
