@@ -2530,10 +2530,18 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title){
 	}
 	break;
     case "params":
-	did = JS9.lightWin(id, "ajax", s, title, a.paramWin);
+	if( JS9.allinone ){
+	    did = JS9.lightWin(id, "inline", s, title, a.paramWin);
+	} else {
+	    did = JS9.lightWin(id, "ajax", s, title, a.paramWin);
+	}
 	break;
     case "textline":
-	did = JS9.lightWin(id, "ajax", s, title, a.dpathWin);
+	if( JS9.allinone ){
+	    did = JS9.lightWin(id, "inline", s, title, a.dpathWin);
+	} else {
+	    did = JS9.lightWin(id, "ajax", s, title, a.dpathWin);
+	}
 	break;
     default:
 	break;
@@ -3764,6 +3772,10 @@ JS9.Menubar = function(width, height){
 	for(ii=0; ii<JS9.menuButtonOptsArr.length; ii++){
 	    ss = JS9.menuButtonOptsArr[ii].name;
 	    tt = JS9.menuButtonOptsArr[ii].label;
+	    // no help available for all-in-one configuration
+	    if( JS9.allinone && (ss === "help") ){
+		continue;
+	    }
 	    if( ss[0] === "#" ){
 		ss = ss.slice(1);
 		JS9.menubarHTML += "<button type='button' id='"+ss+"Menu@@ID@@' class='JS9Button' disabled='disabled'>"+tt+" </button>";
@@ -3852,7 +3864,8 @@ JS9.Menubar = function(width, height){
 		}
 		items["sep" + n++] = "------";
 		items.open = {name: "open local file ..."};
-		if( JS9.globalOpts.loadProxy        &&
+		if( !JS9.allinone 		    &&
+		    JS9.globalOpts.loadProxy        &&
 		    JS9.globalOpts.workDir          &&
 		    (JS9.helper.type === "nodejs"   ||
 		     JS9.helper.type === "sock.io") ){
@@ -3913,10 +3926,19 @@ JS9.Menubar = function(width, height){
 			    break;
 			case "loadcors":
 			    JS9.globalOpts.dhtmlloadid  = "sharedURLForm";
-			    did = JS9.Image.prototype.displayAnalysis.call(null,
+			    if( JS9.allinone ){
+				did = JS9.Image.prototype.displayAnalysis.call(
+				      null,
+				      "textline",
+				      JS9.allinone.loadCorsHTML,
+				      "Open a shared CORS link");
+			    } else {
+				did = JS9.Image.prototype.displayAnalysis.call(
+				      null,
 				      "textline",
 				      JS9.InstallDir(JS9.globalOpts.corsURL),
 				      "Open a shared CORS link");
+			    }
 			    // save display id
 			    $(did).data("dispid", udisp.id);
 			    break;
@@ -4651,6 +4673,8 @@ JS9.Menubar = function(width, height){
 			}
 		    }
 		}
+		// no server side analysis for CDN all-in-one configuration
+		if( !JS9.allinone ){
 		if( n > 0 ){
 		    items["sep" + n++] = "------";
 		}
@@ -4699,6 +4723,7 @@ JS9.Menubar = function(width, height){
 		}
 		items["sep" + n++] = "------";
 		items.dpath = {name: "set data path ..."};
+		}
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val, idx, array){
@@ -5171,9 +5196,15 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 			}
 		    };
 		    JS9.globalOpts.dhtmlloadid  = "regionsConfigForm";
-		    obj.params.winid = im.displayAnalysis("params",
+		    if( JS9.allinone ){
+			obj.params.winid = im.displayAnalysis("params",
+			  JS9.allinone.regionsConfigHTML,
+			  "Region Configuration");
+		    } else {
+			obj.params.winid = im.displayAnalysis("params",
 			  JS9.InstallDir(JS9.Regions.opts.configURL),
 			  "Region Configuration");
+		    }
 		}
 		return;
 	    }
@@ -9807,11 +9838,18 @@ JS9.init = function(){
 		}, JS9.TIMEOUT);
 	    }
 	});
-	// reset dynamic drive images location
-	dhtmlwindow.imagefiles=[JS9.InstallDir("images/min.gif"), 
-				JS9.InstallDir("images/close.gif"), 
-				JS9.InstallDir("images/restore.gif"), 
-				JS9.InstallDir("images/resize.gif")];
+	// allow in-line specification of images for all-in-one configuration
+	if( JS9.allinone ){
+	    dhtmlwindow.imagefiles = [JS9.allinone.min,
+				      JS9.allinone.close,
+				      JS9.allinone.restore,
+				      JS9.allinone.resize];
+	} else {
+	    dhtmlwindow.imagefiles=[JS9.InstallDir("images/min.gif"),
+				    JS9.InstallDir("images/close.gif"),
+				    JS9.InstallDir("images/restore.gif"),
+				    JS9.InstallDir("images/resize.gif")];
+	}
     }
     // set this to false in the page to avoid loading a prefs file
     if( JS9.PREFSFILE ){

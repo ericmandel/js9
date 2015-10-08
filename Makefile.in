@@ -178,8 +178,8 @@ SCRIPTS2 =	js9
 
 MFILES =	Makefile Makefile.in config.guess config.sub \
 		configure configure.ac install-sh js9helper.pc.in js9.in \
-		saoconfig saoprefs.sed nnode mkhelper mkjs9 util astroem \
-		js9Helper-default.cgi js9load README
+		saoconfig saoprefs.sed nnode mkallinone mkhelper mkjs9 \
+		util astroem js9Helper-default.cgi js9load README
 
 UTILLIB	=	libutil.a
 
@@ -263,7 +263,10 @@ js9support:	FORCE
 
 
 js9min:		FORCE
-		@(echo "remaking js9.min.js ..."; touch js9.js; minify js9.js)
+		@(echo "remaking js9.min.js ..."; \
+		  touch js9.js; minify js9.js; \
+		  echo "remaking all in one ..."; \
+		  mkallinone $(ALLIN1) $(VERSION))
 
 fitsymin:	FORCE
 		@(echo "remaking fitsy.min.js ..."; touch fitsy.js; minify fitsy.js)
@@ -427,14 +430,7 @@ install-smartx:	FORCE
 		@(echo "installing smartx"; cd smartx; make install);
 
 allinone:	FORCE
-		@(echo "/* JS9 allinone: v$(VERSION), `date` */" > \
-		  $(ALLIN1).css; \
-		  cat js9support.css js9.css >> \
-		  $(ALLIN1).css; \
-		  echo "/* JS9 allinone: v$(VERSION), `date` */" > \
-		  $(ALLIN1).js; \
-		  cat js9support.min.js js9.min.js js9plugins.js >> \
-		  $(ALLIN1).js)
+		@(mkallinone $(ALLIN1) $(VERSION))
 
 gitprefs:	FORCE
 		@(if [ -d .git ]; then \
