@@ -7986,10 +7986,10 @@ JS9.Panner.create = function(im){
     panner.xblock = im.raw.width / width;
     panner.yblock = im.raw.height / height;
     if( panner.xblock > panner.yblock ){
-	height = height / panner.xblock * panner.yblock;
+	height = Math.floor(height / panner.xblock * panner.yblock + 0.5);
 	panner.yblock = panner.xblock;
     } else if( panner.yblock > panner.xblock ){
-	width = width / panner.yblock * panner.xblock;
+	width = Math.floor(width / panner.yblock * panner.xblock + 0.5);
 	panner.xblock = panner.yblock;
     }
     // create an rgb image the same size as the raw data
