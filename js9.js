@@ -93,7 +93,7 @@ JS9.globalOpts = {
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     dims: [1024, 1024],		// dims of extracted images
     helperProtocol: location.protocol,// http: or https:
-    maxMemory: 450000000,	// max heap memory to allocate for a fits image
+    maxMemory: 750000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",     // location of param html file
     proxyURL: "params/loadproxy.html",     // location of param html file
     loadProxy: false,           // do we allow proxy load requests to server?
@@ -295,13 +295,9 @@ JS9.bugs.hide_menu = true;
 if( (JS9.BROWSER[0] === "Firefox") && JS9.BROWSER[2].search(/Linux/) >=0 ){
     JS9.bugs.firefox_linux = true;
 }
-// chrome 31 broke disableStrokeScale so that the shape border is not drawn
-// fixed in chrome canary 33.0.1729.3 (12/5/2013)
+// chrome appears to have a 500Mb limit on tabs (10/2015)
 if( (JS9.BROWSER[0] === "Chrome") ){
-    JS9.bugs.tval = parseInt(JS9.BROWSER[1].split(".").shift(), 10);
-    if(  (JS9.bugs.tval >= 31) && (JS9.bugs.tval <= 33) ){
-	JS9.bugs.chrome_31 = true;
-    }
+    JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 450000000);
 }
 
 // ---------------------------------------------------------------------
