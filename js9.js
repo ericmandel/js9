@@ -3958,16 +3958,16 @@ JS9.Menubar = function(width, height){
 			    break;
 			case "savefits":
 			    if( uim ){
-				s = uim.id.replace(/png/, "fits")
-				          .replace(/.gz$/, "")
+				s = uim.id.replace(/png/i, "fits")
+				          .replace(/.gz$/i, "")
 				          .replace(/\[.*\]/,"");
 				uim.saveFITS(s);
 			    }
 			    break;
 			case "savepng":
 			    if( uim ){
-				s = uim.id.replace(/fits/, "png")
-				          .replace(/.gz$/, "")
+				s = uim.id.replace(/fit[s]?/i, "png")
+				          .replace(/.gz$/i, "")
 				          .replace(/\[.*\]/,"");
 				uim.savePNG(s);
 			    }
