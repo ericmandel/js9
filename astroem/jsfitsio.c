@@ -454,8 +454,8 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
 		    minname, maxname, binname,
 		    colnum, haxes, amin, amax, binsize, status);
   // why truncate to int? otherwise, cfitsio is 0.5 pixels off from js9 ...
-  xcen = (int)(amax[0] - amin[0])/2;
-  ycen = (int)(amax[1] - amin[1])/2;
+  xcen = (int)(amax[0] + amin[0])/2;
+  ycen = (int)(amax[1] + amin[1])/2;
   dim1 = haxes[0];
   dim2 = haxes[0];
   // get limits of extracted section
