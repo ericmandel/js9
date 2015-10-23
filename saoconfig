@@ -75,7 +75,17 @@ case $name in
 		--with-webdir=/Users/eric/Sites/js9			\
 		--with-helper="socket.io"				\
 		--with-cfitsio=/usr/local				\
-		--with-funtools=/usr/local				\
+		--with-png=/usr/local					\
+		--with-saodir=/Users/eric/Sites				\
+		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
+  ;;
+
+ baba-funtools)
+  ./configure 	$CF							\
+		--prefix=$HOME						\
+		--with-webdir=/Users/eric/Sites/js9			\
+		--with-helper="socket.io"				\
+		--with-funtools=$HOME					\
 		--with-png=/usr/local					\
 		--with-saodir=/Users/eric/Sites				\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
@@ -91,12 +101,13 @@ case $name in
 		--with-cgidir=/Users/eric/Sites/cgi-bin			\
 		--with-cgiurl="~eric/cgi-bin"				\
 		--with-cgixpath=/usr/local/bin				\
-		--with-saodir=/Users/eric/Sites			\
+		--with-saodir=/Users/eric/Sites				\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
   baba-none)
-  ./configure 	$CF --with-webdir=/Users/eric/Sites/js9
+  ./configure 	$CF --with-webdir=/Users/eric/Sites/js9			\
+		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
   hopper*)
