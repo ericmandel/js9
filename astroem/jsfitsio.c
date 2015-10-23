@@ -396,8 +396,8 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
 fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
 			     int *dims, double *cens, int bin, int *status){
   int i, dim1, dim2;
-  int imagetype=TINT, naxis=2, recip=0;
   int tstatus;
+  int imagetype=TINT, naxis=2, recip=0;
   long nirow, norow;
   float weight=1;
   float xcen, ycen;
@@ -491,32 +491,26 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   fits_read_key(fptr, TDOUBLE, "LTV1", &dvalue, comment, &tstatus); 
   dvalue = ((dim1 / 2) - xcen) / bin; tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTV1", &dvalue, comment, &tstatus);
-
   dvalue = 0.0; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTV2", &dvalue, comment, &tstatus); 
   dvalue = ((dim2 / 2) - ycen) / bin; tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTV2", &dvalue, comment, &tstatus);
-
   dvalue = 1.0 / bin; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTM1_1", &dvalue, comment, &tstatus); 
   tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTM1_1", &dvalue, comment, &tstatus);
-
   dvalue = 0.0; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTM1_2", &dvalue, comment, &tstatus); 
   tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTM1_2", &dvalue, comment, &tstatus);
-
   dvalue = 0.0; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTM2_1", &dvalue, comment, &tstatus); 
   tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTM2_1", &dvalue, comment, &tstatus);
-
   dvalue = 1.0 / bin; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTM2_2", &dvalue, comment, &tstatus); 
   tstatus = 0;
   fits_update_key(ofptr, TDOUBLE, "LTM2_2", &dvalue, comment, &tstatus);
-
   // return the center and dims used
   if( dims ){
     dims[0] = dim1 / bin;
