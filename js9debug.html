@@ -1,4 +1,5 @@
-<!DOCTYPE HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -14,7 +15,7 @@
   <script type="text/javascript" src="plugins/plugintest.js"></script>
   <script type="text/javascript" src="js9debugextras/jquery_ujs.js"></script>
   <script type="text/javascript" src="js9debugextras/jquery.datetimepicker.js"></script>
-  <style>
+  <style type="text/css">
     .catdiv{
       background: #99FFCC;
       padding: 10px;
@@ -27,18 +28,19 @@
       border: 0px;
       padding: 2px;
     }
-    #_SUPERMENU_ div.JS9MenubarContainer{
+    #SUPERMENU_ div.JS9MenubarContainer{
       background: darkgreen;
     }
     #myJS9Menubar div.JS9MenubarContainer{
       background: lightblue;
     }
   </style>
+  <title>JS9 Debug Page</title>
 </head>
 <body>
-    <font size="+1"><center>
+    <center><font size="+1">
     <b>JS9 Debugging Page</b>
-    </center></font>
+    </font></center>
     <table  cellspacing="10px">
     <tr valign="top">
     <td>
@@ -95,7 +97,7 @@
     <td colspan="2">
     <center>
     a super-menu to control both JS9 displays:<br>
-    <div class="JS9Menubar" id="_SUPERMENU_" data-displays="JS9,myJS9"></div>
+    <div class="JS9Menubar" id="SUPERMENU_" data-displays="JS9,myJS9"></div>
     </center>
     </td>
     </tr>
