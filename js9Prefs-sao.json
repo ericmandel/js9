@@ -2,7 +2,7 @@
   "globalOpts": {"helperType":	     "nodejs",
   		 "helperPort":       2718, 
 		 "helperCGI":        "./cgi-bin/js9/js9Helper.cgi",
-		 "fits2png":         true,
+		 "fits2png":         false,
 		 "debug":	     0,
 		 "workDir":	     "./tmp",
 		 "loadProxy":	     true,
