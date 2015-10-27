@@ -4,6 +4,7 @@
    "files"  : "*",
    "purl"   : "./params/loadproxy.html",
    "action" : "js9Xeq loadproxy $url",
+   "workDir": true,
    "hidden" : true,
    "rtype"  : "fits"
   },
@@ -11,6 +12,7 @@
    "title"  : "Remove a File from the Proxy Server",
    "files"  : "*",
    "action" : "js9Xeq removeproxy $proxyfile",
+   "workDir": true,
    "hidden" : true,
    "rtype"  : "fits"
   }
