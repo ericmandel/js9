@@ -61,7 +61,7 @@ JS9.SCALEIREG = true;		// scale interactive regions by zoom factor?
 JS9.NOMOVE = 3;			// number of pixels before we recognize movement
 JS9.DBLCLICK = 500;		// milliseconds for double-click
 JS9.TIMEOUT = 250;		// ms before assuming light window is up
-JS9.SUPERMENU = /^_SUPERMENU/;  // base of supermenu id 
+JS9.SUPERMENU = /^SUPERMENU_/;  // base of supermenu id 
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 JS9.BROWSER = (function(){
