@@ -98,11 +98,17 @@ the action is sent to the server for processing. Typically, these macros are
 used to specify filenames, regions, and (possibly) user parameters. The
 following intrinsic macros are defined:
 <ul>
+<li><b>$image:</b> name of the image file being displayed
 <li><b>$filename:</b> pathname of the original FITS file
 <li><b>$regions:</b> all currently defined regions
 <li><b>$sregions:</b> all source regions
 <li><b>$bregions:</b> all background regions
+<li><b>$id:</b> id of the JS9 display
 </ul>
+The three regions macros return region info in the current wcs
+system. To specify an alternate wcs system, append "physical",
+"image", or "wcs" in parentheses, e.g. $regions(physical).
+<p>
 For example, to run the funcnts program, specifying the original FITS
 file as well as source and background regions, use:
 <pre>
