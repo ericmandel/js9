@@ -1,7 +1,7 @@
 #	This file is an input file used by the GNU "autoconf" program to
 #	generate the file "configure", which is run during XPA installation
 #	to configure the system for the local environment.
-AC_INIT(js9, 1.5, saord@cfa.harvard.edu, js9)
+AC_INIT(js9, 1.6, saord@cfa.harvard.edu, js9)
 
 AC_MSG_CHECKING(for web install directory)
 AC_ARG_WITH(webdir,
@@ -112,6 +112,7 @@ fi
 AC_SUBST(CGIXPATH)
 
 # check for external funtools libraries
+FITSLIB="none"
 AC_MSG_CHECKING(for funtools)
 AC_ARG_WITH(funtools,
     [ --with-funtools=<path> funtools directory e.g. /soft/funtools], havelib=1, havelib=0)
@@ -142,6 +143,7 @@ if test x$FUNTOOLSINC != x; then
 fi
 if test x$FUNTOOLSLIB != x; then
   FUNLIB="-L $FUNTOOLSLIB -lfuntools"
+  FITSLIB="funtools"
 fi
 # results from funtools search
 AC_SUBST(FUNINC)
@@ -179,11 +181,15 @@ fi
 if test x$CFITSIOLIB != x; then
   CFITSIOLIB="-L $CFITSIOLIB -lcfitsio"
   CFITSIOOBJS="jsfitsio.o"
+  FITSLIB="cfitsio"
 fi
 # results from cfitsio search
 AC_SUBST(CFITSIOINC)
 AC_SUBST(CFITSIOLIB)
 AC_SUBST(CFITSIOOBJS)
+
+# which fits library (if any)
+AC_SUBST(FITSLIB)
 
 if test x"${CFITSIOINC}${FUNINC}" = x; then
   AC_MSG_RESULT(no funtools or cfitsio: back-end programs will not be built)
