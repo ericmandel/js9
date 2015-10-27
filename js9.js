@@ -98,6 +98,7 @@ JS9.globalOpts = {
     proxyURL: "params/loadproxy.html",     // location of param html file
     loadProxy: false,           // do we allow proxy load requests to server?
     archivesURL: "help/archives.html",     // location of archives help file
+    imsectionURL: "params/imsection.html",     // location of param html file
     postMessage: false,        // allow communication through iframes?
     debug: 0			// debug level
 };
@@ -366,6 +367,10 @@ JS9.Image = function(file, params, func){
     if( localOpts && localOpts.proxyFile ){
 	this.proxyFile = localOpts.proxyFile;
     }
+    // was a "parent" FITS file specified?
+    if( localOpts && localOpts.parentFile ){
+	this.parentFile = localOpts.parentFile;
+    }
     // offsets into canvas to display
     this.ix = 0;
     this.iy = 0;
@@ -538,7 +543,7 @@ JS9.Image.prototype.closeImage = function(){
 	if( r.stderr ){
 	    JS9.error(r.stderr);
 	} else if( r.stdout ){
-	    JS9.warning(r.stdout);
+	    JS9.log(r.stdout);
 	}
     };
     // look for an image and remove it
@@ -559,11 +564,12 @@ JS9.Image.prototype.closeImage = function(){
 		    }
 		}
 	    }
-	    // remove all layers
+	    // clear all layers
 	    for( key in tim.layers ){
 		if( tim.layers.hasOwnProperty(key) ){
-		    tim.layers[key].canvas.dispose();
-		    tim.layers[key] = null;
+		    // tim.layers[key].canvas.dispose();
+		    // tim.layers[key] = null;
+		    tim.layers[key].canvas.clear();
 		}
 	    }
 	    // clear image from display
@@ -2184,7 +2190,7 @@ JS9.Image.prototype.notifyHelper = function(){
     if( JS9.helper.connected && (this.file !== JS9.ANON) ){
 	JS9.helper.send("image", {"image": this.file},
         function(res){
-	    var rstr, r, s, t, cc, im;
+	    var rstr, r, s, cc, im;
 	    if( typeof res === "object" ){
 		// from node.js, we get an object with stdout and stderr
 		rstr = res.stdout;
@@ -2196,7 +2202,7 @@ JS9.Image.prototype.notifyHelper = function(){
 		// with cgi, we just get stdout
 		rstr = res;
 	    }
-	    // uness we have no stdout
+	    // unless we have no stdout
 	    if( !rstr ){
 		return;
 	    }
@@ -2216,10 +2222,16 @@ JS9.Image.prototype.notifyHelper = function(){
 				im.fitsFile =  basedir + im.fitsFile;
 			    }
 			}
-			// prepend JS9 macro for dir if fits is not absolute
-			if( JS9.analOpts.prependJS9Dir &&
-			    im.fitsFile.charAt(0) !== "/" ){
-			    im.fitsFile = "$JS9_DIR/" + im.fitsFile;
+			// prepend JS9_DIR on files if fits is not absolute
+			if( JS9.analOpts.prependJS9Dir ){
+			    if( im.fitsFile 
+				&& im.fitsFile.charAt(0) !== "/" ){
+				im.fitsFile = "${JS9_DIR}/" + im.fitsFile;
+			    }
+			    if( im.parentFile 
+				&& im.parentFile.charAt(0) !== "/" ){
+				im.parentFile = "${JS9_DIR}/" + im.parentFile;
+			    }
 			}
 		    } else {
 			cc = s.lastIndexOf("/") + 1;
@@ -2228,10 +2240,6 @@ JS9.Image.prototype.notifyHelper = function(){
 		    if( JS9.DEBUG > 1 ){
 			JS9.log("JS9 fitsFile: %s %s", im.file, im.fitsFile);
 		    }
-		}
-		t = r[2];
-		if( t !== "?" ){
-		    im.fitsExt = t.match(/\[.*\]/);
 		}
 	    }
 	    // first time through, query the helper for info
@@ -2281,16 +2289,58 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	return;
     }
     // process each $ token
-    cmd = s.replace(/\$(\w+)/g, function(m, t, o){
-	var i, r;
-	switch(t){
+    cmd = s.replace(/\$([a-zA-Z0-9_()]+)/g, function(m, t, o){
+	var i, r, owcssys;
+	var savewcs = function(im, wcssys){
+	    var owcs = im.params.wcssys;
+	    if( wcssys ){
+		switch(wcssys){
+		case "wcs":
+		    if( (owcs === "physical") || (owcs === "image") ){
+			im.params.wcssys = im.params.wcssys0;
+		    }
+		    break;
+		case "physical":
+		case "image":
+		    im.params.wcssys = wcssys;
+		    break;
+		default:
+		    break;
+		}
+	    }
+	    return owcs;
+	};
+	var restorewcs = function(im, wcssys){
+	    if( wcssys ){
+		im.params.wcssys = wcssys;
+	    }
+	};
+	var u = t.split("(");
+	if( u[1] ){
+	    u[1] = u[1].replace(/\)$/, "");
+	}
+	switch(u[0]){
 	case "id":
 	    r = that.display.divjq.attr("id");
 	    break;
+	case "image":
 	case "png":
 	    r = that.id;
 	    break;
 	case "filename":
+	    if( u[1] === "parent" && that.parentFile ){
+		r = that.parentFile;
+	    } else if( that.fitsFile ){
+		r = that.fitsFile;
+		// for tables, we might need to add the binning filter
+		if( (that.imtab === "table") && (that.raw.hdu.table.filter) ){
+		    r += '[EVENTS][' + that.raw.hdu.table.filter + ']';
+		}
+	    } else {
+		JS9.error("no FITS file for " + that.id);
+	    }
+	    break;
+	case "fits":
 	    if( !that.fitsFile ){
 		JS9.error("no FITS file for " + that.id);
 	    }
@@ -2300,17 +2350,33 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 		r += '[EVENTS][' + that.raw.hdu.table.filter + ']';
 	    }
 	    break;
+	case "parent":
+	    if( !that.parentFile ){
+		JS9.error("no parent FITS file for " + that.id);
+	    }
+	    r = that.parentFile;
+	    break;
 	case "ext":
-	    r = that.fitsExt || "[]";
+	    if( that.fitsFile ){
+		r = that.fitsFile.match(/\[.*\]/);
+	    } else {
+		JS9.error("no FITS file for " + that.id);
+	    }
 	    break;
 	case "sregions":
+	    owcssys = savewcs(that, u[1]);
 	    r = that.listRegions("source", 0).replace(/\s+/g,"");
+	    restorewcs(that, owcssys);
 	    break;
 	case "bregions":
+	    owcssys = savewcs(that, u[1]);
 	    r = that.listRegions("background", 0).replace(/\s+/g,"");
+	    restorewcs(that, owcssys);
 	    break;
 	case "regions":
+	    owcssys = savewcs(that, u[1]);
 	    r = that.listRegions("all", 0).replace(/\s+/g,"");
+	    restorewcs(that, owcssys);
 	    break;
 	default:
 	    // look for keyword in the serialized opts array
@@ -2423,8 +2489,10 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	break;
     }
     // ask the helper to run the command
+    JS9.waiting(true);
     JS9.helper.send(m, obj, function(r){
 	var s, robj;
+	JS9.waiting(false);
 	// return type can be string or object
 	if( typeof r === "object" ){
 	    // object from node.js
@@ -2450,7 +2518,11 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    s = sprintf("ERROR: while executing %s [%s]",
 				a.name, robj.errcode);
 		}
-		JS9.error(s, JS9.analOpts.epattern);
+		if( s.search(/WARNING/i) >= 0 ){
+		    JS9.log(s);
+		} else {
+		    JS9.error(s, JS9.analOpts.epattern);
+		}
 	    }
 	    // display according to type
 	    switch(a.rtype){
@@ -2485,11 +2557,15 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 };
 
 // display analysis results (text or plot)
-JS9.Image.prototype.displayAnalysis = function(type, s, title){
-    var id, did, hstr, pobj, divjq;
+JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
+    var id, did, hstr, pobj, divjq, opts, titlefile;
     var a = JS9.lightOpts[JS9.LIGHTWIN];
     // make up title, if necessary
-    title = title || "AnalysisResults: " + (this.fitsFile || this.id);
+    if( !title && this ){
+	titlefile = (this.fitsFile || this.id);
+	titlefile = titlefile.split("/").reverse()[0];
+	title = "AnalysisResults: " + titlefile;
+    }
     // unique id for light window
     id = "Analysis_" + JS9.uniqueID();
     // process the type of analysis results
@@ -2500,7 +2576,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title){
 	    hstr += "<pre class='JS9AnalysisText'>"+s+"</pre>";
 	}
 	hstr += "</div>";
-	did = JS9.lightWin(id, "inline", hstr, title, a.textWin);
+	did = JS9.lightWin(id, "inline", hstr, title, winFormat||a.textWin);
 	break;
     case "plot":
 	// convert results to js object
@@ -2515,28 +2591,33 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title){
 	// create an outer div and an inner plot for the light window open call
 	hstr = sprintf("<div id='%s' class='JS9Analysis'><div id='%sPlot' class='JS9Plot' ></div></div>", id, id);
 	// create the light window to hold the plot
-	did = JS9.lightWin(id, "inline", hstr, title, a.plotWin);
+	did = JS9.lightWin(id, "inline", hstr, title, winFormat||a.plotWin);
 	// find the inner plot div that now is inside the light window
 	divjq = $("#" + id + " #" + id + "Plot");
 	// flot data
 	if( pobj.data ){
 	    // set up linear/log transforms and plot the graph
-	    try{ $.plot(divjq, [pobj], this.params.plotOpts); }
+	    if( this ){
+		opts = this.params.plotOpts;
+	    } else {
+		opts = JS9.plotOpts;
+	    }
+	    try{ $.plot(divjq, [pobj], opts); }
 	    catch(e){ JS9.error("can't plot data", e); }
 	}
 	break;
     case "params":
 	if( JS9.allinone ){
-	    did = JS9.lightWin(id, "inline", s, title, a.paramWin);
+	    did = JS9.lightWin(id, "inline", s, title, winFormat||a.paramWin);
 	} else {
-	    did = JS9.lightWin(id, "ajax", s, title, a.paramWin);
+	    did = JS9.lightWin(id, "ajax", s, title, winFormat||a.paramWin);
 	}
 	break;
     case "textline":
 	if( JS9.allinone ){
-	    did = JS9.lightWin(id, "inline", s, title, a.dpathWin);
+	    did = JS9.lightWin(id, "inline", s, title, winFormat||a.dpathWin);
 	} else {
-	    did = JS9.lightWin(id, "ajax", s, title, a.dpathWin);
+	    did = JS9.lightWin(id, "ajax", s, title, winFormat||a.dpathWin);
 	}
 	break;
     default:
@@ -3840,6 +3921,7 @@ JS9.Menubar = function(width, height){
 		var n = 0;
 		var items = {};
 		var tdisp = getDisplays()[0];
+		var tim = tdisp.image;
 		imlen = JS9.images.length;
 		for(i=0; i<imlen; i++){
 		    im = JS9.images[i];
@@ -3860,15 +3942,29 @@ JS9.Menubar = function(width, height){
 		}
 		items["sep" + n++] = "------";
 		items.open = {name: "open local file ..."};
-		if( !JS9.allinone 		    &&
-		    JS9.globalOpts.loadProxy        &&
-		    JS9.globalOpts.workDir          &&
-		    (JS9.helper.type === "nodejs"   ||
-		     JS9.helper.type === "sock.io") ){
-		    items.archives = {name: " accessing data archives ..."};
-		    items.loadproxy = {name: "open link via proxy ..."};
+		items.archives = {name: " accessing data archives ..."};
+		items.loadproxy = {name: "open link via proxy ..."};
+		if( !JS9.allinone			 &&
+		    JS9.globalOpts.helperType !== "none" &&
+		    JS9.globalOpts.workDir      	 &&
+		    JS9.globalOpts.loadProxy    	 ){
+		    items.loadproxy.disabled = false;
+		} else {
+		    items.loadproxy.disabled = true;
 		}
 		items.loadcors = {name: "open link via CORS ..."};
+		items["sep" + n++] = "------";
+		// only show imsection if the fits file differs from the
+		// displayed file (i.e. its a representation file)
+		items.imsection = {name: "extract image section ..."};
+		if( !JS9.allinone 			 &&
+		    JS9.globalOpts.helperType !== "none" &&
+		    JS9.globalOpts.workDir      	 &&
+		    tim && tim.parentFile 		 ){
+		    items.imsection.disabled = false;
+		} else {
+		    items.imsection.disabled = true;
+		}
 		items.print = {name: "print ..."};
 		items.header = {name: "display FITS header"};
 		items.pageid = {name: "display pageid"};
@@ -3885,7 +3981,7 @@ JS9.Menubar = function(width, height){
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val, idx, array){
-			var j, s, did;
+			var j, s, did, save_orc;
 			var udisp = val;
 			var uim = udisp.image;
 			switch(key){
@@ -3921,7 +4017,6 @@ JS9.Menubar = function(width, height){
 			    JS9.OpenFileMenu(udisp);
 			    break;
 			case "loadcors":
-			    JS9.globalOpts.dhtmlloadid  = "sharedURLForm";
 			    if( JS9.allinone ){
 				did = JS9.Image.prototype.displayAnalysis.call(
 				      null,
@@ -3944,14 +4039,55 @@ JS9.Menubar = function(width, height){
 			case "loadproxy":
 			    // load param url to run analysis task
 			    // param url is relative to js9 install dir
-			    JS9.globalOpts.dhtmlloadid  = "proxyURLForm";
 			    did = JS9.Image.prototype.displayAnalysis.call(null,
-				      "textline",
-				      JS9.InstallDir(JS9.globalOpts.proxyURL),
-				      "Open a link via server proxy");
+				     "textline",
+				     JS9.InstallDir(JS9.globalOpts.proxyURL),
+				     "Open a link via server proxy");
 			    // save info for running the task
 			    $(did).data("dispid", udisp.id)
 				  .data("aname", "loadproxy");
+			    break;
+			case "imsection":
+			    // load param url to run analysis task
+			    // param url is relative to js9 install dir
+			    save_orc = JS9.Regions.opts.onchange;
+			    JS9.globalOpts.dhtmlonload = function(){
+				var f = "#imageSectionForm";
+				 JS9.Regions.opts.onchange = function(im, xreg){
+				    var w, h, ltm1, ltm2;
+				    // call previous
+				    if( save_orc ){ save_orc(im, xreg); }
+				    // verify this image can be imsection'ed
+				    if( !im.parentFile ){ return; }
+				    // are we using a region for pos/size?
+				    if( $(f+" input:radio[name=imode]:checked")
+					  .val() !== "region" ){ return; }
+				    // do we have a box region?
+				    if( xreg.shape !== "box" ){	return; }
+				    // set current size and position
+				    ltm1 = im.raw.header.LTM1_1 || 1.0;
+				    w = xreg.width / ltm1;
+				    ltm2 = im.raw.header.LTM2_2 || 1.0;
+				    h = xreg.height / ltm2;
+				    $(f+" #xcen").val(Math.floor(xreg.lcs.x));
+				    $(f+" #ycen").val(Math.floor(xreg.lcs.y));
+				    $(f+" #xdim").val(Math.floor(w));
+				    $(f+" #ydim").val(Math.floor(h));
+				};
+			    };
+			    JS9.globalOpts.dhtmlloadid  = "imageSectionForm";
+			    JS9.globalOpts.dhtmlonunload = function(){
+				JS9.Regions.opts.onchange = save_orc;
+			    };
+			    JS9.globalOpts.dhtmlunloadid  = "imageSectionForm";
+			    did = JS9.Image.prototype.displayAnalysis.call(null,
+				"params",
+				JS9.InstallDir(JS9.globalOpts.imsectionURL),
+				"Extract Image Section From a 'Parent' File",
+	                        "width=440px,height=230px,center=1,resize=1,scrolling=1");
+			    // save info for running the task
+			    $(did).data("dispid", udisp.id)
+				  .data("aname", "imsection");
 			    break;
 			case "refresh":
 			    $('#refreshLocalFile-' + udisp.id).click();
@@ -4989,6 +5125,10 @@ JS9.Helper.prototype.send = function(key, obj, cb){
     case "get":
     case "post":
 	obj.key = key;
+        if( JS9.DEBUG ){
+	    JS9.log("JS9 cgi helper [%s, %s]: %s", 
+		    this.type, JSON.stringify(obj), this.url);
+        }
 	$.ajax({
 	    url: this.url,
 	    type: this.type.toUpperCase(),
@@ -6533,7 +6673,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     return this;
 };
 
-// update shape layer a change in panning, zooming, binning
+// update shape layer after a change in panning, zooming, binning
 // This routine is more complicated that one would want because fabric.js mixes
 // regions resize, zoom, and binning all in the same scale factor. So when 
 // we want to adjust a region for pan, zoom, or bin, we first have to untangle
@@ -7029,7 +7169,9 @@ JS9.Regions.opts = {
 	source:             "#00FF00",
 	background:         "#FFD700",
 	defcolor:            "#00FF00"
-    }
+    },
+    // global onchange callback
+    onchange: null
 };
 
 // plugin init: load our regions methods
@@ -7071,6 +7213,16 @@ JS9.Regions.init = function(layerName){
 	}
     });
     return this;
+};
+
+// allow a global routine to execute each time a region changes
+// to use this, set JS9.Regions.opts.onchange to point to your function
+JS9.Regions.onchange = function(im, xreg){
+    if( JS9.Regions.opts.onchange &&
+	typeof JS9.Regions.opts.onchange === "function" ){
+	try{ JS9.Regions.opts.onchange(im, xreg); }
+	catch(ignore){}
+    }
 };
 
 // initialize the region config form
@@ -7835,9 +7987,12 @@ JS9.Magnifier.zoom = function(im, zval){
 
 // close the magnifier when closing the image 
 JS9.Magnifier.close = function(im){
-    if( im.display.pluginInstances.JS9Magnifier ){
-	im.display.pluginInstances.JS9Magnifier.context.clear();
+    var magnifier = im.display.pluginInstances.JS9Magnifier;
+    if( magnifier  ){
+	magnifier.context.clear();
+	im.removeShapes("magnifier", "all");
     }
+    return im;
 };
 
 // ---------------------------------------------------------------------
@@ -8134,8 +8289,10 @@ JS9.Panner.zoom = function(im, zval){
 
 // close the panner
 JS9.Panner.close = function(im){
-    if( im.display.pluginInstances.JS9Panner ){
-	im.display.pluginInstances.JS9Panner.context.clear();
+    var panner = im.display.pluginInstances.JS9Panner;
+    if( panner  ){
+	panner.context.clear();
+	im.removeShapes("panner", "all");
     }
     return im;
 };
@@ -9834,6 +9991,20 @@ JS9.init = function(){
 		}, JS9.TIMEOUT);
 	    }
 	});
+	// support callbacks after the dhtml window has been destroyed
+	$("#dhtmlwindowholder").bind('DOMNodeRemoved', function(e) {
+	    var func = JS9.globalOpts.dhtmlonunload;
+	    var id = JS9.globalOpts.dhtmlunloadid;
+	    if( func && (id === $(e.target).attr("id")) ){
+		// only once per dhtml window creation
+		delete JS9.globalOpts.dhtmlonunload;
+		delete JS9.globalOpts.dhtmlunloadid;
+		// slight delay, just in case!
+		window.setTimeout(function(){
+		    func.call(null);
+		}, JS9.TIMEOUT);
+	    }
+	});
 	// allow in-line specification of images for all-in-one configuration
 	if( JS9.allinone ){
 	    dhtmlwindow.imagefiles = [JS9.allinone.min,
@@ -9952,6 +10123,7 @@ JS9.init = function(){
 			winDims: [JS9.WIDTH, 180]});
     JS9.RegisterPlugin(JS9.Regions.CLASS, JS9.Regions.NAME, JS9.Regions.init,
 		       {onkeydown:  JS9.Regions.keyDownCB, 
+			onregionschange: JS9.Regions.onchange,
 			divArgs: ["regions"],
 			winDims: [0, 0]});
     JS9.RegisterPlugin(JS9.Magnifier.CLASS, JS9.Magnifier.NAME, 
@@ -10912,14 +11084,28 @@ JS9.mkPublic("LoadProxy", function(url, opts){
     }
     JS9.waiting(true);
     JS9.Send('loadproxy', {'cmd': 'js9Xeq loadproxy ' + url}, function(r){
-	if( r.stderr ){
-	    JS9.error(r.stderr);
-	} else if( r.stdout ){
+        var robj;
+	// return type can be string or object
+	if( typeof r === "object" ){
+	    // object from node.js
+	    robj = r;
+	} else {
+	    // string from cgi
+	    if( r.search(JS9.analOpts.epattern) >=0 ){
+		robj = {stderr: r};
+	    } else {
+		robj = {stdout: r};
+	    }
+	}
+	robj.errcode = robj.errcode || 0;
+	if( robj.stderr ){
+	    JS9.error(robj.stderr);
+	} else if( robj.stdout ){
 	    opts = opts || {};
 	    if( opts.fits2png === undefined ){
 		opts.fits2png = false;
 	    }
-	    f = r.stdout.trim();
+	    f = robj.stdout.trim();
 	    if( f.charAt(0) !== "/" ){
 		f = JS9.InstallDir(f);
 	    }
