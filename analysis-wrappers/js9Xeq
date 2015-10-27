@@ -8,8 +8,11 @@ if [ $# -lt 1 ]; then
 fi
 
 # on entry, the following JS9 environment variables will be available:
-# JS9_HOST	host ip of client
-# JS9_ID	id (from js9 div) of client
+# JS9_DIR		top level directory of js9 helper
+# JS9_WORKDIR		working directory, if configured
+# JS9_WORKDIR_QUOTA	quota for working directory, if configured
+# JS9_HOST		host ip of client
+# JS9_ID		id (from js9 div) of client
 
 # if we are being called via CGI, send stderr to stdout
 if [ x"$QUERY_STRING" != x ]; then
@@ -22,14 +25,31 @@ error() {
   exit 1
 }
 
+xsed() {
+  sed 's#'${JS9_DIR}'#${JS9_DIR}#g;'
+}
+
+# regcnts is preferred
+hash regcnts 1>/dev/null 2>&1
+if [ $? = 0 ]; then
+  CNTS=regcnts
+else
+  hash funcnts 1>/dev/null 2>&1
+  if [ $? = 0 ]; then
+    CNTS=funcnts
+  else
+    CNTS="error requires regcnts or funcnts ..."
+  fi
+fi
+
 # process standard arguments
 CMD="$1";     shift;
 case $CMD in
 counts)
     if [ $# -eq 1 ]; then
-      funcnts "$1" "$2"
+      ${CNTS} "$1" "$2" | xsed
     else
-      funcnts "$1" "$2" "$3"
+      ${CNTS} "$1" "$2" "$3" | xsed
     fi
     exit 0
     ;;
@@ -40,7 +60,7 @@ fits2png)
     ;;
 
 fitshead)
-    funhead -a "$1"
+    funhead -a "$1" | xsed
     exit 0
     ;;
 
@@ -60,21 +80,22 @@ hist)
       ARGS="$ARGS -w"
     fi
     if [ $# -eq 1 ]; then
-	funhist $ARGS "$FILE" "$1"
+	funhist $ARGS "$FILE" "$1" | xsed
     else
-	funhist $ARGS "$FILE" "$1" "$2"
+	funhist $ARGS "$FILE" "$1" "$2" | xsed
     fi
     exit 0
     ;;
 
 radialplot)
     if [ $# = 0 ]; then
-      error "funcnts filename [source] [bkgd] [$#]"
+      error "${CNTS} filename [source] [bkgd] [$#]"
     fi
     if [ $# -eq 1 ]; then
-      funcnts -rG "$1" "$2" | funcnts2flot -title "$TITLE" -file "$1"
+      ${CNTS} -rG "$1" "$2" | funcnts2flot -title "$TITLE" -file "$1" | xsed
     else
-      funcnts -rG "$1" "$2" "$3" | funcnts2flot -title "$TITLE" -file "$1"
+      ${CNTS} -rG "$1" "$2" "$3" | funcnts2flot -title "$TITLE" -file "$1" | \
+      xsed
     fi
     exit 0
     ;;
@@ -100,10 +121,10 @@ histplot)
     TITLE="`echo "$FILE" | tr [a-z] [A-Z]` Plot"
     if [ $# -eq 1 ]; then
 	funhist $ARGS "$FILE" "$1" | 
-	funhist2flot -title "$TITLE" -file "$FILE"
+	funhist2flot -title "$TITLE" -file "$FILE" | xsed
     else
-	funhist $ARGS "$FILE" "$1" "$2" | 
-	funhist2flot -title "$TITLE" -file "$FILE"
+	funhist $ARGS "$FILE" "$1" "$2" |
+	funhist2flot -title "$TITLE" -file "$FILE" | xsed
     fi
     exit 0
     ;;
@@ -128,15 +149,13 @@ evfilter)
     # remove spaces
     FILTER=`echo $* | sed 's/ //g'`
     # try to get a base name for output
+    XBASE=`basename $IFILE`
     IBASE=`basename $IFILE .fits`
-    if [ x"$IFILE" = x"$IBASE" ]; then
+    if [ x"$XBASE" = x"$IBASE" ]; then
 	IBASE=`basename $IFILE .fits.gz`
     fi
-    if [ x"$IFILE" = x"$IBASE" ]; then
-	IBASE="$IFILE"
-    fi
     # make up unique output file base
-    OBASE=`echo ${IBASE}_${FILTER}_$$ | awk -F/ '{print $NF}' | sed 's/[,]/_/g'`
+    OBASE=`echo ${IBASE}_${FILTER} | awk -F/ '{print $NF}' | sed 's/[,]/_/g'`
     # create the filtered FITS file
     if [ x$OTYPE = xfits ]; then
 	# create the filtered FITS file for analysis
@@ -150,8 +169,42 @@ evfilter)
 	# created the associated PNG file for display (using original ext)
 	fits2png $OBASE.fits"$EXT" $OBASE.png
 	# send back relative path to the PNG file
-	echo "${JS9_WORKDIR:-.}/$OBASE.png"
+	echo "${JS9_WORKDIR}/$OBASE.png"
     fi
+    exit 0
+    ;;
+
+imsection)
+    # required args
+    if [ "$#" -lt 2 ]; then
+	error "imsection file section [mode]"
+    fi
+    if [ x"${JS9_WORKDIR}" = x ]; then
+	error "imsection requires configuration of a temporary work directory"
+    fi
+    mb=`du -sk . | awk '{printf("%d", ($1 + 500) / 1000)}'`
+    if [ ${JS9_WORKDIR_QUOTA:-0} -gt 0 ]; then
+      if [ ${mb:-0} -ge ${JS9_WORKDIR_QUOTA} ]; then
+       error "disk quota exceeded. Please close one or more displayed images."
+      fi
+    fi
+    IFILE="$1"
+    SECTION="$2"
+    if [ $# -ge 3 ]; then
+      MODE="$3"
+    fi
+    # try to get a base name for output
+    XBASE=`basename $IFILE`
+    IBASE=`basename $IFILE .fits`
+    if [ x"$XBASE" = x"$IBASE" ]; then
+	IBASE=`basename $IFILE .fits.gz`
+    fi
+    # output FITS file
+    OBASE=`echo ${IBASE}_${SECTION} | awk -F/ '{print $NF}' | sed 's/[,]/_/g'`
+    OFILE=${OBASE}.fits
+    js9helper -i ${IFILE} imsection ${SECTION} ${MODE} > ${OFILE}
+    # send back relative path to the output file
+    echo "${JS9_WORKDIR}/${OFILE}"
     exit 0
     ;;
 
@@ -175,16 +228,22 @@ loadproxy)
     if [ x"$OFILE" = xuc ]; then
       OFILE="google_"$RANDOM".fits"
     fi
+    # proxy
+    if [ x"$JS9_PROXY" != x ]; then
+      export http_proxy="$JS9_PROXY"
+      export https_proxy="$http_proxy"
+      export ftp_proxy="$http_proxy"
+    fi
     # retrieve the FITS file via URL
-    hash curl 1>/dev/null 2>&1
+    hash wget 1>/dev/null 2>&1
     if [ $? = 0 ]; then
-      curl -s -o "$OFILE" "$URL"
+      wget -q --output-document="$OFILE" "$URL"
     else
-      hash wget 1>/dev/null 2>&1
+      hash curl 1>/dev/null 2>&1
       if [ $? = 0 ]; then
-        wget -q --output-document="$OFILE" "$URL"
+        curl -s -o "$OFILE" "$URL"
       else
-        error "requires either curl or wget"
+        error "requires either wget or curl"
       fi
     fi
     if [ $? != 0 ]; then
@@ -214,7 +273,7 @@ loadproxy)
         fi
       fi
       # tell JS9 the new file name to load
-      echo "${JS9_WORKDIR:-.}/$OFILE"
+      echo "${JS9_WORKDIR}/$OFILE"
     fi
     exit 0
     ;;
@@ -246,14 +305,15 @@ removeproxy)
 
 macros)
     echo "
-    png:      [$1]
+    image     [$1]
     filename: [$2]
     id:       [$3]
     foo:      [$4] (not expanded)
     sregions: [$5]
     bregions: [$6]
-    string1:  [$7] (passed on command line)
-    string2:  [$8] (passed on command line)"
+    reg(wcs): [$7]
+    reg(phy): [$8]
+    string1:  [$9] (passed on command line)"
     exit 0
     ;;
 
