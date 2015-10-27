@@ -83,6 +83,11 @@ if [ x"$jworkdir" != x ]; then
   X="$X;s#^JWORKDIR=\".*\"#JWORKDIR=\"$jworkdir\"#"
 fi
 
+jloadproxy=`egrep '"loadProxy" *:' $IPREFS | awk -F: '{print $NF}' |sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
+if [ x"$jloadproxy" != x ]; then
+  X="$X;s#^JLOADPROXY=\".*\"#JLOADPROXY=\"$jloadproxy\"#"
+fi
+
 jwrappers=`egrep '"analysisWrappers" *:' $IPREFS | awk -F: '{print $NF}' |sed 's/"//g'  | sed 's/^[ 	]*//;s/[,} 	]*$//'`
 if [ x"$jwrappers" != x ]; then
   if [ x${jwrappers:0:1} != "x/" ]; then
