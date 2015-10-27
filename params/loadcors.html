@@ -1,17 +1,19 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
-<header>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-</header>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<title>Load a shared URL</title>
+</head>
 
 <body>
-<title>Load a shared URL</title>
 
-<form id="sharedURLForm" name="sharedURLForm" class="js9AnalysisForm">
+<form id="sharedURLForm" name="sharedURLForm" class="js9AnalysisForm" action="">
 <b>
-Dropbox allows you to share files using public links that can be given to others. These links support <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing"> Cross-Origin Resource Sharing</a>, so JS9 can display them directly.
+Dropbox allows you to share files using public links that can be given to others. These links support <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing"> Cross-Origin Resource Sharing</a>, so JS9 can display them directly. Enter a Dropbox shared link to a FITS file below:
 </b>
 <p>
-<input type="text" placeholder="Enter a Dropbox shared link to a FITS file" id="sharedURL" name="sharedURL" size="90%">
+<input type="text" id="sharedURL" name="sharedURL" size="90%">
 <p>
 <input id="run" name="run" type="button" class="button" value="Load" 
 onclick="var arr = $('#sharedURLForm').serializeArray();
@@ -26,7 +28,7 @@ if( url.match(/dropbox\.com/) ){
   url = url.replace('?dl=0', '').trim() + '?raw=1';
 } else if( url.match(/drive\.google\.com/) ){
   url=url.replace(/\/file\/d\/(\w+)\/\w+\?usp=sharing/,
-                  '/uc?export=download&id=$1').trim();
+                  '/uc?export=download&amp;id=$1').trim();
   JS9.error('Google Drive does not support CORS');
 }
 JS9.Load(url, {display: dispid});

@@ -1,7 +1,9 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
-<header>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<style>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<style type="text/css">
   .column_I1{
     position: absolute;
     top: 0;
@@ -42,12 +44,12 @@
     width: 75px;
   }
 </style>
-</header>
+<title>Extract Image Section</title>
+</head>
 
 <body>
-<title>Extract Image Section</title>
 
-<form id="imageSectionForm" name="imageSectionForm" class="js9AnalysisForm">
+<form id="imageSectionForm" name="imageSectionForm" class="js9AnalysisForm" action="">
 
 <div class="linegroup">
 <span class="column_I1">
@@ -64,10 +66,10 @@ checked="checked"><b>manual center/size</b><br>
 <b>center:</b>
 </span>
 <span class="column_B1">
-<input type="text" class="text_B1" id="xcen" name="xcen" value="" />
+<input type="text" class="text_B1" id="xcen" name="xcen" value="">
 </span>
 <span class="column_B2">
-<input type="text" class="text_B1" id="ycen" name="ycen" value="" />
+<input type="text" class="text_B1" id="ycen" name="ycen" value="">
 </span>
 <span class="column_C1">
 (physical coords)
@@ -79,10 +81,10 @@ checked="checked"><b>manual center/size</b><br>
 <b>size:</b>
 </span>
 <span class="column_B1">
-<input type="text" class="text_B1" id="xdim" name="xdim" value="" />
+<input type="text" class="text_B1" id="xdim" name="xdim" value="">
 </span>
 <span class="column_B2">
-<input type="text" class="text_B1" id="ydim" name="ydim" value="" />
+<input type="text" class="text_B1" id="ydim" name="ydim" value="">
 </span>
 <span class="column_C1">
 (pixels)
@@ -90,7 +92,6 @@ checked="checked"><b>manual center/size</b><br>
 </div>
 
 <div class="linegroup">
-</span>
 <span class="column_I1">
 <input type="radio" name="omode" value="native" checked="checked"><b>native format</b>
 </span>
@@ -136,6 +137,8 @@ operate on the new file as a table, e.g., bin and filter the new table
 using the Binning plugin. However, the new table might not be much
 smaller than the 'parent' table if the selected section includes
 most of the rows (e.g. extracting a bright source).
+
+</div>
 
 </body>
 </html>
