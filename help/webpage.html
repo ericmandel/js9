@@ -145,12 +145,12 @@ create a menubar that controls multiple displays, so that a given menu
 selection is applied to each display. This is done by creating a
 menubar div with two special characteristics:
 <ul>
-<li> the id of the menu bar starts with <b>_SUPERMENU</b> (it can end with anything)
+<li> the id of the menu bar starts with <b>SUPERMENU_</b> (it can end with anything, or nothing)
 <li> an HTML5 data attribute called <b>data-displays</b> lists the JS9 displays to control
 </ul>
 For example, to control two JS9 displays:
 <pre>
-  &lt;div class="JS9Menubar" id="_SUPERMENU_" data-displays="JS9,myJS9"&gt;&lt;/div&gt;
+  &lt;div class="JS9Menubar" id="SUPERMENU_" data-displays="JS9,myJS9"&gt;&lt;/div&gt;
 </pre>
 As shown, the <b>data-displays</b> attribute is a comma-separated list
 of JS9 display ids to control with this super-menu.
