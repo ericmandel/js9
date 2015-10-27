@@ -23,6 +23,8 @@ JPLUGINS=""
 JXPATH=""
 # work directory
 JWORKDIR=""
+# whether loadproxy is enabled
+JLOADPROXY=""
 # directory(/ies) where your local data files are stored
 # taken from analysisWrappers in js9Prefs.json
 JDATAPATH=""
@@ -197,6 +199,30 @@ case $CGIkey in
 	    $CMD $* "$CGIfits"
         else
 	    error "fits2png or wrapper function missing"
+	fi
+	;;
+
+    loadproxy)
+	if [ -d "$JWRAPPERS" ]; then
+	    # cd to the work directory, if necessary
+	    if [ x"$JLOADPROXY" != xtrue ]; then
+		error "loadProxy not enabled on this host"
+	    fi
+	    if [ -d "$JWORKDIR" ]; then
+		export JS9_WORKDIR="$JWORKDIR"
+		cd "$JS9_WORKDIR" || error "can't find work dir: $JS9_WORKDIR"
+	    else
+		error "requires configuration of temp work directory"
+	    fi
+	    OFS="$IFS"
+	    IFS=" "
+	    set -- $CGIcmd
+	    IFS="$OFS"
+	    CMD="$JWRAPPERS/$1"
+	    shift
+	    $CMD $*
+        else
+	    error "wrapper function missing for: $CMD"
 	fi
 	;;
 
