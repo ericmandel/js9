@@ -438,6 +438,10 @@ function execCmd(io, socket, obj, cbfunc) {
     }
     // the command string
     argstr = obj.cmd || "";
+    // expand directory macros
+    argstr = argstr
+	.replace(/\$\{?JS9_DIR\}?/, cdir)
+	.replace(/\$\{?JS9_WORKDIR\}?/, (socket.js9.workDir || ""));
     // split arguments on spaces, respecting quotes
     args = parseArgs(argstr);
     // get commmand to execute
@@ -592,10 +596,10 @@ function socketioHandler(socket) {
 	    if( cbfunc ){ cbfunc("OK"); }
     });
     // on image: signal from JS9 that a new or redisplayed image is active
-    // returns: [input file path, fits file path, "wcs"|"pix", wcs system]
+    // returns: [input file path, fits file path, fits + extension]
     // for other implementations, this is needed if you want to:
-    //   tell JS9 about default wcs system for this data file
     //   get FITS filename associated with PNG representation files
+    //   (args 1 and 2 will be identical when imaging FITS files)
     socket.on("image", function(obj, cbfunc) {
 	if( !obj ){return;}
 	if( globalOpts.cmd ){
@@ -630,7 +634,11 @@ function socketioHandler(socket) {
     for(j=0; j<analysis.pkgs.length; j++){
 	for(i=0; i<analysis.pkgs[j].length; i++){
 	    a = analysis.pkgs[j][i];
-	    // add loadproxy if explicitly enabled
+	    // check for require workDir
+	    if( a.workDir && !globalOpts.workDir ){
+		continue;
+	    }
+	    // loadproxy must be enabled explicitly
 	    if( a.name === "loadproxy" && !globalOpts.loadProxy ){
 		continue;
 	    }
