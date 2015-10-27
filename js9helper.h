@@ -1,7 +1,6 @@
 #if HAVE_CFITSIO
 #include <fitsio.h>
-#elif HAVE_FUNTOOLS
-#include <funtools.h>
+#include "./astroem/jsfitsio.h"
 #endif
 #include <file.h>
 #include <find.h>
@@ -57,18 +56,14 @@ extern int optind;
 #define DEG2RAD(a)	((PI/180.0)*a)
 #define RAD2DEG(a)	((180.0/PI)*a)
 
+#define EXTLIST "EVENTS STDEVT"
+
 /* fits info structure */
 typedef struct finforec{
   struct finforec *next;
   char *fname;
   int ftype;
-#if HAVE_CFITSIO
-  fitsfile *fptr;
-#elif HAVE_FUNTOOLS
-  Fun fun;
-#endif
   FILE *fp;
-  char *ofitsfile;
   char *fitsfile;
   png_structp png_ptr;
   png_infop info_ptr;
