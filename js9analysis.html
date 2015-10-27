@@ -1,4 +1,5 @@
-<!DOCTYPE HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -9,7 +10,7 @@
   <script type="text/javascript" src="js9support.min.js"></script>
   <script type="text/javascript" src="js9.min.js"></script>
   <script type="text/javascript" src="js9plugins.js"></script>
-  <style>
+  <style type="text/css">
       #myAnalysisDiv {
         background: #E9E9E9;
         border-width: 0px;
@@ -37,6 +38,7 @@
         width: 600px;
       }
   </style>
+  <title>JS9 analysis</title>
 </head>
 <body onload="initMyAnalysis()">
     <script type="text/javascript">
@@ -73,7 +75,7 @@
         switch(a.rtype){
         case "text":
           // text can just get shoved into the div
-          rdiv.innerHTML = "<pre>" + stdout + "</pre>";
+          rdiv.innerHTML = "<pre>" + stdout + "<\/pre>";
           break;
         case "plot":
           // plot can make use of the already-loaded flot routines
@@ -96,9 +98,9 @@
       }
     }
     </script>
-    <font size="+1"><center>
+    <center><font size="+1">
     <b>JS9 Demo: two ways of doing remote (server-based) data analysis</b>
-    </center></font>
+    </font></center>
     <table cellspacing="20">
     <tr valign="top">
     <td>
@@ -134,14 +136,14 @@
     <button id="histplot" class="myButton">HistogramPlot</button>
     </div>
     </div>
-    <div id="myHistParams", style="display:none">
-    <form id="myHistPlotForm" name="myHistPlotForm" class="js9AnalysisForm">
+    <div id="myHistParams" style="display:none">
+    <form id="myHistPlotForm" name="myHistPlotForm" class="js9AnalysisForm" action="">
     <div class="linegroup">
     <span class="column_A">
     <b>Enter column name</b>
     </span>
     <span class="column_B">
-    <input type="text" class="text_B" id="column" name="column" value="pi" />
+    <input type="text" class="text_B" id="column" name="column" value="pi">
     </span>
     <span class="column_C">
     <font size="-1">(column must be in file)</font>
@@ -152,7 +154,7 @@
     <b>Enter [min:max:]bins</b>
     </span>
     <span class="column_B">
-    <input type="text" class="text_B" id="bins" name="bins" value="0" />
+    <input type="text" class="text_B" id="bins" name="bins" value="0">
     </span>
     <span class="column_C">
     <font size="-1">(0 => default # of bins)</font>
@@ -163,7 +165,7 @@
     Bin width instead of # of bins?
     </span>
     <span class="column_B">
-    <input type="checkbox" id="bwidth" name="bwidth" value="true"/>
+    <input type="checkbox" id="bwidth" name="bwidth" value="true">
     </span>
     <span class="column_C">
     </span>
@@ -173,7 +175,7 @@
     Normalize by bin size?
     </span>
     <span class="column_B">
-    <input type="checkbox" id="norm" name="norm" value="true"/>
+    <input type="checkbox" id="norm" name="norm" value="true">
     </span>
     <span class="column_C">
     </span>

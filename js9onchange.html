@@ -1,4 +1,5 @@
-<!DOCTYPE HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -9,7 +10,7 @@
   <script type="text/javascript" src="js9support.min.js"></script>
   <script type="text/javascript" src="js9.min.js"></script>
   <script type="text/javascript" src="js9plugins.js"></script>
-  <style>
+  <style type="text/css">
       #myAnalysisDiv {
         background: #E9E9E9;
         border-width: 0px;
@@ -28,6 +29,7 @@
         overflow: auto;
       }
   </style>
+  <title>JS9 onchange</title>
 </head>
 <body onload="initMyAnalysis()">
     <script type="text/javascript">
@@ -121,7 +123,7 @@
 	t += "\n";
       }
       // display all regions
-      rdiv.innerHTML = "<pre>" + t + "</pre>";
+      rdiv.innerHTML = "<pre>" + t + "<\/pre>";
     }
     //
     function modifyMyRegion(im, xreg){
@@ -211,7 +213,7 @@
         switch(a.rtype){
         case "text":
           // text can just get shoved into the div
-          rdiv.innerHTML = "<pre>" + stdout + "</pre>";
+          rdiv.innerHTML = "<pre>" + stdout + "<\/pre>";
           break;
         case "plot":
           // plot can make use of the already-loaded flot routines
@@ -234,9 +236,9 @@
       }
     }
     </script>
-    <font size="+1"><center>
+    <center><font size="+1">
     <b>JS9 Demo: running tasks in response to region changes</b>
-    </center></font>
+    </font></center>
     <table cellspacing="20">
     <tr valign="top">
     <td>
@@ -267,12 +269,12 @@
     <form autocomplete="off" action="">
     <div id="myButtonsDiv">
     <div id="myButtonsBox">
-    <input type="radio" name="onchange" id="disp">Display a Region</input>
-    <input type="radio" name="onchange" id="dispAll">Display all Regions</input>
-    <input type="radio" name="onchange" id="modify">Modify a Region</input>
+    <input type="radio" name="onchange" id="disp">Display a Region
+    <input type="radio" name="onchange" id="dispAll">Display all Regions
+    <input type="radio" name="onchange" id="modify">Modify a Region
     <br>
-    <input type="radio" name="onchange" id="enplot">Energy Spectrum</input>
-    <input type="radio" name="onchange" id="counts">Counts in Regions</input>
+    <input type="radio" name="onchange" id="enplot">Energy Spectrum
+    <input type="radio" name="onchange" id="counts">Counts in Regions
     </div>
     </div>
     </form>

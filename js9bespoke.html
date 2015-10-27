@@ -1,4 +1,5 @@
-<!DOCTYPE HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -9,19 +10,20 @@
   <script type="text/javascript" src="js9support.min.js"></script>
   <script type="text/javascript" src="js9.js"></script>
   <script type="text/javascript" src="js9plugins.js"></script>
-  <style>
+  <style type="text/css">
       #centerdiv {
       width: 512px;
       margin-left: auto ;
       margin-right: auto ;
       }
   </style>
+  <title>JS9 bespoke</title>
 </head>
 <body onload="JS9.Preload('./png/casa.png'); return false">
     <div id="centerdiv">
-    <font size="+1">
-    <center><b>JS9 Demo: an HTML interface (instead of a menubar) </b></center>
-    </font>
+    <center><font size="+1">
+    <b>JS9 Demo: an HTML interface (instead of a menubar) </b>
+    </font></center>
     <p>
     The menubar is only one way to interface with JS9.
     Web designers can create their own graphical inteface, using standard
@@ -44,13 +46,13 @@
     zoom:
     </td>
     <td>
-    <button id="1" class="zoom">zoom1</button>
+    <button id="z1" class="zoom">zoom1</button>
     </td>
     <td>
-    <button id="2" class="zoom">zoom2</button>
+    <button id="z2" class="zoom">zoom2</button>
     </td>
     <td>
-    <button id="4" class="zoom">zoom4</button> 
+    <button id="z4" class="zoom">zoom4</button> 
     </td>
     </tr>
 
@@ -126,7 +128,7 @@
     <p>
     <div class="JS9"></div>
     </div>
-    <script>
+    <script type="text/javascript">
       var click;
       if( "ontouchstart" in document.documentElement ){
           click = "touchstart";
@@ -135,7 +137,7 @@
       }
       $(".zoom").on(click, function(evt){
           var s = $(evt.currentTarget).attr("id");
-          JS9.SetZoom(s);
+          JS9.SetZoom(s.charAt(1));
           return false;
       });
       $(".scale").on(click, function(evt){
