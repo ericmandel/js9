@@ -4051,8 +4051,9 @@ JS9.Menubar = function(width, height){
 			    // load param url to run analysis task
 			    // param url is relative to js9 install dir
 			    save_orc = JS9.Regions.opts.onchange;
-			    JS9.globalOpts.dhtmlonload = function(){
-				var f = "#imageSectionForm";
+			    $("#dhtmlwindowholder").arrive("#imageSectionForm",
+                            {onceOnly: true}, function(){
+				 var f = "#imageSectionForm";
 				 JS9.Regions.opts.onchange = function(im, xreg){
 				    var w, h, ltm1, ltm2;
 				    // call previous
@@ -4074,12 +4075,11 @@ JS9.Menubar = function(width, height){
 				    $(f+" #xdim").val(Math.floor(w));
 				    $(f+" #ydim").val(Math.floor(h));
 				};
-			    };
-			    JS9.globalOpts.dhtmlloadid  = "imageSectionForm";
-			    JS9.globalOpts.dhtmlonunload = function(){
+			    });
+			    $("#dhtmlwindowholder").leave("#imageSectionForm",
+			    {onceOnly: true}, function(){
 				JS9.Regions.opts.onchange = save_orc;
-			    };
-			    JS9.globalOpts.dhtmlunloadid  = "imageSectionForm";
+			    });
 			    did = JS9.Image.prototype.displayAnalysis.call(null,
 				"params",
 				JS9.InstallDir(JS9.globalOpts.imsectionURL),
@@ -4875,10 +4875,10 @@ JS9.Menubar = function(width, height){
 			    switch(key){
 			    case "dpath":
 				// call this once window is loaded
-				JS9.globalOpts.dhtmlonload = function(){
+			        $("#dhtmlwindowholder").arrive("#dataPathForm",
+                                {onceOnly: true}, function(){
 				    $('#dataPath').val(JS9.globalOpts.dataPath);
-				};
-				JS9.globalOpts.dhtmlloadid  = "dataPathForm";
+				});
 				did = uim.displayAnalysis("textline",
 					 JS9.InstallDir(JS9.analOpts.dpathURL),
 					 "Data Path for Drag and Drop");
@@ -5326,12 +5326,12 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    if( dblclick ){
 		if( !obj.params.winid ){
 		    // call this once window is loaded
-		    JS9.globalOpts.dhtmlonload = function(){
+		    $("#dhtmlwindowholder").arrive("#regionsConfigForm",
+                    {onceOnly: true}, function(){
 			if( obj.pub ){
 			    JS9.Regions.initConfigForm.call(im, obj);
 			}
-		    };
-		    JS9.globalOpts.dhtmlloadid  = "regionsConfigForm";
+		    });
 		    if( JS9.allinone ){
 			obj.params.winid = im.displayAnalysis("params",
 			  JS9.allinone.regionsConfigHTML,
@@ -9977,34 +9977,6 @@ JS9.init = function(){
 	    .attr("id", "dhtmlwindowholder")
 	    .appendTo($(document.body))
 	    .append("<span style='display:none'>.</span>");
-	// support callbacks after the dhtml window has been created
-	$("#dhtmlwindowholder").bind('DOMNodeInserted', function(e) {
-	    var func = JS9.globalOpts.dhtmlonload;
-	    var id = JS9.globalOpts.dhtmlloadid;
-	    if( func && (id === $(e.target).attr("id")) ){
-		// only once per dhtml window creation
-		delete JS9.globalOpts.dhtmlonload;
-		delete JS9.globalOpts.dhtmlloadid;
-		// slight delay, just in case!
-		window.setTimeout(function(){
-		    func.call(null);
-		}, JS9.TIMEOUT);
-	    }
-	});
-	// support callbacks after the dhtml window has been destroyed
-	$("#dhtmlwindowholder").bind('DOMNodeRemoved', function(e) {
-	    var func = JS9.globalOpts.dhtmlonunload;
-	    var id = JS9.globalOpts.dhtmlunloadid;
-	    if( func && (id === $(e.target).attr("id")) ){
-		// only once per dhtml window creation
-		delete JS9.globalOpts.dhtmlonunload;
-		delete JS9.globalOpts.dhtmlunloadid;
-		// slight delay, just in case!
-		window.setTimeout(function(){
-		    func.call(null);
-		}, JS9.TIMEOUT);
-	    }
-	});
 	// allow in-line specification of images for all-in-one configuration
 	if( JS9.allinone ){
 	    dhtmlwindow.imagefiles = [JS9.allinone.min,
