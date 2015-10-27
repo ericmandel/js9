@@ -39,7 +39,7 @@ case $name in
 		--prefix=/soft/saord					\
 		--with-webdir=/home/mred/public_html/htdocs/js9		\
 		--with-helper=get					\
-		--with-funtools=/soft/saord				\
+		--with-cfitsio=/proj/rd/linux64				\
 		--with-png=/proj/rd/linux64				\
 		--with-cgidir=/home/mred/public_html/cgi-bin/js9	\
 		--with-cgiurl=./cgi-bin/js9				\
@@ -53,7 +53,8 @@ case $name in
 		--prefix=/export/eric					\
 		--with-webdir=/home/mred/public_html/htdocs/js9		\
 		--with-helper="nodejs"					\
-		--with-funtools=/home/mred/pub/usr/local		\
+		--with-cfitsio=/export/eric				\
+		--with-png=/export/eric				\
   		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
  		$*
   ;;
@@ -96,7 +97,7 @@ case $name in
 		--prefix=$HOME						\
 		--with-webdir=/Users/eric/Sites/js9			\
 		--with-helper=get					\
-		--with-funtools=/usr/local				\
+		--with-cfitsio=/usr/local				\
 		--with-png=/usr/local					\
 		--with-cgidir=/Users/eric/Sites/cgi-bin			\
 		--with-cgiurl="~eric/cgi-bin"				\
@@ -110,21 +111,11 @@ case $name in
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
-  hopper*)
-  ./configure 	$CF							\
-		--prefix=$HOME						\
-		--with-webdir=$HOME/http/js9				\
-		--with-helper=nodejs					\
-		--with-funtools=$HOME					\
-		--with-saodir=$HOME/http				\
-		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
-  ;;
-
   js9*)
   BASE=/proj/web-js9
   ./configure 	$CF							\
 		--prefix=$BASE						\
-		--with-funtools=$BASE					\
+		--with-cfitsio=$BASE					\
 		--with-png=$BASE					\
 		--with-webdir=$BASE/www/js9				\
 		--with-saodir=$BASE/www					\
