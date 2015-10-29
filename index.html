@@ -24,8 +24,8 @@
       #myTabsContainer {
         background: #E9E9E9;
         padding-top: 5px;
-        padding-left: 10px;
-        padding-right: 10px;
+        padding-left: 5px;
+        padding-right: 5px;
       }
       #myTabsDiv {
         background: #E9E9E9;
@@ -64,8 +64,14 @@
       }
       .plugin {
         display: inline-block;
-        width: 220px;
-        height: 220px;
+        width: 210px;
+        height: 210px;
+      }
+      @media only screen and (device-width: 768px) {
+        /* For general iPad layouts */
+        #myTabsDiv {
+          min-height: 510px;
+        }
       }
   </style>
 <title>SAOimage JS9</title>
@@ -163,11 +169,12 @@
       }
     }
     </script>
-    <center>
-    <h2>JS9: astronomical image display right in your
-    browser</h2>
-    </center>
-    <table cellspacing="30">
+    <center><b>
+    <font size="+2">
+    JS9: astronomical image display right in your browser
+    </font>
+    </b></center>
+    <table cellspacing="5">
     <tr valign="top">
     <td>
     <div class="JS9Menubar"></div>
@@ -202,7 +209,7 @@
     <div id="intro" class="tabcontent mytabcontent">
       JS9 brings our Desktop
       <a href="http://ds9.si.edu" target="_blank">DS9</a> 
-      image display into your browser:
+      image display to your browser:
       <ul>
 	<li> display FITS images and tables in a Web page
 	<li> drag and drop FITS images and tables
@@ -219,19 +226,18 @@
 	<li> print images, create RGB images, ...
       </ul>
       <p>
-      JS9 can change how we think about image display and analysis,
-      moving beyond the Desktop into the Web. Drag and drop a FITS
-      image onto this JS9 display and all basic JS9 functionality is
-      immediately available: zoom, pan, colormaps, scaling, regions ...
+      Drag and drop a FITS astronomical data file onto the display and JS9
+      functionality immediately becomes available: zoom, pan, colormaps,
+      scaling, regions ...
       <p>
       By extending JS9 with the plugin facility and the public API, you
-      can perform browser-based analysis on the displayed image. Click
-      the Plugins tab, create a region, and move it around ...
+      can perform browser-based analysis on the displayed image: click
+      the Plugins tab, create a region, move it around ...
       <p>
-      In addition, data files loaded from a server support server-side
-      analysis. Analysis can be run, for example, when a region changes, 
-      with the results displayed back in your browser.  Click the Analysis
-      tab, choose a task, create a region, and move it around ...
+      In addition, images loaded from a server support remote
+      (server-side) analysis. For example, analysis can run when a region
+      changes, with results displayed back in your browser: click the
+      Analysis tab, choose a task, create a region, move it around ...
       <p>
     </div>
     <div id="analysis" class="tabcontent mytabcontent">
@@ -274,9 +280,7 @@
     <div id="plugins" class="tabcontent mytabcontent">
     <div class="pluginContainer">
     <p>
-    For browser-based analysis, create a region and move it around ...
-    <br>
-    (See the <a href="js9/help/localtasks.html" target="_blank">Local Analysis Tasks</a> help page for info about plugins.)
+    <a href="js9/help/localtasks.html" target="_blank">Local Analysis Tasks</a>: create a region, move it around ...
     <p>
     <table>
     <tr><td><div class="ImExamRegionStats plugin" data-js9id="JS9"></div></td>
@@ -391,6 +395,7 @@
       <li> jquery programming ease (http://jquery.com/)
       <li> jquery.contextMenu (http://medialize.github.io/jQuery-contextMenu/)
       <li> arrive.js for MutationObserver support (https://github.com/uzairfarooq/arrive)
+      <li> double click support from appcropolis (http://appcropolis.com/blog/howto/implementing-doubletap-on-iphones-and-ipads/)
       </ul>
       <p>
       JS9 development at the
