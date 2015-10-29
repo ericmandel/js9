@@ -453,7 +453,7 @@ gitprefs:	FORCE
 		     git checkout -- js9Prefs.json; \
 		  fi;)
 
-release:	clean gitprefs allinone
+release:	clean gitprefs
 		(mkdir -p $(DISTDIR)/$(DISTNAME); \
 		tar cf - \
 			 --exclude='node_modules/selenium-webdriver' \
