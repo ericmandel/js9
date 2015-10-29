@@ -385,6 +385,8 @@ ajax_loadpage:function(page_request, t){
 
 stop:function(){
 	dhtmlwindow.etarget=null //clean up
+	dhtmlwindow.distancex=0 //clean up
+	dhtmlwindow.distancey=0 //clean up
 	document.onmousemove=null
 	document.ontouchmove=null
 	document.onmouseup=null

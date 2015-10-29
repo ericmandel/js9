@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.6, Tue Oct 27 16:01:27 EDT 2015 */
+/* JS9 allinone: v1.6, Thu Oct 29 14:22:17 EDT 2015 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -690,7 +690,7 @@ input:focus.JS9CmdIn{
 }
 
 .indentmenu{
-    font: normal 12px Arial;
+    font: normal 11px Arial;
 }
 
 .indentmenu ul{
@@ -699,7 +699,9 @@ input:focus.JS9CmdIn{
 }
 
 .indentmenu ul li a{
-    border-right: 3px solid #E9E9E9;
+    border-right: 2px solid #E9E9E9;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .indentmenu ul li a.selected{

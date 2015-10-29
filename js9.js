@@ -144,6 +144,7 @@ JS9.analOpts = {
 
 // light window opts
 JS9.lightOpts = {
+    nclick: 0,
     dhtml: {
 	top:      ".dhtmlwindow",
 	drag:     ".drag-contentarea",
@@ -5182,7 +5183,7 @@ JS9.Fabric.opts = {
     originX: "center",
     originY: "center",
     strokeWidth: 2,
-    cornerSize: 8 * (fabric.isTouchSupported ? 2 : 1),
+    cornerSize: fabric.isTouchSupported ? 12 : 8,
     transparentCorners: false,
     selectionLineWidth: 2,
     centeredScaling: true,
@@ -8506,12 +8507,39 @@ JS9.msgHandler =  function(msg, cb){
 // create a light window
 // someday we might want other options ...
 JS9.lightWin = function(id, type, s, title, opts){
+    var rval;
     switch(JS9.LIGHTWIN){
     case "dhtml":
-        return dhtmlwindow.open(id, type, s, title, opts);
+	rval = dhtmlwindow.open(id, type, s, title, opts);
+	// allow double-click or double-tap to close ...
+	// ... the close button is unresponsive on the ipad/iphone
+        $("#" + id + " ." + JS9.lightOpts.dhtml.dragBar)
+	    .doubletap(function(){ rval.close(); }, null, 400);
+	// if ios user failed to close the window via the close button,
+	// give a hint (once per session only!)
+        $("#" + id + " ." + JS9.lightOpts.dhtml.dragBar)
+	    .on("touchend", this, function(e){
+		// skip check if we are dragging
+		if( !dhtmlwindow.distancex  && !dhtmlwindow.distancey ){
+		    if( JS9.lightOpts.nclick >= 2 ){
+			alert("trouble closing this window? double-tap the window handle");
+			JS9.lightOpts.nclick = -1;
+		    } else {
+			if( JS9.lightOpts.nclick >= 0 ){
+			    JS9.lightOpts.nclick++;
+			}
+		    }
+		} else {
+		    if( JS9.lightOpts.nclick > 0 ){
+			JS9.lightOpts.nclick = 0;
+		    }
+		}
+	    });
+        break;
     default:
-	break;
+        break;
     }
+    return rval;
 };
 
 // wrapper for new function to avoid jslint errors
