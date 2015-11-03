@@ -11465,23 +11465,22 @@ JS9.WCS2Pix = JS9.WCSToPix;
 //  display a help page (or a general url, actually)
 JS9.mkPublic("DisplayHelp", function(hname){
     var id, title, url;
-    var opts = "width=830px,height=400px,center=1,resize=1,scrolling=1";
+    var opts = JS9.lightOpts.dhtml.textWin;
     var type = "iframe";
     var help;
     // sanity check
     if( !hname ){
 	return;
     }
+    id = hname + "_" + JS9.uniqueID();
     // look for known help file
     help = JS9.helpOpts[hname];
     if( help ){
 	// help file
-	id = help.title + "_" + JS9.uniqueID();
 	url = JS9.InstallDir(help.type + "/" + help.url);
 	JS9.lightWin(id, type, url, help.title, opts);
     } else {
 	// its a random url
-	id = hname + "_" + JS9.uniqueID();
 	title = hname.split("/").reverse()[0];
 	JS9.lightWin(id, type, hname, title, opts);
     }
