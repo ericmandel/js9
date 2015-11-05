@@ -1,14 +1,17 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<style>
-.container{
-  padding: 10px;
-}
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<style type="text/css">
+  .container{
+    padding: 10px;
+  }
 </style>
+<title>Server-side Analysis Tasks</title>
 </head>
 <body>
 <div class="container">
-<title>Server-side Analysis Tasks</title>
 
 <center><h3>Adding Server-side Analysis Tasks to JS9</h3></center>
 
@@ -239,9 +242,46 @@ functionality that is loaded into JS9, or you can use your own chosen
 plotting package. See js9analysis.html for a simple example.
 
 <p>
+<h3>Temporary Work Directories for Users</h3>
+<p>
+By default, server-side analysis is initiated in the directory in which
+Node.js or the CGI script is run. For tasks not creating temp files,
+this usually is sufficient. For other cases, it can be desirable to
+isolate users in their own temporary work directories.  To do this
+automatically (i.e. without the task itself having to change
+directories), set the following property in the globalOpts object of
+the js9Prefs.json file:
+<ul>
+<li><b>workDir</b>: set to the relative path of a directory which
+will hold temporary working directories for each loaded Web page.
+</ul>
+You also can set the following globalOpts configuration parameters in
+js9Prefs.json:
+<ul>
+<li><b>workDirQuota</b>: the disk quota on working directory (default: 50Mb)
+<li><b>rmWorkDir</b>: remove workdir when Web page disconnects? (default: true)
+</ul>
+When <b>workDir</b> is configured, user sub-directories will be created
+in the <b>workDir</b> directory to contain temporary files. Analysis
+tasks will be started in the work sub-directory.
+<p>
+By default, the work directory is removed when the Web page is unloaded,
+but this can be changed by setting <b>rmWorkDir</b> to false.
+<p>
+Note that the <b>workDirQuota</b> is not a hard quota: JS9 tasks such
+as <b>load proxy</b> enforce their own checks using this value.  For
+example, load proxy only checks whether the quota has been exceeded
+before loading the next file. This means that users can load one file
+that will bring the total size above the quota. Thus, if the
+quota is 10Mb and the work directory is empty, the load proxy will
+load a 50Mb file. But it will not more load files until already-loaded
+files have been closed in JS9 (and thereby deleted in the temp
+directory) so as to bring the total under the quota.
+
+<p>
 <h3>The Proxy Load Service</h3>
 <p>
-NB: use this service with care. It can consume considerable disk resources!
+NB: use this service with care. It allows users to consume disk resources!
 <p>
 For security reasons, JavaScript contained in one Web page can
 access data in another Web page only if both Web pages have the
@@ -256,33 +296,14 @@ directly into JS9, but instead is copied back to the server from which
 JS9 itself was loaded. The file is then retrieved by JS9 so that the
 "same origin" rules are not violated.
 <p>
-The Node.js back-end server can be set up as a proxy server by setting
-the following properties in the js9Prefs.json file (before
-starting the server):
+A CGI or Node.js back-end server can be set up as a proxy server by
+setting the following globalOpts properties in the js9Prefs.json file
+(before starting the server):
 <ul>
 <li><b>loadProxy</b>: set to true to enable proxy load
 <li><b>workDir</b>: set to the relative path of a directory which
 will hold temporary working directories for each loaded Web page.
 </ul>
-You also can set the following configuration parameters in js9Prefs.json:
-<ul>
-<li><b>workDirQuota</b>: the disk quota on working directory (default: 50Mb)
-<li><b>rmWorkDir</b>: remove workdir when Web page disconnects? (default: true)
-</ul>
-When <b>workDir</b> is configured, user sub-directories will be created
-in the <b>workDir</b> directory to contain the proxied FITS files. By
-default, the entire user directory is removed when the Web page is
-unloaded. Individual proxy FITS files also are deleted when they are
-closed in JS9 using the <b>File:close image</b> menu option.
-<p>
-Note that the <b>workDirQuota</b> is not a hard quota: the proxy
-checks whether the quota has been exceeded before loading the next
-file. This means that users can load one file that will bring the
-total size above the quota. For example, if the quota is 10Mb and the
-user directory is empty, the proxy will load a 50Mb file. But it will
-not more load files until already-loaded files have been closed in JS9
-(and thereby deleted in the temp directory) so as to bring the total
-under the quota.
 <p>
 When the back-end server supports the proxy service, you will see a
 menu option in the <b>File</b> menu called <b>open link via proxy ...</b>
@@ -301,8 +322,12 @@ static Web page, you can generate/copy the link and paste it into the
 proxy dialog box for display. (Dropbox files also can utilize
 the <b>open link via CORS ...</b> option, which downloads the data
 directly to JS9, bypassing the proxy server.)
+<p>
+Note that individual proxy FITS files are deleted from the working
+directory when they are closed in JS9 using the <b>File:close
+image</b> menu option.
 
-<h5>Last updated: October 6, 2015</h5>
+<h5>Last updated: November 5, 2015</h5>
 </div>
 
 </body>

@@ -1,14 +1,17 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<style>
-.container{
-  padding: 10px;
-}
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<style type="text/css">
+  .container{
+    padding: 10px;
+  }
 </style>
+<title>The JS9 Public API</title>
 </head>
 <body>
 <div class="container">
-<title>The JS9 Public API</title>
 <center><h3>The JS9 Public API</h3></center>
 
 <p>
@@ -77,9 +80,9 @@ Choose from the following sections:
 </ul>
 
 <hr><p>
-<font size="+1"><center><b>
+<center><b><font size="+1">
 <a name="load">Loading Images</a>
-</b></center></font>
+</font></b></center>
 
 <p>
 <font size="+1"><b><u>Load an image into JS9</u></b></font>
@@ -246,7 +249,7 @@ To load an image into a specified display, pass the <b>display object</b> as the
 <p>
 Note again that not all back-end servers support the proxy functionality.
 The main 
-<a href="http://js9.si.edu">JS9 Web site<a/> does support proxy service, and
+<a href="http://js9.si.edu">JS9 Web site</a> does support proxy service, and
 can be used to view images from arbitrary URLs.
 
 <p>
@@ -304,9 +307,9 @@ Thus, to check for image load, one can do this in python:
 </pre>
 
 <hr><p>
-<font size="+1"><center><b>
+<center><b><font size="+1">
 <a name="images">Working with Images</a>
-</b></center></font>
+</font></b></center>
 <p>
 
 <p>
@@ -814,7 +817,6 @@ returns:
 </ul>
 <p>
 The wcs object contains the following properties:
-</a>
 <ul>
 <li><b>ra</b>: right ascension in floating point degrees
 <li><b>dec</b>: declination in floating point degrees 
@@ -837,7 +839,6 @@ returns:
 <li><b>pixobj</b>: pixel object
 </ul>
 The pixel object contains the following properties:
-</a>
 <ul>
 <li><b>x</b>: x image coordinate
 <li><b>y</b>: y image coordinate
@@ -859,9 +860,9 @@ valpos display) or the "region" area (where regions are displayed). The
 empty string will clear the previous message.
 
 <hr><p>
-<font size="+1"><center><b>
+<center><b><font size="+1">
 <a name="regions">Working with Regions</a>
-</b></center></font>
+</font></b></center>
 <p>
 Spatial regions of interest are a crucial part of astronomical data
 analysis.  The regions layer is a special case of the more generalized
@@ -953,7 +954,6 @@ returns:
 </ul>
 <p>
 Each returned region object contains the following properties:
-</a>
 <ul>
 <li><b>id</b>: numeric region id (assigned by JS9 automatically)
 <li><b>mode</b>: "add", "remove" or "change"
@@ -1018,9 +1018,9 @@ where:
 </ul>
 
 <hr><p>
-<font size="+1"><center><b>
+<center><b><font size="+1">
 <a name="shapes">Working with Shape Layers</a>
-</b></center></font>
+</font></b></center>
 <p>
 JS9 supports individual layers for drawing 2D graphics. The regions
 layer is a special case of a shape layer, created automatically by
@@ -1157,7 +1157,6 @@ returns:
 </ul>
 <p>
 Each returned shape object contains the following properties:
-</a>
 <ul>
 <li><b>id</b>: numeric region id (assigned by JS9 automatically)
 <li><b>mode</b>: "add", "remove", or "change"
@@ -1190,9 +1189,9 @@ described in the <b>JS9.AddShapes()</b> section. However, you cannot (yet)
 change the shape itself (e.g. from "box" to "circle").
 
 <hr><p>
-<font size="+1"><center><b>
+<center><b><font size="+1">
 <a name="server">Server-side Analysis</a>
-</b></center></font>
+</font></b></center>
 <p>
 
 <p>
@@ -1209,15 +1208,13 @@ where:
 The <b>JS9.RunAnalysis()</b> routine is used to execute a server-side
 analysis task and return the results for further processing within the
 Web page.
-<li> The optional <b>parr</b> array of parameters is passed to the JS9
+The optional <b>parr</b> array of parameters is passed to the JS9
 analysis macro expander so that values can be added to the command
 line.  The array is in jQuery name/value serialized object format,
 which is described here:
 <pre>
     http://api.jquery.com/serializeArray/
 </pre>
-<li>func: a function to process the returned data when the task is complete.
-</ul>
 <p>
 The <b>func()</b> routine is a callback function to process the returned
 results from the analysis task.  The calling sequence is:
@@ -1266,9 +1263,9 @@ See js9analysis.html for a simple example.
 The <b>func</b> callback is the same as for <b>JS9.RunAnalysis()</b> above.
 
 <hr><p>
-<font size="+1"><center><b>
+<center><b><font size="+1">
 <a name="misc">Miscellaneous</a>
-</b></center></font>
+</font></b></center>
 <p>
 
 <p>
@@ -1393,9 +1390,9 @@ See also <b>JS9.LoadWindow()</b> for a nice way to load images into a
 light-weight or completely new window.
 
 <hr>
-<font size="+1"><center><b>
+<center><b><font size="+1">
 <a name="proto">Prototype Routines (not ready for prime time)</a>
-</b></center></font>
+</font></b></center>
 <p>
 NB: The routines in this section are prototypes and therefore are
 subject to change. Feel free to contact us to discuss your needs so
@@ -1488,9 +1485,9 @@ that we can continue to think about what is required for their support.
 
 
 <hr><p>
-<font size="+1"><center><b>
+<center><b><font size="+1">
 <a name="proto">API Change History</a>
-</b></center></font>
+</font></b></center>
 <p>
 The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.

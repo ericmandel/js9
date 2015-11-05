@@ -1,31 +1,135 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<style>
-.container{
-  padding: 10px;
-}
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<style type="text/css">
+  .container{
+    padding: 10px;
+  }
 </style>
+<title>Dealing with Large Files</title>
 </head>
 <body>
 <div class="container">
-<title>The PNG Representation File</title>
+
+<center><h3>Dealing with Large Files</h3></center>
+<p>
+Archives, and especially X-ray archives, present special problems for
+displaying data in a Web browser. Instead of images, X-ray data
+consists of detected photons stored in FITS binary tables. This means
+that the file size is related to the number of detected photons, not
+the image dimensions. Indeed, X-ray data files can be hundreds of
+megabytes in size.  Downloading (and then binning) these tables can be
+painfully slow, especially if the aim simply is to offer a quick look
+at the data.
+
+<p>
+Of course, FITS image files also present a problem if they are large.
+A 2048 x 2048 32-bit FITS image has a file size of more than 16Mb,
+which can take 30 seconds or more to download on a DSL line. A 12000 x
+12000 Hubble Deep field gzip'ed FITS image can have a file size of
+more than 300Mb. Thus, we need alternatives to simply downloading
+large files for display.
+
+<p>
+One possibility for dealing with large files is to download a smaller
+<b>representation file</b>. For some purposes, a small representation
+file can be used to identify spatial regions of interest, which then
+can be extracted at full resolution.  In other cases, viewing a small
+image representation can be sufficient, especially if you still have
+the ability to perform analysis on the original file.
+
+<p>
+JS9 supports two different ways of dealing with large files through the
+use of smaller representation files:
+<ul>
+<li> you can associate a <b>parent</b> with a representation file and
+allow full resolution section to be extracted from the parent.
+<li> for X-ray data, you can generate <b>PNG representation files</b> that
+are automatically linked to the original file
+</ul>
+These two schemes are described below.
+
+
+<center><h3>Parent Files and Spatial Region Extraction</h3></center>
+
+<p>
+Consider the 12000 x 12000 300Mb Hubble Deep Field image mentioned
+above. This file could take several minutes to download. Even if
+stored locally, it requires more than 500Mb of memory to display,
+which is close to the memory limit of some browsers. But you can bin this
+file by a factor of 24 into a gzip'ed 512 x 512 FITS image with a file
+size of approximately 500Kb.  This <b>representation file</b> would
+download quickly and give a good overview of the entire data set. If
+you then could extract a spatial region of interest from the original
+file at full resolution, you would, in essence, be panning around the
+original image without the transmission and memory overhead associated
+with processing the whole file.
+
+<p>
+JS9 supports this sort of <b>representation file</b> display and image
+extraction. To utilize it at your site, you must configure a
+<a href="helper.html" target="_blank">Server-side (Back-end)
+Helper</a> (using Node.js or CGI), and set up 
+<a href="serverside.html" target="_blank">Server-side Analysis</a>
+to perform the JS9-supplied <b>imsection</b> task.
+
+<p>
+In addition, the Server-side helper must support temporary user work
+directories in which to store the section files. This is accomplished
+by setting the <b>globalOpts.workDir</b> property in js9Prefs.json to
+a directory which will contain the work directories.  You might want
+to set the <b>globalOpts.workDirQuota</b> property (default value of
+50Mb) to limit the amount of space that can be utilized by each
+user. (But note that the <b>workDirQuota</b> is not a hard quota:
+imsection only checks whether the quota has been exceeded before
+extracting the next section. This means that users can extract one
+section that will bring the total size above the quota. Thus, if the
+quota is 10Mb and the work directory is empty, imsection will extract
+a 50Mb file. But it will not extract more files until already-loaded
+files have been closed in JS9 to bring the total under the quota.)
+
+<p>
+Assuming the back-end server is set up, you then can load a
+<b>representation file</b> using JS9.Load(), but with the addition of
+a <b>parentFile</b> property in the options object.  The value
+of <b>parentFile</b> will be the relative path of the original file:
+<pre>
+    JS9.Load("fits/f814w_bin24.fits.gz", {colormap:"cool", parentFile: "fits/f814w.fits.gz"})
+</pre>
+When a <b>parentFile</b> is specified, the File menu will activate the
+<b>extract image section ...</b> menu option. From its dialog box, you 
+will be able to set the image coordinates and size of the section to extract.
+Alternatively, you can choose to have these values automatically updated
+from a box region that you create, move, and resize.
+<p>
+You can also choose to extract the specified section in native format
+(i.e. as a binary table if the parent file is a binary table, etc.) or
+as an image (even if the parent is a binary table).
+<p>
+When the <b>Extract</b> button is pressed, the position and size
+parameters are used to extract a new FITS file from the parent
+file. This file is stored in the temporary work directory and
+displayed in JS9. Analysis can then be performed on this section
+file. When the File <b>close image</b> menu option is chosen, the section
+file will be deleted.
+
+<p>
+Extracting sections works especially well with large FITS images. It
+also can be used for binary tables. However, since the size of a
+binary table depends on the number of events, an extracted section can
+still be very large if it contains a bright source.
+
 <center><h3>The PNG Representation File</h3></center>
 
 <p>
-X-ray archives present special problems for displaying data. Instead
-of images, X-ray data consists of detected photons stored in FITS
-binary tables. This means that the file size is related to the number
-of detected photons, not the image dimensions. Indeed, X-ray data
-files can be hundreds of megabytes in size.  Downloading (and then
-binning) these tables can be painfully slow, especially if the aim
-simply is to offer a quick look at the data. On the other hand, simply
-generating a FITS image from the binary table for download breaks the
-connection with the original events, which might be needed for
-server-side analysis.
-
-<p>
-To remedy this situation, JS9 supports use of a special
-PNG <b>representation file</b>, explicitly tied to the original event
+Generating a <b>representation file</b> from an X-ray binary table for
+download is one solution to the large file problem.  But this requires
+setting up server-side <b>parent file</b> processing (including
+temporary storage of image section files). Another alternative that
+does not require a server-side helper is to create a special
+<b>PNG representation file</b> explicitly tied to the original event
 data.  Once downloaded into JS9, the image can be reconstructed
 from this file for display. The file maintains information about the
 original FITS binary table for use in remote analysis. The idea is
@@ -64,7 +168,7 @@ ordinary PNG files and will correctly load either type.
 <h3>The PNG Representation File</h3>
 <p>
 The PNG
-<b>representation file</b> contains the following information</b>:
+<b>representation file</b> contains the following information:
 <ul>
 <li><b>fitsfile:</b> the pathname of the FITS file used to generate this PNG 
 file, including the FITS bracket extension (if present)
@@ -240,7 +344,6 @@ JS9 Web page by creating URLs that call the <b>JS9.Load()</b> routine:
 where <b>filename</b> is the file to load and
 <b>opts</b> is an object containing params to be merged with the
 default JS9.imageOpts object.
-</ul>
 <p>
 For example:
 <pre>
@@ -280,7 +383,7 @@ exists. Note that the output directory is set explicitly to be the png
 subdirectory of the sample installation. You can change this command
 to suite your site needs.
 
-<h5>Last updated: May 1, 2015</h5>
+<h5>Last updated: November 5, 2015</h5>
 </div>
 
 </body>
