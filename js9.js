@@ -213,6 +213,10 @@ JS9.helpOpts = {
 	type: "help", url:"serverside.html",
 	title: "Server-side Analysis with JS9"
     },
+    repfile: {
+	type: "help", url:"repfile.html",
+	title: "Dealing with Large Files"
+    },
     regions: {
 	type: "help", url:"regions.html",
 	title: "JS9 Regions Format"
@@ -224,10 +228,6 @@ JS9.helpOpts = {
     preferences: {
 	type: "help", url:"preferences.html",
 	title: "JS9 Site Preferences"
-    },
-    repfile: {
-	type: "help", url:"repfile.html",
-	title: "The PNG Represention File"
     },
     changelog: {
 	type: "help", url:"changelog.html",
