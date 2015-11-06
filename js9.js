@@ -11472,16 +11472,16 @@ JS9.mkPublic("DisplayHelp", function(hname){
     if( !hname ){
 	return;
     }
-    id = hname + "_" + JS9.uniqueID();
+    title = hname.split("/").reverse()[0];
+    id = "help_" + JS9.uniqueID();
     // look for known help file
     help = JS9.helpOpts[hname];
     if( help ){
 	// help file
 	url = JS9.InstallDir(help.type + "/" + help.url);
-	JS9.lightWin(id, type, url, help.title, opts);
+	JS9.lightWin(id, type, url, help.title || title, opts);
     } else {
 	// its a random url
-	title = hname.split("/").reverse()[0];
 	JS9.lightWin(id, type, hname, title, opts);
     }
 });
