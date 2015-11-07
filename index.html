@@ -4,9 +4,9 @@
 <head> 
   <meta name="publisher" content="Center for Astrophysics">
   <meta name="language" content="en">
-  <meta name="date" content="2014-06-09">
+  <meta name="date" content="2015-11-07">
   <meta name="author" content="Eric Mandel, CfA">
-  <meta name="keywords" content="Harvard Smithsonian Astrophysics high-energy chandra x-ray astronomy DS9 JS9 telescope observatory research">
+  <meta name="keywords" content="Harvard Smithsonian Astrophysics high-energy chandra x-ray astronomy visualization DS9 JS9 telescope observatory research">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
   <link type="image/x-icon" rel="shortcut icon" href="js9/favicon.ico">
@@ -33,6 +33,7 @@
         font: normal 14px Arial;
         min-height: 512px;
         height: 100%;
+        width: 450px;
       }
       #myAnalysisDiv {
         background: #E9E9E9;
@@ -169,12 +170,14 @@
       }
     }
     </script>
-    <center><b>
-    <font size="+2">
-    JS9: astronomical image display right in your browser
-    </font>
-    </b></center>
     <table cellspacing="5">
+    <tr valign="top">
+    <td style="text-align:center" colspan="2">
+    <b><font size="+2">
+    JS9: astronomical image display right in your browser
+    </font></b>
+    </td>
+    </tr>
     <tr valign="top">
     <td>
     <div class="JS9Menubar"></div>
@@ -327,6 +330,9 @@
       </ul>
     </div>
     <div id="status" class="tabcontent mytabcontent">
+      <b>Release 1.6 (11/7/15)</b> adds support for loading FITS URLs
+      via proxy, support for dealing with large files, and iOS improvements.
+      <p>
       <b>Release 1.5 (7/9/15)</b> adds support for importing DS9/Funtools
       regions, and for running the back-end helper using https.
       <p>
@@ -342,7 +348,7 @@
       <a href="https://github.com/ericmandel/pyjs9">pyjs9</a> Python interface
       via GET/POST support in the back-end Node.js server.
       <p>
-      JS9 works on Web browsers that support the HTML5 canvas element, including
+      JS9 runs on Web browsers that support the HTML5 canvas element, including
       all recent versions of FireFox, Chrome, Safari, and IE.
       <p>
       JS9 is distributed under the terms of The MIT License.
@@ -367,7 +373,7 @@
       <a href="http://heasarc.gsfc.nasa.gov/docs/software/fitsio">cfitsio</a>
       library or the <b>funtools</b> package:
       <ul>
-      <li><a href="downloads/js9-1.5.tar.gz">js9 v1.5</a>
+      <li><a href="downloads/js9-1.6.tar.gz">js9 v1.6</a>
       <li><a href="downloads/pyjs9-1.0.tar.gz">pyjs9 v1.0</a>
       <li><a href="downloads/js9-data.tar.gz">js9 data</a>
       <li><a href="downloads/funtools-1.4.6.tar.gz">funtools</a>
