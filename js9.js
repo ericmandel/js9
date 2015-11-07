@@ -8511,6 +8511,12 @@ JS9.lightWin = function(id, type, s, title, opts){
     switch(JS9.LIGHTWIN){
     case "dhtml":
 	rval = dhtmlwindow.open(id, type, s, title, opts);
+	// override dhtml to add ios scroll capability
+	if(  /iPad|iPhone|iPod/.test(navigator.platform) ){
+	    $("#" + id + " " + JS9.lightOpts.dhtml.drag)
+		.css("-webkit-overflow-scrolling", "touch")
+		.css("overflow-y", "scroll");
+	}
 	// allow double-click or double-tap to close ...
 	// ... the close button is unresponsive on the ipad/iphone
         $("#" + id + " ." + JS9.lightOpts.dhtml.dragBar)
