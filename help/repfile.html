@@ -41,8 +41,8 @@ image representation can be sufficient, especially if you still have
 the ability to perform analysis on the original file.
 
 <p>
-JS9 supports two different ways of dealing with large files through the
-use of smaller representation files:
+At present, JS9 supports two different ways of dealing with large
+files through the use of smaller representation files:
 <ul>
 <li> you can associate a <b>parent</b> with a representation file and
 allow full resolution section to be extracted from the parent.
@@ -54,6 +54,8 @@ These two schemes are described below.
 
 <center><h3>Parent Files and Spatial Region Extraction</h3></center>
 
+<p>
+NB: use this service with care. It allows users to consume disk resources!
 <p>
 Consider the 12000 x 12000 300Mb Hubble Deep Field image mentioned
 above. This file could take several minutes to download. Even if
@@ -125,9 +127,9 @@ still be very large if it contains a bright source.
 
 <p>
 Generating a <b>representation file</b> from an X-ray binary table for
-download is one solution to the large file problem.  But this requires
+download is one solution to the large file problem.  It does require
 setting up server-side <b>parent file</b> processing (including
-temporary storage of image section files). Another alternative that
+temporary storage of image section files). An alternative that
 does not require a server-side helper is to create a special
 <b>PNG representation file</b> explicitly tied to the original event
 data.  Once downloaded into JS9, the image can be reconstructed
