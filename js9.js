@@ -5665,7 +5665,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     };
     // remove means nothing else matters
     if( opts.remove ){
-	return {remove: true};
+	return {remove: opts.remove};
     }
     // initialize
     nparams.tags = [];
@@ -6045,10 +6045,15 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 	opts = $.extend(true, {}, bopts, sarr[ns]);
 	// parse options and generate opts and params objects
 	sobj = JS9.Fabric._parseShapeOptions.call(this, layerName, opts);
-	// remove means remove previous shapes
+	// remove means remove specified shapes or all shapes
 	if( sobj.remove ){
-	    this.removeShapes(layerName, "all");
-	    continue;
+	    if( sobj.remove === true || sobj.remove === "true" ){
+		sobj.remove = "all";
+	    }
+	    if( sobj.remove !== false && sobj.remove !== "false" ){
+		this.removeShapes(layerName, sobj.remove);
+		continue;
+	    }
 	}
 	// sanity check
 	if( !sobj.shape ){
@@ -6581,10 +6586,15 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	bopts = $.extend(true, {}, obj.params, opts);
 	// parse options and generate new obj and params
 	sobj = JS9.Fabric._parseShapeOptions.call(this, layerName, bopts, obj);
-	// remove means remove previous shapes
+	// remove means remove specified shapes or all shapes
 	if( sobj.remove ){
-	    this.removeShapes(layerName, "all");
-	    return;
+	    if( sobj.remove === true || sobj.remove === "true" ){
+		sobj.remove = "all";
+	    }
+	    if( sobj.remove !== false && sobj.remove !== "false" ){
+		this.removeShapes(layerName, sobj.remove || "all");
+		return;
+	    }
 	}
 	// change the shape
 	obj.set(sobj.opts);
