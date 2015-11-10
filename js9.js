@@ -7025,6 +7025,7 @@ JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
 // reset center of a polygon
 // don't need to call using image context
 JS9.resetPolygonCenter = function(poly){
+    var i, ndx, ndy;
     var tpos = {};
     var dx, dy;
     // recalculate bounding box
@@ -7042,6 +7043,16 @@ JS9.resetPolygonCenter = function(poly){
     } else {
 	tpos.x = poly.left + dx;
 	tpos.y = poly.top + dy;
+    }
+    // move points relative to new center
+    // required by polygon changes starting in fabric 1.5.x
+    if( fabric.version.split(".")[1] >= 5 ){
+	ndx = dx / poly.scaleX;
+	ndy = dy / poly.scaleY;
+	for(i=0; i<poly.points.length; i++){
+	    poly.points[i].x -= ndx;
+	    poly.points[i].y -= ndy;
+	}
     }
     // set new center
     poly.left = tpos.x;
