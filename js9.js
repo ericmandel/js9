@@ -1351,11 +1351,11 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, file){
     // init the logical coordinate system, if possible
     this.initLCS(this.raw.header);
     // set initial scaling values if not done already
-    if( isNaN(this.params.scalemin) || 
+    if( isNaN(this.params.scalemin) ||
 	(this.params.scaleclipping === "dataminmax") ){
 	this.params.scalemin = this.raw.dmin;
     }
-    if( isNaN(this.params.scalemax) || 
+    if( isNaN(this.params.scalemax) ||
 	(this.params.scaleclipping === "dataminmax") ){
 	this.params.scalemax = this.raw.dmax;
     }
@@ -2167,7 +2167,7 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
 	return;
     }
     if( this.wcs && (this.wcs > 0) ){
-	if( (this.params.wcssys === "image") || 
+	if( (this.params.wcssys === "image") ||
 	    (this.params.wcssys === "physical") ){
 	    ws = JS9.imageOpts.wcssys;
 	    this.setWCSSys(this.wcs, ws);
@@ -3258,6 +3258,11 @@ JS9.Display = function(el){
 	this.context.mozImageSmoothingEnabled = false;
 	this.context.webkitImageSmoothingEnabled = false;
     }
+    // add the display tooltip
+    this.tooltip = $("<div>")
+	.attr("id", "tooltip_" + this.id)
+	.addClass("JS9Tooltip")
+	.appendTo(this.divjq);
     // no image loaded into this canvas
     this.image = null;
     // no plugin instances yet
@@ -5188,8 +5193,6 @@ JS9.Fabric.opts = {
     selectionLineWidth: 2,
     centeredScaling: true,
     selectable: true,
-    // skipOffset to preserve polygon positional accuracy
-    skipOffset: true,
     // minimize the jump when first resizing a region
     padding: 0,
     canvas: {
@@ -5303,98 +5306,119 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     dlayer.canvas = new fabric.Canvas(dlayer.canvasjq[0]);
     // don't render on add or remove of objects (do it manually)
     dlayer.canvas.renderOnAddRemove = false;
-    // allow selectable objects?
-    dlayer.canvas.selection = dlayer.opts.canvas.selection;
-    // mouse down processing
-    dlayer.canvas.on("mouse:down", function(opts){
-	var obj, im, curtime, dblclick;
-	if( opts.target && dlayer.display.image ){
-	    obj = opts.target;
-	    im = dlayer.display.image;
-	    // look for double click
-	    // fabric dblclick support is broken (loses position during scroll)
-	    if( !JS9.specialKey(opts.e) ){
-		if( obj.params ){
-		    curtime = (new Date()).getTime();
-		    if( obj.params.lasttime ){
-			if( (curtime - obj.params.lasttime) < JS9.DBLCLICK ){
-			    dblclick = true;
-			}
+    // are mouse callbacks defined in the opts object?
+    if( dlayer.opts.onmousedown || dlayer.opts.onmouseup ||
+	dlayer.opts.onmousemove || dlayer.opts.tooltip ||
+	dlayer.opts.onmouseover || dlayer.opts.onmouseout  ){
+	dlayer.opts.evented = true;
+	if( dlayer.opts.onmousedown ){
+	    dlayer.canvas.on("mouse:down", function(opts){
+		if( dlayer.display.image && opts.target ){
+		    // on main window, set region click
+		    if( dlayer.dtype === "main" ){
+			dlayer.display.image.rclick = 1;
 		    }
-		    obj.params.lasttime = curtime;
-		}
-	    }
-	    if( dblclick ){
-		if( !obj.params.winid ){
-		    // call this once window is loaded
-		    $("#dhtmlwindowholder").arrive("#regionsConfigForm",
-                    {onceOnly: true}, function(){
-			if( obj.pub ){
-			    JS9.Regions.initConfigForm.call(im, obj);
-			}
-		    });
-		    if( JS9.allinone ){
-			obj.params.winid = im.displayAnalysis("params",
-			  JS9.allinone.regionsConfigHTML,
-			  "Region Configuration");
-		    } else {
-			obj.params.winid = im.displayAnalysis("params",
-			  JS9.InstallDir(JS9.Regions.opts.configURL),
-			  "Region Configuration");
+		    dlayer.opts.onmousedown.call(this,
+						 dlayer.display.image,
+						 opts.target.pub,
+						 opts.e, opts.target);
+		} else {
+		    // only allow fabric selection if we have special key down
+		    this._selection = this.selection;
+		    if( this.selection ){
+			this.selection = JS9.specialKey(opts.e);
 		    }
 		}
-		return;
-	    }
-	    // on main window, set region click
-	    if( dlayer.dtype === "main" ){
-		im.rclick = 1;
-	    }
-	    // add polygon points
-	    if( JS9.specialKey(opts.e) ){
-		if( opts.target.type === "polygon" ){
-		    JS9.Fabric.addPolygonPoint.call(im, layerName,
-						    opts.target, opts.e);
-		    JS9.Fabric._updateShape.call(im, layerName, opts.target,
-						 null, "update");
-		} else if( opts.target.polyparams ){
-		    JS9.Fabric.removePolygonPoint.call(im, layerName,
-						       opts.target, opts.e);
-		    JS9.Fabric._updateShape.call(im, layerName, 
-						 opts.target.polyparams.polygon,
-						 null, "update");
-		}
-	    }
+	    });
 	} else {
+	    dlayer.canvas.on("mouse:down", function(opts){
+		// only allow fabric selection if we have special key down
+		this._selection = this.selection;
+		if( this.selection ){
+		    this.selection = JS9.specialKey(opts.e);
+		}
+	    });
+	}
+	if( dlayer.opts.onmouseup ){
+	    dlayer.canvas.on("mouse:up", function(opts){
+		if( dlayer.display.image && opts.target ){
+		    dlayer.opts.onmouseup.call(this,
+					       dlayer.display.image,
+					       opts.target.pub,
+					       opts.e, opts.target);
+		}
+		// restore original selection state
+		this.selection = this._selection || this.selection;
+	    });
+	} else {
+	    dlayer.canvas.on("mouse:up", function(opts){
+		// restore original selection state
+		this.selection = this._selection || this.selection;
+	    });
+	}
+	if( dlayer.opts.onmousemove ){
+	    dlayer.canvas.on("mouse:move", function(opts){
+		if( dlayer.display.image && opts.target ){
+		    dlayer.opts.onmousemove.call(this,
+						 dlayer.display.image,
+						 opts.target.pub,
+						 opts.e, opts.target);
+		}
+	    });
+	}
+	if( dlayer.opts.onmouseover ){
+	    dlayer.canvas.on("mouse:over", function(opts){
+		if( dlayer.display.image && opts.target ){
+		    dlayer.opts.onmouseover.call(this,
+						 dlayer.display.image,
+						 opts.target.pub,
+						 opts.e, opts.target);
+		}
+	    });
+	}
+	if( dlayer.opts.onmouseout ){
+	    dlayer.canvas.on("mouse:out", function(opts){
+		if( dlayer.display.image && opts.target ){
+		    dlayer.opts.onmouseout.call(this,
+						dlayer.display.image,
+						opts.target.pub,
+						opts.e, opts.target);
+		}
+	    });
+	}
+	if( dlayer.opts.tooltip ){
+	    dlayer.canvas.on("mouse:over", function(opts){
+		if( dlayer.display.image && opts.target ){
+		    JS9.tooltip(opts.target.left, opts.target.top,
+				dlayer.opts.tooltip,
+				dlayer.display.image,
+				opts.target.pub,
+				opts.e, opts.target);
+		}
+	    });
+	    dlayer.canvas.on("mouse:out", function(opts){
+		if( dlayer.display.image && opts.target ){
+		    JS9.tooltip(opts.target.left, opts.target.top,
+				null,
+				dlayer.display.image,
+				opts.target.pub,
+				opts.e, opts.target);
+		}
+	    });
+	}
+    } else {
+	dlayer.canvas.on("mouse:down", function(opts){
 	    // only allow fabric selection if we have special key down
 	    this._selection = this.selection;
 	    if( this.selection ){
 		this.selection = JS9.specialKey(opts.e);
 	    }
-	}
-    });
-    // mouse up processing
-    dlayer.canvas.on("mouse:up", function(opts){
-	var i;
-	var objs = [];
-	if( dlayer.display.image ){
-	    // one active object
-	    if( this.getActiveObject() ){
-		objs.push(this.getActiveObject());
-	    }
-	    // group of active objects
-	    if( this.getActiveGroup() ){
-		objs = this.getActiveGroup().getObjects();
-	    }
-	    // process all active objects
-	    for(i=0; i<objs.length; i++){
-		if( objs[i].polyparams ){
-		    dlayer.canvas.setActiveObject(objs[i].polyparams.polygon);
-		}
-	    }
-	}
-	// restore original selection state
-	this.selection = this._selection || this.selection;
-    });
+	});
+	dlayer.canvas.on("mouse:up", function(opts){
+	    // restore original selection state
+	    this.selection = this._selection || this.selection;
+	});
+    }
     // object scaled: reset stroke width
     dlayer.canvas.on('object:scaling', function (opts){
 	opts.target.rescaleEvenly();
@@ -5659,7 +5683,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    }
 	}
 	// final attempt: use existing object's color or a default color
-	color = color || (obj && obj.get("stroke")) || 
+	color = color || (obj && obj.get("stroke")) ||
 	        tagcolors.defcolor || JS9.globalOpts.defcolor || "#000000";
 	return color;
     };
@@ -5944,7 +5968,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	}
     }
     // finalize some properties
-    nopts.stroke = nparams.color || 
+    nopts.stroke = nparams.color ||
 	           tagColor(nparams.tags, nparams.tagcolors, obj);
     nopts.selectColor = nopts.stroke;
     nopts.cornerColor = nopts.stroke;
@@ -6124,7 +6148,8 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 	case "polygon":
 	    // save shape
 	    params.shape = "polygon";
-	    s = new fabric.Polygon(opts.points, opts, params.skipOffset);
+	    // final ("true") arg is for fabric.js v1.4.11 (skipOffset)
+	    s = new fabric.Polygon(opts.points, opts, true);
 	    break;
 	case "text":
 	    // save shape
@@ -6453,6 +6478,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.dec = s[1];
 	pub.wcssys = s[2];
     }
+    // generic "data" property, optionally supplied when the shape is created
+    pub.data = obj.params.data;
     // save the pub object
     obj.set("pub", pub);
     // update dialog box, if necessary
@@ -7191,6 +7218,78 @@ JS9.Regions.opts = {
 	source:             "#00FF00",
 	background:         "#FFD700",
 	defcolor:            "#00FF00"
+    },
+    // mouse down processing
+    mousedown: function(im, xreg, evt, target){
+	var curtime, dblclick, poly;
+	// look for double click
+	// fabric dblclick support is broken (loses position during scroll)
+	if( !JS9.specialKey(evt) ){
+	    if( target.params ){
+		curtime = (new Date()).getTime();
+		if( target.params.lasttime ){
+		    if( (curtime - target.params.lasttime) < JS9.DBLCLICK ){
+			dblclick = true;
+		    }
+		}
+		target.params.lasttime = curtime;
+	    }
+	}
+	if( dblclick ){
+	    if( !target.params.winid ){
+		// call this once window is loaded
+		$("#dhtmlwindowholder").arrive("#regionsConfigForm",
+                    {onceOnly: true}, function(){
+			if( target.pub ){
+			    JS9.Regions.initConfigForm.call(im, target);
+			}
+		    });
+		if( JS9.allinone ){
+		    target.params.winid = im.displayAnalysis("params",
+			  JS9.allinone.regionsConfigHTML,
+			  "Region Configuration");
+		} else {
+		    target.params.winid = im.displayAnalysis("params",
+			  JS9.InstallDir(JS9.Regions.opts.configURL),
+			  "Region Configuration");
+		}
+	    }
+	    return;
+	}
+	// add polygon points
+	if( JS9.specialKey(evt) ){
+	    if( target.type === "polygon" ){
+		JS9.Fabric.addPolygonPoint.call(im, target.params.layerName,
+						target, evt);
+		JS9.Fabric._updateShape.call(im, target.params.layerName,
+					     target, null, "update");
+	    } else if( target.polyparams && target.polyparams.polygon  ){
+		poly = target.polyparams.polygon;
+		JS9.Fabric.removePolygonPoint.call(im, poly.params.layerName,
+						   target, evt);
+		JS9.Fabric._updateShape.call(im, poly.params.layerName,
+					     poly, null, "update");
+	    }
+	}
+    },
+    // mouse up processing
+    mouseup: function(im, xreg, evt, target){
+	var i;
+	var objs = [];
+	// one active object
+	if( this.getActiveObject() ){
+	    objs.push(this.getActiveObject());
+	}
+	// group of active objects
+	if( this.getActiveGroup() ){
+	    objs = this.getActiveGroup().getObjects();
+	}
+	// re-select polyon that was just processed
+	for(i=0; i<objs.length; i++){
+	    if( objs[i].polyparams ){
+		this.setActiveObject(objs[i].polyparams.polygon);
+	    }
+	}
     },
     // global onchange callback
     onchange: null
@@ -8136,7 +8235,7 @@ JS9.Panner.create = function(im){
     var i, j, k, ii, jj, kk;
     var width, height;
     // sanity check
-    if( !im || !im.raw || 
+    if( !im || !im.raw ||
 	!im.display.pluginInstances.JS9Panner || !im.psColors ){
 	return;
     }
@@ -8366,21 +8465,6 @@ JS9.Catalogs.opts = {
 // Misc. Utilities
 // ---------------------------------------------------------------------
 
-// http://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible/#1608546
-// Invoke new operator with arbitrary arguments
-// Holy Grail pattern
-JS9.invoke = function(constructor, args){
-    var f;
-    function F() {
-        // constructor returns **this**
-        return constructor.apply(this, args);
-    }
-    F.prototype = constructor.prototype;
-    f = new F();
-    f.constructor = constructor;
-    return f;
-};
-
 // javascript: the good parts p. 22
 if( typeof Object.create !== "function" ){
     Object.create = function(o){
@@ -8422,14 +8506,6 @@ JS9.uniqueID = (function(){
         return id++;
     };
 }());
-
-// list event handlers
-JS9.listev = function(s){
-    s = s || "body";
-    var elem = $(s)[0];
-    var data = $.hasData(elem) && $._data(elem);
-    JS9.log(data.events);
-};
 
 // change cursor to waiting/not waiting
 JS9.waiting = function(mode){
@@ -8691,7 +8767,7 @@ JS9.lookupImage = function(id, display){
     // look for a file
     for(i=0; i<ilen; i++){
 	tim = JS9.images[i];
-	if( (id === tim ) || 
+	if( (id === tim ) ||
 	    (id === tim.file) || (id === (JS9.TOROOT + tim.file)) ||
 	    (tim.fitsFile && (id === tim.fitsFile)) ){
 	    // make sure the display still exists (light windows disappear)
@@ -9097,10 +9173,12 @@ JS9.log = function(){
     }
 };
 
+// is this a string representation of a number?
 JS9.isNumber = function(s) {
     return !isNaN(parseFloat(s)) && isFinite(s);
 };
 
+// parse a FITS card and return name and value
 JS9.cardpars = function(card){
     var name, value;
     if ( card[8] !== "=" ){ return undefined; }
@@ -9191,6 +9269,43 @@ CanvasRenderingContext2D.prototype.clear =
     }           
 };
 
+// create a tooltip, with the tip formatted from a string containing
+// variables in the current context, e.g. "$im.id\n$xreg.imstr\n$xreg.data.tag"
+JS9.tooltip = function(x, y, fmt, im, xreg, evt){
+    var tipstr;
+    var fmt2str = function(str){
+	var cmd = str.replace(/\$([a-zA-Z0-9_.]+)/g, function(m, t, o){
+            var i, val;
+	    var arr = t.split(".");
+	    switch(arr[0]){
+	    case "im":
+		val = im;
+		break;
+	    case "xreg":
+		val = xreg;
+		break;
+	    case "evt":
+		val = evt;
+		break;
+	    default:
+		return m;
+	    }
+	    for(i=1; i<arr.length; i++) {
+		val = val[arr[i]];
+	    }
+	    return val;
+	});
+	return cmd;
+    };
+    if( fmt ){
+	tipstr = fmt2str(fmt);
+	im.display.tooltip
+	    .html(tipstr).css({left:x, top:y, display: "inline-block"});
+    } else {
+	im.display.tooltip
+	    .html("").css({left: -9999, display: "none"});
+    }
+};
 
 // http://stackoverflow.com/questions/359788/how-to-execute-a-javascript-function-when-i-have-its-name-as-a-string
 // our modification will execute a real function or a functionName
@@ -9472,8 +9587,8 @@ JS9.mouseMoveCB = function(evt){
 	// contrast/bias change
 	ipos.x= Math.floor(pos.x + 0.5);
 	ipos.y= Math.floor(pos.y + 0.5);
-	if( (ipos.x < 0) || (ipos.y < 0) || 
-	    (ipos.x >= display.canvas.width) || 
+	if( (ipos.x < 0) || (ipos.y < 0) ||
+	    (ipos.x >= display.canvas.width) ||
 	    (ipos.y >= display.canvas.height) ){
 	    return;
 	}
@@ -10918,7 +11033,7 @@ JS9.mkPublic("Load", function(file, opts){
 	}
     } else {
 	// if opts explcitly specifies fits2png or if it's set globally ...
-	if( opts.fits2png || 
+	if( opts.fits2png ||
 	    ((opts.fits2png === undefined) && JS9.globalOpts.fits2png) ){
 	    // not png, so try to convert to png
 	    if( JS9.helper.connected ){

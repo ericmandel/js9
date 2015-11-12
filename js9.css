@@ -269,6 +269,14 @@ input:focus.JS9CmdIn{
     margin: 10px;
 }
 
+.JS9Tooltip{
+    position: relative;
+    z-index: 999;
+    background: #E9E9E9;
+    padding: 10px;
+    border: 0px;
+}
+
 /* context menu overrides */
 .context-menu-list 
 {

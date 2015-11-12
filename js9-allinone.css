@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.6, Tue Nov 10 18:38:39 EST 2015 */
+/* JS9 allinone: v1.6, Thu Nov 12 13:50:41 EST 2015 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -641,6 +641,14 @@ input:focus.JS9CmdIn{
     width:  800px;
     height: 400px;
     margin: 10px;
+}
+
+.JS9Tooltip{
+    position: relative;
+    z-index: 999;
+    background: #E9E9E9;
+    padding: 10px;
+    border: 0px;
 }
 
 /* context menu overrides */

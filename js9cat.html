@@ -21,7 +21,7 @@
 </head>
 <body onload="init();">
     <script type="text/javascript">
-    var n = 2000;
+    var n = 500;
     var inc = 4;
     // on an ipad, the click handler reload the page!
     var handleClick= 'ontouchstart' in document.documentElement ? 'touchstart': 'click';
@@ -65,9 +65,11 @@
             y = Math.random() * ydim;
 	    if( i % 2 === 0 ){
                 arr[i] = {x: x, y: y, shape: shape, color: color, 
-		          width: 5, height: 2};
+		          width: 5, height: 2,
+		          data: {tag: sprintf("ebox: %s,%s,%s", x, y, color)}};
             } else {
-                arr[i] = {x: x, y: y};
+                arr[i] = {x: x, y: y, 
+		          data: {tag: sprintf("obox: %s,%s", x, y)}};
             }
         }
     }
@@ -86,9 +88,11 @@
             // if( i < 10 ) console.log("%s: %s %s", i, x, y);
             // if( (n - i) < 10 ) console.log("%s: %s %s", i, x, y);
 	    if( i % 2 === 0 ){
-                arr[i] = {x: x, y: y, shape: shape, color: color, radius: 2};
+                arr[i] = {x: x, y: y, shape: shape, color: color, radius: 4,
+		          data: {tag: sprintf("ecir: %s,%s,%s", x, y, color)}};
             } else {
-                arr[i] = {x: x, y: y};
+                arr[i] = {x: x, y: y,
+		          data: {tag: sprintf("ocir: %s,%s", x, y)}};
             }
         }
     }
@@ -105,15 +109,25 @@
             var ydim = Math.max(512, im.raw.height);
             var xcen = im.raw.width/2;
             var ycen = im.raw.height/2;
+	    var boxopts = $.extend(true, {}, JS9.Catalogs.opts);
+	    boxopts.tooltip = "<b>id: $im.id<\/b><br>pos: $xreg.x $xreg.y<br><i>$xreg.data.tag<\/i>";
+	    var ciropts = $.extend(true, {}, JS9.Catalogs.opts);
+	    ciropts.onmouseover = function(im, xreg, evt){
+                console.log("mouseover: %s %s", im.id, xreg.data.tag);
+	    };
+	    ciropts.onmousedown = function(im, xreg, evt){
+                console.log("mousedown: %s %s", im.id, xreg.data.tag);
+	    };
             switch(who){
                 case "box":
                     mkrandom(boxes, n, xdim, ydim, "box", "red");
-	            JS9.NewShapeLayer("box", JS9.Catalogs.opts);
+	            JS9.NewShapeLayer("box", boxopts);
                     JS9.AddShapes("box", boxes, {color: "yellow"});
                     break;
+                    break;
                 case "circle":
-                    mkspirals(circles, n, xcen, ycen, "circle", "blue");
-	            JS9.NewShapeLayer("circle", JS9.Catalogs.opts);
+                    mkspirals(circles, n, xcen, ycen, "circle", "black");
+	            JS9.NewShapeLayer("circle", ciropts);
                     JS9.AddShapes("circle", circles);
                     break;
                 case "both":
@@ -153,9 +167,12 @@
         }
     }
     </script>
-    <div id="centerdiv">
     <center><font size="+1"><b>JS9 Demo: catalogs</b></font></center>
+
     <table cellspacing="15">
+    <tr valign="top">
+    <td>
+    <table cellspacing="0">
     <tr valign="top">
     <td>
     PNG files (converted from FITS):
@@ -177,12 +194,13 @@
     </td>
     </tr>
     </table>
+
     <p>
     <select id="display">
       <option value="" selected="selected" style="display:none">Display</option>
-      <option value="box">Box Catalog</option>
-      <option value="circle">Circle Catalog</option>
-      <option value="both">Both Catalogs</option>
+      <option value="box">Box Catalog (with tooltips)</option>
+      <option value="circle">Circle Catalog (event handlers)</option>
+      <option value="both">Both Catalogs (non-interactive)</option>
     </select> 
     <select id="hide">
       <option value="" selected="selected" style="display:none">Hide</option>
@@ -206,8 +224,10 @@
     <div class="JS9Menubar"></div>
     <div class="JS9"></div>
     <p>
+    </td>
+    <td>
     Catalogs are arrays of JavaScript objects having the following
-    elements (as well any others that you wish to include):
+    elements (as well others that you wish to include):
     <ul>
     <li> x: image x coordinate
     <li> y: image y coordinate
@@ -222,18 +242,68 @@
     <li> ellipse: eradius.x, eradius.y
     <li> polygon: points
     </ul>
-    Catalogs are added to an image using the routine:
+    Catalogs are added to an image by first creating a new shape layer
+    and then adding shapes:
     <pre>
-      JS9.NewShapeLayer(catalog_name, def_opts);
-      JS9.AddShapes(catalog_name, catalog_array, opts);
+    JS9.NewShapeLayer(catalog_name, opts);
+    JS9.AddShapes(catalog_name, catalog_array, opts);
     </pre>
     where <b>catalog_name</b> is an indentifying name for the catalog.
-    and <b>def_opts</b> is a JavaScript object which can specify default
+    and <b>opts</b> is a JavaScript object which can specify default
     values for any of the parameters above (except for the x and y
     coordinate). When all else fails, default values are taken from
     the JS9.Catalog.opts object in JS9.
     <p>
-    </div>
+    By default, catalogs are not interactive, but you can make them so in
+    one of two ways:
+    <p>
+    The first way is to supply one or more event callbacks as properties
+    to the opts object supplied to the JS9.NewShapeLayer() call:
+    <ul>
+    <li> <b>onmousedown</b>: function(im, xreg, evt);
+    <li> <b>onmouseup</b>: function(im, xreg, evt);
+    <li> <b>onmousemove</b>: function(im, xreg, evt);
+    <li> <b>onmouseover</b>: function(im, xreg, evt);
+    <li> <b>onmouseout</b>: function(im, xreg, evt);
+    </ul>
+    Each of these functions will be called with the following arguments:
+    <ul>
+    <li> <b>im</b>: the image handle for the currently displayed image
+    <li> <b>xreg</b>: the shape object, as described in JS9.GetShapes()
+    <li> <b>evt</b>: the original event object
+    </ul>
+    For example, to define mouseover and mousedown callbacks:
+    <pre>
+    opts.onmouseover = function(im, xreg, evt){
+        console.log("mouseover: %s %s", im.id, xreg.data.tag);
+    };
+    opts.onmousedown = function(im, xreg, evt){
+        console.log("mousedown: %s %s", im.id, xreg.data.tag);
+    };
+    </pre>
+    <p>
+    The second way to make a shape layer interactive is to specify that
+    a <b>tooltip</b> be displayed when hovering over objects in this
+    shape layer. This is done by assigning a tooltip format string to
+    the <b>tooltip</b> property of the opts object supplied to the
+    JS9.NewShapeLayer() call. This string can contain HTML directives,
+    and it also can contain references to properties in the im, xreg,
+    and evt objects. When the mouse hovers over an object, a
+    tooltip string is generated by macro-expanding the values for
+    these properties. The tooltip string is displayed as the inner HTML
+    of the tooltip. When the mouse leaves the object, the tooltip is hidden.
+    <p>
+    For example, consider the following tooltip string:
+    <pre>
+    opts.tooltip = "&lt;b&gt;id: $im.id&lt;/b&gt;&lt;br&gt;pos: $xreg.x $xreg.y&lt;br&gt;&lt;i&gt;$xreg.data.tag&lt;/i&gt;";
+    </pre>
+    When the mouse hovers over an object, the displayed tooltip will
+    contain the current image id in bold, followed by that object's
+    position, followed by a "tag" property passed in the <b>data</b>
+    object when the shape was added.
+    </td>
+    </tr>
+    </table>
 <p>
 JS9 Demos:
 <ul>
