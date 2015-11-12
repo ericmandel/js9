@@ -7220,7 +7220,7 @@ JS9.Regions.opts = {
 	defcolor:            "#00FF00"
     },
     // mouse down processing
-    mousedown: function(im, xreg, evt, target){
+    onmousedown: function(im, xreg, evt, target){
 	var curtime, dblclick, poly;
 	// look for double click
 	// fabric dblclick support is broken (loses position during scroll)
@@ -7273,7 +7273,7 @@ JS9.Regions.opts = {
 	}
     },
     // mouse up processing
-    mouseup: function(im, xreg, evt, target){
+    onmouseup: function(im, xreg, evt, target){
 	var i;
 	var objs = [];
 	// one active object
