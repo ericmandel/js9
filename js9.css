@@ -275,6 +275,7 @@ input:focus.JS9CmdIn{
     background: #E9E9E9;
     padding: 10px;
     border: 0px;
+    display: none;
 }
 
 /* context menu overrides */
