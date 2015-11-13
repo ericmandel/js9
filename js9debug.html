@@ -130,9 +130,9 @@
     <div class="catdiv">
     <select id="display">
       <option value="" selected="selected" style="display:none">Display</option>
-      <option value="box">Box Catalog</option>
-      <option value="circle">Circle Catalog</option>
-      <option value="both">Both Catalogs</option>
+      <option value="box">Box Catalog (with tooltips)</option>
+      <option value="circle">Circle Catalog (event handlers, movable)</option>
+      <option value="both">Both Catalogs (non-interactive)</option>
     </select> 
     <select id="hide">
       <option value="" selected="selected" style="display:none">Hide</option>
@@ -172,7 +172,7 @@
     var n = 500;
     var inc = 4;
     // on an ipad, the click handler reload the page!
-    var click= 'ontouchstart' in document.documentElement ? 'touchstart': 'click';
+    var click='ontouchstart' in document.documentElement?'touchstart': 'click';
     function init(){
         JS9.DEBUG = 2;
         JS9.Preload("png/casa.png", {colormap: "cool"});
@@ -265,7 +265,21 @@
             var ycen = im.raw.height/2;
 	    var boxopts = $.extend(true, {}, JS9.Catalogs.opts);
 	    boxopts.tooltip = "<b>id: $im.id<\/b><br>pos: $xreg.x $xreg.y<br><i>$xreg.data.tag<\/i>";
+	    boxopts.ongroupcreate = function(im, xregs, evt){
+                var i, nshape, xcen, ycen;
+	        var xtot=0, ytot=0;
+                nshape = xregs.length;
+                for(i=0; i<nshape; i++){
+                    xtot += xregs[i].x;
+                    ytot += xregs[i].y;
+                }
+                xcen = xtot / nshape;
+                ycen = ytot / nshape;
+                console.log("average pos for %s objects: %s,%s",
+                             nshape, xcen, ycen);
+	    }
 	    var ciropts = $.extend(true, {}, JS9.Catalogs.opts);
+            ciropts.movable = true;
 	    ciropts.onmouseover = function(im, xreg, evt){
                 console.log("mouseover: %s %s", im.id, xreg.data.tag);
 	    };

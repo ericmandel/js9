@@ -5188,9 +5188,14 @@ JS9.Fabric.opts = {
     originX: "center",
     originY: "center",
     strokeWidth: 2,
-    cornerSize: fabric.isTouchSupported ? 12 : 8,
-    transparentCorners: false,
     selectionLineWidth: 2,
+    borderColor: "#00FF00",
+    cornerColor: "#00FF00",
+    cornerSize: fabric.isTouchSupported ? 12 : 8,
+    hasControls: true,
+    hasRotatingPoint: true,
+    hasBorders: true,
+    transparentCorners: false,
     centeredScaling: true,
     selectable: true,
     // minimize the jump when first resizing a region
@@ -5285,7 +5290,9 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     dlayer.opts = $.extend(true, {}, layerOpts);
     // and some needed properties
     dlayer.opts.canvas = dlayer.opts.canvas || {};
-    dlayer.opts.canvas.selection = dlayer.opts.canvas.selection || true;
+    if( dlayer.opts.canvas.selection === undefined ){
+	dlayer.opts.canvas.selection = true;
+    }
     dlayer.opts.canvas.zindex = dlayer.opts.canvas.zindex || JS9.SHAPEZINDEX;
     // additional fabric elements to save using toJSON
     dlayer.el = JS9.Fabric.elements;
@@ -5306,10 +5313,29 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     dlayer.canvas = new fabric.Canvas(dlayer.canvasjq[0]);
     // don't render on add or remove of objects (do it manually)
     dlayer.canvas.renderOnAddRemove = false;
+    // short-hand for allowing objects to move
+    if( dlayer.opts.movable ){
+	dlayer.opts.hasControls = true;
+	dlayer.opts.hasRotatingPoint = true;
+	dlayer.opts.hasBorders = true;
+	dlayer.opts.lockMovementX = false;
+	dlayer.opts.lockMovementY = false;
+	dlayer.opts.lockRotation = false;
+	dlayer.opts.lockScalingX = false;
+	dlayer.opts.lockScalingY = false;
+	dlayer.opts.lockUniScaling = false;
+	dlayer.opts.selectable = true;
+	dlayer.opts.evented = true;
+	dlayer.opts.usekeyboard = true;
+    }
+    // short-hand for allowing group and individual selections
+    if( dlayer.opts.selectable ){
+	dlayer.opts.canvas.selection = true;
+    }
     // are mouse callbacks defined in the opts object?
-    if( dlayer.opts.onmousedown || dlayer.opts.onmouseup ||
-	dlayer.opts.onmousemove || dlayer.opts.tooltip ||
-	dlayer.opts.onmouseover || dlayer.opts.onmouseout  ){
+    if( dlayer.opts.onmousedown || dlayer.opts.onmouseup  ||
+	dlayer.opts.onmousemove || dlayer.opts.tooltip    ||
+	dlayer.opts.onmouseover || dlayer.opts.onmouseout ){
 	dlayer.opts.evented = true;
 	if( dlayer.opts.onmousedown ){
 	    dlayer.canvas.on("mouse:down", function(opts){
@@ -5419,6 +5445,31 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    this.selection = this._selection || this.selection;
 	});
     }
+    // fire events when groups are created
+    if( dlayer.opts.ongroupcreate ){
+	dlayer.opts.canvas.selection = true;
+	dlayer.opts.selectable = true;
+	if( dlayer.opts.ongroupcreate ){
+	    dlayer.canvas.on("selection:created", function(opts){
+		var pubs = [];
+		var targets = [];
+		if( dlayer.display.image ){
+		    if( opts.target.type === "group" ){
+			opts.target.forEachObject(function(shape){
+			    if( shape.pub ){
+				targets.push(shape);
+				pubs.push(shape.pub);
+			    }
+			});
+			dlayer.opts.ongroupcreate.call(this,
+						    dlayer.display.image,
+						    pubs,
+						    opts.e, targets);
+		    }
+		}
+	    });
+	}
+    }
     // object scaled: reset stroke width
     dlayer.canvas.on('object:scaling', function (opts){
 	opts.target.rescaleEvenly();
@@ -5426,7 +5477,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     });
     // object selected: add anchors to polygon
     dlayer.canvas.on('object:selected', function (opts){
-	// file the selection cleared event, if necesssary
+	// fire the selection cleared event, if necesssary
 	if( dlayer.params.sel && opts.target.params &&
 	    (dlayer.params.sel !== opts.target) ){
 	    dlayer.canvas.fire('before:selection:cleared', 
@@ -5823,6 +5874,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	opts.lockRotation = true;
 	opts.lockScalingX = true;
 	opts.lockScalingY = true;
+	opts.lockUniScaling = true;
 	opts.hasControls = false;
 	opts.hasRotatingPoint = false;
 	opts.hasBorders = true;
@@ -8434,8 +8486,16 @@ JS9.Catalogs.opts = {
     hasControls: false,
     hasRotatingPoint: false,
     hasBorders: false,
-    selectable: false,
     evented: false,
+    // catalog objects are locked in place by default
+    // set "movable" to true to unlock all, or unlock individually
+    lockMovementX: true,
+    lockMovementY: true,
+    lockRotation: true,
+    lockScalingX: true,
+    lockScalingY: true,
+    lockUniScaling: true,
+    selectable: false,
     // canvas options
     canvas: {
 	selection: false
