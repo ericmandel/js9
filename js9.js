@@ -8179,8 +8179,6 @@ JS9.Panner.NAME = "Panner";
 // defaults for panner
 JS9.Panner.opts = {
     // override fabric defaults
-//    originX: "left",
-//    originY: "top",
     hasControls: false,
     hasRotatingPoint: false,
     hasBorders: false,
@@ -8255,12 +8253,10 @@ JS9.Panner.init = function(width, height){
 	var im = that.display.image;
 	if( im ){
 	    var pos = opts.target.getCenterPoint();
-	    var ix = (pos.x * 
-		      im.panner.xblock / im.panner.zoom) + 
-		      im.panner.x0 - im.panner.ix;
-	    var iy = ((dlayer.canvas.height - pos.y) * 
-		      im.panner.yblock / im.panner.zoom) +
-		      im.panner.y0 - im.panner.iy;
+	    var ix = ((pos.x - im.panner.ix) *
+		      im.panner.xblock / im.panner.zoom) + im.panner.x0;
+	    var iy = ((dlayer.canvas.height - (pos.y - im.panner.iy)) *
+		      im.panner.yblock / im.panner.zoom) + im.panner.y0;
 	    // pan the image
 	    try{
 		// avoid triggering a re-pan
