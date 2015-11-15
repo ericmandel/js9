@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="js9.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <style>
+      #centerdiv {
+      width: 600px;
+      margin-left: auto ;
+      margin-right: auto ;
+      }
+  </style>
+</head>
+<body>
+    <div id="centerdiv">
+    <font size="+1">
+    <center><b>JS9 Demo: handling large files</b></center>
+    </font>
+    <table cellspacing="15">
+    <tr valign="top">
+    <td>
+    <ul>
+    <li> <a href='javascript:JS9.Load("large/f814w_bin24.fits.gz", {colormap:"cool", parentFile: "large/f814w.fits.gz"});'>f814w @ bin24 (545.56Kb)</a>
+    <li> <a href='javascript:JS9.Load("large/f814w.fits.gz", {colormap:"cool"});'>f814w (310.58Mb)</a>
+    </ul>
+    </td>
+    <td>
+    <ul>
+    <li> <a href='javascript:JS9.Load("large/acisf02707N003_full_img2.fits.gz", {colormap: "cool", parentFile: "large/acisf02707N003_evt2.fits.gz"});'>M87 2707 full img (138Kb)</a>
+    <li> <a href='javascript:JS9.Load("large/acisf02707N003_evt2.fits.gz", {colormap:"heat"});'>M87 2707 event list (229Mb)</a>
+    </ul>
+    </td>
+    </tr>
+    </table>
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    </div>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9bespoke.html'>JS9 Demo: web page control of JS9</a>
+<li><a href='js9sizes.html'>JS9 Demo: setting the size of the JS9 display</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>
