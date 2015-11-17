@@ -41,7 +41,7 @@ talks/
 /png
 png/
 png-v[0-9]*/
-node_modules/socket.io-*
+node_modules/socket.io_v*
 node_modules/selenium-webdriver*/
 rites/
 sfs/

@@ -457,7 +457,7 @@ release:	clean gitprefs
 		(mkdir -p $(DISTDIR)/$(DISTNAME); \
 		tar cf - \
 			 --exclude='node_modules/selenium-webdriver' \
-			 --exclude='node_modules/socket.io-*' \
+			 --exclude='node_modules/socket.io_v[0-9]*' \
 			 $(WEBFILES) $(WEBDIRS) $(BEDIRS) $(WEBHELP) \
 			 $(JS9TESTS) js9*.html \
 			 $(SRCS) $(INCLUDES) $(SCRIPTS) $(MFILES) |\
