@@ -1783,15 +1783,15 @@ JS9.Image.prototype.displayImage = function(imode){
     } else if( imode === "all" ){
 	imode = "colors,scaled,primary,display,plugins";
 	mode.notify = true;
+	mode.plugins = true;
     } else if( imode === "display" ){
 	mode.notify = true;
+	mode.plugins = true;
     }
     // get mode as elements in an object
     imode.split(",").forEach(modeFunc);
     // but always display the image again
     mode.display = true;
-    // and call the plugins
-    mode.plugins = true;
     // generate colordata
     if( mode.colors ){
 	// populate the colorData array (offsets into scaled colorcell data)
