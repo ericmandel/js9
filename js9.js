@@ -1834,8 +1834,13 @@ JS9.Image.prototype.displayImage = function(imode){
 		pinst = this.display.pluginInstances[pname];
 		popts = pinst.plugin.opts;
 		if( pinst.isActive("onimagedisplay") ){
-		    try{ popts.onimagedisplay.call(pinst, this); }
-		    catch(e){ pinst.errLog("onimagedisplay", e); }
+		    // hack: panner always needs to execute plugin callback
+		    // others only do so when the image is really displayed
+		    if( (pname === "JS9Panner") ||
+			(imode === "all") || (imode === "display") ){
+			try{ popts.onimagedisplay.call(pinst, this); }
+			catch(e){ pinst.errLog("onimagedisplay", e); }
+		    }
 		}
 	    }
 	}
