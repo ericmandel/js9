@@ -55,6 +55,11 @@
 
     var enabled = 0;
 
+    var options = {
+	  zoomStack: 0
+	, zoomFunc: undefined
+    };
+
     function zoomStack(plot, ctx) {
 	if ( enabled ) {
 	    plot.stack = [];
@@ -72,21 +77,25 @@
 	}
     }
 
-    function zoomOptions(plot, options) {
-	if ( options.zoomStack ) {
-	    enabled = 1;
+    function zoomOptions(plot, opts) {
+        // zoomStack can be true or it can be an object containing options
+        if ( opts && opts.zoomStack ) {
+            if( typeof opts.zoomStack === "object" ){
+                options.zoomStack = opts.zoomStack.enabled;
+                options.zoomFunc = opts.zoomStack.func;
+            } else {
+                options.zoomStack = opts.zoomStack;
+            }
+        }
+        if( options.zoomStack ){
+            enabled = 1;
 	    plot.hooks.drawOverlay.push(zoomStack);
-	}
+        }
     }
 
     function init(plot) {
 	plot.hooks.processOptions.push(zoomOptions);
     }
-
-    var options = {
-	  zoomStack: 0
-	, zoomFunc: undefined
-    };
 
     $.plot.plugins.push({ init: init, options: options, name: "zoomStack", version: 0.1 });
 }($));
