@@ -619,6 +619,7 @@ JS9.Image.prototype.closeImage = function(){
 	if( display === tim.display ){
 	    // display image, 2D graphics, etc.
 	    tim.displayImage("display");
+	    tim.refreshLayers();
 	    break;
 	}
     }
@@ -1379,9 +1380,8 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	sect.height = Math.min(this.raw.height,this.display.canvas.height);
 	break;
     case 1:
-	// one arg: zoom
-	sect.ozoom = sect.zoom;
-	sect.zoom = xcen;
+	sect.ozoom  = sect.zoom;
+	sect.zoom   = xcen;
 	sect.width  = Math.min(this.raw.width*sect.zoom,
 			       this.display.canvas.width);
 	sect.height = Math.min(this.raw.height*sect.zoom,
@@ -1394,10 +1394,10 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	break;
     case 3:
 	// three args: x, y, zoom
-	sect.ozoom = sect.zoom;
 	sect.xcen   = parseInt(xcen, 10);
 	sect.ycen   = parseInt(ycen, 10);
-	sect.zoom = zoom;
+	sect.ozoom  = sect.zoom;
+	sect.zoom   = zoom;
 	sect.width  = Math.min(this.raw.width*sect.zoom,
 			       this.display.canvas.width);
 	sect.height = Math.min(this.raw.height*sect.zoom,
@@ -1855,7 +1855,7 @@ JS9.Image.prototype.displayImage = function(imode){
 // refresh data for an existing image
 // input obj is a fits object, array, typed array, etc.
 JS9.Image.prototype.refreshImage = function(obj, func){
-    var key, oxcen, oycen, owidth, oheight, ozoom, doreg;
+    var oxcen, oycen, owidth, oheight, ozoom, doreg;
     var pname, pinst, popts;
     // check for refresh function
     if( !func && JS9.imageOpts.onrefresh ){
@@ -1884,13 +1884,7 @@ JS9.Image.prototype.refreshImage = function(obj, func){
     this.displayImage("colors");
     // update shape layers if necessary
     if( doreg ){
-	for( key in this.layers ){
-	    if( this.layers.hasOwnProperty(key) ){
-		if( this.layers[key].show ){
-		    this.refreshShapes(key);
-		}
-	    }
-	}
+	this.refreshLayers();
 	// also update region values
 	this.updateShapes("regions", "all", "binning");
     }
@@ -2010,6 +2004,11 @@ JS9.Image.prototype.setZoom = function(zval){
     }
     // allow chaining
     return this;
+};
+
+// refresh all layers
+JS9.Image.prototype.refreshLayers = function(){
+    this.setZoom(this.getZoom());
 };
 
 // return current file-related position for specified image position
@@ -3440,6 +3439,80 @@ JS9.Display.prototype.displayPlugin = function(plugin){
     }
 };
 
+//  resize a display
+JS9.Display.prototype.resize = function(width, height){
+    var i, im, key, layer, nwidth, nheight, nleft, ntop;
+    var repos = function(o){
+	o.left += nleft;
+	o.top  += ntop;
+	o.setCoords();
+    };
+    // sanity check
+    if( (width < 10) || (height < 10) ){
+	JS9.error("invalid dimension(s) passed to JS9.Resize()");
+    }
+    // get resize parameters relative to current display
+    nwidth = width;
+    nheight = height;
+    nleft = (nwidth - this.width) / 2;
+    ntop = (nheight - this.height) / 2;
+    // change display parameters
+    this.width = nwidth;
+    this.height = nheight;
+    this.divjq.css("width", nwidth);
+    this.divjq.css("height", nheight);
+    this.canvasjq.attr("width", nwidth);
+    this.canvasjq.attr("height", nheight);
+    // change size of shape canvases
+    for(key in this.layers ){
+	if( this.layers.hasOwnProperty(key) ){
+	    layer = this.layers[key];
+	    if( layer.dtype === "main" ){
+		layer.divjq.css("width", nwidth);
+		layer.divjq.css("height", nheight);
+		layer.canvasjq.attr("width", nwidth);
+		layer.canvasjq.attr("height", nheight);
+		layer.canvas.setWidth(nwidth);
+		layer.canvas.setHeight(nheight);
+		layer.canvas.calcOffset();
+	    }
+	}
+    }
+    // change position of shapes on currently displayed layers
+    // save resize parameters for undisplayed layers
+    for(i=0; i<JS9.images.length; i++){
+	im = JS9.images[i];
+	im.mkSection();
+	if( im.display && (this === im.display) ){
+	    // save or update resize object
+	    if( im.resize ){
+		im.resize.left += nleft;
+		im.resize.top  += ntop;
+	    } else {
+		im.resize = {left: nleft, top: ntop};
+	    }
+	    // current image: change object positions in displayed layers
+	    if( im === im.display.image ){
+		for( key in im.layers ){
+		    if( im.layers.hasOwnProperty(key) ){
+			layer = im.layers[key];
+			if( !layer.json ){
+			    layer.canvas.getObjects().forEach(repos);
+			    layer.canvas.renderAll();
+			}
+		    }
+		}
+	    }
+	}
+    }
+    // for current image being displayed ...
+    if( this.image ){
+	// redisplay
+	this.image.displayImage("all");
+	this.image.refreshLayers();
+    }
+};
+
 // ---------------------------------------------------------------------
 // JS9 Command, commands for console window
 // ---------------------------------------------------------------------
@@ -4135,6 +4208,7 @@ JS9.Menubar = function(width, height){
 				    (uim.id === key) ){
 				    // display image, 2D graphics, etc.
 				    uim.displayImage("display");
+				    uim.refreshLayers();
 				    uim.clearMessage();
 				    break;
 				}
@@ -4230,6 +4304,9 @@ JS9.Menubar = function(width, height){
 				    if( uim.layers.hasOwnProperty(ucat) ){
 					if( uim.layers[ucat].dlayer.dtype === "main" ){
 					    uim.showShapeLayer(ucat, key);
+					    if( key === "show" ){
+						uim.refreshLayers();
+					    }
 					}
 				    }
 				}
@@ -4252,6 +4329,9 @@ JS9.Menubar = function(width, height){
 					    umode = uim.layers[ucat].show ?
 						"hide" : "show";
 					    uim.showShapeLayer(ucat, umode);
+					    if( umode === "show" ){
+						uim.refreshLayers();
+					    }
 					    return;
 					}
 				    }
@@ -5551,8 +5631,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 // call using image context
 JS9.Fabric.showShapeLayer = function(layerName, mode){
     var that = this;
-    var s;
-    var layer, dlayer, canvas;
+    var left = 0;
+    var s, xkey, layer, dlayer, canvas;
     layer = this.getShapeLayer(layerName);
     // sanity check
     if( !layer ){
@@ -5568,6 +5648,16 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 	if( layer.json && layer.show ){
 	    canvas.loadFromJSON(layer.json, function(){
 		var key, zindex, tdlayer, obj;
+		// translate these shapes if we resized while hidden
+		if( that.resize ){
+		    canvas.getObjects().forEach(function(o) {
+			o.left += that.resize.left;
+			o.top  += that.resize.top;
+			o.setCoords();
+		    });
+		    canvas.calcOffset();
+		}
+		// redisplay this layer
 		canvas.renderAll();
 		canvas.selection = layer.opts.canvas.selection;
 		zindex = dlayer.opts.canvas.zindex;
@@ -5590,6 +5680,15 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 		}
 		layer.json = null;
 	    });
+	}
+	// remove resize object if we have no more hidden layers
+	for( xkey in this.layers ){
+	    if( this.layers.hasOwnProperty(xkey) && this.layers[xkey].json ){
+		left++;
+	    }
+	}
+	if( !left ){
+	    this.resize = null;
 	}
     } else if( (mode === "hide") || (mode === false) ){
 	// save and hide
@@ -11053,6 +11152,7 @@ JS9.mkPublic("Load", function(file, opts){
 	    if( im ){
 		// display image, 2D graphics, etc.
 		im.displayImage("display");
+		im.refreshLayers();
 		im.clearMessage();
 		return;
 	    }
@@ -11798,6 +11898,16 @@ JS9.mkPublic("AddDivs", function(){
 	JS9.checkNew(new JS9.Display(obj.argv[i]));
     }
     JS9.instantiatePlugins();
+});
+
+// change the size of a display
+JS9.mkPublic("ResizeDisplay", function(){
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    if( !display ){
+	JS9.error("invalid display for resize");
+    }
+    return JS9.Display.prototype.resize.apply(display, obj.argv);
 });
 
 // end of Public Interface

@@ -1367,6 +1367,24 @@ The <b>func</b> callback is the same as for <b>JS9.RunAnalysis()</b> above.
 <p>
 
 <p>
+<font size="+1"><b><u>Resize the JS9 Display</u></b></font>
+<p>
+<code><font size="+1">JS9.ResizeDisplay(width, height)</font></code>
+<p>
+where:
+<ul>
+<li><b>width</b>: new width of the display in HTML pixels
+<li><b>height</b>: new height of the display in HTML pixels
+</ul>
+You can resize the JS9 display element by supplying new width and
+height parameters. The div on the Web page will be resized and the
+image will be re-centered in the new display. If the display size has
+been increased, more of the image will be displayed as needed (up to
+the new size of the display). For example, if the original display was
+512x512 and you increase it to 1024x1024, a 1024x1024 image will now
+be displayed in its entirety.
+
+<p>
 <font size="+1"><b><u>Print an image</u></b></font>
 <p>
 <code><font size="+1">JS9.Print()</font></code>
