@@ -77,7 +77,7 @@ JS9.BROWSER = (function(){
 
 // global options
 JS9.globalOpts = {
-    helperType: "sock.io",	// one of: sock.io, get, post
+    helperType: "none",		// one of: sock.io, get, post, none
     helperPort: 2718,		// default port for node.js helper
     winType: "light",		// plugin window: "light" or "new"
     rgb: {mode: false,		// rgb mode
@@ -8687,7 +8687,8 @@ JS9.waiting = function(mode, el){
     var opts;
     switch(mode){
     case true:
-	if( JS9.globalOpts.waitType === "spinner" ){
+	if( window.hasOwnProperty("Spinner") &&
+	    (JS9.globalOpts.waitType === "spinner") ){
 	    if( !JS9.spinner ){
 		JS9.spinner = {};
 		JS9.spinner.el = el || $("body").get(0);
@@ -8702,8 +8703,11 @@ JS9.waiting = function(mode, el){
 	}
 	break;
     case false:
-	if( JS9.globalOpts.waitType === "spinner" ){
-	    JS9.spinner.spinner.stop();
+	if( window.hasOwnProperty("Spinner") &&
+	    (JS9.globalOpts.waitType === "spinner") ){
+	    if( JS9.spinner ){
+		JS9.spinner.spinner.stop();
+	    }
 	} else {
 	    $("body").removeClass("waiting");
 	}
