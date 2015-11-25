@@ -2926,7 +2926,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    val3 = ti(val,3);
 	    break;
 	case -32:
-	    val3 = tr(val,3);
+	    val3 = tr(val,6);
 	    break;
 	case -64:
 	    val3 = tr(val,6);
