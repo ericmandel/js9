@@ -165,7 +165,8 @@ JS9.lightOpts = {
 // colors for text messages
 JS9.textColorOpts = {
     regions: "#00FF00",
-    info:    "#00FF00"
+    info:    "#00FF00",
+    inimage: "#000000"
 };
 
 // defaults for plot creation
@@ -3836,36 +3837,41 @@ JS9.Info.display = function(type, message, target){
 	// allow chaining
 	return this;
     }
+    // height params for text color assignment
+    tobj.infoheight = tobj.infoArea.height() + 4;
+    tobj.regheight = Math.max(tobj.infoheight * 2 + 10,
+			      tobj.infoheight + tobj.regionsArea.height() + 10);
     // display-based message
     switch(type){
     case "regions":
 	area = tobj.regionsArea;
+	if( !this.display.image ||
+	    (this.display.image.iy > tobj.regheight) ){
+	    color = JS9.textColorOpts.inimage;
+	} else {
+	    color = JS9.textColorOpts.regions;
+	}
 	split = ";";
 	break;
     case "info":
 	area = tobj.infoArea;
+	if( !this.display.image ||
+	    (this.display.image.iy > tobj.infoheight) ){
+	    color = JS9.textColorOpts.inimage;
+	} else {
+	    color = JS9.textColorOpts.info;
+	}
 	split = "";
 	break;
     default:
 	area = tobj.infoArea;
-	break;
-    }
-    // special colors if message is likely to overlap image
-    if( this.primary &&
-	this.primary.img.height / this.display.canvas.height < 0.8 ){
-	color = "black";
-    } else {
-	switch(type){
-	case "regions":
-	    color = JS9.textColorOpts.regions;
-	    break;
-	case "info":
+	if( !this.display.image ||
+	    (this.display.image.iy > tobj.infoheight) ){
+	    color = JS9.textColorOpts.inimage;
+	} else {
 	    color = JS9.textColorOpts.info;
-	    break;
-	default:
-	    color = JS9.textColorOpts.info;
-	    break;
 	}
+	break;
     }
     // massage the message before display, if necessary
     switch( typeof message ){
