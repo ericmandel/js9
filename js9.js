@@ -3944,7 +3944,7 @@ JS9.Menubar = function(width, height){
     this.height = parseInt(this.divjq.css("height"), 10);
     // init menubarHTML, if necessary
     if( JS9.menubarHTML === "" ){
-	JS9.menubarHTML = "<span id='JS9Menus_@@ID@@' class='ui-widget-header ui-corner-all'>";
+	JS9.menubarHTML = "<span id='JS9Menus_@@ID@@'>";
 	for(ii=0; ii<JS9.menuButtonOptsArr.length; ii++){
 	    ss = JS9.menuButtonOptsArr[ii].name;
 	    tt = JS9.menuButtonOptsArr[ii].label;
