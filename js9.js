@@ -89,6 +89,7 @@ JS9.globalOpts = {
     fits2png: false,		// do we convert FITS to  PNG representation?
     alerts: true,		// set to false to turn off alerts
     internalValPos: true,	// a fancy info plugin can turns this off
+    internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     xtimeout: 180000,		// connection timeout for xhr requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     dims: [1024, 1024],		// dims of extracted images
@@ -9778,6 +9779,10 @@ JS9.mouseMoveCB = function(evt){
 	break;
     case 0:
     case 1:
+	// skip contrast/bias change?
+	if( !JS9.globalOpts.internalContrastBias ){
+	    return;
+	}
 	// inside a region or with special key: no contrast/bias
 	if( im.rclick || JS9.specialKey(evt) ){
 	    return;
