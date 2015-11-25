@@ -3441,7 +3441,7 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 };
 
 //  resize a display
-JS9.Display.prototype.resize = function(width, height){
+JS9.Display.prototype.resize = function(width, height, opts){
     var i, im, key, layer, nwidth, nheight, nleft, ntop;
     var repos = function(o){
 	o.left += nleft;
@@ -3452,6 +3452,7 @@ JS9.Display.prototype.resize = function(width, height){
     if( (width < 10) || (height < 10) ){
 	JS9.error("invalid dimension(s) passed to JS9.Resize()");
     }
+    opts = opts || {};
     // get resize parameters relative to current display
     nwidth = width;
     nheight = height;
@@ -3464,6 +3465,10 @@ JS9.Display.prototype.resize = function(width, height){
     this.divjq.css("height", nheight);
     this.canvasjq.attr("width", nwidth);
     this.canvasjq.attr("height", nheight);
+    // change the menubar width, if specified not to
+    if( opts.resizeMenubar === undefined || opts.resizeMenubar ){
+	$("#" + this.id + "Menubar").css("width", nwidth);
+    }
     // change size of shape canvases
     for(key in this.layers ){
 	if( this.layers.hasOwnProperty(key) ){
@@ -10182,6 +10187,10 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	instance.divjq = divjq;
 	// add classes for easier CSS specification
 	instance.divjq.addClass(plugin.xclass+"Plugin").addClass("JS9Plugin");
+	// add id
+	if( !instance.odivjq.attr("id") ){
+	    instance.odivjq.attr("id", instance.id);
+	}
 	// the wrapper plugincontainer is the the outer div
 	instance.outerdivjq = instance.divjq.closest(".JS9PluginContainer");
 	// add the toolbar to the container, if necessary
