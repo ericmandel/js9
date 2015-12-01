@@ -104,6 +104,7 @@ JS9.globalOpts = {
     waitType: "spinner",        // "spinner" or "mouse"
     spinColor: "#FF0000",       // color of spinner
     spinOpacity: 0.35,          // opacity of spinner
+    displayResize: true,	// allow resize of display?
     debug: 0		        // debug level
 };
 
@@ -3441,9 +3442,12 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	o.top  += ntop;
 	o.setCoords();
     };
-    // sanity check
+    // sanity checks
+    if( !JS9.globalOpts.displayResize ){
+	JS9.error("display resize not enabled");
+    }
     if( (width < 10) || (height < 10) ){
-	JS9.error("invalid dimension(s) passed to JS9.Resize()");
+	JS9.error("invalid dimension(s) passed to display resize");
     }
     opts = opts || {};
     // get resize parameters relative to current display
