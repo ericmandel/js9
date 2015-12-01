@@ -3215,7 +3215,6 @@ JS9.Colormap.prototype.mkColorCell = function(ii){
 // JS9 display object for the screen display
 // ---------------------------------------------------------------------
 JS9.Display = function(el){
-    var e;
     // pass jQuery element, DOM element, or id
     if( el instanceof jQuery ){
 	this.divjq = el;
@@ -3279,13 +3278,6 @@ JS9.Display = function(el){
     this.pluginInstances = {};
     // no layers yet
     this.layers = {};
-    // get x and y position of upper left corner
-    for(this.x = 0, e=this.canvas; e; e=e.offsetParent){
-	this.x += e.offsetLeft;
-    }
-    for(this.y = 0, e=this.canvas; e; e=e.offsetParent){
-	this.y += e.offsetTop;
-    }
     // init message layer
     this.initMessages();
     // add event handlers
@@ -9614,13 +9606,12 @@ JS9.mouseDownCB = function(evt){
     if( !im ){
 	return;
     }
-    if( JS9.DEBUG > 2 ){
-	JS9.log("m-down: %d %d %d %s",
-		evt.clientX-display.x, evt.clientY-display.y,
-		im.evstate, im.rclick);
-    }
     // get canvas position
     pos = JS9.eventToDisplayPos(evt);
+    // debugging
+    if( JS9.DEBUG > 2 ){
+	JS9.log("m-down: %d %d %s", pos.x, pos.y, im.rclick);
+    }
     // get image position
     ipos = im.displayToImagePos(pos);
     // save for mouseup check
@@ -9671,6 +9662,10 @@ JS9.mouseUpCB = function(evt){
     }
     // get canvas position
     pos = JS9.eventToDisplayPos(evt);
+    // debugging
+    if( JS9.DEBUG > 2 ){
+	JS9.log("m-up: %d %d %s", pos.x, pos.y, im.rclick);
+    }
     // image position
     ipos = im.displayToImagePos(pos);
     // inside a region, update region string
@@ -9711,10 +9706,6 @@ JS9.mouseUpCB = function(evt){
     im.evstate = -1;
     $("body").off("mouseup");
     $("body").off("mousemove");
-    if( JS9.DEBUG > 2 ){
-	JS9.log("m-up: %d %d %s",
-		evt.clientX-display.x, evt.clientY-display.y, im.rclick);
-    }
 };
 
 // mousemove: assumes display obj is passed in evt.data
@@ -9729,15 +9720,14 @@ JS9.mouseMoveCB = function(evt){
     }
     // get canvas position
     pos = JS9.eventToDisplayPos(evt);
+    // debugging
+    if( JS9.DEBUG > 3 ){
+	JS9.log("m-move: %d %d %s", pos.x, pos.y, im.rclick);
+    }
     // get image position
     ipos = im.displayToImagePos(pos);
     // reset the valpos object
     im.valpos = null;
-    if( JS9.DEBUG > 3 ){
-	JS9.log("m-move: %d %d %s %s",
-		evt.clientX-display.x, evt.clientY-display.y,
-		im.rclick, im.evstate);
-    }
     if( im.rclick ){
 	im.rclick = 2;
 	sel = im.display.layers.regions.params.sel;
