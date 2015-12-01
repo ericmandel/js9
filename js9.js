@@ -9817,13 +9817,15 @@ JS9.mouseOverCB = function(evt){
     var pos, ipos, pname, pinst, popts;
     var display = evt.data;
     var im = display.image;
+    var x = $(document).scrollLeft(), y = $(document).scrollTop();
     evt.preventDefault();
     // sanity checks
     if( !im ){
 	return;
     }
-    // set focus
+    // set focus, but undo any scrolling
     im.display.displayConjq.focus();
+    window.scrollTo(x, y);
     // change cursor
     // document.body.style.cursor = "crosshair";
     // plugin callbacks
