@@ -3449,6 +3449,9 @@ JS9.Display.prototype.resize = function(width, height, opts){
     if( (width < 10) || (height < 10) ){
 	JS9.error("invalid dimension(s) passed to display resize");
     }
+    if( (width === this.width) && (height === this.height) ){
+	return;
+    }
     opts = opts || {};
     // get resize parameters relative to current display
     nwidth = width;
