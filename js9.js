@@ -3446,6 +3446,9 @@ JS9.Display.prototype.resize = function(width, height, opts){
     if( !JS9.globalOpts.displayResize ){
 	JS9.error("display resize not enabled");
     }
+    // get width and height params
+    width = Math.floor(width);
+    height = Math.floor(height);
     if( (width < 10) || (height < 10) ){
 	JS9.error("invalid dimension(s) passed to display resize");
     }
@@ -4250,6 +4253,44 @@ JS9.Menubar = function(width, height){
 		var items = {};
 		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
+		var editResize = function(disp, obj){
+		    var v1, v2;
+		    if( obj.resize ){
+			var arr = obj.resize.split(/[\s,\/]+/);
+			switch(arr.length){
+			case 0:
+			    break;
+			case 1:
+			    if( JS9.isNumber(arr[0]) ){
+				v1 = parseInt(arr[0], 10);
+				disp.resize(v1, v1);
+			    }
+			    break;
+			default:
+			    if( JS9.isNumber(arr[0]) && JS9.isNumber(arr[1]) ){
+				v1 = parseInt(arr[0], 10);
+				v2 = parseInt(arr[1], 10);
+				disp.resize(v1, v2);
+			    }
+			    break;
+			}
+		    }
+		};
+		var keyResize = function(e){
+		    var obj = $.contextMenu.getInputValues(e.data);
+		    var keycode = e.which || e.keyCode;
+		    var vdisp = that.display;
+		    switch( keycode ){
+		    case 9:
+		    case 13:
+			editResize(vdisp, obj);
+			e.data.edited = false;
+			break;
+		    default:
+			e.data.edited = true;
+			break;
+		    }
+		};
 		// plugins
 		for(i=0; i<JS9.plugins.length; i++){
 		    plugin = JS9.plugins[i];
@@ -4292,6 +4333,14 @@ JS9.Menubar = function(width, height){
 		items.valpos = {name: "display value/position"};
 		if( tdisp.image && tdisp.image.params.valpos ){
 		    items.valpos.icon = "sun";
+		}
+		if( JS9.globalOpts.displayResize ){
+		    items["sep" + n++] = "------";
+		    items.resize = {
+			events: {keyup: keyResize},
+			name: "change width/height:",
+			type: "text"
+		    };
 		}
 		return {
 		    callback: function(key, opt){
@@ -4352,6 +4401,29 @@ JS9.Menubar = function(width, height){
 			}
 		    });
 		    },
+		    events: {
+			show: function(opt){
+			    var udisp = that.display;
+			    var obj = {};
+			    if( udisp  ){
+				obj.resize = sprintf("%d %d",
+						     udisp.width, udisp.height);
+				$.contextMenu.setInputValues(opt, obj);
+			    }
+			},
+			hide: function(opt){
+			    var obj;
+			    var udisp = that.display;
+			    if( udisp ){
+				// if a key was pressed, do the edit
+				if( opt.edited ){
+				    delete opt.edited;
+				    obj = $.contextMenu.getInputValues(opt);
+				    editResize(udisp, obj);
+				}
+			    }
+			}
+		    },
 		    items: items
 		};
 	    }
@@ -4386,11 +4458,13 @@ JS9.Menubar = function(width, height){
 		    case 13:
 			if( vim ){
 			    editZoom(vim, obj);
+			    e.data.edited = false;
 			}
 			break;
+		    default:
+			e.data.edited = true;
+			break;
 		    }
-		    // key was pressed
-		    e.data.edited = true;
 		};
 		var items = {};
 		items.zoomtitle = {name: "Zoom Factors:", disabled: true};
@@ -4505,10 +4579,10 @@ JS9.Menubar = function(width, height){
 		var items = {};
 		var tdisp = getDisplays()[0];
 		var editScale = function(im, obj){
-		    if( !isNaN(obj.scalemin) ){
+		    if( JS9.isNumber(obj.scalemin) ){
 			im.params.scalemin = obj.scalemin;
 		    }
-		    if( !isNaN(obj.scalemax) ){
+		    if( JS9.isNumber(obj.scalemax) ){
 			im.params.scalemax = obj.scalemax;
 		    }
 		    im.displayImage("colors");
@@ -4522,10 +4596,12 @@ JS9.Menubar = function(width, height){
 		    case 9:
 		    case 13:
 			editScale(vim, obj);
+			e.data.edited = false;
+			break;
+		    default:
+			e.data.edited = true;
 			break;
 		    }
-		    // key was pressed
-		    e.data.edited = true;
 		};
 		items.scaletitle = {name: "Scaling Algorithms:",
 				    disabled: true};
@@ -4657,10 +4733,12 @@ JS9.Menubar = function(width, height){
 		    case 9:
 		    case 13:
 			editColor(vim, obj);
+			e.data.edited = false;
+			break;
+		    default:
+			e.data.edited = true;
 			break;
 		    }
-		    // key was pressed
-		    e.data.edited = true;
 		};
 		items.cmaptitle = {name: "Colormaps:", disabled: true};
 		for(i=0; i<JS9.colormaps.length; i++){
