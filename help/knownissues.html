@@ -16,6 +16,21 @@
 
 <ol>
 
+<li><b>Webkit (Safari and Chrome) (December 3, 2015 : NOT resolved)</b>
+<p>
+Webkit browsers such as Safari and Chrome implement resizeable divs in
+an unintuitive way, which required several hacks in order to allow us
+to resize the JS9 display on the fly.  The resizeable (enclosing) div
+must be larger than the JS9 display canvas, or else the resize handle
+cannot be seen. As a result, the resize handle juts out from the
+JS9 display in an unappealing way.  Also, the resize operation can only
+increase the size of the display, not decrease it. To work around this,
+you can first decrease the display size using the View menu, which
+sets a new minimum size for GUI-based resize.  Finally, the cursor is
+not changed to a resize cursor. I couldn't figure out how to work
+around this in a fool-proof way.  We hope Webkit will implement more
+intuitive behavior in the near future.
+
 <li><b>Safari Mobile platforms (April 9, 2015 : NOT resolved)</b>
 <p>
 A maximum image size is enforced by Apple on Safari mobile devices.
@@ -87,7 +102,7 @@ further processing commands).
 
 </ol>
 
-<h5>Last updated: April 9, 2015</h5>
+<h5>Last updated: December 3, 2015</h5>
 </div>
 
 </body>

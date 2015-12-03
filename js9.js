@@ -22,7 +22,7 @@
 
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 
-/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner */
+/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor */
 
 /*jshint smarttabs:true */
 
@@ -62,6 +62,8 @@ JS9.NOMOVE = 3;			// number of pixels before we recognize movement
 JS9.DBLCLICK = 500;		// milliseconds for double-click
 JS9.TIMEOUT = 250;		// ms before assuming light window is up
 JS9.SUPERMENU = /^SUPERMENU_/;  // base of supermenu id
+JS9.RESIZEDIST = 20;		// size of rectangle defining resize handle 
+JS9.RESIZEFUDGE = 5;            // fudge for webkit resize problems
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 JS9.BROWSER = (function(){
@@ -104,7 +106,8 @@ JS9.globalOpts = {
     waitType: "spinner",        // "spinner" or "mouse"
     spinColor: "#FF0000",       // color of spinner
     spinOpacity: 0.35,          // opacity of spinner
-    displayResize: true,	// allow resize of display?
+    resize: true,		// allow resize of display?
+    resizeHandle: true,		// add resize handle to display?
     debug: 0		        // debug level
 };
 
@@ -302,6 +305,10 @@ JS9.bugs.hide_menu = true;
 // firefox does not repaint as needed (last checked FF 24.0 on 10/20/13)
 if( (JS9.BROWSER[0] === "Firefox") && JS9.BROWSER[2].search(/Linux/) >=0 ){
     JS9.bugs.firefox_linux = true;
+}
+// webkit resize is not quite up to par
+if( (JS9.BROWSER[0] === "Chrome") || (JS9.BROWSER[0] === "Safari") ){
+    JS9.bugs.webkit_resize = true;
 }
 // chrome appears to have a 500Mb limit on tabs (10/2015)
 if( (JS9.BROWSER[0] === "Chrome") ){
@@ -3216,6 +3223,7 @@ JS9.Colormap.prototype.mkColorCell = function(ii){
 // JS9 display object for the screen display
 // ---------------------------------------------------------------------
 JS9.Display = function(el){
+    var that = this;
     // pass jQuery element, DOM element, or id
     if( el instanceof jQuery ){
 	this.divjq = el;
@@ -3260,6 +3268,29 @@ JS9.Display = function(el){
 	.attr("tabindex", "0")
 	.append(this.canvasjq)
 	.appendTo(this.divjq);
+    // add resize capability, if necessary
+    if( JS9.globalOpts.resizeHandle && window.hasOwnProperty("ResizeSensor") ){
+	this.divjq
+	    .css("resize", "both")
+	    .css("overflow", "hidden");
+	if( JS9.bugs.webkit_resize ){
+	    this.owidth = parseInt(this.divjq.css("width"), 10);
+	    this.oheight = parseInt(this.divjq.css("height"), 10);
+	    this.divjq
+		.css("width",  this.width + JS9.RESIZEFUDGE)
+		.css("height", this.height + JS9.RESIZEFUDGE);
+	}
+	this.resizeSensor = new ResizeSensor(this.divjq, function(el){
+	    var nwidth = that.divjq.width();
+	    var nheight = that.divjq.height();
+	    if( JS9.bugs.webkit_resize ){
+		nwidth  -= JS9.RESIZEFUDGE;
+		nheight -= JS9.RESIZEFUDGE;
+	    }
+	    that.resizing = 1;
+	    that.resize(nwidth, nheight);
+	});
+    }
     // drawing context
     this.context = this.canvas.getContext("2d");
     // turn off anti-aliasing
@@ -3443,7 +3474,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	o.setCoords();
     };
     // sanity checks
-    if( !JS9.globalOpts.displayResize ){
+    if( !JS9.globalOpts.resize ){
 	JS9.error("display resize not enabled");
     }
     // get width and height params
@@ -3468,6 +3499,12 @@ JS9.Display.prototype.resize = function(width, height, opts){
     this.divjq.css("height", nheight);
     this.canvasjq.attr("width", nwidth);
     this.canvasjq.attr("height", nheight);
+    if( JS9.bugs.webkit_resize ){
+	if( !this.resizing ){
+	    this.owidth = Math.min(this.owidth, nwidth);
+	    this.oheight = Math.min(this.oheight, nheight);
+	}
+    }
     // change the menubar width, if specified not to
     if( opts.resizeMenubar === undefined || opts.resizeMenubar ){
 	$("#" + this.id + "Menubar").css("width", nwidth);
@@ -3514,12 +3551,28 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	    }
 	}
     }
+    if( JS9.bugs.webkit_resize ){
+	this.divjq
+	    .css("width",  this.width  + JS9.RESIZEFUDGE)
+	    .css("height", this.height + JS9.RESIZEFUDGE);
+    }
     // for current image being displayed ...
     if( this.image ){
 	// redisplay
 	this.image.displayImage("all");
 	this.image.refreshLayers();
     }
+};
+
+// are we in the resize handle area of this display?
+JS9.Display.prototype.inResize = function(pos){
+    if( JS9.globalOpts.resizeHandle ){
+	if( (pos.x + JS9.RESIZEDIST >= this.divjq.width())  &&
+	    (pos.y + JS9.RESIZEDIST >= this.divjq.height()) ){
+	    return true;
+	}
+    }
+    return false;
 };
 
 // ---------------------------------------------------------------------
@@ -4334,7 +4387,7 @@ JS9.Menubar = function(width, height){
 		if( tdisp.image && tdisp.image.params.valpos ){
 		    items.valpos.icon = "sun";
 		}
-		if( JS9.globalOpts.displayResize ){
+		if( JS9.globalOpts.resize ){
 		    items["sep" + n++] = "------";
 		    items.resize = {
 			events: {keyup: keyResize},
@@ -5376,7 +5429,7 @@ JS9.Fabric.opts = {
     transparentCorners: false,
     centeredScaling: true,
     selectable: true,
-    // minimize the jump when first resizing a region
+    // minimizes the jump when first changing the region size
     padding: 0,
     canvas: {
 	selection: true,
@@ -5487,6 +5540,11 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	.attr("width", divjq.css("width"))
 	.attr("height", divjq.css("height"))
 	.appendTo(dlayer.divjq);
+    if( JS9.bugs.webkit_resize && dlayer.dtype === "main" ){
+	dlayer.canvasjq
+	    .attr("width",  display.width)
+	    .attr("height", display.height);
+    }
     // new fabric canvas associated with this HTML canvas
     dlayer.canvas = new fabric.Canvas(dlayer.canvasjq[0]);
     // don't render on add or remove of objects (do it manually)
@@ -9686,13 +9744,17 @@ JS9.mouseDownCB = function(evt){
     var pname, pinst, popts, pos, ipos;
     var display = evt.data;
     var im = display.image;
-    evt.preventDefault();
+    // evt.preventDefault();
     // sanity checks
     if( !im ){
 	return;
     }
     // get canvas position
     pos = JS9.eventToDisplayPos(evt);
+    // prevent default unless we are close to the resize area
+    if( !display.inResize(pos) ){
+	evt.preventDefault();
+    }
     // debugging
     if( JS9.DEBUG > 2 ){
 	JS9.log("m-down: %d %d %s", pos.x, pos.y, im.rclick);
@@ -9740,13 +9802,17 @@ JS9.mouseUpCB = function(evt){
     var pos, ipos, pname, pinst, popts;
     var display = evt.data;
     var im = display.image;
-    evt.preventDefault();
+    // evt.preventDefault();
     // sanity checks
     if( !im ){
 	return;
     }
     // get canvas position
     pos = JS9.eventToDisplayPos(evt);
+    // prevent default unless we are close to the resize area
+    if( !display.inResize(pos) ){
+	evt.preventDefault();
+    }
     // debugging
     if( JS9.DEBUG > 2 ){
 	JS9.log("m-up: %d %d %s", pos.x, pos.y, im.rclick);
@@ -9789,6 +9855,19 @@ JS9.mouseUpCB = function(evt){
     // safe to unset rclick now
     im.rclick = 0;
     im.evstate = -1;
+    if( display.resizing ){
+	display.resizing = 0;
+	if( JS9.bugs.webkit_resize ){
+	    var dwidth = parseInt(display.divjq.css("width"), 10);
+	    var dheight = parseInt(display.divjq.css("height"), 10);
+	    if( dwidth  < display.owidth ){
+		display.divjq.css("width", display.owidth + JS9.RESIZEFUDGE);
+	    }
+	    if( dheight < display.oheight ){
+		display.divjq.css("height", display.oheight + JS9.RESIZEFUDGE);
+	    }
+	}
+    }
     $("body").off("mouseup");
     $("body").off("mousemove");
 };
@@ -9798,13 +9877,20 @@ JS9.mouseMoveCB = function(evt){
     var pos, ipos, pname, pinst, popts, sel;
     var display = evt.data;
     var im = display.image;
-    evt.preventDefault();
+    // evt.preventDefault();
     // sanity checks
     if( !im ){
 	return;
     }
+    if( display.resizing ){
+	return;
+    }
     // get canvas position
     pos = JS9.eventToDisplayPos(evt);
+    // prevent default unless we are close to the resize area
+    if( !display.inResize(pos) ){
+	evt.preventDefault();
+    }
     // debugging
     if( JS9.DEBUG > 3 ){
 	JS9.log("m-move: %d %d %s", pos.x, pos.y, im.rclick);
@@ -10461,6 +10547,14 @@ JS9.init = function(){
     if( JS9.globalOpts.helperProtocol === "file:" ){
 	JS9.globalOpts.helperProtocol = "http:";
     }
+    // regularize resize params
+    if( !JS9.globalOpts.resize ){
+	JS9.globalOpts.resizeHandle = false;
+    }
+    // turn off resize on mobile platforms
+    if( JS9.BROWSER[3] ){
+	JS9.globalOpts.resizeHandle = false;
+    }
     // add suffix
     JS9.globalOpts.helperProtocol += "//";
     // replace with global opts with user opts, if necessary
@@ -10952,6 +11046,33 @@ JS9.init = function(){
 		    s = args.join(" ");
 		    im.addShapes("regions", s);
 		}
+	    }
+	}
+    }));
+    JS9.checkNew(new JS9.Command({
+	name: "resize",
+	help: "get/set display size for current image",
+	get: function(){
+	    var display;
+	    var im = this.image;
+	    if( im ){
+		display = im.display;
+		return sprintf("%s %s", display.width, display.height);
+	    }
+	},
+	set: function(args){
+	    var display;
+	    var im = this.image;
+	    var width, height;
+	    if( im && args.length ){
+		display = im.display;
+		width = parseInt(args[0], 10);
+		if( args.length > 1 ){
+		    height = parseInt(args[1], 10);
+		} else {
+		    height = width;
+		}
+		display.resize(width, height);
 	    }
 	}
     }));

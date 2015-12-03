@@ -30,14 +30,17 @@ in your browser.
 <p>
 Please choose from the following topics:
 <ul> 
-<li><a href="#gettingstarted">Getting Started with JS9</a>
+<li><a href="#start">Getting Started with JS9</a>
 <li><a href="#menus">JS9 Menus</a>
 <li><a href="#mouse">JS9 Mouse Interaction</a>
 <li><a href="#regions">JS9 Regions</a>
 <li><a href="#meta">Meta Key Accelerator</a>
+<li><a href="#dragdrop">Drag and Drop FITS Images</a>
+<li><a href="#resize">Resizing the Display</a>
 </ul>
 
 <p>
+<a name="start"></a> 
 <h3>Getting Started with JS9</h3>
 <p>
 JS9 provides astronomical image display capabilities right in your browser. 
@@ -76,6 +79,7 @@ map, add geometric regions of interest, change world coordinate system
 the original FITS data.
 
 <p>
+<a name="menus"></a> 
 <h3>JS9 Menus</h3>
 <p>
 The following menus are in the default JS9 menu bar. Note that Web
@@ -310,6 +314,7 @@ listed above.
 </ul>
 
 <p>
+<a name="mouse"></a> 
 <h3>JS9 Mouse Interaction</h3>
 <p>
 In keeping with the needs of mobile devices, JS9 utilizes a single
@@ -321,6 +326,7 @@ image. A double-click (or double-tap) inside a region will bring up
 the configuration menu for that region.
 
 <p>
+<a name="regions"></a> 
 <h3>JS9 Regions</h3>
 <p>
 Regions are geometric shapes that can be used to mark part of an image
@@ -401,6 +407,7 @@ A discussion of how JS9 implements DS9/Funtools regions syntax can be found
 <a href="regions.html">here</a>.
 
 <p>
+<a name="meta"></a> 
 <h3>Meta Key Accelerator</h3>
 <p>
 The <b>meta</b> key is the <b>Command</b> key on a Mac and the <b>Control</b>
@@ -422,6 +429,7 @@ polygon border, a new point will be added at that point. If you press
 the <b>meta</b> key and click on an existing point, it will be deleted.
 
 <p>
+<a name="dragdrop"></a> 
 <h3>Drag and Drop FITS Images</h3>
 <p>
 You can drag and drop FITS images and binary tables onto JS9 to
@@ -432,7 +440,26 @@ server is on your local host machine. In this case, you must set your
 DataPath variable in the Analysis menu to help JS9 locate the original 
 data file.
 
-<h5>Last updated: April 5, 2015</h5>
+<p>
+<a name="resize"></a> 
+<h3>Resizing the JS9 Display</h3>
+<p>
+By default, the JS9 Display can be resized using the
+the <b>View:change width/height</b>menu option (or the
+JS9.ResizeDisplay() JavaScript routine).  This feature can be turned
+off by setting the JS9.globalOpts.resize variable to <b>false</b> in
+the js9Prefs.json file.
+<p>
+Also by default, the JS9 Display can be resized using a grab handle in
+the lower right-hand corner of the display.  This feature can be
+turned off setting the JS9.globalOpts.resizeHandle variable
+to <b>false</b> in the js9Prefs.json file.
+<p>
+See <a href="knownissues.html">Known Issues</a>
+for a discussion of limitations imposed on resize by Webkit
+browsers such as Chrome and Safari.
+
+<h5>Last updated: December 3, 2015</h5>
 </div>
 
 </body>
