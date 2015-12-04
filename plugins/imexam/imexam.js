@@ -113,7 +113,7 @@ ndops.print = function(a, width, prec) {
 };
 
 ndops._hist = typed(function (a, width , min, max) {
-    var size = (max-min) / width;
+    var size = Math.floor((max-min) / width);
     var  h   = new Int32Array(size+1);
 
     // -----
