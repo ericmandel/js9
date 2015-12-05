@@ -232,19 +232,19 @@ defined on that server is available.
 <p>
 To override default image parameters, pass the image opts argument:
 <pre>
-    href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'
+    JS9.LoadProxy("http://hea-www.cfa.harvard.edu/~eric/coma.fits", {scale:"linear", colormap:"sls"});'
 </pre>
 <p>
 If an onload callback function is specified in opts, it will be called
 after the image is loaded:
 <pre>
-    href='javascript:JS9.Load("http://hea-www.cfa.harvard.edu/~eric/coma.fits", {scale: "linear", onload: func});'
+    JS9.LoadProxy("http://hea-www.cfa.harvard.edu/~eric/coma.fits", {scale: "linear", onload: func});'
 </pre>
 The image handle is passed as the first argument to the callback.
 <p>
 To load an image into a specified display, pass the <b>display object</b> as the last argument:
 <pre>
-    href='javascript:JS9.LoadProxy("http://hea-www.cfa.harvard.edu/~eric/coma.fits", {scale: "linear"}, {display: "myJS9"});'
+    JS9.LoadProxy("http://hea-www.cfa.harvard.edu/~eric/coma.fits", {scale: "linear"}, {display: "myJS9"});'
 </pre>
 <p>
 Note again that not all back-end servers support the proxy functionality.
