@@ -3477,14 +3477,24 @@ JS9.Display.prototype.resize = function(width, height, opts){
     if( !JS9.globalOpts.resize ){
 	JS9.error("display resize not enabled");
     }
+    // no args => return current size
+    if( !width && !height ){
+	return {width: this.width, height: this.height};
+    }
     // get width and height params
     width = Math.floor(width);
-    height = Math.floor(height);
+    if( height ){
+	height = Math.floor(height);
+    } else {
+	height = width;
+    }
+    // sanity checks
     if( (width < 10) || (height < 10) ){
 	JS9.error("invalid dimension(s) passed to display resize");
     }
+    // nothing to do if we are not changing size
     if( (width === this.width) && (height === this.height) ){
-	return;
+	return this;
     }
     opts = opts || {};
     // get resize parameters relative to current display
@@ -3562,6 +3572,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	this.image.displayImage("all");
 	this.image.refreshLayers();
     }
+    return this;
 };
 
 // are we in the resize handle area of this display?
@@ -11278,7 +11289,7 @@ JS9.mkPublic = function(name, s){
 		    // call the image method
 		    got = im[s].apply(im, obj.argv);
 		    // don't return image handle, it can't be serialized
-		    if( got === im ){
+		    if( (got === im) || (got === im.display) ){
 			return "OK";
 		    }
 		    return got;
@@ -12124,12 +12135,17 @@ JS9.mkPublic("AddDivs", function(){
 
 // change the size of a display
 JS9.mkPublic("ResizeDisplay", function(){
+    var got;
     var obj = JS9.parsePublicArgs(arguments);
     var display = JS9.lookupDisplay(obj.display);
     if( !display ){
 	JS9.error("invalid display for resize");
     }
-    return JS9.Display.prototype.resize.apply(display, obj.argv);
+    got = JS9.Display.prototype.resize.apply(display, obj.argv);
+    if( got === display ){
+	got = "OK";
+    }
+    return got;
 });
 
 // end of Public Interface
