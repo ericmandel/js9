@@ -22,7 +22,7 @@
 
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 
-/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor */
+/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter */
 
 /*jshint smarttabs:true */
 
@@ -4109,6 +4109,11 @@ JS9.Menubar = function(width, height){
 		items["sep" + n++] = "------";
 		items.open = {name: "open local file ..."};
 		items.archives = {name: " accessing data archives ..."};
+		if( !JS9.allinone ){
+		    items.archives.disabled = false;
+		} else {
+		    items.archives.disabled = true;
+		}
 		items.loadproxy = {name: "open link via proxy ..."};
 		if( !JS9.allinone			 &&
 		    JS9.globalOpts.helperType !== "none" &&
@@ -4119,7 +4124,11 @@ JS9.Menubar = function(width, height){
 		    items.loadproxy.disabled = true;
 		}
 		items.loadcors = {name: "open link via CORS ..."};
-		items["sep" + n++] = "------";
+		if( !window.hasOwnProperty("Jupyter") ){
+		    items.loadcors.disabled = false;
+		} else {
+		    items.loadcors.disabled = true;
+		}
 		// only show imsection if the fits file differs from the
 		// displayed file (i.e. its a representation file)
 		items.imsection = {name: "extract image section ..."};
@@ -4131,6 +4140,7 @@ JS9.Menubar = function(width, height){
 		} else {
 		    items.imsection.disabled = true;
 		}
+		items["sep" + n++] = "------";
 		items.print = {name: "print ..."};
 		items.header = {name: "display FITS header"};
 		items.pageid = {name: "display pageid"};
@@ -4473,6 +4483,7 @@ JS9.Menubar = function(width, height){
 				obj.resize = sprintf("%d %d",
 						     udisp.width, udisp.height);
 				$.contextMenu.setInputValues(opt, obj);
+				JS9.jupyterFocus(".context-menu-item");
 			    }
 			},
 			hide: function(opt){
@@ -4608,6 +4619,7 @@ JS9.Menubar = function(width, height){
 				    String(uim.primary.sect.zoom);
 			    }
 			    $.contextMenu.setInputValues(opt, obj);
+			    JS9.jupyterFocus(".context-menu-item");
 			},
 			hide: function(opt){
 			    var obj;
@@ -4742,6 +4754,7 @@ JS9.Menubar = function(width, height){
 				    String(uim.params.scalemax);
 			    }
 			    $.contextMenu.setInputValues(opt, obj);
+			    JS9.jupyterFocus(".context-menu-item");
 			},
 			hide: function(opt){
 			    var obj;
@@ -4862,6 +4875,7 @@ JS9.Menubar = function(width, height){
 				obj.alpha = String(uim.params.alpha);
 			    }
 			    $.contextMenu.setInputValues(opt, obj);
+			    JS9.jupyterFocus(".context-menu-item");
 			},
 			hide: function(opt){
 			    var obj;
@@ -8796,6 +8810,15 @@ if( typeof Object.create !== "function" ){
     };
 }
 
+// set explicit focus for IPython/Jupyter support
+JS9.jupyterFocus = function(id){
+    var el;
+    if( window.hasOwnProperty("Jupyter") ){
+	el = $(id + " input");
+	Jupyter.keyboard_manager.register_events(el);
+    }
+};
+
 // return a unique value for a given image id by appending <n> to the id
 JS9.getImageID = function(imid, dispid){
     var i, im, s;
@@ -8985,6 +9008,7 @@ JS9.lightWin = function(id, type, s, title, opts){
     default:
         break;
     }
+    JS9.jupyterFocus("#" + id);
     return rval;
 };
 
