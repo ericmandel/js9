@@ -293,7 +293,7 @@ JS9.consoleHTML =
 "<table class='JS9CmdTable'>" +
 "<tr class='JS9Tr'>"+
 "<td><div id='JS9CmdPrompt' class='JS9CmdPrompt'>@@PR@@</div></td>" +
-"<td class='JS9CmdTd'><input type='text' class='JS9CmdIn' autocomplete='off' value='' /></td>" +
+"<td class='JS9CmdTd'><input type='text' class='JS9CmdIn' autocapitalize='off' autocorrect='off' autocomplete='off' value='' /></td>" +
 "</tr>" +
 "</table>" +
 "</form>";
@@ -3692,6 +3692,7 @@ JS9.Console = function(width, height){
 
 // prepare for new input
 JS9.Console.prototype.inp = function(){
+    var el;
     var prompt = "js9>";
     // make previous command input read-only
     this.consoleConjq.find(".JS9CmdIn:last").attr("readonly", "readonly");
@@ -3699,11 +3700,12 @@ JS9.Console.prototype.inp = function(){
     this.consoleConjq.append(JS9.consoleHTML.replace(/@@PR@@/g,prompt));
     // focus on it
     // and prevent Apple ipads from autocapitalizing, etc.
-    this.consoleConjq.find(".JS9CmdIn:last")
-	.focus()
-	.attr("autocapitalize", "off")
-	.attr("autocorrect", "off")
-	.attr("autocomplete", "off");
+    el = this.consoleConjq.find(".JS9CmdIn:last");
+    el.focus()
+      .attr("autocapitalize", "off")
+      .attr("autocorrect", "off")
+      .attr("autocomplete", "off");
+    JS9.jupyterFocus(el.parent());
     // allow chaining
     return this;
 };
@@ -8811,11 +8813,18 @@ if( typeof Object.create !== "function" ){
 }
 
 // set explicit focus for IPython/Jupyter support
-JS9.jupyterFocus = function(id){
-    var el;
+JS9.jupyterFocus = function(el, el2){
+    var eljq;
     if( window.hasOwnProperty("Jupyter") ){
-	el = $(id + " input");
-	Jupyter.keyboard_manager.register_events(el);
+	if( el instanceof jQuery ){
+	    eljq = el;
+	} else {
+	    eljq = $(el);
+	}
+	el2 = el2 || "input, textarea";
+	eljq.find(el2).each(function(){
+	    Jupyter.keyboard_manager.register_events($(this));
+	});
     }
 };
 
@@ -9008,7 +9017,6 @@ JS9.lightWin = function(id, type, s, title, opts){
     default:
         break;
     }
-    JS9.jupyterFocus("#" + id);
     return rval;
 };
 
@@ -10569,6 +10577,12 @@ JS9.init = function(){
 				    JS9.InstallDir("images/close.gif"),
 				    JS9.InstallDir("images/restore.gif"),
 				    JS9.InstallDir("images/resize.gif")];
+	}
+	// once a window is loaded, set jupyter focus, if necessary
+	if( window.hasOwnProperty("Jupyter") ){
+	   $("#dhtmlwindowholder").arrive("input", function(){
+	       JS9.jupyterFocus($(this).parent());
+	   });
 	}
     }
     // set this to false in the page to avoid loading a prefs file
