@@ -5473,6 +5473,9 @@ JS9.Fabric.rescaleStrokeWidth = function(scale, sw1){
     if( !sw1 && this.params ){
 	sw1 = this.params.sw1;
     }
+    if( !sw1 ){
+	return;
+    }
     if( this.type === "group" ){
 	this.forEachObject(function(obj){
 	    JS9.Fabric.rescaleStrokeWidth.call(obj, scale, sw1);
@@ -6489,15 +6492,10 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 	    // save shape
 	    params.shape = "text";
 	    params.text = opts.text || "Double-click to add text here";
-	    if( window.hasOwnProperty("fabric") ){
-		if( !myopts || !myopts.strokeWidth ){
-		    if( fabric.version === "1.4.0" ){
-			opts.strokeWidth = 0;
-		    } else {
-			opts.strokeWidth = 1;
-		    }
-		}
-	    }
+	    // FF svg to pdf is broken, so use fill instead of stroke
+	    // https://github.com/kangax/fabric.js/issues/2675
+	    opts.fill = opts.stroke;
+	    opts.strokeWidth = 0;
 	    s = new fabric.Text(params.text, opts);
 	    break;
 	default:
@@ -6956,6 +6954,16 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 		this.removeShapes(layerName, sobj.remove || "all");
 		return;
 	    }
+	}
+	// shape-specific pre-processing
+	switch(obj.params.shape){
+	case "text":
+	    // can't use stroke, use fill instead
+	    if( sobj.opts.stroke ){
+		sobj.opts.fill = sobj.opts.stroke;
+	    }
+	    sobj.opts.strokeWidth = 0;
+	    break;
 	}
 	// change the shape
 	obj.set(sobj.opts);
