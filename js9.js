@@ -321,7 +321,6 @@ if( (JS9.BROWSER[0] === "Chrome") ){
 JS9.Image = function(file, params, func){
     var sarr;
     var display;
-    var pname, pinst, popts;
     var that = this;
     var localOpts=null;
     var mksect = function(that, localOpts){
@@ -341,6 +340,37 @@ JS9.Image = function(file, params, func){
 	    }
 	}
 	return arr;
+    };
+    var finishUp = function(func){
+	var pname, pinst, popts;
+	// clear previous messages
+	this.clearMessage();
+	// add to list of images
+	JS9.images.push(this);
+	// call function, if necessary
+	if( func ){
+	    try{ JS9.xeqByName(func, window, this); }
+	    catch(e){ JS9.error("in image onload callback", e, false); }
+	}
+	// plugin callbacks
+	for( pname in this.display.pluginInstances ){
+	    if( this.display.pluginInstances.hasOwnProperty(pname) ){
+		pinst = this.display.pluginInstances[pname];
+		popts = pinst.plugin.opts;
+		if( pinst.isActive("onimageload") ){
+		    try{ popts.onimageload.call(pinst, this); }
+		    catch(e){ pinst.errLog("onimageload", e); }
+		}
+	    }
+	}
+	// update shapes?
+	if( this.updateshapes ){
+	    this.updateShapes("regions", "all", "update");
+	}
+	// load is complete
+	this.status.load = "complete";
+	// done loading, reset wait cursor
+	JS9.waiting(false);
     };
     // params can be an object containing local params, or the display string
     if( params ){
@@ -438,36 +468,42 @@ JS9.Image = function(file, params, func){
 	if( sarr.length ){
 	    this.mkSection.apply(this, sarr);
 	}
-	// display image, 2D graphics, etc.
-	this.displayImage("all");
-	// clear previous messages
-	this.clearMessage();
-	// add to list of images
-	JS9.images.push(this);
-	// call function, if necessary
-	if( func ){
-	    try{ JS9.xeqByName(func, window, this); }
-	    catch(e){ JS9.error("in image onload callback", e, false); }
-	}
-	// plugin callbacks
-	for( pname in this.display.pluginInstances ){
-	    if( this.display.pluginInstances.hasOwnProperty(pname) ){
-		pinst = this.display.pluginInstances[pname];
-		popts = pinst.plugin.opts;
-		if( pinst.isActive("onimageload") ){
-		    try{ popts.onimageload.call(pinst, this); }
-		    catch(e){ pinst.errLog("onimageload", e); }
+	// was a static rgb file specified?
+	if( localOpts && localOpts.rgbFile ){
+	    this.rgbFile = localOpts.rgbFile;
+	    // callback to fire when static rgb image is loaded
+	    $(this.png.image).on("load", function(evt){
+		var ss;
+		if( (that.png.image.width !== that.raw.width)   ||
+		    (that.png.image.height !== that.raw.height) ){
+		    ss = sprintf("rgb dims [%s,%s] don't match image [%s,%s]",
+				that.png.image.width,
+				that.png.image.height,
+				that.raw.width,
+				that.raw.height);
+		    JS9.error(ss);
 		}
-	    }
+		// store png data in an offscreen canvas
+		that.mkOffScreenCanvas();
+		// display image, 2D graphics, etc.
+		that.displayImage("all");
+		// finish up
+		finishUp.call(that, func);
+	    }).on("error", function(evt){
+		// done loading, reset wait cursor
+		JS9.waiting(false);
+		// error on load
+		that.status.load = "error";
+		JS9.error("could not load image: "+that.id);
+	    });
+	    // set src to download the display file
+	    this.png.image.src = this.rgbFile;
+	} else {
+	    // display image, 2D graphics, etc.
+	    this.displayImage("all");
+	    // finish up
+	    finishUp.call(this, func);
 	}
-	// update shapes?
-	if( this.updateshapes ){
-	    this.updateShapes("regions", "all", "update");
-	}
-	// load is complete
-	this.status.load = "complete";
-	// done loading, reset wait cursor
-	JS9.waiting(false);
 	break;
     case "string":
 	// save source
@@ -484,7 +520,6 @@ JS9.Image = function(file, params, func){
 	this.status.load = "loading";
 	// callback to fire when image is loaded (do this before setting src)
 	$(this.png.image).on("load", function(evt){
-	    var ppname, ppinst, ppopts;
 	    // populate the image data array from RGB values
 	    that.mkOffScreenCanvas();
 	    // populate the raw image data array from RGB values
@@ -502,30 +537,8 @@ JS9.Image = function(file, params, func){
 	    }
 	    // display image, 2D graphics, etc.
 	    that.displayImage("all");
-	    // clear previous messages
-	    that.clearMessage();
-	    // add to list of images
-	    JS9.images.push(that);
-	    // call function, if necessary
-	    if( func ){
-		try{ JS9.xeqByName(func, window, that); }
-		catch(e){ JS9.error("in image onload callback", e, false); }
-	    }
-	    // plugin callbacks
-	    for( ppname in that.display.pluginInstances ){
-		if( that.display.pluginInstances.hasOwnProperty(ppname) ){
-		    ppinst = that.display.pluginInstances[ppname];
-		    ppopts = ppinst.plugin.opts;
-		    if( ppinst.isActive("onimageload") ){
-			try{ ppopts.onimageload.call(ppinst, that); }
-			catch(e){ pinst.errLog("onimageload", e); }
-		    }
-		}
-	    }
-	    // load is complete
-	    that.status.load = "complete";
-	    // done loading, reset wait cursor
-	    JS9.waiting(false);
+	    // finish up
+	    finishUp.call(that, func);
 	    // debugging
 	    if( JS9.DEBUG ){
 		JS9.log("JS9 image: %s dims(%d,%d) min/max(%d,%d)",
@@ -665,8 +678,8 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
     // read the RGBA data from offscreen
     try{
     this.offscreen.img = this.offscreen.context.getImageData(0, 0,
-				    this.png.image.width,
-				    this.png.image.height);
+			 this.png.image.width,
+			 this.png.image.height);
     } catch(e){
 	if( (JS9.BROWSER[0] === "Chrome") && (document.domain === "") ){
 	    alert("When using the file:// URI, Chrome must be run with the --allow-file-access-from-files switch to permit JS9 to access data.");
@@ -1644,6 +1657,7 @@ JS9.Image.prototype.mkScaledCells = function(){
 // sort of from: saotk/frame/truecolor.c, but not really
 JS9.Image.prototype.mkPrimaryImage = function(){
     var primary, sect, img;
+    var xrgb, yrgb, wrgb, hrgb, imgrdb, ctx;
     var xIn, yIn, xOut, yOut, xOutIdx, yOutIdx;
     var yZoom, xZoom, idx, odx, yLen, zx, zy, zyLen;
     var alpha, alpha1, alpha2;
@@ -1651,7 +1665,7 @@ JS9.Image.prototype.mkPrimaryImage = function(){
     var rthis=this, gthis=this, bthis=this;
     var dorgb = false;
     // sanity check
-    if( !this.primary || !this.psColors ){
+    if( !this.primary ){
 	return this;
     }
     if( JS9.globalOpts.rgb.mode ){
@@ -1666,18 +1680,61 @@ JS9.Image.prototype.mkPrimaryImage = function(){
 	gthis = JS9.globalOpts.rgb.gim;
 	bthis = JS9.globalOpts.rgb.bim;
     }
+    ctx = this.display.context;
     primary = this.primary;
     sect = primary.sect;
+    // if we have static rgb file, use the rgb colors from the image
+    if( this.rgbFile ){
+	wrgb = sect.width / sect.zoom;
+	hrgb = sect.height / sect.zoom;
+	xrgb = sect.x0;
+	yrgb = (this.offscreen.canvas.height - 1) - (sect.y0 + hrgb);
+	imgrdb = this.offscreen.context.getImageData(xrgb, yrgb, wrgb, hrgb);
+	if( sect.zoom === 1 ){
+	    // for unzoomed data, we can grab the rgb pixels directly
+	    primary.img = imgrdb;
+	} else {
+	    // for zoomed data, we have to replicate each rgb pixel
+	    primary.img = ctx.createImageData(sect.width, sect.height);
+	    img = primary.img;
+	    odx = 0;
+	    for(yIn=0, yOut=0; yIn<imgrdb.height; yIn++, yOut++){
+		yLen = yIn * imgrdb.width;
+		yOutIdx = yOut * sect.zoom;
+		for(xIn=0, xOut=0; xIn<imgrdb.width; xIn++, xOut++){
+		    idx = (yLen + xIn) * 4;
+		    xOutIdx = xOut * sect.zoom;
+		    for(yZoom=0; yZoom<sect.zoom; yZoom++) {
+			zy = Math.floor(yOutIdx + yZoom);
+			zyLen = zy * sect.width;
+			for(xZoom=0; xZoom<sect.zoom; xZoom++) {
+			    zx = Math.floor(xOutIdx + xZoom);
+			    odx = (zyLen + zx) * 4;
+			    img.data[odx]   = imgrdb.data[idx];
+			    img.data[odx+1] = imgrdb.data[idx+1];
+			    img.data[odx+2] = imgrdb.data[idx+2];
+			    img.data[odx+3] = imgrdb.data[idx+3];
+			}
+		    }
+		}
+	    }
+	    imgrdb = null;
+	}
+	return this;
+    }
     // create an rgb image if necessary
-    if( !primary.img ||
-	(primary.img.width  !== sect.width) ||
+    if( !primary.img                         ||
+	(primary.img.width  !== sect.width)  ||
 	(primary.img.height !== sect.height) ){
 	// primary.img = this.offscreen.context.createImageData(sect.width,
 	// sect.height);
-	primary.img = this.display.context.createImageData(sect.width,
-							   sect.height);
+	primary.img = ctx.createImageData(sect.width, sect.height);
     }
     img = primary.img;
+    // converting raw data, we need psColors
+    if( !this.psColors ){
+	return this;
+    }
     // primary alpha for this image
     // alpha = this.params.alpha || 255;
     alpha = this.params.alpha;
@@ -1805,6 +1862,11 @@ JS9.Image.prototype.displayImage = function(imode){
     mode.display = true;
     // and always call plugins
     mode.plugins = true;
+    // if we have a static rgb image, we skip some steps
+    if( this.rgbFile ){
+	imode.colors = false;
+	imode.scaled = false;
+    }
     // generate colordata
     if( mode.colors ){
 	// populate the colorData array (offsets into scaled colorcell data)
@@ -8568,13 +8630,14 @@ JS9.Panner.init = function(width, height){
 // sort of from: saotk/frame/truecolor.c, but not really
 // part of panner plugin
 JS9.Panner.create = function(im){
-    var panDisp, panner, sect, img, val;
+    var panDisp, panner, sect, img;
     var x0, y0, xblock, yblock;
-    var i, j, k, ii, jj, kk;
+    var i, j, ii, jj, kk;
+    var ioff, ooff;
     var width, height;
     // sanity check
     if( !im || !im.raw ||
-	!im.display.pluginInstances.JS9Panner || !im.psColors ){
+	!im.display.pluginInstances.JS9Panner ){
 	return;
     }
     // add panner object to image, if necessary
@@ -8622,26 +8685,43 @@ JS9.Panner.create = function(im){
     // save lower limits for display
     panner.x0 = x0;
     panner.y0 = y0;
+    // save as panner image
+    panner.img = img;
+    panner.ix = 0;
+    panner.iy = 0;
+    if( im.rgbFile ){
+	// for a static rgb file, access the rgb data directly
+	for(j=0; j<height; j++){
+	    jj = Math.floor(y0 + (j * yblock)) * im.offscreen.img.width;
+	    kk = j * width;
+	    for(i=0; i<width; i++){
+		ii = Math.floor(x0 + (i * xblock));
+		ioff = (ii + jj) * 4;
+		ooff = (kk + i) * 4;
+		img.data[ooff]   = im.offscreen.img.data[ioff];
+		img.data[ooff+1] = im.offscreen.img.data[ioff+1];
+		img.data[ooff+2] = im.offscreen.img.data[ioff+2];
+		img.data[ooff+3] = 255;
+	    }
+	}
+	return im;
+    }
     // index into scaled data using previously calc'ed data value to get rgb
     for(j=0; j<height; j++){
 	jj = Math.floor(y0 + ((height-j-1) * yblock)) * im.raw.width;
 	kk = j * width;
 	for(i=0; i<width; i++){
 	    ii = Math.floor(x0 + (i * xblock));
-	    val = im.colorData[ii + jj];
-	    if( im.psColors[val] ){
-		k = (kk + i) * 4;
-		img.data[k]   = im.psColors[val][0];
-		img.data[k+1] = im.psColors[val][1];
-		img.data[k+2] = im.psColors[val][2];
-		img.data[k+3] = 255;
+	    ioff = im.colorData[ii + jj];
+	    ooff = (kk + i) * 4;
+	    if( im.psColors[ioff] ){
+		img.data[ooff]   = im.psColors[ioff][0];
+		img.data[ooff+1] = im.psColors[ioff][1];
+		img.data[ooff+2] = im.psColors[ioff][2];
+		img.data[ooff+3] = 255;
 	    }
 	}
     }
-    // save as panner image
-    im.panner.img = img;
-    im.panner.ix = 0;
-    im.panner.iy = 0;
     return im;
 };
 
@@ -9997,6 +10077,10 @@ JS9.mouseMoveCB = function(evt){
 	}
 	// inside a region or with special key: no contrast/bias
 	if( im.rclick || JS9.specialKey(evt) ){
+	    return;
+	}
+	// static rgb image: no contrast/bias
+	if( im.rgbFile ){
 	    return;
 	}
 	// if we haven't moved much from the start, just return
