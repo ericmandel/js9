@@ -1467,6 +1467,65 @@ the user page, "install" for the install page, etc.). Alternatively, you can
 specify an arbitrary URL to display (just because).
 
 <p>
+<font size="+1"><b><u>Display plugin in a light window</u></b></font>
+<p>
+<code><font size="+1">JS9.DisplayPlugin(name)</font></code>
+<p>
+where:
+<ul>
+<li><b>name</b>: name of the plugin
+</ul>
+Toggle the light-window display of the named plugin, as is done by
+the <b>View</b> and <b>Analysis</b> menus. That is, if the plugin is
+not visible, make it visible. If the plugin is visible, hide it. 
+<p>
+You can supply the full class and plugin name or just the name, using
+exact case or lower case, e.g.:
+<ul>
+<li> JS9Panner or panner
+<li> JS9Magnifier or magnifier
+<li> JS9Info or info
+<li> JS9Console or console
+<li> DataSourcesArchivesCatalogs or archivescatalogs
+<li> FitsBinning or binning
+<li> ImExamEncEnergy or encenergy
+<li> ImExamPxTabl or pxtabl
+<li> ImExamRadialProj or radialproj
+<li> ImExamHistogram or histogram
+<li> ImExamRegionStats or regionstats
+<li> ImExamXProj or xproj
+<li> ImExamYProj or yproj
+<li> ImExam3dPlot or 3dplot
+<li> ImExamContours or contours
+</ul>
+<p>
+As with plugins in the View and Analysis menus, this routine does
+nothing if the plugin is explicitly defined on the Web page.
+<p>
+This routine is useful if you are building a Web interface that
+supports the JS9 menu functions.
+
+<p>
+<font size="+1"><b><u>Use the file dialog box to open a FITS file</u></b></font>
+<p>
+<code><font size="+1">JS9.OpenFileMenu()</font></code> Calling this
+routine brings up the browser's file dialog box. When a FITS file is
+selected, if will be loaded into the JS9 display.
+<p>
+This routine is useful if you are building a Web interface that
+supports the JS9 menu functions.
+
+<p>
+<font size="+1"><b><u>Use the file dialog box to open a region file</u></b></font>
+<p>
+<code><font size="+1">JS9.OpenRegionsMenu()</font></code>
+Calling this routine brings up the browser file menu. When a region file is
+selected, if will be loaded into the JS9 display.
+<p>
+This routine is useful if you are building a Web interface that
+supports the JS9 menu functions.
+
+<p>
 <font size="+1"><b><u>Get location of JS9 installation directory</u></b></font>
 <p>
 <code><font size="+1">rpath = JS9.InstallDir(file)</font></code>

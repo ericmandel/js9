@@ -11477,6 +11477,7 @@ JS9.mkPublic("SetValPos", function(mode){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
+	mode = obj.argv[0];
 	got = im.params.valpos;
 	im.params.valpos = mode;
     }
@@ -11487,6 +11488,8 @@ JS9.mkPublic("SetValPos", function(mode){
 JS9.mkPublic("Load", function(file, opts){
     var i, im, ext, disp, display, func, blob, bytes, topts, tfile;
     var obj = JS9.parsePublicArgs(arguments);
+    file = obj.argv[0];
+    opts = obj.argv[1];
     // sanity check
     if( !file ){
 	JS9.error("JS9.Load: no file specified for image load");
@@ -11652,6 +11655,8 @@ JS9.mkPublic("Load", function(file, opts){
 JS9.mkPublic("LoadRegions", function(file, opts){
     var display, reader;
     var obj = JS9.parsePublicArgs(arguments);
+    file = obj.argv[0];
+    opts = obj.argv[1];
     // sanity check
     if( !file ){
 	JS9.error("JS9.LoadRegions: no file specified for regions load");
@@ -11770,6 +11775,8 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 JS9.mkPublic("LoadProxy", function(url, opts){
     var f, disp;
     var obj = JS9.parsePublicArgs(arguments);
+    url = obj.argv[0];
+    opts = obj.argv[1];
     if( !JS9.globalOpts.loadProxy ){
 	JS9.error("proxy load not available for this server");
     }
@@ -11836,6 +11843,7 @@ JS9.mkPublic("Preload", function(arg1){
     var i, j, mode, emsg="", dobj=null;
     var alen=arguments.length;
     var obj = JS9.parsePublicArgs(arguments);
+    arg1 = obj.argv[0];
     if( obj.display ){
 	dobj = {display: obj.display};
 	alen = alen - 1;
@@ -11959,6 +11967,8 @@ JS9.mkPublic("RefreshImage", function(fits, func){
     var retry = function(hdu){
 	JS9.Image.prototype.refreshImage.call(im, hdu, obj.argv[1]);
     };
+    fits = obj.argv[0];
+    func = obj.argv[1];
     if( im ){
 	if( fits instanceof Blob ){
 	    if( JS9.fits.handleFITSFile ){
@@ -11986,7 +11996,8 @@ JS9.mkPublic("GetLoadStatus", function(id){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
-	if( !obj.argv[0] || (im.oid === obj.argv[0]) ){
+	id = obj.argv[0];
+	if( !id || (im.oid === id) ){
 	    return im.status.load;
 	}
 	return "other";
@@ -11994,19 +12005,41 @@ JS9.mkPublic("GetLoadStatus", function(id){
     return "none";
 });
 
-// bring up the file menu and open selected file(s)
-JS9.mkPublic("OpenFileMenu", function(id){
-    var display = JS9.lookupDisplay(id);
-    if( display.id ){
+// bring up the file dialog box and open selected FITS file(s)
+JS9.mkPublic("OpenFileMenu", function(){
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    if( display ){
 	$('#openLocalFile-' + display.id).click();
     }
 });
 
-// bring up the file menu and open selected file(s)
-JS9.mkPublic("OpenRegionsMenu", function(id){
-    var display = JS9.lookupDisplay(id);
-    if( display.id ){
+// bring up the file dialog box and open selected region files(s)
+JS9.mkPublic("OpenRegionsMenu", function(){
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    if( display ){
 	$('#openLocalRegions-' + display.id).click();
+    }
+});
+
+// display the named plugin
+JS9.mkPublic("DisplayPlugin", function(name){
+    var i, plugin, pname, lcname;
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    if( display && obj.argv[0] ){
+	name = obj.argv[0];
+	lcname = name.toLowerCase();
+	for(i=0; i<JS9.plugins.length; i++){
+	    plugin = JS9.plugins[i];
+	    pname = plugin.name;
+	    if( (pname === name) ||
+		(pname.toLowerCase().substr(-lcname.length) === lcname) ){
+		display.displayPlugin(plugin);
+		return;
+	    }
+	}
     }
 });
 
@@ -12046,14 +12079,15 @@ JS9.mkPublic("GetImageData", function(dflag){
     };
     // return data and auxiliary info
     if( im ){
-	if( obj.argv[0] ){
+	dflag = obj.argv[0];
+	if( dflag ){
 	    // return an array for IPC, since python mangles the typed array
-	    if( obj.argv[0] === "array" ){
+	    if( dflag === "array" ){
 		data = Array.prototype.slice.call(im.raw.data);
-	    } else if( obj.argv[0] === "base64" ){
+	    } else if( dflag === "base64" ){
 		// NB: this seems to be the fastest method for IPC!
 		data = atob64(im.raw.data);
-	    } else if( obj.argv[0] && (obj.argv[0] !== "false") ) {
+	    } else if( dflag && (dflag !== "false") ) {
 		// use this for javascript programming on the web page itself
 		data = im.raw.data;
 	    }
@@ -12077,6 +12111,7 @@ JS9.mkPublic("GetFITSHeader", function(flag){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im && im.raw ){
+	flag = obj.argv[0];
 	s = JS9.raw2FITS(im.raw, flag);
     }
     return s;
@@ -12088,6 +12123,8 @@ JS9.mkPublic("LoadAuxFile", function(file, func){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
+	file = obj.argv[0];
+	func = obj.argv[1];
 	im.loadAuxFile(file, func);
     } else {
 	JS9.error("could not find image for aux file: " + file);
@@ -12099,6 +12136,9 @@ JS9.mkPublic("SubmitAnalysis", function(el, aname, func){
     var topjq, formjq, dispid, im, errstr;
     var a = JS9.lightOpts[JS9.LIGHTWIN];
     var obj = JS9.parsePublicArgs(arguments);
+    el = obj.argv[0];
+    aname = obj.argv[1];
+    func = obj.argv[2];
     // if analysis name was not passed, it was saved in the light window div
     if( aname ){
 	dispid =  JS9.lookupDisplay(obj.display).id;
@@ -12152,6 +12192,11 @@ JS9.mkPublic("PixToWCS", function(ix, iy){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
+	ix = obj.argv[0];
+	iy = obj.argv[1];
+	if( !JS9.isNumber(ix) || !JS9.isNumber(iy) ){
+	    JS9.error("invalid input for PixToWCS");
+	}
 	if( im.wcs > 0 ){
 	    // convert to 0-indexed units in wcslib
 	    s = JS9.pix2wcs(im.wcs, ix-1, iy-1).trim();
@@ -12178,6 +12223,11 @@ JS9.mkPublic("WCSToPix", function(ra, dec){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
+	ra = obj.argv[0];
+	dec = obj.argv[1];
+	if( !JS9.isNumber(ra) || !JS9.isNumber(dec) ){
+	    JS9.error("invalid input for WCSToPix");
+	}
 	if( im.wcs > 0 ){
 	    arr = JS9.wcs2pix(im.wcs, ra, dec).trim().split(/ +/);
 	    // convert from 0-indexed units in wcslib
@@ -12223,6 +12273,8 @@ JS9.mkPublic("NewShapeLayer", function(layer, opts){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
+	layer = obj.argv[0];
+	opts = obj.argv[1];
 	return im.display.newShapeLayer(layer, opts);
     }
     return null;
@@ -12233,6 +12285,11 @@ JS9.mkPublic("AddRegions", function(region, opts){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
+	region = obj.argv[0];
+	if( !region ){
+	    JS9.error("no region specified for AddRegions");
+	}
+	opts = obj.argv[1];
 	return im.addShapes("regions", region, opts);
     }
     return null;
@@ -12243,6 +12300,7 @@ JS9.mkPublic("RemoveRegions", function(region){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
+	region = obj.argv[0];
 	im.removeShapes("regions", region);
 	im.clearMessage("regions");
 	return "OK";
@@ -12266,6 +12324,11 @@ JS9.mkPublic("ChangeRegions", function(region, opts){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
+	region = obj.argv[0];
+	if( !region ){
+	    JS9.error("no region specified for GetRegions");
+	}
+	opts = obj.argv[1];
 	im.changeShapes("regions", region, opts);
     }
     return null;
