@@ -1395,6 +1395,7 @@ to pass this property if you do not want to perform the resize.
 If no arguments are passed to this routine, it returns an object
 containing the current display width and height. Otherwise, the
 display object is returned.
+
 <p>
 <font size="+1"><b><u>Print an image</u></b></font>
 <p>
@@ -1405,6 +1406,32 @@ containing the image, along with regions and other graphical layers
 (the 2D graphics having been converted to a re-scalable format).  The
 standard Print dialog box also is displayed and can be used to print
 this new window.  Dismiss both windows when you are finished.
+
+<p>
+<font size="+1"><b><u>Save image as a FITS file</u></b></font>
+<p>
+<code><font size="+1">JS9.SaveFITS(filename)</font></code>
+<p>
+where:
+<ul>
+<li><b>filename</b>: output file name
+</ul>
+Save the currently displayed image as a FITS file. If filename is not
+specified, the file will be saved as "js9.fits".
+
+<p>
+<font size="+1"><b><u>Save image as a PNG file</u></b></font>
+<p>
+<code><font size="+1">JS9.SavePNG(filename)</font></code>
+<p>
+where:
+<ul>
+<li><b>filename</b>: output file name
+</ul>
+Save the currently displayed image as a PNG file. If filename is not
+specified, the file will be saved as "js9.png". Currently, only the
+image is saved.  We hope to add the graphical overlays (regions, etc.)
+in the future.
 
 <p>
 <font size="+1"><b><u>Display help in a light window</u></b></font>

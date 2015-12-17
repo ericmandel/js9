@@ -11462,6 +11462,8 @@ JS9.mkPublic("RemoveShapes", "removeShapes");
 JS9.mkPublic("GetShapes", "getShapes");
 JS9.mkPublic("ChangeShapes", "changeShapes");
 JS9.mkPublic("Print", "print");
+JS9.mkPublic("SavePNG", "savePNG");
+JS9.mkPublic("SaveFITS", "saveFITS");
 JS9.mkPublic("RunAnalysis", "runAnalysis");
 JS9.mkPublic("DisplayMessage", "displayMessage");
 
@@ -11989,13 +11991,19 @@ JS9.mkPublic("GetLoadStatus", function(id){
 });
 
 // bring up the file menu and open selected file(s)
-JS9.mkPublic("OpenFileMenu", function(display){
-    $('#openLocalFile-' + display.id).click();
+JS9.mkPublic("OpenFileMenu", function(id){
+    var display = JS9.lookupDisplay(id);
+    if( display.id ){
+	$('#openLocalFile-' + display.id).click();
+    }
 });
 
 // bring up the file menu and open selected file(s)
-JS9.mkPublic("OpenRegionsMenu", function(display){
-    $('#openLocalRegions-' + display.id).click();
+JS9.mkPublic("OpenRegionsMenu", function(id){
+    var display = JS9.lookupDisplay(id);
+    if( display.id ){
+	$('#openLocalRegions-' + display.id).click();
+    }
 });
 
 // call the image constructor as a function
