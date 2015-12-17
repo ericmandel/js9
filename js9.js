@@ -9670,6 +9670,10 @@ JS9.raw2FITS = function(raw, forDisplay){
     var i, obj, key, val, card;
     var hasend=false;
     var t="";
+    // sanity check
+    if( !raw ){
+	return t;
+    }
     if( raw.card ){
 	// raw.card has comments, so use this if we are displaying header
 	for(i=0; i<raw.card.length; i++){
@@ -12065,6 +12069,17 @@ JS9.mkPublic("GetImageData", function(dflag){
 		header: im.raw.header,
 		data: data};
     }
+});
+
+// return the FITS header as a string
+JS9.mkPublic("GetFITSHeader", function(flag){
+    var s = "";
+    var obj = JS9.parsePublicArgs(arguments);
+    var im = JS9.getImage(obj.display);
+    if( im && im.raw ){
+	s = JS9.raw2FITS(im.raw, flag);
+    }
+    return s;
 });
 
 // load auxiliary file, if available

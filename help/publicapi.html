@@ -1434,6 +1434,26 @@ image is saved.  We hope to add the graphical overlays (regions, etc.)
 in the future.
 
 <p>
+<font size="+1"><b><u>Get FITS header as a string</u></b></font>
+<p>
+<code><font size="+1">JS9.GetFITSHeader(nlflag)</font></code>
+<p>
+where:
+<ul>
+<li><b>nlflag</b>: true if newlines should added to each card
+</ul>
+Return the FITS header as a string. By default, the returned string contains
+the 80-character FITS cards all concatenated together. If <b>nlflag</b>
+is <b>true</b>, each card will have a new-line appended.
+<p>
+Note that the <b>JS9.GetImageData()</b> routine also returns the
+FITS header, but as an object whose properties contain the header
+values. For example, obj.SIMPLE will usually have a value of true,
+obj.BITPIX will have contain the bits/pixel, etc. This object is more
+useful for programming tasks, but does not contain the FITS comments
+associated with each header card.
+
+<p>
 <font size="+1"><b><u>Display help in a light window</u></b></font>
 <p>
 <code><font size="+1">JS9.DisplayHelp(name)</font></code>
