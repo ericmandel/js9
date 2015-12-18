@@ -1726,6 +1726,16 @@ The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.
 
 <p><font size="+1"><b><u>
+20151218: OpenFileMenu and OpenRegionsMenu don't require a display argument
+</u></b></font>
+<p>
+The routines <b>OpenFileMenu()</b> and <b>OpenRegionsMenu()</b>
+required a display argument, instead of utilizing the standard
+optional display object. This mistake has been corrected, with the
+result that both routines now target the default display, as expected,
+if no display is passed.
+
+<p><font size="+1"><b><u>
 20141117: The Set routines now return "OK" instead of true on success
 </u></b></font>
 <p>
