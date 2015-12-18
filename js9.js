@@ -2927,6 +2927,7 @@ JS9.Image.prototype.saveFITS = function(fname){
     } else {
 	JS9.error("no saveAs function available to save FITS file");
     }
+    return fname;
 };
 
 // save image as a png file
@@ -2939,6 +2940,7 @@ JS9.Image.prototype.savePNG = function(fname){
     } else {
 	JS9.error("no saveAs function available to save PNG file");
     }
+    return fname;
 };
 
 // update (and display) pixel and wcs values (connected to info plugin)
