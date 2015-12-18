@@ -4256,7 +4256,7 @@ JS9.Menubar = function(width, height){
 					 JS9.lightOpts[JS9.LIGHTWIN].lineWin);
 			    break;
 			case "open":
-			    JS9.OpenFileMenu(udisp);
+			    JS9.OpenFileMenu({display: udisp});
 			    break;
 			case "loadcors":
 			    if( JS9.allinone ){
@@ -5009,7 +5009,7 @@ JS9.Menubar = function(width, height){
 				uim.clearMessage("regions");
 				break;
 			    case "loadRegions":
-				JS9.OpenRegionsMenu(udisp);
+				JS9.OpenRegionsMenu({display: udisp});
 				break;
 			    case "saveRegions":
 				uim.saveRegions("all", true);
@@ -10728,7 +10728,7 @@ JS9.init = function(){
 	    try{ JS9.userOpts.fits = JSON.parse(uopts); }
 	    catch(ignore){}
 	}
-   }
+    }
     // add handler for postMessage events, if necessary
     if( JS9.globalOpts.postMessage ){
 	window.addEventListener("message", function(ev){
@@ -11658,7 +11658,7 @@ JS9.mkPublic("LoadRegions", function(file, opts){
     var display, reader;
     var obj = JS9.parsePublicArgs(arguments);
     file = obj.argv[0];
-    opts = obj.argv[1];
+    opts = obj.argv[1] || {};
     // sanity check
     if( !file ){
 	JS9.error("JS9.LoadRegions: no file specified for regions load");
@@ -11667,6 +11667,8 @@ JS9.mkPublic("LoadRegions", function(file, opts){
     // check for display
     if( obj.display ){
 	display = obj.display;
+    } else if( opts.display ){
+	display = opts.display;
     } else {
 	if( JS9.displays.length > 0 ){
 	    display = JS9.displays[0].id;
@@ -11674,21 +11676,17 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 	    display = JS9.DEFID;
 	}
     }
-    // make sure we can look for properties in opts
-    opts = opts || {};
-    // if display was implicit, add it to opts
-    opts.display = opts.display || display;
     // convert blob to string
     if( typeof file === "object" ){
 	// file reader object
 	reader = new FileReader();
 	reader.onload = function(ev){
-	    JS9.AddRegions(ev.target.result, opts);
+	    JS9.AddRegions(ev.target.result, opts, {display: display});
 	};
 	reader.readAsText(file);
     } else if( typeof file === "string" ){
-	// url string
 	opts.responseType = "text";
+	opts.display = display;
 	JS9.fetchURL(null, file, opts, JS9.AddRegions);
     } else {
 	// oops!
@@ -12288,6 +12286,7 @@ JS9.mkPublic("AddRegions", function(region, opts){
     var im = JS9.getImage(obj.display);
     if( im ){
 	region = obj.argv[0];
+	opts = obj.argv[1];
 	if( !region ){
 	    JS9.error("no region specified for AddRegions");
 	}
