@@ -1657,7 +1657,7 @@ JS9.Image.prototype.mkScaledCells = function(){
 // sort of from: saotk/frame/truecolor.c, but not really
 JS9.Image.prototype.mkPrimaryImage = function(){
     var primary, sect, img;
-    var xrgb, yrgb, wrgb, hrgb, imgrdb, ctx;
+    var xrgb, yrgb, wrgb, hrgb, imgrgb, ctx;
     var xIn, yIn, xOut, yOut, xOutIdx, yOutIdx;
     var yZoom, xZoom, idx, odx, yLen, zx, zy, zyLen;
     var alpha, alpha1, alpha2;
@@ -1689,19 +1689,19 @@ JS9.Image.prototype.mkPrimaryImage = function(){
 	hrgb = sect.height / sect.zoom;
 	xrgb = sect.x0;
 	yrgb = (this.offscreen.canvas.height - 1) - (sect.y0 + hrgb);
-	imgrdb = this.offscreen.context.getImageData(xrgb, yrgb, wrgb, hrgb);
+	imgrgb = this.offscreen.context.getImageData(xrgb, yrgb, wrgb, hrgb);
 	if( sect.zoom === 1 ){
 	    // for unzoomed data, we can grab the rgb pixels directly
-	    primary.img = imgrdb;
+	    primary.img = imgrgb;
 	} else {
 	    // for zoomed data, we have to replicate each rgb pixel
 	    primary.img = ctx.createImageData(sect.width, sect.height);
 	    img = primary.img;
 	    odx = 0;
-	    for(yIn=0, yOut=0; yIn<imgrdb.height; yIn++, yOut++){
-		yLen = yIn * imgrdb.width;
+	    for(yIn=0, yOut=0; yIn<imgrgb.height; yIn++, yOut++){
+		yLen = yIn * imgrgb.width;
 		yOutIdx = yOut * sect.zoom;
-		for(xIn=0, xOut=0; xIn<imgrdb.width; xIn++, xOut++){
+		for(xIn=0, xOut=0; xIn<imgrgb.width; xIn++, xOut++){
 		    idx = (yLen + xIn) * 4;
 		    xOutIdx = xOut * sect.zoom;
 		    for(yZoom=0; yZoom<sect.zoom; yZoom++) {
@@ -1710,15 +1710,15 @@ JS9.Image.prototype.mkPrimaryImage = function(){
 			for(xZoom=0; xZoom<sect.zoom; xZoom++) {
 			    zx = Math.floor(xOutIdx + xZoom);
 			    odx = (zyLen + zx) * 4;
-			    img.data[odx]   = imgrdb.data[idx];
-			    img.data[odx+1] = imgrdb.data[idx+1];
-			    img.data[odx+2] = imgrdb.data[idx+2];
-			    img.data[odx+3] = imgrdb.data[idx+3];
+			    img.data[odx]   = imgrgb.data[idx];
+			    img.data[odx+1] = imgrgb.data[idx+1];
+			    img.data[odx+2] = imgrgb.data[idx+2];
+			    img.data[odx+3] = imgrgb.data[idx+3];
 			}
 		    }
 		}
 	    }
-	    imgrdb = null;
+	    imgrgb = null;
 	}
 	return this;
     }
