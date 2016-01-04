@@ -668,23 +668,16 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
 	this.offscreen.context.webkitImageSmoothingEnabled = false;
     }
     // draw the png to the offscreen canvas
-    this.offscreen.context.drawImage(this.png.image,
-				     0, 0,
-				     this.png.image.width,
-				     this.png.image.height,
-				     0, 0,
-				     this.png.image.width,
-				     this.png.image.height);
+    this.offscreen.context.drawImage(this.png.image, 0, 0);
     // read the RGBA data from offscreen
     try{
-    this.offscreen.img = this.offscreen.context.getImageData(0, 0,
-			 this.png.image.width,
-			 this.png.image.height);
+	this.offscreen.img = this.offscreen.context.getImageData(0, 0,
+			     this.png.image.width, this.png.image.height);
     } catch(e){
 	if( (JS9.BROWSER[0] === "Chrome") && (document.domain === "") ){
 	    alert("When using the file:// URI, Chrome must be run with the --allow-file-access-from-files switch to permit JS9 to access data.");
 	} else {
-	    alert("could not read JS9 data");
+	    alert("could not read off-screen image data [same-origin policy violation?]");
 	}
     }
     // allow chaining
@@ -1726,8 +1719,6 @@ JS9.Image.prototype.mkPrimaryImage = function(){
     if( !primary.img                         ||
 	(primary.img.width  !== sect.width)  ||
 	(primary.img.height !== sect.height) ){
-	// primary.img = this.offscreen.context.createImageData(sect.width,
-	// sect.height);
 	primary.img = ctx.createImageData(sect.width, sect.height);
     }
     img = primary.img;
@@ -8668,7 +8659,6 @@ JS9.Panner.create = function(im){
 	panner.xblock = panner.yblock;
     }
     // create an rgb image the same size as the raw data
-    // img = im.offscreen.context.createImageData(width, height);
     img = im.display.context.createImageData(width,height);
     // calculate block factors and starting points based on zoom and block
     if( panner.zoom === 1 ){
