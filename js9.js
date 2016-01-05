@@ -874,8 +874,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     // see if we have a real PNG file instead of a representation file
     if( (i < 15) || realpng ){
 	// holy moly, its a real png file!
-	this.mkRawDataFromIMG(this.offscreen.img);
-	// save the off-screen image and the raw data, and return;
+	// save the off-screen image and return;
 	return;
     }
     // its a representation file
@@ -1675,6 +1674,12 @@ JS9.Image.prototype.mkPrimaryImage = function(){
     ctx = this.display.context;
     primary = this.primary;
     sect = primary.sect;
+    // supply your own mkPrimaryImage call (black-magic, used by smart-x)
+    if( this.MakePrimaryImage && typeof this.MakePrimaryImage === "function" ){
+	if( this.MakePrimaryImage() ){
+	    return this;
+	}
+    }
     // if we have static rgb file, use the rgb colors from the image
     if( this.rgbFile ){
 	wrgb = sect.width / sect.zoom;
