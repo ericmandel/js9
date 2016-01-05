@@ -138,6 +138,10 @@ JS9.imageOpts = {
     listonchange: false			// whether to list after a reg change
 };
 
+// allows regions opts to be overridden in preferences
+JS9.regionOpts = {
+};
+
 // defaults for analysis (macro expansion)
 JS9.analOpts = {
     // if this pattern is matched in stderr, throw a real error
@@ -10683,6 +10687,8 @@ JS9.init = function(){
 	JS9.loadPrefs(JS9.InstallDir(JS9.PREFSFILE), 1);
 	// load page preferences, if possible
 	JS9.loadPrefs(JS9.PREFSFILE, 0);
+	// if we have regionOpts from preferences, add them to Regions.opts
+	$.extend(true, JS9.Regions.opts, JS9.regionOpts);
     }
     // reset protocol for file:
     if( JS9.globalOpts.helperProtocol === "file:" ){
