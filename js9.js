@@ -11156,7 +11156,8 @@ JS9.init = function(){
 	    var res;
 	    var im = this.image;
 	    if( im ){
-		res = JS9.Pix2WCS(im, args[0], args[1]);
+		res = JS9.Pix2WCS(parseFloat(args[0]), parseFloat(args[1]),
+				 {display: im});
 		return res.str;
 	    }
 	}
@@ -11351,7 +11352,8 @@ JS9.init = function(){
 	    var res;
 	    var im = this.image;
 	    if( im ){
-		res = JS9.WCS2Pix(im, args[0], args[1]);
+		res = JS9.WCS2Pix(parseFloat(args[0]), parseFloat(args[1]),
+				 {display: im});
 		return res.str;
 	    }
 	}
@@ -12198,8 +12200,7 @@ JS9.mkPublic("PixToWCS", function(ix, iy){
 	    JS9.error("invalid input for PixToWCS");
 	}
 	if( im.wcs > 0 ){
-	    // convert to 0-indexed units in wcslib
-	    s = JS9.pix2wcs(im.wcs, ix-1, iy-1).trim();
+	    s = JS9.pix2wcs(im.wcs, ix, iy).trim();
 	    arr = s.split(/ +/);
 	    if( (im.params.wcsunits === "sexagesimal") &&
 		(im.params.wcssys !== "galactic" )     &&
@@ -12230,9 +12231,8 @@ JS9.mkPublic("WCSToPix", function(ra, dec){
 	}
 	if( im.wcs > 0 ){
 	    arr = JS9.wcs2pix(im.wcs, ra, dec).trim().split(/ +/);
-	    // convert from 0-indexed units in wcslib
-	    x = parseFloat(arr[0]) + 1;
-	    y = parseFloat(arr[1]) + 1;
+	    x = parseFloat(arr[0]);
+	    y = parseFloat(arr[1]);
 	    s = sprintf("%f %f", x, y);
 	    return {x: x, y: y, str: s};
 	}
