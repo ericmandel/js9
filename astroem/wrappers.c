@@ -190,7 +190,7 @@ char *pix2wcsstr(int n, double xpix, double ypix){
   if( info->wcs ){
     str = info->str;
     *str = '\0';
-    // convert from 1-indexed image coords
+    /* convert image x,y to ra,dec (convert 1-index to 0-index) */
     pix2wcst(info->wcs, xpix-1, ypix-1, str, SZ_LINE);
   }
   return str;
@@ -309,8 +309,8 @@ char *reg2wcsstr(int n, char *regstr){
       }
       /* these are the coords of the region */
       if( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) ){
-	/* convert image x,y to ra,dec */
-	pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);
+	/* convert image x,y to ra,dec (convert 1-index to 0-index) */
+	pix2wcs(info->wcs, dval1-1, dval2-1, &rval1, &rval2);
 	if( s ){
 	  snprintf(tbuf, SZ_LINE, "%s(", s);
 	  strncat(str, tbuf, SZ_LINE-1);
@@ -343,8 +343,8 @@ char *reg2wcsstr(int n, char *regstr){
 	} else if( !strcmp(s, "polygon") ){
 	  /* for polygons, convert successive image values to RA, Dec */
 	  while( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) ){
-	    /* convert image x,y to ra,dec */
-	    pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);
+	    /* convert image x,y to ra,dec (convert 1-index to 0-index) */
+	    pix2wcs(info->wcs, dval1-1, dval2-1, &rval1, &rval2);
 	    /* convert to proper units */
 	    switch(info->wcsunits){
 	    case WCS_DEGREES:
@@ -371,10 +371,9 @@ char *reg2wcsstr(int n, char *regstr){
 	  /* use successive x1,y1,x2,y2 to calculate separation (arcsecs) */
 	  while( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) &&
 		 (dval3=strtod(s1, &s2)) && (dval4=strtod(s2, &s1)) ){
-	    /* convert image x,y to ra,dec */
-	    pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);
-	    /* convert image x,y to ra,dec */
-	    pix2wcs(info->wcs, dval3, dval4, &rval3, &rval4);
+	    /* convert image x,y to ra,dec (convert 1-index to 0-index) */
+	    pix2wcs(info->wcs, dval1-1, dval2-1, &rval1, &rval2);
+	    pix2wcs(info->wcs, dval3-1, dval4-1, &rval3, &rval4);
 	    /* calculate and output separation between the two points */
 	    sep = wcsdist(rval1, rval2, rval3, rval4)*3600.0;
 	    if( sep <= 60 ){
