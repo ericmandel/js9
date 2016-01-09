@@ -32,6 +32,10 @@ var msgType = "msg";
 var nsendexit = false;
 var nsend = 0;
 var content = "";
+var sockopts = {
+    reconnection: false,
+    timeout: 10000
+};
 
 // ever-present
 function usage() {
@@ -318,7 +322,7 @@ dns.lookup(host, 4, function (err, address, family) {
 	console.log("connecting to: %s (%s)", helperURL, msg.browserip);
     }
     // finally! connect to helper
-    socket = sockio.connect(helperURL);
+    socket = sockio.connect(helperURL, sockopts);
     // check for connect errors
     socket.on("connect_failed", function(){
 	console.log("ERROR: connect failed: '%s'", helperURL);

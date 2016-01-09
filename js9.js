@@ -92,7 +92,8 @@ JS9.globalOpts = {
     alerts: true,		// set to false to turn off alerts
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
-    xtimeout: 180000,		// connection timeout for xhr requests
+    htimeout: 10000,		// connection timeout for the helper connect
+    xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     dims: [1024, 1024],		// dims of extracted images
     helperProtocol: location.protocol,// http: or https:
@@ -5378,9 +5379,17 @@ JS9.Helper.prototype.connect = function(type){
 	$.ajax({
 	    url: this.sockurl,
 	    dataType: "script",
+	    timeout: JS9.globalOpts.htimeout,
 	    success:  function(data, textStatus, jqXHR){
 		var ii, d;
-		that.socket = io.connect(that.url);
+		var sockopts = {
+		    reconnection: true,
+		    reconnectionDelay: 10000,
+		    reconnectionDelayMax : 60000,
+		    reconnectionAttempts: 10,
+		    timeout: JS9.globalOpts.htimeout
+		};
+		that.socket = io.connect(that.url, sockopts);
 		that.socket.on("connect", function(){
 		    that.connected = true;
 		    that.helper = true;
@@ -5394,6 +5403,22 @@ JS9.Helper.prototype.connect = function(type){
 		    JS9.Preload(true);
 		    if( JS9.DEBUG ){
 			JS9.log("JS9 helper: connect: " + that.type);
+		    }
+		});
+		that.socket.on("connect_error", function(){
+		    that.connected = false;
+		    that.helper = false;
+		    JS9.Preload(true);
+		    if( JS9.DEBUG > 1 ){
+			JS9.log("JS9 helper: connect error");
+		    }
+		});
+		that.socket.on("connect_timeout", function(){
+		    that.connected = false;
+		    that.helper = false;
+		    JS9.Preload(true);
+		    if( JS9.DEBUG > 1 ){
+			JS9.log("JS9 helper: connect timeout");
 		    }
 		});
 		that.socket.on("disconnect", function(){
@@ -5413,6 +5438,9 @@ JS9.Helper.prototype.connect = function(type){
 		that.socket.on("msg", JS9.msgHandler);
 	    },
 	    error:  function(jqXHR, textStatus, errorThrown){
+		that.connected = false;
+		that.helper = false;
+		JS9.Preload(true);
 		if( JS9.DEBUG ){
 	            JS9.log("JS9 helper: connect failure: " +
 			    textStatus + " " + errorThrown);
