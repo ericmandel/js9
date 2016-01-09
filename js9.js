@@ -5385,11 +5385,13 @@ JS9.Helper.prototype.connect = function(type){
 		var sockopts = {
 		    reconnection: true,
 		    reconnectionDelay: 10000,
-		    reconnectionDelayMax : 60000,
-		    reconnectionAttempts: 10,
+		    reconnectionDelayMax : 10000,
+		    reconnectionAttempts: 6,
 		    timeout: JS9.globalOpts.htimeout
 		};
+		// connect to the helper
 		that.socket = io.connect(that.url, sockopts);
+		// on-event processing
 		that.socket.on("connect", function(){
 		    that.connected = true;
 		    that.helper = true;
