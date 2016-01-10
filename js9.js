@@ -239,6 +239,10 @@ JS9.helpOpts = {
 	type: "help", url:"extmsg.html",
 	title: "JS9 External Messaging"
     },
+    python: {
+	type: "help", url:"python.html",
+	title: "JS9 with Python and Jupyter"
+    },
     preferences: {
 	type: "help", url:"preferences.html",
 	title: "JS9 Site Preferences"
@@ -10736,7 +10740,8 @@ JS9.init = function(){
     JS9.globalOpts.helperProtocol += "//";
     // replace with global opts with user opts, if necessary
     if( window.hasOwnProperty("localStorage") ){
-	uopts = localStorage.getItem("images");
+	try{ uopts = localStorage.getItem("images"); }
+	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.images = JSON.parse(uopts); }
 	    catch(ignore){}
@@ -10744,7 +10749,8 @@ JS9.init = function(){
 		$.extend(true, JS9.imageOpts, JS9.userOpts.images);
 	    }
 	}
-	uopts = localStorage.getItem("regions");
+	try{ uopts = localStorage.getItem("regions"); }
+	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.regions = JSON.parse(uopts); }
 	    catch(ignore){}
@@ -10753,7 +10759,8 @@ JS9.init = function(){
 	    }
 	}
 	// this gets replaced below
-	uopts = localStorage.getItem("fits");
+	try{ uopts = localStorage.getItem("fits"); }
+	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.fits = JSON.parse(uopts); }
 	    catch(ignore){}
