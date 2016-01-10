@@ -1,0 +1,174 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<style type="text/css">
+  .container{
+    padding: 10px;
+  }
+</style>
+<title>JS9 with Python and Jupyter</title>
+</head>
+<body>
+<div class="container">
+<center><h3>JS9 with Python and Jupyter</h3></center>
+
+<p>
+<h3>Connecting Python to JS9</h3>
+<p>
+The <b>pyjs9.py</b> module connects Python and JS9. It is
+available on GitHub:&nbsp;&nbsp;
+<a href="https://github.com/ericmandel/pyjs9" target="_blank">https://github.com/ericmandel/pyjs9</a>.
+
+<p>
+The <b>JS9</b> class constructor connects to a single JS9 instance in a
+Web page. Once the connection is made, the returned JS9 object
+supports the JS9 Public API and a shorter command-line syntax. You
+also can send/retrieve numpy arrays and astropy (or pyfits) hdulists
+to/from JS9.
+
+<p>
+pyjs9 communicates with the JS9 back-end server (which communicates with
+the browser itself). By default, pyjs9 utilizes the
+<a href="http://www.python-requests.org/en/latest/" target="_blank"> 
+requests</a> module to communicate with the back-end server.
+However, if you install the
+<a href="https://pypi.python.org/pypi/socketIO-client" target="_blank">
+socketIO_client</a>,
+pyjs9 will use the faster, 
+persistent <a href="http://socket.io/" target="_blank">socket.io</a> protocol.
+
+<p>
+Install pyjs9 from the GitHub repository using pip, as usual:
+<pre>
+    > pip install git+https://github.com/ericmandel/pyjs9.git#egg=pyjs9
+</pre>
+or from a local copy:
+<pre>
+    > pip install /path/to/local/copy
+</pre>
+
+<p>
+Mandatory dependencies for pyjs9 are:
+<ul>
+<li> six
+<li> requests
+</ul>
+
+<p>
+Optional dependencies for pyjs9 are:
+<ul>
+<li> numpy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# support for GetNumpy and SetNumpy methods
+<li> astropy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# support for GetFITS and SetFITS methods
+<li> socketIO-client&nbsp;&nbsp;# fast, persistent socket.io protocol, instead of html
+</ul>
+
+<p>
+To run pyjs9:
+<pre>
+    > # ensure JS9 node-server is running ...
+    > # visit your local JS9 Web page in your browser ...
+    > python
+    ... (startup messages) ...
+    >>> import pyjs9
+    >>>
+    >>> j = pyjs9.JS9()        # default: connect to 'http://localhost'
+    >>>
+    >>> j.GetColormap()
+    {'bias': 0.5, 'colormap': 'grey', 'contrast': 1}
+    >>> j.SetColormap('red')
+    >>> j.cmap()
+    'red 1 0.5'
+    >>>
+    >>> hdul = j.GetFITS()
+    >>> hdul.info()
+    Filename: (No file associated with this HDUList)
+    No.    Name         Type      Cards   Dimensions   Format
+    0    PRIMARY     PrimaryHDU       6   (1024, 1024)   int32   
+    >>>
+    >>> narr = j.GetNumpy()
+    >>> narr.shape
+    (1024, 1024)
+</pre>
+
+<p>
+If you have internet connectivity, visit the JS9 Web page at
+http://js9.si.edu with your browser and:
+<pre>
+    > python
+    ... (startup messages) ...
+    >>> import pyjs9
+    >>>
+    >>> j = pyjs9.JS9('js9.si.edu')        # connect to JS9 Web site
+    >>>
+    >>> j.GetColormap()
+    {'bias': 0.5, 'colormap': 'grey', 'contrast': 1}
+    >>>
+    >>> # etc ...
+</pre>
+
+<p>
+<h3>Adding JS9 to Jupyter (aka IPython)</h3>
+<p>
+We are working on integrating JS9 into Jupyter properly. For now, you
+can utilize Jupyter's <b>%%html</b> construct to load JS9 into a
+cell for display. You simply add JS9 divs to cell and load the JS9
+CSS and Javascript code.
+
+<p>
+To simplify matters, the JS9 CSS files are combined together into a
+file called <b>js9-allinone.css</b> and the JS9 Javascript files are
+combined into a file called <b>js9-allinone.js</b>. These can be loaded 
+in a cell after the JS9 divs are defined:
+<pre>
+    %%html
+    &lt;div class="JS9Menubar"&gt;&lt;/div&gt;
+    &lt;div class="JS9"&gt;&lt;/div&gt;
+    &lt;link type="text/css" rel="stylesheet" href="//js9.si.edu/jupyter/js9-allinone.css"&gt;
+    &lt;script type="text/javascript" src="//js9.si.edu/jupyter/js9-allinone.js"&gt;&lt;/script&gt;
+</pre>
+In this example, the JS9 display and menubar will be loaded into the
+Jupyter page. You can then drag and drop FITS images onto the display
+or use the <b>File:open local file...</b>  option to load FITS data. Once
+an image is loaded, you can pan, zoom, scale, change colormaps, etc,
+and also utilize JS9 plugins (panner, magnifier, browser analysis,
+etc.) as usual.
+
+NB: Obviously, the JS9 install files and directories (other than
+all-in-one .css and .js files) are not available in this mode, leading
+to the following limitations:
+<ul>
+<li> no js9Prefs.json for site-wide configuration
+<li> no back-end helper will be run
+<li> no server-side analysis (including proxy load)
+<li> no help files will be available (and no Help menu option)
+</ul>
+
+<p>
+But note that you also can use Jupyter's <b>%%html</b> syntax to define an
+<b>HTML iframe</b> that will display an existing JS9 Web page:
+<pre>
+    %%html
+    &lt;iframe src="http://js9.si.edu" width=1000 height=750&gt;&lt;/iframe&gt;
+</pre>
+or:
+<pre>
+    %%html
+    &lt;iframe src="http://js9.si.edu/js9/js9basics.html" width=100% height=900&gt;&lt;/iframe&gt;
+</pre>
+Since you are now accessing an existing Web site, all JS9 functions
+should work as expected ... except for the use of locally stored
+preferences (i.e. the Preferences plugin) in Firefox. Currently,
+Firefox throws a security exception when an iframe tries to access
+local storage, so this function does not work.
+
+<p>
+We will continue to improve the Jupyter/JS9 connection. Please send us your
+comments and suggestions.
+
+<h5>Last updated: January 9, 2016</h5>
+</div>
+
+</body>
+</html>
