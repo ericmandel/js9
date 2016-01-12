@@ -17,18 +17,28 @@
 
 <h3> Public Release 1.7 (TBD)</h3>
 <ul>
+<li> add Jupyter/IPython support for iframes
 <li> add keyboard focus support for Jupyter/IPython
+<li> add timeouts to avoid back-end connect() hangs
+<li> add support for using rgb file as the display over a data file
 <li> default helper is "none" (for Jupyter, where js9Prefs.json is not loaded) 
 <li> add lower right handle to change width and height of display
 <li> add View menu option to change width and height of display
 <li> add JS9.ResizeDisplay() to change the size of a JS9 display element
+<li> add JS9.DisplayPlugin() public routine for custom menus
+<li> add JS9.GetFITSHeader() (as a string) public routine for custom menus
 <li> add resize handle to display (lower right corner) 
 <li> add View menu option to change the display width and height
 <li> add support for handling group events in shape layers (i.e. catalogs)
 <li> add support for handling mouse events in shape layers (i.e. catalogs)
 <li> add support for tooltips to shape layers (i.e. catalogs)
+<li> add return values to saveFITS() and savePNG()
+<li> add spinner while waiting
+<li> fix OpenFileMenu() and OpenRegionMenu() when using multiple displays
+<li> fix text region printing
 <li> fix bug in panner box when panner image does not fill panner width
 <li> fix region configure to "delete" only itself (not all regions)
+<li> fix one pixel bug in WCS region conversion
 <li> update fabric.js to v1.5.0
 <li> update socket.io to v1.3.7
 <li> updated jquery to v1.11.3
