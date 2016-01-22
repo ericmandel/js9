@@ -5,10 +5,14 @@ ASTROEM	=	astroem.js
 # where is JS9 directory
 JS9 =		..
 
-# where JS version of cfitsio is located
+# where external JS version of cfitsio is built and stored
 CFITSIO =	../cfitsio
 
-# where zlib sources are located
+# sub-packages
+JSFITSIO =	./jsfitsio
+UTIL =		./util
+WCS =		./wcs
+ZSCALE =	./zscale
 ZLIB =		./zee.js
 
 # emcc compiler flags
@@ -33,20 +37,47 @@ EMEXTRAS =	--pre-js pre.js --post-js post.js
 # combine into EMCC command
 EMCC =		emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMEXTRAS) -I$(CFITSIO)
 
-# needed to generate all emcc objects (i.e. so $(CC) runs emcc)
-CC =		emcc $(EMFLAGS) -I$(CFITSIO)
+# flags to generate all emcc objects (i.e. so $(CC) runs emcc)
+CC =		emcc $(EMFLAGS) -I$(CFITSIO) -I$(JSFITSIO) -I$(UTIL) -I$(WCS) -I$(ZLIB) -I$(ZSCALE)
 
-SRCS =  	wrappers.c wcsinit.c wcs.c wcscon.c \
-		hget.c hput.c iget.c worldpos.c platepos.c \
-		tnxpos.c zpxpos.c dsspos.c poly.c \
-	        wcslib.c lin.c cel.c proj.c sph.c wcstrig.c \
-		dateutil.c distort.c \
-		strtod.c \
-		cdlzscale.c \
-		jsfitsio.c
+# sub-packages
 
+# top-level
+SRCS =  	wrappers.c
 OBJS = 		$(SRCS:%.c=%.o)
 
+# wrapper for cfitsio
+JSRCS =  	$(JSFITSIO)/jsfitsio.c
+JOBJS = 	$(JSRCS:%.c=%.o)
+
+# utilities
+USRCS =		$(UTIL)/strtod.c
+UOBJS = 	$(USRCS:%.c=%.o)
+
+# wcs
+WSRCS =  	$(WCS)/wcsinit.c \
+		$(WCS)/wcs.c \
+		$(WCS)/wcscon.c \
+		$(WCS)/hget.c \
+		$(WCS)/hput.c \
+		$(WCS)/iget.c \
+		$(WCS)/worldpos.c \
+		$(WCS)/platepos.c \
+		$(WCS)/tnxpos.c \
+		$(WCS)/zpxpos.c \
+		$(WCS)/dsspos.c \
+		$(WCS)/poly.c \
+		$(WCS)/wcslib.c \
+		$(WCS)/lin.c \
+		$(WCS)/cel.c \
+		$(WCS)/proj.c \
+		$(WCS)/sph.c \
+		$(WCS)/wcstrig.c \
+		$(WCS)/dateutil.c \
+		$(WCS)/distort.c
+WOBJS = 	$(WSRCS:%.c=%.o)
+
+# zlib
 ZSRCS = 	$(ZLIB)/adler32.c \
 		$(ZLIB)/compress.c \
 		$(ZLIB)/crc32.c \
@@ -64,14 +95,17 @@ ZSRCS = 	$(ZLIB)/adler32.c \
 		$(ZLIB)/zutil.c \
 		$(ZLIB)/zcompress.c \
 		$(ZLIB)/zuncompress.c
-
 ZOBJS = 	$(ZSRCS:%.c=%.o)
 
-LIBS =		libcfitsio.a
+# iraf zscale
+ZSSRCS =	$(ZSCALE)/cdlzscale.c
+ZSOBJS = 	$(ZSSRCS:%.c=%.o)
+
+LIBS =		lib/libcfitsio.a
 
 all:		$(ASTROEM)
 
-astroem.bc:	$(OBJS) $(ZOBJS) $(LIBS)
+astroem.bc:	$(OBJS) $(JOBJS) $(UOBJS) $(WOBJS) $(ZOBJS) $(ZSOBJS) $(LIBS)
 		$(EMCC) -o $@ $?
 
 $(ASTROEM):	astroem.bc pre.js post.js shell-pre.js shell-post.js Makefile
@@ -106,24 +140,16 @@ cfitsio:	FORCE
 		emconfigure ./configure; \
 		emmake make ZLIB_SOURCES="" CFLAGS="$(LIBCFLAGS)" \
 		clean all-nofitsio ;\
-		cp -p libcfitsio.a $${CDIR};)
+		cp -p libcfitsio.a $${CDIR}/lib;)
 
 clean:		FORCE
-		@(rm -rf *.o *~ a.out* foo* *.map \#* $(ZLIB)/*.o  \
-		astroem*.js astroem*.mem astroem.bc \
-		cimtest cimtest.js cimtest.html \
-		cnodetest cnodetest.js cnodetest.html; \
+		@(rm -rf *.o *~ a.out* foo* *.map \#*  \
+		astroem*.js astroem*.mem astroem.bc; \
+		for d in $(JSFITSIO) $(UTIL) $(WCS) $(ZLIB) $(ZSCALE); do \
+		  rm -rf $$d/*{.a,.o,~}; \
+		done; \
 		if [ -d $(CFITSIO) ]; then \
 		    cd $(CFITSIO) && make clean 2>&1 >/dev/null; \
 		fi;)
-
-# make c version for testing
-LDFLAGS	= -g
-
-test.o: 	test.c
-		gcc -c test.c
-
-test:		test.o -g -Wall $(SRCS)
-		gcc $(CFLAGS) -Wall -o test test.o $(SRCS)
 
 FORCE:
