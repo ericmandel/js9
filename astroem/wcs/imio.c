@@ -1539,5 +1539,6 @@ imswapped ()
  *
  * Apr 12 2012	Fix 8-bit variables to be unsigned char
  * Oct 19 2012	Fix errors with character images in minvec() and maxvec()
- * Oct 30 2012	Fix errors with short images in minvec() and maxvec()
+ * Oct 31 2012	Fix errors with short images in minvec() and maxvec()
+ * Oct 31 2012	Drop unused variable il2 from minvec()
  */

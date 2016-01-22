@@ -1,8 +1,8 @@
 /*** File libwcs/wcs.h
- *** September 9, 2011
+ *** February 1, 2013
  *** By Jessica Mink, jmink@cfa.harvard.edu
  *** Harvard-Smithsonian Center for Astrophysics
- *** Copyright (C) 1994-2011
+ *** Copyright (C) 1994-2013
  *** Smithsonian Astrophysical Observatory, Cambridge, MA, USA
 
     This library is free software; you can redistribute it and/or
@@ -295,6 +295,8 @@ extern "C" {
 	const char* hstring,	/* FITS header */
 	int len,		/* Length of FITS header */
 	char *wcschar);		/* WCS character (A-Z) */
+    char *uppercase (		/* Convert string of any case to uppercase */
+	const char *string);		/* String to convert */
 
     /* WCS subroutines in wcs.c */
     void wcsfree (		/* Free a WCS structure and its contents */
@@ -735,7 +737,8 @@ struct WorldCoor *wcsinitc(); /* set up a WCS structure from a FITS image header
 struct WorldCoor *wcsninitc(); /* set up a WCS structure from a FITS image header */
 struct WorldCoor *wcsxinit(); /* set up a WCS structure from arguments */
 struct WorldCoor *wcskinit(); /* set up a WCS structure from keyword values */
-void wcsfree(void);		/* Free a WCS structure and its contents */
+char *uppercase();	/* Convert string of any case to uppercase */
+void wcsfree(void);	/* Free a WCS structure and its contents */
 int wcstype();		/* Set projection type from header CTYPEs */
 void wcscdset();	/* Set scaling and rotation from CD matrix */
 void wcsdeltset();	/* set scaling and rotation from CDELTs and CROTA2 */
@@ -960,4 +963,7 @@ extern int zpxpix();	/* Inverse transform (world to physical) gnomonic projectio
  * Mar 14 2011	Add SCAMP polynomial projection coefficients
  * Sep  1 2011	Add TPV TAN projectioin with SCAT PV terms
  * Sep  9 2011	Fix comment on TPV declaration
+ *
+ * Feb  1 2013	Add uppercase() from wcsinit()
+ * Feb 25 2013	Pass const string to uppercase()
  */
