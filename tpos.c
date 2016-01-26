@@ -1,6 +1,6 @@
 #if HAVE_CFITSIO
 #include <fitsio.h>
-#include "./astroem/jsfitsio.h"
+#include "jsfitsio.h"
 #include <ctype.h>
 #define FT_CARDLEN 80
 #elif HAVE_FUNTOOLS

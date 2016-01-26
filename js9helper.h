@@ -1,6 +1,6 @@
 #if HAVE_CFITSIO
 #include <fitsio.h>
-#include "./astroem/jsfitsio.h"
+#include "jsfitsio.h"
 #endif
 #include <file.h>
 #include <find.h>

@@ -6,15 +6,16 @@
 # actual Makefile.
 #
 
-PACKAGE = @PACKAGE_NAME@
-VERSION = @PACKAGE_VERSION@
-DISTNAME = ${PACKAGE}-${VERSION}
-DDISTNAME = ${PACKAGE}-data
+PACKAGE =		@PACKAGE_NAME@
+VERSION =		@PACKAGE_VERSION@
+DISTNAME =		${PACKAGE}-${VERSION}
+DDISTNAME =		${PACKAGE}-data
 
-DISTDIR	= ../export
-FTPDIR	= ../ftp
-EM	= astroem
-ALLIN1	= js9-allinone
+DISTDIR	=		../export
+FTPDIR	=		../ftp
+EM	=		astroem
+JSFITSIO=		$(EM)/jsfitsio
+ALLIN1	=	 	js9-allinone
 
 #----------------------------------------------------------------
 # Things you can change to personalize the Makefile for your own
@@ -61,7 +62,9 @@ MAN3_INSTALL_DIR =	$(MAN_INSTALL_DIR)/man3
 # extra Libs required to link (e.g. socket libraries)
 LIBS =            	@CFITSIOLIB@ @FUNLIB@ @PNGLIB@ @EXTRA_LIBS@ -lm
 
-INCS =			-I. @CFITSIOINC@ @FUNINC@ @PNGINC@ -I./util
+# includes
+INCS =			-I. @CFITSIOINC@ @FUNINC@ @PNGINC@ \
+			-I./util -I./$(JSFITSIO)
 
 # To change the compiler switches, for example to change from -O
 # to -g, change the following line:
@@ -211,16 +214,16 @@ testall:	$(TESTPROGS)
 All:		all testall
 
 tpos:		$(UTILLIB) $(TPOSOBJS)
-		$(CC) $(LDFLAGS) $(TPOSOBJS) $(UTILLIB) -o tpos $(LIBS)
+		$(CC) $(LDFLAGS) $(TPOSOBJS) $(UTILLIB) -o $@ $(LIBS)
 
 js9helper:	$(UTILLIB) $(HELPEROBJS)
-		$(CC) $(LDFLAGS) $(HELPEROBJS) -o js9helper $(UTILLIB) $(LIBS)
+		$(CC) $(LDFLAGS) $(HELPEROBJS) -o $@ $(UTILLIB) $(LIBS)
 
 pngdisp:	pngdisp.o
-		$(CC) $(LDFLAGS) pngdisp.o -o pngdisp $(LIBS)
+		$(CC) $(LDFLAGS) pngdisp.o -o $@ $(LIBS)
 
 cimtest:	$(CIMTESTOBJS)
-		$(CC) $(LDFLAGS) $(CIMTESTOBJS) -o cimtest $(LIBS)
+		$(CC) $(LDFLAGS) $(CIMTESTOBJS) -o $@ $(LIBS)
 
 prefs:		FORCE
 		@(echo "copying default preferences to js9Prefs.json"; \
@@ -530,16 +533,16 @@ $(UTILLIB):	$(UTILOBJS)
 		mv libutil.a ..)
 
 tpos.o:		tpos.c
-		$(CC) -c $(CC_SW) tpos.c
+		$(CC) -c $(CC_SW) -o $@ $+
 
-jsfitsio.o:	$(EM)/jsfitsio.c
-		$(CC) -c $(CC_SW) -I./$(EM) -o jsfitsio.o $(EM)/jsfitsio.c
+jsfitsio.o:	$(JSFITSIO)/jsfitsio.c
+		$(CC) -c $(CC_SW) -o $@ $+
 
 js9helper.o:	js9helper.c
-		$(CC) -c $(CC_SW) js9helper.c
+		$(CC) -c $(CC_SW) -o $@ $+
 
 pngdisp.o:	pngdisp.c
-		$(CC) -c $(CC_SW) pngdisp.c
+		$(CC) -c $(CC_SW) -o $@ $+
 
 configure:	configure.ac
 		autoconf
