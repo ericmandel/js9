@@ -2934,17 +2934,54 @@ JS9.Image.prototype.saveFITS = function(fname){
     return fname;
 };
 
-// save image as a png file
-JS9.Image.prototype.savePNG = function(fname){
+// save image as an img file of specified type (e.g., image/png, image/jpeg)
+JS9.Image.prototype.saveIMG = function(fname, type, encoderOpts){
+    var key,img, ctx;
     if( window.hasOwnProperty("saveAs") ){
 	fname = fname || "js9.png";
-	this.display.canvas.toBlob(function(blob) {
+	// create off-screen canvas, into which we write all canvases
+	img = document.createElement("canvas");
+	img.setAttribute("width", this.display.width);
+	img.setAttribute("height", this.display.height);
+	ctx = img.getContext("2d");
+	// image display canvas
+	ctx.drawImage(this.display.canvas, 0, 0);
+	for( key in this.layers ){
+	    if( this.layers.hasOwnProperty(key) ){
+		// each layer canvas
+		if( this.layers[key].dlayer.dtype === "main" && 
+		    this.layers[key].show ){
+		    ctx.drawImage(this.layers[key].dlayer.canvasjq[0], 0, 0);
+		}
+	    }
+	}
+	// save as specified type
+	type = type || "image/png";
+	// sanity check on quality
+	if( encoderOpts !== undefined ){
+	    if( encoderOpts < 0 || encoderOpts > 1 ){
+		encoderOpts = 0.95;
+	    }
+	}
+	img.toBlob(function(blob){
 	    saveAs(blob, fname);
-	});
+	}, type, encoderOpts);
     } else {
-	JS9.error("no saveAs function available to save PNG file");
+	JS9.error("no saveAs function available for saving image");
     }
     return fname;
+};
+
+// save image as a PNG file
+JS9.Image.prototype.savePNG = function(fname){
+    fname = fname || "js9.png";
+    this.saveIMG(fname, "image/png");
+};
+
+// save image as a JPEG file
+JS9.Image.prototype.saveJPEG = function(fname, quality){
+    fname = fname || "js9.jpeg";
+    this.saveIMG(fname, "image/jpeg", quality);
 };
 
 // update (and display) pixel and wcs values (connected to info plugin)
@@ -4216,6 +4253,7 @@ JS9.Menubar = function(width, height){
 		items.pageid = {name: "display pageid"};
 		items.savefits = {name: "save image as FITS"};
 		items.savepng = {name: "save image as PNG"};
+		items.savejpeg = {name: "save image as JPEG"};
 		items.close = {name: "close image"};
 		items["sep" + n++] = "------";
 		items.lite = {name: "new JS9 light window"};
@@ -4340,18 +4378,27 @@ JS9.Menubar = function(width, height){
 			    break;
 			case "savefits":
 			    if( uim ){
-				s = uim.id.replace(/png/i, "fits")
-				          .replace(/.gz$/i, "")
+				s = uim.id.replace(/\.png/i, ".fits")
+				          .replace(/\.gz$/i, "")
 				          .replace(/\[.*\]/,"");
 				uim.saveFITS(s);
 			    }
 			    break;
 			case "savepng":
 			    if( uim ){
-				s = uim.id.replace(/fit[s]?/i, "png")
-				          .replace(/.gz$/i, "")
+				s = uim.id.replace(/\.fit[s]?/i, ".png")
+				          .replace(/\.gz$/i, "")
 				          .replace(/\[.*\]/,"");
 				uim.savePNG(s);
+			    }
+			    break;
+			case "savejpeg":
+			    if( uim ){
+				s = uim.id.replace(/\.fit[s]?/i, ".jpeg")
+				          .replace(/\.png$/i, ".jpeg")
+				          .replace(/\.gz$/i, "")
+				          .replace(/\[.*\]/,"");
+				uim.saveJPEG(s);
 			    }
 			    break;
 			case "print":
@@ -11508,6 +11555,7 @@ JS9.mkPublic("GetShapes", "getShapes");
 JS9.mkPublic("ChangeShapes", "changeShapes");
 JS9.mkPublic("Print", "print");
 JS9.mkPublic("SavePNG", "savePNG");
+JS9.mkPublic("SaveJPEG", "saveJPEG");
 JS9.mkPublic("SaveFITS", "saveFITS");
 JS9.mkPublic("RunAnalysis", "runAnalysis");
 JS9.mkPublic("DisplayMessage", "displayMessage");
