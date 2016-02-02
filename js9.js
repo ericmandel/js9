@@ -8689,7 +8689,7 @@ JS9.Panner.init = function(width, height){
 	    var pos = opts.target.getCenterPoint();
 	    var ix = ((pos.x - im.panner.ix) *
 		      im.panner.xblock / im.panner.zoom) + im.panner.x0;
-	    var iy = ((dlayer.canvas.height - (pos.y - im.panner.iy)) *
+	    var iy = ((dlayer.canvas.height - (pos.y + im.panner.iy)) *
 		      im.panner.yblock / im.panner.zoom) + im.panner.y0;
 	    // pan the image
 	    try{
