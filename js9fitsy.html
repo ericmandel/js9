@@ -1,80 +1,396 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
-    <head>
+<head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
-  <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">
-  <link type="text/css" rel="stylesheet" href="css/jquery.contextMenu.css">
-  <link rel="stylesheet" href="css/dhtmlwindow.css" type="text/css">
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
   <link type="text/css" rel="stylesheet" href="js9.css">
   <link type="text/css" rel="stylesheet" href="plugins/plugintest.css">
-  <script type="text/javascript" src="js/jquery.min.js"></script>
-  <script type="text/javascript" src="js/jquery.contextMenu.min.js"></script>
-  <script type="text/javascript" src="js/jquery.flot.min.js"></script>
-  <script type="text/javascript" src="js/jquery.flot.errorbars.min.js"></script>
-  <script type="text/javascript" src="js/sprintf.min.js"></script>
-  <script type="text/javascript" src="js/dhtmlwindow.min.js">
-  /***********************************************
-  * DHTML Window Widget- © Dynamic Drive (www.dynamicdrive.com)
-  * This notice must stay intact for legal use.
-  * Visit http://www.dynamicdrive.com/ for full source code
-  ***********************************************/
-  </script>
-  <script type="text/javascript" src="js/fabric.js"></script>
-
-  <script type="text/javascript" src="plugins/fitsy/fitsy.js"></script>
-  <script type="text/javascript" src="js/astrolib.js"></script>
+  <link type="text/css" rel="stylesheet" href="js9debugextras/jquery.datetimepicker.css">
+  <script type="text/javascript" src="js9support.js"></script>
   <script type="text/javascript" src="js9.js"></script>
+  <script type="text/javascript" src="fitsy.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <script type="text/javascript" src="plugins/plugintest.js"></script>
+  <script type="text/javascript" src="js9debugextras/jquery_ujs.js"></script>
+  <script type="text/javascript" src="js9debugextras/jquery.datetimepicker.js"></script>
+  <style type="text/css">
+    .catdiv{
+      background: #99FFCC;
+      padding: 10px;
+    }
+    .datepickerText{
+      font-size: 12px;
+      font-family: monospace;
+      overflow-x: hidden;
+      background: #E9E9E9;
+      border: 0px;
+      padding: 2px;
+    }
+    #SUPERMENU_ div.JS9MenubarContainer{
+      background: darkgreen;
+    }
+    #myJS9Menubar div.JS9MenubarContainer{
+      background: lightblue;
+    }
+  </style>
+  <title>JS9 Fitsy Page</title>
+</head>
+<body>
+    <center><font size="+1">
+    <b>JS9 Fitsy Debugging Page</b>
+    </font></center>
+    <table  cellspacing="10px">
+    <tr valign="top">
+    <td>
+    <table  cellspacing="2px">
+    <tr>
+    <td>
+    <ul>
+    <li> <a href='javascript:JS9.Load("png/casa.png");'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("png/3c58.png", {colormap: "heat"}, {display: "JS9"});'>3c58 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'>M13 (via SkyView)</a>
+    <li> <a href='javascript:JS9.Load("png/snr.png");'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:JS9.Load("png/ngc1316.png", {scale:"linear"});'>ngc1316 (AIPS)</a>
+    </ul>
+    </td>
+    <td>
+    <ul>
+    <li> <a href='javascript:JS9.Load("png/b10.png");'>byte 10x10 (v=x*10+y)</a>
+    <li> <a href='javascript:JS9.Load("png/s100.png", {scale:"linear", colormap:"grey"});'>s100 (v=x*100+y)</a>
+    <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y)</a>
+    <li> <a href='javascript:JS9.Load("png/f1000.png");'>float 1000x1000 (v=x.y/1000)</a>
+    <li> <a href='javascript:JS9.Load("png/d1000.png");'>double 1000x1000 (v=x.y/1000)</a>
+    </ul>
+    </td>
+    </table>
+    </td>
 
+    <td>
+    <table  cellspacing="2px">
+    <tr>
+    <td>
+    <ul>
+    <li> <a href='javascript:JS9.Load("fits/casa.fits", {display: "myJS9"});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/3c58.fits", {fits2png: false, colormap: "heat", zoom: 2, xcen: 395, ycen: 693}, {display: "myJS9"});'>3c58 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/m13.fits", {fits2png: false, onload: function(m){JS9.SetColormap("sls", {display: "myJS9"}); JS9.SetZoom(2, {display: "myJS9"})}}, {display: "myJS9"});'>M13 (via SkyView)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngc1316.fits[*,-*]", {fits2png: false, scale:"linear"}, {display: "myJS9"});'>ngc1316 (AIPS)</a>
+    <li> <a href='javascript:JS9.Load("fits/f1000.fits", {fits2png: true}, {display: "myJS9"});'>float 1000x1000 (v=x.y/1000)</a>
+    </ul>
+    </td>
 
-      <script type="text/javascript" src="plugins/fitsy/pako_inflate.min.js"></script>
-      <script type="text/javascript" src="plugins/fitsy/bzip2.js"></script>
-      <script type="text/javascript" src="plugins/fitsy/lzma_worker.js"></script>
-
-      <script type="text/javascript" src="plugins/fitsy/binning.js"></script>
-    </head>
-    <body>
-
-    <table>
-    <tr><td>
-	<div class="JS9Menubar"></div>
-	<div class="JS9"></div>
-	</td>
-	 <td>
-	    <H4> FITS Images </H4>
-	    <ul>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/1212.fits')">1212.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/m13.fits')">m13.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/STAR1_3.fits')">STAR1_3.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/ngc1316.fits')">ngc1316.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/casa-mask.fits.gz')">casa-mask.fits.gz</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/i1000.fits')">i1000.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/f1000.fits')">f1000.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/d1000.fits')">d1000.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/s100.fits')">s100.fits</A></li>
-	    </ul>
-	    <H4> FITS Tables </H4>
-	    <ul>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/3c58.fits')">3c58.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/casa.fits')">casa.fits</A></li>
-      	    <li><A href="javascript:Fitsy.fetchURL('fits/ngkper.fits')">ngkper.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/snr.fits')">snr.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/3c273.fits')">3c273.fits</A></li>
-	    </ul>
-
-
-	    <H4> Silly test files </H4>
-	    <ul>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/gauss.fits')">gauss.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/foo.fits')">foo.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/events.fits')">events.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/cross1.fits')">cross1.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/cross2.fits')">cross2.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/cross4.fits')">cross4.fits</A></li>
-	    <li><A href="javascript:Fitsy.fetchURL('fits/b10.fits')">b10.fits</A></li>
-	    </ul>
-	</td>
+    <td>
+    <ul>
+    <li> <a href='javascript:JS9.Load("fits/bzero.fits", {fits2png: false, colormap: "grey"}, {display: "myJS9"});'>bzero.fits</a>
+    <li> <a href='javascript:JS9.Load("m13/m13_gzip.fits", {fits2png: false, colormap: "red"}, {display: "myJS9"});'>M13 (gzip tile compress)</a>
+    <li> <a href='javascript:JS9.Load("m13/m13_rice.fits", {fits2png: false, colormap: "grey"}, {display: "myJS9"});'>M13 (rice tile compress)</a>
+    <li> <a href='javascript:JS9.LoadProxy("http://hea-www.cfa.harvard.edu/~eric/coma.fits", {scale: "linear"}, {display: "myJS9"});'>coma.fits (proxy)</a>
+    <li> <a href='javascript:JS9.Load("smartx/casa_smartx_regions.fits.gz", {fits2png: false, rgbFile: "smartx/casa_smartx.png", parentFile: "smartx/casa_obs4637_img.fits"}, {display: "myJS9"});'>CAS-A (with RGB overlay)</a>
+    </ul>
+    </td>
     </tr>
     </table>
-    </body>
-</html>
+    </tr>
 
+    <tr valign="top">
+    <td colspan="2">
+    <center>
+    a super-menu to control both JS9 displays:<br>
+    <div class="JS9Menubar" id="SUPERMENU_" data-displays="JS9,myJS9"></div>
+    </center>
+    </td>
+    </tr>
+    <tr valign="bottom">
+    <td>
+    <input type="text" id="datetimepicker" size="44" value="datepicker test: 3rd party event-handling" class="datepickerText">
+    <p>
+    heap test:
+    <input type="file" multiple="true" onchange="javascript:HeapTest(this.files)">
+    <p>
+    <div class="JS9Info"></div>
+    </td>
+    <td>
+    <table>
+    <tr valign="top">
+    <td>
+    <div class="JS9Panner" id="myJS9Panner" data-toolbarseparate="true"></div>
+    </td>
+    <td>
+    <div class="JS9Magnifier" id="myJS9Magnifier" data-width="150px" data-height="150px"></div>
+    </td>
+    </table>
+    </td>
+    </tr>
+    <tr valign="top">
+    <td>
+    <div class="JS9Menubar" id="JS9Menubar" data-width="400px" data-height="54px"></div>
+    <div class="JS9" data-width="400px" data-height="400px"></div>
+    <p>
+    <div class="catdiv">
+    <select id="display">
+      <option value="" selected="selected" style="display:none">Display</option>
+      <option value="box">Box Catalog (with tooltips)</option>
+      <option value="circle">Circle Catalog (event handlers, movable)</option>
+      <option value="both">Both Catalogs (non-interactive)</option>
+    </select> 
+    <select id="hide">
+      <option value="" selected="selected" style="display:none">Hide</option>
+      <option value="box">Box Catalog</option>
+      <option value="circle">Circle Catalog</option>
+      <option value="both">Both Catalogs</option>
+    </select> 
+    <select id="show">
+      <option value="" selected="selected" style="display:none">Show</option>
+      <option value="box">Box Catalog</option>
+      <option value="circle">Circle Catalog</option>
+      <option value="both">Both Catalogs</option>
+    </select> 
+    <p>
+    <b>Move circle catalog: </b>
+    <button id="up">Up</button>
+    <button id="down">Down</button>
+    <button id="left">Left</button>
+    <button id="right">Right</button>
+    </div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="myJS9Menubar"></div>
+    <div class="JS9" id="myJS9"></div>
+    </td>
+    </tr>
+    <tr valign="top">
+    <td>
+    <div class="PLUGINtest" data-js9id="JS9"></div>
+    </td>
+    <td>
+    <div class="JS9Console" id="myJS9Console" data-width="512px" data-height="300px"></div>
+    </td>
+    </tr>
+    </table>
+    <script type="text/javascript">
+    var n = 500;
+    var inc = 4;
+    // on an ipad, the click handler reload the page!
+    var click='ontouchstart' in document.documentElement?'touchstart': 'click';
+    function init(){
+        JS9.DEBUG = 2;
+        JS9.Preload("png/casa.png", {colormap: "cool"});
+        JS9.Preload("fits/snr.fits", {colormap: "heat", fits2png: false, onload: function(im){JS9.SetZoom(2,{display: "myJS9"});}}, {display: "myJS9"});
+        $("#display").on("change", function(evt){
+          try{doit("display", this.value);}
+          finally{$("#display").prop('selectedIndex', 0);
+          return false;}
+        });
+        $("#show").on("change", function(evt){
+          try{doit("show", this.value);}
+          finally{$("#show").prop('selectedIndex', 0);
+          return false;}
+        });
+        $("#hide").on("change", function(evt){
+          try{doit("hide", this.value);}
+          finally{$("#hide").prop('selectedIndex', 0);
+          return false;}
+        });
+        $("#up").on(click, function(evt){
+          try{doit("up");}
+          finally{return false;}
+        });
+        $("#down").on(click, function(evt){
+          try{doit("down");}
+          finally{return false;}
+        });
+        $("#left").on(click, function(evt){
+          try{doit("left");}
+          finally{return false;}
+        });
+        $("#right").on(click, function(evt){
+          try{doit("right");}
+          finally{return false;}
+        });
+        $('#datetimepicker').datetimepicker({
+          format:'d.m.Y H:i'
+        });
+    }
+    function mkrandom(arr, n, xdim, ydim, shape, color){
+        var i, x, y;
+        for(i=0; i<n; i++){
+            x = Math.random() * xdim;
+            y = Math.random() * ydim;
+	    if( i % 2 === 0 ){
+                arr[i] = {x: x, y: y, shape: shape, color: color, 
+		          width: 5, height: 2,
+		          data: {tag: sprintf("ebox: %s,%s,%s", x, y, color)}};
+            } else {
+                arr[i] = {x: x, y: y, 
+		          data: {tag: sprintf("obox: %s,%s", x, y)}};
+            }
+        }
+    }
+    function mkspirals(arr, n, xcen, ycen, shape, color){
+        var i, x, y;
+        var angle_incr = 2 * Math.PI/180;
+        var cx = xcen;
+        var cy = ycen;
+        var outer_rad = 512*0.48;
+        for(i=0; i<n; i++){
+            var ratio = i/n;
+            var angle = i*angle_incr;
+            var spiral_rad = ratio * outer_rad;
+            x = cx + Math.cos(angle) * spiral_rad;
+            y = cy + Math.sin(angle) * spiral_rad;
+            // if( i < 10 ) console.log("%s: %s %s", i, x, y);
+            // if( (n - i) < 10 ) console.log("%s: %s %s", i, x, y);
+	    if( i % 2 === 0 ){
+                arr[i] = {x: x, y: y, shape: shape, color: color, radius: 4,
+		          data: {tag: sprintf("ecir: %s,%s,%s", x, y, color)}};
+            } else {
+                arr[i] = {x: x, y: y,
+		          data: {tag: sprintf("ocir: %s,%s", x, y)}};
+            }
+        }
+    }
+    function doit(what, who){
+        switch(what){
+          case "display":
+	    var circles = [];
+            var boxes = [];
+            var im = JS9.GetImage();
+            if( !im ){
+                JS9.error("please display an image first!");
+            }
+            var xdim = Math.max(512, im.raw.width);
+            var ydim = Math.max(512, im.raw.height);
+            var xcen = im.raw.width/2;
+            var ycen = im.raw.height/2;
+	    var boxopts = $.extend(true, {}, JS9.Catalogs.opts);
+	    boxopts.tooltip = "<b>id: $im.id<\/b><br>pos: $xreg.x $xreg.y<br><i>$xreg.data.tag<\/i>";
+	    boxopts.ongroupcreate = function(im, xregs, evt){
+                var i, nshape, xcen, ycen;
+	        var xtot=0, ytot=0;
+                nshape = xregs.length;
+                for(i=0; i<nshape; i++){
+                    xtot += xregs[i].x;
+                    ytot += xregs[i].y;
+                }
+                xcen = xtot / nshape;
+                ycen = ytot / nshape;
+                console.log("average pos for %s objects: %s,%s",
+                             nshape, xcen, ycen);
+	    }
+	    var ciropts = $.extend(true, {}, JS9.Catalogs.opts);
+            ciropts.movable = true;
+	    ciropts.onmouseover = function(im, xreg, evt){
+                console.log("mouseover: %s %s", im.id, xreg.data.tag);
+	    };
+	    ciropts.onmousedown = function(im, xreg, evt){
+                console.log("mousedown: %s %s", im.id, xreg.data.tag);
+	    };
+            switch(who){
+                case "box":
+                    mkrandom(boxes, n, xdim, ydim, "box", "red");
+	            JS9.NewShapeLayer("box", boxopts);
+                    JS9.AddShapes("box", boxes, {color: "yellow"});
+                    break;
+                case "circle":
+                    mkspirals(circles, n, xcen, ycen, "circle", "black");
+	            JS9.NewShapeLayer("circle", ciropts);
+                    JS9.AddShapes("circle", circles);
+                    break;
+                case "both":
+                    mkrandom(boxes, n, xdim, ydim, "box", "red");
+	            JS9.NewShapeLayer("box", JS9.Catalogs.opts);
+                    JS9.AddShapes("box", boxes, {color: "yellow"});
+                    mkspirals(circles, n, xcen, ycen, "circle", "blue");
+	            JS9.NewShapeLayer("circle", JS9.Catalogs.opts);
+                    JS9.AddShapes("circle", circles);
+                    break;
+            }
+            break;
+          case "show":
+          case "hide":
+            switch(who){
+                case "both":
+                    JS9.ShowShapeLayer("box", what);
+                    JS9.ShowShapeLayer("circle", what);
+                    break;
+	        default:
+                    JS9.ShowShapeLayer(who, what);
+	            break;
+            }
+            break;
+          case "up":
+            JS9.ChangeShapes("circle", "all", {dx: 0, dy: inc});
+            break;
+          case "down":
+            JS9.ChangeShapes("circle", "all", {dx: 0, dy: -inc});
+            break;
+          case "left":
+            JS9.ChangeShapes("circle", "all", {dx: -inc, dy: 0});
+            break;
+          case "right":
+            JS9.ChangeShapes("circle", "all", {dx: inc, dy: 0});
+            break;
+        }
+    }
+    // heap test
+    var heapBlobs, heapBuf, heapStart, heapCur, heapIter;
+    var heapAlloc = 1024000, heapTimeout=100;
+    var HeapTest = function(files){
+      heapBlobs = files;
+      heapBuf = new ArrayBuffer(heapAlloc);
+      heapTest(1000);
+    }
+    var heapTest = function(nn, ii){
+        var buf;
+        var im = JS9.GetImage();
+        if( ii === undefined ){
+          ii = 0;
+          heapIter = nn;
+         }
+         if( heapBlobs ){
+           JS9.RefreshImage(heapBlobs[ii%heapBlobs.length]);
+         } else {
+           JS9.error("please choose an image to refresh");
+         }
+         if( ii++ < nn ){
+           buf = Astroem._malloc(heapAlloc);
+           if( !heapStart ){
+             heapStart = buf;
+           }
+           heapCur = buf;
+	   console.log("buf[%s]: %s", ii, buf);
+           Astroem.HEAPU8.set(new Uint8Array(heapBuf), buf);
+	   Astroem._free(buf);
+           setTimeout(function(){heapTest(nn, ii);}, heapTimeout);
+        } else {
+          console.log("bytes added to heap in %s iterations: %s = %s - %s", 
+                       heapIter, heapCur - heapStart, heapCur, heapStart);
+        };
+    }
+    $(document).ready(function(){
+      init();
+    });
+    </script>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9bespoke.html'>JS9 Demo: web page control of JS9</a>
+<li><a href='js9sizes.html'>JS9 Demo: setting the size of the JS9 display</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>
