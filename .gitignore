@@ -27,7 +27,7 @@ js9helper.pc
 js/.DS_Store
 astroem/.DS_Store
 a.out.dSYM/
-tmp/
+cfitsio/
 fits/
 hera/
 kes75/
@@ -35,9 +35,11 @@ m13/
 nan/
 net/
 notes/
+orion/
 old/
-cfitsio/
+reproj/
 talks/
+tmp/
 /png
 png/
 png-v[0-9]*/
