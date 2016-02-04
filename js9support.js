@@ -16778,8 +16778,8 @@ rememberattrs:function(t){ //remember certain attributes of the window when it's
 },
 
 move:function(t, e){
-	t.style.left=dhtmlwindow.distancex+dhtmlwindow.initx+"px"
-	t.style.top=dhtmlwindow.distancey+dhtmlwindow.inity+"px"
+	t.style.left=Math.max(0,dhtmlwindow.distancex+dhtmlwindow.initx)+"px"
+	t.style.top=Math.max(0,dhtmlwindow.distancey+dhtmlwindow.inity)+"px"
 },
 
 resize:function(t, e){
