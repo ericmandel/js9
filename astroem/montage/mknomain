@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo "generating nomain version of mProjectPP.c ..."
+
+cat mProjectPP.c | \
+sed 's/main/mProjectPP/;s/exit(0)/optind=1;fflush(fstatus);return 0/g;' \
+> mProjectPP_nomain.c
+
+# cat checkHdr.c | \
+# sed '482i\
+# fclose(fout);
+# ' \
+# > checkHdr_mod.c

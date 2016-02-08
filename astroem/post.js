@@ -7,10 +7,35 @@
 
 Module['print'] = function(text) { console.log(text); };
 
-Module['arrfile'] = function(filename, arr) {
-  try{ FS.unlink("/" + filename); }
+Module['rootdir'] = "/";
+
+Module['vfile'] = function(filename, buf) {
+  var size;
+  try{ FS.unlink(Module['rootdir'] + filename); }
   catch(ignore){ }
-  FS.createDataFile("/", filename, arr, true, true);
+  FS.createDataFile(Module['rootdir'], filename, buf, true, true)
+  if( buf.length !== undefined ){
+      size = buf.length;
+  } else if( buf.byteLength !== undefined ){
+      size = buf.byteLength;
+  } else if( buf.size !== undefined ){
+      size = buf.size;
+  } else {
+      size = -1;
+  }
+  return {path: filename, size: size};
+};
+
+Module['vunlink'] = function(filename) {
+  try{ FS.unlink(Module['rootdir'] + filename); }
+  catch(ignore){ }
+};
+
+// legacy routine used by fitsy
+Module['arrfile'] = function(filename, arr) {
+  try{ FS.unlink(Module['rootdir'] + filename); }
+  catch(ignore){ }
+  FS.createDataFile(Module['rootdir'], filename, arr, true, true);
   return {path: filename, size: arr.byteLength};
 };
 
@@ -28,14 +53,17 @@ Module['gzcompress'] = function(data) {
 
 Module['gzdecompress'] = function(data) {
   var BUFSIZE = 1024*1024;
-  FS.createDataFile('/', 'input.gz', data, true, true);
+  FS.createDataFile(Module['rootdir'], 'input.gz', data, true, true);
   var gzFile = ccall('gzopen', 'number', ['string', 'string'], ['input.gz', 'rb']);
   var buffer = _malloc(BUFSIZE);
   var chunks = [];
   var total = 0;
   var len;
   var i, ret, curr;
-  while( (len = ccall('gzread', 'number', ['number', 'number', 'number'], [gzFile, buffer, BUFSIZE])) > 0) {
+  while ( true ){
+    len = ccall('gzread', 'number',
+		['number', 'number', 'number'], [gzFile, buffer, BUFSIZE]);
+    if( len <= 0 ){ break; }
     chunks.push(new Uint8Array(len));
     chunks[chunks.length-1].set(HEAPU8.subarray(buffer, buffer+len));
     total += len;
@@ -176,7 +204,7 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	hdu.filename = options.filename;
     }
     // make up the fits object (used in cleanup)
-    hdu.fits = {fptr: fptr, vname: hdu.vname, heap: bufptr,
+    hdu.fits = {fptr: fptr, vfile: hdu.vfile, heap: bufptr,
 		cardstr: hdu.cardstr };
     // call the handler
     if( handler ){
@@ -186,50 +214,71 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     }
 };
 
-Module["handleFITSFile"] = function(blob, options, handler) {
+Module["handleFITSFile"] = function(fits, options, handler) {
     var fptr, hptr, fitsname, status;
     var fileReader, arr;
     var hdu = {};
     // set up options and handler (might want to use defaults)
     options = options || {};
     handler = handler || Module["options"].handler;
-    // convert blob into array
-    fileReader = new FileReader();
-    fileReader.onload = function() {
-	// filename or assume gzip'ed file: cfitsio will do the right thing ...
-	if( options.filename ){
-	    // filename with extension to pass to cfitsio
-	    fitsname = options.filename
+    // blob: turn blob into virtual file, the open with cfitsio
+    if( fits instanceof Blob ){
+	// convert blob into array
+	fileReader = new FileReader();
+	fileReader.onload = function() {
+	    // filename or assume gzip'ed: cfitsio will do the right thing ...
+	    if( options.filename ){
+		// filename with extension to pass to cfitsio
+		fitsname = options.filename
 		.replace(/^\.\.*/, "X")
-		.replace(/\//g, "_")
-	    // virtual file name without extension
-	    hdu.vname = fitsname.replace(/\[.*\]/g, "");
-	} else {
-	    fitsname = "myblob.gz";
-	    hdu.vname = fitsname;
-	}
-	// delete old version, ignoring errors
-	try{ FS.unlink("/" + hdu.vname); }
-	catch(ignore){ }
-	// create a file in the emscripten virtual file system from the blob
-	arr = new Uint8Array(this.result);
-	try { FS.createDataFile("/", hdu.vname, arr, true, true); }
-	catch(e){ Module["error"]("can't create virtual file: " + hdu.vname); }
-	// open the virtual file as a FITS file
+		.replace(/\//g, "__");
+		// virtual file name without extension
+		hdu.vfile = fitsname.replace(/\[.*\]/g, "");
+	    } else {
+		fitsname = "myblob.gz";
+		hdu.vfile = fitsname;
+	    }
+	    // delete old version, ignoring errors
+	    try{ FS.unlink(Module['rootdir'] + hdu.vfile); }
+	    catch(ignore){ }
+	    // create a file in the emscripten virtual file system from the blob
+	    arr = new Uint8Array(this.result);
+	    try { FS.createDataFile(Module['rootdir'], hdu.vfile, arr, true, true); }
+	    catch(e){
+		Module["error"]("can't create virtual file: "+hdu.vfile);
+	    }
+	    // open the virtual file as a FITS file
+	    hptr = _malloc(8);
+	    setValue(hptr+4, 0, 'i32');
+	    fptr = ccall("openFITSFile", "number",
+			 ["string", "string", "number", "number"],
+			 [fitsname, options.extlist, hptr, hptr+4]);
+	    hdu.type = getValue(hptr,   'i32');
+	    status  = getValue(hptr+4, 'i32');
+	    _free(hptr);
+	    Module["errchk"](status);
+	    // extract image section and call handler
+	    Module["getFITSImage"]({fptr: fptr}, hdu, options, handler);
+	};
+	// this starts it all!
+	fileReader.readAsArrayBuffer(fits);
+    } else if( typeof fits === "string" ){
+	hdu.vfile = fits;
+	// open existing virtual file as a FITS file
 	hptr = _malloc(8);
 	setValue(hptr+4, 0, 'i32');
 	fptr = ccall("openFITSFile", "number",
 		     ["string", "string", "number", "number"], 
-		     [fitsname, options.extlist, hptr, hptr+4]);
+		     [fits, options.extlist, hptr, hptr+4]);
 	hdu.type = getValue(hptr,   'i32');
 	status  = getValue(hptr+4, 'i32'); 
 	_free(hptr);
 	Module["errchk"](status);
 	// extract image section and call handler
 	Module["getFITSImage"]({fptr: fptr}, hdu, options, handler);
-    };
-    // this starts it all!
-    fileReader.readAsArrayBuffer(blob);
+    } else {
+	Module["error"]("invalid fits input for handleFITSFile");
+    }
 };
 
 Module["cleanupFITSFile"] = function(fits, all) {
@@ -260,7 +309,7 @@ Module["cleanupFITSFile"] = function(fits, all) {
 	Module["errchk"](status);
 	fits.fptr = null;
 	// delete virtual FITS file
-	try{ FS.unlink("/" + fits.vname); }
+	try{ FS.unlink(Module['rootdir'] + fits.vfile); }
 	catch(ignore){ }
     }
 };

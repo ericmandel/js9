@@ -8,13 +8,6 @@ JS9 =		..
 # where external JS version of cfitsio is built and stored
 CFITSIO =	../cfitsio
 
-# sub-packages
-JSFITSIO =	./jsfitsio
-UTIL =		./util
-WCS =		./wcs
-ZSCALE =	./zscale
-ZLIB =		./zee.js
-
 # emcc compiler flags
 # NB: -O2 is the recommended optimization (not -O3, as of 1/27/2015)
 # can't use mem file: we don't know where the mem file will resides
@@ -26,35 +19,45 @@ EMFLAGS	= 	-DEM -O2 --memory-init-file 0
 # EMOPTS =	-s TOTAL_MEMORY=33554432
 # support zscale up to 4096 * 4096 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=67108864
-# semi-arbitrarily large files, but disables asm.js compilation
-# cfitsio requires this:
-EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1
+# cfitsio requires memory growth
+# but disable asm.js validation to avoid chrome slowdown with memory growth:
+# https://github.com/kripken/emscripten/wiki/Chrome-Perf-Issues
+EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -s ASM_JS=2
 
-EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_initwcs', '_wcsinfo', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_saodtype', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek', '_openFITSFile', '_openFITSMem', '_getImageToArray', '_filterTableToImage', '_getHeaderToString', '_closeFITSFile', '_maxFITSMemory', '_ffgerr']"
+EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_initwcs', '_wcsinfo', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_saodtype', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek', '_openFITSFile', '_openFITSMem', '_getImageToArray', '_filterTableToImage', '_getHeaderToString', '_closeFITSFile', '_maxFITSMemory', '_ffgerr', '_reproject', '_vls', '_vcat']"
 
 EMEXTRAS =	--pre-js pre.js --post-js post.js
-
-# combine into EMCC command
-EMCC =		emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMEXTRAS) -I$(CFITSIO)
-
-# flags to generate all emcc objects (i.e. so $(CC) runs emcc)
-CC =		emcc $(EMFLAGS) -I$(CFITSIO) -I$(JSFITSIO) -I$(UTIL) -I$(WCS) -I$(ZLIB) -I$(ZSCALE)
-
-# sub-packages
 
 # top-level
 SRCS =  	wrappers.c
 OBJS = 		$(SRCS:%.c=%.o)
 
 # wrapper for cfitsio
+JSFITSIO =	./jsfitsio
 JSRCS =  	$(JSFITSIO)/jsfitsio.c
 JOBJS = 	$(JSRCS:%.c=%.o)
 
+# montage (re-project)
+MONTAGE =	./montage
+MSRCS =		$(MONTAGE)/mProjectPP_nomain.c \
+		$(MONTAGE)/overlapAreaPP.c \
+		$(MONTAGE)/debugCheck.c \
+		$(MONTAGE)/checkHdr.c \
+		$(MONTAGE)/checkWCS.c \
+		$(MONTAGE)/two_plane.c \
+		$(MONTAGE)/distort.c \
+		$(MONTAGE)/undistort.c \
+		$(MONTAGE)/initdistdata.c \
+		$(MONTAGE)/redefine_pointing.c
+MOBJS =		$(MSRCS:%.c=%.o)
+
 # utilities
+UTIL =		./util
 USRCS =		$(UTIL)/strtod.c
 UOBJS = 	$(USRCS:%.c=%.o)
 
 # wcs
+WCS =		./wcs
 WSRCS =  	$(WCS)/wcsinit.c \
 		$(WCS)/wcs.c \
 		$(WCS)/wcscon.c \
@@ -78,6 +81,7 @@ WSRCS =  	$(WCS)/wcsinit.c \
 WOBJS = 	$(WSRCS:%.c=%.o)
 
 # zlib
+ZLIB =		./zee.js
 ZSRCS = 	$(ZLIB)/adler32.c \
 		$(ZLIB)/compress.c \
 		$(ZLIB)/crc32.c \
@@ -98,15 +102,25 @@ ZSRCS = 	$(ZLIB)/adler32.c \
 ZOBJS = 	$(ZSRCS:%.c=%.o)
 
 # iraf zscale
+ZSCALE =	./zscale
 ZSSRCS =	$(ZSCALE)/cdlzscale.c
 ZSOBJS = 	$(ZSSRCS:%.c=%.o)
 
+PKGOBJS =	$(JOBJS) $(MOBJS) $(UOBJS) $(WOBJS) $(ZOBJS) $(ZSOBJS)
+PKGDIRS =	$(JSFITSIO) $(MONTAGE) $(UTIL) $(WCS) $(ZSCALE) $(ZLIB)
+
 LIBS =		lib/libcfitsio.a
+
+# combine into EMCC command
+EMCC =		emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMEXTRAS) -I$(CFITSIO)
+
+# flags to generate all emcc objects (i.e. so $(CC) runs emcc)
+CC =		emcc $(EMFLAGS) -I$(CFITSIO) -I$(JSFITSIO) -I$(UTIL) -I$(WCS) -I$(ZLIB) -I$(ZSCALE) -D'exit(n)=em_exit(n)'
 
 all:		$(ASTROEM)
 
-astroem.bc:	$(OBJS) $(JOBJS) $(UOBJS) $(WOBJS) $(ZOBJS) $(ZSOBJS) $(LIBS)
-		$(EMCC) -o $@ $?
+astroem.bc:	$(OBJS) $(PKGOBJS) $(LIBS)
+		$(EMCC) -o $@ $+
 
 $(ASTROEM):	astroem.bc pre.js post.js shell-pre.js shell-post.js Makefile
 		@(echo "generating raw astroem.js ..."; \
@@ -145,7 +159,7 @@ cfitsio:	FORCE
 clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#*  \
 		astroem*.js astroem*.mem astroem.bc; \
-		for d in $(JSFITSIO) $(UTIL) $(WCS) $(ZLIB) $(ZSCALE); do \
+		for d in $(PKGDIRS); do \
 		  rm -rf $$d/*{.a,.o,~}; \
 		done; \
 		if [ -d $(CFITSIO) ]; then \

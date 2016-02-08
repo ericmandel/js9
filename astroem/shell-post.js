@@ -9,8 +9,12 @@
       reg2wcs: Module.cwrap('reg2wcsstr', 'string', ['number', 'string']),
       saostrtod: Module.cwrap('saostrtod', 'number', ['string']),
       saodtype:  Module.cwrap('saodtype', 'number'),
-      zscale: Module.cwrap('zscale', 'string', ['number', 'number', 'number', 'number', 'number', 'number', 'number']),
       arrfile: Module["arrfile"],
+      vfile: Module["vfile"],
+      vunlink: Module["vunlink"],
+      vheap: Module["HEAPU8"],
+      vmalloc: Module["_malloc"],
+      vfree: Module["_free"],
       gzopen: Module.cwrap('gzopen', 'number', ['string', 'string']),
       gzread: Module.cwrap('gzread', 'number', ['number', 'number', 'number']),
       gzwrite: Module.cwrap('gzwrite', 'number', ['number', 'number', 'number']),
@@ -22,9 +26,10 @@
       cleanupFITSFile: Module["cleanupFITSFile"],
       getFITSImage: Module["getFITSImage"],
       maxFITSMemory: Module["maxFITSMemory"],
-      HEAPU8: Module["HEAPU8"],
-      _malloc: Module["_malloc"],
-      _free: Module["_free"],
+      zscale: Module.cwrap('zscale', 'string', ['number', 'number', 'number', 'number', 'number', 'number', 'number']),
+      reproject: Module.cwrap('reproject', 'string', ['string', 'string', 'string', 'string']),
+      vls: Module.cwrap('vls', 'int', ['string']),
+      vcat: Module.cwrap('vcat', 'string', ['string', 'number']),
       options: Module["options"]
   };
 })();

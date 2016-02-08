@@ -14,8 +14,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <math.h>
 #include <ctype.h>
+#include <setjmp.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
 #include "wcs.h"
 #include "strtod.h"
 #include "cdl.h"
@@ -29,10 +34,14 @@
 
 #define NDEC 3
 
-#define SZ_LINE 4096
+#define SZ_LINE  1024
+#define MAX_ARGS 10
+
+/* must match Module['rootdir'] in post.js! */
+#define ROOTDIR "/"
 
 /* static return buffer */
-char rstr[SZ_LINE];
+static char rstr[SZ_LINE];
 
 /* hold information about wcs for individual images */
 typedef struct infostruct {
@@ -46,6 +55,12 @@ static Info infos=NULL;
 static int ninfo = 1;
 static int maxinfo = 0;
 static int maxinc = 10;
+static int nreproj=0;
+
+static jmp_buf em_jmpbuf;
+
+int mProjectPP(int argc, char **argv);
+void emscripten_exit_with_live_runtime(void);
 
 /*
  *
@@ -73,7 +88,7 @@ static void cluc(char *s)
   }
 }
 
-int nowhite (char *c, char *cr)
+static int nowhite (char *c, char *cr)
 {
   char *cr0;    /* initial value of cr */
   int n;        /* the number of characters */
@@ -93,6 +108,20 @@ int nowhite (char *c, char *cr)
     n--;
   }
   return(n);
+}
+
+static int filecontents(char *path, char *obuf, int osize){
+  int got;
+  FILE *fd;
+  /* open the file */
+  if( !(fd=fopen(path, "r")) ){
+    return -1;
+  }
+  /* get contents */
+  got = fread(obuf, sizeof(char), osize-1, fd);
+  fclose(fd);
+  obuf[got] = '\0';
+  return got;
 }
 
 /* add a new Info record with a valid wcs struct */
@@ -131,6 +160,21 @@ static Info getinfo(int n){
   } else {
     return &infos[n];
   }
+}
+
+/*
+ *
+ * semi-public routines: these are used within emscripten elsewhere
+ *
+ */
+/* in emscripten-compiled programs, we change exit(1) to em_exit(1)
+   to avoid exiting the emscripten environment. see reproject() below */
+void em_exit(int n){
+  // don't return with a 0, it will cause recursion! */
+  if( n == 0 ){
+    n = 1;
+  }
+  longjmp(em_jmpbuf, n);
 }
 
 /*
@@ -426,9 +470,138 @@ char *zscale(unsigned char *im, int nx, int ny, int bitpix,
 	     float contrast, int numsamples, int perline){
   float z1, z2;
   char tbuf[SZ_LINE];
-  cdl_zscale(im, nx, ny, bitpix, &z1, &z2, contrast, numsamples, perline);
-  /* encode in a string for easy return */
-  snprintf(tbuf, SZ_LINE-1, "%f %f", z1, z2);
-  nowhite(tbuf, rstr);;
+  /* assume the worst */
+  *tbuf = '\0';
+  /* in case there are any exit() calls changes to em_exit() */
+  if( !setjmp(em_jmpbuf) ){
+    /* make the zscale call */
+    cdl_zscale(im, nx, ny, bitpix, &z1, &z2, contrast, numsamples, perline);
+    /* encode in a string for easy return */
+    snprintf(tbuf, SZ_LINE-1, "%f %f", z1, z2);
+  }
+  nowhite(tbuf, rstr);
   return rstr;
+}
+
+/* reproject using Montage/mProjectPP */
+char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
+  int i=0, j=0;
+  char *targs=NULL, *targ=NULL;
+  char *args[SZ_LINE];
+  char tbufs[MAX_ARGS][SZ_LINE];
+  char file0[SZ_LINE];
+  char file1[SZ_LINE];
+  char file2[SZ_LINE];
+  char file3[SZ_LINE];
+  args[i++] = "mProjectPP";
+  if( cmdswitches && *cmdswitches ){
+    targs = (char *)strdup(cmdswitches);
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL; 
+	targ=(char *)strtok(NULL," \t")){
+      if( j < MAX_ARGS ){
+	strncpy(tbufs[j], targ, SZ_LINE-1);
+	args[i++] = tbufs[j++];
+      } else {
+	break;
+      }
+    }
+    if( targs ) free(targs);
+  }
+  args[i++] = "-s";
+  snprintf(file0, SZ_LINE-1, "%sstatus_%d.txt", ROOTDIR, nreproj++);
+  args[i++] = file0;
+  snprintf(file1, SZ_LINE-1, "%s%s", ROOTDIR, iname);
+  args[i++] = file1;
+  snprintf(file2, SZ_LINE-1, "%s%s", ROOTDIR, oname);
+  args[i++] = file2;
+  snprintf(file3, SZ_LINE-1, "%s%s", ROOTDIR, wname);
+  args[i++] = file3;
+  /* make the reprojection call */
+  /* we have changed montage exit() calls to longjmp() */
+  if( !setjmp(em_jmpbuf) ){
+    /* make the reprojection call */
+    mProjectPP(i, args);
+  }
+  /* look for a return value */
+  if( filecontents(file0, rstr, SZ_LINE) >= 0 ){
+    unlink(file0);
+    return rstr;
+  } else {
+    return "Error: reproject failed; no status file created";
+  }
+}
+
+/* debugging tool: get content of a virtual file */
+char *vcat(char *file, int flen){
+  FILE *fd;
+  char tbuf[SZ_LINE];
+  char tbuf2[SZ_LINE];
+  int len, got;
+  snprintf(tbuf, SZ_LINE-1, "%s%s", ROOTDIR, file);
+  if( (flen > 0) && (flen < SZ_LINE) ){
+    len = flen;
+  } else {
+    len = SZ_LINE - 1;
+  }
+  *rstr = '\0';
+  got = filecontents(tbuf, rstr, len);
+  return rstr;
+}
+
+/* debugging tool: list virtual files */
+int vls(char *dir){
+  char tbuf[SZ_LINE];
+  char *type, *mydir, *cretime, *modtime;
+  int m;
+  int got = 0;
+  DIR* dfd;
+  struct dirent* dirent;
+  struct stat buf;
+  /* Scanning the in directory */
+  if( dir && *dir ){
+    mydir = dir;
+  } else {
+    mydir = ROOTDIR;
+  }
+  if( !(dfd = opendir(mydir)) ){
+    fprintf(stdout, "Error: can't open directory - %s\n", mydir);
+    fflush(stdout);
+    return 0;
+  }
+  while( (dirent = readdir(dfd)) ){
+    if (!strcmp (dirent->d_name, "."))
+      continue;
+    if (!strcmp (dirent->d_name, ".."))    
+      continue;
+    if( mydir[strlen(mydir)-1] == '/' ){
+      snprintf(tbuf, SZ_LINE, "%s%s", mydir, dirent->d_name);
+    } else {
+      snprintf(tbuf, SZ_LINE, "%s/%s", mydir, dirent->d_name);
+    }
+    if( stat(tbuf, &buf) >= 0 ){
+      cretime = asctime(gmtime(&(buf.st_ctime)));
+      modtime = asctime(gmtime(&(buf.st_mtime)));
+      m = buf.st_mode;
+      if( S_ISREG(m) )       type = "file";
+      else if( S_ISDIR(m) )  type = "dir";
+      else if( S_ISCHR(m) )  type = "cdev";
+      else if( S_ISBLK(m) )  type = "bdev";
+      else if( S_ISFIFO(m) ) type = "fifo";
+      else if( S_ISLNK(m) )  type = "link";
+      else                   type = "?";
+      if( !strcmp(type, "dir") ){
+	fprintf(stdout, "%s (dir)\n", dirent->d_name);
+      } else {
+	fprintf(stdout, "%s (%s):\n\tsize: %d\n\tcre: %s\tmod: %s\n", 
+		dirent->d_name, type, (int)buf.st_size, cretime, modtime);
+      }
+      fflush(stdout);
+      got++;
+    } else {
+      fprintf(stdout, "%s (unknown)\n", dirent->d_name);
+      fflush(stdout);
+    }
+  }
+  closedir(dfd);
+  return got;
 }

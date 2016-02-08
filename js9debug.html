@@ -101,13 +101,21 @@
     </center>
     </td>
     </tr>
-    <tr valign="bottom">
+
+    <tr valign="top">
     <td>
     <input type="text" id="datetimepicker" size="44" value="datepicker test: 3rd party event-handling" class="datepickerText">
-    <p>
-    heap test:
+    </td>
+    <td>
+    Heap Test:
     <input type="file" multiple="true" onchange="javascript:HeapTest(this.files)">
-    <p>
+    <input type="button" value="Reproj Load" onclick="javascript:ReprojLoad()">
+    <input type="button" value="Reproj Test" onclick="javascript:ReprojTest()">
+    </td>
+    </tr>
+
+    <tr valign="bottom">
+    <td>
     <div class="JS9Info"></div>
     </td>
     <td>
@@ -354,19 +362,33 @@
            JS9.error("please choose an image to refresh");
          }
          if( ii++ < nn ){
-           buf = Astroem._malloc(heapAlloc);
+           buf = Astroem.vmalloc(heapAlloc);
            if( !heapStart ){
              heapStart = buf;
            }
            heapCur = buf;
 	   console.log("buf[%s]: %s", ii, buf);
-           Astroem.HEAPU8.set(new Uint8Array(heapBuf), buf);
-	   Astroem._free(buf);
+           Astroem.vheap.set(new Uint8Array(heapBuf), buf);
+	   Astroem.vfree(buf);
            setTimeout(function(){heapTest(nn, ii);}, heapTimeout);
         } else {
           console.log("bytes added to heap in %s iterations: %s = %s - %s", 
                        heapIter, heapCur - heapStart, heapCur, heapStart);
         };
+    }
+    var ReprojLoad = function(){
+      console.log("loading casa1k.fits ...")
+      JS9.Load("reproj/casa1k.fits", {display: "JS9", onload:function(im){
+	console.log("loading casa1kr.fits ...")
+	JS9.Load("reproj/casa1kr.fits", {display: "myJS9", onload:function(im2){
+          Astroem.vls();
+        }})
+      }})
+    }
+    var ReprojTest = function(){
+      var im = JS9.GetImage({display: "myJS9"});
+      console.log("running reproj on %s", im.id)
+      im.reproject("reproj/casa1k.fits");
     }
     $(document).ready(function(){
       init();

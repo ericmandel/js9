@@ -28,7 +28,7 @@ want. It parallels DS9's behavior in which XPA commands act on the
 currently displayed image. For example, to change the colormap of the
 current image, use:
 <pre>
-  JS9.SetColormap("cool");
+    JS9.SetColormap("cool");
 </pre>
 
 <p>
@@ -37,13 +37,13 @@ single page, you can specify the specific div element to process by
 adding an <b> display object</b> argument to the calling sequence with
 a single <b>display</b> property:
 <pre>
-  {display: [div_id]}
+    {display: [div_id]}
 </pre>
 where [div_id] is the id of the target JS9 div element. For example,
 if two JS9 divs with ids "JS9" and "myJS9", respectively, are present
 on a single Web page, you can set the colormap of the second one this way:
 <pre>
-  JS9.SetColormap("cool", {display: "myJS9"})
+    JS9.SetColormap("cool", {display: "myJS9"})
 </pre>
 Note that this <b>display object</b> contains only the <b>display</b>
 property and always is specified as the final argument in a call.
@@ -52,13 +52,13 @@ The display property can specify an image handle instead of
 a JS9 div element id. This is a minor optimization for cases where you want
 to call a routine such as JS9.WCSToPix() or JS9.PixtoWCS() many times:
 <pre>
-  var im = JS9.GetImage({display: "myJS9"});
-  for(i=0; i<1000; i++){
-    x = ...
-    y = ... 
-    wcs = JS9.PixtoWCS(x, y, {display: im});
-    console.log("%s %s -> %s %s", x, y, wcs.ra, wcs.dec);
-  }
+    var im = JS9.GetImage({display: "myJS9"});
+    for(i=0; i<1000; i++){
+      x = ...
+      y = ... 
+      wcs = JS9.PixtoWCS(x, y, {display: im});
+      console.log("%s %s -> %s %s", x, y, wcs.ra, wcs.dec);
+    }
 </pre>
 Passing the image handle will speed up processing very slightly, but
 it makes us programmers feel much better.
@@ -116,19 +116,19 @@ a completely new image to the display.
 <p>
 To override default image parameters, pass the image opts argument:
 <pre>
-    href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'
+    JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});
 </pre>
 <p>
 If an onload callback function is specified in opts, it will be called
 after the image is loaded:
 <pre>
-    href='javascript:JS9.Load("fits/3c273.fits", {scale: "linear", onload: func});'
+    JS9.Load("fits/3c273.fits", {scale: "linear", onload: func});
 </pre>
 The image handle is passed as the first argument to the callback.
 <p>
 To load an image into a specified display, pass the <b>display object</b> as the last argument:
 <pre>
-    href='javascript:JS9.Load("fits/3c273.fits", {scale: "linear"}, {display: "myJS9"});'
+    JS9.Load("fits/3c273.fits", {scale: "linear"}, {display: "myJS9"});
 </pre>
 <p>
 See <a href="./yourdata.html">Displaying Your Data</a> for further discussion of
@@ -858,6 +858,203 @@ where:
 The text string is displayed in the "info" area (usually occupied by the
 valpos display) or the "region" area (where regions are displayed). The
 empty string will clear the previous message.
+
+<p>
+<font size="+1"><b><u>Create or Modify a Raw Data Layer</u></b></font>
+<p>
+<code><font size="+1">JS9.RawDataLayer(opts, func)</font></code>
+<p>
+where:
+<ul>
+<li><b>opts</b>: layer name or opts object
+<li><b>func</b>: function used to create or modify raw data
+</ul>
+Each image has raw data associated with it, i.e. the underlying
+astronomical image pixels that are scaled and displayed using the
+chosen scale and colormap. You can manipulate the raw data by creating
+a new <b>raw data layer</b> using <b>JS9.RawDataLayer()</b>, setting
+the image pixel values, and then making this layer the current
+one. The original raw data (with id "raw0") will be maintained in
+separate layer, so you can switch between layers (also using this
+routine).
+
+<p>
+To create a new raw data layer (or edit an existing layer), call the
+<b>JS9.RawDataLayer()</b> with two arguments: layer opts (or layer
+name) and a function. The layer opts object can have the following properties:
+<ul>
+<li><b>rawid</b>: id of new raw data layer (default: "alt")
+<li><b>oraw</b>: id of raw data layer to pass to func or "current" (default: "raw0", i.e., the original data)
+<li><b>from</b>: descriptive string describing origin of this raw data (def: "func")
+</ul>
+Alternative, you can pass the id of the raw data layer as a string and
+use the defaults for the other properties (which usually is sufficient).
+
+<p>
+The pixel modifying function should have the following calling sequence:
+<pre>
+    func(oraw, nraw, opts)
+</pre>
+where:
+<ul>
+<li><b>oraw</b>: the raw data object specified by the <b>from</b> property above (def: original raw data "raw0");
+<li><b>nraw</b>: the raw data layer you are modifying
+<li><b>opts</b>: the original opts object along with any params you add to it
+</ul>
+The function should return <b>true</b> is you want to switch to the new layer
+and display it, or <b>false</b> to discard the new layer (in case of an error).
+
+<p>
+Note that the <b>nraw</b> object will contain the raw data for this
+layer, if it already exists. Otherwise, it will contain a copy of
+the <b>from</b> data.
+
+<p>
+For example, the following routine creates a new "clip" layer and
+clips the original raw data at the specified nmax level:
+<pre>
+    im.rawData({rawid: "clip", nmax: n}, function (oraw, nraw, opts){
+        var i, len;
+        opts = opts || {};
+        if( opts.nmax === undefined ){ opts.nmax = 0; }
+        len = nraw.width * nraw.height;
+        for(i=0; i&lt;len; i++){
+            if( oraw.data[i] &lt; opts.nmax ){
+                nraw.data[i] = 0;
+            } else {
+                nraw.data[i] = oraw.data[i];
+            }
+        }
+        return true;
+    });
+</pre>
+When clipping, the nraw pixel values are taken from the oraw values, so
+that you can clip to a value of 100, then clip to a value of 50, and
+get the right result. This is different from the following example "add"
+layer, which adds a constant value to the existing data:
+<pre>
+    im.rawData({rawid: "add", val: n}, function (oraw, nraw, opts){
+        var i, len;
+        opts = opts || {};
+        if( opts.val === undefined ){
+            opts.val = 1;
+        }
+        len = nraw.width * nraw.height;
+        for(i=0; i&lt;len; i++){
+            nraw.data[i] += opts.val;
+        }
+        return true;
+    });
+</pre>
+Here, the operation is performed on the existing "add" layer each time, so
+that the addition is cumulative.
+
+<p>
+The oraw and nraw objects are the same as the object returned by
+<b>JS9.GetImageData()</b>and, in particular, have the following properties:
+<ul>
+<li><b>width</b>: x dimension of image
+<li><b>height</b>: y dimension of image
+<li><b>bitpix</b>: FITS bits/pixel of each image element (8 for unsigned char, 16, 32 for signed integer, -32 or -64 for float)
+<li><b>header</b>: JavaScript object containing FITS header values
+<li><b>data</b>: buffer containing raw data values
+</ul>
+
+<p>
+To switch to a layer, call <b>JS9.RawDataLayer()</b> with a single argument, the layer name:
+<pre>
+    JS9.RawDataLayer("raw0")   # switch to original data
+    JS9.RawDataLayer("clip")   # switch to clipped data
+    JS9.RawDataLayer("add")    # switch to add data
+</pre>
+To get the currently displayed layer, call the routine with no arguments:
+<pre>
+    JS9.RawDataLayer()         # returns "clip"
+</pre>
+
+<p>
+<font size="+1"><b><u>Shift Raw Data</u></b></font>
+<p>
+<code><font size="+1">JS9.ShiftData(x, y, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>x</b>: number of pixels to shift in the x (width) direction
+<li><b>y</b>: number of pixels to shift in the y (height) direction
+<li><b>opts</b>: options object
+</ul>
+This routine creates a new raw data layer called "shiftData" in which
+the pixels are shifted from the original image array by the specified
+amount in x and/or y. The results of successive shifts are
+cumulative. The routine is used by the Harvard-Smithsonian Center for
+Astrophysics MicroObservatory project interactively to align images
+that are only slightly offset from one another.
+
+<p>
+<font size="+1"><b><u>Reproject an Image Using a Specified WCS</u></b></font>
+<p>
+<code><font size="+1">JS9.Reproject(wcsim, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>wcsim</b>: image containing the WCS used to perform the reprojection
+<li><b>opts</b>: options object
+</ul>
+<b>JS9.Reproject()</b> creates a new raw data layer (with default id
+of "reproject") in which the pixels are reprojected using the WCS from
+another image. The
+<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html">mProjectPP</a>
+program from the 
+<a href="http://montage.ipac.caltech.edu/">Montage</a> software suite
+is used to perform the reprojection.  Please read the documentation on
+mProjectPP from the Montage Web site, which includes this explanation:
+<p>
+<pre>
+    mProjectPP performs a plane-to-plane transform on the input image, and
+    is an adaptation of the Mopex algorithm and developed in collaboration
+    with the Spitzer Space Telescope. It provides a speed increase of
+    approximately a factor of 30 over the general-purpose mProject. However,
+    mProjectPP is only suitable for projections which can be approximated
+    by tangent-plane projections (TAN, SIN, ZEA, STG, ARC), and is therefore
+    not suited for images covering large portions of the sky. Also note that
+    it does not directly support changes in coordinate system (i.e. equatorial
+    to galactic coordinates), though these changes can be facilitated by the
+    use of an alternate header.
+</pre>
+
+<p>
+The <b>wcsim</b> argument is an image id, image filename, or image
+object pointing to the WCS image.
+
+<p>
+The <b>opts</b> object can contain the following reproject-specific properties:
+<ul>
+<li><b>rawid</b>: the id of the raw data layer to create (default: "reproject")
+<li><b>cmdswitches</b>: a string containing mProjectPP command line switches
+</ul>
+The cmdswitches will be prepended to the mProjectPP command line. For example:
+<pre>
+ {cmdswitches: "-d 1 -z .75"}
+</pre>
+will set the mProjectPP debugging and the drizzle factor, resulting in a
+command line that looks like this:
+<pre>
+  mProjectPP -d 1 -z .75 -s statusfile in.fits out.fits template.hdr
+</pre>
+See the 
+<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html">mProjectPP</a>
+documentation for more information about command switches.
+
+<p>
+Reprojection is an intensive process which can take a considerable
+amount of memory and processing time. To ensure stability, we currently
+restrict the size of the image that can be reprojected, as follows:
+<ul>
+<li> for iOS devices: maximum image size is approximately 1024 x 1024
+<li> for other devices: maximum image size is approximately 2048 x 2048
+</ul>
+We will relax these restrictions as browsers improve their ability to
+handle large amounts of memory.
 
 <hr><p>
 <center><b><font size="+1">
@@ -1601,7 +1798,7 @@ are specific to the message being handled.
 For example, you can send a message to the back-end server to retrieve the
 list of available analysis tasks and then display this list using the call:
 <pre>
-JS9.Send("getAnalysis", null, function(s){alert(s)});
+    JS9.Send("getAnalysis", null, function(s){alert(s)});
 </pre>
 The "getAnalysis" message passes no parameters to the server. The
 server returns a list of available analysis tasks in JSON format.
@@ -1626,13 +1823,13 @@ leave the argument list empty.
 For example, to add a new JS9 display and menubar at the end of a Web
 page and load an image into that display:
 <pre>
-  var html = "&lt;div class='JS9Menubar' id='myJS9Menubar'&gt;&lt;/div&gt;&lt;div class='JS9' id='myJS9'&gt;&lt;/div&gt;";
-  // jquery append to end of page
-  $(html).appendTo($("body"));
-  // create the new JS9 display, with associated plugins
-  JS9.AddDivs("myJS9");
-  // just a standard load to that display
-  JS9.Load("foo.fits", {scale: "log"}, {display: "myJS9"});
+    var html = "&lt;div class='JS9Menubar' id='myJS9Menubar'&gt;&lt;/div&gt;&lt;div class='JS9' id='myJS9'&gt;&lt;/div&gt;";
+    // jquery append to end of page
+    $(html).appendTo($("body"));
+    // create the new JS9 display, with associated plugins
+    JS9.AddDivs("myJS9");
+    // just a standard load to that display
+    JS9.Load("foo.fits", {scale: "log"}, {display: "myJS9"});
 </pre>
 See also <b>JS9.LoadWindow()</b> for a nice way to load images into a
 light-weight or completely new window.
@@ -1644,7 +1841,8 @@ light-weight or completely new window.
 <p>
 NB: The routines in this section are prototypes and therefore are
 subject to change. Feel free to contact us to discuss your needs so
-that we can gain a better understanding of is required in these cases.
+that we can gain a better understanding of what is required in these cases.
+
 <p>
 <font size="+1"><b><u>Load an auxiliary file</u></b></font>
 <p>
@@ -1671,14 +1869,14 @@ auxfile specification has the following properties:
 </ul>
 For example, the following defines two auxfiles:
 <pre>
-  "auxFiles":   [{"type":	     "mask",
-		  "name":	     "sciencemasks",
-		  "image": 	     "casa.*.png",
-		  "url":	     "../myauxfiles/casa-mask.png"},
-		 {"type":	     "regions",
-		  "name":	     "scienceregions",
-		  "image": 	     "casa.*.png",
-		  "url":	     "../myauxfiles/casa.reg"}],
+    "auxFiles":   [{"type":	     "mask",
+  		    "name":	     "sciencemasks",
+		    "image": 	     "casa.*.png",
+		    "url":	     "../myauxfiles/casa-mask.png"},
+		   {"type":	     "regions",
+		    "name":	     "scienceregions",
+		    "image": 	     "casa.*.png",
+		    "url":	     "../myauxfiles/casa.reg"}],
 </pre>
 Here, a mask auxfile and a regions auxfile are defined for Cas-A
 dataset(s). These auxfiles are brought into play as follows:
@@ -1778,7 +1976,7 @@ See js9onchange.html for an example of using this callback function.
 
 <hr><p>
 
-<h5>Last updated: September 25, 2015</h5>
+<h5>Last updated: February 6, 2016</h5>
 </div>
 
 </body>

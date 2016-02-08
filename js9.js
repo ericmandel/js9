@@ -59,11 +59,14 @@ JS9.LIGHTWIN = "dhtml";		// light window type: choice of dhtml
 JS9.ANTIALIAS = false;		// use anti-aliasing?
 JS9.SCALEIREG = true;		// scale interactive regions by zoom factor?
 JS9.NOMOVE = 3;			// number of pixels before we recognize movement
-JS9.DBLCLICK = 500;		// milliseconds for double-click
-JS9.TIMEOUT = 250;		// ms before assuming light window is up
+JS9.DBLCLICK = 500;		// millisec for double-click
+JS9.TIMEOUT = 250;              // millisec before assuming light window is up
+JS9.SPINOUT = 250;		// millisec before assuming spinner is up
 JS9.SUPERMENU = /^SUPERMENU_/;  // base of supermenu id
-JS9.RESIZEDIST = 20;		// size of rectangle defining resize handle 
+JS9.RESIZEDIST = 20;		// size of rectangle defining resize handle
 JS9.RESIZEFUDGE = 5;            // fudge for webkit resize problems
+JS9.RAWID0 = "raw0";		// primary raw id
+JS9.RAWIDX = "alt";		// default "alternate" raw id
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 JS9.BROWSER = (function(){
@@ -407,7 +410,8 @@ JS9.Image = function(file, params, func){
     // copy image parameters
     this.params = $.extend(true, {}, JS9.imageOpts, localOpts);
     // set the colormap object from colormap name (text string)
-    this.cmapObj = JS9.lookupColormap(this.params.colormap);
+    // this.cmapObj = JS9.lookupColormap(this.params.colormap);
+    this.setColormap(this.params.colormap);
     // do we display?
     this.displayMode = true;
     // mouse event state
@@ -454,6 +458,8 @@ JS9.Image = function(file, params, func){
     this.aux = {};
     // binning parameters
     this.binning = {bin: 1, obin: 1};
+    // array to hold raw data as we create it (original raw data at index 0)
+    this.raws = [];
     // temp flag determines if we should update shapes at end of this call
     this.updateshapes = false;
     // change the cursor to show the waiting status
@@ -465,7 +471,7 @@ JS9.Image = function(file, params, func){
 	// save source
 	this.source = "fits";
 	// generate the raw data array from the hdu
-	this.mkRawDataFromHDU(file, file.filename);
+	this.mkRawDataFromHDU(file, {file: file.filename});
 	// do zscale, if necessary
 	if( this.params.scaleclipping === "zscale" ){
 	    this.zscale(true);
@@ -571,7 +577,7 @@ JS9.Image = function(file, params, func){
 
 // undisplay the image, release resources
 JS9.Image.prototype.closeImage = function(){
-    var i, tim, key;
+    var i, j, tim, key;
     var pname, pinst, popts;
     var ilen= JS9.images.length;
     var display = this.display;
@@ -623,9 +629,12 @@ JS9.Image.prototype.closeImage = function(){
 		break;
 	    }
 	    // cleanup FITS file support, if necessary
-	    if( JS9.fits.cleanupFITSFile &&
-		tim.raw.hdu && tim.raw.hdu.fits ){
-		JS9.fits.cleanupFITSFile(tim.raw.hdu.fits, true);
+	    if( JS9.fits.cleanupFITSFile ){
+		for(j=0; j<tim.raws.length; j++){
+		    if( tim.raws[j].hdu && tim.raws[j].hdu.fits ){
+			JS9.fits.cleanupFITSFile(tim.raws[j].hdu.fits, true);
+		    }
+		}
 	    }
 	    // remove proxy image from server, if necessary
 	    if( tim.proxyFile ){
@@ -803,6 +812,12 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
     h = img.height;
     w = img.width;
     ibuf = img.data;
+    // create the object to hold raw data and add to raws array
+    this.raws.push({from: "img"});
+    // assign this object to the high-level raw data object
+    this.raw = this.raws[this.raws.length-1];
+    // this is the primary data
+    this.raw.id = JS9.RAWID0;
     // create a raw array to hold the reconsituted data
     this.raw.data = new Float32Array(h*w);
     // get data value from RGB
@@ -838,8 +853,14 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
     }
     // change data source
     this.source = "png";
-    // there is no header
-    this.raw.header = null;
+    // fake header
+    this.raw.header = {
+	SIMPLE: true,
+	NAXIS: 2,
+	NAXIS1: this.raw.width,
+	NAXIS2: this.raw.height,
+	BITPIX: this.raw.bitpix
+    };
     // allow chaining
     return this;
 };
@@ -860,8 +881,12 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     if( !this.offscreen.img  ){
 	return this;
     }
-    // create the object to hold raw data
-    this.raw = {};
+    // create the object to hold raw data and add to raws array
+    this.raws.push({from: "png"});
+    // assign this object to the high-level raw data object
+    this.raw = this.raws[this.raws.length-1];
+    // this is the primary data
+    this.raw.id = JS9.RAWID0;
     // offscreen image data
     offscreen = this.offscreen.img.data;
     // gather up the json header (until we hit a null, skipping bogus values)
@@ -1195,9 +1220,10 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 };
 
 // read input object and convert to image data
-JS9.Image.prototype.mkRawDataFromHDU = function(obj, file){
-    var i, s, ui, dlen, clen, hdu, pars, card;
+JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
+    var i, s, ui, dlen, clen, hdu, pars, card, got, rlen;
     var owidth, oheight, obitpix;
+    opts = opts || {};
     if( $.isArray(obj) || JS9.isTypedArray(obj) || obj instanceof ArrayBuffer ){
 	// flatten if necessary
 	if( $.isArray(obj[0]) ){
@@ -1224,8 +1250,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, file){
 	JS9.error("can't image a FITS file with less than 2 dimensions");
     }
     // look for a filename
-    if( file ){
-	this.file = file;
+    if( opts.file ){
+	this.file = opts.file;
     } else if( hdu.filename ){
 	this.file = hdu.filename;
     }
@@ -1243,9 +1269,38 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, file){
 	oheight = this.raw.height;
 	obitpix = this.raw.bitpix;
     }
-    // fill in raw data info directly from the fits object
-    this.raw = {};
+    // initialize raws array?
+    rlen = this.raws.length;
+    if( !rlen ){
+	// create primary object to hold raw data and add to raws array
+	this.raws.push({from: "hdu"});
+	// assign this object to the high-level raw data object
+	this.raw = this.raws[rlen];
+	// ignore rawid, this is the primary data
+	this.raw.id = JS9.RAWID0;
+    } else {
+	opts.rawid = opts.rawid || JS9.RAWIDX;
+	// reuse raw object with the same id, after re-initializing it
+	got = 0;
+	for(i=0; i<rlen; i++){
+	    if( opts.rawid === this.raws[i].id  ){
+		this.raws[i] = {};
+		this.raw = this.raws[i];
+		got++;
+		break;
+	    }
+	}
+	// otherwise, create new raw object with this id
+	if( !got ){
+	    // create the object to hold raw data and add to raws array
+	    this.raws.push({from: "hdu", id: opts.rawid});
+	    // assign this object to the high-level raw data object
+	    this.raw = this.raws[rlen];
+	}
+    }
+    // save hdu
     this.raw.hdu = hdu;
+    // fill in raw data info directly from the fits object
     if( hdu.axis ){
 	this.raw.width  = hdu.axis[1];
 	this.raw.height = hdu.axis[2];
@@ -1662,23 +1717,26 @@ JS9.Image.prototype.mkPrimaryImage = function(){
     var yZoom, xZoom, idx, odx, yLen, zx, zy, zyLen;
     var alpha, alpha1, alpha2;
     var ridx, gidx, bidx;
-    var rthis=this, gthis=this, bthis=this;
+    var rthis=null, gthis=null, bthis=null;
     var dorgb = false;
     // sanity check
     if( !this.primary ){
 	return this;
     }
-    if( JS9.globalOpts.rgb.mode ){
-	if( (this === JS9.globalOpts.rgb.rim) ||
-	    (this === JS9.globalOpts.rgb.gim) ||
-	    (this === JS9.globalOpts.rgb.bim) ){
-	    dorgb = true;
+    if( JS9.globalOpts.rgb.mode &&
+	((this === JS9.globalOpts.rgb.rim) ||
+	 (this === JS9.globalOpts.rgb.gim) ||
+	 (this === JS9.globalOpts.rgb.bim)) ){
+	dorgb = true;
+	if( JS9.globalOpts.rgb.rim ){
+	    rthis = JS9.globalOpts.rgb.rim;
 	}
-    }
-    if( dorgb ){
-	rthis = JS9.globalOpts.rgb.rim;
-	gthis = JS9.globalOpts.rgb.gim;
-	bthis = JS9.globalOpts.rgb.bim;
+	if( JS9.globalOpts.rgb.gim ){
+	    gthis = JS9.globalOpts.rgb.gim;
+	}
+	if( JS9.globalOpts.rgb.bim ){
+	    bthis = JS9.globalOpts.rgb.bim;
+	}
     }
     ctx = this.display.context;
     primary = this.primary;
@@ -1760,14 +1818,16 @@ JS9.Image.prototype.mkPrimaryImage = function(){
 	yOutIdx = yOut * sect.zoom;
 	for(xIn=sect.x0, xOut=0; xIn<sect.x1; xIn++, xOut++){
 	    if( dorgb ){
-		if( rthis ){
-		    ridx = rthis.colorData[yLen + xIn];
-		}
-		if( gthis ){
-		    gidx = gthis.colorData[yLen + xIn];
-		}
-		if( bthis ){
-		    bidx = bthis.colorData[yLen + xIn];
+		ridx = rthis ? rthis.colorData[yLen + xIn] : 0;
+		gidx = gthis ? gthis.colorData[yLen + xIn] : 0;
+		bidx = bthis ? bthis.colorData[yLen + xIn] : 0;
+		if( (ridx === undefined) || 
+		    (gidx === undefined) ||
+		    (bidx === undefined) ){
+		    JS9.globalOpts.rgb.mode = false;
+		    JS9.error("RGB images are incompatible. Turning off RGB mode.", "", false);
+		    JS9.Image.prototype.mkPrimaryImage.call(this);
+		    return this;
 		}
 	    } else {
 		idx = this.colorData[yLen + xIn];
@@ -1930,12 +1990,20 @@ JS9.Image.prototype.displayImage = function(imode){
 
 // refresh data for an existing image
 // input obj is a fits object, array, typed array, etc.
-JS9.Image.prototype.refreshImage = function(obj, func){
+JS9.Image.prototype.refreshImage = function(obj, opts){
     var oxcen, oycen, owidth, oheight, ozoom, doreg;
-    var pname, pinst, popts;
+    var pname, pinst, popts, func;
     // check for refresh function
-    if( !func && JS9.imageOpts.onrefresh ){
-	func = JS9.imageOpts.onrefresh;
+    opts = opts || {};
+    opts.rawid = opts.rawid || JS9.RAWID0;
+    // allow explicit specification of a function, for backward-compatibility
+    if( typeof opts === "function" ){
+	func = opts;
+	opts = {onrefresh: func};
+    }
+    if( !opts.onrefresh && JS9.imageOpts.onrefresh ){
+	// use global onrefresh, if possible
+	opts.onrefresh = JS9.imageOpts.onrefresh;
     }
     // save section in case it gets reset
     oxcen = this.primary.sect.xcen;
@@ -1946,7 +2014,7 @@ JS9.Image.prototype.refreshImage = function(obj, func){
     // save old binning
     this.binning.obin = this.binning.bin;
     // generate new data
-    this.mkRawDataFromHDU(obj);
+    this.mkRawDataFromHDU(obj, opts);
     // doreg = (this.binning.obin !== this.binning.bin);
     doreg = true;
     // restore section unless dimensions changed
@@ -1964,9 +2032,9 @@ JS9.Image.prototype.refreshImage = function(obj, func){
 	// also update region values
 	this.updateShapes("regions", "all", "binning");
     }
-    // call function, if necessary
-    if( func ){
-	try{ JS9.xeqByName(func, window, this); }
+    // call onrefresh function, if necessary
+    if( opts.onrefresh ){
+	try{ JS9.xeqByName(opts.onrefresh, window, this); }
 	catch(e){ JS9.error("in image refresh callback", e); }
     }
     // plugin callbacks
@@ -1980,6 +2048,49 @@ JS9.Image.prototype.refreshImage = function(obj, func){
 	    }
 	}
     }
+};
+
+// convert current image to array
+JS9.Image.prototype.toArray = function(){
+    var i, j, k, bpe, idx, le;
+    var header, npad, arr, buf, dbuf, _dbuf;
+    dbuf = this.raw.data.buffer;
+    // get header
+    header = JS9.raw2FITS(this.raw);
+    // append padding to header now
+    npad = 2880 - (header.length % 2880);
+    if( npad === 2880 ){ npad = 0; }
+    for(i=0; i<npad; i++){ header += " "; }
+    // calculate padding for data for later
+    npad = 2880 - (dbuf.byteLength % 2880);
+    if( npad === 2880 ){ npad = 0; }
+    // make an array buffer to hold the whole FITS file
+    arr = new ArrayBuffer(header.length + dbuf.byteLength + npad);
+    // and a view of that array to manipulate
+    buf = new Uint8Array(arr);
+    // copy the header
+    for(i=0; i<header.length; i++){ buf[i] = header.charCodeAt(i); }
+    // copy data
+    // if necessary, swap data bytes to get FITS big-endian
+    le = new Int8Array(new Int16Array([1]).buffer)[0] > 0;
+    if( le ){
+	idx = header.length;
+	bpe = Math.abs(this.raw.bitpix)/8;
+	_dbuf = new Uint8Array(dbuf);
+	// swap bytes to big-endian
+	for(i=0; i<_dbuf.byteLength; i+= bpe){
+	    for(j=i+bpe-1, k=0; k<bpe; j--, k++){
+		buf[idx++] = _dbuf[j];
+	    }
+	}
+    } else {
+	// already big-endian, just copy the data
+	buf.set(new Uint8Array(dbuf), header.length);
+    }
+    // now we can add data padding
+    idx = header.length + dbuf.byteLength;
+    for(i=0; i<npad; i++){ buf[idx++] = 0; }
+    return buf;
 };
 
 // get pan location
@@ -2882,51 +2993,16 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
     }
 };
 
-// save image as a fits file
+// save image as a FITS file
 JS9.Image.prototype.saveFITS = function(fname){
-    var i, j, k, bpe, idx, le;
-    var blob, header, npad, arr, buf, dbuf, _dbuf;
+    var arr, blob;
     if( window.hasOwnProperty("saveAs") ){
-	dbuf = this.raw.data.buffer;
 	fname = fname || "js9.fits";
-	// get header
-	header = JS9.raw2FITS(this.raw);
-	// append padding to header now
-	npad = 2880 - (header.length % 2880);
-	if( npad === 2880 ){ npad = 0; }
-	for(i=0; i<npad; i++){ header += " "; }
-	// calculate padding for data for later
-	npad = 2880 - (dbuf.byteLength % 2880);
-	if( npad === 2880 ){ npad = 0; }
-	// make an array buffer to hold the whole FITS file
-	arr = new ArrayBuffer(header.length + dbuf.byteLength + npad);
-	// and a view of that array to manipulate
-	buf = new Uint8Array(arr);
-	// copy the header
-	for(i=0; i<header.length; i++){ buf[i] = header.charCodeAt(i); }
-	// copy data
-	// if necessary, swap data bytes to get FITS big-endian
-	le = new Int8Array(new Int16Array([1]).buffer)[0] > 0;
-	if( le ){
-	    idx = header.length;
-	    bpe = Math.abs(this.raw.bitpix)/8;
-	    _dbuf = new Uint8Array(dbuf);
-	    // swap bytes to big-endian
-	    for(i=0; i<_dbuf.byteLength; i+= bpe){
-		for(j=i+bpe-1, k=0; k<bpe; j--, k++){
-		    buf[idx++] = _dbuf[j];
-		}
-	    }
-	} else {
-	    // already big-endian, just copy the data
-	    buf.set(new Uint8Array(dbuf), header.length);
-	}
-	// now we can add data padding
-	idx = header.length + dbuf.byteLength;
-	for(i=0; i<npad; i++){ buf[idx++] = 0; }
-	// convert to blob
-	blob = new Blob([buf], {type: "application/octet-binary"});
-	// and save
+	// first convert to array
+	arr = this.toArray();
+	// then convert array to blob
+	blob = new Blob([arr], {type: "application/octet-binary"});
+	// save to disk
 	saveAs(blob, fname);
     } else {
 	JS9.error("no saveAs function available to save FITS file");
@@ -2949,7 +3025,7 @@ JS9.Image.prototype.saveIMG = function(fname, type, encoderOpts){
 	for( key in this.layers ){
 	    if( this.layers.hasOwnProperty(key) ){
 		// each layer canvas
-		if( this.layers[key].dlayer.dtype === "main" && 
+		if( this.layers[key].dlayer.dtype === "main" &&
 		    this.layers[key].show ){
 		    ctx.drawImage(this.layers[key].dlayer.canvasjq[0], 0, 0);
 		}
@@ -3102,16 +3178,18 @@ JS9.Image.prototype.setColormap = function(arg, arg2, arg3){
 	    this.params.bias = JS9.imageOpts.bias;
 	    break;
 	default:
-	    switch(this.cmapObj.name){
-	    case "red":
-		JS9.globalOpts.rgb.rim = null;
-		break;
-	    case "green":
-		JS9.globalOpts.rgb.gim = null;
-		break;
-	    case "blue":
-		JS9.globalOpts.rgb.bim = null;
-		break;
+	    if( this.cmapObj ){
+		switch(this.cmapObj.name){
+		case "red":
+		    JS9.globalOpts.rgb.rim = null;
+		    break;
+		case "green":
+		    JS9.globalOpts.rgb.gim = null;
+		    break;
+		case "blue":
+		    JS9.globalOpts.rgb.bim = null;
+		    break;
+		}
 	    }
 	    this.cmapObj = JS9.lookupColormap(arg);
 	    this.params.colormap = this.cmapObj.name;
@@ -3193,7 +3271,7 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
     return this;
 };
 
-// the zsale calculation
+// the zscale calculation
 JS9.Image.prototype.zscale = function(setvals){
     var s, rawdata, buf, vals;
     // sanity check
@@ -3202,10 +3280,10 @@ JS9.Image.prototype.zscale = function(setvals){
     }
     rawdata = this.raw.data;
     // allocate space for the image in the emscripten heap
-    try{ buf = Astroem._malloc(rawdata.length * rawdata.BYTES_PER_ELEMENT); }
+    try{ buf = JS9.vmalloc(rawdata.length * rawdata.BYTES_PER_ELEMENT); }
     catch(e){ JS9.error("image too large for zscale", e); }
     // copy the raw image data to the heap
-    try{ Astroem.HEAPU8.set(new Uint8Array(rawdata.buffer), buf); }
+    try{ JS9.vheap.set(new Uint8Array(rawdata.buffer), buf); }
     catch(e){ JS9.error("can't transfer image to heap for zscale", e); }
     // call the zscale routine
     s = JS9.zscale(buf,
@@ -3216,7 +3294,7 @@ JS9.Image.prototype.zscale = function(setvals){
 		   this.params.zscalesamples,
 		   this.params.zscaleline);
     // free empscripten heap space
-    Astroem._free(buf);
+    JS9.vfree(buf);
     // clean up return values
     vals = s.trim().split(" ");
     // save z1 and z2
@@ -3229,6 +3307,310 @@ JS9.Image.prototype.zscale = function(setvals){
     }
     // allow chaining
     return this;
+};
+
+// make (or select) a raw data layer
+// im.rawDataLayer(obj, func) -- editing existing or create new raw data layer
+// obj properties:
+//    rawid: id of new raw data (default: "alt")
+//    oraw: id of raw data to pass to func or "current" (default: "raw0")
+//    from: string describing origin of this raw data (def: "func")
+// im.rawDataLayer(id) -- switch to existing raw data later with specified id
+JS9.Image.prototype.rawDataLayer = function(opts, func){
+    var i, oraw, nraw, rawid, cur;
+    // no arg => return name of current raw
+    if( !arguments.length ){
+	return this.raw.id;
+    }
+    // opts is a string and no function: switch to a different raw data layer
+    // opts is a string with function: generate opts object
+    if( typeof opts === "string" ){
+	if( typeof func === "function" ){
+	    opts = {rawid: opts};
+	} else {
+	    for(i=0; i<this.raws.length; i++){
+		if( opts === this.raws[i].id ){
+		    this.raw = this.raws[i];
+		    // redisplay using these data
+		    this.displayImage("all");
+		    return true;
+		}
+	    }
+	    return false;
+	}
+    }
+    // otherwise, sanity check if we are going to change data
+    if( typeof func !== "function" ){
+	return false;
+    }
+    // opts is ... optional
+    opts = opts || {};
+    // but the id is not
+    rawid = opts.rawid || JS9.RAWIDX;
+    // which of the "old" raws do we pass to func?
+    if( opts.oraw === "current" ){
+	// use currently active raw
+	oraw = this.raw;
+    } else if( opts.oraw !== undefined ) {
+	// look for oraw matching 'oraw' property
+	for(i=0; i<this.raws.length; i++){
+	    if( opts.oraw === this.raws[i].id ){
+		oraw = this.raws[i];
+		break;
+	    }
+	}
+    }
+    // default: use initial (raw0)
+    if( !oraw ){
+	oraw = this.raws[0];
+    }
+    // look for an exiting nraw by id
+    cur = -1;
+    for(i=0; i<this.raws.length; i++){
+	if( rawid === this.raws[i].id ){
+	    nraw = this.raws[i];
+	    cur = i;
+	    break;
+	}
+    }
+    // if we don't have an existing nraw, make a copy from oraw
+    if( cur < 0 ){
+	// make copy
+	nraw = $.extend(true, {}, oraw);
+	// but ensure that data is a copy, not a pointer to the original!
+	switch(oraw.bitpix){
+	case 8:
+	    nraw.data = new Uint8Array(oraw.data);
+	    break;
+	case 16:
+	    nraw.data = new Int16Array(oraw.data);
+	    break;
+	case -16:
+	    nraw.data = new Uint16Array(oraw.data);
+	    break;
+	case 32:
+	    nraw.data = new Int32Array(oraw.data);
+	    break;
+	case -32:
+	    nraw.data = new Float32Array(oraw.data);
+	    break;
+	case -64:
+	    nraw.data = new Float64Array(oraw.data);
+	    break;
+	}
+	// set id for copy
+	nraw.id = rawid;
+	// where did this raw data come from?
+	nraw.from = opts.from || nraw.from || "func";
+    }
+    // call the function to fill in the nraw data
+    if( func.call(this, oraw, nraw, opts) ){
+	// replace existing nraw with new version
+	if( cur >= 0 ){
+	    this.raws[cur] = nraw;
+	} else {
+	    // or add new nraw to nraws array
+	    this.raws.push(nraw);
+	}
+	// assign this nraw to the high-level raw data object
+	this.raw = nraw;
+	// redisplay using these data
+	this.displayImage("all");
+    }
+    return true;
+};
+
+// linear shift of raw data (cheap alignment for CFA MicroObservatory)
+// creates a new raw data layer ("shiftData")
+JS9.Image.prototype.shiftData = function(x, y, opts){
+    if( x === undefined || y === undefined ){
+	JS9.error("missing translation value(s) for shiftData");
+    }
+    opts = opts || {};
+    opts.rawid = "shiftData";
+    opts.x = x;
+    opts.y = y;
+    this.rawDataLayer(opts, function (oraw, nraw, opts){
+	var oi, oj, ni, nj, nlen, oU8, nU8, ooff, noff;
+	var bpp = oraw.data.BYTES_PER_ELEMENT;
+	if( nraw.xoff === undefined ){
+	    nraw.xoff = 0;
+	}
+	if( nraw.yoff === undefined ){
+	    nraw.yoff = 0;
+	}
+	nraw.xoff += opts.x;
+	nraw.yoff += opts.y;
+	if( !opts.fill || opts.fill === "clear" ){
+	    nraw.data.fill(0);
+	}
+	for(oj=0; oj<oraw.height; oj++){
+	    nj = oj + nraw.yoff;
+	    if( (nj < 0) || (nj >= oraw.height) ){
+		continue;
+	    }
+	    oi = 0;
+	    ni = oi + nraw.xoff;
+	    nlen = oraw.width;
+	    if( ni < 0 ){
+		oi -= ni;
+		nlen += ni;
+		ni = 0;
+	    }
+	    if( (ni + nlen) > oraw.width ){
+		nlen -= (ni + nlen) - oraw.width;
+	    }
+	    if( nlen <= 0 ){
+		return false;
+	    }
+	    ooff = (oj * oraw.width + oi) * bpp;
+	    oU8 = new Uint8Array(oraw.data.buffer, ooff, nlen * bpp);
+	    noff = (nj * oraw.width + ni) * bpp;
+	    nU8 = new Uint8Array(nraw.data.buffer, noff, nlen * bpp);
+	    nU8.set(oU8);
+	}
+	return true;
+    });
+};
+
+// reproject image using WCS info
+// creates a new raw data layer ("reproject")
+JS9.Image.prototype.reproject = function(wcsim, opts){
+    var that = this;
+    var twcs = {};
+    var wvfile, wcsheader, wcsstr, oheader, nheader;
+    var im, arr, ivfile, ovfile, topts, rstr, key;
+    var wcsexp = /AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
+    var reprojHandler = function(hdu){
+	that.refreshImage(hdu, topts);
+	JS9.waiting(false);
+    };
+    // sanity checks
+    if( !this.wcs || !wcsim || !JS9.reproject || !JS9.fits.handleFITSFile ){
+	return;
+    }
+    // opts is optional
+    opts = opts || {};
+    // could take a while ...
+    JS9.waiting(true, this.display.divjq[0]);
+    // is this a string containing an image name or WCS values?
+    if( typeof wcsim === "string" ){
+	im = JS9.getImage(wcsim);
+	if( im ){
+	    // it was an image name, so change wcsim to the image handle
+	    wcsim = im;
+	} else {
+	    JS9.error("unknown WCS for reproject: " + wcsim);
+	}
+    }
+    // make copy of header, removing wcs keywords
+    oheader = $.extend(true, {}, this.raw.header);
+    for(key in oheader){
+	if( oheader.hasOwnProperty(key) ){
+	    if( wcsexp.test(key) ){
+		delete oheader[key];
+	    }
+	}
+    }
+    // get wcs keywords from new header
+    if( wcsim.raw && wcsim.raw.header ){
+	nheader = wcsim.raw.header;
+    } else if( wcsim.BITPIX && wcsim.NAXIS1 && wcsim.NAXIS2 ){
+	// assume its a WCS header
+	nheader = wcsim;
+    } else {
+	JS9.error("invalid wcs object input to reproject()");
+    }
+    for(key in nheader){
+	if( nheader.hasOwnProperty(key) ){
+	    if( wcsexp.test(key) ){
+		twcs[key] = nheader[key];
+	    }
+	}
+    }
+    // combine old header keywords + new wcs keywords
+    wcsheader = $.extend(true, {}, oheader, twcs);
+    // sanity check on result
+    if( !wcsheader.NAXIS || !wcsheader.NAXIS1 || !wcsheader.NAXIS2 ){
+	JS9.error("invalid FITS image header");
+    }
+    // for now, limit the size of the image we reproject
+    if( /iPad|iPhone|iPod/.test(navigator.platform) ){
+	// 1025 x 1025
+	if( (wcsheader.NAXIS1 * wcsheader.NAXIS2) > 1050625 ){
+	    JS9.error("for now, the maximum image size for reprojection under iOS is approximately 1024 x 1024");
+	}
+    } else {
+	// 2050 x 2050
+	if( (wcsheader.NAXIS1 * wcsheader.NAXIS2) > 4202500 ){
+	    JS9.error("for now, the maximum image size for reprojection is approximately 2048 x 2048");
+	}
+    }
+    // convert to a string
+    wcsstr = JS9.raw2FITS(wcsheader, true);
+    // create vfile text file containing WCS
+    wvfile = "wcs_" + JS9.uniqueID() + ".txt";
+    JS9.vfile(wvfile, wcsstr);
+    // get reference to existing raw data file (or create one)
+    if( this.raw.hdu && this.raw.hdu.vfile ){
+	// input file name
+	ivfile = this.raw.hdu.vfile;
+	// output file name
+	ovfile = "reprojected_" + this.id.replace(/png$/, "fits");
+    } else {
+	// input file name
+	arr = this.toArray();
+	ivfile = this.id.replace(/\.png$/, "_png" + JS9.uniqueID() + ".fits");
+	JS9.vfile(ivfile, arr);
+	// output file name
+	ovfile = "reprojected_" + ivfile;
+    }
+    // call the reproject routine
+    // (timeout allows the wait spinner to get started)
+    window.setTimeout(function(){
+	var n, avfile, earr, cmdswitches;
+	// call the reproject routine, passing full pathnames
+	try{
+	    // name of (unneeded) area file
+	    n = ovfile.lastIndexOf(".");
+	    if( n >= 0 ) {
+		avfile = ovfile.substring(0, n) + "_area" + ovfile.substring(n);
+	    }
+	    // optional command line args
+	    cmdswitches = opts.cmdswitches || "";
+	    // call reproject
+	    rstr = JS9.reproject(ivfile, ovfile, wvfile, cmdswitches);
+	    // delete unneeded files ...
+	    JS9.vunlink(avfile);
+	    JS9.vunlink(wvfile);
+	    // ... then error check
+	    if( rstr.search(/\[struct stat="OK"/) < 0 ){
+		earr = rstr.match(/msg="([^"]*)"/);
+		if( earr[1] ){
+		    JS9.error(earr[1] + " (from mProjectPP)");
+		} else {
+		    JS9.error(rstr);
+		}
+	    }
+	}
+	catch(e){
+	    // delete unneeded files ...
+	    JS9.vunlink(avfile);
+	    JS9.vunlink(wvfile);
+	    // call error handler
+	    if( rstr ){
+		JS9.error(rstr);
+	    } else {
+		JS9.error("WCS reproject failed", e);
+	    }
+	}
+	// refresh image using the reprojected file ...
+	topts = $.extend(true, {}, opts || {}, JS9.fits.options);
+	// ... in a new raw data layer
+	topts.rawid = topts.rawid || "reproject";
+	try{ JS9.fits.handleFITSFile(ovfile, topts, reprojHandler); }
+	catch(e){ JS9.error("can't process reprojected FITS file", e); }
+    }, JS9.SPINOUT);
 };
 
 // Colormap
@@ -4200,6 +4582,17 @@ JS9.Menubar = function(width, height){
 		    im = JS9.images[i];
 		    if( im.display === tdisp ){
 			name = im.id;
+			if( JS9.globalOpts.rgb.mode ){
+			    if( im === JS9.globalOpts.rgb.rim){ 
+				name += " (red)";
+			    }
+			    if( im === JS9.globalOpts.rgb.gim){
+				name += " (green)";
+			    }
+			    if( im === JS9.globalOpts.rgb.bim){
+				name += " (blue)";
+			    }
+			}
 			items[name] = {name: name};
 			if( tdisp.image && (tdisp.image.id === im.id) ){
 			    items[name].icon = "sun";
@@ -4265,7 +4658,7 @@ JS9.Menubar = function(width, height){
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val, idx, array){
-			var j, s, did, save_orc;
+			var j, s, did, save_orc, kid;
 			var udisp = val;
 			var uim = udisp.image;
 			switch(key){
@@ -4409,8 +4802,9 @@ JS9.Menubar = function(width, height){
 			default:
 			    for(j=0; j<JS9.images.length; j++){
 				uim = JS9.images[j];
-				if( (udisp.id === uim.display.id) &&
-				    (uim.id === key) ){
+				kid = key.replace(/ *\((red|green|blue)\)/,"");
+				if( (udisp.id === uim.display.id) && 
+				    (uim.id === kid) ){
 				    // display image, 2D graphics, etc.
 				    uim.displayImage("display");
 				    uim.refreshLayers();
@@ -9037,15 +9431,14 @@ JS9.waiting = function(mode, el){
     case true:
 	if( window.hasOwnProperty("Spinner") &&
 	    (JS9.globalOpts.waitType === "spinner") ){
+	    el = el || $("body").get(0);
 	    if( !JS9.spinner ){
 		JS9.spinner = {};
-		JS9.spinner.el = el || $("body").get(0);
 		opts = {color:   JS9.globalOpts.spinColor,
 			opacity: JS9.globalOpts.spinOpacity};
-		JS9.spinner.spinner = new Spinner(opts).spin(JS9.spinner.el);
-	    } else {
-		JS9.spinner.spinner.spin(el || JS9.spinner.el);
+		JS9.spinner.spinner = new Spinner(opts);
 	    }
+	    JS9.spinner.spinner.spin(el);
 	} else {
 	    $("body").addClass("waiting");
 	}
@@ -9304,26 +9697,24 @@ JS9.centroidPolygon = function(points){
     return {x: cx, y: cy};
 };
 
-// return the image for the specified image name
+// return the image object for the specified image object, name, or filename
 JS9.lookupImage = function(id, display){
-    var i;
-    var im=null, tim=null, ilen= JS9.images.length;
-    // look for a file
+    var i, im;
+    var ilen= JS9.images.length;
     for(i=0; i<ilen; i++){
-	tim = JS9.images[i];
-	if( (id === tim ) ||
-	    (id === tim.file) || (id === (JS9.TOROOT + tim.file)) ||
-	    (tim.fitsFile && (id === tim.fitsFile)) ){
+	im = JS9.images[i];
+	if( (id === im ) || (id === im.id) ||
+	    (id === im.file) || (id === (JS9.TOROOT + im.file))  ||
+	    (im.fitsFile && (id === im.fitsFile)) ){
 	    // make sure the display still exists (light windows disappear)
-	    if( $("#"+tim.display.id).length > 0 ){
-		if( !display || (display === tim.display.id) ){
-		    im = tim;
-		    break;
+	    if( $("#"+im.display.id).length > 0 ){
+		if( !display || (display === im.display.id) ){
+		    return im;
 		}
 	    }
 	}
     }
-    return im;
+    return null;
 };
 
 // return the display for the specified id
@@ -9386,7 +9777,8 @@ JS9.onFileList = function(files, options, handler){
 		}
 	    }
 	    JS9.waiting(true, disp);
-	    JS9.fits.handleFITSFile(file, options, handler);
+	    try{ JS9.fits.handleFITSFile(file, options, handler); }
+	    catch(e){ JS9.error("can't process FITS file from file list", e); }
 	} else {
 	    JS9.error("no FITS module available to load FITS file");
 	}
@@ -9782,6 +10174,27 @@ JS9.raw2FITS = function(raw, forDisplay){
     } else if( raw.header ){
 	// minimal header without comments
 	obj = raw.header;
+	for( key in obj ){
+	    if( obj.hasOwnProperty(key) ){
+		if( key === "js9Protocol" || key === "js9Endian" ){
+		    continue;
+		}
+		if( key === "END" ){
+		    hasend = true;
+		}
+		val = obj[key];
+		if( val === true ){
+		    val = "T";
+		}
+		t += sprintf("%-8s%-2s%-70s", key, "=", val);
+		if( forDisplay ){
+		    t += "\n";
+		}
+	    }
+	}
+    } else if( raw.BITPIX ){
+	// directly specified object containing header without comments
+	obj = raw;
 	for( key in obj ){
 	    if( obj.hasOwnProperty(key) ){
 		if( key === "js9Protocol" || key === "js9Endian" ){
@@ -10842,6 +11255,12 @@ JS9.init = function(){
     JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
     // initialize astronomy emscripten routines (wcslib, etc), if possible
     if( window.hasOwnProperty("Astroem") ){
+	JS9.vmalloc = Astroem.vmalloc;
+	JS9.vfree = Astroem.vfree;
+	JS9.vheap = Astroem.vheap;
+	JS9.vfile = Astroem.vfile;
+	JS9.vunlink = Astroem.vunlink;
+	JS9.arrfile = Astroem.arrfile;
 	JS9.initwcs = Astroem.initwcs;
 	JS9.wcsinfo = Astroem.wcsinfo;
 	JS9.wcssys = Astroem.wcssys;
@@ -10852,6 +11271,7 @@ JS9.init = function(){
 	JS9.saostrtod = Astroem.saostrtod;
 	JS9.saodtype = Astroem.saodtype;
 	JS9.zscale = Astroem.zscale;
+	JS9.reproject = Astroem.reproject;
     }
     // configure fits library
     if( window.hasOwnProperty("Fitsy") ){
@@ -11559,6 +11979,9 @@ JS9.mkPublic("SaveJPEG", "saveJPEG");
 JS9.mkPublic("SaveFITS", "saveFITS");
 JS9.mkPublic("RunAnalysis", "runAnalysis");
 JS9.mkPublic("DisplayMessage", "displayMessage");
+JS9.mkPublic("RawDataLayer", "rawDataLayer");
+JS9.mkPublic("ShiftData", "shiftData");
+JS9.mkPublic("Reproject", "reproject");
 
 // set/clear valpos flag
 JS9.mkPublic("SetValPos", function(mode){
@@ -11625,7 +12048,8 @@ JS9.mkPublic("Load", function(file, opts){
 	}
 	if( JS9.fits.handleFITSFile ){
 	    topts = $.extend(true, {}, opts, JS9.fits.options);
-	    JS9.fits.handleFITSFile(file, topts, JS9.NewFitsImage);
+	    try{ JS9.fits.handleFITSFile(file, topts, JS9.NewFitsImage); }
+	    catch(e){ JS9.error("can't process FITS file", e); }
 	} else {
 	    JS9.error("no FITS module available to load this FITS blob");
 	}
@@ -11657,7 +12081,8 @@ JS9.mkPublic("Load", function(file, opts){
 	blob.name = opts.filename;
 	if( JS9.fits.handleFITSFile ){
 	    topts = $.extend(true, {}, opts, JS9.fits.options);
-	    JS9.fits.handleFITSFile(blob, topts, JS9.NewFitsImage);
+	    try{ JS9.fits.handleFITSFile(blob, topts, JS9.NewFitsImage); }
+	    catch(e){ JS9.error("can't process FITS file", e); }
 	} else {
 	    JS9.error("no FITS module available to process this memory FITS");
 	}
@@ -12048,25 +12473,26 @@ JS9.mkPublic("Preload", function(arg1){
 });
 
 // refresh existing image
-JS9.mkPublic("RefreshImage", function(fits, func){
+JS9.mkPublic("RefreshImage", function(fits, opts){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     var retry = function(hdu){
-	JS9.Image.prototype.refreshImage.call(im, hdu, obj.argv[1]);
+	JS9.Image.prototype.refreshImage.call(im, hdu, opts);
     };
     fits = obj.argv[0];
-    func = obj.argv[1];
+    opts = obj.argv[1] || {};
     if( im ){
 	if( fits instanceof Blob ){
 	    if( JS9.fits.handleFITSFile ){
 		// cleanup previous FITS file support, if necessary
 		// do this before we handle the new FITS file, or else
 		// we end up with a memory leak in the emscripten heap!
-		if( JS9.fits.cleanupFITSFile &&
-		    im.raw.hdu && im.raw.hdu.fits ){
+		if( !opts.rawid && JS9.fits.cleanupFITSFile &&
+		     im.raw.hdu && im.raw.hdu.fits ){
 		    JS9.fits.cleanupFITSFile(im.raw.hdu.fits, true);
 		}
-		JS9.fits.handleFITSFile(fits, JS9.fits.options, retry);
+		try{ JS9.fits.handleFITSFile(fits, JS9.fits.options, retry); }
+		catch(e){ JS9.error("can't refresh FITS file", e); }
 	    } else {
 		JS9.error("no FITS module available to refresh this image");
 	    }
