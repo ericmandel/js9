@@ -397,6 +397,7 @@ automatically as in C. They will return null values.
 Also note that since we need 0-based data array indexes, we subtract 1 from
 the 1-based image position.  But then we must add 0.5 before rounding because
 by convention, x.0, y.0 is the middle of the pixel.
+
 <p>
 <font size="+1"><b><u>Display an image</u></b></font>
 <p>
@@ -950,8 +951,8 @@ Here, the operation is performed on the existing "add" layer each time, so
 that the addition is cumulative.
 
 <p>
-The oraw and nraw objects are the same as the object returned by
-<b>JS9.GetImageData()</b>and, in particular, have the following properties:
+The oraw and nraw objects contain a subset of the properties returned by
+<b>JS9.GetImageData()</b>:
 <ul>
 <li><b>width</b>: x dimension of image
 <li><b>height</b>: y dimension of image
