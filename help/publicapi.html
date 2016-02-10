@@ -399,6 +399,21 @@ the 1-based image position.  But then we must add 0.5 before rounding because
 by convention, x.0, y.0 is the middle of the pixel.
 
 <p>
+<font size="+1"><b><u>Get image data for all images loaded into the specified display</u></b></font>
+<p>
+<code><font size="+1">imarr = JS9.GetDisplayData()</font></code>
+returns:
+<ul>
+<li><b>imdataArr</b>: array of image data objects
+</ul>
+<p>
+The <b>JS9.GetDisplayData()</b> routine returns an array of image data
+objects, one for each images loaded into the specified display.
+That is, it returns the same type of information
+as <b>JS9.GetImageData()</b>, but does so for each image associated
+with the display, not just the current image.
+
+<p>
 <font size="+1"><b><u>Display an image</u></b></font>
 <p>
 <code><font size="+1">JS9.DisplayImage(step)</font></code>

@@ -575,6 +575,45 @@ JS9.Image = function(file, params, func){
     }
 };
 
+// return the image data in a relatively standard format
+JS9.Image.prototype.getImageData = function(dflag){
+    var data = null;
+    var atob64 = function(a){
+	var i;
+	var s = '';
+	var bytes = new Uint8Array(a.buffer);
+	var len = bytes.byteLength;
+	for(i=0; i<len; i++){
+            s += String.fromCharCode(bytes[i]);
+	}
+	return window.btoa(s);
+    };
+    // return data and auxiliary info
+    if( dflag ){
+	// return an array for IPC, since python mangles the typed array
+	if( dflag === "array" ){
+	    data = Array.prototype.slice.call(this.raw.data);
+	} else if( dflag === "base64" ){
+	    // NB: this seems to be the fastest method for IPC!
+	    data = atob64(this.raw.data);
+	} else if( dflag && (dflag !== "false") ) {
+	    // use this for javascript programming on the web page itself
+	    data = this.raw.data;
+	}
+    }
+    return {id: this.id,
+	    file: this.file,
+	    fits: this.fitsFile || "",
+	    source: this.source,
+	    imtab: this.imtab,
+	    width: this.raw.width,
+	    height: this.raw.height,
+	    bitpix: this.raw.bitpix,
+	    header: this.raw.header,
+	    data: data
+	   };
+};
+
 // undisplay the image, release resources
 JS9.Image.prototype.closeImage = function(){
     var i, j, tim, key;
@@ -12575,47 +12614,32 @@ JS9.mkPublic("GetImage", function(id){
     return JS9.getImage(id);
 });
 
-// return the image data and auxiliary info
+// return the image data and auxiliary info for the current image
 JS9.mkPublic("GetImageData", function(dflag){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
-    var data = null;
-    var atob64 = function(a){
-	var i;
-	var s = '';
-	var bytes = new Uint8Array(a.buffer);
-	var len = bytes.byteLength;
-	for(i=0; i<len; i++){
-            s += String.fromCharCode(bytes[i]);
-	}
-	return window.btoa(s);
-    };
     // return data and auxiliary info
     if( im ){
 	dflag = obj.argv[0];
-	if( dflag ){
-	    // return an array for IPC, since python mangles the typed array
-	    if( dflag === "array" ){
-		data = Array.prototype.slice.call(im.raw.data);
-	    } else if( dflag === "base64" ){
-		// NB: this seems to be the fastest method for IPC!
-		data = atob64(im.raw.data);
-	    } else if( dflag && (dflag !== "false") ) {
-		// use this for javascript programming on the web page itself
-		data = im.raw.data;
-	    }
-	}
-	return {id: im.id,
-		file: im.file,
-		fits: im.fitsFile || "",
-		source: im.source,
-		imtab: im.imtab,
-		width: im.raw.width,
-		height: im.raw.height,
-		bitpix: im.raw.bitpix,
-		header: im.raw.header,
-		data: data};
+	return im.getImageData(dflag);
     }
+    return null;
+});
+
+// return the image data and aux info for all images loaded into this display
+JS9.mkPublic("GetDisplayData", function(dflag){
+    var i, id, im;
+    var imarr = [];
+    var obj = JS9.parsePublicArgs(arguments);
+    id = obj.display || JS9.displays[0].id;
+    dflag = obj.argv[0];
+    for(i=0; i<JS9.images.length; i++){
+	im = JS9.images[i];
+	if( im.display.id === id ){
+	    imarr.push(im.getImageData(dflag));
+	}
+    }
+    return imarr;
 });
 
 // return the FITS header as a string
