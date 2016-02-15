@@ -3312,18 +3312,20 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
 
 // the zscale calculation
 JS9.Image.prototype.zscale = function(setvals){
-    var s, rawdata, buf, vals;
+    var s, rawdata, bufsize, buf, vals;
     // sanity check
     if( !JS9.zscale || !this.raw || !this.raw.data ){
 	return this;
     }
     rawdata = this.raw.data;
     // allocate space for the image in the emscripten heap
-    try{ buf = JS9.vmalloc(rawdata.length * rawdata.BYTES_PER_ELEMENT); }
-    catch(e){ JS9.error("image too large for zscale", e); }
+    bufsize = rawdata.length * rawdata.BYTES_PER_ELEMENT;
+    try{ buf = JS9.vmalloc(bufsize); }
+    catch(e){ JS9.error("image too large for zscale malloc: " + bufsize, e); }
     // copy the raw image data to the heap
-    try{ JS9.vheap.set(new Uint8Array(rawdata.buffer), buf); }
-    catch(e){ JS9.error("can't transfer image to heap for zscale", e); }
+    // try{ JS9.vheap.set(new Uint8Array(rawdata.buffer), buf); }
+    try{ JS9.vmemcpy(new Uint8Array(rawdata.buffer), buf); }
+    catch(e){ JS9.error("can't copy image to zscale heap: " + bufsize, e); }
     // call the zscale routine
     s = JS9.zscale(buf,
 		   this.raw.width,

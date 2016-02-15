@@ -14,6 +14,7 @@
       vunlink: Module["vunlink"],
       vheap: Module["HEAPU8"],
       vmalloc: Module["_malloc"],
+      vmemcpy: Module["writeArrayToMemory"],
       vfree: Module["_free"],
       gzopen: Module.cwrap('gzopen', 'number', ['string', 'string']),
       gzread: Module.cwrap('gzread', 'number', ['number', 'number', 'number']),
