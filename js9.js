@@ -11299,6 +11299,7 @@ JS9.init = function(){
 	JS9.vmalloc = Astroem.vmalloc;
 	JS9.vfree = Astroem.vfree;
 	JS9.vheap = Astroem.vheap;
+	JS9.vmemcpy = Astroem.vmemcpy;
 	JS9.vfile = Astroem.vfile;
 	JS9.vunlink = Astroem.vunlink;
 	JS9.arrfile = Astroem.arrfile;
