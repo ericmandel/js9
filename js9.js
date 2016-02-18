@@ -22,7 +22,7 @@
 
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 
-/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter */
+/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur */
 
 /*jshint smarttabs:true */
 
@@ -131,9 +131,10 @@ JS9.imageOpts = {
     wcsunits: "sexagesimal",		// default WCS units
     lcs: "physical",			// default logical coordinate system
     valpos: true,			// whether to display value/position
-    alpha:  255,                        // alpha for this image
-    alpha1: 100,			// alpha for masked pixels
-    alpha2: 255,			// alpha for unmasked pixels
+    opacity: 1.0,			// opacity between 0 and 1
+    maskOpacity: 0.4,			// opacity for masked pixels
+    alpha:  255,                        // alpha for image (but use opacity!)
+    alpha1: 100,                        // alpha for masked pixels
     // xcen: 0,                         // default x center pos to pan to
     // ycen: 0,                         // default y center pos to pan to
     zoom: 1,				// default zoom factor
@@ -407,8 +408,17 @@ JS9.Image = function(file, params, func){
     this.type = "image";
     // set the display
     this.display = JS9.lookupDisplay(display);
+    // initialize image params
+    this.params = {};
+    // scale min and max to impossible numbers
+    this.params.scalemin = Number.Nan;
+    this.params.scalemax = Number.Nan;
+    // xeq callback for region changes?
+    this.params.xeqonchange = true;
+    // copy plot parameters
+    this.params.plotOpts = $.extend(true, {}, JS9.plotOpts);
     // copy image parameters
-    this.params = $.extend(true, {}, JS9.imageOpts, localOpts);
+    this.params = $.extend(true, this.params, JS9.imageOpts, localOpts);
     // set the colormap object from colormap name (text string)
     // this.cmapObj = JS9.lookupColormap(this.params.colormap);
     this.setColormap(this.params.colormap);
@@ -431,13 +441,6 @@ JS9.Image = function(file, params, func){
     // offsets into canvas to display
     this.ix = 0;
     this.iy = 0;
-    // init some new parameters
-    this.params.scalemin = Number.Nan;
-    this.params.scalemax = Number.Nan;
-    // xeq callback for region changes?
-    this.params.xeqonchange = true;
-    // copy plot parameters
-    this.params.plotOpts = $.extend(true, {}, JS9.plotOpts);
     // create the png object
     this.png = {};
     // image element to hold png file, from which array data is generated
@@ -460,6 +463,9 @@ JS9.Image = function(file, params, func){
     this.binning = {bin: 1, obin: 1};
     // array to hold raw data as we create it (original raw data at index 0)
     this.raws = [];
+    // blend parameters
+    this.blend = true;
+    this.blends = [];
     // temp flag determines if we should update shapes at end of this call
     this.updateshapes = false;
     // change the cursor to show the waiting status
@@ -1472,12 +1478,10 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     // init the logical coordinate system, if possible
     this.initLCS(this.raw.header);
     // set initial scaling values if not done already
-    if( isNaN(this.params.scalemin) ||
-	(this.params.scaleclipping === "dataminmax") ){
+    if( isNaN(this.params.scalemin) ){
 	this.params.scalemin = this.raw.dmin;
     }
-    if( isNaN(this.params.scalemax) ||
-	(this.params.scaleclipping === "dataminmax") ){
+    if( isNaN(this.params.scalemax) ){
 	this.params.scalemax = this.raw.dmax;
     }
     // allow chaining
@@ -1836,17 +1840,44 @@ JS9.Image.prototype.mkPrimaryImage = function(){
     if( !this.psColors ){
 	return this;
     }
-    // primary alpha for this image
-    // alpha = this.params.alpha || 255;
-    alpha = this.params.alpha;
+    // opacity is preferred, but alpha is acceptable
+    if( this.params.opacity !== undefined ){
+	// opacity is 0.0 to 1.0
+	alpha = this.params.opacity * 255;
+    } else if( this.params.alpha !== undefined ){
+	// alpha is 0 to 255
+	alpha = this.params.alpha;
+    } else {
+	alpha = 255;
+    }
     // reverse maskData alphas, if necessary
     if( this.maskData ){
 	if( this.params.maskInvert ){
-	    alpha1 = this.params.alpha2;
-	    alpha2 = this.params.alpha1;
+	    if( (this.params.opacity !== undefined)     &&
+		(this.params.maskOpacity !== undefined) ){
+		alpha1 = this.params.opacity * 255;
+		alpha2 = this.params.maskOpacity * 255;
+	    } else if( (this.params.alpha1 !== undefined) &&
+		       (this.params.alpha2 !== undefined) ){
+		alpha1 = this.params.alpha2;
+		alpha2 = this.params.alpha1;
+	    } else {
+		alpha1 = 0;
+		alpha2 = 255;
+	    }
 	} else {
-	    alpha1 = this.params.alpha1;
-	    alpha2 = this.params.alpha2;
+	    if( (this.params.opacity !== undefined)     &&
+		(this.params.maskOpacity !== undefined) ){
+		alpha1 = this.params.maskOpacity * 255;
+		alpha2 = this.params.opacity * 255;
+	    } else if( (this.params.alpha1 !== undefined) &&
+		       (this.params.alpha2 !== undefined) ){
+		alpha1 = this.params.alpha1;
+		alpha2 = this.params.alpha2;
+	    } else {
+		alpha1 = 255;
+		alpha2 = 0;
+	    }
 	}
     }
     // index into scaled data using previously calc'ed data value to get rgb
@@ -1911,6 +1942,121 @@ JS9.Image.prototype.mkPrimaryImage = function(){
     return this;
 };
 
+// add an image to blend into this display
+// calling sequences:
+//  blendImage(id)                 # return current params for blended image
+//  blendImage(true||false)        # turn on/off blending for current image
+//  blendImage(id, true||false)    # turn on/off blending of blended image
+//  blendImage(id, blend, opacity) # set blend and opacity for blended image
+JS9.Image.prototype.blendImage = function(id, blend, opacity){
+    var i, im;
+    // see composite and blend opetations: https://www.w3.org/TR/compositing-1/
+    var blendexp = /normal|multiply|screen|overlay|darken|lighten|color-dodge|color-burn|hard-light|soft-light|difference|exclusion|hue|saturation|color|luminosity|clear|copy|source-over|destination-over|source-in|destination-in|source-out|destination-out|source-atop|destination-atop|xor|lighter/i;
+    // if first argument is true or false, this turns on/off blending
+    if( id === true ){
+	this.blend = true;
+	return this;
+    }
+    if( id === false ){
+	this.blend = false;
+	return this;
+    }
+    // get image associated with blend id
+    im = JS9.lookupImage(id);
+    if( im ){
+	// return current
+	if( arguments.length === 1 ){
+	    for(i=0; i<this.blends.length; i++){
+		if( im === this.blends[i].im ){
+		    return this.blends[i];
+		}
+	    }
+	    JS9.error("can't find blend params for " + im.id);
+	}
+	// add or change
+	// if blend already exists, change blend params
+	for(i=0; i<this.blends.length; i++){
+	    if( im === this.blends[i].im ){
+		if( (blend !== undefined) && (blend !== null) ){
+		    if( blend === "remove" ){
+			this.blends.splice(i, 1);
+			return this;
+		    }
+		    if( (blend === true) || (blend === false) ){
+			this.blends[i].active = blend;
+			return this;
+		    }
+		    if( !blendexp.test(blend) ){
+			JS9.error("invalid composite/blend operation: "+blend);
+		    }
+		    this.blends[i].blend = blend;
+		}
+		if( (opacity !== undefined) && (opacity !== null) ){
+		    this.blends[i].opacity = opacity;
+		}
+		return this;
+	    }
+	}
+	// add new blend
+	this.blends.push({im: im, active: true,
+			  blend: blend, opacity: opacity});
+    } else {
+	JS9.error("can't find image to blend: " + id);
+    }
+    return this;
+};
+
+// primitive to put image data on screen
+JS9.Image.prototype.putImage = function(opts){
+    var img, key;
+    var save = {};
+    var primary = this.primary;
+    var display = this.display;
+    var ctx = display.context;
+    var img2canvas = function(that, img) {
+	var octx, ocanvas;
+	if( !that.offscreenRGB ){
+	    ocanvas = document.createElement("canvas");
+	    octx = ocanvas.getContext("2d");
+	    ocanvas.width= img.width;
+	    ocanvas.height = img.height;
+	    // turn off anti-aliasing
+	    if( !JS9.ANTIALIAS ){
+		octx.imageSmoothingEnabled = false;
+		octx.mozImageSmoothingEnabled = false;
+		octx.webkitImageSmoothingEnabled = false;
+	    }
+	    octx.putImageData(img, 0, 0);
+	    that.offscreenRGB = {canvas: ocanvas, context: octx};
+	}
+	return that.offscreenRGB.canvas;
+    };
+    // offsets into display
+    this.ix = Math.floor((display.canvas.width - primary.img.width)/2);
+    this.iy = Math.floor((display.canvas.height - primary.img.height)/2);
+    // draw the image into the context
+    if( (opts.opacity !== undefined) || (opts.blend !== undefined) ){
+	// img = img2canvas(this, primary.img, this.ix, this.iy);
+	img = img2canvas(this, primary.img);
+	if( opts.opacity !== undefined ){
+	    save.globalAlpha = ctx.globalAlpha;
+	    ctx.globalAlpha = opts.opacity;
+	}
+	if( opts.blend !== undefined ){
+	    save.globalCompositeOperation = ctx.globalCompositeOperation;
+	    ctx.globalCompositeOperation = opts.blend;
+	}
+	ctx.drawImage(img, this.ix, this.iy);
+	for( key in save ){
+	    if( save.hasOwnProperty(key) ){
+		ctx[key] = save[key];
+	    }
+	}
+    } else {
+	ctx.putImageData(primary.img, this.ix, this.iy);
+    }
+};
+
 // display image, with pre and post processing based on comma-separated string
 // of options:
 // colors: generate colorData
@@ -1919,10 +2065,8 @@ JS9.Image.prototype.mkPrimaryImage = function(){
 // display: displlay image (always done)
 // plugins: execute plugin callbacks
 // all: colors,scaled,primary,display,plugins
-JS9.Image.prototype.displayImage = function(imode){
-    var pname, pinst, popts;
-    var primary = this.primary;
-    var display = this.display;
+JS9.Image.prototype.displayImage = function(imode, opts){
+    var i, blend, pname, pinst, popts;
     var mode = {};
     var modeFunc = function(element, index, array){
 	var el = element.trim();
@@ -1951,6 +2095,12 @@ JS9.Image.prototype.displayImage = function(imode){
     if( !this.displayMode ){
 	return;
     }
+
+    // did we just pass the opts params?
+    if( typeof imode === "object" ){
+	opts = imode;
+	imode = null;
+    }
     if( !imode ){
 	imode = "primary";
     } else if( imode === "all" ){
@@ -1970,10 +2120,14 @@ JS9.Image.prototype.displayImage = function(imode){
 	imode.colors = false;
 	imode.scaled = false;
     }
+    // opts are ... optional
+    opts = opts || {};
     // generate colordata
     if( mode.colors ){
 	// populate the colorData array (offsets into scaled colorcell data)
 	this.mkColorData();
+	// if we changed colors, the offsreen rgb is invalid
+	this.offscreenRGB = null;
     }
     // generated scaled cells
     if( mode.scaled ){
@@ -1981,28 +2135,43 @@ JS9.Image.prototype.displayImage = function(imode){
 	this.mkColorCells();
 	// generated scaled cells from color cells
 	this.mkScaledCells();
+	// if we changed scale, the offsreen rgb is invalid
+	this.offscreenRGB = null;
     }
     // generate primary (RGB) image from scaled cells
     if( mode.primary ){
+	// make the rgb image
 	this.mkPrimaryImage();
     }
     // display image on screen
     if( mode.display ){
-	// offsets into display
-	this.ix = Math.floor((display.canvas.width - primary.img.width)/2);
-	this.iy = Math.floor((display.canvas.height - primary.img.height)/2);
-	// clear first
-	display.context.clear();
-	// draw the image into the context
-	display.context.putImageData(primary.img, this.ix, this.iy);
+	// clear image?
+	if( (opts.opacity === undefined) && (opts.blend === undefined) ){
+	    this.display.context.clear();
+	}
+	// display the image
+	this.putImage(opts);
+	// add blends, if necessary
+	if( this.blend && this.blends.length ){
+	    for(i=0; i<this.blends.length; i++){
+		blend = this.blends[i];
+		if( blend.active ){
+		    JS9.Image.prototype.putImage.call(blend.im,
+						      {opacity: blend.opacity,
+						       blend: blend.blend});
+		}
+	    }
+	}
 	// display layers for this image
 	this.displayShapeLayers();
 	// notify the helper
 	if( mode.notify ){
 	    this.notifyHelper();
 	}
-	// mark this image as being in this display
-	display.image = this;
+	// mark this image as being in this display, if its not a blend
+	if( (opts.opacity === undefined) && (opts.blend === undefined) ){
+	    this.display.image = this;
+	}
     }
     // post-processing
     if( mode.plugins ){
@@ -3358,7 +3527,7 @@ JS9.Image.prototype.zscale = function(setvals){
 //    from: string describing origin of this raw data (def: "func")
 // im.rawDataLayer(id) -- switch to existing raw data later with specified id
 JS9.Image.prototype.rawDataLayer = function(opts, func){
-    var i, oraw, nraw, rawid, cur;
+    var i, oraw, nraw, rawid, cur, nlen;
     // no arg => return name of current raw
     if( !arguments.length ){
 	return this.raw.id;
@@ -3372,6 +3541,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 	    for(i=0; i<this.raws.length; i++){
 		if( opts === this.raws[i].id ){
 		    this.raw = this.raws[i];
+		    this.mkSection();
 		    // redisplay using these data
 		    this.displayImage("all");
 		    return true;
@@ -3389,10 +3559,25 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
     // but the id is not
     rawid = opts.rawid || JS9.RAWIDX;
     // which of the "old" raws do we pass to func?
+    if( opts.oraw === undefined ){
+	opts.oraw = "current0";
+    }
     if( opts.oraw === "current" ){
 	// use currently active raw
 	oraw = this.raw;
-    } else if( opts.oraw !== undefined ) {
+    } else if( opts.oraw === "current0" ){
+	// use the original current data for this layer, if possible;
+	for(i=0; i<this.raws.length; i++){
+	    if( rawid === this.raws[i].id ){
+		oraw = this.raws[i].current0;
+		break;
+	    }
+	}
+	// else use currently active raw
+	if( !oraw ){
+	    oraw = this.raw;
+	}
+    } else {
 	// look for oraw matching 'oraw' property
 	for(i=0; i<this.raws.length; i++){
 	    if( opts.oraw === this.raws[i].id ){
@@ -3401,11 +3586,11 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 	    }
 	}
     }
-    // default: use initial (raw0)
+    // if all else fails: use initial (raw0)
     if( !oraw ){
 	oraw = this.raws[0];
     }
-    // look for an exiting nraw by id
+    // look for existing nraw by id
     cur = -1;
     for(i=0; i<this.raws.length; i++){
 	if( rawid === this.raws[i].id ){
@@ -3415,29 +3600,63 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 	}
     }
     // if we don't have an existing nraw, make a copy from oraw
-    if( cur < 0 ){
+    if( (cur < 0) || opts.alwaysCopy ){
 	// make copy
 	nraw = $.extend(true, {}, oraw);
+	// save "initial" current
+	if( !nraw.current0 ){
+	    nraw.current0 = oraw;
+	}
 	// but ensure that data is a copy, not a pointer to the original!
-	switch(oraw.bitpix){
-	case 8:
-	    nraw.data = new Uint8Array(oraw.data);
-	    break;
-	case 16:
-	    nraw.data = new Int16Array(oraw.data);
-	    break;
-	case -16:
-	    nraw.data = new Uint16Array(oraw.data);
-	    break;
-	case 32:
-	    nraw.data = new Int32Array(oraw.data);
-	    break;
-	case -32:
-	    nraw.data = new Float32Array(oraw.data);
-	    break;
-	case -64:
-	    nraw.data = new Float64Array(oraw.data);
-	    break;
+	if( opts.bitpix ){
+	    // different bitpix from oraw specified?
+	    switch(opts.bitpix){
+	    case 8:
+		nraw.data = new Uint8Array(oraw.height * oraw.width);
+		break;
+	    case 16:
+		nraw.data = new Int16Array(oraw.height * oraw.width);
+		break;
+	    case -16:
+		nraw.data = new Uint16Array(oraw.height * oraw.width);
+		break;
+	    case 32:
+		nraw.data = new Int32Array(oraw.height * oraw.width);
+		break;
+	    case -32:
+		nraw.data = new Float32Array(oraw.height * oraw.width);
+		break;
+	    case -64:
+		nraw.data = new Float64Array(oraw.height * oraw.width);
+		break;
+	    }
+	    // copy data and convert data type
+	    nlen = nraw.width * nraw.height;
+	    for(i=0; i<nlen; i++){
+		nraw.data[i] = oraw.data[i];
+	    }
+	    nraw.bitpix = opts.bitpix;
+	} else {
+	    switch(oraw.bitpix){
+	    case 8:
+		nraw.data = new Uint8Array(oraw.data);
+		break;
+	    case 16:
+		nraw.data = new Int16Array(oraw.data);
+		break;
+	    case -16:
+		nraw.data = new Uint16Array(oraw.data);
+		break;
+	    case 32:
+		nraw.data = new Int32Array(oraw.data);
+		break;
+	    case -32:
+		nraw.data = new Float32Array(oraw.data);
+		break;
+	    case -64:
+		nraw.data = new Float64Array(oraw.data);
+		break;
+	    }
 	}
 	// set id for copy
 	nraw.id = rawid;
@@ -3450,7 +3669,6 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 	if( cur >= 0 ){
 	    this.raws[cur] = nraw;
 	} else {
-	    // or add new nraw to nraws array
 	    this.raws.push(nraw);
 	}
 	// assign this nraw to the high-level raw data object
@@ -3461,14 +3679,58 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
     return true;
 };
 
+// perform a gaussian blur on the raw data
+// creates a new raw data layer ("gaussBlur")
+JS9.Image.prototype.gaussBlurData = function(sigma){
+    var opts = {};
+    if( sigma === undefined ){
+	JS9.error("missing sigma value for gaussBlurData");
+    }
+    opts = opts || {};
+    // the blurred image will be floating point
+    if( this.raw.bitpix === -64 ){
+	opts.bitpix = -64;
+    } else {
+	opts.bitpix = -32;
+    }
+    // use current (and keep using it)
+    opts.oraw = "current0";
+    // nraw should be a floating point copy of oraw
+    opts.alwaysCopy = true;
+    // new layer
+    opts.rawid = "gaussBlur";
+    // pass the options
+    opts.sigma = sigma;
+    // call routine to generate (or modify) the new layer
+    this.rawDataLayer(opts, function (oraw, nraw, opts){
+	var tdata;
+	// nraw contains a floating point copy of oraw
+	// make a temporary copy of nraw data for calculations
+	switch(nraw.bitpix){
+	case -32:
+	    tdata = new Float32Array(nraw.data);
+	    break;
+	case -64:
+	    tdata = new Float64Array(nraw.data);
+	    break;
+	default:
+	    JS9.error("invalid temp bitpix for gaussBlur: " + nraw.bitpix);
+	    break;
+	}
+	// the heart of the matter!
+	gaussBlur(tdata, nraw.data, nraw.width, nraw.height, sigma);
+	return true;
+    });
+};
+
 // linear shift of raw data (cheap alignment for CFA MicroObservatory)
-// creates a new raw data layer ("shiftData")
+// creates a new raw data layer ("shift")
 JS9.Image.prototype.shiftData = function(x, y, opts){
     if( x === undefined || y === undefined ){
 	JS9.error("missing translation value(s) for shiftData");
     }
     opts = opts || {};
-    opts.rawid = "shiftData";
+    opts.rawid = "shift";
     opts.x = x;
     opts.y = y;
     this.rawDataLayer(opts, function (oraw, nraw, opts){
@@ -3521,7 +3783,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     var twcs = {};
     var wvfile, wcsheader, wcsstr, oheader, nheader;
     var im, arr, ivfile, ovfile, topts, rstr, key;
-    var wcsexp = /AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
+    var wcsexp = /NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
     var reprojHandler = function(hdu){
 	that.refreshImage(hdu, topts);
 	JS9.waiting(false);
@@ -3627,7 +3889,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	    // ... then error check
 	    if( rstr.search(/\[struct stat="OK"/) < 0 ){
 		earr = rstr.match(/msg="([^"]*)"/);
-		if( earr[1] ){
+		if( earr && earr[1] ){
 		    JS9.error(earr[1] + " (from mProjectPP)");
 		} else {
 		    JS9.error(rstr);
@@ -3786,9 +4048,10 @@ JS9.Display = function(el){
     // jquery version for event handling and DOM manipulation
     this.canvasjq = $(this.canvas)
 	.addClass("JS9Image")
-	.css("z-index", JS9.ZINDEX)
+	.attr("id", this.id+"Image")
 	.attr("width", this.width)
-	.attr("height", this.height);
+	.attr("height", this.height)
+	.css("z-index", JS9.ZINDEX);
     // add container to the high-level div
     this.displayConjq = $("<div>")
 	.addClass("JS9Container")
