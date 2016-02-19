@@ -1958,13 +1958,13 @@ JS9.Image.prototype.blendImage = function(id, blend, opacity){
     var i, im;
     // see composite and blend opetations: https://www.w3.org/TR/compositing-1/
     var blendexp = /normal|multiply|screen|overlay|darken|lighten|color-dodge|color-burn|hard-light|soft-light|difference|exclusion|hue|saturation|color|luminosity|clear|copy|source-over|destination-over|source-in|destination-in|source-out|destination-out|source-atop|destination-atop|xor|lighter/i;
-    // if first argument is true or false, this turns on/off blending
-    if( id === true ){
-	this.blend = true;
-	return this;
+    if( arguments.length === 0 ){
+	return this.blends;
     }
-    if( id === false ){
-	this.blend = false;
+    // if first argument is true or false, this turns on/off blending
+    if( (id === true) || (id === false) ){
+	this.blend = id;
+	this.displayImage();
 	return this;
     }
     // get image associated with blend id
@@ -2000,12 +2000,20 @@ JS9.Image.prototype.blendImage = function(id, blend, opacity){
 		if( (opacity !== undefined) && (opacity !== null) ){
 		    this.blends[i].opacity = opacity;
 		}
+		// display result, if necessary
+		if( this.blend ){
+		    this.displayImage();
+		}
 		return this;
 	    }
 	}
 	// add new blend
 	this.blends.push({im: im, active: true,
 			  blend: blend, opacity: opacity});
+	// display result, if necessary
+	if( this.blend ){
+	    this.displayImage();
+	}
     } else {
 	JS9.error("can't find image to blend: " + id);
     }
@@ -12300,6 +12308,7 @@ JS9.mkPublic = function(name, s){
 
 JS9.mkPublic("CloseImage", "closeImage");
 JS9.mkPublic("DisplayImage", "displayImage");
+JS9.mkPublic("BlendImage", "blendImage");
 JS9.mkPublic("GetColormap", "getColormap");
 JS9.mkPublic("SetColormap", "setColormap");
 JS9.mkPublic("GetZoom", "getZoom");
