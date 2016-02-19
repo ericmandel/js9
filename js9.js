@@ -2329,7 +2329,6 @@ JS9.Image.prototype.setPan = function(panx, pany){
 	panx = w2;
 	pany = h2;
     }
-console.log("main %s: %s %s", this.id, panx, pany);
     this.mkSection(panx, pany);
     // pan blended images, if necessary
     if( this.blend && this.blends.length ){
@@ -2345,7 +2344,6 @@ console.log("main %s: %s %s", this.id, panx, pany);
 		    bpanx = bw2 - (w2 - panx);
 		    bpany = bh2 - (h2 - pany);
 		}
-console.log("%s: %s %s", blend.im.id, bpanx, bpany);
 		JS9.Image.prototype.mkSection.call(blend.im, bpanx, bpany);
 		JS9.Image.prototype.displayImage.call(blend.im, "rgbonly");
 	    }
@@ -12332,6 +12330,7 @@ JS9.mkPublic("RunAnalysis", "runAnalysis");
 JS9.mkPublic("DisplayMessage", "displayMessage");
 JS9.mkPublic("RawDataLayer", "rawDataLayer");
 JS9.mkPublic("ShiftData", "shiftData");
+JS9.mkPublic("GaussBlurData", "gaussBlurData");
 JS9.mkPublic("Reproject", "reproject");
 
 // set/clear valpos flag
