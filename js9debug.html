@@ -111,6 +111,22 @@
     <input type="file" multiple="true" onchange="javascript:HeapTest(this.files)">
     <input type="button" value="Reproj Load" onclick="javascript:ReprojLoad()">
     <input type="button" value="Reproj Test" onclick="javascript:ReprojTest()">
+    &nbsp; &nbsp;
+    <select id="blur" onfocus="this.selectedIndex=0;">
+        <option value="">blur levels</option>
+        <option value="">-----------</option>
+        <option value="0" onclick="xblur(0);">no blur</option>
+        <option value="1" onclick="xblur(1);">sigma 1</option> 
+        <option value="2" onclick="xblur(2);">sigma 2</option>
+        <option value="3" onclick="xblur(3);">sigma 3</option>
+        <option value="4" onclick="xblur(4);">sigma 4</option>
+        <option value="5" onclick="xblur(5);">sigma 5</option>
+        <option value="6" onclick="xblur(6);">sigma 6</option>
+        <option value="7" onclick="xblur(7);">sigma 7</option>
+        <option value="8" onclick="xblur(8);">sigma 8</option>
+        <option value="9" onclick="xblur(9);">sigma 9</option>
+        <option value="10" onclick="xblur(10);">sigma 10</option>
+    </select>
     </td>
     </tr>
 
@@ -389,6 +405,13 @@
       var im = JS9.GetImage({display: "myJS9"});
       console.log("running reproj on %s", im.id)
       im.reproject("reproj/casa1k.fits");
+    }
+    var xblur = function(sigma){
+       var im = JS9.GetImage({display: "myJS9"});
+       if( im ){
+           console.log("blur: %s %s", im.id, sigma);
+           im.gaussBlurData(sigma);
+       }
     }
     $(document).ready(function(){
       init();
