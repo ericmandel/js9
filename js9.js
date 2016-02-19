@@ -65,7 +65,7 @@ JS9.SPINOUT = 250;		// millisec before assuming spinner is up
 JS9.SUPERMENU = /^SUPERMENU_/;  // base of supermenu id
 JS9.RESIZEDIST = 20;		// size of rectangle defining resize handle
 JS9.RESIZEFUDGE = 5;            // fudge for webkit resize problems
-JS9.RAWID0 = "raw0";		// primary raw id
+JS9.RAWID0 = "raw0";		// default raw id
 JS9.RAWIDX = "alt";		// default "alternate" raw id
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
@@ -85,7 +85,7 @@ JS9.globalOpts = {
     helperType: "none",		// one of: sock.io, get, post, none
     helperPort: 2718,		// default port for node.js helper
     winType: "light",		// plugin window: "light" or "new"
-    rgb: {mode: false,		// rgb mode
+    rgb: {mode: false,		// RGB mode
 	  rim: null,
 	  gim: null,
 	  bim: null},
@@ -273,7 +273,7 @@ JS9.menuButtonOptsArr = [{name: "file", label: "File"},
 			 {name: "analysis", label: "Analysis"},
 			 {name: "help", label: "Help"}];
 
-// misc arrays (mostly) holding instances of various primary objects
+// containers for groups of JS9 objects
 JS9.images = [];		// array of current images
 JS9.displays = [];		// array of current display canvases
 JS9.colormaps = [];		// array of current colormaps
@@ -449,10 +449,10 @@ JS9.Image = function(file, params, func){
     // this.initMenubar();
     // init status object
     this.status = {};
-    // primary image
-    this.primary = {};
+    // RGB image
+    this.rgb = {};
     // section parameters
-    this.primary.sect = {zoom: 1, ozoom: 1};
+    this.rgb.sect = {zoom: 1, ozoom: 1};
     // graphical layers
     this.layers = {};
     // no logical coordinate systems
@@ -489,10 +489,10 @@ JS9.Image = function(file, params, func){
 	if( sarr.length ){
 	    this.mkSection.apply(this, sarr);
 	}
-	// was a static rgb file specified?
+	// was a static RGB file specified?
 	if( localOpts && localOpts.rgbFile ){
 	    this.rgbFile = localOpts.rgbFile;
-	    // callback to fire when static rgb image is loaded
+	    // callback to fire when static RGB image is loaded
 	    $(this.png.image).on("load", function(evt){
 		var ss;
 		if( (that.png.image.width !== that.raw.width)   ||
@@ -661,7 +661,7 @@ JS9.Image.prototype.closeImage = function(){
 	    }
 	    // clear image from display
 	    tim.display.image = null;
-	    // remove from rgb, if necessary
+	    // remove from RGB mode, if necessary
 	    switch(tim.cmapObj.name){
 	    case "red":
 		JS9.globalOpts.rgb.rim = null;
@@ -687,7 +687,7 @@ JS9.Image.prototype.closeImage = function(){
 			 {'cmd': 'js9Xeq removeproxy ' + tim.proxyFile}, func);
 	    }
 	    // good hints to the garbage collector
-	    tim.primary = null;
+	    tim.rgb = null;
 	    tim.offscreen = null;
 	    tim.raw = null;
 	    tim.colorData = null;
@@ -861,7 +861,7 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
     this.raws.push({from: "img"});
     // assign this object to the high-level raw data object
     this.raw = this.raws[this.raws.length-1];
-    // this is the primary data
+    // this is the default raw data
     this.raw.id = JS9.RAWID0;
     // create a raw array to hold the reconsituted data
     this.raw.data = new Float32Array(h*w);
@@ -930,7 +930,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     this.raws.push({from: "png"});
     // assign this object to the high-level raw data object
     this.raw = this.raws[this.raws.length-1];
-    // this is the primary data
+    // this is the default raw data
     this.raw.id = JS9.RAWID0;
     // offscreen image data
     offscreen = this.offscreen.img.data;
@@ -1317,11 +1317,11 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     // initialize raws array?
     rlen = this.raws.length;
     if( !rlen ){
-	// create primary object to hold raw data and add to raws array
+	// create object to hold raw data and add to raws array
 	this.raws.push({from: "hdu"});
 	// assign this object to the high-level raw data object
 	this.raw = this.raws[rlen];
-	// ignore rawid, this is the primary data
+	// ignore rawid, this is the default raw data
 	this.raw.id = JS9.RAWID0;
     } else {
 	opts.rawid = opts.rawid || JS9.RAWIDX;
@@ -1490,7 +1490,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 
 // store section information
 JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
-    var sect = this.primary.sect;
+    var sect = this.rgb.sect;
     // process arguments
     switch(arguments.length){
     case 0:
@@ -1751,11 +1751,11 @@ JS9.Image.prototype.mkScaledCells = function(){
     return this;
 };
 
-// create primary (RGB) image from scaled colorCells
+// create RGB image from scaled colorCells
 // sort of from: saotk/frame/truecolor.c, but not really
-JS9.Image.prototype.mkPrimaryImage = function(){
-    var primary, sect, img;
-    var xrgb, yrgb, wrgb, hrgb, imgrgb, ctx;
+JS9.Image.prototype.mkRGBImage = function(){
+    var rgb, sect, img;
+    var xrgb, yrgb, wrgb, hrgb, rgbimg, ctx;
     var xIn, yIn, xOut, yOut, xOutIdx, yOutIdx;
     var yZoom, xZoom, idx, odx, yLen, zx, zy, zyLen;
     var alpha, alpha1, alpha2;
@@ -1763,7 +1763,7 @@ JS9.Image.prototype.mkPrimaryImage = function(){
     var rthis=null, gthis=null, bthis=null;
     var dorgb = false;
     // sanity check
-    if( !this.primary ){
+    if( !this.rgb ){
 	return this;
     }
     if( JS9.globalOpts.rgb.mode &&
@@ -1782,33 +1782,39 @@ JS9.Image.prototype.mkPrimaryImage = function(){
 	}
     }
     ctx = this.display.context;
-    primary = this.primary;
-    sect = primary.sect;
-    // supply your own mkPrimaryImage call (black-magic, used by smart-x)
+    rgb = this.rgb;
+    sect = rgb.sect;
+    // supply your own mkRGBImage call (black-magic, used by smart-x)
+    if( this.MakeRGBImage && typeof this.MakeRGBImage === "function" ){
+	if( this.MakeRGBImage() ){
+	    return this;
+	}
+    }
+    // backward-compatibility with v1.7
     if( this.MakePrimaryImage && typeof this.MakePrimaryImage === "function" ){
 	if( this.MakePrimaryImage() ){
 	    return this;
 	}
     }
-    // if we have static rgb file, use the rgb colors from the image
+    // if we have static RGB file, use the RGB colors from the image
     if( this.rgbFile ){
 	wrgb = sect.width / sect.zoom;
 	hrgb = sect.height / sect.zoom;
 	xrgb = sect.x0;
 	yrgb = (this.offscreen.canvas.height - 1) - (sect.y0 + hrgb);
-	imgrgb = this.offscreen.context.getImageData(xrgb, yrgb, wrgb, hrgb);
+	rgbimg = this.offscreen.context.getImageData(xrgb, yrgb, wrgb, hrgb);
 	if( sect.zoom === 1 ){
-	    // for unzoomed data, we can grab the rgb pixels directly
-	    primary.img = imgrgb;
+	    // for unzoomed data, we can grab the RGB pixels directly
+	    rgb.img = rgbimg;
 	} else {
-	    // for zoomed data, we have to replicate each rgb pixel
-	    primary.img = ctx.createImageData(sect.width, sect.height);
-	    img = primary.img;
+	    // for zoomed data, we have to replicate each RGB pixel
+	    rgb.img = ctx.createImageData(sect.width, sect.height);
+	    img = rgb.img;
 	    odx = 0;
-	    for(yIn=0, yOut=0; yIn<imgrgb.height; yIn++, yOut++){
-		yLen = yIn * imgrgb.width;
+	    for(yIn=0, yOut=0; yIn<rgbimg.height; yIn++, yOut++){
+		yLen = yIn * rgbimg.width;
 		yOutIdx = yOut * sect.zoom;
-		for(xIn=0, xOut=0; xIn<imgrgb.width; xIn++, xOut++){
+		for(xIn=0, xOut=0; xIn<rgbimg.width; xIn++, xOut++){
 		    idx = (yLen + xIn) * 4;
 		    xOutIdx = xOut * sect.zoom;
 		    for(yZoom=0; yZoom<sect.zoom; yZoom++) {
@@ -1817,25 +1823,25 @@ JS9.Image.prototype.mkPrimaryImage = function(){
 			for(xZoom=0; xZoom<sect.zoom; xZoom++) {
 			    zx = Math.floor(xOutIdx + xZoom);
 			    odx = (zyLen + zx) * 4;
-			    img.data[odx]   = imgrgb.data[idx];
-			    img.data[odx+1] = imgrgb.data[idx+1];
-			    img.data[odx+2] = imgrgb.data[idx+2];
-			    img.data[odx+3] = imgrgb.data[idx+3];
+			    img.data[odx]   = rgbimg.data[idx];
+			    img.data[odx+1] = rgbimg.data[idx+1];
+			    img.data[odx+2] = rgbimg.data[idx+2];
+			    img.data[odx+3] = rgbimg.data[idx+3];
 			}
 		    }
 		}
 	    }
-	    imgrgb = null;
+	    rgbimg = null;
 	}
 	return this;
     }
-    // create an rgb image if necessary
-    if( !primary.img                         ||
-	(primary.img.width  !== sect.width)  ||
-	(primary.img.height !== sect.height) ){
-	primary.img = ctx.createImageData(sect.width, sect.height);
+    // create an RGB image if necessary
+    if( !rgb.img                         ||
+	(rgb.img.width  !== sect.width)  ||
+	(rgb.img.height !== sect.height) ){
+	rgb.img = ctx.createImageData(sect.width, sect.height);
     }
-    img = primary.img;
+    img = rgb.img;
     // converting raw data, we need psColors
     if( !this.psColors ){
 	return this;
@@ -1880,7 +1886,7 @@ JS9.Image.prototype.mkPrimaryImage = function(){
 	    }
 	}
     }
-    // index into scaled data using previously calc'ed data value to get rgb
+    // index into scaled data using previously calc'ed data value to get RGB
     // reverse y lines
     odx = 0;
     for(yIn=sect.y1-1, yOut=0; yIn>=sect.y0; yIn--, yOut++){
@@ -1896,7 +1902,7 @@ JS9.Image.prototype.mkPrimaryImage = function(){
 		    (bidx === undefined) ){
 		    JS9.globalOpts.rgb.mode = false;
 		    JS9.error("RGB images are incompatible. Turning off RGB mode.", "", false);
-		    JS9.Image.prototype.mkPrimaryImage.call(this);
+		    JS9.Image.prototype.mkRGBImage.call(this);
 		    return this;
 		}
 	    } else {
@@ -2010,7 +2016,7 @@ JS9.Image.prototype.blendImage = function(id, blend, opacity){
 JS9.Image.prototype.putImage = function(opts){
     var img, key;
     var save = {};
-    var primary = this.primary;
+    var rgb = this.rgb;
     var display = this.display;
     var ctx = display.context;
     var img2canvas = function(that, img) {
@@ -2032,12 +2038,11 @@ JS9.Image.prototype.putImage = function(opts){
 	return that.offscreenRGB.canvas;
     };
     // offsets into display
-    this.ix = Math.floor((display.canvas.width - primary.img.width)/2);
-    this.iy = Math.floor((display.canvas.height - primary.img.height)/2);
+    this.ix = Math.floor((display.canvas.width - rgb.img.width)/2);
+    this.iy = Math.floor((display.canvas.height - rgb.img.height)/2);
     // draw the image into the context
     if( (opts.opacity !== undefined) || (opts.blend !== undefined) ){
-	// img = img2canvas(this, primary.img, this.ix, this.iy);
-	img = img2canvas(this, primary.img);
+	img = img2canvas(this, rgb.img);
 	if( opts.opacity !== undefined ){
 	    save.globalAlpha = ctx.globalAlpha;
 	    ctx.globalAlpha = opts.opacity;
@@ -2053,7 +2058,7 @@ JS9.Image.prototype.putImage = function(opts){
 	    }
 	}
     } else {
-	ctx.putImageData(primary.img, this.ix, this.iy);
+	ctx.putImageData(rgb.img, this.ix, this.iy);
     }
 };
 
@@ -2061,10 +2066,10 @@ JS9.Image.prototype.putImage = function(opts){
 // of options:
 // colors: generate colorData
 // scaled: generate colorCells and scaledCells
-// primary: generate primary image (happens automatically for any of the above)
+// rgb: generate RGB image (happens automatically for any of the above)
 // display: displlay image (always done)
 // plugins: execute plugin callbacks
-// all: colors,scaled,primary,display,plugins
+// all: colors,scaled,rgb,display,plugins
 JS9.Image.prototype.displayImage = function(imode, opts){
     var i, blend, pname, pinst, popts;
     var mode = {};
@@ -2075,17 +2080,17 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	switch(el){
 	case "colors":
 	    mode.scaled = true;
-	    mode.primary = true;
+	    mode.rgb = true;
 	    break;
 	case "scaled":
-	    mode.primary = true;
+	    mode.rgb = true;
 	    break;
 	}
     };
     // special checks for displayMode setting
     if( imode === false ){
 	this.displayMode = false;
-	return;
+	return this;
     }
     if( imode === true ){
 	this.displayMode = true;
@@ -2093,29 +2098,31 @@ JS9.Image.prototype.displayImage = function(imode, opts){
     }
     // if displayMode is false, just return
     if( !this.displayMode ){
-	return;
+	return this;
     }
-
     // did we just pass the opts params?
     if( typeof imode === "object" ){
 	opts = imode;
 	imode = null;
     }
     if( !imode ){
-	imode = "primary";
+	imode = "rgb";
     } else if( imode === "all" ){
-	imode = "colors,scaled,primary,display,plugins";
+	imode = "colors,scaled,rgb,display,plugins";
+	mode.notify = true;
+    } else if( imode === "rgbonly" ){
+	imode = "rgb,nodisplay";
 	mode.notify = true;
     } else if( imode === "display" ){
 	mode.notify = true;
     }
     // get mode as elements in an object
     imode.split(",").forEach(modeFunc);
-    // but always display the image again
+    // by default display the image again (unless nodisplay is set)
     mode.display = true;
     // and always call plugins
     mode.plugins = true;
-    // if we have a static rgb image, we skip some steps
+    // if we have a static RGB image, we skip some steps
     if( this.rgbFile ){
 	imode.colors = false;
 	imode.scaled = false;
@@ -2126,7 +2133,7 @@ JS9.Image.prototype.displayImage = function(imode, opts){
     if( mode.colors ){
 	// populate the colorData array (offsets into scaled colorcell data)
 	this.mkColorData();
-	// if we changed colors, the offsreen rgb is invalid
+	// if we changed colors, the offsreen RGB image is invalid
 	this.offscreenRGB = null;
     }
     // generated scaled cells
@@ -2135,13 +2142,19 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	this.mkColorCells();
 	// generated scaled cells from color cells
 	this.mkScaledCells();
-	// if we changed scale, the offsreen rgb is invalid
+	// if we changed scale, the offsreen RGB image is invalid
 	this.offscreenRGB = null;
     }
-    // generate primary (RGB) image from scaled cells
-    if( mode.primary ){
-	// make the rgb image
-	this.mkPrimaryImage();
+    // generate RGB image from scaled cells
+    if( mode.rgb ){
+	// make the RGB image
+	this.mkRGBImage();
+	// if we changed the rgb image, the offsreen RGB image is invalid
+	this.offscreenRGB = null;
+    }
+    // if we explicitly don't display, reuturn here;
+    if( mode.nodisplay ){
+	return this;
     }
     // display image on screen
     if( mode.display ){
@@ -2151,7 +2164,7 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	}
 	// display the image
 	this.putImage(opts);
-	// add blends, if necessary
+	// display blended images, if necessary
 	if( this.blend && this.blends.length ){
 	    for(i=0; i<this.blends.length; i++){
 		blend = this.blends[i];
@@ -2214,9 +2227,9 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	opts.onrefresh = JS9.imageOpts.onrefresh;
     }
     // save section in case it gets reset
-    oxcen = this.primary.sect.xcen;
-    oycen = this.primary.sect.ycen;
-    ozoom = this.primary.sect.zoom;
+    oxcen = this.rgb.sect.xcen;
+    oycen = this.rgb.sect.ycen;
+    ozoom = this.rgb.sect.zoom;
     owidth = this.raw.width;
     oheight = this.raw.height;
     // save old binning
@@ -2303,19 +2316,42 @@ JS9.Image.prototype.toArray = function(){
 
 // get pan location
 JS9.Image.prototype.getPan = function(panx, pany){
-    return {x: (this.primary.sect.x0 + this.primary.sect.x1)/2+1,
-	    y: (this.primary.sect.y0 + this.primary.sect.y1)/2+1};
+    return {x: (this.rgb.sect.x0 + this.rgb.sect.x1)/2+1,
+	    y: (this.rgb.sect.y0 + this.rgb.sect.y1)/2+1};
 };
 
-// set pan location of primary image (using image coordinates)
+// set pan location of RGB image (using image coordinates)
 JS9.Image.prototype.setPan = function(panx, pany){
-    var key;
+    var i, key, blend, bpanx, bpany, bw2, bh2;
+    var w2 = this.raw.width / 2;
+    var h2 = this.raw.height / 2;
     if( arguments.length === 0 ){
-	panx = this.raw.width / 2;
-	pany = this.raw.height / 2;
+	panx = w2;
+	pany = h2;
     }
+console.log("main %s: %s %s", this.id, panx, pany);
     this.mkSection(panx, pany);
-    this.displayImage("primary");
+    // pan blended images, if necessary
+    if( this.blend && this.blends.length ){
+	for(i=0; i<this.blends.length; i++){
+	    blend = this.blends[i];
+	    if( blend.active ){
+		bw2 = blend.im.raw.width / 2;
+		bh2 = blend.im.raw.height / 2;
+		if( arguments.length === 0 ){
+		    bpanx = bw2;
+		    bpany = bh2;
+		} else {
+		    bpanx = bw2 - (w2 - panx);
+		    bpany = bh2 - (h2 - pany);
+		}
+console.log("%s: %s %s", blend.im.id, bpanx, bpany);
+		JS9.Image.prototype.mkSection.call(blend.im, bpanx, bpany);
+		JS9.Image.prototype.displayImage.call(blend.im, "rgbonly");
+	    }
+	}
+    }
+    this.displayImage("rgb");
     // pan/zoom the shape layers
     for( key in this.layers ){
 	if( this.layers.hasOwnProperty(key) ){
@@ -2331,14 +2367,14 @@ JS9.Image.prototype.setPan = function(panx, pany){
 
 // return current zoom
 JS9.Image.prototype.getZoom = function(){
-    return this.primary.sect.zoom;
+    return this.rgb.sect.zoom;
 };
 
 // return zoom from zoom string
 JS9.Image.prototype.parseZoom = function(zval){
     var ozoom, nzoom;
     // get old zoom
-    ozoom = this.primary.sect.zoom;
+    ozoom = this.rgb.sect.zoom;
     // determine new zoom
     switch(typeof zval){
     case "string":
@@ -2377,17 +2413,27 @@ JS9.Image.prototype.parseZoom = function(zval){
     return nzoom;
 };
 
-// set zoom of primary image
+// set zoom of RGB image
 JS9.Image.prototype.setZoom = function(zval){
-    var nzoom, key;
+    var i, nzoom, key, blend;
     nzoom = this.parseZoom(zval);
     if( !nzoom ){
 	return;
     }
     // remake section
     this.mkSection(nzoom);
+    // zoom blended images, if necessary
+    if( this.blend && this.blends.length ){
+	for(i=0; i<this.blends.length; i++){
+	    blend = this.blends[i];
+	    if( blend.active ){
+		JS9.Image.prototype.mkSection.call(blend.im, nzoom);
+		JS9.Image.prototype.displayImage.call(blend.im, "rgbonly");
+	    }
+	}
+    }
     // redisplay the image
-    this.displayImage("primary");
+    this.displayImage("rgb");
     // pan/zoom the shape layers
     for( key in this.layers ){
 	if( this.layers.hasOwnProperty(key) ){
@@ -2474,32 +2520,32 @@ JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
 
 // return 1-indexed image coords for specified 0-indexed display position
 JS9.Image.prototype.displayToImagePos = function(dpos){
-    var primary = this.primary;
-    var sect = this.primary.sect;
+    var rgb = this.rgb;
+    var sect = this.rgb.sect;
     var ipos = {};
     // for zoomed images, the image coordinate is at the center
     if( sect.zoom <= 1 ){
 	ipos.x = (dpos.x - this.ix) / sect.zoom + sect.x0 + 1;
-	ipos.y = ((primary.img.height - 1) - (dpos.y - this.iy)) / sect.zoom + sect.y0 + 1;
+	ipos.y = ((rgb.img.height - 1) - (dpos.y - this.iy)) / sect.zoom + sect.y0 + 1;
     } else {
 	ipos.x = (dpos.x - this.ix) / sect.zoom + sect.x0 + 1 - 0.5;
-	ipos.y = ((primary.img.height - 1) - (dpos.y - this.iy)) / sect.zoom + sect.y0 + 1 - 0.5;
+	ipos.y = ((rgb.img.height - 1) - (dpos.y - this.iy)) / sect.zoom + sect.y0 + 1 - 0.5;
     }
     return ipos;
 };
 
 // return 0-indexed display coords for specified 1-indexed image position
 JS9.Image.prototype.imageToDisplayPos = function(ipos){
-    var primary = this.primary;
-    var sect = this.primary.sect;
+    var rgb = this.rgb;
+    var sect = this.rgb.sect;
     var dpos = {};
     // for zoomed images, the image coordinate is at the center
     if( sect.zoom <= 1 ){
 	dpos.x = (((ipos.x - 1) - sect.x0) * sect.zoom) + this.ix;
-	dpos.y = (sect.y0 - (ipos.y - 1)) * sect.zoom + (primary.img.height - 1) + this.iy;
+	dpos.y = (sect.y0 - (ipos.y - 1)) * sect.zoom + (rgb.img.height - 1) + this.iy;
     } else {
 	dpos.x = (((ipos.x - 1 + 0.5) - sect.x0) * sect.zoom) + this.ix;
-	dpos.y = (sect.y0 - (ipos.y - 1 + 0.5)) * sect.zoom + (primary.img.height - 1) + this.iy;
+	dpos.y = (sect.y0 - (ipos.y - 1 + 0.5)) * sect.zoom + (rgb.img.height - 1) + this.iy;
     }
     return dpos;
 };
@@ -4840,7 +4886,7 @@ JS9.Menubar = function(width, height){
 	function onhide(opt) {
 	    var tdisp = that.display;
 	    if( JS9.bugs.hide_menu && tdisp.image ){
-		tdisp.image.displayImage("primary");
+		tdisp.image.displayImage("rgb");
 	    }
 	}
 	function getDisplays() {
@@ -5364,7 +5410,7 @@ JS9.Menubar = function(width, height){
 		    name = sprintf("zoom%s", zoom);
 		    name2 = sprintf("zoom 1/%s", zoomp);
 		    items[name] = {name: name2};
-		    if( tim && (tim.primary.sect.zoom === zoom) ){
+		    if( tim && (tim.rgb.sect.zoom === zoom) ){
 			items[name].icon = "sun";
 		    }
 		}
@@ -5373,7 +5419,7 @@ JS9.Menubar = function(width, height){
 		    name = sprintf("zoom%s", zoom);
 		    name2 = sprintf("zoom %s", zoom);
 		    items[name] = {name: name2};
-		    if( tim && (tim.primary.sect.zoom === zoom) ){
+		    if( tim && (tim.rgb.sect.zoom === zoom) ){
 			items[name].icon = "sun";
 		    }
 		}
@@ -5431,7 +5477,7 @@ JS9.Menubar = function(width, height){
 			    var obj = {};
 			    if( uim  ){
 				obj.zoom =
-				    String(uim.primary.sect.zoom);
+				    String(uim.rgb.sect.zoom);
 			    }
 			    $.contextMenu.setInputValues(opt, obj);
 			    JS9.jupyterFocus(".context-menu-item");
@@ -6806,7 +6852,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     var YFUDGE = 1;
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
-	zoom = this.primary.sect.zoom;
+	zoom = this.rgb.sect.zoom;
     } else {
 	zoom = 1;
     }
@@ -7198,7 +7244,7 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
     canvas = layer.canvas;
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
-	zoom = this.primary.sect.zoom;
+	zoom = this.rgb.sect.zoom;
 	bin = this.binning.bin || 1;
     } else {
 	zoom = 1;
@@ -7507,7 +7553,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     display = this.display;
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
-	zoom = this.primary.sect.zoom;
+	zoom = this.rgb.sect.zoom;
 	// bin = this.binning.bin || 1;
 	bin = 1;
     } else {
@@ -7771,7 +7817,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     canvas = layer.canvas;
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
-	zoom = this.primary.sect.zoom;
+	zoom = this.rgb.sect.zoom;
 	bin = this.binning.bin || 1;
     } else {
 	zoom = 1;
@@ -7918,13 +7964,13 @@ JS9.Fabric.refreshShapes = function(layerName){
     }
     if( ismain ){
 	bin = this.binning.bin;
-	zoom = this.primary.sect.zoom;
+	zoom = this.rgb.sect.zoom;
 	// scale factor removes the old values and applies the new ones
-	scaleX = (this.binning.obin / this.primary.sect.ozoom) * zoom / bin;
-	scaleY = (this.binning.obin / this.primary.sect.ozoom) * zoom / bin;
+	scaleX = (this.binning.obin / this.rgb.sect.ozoom) * zoom / bin;
+	scaleY = (this.binning.obin / this.rgb.sect.ozoom) * zoom / bin;
     } else {
 	bin = 1;
-	zoom = this.primary.sect.zoom;
+	zoom = this.rgb.sect.zoom;
 	scaleX = zoom;
 	scaleY = zoom;
     }
@@ -7979,7 +8025,7 @@ JS9.Fabric.refreshShapes = function(layerName){
     // only use the old bin and zoom once (until they change again)
     if( ismain ){
 	this.binning.obin = this.binning.bin;
-	this.primary.sect.ozoom = this.primary.sect.zoom;
+	this.rgb.sect.ozoom = this.rgb.sect.zoom;
     }
     // redraw regions
     if( canvas ){
@@ -9396,7 +9442,7 @@ JS9.Panner.init = function(width, height){
 		// pan image
 		im.setPan(ix, iy);
 	    }
-	    catch(e){JS9.log("couldn't pan image");}
+	    catch(e){JS9.log("couldn't pan image", e);}
 	    finally{im.display.pluginInstances.JS9Panner.status = "active";}
 	}
     });
@@ -9431,11 +9477,11 @@ JS9.Panner.create = function(im){
     // convenience variables
     panDisp = im.display.pluginInstances.JS9Panner;
     panner = im.panner;
-    sect = im.primary.sect;
+    sect = im.rgb.sect;
     // size image
     width = Math.min(im.raw.width, panDisp.width);
     height = Math.min(im.raw.height, panDisp.height);
-    // block rgb image to fit into panner window
+    // block RGB image to fit into panner window
     panner.xblock = im.raw.width / width;
     panner.yblock = im.raw.height / height;
     if( panner.xblock > panner.yblock ){
@@ -9445,7 +9491,7 @@ JS9.Panner.create = function(im){
 	width = Math.floor(width / panner.yblock * panner.xblock + 0.5);
 	panner.xblock = panner.yblock;
     }
-    // create an rgb image the same size as the raw data
+    // create an RGB image the same size as the raw data
     img = im.display.context.createImageData(width,height);
     // calculate block factors and starting points based on zoom and block
     if( panner.zoom === 1 ){
@@ -9469,7 +9515,7 @@ JS9.Panner.create = function(im){
     panner.ix = 0;
     panner.iy = 0;
     if( im.rgbFile ){
-	// for a static rgb file, access the rgb data directly
+	// for a static RGB file, access the RGB data directly
 	for(j=0; j<height; j++){
 	    jj = Math.floor(y0 + (j * yblock)) * im.offscreen.img.width;
 	    kk = j * width;
@@ -9485,7 +9531,7 @@ JS9.Panner.create = function(im){
 	}
 	return im;
     }
-    // index into scaled data using previously calc'ed data value to get rgb
+    // index into scaled data using previously calc'ed data value to get RGB
     for(j=0; j<height; j++){
 	jj = Math.floor(y0 + ((height-j-1) * yblock)) * im.raw.width;
 	kk = j * width;
@@ -9520,7 +9566,7 @@ JS9.Panner.display = function(im){
     // convenience variables
     panner = im.panner;
     panDisp = im.display.pluginInstances.JS9Panner;
-    sect = im.primary.sect;
+    sect = im.rgb.sect;
     // we're done if there is no panner image
     if( !panner.img ){
 	return;
@@ -10881,7 +10927,7 @@ JS9.mouseMoveCB = function(evt){
 	if( im.rclick || JS9.specialKey(evt) ){
 	    return;
 	}
-	// static rgb image: no contrast/bias
+	// static RGB image: no contrast/bias
 	if( im.rgbFile ){
 	    return;
 	}
@@ -11586,7 +11632,7 @@ JS9.init = function(){
 	JS9.fitsLibrary("cfitsio");
 	JS9.fits = Astroem;
     }
-    // init primary display(s)
+    // init main display(s)
     $("div.JS9").each(function(){
 	JS9.checkNew(new JS9.Display($(this)));
     });
@@ -11680,7 +11726,7 @@ JS9.init = function(){
 	    h = frac * 360.0 + 270.0;
 	    s = Math.abs(Math.sin(frac * 3.1416));
 	    v = Math.pow((1.0 - frac), (1.0 / 3.0));
-	    // convert to rgb
+	    // convert to RGB
 	    while( h >= 360.0 ){
 		h -= 360.0;
 	    }
