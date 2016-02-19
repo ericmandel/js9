@@ -999,12 +999,29 @@ where:
 <li><b>y</b>: number of pixels to shift in the y (height) direction
 <li><b>opts</b>: options object
 </ul>
-This routine creates a new raw data layer called "shiftData" in which
+This routine creates a new raw data layer called "shift" in which
 the pixels are shifted from the original image array by the specified
 amount in x and/or y. The results of successive shifts are
 cumulative. The routine is used by the Harvard-Smithsonian Center for
 Astrophysics MicroObservatory project interactively to align images
 that are only slightly offset from one another.
+
+<p>
+<font size="+1"><b><u>Gaussian Blur of Raw Data</u></b></font>
+<p>
+<code><font size="+1">JS9.GaussBlurData(sigma, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>sigma</b>: sigma of Gaussian function
+<li><b>opts</b>: options object
+</ul>
+This routine creates a new raw data layer called "gaussBlur" in which
+the image pixel values are blurred using a Gaussian function with the
+specified sigma. The routine uses the fast Gaussian blur algorithm
+(approximating a full Gaussian blur with three passes of a box blur)
+described <a href=" http://blog.ivank.net/fastest-gaussian-blur.html">
+here</a>.
 
 <p>
 <font size="+1"><b><u>Reproject an Image Using a Specified WCS</u></b></font>
