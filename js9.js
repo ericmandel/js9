@@ -3472,7 +3472,7 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
     opts.x = x;
     opts.y = y;
     this.rawDataLayer(opts, function (oraw, nraw, opts){
-	var oi, oj, ni, nj, nlen, oU8, nU8, ooff, noff;
+	var i, oi, oj, ni, nj, nlen, oU8, nU8, ooff, noff;
 	var bpp = oraw.data.BYTES_PER_ELEMENT;
 	if( nraw.xoff === undefined ){
 	    nraw.xoff = 0;
@@ -3483,7 +3483,13 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 	nraw.xoff += opts.x;
 	nraw.yoff += opts.y;
 	if( !opts.fill || opts.fill === "clear" ){
-	    nraw.data.fill(0);
+	    if( typeof nraw.data.fill === "function" ){
+		nraw.data.fill(0);
+	    } else {
+		for(i=0; i<nraw.data.length; i++){
+		    nraw.data[i] = 0;
+		}
+	    }
 	}
 	for(oj=0; oj<oraw.height; oj++){
 	    nj = oj + nraw.yoff;
