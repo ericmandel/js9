@@ -1,0 +1,54 @@
+div.JS9BlendContainer {
+    padding: 2px;
+}
+
+div.JS9BlendImage {
+    margin: 5px;
+    background: #E9E9E9;
+    overflow: auto;
+}
+
+div.JS9BlendImageInactive {
+    padding: 10px;
+    border: 1px solid black;
+}
+
+div.JS9BlendImageActive {
+    padding: 9px;
+    border: 2px solid #00F000;
+}
+
+div.JS9BlendHeader {
+    border: 0px solid black;
+    background: #E9E9E9;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+}
+
+#blendModeSelect {
+    width: 100px;
+}
+
+#blendModeSelect option {
+    width: 100px;
+}
+
+#blendOpacitySelect {
+    width: 80px;
+}
+
+#blendOpacitySelect option {
+    width: 80px;
+}
+
+#blendFile {
+    float: right;
+}
+
+#blendNoFile {
+    margin-left: 15px;
+}
+

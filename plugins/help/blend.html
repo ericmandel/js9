@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head> 
+</head>
+<body>
+<h3>JS9 Image Blending</h3>
+
+<p>
+The <b>Image Blending</b> plugin allows you to combine selected images
+using a specified blend mode and optional opacity. Blend modes are
+different ways in which the colors of individual pixels are
+combined between a source and background image. For example,
+the <b>multiply</b> mode multiplies the color value of the source
+pixel by the color value of the background pixel and uses the
+resulting (scaled) value for the color:
+<pre>
+    x = a * b
+</pre>
+Multiplying white (value 1) by any other color results in the latter
+color being used. Multiplying black (value 0) by any other color
+results in black being used. Thus, <b>multiply</b> makes whites
+transparent but otherwise darkens the image.
+
+<p>
+One of the most useful blend modes for astronomy is <b>screen</b>, which is
+the opposite of <b>multiply</b>: white pixels are made opaque, black pixels
+become transparent, and other pixels are lightened. The blend algorithm
+multiplies inverses and takes the inverse of the result:
+<pre>
+    x = 1 − ((1 − a) × (1 − b))
+</pre>
+
+<p>
+Standard blend modes supported by modern Web browsers are documented in
+<a href="https://www.w3.org/TR/compositing-1/" target="blank">
+W3C Compositing and Blending</a>, which includes algorithms and examples
+for each mode.
+
+<p>
+The <b>Image Blending</b> plugin allows you to toggle global image blending
+on and off, so that you can switch between blending and the ordinary display
+of a single image. By default, when the plugin is displayed, blending is 
+turned on.
+
+<p>
+Each image loaded into the display will be shown in a stack.
+The currently active image will be displayed with a green border.
+This is the image that responds to contrast/bias changes, region
+creation, etc.  It also is the image on which browser-based analysis
+and server-based analysis is performed. You can click on any image
+in the stack to make it the current image.
+
+<p>
+If you have two or more observations of the same object displayed, you
+probably will want to align them by WCS coordinates. This can be done by
+utilizing the <b>WCS->reproject</b> menu option, which uses the WCS of one
+image to reproject the other into a new raw data layer.
+
+<p>
+Once two or more images are aligned, you can change the colormap,
+contrast/bias and scaling of each of them separately and then combine
+them into a single display. This is done by clicking the <b>blend
+using</b> button to add this image to the blend list, and the choosing
+its blend mode and optional opacity. You can continue to change the
+colormap, scale, contrast/bias, etc. of the current image even after
+blending has been turned on.
+
+<p>
+Note that some, but not all, blend modes are commutative. In particular,
+the <b>non-separable</b> blend modes (<b>hue</b>, <b>saturation</b>, 
+<b>color</b>, and <b>luminosity</b>) are all order-dependent.  In such
+cases, you can change the stacking order simply by dragging an image
+into the appropriate place on the stack.
+
+</body>
+</html>

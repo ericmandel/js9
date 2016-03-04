@@ -140,9 +140,12 @@ SAOFILES =	index.html
 CSSFILES =	css/jquery.contextMenu.css css/dhtmlwindow.css  \
 		css/tabcontent.css
 
-JSFILES =	js/jquery.min.js js/jquery.contextMenu.min.js js/jquery.flot.min.js js/jquery.flot.errorbars.min.js js/jquery.flot.navigate.min.js js/jquery.flot.selection.min.js js/flot-zoom.min.js js/sprintf.min.js js/dhtmlwindow.min.js js/dhtmlwindow_blurb.js js/fabric.min.js js/pako_inflate.min.js js/FileSaver.min.js js/canvas-toBlob.js js/tabcontent.js js/astroem.js js/arrive.min.js js/jquery.doubletap.min.js js/jquery.flot.axislabels.js js/spin.js js/ElementQueries.js js/ResizeSensor.js js/gaussblur.js
+PLCSSFILES =	plugins/core/blend.css
+
+JSFILES =	js/jquery.min.js js/jquery-ui.min.js js/jquery.contextMenu.min.js js/jquery.flot.min.js js/jquery.flot.errorbars.min.js js/jquery.flot.navigate.min.js js/jquery.flot.selection.min.js js/flot-zoom.min.js js/sprintf.min.js js/dhtmlwindow.min.js js/dhtmlwindow_blurb.js js/fabric.min.js js/pako_inflate.min.js js/FileSaver.min.js js/canvas-toBlob.js js/tabcontent.js js/astroem.js js/arrive.min.js js/jquery.doubletap.min.js js/jquery.flot.axislabels.js js/spin.js js/ElementQueries.js js/ResizeSensor.js js/gaussblur.js
 
 PLUGINFILES =	plugins/core/prefs.js \
+		plugins/core/blend.js \
 		plugins/archive/archive.js \
 		plugins/fitsy/binning.js \
 		plugins/imexam/imexam.js \
@@ -266,6 +269,8 @@ js9support:	FORCE
 		  echo "css files in js9support.css: " > js9support.txt; \
 		  echo $(CSSFILES) >>  js9support.txt; \
 		  cat $(CSSFILES)  >  js9support.css;  \
+		  echo $(PLCSSFILES) >>  js9support.txt; \
+		  cat $(PLCSSFILES)  >>  js9support.css;  \
 		  echo "js files in js9support.js: " >> js9support.txt; \
 		  echo $(JSFILES)  >> js9support.txt; \
 		  cat $(JSFILES)   >  js9support.min.js; \
@@ -458,6 +463,7 @@ gitprefs:	FORCE
 
 release:	clean gitprefs
 		(mkdir -p $(DISTDIR)/$(DISTNAME); \
+	        touch $(DISTDIR)/foo; \
 		tar cf - \
 			 --exclude='node_modules/selenium-webdriver' \
 			 --exclude='node_modules/socket.io_v[0-9]*' \
@@ -467,7 +473,7 @@ release:	clean gitprefs
 		(cd $(DISTDIR)/$(DISTNAME) && tar xf -); \
 		cd $(DISTDIR) ; \
 		tar cf - $(DISTNAME) | gzip -c > $(DISTNAME).tar.gz; \
-		rm -rf $(DISTNAME))
+		rm -rf foo $(DISTNAME))
 
 release-data:	FORCE
 		tar cf - $(WEBDATA) | gzip -c > $(DISTDIR)/$(DDISTNAME).tar.gz;
