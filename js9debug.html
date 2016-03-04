@@ -148,7 +148,7 @@
     </tr>
     <tr valign="top">
     <td>
-    <div class="JS9Menubar" id="JS9Menubar" data-width="400px" data-height="54px"></div>
+    <div class="JS9Menubar" id="JS9Menubar" data-width="400px" data-height="64px"></div>
     <div class="JS9" data-width="400px" data-height="400px"></div>
     <p>
     <div class="catdiv">
@@ -404,7 +404,7 @@
     var ReprojTest = function(){
       var im = JS9.GetImage({display: "myJS9"});
       console.log("running reproj on %s", im.id)
-      im.reproject("reproj/casa1k.fits");
+      im.reprojectData("reproj/casa1k.fits");
     }
     var xblur = function(sigma){
        var im = JS9.GetImage({display: "myJS9"});
