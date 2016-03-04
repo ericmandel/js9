@@ -299,6 +299,10 @@ input:focus.JS9CmdIn{
    width: 85%;
 }
 
+.context-menu-input > label > span {
+    margin-left: 0px;
+}
+
 /* dhtml window overrides */
 .dhtmlwindow
 {
