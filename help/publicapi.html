@@ -482,25 +482,22 @@ existing image, while the latter adds a completely new image to the
 display.
 
 <p>
-<font size="+1"><b><u>Blend the specified image into the current image using W3C composite/blend modes </u></b></font>
+<font size="+1"><b><u>Blend the image in an image stack using W3C composite/blend modes </u></b></font>
 <p>
-<code><font size="+1">JS9.BlendImage(blendID, blendMode, opacity)</font></code>
+<code><font size="+1">JS9.BlendImage(blendMode, opacity)</font></code>
 Calling sequences:
 <pre>
-    JS9.BlendImage(id)                 # return current params for blended image
-    JS9.BlendImage(true||false)        # turn on/off blending for current image
-    JS9.BlendImage(id, true||false)    # turn on/off blending of blended image
-    JS9.BlendImage(id, "remove")       # remove blended image
-    JS9.BlendImage(id, blend, opacity) # set blend and opacity for blended image
+    JS9.BlendImage()                   # return current blend params
+    JS9.BlendImage(true||false)        # turn on/off blending
+    JS9.BlendImage(mode, opacity)      # set blend mode and/or opacity
 <p>
 where:
 <ul>
-<li><b>id</b>: image id (or image object) of the image to blend into this one
-<li><b>blend</b>: one of the W3C bend modes
+<li><b>mode</b>: one of the W3C bend modes
 <li><b>opacity</b>: the opacity of the blended image (percent from 0 to 1)
 </ul>
 Image processing programs such as Adobe Photoshop and Gimp allow you to blend
-two or more images together by mixing the RGB colors. The W3C has defined a
+a stack of images together by mixing the RGB colors. The W3C has defined a
 number of composite and blending modes which have been implemented by Firefox, Chrome, and Safari (what about IE?):
 <ul>
 <li>normal
@@ -543,14 +540,14 @@ and in this
 
 <p>
 JS9 allows you to use these modes to blend images together. If you load two
-images of the same object into JS9, you can use the <b>JS9.Reproject()</b> 
+images of the same object into JS9, you can use the <b>JS9.ReprojectData()</b> 
 routine to align them by WCS. You then can blend one image into the other by
 specifying a blend mode and an optional opacity. For example, if chandra.fits
 and spitzer.fits are two aligned images of the same object, and chandra.fits is
 currently being displayed, you can blend spitzer into chandra using
 the "screen" blend and opacity 0.9 mode this way:
 <pre>
-    JS9.BlendImage("spitzer.fits", "screen", 0.9);
+    JS9.BlendImage("screen", 0.9);
 </pre>
 After the spitzer image is blended, both images will be displayed as
 part of the chandra.fits display. However, changing the colormap,
@@ -578,19 +575,15 @@ is correctly linked to the blended version.
 The <b>JS9.BlendImage()</b> call accepts a variable number of
 arguments to perform a variety of functions:
 <ul>
-<li>JS9.BlendImage() returns an array of blend objects, containing the following
-properties:
+<li>JS9.BlendImage() returns an object containing the following properties:
 <ul>
-<li>image: the image handle for the blended image
 <li>active: boolean specifying whether this image is to be blended
-<li>blend: string specifying the blend mode
+<li>mode: string specifying the blend mode
 <li>opacity: opacity value (0 to 1)
 </ul>
-<li>JS9.BlendImage(id) returns a blend object for the specified blend image (see above for blend properties)
-<li>JS9.BlendImage(true||false) turns on/off blending of all blended images
-<li>JS9.BlendImage(id, true||false) turns on/off blending of specified blend image
-<li>JS9.BlendImage(id, "remove") remove the blend image
-<li>JS9.BlendImage(id, blend, opacity) set or modify the blend mode and/or opacity for this blended image (i.e. can specify blend and/or opacity).
+<li>JS9.BlendImage() returns a blend object for the current image
+<li>JS9.BlendImage(true||false) turns on/off blending of
+<li>JS9.BlendImage(blend, opacity) set or modify the blend mode and/or opacity
 </ul>
 Other actions will be added as we gain experience with blending operations
 
@@ -1141,14 +1134,14 @@ here</a>.
 <p>
 <font size="+1"><b><u>Reproject an Image Using a Specified WCS</u></b></font>
 <p>
-<code><font size="+1">JS9.Reproject(wcsim, opts)</font></code>
+<code><font size="+1">JS9.ReprojectData(wcsim, opts)</font></code>
 <p>
 where:
 <ul>
 <li><b>wcsim</b>: image containing the WCS used to perform the reprojection
 <li><b>opts</b>: options object
 </ul>
-<b>JS9.Reproject()</b> creates a new raw data layer (with default id
+<b>JS9.ReprojectData()</b> creates a new raw data layer (with default id
 of "reproject") in which the pixels are reprojected using the WCS from
 another image. The
 <a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html">mProjectPP</a>

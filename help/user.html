@@ -258,6 +258,13 @@ You also can choose the units in which WCS information is displayed:
 <b>degrees</b>, <b>radians</b>, or <b>sexagesimal</b>. Image and
 physical coordinates are displayed in units of pixels.
 
+<p>
+Finally the <b>reproject</b> menu option allows you to reproject the
+image using the WCS associated with another displayed image. The
+reprojected data is placed in a new <b>raw data layer</b> called
+"reproject". You can switch between layers using the <b>View->raw data
+layers</b> option.
+
 <li><p><b>Analysis:</b> Each JS9 site can define server-side analysis
 tasks to be run from the Analysis menu. Tasks are of two types:
 <ul>
@@ -292,14 +299,23 @@ In addition to server-side analysis, the <b>Analysis</b> menu lists
 the currently loaded <b>Analysis Plugins</b>. JS9 itself supplies the
 <b>Imexam</b> plugin, which offers the following tasks:
 <ul>
-<li>Encircled Energy
-<li>Radial Proj
+<li> Encircled Energy
+<li> Radial Proj
 <li> Histogram
 <li> Region Stats
 <li> X Proj
 <li> Y Proj
 <li> 3dPlot
 </ul>
+<p>
+You also can perform a fast Gaussian blur by entering a sigma (radius)
+value into the <b>gaussian blur sigma<b> option.  A new raw data layer
+called "gaussBlur" is created, in which the image pixel values are
+blurred using a Gaussian function with the specified sigma. The
+routine uses the fast Gaussian blur algorithm (approximating a full
+Gaussian blur with three passes of a box blur) described <a href="
+http://blog.ivank.net/fastest-gaussian-blur.html"> here</a>.
+
 <p>
 Finally the <b>set data path ...</b> option allows you to specify a
 colon-separated list of directories for JS9 to search when looking for
