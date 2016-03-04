@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.7, Fri Feb 19 13:33:04 EST 2016 */
+/* JS9 allinone: v1.7, Fri Mar  4 12:06:21 EST 2016 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -372,7 +372,61 @@ display:none;
 .tabcontent {
 display:block !important;
 }
-}/*
+}div.JS9BlendContainer {
+    padding: 2px;
+}
+
+div.JS9BlendImage {
+    margin: 5px;
+    background: #E9E9E9;
+    overflow: auto;
+}
+
+div.JS9BlendImageInactive {
+    padding: 10px;
+    border: 1px solid black;
+}
+
+div.JS9BlendImageActive {
+    padding: 9px;
+    border: 2px solid #00F000;
+}
+
+div.JS9BlendHeader {
+    border: 0px solid black;
+    background: #E9E9E9;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+}
+
+#blendModeSelect {
+    width: 100px;
+}
+
+#blendModeSelect option {
+    width: 100px;
+}
+
+#blendOpacitySelect {
+    width: 80px;
+}
+
+#blendOpacitySelect option {
+    width: 80px;
+}
+
+#blendFile {
+    float: right;
+}
+
+#blendNoFile {
+    margin-left: 15px;
+}
+
+/*
  *
  * JS9 CSS specifications
  *
@@ -671,6 +725,10 @@ input:focus.JS9CmdIn{
 .context-menu-input > label > input[type="text"]
 {
    width: 85%;
+}
+
+.context-menu-input > label > span {
+    margin-left: 0px;
 }
 
 /* dhtml window overrides */

@@ -1,22 +1,12 @@
 /*
  *
- * JS9 module (December 10, 2012)
+ * JS9: image display right in your browser (December 10, 2012)
  *
  * Principals: Eric Mandel, Alexey Vikhlinin
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
  * Contact: saord@cfa.harvard.edu
  *
  * Copyright (c) 2012 - 2016 Smithsonian Astrophysical Observatory
- *
- * Utilizes: jquery.js
- *           jquery.contextMenu.js
- *           jquery.flot.js, jquery.flot.errorbars.js
- *           socket.io.js
- *           fabric.js
- *           dhtmlwindow.js
- *           sprintf.js
- *           astroem.js (includes cfitsio, wcslib)
- *           fitsy.js
  *
  */
 
@@ -85,7 +75,7 @@ JS9.globalOpts = {
     helperType: "none",		// one of: sock.io, get, post, none
     helperPort: 2718,		// default port for node.js helper
     winType: "light",		// plugin window: "light" or "new"
-    rgb: {mode: false,		// RGB mode
+    rgb: {active: false,	// RGB mode
 	  rim: null,
 	  gim: null,
 	  bim: null},
@@ -132,6 +122,7 @@ JS9.imageOpts = {
     lcs: "physical",			// default logical coordinate system
     valpos: true,			// whether to display value/position
     opacity: 1.0,			// opacity between 0 and 1
+    sigma: "none",			// gauss blur sigma or none
     maskOpacity: 0.4,			// opacity for masked pixels
     alpha:  255,                        // alpha for image (but use opacity!)
     alpha1: 100,                        // alpha for masked pixels
@@ -463,9 +454,8 @@ JS9.Image = function(file, params, func){
     this.binning = {bin: 1, obin: 1};
     // array to hold raw data as we create it (original raw data at index 0)
     this.raws = [];
-    // blend parameters
-    this.blend = true;
-    this.blends = [];
+    // initial blend mode
+    this.blend = {active: undefined, mode: "normal", opacity: 1};
     // temp flag determines if we should update shapes at end of this call
     this.updateshapes = false;
     // change the cursor to show the waiting status
@@ -507,7 +497,7 @@ JS9.Image = function(file, params, func){
 		// store png data in an offscreen canvas
 		that.mkOffScreenCanvas();
 		// display image, 2D graphics, etc.
-		that.displayImage("all");
+		that.displayImage("all", localOpts);
 		// finish up
 		finishUp.call(that, func);
 	    }).on("error", function(evt){
@@ -521,7 +511,7 @@ JS9.Image = function(file, params, func){
 	    this.png.image.src = this.rgbFile;
 	} else {
 	    // display image, 2D graphics, etc.
-	    this.displayImage("all");
+	    this.displayImage("all", localOpts);
 	    // finish up
 	    finishUp.call(this, func);
 	}
@@ -557,7 +547,7 @@ JS9.Image = function(file, params, func){
 		that.mkSection.apply(that, sarr);
 	    }
 	    // display image, 2D graphics, etc.
-	    that.displayImage("all");
+	    that.displayImage("all", localOpts);
 	    // finish up
 	    finishUp.call(that, func);
 	    // debugging
@@ -1558,6 +1548,10 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
     // last desperate attempt!
     sect.x0 = Math.max(0, sect.x0);
     sect.y0 = Math.max(0, sect.y0);
+    // we changed section, so the offsreen RGB image is invalid
+    this.offscreenRGB = null;
+    // allow chaining
+    return this;
 };
 
 // create colormap index array from data values and specified data min/max
@@ -1766,7 +1760,7 @@ JS9.Image.prototype.mkRGBImage = function(){
     if( !this.rgb ){
 	return this;
     }
-    if( JS9.globalOpts.rgb.mode &&
+    if( JS9.globalOpts.rgb.active &&
 	((this === JS9.globalOpts.rgb.rim) ||
 	 (this === JS9.globalOpts.rgb.gim) ||
 	 (this === JS9.globalOpts.rgb.bim)) ){
@@ -1900,7 +1894,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 		if( (ridx === undefined) || 
 		    (gidx === undefined) ||
 		    (bidx === undefined) ){
-		    JS9.globalOpts.rgb.mode = false;
+		    JS9.globalOpts.rgb.active = false;
 		    JS9.error("RGB images are incompatible. Turning off RGB mode.", "", false);
 		    JS9.Image.prototype.mkRGBImage.call(this);
 		    return this;
@@ -1948,82 +1942,52 @@ JS9.Image.prototype.mkRGBImage = function(){
     return this;
 };
 
-// add an image to blend into this display
 // calling sequences:
-//  blendImage(id)                 # return current params for blended image
-//  blendImage(true||false)        # turn on/off blending for current image
-//  blendImage(id, true||false)    # turn on/off blending of blended image
-//  blendImage(id, blend, opacity) # set blend and opacity for blended image
-JS9.Image.prototype.blendImage = function(id, blend, opacity){
-    var i, im;
+//  blendImage()                   # return current blend params
+//  blendImage(true||false)        # turn on/off blending
+//  blendImage(mode, opacity)      # set blend mode and opacity
+JS9.Image.prototype.blendImage = function(mode, opacity, active){
     // see composite and blend opetations: https://www.w3.org/TR/compositing-1/
     var blendexp = /normal|multiply|screen|overlay|darken|lighten|color-dodge|color-burn|hard-light|soft-light|difference|exclusion|hue|saturation|color|luminosity|clear|copy|source-over|destination-over|source-in|destination-in|source-out|destination-out|source-atop|destination-atop|xor|lighter/i;
     if( arguments.length === 0 ){
-	return this.blends;
+	return this.blend;
     }
     // if first argument is true or false, this turns on/off blending
-    if( (id === true) || (id === false) ){
-	this.blend = id;
-	this.displayImage();
-	return this;
-    }
-    // get image associated with blend id
-    im = JS9.lookupImage(id);
-    if( im ){
-	// return current
-	if( arguments.length === 1 ){
-	    for(i=0; i<this.blends.length; i++){
-		if( im === this.blends[i].im ){
-		    return this.blends[i];
-		}
-	    }
-	    JS9.error("can't find blend params for " + im.id);
-	}
-	// add or change
-	// if blend already exists, change blend params
-	for(i=0; i<this.blends.length; i++){
-	    if( im === this.blends[i].im ){
-		if( (blend !== undefined) && (blend !== null) ){
-		    if( blend === "remove" ){
-			this.blends.splice(i, 1);
-			return this;
-		    }
-		    if( (blend === true) || (blend === false) ){
-			this.blends[i].active = blend;
-			return this;
-		    }
-		    if( !blendexp.test(blend) ){
-			JS9.error("invalid composite/blend operation: "+blend);
-		    }
-		    this.blends[i].blend = blend;
-		}
-		if( (opacity !== undefined) && (opacity !== null) ){
-		    this.blends[i].opacity = opacity;
-		}
-		// display result, if necessary
-		if( this.blend ){
-		    this.displayImage();
-		}
-		return this;
-	    }
-	}
-	// add new blend
-	this.blends.push({im: im, active: true,
-			  blend: blend, opacity: opacity});
-	// display result, if necessary
-	if( this.blend ){
+    if( (mode === true) || (mode === false) ){
+	this.blend.active = mode;
+	if( this.display.blendMode ){
 	    this.displayImage();
 	}
-    } else {
-	JS9.error("can't find image to blend: " + id);
+	return this;
+    }
+    if( JS9.notNull(mode) || JS9.notNull(opacity) ){
+	// set blend mode, if necessary
+	if( JS9.notNull(mode) ){
+	    if( !blendexp.test(mode) ){
+		JS9.error("invalid composite/blend operation: "+mode);
+	    }
+	    this.blend.mode = mode;
+	}
+	// set opacity, if necessary
+	if( JS9.notNull(opacity) ){
+	    this.blend.opacity = opacity;
+	}
+	// set active state, if necessary
+	if( JS9.notNull(active) ){
+	    this.blend.active = active;
+	}
+	// display blended result, if necessary
+	if( this.display.blendMode && this.blend.active ){
+	    this.displayImage();
+	}
     }
     return this;
 };
 
+JS9.noff = 0;
 // primitive to put image data on screen
 JS9.Image.prototype.putImage = function(opts){
-    var img, key;
-    var save = {};
+    var wcspos, impos;
     var rgb = this.rgb;
     var display = this.display;
     var ctx = display.context;
@@ -2045,26 +2009,38 @@ JS9.Image.prototype.putImage = function(opts){
 	}
 	return that.offscreenRGB.canvas;
     };
+    // opts is optional
+    opts = opts || {};
     // offsets into display
     this.ix = Math.floor((display.canvas.width - rgb.img.width)/2);
     this.iy = Math.floor((display.canvas.height - rgb.img.height)/2);
+    // for reprojection: if the original wcs header was supplied, make sure we
+    // are aligned with it
+    if( this.rawDataLayer() === "reproject" ){
+	if( opts.wcsim ){
+	    wcspos = opts.wcsim.logicalToDisplayPos({x: opts.wcsim.raw.header.CRPIX1, y: opts.wcsim.raw.header.CRPIX2});
+	    impos = this.logicalToDisplayPos({x: this.raw.header.CRPIX1, y: this.raw.header.CRPIX2});
+	    this.wcsix = wcspos.x - impos.x;
+	    this.wcsiy = wcspos.y - impos.y;
+	}
+	if( this.wcsix ){
+	    this.ix += this.wcsix * this.rgb.sect.zoom;
+	}
+	if( this.wcsiy ){
+	    this.iy += this.wcsiy * this.rgb.sect.zoom;
+	}
+    }
     // draw the image into the context
-    if( (opts.opacity !== undefined) || (opts.blend !== undefined) ){
-	img = img2canvas(this, rgb.img);
+    if( JS9.notNull(opts.opacity) || JS9.notNull(opts.blend) ){
+	ctx.save();
 	if( opts.opacity !== undefined ){
-	    save.globalAlpha = ctx.globalAlpha;
 	    ctx.globalAlpha = opts.opacity;
 	}
 	if( opts.blend !== undefined ){
-	    save.globalCompositeOperation = ctx.globalCompositeOperation;
 	    ctx.globalCompositeOperation = opts.blend;
 	}
-	ctx.drawImage(img, this.ix, this.iy);
-	for( key in save ){
-	    if( save.hasOwnProperty(key) ){
-		ctx[key] = save[key];
-	    }
-	}
+	ctx.drawImage(img2canvas(this, rgb.img), this.ix, this.iy);
+	ctx.restore();
     } else {
 	ctx.putImageData(rgb.img, this.ix, this.iy);
     }
@@ -2079,7 +2055,10 @@ JS9.Image.prototype.putImage = function(opts){
 // plugins: execute plugin callbacks
 // all: colors,scaled,rgb,display,plugins
 JS9.Image.prototype.displayImage = function(imode, opts){
-    var i, blend, pname, pinst, popts;
+    var i, im, pname, pinst, popts, bopts;
+    var allmode = "colors,scaled,rgb,display,plugins";
+    var nblend = 0;
+    var blends = [];
     var mode = {};
     var modeFunc = function(element, index, array){
 	var el = element.trim();
@@ -2116,7 +2095,7 @@ JS9.Image.prototype.displayImage = function(imode, opts){
     if( !imode ){
 	imode = "rgb";
     } else if( imode === "all" ){
-	imode = "colors,scaled,rgb,display,plugins";
+	imode = allmode;
 	mode.notify = true;
     } else if( imode === "rgbonly" ){
 	imode = "rgb,nodisplay";
@@ -2137,6 +2116,16 @@ JS9.Image.prototype.displayImage = function(imode, opts){
     }
     // opts are ... optional
     opts = opts || {};
+    // do we need to blend?
+    if( this.display.blendMode ){
+	for(i=0; i<JS9.images.length; i++){
+	    im = JS9.images[i];
+	    if( (im.display === this.display) && im.blend.active ){
+		blends.push(im);
+		nblend++;
+	    }
+	}
+    }
     // generate colordata
     if( mode.colors ){
 	// populate the colorData array (offsets into scaled colorcell data)
@@ -2157,8 +2146,15 @@ JS9.Image.prototype.displayImage = function(imode, opts){
     if( mode.rgb ){
 	// make the RGB image
 	this.mkRGBImage();
-	// if we changed the rgb image, the offsreen RGB image is invalid
+	// if we changed the rgb image, the offscreen RGB image is invalid
 	this.offscreenRGB = null;
+	if( nblend ){
+	    for(i=blends.length-1; i>=0; i--){
+		im = blends[i];
+		im.mkRGBImage();
+		im.offscreenRGB = null;
+	    }
+	}
     }
     // if we explicitly don't display, reuturn here;
     if( mode.nodisplay ){
@@ -2166,33 +2162,35 @@ JS9.Image.prototype.displayImage = function(imode, opts){
     }
     // display image on screen
     if( mode.display ){
-	// clear image?
-	if( (opts.opacity === undefined) && (opts.blend === undefined) ){
-	    this.display.context.clear();
-	}
-	// display the image
-	this.putImage(opts);
-	// display blended images, if necessary
-	if( this.blend && this.blends.length ){
-	    for(i=0; i<this.blends.length; i++){
-		blend = this.blends[i];
-		if( blend.active ){
-		    JS9.Image.prototype.putImage.call(blend.im,
-						      {opacity: blend.opacity,
-						       blend: blend.blend});
+	// clear image
+	this.display.context.clear();
+	if( nblend ){
+	    for(i=blends.length-1; i>=0; i--){
+		im = blends[i];
+		// display the image
+		bopts = {blend: im.blend.mode, opacity: im.blend.opacity};
+		im.putImage(bopts);
+		if( im === this ){
+		    // display layers for this image
+		    im.displayShapeLayers();
+		    // notify the helper
+		    if( mode.notify ){
+			im.notifyHelper();
+		    }
 		}
 	    }
+	} else {
+	    // display the image
+	    this.putImage(opts);
+	    // display layers for this image
+	    this.displayShapeLayers();
+	    // notify the helper
+	    if( mode.notify ){
+		this.notifyHelper();
+	    }
 	}
-	// display layers for this image
-	this.displayShapeLayers();
-	// notify the helper
-	if( mode.notify ){
-	    this.notifyHelper();
-	}
-	// mark this image as being in this display, if its not a blend
-	if( (opts.opacity === undefined) && (opts.blend === undefined) ){
-	    this.display.image = this;
-	}
+	// mark this image as being in this display
+	this.display.image = this;
     }
     // post-processing
     if( mode.plugins ){
@@ -2204,8 +2202,7 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 		if( pinst.isActive("onimagedisplay") ){
 		    // hack: panner always needs to execute plugin callback
 		    // others only do so when the image is really displayed
-		    if( (pname === "JS9Panner") ||
-			(imode === "all") || (imode === "display") ){
+		    if( (pname === "JS9Panner") || mode.display ){
 			try{ popts.onimagedisplay.call(pinst, this); }
 			catch(e){ pinst.errLog("onimagedisplay", e); }
 		    }
@@ -2254,7 +2251,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	this.mkSection(ozoom);
     }
     // display new image data with old section
-    this.displayImage("colors");
+    this.displayImage("colors", opts);
     // update shape layers if necessary
     if( doreg ){
 	this.refreshLayers();
@@ -2330,7 +2327,7 @@ JS9.Image.prototype.getPan = function(panx, pany){
 
 // set pan location of RGB image (using image coordinates)
 JS9.Image.prototype.setPan = function(panx, pany){
-    var i, key, blend, bpanx, bpany, bw2, bh2;
+    var i, key, bpanx, bpany, bw2, bh2, im;
     var w2 = this.raw.width / 2;
     var h2 = this.raw.height / 2;
     if( arguments.length === 0 ){
@@ -2338,13 +2335,14 @@ JS9.Image.prototype.setPan = function(panx, pany){
 	pany = h2;
     }
     this.mkSection(panx, pany);
-    // pan blended images, if necessary
-    if( this.blend && this.blends.length ){
-	for(i=0; i<this.blends.length; i++){
-	    blend = this.blends[i];
-	    if( blend.active ){
-		bw2 = blend.im.raw.width / 2;
-		bh2 = blend.im.raw.height / 2;
+    // set pan for blended images, if necessary
+    if( this.display.blendMode ){
+	for(i=0; i<JS9.images.length; i++){
+	    im = JS9.images[i];
+	    if( (im !== this) &&
+		(im.display === this.display) && im.blend.active ){
+		bw2 = im.raw.width / 2;
+		bh2 = im.raw.height / 2;
 		if( arguments.length === 0 ){
 		    bpanx = bw2;
 		    bpany = bh2;
@@ -2352,8 +2350,7 @@ JS9.Image.prototype.setPan = function(panx, pany){
 		    bpanx = bw2 - (w2 - panx);
 		    bpany = bh2 - (h2 - pany);
 		}
-		JS9.Image.prototype.mkSection.call(blend.im, bpanx, bpany);
-		JS9.Image.prototype.displayImage.call(blend.im, "rgbonly");
+		JS9.Image.prototype.mkSection.call(im, bpanx, bpany);
 	    }
 	}
     }
@@ -2421,20 +2418,20 @@ JS9.Image.prototype.parseZoom = function(zval){
 
 // set zoom of RGB image
 JS9.Image.prototype.setZoom = function(zval){
-    var i, nzoom, key, blend;
+    var i, nzoom, key, im;
     nzoom = this.parseZoom(zval);
     if( !nzoom ){
 	return;
     }
     // remake section
     this.mkSection(nzoom);
-    // zoom blended images, if necessary
-    if( this.blend && this.blends.length ){
-	for(i=0; i<this.blends.length; i++){
-	    blend = this.blends[i];
-	    if( blend.active ){
-		JS9.Image.prototype.mkSection.call(blend.im, nzoom);
-		JS9.Image.prototype.displayImage.call(blend.im, "rgbonly");
+    // set zoom for blended images, if necessary
+    if( this.display.blendMode ){
+	for(i=0; i<JS9.images.length; i++){
+	    im = JS9.images[i];
+	    if( (im !== this) &&
+		(im.display === this.display) && im.blend.active ){
+		JS9.Image.prototype.mkSection.call(im, nzoom);
 	    }
 	}
     }
@@ -3427,7 +3424,7 @@ JS9.Image.prototype.setColormap = function(arg, arg2, arg3){
     case 3:
 	switch(arg){
 	case "rgb":
-	    JS9.globalOpts.rgb.mode = !JS9.globalOpts.rgb.mode;
+	    JS9.globalOpts.rgb.active = !JS9.globalOpts.rgb.active;
 	    break;
 	case "invert":
 	    this.params.invert = !this.params.invert;
@@ -3592,10 +3589,25 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 	} else {
 	    for(i=0; i<this.raws.length; i++){
 		if( opts === this.raws[i].id ){
+		    if( func === "remove" ){
+			if( opts === "raw0" ){
+			    JS9.error("can't remove raw0 data layer");
+			}
+			if( this.raws[i].current0 && this.raws[i].current0.id ){
+			    // back to origin of this layer, if possible
+			    this.raw = this.raws[i].current0;
+			} else {
+			    // else back to original raw data
+			    this.raw = this.raws[0];
+			}
+			this.raws.splice(i, 1);
+			this.displayImage("all", opts);
+			return true;
+		    }
 		    this.raw = this.raws[i];
 		    this.mkSection();
 		    // redisplay using these data
-		    this.displayImage("all");
+		    this.displayImage("all", opts);
 		    return true;
 		}
 	    }
@@ -3726,7 +3738,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 	// assign this nraw to the high-level raw data object
 	this.raw = nraw;
 	// redisplay using these data
-	this.displayImage("all");
+	this.displayImage("all", opts);
     }
     return true;
 };
@@ -3786,7 +3798,7 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
     opts.x = x;
     opts.y = y;
     this.rawDataLayer(opts, function (oraw, nraw, opts){
-	var oi, oj, ni, nj, nlen, oU8, nU8, ooff, noff;
+	var i, oi, oj, ni, nj, nlen, oU8, nU8, ooff, noff;
 	var bpp = oraw.data.BYTES_PER_ELEMENT;
 	if( nraw.xoff === undefined ){
 	    nraw.xoff = 0;
@@ -3797,7 +3809,13 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 	nraw.xoff += opts.x;
 	nraw.yoff += opts.y;
 	if( !opts.fill || opts.fill === "clear" ){
-	    nraw.data.fill(0);
+	    if( typeof nraw.data.fill === "function" ){
+		nraw.data.fill(0);
+	    } else {
+		for(i=0; i<nraw.data.length; i++){
+		    nraw.data[i] = 0;
+		}
+	    }
 	}
 	for(oj=0; oj<oraw.height; oj++){
 	    nj = oj + nraw.yoff;
@@ -3830,7 +3848,7 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 
 // reproject image using WCS info
 // creates a new raw data layer ("reproject")
-JS9.Image.prototype.reproject = function(wcsim, opts){
+JS9.Image.prototype.reprojectData = function(wcsim, opts){
     var that = this;
     var twcs = {};
     var wvfile, wcsheader, wcsstr, oheader, nheader;
@@ -3963,6 +3981,9 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	topts = $.extend(true, {}, opts || {}, JS9.fits.options);
 	// ... in a new raw data layer
 	topts.rawid = topts.rawid || "reproject";
+	// save pointer to original wcs image
+	topts.wcsim = wcsim;
+	// process the FITS file
 	try{ JS9.fits.handleFITSFile(ovfile, topts, reprojHandler); }
 	catch(e){ JS9.error("can't process reprojected FITS file", e); }
     }, JS9.SPINOUT);
@@ -4155,6 +4176,8 @@ JS9.Display = function(el){
     this.layers = {};
     // init message layer
     this.initMessages();
+    // blend mode is false to start
+    this.blendMode = false;
     // add event handlers
     this.divjq.on("mouseover", this,
 		  function(evt){return JS9.mouseOverCB(evt);});
@@ -4412,7 +4435,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
     // for current image being displayed ...
     if( this.image ){
 	// redisplay
-	this.image.displayImage("all");
+	this.image.displayImage("all", opts);
 	this.image.refreshLayers();
     }
     return this;
@@ -4938,7 +4961,7 @@ JS9.Menubar = function(width, height){
 		    im = JS9.images[i];
 		    if( im.display === tdisp ){
 			name = im.id;
-			if( JS9.globalOpts.rgb.mode ){
+			if( JS9.globalOpts.rgb.active ){
 			    if( im === JS9.globalOpts.rgb.rim){ 
 				name += " (red)";
 			    }
@@ -5275,6 +5298,22 @@ JS9.Menubar = function(width, height){
 		if( tdisp.image && tdisp.image.params.valpos ){
 		    items.valpos.icon = "sun";
 		}
+		if( tim && tim.raws.length > 1 ){
+		    items["sep" + n++] = "------";
+		    items.rawlayer = {
+			name: "raw data layers",
+			items: { }
+		    };
+		    for(i=0; i<tim.raws.length; i++){
+			key = "rawlayer_" + tim.raws[i].id;
+			items.rawlayer.items[key] = {
+			    name: tim.raws[i].id
+			};
+			if( tim.raw === tim.raws[i] ){
+			    items.rawlayer.items[key].icon = "sun";
+			}
+		    }
+		}
 		if( JS9.globalOpts.resize ){
 		    items["sep" + n++] = "------";
 		    items.resize = {
@@ -5337,6 +5376,10 @@ JS9.Menubar = function(width, height){
 					}
 				    }
 				}
+			    }
+			    // maybe its a raw data layer
+			    if( tim && key.match(/^rawlayer_/) ){
+				tim.rawDataLayer(key.replace(/^rawlayer_/, ""));
 			    }
 			    break;
 			}
@@ -5657,14 +5700,18 @@ JS9.Menubar = function(width, height){
 		var items = {};
 		var tdisp = getDisplays()[0];
 		var editColor = function(im, obj){
-		    if( !isNaN(obj.contrast) ){
-			im.params.contrast = obj.contrast;
+		    if( obj.contrast && !isNaN(obj.contrast) ){
+			im.params.contrast = parseFloat(obj.contrast);
 		    }
-		    if( !isNaN(obj.bias) ){
-			im.params.bias = obj.bias;
+		    if( obj.bias && !isNaN(obj.bias) ){
+			im.params.bias = parseFloat(obj.bias);
 		    }
-		    if( !isNaN(obj.alpha) ){
-			im.params.alpha = obj.alpha;
+		    if( !isNaN(obj.opacity) ){
+			if( obj.opacity !== "" ){
+			    im.params.opacity = parseFloat(obj.opacity);
+			} else {
+			    im.params.opacity = 1.0;
+			}
 		    }
 		    im.displayImage("colors");
 		};
@@ -5704,9 +5751,9 @@ JS9.Menubar = function(width, height){
 		    name: "bias value:",
 		    type: "text"
 		};
-		items.alpha = {
+		items.opacity = {
 		    events: {keyup: keyColor},
-		    name: "alpha value:",
+		    name: "opacity value:",
 		    type: "text"
 		};
 		items["sep" + n++] = "------";
@@ -5718,7 +5765,7 @@ JS9.Menubar = function(width, height){
 		}
 		items["sep" + n++] = "------";
 		items.rgb = {name: "RGB mode"};
-		if( JS9.globalOpts.rgb.mode ){
+		if( JS9.globalOpts.rgb.active ){
 		    items.rgb.icon = "sun";
 		}
 		return {
@@ -5739,7 +5786,8 @@ JS9.Menubar = function(width, height){
 			    if( uim  ){
 				obj.contrast = String(uim.params.contrast);
 				obj.bias = String(uim.params.bias);
-				obj.alpha = String(uim.params.alpha);
+				obj.opacity = String(uim.params.opacity);
+				obj.sigma = String(uim.params.sigma);
 			    }
 			    $.contextMenu.setInputValues(opt, obj);
 			    JS9.jupyterFocus(".context-menu-item");
@@ -5847,9 +5895,10 @@ JS9.Menubar = function(width, height){
 	    events: { hide: onhide },
             build: function($trigger, evt){
 		var i, s1, s2;
-		var n = 0;
+		var n=0, nwcs=0;
 		var items = {};
 		var tdisp = getDisplays()[0];
+		var tim = tdisp.image;
 		items.wcssystitle = {name: "WCS Systems:", disabled: true};
 		for(i=0; i<JS9.wcssyss.length; i++){
 		    s1 = JS9.wcssyss[i];
@@ -5869,16 +5918,46 @@ JS9.Menubar = function(width, height){
 			items[s1].icon = "sun";
 		    }
 		}
+		items["sep" + n++] = "------";
+		items.reproject = {
+		    name: "reproject",
+		    items: {reprojtitle: {name: "wcs from:", disabled: true}}
+		};
+		for(i=0; i<JS9.images.length; i++){
+		    if( tim !== JS9.images[i]  &&  
+			JS9.images[i].wcs ){
+			s1 = "reproject_" + JS9.images[i].id;
+			items.reproject.items[s1] = {
+			    name: JS9.images[i].id
+			};
+			nwcs++;
+		    }
+		}
+		if( !nwcs ){
+		    items.reproject.items.notasks = {
+			name: "[none]",
+			disabled: true,
+			events: {keyup: function(evt){return;}}
+		    };
+		}
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val, idx, array){
+			var file;
 			var rexp = new RegExp(key);
 			var udisp = val;
 			var uim = udisp.image;
 			if( uim ){
+			    // maybe it's a wcs reprojection request
+			    if( key.match(/^reproject_/) ){
+				file = key.replace(/^reproject_/,"");
+				uim.reprojectData(file);
+				return;
+			    }
+			    // otherwise it's a wcs directive
 			    if( JS9.wcssyss.join("@").search(rexp) >=0 ){
 				uim.setWCSSys(key);
-			    } else if( JS9.wcsunitss.join("@").search(rexp) >=0 ){
+			    } else if( JS9.wcsunitss.join("@").search(rexp)>=0){
 				uim.setWCSUnits(key);
 			    } else {
 				JS9.error("unknown wcs sys/units: " + key);
@@ -5910,6 +5989,34 @@ JS9.Menubar = function(width, height){
 		var tdisp = getDisplays()[0];
 		var im = tdisp.image;
 		var lastxclass="";
+		var editAnalysis = function(im, obj){
+		    if( !obj.sigma ){
+			obj.sigma = "none";
+		    }
+		    if( obj.sigma === "none" ){
+			im.params.sigma = obj.sigma;
+			im.rawDataLayer("gaussBlur", "remove");
+		    } else {
+			im.params.sigma = parseFloat(obj.sigma);
+			im.gaussBlurData(im.params.sigma);
+		    }
+		};
+		var keyAnalysis = function(e){
+		    var obj = $.contextMenu.getInputValues(e.data);
+		    var keycode = e.which || e.keyCode;
+		    var vdisp = that.display;
+		    var vim = vdisp.image;
+		    switch( keycode ){
+		    case 9:
+		    case 13:
+			editAnalysis(vim, obj);
+			e.data.edited = false;
+			break;
+		    default:
+			e.data.edited = true;
+			break;
+		    }
+		};
 		for(i=0; i<JS9.plugins.length; i++){
 		    plugin = JS9.plugins[i];
 		    pname = plugin.name;
@@ -5983,6 +6090,11 @@ JS9.Menubar = function(width, height){
 		    };
 		}
 		items["sep" + n++] = "------";
+		items.sigma = {
+		    events: {keyup: keyAnalysis},
+		    name: "gaussian blur sigma:",
+		    type: "text"
+		};
 		items.dpath = {name: "set data path ..."};
 		}
 		return {
@@ -6035,6 +6147,31 @@ JS9.Menubar = function(width, height){
 			    }
 			}
 		    });
+		    },
+		    events: {
+			show: function(opt){
+			    var udisp = that.display;
+			    var uim = udisp.image;
+			    var obj = {};
+			    if( uim  ){
+				obj.sigma = String(uim.params.sigma);
+			    }
+			    $.contextMenu.setInputValues(opt, obj);
+			    JS9.jupyterFocus(".context-menu-item");
+			},
+			hide: function(opt){
+			    var obj;
+			    var udisp = that.display;
+			    var uim = udisp.image;
+			    if( uim ){
+				// if a key was pressed, do the edit
+				if( opt.edited ){
+				    delete opt.edited;
+				    obj = $.contextMenu.getInputValues(opt);
+				    editAnalysis(uim, obj);
+				}
+			    }
+			}
 		    },
 		    items: items
 		};
@@ -10478,6 +10615,11 @@ JS9.isNumber = function(s) {
     return !isNaN(parseFloat(s)) && isFinite(s);
 };
 
+// check if a variable is neither undefined nor null
+JS9.notNull = function(s) {
+    return s !== undefined && s !== null;
+};
+
 // parse a FITS card and return name and value
 JS9.cardpars = function(card){
     var name, value;
@@ -10754,6 +10896,11 @@ JS9.mouseDownCB = function(evt){
 	im.clearMessage("regions");
 	return;
     }
+    // change blend mode to 0 in case we change contrast/bias
+    // (setting to 0 instead of false signals it was true ... for resetting)
+    if( display.blendMode ){
+	display.blendMode = 0;
+    }
     // plugin callbacks
     if( !JS9.specialKey(evt) ){
 	for( pname in display.pluginInstances ){
@@ -10820,6 +10967,11 @@ JS9.mouseUpCB = function(evt){
 	     (Math.abs(im.dnpos.y-pos.y) < JS9.NOMOVE)) ){
 	    im.setPan(ipos.x, ipos.y);
 	}
+    }
+    // if blend mode is 0, it was true on mousedown, so reset and redisplay
+    if( display.blendMode === 0 ){
+	display.blendMode = true;
+	im.displayImage("rgb");
     }
     // plugin callbacks
     if( !JS9.specialKey(evt) ){
@@ -12340,7 +12492,7 @@ JS9.mkPublic("DisplayMessage", "displayMessage");
 JS9.mkPublic("RawDataLayer", "rawDataLayer");
 JS9.mkPublic("ShiftData", "shiftData");
 JS9.mkPublic("GaussBlurData", "gaussBlurData");
-JS9.mkPublic("Reproject", "reproject");
+JS9.mkPublic("ReprojectData", "reprojectData");
 
 // set/clear valpos flag
 JS9.mkPublic("SetValPos", function(mode){
@@ -12394,7 +12546,7 @@ JS9.mkPublic("Load", function(file, opts){
 	    im = JS9.lookupImage(file.name, display);
 	    if( im ){
 		// display image, 2D graphics, etc.
-		im.displayImage("display");
+		im.displayImage("display", opts);
 		im.refreshLayers();
 		im.clearMessage();
 		return;
@@ -12451,7 +12603,7 @@ JS9.mkPublic("Load", function(file, opts){
     im = JS9.lookupImage(file, display);
     if( im ){
 	// display image, 2D graphics, etc.
-	im.displayImage("display");
+	im.displayImage("display", opts);
 	im.clearMessage();
 	return;
     }
@@ -12912,6 +13064,7 @@ JS9.mkPublic("DisplayPlugin", function(name){
 		return;
 	    }
 	}
+	JS9.error("can't find plugin: " + name);
     }
 });
 
@@ -12972,6 +13125,36 @@ JS9.mkPublic("GetFITSHeader", function(flag){
 	s = JS9.raw2FITS(im.raw, flag);
     }
     return s;
+});
+
+// turn on and off blending, redisplaying image
+JS9.mkPublic("BlendDisplay", function(mode){
+    var i, im;
+    var imarr = [];
+    var obj = JS9.parsePublicArgs(arguments);
+    var id = obj.display || JS9.DEFID;
+    var disp = JS9.lookupDisplay(id);
+    if( !disp ){
+	JS9.error("no JS9 display found: " + id);
+    }
+    if( (mode === undefined) || (mode === "mode") ){
+	return disp.blendMode;
+    }
+    if( mode === "list" ){
+	for(i=0; i<JS9.images.length; i++){
+	    im = JS9.images[i];
+	    if( (im.display.id === id) && im.blend.active ){
+		imarr.push(im.id);
+	    }
+	}
+	return imarr;
+    }
+    // it's true or false
+    disp.blendMode = !!mode;
+    if( disp.image ){
+	disp.image.displayImage();
+    }
+    return disp.blendMode;
 });
 
 // load auxiliary file, if available
