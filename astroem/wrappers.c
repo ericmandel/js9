@@ -384,8 +384,8 @@ char *reg2wcsstr(int n, char *regstr){
 	if( !strcmp(s, "text") ){
 	  snprintf(tbuf, SZ_LINE, ",%s", s1);
 	  strncat(str, tbuf, SZ_LINE-1);
-	} else if( !strcmp(s, "polygon") ){
-	  /* for polygons, convert successive image values to RA, Dec */
+	} else if( !strcmp(s, "polygon") || !strcmp(s, "line") ){
+	  /* for polygons and lines, convert successive image pos to RA, Dec */
 	  while( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) ){
 	    /* convert image x,y to ra,dec (convert 1-index to 0-index) */
 	    pix2wcs(info->wcs, dval1-1, dval2-1, &rval1, &rval2);

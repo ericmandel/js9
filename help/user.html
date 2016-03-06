@@ -215,7 +215,7 @@ separately.
 
 <li><p><b>Region:</b> Choose the appropriate menu option to create a
 region of type <b>annulus</b>, <b>box</b>, <b>circle</b>, <b>ellipse</b>,
-<b>point</b>, <b>polygon</b>, <b>text</b>.
+<b>line</b>, <b>point</b>, <b>polygon</b>, <b>text</b>.
 (see below for details on how to use regions). One or more regions can
 be created and manipulated on a single image.
 
@@ -348,7 +348,7 @@ the configuration menu for that region.
 <p>
 Regions are geometric shapes that can be used to mark part of an image
 for analysis. JS9 allows you to create the following region
-types: <b>annulus, box, circle, ellipse, point, polygon</b>.
+types: <b>annulus, box, circle, ellipse, line, point, polygon</b>.
 A <b>text</b> region also can be created to annotate an image.  When one
 of these options is selected, the region is created in the center of
 the image. It then can be dragged to the desired location. Arrow keys
@@ -410,7 +410,7 @@ The <b>ellipse</b> region supports:
 <li><b>Radii:</b> change the r1 and r2 radii of the region (in pixels)
 <li><b>Angle:</b> change the angle of the region (in degrees, counter-clockwise)
 </ul>
-The <b>polygon</b> region supports:
+The <b>polygon</b> and line regions support:
 <ul>
 <li><b>Points:</b> change the image points of the region (in pixels)
 <li><b>Angle:</b> change the angle of the region (in degrees, counter-clockwise)
@@ -441,9 +441,10 @@ all mouse events. See <a href="localtasks.html">Local Tasks</a> for
 more information about plugins and browser-based analysis.
 
 <p>
-Within a polygon, if you press <b>meta</b> and click the mouse on the
-polygon border, a new point will be added at that point. If you press
-the <b>meta</b> key and click on an existing point, it will be deleted.
+Within a polygon or a line, if you press <b>meta</b> and click the
+mouse on the polygon or line border, a new point will be added at that
+point. If you press the <b>meta</b> key and click on an existing
+point, it will be deleted.
 
 <p>
 <a name="dragdrop"></a> 

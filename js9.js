@@ -5829,6 +5829,7 @@ JS9.Menubar = function(width, height){
 		    "box": {name: "box"},
 		    "circle": {name: "circle"},
 		    "ellipse": {name: "ellipse"},
+		    "line": {name: "line"},
 		    "point": {name: "point"},
 		    "polygon": {name: "polygon"},
 		    "text": {name: "text"},
@@ -6782,6 +6783,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	}
 	// selection processing
 	switch(opts.target.type){
+	case "polyline":
 	case "polygon":
 	    JS9.Fabric.addPolygonAnchors(dlayer, opts.target);
 	    dlayer.canvas.renderAll();
@@ -6808,6 +6810,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	}
 	// selection cleared processing
 	switch(opts.target.type){
+	case "polyline":
 	case "polygon":
 	    JS9.Fabric.removePolygonAnchors(dlayer, opts.target);
 	    dlayer.canvas.renderAll();
@@ -7195,6 +7198,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	opts.hasRotatingPoint = false;
 	opts.hasBorders = true;
 	break;
+    case "line":
     case "polygon":
 	if( opts.pts && opts.pts.length ){
 	    if( typeof opts.pts === "string" ){
@@ -7232,6 +7236,10 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 		       y: (opts.pts[i].y - cpos.y) / zoom};
 		opts.points.push(pos);
 	    }
+	} else if( opts.shape === "polygon" && opts. polypoints ){
+	    opts.points = opts.polypoints;
+	} else if( opts.shape === "line" && opts. linepoints ){
+	    opts.points = opts.linepoints;
 	}
 	if( opts.ireg && JS9.SCALEIREG ){
 	    len = opts.points.length;
@@ -7512,6 +7520,11 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 		s = new fabric.Rect(opts);
 		break;
 	    }
+	    break;
+	case "line":
+	    // save shape
+	    params.shape = "line";
+	    s = new fabric.Polyline(opts.points, opts);
 	    break;
 	case "polygon":
 	    // save shape
@@ -7794,9 +7807,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.imstr = "point(" + tr(px) + ", " + tr(py) + ")";
 	tstr = "point " + pub.x + " " + pub.y;
 	break;
+    case "line":
     case "polygon":
-	pub.imstr = "polygon(";
-	tstr = "polygon ";
+	pub.imstr = pub.shape + "(";
+	tstr = pub.shape + " ";
 	pub.pts = [];
 	for(i=0; i<obj.points.length; i++){
 	    if( i > 0 ){
@@ -8057,6 +8071,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 		obj.height = obj.ry * 2;
 	    }
 	    break;
+	case "line":
 	case "polygon":
 	    if( opts.points && opts.points.length ){
 		obj.scaleX = zoom / bin;
@@ -8157,6 +8172,7 @@ JS9.Fabric.refreshShapes = function(layerName){
 	obj.setCoords();
 	// shape-specific processing
 	switch(obj.type){
+	    case "polyline":
 	    case "polygon":
 	    if( ao === obj ){
 		JS9.Fabric.removePolygonAnchors(layer.dlayer, obj);
@@ -8362,7 +8378,7 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	return;
     }
     obj.params.anchors = [];
-    // make a circle at each anchor point
+    // make a rectangle at each anchor point
     for(i=0; i<obj.points.length; i++){
 	pos.x = obj.left + obj.points[i].x * obj.scaleX;
 	pos.y = obj.top + obj.points[i].y * obj.scaleY;
@@ -8564,9 +8580,11 @@ JS9.Regions.opts = {
     // point
     ptshape: "box",
     ptsize: 2,
+    // line
+    linepoints: [{x: -30, y: 30}, {x:30, y:-30}],
     // polygon in display coords
     // points: [{x: -30, y: 30}, {x:30, y:30}, {x:30, y:-30}, {x:-30, y: -30}],
-    points: [{x: -30, y: 30}, {x:30, y:30}, {x:0, y:-30}],
+    polypoints: [{x: -30, y: 30}, {x:30, y:30}, {x:0, y:-30}],
     // text
     // fontFamily: "Helvetica, sans-serif",
     fontFamily: "Helvetica",
@@ -8631,7 +8649,7 @@ JS9.Regions.opts = {
 	}
 	// add polygon points
 	if( JS9.specialKey(evt) ){
-	    if( target.type === "polygon" ){
+	    if( target.type === "polygon" || target.type === "polyline" ){
 		JS9.Fabric.addPolygonPoint.call(im, target.params.layerName,
 						target, evt);
 		JS9.Fabric._updateShape.call(im, target.params.layerName,
@@ -8784,6 +8802,7 @@ JS9.Regions.initConfigForm = function(obj){
     switch(obj.pub.shape){
     case "box":
     case "ellipse":
+    case "line":
     case "polygon":
     case "text":
 	$(form + ".angle").removeClass("nodisplay");
@@ -8943,7 +8962,7 @@ JS9.Regions.parseRegions = function(s){
     var regions = [];
     var i, j, k, lines, obj, robj;
     var owcssys, wcssys, iswcs, liswcs, pos, wcsinfo, alen;
-    var regrexp = /(annulus)|(box)|(circle)|(ellipse)|(polygon)|(point)|(text)/;
+    var regrexp = /(annulus)|(box)|(circle)|(ellipse)|(line)|(polygon)|(point)|(text)/;
     var wcsrexp = /(fk4)|(fk5)|(icrs)|(galactic)|(ecliptic)|(image)|(physical)/;
     var parrexp = /\(\s*([^)]+?)\s*\)/;
     var seprexp = /\n|;/;
@@ -9156,6 +9175,7 @@ JS9.Regions.parseRegions = function(s){
 			obj.angle = getang.call(this, robj.args[4]);
 		    }
 		    break;
+		case 'line':
 		case 'polygon':
 		    obj.pts = [];
 		    for(j=0, k=0; j<alen; j+=2, k++){
