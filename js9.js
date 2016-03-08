@@ -7699,6 +7699,7 @@ JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
 JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     var i, pname, pinst, popts, xname, s, scalex, scaley, px, py, lcs;
     var display, bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius;
+    var opos, dist;
     var pub ={};
     var layer = this.layers[layerName];
     var tr  = function(x){return x.toFixed(1);};
@@ -7831,8 +7832,21 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    }
 	    tstr += (npos.x + " " + npos.y);
 	    pub.pts.push(npos);
+	    if( pub.shape === "line" ){
+		if( i === 0 ){
+		    dist = 0;
+		} else {
+		    opos = pub.pts[i-1];
+		    dist += Math.sqrt(((npos.x - opos.x) * (npos.x - opos.x)) +
+				      ((npos.y - opos.y) * (npos.y - opos.y)));
+		}
+	    }
 	}
-	pub.imstr += ")";
+        if( pub.shape === "line" ){
+	    pub.imstr += ') {"sep":' + tr(dist) + ',"units":"pix"}';
+	} else {
+	    pub.imstr += ")";
+	}
         break;
     case "text":
 	pub.imstr = "text(" + tr(px) + ", " + tr(py) + ', "' + obj.text + '")';

@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.7, Sun Mar  6 13:05:56 EST 2016 */
+/* JS9 allinone: v1.7, Tue Mar  8 10:32:22 EST 2016 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -403,11 +403,11 @@ div.JS9BlendHeader {
 }
 
 #blendModeSelect {
-    width: 100px;
+    width: 110px;
 }
 
 #blendModeSelect option {
-    width: 100px;
+    width: 110px;
 }
 
 #blendOpacitySelect {

@@ -321,12 +321,13 @@ char *reg2wcsstr(int n, char *regstr){
   char *str = NULL;
   char *s=NULL, *t=NULL;;
   char *s1=NULL, *s2=NULL;
+  char *saves1=NULL;
   char *targs=NULL, *targ=NULL;
   char *mywcssys=NULL;
   int alwaysdeg = 0;
+  double sep = 0.0;
   double dval1, dval2, dval3, dval4;
   double rval1, rval2, rval3, rval4;
-  double sep;
 
   if( info->wcs ){
     mywcssys = wcssys(n, NULL);
@@ -352,6 +353,7 @@ char *reg2wcsstr(int n, char *regstr){
 	s1 = "";
       }
       /* these are the coords of the region */
+      saves1 = s1;
       if( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) ){
 	/* convert image x,y to ra,dec (convert 1-index to 0-index) */
 	pix2wcs(info->wcs, dval1-1, dval2-1, &rval1, &rval2);
@@ -411,6 +413,23 @@ char *reg2wcsstr(int n, char *regstr){
 	      break;
 	    }
 	  }
+	  /* for lines, get total distance of the segments */
+	  if( !strcmp(s, "line") ){
+	    s1 = saves1;
+	    /* use successive x1,y1,x2,y2 to calculate separation (arcsecs) */
+	    if( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) ){
+	      while(  (dval3=strtod(s1, &s2)) && (dval4=strtod(s2, &s1)) ){
+		/* convert image x,y to ra,dec (convert 1-index to 0-index) */
+		pix2wcs(info->wcs, dval1-1, dval2-1, &rval1, &rval2);
+		pix2wcs(info->wcs, dval3-1, dval4-1, &rval3, &rval4);
+		/* calculate and output separation between the two points */
+		sep += wcsdist(rval1, rval2, rval3, rval4)*3600.0;
+		/* set up for next separation */
+		dval1 = dval3;
+		dval2 = dval4;
+	      }
+	    }
+	  }
 	} else {
 	  /* use successive x1,y1,x2,y2 to calculate separation (arcsecs) */
 	  while( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) &&
@@ -442,6 +461,22 @@ char *reg2wcsstr(int n, char *regstr){
 	if( s ){
 	  snprintf(tbuf, SZ_LINE, ")");
 	  strncat(str, tbuf, SZ_LINE-1);
+	}
+	/* for lines, add total line segment distance */
+	if( !strcmp(s, "line") ){
+	  if( sep <= 60 ){
+	    snprintf(tbuf, SZ_LINE, " {\"sep\":%.2f,\"units\":\"arcsec\"}", 
+		     sep);
+	    strncat(str, tbuf, SZ_LINE-1);
+	  } else if( sep <= 3600 ){
+	    snprintf(tbuf, SZ_LINE, " {\"sep\":%.6f,\"units\":\"arcmin\"}", 
+		     sep/60.0);
+	    strncat(str, tbuf, SZ_LINE-1);
+	  } else {
+	    snprintf(tbuf, SZ_LINE, " {\"sep\":%.6f,\"units\":\"deg\"}", 
+		     sep/3600.0);
+	    strncat(str, tbuf, SZ_LINE-1);
+	  }
 	}
 	snprintf(tbuf, SZ_LINE, ";");
 	strncat(str, tbuf, SZ_LINE-1);
