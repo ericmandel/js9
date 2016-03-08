@@ -7843,7 +7843,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    }
 	}
         if( pub.shape === "line" ){
-	    pub.imstr += ') {"sep":' + tr(dist) + ',"units":"pix"}';
+	    pub.imstr += ') {"size":' + tr(dist) + ',"units":"pixels"}';
 	} else {
 	    pub.imstr += ")";
 	}

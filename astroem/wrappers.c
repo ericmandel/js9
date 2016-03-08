@@ -465,15 +465,15 @@ char *reg2wcsstr(int n, char *regstr){
 	/* for lines, add total line segment distance */
 	if( !strcmp(s, "line") ){
 	  if( sep <= 60 ){
-	    snprintf(tbuf, SZ_LINE, " {\"sep\":%.2f,\"units\":\"arcsec\"}", 
+	    snprintf(tbuf, SZ_LINE, " {\"size\":%.2f,\"units\":\"arcsec\"}",
 		     sep);
 	    strncat(str, tbuf, SZ_LINE-1);
 	  } else if( sep <= 3600 ){
-	    snprintf(tbuf, SZ_LINE, " {\"sep\":%.6f,\"units\":\"arcmin\"}", 
+	    snprintf(tbuf, SZ_LINE, " {\"size\":%.6f,\"units\":\"arcmin\"}",
 		     sep/60.0);
 	    strncat(str, tbuf, SZ_LINE-1);
 	  } else {
-	    snprintf(tbuf, SZ_LINE, " {\"sep\":%.6f,\"units\":\"deg\"}", 
+	    snprintf(tbuf, SZ_LINE, " {\"size\":%.6f,\"units\":\"degrees\"}",
 		     sep/3600.0);
 	    strncat(str, tbuf, SZ_LINE-1);
 	  }
