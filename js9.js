@@ -401,6 +401,8 @@ JS9.Image = function(file, params, func){
     this.display = JS9.lookupDisplay(display);
     // initialize image params
     this.params = {};
+    // image-specific scratch space for plugins
+    this.tmp = {};
     // scale min and max to impossible numbers
     this.params.scalemin = Number.Nan;
     this.params.scalemax = Number.Nan;
