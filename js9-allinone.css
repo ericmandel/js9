@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.7, Wed Mar  9 19:49:39 EST 2016 */
+/* JS9 allinone: v1.7, Wed Mar  9 20:08:48 EST 2016 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -423,6 +423,60 @@ div.JS9BlendHeader {
 }
 
 #blendNoFile {
+    margin-left: 15px;
+}
+
+div.JS9BlinkContainer {
+    padding: 2px;
+}
+
+div.JS9BlinkImage {
+    margin: 5px;
+    background: #E9E9E9;
+    overflow: auto;
+}
+
+div.JS9BlinkImageInactive {
+    padding: 10px;
+    border: 1px solid black;
+}
+
+div.JS9BlinkImageActive {
+    padding: 9px;
+    border: 2px solid #00F000;
+}
+
+div.JS9BlinkHeader {
+    border: 0px solid black;
+    background: #E9E9E9;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+}
+
+#blinkModeSelect {
+    width: 110px;
+}
+
+#blinkModeSelect option {
+    width: 110px;
+}
+
+#blinkOpacitySelect {
+    width: 80px;
+}
+
+#blinkOpacitySelect option {
+    width: 80px;
+}
+
+#blinkFile {
+    float: right;
+}
+
+#blinkNoFile {
     margin-left: 15px;
 }
 

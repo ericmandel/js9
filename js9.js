@@ -11832,17 +11832,17 @@ JS9.init = function(){
     });
     // register core plugins
     JS9.RegisterPlugin("JS9", "Menubar", JS9.Menubar);
+    JS9.RegisterPlugin("JS9", "Console", JS9.Console,
+		       {menuItem: "Console",
+			winTitle: "JS9 Console",
+			winResize: true,
+			winDims: [JS9.WIDTH, 180]});
     JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 		       {menuItem: "InfoBox",
 			plugindisplay: JS9.Info.clearMain,
 			winTitle: "JS9 Info",
 			winResize: true,
 			winDims: [JS9.INFOWIDTH, JS9.INFOHEIGHT]});
-    JS9.RegisterPlugin("JS9", "Console", JS9.Console,
-		       {menuItem: "Console",
-			winTitle: "JS9 Console",
-			winResize: true,
-			winDims: [JS9.WIDTH, 180]});
     JS9.RegisterPlugin(JS9.Regions.CLASS, JS9.Regions.NAME, JS9.Regions.init,
 		       {onkeydown:  JS9.Regions.keyDownCB,
 			onregionschange: JS9.Regions.onchange,
