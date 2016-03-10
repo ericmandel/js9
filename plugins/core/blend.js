@@ -13,7 +13,7 @@ JS9.Blend.WIDTH =  512;	  // width of light window
 JS9.Blend.HEIGHT = 270;	  // height of light window
 JS9.Blend.BASE = JS9.Blend.CLASS + JS9.Blend.NAME;  // CSS base class name
 
-JS9.Blend.blendModeHTML='When <b>Image Blending</b> is turned on, the images you select below will be combined using your chosen blend mode and optional opacity. See <a href="https://www.w3.org/TR/compositing-1/" target="blank">W3C Compositing and Blending</a> for info about compositing and blending.<p> <input type="checkbox" id="active" name="Image Blending" value="active" onclick="javascript:JS9.Blend.xblendmode(\'%s\', this)" checked><b>Image Blending</b>';
+JS9.Blend.blendModeHTML='When <b>Image Blending</b> is turned on, the images you select below will be combined using your chosen blend mode and optional opacity. See <a href="https://www.w3.org/TR/compositing-1/" target="blank">W3C Compositing and Blending</a> for info about compositing and blending.<p> <input type="checkbox" id="active" name="imageBlending" value="active" onclick="javascript:JS9.Blend.xblendmode(\'%s\', this)" checked><b>Image Blending</b>';
 
 JS9.Blend.imageHTML="<span style='float: left'>$active &nbsp;&nbsp; $blend &nbsp;&nbsp; $opacity</span>&nbsp;&nbsp; <span id='blendFile'>$imfile</span>";
 
@@ -133,7 +133,7 @@ JS9.Blend.addImage = function(im){
 	    im.displayImage();
 	    JS9.Blend.activeImage.call(this, im);
     });
-    // save this div in the 
+    // one more div in the stack
     this.blendDivs++;
     //make it the current one
     JS9.Blend.activeImage(im);
@@ -154,14 +154,7 @@ JS9.Blend.removeImage = function(im){
     return false;
 };
 
-// constructor: it's here that you add HTML elements to the container div
-// But you don't have to do so: you can put the HTML elements right into
-// the Web page, in which case this routine can be empty.
-// Obviously, you must use the contructor to add your HTML elements if you
-// want to support your plugin from the View menu.
-//
-// The examaple below splits the difference: it allows the container div to
-// be empty or filled with the inner canvas, and thus support the view menu.
+// constructor: add HTML elements to the plugin
 JS9.Blend.init = function(){
     var i, im;
     // on entry, these elements have already been defined:
