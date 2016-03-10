@@ -1,713 +1,3 @@
-/*
- * JS9 preferences module (14 April 2015)
- */
-
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, ddtabcontent */
-
-// To specify the JS9 display instance to link to a given PREFS div,
-// use the HTML5 dataset syntax: 
-//    <div class="JS9Prefs" data-js9id="JS9"></div>
-
-// create our namespace, and specify some meta-information and params
-JS9.Prefs = {};
-JS9.Prefs.CLASS = "JS9";        // class of plugins (1st part of div class)
-JS9.Prefs.NAME = "Preferences"; // name of this plugin (2nd part of div class)
-JS9.Prefs.WIDTH =  630;         // default width of window
-JS9.Prefs.HEIGHT = 250;	        // default height of window
-
-JS9.Prefs.imagesSchema = {
-    "title": "Image Preferences",
-    "description": "preferences for each JS9 image",
-    "properties": {
-	"colormap": {
-	    "type": "string",
-	    "helper": "default color map"
-	},
-	"contrast": {
-	    "type": "number",
-	    "helper": "default color contrast"
-	},
-	"bias": {
-	    "type": "number",
-	    "helper": "default color bias"
-	},
-	"scale": {
-	    "type": "string",
-	    "helper": "default scale algorithm"
-	},
-	"scaleclipping": {
-	    "type": "string",
-	    "helper": "'dataminmax' or 'zscale'"
-	},
-	"zscalecontrast": {
-	    "type": "number",
-	    "helper": "default from ds9"
-	},
-	"zscalesamples": {
-	    "type": "number",
-	    "helper": "default from ds9"
-	},
-	"zscaleline": {
-	    "type": "number",
-	    "helper": "default from ds9"
-	},
-	"exp": {
-	    "type": "number",
-	    "helper": "default exp value for scaling"
-	},
-	"wcssys": {
-	    "type": "string",
-	    "helper": "default WCS sys"
-	},
-	"wcsunits": {
-	    "type": "string",
-	    "helper": "default WCS units"
-	},
-	"lcs": {
-	    "type": "string",
-	    "helper": "default logical coordinate system"
-	},
-	"alpha": {
-	    "type": "number",
-	    "helper": "alpha for images"
-	},
-	"alpha1": {
-	    "type": "number",
-	    "helper": "alpha for masked pixels"
-	},
-	"alpha2": {
-	    "type": "number",
-	    "helper": "alpha for unmasked pixels"
-	},
-	"zoom": {
-	    "type": "number",
-	    "helper": "default zoom factor"
-	},
-	"zooms": {
-	    "type": "number",
-	    "helper": "how many zooms in each direction?"
-	},
-	"nancolor": {
-	    "type": "string",
-	    "helper": "6-digit #hex color for NaN values"
-	},
-	"listonchange": {
-	    "type": "boolean",
-	    "helper": "list after a region change?"
-	},
-	"valpos": {
-	    "type": "boolean",
-	    "helper": "display value/position?"
-	},
-	"invert": {
-	    "type": "boolean",
-	    "helper": "by default, invert colormap?"
-	}
-
-    }
-};
-    
-JS9.Prefs.regionsSchema = {
-    "title": "Region Preferences",
-    "description": "preferences for each JS9 region",
-    "type": "object",
-    "properties": {
-	"iradius": {
-	    "type": "number",
-	    "helper": "annulus: initial inner radius"
-	},
-	"oradius": {
-	    "type": "number",
-	    "helper": "annulus: initial outer radius"
-	},
-	"nannuli": {
-	    "type": "number",
-	    "helper": "annulus: initial number of annuli"
-	},
-	"width": {
-	    "type": "number",
-	    "helper": "box: initial width"
-	},
-	"height": {
-	    "type": "number",
-	    "helper": "box: initial height"
-	},
-	"radius": {
-	    "type": "number",
-	    "helper": "circle: initial radius"
-	},
-	"r1": {
-	    "type": "number",
-	    "helper": "ellipse: initial radius1"
-	},
-	"r2": {
-	    "type": "number",
-	    "helper": "ellipse: initial radius2"
-	},
-	"ptshape": {
-	    "type": "string",
-	    "helper": "point shape: box, circle, ellipse"
-	},
-	"ptsize": {
-	    "type": "number",
-	    "helper": "point size"
-	},
-	"points": {
-	    "type": "string",
-	    "helper": "array of x,y relative positions"
-	},
-	"angle": {
-	    "type": "number",
-	    "helper": "box, ellipse: initial angle in degrees"
-	},
-	"tags": {
-	    "type": "string",
-	    "helper": "initial tags for a region"
-	},
-	"strokeWidth": {
-	    "type": "number",
-	    "helper": "region stroke width"
-	},
-	"fontFamily": {
-	    "type": "string",
-	    "helper": "region font"
-	},
-	"fontSize": {
-	    "type": "string",
-	    "helper": "region font size"
-	},
-	"fontStyle": {
-	    "type": "string",
-	    "helper": "region font style"
-	},
-	"fontWeight": {
-	    "type": "string",
-	    "helper": "region font weight"
-	},
-	"textAlign": {
-	    "type": "string",
-	    "helper": "text alignment"
-	}
-    }
-};
-
-// schema for each source
-JS9.Prefs.fitsSchema = {
-    "title": "FITS Preferences",
-    "description": "FITS preferences in JS9",
-    "properties": {
-	"extlist": {
-	    "type": "string",
-	    "helper": "default binary table extensions for drag/drop"
-	},
-	"xdim": {
-	    "type": "string",
-	    "helper": "x dimension of extracted image"
-	},
-	"ydim": {
-	    "type": "string",
-	    "helper": "y dimension of extracted image"
-	},
-    }
-};
-
-// source object for preferences
-JS9.Prefs.sources = [
-    {name: "images",  schema: JS9.Prefs.imagesSchema},
-    {name: "regions", schema: JS9.Prefs.regionsSchema},
-    {name: "fits",    schema: JS9.Prefs.fitsSchema}
-];
-
-// init preference plugin
-JS9.Prefs.init = function(width, height){
-    var i, s, obj, key, props, sources, source, id, pid, html, prompt;
-    // set width and height on div
-    this.width = this.divjq.attr("data-width");
-    if( !this.width  ){
-	this.width  = width  || JS9.Prefs.WIDTH;
-    }
-    this.divjq.css("width", this.width);
-    this.width = parseInt(this.divjq.css("width"), 10);
-    this.height = this.divjq.attr("data-height");
-    if( !this.height ){
-	this.height = height || JS9.Prefs.HEIGHT;
-    }
-    this.divjq.css("height", this.height);
-    this.height = parseInt(this.divjq.css("height"), 10);
-    // create the div containing one tab for each of the sources
-    sources = JS9.Prefs.sources;
-    pid = this.id + 'prefsTabs';
-    html = "<div style='padding: 8px'>";
-    html += sprintf("<div id='%s' class='indentmenu'>\n", pid);
-    html += "<ul>";
-    // create a tab for each source
-    for(i=0; i<sources.length; i++){
-	source = sources[i];
-	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
-	html += sprintf("  <li><a href='#' rel='%s'>%s</a></li>\n", 
-			id + "Div", source.name);
-    }
-    html += "</ul>";
-    html += "<br style='clear:left'/></div></div><p>\n";
-    // create each param form (displayed by clicking each tab)
-    for(i=0; i<sources.length; i++){
-	source = sources[i];
-	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
-	// source-specific pre-processing
-	switch( source.name ){
-	case "fits":
-	    // make up "nicer" option values from raw object
-	    source.data = {extlist: JS9.fits.options.extlist,
-			   xdim: JS9.fits.options.table.nx, 
-			   ydim: JS9.fits.options.table.ny};
-	    break;
-	case "regions":
-	    source.data = JS9.Regions.opts;
-	    break;
-	case "images":
-	    source.data = JS9.imageOpts;
-	    break;
-	default:
-	    break;
-	}
-	html += sprintf("<div id='%s' class='tabcontent'>", id + "Div");
-	html += sprintf("<form id='%s' class='js9AnalysisForm' style='max-height: %spx; overflow: scroll'>", id + "Form", this.height-90);
-	props = source.schema.properties;
-	for( key in props ){
-	    if( props.hasOwnProperty(key) ){
-		obj = props[key];
-		prompt = obj.prompt || key + ":";
-		switch(obj.type){
-		case "boolean":
-		    if( source.data[key] ){
-			s = "checked";
-		    } else {
-			s = "";
-		    }
-		    html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2'><input type='checkbox' name='%s' value='true' %s></span><span class='column_R3L'>%s</span></div>", prompt, key, s, obj.helper);
-		    break;
-		default:
-		    if( typeof source.data[key] === "object" ){
-			s = JSON.stringify(source.data[key]);
-		    } else {
-			s = source.data[key];
-		    }
-		    html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2'><input type='text' name='%s' class='text_R' value='%s'/></span><span class='column_R3L'>%s</span></div>", prompt, key, s, obj.helper);
-		    break;
-		}
-	    }
-	}
-	html += "<input id='" + this.id + "_applyPrefs' name='Apply' type='button' class='button' value='Apply' onclick='JS9.Prefs.applyForm.call(this);' style='margin: 8px'>";
-	// manage stored preferences
-	if( window.hasOwnProperty("localStorage") ){
-	    html += "<input id='" + this.id + "_savePrefs' name='Save' type='button' class='button' value='Save' onclick='JS9.Prefs.saveForm.call(this)' style='margin: 8px'>";
-	    html += "<input id='" + this.id + "_showPrefs' name='Show' type='button' class='button' value='Show Saved' onclick='JS9.Prefs.showForm.call(this)' style='margin: 8px'>";
-	    html += "<input id='delete' name='Delete' type='button' class='button' value='Delete Saved' onclick='JS9.Prefs.deleteForm.call(this)' style='margin: 8px'>";
-	}
-	// light windows get a close button
-	if( this.winType === "light" ){
-	    html += "<input id='" + this.id + "_closePrefs' name='Close' type='button' class='button' value='Close' onclick='var form = $(this).closest(\"form\"); var winid = form.data(\"winid\"); winid.close(); return false;' style='float: right; margin: 8px'>";
-	}
-	html += "</form>";
-	html += "</div>";
-    }
-    // set the html for this div
-    this.divjq.html(html);
-    // for each source, set data values that we will need in button callbacks
-    for(i=0; i<sources.length; i++){
-	source = sources[i];
-	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
-	$( "#" + id + "Form").data("display", this.display);
-	$( "#" + id + "Form").data("source", source);
-	if( this.winType === "light" ){
-	    $( "#" + id + "Form").data("winid", this.winHandle);
-	}
-    }
-    // now init the tab content
-    this.tabs = new ddtabcontent(pid); //enter ID of Tab Container
-    this.tabs.setpersist(false); //toogle persistence of the tabs' state
-    this.tabs.setselectedClassTarget("link"); //"link" or "linkparent"
-    this.tabs.init();
-};
-
-// action for Apply in Form
-JS9.Prefs.applyForm = function(){
-    var form = $(this).closest("form");
-    var arr = form.serializeArray();
-    var display = form.data("display");
-    var source = form.data("source");
-    var winid = form.data("winid");
-    arr = arr.concat($("#" + form.attr("id") + " input[type=checkbox]:not(:checked)").map(function(){
-	return {"name": this.name, "value": "false"};
-    }).get());
-    JS9.Prefs.processForm(source, arr, display, winid);
-    return false;
-};
-
-// action for Save in Form
-JS9.Prefs.saveForm = function(){
-    var form = $(this).closest("form");
-    var source = form.data("source");
-    JS9.Prefs.applyForm.call(this);
-    try{ localStorage.setItem(source.name, JSON.stringify(source.data,null,2));
-	 JS9.userOpts[source.name] = localStorage.getItem(source.name); }
-    catch(e){ JS9.error("could not save prefs: " + source.name); }
-    return false;
-};
-
-// action for Show in Form
-JS9.Prefs.showForm = function(){
-    var s, t;
-    var form = $(this).closest("form");
-    var source = form.data("source");
-    try{ s = localStorage.getItem(source.name); }
-    catch(ignore){}
-    if( s && (s !== "null") ){
-	t = "<pre>" + s + "</pre>";
-    } else {
-	t = sprintf("<p><center>No saved prefs: %s</center>", source.name);
-    }
-    JS9.lightWin("savedPrefs" + JS9.uniqueID(), "inline", t, 
-		 "Saved prefs: "+source.name, 
-		 JS9.lightOpts[JS9.LIGHTWIN].textWin);
-    return false;
-};
-
-// action for Delete in Form
-JS9.Prefs.deleteForm = function(){
-    var form = $(this).closest("form");
-    var source = form.data("source");
-    try{ localStorage.removeItem(source.name);
-	delete JS9.userOpts[source.name]; }
-    catch(ignore){}
-    return false;
-};
-
-// process new preferences in the preference form
-JS9.Prefs.processForm = function(source, arr, display, winid){
-    var i, j, key , val, obj, rlayer;
-    var len = arr.length;
-    // source-specific pre-processing
-    switch( source.name ){
-    case "fits":
-	obj = JS9.fits.options;
-	break;
-    case "regions":
-	obj = JS9.Regions.opts;
-	break;
-    case "images":
-	obj = JS9.imageOpts;
-	break;
-    }
-    for(i=0; i<len; i++){
-	key = arr[i].name;
-	val = arr[i].value;
-	switch( typeof obj[key] ){
-	case "boolean":
-	    if( val === "true" ){
-		val = true;
-	    }
-	    if( val === "false" ){
-		val = false;
-	    }
-	    break;
-	case "number":
-	    val = parseFloat(val);
-	    break;
-	case "object":
-	    val = JSON.parse(val);
-	    break;
-	default:
-	    break;
-	}
-	if( obj[key] !== val ){
-	    switch( source.name ){
-	    case "fits":
-	        // put our "nicer" option values back into raw object
-	        // note that the values are still strings
-	        switch(key){
- 	        case "xdim":
-		    obj.table.nx = parseFloat(val);
-	            break;
-	        case "ydim":
-		    obj.table.ny = parseFloat(val);
-	            break;
-	        default:
-	            obj[key] = val;
-	            break;
-	        }
-	        break;
-	    case "regions":
-		// set new option value
-	        obj[key] = val;
-		// change option value in each display's region layer as well
-		for(j=0; j<JS9.displays.length; j++){
-		    rlayer = JS9.displays[j].layers.regions;
-		    if( rlayer ){
-			rlayer.opts[key] = val;
-		    }
-		}
-		break;
-	    default:
-		// set new option value
-	        obj[key] = val;
-	        break;
-	    }
-	}
-    }
-};
-
-// add preference plugin into JS9
-JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME, JS9.Prefs.init,
-		   {menuItem: "Preferences",
-		    help: "help/prefs.html",
-		    winTitle: "JS9 User Preferences",
-		    winDims: [JS9.Prefs.WIDTH, JS9.Prefs.HEIGHT]});
-/*
- * image blend module (February 25, 2016)
- */
-
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf */
-
-// create our namespace, and specify some meta-information and params
-JS9.Blend = {};
-JS9.Blend.CLASS = "JS9";      // class of plugins (1st part of div class)
-JS9.Blend.NAME = "Blend";     // name of this plugin (2nd part of div class)
-JS9.Blend.WIDTH =  512;	  // width of light window
-JS9.Blend.HEIGHT = 270;	  // height of light window
-JS9.Blend.BASE = JS9.Blend.CLASS + JS9.Blend.NAME;  // CSS base class name
-
-JS9.Blend.blendModeHTML='When <b>Image Blending</b> is turned on, the images you select below will be combined using your chosen blend mode and optional opacity. See <a href="https://www.w3.org/TR/compositing-1/" target="blank">W3C Compositing and Blending</a> for info about compositing and blending.<p> <input type="checkbox" id="active" name="imageBlending" value="active" onclick="javascript:JS9.Blend.xblendmode(\'%s\', this)" checked><b>Image Blending</b>';
-
-JS9.Blend.imageHTML="<span style='float: left'>$active &nbsp;&nbsp; $blend &nbsp;&nbsp; $opacity</span>&nbsp;&nbsp; <span id='blendFile'>$imfile</span>";
-
-JS9.Blend.activeHTML='<input class="blendActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blend.xactive(\'%s\', this)">blend using:';
-
-JS9.Blend.blendHTML='<select id="blendModeSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xblend(\'%s\',this)"><option selected disabled>blend mode</option><option value="normal">normal</option><option value="screen">screen</option><option value="multiply">multiply</option><option value="overlay">overlay</option><option value="darken">darken</option><option value="lighten">lighten</option><option value="color-dodge">color-dodge</option><option value="color-burn">color-burn</option><option value="hard-light">hard-light</option><option value="soft-light">soft-light</option><option value="difference">difference</option><option value="exclusion">exclusion</option><option value="hue">hue</option><option value="saturation">saturation</option><option value="color">color</option> <option value="luminosity">luminosity</option></select>';
-
-JS9.Blend.opacityHTML='<select id="blendOpacitySelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xopacity(\'%s\',this)"><option selected disabled>opacity</option><option value="1.0">opaque</option><option value="0.95">0.95</option><option value="0.9">0.90</option><option value="0.85">0.85</option><option value="0.8">0.80</option><option value="0.75">0.75</option><option value="0.7">0.70</option><option value="0.65">0.65</option><option value="0.6">0.60</option><option value="0.55">0.55</option><option value="0.5">0.50</option><option value="0.45">0.45</option><option value="0.4">0.40</option><option value="0.35">0.35</option><option value="0.3">0.30</option><option value="0.25">0.25</option><option value="0.2">0.20</option><option value="0.1">0.10</option><option value="0.0">transparent</option></select>';
-
-// JS9.Blend.imfileHTML='<input type="button" value="%s" onclick="javascript:JS9.Blend.ximfile(\'%s\', this)">';
-JS9.Blend.imfileHTML='<b>%s</b>';
-
-JS9.Blend.nofileHTML='<p><span id="blendNoFile">[Images will appear here as they are loaded]</span>';
-
-// change active state
-JS9.Blend.xactive = function(id, target){
-    var im = JS9.lookupImage(id);
-    var active = target.checked;
-    if( im ){
-	// change active mode
-	im.blendImage(active);
-    }
-};
-
-// change blend mode
-JS9.Blend.xblend = function(id, target){
-    var im = JS9.lookupImage(id);
-    var blend = target.options[target.selectedIndex].value;
-    if( im ){
-	// change the blend mode
-	if( blend !== "" ){
-            im.blendImage(blend);
-	}
-    }
-};
-
-// change opacity
-JS9.Blend.xopacity = function(id, target){
-    var im = JS9.lookupImage(id);
-    var opacity = target.options[target.selectedIndex].value;
-    if( im ){
-	// change opacity
-	if( opacity !== "" ){
-            im.blendImage(null, parseFloat(opacity));
-	}
-    }
-};
-
-// change current file
-JS9.Blend.ximfile = function(id, target){
-    var im = JS9.lookupImage(id);
-    if( im ){
-	// change "current" file to display
-	im.displayImage();
-    }
-};
-
-// change global blend mode for this display
-JS9.Blend.xblendmode = function(id, target){
-    var display = JS9.lookupDisplay(id);
-    var blendMode = target.checked;
-    // change global blend mode
-    if( display ){
-        JS9.BlendDisplay(blendMode, {display: display});
-	$(".blendActive").prop("disabled", !blendMode);
-    }
-};
-
-// get a BlendImage id based on the file image id
-JS9.Blend.imid = function(im){
-    return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"")  + "BlendImage";
-};
-
-// change the active image
-JS9.Blend.activeImage = function(im){
-    var id;
-    if( im ){
-	id = JS9.Blend.imid(im);
-	$("." + JS9.Blend.BASE + "Image")
-	    .removeClass(JS9.Blend.BASE + "ImageActive")
-	    .addClass(JS9.Blend.BASE + "ImageInactive");
-	$("#" + id)
-	    .removeClass(JS9.Blend.BASE + "ImageInactive")
-	    .addClass(JS9.Blend.BASE + "ImageActive");
-    }
-};
-
-// add an image to the list of available images
-JS9.Blend.addImage = function(im){
-    var s, id, divjq;
-    var opts = [];
-    if( !im ){
-	return;
-    }
-    id = JS9.Blend.imid(im);
-    // value to pass to the macro expander
-    opts.push({name: "imid", value: im.id});
-    opts.push({name: "active", value: sprintf(JS9.Blend.activeHTML, im.id)});
-    opts.push({name: "opacity", value: sprintf(JS9.Blend.opacityHTML, im.id)});
-    opts.push({name: "imfile", value: sprintf(JS9.Blend.imfileHTML, im.id, im.id)});
-    opts.push({name: "blend", value: sprintf(JS9.Blend.blendHTML, im.id)});
-    // remove initial message
-    if( !this.blendDivs ){
-	this.blendImageContainer.html("");
-    }
-    // create the html for this image
-    s = JS9.Image.prototype.expandMacro.call(im, JS9.Blend.imageHTML, opts);
-    // add image html to the image container
-    divjq = $("<div>")
-	.addClass(JS9.Blend.BASE + "Image")
-	.addClass(JS9.Blend.BASE + "ImageActive")
-	.attr("id", id)
-	.prop("imid", im.id)
-	.html(s)
-	.appendTo(this.blendImageContainer);
-    divjq.on("mousedown touchstart", function(evt){
-	    im.displayImage();
-	    JS9.Blend.activeImage.call(this, im);
-    });
-    // one more div in the stack
-    this.blendDivs++;
-    //make it the current one
-    JS9.Blend.activeImage(im);
-};
-
-// remove an image to the list of available images
-JS9.Blend.removeImage = function(im){
-    var id;
-    if( im ){
-	id = JS9.Blend.imid(im);
-	$("#" + id).remove();
-	this.blendDivs--;
-	if( this.blendDivs === 0 ){
-	    this.blendImageContainer.html(JS9.Blend.nofileHTML);
-	}
-	return true;
-    }
-    return false;
-};
-
-// constructor: add HTML elements to the plugin
-JS9.Blend.init = function(){
-    var i, im;
-    // on entry, these elements have already been defined:
-    // this.div:      the DOM element representing the div for this plugin
-    // this.divjq:    the jquery object representing the div for this plugin
-    // this.id:       the id ofthe div (or the plugin name as a default)
-    // this.display:  the display object associated with this plugin
-    // this.dispMode: display mode (for internal use)
-    //
-    // create container to hold image container and header
-    var that = this;
-    // no images/divs loaded yet
-    this.blendDivs = 0;
-    // main container
-    this.blendContainer = $("<div>")
-	.addClass(JS9.Blend.BASE + "Container")
-	.attr("id", this.id + "BlendContainer")
-        .height(this.divjq.height()-4)
-        .width(this.divjq.width()-4)
-        .css("overflow", "auto")
-	.appendTo(this.divjq);
-    // header
-    this.blendHeader = $("<div>")
-	.addClass(JS9.Blend.BASE + "Header")
-	.attr("id", this.display.id + "Header")
-	.html(sprintf(JS9.Blend.blendModeHTML, this.display.id))
-	.appendTo(this.blendContainer);
-    // container to hold images
-    this.blendImageContainer = $("<div>")
-	.addClass(JS9.Blend.BASE + "ImageContainer")
-	.attr("id", this.id + "BlendImageContainer")
-        .html(JS9.Blend.nofileHTML)
-	.appendTo(this.blendContainer);
-    // start with blend mode turned on
-    this.display.blendMode = true;
-    // add currently loaded images
-    for(i=0; i<JS9.images.length; i++){
-	im = JS9.images[i];
-	if( im.display === this.display ){
-	    JS9.Blend.addImage.call(this, im);
-	}
-    }
-    // the images within the image container will be sortable
-    this.blendImageContainer.sortable({
-	start: function(event, ui) {
-	    this.oidx = ui.item.index();
-	},
-	stop: function(event, ui) {
-	    var nidx = ui.item.index();
-	    // JS9 image list reflects the sort
-	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
-	    // redisplay in case something changed
-	    if( that.display.image ){
-		that.display.image.displayImage();
-	    }
-	}
-    });
-};
-
-// callback when an image is loaded
-JS9.Blend.imageload = function(im){
-    // im gives access to image object
-    if( im ){
-	JS9.Blend.addImage.call(this, im);
-    }
-};
-
-// callback when image is displayed
-JS9.Blend.imagedisplay = function(im){
-    JS9.Blend.activeImage.call(this, im);
-};
-
-// callback when image is displayed
-JS9.Blend.imageclose = function(im){
-    JS9.Blend.removeImage.call(this, im);
-};
-
-// add this plugin into JS9
-JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
-		   {menuItem: "Image Blending",
-		    onimageload: JS9.Blend.imageload,
-		    onimagedisplay: JS9.Blend.imagedisplay,
-		    onimageclose: JS9.Blend.imageclose,
-		    help: "help/blend.html",
-		    winTitle: "Image Blending",
-		    winDims: [JS9.Blend.WIDTH, JS9.Blend.HEIGHT]});
-
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 /*globals $, JS9, Option */ 
@@ -1779,6 +1069,1014 @@ module.exports = xhr;
             winDims: [400, 180],
     });
 }());
+/*
+ * image blend module (February 25, 2016)
+ */
+
+/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
+/*global $, jQuery, JS9, sprintf */
+
+// create our namespace, and specify some meta-information and params
+JS9.Blend = {};
+JS9.Blend.CLASS = "JS9";      // class of plugins (1st part of div class)
+JS9.Blend.NAME = "Blend";     // name of this plugin (2nd part of div class)
+JS9.Blend.WIDTH =  512;	  // width of light window
+JS9.Blend.HEIGHT = 270;	  // height of light window
+JS9.Blend.BASE = JS9.Blend.CLASS + JS9.Blend.NAME;  // CSS base class name
+
+JS9.Blend.blendModeHTML='When <b>Image Blending</b> is turned on, the images you select below will be combined using your chosen blend mode and optional opacity. See <a href="https://www.w3.org/TR/compositing-1/" target="blank">W3C Compositing and Blending</a> for info about compositing and blending.<p> <input type="checkbox" id="active" name="imageBlending" value="active" onclick="javascript:JS9.Blend.xblendmode(\'%s\', this)" checked><b>Image Blending</b>';
+
+JS9.Blend.imageHTML="<span style='float: left'>$active &nbsp;&nbsp; $blend &nbsp;&nbsp; $opacity</span>&nbsp;&nbsp; <span id='blendFile'>$imfile</span>";
+
+JS9.Blend.activeHTML='<input class="blendActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blend.xactive(\'%s\', this)">blend using:';
+
+JS9.Blend.blendHTML='<select id="blendModeSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xblend(\'%s\',this)"><option selected disabled>blend mode</option><option value="normal">normal</option><option value="screen">screen</option><option value="multiply">multiply</option><option value="overlay">overlay</option><option value="darken">darken</option><option value="lighten">lighten</option><option value="color-dodge">color-dodge</option><option value="color-burn">color-burn</option><option value="hard-light">hard-light</option><option value="soft-light">soft-light</option><option value="difference">difference</option><option value="exclusion">exclusion</option><option value="hue">hue</option><option value="saturation">saturation</option><option value="color">color</option> <option value="luminosity">luminosity</option></select>';
+
+JS9.Blend.opacityHTML='<select id="blendOpacitySelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xopacity(\'%s\',this)"><option selected disabled>opacity</option><option value="1.0">opaque</option><option value="0.95">0.95</option><option value="0.9">0.90</option><option value="0.85">0.85</option><option value="0.8">0.80</option><option value="0.75">0.75</option><option value="0.7">0.70</option><option value="0.65">0.65</option><option value="0.6">0.60</option><option value="0.55">0.55</option><option value="0.5">0.50</option><option value="0.45">0.45</option><option value="0.4">0.40</option><option value="0.35">0.35</option><option value="0.3">0.30</option><option value="0.25">0.25</option><option value="0.2">0.20</option><option value="0.1">0.10</option><option value="0.0">transparent</option></select>';
+
+// JS9.Blend.imfileHTML='<input type="button" value="%s" onclick="javascript:JS9.Blend.ximfile(\'%s\', this)">';
+JS9.Blend.imfileHTML='<b>%s</b>';
+
+JS9.Blend.nofileHTML='<p><span id="blendNoFile">[Images will appear here as they are loaded]</span>';
+
+// change active state
+JS9.Blend.xactive = function(id, target){
+    var im = JS9.lookupImage(id);
+    var active = target.checked;
+    if( im ){
+	// change active mode
+	im.blendImage(active);
+    }
+};
+
+// change blend mode
+JS9.Blend.xblend = function(id, target){
+    var im = JS9.lookupImage(id);
+    var blend = target.options[target.selectedIndex].value;
+    if( im ){
+	// change the blend mode
+	if( blend !== "" ){
+            im.blendImage(blend);
+	}
+    }
+};
+
+// change opacity
+JS9.Blend.xopacity = function(id, target){
+    var im = JS9.lookupImage(id);
+    var opacity = target.options[target.selectedIndex].value;
+    if( im ){
+	// change opacity
+	if( opacity !== "" ){
+            im.blendImage(null, parseFloat(opacity));
+	}
+    }
+};
+
+// change current file
+JS9.Blend.ximfile = function(id, target){
+    var im = JS9.lookupImage(id);
+    if( im ){
+	// change "current" file to display
+	im.displayImage();
+    }
+};
+
+// change global blend mode for this display
+JS9.Blend.xblendmode = function(id, target){
+    var display = JS9.lookupDisplay(id);
+    var blendMode = target.checked;
+    // change global blend mode
+    if( display ){
+        JS9.BlendDisplay(blendMode, {display: display});
+	$(".blendActive").prop("disabled", !blendMode);
+    }
+};
+
+// get a BlendImage id based on the file image id
+JS9.Blend.imid = function(im){
+    return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"")  + "BlendImage";
+};
+
+// change the active image
+JS9.Blend.activeImage = function(im){
+    var id;
+    if( im ){
+	id = JS9.Blend.imid(im);
+	$("." + JS9.Blend.BASE + "Image")
+	    .removeClass(JS9.Blend.BASE + "ImageActive")
+	    .addClass(JS9.Blend.BASE + "ImageInactive");
+	$("#" + id)
+	    .removeClass(JS9.Blend.BASE + "ImageInactive")
+	    .addClass(JS9.Blend.BASE + "ImageActive");
+    }
+};
+
+// add an image to the list of available images
+JS9.Blend.addImage = function(im){
+    var s, id, divjq;
+    var opts = [];
+    if( !im ){
+	return;
+    }
+    id = JS9.Blend.imid(im);
+    // value to pass to the macro expander
+    opts.push({name: "imid", value: im.id});
+    opts.push({name: "active", value: sprintf(JS9.Blend.activeHTML, im.id)});
+    opts.push({name: "opacity", value: sprintf(JS9.Blend.opacityHTML, im.id)});
+    opts.push({name: "imfile", value: sprintf(JS9.Blend.imfileHTML, im.id, im.id)});
+    opts.push({name: "blend", value: sprintf(JS9.Blend.blendHTML, im.id)});
+    // remove initial message
+    if( !this.blendDivs ){
+	this.blendImageContainer.html("");
+    }
+    // create the html for this image
+    s = JS9.Image.prototype.expandMacro.call(im, JS9.Blend.imageHTML, opts);
+    // add image html to the image container
+    divjq = $("<div>")
+	.addClass(JS9.Blend.BASE + "Image")
+	.addClass(JS9.Blend.BASE + "ImageActive")
+	.attr("id", id)
+	.prop("imid", im.id)
+	.html(s)
+	.appendTo(this.blendImageContainer);
+    divjq.on("mousedown touchstart", function(evt){
+	    im.displayImage();
+	    JS9.Blend.activeImage.call(this, im);
+    });
+    // one more div in the stack
+    this.blendDivs++;
+    //make it the current one
+    JS9.Blend.activeImage(im);
+};
+
+// remove an image to the list of available images
+JS9.Blend.removeImage = function(im){
+    var id;
+    if( im ){
+	id = JS9.Blend.imid(im);
+	$("#" + id).remove();
+	this.blendDivs--;
+	if( this.blendDivs === 0 ){
+	    this.blendImageContainer.html(JS9.Blend.nofileHTML);
+	}
+	return true;
+    }
+    return false;
+};
+
+// constructor: add HTML elements to the plugin
+JS9.Blend.init = function(){
+    var i, im;
+    // on entry, these elements have already been defined:
+    // this.div:      the DOM element representing the div for this plugin
+    // this.divjq:    the jquery object representing the div for this plugin
+    // this.id:       the id ofthe div (or the plugin name as a default)
+    // this.display:  the display object associated with this plugin
+    // this.dispMode: display mode (for internal use)
+    //
+    // create container to hold image container and header
+    var that = this;
+    // no images/divs loaded yet
+    this.blendDivs = 0;
+    // main container
+    this.blendContainer = $("<div>")
+	.addClass(JS9.Blend.BASE + "Container")
+	.attr("id", this.id + "BlendContainer")
+        .height(this.divjq.height()-4)
+        .width(this.divjq.width()-4)
+        .css("overflow", "auto")
+	.appendTo(this.divjq);
+    // header
+    this.blendHeader = $("<div>")
+	.addClass(JS9.Blend.BASE + "Header")
+	.attr("id", this.display.id + "Header")
+	.html(sprintf(JS9.Blend.blendModeHTML, this.display.id))
+	.appendTo(this.blendContainer);
+    // container to hold images
+    this.blendImageContainer = $("<div>")
+	.addClass(JS9.Blend.BASE + "ImageContainer")
+	.attr("id", this.id + "BlendImageContainer")
+        .html(JS9.Blend.nofileHTML)
+	.appendTo(this.blendContainer);
+    // start with blend mode turned on
+    this.display.blendMode = true;
+    // add currently loaded images
+    for(i=0; i<JS9.images.length; i++){
+	im = JS9.images[i];
+	if( im.display === this.display ){
+	    JS9.Blend.addImage.call(this, im);
+	}
+    }
+    // the images within the image container will be sortable
+    this.blendImageContainer.sortable({
+	start: function(event, ui) {
+	    this.oidx = ui.item.index();
+	},
+	stop: function(event, ui) {
+	    var nidx = ui.item.index();
+	    // JS9 image list reflects the sort
+	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
+	    // redisplay in case something changed
+	    if( that.display.image ){
+		that.display.image.displayImage();
+	    }
+	}
+    });
+};
+
+// callback when an image is loaded
+JS9.Blend.imageload = function(im){
+    // im gives access to image object
+    if( im ){
+	JS9.Blend.addImage.call(this, im);
+    }
+};
+
+// callback when image is displayed
+JS9.Blend.imagedisplay = function(im){
+    JS9.Blend.activeImage.call(this, im);
+};
+
+// callback when image is displayed
+JS9.Blend.imageclose = function(im){
+    JS9.Blend.removeImage.call(this, im);
+};
+
+// add this plugin into JS9
+JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
+		   {menuItem: "Blending",
+		    onimageload: JS9.Blend.imageload,
+		    onimagedisplay: JS9.Blend.imagedisplay,
+		    onimageclose: JS9.Blend.imageclose,
+		    help: "help/blend.html",
+		    winTitle: "Image Blending",
+		    winDims: [JS9.Blend.WIDTH, JS9.Blend.HEIGHT]});
+
+/*
+ * image blink module (March 10, 2016)
+ */
+
+/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
+/*global $, jQuery, JS9, sprintf */
+
+// create our namespace, and specify some meta-information and params
+JS9.Blink = {};
+JS9.Blink.CLASS = "JS9";      // class of plugins (1st part of div class)
+JS9.Blink.NAME = "Blink";     // name of this plugin (2nd part of div class)
+JS9.Blink.WIDTH =  512;	  // width of light window
+JS9.Blink.HEIGHT = 270;	  // height of light window
+JS9.Blink.BASE = JS9.Blink.CLASS + JS9.Blink.NAME;  // CSS base class name
+
+// blink rate in milliseconds
+JS9.Blink.rate = 1000;
+// starting index for blinking
+JS9.Blink.idx = 0;
+
+JS9.Blink.blinkModeHTML='When <b>Blink Images</b> is turned on, selected images will be displayed at the specified blink rate. You also can blink the selected images manually. The blink sequence can be changed by moving images around in the stack. <p>$mode&nbsp;&nbsp;&nbsp;&nbsp;$rate&nbsp;&nbsp;&nbsp;&nbsp;$manual';
+
+JS9.Blink.modeHTML='<input type="checkbox" id="active" name="blinkImages" value="active" onclick="javascript:JS9.Blink.xblinkmode(\'%s\', this)"><b>Blink Images</b>';
+
+JS9.Blink.rateHTML='<select id="blinkRateSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xrate(\'%s\',this)"><option selected disabled>blink rate</option><option value="0.1">0.1</option><option value="0.25">0.25</option><option value="0.5">0.5</option><option value="1.0">1.0</option><option value="2.0">2.0</option><option value="3.0">3.0</option><option value="4.0">4.0</option><option value="5.0">5.0</option><option value="6.0">6.0</option><option value="7.0">7.0</option><option value="8.0">8.0</option><option value="9.0">9.0</option><option value="10.0">10.0</option><option value="15.0">15.0</option><option value="20.0">20.0</option><option value="30.0">30.0</option></select>';
+
+JS9.Blink.manualHTML='<input type="button" id="manual" name="manualBlink" value="blink manually" onclick="javascript:JS9.Blink.xblink1(\'%s\', this)">';
+
+JS9.Blink.imageHTML="<span style='float: left'>$active&nbsp;&nbsp;</span><span id='blinkFile'>$imfile</span>";
+
+JS9.Blink.activeHTML='<input class="blinkActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blink.xactive(\'%s\', this)">blink';
+
+JS9.Blink.imfileHTML='<b>%s</b>';
+
+JS9.Blink.nofileHTML='<p><span id="blinkNoFile">[Images will appear here as they are loaded]</span>';
+
+// start blinking
+JS9.Blink.start = function(display){
+    var im;
+    var done = false;
+    var saveidx = JS9.Blink.idx;
+    while( !done ){
+	im = JS9.images[JS9.Blink.idx];
+	if( (im.display === display) && im.tmp.blinkMode ){
+	    im.displayImage("display");
+	    done = true;
+	}
+	if( ++JS9.Blink.idx >= JS9.images.length ){
+	    JS9.Blink.idx = 0;
+	}
+	if( JS9.Blink.idx === saveidx ){
+	    done = true;
+	}
+    }
+    if( display.blinkMode ){
+	JS9.Blink.tid = window.setTimeout(function(){
+	    JS9.Blink.start(display);
+	}, JS9.Blink.rate);
+    }
+};
+
+// stop blinking
+JS9.Blink.stop = function(display){
+    if( JS9.Blink.tid ){
+	window.clearTimeout(JS9.Blink.tid);
+	delete JS9.Blink.tid;
+    }
+    display.blinkMode = false;
+    JS9.Blink.idx = 0;
+};
+
+// change active state
+JS9.Blink.xactive = function(id, target){
+    var im = JS9.lookupImage(id);
+    var active = target.checked;
+    if( im ){
+	im.tmp.blinkMode = active;
+    }
+};
+
+// change current file
+JS9.Blink.ximfile = function(id, target){
+    var im = JS9.lookupImage(id);
+    if( im ){
+	// change "current" file to display
+	im.displayImage();
+    }
+};
+
+// change global blink mode for this display
+JS9.Blink.xblinkmode = function(id, target){
+    var display = JS9.lookupDisplay(id);
+    var blinkMode = target.checked;
+    // change global blink mode
+    if( display ){
+	$(".blinkActive").prop("disabled", !blinkMode);
+	if( blinkMode ){
+	    display.blinkMode = true;
+	    JS9.Blink.start(display);
+	} else {
+	    JS9.Blink.stop(display);
+	}
+    }
+};
+
+// change global blink mode for this display
+JS9.Blink.xblink1 = function(id, target){
+    var display = JS9.lookupDisplay(id);
+    // blink once
+    if( display ){
+	if( JS9.images[JS9.Blink.idx] === display.image ){
+	    if( ++JS9.Blink.idx >= JS9.images.length ){
+		JS9.Blink.idx = 0;
+	    }
+	}
+	JS9.Blink.start(display);
+    }
+};
+
+// change blink rate
+JS9.Blend.xrate = function(id, target){
+    // var im = JS9.lookupImage(id);
+    var rate = Math.floor(target.options[target.selectedIndex].value * 1000);
+    if( !isNaN(rate) ){
+	JS9.Blink.rate = rate;
+    }
+};
+
+// get a BlinkImage id based on the file image id
+JS9.Blink.imid = function(im){
+    return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"")  + "BlinkImage";
+};
+
+// change the active image
+JS9.Blink.activeImage = function(im){
+    var id;
+    if( im ){
+	id = JS9.Blink.imid(im);
+	$("." + JS9.Blink.BASE + "Image")
+	    .removeClass(JS9.Blink.BASE + "ImageActive")
+	    .addClass(JS9.Blink.BASE + "ImageInactive");
+	$("#" + id)
+	    .removeClass(JS9.Blink.BASE + "ImageInactive")
+	    .addClass(JS9.Blink.BASE + "ImageActive");
+    }
+};
+
+// add an image to the list of available images
+JS9.Blink.addImage = function(im){
+    var s, id, divjq;
+    var opts = [];
+    if( !im ){
+	return;
+    }
+    id = JS9.Blink.imid(im);
+    // value to pass to the macro expander
+    opts.push({name: "imid", value: im.id});
+    opts.push({name: "active", value: sprintf(JS9.Blink.activeHTML, im.id)});
+    opts.push({name: "imfile", value: sprintf(JS9.Blink.imfileHTML, im.id, im.id)});
+    // remove initial message
+    if( !this.blinkDivs ){
+	this.blinkImageContainer.html("");
+    }
+    // create the html for this image
+    s = JS9.Image.prototype.expandMacro.call(im, JS9.Blink.imageHTML, opts);
+    // add image html to the image container
+    divjq = $("<div>")
+	.addClass(JS9.Blink.BASE + "Image")
+	.addClass(JS9.Blink.BASE + "ImageActive")
+	.attr("id", id)
+	.prop("imid", im.id)
+	.html(s)
+	.appendTo(this.blinkImageContainer);
+    divjq.on("mousedown touchstart", function(evt){
+	    im.displayImage();
+	    JS9.Blink.activeImage.call(this, im);
+    });
+    // one more div in the stack
+    this.blinkDivs++;
+    // no blinking yet
+    im.tmp.blinkMode = false;
+    //make it the current one
+    JS9.Blink.activeImage(im);
+};
+
+// remove an image from the list of available images
+JS9.Blink.removeImage = function(im){
+    var id;
+    if( im ){
+	id = JS9.Blink.imid(im);
+	$("#" + id).remove();
+	this.blinkDivs--;
+	if( this.blinkDivs === 0 ){
+	    this.blinkImageContainer.html(JS9.Blink.nofileHTML);
+	}
+	delete im.tmp.blinkMode;
+	return true;
+    }
+    return false;
+};
+
+// constructor: add HTML elements to the plugin
+JS9.Blink.init = function(){
+    var i, s, im;
+    var opts = [];
+    // on entry, these elements have already been defined:
+    // this.div:      the DOM element representing the div for this plugin
+    // this.divjq:    the jquery object representing the div for this plugin
+    // this.id:       the id ofthe div (or the plugin name as a default)
+    // this.display:  the display object associated with this plugin
+    // this.dispMode: display mode (for internal use)
+    //
+    // create container to hold image container and header
+    var that = this;
+    // no images/divs loaded yet
+    this.blinkDivs = 0;
+    // main container
+    this.blinkContainer = $("<div>")
+	.addClass(JS9.Blink.BASE + "Container")
+	.attr("id", this.id + "BlinkContainer")
+        .height(this.divjq.height()-4)
+        .width(this.divjq.width()-4)
+        .css("overflow", "auto")
+	.appendTo(this.divjq);
+    opts.push({name: "mode", value: sprintf(JS9.Blink.modeHTML, 
+					    this.display.id)});
+    opts.push({name: "manual", value: sprintf(JS9.Blink.manualHTML, 
+					    this.display.id)});
+    opts.push({name: "rate", value: sprintf(JS9.Blink.rateHTML, 
+					    this.display.id)});
+    s = JS9.Image.prototype.expandMacro.call(null, JS9.Blink.blinkModeHTML, 
+					     opts);
+    // header
+    this.blinkHeader = $("<div>")
+	.addClass(JS9.Blink.BASE + "Header")
+	.attr("id", this.display.id + "Header")
+	.html(s)
+	.appendTo(this.blinkContainer);
+    // container to hold images
+    this.blinkImageContainer = $("<div>")
+	.addClass(JS9.Blink.BASE + "ImageContainer")
+	.attr("id", this.id + "BlinkImageContainer")
+        .html(JS9.Blink.nofileHTML)
+	.appendTo(this.blinkContainer);
+    // start with blink mode turned off
+    this.display.blinkMode = false;
+    // add currently loaded images
+    for(i=0; i<JS9.images.length; i++){
+	im = JS9.images[i];
+	if( im.display === this.display ){
+	    JS9.Blink.addImage.call(this, im);
+	}
+    }
+    // the images within the image container will be sortable
+    this.blinkImageContainer.sortable({
+	start: function(event, ui) {
+	    this.oidx = ui.item.index();
+	},
+	stop: function(event, ui) {
+	    var nidx = ui.item.index();
+	    // JS9 image list reflects the sort
+	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
+	    // redisplay in case something changed
+	    if( that.display.image ){
+		that.display.image.displayImage();
+	    }
+	}
+    });
+};
+
+// callback when an image is loaded
+JS9.Blink.imageload = function(im){
+    // im gives access to image object
+    if( im ){
+	JS9.Blink.addImage.call(this, im);
+    }
+};
+
+// callback when image is displayed
+JS9.Blink.imagedisplay = function(im){
+    JS9.Blink.activeImage.call(this, im);
+};
+
+// callback when image is displayed
+JS9.Blink.imageclose = function(im){
+    JS9.Blink.removeImage.call(this, im);
+};
+
+// add this plugin into JS9
+JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
+		   {menuItem: "Blinking",
+		    onimageload: JS9.Blink.imageload,
+		    onimagedisplay: JS9.Blink.imagedisplay,
+		    onimageclose: JS9.Blink.imageclose,
+		    help: "help/blink.html",
+		    winTitle: "Image Blinking",
+		    winDims: [JS9.Blink.WIDTH, JS9.Blink.HEIGHT]});
+
+/*
+ * JS9 preferences module (14 April 2015)
+ */
+
+/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
+/*global $, jQuery, JS9, sprintf, ddtabcontent */
+
+// To specify the JS9 display instance to link to a given PREFS div,
+// use the HTML5 dataset syntax: 
+//    <div class="JS9Prefs" data-js9id="JS9"></div>
+
+// create our namespace, and specify some meta-information and params
+JS9.Prefs = {};
+JS9.Prefs.CLASS = "JS9";        // class of plugins (1st part of div class)
+JS9.Prefs.NAME = "Preferences"; // name of this plugin (2nd part of div class)
+JS9.Prefs.WIDTH =  630;         // default width of window
+JS9.Prefs.HEIGHT = 250;	        // default height of window
+
+JS9.Prefs.imagesSchema = {
+    "title": "Image Preferences",
+    "description": "preferences for each JS9 image",
+    "properties": {
+	"colormap": {
+	    "type": "string",
+	    "helper": "default color map"
+	},
+	"contrast": {
+	    "type": "number",
+	    "helper": "default color contrast"
+	},
+	"bias": {
+	    "type": "number",
+	    "helper": "default color bias"
+	},
+	"scale": {
+	    "type": "string",
+	    "helper": "default scale algorithm"
+	},
+	"scaleclipping": {
+	    "type": "string",
+	    "helper": "'dataminmax' or 'zscale'"
+	},
+	"zscalecontrast": {
+	    "type": "number",
+	    "helper": "default from ds9"
+	},
+	"zscalesamples": {
+	    "type": "number",
+	    "helper": "default from ds9"
+	},
+	"zscaleline": {
+	    "type": "number",
+	    "helper": "default from ds9"
+	},
+	"exp": {
+	    "type": "number",
+	    "helper": "default exp value for scaling"
+	},
+	"wcssys": {
+	    "type": "string",
+	    "helper": "default WCS sys"
+	},
+	"wcsunits": {
+	    "type": "string",
+	    "helper": "default WCS units"
+	},
+	"lcs": {
+	    "type": "string",
+	    "helper": "default logical coordinate system"
+	},
+	"alpha": {
+	    "type": "number",
+	    "helper": "alpha for images"
+	},
+	"alpha1": {
+	    "type": "number",
+	    "helper": "alpha for masked pixels"
+	},
+	"alpha2": {
+	    "type": "number",
+	    "helper": "alpha for unmasked pixels"
+	},
+	"zoom": {
+	    "type": "number",
+	    "helper": "default zoom factor"
+	},
+	"zooms": {
+	    "type": "number",
+	    "helper": "how many zooms in each direction?"
+	},
+	"nancolor": {
+	    "type": "string",
+	    "helper": "6-digit #hex color for NaN values"
+	},
+	"listonchange": {
+	    "type": "boolean",
+	    "helper": "list after a region change?"
+	},
+	"valpos": {
+	    "type": "boolean",
+	    "helper": "display value/position?"
+	},
+	"invert": {
+	    "type": "boolean",
+	    "helper": "by default, invert colormap?"
+	}
+
+    }
+};
+    
+JS9.Prefs.regionsSchema = {
+    "title": "Region Preferences",
+    "description": "preferences for each JS9 region",
+    "type": "object",
+    "properties": {
+	"iradius": {
+	    "type": "number",
+	    "helper": "annulus: initial inner radius"
+	},
+	"oradius": {
+	    "type": "number",
+	    "helper": "annulus: initial outer radius"
+	},
+	"nannuli": {
+	    "type": "number",
+	    "helper": "annulus: initial number of annuli"
+	},
+	"width": {
+	    "type": "number",
+	    "helper": "box: initial width"
+	},
+	"height": {
+	    "type": "number",
+	    "helper": "box: initial height"
+	},
+	"radius": {
+	    "type": "number",
+	    "helper": "circle: initial radius"
+	},
+	"r1": {
+	    "type": "number",
+	    "helper": "ellipse: initial radius1"
+	},
+	"r2": {
+	    "type": "number",
+	    "helper": "ellipse: initial radius2"
+	},
+	"ptshape": {
+	    "type": "string",
+	    "helper": "point shape: box, circle, ellipse"
+	},
+	"ptsize": {
+	    "type": "number",
+	    "helper": "point size"
+	},
+	"points": {
+	    "type": "string",
+	    "helper": "array of x,y relative positions"
+	},
+	"angle": {
+	    "type": "number",
+	    "helper": "box, ellipse: initial angle in degrees"
+	},
+	"tags": {
+	    "type": "string",
+	    "helper": "initial tags for a region"
+	},
+	"strokeWidth": {
+	    "type": "number",
+	    "helper": "region stroke width"
+	},
+	"fontFamily": {
+	    "type": "string",
+	    "helper": "region font"
+	},
+	"fontSize": {
+	    "type": "string",
+	    "helper": "region font size"
+	},
+	"fontStyle": {
+	    "type": "string",
+	    "helper": "region font style"
+	},
+	"fontWeight": {
+	    "type": "string",
+	    "helper": "region font weight"
+	},
+	"textAlign": {
+	    "type": "string",
+	    "helper": "text alignment"
+	}
+    }
+};
+
+// schema for each source
+JS9.Prefs.fitsSchema = {
+    "title": "FITS Preferences",
+    "description": "FITS preferences in JS9",
+    "properties": {
+	"extlist": {
+	    "type": "string",
+	    "helper": "default binary table extensions for drag/drop"
+	},
+	"xdim": {
+	    "type": "string",
+	    "helper": "x dimension of extracted image"
+	},
+	"ydim": {
+	    "type": "string",
+	    "helper": "y dimension of extracted image"
+	},
+    }
+};
+
+// source object for preferences
+JS9.Prefs.sources = [
+    {name: "images",  schema: JS9.Prefs.imagesSchema},
+    {name: "regions", schema: JS9.Prefs.regionsSchema},
+    {name: "fits",    schema: JS9.Prefs.fitsSchema}
+];
+
+// init preference plugin
+JS9.Prefs.init = function(width, height){
+    var i, s, obj, key, props, sources, source, id, pid, html, prompt;
+    // set width and height on div
+    this.width = this.divjq.attr("data-width");
+    if( !this.width  ){
+	this.width  = width  || JS9.Prefs.WIDTH;
+    }
+    this.divjq.css("width", this.width);
+    this.width = parseInt(this.divjq.css("width"), 10);
+    this.height = this.divjq.attr("data-height");
+    if( !this.height ){
+	this.height = height || JS9.Prefs.HEIGHT;
+    }
+    this.divjq.css("height", this.height);
+    this.height = parseInt(this.divjq.css("height"), 10);
+    // create the div containing one tab for each of the sources
+    sources = JS9.Prefs.sources;
+    pid = this.id + 'prefsTabs';
+    html = "<div style='padding: 8px'>";
+    html += sprintf("<div id='%s' class='indentmenu'>\n", pid);
+    html += "<ul>";
+    // create a tab for each source
+    for(i=0; i<sources.length; i++){
+	source = sources[i];
+	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
+	html += sprintf("  <li><a href='#' rel='%s'>%s</a></li>\n", 
+			id + "Div", source.name);
+    }
+    html += "</ul>";
+    html += "<br style='clear:left'/></div></div><p>\n";
+    // create each param form (displayed by clicking each tab)
+    for(i=0; i<sources.length; i++){
+	source = sources[i];
+	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
+	// source-specific pre-processing
+	switch( source.name ){
+	case "fits":
+	    // make up "nicer" option values from raw object
+	    source.data = {extlist: JS9.fits.options.extlist,
+			   xdim: JS9.fits.options.table.nx, 
+			   ydim: JS9.fits.options.table.ny};
+	    break;
+	case "regions":
+	    source.data = JS9.Regions.opts;
+	    break;
+	case "images":
+	    source.data = JS9.imageOpts;
+	    break;
+	default:
+	    break;
+	}
+	html += sprintf("<div id='%s' class='tabcontent'>", id + "Div");
+	html += sprintf("<form id='%s' class='js9AnalysisForm' style='max-height: %spx; overflow: scroll'>", id + "Form", this.height-90);
+	props = source.schema.properties;
+	for( key in props ){
+	    if( props.hasOwnProperty(key) ){
+		obj = props[key];
+		prompt = obj.prompt || key + ":";
+		switch(obj.type){
+		case "boolean":
+		    if( source.data[key] ){
+			s = "checked";
+		    } else {
+			s = "";
+		    }
+		    html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2'><input type='checkbox' name='%s' value='true' %s></span><span class='column_R3L'>%s</span></div>", prompt, key, s, obj.helper);
+		    break;
+		default:
+		    if( typeof source.data[key] === "object" ){
+			s = JSON.stringify(source.data[key]);
+		    } else {
+			s = source.data[key];
+		    }
+		    html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2'><input type='text' name='%s' class='text_R' value='%s'/></span><span class='column_R3L'>%s</span></div>", prompt, key, s, obj.helper);
+		    break;
+		}
+	    }
+	}
+	html += "<input id='" + this.id + "_applyPrefs' name='Apply' type='button' class='button' value='Apply' onclick='JS9.Prefs.applyForm.call(this);' style='margin: 8px'>";
+	// manage stored preferences
+	if( window.hasOwnProperty("localStorage") ){
+	    html += "<input id='" + this.id + "_savePrefs' name='Save' type='button' class='button' value='Save' onclick='JS9.Prefs.saveForm.call(this)' style='margin: 8px'>";
+	    html += "<input id='" + this.id + "_showPrefs' name='Show' type='button' class='button' value='Show Saved' onclick='JS9.Prefs.showForm.call(this)' style='margin: 8px'>";
+	    html += "<input id='delete' name='Delete' type='button' class='button' value='Delete Saved' onclick='JS9.Prefs.deleteForm.call(this)' style='margin: 8px'>";
+	}
+	// light windows get a close button
+	if( this.winType === "light" ){
+	    html += "<input id='" + this.id + "_closePrefs' name='Close' type='button' class='button' value='Close' onclick='var form = $(this).closest(\"form\"); var winid = form.data(\"winid\"); winid.close(); return false;' style='float: right; margin: 8px'>";
+	}
+	html += "</form>";
+	html += "</div>";
+    }
+    // set the html for this div
+    this.divjq.html(html);
+    // for each source, set data values that we will need in button callbacks
+    for(i=0; i<sources.length; i++){
+	source = sources[i];
+	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
+	$( "#" + id + "Form").data("display", this.display);
+	$( "#" + id + "Form").data("source", source);
+	if( this.winType === "light" ){
+	    $( "#" + id + "Form").data("winid", this.winHandle);
+	}
+    }
+    // now init the tab content
+    this.tabs = new ddtabcontent(pid); //enter ID of Tab Container
+    this.tabs.setpersist(false); //toogle persistence of the tabs' state
+    this.tabs.setselectedClassTarget("link"); //"link" or "linkparent"
+    this.tabs.init();
+};
+
+// action for Apply in Form
+JS9.Prefs.applyForm = function(){
+    var form = $(this).closest("form");
+    var arr = form.serializeArray();
+    var display = form.data("display");
+    var source = form.data("source");
+    var winid = form.data("winid");
+    arr = arr.concat($("#" + form.attr("id") + " input[type=checkbox]:not(:checked)").map(function(){
+	return {"name": this.name, "value": "false"};
+    }).get());
+    JS9.Prefs.processForm(source, arr, display, winid);
+    return false;
+};
+
+// action for Save in Form
+JS9.Prefs.saveForm = function(){
+    var form = $(this).closest("form");
+    var source = form.data("source");
+    JS9.Prefs.applyForm.call(this);
+    try{ localStorage.setItem(source.name, JSON.stringify(source.data,null,2));
+	 JS9.userOpts[source.name] = localStorage.getItem(source.name); }
+    catch(e){ JS9.error("could not save prefs: " + source.name); }
+    return false;
+};
+
+// action for Show in Form
+JS9.Prefs.showForm = function(){
+    var s, t;
+    var form = $(this).closest("form");
+    var source = form.data("source");
+    try{ s = localStorage.getItem(source.name); }
+    catch(ignore){}
+    if( s && (s !== "null") ){
+	t = "<pre>" + s + "</pre>";
+    } else {
+	t = sprintf("<p><center>No saved prefs: %s</center>", source.name);
+    }
+    JS9.lightWin("savedPrefs" + JS9.uniqueID(), "inline", t, 
+		 "Saved prefs: "+source.name, 
+		 JS9.lightOpts[JS9.LIGHTWIN].textWin);
+    return false;
+};
+
+// action for Delete in Form
+JS9.Prefs.deleteForm = function(){
+    var form = $(this).closest("form");
+    var source = form.data("source");
+    try{ localStorage.removeItem(source.name);
+	delete JS9.userOpts[source.name]; }
+    catch(ignore){}
+    return false;
+};
+
+// process new preferences in the preference form
+JS9.Prefs.processForm = function(source, arr, display, winid){
+    var i, j, key , val, obj, rlayer;
+    var len = arr.length;
+    // source-specific pre-processing
+    switch( source.name ){
+    case "fits":
+	obj = JS9.fits.options;
+	break;
+    case "regions":
+	obj = JS9.Regions.opts;
+	break;
+    case "images":
+	obj = JS9.imageOpts;
+	break;
+    }
+    for(i=0; i<len; i++){
+	key = arr[i].name;
+	val = arr[i].value;
+	switch( typeof obj[key] ){
+	case "boolean":
+	    if( val === "true" ){
+		val = true;
+	    }
+	    if( val === "false" ){
+		val = false;
+	    }
+	    break;
+	case "number":
+	    val = parseFloat(val);
+	    break;
+	case "object":
+	    val = JSON.parse(val);
+	    break;
+	default:
+	    break;
+	}
+	if( obj[key] !== val ){
+	    switch( source.name ){
+	    case "fits":
+	        // put our "nicer" option values back into raw object
+	        // note that the values are still strings
+	        switch(key){
+ 	        case "xdim":
+		    obj.table.nx = parseFloat(val);
+	            break;
+	        case "ydim":
+		    obj.table.ny = parseFloat(val);
+	            break;
+	        default:
+	            obj[key] = val;
+	            break;
+	        }
+	        break;
+	    case "regions":
+		// set new option value
+	        obj[key] = val;
+		// change option value in each display's region layer as well
+		for(j=0; j<JS9.displays.length; j++){
+		    rlayer = JS9.displays[j].layers.regions;
+		    if( rlayer ){
+			rlayer.opts[key] = val;
+		    }
+		}
+		break;
+	    default:
+		// set new option value
+	        obj[key] = val;
+	        break;
+	    }
+	}
+    }
+};
+
+// add preference plugin into JS9
+JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME, JS9.Prefs.init,
+		   {menuItem: "Preferences",
+		    help: "help/prefs.html",
+		    winTitle: "JS9 User Preferences",
+		    winDims: [JS9.Prefs.WIDTH, JS9.Prefs.HEIGHT]});
 require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"./imexam":[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, bitwise: true */
 /*globals Float32Array, Int32Array, JS9, $ */ 
