@@ -4062,7 +4062,7 @@ JS9.Colormap.prototype.mkColorCell = function(ii){
     case "lut":
 	var size = this.colors.length;
 	// index into the evenly spaced RGB values
-	var index = Math.floor((ii*size/count) + 0.5);
+	var index = Math.floor(ii*size/count);
 	if( index < 0 ){
 	    rgb[0] = this.colors[0][0] * umax;
 	    rgb[1] = this.colors[0][1] * umax;
