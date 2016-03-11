@@ -1310,7 +1310,7 @@ JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		    onimagedisplay: JS9.Blend.imagedisplay,
 		    onimageclose: JS9.Blend.imageclose,
 		    help: "help/blend.html",
-		    winTitle: "Image Blending",
+		    winTitle: "JS9 Image Blending",
 		    winDims: [JS9.Blend.WIDTH, JS9.Blend.HEIGHT]});
 
 /*
@@ -1608,7 +1608,7 @@ JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
 		    onimagedisplay: JS9.Blink.imagedisplay,
 		    onimageclose: JS9.Blink.imageclose,
 		    help: "help/blink.html",
-		    winTitle: "Image Blinking",
+		    winTitle: "JS9 Image Blinking",
 		    winDims: [JS9.Blink.WIDTH, JS9.Blink.HEIGHT]});
 
 /*
@@ -1769,7 +1769,7 @@ JS9.RegisterPlugin(JS9.Colorbar.CLASS, JS9.Colorbar.NAME, JS9.Colorbar.init,
 		   {menuItem: "Colorbar",
 		    onimagedisplay: JS9.Colorbar.imagedisplay,
 		    help: "help/colorbar.html",
-		    winTitle: "Colorbar",
+		    winTitle: "JS9 Colorbar",
 		    winDims: [JS9.Colorbar.WIDTH, JS9.Colorbar.HEIGHT]});
 /*
  * JS9 preferences module (14 April 2015)

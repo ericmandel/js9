@@ -293,6 +293,6 @@ JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
 		    onimagedisplay: JS9.Blink.imagedisplay,
 		    onimageclose: JS9.Blink.imageclose,
 		    help: "help/blink.html",
-		    winTitle: "Image Blinking",
+		    winTitle: "JS9 Image Blinking",
 		    winDims: [JS9.Blink.WIDTH, JS9.Blink.HEIGHT]});
 

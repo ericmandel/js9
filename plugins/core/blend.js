@@ -239,6 +239,6 @@ JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		    onimagedisplay: JS9.Blend.imagedisplay,
 		    onimageclose: JS9.Blend.imageclose,
 		    help: "help/blend.html",
-		    winTitle: "Image Blending",
+		    winTitle: "JS9 Image Blending",
 		    winDims: [JS9.Blend.WIDTH, JS9.Blend.HEIGHT]});
 

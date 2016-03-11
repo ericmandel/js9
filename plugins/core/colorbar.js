@@ -156,5 +156,5 @@ JS9.RegisterPlugin(JS9.Colorbar.CLASS, JS9.Colorbar.NAME, JS9.Colorbar.init,
 		   {menuItem: "Colorbar",
 		    onimagedisplay: JS9.Colorbar.imagedisplay,
 		    help: "help/colorbar.html",
-		    winTitle: "Colorbar",
+		    winTitle: "JS9 Colorbar",
 		    winDims: [JS9.Colorbar.WIDTH, JS9.Colorbar.HEIGHT]});
