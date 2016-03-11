@@ -22424,7 +22424,7 @@ open:function(t, contenttype, contentsource, title, attr, recalonload){
 
 setSize:function(t, w, h){ //set window size (min is 150px wide by 100px tall)
 	t.style.width=Math.max(parseInt(w), 150)+"px"
-	t.contentarea.style.height=Math.max(parseInt(h), 100)+"px"
+	t.contentarea.style.height=Math.max(parseInt(h), 20)+"px"
 },
 
 moveTo:function(t, x, y){ //move window. Position includes current viewpoint of document
