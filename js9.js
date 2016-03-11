@@ -69,6 +69,19 @@ JS9.BROWSER = (function(){
   M.push(/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(ua));
   return M;
 }());
+// convenience to allow plugins to deal with HiDPI ratio blurring
+// http://stackoverflow.com/questions/15661339/how-do-i-fix-blurry-text-in-my-html5-canvas
+JS9.PIXEL_RATIO = (function(){
+    var ctx = document.createElement("canvas").getContext("2d"),
+        dpr = window.devicePixelRatio || 1,
+        bsr = ctx.webkitBackingStorePixelRatio ||
+              ctx.mozBackingStorePixelRatio ||
+              ctx.msBackingStorePixelRatio ||
+              ctx.oBackingStorePixelRatio ||
+              ctx.backingStorePixelRatio || 1;
+
+    return dpr / bsr;
+}());
 
 // global options
 JS9.globalOpts = {
@@ -3345,18 +3358,23 @@ JS9.Image.prototype.saveJPEG = function(fname, quality){
 JS9.Image.prototype.updateValpos = function(ipos, disp){
     var val, vstr, val3, i, c, s;
     var obj = null;
-    var tr = function(x, length){
-	length = length || 3;
-	return x.toFixed(length);
+    var prec = JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
+    var tf = function(fval, length){
+	return JS9.floatFormattedString(fval, prec);
     };
-    var ti = function(num, length) {
+    var tr = function(fval, length){
+	length = length || 3;
+	return fval.toFixed(length);
+    };
+    var ti = function(ival, length) {
         var r = "";
 	var prefix = "";
-	if( num < 0 ){
-	    num = Math.abs(num);
+	length = length || 3;
+	if( ival < 0 ){
+	    ival = Math.abs(ival);
 	    prefix = "-";
 	}
-	r = r + num;
+	r = r + ival;
 	while (r.length < length) {
             r = "0" + r;
 	}
@@ -3394,21 +3412,19 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	case 16:
 	case -16:
 	case 32:
-	    val3 = ti(val,3);
+	    val3 = ti(val);
 	    break;
 	case -32:
-	    val3 = tr(val,6);
-	    break;
 	case -64:
-	    val3 = tr(val,6);
+	    val3 = tf(val);
 	    break;
 	default:
-	    val3 = ti(val,3);
+	    val3 = ti(val);
 	    break;
 	}
 	// create the valpos string
 	// since we can call this in mousemove, optimize by not using sprintf
-	vstr = "value(" + val3 + ") " + c.sys + "(" + tr(c.x) + ", " + tr(c.y) + ")";
+	vstr = "value(" + val3 + ") " + c.sys + "(" + tr(c.x, 3) + ", " + tr(c.y, 3) + ")";
 	// object containing all information
 	obj = {ix: i.x, iy: i.y, isys: "image", px: c.x, py: c.y, psys: c.sys,
 	       ra: "", dec: "", wcssys: "", val: val, val3: val3, vstr: vstr,
@@ -10212,6 +10228,41 @@ JS9.bcall = function(which, cmd, arg1){
     default:
         break;
     }
+};
+
+// figure out precision from range of values
+// from: /tksao1.0/colorbar/colorbarbase.C
+JS9.floatPrecision = function(fval1, fval2){
+    var aa, bb, prec;
+    aa = Math.floor(Math.log10(fval1));
+    bb = Math.floor(Math.log10(fval2));
+    if( aa !== bb ){
+      prec = aa > bb ? aa : bb;
+    } else {
+      prec = 1;
+    }
+    return prec;
+};
+
+// convert float value to a string with decent precision
+// from: /tksao1.0/colorbar/colorbarbase.C
+JS9.floatFormattedString = function(fval, prec){
+    var fmt, s;
+    if( prec < -2){
+	fmt = "%.2e";
+	s = sprintf(fmt, fval);
+    } else if( prec < 0){
+	s = fval.toFixed(Math.abs(prec)+3);
+    } else if( prec < 2){
+	fmt = "%." + Math.abs(prec) + "f";
+	s = sprintf(fmt, fval);
+    } else if( prec < 5){
+	s = fval.toFixed(0);
+    } else{
+	fmt = "%.2e";
+	s = sprintf(fmt, fval);
+    }
+    return s;
 };
 
 // calculate centroid for a polygon
