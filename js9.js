@@ -685,6 +685,7 @@ JS9.Image.prototype.closeImage = function(){
 	    tim.colorData = null;
 	    tim.colorCells = null;
 	    tim.psColors = null;
+	    tim.psInverse = null;
 	    tim = null;
 	    // remove image from active list
 	    JS9.images.splice(i,1);
@@ -1557,7 +1558,7 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 };
 
 // create colormap index array from data values and specified data min/max
-// from: saotk/frame/frametruecolor.C
+// from: tksao1.0/frame/frametruecolor.C
 JS9.Image.prototype.mkColorData = function(){
     var i, dd;
     var ss = JS9.SCALESIZE;
@@ -1588,7 +1589,7 @@ JS9.Image.prototype.mkColorData = function(){
 };
 
 // generate colorcells array from current colormap
-// from: saotk/colorbar/colorbar.C
+// from: tksao1.0/colorbar/colorbar.C
 JS9.Image.prototype.calcContrastBias = function(i){
     var r, result;
     var cs = JS9.COLORSIZE;
@@ -1618,7 +1619,7 @@ JS9.Image.prototype.calcContrastBias = function(i){
 };
 
 // generate colorcells array from current colormap
-// from: saotk/colorbar/colorbartruecolor.C
+// from: tksao1.0/colorbar/colorbartruecolor.C
 JS9.Image.prototype.mkColorCells = function(){
     var i, j, idx;
     var cs = JS9.COLORSIZE;
@@ -1637,9 +1638,10 @@ JS9.Image.prototype.mkColorCells = function(){
 };
 
 // create scaled colorCells from colorCells by applying scale algorithm
-// from: saotk/frame/colorscale.C
+// from: tksao1.0/frame/colorscale.C
+// inverse code from: tksao1.0/frame/inversescale.C
 JS9.Image.prototype.mkScaledCells = function(){
-    var aa, bb, ii, ll, exp;
+    var aa, dd, ii, ll, exp, low;
     var cs = JS9.COLORSIZE;
     var ss = JS9.SCALESIZE;
     var hex2num = function(hex){
@@ -1658,7 +1660,6 @@ JS9.Image.prototype.mkScaledCells = function(){
 	}
 	return value;
     };
-
     // sanity check
     if( !this.colorCells ){
 	return this;
@@ -1669,6 +1670,15 @@ JS9.Image.prototype.mkScaledCells = function(){
 	// value for NaN
 	this.psColors[NaN] = hex2num(this.params.nancolor);
     }
+    // and the inverse array for colorbar ticks
+    if( !this.psInverse ){
+	this.psInverse = [];
+	// value for NaN
+	this.psInverse[NaN] = hex2num(this.params.nancolor);
+    }
+    // delta for scaling
+    dd = this.params.scalemax - this.params.scalemin;
+    low = this.params.scalemin;
     // apply the appropriate scale algorithm
     switch(this.params.scale){
     case "linear":
@@ -1676,6 +1686,7 @@ JS9.Image.prototype.mkScaledCells = function(){
 	    aa = ii / ss;
 	    ll = Math.floor(aa * cs);
 	    this.psColors[ii] = this.colorCells[ll];
+	    this.psInverse[ii] = aa * dd + low;
 	}
 	break;
     case "log":
@@ -1687,6 +1698,8 @@ JS9.Image.prototype.mkScaledCells = function(){
 		ll = cs - 1;
 	    }
 	    this.psColors[ii] = this.colorCells[ll];
+	    aa = (Math.pow(exp,ii/ss)-1) / exp;
+	    this.psInverse[ii] =  aa * dd + low;
 	}
 	break;
     case "pow":
@@ -1698,46 +1711,55 @@ JS9.Image.prototype.mkScaledCells = function(){
 		ll = cs - 1;
 	    }
 	    this.psColors[ii] = this.colorCells[ll];
+	    aa = Math.log(exp*ii/ss+1) / Math.log(exp);
+	    this.psInverse[ii] =  aa * dd + low;
 	}
 	break;
     case "sqrt":
 	for(ii=0; ii<ss; ii++){
 	    aa = ii / ss;
-	    ll = Math.floor(Math.sqrt(aa * cs));
+	    ll = Math.floor(Math.sqrt(aa) * cs);
+	    if( ll >= cs ){
+		ll = cs - 1;
+	    }
 	    this.psColors[ii] = this.colorCells[ll];
+	    this.psInverse[ii] =  (aa * aa) * dd + low;
 	}
 	break;
     case "squared":
 	for(ii=0; ii<ss; ii++){
 	    aa = ii / ss;
 	    ll = Math.floor(aa * aa * cs);
+	    if( ll >= cs ){
+		ll = cs - 1;
+	    }
 	    this.psColors[ii] = this.colorCells[ll];
+	    aa = Math.sqrt(ii/ss);
+	    this.psInverse[ii] =  aa * dd + low;
 	}
 	break;
     case "asinh":
-	// http://phpjs.org/functions/asinh:353:
-	// Math.log(arg + Math.sqrt(arg * arg + 1))
 	for(ii=0; ii<ss; ii++){
 	    aa = ii / ss;
-	    bb = 10.0 * aa;
-	    ll = Math.floor((Math.log(bb+Math.sqrt(bb*bb+1))) / 3.0 * cs);
+	    ll = Math.floor(Math.asinh(10.0*aa)/3.0 * cs);
 	    if( ll >= cs ){
 		ll = cs - 1;
 	    }
 	    this.psColors[ii] = this.colorCells[ll];
+	    ll = Math.sinh(3.0*aa)/10.0;
+	    this.psInverse[ii] =  ll * dd + low;
 	}
 	break;
     case "sinh":
-	// http://phpjs.org/functions/sinh:516:
-	// (Math.exp(arg) - Math.exp(-arg)) / 2
 	for(ii=0; ii<ss; ii++){
 	    aa = ii / ss;
-	    bb = 3.0 * aa;
-	    ll = Math.floor(((Math.exp(bb)-Math.exp(-bb))/2.0) / 10.0 * cs);
+	    ll = Math.floor(Math.sinh(3.0*aa)/10.0 * cs);
 	    if( ll >= cs ){
 		ll = cs - 1;
 	    }
 	    this.psColors[ii] = this.colorCells[ll];
+	    ll = Math.asinh(10.0*aa)/3.0;
+	    this.psInverse[ii] =  ll * dd + low;
 	}
 	break;
     default:
@@ -1748,7 +1770,7 @@ JS9.Image.prototype.mkScaledCells = function(){
 };
 
 // create RGB image from scaled colorCells
-// sort of from: saotk/frame/truecolor.c, but not really
+// sort of from: tksao1.0/frame/truecolor.c, but not really
 JS9.Image.prototype.mkRGBImage = function(){
     var rgb, sect, img;
     var xrgb, yrgb, wrgb, hrgb, rgbimg, ctx;
@@ -4023,7 +4045,7 @@ JS9.Colormap.prototype.mkColorCell = function(ii){
     var umax = 255;
     var rgb = [0, 0, 0];
     switch(this.type){
-    // from: saotk/colormap/sao.C
+    // from: tksao1.0/colormap/sao.C
     case "sao":
 	var i, j, val, vertex, len;
 	var x = ii / count;
@@ -4058,7 +4080,7 @@ JS9.Colormap.prototype.mkColorCell = function(ii){
 	    rgb[j] = val * umax;
 	}
 	break;
-    // from: saotk/colormap/lut.C
+    // from: tksao1.0/colormap/lut.C
     case "lut":
 	var size = this.colors.length;
 	// index into the evenly spaced RGB values
@@ -9632,7 +9654,7 @@ JS9.Panner.init = function(width, height){
 };
 
 // create panner (RGB) image from scaled colorCells
-// sort of from: saotk/frame/truecolor.c, but not really
+// sort of from: tksao1.0/frame/truecolor.c, but not really
 // part of panner plugin
 JS9.Panner.create = function(im){
     var panDisp, panner, sect, img;
@@ -9903,6 +9925,19 @@ if( typeof Object.create !== "function" ){
 	return new F();
     };
 }
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/asinh
+Math.asinh = Math.asinh || function(x) {
+  if (x === -Infinity) {
+    return x;
+  }
+  return Math.log(x + Math.sqrt(x * x + 1));
+};
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sinh
+Math.sinh = Math.sinh || function(x) {
+  return (Math.exp(x) - Math.exp(-x)) / 2;
+};
 
 // set explicit focus for IPython/Jupyter support
 JS9.jupyterFocus = function(el, el2){
