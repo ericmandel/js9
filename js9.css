@@ -130,24 +130,6 @@ canvas.JS9Layer
     background-color: transparent;
 }
 
-/* printing support */
-@media print {
-  body * {
-    visibility:hidden;
-  }
-  div.PrintJS9, div.PrintJS9 * {
-    visibility:visible;
-  }
-  div.PrintJS9 {
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    margin: 0;
-  }
-}
-
 /* message display */
 div.JS9Message
 {
