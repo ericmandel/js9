@@ -1738,13 +1738,23 @@ display object is returned.
 <p>
 <font size="+1"><b><u>Print an image</u></b></font>
 <p>
-<code><font size="+1">JS9.Print()</font></code>
+<code><font size="+1">JS9.Print(opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>opts</b>: options for print
+</ul>
 <p>
 Print the currently displayed image. A new window is displayed
 containing the image, along with regions and other graphical layers
 (the 2D graphics having been converted to a re-scalable format).  The
 standard Print dialog box also is displayed and can be used to print
 this new window.  Dismiss both windows when you are finished.
+
+<p>
+By default, if a colorbar is active on the page, it will be placed
+beneath the image. You can pass the <b>colorbar: false</b> option
+in the <b>opts</b> object to avoid printing the active colorbar.
 
 <p>
 <font size="+1"><b><u>Save image as a FITS file</u></b></font>

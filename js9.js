@@ -8533,37 +8533,71 @@ JS9.resetPolygonCenter = function(poly){
 
 // Print support
 // call using image context
-JS9.Fabric.print = function(){
-    var key, win, dataURL;
-    var opts = sprintf("width=%s,height=%s,menubar=1,toolbar=1,status=0,scrollbars=1,resizable=1", this.display.canvasjq.attr("width"), this.display.canvasjq.attr("height"));
-    // make a copy of the image
-    dataURL = this.display.canvas.toDataURL("image/png");
+JS9.Fabric.print = function(opts){
+    var key, win, dataURL, divstr, pinst, xoff, yoff;
+    var divtmpl = "<div style='position:absolute; left:%spx; top:%spx'>";
+    var winopts = sprintf("width=%s,height=%s,menubar=1,toolbar=1,status=0,scrollbars=1,resizable=1", this.display.canvasjq.attr("width"), this.display.canvasjq.attr("height"));
+    // opts is optional
+    opts = opts || {};
+    // initialize position in new window
+    xoff = 0;
+    yoff = 0;
     // make a new window
-    win = window.open(null, this.id, opts);
+    win = window.open(null, this.id, winopts);
     if( !win ){
-	JS9.log("warning: could not create print window (check your pop-up blockers)");
+	JS9.error("could not create print window (check your pop-up blockers)");
 	return;
     }
+    // open DOM for writing
     win.document.open();
-    // put everything at 0,0
     win.document.write("<html><body style='padding: 0px; margin: 0px' onload='window.print(); return false'>");
-    // here is the image
-    win.document.write("<div style='position: absolute'>");
+    // output the main image
+    dataURL = this.display.canvas.toDataURL("image/png");
+    divstr = sprintf(divtmpl, xoff, yoff);
+    win.document.write(divstr);
     win.document.write("<img src='");
     win.document.write(dataURL);
-    win.document.write("' />");
+    win.document.write("'>");
     win.document.write("</div>");
     for( key in this.layers ){
 	if( this.layers.hasOwnProperty(key) ){
 	    // output (showing) layers attached to the main display
 	    if( this.layers[key].dlayer.dtype === "main" &&
 		this.layers[key].show ){
-		win.document.write("<div style='position: absolute'>");
+		divstr = sprintf(divtmpl, xoff, yoff);
+		win.document.write(divstr);
 		win.document.write(this.layers[key].dlayer.canvas.toSVG());
 		win.document.write("</div>");
 	    }
 	}
     }
+    // output colorbar, if necessary
+    if( (opts.colorbar === undefined) || opts.colorbar ){
+	pinst = this.display.pluginInstances.JS9Colorbar;
+	if( pinst && pinst.isActive() ){
+	    // separate from main display
+	    yoff += 2;
+	    // colorbar canvas
+	    dataURL = pinst.colorbarjq[0].toDataURL("image/png");
+	    yoff += this.display.height;
+	    divstr = sprintf(divtmpl, xoff, yoff);
+	    win.document.write(divstr);
+	    win.document.write(sprintf("<img "));
+	    win.document.write(sprintf(" src='%s'>", dataURL));
+	    win.document.write("</div>");
+	    // colorbar text/tickmarks canvas
+	    dataURL = pinst.textjq[0].toDataURL("image/png");
+	    yoff += pinst.colorbarjq.height() + 1;
+	    divstr = sprintf(divtmpl, xoff, yoff);
+	    win.document.write(divstr);
+	    // need to rescale the text ... argh!!!
+            win.document.write(sprintf("<img style='width:%spx;'",
+				       this.display.width));
+	    win.document.write(sprintf("src='%s'>", dataURL));
+	    win.document.write("</div>");
+	}
+    }
+    // finish up
     win.document.write("</body></html>");
     win.document.close();
 };
@@ -11557,7 +11591,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	if( this.status !== "active" ){
 	    return false;
 	}
-	if( !this.plugin.opts.hasOwnProperty(cbname) ){
+	if( cbname && !this.plugin.opts.hasOwnProperty(cbname) ){
 	    return false;
 	}
 	switch(this.winType){
