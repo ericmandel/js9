@@ -234,7 +234,7 @@ move:function(t, e){
 
 resize:function(t, e){
 	t.style.width=Math.max(dhtmlwindow.width+dhtmlwindow.distancex, 150)+"px"
-	t.contentarea.style.height=Math.max(dhtmlwindow.contentheight+dhtmlwindow.distancey, 100)+"px"
+	t.contentarea.style.height=Math.max(dhtmlwindow.contentheight+dhtmlwindow.distancey, 20)+"px"
 },
 
 enablecontrols:function(e){
