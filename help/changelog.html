@@ -17,8 +17,12 @@
 
 <h3> Public Release 1.8 (TBD)</h3>
 <ul>
-<li> add line region (with support for multiple line segments)
+<li> add RGB image processing routines, accessible via JS9.FilterRGBImage()
+<li> add colorbar plugin
+<li> add blink plugin
+<li> add image blending plugin
 <li> add ability to blend images using W3C composite/blending modes
+<li> add line region (with support for multiple line segments)
 <li> add raw data layers to allow manipulation of underlying raw data
 <li> add JS9.GaussBlurData public routine to perform Gaussian blur on data layer
 <li> add JS9.RawDataLayer() public routine for raw data layer manipulation
@@ -30,6 +34,7 @@
 <li> add JS9.Reproject() public access routine
 <li> change menu option Color->alpha (0 to 255) to Color->opacity (0.0 to 1.0)
 <li> fix bug when interactively changing panner for non-square images
+<li> fix bug in lut colormap, which truncated the first color
 <li> refactor emscripten astroem package into sub-packages
 <li> upgrade emscripten to v1.35.0
 </ul>

@@ -490,6 +490,7 @@ Calling sequences:
     JS9.BlendImage()                   # return current blend params
     JS9.BlendImage(true||false)        # turn on/off blending
     JS9.BlendImage(mode, opacity)      # set blend mode and/or opacity
+</pre>
 <p>
 where:
 <ul>
@@ -533,10 +534,8 @@ In addition, the following Porter-Duff compositing modes are available
 <li>xor
 <li>lighter
 </ul>
-Blending and compositing modes are described in detail in this
-<a href="https://www.w3.org/TR/compositing-1/">W3C candidate recommendation</a>
-and in this
-<a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Compositing">Mozilla document</a>.
+Blending and compositing modes are described in detail in this <a href="https://www.w3.org/TR/compositing-1/">W3C candidate recommendation</a>
+and in this <a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Compositing">Mozilla document</a>.
 
 <p>
 JS9 allows you to use these modes to blend images together. If you load two
@@ -1130,6 +1129,122 @@ specified sigma. The routine uses the fast Gaussian blur algorithm
 (approximating a full Gaussian blur with three passes of a box blur)
 described <a href=" http://blog.ivank.net/fastest-gaussian-blur.html">
 here</a>.
+
+<p>
+<font size="+1"><b><u>Apply a Filter to the RGB Image</u></b></font>
+<p>
+<code><font size="+1">JS9.FilterRGBImage(filter, args)</font></code>
+<p>
+where:
+<ul>
+<li><b>filter</b>: name of image filter to apply to the RGB data
+<li><b>args</b>: filter-specific arguments, where applicable
+</ul>
+In JS9, you can change the raw data (and hence the displayed image) using
+routines such as <b>JS9.GaussBlurData()</b> or the more general
+<b>JS9.RawDataLayer()</b>. You also can apply image processing
+techniques directly to the displayed RGB image without changing the
+underlying raw data, using this routine. The Web has an overwhelming
+amount of information about image processing.  A good technical
+article concerning the use of image filters with Javascript and the
+HTML5 canvas is available at:
+<a href="http://www.html5rocks.com/en/tutorials/canvas/imagefilters/">
+http://www.html5rocks.com/en/tutorials/canvas/imagefilters/
+</a>
+
+<p>
+The <b>JS9.FilterRGBImage()</b> routine supports a number of image
+processing routines, which are listed below.  To call one of them
+using <b>JS9.FilterRGBImage()</b>, supply the filter name, followed by any
+filter-specific arguments, e.g.:
+<pre>
+    JS9.FilterRGBImage("luminance", {display: "myJS9"});
+    JS9.FilterRGBImage("duotone", "g", {display: "myJS9"});
+    JS9.FilterRGBImage("convolve", [-1,-1,-1,-1,8,-1,-1,-1,-1]);
+</pre>
+You can, of course, use the default arguments where applicable.
+
+<p>
+Note that the standard JS9 colormaps, scale, contrast and bias
+selections are applied to the raw data to regenerate the RGB
+image. Thus, if you use any of the image processing techniques listed
+below and then change colormap, contrast, bias, or scale, you will
+undo the applied image processing. This is a good way to reset the
+displayed image. The same thing can be accomplished programmatically by
+specifying "reset" as the filter name:
+<pre>
+    JS9.FilterRGBImage("reset", {display: "myJS9"});
+</pre>
+
+<p>
+The following simple image processing filters are available:
+<ul>
+<li><b>luminance():</b>convert to greyscale using the CIE luminance:
+0.2126*r + 0.7152*g + 0.0722*b
+<li><b>greyscale():</b>convert to greyscale using the standard greyscale:
+0.3*r + 0.59*g + 0.11*b
+<li><b>greyscaleAvg():</b>convert to greyscale using averaging:
+(r+g+b) / 3
+<li><b>brighten(val):</b> add constant value to each pixel to change the brightness:
+[r + val, g + val, b + val]
+<li><b>noise(v1, v2):</b> add random noise: 
+pixel += Math.floor((Math.random()*(v2-v1)) - v2),
+defaults are v1=-30, v2=30
+<li><b>duotone("r"|"g"|"b"):</b> remove a color by setting it to
+the avg of the two others: r=(g+b)/2, default color is "r"
+<li><b>invert():</b> the RGB channels of the image are inverted:
+[255-r, 255-g, 255-b, a]
+<li><b>pixelate(size):</b>make image look coarser by creating a square tiling
+effect of the specified size, default size is 2
+<li><b>sepia():</b> image takes on shades of brown, like an antique photograph
+<li><b>contrast(val):</b> change the difference in brightness between the min 
+and max intensity of a pixel, default val is 2
+<li><b>threshold(thresh, low, high):</b>create a two-color image in which pixels
+less bright than thresh are assigned the low value (default 0 for black), 
+otherwise the high value (default: 255 for white)
+<li><b>gamma(gcorr):</b> apply the nonlinear gamma operation, used to code and 
+decode luminance values in video or still image systems: 
+out = pow(in, gcorr), default gcorr is 0.2
+<li><b>posterize():</b> convert a smooth gradation of tone to regions
+of fewer tones, with abrupt changes between them
+<li><b>scatter():</b> scatters the colors of a pixel in its neighborhood, akin
+to viewing through brittle cracked glass
+<li><b>solarize():</b> which image is wholly or partially reversed in
+tone. Dark areas appear light or light areas appear dark.
+</ul>
+
+<p>
+The following image convolutions are available:
+<ul>
+<li><b>convolve(weights, [opaque])</b> convolve the image using the weights array
+as a square convolution matrix. If opaque is true (default), the image will 
+have an opaque alpha channel, otherwise the alpha is convolved as well.
+<li><b>sobel():</b> use the Sobel operator to create an image that emphasizes the edges
+<li><b>medianFilter():</b> noise reduction technique that replaces each pixel with
+the median of neighboring pixels
+<li><b>gaussBlur5():</b> image pixel values are blurred using a 5x5 Gaussian
+<li><b>edgeDetect():</b> detect edges using the kernel
+[ -1, -1, -1, -1, 8, -1, -1, -1, -1 ]
+<li><b>sharpen(val):</b> sharpen the image using the kernel
+[ 0, -3, 0, -3, val, -3, 0, -3, 0 ]
+<li><b>blur():</b> blur the image using the kernel
+[ 1, 2, 1, 2, 1, 2, 1, 2, 1 ]
+<li><b>emboss(val):</b> produce embossing effect using the kernel
+[-18, -9, 9, -9, 100 - val, 9, 0, 9, 18 ]
+<li><b>lighten(val):</b> apply the kernel
+[ 0, 0, 0, 0, val, 0, 0, 0, 0 ],
+default val of 12/9 lightens the image
+<li><b>darken(val):</b> apply the kernel
+[ 0, 0, 0, 0, val, 0, 0, 0, 0],
+default val of 6/9 darkens the image
+</ul>
+
+<p>
+With no arguments, the routine returns an array of available filters:
+<pre>
+    JS9.FilterRGBImage()
+    ["convolve", "luminance", ..., "blur", "emboss", "lighten", "darken"]
+</pre>
 
 <p>
 <font size="+1"><b><u>Reproject an Image Using a Specified WCS</u></b></font>

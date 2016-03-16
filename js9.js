@@ -12,7 +12,7 @@
 
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 
-/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur */
+/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters */
 
 /*jshint smarttabs:true */
 
@@ -4027,6 +4027,41 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	try{ JS9.fits.handleFITSFile(ovfile, topts, reprojHandler); }
 	catch(e){ JS9.error("can't process reprojected FITS file", e); }
     }, JS9.SPINOUT);
+};
+
+// apply image processing filters to the current RGB image
+JS9.Image.prototype.filterRGBImage = function(filter){
+    var key, filters = [];
+    var argv = Array.prototype.slice.call(arguments);
+    // no arg: return list of filters
+    if( !filter ){
+	for( key in JS9.ImageFilters ){
+	    if( JS9.ImageFilters.hasOwnProperty(key) ){
+		filters.push(key);
+	    }
+	}
+	return filters;
+    }
+    // sanity checks
+    if( filter !== "reset" && !JS9.ImageFilters[filter] ){
+	JS9.error("JS9 image filter '" + filter + "' not available");
+    }
+    // special case: reset to original RGB data, contrast/bias
+    if( filter === "reset" ){
+	this.setColormap("reset");
+	return this;
+    }
+    // remove filter name argument
+    argv.shift();
+    // add RGB img arguments
+    argv.unshift(this.rgb.img);
+    // try to run the filter to generate a new RGB image
+    try{ JS9.ImageFilters[filter].apply(null, argv); }
+    catch(e){ JS9.error("JS9 image filter '" + filter + "' failed", e); }
+    // display new RGB image
+    this.displayImage("display");
+    // allow chaining
+    return this;
 };
 
 // Colormap
@@ -11917,6 +11952,10 @@ JS9.init = function(){
     }
     // set debug flag
     JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
+    // initialize image filters
+    if( window.hasOwnProperty("ImageFilters") ){
+	JS9.ImageFilters = ImageFilters;
+    }
     // initialize astronomy emscripten routines (wcslib, etc), if possible
     if( window.hasOwnProperty("Astroem") ){
 	JS9.vmalloc = Astroem.vmalloc;
@@ -12649,6 +12688,7 @@ JS9.mkPublic("RawDataLayer", "rawDataLayer");
 JS9.mkPublic("ShiftData", "shiftData");
 JS9.mkPublic("GaussBlurData", "gaussBlurData");
 JS9.mkPublic("ReprojectData", "reprojectData");
+JS9.mkPublic("FilterRGBImage", "filterRGBImage");
 
 // set/clear valpos flag
 JS9.mkPublic("SetValPos", function(mode){
