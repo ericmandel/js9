@@ -297,8 +297,8 @@ static Finfo FinfoNew(char *fname)
 	}
       }
     } else {
-      fprintf(stderr, "ERROR: can't locate PNG file for '%s' (%s)\n",
-	      fname, datapath);
+      fprintf(stderr, "ERROR: can't find PNG file '%s' [data path: %s]\n",
+	      fname, datapath?datapath:"none");
       goto error;
     }
     break;
@@ -325,8 +325,8 @@ static Finfo FinfoNew(char *fname)
       }
       xfree(s);
     } else {
-      fprintf(stderr, "ERROR: can't locate FITS file for '%s' (%s)\n",
-	      fname, datapath);
+      fprintf(stderr, "ERROR: can't find FITS file '%s' [data path: %s]\n",
+	      fname, datapath?datapath:"none");
       goto error;
     }
     break;
@@ -428,7 +428,6 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
       }
       /* new image */
       if( !(finfo = FinfoNew(tbuf)) ){
-	fprintf(stderr, NONEW, cmd);
 	return 1;
       }
       /* make it current */
@@ -446,7 +445,6 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
       }
       /* new image */
       if( !(finfo = FinfoNew(tbuf)) ){
-	fprintf(stderr, NONEW, cmd);
 	return 1;
       }
       /* make it current */
