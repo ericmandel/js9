@@ -3891,8 +3891,10 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 JS9.Image.prototype.reprojectData = function(wcsim, opts){
     var that = this;
     var twcs = {};
+    var rcomplete = false;
     var wvfile, wcsheader, wcsstr, oheader, nheader;
     var im, arr, ivfile, ovfile, topts, rstr, key;
+    var tab, tx0, tx1, ty0, ty1, s;
     var wcsexp = /NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
     var reprojHandler = function(hdu){
 	that.refreshImage(hdu, topts);
@@ -3968,15 +3970,25 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     if( this.raw.hdu && this.raw.hdu.vfile ){
 	// input file name
 	ivfile = this.raw.hdu.vfile;
-	// output file name
-	ovfile = "reprojected_" + this.id.replace(/png$/, "fits");
     } else {
 	// input file name
 	arr = this.toArray();
-	ivfile = this.id.replace(/\.png$/, "_png" + JS9.uniqueID() + ".fits");
+	ivfile = this.id.replace(/\.png$/, "_png" +  ".fits");
 	JS9.vfile(ivfile, arr);
-	// output file name
-	ovfile = "reprojected_" + ivfile;
+    }
+    // output file name
+    s = this.id.replace(/\.png$/, ".fits").replace(/\.gz$/, "");
+    ovfile = "reprojected_" + JS9.uniqueID() + "_" + s;
+    // if input is a table, we have to bin it by adding a bin specification
+    // we also need to pass the HDU name. For now, "EVENTS" is all we know ...
+    if( this.imtab === "table" ){
+	tab = this.raw.hdu.table;
+	tx0 = Math.floor(tab.cx - ((tab.nx+1)/2) + 1);
+	tx1 = Math.floor(tab.cx + (tab.nx/2));
+	ty0 = Math.floor(tab.cy - ((tab.ny+1)/2) + 1);
+	ty1 = Math.floor(tab.cy + (tab.ny/2));
+	s = sprintf("[EVENTS][bin X=%s:%s,Y=%s:%s]", tx0, tx1, ty0, ty1);
+	ivfile += s;
     }
     // call the reproject routine
     // (timeout allows the wait spinner to get started)
@@ -3993,11 +4005,17 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    cmdswitches = opts.cmdswitches || "";
 	    // call reproject
 	    rstr = JS9.reproject(ivfile, ovfile, wvfile, cmdswitches);
+	    if( JS9.DEBUG > 1 ){
+		JS9.log("reproject: %s %s %s -> %s",
+			ivfile, ovfile, wvfile, rstr);
+	    }
 	    // delete unneeded files ...
 	    JS9.vunlink(avfile);
 	    JS9.vunlink(wvfile);
 	    // ... then error check
 	    if( rstr.search(/\[struct stat="OK"/) < 0 ){
+		// signal that we completed the reproject attempt
+		rcomplete = true;
 		earr = rstr.match(/msg="([^"]*)"/);
 		if( earr && earr[1] ){
 		    JS9.error(earr[1] + " (from mProjectPP)");
@@ -4007,14 +4025,19 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    }
 	}
 	catch(e){
-	    // delete unneeded files ...
-	    JS9.vunlink(avfile);
-	    JS9.vunlink(wvfile);
-	    // call error handler
-	    if( rstr ){
-		JS9.error(rstr);
+	    // avoid double error reporting
+	    if( !rcomplete ){
+		// delete unneeded files ...
+		JS9.vunlink(avfile);
+		JS9.vunlink(wvfile);
+		// call error handler
+		if( rstr ){
+		    JS9.error(rstr);
+		} else {
+		    JS9.error("WCS reproject failed", e);
+		}
 	    } else {
-		JS9.error("WCS reproject failed", e);
+		return;
 	    }
 	}
 	// refresh image using the reprojected file ...
