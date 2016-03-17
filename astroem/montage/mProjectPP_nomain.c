@@ -294,7 +294,7 @@ int mProjectPP(int argc, char **argv)
    strcpy(altout, "");
    strcpy(altin,  "");
 
-   fstatus = stdout;
+   fstatus = stdout;optind = 1;
 
    while ((c = getopt(argc, argv, "z:d:s:b:o:i:h:w:W:t:x:X")) != EOF) 
    {
@@ -1608,7 +1608,7 @@ int mProjectPP(int argc, char **argv)
       (double)(currtime - start));
    fflush(stdout);
 
-   optind=1;fflush(fstatus);return 0;
+   fflush(fstatus);return 0;
 }
 
 

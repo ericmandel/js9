@@ -3,7 +3,7 @@
 echo "generating nomain version of mProjectPP.c ..."
 
 cat mProjectPP.c | \
-sed 's/main/mProjectPP/;s/exit(0)/optind=1;fflush(fstatus);return 0/g;' \
+sed 's/main/mProjectPP/;s/\(fstatus = stdout\);/\1;optind = 1;/;s/exit(0)/fflush(fstatus);return 0/;' \
 > mProjectPP_nomain.c
 
 # cat checkHdr.c | \
