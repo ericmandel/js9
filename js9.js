@@ -57,6 +57,7 @@ JS9.RESIZEDIST = 20;		// size of rectangle defining resize handle
 JS9.RESIZEFUDGE = 5;            // fudge for webkit resize problems
 JS9.RAWID0 = "raw0";		// default raw id
 JS9.RAWIDX = "alt";		// default "alternate" raw id
+JS9.REPROJDIM = 2400;		// max dimension for reprojection
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 JS9.BROWSER = (function(){
@@ -144,6 +145,7 @@ JS9.imageOpts = {
     zoom: 1,				// default zoom factor
     zooms: 5,				// how many zooms in each direction?
     nancolor: "#000000",		// 6-digit #hex color for NaN values
+    wcsalign: true,			// align image using wcs after reproj?
     listonchange: false			// whether to list after a reg change
 };
 
@@ -447,6 +449,9 @@ JS9.Image = function(file, params, func){
     // offsets into canvas to display
     this.ix = 0;
     this.iy = 0;
+    // wcs offsets into canvas to display
+    this.wcsix = 0;
+    this.wcsiy = 0;
     // create the png object
     this.png = {};
     // image element to hold png file, from which array data is generated
@@ -1687,7 +1692,7 @@ JS9.Image.prototype.mkScaledCells = function(){
     if( !this.psInverse ){
 	this.psInverse = [];
 	// value for NaN
-	this.psInverse[NaN] = hex2num(this.params.nancolor);
+	this.psInverse[NaN] = 0;
     }
     // delta for scaling
     dd = this.params.scalemax - this.params.scalemin;
@@ -2051,19 +2056,18 @@ JS9.Image.prototype.putImage = function(opts){
     // offsets into display
     this.ix = Math.floor((display.canvas.width - rgb.img.width)/2);
     this.iy = Math.floor((display.canvas.height - rgb.img.height)/2);
-    // for reprojection: if the original wcs header was supplied, make sure we
-    // are aligned with it
+    // reproject: if reproj wcs header exists, align the display if necessary
     if( this.rawDataLayer() === "reproject" ){
 	if( opts.wcsim ){
-	    wcspos = opts.wcsim.logicalToDisplayPos({x: opts.wcsim.raw.header.CRPIX1, y: opts.wcsim.raw.header.CRPIX2});
-	    impos = this.logicalToDisplayPos({x: this.raw.header.CRPIX1, y: this.raw.header.CRPIX2});
-	    this.wcsix = wcspos.x - impos.x;
-	    this.wcsiy = wcspos.y - impos.y;
+	    if( this.params.wcsalign ){
+		wcspos = opts.wcsim.logicalToDisplayPos({x: opts.wcsim.raw.header.CRPIX1, y: opts.wcsim.raw.header.CRPIX2});
+		impos = this.logicalToDisplayPos({x: this.raw.header.CRPIX1, y: this.raw.header.CRPIX2});
+		this.wcsix = wcspos.x - impos.x;
+		this.wcsiy = wcspos.y - impos.y;
+	    }
 	}
-	if( this.wcsix ){
+	if( this.params.wcsalign ){
 	    this.ix += this.wcsix * this.rgb.sect.zoom;
-	}
-	if( this.wcsiy ){
 	    this.iy += this.wcsiy * this.rgb.sect.zoom;
 	}
     }
@@ -3360,7 +3364,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
     var obj = null;
     var prec = JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
     var tf = function(fval, length){
-	return JS9.floatFormattedString(fval, prec);
+	return JS9.floatFormattedString(fval, prec, 0);
     };
     var tr = function(fval, length){
 	length = length || 3;
@@ -3894,7 +3898,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     var rcomplete = false;
     var wvfile, wcsheader, wcsstr, oheader, nheader;
     var im, arr, ivfile, ovfile, topts, rstr, key;
-    var tab, tx0, tx1, ty0, ty1, s;
+    var tab, tx1, tx2, ty1, ty2, s;
     var wcsexp = /NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
     var reprojHandler = function(hdu){
 	that.refreshImage(hdu, topts);
@@ -3949,17 +3953,9 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     if( !wcsheader.NAXIS || !wcsheader.NAXIS1 || !wcsheader.NAXIS2 ){
 	JS9.error("invalid FITS image header");
     }
-    // for now, limit the size of the image we reproject
-    if( /iPad|iPhone|iPod/.test(navigator.platform) ){
-	// 1025 x 1025
-	if( (wcsheader.NAXIS1 * wcsheader.NAXIS2) > 1050625 ){
-	    JS9.error("for now, the maximum image size for reprojection under iOS is approximately 1024 x 1024");
-	}
-    } else {
-	// 2050 x 2050
-	if( (wcsheader.NAXIS1 * wcsheader.NAXIS2) > 4202500 ){
-	    JS9.error("for now, the maximum image size for reprojection is approximately 2048 x 2048");
-	}
+    // keep within the limits of current memory constraints
+    if( (wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.REPROJDIM*JS9.REPROJDIM) ){
+	JS9.error("for now, the maximum image size for reprojection is approximately " + JS9.REPROJDIM  + " * " + JS9.REPROJDIM);
     }
     // convert to a string
     wcsstr = JS9.raw2FITS(wcsheader, true);
@@ -3983,11 +3979,11 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     // we also need to pass the HDU name. For now, "EVENTS" is all we know ...
     if( this.imtab === "table" ){
 	tab = this.raw.hdu.table;
-	tx0 = Math.floor(tab.cx - ((tab.nx+1)/2) + 1);
-	tx1 = Math.floor(tab.cx + (tab.nx/2));
-	ty0 = Math.floor(tab.cy - ((tab.ny+1)/2) + 1);
-	ty1 = Math.floor(tab.cy + (tab.ny/2));
-	s = sprintf("[EVENTS][bin X=%s:%s,Y=%s:%s]", tx0, tx1, ty0, ty1);
+	tx1 = Math.floor(tab.cx - ((tab.nx+1)/2) + 1);
+	tx2 = Math.floor(tab.cx + (tab.nx/2));
+	ty1 = Math.floor(tab.cy - ((tab.ny+1)/2) + 1);
+	ty2 = Math.floor(tab.cy + (tab.ny/2));
+	s = sprintf("[EVENTS][bin X=%s:%s,Y=%s:%s]", tx1, tx2, ty1, ty2);
 	ivfile += s;
     }
     // call the reproject routine
@@ -5664,10 +5660,10 @@ JS9.Menubar = function(width, height){
 		var tdisp = getDisplays()[0];
 		var editScale = function(im, obj){
 		    if( JS9.isNumber(obj.scalemin) ){
-			im.params.scalemin = obj.scalemin;
+			im.params.scalemin = parseFloat(obj.scalemin);
 		    }
 		    if( JS9.isNumber(obj.scalemax) ){
-			im.params.scalemax = obj.scalemax;
+			im.params.scalemax = parseFloat(obj.scalemax);
 		    }
 		    im.displayImage("colors");
 		};
@@ -6032,12 +6028,20 @@ JS9.Menubar = function(width, height){
 			nwcs++;
 		    }
 		}
-		if( !nwcs ){
+		if( nwcs === 0 ){
 		    items.reproject.items.notasks = {
 			name: "[none]",
 			disabled: true,
 			events: {keyup: function(evt){return;}}
 		    };
+		} else {
+		    items.reproject.items["sep" + n++] = "------";
+		    items.reproject.items.reproject_wcsalign = {
+			name: "display wcs-aligned"
+		    };
+		    if( tdisp.image && (tdisp.image.params.wcsalign) ){
+			items.reproject.items.reproject_wcsalign.icon = "sun";
+		    }
 		}
 		return {
                     callback: function(key, opt){
@@ -6049,8 +6053,13 @@ JS9.Menubar = function(width, height){
 			if( uim ){
 			    // maybe it's a wcs reprojection request
 			    if( key.match(/^reproject_/) ){
-				file = key.replace(/^reproject_/,"");
-				uim.reprojectData(file);
+				if( key === "reproject_wcsalign" ){
+				    uim.params.wcsalign = !uim.params.wcsalign;
+				    uim.displayImage("display");
+				}  else {
+				    file = key.replace(/^reproject_/,"");
+				    uim.reprojectData(file);
+				}
 				return;
 			    }
 			    // otherwise it's a wcs directive
@@ -10338,7 +10347,7 @@ JS9.floatPrecision = function(fval1, fval2){
 
 // convert float value to a string with decent precision
 // from: /tksao1.0/colorbar/colorbarbase.C
-JS9.floatFormattedString = function(fval, prec){
+JS9.floatFormattedString = function(fval, prec, fix){
     var fmt, s;
     if( prec < -2){
 	fmt = "%.2e";
@@ -10349,7 +10358,7 @@ JS9.floatFormattedString = function(fval, prec){
 	fmt = "%." + Math.abs(prec) + "f";
 	s = sprintf(fmt, fval);
     } else if( prec < 5){
-	s = fval.toFixed(0);
+	s = fval.toFixed(fix);
     } else{
 	fmt = "%.2e";
 	s = sprintf(fmt, fval);
