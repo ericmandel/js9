@@ -1632,8 +1632,10 @@ JS9.Colorbar.TICKS = 10;
 // height of colorbar inside plugin
 JS9.Colorbar.COLORBARHEIGHT = 16;
 
+// redraw colorbar on display
 JS9.Colorbar.display = function(im){
-    var i, j, prec, idx, idx0, colorBuf, tval, tlabel, ix, iy;
+    var i, j, prec, idx, idx0, colorBuf, tval, ix, iy, done;
+    var tlabels = [];
     var canvasWidth = this.colorbarWidth;
     var canvasHeight = this.colorbarHeight;
     var colorImg = this.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
@@ -1668,17 +1670,36 @@ JS9.Colorbar.display = function(im){
     // get precision estimate
     prec = JS9.floatPrecision(im.psInverse[0], 
 			      im.psInverse[im.psInverse.length-1]);
+    // make labels, with a feeble attempt to avoid duplicates
+    for(j=0; j<3; j++){
+	done = true;
+	// gather array of labels
+	for(i=0; i<this.ticks; i++){
+	    tval = im.psInverse[Math.floor(i*idx0)];
+	    tlabels[i] = JS9.floatFormattedString(tval, prec+j, j);
+	}
+	// look for dups
+	for(i=1; i<this.ticks; i++){
+	    if( tlabels[i-1] === tlabels[i] ){
+		done = false;
+	    }
+	}
+	// done if no dups
+	if( done ){
+	    break;
+	}
+    }
+    // draw tick marks and labels
     for(i=1; i<this.ticks; i++){
-	tval = im.psInverse[Math.floor(i*idx0)];
-	tlabel = JS9.floatFormattedString(tval, prec);
 	ix = (i/this.ticks)*this.width;
 	iy = 0;
+	this.textctx.textAlign = "center";
 	this.textctx.beginPath();
 	this.textctx.moveTo(ix, iy);
 	this.textctx.lineWidth = 1;
 	this.textctx.lineTo(ix, iy+5);
 	this.textctx.stroke();
-	this.textctx.fillText(tlabel, ix, iy+15);
+	this.textctx.fillText(tlabels[i], ix, iy+15);
     }
 };
 
@@ -1750,7 +1771,6 @@ JS9.Colorbar.init = function(){
 	.appendTo(this.colorbarContainer);
     this.textctx = this.textjq[0].getContext("2d");
     this.textctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    this.textctx.textAlign = "center";
     // display current colorbar, if necessary
     if( this.display.image ){
 	JS9.Colorbar.display.call(this, this.display.image);
