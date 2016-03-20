@@ -4099,7 +4099,7 @@ JS9.Colormap = function(name, a1, a2, a3){
 	this.vertices[2] = a3;
 	break;
     default:
-	JS9.error("colormap requires name and 1 or 3 array arg");
+	JS9.error("colormap requires a colormap name and 1 or 3 array args");
     }
     // add to list of colormaps
     JS9.colormaps.push(this);
@@ -12721,6 +12721,22 @@ JS9.mkPublic("ShiftData", "shiftData");
 JS9.mkPublic("GaussBlurData", "gaussBlurData");
 JS9.mkPublic("ReprojectData", "reprojectData");
 JS9.mkPublic("FilterRGBImage", "filterRGBImage");
+
+// add a colormap to JS9
+JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
+    var obj = JS9.parsePublicArgs(arguments);
+    switch(obj.argv.length-1){
+    case 1:
+	JS9.checkNew(new JS9.Colormap(colormap, a1));
+	break;
+    case 3:
+	JS9.checkNew(new JS9.Colormap(colormap, a1, a2, a3));
+	break;
+    default:
+	JS9.error("AddColormap() requires a colormap name and 1 or 3 args");
+	break;
+    }
+});
 
 // set/clear valpos flag
 JS9.mkPublic("SetValPos", function(mode){

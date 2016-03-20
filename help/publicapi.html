@@ -636,6 +636,80 @@ Set the current colormap, contrast/bias, or both. This call takes one
 arguments.
 
 <p>
+<font size="+1"><b><u>Add a colormap to JS9</u></b></font>
+<p>
+<code><font size="+1">JS9.AddColormap(colormap, aa)</font></code>
+<br>
+or:
+<br>
+<code><font size="+1">JS9.AddColormap(colormap, rr, gg, bb)</font></code>
+<p>
+where:
+<ul>
+<li><b>colormap</b>: colormap name
+<li><b>aa</b>: array containing RGB triplets
+<li><b>rr</b>: array of red vertices
+<li><b>gg</b>: array of green vertices
+<li><b>bb</b>: array of blue vertices
+</ul>
+You can add new colormaps to JS9 using one of two formats. The first
+is an array of RGB triplets (i.e. an array of 3-D arrays), where each
+triplet defines a color. The elements of the colormap are divided
+evenly between these 3-D triplets.  For example, the <b>i8</b>
+colormap is defined as:
+<pre>
+    JS9.AddColormap("i8", [[0,0,0], [0,1,0], [0,0,1], [0,1,1], [1,0,0], [1,1,0], [1,0,1], [1,1,1]]));
+</pre>
+Here, the colormap is divided into 8 sections having the following
+colors: black, green, blue, cyan (green + blue), red, yellow (red +
+green), purple (red + blue), and white. A colormap such as <b>sls</b>
+also utilizes an array of RGB triplets, but it has 200 entries,
+leading to much more gradual transitions between colors.
+
+<p>
+The second colormap format consists three arrays of vertices defining
+the change in intensity of red, green, and blue, respectively. For
+each of these three color triplets, the first coordinate of each
+vertex is the x-distance along the colormap axis (scaled from 0 to 1)
+and the second coordinate is the y-intensity of the color.  Colors are
+interpolated between the vertices.  For example, consider the following:
+<pre>
+    JS9.AddColormap("red", [[0,0],[1,1]], [[0,0], [0,0]], [[0,0],[0,0]]);
+    JS9.AddColormap("blue", [[0,0],[0,0]], [[0,0], [0,0]], [[0,0],[1,1]]);
+    JS9.AddColormap("purple", [[0,0],[1,1]], [[0,0], [0,0]], [[0,0],[1,1]]);
+</pre>
+In the red (blue) colormap, the red (blue) array contains two
+vertices, whose color ranges from no intensity (0) to full intensity
+(1) over the whole range of the colormap (0 to 1). The same holds true
+for the purple colormap, except that both red and blue change from zero
+to full intensity.
+
+<p>
+For a more complicated example, consider the <b>a</b> colormap, which is
+defined as:
+<pre>
+    JS9.AddColormap("a",
+      [[0,0], [0.25,0], [0.5,1], [1,1]],
+      [[0,0], [0.25,1], [0.5,0], [0.77,0], [1,1]],
+      [[0,0], [0.125,0], [0.5, 1], [0.64,0.5], [0.77, 0], [1,0]]);
+</pre>
+Here we see that red is absent for the first quarter of the colormap,
+then gradually increases to full intensity by the half mark, after
+which it stays at full intensity to the end. Green ramps up to full
+intensity in the first quarter, then drops to zero by the half and
+stays that way until a bit more than three-quarters along, after which
+it gradually increases again. Blue starts off at no intensity for an
+eighth, then gradually increases to full intensity by the half-way
+mark, decreasing gradually to zero by the three-quarter mark. The
+result is that you see, for example, green at the beginning and yellow
+(red + green) at the end, with some purple (red + blue) in the middle
+of the colormap.
+
+<p>
+Note that <b>JS9.AddColormap()</b> adds its new colormap to all
+JS9 displays on the given page.
+
+<p>
 <font size="+1"><b><u>Get the image scale</u></b></font>
 <p>
 <code><font size="+1">scale = JS9.GetScale()</font></code>
