@@ -636,21 +636,31 @@ Set the current colormap, contrast/bias, or both. This call takes one
 arguments.
 
 <p>
-<font size="+1"><b><u>Add a colormap to JS9</u></b></font>
+<font size="+1"><b><u>Save current colormap definition</u></b></font>
 <p>
-<code><font size="+1">JS9.AddColormap(colormap, aa)</font></code>
-<br>
-or:
-<br>
-<code><font size="+1">JS9.AddColormap(colormap, rr, gg, bb)</font></code>
+<code><font size="+1">JS9.SaveColormap(filename)</font></code>
 <p>
 where:
 <ul>
-<li><b>colormap</b>: colormap name
-<li><b>aa</b>: array containing RGB triplets
-<li><b>rr</b>: array of red vertices
-<li><b>gg</b>: array of green vertices
-<li><b>bb</b>: array of blue vertices
+<li><b>filename</b>: output file name
+</ul>
+Save the current colormap definition for displayed image as a JSON
+file. If filename is not specified, the file will be saved as "js9.cmap".
+This is useful if you want to edit the current definition to make a new
+colormap.
+
+<p>
+<font size="+1"><b><u>Add a colormap to JS9</u></b></font>
+<p>
+<code><font size="+1">JS9.AddColormap(name, aa|rr,gg,bb|obj|json)</font></code>
+<p>
+where:
+<ul>
+<li><b>name</b>: colormap name
+<li><b>aa</b>: an array containing RGB color triplets
+<li><b>rr,gg,bb</b>: 3 arrays of vertices specifying color changes
+<li><b>obj</b>: object containing one of the two colormap definition formats
+<li><b>json</b>: json string containing one of the colormap definition formats
 </ul>
 You can add new colormaps to JS9 using one of two formats. The first
 is an array of RGB triplets (i.e. an array of 3-D arrays), where each
@@ -665,7 +675,6 @@ colors: black, green, blue, cyan (green + blue), red, yellow (red +
 green), purple (red + blue), and white. A colormap such as <b>sls</b>
 also utilizes an array of RGB triplets, but it has 200 entries,
 leading to much more gradual transitions between colors.
-
 <p>
 The second colormap format consists three arrays of vertices defining
 the change in intensity of red, green, and blue, respectively. For
@@ -683,7 +692,6 @@ vertices, whose color ranges from no intensity (0) to full intensity
 (1) over the whole range of the colormap (0 to 1). The same holds true
 for the purple colormap, except that both red and blue change from zero
 to full intensity.
-
 <p>
 For a more complicated example, consider the <b>a</b> colormap, which is
 defined as:
@@ -704,10 +712,19 @@ mark, decreasing gradually to zero by the three-quarter mark. The
 result is that you see, for example, green at the beginning and yellow
 (red + green) at the end, with some purple (red + blue) in the middle
 of the colormap.
-
 <p>
-Note that <b>JS9.AddColormap()</b> adds its new colormap to all
-JS9 displays on the given page.
+As a convenience, you also can pass an object or JSON string containing the
+colormap defintion:
+<pre>
+    # RGB color triplets for the I8 colormap in a "colors" property
+    {"name":"i8","colors":[[0,0,0],[0,1,0],[0,0,1],[0,1,1],[1,0,0],[1,1,0],[1,0,1],[1,1,1]]}
+
+    # all 3 arrays vertices for the purple colormap in one "vertices" property
+    {"name":"purple","vertices":[[[0,0],[1,1]],[[0,0],[0,0]],[[0,0],[1,1]]]}
+</pre>
+<p>
+Finally, note that <b>JS9.AddColormap()</b> adds its new colormap to
+all JS9 displays on the given page.
 
 <p>
 <font size="+1"><b><u>Get the image scale</u></b></font>
@@ -2059,7 +2076,7 @@ This routine is useful if you are building a Web interface that
 supports the JS9 menu functions.
 
 <p>
-<font size="+1"><b><u>Use the file dialog box to open a FITS file</u></b></font>
+<font size="+1"><b><u>Use the file dialog box to load a FITS file</u></b></font>
 <p>
 <code><font size="+1">JS9.OpenFileMenu()</font></code> Calling this
 routine brings up the browser's file dialog box. When a FITS file is
@@ -2069,10 +2086,20 @@ This routine is useful if you are building a Web interface that
 supports the JS9 menu functions.
 
 <p>
-<font size="+1"><b><u>Use the file dialog box to open a region file</u></b></font>
+<font size="+1"><b><u>Use the file dialog box to load a region file</u></b></font>
 <p>
 <code><font size="+1">JS9.OpenRegionsMenu()</font></code>
 Calling this routine brings up the browser file menu. When a region file is
+selected, if will be loaded into the JS9 display.
+<p>
+This routine is useful if you are building a Web interface that
+supports the JS9 menu functions.
+
+<p>
+<font size="+1"><b><u>Use the file dialog box to load a colormap file</u></b></font>
+<p>
+<code><font size="+1">JS9.OpenColormapMenu()</font></code>
+Calling this routine brings up the browser file menu. When a colormap file is
 selected, if will be loaded into the JS9 display.
 <p>
 This routine is useful if you are building a Web interface that

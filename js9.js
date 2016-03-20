@@ -4086,17 +4086,14 @@ JS9.Image.prototype.filterRGBImage = function(filter){
 // Colormap
 JS9.Colormap = function(name, a1, a2, a3){
     this.name = name;
-    switch(arguments.length-1){
-    case 1:
+    switch(arguments.length){
+    case 2:
 	this.type = "lut";
 	this.colors = a1;
 	break;
-    case 3:
+    case 4:
 	this.type = "sao";
-	this.vertices = [];
-	this.vertices[0] = a1;
-	this.vertices[1] = a2;
-	this.vertices[2] = a3;
+	this.vertices = [a1, a2, a3];
 	break;
     default:
 	JS9.error("colormap requires a colormap name and 1 or 3 array args");
@@ -4303,6 +4300,7 @@ JS9.Display = function(el){
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.Load(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="refreshLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.RefreshImage(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalRegions-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadRegions(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalColormap-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.AddColormap(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
     // add to list of displays
     JS9.displays.push(this);
     // debugging
@@ -5853,6 +5851,8 @@ JS9.Menubar = function(width, height){
 		items["sep" + n++] = "------";
 		items.reset = {name: "reset contrast/bias"};
 		items["sep" + n++] = "------";
+		items.loadcmap = {name: "load colormap"};
+		items.savecmap = {name: "save colormap"};
 		items.invert = {name: "invert colormap"};
 		if( tdisp.image && tdisp.image.params.invert ){
 		    items.invert.icon = "sun";
@@ -5868,7 +5868,16 @@ JS9.Menubar = function(width, height){
 			var udisp = val;
 			var uim = udisp.image;
 			if( uim ){
-			    uim.setColormap(key);
+			    switch(key){
+			    case "loadcmap":
+				JS9.OpenColormapMenu({display: udisp});
+				break;
+			    case "savecmap":
+				JS9.SaveColormap({display: udisp});
+				break;
+			    default:
+				uim.setColormap(key);
+			    }
 			}
 		    });
 		    },
@@ -12724,17 +12733,50 @@ JS9.mkPublic("FilterRGBImage", "filterRGBImage");
 
 // add a colormap to JS9
 JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
+    var reader, cobj;
     var obj = JS9.parsePublicArgs(arguments);
-    switch(obj.argv.length-1){
-    case 1:
-	JS9.checkNew(new JS9.Colormap(colormap, a1));
-	break;
-    case 3:
-	JS9.checkNew(new JS9.Colormap(colormap, a1, a2, a3));
-	break;
-    default:
-	JS9.error("AddColormap() requires a colormap name and 1 or 3 args");
-	break;
+    var obj2cmap = function(xobj){
+	if( xobj.vertices ){
+	    JS9.AddColormap(xobj.name,
+			    xobj.vertices[0],
+			    xobj.vertices[1],
+			    xobj.vertices[2]);
+	} else if( xobj.colors ){
+	    JS9.AddColormap(xobj.name, xobj.colors);
+	} else {
+	    JS9.error("invalid colormap object for JS9.AddColormap()");
+	}
+    };
+    // blob passed by OpenColormapMenu()
+    if( obj.argv[0] instanceof Blob ){
+	// file reader object
+	reader = new FileReader();
+	reader.onload = function(ev){
+	    try{ cobj = JSON.parse(ev.target.result); }
+	    catch(e){ JS9.error("can't parse json colormap", e); }
+	    obj2cmap(cobj);
+	};
+	reader.readAsText(obj.argv[0]);
+    } else if( typeof obj.argv[0]  === "object" ){
+	obj2cmap(obj.argv[0]);
+    } else {
+	switch(obj.argv.length){
+	case 1:
+	    // json formatted string
+	    try{ cobj = JSON.parse(colormap); }
+	    catch(e){ JS9.error("can't parse JSON colormap", e); }
+	    obj2cmap(cobj);
+	    break;
+	case 2:
+	    JS9.checkNew(new JS9.Colormap(colormap, a1));
+	    break;
+	case 4:
+	    JS9.checkNew(new JS9.Colormap(colormap, a1, a2, a3));
+	    break;
+	default:
+	    JS9.error("AddColormap() requires a colormap name and 1 or 3 args");
+	    break;
+	}
     }
 });
 
@@ -13289,6 +13331,39 @@ JS9.mkPublic("OpenRegionsMenu", function(){
     if( display ){
 	$('#openLocalRegions-' + display.id).click();
     }
+});
+
+// bring up the file dialog box and load selected colormap file(s)
+JS9.mkPublic("OpenColormapMenu", function(){
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    if( display ){
+	$('#openLocalColormap-' + display.id).click();
+    }
+});
+
+// save a colormap to disk
+JS9.mkPublic("SaveColormap", function(fname){
+    var im, cobj, s, blob;
+    var obj = JS9.parsePublicArgs(arguments);
+    if( window.hasOwnProperty("saveAs") ){
+	im = JS9.getImage(obj.display);
+	if( im ){
+	    fname = obj.argv[0] || "js9.cmap";
+	    // delete type property before saving
+	    cobj = $.extend(true, {}, im.cmapObj);
+	    delete cobj.type;
+	    // convert to json
+	    s = JSON.stringify(cobj);
+	    // then convert json to blob
+	    blob = new Blob([s], {type: 'text/plain'});
+	    // save to disk
+	    saveAs(blob, fname);
+	}
+    } else {
+	JS9.error("no saveAs function available to save colormap");
+    }
+    return fname;
 });
 
 // display the named plugin
