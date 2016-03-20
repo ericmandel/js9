@@ -332,6 +332,7 @@ determine the current image for each call.
 <font size="+1"><b><u>Get image data and auxiliary info for the specified image</u></b></font>
 <p>
 <code><font size="+1">imdata = JS9.GetImageData(dflag)</font></code>
+<p>
 where:
 <ul>
 <li><b>dflag</b>: specifies whether the data should also be returned
@@ -402,6 +403,7 @@ by convention, x.0, y.0 is the middle of the pixel.
 <font size="+1"><b><u>Get image data for all images loaded into the specified display</u></b></font>
 <p>
 <code><font size="+1">imarr = JS9.GetDisplayData()</font></code>
+<p>
 returns:
 <ul>
 <li><b>imdataArr</b>: array of image data objects
@@ -485,6 +487,7 @@ display.
 <font size="+1"><b><u>Blend the image in an image stack using W3C composite/blend modes </u></b></font>
 <p>
 <code><font size="+1">JS9.BlendImage(blendMode, opacity)</font></code>
+<p>
 Calling sequences:
 <pre>
     JS9.BlendImage()                   # return current blend params
@@ -719,7 +722,7 @@ colormap definition:
     # RGB color triplets for the I8 colormap in a "colors" property
     {"name":"i8","colors":[[0,0,0],[0,1,0],[0,0,1],[0,1,1],[1,0,0],[1,1,0],[1,0,1],[1,1,1]]}
 
-    # all 3 arrays vertices for the purple colormap in one "vertices" property
+    # all 3 vertex arrays for the purple colormap in one "vertices" property
     {"name":"purple","vertices":[[[0,0],[1,1]],[[0,0],[0,0]],[[0,0],[1,1]]]}
 </pre>
 <p>
@@ -2078,9 +2081,10 @@ supports the JS9 menu functions.
 <p>
 <font size="+1"><b><u>Use the file dialog box to load a FITS file</u></b></font>
 <p>
-<code><font size="+1">JS9.OpenFileMenu()</font></code> Calling this
-routine brings up the browser's file dialog box. When a FITS file is
-selected, if will be loaded into the JS9 display.
+<code><font size="+1">JS9.OpenFileMenu()</font></code>
+<p>
+Calling this routine brings up the browser's file dialog box. When a
+FITS file is selected, if will be loaded into the JS9 display.
 <p>
 This routine is useful if you are building a Web interface that
 supports the JS9 menu functions.
@@ -2089,6 +2093,7 @@ supports the JS9 menu functions.
 <font size="+1"><b><u>Use the file dialog box to load a region file</u></b></font>
 <p>
 <code><font size="+1">JS9.OpenRegionsMenu()</font></code>
+<p>
 Calling this routine brings up the browser file menu. When a region file is
 selected, if will be loaded into the JS9 display.
 <p>
@@ -2099,11 +2104,21 @@ supports the JS9 menu functions.
 <font size="+1"><b><u>Use the file dialog box to load a colormap file</u></b></font>
 <p>
 <code><font size="+1">JS9.OpenColormapMenu()</font></code>
-Calling this routine brings up the browser file menu. When a colormap file is
-selected, if will be loaded into the JS9 display.
 <p>
+Calling this routine brings up the browser file menu. When a
+JSON-format colormap file is selected, it will be loaded into the JS9
+display. The colormap file can take one of two forms (without the comments):
+<pre>
+    # RGB color triplets for the I8 colormap in a "colors" property
+    {"name":"i8","colors":[[0,0,0],[0,1,0],[0,0,1],[0,1,1],[1,0,0],[1,1,0],[1,0,1],[1,1,1]]}
+
+    # all 3 vertex arrays for the purple colormap in one "vertices" property
+    {"name":"purple","vertices":[[[0,0],[1,1]],[[0,0],[0,0]],[[0,0],[1,1]]]}
+</pre>
 This routine is useful if you are building a Web interface that
-supports the JS9 menu functions.
+supports the JS9 menu functions. See <b>JS9.AddColormap()</b> for more
+information about colormap formats.
+
 
 <p>
 <font size="+1"><b><u>Get location of JS9 installation directory</u></b></font>
