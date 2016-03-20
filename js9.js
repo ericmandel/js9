@@ -5965,7 +5965,7 @@ JS9.Menubar = function(width, height){
 				JS9.OpenRegionsMenu({display: udisp});
 				break;
 			    case "saveRegions":
-				uim.saveRegions("all", true);
+				uim.saveRegions("js9.reg", "all");
 				break;
 			    case "listRegions":
 				uim.listRegions("all", 2);
@@ -9387,17 +9387,18 @@ JS9.Regions.parseRegions = function(s){
 };
 
 // save regions to a file
-JS9.Regions.saveRegions = function(which, disp){
+JS9.Regions.saveRegions = function(fname, which){
     var header = sprintf("# Region file format: JS9 version 1.0");
     var regstr = this.listRegions(which, 1);
     var s = sprintf("%s\n%s\n", header, regstr.replace(/; */g, "\n"));
     var blob = new Blob([s], {type: "text/plain;charset=utf-8"});
+    fname = fname || "js9.reg";
     if( window.hasOwnProperty("saveAs") ){
-	saveAs(blob, "js9.reg");
+	saveAs(blob, fname);
     } else {
 	JS9.error("no saveAs function available to save region file");
     }
-    return regstr;
+    return fname;
 };
 
 // ---------------------------------------------------------------------
@@ -12962,6 +12963,17 @@ JS9.mkPublic("Load", function(file, opts){
     }
 });
 
+// save regions to disk
+JS9.mkPublic("SaveRegions", function(fname, which){
+    var im;
+    var obj = JS9.parsePublicArgs(arguments);
+    im = JS9.getImage(obj.display);
+    if( im ){
+	return im.saveRegions(fname, which);
+    }
+    return fname;
+});
+
 // load a DS9/funtools regions file
 JS9.mkPublic("LoadRegions", function(file, opts){
     var display, reader;
@@ -12971,7 +12983,6 @@ JS9.mkPublic("LoadRegions", function(file, opts){
     // sanity check
     if( !file ){
 	JS9.error("JS9.LoadRegions: no file specified for regions load");
-	return;
     }
     // check for display
     if( obj.display ){

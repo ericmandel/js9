@@ -1593,6 +1593,31 @@ be any of the following (in order of precedence):
 Thus, it is possible to act on multiple shapes at the same time.
 
 <p>
+<font size="+1"><b><u>Save regions from the current image to a file</u></b></font>
+<p>
+<code><font size="+1">JS9.SaveRegions(filename, which)</font></code>
+<p>
+where:
+<ul>
+<li><b>filename</b>: output file name
+<li><b>which</b>: which regions to save (default is "all")
+</ul>
+Save the current regions for the displayed image as JS9 regions file. If
+filename is not specified, the file will be saved as "js9.reg".
+
+<p>
+<font size="+1"><b><u>Load regions from a file into the current image</u></b></font>
+<p>
+<code><font size="+1">JS9.LoadRegions(filename)</font></code>
+<p>
+where:
+<ul>
+<li><b>filename</b>: input file name
+</ul>
+Load the specified regions file into the displayed image. The filename must
+be specified.
+
+<p>
 <font size="+1"><b><u>Create a new shape layer</u></b></font>
 <p>
 <code><font size="+1">lid = JS9.NewShapeLayer(layer, opts)</font></code>
