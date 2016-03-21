@@ -103,17 +103,17 @@
     </tr>
 
     <tr valign="top">
-    <td>
+    <td colspan="2">
+    <form autocomplete="off" action="noop()">
     <input type="text" id="datetimepicker" size="44" value="datepicker test: 3rd party event-handling" class="datepickerText">
-    </td>
-    <td>
+    &nbsp; &nbsp;
     Heap Test:
     <input type="file" multiple="true" onchange="javascript:HeapTest(this.files)">
     <input type="button" value="Reproj Load" onclick="javascript:ReprojLoad()">
     <input type="button" value="Reproj Test" onclick="javascript:ReprojTest()">
     &nbsp; &nbsp;
     <select id="blur" onfocus="this.selectedIndex=0;">
-        <option value="">blur levels</option>
+        <option value="">Blur Levels</option>
         <option value="">-----------</option>
         <option value="0" onclick="xblur(0);">no blur</option>
         <option value="1" onclick="xblur(1);">sigma 1</option> 
@@ -127,6 +127,37 @@
         <option value="9" onclick="xblur(9);">sigma 9</option>
         <option value="10" onclick="xblur(10);">sigma 10</option>
     </select>
+    &nbsp; &nbsp;
+    <select id="improc" onfocus="this.selectedIndex=0;">
+        <option value="">Image Filters</option>
+        <option value="">-----------</option>
+        <option value="reset" onclick='xfilter("reset");'>reset</option>
+        <option value="luminance" onclick='xfilter("luminance");'>luminance</option>
+        <option value="greyscale" onclick='xfilter("greyscale");'>greyscale</option>
+        <option value="greyscaleAvg" onclick='xfilter("greyscaleAvg");'>greyscaleAvg</option>
+        <option value="brighten" onclick='xfilter("brighten");'>brighten</option>
+        <option value="noise" onclick='xfilter("noise");'>noise</option>
+        <option value="duotone" onclick='xfilter("duotone");'>duotone</option>
+        <option value="invert" onclick='xfilter("invert");'>invert</option>
+        <option value="pixelate" onclick='xfilter("pixelate");'>pixelate</option>
+        <option value="sepia" onclick='xfilter("sepia");'>sepia</option>
+        <option value="contrast" onclick='xfilter("contrast");'>contrast</option>
+        <option value="threshold" onclick='xfilter("threshold");'>threshold</option>
+        <option value="gamma" onclick='xfilter("gamma");'>gamma</option>
+        <option value="posterize" onclick='xfilter("posterize");'>posterize</option>
+        <option value="scatter" onclick='xfilter("scatter");'>scatter</option>
+        <option value="solarize" onclick='xfilter("solarize");'>solarize</option>
+        <option value="sobel" onclick='xfilter("sobel");'>sobel</option>
+        <option value="medianFilter" onclick='xfilter("medianFilter");'>medianFilter</option>
+        <option value="gaussBlur5" onclick='xfilter("gaussBlur5");'>gaussBlur5</option>
+        <option value="edgeDetect" onclick='xfilter("edgeDetect");'>edgeDetect</option>
+        <option value="sharpen" onclick='xfilter("sharpen");'>sharpen</option>
+        <option value="blur" onclick='xfilter("blur");'>blur</option>
+        <option value="emboss" onclick='xfilter("emboss");'>blur</option>
+        <option value="lighten" onclick='xfilter("lighten");'>lighten</option>
+        <option value="darken" onclick='xfilter("darken");'>darken</option>
+    </select>
+    </form>
     </td>
     </tr>
 
@@ -183,6 +214,7 @@
     <div class="JS9" id="myJS9"></div>
     <div style="margin-top: 2px;">
     <div class="JS9Colorbar" id="myJS9Colorbar"></div>
+    </div>
     </td>
     </tr>
     <tr valign="top">
@@ -364,12 +396,13 @@
     // heap test
     var heapBlobs, heapBuf, heapStart, heapCur, heapIter;
     var heapAlloc = 1024000, heapTimeout=100;
-    var HeapTest = function(files){
+    function HeapTest(files){
+      heapStart = 0;
       heapBlobs = files;
       heapBuf = new ArrayBuffer(heapAlloc);
       heapTest(1000);
     }
-    var heapTest = function(nn, ii){
+    function heapTest(nn, ii){
         var buf;
         var im = JS9.GetImage();
         if( ii === undefined ){
@@ -396,7 +429,7 @@
                        heapIter, heapCur - heapStart, heapCur, heapStart);
         };
     }
-    var ReprojLoad = function(){
+    function ReprojLoad(){
       console.log("loading casa1k.fits ...")
       JS9.Load("reproj/casa1k.fits", {display: "JS9", onload:function(im){
 	console.log("loading casa1kr.fits ...")
@@ -405,17 +438,27 @@
         }})
       }})
     }
-    var ReprojTest = function(){
+    function ReprojTest(){
       var im = JS9.GetImage({display: "myJS9"});
       console.log("running reproj on %s", im.id)
       im.reprojectData("reproj/casa1k.fits");
     }
-    var xblur = function(sigma){
+    function xblur(sigma){
        var im = JS9.GetImage({display: "myJS9"});
        if( im ){
            console.log("blur: %s %s", im.id, sigma);
            im.gaussBlurData(sigma);
        }
+    }
+    function xfilter(s){
+       var im = JS9.GetImage({display: "myJS9"});
+       if( im ){
+           console.log("improc: %s %s", im.id, s);
+           im.filterRGBImage(s);
+       }
+    }
+    function noop(){
+      return;
     }
     $(document).ready(function(){
       init();
