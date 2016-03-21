@@ -1,18 +1,20 @@
 JS9 is our Web-based implementation of DS9, the de facto standard image display
 for astronomy. With JS9, you can:
 
-  - display URL-based FITS images and binary tables
-  - drag and drop FITS images and binary tables
-  - change the colormap and scale
-  - manipulate the contrast/bias with the mouse
-  - display pixel values and WCS position information
-  - create and manipulate geometric regions of interest
-  - add your own extensions using plugins and the public api
-  - perform local (browser-based) data analysis via plugins
-  - perform remote (server-side) data analysis via node.js or CGI
-  - display RGB composite images
-  - control JS9 from the command line
-  - print images
+  - display FITS images and tables in a Web page
+  - drag and drop FITS images and tables
+  - retrieve FITS files from data archives
+  - change the colormap and scale algorithm
+  - blend images and apply RGB image filters
+  - mouse move displays pixel values, WCS info
+  - one finger displays pixel values, WCS info
+  - mouse press/move changes the contrast/bias
+  - two fingers changes the contrast/bias
+  - create and manipulate regions of interest
+  - extend JS9 using plugins and the public API
+  - perform data analysis (local and server-side)
+  - control JS9 from a command shell or Python
+  - print images, save images, etc ...
 
 The JS9 Website contains on-line documentation, demos, and downloads:
 
@@ -23,9 +25,6 @@ Of course, JS9 also is available on GitHub:
     https://github.com/ericmandel/js9
 
 For installation instructions, start with help/install.html
-
-(If you are utilizing the JS9 Public API, please see APICHANGES for a
-list of rare but important changes that might require mods to your code.)
 
 JS9 can change how we think about image display and analysis, moving
 beyond the Desktop into the Web. You can simply drag and drop a FITS
