@@ -2066,10 +2066,11 @@ JS9.Image.prototype.putImage = function(opts){
 		this.wcsiy = wcspos.y - impos.y;
 	    }
 	}
-	if( this.params.wcsalign ){
-	    this.ix += this.wcsix * this.rgb.sect.zoom;
-	    this.iy += this.wcsiy * this.rgb.sect.zoom;
-	}
+    }
+    // wcs alignment of a reprojected layer, or a (current0) copy of one
+    if( this.params.wcsalign ){
+	this.ix += this.wcsix * this.rgb.sect.zoom;
+	this.iy += this.wcsiy * this.rgb.sect.zoom;
     }
     // draw the image into the context
     if( JS9.notNull(opts.opacity) || JS9.notNull(opts.blend) ){
