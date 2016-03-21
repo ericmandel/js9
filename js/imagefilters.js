@@ -318,9 +318,9 @@ ImageFilters = (function(){
     }
 
     function medianFilter(imageData){
-	convolve(imageData, 
-		 [1,0,0,0,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,0,0,0,1]);
-	return imageData;
+	return convolve(imageData,
+			[1,0,0,0,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,0,0,0,1],
+			true, true);
     }
     
     function sobel(imageData, colorize){
