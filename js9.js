@@ -24,7 +24,7 @@ if( JS9 && (typeof JS9 !== "object" || JS9.NAME) ){
 // create the module and seed with standard values
 var JS9 = {};
 JS9.NAME = "JS9";		// The name of this namespace
-JS9.VERSION = "1.7";		// The version of this namespace
+JS9.VERSION = "1.8";		// The version of this namespace
 JS9.COPYRIGHT = "Copyright (c) 2012-2016 Smithsonian Institution";
 
 // use the module augmentation pattern, passing in our already-defined module
@@ -57,7 +57,7 @@ JS9.RESIZEDIST = 20;		// size of rectangle defining resize handle
 JS9.RESIZEFUDGE = 5;            // fudge for webkit resize problems
 JS9.RAWID0 = "raw0";		// default raw id
 JS9.RAWIDX = "alt";		// default "alternate" raw id
-JS9.REPROJDIM = 2400;		// max dimension for reprojection
+JS9.REPROJDIM = 2200;		// max dimension for reprojection
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 JS9.BROWSER = (function(){

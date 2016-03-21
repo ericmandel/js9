@@ -1397,14 +1397,11 @@ documentation for more information about command switches.
 
 <p>
 Reprojection is an intensive process which can take a considerable
-amount of memory and processing time. To ensure stability, we currently
-restrict the size of the image that can be reprojected, as follows:
-<ul>
-<li> for iOS devices: maximum image size is approximately 1024 x 1024
-<li> for other devices: maximum image size is approximately 2048 x 2048
-</ul>
-We will relax these restrictions as browsers improve their ability to
-handle large amounts of memory.
+amount of memory and processing time. To avoid crashes, we currently
+restrict the WCS image size used for reprojection to a value defined
+by JS9.REPROJDIM, currently 2200 x 2200. Even this might be too large
+for iOS devices under certain circumstances, although issues regarding
+memory are evolving rapidly.
 
 <hr><p>
 <center><b><font size="+1">
