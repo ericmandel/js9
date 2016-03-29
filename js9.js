@@ -3365,7 +3365,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
     var obj = null;
     var prec = JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
     var tf = function(fval, length){
-	return JS9.floatFormattedString(fval, prec, 0);
+	return JS9.floatFormattedString(fval, prec, 3);
     };
     var tr = function(fval, length){
 	length = length || 3;
