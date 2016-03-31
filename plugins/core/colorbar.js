@@ -115,7 +115,7 @@ JS9.Colorbar.init = function(){
     this.height = parseInt(this.divjq.css("height"), 10);
     // height of colorbar inside plugin
     this.colorbarWidth = this.width;
-    this.colorbarHeight = this.divjq.attr("data-colorbarHeight");
+    this.colorbarHeight = parseInt(this.divjq.attr("data-colorbarHeight"), 10);
     if( !this.colorbarHeight ){
 	this.colorbarHeight  = JS9.Colorbar.COLORBARHEIGHT;
     }
