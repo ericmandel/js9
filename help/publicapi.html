@@ -354,6 +354,7 @@ The image data object contains the following information:
 <li><b>height</b>: y dimension of image
 <li><b>bitpix</b>: FITS bits/pixel of each image element (8 for unsigned char, 16, 32 for signed integer, -32 or -64 for float)
 <li><b>header</b>: JavaScript object containing FITS header values
+<li><b>hdus</b>: JavaScript array containing objects that describe the FITS HDU structure (FITS files only)
 <li><b>data</b>: buffer containing raw data values
 </ul>
 This call can return raw data for subsequent use in local analysis
@@ -482,6 +483,61 @@ The main difference between <b>JS9.RefreshImage()</b>
 and <b>JS9.Load()</b> is that the former updates the data into an
 existing image, while the latter adds a completely new image to the
 display.
+
+<p>
+<font size="+1"><b><u>Display an extension from a multi-extension FITS file</u></b></font>
+<p>
+<code><font size="+1">JS9.DisplayExtension(extid, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>extid</b>: HDU extension number or the HDU's EXTNAME value
+<li><b>opts</b>: object containing options
+</ul>
+This routine allows you to display images and even binary tables from
+a multi-extension FITS file. (See, for example,
+<a href=" http://fits.gsfc.nasa.gov/fits_primer.html">the FITS Primer</a>
+for information about HDUs and multi-extension FITS).
+
+<p>
+The <b>extid</b> (extension id) parameter can either be the HDU extension
+number within the FITS file (starting with <b>1</b> for
+the <b>Primary HDU</b>) or it can be the string contained in
+the <b>EXTNAME</b> parameter of the extension.  For example, consider
+a Hubble NICMOS file containing the following HDU extensions:
+<pre>
+    hdu: 1	name: Primary	type: image	bitpix: 16	naxis: 0
+    hdu: 2	name: SCI	type: image	bitpix: -32	naxis: 2	axes: [270, 263]
+    hdu: 3	name: ERR	type: image	bitpix: -32	naxis: 2	axes: [270, 263]
+    hdu: 4	name: DQ	type: image	bitpix: 16	naxis: 2	axes: [270, 263]
+    hdu: 5	name: SAMP	type: image	bitpix: 16	naxis: 2	axes: [270, 263]
+    hdu: 6	name: TIME	type: image	bitpix: -32	naxis: 2	axes: [270, 263]
+</pre>
+You can display the last extension in one of two ways:
+<pre>
+  JS9.DisplayExtension(6);
+</pre>
+or:
+<pre>
+  JS9.DisplayExtension("TIME");
+</pre>
+<p>
+By default, the new extension data replaces the data in the currently displayed
+extension. You can display the extension as a separate image by supplying
+an <b>opts</b> object with its <b>separate</b> property set to <b>true</b>.
+For example:
+<pre>
+  JS9.DisplayExtension("TIME", {separate: true});
+</pre>
+will display the "TIME" extension separately from the original file,
+allowing blinking, image blending, etc between the two "files".  Note
+that the new id and filename are adjusted to be the original file's values,
+with the <b>[extid]</b> appended.
+
+<p>
+Binary table extensions also can be displayed, but they must contain 
+the appropriate <b>x</b> and <b>y</b> columns for binning. We hope to remove
+this restriction in the future to allow binning on any two columns.
 
 <p>
 <font size="+1"><b><u>Blend the image in an image stack using W3C composite/blend modes </u></b></font>

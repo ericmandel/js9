@@ -249,16 +249,17 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   double bzero = 0.0;
   char comment[81];
 
-  // get image dimensions and type
-  fits_get_img_dim(fptr, &naxis, status);
-  fits_get_img_size(fptr, min(IDIM,naxis), naxes, status);
-  fits_get_img_type(fptr, bitpix, status);
   // seed buffers
   for(i=0; i<IDIM; i++){
+    naxes[i] = 0;
     fpixel[i] = 1;
     lpixel[i] = 1;
     inc[i] = 1;
   }
+  // get image dimensions and type
+  fits_get_img_dim(fptr, &naxis, status);
+  fits_get_img_size(fptr, min(IDIM,naxis), naxes, status);
+  fits_get_img_type(fptr, bitpix, status);
   // get limits of extracted section
   if( dims && dims[0] && dims[1] ){
     dim1 = min(dims[0], naxes[0]);
@@ -298,6 +299,11 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   *odim1 = lpixel[0] - fpixel[0] + 1;
   *odim2 = lpixel[1] - fpixel[1] + 1;
   totpix = *odim1 * *odim2;
+  // make sure we have an image with valid dimensions size
+  if( totpix <= 1 ){
+    *status = NEG_AXIS;
+    return NULL;
+  }
   // are we scaling?
   fits_read_key(fptr, TDOUBLE, "BSCALE", &bscale, comment, &tstatus);
   if( tstatus != VALUE_UNDEFINED ){
@@ -443,6 +449,9 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   // filter the input file and generate selected rows array
   if( filter && *filter ){
     fits_find_rows(fptr, filter, 0, nirow, &norow, rowselect,  status);
+    if( *status > 0 ){
+      return(NULL);
+    }
   } else {
     for(i=0; i<nirow+1; i++){
       rowselect[i] = TRUE;
@@ -453,6 +462,9 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   fits_calc_binning(fptr, naxis, colname, minin, maxin, binsizein, 
 		    minname, maxname, binname,
 		    colnum, haxes, amin, amax, binsize, status);
+  if( *status > 0 ){
+    return(NULL);
+  }
   // why truncate to int? otherwise, cfitsio is 0.5 pixels off from js9 ...
   xcen = (int)(amax[0] + amin[0])/2;
   ycen = (int)(amax[1] + amin[1])/2;
@@ -485,7 +497,9 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   ofptr = ffhist3(fptr, outfile, imagetype, naxis, colname, 
 		  minin, maxin, binsizein, minname, maxname, binname,
 		  weight, wtcol, recip, rowselect, status);
-
+  if( *status > 0 ){
+    return NULL;
+  }
   // update/add LTM and LTV header params
   dvalue = 0.0; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTV1", &dvalue, comment, &tstatus); 

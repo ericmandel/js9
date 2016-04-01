@@ -24,7 +24,7 @@ EMFLAGS	= 	-DEM -O2 --memory-init-file 0
 # https://github.com/kripken/emscripten/wiki/Chrome-Perf-Issues
 EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -s ASM_JS=2
 
-EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_initwcs', '_wcsinfo', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_saodtype', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek', '_openFITSFile', '_openFITSMem', '_getImageToArray', '_filterTableToImage', '_getHeaderToString', '_closeFITSFile', '_maxFITSMemory', '_ffgerr', '_reproject', '_vls', '_vcat']"
+EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_initwcs', '_wcsinfo', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_saodtype', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek', '_openFITSFile', '_openFITSMem', '_getImageToArray', '_filterTableToImage', '_getHeaderToString', '_closeFITSFile', '_maxFITSMemory', '_ffgerr', '_ffmahd', '_ffghdn','_ffmnhd', '_ffghdt', '_listhdu', '_reproject', '_vls', '_vcat']"
 
 EMEXTRAS =	--pre-js pre.js --post-js post.js
 
@@ -34,7 +34,8 @@ OBJS = 		$(SRCS:%.c=%.o)
 
 # wrapper for cfitsio
 JSFITSIO =	./jsfitsio
-JSRCS =  	$(JSFITSIO)/jsfitsio.c
+JSRCS =  	$(JSFITSIO)/jsfitsio.c \
+		$(JSFITSIO)/listhdu.c
 JOBJS = 	$(JSRCS:%.c=%.o)
 
 # montage (re-project)

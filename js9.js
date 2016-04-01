@@ -346,13 +346,13 @@ JS9.Image = function(file, params, func){
 	var zoom;
 	var arr = [];
 	// make up section array from default values
-	if( localOpts.xcen !== undefined ){
+	if( localOpts && (localOpts.xcen !== undefined) ){
 	    arr.push(localOpts.xcen);
 	}
-	if( localOpts.ycen !== undefined ){
+	if( localOpts && (localOpts.ycen !== undefined) ){
 	    arr.push(localOpts.ycen);
 	}
-	if( localOpts.zoom !== undefined ){
+	if( localOpts && (localOpts.zoom !== undefined) ){
 	    zoom = that.parseZoom(localOpts.zoom);
 	    if( zoom ){
 		arr.push(zoom);
@@ -445,6 +445,10 @@ JS9.Image = function(file, params, func){
     // was a "parent" FITS file specified?
     if( localOpts && localOpts.parentFile ){
 	this.parentFile = localOpts.parentFile;
+    }
+    // was an id specified?
+    if( localOpts && localOpts.id ){
+	this.id = localOpts.id;
     }
     // offsets into canvas to display
     this.ix = 0;
@@ -626,13 +630,14 @@ JS9.Image.prototype.getImageData = function(dflag){
 	    height: this.raw.height,
 	    bitpix: this.raw.bitpix,
 	    header: this.raw.header,
+	    hdus: this.hdus,
 	    data: data
 	   };
 };
 
 // undisplay the image, release resources
 JS9.Image.prototype.closeImage = function(){
-    var i, j, tim, key;
+    var i, j, tim, key, cmode, carr;
     var pname, pinst, popts;
     var ilen= JS9.images.length;
     var display = this.display;
@@ -687,7 +692,14 @@ JS9.Image.prototype.closeImage = function(){
 	    if( JS9.fits.cleanupFITSFile ){
 		for(j=0; j<tim.raws.length; j++){
 		    if( tim.raws[j].hdu && tim.raws[j].hdu.fits ){
-			JS9.fits.cleanupFITSFile(tim.raws[j].hdu.fits, true);
+			cmode = true;
+			if( tim.raws[j].id === "raw0" ){
+			    carr = JS9.lookupVfile(tim.raws[j].hdu.fits.vfile);
+			    if( carr.length > 1 ){
+				cmode = false;
+			    }
+			}
+			JS9.fits.cleanupFITSFile(tim.raws[j].hdu.fits, cmode);
 		    }
 		}
 	    }
@@ -1495,6 +1507,12 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     if( isNaN(this.params.scalemax) ){
 	this.params.scalemax = this.raw.dmax;
     }
+    // get hdu info, if possible
+    try{
+	s = JS9.listhdu(this.raw.hdu.fits.vfile);
+	this.hdus = JSON.parse(s);
+    }
+    catch(ignore){}
     // allow chaining
     return this;
 };
@@ -2315,6 +2333,43 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 		catch(e){ pinst.errLog("onimagerefresh", e); }
 	    }
 	}
+    }
+};
+
+// display the specified extension of a multi-extension FITS file
+JS9.Image.prototype.displayExtension = function(extid, opts){
+    var s, extOpts;
+    var that = this;
+    var moveToHandler = function(hdu){
+	if( opts.separate ){
+	    s = sprintf("[%s]", extid);
+	    opts.id = that.id.replace(/\[.*\]/,"") + s;
+	    hdu.filename = that.file.replace(/\[.*\]/,"") + s;
+	    JS9.Load(hdu, opts, {display: opts.display || that.display});
+	} else {
+	    that.refreshImage(hdu, JS9.fits.options);
+	}
+    };
+    // sanity check
+    if( extid === undefined ){
+	JS9.error("missing extname/extnum for moveToExtension()");
+    }
+    // opts is ... optional
+    opts = opts || {};
+    // only makes sense if we have a virtual file
+    if( this.raw.hdu && this.raw.hdu.fits && this.raw.hdu.fits.fptr ){
+	// access virtual file via its fits pointer
+	extOpts = {fptr: this.raw.hdu.fits.fptr, vfile: this.raw.hdu.vfile};
+	// extname or extnum specified?
+	if( typeof extid === "string" ){
+	    extOpts.extname = extid;
+	} else if( typeof extid === "number" ){
+	    extOpts.extnum = extid;
+	} 
+	// process the FITS file by going to the extname/extnum
+	JS9.fits.handleFITSFile("", extOpts, moveToHandler);
+    } else {
+	JS9.error("virtual FITS file is missing for displayExtension()");
     }
 };
 
@@ -5115,6 +5170,10 @@ JS9.Menubar = function(width, height){
 		items["sep" + n++] = "------";
 		items.print = {name: "print ..."};
 		items.header = {name: "display FITS header"};
+		items.hdus = {name: "display FITS HDUs"};
+		if( !tim || !tim.hdus ){
+		    items.hdus.disabled = true;
+		}
 		items.pageid = {name: "display pageid"};
 		items.savefits = {name: "save image as FITS"};
 		items.savepng = {name: "save image as PNG"};
@@ -5145,6 +5204,18 @@ JS9.Menubar = function(width, height){
 				    uim.displayAnalysis("text",
 						   JS9.raw2FITS(uim.raw, true),
 						   "FITSHeader_"+uim.id);
+				} else {
+				    JS9.error("no FITS header for " + uim.id);
+				}
+			    }
+			    break;
+			case "hdus":
+			    if( uim ){
+				if( uim.hdus ){
+				    uim.displayAnalysis("text",
+						   JS9.hdus2Str(uim.hdus),
+						   "FITSHDUs_"+uim.id,
+				    "width=800px,height=200px,center=1,resize=1,scrolling=1");
 				} else {
 				    JS9.error("no FITS header for " + uim.id);
 				}
@@ -10488,6 +10559,25 @@ JS9.getImage = function(id){
     return im;
 };
 
+// look for specified vfile among raw0 hdus
+// used to determine if its safe to delete a vfile
+JS9.lookupVfile = function(vfile){
+    var i, raw;
+    var arr = [];
+    // sanity check
+    if( !vfile ){
+	return arr;
+    }
+    // check raw0 hdu for specified vfile
+    for(i=0; i<JS9.images.length; i++){
+	raw = JS9.images[i].raws[0];
+	if( raw.hdu && raw.hdu.fits && (vfile === raw.hdu.fits.vfile) ){
+	    arr.push(JS9.images[i].id);
+	}
+    }
+    return arr;
+};
+
 // process a list of file objects or blobs
 JS9.onFileList = function(files, options, handler){
     var i;
@@ -10610,6 +10700,7 @@ JS9.fitsLibrary = function(s){
 	// set up default options
 	JS9.fits.options = JS9.fits.options || {};
 	JS9.fits.options.handler = JS9.NewFitsImage;
+	JS9.fits.options.error = JS9.error;
 	if( JS9.userOpts.fits ){
 	    JS9.fits.options.extlist =  JS9.userOpts.fits.extlist;
 	    JS9.fits.options.table = {
@@ -10952,6 +11043,60 @@ JS9.raw2FITS = function(raw, forDisplay){
 	if( forDisplay ){
 	    t += "\n";
 	}
+    }
+    return t;
+};
+
+// convert an array of hdu objects into a nice string
+JS9.hdus2Str = function(hdus){
+    var i, j, s, obj;
+    var t="";
+    // sanity check
+    if( !hdus ){
+	return t;
+    }
+    for(i=0; i<hdus.length; i++){
+	obj = hdus[i];
+	if( obj.name ){
+	    s = obj.name;
+	} else if( i === 0 ){
+	    s = "Primary";
+	} else {
+	    s = "N/A";
+	}
+	t += sprintf("<b>hdu</b>: %d\t<b>name</b>: %s\t<b>type</b>: %s", 
+		     obj.hdu, s, obj.type);
+	switch(obj.type){
+	case "image":
+	    t += sprintf("\t<b>bitpix</b>: %d\t<b>naxis</b>: %d", obj.bitpix, obj.naxis);
+	    if( obj.naxes.length ){
+		t += "\t<b>axes</b>: [";
+		for(j=0; j<obj.naxes.length; j++){
+		    t += sprintf("%d", obj.naxes[j]);
+		    if( j !== obj.naxes.length-1 ){
+			t += ", ";
+		    }
+		}
+		t += "]";
+	    }
+	    break;
+	case "table":
+	case "ascii":
+	    s = "\t";
+	    if( obj.rows <= 9 ){
+		s += "\t";
+	    }
+	    t += sprintf("\t<b>rows</b>: %d%s<b>cols</b>: [", obj.rows, s);
+	    for(j=0; j<obj.cols.length; j++){
+		t += sprintf("%s", obj.cols[j].name);
+		if( j !== obj.cols.length-1 ){
+		    t += ", ";
+		}
+	    }
+	    t += "]";
+	    break;
+	}
+	t += "\n\n";
     }
     return t;
 };
@@ -12008,6 +12153,7 @@ JS9.init = function(){
 	JS9.vfile = Astroem.vfile;
 	JS9.vunlink = Astroem.vunlink;
 	JS9.arrfile = Astroem.arrfile;
+	JS9.listhdu = Astroem.listhdu;
 	JS9.initwcs = Astroem.initwcs;
 	JS9.wcsinfo = Astroem.wcsinfo;
 	JS9.wcssys = Astroem.wcssys;
@@ -12698,6 +12844,7 @@ JS9.mkPublic = function(name, s){
 
 JS9.mkPublic("CloseImage", "closeImage");
 JS9.mkPublic("DisplayImage", "displayImage");
+JS9.mkPublic("DisplayExtension", "displayExtension");
 JS9.mkPublic("BlendImage", "blendImage");
 JS9.mkPublic("GetColormap", "getColormap");
 JS9.mkPublic("SetColormap", "setColormap");

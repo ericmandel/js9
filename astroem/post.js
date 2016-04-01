@@ -1,4 +1,4 @@
-/*jshint smarttabs:true */
+/*jshint smarttabs:true, sub:true */
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 /*global Blob, ArrayBuffer, Uint8Array, Uint16Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue */
 
@@ -13,7 +13,7 @@ Module['vfile'] = function(filename, buf) {
   var size;
   try{ FS.unlink(Module['rootdir'] + filename); }
   catch(ignore){ }
-  FS.createDataFile(Module['rootdir'], filename, buf, true, true)
+  FS.createDataFile(Module['rootdir'], filename, buf, true, true);
   if( buf.length !== undefined ){
       size = buf.length;
   } else if( buf.byteLength !== undefined ){
@@ -81,7 +81,7 @@ Module['gzdecompress'] = function(data) {
 };
 
 Module["getFITSImage"] = function(fits, hdu, options, handler) {
-    var i, ofptr, hptr, status, datalen;
+    var i, ofptr, hptr, status, datalen, extnum;
     var buf, bufptr, buflen, bufptr2;
     var filter = null;
     var fptr = fits.fptr;
@@ -119,7 +119,7 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	setValue(hptr+16, cens[1], 'double');
 	setValue(hptr+24, 0, 'i32');
 	ofptr = ccall("filterTableToImage", "number",
-        ["number", "string", "number", "number", "number", "number", "number"], 
+        ["number", "string", "number", "number", "number", "number", "number"],
         [fptr, filter, 0, hptr, hptr+8, bin, hptr+24]);
 	hdu.table.nx = getValue(hptr,     'i32');
 	hdu.table.ny = getValue(hptr+4,   'i32');
@@ -127,7 +127,7 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	hdu.table.cy = getValue(hptr+16,  'double');
 	hdu.table.bin = bin;
 	hdu.table.filter = filter;
-	status  = getValue(hptr+24, 'i32'); 
+	status  = getValue(hptr+24, 'i32');
 	_free(hptr);
 	Module["errchk"](status);
 	break;
@@ -138,17 +138,17 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     setValue(hptr+4,  0, 'i32');
     setValue(hptr+20, 0, 'i32');
     bufptr = ccall("getImageToArray", "number",
-	["number", "number", "number", "number", "number", "number", "number"], 
+	["number", "number", "number", "number", "number", "number", "number"],
 	[ofptr, hptr, 0, hptr+8, hptr+12, hptr+16, hptr+20]);
-    hdu.naxis1  = getValue(hptr+8, 'i32'); 
-    hdu.naxis2  = getValue(hptr+12, 'i32'); 
-    hdu.bitpix  = getValue(hptr+16, 'i32'); 
-    status  = getValue(hptr+20, 'i32'); 
+    hdu.naxis1  = getValue(hptr+8, 'i32');
+    hdu.naxis2  = getValue(hptr+12, 'i32');
+    hdu.bitpix  = getValue(hptr+16, 'i32');
+    status  = getValue(hptr+20, 'i32');
     _free(hptr);
+    Module["errchk"](status);
     if( !bufptr ){
       Module["error"]("image is too large (max is JS9.globalOpts.maxMemory)");
     }
-    Module["errchk"](status);
     // save pointer to section data
     datalen = hdu.naxis1 * hdu.naxis2;
     switch(hdu.bitpix){
@@ -177,7 +177,7 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     ccall("getHeaderToString", null,
 	  ["number", "number", "number", "number"],
 	  [ofptr, hptr, hptr+8, hptr+12]);
-    hdu.ncard  = getValue(hptr+8, 'i32'); 
+    hdu.ncard  = getValue(hptr+8, 'i32');
     bufptr2 = getValue(hptr, '*');
     buf = HEAPU8.subarray(bufptr2, bufptr2+(hdu.ncard*80));
     buflen = buf.byteLength;
@@ -185,17 +185,15 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     for(i=0; i<buflen; i++){
 	hdu.cardstr += String.fromCharCode(buf[i]);
     }
-    status  = getValue(hptr+12, 'i32'); 
+    status  = getValue(hptr+12, 'i32');
     _free(hptr);
     Module["errchk"](status);
     // close the image section "file"
     if( ofptr && (ofptr !== fptr) ){
         hptr = _malloc(4);
 	setValue(hptr, 0, 'i32');
-	ccall("closeFITSFile", null, 
-	      ["number", "number"], 
-	      [ofptr, hptr]);
-	status  = getValue(hptr, 'i32'); 
+	ccall("closeFITSFile", null, ["number", "number"], [ofptr, hptr]);
+	status  = getValue(hptr, 'i32');
 	_free(hptr);
 	Module["errchk"](status);
     }
@@ -203,9 +201,14 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     if( options.filename ){
 	hdu.filename = options.filename;
     }
+    // set extension number
+    hptr = _malloc(4);
+    ccall("ffghdn", null, ["number", "number"], [fptr, hptr]);
+    extnum  = getValue(hptr, 'i32');
+    _free(hptr);
     // make up the fits object (used in cleanup)
     hdu.fits = {fptr: fptr, vfile: hdu.vfile, heap: bufptr,
-		cardstr: hdu.cardstr };
+		cardstr: hdu.cardstr, extnum: extnum };
     // call the handler
     if( handler ){
 	handler(hdu, options);
@@ -257,23 +260,75 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    status  = getValue(hptr+4, 'i32');
 	    _free(hptr);
 	    Module["errchk"](status);
+	    // save current extension number
+	    hptr = _malloc(4);
+	    ccall("ffghdn", null,
+		  ["number", "number"],
+		  [fptr, hptr]);
+	    hdu.extnum = getValue(hptr,   'i32');
+	    _free(hptr);
 	    // extract image section and call handler
 	    Module["getFITSImage"]({fptr: fptr}, hdu, options, handler);
 	};
 	// this starts it all!
 	fileReader.readAsArrayBuffer(fits);
     } else if( typeof fits === "string" ){
-	hdu.vfile = fits;
-	// open existing virtual file as a FITS file
-	hptr = _malloc(8);
-	setValue(hptr+4, 0, 'i32');
-	fptr = ccall("openFITSFile", "number",
-		     ["string", "string", "number", "number"], 
-		     [fits, options.extlist, hptr, hptr+4]);
-	hdu.type = getValue(hptr,   'i32');
-	status  = getValue(hptr+4, 'i32'); 
-	_free(hptr);
-	Module["errchk"](status);
+	// are we changing extensions on an existing virtual file?
+	if( options.fptr ){
+	    fptr = options.fptr;
+	    if( options.vfile ){
+		hdu.vfile = options.vfile;
+	    }
+	    if( options.extname ){
+		// look for extension with specified name
+		hptr = _malloc(4);
+		setValue(hptr, 0, 'i32');
+		ccall("ffmnhd", null,
+		      ["number", "number", "string", "number", "number"],
+		      [fptr, -1, options.extname, 0, hptr]);
+		status  = getValue(hptr, 'i32');
+		_free(hptr);
+		Module["errchk"](status);
+		// get type of extension (image or table)
+		hptr = _malloc(8);
+		setValue(hptr+4, 0, 'i32');
+		ccall("ffghdt", null,
+		      ["number", "number", "number"],
+		      [fptr, hptr, hptr+4]);
+		hdu.type = getValue(hptr,   'i32');
+		status  = getValue(hptr+4, 'i32');
+		_free(hptr);
+		Module["errchk"](status);
+	    } else if( options.extnum !== undefined ){
+		// go to extension number
+		hptr = _malloc(8);
+		setValue(hptr+4, 0, 'i32');
+		ccall("ffmahd", null,
+		      ["number", "number", "number", "number"],
+		      [fptr, options.extnum, hptr, hptr+4]);
+		hdu.type = getValue(hptr,   'i32');
+		status  = getValue(hptr+4, 'i32');
+		_free(hptr);
+		Module["errchk"](status);
+	    } else {
+		Module["error"]("missing extname/extnum for FITS file");
+	    }
+	} else {
+	    // open existing virtual file as a FITS file
+	    if( !fits ){
+		Module["error"]("FITS file name not specified");
+	    }
+	    hdu.vfile = fits;
+	    hptr = _malloc(8);
+	    setValue(hptr+4, 0, 'i32');
+	    fptr = ccall("openFITSFile", "number",
+			 ["string", "string", "number", "number"],
+			 [fits, options.extlist, hptr, hptr+4]);
+	    hdu.type = getValue(hptr,   'i32');
+	    status  = getValue(hptr+4, 'i32');
+	    _free(hptr);
+	    Module["errchk"](status);
+	}
 	// extract image section and call handler
 	Module["getFITSImage"]({fptr: fptr}, hdu, options, handler);
     } else {
@@ -297,20 +352,23 @@ Module["cleanupFITSFile"] = function(fits, all) {
 	Module._free(fits.cardstr);
 	fits.cardstr = null;
     }
-    if( all && fits.fptr ){
+    if( all ){
 	// close FITS file
-	hptr = _malloc(4);
-	setValue(hptr, 0, 'i32');
-	ccall("closeFITSFile", null, 
-	      ["number", "number"],
-	      [fits.fptr, hptr]);
-	status  = getValue(hptr, 'i32'); 
-	_free(hptr);
-	Module["errchk"](status);
-	fits.fptr = null;
+	if( fits.fptr ){
+	    hptr = _malloc(4);
+	    setValue(hptr, 0, 'i32');
+	    ccall("closeFITSFile", null,
+		  ["number", "number"], [fits.fptr, hptr]);
+	    status  = getValue(hptr, 'i32');
+	    _free(hptr);
+	    // Module["errchk"](status);
+	    fits.fptr = null;
+	}
 	// delete virtual FITS file
-	try{ FS.unlink(Module['rootdir'] + fits.vfile); }
-	catch(ignore){ }
+	if( fits.vfile ){
+	    try{ FS.unlink(Module['rootdir'] + fits.vfile); }
+	    catch(ignore){ }
+	}
     }
 };
 
@@ -323,15 +381,16 @@ Module["maxFITSMemory"] = function(bytes) {
 // error handler
 Module["errchk"] = function(status) {
     var i, c, hptr, bytes;
-    var hlen = 32;  // ffgerr returns 30-byte string + null
+    var hlen = 82;  // ffgerr returns 80-byte string + null
     var s="ERROR from cfitsio.js: ";
     if( status ){
 	hptr = _malloc(hlen);
-	ccall("ffgerr", null, 
-	      ["number", "number"],
-	      [status, hptr]);
+	ccall("ffgerr", null, ["number", "number"], [status, hptr]);
 	bytes = HEAPU8.subarray(hptr, hptr+hlen);
 	for(i=0; i<hlen; i++){
+	    if( bytes[i] === 0 ){
+		break;
+	    }
             c = String.fromCharCode(bytes[i]);
 	    s += c;
 	}
@@ -343,7 +402,7 @@ Module["errchk"] = function(status) {
 // error handler
 Module["error"] = function(s, e) {
     if( Module["options"].error ){
-	Module["options"].error(s, e);
+	Module["options"].error(s, e, true);
     } else {
 	throw new Error(s);
     }

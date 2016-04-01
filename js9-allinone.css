@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.8, Tue Mar 29 12:51:42 EDT 2016 */
+/* JS9 allinone: v1.8, Fri Apr  1 12:06:30 EDT 2016 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -490,6 +490,32 @@ canvas.JS9ColorbarTextCanvas {
     background-color: white;
 }
 
+
+div.JS9MefContainer {
+    padding: 10px;
+    overflow: auto;
+}
+
+div.JS9MefExtension {
+    margin: 5px;
+    background: #E9E9E9;
+    overflow: auto;
+}
+
+p.JS9MefPara {
+    margin: 5px;
+    background: #E9E9E9;
+}
+
+div.JS9MefExtensionInactive {
+    padding: 0px;
+    border: 1px solid black;
+}
+
+div.JS9MefExtensionActive {
+    padding: 0px;
+    border: 2px solid #00F000;
+}
 
 /*
  *

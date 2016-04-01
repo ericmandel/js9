@@ -34,7 +34,7 @@
 
 #define NDEC 3
 
-#define SZ_LINE  1024
+#define SZ_LINE  8192
 #define MAX_ARGS 10
 
 /* must match Module['rootdir'] in post.js! */
@@ -60,6 +60,7 @@ static int nreproj=0;
 static jmp_buf em_jmpbuf;
 
 int mProjectPP(int argc, char **argv);
+int _listhdu(char *iname, char *oname);
 void emscripten_exit_with_live_runtime(void);
 
 /*
@@ -563,6 +564,21 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
     return rstr;
   } else {
     return "Error: reproject failed; no status file created";
+  }
+}
+
+/* get info about the hdus in a FITS file */
+char *listhdu(char *iname){
+  char file0[SZ_LINE];
+  char file1[SZ_LINE];
+  snprintf(file0, SZ_LINE-1, "%s%s", ROOTDIR, iname);
+  snprintf(file1, SZ_LINE-1, "%s%s.hdulist", ROOTDIR, iname);
+  _listhdu(file0, file1);
+  if( filecontents(file1, rstr, SZ_LINE) >= 0 ){
+    unlink(file1);
+    return rstr;
+  } else {
+    return "Error: listhdu failed; no list file created";
   }
 }
 
