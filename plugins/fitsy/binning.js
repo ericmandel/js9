@@ -243,6 +243,7 @@
 
             menuItem: "Binning",
 
+	    plugindisplay:  binningInit,
 	    onimageload:    binningInit,
 	    onimagedisplay: binningInit,
 
