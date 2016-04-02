@@ -11053,13 +11053,13 @@ JS9.hdus2Str = function(hdus){
 	} else {
 	    s = "N/A";
 	}
-	t += sprintf("<b>hdu</b>: %d\t<b>name</b>: %s\t<b>type</b>: %s", 
+	t += sprintf("<b>#%d</b>:&#09;<b>name</b>: %s&#09;<b>type</b>: %s",
 		     obj.hdu, s, obj.type);
 	switch(obj.type){
 	case "image":
-	    t += sprintf("\t<b>bitpix</b>: %d\t<b>naxis</b>: %d", obj.bitpix, obj.naxis);
+	    t += sprintf("&#09;<b>bitpix</b>: %d&#09;<b>naxis</b>: %d", obj.bitpix, obj.naxis);
 	    if( obj.naxes.length ){
-		t += "\t<b>axes</b>: [";
+		t += "&#09;<b>axes</b>: [";
 		for(j=0; j<obj.naxes.length; j++){
 		    t += sprintf("%d", obj.naxes[j]);
 		    if( j !== obj.naxes.length-1 ){
@@ -11071,11 +11071,11 @@ JS9.hdus2Str = function(hdus){
 	    break;
 	case "table":
 	case "ascii":
-	    s = "\t";
+	    s = "&#09;";
 	    if( obj.rows <= 9 ){
-		s += "\t";
+		s += "&#09;";
 	    }
-	    t += sprintf("\t<b>rows</b>: %d%s<b>cols</b>: [", obj.rows, s);
+	    t += sprintf("&#09;<b>rows</b>: %d%s<b>cols</b>: [", obj.rows, s);
 	    for(j=0; j<obj.cols.length; j++){
 		t += sprintf("%s", obj.cols[j].name);
 		if( j !== obj.cols.length-1 ){
