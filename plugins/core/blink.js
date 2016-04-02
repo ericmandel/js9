@@ -128,7 +128,8 @@ JS9.Blend.xrate = function(id, target){
 
 // get a BlinkImage id based on the file image id
 JS9.Blink.imid = function(im){
-    return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"")  + "BlinkImage";
+    return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"").replace(/[<>]/g,"_")
+	+ "BlinkImage";
 };
 
 // change the active image

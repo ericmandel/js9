@@ -18,7 +18,7 @@ JS9.Mef.marginWidth = 44;
 
 // get a MefExtension id based on the file image id
 JS9.Mef.imid = function(im, i){
-    return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"").replace(/[<>]/,"_")
+    return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"").replace(/[<>]/g,"_")
 	+ "MefExtension_" + i;
 };
 
