@@ -53,8 +53,9 @@ div.JS9Plugin
     background: #E9E9E9;
 }
 
-/* this is the inner div to the plugin, where user html is placed */
-div.JS9PluginInnerDiv
+
+/* tell plugin div to scroll on overflow */
+div.JS9PluginScrolling
 {
     overflow: auto;
 }

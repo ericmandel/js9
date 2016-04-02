@@ -1241,6 +1241,8 @@ JS9.Blend.init = function(){
     var that = this;
     // no images/divs loaded yet
     this.blendDivs = 0;
+    // allow scrolling on the plugin
+    this.divjq.addClass("JS9PluginScrolling")
     // main container
     this.blendContainer = $("<div>")
 	.addClass(JS9.Blend.BASE + "Container")
@@ -1530,6 +1532,8 @@ JS9.Blink.init = function(){
     var that = this;
     // no images/divs loaded yet
     this.blinkDivs = 0;
+    // allow scrolling on the plugin
+    this.divjq.addClass("JS9PluginScrolling")
     // main container
     this.blinkContainer = $("<div>")
 	.addClass(JS9.Blink.BASE + "Container")
@@ -1884,6 +1888,8 @@ JS9.Mef.init = function(){
     // this.display:  the display object associated with this plugin
     // this.dispMode: display mode (for internal use)
     //
+    // allow scrolling on the plugin
+    this.divjq.addClass("JS9PluginScrolling")
     // clean main container
     this.divjq.html("");
     // add mef container to main
@@ -2227,6 +2233,8 @@ JS9.Prefs.init = function(width, height){
 	html += "</form>";
 	html += "</div>";
     }
+    // allow scrolling on the plugin
+    this.divjq.addClass("JS9PluginScrolling")
     // set the html for this div
     this.divjq.html(html);
     // for each source, set data values that we will need in button callbacks

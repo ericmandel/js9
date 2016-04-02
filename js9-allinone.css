@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.8, Sat Apr  2 12:54:02 EDT 2016 */
+/* JS9 allinone: v1.8, Sat Apr  2 13:44:06 EDT 2016 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -572,8 +572,9 @@ div.JS9Plugin
     background: #E9E9E9;
 }
 
-/* this is the inner div to the plugin, where user html is placed */
-div.JS9PluginInnerDiv
+
+/* tell plugin div to scroll on overflow */
+div.JS9PluginScrolling
 {
     overflow: auto;
 }

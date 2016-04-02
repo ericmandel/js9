@@ -169,6 +169,8 @@ JS9.Blend.init = function(){
     var that = this;
     // no images/divs loaded yet
     this.blendDivs = 0;
+    // allow scrolling on the plugin
+    this.divjq.addClass("JS9PluginScrolling")
     // main container
     this.blendContainer = $("<div>")
 	.addClass(JS9.Blend.BASE + "Container")

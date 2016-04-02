@@ -215,6 +215,8 @@ JS9.Blink.init = function(){
     var that = this;
     // no images/divs loaded yet
     this.blinkDivs = 0;
+    // allow scrolling on the plugin
+    this.divjq.addClass("JS9PluginScrolling")
     // main container
     this.blinkContainer = $("<div>")
 	.addClass(JS9.Blink.BASE + "Container")

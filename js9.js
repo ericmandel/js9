@@ -4404,7 +4404,6 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 		    .appendTo($(this.divjq));
 		$("<div>")
 		    .addClass(plugin.name)
-		    .addClass("JS9PluginInnerDiv")
 		    .attr("id", iid)
 		    .attr("data-js9id", this.divjq.attr("id"))
 		    .css("height", "100%")

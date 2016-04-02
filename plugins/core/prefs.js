@@ -299,6 +299,8 @@ JS9.Prefs.init = function(width, height){
 	html += "</form>";
 	html += "</div>";
     }
+    // allow scrolling on the plugin
+    this.divjq.addClass("JS9PluginScrolling")
     // set the html for this div
     this.divjq.html(html);
     // for each source, set data values that we will need in button callbacks

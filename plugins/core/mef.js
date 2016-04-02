@@ -91,6 +91,8 @@ JS9.Mef.init = function(){
     // this.display:  the display object associated with this plugin
     // this.dispMode: display mode (for internal use)
     //
+    // allow scrolling on the plugin
+    this.divjq.addClass("JS9PluginScrolling")
     // clean main container
     this.divjq.html("");
     // add mef container to main
