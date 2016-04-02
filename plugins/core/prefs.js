@@ -222,19 +222,6 @@ JS9.Prefs.sources = [
 // init preference plugin
 JS9.Prefs.init = function(width, height){
     var i, s, obj, key, props, sources, source, id, pid, html, prompt;
-    // set width and height on div
-    this.width = this.divjq.attr("data-width");
-    if( !this.width  ){
-	this.width  = width  || JS9.Prefs.WIDTH;
-    }
-    this.divjq.css("width", this.width);
-    this.width = parseInt(this.divjq.css("width"), 10);
-    this.height = this.divjq.attr("data-height");
-    if( !this.height ){
-	this.height = height || JS9.Prefs.HEIGHT;
-    }
-    this.divjq.css("height", this.height);
-    this.height = parseInt(this.divjq.css("height"), 10);
     // create the div containing one tab for each of the sources
     sources = JS9.Prefs.sources;
     pid = this.id + 'prefsTabs';
@@ -272,7 +259,7 @@ JS9.Prefs.init = function(width, height){
 	    break;
 	}
 	html += sprintf("<div id='%s' class='tabcontent'>", id + "Div");
-	html += sprintf("<form id='%s' class='js9AnalysisForm' style='max-height: %spx; overflow: scroll'>", id + "Form", this.height-90);
+	html += sprintf("<form id='%s' class='js9AnalysisForm' style='max-height: %spx; overflow: hidden'>", id + "Form", this.height-90);
 	props = source.schema.properties;
 	for( key in props ){
 	    if( props.hasOwnProperty(key) ){
@@ -463,4 +450,5 @@ JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME, JS9.Prefs.init,
 		   {menuItem: "Preferences",
 		    help: "help/prefs.html",
 		    winTitle: "JS9 User Preferences",
+		    winResize: true,
 		    winDims: [JS9.Prefs.WIDTH, JS9.Prefs.HEIGHT]});
