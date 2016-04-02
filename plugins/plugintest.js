@@ -17,11 +17,11 @@ if( PLUGIN && (typeof PLUGIN !== "object" || PLUGIN.CLASS) ){
 
 // create our namespace, and specify some meta-information and params
 PLUGIN = {};
-PLUGIN.CLASS = "PLUGIN";  // class of plugins (1st part of div class)
-PLUGIN.NAME = "test";     // name of this plugin (2nd part of div class)
-PLUGIN.NDIV = 4;	  // number of div message areas
-PLUGIN.WIDTH =  512;	  // width of light window
-PLUGIN.HEIGHT = 150;	  // height of light window
+PLUGIN.CLASS = "PLUGIN";// class of plugins (1st part of div class)
+PLUGIN.NAME = "test";   // name of this plugin (2nd part of div class)
+PLUGIN.NDIV = 4;	// number of div message areas
+PLUGIN.WIDTH =  400;	// width of light window
+PLUGIN.HEIGHT = 200;	// height of light window (4 * (30 + 20 from css))
 
 // constructor: it's here that you add HTML elements to the container div
 // But you don't have to do so: you can put the HTML elements right into
@@ -31,7 +31,7 @@ PLUGIN.HEIGHT = 150;	  // height of light window
 //
 // The examaple below splits the difference: it allows the container div to
 // be empty or filled with the inner canvas, and thus support the view menu.
-PLUGIN.Test = function(){
+PLUGIN.init = function(){
     var i;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -52,7 +52,7 @@ PLUGIN.Test = function(){
 };
 
 // write a row of text in message area associated with a given plugin
-PLUGIN.Test.prototype.message = function(message, row) {
+PLUGIN.init.prototype.message = function(message, row) {
     this.divjq.children("#message" + row).html(message);
 };
 
@@ -160,7 +160,7 @@ PLUGIN.imagedisplay = function(im){
 };
 
 // add this plugin into JS9
-JS9.RegisterPlugin(PLUGIN.CLASS, PLUGIN.NAME, PLUGIN.Test,
+JS9.RegisterPlugin(PLUGIN.CLASS, PLUGIN.NAME, PLUGIN.init,
 		   {menuItem: "pluginTest",
 		    onmousedown: PLUGIN.mousedown,
 		    onmouseup: PLUGIN.mouseup,
@@ -173,4 +173,5 @@ JS9.RegisterPlugin(PLUGIN.CLASS, PLUGIN.NAME, PLUGIN.Test,
 		    onimagedisplay: PLUGIN.imagedisplay,
 		    help: "help/plugintest.html",
 		    winTitle: "Plugin Test",
+		    winResize: true,
 		    winDims: [PLUGIN.WIDTH, PLUGIN.HEIGHT]});
