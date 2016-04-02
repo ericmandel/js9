@@ -13,15 +13,11 @@ JS9.Mef.WIDTH =  800;	  // width of light window
 JS9.Mef.HEIGHT = 240;	  // height of light window
 JS9.Mef.BASE = JS9.Mef.CLASS + JS9.Mef.NAME;  // CSS base class name
 
-JS9.Mef.marginHeight = 32;
-JS9.Mef.marginWidth = 44;
-
 // get a MefExtension id based on the file image id
 JS9.Mef.imid = function(im, i){
     return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"").replace(/[<>]/g,"_")
 	+ "MefExtension_" + i;
 };
-
 
 // change the active extension
 JS9.Mef.activeExtension = function(im, i){
@@ -80,7 +76,6 @@ JS9.Mef.init = function(){
 	    .addClass(JS9.Mef.BASE + "ExtensionInactive")
 	    .attr("id", id)
 	    .html(htmlString)
-            .width(that.divjq.width() - JS9.Mef.marginWidth)
 	    .appendTo(that.mefContainer);
 	if( doit ){
 	    div.on("mousedown touchstart", function(evt){
@@ -102,8 +97,6 @@ JS9.Mef.init = function(){
     this.mefContainer = $("<div>")
 	.addClass(JS9.Mef.BASE + "Container")
 	.attr("id", this.id + "MefContainer")
-        .height(this.divjq.height() - JS9.Mef.marginHeight)
-        .width(this.divjq.width())
 	.appendTo(this.divjq);
     im  = this.display.image;
     if( !im ){

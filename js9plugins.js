@@ -1245,9 +1245,6 @@ JS9.Blend.init = function(){
     this.blendContainer = $("<div>")
 	.addClass(JS9.Blend.BASE + "Container")
 	.attr("id", this.id + "BlendContainer")
-        .height(this.divjq.height()-4)
-        .width(this.divjq.width()-4)
-        .css("overflow", "auto")
 	.appendTo(this.divjq);
     // header
     this.blendHeader = $("<div>")
@@ -1313,6 +1310,7 @@ JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		    onimageclose: JS9.Blend.imageclose,
 		    help: "help/blend.html",
 		    winTitle: "JS9 Image Blending",
+		    winResize: true,
 		    winDims: [JS9.Blend.WIDTH, JS9.Blend.HEIGHT]});
 
 /*
@@ -1536,8 +1534,6 @@ JS9.Blink.init = function(){
     this.blinkContainer = $("<div>")
 	.addClass(JS9.Blink.BASE + "Container")
 	.attr("id", this.id + "BlinkContainer")
-        .height(this.divjq.height()-4)
-        .width(this.divjq.width()-4)
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     opts.push({name: "mode", value: sprintf(JS9.Blink.modeHTML, 
@@ -1612,6 +1608,7 @@ JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
 		    onimageclose: JS9.Blink.imageclose,
 		    help: "help/blink.html",
 		    winTitle: "JS9 Image Blinking",
+		    winResize: true,
 		    winDims: [JS9.Blink.WIDTH, JS9.Blink.HEIGHT]});
 
 /*
@@ -1809,15 +1806,11 @@ JS9.Mef.WIDTH =  800;	  // width of light window
 JS9.Mef.HEIGHT = 240;	  // height of light window
 JS9.Mef.BASE = JS9.Mef.CLASS + JS9.Mef.NAME;  // CSS base class name
 
-JS9.Mef.marginHeight = 32;
-JS9.Mef.marginWidth = 44;
-
 // get a MefExtension id based on the file image id
 JS9.Mef.imid = function(im, i){
     return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"").replace(/[<>]/g,"_")
 	+ "MefExtension_" + i;
 };
-
 
 // change the active extension
 JS9.Mef.activeExtension = function(im, i){
@@ -1876,7 +1869,6 @@ JS9.Mef.init = function(){
 	    .addClass(JS9.Mef.BASE + "ExtensionInactive")
 	    .attr("id", id)
 	    .html(htmlString)
-            .width(that.divjq.width() - JS9.Mef.marginWidth)
 	    .appendTo(that.mefContainer);
 	if( doit ){
 	    div.on("mousedown touchstart", function(evt){
@@ -1898,8 +1890,6 @@ JS9.Mef.init = function(){
     this.mefContainer = $("<div>")
 	.addClass(JS9.Mef.BASE + "Container")
 	.attr("id", this.id + "MefContainer")
-        .height(this.divjq.height() - JS9.Mef.marginHeight)
-        .width(this.divjq.width())
 	.appendTo(this.divjq);
     im  = this.display.image;
     if( !im ){
@@ -2160,19 +2150,6 @@ JS9.Prefs.sources = [
 // init preference plugin
 JS9.Prefs.init = function(width, height){
     var i, s, obj, key, props, sources, source, id, pid, html, prompt;
-    // set width and height on div
-    this.width = this.divjq.attr("data-width");
-    if( !this.width  ){
-	this.width  = width  || JS9.Prefs.WIDTH;
-    }
-    this.divjq.css("width", this.width);
-    this.width = parseInt(this.divjq.css("width"), 10);
-    this.height = this.divjq.attr("data-height");
-    if( !this.height ){
-	this.height = height || JS9.Prefs.HEIGHT;
-    }
-    this.divjq.css("height", this.height);
-    this.height = parseInt(this.divjq.css("height"), 10);
     // create the div containing one tab for each of the sources
     sources = JS9.Prefs.sources;
     pid = this.id + 'prefsTabs';
@@ -2210,7 +2187,7 @@ JS9.Prefs.init = function(width, height){
 	    break;
 	}
 	html += sprintf("<div id='%s' class='tabcontent'>", id + "Div");
-	html += sprintf("<form id='%s' class='js9AnalysisForm' style='max-height: %spx; overflow: scroll'>", id + "Form", this.height-90);
+	html += sprintf("<form id='%s' class='js9AnalysisForm' style='max-height: %spx; overflow: hidden'>", id + "Form", this.height-90);
 	props = source.schema.properties;
 	for( key in props ){
 	    if( props.hasOwnProperty(key) ){
@@ -2401,6 +2378,7 @@ JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME, JS9.Prefs.init,
 		   {menuItem: "Preferences",
 		    help: "help/prefs.html",
 		    winTitle: "JS9 User Preferences",
+		    winResize: true,
 		    winDims: [JS9.Prefs.WIDTH, JS9.Prefs.HEIGHT]});
 require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"./imexam":[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, bitwise: true */

@@ -219,8 +219,6 @@ JS9.Blink.init = function(){
     this.blinkContainer = $("<div>")
 	.addClass(JS9.Blink.BASE + "Container")
 	.attr("id", this.id + "BlinkContainer")
-        .height(this.divjq.height()-4)
-        .width(this.divjq.width()-4)
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     opts.push({name: "mode", value: sprintf(JS9.Blink.modeHTML, 
@@ -295,5 +293,6 @@ JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
 		    onimageclose: JS9.Blink.imageclose,
 		    help: "help/blink.html",
 		    winTitle: "JS9 Image Blinking",
+		    winResize: true,
 		    winDims: [JS9.Blink.WIDTH, JS9.Blink.HEIGHT]});
 

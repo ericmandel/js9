@@ -173,9 +173,6 @@ JS9.Blend.init = function(){
     this.blendContainer = $("<div>")
 	.addClass(JS9.Blend.BASE + "Container")
 	.attr("id", this.id + "BlendContainer")
-        .height(this.divjq.height()-4)
-        .width(this.divjq.width()-4)
-        .css("overflow", "auto")
 	.appendTo(this.divjq);
     // header
     this.blendHeader = $("<div>")
@@ -241,5 +238,6 @@ JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		    onimageclose: JS9.Blend.imageclose,
 		    help: "help/blend.html",
 		    winTitle: "JS9 Image Blending",
+		    winResize: true,
 		    winDims: [JS9.Blend.WIDTH, JS9.Blend.HEIGHT]});
 
