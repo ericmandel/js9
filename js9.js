@@ -4845,19 +4845,6 @@ JS9.Info.opts = {
 };
 
 JS9.Info.init = function(width, height){
-    // set width and height on div
-    this.width = this.divjq.attr("data-width");
-    if( !this.width  ){
-	this.width  = width || JS9.INFOWIDTH;
-    }
-    this.divjq.css("width", this.width);
-    this.width = parseInt(this.divjq.css("width"), 10);
-    this.height = this.divjq.attr("data-height");
-    if( !this.height ){
-	this.height = height || JS9.INFOHEIGHT;
-    }
-    this.divjq.css("height", this.height);
-    this.height = parseInt(this.divjq.css("height"), 10);
     // add container to the high-level div
     this.infoConjq = $("<div>")
 	.addClass("JS9Container")
