@@ -10568,20 +10568,22 @@ JS9.lookupVfile = function(vfile){
 // process a list of file objects or blobs
 JS9.onFileList = function(files, options, handler){
     var i;
-    var dofits = function(file, options, handler){
+    var dofits = function(nfile){
 	var disp;
+	var file = files[nfile];
+	var topts = $.extend({}, options);
 	if( JS9.fits.handleFITSFile ){
 	    if( file.name ){
-		options.filename = file.name;
+		topts.filename = file.name;
 	    }
-	    if( options.display ){
-		disp = JS9.lookupDisplay(options.display);
+	    if( topts.display ){
+		disp = JS9.lookupDisplay(topts.display);
 		if( disp ){
 		    disp = disp.divjq[0];
 		}
 	    }
 	    JS9.waiting(true, disp);
-	    try{ JS9.fits.handleFITSFile(file, options, handler); }
+	    try{ JS9.fits.handleFITSFile(file, topts, handler); }
 	    catch(e){ JS9.error("can't process FITS file from file list", e); }
 	} else {
 	    JS9.error("no FITS module available to load FITS file");
@@ -10591,14 +10593,14 @@ JS9.onFileList = function(files, options, handler){
 	if( files[i].type.indexOf("image/") !== -1 ){
 	    switch(files[i].type){
 	    case "image/fits":
-		dofits(files[i], options, handler);
+		dofits(i);
 		break;
 	    default:
 		JS9.handleImageFile(files[i], options, handler);
 		break;
 	    }
 	} else {
-	    dofits(files[i], options, handler);
+	    dofits(i);
 	}
     }
 
