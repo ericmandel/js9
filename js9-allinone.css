@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.8, Fri Apr  1 12:06:30 EDT 2016 */
+/* JS9 allinone: v1.8, Sat Apr  2 12:36:49 EDT 2016 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -570,6 +570,12 @@ div.JS9PluginContainer
 div.JS9Plugin
 {
     background: #E9E9E9;
+}
+
+/* this is the inner div to the plugin, where user html is placed */
+div.JS9PluginInnerDiv
+{
+    overflow: auto;
 }
 
 /* commands and buttons on top of plugins */

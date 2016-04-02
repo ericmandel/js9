@@ -53,6 +53,12 @@ div.JS9Plugin
     background: #E9E9E9;
 }
 
+/* this is the inner div to the plugin, where user html is placed */
+div.JS9PluginInnerDiv
+{
+    overflow: auto;
+}
+
 /* commands and buttons on top of plugins */
 div.JS9PluginToolbar-div
 {
