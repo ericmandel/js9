@@ -13155,7 +13155,7 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 // nb: unlike JS9.Load, this required the opts param
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     var id, did, head, body, win, doc;
-    var idbase = JS9.helper.pageid || type || "win";
+    var idbase = (type || "") + "win";
     opts = opts || {};
     switch(type){
     case "light":
@@ -13175,6 +13175,8 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
         JS9.lightWin(did, "inline", html, file, winopts);
         // create the new JS9 Display
         JS9.checkNew(new JS9.Display(id));
+	// add to list of displays
+	JS9.helper.send("addDisplay", {"display": id});
         // instantiate new plugins (create menubar, etc)
         JS9.instantiatePlugins();
         // load the image into this display
