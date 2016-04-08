@@ -506,6 +506,11 @@ p.JS9MefPara {
     background: #E9E9E9;
 }
 
+p.JS9MefInput {
+    margin: 5px;
+    background: #E9E9E9;
+}
+
 div.JS9MefExtensionInactive {
     padding: 0px;
     border: 1px solid black;

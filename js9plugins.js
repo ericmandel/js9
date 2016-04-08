@@ -1810,6 +1810,16 @@ JS9.Mef.WIDTH =  800;	  // width of light window
 JS9.Mef.HEIGHT = 240;	  // height of light window
 JS9.Mef.BASE = JS9.Mef.CLASS + JS9.Mef.NAME;  // CSS base class name
 
+// change global separate mode for this display
+JS9.Mef.xseparate = function(id, target){
+    var display = JS9.lookupDisplay(id);
+    var separate = target.checked;
+    // change separate mode for this instance
+    if( display ){
+	display.pluginInstances[JS9.Mef.BASE].separate = separate;
+    }
+};
+
 // get a MefExtension id based on the file image id
 JS9.Mef.imid = function(im, i){
     return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"").replace(/[<>]/g,"_")
@@ -1832,7 +1842,7 @@ JS9.Mef.activeExtension = function(im, i){
 
 // constructor: add HTML elements to the plugin
 JS9.Mef.init = function(){
-    var i, im, id, obj, s, div, htmlString;
+    var i, im, id, obj, s, sid, div, htmlString;
     var that = this;
     var addExt = function(o, s, k){
 	var c, j;
@@ -1876,7 +1886,7 @@ JS9.Mef.init = function(){
 	    .appendTo(that.mefContainer);
 	if( doit ){
 	    div.on("mousedown touchstart", function(evt){
-		im.displayExtension(o.hdu);
+		im.displayExtension(o.hdu, {separate: that.separate});
 		JS9.Mef.activeExtension(im, o.hdu);
 	    });
 	}
@@ -1889,7 +1899,7 @@ JS9.Mef.init = function(){
     // this.dispMode: display mode (for internal use)
     //
     // allow scrolling on the plugin
-    this.divjq.addClass("JS9PluginScrolling")
+    this.divjq.addClass("JS9PluginScrolling");
     // clean main container
     this.divjq.html("");
     // add mef container to main
@@ -1897,6 +1907,10 @@ JS9.Mef.init = function(){
 	.addClass(JS9.Mef.BASE + "Container")
 	.attr("id", this.id + "MefContainer")
 	.appendTo(this.divjq);
+    // separate mode
+    if( this.separate === undefined ){
+	this.separate = false;
+    }
     im  = this.display.image;
     if( !im ){
 	this.mefContainer.html("<p><center>HDU extensions will be displayed here.</center>");
@@ -1915,6 +1929,14 @@ JS9.Mef.init = function(){
 	s = JS9.hdus2Str([obj]).trim();
 	addExt(obj, s, i);
     }
+    // add the checkbox for displaying each extension separately
+    sid = JS9.Mef.imid(im, "Separate");
+    s = sprintf('<input type="checkbox" id="%s" name="separate" value="separate" onclick="javascript:JS9.Mef.xseparate(\'%s\', this)"><b>Display each extension as a separate image</b>', sid, this.display.id);
+    $("<div>")
+	.addClass(JS9.Mef.BASE + "Input")
+	.html(s)
+	.appendTo(that.mefContainer);
+    $("#" + sid).prop("checked", this.separate);
     // make the currently displayed extension active
     if( im.raw.hdu.fits.extnum ){
 	JS9.Mef.activeExtension(im, im.raw.hdu.fits.extnum);
