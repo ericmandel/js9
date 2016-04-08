@@ -84,7 +84,9 @@ JS9.Blend.xblendmode = function(id, target){
 
 // get a BlendImage id based on the file image id
 JS9.Blend.imid = function(im){
-    return im.id.replace(/[^A-Za-z0-9_]/g, "_") + "BlendImage";
+    return im.id
+	.replace(/[^A-Za-z0-9_]/g, "_")
+	+ "BlendImage";
 };
 
 // change the active image

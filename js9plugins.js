@@ -1156,7 +1156,9 @@ JS9.Blend.xblendmode = function(id, target){
 
 // get a BlendImage id based on the file image id
 JS9.Blend.imid = function(im){
-    return im.id.replace(/[^A-Za-z0-9_]/g, "_") + "BlendImage";
+    return im.id
+	.replace(/[^A-Za-z0-9_]/g, "_")
+	+ "BlendImage";
 };
 
 // change the active image
@@ -1447,7 +1449,9 @@ JS9.Blend.xrate = function(id, target){
 
 // get a BlinkImage id based on the file image id
 JS9.Blink.imid = function(im){
-    return im.id.replace(/[^A-Za-z0-9_]/g, "_") + "BlinkImage";
+    return im.id
+	.replace(/[^A-Za-z0-9_]/g, "_")
+	+ "BlinkImage";
 };
 
 // change the active image
@@ -1824,9 +1828,12 @@ JS9.Mef.xseparate = function(id, target){
     }
 };
 
-// get a MefExtension id based on the file image id
+// get an MefExtension id based on the file image id
 JS9.Mef.imid = function(im, i){
-    return im.id.replace(/[^A-Za-z0-9_]/g, "_") + "MefExtension_" + i;
+    return im.id
+	.replace(/\[[0-9][0-9]*\]/g,"")
+	.replace(/[^A-Za-z0-9_]/g, "_")
+	+ "MefExtension_" + i;
 };
 
 // change the active extension
