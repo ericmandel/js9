@@ -1951,7 +1951,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 		ridx = rthis ? rthis.colorData[yLen + xIn] : 0;
 		gidx = gthis ? gthis.colorData[yLen + xIn] : 0;
 		bidx = bthis ? bthis.colorData[yLen + xIn] : 0;
-		if( (ridx === undefined) || 
+		if( (ridx === undefined) ||
 		    (gidx === undefined) ||
 		    (bidx === undefined) ){
 		    JS9.globalOpts.rgb.active = false;
@@ -2340,7 +2340,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 JS9.Image.prototype.displayExtension = function(extid, opts){
     var s, extOpts;
     var that = this;
-    var moveToHandler = function(hdu){
+    var newExtHandler = function(hdu){
 	if( opts.separate ){
 	    s = sprintf("[%s]", extid);
 	    opts.id = that.id.replace(/\[.*\]/,"") + s;
@@ -2352,7 +2352,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
     };
     // sanity check
     if( extid === undefined ){
-	JS9.error("missing extname/extnum for moveToExtension()");
+	JS9.error("missing extname/extnum for displayExtension()");
     }
     // opts is ... optional
     opts = opts || {};
@@ -2365,9 +2365,9 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
 	    extOpts.extname = extid;
 	} else if( typeof extid === "number" ){
 	    extOpts.extnum = extid;
-	} 
+	}
 	// process the FITS file by going to the extname/extnum
-	JS9.fits.handleFITSFile("", extOpts, moveToHandler);
+	JS9.fits.handleFITSFile("", extOpts, newExtHandler);
     } else {
 	JS9.error("virtual FITS file is missing for displayExtension()");
     }
@@ -4139,6 +4139,77 @@ JS9.Image.prototype.filterRGBImage = function(filter){
     return this;
 };
 
+// move image to a different display
+// maybe this should be refactored using more useful routines ...
+// ... and should (some of) this code be in the Fabric section??
+JS9.Image.prototype.moveToDisplay = function(dname){
+    var i, im, key, layer, dlayer;
+    var odisplay = this.display;
+    var ndisplay = JS9.lookupDisplay(dname);
+    // sanity check
+    if( !dname || !ndisplay ){
+	JS9.error("could not find display: " + dname);
+	return null;
+    }
+    // clear old display first
+    this.clearMessage();
+    this.display.context.clear();
+    // make sure the main layers in the old display are in the new display
+    for( key in odisplay.layers ){
+	if( odisplay.layers.hasOwnProperty(key) ){
+	    if( (odisplay.layers[key].dtype === "main") &&
+		!ndisplay.layers[key] ){
+		ndisplay.newShapeLayer(key, odisplay.layers[key].opts);
+	    }
+	}
+    }
+    // re-assign each "main" layer from old display to new by:
+    // saving the graphics, reassigning the canvas, restoring the graphics
+    for( key in this.layers ){
+	if( this.layers.hasOwnProperty(key) ){
+	    layer = this.layers[key];
+	    dlayer = ndisplay.layers[key];
+	    if( dlayer && (dlayer.dtype === "main") ){
+		if( ndisplay.image ){
+		    ndisplay.image.showShapeLayer(key, false);
+		}
+		this.showShapeLayer(key, false);
+                layer.dlayer = dlayer;
+                layer.divjq = dlayer.divjq;
+                layer.canvasjq = dlayer.canvasjq;
+                layer.canvas = dlayer.canvas;
+		this.showShapeLayer(key, true);
+	    } else {
+		delete this.layers[key];
+	    }
+	}
+    }
+    // move "main" display from old to new
+    this.display = ndisplay;
+    // avoid erroneous save of previous layers
+    this.display.image = this;
+    // reset section to ensure proper display size
+    this.mkSection();
+    // and redisplay
+    this.displayImage("all");
+    // ensure proper positions for graphics
+    this.refreshLayers();
+    // old display has no image
+    odisplay.image = null;
+    // so display a different image in old display, if possible
+    for(i=0; i<JS9.images.length; i++){
+	im = JS9.images[i];
+	if( odisplay === im.display ){
+	    // avoid erroneous save of previous layers
+	    im.display.image = null;
+	    im.displayImage("all");
+	    // ensure proper positions for graphics
+	    im.refreshLayers();
+	    break;
+	}
+    }
+};
+
 // Colormap
 JS9.Colormap = function(name, a1, a2, a3){
     this.name = name;
@@ -5086,7 +5157,7 @@ JS9.Menubar = function(width, height){
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
             build: function($trigger, evt){
-		var i, im, name, imlen;
+		var i, im, name, imlen, s1;
 		var n = 0;
 		var items = {};
 		var tdisp = getDisplays()[0];
@@ -5097,7 +5168,7 @@ JS9.Menubar = function(width, height){
 		    if( im.display === tdisp ){
 			name = im.id;
 			if( JS9.globalOpts.rgb.active ){
-			    if( im === JS9.globalOpts.rgb.rim){ 
+			    if( im === JS9.globalOpts.rgb.rim){
 				name += " (red)";
 			    }
 			    if( im === JS9.globalOpts.rgb.gim){
@@ -5165,6 +5236,24 @@ JS9.Menubar = function(width, height){
 		items.savefits = {name: "save image as FITS"};
 		items.savepng = {name: "save image as PNG"};
 		items.savejpeg = {name: "save image as JPEG"};
+		items.moveto = {
+		    name: "move image to",
+		    items: {movetotitle: {name: "choose display:",
+					  disabled: true}}
+		};
+		if( tim ){
+		    items.moveto.disabled = false;
+		    for(i=0; i<JS9.displays.length; i++){
+			if( $("#"+JS9.displays[i].id).length > 0 &&
+			    tdisp !== JS9.displays[i]    	     ){
+			    s1 = "moveto_" + JS9.displays[i].id;
+			    items.moveto.items[s1] = {name: JS9.displays[i].id};
+			}
+		    }
+		    items.moveto.items.moveto_newdisp = { name: "new display" };
+		} else {
+		    items.moveto.disabled = true;
+		}
 		items.close = {name: "close image"};
 		items["sep" + n++] = "------";
 		items.lite = {name: "new JS9 light window"};
@@ -5176,7 +5265,7 @@ JS9.Menubar = function(width, height){
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val, idx, array){
-			var j, s, did, save_orc, kid;
+			var j, s, did, save_orc, kid, unew, uwin;
 			var udisp = val;
 			var uim = udisp.image;
 			switch(key){
@@ -5330,10 +5419,25 @@ JS9.Menubar = function(width, height){
 			    }
 			    break;
 			default:
+			    // maybe it's a moveto request
+			    if( key.match(/^moveto_/) ){
+				unew = key.replace(/^moveto_/,"");
+				if( unew === "newdisp" ){
+				    uwin = "lightwin" + JS9.uniqueID();
+			            $("#dhtmlwindowholder").arrive("#" + uwin,
+                                    {onceOnly: true}, function(){
+					uim.moveToDisplay(uwin);
+				    });
+				    JS9.LoadWindow(null, {id: uwin}, "light");
+				} else {
+				    uim.moveToDisplay(unew);
+				}
+				return;
+			    }
 			    for(j=0; j<JS9.images.length; j++){
 				uim = JS9.images[j];
 				kid = key.replace(/ *\((red|green|blue)\)/,"");
-				if( (udisp.id === uim.display.id) && 
+				if( (udisp.id === uim.display.id) &&
 				    (uim.id === kid) ){
 				    // display image, 2D graphics, etc.
 				    uim.displayImage("display");
@@ -6087,7 +6191,7 @@ JS9.Menubar = function(width, height){
 		    items: {reprojtitle: {name: "wcs from:", disabled: true}}
 		};
 		for(i=0; i<JS9.images.length; i++){
-		    if( tim !== JS9.images[i]  &&  
+		    if( tim !== JS9.images[i]  &&
 			JS9.images[i].wcs ){
 			s1 = "reproject_" + JS9.images[i].id;
 			items.reproject.items[s1] = {
@@ -6097,12 +6201,14 @@ JS9.Menubar = function(width, height){
 		    }
 		}
 		if( nwcs === 0 ){
+		    items.reproject.disabled = true;
 		    items.reproject.items.notasks = {
 			name: "[none]",
 			disabled: true,
 			events: {keyup: function(evt){return;}}
 		    };
 		} else {
+		    items.reproject.disabled = false;
 		    items.reproject.items["sep" + n++] = "------";
 		    items.reproject.items.reproject_wcsalign = {
 			name: "display wcs-aligned"
@@ -7018,7 +7124,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 JS9.Fabric.showShapeLayer = function(layerName, mode){
     var that = this;
     var left = 0;
-    var s, xkey, layer, dlayer, canvas;
+    var jobj, xkey, layer, dlayer, canvas;
     layer = this.getShapeLayer(layerName);
     // sanity check
     if( !layer ){
@@ -7064,7 +7170,6 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 			}
 		    }
 		}
-		layer.json = null;
 	    });
 	}
 	// remove resize object if we have no more hidden layers
@@ -7086,11 +7191,13 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 		    obj.params.winid = null;
 		}
 	    });
-	    s = canvas.toJSON(layer.dlayer.el);
-	    layer.json = JSON.stringify(s);
+	    jobj = canvas.toJSON(layer.dlayer.el);
+	    layer.json = JSON.stringify(jobj);
 	    canvas.selection = false;
 	    // push to bottom of the pile
-	    dlayer.divjq.css("z-index", 0);
+	    if( dlayer ){
+		dlayer.divjq.css("z-index", 0);
+	    }
 	    canvas.clear();
 	}
 	if( mode === "hide" ){
@@ -12868,6 +12975,7 @@ JS9.mkPublic("ShiftData", "shiftData");
 JS9.mkPublic("GaussBlurData", "gaussBlurData");
 JS9.mkPublic("ReprojectData", "reprojectData");
 JS9.mkPublic("FilterRGBImage", "filterRGBImage");
+JS9.mkPublic("MoveToDisplay", "moveToDisplay");
 
 // add a colormap to JS9
 JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
