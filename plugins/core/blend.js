@@ -84,8 +84,7 @@ JS9.Blend.xblendmode = function(id, target){
 
 // get a BlendImage id based on the file image id
 JS9.Blend.imid = function(im){
-    return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"").replace(/[<>]/g,"_")
-	+ "BlendImage";
+    return im.id.replace(/[^A-Za-z0-9_]/g, "_") + "BlendImage";
 };
 
 // change the active image
@@ -167,10 +166,12 @@ JS9.Blend.init = function(){
     //
     // create container to hold image container and header
     var that = this;
+    // clean main container
+    this.divjq.html("");
     // no images/divs loaded yet
     this.blendDivs = 0;
     // allow scrolling on the plugin
-    this.divjq.addClass("JS9PluginScrolling")
+    this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.blendContainer = $("<div>")
 	.addClass(JS9.Blend.BASE + "Container")
@@ -235,6 +236,7 @@ JS9.Blend.imageclose = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		   {menuItem: "Blending",
+		    plugindisplay: JS9.Blend.init,
 		    onimageload: JS9.Blend.imageload,
 		    onimagedisplay: JS9.Blend.imagedisplay,
 		    onimageclose: JS9.Blend.imageclose,

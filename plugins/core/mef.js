@@ -25,8 +25,7 @@ JS9.Mef.xseparate = function(id, target){
 
 // get a MefExtension id based on the file image id
 JS9.Mef.imid = function(im, i){
-    return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"").replace(/[<>]/g,"_")
-	+ "MefExtension_" + i;
+    return im.id.replace(/[^A-Za-z0-9_]/g, "_") + "MefExtension_" + i;
 };
 
 // change the active extension

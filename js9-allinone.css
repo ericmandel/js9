@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.8, Fri Apr  8 14:25:11 EDT 2016 */
+/* JS9 allinone: v1.8, Fri Apr  8 17:39:43 EDT 2016 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -503,6 +503,11 @@ div.JS9MefExtension {
 }
 
 p.JS9MefPara {
+    margin: 5px;
+    background: #E9E9E9;
+}
+
+p.JS9MefInput {
     margin: 5px;
     background: #E9E9E9;
 }

@@ -2341,11 +2341,18 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
     var s, extOpts;
     var that = this;
     var newExtHandler = function(hdu){
+	var im;
 	if( opts.separate ){
 	    s = sprintf("[%s]", extid);
 	    opts.id = that.id.replace(/\[.*\]/,"") + s;
 	    hdu.filename = that.file.replace(/\[.*\]/,"") + s;
-	    JS9.Load(hdu, opts, {display: opts.display || that.display});
+	    im = JS9.lookupImage(opts.id, that.display.id);
+	    if( im ){
+		im.displayImage("display", opts);
+		im.clearMessage();
+	    } else {
+		JS9.Load(hdu, opts, {display: opts.display || that.display});
+	    }
 	} else {
 	    that.refreshImage(hdu, JS9.fits.options);
 	}

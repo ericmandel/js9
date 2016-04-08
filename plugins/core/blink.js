@@ -128,8 +128,7 @@ JS9.Blend.xrate = function(id, target){
 
 // get a BlinkImage id based on the file image id
 JS9.Blink.imid = function(im){
-    return im.id.replace(/\./g, "_").replace(/\[.*\]/g,"").replace(/[<>]/g,"_")
-	+ "BlinkImage";
+    return im.id.replace(/[^A-Za-z0-9_]/g, "_") + "BlinkImage";
 };
 
 // change the active image
@@ -213,10 +212,12 @@ JS9.Blink.init = function(){
     //
     // create container to hold image container and header
     var that = this;
+    // clean main container
+    this.divjq.html("");
     // no images/divs loaded yet
     this.blinkDivs = 0;
     // allow scrolling on the plugin
-    this.divjq.addClass("JS9PluginScrolling")
+    this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.blinkContainer = $("<div>")
 	.addClass(JS9.Blink.BASE + "Container")
@@ -290,6 +291,7 @@ JS9.Blink.imageclose = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
 		   {menuItem: "Blinking",
+		    plugindisplay: JS9.Blink.init,
 		    onimageload: JS9.Blink.imageload,
 		    onimagedisplay: JS9.Blink.imagedisplay,
 		    onimageclose: JS9.Blink.imageclose,
