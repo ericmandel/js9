@@ -15,8 +15,6 @@ JS9.Blink.BASE = JS9.Blink.CLASS + JS9.Blink.NAME;  // CSS base class name
 
 // blink rate in milliseconds
 JS9.Blink.rate = 1000;
-// starting index for blinking
-JS9.Blink.idx = 0;
 
 JS9.Blink.blinkModeHTML='When <b>Blink Images</b> is turned on, selected images will be displayed at the specified blink rate. You also can blink the selected images manually. The blink sequence can be changed by moving images around in the stack. <p>$mode&nbsp;&nbsp;&nbsp;&nbsp;$rate&nbsp;&nbsp;&nbsp;&nbsp;$manual';
 
@@ -38,24 +36,25 @@ JS9.Blink.nofileHTML='<p><span id="blinkNoFile">[Images will appear here as they
 JS9.Blink.start = function(display){
     var im;
     var done = false;
-    var saveidx = JS9.Blink.idx;
+    var plugin = display.pluginInstances.JS9Blink;
+    var saveidx = plugin.idx;
     while( !done ){
-	im = JS9.images[JS9.Blink.idx];
+	im = JS9.images[plugin.idx];
 	if( (im.display === display) && im.tmp.blinkMode ){
 	    im.displayImage("display");
 	    done = true;
 	}
-	if( ++JS9.Blink.idx >= JS9.images.length ){
-	    JS9.Blink.idx = 0;
+	if( ++plugin.idx >= JS9.images.length ){
+	    plugin.idx = 0;
 	}
-	if( JS9.Blink.idx === saveidx ){
+	if( plugin.idx === saveidx ){
 	    done = true;
 	}
     }
     if( display.blinkMode ){
 	JS9.Blink.tid = window.setTimeout(function(){
 	    JS9.Blink.start(display);
-	}, JS9.Blink.rate);
+	}, plugin.rate);
     }
 };
 
@@ -66,7 +65,7 @@ JS9.Blink.stop = function(display){
 	delete JS9.Blink.tid;
     }
     display.blinkMode = false;
-    JS9.Blink.idx = 0;
+    display.pluginInstances.JS9Blink.idx = 0;
 };
 
 // change active state
@@ -106,11 +105,12 @@ JS9.Blink.xblinkmode = function(id, target){
 // change global blink mode for this display
 JS9.Blink.xblink1 = function(id, target){
     var display = JS9.lookupDisplay(id);
+    var plugin = display.pluginInstances.JS9Blink;
     // blink once
     if( display ){
-	if( JS9.images[JS9.Blink.idx] === display.image ){
-	    if( ++JS9.Blink.idx >= JS9.images.length ){
-		JS9.Blink.idx = 0;
+	if( JS9.images[plugin.idx] === display.image ){
+	    if( ++plugin.idx >= JS9.images.length ){
+		plugin.idx = 0;
 	    }
 	}
 	JS9.Blink.start(display);
@@ -119,10 +119,13 @@ JS9.Blink.xblink1 = function(id, target){
 
 // change blink rate
 JS9.Blend.xrate = function(id, target){
-    // var im = JS9.lookupImage(id);
     var rate = Math.floor(target.options[target.selectedIndex].value * 1000);
-    if( !isNaN(rate) ){
-	JS9.Blink.rate = rate;
+    var display = JS9.lookupDisplay(id);
+    if( display ){
+	var plugin = display.pluginInstances.JS9Blink;
+	if( !isNaN(rate) ){
+	    plugin.rate = rate;
+	}
     }
 };
 
@@ -214,6 +217,13 @@ JS9.Blink.init = function(){
     //
     // create container to hold image container and header
     var that = this;
+    // initialize params
+    if( this.idx === undefined ){
+	this.idx = 0;
+    }
+    if( this.rate === undefined ){
+	this.rate = JS9.Blink.rate;
+    }
     // clean main container
     this.divjq.html("");
     // no images/divs loaded yet
