@@ -490,6 +490,19 @@ canvas.JS9ColorbarTextCanvas {
 }
 
 
+div.JS9ImarithLinegroup {
+    float: left;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 95%;
+    padding: 5px;
+    margin: 5px;
+}
+
+div.JS9ImarithContainer {
+    padding: 5px;
+}
 div.JS9MefContainer {
     padding: 10px;
     overflow: auto;

@@ -903,22 +903,8 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
     this.raw.width = w;
     this.raw.height = h;
     this.raw.bitpix = -32;
-    this.raw.dmin = Number.MAX_VALUE;
-    this.raw.dmax = Number.MIN_VALUE;
-    // find data min and max
-    for(i=0; i<h*w; i++) {
-	if( !isNaN(this.raw.data[i]) ){
-	    this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
-	    this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
-	}
-    }
-    // set initial scaling values if not done already
-    if( isNaN(this.params.scalemin) ){
-	this.params.scalemin = this.raw.dmin;
-    }
-    if( isNaN(this.params.scalemax) ){
-	this.params.scalemax = this.raw.dmax;
-    }
+    // set data min and max
+    this.dataminmax();
     // change data source
     this.source = "png";
     // fake header
@@ -3635,6 +3621,31 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
     return this;
 };
 
+// re-calculate data min and max (and set scale params, if necessary)
+JS9.Image.prototype.dataminmax = function(){
+    var i;
+    this.raw.dmin = Number.MAX_VALUE;
+    this.raw.dmax = Number.MIN_VALUE;
+    for(i=0; i<this.raw.data.length; i++) {
+	if( !isNaN(this.raw.data[i]) ){
+	    this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
+	    this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
+	}
+    }
+    // re-set scaling values, if necessary
+    if( (this.params.scaleclipping === "dataminmax") ||
+	isNaN(this.params.scalemin)                  ){
+	this.params.scalemin = this.raw.dmin;
+    }
+    if( (this.params.scaleclipping === "dataminmax") ||
+	isNaN(this.params.scalemax)                  ){
+	this.params.scalemax = this.raw.dmax;
+    }
+    // allow chaining
+    return this;
+};
+
+
 // the zscale calculation
 JS9.Image.prototype.zscale = function(setvals){
     var s, rawdata, bufsize, buf, vals;
@@ -3698,7 +3709,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 		if( opts === this.raws[i].id ){
 		    if( func === "remove" ){
 			if( opts === "raw0" ){
-			    JS9.error("can't remove raw0 data layer");
+			    JS9.error("can't remove primary (raw0) data layer");
 			}
 			if( this.raws[i].current0 && this.raws[i].current0.id ){
 			    // back to origin of this layer, if possible
@@ -3707,11 +3718,22 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 			    // else back to original raw data
 			    this.raw = this.raws[0];
 			}
+			// remove layer
 			this.raws.splice(i, 1);
+			// renew bitpix, if necessary
+			if( this.raw.header.bitpix ){
+			    this.raw.bitpix = this.raw.header.bitpix;
+			}
+			// re-calculate min and max
+			this.dataminmax();
 			this.displayImage("all", opts);
 			return true;
 		    }
 		    this.raw = this.raws[i];
+		    if( this.raw.header.bitpix ){
+			this.raw.bitpix = this.raw.header.bitpix;
+		    }
+		    this.dataminmax();
 		    this.mkSection();
 		    // redisplay using these data
 		    this.displayImage("all", opts);
@@ -3844,6 +3866,12 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 	}
 	// assign this nraw to the high-level raw data object
 	this.raw = nraw;
+	// renew bitpix, if necessary
+	if( this.raw.header.bitpix ){
+	    this.raw.bitpix = this.raw.header.bitpix;
+	}
+	// re-calculate min and max
+	this.dataminmax();
 	// redisplay using these data
 	this.displayImage("all", opts);
     }
@@ -3890,6 +3918,193 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
 	}
 	// the heart of the matter!
 	gaussBlur(tdata, nraw.data, nraw.width, nraw.height, sigma);
+	return true;
+    });
+};
+
+// perform arithmetic operations on the raw data
+// creates a new raw data layer ("imarith")
+JS9.Image.prototype.imarithData = function(op, arg1, opts){
+    var im;
+    // no args means return the available ops
+    if( !arguments.length ){
+	return ["add", "sub", "mul", "div", "min", "max", "reset"];
+    }
+    opts = opts || {};
+    if( !opts.rawid ){
+	opts.rawid = "imarith";
+    }
+    // special case: reset by deleting the layer
+    if( (op === "reset") || (op === "remove") ){
+	this.rawDataLayer(opts.rawid, "remove");
+	return;
+    }
+    // sanity check
+    if( op === undefined || arg1 === undefined ){
+	JS9.error("missing arg(s) for image arithmetic");
+    }
+    // operation: add, sub, mul, div ...
+    switch(op){
+    case "add":
+    case "sub":
+    case "mul":
+    case "div":
+    case "min":
+    case "max":
+	opts.op = op;
+	break;
+    default:
+	JS9.error("invalid operator for image arithmetic: " + op);
+	break;
+    }
+    // arg1: can be an image object or a numeric value
+    if( typeof arg1 === "object" ){
+	if( !arg1.raw.hdu || !arg1.raw.hdu.fits || !arg1.raw.hdu.fits.vfile ){
+	    JS9.error("no virtual FITS file for image arithmetic: " + arg1.id);
+	} else {
+	    opts.argtype = "image";
+	    opts.argval = arg1;
+	}
+	if( (this.raw.width  !== arg1.raw.width)  ||
+	    (this.raw.height !== arg1.raw.height) ){
+	    JS9.error("images must be the same size for image arithmetic");
+	}
+    } else if( JS9.isNumber(arg1) ){
+	opts.argtype = "value";
+	opts.argval = arg1;
+    } else {
+	// lookup the image by name
+	im = JS9.lookupImage(arg1);
+	if( !im ){
+	    JS9.error("imarith arg1 must be an image or a constant: "+arg1);
+	}
+	opts.argval = im;
+	opts.argtype = "image";
+    }
+    // check for invalid args
+    if( (opts.op === "div") &&
+	(opts.argtype === "value") && (opts.argval === 0) ){
+	JS9.error("imarith can't divide by zero (nor can anyone else)");
+    }
+    // choose a decent bitpix
+    if( !opts.bitpix ){
+	switch(opts.argtype){
+	case "image":
+	    if( (this.raw.bitpix > 0) && (opts.argval.raw.bitpix > 0) ){
+		opts.bitpix = Math.max(this.raw.bitpix, opts.argval.raw.bitpix);
+	    } else if( (this.raw.bitpix < 0) && (opts.argval.raw.bitpix < 0) ){
+		opts.bitpix = Math.min(this.raw.bitpix, opts.argval.raw.bitpix);
+	    } else if( (this.raw.bitpix < 0) && (opts.argval.raw.bitpix > 0) ){
+		opts.bitpix = this.raw.bitpix;
+	    } else {
+		opts.bitpix = opts.argval.raw.bitpix;
+	    }
+	    break;
+	case "value":
+	    if( this.raw.bitpix === -64 ){
+		opts.bitpix = -64;
+	    } else {
+		opts.bitpix = -32;
+	    }
+	    break;
+	}
+    }
+    // nraw should be a opts.bitpix copy of oraw
+    opts.alwaysCopy = true;
+    // use current
+    opts.oraw = "current";
+    // call routine to generate (or modify) the new layer
+    this.rawDataLayer(opts, function (oraw, nraw, opts){
+	var i, val;
+	switch(opts.argtype){
+	case "image":
+	    val = opts.argval.raw.data;
+	    switch(opts.op){
+	    case "add":
+		for(i=0; i<nraw.data.length; i++){
+		    nraw.data[i] += val[i];
+		}
+		break;
+	    case "sub":
+		for(i=0; i<nraw.data.length; i++){
+		    nraw.data[i] -= val[i];
+		}
+		break;
+	    case "mul":
+		for(i=0; i<nraw.data.length; i++){
+		    nraw.data[i] *= val[i];
+		}
+		break;
+	    case "div":
+		for(i=0; i<nraw.data.length; i++){
+		    if( val[i] === 0 ){
+			nraw.data[i] = 0;
+		    } else {
+			nraw.data[i] /= val[i];
+		    }
+		}
+		break;
+	    case "min":
+		for(i=0; i<nraw.data.length; i++){
+		    nraw.data[i] = Math.min(nraw.data[i], val[i]);
+		}
+		break;
+	    case "max":
+		for(i=0; i<nraw.data.length; i++){
+		    nraw.data[i] = Math.max(nraw.data[i], val[i]);
+		}
+		break;
+	    default:
+		JS9.error("unknown operation for imarith: " + opts.op);
+		break;
+	    }
+	    break;
+	case "value":
+	    val = opts.argval;
+	    switch(opts.op){
+	    case "add":
+		for(i=0; i<nraw.data.length; i++){
+		    nraw.data[i] += val;
+		}
+		break;
+	    case "sub":
+		for(i=0; i<nraw.data.length; i++){
+		    nraw.data[i] -= val;
+		}
+		break;
+	    case "mul":
+		for(i=0; i<nraw.data.length; i++){
+		    nraw.data[i] *= val;
+		}
+		break;
+	    case "div":
+		for(i=0; i<nraw.data.length; i++){
+		    if( val === 0 ){
+			nraw.data[i] = 0;
+		    } else {
+			nraw.data[i] /= val;
+		    }
+		}
+		break;
+	    case "min":
+		for(i=0; i<nraw.data.length; i++){
+		    nraw.data[i] = Math.min(nraw.data[i], val);
+		}
+		break;
+	    case "max":
+		for(i=0; i<nraw.data.length; i++){
+		    nraw.data[i] = Math.max(nraw.data[i], val);
+		}
+		break;
+	    default:
+		JS9.error("unknown op for imarith: " + opts.op);
+		break;
+	    }
+	    break;
+	default:
+	    JS9.error("unknown argument type for imarith: " + opts.argtype);
+	    break;
+	}
 	return true;
     });
 };
@@ -5575,6 +5790,8 @@ JS9.Menubar = function(width, height){
 			    items.rawlayer.items[key].icon = "sun";
 			}
 		    }
+		    items.rawlayer.items["sep" + n++] = "------";
+		    items.rawlayer.items.rawlayer_remove = {name: "remove"};
 		}
 		if( JS9.globalOpts.resize ){
 		    items["sep" + n++] = "------";
@@ -5587,7 +5804,7 @@ JS9.Menubar = function(width, height){
 		return {
 		    callback: function(key, opt){
 		    getDisplays().forEach(function(val, idx, array){
-			var jj, ucat, umode, uplugin;
+		        var jj, ucat, umode, uplugin, s;
 			var udisp = val;
 			var uim = udisp.image;
 			switch(key){
@@ -5641,7 +5858,17 @@ JS9.Menubar = function(width, height){
 			    }
 			    // maybe its a raw data layer
 			    if( tim && key.match(/^rawlayer_/) ){
-				tim.rawDataLayer(key.replace(/^rawlayer_/, ""));
+				s = key.replace(/^rawlayer_/, "");
+				if( s === "remove" ){
+				    for(i=0; i<tim.raws.length; i++){
+					if( tim.raw === tim.raws[i] ){
+					    tim.rawDataLayer(tim.raw.id,
+							     "remove");
+					}
+				    }
+				} else {
+				    tim.rawDataLayer(s);
+				}
 			    }
 			    break;
 			}
@@ -11066,7 +11293,7 @@ JS9.cardpars = function(card){
 
 // convert obj to FITS-style string
 JS9.raw2FITS = function(raw, forDisplay){
-    var i, obj, key, val, card;
+    var i, obj, key, val, card, s, obp;
     var hasend=false;
     var t="";
     // sanity check
@@ -11089,7 +11316,19 @@ JS9.raw2FITS = function(raw, forDisplay){
 	// raw.cardstr has comments, so use this if we are displaying header
 	for(i=0; i<raw.ncard; i++){
 	    card = raw.cardstr.slice(i*80, (i+1)*80);
-	    t += card;
+	    // hack: if bitpix was changed by a raw data layer, fix it now
+	    if( card.match(/^BITPIX/) && raw.bitpix ){
+		s = card.replace(/BITPIX *= *(-?[0-9][0-9]*) */, "$1");
+		obp = parseInt(s, 10);
+		if( obp !== raw.bitpix ){
+		    t += sprintf("BITPIX  = %20s / %-47s",
+				 raw.bitpix, "bits/pixel");
+		} else {
+		    t += card;
+		}
+	    } else {
+		t += card;
+	    }
 	    if( card.substring(0,4) === "END " ){
 		hasend = true;
 	    }
@@ -12978,9 +13217,10 @@ JS9.mkPublic("SaveFITS", "saveFITS");
 JS9.mkPublic("RunAnalysis", "runAnalysis");
 JS9.mkPublic("DisplayMessage", "displayMessage");
 JS9.mkPublic("RawDataLayer", "rawDataLayer");
-JS9.mkPublic("ShiftData", "shiftData");
 JS9.mkPublic("GaussBlurData", "gaussBlurData");
+JS9.mkPublic("ImarithData", "imarithData");
 JS9.mkPublic("ReprojectData", "reprojectData");
+JS9.mkPublic("ShiftData", "shiftData");
 JS9.mkPublic("FilterRGBImage", "filterRGBImage");
 JS9.mkPublic("MoveToDisplay", "moveToDisplay");
 

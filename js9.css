@@ -292,6 +292,13 @@ input:focus.JS9CmdIn{
     margin-left: 0px;
 }
 
+.context-menu-submenu:after {
+    content: "\2192";
+    color: black;
+    position: absolute;
+    right: 5px;
+}
+
 /* dhtml window overrides */
 .dhtmlwindow
 {

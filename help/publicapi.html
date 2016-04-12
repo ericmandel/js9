@@ -177,6 +177,11 @@ You can supply your own parameters for the new dhtmlwindow using the
 <a href="http://www.dynamicdrive.com/dynamicindex8/dhtmlwindow/index.htm">
 DynamicDrive</a> for more information about their light-weight window.
 <p>
+To create a new light window without loading an image, use:
+<pre>
+    JS9.LoadWindow(null, null, "light");
+</pre>
+<p>
 See js9create.html for examples of how to use this routine.
 
 <p>
@@ -538,6 +543,28 @@ with the <b>[extid]</b> appended.
 Binary table extensions also can be displayed, but they must contain 
 the appropriate <b>x</b> and <b>y</b> columns for binning. We hope to remove
 this restriction in the future to allow binning on any two columns.
+
+<p>
+<font size="+1"><b><u>Move an image to a new JS9 display</u></b></font>
+<p>
+<code><font size="+1">JS9.MoveToDisplay(dname)</font></code>
+<p>
+where:
+<ul>
+<li><b>dname</b>: name of JS9 display to which the image will be moved
+</ul>
+The <b>JS9.MoveToDisplay()</b> routine moves the current image to the
+specified display:
+<pre>
+    JS9.MoveToDisplay("myJS9", {display: "JS9"});
+</pre>
+will move the current image displayed in the "JS9" display window to
+the "myJS9" window. 
+
+<p>
+Note that the new JS9 display must already exist. New displays can be
+created with the <b>JS9.LoadWindow()</b> public access routine or
+the <b>File:new JS9 light window</b> menu option.
 
 <p>
 <font size="+1"><b><u>Blend the image in an image stack using W3C composite/blend modes </u></b></font>
@@ -1133,7 +1160,7 @@ valpos display) or the "region" area (where regions are displayed). The
 empty string will clear the previous message.
 
 <p>
-<font size="+1"><b><u>Create or Modify a Raw Data Layer</u></b></font>
+<font size="+1"><b><u>Create or modify a raw data layer</u></b></font>
 <p>
 <code><font size="+1">JS9.RawDataLayer(opts, func)</font></code>
 <p>
@@ -1246,7 +1273,86 @@ To get the currently displayed layer, call the routine with no arguments:
 </pre>
 
 <p>
-<font size="+1"><b><u>Shift Raw Data</u></b></font>
+<font size="+1"><b><u>Gaussian blur of raw data</u></b></font>
+<p>
+<code><font size="+1">JS9.GaussBlurData(sigma, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>sigma</b>: sigma of Gaussian function
+<li><b>opts</b>: options object
+</ul>
+This routine creates a new raw data layer called "gaussBlur" in which
+the image pixel values are blurred using a Gaussian function with the
+specified sigma. The routine uses the fast Gaussian blur algorithm
+(approximating a full Gaussian blur with three passes of a box blur)
+described <a href=" http://blog.ivank.net/fastest-gaussian-blur.html">
+here</a>.
+
+<p>
+<font size="+1"><b><u>Perform image arithmetic on raw data</u></b></font>
+<p>
+<code><font size="+1">JS9.ImarithData(op, arg1, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>op</b>: image operation: "add", "sub", "mul", "div", "min", "max", and "reset"
+<li><b>arg1</b>: image handle, image id or numeric value
+<li><b>opts</b>: options object
+</ul>
+The <b>JS9.ImarithData()</b> routine performs basic arithmetic
+(addition, subtraction, multiplication, division, minimum, maximum, average)
+between the currently displayed image and either another image or a
+constant value. The first <b>op</b> argument is a string, as detailed
+above. The second <b>arg1</b> argument can be a numeric value or an
+image id. In the former case, the constant value is applied to each
+pixel in the image. In the latter case, the operation is performed
+between the corresponding pixels in the two images. For example:
+<pre>
+    JS9.ImarithData("max", "foo.fits");
+</pre>
+will make a new data layer of the currently displayed image, where
+each pixel is the larger value from that image and the foo.fits image
+(which can be in any display).
+
+<p>
+This routine creates a new raw data layer called "imarith" containing
+the results of the operation. Successive calls to this routine are
+cumulative, so that you can build up a more complex operation from
+simple ones. For example:
+<pre>
+    # foo.fits is displayed in the "myJS9" display
+    var myim = JS9.GetImage({display: "myJS9"});
+    JS9.ImarithData("max", myim);
+    JS9.ImarithData("add", 2.718);
+</pre>
+will make a new data layer where each pixel is the larger value from
+the two images, after which an approximation of the irrational number
+e is added to each pixel. 
+
+<p>
+The special <b>reset</b> operation deletes the "imarith" raw data
+layer, allowing you to start afresh.
+
+<p>
+The bitpix value of the new "imarith" layer is chosen as follows:
+<ul>
+<li> for operations between two images, bitpix the "larger" of the two
+images (where float is "larger" than int).
+<li> for operations between an image and a constant, bitpix of -32
+(single float) is chosen unless the image itself has bitpix of -64, in
+which case the double float bitpix is chosen.
+</ul>
+You can override the choice of bitpix by passing a <b>bitpix</b> property
+in the optional opts object.
+
+<p>
+Finally, note that the two images must have the same dimensions. We
+might be able to remove this restriction in the future, although
+it is unclear how one lines up images of different dimensions.
+
+<p>
+<font size="+1"><b><u>Shift raw data</u></b></font>
 <p>
 <code><font size="+1">JS9.ShiftData(x, y, opts)</font></code>
 <p>
@@ -1264,24 +1370,7 @@ Astrophysics MicroObservatory project interactively to align images
 that are only slightly offset from one another.
 
 <p>
-<font size="+1"><b><u>Gaussian Blur of Raw Data</u></b></font>
-<p>
-<code><font size="+1">JS9.GaussBlurData(sigma, opts)</font></code>
-<p>
-where:
-<ul>
-<li><b>sigma</b>: sigma of Gaussian function
-<li><b>opts</b>: options object
-</ul>
-This routine creates a new raw data layer called "gaussBlur" in which
-the image pixel values are blurred using a Gaussian function with the
-specified sigma. The routine uses the fast Gaussian blur algorithm
-(approximating a full Gaussian blur with three passes of a box blur)
-described <a href=" http://blog.ivank.net/fastest-gaussian-blur.html">
-here</a>.
-
-<p>
-<font size="+1"><b><u>Apply a Filter to the RGB Image</u></b></font>
+<font size="+1"><b><u>Apply a filter to the RGB image</u></b></font>
 <p>
 <code><font size="+1">JS9.FilterRGBImage(filter, args)</font></code>
 <p>
@@ -1397,7 +1486,7 @@ With no arguments, the routine returns an array of available filters:
 </pre>
 
 <p>
-<font size="+1"><b><u>Reproject an Image Using a Specified WCS</u></b></font>
+<font size="+1"><b><u>Reproject an image using a specified WCS</u></b></font>
 <p>
 <code><font size="+1">JS9.ReprojectData(wcsim, opts)</font></code>
 <p>

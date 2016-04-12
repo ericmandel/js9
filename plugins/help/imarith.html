@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head> 
+</head>
+<body>
+<h3>JS9 Image Arithmetic</h3>
+
+<p>
+The <b>Image Arithmetic</b> plugin performs basic arithmetic
+operations (addition, subtraction, multiplication, division, minimum,
+maximum) between the currently displayed image and either another
+image or a constant real value.
+
+<p>
+To start, choose an arithmetic <b>operation</b> from the first menu.
+Next use the second menu to choose either a <b>real value</b> or another
+<b>image</b> as the second operand. In the former case, the constant value
+you enter into the text box will be applied to each pixel in the
+image. In the latter case, the operation is performed between the
+corresponding pixels in the two images.
+
+<p>
+Click the <b>Run</b> button to perform the arithmetic operation.  A
+new raw data layer called "imarith" will be created containing the
+results of the operation. Successive runs are cumulative, so that you
+can build up a more complex operation from simple ones.
+
+<p>
+Click the <b>Reset</b> button to delete the "imarith" raw data layer,
+which will allow you to start afresh.
+
+<p>
+Note that the two images must have the same dimensions. We might be
+able to remove this restriction in the future, although it is
+unclear how one lines up images of different dimensions.
+</body>
+</html>
