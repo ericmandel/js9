@@ -1339,7 +1339,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	got = 0;
 	for(i=0; i<rlen; i++){
 	    if( opts.rawid === this.raws[i].id  ){
-		this.raws[i] = {};
+		s = this.raws[i].from;
+		this.raws[i] = {from: s, id: opts.rawid};
 		this.raw = this.raws[i];
 		got++;
 		break;
@@ -1353,7 +1354,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    this.raw = this.raws[rlen];
 	}
     }
-    // save hdu
+    // now save the hdu in the raw object
     this.raw.hdu = hdu;
     // fill in raw data info directly from the fits object
     if( hdu.axis ){
@@ -2288,14 +2289,15 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     this.binning.obin = this.binning.bin;
     // generate new data
     this.mkRawDataFromHDU(obj, opts);
-    // doreg = (this.binning.obin !== this.binning.bin);
-    doreg = true;
-    // restore section unless dimensions changed
+    // if binning changed, we have to update the regions and other shape layers
+    doreg = (this.binning.obin !== this.binning.bin);
+    // restore section unless dims changed (in which case we update regions)
     if( (this.raw.width === owidth) && (this.raw.height === oheight) ){
 	this.mkSection(oxcen, oycen, ozoom);
     } else {
 	this.mkSection();
 	this.mkSection(ozoom);
+        doreg = true;
     }
     // display new image data with old section
     this.displayImage("colors", opts);
@@ -3898,7 +3900,7 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     // nraw should be a floating point copy of oraw
     opts.alwaysCopy = true;
     // new layer
-    opts.rawid = "gaussBlur";
+    opts.rawid = opts.rawid || "gaussBlur";
     // pass the options
     opts.sigma = sigma;
     // call routine to generate (or modify) the new layer
@@ -3932,9 +3934,7 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 	return ["add", "sub", "mul", "div", "min", "max", "reset"];
     }
     opts = opts || {};
-    if( !opts.rawid ){
-	opts.rawid = "imarith";
-    }
+    opts.rawid = opts.rawid || "imarith";
     // special case: reset by deleting the layer
     if( (op === "reset") || (op === "remove") ){
 	this.rawDataLayer(opts.rawid, "remove");
@@ -4117,7 +4117,7 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 	JS9.error("missing translation value(s) for shiftData");
     }
     opts = opts || {};
-    opts.rawid = "shift";
+    opts.rawid = opts.rawid || "shift";
     opts.x = x;
     opts.y = y;
     this.rawDataLayer(opts, function (oraw, nraw, opts){
