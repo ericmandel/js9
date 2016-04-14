@@ -962,6 +962,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     // see if we have a real PNG file instead of a representation file
     if( (i < 15) || realpng ){
 	// holy moly, its a real png file!
+	this.mkRawDataFromIMG(this.offscreen.img);
 	// save the off-screen image and return;
 	return;
     }
