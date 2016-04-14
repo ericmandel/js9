@@ -53,6 +53,7 @@
     <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'>M13 (via SkyView)</a>
     <li> <a href='javascript:JS9.Load("png/snr.png");'>CTB 109 (Einstein)</a>
     <li> <a href='javascript:JS9.Load("png/ngc1316.png", {scale:"linear"});'>ngc1316 (AIPS)</a>
+    <li> <a href='javascript:JS9.Load("png/dmitri.png");'>Dmitri (classic PNG)</a>
     </ul>
     </td>
     <td>
@@ -92,23 +93,24 @@
     </tr>
     </table>
     </tr>
-
     <tr valign="top">
-    <td colspan="2">
-    <center>
-    a super-menu to control both JS9 displays:<br>
+    <td>
+    <input type="text" id="datetimepicker" size="44" value="datepicker test: 3rd party event-handling" class="datepickerText">
+    </td>
+    <td>
     <div class="JS9Menubar" id="SUPERMENU_" data-displays="JS9,myJS9"></div>
-    </center>
     </td>
     </tr>
-
     <tr valign="top">
     <td colspan="2">
     <form autocomplete="off" action="noop()">
-    <input type="text" id="datetimepicker" size="44" value="datepicker test: 3rd party event-handling" class="datepickerText">
+    Blobs:
+    <input type="file" multiple="true" onchange="javascript:GetBlobs(this.files)">
     &nbsp; &nbsp;
-    Heap Test:
-    <input type="file" multiple="true" onchange="javascript:HeapTest(this.files)">
+    <input type="button" value="Heap Test" onclick="javascript:HeapTest()">
+    &nbsp; &nbsp;
+    <input type="button" value="Refresh Test" onclick="javascript:RefreshTest()">
+    &nbsp; &nbsp;
     <input type="button" value="Reproj Load" onclick="javascript:ReprojLoad()">
     <input type="button" value="Reproj Test" onclick="javascript:ReprojTest()">
     &nbsp; &nbsp;
@@ -227,6 +229,7 @@
     </tr>
     </table>
     <script type="text/javascript">
+    var im0, im1, im;
     var n = 500;
     var inc = 4;
     // on an ipad, the click handler reload the page!
@@ -393,14 +396,19 @@
             break;
         }
     }
-    // heap test
-    var heapBlobs, heapBuf, heapStart, heapCur, heapIter;
-    var heapAlloc = 1024000, heapTimeout=100;
-    function HeapTest(files){
+    // heap and refresh test blobs
+    var fileBlobs;
+    var timeTotal=30;
+    var refreshTimeout=2000;
+    var heapTimeout=100, heapAlloc = 1024000;
+    var heapBuf, heapStart, heapCur, heapIter;
+    function GetBlobs(files){
+      fileBlobs = files;
+    }
+    function HeapTest(){
       heapStart = 0;
-      heapBlobs = files;
       heapBuf = new ArrayBuffer(heapAlloc);
-      heapTest(1000);
+      heapTest(timeTotal*1000/heapTimeout);
     }
     function heapTest(nn, ii){
         var buf;
@@ -409,8 +417,8 @@
           ii = 0;
           heapIter = nn;
          }
-         if( heapBlobs ){
-           JS9.RefreshImage(heapBlobs[ii%heapBlobs.length]);
+         if( fileBlobs ){
+           JS9.RefreshImage(fileBlobs[ii%fileBlobs.length]);
          } else {
            JS9.error("please choose an image to refresh");
          }
@@ -427,6 +435,28 @@
         } else {
           console.log("bytes added to heap in %s iterations: %s = %s - %s", 
                        heapIter, heapCur - heapStart, heapCur, heapStart);
+        };
+    }
+    // refresh test
+    function RefreshTest(files){
+      refreshTest(timeTotal*1000/refreshTimeout);
+    }
+    function refreshTest(nn, ii){
+        var buf;
+        var im = JS9.GetImage();
+        if( ii === undefined ){
+          ii = 0;
+         }
+         if( fileBlobs ){
+           JS9.RefreshImage(fileBlobs[ii%fileBlobs.length]);
+         } else {
+           JS9.error("please choose an image to refresh");
+         }
+         if( ii++ < nn ){
+	   console.log("refresh: %s", ii);
+           setTimeout(function(){refreshTest(nn, ii);}, refreshTimeout);
+        } else {
+           console.log("all done!");
         };
     }
     function ReprojLoad(){
@@ -459,6 +489,11 @@
     }
     function noop(){
       return;
+    }
+    function ims(){
+      im0 = JS9.GetImage();
+      im1 = JS9.GetImage({display: "myJS9"});
+      im = im1;
     }
     $(document).ready(function(){
       init();
