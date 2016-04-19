@@ -1825,7 +1825,7 @@ JS9.Imarith = {};
 JS9.Imarith.CLASS = "JS9";      // class of plugins (1st part of div class)
 JS9.Imarith.NAME = "Imarith";  // name of this plugin (2nd part of div class)
 JS9.Imarith.WIDTH =  512;	 // width of light window
-JS9.Imarith.HEIGHT = 160;	 // height of light window
+JS9.Imarith.HEIGHT = 170;	 // height of light window
 JS9.Imarith.BASE = JS9.Imarith.CLASS + JS9.Imarith.NAME;
 
 JS9.Imarith.imageHTML="<div class='JS9ImarithLinegroup'>Choose an op (add, subtract, multiply, divide, min, max) and an operand (number or image) and click Run. Reset will revert to the original data.</div><div class='JS9ImarithLinegroup'><span class='JS9ImarithSpan' style='float: left'><b>$imid</b> &nbsp;&nbsp; $op &nbsp;&nbsp; $arg1 &nbsp;&nbsp; $num</span></div><p><div class='JS9ImarithLinegroup'><span class='JS9ImarithSpan' style='float: left'>$run</span><span style='float: right'>$reset</span></div>";
