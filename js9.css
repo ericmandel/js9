@@ -150,8 +150,14 @@ div.JS9Message
 .JS9Button
 {
     font: normal 12px Arial;
-    padding: 2px;
+    padding: 3px;
     margin: 2px;
+}
+
+/* prevent firefox from adding extra button padding */
+.JS9Button::-moz-focus-inner {
+    border: 0;
+    padding: 0;
 }
 
 /* ipad button font is too large */
