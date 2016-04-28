@@ -505,44 +505,50 @@ a multi-extension FITS file. (See, for example,
 for information about HDUs and multi-extension FITS).
 
 <p>
-The <b>extid</b> (extension id) parameter can either be the HDU extension
-number within the FITS file (starting with <b>1</b> for
-the <b>Primary HDU</b>) or it can be the string contained in
-the <b>EXTNAME</b> parameter of the extension.  For example, consider
-a Hubble NICMOS file containing the following HDU extensions:
+<font size="+1"><b><u>Display a slice of a FITS data cube</u></b></font>
+<p>
+<code><font size="+1">JS9.DisplaySlice(slice, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>slice</b>: slice description or slice number
+<li><b>opts</b>: object containing options
+</ul>
+This routine allows you to display a 2D slice of a 3D or 4D FITS data
+cube, i.e.  a FITS image containing 3 or 4 axes.
+
+<p>
+The <b>slice</b> parameter can either be the numeric value of the
+slice in the third (or fourth) image dimension (starting
+with <b>1</b>) or it can be a slice description string: a combination
+of asterisks and a numeric value defines the slice axis. Thus, for
+example, in a 1024 x 1024 x 16 cube, you can display the sixth slice
+along the third axis in one of two ways:
 <pre>
-    hdu: 1	name: Primary	type: image	bitpix: 16	naxis: 0
-    hdu: 2	name: SCI	type: image	bitpix: -32	naxis: 2	axes: [270, 263]
-    hdu: 3	name: ERR	type: image	bitpix: -32	naxis: 2	axes: [270, 263]
-    hdu: 4	name: DQ	type: image	bitpix: 16	naxis: 2	axes: [270, 263]
-    hdu: 5	name: SAMP	type: image	bitpix: 16	naxis: 2	axes: [270, 263]
-    hdu: 6	name: TIME	type: image	bitpix: -32	naxis: 2	axes: [270, 263]
-</pre>
-You can display the last extension in one of two ways:
-<pre>
-  JS9.DisplayExtension(6);
+  JS9.DisplaySlice(6);
 </pre>
 or:
 <pre>
-  JS9.DisplayExtension("TIME");
+  JS9.DisplaySlice("*,*,6");
+</pre>
+If the image was organized as 16 x 1024 x 1024, you would use the
+string description:
+<pre>
+  JS9.DisplaySlice("6,*,*");
 </pre>
 <p>
-By default, the new extension data replaces the data in the currently displayed
-extension. You can display the extension as a separate image by supplying
+By default, the new slice replaces the data in the currently displayed
+image. You can display the slice as a separate image by supplying
 an <b>opts</b> object with its <b>separate</b> property set to <b>true</b>.
 For example:
 <pre>
-  JS9.DisplayExtension("TIME", {separate: true});
+  JS9.DisplaySlice("6,*,*", {separate: true});
 </pre>
-will display the "TIME" extension separately from the original file,
-allowing blinking, image blending, etc between the two "files".  Note
-that the new id and filename are adjusted to be the original file's values,
-with the <b>[extid]</b> appended.
-
-<p>
-Binary table extensions also can be displayed, but they must contain 
-the appropriate <b>x</b> and <b>y</b> columns for binning. We hope to remove
-this restriction in the future to allow binning on any two columns.
+will display the sixth slice of the first image dimension separately
+from the original file, allowing blinking, image blending, etc. between
+the two "files".  Note that the new id and filename are adjusted to be
+the original file's values with the cfitsio image section <b>[6:6,*,*]</b>
+appended.
 
 <p>
 <font size="+1"><b><u>Move an image to a new JS9 display</u></b></font>

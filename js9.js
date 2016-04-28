@@ -13223,6 +13223,7 @@ JS9.mkPublic = function(name, s){
 JS9.mkPublic("CloseImage", "closeImage");
 JS9.mkPublic("DisplayImage", "displayImage");
 JS9.mkPublic("DisplayExtension", "displayExtension");
+JS9.mkPublic("DisplaySlice", "displaySlice");
 JS9.mkPublic("BlendImage", "blendImage");
 JS9.mkPublic("GetColormap", "getColormap");
 JS9.mkPublic("SetColormap", "setColormap");
