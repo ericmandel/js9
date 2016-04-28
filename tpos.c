@@ -383,7 +383,8 @@ int main(int argc, char **argv)
   switch(hdutype){
   case IMAGE_HDU:
     // get image array
-    dbuf = getImageToArray(fptr, NULL, NULL, &idim1, &idim2, &bitpix, &status);
+    dbuf = getImageToArray(fptr, NULL, NULL, NULL,
+			   &idim1, &idim2, &bitpix, &status);
     errchk(status);
     fits_get_hdrspace(fptr, &maxcard, &morekeys, &status);
     errchk(status);
@@ -393,7 +394,8 @@ int main(int argc, char **argv)
     ofptr = filterTableToImage(fptr, filter, NULL, dims, cens, block, &status);
     errchk(status);
     // get image array
-    dbuf = getImageToArray(ofptr, NULL, NULL, &idim1, &idim2, &bitpix, &status);
+    dbuf = getImageToArray(ofptr, NULL, NULL, NULL,
+			   &idim1, &idim2, &bitpix, &status);
     errchk(status);
     // get number of keys
     fits_get_hdrspace(ofptr, &maxcard, &morekeys, &status);

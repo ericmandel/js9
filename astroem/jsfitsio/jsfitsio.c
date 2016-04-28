@@ -236,7 +236,7 @@ fitsfile *openFITSMem(void **buf, size_t *buflen, char *extlist,
 }
 
 // getImageToArray: extract a sub-section from an image HDU, return array
-void *getImageToArray(fitsfile *fptr, int *dims, double *cens, 
+void *getImageToArray(fitsfile *fptr, int *dims, double *cens, char *slice,
 		      int *odim1, int *odim2, int *bitpix, int *status){
   int i, naxis;
   int xcen, ycen, dim1, dim2, type;
@@ -248,7 +248,10 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   double bscale = 1.0;
   double bzero = 0.0;
   char comment[81];
-
+  char *s, *tslice;
+  int nslice, idx, iaxis0, iaxis1;
+  int iaxes[2] = {0, 1};
+  int saxes[IDIM] = {0, 0, 0, 0};
   // seed buffers
   for(i=0; i<IDIM; i++){
     naxes[i] = 0;
@@ -260,10 +263,37 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   fits_get_img_dim(fptr, &naxis, status);
   fits_get_img_size(fptr, min(IDIM,naxis), naxes, status);
   fits_get_img_type(fptr, bitpix, status);
+  if( naxis < 2 ){
+    *status = BAD_DIMEN;
+    return NULL;
+  }
+  // parse slice string into primary axes and slice axes
+  if( slice && *slice ){
+    tslice = (char *)strdup(slice);
+    for(s=(char *)strtok(tslice, " :,"), nslice=0, idx=0;
+	(s != NULL) && (nslice < IDIM); 
+	s=(char *)strtok(NULL," :,"), nslice++){
+      if( !strcmp(s, "*") ){
+	if( idx < 2 ){
+	  iaxes[idx++] = nslice;
+	}
+      } else {
+	saxes[nslice] = atoi(s);
+	if( (saxes[nslice] < 1) || (saxes[nslice] > naxes[nslice]) ){
+	  *status = SEEK_ERROR;
+	  return NULL;
+	}
+      }
+    }
+    free(tslice);      
+  }
+  // convenience variables for the primary axis indexes
+  iaxis0 = iaxes[0];
+  iaxis1 = iaxes[1];
   // get limits of extracted section
   if( dims && dims[0] && dims[1] ){
-    dim1 = min(dims[0], naxes[0]);
-    dim2 = min(dims[1], naxes[1]);
+    dim1 = min(dims[0], naxes[iaxis0]);
+    dim2 = min(dims[1], naxes[iaxis1]);
     // read image section
     if( cens ){
       xcen = cens[0];
@@ -272,32 +302,42 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       xcen = dim1/2;
       ycen = dim2/2;
     }
-    fpixel[0] = (int)(xcen - (dim1+1)/2);
-    fpixel[1] = (int)(ycen - (dim2+1)/2);
-    lpixel[0] = (int)(xcen + (dim1/2));
-    lpixel[1] = (int)(ycen + (dim2/2));
+    fpixel[iaxis0] = (int)(xcen - (dim1+1)/2);
+    fpixel[iaxis1] = (int)(ycen - (dim2+1)/2);
+    lpixel[iaxis0] = (int)(xcen + (dim1/2));
+    lpixel[iaxis1] = (int)(ycen + (dim2/2));
   } else {
     // read entire image
-    fpixel[0] = 1;
-    fpixel[1] = 1;
-    lpixel[0] = naxes[0];
-    lpixel[1] = naxes[1];
+    fpixel[iaxis0] = 1;
+    fpixel[iaxis1] = 1;
+    lpixel[iaxis0] = naxes[iaxis0];
+    lpixel[iaxis1] = naxes[iaxis1];
   }
-  if( fpixel[0] < 1 ){
-    fpixel[0] = 1;
-  }
-  if( fpixel[0] > naxes[0] ){
-    fpixel[0] = naxes[0];
-  }
-  if( fpixel[1] < 1 ){
-    fpixel[1] = 1;
-  }
-  if( fpixel[1] > naxes[1] ){
-    fpixel[1] = naxes[1];
+  // stay within image limits
+  fpixel[iaxis0] = max(fpixel[iaxis0], 1);
+  fpixel[iaxis0] = min(fpixel[iaxis0], naxes[iaxis0]);
+  lpixel[iaxis0] = max(lpixel[iaxis0], 1);
+  lpixel[iaxis0] = min(lpixel[iaxis0], naxes[iaxis0]);
+  fpixel[iaxis1] = max(fpixel[iaxis1], 1);
+  fpixel[iaxis1] = min(fpixel[iaxis1], naxes[iaxis0]);
+  lpixel[iaxis1] = max(lpixel[iaxis1], 1);
+  lpixel[iaxis1] = min(lpixel[iaxis1], naxes[iaxis0]);
+  // for sliced dimensions, set first and last pixel to the specified slice
+  for(i=0; i<min(IDIM,naxis); i++){
+    if( saxes[i] ){
+      // 1 pixel slice in this dimension
+      fpixel[i] = saxes[i];
+      lpixel[i] = saxes[i];
+      // stay within image limits
+      fpixel[i] = max(fpixel[i], 1);
+      fpixel[i] = min(fpixel[i], naxes[i]);
+      lpixel[i] = max(lpixel[i], 1);
+      lpixel[i] = min(lpixel[i], naxes[i]);
+    }
   }
   // section dimensions
-  *odim1 = lpixel[0] - fpixel[0] + 1;
-  *odim2 = lpixel[1] - fpixel[1] + 1;
+  *odim1 = lpixel[iaxis0] - fpixel[iaxis0] + 1;
+  *odim2 = lpixel[iaxis1] - fpixel[iaxis1] + 1;
   totpix = *odim1 * *odim2;
   // make sure we have an image with valid dimensions size
   if( totpix <= 1 ){

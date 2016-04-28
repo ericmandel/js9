@@ -1276,7 +1276,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 
 // read input object and convert to image data
 JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
-    var i, s, ui, dlen, clen, hdu, pars, card, got, rlen;
+    var i, s, ui, clen, hdu, pars, card, got, rlen;
     var owidth, oheight, obitpix;
     opts = opts || {};
     if( $.isArray(obj) || JS9.isTypedArray(obj) || obj instanceof ArrayBuffer ){
@@ -1448,19 +1448,12 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     // min and max data values
     if( hdu.dmin && hdu.dmax ){
+	// from object
 	this.raw.dmin = hdu.dmin;
 	this.raw.dmax = hdu.dmax;
     } else {
-	// find data min and max
-	this.raw.dmin = Number.MAX_VALUE;
-	this.raw.dmax = Number.MIN_VALUE;
-	dlen = this.raw.width * this.raw.height;
-	for(i=0; i<dlen; i++) {
-	    if( !isNaN(this.raw.data[i]) ){
-		this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
-		this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
-	    }
-	}
+	// calculate data min and max
+	this.dataminmax();
     }
     // image or table
     if( hdu.imtab ){
@@ -1488,13 +1481,6 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     // init the logical coordinate system, if possible
     this.initLCS(this.raw.header);
-    // set initial scaling values if not done already
-    if( isNaN(this.params.scalemin) ){
-	this.params.scalemin = this.raw.dmin;
-    }
-    if( isNaN(this.params.scalemax) ){
-	this.params.scalemax = this.raw.dmax;
-    }
     // get hdu info, if possible
     try{
 	s = JS9.listhdu(this.raw.hdu.fits.vfile);
@@ -2366,6 +2352,51 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
 	JS9.fits.handleFITSFile("", extOpts, newExtHandler);
     } else {
 	JS9.error("virtual FITS file is missing for displayExtension()");
+    }
+};
+
+// display the specified slice of a 3D or 4d FITS cube
+JS9.Image.prototype.displaySlice = function(slice, opts){
+    var sliceOpts;
+    var that = this;
+    var newSliceHandler = function(hdu){
+	var im, s;
+	if( opts.separate ){
+	    s = sprintf("[%s]", sliceOpts.slice);
+	    s = s.replace(/([0-9][0-9]*)/, "$1:$1");
+	    opts.id = that.id.replace(/\[.*\]/,"") + s;
+	    hdu.filename = that.file.replace(/\[.*\]/,"") + s;
+	    im = JS9.lookupImage(opts.id, that.display.id);
+	    if( im ){
+		im.displayImage("display", opts);
+		im.clearMessage();
+	    } else {
+		JS9.Load(hdu, opts, {display: opts.display || that.display});
+	    }
+	} else {
+	    that.refreshImage(hdu, JS9.fits.options);
+	}
+    };
+    // sanity check
+    if( slice === undefined ){
+	JS9.error("missing slice for displaySlice()");
+    }
+    // opts is ... optional
+    opts = opts || {};
+    // only makes sense if we have a virtual file
+    if( this.raw.hdu && this.raw.hdu.fits && this.raw.hdu.fits.fptr ){
+	// access virtual file via its fits pointer
+	sliceOpts = {fptr: this.raw.hdu.fits.fptr, vfile: this.raw.hdu.vfile};
+	// slicename or slicenum specified?
+	if( typeof slice === "string" ){
+	    sliceOpts.slice = slice;
+	} else if( typeof slice === "number" ){
+	    sliceOpts.slice = sprintf("*,*,%s", slice);
+	}
+	// process the FITS file by going to the slice
+	JS9.fits.handleFITSFile("", sliceOpts, newSliceHandler);
+    } else {
+	JS9.error("virtual FITS file is missing for displaySlice()");
     }
 };
 
@@ -10759,7 +10790,11 @@ JS9.floatPrecision = function(fval1, fval2){
 // convert float value to a string with decent precision
 // from: /tksao1.0/colorbar/colorbarbase.C
 JS9.floatFormattedString = function(fval, prec, fix){
-    var fmt, s;
+    var fmt;
+    var s = "";
+    if( fval === undefined ){
+	return s;
+    }
     if( prec < -2){
 	fmt = "%.2e";
 	s = sprintf(fmt, fval);

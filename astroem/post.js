@@ -82,7 +82,7 @@ Module['gzdecompress'] = function(data) {
 
 Module["getFITSImage"] = function(fits, hdu, options, handler) {
     var i, ofptr, hptr, status, datalen, extnum;
-    var buf, bufptr, buflen, bufptr2;
+    var buf, bufptr, buflen, bufptr2, slice;
     var filter = null;
     var fptr = fits.fptr;
     var cens = [0, 0];
@@ -92,6 +92,8 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     if( hdu.fits ){
 	Module["cleanupFITSFile"](hdu.fits, false);
     }
+    // default hdu type is image
+    hdu.type = hdu.type || 0;
     // pre-processing
     switch(hdu.type){
     case 0:
@@ -137,9 +139,11 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     setValue(hptr,    0, 'i32');
     setValue(hptr+4,  0, 'i32');
     setValue(hptr+20, 0, 'i32');
+    // might want a slice
+    slice = options.slice || "";
     bufptr = ccall("getImageToArray", "number",
-	["number", "number", "number", "number", "number", "number", "number"],
-	[ofptr, hptr, 0, hptr+8, hptr+12, hptr+16, hptr+20]);
+	["number", "number", "number", "string", "number", "number", "number", "number"],
+	[ofptr, hptr, 0, slice, hptr+8, hptr+12, hptr+16, hptr+20]);
     hdu.naxis1  = getValue(hptr+8, 'i32');
     hdu.naxis2  = getValue(hptr+12, 'i32');
     hdu.bitpix  = getValue(hptr+16, 'i32');
@@ -310,8 +314,17 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 		status  = getValue(hptr+4, 'i32');
 		_free(hptr);
 		Module["errchk"](status);
+	    } else if( options.slice !== undefined ){
+		hptr = _malloc(8);
+		setValue(hptr+4, 0, 'i32');
+		ccall("ffghdt", null,
+		      ["number", "number", "number"],
+		      [fptr, hptr, hptr+4]);
+		hdu.type = getValue(hptr,   'i32');
+		_free(hptr);
+		Module["errchk"](status);
 	    } else {
-		Module["error"]("missing extname/extnum for FITS file");
+		Module["error"]("missing extname/extnum/slice for FITS file");
 	    }
 	} else {
 	    // open existing virtual file as a FITS file

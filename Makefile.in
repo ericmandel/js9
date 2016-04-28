@@ -105,9 +105,9 @@ CP =		cp -p
 
 CC =		@CC@
 
-CC_SW =	${CFLAGS} ${AC_FLAGS} ${INCS}
+CC_SW =		${CFLAGS} ${AC_FLAGS} ${INCS}
 
-DEPEND_SW = ${CFLAGS} -I. ${AC_FLAGS}
+DEPEND_SW = 	${CFLAGS} -I. ${AC_FLAGS}
 
 # type of backend server (or none)
 HELPER =	@HELPER@
@@ -555,6 +555,9 @@ js9helper.o:	js9helper.c
 
 pngdisp.o:	pngdisp.c
 		$(CC) -c $(CC_SW) -o $@ $+
+
+cimtest.o:	cimtest.c
+		$(CC) -I ./astroem/jsfitsio -c $(CC_SW) -o $@ $+
 
 configure:	configure.ac
 		autoconf

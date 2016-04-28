@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.8, Thu Apr 14 13:14:11 EDT 2016 */
+/* JS9 allinone: v1.8, Thu Apr 28 16:27:54 EDT 2016 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -687,8 +687,14 @@ div.JS9Message
 .JS9Button
 {
     font: normal 12px Arial;
-    padding: 2px;
+    padding: 3px;
     margin: 2px;
+}
+
+/* prevent firefox from adding extra button padding */
+.JS9Button::-moz-focus-inner {
+    border: 0;
+    padding: 0;
 }
 
 /* ipad button font is too large */
