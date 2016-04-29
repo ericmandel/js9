@@ -1,10 +1,8 @@
 canvas.JS9ColorbarCanvas {
     border: 1px solid black;
 }
+
 canvas.JS9ColorbarTextCanvas {
-    font-family: Helvetica, sans-serif;
-    font-size: 10pt;
-    font-weight: 300;
     background-color: white;
 }
 

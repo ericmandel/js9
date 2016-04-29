@@ -1653,6 +1653,7 @@ JS9.Colorbar.SCALED = false;
 JS9.Colorbar.TICKS = 10;
 // height of colorbar inside plugin
 JS9.Colorbar.COLORBARHEIGHT = 16;
+// JS9.Colorbar.COLORBARFONT = "11pt Arial";
 
 // redraw colorbar on display
 JS9.Colorbar.display = function(im){
@@ -1792,6 +1793,13 @@ JS9.Colorbar.init = function(){
         .css("height", (this.height - this.colorbarHeight) + "px")
 	.appendTo(this.colorbarContainer);
     this.textctx = this.textjq[0].getContext("2d");
+    // font specified in data property of div element?
+    this.colorbarFont = this.divjq.attr("data-colorbarFont");
+    if( this.colorbarFont ){
+	this.textctx.font = this.colorbarFont;
+    } else if( JS9.Colorbar.COLORBARFONT ){
+	this.textctx.font = JS9.Colorbar.COLORBARFONT;
+    }
     this.textctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     // display current colorbar, if necessary
     if( this.display.image ){
