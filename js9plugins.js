@@ -1672,7 +1672,7 @@ JS9.Colorbar.display = function(im){
 	colorBuf = im.colorCells;
     }
     // first line gets colors from main display's rgb array
-    idx0 = Math.floor(colorBuf.length / canvasWidth + 0.5);
+    idx0 = Math.floor(colorBuf.length / canvasWidth);
     for(i=0, j=0; i<canvasWidth; i++, j+=4){
 	idx = i * idx0;
 	colorData[j]   = colorBuf[idx][0];
