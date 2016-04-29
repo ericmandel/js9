@@ -98,10 +98,6 @@ JS9.Imarith.init = function(){
     var i, s, im, tim;
     var images = "";
     var opts = [];
-    // don't re-create if its the same image
-    if( this.display.image && (this.display.image.id === this.lastim) ){
-	return;
-    }
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
