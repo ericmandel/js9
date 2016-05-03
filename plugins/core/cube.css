@@ -1,0 +1,31 @@
+.JS9CubeContainer {
+    padding: 5px;
+}
+
+.JS9CubeLinegroup {
+    float: left;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 95%;
+    padding: 5px;
+    margin: 5px;
+}
+
+.JS9CubeRangeLine {
+  font-size: 9pt;
+}
+
+.JS9CubeRange {
+  vertical-align: middle;
+}
+
+.JS9CubeValue {
+  vertical-align: top;
+  text-align: center;
+}
+
+.JS9CubeOrder {
+  vertical-align: top;
+}
+

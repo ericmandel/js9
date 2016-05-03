@@ -1028,7 +1028,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     this.raw.dmax = Number.MIN_VALUE;
     // number of data pixels
     dlen = this.raw.width * this.raw.height;
-    // mode: process the next imge pixel based on starting index into RGBA pixel
+    // mode: process next image pixel based on starting index into RGBA pixel
     mode = idx % 4;
     // image pixels are packed into RGBA array, in little-endian format.
     // The A value is supplied by the browser and has to be skipped.
@@ -2368,12 +2368,14 @@ JS9.Image.prototype.displaySlice = function(slice, opts){
 	    hdu.filename = that.file.replace(/\[.*\]/,"") + s;
 	    im = JS9.lookupImage(opts.id, that.display.id);
 	    if( im ){
+		im.slice = sliceOpts.slice;
 		im.displayImage("display", opts);
 		im.clearMessage();
 	    } else {
 		JS9.Load(hdu, opts, {display: opts.display || that.display});
 	    }
 	} else {
+	    that.slice = sliceOpts.slice;
 	    that.refreshImage(hdu, JS9.fits.options);
 	}
     };
@@ -2388,10 +2390,10 @@ JS9.Image.prototype.displaySlice = function(slice, opts){
 	// access virtual file via its fits pointer
 	sliceOpts = {fptr: this.raw.hdu.fits.fptr, vfile: this.raw.hdu.vfile};
 	// slicename or slicenum specified?
-	if( typeof slice === "string" ){
-	    sliceOpts.slice = slice;
-	} else if( typeof slice === "number" ){
+	if( JS9.isNumber(slice) ){
 	    sliceOpts.slice = sprintf("*,*,%s", slice);
+	} else {
+	    sliceOpts.slice = slice;
 	}
 	// process the FITS file by going to the slice
 	JS9.fits.handleFITSFile("", sliceOpts, newSliceHandler);
@@ -10475,6 +10477,11 @@ JS9.Catalogs.opts = {
 // ---------------------------------------------------------------------
 // Misc. Utilities
 // ---------------------------------------------------------------------
+
+// sigh ... why do we need this polyfill??? (chrome pre-38)
+Math.log10 = Math.log10 || function(x) {
+  return Math.log(x) / Math.LN10;
+};
 
 // javascript: the good parts p. 22
 if( typeof Object.create !== "function" ){
