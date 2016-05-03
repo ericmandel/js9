@@ -1023,9 +1023,6 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     }
     // object name
     this.object = this.raw.header.OBJECT;
-    // no min or max yet
-    this.raw.dmin = Number.MAX_VALUE;
-    this.raw.dmax = Number.MIN_VALUE;
     // number of data pixels
     dlen = this.raw.width * this.raw.height;
     // mode: process next image pixel based on starting index into RGBA pixel
@@ -1061,11 +1058,6 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 	    }
 	    // save current pixel value
 	    this.raw.data[i] = tval;
-	    // save min and max data values as we convert
-	    if( !isNaN(tval) ){
-		this.raw.dmin = Math.min(this.raw.dmin, tval);
-		this.raw.dmax = Math.max(this.raw.dmax, tval);
-	    }
 	}
 	break;
     case 16:
@@ -1111,11 +1103,6 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 	    }
 	    // save current pixel value
 	    this.raw.data[i] = tval;
-	    // save min and max data values as we convert
-	    if( !isNaN(tval) ){
-		this.raw.dmin = Math.min(this.raw.dmin, tval);
-		this.raw.dmax = Math.max(this.raw.dmax, tval);
-	    }
 	}
 	break;
     case 32:
@@ -1170,11 +1157,6 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 	    }
 	    // save current pixel value
 	    this.raw.data[i] = tval;
-	    // save min and max data values as we convert
-	    if( !isNaN(tval) ){
-		this.raw.dmin = Math.min(this.raw.dmin, tval);
-		this.raw.dmax = Math.max(this.raw.dmax, tval);
-	    }
 	}
 	break;
     case -64:
@@ -1241,23 +1223,13 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 	    }
 	    // save current pixel value
 	    this.raw.data[i] = tval;
-	    // save min and max data values as we convert
-	    if( !isNaN(tval) ){
-		this.raw.dmin = Math.min(this.raw.dmin, tval);
-		this.raw.dmax = Math.max(this.raw.dmax, tval);
-	    }
 	}
 	break;
     default:
 	JS9.error("unsupported bitpix in PNG file: "+this.raw.bitpix);
     }
-    // set initial scaling values if not done already
-    if( isNaN(this.params.scalemin) ){
-	this.params.scalemin = this.raw.dmin;
-    }
-    if( isNaN(this.params.scalemax) ){
-	this.params.scalemax = this.raw.dmax;
-    }
+    // set data min and max
+    this.dataminmax();
     // having the real image, we can ask to release the offscreen image
     this.offscreen.img = null;
     // init WCS, if possible
