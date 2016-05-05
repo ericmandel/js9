@@ -3,7 +3,7 @@
 # defaults
 DEFPREFS="js9Prefs.json"
 HELPER="./js9Helper.js"
-LOG="./node.log"
+LOG="./js9node.log"
 
 # process command line switches
 while [ x"$1" != x ]; do
