@@ -8,6 +8,7 @@
 foo*
 goo*
 node.log
+js9node.log
 Makefile
 !astroem/Makefile
 !util/Makefile

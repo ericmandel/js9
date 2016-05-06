@@ -54,7 +54,7 @@ case $name in
 		--with-webdir=/home/mred/public_html/htdocs/js9		\
 		--with-helper="nodejs"					\
 		--with-cfitsio=/export/eric				\
-		--with-png=/export/eric				\
+		--with-png=/export/eric					\
   		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
  		$*
   ;;
@@ -70,44 +70,44 @@ case $name in
  		$*
   ;;
 
-  baba.local|baba-nodejs)
+  baba|baba.local|baba-nodejs)
   ./configure 	$CF							\
 		--prefix=$HOME						\
-		--with-webdir=/Users/eric/Sites/js9			\
+		--with-webdir=$HOME/Sites/js9				\
 		--with-helper="socket.io"				\
 		--with-cfitsio=/usr/local				\
 		--with-png=/usr/local					\
-		--with-saodir=/Users/eric/Sites				\
+		--with-saodir=$HOME/Sites				\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
  baba-funtools)
   ./configure 	$CF							\
 		--prefix=$HOME						\
-		--with-webdir=/Users/eric/Sites/js9			\
+		--with-webdir=$HOME/Sites/js9				\
 		--with-helper="socket.io"				\
 		--with-funtools=$HOME					\
 		--with-png=/usr/local					\
-		--with-saodir=/Users/eric/Sites				\
+		--with-saodir=$HOME/Sites				\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
   baba-cgi)
   ./configure 	$CF							\
 		--prefix=$HOME						\
-		--with-webdir=/Users/eric/Sites/js9			\
+		--with-webdir=$HOME/Sites/js9				\
 		--with-helper=get					\
 		--with-cfitsio=/usr/local				\
 		--with-png=/usr/local					\
-		--with-cgidir=/Users/eric/Sites/cgi-bin			\
-		--with-cgiurl="~eric/cgi-bin"				\
+		--with-cgidir=$HOME/Sites/cgi-bin			\
+		--with-cgiurl=$HOME/cgi-bin				\
 		--with-cgixpath=/usr/local/bin				\
-		--with-saodir=/Users/eric/Sites				\
+		--with-saodir=$HOME/Sites				\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
   baba-none)
-  ./configure 	$CF --with-webdir=/Users/eric/Sites/js9			\
+  ./configure 	$CF --with-webdir=$HOME/Sites/js9			\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 

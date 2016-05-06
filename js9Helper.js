@@ -68,7 +68,7 @@ var globalOpts = {
 //
 
 // get ip address and port of the current socket or http connection
-function getHost(io, req){
+var getHost = function(io, req){
     // socket.io
     if( req.handshake ){
 	return req.client.conn.remoteAddress;
@@ -77,10 +77,10 @@ function getHost(io, req){
     // http://stackoverflow.com/questions/19266329/node-js-get-clients-ip
     return (req.headers['x-forwarded-for'] || '').split(',')[0] ||
             req.connection.remoteAddress;
-}
+};
 
 // http://stackoverflow.com/questions/6563885/socket-io-how-do-i-get-a-list-of-connected-sockets-clients
-function findClientsSocket(io, namespace, roomId){
+var findClientsSocket = function(io, namespace, roomId){
     var id, index;
     var res = [];
     var ns = io.of(namespace ||"/");    // the default namespace is "/"
@@ -99,36 +99,37 @@ function findClientsSocket(io, namespace, roomId){
         }
     }
     return res;
-}
+};
 
 // get list of all clients currently connected
-function getClients(io, socket){
+var getClients = function(io, socket){
     return findClientsSocket(io);
-}
+};
 
 // utility functions
 
 // create a nice date/time string for logging
-function datestr(){
+var datestr = function(){
     return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ' UTC');
-}
+};
+
 // output a log message on the console
-function clog(){
+var clog = function(){
     var args = Array.prototype.slice.call(arguments, 0);
     args.push(" [" + datestr() + "]");
     console.log.apply(null, args);
-}
+};
 
 // output an error message on the console
-function cerr(){
+var cerr = function(){
     var args = Array.prototype.slice.call(arguments, 0);
     args.unshift("ERROR: ");
     args.push(" [" + datestr() + "]");
     console.log.apply(null, args);
-}
+};
 
 // getTargets: identify target(s) for an external msg for a given ip
-function getTargets(io, socket, msg){
+var getTargets = function(io, socket, msg){
     var i, j, c, clip;
     var displays;
     var browserip = msg.browserip || "*";
@@ -185,18 +186,18 @@ function getTargets(io, socket, msg){
 	}
     }
     return targets;
-}
+};
 
 // envClean: clean incoming environment variables
 // this should match cleaning in js9Helper.cgi
-function envClean(s) {
+var envClean = function(s) {
     if( typeof s === "string" ){
 	return s.replace(/[`&]/g, "").replace(/\(\)[ 	]*\{.*/g, "");
     }
     return s;
-}
+};
 
-function loadSecurePreferences(securefile){
+var loadSecurePreferences = function(securefile){
     var s, obj, opt;
     var secure = false;
     if( fs.existsSync(securefile) ){
@@ -232,10 +233,10 @@ function loadSecurePreferences(securefile){
 	}
     }
     return secure;
-}
+};
 
 // load preference file, if possible
-function loadPreferences(prefsfile){
+var loadPreferences = function(prefsfile){
     var s, obj, opt, otype, jtype;
     if( fs.existsSync(prefsfile) ){
 	s = fs.readFileSync(prefsfile, "utf-8");
@@ -268,10 +269,10 @@ function loadPreferences(prefsfile){
 	    }
 	}
     }
-}
+};
 
 // load analysis plugin files, if available
-function loadAnalysisTasks(dir){
+var loadAnalysisTasks = function(dir){
     if( fs.existsSync(dir) ){
 	fs.readdir(dir, function(err, files){
 	    var i, jstr, pathname;
@@ -303,16 +304,16 @@ function loadAnalysisTasks(dir){
 	    }
 	});
     }
-}
+};
 
 // addAnalysisTask: add to the list of analysis tasks sent to browser
-function addAnalysisTask(obj) {
+var addAnalysisTask = function(obj) {
     analysis.pkgs.push(obj);
     analysis.str.push("[" + JSON.stringify(obj) + "]");
-}
+};
 
 // load user-defined plugins, if possible
-function loadHelperPlugins(dir){
+var loadHelperPlugins = function(dir){
     if( fs.existsSync(dir) ){
 	fs.readdir(dir, function(err, files){
 	    var i, x, pathname, name;
@@ -337,11 +338,11 @@ function loadHelperPlugins(dir){
 	    }
 	});
     }
-}
+};
 
 // parse an argument string into an array of arguments, where
 // spaces and quotes are delimiters
-function parseArgs(argstr){
+var parseArgs = function(argstr){
     var targs, i, j, ci, c1, c2, s;
     var args = [];
     // split arguments on spaces
@@ -388,7 +389,7 @@ function parseArgs(argstr){
 	}
     }
     return args;
-}
+};
 
 //
 // message callbacks
@@ -396,7 +397,7 @@ function parseArgs(argstr){
 
 // execCmd: exec a analysis wrapper function to run a command
 // this is the default callback for server-side analysis tasks
-function execCmd(io, socket, obj, cbfunc) {
+var execCmd = function(io, socket, obj, cbfunc) {
     var cmd, argstr, args, maxbuf;
     var myworkdir = null;
     var myip = getHost(io, socket);
@@ -502,20 +503,63 @@ function execCmd(io, socket, obj, cbfunc) {
 		       // send results back to browser
 		       if( cbfunc ){ cbfunc(res); }
 		   });
-}
+};
 
 // sendAnalysis: send list of analysis routines to browser
-function sendAnalysisTasks(io, socket, obj, cbfunc) {
+var sendAnalysisTasks = function(io, socket, obj, cbfunc) {
     var s;
     if( analysis && analysis.str.length ){
 	s = "[" + analysis.str.join(",") + "]";
 	if( cbfunc ){ cbfunc(s); }
     }
-}
+};
+
+// pageReady: wait for a Web browser to load a JS9 page and connect
+// used by js9Msg.js to start up a Web browser before executing commands
+var pageReady = function(io, socket, obj, cbfunc, tries){
+    var i, targets;
+    var timeout = obj.timeout || 500;
+    var maxtries = obj.tries || 10;
+    // callback function
+    var myfunc = function(s){
+	if( cbfunc ){ cbfunc(s); }
+    };
+    setTimeout(function(){
+	// look for targets
+	targets = getTargets(io, socket, obj);
+	// if we have at least one ...
+	if( (targets.length === 1) || obj.multi ){
+	    // send command to JS9 instance(s)
+	    for(i=0; i<targets.length; i++){
+		targets[i].emit("msg", obj, myfunc);
+	    }
+	} else {
+	    // no targets: have we tried enough?
+	    if( !targets.length ){
+		if( tries < maxtries ){
+		    // no, try again
+		    pageReady(io, socket, obj, cbfunc, tries+1);
+		} else {
+		    // yes, it's an error
+		    if( cbfunc ){
+			cbfunc("ERROR: timeout waiting for Web page");
+		    }
+		}
+	    } else {
+		// it's an error
+		if( cbfunc ){
+		    cbfunc("ERROR: "+ targets.length +
+			   " JS9 instance(s) found with" +
+			   " id " + obj.id + " (" + obj.cmd+")");
+		}
+	    }
+	}
+    }, timeout);
+};
 
 // sendMsg: send a message to the browser
 // this is the default callback for external communication with JS9
-function sendMsg(io, socket, obj, cbfunc) {
+var sendMsg = function(io, socket, obj, cbfunc) {
     var i, targets;
     // callback function
     var myfunc = function(s){
@@ -523,26 +567,37 @@ function sendMsg(io, socket, obj, cbfunc) {
     };
     // get list of targets to send to
     targets = getTargets(io, socket, obj);
+    // was that all that's wanted?
+    if( obj.cmd === "targets" ){
+	myfunc(targets.length);
+	return;
+    }
     // look for one target (or else that multi is allowed)
     if( (targets.length === 1) || obj.multi ){
+	// send command to JS9 instance(s)
 	for(i=0; i<targets.length; i++){
 	    targets[i].emit("msg", obj, myfunc);
 	}
     } else {
+	// no targets: wait for the page to get ready?
+	if( !targets.length && obj.pageReady ){
+	    pageReady(io, socket, obj, cbfunc, 0);
+	    return;
+	}
+	// it's an error
 	if( cbfunc ){
             cbfunc("ERROR: "+targets.length+" JS9 instance(s) found with" +
 		   " id " + obj.id + " (" + obj.cmd+")");
 	}
     }
-}
-
+};
 
 //
 // protocol handlers
 //
 
 // socketio handler: field socket.io requests
-function socketioHandler(socket) {
+var socketioHandler = function(socket) {
     var i, j, m, a;
     // function outside loop needed to make jslint happy
     var xfunc = function(obj, cbfunc) {
@@ -698,7 +753,7 @@ function socketioHandler(socket) {
 	    catch(e){ cerr("can't add %s", plugins[i].name); }
 	}
     }
-}
+};
 
 // httpd handler: field pseudo-socket.io http requests
 // public api:
@@ -709,7 +764,7 @@ function socketioHandler(socket) {
 // wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom"}'
 // analysis commands:
 // wget $MYHOST'/counts?{"id": "'$ID'", "cmd": "counts", "args": ["counts"]}'
-function httpHandler(req, res){
+var httpHandler = function(req, res){
     var cmd, gobj, s, jstr;
     var body = "";
     // return error into to browser
@@ -816,7 +871,7 @@ function httpHandler(req, res){
 	htmlerr("unsupported method: " + req.method);
 	return;
     }
-}
+};
 
 //
 // initialization

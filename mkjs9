@@ -1,26 +1,18 @@
 #!/bin/bash
 # set -x
 
-WEBDIR=""
+JS9_SRCDIR=$(pwd)
 if [ x"$1" != x ]; then
-  WEBDIR="$1"
+  JS9_INSTALLDIR="$1"
 fi
 
 # js9: message script
 IMSGSCR="js9.in"
 OMSGSCR="js9"
 
-echo "generating $OMSGSCR for js9 messaging ..."
-jtype=`egrep '"helperType" *:' js9Prefs.json | awk -F: '{print $NF}' | sed 's/"//g' | sed 's/^[ 	]*//;s/[,} 	]*$//'`
-if [ x"$jtype" != x ]; then
-    echo "helper type: $jtype"
-    X="$X;s#^JTYPE=\".*\"#JTYPE=\"$jtype\"#"
-fi
-jport=`egrep '"helperPort" *:' js9Prefs.json | awk -F: '{print $2}' | sed 's/"//g' | sed 's/[,} ]*$//' | sed 's/^ *//;s/ *$//'`
-if [ x"$jport" != x ]; then
-    X="$X;s#^JPORT=\".*\"#JPORT=\"$jport\"#"
-fi
-X="$X;s#^WEBDIR=\".*\"#WEBDIR=\"$WEBDIR\"#"
+echo "generating $OMSGSCR for JS9 messaging ..."
+X="s#^ *JS9_SRCDIR=\".*\"#export JS9_SRCDIR=\"$JS9_SRCDIR\"#"
+X="$X;s#^ *JS9_INSTALLDIR=\".*\"#export JS9_INSTALLDIR=\"$JS9_INSTALLDIR\"#"
 sed "$X" < $IMSGSCR > $OMSGSCR
 chmod +x $OMSGSCR
 
