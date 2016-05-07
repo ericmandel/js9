@@ -177,8 +177,8 @@ JS9.lightOpts = {
 	plotWin:  "width=830px,height=420px,center=1,resize=1,scrolling=1",
 	dpathWin: "width=830px,height=175px,center=1,resize=1,scrolling=1",
 	paramWin: "width=830px,height=230px,center=1,resize=1,scrolling=1",
-	imageWin: "width=512px,height=542px,center=1,resize=1,scrolling=1",
-	lineWin:  "width=400px,height=10px,center=1,resize=1,scrolling=1"
+	imageWin: "width=512px,height=590px,center=1,resize=1,scrolling=1",
+	lineWin:  "width=400px,height=60px,center=1,resize=1,scrolling=1"
     }
 };
 
@@ -3117,6 +3117,10 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
 	titlefile = titlefile.split("/").reverse()[0];
 	title = "AnalysisResults: " + titlefile;
     }
+    // add display to title, if we have more than one
+    if( JS9.displays.length > 1 ){
+	title += sprintf(" (%s)", this.display.id);
+    }
     // unique id for light window
     id = "Analysis_" + JS9.uniqueID();
     // process the type of analysis results
@@ -4727,6 +4731,10 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 	    } else {
 		title = plugin.opts.winTitle || "";
 	    }
+	    // add display to title, if we have more than one
+	    if( JS9.displays.length > 1 ){
+		title += sprintf(" (%s)", this.id);
+	    }
 	    // create the light window
 	    win = JS9.lightWin(did, "div", oid, title, s);
 	    // find inner div in the light window
@@ -5460,7 +5468,6 @@ JS9.Menubar = function(width, height){
 		if( !tim || !tim.hdus ){
 		    items.hdus.disabled = true;
 		}
-		items.pageid = {name: "display pageid"};
 		items.savefits = {name: "save image as FITS"};
 		items.savepng = {name: "save image as PNG"};
 		items.savejpeg = {name: "save image as JPEG"};
@@ -5486,6 +5493,8 @@ JS9.Menubar = function(width, height){
 		items["sep" + n++] = "------";
 		items.lite = {name: "new JS9 light window"};
 		items.xnew = {name: "new JS9 separate window"};
+		items["sep" + n++] = "------";
+		items.pageid = {name: "display page id"};
 		if( JS9.DEBUG > 2 ){
 		  items["sep" + n++] = "------";
 		  items.refresh = {name: "debug: refresh ..."};
@@ -5493,7 +5502,7 @@ JS9.Menubar = function(width, height){
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val, idx, array){
-			var j, s, did, save_orc, kid, unew, uwin;
+			var j, s, t, did, save_orc, kid, unew, uwin;
 			var udisp = val;
 			var uim = udisp.image;
 			switch(key){
@@ -5532,9 +5541,14 @@ JS9.Menubar = function(width, height){
 			    JS9.LoadWindow(null, null, "new");
 			    break;
 			case "pageid":
-			    s = "<center><p>Usage: js9 -pageid [pageid] ...<p>" + JS9.helper.pageid || "none" + "</center>";
+			    s = sprintf("<center><p>pageid: %s</center>", JS9.helper.pageid || "none");
+			    t = "JS9 page id";
+			    // add display to title, if we have more than one
+			    if( JS9.displays.length > 1 ){
+				t += sprintf(" (%s)", udisp.id);
+			    }
 			    JS9.lightWin("fileid" + JS9.uniqueID(),
-					 "inline", s, "page ID",
+					 "inline", s, t,
 					 JS9.lightOpts[JS9.LIGHTWIN].lineWin);
 			    break;
 			case "open":
@@ -13523,10 +13537,11 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 });
 
 // create a new instance of JS9 in a window (light or new)
-// nb: unlike JS9.Load, this required the opts param
+// nb: unlike JS9.Load, this requires the opts param
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     var id, did, head, body, win, doc;
     var idbase = (type || "") + "win";
+    var title;
     opts = opts || {};
     switch(type){
     case "light":
@@ -13540,10 +13555,12 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
         // and a second one for controlling the light window
         did = "d" + id;
         // make up the html with the unique id
-        html = html || sprintf("<hr class='hline0'><div class='JS9Menubar' id='%sMenubar'></div><div class='JS9' id='%s'></div>", id, id);
+        html = html || sprintf("<hr class='hline0'><div class='JS9Menubar' id='%sMenubar'></div><div class='JS9' id='%s'></div><div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar'></div></div>", id, id, id);
         winopts = winopts || JS9.lightOpts[JS9.LIGHTWIN].imageWin;
+	// nice title
+	title = sprintf("JS9 Display (%s)", id);
         // create the light window
-        JS9.lightWin(did, "inline", html, file, winopts);
+        JS9.lightWin(did, "inline", html, title, winopts);
         // create the new JS9 Display
         JS9.checkNew(new JS9.Display(id));
 	// add to list of displays
