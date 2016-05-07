@@ -58,7 +58,7 @@ JS9.RESIZEFUDGE = 5;            // fudge for webkit resize problems
 JS9.RAWID0 = "raw0";		// default raw id
 JS9.RAWIDX = "alt";		// default "alternate" raw id
 JS9.REPROJDIM = 2200;		// max dimension for reprojection
-JS9.IDFMT = "  (display: %s)";  // format for light window id
+JS9.IDFMT = "  (id: %s)";       // format for light window id
 
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
