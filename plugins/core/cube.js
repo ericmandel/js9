@@ -13,7 +13,7 @@ JS9.Cube.WIDTH = 512;	 // width of light window
 JS9.Cube.HEIGHT = 170;	 // height of light window
 JS9.Cube.BASE = JS9.Cube.CLASS + JS9.Cube.NAME;
 
-JS9.Cube.cubeHTML="<div class='JS9CubeLinegroup'>$header</div><p><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$range&nbsp;&nbsp;&nbsp;&nbsp;$value</span><span class='JS9CubeSpan' style='float: right'>$order</span></div><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$first&nbsp;$next&nbsp;$prev&nbsp;$last</span><span class='JS9CubeSpan' style='float: right'>$blink&nbsp;$stop&nbsp;$rate</span></div>";
+JS9.Cube.cubeHTML="<div class='JS9CubeLinegroup'>$header</div><p><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$range&nbsp;&nbsp;&nbsp;&nbsp;$value&nbsp;&nbsp;&nbsp;&nbsp;$extname</span><span class='JS9CubeSpan' style='float: right'>$order</span></div><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$first&nbsp;$next&nbsp;$prev&nbsp;$last</span><span class='JS9CubeSpan' style='float: right'>$blink&nbsp;$stop&nbsp;$rate</span></div>";
 
 JS9.Cube.headerHTML='Use the slider, text box, navigation or blink buttons to display a slice of a <b>FITS data cube</b>. Use the menu at the right to specify the slice axis.';
 
@@ -32,6 +32,8 @@ JS9.Cube.lastHTML='<input type="button" class=JS9CubeBtn" value="Last" onclick="
 JS9.Cube.blinkHTML='<input type="button" class=JS9CubeBtn" value="Blink" onclick="JS9.Cube.xstart(\'%s\',this)">';
 
 JS9.Cube.stopHTML='<input type="button" class=JS9CubeBtn" value="Stop" onclick="JS9.Cube.xstop(\'%s\',this)">';
+
+JS9.Cube.extnameHTML='<span class="JS9CubeRangeLine">%s</span>';
 
 JS9.Cube.orderHTML='<select class="JS9CubeOrder" onchange="JS9.Cube.xorder(\'%s\',this)"><option value="$slice,*,*">$slice : * : *</option><option value="*,$slice,*">* : $slice : *</option><option value="*,*,$slice">* : * : $slice</option></select>';
 
@@ -277,6 +279,9 @@ JS9.Cube.init = function(){
 		       value: sprintf(JS9.Cube.blinkHTML, im.id)});
 	    opts.push({name: "stop",
 		       value: sprintf(JS9.Cube.stopHTML, im.id)});
+	    opts.push({name: "extname",
+		       value: sprintf(JS9.Cube.extnameHTML, 
+				      im.raw.header.EXTNAME || "")});
 	    opts.push({name: "order",
 		       value: sprintf(JS9.Cube.orderHTML, im.id)});
 	    opts.push({name: "rate",
@@ -306,7 +311,7 @@ JS9.Cube.init = function(){
 
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Cube.CLASS, JS9.Cube.NAME, JS9.Cube.init,
-		   {menuItem: "Data Cubes",
+		   {menuItem: "Data Cube",
 		    plugindisplay: JS9.Cube.init,
 		    onimageload: JS9.Cube.init,
 		    onimagedisplay: JS9.Cube.init,
