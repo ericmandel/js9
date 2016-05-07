@@ -2396,7 +2396,7 @@ JS9.Mef.init = function(){
 	if( doit ){
 	    htmlString = "<pre>&nbsp;&nbsp;"+s+"</pre>";
 	} else {
-	    htmlString = "<pre><strike>&nbsp;&nbsp;"+s+"</strike></pre>";
+	    htmlString = "<pre>&nbsp;&nbsp;<span class='JS9MefStrike'><span>"+s+"</span></span></pre>";
 	}
 	id = JS9.Mef.imid(im, k+1);
 	div = $("<div>")
@@ -2442,7 +2442,10 @@ JS9.Mef.init = function(){
 	return;
     }
     // reset main container
-    s = sprintf("<p class='%s'><b>Click on a FITS HDU extension to display it:</b></p>", JS9.Mef.BASE + "Para");
+    s = sprintf("<div class='%s'><span><b>Click on a FITS HDU extension to display it:</b></span>", JS9.Mef.BASE + "Header");
+    // add the checkbox for displaying each extension separately
+    sid = JS9.Mef.imid(im, "Separate");
+    s += sprintf('<span style="float: right"><input type="checkbox" id="%s" name="separate" value="separate" onclick="javascript:JS9.Mef.xseparate(\'%s\', this)"><b>Display each extension as a separate image</b></span></div>', sid, this.display.id);
     this.mefContainer.html(s);
     // add a formatted string for each extension
     for(i=0; i<im.hdus.length; i++){
@@ -2450,13 +2453,6 @@ JS9.Mef.init = function(){
 	s = JS9.hdus2Str([obj]).trim();
 	addExt(obj, s, i);
     }
-    // add the checkbox for displaying each extension separately
-    sid = JS9.Mef.imid(im, "Separate");
-    s = sprintf('<input type="checkbox" id="%s" name="separate" value="separate" onclick="javascript:JS9.Mef.xseparate(\'%s\', this)"><b>Display each extension as a separate image</b>', sid, this.display.id);
-    $("<div>")
-	.addClass(JS9.Mef.BASE + "Input")
-	.html(s)
-	.appendTo(that.mefContainer);
     $("#" + sid).prop("checked", this.separate);
     // make the currently displayed extension active
     if( im.raw.hdu.fits.extnum ){

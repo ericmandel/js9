@@ -532,34 +532,44 @@ div.JS9ImarithLinegroup {
 div.JS9ImarithContainer {
     padding: 5px;
 }
-div.JS9MefContainer {
+.JS9MefContainer {
     padding: 10px;
     overflow: auto;
 }
 
-div.JS9MefExtension {
+.JS9MefExtension {
     margin: 5px;
     background: #E9E9E9;
     overflow: auto;
 }
 
-p.JS9MefPara {
+.JS9MefHeader {
     margin: 5px;
     background: #E9E9E9;
 }
 
-p.JS9MefInput {
+.JS9MefInput {
     margin: 5px;
     background: #E9E9E9;
 }
 
-div.JS9MefExtensionInactive {
+.JS9MefExtensionInactive {
     padding: 0px;
     border: 1px solid black;
 }
 
-div.JS9MefExtensionActive {
+.JS9MefExtensionActive {
     padding: 0px;
     border: 2px solid #00F000;
 }
 
+span.JS9MefStrike{
+    font-weight:bold; /*set line weight here*/
+    color:red;
+    text-decoration:line-through;
+}
+
+span.JS9MefStrike>span {
+    font-weight:normal;
+    color: black;
+}
