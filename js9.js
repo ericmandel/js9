@@ -58,6 +58,8 @@ JS9.RESIZEFUDGE = 5;            // fudge for webkit resize problems
 JS9.RAWID0 = "raw0";		// default raw id
 JS9.RAWIDX = "alt";		// default "alternate" raw id
 JS9.REPROJDIM = 2200;		// max dimension for reprojection
+JS9.IDFMT = "  (display: %s)";  // format for light window id
+
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 JS9.BROWSER = (function(){
@@ -3117,10 +3119,8 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
 	titlefile = titlefile.split("/").reverse()[0];
 	title = "AnalysisResults: " + titlefile;
     }
-    // add display to title, if we have more than one
-    if( JS9.displays.length > 1 ){
-	title += sprintf(" (%s)", this.display.id);
-    }
+    // add display to title
+    title += sprintf(JS9.IDFMT, this.display.id);
     // unique id for light window
     id = "Analysis_" + JS9.uniqueID();
     // process the type of analysis results
@@ -4731,10 +4731,8 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 	    } else {
 		title = plugin.opts.winTitle || "";
 	    }
-	    // add display to title, if we have more than one
-	    if( JS9.displays.length > 1 ){
-		title += sprintf(" (%s)", this.id);
-	    }
+	    // add display to title
+	    title += sprintf(JS9.IDFMT, this.id);
 	    // create the light window
 	    win = JS9.lightWin(did, "div", oid, title, s);
 	    // find inner div in the light window
@@ -5543,10 +5541,8 @@ JS9.Menubar = function(width, height){
 			case "pageid":
 			    s = sprintf("<center><p>pageid: %s</center>", JS9.helper.pageid || "none");
 			    t = "JS9 page id";
-			    // add display to title, if we have more than one
-			    if( JS9.displays.length > 1 ){
-				t += sprintf(" (%s)", udisp.id);
-			    }
+			    // add display to title
+			    t += sprintf(JS9.IDFMT, udisp.id);
 			    JS9.lightWin("fileid" + JS9.uniqueID(),
 					 "inline", s, t,
 					 JS9.lightOpts[JS9.LIGHTWIN].lineWin);
@@ -13558,7 +13554,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
         html = html || sprintf("<hr class='hline0'><div class='JS9Menubar' id='%sMenubar'></div><div class='JS9' id='%s'></div><div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar'></div></div>", id, id, id);
         winopts = winopts || JS9.lightOpts[JS9.LIGHTWIN].imageWin;
 	// nice title
-	title = sprintf("JS9 Display (%s)", id);
+	title = sprintf("JS9 Display"+JS9.IDFMT, id);
         // create the light window
         JS9.lightWin(did, "inline", html, title, winopts);
         // create the new JS9 Display
