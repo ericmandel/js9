@@ -2345,22 +2345,25 @@ JS9.Mef.xseparate = function(id, target){
 };
 
 // get an MefExtension id based on the file image id
-JS9.Mef.imid = function(im, i){
-    return im.id
-	.replace(/\[[0-9][0-9]*\]/g,"")
+JS9.Mef.imid = function(im, i, noext){
+    var id = im.id;
+    if( noext ){
+	id = id.replace(/\[[0-9][0-9]*\]/g,"");
+    }
+    return id
 	.replace(/[^A-Za-z0-9_]/g, "_")
 	+ "MefExtension_" + i;
 };
 
 // change the active extension
 JS9.Mef.activeExtension = function(im, i){
-    var id;
+    var clas;
     if( im ){
-	id = JS9.Mef.imid(im, i);
 	$("." + JS9.Mef.BASE + "Extension")
 	    .removeClass(JS9.Mef.BASE + "ExtensionActive")
 	    .addClass(JS9.Mef.BASE + "ExtensionInactive");
-	$("#" + id)
+	clas = JS9.Mef.imid(im, i, true);
+	$("." + clas )
 	    .removeClass(JS9.Mef.BASE + "ExtensionInactive")
 	    .addClass(JS9.Mef.BASE + "ExtensionActive");
     }
@@ -2368,7 +2371,7 @@ JS9.Mef.activeExtension = function(im, i){
 
 // constructor: add HTML elements to the plugin
 JS9.Mef.init = function(){
-    var i, im, id, obj, s, sid, div, htmlString;
+    var i, im, id, clas, obj, s, sid, div, htmlString;
     var that = this;
     var addExt = function(o, s, k){
 	var c, j;
@@ -2404,7 +2407,9 @@ JS9.Mef.init = function(){
 	    htmlString = "<pre>&nbsp;&nbsp;<span class='JS9MefStrike'><span>"+s+"</span></span></pre>";
 	}
 	id = JS9.Mef.imid(im, k+1);
+	clas = JS9.Mef.imid(im, k+1, true);
 	div = $("<div>")
+	    .addClass(clas)
 	    .addClass(JS9.Mef.BASE + "Extension")
 	    .addClass(JS9.Mef.BASE + "ExtensionInactive")
 	    .attr("id", id)
