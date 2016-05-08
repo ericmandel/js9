@@ -5514,7 +5514,7 @@ JS9.Menubar = function(width, height){
 				if( uim.raw.header ){
 				    uim.displayAnalysis("text",
 						   JS9.raw2FITS(uim.raw, true),
-						   "FITSHeader_"+uim.id);
+						   "FITS Header: "+uim.id);
 				} else {
 				    JS9.error("no FITS header for " + uim.id);
 				}
@@ -5525,7 +5525,7 @@ JS9.Menubar = function(width, height){
 				if( uim.hdus ){
 				    uim.displayAnalysis("text",
 						   JS9.hdus2Str(uim.hdus),
-						   "FITSHDUs_"+uim.id,
+						   "FITS HDUs: "+uim.id,
 				    "width=800px,height=200px,center=1,resize=1,scrolling=1");
 				} else {
 				    JS9.error("no FITS header for " + uim.id);
