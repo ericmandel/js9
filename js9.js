@@ -42,6 +42,8 @@ JS9.BTNZINDEX = 10;		// z-index of buttons on top of plugin canvases
 JS9.MENUZINDEX = 1000;		// z-index of menus: always on top!
 JS9.COLORSIZE = 1024;		// size of contrast/biased color array
 JS9.SCALESIZE = 16384;		// size of scaled color array
+JS9.INVSIZE = 1024;		// size of inverse array
+JS9.HISTSIZE = 16384;		// size of histogram equalization array
 JS9.INSTALLDIR="";		// prefix to get to js9 install directory
 JS9.TOROOT="";			// prefix to get to data file from install
 JS9.PLUGINS="";			// regexp list of plugins
@@ -296,7 +298,7 @@ JS9.userOpts = {};		// object to hold localStorage opts
 
 // misc params
 // list of scales in mkScaledCells
-JS9.scales = ["linear", "log", "pow", "sqrt", "squared", "asinh", "sinh"];
+JS9.scales = ["linear", "log", "histeq", "power", "sqrt", "squared", "asinh", "sinh"];
 
 // list of known wcs systems
 JS9.wcssyss = ["FK4", "FK5", "ICRS", "galactic", "ecliptic", "native",
@@ -1625,9 +1627,12 @@ JS9.Image.prototype.mkColorCells = function(){
 // from: tksao1.0/frame/colorscale.C
 // inverse code from: tksao1.0/frame/inversescale.C
 JS9.Image.prototype.mkScaledCells = function(){
-    var aa, dd, ii, ll, exp, low;
+    var aa, dd, ii, jj, ll, exp, low;
+    var vv, avg, color, data, dlen, diff, bin, total, dval, dmin, dmax, pdf;
     var cs = JS9.COLORSIZE;
     var ss = JS9.SCALESIZE;
+    var tt = JS9.INVSIZE;
+    var hh = JS9.HISTSIZE;
     var hex2num = function(hex){
 	var i, k, int1, int2;
 	var hex_alphabets = "0123456789ABCDEF";
@@ -1666,15 +1671,21 @@ JS9.Image.prototype.mkScaledCells = function(){
     // apply the appropriate scale algorithm
     switch(this.params.scale){
     case "linear":
+	// scaled cells
 	for(ii=0; ii<ss; ii++){
 	    aa = ii / ss;
 	    ll = Math.floor(aa * cs);
 	    this.psColors[ii] = this.colorCells[ll];
+	}
+	// inverse
+	for(ii=0; ii<tt; ii++){
+	    aa = ii / tt;
 	    this.psInverse[ii] = aa * dd + low;
 	}
 	break;
     case "log":
 	exp = this.params.exp;
+	// scaled cells
 	for(ii=0; ii<ss; ii++){
 	    aa = Math.log(((exp*ii)/ss)+1) / Math.log(exp);
 	    ll = Math.floor(aa * cs);
@@ -1682,12 +1693,16 @@ JS9.Image.prototype.mkScaledCells = function(){
 		ll = cs - 1;
 	    }
 	    this.psColors[ii] = this.colorCells[ll];
-	    aa = (Math.pow(exp,ii/ss)-1) / exp;
+	}
+	// inverse
+	for(ii=0; ii<tt; ii++){
+	    aa = (Math.pow(exp,ii/tt)-1) / exp;
 	    this.psInverse[ii] =  aa * dd + low;
 	}
 	break;
-    case "pow":
+    case "power":
 	exp = this.params.exp;
+	// scaled cells
 	for(ii=0; ii<ss; ii++){
 	    aa = (Math.pow(exp, ii/ss)-1) / exp;
 	    ll = Math.floor(aa * cs);
@@ -1695,11 +1710,15 @@ JS9.Image.prototype.mkScaledCells = function(){
 		ll = cs - 1;
 	    }
 	    this.psColors[ii] = this.colorCells[ll];
-	    aa = Math.log(exp*ii/ss+1) / Math.log(exp);
+	}
+	// inverse
+	for(ii=0; ii<tt; ii++){
+	    aa = Math.log(exp*ii/tt+1) / Math.log(exp);
 	    this.psInverse[ii] =  aa * dd + low;
 	}
 	break;
     case "sqrt":
+	// scaled cells
 	for(ii=0; ii<ss; ii++){
 	    aa = ii / ss;
 	    ll = Math.floor(Math.sqrt(aa) * cs);
@@ -1707,10 +1726,15 @@ JS9.Image.prototype.mkScaledCells = function(){
 		ll = cs - 1;
 	    }
 	    this.psColors[ii] = this.colorCells[ll];
+	}
+	// inverse
+	for(ii=0; ii<tt; ii++){
+	    aa = ii / tt;
 	    this.psInverse[ii] =  (aa * aa) * dd + low;
 	}
 	break;
     case "squared":
+	// scaled cells
 	for(ii=0; ii<ss; ii++){
 	    aa = ii / ss;
 	    ll = Math.floor(aa * aa * cs);
@@ -1718,11 +1742,15 @@ JS9.Image.prototype.mkScaledCells = function(){
 		ll = cs - 1;
 	    }
 	    this.psColors[ii] = this.colorCells[ll];
-	    aa = Math.sqrt(ii/ss);
+	}
+	// inverse
+	for(ii=0; ii<tt; ii++){
+	    aa = Math.sqrt(ii/tt);
 	    this.psInverse[ii] =  aa * dd + low;
 	}
 	break;
     case "asinh":
+	// scaled cells
 	for(ii=0; ii<ss; ii++){
 	    aa = ii / ss;
 	    ll = Math.floor(Math.asinh(10.0*aa)/3.0 * cs);
@@ -1730,11 +1758,16 @@ JS9.Image.prototype.mkScaledCells = function(){
 		ll = cs - 1;
 	    }
 	    this.psColors[ii] = this.colorCells[ll];
+	}
+	// inverse
+	for(ii=0; ii<tt; ii++){
+	    aa = ii / tt;
 	    ll = Math.sinh(3.0*aa)/10.0;
 	    this.psInverse[ii] =  ll * dd + low;
 	}
 	break;
     case "sinh":
+	// scaled cells
 	for(ii=0; ii<ss; ii++){
 	    aa = ii / ss;
 	    ll = Math.floor(Math.sinh(3.0*aa)/10.0 * cs);
@@ -1742,8 +1775,74 @@ JS9.Image.prototype.mkScaledCells = function(){
 		ll = cs - 1;
 	    }
 	    this.psColors[ii] = this.colorCells[ll];
+	}
+	// inverse
+	for(ii=0; ii<tt; ii++){
+	    aa = ii / tt;
 	    ll = Math.asinh(10.0*aa)/3.0;
 	    this.psInverse[ii] =  ll * dd + low;
+	}
+	break;
+    case "histeq":
+	// taken from: saods9/tksao1.0/frame/frscale.C
+	data = this.raw.data;
+	dlen = this.raw.width * this.raw.height;
+	diff = (this.raw.dmax - this.raw.dmin);
+	dmax = this.raw.dmax;
+	dmin = this.raw.dmin;
+	bin = 0;
+	total = 0;
+	pdf = [];
+	if( !this.hist || !this.hist.length ){
+	    this.hist = [];
+	    // start with a cleared pdf buffer
+	    for(ii=0; ii<hh; ii++){
+		pdf[ii] = 0;
+	    }
+	    // make histogram from data values
+	    for(ii=0; ii<dlen; ii++){
+		if( (data[ii] >= dmin) && (data[ii] <= dmax) ){
+		    jj = Math.floor((data[ii] - dmin) / diff * hh + 0.5);
+		    if( jj < hh ){
+			pdf[jj] += 1;
+		    }
+		}
+	    }
+	    // get average
+	    for(ii=0; ii<hh; ii++){
+		total += pdf[ii];
+	    }
+	    avg = total / hh;
+	    // generate histogram
+	    for(color=0, ii=0; ii<hh && color<hh; ii++){
+		this.hist[ii] = color / hh;
+		bin += pdf[ii];
+		while( (bin >= avg) && (color < hh) ){
+		    bin -= avg;
+		    color++;
+		}
+	    }
+	    dval = (hh - 1) /hh;
+	    while( ii < hh ){
+		this.hist[ii++] = dval;
+	    }
+	}
+	// scaled cells
+	for(ii=0; ii<ss; ii++){
+	    aa = this.hist[ii * hh / ss];
+	    ll = Math.floor(aa * cs);
+	    this.psColors[ii] = this.colorCells[ll];
+	}
+	// inverse
+	for(ii=0; ii<tt; ii++){
+	    vv = ii / tt;
+	    for(jj=0; jj < (hh - 1); jj++){
+		if( this.hist[jj] > vv ){
+		    break;
+		}
+	    }
+	    aa = jj / hh;
+	    this.psInverse[ii] = aa * diff + dmin;
 	}
 	break;
     default:
@@ -10785,7 +10884,7 @@ JS9.floatFormattedString = function(fval, prec, fix){
 	return s;
     }
     if( prec < -2){
-	fmt = "%.2e";
+	fmt = "%." + Math.min(Math.abs(prec),9) + "e";
 	s = sprintf(fmt, fval);
     } else if( prec < 0){
 	s = fval.toFixed(Math.abs(prec)+3);
@@ -10795,7 +10894,7 @@ JS9.floatFormattedString = function(fval, prec, fix){
     } else if( prec < 5){
 	s = fval.toFixed(fix);
     } else{
-	fmt = "%.2e";
+	fmt = "%." + Math.min(prec, 9) + "e";
 	s = sprintf(fmt, fval);
     }
     return s;

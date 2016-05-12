@@ -1654,6 +1654,8 @@ JS9.Colorbar.TICKS = 10;
 // height of colorbar inside plugin
 JS9.Colorbar.COLORBARHEIGHT = 16;
 // JS9.Colorbar.COLORBARFONT = "11pt Arial";
+// max label length before we start skipping some labels
+JS9.Colorbar.MAXLABELSIZE = 10;
 
 // redraw colorbar on display
 JS9.Colorbar.display = function(im){
@@ -1714,6 +1716,10 @@ JS9.Colorbar.display = function(im){
     }
     // draw tick marks and labels
     for(i=1; i<this.ticks; i++){
+	// skip repeats
+	if( (i > 1) && (tlabels[i] === tlabels[i-1]) ){
+	    continue;
+	}
 	ix = (i/this.ticks)*this.width;
 	iy = 0;
 	this.textctx.textAlign = "center";
@@ -1722,6 +1728,10 @@ JS9.Colorbar.display = function(im){
 	this.textctx.lineWidth = 1;
 	this.textctx.lineTo(ix, iy+5);
 	this.textctx.stroke();
+	// if the label is going to be wide, skip even ones
+	if( (tlabels[i].length >= JS9.Colorbar.MAXLABELSIZE) && (i % 2 === 0) ){
+	    continue;
+	}
 	this.textctx.fillText(tlabels[i], ix, iy+15);
     }
 };

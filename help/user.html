@@ -163,9 +163,12 @@ the <b>reset zoom/pan</b> sets the zoom to 1 and centers the display.
 <li><p><b>Scale:</b>Each scale option specifies a different scaling
 algorithm to use when converting image pixel values to RGB
 values. (The procedure for doing this conversion is detailed in the
-DS9 documentation titled "How It Works".) The log scale, for example,
-is especially useful with X-ray data. The current scale is marked
-with a star burst. 
+DS9 documentation titled <a href="http://ds9.si.edu/doc/ref/how.html"
+target="_blank">"How It Works"</a>.) The log scale, for example, is
+especially useful with X-ray data. Histogram equalization (histeq)
+tries to maximize contrast across the range of data values and is
+useful in a wide variety of cases. The current scale is marked with a
+star burst.
 
 <p>
 You also can change the low and high values used to clip the image
