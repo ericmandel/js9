@@ -495,7 +495,8 @@ JS9.Image = function(file, params, func){
 	// save source
 	this.source = "fits";
 	// generate the raw data array from the hdu
-	this.mkRawDataFromHDU(file, {file: file.filename});
+	this.mkRawDataFromHDU(file,
+			      $.extend({}, {file: file.filename}, localOpts));
 	// do zscale, if necessary
 	if( this.params.scaleclipping === "zscale" ){
 	    this.zscale(true);
@@ -552,9 +553,9 @@ JS9.Image = function(file, params, func){
 	// downloaded image file
 	this.file = file;
 	// take file but discard path (or scheme) up to slashes
-	this.oid = this.file.split("/").reverse()[0];
+	this.id0 = this.file.split("/").reverse()[0];
 	// save id in case we have to change it for uniqueness
-	this.id = JS9.getImageID(this.oid, this.display.id);
+	this.id = JS9.getImageID(this.id0, this.display.id);
 	// load status
 	this.status.load = "loading";
 	// callback to fire when image is loaded (do this before setting src)
@@ -1280,20 +1281,6 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     if( hdu.naxis < 2 ){
 	JS9.error("can't image a FITS file with less than 2 dimensions");
     }
-    // look for a filename
-    if( opts.file ){
-	this.file = opts.file;
-    } else if( hdu.filename ){
-	this.file = hdu.filename;
-    }
-    this.file = this.file || JS9.ANON;
-    // look for an id
-    if( !this.id ){
-	// save id in case we have to change it for uniqueness
-	this.oid = this.file.split("/").reverse()[0];
-	// get a unique id for this image
-	this.id = JS9.getImageID(this.oid, this.display.id);
-    }
     // save old essential values, if possible (for use as defaults)
     if( this.raw ){
 	owidth = this.raw.width;
@@ -1421,6 +1408,46 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	this.raw.header.NAXIS1 = this.raw.width;
 	this.raw.header.NAXIS2 = this.raw.height;
 	this.raw.header.BITPIX = this.raw.bitpix;
+    }
+    // look for a filename (needs header so we can add extension name/num
+    if( opts.file ){
+	this.file = opts.file;
+    } else if( hdu.filename ){
+	this.file = hdu.filename;
+    }
+    this.file = this.file || JS9.ANON;
+    // save original file in case we add an extension
+    this.file0 = this.file;
+    // look for an id
+    if( opts.id ){
+	// get a unique id for this image
+	this.id0 = opts.id;
+	this.id = JS9.getImageID(opts.id, this.display.id, this);
+    }
+    // add extname or extnum, if possible
+    if( !this.id && this.file && !this.file.match(/\[.*[^a-zA-Z0-9_].*\]/) ){
+	if( this.raw.hdu.fits ){
+	    if( this.raw.hdu.fits.extname ){
+		this.file = this.file.replace(/\[.*\]/, "");
+		this.file += sprintf("[%s]", this.raw.hdu.fits.extname);
+	    } else if( this.raw.hdu.fits.extnum &&
+		       (this.raw.hdu.fits.extnum > 0) ){
+		this.file = this.file.replace(/\[.*\]/, "");
+		this.file += sprintf("[%s]", this.raw.hdu.fits.extnum);
+	    }
+	} else if( this.raw.header ){
+	    if( this.raw.header.EXTNAME ){
+		this.file = this.file.replace(/\[.*\]/, "");
+		this.file += sprintf("[%s]", this.raw.header.EXTNAME);
+	    }
+	}
+    }
+    // last chance: get it from the file
+    if( !this.id ){
+	// save id in case we have to change it for uniqueness
+	this.id0 = this.file.split("/").reverse()[0];
+	// get a unique id for this image
+	this.id = JS9.getImageID(this.id0, this.display.id);
     }
     // min and max data values
     if( hdu.dmin && hdu.dmax ){
@@ -2386,23 +2413,31 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 
 // display the specified extension of a multi-extension FITS file
 JS9.Image.prototype.displayExtension = function(extid, opts){
-    var s, extOpts;
+    var i, s, got, extOpts, extname, im, id;
     var that = this;
     var newExtHandler = function(hdu){
-	var im;
-	if( opts.separate ){
-	    s = sprintf("[%s]", extid);
-	    opts.id = that.id.replace(/\[.*\]/,"") + s;
-	    hdu.filename = that.file.replace(/\[.*\]/,"") + s;
-	    im = JS9.lookupImage(opts.id, that.display.id);
-	    if( im ){
-		im.displayImage("display", opts);
-		im.clearMessage();
+	var iid;
+	var ss = "";
+	var topts = {};
+	// the id might have changed if we changed extensions
+	if( hdu.fits.extname ){
+	    ss = sprintf("[%s]", hdu.fits.extname);
+	} else if( hdu.fits.extnum ){
+	    if( hdu.fits.extnum > 0 ){
+		ss = sprintf("[%s]", hdu.fits.extnum);
 	    } else {
-		JS9.Load(hdu, opts, {display: opts.display || that.display});
+		ss = "";
 	    }
+	}
+	iid = that.id.replace(/\[.*\]/,"") + ss;
+	if( opts.separate ){
+	    topts.id = iid;
+	    topts.display = that.display;
+	    JS9.checkNew(new JS9.Image(hdu, topts));
 	} else {
-	    that.refreshImage(hdu, JS9.fits.options);
+	    topts.file = iid;
+	    topts.id = iid;
+	    that.refreshImage(hdu, topts);
 	}
     };
     // sanity check
@@ -2411,15 +2446,58 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
     }
     // opts is ... optional
     opts = opts || {};
+    // only makes sense if we have hdus
+    if( !this.hdus ){
+	JS9.error("no FITS HDUs found for displayExtension()");
+    }
     // only makes sense if we have a virtual file
     if( this.raw.hdu && this.raw.hdu.fits && this.raw.hdu.fits.fptr ){
 	// access virtual file via its fits pointer
 	extOpts = {fptr: this.raw.hdu.fits.fptr, vfile: this.raw.hdu.vfile};
-	// extname or extnum specified?
+	// extname specified?
 	if( typeof extid === "string" ){
 	    extOpts.extname = extid;
+	    extname = extid.toLowerCase();
+	    for(i=0, got=0; i<this.hdus.length; i++){
+		if( this.hdus.name.toLowerCase() === extname ){
+		    got++;
+		    break;
+		}
+	    }
+	    if( !got ){
+		JS9.error(sprintf("no FITS HDU %s for displayExtension()",
+				  extid));
+	    }
+	// extnum specified?
 	} else if( typeof extid === "number" ){
 	    extOpts.extnum = extid;
+	    if( this.hdus[extid] ){
+		extname = this.hdus[extid].name || extid.toString();
+	    } else {
+		JS9.error(sprintf("no FITS HDU %s for displayExtension()",
+				 extid));
+	    }
+	}
+	// if we are creating a separate file, see if we already have it
+	if( opts.separate ){
+	    s = sprintf("[%s]", extname);
+	    id = this.id.replace(/\[.*\]/,"") + s;
+	    for(i=0, got=0; i<JS9.images.length; i++){
+		im = JS9.images[i];
+		if( id === im.id ){
+		    if( $("#"+im.display.id).length > 0 ){
+			if( this.display.id === im.display.id ){
+			    got++;
+			    break;
+			}
+		    }
+		}
+	    }
+	    if( got ){
+		im.displayImage("display", opts);
+		im.clearMessage();
+		return;
+	    }
 	}
 	// process the FITS file by going to the extname/extnum
 	JS9.fits.handleFITSFile("", extOpts, newExtHandler);
@@ -2966,6 +3044,24 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 		im.params.wcssys = wcssys;
 	    }
 	};
+	var withext = function(im, r){
+	    var e;
+	    // for tables, we might need to add the binning filter
+	    if( (im.imtab === "table") && (im.raw.hdu.table.filter) ){
+		r += '[' + im.raw.hdu.table.filter + ']';
+	    } else if( im.imtab === "image" ){
+		// for images, we might need to add/replace extension info
+		e = im.file.match(/\[.*\]/);
+		if( e ){
+		    if( r.match(/\[.*\]/) ){
+			r = r.replace(/\[.*\]/, e);
+		    } else {
+			r += e;
+		    }
+		}
+	    }
+	    return r;
+	};
 	var u = t.split("(");
 	if( u[1] ){
 	    u[1] = u[1].replace(/\)$/, "");
@@ -2982,11 +3078,7 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    if( u[1] === "parent" && that.parentFile ){
 		r = that.parentFile;
 	    } else if( that.fitsFile ){
-		r = that.fitsFile;
-		// for tables, we might need to add the binning filter
-		if( (that.imtab === "table") && (that.raw.hdu.table.filter) ){
-		    r += '[EVENTS][' + that.raw.hdu.table.filter + ']';
-		}
+		r = withext(that, that.fitsFile);
 	    } else {
 		JS9.error("no FITS file for " + that.id);
 	    }
@@ -2995,11 +3087,7 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    if( !that.fitsFile ){
 		JS9.error("no FITS file for " + that.id);
 	    }
-	    r = that.fitsFile;
-	    // for tables, we might need to add the binning filter
-	    if( (that.imtab === "table") && (that.raw.hdu.table.filter) ){
-		r += '[EVENTS][' + that.raw.hdu.table.filter + ']';
-	    }
+	    r = withext(that, that.fitsFile);
 	    break;
 	case "parent":
 	    if( !that.parentFile ){
@@ -10603,16 +10691,18 @@ JS9.jupyterFocus = function(el, el2){
 };
 
 // return a unique value for a given image id by appending <n> to the id
-JS9.getImageID = function(imid, dispid){
+JS9.getImageID = function(imid, dispid, myim){
     var i, im, s;
     var ids = 0;
     var idmax = 1;
     var imlen = JS9.images.length;
     var rexp = /.*<([0-9][0-9]*)>$/;
+    var rexp2 = /<[0-9][0-9]*>/;
+    imid = imid.replace(rexp2, "");
     for(i=0; i<imlen; i++){
 	im = JS9.images[i];
 	if( im.display.id === dispid ){
-	    if( imid === im.oid ){
+	    if( (im !== myim) && (imid === im.id0) ){
 		if( im.id.search(rexp) >= 0 ){
 		    s = im.id.replace(rexp, "$1");
 		    idmax = Math.max(idmax, parseInt(s, 10));
@@ -10953,8 +11043,10 @@ JS9.lookupImage = function(id, display){
     var ilen= JS9.images.length;
     for(i=0; i<ilen; i++){
 	im = JS9.images[i];
-	if( (id === im ) || (id === im.id) ||
-	    (id === im.file) || (id === (JS9.TOROOT + im.file))  ||
+	if( (id === im )                          ||
+	    (id === im.id) || (id === im.id0)     ||
+	    (id === im.file) || (id === im.file0) ||
+	    (id === (JS9.TOROOT + im.file))       ||
 	    (im.fitsFile && (id === im.fitsFile)) ){
 	    // make sure the display still exists (light windows disappear)
 	    if( $("#"+im.display.id).length > 0 ){
@@ -13940,7 +14032,7 @@ JS9.mkPublic("GetLoadStatus", function(id){
     var im = JS9.getImage(obj.display);
     if( im ){
 	id = obj.argv[0];
-	if( !id || (im.oid === id) ){
+	if( !id || (im.id0 === id) ){
 	    return im.status.load;
 	}
 	return "other";

@@ -28,6 +28,8 @@ int _listhdu(char *iname, char *oname){
       fits_movabs_hdu(fptr, 1, &hdutype, &status);
       /* join original code */
       fits_get_hdu_num(fptr, &hdupos);  /* Get the current HDU position */
+      /* index at 0, instead of 1 */
+      hdupos--;
       fprintf(fd, "[");
       /* process all hdus */
       for (; !status; hdupos++){   /* Main loop for each HDU */

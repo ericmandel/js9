@@ -1,6 +1,6 @@
 /*jshint smarttabs:true, sub:true */
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
-/*global Blob, ArrayBuffer, Uint8Array, Uint16Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue */
+/*global Blob, ArrayBuffer, Uint8Array, Uint16Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue, Pointer_stringify */
 
 // use when running jslint
 // "use strict";
@@ -81,7 +81,7 @@ Module['gzdecompress'] = function(data) {
 };
 
 Module["getFITSImage"] = function(fits, hdu, options, handler) {
-    var i, ofptr, hptr, status, datalen, extnum;
+    var i, ofptr, hptr, status, datalen, extnum, extname;
     var buf, bufptr, buflen, bufptr2, slice;
     var filter = null;
     var fptr = fits.fptr;
@@ -94,6 +94,23 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     }
     // default hdu type is image
     hdu.type = hdu.type || 0;
+    // get extension number and name (of original data)
+    hptr = _malloc(4);
+    ccall("ffghdn", null, ["number", "number"], [fptr, hptr]);
+    extnum  = getValue(hptr, 'i32') - 1;
+    _free(hptr);
+    // try to get extname (ignore errors)
+    hptr = _malloc(86);
+    setValue(hptr+82, 0, 'i32');
+    ccall("ffgky", null, ["number", "number", "string", "number", "number", "number"], [fptr, 16, "EXTNAME", hptr, 0, hptr+82]);
+    status  = getValue(hptr+82, 'i32');
+    if( status === 0 ){
+	extname = Pointer_stringify(hptr)
+	          .replace(/^'/,"").replace(/'$/,"").trim();
+    } else {
+	extname = "";
+    }
+    _free(hptr);
     // pre-processing
     switch(hdu.type){
     case 0:
@@ -205,14 +222,9 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     if( options.filename ){
 	hdu.filename = options.filename;
     }
-    // set extension number
-    hptr = _malloc(4);
-    ccall("ffghdn", null, ["number", "number"], [fptr, hptr]);
-    extnum  = getValue(hptr, 'i32');
-    _free(hptr);
-    // make up the fits object (used in cleanup)
+    // make up the return fits object
     hdu.fits = {fptr: fptr, vfile: hdu.vfile, heap: bufptr,
-		cardstr: hdu.cardstr, extnum: extnum };
+		cardstr: hdu.cardstr, extnum: extnum, extname: extname };
     // call the handler
     if( handler ){
 	handler(hdu, options);
@@ -269,7 +281,7 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    ccall("ffghdn", null,
 		  ["number", "number"],
 		  [fptr, hptr]);
-	    hdu.extnum = getValue(hptr,   'i32');
+	    hdu.extnum = getValue(hptr,   'i32') - 1;
 	    _free(hptr);
 	    // extract image section and call handler
 	    Module["getFITSImage"]({fptr: fptr}, hdu, options, handler);
@@ -309,7 +321,7 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 		setValue(hptr+4, 0, 'i32');
 		ccall("ffmahd", null,
 		      ["number", "number", "number", "number"],
-		      [fptr, options.extnum, hptr, hptr+4]);
+		      [fptr, options.extnum + 1, hptr, hptr+4]);
 		hdu.type = getValue(hptr,   'i32');
 		status  = getValue(hptr+4, 'i32');
 		_free(hptr);
