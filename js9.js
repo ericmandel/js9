@@ -61,6 +61,7 @@ JS9.RAWID0 = "raw0";		// default raw id
 JS9.RAWIDX = "alt";		// default "alternate" raw id
 JS9.REPROJDIM = 2200;		// max dimension for reprojection
 JS9.IDFMT = "  (id: %s)";       // format for light window id
+JS9.CHROMEFILEWARNING = true;	// whether to alert chrome users about file URI
 
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
@@ -765,7 +766,8 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
 	this.offscreen.img = this.offscreen.context.getImageData(0, 0,
 			     this.png.image.width, this.png.image.height);
     } catch(e){
-	if( (JS9.BROWSER[0] === "Chrome") && (document.domain === "") ){
+	if( JS9.CHROMEFILEWARNING &&
+	    (JS9.BROWSER[0] === "Chrome") && (document.domain === "") ){
 	    alert("When using the file:// URI, Chrome must be run with the --allow-file-access-from-files switch to permit JS9 to access data.");
 	} else {
 	    alert("could not read off-screen image data [same-origin policy violation?]");
@@ -11771,8 +11773,11 @@ JS9.loadPrefs = function(url, doerr) {
       },
       error:  function(jqXHR, textStatus, errorThrown){
 	if( doerr ){
-	    if( (JS9.BROWSER[0] === "Chrome") && (document.domain === "") ){
-		JS9.log("When using the file:// URI, Chrome must be run with the --allow-file-access-from-files switch to permit JS9 to access the preference file.");
+	    if( JS9.CHROMEFILEWARNING &&
+		(JS9.BROWSER[0] === "Chrome") && (document.domain === "") &&
+		(errorThrown && errorThrown.message && errorThrown.message.match(/Failed to execute 'send' on 'XMLHttpRequest'/)) ){
+		    alert("When using the file:// URI, Chrome must be run with the --allow-file-access-from-files switch to permit JS9 to access the preference file (and data files).");
+		JS9.CHROMEFILEWARNING = false;
 	    } else {
 		JS9.log("JS9 prefs file not available: %s", url);
 	    }
