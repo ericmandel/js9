@@ -132,21 +132,21 @@
     </div>
     <script type="text/javascript">
     var Load = function(name){
-      JS9.globalOpts.rgb.rim = null;
-      JS9.globalOpts.rgb.gim = null;
-      JS9.globalOpts.rgb.bim = null;
+      for(i=0; i<JS9.images.length; i++){
+        JS9.images[i].closeImage();
+      }
       switch(name){
       case 'kes75':
         $(".arrow").css("visibility", "hidden");
-        JS9.Load("kes75/kes75_e1.png", {scale: "log"});
-        JS9.Load("kes75/kes75_e2.png", {scale: "log"});
-        JS9.Load("kes75/kes75_e3.png", {scale: "log"});
+        JS9.Load("kes75/kes75_e1.png", {scale: "log", colormap: "red"});
+        JS9.Load("kes75/kes75_e2.png", {scale: "log", colormap: "green"});
+        JS9.Load("kes75/kes75_e3.png", {scale: "log", colormap: "blue"});
         break;
       case 'orion':
         $(".arrow").css("visibility", "visible");
-        JS9.Load("orion/orion_1.fits", {scale: "linear"});
-        JS9.Load("orion/orion_2.fits", {scale: "linear"});
-        JS9.Load("orion/orion_3.fits", {scale: "linear"});
+        JS9.Load("orion/orion_1.fits", {scale: "linear", colormap: "red"});
+        JS9.Load("orion/orion_2.fits", {scale: "linear", colormap: "green"});
+        JS9.Load("orion/orion_3.fits", {scale: "linear", colormap: "blue"});
         break;
       }
     }
