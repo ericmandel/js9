@@ -3307,9 +3307,9 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
 	titlefile = (this.fitsFile || this.id);
 	titlefile = titlefile.split("/").reverse()[0];
 	title = "AnalysisResults: " + titlefile;
+	// add display to title
+	title += sprintf(JS9.IDFMT, this.display.id);
     }
-    // add display to title
-    title += sprintf(JS9.IDFMT, this.display.id);
     // unique id for light window
     id = "Analysis_" + JS9.uniqueID();
     // process the type of analysis results
