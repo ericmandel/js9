@@ -186,16 +186,9 @@ if [ x$XDIM != x -a x$YDIM != x ]; then
 	;;
   esac
 
-
-  case $XEQ in
-      ftools)
-	IEXT="[events]"$IEXT
-	SWITCHES="-b $BLOCK"
-	;;
-      funtools)
-	IEXT="[*,*,$BLOCK]"$IEXT
-	;;
-  esac
+  # assume cfitsio-based tpos
+  IEXT="[events]"$IEXT
+  SWITCHES="-b $BLOCK"
 fi
 
 # don't execute
