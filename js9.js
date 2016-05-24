@@ -131,6 +131,8 @@ JS9.globalOpts = {
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
+    pinchWait: 8,		// number of events to wait before testing pinch
+    pinchThresh: 6,		// threshold for pinch test
     debug: 0		        // debug level
 };
 

@@ -62,7 +62,8 @@ JS9.MouseTouch.addAction = function(container, cname, aname){
 
 // display value/position
 JS9.MouseTouch.isPinch = function(im, evt){
-    var NPINCH = 7;
+    var npinch = JS9.globalOpts.pinchWait;
+    var pthresh = JS9.globalOpts.pinchThresh;
     var i, display, dist, pinc, pdec;
     // sanity check
     if( !im ){
@@ -85,15 +86,15 @@ JS9.MouseTouch.isPinch = function(im, evt){
 	 display.dist0 = dist;
     }
     display.deltas.push(Math.floor(dist - display.dist0));
-    if( display.deltas.length >= NPINCH ){
-	for(i=1, pinc=0, pdec=0; i<NPINCH; i++){
+    if( display.deltas.length >= npinch ){
+	for(i=1, pinc=0, pdec=0; i<npinch; i++){
 	    if(  display.deltas[i] > display.deltas[i-1] ){
 		pinc++;
 	    } else if(  display.deltas[i] < display.deltas[i-1] ){
 		pdec++;
 	    }
 	}
-	if( (pinc >= (NPINCH - 1)) || (pdec >= (NPINCH - 1)) ){
+	if( (pinc >= pthresh) || (pdec >= pthresh) ){
 	    display.ispinch = 1;
 	} else {
 	    display.ispinch = -1;
