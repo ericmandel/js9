@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head> 
+<style type="text/css">
+  .container{
+    padding: 10px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+<h3>Mouse and Touch Actions</h3>
+
+JS9 supports the following configurable mouse and touch actions:
+<ul>
+<li> mouse movement with no buttons pressed
+<li> mouse movement with one button pressed
+<li> mouse movement with two buttons pressed
+<li> touch with one finger
+<li> touch with two fingers
+<li> touch with three fingers
+</ul>
+The initial actions are defined by the <b>JS9.globalOpts.mouseActions</b>
+and <b>JS9.globalOpts.touchActions</b> arrays. In addition, the
+<b>JS9.globalOpts.mousetouchZoom</b> property specifies whether a mouse wheel
+or touch/pinch will zoom the image. The default actions are:
+<ul>
+<li> <b>mouseActions:</b> ["display value/position", "change contrast/bias", "pan the image"]
+<li> <b>touchActions:</b> ["display value/position", "change contrast/bias", "pan the image"]
+<li> <b>mousetouchZoom:</b> false
+</ul>
+where the array elements map to an increasing numbers of
+buttons/fingers.  You can change the default actions of the elements
+in either array in your js9Prefs.json file. For example, to make pan
+and zoom to the default one-finger touch actions:
+<ul>
+<li> <b>touchActions:</b> [, "pan the image", "display value/position", "change contrast/bias"]
+<li> <b>mousetouchZoom:</b> true
+</ul>
+As usual, the defaults in js9Prefs.json are used by all JS9 displays in
+a web page.
+
+<p>
+Users can change the action assignments using the <b>MouseTouch</b>
+plugin, which displays the current mapping between mouse/touch gesture
+and its action. Simply drag and drop an action to a different gesture
+in order to change the mapping. You also can toggle the scroll/pinch
+to zoom capability by clicking its button.
+</div>
+</body>
+</html>
