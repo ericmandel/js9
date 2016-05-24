@@ -146,6 +146,9 @@ evfilter)
     OTYPE="png"
     IFILE="$1"; shift
     EXT="$1"; shift
+    if [ x"$EXT" = xnull ]; then
+      EXT=""
+    fi
     # remove spaces
     FILTER=`echo $* | sed 's/ //g'`
     # try to get a base name for output

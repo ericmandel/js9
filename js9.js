@@ -3114,6 +3114,9 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	case "ext":
 	    if( that.fitsFile ){
 		r = that.fitsFile.match(/\[.*\]/);
+		if( r === null ){
+		    r = "";
+		}
 	    } else {
 		JS9.error("no FITS file for " + that.id);
 	    }
