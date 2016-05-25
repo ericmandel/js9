@@ -19,11 +19,12 @@ div.JS9MouseTouchAction {
 }
 
 div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
-    border: 0px solid black;
     background: #E9E9E9;
+    text-align: center;
     padding: 0px;
     margin-left: 15px;
     margin-top: 5px;
     margin-right: 5px;
     margin-bottom: 0px;
+    border: 1px solid transparent;
 }
