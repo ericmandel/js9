@@ -12086,6 +12086,13 @@ JS9.mouseMoveCB = function(evt){
     im.pos = JS9.eventToDisplayPos(evt, im.posOffset);
     // get image position
     im.ipos = im.displayToImagePos(im.pos);
+    // in case mouse down was not called
+    if( !im.pos0 ){
+	im.pos0 = im.pos;
+    }
+    if( !im.ipos0 ){
+	im.ipos0 = im.ipos;
+    }
     // prevent default unless we are close to the resize area
     if( !display.inResize(im.pos) ){
 	evt.preventDefault();

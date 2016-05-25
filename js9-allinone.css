@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.8, Wed May 25 11:10:31 EDT 2016 */
+/* JS9 allinone: v1.8, Wed May 25 19:42:03 EDT 2016 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -582,6 +582,7 @@ div.JS9MouseTouchText {
     padding: 6px;
     background: #E9E9E9;
     overflow: auto;
+    border: 1px solid transparent;
 }
 
 div.JS9MouseTouchAction {
@@ -593,13 +594,14 @@ div.JS9MouseTouchAction {
 }
 
 div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
-    border: 0px solid black;
     background: #E9E9E9;
+    text-align: center;
     padding: 0px;
     margin-left: 15px;
     margin-top: 5px;
     margin-right: 5px;
     margin-bottom: 0px;
+    border: 1px solid transparent;
 }
 /*
  *
