@@ -563,8 +563,8 @@ JS9.Image = function(file, params, func){
 	this.source = "fits2png";
 	// image or table
 	this.imtab = "image";
-	// downloaded image file
-	this.file = file;
+	// downloaded image file, path relative to displayed Web page
+	this.file = file.replace(/\/\.\//, "/");
 	// take file but discard path (or scheme) up to slashes
 	this.id0 = this.file.split("/").reverse()[0];
 	// save id in case we have to change it for uniqueness
@@ -2935,7 +2935,7 @@ JS9.Image.prototype.notifyHelper = function(){
     if( JS9.helper.connected && (this.file !== JS9.ANON) ){
 	JS9.helper.send("image", {"image": this.file},
         function(res){
-	    var rstr, r, s, cc, im;
+	    var rstr, r, s, cc, im, regexp;
 	    if( typeof res === "object" ){
 		// from node.js, we get an object with stdout and stderr
 		rstr = res.stdout;
@@ -2960,10 +2960,14 @@ JS9.Image.prototype.notifyHelper = function(){
 		    if( !JS9.analOpts.dataDir ){
 			im.fitsFile = s;
 			// prepend base of png path if fits file has no path
-			// is this a bad "feature" in tpos??
+			// is this a bad "feature" in tpos?? probably ...
 			if( im.fitsFile.indexOf("/") < 0 ){
 			    basedir = im.file.match( /.*\// );
-			    if( basedir ){
+			    // but don't add installdir as part of prefix
+			    // (fitsFile path is relative to the js9 directory)
+			    if( basedir && basedir.length ){
+				regexp = new RegExp("^"+JS9.INSTALLDIR);
+				basedir = basedir[0].replace(regexp, "");
 				im.fitsFile =  basedir + im.fitsFile;
 			    }
 			}
@@ -2986,6 +2990,12 @@ JS9.Image.prototype.notifyHelper = function(){
 			JS9.log("JS9 fitsFile: %s %s", im.file, im.fitsFile);
 		    }
 		}
+	    }
+	    if( im.fitsFile ){
+		im.fitsFile = im.fitsFile.replace(/\/\.\//g, "/");
+	    }
+	    if( im.parentFile ){
+		im.parentFile = im.parentFile.replace(/\/\.\//g, "/");
 	    }
 	    // first time through, query the helper for info
 	    if( !that.queried ){
@@ -3299,10 +3309,12 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		break;
 	    case "fits":
 	    case "png":
-		f = robj.stdout.trim();
+		f = robj.stdout.trim().replace(/\/\.\//, "/");
+		// relative path: add install dir prefix
 		if( f.charAt(0) !== "/" ){
 		    f = JS9.InstallDir(f);
 		}
+		// load new file
 	        JS9.Load(f, {proxyFile: f}, {display: that.display});
 		break;
 	    case "none":
@@ -11119,6 +11131,10 @@ JS9.centroidPolygon = function(points){
 JS9.lookupImage = function(id, display){
     var i, im;
     var ilen= JS9.images.length;
+    // sanity check
+    if( !id ){
+	return null;
+    }
     for(i=0; i<ilen; i++){
 	im = JS9.images[i];
 	if( (id === im )                          ||
@@ -12620,7 +12636,7 @@ JS9.init = function(){
 	JS9.error("sorry: your browser does not support JS9 (no JSON support). Try a modern version of Firefox, Chrome, or Safari.");
     }
     // get relative location of installed js9.css file
-    // which tells us where other files and dirs are located
+    // which tells us where JS9 installed files (and the helper) are located
     if( !JS9.INSTALLDIR ){
 	try{
 	    JS9.INSTALLDIR = $('link[href$="js9.css"]')
@@ -13917,11 +13933,14 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 	    if( opts.fits2png === undefined ){
 		opts.fits2png = false;
 	    }
-	    f = robj.stdout.trim();
+	    f = robj.stdout.trim().replace(/\/\.\//, "/");
+	    // proxy file
+	    opts.proxyFile = f;
+	    // relative path: add install dir prefix
 	    if( f.charAt(0) !== "/" ){
 		f = JS9.InstallDir(f);
 	    }
-	    opts.proxyFile = f;
+	    // load new file
 	    JS9.Load(f, opts, {display: obj.display});
 	} else {
 	    JS9.error('internal error: no return from load proxy command');
