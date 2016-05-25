@@ -581,6 +581,7 @@ div.JS9MouseTouchText {
     padding: 6px;
     background: #E9E9E9;
     overflow: auto;
+    border: 1px solid transparent;
 }
 
 div.JS9MouseTouchAction {
