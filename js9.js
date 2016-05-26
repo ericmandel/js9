@@ -6785,7 +6785,7 @@ JS9.Menubar = function(width, height){
 	    events: { hide: onhide },
             build: function($trigger, evt){
 	        var i, j, s, apackages, atasks;
-		var plugin, pinst, pname;
+		var plugin, pinst, pname, arr;
 		var ntask = 0;
 		var n = 0;
 		// var m = 0;
@@ -6881,9 +6881,6 @@ JS9.Menubar = function(width, height){
 			    ntask++;
 			    // m++;
 			}
-			// if( (m > 0 ) && (j < (apackages.length-1)) ){
-			    // items["sep" + n++] = "------";
-			// }
 		    }
 		}
 		if( !ntask ){
@@ -6894,11 +6891,28 @@ JS9.Menubar = function(width, height){
 		    };
 		}
 		items["sep" + n++] = "------";
+		items.imfilter = {
+		    name: "RGB image filters",
+		    items: {imftitle: {name: "image filters:", disabled: true}}
+		};
+		if( im ){
+		    arr = im.filterRGBImage();
+		    for(i=0; i<arr.length; i++){
+			if( arr[i] === "convolve" ){
+			    continue;
+			}
+			s = "imfilter_" + arr[i];
+			items.imfilter.items[s] = {
+			    name: arr[i]
+			};
+		    }
+		}
 		items.sigma = {
 		    events: {keyup: keyAnalysis},
-		    name: "gaussian blur sigma:",
+		    name: "Gaussian blur sigma:",
 		    type: "text"
 		};
+		items["sep" + n++] = "------";
 		items.dpath = {name: "set data path ..."};
 		}
 		return {
@@ -6931,6 +6945,11 @@ JS9.Menubar = function(width, height){
 				$(did).data("dispid", udisp.id);
 				break;
 			    default:
+				if( key.match(/^imfilter_/) ){
+				    s = key.replace(/^imfilter_/,"");
+				    uim.filterRGBImage(s);
+				    return;
+				}
 				// look for analysis routine
 				a = uim.lookupAnalysis(key);
 				if( a ){
@@ -6948,6 +6967,7 @@ JS9.Menubar = function(width, height){
 					uim.runAnalysis(a.name);
 				    }
 				}
+				return;
 			    }
 			}
 		    });

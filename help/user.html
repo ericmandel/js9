@@ -329,8 +329,20 @@ the currently loaded <b>Analysis Plugins</b>. JS9 itself supplies the
 <li> 3dPlot
 </ul>
 <p>
-You also can perform a fast Gaussian blur by entering a sigma (radius)
-value into the <b>gaussian blur sigma<b> option.  A new raw data layer
+The <b>RGB image filters</b> menu option provides a number of well-known
+image processing functions that act directly on the displayed RGB
+image data (not the underlying raw astronomical data, as with Gaussian
+blur below).  Thus, when you can run one of these routines on an image, its
+effect will be undone if you redraw the image by changing the
+contrast/bias, scale, colormap, zoom, etc. Also, since these functions
+act on the current RGB image, their effect is cumulative.
+See the <b>JS9.FilterRGBImage()</b> section in the
+<a href="publicapi.html">JS9 Public API</a> for more information about
+the individual functions.
+
+<p>
+You also can perform a fast <b>Gaussian blur</b> by entering a sigma (radius)
+value into the <b>Gaussian blur sigma</b> option.  A new raw data layer
 called "gaussBlur" is created, in which the image pixel values are
 blurred using a Gaussian function with the specified sigma. The
 routine uses the fast Gaussian blur algorithm (approximating a full
@@ -498,7 +510,7 @@ See <a href="knownissues.html">Known Issues</a>
 for a discussion of limitations imposed on resize by Webkit
 browsers such as Chrome and Safari.
 
-<h5>Last updated: December 3, 2015</h5>
+<h5>Last updated: May 26, 2016</h5>
 </div>
 
 </body>
