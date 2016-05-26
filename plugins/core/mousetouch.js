@@ -173,7 +173,7 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
     }
 };
 
-// pan the image
+// zoom the image
 JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
     var nzoom, display;
     var delta = evt.originalEvent.deltaY;
@@ -200,12 +200,15 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
 
 // pan the image
 JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
-    // pan image
-    if( im && ipos ){
-	var x = im.rgb.sect.xcen - im.ipos.x + im.ipos0.x;
-	var y = im.rgb.sect.ycen - im.ipos.y + im.ipos0.y;
-	im.setPan(x, y);
+    var x, y;
+    // sanity check
+    if( !im ){
+	return;
     }
+    x = im.rgb.sect.xcen + ((im.pos0.x - im.pos.x) / im.rgb.sect.zoom);
+    y = im.rgb.sect.ycen - ((im.pos0.y - im.pos.y) / im.rgb.sect.zoom);
+    im.setPan(x, y);
+    im.pos0 = im.pos;
 };
 
 // pinch zoom
