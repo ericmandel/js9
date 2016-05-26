@@ -4613,8 +4613,8 @@ JS9.Image.prototype.filterRGBImage = function(filter){
     }
     // remove filter name argument
     argv.shift();
-    // add RGB img arguments
-    argv.unshift(this.rgb.img);
+    // add display context and RGB img argument
+    argv.unshift(this.display.context, this.rgb.img);
     // try to run the filter to generate a new RGB image
     try{ JS9.ImageFilters[filter].apply(null, argv); }
     catch(e){ JS9.error("JS9 image filter '" + filter + "' failed", e); }

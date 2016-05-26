@@ -46561,17 +46561,22 @@ ImageFilters = (function(){
 	}
     }
     
-    function convolve(pixels, weights, opaque, norm){
-	var x, y, sx, sy, scx, scy, dstOff, cx, cy, srcOff, wt, r, g, b, a;
+    function convolve(ctx, pixels, weights, opaque, norm){
+	var i, x, y, sx, sy, scx, scy, dstOff, cx, cy, srcOff, wt, r, g, b, a;
 	var side = Math.round(Math.sqrt(weights.length));
 	var halfSide = Math.floor(side/2);
-	var src = pixels.data;
 	var sw = pixels.width;
 	var sh = pixels.height;
+	var swh = sw * sh * 4;
 	// pad output by the convolution matrix
 	var w = sw;
 	var h = sh;
 	var dst = pixels.data;
+	// src data is a copy of the input (which we then return in place)
+	var src = ctx.createImageData(pixels.width, pixels.height);
+	for(i=0; i<swh; i++){
+	    src[i] = dst[i];
+	}
 	// weights array is required
 	if( Object.prototype.toString.call(weights) !== '[object Array]' ) {
 	    return pixels;
@@ -46619,7 +46624,7 @@ ImageFilters = (function(){
 	return pixels;
     }
     
-    function convolveFloat32(pixels, weights, opaque){
+    function convolveFloat32(ctx, pixels, weights, opaque){
 	var x, y, sx, sy, scx, scy, dstOff, cx, cy, srcOff, wt, r, g, b, a;
         var side = Math.round(Math.sqrt(weights.length));
         var halfSide = Math.floor(side/2);
@@ -46662,7 +46667,7 @@ ImageFilters = (function(){
         return output.data;
     }
     
-    function luminance(imageData){
+    function luminance(ctx, imageData){
 	var i, v;
 	var data = imageData.data;
 	for(i = 0; i < data.length; i += 4){
@@ -46674,7 +46679,7 @@ ImageFilters = (function(){
 	return imageData;
     }
     
-    function greyscale(imageData){
+    function greyscale(ctx, imageData){
 	var i, v;
 	var data = imageData.data;
 	for(i = 0; i < data.length; i += 4){
@@ -46684,7 +46689,7 @@ ImageFilters = (function(){
 	return imageData;
     }
     
-    function greyscaleAvg(imageData){
+    function greyscaleAvg(ctx, imageData){
 	var i, v;
 	var data = imageData.data;
 	for(i = 0; i < data.length; i += 4){
@@ -46694,7 +46699,7 @@ ImageFilters = (function(){
 	return imageData;
     }
     
-    function duotone(imageData, which) {
+    function duotone(ctx, imageData, which) {
 	var i, r;
 	var data = imageData.data;
 	switch(which){
@@ -46719,10 +46724,10 @@ ImageFilters = (function(){
 	return imageData;
     }
 
-    function noise(imageData, lower, upper){
+    function noise(ctx, imageData, lower, upper){
 	var i, radius, mod;
 	var data = imageData.data;
-	if(arguments.length < 2){
+	if(arguments.length < 3){
 	    lower = -30;
 	    upper = 30;
 	}
@@ -46736,7 +46741,7 @@ ImageFilters = (function(){
 	return imageData;
     }
     
-    function invert(imageData){
+    function invert(ctx, imageData){
 	var i;
 	var data = imageData.data;
 	for(i = 0; i < data.length; i += 4){
@@ -46747,13 +46752,13 @@ ImageFilters = (function(){
 	return imageData;
     }
     
-    function pixelate(imageData, radius){
+    function pixelate(ctx, imageData, radius){
 	var r, g, b, idx, odx, ody;
 	var x, y, nx, ny, delta;
 	var width = imageData.width;
 	var height = imageData.height;
 	var data = imageData.data;
-	if(arguments.length < 2){
+	if(arguments.length < 3){
 	    radius = 2;
 	}
 	delta = (2 * radius);
@@ -46777,10 +46782,10 @@ ImageFilters = (function(){
 	return imageData;
     }
     
-    function gamma(imageData, amount){
+    function gamma(ctx, imageData, amount){
 	var i;
 	var data = imageData.data;
-	if(arguments.length < 2){
+	if(arguments.length < 3){
 	    amount = 0.2;
 	}
 	for(i = 0; i < data.length; i += 4){
@@ -46791,7 +46796,7 @@ ImageFilters = (function(){
 	return imageData;
     }
     
-    function brighten(imageData, a){
+    function brighten(ctx, imageData, a){
 	var i;
 	var data = imageData.data;
 	a = a || 10;
@@ -46803,7 +46808,7 @@ ImageFilters = (function(){
 	return imageData;
     }
     
-    function sepia(imageData){
+    function sepia(ctx, imageData){
 	var i, r, g, b;
 	var data = imageData.data;
 	for(i = 0; i < data.length; i += 4){
@@ -46817,10 +46822,10 @@ ImageFilters = (function(){
 	return imageData;
     }
     
-    function contrast(imageData, amount){
+    function contrast(ctx, imageData, amount){
 	var i;
 	var data = imageData.data;
-	if(arguments.length < 2){
+	if(arguments.length < 3){
 	    amount = 2;
 	}
 	if(amount < -100){
@@ -46836,14 +46841,14 @@ ImageFilters = (function(){
 	return imageData;
     }
     
-    function threshold(imageData, thresh, low, high){
+    function threshold(ctx, imageData, thresh, low, high){
 	var i, r, g, b, val;
 	var data = imageData.data;
-	if(arguments.length < 2){
+	if(arguments.length < 3){
 	    thresh = 10;
 	    low = 0;
 	    high = 255;
-	} else if(arguments.length < 4){
+	} else if(arguments.length < 5){
 	    low = 0;
 	    high = 255;
 	}
@@ -46857,20 +46862,20 @@ ImageFilters = (function(){
 	return imageData;
     }
 
-    function medianFilter(imageData){
-	return convolve(imageData,
+    function medianFilter(ctx, imageData){
+	return convolve(ctx, imageData,
 			[1,0,0,0,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,0,0,0,1],
 			true, true);
     }
     
-    function sobel(imageData, colorize){
+    function sobel(ctx, imageData, colorize){
 	var i, v, h;
 	var vertical, horizontal;
 	var data = imageData.data;
-	imageData = greyscaleAvg(imageData);
-	horizontal = convolveFloat32(imageData, 
+	imageData = greyscaleAvg(ctx, imageData);
+	horizontal = convolveFloat32(ctx, imageData, 
 				     [ -1, 0, 1, -2, 0, 2, -1, 0, 1 ]);
-	vertical   = convolveFloat32(imageData,
+	vertical   = convolveFloat32(ctx, imageData,
 				     [ -1, -2, -1, 0, 0, 0, 1, 2, 1 ]);
 	if(colorize){
 	    for (i=0; i<data.length; i+=4){
@@ -46888,13 +46893,13 @@ ImageFilters = (function(){
 		data[i+1] = h;
 		data[i+2] = (v+h)/2;
 	    }
-	    greyscale(imageData);
+	    greyscale(ctx, imageData);
 	}
 	return imageData;
     }
     
-    function gaussBlur5(imageData){
-	return convolve(imageData, [ 
+    function gaussBlur5(ctx, imageData){
+	return convolve(ctx, imageData, [ 
 	    0.0030, 0.0133, 0.0219, 0.0133, 0.0030,
 	    0.0133, 0.0596, 0.0983, 0.0596, 0.0133,
 	    0.0219, 0.0983, 0.1621, 0.0983, 0.0219,
@@ -46902,12 +46907,12 @@ ImageFilters = (function(){
 	    0.0030, 0.0133, 0.0219, 0.0133, 0.0030 ]);
     }
     
-    function posterize(imageData, colors){
+    function posterize(ctx, imageData, colors){
 	var i, r, g, b;
 	var levels = [];
 	var level = 1;
 	var data = imageData.data;
-	if(arguments.length < 2){
+	if(arguments.length < 3){
 	    colors = 40;
 	}
 	for(i = 0; i < 256; ++i){
@@ -46929,7 +46934,7 @@ ImageFilters = (function(){
 	return imageData;
     }
 
-    function scatter(imageData, radius){
+    function scatter(ctx, imageData, radius){
 	var x, y, swap, nswaps, delta, total;
 	var px1, py1, px2, py2;
 	var width = imageData.width;
@@ -46952,7 +46957,7 @@ ImageFilters = (function(){
 	    data[w2+2] = temp[2];
 	    data[w2+3] = temp[3];
 	};
-	if(arguments.length < 2){
+	if(arguments.length < 3){
 	    radius = 5;
 	}
 	delta = 2 * radius;
@@ -46977,10 +46982,10 @@ ImageFilters = (function(){
 	return imageData;
     }
     
-    function solarize(imageData, threshold){
+    function solarize(ctx, imageData, threshold){
 	var i, r, g, b, intensity;
 	var data = imageData.data;
-	if(arguments.length < 2){
+	if(arguments.length < 3){
 	    threshold = 50;
 	}
 	for(i = 0; i < data.length; ++i){
@@ -46997,47 +47002,47 @@ ImageFilters = (function(){
 	return imageData;
     }
 	
-    function edgeDetect(imageData){
-	return convolve(imageData, 
+    function edgeDetect(ctx, imageData){
+	return convolve(ctx, imageData, 
 			 [ -1, -1, -1, -1, 8, -1, -1, -1, -1 ]);
     }
 	
-    function sharpen(imageData, amount){
-	if(arguments.length < 2){
+    function sharpen(ctx, imageData, amount){
+	if(arguments.length < 3){
 	    amount = 20;
 	}
-	return convolve(imageData,
+	return convolve(ctx, imageData,
 			[ 0, -3,  0, -3, amount, -3, 0, -3, 0 ], 
 			true, true);
     }
 	
-    function blur(imageData){
-	return convolve(imageData,
+    function blur(ctx, imageData){
+	return convolve(ctx, imageData,
 			[ 1, 2, 1, 2, 1, 2, 1, 2, 1 ], 
 			true, true);
     }
 	
-    function emboss(imageData, amount){
-	if(arguments.length < 2){
+    function emboss(ctx, imageData, amount){
+	if(arguments.length < 3){
 	    amount = 95;
 	}
-	return convolve(imageData,
+	return convolve(ctx, imageData,
 			 [ -18, -9, 9, -9, 100 - amount, 9, 0, 9, 18 ], 
 			 true, true);
     }
 	
-    function lighten(imageData, amount){
-	if(arguments.length < 2 || amount < 0){
+    function lighten(ctx, imageData, amount){
+	if(arguments.length < 3 || amount < 0){
 	    amount = 12/9;
 	}
-	return convolve(imageData, [ 0, 0, 0, 0, amount, 0, 0, 0, 0 ]);
+	return convolve(ctx, imageData, [ 0, 0, 0, 0, amount, 0, 0, 0, 0 ]);
     }
 	
-    function darken(imageData, amount){
-	if(arguments.length < 2 || amount > 1){
+    function darken(ctx, imageData, amount){
+	if(arguments.length < 3 || amount > 1){
 	    amount = 6/9;
 	}
-	return convolve(imageData, [ 0, 0, 0, 0, amount, 0, 0, 0, 0 ]);
+	return convolve(ctx, imageData, [ 0, 0, 0, 0, amount, 0, 0, 0, 0 ]);
     }
 	
     return {
