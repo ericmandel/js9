@@ -198,6 +198,18 @@ or try different ones to see how data features can be brought to the fore
 by color and contrast/bias.
 
 <p>
+The <b>image filters</b> menu option provides a number of well-known
+image processing functions that act directly on the displayed RGB
+image data (not the underlying raw astronomical data, as with the
+<b>Gaussian blur</b> in the <b>Analysis</b> menu).  Thus, when you can
+run one of these routines on an image, its effect will be undone if
+you redraw the image by changing the contrast/bias, colormap,
+etc. Also, since these functions act on the current RGB image, their
+effect is cumulative.  See the <b>JS9.FilterRGBImage()</b> section in
+the <a href="publicapi.html">JS9 Public API</a> for more information about
+the individual functions.
+
+<p>
 You can enter a floating point value into the <b>contrast value</b> and 
 <b>bias value</b> text boxes to set the contrast/bias. Note that the
 contrast value ranges from 0 to 10 and the bias ranges from 0 to 1
@@ -328,17 +340,6 @@ the currently loaded <b>Analysis Plugins</b>. JS9 itself supplies the
 <li> Y Proj
 <li> 3dPlot
 </ul>
-<p>
-The <b>RGB image filters</b> menu option provides a number of well-known
-image processing functions that act directly on the displayed RGB
-image data (not the underlying raw astronomical data, as with Gaussian
-blur below).  Thus, when you can run one of these routines on an image, its
-effect will be undone if you redraw the image by changing the
-contrast/bias, scale, colormap, zoom, etc. Also, since these functions
-act on the current RGB image, their effect is cumulative.
-See the <b>JS9.FilterRGBImage()</b> section in the
-<a href="publicapi.html">JS9 Public API</a> for more information about
-the individual functions.
 
 <p>
 You also can perform a fast <b>Gaussian blur</b> by entering a sigma (radius)

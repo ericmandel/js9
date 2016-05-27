@@ -6472,7 +6472,7 @@ JS9.Menubar = function(width, height){
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
             build: function($trigger, evt){
-		var i, s1, s2;
+		var i, s1, s2, arr;
 		var n = 0;
 		var items = {};
 		var tdisp = getDisplays()[0];
@@ -6518,6 +6518,21 @@ JS9.Menubar = function(width, height){
 		    }
 		}
 		items["sep" + n++] = "------";
+		items.imfilter = {
+		    name: "image filters",
+		    items: {}
+		};
+		arr = JS9.Image.prototype.filterRGBImage.call(null).sort();
+		for(i=0; i<arr.length; i++){
+		    if( arr[i] === "convolve" ){
+			continue;
+		    }
+		    s1 = "imfilter_" + arr[i];
+		    items.imfilter.items[s1] = {
+			name: arr[i]
+		    };
+		}
+		items["sep" + n++] = "------";
 		items.contrast = {
 		    events: {keyup: keyColor},
 		    name: "contrast value:",
@@ -6561,6 +6576,11 @@ JS9.Menubar = function(width, height){
 				JS9.SaveColormap({display: udisp});
 				break;
 			    default:
+				if( key.match(/^imfilter_/) ){
+				    s1 = key.replace(/^imfilter_/,"");
+				    uim.filterRGBImage(s1);
+				    return;
+				}
 				uim.setColormap(key);
 			    }
 			}
@@ -6785,7 +6805,7 @@ JS9.Menubar = function(width, height){
 	    events: { hide: onhide },
             build: function($trigger, evt){
 	        var i, j, s, apackages, atasks;
-		var plugin, pinst, pname, arr;
+		var plugin, pinst, pname;
 		var ntask = 0;
 		var n = 0;
 		// var m = 0;
@@ -6891,28 +6911,11 @@ JS9.Menubar = function(width, height){
 		    };
 		}
 		items["sep" + n++] = "------";
-		items.imfilter = {
-		    name: "RGB image filters",
-		    items: {imftitle: {name: "image filters:", disabled: true}}
-		};
-		if( im ){
-		    arr = im.filterRGBImage().sort();
-		    for(i=0; i<arr.length; i++){
-			if( arr[i] === "convolve" ){
-			    continue;
-			}
-			s = "imfilter_" + arr[i];
-			items.imfilter.items[s] = {
-			    name: arr[i]
-			};
-		    }
-		}
 		items.sigma = {
 		    events: {keyup: keyAnalysis},
 		    name: "Gaussian blur sigma:",
 		    type: "text"
 		};
-		items["sep" + n++] = "------";
 		items.dpath = {name: "set data path ..."};
 		}
 		return {
@@ -6945,11 +6948,6 @@ JS9.Menubar = function(width, height){
 				$(did).data("dispid", udisp.id);
 				break;
 			    default:
-				if( key.match(/^imfilter_/) ){
-				    s = key.replace(/^imfilter_/,"");
-				    uim.filterRGBImage(s);
-				    return;
-				}
 				// look for analysis routine
 				a = uim.lookupAnalysis(key);
 				if( a ){
