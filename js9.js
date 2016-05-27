@@ -6896,7 +6896,7 @@ JS9.Menubar = function(width, height){
 		    items: {imftitle: {name: "image filters:", disabled: true}}
 		};
 		if( im ){
-		    arr = im.filterRGBImage();
+		    arr = im.filterRGBImage().sort();
 		    for(i=0; i<arr.length; i++){
 			if( arr[i] === "convolve" ){
 			    continue;
