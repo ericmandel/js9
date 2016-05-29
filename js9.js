@@ -11067,8 +11067,8 @@ JS9.bcall = function(which, cmd, arg1){
 // from: /tksao1.0/colorbar/colorbarbase.C
 JS9.floatPrecision = function(fval1, fval2){
     var aa, bb, prec;
-    aa = Math.floor(Math.log10(fval1));
-    bb = Math.floor(Math.log10(fval2));
+    aa = Math.floor(Math.log10(Math.abs(fval1)));
+    bb = Math.floor(Math.log10(Math.abs(fval2)));
     if( aa !== bb ){
       prec = aa > bb ? aa : bb;
     } else {
