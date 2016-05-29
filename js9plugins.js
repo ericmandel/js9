@@ -2478,7 +2478,7 @@ JS9.Mef.init = function(){
     }
     $("#" + sid).prop("checked", this.separate);
     // make the currently displayed extension active
-    if( im.raw.hdu.fits.extnum ){
+    if( im.raw.hdu.fits.extnum !== undefined ){
 	JS9.Mef.activeExtension(im, im.raw.hdu.fits.extnum);
     }
 };
