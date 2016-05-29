@@ -3854,14 +3854,18 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
 // re-calculate data min and max (and set scale params, if necessary)
 JS9.Image.prototype.dataminmax = function(){
     var i, blankval;
-    var reminscale = isNaN(this.params.scalemin);
-    var remaxscale = isNaN(this.params.scalemax);
+    var reminscale = isNaN(this.params.scalemin) ||
+                     (this.params.scalemin === undefined);
+    var remaxscale = isNaN(this.params.scalemax) ||
+                     (this.params.scalemax === undefined);
     // might have to redo scaling if it's tied to current data min or max
     if( this.params.scaleclipping === "dataminmax" ){
-	if( this.params.scalemin === this.raw.dmin ){
+	if( (this.raw.dmin === this.params.scalemin) ||
+	    (this.raw.dmin === undefined)            ){
 	    reminscale = true;
 	}
-	if( this.params.scalemax === this.raw.dmax ){
+	if( (this.raw.dmax === this.params.scalemax) ||
+	    (this.raw.dmax === undefined)            ){
 	    remaxscale = true;
 	}
     }
