@@ -224,7 +224,7 @@ JS9.plotOpts = {
 JS9.helpOpts = {
     user: {
 	type: "help", url:"user.html",
-	title: "JS9 User Manual"
+	title: "User Manual"
     },
     install: {
 	type: "help", url:"install.html",
@@ -260,11 +260,11 @@ JS9.helpOpts = {
     },
     regions: {
 	type: "help", url:"regions.html",
-	title: "JS9 Regions Format"
+	title: "Regions Format"
     },
     extmsg: {
 	type: "help", url:"extmsg.html",
-	title: "JS9 External Messaging"
+	title: "External Messaging"
     },
     python: {
 	type: "help", url:"python.html",
@@ -272,11 +272,11 @@ JS9.helpOpts = {
     },
     preferences: {
 	type: "help", url:"preferences.html",
-	title: "JS9 Site Preferences"
+	title: "Setting Site Preferences"
     },
     changelog: {
 	type: "help", url:"changelog.html",
-	title: "JS9 ChangeLog"
+	title: "ChangeLog"
     },
     issues: {
 	type: "help", url:"knownissues.html",

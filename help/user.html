@@ -120,18 +120,25 @@ uncompressed).  It also contains options to:
 <li><b>display pageID</b>, a unique ID for this page that can be used when communicating with JS9 externally
 </ul>
 
-<li><p><b>View:</b> The <b>display value/position</b> option specifies whether
-image position and image pixel value is displayed as the mouse (or
-finger) moves over the image. By default, this information is
-displayed in the upper left of the image. You can redirect the display
-to a movable, light-weight window by choosing the <b>InfoBox</b> menu
-option. The <b>Console</b> menu option will bring up a movable, light-weight
+<li><p><b>View:</b> displays a list of plugin menu options, including the following core options:
+<ul>
+<li> The <b>Console</b> menu option will bring up a movable, light-weight
 console window into which JS9 commands can be entered.
-The <b>Magnifier</b> menu option will bring up a movable,
+<li> The <b>Extension</b> menu option allows you to display images from a FITS
+multi-extension file.
+<li> The <b>Data Cube</b> menu option allows you to display slices of a 3D FITS
+data cube.
+<li> The <b>InfoBox</b> menu option allows you to display value and position
+information in a separate light-weight window.
+<li> The <b>Magnifier</b> menu option will bring up a movable,
 light-weight window showing a blocked image of the data in an area
 surrounding the mouse as it moves. The default magnification of four
 can be changed using command buttons on the magnifier window.
-The <b>Panner</b> menu option will bring up a movable,
+<li> The <b>Mouse/Touch</b> menu option allows you to change the
+actions performed when you move the mouse over an image with zero,
+one, or two buttons pressed.  It also configures touch actions using
+one, two, or three fingers.
+<li> The <b>Panner</b> menu option will bring up a movable,
 light-weight panner window that displays the full image along with a
 viewport rectangle showing the currently displayed image section in
 the primary image window. The viewport can be moved around in order to pan
@@ -140,19 +147,25 @@ command button options to zoom the viewport itself. (This makes
 the viewport rectangle larger at the expense of displaying only a
 section of the full image. It is useful for panning in a very large
 image.) 
+</ul>
 <p>
 In addition to these core options, the <b>View</b> menu also lists the
-currently loaded <b>View Plugins</b>. JS9 itself supplies the following plugins:
+currently-loaded <b>View plugins</b>. JS9 itself supplies the following plugins:
 <ul>
-<li><b>Archive and Catalogs:</b> allows you to display image data retrieved 
-from various archives and overlay catalog information
-<li><b>Binning:</b> supports binning and column filtering on FITS binary tables
-<li><b>Pixel Table:</b> displays an array of pixel values around the current mouse position
+<li>The <b>Archive and Catalogs</b> menu option allows you to display image data retrieved from various archives and overlay catalog information.
+<li>The <b>Binning</b> menu option supports binning and column filtering on FITS binary tables.
+<li>The <b>Pixel Table</b> menu option displays an array of pixel values around the current mouse position.
 </ul>
 <p>
 Web developers can develop and register other plugins (which generally are
 loaded into either the <b>View</b> or <b>Analysis</b> menus).
 <p>
+The <b>display value/position</b> option specifies whether
+image position and image pixel value is displayed as the mouse (or
+finger) moves over the image. By default, this information is
+displayed in the upper left of the image. You can redirect the display
+to a movable, light-weight window by choosing the <b>InfoBox</b> menu
+option.
 <p>
 Finally, the <b>change width/height</b> menu option allows you to
 specify a new width and height for the JS9 display.
@@ -332,13 +345,13 @@ In addition to server-side analysis, the <b>Analysis</b> menu lists
 the currently loaded <b>Analysis Plugins</b>. JS9 itself supplies the
 <b>Imexam</b> plugin, which offers the following tasks:
 <ul>
+<li> 3dPlot
 <li> Encircled Energy
-<li> Radial Proj
 <li> Histogram
+<li> Radial Proj
 <li> Region Stats
 <li> X Proj
 <li> Y Proj
-<li> 3dPlot
 </ul>
 
 <p>
@@ -511,7 +524,7 @@ See <a href="knownissues.html">Known Issues</a>
 for a discussion of limitations imposed on resize by Webkit
 browsers such as Chrome and Safari.
 
-<h5>Last updated: May 26, 2016</h5>
+<h5>Last updated: May 30, 2016</h5>
 </div>
 
 </body>

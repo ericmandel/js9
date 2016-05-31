@@ -37,9 +37,11 @@ on the level of expertise of a given user.
 If you run the Node.js-based helper (instead of the CGI helper), this
 sort of external communication is supported by the <b>js9 script</b>
 and its underlying <b>js9Msg.js</b> module. The script runs
-<b>Node.js</b> with js9Msg.js as its first argument. Using command
-line syntax, it will send a single JS9 command to the browser and
-return the results:
+<b>Node.js</b> with js9Msg.js as its first argument. 
+
+<p>
+Using command line syntax, the js9 script will send a single JS9
+command to the browser and return the results:
 <pre>
   sh> js9 cmap heat        # change colormap to heat
   OK
@@ -56,6 +58,7 @@ enter a "read-line" loop, executing commands as they are input:
   JS9> cmap
   heat
 </pre>
+
 <p>
 When no arguments are supplied, js9 will read stdin. You can send
 multiple commands to the script's standard input (comments and blank
@@ -175,35 +178,49 @@ instances on a page connected to a remote helper this way:
   sh> js9 -host js9.cfa.harvard.edu -id myJS9 cmap heat
   OK
 </pre>
-<p>
-A final esoteric security note: special considerations are required
-when a helper host wants to talk to one of several instances of JS9
-connected to the helper. Being on the same host as the helper,
-the <b>js9 script</b> is allowed to send messages to any of these
-clients. But for security reasons, it can only send a message to an
-individual browser, not to all browsers at once. If the target
-browser's ip address is known, the <b>-browser</b> switch can be used
-to differentiate browsers running the same page. For example, if you
-want to talk to the JS9 client browser on bynars:
-<pre>
-  sh> js9 -browser bynars.cfa.harvard.edu -id myJS9 region circle
-  OK
-  sh> js9 -browser bynars.cfa.harvard.edu -id JS9 region 
-  ICRS; circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
-</pre>
-or, from the readline loop:
-<pre>
-  sh> js9 -browser bynars.cfa.harvard.edu -id myJS9
-  JS9> region circle
-  OK
-  JS9> region 
-  ICRS; circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
-</pre>
-<p>
-The JS9 interface will evolve to meet the needs of the astronomical
-community.
 
-<h5>Last updated: July 2, 2015</h5>
+<p>
+Ordinarily, the js9 script talks to a displayed JS9 Web page. But it
+also can be used to start up a new browser, display a JS9 Web page,
+and then load an image into that page. To do this, use the <b>-b or
+-browser</b> switch to specify the browser (chrome, safari, or
+firefox) and the <b>-w or -webpage</b> switch to specify a Web page
+(default is a nice, basic JS9 Web page). For example:
+<pre>
+  js9 -b chrome ~/data/casa.fits
+</pre>
+will start a Chrome browser with a basic JS9 Web page and load the
+Cas-A FITS files into the page, while:
+<pre>
+<p>
+  cd ~/data
+  js9 -b firefox -w ~/js9/js9basics.html casa.fits
+</pre>
+will display the same image in one of the JS9 demo pages. (Note that, in
+this case, the js9 script figures out the full pathname of the FITS file.)
+
+<p>
+Instead of supplying the browser name each time on the command line, you
+can set the environment variable <b>JS9_BROWSER</b> and just use the
+-b switch with no argument. (Note that you still must supply the -b
+switch, which tells the script to start a browser.) Similarly, the default
+Web page can be configured using the <b>JS9_WEBPAGE</b> environment variable:
+<pre>
+    export JS9_BROWSER=chrome
+    export JS9_WEBPAGE=$HOME/js9/js9basics.html
+    js9 -b ~/data/casa.fits
+</pre>
+
+<p>
+Care must be taken that no JS9 Web page is already being displayed when the
+<b>-b or -browser</b> switch is utilized, or else the specified image
+will be loaded into the existing Web page (and no new browser will be started).
+Also, it is important to note that the Google Chrome browser must be
+started by the js9 script or it must be started by you using the
+<b>--allow-file-access-from-files</b> switch. Without this switch,
+Chrome will not permit a local HTML file to read other files.
+
+<h5>Last updated: May 30, 2016</h5>
 </div>
 
 </body>
