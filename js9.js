@@ -12878,6 +12878,24 @@ JS9.init = function(){
 			divArgs: [JS9.DS9WIDTH, JS9.DS9HEIGHT]});
     // find divs associated with each plugin and run the constructor
     JS9.instantiatePlugins();
+    // sort plugins
+    JS9.plugins.sort(function(a,b){
+	var t1 = a.opts.menuItem;
+	var t2 = b.opts.menuItem;
+	if( !t1 ){
+	    return 1;
+	}
+	if( !t2 ){
+	    return -1;
+	}
+	if( t1 < t2 ){
+	    return -1;
+	}
+	if( t1 > t2 ){
+	    return 1;
+	}
+	return 0;
+    });
     // load colormaps
     JS9.checkNew(new JS9.Colormap("grey",
 	[[0,0], [1,1]],
