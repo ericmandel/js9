@@ -10277,8 +10277,9 @@ JS9.Magnifier.display = function(im, ipos){
        (im.display.pluginInstances.JS9Magnifier.status !== "active")){
 	return;
     }
-    // don't display if a mouse button is pressed while moving
-    if( im.clickState ){
+    // don't display if a mouse button is pressed while moving, or
+    // if two or more touch buttons are pressed while moving
+    if( (im.clickState > 0) || (im.clickState < -1) ){
 	return;
     }
     // image init: add magnifier object to image, if necessary
@@ -10420,8 +10421,8 @@ JS9.Panner.HTML =
 "<span>" +
 "<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"zoomPanner\", \"x2\"); return false'>x2</button>" +
 "<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"zoomPanner\", \"/2\"); return false'>/2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"zoomPanner\", \"1\"); return false'>Zoom1</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"panImage\"); return false'>Center</button>" +
+"<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"zoomPanner\", \"1\"); return false'>z1</button>" +
+"<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"panImage\"); return false'>center</button>" +
 "</span>";
 
 // JS9 Panner constructor
@@ -12843,13 +12844,13 @@ JS9.init = function(){
     JS9.RegisterPlugin("JS9", "Menubar", JS9.Menubar);
     JS9.RegisterPlugin("JS9", "Console", JS9.Console,
 		       {menuItem: "Console",
-			winTitle: "JS9 Console",
+			winTitle: "Console",
 			winResize: true,
 			winDims: [JS9.WIDTH, 180]});
     JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 		       {menuItem: "InfoBox",
 			plugindisplay: JS9.Info.clearMain,
-			winTitle: "JS9 Info",
+			winTitle: "Info",
 			winResize: true,
 			winDims: [JS9.INFOWIDTH, JS9.INFOHEIGHT]});
     JS9.RegisterPlugin(JS9.Regions.CLASS, JS9.Regions.NAME, JS9.Regions.init,
@@ -12864,7 +12865,7 @@ JS9.init = function(){
 			toolbarHTML: JS9.Magnifier.HTML,
 			onmousemove: JS9.Magnifier.display,
 			onimageclose: JS9.Magnifier.close,
-			winTitle: "JS9 Magnifier",
+			winTitle: "Magnifier",
 			winDims: [JS9.MAGWIDTH, JS9.MAGHEIGHT],
 			divArgs: [JS9.DS9WIDTH, JS9.DS9HEIGHT]});
     JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
@@ -12873,7 +12874,7 @@ JS9.init = function(){
 			toolbarHTML: JS9.Panner.HTML,
 			onimagedisplay: JS9.Panner.display,
 			onimageclose: JS9.Panner.close,
-			winTitle: "JS9 Panner",
+			winTitle: "Panner",
 			winDims: [JS9.PANWIDTH, JS9.PANHEIGHT],
 			divArgs: [JS9.DS9WIDTH, JS9.DS9HEIGHT]});
     // find divs associated with each plugin and run the constructor

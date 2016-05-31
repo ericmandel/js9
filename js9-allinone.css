@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.8, Tue May 31 10:24:41 EDT 2016 */
+/* JS9 allinone: v1.8, Tue May 31 12:14:36 EDT 2016 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -684,7 +684,7 @@ div.JS9PluginToolbar-light
     position:absolute;
     display:inline-block;
     top: 0px;
-    right: 40px;
+    right: 36px;
     overflow: auto;
     text-align: center;
 }
