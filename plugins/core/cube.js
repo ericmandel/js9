@@ -288,7 +288,7 @@ JS9.Cube.init = function(){
 		       value: sprintf(JS9.Cube.rateHTML, im.id)});
  	    s = im.expandMacro(JS9.Cube.cubeHTML, opts);
 	} else {
-	    s = "<p><center>This image is not a FITS data cube</center>";
+	    s = "<p><center>This image is not a FITS data cube.</center>";
 	}
     } else {
 	    s = "<p><center>FITS cube processing will go here</center>";

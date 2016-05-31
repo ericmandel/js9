@@ -126,11 +126,11 @@ JS9.Mef.init = function(){
     }
     im  = this.display.image;
     if( !im ){
-	this.mefContainer.html("<p><center>HDU extensions will be displayed here.</center>");
+	this.mefContainer.html("<p><center>FITS HDU extensions will be displayed here.</center>");
 	return;
     }
     if( !im.hdus ){
-	this.mefContainer.html("<p><center>HDU extensions not available for this image.</center>");
+	this.mefContainer.html("<p><center>FITS HDU extensions are not present in this image.</center>");
 	return;
     }
     // reset main container

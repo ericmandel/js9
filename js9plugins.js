@@ -2121,7 +2121,7 @@ JS9.Cube.init = function(){
 		       value: sprintf(JS9.Cube.rateHTML, im.id)});
  	    s = im.expandMacro(JS9.Cube.cubeHTML, opts);
 	} else {
-	    s = "<p><center>This image is not a FITS data cube</center>";
+	    s = "<p><center>This image is not a FITS data cube.</center>";
 	}
     } else {
 	    s = "<p><center>FITS cube processing will go here</center>";
@@ -2457,11 +2457,11 @@ JS9.Mef.init = function(){
     }
     im  = this.display.image;
     if( !im ){
-	this.mefContainer.html("<p><center>HDU extensions will be displayed here.</center>");
+	this.mefContainer.html("<p><center>FITS HDU extensions will be displayed here.</center>");
 	return;
     }
     if( !im.hdus ){
-	this.mefContainer.html("<p><center>HDU extensions not available for this image.</center>");
+	this.mefContainer.html("<p><center>FITS HDU extensions are not present in this image.</center>");
 	return;
     }
     // reset main container
