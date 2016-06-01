@@ -23,7 +23,7 @@ available on GitHub:&nbsp;&nbsp;
 
 <p>
 The <b>JS9</b> class constructor connects to a single JS9 instance in a
-Web page. Once the connection is made, the returned JS9 object
+web page. Once the connection is made, the returned JS9 object
 supports the JS9 Public API and a shorter command-line syntax. You
 also can send/retrieve numpy arrays and astropy (or pyfits) hdulists
 to/from JS9.
@@ -68,7 +68,7 @@ Optional dependencies for pyjs9 are:
 To run pyjs9:
 <pre>
     > # ensure JS9 node-server is running ...
-    > # visit your local JS9 Web page in your browser ...
+    > # visit your local JS9 web page in your browser ...
     > python
     ... (startup messages) ...
     >>> import pyjs9
@@ -93,14 +93,14 @@ To run pyjs9:
 </pre>
 
 <p>
-If you have internet connectivity, visit the JS9 Web page at
+If you have internet connectivity, visit the JS9 web page at
 http://js9.si.edu with your browser and:
 <pre>
     > python
     ... (startup messages) ...
     >>> import pyjs9
     >>>
-    >>> j = pyjs9.JS9('js9.si.edu')        # connect to JS9 Web site
+    >>> j = pyjs9.JS9('js9.si.edu')        # connect to JS9 web site
     >>>
     >>> j.GetColormap()
     {'bias': 0.5, 'colormap': 'grey', 'contrast': 1}
@@ -147,7 +147,7 @@ to the following limitations:
 
 <p>
 But note that you also can use Jupyter's <b>%%html</b> syntax to define an
-<b>HTML iframe</b> that will display an existing JS9 Web page:
+<b>HTML iframe</b> that will display an existing JS9 web page:
 <pre>
     %%html
     &lt;iframe src="http://js9.si.edu" width=1000 height=750&gt;&lt;/iframe&gt;
@@ -157,7 +157,7 @@ or:
     %%html
     &lt;iframe src="http://js9.si.edu/js9/js9basics.html" width=100% height=900&gt;&lt;/iframe&gt;
 </pre>
-Since you are now accessing an existing Web site, all JS9 functions
+Since you are now accessing an existing web site, all JS9 functions
 should work as expected ... except for the use of locally stored
 preferences (i.e. the Preferences plugin) in Firefox. Currently,
 Firefox throws a security exception when an iframe tries to access
@@ -167,7 +167,7 @@ local storage, so this function does not work.
 We will continue to improve the Jupyter/JS9 connection. Please send us your
 comments and suggestions.
 
-<h5>Last updated: January 9, 2016</h5>
+<h5>Last updated: June 1, 2016</h5>
 </div>
 
 </body>

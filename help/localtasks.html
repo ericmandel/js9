@@ -20,14 +20,14 @@ executed in your browser (not on the back-end server).  This is
 accomplished by offering access to the image data and region
 information via a 
 <a href="publicapi.html">JS9 Public API</a>. Obviously, all of JS9
-JavaScript code is available to you within a Web page, but the public
+JavaScript code is available to you within a web page, but the public
 API is designed to stable and well-documented.
 
 <p>
 <b>Adding Simple Analysis Tasks to Your Web Page</b>
 <p>
 For simple analysis (i.e., no mouse or keyboard event processing), it
-often is sufficient to define GUI elements directly on the Web page,
+often is sufficient to define GUI elements directly on the web page,
 adding Javascript code to interact with these elements and call the
 public JS9 functions as needed. In particular,
 the <b>JS9.GetImage()</b> function will return a handle for the
@@ -36,7 +36,7 @@ functions allow you to manipulate regions.  These routines are
 described in the <a href="publicapi.html">JS9 Public API</a>.
 
 <p>
-The js9onchange.html demo Web page illustrates these simple
+The js9onchange.html demo web page illustrates these simple
 capabilities.  It shows how to run a task every time a region
 changes, i.e. when it is moved, resized, or deleted. This is
 accomplished by setting the <b>JS9.Regions.opts.onchange</b>
@@ -64,9 +64,9 @@ menu option in a given region's context menu or the global <b>Regions</b> menu,
 respectively.
 
 <p>
-The js9onchange.html demo Web page also shows how
+The js9onchange.html demo web page also shows how
 server-side JS9 analysis tasks can be executed directly from the
-Web page using HTML elements (buttons, forms, etc.) instead of the
+web page using HTML elements (buttons, forms, etc.) instead of the
 <b>Analysis</b> menu. See <a href="serverside.html"> Server-side
 Analysis Tasks</a> for more information.
 
@@ -80,11 +80,11 @@ one or more <b>event callbacks</b> to process desired events. At the
 end of the file, the plugin calls <b>RegisterPlugin()</b> to make
 itself known to JS9. Plugin modules should be stored in the
 js9/plugins directory (or in a sub-directory therein) and should be
-loaded into JS9-enabled Web pages after js9.js itself is loaded.
+loaded into JS9-enabled web pages after js9.js itself is loaded.
 
 <p>
 To create instances of the plugin GUI, the constructor function gets
-called for each plugin div defined on the Web page.
+called for each plugin div defined on the web page.
 The <b>this</b> context is seeded with a few JS9 properties, including:
 <ul>
 <li><b>this.div:</b>      the DOM element representing the div for this plugin
@@ -172,12 +172,12 @@ The former does this globally, the latter only for the specific region.
 
 <p>
 The <b>divArgs</b> is an array specifying arguments to pass to the constructor
-function, when a div element is found in the Web page. For example, the Panner
+function, when a div element is found in the web page. For example, the Panner
 and Magnifier plugins pass a width and height to the constructor in this way.
 
 <p>
 The <b>menuItem</b> is a string which specifies the name that will be
-used in the <b>View</b> menu when a plugin div is not found on the Web
+used in the <b>View</b> menu when a plugin div is not found on the web
 page. If no <b>menuItem</b> is specified, the plugin will not appear
 in the <b>View</b> menu. 
 
@@ -199,7 +199,7 @@ The default is no title.
 You can add HTML (e.g. command buttons) to the light window titlebar
 by putting an HTML string into the <b>toolbarHTML</b> property. The
 panner and magnifier use this technique to add zoom buttons. You also
-can add HTML onto a Web-page plugin div, but in this case, where the
+can add HTML onto a web page plugin div, but in this case, where the
 HTML is placed depends on the value of the <b>toolbarSeparate</b>
 property. If the value of <b>toolbarSeparate</b> is true, then a
 titlebar is created above the plugin and the HTML is added to it.
@@ -215,7 +215,7 @@ Within a callback, you can use the JS9 Public API to manipulate data, as
 detailed in the <a href="publicapi.html">JS9 Public API</a>.
 
 <p>
-<h5>Last updated: September 4, 2014</h5>
+<h5>Last updated: June 1, 2016</h5>
 </div>
 
 </body>

@@ -22,7 +22,7 @@
 
 <center><h3>How to Access Data Archives with JS9</h3></center>
 <ul>
-<li> visit a data archive Web page in your browser
+<li> visit a data archive web page in your browser
 <li> execute a search for the desired observation
 <li> copy the resulting FITS file link
 <li> in JS9, select the <b>File:open link via proxy ...</b> menu option
@@ -32,8 +32,8 @@
 
 <center><h3>Details: Using a Proxy Server to Access FITS Data</h3></center>
 <p>
-For security reasons, JavaScript contained in one Web page can
-access data in another Web page only if both Web pages have the
+For security reasons, JavaScript contained in one web page can
+access data in another web page only if both web pages have the
 same origin (i.e., basically coming from the same host).  This
 policy is called the 
 <a href="https://en.wikipedia.org/wiki/Same-origin_policy">
@@ -45,13 +45,13 @@ directly into JS9, but instead is copied back to the server from which
 JS9 itself was loaded. The file is then retrieved by JS9 so that the
 "same origin" rules are not violated.
 <p>
-When the back-end server associated with a JS9 Web page supports the
+When the back-end server associated with a JS9 web page supports the
 proxy service, you will see a menu option in the <b>File</b> menu
 called <b>open link via proxy ...</b>
 <p>
 Enter a FITS URL into the proxy dialog box and press the <b>Load</b>
 button. The data file will be retrieved by the server and stored in a
-directory specifically tied to the Web page. (The directory and its
+directory specifically tied to the web page. (The directory and its
 contents will be deleted when the page is unloaded.)  JS9 then will
 load the file from this directory. Note that since the file resides on
 the back-end server, all back-end analysis defined on that server is
@@ -59,12 +59,12 @@ available.
 <p>
 This technique can also be used FITS links from other sources. For
 example, if you have a FITS file on Google Drive, Dropbox or even a
-static Web page, you can generate/copy the link and paste it into the
+static web page, you can generate/copy the link and paste it into the
 proxy dialog box for display. (Dropbox files also can utilize
 the <b>open link via CORS ...</b> option, which downloads the data
 directly to JS9, bypassing the proxy server.)
 
-<h5>Last updated: October 6, 2015</h5>
+<h5>Last updated: June 1, 2016</h5>
 </div>
 
 </body>

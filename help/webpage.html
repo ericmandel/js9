@@ -17,13 +17,13 @@
 
 <h3>Adding JS9 to Your Web Page</h3>
 <p>
-The sample js9basics.html file shows how to add JS9 to a Web page by
-assigning JS9 CSS classes to "div" elements.  The js9multi.html Web
+The sample js9basics.html file shows how to add JS9 to a web page by
+assigning JS9 CSS classes to "div" elements.  The js9multi.html web
 page goes further by showing how multiple instances of JS9 can be
-added to a Web page using unique IDs.
+added to a web page using unique IDs.
 
 <p>
-To start, a few JavaScript and CSS files must be loaded into the Web
+To start, a few JavaScript and CSS files must be loaded into the web
 page.  Ordinarily this is done in the page's header, which typically
 will look something like this:
 <pre>
@@ -56,7 +56,7 @@ to version 1.3 from a previous version, simply remove the load of
 fitsy.js (or fitsy.min.js) from your web page to start using cfitsio.
 
 <p>
-Instances of JS9 are placed on a Web page by assigning JS9 classes
+Instances of JS9 are placed on a web page by assigning JS9 classes
 to ordinary "div" elements. The two important JS9 classes are:
 <ul>
 <li><b>JS9:</b> this class will display the main JS9 image window
@@ -87,7 +87,7 @@ statically in a page, it will not be made available in the <b>View</b>
 menu.
 
 <p>
-Placement of JS9 div elements should follow standard Web page rules
+Placement of JS9 div elements should follow standard web page rules
 and constraints.  This means that div elements can be placed in any
 order to create different graphical views. For example, the
 js9basics.html page places the menubar above the image display, in
@@ -111,7 +111,7 @@ also want to shorten the width of the menubar:
 </pre>
 
 <p>
-Multiple instances of JS9 can be added to a single Web page. This is done by
+Multiple instances of JS9 can be added to a single web page. This is done by
 giving each JS9 div element a unique ID. In order to tie otherwise separate
 JS9 components together, the IDs should be specified as follows:
 <ul>
@@ -131,7 +131,7 @@ specifies the associated console.
 The ID is not required if there is only one JS9 instance on the page,
 since it defaults to "JS9". However, if your site needs to communicate
 with clients using the <b>js9 script</b> for external communication,
-you can differentiate between clients loading the same JS9-enabled Web
+you can differentiate between clients loading the same JS9-enabled web
 page by supplying a unique ID when the JS9 page is served.
 
 <p>
@@ -180,8 +180,8 @@ displays in a future release.
 <p>
 Server-side JS9 analysis tasks can be executed using
 the <b>Analysis</b> menu, but they also can be executed directly from
-the Web page using HTML elements (buttons, forms, etc.) To do this, a
-Web page author simply creates the Web interface and calls
+the web page using HTML elements (buttons, forms, etc.) To do this, a
+web page author simply creates the web interface and calls
 either <b>JS9.RunAnalysis()</b> (for buttons, menus, etc.)
 or <b>JS9.SubmitAnalysis()</b> (for forms). These are described
 in the <a href="localtasks.html">Local Tasks</a> web page.
@@ -190,7 +190,7 @@ in the <a href="localtasks.html">Local Tasks</a> web page.
 <h3>Adding Local Analysis Tasks to Your Web Page</h3>
 <p>
 JS9 also supports the ability to perform local analysis, i.e.,
-analysis tasks defined and executed right on your Web page, rather
+analysis tasks defined and executed right on your web page, rather
 than being executed by a back-end server.  This is accomplished by
 offering access to the image data and region information via
 a <b>public JS9 API</b>. See the
@@ -206,17 +206,17 @@ pop-up window. See the
 <a href="publicapi.html">JS9 Public API</a> for more information.
 
 <p>
-<h3>Adding Data Files to a Web page</h3> 
+<h3>Adding Data Files to a Web Page</h3>
 <p>
-Data file links are added to a Web page by supplying URLs that call
+Data file links are added to a web page by supplying URLs that call
 the <b>JS9.Load()</b> routine.
-You also can load images automatically when the Web page loads using the
+You also can load images automatically when the web page loads using the
 <b>JS9.Preload()</b> routine.
 See:
 <a href="yourdata.html">Adding Data Files To a Web Page</a> for more
 information.
 
-<h5>Last updated: March 12, 2015</h5>
+<h5>Last updated: June 1, 2016</h5>
 </div>
 
 </body>

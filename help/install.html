@@ -18,9 +18,9 @@
 <ul>
 <li> retrieve and unpack the source code tar file or clone the js9 repository
 <li> JS9 is now ready for drag-and-drop image files using the file:// URI
-<li> to install JS9 into a Web server tree, run configure with this switch:
+<li> to install JS9 into a web server tree, run configure with this switch:
 <pre>
-  ./configure --with-webdir=[path]  where path specifies the location to install the JS9 Web files
+  ./configure --with-webdir=[path]  where path specifies the location to install the JS9 web files
 </pre>
 <li> edit the js9Prefs.js to set up your site-specific JS9 parameters
 <li> build, install, clean up: <b>make; make install; make clean</b>
@@ -44,7 +44,7 @@ You also can clone JS9 from GitHub:
 
 <h3>Run JS9 using the file:// URI</h3>
 Once the tar file is unpacked, you should be able to load any of the
-js9*.html Web pages into your browser using the file:// URI. For
+js9*.html web pages into your browser using the file:// URI. For
 example, if you unpacked the tar file into /Users/me on a Mac, then
 you can point your browser to:
 <pre>
@@ -52,7 +52,7 @@ you can point your browser to:
 </pre>
 to see the basic JS9 demo page. You then can drag any FITS image file onto
 the JS9 display and view it, change contrast/bias, colormaps,
-scale, create regions, etc. Furthermore, if you load the imexam Web page:
+scale, create regions, etc. Furthermore, if you load the imexam web page:
 <pre>
     file:///Users/me/js9-[version]/js9imexam.html
 </pre>
@@ -77,11 +77,11 @@ for colormaps, scaling, etc. See:
 description of the available parameters.
 
 <h3>Do You Want to Install JS9 in a Web Server?</h3>  If you want to
-run JS9 in a "real" Web server tree, build and install the JS9 tools and
+run JS9 in a "real" web server tree, build and install the JS9 tools and
 files using the standard GNU <b>./configure; make; make install</b>
 technique. You should run configure with
 the <b>--with-webdir=[path]</b> switch, which specifies the directory
-into which the JS9 Web files (JavaScript, CSS, etc.) will be
+into which the JS9 web files (JavaScript, CSS, etc.) will be
 installed.  We recommend that this directory only contain the
 installed JS9 files, i.e. that you install JS9 into its own
 self-contained directory. This will make upgrading to new versions
@@ -92,8 +92,8 @@ much easier.
 JS9 supports server-side ("back-end") analysis on FITS data using a
 server-side helper. This capability allows you to execute virtually
 any command-line analysis program from JS9. The analysis command is
-run on the back-end server and results viewed on your Web page.  You can
-utilize your own Web server as the JS9 back-end helper using CGI
+run on the back-end server and results viewed on your web page.  You can
+utilize your own web server as the JS9 back-end helper using CGI
 calls, or you can run a separate Node.js-based server to process JS9
 back-end requests.  The server-side analysis capability is especially
 useful for archive centers, but also can be attractive to individual
@@ -123,7 +123,7 @@ and then build the JS9 system using the <b>make</b> command:
 <h3>Finalize Your Site Preferences</h3>
 <p>
 When JS9 is loaded into your browser, it reads a file called
-<b>js9Prefs.json</b> from the JS9 Web directory.  This file contains
+<b>js9Prefs.json</b> from the JS9 web directory.  This file contains
 various default settings for JS9, e.g. default colormap and scale for
 image display.  Feel free to edit this file to set up your own
 site-specific parameters. See
@@ -131,7 +131,7 @@ site-specific parameters. See
 description of the available parameters.
 
 <h3>Install the JS9 System</h3>
-<p> When the build is completed, you can install the JS9 into your Web tree:
+<p> When the build is completed, you can install the JS9 into your web tree:
 <pre>
     make install
 </pre>
@@ -143,11 +143,11 @@ and then clean up the build directory using the command:
 <h3>Optionally Install the JS9 Test Data Files</h3>
 <p> 
 If you want to display our test data files in the JS9 demo pages, 
-you must retrieve the JS9 data file tar file from the JS9 Web site:
+you must retrieve the JS9 data file tar file from the JS9 web site:
 <pre>
     http://js9.si.edu
 </pre>
-and untar it into the JS9 Web install directory. This will create
+and untar it into the JS9 web install directory. This will create
 sub-directories containing the image data. These data files also are
 available on GitHub:
 <pre>
@@ -155,7 +155,7 @@ available on GitHub:
 </pre>
 
 
-<h5>Last updated: October 28, 2014</h5>
+<h5>Last updated: June 1, 2016</h5>
 </div>
 
 </body>

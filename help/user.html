@@ -50,17 +50,17 @@ DS9 image display program for desktop use, which is available at:
     http://ds9.si.edu
 </pre>
 The JS9 display consists of one or more components that can be added
-to a Web page by the Web page designer.  At a minimum, the JS9 display
+to a web page by the web page designer.  At a minimum, the JS9 display
 will contain an image display canvas. It usually also will display a
 menu strip containing several pull-down menus. Traditionally, this
-menu strip is placed on top of the image canvas, but Web designers
+menu strip is placed on top of the image canvas, but web designers
 have complete control over its placement. JS9 also can display an info
 box, a command-line window, a pan window, a zoom window, as well as
 other plugins. All of these windows can be brought up dynamically from
 the View menu.
 
 <p>
-Astronomical image data usually is offered on a JS9 Web page as one or more
+Astronomical image data usually is offered on a JS9 web page as one or more
 clickable URLs. When you click on a data URL, it is displayed on the JS9 image
 canvas. Multiple images can be loaded into a single JS9 display. The <b>File</b>
 menu allows you to switch between these images.
@@ -73,7 +73,7 @@ fingers on a touch screen) will change the contrast/bias of the
 displayed image, bringing image features into relief.
 
 <p>
-These mouse/touch actions are configurable, both by Web page
+These mouse/touch actions are configurable, both by web page
 developers and by users. See
 the <a href="../plugins/help/mousetouch.html">Mouse Touch plugin</a> for
 more information.
@@ -88,10 +88,10 @@ the original FITS data.
 <a name="menus"></a> 
 <h3>JS9 Menus</h3>
 <p>
-The following menus are in the default JS9 menu bar. Note that Web
+The following menus are in the default JS9 menu bar. Note that web
 designers have control over which menus are displayed (or even whether
 the menu bar itself is displayed). Thus, not all of the menus listed below
-will be found on all Web pages:
+will be found on all web pages:
 <ul>
 
 <li><p><b>File:</b> The File menu displays a list of all images
@@ -103,7 +103,7 @@ uncompressed).  It also contains options to:
 <ul>
 <li><b>open local file ...</b> bring up a file browser dialog box to choose a FITS file for display
 <li><b>accessing data archives ...</b>a help page containing links to archives that are known to work with JS9
-<li><b>open link via proxy ...</b> enter a link to a FITS file that will be downloaded onto the Web-page server host and displayed (if configured)
+<li><b>open link via proxy ...</b> enter a link to a FITS file that will be downloaded onto the web-page server host and displayed (if configured)
 <li><b>open link via CORS ...</b> enter a shared Dropbox link to display a FITS file
 <li><b>extract image section ...</b> if this image has a parent file, you can extract a section from that parent for display (if configured)
 <li><b>print ...</b> print the current image display window (including 2D graphics)
@@ -195,7 +195,7 @@ data before scaling by changing the <b>low value for clipping</b>
 and/or <b>high value for clipping</b> numbers. These values are set
 initially with the data's min and max values or the z1,z2 values
 calculated by the <b>IRAF zscale</b> algorithm (depending on the value
-of the Web site's <b>JS9.imageOpts.scaleclipping</b> parameter. The
+of the web site's <b>JS9.imageOpts.scaleclipping</b> parameter. The
 default usually is "dataminmax".). Finally, you can set (or reset) the
 low and high values to data min,max or zscale z1,z2 using the <b>set
 vals to data min/max</b> or <b>set vals to zscale z1/z2</b> options,
@@ -369,7 +369,7 @@ colon-separated list of directories for JS9 to search when looking for
 FITS data files that have been dropped onto the display. This is used
 by JS9 when performing server-side data analysis on local
 drag-and-drop FITS files. It is necessary to specify data paths
-explicitly since Web pages are not allowed to determine the pathname
+explicitly since web pages are not allowed to determine the pathname
 of such files automatically (for obvious security reasons).
 
 <li><p><b>Help:</b> Show this and other JS9 help pages. The <b>Help</b> menu
@@ -524,7 +524,7 @@ See <a href="knownissues.html">Known Issues</a>
 for a discussion of limitations imposed on resize by Webkit
 browsers such as Chrome and Safari.
 
-<h5>Last updated: May 30, 2016</h5>
+<h5>Last updated: June 1, 2016</h5>
 </div>
 
 </body>

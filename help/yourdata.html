@@ -17,15 +17,15 @@
 
 <h3>Loading a FITS File From Your Web Page</h3>
 <p>
-Once you have your Web page set up, you can make your FITS data files
-available on your JS9 Web page by creating URLs that call
+Once you have your web page set up, you can make your FITS data files
+available on your JS9 web page by creating URLs that call
 the <b>JS9.Load()</b> routine:
 <pre>
     href='javascript:JS9.Load(filename, opts);'
 </pre>
 where opts can be:
 <ul>
-<li><b>filename</b> is the path relative to the current Web page location
+<li><b>filename</b> is the path relative to the current web page location
 <li><b>imageOpts</b>: an object containing params to be merged with the
 default JS9.imageOpts object
 </ul>
@@ -35,7 +35,7 @@ For example:
     href='javascript:JS9.Load("fits/casa.fits");'
 </pre>
 Clicking on this URL will load the casa.fits file (here, stored in the
-fits directory directly beneath the Web page location). If the JS9
+fits directory directly beneath the web page location). If the JS9
 server-side helper is running, it will be alerted about this new file
 so that it can run analysis, etc.
 
@@ -94,9 +94,9 @@ will result in poor responsiveness.
 
 <h3>Pre-Loading a File From Your Web Page</h3>
 <p>
-You can pre-load one or more data files into JS9 when the Web page
+You can pre-load one or more data files into JS9 when the web page
 itself is loaded by adding the <b>JS9.Preload()</b> routine to
-the <b>onload</b> event in your Web page <b>body</b> element:
+the <b>onload</b> event in your web page <b>body</b> element:
 <pre>
 &lt;body onload="JS9.Preload('fits/casa.fits', 
 		          'fits/snr.fits[events][pi==pha]', {colormap:'heat'},
@@ -110,7 +110,7 @@ Note that this routine takes a list of images, each of which
 optionally can have an associated <b>imgOpts</b> argument. The display
 opts can be passed as the final argument and will apply to all images.
 
-<h5>Last updated: March 12, 2015</h5>
+<h5>Last updated: June 1, 2016</h5>
 </div>
 
 </body>

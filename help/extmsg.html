@@ -16,7 +16,7 @@
 
 <p>
 The JS9 <b>Analysis menu</b> provides flexible support for running a
-macro-expanded external analysis command on the Web server and
+macro-expanded external analysis command on the web server and
 displaying results in the browser. But there are other scenarios in which
 it might be desirable for an external process to communicate with the
 JS9 client:
@@ -25,9 +25,9 @@ JS9 client:
 <li> JS9 might be part of an analysis system
 (i.e. instead of the analysis being incorporated into the Analysis
 menu). An analysis task might want to query JS9 for its regions.
-<li> A Web site might offer "live" tutorials in which JS9 in the
+<li> A web site might offer "live" tutorials in which JS9 in the
 browser is manipulated automatically from the server.
-<li> A Web site might wish to modify a JS9 client's user interface based
+<li> A web site might wish to modify a JS9 client's user interface based
 on the level of expertise of a given user.
 <li> A user running JS9 locally might want to interact with her JS9 client from within a local analysis script.
 <li> A remote user might want to interact with her JS9 client in a similar way.
@@ -135,7 +135,7 @@ These are the same commands that are available to the JS9 light-weight
 <p>
 The <b>js9 script</b> can talk to a JS9 instance if the script is run from:
 <ul>
-<li> the local host running the Web service and back-end helper
+<li> the local host running the web service and back-end helper
 <li> the same host that is running the target browser, regardless of
 where the helper resides
 </ul>
@@ -152,7 +152,7 @@ this way:
   OK
 </pre>
 <p>
-If more than one instance of JS9 appears on a single Web page, the 
+If more than one instance of JS9 appears on a single web page, the
 <b>-id</b> switch can differentiate between instances. The value of
 the id switch is the div id for that JS9 instance.  For example, if
 two instances of JS9 having div ids of "JS9" and "myJS9" are defined
@@ -180,16 +180,16 @@ instances on a page connected to a remote helper this way:
 </pre>
 
 <p>
-Ordinarily, the js9 script talks to a displayed JS9 Web page. But it
-also can be used to start up a new browser, display a JS9 Web page,
+Ordinarily, the js9 script talks to a displayed JS9 web page. But it
+also can be used to start up a new browser, display a JS9 web page,
 and then load an image into that page. To do this, use the <b>-b or
 -browser</b> switch to specify the browser (chrome, safari, or
-firefox) and the <b>-w or -webpage</b> switch to specify a Web page
-(default is a nice, basic JS9 Web page). For example:
+firefox) and the <b>-w or -webpage</b> switch to specify a web page
+(default is a nice, basic JS9 web page). For example:
 <pre>
   js9 -b chrome ~/data/casa.fits
 </pre>
-will start a Chrome browser with a basic JS9 Web page and load the
+will start a Chrome browser with a basic JS9 web page and load the
 Cas-A FITS files into the page, while:
 <pre>
 <p>
@@ -204,7 +204,7 @@ Instead of supplying the browser name each time on the command line, you
 can set the environment variable <b>JS9_BROWSER</b> and just use the
 -b switch with no argument. (Note that you still must supply the -b
 switch, which tells the script to start a browser.) Similarly, the default
-Web page can be configured using the <b>JS9_WEBPAGE</b> environment variable:
+web page can be configured using the <b>JS9_WEBPAGE</b> environment variable:
 <pre>
     export JS9_BROWSER=chrome
     export JS9_WEBPAGE=$HOME/js9/js9basics.html
@@ -212,15 +212,15 @@ Web page can be configured using the <b>JS9_WEBPAGE</b> environment variable:
 </pre>
 
 <p>
-Care must be taken that no JS9 Web page is already being displayed when the
+Care must be taken that no JS9 web page is already being displayed when the
 <b>-b or -browser</b> switch is utilized, or else the specified image
-will be loaded into the existing Web page (and no new browser will be started).
+will be loaded into the existing web page (and no new browser will be started).
 Also, it is important to note that the Google Chrome browser must be
 started by the js9 script or it must be started by you using the
 <b>--allow-file-access-from-files</b> switch. Without this switch,
 Chrome will not permit a local HTML file to read other files.
 
-<h5>Last updated: May 30, 2016</h5>
+<h5>Last updated: June 1, 2016</h5>
 </div>
 
 </body>

@@ -17,12 +17,12 @@
 <p>
 The JS9 Public API provides a JavaScript programming interface for
 interacting with JS9. Obviously, all of JS9 JavaScript code is
-available to you within a Web page, but the public API is designed to
-stable and well-documented for users and Web designers. It also will
+available to you within a web page, but the public API is designed to
+stable and well-documented for users and web designers. It also will
 provide the basis for planned language bindings (python, perhaps C/Fortran).
 <p>
 In general, the public API routines act on the current image being
-displayed in the default JS9 div element. Since most Web pages will
+displayed in the default JS9 div element. Since most web pages will
 have only a single JS9 div element, this behavior is usually what you
 want. It parallels DS9's behavior in which XPA commands act on the
 currently displayed image. For example, to change the colormap of the
@@ -41,7 +41,7 @@ a single <b>display</b> property:
 </pre>
 where [div_id] is the id of the target JS9 div element. For example,
 if two JS9 divs with ids "JS9" and "myJS9", respectively, are present
-on a single Web page, you can set the colormap of the second one this way:
+on a single web page, you can set the colormap of the second one this way:
 <pre>
     JS9.SetColormap("cool", {display: "myJS9"})
 </pre>
@@ -165,7 +165,7 @@ By default, the new window will contain a Menubar above an image display area:
     &lt;div class='JS9Menubar' id='[id]Menubar'&gt;&lt;/div&gt;
     &lt;div class='JS9' id='[id]'&gt;&lt;/div&gt;
 </pre>
-You can use the <b>html</b> argument to supply different Web page elements
+You can use the <b>html</b> argument to supply different web page elements
 for the window. Furthermore, if you create a light window, a default
 set of DynamicDrive dhtmlwindow parameters will be used to make the
 window the correct size for the default html:
@@ -198,8 +198,8 @@ where:
 Load a FITS file specified by an arbitrary URL into JS9 using the
 JS9 back-end helper as a proxy server.
 <p>
-For security reasons, JavaScript contained in one Web page can
-access data in another Web page only if both Web pages have the
+For security reasons, JavaScript contained in one web page can
+access data in another web page only if both web pages have the
 same origin (i.e., basically coming from the same host).  This
 policy is called the 
 <a href="https://en.wikipedia.org/wiki/Same-origin_policy">
@@ -229,7 +229,7 @@ will display a <b>open link via proxy</b> menu option in the <b>File</b> menu.
 <p>
 The <b>JS9.LoadProxy()</b> call takes a URL as its first
 argument. This URL will be retrieved using curl or wget and stored on
-the back-end server in a directory specifically tied to the Web
+the back-end server in a directory specifically tied to the web
 page. (The directory and its contents will be deleted when the page is
 unloaded.) JS9 then will load the file from this directory. Note that
 since the file resides on the back-end server, all back-end analysis 
@@ -254,11 +254,11 @@ To load an image into a specified display, pass the <b>display object</b> as the
 <p>
 Note again that not all back-end servers support the proxy functionality.
 The main 
-<a href="http://js9.si.edu">JS9 Web site</a> does support proxy service, and
+<a href="http://js9.si.edu">JS9 web site</a> does support proxy service, and
 can be used to view images from arbitrary URLs.
 
 <p>
-<font size="+1"><b><u>Load one or more images when the Web page is ready</u></b></font>
+<font size="+1"><b><u>Load one or more images when the web page is ready</u></b></font>
 <p>
 <code><font size="+1">JS9.Preload(url1, opts1, url2, opts2, ... url2, optsn)</font></code>
 <p>
@@ -268,14 +268,14 @@ where:
 <li><b>opts</b>: optional object containing image parameters
 </ul>
 This routine will pre-load images into a JS9 display. It can be added
-to the Web page body element using the onload() JavaScript call or
+to the web page body element using the onload() JavaScript call or
 called in a JavaScript init routine tied to onload. See index.html and
 js9preload.html for examples.
 <p>
 It is worth emphasizing that <b>JS9.Preload()</b> should not be called
-until the Web page is fully loaded, since JS9 itself is not fully
+until the web page is fully loaded, since JS9 itself is not fully
 initialized until then. It is for this reason that <b>JS9.Preload()</b>
-generally is called using an onload routine tied to the Web page body.
+generally is called using an onload routine tied to the web page body.
   
 <p>
 <font size="+1"><b><u>Get Load Status</u></b></font>
@@ -432,7 +432,7 @@ where:
 </ul>
 The display steps are: "colors" (remake color data when cmap has changed),
 "scaled" (rescale data values), "primary" (convert scaled data values
-to color values), and "display" (write color values to the Web page).
+to color values), and "display" (write color values to the web page).
 <p>
 The default step is "primary", which displays the image without recalculating
 color data, scaled data, etc. This generally is what you want, unless you have
@@ -1389,7 +1389,7 @@ In JS9, you can change the raw data (and hence the displayed image) using
 routines such as <b>JS9.GaussBlurData()</b> or the more general
 <b>JS9.RawDataLayer()</b>. You also can apply image processing
 techniques directly to the displayed RGB image without changing the
-underlying raw data, using this routine. The Web has an overwhelming
+underlying raw data, using this routine. The web has an overwhelming
 amount of information about image processing.  A good technical
 article concerning the use of image filters with Javascript and the
 HTML5 canvas is available at:
@@ -1508,7 +1508,7 @@ another image. The
 program from the 
 <a href="http://montage.ipac.caltech.edu/">Montage</a> software suite
 is used to perform the reprojection.  Please read the documentation on
-mProjectPP from the Montage Web site, which includes this explanation:
+mProjectPP from the Montage web site, which includes this explanation:
 <p>
 <pre>
     mProjectPP performs a plane-to-plane transform on the input image, and
@@ -2026,7 +2026,7 @@ where:
 </ul>
 The <b>JS9.RunAnalysis()</b> routine is used to execute a server-side
 analysis task and return the results for further processing within the
-Web page.
+web page.
 The optional <b>parr</b> array of parameters is passed to the JS9
 analysis macro expander so that values can be added to the command
 line.  The array is in jQuery name/value serialized object format,
@@ -2099,7 +2099,7 @@ where:
 <li><b>opts</b>: optional object containing resize parameters
 </ul>
 You can resize the JS9 display element by supplying new width and
-height parameters. The div on the Web page will be resized and the
+height parameters. The div on the web page will be resized and the
 image will be re-centered in the new display. If the display size has
 been increased, more of the image will be displayed as needed (up to
 the new size of the display). For example, if the original display was
@@ -2206,7 +2206,7 @@ associated with each header card.
 <p>
 where:
 <ul>
-<li><b>name</b>: name of a help file or url of a Web site to display
+<li><b>name</b>: name of a help file or url of a web site to display
 </ul>
 The help file names are the property names in JS9.helpOpts (e.g., "user" for
 the user page, "install" for the install page, etc.). Alternatively, you can
@@ -2246,9 +2246,9 @@ exact case or lower case, e.g.:
 </ul>
 <p>
 As with plugins in the View and Analysis menus, this routine does
-nothing if the plugin is explicitly defined on the Web page.
+nothing if the plugin is explicitly defined on the web page.
 <p>
-This routine is useful if you are building a Web interface that
+This routine is useful if you are building a web interface that
 supports the JS9 menu functions.
 
 <p>
@@ -2259,7 +2259,7 @@ supports the JS9 menu functions.
 Calling this routine brings up the browser's file dialog box. When a
 FITS file is selected, if will be loaded into the JS9 display.
 <p>
-This routine is useful if you are building a Web interface that
+This routine is useful if you are building a web interface that
 supports the JS9 menu functions.
 
 <p>
@@ -2270,7 +2270,7 @@ supports the JS9 menu functions.
 Calling this routine brings up the browser file menu. When a region file is
 selected, if will be loaded into the JS9 display.
 <p>
-This routine is useful if you are building a Web interface that
+This routine is useful if you are building a web interface that
 supports the JS9 menu functions.
 
 <p>
@@ -2288,7 +2288,7 @@ display. The colormap file can take one of two forms (without the comments):
     # all 3 vertex arrays for the purple colormap in one "vertices" property
     {"name":"purple","vertices":[[[0,0],[1,1]],[[0,0],[0,0]],[[0,0],[1,1]]]}
 </pre>
-This routine is useful if you are building a Web interface that
+This routine is useful if you are building a web interface that
 supports the JS9 menu functions. See <b>JS9.AddColormap()</b> for more
 information about colormap formats.
 
@@ -2307,7 +2307,7 @@ returns:
 <li><b>rpath</b>: path of the file relative to the JS9 install directory
 </ul>
 Sometimes a plugin needs to load an auxiliary file inside the plugins
-sub-directory. The Web page loading the plugin has an arbitrary
+sub-directory. The web page loading the plugin has an arbitrary
 location relative to the JS9 install directory, so this routine
 returns a relative path to the js9 install directory.
 
@@ -2369,14 +2369,14 @@ where:
 <li><b>id1, id2, ...</b>: optional name(s) of new JS9 display div(s)
 </ul>
 You can add new JS9 displays and/or plugins dynamically. To do this, you
-create the new divs, add them to the Web page, and then call this routine to
+create the new divs, add them to the web page, and then call this routine to
 incorporate them into JS9.
 <p>
 The routine will accept a list of JS9 display divs to initialize.  If
 all you are doing is adding one or more plugins to an existing display,
 leave the argument list empty.
 <p>
-For example, to add a new JS9 display and menubar at the end of a Web
+For example, to add a new JS9 display and menubar at the end of a web
 page and load an image into that display:
 <pre>
     var html = "&lt;div class='JS9Menubar' id='myJS9Menubar'&gt;&lt;/div&gt;&lt;div class='JS9' id='myJS9'&gt;&lt;/div&gt;";
@@ -2463,7 +2463,7 @@ the class name and the image name.  If found (in the example above,
 for Cas-A datasets), the associated auxfile URL is loaded and
 type-specific processing is performed:
 <ul>
-<li><b>masks</b>: the mask file is loaded into the Web page as an
+<li><b>masks</b>: the mask file is loaded into the web page as an
 off-screen image and an aux object is created as a property of the
 image object. This aux object can be used for subsequent processing
 (see below).
@@ -2532,7 +2532,7 @@ See js9onchange.html for an example of using this callback function.
 
 <hr><p>
 
-<h5>Last updated: February 6, 2016</h5>
+<h5>Last updated: June 1, 2016</h5>
 </div>
 
 </body>
