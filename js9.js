@@ -4517,8 +4517,11 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	JS9.vfile(ivfile, arr);
     }
     // output file name
-    s = this.id.replace(/\.png$/, ".fits").replace(/\.gz$/, "");
-    ovfile = "reprojected_" + JS9.uniqueID() + "_" + s;
+    s = this.id
+	.replace(/\[.*\]/, "")
+	.replace(/\.png$/, ".fits")
+	.replace(/\.gz$/, "");
+    ovfile = "reproj_" + JS9.uniqueID() + "_" + s;
     // if input is a table, we have to bin it by adding a bin specification
     // we also need to pass the HDU name. For now, "EVENTS" is all we know ...
     if( this.imtab === "table" ){
