@@ -1,18 +1,18 @@
-JS9 is our Web-based implementation of DS9, the de facto standard image display
-for astronomy. With JS9, you can:
+JS9 brings our Desktop DS9 image display to your browser:
 
-  - display FITS images and tables in a Web page
+  - display FITS images and tables in a web page
+  - display FITS data cubes and multi-extension files
   - drag and drop FITS images and tables
   - retrieve FITS files from data archives
-  - change the colormap and scale algorithm
+  - change the colormap and scale
+  - image pan, zoom and blink, table binning
+  - image arithmetic, Gaussian smoothing
   - blend images and apply RGB image filters
-  - mouse move displays pixel values, WCS info
-  - one finger displays pixel values, WCS info
-  - mouse press/move changes the contrast/bias
-  - two fingers changes the contrast/bias
+  - configure mouse movements and touch events
   - create and manipulate regions of interest
   - extend JS9 using plugins and the public API
   - perform data analysis (local and server-side)
+  - configure and control JS9 from within a web page
   - control JS9 from a command shell or Python
   - print images, save images, etc ...
 
@@ -24,13 +24,15 @@ Of course, JS9 also is available on GitHub:
 
     https://github.com/ericmandel/js9
 
-For installation instructions, start with help/install.html
-
-JS9 can change how we think about image display and analysis, moving
+JS9 is changing how we think about image display and analysis, moving
 beyond the Desktop into the Web. You can simply drag and drop a FITS
 image from your computer onto the JS9 display. All of basic JS9/DS9
 functionality is immediately available: zoom, pan, colormaps, scaling,
 regions, WCS, etc.
+
+For full installation instructions, start with help/install.html. But
+really, just clone or download the JS9 source, display the js9.html page
+in your browser, and drag and drop a FITS file onto the JS9 display.
 
 You can extend JS9 using the Plugin facility in combination with the
 JS9 Public API. For example, you can perform browser-based analysis on
@@ -42,13 +44,6 @@ the original data files on the back-end server).  Server-side analysis
 can be run, for example, in response to region changes, with the
 results displayed back in your browser. On the JS9 Website, click the
 Analysis tab, choose a task, create a region, and move it around ...
-
-JS9 originally was conceived as way to provide DS9 functionality on
-the Web, in order to support astronomical data archives, data centers,
-and individual projects. It subsequently has proven its value in the 
-lab, on education Web pages, and as part of Web-based analysis tools.
-It has been tested on a variety of browsers (Firefox, Safari, Chrome, 
-IE9) using a variety of operating systems (Linux, OS X, IOS, Windows).
 
 We are very interested in exploring new uses for JS9 as we evolve its
 functionality in response to community needs. If you would like to 
