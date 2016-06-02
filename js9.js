@@ -4916,16 +4916,16 @@ JS9.Display = function(el){
     });
     // set up drag and drop, if available
     this.divjq.on("dragenter", this, function(evt){
-	return JS9.dragenter(this.id, evt);
+	return JS9.dragenterCB(this.id, evt);
     });
     this.divjq.on("dragover", this, function(evt){
-	return JS9.dragover(this.id, evt);
+	return JS9.dragoverCB(this.id, evt);
     });
     this.divjq.on("dragexit", this, function(evt){
-	return JS9.dragexit(this.id, evt);
+	return JS9.dragexitCB(this.id, evt);
     });
     this.divjq.on("drop", this, function(evt){
-	return JS9.dragdrop(this.id, evt, JS9.NewFITSImage);
+	return JS9.dragdropCB(this.id, evt, JS9.NewFITSImage);
     });
     // no context menus on the display
     this.divjq.on("contextmenu", this, function(evt){
@@ -12009,7 +12009,8 @@ JS9.mouseDownCB = function(evt){
 	break;
     }
     // override click state with touch state, if possible
-    if( evt.originalEvent.touches && evt.originalEvent.touches.length ){
+    if( evt.originalEvent &&
+	evt.originalEvent.touches && evt.originalEvent.touches.length ){
 	im.clickState = -evt.originalEvent.touches.length;
     }
     // add callbacks for moving
@@ -12306,28 +12307,34 @@ JS9.keyDownCB = function(evt){
     }
 };
 
-JS9.dragenter = function(id, evt){
+// ---------------------------------------------------------------------
+// drag and drop event handlers
+// ---------------------------------------------------------------------
+JS9.dragenterCB = function(id, evt){
     evt.stopPropagation();
     evt.preventDefault();
 };
 
-JS9.dragover = function(id, evt){
+JS9.dragoverCB = function(id, evt){
     evt.stopPropagation();
     evt.preventDefault();
 };
 
-JS9.dragexit = function(id, evt){
+JS9.dragexitCB = function(id, evt){
     evt.stopPropagation();
     evt.preventDefault();
 };
 
-JS9.dragdrop = function(id, evt, handler){
+JS9.dragdropCB = function(id, evt, handler){
     var files, opts;
-    evt = evt.originalEvent;
+    // convert jquery event to original event, if possible
+    if( evt.originalEvent ){
+	evt = evt.originalEvent;
+    }
+    evt.stopPropagation();
+    evt.preventDefault();
     files = evt.target.files || evt.dataTransfer.files;
     opts = $.extend(true, {}, JS9.fits.options);
-    evt.stopPropagation();
-    evt.preventDefault();
     if( opts.display === undefined ){ opts.display = id; }
     if( opts.extlist === undefined ){ opts.extlist = JS9.globalOpts.extlist; }
     JS9.onFileList(files, opts, handler);
