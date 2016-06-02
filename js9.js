@@ -789,7 +789,6 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
     return this;
 };
 
-
 // initialize keywords for various logical coordinate systems
 JS9.Image.prototype.initLCS = function(header){
     var arr = [[0,0,0], [0,0,0], [0,0,0]];
@@ -7281,7 +7280,6 @@ JS9.Helper.prototype.send = function(key, obj, cb){
     return this;
 };
 
-
 // ---------------------------------------------------------------------
 // Graphics support using fabric.js
 //
@@ -9187,8 +9185,6 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	if( im && (im.params.listonchange || poly.params.listonchange) ){
 	    im.listRegions(poly, 2);
 	}
-
-
 	// redraw
 	canvas.renderAll();
     };
@@ -12239,10 +12235,12 @@ JS9.mouseOutCB = function(evt){
 JS9.wheelCB = function(evt){
     var display = evt.data;
     var im = display.image;
-    evt.preventDefault();
-    if( JS9.hasOwnProperty("MouseTouch") && 
-	JS9.MouseTouch.Actions["wheel zoom"]  ){
+    if( display.mousetouchZoom && im         &&
+	JS9.hasOwnProperty("MouseTouch")     &&
+	JS9.MouseTouch.Actions["wheel zoom"] ){
 	JS9.MouseTouch.Actions["wheel zoom"](im, evt);
+	// avoid page scroll if we are using the wheel for zooming
+	evt.preventDefault();
     }
 };
 
