@@ -316,5 +316,5 @@ JS9.RegisterPlugin(JS9.Cube.CLASS, JS9.Cube.NAME, JS9.Cube.init,
 		    onimageload: JS9.Cube.init,
 		    onimagedisplay: JS9.Cube.init,
 		    help: "help/cube.html",
-		    winTitle: "JS9 FITS Data Cubes",
+		    winTitle: "FITS Data Cubes",
 		    winDims: [JS9.Cube.WIDTH, JS9.Cube.HEIGHT]});

@@ -159,7 +159,7 @@ JS9.RegisterPlugin(JS9.Mef.CLASS, JS9.Mef.NAME, JS9.Mef.init,
 		    plugindisplay: JS9.Mef.init,
 		    onimageload: JS9.Mef.init,
 		    onimagedisplay: JS9.Mef.init,
-		    winTitle: "JS9 Multi-Extension FITS",
+		    winTitle: "Multi-Extension FITS",
 		    winResize: true,
 		    winDims: [JS9.Mef.WIDTH, JS9.Mef.HEIGHT]});
 

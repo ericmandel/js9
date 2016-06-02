@@ -174,5 +174,5 @@ JS9.RegisterPlugin(JS9.Imarith.CLASS, JS9.Imarith.NAME, JS9.Imarith.init,
 		    onimageload: JS9.Imarith.init,
 		    onimagedisplay: JS9.Imarith.init,
 		    help: "help/imarith.html",
-		    winTitle: "JS9 Imarith",
+		    winTitle: "Image Arithmetic",
 		    winDims: [JS9.Imarith.WIDTH, JS9.Imarith.HEIGHT]});

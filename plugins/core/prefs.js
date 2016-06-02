@@ -451,6 +451,6 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME, JS9.Prefs.init,
 		   {menuItem: "Preferences",
 		    help: "help/prefs.html",
-		    winTitle: "JS9 User Preferences",
+		    winTitle: "User Preferences",
 		    winResize: true,
 		    winDims: [JS9.Prefs.WIDTH, JS9.Prefs.HEIGHT]});

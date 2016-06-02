@@ -448,6 +448,6 @@ JS9.RegisterPlugin(JS9.MouseTouch.CLASS, JS9.MouseTouch.NAME,
 		   {menuItem: "Mouse/Touch",
 		    plugindisplay: JS9.MouseTouch.init,
 		    help: "help/mousetouch.html",
-		    winTitle: "JS9 Mouse/Touch Actions",
+		    winTitle: "Mouse/Touch Actions",
 		    winResize: true,
 		    winDims: [JS9.MouseTouch.WIDTH, JS9.MouseTouch.HEIGHT]});

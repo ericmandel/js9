@@ -1315,7 +1315,7 @@ JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		    onimagedisplay: JS9.Blend.imagedisplay,
 		    onimageclose: JS9.Blend.imageclose,
 		    help: "help/blend.html",
-		    winTitle: "JS9 Image Blending",
+		    winTitle: "Image Blending",
 		    winResize: true,
 		    winDims: [JS9.Blend.WIDTH, JS9.Blend.HEIGHT]});
 
@@ -1629,7 +1629,7 @@ JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
 		    onimagedisplay: JS9.Blink.imagedisplay,
 		    onimageclose: JS9.Blink.imageclose,
 		    help: "help/blink.html",
-		    winTitle: "JS9 Image Blinking",
+		    winTitle: "Image Blinking",
 		    winResize: true,
 		    winDims: [JS9.Blink.WIDTH, JS9.Blink.HEIGHT]});
 
@@ -1829,7 +1829,7 @@ JS9.RegisterPlugin(JS9.Colorbar.CLASS, JS9.Colorbar.NAME, JS9.Colorbar.init,
 		   {menuItem: "Colorbar",
 		    onimagedisplay: JS9.Colorbar.imagedisplay,
 		    help: "help/colorbar.html",
-		    winTitle: "JS9 Colorbar",
+		    winTitle: "Colorbar",
 		    winDims: [JS9.Colorbar.WIDTH, JS9.Colorbar.HEIGHT]});
 /*
  * FITS 3D cube plugin (April 29, 2016)
@@ -2149,7 +2149,7 @@ JS9.RegisterPlugin(JS9.Cube.CLASS, JS9.Cube.NAME, JS9.Cube.init,
 		    onimageload: JS9.Cube.init,
 		    onimagedisplay: JS9.Cube.init,
 		    help: "help/cube.html",
-		    winTitle: "JS9 FITS Data Cubes",
+		    winTitle: "FITS Data Cubes",
 		    winDims: [JS9.Cube.WIDTH, JS9.Cube.HEIGHT]});
 /*
  * imarith module (March 8, 2016)
@@ -2327,7 +2327,7 @@ JS9.RegisterPlugin(JS9.Imarith.CLASS, JS9.Imarith.NAME, JS9.Imarith.init,
 		    onimageload: JS9.Imarith.init,
 		    onimagedisplay: JS9.Imarith.init,
 		    help: "help/imarith.html",
-		    winTitle: "JS9 Imarith",
+		    winTitle: "Image Arithmetic",
 		    winDims: [JS9.Imarith.WIDTH, JS9.Imarith.HEIGHT]});
 /*
  * Multi-Extension FITS module (March 31, 2016)
@@ -2490,7 +2490,7 @@ JS9.RegisterPlugin(JS9.Mef.CLASS, JS9.Mef.NAME, JS9.Mef.init,
 		    plugindisplay: JS9.Mef.init,
 		    onimageload: JS9.Mef.init,
 		    onimagedisplay: JS9.Mef.init,
-		    winTitle: "JS9 Multi-Extension FITS",
+		    winTitle: "Multi-Extension FITS",
 		    winResize: true,
 		    winDims: [JS9.Mef.WIDTH, JS9.Mef.HEIGHT]});
 
@@ -2944,7 +2944,7 @@ JS9.RegisterPlugin(JS9.MouseTouch.CLASS, JS9.MouseTouch.NAME,
 		   {menuItem: "Mouse/Touch",
 		    plugindisplay: JS9.MouseTouch.init,
 		    help: "help/mousetouch.html",
-		    winTitle: "JS9 Mouse/Touch Actions",
+		    winTitle: "Mouse/Touch Actions",
 		    winResize: true,
 		    winDims: [JS9.MouseTouch.WIDTH, JS9.MouseTouch.HEIGHT]});
 /*
@@ -3400,7 +3400,7 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME, JS9.Prefs.init,
 		   {menuItem: "Preferences",
 		    help: "help/prefs.html",
-		    winTitle: "JS9 User Preferences",
+		    winTitle: "User Preferences",
 		    winResize: true,
 		    winDims: [JS9.Prefs.WIDTH, JS9.Prefs.HEIGHT]});
 require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"./imexam":[function(require,module,exports){
