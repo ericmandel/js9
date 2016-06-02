@@ -228,7 +228,7 @@ function CatalogService(params) {
     this.params = params;
 
     this.table2cat = function(im, table) {
-	var i;
+	var i, j;
 	var shape = this.params.shape;
 
 	var xcol = table[this.params.xcol];
@@ -240,8 +240,11 @@ function CatalogService(params) {
 
 	var pos_func = function(im, x, y) {
 	    var coords = JS9.WCSToPix(x, y, {display: im});
-
-	    return { x: coords.x, y: coords.y };
+	    if( coords ){
+		return { x: coords.x, y: coords.y };
+	    } else {
+		return null;
+	    }
 	};
 	var sizefunc;
 
@@ -264,8 +267,11 @@ function CatalogService(params) {
 	}
 
 	var regs = [], pos, siz, reg;
-	for ( i = 0; i < table.data.length; i++ ) {
+	for ( i = 0, j = 0; i < table.data.length; i++ ) {
 	    pos = pos_func(im, table.data[i][xcol]*15, table.data[i][ycol]);
+	    if( !pos ){
+		continue;
+	    }
 	    siz = sizefunc(im, table.data[i][wcol], table.data[i][hcol]);
 
 	    reg = {   id: i.toString(), shape: shape
@@ -274,7 +280,7 @@ function CatalogService(params) {
 			, angle: 0
 		};
 
-	    regs[i] = reg;
+	    regs[j++] = reg;
 	}
 
 	return regs;
