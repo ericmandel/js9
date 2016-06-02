@@ -11546,15 +11546,20 @@ JS9.eventToDisplayPos = function(evt, offset){
     offset = offset || $(targ).offset();
     // jQuery normalizes pageX, pageY: mouse positions relative to the document
     // changed touch events: take position from first finger
-    touches = evt.originalEvent.touches;
-    if( touches ){
-	if( touches.length ){
+    if( evt.originalEvent ){
+	if( evt.originalEvent.touches &&
+	    evt.originalEvent.touches.length ){
+	    touches = evt.originalEvent.touches;
 	    pageX = touches[0].pageX;
 	    pageY = touches[0].pageY;
 	} else if( evt.originalEvent.changedTouches &&
 		   evt.originalEvent.changedTouches.length ){
-	    pageX = evt.originalEvent.changedTouches[0].pageX;
-	    pageY = evt.originalEvent.changedTouches[0].pageY;
+	    touches = evt.originalEvent.changedTouches;
+	    pageX = touches[0].pageX;
+	    pageY = touches[0].pageY;
+	} else {
+	    pageX = evt.pageX;
+	    pageY = evt.pageY;
 	}
     } else {
 	// mouse events
