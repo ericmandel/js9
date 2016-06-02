@@ -286,6 +286,12 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    // extract image section and call handler
 	    Module["getFITSImage"]({fptr: fptr}, hdu, options, handler);
 	};
+	fileReader.onerror = function(e) {
+	    Module["error"]("fileReader could not read blob as a FITS file");
+	};
+	fileReader.onabort = function(e) {
+	    Module["error"]("fileReader did not read blob as a FITS file");
+	};
 	// this starts it all!
 	fileReader.readAsArrayBuffer(fits);
     } else if( typeof fits === "string" ){
