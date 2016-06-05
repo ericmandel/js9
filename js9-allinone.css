@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.8, Thu Jun  2 16:44:55 EDT 2016 */
+/* JS9 allinone: v1.8, Sun Jun  5 10:47:59 EDT 2016 */
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
@@ -1093,6 +1093,14 @@ canvas.surfacePlotCanvas {
     top: 0;
     left: 450px;
     width: 100px;
+}
+
+.column_R4l
+{
+    position: absolute;
+    top: 0;
+    left: 450px;
+    width: 250px;
 }
 
 .column_R5

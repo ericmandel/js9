@@ -13,7 +13,7 @@
 JS9.Prefs = {};
 JS9.Prefs.CLASS = "JS9";        // class of plugins (1st part of div class)
 JS9.Prefs.NAME = "Preferences"; // name of this plugin (2nd part of div class)
-JS9.Prefs.WIDTH =  630;         // default width of window
+JS9.Prefs.WIDTH =  750;         // default width of window
 JS9.Prefs.HEIGHT = 250;	        // default height of window
 
 JS9.Prefs.imagesSchema = {
@@ -199,7 +199,7 @@ JS9.Prefs.fitsSchema = {
     "properties": {
 	"extlist": {
 	    "type": "string",
-	    "helper": "default binary table extensions for drag/drop"
+	    "helper": "default binary table extensions"
 	},
 	"xdim": {
 	    "type": "string",
@@ -212,11 +212,32 @@ JS9.Prefs.fitsSchema = {
     }
 };
 
+// display schema for the page
+JS9.Prefs.displaysSchema = {
+    "title": "Display Preferences",
+    "description": "preferences for each JS9 display in this page",
+    "properties": {
+	"mouseActions": {
+	    "type": "object",
+	    "helper": "array of mouse actions"
+	},
+	"touchActions": {
+	    "type": "object",
+	    "helper": "array of touch actions"
+	},
+	"mousetouchZoom": {
+	    "type": "boolean",
+	    "helper": "scroll/pinch to zoom?"
+	},
+    }
+};
+
 // source object for preferences
 JS9.Prefs.sources = [
-    {name: "images",  schema: JS9.Prefs.imagesSchema},
-    {name: "regions", schema: JS9.Prefs.regionsSchema},
-    {name: "fits",    schema: JS9.Prefs.fitsSchema}
+    {name: "images",   schema: JS9.Prefs.imagesSchema},
+    {name: "regions",  schema: JS9.Prefs.regionsSchema},
+    {name: "fits",     schema: JS9.Prefs.fitsSchema},
+    {name: "displays", schema: JS9.Prefs.displaysSchema}
 ];
 
 // init preference plugin
@@ -243,17 +264,22 @@ JS9.Prefs.init = function(width, height){
 	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
 	// source-specific pre-processing
 	switch( source.name ){
+	case "images":
+	    source.data = JS9.imageOpts;
+	    break;
+	case "regions":
+	    source.data = JS9.Regions.opts;
+	    break;
 	case "fits":
 	    // make up "nicer" option values from raw object
 	    source.data = {extlist: JS9.fits.options.extlist,
 			   xdim: JS9.fits.options.table.nx, 
 			   ydim: JS9.fits.options.table.ny};
 	    break;
-	case "regions":
-	    source.data = JS9.Regions.opts;
-	    break;
-	case "images":
-	    source.data = JS9.imageOpts;
+	case "displays":
+	    source.data = {mouseActions: JS9.globalOpts.mouseActions,
+			   touchActions: JS9.globalOpts.touchActions,
+			   mousetouchZoom: JS9.globalOpts.mousetouchZoom};
 	    break;
 	default:
 	    break;
@@ -272,7 +298,7 @@ JS9.Prefs.init = function(width, height){
 		    } else {
 			s = "";
 		    }
-		    html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2'><input type='checkbox' name='%s' value='true' %s></span><span class='column_R3L'>%s</span></div>", prompt, key, s, obj.helper);
+		    html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2'><input type='checkbox' name='%s' value='true' %s></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
 		    break;
 		default:
 		    if( typeof source.data[key] === "object" ){
@@ -280,7 +306,7 @@ JS9.Prefs.init = function(width, height){
 		    } else {
 			s = source.data[key];
 		    }
-		    html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2'><input type='text' name='%s' class='text_R' value='%s'/></span><span class='column_R3L'>%s</span></div>", prompt, key, s, obj.helper);
+		    html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2l'><input type='text' name='%s' class='text_R' value='%s'/></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
 		    break;
 		}
 	    }
@@ -300,7 +326,7 @@ JS9.Prefs.init = function(width, height){
 	html += "</div>";
     }
     // allow scrolling on the plugin
-    this.divjq.addClass("JS9PluginScrolling")
+    this.divjq.addClass("JS9PluginScrolling");
     // set the html for this div
     this.divjq.html(html);
     // for each source, set data values that we will need in button callbacks
@@ -379,14 +405,17 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
     var len = arr.length;
     // source-specific pre-processing
     switch( source.name ){
-    case "fits":
-	obj = JS9.fits.options;
+    case "images":
+	obj = JS9.imageOpts;
 	break;
     case "regions":
 	obj = JS9.Regions.opts;
 	break;
-    case "images":
-	obj = JS9.imageOpts;
+    case "fits":
+	obj = JS9.fits.options;
+	break;
+    case "displays":
+	obj = JS9.globalOpts;
 	break;
     }
     for(i=0; i<len; i++){
@@ -412,6 +441,21 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	}
 	if( obj[key] !== val ){
 	    switch( source.name ){
+	    case "images":
+		// set new option value
+	        obj[key] = val;
+	        break;
+	    case "regions":
+		// set new option value
+	        obj[key] = val;
+		// change option value in each display's region layer as well
+		for(j=0; j<JS9.displays.length; j++){
+		    rlayer = JS9.displays[j].layers.regions;
+		    if( rlayer ){
+			rlayer.opts[key] = val;
+		    }
+		}
+		break;
 	    case "fits":
 	        // put our "nicer" option values back into raw object
 	        // note that the values are still strings
@@ -426,17 +470,16 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	            obj[key] = val;
 	            break;
 	        }
+		source.data[key] = val;
 	        break;
-	    case "regions":
-		// set new option value
-	        obj[key] = val;
-		// change option value in each display's region layer as well
+	    case "displays":
+	        // put our "nicer" option values back into raw object
+	        JS9.globalOpts[key] = val;
+		// change option value in this display as well
 		for(j=0; j<JS9.displays.length; j++){
-		    rlayer = JS9.displays[j].layers.regions;
-		    if( rlayer ){
-			rlayer.opts[key] = val;
-		    }
+		    JS9.displays[j][key] = val;
 		}
+		source.data[key] = val;
 		break;
 	    default:
 		// set new option value

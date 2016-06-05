@@ -11366,14 +11366,12 @@ JS9.fitsLibrary = function(s){
 	if( JS9.userOpts.fits ){
 	    JS9.fits.options.extlist =  JS9.userOpts.fits.extlist;
 	    JS9.fits.options.table = {
-		// size of extracted image
-		nx: JS9.userOpts.fits.table.nx,
-		ny: JS9.userOpts.fits.table.ny
+		nx: JS9.userOpts.fits.xdim,
+		ny: JS9.userOpts.fits.ydim
 	    };
 	} else {
 	    JS9.fits.options.extlist =  JS9.globalOpts.extlist;
 	    JS9.fits.options.table = {
-		// size of extracted image
 		nx: JS9.globalOpts.dims[0],
 		ny: JS9.globalOpts.dims[1]
 	    };
@@ -12786,6 +12784,15 @@ JS9.init = function(){
 	if( uopts ){
 	    try{ JS9.userOpts.fits = JSON.parse(uopts); }
 	    catch(ignore){}
+	}
+	try{ uopts = localStorage.getItem("displays"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.displays = JSON.parse(uopts); }
+	    catch(ignore){}
+	    if( JS9.userOpts.displays ){
+		$.extend(true, JS9.globalOpts, JS9.userOpts.displays);
+	    }
 	}
     }
     // add handler for postMessage events, if necessary
