@@ -4,7 +4,7 @@
 <head> 
   <meta name="publisher" content="Center for Astrophysics">
   <meta name="language" content="en">
-  <meta name="date" content="2016-03-21">
+  <meta name="date" content="2016-06-08">
   <meta name="author" content="Eric Mandel, CfA">
   <meta name="keywords" content="Harvard Smithsonian Astrophysics high-energy chandra x-ray astronomy visualization DS9 JS9 telescope observatory research">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -330,6 +330,10 @@
       </ul>
     </div>
     <div id="status" class="tabcontent mytabcontent">
+      <b>Release 1.9 (06/08/16)</b> adds support for multi-extension FITS,
+      3D cubes, image arithmetic, RGB image processing, gesture configuration,
+      new scales and colormaps
+      <p>
       <b>Release 1.8 (03/21/16)</b> adds support for image blending,
       image filters, wcs reprojections, colorbar, blinking, Gaussian blur,
       line region with distance measure, raw data layer manipulation.
@@ -360,7 +364,7 @@
       <p>
       JS9 is distributed under the terms of The MIT License.
       <p>
-      Contact: <a href="mailto:saord@cfa.harvard.edu?subject=JS9 inquiry">Eric Mandel</a>, Harvard-Smithsonian Center for Astrophysics
+      Contact: <a href="mailto:eric@cfa.harvard.edu?subject=JS9 inquiry">Eric Mandel</a>, Harvard-Smithsonian Center for Astrophysics
     </div>
     <div id="get" class="tabcontent mytabcontent">
       The current <b>JS9 source</b> tar file is available below.
@@ -377,14 +381,13 @@
       To configure a back-end Node helper (for server-side analysis and
       external control), you also will need to install the
       <a href="http://heasarc.gsfc.nasa.gov/docs/software/fitsio" target="_blank" rel="noopener noreferrer">cfitsio</a>
-      library or the <b>funtools</b> package.
+      library.
       <p>
       Tar files:
       <ul>
-      <li><a href="downloads/js9-1.8.tar.gz">js9 v1.8</a>
+      <li><a href="downloads/js9-1.9.tar.gz">js9 v1.9</a>
       <li><a href="downloads/pyjs9-1.0.tar.gz">pyjs9 v1.0</a>
       <li><a href="downloads/js9-data.tar.gz">js9 data</a>
-      <li><a href="downloads/funtools-1.4.6.tar.gz">funtools</a>
       </ul>
       <p>
       JS9 and pyjs9 also are available on GitHub, where the
@@ -393,7 +396,6 @@
       <li><a href="https://github.com/ericmandel/js9" target="_blank" rel="noopener noreferrer">js9</a>
       <li><a href="https://github.com/ericmandel/pyjs9" target="_blank" rel="noopener noreferrer">pyjs9</a>
       <li><a href="https://github.com/ericmandel/js9data" target="_blank" rel="noopener noreferrer">js9 data</a>
-      <li><a href="https://github.com/ericmandel/funtools" target="_blank" rel="noopener noreferrer">funtools</a>
       </ul>
       <p>
     </div>
@@ -419,13 +421,13 @@
       <p>
       Thanks for important suggestions and (sometimes) code from:
       <ul>
-      <li> Brian Chekinka, JHU (multi-extension FITS, data cubes)
+      <li> Brian Cherinka, JHU (multi-extension FITS, data cubes)
       <li> Joseph DePasquale, CfA (image blending techniques)
-      <li> Kathy Lestition, CfA (education and outreach)
+      <li> Kathy Lestition, CfA (EPO)
       <li> Briehan Lombaard SAAO (telescope control)
       <li> John Roll, Facebook (fitsy, data analysis plugins)
-      <li> Pat Slane, CfA (the needs of research vs. education)
-      <li> Science Education Department, CfA (education and outreach)
+      <li> Pat Slane, CfA (needs of research vs. education)
+      <li> Science Education Department, CfA (EPO)
       </ul>
       <p>
       JS9 development at the
@@ -439,7 +441,7 @@
     <div style="margin-top: 10px; margin-left: 2px; float: right">
     <font size="-1">
     Questions? Please contact
-    <a href="mailto:saord@cfa.harvard.edu?subject=JS9 inquiry">
+    <a href="mailto:eric@cfa.harvard.edu?subject=JS9 inquiry">
       Eric Mandel
     </a>
     </font>
@@ -469,8 +471,8 @@
 </tr>
 <tr align="left" valign="top">
 <td style="text-align:center" height="40px">&nbsp;&nbsp;&nbsp;&nbsp;
-<a href="http://www.harvard.edu"><img src="http://hea-www.harvard.edu/common/images/footer-harvard.gif" alt="Harvard Logo" width="20" height="20" align="middle"></a>
-<a href="http://www.si.edu"><img src="http://hea-www.harvard.edu/common/images/footer-si.gif" alt="Smithsonian Logo" width="20" height="20" align="middle"></a>
+<a href="http://www.harvard.edu"><img src="js9/images/xfooter-harvard.gif" alt="Harvard Logo" width="20" height="20" align="middle"></a>
+<a href="http://www.si.edu"><img src="js9/images/xfooter-si.gif" alt="Smithsonian Logo" width="20" height="20" align="middle"></a>
 <span class="navfooter">
 &nbsp;&nbsp;HARVARD-SMITHSONIAN CENTER FOR ASTROPHYSICS&nbsp;&nbsp;|&nbsp;&nbsp;
 60 GARDEN STREET&nbsp;&nbsp;|&nbsp;&nbsp;
