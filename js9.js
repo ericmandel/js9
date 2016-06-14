@@ -3549,6 +3549,7 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
 		url: url,
 		cache: false,
 		dataType: "json",
+		mimeType: "application/json",
 		success: loadRegionFunc,
 		error:  errFunc
 	    });
