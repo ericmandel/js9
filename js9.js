@@ -11871,7 +11871,8 @@ JS9.loadPrefs = function(url, doerr) {
     // load site/user preferences synchronously
     $.ajax({
       url: url,
-      dataType: "json",
+	dataType: "json",
+	mimeType: "application/json",
 	async: false,
       success: function(obj, textStatus, jqXHR){
 	var otype, jtype, name;
