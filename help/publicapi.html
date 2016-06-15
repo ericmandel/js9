@@ -79,7 +79,7 @@ Choose from the following sections:
 <li><a href="#proto">Prototypes (in development)</a>
 </ul>
 
-<hr><p>
+<p><hr><p>
 <center><b><font size="+1">
 <a name="load">Loading Images</a>
 </font></b></center>
@@ -311,7 +311,7 @@ Thus, to check for image load, one can do this in python:
     j.SetZoom(2)
 </pre>
 
-<hr><p>
+<p><hr><p>
 <center><b><font size="+1">
 <a name="images">Working with Images</a>
 </font></b></center>
@@ -736,7 +736,7 @@ where:
 <ul>
 <li><b>filename</b>: output file name
 </ul>
-Save the current colormap definition for displayed image as a JSON
+Save the current colormap definition for displayed image as a json
 file. If filename is not specified, the file will be saved as "js9.cmap".
 This is useful if you want to edit the current definition to make a new
 colormap.
@@ -805,7 +805,7 @@ result is that you see, for example, green at the beginning and yellow
 (red + green) at the end, with some purple (red + blue) in the middle
 of the colormap.
 <p>
-As a convenience, you also can pass an object or JSON string containing the
+As a convenience, you also can pass an object or json string containing the
 colormap definition:
 <pre>
     # RGB color triplets for the I8 colormap in a "colors" property
@@ -1554,7 +1554,65 @@ by JS9.REPROJDIM, currently 2200 x 2200. Even this might be too large
 for iOS devices under certain circumstances, although issues regarding
 memory are evolving rapidly.
 
-<hr><p>
+<p>
+<font size="+1"><b><u>Save an image session to a file</u></b></font>
+<p>
+<code><font size="+1">JS9.SaveSession(session)</font></code>
+<p>
+where:
+<ul>
+<li><b>session</b>: name of the file to create when saving this session
+</ul>
+<p>
+This routine saves all essential session information about the currently
+displayed image (filename, scaling, colormap, contrast/bias, zoom, regions,
+catalogs, etc) in a json-formatted file. You can subsequently load this file
+into JS9 to restore the image session.
+<p>
+The session file is a text file and can be edited, subject to the usual
+rules of json formatting. For example, you can change the colormap,
+scaling, etc. after the fact.
+<p>
+The session file contains a <b>file</b> property near the top that
+specifies the location of the image. A local file usually will contain
+an absolute path or a path relative to the web page being displayed.
+However, if the image was originally opened using drag-and-drop, no
+pathname information is available, in accordance with standard web
+security protocols. In this case, you must edit the session file to
+supply the path (either absolute or relative to the web page) before
+re-loading the session.
+
+<p>
+<font size="+1"><b><u>Load a previously saved image session from a file</u></b></font>
+<p>
+<code><font size="+1">JS9.LoadSession(session)</font></code>
+<p>
+where:
+<ul>
+<li><b>session</b>: name of the session file to load
+</ul>
+<p>
+Restore an image session by loading a json-formatted session file. The
+image itself is retrieved and loaded, and all of the saved parameters
+and graphics (scale, colormap, regions, catalogs etc) are applied to
+the display.
+<p>
+The session file contains a <b>file</b> property near the top that
+specifies the location of the image. A local file usually will contain
+an absolute path or a path relative to the web page being displayed.
+However, if the image was originally opened using drag-and-drop, no
+pathname information is available, in accordance with standard web
+security protocols. In this case, you must edit the session file to
+supply the path (either absolute or relative to the web page) before
+re-loading the session.
+<p>
+Note that the raw data file itself is not saved (only its pathname),
+so you must have access to that file in order to restore a session. However,
+the data file need not be in the same location as it was originally: you
+can adjust the path of the data file by editing the <b>file</b> property
+as needed.
+
+<p><hr><p>
 <center><b><font size="+1">
 <a name="regions">Working with Regions</a>
 </font></b></center>
@@ -1716,7 +1774,33 @@ where:
 <li><b>regions</b>: which regions to remove
 </ul>
 
-<hr><p>
+<p>
+<font size="+1"><b><u>Save regions from the current image to a file</u></b></font>
+<p>
+<code><font size="+1">JS9.SaveRegions(filename, which)</font></code>
+<p>
+where:
+<ul>
+<li><b>filename</b>: output file name
+<li><b>which</b>: which regions to save (default is "all")
+</ul>
+Save the current regions for the displayed image as JS9 regions file. If
+filename is not specified, the file will be saved as "js9.reg".
+
+<p>
+<font size="+1"><b><u>Load regions from a file into the current image</u></b></font>
+<p>
+<code><font size="+1">JS9.LoadRegions(filename)</font></code>
+<p>
+where:
+<ul>
+<li><b>filename</b>: input file name or URL
+</ul>
+Load the specified regions file into the displayed image. The filename, 
+which must be specified, can be a local file (with absolute path or a
+path relative to the displayed web page) or a URL.
+
+<p><hr><p>
 <center><b><font size="+1">
 <a name="shapes">Working with Shape Layers</a>
 </font></b></center>
@@ -1739,31 +1823,6 @@ be any of the following (in order of precedence):
 <li><b>[tag]</b>: all regions containing the specified tag (e.g., "source")
 </ul>
 Thus, it is possible to act on multiple shapes at the same time.
-
-<p>
-<font size="+1"><b><u>Save regions from the current image to a file</u></b></font>
-<p>
-<code><font size="+1">JS9.SaveRegions(filename, which)</font></code>
-<p>
-where:
-<ul>
-<li><b>filename</b>: output file name
-<li><b>which</b>: which regions to save (default is "all")
-</ul>
-Save the current regions for the displayed image as JS9 regions file. If
-filename is not specified, the file will be saved as "js9.reg".
-
-<p>
-<font size="+1"><b><u>Load regions from a file into the current image</u></b></font>
-<p>
-<code><font size="+1">JS9.LoadRegions(filename)</font></code>
-<p>
-where:
-<ul>
-<li><b>filename</b>: input file name
-</ul>
-Load the specified regions file into the displayed image. The filename must
-be specified.
 
 <p>
 <font size="+1"><b><u>Create a new shape layer</u></b></font>
@@ -2007,7 +2066,7 @@ Change one or more shapes. The opts object can contain the parameters
 described in the <b>JS9.AddShapes()</b> section. However, you cannot (yet)
 change the shape itself (e.g. from "box" to "circle").
 
-<hr><p>
+<p><hr><p>
 <center><b><font size="+1">
 <a name="server">Server-side Analysis</a>
 </font></b></center>
@@ -2081,7 +2140,7 @@ See js9analysis.html for a simple example.
 <p>
 The <b>func</b> callback is the same as for <b>JS9.RunAnalysis()</b> above.
 
-<hr><p>
+<p><hr><p>
 <center><b><font size="+1">
 <a name="misc">Miscellaneous</a>
 </font></b></center>
@@ -2279,7 +2338,7 @@ supports the JS9 menu functions.
 <code><font size="+1">JS9.OpenColormapMenu()</font></code>
 <p>
 Calling this routine brings up the browser file menu. When a
-JSON-format colormap file is selected, it will be loaded into the JS9
+json-format colormap file is selected, it will be loaded into the JS9
 display. The colormap file can take one of two forms (without the comments):
 <pre>
     # RGB color triplets for the I8 colormap in a "colors" property
@@ -2357,7 +2416,7 @@ list of available analysis tasks and then display this list using the call:
     JS9.Send("getAnalysis", null, function(s){alert(s)});
 </pre>
 The "getAnalysis" message passes no parameters to the server. The
-server returns a list of available analysis tasks in JSON format.
+server returns a list of available analysis tasks in json format.
 
 <p>
 <font size="+1"><b><u>Add a JS9 display div and/or associated plugins</u></b></font>
@@ -2390,7 +2449,7 @@ page and load an image into that display:
 See also <b>JS9.LoadWindow()</b> for a nice way to load images into a
 light-weight or completely new window.
 
-<hr>
+<p><hr>
 <center><b><font size="+1">
 <a name="proto">Prototype Routines (not ready for prime time)</a>
 </font></b></center>
@@ -2486,7 +2545,7 @@ object. Please contact us if you want to work with auxiliary files, so
 that we can continue to think about what is required for their support.
 
 
-<hr><p>
+<p><hr><p>
 <center><b><font size="+1">
 <a name="proto">API Change History</a>
 </font></b></center>
@@ -2530,9 +2589,9 @@ to:
 </pre>
 See js9onchange.html for an example of using this callback function.
 
-<hr><p>
+<p><hr><p>
 
-<h5>Last updated: June 1, 2016</h5>
+<h5>Last updated: June 15, 2016</h5>
 </div>
 
 </body>

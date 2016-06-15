@@ -4702,6 +4702,61 @@ JS9.Image.prototype.moveToDisplay = function(dname){
     }
 };
 
+// save session to a json file
+// NB: save is an image method, load is a display method
+JS9.Image.prototype.saveSession = function(file){
+    var obj, str, blob, layer, dlayer, tobj, key;
+    file = file || "js9.ses";
+    if( !window.hasOwnProperty("saveAs") ){
+	JS9.error("no saveAs function available to save session");
+    }
+    // change the cursor to show the waiting status
+    JS9.waiting(true, this.display.divjq[0]);
+    // object holding session keys
+    obj = {};
+    // filename
+    obj.file = this.file;
+    // image params
+    obj.params = $.extend(true, {}, this.params);
+    // section info
+    obj.params.xcen = this.rgb.sect.xcen;
+    obj.params.ycen = this.rgb.sect.ycen;
+    obj.params.zoom = this.rgb.sect.zoom;
+    // layers
+    obj.layers = [];
+    for( key in this.layers ){
+	// save each main layer so it can be reconstituted
+        if( this.layers.hasOwnProperty(key) ){
+	    layer = this.layers[key];
+	    dlayer = layer.dlayer;
+	    // only save layers on main display
+	    if( dlayer.dtype === "main" ){
+		tobj = {};
+		tobj.name = key;
+		tobj.json = dlayer.canvas.toJSON(dlayer.el);
+		tobj.dopts = $.extend(true, {}, dlayer.opts);
+		obj.layers.push(tobj);
+	    }
+        }
+    }
+    // display size info
+    obj.dwidth = this.display.width;
+    obj.dheight = this.display.height;
+    // remove old display info
+    if( obj.params.display ){
+	delete obj.params.display;
+    }
+    // make a blob from the stringified session object
+    str = JSON.stringify(obj, null, 4);
+    blob = new Blob([str], {type: "application/json"});
+    // save it
+    saveAs(blob, file);
+    // done waiting
+    JS9.waiting(false);
+    // return file name
+    return file;
+};
+
 // Colormap
 JS9.Colormap = function(name, a1, a2, a3){
     this.name = name;
@@ -4938,6 +4993,7 @@ JS9.Display = function(el){
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.Load(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="refreshLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.RefreshImage(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalRegions-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadRegions(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalSession-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadSession(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalColormap-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.AddColormap(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
     // add to list of displays
     JS9.displays.push(this);
@@ -5182,6 +5238,66 @@ JS9.Display.prototype.inResize = function(pos){
 	}
     }
     return false;
+};
+
+// load session from a json file
+// NB: save is an image method, load is a display method
+JS9.Display.prototype.loadSession = function(file){
+    var that = this;
+    var obj;
+    var addLayers = function(im){
+	var i, dlayer, layer;
+	var dorender = function(){
+	    // change shape positions if the displays sizes differ
+	    im.refreshLayers();
+	};
+	// reconstitute each layer
+	if( obj.layers && obj.layers.length ){
+	    for(i=0; i<obj.layers.length; i++){
+		layer = obj.layers[i];
+		// make sure layer exists in the display
+		dlayer = that.newShapeLayer(layer.name, layer.dopts);
+		// add a layer instance to this image (no objects yet)
+		im.addShapes(layer.name, []);
+		// load the session objects into the layer and render
+		dlayer.canvas.loadFromJSON(layer.json, dorender);
+	    }
+	}
+    };
+    var loadit = function(jobj){
+	// sanity check
+	if( !jobj.file ){
+	    JS9.error("session does not contain a filename");
+	}
+	// save object so addLayers can find it
+	obj = jobj;
+	// include an onload callback to load the layers
+	obj.params.onload = addLayers;
+	// delete old display info
+	if( obj.params.display ){
+	    delete obj.params.display;
+	}
+	// load the image
+	JS9.Load(obj.file, obj.params, {display: that.id});
+    };
+    // change the cursor to show the waiting status
+    JS9.waiting(true, this.divjq[0]);
+    if( typeof file === "object" ){
+	loadit(file);
+    } else {
+	$.ajax({
+	    url: file,
+	    dataType: "json",
+	    mimeType: "application/json",
+	    async: false,
+	    success: function(jobj, textStatus, jqXHR){
+		loadit(jobj);
+	    },
+	    error:  function(jqXHR, textStatus, errorThrown){
+		JS9.error("could not load session: " + file, errorThrown);
+	    }
+	});
+    }
 };
 
 // ---------------------------------------------------------------------
@@ -5768,6 +5884,9 @@ JS9.Menubar = function(width, height){
 		}
 		items.close = {name: "close image"};
 		items["sep" + n++] = "------";
+		items.loadsession = {name: "load session ..."};
+		items.savesession = {name: "save session"};
+		items["sep" + n++] = "------";
 		items.lite = {name: "new JS9 light window"};
 		items.xnew = {name: "new JS9 separate window"};
 		items["sep" + n++] = "------";
@@ -5786,6 +5905,16 @@ JS9.Menubar = function(width, height){
 			case "close":
 			    if( uim ){
 				uim.closeImage();
+			    }
+			    break;
+			case "savesession":
+			    if( uim ){
+				uim.saveSession(uim.id + ".ses");
+			    }
+			    break;
+			case "loadsession":
+			    if( udisp ){
+				JS9.OpenSessionMenu({display: udisp});
 			    }
 			    break;
 			case "header":
@@ -11334,8 +11463,8 @@ JS9.fetchURL = function(name, url, opts, handler) {
 	}
     };
     xhr.onerror = function() {
-	JS9.error(sprintf("cannot load: %s %s (%s)  ",
-			  url, xhr.statusText,  xhr.status));
+	JS9.error(sprintf("cannot load: %s %s .. please check the url/pathname",
+	    url, xhr.statusText));
     };
     xhr.ontimeout = function() {
 	JS9.error("timeout awaiting response from server: " + url);
@@ -13590,6 +13719,7 @@ JS9.mkPublic("ReprojectData", "reprojectData");
 JS9.mkPublic("ShiftData", "shiftData");
 JS9.mkPublic("FilterRGBImage", "filterRGBImage");
 JS9.mkPublic("MoveToDisplay", "moveToDisplay");
+JS9.mkPublic("SaveSession", "saveSession");
 
 // add a colormap to JS9
 JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
@@ -13689,12 +13819,13 @@ JS9.mkPublic("Load", function(file, opts){
     if( file instanceof Blob ){
 	if( file.name ){
 	    // see if file is already loaded
-	    im = JS9.lookupImage(file.name, display);
+	    im = JS9.lookupImage(file.name, opts.display);
 	    if( im ){
 		// display image, 2D graphics, etc.
 		im.displayImage("display", opts);
 		im.refreshLayers();
 		im.clearMessage();
+		JS9.waiting(false);
 		return;
 	    }
 	    // new file
@@ -13746,11 +13877,12 @@ JS9.mkPublic("Load", function(file, opts){
 	return;
     }
     // if this file is already loaded, just redisplay
-    im = JS9.lookupImage(file, display);
+    im = JS9.lookupImage(file, opts.display);
     if( im ){
 	// display image, 2D graphics, etc.
 	im.displayImage("all", opts);
 	im.clearMessage();
+	JS9.waiting(false);
 	return;
     }
     // save to get rid of whitespace
@@ -14211,6 +14343,15 @@ JS9.mkPublic("OpenRegionsMenu", function(){
     }
 });
 
+// bring up the file dialog box and load selected session files(s)
+JS9.mkPublic("OpenSessionMenu", function(){
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    if( display ){
+	$('#openLocalSession-' + display.id).click();
+    }
+});
+
 // bring up the file dialog box and load selected colormap file(s)
 JS9.mkPublic("OpenColormapMenu", function(){
     var obj = JS9.parsePublicArgs(arguments);
@@ -14598,6 +14739,52 @@ JS9.mkPublic("ResizeDisplay", function(){
 	got = "OK";
     }
     return got;
+});
+
+// load a session file
+JS9.mkPublic("LoadSession", function(file, opts){
+    var display, reader, disp;
+    var obj = JS9.parsePublicArgs(arguments);
+    file = obj.argv[0];
+    opts = obj.argv[1] || {};
+    // sanity check
+    if( !file ){
+	JS9.error("JS9.LoadSession: no file specified for load");
+    }
+    // check for display
+    if( obj.display ){
+	display = obj.display;
+    } else if( opts.display ){
+	display = opts.display;
+    } else {
+	if( JS9.displays.length > 0 ){
+	    display = JS9.displays[0].id;
+	} else {
+	    display = JS9.DEFID;
+	}
+    }
+    disp = JS9.lookupDisplay(display);
+    opts.display = disp.id;
+    // convert blob to json object
+    if( typeof file === "object" ){
+	// file reader object
+	reader = new FileReader();
+	reader.onload = function(ev){
+	    var jobj = JSON.parse(ev.target.result);
+	    disp.loadSession(jobj, opts);
+	};
+	reader.readAsText(file);
+    } else if( typeof file === "string" ){
+	opts.responseType = "text";
+	opts.display = disp.id;
+	JS9.fetchURL(null, file, opts, function(jstr, opts){
+	    var jobj = JSON.parse(jstr);
+            disp.loadSession(jobj, opts);
+	});
+    } else {
+	// oops!
+	JS9.error("unknown file type for LoadSession: " + typeof file);
+    }
 });
 
 // end of Public Interface
