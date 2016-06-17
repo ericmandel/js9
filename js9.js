@@ -2472,7 +2472,8 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
 	    extOpts.extname = extid;
 	    extname = extid.toLowerCase();
 	    for(i=0, got=0; i<this.hdus.length; i++){
-		if( this.hdus.name.toLowerCase() === extname ){
+		if( this.hdus[i].name &&
+		    this.hdus[i].name.toLowerCase() === extname ){
 		    got++;
 		    break;
 		}
