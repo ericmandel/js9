@@ -2128,10 +2128,10 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 	    this.displayImage();
 	}
     }
+    // allow chaining
     return this;
 };
 
-JS9.noff = 0;
 // primitive to put image data on screen
 JS9.Image.prototype.putImage = function(opts){
     var wcspos, impos;
@@ -2191,6 +2191,8 @@ JS9.Image.prototype.putImage = function(opts){
     } else {
 	ctx.putImageData(rgb.img, this.ix, this.iy);
     }
+    // allow chaining
+    return this;
 };
 
 // display image, with pre and post processing based on comma-separated string
@@ -2422,6 +2424,8 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	    }
 	}
     }
+    // allow chaining
+    return this;
 };
 
 // display the specified extension of a multi-extension FITS file
@@ -2518,6 +2522,8 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
     } else {
 	JS9.error("virtual FITS file is missing for displayExtension()");
     }
+    // allow chaining
+    return this;
 };
 
 // display the specified slice of a 3D or 4d FITS cube
@@ -2565,6 +2571,8 @@ JS9.Image.prototype.displaySlice = function(slice, opts){
     } else {
 	JS9.error("virtual FITS file is missing for displaySlice()");
     }
+    // allow chaining
+    return this;
 };
 
 // convert current image to array
@@ -3325,6 +3333,8 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	    }
 	}
     });
+    // allow chaining
+    return this;
 };
 
 // display analysis results (text or plot)
@@ -3629,13 +3639,13 @@ JS9.Image.prototype.saveIMG = function(fname, type, encoderOpts){
 // save image as a PNG file
 JS9.Image.prototype.savePNG = function(fname){
     fname = fname || "js9.png";
-    this.saveIMG(fname, "image/png");
+    return this.saveIMG(fname, "image/png");
 };
 
 // save image as a JPEG file
 JS9.Image.prototype.saveJPEG = function(fname, quality){
     fname = fname || "js9.jpeg";
-    this.saveIMG(fname, "image/jpeg", quality);
+    return this.saveIMG(fname, "image/jpeg", quality);
 };
 
 // update (and display) pixel and wcs values (connected to info plugin)
@@ -4184,6 +4194,8 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
 	gaussBlur(tdata, nraw.data, nraw.width, nraw.height, sigma);
 	return true;
     });
+    // allow chaining
+    return this;
 };
 
 // perform arithmetic operations on the raw data
@@ -4369,6 +4381,8 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 	}
 	return true;
     });
+    // allow chaining
+    return this;
 };
 
 // linear shift of raw data (cheap alignment for CFA MicroObservatory)
@@ -4434,6 +4448,8 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 	}
 	return true;
     });
+    // allow chaining
+    return this;
 };
 
 // reproject image using WCS info
@@ -4595,6 +4611,8 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	try{ JS9.fits.handleFITSFile(ovfile, topts, reprojHandler); }
 	catch(e){ JS9.error("can't process reprojected FITS file", e); }
     }, JS9.SPINOUT);
+    // allow chaining
+    return this;
 };
 
 // apply image processing filters to the current RGB image
@@ -4701,6 +4719,8 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 	    break;
 	}
     }
+    // allow chaining
+    return this;
 };
 
 // save session to a json file
@@ -5299,6 +5319,8 @@ JS9.Display.prototype.loadSession = function(file){
 	    }
 	});
     }
+    // allow chaining
+    return this;
 };
 
 // ---------------------------------------------------------------------
@@ -13957,11 +13979,13 @@ JS9.mkPublic("Load", function(file, opts){
 
 // save regions to disk
 JS9.mkPublic("SaveRegions", function(fname, which){
-    var im;
+    var file, wh, im;
     var obj = JS9.parsePublicArgs(arguments);
+    file = obj.argv[0];
+    wh = obj.argv[1];
     im = JS9.getImage(obj.display);
     if( im ){
-	return im.saveRegions(fname, which);
+	return im.saveRegions(file, wh);
     }
     return fname;
 });
