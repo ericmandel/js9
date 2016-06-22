@@ -245,6 +245,10 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	// convert blob into array
 	fileReader = new FileReader();
 	fileReader.onload = function() {
+	    // file name might be in the blob itself
+	    if( !options.filename && fits.name ){
+		options.filename = fits.name;
+	    }
 	    // filename or assume gzip'ed: cfitsio will do the right thing ...
 	    if( options.filename ){
 		// filename with extension to pass to cfitsio
