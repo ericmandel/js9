@@ -8204,8 +8204,9 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    if( opts.left && opts.top ){
 		cpos = {x: opts.left, y: opts.top};
 	    } else {
-		cpos = JS9.centroidPolygon(opts.pts);
-		// this is the center point
+		// get center point of polygon bounding box
+		cpos = JS9.centerPolygon(opts.pts);
+		// this is the center of the shape
 		nopts.left = cpos.x;
 		nopts.top = cpos.y;
 	    }
@@ -10083,9 +10084,8 @@ JS9.Regions.parseRegions = function(s){
 		v1.dval *= 15.0;
 	    }
 	    sarr = JS9.wcs2pix(this.wcs, v1.dval, v2.dval).split(/ +/);
-	    // returns 1-indexed, I guess ...
-	    ox = parseFloat(sarr[0]) - 1;
-	    oy = parseFloat(sarr[1]) - 1;
+	    ox = parseFloat(sarr[0]);
+	    oy = parseFloat(sarr[1]);
 	} else {
 	    if( wcssys === "physical" ){
 		vt = this.logicalToImagePos({x: v1.dval, y: v2.dval});
@@ -11253,6 +11253,32 @@ JS9.floatFormattedString = function(fval, prec, fix){
 	s = sprintf(fmt, fval);
     }
     return s;
+};
+
+// get center of bounding box surrounding a polygon
+JS9.centerPolygon = function(points){
+    var i, plen;
+    var minx, maxx, miny, maxy;
+    // sanity check
+    if( !points || !points.length ){
+	return;
+    }
+    plen = points.length;
+    for(i=0; i<plen; i++){
+	if( (minx === undefined) || (points[i].x < minx) ){
+	    minx = points[i].x;
+	}
+	if( (maxx === undefined) || (points[i].x > maxx) ){
+	    maxx = points[i].x;
+	}
+	if( (miny === undefined) || (points[i].y < miny) ){
+	    miny = points[i].y;
+	}
+	if( (maxy === undefined) || (points[i].y > maxy) ){
+	    maxy = points[i].y;
+	}
+    }
+    return {x: (minx + maxx) / 2.0, y: (miny + maxy) / 2.0};
 };
 
 // calculate centroid for a polygon
