@@ -1251,14 +1251,14 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     // having the real image, we can ask to release the offscreen image
     this.offscreen.img = null;
     // init WCS, if possible
-    this.wcs = JS9.initwcs(JS9.raw2FITS(this.raw));
-    if( this.wcs > 0 ){
+    this.raw.wcs = JS9.initwcs(JS9.raw2FITS(this.raw));
+    if( this.raw.wcs > 0 ){
 	// set the wcs system
 	this.setWCSSys(this.params.wcssys);
 	// this is also the default
 	this.params.wcssys0 = this.params.wcssys.trim();
 	// get info about the wcs
-	try{ this.wcsinfo = JSON.parse(JS9.wcsinfo(this.wcs)); }
+	try{ this.raw.wcsinfo = JSON.parse(JS9.wcsinfo(this.raw.wcs)); }
 	catch(ignore){}
     }
     // init the logical coordinate system, if possible
@@ -1489,8 +1489,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	this.binning.bin = 1;
     }
     // init WCS, if possible
-    this.wcs = JS9.initwcs(JS9.raw2FITS(this.raw));
-    if( this.wcs > 0 ){
+    this.raw.wcs = JS9.initwcs(JS9.raw2FITS(this.raw));
+    if( this.raw.wcs > 0 ){
 	// set the wcs system
 	this.setWCSSys(this.params.wcssys);
 	// this is also the default
@@ -1498,7 +1498,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	// set the wcs units
 	this.setWCSUnits(this.params.wcsunits);
 	// get info about the wcs
-	try{ this.wcsinfo = JSON.parse(JS9.wcsinfo(this.wcs)); }
+	try{ this.raw.wcsinfo = JSON.parse(JS9.wcsinfo(this.raw.wcs)); }
 	catch(ignore){}
     }
     // init the logical coordinate system, if possible
@@ -2171,8 +2171,8 @@ JS9.Image.prototype.putImage = function(opts){
     if( this.rawDataLayer() === "reproject" ){
 	if( opts.wcsim ){
 	    if( this.params.wcsalign ){
-		wcspos = opts.wcsim.logicalToDisplayPos({x: opts.wcsim.wcsinfo.crpix1, y: opts.wcsim.wcsinfo.crpix2});
-		impos = this.logicalToDisplayPos({x: this.wcsinfo.crpix1, y: this.wcsinfo.crpix2});
+		wcspos = opts.wcsim.logicalToDisplayPos({x: opts.wcsim.raw.wcsinfo.crpix1, y: opts.wcsim.raw.wcsinfo.crpix2});
+		impos = this.logicalToDisplayPos({x: this.raw.wcsinfo.crpix1, y: this.raw.wcsinfo.crpix2});
 		this.wcsix = wcspos.x - impos.x;
 		this.wcsiy = wcspos.y - impos.y;
 	    }
@@ -2889,11 +2889,11 @@ JS9.Image.prototype.setWCSSys = function(wcssys){
 	this.params.wcsunits = "pixels";
 	return;
     }
-    if( this.wcs && (this.wcs > 0) ){
+    if( this.raw.wcs && (this.raw.wcs > 0) ){
 	if( wcssys === "native" ){
 	    wcssys = this.params.wcssys0;
 	}
-	s = JS9.wcssys(this.wcs, wcssys);
+	s = JS9.wcssys(this.raw.wcs, wcssys);
 	if( s ){
 	    this.params.wcssys = s.trim();
 	    if( this.params.wcsunits === "pixels" ){
@@ -2924,13 +2924,13 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
 	this.params.wcsunits = "pixels";
 	return;
     }
-    if( this.wcs && (this.wcs > 0) ){
+    if( this.raw.wcs && (this.raw.wcs > 0) ){
 	if( (this.params.wcssys === "image") ||
 	    (this.params.wcssys === "physical") ){
 	    ws = JS9.imageOpts.wcssys;
-	    this.setWCSSys(this.wcs, ws);
+	    this.setWCSSys(this.raw.wcs, ws);
 	}
-	s = JS9.wcsunits(this.wcs, wcsunits);
+	s = JS9.wcsunits(this.raw.wcs, wcsunits);
 	if( s ){
 	    this.params.wcsunits = s.trim();
 	    this.updateShapes("regions", "all", "update");
@@ -3730,10 +3730,10 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	       ra: "", dec: "", wcssys: "", val: val, val3: val3, vstr: vstr,
 	       id: this.id, file: this.file, object: this.object};
 	// add wcs, if necessary
-	if( (this.wcs > 0) &&
+	if( (this.raw.wcs > 0) &&
 	    (this.params.wcssys !== "image") &&
 	    (this.params.wcssys !== "physical") ){
-	    s = JS9.pix2wcs(this.wcs, ipos.x, ipos.y).trim().split(/\s+/);
+	    s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
 	    vstr = vstr + " " + s[2] + "(" + s[0] + ", " + s[1] + ")";
 	    // update object with wcs
 	    obj.ra = s[0];
@@ -4006,6 +4006,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 			}
 			// re-calculate min and max
 			this.dataminmax();
+			this.mkSection();
 			this.displayImage("all", opts);
 			return true;
 		    }
@@ -4475,7 +4476,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	JS9.waiting(false);
     };
     // sanity checks
-    if( !this.wcs || !wcsim || !JS9.reproject || !JS9.fits.handleFITSFile ){
+    if( !this.raw.wcs || !wcsim || !JS9.reproject || !JS9.fits.handleFITSFile ){
 	return;
     }
     // opts is optional
@@ -4536,7 +4537,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     // if not, try to make an alternate WCS header amenable to mProjectPP
     try{
 	// try to change input WCS to a sys usable by mProjectPP
-	if( !ptypeexp.test(this.wcsinfo.ptype) ){
+	if( !ptypeexp.test(this.raw.wcsinfo.ptype) ){
 	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
 	    JS9.vfile(owvfile, JS9.raw2FITS(this.raw.header, true));
 	    awvfile = "awcs_" + JS9.uniqueID() + ".txt";
@@ -4553,7 +4554,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    }
 	}
 	// try to change reproject WCS to a sys usable by mProjectPP
-	if( !ptypeexp.test(wcsim.wcsinfo.ptype) ){
+	if( !ptypeexp.test(wcsim.raw.wcsinfo.ptype) ){
 	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
 	    JS9.vfile(owvfile, JS9.raw2FITS(nheader, true));
 	    awvfile2 = "awcs_" + JS9.uniqueID() + ".txt";
@@ -6943,7 +6944,7 @@ JS9.Menubar = function(width, height){
 		};
 		for(i=0; i<JS9.images.length; i++){
 		    if( tim !== JS9.images[i]  &&
-			JS9.images[i].wcs ){
+			JS9.images[i].raw.wcs ){
 			s1 = "reproject_" + JS9.images[i].id;
 			items.reproject.items[s1] = {
 			    name: JS9.images[i].id
@@ -8891,12 +8892,12 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // generate wcs string, if:
     // it's the region layer and opts.dowcsstr is not explicitly false
     // it's the not region layer and opts.dowcsstr is explicitly true
-    if( this.wcs && (this.wcs > 0) ){
+    if( this.raw.wcs && (this.raw.wcs > 0) ){
 	if( ((layerName === "regions") && (opts.dowcsstr !== false)) ||
 	    ((layerName !== "regions") && (opts.dowcsstr === true))  ){
-	    pub.wcsstr = JS9.reg2wcs(this.wcs, tstr).replace(/;$/, "");
+	    pub.wcsstr = JS9.reg2wcs(this.raw.wcs, tstr).replace(/;$/, "");
 	}
-	s = JS9.pix2wcs(this.wcs, ipos.x, ipos.y).trim().split(/\s+/);
+	s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
 	pub.ra = s[0];
 	pub.dec = s[1];
 	pub.wcssys = s[2];
@@ -10039,7 +10040,7 @@ JS9.Regions.listRegions = function(which, mode){
 JS9.Regions.parseRegions = function(s){
     var regions = [];
     var i, j, k, lines, obj, robj;
-    var owcssys, wcssys, iswcs, liswcs, pos, wcsinfo, alen;
+    var owcssys, wcssys, iswcs, liswcs, pos, alen;
     var regrexp = /(annulus)|(box)|(circle)|(ellipse)|(line)|(polygon)|(point)|(text)/;
     var wcsrexp = /(fk4)|(fk5)|(icrs)|(galactic)|(ecliptic)|(image)|(physical)/;
     var parrexp = /\(\s*([^)]+?)\s*\)/;
@@ -10133,7 +10134,7 @@ JS9.Regions.parseRegions = function(s){
 		(wcssys !== "galactic") && (wcssys !== "ecliptic") ){
 		v1.dval *= 15.0;
 	    }
-	    sarr = JS9.wcs2pix(this.wcs, v1.dval, v2.dval).split(/ +/);
+	    sarr = JS9.wcs2pix(this.raw.wcs, v1.dval, v2.dval).split(/ +/);
 	    ox = parseFloat(sarr[0]);
 	    oy = parseFloat(sarr[1]);
 	} else {
@@ -10152,6 +10153,7 @@ JS9.Regions.parseRegions = function(s){
     var getilen = function(len, which){
 	var cstr;
 	var v = strtod(len);
+	var wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
 	if( iswcs || liswcs ){
 	    if( v.dtype && (v.dtype !== ".") ){
 		cstr = "cdelt" + which;
@@ -10163,13 +10165,6 @@ JS9.Regions.parseRegions = function(s){
     // get image angle
     var getang = function(a){
 	var v = strtod(a);
-// this is in funtools/filter, but why??
-//	if( iswcs || liswcs ){
-//	    v.dval += wcsinfo.crot;
-//	    if( wcsinfo.imflip ){
-//		v.dval = -v.dval;
-//	    }
-//	}
 	return v.dval;
     };
     // get cleaned-up string
@@ -10182,9 +10177,6 @@ JS9.Regions.parseRegions = function(s){
     if( !s.match(charrexp) ){
 	return s;
     }
-    // get wcs info
-    try{ wcsinfo = JSON.parse(JS9.wcsinfo(this.wcs)); }
-    catch(e){ wcsinfo = {cdelt1: 1, cdelt2: 1, crot: 0, imflip: 0}; }
     // save original wcs
     owcssys = this.getWCSSys();
     // this is the default wcs for regions
@@ -14680,8 +14672,8 @@ JS9.mkPublic("PixToWCS", function(ix, iy){
 	if( !JS9.isNumber(ix) || !JS9.isNumber(iy) ){
 	    JS9.error("invalid input for PixToWCS");
 	}
-	if( im.wcs > 0 ){
-	    s = JS9.pix2wcs(im.wcs, ix, iy).trim();
+	if( im.raw.wcs > 0 ){
+	    s = JS9.pix2wcs(im.raw.wcs, ix, iy).trim();
 	    arr = s.split(/ +/);
 	    if( (im.params.wcsunits === "sexagesimal") &&
 		(im.params.wcssys !== "galactic" )     &&
@@ -14710,8 +14702,8 @@ JS9.mkPublic("WCSToPix", function(ra, dec){
 	if( !JS9.isNumber(ra) || !JS9.isNumber(dec) ){
 	    JS9.error("invalid input for WCSToPix");
 	}
-	if( im.wcs > 0 ){
-	    arr = JS9.wcs2pix(im.wcs, ra, dec).trim().split(/ +/);
+	if( im.raw.wcs > 0 ){
+	    arr = JS9.wcs2pix(im.raw.wcs, ra, dec).trim().split(/ +/);
 	    x = parseFloat(arr[0]);
 	    y = parseFloat(arr[1]);
 	    s = sprintf("%f %f", x, y);
