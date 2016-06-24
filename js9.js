@@ -5065,11 +5065,11 @@ JS9.Display = function(el){
     this.divjq.on("contextmenu", this, function(evt){
 	return false;
     });
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.Load(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="refreshLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.RefreshImage(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalRegions-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadRegions(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalSession-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadSession(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalColormap-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.AddColormap(this.files[i], {display:\''+ this.id +'\'}); }"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.Load(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="refreshLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.RefreshImage(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalRegions-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadRegions(this.files[i], {display:\''+ this.id +'\'}); };this.value=null;return false;"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalSession-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadSession(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalColormap-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.AddColormap(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
     // add to list of displays
     JS9.displays.push(this);
     // debugging
