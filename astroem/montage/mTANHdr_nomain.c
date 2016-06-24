@@ -205,7 +205,7 @@ int mTANHdr(int argc, char **argv)
    maxiter   = 50;
    tolerance =  0.01;
    fstatus   = stdout;
-   useOffscl =  0;
+   useOffscl =  0;optind = 1;
 
    while ((c = getopt(argc, argv, "dui:o:t:s:")) != EOF) 
    {
