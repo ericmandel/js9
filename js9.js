@@ -2274,7 +2274,7 @@ JS9.Image.prototype.displayImage = function(imode, opts){
     // opts are ... optional
     opts = opts || {};
     // do we need to blend?
-    if( this.display.blendMode ){
+    if( this.display.blendMode && (opts.blendMode !== false) ){
 	for(i=0; i<JS9.images.length; i++){
 	    im = JS9.images[i];
 	    if( (im.display === this.display) && im.blend.active ){
@@ -12206,11 +12206,6 @@ JS9.mouseDownCB = function(evt){
 	im.clearMessage("regions");
 	return;
     }
-    // temporarily turn off blending in case we change contrast/bias
-    // (setting to 0 instead of false signals it was true ... for resetting)
-    if( display.blendMode ){
-	display.blendMode = 0;
-    }
     // plugin callbacks
     if( !JS9.specialKey(evt) ){
 	for( pname in display.pluginInstances ){
@@ -12283,9 +12278,8 @@ JS9.mouseUpCB = function(evt){
 	    im.updateShapes("regions", "selected", "update");
 	}
     }
-    // if blendMode is exactly 0, it was true on mousedown, so reset/redisplay
-    if( display.blendMode === 0 ){
-	display.blendMode = true;
+    // if blendMode is on, we have to redisplay
+    if( display.blendMode ){
 	im.displayImage("rgb");
     }
     // plugin callbacks

@@ -2669,10 +2669,10 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
     // https://bugzilla.mozilla.org/show_bug.cgi?id=732621
     if( JS9.bugs.firefox_linux ){
 	window.setTimeout(function(){
-	    im.displayImage("scaled");
+	    im.displayImage("scaled", {blendMode: false});
 	}, 0);
     } else {
-	im.displayImage("scaled");
+	im.displayImage("scaled", {blendMode: false});
     }
 };
 
