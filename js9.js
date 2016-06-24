@@ -1257,6 +1257,9 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 	this.setWCSSys(this.params.wcssys);
 	// this is also the default
 	this.params.wcssys0 = this.params.wcssys.trim();
+	// get info about the wcs
+	try{ this.wcsinfo = JSON.parse(JS9.wcsinfo(this.wcs)); }
+	catch(ignore){}
     }
     // init the logical coordinate system, if possible
     this.initLCS(this.raw.header);
@@ -1494,6 +1497,9 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	this.params.wcssys0 = this.params.wcssys.trim();
 	// set the wcs units
 	this.setWCSUnits(this.params.wcsunits);
+	// get info about the wcs
+	try{ this.wcsinfo = JSON.parse(JS9.wcsinfo(this.wcs)); }
+	catch(ignore){}
     }
     // init the logical coordinate system, if possible
     this.initLCS(this.raw.header);
@@ -2165,8 +2171,8 @@ JS9.Image.prototype.putImage = function(opts){
     if( this.rawDataLayer() === "reproject" ){
 	if( opts.wcsim ){
 	    if( this.params.wcsalign ){
-		wcspos = opts.wcsim.logicalToDisplayPos({x: opts.wcsim.raw.header.CRPIX1, y: opts.wcsim.raw.header.CRPIX2});
-		impos = this.logicalToDisplayPos({x: this.raw.header.CRPIX1, y: this.raw.header.CRPIX2});
+		wcspos = opts.wcsim.logicalToDisplayPos({x: opts.wcsim.wcsinfo.crpix1, y: opts.wcsim.wcsinfo.crpix2});
+		impos = this.logicalToDisplayPos({x: this.wcsinfo.crpix1, y: this.wcsinfo.crpix2});
 		this.wcsix = wcspos.x - impos.x;
 		this.wcsiy = wcspos.y - impos.y;
 	    }
@@ -4458,10 +4464,12 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     var that = this;
     var twcs = {};
     var rcomplete = false;
-    var wvfile, wcsheader, wcsstr, oheader, nheader;
+    var awvfile, awvfile2, wvfile, owvfile;
+    var wcsheader, wcsstr, oheader, nheader;
     var im, arr, ivfile, ovfile, topts, rstr, key;
     var tab, tx1, tx2, ty1, ty2, s;
     var wcsexp = /NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
+    var ptypeexp = /TAN|SIN|ZEA|STG|ARC/;
     var reprojHandler = function(hdu){
 	that.refreshImage(hdu, topts);
 	JS9.waiting(false);
@@ -4484,7 +4492,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    JS9.error("unknown WCS for reproject: " + wcsim);
 	}
     }
-    // make copy of header, removing wcs keywords
+    // make copy of input header, removing wcs keywords
     oheader = $.extend(true, {}, this.raw.header);
     for(key in oheader){
 	if( oheader.hasOwnProperty(key) ){
@@ -4519,11 +4527,50 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     if( (wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.REPROJDIM*JS9.REPROJDIM) ){
 	JS9.error("for now, the maximum image size for reprojection is approximately " + JS9.REPROJDIM  + " * " + JS9.REPROJDIM);
     }
-    // convert to a string
+    // convert reprojection header to a string
     wcsstr = JS9.raw2FITS(wcsheader, true);
-    // create vfile text file containing WCS
+    // create vfile text file containing reprojection WCS
     wvfile = "wcs_" + JS9.uniqueID() + ".txt";
     JS9.vfile(wvfile, wcsstr);
+    // check input and reprojection WCS to make sure we can run fast mProjectPP
+    // if not, try to make an alternate WCS header amenable to mProjectPP
+    try{
+	// try to change input WCS to a sys usable by mProjectPP
+	if( !ptypeexp.test(this.wcsinfo.ptype) ){
+	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
+	    JS9.vfile(owvfile, JS9.raw2FITS(this.raw.header, true));
+	    awvfile = "awcs_" + JS9.uniqueID() + ".txt";
+	    rstr = JS9.tanhdr(owvfile, awvfile, "");
+	    if( JS9.DEBUG > 1 ){
+		JS9.log("tanhdr (input): %s %s -> %s", 
+			owvfile, awvfile, rstr);
+	    }
+	    JS9.vunlink(owvfile);
+	    if( rstr.search(/\[struct stat="OK"/) >= 0 ){
+		// add command switch to use this alternate wcs
+		opts.cmdswitches = opts.cmdswitches || "";
+		opts.cmdswitches += (" -i " + awvfile);
+	    }
+	}
+	// try to change reproject WCS to a sys usable by mProjectPP
+	if( !ptypeexp.test(wcsim.wcsinfo.ptype) ){
+	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
+	    JS9.vfile(owvfile, JS9.raw2FITS(nheader, true));
+	    awvfile2 = "awcs_" + JS9.uniqueID() + ".txt";
+	    rstr = JS9.tanhdr(owvfile, awvfile2, "");
+	    if( JS9.DEBUG > 1 ){
+		JS9.log("tanhdr (reproj): %s %s -> %s",
+			owvfile, awvfile2, rstr);
+	    }
+	    JS9.vunlink(owvfile);
+	    if( rstr.search(/\[struct stat="OK"/) >= 0 ){
+		// delete old wcs file and use this alternate wcsfile
+		JS9.vunlink(wvfile);
+		wvfile = awvfile2;
+	    }
+	}
+    }
+    catch(ignore){}
     // get reference to existing raw data file (or create one)
     if( this.raw.hdu && this.raw.hdu.vfile ){
 	// input file name
@@ -4567,12 +4614,15 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    // call reproject
 	    rstr = JS9.reproject(ivfile, ovfile, wvfile, cmdswitches);
 	    if( JS9.DEBUG > 1 ){
-		JS9.log("reproject: %s %s %s -> %s",
-			ivfile, ovfile, wvfile, rstr);
+		JS9.log("reproject: %s %s %s [%s] -> %s",
+			ivfile, ovfile, wvfile, cmdswitches, rstr);
 	    }
 	    // delete unneeded files ...
 	    JS9.vunlink(avfile);
 	    JS9.vunlink(wvfile);
+	    if( awvfile ){
+		JS9.vunlink(awvfile);
+	    }
 	    // ... then error check
 	    if( rstr.search(/\[struct stat="OK"/) < 0 ){
 		// signal that we completed the reproject attempt
@@ -6226,7 +6276,7 @@ JS9.Menubar = function(width, height){
 		    items["sep" + n++] = "------";
 		    items.rawlayer = {
 			name: "raw data layers",
-			items: { }
+			items: {}
 		    };
 		    for(i=0; i<tim.raws.length; i++){
 			key = "rawlayer_" + tim.raws[i].id;
@@ -10421,7 +10471,7 @@ JS9.Magnifier.init = function(width, height){
 
 // display the magnified image on the magnifier canvas
 JS9.Magnifier.display = function(im, ipos){
-    var pos, tval, magDisp, zoom, nx, ny;
+    var pos, tval, magDisp, zoom;
     var canvas, sx, sy, sw, sh, dx, dy, dw, dh;
     // sanity check
     // only display if we have a magnifier present
@@ -10491,11 +10541,13 @@ JS9.Magnifier.display = function(im, ipos){
 	// make background black, which looks better at the edge
 	$(magDisp.canvas).css("background-color", "black");
     }
-    // set size and position based on zoom
-    nx = magDisp.width/2;
-    ny = magDisp.height/2;
-    im.changeShapes("magnifier", im.magnifier.boxid,
-	{left: nx, top:  ny, width: zoom, height: zoom});
+    // center point size and position, based on zoom
+    if( im.magnifier.ozoom !== zoom ){
+	im.changeShapes("magnifier", im.magnifier.boxid,
+			{left: magDisp.width/2, top:  magDisp.height/2, 
+			 width: zoom, height: zoom});
+	im.magnifier.ozoom = im.magnifier.zoom;
+    }
 };
 
 // zoom the rectangle inside the magnifier (RGB) image
@@ -10526,7 +10578,8 @@ JS9.Magnifier.zoom = function(im, zval){
     if( !nzoom || (nzoom < 1) ){
 	nzoom = 1;
     }
-    // set new value
+    // save old value, set new value
+    magnifier.ozoom = magnifier.zoom;
     magnifier.zoom = nzoom;
     // redisplay
     JS9.Magnifier.display(im);
@@ -13026,6 +13079,7 @@ JS9.init = function(){
 	JS9.saostrtod = Astroem.saostrtod;
 	JS9.saodtype = Astroem.saodtype;
 	JS9.zscale = Astroem.zscale;
+	JS9.tanhdr = Astroem.tanhdr;
 	JS9.reproject = Astroem.reproject;
     }
     // configure fits library
