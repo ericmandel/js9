@@ -770,6 +770,7 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
 	this.offscreen.context.imageSmoothingEnabled = false;
 	this.offscreen.context.mozImageSmoothingEnabled = false;
 	this.offscreen.context.webkitImageSmoothingEnabled = false;
+	this.offscreen.context.msImageSmoothingEnabled = false;
     }
     // draw the png to the offscreen canvas
     this.offscreen.context.drawImage(this.png.image, 0, 0);
@@ -2156,6 +2157,7 @@ JS9.Image.prototype.putImage = function(opts){
 		octx.imageSmoothingEnabled = false;
 		octx.mozImageSmoothingEnabled = false;
 		octx.webkitImageSmoothingEnabled = false;
+		octx.msImageSmoothingEnabled = false;
 	    }
 	    octx.putImageData(img, 0, 0);
 	    that.offscreenRGB = {canvas: ocanvas, context: octx};
@@ -4999,6 +5001,7 @@ JS9.Display = function(el){
 	this.context.imageSmoothingEnabled = false;
 	this.context.mozImageSmoothingEnabled = false;
 	this.context.webkitImageSmoothingEnabled = false;
+	this.context.msImageSmoothingEnabled = false;
     }
     // add the display tooltip
     this.tooltip = $("<div>")
@@ -10450,6 +10453,7 @@ JS9.Magnifier.init = function(width, height){
 	this.context.imageSmoothingEnabled = false;
 	this.context.mozImageSmoothingEnabled = false;
 	this.context.webkitImageSmoothingEnabled = false;
+	this.context.msImageSmoothingEnabled = false;
     }
     // add container with canvas to the high-level div
     this.containerjq = $("<div>")
@@ -10658,6 +10662,7 @@ JS9.Panner.init = function(width, height){
 	this.context.imageSmoothingEnabled = false;
 	this.context.mozImageSmoothingEnabled = false;
 	this.context.webkitImageSmoothingEnabled = false;
+	this.context.msImageSmoothingEnabled = false;
     }
     // add container with canvas to the high-level div
     this.containerjq = $("<div>")
