@@ -1,5 +1,5 @@
 /*jshint smarttabs:true, sub:true */
-/*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
+/*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true, sub: true */
 /*global Blob, ArrayBuffer, Uint8Array, Uint16Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue, Pointer_stringify */
 
 // use when running jslint
@@ -372,7 +372,8 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 };
 
 Module["cleanupFITSFile"] = function(fits, all) {
-    var hptr, status;
+    var hptr;
+    // var status;
     // sanity check
     if( !fits ){
 	return;
@@ -394,7 +395,7 @@ Module["cleanupFITSFile"] = function(fits, all) {
 	    setValue(hptr, 0, 'i32');
 	    ccall("closeFITSFile", null,
 		  ["number", "number"], [fits.fptr, hptr]);
-	    status  = getValue(hptr, 'i32');
+	    // status  = getValue(hptr, 'i32');
 	    _free(hptr);
 	    // Module["errchk"](status);
 	    fits.fptr = null;

@@ -3,8 +3,12 @@
 echo "generating nomain version of mProjectPP.c ..."
 
 cat mProjectPP.c | \
-sed 's/main/mProjectPP/;s/\(fstatus = stdout\);/\1;optind = 1;/;s/exit(\([0-9]\))/fflush(fstatus); exit(\1)/;' \
+sed 's/main/mProjectPP/;s/\(fstatus = stdout\);/\1;optind = 1;/;s/exit(\([0-9]\))/fflush(fstatus); fclose(fstatus); exit(\1)/g;s/ printf("\[struct/ fprintf(fstatus, "[struct/g;' \
 > mProjectPP_nomain.c
+
+cat mTANHdr.c | \
+sed 's/main/mTANHdr/;s/\(fstatus = stdout\);/\1;optind = 1;/;s/exit(\([0-9]\))/fflush(fstatus);fclose(fstatus);exit(\1)/g;s/readTemplate/xreadTemplate/g;s/stradd/xstradd/g;s/ printf("\[struct/ fprintf(fstatus, "[struct/g;' \
+> mTANHdr_nomain.c
 
 # cat checkHdr.c | \
 # sed '482i\

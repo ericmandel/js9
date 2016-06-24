@@ -1,13 +1,7 @@
 /*
- * wcswrapper.c -- enscripten wrapper functions
+ * wrappers.c -- enscripten wrapper functions
  *
  * Eric Mandel 10/11/2013 (during the Great Government Shutdown)
- *
- * The main reasons for writing this module are:
- * 1. I couldn't figure out how to call subroutines and fill in indirect args
- * 2. I didn't seem to be able to return the wcs struct to javascript
- * 3. I didn't see much help in the scant documentation
- * 4. I got tired of banging my head against the wall regarding #1, #2, #3
  * 
  */
 
@@ -59,6 +53,7 @@ static int nreproj=0;
 
 static jmp_buf em_jmpbuf;
 
+int mTANHdr(int argc, char **argv);
 int mProjectPP(int argc, char **argv);
 int _listhdu(char *iname, char *oname);
 void emscripten_exit_with_live_runtime(void);
@@ -202,8 +197,9 @@ int initwcs(char *s, int n){
 char *wcsinfo(int n){
   Info info = getinfo(n);
   char *str = NULL;
+  char *ptype=NULL;
   int imflip=0;
-  double cdelt1=0.0, cdelt2=0.0, crot=0.0;
+  double crpix1=0.0, crpix2=0.0, cdelt1=0.0, cdelt2=0.0, crot=0.0;
   if( info->wcs ){
     if( !info->wcs->coorflip ){
       cdelt1 = info->wcs->cdelt[0];
@@ -218,13 +214,16 @@ char *wcsinfo(int n){
     } else {
 	crot =  info->wcs->rot;
     }
+    crpix1 = info->wcs->crpix[0];
+    crpix2 = info->wcs->crpix[1];
     imflip = info->wcs->imflip;
+    ptype = info->wcs->ptype;
   }
   // convert to 1-indexed image coords
   str = info->str;
   snprintf(str, SZ_LINE-1,
-  "{\"cdelt1\": %.14g, \"cdelt2\": %.14g, \"crot\": %.14g, \"imflip\": %d}",
-   cdelt1, cdelt2, crot, imflip);
+  "{\"crpix1\": %.14g, \"crpix2\": %.14g, \"cdelt1\": %.14g, \"cdelt2\": %.14g, \"crot\": %.14g, \"imflip\": %d, \"ptype\": \"%s\"}",
+   crpix1, crpix2, cdelt1, cdelt2, crot, imflip, ptype);
   return str;
 }
 
@@ -519,6 +518,50 @@ char *zscale(unsigned char *im, int nx, int ny, int bitpix,
   return rstr;
 }
 
+/* generate alternate WCS header using Montage/mTANHdr */
+char *tanhdr(char *iname, char *oname, char *cmdswitches){
+  int i=0, j=0;
+  char *targs=NULL, *targ=NULL;
+  char *args[SZ_LINE];
+  char tbufs[MAX_ARGS][SZ_LINE];
+  char file0[SZ_LINE];
+  char file1[SZ_LINE];
+  char file2[SZ_LINE];
+  args[i++] = "mTANHdr";
+  if( cmdswitches && *cmdswitches ){
+    targs = (char *)strdup(cmdswitches);
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL; 
+	targ=(char *)strtok(NULL," \t")){
+      if( j < MAX_ARGS ){
+	strncpy(tbufs[j], targ, SZ_LINE-1);
+	args[i++] = tbufs[j++];
+      } else {
+	break;
+      }
+    }
+    if( targs ) free(targs);
+  }
+  args[i++] = "-s";
+  snprintf(file0, SZ_LINE-1, "%sstatus_%d.txt", ROOTDIR, nreproj++);
+  args[i++] = file0;
+  snprintf(file1, SZ_LINE-1, "%s%s", ROOTDIR, iname);
+  args[i++] = file1;
+  snprintf(file2, SZ_LINE-1, "%s%s", ROOTDIR, oname);
+  args[i++] = file2;
+  /* we have changed montage exit() calls to longjmp() */
+  if( !setjmp(em_jmpbuf) ){
+    /* make the tanhdr call */
+    mTANHdr(i, args);
+  }
+  /* look for a return value */
+  if( filecontents(file0, rstr, SZ_LINE) > 0 ){
+    unlink(file0);
+    return rstr;
+  } else {
+    return "Error: tanhdr failed; no status file created";
+  }
+}
+
 /* reproject using Montage/mProjectPP */
 char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
   int i=0, j=0;
@@ -552,7 +595,6 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
   args[i++] = file2;
   snprintf(file3, SZ_LINE-1, "%s%s", ROOTDIR, wname);
   args[i++] = file3;
-  /* make the reprojection call */
   /* we have changed montage exit() calls to longjmp() */
   if( !setjmp(em_jmpbuf) ){
     /* make the reprojection call */

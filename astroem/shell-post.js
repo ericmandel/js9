@@ -29,6 +29,7 @@
       getFITSImage: Module["getFITSImage"],
       maxFITSMemory: Module["maxFITSMemory"],
       zscale: Module.cwrap('zscale', 'string', ['number', 'number', 'number', 'number', 'number', 'number', 'number']),
+      tanhdr: Module.cwrap('tanhdr', 'string', ['string', 'string', 'string']),
       reproject: Module.cwrap('reproject', 'string', ['string', 'string', 'string', 'string']),
       vls: Module.cwrap('vls', 'int', ['string']),
       vcat: Module.cwrap('vcat', 'string', ['string', 'number']),
