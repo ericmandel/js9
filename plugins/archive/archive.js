@@ -433,10 +433,11 @@ var ImageService = require("./image-service");
 	    var name;
 
 	    if ( values.name !== "" ) {
-		name = values.name + " " + values.source;
+		name = values.name + "_" + values.source;
 	    } else {
-	        name = values.source + " " + values.r + plus + values.d;
+	        name = values.source + "_" + values.r + plus + values.d;
 	    }
+	    name += ".fits";
 
 	    return name;
 	};
@@ -551,7 +552,7 @@ var ImageService = require("./image-service");
 //	    , url: "http://skys.gsfc.nasa.gov/cgi-bin/images?VCOORD={ra},{dec}&SURVEY={s}&SFACTR={size}&RETURN=FITS"
 //	    , calc: function(values) {
 //		    values.size = Math.floor((values.w+values.h)/2)
-//		    values.name = values.name + " " + values.source;
+//		    values.name = values.name + "_" + values.source;
 //		}
 //	})
 
