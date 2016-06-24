@@ -5362,6 +5362,7 @@ JS9.Display.prototype.loadSession = function(file){
     } else {
 	$.ajax({
 	    url: file,
+	    cache: false,
 	    dataType: "json",
 	    mimeType: "application/json",
 	    async: false,
@@ -12100,9 +12101,10 @@ JS9.loadPrefs = function(url, doerr) {
     // load site/user preferences synchronously
     $.ajax({
       url: url,
-	dataType: "json",
-	mimeType: "application/json",
-	async: false,
+      cache: false,
+      dataType: "json",
+      mimeType: "application/json",
+      async: false,
       success: function(obj, textStatus, jqXHR){
 	var otype, jtype, name;
 	// merge preferences with js9 objects and data
