@@ -1098,9 +1098,9 @@ JS9.Blend.imageHTML="<span style='float: left'>$active &nbsp;&nbsp; $blend &nbsp
 
 JS9.Blend.activeHTML='<input class="blendActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blend.xactive(\'%s\', this)">blend using:';
 
-JS9.Blend.blendHTML='<select id="blendModeSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xblend(\'%s\',this)"><option selected disabled>blend mode</option><option value="normal">normal</option><option value="screen">screen</option><option value="multiply">multiply</option><option value="overlay">overlay</option><option value="darken">darken</option><option value="lighten">lighten</option><option value="color-dodge">color-dodge</option><option value="color-burn">color-burn</option><option value="hard-light">hard-light</option><option value="soft-light">soft-light</option><option value="difference">difference</option><option value="exclusion">exclusion</option><option value="hue">hue</option><option value="saturation">saturation</option><option value="color">color</option> <option value="luminosity">luminosity</option></select>';
+JS9.Blend.blendHTML='<select class="blendModeSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xblend(\'%s\',this)"><option selected disabled>blend mode</option><option value="normal">normal</option><option value="screen">screen</option><option value="multiply">multiply</option><option value="overlay">overlay</option><option value="darken">darken</option><option value="lighten">lighten</option><option value="color-dodge">color-dodge</option><option value="color-burn">color-burn</option><option value="hard-light">hard-light</option><option value="soft-light">soft-light</option><option value="difference">difference</option><option value="exclusion">exclusion</option><option value="hue">hue</option><option value="saturation">saturation</option><option value="color">color</option> <option value="luminosity">luminosity</option></select>';
 
-JS9.Blend.opacityHTML='<select id="blendOpacitySelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xopacity(\'%s\',this)"><option selected disabled>opacity</option><option value="1.0">opaque</option><option value="0.95">0.95</option><option value="0.9">0.90</option><option value="0.85">0.85</option><option value="0.8">0.80</option><option value="0.75">0.75</option><option value="0.7">0.70</option><option value="0.65">0.65</option><option value="0.6">0.60</option><option value="0.55">0.55</option><option value="0.5">0.50</option><option value="0.45">0.45</option><option value="0.4">0.40</option><option value="0.35">0.35</option><option value="0.3">0.30</option><option value="0.25">0.25</option><option value="0.2">0.20</option><option value="0.1">0.10</option><option value="0.0">transparent</option></select>';
+JS9.Blend.opacityHTML='<select class="blendOpacitySelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xopacity(\'%s\',this)"><option selected disabled>opacity</option><option value="1.00">opaque</option><option value="0.95">0.95</option><option value="0.90">0.90</option><option value="0.85">0.85</option><option value="0.80">0.80</option><option value="0.75">0.75</option><option value="0.70">0.70</option><option value="0.65">0.65</option><option value="0.60">0.60</option><option value="0.55">0.55</option><option value="0.50">0.50</option><option value="0.45">0.45</option><option value="0.40">0.40</option><option value="0.35">0.35</option><option value="0.30">0.30</option><option value="0.25">0.25</option><option value="0.20">0.20</option><option value="0.10">0.10</option><option value="0.0">transparent</option></select>';
 
 // JS9.Blend.imfileHTML='<input type="button" value="%s" onclick="javascript:JS9.Blend.ximfile(\'%s\', this)">';
 JS9.Blend.imfileHTML='<b>%s</b>';
@@ -1184,7 +1184,7 @@ JS9.Blend.activeImage = function(im){
 
 // add an image to the list of available images
 JS9.Blend.addImage = function(im){
-    var s, id, divjq;
+    var s, bl, id, divjq;
     var opts = [];
     if( !im ){
 	return;
@@ -1214,6 +1214,18 @@ JS9.Blend.addImage = function(im){
 	    im.displayImage();
 	    JS9.Blend.activeImage.call(this, im);
     });
+    // set the current options
+    bl = im.blendImage();
+    if( bl ){
+	divjq.find(".blendActiveCheck").prop("checked", !!bl.active);
+	if( bl.mode !== undefined ){
+	    divjq.find(".blendModeSelect").val(bl.mode);
+	}
+	if( bl.opacity !== undefined ){
+	    s = bl.opacity.toFixed(2);
+	    divjq.find(".blendOpacitySelect").val(s);
+	}
+    }
     // one more div in the stack
     this.blendDivs++;
     //make it the current one
