@@ -5,6 +5,9 @@
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, jQuery, JS9, sprintf */
 
+// use when running jslint
+// "use strict";
+
 // create our namespace, and specify some meta-information and params
 JS9.MouseTouch = {};
 JS9.MouseTouch.CLASS = "JS9";       // class of plugin
@@ -173,6 +176,14 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
     }
 };
 
+// stop action for contrast/bias: redisplay image
+JS9.MouseTouch.Actions["change contrast/bias"].stop = function(im, ipos, evt){
+    // if blendMode is on, we have to redisplay
+    if( im.display.blendMode ){
+	im.displayImage("rgb");
+    }
+};
+
 // zoom the image
 JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
     var nzoom, display;
@@ -237,7 +248,7 @@ JS9.MouseTouch.Actions.pinch = function(im, ipos, evt){
 
 // start of mouse/touch action processing
 JS9.MouseTouch.Actions.start = function(im, ipos, evt){
-    var display;
+    var display, action;
     if( im ){
 	display = im.display;
 	display.ispinch = 0;
@@ -245,62 +256,80 @@ JS9.MouseTouch.Actions.start = function(im, ipos, evt){
 	display.zoom0 = im.rgb.sect.zoom;
 	display.deltas = [];
     }
+    action = JS9.MouseTouch.getAction(im, evt);
+    // call the start mouse/touch action, if necessary
+    if( JS9.MouseTouch.Actions[action] && 
+	JS9.MouseTouch.Actions[action].start ){
+	JS9.MouseTouch.Actions[action].start(im, im.ipos, evt);
+    }
 };
 
 // end of mouse/touch action processing
 JS9.MouseTouch.Actions.stop = function(im, ipos, evt){
+    var action = JS9.MouseTouch.getAction(im, evt);
+    // call the stop mouse/touch action, if necessary
+    if( JS9.MouseTouch.Actions[action] &&
+	JS9.MouseTouch.Actions[action].stop ){
+	JS9.MouseTouch.Actions[action].stop(im, im.ipos, evt);
+    }
     return;
 };
 
-// execute the mouse/touch action routine
-JS9.MouseTouch.action = function(im, evt){
-    var action;
-    var display = im.display;
-    if( typeof evt === "string" ){
-	action = evt;
-    } else {
-	switch(im.clickState){
-	    // mouse move actions
+// get action associated with the current clickState
+JS9.MouseTouch.getAction = function(im, evt){
+    var action, display;
+    // sanity check
+    if( !im ){
+	return action;
+    }
+    display = im.display;
+    switch(im.clickState){
+	// mouse move actions
+    case 0:
+	action = display.mouseActions[0];
+	break;
+    case 1:
+	action = display.mouseActions[1];
+	break;
+    case 2:
+	action = display.mouseActions[2];
+	break;
+	// touch event actions
+    case -1:
+	action = display.touchActions[0];
+	break;
+    case -2:
+	switch( JS9.MouseTouch.isPinch(im, evt) ){
+	case -1:
+	    action = display.touchActions[1];
+	    break;
 	case 0:
-	    action = display.mouseActions[0];
+	    // do nothing, no idea if its a pinch yet
 	    break;
 	case 1:
-	    action = display.mouseActions[1];
-	    break;
-	case 2:
-	    action = display.mouseActions[2];
-	    break;
-	    // touch event actions
-	case -1:
-	    action = display.touchActions[0];
-	    break;
-	case -2:
-	    switch( JS9.MouseTouch.isPinch(im, evt) ){
-	    case -1:
-		action = display.touchActions[1];
-		break;
-	    case 0:
-		// do nothing, no idea if its a pinch yet
-		return;
-	    case 1:
-		action = "pinch";
-		break;
-	    }
-	    break;
-	case -3:
-	    action = display.touchActions[2];
-	    break;
-	default:
+	    action = "pinch";
 	    break;
 	}
+	break;
+    case -3:
+	action = display.touchActions[2];
+	break;
+    default:
+	break;
     }
+    return action;
+};
+
+// execute the mouse/touch action routine
+JS9.MouseTouch.action = function(im, evt, action){
+    action = action || JS9.MouseTouch.getAction(im, evt);
     // call the mouse/touch action
     if( action && JS9.MouseTouch.Actions[action] ){
 	JS9.MouseTouch.Actions[action](im, im.ipos, evt);
     }
 };
 
-// change global blink mode for this display
+// change zoom mode for this display
 JS9.MouseTouch.mousetouchzoom = function(id, target){
     var display = JS9.lookupDisplay(id);
     var mode = target.checked;

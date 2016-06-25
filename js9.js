@@ -12199,7 +12199,7 @@ JS9.mouseDownCB = function(evt){
     }
     // begin actions for mouse and touch events
     if( JS9.hasOwnProperty("MouseTouch") ){
-	JS9.MouseTouch.action(im, "start");
+	JS9.MouseTouch.action(im, evt, "start");
     }
     // inside a region, clear region display and return;
     if( im.clickInRegion ){
@@ -12266,9 +12266,9 @@ JS9.mouseUpCB = function(evt){
     if( !display.inResize(im.pos) ){
 	evt.preventDefault();
     }
-    // begin actions for mouse and touch events
+    // end actions for mouse and touch events
     if( JS9.hasOwnProperty("MouseTouch") ){
-	JS9.MouseTouch.action(im, "stop");
+	JS9.MouseTouch.action(im, evt, "stop");
     }
     // inside a region, update region string
     if( im.clickInRegion ){
@@ -12278,10 +12278,6 @@ JS9.mouseUpCB = function(evt){
 	} else {
 	    im.updateShapes("regions", "selected", "update");
 	}
-    }
-    // if blendMode is on, we have to redisplay
-    if( display.blendMode ){
-	im.displayImage("rgb");
     }
     // plugin callbacks
     if( !JS9.specialKey(evt) ){
@@ -12349,10 +12345,6 @@ JS9.mouseMoveCB = function(evt){
     // prevent default unless we are close to the resize area
     if( !display.inResize(im.pos) ){
 	evt.preventDefault();
-    }
-    // begin actions for mouse and touch events
-    if( JS9.hasOwnProperty("MouseTouch") ){
-	JS9.MouseTouch.action(im, "stop");
     }
     // reset the valpos object
     im.valpos = null;
