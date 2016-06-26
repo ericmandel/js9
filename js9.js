@@ -3993,6 +3993,11 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 			if( opts === "raw0" ){
 			    JS9.error("can't remove primary (raw0) data layer");
 			}
+			if( this.raws[i].hdu && this.raws[i].hdu.fits ){
+			    // delete vfile associated with this layer
+			    JS9.fits.cleanupFITSFile(this.raws[i].hdu.fits,
+						     true);
+			}
 			if( this.raws[i].current0 && this.raws[i].current0.id ){
 			    // back to origin of this layer, if possible
 			    this.raw = this.raws[i].current0;
