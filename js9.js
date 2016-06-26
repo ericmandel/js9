@@ -655,7 +655,7 @@ JS9.Image.prototype.getImageData = function(dflag){
 
 // undisplay the image, release resources
 JS9.Image.prototype.closeImage = function(){
-    var i, j, tim, key, cmode, carr;
+    var i, j, tim, key, raw, carr;
     var pname, pinst, popts;
     var ilen= JS9.images.length;
     var display = this.display;
@@ -709,15 +709,12 @@ JS9.Image.prototype.closeImage = function(){
 	    // cleanup FITS file support, if necessary
 	    if( JS9.fits.cleanupFITSFile ){
 		for(j=0; j<tim.raws.length; j++){
-		    if( tim.raws[j].hdu && tim.raws[j].hdu.fits ){
-			cmode = true;
-			if( tim.raws[j].id === "raw0" ){
-			    carr = JS9.lookupVfile(tim.raws[j].hdu.fits.vfile);
-			    if( carr.length > 1 ){
-				cmode = false;
-			    }
+		    raw = tim.raws[j];
+		    if( raw.hdu && raw.hdu.fits ){
+			carr = JS9.lookupVfile(raw.hdu.fits.vfile);
+			if( carr.length <= 1 ){
+			    JS9.fits.cleanupFITSFile(raw.hdu.fits, true);
 			}
-			JS9.fits.cleanupFITSFile(tim.raws[j].hdu.fits, cmode);
 		    }
 		}
 	    }
@@ -3976,7 +3973,7 @@ JS9.Image.prototype.zscale = function(setvals){
 //    from: string describing origin of this raw data (def: "func")
 // im.rawDataLayer(id) -- switch to existing raw data later with specified id
 JS9.Image.prototype.rawDataLayer = function(opts, func){
-    var i, oraw, nraw, rawid, cur, nlen;
+    var i, j, raw, oraw, nraw, rawid, cur, nlen, carr;
     // no arg => return name of current raw
     if( !arguments.length ){
 	return this.raw.id;
@@ -3988,22 +3985,31 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 	    opts = {rawid: opts};
 	} else {
 	    for(i=0; i<this.raws.length; i++){
-		if( opts === this.raws[i].id ){
+		raw = this.raws[i];
+		if( opts === raw.id ){
 		    if( func === "remove" ){
 			if( opts === "raw0" ){
 			    JS9.error("can't remove primary (raw0) data layer");
 			}
-			if( this.raws[i].hdu && this.raws[i].hdu.fits ){
-			    // delete vfile associated with this layer
-			    JS9.fits.cleanupFITSFile(this.raws[i].hdu.fits,
-						     true);
+			if( raw.hdu && raw.hdu.fits ){
+			    // delete vfile associated with this layer?
+			    carr = JS9.lookupVfile(raw.hdu.fits.vfile);
+			    if( carr.length <= 1 ){
+				JS9.fits.cleanupFITSFile(raw.hdu.fits, true);
+			    }
 			}
-			if( this.raws[i].current0 && this.raws[i].current0.id ){
-			    // back to origin of this layer, if possible
-			    this.raw = this.raws[i].current0;
-			} else {
-			    // else back to original raw data
-			    this.raw = this.raws[0];
+			// default is to go back to original raw data
+			this.raw = this.raws[0];
+			// but go back to origin of this layer if necessary
+			if( raw.current0 && raw.current0.id ){
+			    // look for origin
+			    for(j=0; j<this.raws.length; j++){
+				if( raw.current0.id === this.raws[j].id ){
+				    // found it!
+				    this.raw = this.raws[j];
+				    break;
+				}
+			    }
 			}
 			// remove layer
 			this.raws.splice(i, 1);
@@ -4017,7 +4023,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 			this.displayImage("all", opts);
 			return true;
 		    }
-		    this.raw = this.raws[i];
+		    this.raw = raw;
 		    if( this.raw.header.bitpix ){
 			this.raw.bitpix = this.raw.header.bitpix;
 		    }
@@ -4049,8 +4055,9 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
     } else if( opts.oraw === "current0" ){
 	// use the original current data for this layer, if possible;
 	for(i=0; i<this.raws.length; i++){
-	    if( rawid === this.raws[i].id ){
-		oraw = this.raws[i].current0;
+	    raw = this.raws[i];
+	    if( rawid === raw.id ){
+		oraw = raw.current0;
 		break;
 	    }
 	}
@@ -4061,8 +4068,9 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
     } else {
 	// look for oraw matching 'oraw' property
 	for(i=0; i<this.raws.length; i++){
-	    if( opts.oraw === this.raws[i].id ){
-		oraw = this.raws[i];
+	    raw = this.raws[i];
+	    if( opts.oraw === raw.id ){
+		oraw = raw;
 		break;
 	    }
 	}
@@ -11458,7 +11466,7 @@ JS9.getImage = function(id){
 // look for specified vfile among raw0 hdus
 // used to determine if its safe to delete a vfile
 JS9.lookupVfile = function(vfile){
-    var i, raw;
+    var i, j, im, raw;
     var arr = [];
     // sanity check
     if( !vfile ){
@@ -11466,9 +11474,12 @@ JS9.lookupVfile = function(vfile){
     }
     // check raw0 hdu for specified vfile
     for(i=0; i<JS9.images.length; i++){
-	raw = JS9.images[i].raws[0];
-	if( raw.hdu && raw.hdu.fits && (vfile === raw.hdu.fits.vfile) ){
-	    arr.push(JS9.images[i].id);
+	im = JS9.images[i];
+	for(j=0; j<im.raws.length; j++){
+	    raw = im.raws[j];
+	    if( raw.hdu && raw.hdu.fits && (vfile === raw.hdu.fits.vfile) ){
+		arr.push({im: im, raw: raw, idx: j});
+	    }
 	}
     }
     return arr;
