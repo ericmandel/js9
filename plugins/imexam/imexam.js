@@ -311,8 +311,8 @@ ndops.rms = typed(function (a) {
     var squ = 0;
     // ----
     if( !isNaN(a) ){
-        sum +=   a;
-	    squ += a*a;
+	sum +=   a;
+	squ += a*a;
     }
     // ----
 
@@ -382,7 +382,7 @@ imops._rproj = typed(function(a, cx, cy, radius, length) {
     // ----
 	var d = Math.sqrt((iY-cy)*(iY-cy) + (iX-cx)*(iX-cx));
 
-	if ( (d <= r) && !isNaN(a) ) { 
+	if ( (d <= r) && !isNaN(a) ) {
 	    rad[i] = d;
 	    val[i] = a;
 
@@ -642,7 +642,7 @@ exports.typed    = ndops;
 exports.imops    = imops;
 
 
-},{"./mask.js":1,"./template":9,"typed-array-function":2,"typed-array-ops":3,"typed-array-rotate":4,"typed-numeric-uncmin":7}],1:[function(require,module,exports){
+},{"./mask.js":1,"./template":12,"typed-array-function":4,"typed-array-ops":5,"typed-array-rotate":8,"typed-numeric-uncmin":10}],1:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 /*globals $ */ 
 
@@ -715,7 +715,410 @@ exports.imops    = imops;
 }());
 
 
-},{"./raster":8}],2:[function(require,module,exports){
+},{"./raster":11}],2:[function(require,module,exports){
+"use strict"
+
+var iota = require("iota-array")
+
+var arrayMethods = [
+  "concat",
+  "join",
+  "slice",
+  "toString",
+  "indexOf",
+  "lastIndexOf",
+  "forEach",
+  "every",
+  "some",
+  "filter",
+  "map",
+  "reduce",
+  "reduceRight"
+]
+
+function compare1st(a, b) {
+  return a[0] - b[0]
+}
+
+function order() {
+  var stride = this.stride
+  var terms = new Array(stride.length)
+  var i
+  for(i=0; i<terms.length; ++i) {
+    terms[i] = [Math.abs(stride[i]), i]
+  }
+  terms.sort(compare1st)
+  var result = new Array(terms.length)
+  for(i=0; i<result.length; ++i) {
+    result[i] = terms[i][1]
+  }
+  return result
+}
+
+function compileConstructor(dtype, dimension) {
+  var className = ["View", dimension, "d", dtype].join("")
+  if(dimension < 0) {
+    className = "View_Nil" + dtype
+  }
+  var useGetters = (dtype === "generic")
+  
+  if(dimension === -1) {
+    //Special case for trivial arrays
+    var code = 
+      "function "+className+"(a){this.data=a;};\
+var proto="+className+".prototype;\
+proto.dtype='"+dtype+"';\
+proto.index=function(){return -1};\
+proto.size=0;\
+proto.dimension=-1;\
+proto.shape=proto.stride=proto.order=[];\
+proto.lo=proto.hi=proto.transpose=proto.step=\
+function(){return new "+className+"(this.data);};\
+proto.get=proto.set=function(){};\
+proto.pick=function(){return null};\
+return function construct_"+className+"(a){return new "+className+"(a);}"
+    var procedure = new Function(code)
+    return procedure()
+  } else if(dimension === 0) {
+    //Special case for 0d arrays
+    var code =
+      "function "+className+"(a,d) {\
+this.data = a;\
+this.offset = d\
+};\
+var proto="+className+".prototype;\
+proto.dtype='"+dtype+"';\
+proto.index=function(){return this.offset};\
+proto.dimension=0;\
+proto.size=1;\
+proto.shape=\
+proto.stride=\
+proto.order=[];\
+proto.lo=\
+proto.hi=\
+proto.transpose=\
+proto.step=function "+className+"_copy() {\
+return new "+className+"(this.data,this.offset)\
+};\
+proto.pick=function "+className+"_pick(){\
+return TrivialArray(this.data);\
+};\
+proto.valueOf=proto.get=function "+className+"_get(){\
+return "+(useGetters ? "this.data.get(this.offset)" : "this.data[this.offset]")+
+"};\
+proto.set=function "+className+"_set(v){\
+return "+(useGetters ? "this.data.set(this.offset,v)" : "this.data[this.offset]=v")+"\
+};\
+return function construct_"+className+"(a,b,c,d){return new "+className+"(a,d)}"
+    var procedure = new Function("TrivialArray", code)
+    return procedure(CACHED_CONSTRUCTORS[dtype][0])
+  }
+
+  var code = ["'use strict'"]
+    
+  //Create constructor for view
+  var indices = iota(dimension)
+  var args = indices.map(function(i) { return "i"+i })
+  var index_str = "this.offset+" + indices.map(function(i) {
+        return ["this._stride", i, "*i",i].join("")
+      }).join("+")
+  code.push("function "+className+"(a,"+
+    indices.map(function(i) {
+      return "b"+i
+    }).join(",")+","+
+    indices.map(function(i) {
+      return "c"+i
+    }).join(",")+",d){this.data=a")
+  for(var i=0; i<dimension; ++i) {
+    code.push("this._shape"+i+"=b"+i+"|0")
+  }
+  for(var i=0; i<dimension; ++i) {
+    code.push("this._stride"+i+"=c"+i+"|0")
+  }
+  code.push("this.offset=d|0}",
+    "var proto="+className+".prototype",
+    "proto.dtype='"+dtype+"'",
+    "proto.dimension="+dimension)
+  
+  //view.stride and view.shape
+  var strideClassName = "VStride" + dimension + "d" + dtype
+  var shapeClassName = "VShape" + dimension + "d" + dtype
+  var props = {"stride":strideClassName, "shape":shapeClassName}
+  for(var prop in props) {
+    var arrayName = props[prop]
+    code.push(
+      "function " + arrayName + "(v) {this._v=v} var aproto=" + arrayName + ".prototype",
+      "aproto.length="+dimension)
+    
+    var array_elements = []
+    for(var i=0; i<dimension; ++i) {
+      array_elements.push(["this._v._", prop, i].join(""))
+    }
+    code.push(
+      "aproto.toJSON=function " + arrayName + "_toJSON(){return [" + array_elements.join(",") + "]}",
+      "aproto.valueOf=aproto.toString=function " + arrayName + "_toString(){return [" + array_elements.join(",") + "].join()}")
+    
+    for(var i=0; i<dimension; ++i) {
+      code.push(["Object.defineProperty(aproto,", i, ",{get:function(){return this._v._", prop, i, "},set:function(v){return this._v._", prop, i, "=v|0},enumerable:true})"].join(""))
+    }
+    for(var i=0; i<arrayMethods.length; ++i) {
+      if(arrayMethods[i] in Array.prototype) {
+        code.push(["aproto.", arrayMethods[i], "=Array.prototype.", arrayMethods[i]].join(""))
+      }
+    }
+    code.push(["Object.defineProperty(proto,'",prop,"',{get:function ", arrayName, "_get(){return new ", arrayName, "(this)},set: function ", arrayName, "_set(v){"].join(""))
+    for(var i=0; i<dimension; ++i) {
+      code.push(["this._", prop, i, "=v[", i, "]|0"].join(""))
+    }
+    code.push("return v}})")
+  }
+  
+  //view.size:
+  code.push(["Object.defineProperty(proto,'size',{get:function ",className,"_size(){\
+return ", indices.map(function(i) { return ["this._shape", i].join("") }).join("*"),
+"}})"].join(""))
+
+  //view.order:
+  if(dimension === 1) {
+    code.push("proto.order=[0]")
+  } else {
+    code.push("Object.defineProperty(proto,'order',{get:")
+    if(dimension < 4) {
+      code.push(["function ",className,"_order(){"].join(""))
+      if(dimension === 2) {
+        code.push("return (Math.abs(this._stride0)>Math.abs(this._stride1))?[1,0]:[0,1]}})")
+      } else if(dimension === 3) {
+        code.push(
+"var s0=Math.abs(this._stride0),s1=Math.abs(this._stride1),s2=Math.abs(this._stride2);\
+if(s0>s1){\
+if(s1>s2){\
+return [2,1,0];\
+}else if(s0>s2){\
+return [1,2,0];\
+}else{\
+return [1,0,2];\
+}\
+}else if(s0>s2){\
+return [2,0,1];\
+}else if(s2>s1){\
+return [0,1,2];\
+}else{\
+return [0,2,1];\
+}}})")
+      }
+    } else {
+      code.push("ORDER})")
+    }
+  }
+  
+  //view.set(i0, ..., v):
+  code.push([
+"proto.set=function ",className,"_set(", args.join(","), ",v){"].join(""))
+  if(useGetters) {
+    code.push(["return this.data.set(", index_str, ",v)}"].join(""))
+  } else {
+    code.push(["return this.data[", index_str, "]=v}"].join(""))
+  }
+  
+  //view.get(i0, ...):
+  code.push(["proto.get=function ",className,"_get(", args.join(","), "){"].join(""))
+  if(useGetters) {
+    code.push(["return this.data.get(", index_str, ")}"].join(""))
+  } else {
+    code.push(["return this.data[", index_str, "]}"].join(""))
+  }
+  
+  //view.index:
+  code.push([
+    "proto.index=function ",
+      className,
+      "_index(", args.join(), "){return ", 
+      index_str, "}"].join(""))
+
+  //view.hi():
+  code.push(["proto.hi=function ",className,"_hi(",args.join(","),"){return new ", className, "(this.data,",
+    indices.map(function(i) {
+      return ["(typeof i",i,"!=='number'||i",i,"<0)?this._shape", i, ":i", i,"|0"].join("")
+    }).join(","), ",",
+    indices.map(function(i) {
+      return "this._stride"+i
+    }).join(","), ",this.offset)}"].join(""))
+  
+  //view.lo():
+  var a_vars = indices.map(function(i) { return "a"+i+"=this._shape"+i })
+  var c_vars = indices.map(function(i) { return "c"+i+"=this._stride"+i })
+  code.push(["proto.lo=function ",className,"_lo(",args.join(","),"){var b=this.offset,d=0,", a_vars.join(","), ",", c_vars.join(",")].join(""))
+  for(var i=0; i<dimension; ++i) {
+    code.push([
+"if(typeof i",i,"==='number'&&i",i,">=0){\
+d=i",i,"|0;\
+b+=c",i,"*d;\
+a",i,"-=d}"].join(""))
+  }
+  code.push(["return new ", className, "(this.data,",
+    indices.map(function(i) {
+      return "a"+i
+    }).join(","),",",
+    indices.map(function(i) {
+      return "c"+i
+    }).join(","), ",b)}"].join(""))
+  
+  //view.step():
+  code.push(["proto.step=function ",className,"_step(",args.join(","),"){var ",
+    indices.map(function(i) {
+      return "a"+i+"=this._shape"+i
+    }).join(","), ",",
+    indices.map(function(i) {
+      return "b"+i+"=this._stride"+i
+    }).join(","),",c=this.offset,d=0,ceil=Math.ceil"].join(""))
+  for(var i=0; i<dimension; ++i) {
+    code.push([
+"if(typeof i",i,"==='number'){\
+d=i",i,"|0;\
+if(d<0){\
+c+=b",i,"*(a",i,"-1);\
+a",i,"=ceil(-a",i,"/d)\
+}else{\
+a",i,"=ceil(a",i,"/d)\
+}\
+b",i,"*=d\
+}"].join(""))
+  }
+  code.push(["return new ", className, "(this.data,",
+    indices.map(function(i) {
+      return "a" + i
+    }).join(","), ",",
+    indices.map(function(i) {
+      return "b" + i
+    }).join(","), ",c)}"].join(""))
+  
+  //view.transpose():
+  var tShape = new Array(dimension)
+  var tStride = new Array(dimension)
+  for(var i=0; i<dimension; ++i) {
+    tShape[i] = ["a[i", i, "]"].join("")
+    tStride[i] = ["b[i", i, "]"].join("")
+  }
+  code.push(["proto.transpose=function ",className,"_transpose(",args,"){", 
+    args.map(function(n,idx) { return n + "=(" + n + "===undefined?" + idx + ":" + n + "|0)"}).join(";"),
+    ";var a=this.shape,b=this.stride;return new ", className, "(this.data,", tShape.join(","), ",", tStride.join(","), ",this.offset)}"].join(""))
+  
+  //view.pick():
+  code.push(["proto.pick=function ",className,"_pick(",args,"){var a=[],b=[],c=this.offset"].join(""))
+  for(var i=0; i<dimension; ++i) {
+    code.push(["if(typeof i",i,"==='number'&&i",i,">=0){c=(c+this._stride",i,"*i",i,")|0}else{a.push(this._shape",i,");b.push(this._stride",i,")}"].join(""))
+  }
+  code.push("var ctor=CTOR_LIST[a.length+1];return ctor(this.data,a,b,c)}")
+    
+  //Add return statement
+  code.push(["return function construct_",className,"(data,shape,stride,offset){return new ", className,"(data,",
+    indices.map(function(i) {
+      return "shape["+i+"]"
+    }).join(","), ",",
+    indices.map(function(i) {
+      return "stride["+i+"]"
+    }).join(","), ",offset)}"].join(""))
+
+  //Compile procedure
+  var procedure = new Function("CTOR_LIST", "ORDER", code.join("\n"))
+  return procedure(CACHED_CONSTRUCTORS[dtype], order)
+}
+
+function arrayDType(data) {
+  if(data instanceof Float64Array) {
+    return "float64";
+  } else if(data instanceof Float32Array) {
+    return "float32"
+  } else if(data instanceof Int32Array) {
+    return "int32"
+  } else if(data instanceof Uint32Array) {
+    return "uint32"
+  } else if(data instanceof Uint8Array) {
+    return "uint8"
+  } else if(data instanceof Uint16Array) {
+    return "uint16"
+  } else if(data instanceof Int16Array) {
+    return "int16"
+  } else if(data instanceof Int8Array) {
+    return "int8"
+  } else if(data instanceof Uint8ClampedArray) {
+    return "uint8_clamped"
+  } else if(data instanceof Array) {
+    return "array"
+  }
+  return "generic"
+}
+
+var CACHED_CONSTRUCTORS = {
+  "float32":[],
+  "float64":[],
+  "int8":[],
+  "int16":[],
+  "int32":[],
+  "uint8":[],
+  "uint16":[],
+  "uint32":[],
+  "array":[],
+  "uint8_clamped":[],
+  "generic":[]
+}
+
+;(function() {
+  for(var id in CACHED_CONSTRUCTORS) {
+    CACHED_CONSTRUCTORS[id].push(compileConstructor(id, -1))
+  }
+});
+
+function wrappedNDArrayCtor(data, shape, stride, offset) {
+  if(data === undefined) {
+    var ctor = CACHED_CONSTRUCTORS.array[0]
+    return ctor([])
+  } else if(typeof data === "number") {
+    data = [data]
+  }
+  if(shape === undefined) {
+    shape = [ data.length ]
+  }
+  var d = shape.length
+  if(stride === undefined) {
+    stride = new Array(d)
+    for(var i=d-1, sz=1; i>=0; --i) {
+      stride[i] = sz
+      sz *= shape[i]
+    }
+  }
+  if(offset === undefined) {
+    offset = 0
+    for(var i=0; i<d; ++i) {
+      if(stride[i] < 0) {
+        offset -= (shape[i]-1)*stride[i]
+      }
+    }
+  }
+  var dtype = arrayDType(data)
+  var ctor_list = CACHED_CONSTRUCTORS[dtype]
+  while(ctor_list.length <= d+1) {
+    ctor_list.push(compileConstructor(dtype, ctor_list.length-1))
+  }
+  var ctor = ctor_list[d+1]
+  return ctor(data, shape, stride, offset)
+}
+
+module.exports = wrappedNDArrayCtor
+
+},{"iota-array":3}],3:[function(require,module,exports){
+"use strict"
+
+function iota(n) {
+  var result = new Array(n)
+  for(var i=0; i<n; ++i) {
+    result[i] = i
+  }
+  return result
+}
+
+module.exports = iota
+},{}],4:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, evil: true, regexp: true, bitwise: true */
 /*jshint node: true, -W099: true, laxbreak:true, laxcomma:true, multistr:true, smarttabs:true */
 /*globals typed, Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array */ 
@@ -1108,9 +1511,7 @@ exports.imops    = imops;
     var size = typed(function (a) {
 	var prd = 1;
 	// ----
-    if( !isNaN(a) ){
 	    prd *= a;
-    }
 	// ----
 	return prd;
     });
@@ -1220,7 +1621,7 @@ exports.imops    = imops;
 }());
 
 
-},{"ndarray-nobuffer":11}],3:[function(require,module,exports){
+},{"ndarray-nobuffer":2}],5:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, evil: true, regexp: true */
 /*globals */ 
 
@@ -1398,18 +1799,14 @@ exports.imops    = imops;
     ops.sum  = typed(function (a) {
 	var sum = 0; 
 	// ----
-    if( !isNaN(a) ){
 	    sum += a;
-    }
 	// ----
 	return sum;
     });
     ops.prod = typed(function (a) {
 	var prd = 1;
 	// ----
-    if( !isNaN(a) ){
 	    prd *= a;
-    }
 	// ----
 	return prd;
     });
@@ -1433,9 +1830,7 @@ exports.imops    = imops;
     ops.norm2Squared = typed(function (a) {
 	var norm2 = 0;
 	// ----    
-    if( !isNaN(a) ){
 	    norm2 += a*a;
-    }
 	// ----    
 	return norm2;
     });
@@ -1450,33 +1845,118 @@ exports.imops    = imops;
 }());
  
 
-},{"typed-array-function":2}],4:[function(require,module,exports){
-/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, bitwise: true */
+},{"typed-array-function":4}],6:[function(require,module,exports){
+"use strict"
 
-"use strict";
-
-var warp = require("typed-array-warp");
-
-
-function rotateImage(out, inp, theta, iX, iY, oX, oY) {
-  var c = Math.cos(theta);
-  var s = Math.sin(-theta);
-  iX = iX || inp.shape[0]/2.0;
-  iY = iY || inp.shape[1]/2.0;
-  oX = oX || out.shape[0]/2.0;
-  oY = oY || out.shape[1]/2.0;
-  var a = iX - c * oX + s * oY;
-  var b = iY - s * oX - c * oY;
-  warp(out, inp, function(y,x) {
-    y[0] = c * x[0] - s * x[1] + a;
-    y[1] = s * x[0] + c * x[1] + b;
-  });
-  return out;
+function interp1d(arr, x) {
+  var ix = Math.floor(x)
+    , fx = x - ix
+    , s0 = 0 <= ix   && ix   < arr.shape[0]
+    , s1 = 0 <= ix+1 && ix+1 < arr.shape[0]
+    , w0 = s0 ? +arr.get(ix)   : 0.0
+    , w1 = s1 ? +arr.get(ix+1) : 0.0
+  return (1.0-fx)*w0 + fx*w1
 }
 
-module.exports = rotateImage;
+function interp2d(arr, x, y) {
+  var ix = Math.floor(x)
+    , fx = x - ix
+    , s0 = 0 <= ix   && ix   < arr.shape[0]
+    , s1 = 0 <= ix+1 && ix+1 < arr.shape[0]
+    , iy = Math.floor(y)
+    , fy = y - iy
+    , t0 = 0 <= iy   && iy   < arr.shape[1]
+    , t1 = 0 <= iy+1 && iy+1 < arr.shape[1]
+    , w00 = s0&&t0 ? arr.get(ix  ,iy  ) : 0.0
+    , w01 = s0&&t1 ? arr.get(ix  ,iy+1) : 0.0
+    , w10 = s1&&t0 ? arr.get(ix+1,iy  ) : 0.0
+    , w11 = s1&&t1 ? arr.get(ix+1,iy+1) : 0.0
+  return (1.0-fy) * ((1.0-fx)*w00 + fx*w10) + fy * ((1.0-fx)*w01 + fx*w11)
+}
 
-},{"typed-array-warp":5}],5:[function(require,module,exports){
+function interp3d(arr, x, y, z) {
+  var ix = Math.floor(x)
+    , fx = x - ix
+    , s0 = 0 <= ix   && ix   < arr.shape[0]
+    , s1 = 0 <= ix+1 && ix+1 < arr.shape[0]
+    , iy = Math.floor(y)
+    , fy = y - iy
+    , t0 = 0 <= iy   && iy   < arr.shape[1]
+    , t1 = 0 <= iy+1 && iy+1 < arr.shape[1]
+    , iz = Math.floor(z)
+    , fz = z - iz
+    , u0 = 0 <= iz   && iz   < arr.shape[2]
+    , u1 = 0 <= iz+1 && iz+1 < arr.shape[2]
+    , w000 = s0&&t0&&u0 ? arr.get(ix,iy,iz)       : 0.0
+    , w010 = s0&&t1&&u0 ? arr.get(ix,iy+1,iz)     : 0.0
+    , w100 = s1&&t0&&u0 ? arr.get(ix+1,iy,iz)     : 0.0
+    , w110 = s1&&t1&&u0 ? arr.get(ix+1,iy+1,iz)   : 0.0
+    , w001 = s0&&t0&&u1 ? arr.get(ix,iy,iz+1)     : 0.0
+    , w011 = s0&&t1&&u1 ? arr.get(ix,iy+1,iz+1)   : 0.0
+    , w101 = s1&&t0&&u1 ? arr.get(ix+1,iy,iz+1)   : 0.0
+    , w111 = s1&&t1&&u1 ? arr.get(ix+1,iy+1,iz+1) : 0.0
+  return (1.0-fz) * ((1.0-fy) * ((1.0-fx)*w000 + fx*w100) + fy * ((1.0-fx)*w010 + fx*w110)) + fz * ((1.0-fy) * ((1.0-fx)*w001 + fx*w101) + fy * ((1.0-fx)*w011 + fx*w111))
+}
+
+function interpNd(arr) {
+  var d = arr.shape.length|0
+    , ix = new Array(d)
+    , fx = new Array(d)
+    , s0 = new Array(d)
+    , s1 = new Array(d)
+    , i, t
+  for(i=0; i<d; ++i) {
+    t = +arguments[i+1]
+    ix[i] = Math.floor(t)
+    fx[i] = t - ix[i]
+    s0[i] = (0 <= ix[i]   && ix[i]   < arr.shape[i])
+    s1[i] = (0 <= ix[i]+1 && ix[i]+1 < arr.shape[i])
+  }
+  var r = 0.0, j, w, idx
+i_loop:
+  for(i=0; i<(1<<d); ++i) {
+    w = 1.0
+    idx = arr.offset
+    for(j=0; j<d; ++j) {
+      if(i & (1<<j)) {
+        if(!s1[j]) {
+          continue i_loop
+        }
+        w *= fx[j]
+        idx += arr.stride[j] * (ix[j] + 1)
+      } else {
+        if(!s0[j]) {
+          continue i_loop
+        }
+        w *= 1.0 - fx[j]
+        idx += arr.stride[j] * ix[j]
+      }
+    }
+    r += w * arr.data[idx]
+  }
+  return r
+}
+
+function interpolate(arr, x, y, z) {
+  switch(arr.shape.length) {
+    case 0:
+      return 0.0
+    case 1:
+      return interp1d(arr, x)
+    case 2:
+      return interp2d(arr, x, y)
+    case 3:
+      return interp3d(arr, x, y, z)
+    default:
+      return interpNd.apply(undefined, arguments)
+  }
+}
+module.exports = interpolate
+module.exports.d1 = interp1d
+module.exports.d2 = interp2d
+module.exports.d3 = interp3d
+
+},{}],7:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, bitwise: true */
 
 "use strict";
@@ -1549,7 +2029,33 @@ module.exports = function warp(dest, src, func) {
   return dest;
 };
 
-},{"ndarray-linear-interpolate":10,"typed-array-function":2}],6:[function(require,module,exports){
+},{"ndarray-linear-interpolate":6,"typed-array-function":4}],8:[function(require,module,exports){
+/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, bitwise: true */
+
+"use strict";
+
+var warp = require("typed-array-warp");
+
+
+function rotateImage(out, inp, theta, iX, iY, oX, oY) {
+  var c = Math.cos(theta);
+  var s = Math.sin(-theta);
+  iX = iX || inp.shape[0]/2.0;
+  iY = iY || inp.shape[1]/2.0;
+  oX = oX || out.shape[0]/2.0;
+  oY = oY || out.shape[1]/2.0;
+  var a = iX - c * oX + s * oY;
+  var b = iY - s * oX - c * oY;
+  warp(out, inp, function(y,x) {
+    y[0] = c * x[0] - s * x[1] + a;
+    y[1] = s * x[0] + c * x[1] + b;
+  });
+  return out;
+}
+
+module.exports = rotateImage;
+
+},{"typed-array-warp":7}],9:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, evil: true, regexp: true, bitwise: true */
 /*jshint node: true, -W099: true, laxbreak:true, laxcomma:true, multistr:true, smarttabs:true */
 /*globals */ 
@@ -1700,10 +2206,8 @@ numeric.dotMM = typed({ loops: false }, numeric.dotMM);
 numeric.diag  = typed({ loops: false }, numeric.diag);
 
 
-},{"typed-array-function":2}],7:[function(require,module,exports){
-/*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true, evil: true, regexp: true, bitwise: true, continue:true */
+},{"typed-array-function":4}],10:[function(require,module,exports){
 
-"use strict";
 
 var numeric =                         require("typed-array-function");
     numeric = numeric.extend(numeric, require("typed-array-ops"));
@@ -1713,13 +2217,13 @@ var numeric =                         require("typed-array-function");
 exports.gradient = function gradient(f,x) {
     var n = x.length;
     var f0 = f(x);
-    if(isNaN(f0)) { throw new Error('gradient: f(x) is a NaN!'); }
-    var i,x0 = numeric.clone(x),f1,f2, J = new [].constructor(n);
-    var errest,max = Math.max,eps = 1e-3,abs = Math.abs, min = Math.min;
-    var t0,t1,t2,it=0,d1,d2,N,h;
+    if(isNaN(f0)) throw new Error('gradient: f(x) is a NaN!');
+    var i,x0 = numeric.clone(x),f1,f2, J = Array(n);
+    var errest,roundoff,max = Math.max,eps = 1e-3,abs = Math.abs, min = Math.min;
+    var t0,t1,t2,it=0,d1,d2,N;
     for(i=0;i<n;i++) {
-        h = max(1e-6*f0,1e-8);
-        while(true) {
+        var h = max(1e-6*f0,1e-8);
+        while(1) {
             ++it;
             if(it>20) { throw new Error("Numerical gradient fails"); }
             x0[i] = x[i]+h;
@@ -1736,29 +2240,29 @@ exports.gradient = function gradient(f,x) {
             d2 = (f0-f2)/h;
             N = max(abs(J[i]),abs(f0),abs(f1),abs(f2),abs(t0),abs(t1),abs(t2),1e-8);
             errest = min(max(abs(d1-J[i]),abs(d2-J[i]),abs(d1-d2))/N,h/N);
-            if(errest>eps) { h/=16;
-	    } else { break; }
+            if(errest>eps) { h/=16; }
+            else break;
             }
     }
     return J;
-};
+}
 exports.uncmin = function uncmin(f,x0,tol,gradient,maxit,callback,options) {
     var grad = exports.gradient;
-    if(options  === undefined) { options = {}; }
-    if(tol      === undefined) { tol = 1e-8; }
-    if(gradient === undefined) { gradient = function(x) { return grad(f,x); }; }
-    if(maxit    === undefined) { maxit = 1000; }
+    if(typeof options === "undefined") { options = {}; }
+    if(typeof tol === "undefined") { tol = 1e-8; }
+    if(typeof gradient === "undefined") { gradient = function(x) { return grad(f,x); }; }
+    if(typeof maxit === "undefined") maxit = 1000;
     x0 = numeric.clone(x0);
     var n = x0.length;
     var f0 = f(x0),f1,df0;
-    if(isNaN(f0)) { throw new Error('uncmin: f(x0) is a NaN!'); }
+    if(isNaN(f0)) throw new Error('uncmin: f(x0) is a NaN!');
     var max = Math.max, norm2 = numeric.norm2;
     tol = max(tol,numeric.epsilon);
     var step,g0,g1,H1 = options.Hinv || numeric.identity(n);
     var dot = numeric.dot, sub = numeric.sub, add = numeric.add, ten = numeric.tensor, div = numeric.div, mul = numeric.mul;
 
     var all = numeric.all, isfinite = numeric.isFinite, neg = numeric.neg;
-    var it=0,s,x1,y,Hy,ys,t,nstep;
+    var it=0,i,s,x1,y,Hy,Hs,ys,i0,t,nstep,t1,t2;
     var msg = "";
     g0 = gradient(x0);
     while(it<maxit) {
@@ -1804,9 +2308,9 @@ exports.uncmin = function uncmin(f,x0,tol,gradient,maxit,callback,options) {
 
     }
     return {solution: x0, f: f0, gradient: g0, invHessian: H1, iterations:it, message: msg};
-};
+}
 
-},{"typed-array-function":2,"typed-array-ops":3,"typed-matrix-ops":6}],8:[function(require,module,exports){
+},{"typed-array-function":4,"typed-array-ops":5,"typed-matrix-ops":9}],11:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 /*globals */ 
 
@@ -1943,7 +2447,7 @@ exports.uncmin = function uncmin(f,x0,tol,gradient,maxit,callback,options) {
     exports.drawBox     = function (buffer, width, x, y, h, w, rot, color, rop) { _drawPolygon(buffer, width, rotPoints(polyBox    (x, y, h, w), rot, { x: x, y: y }), color, rop); };
 }());
 
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
 
 "use strict";
@@ -2017,519 +2521,5 @@ function template(text,data) {
 
 module.exports = template;
 
-},{}],10:[function(require,module,exports){
-"use strict"
-
-function interp1d(arr, x) {
-  var ix = Math.floor(x)
-    , fx = x - ix
-    , s0 = 0 <= ix   && ix   < arr.shape[0]
-    , s1 = 0 <= ix+1 && ix+1 < arr.shape[0]
-    , w0 = s0 ? +arr.get(ix)   : 0.0
-    , w1 = s1 ? +arr.get(ix+1) : 0.0
-  return (1.0-fx)*w0 + fx*w1
-}
-
-function interp2d(arr, x, y) {
-  var ix = Math.floor(x)
-    , fx = x - ix
-    , s0 = 0 <= ix   && ix   < arr.shape[0]
-    , s1 = 0 <= ix+1 && ix+1 < arr.shape[0]
-    , iy = Math.floor(y)
-    , fy = y - iy
-    , t0 = 0 <= iy   && iy   < arr.shape[1]
-    , t1 = 0 <= iy+1 && iy+1 < arr.shape[1]
-    , w00 = s0&&t0 ? arr.get(ix  ,iy  ) : 0.0
-    , w01 = s0&&t1 ? arr.get(ix  ,iy+1) : 0.0
-    , w10 = s1&&t0 ? arr.get(ix+1,iy  ) : 0.0
-    , w11 = s1&&t1 ? arr.get(ix+1,iy+1) : 0.0
-  return (1.0-fy) * ((1.0-fx)*w00 + fx*w10) + fy * ((1.0-fx)*w01 + fx*w11)
-}
-
-function interp3d(arr, x, y, z) {
-  var ix = Math.floor(x)
-    , fx = x - ix
-    , s0 = 0 <= ix   && ix   < arr.shape[0]
-    , s1 = 0 <= ix+1 && ix+1 < arr.shape[0]
-    , iy = Math.floor(y)
-    , fy = y - iy
-    , t0 = 0 <= iy   && iy   < arr.shape[1]
-    , t1 = 0 <= iy+1 && iy+1 < arr.shape[1]
-    , iz = Math.floor(z)
-    , fz = z - iz
-    , u0 = 0 <= iz   && iz   < arr.shape[2]
-    , u1 = 0 <= iz+1 && iz+1 < arr.shape[2]
-    , w000 = s0&&t0&&u0 ? arr.get(ix,iy,iz)       : 0.0
-    , w010 = s0&&t1&&u0 ? arr.get(ix,iy+1,iz)     : 0.0
-    , w100 = s1&&t0&&u0 ? arr.get(ix+1,iy,iz)     : 0.0
-    , w110 = s1&&t1&&u0 ? arr.get(ix+1,iy+1,iz)   : 0.0
-    , w001 = s0&&t0&&u1 ? arr.get(ix,iy,iz+1)     : 0.0
-    , w011 = s0&&t1&&u1 ? arr.get(ix,iy+1,iz+1)   : 0.0
-    , w101 = s1&&t0&&u1 ? arr.get(ix+1,iy,iz+1)   : 0.0
-    , w111 = s1&&t1&&u1 ? arr.get(ix+1,iy+1,iz+1) : 0.0
-  return (1.0-fz) * ((1.0-fy) * ((1.0-fx)*w000 + fx*w100) + fy * ((1.0-fx)*w010 + fx*w110)) + fz * ((1.0-fy) * ((1.0-fx)*w001 + fx*w101) + fy * ((1.0-fx)*w011 + fx*w111))
-}
-
-function interpNd(arr) {
-  var d = arr.shape.length|0
-    , ix = new Array(d)
-    , fx = new Array(d)
-    , s0 = new Array(d)
-    , s1 = new Array(d)
-    , i, t
-  for(i=0; i<d; ++i) {
-    t = +arguments[i+1]
-    ix[i] = Math.floor(t)
-    fx[i] = t - ix[i]
-    s0[i] = (0 <= ix[i]   && ix[i]   < arr.shape[i])
-    s1[i] = (0 <= ix[i]+1 && ix[i]+1 < arr.shape[i])
-  }
-  var r = 0.0, j, w, idx
-i_loop:
-  for(i=0; i<(1<<d); ++i) {
-    w = 1.0
-    idx = arr.offset
-    for(j=0; j<d; ++j) {
-      if(i & (1<<j)) {
-        if(!s1[j]) {
-          continue i_loop
-        }
-        w *= fx[j]
-        idx += arr.stride[j] * (ix[j] + 1)
-      } else {
-        if(!s0[j]) {
-          continue i_loop
-        }
-        w *= 1.0 - fx[j]
-        idx += arr.stride[j] * ix[j]
-      }
-    }
-    r += w * arr.data[idx]
-  }
-  return r
-}
-
-function interpolate(arr, x, y, z) {
-  switch(arr.shape.length) {
-    case 0:
-      return 0.0
-    case 1:
-      return interp1d(arr, x)
-    case 2:
-      return interp2d(arr, x, y)
-    case 3:
-      return interp3d(arr, x, y, z)
-    default:
-      return interpNd.apply(undefined, arguments)
-  }
-}
-module.exports = interpolate
-module.exports.d1 = interp1d
-module.exports.d2 = interp2d
-module.exports.d3 = interp3d
-
-},{}],11:[function(require,module,exports){
-"use strict"
-
-var iota = require("iota-array")
-
-var arrayMethods = [
-  "concat",
-  "join",
-  "slice",
-  "toString",
-  "indexOf",
-  "lastIndexOf",
-  "forEach",
-  "every",
-  "some",
-  "filter",
-  "map",
-  "reduce",
-  "reduceRight"
-]
-
-function compare1st(a, b) {
-  return a[0] - b[0]
-}
-
-function order() {
-  var stride = this.stride
-  var terms = new Array(stride.length)
-  var i
-  for(i=0; i<terms.length; ++i) {
-    terms[i] = [Math.abs(stride[i]), i]
-  }
-  terms.sort(compare1st)
-  var result = new Array(terms.length)
-  for(i=0; i<result.length; ++i) {
-    result[i] = terms[i][1]
-  }
-  return result
-}
-
-function compileConstructor(dtype, dimension) {
-  var className = ["View", dimension, "d", dtype].join("")
-  if(dimension < 0) {
-    className = "View_Nil" + dtype
-  }
-  var useGetters = (dtype === "generic")
-  
-  if(dimension === -1) {
-    //Special case for trivial arrays
-    var code = 
-      "function "+className+"(a){this.data=a;};\
-var proto="+className+".prototype;\
-proto.dtype='"+dtype+"';\
-proto.index=function(){return -1};\
-proto.size=0;\
-proto.dimension=-1;\
-proto.shape=proto.stride=proto.order=[];\
-proto.lo=proto.hi=proto.transpose=proto.step=\
-function(){return new "+className+"(this.data);};\
-proto.get=proto.set=function(){};\
-proto.pick=function(){return null};\
-return function construct_"+className+"(a){return new "+className+"(a);}"
-    var procedure = new Function(code)
-    return procedure()
-  } else if(dimension === 0) {
-    //Special case for 0d arrays
-    var code =
-      "function "+className+"(a,d) {\
-this.data = a;\
-this.offset = d\
-};\
-var proto="+className+".prototype;\
-proto.dtype='"+dtype+"';\
-proto.index=function(){return this.offset};\
-proto.dimension=0;\
-proto.size=1;\
-proto.shape=\
-proto.stride=\
-proto.order=[];\
-proto.lo=\
-proto.hi=\
-proto.transpose=\
-proto.step=function "+className+"_copy() {\
-return new "+className+"(this.data,this.offset)\
-};\
-proto.pick=function "+className+"_pick(){\
-return TrivialArray(this.data);\
-};\
-proto.valueOf=proto.get=function "+className+"_get(){\
-return "+(useGetters ? "this.data.get(this.offset)" : "this.data[this.offset]")+
-"};\
-proto.set=function "+className+"_set(v){\
-return "+(useGetters ? "this.data.set(this.offset,v)" : "this.data[this.offset]=v")+"\
-};\
-return function construct_"+className+"(a,b,c,d){return new "+className+"(a,d)}"
-    var procedure = new Function("TrivialArray", code)
-    return procedure(CACHED_CONSTRUCTORS[dtype][0])
-  }
-
-  var code = ["'use strict'"]
-    
-  //Create constructor for view
-  var indices = iota(dimension)
-  var args = indices.map(function(i) { return "i"+i })
-  var index_str = "this.offset+" + indices.map(function(i) {
-        return ["this._stride", i, "*i",i].join("")
-      }).join("+")
-  code.push("function "+className+"(a,"+
-    indices.map(function(i) {
-      return "b"+i
-    }).join(",")+","+
-    indices.map(function(i) {
-      return "c"+i
-    }).join(",")+",d){this.data=a")
-  for(var i=0; i<dimension; ++i) {
-    code.push("this._shape"+i+"=b"+i+"|0")
-  }
-  for(var i=0; i<dimension; ++i) {
-    code.push("this._stride"+i+"=c"+i+"|0")
-  }
-  code.push("this.offset=d|0}",
-    "var proto="+className+".prototype",
-    "proto.dtype='"+dtype+"'",
-    "proto.dimension="+dimension)
-  
-  //view.stride and view.shape
-  var strideClassName = "VStride" + dimension + "d" + dtype
-  var shapeClassName = "VShape" + dimension + "d" + dtype
-  var props = {"stride":strideClassName, "shape":shapeClassName}
-  for(var prop in props) {
-    var arrayName = props[prop]
-    code.push(
-      "function " + arrayName + "(v) {this._v=v} var aproto=" + arrayName + ".prototype",
-      "aproto.length="+dimension)
-    
-    var array_elements = []
-    for(var i=0; i<dimension; ++i) {
-      array_elements.push(["this._v._", prop, i].join(""))
-    }
-    code.push(
-      "aproto.toJSON=function " + arrayName + "_toJSON(){return [" + array_elements.join(",") + "]}",
-      "aproto.valueOf=aproto.toString=function " + arrayName + "_toString(){return [" + array_elements.join(",") + "].join()}")
-    
-    for(var i=0; i<dimension; ++i) {
-      code.push(["Object.defineProperty(aproto,", i, ",{get:function(){return this._v._", prop, i, "},set:function(v){return this._v._", prop, i, "=v|0},enumerable:true})"].join(""))
-    }
-    for(var i=0; i<arrayMethods.length; ++i) {
-      if(arrayMethods[i] in Array.prototype) {
-        code.push(["aproto.", arrayMethods[i], "=Array.prototype.", arrayMethods[i]].join(""))
-      }
-    }
-    code.push(["Object.defineProperty(proto,'",prop,"',{get:function ", arrayName, "_get(){return new ", arrayName, "(this)},set: function ", arrayName, "_set(v){"].join(""))
-    for(var i=0; i<dimension; ++i) {
-      code.push(["this._", prop, i, "=v[", i, "]|0"].join(""))
-    }
-    code.push("return v}})")
-  }
-  
-  //view.size:
-  code.push(["Object.defineProperty(proto,'size',{get:function ",className,"_size(){\
-return ", indices.map(function(i) { return ["this._shape", i].join("") }).join("*"),
-"}})"].join(""))
-
-  //view.order:
-  if(dimension === 1) {
-    code.push("proto.order=[0]")
-  } else {
-    code.push("Object.defineProperty(proto,'order',{get:")
-    if(dimension < 4) {
-      code.push(["function ",className,"_order(){"].join(""))
-      if(dimension === 2) {
-        code.push("return (Math.abs(this._stride0)>Math.abs(this._stride1))?[1,0]:[0,1]}})")
-      } else if(dimension === 3) {
-        code.push(
-"var s0=Math.abs(this._stride0),s1=Math.abs(this._stride1),s2=Math.abs(this._stride2);\
-if(s0>s1){\
-if(s1>s2){\
-return [2,1,0];\
-}else if(s0>s2){\
-return [1,2,0];\
-}else{\
-return [1,0,2];\
-}\
-}else if(s0>s2){\
-return [2,0,1];\
-}else if(s2>s1){\
-return [0,1,2];\
-}else{\
-return [0,2,1];\
-}}})")
-      }
-    } else {
-      code.push("ORDER})")
-    }
-  }
-  
-  //view.set(i0, ..., v):
-  code.push([
-"proto.set=function ",className,"_set(", args.join(","), ",v){"].join(""))
-  if(useGetters) {
-    code.push(["return this.data.set(", index_str, ",v)}"].join(""))
-  } else {
-    code.push(["return this.data[", index_str, "]=v}"].join(""))
-  }
-  
-  //view.get(i0, ...):
-  code.push(["proto.get=function ",className,"_get(", args.join(","), "){"].join(""))
-  if(useGetters) {
-    code.push(["return this.data.get(", index_str, ")}"].join(""))
-  } else {
-    code.push(["return this.data[", index_str, "]}"].join(""))
-  }
-  
-  //view.index:
-  code.push([
-    "proto.index=function ",
-      className,
-      "_index(", args.join(), "){return ", 
-      index_str, "}"].join(""))
-
-  //view.hi():
-  code.push(["proto.hi=function ",className,"_hi(",args.join(","),"){return new ", className, "(this.data,",
-    indices.map(function(i) {
-      return ["(typeof i",i,"!=='number'||i",i,"<0)?this._shape", i, ":i", i,"|0"].join("")
-    }).join(","), ",",
-    indices.map(function(i) {
-      return "this._stride"+i
-    }).join(","), ",this.offset)}"].join(""))
-  
-  //view.lo():
-  var a_vars = indices.map(function(i) { return "a"+i+"=this._shape"+i })
-  var c_vars = indices.map(function(i) { return "c"+i+"=this._stride"+i })
-  code.push(["proto.lo=function ",className,"_lo(",args.join(","),"){var b=this.offset,d=0,", a_vars.join(","), ",", c_vars.join(",")].join(""))
-  for(var i=0; i<dimension; ++i) {
-    code.push([
-"if(typeof i",i,"==='number'&&i",i,">=0){\
-d=i",i,"|0;\
-b+=c",i,"*d;\
-a",i,"-=d}"].join(""))
-  }
-  code.push(["return new ", className, "(this.data,",
-    indices.map(function(i) {
-      return "a"+i
-    }).join(","),",",
-    indices.map(function(i) {
-      return "c"+i
-    }).join(","), ",b)}"].join(""))
-  
-  //view.step():
-  code.push(["proto.step=function ",className,"_step(",args.join(","),"){var ",
-    indices.map(function(i) {
-      return "a"+i+"=this._shape"+i
-    }).join(","), ",",
-    indices.map(function(i) {
-      return "b"+i+"=this._stride"+i
-    }).join(","),",c=this.offset,d=0,ceil=Math.ceil"].join(""))
-  for(var i=0; i<dimension; ++i) {
-    code.push([
-"if(typeof i",i,"==='number'){\
-d=i",i,"|0;\
-if(d<0){\
-c+=b",i,"*(a",i,"-1);\
-a",i,"=ceil(-a",i,"/d)\
-}else{\
-a",i,"=ceil(a",i,"/d)\
-}\
-b",i,"*=d\
-}"].join(""))
-  }
-  code.push(["return new ", className, "(this.data,",
-    indices.map(function(i) {
-      return "a" + i
-    }).join(","), ",",
-    indices.map(function(i) {
-      return "b" + i
-    }).join(","), ",c)}"].join(""))
-  
-  //view.transpose():
-  var tShape = new Array(dimension)
-  var tStride = new Array(dimension)
-  for(var i=0; i<dimension; ++i) {
-    tShape[i] = ["a[i", i, "]"].join("")
-    tStride[i] = ["b[i", i, "]"].join("")
-  }
-  code.push(["proto.transpose=function ",className,"_transpose(",args,"){", 
-    args.map(function(n,idx) { return n + "=(" + n + "===undefined?" + idx + ":" + n + "|0)"}).join(";"),
-    ";var a=this.shape,b=this.stride;return new ", className, "(this.data,", tShape.join(","), ",", tStride.join(","), ",this.offset)}"].join(""))
-  
-  //view.pick():
-  code.push(["proto.pick=function ",className,"_pick(",args,"){var a=[],b=[],c=this.offset"].join(""))
-  for(var i=0; i<dimension; ++i) {
-    code.push(["if(typeof i",i,"==='number'&&i",i,">=0){c=(c+this._stride",i,"*i",i,")|0}else{a.push(this._shape",i,");b.push(this._stride",i,")}"].join(""))
-  }
-  code.push("var ctor=CTOR_LIST[a.length+1];return ctor(this.data,a,b,c)}")
-    
-  //Add return statement
-  code.push(["return function construct_",className,"(data,shape,stride,offset){return new ", className,"(data,",
-    indices.map(function(i) {
-      return "shape["+i+"]"
-    }).join(","), ",",
-    indices.map(function(i) {
-      return "stride["+i+"]"
-    }).join(","), ",offset)}"].join(""))
-
-  //Compile procedure
-  var procedure = new Function("CTOR_LIST", "ORDER", code.join("\n"))
-  return procedure(CACHED_CONSTRUCTORS[dtype], order)
-}
-
-function arrayDType(data) {
-  if(data instanceof Float64Array) {
-    return "float64";
-  } else if(data instanceof Float32Array) {
-    return "float32"
-  } else if(data instanceof Int32Array) {
-    return "int32"
-  } else if(data instanceof Uint32Array) {
-    return "uint32"
-  } else if(data instanceof Uint8Array) {
-    return "uint8"
-  } else if(data instanceof Uint16Array) {
-    return "uint16"
-  } else if(data instanceof Int16Array) {
-    return "int16"
-  } else if(data instanceof Int8Array) {
-    return "int8"
-  } else if(data instanceof Uint8ClampedArray) {
-    return "uint8_clamped"
-  } else if(data instanceof Array) {
-    return "array"
-  }
-  return "generic"
-}
-
-var CACHED_CONSTRUCTORS = {
-  "float32":[],
-  "float64":[],
-  "int8":[],
-  "int16":[],
-  "int32":[],
-  "uint8":[],
-  "uint16":[],
-  "uint32":[],
-  "array":[],
-  "uint8_clamped":[],
-  "generic":[]
-}
-
-;(function() {
-  for(var id in CACHED_CONSTRUCTORS) {
-    CACHED_CONSTRUCTORS[id].push(compileConstructor(id, -1))
-  }
-});
-
-function wrappedNDArrayCtor(data, shape, stride, offset) {
-  if(data === undefined) {
-    var ctor = CACHED_CONSTRUCTORS.array[0]
-    return ctor([])
-  } else if(typeof data === "number") {
-    data = [data]
-  }
-  if(shape === undefined) {
-    shape = [ data.length ]
-  }
-  var d = shape.length
-  if(stride === undefined) {
-    stride = new Array(d)
-    for(var i=d-1, sz=1; i>=0; --i) {
-      stride[i] = sz
-      sz *= shape[i]
-    }
-  }
-  if(offset === undefined) {
-    offset = 0
-    for(var i=0; i<d; ++i) {
-      if(stride[i] < 0) {
-        offset -= (shape[i]-1)*stride[i]
-      }
-    }
-  }
-  var dtype = arrayDType(data)
-  var ctor_list = CACHED_CONSTRUCTORS[dtype]
-  while(ctor_list.length <= d+1) {
-    ctor_list.push(compileConstructor(dtype, ctor_list.length-1))
-  }
-  var ctor = ctor_list[d+1]
-  return ctor(data, shape, stride, offset)
-}
-
-module.exports = wrappedNDArrayCtor
-
-},{"iota-array":12}],12:[function(require,module,exports){
-"use strict"
-
-function iota(n) {
-  var result = new Array(n)
-  for(var i=0; i<n; ++i) {
-    result[i] = i
-  }
-  return result
-}
-
-module.exports = iota
 },{}]},{},[]);
 
