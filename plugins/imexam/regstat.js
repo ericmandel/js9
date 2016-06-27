@@ -9,16 +9,16 @@
 
 
     var statTemplate = "                                                                                \
-        <table width=100% style='padding-right: 15px'>                                                                             \
+        <table width=100% style='padding-right: 6px; padding-left: 0px'>                                \
             <tr><td align=right>position x</td> <td align=right>{reg.x%.2f}              </td>          \
             <td align=right>y</td>              <td align=right>{reg.y%.2f}             </td></tr>      \
-            <tr><td align=right>box width</td>      <td align=right>{reg.width%.2f}         </td>           \
+            <tr><td align=right>box width</td>      <td align=right>{reg.width%.2f}         </td>       \
             <td align=right>height</td>         <td align=right>{reg.height%.2f}        </td></tr>      \
             <tr><td align=right>min</td>        <td align=right>{min%.2f}               </td>           \
             <td align=right>max</td>            <td align=right>{max%.2f}               </td></tr>      \
-            <tr><td align=right>totcounts</td>     <td align=right colspan=3>{centroid2.sum%.2f}</tr>       \
-            <tr><td align=right>bscounts</td>     <td align=right colspan=3>{centroid.sum%.2f}</tr>       \
-            <tr><td align=right>bkgd</td>     <td align=right>{backgr.value%.2f}      </td>           \
+            <tr><td align=right>totcounts</td>     <td align=right colspan=3>{centroid2.sum%.2f}</tr>   \
+            <tr><td align=right>bscounts</td>     <td align=right colspan=3>{centroid.sum%.2f}</tr>     \
+            <tr><td align=right>bkgd</td>     <td align=right>{backgr.value%.2f}      </td>             \
             <td align=right>noise</td>          <td align=right>{backgr.noise%.2f}      </td></tr>      \
             <tr><td align=right>centroid x</td> <td align=right>{centroid.cenx%.2f}     </td>           \
             <td align=right>y</td>              <td align=right>{centroid.ceny%.2f}     </td></tr>      \
