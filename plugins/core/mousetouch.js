@@ -475,7 +475,7 @@ JS9.MouseTouch.init = function(){
 JS9.RegisterPlugin(JS9.MouseTouch.CLASS, JS9.MouseTouch.NAME, 
 		   JS9.MouseTouch.init,
 		   {menuItem: "Mouse/Touch",
-		    plugindisplay: JS9.MouseTouch.init,
+		    onplugindisplay: JS9.MouseTouch.init,
 		    help: "help/mousetouch.html",
 		    winTitle: "Mouse/Touch Actions",
 		    winResize: true,

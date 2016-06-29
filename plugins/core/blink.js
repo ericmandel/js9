@@ -303,7 +303,7 @@ JS9.Blink.imageclose = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
 		   {menuItem: "Blinking",
-		    plugindisplay: JS9.Blink.init,
+		    onplugindisplay: JS9.Blink.init,
 		    onimageload: JS9.Blink.imageload,
 		    onimagedisplay: JS9.Blink.imagedisplay,
 		    onimageclose: JS9.Blink.imageclose,

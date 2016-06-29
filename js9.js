@@ -5170,12 +5170,12 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 		return false;
 	    };
 	    pinst.status = "active";
-	    if( plugin.opts.plugindisplay ){
+	    if( plugin.opts.onplugindisplay ){
 		try{
-		    plugin.opts.plugindisplay.call(pinst, this.image);
+		    plugin.opts.onplugindisplay.call(pinst, this.image);
 		}
 		catch(e){
-		    JS9.log("plugindisplayCB: %s [%s]\n%s",
+		    JS9.log("onplugindisplayCB: %s [%s]\n%s",
 			    plugin.name, e.message, JS9.strace(e));
 		}
 	    }
@@ -5184,12 +5184,12 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 	    if( pinst.winHandle ){
 		pinst.winHandle.show();
 		pinst.status = "active";
-		if( plugin.opts.plugindisplay ){
+		if( plugin.opts.onplugindisplay ){
 		    try{
-			plugin.opts.plugindisplay.call(pinst, this.image);
+			plugin.opts.onplugindisplay.call(pinst, this.image);
 		    }
 		    catch(e){
-			JS9.log("plugindisplayCB: %s [%s]\n%s",
+			JS9.log("onplugindisplayCB: %s [%s]\n%s",
 				plugin.name, e.message, JS9.strace(e));
 		    }
 		}
@@ -13105,7 +13105,7 @@ JS9.init = function(){
 			winDims: [JS9.WIDTH, 180]});
     JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 		       {menuItem: "InfoBox",
-			plugindisplay: JS9.Info.clearMain,
+			onplugindisplay: JS9.Info.clearMain,
 			winTitle: "Info",
 			winResize: true,
 			winDims: [JS9.INFOWIDTH, JS9.INFOHEIGHT]});
@@ -13119,7 +13119,7 @@ JS9.init = function(){
 		       {menuItem: "Magnifier",
 			toolbarSeparate: false,
 			toolbarHTML: JS9.Magnifier.HTML,
-			plugindisplay: JS9.Magnifier.display,
+			onplugindisplay: JS9.Magnifier.display,
 			onmousemove: JS9.Magnifier.display,
 			onimageclose: JS9.Magnifier.close,
 			winTitle: "Magnifier",
@@ -13129,7 +13129,7 @@ JS9.init = function(){
 		       {menuItem: "Panner",
 			toolbarSeparate: false,
 			toolbarHTML: JS9.Panner.HTML,
-			plugindisplay: JS9.Panner.display,
+			onplugindisplay: JS9.Panner.display,
 			onimagedisplay: JS9.Panner.display,
 			onimageclose: JS9.Panner.close,
 			winTitle: "Panner",

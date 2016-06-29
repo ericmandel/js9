@@ -312,7 +312,7 @@ JS9.Cube.init = function(){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Cube.CLASS, JS9.Cube.NAME, JS9.Cube.init,
 		   {menuItem: "Data Cube",
-		    plugindisplay: JS9.Cube.init,
+		    onplugindisplay: JS9.Cube.init,
 		    onimageload: JS9.Cube.init,
 		    onimagedisplay: JS9.Cube.init,
 		    help: "help/cube.html",

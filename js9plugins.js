@@ -1071,9 +1071,9 @@ module.exports = xhr;
 
             menuItem: "Binning",
 
-	    plugindisplay:  binningInit,
-	    onimageload:    binningInit,
-	    onimagedisplay: binningInit,
+	    onplugindisplay:  binningInit,
+	    onimageload:      binningInit,
+	    onimagedisplay:   binningInit,
 
 	    help:     "fitsy/binning.html",
 
@@ -1332,7 +1332,7 @@ JS9.Blend.imageclose = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		   {menuItem: "Blending",
-		    plugindisplay: JS9.Blend.init,
+		    onplugindisplay: JS9.Blend.init,
 		    onimageload: JS9.Blend.imageload,
 		    onimagedisplay: JS9.Blend.imagedisplay,
 		    onimageclose: JS9.Blend.imageclose,
@@ -1646,7 +1646,7 @@ JS9.Blink.imageclose = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
 		   {menuItem: "Blinking",
-		    plugindisplay: JS9.Blink.init,
+		    onplugindisplay: JS9.Blink.init,
 		    onimageload: JS9.Blink.imageload,
 		    onimagedisplay: JS9.Blink.imagedisplay,
 		    onimageclose: JS9.Blink.imageclose,
@@ -2167,7 +2167,7 @@ JS9.Cube.init = function(){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Cube.CLASS, JS9.Cube.NAME, JS9.Cube.init,
 		   {menuItem: "Data Cube",
-		    plugindisplay: JS9.Cube.init,
+		    onplugindisplay: JS9.Cube.init,
 		    onimageload: JS9.Cube.init,
 		    onimagedisplay: JS9.Cube.init,
 		    help: "help/cube.html",
@@ -2345,7 +2345,7 @@ JS9.Imarith.init = function(){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Imarith.CLASS, JS9.Imarith.NAME, JS9.Imarith.init,
 		   {menuItem: "Imarith",
-		    plugindisplay: JS9.Imarith.init,
+		    onplugindisplay: JS9.Imarith.init,
 		    onimageload: JS9.Imarith.init,
 		    onimagedisplay: JS9.Imarith.init,
 		    help: "help/imarith.html",
@@ -2509,7 +2509,7 @@ JS9.Mef.init = function(){
 JS9.RegisterPlugin(JS9.Mef.CLASS, JS9.Mef.NAME, JS9.Mef.init,
 		   {menuItem: "Extensions",
 		    help: "help/mef.html",
-		    plugindisplay: JS9.Mef.init,
+		    onplugindisplay: JS9.Mef.init,
 		    onimageload: JS9.Mef.init,
 		    onimagedisplay: JS9.Mef.init,
 		    winTitle: "Multi-Extension FITS",
@@ -2993,7 +2993,7 @@ JS9.MouseTouch.init = function(){
 JS9.RegisterPlugin(JS9.MouseTouch.CLASS, JS9.MouseTouch.NAME, 
 		   JS9.MouseTouch.init,
 		   {menuItem: "Mouse/Touch",
-		    plugindisplay: JS9.MouseTouch.init,
+		    onplugindisplay: JS9.MouseTouch.init,
 		    help: "help/mousetouch.html",
 		    winTitle: "Mouse/Touch Actions",
 		    winResize: true,

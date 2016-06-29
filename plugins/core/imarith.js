@@ -170,7 +170,7 @@ JS9.Imarith.init = function(){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Imarith.CLASS, JS9.Imarith.NAME, JS9.Imarith.init,
 		   {menuItem: "Imarith",
-		    plugindisplay: JS9.Imarith.init,
+		    onplugindisplay: JS9.Imarith.init,
 		    onimageload: JS9.Imarith.init,
 		    onimagedisplay: JS9.Imarith.init,
 		    help: "help/imarith.html",

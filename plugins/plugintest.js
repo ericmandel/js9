@@ -141,11 +141,20 @@ PLUGIN.regionschange = function(im, xreg){
     this.message(t, 1);
 };
 
-// callback when region changes
+// callback when image is loaded
 PLUGIN.imageload = function(im){
     var t;
     // im gives access to image object
     t = sprintf("image loaded: %s (%s,%s)", im.id, im.raw.width, im.raw.height);
+    // context is the calling instance
+    this.message(t, 3);
+};
+
+// callback when image is closed
+PLUGIN.imageclose = function(im){
+    var t;
+    // im gives access to image object
+    t = sprintf("image closed: %s", im.id);
     // context is the calling instance
     this.message(t, 3);
 };
@@ -170,6 +179,7 @@ JS9.RegisterPlugin(PLUGIN.CLASS, PLUGIN.NAME, PLUGIN.init,
 		    onkeypress: PLUGIN.keypress,
 		    onregionschange: PLUGIN.regionschange,
 		    onimageload: PLUGIN.imageload,
+		    onimageclose: PLUGIN.imageclose,
 		    onimagedisplay: PLUGIN.imagedisplay,
 		    help: "help/plugintest.html",
 		    winTitle: "Plugin Test",

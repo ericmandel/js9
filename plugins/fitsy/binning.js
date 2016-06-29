@@ -243,9 +243,9 @@
 
             menuItem: "Binning",
 
-	    plugindisplay:  binningInit,
-	    onimageload:    binningInit,
-	    onimagedisplay: binningInit,
+	    onplugindisplay:  binningInit,
+	    onimageload:      binningInit,
+	    onimagedisplay:   binningInit,
 
 	    help:     "fitsy/binning.html",
 

@@ -156,7 +156,7 @@ JS9.Mef.init = function(){
 JS9.RegisterPlugin(JS9.Mef.CLASS, JS9.Mef.NAME, JS9.Mef.init,
 		   {menuItem: "Extensions",
 		    help: "help/mef.html",
-		    plugindisplay: JS9.Mef.init,
+		    onplugindisplay: JS9.Mef.init,
 		    onimageload: JS9.Mef.init,
 		    onimagedisplay: JS9.Mef.init,
 		    winTitle: "Multi-Extension FITS",

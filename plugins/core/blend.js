@@ -250,7 +250,7 @@ JS9.Blend.imageclose = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		   {menuItem: "Blending",
-		    plugindisplay: JS9.Blend.init,
+		    onplugindisplay: JS9.Blend.init,
 		    onimageload: JS9.Blend.imageload,
 		    onimagedisplay: JS9.Blend.imagedisplay,
 		    onimageclose: JS9.Blend.imageclose,
