@@ -74,6 +74,7 @@ Choose from the following sections:
 <li><a href="#images">Working with Images</a>
 <li><a href="#regions">Working with Regions</a>
 <li><a href="#shapes">Working with Shape Layers</a>
+<li><a href="#gestures">Mouse/Touch Gestures</a>
 <li><a href="#server">Server-side Analysis</a>
 <li><a href="#misc">Miscellaneous</a>
 <li><a href="#proto">Prototypes (in development)</a>
@@ -913,11 +914,11 @@ convert between image and WCS coordinates.
 <p>
 where:
 <ul>
-<li><b>evt</b>: a JavaScript event
+<li><b>evt</b>: a JavaScript or jQuery event
 </ul>
 returns:
 <ul>
-<li><b>dpos</b>: display position object containing x and y display
+<li><b>dpos</b>: display position object containing 1-indexed x and y display
 coordinate values
 </ul>
 If you define your own event callbacks, you can use this routine to convert
@@ -931,12 +932,12 @@ image position (see below).
 <p>
 where:
 <ul>
-<li><b>dpos</b>: display position object containing x and y display
+<li><b>dpos</b>: display position object containing 1-indexed x and y display
 coordinate values
 </ul>
 returns:
 <ul>
-<li><b>ipos</b>: image position object containing x and y image
+<li><b>ipos</b>: image position object containing 1-indexed x and y image
 coordinate values
 </ul>
 Note that image coordinates are one-indexed, as per FITS conventions, while
@@ -949,12 +950,12 @@ display coordinate are 0-indexed.
 <p>
 where:
 <ul>
-<li><b>ipos</b>: image position object containing x and y image
+<li><b>ipos</b>: image position object containing 1-indexed x and y image
 coordinate values
 </ul>
 returns:
 <ul>
-<li><b>dpos</b>: display position object containing x and y display
+<li><b>dpos</b>: display position object containing 1-indexed x and y display
 coordinate values
 </ul>
 Get display (screen) coordinates from image coordinates.  Note that
@@ -968,12 +969,12 @@ display coordinate are 0-indexed.
 <p>
 where:
 <ul>
-<li><b>lpos</b>: logical position object containing x and y logical
+<li><b>lpos</b>: logical position object containing 1-indexed x and y logical
 coordinate values
 </ul>
 returns:
 <ul>
-<li><b>ipos</b>: image position object containing x and y image
+<li><b>ipos</b>: image position object containing 1-indexed x and y image
 coordinate values
 </ul>
 Logical coordinate systems include: "physical" (defined by LTM/LTV keywords in a
@@ -993,12 +994,12 @@ coordinate system (assuming the appropriate keywords have been defined).
 <p>
 where:
 <ul>
-<li><b>ipos</b>: image position object containing x and y image
+<li><b>ipos</b>: image position object containing 1-indexed x and y image
 coordinate values
 </ul>
 returns:
 <ul>
-<li><b>lpos</b>: logical position object containing x and y logical
+<li><b>lpos</b>: logical position object containing 1-indexed x and y logical
 coordinate values
 </ul>
 Logical coordinate systems include: "physical" (defined by LTM/LTV keywords in a
@@ -1017,7 +1018,7 @@ coordinate system (assuming the appropriate keywords have been defined).
 <p>
 where:
 <ul>
-<li><b>ipos</b>: image position object containing x and y image coord values
+<li><b>ipos</b>: image position object containing 1-indexed x and y image coord values
 <li><b>display</b>: boolean value specifying whether the info box display should be updated (default is true)
 </ul>
 returns:
@@ -2068,6 +2069,91 @@ change the shape itself (e.g. from "box" to "circle").
 
 <p><hr><p>
 <center><b><font size="+1">
+<a name="gestures">Mouse/Touch Gestures</a>
+</font></b></center>
+<p>
+JS9 supports the following configurable mouse and touch actions:
+<ul>
+<li> mouse movement with no buttons pressed
+<li> mouse movement with one button pressed
+<li> mouse movement with two buttons pressed
+<li> touch with one finger
+<li> touch with two fingers
+<li> touch with three fingers
+</ul>
+The initial actions are defined by the <b>JS9.globalOpts.mouseActions</b>
+and <b>JS9.globalOpts.touchActions</b> arrays. In addition, the
+<b>JS9.globalOpts.mousetouchZoom</b> property specifies whether a mouse wheel
+or touch/pinch will zoom the image. The default actions are:
+<ul>
+<li> <b>mouseActions:</b> ["display value/position", "change contrast/bias", "pan the image"]
+<li> <b>touchActions:</b> ["display value/position", "change contrast/bias", "pan the image"]
+<li> <b>mousetouchZoom:</b> false
+</ul>
+where the array elements map to an increasing numbers of
+buttons/fingers.  You can change the default actions of the elements
+in either array in your js9Prefs.json file. For example, to make pan
+and zoom the default one-touch and pinch actions respectively:
+<ul>
+<li> <b>touchActions:</b> ["pan the image", "display value/position", "change contrast/bias"]
+<li> <b>mousetouchZoom:</b> true
+</ul>
+As usual, the defaults in js9Prefs.json are used by all JS9 displays in
+a web page.
+
+<p>
+Users can change the action assignments using the <b>MouseTouch</b>
+plugin, which displays the current mapping between mouse/touch gesture
+and its action. Simply drag and drop an action to a different gesture
+in order to change the mapping. You also can toggle the scroll/pinch
+to zoom capability by clicking its button.
+
+<p>
+Web page developers can extend the available mouse and touch actions
+beyond the defaults contained in
+<a href="../plugins/core/mousetouch.js">the Mouse Touch plugin</a>. To
+add a new action, first write a function with the following calling sequence:
+<pre>
+    gestureFunc(im, ipos, evt)
+</pre>
+where:
+<ul>
+<li><b>im</b>: image handle
+<li><b>ipos</b>: image position object containing 1-indexed x and y image
+coordinate values
+<li><b>evt</b>: a JavaScript or jQuery event
+</ul>
+Add this new function to the JS9.MouseTouchActions array, using a
+descriptive name as its array index, e.g.:
+<pre>
+    JS9.MouseTouch.Actions["all contrast/bias"] = function(im, ipos, evt){
+      var i, myim;
+      for(i=0; i&lt;JS9.displays.length; i++){
+        myim = JS9.displays[i].image;
+        if( myim ){
+          JS9.MouseTouch.Actions["change contrast/bias"](myim, ipos, evt);
+        }
+      }
+    };
+</pre>
+At this point, the <b>Mouse Touch Plugin</b> will display the new
+function in its list of available actions. Users can move it into one
+of the defined gestures to activate it.
+
+<p>
+Of course, you can add the new action to the JS9.globalOpts.mouseActions
+and/or JS9.globalOpts.touchActions arrays to make it active immediately:
+<pre>
+    JS9.globalOpts.mouseActions[1] = "all contrast/bias";
+    JS9.globalOpts.touchActions[1] = "all contrast/bias";
+</pre>
+</ul>
+Here, we have replaced the one-button mouse move and two-button touch
+move actions (whose defaults are to "change contrast/bias") with our
+new action.
+
+<p><hr><p>
+<center><b><font size="+1">
 <a name="server">Server-side Analysis</a>
 </font></b></center>
 <p>
@@ -2591,7 +2677,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: June 15, 2016</h5>
+<h5>Last updated: July 1, 2016</h5>
 </div>
 
 </body>
