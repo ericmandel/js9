@@ -8,11 +8,11 @@
     padding: 10px;
   }
 </style>
-<title>Local (Browser-Based) Analysis Tasks</title>
+<title>Local (Browser-Based) Analysis Tasks and Plugins</title>
 </head>
 <body>
 <div class="container">
-<center><h3>Adding Local (Browser-Based) Analysis Tasks to JS9</h3></center>
+<center><h3>Adding Local (Browser-Based) Analysis Tasks and Plugins to JS9</h3></center>
 
 <p>
 JS9 supports the ability to perform local analysis, i.e.  tasks
@@ -24,7 +24,7 @@ JavaScript code is available to you within a web page, but the public
 API is designed to stable and well-documented.
 
 <p>
-<b>Adding Simple Analysis Tasks to Your Web Page</b>
+<h3>Adding Simple Analysis Tasks to Your Web Page</h3>
 <p>
 For simple analysis (i.e., no mouse or keyboard event processing), it
 often is sufficient to define GUI elements directly on the web page,
@@ -56,9 +56,17 @@ The calling sequence of the xeqonchange function is:
     function myRegionChanged(im, xreg)
 </pre>
 where <b>im</b> is the image handle of the currently displayed image, and
-<b>xreg</b> is an object containing information about the changed region.
-See <a href="#xreg">below</a> for a description of the returned region
-object. Note that you can turn off region change processing for
+<b>xreg</b> is an object containing information about the changed region:
+<pre>
+  function myRegionChanged(im, xreg){
+    var obj, v;
+    obj = JS9.GetImageData(true, {display: im});
+    # get data value at the center of the region
+    v = obj.data[Math.floor(xreg.y-0.5) * obj.width + Math.floor(xreg.x-0.5)];
+    console.log("cen: %s,%s val: %s", xreg.x.toFixed(2), xreg.y.toFixed(2), v);
+  };
+</pre>
+Note that you can turn off region change processing for
 individual regions or for all regions by means of the <b>xeqonchange</b>
 menu option in a given region's context menu or the global <b>Regions</b> menu,
 respectively.
@@ -76,9 +84,9 @@ Analysis Tasks</a> for more information.
 For anything other than the simplest analysis, you can write a JS9
 <b>Plugin</b> module. A plugin is a Javascript module that contains
 a <b>constructor</b> function to create a plugin GUI, and, optionally,
-one or more <b>event callbacks</b> to process desired events. At the
-end of the file, the plugin calls <b>RegisterPlugin()</b> to make
-itself known to JS9. Plugin modules should be stored in the
+one or more <b>event callbacks</b> to process desired events.  When
+the file is loaded, the plugin should call <b>RegisterPlugin()</b> to
+make itself known to JS9. Plugin modules should be stored in the
 js9/plugins directory (or in a sub-directory therein) and should be
 loaded into JS9-enabled web pages after js9.js itself is loaded.
 
@@ -130,19 +138,8 @@ This class/name separation has been made so that multiple plugins can
 be written as part of one class and processed together as part of that
 class, e.g., displayed together in the <b>View</b> and <b>Help</b> menus.
 <p>
-The optional <b>opts</b> object contains the following elements, 
-all of which also are optional:
+The optional <b>opts</b> object contains the following optional elements:
 <ul>
-<li><b>onmouseup</b>: callback function(im, ipos, evt) for mouse up events
-<li><b>onmousedown</b>: callback function(im, ipos, evt) for mouse down events
-<li><b>onmousemove</b>: callback function(im, ipos, evt) for mouse move events
-<li><b>onmouseover</b>: callback function(im, ipos, evt) for mouse over events
-<li><b>onmouseout</b>: callback function(im, ipos, evt) for mouse out events
-<li><b>onkeypress</b>: callback function(im, ipos, evt) for keypress events
-<li><b>on[layer]change</b>: function(im, xreg) for when a shapes changes in a layer (e.g. onregionschange for region changes)
-<li><b>onimageload</b>: callback function(im) when an image is loaded
-<li><b>onimagedisplay</b>: callback function(im) when an image is (re)displayed
-<li><b>onplugindisplay</b>: callback function(im) when an plugin window is re-displayed
 <li><b>divArgs</b>: [arg1, arg2, ...] arguments passed to div-based constructor
 <li><b>menuItem</b>: menuname in specified menu (default is View menu)
 <li><b>menu</b>: add plugin to this menu (only View or Analysis right now!)
@@ -152,16 +149,94 @@ all of which also are optional:
 <li><b>toolbarSeparate</b>: boolean
 <li><b>help</b>: path html file for help, relative to js9/plugins directory
 </ul>
+
 <p>
-Each of the callback functions are routines which get executed when
-the specified event takes place. The routines are passed the following
-arguments: current image object handle, the 1-indexed image position
-of the mouse and, for all but the <b>on[layer]change</b>,
-<b>onimageload</b> and <b>onimagedisplay</b> routines, the original event
-that triggered the callback. The <b>on[layer]change</b> callback gets
-passed the same <b>xreg</b> object as is used for the
-<b>JS9.Regions()</b> routine and the <b>JS9.Regions.opts.onchange</b>
-parameter. See <a href="#xreg">below </a> for a description of its contents.
+The <b>opts</b> object allows you to specify callback functions that
+get triggered by various JS9 events. The calling sequence of these
+functions depends on the <b>callback type</b>. The defined callback
+types and their standard callbacks are:
+<ul>
+<li><b>image</b>: function(im)
+<ul>
+<li><b>onimageload</b>: an image is loaded
+<li><b>onimageclose</b>: an image is closed
+<li><b>onimagedisplay</b>: an image is (re)displayed
+<li><b>onimagerefresh</b>: an image is refreshed (i.e., new data is supplied)
+<li><b>onplugindisplay</b>: a plugin window is re-displayed
+</ul>
+<li><b>mouse</b>: function(im, ipos, evt)
+<ul>
+<li><b>onmouseup</b>: mouse up events
+<li><b>onmousedown</b>: mouse down events
+<li><b>onmousemove</b>: mouse move events
+<li><b>onmouseover</b>: mouse over events
+<li><b>onmouseout</b>: mouse out events
+</ul>
+<li><b>keypress</b>: function(im, ipos, evt)
+<ul>
+<li><b>onkeydown</b>: keydown events
+<li><b>onkeypress</b>: keypress events (keydown + keyup)
+</ul>
+<li><b>shape</b>: function(im, xreg)
+<ul>
+<li><b>on[layer]change</b>: a shapes changes in a layer (e.g. "onregionschange" for region changes)
+</ul>
+</ul>
+<p>
+In addition to these standard callbacks, JS9 also supports an extended set of
+<b>image</b> callbacks that get triggered when internal JS9 routines are called.
+These callbacks are only active if the <b>JS9.globalOpts.extendedPlugins</b>
+variable is set to <b>true</b> (which is the default).
+<ul>
+<li><b>onsetpan</b>: called when pan value is set by im.setPan()
+<li><b>onsetzoom</b> called when zoom value is set by im.setZoom()
+<li><b>onsetwcssys</b> called when wcs system is set by im.setWCSSys()
+<li><b>onsetunits</b> called when wcs units is set by im.setWCSUnits()
+<li><b>onsetcolormap</b> called when colormap is set by im.setColormap()
+<li><b>onsetscale</b> called when scale is set by im.setScale()
+<li><b>onrawdatalayer</b> called when a raw data layer is created or modified by im.rawDataLayer()
+<li><b>onfilterrgbimage</b> called when an RGB image is filtered by im.filterRGBImage()
+<li><b>onchangecontrastbias</b> called when the "change contrast/bias"
+mouse/touch gesture changes the contrast/bias
+</ul>
+(Please let us know if you require a callback to be associated with
+another JS9 function.)
+
+<p>
+Each callback function gets executed when the specified event takes
+place. The im object is the JS9 image handle, which can be passed to
+the display parameter of public API calls to specify the JS9 display
+(necessary when there is more than one display on the page);
+<pre>
+  function onimdisplay(im){
+    arr = JS9.GetRegions({display: im});
+  }
+</pre>
+The ipos object contains the one-indexed image position of the mouse:
+<pre>
+  function onmousemove(im, ipos){
+    var obj, v;
+    obj = JS9.GetImageData(true, {display: im});
+    # get data value at the mouse position
+    v = obj.data[Math.floor(ipos.y-0.5) * obj.width + Math.floor(ipos.x-0.5)];
+    console.log("ipos=%s,%s val=%s", ipos.x.toFixed(2), ipos.y.toFixed(2), v);
+  };
+</pre>
+The evt object is the jQuery event that triggered the callback.
+
+<p>
+The <b>on[layer]change</b> callback gets passed the same <b>xreg</b>
+object as is used for the <b>JS9.GetRegions()</b> routine and
+the <b>JS9.Regions.opts.onchange</b> parameter:
+<pre>
+  function myRegionChanged(im, xreg){
+    var obj, v;
+    obj = JS9.GetImageData(true, {display: im});
+    # get data value at the center of the region
+    v = obj.data[Math.floor(xreg.y-0.5) * obj.width + Math.floor(xreg.x-0.5)];
+    console.log("cen: %s,%s val: %s", xreg.x.toFixed(2), xreg.y.toFixed(2), v);
+  };
+</pre>
 
 <p>
 Holding down the Shift key (where available) will turn off execution of all
@@ -192,7 +267,13 @@ for placement.
 
 <p>
 The <b>winDims</b> is an array specifying the width and height of the
-light window that will get created for this plugin via the <b>View</b> menu.
+light window that will get created for this plugin via the <b>View</b>
+menu.  If the winDims dimensions is specified as [0, 0], the plugin is
+<b>virtual</b> and is active all the time. This is useful in cases
+where you simply want to define callback routines for one or more JS9
+actions. See the example below.
+
+<p>
 The <b>winTitle</b> is a string specifying the title of the light window.
 The default is no title.
 
@@ -216,7 +297,35 @@ Within a callback, you can use the JS9 Public API to manipulate data, as
 detailed in the <a href="publicapi.html">JS9 Public API</a>.
 
 <p>
-<h5>Last updated: June 1, 2016</h5>
+A final example: if you want changes of contrast/bias in one JS9 display
+to trigger similar changes in all other displays, you can do this:
+<pre>
+JS9.RegisterPlugin("MyPlugins", "allconstrastbias",
+		   function(){return;},
+		   {onchangecontrastbias: function(im){
+		       var i, tim, obj;
+		       JS9.globalOpts.extendedPlugins = false;
+		       obj = JS9.GetColormap({display: im});
+		       for(i=0; i&lt;JS9.displays.length; i++){
+			   tim = JS9.displays[i].image;
+			   if( tim && (tim !== im) ){
+			       JS9.SetColormap(obj.contrast, obj.bias,
+					      {display: tim});
+			   }
+		       }
+		       JS9.globalOpts.extendedPlugins = true;
+		   },
+		   winDims: [0, 0]});
+</pre>
+Here, a <b>virtual</b> plugin is created with no user interface. It thus is
+active all of the time. The plugin defines a single action that gets
+triggered when the contrast/bias is changed. This action changes the
+contrast/bias of all other displays. Note that the
+<b>JS9.globalOpts.extendedPlugins</b> property is set to false temporarily
+to avoid recursion.
+
+<p>
+<h5>Last updated: July 2, 2016</h5>
 </div>
 
 </body>

@@ -133,6 +133,7 @@ JS9.globalOpts = {
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     pinchWait: 8,		// number of events to wait before testing pinch
     pinchThresh: 6,		// threshold for pinch test
+    extendedPlugins: true,	// enable extended plugin support?
     debug: 0		        // debug level
 };
 
@@ -240,19 +241,19 @@ JS9.helpOpts = {
     },
     localtasks: {
 	type: "help", url:"localtasks.html",
-	title: "Local Analysis with JS9"
-    },
-    publicapi: {
-	type: "help", url:"publicapi.html",
-	title: "The JS9 Public API"
+	title: "Adding Local Analysis Tasks and Plugins"
     },
     helper: {
 	type: "help", url:"helper.html",
-	title: "Adding Server-side Analysis"
+	title: "Adding Server-side Analysis Tasks"
     },
     serverside: {
 	type: "help", url:"serverside.html",
 	title: "Server-side Analysis with JS9"
+    },
+    publicapi: {
+	type: "help", url:"publicapi.html",
+	title: "The JS9 Public API"
     },
     repfile: {
 	type: "help", url:"repfile.html",
@@ -337,7 +338,9 @@ JS9.consoleHTML =
 // known bugs and work-arounds
 JS9.bugs = {};
 // sometimes hiding the menu does not refresh the image properly
-JS9.bugs.hide_menu = true;
+// JS9.bugs.hide_menu = true;
+// turned off: 6/30/16
+JS9.bugs.hide_menu = false;
 // firefox does not repaint as needed (last checked FF 24.0 on 10/20/13)
 if( (JS9.BROWSER[0] === "Firefox") && JS9.BROWSER[2].search(/Linux/) >=0 ){
     JS9.bugs.firefox_linux = true;
@@ -378,7 +381,6 @@ JS9.Image = function(file, params, func){
 	return arr;
     };
     var finishUp = function(func){
-	var pname, pinst, popts;
 	// clear previous messages
 	this.clearMessage();
 	// add to list of images
@@ -389,16 +391,7 @@ JS9.Image = function(file, params, func){
 	    catch(e){ JS9.error("in image onload callback", e, false); }
 	}
 	// plugin callbacks
-	for( pname in this.display.pluginInstances ){
-	    if( this.display.pluginInstances.hasOwnProperty(pname) ){
-		pinst = this.display.pluginInstances[pname];
-		popts = pinst.plugin.opts;
-		if( pinst.isActive("onimageload") ){
-		    try{ popts.onimageload.call(pinst, this); }
-		    catch(e){ pinst.errLog("onimageload", e); }
-		}
-	    }
-	}
+	this.xeqPlugins("image", "onimageload");
 	// update shapes?
 	if( this.updateshapes ){
 	    this.updateShapes("regions", "all", "update");
@@ -656,7 +649,6 @@ JS9.Image.prototype.getImageData = function(dflag){
 // undisplay the image, release resources
 JS9.Image.prototype.closeImage = function(){
     var i, j, tim, key, raw, carr;
-    var pname, pinst, popts;
     var ilen= JS9.images.length;
     var display = this.display;
     var func = function(r){
@@ -674,16 +666,7 @@ JS9.Image.prototype.closeImage = function(){
 	    tim.clearMessage();
 	    tim.display.context.clear();
 	    // plugin callbacks
-	    for( pname in tim.display.pluginInstances ){
-		if( tim.display.pluginInstances.hasOwnProperty(pname) ){
-		    pinst = tim.display.pluginInstances[pname];
-		    popts = pinst.plugin.opts;
-		    if( pinst.isActive("onimageclose") ){
-			try{ popts.onimageclose.call(pinst, tim); }
-			catch(e){ pinst.errLog("onimageclose", e); }
-		    }
-		}
-	    }
+	    tim.xeqPlugins("image", "onimageclose");
 	    // clear all layers
 	    for( key in tim.layers ){
 		if( tim.layers.hasOwnProperty(key) ){
@@ -883,6 +866,8 @@ JS9.Image.prototype.initLCS = function(header){
 	this.setWCSSys("physical");
 	this.params.wcssys0 = this.params.lcs;
     }
+    // allow chaining
+    return this;
 };
 
 // unpack IMG data and convert to JS9 image data
@@ -2209,7 +2194,7 @@ JS9.Image.prototype.putImage = function(opts){
 // plugins: execute plugin callbacks
 // all: colors,scaled,rgb,display,plugins
 JS9.Image.prototype.displayImage = function(imode, opts){
-    var i, im, pname, pinst, popts, bopts;
+    var i, im, bopts;
     var allmode = "colors,scaled,rgb,display,plugins";
     var nblend = 0;
     var blends = [];
@@ -2347,23 +2332,8 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	this.display.image = this;
     }
     // post-processing
-    if( mode.plugins ){
-	// plugin callbacks
-	for( pname in this.display.pluginInstances ){
-	    if( this.display.pluginInstances.hasOwnProperty(pname) ){
-		pinst = this.display.pluginInstances[pname];
-		popts = pinst.plugin.opts;
-		if( pinst.isActive("onimagedisplay") ){
-		    // hack: panner always needs to execute plugin callback
-		    // others only do so when the image is really displayed
-		    if( (pname === "JS9Panner") || mode.display ){
-			try{ popts.onimagedisplay.call(pinst, this); }
-			catch(e){ pinst.errLog("onimagedisplay", e); }
-		    }
-		}
-	    }
-	}
-    }
+    // plugin callbacks
+    this.xeqPlugins("image", "onimagedisplay");
     // allow chaining
     return this;
 };
@@ -2372,7 +2342,7 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 // input obj is a fits object, array, typed array, etc.
 JS9.Image.prototype.refreshImage = function(obj, opts){
     var oxcen, oycen, owidth, oheight, ozoom, doreg;
-    var pname, pinst, popts, func;
+    var func;
     // check for refresh function
     opts = opts || {};
     opts.rawid = opts.rawid || JS9.RAWID0;
@@ -2419,16 +2389,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	catch(e){ JS9.error("in image refresh callback", e); }
     }
     // plugin callbacks
-    for( pname in this.display.pluginInstances ){
-	if( this.display.pluginInstances.hasOwnProperty(pname) ){
-	    pinst = this.display.pluginInstances[pname];
-	    popts = pinst.plugin.opts;
-	    if( pinst.isActive("onimagerefresh") ){
-		try{ popts.onimagerefresh.call(pinst, this); }
-		catch(e){ pinst.errLog("onimagerefresh", e); }
-	    }
-	}
-    }
+    this.xeqPlugins("image", "onimagerefresh");
     // allow chaining
     return this;
 };
@@ -2668,6 +2629,10 @@ JS9.Image.prototype.setPan = function(panx, pany){
 	    }
 	}
     }
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	this.xeqPlugins("image", "onsetpan");
+    }
     // allow chaining
     return this;
 };
@@ -2751,6 +2716,10 @@ JS9.Image.prototype.setZoom = function(zval){
 		this.refreshShapes(key);
 	    }
 	}
+    }
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	this.xeqPlugins("image", "onsetzoom");
     }
     // allow chaining
     return this;
@@ -2881,14 +2850,10 @@ JS9.Image.prototype.setWCSSys = function(wcssys){
     if( wcssys === "image" ){
 	this.params.wcssys = "image";
 	this.params.wcsunits = "pixels";
-	return;
-    }
-    if( wcssys === "physical" ){
+    } else if( wcssys === "physical" ){
 	this.params.wcssys = "physical";
 	this.params.wcsunits = "pixels";
-	return;
-    }
-    if( this.raw.wcs && (this.raw.wcs > 0) ){
+    } else if( this.raw.wcs && (this.raw.wcs > 0) ){
 	if( wcssys === "native" ){
 	    wcssys = this.params.wcssys0;
 	}
@@ -2903,8 +2868,13 @@ JS9.Image.prototype.setWCSSys = function(wcssys){
 	    this.setWCSUnits(wu);
 	    this.updateShapes("regions", "all", "update");
 	}
-	return this;
     }
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	this.xeqPlugins("image", "onsetwcssys");
+    }
+    // allow chaining
+    return this;
 };
 
 // get the WCS units for this image
@@ -2921,9 +2891,7 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
     if( wcsunits === "pixels" ){
 	this.params.wcssys = "physical";
 	this.params.wcsunits = "pixels";
-	return;
-    }
-    if( this.raw.wcs && (this.raw.wcs > 0) ){
+    } else if( this.raw.wcs && (this.raw.wcs > 0) ){
 	if( (this.params.wcssys === "image") ||
 	    (this.params.wcssys === "physical") ){
 	    ws = JS9.imageOpts.wcssys;
@@ -2934,7 +2902,10 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
 	    this.params.wcsunits = s.trim();
 	    this.updateShapes("regions", "all", "update");
 	}
-	return this;
+    }
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	this.xeqPlugins("image", "onsetwcsunits");
     }
     // allow chaining
     return this;
@@ -3823,6 +3794,10 @@ JS9.Image.prototype.setColormap = function(arg, arg2, arg3){
 	break;
     }
     this.displayImage("colors");
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	this.xeqPlugins("image", "onsetcolormap");
+    }
     return this;
 };
 
@@ -3863,6 +3838,10 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
 	    break;
 	}
 	this.displayImage("scaled");
+    }
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	this.xeqPlugins("image", "onsetscale");
     }
     return this;
 };
@@ -4031,6 +4010,10 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 		    this.mkSection();
 		    // redisplay using these data
 		    this.displayImage("all", opts);
+		    // extended plugins
+		    if( JS9.globalOpts.extendedPlugins ){
+			this.xeqPlugins("image", "onrawdatalayer");
+		    }
 		    return true;
 		}
 	    }
@@ -4713,6 +4696,10 @@ JS9.Image.prototype.filterRGBImage = function(filter){
     catch(e){ JS9.error("JS9 image filter '" + filter + "' failed", e); }
     // display new RGB image
     this.displayImage("display");
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	this.xeqPlugins("image", "onfilterrgbimage");
+    }
     // allow chaining
     return this;
 };
@@ -4843,6 +4830,58 @@ JS9.Image.prototype.saveSession = function(file){
     JS9.waiting(false);
     // return file name
     return file;
+};
+
+// execute plugins of various types (using type-specific values)
+JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
+    var pname, pinst, popts, parr, evt;
+    // sanity check
+    if( !xtype || !xname ){
+	return;
+    }
+    // array of plugin instances
+    parr = this.display.pluginInstances;
+    // look for plugin callbacks to execute
+    for( pname in parr ){
+	if( parr.hasOwnProperty(pname) ){
+	    pinst = parr[pname];
+	    if( pinst.isActive(xname) ){
+		popts = pinst.plugin.opts;
+		switch(xtype){
+		case "image":
+		    // used for: onimage[load,close,refresh,display]
+		    try{ popts[xname].call(pinst, this); }
+		    catch(e){ pinst.errLog(xname, e); }
+		    break;
+		case "region":
+		case "shape":
+		    // used for: on[layer]change
+		    // xval: pub
+		    try{ popts[xname].call(pinst, this, xval); }
+		    catch(e){ pinst.errLog(xname, e); }
+		    break;
+		case "keypress":
+		    // used for: onkeypress, onkeydown
+		    // xval: evt
+		    evt = xval.originalEvent || xval;
+		    try{ popts[xname].call(pinst, this, this.ipos, evt); }
+		    catch(e){ pinst.errLog(xname, e); }
+		    break;
+		case "mouse":
+		    // used for: onmouse[down,move,over,out]
+		    // xval: evt
+		    if( !this.clickInRegion || popts[xname+"_inRegion"] ){
+			evt = xval.originalEvent || xval;
+			try{ popts[xname].call(pinst, this, this.ipos, evt); }
+			catch(e){ pinst.errLog(xname, e); }
+	    }
+		    break;
+		}
+	    }
+	}
+    }
+    // allow chaining
+    return this;
 };
 
 // Colormap
@@ -8748,8 +8787,8 @@ JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
 // primitive to update one shape
 // call using image context
 JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
-    var i, pname, pinst, popts, xname, s, scalex, scaley, px, py, lcs;
-    var display, bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius;
+    var i, xname, s, scalex, scaley, px, py, lcs;
+    var bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius;
     var opos, dist;
     var pub ={};
     var layer = this.layers[layerName];
@@ -8758,7 +8797,6 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     ginfo = ginfo || {};
     opts = opts || {};
     mode = mode || "update";
-    display = this.display;
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
 	zoom = this.rgb.sect.zoom;
@@ -8964,16 +9002,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // plugin callbacks: these have the form on[layer]change,
     // e.g. onregionschange
     xname = "on" + layerName + "change";
-    for( pname in display.pluginInstances ){
-	if( display.pluginInstances.hasOwnProperty(pname) ){
-	    pinst = display.pluginInstances[pname];
-	    popts = pinst.plugin.opts;
-	    if( pinst.isActive(xname) ){
-		try{ popts[xname].call(pinst, this, pub); }
-		catch(e){ pinst.errLog(xname, e); }
-	    }
-	}
-    }
+    // plugin callbacks
+    this.xeqPlugins("shape", xname, pub);
     // and return it
     return pub;
 };
@@ -12190,7 +12220,6 @@ JS9.isTypedArray = function(obj) {
 
 // mousedown: assumes display obj is passed in evt.data
 JS9.mouseDownCB = function(evt){
-    var pname, pinst, popts;
     var display = evt.data;
     var im = display.image;
     // sanity checks
@@ -12225,19 +12254,7 @@ JS9.mouseDownCB = function(evt){
     }
     // plugin callbacks
     if( !JS9.specialKey(evt) ){
-	for( pname in display.pluginInstances ){
-	    if( display.pluginInstances.hasOwnProperty(pname) ){
-		pinst = display.pluginInstances[pname];
-		popts = pinst.plugin.opts;
-		if( pinst.isActive("onmousedown") ){
-		    if( !im.clickInRegion || popts.mousedownRegions ){
-			try{ popts.onmousedown.call(pinst, im, im.ipos,
-					        evt.originalEvent || evt); }
-			catch(e){ pinst.errLog("onmousedown", e); }
-		    }
-		}
-	    }
-	}
+	im.xeqPlugins("mouse", "onmousedown", evt);
     }
     // set click state to current mouse button
     im.clickState = evt.which;
@@ -12267,7 +12284,6 @@ JS9.mouseDownCB = function(evt){
 
 // mouseup: assumes display obj is passed in evt.data
 JS9.mouseUpCB = function(evt){
-    var pname, pinst, popts;
     var display = evt.data;
     var im = display.image;
     // sanity checks
@@ -12297,19 +12313,7 @@ JS9.mouseUpCB = function(evt){
     }
     // plugin callbacks
     if( !JS9.specialKey(evt) ){
-	for( pname in display.pluginInstances ){
-	    if( display.pluginInstances.hasOwnProperty(pname) ){
-		pinst = display.pluginInstances[pname];
-		popts = pinst.plugin.opts;
-		if( pinst.isActive("onmouseup") ){
-		    if( !im.clickInRegion || popts.mouseupRegions ){
-			try{ popts.onmouseup.call(pinst, im, im.ipos,
-						  evt.originalEvent || evt); }
-			catch(e){ pinst.errLog("onmouseup", e); }
-		    }
-		}
-	    }
-	}
+	im.xeqPlugins("mouse", "onmouseup", evt);
     }
     // safe to unset clickInRegion now
     im.clickInRegion = false;
@@ -12335,7 +12339,7 @@ JS9.mouseUpCB = function(evt){
 
 // mousemove: assumes display obj is passed in evt.data
 JS9.mouseMoveCB = function(evt){
-    var pname, pinst, popts, sel;
+    var sel;
     var display = evt.data;
     var im = display.image;
     // evt.preventDefault();
@@ -12383,25 +12387,15 @@ JS9.mouseMoveCB = function(evt){
 	if( !im.valpos ){
 	    im.valpos = im.updateValpos(im.ipos, false);
 	}
-	for( pname in display.pluginInstances ){
-	    if( display.pluginInstances.hasOwnProperty(pname) ){
-		pinst = display.pluginInstances[pname];
-		popts = pinst.plugin.opts;
-		if( pinst.isActive("onmousemove") ){
-		    if( !im.clickInRegion || popts.mousemoveRegions ){
-			try{ popts.onmousemove.call(pinst, im, im.ipos,
-						    evt.originalEvent || evt); }
-			catch(e){ pinst.errLog("onmousemove", e); }
-		    }
-		}
-	    }
+	// plugin callbacks
+	if( !JS9.specialKey(evt) ){
+	    im.xeqPlugins("mouse", "onmousemove", evt);
 	}
     }
 };
 
 // mouseover: assumes display obj is passed in evt.data
 JS9.mouseOverCB = function(evt){
-    var pname, pinst, popts;
     var display = evt.data;
     var im = display.image;
     var x = $(document).scrollLeft(), y = $(document).scrollTop();
@@ -12422,25 +12416,14 @@ JS9.mouseOverCB = function(evt){
 	// get image position
 	im.ipos = im.displayToImagePos(im.pos);
 	// plugin callbacks
-	for( pname in display.pluginInstances ){
-	    if( display.pluginInstances.hasOwnProperty(pname) ){
-		pinst = display.pluginInstances[pname];
-		popts = pinst.plugin.opts;
-		if( pinst.isActive("onmouseover") ){
-		    if( !im.clickInRegion || popts.mouseoverRegions ){
-			try{ popts.onmouseover.call(pinst, im, im.ipos,
-						    evt.originalEvent || evt); }
-			catch(e){ pinst.errLog("onmouseover", e); }
-		    }
-		}
-	    }
+	if( !JS9.specialKey(evt) ){
+	    im.xeqPlugins("mouse", "onmouseover", evt);
 	}
     }
 };
 
 // mouseover: assumes display obj is passed in evt.data
 JS9.mouseOutCB = function(evt){
-    var pname, pinst, popts;
     var display = evt.data;
     var im = display.image;
     evt.preventDefault();
@@ -12457,18 +12440,8 @@ JS9.mouseOutCB = function(evt){
 	// get image position
 	im.ipos = im.displayToImagePos(im.pos);
 	// plugin callbacks
-	for( pname in display.pluginInstances ){
-	    if( display.pluginInstances.hasOwnProperty(pname) ){
-		pinst = display.pluginInstances[pname];
-		popts = pinst.plugin.opts;
-		if( pinst.isActive("onmouseout") ){
-		    if( !im.clickInRegion || popts.mouseoutRegions ){
-			try{ popts.onmouseout.call(pinst, im, im.ipos,
-						   evt.originalEvent || evt); }
-			catch(e){ pinst.errLog("onmouseout", e); }
-		    }
-		}
-	    }
+	if( !JS9.specialKey(evt) ){
+	    im.xeqPlugins("mouse", "onmouseout", evt);
 	}
     }
 };
@@ -12490,7 +12463,6 @@ JS9.wheelCB = function(evt){
 // in case you are wondering: you can't move the mouse via javascript!
 // http://stackoverflow.com/questions/4752501/move-the-mouse-pointer-to-a-specific-position
 JS9.keyPressCB = function(evt){
-    var pname, pinst, popts;
     var display = evt.data;
     var im = display.image;
     // var keycode = evt.which || evt.keyCode;
@@ -12500,24 +12472,13 @@ JS9.keyPressCB = function(evt){
     // get image position
     im.ipos = im.displayToImagePos(im.pos);
     // plugin callbacks
-    for( pname in display.pluginInstances ){
-	if( display.pluginInstances.hasOwnProperty(pname) ){
-	    pinst = display.pluginInstances[pname];
-	    popts = pinst.plugin.opts;
-	    if( pinst.isActive("onkeypress") ){
-		try{ popts.onkeypress.call(pinst, im, im.ipos,
-					   evt.originalEvent || evt); }
-		catch(e){ pinst.errLog("onkeypress", e); }
-	    }
-	}
-    }
+    im.xeqPlugins("keypress", "onkeypress", evt);
 };
 
 // keydown: assumes display obj is passed in evt.data
 // in case you are wondering: you can't move the mouse via javascript!
 // http://stackoverflow.com/questions/4752501/move-the-mouse-pointer-to-a-specific-position
 JS9.keyDownCB = function(evt){
-    var pname, pinst, popts;
     var display = evt.data;
     var im = display.image;
     // var keycode = evt.which || evt.keyCode;
@@ -12526,17 +12487,7 @@ JS9.keyDownCB = function(evt){
     // get image position
     im.ipos = im.displayToImagePos(im.pos);
     // plugin callbacks
-    for( pname in display.pluginInstances ){
-	if( display.pluginInstances.hasOwnProperty(pname) ){
-	    pinst = display.pluginInstances[pname];
-	    popts = pinst.plugin.opts;
-	    if( pinst.isActive("onkeydown") ){
-		try{ popts.onkeydown.call(pinst, im, im.ipos,
-					  evt.originalEvent || evt); }
-		catch(e){ pinst.errLog("onkeydown", e); }
-	    }
-	}
-    }
+    im.xeqPlugins("keypress", "onkeydown", evt);
     // fire keydown for keyboard-enabled layer, if necessary
     if( im.layer && im.layers[im.layer].opts.usekeyboard ){
 	JS9.Regions.keyDownCB(im, im.ipos, evt, im.layer);

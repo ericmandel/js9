@@ -174,6 +174,10 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
     } else {
 	im.displayImage("scaled", {blendMode: false});
     }
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	im.xeqPlugins("image", "onchangecontrastbias");
+    }
 };
 
 // stop action for contrast/bias: redisplay image
