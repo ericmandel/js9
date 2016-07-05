@@ -277,11 +277,24 @@ input:focus.JS9CmdIn{
 .context-menu-list 
 {
     border: 1px solid black;
+    font-family: Helvetica, sans-serif;
+    font-size: 12px;
+    background-color: #E9E9E9;
 }
 
-.context-menu-item.icon-sun
-{
-   background-image: url(images/sun.png);
+/* jqueryContextMenu v2.2 */
+.context-menu-icon-sun:before {
+   content: url(images/sun.png);
+}
+
+.context-menu-item {
+    background-color: #E9E9E9;
+}
+
+.context-menu-item.context-menu-disabled {
+    color: #AAA;
+    cursor: default; 
+    background-color: #E9E9E9;
 }
 
 .context-menu-separator
@@ -289,16 +302,29 @@ input:focus.JS9CmdIn{
     border-bottom: 1px solid #AAA;
 }
 
-.context-menu-input > label > input[type="text"]
+.context-menu-input > label
 {
-   width: 85%;
+   margin-left: 18px;
 }
 
-.context-menu-input > label > span {
+.context-menu-input > label > input[type="text"]
+{
+   width: 80%;
+   padding: 2px;
+}
+
+/* jqueryContextMenu pre-v2.2 */
+.pre-v2.2-context-menu-item.icon-sun {
+   background-image: url(images/sun.png);
+}
+
+/* jqueryContextMenu pre-v2.2 */
+.pre-v2.2-context-menu-input > label > span {
     margin-left: 0px;
 }
 
-.context-menu-submenu:after {
+/* jqueryContextMenu pre-v2.2 */
+.pre-v2.2-context-menu-submenu:after {
     content: "\2192";
     color: black;
     position: absolute;
