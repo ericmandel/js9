@@ -6288,6 +6288,9 @@ JS9.Menubar = function(width, height){
 		    }
 		};
 		// plugins
+		items["sep" + n++] = "------";
+		items["sep" + n++] = {name: "Plugins:"};
+		items["sep" + (n-1)].disabled = true;
 		for(i=0; i<JS9.plugins.length; i++){
 		    plugin = JS9.plugins[i];
 		    pname = plugin.name;
