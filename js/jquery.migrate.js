@@ -1,1 +1,1 @@
-jquery-migrate-1.2.1.js
+jquery-migrate-3.0.0.js

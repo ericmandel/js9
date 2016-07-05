@@ -9927,17 +9927,17 @@ JS9.Regions.initConfigForm = function(obj){
 	obj.params.listonchange = false;
     }
     if( obj.params.listonchange ){
-	$(form + "[name='listonchange']").attr("checked", "checked");
+	$(form + "[name='listonchange']").prop("checked", true);
     } else {
-	$(form + "[name='listonchange']").removeAttr("checked");
+	$(form + "[name='listonchange']").prop("checked", false);
     }
     if( obj.params.fixinplace === undefined ){
 	obj.params.fixinplace = false;
     }
     if( obj.params.fixinplace ){
-	$(form + "[name='fixinplace']").attr("checked", "checked");
+	$(form + "[name='fixinplace']").prop("checked", true);
     } else {
-	$(form + "[name='fixinplace']").removeAttr("checked");
+	$(form + "[name='fixinplace']").prop("checked", false);
     }
     // shape specific processing
     switch(obj.pub.shape){
@@ -11834,7 +11834,7 @@ JS9.eventToDisplayPos = function(evt, offset){
     }
     // offset() returns the position of the element relative to the document
     offset = offset || $(targ).offset();
-    // jQuery normalizes pageX, pageY: mouse positions relative to the document
+    // pageX, pageY: mouse positions relative to the document
     // changed touch events: take position from first finger
     if( evt.originalEvent ){
 	if( evt.originalEvent.touches &&
