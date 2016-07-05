@@ -8863,7 +8863,6 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	olen = objs.length;
 	for(i=0; i<olen; i++){
 	    radius = objs[i].radius * scalex;
-	    radius = Math.round((radius + 0.00001) * 100) / 100;
 	    pub.imstr += tr(radius);
 	    tstr += (pub.x + " " +  pub.y + " " + (pub.x + radius) + " " + pub.y + " ");
 	    if( i === (olen - 1) ){
@@ -9882,6 +9881,16 @@ JS9.Regions.initConfigForm = function(obj){
 	key = $(this).attr("name");
 	// key-specific pre-processing
 	switch(key){
+	case "radii":
+	    if( obj.pub.radii ){
+		obj.pub.radii.forEach(function(p){
+		    if( val ){
+			val += ", ";
+		    }
+		    val += p.toFixed(1);
+		});
+	    }
+	    break;
 	case "pts":
 	    if( obj.pub.pts ){
 		obj.pub.pts.forEach(function(p){
