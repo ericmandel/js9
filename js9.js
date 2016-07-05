@@ -8863,6 +8863,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	olen = objs.length;
 	for(i=0; i<olen; i++){
 	    radius = objs[i].radius * scalex;
+	    radius = Math.round((radius + 0.00001) * 100) / 100;
 	    pub.imstr += tr(radius);
 	    tstr += (pub.x + " " +  pub.y + " " + (pub.x + radius) + " " + pub.y + " ");
 	    if( i === (olen - 1) ){
@@ -9887,7 +9888,7 @@ JS9.Regions.initConfigForm = function(obj){
 		    if( val ){
 			val += ", ";
 		    }
-		    val += sprintf("%s, %s", p.x, p.y);
+		    val += sprintf("%s, %s", p.x.toFixed(2), p.y.toFixed(2));
 		});
 	    } else {
 		// use the flat points list instead of the pts object array
@@ -9899,6 +9900,10 @@ JS9.Regions.initConfigForm = function(obj){
 	default:
 	    if( obj.pub[key] !== undefined ){
 		val = obj.pub[key];
+		// fix floating point values
+		if( (typeof val === "number") && (val % 1 !== 0) ){
+		    val = val.toFixed(2);
+		}
 	    }
 	    break;
 	}
@@ -9929,8 +9934,6 @@ JS9.Regions.initConfigForm = function(obj){
     switch(obj.pub.shape){
     case "box":
     case "ellipse":
-    case "line":
-    case "polygon":
     case "text":
 	$(form + ".angle").removeClass("nodisplay");
 	break;
