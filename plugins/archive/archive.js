@@ -71,7 +71,8 @@
 	var form = $(div).find(".JS9Archive-form")[0];
 
 	if ( form.object.value !== "" ) {
-	    var simbad = encodeURI('http://hopper.si.edu/http/simbad?' + form.object.value);
+	    var simurl = JS9.globalOpts.simbadProxy || "http://js9.si.edu/cgi-bin/simbad-proxy.cgi";
+	    var simbad = encodeURI(simurl + '?' + form.object.value);
 
 	    xhr({ url: simbad, title: "Name", status: status }, function(e, xhr) {
 		var coords = xhr.responseText.trim().split(" ");
@@ -458,13 +459,13 @@ var ImageService = require("./image-service");
 	});
 
 	var stsDSS = new ImageService({
-	      text: "DSS@Stsci"
+	      text: "DSS@STScI"
 	    , value: "stsDSS"
-	    , surveys: [   { value: "poss2ukstu_ir",	text: "StSci DSS2 IR"	}
-			 , { value: "poss2ukstu_red",	text: "StSci DSS2 Red"	}
-			 , { value: "poss2ukstu_blue",	text: "StSci DSS2 Blue"	}
-			 , { value: "poss1_red", 	text: "StSci DSS1 Red"	}
-			 , { value: "poss1_blue",	text: "StSci DSS1 Blue"	}
+	    , surveys: [   { value: "poss2ukstu_ir",	text: "STScI DSS2 IR"	}
+			 , { value: "poss2ukstu_red",	text: "STScI DSS2 Red"	}
+			 , { value: "poss2ukstu_blue",	text: "STScI DSS2 Blue"	}
+			 , { value: "poss1_red", 	text: "STScI DSS1 Red"	}
+			 , { value: "poss1_blue",	text: "STScI DSS1 Blue"	}
 			]
 	    , url: "http://stdatu.stsci.edu/cgi-bin/dss_search?r={r}&d={d}&w={w}&h={h}&e={e}&c={c}&v={s}&f=fits"
 	    , calc: function(values) {
@@ -780,6 +781,8 @@ module.exports = template;
 	var status = params.status;
 	var title = "";
 
+	var corsurl = JS9.globalOpts.corsProxy || "http://js9.si.edu/cgi-bin/CORS-proxy.cgi";
+
 	if ( params.CORS ) {
 	    params.url = params.url.replace(/\?/g, "@");
 	    params.url = params.url.replace(/&/g, "!");
@@ -787,10 +790,12 @@ module.exports = template;
 
 	    params.url = encodeURI(params.url);
 
-	    params.url="http://hopper.si.edu/http/CORS-proxy?Q=" + params.url;
+	    params.url= corsurl + "?Q=" + params.url;
 	}
 
 	var _xhr = new XMLHttpRequest();
+
+console.log("xhr: %s", params.url);
 
 	_xhr.open('GET', params.url, true);
 
