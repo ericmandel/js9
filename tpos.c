@@ -19,7 +19,6 @@ extern char *optarg;
 extern int optind;
 #endif
 
-#define ABS(x) ((x)<0?(-x):(x))
 #define DEF_EVTLIST "EVENTS STDEVT"
 #define BUFLEN 1024
 
