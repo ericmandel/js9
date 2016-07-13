@@ -795,8 +795,6 @@ module.exports = template;
 
 	var _xhr = new XMLHttpRequest();
 
-console.log("xhr: %s", params.url);
-
 	_xhr.open('GET', params.url, true);
 
 	if ( params.title ) {
