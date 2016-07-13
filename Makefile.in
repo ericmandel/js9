@@ -124,7 +124,7 @@ CGIXPATH =   	@CGIXPATH@
 # this is for SAO install only ... I think!
 SAODIR =	@SAODIR@
 
-WEBDIRS	=	plugins params js css images
+WEBDIRS	=	plugins params js css font images
 
 BEDIRS =	node_modules analysis-plugins analysis-wrappers
 
