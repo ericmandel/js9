@@ -27,7 +27,6 @@ else
   if [ $? = 0 ]; then
     URLGET="curl"
     URLGETARGS="-s"
-    error "curl is broken for Simbad queries. Please use wget."
   else
     error "requires either wget or curl"
   fi
@@ -53,9 +52,27 @@ if [ x"$2" != x ] ; then
   URL="$2"
 fi
 
+if [ $URLGET = "wget" ]; then
+
 $URLGET $URLGETARGS $URL/simbad/sim-script?script="
 output console=off script=off
 set limit 1
 format object form1 \"%COO(:;A;FK5;2000;2000) %COO(:;D;FK5;2000;2000)\"
 query id $1
 "
+
+elif [ $URLGET = "curl" ]; then
+
+# curl requires encoding
+$URLGET $URLGETARGS $URL/simbad/sim-script --data-urlencode "script=
+output console=off script=off
+set limit 1
+format object form1 \"%COO(:;A;FK5;2000;2000) %COO(:;D;FK5;2000;2000)\"
+query id $1
+"
+
+else
+
+error "unknown URL get method: $URLGET"
+
+fi
