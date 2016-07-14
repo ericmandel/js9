@@ -1,12 +1,9 @@
 #!/bin/bash
 
-# error handler
-error() {
-  echo "Content-Type: text/plain"
-  echo ""
-  echo "ERROR: $*"
-  exit 1
-}
+# site configuration
+if [ -f ./js9config.cgi ]; then
+  . ./js9config.cgi
+fi
 
 # we need wget or curl to retrieve the image
 hash wget 1>/dev/null 2>&1
@@ -19,7 +16,7 @@ else
     URLGET="curl"
     URLGETARGS="-i -s"
   else
-    error "requires either wget or curl"
+    exit 1
   fi
 fi
 
@@ -46,7 +43,7 @@ case "$url" in
 
     http://vizier.u-strasbg.fr/viz-bin/asu-tsv*)			;;
 
-    *)	exit 1 ;;
+    *) exit 1;;
 esac
 
 # retrieve data and send back CORS header with the data
@@ -57,7 +54,7 @@ $URLGET $URLGETARGS $url | (
 	    echo "Access-Control-Allow-Origin: *"
 	    echo
 	    cat
-	    exit
+	    exit 0
 	    ;;
 	[Cc]ontent-[Ee]ncoding*)
 	    case $LINE in

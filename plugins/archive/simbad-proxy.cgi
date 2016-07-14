@@ -1,7 +1,11 @@
 #!/bin/bash
-# set -x
 
-# defaults
+# site configuration
+if [ -f ./js9config.cgi ]; then
+  . ./js9config.cgi
+fi
+
+# default simbad URL
 URL=http://simbad.u-strasbg.fr
 
 # error handler

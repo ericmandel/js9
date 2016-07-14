@@ -511,29 +511,29 @@ var ImageService = require("./image-service");
 		}
 	});
 
-	var dasch  = new ImageService({
-	      text: "DASCH"
-	    , value: "dasch"
-	    , surveys: [   { value: "plates", 		text: "Plates"		} ]
-
-	    , url: "http://dasch.rc.fas.harvard.edu/showtext.php?listflag=0&dateflag=dateform=j%20&coordflag=&radius=200&daterange=&seriesflag=&plateNumberflag=&classflag=&typeflag=%20-T%20wcsfit%20&pessimisticflag=&bflag=-j&nstars=5000&locstring=12:00:00%2030:00:00%20J2000"
-
-	    , calc: function(values) {
-		    values.radius = Math.min(Math.floor(Math.sqrt(values.w*values.w+values.h*values.h)*60), 600);
-		    values.name   = imageName(values);
-	    }
-
-	    , picker: "<input type=button value='pick' class='picker'>"
-	    , controls: "<tr>><td>Series</td>   <td><input type=text size=10 name=series></td>		\n\
-	    		      <td>Plate No</td> <td><input type=text size=10 name=plate></td>           \n\
-	    		      <td>Class</td>    <td><input type=text size=10 name=class></td></tr>      \n\
-	    		  <tr><td>Date From</td><td><input type=text size=10 name=datefr></td>          \n\
-	    		      <td>Date To</td>  <td><input type=text size=10 name=dateto></td></tr>      \n\
-			 "
-	    , handler: function (e, xhr, params, values) {
-	    	
-	    }
-	});
+//	var dasch  = new ImageService({
+//	      text: "DASCH"
+//	    , value: "dasch"
+//	    , surveys: [   { value: "plates", 		text: "Plates"		} ]
+//
+//	    , url: "http://dasch.rc.fas.harvard.edu/showtext.php?listflag=0&dateflag=dateform=j%20&coordflag=&radius=200&daterange=&seriesflag=&plateNumberflag=&classflag=&typeflag=%20-T%20wcsfit%20&pessimisticflag=&bflag=-j&nstars=5000&locstring=12:00:00%2030:00:00%20J2000"
+//
+//	    , calc: function(values) {
+//		    values.radius = Math.min(Math.floor(Math.sqrt(values.w*values.w+values.h*values.h)*60), 600);
+//		    values.name   = imageName(values);
+//	    }
+//
+//	    , picker: "<input type=button value='pick' class='picker'>"
+//	    , controls: "<tr>><td>Series</td>   <td><input type=text size=10 name=series></td>		\n\
+//	    		      <td>Plate No</td> <td><input type=text size=10 name=plate></td>           \n\
+//	    		      <td>Class</td>    <td><input type=text size=10 name=class></td></tr>      \n\
+//	    		  <tr><td>Date From</td><td><input type=text size=10 name=datefr></td>          \n\
+//	    		      <td>Date To</td>  <td><input type=text size=10 name=dateto></td></tr>      \n\
+//			 "
+//	    , handler: function (e, xhr, params, values) {
+//
+//	    }
+//	});
 
 //	var cds = new ImageService({
 //	      text: "CDS Aladin Server"
@@ -793,6 +793,10 @@ module.exports = template;
 	    params.url= corsurl + "?Q=" + params.url;
 	}
 
+	if( JS9.DEBUG > 1 ){
+	    console.log("archive/catalog url: %s", params.url);
+	}
+
 	var _xhr = new XMLHttpRequest();
 
 	_xhr.open('GET', params.url, true);
@@ -814,7 +818,6 @@ module.exports = template;
 	    if ( this.readyState === 4 ) {
 		if ( this.status === 200 || this.status === 0 ) {
 		    if ( status !== undefined ) { status(""); }
-
 		    func(e, this);
 		}
 	    }
