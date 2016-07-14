@@ -440,7 +440,7 @@ var ImageService = require("./image-service");
 	    } else {
 	        name = values.source + "_" + values.r + plus + values.d;
 	    }
-	    name += ".fits";
+	    name = name.replace(/\s+/g,"_") + ".fits";
 
 	    return name;
 	};
