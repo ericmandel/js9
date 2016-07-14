@@ -48,9 +48,11 @@ on a single web page, you can set the colormap of the second one this way:
 Note that this <b>display object</b> contains only the <b>display</b>
 property and always is specified as the final argument in a call.
 <p>
-The display property can specify an image handle instead of
-a JS9 div element id. This is a minor optimization for cases where you want
-to call a routine such as JS9.WCSToPix() or JS9.PixtoWCS() many times:
+The display property can specify an image handle instead of a JS9 div
+id. When the image handle in question points to the currently
+displayed image, this alternate usage is nothing more than a trivial
+optimization.  Thus, to call a routine such as JS9.WCSToPix() or
+JS9.PixtoWCS():
 <pre>
     var im = JS9.GetImage({display: "myJS9"});
     for(i=0; i<1000; i++){
@@ -60,12 +62,22 @@ to call a routine such as JS9.WCSToPix() or JS9.PixtoWCS() many times:
       console.log("%s %s -> %s %s", x, y, wcs.ra, wcs.dec);
     }
 </pre>
-Passing the image handle will speed up processing very slightly, but
-it makes us programmers feel much better.
+However, the image handle does not need to point to the currently
+displayed image. When it does not, the public routine will act on the
+image associated with the image handle, not the current image.  In
+particular, you can use <b>JS9.LookupImage()</b> to get the image
+handle of any image, and then act on that image. For example, if two
+images, foo1.fits and foo2.fits, are loaded into a JS9 display, and
+foo1.fits is currently being displayed, you can close foo2.fits this way:
+<pre>
+    var im = JS9.LookupImage("foo2.fits");
+    if( im ){
+        JS9.CloseImage({display: im});
+    }
+</pre>
 <p>
-The optional <b>display object</b> argument is not explicitly
-documented in the routines below (except as an example
-in <b>JS9.Load()</b>), but it is always available.
+The optional <b>display object</b> argument generally is not
+mentioned in the routines below, but it is always available.
 
 <p>
 Choose from the following sections:
@@ -333,6 +345,40 @@ The routine returns the image handle associated with the current image.
 The returned image handle can be passed in the display object.  This
 is marginally more efficient than the default behavior, which is to
 determine the current image for each call.
+
+<p>
+<font size="+1"><b><u>Lookup an image by id</u></b></font>
+<p>
+<code><font size="+1">im = JS9.LookupImage(id)</font></code>
+<p>
+where:
+<ul>
+<li><b>id</b>: image id
+</ul>
+<p>
+returns:
+<ul>
+<li><b>im</b>: image handle
+</ul>
+<p>
+The <b>JS9.LookupImage()</b> routine takes a string id as input and
+returns the image handle of the image having that id (or null). The id
+is the same as is found in the <b>File</b> menu list of displayed images.
+This routine is similar to the standard <b>JS9.GetImage()</b>
+routine, but returns an image by name, regardless of whether it is
+currently being displayed.
+
+<p>
+You can use this routine, for example, so close an image that is not
+currently being displayed. If two images, foo1.fits and foo2.fits, are
+loaded into a JS9 display, and foo1.fits is currently being displayed,
+you can close foo2.fits this way:
+<pre>
+    var im = JS9.LookupImage("foo2.fits");
+    if( im ){
+        JS9.CloseImage({display: im});
+    }
+</pre>
 
 <p>
 <font size="+1"><b><u>Get image data and auxiliary info for the specified image</u></b></font>

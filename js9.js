@@ -651,6 +651,7 @@ JS9.Image.prototype.getImageData = function(dflag){
 // undisplay the image, release resources
 JS9.Image.prototype.closeImage = function(){
     var i, j, tim, key, raw, carr;
+    var iscurrent = false;
     var ilen= JS9.images.length;
     var display = this.display;
     var func = function(r){
@@ -660,25 +661,32 @@ JS9.Image.prototype.closeImage = function(){
 	    JS9.log(r.stdout);
 	}
     };
-    // look for an image and remove it
+    // look for the image in the image list, and remove it
     for(i=0; i<ilen; i++){
 	if( this === JS9.images[i] ){
 	    tim = JS9.images[i];
-	    // nothing on the screen
-	    tim.clearMessage();
-	    tim.display.context.clear();
+	    // is this the currently displayed image?
+	    if( tim === tim.display.image ){
+		iscurrent = true;
+	    }
+	    // clear display if this is the currently displayed image
+	    if( iscurrent ){
+		// nothing on the screen
+		tim.clearMessage();
+		tim.display.context.clear();
+		// clear all layers
+		for( key in tim.layers ){
+		    if( tim.layers.hasOwnProperty(key) ){
+			// tim.layers[key].canvas.dispose();
+			// tim.layers[key] = null;
+			tim.layers[key].canvas.clear();
+		    }
+		}
+		// clear image from display
+		tim.display.image = null;
+	    }
 	    // plugin callbacks
 	    tim.xeqPlugins("image", "onimageclose");
-	    // clear all layers
-	    for( key in tim.layers ){
-		if( tim.layers.hasOwnProperty(key) ){
-		    // tim.layers[key].canvas.dispose();
-		    // tim.layers[key] = null;
-		    tim.layers[key].canvas.clear();
-		}
-	    }
-	    // clear image from display
-	    tim.display.image = null;
 	    // remove from RGB mode, if necessary
 	    switch(tim.cmapObj.name){
 	    case "red":
@@ -719,17 +727,20 @@ JS9.Image.prototype.closeImage = function(){
 	    tim = null;
 	    // remove image from active list
 	    JS9.images.splice(i,1);
+	    // found and removed the specified image
 	    break;
 	}
     }
-    // display another image, if available
-    for(i=0; i<JS9.images.length; i++){
-	tim = JS9.images[i];
-	if( display === tim.display ){
-	    // display image, 2D graphics, etc.
-	    tim.displayImage("all");
-	    tim.refreshLayers();
-	    break;
+    // display another image, if necessary and if possible
+    if( iscurrent ){
+	for(i=0; i<JS9.images.length; i++){
+	    tim = JS9.images[i];
+	    if( display === tim.display ){
+		// display image, 2D graphics, etc.
+		tim.displayImage("all");
+		tim.refreshLayers();
+		break;
+	    }
 	}
     }
 };
@@ -10646,7 +10657,7 @@ JS9.Magnifier.zoom = function(im, zval){
 // close the magnifier when closing the image
 JS9.Magnifier.close = function(im){
     var magnifier = im.display.pluginInstances.JS9Magnifier;
-    if( magnifier  ){
+    if( magnifier && (im === im.display.image) ){
 	magnifier.context.clear();
 	im.removeShapes("magnifier", "all");
     }
@@ -10962,7 +10973,7 @@ JS9.Panner.zoom = function(im, zval){
 // close the panner
 JS9.Panner.close = function(im){
     var panner = im.display.pluginInstances.JS9Panner;
-    if( panner  ){
+    if( panner && (im === im.display.image) ){
 	panner.context.clear();
 	im.removeShapes("panner", "all");
     }
@@ -13795,6 +13806,12 @@ JS9.mkPublic("ShiftData", "shiftData");
 JS9.mkPublic("FilterRGBImage", "filterRGBImage");
 JS9.mkPublic("MoveToDisplay", "moveToDisplay");
 JS9.mkPublic("SaveSession", "saveSession");
+
+// lookup an image
+JS9.mkPublic("LookupImage", function(id){
+    var obj = JS9.parsePublicArgs(arguments);
+    return JS9.lookupImage(obj.argv[0], obj.display);
+});
 
 // add a colormap to JS9
 JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
