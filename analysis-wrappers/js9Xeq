@@ -252,7 +252,6 @@ loadproxy)
     if [ $? != 0 ]; then
       error "could not retrieve: $URL"
     else
-      # look for a compressed file (and add .gz extension, if necessary)
       s=`file $OFILE`
       f=`echo $s | egrep "HTML document text" 1>/dev/null 2>&1`
       if [ $? = 0 ]; then
@@ -263,6 +262,7 @@ loadproxy)
 	  error `cat $OFILE`
         fi
       fi
+      # look for a compressed file (and add .gz extension, if necessary)
       f=`echo $s | sed -n 's/.*gzip compressed data, was "\([^"]*\)".*/\1/gp'`
       if [ x"$f" != x ]; then
 	ext="${f##*.}"
@@ -273,6 +273,13 @@ loadproxy)
         fi
         if [ x"$NFILE" != x"$OFILE" ]; then
           mv $OFILE $NFILE && OFILE="$NFILE"
+        fi
+      else
+	# better be a valid FITS file
+        f=`echo $s | egrep "FITS image data" 1>/dev/null 2>&1`
+        if [ $? != 0 ]; then
+	    rm -rf $OFILE
+	    error "$OFILE is not a valid FITS file"
         fi
       fi
       # tell JS9 the new file name to load
