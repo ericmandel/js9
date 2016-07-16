@@ -33,7 +33,7 @@ JS9 = (function(JS9){
 
 // internal defaults (not usually changed by users)
 JS9.DEFID = "JS9";		// default JS9 display id
-JS9.ANON = "[anonymous]";	// name to use for images with no name
+JS9.ANON = "Anonymous";		// name to use for images with no name
 JS9.PREFSFILE = "js9Prefs.json";// prefs file to load
 JS9.ZINDEX = 0;			// z-index of image canvas: on bottom of js9
 JS9.SHAPEZINDEX = 7;		// z-index of 2d graphics (regions is +2)
