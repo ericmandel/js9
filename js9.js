@@ -1427,7 +1427,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     } else if( hdu.filename ){
 	this.file = hdu.filename;
     }
-    this.file = this.file || JS9.ANON;
+    this.file = this.file || (JS9.ANON + JS9.uniqueID());
     // save original file in case we add an extension
     this.file0 = this.file;
     // look for an id
@@ -2928,8 +2928,9 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
 JS9.Image.prototype.notifyHelper = function(){
     var basedir;
     var that = this;
+    var imexp = new RegExp("^"+JS9.ANON+"[0-9]*");
     // notify the helper
-    if( JS9.helper.connected && (this.file !== JS9.ANON) ){
+    if( JS9.helper.connected && !this.file.match(imexp) ){
 	JS9.helper.send("image", {"image": this.file},
         function(res){
 	    var rstr, r, s, cc, im, regexp;
@@ -13924,7 +13925,7 @@ JS9.mkPublic("Load", function(file, opts){
 	    opts.filename = file.name;
 	}
 	if( !opts.filename ){
-	    opts.filename = JS9.ANON;
+	    opts.filename = JS9.ANON + JS9.uniqueID();
 	}
 	if( JS9.fits.handleFITSFile ){
 	    topts = $.extend(true, {}, opts, JS9.fits.options);
@@ -13956,7 +13957,7 @@ JS9.mkPublic("Load", function(file, opts){
 	}
 	blob = new Blob([new Uint8Array(bytes)]);
 	if( !opts.filename ){
-	    opts.filename = JS9.ANON;
+	    opts.filename = JS9.ANON + JS9.uniqueID();
 	}
 	blob.name = opts.filename;
 	if( JS9.fits.handleFITSFile ){
