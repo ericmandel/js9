@@ -198,6 +198,7 @@ char *wcsinfo(int n){
   Info info = getinfo(n);
   char *str = NULL;
   char *ptype=NULL;
+  char *radecsys=NULL;
   char *c1type=NULL;
   char *c2type=NULL;
   double crval1=0.0, crval2=0.0, crpix1=0.0, crpix2=0.0, cdelt1=0.0, cdelt2=0.0;
@@ -223,13 +224,14 @@ char *wcsinfo(int n){
     c1type = info->wcs->c1type;
     c2type = info->wcs->c2type;
     ptype = info->wcs->ptype;
+    radecsys = info->wcs->radecsys;
   }
   // convert to 1-indexed image coords
   str = info->str;
   snprintf(str, SZ_LINE-1,
-	   "{\"crval1\": %.14g, \"crval2\": %.14g, \"crpix1\": %.14g, \"crpix2\": %.14g, \"cdelt1\": %.14g, \"cdelt2\": %.14g, \"crot\": %.14g, \"ctype1\": \"%s\", \"ctype2\": \"%s\",  \"ptype\": \"%s\"}",
+	   "{\"crval1\": %.14g, \"crval2\": %.14g, \"crpix1\": %.14g, \"crpix2\": %.14g, \"cdelt1\": %.14g, \"cdelt2\": %.14g, \"crot\": %.14g, \"ctype1\": \"%s\", \"ctype2\": \"%s\",  \"ptype\": \"%s\", \"radecsys\": \"%s\"}",
 	   crval1, crval2, crpix1, crpix2, cdelt1, cdelt2, crot,
-	   c1type, c2type, ptype);
+	   c1type, c2type, ptype, radecsys);
   return str;
 }
 
