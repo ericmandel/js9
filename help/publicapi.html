@@ -1103,6 +1103,56 @@ where:
 </ul>
 Set the display mode of the value/position display for the specified image.
 
+
+<p>
+<font size="+1"><b><u>Get information about the current WCS</u></b></font>
+<p>
+<code><font size="+1">wcsobj = JS9.GetWCS()</font></code>
+<p>
+returns:
+<ul>
+<li><b>wcsobj</b>: object containing WCS info
+</ul>
+<p>
+Get information about the current WCS, including:
+<ul>
+<li><b>version</b>: the WCS version ("default" or the letter "A"-"Z" for an alternate WCS)
+<li><b>wcsname</b>: the value of the WCSNAME header parameter associated
+with this WCS, if present
+<li><b>crot</b>: crot value (i.e., the CROT1 value) from wcs library 
+<li><b>crpix[1,2]</b>: crpix values from wcs library
+<li><b>crval[1,2]</b>: crval values from wcs library
+<li><b>crdelt[1,2]</b>: crdelt values from wcs library
+<li><b>crtype[1,2]</b>: crtype values (e.g., "RA" and "Dec") from wcs library
+<li><b>ptype</b>: ptype value (e.g., "TAN") from wcs library
+<li><b>radecsys</b>: radecsys value (e.g., "ICRS") from the wcs library
+</ul>
+
+<p>
+<font size="+1"><b><u>Set the current WCS</u></b></font>
+<p>
+<code><font size="+1">JS9.SetWCS(which)</font></code>
+<p>
+where:
+<ul>
+<li><b>which</b>: WCS name or id
+</ul>
+Set the current WCS, in cases where alternate WCS's are available. The
+alternate WCS convention is described in the standard paper by Greisen
+and Callebretta <i>Representations of world coordinates in FITS</i>
+(A&A 395, 1061–1075 (2002)). If a FITS file contains alternate WCS
+info, you can switch to an alternate using this routine or using
+the <b>File->alternate wcs</b> menu option.
+<p>
+The <b>which</b> argument can be one of the following:
+<ul>
+<li><b>default</b>: the default WCS from the original file
+<li><b>[version]</b>: the version letter of the alternate WCS, i.e. <b>A-Z</b>
+<li><b>[wcsname]</b>: the value of the WCSNAME header parameter associated
+with this WCS, if present
+</ul>
+If no argument is supplied, the default WCS is set up.
+
 <p>
 <font size="+1"><b><u>Get the current WCS units</u></b></font>
 <p>

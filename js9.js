@@ -830,10 +830,8 @@ JS9.Image.prototype.initLCS = function(header){
 	return xout;
     };
 
-    // sanity check
-    if( !header ){
-	return;
-    }
+    // header usually is raw header
+    header = header || this.raw.header;
     // physical coords
     arr[0][0] = header.LTM1_1 || 1.0;
     arr[1][0] = header.LTM2_1 || 0.0;
@@ -1247,18 +1245,9 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     // having the real image, we can ask to release the offscreen image
     this.offscreen.img = null;
     // init WCS, if possible
-    this.raw.wcs = JS9.initwcs(JS9.raw2FITS(this.raw));
-    if( this.raw.wcs > 0 ){
-	// set the wcs system
-	this.setWCSSys(this.params.wcssys);
-	// this is also the default
-	this.params.wcssys0 = this.params.wcssys.trim();
-	// get info about the wcs
-	try{ this.raw.wcsinfo = JSON.parse(JS9.wcsinfo(this.raw.wcs)); }
-	catch(ignore){}
-    }
+    this.initWCS();
     // init the logical coordinate system, if possible
-    this.initLCS(this.raw.header);
+    this.initLCS();
     // allow chaining
     return this;
 };
@@ -1485,20 +1474,9 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	this.binning.bin = 1;
     }
     // init WCS, if possible
-    this.raw.wcs = JS9.initwcs(JS9.raw2FITS(this.raw));
-    if( this.raw.wcs > 0 ){
-	// set the wcs system
-	this.setWCSSys(this.params.wcssys);
-	// this is also the default
-	this.params.wcssys0 = this.params.wcssys.trim();
-	// set the wcs units
-	this.setWCSUnits(this.params.wcsunits);
-	// get info about the wcs
-	try{ this.raw.wcsinfo = JSON.parse(JS9.wcsinfo(this.raw.wcs)); }
-	catch(ignore){}
-    }
+    this.initWCS();
     // init the logical coordinate system, if possible
-    this.initLCS(this.raw.header);
+    this.initLCS();
     // get hdu info, if possible
     try{
 	s = JS9.listhdu(this.raw.hdu.fits.vfile);
@@ -2890,6 +2868,124 @@ JS9.Image.prototype.setWCSSys = function(wcssys){
     return this;
 };
 
+// init wcs
+JS9.Image.prototype.initWCS = function(header){
+    var alt, key, varr, s;
+    var awcs = /(WCSNAME|WCSAXES|CRVAL[0-9]|CRPIX[0-9]|PC[0-9]_[0-9]|CDELT[0-9]|CD[0-9]_[0-9]|CTYPE[0-9]|CUNIT[0-9]|CRVAL[0-9]|PV[0-9]_[0-9]|PS[0-9]_[0-9]|RADESYS|LONPOLE|LATPOLE)([A-Z])/;
+    if( !this.raw.header ){
+	return this;
+    }
+    // usually it's the raw header
+    header = header || this.raw.header;
+    // init object to hold alt wcs objects
+    this.raw.altwcs = {};
+    // set up the default wcs, using the original header params
+    alt = "default";
+    this.raw.altwcs[alt] = {};
+    this.raw.altwcs[alt].header = this.raw.header;
+    // look for wcs alternates
+    // see: http://www.atnf.csiro.au/people/mcalabre/WCS/wcs.pdf
+    for( key in header ){
+	if( header.hasOwnProperty(key) ){
+	    // is it an alt wcs keyword?
+	    varr = key.match(awcs);
+	    if( varr && varr.length ){
+		// this is the A-Z version
+		alt = varr[2];
+		// init the alt wcs object, if necessary
+		if( !this.raw.altwcs[alt] ){
+		    this.raw.altwcs[alt] = {};
+		    // start with original header
+		    this.raw.altwcs[alt].header = $.extend({}, this.raw.header);
+		}
+		// wcslib seems to want "RADECSYS", not "RADESYS"
+		if( varr[1] === "RADESYS" ){
+		    varr[1] = "RADECSYS";
+		}
+		// overwrite standard keyword in header with the alt value
+		this.raw.altwcs[alt].header[varr[1]] = header[varr[0]];
+	    }
+	}
+    }
+    // init all of the wcs's that we found
+    for( key in this.raw.altwcs ){
+	// loop through alt wcs objects
+	if( this.raw.altwcs.hasOwnProperty(key) ){
+	    s = JS9.raw2FITS(this.raw.altwcs[key].header);
+	    this.raw.altwcs[key].wcs = JS9.initwcs(s);
+	    // get info about the wcs
+	    try{ this.raw.altwcs[key].wcsinfo = 
+		 JSON.parse(JS9.wcsinfo(this.raw.altwcs[key].wcs)); }
+	    catch(ignore){}
+	}
+    }
+    // set current wcs to the default
+    this.setWCS("default");
+    // allow chaining
+    return this;
+};
+
+// get name of current wcs (from among the alternates)
+JS9.Image.prototype.getWCS = function(){
+    var key, obj;
+    // loop through wcs objects, looking for a match
+    for( key in this.raw.altwcs ){
+	if( this.raw.altwcs.hasOwnProperty(key) ){
+	    if( this.raw.wcs === this.raw.altwcs[key].wcs ){
+		obj = $.extend(true, {}, this.raw.altwcs[key].wcsinfo);
+		obj.version = key;
+		obj.wcsname = this.raw.altwcs[key].header.WCSNAME;
+		return obj;
+	    }
+	}
+    }
+    return null;
+};
+
+// set wcs to default or one of the alternative versions
+JS9.Image.prototype.setWCS = function(version){
+    var key, wcsname, wcssys;
+    version = version || "default";
+    // sanity check
+    if( !this.raw || !this.raw.altwcs ){
+	return this;
+    }
+    // loop through wcs objects, looking for a match
+    for( key in this.raw.altwcs ){
+	if( this.raw.altwcs.hasOwnProperty(key) ){
+	    wcsname = this.raw.altwcs[key].header.WCSNAME;
+	    if( (version === key) || (version === wcsname) ){
+		// make sure its a valid wcs
+		if( this.raw.altwcs[key].wcs <= 0 ){
+		    JS9.error("invalid WCS for version: %s", version);
+		}
+		// set this wcs up as the current one
+		this.raw.wcs = this.raw.altwcs[key].wcs;
+		// get info about the wcs
+		this.raw.wcsinfo = this.raw.altwcs[key].wcsinfo;
+		// look for a good wcssys
+		if( this.raw.wcsinfo && this.raw.wcsinfo.radecsys ){
+		    wcssys = this.raw.wcsinfo.radecsys;
+		} else {
+		    wcssys = this.params.wcssys.trim();
+		}
+		// set the wcs system
+		this.setWCSSys(wcssys);
+		// this is also the default
+		if( !this.params.wcssys0 ){
+		    this.params.wcssys0 = wcssys;
+		}
+		// set the wcs units
+		this.setWCSUnits(this.params.wcsunits);
+		// all done
+		return this;
+	    }
+	}
+    }
+    // didn't find it
+    JS9.error("could not find WCS version: " + version);
+};
+
 // get the WCS units for this image
 JS9.Image.prototype.getWCSUnits = function(){
     if( this.params.wcsunits ){
@@ -3718,7 +3814,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    (this.params.wcssys !== "image") &&
 	    (this.params.wcssys !== "physical") ){
 	    s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
-	    vstr = vstr + " " + s[2] + "(" + s[0] + ", " + s[1] + ")";
+	    vstr = vstr + " " + (s[2]||"wcs") + "(" + s[0] + ", " + s[1] + ")";
 	    // update object with wcs
 	    obj.ra = s[0];
 	    obj.dec = s[1];
@@ -6987,8 +7083,8 @@ JS9.Menubar = function(width, height){
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
             build: function($trigger, evt){
-		var i, s1, s2;
-		var n=0, nwcs=0;
+		var i, s1, s2, key, altwcs;
+		var n=0, nwcs=0, got=0;
 		var items = {};
 		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
@@ -6997,9 +7093,15 @@ JS9.Menubar = function(width, height){
 		    s1 = JS9.wcssyss[i];
 		    s2 = s1;
 		    items[s1] = {name: s2};
-		    if( tdisp.image && (tdisp.image.params.wcssys === s1) ){
+		    if( tim && (tim.params.wcssys === s1) ){
 			items[s1].icon = "sun";
+			got++;
 		    }
+		}
+		// if we don't know which wcssys is current, assume "native"
+		if( !got ){
+		    s1 = "native";
+		    items[s1].icon = "sun";
 		}
 		items["sep" + n++] = "------";
 		items.wcsutitle = {name: "WCS Units:", disabled: true};
@@ -7007,8 +7109,42 @@ JS9.Menubar = function(width, height){
 		    s1 = JS9.wcsunitss[i];
 		    s2 = s1;
 		    items[s1] = {name: s2};
-		    if( tdisp.image && (tdisp.image.params.wcsunits === s1) ){
+		    if( tim && (tim.params.wcsunits === s1) ){
 			items[s1].icon = "sun";
+		    }
+		}
+		if( tim && tim.raw.altwcs ){
+		    items["sep" + n++] = "------";
+		    items.altwcs = {
+			name: "alternate wcs",
+			items: {altwcstitle: {name: "choose a wcs:", 
+					      disabled: true}}
+		    };
+		    altwcs = tim.raw.altwcs;
+		    for(key in altwcs ){
+			if( altwcs.hasOwnProperty(key) ){
+			    s1 = "altwcs_" + key;
+			    if( altwcs[key].header.WCSNAME ){
+				s2 = altwcs[key].header.WCSNAME + 
+				    "    (" + key + ")";
+			    } else {
+				s2 = key;
+			    }
+			    items.altwcs.items[s1] = { name: s2 };
+			    if( tim.raw.wcs === altwcs[key].wcs ){
+				items.altwcs.items[s1].icon = "sun";
+			    }
+			    nwcs++;
+			}
+		    }
+		    // disable if we only have the default wcs
+		    if( nwcs < 2 ){
+			items.altwcs.disabled = true;
+			items.altwcs.items.notasks = {
+			    name: "[none]",
+			    disabled: true,
+			    events: {keyup: function(evt){return;}}
+			};
 		    }
 		}
 		items["sep" + n++] = "------";
@@ -7016,7 +7152,7 @@ JS9.Menubar = function(width, height){
 		    name: "reproject",
 		    items: {reprojtitle: {name: "wcs from:", disabled: true}}
 		};
-		for(i=0; i<JS9.images.length; i++){
+		for(i=0, nwcs=0; i<JS9.images.length; i++){
 		    if( tim !== JS9.images[i]  &&
 			JS9.images[i].raw.wcs ){
 			s1 = "reproject_" + JS9.images[i].id;
@@ -7039,18 +7175,24 @@ JS9.Menubar = function(width, height){
 		    items.reproject.items.reproject_wcsalign = {
 			name: "display wcs-aligned"
 		    };
-		    if( tdisp.image && (tdisp.image.params.wcsalign) ){
+		    if( tim && (tim.params.wcsalign) ){
 			items.reproject.items.reproject_wcsalign.icon = "sun";
 		    }
 		}
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val, idx, array){
-			var file;
+			var file, s;
 			var rexp = new RegExp(key);
 			var udisp = val;
 			var uim = udisp.image;
 			if( uim ){
+			    // maybe it's an alt wcs request
+			    if( key.match(/^altwcs_/) ){
+				s = key.replace(/^altwcs_/,"");
+				uim.setWCS(s);
+				return;
+			    }
 			    // maybe it's a wcs reprojection request
 			    if( key.match(/^reproject_/) ){
 				if( key === "reproject_wcsalign" ){
@@ -13786,6 +13928,8 @@ JS9.mkPublic("ImageToLogicalPos", "imageToLogicalPos");
 JS9.mkPublic("LogicalToImagePos", "logicalToImagePos");
 JS9.mkPublic("GetWCSUnits", "getWCSUnits");
 JS9.mkPublic("SetWCSUnits", "setWCSUnits");
+JS9.mkPublic("GetWCS", "getWCS");
+JS9.mkPublic("SetWCS", "setWCS");
 JS9.mkPublic("GetWCSSys", "getWCSSys");
 JS9.mkPublic("SetWCSSys", "setWCSSys");
 JS9.mkPublic("ShowShapeLayer", "showShapeLayer");
