@@ -1,0 +1,24 @@
+{
+  "name": "js9",
+  "version": "1.9.1",
+  "description": "astronomical image display right in your browser",
+  "main": "js9.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ericmandel/js9.git"
+  },
+  "keywords": [
+    "astronomy",
+    "software",
+    "image display"
+  ],
+  "author": "Eric Mandel <eric@cfa.harvard.edu> (http://js9.si.edu)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ericmandel/js9/issues"
+  },
+  "homepage": "http://js9.si.edu"
+}
