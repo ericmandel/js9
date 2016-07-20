@@ -3085,10 +3085,10 @@ JS9.Image.prototype.notifyHelper = function(){
 		    }
 		}
 	    }
-	    if( im.fitsFile ){
+	    if( im && im.fitsFile ){
 		im.fitsFile = im.fitsFile.replace(/\/\.\//g, "/");
 	    }
-	    if( im.parentFile ){
+	    if( im && im.parentFile ){
 		im.parentFile = im.parentFile.replace(/\/\.\//g, "/");
 	    }
 	    // first time through, query the helper for info
@@ -14247,7 +14247,7 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 // create a new instance of JS9 in a window (light or new)
 // nb: unlike JS9.Load, this requires the opts param
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
-    var id, did, head, body, win, doc;
+    var id, did, head, body, win, doc, winid;
     var idbase = (type || "") + "win";
     var title;
     opts = opts || {};
@@ -14268,7 +14268,25 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	// nice title
 	title = sprintf("JS9 Display"+JS9.IDFMT, id);
         // create the light window
-        JS9.lightWin(did, "inline", html, title, winopts);
+        winid = JS9.lightWin(did, "inline", html, title, winopts);
+	// when this window closes, close all of its displayed images
+	winid.onclose = function(){
+	    var i, im;
+	    var ims = [];
+	    // make a list of images in this display
+	    for(i=0; i<JS9.images.length; i++){
+		im = JS9.images[i];
+		if( im.display.id === id ){
+		    ims.push(im);
+		}
+	    }
+	    // close them all
+	    for(i=0; i<ims.length; i++){
+		try{ ims[i].closeImage(); }
+		catch(ignore){}
+	    }
+	    return true;
+	};
         // create the new JS9 Display
         JS9.checkNew(new JS9.Display(id));
 	// add to list of displays
