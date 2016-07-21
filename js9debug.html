@@ -114,50 +114,50 @@
     <input type="button" value="Reproj Load" onclick="javascript:ReprojLoad()">
     <input type="button" value="Reproj Test" onclick="javascript:ReprojTest()">
     &nbsp; &nbsp;
-    <select id="blur" onfocus="this.selectedIndex=0;">
+    <select id="blur" onchange="xblur(this.value);" onfocus="this.selectedIndex=0;">
         <option value="">Blur Levels</option>
         <option value="">-----------</option>
-        <option value="0" onclick="xblur(0);">no blur</option>
-        <option value="1" onclick="xblur(1);">sigma 1</option> 
-        <option value="2" onclick="xblur(2);">sigma 2</option>
-        <option value="3" onclick="xblur(3);">sigma 3</option>
-        <option value="4" onclick="xblur(4);">sigma 4</option>
-        <option value="5" onclick="xblur(5);">sigma 5</option>
-        <option value="6" onclick="xblur(6);">sigma 6</option>
-        <option value="7" onclick="xblur(7);">sigma 7</option>
-        <option value="8" onclick="xblur(8);">sigma 8</option>
-        <option value="9" onclick="xblur(9);">sigma 9</option>
-        <option value="10" onclick="xblur(10);">sigma 10</option>
+        <option value="0">no blur</option>
+        <option value="1">sigma 1</option>
+        <option value="2">sigma 2</option>
+        <option value="3">sigma 3</option>
+        <option value="4">sigma 4</option>
+        <option value="5">sigma 5</option>
+        <option value="6">sigma 6</option>
+        <option value="7">sigma 7</option>
+        <option value="8">sigma 8</option>
+        <option value="9">sigma 9</option>
+        <option value="10">sigma 10</option>
     </select>
     &nbsp; &nbsp;
-    <select id="improc" onfocus="this.selectedIndex=0;">
+    <select id="improc" onchange="xfilter(this.value);" onfocus="this.selectedIndex=0;">
         <option value="">Image Filters</option>
         <option value="">-----------</option>
-        <option value="reset" onclick='xfilter("reset");'>reset</option>
-        <option value="luminance" onclick='xfilter("luminance");'>luminance</option>
-        <option value="greyscale" onclick='xfilter("greyscale");'>greyscale</option>
-        <option value="greyscaleAvg" onclick='xfilter("greyscaleAvg");'>greyscaleAvg</option>
-        <option value="brighten" onclick='xfilter("brighten");'>brighten</option>
-        <option value="noise" onclick='xfilter("noise");'>noise</option>
-        <option value="duotone" onclick='xfilter("duotone");'>duotone</option>
-        <option value="invert" onclick='xfilter("invert");'>invert</option>
-        <option value="pixelate" onclick='xfilter("pixelate");'>pixelate</option>
-        <option value="sepia" onclick='xfilter("sepia");'>sepia</option>
-        <option value="contrast" onclick='xfilter("contrast");'>contrast</option>
-        <option value="threshold" onclick='xfilter("threshold");'>threshold</option>
-        <option value="gamma" onclick='xfilter("gamma");'>gamma</option>
-        <option value="posterize" onclick='xfilter("posterize");'>posterize</option>
-        <option value="scatter" onclick='xfilter("scatter");'>scatter</option>
-        <option value="solarize" onclick='xfilter("solarize");'>solarize</option>
-        <option value="sobel" onclick='xfilter("sobel");'>sobel</option>
-        <option value="medianFilter" onclick='xfilter("medianFilter");'>medianFilter</option>
-        <option value="gaussBlur5" onclick='xfilter("gaussBlur5");'>gaussBlur5</option>
-        <option value="edgeDetect" onclick='xfilter("edgeDetect");'>edgeDetect</option>
-        <option value="sharpen" onclick='xfilter("sharpen");'>sharpen</option>
-        <option value="blur" onclick='xfilter("blur");'>blur</option>
-        <option value="emboss" onclick='xfilter("emboss");'>blur</option>
-        <option value="lighten" onclick='xfilter("lighten");'>lighten</option>
-        <option value="darken" onclick='xfilter("darken");'>darken</option>
+        <option value="reset">reset</option>
+        <option value="luminance">luminance</option>
+        <option value="greyscale">greyscale</option>
+        <option value="greyscaleAvg">greyscaleAvg</option>
+        <option value="brighten">brighten</option>
+        <option value="noise">noise</option>
+        <option value="duotone">duotone</option>
+        <option value="invert">invert</option>
+        <option value="pixelate">pixelate</option>
+        <option value="sepia">sepia</option>
+        <option value="contrast">contrast</option>
+        <option value="threshold">threshold</option>
+        <option value="gamma">gamma</option>
+        <option value="posterize">posterize</option>
+        <option value="scatter">scatter</option>
+        <option value="solarize">solarize</option>
+        <option value="sobel">sobel</option>
+        <option value="medianFilter">medianFilter</option>
+        <option value="gaussBlur5">gaussBlur5</option>
+        <option value="edgeDetect">edgeDetect</option>
+        <option value="sharpen">sharpen</option>
+        <option value="blur">blur</option>
+        <option value="emboss">emboss</option>
+        <option value="lighten">lighten</option>
+        <option value="darken">darken</option>
     </select>
     </form>
     </td>
@@ -474,7 +474,8 @@
       console.log("running reproj on %s", im.id)
       im.reprojectData("reproj/casa1k.fits");
     }
-    function xblur(sigma){
+    function xblur(s){
+       var sigma = parseFloat(s);
        var im = JS9.GetImage({display: "myJS9"});
        if( im ){
            console.log("blur: %s %s", im.id, sigma);
