@@ -16,7 +16,7 @@
 
 /*jshint smarttabs:true */
 
-/*global require process */
+/* global require process */
 
 "use strict";
 

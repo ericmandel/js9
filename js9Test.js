@@ -17,8 +17,8 @@
 
 /*jshint smarttabs:true */
 
-/*global require process */
-/*eslint no-console: "off" */
+/* global require process */
+/* eslint no-console: "off" */
 
 "use strict";
 
