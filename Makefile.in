@@ -152,10 +152,14 @@ PLUGINFILES =	plugins/archive/archive.js \
 		plugins/core/blend.js \
 		plugins/core/blink.js \
 		plugins/core/colorbar.js \
+		plugins/core/console.js \
 		plugins/core/cube.js \
 		plugins/core/imarith.js \
+		plugins/core/info.js \
+		plugins/core/magnifier.js \
 		plugins/core/mef.js \
-		plugins/core/mousetouch.js \
+		plugins/core/menubar.js \
+		plugins/core/panner.js \
 		plugins/core/prefs.js \
 		plugins/imexam/imexam.js \
 		plugins/imexam/encircled.js \

@@ -33,6 +33,8 @@ JS9 = (function(JS9){
 
 // internal defaults (not usually changed by users)
 JS9.DEFID = "JS9";		// default JS9 display id
+JS9.WIDTH = 512;	        // width of js9 canvas
+JS9.HEIGHT = 512;		// height of js9 canvas
 JS9.ANON = "Anonymous";		// name to use for images with no name
 JS9.PREFSFILE = "js9Prefs.json";// prefs file to load
 JS9.ZINDEX = 0;			// z-index of image canvas: on bottom of js9
@@ -287,18 +289,6 @@ JS9.helpOpts = {
     }
 };
 
-// menu buttons in the menubar
-// NB: names must match actual menus, menu labels are arbitrary
-JS9.menuButtonOptsArr = [{name: "file", label: "File"},
-			 {name: "view", label: "View"},
-			 {name: "zoom", label: "Zoom"},
-			 {name: "scale", label: "Scale"},
-			 {name: "color", label: "Color"},
-			 {name: "region", label: "Region"},
-			 {name: "wcs", label: "WCS"},
-			 {name: "analysis", label: "Analysis"},
-			 {name: "help", label: "Help"}];
-
 // containers for groups of JS9 objects
 JS9.images = [];		// array of current images
 JS9.displays = [];		// array of current display canvases
@@ -322,20 +312,6 @@ JS9.wcssyss = ["FK4", "FK5", "ICRS", "galactic", "ecliptic", "native",
 
 // list of known wcs units
 JS9.wcsunitss = ["degrees", "sexagesimal", "pixels"];
-
-// html used by the menubar plugin
-JS9.menubarHTML = "";
-
-// html used by the console plugin
-JS9.consoleHTML =
-"<form name='form' onsubmit='return false;' class='JS9CmdForm' action=''>" +
-"<table class='JS9CmdTable'>" +
-"<tr class='JS9Tr'>"+
-"<td><div id='JS9CmdPrompt' class='JS9CmdPrompt'>@@PR@@</div></td>" +
-"<td class='JS9CmdTd'><input type='text' class='JS9CmdIn' autocapitalize='off' autocorrect='off' autocomplete='off' value='' /></td>" +
-"</tr>" +
-"</table>" +
-"</form>";
 
 // known bugs and work-arounds
 JS9.bugs = {};
@@ -472,8 +448,6 @@ JS9.Image = function(file, params, func){
     this.png = {};
     // image element to hold png file, from which array data is generated
     this.png.image = new Image();
-    // init menubar, if necessary
-    // this.initMenubar();
     // init status object
     this.status = {};
     // RGB image
@@ -2914,7 +2888,7 @@ JS9.Image.prototype.initWCS = function(header){
 	    s = JS9.raw2FITS(this.raw.altwcs[key].header);
 	    this.raw.altwcs[key].wcs = JS9.initwcs(s);
 	    // get info about the wcs
-	    try{ this.raw.altwcs[key].wcsinfo = 
+	    try{ this.raw.altwcs[key].wcsinfo =
 		 JSON.parse(JS9.wcsinfo(this.raw.altwcs[key].wcs)); }
 	    catch(ignore){}
 	}
@@ -4588,7 +4562,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    JS9.waiting(false);
 	};
 	// sanity checks
-	if( !that.raw.wcs || !wcsim || 
+	if( !that.raw.wcs || !wcsim ||
 	    !JS9.reproject || !JS9.fits.handleFITSFile ){
 	    return;
 	}
@@ -4654,7 +4628,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 		awvfile = "awcs_" + JS9.uniqueID() + ".txt";
 		rstr = JS9.tanhdr(owvfile, awvfile, "");
 		if( JS9.DEBUG > 1 ){
-		    JS9.log("tanhdr (input): %s %s -> %s", 
+		    JS9.log("tanhdr (input): %s %s -> %s",
 			    owvfile, awvfile, rstr);
 		}
 		JS9.vunlink(owvfile);
@@ -4992,6 +4966,15 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
     }
     // allow chaining
     return this;
+};
+
+// dummy routines to display/clear message, overwritten in info plugin
+JS9.Image.prototype.displayMessage = function(type, message, target){
+    return;
+};
+
+JS9.Image.prototype.clearMessage = function(which){
+    return;
 };
 
 // Colormap
@@ -5407,7 +5390,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	    this.oheight = Math.min(this.oheight, nheight);
 	}
     }
-    // change the menubar width, if specified not to
+    // change the menubar width, unless explicitly told not to
     if( opts.resizeMenubar === undefined || opts.resizeMenubar ){
 	$("#" + this.id + "Menubar").css("width", nwidth);
     }
@@ -5592,1888 +5575,6 @@ JS9.Command.prototype.getWhich = function(args){
 	which = "set";
     }
     return which;
-};
-
-// ---------------------------------------------------------------------
-// JS9 console: a window into which commands can be entered
-// basic idea borrowed from goosh.org, to whom grateful acknowledgement is made
-// ---------------------------------------------------------------------
-JS9.Console = function(width, height){
-    // mark as valid
-    this.display.conMode = 2;
-    // set up history
-    this.hist = [];
-    this.histpos = 0;
-    this.histtemp = 0;
-    this.histused = false;
-    // add ability to handle events to this div
-    // this.divjq.attr("tabindex", "0");
-    // add container into the div
-    this.consoleConjq = $("<div>")
-	.addClass("JS9ConsoleContainer")
-	.appendTo(this.divjq);
-    // light wins: size is set by containing window
-    // for others, we need to set the size
-    if( this.winType !== "light" ){
-	// set width and height on div
-	this.width = this.divjq.attr("data-width");
-	if( !this.width  ){
-	    this.width  = width || JS9.CONWIDTH;
-	}
-	this.divjq.css("width", this.width);
-	this.width = parseInt(this.divjq.css("width"), 10);
-	this.height = this.divjq.attr("data-height");
-	if( !this.height ){
-	    this.height = height || JS9.CONHEIGHT;
-	}
-	this.divjq.css("height", this.height);
-	this.height = parseInt(this.divjq.css("height"), 10);
-	this.consoleConjq
-	    .css("width", this.width)
-	    .css("height", this.height);
-    }
-    // add ability to handle events to this div
-    this.consoleConjq.attr("tabindex", "0");
-    // event handlers:
-    // history processing
-    this.consoleConjq.on("keydown", this, function(evt){
-	return JS9.consoleKeyDownCB(evt);
-    });
-    // welcome message
-    this.out("Type 'help' for a list of commands", "info");
-    // ready next input
-    this.inp();
-};
-
-// prepare for new input
-JS9.Console.prototype.inp = function(){
-    var el;
-    var prompt = "js9>";
-    // make previous command input read-only
-    this.consoleConjq.find(".JS9CmdIn:last").attr("readonly", "readonly");
-    // add new input element
-    this.consoleConjq.append(JS9.consoleHTML.replace(/@@PR@@/g,prompt));
-    // focus on it
-    // and prevent Apple ipads from autocapitalizing, etc.
-    el = this.consoleConjq.find(".JS9CmdIn:last");
-    el.focus()
-      .attr("autocapitalize", "off")
-      .attr("autocorrect", "off")
-      .attr("autocomplete", "off");
-    JS9.jupyterFocus(el.parent());
-    // allow chaining
-    return this;
-};
-
-// output results
-JS9.Console.prototype.out = function(s,c){
-    // message type
-    switch(c.toLowerCase()){
-    case "error":
-	s = "ERROR: " + s;
-	c = "Error";
-	break;
-    case "info":
-	c = "Info";
-	break;
-    case "out":
-	c = "Out";
-	break;
-    default:
-	c = "Out";
-	break;
-    }
-    // create a new output element
-    $("<div>").addClass("JS9Cmd" + c).html(s).appendTo(this.consoleConjq);
-    // allow chaining
-    return this;
-};
-
-// execute a command
-JS9.Console.prototype.xeq = function(){
-    var i, cmd, obj, msg;
-    var cmdstring = this.consoleConjq.find(".JS9CmdIn:last").val();
-    var tokens = cmdstring.replace(/ {2,}/g, " ").split(" ");
-    var args = [];
-    // skip blank lines
-    if( !tokens[0] ){
-	return this;
-    }
-    cmd = tokens[0];
-    // create args array
-    for(i=1; i<tokens.length; i++){
-	args.push(tokens[i]);
-    }
-    // save history, if necessary
-    if( !this.histused ){
-	this.hist[this.hist.length] = cmdstring;
-    }
-    this.histpos = this.hist.length;
-    this.histused = false;
-    // lookup and xeq, if possible
-    try{
-	obj = JS9.lookupCommand(cmd);
-	if( obj ){
-	    obj.getDisplayInfo(this.display);
-	    switch(obj.getWhich(args)){
-	    case "get":
-		msg = obj.get(args) || "";
-		this.out(msg, "ok");
-		break;
-	    case "set":
-		msg = obj.set(args);
-		if( msg ){
-		    this.out(msg, "ok");
-		}
-		break;
-	    default:
-		msg = sprintf("unknown cmd type for '%s'", cmd);
-		JS9.error(msg);
-		break;
-	    }
-	} else {
-	    msg = sprintf("unknown command '%s'", cmd);
-	    if( args.length > 0 ){
-		msg = msg + " " + args;
-	    }
-	    JS9.error(msg);
-	}
-    } catch(e){
-	// output error
-	this.out(e.message, "error");
-    }
-    // allow chaining
-    return this;
-};
-
-// ---------------------------------------------------------------------
-// JS9 info, a minimalist info display
-// ---------------------------------------------------------------------
-JS9.Info = {};
-JS9.Info.CLASS = "JS9";
-JS9.Info.NAME = "Info";
-
-JS9.Info.opts = {
-    // info url
-    infoURL: "./params/info.html",
-    infoHTML: '<table id="info" class="js9InfoTable">' +
-'<tr>' +
-'<td>file:</td>' +
-'<td colspan="2"><input type="text" id="id" size="28" value="" readonly="readonly" /></td>' +
-'</tr> <tr>' +
-'<td>object:</td>' +
-'<td colspan="2"><input type="text" id="object" size="28" value="" readonly="readonly" /></td>' +
-'</tr> <tr>' +
-'<td>value:</td>' +
-'<td colspan="2"><input type="text" id="val3" size="28" value="" readonly="readonly" /></td>' +
-'</tr> <tr>' +
-'<td><input type="text" id="isys" size="10" value="" readonly="readonly" /></td>' +
-'<td><input type="text" id="ix" size="13" value="" readonly="readonly" /></td>' +
-'<td><input type="text" id="iy" size="13" value="" readonly="readonly" /></td>' +
-'</tr> <tr>' +
-'<td><input type="text" id="psys" size="10" value="" readonly="readonly" /></td>' +
-'<td><input type="text" id="px" size="13" value="" readonly="readonly" /></td>' +
-'<td><input type="text" id="py" size="13" value="" readonly="readonly" /></td>' +
-'</tr> <tr>' +
-'<td><input type="text" id="wcssys" size="10" value="" readonly="readonly" /></span></td>' +
-'<td><input type="text" id="ra" size="13" value="" readonly="readonly" /></td>' +
-'<td><input type="text" id="dec" size="13" value="" readonly="readonly" /></td>' +
-'</tr> <tr>' +
-'<td colspan="3"><textarea style="background: #E9E9E9; border: #CCCCCC solid 1px" id="regions" rows="4" cols="40" value="" readonly="readonly" /></td>' +
-'</tr>' +
-'</table>'
-};
-
-JS9.Info.init = function(width, height){
-    // add container to the high-level div
-    this.infoConjq = $("<div>")
-	.addClass("JS9Container")
-	.append(JS9.Info.opts.infoHTML)
-	.appendTo(this.divjq);
-    // save the jquery element for later processing
-    this.jq = this.infoConjq.find("#info");
-};
-
-// display a message on the image canvas or info plugin
-// call with image or display as context
-JS9.Info.display = function(type, message, target){
-    var tobj, split, area, tokens, rexp, s, color, info, key, jel;
-    // if image is context
-    if( this.display && this.display.pluginInstances ){
-	info = this.display.pluginInstances.JS9Info;
-    }
-    // if specific target was specified use that
-    if( target ){
-	tobj = target;
-    } else {
-	// if info plugin is active, use that
-	if( info && (info.status === "active") ){
-	    tobj = info;
-	} else {
-	    // use display
-	    if( this.display ){
-		// image context
-		tobj = this.display;
-	    } else {
-		// display context
-		tobj = this;
-	    }
-	}
-    }
-    // plugin-based display: fill in html form
-    if( tobj === info ){
-	switch( typeof message ){
-	case "string":
-	    jel = info.jq.find("#" + type);
-	    if( jel.length > 0 ){
-		jel.val(message);
-	    }
-	    break;
-	case "object":
-	    // process all key in the object
-	    for( key in message ){
-		if( message.hasOwnProperty(key) ){
-		    // key-specific processing
-		    switch(key){
-		    case "wcssys":
-			if( !message[key] ){
-			    message[key] = "wcs";
-			}
-			break;
-		    }
-		    // set value, if possible
-		    jel = info.jq.find("#" + key);
-		    if( jel.length > 0 ){
-			jel.val(message[key]);
-		    }
-		}
-	    }
-	    break;
-	}
-	// allow chaining
-	return this;
-    }
-    // height params for text color assignment
-    tobj.infoheight = tobj.infoArea.height() + 4;
-    tobj.regheight = Math.max(tobj.infoheight * 2 + 10,
-			      tobj.infoheight + tobj.regionsArea.height() + 10);
-    // display-based message
-    switch(type){
-    case "regions":
-	area = tobj.regionsArea;
-	if( !this.display.image ||
-	    (this.display.image.iy > tobj.regheight) ){
-	    color = JS9.textColorOpts.inimage;
-	} else {
-	    color = JS9.textColorOpts.regions;
-	}
-	split = ";";
-	break;
-    case "info":
-	area = tobj.infoArea;
-	if( !this.display.image ||
-	    (this.display.image.iy > tobj.infoheight) ){
-	    color = JS9.textColorOpts.inimage;
-	} else {
-	    color = JS9.textColorOpts.info;
-	}
-	split = "";
-	break;
-    default:
-	area = tobj.infoArea;
-	if( !this.display.image ||
-	    (this.display.image.iy > tobj.infoheight) ){
-	    color = JS9.textColorOpts.inimage;
-	} else {
-	    color = JS9.textColorOpts.info;
-	}
-	break;
-    }
-    // massage the message before display, if necessary
-    switch( typeof message ){
-    case "string":
-	s = message;
-	break;
-    case "object":
-	s = message.vstr;
-	break;
-    }
-    if( split !== "" ){
-	tokens = s.split(split);
-	if( tokens.length > 2 ){
-	    rexp = new RegExp(split, "g");
-	    s = s.replace(rexp, "<br>");
-	}
-    }
-    // display the message
-    area.css("color", color).html(s);
-    // allow chaining
-    return this;
-};
-JS9.Image.prototype.displayMessage = JS9.Info.display;
-
-// clear an info message
-JS9.Info.clear = function(which){
-    if( which ){
-	this.displayMessage(which, "");
-    } else {
-	this.displayMessage("info", "");
-	this.displayMessage("regions", "");
-    }
-    // allow chaining
-    return this;
-};
-JS9.Image.prototype.clearMessage = JS9.Info.clear;
-
-// when a plugin window is brought up, clear the display window
-JS9.Info.clearMain = function(im){
-    if( im ){
-	im.displayMessage("info", "", im.display);
-	im.displayMessage("regions", "", im.display);
-    }
-};
-
-// ---------------------------------------------------------------------
-// JS9 menubar to manage menubar and its menus
-// ---------------------------------------------------------------------
-JS9.Menubar = function(width, height){
-    var ii, ss, tt;
-    var menubarHTML;
-    var that = this;
-    // set width and height on div
-    this.width = this.divjq.attr("data-width");
-    if( !this.width  ){
-	this.width = width || JS9.MENUWIDTH;
-    }
-    this.divjq.css("width", this.width);
-    this.width = parseInt(this.divjq.css("width"), 10);
-    this.height = this.divjq.attr("data-height");
-    if( !this.height  ){
-	this.height = height || JS9.MENUHEIGHT;
-    }
-    this.divjq.css("height", this.height);
-    this.height = parseInt(this.divjq.css("height"), 10);
-    // init menubarHTML, if necessary
-    if( JS9.menubarHTML === "" ){
-	JS9.menubarHTML = "<span id='JS9Menus_@@ID@@'>";
-	for(ii=0; ii<JS9.menuButtonOptsArr.length; ii++){
-	    ss = JS9.menuButtonOptsArr[ii].name;
-	    tt = JS9.menuButtonOptsArr[ii].label;
-	    // no help available for all-in-one configuration
-	    if( JS9.allinone && (ss === "help") ){
-		continue;
-	    }
-	    if( ss[0] === "#" ){
-		ss = ss.slice(1);
-		JS9.menubarHTML += "<button type='button' id='"+ss+"Menu@@ID@@' class='JS9Button' disabled='disabled'>"+tt+" </button>";
-	    } else {
-		JS9.menubarHTML += "<button type='button' id='"+ss+"Menu@@ID@@' class='JS9Button'>"+tt+"</button>";
-	    }
-	}
-	JS9.menubarHTML += "<button type='button' id='hiddenRegionMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
-	JS9.menubarHTML += "<button type='button' id='hiddenAnchorMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
-	JS9.menubarHTML += "</span>";
-    }
-    // set the display for this menubar
-    this.display = JS9.lookupDisplay(this.id);
-    // link back the menubar in the display
-    this.display.menubar = this;
-    // define menubar
-    menubarHTML = JS9.menubarHTML.replace(/@@ID@@/g,this.id);
-    // add container to the high-level div
-    this.menuConjq = $("<div>")
-	.addClass("JS9MenubarContainer")
-	.attr("width", this.width)
-	.attr("height", this.height)
-	.html(menubarHTML)
-	.appendTo(this.divjq);
-    $(function(){
-	function onhide(opt) {
-	    var tdisp = that.display;
-	    if( JS9.bugs.hide_menu && tdisp.image ){
-		tdisp.image.displayImage("rgb");
-	    }
-	}
-	function getDisplays() {
-	    var i, s, disp;
-	    var arr = [];
-	    if( that.id.search(JS9.SUPERMENU) >= 0 ){
-		s = that.divjq.data("displays").split(",");
-		if( s[0] === "*" ){
-		    for(i=0; i<JS9.displays.length; i++){
-			arr.push(JS9.displays[i]);
-		    }
-		} else {
-		    for(i=0; i<s.length; i++){
-			disp = JS9.lookupDisplay(s[i]);
-			if( disp ){
-			    arr.push(disp);
-			}
-		    }
-		}
-	    }
-	    if( !arr.length ){
-		arr.push(that.display);
-	    }
-	    return arr;
-	}
-	// file: make button open the contextMenu
-	$("#fileMenu" + that.id).on("mousedown", function(evt){
-            evt.preventDefault();
-            $("#fileMenu" + that.id).contextMenu();
-	});
-	$.contextMenu({
-            selector: "#fileMenu" + that.id,
-	    zIndex: JS9.MENUZINDEX,
-	    events: { hide: onhide },
-            build: function($trigger, evt){
-		var i, im, name, imlen, s1;
-		var n = 0;
-		var items = {};
-		var tdisp = getDisplays()[0];
-		var tim = tdisp.image;
-		imlen = JS9.images.length;
-		for(i=0; i<imlen; i++){
-		    im = JS9.images[i];
-		    if( im.display === tdisp ){
-			name = im.id;
-			if( JS9.globalOpts.rgb.active ){
-			    if( im === JS9.globalOpts.rgb.rim){
-				name += " (red)";
-			    }
-			    if( im === JS9.globalOpts.rgb.gim){
-				name += " (green)";
-			    }
-			    if( im === JS9.globalOpts.rgb.bim){
-				name += " (blue)";
-			    }
-			}
-			items[name] = {name: name};
-			if( tdisp.image && (tdisp.image.id === im.id) ){
-			    items[name].icon = "sun";
-			}
-			n++;
-		    }
-		}
-		if( !n ){
-		    items.noimg = {
-			name: "[no images]",
-			events: {keyup: function(evt){return;}}
-		    };
-		}
-		items["sep" + n++] = "------";
-		items.open = {name: "open local file ..."};
-		items.archives = {name: " accessing data archives ..."};
-		if( !JS9.allinone ){
-		    items.archives.disabled = false;
-		} else {
-		    items.archives.disabled = true;
-		}
-		items.loadproxy = {name: "open link via proxy ..."};
-		if( !JS9.allinone			 &&
-		    JS9.globalOpts.helperType !== "none" &&
-		    JS9.globalOpts.workDir      	 &&
-		    JS9.globalOpts.loadProxy    	 ){
-		    items.loadproxy.disabled = false;
-		} else {
-		    items.loadproxy.disabled = true;
-		}
-		items.loadcors = {name: "open link via CORS ..."};
-		if( !window.hasOwnProperty("Jupyter") ){
-		    items.loadcors.disabled = false;
-		} else {
-		    items.loadcors.disabled = true;
-		}
-		// only show imsection if the fits file differs from the
-		// displayed file (i.e. its a representation file)
-		items.imsection = {name: "extract image section ..."};
-		if( !JS9.allinone 			 &&
-		    JS9.globalOpts.helperType !== "none" &&
-		    JS9.globalOpts.workDir      	 &&
-		    tim && tim.parentFile 		 ){
-		    items.imsection.disabled = false;
-		} else {
-		    items.imsection.disabled = true;
-		}
-		items["sep" + n++] = "------";
-		items.print = {name: "print ..."};
-		items.header = {name: "display FITS header"};
-		items.hdus = {name: "display FITS HDUs"};
-		if( !tim || !tim.hdus ){
-		    items.hdus.disabled = true;
-		}
-		items.savefits = {name: "save image as FITS"};
-		items.savepng = {name: "save image as PNG"};
-		items.savejpeg = {name: "save image as JPEG"};
-		items.moveto = {
-		    name: "move image to",
-		    items: {movetotitle: {name: "choose display:",
-					  disabled: true}}
-		};
-		if( tim ){
-		    items.moveto.disabled = false;
-		    for(i=0; i<JS9.displays.length; i++){
-			if( $("#"+JS9.displays[i].id).length > 0 &&
-			    tdisp !== JS9.displays[i]    	     ){
-			    s1 = "moveto_" + JS9.displays[i].id;
-			    items.moveto.items[s1] = {name: JS9.displays[i].id};
-			}
-		    }
-		    items.moveto.items.moveto_newdisp = { name: "new display" };
-		} else {
-		    items.moveto.disabled = true;
-		}
-		items.close = {name: "close image"};
-		items["sep" + n++] = "------";
-		items.loadsession = {name: "load session ..."};
-		items.savesession = {name: "save session"};
-		items["sep" + n++] = "------";
-		items.lite = {name: "new JS9 light window"};
-		items.xnew = {name: "new JS9 separate window"};
-		items["sep" + n++] = "------";
-		items.pageid = {name: "display page id"};
-		if( JS9.DEBUG > 2 ){
-		  items["sep" + n++] = "------";
-		  items.refresh = {name: "debug: refresh ..."};
-		}
-		return {
-                    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
-			var j, s, t, did, save_orc, kid, unew, uwin;
-			var udisp = val;
-			var uim = udisp.image;
-			switch(key){
-			case "close":
-			    if( uim ){
-				uim.closeImage();
-			    }
-			    break;
-			case "savesession":
-			    if( uim ){
-				uim.saveSession(uim.id + ".ses");
-			    }
-			    break;
-			case "loadsession":
-			    if( udisp ){
-				JS9.OpenSessionMenu({display: udisp});
-			    }
-			    break;
-			case "header":
-			    if( uim ){
-				if( uim.raw.header ){
-				    uim.displayAnalysis("text",
-						   JS9.raw2FITS(uim.raw, true),
-						   "FITS Header: "+uim.id);
-				} else {
-				    JS9.error("no FITS header for " + uim.id);
-				}
-			    }
-			    break;
-			case "hdus":
-			    if( uim ){
-				if( uim.hdus ){
-				    uim.displayAnalysis("text",
-						   JS9.hdus2Str(uim.hdus),
-						   "FITS HDUs: "+uim.id,
-				    "width=800px,height=200px,center=1,resize=1,scrolling=1");
-				} else {
-				    JS9.error("no FITS header for " + uim.id);
-				}
-			    }
-			    break;
-			case "lite":
-			    JS9.LoadWindow(null, null, "light");
-			    break;
-			case "xnew":
-			    JS9.LoadWindow(null, null, "new");
-			    break;
-			case "pageid":
-			    s = sprintf("<center><p>pageid: %s</center>", JS9.helper.pageid || "none");
-			    t = "JS9 page id";
-			    // add display to title
-			    t += sprintf(JS9.IDFMT, udisp.id);
-			    JS9.lightWin("fileid" + JS9.uniqueID(),
-					 "inline", s, t,
-					 JS9.lightOpts[JS9.LIGHTWIN].lineWin);
-			    break;
-			case "open":
-			    JS9.OpenFileMenu({display: udisp});
-			    break;
-			case "loadcors":
-			    if( JS9.allinone ){
-				did = JS9.Image.prototype.displayAnalysis.call(
-				      null,
-				      "textline",
-				      JS9.allinone.loadCorsHTML,
-				      "Open a shared CORS link");
-			    } else {
-				did = JS9.Image.prototype.displayAnalysis.call(
-				      null,
-				      "textline",
-				      JS9.InstallDir(JS9.globalOpts.corsURL),
-				      "Open a shared CORS link");
-			    }
-			    // save display id
-			    $(did).data("dispid", udisp.id);
-			    break;
-			case "archives":
-			    JS9.DisplayHelp(JS9.InstallDir(JS9.globalOpts.archivesURL));
-			    break;
-			case "loadproxy":
-			    // load param url to run analysis task
-			    // param url is relative to js9 install dir
-			    did = JS9.Image.prototype.displayAnalysis.call(null,
-				     "textline",
-				     JS9.InstallDir(JS9.globalOpts.proxyURL),
-				     "Open a link via server proxy");
-			    // save info for running the task
-			    $(did).data("dispid", udisp.id)
-				  .data("aname", "loadproxy");
-			    break;
-			case "imsection":
-			    // load param url to run analysis task
-			    // param url is relative to js9 install dir
-			    save_orc = JS9.Regions.opts.onchange;
-			    $("#dhtmlwindowholder").arrive("#imageSectionForm",
-                            {onceOnly: true}, function(){
-				 var f = "#imageSectionForm";
-				 JS9.Regions.opts.onchange = function(im, xreg){
-				    var w, h, ltm1, ltm2;
-				    // call previous
-				    if( save_orc ){ save_orc(im, xreg); }
-				    // verify this image can be imsection'ed
-				    if( !im.parentFile ){ return; }
-				    // are we using a region for pos/size?
-				    if( $(f+" input:radio[name=imode]:checked")
-					  .val() !== "region" ){ return; }
-				    // do we have a box region?
-				    if( xreg.shape !== "box" ){	return; }
-				    // set current size and position
-				    ltm1 = im.raw.header.LTM1_1 || 1.0;
-				    w = xreg.width / ltm1;
-				    ltm2 = im.raw.header.LTM2_2 || 1.0;
-				    h = xreg.height / ltm2;
-				    $(f+" #xcen").val(Math.floor(xreg.lcs.x));
-				    $(f+" #ycen").val(Math.floor(xreg.lcs.y));
-				    $(f+" #xdim").val(Math.floor(w));
-				    $(f+" #ydim").val(Math.floor(h));
-				};
-			    });
-			    $("#dhtmlwindowholder").leave("#imageSectionForm",
-			    {onceOnly: true}, function(){
-				JS9.Regions.opts.onchange = save_orc;
-			    });
-			    did = JS9.Image.prototype.displayAnalysis.call(null,
-				"params",
-				JS9.InstallDir(JS9.globalOpts.imsectionURL),
-				"Extract Image Section From a 'Parent' File",
-	                        "width=440px,height=230px,center=1,resize=1,scrolling=1");
-			    // save info for running the task
-			    $(did).data("dispid", udisp.id)
-				  .data("aname", "imsection");
-			    break;
-			case "refresh":
-			    $('#refreshLocalFile-' + udisp.id).click();
-			    break;
-			case "savefits":
-			    if( uim ){
-				s = uim.id.replace(/\.png/i, ".fits")
-				          .replace(/\.gz$/i, "")
-				          .replace(/\[.*\]/,"");
-				uim.saveFITS(s);
-			    }
-			    break;
-			case "savepng":
-			    if( uim ){
-				s = uim.id.replace(/\.fit[s]?/i, ".png")
-				          .replace(/\.gz$/i, "")
-				          .replace(/\[.*\]/,"");
-				uim.savePNG(s);
-			    }
-			    break;
-			case "savejpeg":
-			    if( uim ){
-				s = uim.id.replace(/\.fit[s]?/i, ".jpeg")
-				          .replace(/\.png$/i, ".jpeg")
-				          .replace(/\.gz$/i, "")
-				          .replace(/\[.*\]/,"");
-				uim.saveJPEG(s);
-			    }
-			    break;
-			case "print":
-			    if( uim ){
-				uim.print();
-			    }
-			    break;
-			default:
-			    // maybe it's a moveto request
-			    if( key.match(/^moveto_/) ){
-				unew = key.replace(/^moveto_/,"");
-				if( unew === "newdisp" ){
-				    uwin = "lightwin" + JS9.uniqueID();
-			            $("#dhtmlwindowholder").arrive("#" + uwin,
-                                    {onceOnly: true}, function(){
-					uim.moveToDisplay(uwin);
-				    });
-				    JS9.LoadWindow(null, {id: uwin}, "light");
-				} else {
-				    uim.moveToDisplay(unew);
-				}
-				return;
-			    }
-			    for(j=0; j<JS9.images.length; j++){
-				uim = JS9.images[j];
-				kid = key.replace(/ *\((red|green|blue)\)/,"");
-				if( (udisp.id === uim.display.id) &&
-				    (uim.id === kid) ){
-				    // display image, 2D graphics, etc.
-				    uim.displayImage("all");
-				    uim.refreshLayers();
-				    uim.clearMessage();
-				    break;
-				}
-			    }
-			    break;
-			}
-		    });
-                    },
-		    items: items
-		};
-            }
-	});
-	// View: make button open the contextMenu
-	$("#viewMenu" + that.id).on("mousedown", function(evt){
-            evt.preventDefault();
-            $("#viewMenu" + that.id).contextMenu();
-	});
-	// define contextMenu actions
-	$.contextMenu({
-            selector: "#viewMenu" + that.id,
-	    zIndex: JS9.MENUZINDEX,
-	    events: { hide: onhide },
-            build: function($trigger, evt){
-		var i, plugin, pname, pinst, key;
-		var lastxclass="";
-		var n = 0;
-		var nkey = 0;
-		var items = {};
-		var tdisp = getDisplays()[0];
-		var tim = tdisp.image;
-		var editResize = function(disp, obj){
-		    var v1, v2;
-		    if( obj.resize ){
-			var arr = obj.resize.split(/[\s,\/]+/);
-			switch(arr.length){
-			case 0:
-			    break;
-			case 1:
-			    if( JS9.isNumber(arr[0]) ){
-				v1 = parseInt(arr[0], 10);
-				disp.resize(v1, v1);
-			    }
-			    break;
-			default:
-			    if( JS9.isNumber(arr[0]) && JS9.isNumber(arr[1]) ){
-				v1 = parseInt(arr[0], 10);
-				v2 = parseInt(arr[1], 10);
-				disp.resize(v1, v2);
-			    }
-			    break;
-			}
-		    }
-		};
-		var keyResize = function(e){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = that.display;
-		    switch( keycode ){
-		    case 9:
-		    case 13:
-			editResize(vdisp, obj);
-			e.data.edited = false;
-			break;
-		    default:
-			e.data.edited = true;
-			break;
-		    }
-		};
-		// plugins
-		items["sep" + n++] = "------";
-		items["sep" + n++] = {name: "Plugins:"};
-		items["sep" + (n-1)].disabled = true;
-		for(i=0; i<JS9.plugins.length; i++){
-		    plugin = JS9.plugins[i];
-		    pname = plugin.name;
-		    if( plugin.opts.menuItem && (plugin.opts.menu === "view") ){
-			pinst = tdisp.pluginInstances[pname];
-			if( !pinst || pinst.winHandle ){
-			    if( plugin.xclass !== lastxclass ){
-				// items["sep" + n] = "------";
-				n = n + 1;
-			    }
-			    lastxclass = plugin.xclass;
-			    items[pname] = {name: plugin.opts.menuItem};
-			    if( pinst && (pinst.status === "active") ){
-				items[pname].icon = "sun";
-			    }
-			}
-		    }
-		}
-		// layers
-		items["sep" + n++] = "------";
-		if( tim ){
-		    for( key in tim.layers ){
-			if( tim.layers.hasOwnProperty(key) ){
-			    if( tim.layers[key].dlayer.dtype === "main" ){
-				nkey++;
-				items[key] = {name: key};
-				if( tim.layers[key].show ){
-				    items[key].icon = "sun";
-				}
-			    }
-			}
-		    }
-		    if( nkey > 1 ){
-			items.hide = {name: "HideAll"};
-			items.show = {name: "ShowAll"};
-			items["sep" + n++] = "------";
-		    }
-		}
-		items.valpos = {name: "display value/position"};
-		if( tdisp.image && tdisp.image.params.valpos ){
-		    items.valpos.icon = "sun";
-		}
-		if( tim && tim.raws.length > 1 ){
-		    items["sep" + n++] = "------";
-		    items.rawlayer = {
-			name: "raw data layers",
-			items: {}
-		    };
-		    for(i=0; i<tim.raws.length; i++){
-			key = "rawlayer_" + tim.raws[i].id;
-			items.rawlayer.items[key] = {
-			    name: tim.raws[i].id
-			};
-			if( tim.raw === tim.raws[i] ){
-			    items.rawlayer.items[key].icon = "sun";
-			}
-		    }
-		    items.rawlayer.items["sep" + n++] = "------";
-		    items.rawlayer.items.rawlayer_remove = {name: "remove"};
-		}
-		if( JS9.globalOpts.resize ){
-		    items["sep" + n++] = "------";
-		    items.resize = {
-			events: {keyup: keyResize},
-			name: "change width/height:",
-			type: "text"
-		    };
-		}
-		return {
-		    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
-		        var jj, ucat, umode, uplugin, s;
-			var udisp = val;
-			var uim = udisp.image;
-			switch(key){
-			case "valpos":
-			    if( uim ){
-				uim.params.valpos = !uim.params.valpos;
-				if( !uim.params.valpos ){
-				    uim.clearMessage();
-				}
-			    }
-			    break;
-			case "show":
-			case "hide":
-			    if( uim ){
-				for( ucat in uim.layers ){
-				    if( uim.layers.hasOwnProperty(ucat) ){
-					if( uim.layers[ucat].dlayer.dtype === "main" ){
-					    uim.showShapeLayer(ucat, key);
-					    if( key === "show" ){
-						uim.refreshLayers();
-					    }
-					}
-				    }
-				}
-			    }
-			    break;
-			default:
-			    // maybe it's a plugin
-			    for(jj=0; jj<JS9.plugins.length; jj++){
-				uplugin = JS9.plugins[jj];
-				if( uplugin.name === key ){
-				    udisp.displayPlugin(uplugin);
-				    return;
-				}
-			    }
-			    // maybe it's a shape layer
-			    if( uim ){
-				for( ucat in uim.layers ){
-				    if( uim.layers.hasOwnProperty(ucat) ){
-					if( key === ucat ){
-					    umode = uim.layers[ucat].show ?
-						"hide" : "show";
-					    uim.showShapeLayer(ucat, umode);
-					    if( umode === "show" ){
-						uim.refreshLayers();
-					    }
-					    return;
-					}
-				    }
-				}
-			    }
-			    // maybe its a raw data layer
-			    if( tim && key.match(/^rawlayer_/) ){
-				s = key.replace(/^rawlayer_/, "");
-				if( s === "remove" ){
-				    for(i=0; i<tim.raws.length; i++){
-					if( tim.raw === tim.raws[i] ){
-					    tim.rawDataLayer(tim.raw.id,
-							     "remove");
-					}
-				    }
-				} else {
-				    tim.rawDataLayer(s);
-				}
-			    }
-			    break;
-			}
-		    });
-		    },
-		    events: {
-			show: function(opt){
-			    var udisp = that.display;
-			    var obj = {};
-			    if( udisp  ){
-				obj.resize = sprintf("%d %d",
-						     udisp.width, udisp.height);
-				$.contextMenu.setInputValues(opt, obj);
-				JS9.jupyterFocus(".context-menu-item");
-			    }
-			},
-			hide: function(opt){
-			    var obj;
-			    var udisp = that.display;
-			    if( udisp ){
-				// if a key was pressed, do the edit
-				if( opt.edited ){
-				    delete opt.edited;
-				    obj = $.contextMenu.getInputValues(opt);
-				    editResize(udisp, obj);
-				}
-			    }
-			}
-		    },
-		    items: items
-		};
-	    }
-	});
-	// Zoom: make button open the contextMenu
-	$("#zoomMenu" + that.id).on("mousedown", function(evt){
-            evt.preventDefault();
-            $("#zoomMenu" + that.id).contextMenu();
-	});
-	// define contextMenu actions
-	$.contextMenu({
-            selector: "#zoomMenu" + that.id,
-	    zIndex: JS9.MENUZINDEX,
-	    events: { hide: onhide },
-            build: function($trigger, evt){
-		var i, zoom, zoomp, name, name2;
-		var n = 0;
-		var tdisp = getDisplays()[0];
-		var tim = tdisp.image;
-		var editZoom = function(im, obj){
-		    if( !isNaN(obj.zoom) ){
-			im.setZoom(obj.zoom);
-		    }
-		};
-		var keyZoom = function(e){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = that.display;
-		    var vim = vdisp.image;
-		    switch( keycode ){
-		    case 9:
-		    case 13:
-			if( vim ){
-			    editZoom(vim, obj);
-			    e.data.edited = false;
-			}
-			break;
-		    default:
-			e.data.edited = true;
-			break;
-		    }
-		};
-		var items = {};
-		items.zoomtitle = {name: "Zoom Factors:", disabled: true};
-		for(i=JS9.imageOpts.zooms; i>=1; i--){
-		    zoom = Math.pow(2,-i);
-		    zoomp = Math.pow(2,i);
-		    name = sprintf("zoom%s", zoom);
-		    name2 = sprintf("zoom 1/%s", zoomp);
-		    items[name] = {name: name2};
-		    if( tim && (tim.rgb.sect.zoom === zoom) ){
-			items[name].icon = "sun";
-		    }
-		}
-		for(i=0; i<=JS9.imageOpts.zooms; i++){
-		    zoom = Math.pow(2,i);
-		    name = sprintf("zoom%s", zoom);
-		    name2 = sprintf("zoom %s", zoom);
-		    items[name] = {name: name2};
-		    if( tim && (tim.rgb.sect.zoom === zoom) ){
-			items[name].icon = "sun";
-		    }
-		}
-		items["sep" + n++] = "------";
-		items.zoomiotitle = {name: "Zoom In/Out:", disabled: true};
-		items.zoomIn = {name: "zoom in"};
-		items.zoomOut = {name: "zoom out"};
-		items.zoomToFit = {name: "zoom to fit"};
-		items["sep" + n++] = "------";
-		items.zoom = {
-		    events: {keyup: keyZoom},
-		    name: "numeric zoom value:",
-		    type: "text"
-		};
-		items["sep" + n++] = "------";
-		items.center = {name: "pan to center"};
-		items.reset = {name: "reset zoom/pan"};
-		return {
-		    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
-			var udisp = val;
-			var uim = udisp.image;
-			if( uim ){
-			    switch(key){
-			    case "zoomIn":
-				uim.setZoom("x2");
-				break;
-			    case "zoomOut":
-				uim.setZoom("/2");
-				break;
-			    case "zoomToFit":
-				uim.setZoom("tofit");
-				break;
-			    case "center":
-				uim.setPan();
-				break;
-			    case "reset":
-				uim.setZoom("1");
-				uim.setPan();
-				break;
-			    default:
-				// look for a numeric zoom
-				if( key.match(/^zoom/) ){
-				    uim.setZoom(key.slice(4));
-				}
-				break;
-			    }
-			}
-		    });
-		    },
-		    events: {
-			show: function(opt){
-			    var udisp = that.display;
-			    var uim = udisp.image;
-			    var obj = {};
-			    if( uim  ){
-				obj.zoom =
-				    String(uim.rgb.sect.zoom);
-			    }
-			    $.contextMenu.setInputValues(opt, obj);
-			    JS9.jupyterFocus(".context-menu-item");
-			},
-			hide: function(opt){
-			    var obj;
-			    var udisp = that.display;
-			    var uim = udisp.image;
-			    if( uim ){
-				// if a key was pressed, do the edit
-				if( opt.edited ){
-				    delete opt.edited;
-				    obj = $.contextMenu.getInputValues(opt);
-				    editZoom(uim, obj);
-				}
-			    }
-			}
-		    },
-		    items: items
-		};
-	    }
-	});
-	// Scale: make button open the contextMenu
-	$("#scaleMenu" + that.id).on("mousedown", function(evt){
-            evt.preventDefault();
-            $("#scaleMenu" + that.id).contextMenu();
-	});
-	// define contextMenu actions
-	$.contextMenu({
-            selector: "#scaleMenu" + that.id,
-	    zIndex: JS9.MENUZINDEX,
-	    events: { hide: onhide },
-            build: function($trigger, evt){
-		var i, s1, s2;
-		var n = 0;
-		var items = {};
-		var tdisp = getDisplays()[0];
-		var editScale = function(im, obj){
-		    if( JS9.isNumber(obj.scalemin) ){
-			im.params.scalemin = parseFloat(obj.scalemin);
-		    }
-		    if( JS9.isNumber(obj.scalemax) ){
-			im.params.scalemax = parseFloat(obj.scalemax);
-		    }
-		    im.displayImage("colors");
-		};
-		var keyScale = function(e){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = that.display;
-		    var vim = vdisp.image;
-		    switch( keycode ){
-		    case 9:
-		    case 13:
-			editScale(vim, obj);
-			e.data.edited = false;
-			break;
-		    default:
-			e.data.edited = true;
-			break;
-		    }
-		};
-		items.scaletitle = {name: "Scaling Algorithms:",
-				    disabled: true};
-		for(i=0; i<JS9.scales.length; i++){
-		    s1 = JS9.scales[i];
-		    s2 = s1;
-		    items[s1] = {name: s2};
-		    if( tdisp.image && (tdisp.image.params.scale === s1) ){
-			items[s1].icon = "sun";
-		    }
-		}
-		items["sep" + n++] = "------";
-		items.scalemin = {
-		    events: {keyup: keyScale},
-		    name: "low limit for clipping:",
-		    type: "text"
-		};
-		items.scalemax = {
-		    events: {keyup: keyScale},
-		    name: "high limit for clipping:",
-		    type: "text"
-		};
-		items["sep" + n++] = "------";
-		items.dminmax = {
-		    name: "set limits to data min/max"
-		};
-		items.zscale = {
-		    name: "set limits to zscale z1/z2"
-		};
-		return {
-                    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
-			var udisp = val;
-			var uim = udisp.image;
-			if( uim ){
-			    switch(key){
-			    case "dminmax":
-				uim.params.scaleclipping = "dataminmax";
-				uim.params.scalemin = uim.raw.dmin;
-				uim.params.scalemax = uim.raw.dmax;
-				$.contextMenu.setInputValues(opt,
-				     {scalemin: String(uim.params.scalemin),
-				      scalemax: String(uim.params.scalemax)});
-				uim.displayImage("colors");
-				return false;
-			    case "zscale":
-				if( !uim.params.z1 || uim.params.z2 ){
-				    uim.zscale(false);
-				}
-				uim.params.scaleclipping = "zscale";
-				uim.params.scalemin = uim.params.z1;
-				uim.params.scalemax = uim.params.z2;
-				$.contextMenu.setInputValues(opt,
-				     {scalemin: String(uim.params.scalemin),
-				      scalemax: String(uim.params.scalemax)});
-				uim.displayImage("colors");
-				return false;
-			    default:
-				uim.setScale(key);
-				break;
-			    }
-			}
-		    });
-		    },
-		    events: {
-			show: function(opt){
-			    var udisp = that.display;
-			    var uim = udisp.image;
-			    var obj = {};
-			    if( uim  ){
-				obj.scalemin =
-				    String(uim.params.scalemin);
-				obj.scalemax =
-				    String(uim.params.scalemax);
-			    }
-			    $.contextMenu.setInputValues(opt, obj);
-			    JS9.jupyterFocus(".context-menu-item");
-			},
-			hide: function(opt){
-			    var obj;
-			    var udisp = that.display;
-			    var uim = udisp.image;
-			    if( uim ){
-				// if a key was pressed, do the edit
-				if( opt.edited ){
-				    delete opt.edited;
-				    obj = $.contextMenu.getInputValues(opt);
-				    editScale(uim, obj);
-				}
-			    }
-			}
-		    },
-		    items: items
-		};
-	    }
-	});
-	// Color: make button open the contextMenu
-	$("#colorMenu" + that.id).on("mousedown", function(evt){
-            evt.preventDefault();
-            $("#colorMenu" + that.id).contextMenu();
-	});
-	// define contextMenu actions
-	$.contextMenu({
-            selector: "#colorMenu" + that.id,
-	    zIndex: JS9.MENUZINDEX,
-	    events: { hide: onhide },
-            build: function($trigger, evt){
-		var i, s1, s2, arr;
-		var n = 0;
-		var items = {};
-		var tdisp = getDisplays()[0];
-		var editColor = function(im, obj){
-		    if( obj.contrast && !isNaN(obj.contrast) ){
-			im.params.contrast = parseFloat(obj.contrast);
-		    }
-		    if( obj.bias && !isNaN(obj.bias) ){
-			im.params.bias = parseFloat(obj.bias);
-		    }
-		    if( !isNaN(obj.opacity) ){
-			if( obj.opacity !== "" ){
-			    im.params.opacity = parseFloat(obj.opacity);
-			} else {
-			    im.params.opacity = 1.0;
-			}
-		    }
-		    im.displayImage("colors");
-		};
-		var keyColor = function(e){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = that.display;
-		    var vim = vdisp.image;
-		    switch( keycode ){
-		    case 9:
-		    case 13:
-			editColor(vim, obj);
-			e.data.edited = false;
-			break;
-		    default:
-			e.data.edited = true;
-			break;
-		    }
-		};
-		items.cmaptitle = {name: "Colormaps:", disabled: true};
-		for(i=0; i<JS9.colormaps.length; i++){
-		    s1 = JS9.colormaps[i].name;
-		    s2 = s1;
-		    items[s1] = {name: s2};
-		    if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
-			items[s1].icon = "sun";
-		    }
-		}
-		items["sep" + n++] = "------";
-		items.imfilter = {
-		    name: "image filters",
-		    items: {}
-		};
-		arr = JS9.Image.prototype.filterRGBImage.call(null).sort();
-		for(i=0; i<arr.length; i++){
-		    if( arr[i] === "convolve" ){
-			continue;
-		    }
-		    s1 = "imfilter_" + arr[i];
-		    items.imfilter.items[s1] = {
-			name: arr[i]
-		    };
-		}
-		items["sep" + n++] = "------";
-		items.contrast = {
-		    events: {keyup: keyColor},
-		    name: "contrast value:",
-		    type: "text"
-		};
-		items.bias = {
-		    events: {keyup: keyColor},
-		    name: "bias value:",
-		    type: "text"
-		};
-		items.opacity = {
-		    events: {keyup: keyColor},
-		    name: "opacity value:",
-		    type: "text"
-		};
-		items["sep" + n++] = "------";
-		items.reset = {name: "reset contrast/bias"};
-		items["sep" + n++] = "------";
-		items.loadcmap = {name: "load colormap"};
-		items.savecmap = {name: "save colormap"};
-		items.invert = {name: "invert colormap"};
-		if( tdisp.image && tdisp.image.params.invert ){
-		    items.invert.icon = "sun";
-		}
-		items["sep" + n++] = "------";
-		items.rgb = {name: "RGB mode"};
-		if( JS9.globalOpts.rgb.active ){
-		    items.rgb.icon = "sun";
-		}
-		return {
-		    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
-			var udisp = val;
-			var uim = udisp.image;
-			if( uim ){
-			    switch(key){
-			    case "loadcmap":
-				JS9.OpenColormapMenu({display: udisp});
-				break;
-			    case "savecmap":
-				JS9.SaveColormap({display: udisp});
-				break;
-			    default:
-				if( key.match(/^imfilter_/) ){
-				    s1 = key.replace(/^imfilter_/,"");
-				    uim.filterRGBImage(s1);
-				    return;
-				}
-				uim.setColormap(key);
-			    }
-			}
-		    });
-		    },
-		    events: {
-			show: function(opt){
-			    var udisp = that.display;
-			    var uim = udisp.image;
-			    var obj = {};
-			    if( uim  ){
-				obj.contrast = String(uim.params.contrast);
-				obj.bias = String(uim.params.bias);
-				obj.opacity = String(uim.params.opacity);
-				obj.sigma = String(uim.params.sigma);
-			    }
-			    $.contextMenu.setInputValues(opt, obj);
-			    JS9.jupyterFocus(".context-menu-item");
-			},
-			hide: function(opt){
-			    var obj;
-			    var udisp = that.display;
-			    var uim = udisp.image;
-			    if( uim ){
-				// if a key was pressed, do the edit
-				if( opt.edited ){
-				    delete opt.edited;
-				    obj = $.contextMenu.getInputValues(opt);
-				    editColor(uim, obj);
-				}
-			    }
-			}
-		    },
-		    items: items
-		};
-	    }
-	});
-	// Region: make button open the contextMenu
-	$("#regionMenu" + that.id).on("mousedown", function(evt){
-            evt.preventDefault();
-            $("#regionMenu" + that.id).contextMenu();
-	});
-	// define contextMenu actions
-	$.contextMenu({
-            selector: "#regionMenu" + that.id,
-	    zIndex: JS9.MENUZINDEX,
-	    events: { hide: onhide },
-            build: function($trigger, evt){
-		var tdisp = getDisplays()[0];
-		var tim = tdisp.image;
-		var items = {
-		    "regiontitle": {name: "Regions:", disabled: true},
-		    "annulus": {name: "annulus"},
-		    "box": {name: "box"},
-		    "circle": {name: "circle"},
-		    "ellipse": {name: "ellipse"},
-		    "line": {name: "line"},
-		    "point": {name: "point"},
-		    "polygon": {name: "polygon"},
-		    "text": {name: "text"},
-		    "sep2": "------",
-		    "loadRegions" : {name: "load regions"},
-		    "saveRegions" : {name: "save regions"},
-		    "listRegions" : {name: "list regions"},
-		    "deleteRegions" : {name: "delete regions"},
-		    "listonchange" : {name: "list on change"},
-		    "xeqonchange" : {name: "xeq on change"}
-		};
-		if( tim && tim.params.listonchange ){
-		    items.listonchange.icon = "sun";
-		}
-		if( tim && tim.params.xeqonchange ){
-		    items.xeqonchange.icon = "sun";
-		}
-		return {
-		    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
-			var udisp = val;
-			var uim = udisp.image;
-			if( uim ){
-			    switch(key){
-			    case "deleteRegions":
-				uim.removeShapes("regions", "all");
-				uim.clearMessage("regions");
-				break;
-			    case "loadRegions":
-				JS9.OpenRegionsMenu({display: udisp});
-				break;
-			    case "saveRegions":
-				uim.saveRegions("js9.reg", "all");
-				break;
-			    case "listRegions":
-				uim.listRegions("all", 2);
-				break;
-			    case "xeqonchange":
-				uim.params.xeqonchange = !uim.params.xeqonchange;
-				break;
-			    case "listonchange":
-				uim.params.listonchange = !uim.params.listonchange;
-				break;
-			    default:
-				uim.addShapes("regions", key, {ireg: true});
-				break;
-			    }
-			}
-		    });
-		    },
-		    items: items
-		};
-	    }
-	});
-	// WCS: make button open the contextMenu
-	$("#wcsMenu" + that.id).on("mousedown", function(evt){
-            evt.preventDefault();
-            $("#wcsMenu" + that.id).contextMenu();
-	});
-	// define contextMenu actions
-	$.contextMenu({
-            selector: "#wcsMenu" + that.id,
-	    zIndex: JS9.MENUZINDEX,
-	    events: { hide: onhide },
-            build: function($trigger, evt){
-		var i, s1, s2, key, altwcs;
-		var n=0, nwcs=0, got=0;
-		var items = {};
-		var tdisp = getDisplays()[0];
-		var tim = tdisp.image;
-		items.wcssystitle = {name: "WCS Systems:", disabled: true};
-		for(i=0; i<JS9.wcssyss.length; i++){
-		    s1 = JS9.wcssyss[i];
-		    s2 = s1;
-		    items[s1] = {name: s2};
-		    if( tim && (tim.params.wcssys === s1) ){
-			items[s1].icon = "sun";
-			got++;
-		    }
-		}
-		// if we don't know which wcssys is current, assume "native"
-		if( !got ){
-		    s1 = "native";
-		    items[s1].icon = "sun";
-		}
-		items["sep" + n++] = "------";
-		items.wcsutitle = {name: "WCS Units:", disabled: true};
-		for(i=0; i<JS9.wcsunitss.length; i++){
-		    s1 = JS9.wcsunitss[i];
-		    s2 = s1;
-		    items[s1] = {name: s2};
-		    if( tim && (tim.params.wcsunits === s1) ){
-			items[s1].icon = "sun";
-		    }
-		}
-		if( tim && tim.raw.altwcs ){
-		    items["sep" + n++] = "------";
-		    items.altwcs = {
-			name: "alternate wcs",
-			items: {altwcstitle: {name: "choose a wcs:", 
-					      disabled: true}}
-		    };
-		    altwcs = tim.raw.altwcs;
-		    for(key in altwcs ){
-			if( altwcs.hasOwnProperty(key) ){
-			    s1 = "altwcs_" + key;
-			    if( altwcs[key].header.WCSNAME ){
-				s2 = altwcs[key].header.WCSNAME + 
-				    "    (" + key + ")";
-			    } else {
-				s2 = key;
-			    }
-			    items.altwcs.items[s1] = { name: s2 };
-			    if( tim.raw.wcs === altwcs[key].wcs ){
-				items.altwcs.items[s1].icon = "sun";
-			    }
-			    nwcs++;
-			}
-		    }
-		    // disable if we only have the default wcs
-		    if( nwcs < 2 ){
-			items.altwcs.disabled = true;
-			items.altwcs.items.notasks = {
-			    name: "[none]",
-			    disabled: true,
-			    events: {keyup: function(evt){return;}}
-			};
-		    }
-		}
-		items["sep" + n++] = "------";
-		items.reproject = {
-		    name: "reproject",
-		    items: {reprojtitle: {name: "wcs from:", disabled: true}}
-		};
-		for(i=0, nwcs=0; i<JS9.images.length; i++){
-		    if( tim !== JS9.images[i]  &&
-			JS9.images[i].raw.wcs ){
-			s1 = "reproject_" + JS9.images[i].id;
-			items.reproject.items[s1] = {
-			    name: JS9.images[i].id
-			};
-			nwcs++;
-		    }
-		}
-		if( nwcs === 0 ){
-		    items.reproject.disabled = true;
-		    items.reproject.items.notasks = {
-			name: "[none]",
-			disabled: true,
-			events: {keyup: function(evt){return;}}
-		    };
-		} else {
-		    items.reproject.disabled = false;
-		    items.reproject.items["sep" + n++] = "------";
-		    items.reproject.items.reproject_wcsalign = {
-			name: "display wcs-aligned"
-		    };
-		    if( tim && (tim.params.wcsalign) ){
-			items.reproject.items.reproject_wcsalign.icon = "sun";
-		    }
-		}
-		return {
-                    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
-			var file, s;
-			var rexp = new RegExp(key);
-			var udisp = val;
-			var uim = udisp.image;
-			if( uim ){
-			    // maybe it's an alt wcs request
-			    if( key.match(/^altwcs_/) ){
-				s = key.replace(/^altwcs_/,"");
-				uim.setWCS(s);
-				return;
-			    }
-			    // maybe it's a wcs reprojection request
-			    if( key.match(/^reproject_/) ){
-				if( key === "reproject_wcsalign" ){
-				    uim.params.wcsalign = !uim.params.wcsalign;
-				    uim.displayImage("display");
-				}  else {
-				    file = key.replace(/^reproject_/,"");
-				    uim.reprojectData(file);
-				}
-				return;
-			    }
-			    // otherwise it's a wcs directive
-			    if( JS9.wcssyss.join("@").search(rexp) >=0 ){
-				uim.setWCSSys(key);
-			    } else if( JS9.wcsunitss.join("@").search(rexp)>=0){
-				uim.setWCSUnits(key);
-			    } else {
-				JS9.error("unknown wcs sys/units: " + key);
-			    }
-			}
-		    });
-		    },
-		    items: items
-		};
-	    }
-	});
-	// ANALYSIS: make button open the contextMenu
-	$("#analysisMenu" + that.id).on("mousedown", function(evt){
-            evt.preventDefault();
-            $("#analysisMenu" + that.id).contextMenu();
-	});
-	// define contextMenu actions
-	$.contextMenu({
-            selector: "#analysisMenu" + that.id,
-	    zIndex: JS9.MENUZINDEX,
-	    events: { hide: onhide },
-            build: function($trigger, evt){
-	        var i, j, s, apackages, atasks;
-		var plugin, pinst, pname;
-		var ntask = 0;
-		var n = 0;
-		// var m = 0;
-		var items = {};
-		var tdisp = getDisplays()[0];
-		var im = tdisp.image;
-		var lastxclass="";
-		var editAnalysis = function(im, obj){
-		    if( !obj.sigma ){
-			obj.sigma = "none";
-		    }
-		    if( obj.sigma === "none" ){
-			im.params.sigma = obj.sigma;
-			im.rawDataLayer("gaussBlur", "remove");
-		    } else {
-			im.params.sigma = parseFloat(obj.sigma);
-			im.gaussBlurData(im.params.sigma);
-		    }
-		};
-		var keyAnalysis = function(e){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = that.display;
-		    var vim = vdisp.image;
-		    switch( keycode ){
-		    case 9:
-		    case 13:
-			editAnalysis(vim, obj);
-			e.data.edited = false;
-			break;
-		    default:
-			e.data.edited = true;
-			break;
-		    }
-		};
-		for(i=0; i<JS9.plugins.length; i++){
-		    plugin = JS9.plugins[i];
-		    pname = plugin.name;
-		    if( plugin.opts.menuItem &&
-			(plugin.opts.menu === "analysis") ){
-			pinst = tdisp.pluginInstances[pname];
-			if( !pinst || pinst.winHandle ){
-			    if( plugin.xclass !== lastxclass ){
-				items["sep" + n++] = "------";
-				items["sep" + n++] =
-				    {name: plugin.xclass + " Plugins:"};
-			        items["sep" + (n-1)].disabled = true;
-			    }
-			    lastxclass = plugin.xclass;
-			    items[pname] = {
-				name: plugin.opts.menuItem
-			    };
-			    if( pinst && (pinst.status === "active") ){
-				items[pname].icon = "sun";
-			    }
-			    n++;
-			}
-		    }
-		}
-		// no server side analysis for CDN all-in-one configuration
-		if( !JS9.allinone ){
-		if( n > 0 ){
-		    items["sep" + n++] = "------";
-		}
-	        items.remotetitle = {
-		    name: "Server-side Tasks:",
-		    disabled: true
-	        };
-		if( im && im.analysisPackages ){
-		    apackages = im.analysisPackages;
-		    // m = 0;
-		    for(j=0; j<apackages.length; j++){
-			atasks = apackages[j];
-			for(i=0; i<atasks.length; i++){
-			    if( atasks[i].hidden ){
-				continue;
-			    }
-			    if( (atasks[i].files === "fits") &&
-				!im.fitsFile ){
-				continue;
-			    }
-			    if( (atasks[i].files === "png") &&
-				im.source !== "fits2png"){
-				continue;
-			    }
-			    s = atasks[i].title;
-			    if( atasks[i].purl ){
-				s += " ...";
-			    }
-			    items[atasks[i].name] = {
-				name: s
-			    };
-			    ntask++;
-			    // m++;
-			}
-		    }
-		}
-		if( !ntask ){
-		    items.notasks = {
-			name: "[none]",
-			disabled: true,
-			events: {keyup: function(evt){return;}}
-		    };
-		}
-		items["sep" + n++] = "------";
-		items.sigma = {
-		    events: {keyup: keyAnalysis},
-		    name: "Gaussian blur sigma:",
-		    type: "text"
-		};
-		items.dpath = {name: "set data path ..."};
-		}
-		return {
-                    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
-			var a, did, jj, tplugin;
-			var udisp = val;
-			var uim = udisp.image;
-			// first look for a plugin -- no image rquired
-			for(jj=0; jj<JS9.plugins.length; jj++){
-			    tplugin = JS9.plugins[jj];
-			    if( tplugin.name === key ){
-				udisp.displayPlugin(tplugin);
-				return;
-			    }
-			}
-			// the rest need an image loaded
-			if( uim ){
-			    switch(key){
-			    case "dpath":
-				// call this once window is loaded
-			        $("#dhtmlwindowholder").arrive("#dataPathForm",
-                                {onceOnly: true}, function(){
-				    $('#dataPath').val(JS9.globalOpts.dataPath);
-				});
-				did = uim.displayAnalysis("textline",
-					 JS9.InstallDir(JS9.analOpts.dpathURL),
-					 "Data Path for Drag and Drop");
-				// save display id
-				$(did).data("dispid", udisp.id);
-				break;
-			    default:
-				// look for analysis routine
-				a = uim.lookupAnalysis(key);
-				if( a ){
-				    // load param url to run analysis task
-				    // param url is relative to js9 install dir
-				    if( a.purl ){
-					did = uim.displayAnalysis("params",
-						  JS9.InstallDir(a.purl),
-						  a.title+": "+uim.fitsFile);
-					// save info for running the task
-					$(did).data("dispid", udisp.id)
-				              .data("aname", a.name);
-				    } else {
-					// else run task directly
-					uim.runAnalysis(a.name);
-				    }
-				}
-				return;
-			    }
-			}
-		    });
-		    },
-		    events: {
-			show: function(opt){
-			    var udisp = that.display;
-			    var uim = udisp.image;
-			    var obj = {};
-			    if( uim  ){
-				obj.sigma = String(uim.params.sigma);
-			    }
-			    $.contextMenu.setInputValues(opt, obj);
-			    JS9.jupyterFocus(".context-menu-item");
-			},
-			hide: function(opt){
-			    var obj;
-			    var udisp = that.display;
-			    var uim = udisp.image;
-			    if( uim ){
-				// if a key was pressed, do the edit
-				if( opt.edited ){
-				    delete opt.edited;
-				    obj = $.contextMenu.getInputValues(opt);
-				    editAnalysis(uim, obj);
-				}
-			    }
-			}
-		    },
-		    items: items
-		};
-	    }
-	});
-	// HELP: make button open the contextMenu
-	$("#helpMenu" + that.id).on("mousedown", function(evt){
-            evt.preventDefault();
-            $("#helpMenu" + that.id).contextMenu();
-	});
-	// define contextMenu actions
-	$.contextMenu({
-            selector: "#helpMenu" + that.id,
-	    zIndex: JS9.MENUZINDEX,
-	    events: { hide: onhide },
-            build: function($trigger, evt){
-		var key, val;
-		var n=1;
-		var last = "";
-		var items = {};
-		items.helptitle = {name: "JS9 Help:", disabled: true};
-		for( key in JS9.helpOpts ){
-		    if( JS9.helpOpts.hasOwnProperty(key) ){
-			val = JS9.helpOpts[key];
-			if( (last !== "") && (val.type !== last) ){
-			    items["sep" + n++] = "------";
-			    if( val.heading ){
-				items["sep" + n++] =
-				    {name: val.heading + " Help:"};
-			        items["sep" + (n-1)].disabled = true;
-			    }
-			}
-			last = val.type;
-			items[key] = {name: val.title};
-		    }
-		}
-		items["sep" + n++] = "------";
-		items.about = {name: "About JS9"};
-		return{
-		    callback: function(key, opt){
-			switch(key){
-			case "about":
-			    alert(sprintf("JS9: image display right in your browser\nversion: %s\nprincipals: Eric Mandel (lead), Alexey Vikhlinin (science,management)\ncontact: saord@cfa.harvard.edu\n%s", JS9.VERSION, JS9.COPYRIGHT));
-			    break;
-			default:
-			    JS9.DisplayHelp(key);
-			    break;
-			}
-		    },
-		    items: items
-		};
-	    }
-	});
-    });
 };
 
 // ---------------------------------------------------------------------
@@ -9234,8 +7335,6 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	zoom = 1;
 	bin = 1;
     }
-    // binning is part of panner scale (is this really right???)
-    // bin = this.binning.bin || 1;
     // active object
     ao = canvas.getActiveObject();
     // process the specified shapes
@@ -9830,6 +7929,484 @@ JS9.Fabric.initGraphics = function(){
 
 // initialize graphics to use Fabric
 JS9.Fabric.initGraphics();
+
+/*
+ * action mousetouch module (May 19, 2016)
+ */
+
+/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
+/*global $, jQuery, JS9, sprintf */
+
+// use when running jslint
+// "use strict";
+
+// create our namespace, and specify some meta-information and params
+JS9.MouseTouch = {};
+JS9.MouseTouch.CLASS = "JS9";       // class of plugin
+JS9.MouseTouch.NAME = "MouseTouch"; // name of this plugin
+JS9.MouseTouch.WIDTH =  512;	    // width of light window
+JS9.MouseTouch.HEIGHT = 220;	    // height of light window
+JS9.MouseTouch.BASE = JS9.MouseTouch.CLASS + JS9.MouseTouch.NAME;
+
+JS9.MouseTouch.mouseText = [];
+JS9.MouseTouch.mouseText[0] = "move mouse, no buttons pressed:";
+JS9.MouseTouch.mouseText[1] = "move mouse, primary button pressed:";
+JS9.MouseTouch.mouseText[2] = "move mouse, secondary button pressed:";
+
+JS9.MouseTouch.touchText = [];
+JS9.MouseTouch.touchText[0] = "touch move, with one finger:";
+JS9.MouseTouch.touchText[1] = "touch move, with two fingers:";
+JS9.MouseTouch.touchText[2] = "touch move, with three fingers:";
+
+JS9.MouseTouch.textHTML="<div style='float: left'>%s</div>";
+
+JS9.MouseTouch.actionHTML="<div style='float: left'><b>%s</b></div>";
+
+// get an id based on the action
+JS9.MouseTouch.actionid = function(cname, aname){
+    return (cname + "_" + aname).replace(/[^A-Za-z0-9_]/g, "_");
+};
+
+// add to the text descriptions
+JS9.MouseTouch.addText = function(container, text){
+    var s, divjq;
+    // create the html for this action
+    s = sprintf(JS9.MouseTouch.textHTML, text);
+    // add text html to the text container
+    divjq = $("<div>")
+	.addClass(JS9.MouseTouch.BASE + "Text")
+	.html(s)
+	.appendTo(container);
+    return divjq;
+};
+
+// add to the sortable action list
+JS9.MouseTouch.addAction = function(container, cname, aname){
+    var s, id, divjq;
+    id = JS9.MouseTouch.actionid(cname, aname);
+    // create the html for this action
+    s = sprintf(JS9.MouseTouch.actionHTML, aname);
+    // add action html to the action container
+    divjq = $("<div>")
+	.addClass(JS9.MouseTouch.BASE + "Action")
+	.attr("id", id)
+	.html(s)
+	.appendTo(container);
+    return divjq;
+};
+
+// display value/position
+JS9.MouseTouch.isPinch = function(im, evt){
+    var npinch = JS9.globalOpts.pinchWait;
+    var pthresh = JS9.globalOpts.pinchThresh;
+    var i, display, dist, pinc, pdec;
+    // sanity check
+    if( !im ){
+	return -1;
+    }
+    display = im.display;
+    if( !display.mousetouchZoom || (im.pos.touches.length !== 2) ){
+	return -1;
+    }
+    switch(display.ispinch ){
+    case -1:
+    case 1:
+	return display.ispinch;
+    }
+    dist = Math.sqrt(((im.pos.touches[0].x - im.pos.touches[1].x)  *
+		      (im.pos.touches[0].x - im.pos.touches[1].x))  +
+		     ((im.pos.touches[0].y - im.pos.touches[1].y)  *
+		      (im.pos.touches[0].y - im.pos.touches[1].y)));
+    if( !display.dist0 ){
+	 display.dist0 = dist;
+    }
+    display.deltas.push(Math.floor(dist - display.dist0));
+    if( display.deltas.length >= npinch ){
+	for(i=1, pinc=0, pdec=0; i<npinch; i++){
+	    if(  display.deltas[i] > display.deltas[i-1] ){
+		pinc++;
+	    } else if(  display.deltas[i] < display.deltas[i-1] ){
+		pdec++;
+	    }
+	}
+	if( (pinc >= pthresh) || (pdec >= pthresh) ){
+	    display.ispinch = 1;
+	} else {
+	    display.ispinch = -1;
+	}
+	display.lastzoom = 0;
+	return display.ispinch;
+    }
+    // not sure yet
+    return 0;
+};
+
+// ---------------------------------------------------------------------
+//
+// MouseTouch.Actions: callbacks when on mouse or touch movement
+//
+// for mouse: no click, primary click, secondary click
+// for touch: 1, 2, or 3 fingers down
+//
+// the mouseActions and touchActions arrays in JS9.globalOpts determine
+// the initial mapping of mouse/touch configuration to callback, e.g.:
+//
+//  JS9.globalOpts.mouseActions = ["display value/position", "change contrast/bias", "pan the image"];
+//
+// You can add your own to the Actions object, with titles in mouseText ...
+// They are transferred to the display object.
+//
+// ---------------------------------------------------------------------
+JS9.MouseTouch.Actions = {};
+
+// display value/position
+JS9.MouseTouch.Actions["display value/position"] = function(im, ipos, evt){
+    // display pixel and wcs values
+    if( JS9.globalOpts.internalValPos && im && ipos ){
+	if( (ipos.x > 0) && (ipos.y > 0) &&
+	    (ipos.x < im.raw.width) && (ipos.y < im.raw.height) ){
+	    im.valpos = im.updateValpos(ipos, true);
+	}
+    }
+};
+
+// change contrast/bias
+JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
+    var x, y, pos;
+    var display = im.display;
+    // skip contrast/bias change?
+    if( !JS9.globalOpts.internalContrastBias || !im || !ipos ){
+	return;
+    }
+    // inside a region or with special key: no contrast/bias
+    if( im.clickInRegion || JS9.specialKey(evt) ){
+	return;
+    }
+    // static RGB image: no contrast/bias
+    if( im.rgbFile ){
+	return;
+    }
+    // get canvas position
+    pos = JS9.eventToDisplayPos(evt);
+    // contrast/bias change
+    x = Math.floor(pos.x + 0.5);
+    y = Math.floor(pos.y + 0.5);
+    if( (x < 0) || (y < 0) ||
+	(x >= display.canvas.width) || (y >= display.canvas.height) ){
+	return;
+    }
+    im.params.bias = x / display.canvas.width;
+    im.params.contrast = y / display.canvas.height * 10.0;
+    // work-around for FF bug, not fixed as of 8/8/2012
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=732621
+    if( JS9.bugs.firefox_linux ){
+	window.setTimeout(function(){
+	    im.displayImage("scaled", {blendMode: false});
+	}, 0);
+    } else {
+	im.displayImage("scaled", {blendMode: false});
+    }
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	im.xeqPlugins("image", "onchangecontrastbias");
+    }
+};
+
+// stop action for contrast/bias: redisplay image
+JS9.MouseTouch.Actions["change contrast/bias"].stop = function(im, ipos, evt){
+    // if blendMode is on, we have to redisplay
+    if( im.display.blendMode ){
+	im.displayImage("rgb");
+    }
+};
+
+// zoom the image
+JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
+    var nzoom, display;
+    var delta = evt.originalEvent.deltaY;
+    // sanity checks
+    if( !im ){
+	return;
+    }
+    // is scroll to zoom turned on?
+    display = im.display;
+    if( !display.mousetouchZoom ){
+	return;
+    }
+    // scroll by the delta
+    if( delta > 0 ){
+	nzoom = Math.min(JS9.MAXZOOM, im.getZoom() + JS9.ADDZOOM);
+    } else {
+	nzoom = Math.max(JS9.MINZOOM, im.getZoom() - JS9.ADDZOOM);
+    }
+    // a little rounding makes the zoom nicer
+    nzoom = Math.round((nzoom + 0.00001) * 100) / 100;
+    // zoom the image
+    im.setZoom(nzoom);
+};
+
+// pan the image
+JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
+    var x, y;
+    // sanity check
+    if( !im ){
+	return;
+    }
+    x = im.rgb.sect.xcen + ((im.pos0.x - im.pos.x) / im.rgb.sect.zoom);
+    y = im.rgb.sect.ycen - ((im.pos0.y - im.pos.y) / im.rgb.sect.zoom);
+    im.setPan(x, y);
+    im.pos0 = im.pos;
+};
+
+// pinch zoom
+JS9.MouseTouch.Actions.pinch = function(im, ipos, evt){
+    var display, dist, nzoom;
+    // sanity checks
+    if( !im ){
+	return;
+    }
+    // is scroll to zoom turned on?
+    display = im.display;
+    // get current distance
+    dist = Math.sqrt(((im.pos.touches[0].x - im.pos.touches[1].x)  *
+		      (im.pos.touches[0].x - im.pos.touches[1].x)) +
+		      ((im.pos.touches[0].y - im.pos.touches[1].y)  *
+		       (im.pos.touches[0].y - im.pos.touches[1].y)));
+    nzoom = display.zoom0 * dist / display.dist0;
+    // a little rounding makes the zoom nicer
+    nzoom = Math.max(JS9.MINZOOM, Math.min(JS9.MAXZOOM, Math.round((nzoom + 0.00001) * 100) / 100));
+    // zoom the image
+    if( nzoom !== display.lastzoom ){
+	im.setZoom(nzoom);
+    }
+    display.lastzoom = nzoom;
+};
+
+// start of mouse/touch action processing
+JS9.MouseTouch.Actions.start = function(im, ipos, evt){
+    var display, action;
+    if( im ){
+	display = im.display;
+	display.ispinch = 0;
+	display.dist0 = 0;
+	display.zoom0 = im.rgb.sect.zoom;
+	display.deltas = [];
+    }
+    action = JS9.MouseTouch.getAction(im, evt);
+    // call the start mouse/touch action, if necessary
+    if( JS9.MouseTouch.Actions[action] &&
+	JS9.MouseTouch.Actions[action].start ){
+	JS9.MouseTouch.Actions[action].start(im, im.ipos, evt);
+    }
+};
+
+// end of mouse/touch action processing
+JS9.MouseTouch.Actions.stop = function(im, ipos, evt){
+    var action = JS9.MouseTouch.getAction(im, evt);
+    // call the stop mouse/touch action, if necessary
+    if( JS9.MouseTouch.Actions[action] &&
+	JS9.MouseTouch.Actions[action].stop ){
+	JS9.MouseTouch.Actions[action].stop(im, im.ipos, evt);
+    }
+    return;
+};
+
+// get action associated with the current clickState
+JS9.MouseTouch.getAction = function(im, evt){
+    var action, display;
+    // sanity check
+    if( !im ){
+	return action;
+    }
+    display = im.display;
+    switch(im.clickState){
+	// mouse move actions
+    case 0:
+	action = display.mouseActions[0];
+	break;
+    case 1:
+	action = display.mouseActions[1];
+	break;
+    case 2:
+	action = display.mouseActions[2];
+	break;
+	// touch event actions
+    case -1:
+	action = display.touchActions[0];
+	break;
+    case -2:
+	switch( JS9.MouseTouch.isPinch(im, evt) ){
+	case -1:
+	    action = display.touchActions[1];
+	    break;
+	case 0:
+	    // do nothing, no idea if its a pinch yet
+	    break;
+	case 1:
+	    action = "pinch";
+	    break;
+	}
+	break;
+    case -3:
+	action = display.touchActions[2];
+	break;
+    default:
+	break;
+    }
+    return action;
+};
+
+// execute the mouse/touch action routine
+JS9.MouseTouch.action = function(im, evt, action){
+    action = action || JS9.MouseTouch.getAction(im, evt);
+    // call the mouse/touch action
+    if( action && JS9.MouseTouch.Actions[action] ){
+	JS9.MouseTouch.Actions[action](im, im.ipos, evt);
+    }
+};
+
+// change zoom mode for this display
+JS9.MouseTouch.mousetouchzoom = function(id, target){
+    var display = JS9.lookupDisplay(id);
+    var mode = target.checked;
+    // change global blink mode
+    if( display ){
+	display.mousetouchZoom = mode;
+    }
+};
+
+// constructor: add HTML elements to the plugin
+JS9.MouseTouch.init = function(){
+    var i, s;
+    var that = this;
+    // on entry, these elements have already been defined:
+    // this.div:      the DOM element representing the div for this plugin
+    // this.divjq:    the jquery object representing the div for this plugin
+    // this.id:       the id ofthe div (or the plugin name as a default)
+    // this.display:  the display object associated with this plugin
+    // this.dispMode: display mode (for internal use)
+    //
+    // create container to hold action container and header
+    // clean main container
+    this.divjq.html("");
+    // allow scrolling on the plugin
+    this.divjq.addClass("JS9PluginScrolling");
+    // main container
+    this.mousetouchContainer = $("<div>")
+	.addClass(JS9.MouseTouch.BASE + "Container")
+	.attr("id", this.id + "MouseTouchContainer")
+	.appendTo(this.divjq);
+    s = sprintf("<div class='%s'><span><b>Drag an action to reconfigure JS9 mouse/touch events:</b></span><p>", JS9.MouseTouch.BASE + "Header");
+    this.mousetouchHeadContainer = $("<span style='float: left'>")
+	.addClass(JS9.MouseTouch.BASE + "Container")
+	.attr("id", this.id + "MouseTouchHeadContainer")
+        .html(s)
+	.appendTo(this.mousetouchContainer);
+    this.mousetouchTextContainer = $("<span style='float: left'>")
+	.addClass(JS9.MouseTouch.BASE + "Container")
+	.attr("id", this.id + "MouseTouchTextContainer")
+	.appendTo(this.mousetouchContainer);
+    this.mousetouchActionContainer = $("<span style='float: left'>")
+	.addClass(JS9.MouseTouch.BASE + "Container")
+	.attr("id", this.id + "MouseTouchActionContainer")
+	.appendTo(this.mousetouchContainer);
+    if( JS9.TOUCHSUPPORTED ){
+	// container to hold text descriptions
+	this.mousetouchTouchTextContainer = $("<div>")
+	    .addClass(JS9.MouseTouch.BASE + "TextContainer")
+	    .attr("id", this.id + "TouchTextContainer")
+            .html("")
+	    .appendTo(this.mousetouchTextContainer);
+	for(i=0; i<JS9.MouseTouch.touchText.length; i++){
+            JS9.MouseTouch.addText.call(this,
+					this.mousetouchTouchTextContainer,
+					JS9.MouseTouch.touchText[i]);
+	}
+	for(i=JS9.MouseTouch.touchText.length;
+	    i<this.display.touchActions.length ; i++){
+            JS9.MouseTouch.addText.call(this,
+					this.mousetouchMouseTextContainer,
+					"&nbsp;");
+	}
+	// container to hold touch actions
+	this.mousetouchTouchContainer = $("<div>")
+	    .addClass(JS9.MouseTouch.BASE + "ActionContainer")
+	    .attr("id", this.id + "TouchContainer")
+            .html("")
+	    .appendTo(this.mousetouchActionContainer);
+	// add touch actions, if necessary
+	for(i=0; i<this.display.touchActions.length; i++){
+	    s = this.display.touchActions[i];
+            JS9.MouseTouch.addAction.call(this, this.mousetouchTouchContainer,
+					  "touch", s);
+	}
+	// the actions within the action container will be sortable
+	this.mousetouchTouchContainer.sortable({
+	    start: function(event, ui) {
+		this.oidx = ui.item.index();
+	    },
+	    stop: function(event, ui) {
+		var nidx = ui.item.index();
+		var oarr = that.display.touchActions.splice(this.oidx, 1)[0];
+		// JS9 action list reflects the sort
+		that.display.touchActions.splice(nidx, 0, oarr);
+	    }
+	});
+    }
+    if(  !/iPad|iPhone|iPod/.test(navigator.platform) ){
+	// container to hold text descriptions
+	this.mousetouchMouseTextContainer = $("<div>")
+	    .addClass(JS9.MouseTouch.BASE + "TextContainer")
+	    .attr("id", this.id + "MouseTextContainer")
+	    .appendTo(this.mousetouchTextContainer);
+	for(i=0; i< 3; i++){
+            JS9.MouseTouch.addText.call(this,
+					this.mousetouchMouseTextContainer,
+					JS9.MouseTouch.mouseText[i]);
+	}
+	for(i=3; i<this.display.mouseActions.length ; i++){
+            JS9.MouseTouch.addText.call(this,
+					this.mousetouchMouseTextContainer,
+					"&nbsp;");
+	}
+	// container to hold mouse actions
+	this.mousetouchMouseContainer = $("<div>")
+	    .addClass(JS9.MouseTouch.BASE + "ActionContainer")
+	    .attr("id", this.id + "MouseContainer")
+            .html("")
+	    .appendTo(this.mousetouchActionContainer);
+	// add mouse actions, if necessary
+	for(i=0; i<this.display.mouseActions.length; i++){
+	    s = this.display.mouseActions[i];
+            JS9.MouseTouch.addAction.call(this, this.mousetouchMouseContainer,
+					  "mouse", s);
+	}
+	// the actions within the action container will be sortable
+	this.mousetouchMouseContainer.sortable({
+	    start: function(event, ui) {
+		this.oidx = ui.item.index();
+	    },
+	    stop: function(event, ui) {
+		var nidx = ui.item.index();
+		var oarr = that.display.mouseActions.splice(this.oidx, 1)[0];
+		// JS9 action list reflects the sort
+		that.display.mouseActions.splice(nidx, 0, oarr);
+	    }
+	});
+    }
+    // add the footer, containing buttons
+    s = sprintf("<p><div class='%s'>use mouse wheel or pinch to zoom:&nbsp;&nbsp;<input type='checkbox' value='1' onclick='javascript:JS9.MouseTouch.mousetouchzoom(\"%s\", this);'></div>", JS9.MouseTouch.BASE + "Footer", this.display.id);
+    this.mousetouchFootContainer = $("<span style='float: left'>")
+	.addClass(JS9.MouseTouch.BASE + "Container")
+	.attr("id", this.id + "MouseTouchFootContainer")
+        .html(s)
+	.appendTo(this.mousetouchContainer);
+    // set initial value of scroll
+    if( this.display.mousetouchZoom ){
+	this.mousetouchContainer.find("input").attr("checked", true);
+    }
+};
+
 
 // ---------------------------------------------------------------------
 // Regions object defines high level calls for Regions plugin
@@ -10599,531 +9176,6 @@ JS9.Regions.keyDownCB = function(im, ipos, evt, layerName){
 };
 
 // ---------------------------------------------------------------------
-// Magnifier object defines high level calls for magnifier plugin
-// ---------------------------------------------------------------------
-
-JS9.Magnifier = {};
-JS9.Magnifier.CLASS = "JS9";
-JS9.Magnifier.NAME = "Magnifier";
-
-// defaults for magnifier
-JS9.Magnifier.opts = {
-    // override fabric defaults
-    originX: "left",
-    originY: "top",
-    hasControls: false,
-    hasRotatingPoint: false,
-    hasBorders: false,
-    selectable: false,
-    // initial magnifier zoom
-    zoom: 4,
-    // canvas options
-    canvas: {
-	selection: false
-    },
-    // magnifier box colors
-    tagcolors: {
-	defcolor: "#00FF00"
-    }
-};
-
-// html used by the magnifier plugin
-JS9.Magnifier.HTML =
-"<span>" +
-"<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"zoomMagnifier\", \"x2\"); return false'>x2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"zoomMagnifier\", \"/2\"); return false'>/2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"zoomMagnifier\", \""+JS9.Magnifier.opts.zoom+"\"); return false'>"+JS9.Magnifier.opts.zoom+"</button>" +
-"</span>";
-
-// JS9 Magnifier constructor
-JS9.Magnifier.init = function(width, height){
-    // set width and height on div
-    this.width = this.divjq.attr("data-width");
-    if( !this.width  ){
-	this.width = width || JS9.MAGWIDTH;
-    }
-    this.divjq.css("width", this.width);
-    this.width = parseInt(this.divjq.css("width"), 10);
-    this.height = this.divjq.attr("data-height");
-    if( !this.height ){
-	this.height = height || JS9.MAGHEIGHT;
-    }
-    this.divjq.css("height", this.height);
-    this.height = parseInt(this.divjq.css("height"), 10);
-    // create DOM canvas element
-    this.canvas = document.createElement("canvas");
-    // jquery version for event handling and DOM manipulation
-    this.canvasjq = $(this.canvas);
-    // set class
-    this.canvasjq.addClass("JS9Magnifier");
-    // required so graphical layers will be on top:
-    this.canvasjq.css("z-index", JS9.ZINDEX);
-    // how do we allow users to set the size of the canvas??
-    // it doesn't go into the CSS and we have no canvas on the Web page ...
-    this.canvasjq.attr("width", this.width);
-    this.canvasjq.attr("height", this.height);
-    // drawing context
-    this.context = this.canvas.getContext("2d");
-    // turn off anti-aliasing
-    if( !JS9.ANTIALIAS ){
-	this.context.imageSmoothingEnabled = false;
-	this.context.mozImageSmoothingEnabled = false;
-	this.context.webkitImageSmoothingEnabled = false;
-	this.context.msImageSmoothingEnabled = false;
-    }
-    // add container with canvas to the high-level div
-    this.containerjq = $("<div>")
-	.addClass("JS9Container")
-	.append(this.canvasjq)
-	.appendTo(this.divjq);
-    // add magnifier graphics layer to the display
-    // the magnifier will be appended to the div of the plugin
-    this.display.newShapeLayer("magnifier", JS9.Magnifier.opts, this.divjq);
-};
-
-// display the magnified image on the magnifier canvas
-JS9.Magnifier.display = function(im, ipos){
-    var pos, tval, magDisp, zoom;
-    var canvas, sx, sy, sw, sh, dx, dy, dw, dh;
-    // sanity check
-    // only display if we have a magnifier present
-    if(!im || !im.display.pluginInstances.JS9Magnifier ||
-       (im.display.pluginInstances.JS9Magnifier.status !== "active")){
-	return;
-    }
-    // don't display if a mouse button is pressed while moving, or
-    // if two or more touch buttons are pressed while moving
-    if( (im.clickState > 0) || (im.clickState < -1) ){
-	return;
-    }
-    // image init: add magnifier object to image, if necessary
-    if( !im.magnifier ){
-	im.magnifier = {zoom: JS9.Magnifier.opts.zoom, posx: 0, posy: 0};
-    }
-    magDisp = im.display.pluginInstances.JS9Magnifier;
-    canvas = im.display.canvas;
-    zoom = im.magnifier.zoom;
-    sw = Math.floor(magDisp.width / zoom);
-    sh = Math.floor(magDisp.height / zoom);
-    if( ipos ){
-	pos = im.imageToDisplayPos(ipos);
-	sx = pos.x - (sw/2);
-	sy = pos.y - (sh/2);
-	im.magnifier.posx = sx;
-	im.magnifier.posy = sy;
-    } else {
-	sx = im.magnifier.posx;
-	sy = im.magnifier.posy;
-    }
-    // default destination parameters
-    dx = 0;
-    dy = 0;
-    dw = magDisp.canvas.width;
-    dh = magDisp.canvas.height;
-    // adjust for boundaries
-    if( sx < 0 ){
-	sw += sx;
-	dx -= (sx * zoom);
-	dw += (sx * zoom);
-	sx = 0;
-    }
-    tval = (sx + sw) - canvas.width;
-    if( tval > 0  ){
-	sw -= tval;
-	dw = sw * zoom;
-    }
-    if( sy < 0 ){
-	sh += sy;
-	dy -= (sy * zoom);
-	dh += (sy * zoom);
-	sy = 0;
-    }
-    tval = sy + sh- canvas.height;
-    if( tval > 0 ){
-	sh -= tval;
-	dh = sh * zoom;
-    }
-    // display magnifier image
-    magDisp.context.clear();
-    magDisp.context.drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh);
-    // stuff we only do once
-    if( !im.magnifier.boxid ){
-	// add the center point to the magnifier, if necessary
-	im.magnifier.boxid = im.addShapes("magnifier", "box");
-	// make background black, which looks better at the edge
-	$(magDisp.canvas).css("background-color", "black");
-    }
-    // center point size and position, based on zoom
-    if( im.magnifier.ozoom !== zoom ){
-	im.changeShapes("magnifier", im.magnifier.boxid,
-			{left: magDisp.width/2, top:  magDisp.height/2, 
-			 width: zoom, height: zoom});
-	im.magnifier.ozoom = im.magnifier.zoom;
-    }
-};
-
-// zoom the rectangle inside the magnifier (RGB) image
-// part of magnifier plugin
-JS9.Magnifier.zoom = function(im, zval){
-    var magnifier, ozoom, nzoom;
-    // sanity check
-    if( !im || !im.magnifier ){
-	return;
-    }
-    magnifier = im.magnifier;
-    // get old zoom
-    ozoom = magnifier.zoom;
-    // determine new zoom
-    switch(zval.charAt(0)){
-    case "x":
-    case "*":
-	nzoom = ozoom * parseFloat(zval.slice(1));
-	break;
-    case "/":
-	nzoom = ozoom / parseFloat(zval.slice(1));
-	break;
-    default:
-	nzoom = parseFloat(zval);
-	break;
-    }
-    // sanity check
-    if( !nzoom || (nzoom < 1) ){
-	nzoom = 1;
-    }
-    // save old value, set new value
-    magnifier.ozoom = magnifier.zoom;
-    magnifier.zoom = nzoom;
-    // redisplay
-    JS9.Magnifier.display(im);
-};
-
-// close the magnifier when closing the image
-JS9.Magnifier.close = function(im){
-    var magnifier = im.display.pluginInstances.JS9Magnifier;
-    if( magnifier && (im === im.display.image) ){
-	magnifier.context.clear();
-	im.removeShapes("magnifier", "all");
-    }
-    return im;
-};
-
-// ---------------------------------------------------------------------
-// Panner object defines high level calls for panner plugin
-// ---------------------------------------------------------------------
-
-JS9.Panner = {};
-JS9.Panner.CLASS = "JS9";
-JS9.Panner.NAME = "Panner";
-
-// defaults for panner
-JS9.Panner.opts = {
-    // override fabric defaults
-    hasControls: false,
-    hasRotatingPoint: false,
-    hasBorders: false,
-    // initial panner zoom
-    zoom: 4,
-    // canvas options
-    canvas: {
-	selection: true
-    },
-    // panner box colors
-    tagcolors: {
-	defcolor: "#00FF00"
-    }
-};
-
-// html used by the panner plugin
-JS9.Panner.HTML =
-"<span>" +
-"<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"zoomPanner\", \"x2\"); return false'>x2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"zoomPanner\", \"/2\"); return false'>/2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"zoomPanner\", \"1\"); return false'>z1</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.bcall(this, \"panImage\"); return false'>center</button>" +
-"</span>";
-
-// JS9 Panner constructor
-JS9.Panner.init = function(width, height){
-    var dlayer;
-    var that = this;
-    // set width and height on div
-    this.width = this.divjq.attr("data-width");
-    if( !this.width  ){
-	this.width  = width  || JS9.PANWIDTH;
-    }
-    this.divjq.css("width", this.width);
-    this.width = parseInt(this.divjq.css("width"), 10);
-    this.height = this.divjq.attr("data-height");
-    if( !this.height ){
-	this.height = height || JS9.PANHEIGHT;
-    }
-    this.divjq.css("height", this.height);
-    this.height = parseInt(this.divjq.css("height"), 10);
-    // create DOM canvas element
-    this.canvas = document.createElement("canvas");
-    // jquery version for event handling and DOM manipulation
-    this.canvasjq = $(this.canvas);
-    // set class
-    this.canvasjq.addClass("JS9Panner");
-    // required so graphical layers will be on top:
-    this.canvasjq.css("z-index", JS9.ZINDEX);
-    // how do we allow users to set the size of the canvas??
-    // it doesn't go into the CSS and we have no canvas on the Web page ...
-    this.canvasjq.attr("width", this.width);
-    this.canvasjq.attr("height", this.height);
-    // drawing context
-    this.context = this.canvas.getContext("2d");
-    // turn off anti-aliasing
-    if( !JS9.ANTIALIAS ){
-	this.context.imageSmoothingEnabled = false;
-	this.context.mozImageSmoothingEnabled = false;
-	this.context.webkitImageSmoothingEnabled = false;
-	this.context.msImageSmoothingEnabled = false;
-    }
-    // add container with canvas to the high-level div
-    this.containerjq = $("<div>")
-	.addClass("JS9Container")
-	.append(this.canvasjq)
-	.appendTo(this.divjq);
-    // add panner graphics layer to the display
-    // the panner will be appended to the div of the plugin
-    dlayer = this.display.newShapeLayer("panner", JS9.Panner.opts, this.divjq);
-    // add a callback to pan when the panning rectangle is moved
-    dlayer.canvas.on("object:modified", function(opts){
-	var im = that.display.image;
-	if( im ){
-	    var pos = opts.target.getCenterPoint();
-	    var ix = ((pos.x - im.panner.ix) *
-		      im.panner.xblock / im.panner.zoom) + im.panner.x0;
-	    var iy = ((dlayer.canvas.height - (pos.y + im.panner.iy)) *
-		      im.panner.yblock / im.panner.zoom) + im.panner.y0;
-	    // pan the image
-	    try{
-		// avoid triggering a re-pan
-		im.display.pluginInstances.JS9Panner.status = "inactive";
-		// pan image
-		im.setPan(ix, iy);
-	    }
-	    catch(e){JS9.log("couldn't pan image", e);}
-	    finally{im.display.pluginInstances.JS9Panner.status = "active";}
-	}
-    });
-    // display current image in panner
-    if( this.display.image ){
-	JS9.Panner.display(this.display.image);
-    }
-};
-
-// create panner (RGB) image from scaled colorCells
-// sort of from: tksao1.0/frame/truecolor.c, but not really
-// part of panner plugin
-JS9.Panner.create = function(im){
-    var panDisp, panner, sect, img;
-    var x0, y0, xblock, yblock;
-    var i, j, ii, jj, kk;
-    var ioff, ooff;
-    var width, height;
-    // sanity check
-    if( !im || !im.raw ||
-	!im.display.pluginInstances.JS9Panner ){
-	return;
-    }
-    // add panner object to image, if necessary
-    if( !im.panner ){
-	im.panner = {};
-    }
-    // init zoom factor, if necessary
-    if( !im.panner.zoom ){
-	im.panner.zoom = 1;
-    }
-    // convenience variables
-    panDisp = im.display.pluginInstances.JS9Panner;
-    panner = im.panner;
-    sect = im.rgb.sect;
-    // size image
-    width = Math.min(im.raw.width, panDisp.width);
-    height = Math.min(im.raw.height, panDisp.height);
-    // block RGB image to fit into panner window
-    panner.xblock = im.raw.width / width;
-    panner.yblock = im.raw.height / height;
-    if( panner.xblock > panner.yblock ){
-	height = Math.floor(height / panner.xblock * panner.yblock + 0.5);
-	panner.yblock = panner.xblock;
-    } else if( panner.yblock > panner.xblock ){
-	width = Math.floor(width / panner.yblock * panner.xblock + 0.5);
-	panner.xblock = panner.yblock;
-    }
-    // create an RGB image the same size as the raw data
-    img = im.display.context.createImageData(width,height);
-    // calculate block factors and starting points based on zoom and block
-    if( panner.zoom === 1 ){
-	xblock = panner.xblock;
-	yblock = panner.yblock;
-	x0 = 0;
-	y0 = 0;
-    } else {
-	xblock = panner.xblock / panner.zoom;
-	yblock = panner.yblock / panner.zoom;
-	// x0, y0 is the corner of the section of the image we can display in
-	// the panner (we can't display the whole image if we are zoomed).
-	x0 = Math.max(0, ((sect.x0 + sect.x1) - (width  * xblock)) / 2);
-	y0 = Math.max(0, ((sect.y0 + sect.y1) - (height * yblock)) / 2);
-    }
-    // save lower limits for display
-    panner.x0 = x0;
-    panner.y0 = y0;
-    // save as panner image
-    panner.img = img;
-    panner.ix = 0;
-    panner.iy = 0;
-    if( im.rgbFile ){
-	// for a static RGB file, access the RGB data directly
-	for(j=0; j<height; j++){
-	    jj = Math.floor(y0 + (j * yblock)) * im.offscreen.img.width;
-	    kk = j * width;
-	    for(i=0; i<width; i++){
-		ii = Math.floor(x0 + (i * xblock));
-		ioff = (ii + jj) * 4;
-		ooff = (kk + i) * 4;
-		img.data[ooff]   = im.offscreen.img.data[ioff];
-		img.data[ooff+1] = im.offscreen.img.data[ioff+1];
-		img.data[ooff+2] = im.offscreen.img.data[ioff+2];
-		img.data[ooff+3] = 255;
-	    }
-	}
-	return im;
-    }
-    // index into scaled data using previously calc'ed data value to get RGB
-    for(j=0; j<height; j++){
-	jj = Math.floor(y0 + ((height-j-1) * yblock)) * im.raw.width;
-	kk = j * width;
-	for(i=0; i<width; i++){
-	    ii = Math.floor(x0 + (i * xblock));
-	    ioff = im.colorData[ii + jj];
-	    ooff = (kk + i) * 4;
-	    if( im.psColors[ioff] ){
-		img.data[ooff]   = im.psColors[ioff][0];
-		img.data[ooff+1] = im.psColors[ioff][1];
-		img.data[ooff+2] = im.psColors[ioff][2];
-		img.data[ooff+3] = 255;
-	    }
-	}
-    }
-    return im;
-};
-
-// display the magnified image on the magnifier canvas
-JS9.Panner.display = function(im){
-    var panDisp, panner, sect, tblkx, tblky;
-    var obj, nx, ny, nwidth, nheight;
-    var FUDGE = 1;
-    // sanity check
-    // only display if we have a panner present
-    if( !im || !im.display.pluginInstances.JS9Panner ||
-       (im.display.pluginInstances.JS9Panner.status !== "active") ){
-	return;
-    }
-    // always remake make panner image (might be zooming, for example)
-    JS9.Panner.create(im);
-    // convenience variables
-    panner = im.panner;
-    panDisp = im.display.pluginInstances.JS9Panner;
-    sect = im.rgb.sect;
-    // we're done if there is no panner image
-    if( !panner.img ){
-	return;
-    }
-    // offsets into display
-    if( panner.img.width < panDisp.canvas.width ){
-	panner.ix = Math.floor((panDisp.canvas.width - panner.img.width)/2);
-    }
-    if( panner.img.height < panDisp.canvas.height ){
-        panner.iy = Math.floor((panDisp.canvas.height - panner.img.height)/2);
-    }
-    // clear first
-    panDisp.context.clear();
-    // draw the image into the context
-    panDisp.context.putImageData(panner.img, panner.ix, panner.iy);
-    // display panner rectangle
-    // convenience variables
-    tblkx = panner.zoom / panner.xblock;
-    tblky = panner.zoom / panner.yblock;
-    // size of rectangle
-    // nwidth = sect.width * tblkx / sect.zoom * bin;
-    // nheight = sect.height * tblky / sect.zoom * bin;
-    nwidth = sect.width * tblkx / sect.zoom;
-    nheight = sect.height * tblky / sect.zoom;
-    // position of the rectangle
-    nx = (sect.x0 - panner.x0) * tblkx + panner.ix;
-    ny = (panDisp.height - 1) - ((sect.y1 - panner.y0) * tblky + panner.iy);
-    // why is the fudge needed???
-    nx  += FUDGE;
-    ny  += FUDGE;
-    // convert to center pos
-    nx += nwidth / 2;
-    ny += nheight / 2;
-    // nice integer values
-    nx = Math.floor(nx);
-    ny = Math.floor(ny);
-    nwidth = Math.floor(nwidth);
-    nheight = Math.floor(nheight);
-    obj = {left: nx, top: ny, width: nwidth, height: nheight};
-    // create the box
-    if( !im.panner.boxid ){
-	im.panner.boxid = im.addShapes("panner", "box", obj);
-    } else {
-	im.changeShapes("panner", im.panner.boxid, obj);
-    }
-    return im;
-};
-
-// zoom the rectangle inside the panner (RGB) image
-JS9.Panner.zoom = function(im, zval){
-    var panDisp, panner, ozoom, nzoom;
-    // sanity check
-    if( !im || !im.panner || !im.display.pluginInstances.JS9Panner ){
-	return;
-    }
-    panner = im.panner;
-    panDisp = im.display.pluginInstances.JS9Panner;
-    // get old zoom
-    ozoom = panner.zoom;
-    // determine new zoom
-    switch(zval.charAt(0)){
-    case "*":
-    case "x":
-    case "X":
-	nzoom = Math.min(Math.min(panDisp.width, panDisp.height),
-			 ozoom * parseFloat(zval.slice(1)));
-	break;
-    case "/":
-	nzoom = Math.max(1, ozoom / parseFloat(zval.slice(1)));
-	break;
-    default:
-	nzoom = parseFloat(zval);
-	break;
-    }
-    // sanity check
-    if( !nzoom || (nzoom < 1) ){
-	nzoom = 1;
-    }
-    panner.zoom = nzoom;
-    // redisplay the panner
-    JS9.Panner.display(im);
-    return im;
-};
-
-// close the panner
-JS9.Panner.close = function(im){
-    var panner = im.display.pluginInstances.JS9Panner;
-    if( panner && (im === im.display.image) ){
-	panner.context.clear();
-	im.removeShapes("panner", "all");
-    }
-    return im;
-};
-
-// ---------------------------------------------------------------------
 // Catalogs object defines high level calls for catalog plugin
 // Mostly replaced by a call to newShapeLayer() and addShapes(),
 // leaving on the options
@@ -11433,53 +9485,6 @@ JS9.strace = function(e){
 	s = e.stack || e.stacktrace || "";
     }
     return s;
-};
-
-// call a js9 routine from a button in the panner/magnifier plugin toolbar
-// the plugin instantiation saves the display id in the toolbar div
-JS9.bcall = function(which, cmd, arg1){
-    var dispid, im;
-    // The button plugintoolbar div has data containing the id of the display
-    dispid = $(which).closest("div[class^=JS9PluginToolbar]").data("displayid");
-    if( dispid ){
-	im = JS9.getImage(dispid);
-    } else {
-	JS9.error("can't find display for cmd: "+cmd);
-    }
-    if( !im ){
-	JS9.error("can't find image for cmd: "+cmd);
-    }
-    switch(cmd){
-    case "zoomPanner":
-	if( arguments.length < 3 ){
-	    JS9.error("missing argument(s) for cmd: "+cmd);
-	}
-	try{
-	    JS9.Panner.zoom(im, arg1);
-	} catch(e){
-	    JS9.error("error calling zoomPanner()", e);
-	}
-	break;
-    case "zoomMagnifier":
-	if( arguments.length < 3 ){
-	    JS9.error("missing argument(s) for cmd: "+cmd);
-	}
-	try{
-	    JS9.Magnifier.zoom(im, arg1);
-	} catch(e){
-	    JS9.error("error calling zoomMagnifier()", e);
-	}
-	break;
-    case "panImage":
-	try{
-	    im.setPan();
-	} catch(e){
-	    JS9.error("error calling setPan()", e);
-	}
-	break;
-    default:
-        break;
-    }
 };
 
 // figure out precision from range of values
@@ -12447,7 +10452,7 @@ JS9.mouseDownCB = function(evt){
 	im.clickState = -evt.originalEvent.touches.length;
     }
     // add callbacks for moving
-    $("body").on("mousemove", display, 
+    $("body").on("mousemove", display,
 		 function(evt){return JS9.mouseMoveCB(evt);});
     $("body").on("mouseup", display,
 		 function(evt){return JS9.mouseUpCB(evt);});
@@ -12701,68 +10706,6 @@ JS9.dragdropCB = function(id, evt, handler){
 // ---------------------------------------------------------------------
 // special event handlers
 // ---------------------------------------------------------------------
-
-// console keydown: assumes console obj is passed in evt.data
-JS9.consoleKeyDownCB = function(evt){
-    var v;
-    var obj = evt.data;
-    var keycode = evt.which || evt.keyCode;
-    // history idea and basic algorithm from goosh.org,
-    // to whom grateful acknowledgement is made
-    // this prevents keypress on FF (and others)
-    // https://developer.mozilla.org/en-US/docs/Web/Reference/Events/keydown
-    // evt.preventDefault();
-    if( JS9.specialKey(evt) ){
-	return;
-    }
-    v = obj.consoleConjq.find(".JS9CmdIn:last");
-    v.focus();
-    if(obj.hist.length && ((keycode===38) || (keycode===40))){
-	if( obj.hist[obj.histpos] ){
-	    obj.hist[obj.histpos] = v.val();
-	} else {
-	    obj.histtemp = v.val();
-	}
-	switch(keycode){
-	case  38:
-	    obj.histpos--;
-	    if( obj.histpos < 0 ){
-		obj.histpos = 0;
-	    }
-	    break;
-	case 40:
-	    obj.histpos++;
-	    if( obj.histpos > obj.hist.length ){
-		obj.histpos = obj.hist.length;
-	    }
-	    break;
-	default:
-	    JS9.error("internal keycode switch mixup");
-	}
-	if( obj.hist[obj.histpos] ){
-	    v.val(obj.hist[obj.histpos]);
-	    // mark history as being used
-	    if( obj.histpos !== obj.hist.length){
-		obj.histused = true;
-	    } else {
-		// except for the current input line
-		obj.histused = false;
-	    }
-	} else {
-	    v.val(obj.histtemp);
-	    obj.histused = false;
-	}
-    }
-    // xeq command when new-line is pressed and re-init
-    if( keycode === 13 ){
-	// turn off alerts to user
-	JS9.globalOpts.alerts = false;
-	obj.xeq();
-	// turn on alerts to user
-	JS9.globalOpts.alerts = true;
-	obj.inp();
-    }
-};
 
 // ---------------------------------------------------------------------
 // plugin support
@@ -13048,21 +10991,6 @@ JS9.init = function(){
     if( window.hasOwnProperty("Kinetic") && !window.hasOwnProperty("fabric") ){
 	JS9.error("please load fabric.js instead of Kinetic.js");
     }
-    // set up sizes, if not already done (i.e. in Web page or prefs file)
-    JS9.WIDTH = JS9.WIDTH || 512;	        // width of js9 canvas
-    JS9.HEIGHT = JS9.HEIGHT || 512;		// height of js9 canvas
-    JS9.INFOWIDTH = JS9.INFOWIDTH || 345;	// width of js9Info box
-    JS9.INFOHEIGHT = JS9.INFOHEIGHT || 265;	// height of js9Info box
-    JS9.MENUWIDTH = JS9.MENUWIDTH || JS9.WIDTH;	// width of js9Menubar
-    JS9.MENUHEIGHT = JS9.MENUHEIGHT || "auto";	// height of js9Menubar
-    JS9.CONWIDTH = JS9.CONWIDTH || JS9.WIDTH;	// width of js9Console
-    JS9.CONHEIGHT = JS9.CONHEIGHT || 180;	// height of js9Console
-    JS9.MAGWIDTH = JS9.MAGWIDTH || JS9.WIDTH/2;	// width of js9Mag canvas
-    JS9.MAGHEIGHT = JS9.MAGHEIGHT || JS9.HEIGHT/2; // height of js9Mag canvas
-    JS9.PANWIDTH = JS9.PANWIDTH || 320;		// width of js9Pan canvas
-    JS9.PANHEIGHT = JS9.PANHEIGHT || 320;	// height of js9Pan canvas
-    JS9.DS9WIDTH = JS9.DS9WIDTH || 250;		// width of small js9Pan canvas
-    JS9.DS9HEIGHT = JS9.DS9HEIGHT || 250;	// height of small js9Pan canvas
     // set up the dynamic drive html window
     if( JS9.LIGHTWIN === "dhtml" ){
 	// Creation of dhtmlwindowholder was done by a document.write in
@@ -13218,45 +11146,21 @@ JS9.init = function(){
     $("div.JS9").each(function(){
 	JS9.checkNew(new JS9.Display($(this)));
     });
-    // register core plugins
-    JS9.RegisterPlugin("JS9", "Menubar", JS9.Menubar);
-    JS9.RegisterPlugin("JS9", "Console", JS9.Console,
-		       {menuItem: "Console",
-			winTitle: "Console",
+    // register essential plugins
+    JS9.RegisterPlugin(JS9.MouseTouch.CLASS, JS9.MouseTouch.NAME,
+		       JS9.MouseTouch.init,
+		       {menuItem: "Mouse/Touch",
+			onplugindisplay: JS9.MouseTouch.init,
+			help: "help/mousetouch.html",
+			winTitle: "Mouse/Touch Actions",
 			winResize: true,
-			winDims: [JS9.WIDTH, 180]});
-    JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
-		       {menuItem: "InfoBox",
-			onplugindisplay: JS9.Info.clearMain,
-			winTitle: "Info",
-			winResize: true,
-			winDims: [JS9.INFOWIDTH, JS9.INFOHEIGHT]});
-    JS9.RegisterPlugin(JS9.Regions.CLASS, JS9.Regions.NAME, JS9.Regions.init,
+			winDims: [JS9.MouseTouch.WIDTH,JS9.MouseTouch.HEIGHT]});
+    JS9.RegisterPlugin(JS9.Regions.CLASS, JS9.Regions.NAME,
+		       JS9.Regions.init,
 		       {onkeydown:  JS9.Regions.keyDownCB,
 			onregionschange: JS9.Regions.onchange,
 			divArgs: ["regions"],
 			winDims: [0, 0]});
-    JS9.RegisterPlugin(JS9.Magnifier.CLASS, JS9.Magnifier.NAME,
-		       JS9.Magnifier.init,
-		       {menuItem: "Magnifier",
-			toolbarSeparate: false,
-			toolbarHTML: JS9.Magnifier.HTML,
-			onplugindisplay: JS9.Magnifier.display,
-			onmousemove: JS9.Magnifier.display,
-			onimageclose: JS9.Magnifier.close,
-			winTitle: "Magnifier",
-			winDims: [JS9.MAGWIDTH, JS9.MAGHEIGHT],
-			divArgs: [JS9.DS9WIDTH, JS9.DS9HEIGHT]});
-    JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
-		       {menuItem: "Panner",
-			toolbarSeparate: false,
-			toolbarHTML: JS9.Panner.HTML,
-			onplugindisplay: JS9.Panner.display,
-			onimagedisplay: JS9.Panner.display,
-			onimageclose: JS9.Panner.close,
-			winTitle: "Panner",
-			winDims: [JS9.PANWIDTH, JS9.PANHEIGHT],
-			divArgs: [JS9.DS9WIDTH, JS9.DS9HEIGHT]});
     // find divs associated with each plugin and run the constructor
     JS9.instantiatePlugins();
     // sort plugins
@@ -13942,7 +11846,6 @@ JS9.mkPublic("SavePNG", "savePNG");
 JS9.mkPublic("SaveJPEG", "saveJPEG");
 JS9.mkPublic("SaveFITS", "saveFITS");
 JS9.mkPublic("RunAnalysis", "runAnalysis");
-JS9.mkPublic("DisplayMessage", "displayMessage");
 JS9.mkPublic("RawDataLayer", "rawDataLayer");
 JS9.mkPublic("GaussBlurData", "gaussBlurData");
 JS9.mkPublic("ImarithData", "imarithData");
@@ -14291,7 +12194,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
         JS9.checkNew(new JS9.Display(id));
 	// add to list of displays
 	JS9.helper.send("addDisplay", {"display": id});
-        // instantiate new plugins (create menubar, etc)
+        // instantiate new plugins
         JS9.instantiatePlugins();
         // load the image into this display
         opts.display = id;

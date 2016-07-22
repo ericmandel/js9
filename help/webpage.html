@@ -44,10 +44,60 @@ You can simply copy the order of files as specified in the JS9 demo files.
 
 <p>
 The text file <b>js9support.txt</b> is a list of the files contained
-in js9support.css, js9support.js, js9support.min,js, and
-js9plugins.js. Note that jquery v1.11.1 is one of the files loaded by
-js9support.js. All of these files are contained in the js and css
-sub-directories.
+in js9support.css, js9support.js, js9support.min,js, and js9plugins.js.
+
+<p>
+JS9 <b>will not run</b> without js9support.min.js. This file contains
+a number of required 3rd-party software modules, including jQuery,
+flot (for plotting), dhtmlwindow (for light windows), etc. It is
+separated from js9.min.js to optimize file caching.
+
+<p>
+JS9 <b>will run</b> without the js9plugins.js file, but with
+restricted functionality.  In particular, the following core plugins
+are loaded from this file:
+<ul>
+<li>blend.js: image blending
+<li>blink.js: image blinking
+<li>colorbar.js: colorbar display
+<li>console.js: a simple command console
+<li>cube.js: display slices of a 3D FITS file
+<li>imarith.js: image arithmetic
+<li>info.js: display of value, position, regions
+<li>magnifier.js: magnifier
+<li>mef.js: display multi-extension FITS
+<li>menubar.js: the main menubar
+<li>panner.js: panner
+<li>prefs.js: save/restore preferences
+</ul>
+Note that the regions and mouse/touch core plugins are always loaded
+from within js9.min.js itself, since they are essential to almost all
+JS9 functionality.
+
+<p>
+In addition, the following contributed plugins are loaded from this file:
+<ul>
+<li>archive.js: access to archives and catalogs
+<li>binning.js: FITS binary table binning
+<li>encircled.js: encircled energy
+<li>pixtable.js: display of pixel table
+<li>radproj.js: radial projection
+<li>regstat.js: region statistics
+<li>xyproj.js:  projections
+<li>3dplot.js: 3D plot
+<li>contour.js: contours
+</ul>
+
+<p>
+All of these files are contained in the plugins subdirectory, so you can load
+them individually, e.g.:
+<pre>
+  &lt;script type="text/javascript" src="js9support.min.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="js9.min.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="plugins/core/menubar.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="plugins/core/info.js"&gt;&lt;/script&gt;
+</pre>
+will load only the menubar and info display plugins.
 
 <p>
 As of version 1.3, the cfitsio library is used to process FITS files
@@ -216,7 +266,7 @@ See:
 <a href="yourdata.html">Adding Data Files To a Web Page</a> for more
 information.
 
-<h5>Last updated: June 1, 2016</h5>
+<h5>Last updated: July 21, 2016</h5>
 </div>
 
 </body>
