@@ -16,6 +16,8 @@
 
 /*jshint smarttabs:true */
 
+/*global require process */
+
 "use strict";
 
 // load required modules
@@ -117,6 +119,7 @@ var datestr = function(){
 var clog = function(){
     var args = Array.prototype.slice.call(arguments, 0);
     args.push(" [" + datestr() + "]");
+    // eslint-disable-next-line no-console
     console.log.apply(null, args);
 };
 
@@ -125,6 +128,7 @@ var cerr = function(){
     var args = Array.prototype.slice.call(arguments, 0);
     args.unshift("ERROR: ");
     args.push(" [" + datestr() + "]");
+    // eslint-disable-next-line no-console
     console.log.apply(null, args);
 };
 
@@ -192,7 +196,7 @@ var getTargets = function(io, socket, msg){
 // this should match cleaning in js9Helper.cgi
 var envClean = function(s) {
     if( typeof s === "string" ){
-	return s.replace(/[`&]/g, "").replace(/\(\)[ 	]*\{.*/g, "");
+	return s.replace(/[`&]/g, "").replace(/\(\)\s*\{.*/g, "");
     }
     return s;
 };

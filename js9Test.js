@@ -17,6 +17,9 @@
 
 /*jshint smarttabs:true */
 
+/*global require process */
+/*eslint no-console: "off" */
+
 "use strict";
 
 // local variables
@@ -54,9 +57,8 @@ var cproc   = require("child_process"),
     assert  = require("assert");
 
 // load webdriver modules
-var webdriver = require('selenium-webdriver'),
-    By = webdriver.By,
-    until = webdriver.until;
+var webdriver = require('selenium-webdriver');
+var By = webdriver.By, until = webdriver.until;
 
 // requires at least one test file or --all switch
 if( !js9Test.scripts.length ){

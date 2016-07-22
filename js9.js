@@ -22,12 +22,14 @@ if( JS9 && (typeof JS9 !== "object" || JS9.NAME) ){
     throw new Error("Namespace 'JS9' already exists");
 }
 // create the module and seed with standard values
+// eslint-disable-next-line no-redeclare
 var JS9 = {};
 JS9.NAME = "JS9";		// The name of this namespace
 JS9.VERSION = "1.9";		// The version of this namespace
 JS9.COPYRIGHT = "Copyright (c) 2012-2016 Smithsonian Institution";
 
 // use the module augmentation pattern, passing in our already-defined module
+// eslint-disable-next-line no-native-reassign
 JS9 = (function(JS9){
 "use strict";
 
@@ -10059,8 +10061,10 @@ JS9.rotatePoint = function(point, angle, cen)
 JS9.log = function(){
     if( (window.console !== undefined) && (window.console.log !== undefined) ){
         try {
+	    // eslint-disable-next-line no-console
             console.log.apply(console, arguments);
         } catch(e){
+	    // eslint-disable-next-line no-console
             var log = Function.prototype.bind.call(console.log, console);
             log.apply(console, arguments);
         }
