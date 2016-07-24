@@ -104,6 +104,7 @@ var findClientsSocket = function(io, namespace, roomId){
 };
 
 // get list of all clients currently connected
+// eslint-disable-next-line no-unused-vars
 var getClients = function(io, socket){
     return findClientsSocket(io);
 };

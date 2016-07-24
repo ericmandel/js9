@@ -21,7 +21,7 @@ var sockio = require("socket.io/node_modules/socket.io-client"),
     readline = require("readline");
 
 // internal variables
-var msg;
+var s, msg;
 var args = process.argv.slice(2);
 var browser = "";
 var content = "";
@@ -38,14 +38,12 @@ var host = "";
 var istty = process.stdin.isTTY  || false;
 var nsendexit = false;
 var nsend = 0;
-var pageReady = false;
 var rl = null;
 var socket = null;
 var sockopts = {
     reconnection: false,
     timeout: 10000
 };
-var tries = 0;
 var verify = false;
 var webpage = "";
 var srcdir = process.env.JS9_SRCDIR;
@@ -179,7 +177,6 @@ function JS9Msg(){
     this.multi = false;
     this.pageid = null;
     this.timeout = 1000;
-    this.tries = 5;
 }
 
 JS9Msg.prototype.reset = function() {
@@ -233,9 +230,6 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
 	}
 	// post-processing
 	switch(postproc){
-	case 'pageReady':
-	    pageReady = true;
-	    break;
 	case 'exit':
 	    // exit
 	    that.exit(socket, rl, 0);
@@ -399,7 +393,7 @@ while( !done ){
 
 // compose helper URL, if not done explicitly
 if( !helperURL ){
-    var s = "";
+    s = "";
     if( !helperHost.match(/:\/\//) ){
 	s += helperScheme;
     }
@@ -472,8 +466,6 @@ dns.lookup(host, 4, function (err, address, family) {
 			startBrowser();
 		    }
 		});
-		// wait for page to be ready
-		msg.pageReady = true;
 		// when a browser is started, all args are files to be loaded
 		// use absolute paths
 		for(i=0; i<args.length; i++){

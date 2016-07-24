@@ -206,7 +206,7 @@ module.exports = {
             "never"
         ],
         "valid-jsdoc": "error",
-        "vars-on-top": "off",
+        "vars-on-top": "error",
         "wrap-iife": "error",
         "wrap-regex": "off",
         "yield-star-spacing": "error",
@@ -214,8 +214,6 @@ module.exports = {
             "error",
             "never"
         ],
-	"no-unused-vars": "off",
 	"no-mixed-spaces-and-tabs": "off",
-	"no-fallthrough": "off"
     }
 };
