@@ -48,7 +48,7 @@ Version  Developer        Date     Change
 
 #define MAXSTR  256
 #define MAXFILE 256
-#define HDRLEN  80000
+#define HDRLEN  800000
 
 #define NORMAL_TEMPLATE  0
 #define ALTERNATE_INPUT  1
@@ -1656,7 +1656,7 @@ int readTemplate(char *filename, int headerType)
 
    strcpy(headerStr, "");
 
-   for(j=0; j<1000; ++j)
+   for(j=0; j<10000; ++j)
    {
       if(fgets(line, MAXSTR, fp) == (char *)NULL)
          break;

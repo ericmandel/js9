@@ -3,7 +3,7 @@
 echo "generating nomain version of mProjectPP.c ..."
 
 cat mProjectPP.c | \
-sed 's/main/mProjectPP/;s/\(fstatus = stdout\);/\1;optind = 1;/;s/exit(\([0-9]\))/fflush(fstatus); fclose(fstatus); exit(\1)/g;s/ printf("\[struct/ fprintf(fstatus, "[struct/g;' \
+sed 's/main/mProjectPP/;s/\(fstatus = stdout\);/\1;optind = 1;/;s/exit(\([0-9]\))/fflush(fstatus); fclose(fstatus); exit(\1)/g;s/ printf("\[struct/ fprintf(fstatus, "[struct/g;s/8000/80000/;s/1000;/10000;/' \
 > mProjectPP_nomain.c
 
 cat mTANHdr.c | \
