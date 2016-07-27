@@ -436,9 +436,6 @@ JS9.Image = function(file, params, func){
     // offsets into canvas to display
     this.ix = 0;
     this.iy = 0;
-    // wcs offsets into canvas to display
-    this.wcsix = 0;
-    this.wcsiy = 0;
     // create the png object
     this.png = {};
     // image element to hold png file, from which array data is generated
@@ -2083,7 +2080,6 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 
 // primitive to put image data on screen
 JS9.Image.prototype.putImage = function(opts){
-    var wcspos, impos;
     var rgb = this.rgb;
     var display = this.display;
     var ctx = display.context;
@@ -2112,20 +2108,17 @@ JS9.Image.prototype.putImage = function(opts){
     this.ix = Math.floor((display.canvas.width - rgb.img.width)/2);
     this.iy = Math.floor((display.canvas.height - rgb.img.height)/2);
     // reproject: if reproj wcs header exists, align the display if necessary
-    if( this.rawDataLayer() === "reproject" ){
-	if( opts.wcsim ){
-	    if( this.params.wcsalign ){
-		wcspos = opts.wcsim.logicalToDisplayPos({x: opts.wcsim.raw.wcsinfo.crpix1, y: opts.wcsim.raw.wcsinfo.crpix2});
-		impos = this.logicalToDisplayPos({x: this.raw.wcsinfo.crpix1, y: this.raw.wcsinfo.crpix2});
-		this.wcsix = wcspos.x - impos.x;
-		this.wcsiy = wcspos.y - impos.y;
-	    }
-	}
+    if( this.rawDataLayer() === "reproject" && opts.wcsim ){
+	this.wcsix = opts.wcsim.ix +
+	    opts.wcsim.raw.wcsinfo.crpix1 - this.raw.wcsinfo.crpix1;
+	this.wcsiy = opts.wcsim.iy +
+	    opts.wcsim.raw.wcsinfo.crpix2 - this.raw.wcsinfo.crpix2;
     }
     // wcs alignment of a reprojected layer, or a (current0) copy of one
-    if( this.params.wcsalign ){
-	this.ix += this.wcsix * this.rgb.sect.zoom;
-	this.iy += this.wcsiy * this.rgb.sect.zoom;
+    if( this.params.wcsalign &&
+	(this.wcsix !== undefined) && (this.wcsiy !== undefined)  ){
+	this.ix = this.wcsix;
+	this.iy = this.wcsiy;
     }
     // draw the image into the context
     if( JS9.notNull(opts.opacity) || JS9.notNull(opts.blend) ){
@@ -4554,7 +4547,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	var im, arr, ivfile, ovfile, rstr, key, topts;
 	var tab, tx1, tx2, ty1, ty2, s;
 	var n, avfile, earr, cmdswitches;
-	var wcsexp = /NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
+	var wcsexp = /SIMPLE|BITPIX|NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
 	var ptypeexp = /TAN|SIN|ZEA|STG|ARC/;
 	var reprojHandler = function(hdu){
 	    that.refreshImage(hdu, topts);
@@ -4602,8 +4595,8 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 		}
 	    }
 	}
-	// combine old header keywords + new wcs keywords
-	wcsheader = $.extend(true, {}, oheader, twcs);
+	// combine new wcs keywords + old header keywords
+	wcsheader = $.extend(true, {}, twcs, oheader);
 	// sanity check on result
 	if( !wcsheader.NAXIS || !wcsheader.NAXIS1 || !wcsheader.NAXIS2 ){
 	    JS9.error("invalid FITS image header");
