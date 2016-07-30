@@ -56,7 +56,7 @@ JS9.RESIZEDIST = 20;		// size of rectangle defining resize handle
 JS9.RESIZEFUDGE = 5;            // fudge for webkit resize problems
 JS9.RAWID0 = "raw0";		// default raw id
 JS9.RAWIDX = "alt";		// default "alternate" raw id
-JS9.REPROJDIM = 2200;		// max dimension for reprojection
+JS9.REPROJDIM = 2300;		// max dimension for reprojection
 JS9.IDFMT = "  (%s)";           // format for light window id
 JS9.MINZOOM = 0.125;		// min zoom using scrool wheel
 JS9.MAXZOOM = 16.0;		// max zoom using scrool wheel
@@ -4653,6 +4653,14 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	if( that.raw.hdu && that.raw.hdu.vfile ){
 	    // input file name
 	    ivfile = that.raw.hdu.vfile;
+	    // add extension name or number
+	    if( that.raw.hdu.fits.extname ){
+		ivfile += sprintf("[%s]", that.raw.hdu.fits.extname);
+	    } else if( that.raw.hdu.fits.extnum &&
+		       (that.raw.hdu.fits.extnum > 0) ){
+		ivfile += sprintf("[%s]", that.raw.hdu.fits.extnum);
+	    }
+
 	} else {
 	    // input file name
 	    arr = that.toArray();
@@ -4677,7 +4685,6 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    ivfile += s;
 	}
 	// call the reproject routine
-	// call the reproject routine, passing full pathnames
 	try{
 	    // name of (unneeded) area file
 	    n = ovfile.lastIndexOf(".");
