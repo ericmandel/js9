@@ -102,7 +102,7 @@ JS9.Colorbar.display = function(im){
 };
 
 // constructor: add HTML elements to the plugin
-JS9.Colorbar.init = function(){
+JS9.Colorbar.init = function(width, height){
     var ratio = JS9.PIXEL_RATIO || 1;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -114,13 +114,13 @@ JS9.Colorbar.init = function(){
     // set width and height of plugin itself
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
-	this.width  = JS9.Colorbar.WIDTH;
+	this.width  = width || JS9.Colorbar.WIDTH;
     }
     this.divjq.css("width", this.width);
     this.width = parseInt(this.divjq.css("width"), 10);
     this.height = this.divjq.attr("data-height");
     if( !this.height ){
-	this.height  = JS9.Colorbar.HEIGHT;
+	this.height  = height || JS9.Colorbar.HEIGHT;
     }
     this.divjq.css("height", this.height);
     this.height = parseInt(this.divjq.css("height"), 10);

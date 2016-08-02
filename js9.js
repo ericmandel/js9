@@ -108,6 +108,7 @@ JS9.globalOpts = {
     alerts: true,		// set to false to turn off alerts
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
+    containContrastBias: false, // contrast/bias only when mouse is in display?
     htimeout: 10000,		// connection timeout for the helper connect
     xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
@@ -125,6 +126,7 @@ JS9.globalOpts = {
     spinOpacity: 0.35,          // opacity of spinner
     resize: true,		// allow resize of display?
     resizeHandle: true,		// add resize handle to display?
+    resizeRedisplay: true,	// redisplay image while resizing?
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
@@ -5136,7 +5138,6 @@ JS9.Display = function(el){
 		nwidth  -= JS9.RESIZEFUDGE;
 		nheight -= JS9.RESIZEFUDGE;
 	    }
-	    that.resizing = 1;
 	    that.resize(nwidth, nheight);
 	});
     }
@@ -5342,7 +5343,7 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 
 //  resize a display
 JS9.Display.prototype.resize = function(width, height, opts){
-    var i, im, key, layer, nwidth, nheight, nleft, ntop;
+    var i, im, key, layer, nwidth, nheight, nleft, ntop, pinst;
     var repos = function(o){
 	o.left += nleft;
 	o.top  += ntop;
@@ -5392,7 +5393,20 @@ JS9.Display.prototype.resize = function(width, height, opts){
     }
     // change the menubar width, unless explicitly told not to
     if( opts.resizeMenubar === undefined || opts.resizeMenubar ){
-	$("#" + this.id + "Menubar").css("width", nwidth);
+	pinst = this.pluginInstances.JS9Menubar;
+	if( pinst ){
+	    $("#" + this.id + "Menubar").css("width", nwidth);
+	}
+    }
+    // change the colorbar width, unless explicitly told not to
+    if( opts.resizeColorbar === undefined || opts.resizeColorbar ){
+	pinst = this.pluginInstances.JS9Colorbar;
+	if( pinst ){
+	    // clear colorbar
+	    pinst.divjq.html("");
+	    // re-init colorbar for this size
+	    JS9.Colorbar.init.call(pinst, nwidth, nheight);
+	}
     }
     // change size of shape canvases
     for(key in this.layers ){
@@ -5427,7 +5441,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
 		for( key in im.layers ){
 		    if( im.layers.hasOwnProperty(key) ){
 			layer = im.layers[key];
-			if( !layer.json ){
+			if( layer.dlayer.type === "main" && !layer.json ){
 			    layer.canvas.getObjects().forEach(repos);
 			    layer.canvas.renderAll();
 			}
@@ -5441,9 +5455,8 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	    .css("width",  this.width  + JS9.RESIZEFUDGE)
 	    .css("height", this.height + JS9.RESIZEFUDGE);
     }
-    // for current image being displayed ...
-    if( this.image ){
-	// redisplay
+    // redisplay current image, if necessary
+    if( this.image && (JS9.globalOpts.resizeRedisplay || !this.resizing) ){
 	this.image.displayImage("all", opts);
 	this.image.refreshLayers();
     }
@@ -8092,13 +8105,16 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
 	return;
     }
     // get canvas position
-    pos = JS9.eventToDisplayPos(evt);
+    pos = JS9.eventToDisplayPos(evt, im.posOffset);
     // contrast/bias change
     x = Math.floor(pos.x + 0.5);
     y = Math.floor(pos.y + 0.5);
-    if( (x < 0) || (y < 0) ||
-	(x >= display.canvas.width) || (y >= display.canvas.height) ){
-	return;
+    // values only from within display window?
+    if( JS9.globalOpts.containContrastBias ){
+	if( (x < 0) || (y < 0) ||
+	    (x >= display.canvas.width) || (y >= display.canvas.height) ){
+	    return;
+	}
     }
     im.params.bias = x / display.canvas.width;
     im.params.contrast = y / display.canvas.height * 10.0;
@@ -10427,31 +10443,30 @@ JS9.mouseDownCB = function(evt){
     im.ipos0 = im.displayToImagePos(im.pos);
     // this also is the current image position
     im.ipos = im.ipos0;
-    // prevent default unless we are close to the resize area
-    if( !display.inResize(im.pos) ){
+    // in the resize area?
+    display.resizing = display.inResize(im.pos);
+    // normal (non-resizing) processing
+    if( !display.resizing ){
 	evt.preventDefault();
-    }
-    // begin actions for mouse and touch events
-    if( JS9.hasOwnProperty("MouseTouch") ){
-	JS9.MouseTouch.action(im, evt, "start");
-    }
-    // inside a region, clear region display and return;
-    if( im.clickInRegion ){
-	// clear the region layer
-	im.clearMessage("regions");
-	return;
-    }
-    // plugin callbacks
-    if( !JS9.specialKey(evt) ){
-	im.xeqPlugins("mouse", "onmousedown", evt);
+	// begin actions for mouse and touch events
+	if( JS9.hasOwnProperty("MouseTouch") ){
+	    JS9.MouseTouch.action(im, evt, "start");
+	}
+	// inside a region, clear region display and return;
+	if( im.clickInRegion ){
+	    // clear the region layer
+	    im.clearMessage("regions");
+	    return;
+	}
+	// plugin callbacks
+	if( !JS9.specialKey(evt) ){
+	    im.xeqPlugins("mouse", "onmousedown", evt);
+	}
     }
     // set click state to current mouse button
     im.clickState = evt.which;
     switch(evt.which){
     case 1:
-	// primary mouse click
-	im.clickState = 1;
-	break;
     case 2:
 	break;
     case 3:
@@ -10464,7 +10479,7 @@ JS9.mouseDownCB = function(evt){
 	evt.originalEvent.touches && evt.originalEvent.touches.length ){
 	im.clickState = -evt.originalEvent.touches.length;
     }
-    // add callbacks for moving
+    // add move and up callbacks to the body
     $("body").on("mousemove", display,
 		 function(evt){return JS9.mouseMoveCB(evt);});
     $("body").on("mouseup", display,
@@ -10473,7 +10488,7 @@ JS9.mouseDownCB = function(evt){
 
 // mouseup: assumes display obj is passed in evt.data
 JS9.mouseUpCB = function(evt){
-    var dwidth, dheight;
+    var i, dwidth, dheight, tdisp;
     var display = evt.data;
     var im = display.image;
     // sanity checks
@@ -10511,7 +10526,7 @@ JS9.mouseUpCB = function(evt){
     im.posOffset = null;
     // finish resize, if necessary
     if( display.resizing ){
-	display.resizing = 0;
+	display.resizing = false;
 	if( JS9.bugs.webkit_resize ){
 	    dwidth = parseInt(display.divjq.css("width"), 10);
 	    dheight = parseInt(display.divjq.css("height"), 10);
@@ -10522,9 +10537,22 @@ JS9.mouseUpCB = function(evt){
 		display.divjq.css("height", display.oheight + JS9.RESIZEFUDGE);
 	    }
 	}
+	// if we were not displaying the image while resizing, do it now
+	if( !JS9.globalOpts.resizeRedisplay ){
+	    im.displayImage("all");
+	    im.refreshLayers();
+	}
     }
+    // remove move and up callbacks on the body
     $("body").off("mouseup");
     $("body").off("mousemove");
+    // look for active mousedown from a different display and fire mouse up
+    for(i=0; i<JS9.displays.length; i++){
+	tdisp = JS9.displays[i];
+	if( (tdisp !== display) && tdisp.image && tdisp.image.clickState ){
+	    tdisp.divjq.trigger("mouseup");
+	}
+    }
 };
 
 // mousemove: assumes display obj is passed in evt.data
@@ -10535,10 +10563,6 @@ JS9.mouseMoveCB = function(evt){
     // evt.preventDefault();
     // sanity checks
     if( !im ){
-	return;
-    }
-    // don't do anything if we are resizing
-    if( display.resizing ){
 	return;
     }
     // get canvas position
@@ -10552,10 +10576,11 @@ JS9.mouseMoveCB = function(evt){
     if( !im.ipos0 ){
 	im.ipos0 = im.ipos;
     }
-    // prevent default unless we are close to the resize area
-    if( !display.inResize(im.pos) ){
-	evt.preventDefault();
+    // don't do anything else if we are resizing
+    if( display.resizing ){
+	return;
     }
+    evt.preventDefault();
     // reset the valpos object
     im.valpos = null;
     // in a region, update the region info
