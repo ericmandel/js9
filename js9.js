@@ -10479,10 +10479,10 @@ JS9.mouseDownCB = function(evt){
 	evt.originalEvent.touches && evt.originalEvent.touches.length ){
 	im.clickState = -evt.originalEvent.touches.length;
     }
-    // add move and up callbacks to the body
-    $("body").on("mousemove", display,
+    // add move and up callbacks to whole document
+    $(document).on("mousemove", display,
 		 function(evt){return JS9.mouseMoveCB(evt);});
-    $("body").on("mouseup", display,
+    $(document).on("mouseup", display,
 		 function(evt){return JS9.mouseUpCB(evt);});
 };
 
@@ -10543,9 +10543,9 @@ JS9.mouseUpCB = function(evt){
 	    im.refreshLayers();
 	}
     }
-    // remove move and up callbacks on the body
-    $("body").off("mouseup");
-    $("body").off("mousemove");
+    // remove move and up callbacks on the whole document
+    $(document).off("mouseup");
+    $(document).off("mousemove");
     // look for active mousedown from a different display and fire mouse up
     for(i=0; i<JS9.displays.length; i++){
 	tdisp = JS9.displays[i];
