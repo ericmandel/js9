@@ -9,13 +9,7 @@ foo*
 goo*
 node.log
 js9node.log
-Makefile
-!astroem/Makefile
-!astroem/montage/Makefile
-!astroem/jsfitsio/Makefile
-!astroem/wcs/Makefile
-!astroem/zee.js/Makefile
-!util/Makefile
+/Makefile
 conf.h
 config.status
 config.log
