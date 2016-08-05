@@ -16,9 +16,7 @@
 
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 
-var JS9PM = {};
-
-JS9PM = (function(JS9PM){
+var JS9PM = (function(){
 "use strict";
 
 JS9PM.error = function(s){
@@ -73,4 +71,4 @@ JS9PM.send = function(pm, cmd, args, cb){
 
 // return namespace
 return JS9PM;
-}(JS9PM));
+}());
