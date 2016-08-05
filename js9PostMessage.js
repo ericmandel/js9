@@ -19,6 +19,9 @@
 var JS9PM = (function(){
 "use strict";
 
+/* return module */
+var JS9PM = {};
+
 JS9PM.error = function(s){
     alert("JS9PM ERROR: " + s);
     throw s;
