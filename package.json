@@ -1,6 +1,6 @@
 {
   "name": "js9",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "astronomical image display right in your browser",
   "main": "js9.js",
   "scripts": {
