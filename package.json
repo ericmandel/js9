@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/ericmandel/js9/issues"
   },
+  "bundledDependencies": [
+    "minimist", "node-uuid", "opn", "rimraf", "socket.io"
+  ],
   "homepage": "http://js9.si.edu"
 }

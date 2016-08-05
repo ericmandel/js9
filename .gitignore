@@ -11,6 +11,10 @@ node.log
 js9node.log
 Makefile
 !astroem/Makefile
+!astroem/montage/Makefile
+!astroem/jsfitsio/Makefile
+!astroem/wcs/Makefile
+!astroem/zee.js/Makefile
 !util/Makefile
 conf.h
 config.status
