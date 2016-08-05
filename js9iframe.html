@@ -50,13 +50,15 @@
     </script>
     <center><font size="+1"><b>JS9 Demo: JS9 in an iframe</b></font></center>
     <p>
-    If your Web site has been configured to allow postMessages to JS9,
+    If your web site has been configured to allow postMessages to JS9,
     you can load JS9 into an iframe and communicate via the JS9
-    PostMessage module. All of the Public API routines are available
-    (the gets require a callback).  You also can send a postMessage
-    directly by passing an object with a <b>cmd</b> property (the name
-    of the Public API call) and an <b>args</b> property (an array of
-    call arguments):
+    PostMessage module. In this example, we have loaded a web page from
+    the main JS9 web site at http://js9.si.edu into the iframe.
+
+    All of the Public API routines are available (the gets require a
+    callback).  You also can send a postMessage directly by passing an
+    object with a <b>cmd</b> property (the name of the Public API
+    call) and an <b>args</b> property (an array of call arguments):
     <pre>
         ctx = window.document.getElementById("js9iframe").contentWindow; ctx.postMessage({cmd: "SetColormap", args: ["cool"]}, "*");
     </pre>
@@ -131,7 +133,7 @@ The sea is calm tonight.<br>The tide is full, the moon lies fair <br>Upon the st
 </div>
 
 <div id="overlay">
-<iframe id="js9" src="js9_center_top.html" height="1024" width="1024">
+<iframe id="js9" src="http://js9.si.edu/js9/js9_center_top.html" height="1024" width="1024">
 </iframe>
 </div>
 
