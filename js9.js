@@ -11120,30 +11120,31 @@ JS9.init = function(){
 	}
     }
     // add handler for postMessage events, if necessary
-    if( JS9.globalOpts.postMessage ){
-	window.addEventListener("message", function(ev){
-	    var msg, res;
-	    var data = ev.data;
-	    // var origin = ev.origin;
-	    // var source = ev.source;
-	    if( typeof data === "string" ){
-		// json string passed (we hope)
-		try{ msg = JSON.parse(data); }
-		catch(e){ JS9.error("can't parse msg: "+data, e); }
-	    } else if( typeof data === "object" ){
-		// object was passed directly
-		msg = data;
-	    } else {
-		JS9.error("invalid msg from postMessage");
-	    }
-	    // call the msg handler
-	    res = JS9.msgHandler(msg);
-	    // send results back to parent (sender)
-	    if( res ){
-		parent.postMessage({cmd: msg.cmd, res: res}, "*");
-	    }
-	}, false);
-    }
+    window.addEventListener("message", function(ev){
+	var msg, res;
+	var data = ev.data;
+	if( !JS9.globalOpts.postMessage ){
+	    JS9.error("JS9 postMessage support is not enabled");
+	}
+	// var origin = ev.origin;
+	// var source = ev.source;
+	if( typeof data === "string" ){
+	    // json string passed (we hope)
+	    try{ msg = JSON.parse(data); }
+	    catch(e){ JS9.error("can't parse msg: "+data, e); }
+	} else if( typeof data === "object" ){
+	    // object was passed directly
+	    msg = data;
+	} else {
+	    JS9.error("invalid msg from postMessage");
+	}
+	// call the msg handler
+	res = JS9.msgHandler(msg);
+	// send results back to parent (sender)
+	if( res ){
+	    parent.postMessage({cmd: msg.cmd, res: res}, "*");
+	}
+    }, false);
     // set debug flag
     JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
     // initialize image filters

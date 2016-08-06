@@ -3,40 +3,58 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge" > 
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge" >
   <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
   <script type="text/javascript" src="js9PostMessage.js"></script>
   <style type="text/css">
       body {
         background: lightgreen;
       }
-      #left {
-        float: left;
-        width: 300px;
+      .overlay {
+        position: absolute;
+        top:   0px;
+        left:  0px;
+        width: 100%;
+        height: 100%;
       }
-      #center {
+      .iframe {
+        border: 0px;
+      }
+      .left {
+        position: relative;
+        padding-top: 5px;
+        padding-left: 15px;
         float: left;
+        width: 300;
+      }
+      .center {
+        position: relative;
+        margin: 0 auto;
         width: 512px;
       }
-      #right {
+      .right {
+        position: relative;
+        /* can't figure out why .right is pushed down so ... */
+        top: -160px;
+        padding-top: 5px;
         float: right;
         width: 300px;
       }
-      #load {
-        display:block;
-        margin:auto;
+      #intro {
+        padding: 5px;
+      }
+      #ttop {
+        position: relative;
+        top: 0px;
+        z-index: 2;
+      }
+      #tbot {
+        position: relative;
+        top: 625px;
+        z-index: 2;
       }
       #overlay {
-        position: absolute;
-        top:   275px;
-        left:  0px;
-        width: 100%;
-        text-align: center;
-      }
-      #js9 {
-        border: 0px;
-        background: none transparent;
-        allowTransparency: true;
+        top:   140px;
       }
   </style>
   <title>JS9 in an iframe</title>
@@ -45,97 +63,106 @@
     <script type="text/javascript">
       var pm;
       function init(){
-        pm = JS9PM.init("js9");
+        // arg1: id of the iframe containing the JS9 page
+        pm = JS9PM.init("js9iframe");
       }
     </script>
     <center><font size="+1"><b>JS9 Demo: JS9 in an iframe</b></font></center>
+    <div id="intro">
     <p>
     If your web site has been configured to allow postMessages to JS9,
-    you can load JS9 into an iframe and communicate via the JS9
-    PostMessage module. In this example, we have loaded a web page from
-    the main JS9 web site at http://js9.si.edu into the iframe.
-
-    All of the Public API routines are available (the gets require a
-    callback).  You also can send a postMessage directly by passing an
-    object with a <b>cmd</b> property (the name of the Public API
-    call) and an <b>args</b> property (an array of call arguments):
+    you can load JS9 into an iframe and call any JS9 Public API
+    routine using the js9PostMessage.js module:
     <pre>
-        ctx = window.document.getElementById("js9iframe").contentWindow; ctx.postMessage({cmd: "SetColormap", args: ["cool"]}, "*");
+      &lt;script type='text/javascript' src='js9PostMessage.js'&gt;&lt;/script&gt;
+
+      var pm = JS9PM.init('js9iframe');
+      JS9PM.send(pm, 'SetColormap', 'cool');
+      JS9PM.send(pm, 'GetColormap', function(o){alert(JSON.stringify(o))});
+    </pre>
+    Without js9PostMessage.js, you can send a postMessage directly,
+    passing an object with a <b>cmd</b> property (name of the
+    Public API call) and an <b>args</b> property (an array of call
+    arguments):
+    <pre>
+        ctx = window.document.getElementById("js9iframe").contentWindow;
+	ctx.postMessage({cmd: "SetColormap", args: ["cool"]}, "*");
     </pre>
     <p>
-    The startling fact that JS9 light windows can be moved beyond the
-    JS9 display is a CSS trick: the large iframe utilizes a
-    transparent background, so you can move light windows anywhere
-    below the top of the image display (but you cannot interact with
-    the main page). Not sure how all this can be used but ...
-    <p>
+    Caveat: the JS9 light windows can move beyond the JS9 display
+    because the iframe is a full-window overlay with a transparent
+    background. But since the overlay covers the page, the z-index of
+    the button divs must be raised so that the buttons can be
+    pressed ... which means they are visible on top of any
+    light window that "covers" them ...
+    </div>
 
-<div id="left">
+<div class="container">
+<div class="left">
 <b>The Solitary Reaper, William Wordsworth</b><p>
 <font size="-1">
 Behold her, single in the field,<br>Yon solitary Highland Lass!<br>Reaping and singing by herself;<br>Stop here, or gently pass!<br>Alone she cuts and binds the grain,<br>And sings a melancholy strain;<br>O listen! for the Vale profound<br>Is overflowing with the sound.<br><br>No Nightingale did ever chaunt<br>More welcome notes to weary bands<br>Of travellers in some shady haunt,<br>Among Arabian sands:<br>A voice so thrilling ne'er was heard<br>In spring-time from the Cuckoo-bird,<br>Breaking the silence of the seas<br>Among the farthest Hebrides.<br><br>Will no one tell me what she sings?—<br>Perhaps the plaintive numbers flow<br>For old, unhappy, far-off things,<br>And battles long ago:<br>Or is it some more humble lay,<br>Familiar matter of to-day?<br>Some natural sorrow, loss, or pain,<br>That has been, and may be again?<br><br>Whate'er the theme, the Maiden sang<br>As if her song could have no ending;<br>I saw her singing at her work,<br>And o'er the sickle bending;—<br>I listened, motionless and still;<br>And, as I mounted up the hill,<br>The music in my heart I bore,<br>Long after it was heard no more.<br><br>
 </font>
 </div>
 
-<div id="center">
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    <b>Load an image:</b>
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    <a href="javascript:JS9PM.send(pm, 'Load', './png/casa.png');">casa.png</a>
-    &nbsp;&nbsp;
-    <a href="javascript:JS9PM.send(pm, 'Load', './fits/snr.fits');">snr.fits</a>
-    &nbsp;&nbsp;
-    <a href="javascript:JS9PM.send(pm, 'LoadProxy', ['http://hea-www.cfa.harvard.edu/~eric/coma.fits', {scale: 'linear'}]);">coma.fits (via proxy)</a>
-    <br>
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    <b>Pick a colormap:</b>
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    <a href="javascript:JS9PM.send(pm, 'SetColormap', 'cool');">cool</a>
-    &nbsp;&nbsp;
-    <a href="javascript:JS9PM.send(pm, 'SetColormap', 'heat');">heat</a>
-    &nbsp;&nbsp;
-    <a href="javascript:JS9PM.send(pm, 'SetColormap', 'grey');">grey</a>
-    <br>
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    <b>Run analysis:</b>
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    &nbsp;&nbsp;
-    <a href="javascript:JS9PM.send(pm, 'RunAnalysis', 'counts');">counts</a>
-    &nbsp;&nbsp;
-    <a href="javascript:JS9PM.send(pm, 'RunAnalysis', 'energyplot');">spectrum</a>
+<div class="center">
+  <table id="ttop" cellspacing="5">
+    <tr>
+    <td><b>Load an image:</b></td>
+    <td><input type="button" value="casa.png" onclick="javascript:JS9PM.send(pm, 'Load', './png/casa.png');"></td>
+    <td><input type="button" value="snr.fits" onclick="javascript:JS9PM.send(pm, 'Load', './fits/snr.fits');"></td>
+    <td><input type="button" value="coma.fits (via proxy)" onclick="javascript:JS9PM.send(pm, 'LoadProxy', ['http://hea-www.cfa.harvard.edu/~eric/coma.fits', {scale: 'linear'}]);"></td>
+    </tr>
+  </table>
+
+  <table id="tbot" cellspacing="5">
+    <tr>
+    <td><b>Pick a colormap:</b></td>
+    <td><input type="button" value="cool" onclick="javascript:JS9PM.send(pm, 'SetColormap', 'cool');"></td>
+    <td><input type="button" value="heat" onclick="javascript:JS9PM.send(pm, 'SetColormap', 'heat');"></td>
+    <td><input type="button" value="grey" onclick="javascript:JS9PM.send(pm, 'SetColormap', 'grey');"></td>
+    </tr>
+
+    <tr>
+    <td><b>Pick a scale:</b></td>
+    <td><input type="button" value="linear" onclick="javascript:JS9PM.send(pm, 'SetScale', 'linear');"></td>
+    <td><input type="button" value="log" onclick="javascript:JS9PM.send(pm, 'SetScale', 'log');"></td>
+    <td><input type="button" value="asinh" onclick="javascript:JS9PM.send(pm, 'SetScale', 'asinh');"></td>
+    </tr>
+
+    <tr>
+    <td><b>Pick a zoom:</b></td>
+    <td><input type="button" value="zoom 1" onclick="javascript:JS9PM.send(pm, 'SetZoom', 1);"></td>
+    <td><input type="button" value="zoom 2" onclick="javascript:JS9PM.send(pm, 'SetZoom', 2);"></td>
+    <td><input type="button" value="zoom 4" onclick="javascript:JS9PM.send(pm, 'SetZoom', 3);"></td>
+    </tr>
+
+    <tr>
+    <td><b>Add a region:</b></td>
+    <td><input type="button" value="circle" onclick="javascript:JS9PM.send(pm, 'AddRegions', 'circle');"></td>
+    <td><input type="button" value="box" onclick="javascript:JS9PM.send(pm, 'AddRegions', 'box');"></td>
+    <td><input type="button" value="ellipse" onclick="javascript:JS9PM.send(pm, 'AddRegions', 'ellipse');"></td>
+    </tr>
+
+    <td><b>Run analysis:</b></td>
+    <td><input type="button" value="spectrum" onclick="javascript:JS9PM.send(pm, 'RunAnalysis', 'energyplot');"></td>
+    <td><input type="button" value="spectrum" onclick="javascript:JS9PM.send(pm, 'RunAnalysis', 'energyplot');"></td>
+    <td><input type="button" value="FITS header" onclick="javascript:JS9PM.send(pm, 'RunAnalysis', 'fitshead');"></td>
+    </tr>
+  </table>
 </div>
 
-<div id="right">
+<div class="right">
 <b>Dover Beach, Mathew Arnold</b><p>
 <font size="-1">
 The sea is calm tonight.<br>The tide is full, the moon lies fair <br>Upon the straits; on the French coast the light <br>Gleams and is gone; the cliffs of England stand, <br>Glimmering and vast, out in the tranquil bay. <br>Come to the window, sweet is the night-air! <br>Only, from the long line of spray <br>Where the sea meets the moon-blanched land, <br>Listen! you hear the grating roar <br>Of pebbles which the waves draw back, and fling, <br>At their return, up the high strand, <br>Begin, and cease, and then again begin, <br>With tremulous cadence slow, and bring <br>The eternal note of sadness in. <br><br>Sophocles long ago <br>Heard it on the &AElig;gean, and it brought <br>Into his mind the turbid ebb and flow <br>Of human misery; we <br>Find also in the sound a thought, <br>Hearing it by this distant northern sea. <br><br>The Sea of Faith <br>Was once, too, at the full, and round earth&#8217;s shore <br>Lay like the folds of a bright girdle furled. <br>But now I only hear <br>Its melancholy, long, withdrawing roar, <br>Retreating, to the breath <br>Of the night-wind, down the vast edges drear <br>And naked shingles of the world. <br><br>Ah, love, let us be true <br>To one another! for the world, which seems <br>To lie before us like a land of dreams, <br>So various, so beautiful, so new, <br>Hath really neither joy, nor love, nor light, <br>Nor certitude, nor peace, nor help for pain; <br>And we are here as on a darkling plain <br>Swept with confused alarms of struggle and flight, <br>Where ignorant armies clash by night.<br>
 </font>
 </div>
-
-<div id="overlay">
-<iframe id="js9" src="http://js9.si.edu/js9/js9_center_top.html" height="1024" width="1024">
-</iframe>
 </div>
 
+<div class="overlay" id="overlay">
+<iframe class="iframe" id="js9iframe" src="http://js9.si.edu/js9/js9_center.html" height="1024" width="100%">
+</iframe>
+</div>
 </body>
 </html>
