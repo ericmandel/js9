@@ -54,7 +54,7 @@
         z-index: 2;
       }
       #overlay {
-        top:   140px;
+        top:   136px;
       }
   </style>
   <title>JS9 in an iframe</title>
@@ -74,27 +74,27 @@
     you can load JS9 into an iframe and call any JS9 Public API
     routine using the js9PostMessage.js module:
     <pre>
-      &lt;script type='text/javascript' src='js9PostMessage.js'&gt;&lt;/script&gt;
+    &lt;script type="text/javascript" src="js9PostMessage.js"&gt;&lt;/script&gt;
 
-      var pm = JS9PM.init('js9iframe');
-      JS9PM.send(pm, 'SetColormap', 'cool');
-      JS9PM.send(pm, 'GetColormap', function(o){alert(JSON.stringify(o))});
+    var pm = JS9PM.init("js9iframe", "http://js9.si.edu");
+    JS9PM.send(pm, "SetColormap", "cool");
+    JS9PM.send(pm, "GetColormap", function(o){alert(JSON.stringify(o))});
     </pre>
     Without js9PostMessage.js, you can send a postMessage directly,
     passing an object with a <b>cmd</b> property (name of the
     Public API call) and an <b>args</b> property (an array of call
     arguments):
     <pre>
-        ctx = window.document.getElementById("js9iframe").contentWindow;
-	ctx.postMessage({cmd: "SetColormap", args: ["cool"]}, "*");
+    var ctx = window.document.getElementById("js9iframe").contentWindow;
+    ctx.postMessage({cmd: "SetColormap", args: ["red"]}, "http://js9.si.edu");
     </pre>
     <p>
-    Caveat: the JS9 light windows can move beyond the JS9 display
-    because the iframe is a full-window overlay with a transparent
-    background. But since the overlay covers the page, the z-index of
-    the button divs must be raised so that the buttons can be
-    pressed ... which means they are visible on top of any
-    light window that "covers" them ...
+    Caveat: dealing with light windows is an issue. In this example,
+    light windows can move anywhere because the iframe overlays
+    the full window using a transparent background.  But since the
+    overlay covers the whole page, the z-index of the button divs must
+    be raised so that the buttons can be pressed ... hence, they are
+    visible through any light window that "covers" them ...
     </div>
 
 <div class="container">
