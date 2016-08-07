@@ -42,6 +42,8 @@
       }
       #intro {
         padding: 5px;
+        overflow: hidden;
+        white-space: nowrap;
       }
       #ttop {
         position: relative;
@@ -70,9 +72,9 @@
     <center><font size="+1"><b>JS9 Demo: JS9 in an iframe</b></font></center>
     <div id="intro">
     <p>
-    If your web site has been configured to allow postMessages to JS9,
-    you can load JS9 into an iframe and call any JS9 Public API
-    routine using the js9PostMessage.js module:
+    If your web site is configured to allow postMessages, you can load
+    JS9 into an iframe and send it any JS9 Public API routine using
+    the js9PostMessage.js module:
     <pre>
     &lt;script type="text/javascript" src="js9PostMessage.js"&gt;&lt;/script&gt;
 
@@ -81,9 +83,7 @@
     JS9PM.send(pm, "GetColormap", function(o){alert(JSON.stringify(o))});
     </pre>
     Without js9PostMessage.js, you can send a postMessage directly,
-    passing an object with a <b>cmd</b> property (name of the
-    Public API call) and an <b>args</b> property (an array of call
-    arguments):
+    passing an object with a <b>cmd</b> property (API call name) and an <b>args</b> property (array of call args):
     <pre>
     var ctx = window.document.getElementById("js9iframe").contentWindow;
     ctx.postMessage({cmd: "SetColormap", args: ["red"]}, "http://js9.si.edu");
@@ -91,10 +91,10 @@
     <p>
     Caveat: dealing with light windows is an issue. In this example,
     light windows can move anywhere because the iframe overlays
-    the full window using a transparent background.  But since the
-    overlay covers the whole page, the z-index of the button divs must
-    be raised so that the buttons can be pressed ... hence, they are
-    visible through any light window that "covers" them ...
+    the full window using a transparent background.
+    <br> But now the overlay covers the page, so z-index of
+    the button divs must be raised so the buttons are active ...
+    ... making them visible through any overlapping light window.
     </div>
 
 <div class="container">
