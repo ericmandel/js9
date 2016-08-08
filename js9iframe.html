@@ -10,35 +10,36 @@
       body {
         background: lightgreen;
       }
+      table {
+        margin: 0 auto; /* or margin: 0 auto 0 auto */
+      }
+      .container{
+        position: relative;
+        display: -webkit-flex;
+        display: flex;
+        margin: 15px;
+      }
+      .left {
+        padding-left: 15px;
+        align-items: stretch;
+      }
+      .center {
+        margin-left: auto;
+        margin-right: auto;
+        align-items: stretch;
+      }
+      .right {
+        align-items: stretch;
+      }
       .overlay {
         position: absolute;
-        top:   0px;
-        left:  0px;
-        width: 100%;
-        height: 100%;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
       }
       .iframe {
         border: 0px;
-      }
-      .left {
-        position: relative;
-        padding-top: 5px;
-        padding-left: 15px;
-        float: left;
-        width: 300;
-      }
-      .center {
-        position: relative;
-        margin: 0 auto;
-        width: 512px;
-      }
-      .right {
-        position: relative;
-        /* can't figure out why .right is pushed down so ... */
-        top: -160px;
-        padding-top: 5px;
-        float: right;
-        width: 300px;
       }
       #intro {
         padding: 5px;
@@ -52,21 +53,70 @@
       }
       #tbot {
         position: relative;
-        top: 625px;
+        top: 640px;
         z-index: 2;
-      }
-      #overlay {
-        top:   136px;
       }
   </style>
   <title>JS9 in an iframe</title>
 </head>
-<body onload="init()">
+<body onload="pminit()">
     <script type="text/javascript">
       var pm;
-      function init(){
-        // arg1: id of the iframe containing the JS9 page
-        pm = JS9PM.init("js9iframe", "http://js9.si.edu");
+      var cbs = [];
+      var pmTarget = "http://js9.si.edu";
+      var pmEl = "js9iframe";
+      function pminit(){
+          if( window.hasOwnProperty("JS9PM") ){
+              console.log("using JS9PM ...");
+              pm = JS9PM.init(pmEl, pmTarget);
+          } else {
+              console.log("using raw postMessage ...");
+              pm = window.document.getElementById(pmEl).contentWindow;
+              window.addEventListener("message", function(ev){
+                  var msg;
+                  var data = ev.data;
+                  if( typeof data === "string" ){
+                      // json string passed (we hope)
+                      try{ msg = JSON.parse(data); }
+                      catch(e){ alert("ERROR: can't parse msg: "+data, e); }
+                  } else if( typeof data === "object" ){
+                      // object was passed directly
+                      msg = data;
+                  } else {
+                      alert("ERROR: invalid return msg from postMessage");
+                  }
+                  if( cbs[msg.cmd] && msg.res ){
+                      cbs[msg.cmd](msg.res);
+                      delete cbs[msg.cmd];
+                  }
+              });
+          }
+      }
+      function pmsend(cmd, args, cb){
+          if( window.hasOwnProperty("JS9PM") ){
+              args.unshift(cmd);
+              args.unshift(pm);
+              if( cb ){
+                args.push(cb);
+              }
+              JS9PM.send.apply(null, args);
+          } else {
+              if( cb ){
+                  cbs[cmd] = cb;
+              }
+              pm.postMessage({cmd: cmd, args: args}, pmTarget);
+          }
+      }
+      function pmcb(s){
+          var i, t="";
+          if( typeof s === "object" && s[0] && s[0].wcsstr ){
+              for(i=0; i<s.length; i++){
+                t += s[i].wcsstr + "\n";
+              }
+              alert(t);
+          } else {
+              alert(JSON.stringify(s));
+          }
       }
     </script>
     <center><font size="+1"><b>JS9 Demo: JS9 in an iframe</b></font></center>
@@ -85,19 +135,17 @@
     Without js9PostMessage.js, you can send a postMessage directly,
     passing an object with a <b>cmd</b> property (API call name) and an <b>args</b> property (array of call args):
     <pre>
-    var ctx = window.document.getElementById("js9iframe").contentWindow;
-    ctx.postMessage({cmd: "SetColormap", args: ["red"]}, "http://js9.si.edu");
+    var pm = window.document.getElementById("js9iframe").contentWindow;
+    pm.postMessage({cmd: "SetColormap", args: ["red"]}, "http://js9.si.edu");
     </pre>
     <p>
     Caveat: dealing with light windows is an issue. In this example,
-    light windows can move anywhere because the iframe overlays
-    the full window using a transparent background.
-    <br> But now the overlay covers the page, so z-index of
-    the button divs must be raised so the buttons are active ...
-    ... making them visible through any overlapping light window.
+    light windows can move left and right because the iframe is in
+    an overlay that uses a transparent background.
     </div>
 
 <div class="container">
+
 <div class="left">
 <b>The Solitary Reaper, William Wordsworth</b><p>
 <font size="-1">
@@ -109,48 +157,67 @@ Behold her, single in the field,<br>Yon solitary Highland Lass!<br>Reaping and s
   <table id="ttop" cellspacing="5">
     <tr>
     <td><b>Load an image:</b></td>
-    <td><input type="button" value="casa.png" onclick="javascript:JS9PM.send(pm, 'Load', './png/casa.png');"></td>
-    <td><input type="button" value="snr.fits" onclick="javascript:JS9PM.send(pm, 'Load', './fits/snr.fits');"></td>
-    <td><input type="button" value="coma.fits (via proxy)" onclick="javascript:JS9PM.send(pm, 'LoadProxy', ['http://hea-www.cfa.harvard.edu/~eric/coma.fits', {scale: 'linear'}]);"></td>
+    <td><input type="button" value="casa.png" onclick="javascript:pmsend('Load', ['./png/casa.png']);"></td>
+    <td><input type="button" value="snr.fits" onclick="javascript:pmsend('Load', ['./fits/snr.fits']);"></td>
+    <td><input type="button" value="coma.fits (via proxy)" onclick="javascript:pmsend('LoadProxy', ['http://hea-www.cfa.harvard.edu/~eric/coma.fits', {scale: 'linear'}]);"></td>
     </tr>
   </table>
 
   <table id="tbot" cellspacing="5">
     <tr>
     <td><b>Pick a colormap:</b></td>
-    <td><input type="button" value="cool" onclick="javascript:JS9PM.send(pm, 'SetColormap', 'cool');"></td>
-    <td><input type="button" value="heat" onclick="javascript:JS9PM.send(pm, 'SetColormap', 'heat');"></td>
-    <td><input type="button" value="grey" onclick="javascript:JS9PM.send(pm, 'SetColormap', 'grey');"></td>
+    <td><input type="button" value="cool" onclick="javascript:pmsend('SetColormap', ['cool']);"></td>
+    <td><input type="button" value="heat" onclick="javascript:pmsend('SetColormap', ['heat']);"></td>
+    <td><input type="button" value="grey" onclick="javascript:pmsend('SetColormap', ['grey']);"></td>
+    <td><input type="button" value="viridis" onclick="javascript:pmsend('SetColormap', ['viridis']);"></td>
     </tr>
 
     <tr>
     <td><b>Pick a scale:</b></td>
-    <td><input type="button" value="linear" onclick="javascript:JS9PM.send(pm, 'SetScale', 'linear');"></td>
-    <td><input type="button" value="log" onclick="javascript:JS9PM.send(pm, 'SetScale', 'log');"></td>
-    <td><input type="button" value="asinh" onclick="javascript:JS9PM.send(pm, 'SetScale', 'asinh');"></td>
+    <td><input type="button" value="linear" onclick="javascript:pmsend('SetScale', ['linear']);"></td>
+    <td><input type="button" value="log" onclick="javascript:pmsend('SetScale', ['log']);"></td>
+    <td><input type="button" value="asinh" onclick="javascript:pmsend('SetScale', ['asinh']);"></td>
+    <td><input type="button" value="histeq" onclick="javascript:pmsend('SetScale', ['histeq']);"></td>
     </tr>
 
     <tr>
     <td><b>Pick a zoom:</b></td>
-    <td><input type="button" value="zoom 1" onclick="javascript:JS9PM.send(pm, 'SetZoom', 1);"></td>
-    <td><input type="button" value="zoom 2" onclick="javascript:JS9PM.send(pm, 'SetZoom', 2);"></td>
-    <td><input type="button" value="zoom 4" onclick="javascript:JS9PM.send(pm, 'SetZoom', 3);"></td>
+    <td><input type="button" value="zoom 1/2" onclick="javascript:pmsend('SetZoom', [0.5]);"></td>
+    <td><input type="button" value="zoom 1" onclick="javascript:pmsend('SetZoom', [1]);"></td>
+    <td><input type="button" value="zoom 2" onclick="javascript:pmsend('SetZoom', [2]);"></td>
+    <td><input type="button" value="zoom 4" onclick="javascript:pmsend('SetZoom', [4]);"></td>
     </tr>
 
     <tr>
     <td><b>Add a region:</b></td>
-    <td><input type="button" value="circle" onclick="javascript:JS9PM.send(pm, 'AddRegions', 'circle');"></td>
-    <td><input type="button" value="box" onclick="javascript:JS9PM.send(pm, 'AddRegions', 'box');"></td>
-    <td><input type="button" value="ellipse" onclick="javascript:JS9PM.send(pm, 'AddRegions', 'ellipse');"></td>
+    <td><input type="button" value="circle" onclick="javascript:pmsend('AddRegions', ['circle']);"></td>
+    <td><input type="button" value="box" onclick="javascript:pmsend('AddRegions', ['box']);"></td>
+    <td><input type="button" value="ellipse" onclick="javascript:pmsend('AddRegions', ['ellipse']);"></td>
+    <td><input type="button" value="ellipse" onclick="javascript:pmsend('AddRegions', ['polygon']);"></td>
     </tr>
 
     <tr>
     <td><b>Run analysis:</b></td>
-    <td><input type="button" value="counts" onclick="javascript:JS9PM.send(pm, 'RunAnalysis', 'counts');"></td>
-    <td><input type="button" value="spectrum" onclick="javascript:JS9PM.send(pm, 'RunAnalysis', 'energyplot');"></td>
-    <td><input type="button" value="FITS header" onclick="javascript:JS9PM.send(pm, 'RunAnalysis', 'fitshead');"></td>
+    <td><input type="button" value="FITS header" onclick="javascript:pmsend('RunAnalysis', ['fitshead']);"></td>
+    <td><input type="button" value="counts" onclick="javascript:pmsend('RunAnalysis', ['counts']);"></td>
+    <td><input type="button" value="spectrum" onclick="javascript:pmsend('RunAnalysis', ['energyplot']);"></td>
+    <td><input type="button" value="histplot" onclick="javascript:pmsend('RunAnalysis', ['histplot']);"></td>
+    </tr>
+
+    <tr>
+    <td><b>Get Info:</b></td>
+    <td><input type="button" value="colormap" onclick="javascript:pmsend('GetColormap', [''], pmcb);"></td>
+    <td><input type="button" value="scale" onclick="javascript:pmsend('GetScale', [''], pmcb);"></td>
+    <td><input type="button" value="zoom" onclick="javascript:pmsend('GetZoom', [''], pmcb);"></td>
+    <td><input type="button" value="regions" onclick="javascript:pmsend('GetRegions', [''], pmcb);"></td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
     </tr>
   </table>
+</div>
+
+<div class="overlay">
+<iframe class="iframe" id="js9iframe" src="http://js9.si.edu/js9/js9_center.html" height="640" width="100%"></iframe>
 </div>
 
 <div class="right">
@@ -159,11 +226,8 @@ Behold her, single in the field,<br>Yon solitary Highland Lass!<br>Reaping and s
 The sea is calm tonight.<br>The tide is full, the moon lies fair <br>Upon the straits; on the French coast the light <br>Gleams and is gone; the cliffs of England stand, <br>Glimmering and vast, out in the tranquil bay. <br>Come to the window, sweet is the night-air! <br>Only, from the long line of spray <br>Where the sea meets the moon-blanched land, <br>Listen! you hear the grating roar <br>Of pebbles which the waves draw back, and fling, <br>At their return, up the high strand, <br>Begin, and cease, and then again begin, <br>With tremulous cadence slow, and bring <br>The eternal note of sadness in. <br><br>Sophocles long ago <br>Heard it on the &AElig;gean, and it brought <br>Into his mind the turbid ebb and flow <br>Of human misery; we <br>Find also in the sound a thought, <br>Hearing it by this distant northern sea. <br><br>The Sea of Faith <br>Was once, too, at the full, and round earth&#8217;s shore <br>Lay like the folds of a bright girdle furled. <br>But now I only hear <br>Its melancholy, long, withdrawing roar, <br>Retreating, to the breath <br>Of the night-wind, down the vast edges drear <br>And naked shingles of the world. <br><br>Ah, love, let us be true <br>To one another! for the world, which seems <br>To lie before us like a land of dreams, <br>So various, so beautiful, so new, <br>Hath really neither joy, nor love, nor light, <br>Nor certitude, nor peace, nor help for pain; <br>And we are here as on a darkling plain <br>Swept with confused alarms of struggle and flight, <br>Where ignorant armies clash by night.<br>
 </font>
 </div>
+
 </div>
 
-<div class="overlay" id="overlay">
-<iframe class="iframe" id="js9iframe" src="http://js9.si.edu/js9/js9_center.html" height="1024" width="100%">
-</iframe>
-</div>
 </body>
 </html>
