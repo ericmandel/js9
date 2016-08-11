@@ -9386,6 +9386,14 @@ JS9.msgHandler =  function(msg, cb){
 	if( id ){
 	    args.push({display: id});
 	}
+	// if RunAnalysis has a callback, call it after the helper returns
+	if( cb && (cmd === "RunAnalysis") ){
+	    JS9.globalOpts.alerts = true;
+	    args.push(null);
+	    args.push(cb);
+	    JS9.publics[cmd].apply(null, args);
+	    return;
+	}
 	// call public API
 	try{ res = JS9.publics[cmd].apply(null, args); }
 	catch(e){ res = sprintf("ERROR: %s", e.message); }
@@ -11121,7 +11129,7 @@ JS9.init = function(){
     }
     // add handler for postMessage events, if necessary
     window.addEventListener("message", function(ev){
-	var msg, res;
+	var msg;
 	var data = ev.data;
 	if( !JS9.globalOpts.postMessage ){
 	    JS9.error("JS9 postMessage support is not enabled");
@@ -11139,11 +11147,13 @@ JS9.init = function(){
 	    JS9.error("invalid msg from postMessage");
 	}
 	// call the msg handler
-	res = JS9.msgHandler(msg);
-	// send results back to parent (sender)
-	if( res ){
+	JS9.msgHandler(msg, function(stdout, stderr, errcode, a){
+	    var res;
+            a = a || {};
+	    res = {name: a.name, rtype: a.rtype, rdata: stdout,
+		   stdout: stdout, stderr: stderr, errcode: errcode};
 	    parent.postMessage({cmd: msg.cmd, res: res}, "*");
-	}
+	});
     }, false);
     // set debug flag
     JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
