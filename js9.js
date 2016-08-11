@@ -9386,12 +9386,18 @@ JS9.msgHandler =  function(msg, cb){
 	if( id ){
 	    args.push({display: id});
 	}
-	// if RunAnalysis has a callback, call it after the helper returns
+	// if RunAnalysis has a callback, call it when the helper returns
 	if( cb && (cmd === "RunAnalysis") ){
-	    JS9.globalOpts.alerts = true;
-	    args.push(null);
+	    // add opts arg if not already present
+	    if( args.length === 1 ){
+		args.push(null);
+	    }
+	    // add callback arg
 	    args.push(cb);
+	    // run task
 	    JS9.publics[cmd].apply(null, args);
+	    // restore alerts
+	    JS9.globalOpts.alerts = true;
 	    return;
 	}
 	// call public API
