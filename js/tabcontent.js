@@ -39,7 +39,7 @@ ddtabcontent.prototype={
 		try{
 			if (typeof tabid_or_position=="string" && document.getElementById(tabid_or_position).getAttribute("rel")) //if specified tab contains "rel" attr
 				tabref=document.getElementById(tabid_or_position)
-			else if (parseInt(tabid_or_position)!=NaN && this.tabs[tabid_or_position].getAttribute("rel")) //if specified tab contains "rel" attr
+			else if (parseInt(tabid_or_position)!=isNaN() && this.tabs[tabid_or_position].getAttribute("rel")) //if specified tab contains "rel" attr
 				tabref=this.tabs[tabid_or_position]
 		}
 		catch(err){alert("Invalid Tab ID or position entered!")}
@@ -156,4 +156,5 @@ ddtabcontent.prototype={
 		}
 	} //END int() function
 
-} //END Prototype assignment
+}; //END Prototype assignment
+
