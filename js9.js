@@ -7063,7 +7063,7 @@ JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
 // call using image context
 JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     var i, xname, s, scalex, scaley, px, py, lcs;
-    var bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius;
+    var bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius, oangle;
     var opos, dist;
     var pub ={};
     var layer = this.layers[layerName];
@@ -7119,6 +7119,11 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     }
     while( pub.angle > 360 ){
 	pub.angle -= 360;
+    }
+    // remove file rotation?
+    oangle = pub.angle;
+    if( this.raw.wcsinfo && this.raw.wcsinfo.crot ){
+	pub.angle -= this.raw.wcsinfo.crot;
     }
     // the parts of the obj.scale[XY] values related to size (not zoom, binning)
     scalex = obj.scaleX / zoom * bin;
@@ -7186,7 +7191,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    npos = {x: pub.x + obj.points[i].x * scalex,
 		    y: pub.y - obj.points[i].y * scaley};
 	    // add rotation
-	    npos = JS9.rotatePoint(npos, pub.angle,
+	    npos = JS9.rotatePoint(npos, oangle,
 				   {x: pub.x, y: pub.y});
 	    if( this.params.wcssys === "image" ){
 		pub.imstr += (tr(npos.x) + ", " + tr(npos.y));
@@ -8985,6 +8990,10 @@ JS9.Regions.parseRegions = function(s){
     // get image angle
     var getang = function(a){
 	var v = strtod(a);
+	var wcsinfo = this.raw.wcsinfo || {crot: 0};
+	if( (iswcs || liswcs) && wcsinfo.crot ){
+            v.dval += wcsinfo.crot;
+	}
 	return v.dval;
     };
     // get cleaned-up string
