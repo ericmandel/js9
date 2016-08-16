@@ -1483,7 +1483,8 @@ JS9.Menubar.init = function(width, height){
 				    if( a.purl ){
 					did = uim.displayAnalysis("params",
 						  JS9.InstallDir(a.purl),
-						  a.title+": "+uim.fitsFile);
+						  a.title+": "+uim.fitsFile,
+						  a.pwin);
 					// save info for running the task
 					$(did).data("dispid", udisp.id)
 				              .data("aname", a.name);
