@@ -124,10 +124,9 @@ radialplot)
         error "please specify an annulus region (only) for the source"
     fi
     if [ $# -eq 1 ]; then
-      ${CNTS} -rG "$1" "$2" | funcnts2flot -title "$TITLE" -file "$1" | xsed
+      ${CNTS} -rG "$1" "$2" | funcnts2flot | xsed
     else
-      ${CNTS} -rG "$1" "$2" "$3" | funcnts2flot -title "$TITLE" -file "$1" | \
-      xsed
+      ${CNTS} -rG "$1" "$2" "$3" | funcnts2flot | xsed
     fi
     exit 0
     ;;
@@ -152,25 +151,30 @@ histplot)
     fi
     COL="$1"; shift;
     BINS="$1"
+    YAXIS="counts"
+    XAXIS="${COL} bin"
     if [ "x$COL" = 'x$energy' ]; then
       COL="pi";
+      XAXIS="${COL} bin"
       TELESCOP=`funhead $FILE | getpar TELESCOP`
       case "$TELESCOP" in
         CHANDRA)
           COL="energy"
+          XAXIS="${COL} (ev)"
           if [ x"$BINS" = x0 ]; then
               BINS="$CHANDRABINS"
           fi
         ;;
+        XMM)
+          XAXIS="${COL} (ev)"
+        ;;
       esac
     fi
-    TITLE="`echo "$FILE" | tr [a-z] [A-Z]` Plot"
+    TITLE="$YAXIS vs. $XAXIS"
     if [ x"$BINS" = "x0" ]; then
-	funhist $ARGS "$FILE" "$COL" |
-	funhist2flot -title "$TITLE" -file "$FILE" | xsed
+	funhist $ARGS "$FILE" "$COL" | funhist2flot -t "$TITLE" | xsed
     else
-	funhist $ARGS "$FILE" "$COL" "$BINS" |
-	funhist2flot -title "$TITLE" -file "$FILE" | xsed
+	funhist $ARGS "$FILE" "$COL" "$BINS" | funhist2flot -t "$TITLE" | xsed
     fi
     exit 0
     ;;
