@@ -3,7 +3,7 @@
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Blink = {};
@@ -78,6 +78,7 @@ JS9.Blink.xactive = function(id, target){
 };
 
 // change current file
+// eslint-disable-next-line no-unused-vars
 JS9.Blink.ximfile = function(id, target){
     var im = JS9.lookupImage(id);
     if( im ){
@@ -103,6 +104,7 @@ JS9.Blink.xblinkmode = function(id, target){
 };
 
 // change global blink mode for this display
+// eslint-disable-next-line no-unused-vars
 JS9.Blink.xblink1 = function(id, target){
     var display = JS9.lookupDisplay(id);
     var plugin = display.pluginInstances.JS9Blink;
@@ -119,10 +121,11 @@ JS9.Blink.xblink1 = function(id, target){
 
 // change blink rate
 JS9.Blend.xrate = function(id, target){
+    var plugin;
     var rate = Math.floor(target.options[target.selectedIndex].value * 1000);
     var display = JS9.lookupDisplay(id);
     if( display ){
-	var plugin = display.pluginInstances.JS9Blink;
+	plugin = display.pluginInstances.JS9Blink;
 	if( !isNaN(rate) ){
 	    plugin.rate = rate;
 	}
@@ -176,7 +179,7 @@ JS9.Blink.addImage = function(im){
 	.prop("imid", im.id)
 	.html(s)
 	.appendTo(this.blinkImageContainer);
-    divjq.on("mousedown touchstart", function(evt){
+    divjq.on("mousedown touchstart", function(){
 	    im.displayImage();
 	    JS9.Blink.activeImage.call(this, im);
     });

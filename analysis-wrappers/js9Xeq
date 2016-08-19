@@ -14,6 +14,9 @@ fi
 # JS9_HOST		host ip of client
 # JS9_ID		id (from js9 div) of client
 
+#defaults
+CHANDRABINS="500:8000:1875"
+
 # if we are being called via CGI, send stderr to stdout
 if [ x"$QUERY_STRING" != x ]; then
   exec 2>&1
@@ -21,12 +24,21 @@ fi
 
 # error handler: send to stderr (which will go to stdout for CGI)
 error() {
-  echo "ERROR: $*" >&2
+  echo "$*" | egrep "^ERROR:" 2>&1 >/dev/null
+  if [ $? = 0 ]; then
+    echo "$*" >&2
+  else
+    echo "ERROR: $*" >&2
+  fi
   exit 1
 }
 
 xsed() {
-  sed 's#'${JS9_DIR}'#${JS9_DIR}#g;'
+  sed 's#'${JS9_DIR:-none}'#${JS9_DIR}#g;'
+}
+
+getpar () {
+  egrep "$1 *=" | awk -F= '{print $2}' | awk -F/ '{print $1}' | sed "s/[' ]*\([^ ']*\)[ ']*/\1/" | tr [a-z] [A-Z] | head -1
 }
 
 # regcnts is preferred
@@ -79,17 +91,37 @@ hist)
     if [ $WIDTH = "true" ]; then
       ARGS="$ARGS -w"
     fi
-    if [ $# -eq 1 ]; then
-	funhist $ARGS "$FILE" "$1" | xsed
+    COL="$1"; shift;
+    if [ "x$COL" = 'x$energy' ]; then
+      COL="pi";
+      TELESCOP=`funhead $FILE | getpar TELESCOP`
+      case "$TELESCOP" in
+        CHANDRA)
+          COL="energy"
+          if [ x"$BINS" = x0 ]; then
+              BINS="$CHANDRABINS"
+          fi
+        ;;
+      esac
+    fi
+    if [ $# -eq 0 ]; then
+	funhist $ARGS "$FILE" "$COL" | xsed
     else
-	funhist $ARGS "$FILE" "$1" "$2" | xsed
+	funhist $ARGS "$FILE" "$COL" "$1" | xsed
     fi
     exit 0
     ;;
 
 radialplot)
-    if [ $# = 0 ]; then
+    if [ $# -lt 2 ]; then
       error "${CNTS} filename [source] [bkgd] [$#]"
+    fi
+    if [ x"$2" = x ]; then
+        error "please specify an annulus region for the source"
+    fi
+    echo "$2" | egrep 'box|circle|ellipse|line|point|poly' 2>&1 >/dev/null
+    if [ $? = 0 ]; then
+        error "please specify an annulus region (only) for the source"
     fi
     if [ $# -eq 1 ]; then
       ${CNTS} -rG "$1" "$2" | funcnts2flot -title "$TITLE" -file "$1" | xsed
@@ -118,12 +150,26 @@ histplot)
       fi
       ARGS="$ARGS -w"
     fi
+    COL="$1"; shift;
+    BINS="$1"
+    if [ "x$COL" = 'x$energy' ]; then
+      COL="pi";
+      TELESCOP=`funhead $FILE | getpar TELESCOP`
+      case "$TELESCOP" in
+        CHANDRA)
+          COL="energy"
+          if [ x"$BINS" = x0 ]; then
+              BINS="$CHANDRABINS"
+          fi
+        ;;
+      esac
+    fi
     TITLE="`echo "$FILE" | tr [a-z] [A-Z]` Plot"
-    if [ $# -eq 1 ]; then
-	funhist $ARGS "$FILE" "$1" | 
+    if [ x"$BINS" = "x0" ]; then
+	funhist $ARGS "$FILE" "$COL" |
 	funhist2flot -title "$TITLE" -file "$FILE" | xsed
     else
-	funhist $ARGS "$FILE" "$1" "$2" |
+	funhist $ARGS "$FILE" "$COL" "$BINS" |
 	funhist2flot -title "$TITLE" -file "$FILE" | xsed
     fi
     exit 0
@@ -132,7 +178,7 @@ histplot)
 evfilter)
     # required args
     if [ "$#" -lt 3 ]; then
-	error "evfilter ifile ext filter [$*]"
+	error "evfilter ifile filter cen dims [$*]"
     fi
     if [ x"${JS9_WORKDIR}" = x ]; then
 	error "evfilter requires configuration of a temporary work directory"
@@ -143,14 +189,17 @@ evfilter)
        error "disk quota exceeded. Please close one or more displayed images."
       fi
     fi
-    OTYPE="png"
+    # input file
     IFILE="$1"; shift
-    EXT="$1"; shift
-    if [ x"$EXT" = xnull ]; then
-      EXT=""
-    fi
-    # remove spaces
-    FILTER=`echo $* | sed 's/ //g'`
+    # get filter, remove spaces
+    FILTER=`echo $1 | sed 's/ //g;s/__ampersand__/\&/g'`; shift
+    CEN="$1"; shift
+    # get dims
+    DIMS="$1"; shift
+    # make up funtools image section extension from cen and dims
+    X=`echo $CEN | awk '{print $1}'`
+    Y=`echo $CEN | awk '{print $2}'`
+    EXT="[$DIMS@$X,$DIMS@$Y]"
     # try to get a base name for output
     XBASE=`basename $IFILE`
     IBASE=`basename $IFILE .fits`
@@ -158,22 +207,29 @@ evfilter)
 	IBASE=`basename $IFILE .fits.gz`
     fi
     # make up unique output file base
-    OBASE=`echo ${IBASE}_${FILTER} | awk -F/ '{print $NF}' | sed 's/[,]/_/g'`
-    # create the filtered FITS file
-    if [ x$OTYPE = xfits ]; then
-	# create the filtered FITS file for analysis
-	funimage $IFILE"[EVENTS+,${FILTER}]" $OBASE.fits
-	# sending as binary will result in high bit being stripped! why??
-	# cat $OBASE.fits
-	base64 < $OBASE.fits
+    OBASE=`echo ${IBASE}_${FILTER} | sed 's/\[.*\]//g' | awk -F/ '{print $NF}' | sed 's/[,<>$&|!\*]/_/g'`
+    # make up new filter ... might need to combine with old filter
+    echo "$IFILE" | egrep '\]\[' 2>&1 >/dev/null
+    if [ $? = 0 ]; then
+	# remove closing bracket from old filter
+        X=`echo $IFILE | sed 's/\]$//'`
+	# append new filter onto old filter
+        IFILEX="${X}&&$FILTER]"
     else
-	# create the filtered FITS file for analysis
-	funtable $IFILE"[EVENTS+,${FILTER}]" $OBASE.fits
-	# created the associated PNG file for display (using original ext)
-	fits2png $OBASE.fits"$EXT" $OBASE.png
-	# send back relative path to the PNG file
-	echo "${JS9_WORKDIR}/$OBASE.png"
+        IFILEX="${IFILE}[$FILTER]"
     fi
+    # create the filtered FITS event file
+    funtable $IFILEX ${OBASE}.fits >& err.log
+    if [ $? != 0 ]; then
+	error "`cat err.log`"
+    fi
+    # create a smaller representation file for display
+    funimage ${OBASE}.fits"$EXT" stdout | gzip -c > ${OBASE}.fits.gz
+    if [ $? != 0 ]; then
+	error "`cat err.log`"
+    fi
+    # send representation file and parent file
+    echo "${JS9_WORKDIR}/${OBASE}.fits.gz ${JS9_WORKDIR}/${OBASE}.fits"
     exit 0
     ;;
 
@@ -300,13 +356,14 @@ removeproxy)
     if [ x"${JS9_WORKDIR}" = x ]; then
 	error "removeproxy requires configuration of a temporary work directory"
     fi
-    if [ x"$DIR" != x"$JS9_WORKDIR" ]; then
+    echo "$DIR" | egrep "$JS9_WORKDIR" 2>&1 >/dev/null
+    if [ $? != 0 ]; then
       error "can't remove proxy file from someone else's working directory"
     fi
     # remove files that match a template of the input file (without extension),
     # but avoid removing files with a similar name
     TMPL=`echo $FILE | rev | cut -f 2- -d '.' | rev`
-    rm -rf `ls ${TMPL}.* | egrep -v "${TMPL}\..*\..*"`
+    rm -rf `ls ${TMPL} ${TMPL}.* | egrep -v "${TMPL}\..*\..*"`
     if [ $? != 0 ]; then
       error "can't remove proxy file: $FILE"
     fi
@@ -315,15 +372,19 @@ removeproxy)
 
 macros)
     echo "
-    image     [$1]
-    filename: [$2]
-    id:       [$3]
-    foo:      [$4] (not expanded)
-    sregions: [$5]
-    bregions: [$6]
-    reg(wcs): [$7]
-    reg(phy): [$8]
-    string1:  [$9] (passed on command line)"
+    image:       [$1]
+    file/parent: [$2]
+    file/this:   [$3]
+    ext:         [$4]
+    imcen:       [$5]
+    wcscen:      [$6]
+    id:          [$7]
+    foo:         [$8] (not expanded)
+    sregions:    [$9]
+    bregions:    [${10}]
+    reg(wcs):    [${11}]
+    reg(phy):    [${12}]
+    string1:     [${13}] (passed on command line)"
     exit 0
     ;;
 

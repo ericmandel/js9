@@ -3,7 +3,7 @@
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Blend = {};
@@ -63,6 +63,7 @@ JS9.Blend.xopacity = function(id, target){
 };
 
 // change current file
+// eslint-disable-next-line no-unused-vars
 JS9.Blend.ximfile = function(id, target){
     var im = JS9.lookupImage(id);
     if( im ){
@@ -131,7 +132,7 @@ JS9.Blend.addImage = function(im){
 	.prop("imid", im.id)
 	.html(s)
 	.appendTo(this.blendImageContainer);
-    divjq.on("mousedown touchstart", function(evt){
+    divjq.on("mousedown touchstart", function(){
 	    im.displayImage();
 	    JS9.Blend.activeImage.call(this, im);
     });

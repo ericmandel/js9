@@ -3105,7 +3105,7 @@ JS9.Image.prototype.expandMacro = function(s, opts){
     // process each $ token
     // eslint-disable-next-line no-unused-vars
     cmd = s.replace(/\$([a-zA-Z0-9_()]+)/g, function(m, t, o){
-	var i, r, owcssys;
+	var i, r, owcssys, pos;
 	var savewcs = function(im, wcssys){
 	    var owcs = im.params.wcssys;
 	    if( wcssys ){
@@ -3133,8 +3133,16 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	var withext = function(im, r){
 	    var e;
 	    // for tables, we might need to add the binning filter
-	    if( (im.imtab === "table") && (im.raw.hdu.table.filter) ){
-		r += '[' + im.raw.hdu.table.filter + ']';
+	    if( im.imtab === "table" ){
+		if( im.raw.hdu.table.filter &&
+		    !r.match(im.raw.hdu.table.filter) ){
+		    if( r.match(/\]\[/) ){
+			r = r.slice(0, -1) +
+			    '&&' + im.raw.hdu.table.filter + ']';
+		    } else {
+			r += '[' + im.raw.hdu.table.filter + ']';
+		    }
+		}
 	    } else if( im.imtab === "image" ){
 		// for images, we might need to add/replace extension info
 		e = im.file.match(/\[.*\]/);
@@ -3161,7 +3169,7 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    r = that.id;
 	    break;
 	case "filename":
-	    if( u[1] === "parent" && that.parentFile ){
+	    if( that.parentFile && (u[1] !== "this") ){
 		r = that.parentFile;
 	    } else if( that.fitsFile ){
 		r = withext(that, that.fitsFile);
@@ -3190,6 +3198,16 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    } else {
 		JS9.error("no FITS file for " + that.id);
 	    }
+	    break;
+	case "imcenter":
+	    pos = that.displayToLogicalPos({x: that.display.width/2,
+					    y: that.display.height/2});
+	    r = sprintf("%s %s", pos.x, pos.y);
+	    break;
+	case "wcscenter":
+	    pos = that.displayToImagePos({x: that.display.width/2,
+					  y: that.display.height/2});
+	    r = JS9.pix2wcs(that.raw.wcs, pos.x, pos.y);
 	    break;
 	case "sregions":
 	    owcssys = savewcs(that, u[1]);
@@ -3271,7 +3289,7 @@ JS9.Image.prototype.lookupAnalysis = function(name){
 
 // execute analysis task
 JS9.Image.prototype.runAnalysis = function(name, opts, func){
-    var i, a, f, m;
+    var i, a, m;
     var that = this;
     var obj = {};
     // sanity checks
@@ -3320,7 +3338,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     // change the cursor to show the waiting status
     JS9.waiting(true, this.display.divjq[0]);
     JS9.helper.send(m, obj, function(r){
-	var s, robj;
+	var s, robj, f, pf, xobj, files;
 	JS9.waiting(false);
 	// return type can be string or object
 	if( typeof r === "object" ){
@@ -3369,13 +3387,23 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		break;
 	    case "fits":
 	    case "png":
-		f = robj.stdout.trim().replace(/\/\.\//, "/");
+		// output is file and possibly parentFile
+		files = robj.stdout.split(/\s+/);
+		// file
+		f = files[0].trim().replace(/\/\.\//, "/");
 		// relative path: add install dir prefix
 		if( f.charAt(0) !== "/" ){
 		    f = JS9.InstallDir(f);
 		}
+		// which is a proxy file (meaning: delete it on close)
+		xobj = {proxyFile: f};
+		// look for parentFile (path relative to helper, not install)
+		if( files[1] ){
+		    pf = files[1].trim().replace(/\/\.\//, "/");
+		    xobj.parentFile = pf;
+		}
 		// load new file
-	        JS9.Load(f, {proxyFile: f}, {display: that.display});
+	        JS9.Load(f, xobj, {display: that.display});
 		break;
 	    case "none":
 		break;
@@ -4008,7 +4036,7 @@ JS9.Image.prototype.zscale = function(setvals){
     // free empscripten heap space
     JS9.vfree(buf);
     // clean up return values
-    vals = s.trim().split(" ");
+    vals = s.trim().split(/\s+/);
     // save z1 and z2
     this.params.z1 = parseFloat(vals[0]);
     this.params.z2 = parseFloat(vals[1]);

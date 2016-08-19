@@ -3,7 +3,7 @@
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, ddtabcontent */
+/*global $, JS9, sprintf, ddtabcontent */
 
 // To specify the JS9 display instance to link to a given PREFS div,
 // use the HTML5 dataset syntax: 
@@ -208,7 +208,7 @@ JS9.Prefs.fitsSchema = {
 	"ydim": {
 	    "type": "string",
 	    "helper": "y dimension of extracted image"
-	},
+	}
     }
 };
 
@@ -228,7 +228,7 @@ JS9.Prefs.displaysSchema = {
 	"mousetouchZoom": {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
-	},
+	}
     }
 };
 
@@ -241,7 +241,7 @@ JS9.Prefs.sources = [
 ];
 
 // init preference plugin
-JS9.Prefs.init = function(width, height){
+JS9.Prefs.init = function(){
     var i, s, obj, key, props, sources, source, id, pid, html, prompt;
     // create the div containing one tab for each of the sources
     sources = JS9.Prefs.sources;
@@ -400,6 +400,7 @@ JS9.Prefs.deleteForm = function(){
 };
 
 // process new preferences in the preference form
+// eslint-disable-next-line no-unused-vars
 JS9.Prefs.processForm = function(source, arr, display, winid){
     var i, j, key , val, obj, rlayer;
     var len = arr.length;

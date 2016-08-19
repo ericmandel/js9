@@ -833,126 +833,59 @@ module.exports = xhr;
 },{}]},{},[1]);
 
 /*jslint white: true, vars: true, plusplus: true, nomen: true, unparam: true */
-/*globals $, JS9 */ 
+/*globals $, JS9, Fitsy */
 
 "use strict";
-
 
 (function() {
 
     function reBinImage(div, display) {
-
-    JS9.debug = 2;
-
-	var i, j;
+	var hdu, options;
 	var im   = JS9.GetImage({display: display});
 	var form = $(div).find(".binning-form")[0];
-
+	var rebin = function(im, hdu, display){
+	    var ss;
+	    var rexp = /(\[.*[a-zA-Z0-9_].*\])\[.*\]/;
+	    var topts = {display: display};
+	    if( form.separate.checked ){
+		// replace old extensions with new
+		// would be better to combine them, but ...
+		if( form.filter.value ){
+		    ss = '[' + form.filter.value.replace(/\s+/g,"") + ']';
+		    topts.id = im.id.replace(rexp, "$1") + ss;
+		    if( im.fitsFile ){
+			topts.file = im.fitsFile.replace(rexp, "$1") + ss;
+		    } else {
+			topts.file = topts.id;
+		    }
+		}
+		JS9.checkNew(new JS9.Image(hdu, topts));
+	    } else {
+		JS9.RefreshImage(hdu, topts);
+	    }
+	};
 	if ( !im ) { return; }
 
-	var options = $.extend(true, {}, JS9.fits.options
-	    , { table: { cx: form.cx.value , cy: form.cy.value  
-	    	       , nx: form.nx.value , ny: form.ny.value
-		       , bin: form.bin.value , filter: form.filter.value }
+	options = $.extend(true, {}, JS9.fits.options,
+	      { table: { cx: form.cx.value , cy: form.cy.value,
+			 nx: form.nx.value , ny: form.ny.value,
+			 bin: form.bin.value , filter: form.filter.value }
 	      });
 
-	var hdu = im.raw.hdu;
+	hdu = im.raw.hdu;
 
 	if ( hdu.type === "image" ) {
-
-	  switch(JS9.fitsLibrary()){
-	  case "fitsy":
-	    var bin = Math.round(Number(form.bin.value));
-	    hdu.bin        = bin;
-	    form.bin.value = bin;
-
-	    var nx = hdu.head["NAXIS1"]
-	    var ny = hdu.head["NAXIS2"]
-
-	    var xx = Math.round(nx/bin);
-	    var yy = Math.round(ny/bin);
-
-	    hdu.image = new Float32Array(nx*ny);
-
-	    for ( j = 0; j < ny; j++ ) {
-	    for ( i = 0; i < nx; i++ ) {
-		hdu.image[Math.floor(j/bin)*xx+Math.floor(i/bin)] += hdu.filedata[j*nx+i];
-	    }
-	    }
-
-	    hdu.dmin = Number.MAX_VALUE;
-	    hdu.dmax = Number.MIN_VALUE;
-
-	    for ( i = 0; i < xx*yy; i++ ) {
-		hdu.dmin    = Math.min(hdu.dmin, hdu.image[i]);
-		hdu.dmax    = Math.max(hdu.dmax, hdu.image[i]);
-	    }
-
-	    hdu.axis[1] = xx;
-	    hdu.axis[2] = yy;
-	    hdu.bitpix  = -32;
-
-	    hdu.head  = Fitsy.clone(hdu.filehead);
-	    hdu.card  = Fitsy.clone(hdu.filecard);
-
-	    // Simple standard FITS WCS
-	    //
-	    Fitsy.cardcopy(hdu, "CDELT1",   hdu, "CDELT1", undefined, function(x) { return x*bin; });
-	    Fitsy.cardcopy(hdu, "CRPIX1",   hdu, "CRPIX1", undefined, function(x) { return x/bin; });
-	    Fitsy.cardcopy(hdu, "CDELT2",   hdu, "CDELT2", undefined, function(x) { return x*bin; });
-	    Fitsy.cardcopy(hdu, "CRPIX2",   hdu, "CRPIX2", undefined, function(x) { return x/bin; });
-
-	    // Adjust the CD Matrix
-	    //
-	    Fitsy.cardcopy(hdu, "CD1_1",    hdu, "CD1_1", undefined, function(x) { return x/bin; });
-	    Fitsy.cardcopy(hdu, "CD1_2",    hdu, "CD1_2", undefined, function(x) { return x/bin; });
-	    Fitsy.cardcopy(hdu, "CD2_1",    hdu, "CD2_1", undefined, function(x) { return x/bin; });
-	    Fitsy.cardcopy(hdu, "CD2_2",    hdu, "CD2_2", undefined, function(x) { return x/bin; });
-
-
-	    // DSS-II image - this is just a guess
-	    //
-	    Fitsy.cardcopy(hdu, "PLTSCALE", hdu, "PLTSCALE", undefined, function(x) { return x*bin; });
-	    Fitsy.cardcopy(hdu, "XPIXELSZ", hdu, "XPIXELSZ", undefined, function(x) { return x*bin; });
-	    Fitsy.cardcopy(hdu, "CNPIX1",   hdu, "CNPIX1",   undefined, function(x) { return x/bin; });
-	    Fitsy.cardcopy(hdu, "YPIXELSZ", hdu, "YPIXELSZ", undefined, function(x) { return x*bin; });
-	    Fitsy.cardcopy(hdu, "CNPIX2",   hdu, "CNPIX2",   undefined, function(x) { return x/bin; });
-
-	    // Fix up some random commonly used keywords
-	    //
-	    Fitsy.cardcopy(hdu, "PIXSCALE", hdu, "PIXSCALE", undefined, function(x) { return x*bin; });
-	    Fitsy.cardcopy(hdu, "SECPIX",   hdu, "SECPIX",   undefined, function(x) { return x*bin; });
-	    Fitsy.cardcopy(hdu, "SECPIX1",  hdu, "SECPIX1",  undefined, function(x) { return x*bin; });
-	    Fitsy.cardcopy(hdu, "SECPIX2",  hdu, "SECPIX2",  undefined, function(x) { return x*bin; });
-	    Fitsy.cardcopy(hdu, "XPIXSIZE", hdu, "XPIXSIZE", undefined, function(x) { return x*bin; });
-	    Fitsy.cardcopy(hdu, "YPIXSIZE", hdu, "YPIXSIZE", undefined, function(x) { return x*bin; });
-	    Fitsy.cardcopy(hdu, "PIXSCAL1", hdu, "PIXSCAL1", undefined, function(x) { return x*bin; });
-	    Fitsy.cardcopy(hdu, "PIXSCAL2", hdu, "PIXSCAL2", undefined, function(x) { return x*bin; });
-
-	    Fitsy.cardcopy(hdu, "LTM1_1",   hdu, "LTM1_1", 1.0, function(x) { return x/bin; });
-	    Fitsy.cardcopy(hdu, "LTM1_2",   hdu, "LTM1_2", 0.0, function(x) { return x/bin; });
-	    Fitsy.cardcopy(hdu, "LTM2_1",   hdu, "LTM2_1", 0.0, function(x) { return x/bin; });
-	    Fitsy.cardcopy(hdu, "LTM2_2",   hdu, "LTM2_2", 1.0, function(x) { return x/bin; });
-
-	    Fitsy.cardcopy(hdu, "LTV1",     hdu, "LTV1",   0.0, function(x) { return x/bin; });
-	    Fitsy.cardcopy(hdu, "LTV2",     hdu, "LTV2",   0.0, function(x) { return x/bin; });
-
-	    JS9.RefreshImage(hdu, {display: display});
-	    break;
-	    case "cfitsio":
-	      JS9.error("image binning not yet implemented using cfitsio");
-	      break;
-          }
+	      JS9.error("image binning not implemented");
 	} else {
 	    switch(JS9.fitsLibrary()){
 	    case "fitsy":
 		Fitsy.readTableHDUData(hdu.fits, hdu, options, function(hdu){
-	            JS9.RefreshImage(hdu, {display: display});
+		    rebin(im, hdu, display);
 		});
 		break;
 	    case "cfitsio":
 		JS9.fits.getFITSImage(hdu.fits, hdu, options, function(hdu){
-		    JS9.RefreshImage(hdu, {display: display});
+		    rebin(im, hdu, display);
 		});
 		break;
 	    }
@@ -960,14 +893,15 @@ module.exports = xhr;
     }
 
     function getBinParams(div, display) {
+	var im, form;
 	if ( display === undefined ) {
 	    div     = this.div;
 	    display = this.display;
 	}
-	var im   = JS9.GetImage({display: display});
+	im   = JS9.GetImage({display: display});
 
 	if ( im ) {
-	    var form = $(div).find(".binning-form")[0];
+	    form = $(div).find(".binning-form")[0];
 
 	    if ( im.raw.hdu !== undefined ) {
 		form.rebin.disabled = false;
@@ -981,14 +915,13 @@ module.exports = xhr;
 		     form.ny.value = im.raw.hdu.table.ny;
 		     form.filter.value = im.raw.hdu.table.filter || "";
 
-
 		     form.cx.disabled = false;
 		     form.cy.disabled = false;
 		     form.nx.disabled = false;
 		     form.ny.disabled = false;
 		     form.filter.disabled = false;
 		} else {
-		    if ( im.raw.hdu.bin != undefined ) {
+		    if ( im.raw.hdu.bin !== undefined ) {
 			form.bin.value = im.raw.hdu.bin;
 		    } else {
 			form.bin.value = 1;
@@ -1008,6 +941,7 @@ module.exports = xhr;
     }
 
     function binningInit() {
+	var that = this;
 	var div = this.div;
 	var display = this.display;
 	var win = this.winHandle;
@@ -1023,24 +957,35 @@ module.exports = xhr;
 	    disclose = 'disabled="disabled"';
 	}
 
-	$(div).html('<form class="binning-form" style="margin: 5px">				\
-	    <table><tr>	<td>Bin&nbsp;Factor</td>							\
+	/*eslint-disable no-multi-str */
+	$(div).html('<form class="binning-form" style="margin: 10px">					\
+	    <table><tr>	<td>Bin&nbsp;factor:</td>							\
 			<td><input type=text name=bin value=1 size=10 style="text-align:right;"></td>	\
 			<td>&nbsp;</td>									\
 			<td>&nbsp;</td>									\
 		   </tr>										\
-	           <tr>	<td>Center</td>									\
+	           <tr>	<td>Image&nbsp;center:</td>									\
 			<td><input type=text name=cx size=10 style="text-align:right;"></td>		\
 			<td><input type=text name=cy size=10 style="text-align:right;"></td>    	\
 			<td>&nbsp;</td>									\
 		   </tr>										\
-	           <tr>	<td>Image&nbsp;Size</td>								\
+	           <tr>	<td>Image&nbsp;size:</td>							\
 			<td><input type=text name=nx size=10 style="text-align:right;"></td>		\
 			<td><input type=text name=ny size=10 style="text-align:right;"></td>		\
 			<td>&nbsp;</td>									\
 		   </tr>										\
-	           <tr>	<td>Filter</td>									\
-			<td colspan="2"><input type=text name=filter size="24" style="text-align:left;"></td>	\
+	           <tr>	<td>Event filter:</td>									\
+			<td colspan="2"><input type=text name=filter size="36" style="text-align:left;"></td>	\
+			<td>&nbsp;</td>									\
+			<td>&nbsp;</td>									\
+		   </tr>										\
+	           <tr>	<td>&nbsp;</td>									\
+			<td>&nbsp;</td>									\
+			<td>&nbsp;</td>									\
+			<td>&nbsp;</td>									\
+		   </tr>										\
+	           <tr>	<td colspan="2">Display as a separate image?</td>				\
+			<td><input type=checkbox name=separate class="sep-image" style="text-align:left;"></td>	\
 			<td>&nbsp;</td>									\
 			<td>&nbsp;</td>									\
 		   </tr>										\
@@ -1050,20 +995,24 @@ module.exports = xhr;
 			<td>&nbsp;</td>									\
 		   </tr>										\
 		   <tr>											\
-		       	<td><input type=button name=rebin value="Rebin" class="rebin-image"></td>	\
+			<td><input type=button name=rebin value="Run" class="rebin-image"></td>	\
 			<td>&nbsp;</td>									\
 			<td>&nbsp;</td>									\
 		       	<td><input type=button name=close value="Close" class="close-image" ' + disclose + '></td>	\
 		   </tr>										\
 	    </table>											\
 	    </form>');
+	/*eslint-enable no-multi-str */
 
-// 	click doesn't work on localhost on a Mac using Chrome/Safari, but mouseup does!
-//	$(div).find(".rebin-image").on("click", function () { reBinImage(div, display); });
-//	$(div).find(".close-image").on("click", function () { if( win ){ win.close(); } });
+	// click doesn't work on localhost on a Mac using Chrome/Safari, but mouseup does ...
 	$(div).find(".rebin-image").on("mouseup", function () { reBinImage(div, display); });
 	$(div).find(".close-image").on("mouseup", function () { if( win ){ win.close(); } });
+	$(div).find(".sep-image").change(function() { that.sep = $(this).prop("checked"); });
 
+	// set separate button
+	$(div).find(".sep-image").prop("checked", !!that.sep);
+
+	// get current params
 	if ( im ) {
 	    getBinParams(div, display);
 	}
@@ -1072,10 +1021,10 @@ module.exports = xhr;
     JS9.RegisterPlugin("Fits", "Binning", binningInit, {
 	    menu: "view",
 
-            winTitle: "FITS Binary Table Binning",
+            winTitle: "FITS Binary Table Binning/Filtering",
 	    winResize: true,
 
-            menuItem: "Binning",
+            menuItem: "Binning/Filtering",
 
 	    onplugindisplay:  binningInit,
 	    onimageload:      binningInit,
@@ -1083,7 +1032,7 @@ module.exports = xhr;
 
 	    help:     "fitsy/binning.html",
 
-            winDims: [400, 180],
+            winDims: [400, 210]
     });
 }());
 /*
@@ -1091,7 +1040,7 @@ module.exports = xhr;
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Blend = {};
@@ -1151,6 +1100,7 @@ JS9.Blend.xopacity = function(id, target){
 };
 
 // change current file
+// eslint-disable-next-line no-unused-vars
 JS9.Blend.ximfile = function(id, target){
     var im = JS9.lookupImage(id);
     if( im ){
@@ -1219,7 +1169,7 @@ JS9.Blend.addImage = function(im){
 	.prop("imid", im.id)
 	.html(s)
 	.appendTo(this.blendImageContainer);
-    divjq.on("mousedown touchstart", function(evt){
+    divjq.on("mousedown touchstart", function(){
 	    im.displayImage();
 	    JS9.Blend.activeImage.call(this, im);
     });
@@ -1352,7 +1302,7 @@ JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Blink = {};
@@ -1427,6 +1377,7 @@ JS9.Blink.xactive = function(id, target){
 };
 
 // change current file
+// eslint-disable-next-line no-unused-vars
 JS9.Blink.ximfile = function(id, target){
     var im = JS9.lookupImage(id);
     if( im ){
@@ -1452,6 +1403,7 @@ JS9.Blink.xblinkmode = function(id, target){
 };
 
 // change global blink mode for this display
+// eslint-disable-next-line no-unused-vars
 JS9.Blink.xblink1 = function(id, target){
     var display = JS9.lookupDisplay(id);
     var plugin = display.pluginInstances.JS9Blink;
@@ -1468,10 +1420,11 @@ JS9.Blink.xblink1 = function(id, target){
 
 // change blink rate
 JS9.Blend.xrate = function(id, target){
+    var plugin;
     var rate = Math.floor(target.options[target.selectedIndex].value * 1000);
     var display = JS9.lookupDisplay(id);
     if( display ){
-	var plugin = display.pluginInstances.JS9Blink;
+	plugin = display.pluginInstances.JS9Blink;
 	if( !isNaN(rate) ){
 	    plugin.rate = rate;
 	}
@@ -1525,7 +1478,7 @@ JS9.Blink.addImage = function(im){
 	.prop("imid", im.id)
 	.html(s)
 	.appendTo(this.blinkImageContainer);
-    divjq.on("mousedown touchstart", function(evt){
+    divjq.on("mousedown touchstart", function(){
 	    im.displayImage();
 	    JS9.Blink.activeImage.call(this, im);
     });
@@ -1666,7 +1619,7 @@ JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9, Uint8Array */
 
 // create our namespace, and specify some meta-information and params
 JS9.Colorbar = {};
@@ -1865,7 +1818,7 @@ JS9.RegisterPlugin(JS9.Colorbar.CLASS, JS9.Colorbar.NAME, JS9.Colorbar.init,
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Console = {};
@@ -2108,7 +2061,7 @@ JS9.RegisterPlugin("JS9", "Console", JS9.Console.init,
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Cube = {};
@@ -2176,6 +2129,7 @@ JS9.Cube.xvalue = function(id, target){
 };
 
 // first cube
+// eslint-disable-next-line no-unused-vars
 JS9.Cube.xfirst = function(id, target){
     var slice;
     var im = JS9.lookupImage(id);
@@ -2186,6 +2140,7 @@ JS9.Cube.xfirst = function(id, target){
 };
 
 // next cube
+// eslint-disable-next-line no-unused-vars
 JS9.Cube.xnext = function(id, target){
     var s, slice, plugin;
     var im = JS9.lookupImage(id);
@@ -2201,6 +2156,7 @@ JS9.Cube.xnext = function(id, target){
 };
 
 // prev cube
+// eslint-disable-next-line no-unused-vars
 JS9.Cube.xprev = function(id, target){
     var s, slice, plugin;
     var im = JS9.lookupImage(id);
@@ -2216,6 +2172,7 @@ JS9.Cube.xprev = function(id, target){
 };
 
 // last cube
+// eslint-disable-next-line no-unused-vars
 JS9.Cube.xlast = function(id, target){
     var s, slice, plugin;
     var im = JS9.lookupImage(id);
@@ -2249,7 +2206,7 @@ JS9.Cube.xorder = function(id, target){
 
 // blink
 JS9.Cube.blink = function(id, target){
-    var i, arr, plugin;
+    var plugin;
     var im = JS9.lookupImage(id);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
@@ -2269,7 +2226,7 @@ JS9.Cube.blink = function(id, target){
 
 // start blink
 JS9.Cube.xstart = function(id, target){
-    var i, arr, plugin;
+    var plugin;
     var im = JS9.lookupImage(id);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
@@ -2280,8 +2237,9 @@ JS9.Cube.xstart = function(id, target){
 };
 
 // stop blink
+// eslint-disable-next-line no-unused-vars
 JS9.Cube.xstop = function(id, target){
-    var i, arr, plugin;
+    var plugin;
     var im = JS9.lookupImage(id);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
@@ -2297,7 +2255,7 @@ JS9.Cube.xstop = function(id, target){
 
 // blink rate
 JS9.Cube.xrate = function(id, target){
-    var i, arr, plugin;
+    var plugin;
     var im = JS9.lookupImage(id);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
@@ -2428,7 +2386,7 @@ JS9.RegisterPlugin(JS9.Cube.CLASS, JS9.Cube.NAME, JS9.Cube.init,
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Imarith = {};
@@ -2490,6 +2448,7 @@ JS9.Imarith.xnum = function(id, target){
 };
 
 // run image arithmetic
+// eslint-disable-next-line no-unused-vars
 JS9.Imarith.xrun = function(id, target){
     var arg1, plugin;
     var im = JS9.lookupImage(id);
@@ -2511,6 +2470,7 @@ JS9.Imarith.xrun = function(id, target){
 };
 
 // reset to original data
+// eslint-disable-next-line no-unused-vars
 JS9.Imarith.xreset = function(id, target){
     var im = JS9.lookupImage(id);
     if( im ){
@@ -2606,7 +2566,7 @@ JS9.RegisterPlugin(JS9.Imarith.CLASS, JS9.Imarith.NAME, JS9.Imarith.init,
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9 */
 
 // create our namespace, and specify some meta-information and params
 JS9.Info = {};
@@ -2646,7 +2606,8 @@ JS9.Info.opts = {
 '</table>'
 };
 
-JS9.Info.init = function(width, height){
+// init plugin
+JS9.Info.init = function(){
     // add container to the high-level div
     this.infoConjq = $("<div>")
 	.addClass("JS9Container")
@@ -2810,7 +2771,7 @@ JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9 */
 
 // create our namespace, and specify some meta-information and params
 JS9.Magnifier = {};
@@ -3068,7 +3029,7 @@ JS9.RegisterPlugin(JS9.Magnifier.CLASS, JS9.Magnifier.NAME, JS9.Magnifier.init,
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Mef = {};
@@ -3163,7 +3124,7 @@ JS9.Mef.init = function(){
 	    .html(htmlString)
 	    .appendTo(that.mefContainer);
 	if( doit ){
-	    div.on("mousedown touchstart", function(evt){
+	    div.on("mousedown touchstart", function(){
 		im.displayExtension(o.hdu, {separate: that.separate});
 		JS9.Mef.activeExtension(im, o.hdu);
 	    });
@@ -3233,7 +3194,7 @@ JS9.RegisterPlugin(JS9.Mef.CLASS, JS9.Mef.NAME, JS9.Mef.init,
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Menubar = {};
@@ -3312,7 +3273,7 @@ JS9.Menubar.init = function(width, height){
 	.html(menubarHTML)
 	.appendTo(this.divjq);
     $(function(){
-	function onhide(opt) {
+	function onhide() {
 	    var tdisp = that.display;
 	    if( JS9.bugs.hide_menu && tdisp.image ){
 		tdisp.image.displayImage("rgb");
@@ -3350,7 +3311,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#fileMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var i, im, name, imlen, s1;
 		var n = 0;
 		var items = {};
@@ -3382,7 +3343,7 @@ JS9.Menubar.init = function(width, height){
 		if( !n ){
 		    items.noimg = {
 			name: "[no images]",
-			events: {keyup: function(evt){return;}}
+			events: {keyup: function(){return;}}
 		    };
 		}
 		items["sep" + n++] = "------";
@@ -3461,8 +3422,8 @@ JS9.Menubar.init = function(width, height){
 		  items.refresh = {name: "debug: refresh ..."};
 		}
 		return {
-                    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+                    callback: function(key){
+		    getDisplays().forEach(function(val){
 			var j, s, t, did, save_orc, kid, unew, uwin;
 			var udisp = val;
 			var uim = udisp.image;
@@ -3675,7 +3636,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#viewMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var i, plugin, pname, pinst, key;
 		var lastxclass="";
 		var n = 0;
@@ -3684,9 +3645,9 @@ JS9.Menubar.init = function(width, height){
 		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
 		var editResize = function(disp, obj){
-		    var v1, v2;
+		    var v1, v2, arr;
 		    if( obj.resize ){
-			var arr = obj.resize.split(/[\s,\/]+/);
+			arr = obj.resize.split(/[\s,\/]+/);
 			switch(arr.length){
 			case 0:
 			    break;
@@ -3797,8 +3758,8 @@ JS9.Menubar.init = function(width, height){
 		    };
 		}
 		return {
-		    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+		    callback: function(key){
+		    getDisplays().forEach(function(val){
 		        var jj, ucat, umode, uplugin, s;
 			var udisp = val;
 			var uim = udisp.image;
@@ -3907,7 +3868,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#zoomMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var i, zoom, zoomp, name, name2;
 		var n = 0;
 		var tdisp = getDisplays()[0];
@@ -3971,8 +3932,8 @@ JS9.Menubar.init = function(width, height){
 		items.center = {name: "pan to center"};
 		items.reset = {name: "reset zoom/pan"};
 		return {
-		    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+		    callback: function(key){
+		    getDisplays().forEach(function(val){
 			var udisp = val;
 			var uim = udisp.image;
 			if( uim ){
@@ -4043,7 +4004,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#scaleMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var i, s1, s2;
 		var n = 0;
 		var items = {};
@@ -4103,7 +4064,7 @@ JS9.Menubar.init = function(width, height){
 		};
 		return {
                     callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+		    getDisplays().forEach(function(val){
 			var udisp = val;
 			var uim = udisp.image;
 			if( uim ){
@@ -4178,7 +4139,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#colorMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var i, s1, s2, arr;
 		var n = 0;
 		var items = {};
@@ -4270,8 +4231,8 @@ JS9.Menubar.init = function(width, height){
 		    items.rgb.icon = "sun";
 		}
 		return {
-		    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+		    callback: function(key){
+		    getDisplays().forEach(function(val){
 			var udisp = val;
 			var uim = udisp.image;
 			if( uim ){
@@ -4335,7 +4296,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#regionMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
 		var items = {
@@ -4367,8 +4328,8 @@ JS9.Menubar.init = function(width, height){
 		    items.xeqonchange.icon = "sun";
 		}
 		return {
-		    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+		    callback: function(key){
+		    getDisplays().forEach(function(val){
 			var udisp = val;
 			var uim = udisp.image;
 			if( uim ){
@@ -4413,7 +4374,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#wcsMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var i, s1, s2, key, altwcs;
 		var n=0, nwcs=0, got=0;
 		var items = {};
@@ -4474,7 +4435,7 @@ JS9.Menubar.init = function(width, height){
 			items.altwcs.items.notasks = {
 			    name: "[none]",
 			    disabled: true,
-			    events: {keyup: function(evt){return;}}
+			    events: {keyup: function(){return;}}
 			};
 		    }
 		}
@@ -4498,7 +4459,7 @@ JS9.Menubar.init = function(width, height){
 		    items.reproject.items.notasks = {
 			name: "[none]",
 			disabled: true,
-			events: {keyup: function(evt){return;}}
+			events: {keyup: function(){return;}}
 		    };
 		} else {
 		    items.reproject.disabled = false;
@@ -4511,8 +4472,8 @@ JS9.Menubar.init = function(width, height){
 		    }
 		}
 		return {
-                    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+                    callback: function(key){
+		    getDisplays().forEach(function(val){
 			var file, s;
 			var rexp = new RegExp(key);
 			var udisp = val;
@@ -4560,9 +4521,11 @@ JS9.Menubar.init = function(width, height){
             selector: "#analysisMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
-	        var i, j, s, apackages, atasks;
+            build: function(){
+	        var i, j, s, re, apackages, atasks;
 		var plugin, pinst, pname;
+		var parr;
+		var pexp = /([A-Za-z0-9_]+)\((.*)\)/;
 		var ntask = 0;
 		var n = 0;
 		// var m = 0;
@@ -4640,13 +4603,28 @@ JS9.Menubar.init = function(width, height){
 			    if( atasks[i].hidden ){
 				continue;
 			    }
-			    if( (atasks[i].files === "fits") &&
+			    if( atasks[i].files.match(/fits/) &&
 				!im.fitsFile ){
 				continue;
 			    }
-			    if( (atasks[i].files === "png") &&
-				im.source !== "fits2png"){
+			    if( atasks[i].files.match(/png/) &&
+				(im.source !== "fits2png") ){
 				continue;
+			    }
+			    if( atasks[i].files.match(/table/) ){
+				if( (im.source !== "fits2png") &&
+				    (im.imtab !== "table") ){
+				    continue;
+				}
+			    }
+			    // header params: pname(pvalue)
+			    parr = atasks[i].files.match(pexp);
+			    if( parr ){
+				s = im.raw.header[parr[1].toUpperCase()];
+				re = new RegExp(parr[2], "i");
+				if( !s || !s.match(re) ){
+				    continue;
+				}
 			    }
 			    s = atasks[i].title;
 			    if( atasks[i].purl ){
@@ -4664,7 +4642,7 @@ JS9.Menubar.init = function(width, height){
 		    items.notasks = {
 			name: "[none]",
 			disabled: true,
-			events: {keyup: function(evt){return;}}
+			events: {keyup: function(){return;}}
 		    };
 		}
 		items["sep" + n++] = "------";
@@ -4676,8 +4654,8 @@ JS9.Menubar.init = function(width, height){
 		items.dpath = {name: "set data path ..."};
 		}
 		return {
-                    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+                    callback: function(key){
+		    getDisplays().forEach(function(val){
 			var a, did, jj, tplugin;
 			var udisp = val;
 			var uim = udisp.image;
@@ -4767,7 +4745,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#helpMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var key, val;
 		var n=1;
 		var last = "";
@@ -4791,7 +4769,7 @@ JS9.Menubar.init = function(width, height){
 		items["sep" + n++] = "------";
 		items.about = {name: "About JS9"};
 		return{
-		    callback: function(key, opt){
+		    callback: function(key){
 			switch(key){
 			case "about":
 			    alert(sprintf("JS9: image display right in your browser\nversion: %s\nprincipals: Eric Mandel (lead), Alexey Vikhlinin (science,management)\ncontact: saord@cfa.harvard.edu\n%s", JS9.VERSION, JS9.COPYRIGHT));
@@ -4816,7 +4794,7 @@ JS9.RegisterPlugin("JS9", "Menubar", JS9.Menubar.init,
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9 */
 
 // create our namespace, and specify some meta-information and params
 JS9.Panner = {};
@@ -4893,6 +4871,7 @@ JS9.Panner.HTML =
 
 // JS9 Panner constructor
 JS9.Panner.init = function(width, height){
+    var pos, ix, iy;
     var dlayer;
     var that = this;
     // set width and height on div
@@ -4941,10 +4920,10 @@ JS9.Panner.init = function(width, height){
     dlayer.canvas.on("object:modified", function(opts){
 	var im = that.display.image;
 	if( im ){
-	    var pos = opts.target.getCenterPoint();
-	    var ix = ((pos.x - im.panner.ix) *
+	    pos = opts.target.getCenterPoint();
+	    ix = ((pos.x - im.panner.ix) *
 		      im.panner.xblock / im.panner.zoom) + im.panner.x0;
-	    var iy = ((dlayer.canvas.height - (pos.y + im.panner.iy)) *
+	    iy = ((dlayer.canvas.height - (pos.y + im.panner.iy)) *
 		      im.panner.yblock / im.panner.zoom) + im.panner.y0;
 	    // pan the image
 	    try{
@@ -5188,7 +5167,7 @@ JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, ddtabcontent */
+/*global $, JS9, sprintf, ddtabcontent */
 
 // To specify the JS9 display instance to link to a given PREFS div,
 // use the HTML5 dataset syntax: 
@@ -5393,7 +5372,7 @@ JS9.Prefs.fitsSchema = {
 	"ydim": {
 	    "type": "string",
 	    "helper": "y dimension of extracted image"
-	},
+	}
     }
 };
 
@@ -5413,7 +5392,7 @@ JS9.Prefs.displaysSchema = {
 	"mousetouchZoom": {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
-	},
+	}
     }
 };
 
@@ -5426,7 +5405,7 @@ JS9.Prefs.sources = [
 ];
 
 // init preference plugin
-JS9.Prefs.init = function(width, height){
+JS9.Prefs.init = function(){
     var i, s, obj, key, props, sources, source, id, pid, html, prompt;
     // create the div containing one tab for each of the sources
     sources = JS9.Prefs.sources;
@@ -5585,6 +5564,7 @@ JS9.Prefs.deleteForm = function(){
 };
 
 // process new preferences in the preference form
+// eslint-disable-next-line no-unused-vars
 JS9.Prefs.processForm = function(source, arr, display, winid){
     var i, j, key , val, obj, rlayer;
     var len = arr.length;

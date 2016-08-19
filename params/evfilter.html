@@ -3,18 +3,40 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
-<title>Event (Column) Filter for PNG Files</title>
+<title>Event (Column) Filter for FITS and PNG Files</title>
 </head>
 <body>
+
+<div style="padding: 10px">
+Create a new FITS binary table using the specified event filter. A
+smaller FITS image will be transferred to JS9 for display, but remote
+analysis will use the full table. See below for more information about
+event filtering.
+</div>
 
 <form id="evfilterForm" name="evfilterForm" class="js9AnalysisForm" action="">
 
 <div class="linegroup">
 <span class="column_A">
-<b>Enter event filter</b>
+<b>Event filter</b>
 </span>
-<span class="column_R2L">
+<span class="column_R2l">
 <input type="text" class="text_R" id="filter" name="filter" value="" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_C">
+(e.g. 'energy=500:2500'; see help below)
+</span>
+</div>
+
+<div class="linegroup">
+<span class="column_A">
+<b>Display image size</b>
+</span>
+<span class="column_R2l">
+<input type="text" class="text_R" id="dims" name="dims" value="1024" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_C">
+(e.g. '1024' for 1024x1024 image)
 </span>
 </div>
 
@@ -36,10 +58,11 @@ return false;" style="float: right;">
 <center><b>Help for Event Filter</b></center>
 
 <p>
-Table filtering allows you  to select rows from an FITS binary table
-(e.g., an X-ray event list) by checking each row against an expression
-involving the columns in the table. When a table is filtered, only
-valid rows satisfying these expressions are used to make the image.
+Event filtering allows you to select rows from an FITS binary table
+(e.g., an X-ray event list) by checking each event row against an
+expression involving the columns in the table. When a table is
+filtered, only valid rows satisfying these expressions are used to
+make the image.
 
 <p>
 A filter expression consists of an arithmetic or logical operation
@@ -79,8 +102,6 @@ IRAF-style <b>range lists</b> which specify a range of values. The
 syntax requires that the column name be followed by an '=' sign, which
 is followed by a range expression of the form:
 <pre>
-  col = :v            # col <= v in range
-  col = v:            # col >= v in range
   col = v1:v2         # v1 <= col <= v2 in range
 </pre>
 The v values above must be numeric constants. 

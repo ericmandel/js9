@@ -3,7 +3,7 @@
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Mef = {};
@@ -98,7 +98,7 @@ JS9.Mef.init = function(){
 	    .html(htmlString)
 	    .appendTo(that.mefContainer);
 	if( doit ){
-	    div.on("mousedown touchstart", function(evt){
+	    div.on("mousedown touchstart", function(){
 		im.displayExtension(o.hdu, {separate: that.separate});
 		JS9.Mef.activeExtension(im, o.hdu);
 	    });

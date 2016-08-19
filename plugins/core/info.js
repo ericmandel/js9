@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9 */
 
 // create our namespace, and specify some meta-information and params
 JS9.Info = {};
@@ -43,7 +43,8 @@ JS9.Info.opts = {
 '</table>'
 };
 
-JS9.Info.init = function(width, height){
+// init plugin
+JS9.Info.init = function(){
     // add container to the high-level div
     this.infoConjq = $("<div>")
 	.addClass("JS9Container")

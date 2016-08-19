@@ -3,7 +3,7 @@
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Cube = {};
@@ -71,6 +71,7 @@ JS9.Cube.xvalue = function(id, target){
 };
 
 // first cube
+// eslint-disable-next-line no-unused-vars
 JS9.Cube.xfirst = function(id, target){
     var slice;
     var im = JS9.lookupImage(id);
@@ -81,6 +82,7 @@ JS9.Cube.xfirst = function(id, target){
 };
 
 // next cube
+// eslint-disable-next-line no-unused-vars
 JS9.Cube.xnext = function(id, target){
     var s, slice, plugin;
     var im = JS9.lookupImage(id);
@@ -96,6 +98,7 @@ JS9.Cube.xnext = function(id, target){
 };
 
 // prev cube
+// eslint-disable-next-line no-unused-vars
 JS9.Cube.xprev = function(id, target){
     var s, slice, plugin;
     var im = JS9.lookupImage(id);
@@ -111,6 +114,7 @@ JS9.Cube.xprev = function(id, target){
 };
 
 // last cube
+// eslint-disable-next-line no-unused-vars
 JS9.Cube.xlast = function(id, target){
     var s, slice, plugin;
     var im = JS9.lookupImage(id);
@@ -144,7 +148,7 @@ JS9.Cube.xorder = function(id, target){
 
 // blink
 JS9.Cube.blink = function(id, target){
-    var i, arr, plugin;
+    var plugin;
     var im = JS9.lookupImage(id);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
@@ -164,7 +168,7 @@ JS9.Cube.blink = function(id, target){
 
 // start blink
 JS9.Cube.xstart = function(id, target){
-    var i, arr, plugin;
+    var plugin;
     var im = JS9.lookupImage(id);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
@@ -175,8 +179,9 @@ JS9.Cube.xstart = function(id, target){
 };
 
 // stop blink
+// eslint-disable-next-line no-unused-vars
 JS9.Cube.xstop = function(id, target){
-    var i, arr, plugin;
+    var plugin;
     var im = JS9.lookupImage(id);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
@@ -192,7 +197,7 @@ JS9.Cube.xstop = function(id, target){
 
 // blink rate
 JS9.Cube.xrate = function(id, target){
-    var i, arr, plugin;
+    var plugin;
     var im = JS9.lookupImage(id);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];

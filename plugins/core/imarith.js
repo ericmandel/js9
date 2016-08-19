@@ -3,7 +3,7 @@
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Imarith = {};
@@ -65,6 +65,7 @@ JS9.Imarith.xnum = function(id, target){
 };
 
 // run image arithmetic
+// eslint-disable-next-line no-unused-vars
 JS9.Imarith.xrun = function(id, target){
     var arg1, plugin;
     var im = JS9.lookupImage(id);
@@ -86,6 +87,7 @@ JS9.Imarith.xrun = function(id, target){
 };
 
 // reset to original data
+// eslint-disable-next-line no-unused-vars
 JS9.Imarith.xreset = function(id, target){
     var im = JS9.lookupImage(id);
     if( im ){

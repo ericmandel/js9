@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Menubar = {};
@@ -82,7 +82,7 @@ JS9.Menubar.init = function(width, height){
 	.html(menubarHTML)
 	.appendTo(this.divjq);
     $(function(){
-	function onhide(opt) {
+	function onhide() {
 	    var tdisp = that.display;
 	    if( JS9.bugs.hide_menu && tdisp.image ){
 		tdisp.image.displayImage("rgb");
@@ -120,7 +120,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#fileMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var i, im, name, imlen, s1;
 		var n = 0;
 		var items = {};
@@ -152,7 +152,7 @@ JS9.Menubar.init = function(width, height){
 		if( !n ){
 		    items.noimg = {
 			name: "[no images]",
-			events: {keyup: function(evt){return;}}
+			events: {keyup: function(){return;}}
 		    };
 		}
 		items["sep" + n++] = "------";
@@ -231,8 +231,8 @@ JS9.Menubar.init = function(width, height){
 		  items.refresh = {name: "debug: refresh ..."};
 		}
 		return {
-                    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+                    callback: function(key){
+		    getDisplays().forEach(function(val){
 			var j, s, t, did, save_orc, kid, unew, uwin;
 			var udisp = val;
 			var uim = udisp.image;
@@ -445,7 +445,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#viewMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var i, plugin, pname, pinst, key;
 		var lastxclass="";
 		var n = 0;
@@ -454,9 +454,9 @@ JS9.Menubar.init = function(width, height){
 		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
 		var editResize = function(disp, obj){
-		    var v1, v2;
+		    var v1, v2, arr;
 		    if( obj.resize ){
-			var arr = obj.resize.split(/[\s,\/]+/);
+			arr = obj.resize.split(/[\s,\/]+/);
 			switch(arr.length){
 			case 0:
 			    break;
@@ -567,8 +567,8 @@ JS9.Menubar.init = function(width, height){
 		    };
 		}
 		return {
-		    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+		    callback: function(key){
+		    getDisplays().forEach(function(val){
 		        var jj, ucat, umode, uplugin, s;
 			var udisp = val;
 			var uim = udisp.image;
@@ -677,7 +677,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#zoomMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var i, zoom, zoomp, name, name2;
 		var n = 0;
 		var tdisp = getDisplays()[0];
@@ -741,8 +741,8 @@ JS9.Menubar.init = function(width, height){
 		items.center = {name: "pan to center"};
 		items.reset = {name: "reset zoom/pan"};
 		return {
-		    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+		    callback: function(key){
+		    getDisplays().forEach(function(val){
 			var udisp = val;
 			var uim = udisp.image;
 			if( uim ){
@@ -813,7 +813,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#scaleMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var i, s1, s2;
 		var n = 0;
 		var items = {};
@@ -873,7 +873,7 @@ JS9.Menubar.init = function(width, height){
 		};
 		return {
                     callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+		    getDisplays().forEach(function(val){
 			var udisp = val;
 			var uim = udisp.image;
 			if( uim ){
@@ -948,7 +948,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#colorMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var i, s1, s2, arr;
 		var n = 0;
 		var items = {};
@@ -1040,8 +1040,8 @@ JS9.Menubar.init = function(width, height){
 		    items.rgb.icon = "sun";
 		}
 		return {
-		    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+		    callback: function(key){
+		    getDisplays().forEach(function(val){
 			var udisp = val;
 			var uim = udisp.image;
 			if( uim ){
@@ -1105,7 +1105,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#regionMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
 		var items = {
@@ -1137,8 +1137,8 @@ JS9.Menubar.init = function(width, height){
 		    items.xeqonchange.icon = "sun";
 		}
 		return {
-		    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+		    callback: function(key){
+		    getDisplays().forEach(function(val){
 			var udisp = val;
 			var uim = udisp.image;
 			if( uim ){
@@ -1183,7 +1183,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#wcsMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var i, s1, s2, key, altwcs;
 		var n=0, nwcs=0, got=0;
 		var items = {};
@@ -1244,7 +1244,7 @@ JS9.Menubar.init = function(width, height){
 			items.altwcs.items.notasks = {
 			    name: "[none]",
 			    disabled: true,
-			    events: {keyup: function(evt){return;}}
+			    events: {keyup: function(){return;}}
 			};
 		    }
 		}
@@ -1268,7 +1268,7 @@ JS9.Menubar.init = function(width, height){
 		    items.reproject.items.notasks = {
 			name: "[none]",
 			disabled: true,
-			events: {keyup: function(evt){return;}}
+			events: {keyup: function(){return;}}
 		    };
 		} else {
 		    items.reproject.disabled = false;
@@ -1281,8 +1281,8 @@ JS9.Menubar.init = function(width, height){
 		    }
 		}
 		return {
-                    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+                    callback: function(key){
+		    getDisplays().forEach(function(val){
 			var file, s;
 			var rexp = new RegExp(key);
 			var udisp = val;
@@ -1330,9 +1330,11 @@ JS9.Menubar.init = function(width, height){
             selector: "#analysisMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
-	        var i, j, s, apackages, atasks;
+            build: function(){
+	        var i, j, s, re, apackages, atasks;
 		var plugin, pinst, pname;
+		var parr;
+		var pexp = /([A-Za-z0-9_]+)\((.*)\)/;
 		var ntask = 0;
 		var n = 0;
 		// var m = 0;
@@ -1410,13 +1412,28 @@ JS9.Menubar.init = function(width, height){
 			    if( atasks[i].hidden ){
 				continue;
 			    }
-			    if( (atasks[i].files === "fits") &&
+			    if( atasks[i].files.match(/fits/) &&
 				!im.fitsFile ){
 				continue;
 			    }
-			    if( (atasks[i].files === "png") &&
-				im.source !== "fits2png"){
+			    if( atasks[i].files.match(/png/) &&
+				(im.source !== "fits2png") ){
 				continue;
+			    }
+			    if( atasks[i].files.match(/table/) ){
+				if( (im.source !== "fits2png") &&
+				    (im.imtab !== "table") ){
+				    continue;
+				}
+			    }
+			    // header params: pname(pvalue)
+			    parr = atasks[i].files.match(pexp);
+			    if( parr ){
+				s = im.raw.header[parr[1].toUpperCase()];
+				re = new RegExp(parr[2], "i");
+				if( !s || !s.match(re) ){
+				    continue;
+				}
 			    }
 			    s = atasks[i].title;
 			    if( atasks[i].purl ){
@@ -1434,7 +1451,7 @@ JS9.Menubar.init = function(width, height){
 		    items.notasks = {
 			name: "[none]",
 			disabled: true,
-			events: {keyup: function(evt){return;}}
+			events: {keyup: function(){return;}}
 		    };
 		}
 		items["sep" + n++] = "------";
@@ -1446,8 +1463,8 @@ JS9.Menubar.init = function(width, height){
 		items.dpath = {name: "set data path ..."};
 		}
 		return {
-                    callback: function(key, opt){
-		    getDisplays().forEach(function(val, idx, array){
+                    callback: function(key){
+		    getDisplays().forEach(function(val){
 			var a, did, jj, tplugin;
 			var udisp = val;
 			var uim = udisp.image;
@@ -1537,7 +1554,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#helpMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
-            build: function($trigger, evt){
+            build: function(){
 		var key, val;
 		var n=1;
 		var last = "";
@@ -1561,7 +1578,7 @@ JS9.Menubar.init = function(width, height){
 		items["sep" + n++] = "------";
 		items.about = {name: "About JS9"};
 		return{
-		    callback: function(key, opt){
+		    callback: function(key){
 			switch(key){
 			case "about":
 			    alert(sprintf("JS9: image display right in your browser\nversion: %s\nprincipals: Eric Mandel (lead), Alexey Vikhlinin (science,management)\ncontact: saord@cfa.harvard.edu\n%s", JS9.VERSION, JS9.COPYRIGHT));

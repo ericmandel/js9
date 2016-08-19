@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf, Uint8Array */
+/*global $, JS9 */
 
 // create our namespace, and specify some meta-information and params
 JS9.Panner = {};
@@ -80,6 +80,7 @@ JS9.Panner.HTML =
 
 // JS9 Panner constructor
 JS9.Panner.init = function(width, height){
+    var pos, ix, iy;
     var dlayer;
     var that = this;
     // set width and height on div
@@ -128,10 +129,10 @@ JS9.Panner.init = function(width, height){
     dlayer.canvas.on("object:modified", function(opts){
 	var im = that.display.image;
 	if( im ){
-	    var pos = opts.target.getCenterPoint();
-	    var ix = ((pos.x - im.panner.ix) *
+	    pos = opts.target.getCenterPoint();
+	    ix = ((pos.x - im.panner.ix) *
 		      im.panner.xblock / im.panner.zoom) + im.panner.x0;
-	    var iy = ((dlayer.canvas.height - (pos.y + im.panner.iy)) *
+	    iy = ((dlayer.canvas.height - (pos.y + im.panner.iy)) *
 		      im.panner.yblock / im.panner.zoom) + im.panner.y0;
 	    // pan the image
 	    try{
