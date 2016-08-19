@@ -151,23 +151,30 @@ histplot)
     fi
     COL="$1"; shift;
     BINS="$1"
+    TELESCOP=`funhead $FILE | getpar TELESCOP`
     YAXIS="counts"
     XAXIS="${COL} bin"
     if [ "x$COL" = 'x$energy' ]; then
       COL="pi";
       XAXIS="${COL} bin"
-      TELESCOP=`funhead $FILE | getpar TELESCOP`
       case "$TELESCOP" in
-        CHANDRA)
-          COL="energy"
-          XAXIS="${COL} (ev)"
-          if [ x"$BINS" = x0 ]; then
-              BINS="$CHANDRABINS"
-          fi
-        ;;
-        XMM)
-          XAXIS="${COL} (ev)"
-        ;;
+      CHANDRA)
+        COL="energy"
+        XAXIS="${COL} (ev)"
+        if [ x"$BINS" = x0 ]; then
+            BINS="$CHANDRABINS"
+        fi
+      ;;
+      XMM)
+        XAXIS="${COL} (ev)"
+      ;;
+      esac
+    elif [ "x$COL" = 'x$time' ]; then
+      case "$TELESCOP" in
+      CHANDRA|EINSTEIN)
+        COL="time"
+        XAXIS="time (sec)"
+      ;;
       esac
     fi
     TITLE="$YAXIS vs. $XAXIS"
