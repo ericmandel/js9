@@ -210,7 +210,12 @@ JS9.textColorOpts = {
 
 // defaults for plot creation
 JS9.plotOpts = {
-    zoomStack: true,
+    color: "blue",
+    annotate: false,
+    annotateColor: "#FF0000",
+    zoomStack: {
+	enabled: true
+    },
     selection: {
 	mode: "xy"
     },
@@ -219,6 +224,10 @@ JS9.plotOpts = {
 	hoverable: true,
         lines: { show: true },
         points: { show: false }
+    },
+    legend: {
+	backgroundColor: null,
+	backgroundOpacity: 0
     }
 };
 
@@ -408,8 +417,6 @@ JS9.Image = function(file, params, func){
     this.params.scalemax = Number.Nan;
     // xeq callback for region changes?
     this.params.xeqonchange = true;
-    // copy plot parameters
-    this.params.plotOpts = $.extend(true, {}, JS9.plotOpts);
     // copy image parameters
     this.params = $.extend(true, this.params, JS9.imageOpts, localOpts);
     // set the colormap object from colormap name (text string)
@@ -3419,8 +3426,42 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 
 // display analysis results (text or plot)
 JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
-    var id, did, hstr, pobj, divjq, opts, titlefile;
+    var id, did, hstr, pobj, divjq, opts, titlefile, plot;
     var a = JS9.lightOpts[JS9.LIGHTWIN];
+    var annotate = function(divjq, plot, pobj, opts){
+	var i, j, ann, ac, ao, ax, ay, ahtml;
+	var yTextOffset = -25;
+	var data = pobj.data;
+	opts = opts || {};
+	divjq.find(".plotAnnotation").remove();
+	for(i=0; i<pobj.annotate.data.length; i++){
+	    ann = pobj.annotate.data[i];
+	    if( !ann.text ){
+		continue;
+	    }
+	    ax = ann.x || 0;
+	    if( ann.y === undefined ){
+		for(j=1; j<data.length-1; j++){
+		    if( data[j][0] > ax ){
+			ay = Math.max(data[j-1][1], data[j][1], data[j+1][1]);
+			ay += yTextOffset;
+			break;
+		    }
+		}
+	    } else {
+		ay = ann.y;
+	    }
+	    ac = pobj.annotate.color || opts.annotateColor || pobj.color;
+	    ao = plot.pointOffset({ x: ax, y: ay });
+	    if( (ao.left < 0) || (ao.left > divjq.width()) ){
+		continue;
+	    }
+	    ahtml = sprintf("<div class='plotAnnotation' style='position: absolute; left: %spx; top:%spx; color: %s; font-size: small'>%s</div>",
+			    ao.left, ao.top+yTextOffset,
+			    ac, "&darr;" + ann.text);
+	    divjq.append(ahtml);
+	}
+    };
     // make up title, if necessary
     if( !title && this ){
 	titlefile = (this.fitsFile || this.id);
@@ -3460,13 +3501,21 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
 	// flot data
 	if( pobj.data ){
 	    // set up linear/log transforms and plot the graph
-	    if( this ){
-		opts = this.params.plotOpts;
-	    } else {
-		opts = JS9.plotOpts;
+	    opts = $.extend(true, {}, JS9.plotOpts);
+	    // add re-annotate callback, if necessary
+	    if( opts.annotate && pobj.annotate ){
+		// eslint-disable-next-line no-unused-vars
+		opts.zoomStack.func = function(plt, r){
+		    annotate(divjq, plt, pobj, opts);
+		};
 	    }
-	    try{ $.plot(divjq, [pobj], opts); }
+	    pobj.color = pobj.color || opts.color;
+	    try{ plot = $.plot(divjq, [pobj], opts); }
 	    catch(e){ JS9.error("can't plot data", e); }
+	    // annotate, if necessary
+	    if( opts.annotate && pobj.annotate ){
+		annotate(divjq, plot, pobj, opts);
+	    }
 	}
 	break;
     case "params":

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # set -x
 
 # make sure we have minimum arg count
@@ -15,7 +15,9 @@ fi
 # JS9_ID		id (from js9 div) of client
 
 #defaults
-CHANDRABINS="500:8000:1875"
+CHANDRA_BINS="500:8000:1875"
+XMM_BINS="400:15000:1825"
+XRAY_ELEMENTS='{"text": "O VII", "x": 570}, {"text": "O VIII", "x": 650}, {"text": "Ne X", "x": 1020}, {"text": "Mg XI", "x": 1340}, {"text": "Si XIII", "x": 1850}, {"text": "Si XIV", "x": 2010}, {"text": "S XV", "x": 2450}, {"text": "S XVI", "x": 2620}, {"text": "Ar XVII", "x": 3130}, {"text": "Ar XVIII", "x": 3320}, {"text": "Ca XIX", "x": 3890}, {"text": "Ca XX", "x": 4110}, {"text": "Fe XXV", "x": 6670}'
 
 # if we are being called via CGI, send stderr to stdout
 if [ x"$QUERY_STRING" != x ]; then
@@ -99,7 +101,12 @@ hist)
         CHANDRA)
           COL="energy"
           if [ x"$BINS" = x0 ]; then
-              BINS="$CHANDRABINS"
+              BINS="${CHANDRA_BINS}"
+          fi
+        ;;
+        XMM)
+          if [ x"$BINS" = x0 ]; then
+              BINS="${XMM_BINS}"
           fi
         ;;
       esac
@@ -158,16 +165,20 @@ histplot)
       COL="pi";
       XAXIS="${COL} bin"
       case "$TELESCOP" in
-      CHANDRA)
-        COL="energy"
-        XAXIS="${COL} (ev)"
-        if [ x"$BINS" = x0 ]; then
-            BINS="$CHANDRABINS"
-        fi
-      ;;
-      XMM)
-        XAXIS="${COL} (ev)"
-      ;;
+        CHANDRA)
+          COL="energy"
+          if [ x"$BINS" = x0 ]; then
+            BINS="${CHANDRA_BINS}"
+          fi
+          XAXIS="${COL} (ev)"
+          ANNOTATE="${XRAY_ELEMENTS}"
+        ;;
+        XMM)
+          if [ x"$BINS" = x0 ]; then
+            BINS="${XMM_BINS}"
+          fi
+          XAXIS="${COL} (ev)"
+        ;;
       esac
     elif [ "x$COL" = 'x$time' ]; then
       case "$TELESCOP" in
@@ -179,9 +190,11 @@ histplot)
     fi
     TITLE="$YAXIS vs. $XAXIS"
     if [ x"$BINS" = "x0" ]; then
-	funhist $ARGS "$FILE" "$COL" | funhist2flot -t "$TITLE" | xsed
+	funhist $ARGS "$FILE" "$COL"            | \
+	funhist2flot -a "$ANNOTATE" -t "$TITLE" | xsed
     else
-	funhist $ARGS "$FILE" "$COL" "$BINS" | funhist2flot -t "$TITLE" | xsed
+	funhist $ARGS "$FILE" "$COL" "$BINS"    | \
+	funhist2flot -a "$ANNOTATE" -t "$TITLE" | xsed
     fi
     exit 0
     ;;
