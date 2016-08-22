@@ -141,7 +141,7 @@
 			<td>&nbsp;</td>									\
 		   </tr>										\
 	           <tr>	<td>Event filter:</td>									\
-			<td colspan="2"><input type=text name=filter size="36" style="text-align:left;"></td>	\
+			<td colspan="2"><input type=text name=filter size="32" style="text-align:left;"></td>	\
 			<td>&nbsp;</td>									\
 			<td>&nbsp;</td>									\
 		   </tr>										\
@@ -198,6 +198,6 @@
 
 	    help:     "fitsy/binning.html",
 
-            winDims: [400, 210]
+            winDims: [480, 240]
     });
 }());

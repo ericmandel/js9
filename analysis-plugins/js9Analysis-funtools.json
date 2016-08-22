@@ -12,12 +12,12 @@
   {"name"   : "energyplot",
    "title"  : "Energy Spectrum",
    "files"  : "fits",
-   "action" : "js9Xeq histplot $filename[$regions] false false $energy 0",
+   "action" : "js9Xeq histplot $filename[$regions] false false %energy 0",
    "rtype"  : "plot"},
   {"name"   : "timeplot",
    "title"  : "Light Curve",
    "files"  : "fits",
-   "action" : "js9Xeq histplot $filename[$regions] false false $time 0",
+   "action" : "js9Xeq histplot $filename[$regions] false false %time 0",
    "rtype"  : "plot"},
   {"name"   : "histplot",
    "title"  : "Histogram Plot",
@@ -29,7 +29,7 @@
    "title"  : "Event Filter",
    "files"  : "fits",
    "purl"   : "./params/evfilter.html",
-   "action" : "js9Xeq evfilter $filename '$filter' '$imcenter' $dims",
+   "action" : "js9Xeq evfilter $filename $filter $imcenter $dims",
    "pwin"   : "width=830px,height=218px,center=1,resize=1,scrolling=1",
    "rtype"  : "png"}
 ]

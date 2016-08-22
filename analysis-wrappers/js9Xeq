@@ -17,7 +17,7 @@ fi
 #defaults
 CHANDRA_BINS="500:8000:1875"
 XMM_BINS="400:15000:1825"
-XRAY_ELEMENTS='{"text": "O VII", "x": 570}, {"text": "O VIII", "x": 650}, {"text": "Ne X", "x": 1020}, {"text": "Mg XI", "x": 1340}, {"text": "Si XIII", "x": 1850}, {"text": "Si XIV", "x": 2010}, {"text": "S XV", "x": 2450}, {"text": "S XVI", "x": 2620}, {"text": "Ar XVII", "x": 3130}, {"text": "Ar XVIII", "x": 3320}, {"text": "Ca XIX", "x": 3890}, {"text": "Ca XX", "x": 4110}, {"text": "Fe XXV", "x": 6670}'
+XRAY_ELEMENTS='{"text": "O VII", "x": 570, "y": "%Y"}, {"text": "O VIII", "x": 650, "y": "%Y"}, {"text": "Ne X", "x": 1020, "y": "%Y"}, {"text": "Mg XI", "x": 1340, "y": "%Y"}, {"text": "Si XIII", "x": 1850, "y": "%Y"}, {"text": "Si XIV", "x": 2010, "y": "%Y"}, {"text": "S XV", "x": 2450, "y": "%Y"}, {"text": "S XVI", "x": 2620, "y": "%Y"}, {"text": "Ar XVII", "x": 3130, "y": "%Y"}, {"text": "Ar XVIII", "x": 3320, "y": "%Y"}, {"text": "Ca XIX", "x": 3890, "y": "%Y"}, {"text": "Ca XX", "x": 4110, "y": "%Y"}, {"text": "Fe XXV", "x": 6670, "y": "%Y"}'
 
 # if we are being called via CGI, send stderr to stdout
 if [ x"$QUERY_STRING" != x ]; then
@@ -94,7 +94,7 @@ hist)
       ARGS="$ARGS -w"
     fi
     COL="$1"; shift;
-    if [ "x$COL" = 'x$energy' ]; then
+    if [ "x$COL" = 'x%energy' ]; then
       COL="pi";
       TELESCOP=`funhead $FILE | getpar TELESCOP`
       case "$TELESCOP" in
@@ -161,7 +161,7 @@ histplot)
     TELESCOP=`funhead $FILE | getpar TELESCOP`
     YAXIS="counts"
     XAXIS="${COL} bin"
-    if [ "x$COL" = 'x$energy' ]; then
+    if [ "x$COL" = 'x%energy' ]; then
       COL="pi";
       XAXIS="${COL} bin"
       case "$TELESCOP" in
@@ -180,7 +180,7 @@ histplot)
           XAXIS="${COL} (ev)"
         ;;
       esac
-    elif [ "x$COL" = 'x$time' ]; then
+    elif [ "x$COL" = 'x%time' ]; then
       case "$TELESCOP" in
       CHANDRA|EINSTEIN)
         COL="time"
@@ -221,8 +221,8 @@ evfilter)
     # get dims
     DIMS="$1"; shift
     # make up funtools image section extension from cen and dims
-    X=`echo $CEN | awk '{print $1}'`
-    Y=`echo $CEN | awk '{print $2}'`
+    X=`echo $CEN | awk -F, '{print $1}'`
+    Y=`echo $CEN | awk -F, '{print $2}'`
     EXT="[$DIMS@$X,$DIMS@$Y]"
     # try to get a base name for output
     XBASE=`basename $IFILE`

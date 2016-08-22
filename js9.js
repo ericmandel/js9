@@ -3209,12 +3209,12 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	case "imcenter":
 	    pos = that.displayToLogicalPos({x: that.display.width/2,
 					    y: that.display.height/2});
-	    r = sprintf("%s %s", pos.x, pos.y);
+	    r = sprintf("%s,%s", pos.x, pos.y);
 	    break;
 	case "wcscenter":
 	    pos = that.displayToImagePos({x: that.display.width/2,
 					  y: that.display.height/2});
-	    r = JS9.pix2wcs(that.raw.wcs, pos.x, pos.y);
+	    r = JS9.pix2wcs(that.raw.wcs, pos.x, pos.y).replace(/\s+/g, ",");
 	    break;
 	case "sregions":
 	    owcssys = savewcs(that, u[1]);
@@ -3440,11 +3440,13 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
 		continue;
 	    }
 	    ax = ann.x || 0;
-	    if( ann.y === undefined ){
+	    if( ann.y.toUpperCase() === "%Y" ){
 		for(j=1; j<data.length-1; j++){
 		    if( data[j][0] > ax ){
 			ay = Math.max(data[j-1][1], data[j][1], data[j+1][1]);
-			ay += yTextOffset;
+			if( ann.y === "%Y" ){
+			    ay += yTextOffset;
+			}
 			break;
 		    }
 		}
@@ -3463,7 +3465,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
 	}
     };
     // make up title, if necessary
-    if( !title && this ){
+    if( this && !title ){
 	titlefile = (this.fitsFile || this.id);
 	titlefile = titlefile.split("/").reverse()[0];
 	title = "AnalysisResults: " + titlefile;
