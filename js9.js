@@ -3553,7 +3553,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
 		for(i=0; i<pobj.data.length; i++){
 		    pdata.x.push(pobj.data[i][0]);
 		    pdata.y.push(pobj.data[i][1]);
-		    if( pdata.error_y.array ){
+		    if( pdata.error_y && pdata.error_y.array ){
 			pdata.error_y.array.push(pobj.data[i][2]);
 		    }
 		}
