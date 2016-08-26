@@ -22,6 +22,7 @@ tpos
 js9helper
 js9
 js9helper.pc
+plotly.min.js
 .DS_Store
 js/.DS_Store
 astroem/.DS_Store
