@@ -42,6 +42,7 @@
 </head>
 <body onload="initMyAnalysis()">
     <script type="text/javascript">
+    var plot;
     // add event handlers to the analysis buttons to execute the specified task
     // note that jQuery is available automatically
     function initMyAnalysis(){
@@ -65,17 +66,21 @@
     // display function passed to JS9.RunAnalysis and JS9.SubmitAnalysis
     // when the analysis task is complete, this callback displays results
     function displayMyAnalysis(stdout, stderr, errcode, a){
-      var rdiv = $("#myAnalysisResults")[0];
-      if( !rdiv ){
-        alert("the analysis results area is missing on this web page");
-      }
-      else if( stderr ){
+      var rdiv = $("#myAnalysisResults");
+      if( stderr ){
         alert(stderr);
       } else {
+        // remove previous contents
+        rdiv.empty();
+        // we must destroy previous plot, or else some bindings will remain
+        if( plot ){
+            plot.destroy();
+            plot = null;
+        }
         switch(a.rtype){
         case "text":
           // text can just get shoved into the div
-          rdiv.innerHTML = "<pre>" + stdout + "<\/pre>";
+          rdiv.html("<pre>" + stdout + "<\/pre>");
           break;
         case "plot":
           // plot can make use of the already-loaded flot routines
@@ -84,10 +89,8 @@
 	    // retrieve plot object (should contain a data object)
 	    pobj = JSON.parse(stdout);
             if( pobj && pobj.data ){
-              // erase explanatory text
-              rdiv.innerHTML = "";
     	      // plot the data
-	      $.plot(rdiv, [pobj], JS9.plotOpts);
+	      plot = $.plot(rdiv, [pobj], JS9.plotOpts);
 	    } else {
               alert("no analysis data returned");
             }
