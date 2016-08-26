@@ -4,12 +4,12 @@
 LC_NUMERIC=en_US.ISO8859-1
 export LC_NUMERIC
 
-annotate=""
+annotations=""
 title="Histogram Plot"
 while [ x"$1" != x ]; do
     case $1 in
 	-a) shift
-	    annotate="$1"
+	    annotations="$1"
 	    shift
 	    continue;;
 	-t) shift
@@ -21,7 +21,7 @@ while [ x"$1" != x ]; do
     esac
 done
 
-awk -v title="${title}" -v annotate="${annotate}" '
+awk -v title="${title}" -v annotations="${annotations}" '
 BEGIN{
   mode=1
   npts=0
@@ -31,9 +31,9 @@ mode==1{
     column = $3
   }
   else if( $1 == "------" ){
-    printf "{\042label\042 : \042%s\042, ", title
-    if( annotate != "" ){
-        printf "\042annotate\042 : {\042data\042 : [%s]}, ", annotate
+    printf "{\042color\042: \042blue\042, \042label\042 : \042%s\042, ", title
+    if( annotations != "" ){
+        printf "\042annotations\042 : {\042data\042 : [%s]}, ", annotations
     }
     mode = 2
     next

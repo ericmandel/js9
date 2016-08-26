@@ -12,7 +12,7 @@
 
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 
-/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters */
+/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly */
 
 /*jshint smarttabs:true */
 
@@ -210,9 +210,11 @@ JS9.textColorOpts = {
 
 // defaults for plot creation
 JS9.plotOpts = {
-    color: "blue",
+    // generic options
     annotate: false,
     annotateColor: "#FF0000",
+    color: "blue",
+    // flot options
     zoomStack: {
 	enabled: true
     },
@@ -228,6 +230,13 @@ JS9.plotOpts = {
     legend: {
 	backgroundColor: null,
 	backgroundOpacity: 0
+    },
+    // plotly options
+    xaxis: {
+	autorange: true
+    },
+    yaxis: {
+	autorange: true
     }
 };
 
@@ -3426,35 +3435,56 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 
 // display analysis results (text or plot)
 JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
-    var id, did, hstr, pobj, divjq, opts, titlefile, plot;
+    var i, id, did, hstr, pobj, divjq, opts, titlefile, plot, pdata;
     var a = JS9.lightOpts[JS9.LIGHTWIN];
-    var annotate = function(divjq, plot, pobj, opts){
-	var i, j, ann, ac, ao, ax, ay, ahtml;
-	var yTextOffset = -25;
+    var getPos = function(ann, data){
+	var i, x, y;
+	if( !ann.text ){
+	    return null;
+	}
+	x = ann.x || 0;
+	if( ann.y.toUpperCase() === "%Y" ){
+	    for(i=1; i<data.length-1; i++){
+		if( data[i][0] > x ){
+		    y = Math.max(data[i-1][1], data[i][1], data[i+1][1]);
+		    break;
+		}
+	    }
+	} else {
+	    y = ann.y;
+	}
+	return {x: x, y: y};
+    };
+    var plotlyAnnotate = function(pobj){
+	var i, ann, aobj, pos;
+	var yTextOffset = -30;
 	var data = pobj.data;
-	opts = opts || {};
-	divjq.find(".plotAnnotation").remove();
-	for(i=0; i<pobj.annotate.data.length; i++){
-	    ann = pobj.annotate.data[i];
-	    if( !ann.text ){
+	var ac = pobj.annotations.color || JS9.plotOpts.annotateColor;
+	var annotations = [];
+	for(i=0; i<pobj.annotations.data.length; i++){
+	    ann = pobj.annotations.data[i];
+	    pos = getPos(ann, data);
+	    if( !pos ){
 		continue;
 	    }
-	    ax = ann.x || 0;
-	    if( ann.y.toUpperCase() === "%Y" ){
-		for(j=1; j<data.length-1; j++){
-		    if( data[j][0] > ax ){
-			ay = Math.max(data[j-1][1], data[j][1], data[j+1][1]);
-			if( ann.y === "%Y" ){
-			    ay += yTextOffset;
-			}
-			break;
-		    }
-		}
-	    } else {
-		ay = ann.y;
-	    }
-	    ac = pobj.annotate.color || opts.annotateColor || pobj.color;
-	    ao = plot.pointOffset({ x: ax, y: ay });
+	    aobj = {x: pos.x, y: pos.y, xref: "x", yref: "y",
+		    text: ann.text, arrowcolor: ac, font: {color: ac},
+		    showarrow: true, arrowhead: 2, ax: 0, ay: yTextOffset};
+	    annotations.push(aobj);
+	}
+	return annotations;
+    };
+    // eslint-disable-next-line no-unused-vars
+    var flotAnnotate = function(divjq, plot, pobj){
+	var i, ann, ao, pos, ahtml;
+	var yTextOffset = -25;
+	var data = pobj.data;
+	var ac = pobj.annotations.color || JS9.plotOpts.annotateColor;
+	divjq.find(".plotAnnotation").remove();
+	for(i=0; i<pobj.annotations.data.length; i++){
+	    ann = pobj.annotations.data[i];
+	    pos = getPos(ann, data);
+	    ao = plot.pointOffset({ x: pos.x, y: pos.y });
 	    if( (ao.left < 0) || (ao.left > divjq.width()) ){
 		continue;
 	    }
@@ -3502,21 +3532,54 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
 	divjq = $("#" + id + " #" + id + "Plot");
 	// flot data
 	if( pobj.data ){
-	    // set up linear/log transforms and plot the graph
-	    opts = $.extend(true, {}, JS9.plotOpts);
-	    // add re-annotate callback, if necessary
-	    if( opts.annotate && pobj.annotate ){
-		// eslint-disable-next-line no-unused-vars
-		opts.zoomStack.func = function(plt, r){
-		    annotate(divjq, plt, pobj, opts);
-		};
-	    }
-	    pobj.color = pobj.color || opts.color;
-	    try{ plot = $.plot(divjq, [pobj], opts); }
-	    catch(e){ JS9.error("can't plot data", e); }
-	    // annotate, if necessary
-	    if( opts.annotate && pobj.annotate ){
-		annotate(divjq, plot, pobj, opts);
+	    switch( JS9.globalOpts.plotLibrary ){
+	    case "plotly":
+		opts = $.extend(true, {}, JS9.plotOpts, pobj.opts);
+		if( pobj.label ){
+		    opts.title = pobj.label;
+		}
+		pdata = {x: [], y: [], type: "scatter"};
+		// flot data format: [[x1,y1], [x2,y2], ..]
+		//               or: [[x1,y1,yerr1], [x2,y2,yerr2], ..]
+		if( pobj.data[0].length >= 3 ){
+		    // look for flot yerr properties
+		    pdata.error_y = {type: 'data', array: [], visible: true};
+		    if( pobj.points && pobj.points.yerr ){
+			if( pobj.points.yerr.color ){
+			    pdata.error_y.color = pobj.points.yerr.color;
+			}
+		    }
+		}
+		for(i=0; i<pobj.data.length; i++){
+		    pdata.x.push(pobj.data[i][0]);
+		    pdata.y.push(pobj.data[i][1]);
+		    if( pdata.error_y.array ){
+			pdata.error_y.array.push(pobj.data[i][2]);
+		    }
+		}
+		if( JS9.plotOpts.annotate && pobj.annotations ){
+		    opts.annotations = plotlyAnnotate(pobj);
+		}
+		try{  Plotly.newPlot(divjq.attr("id"), [pdata], opts); }
+		catch(e){ JS9.error("can't plot data (plotly)", e); }
+		break;
+	    default:
+		opts = $.extend(true, {}, JS9.plotOpts, pobj.opts);
+		// add re-annotate callback, if necessary
+		if( JS9.plotOpts.annotate && pobj.annotations ){
+		    // eslint-disable-next-line no-unused-vars
+		    opts.zoomStack.func = function(plt, r){
+			flotAnnotate(divjq, plt, pobj);
+		    };
+		}
+		pobj.color = pobj.color || opts.color;
+		try{ plot = $.plot(divjq, [pobj], opts); }
+		catch(e){ JS9.error("can't plot data (flot)", e); }
+		// annotate, if necessary
+		if( JS9.plotOpts.annotate && pobj.annotations ){
+		    flotAnnotate(divjq, plot, pobj);
+		}
+		break;
 	    }
 	}
 	break;
@@ -9475,18 +9538,15 @@ JS9.msgHandler =  function(msg, cb){
 	    args.push({display: id});
 	}
 	// if RunAnalysis has a callback, call it when the helper returns
-	if( cb && (cmd === "RunAnalysis") ){
+	if( (cmd === "RunAnalysis") && cb ){
 	    // add opts arg if not already present
 	    if( args.length === 1 ){
 		args.push(null);
 	    }
 	    // add callback arg
 	    args.push(cb);
-	    // run task
-	    JS9.publics[cmd].apply(null, args);
-	    // restore alerts
-	    JS9.globalOpts.alerts = true;
-	    return;
+	    // and clear the callback
+	    cb = null;
 	}
 	// call public API
 	try{ res = JS9.publics[cmd].apply(null, args); }
@@ -11161,6 +11221,11 @@ JS9.init = function(){
 	   });
 	}
     }
+    // use plotly if loaded separately, otherwise use internal flot
+    if( !JS9.globalOpts.plotLibrary && window.hasOwnProperty("Plotly") ){
+	JS9.globalOpts.plotLibrary = "plotly";
+    }
+    JS9.globalOpts.plotLibrary = JS9.globalOpts.plotLibrary || "flot";
     // set this to false in the page to avoid loading a prefs file
     if( JS9.PREFSFILE ){
 	// load site preferences, if possible
@@ -11221,12 +11286,30 @@ JS9.init = function(){
 	    }
 	}
     }
-    // add handler for postMessage events, if necessary
+    // add handler for postMessage events
     window.addEventListener("message", function(ev){
+	var s;
 	var msg;
 	var data = ev.data;
+	// For Chrome, origin property is in the ev.originalEvent object
+	var origin = ev.origin || ev.originalEvent.origin;
+	if( origin === "null" ){
+	    origin = "unknown";
+	}
+	// if postMessage handling is disabled, just (log and) return
 	if( !JS9.globalOpts.postMessage ){
-	    JS9.error("JS9 postMessage support is not enabled");
+	    if( JS9.DEBUG ){
+		s = sprintf("JS9 ignoring postMessage, origin: %s", origin);
+		if( typeof data === "string" ){
+		    s += sprintf(" data: %s", data);
+		} else if( typeof data === "object" ){
+		    s += sprintf(" obj: %s", JSON.stringify(Object.keys(data)));
+		} else {
+		    s += sprintf(" typeof: %s", typeof data);
+		}
+		JS9.log(s);
+	    }
+	    return;
 	}
 	// var origin = ev.origin;
 	// var source = ev.source;
@@ -11240,7 +11323,7 @@ JS9.init = function(){
 	} else {
 	    JS9.error("invalid msg from postMessage");
 	}
-	// call the msg handler
+	// call the msg handler for JS9 API calls
 	JS9.msgHandler(msg, function(stdout, stderr, errcode, a){
 	    var res;
             a = a || {};

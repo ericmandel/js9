@@ -150,34 +150,37 @@ to the server for execution.  See <b>histplot.html</b> for sample syntax.
 The <b>rtype</b> property determine how JS9 handles return values:
 <ul>
 <li><b>text:</b> the returned text is displayed in a lightweight window
-<li><b>plot:</b> the returned plot data is plotted using the jQuery 
-<b>flot</b> widget (see http://www.flotcharts.org/)
+<li><b>plot:</b> the returned plot data is plotted
 </ul>
 Sample scripts such as <b>funcnts2flot</b> and <b>funhist2plot</b>
 generate a JSON string that contains a valid flot object. For
 example, the radial profile plot contains x, y, and error values:
 <pre>
 {
-  "color": "green", 
   "label" : "surf_bri(...) vs. avg_radius(...)", 
-  "points" : {"errorbars" : "y", 
-              "yerr" : {"show" : "true", "color" : "red"}},
+  "points" : {"errorbars" : "y", "yerr" : {"show" : "true", "color" : "red"}},
   "data": [[x1, y1, e1], [x2, y2, e2], ... [xn, xn, en]]
 }
 </pre>
 while the histogram plot contains only x and y values:
 <pre>
 {
-  "color": "blue", 
   "label" : "counts vs. ...bin", 
   "data": [[x1, y1], [x2, y2], ... [xn, xn]]
 }
 </pre>
 If your analysis task generates one of these two plot formats, JS9
-will display the plot data. Plotting is still somewhat experimental
-and rudimentary. We will be adding features with time (e.g. ability to
-change scales between linear and log). Please work with us to improve
-plotting support.
+will display the plot data. By default, the plot is generated using
+the jQuery <b>flot</b> library (see http://www.flotcharts.org/), which
+is supplied with JS9. If JS9 detects the presence of the <b>plotly</b>
+library (https://plot.ly/), it will use that for plotting. Note that you
+must load plotly yourself: due to its relatively large size, plotly is
+not packaged in the JS9 support file.
+
+<p>
+Plotting is still somewhat experimental and rudimentary. We will be
+adding features with time (e.g. ability to change scales between
+linear and log). Please work with us to improve plotting support.
 
 <p>
 Finally, the <b>hidden</b> value determines whether or not a task is
