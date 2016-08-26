@@ -42,6 +42,7 @@
       }
       #myAnalysisResults {
         padding: 5px;
+        margin:  5px;
         min-height: 440px;
       }
       #myButtonsDiv {
@@ -82,6 +83,7 @@
     var aname, im, lastim, lastreg, js9tabs;
     var ncall = 0;
     var err = {};
+    var plot;
     // this is the callback for all region changes
     JS9.Regions.opts.onchange = runMyAnalysis;
     // called when the function changes to redo the last display
@@ -107,6 +109,10 @@
         var rarr = [];
         lastim = im;
         lastreg = xreg;
+        // don't run on removal
+        if( xreg.mode === "remove" ){
+            return;
+        }
         // check whether we are in the analysis tab
         if( js9tabs.subcontentids[js9tabs.currentTabIndex] !== "analysis" ){
           return;
@@ -137,29 +143,35 @@
     }
     // display function passed to JS9.RunAnalysis when the task is complete.
     function dispMyAnalysis(stdout, stderr, errcode, a){
-      var rdiv = $("#myAnalysisResults")[0];
+      var rdiv = $("#myAnalysisResults");
       if( !rdiv ){
         alert("the analysis results area is missing on this web page");
       }
       else if( stderr ){
         alert(stderr);
       } else {
-        switch(a.rtype){
-        case "text":
+       // remove previous contents
+       rdiv.empty();
+       // we must destroy previous plot, or else some bindings will remain
+       if( plot ){
+           plot.destroy();
+           plot = null;
+       }
+       // process return type
+       switch(a.rtype){
+          case "text":
           // text can just get shoved into the div
-          rdiv.innerHTML = "<pre>" + stdout + "<\/pre>";
+          rdiv.html("<pre>" + stdout + "<\/pre>");
           break;
         case "plot":
           // plot can make use of the already-loaded flot routines
-          // ( and JS9.plotOpts is defined in js9-version.js)
+          // (JS9.plotOpts is defined in js9.js)
           try{ 
 	    // retrieve plot object (should contain a data object)
 	    pobj = JSON.parse(stdout);
             if( pobj && pobj.data ){
-              // erase explanatory text
-              rdiv.innerHTML = "";
     	      // plot the data
-	      $.plot(rdiv, [pobj], JS9.plotOpts);
+	      plot = $.plot(rdiv, [pobj], JS9.plotOpts);
 	    } else {
               alert("no analysis data returned");
             }
