@@ -93,13 +93,15 @@
           }
       }
       function pmsend(cmd, args, cb){
+          var pargs = [];
           if( window.hasOwnProperty("JS9PM") ){
-              args.unshift(cmd);
-              args.unshift(pm);
+              pargs.push(pm);
+              pargs.push(cmd);
+              pargs.push(args);
               if( cb ){
-                args.push(cb);
+                pargs.push(cb);
               }
-              JS9PM.send.apply(null, args);
+              JS9PM.send.apply(null, pargs);
           } else {
               if( cb ){
                   cbs[cmd] = cb;
@@ -132,6 +134,21 @@
     JS9PM.send(pm, "SetColormap", "cool");
     JS9PM.send(pm, "GetColormap", function(o){alert(JSON.stringify(o))});
     </pre>
+    <p>
+    When running analysis tools, you have two options:
+    <ul>
+    <li> if you call "RunAnalysis", the results are returned in an object
+    <li> if you call "analysis", the results are displayed in the iframe
+    </ul>
+    This can be seen in the examples below. The "FITS header" and
+    "counts" analysis tasks both return the results in an object,
+    which is displayed via alert().<br>The object contains
+    an <b>rtype</b> property which will be "text" or "plot", and
+    an <b>rdata</b> property to hold the returned data.  The
+    "energyplot" and "histplot" tasks <br>display their results in light
+    windows in the iframe, as if you had run these tasks from the Analysis menu.
+
+    <p>
     Without js9PostMessage.js, you can send a postMessage directly,
     passing an object with a <b>cmd</b> property (API call name) and an <b>args</b> property (array of call args):
     <pre>
@@ -198,10 +215,10 @@ Behold her, single in the field,<br>Yon solitary Highland Lass!<br>Reaping and s
 
     <tr>
     <td><b>Run analysis:</b></td>
-    <td><input type="button" value="FITS header" onclick="javascript:pmsend('RunAnalysis', ['fitshead']);"></td>
-    <td><input type="button" value="counts" onclick="javascript:pmsend('RunAnalysis', ['counts']);"></td>
-    <td><input type="button" value="spectrum" onclick="javascript:pmsend('RunAnalysis', ['energyplot']);"></td>
-    <td><input type="button" value="histplot" onclick="javascript:pmsend('RunAnalysis', ['histplot']);"></td>
+    <td><input type="button" value="FITS header" onclick="javascript:pmsend('RunAnalysis', ['fitshead'], pmcb);"></td>
+    <td><input type="button" value="counts" onclick="javascript:pmsend('RunAnalysis', ['counts'], pmcb);"></td>
+    <td><input type="button" value="spectrum" onclick="javascript:pmsend('analysis', ['energyplot']);"></td>
+    <td><input type="button" value="histplot" onclick="javascript:pmsend('analysis', ['histplot']);"></td>
     </tr>
 
     <tr>
