@@ -275,8 +275,9 @@ char *wcssys(int n, char *s){
     if( s && *s && 
 	(!strcasecmp(s, "galactic") || !strcasecmp(s, "ecliptic") ||
 	 !strcasecmp(s, "linear")   || (wcsceq(s) > 0.0)) ){
-      /* try to set the wcs output system */
+      /* try to set the wcs system */
       wcsoutinit(info->wcs, s);
+      wcsininit(info->wcs, s);
     }
     /* always return current */
     strncpy(str, getwcsout(info->wcs), SZ_LINE);
