@@ -3308,6 +3308,8 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     var i, a, m;
     var that = this;
     var obj = {};
+    // func can be passed, or it can be global
+    func = func || JS9.globalOpts.analysisFunc;
     // sanity checks
     if( !JS9.helper.connected ){
 	return;
@@ -3391,10 +3393,12 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	    switch(a.rtype){
 	    case "text":
 	    case undefined:
-		that.displayAnalysis("text", robj.stdout);
+		that.displayAnalysis("text", robj.stdout,
+				     {divid: JS9.globalOpts.analysisDiv});
 		break;
 	    case "plot":
-		that.displayAnalysis("plot", robj.stdout);
+		that.displayAnalysis("plot", robj.stdout,
+				     {divid: JS9.globalOpts.analysisDiv});
 		break;
 	    case "alert":
 		if( robj.stdout ){
@@ -3434,8 +3438,9 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 };
 
 // display analysis results (text or plot)
-JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
-    var i, id, did, hstr, pobj, divjq, opts, titlefile, plot, pdata;
+JS9.Image.prototype.displayAnalysis = function(type, s, opts){
+    var i, r, id, did, hstr, pobj, divjq, title, titlefile, winFormat, divid;
+    var plot, pdata, popts;
     var a = JS9.lightOpts[JS9.LIGHTWIN];
     var getPos = function(ann, data){
 	var i, x, y;
@@ -3494,7 +3499,16 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
 	    divjq.append(ahtml);
 	}
     };
+    // opts is optional
+    opts = opts || {};
+    // window format ...
+    winFormat = opts.winformat;
+    // ... or target div
+    if( opts.divid && $("#" + opts.divid).length > 0 ){
+	divid = $("#" + opts.divid);
+    }
     // make up title, if necessary
+    title = opts.title || "";
     if( this && !title ){
 	titlefile = (this.fitsFile || this.id);
 	titlefile = titlefile.split("/").reverse()[0];
@@ -3507,12 +3521,17 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
     // process the type of analysis results
     switch(type){
     case "text":
+	s = s || "";
 	hstr = "<div class='JS9Analysis'></div>";
-	if( s ){
-	    hstr += "<pre class='JS9AnalysisText'>"+s+"</pre>";
-	}
+	hstr += "<pre class='JS9AnalysisText'>"+s+"</pre>";
 	hstr += "</div>";
-	did = JS9.lightWin(id, "inline", hstr, title, winFormat||a.textWin);
+	// populate div or create the light window to hold the text
+        if( divid ){
+	    divid.html(hstr);
+	} else {
+	    winFormat = winFormat || a.textWin;
+	    did = JS9.lightWin(id, "inline", hstr, title, winFormat);
+	}
 	break;
     case "plot":
 	// convert results to js object
@@ -3526,17 +3545,28 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
 	}
 	// create an outer div and an inner plot for the light window open call
 	hstr = sprintf("<div id='%s' class='JS9Analysis'><div id='%sPlot' class='JS9Plot' ></div></div>", id, id);
-	// create the light window to hold the plot
-	did = JS9.lightWin(id, "inline", hstr, title, winFormat||a.plotWin);
+	// populate div or create the light window to hold the plot
+        if( divid ){
+	    divid.html(hstr);
+	} else {
+	    winFormat = winFormat || a.plotWin;
+	    did = JS9.lightWin(id, "inline", hstr, title, winFormat);
+	}
 	// find the inner plot div that now is inside the light window
 	divjq = $("#" + id + " #" + id + "Plot");
+	// when using a div (instead of a lightwin), set the div size
+        if( divid ){
+	    divjq.css("width", divid.css("width"));
+	    divjq.css("height", divid.css("height"));
+	    divjq.css("margin", 0);
+	}
 	// flot data
 	if( pobj.data ){
 	    switch( JS9.globalOpts.plotLibrary ){
 	    case "plotly":
-		opts = $.extend(true, {}, JS9.plotOpts, pobj.opts);
+		popts = $.extend(true, {}, JS9.plotOpts, pobj.opts);
 		if( pobj.label ){
-		    opts.title = pobj.label;
+		    popts.title = pobj.label;
 		}
 		pdata = {x: [], y: [], type: "scatter"};
 		// flot data format: [[x1,y1], [x2,y2], ..]
@@ -3558,22 +3588,22 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
 		    }
 		}
 		if( JS9.plotOpts.annotate && pobj.annotations ){
-		    opts.annotations = plotlyAnnotate(pobj);
+		    popts.annotations = plotlyAnnotate(pobj);
 		}
-		try{  Plotly.newPlot(divjq.attr("id"), [pdata], opts); }
+		try{  Plotly.newPlot(divjq.attr("id"), [pdata], popts); }
 		catch(e){ JS9.error("can't plot data (plotly)", e); }
 		break;
 	    default:
-		opts = $.extend(true, {}, JS9.plotOpts, pobj.opts);
+		popts = $.extend(true, {}, JS9.plotOpts, pobj.opts);
 		// add re-annotate callback, if necessary
 		if( JS9.plotOpts.annotate && pobj.annotations ){
 		    // eslint-disable-next-line no-unused-vars
-		    opts.zoomStack.func = function(plt, r){
+		    popts.zoomStack.func = function(plt, r){
 			flotAnnotate(divjq, plt, pobj);
 		    };
 		}
-		pobj.color = pobj.color || opts.color;
-		try{ plot = $.plot(divjq, [pobj], opts); }
+		pobj.color = pobj.color || popts.color;
+		try{ plot = $.plot(divjq, [pobj], popts); }
 		catch(e){ JS9.error("can't plot data (flot)", e); }
 		// annotate, if necessary
 		if( JS9.plotOpts.annotate && pobj.annotations ){
@@ -3584,17 +3614,26 @@ JS9.Image.prototype.displayAnalysis = function(type, s, title, winFormat){
 	}
 	break;
     case "params":
-	if( JS9.allinone ){
-	    did = JS9.lightWin(id, "inline", s, title, winFormat||a.paramWin);
-	} else {
-	    did = JS9.lightWin(id, "ajax", s, title, winFormat||a.paramWin);
-	}
-	break;
     case "textline":
-	if( JS9.allinone ){
-	    did = JS9.lightWin(id, "inline", s, title, winFormat||a.dpathWin);
+        if( divid ){
+	    if( JS9.allinone){
+		divid.html(s);
+	    } else {
+		$.ajax({
+		    url: s,
+		    cache: false,
+		    dataType: "text",
+		    success: function(data){divid.html(data);}
+		});
+	    }
 	} else {
-	    did = JS9.lightWin(id, "ajax", s, title, winFormat||a.dpathWin);
+	    if( type === "params" ){
+		winFormat = winFormat || a.paramWin;
+	    } else {
+		winFormat = winFormat || a.dpathWin;
+	    }
+	    r = JS9.allinone?"inline":"ajax";
+	    did = JS9.lightWin(id, r, s, title, winFormat);
 	}
 	break;
     default:
@@ -4853,7 +4892,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    if( rstr.search(/\[struct stat="OK"/) < 0 ){
 		// signal that we completed the reproject attempt
 		rcomplete = true;
-		earr = rstr.match(/msg="([^"]*)"/);
+		earr = rstr.match(/msg="(.*)"/);
 		if( earr && earr[1] ){
 		    JS9.error(earr[1] + " (from mProjectPP)");
 		} else {
@@ -5061,6 +5100,10 @@ JS9.Image.prototype.saveSession = function(file){
 // execute plugins of various types (using type-specific values)
 JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
     var pname, pinst, popts, parr, evt;
+    var xtrig = function(name, obj){
+        var s = "JS9:" + name;
+        $(document).trigger(s, obj);
+    };
     // sanity check
     if( !xtype || !xname ){
 	return;
@@ -5076,21 +5119,30 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
 		switch(xtype){
 		case "image":
 		    // used for: onimage[load,close,refresh,display]
-		    try{ popts[xname].call(pinst, this); }
+		    try{
+			popts[xname].call(pinst, this);
+			xtrig(xname, {im: this});
+                    }
 		    catch(e){ pinst.errLog(xname, e); }
 		    break;
 		case "region":
 		case "shape":
 		    // used for: on[layer]change
 		    // xval: pub
-		    try{ popts[xname].call(pinst, this, xval); }
+		    try{
+			popts[xname].call(pinst, this, xval);
+			xtrig(xname, {im: this, xreg: xval});
+                    }
 		    catch(e){ pinst.errLog(xname, e); }
 		    break;
 		case "keypress":
 		    // used for: onkeypress, onkeydown
 		    // xval: evt
 		    evt = xval.originalEvent || xval;
-		    try{ popts[xname].call(pinst, this, this.ipos, evt); }
+		    try{
+			popts[xname].call(pinst, this, this.ipos, evt);
+			xtrig(xname, {im: this, ipos: this.ipos, evt: evt});
+                    }
 		    catch(e){ pinst.errLog(xname, e); }
 		    break;
 		case "mouse":
@@ -5098,7 +5150,10 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
 		    // xval: evt
 		    if( !this.clickInRegion || popts[xname+"_inRegion"] ){
 			evt = xval.originalEvent || xval;
-			try{ popts[xname].call(pinst, this, this.ipos, evt); }
+			try{
+			    popts[xname].call(pinst, this, this.ipos, evt);
+			    xtrig(xname, {im: this, ipos: this.ipos, evt: evt});
+                        }
 			catch(e){ pinst.errLog(xname, e); }
 	    }
 		    break;
@@ -5363,7 +5418,7 @@ JS9.Display = function(el){
     JS9.displays.push(this);
     // debugging
     if( JS9.DEBUG ){
-	JS9.log("JS9 display:  %s (%d,%d)", this.id, this.x, this.y);
+	JS9.log("JS9 display:  %s", this.id);
     }
 };
 
@@ -5795,6 +5850,8 @@ JS9.Helper.prototype.connect = function(type){
     switch(this.type){
     case "none":
         this.connected = null;
+        // signal that JS9 helper is ready
+        $(document).trigger("JS9:ready", {type: "none", status: "OK"});
 	JS9.Preload(true);
         break;
     case "get":
@@ -5809,6 +5866,7 @@ JS9.Helper.prototype.connect = function(type){
         if( JS9.DEBUG ){
 	    JS9.log("JS9 helper: connect: " + this.type);
         }
+        $(document).trigger("JS9:ready", {type: "get", status: "OK"});
 	JS9.Preload(true);
 	break;
     case "sock.io":
@@ -5845,6 +5903,8 @@ JS9.Helper.prototype.connect = function(type){
 		    that.socket.emit("displays", {displays: d}, function(pid){
 			that.pageid = pid;
 		    });
+                    $(document).trigger("JS9:ready",
+                        {type: "socket.io", status: "OK"});
 		    JS9.Preload(true);
 		    if( JS9.DEBUG ){
 			JS9.log("JS9 helper: connect: " + that.type);
@@ -5885,6 +5945,8 @@ JS9.Helper.prototype.connect = function(type){
 	    error:  function(jqXHR, textStatus, errorThrown){
 		that.connected = false;
 		that.helper = false;
+                $(document).trigger("JS9:ready",
+                    {type: "socket.io", status: "error"});
 		JS9.Preload(true);
 		if( JS9.DEBUG ){
 	            JS9.log("JS9 helper: connect failure: " +
@@ -8672,11 +8734,11 @@ JS9.Regions.opts = {
 		if( JS9.allinone ){
 		    target.params.winid = im.displayAnalysis("params",
 			  JS9.allinone.regionsConfigHTML,
-			  "Region Configuration");
+			  {title: "Region Configuration"});
 		} else {
 		    target.params.winid = im.displayAnalysis("params",
 			  JS9.InstallDir(JS9.Regions.opts.configURL),
-			  "Region Configuration");
+			  {title: "Region Configuration"});
 		}
 	    }
 	    return;
@@ -9140,7 +9202,7 @@ JS9.Regions.parseRegions = function(s){
     };
     // get cleaned-up string
     var getstr = function(s){
-	var t = s.replace(/^['"]/, "").replace(/['"]$/, "");
+	var t = s.replace(/^['"]/, "").replace(/["']$/, "");
 	return t;
     };
     // sanity check
@@ -11595,7 +11657,7 @@ JS9.init = function(){
 		if( a.purl ){
 		    did = im.displayAnalysis("params",
 					     JS9.InstallDir(a.purl),
-					     a.title+": "+im.fitsFile);
+					     {title: a.title+": "+im.fitsFile});
 		    // save info for running the task
 		    $(did).data("dispid", im.display.id)
 			.data("aname", a.name);
@@ -11980,6 +12042,8 @@ JS9.init = function(){
     });
     // scroll to top
     $(document).scrollTop(0);
+    // signal that JS9 init is complete
+    $(document).trigger("JS9:init");
 };
 
 // ---------------------------------------------------------------------

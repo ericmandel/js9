@@ -2300,6 +2300,21 @@ plotting package.
 If no <b>func</b> callback is specified, the default processing will
 display "text" in a new light window.  If the return type is "plot",
 the results are assumed to be in <b>flot</b> format and will be plotted.
+<p>
+Instead of passing a callback function each time, you can set the global
+property <b>JS9.globalOpts.analysisFunc</b> to a function having the
+same signature:
+<pre>
+    func(stdout, stderr, errcode, aobj)
+</pre>
+The specified function will be called for each execution
+of <b>JS9.RunAnalysis</b>
+<p>
+In addition, you can change the target of the analysis results display
+from a light window to your own div element by setting the global
+property <b>JS9.globalOpts.analysisDiv</b> to the id of your new
+target div. The div must have CSS height and width properties if you
+are going to plot results.
 
 <p>
 <font size="+1"><b><u>Run a server-side analysis task, utilizing
@@ -2320,7 +2335,8 @@ the form values and passes them to the JS9 analysis macro expander so
 that these values can be integrated into the analysis command line.
 See js9analysis.html for a simple example.
 <p>
-The <b>func</b> callback is the same as for <b>JS9.RunAnalysis()</b> above.
+The <b>func</b> callback and global options are the same as
+for <b>JS9.RunAnalysis()</b> above.
 
 <p><hr><p>
 <center><b><font size="+1">
