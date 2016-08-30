@@ -387,7 +387,7 @@ removeproxy)
     # remove files that match a template of the input file (without extension),
     # but avoid removing files with a similar name
     TMPL=`echo $FILE | rev | cut -f 2- -d '.' | rev`
-    rm -rf `ls ${TMPL} ${TMPL}.* | egrep -v "${TMPL}\..*\..*"`
+    rm -rf `ls ${TMPL} ${TMPL}.* 2>/dev/null | egrep -v "${TMPL}\..*\..*"`
     if [ $? != 0 ]; then
       error "can't remove proxy file: $FILE"
     fi
