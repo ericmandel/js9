@@ -1806,10 +1806,14 @@ returns:
 <li><b>rarr</b>: array of region objects
 </ul>
 <p>
+If the <b>regions</b> argument is not specified, it defaults to "all". You
+can specify "selected" to return information about the selected regions, or
+a tag value to return information about regions having that tag.
+<p>
 Each returned region object contains the following properties:
 <ul>
 <li><b>id</b>: numeric region id (assigned by JS9 automatically)
-<li><b>mode</b>: "add", "remove" or "change"
+<li><b>mode</b>: "add", "remove", "select", "update"
 <li><b>shape</b>: region shape ("annulus", "box", "circle", "ellipse",
 "point", "polygon", "text")
 <li><b>tags</b>: comma delimited list of region tags (e.g., "source", "include")
@@ -1856,10 +1860,32 @@ where:
 <li><b>regions</b>: which regions to change
 <li><b>opts</b>: object containing options to change in each region
 </ul>
-Change one or more regions. The opts object can contain the parameters 
+Change one or more regions. 
+If the <b>regions</b> argument is not specified, it defaults to "all". You
+can specify "selected" to return information about the selected regions, or
+a tag value to change regions having that tag.
+<p>
+The opts object can contain the parameters 
 described in the <b>JS9.AddRegions()</b> section. However, you cannot (yet)
 change the shape itself (e.g. from "box" to "circle"). See js9onchange.html
 for examples of how to use this routine.
+
+<p>
+<font size="+1"><b><u>Copy one or more regions to another image</u></b></font>
+<p>
+<code><font size="+1">JS9.CopyRegions(to, regions)</font></code>
+<p>
+where:
+<ul>
+  <li><b>to</b>: image id to which to copy regions
+<li><b>regions</b>: which regions to copy
+</ul>
+Copy regions to a different image. If <b>to</b> is "all", then the regions are
+copied to all images. If <b>regions</b> is not specified, the default will be
+<ul>
+<li> the selected regions, if any regions are selected
+<li> all regions
+</ul>
 
 <p>
 <font size="+1"><b><u>Remove one or more regions from the region layer</u></b></font>
@@ -1870,6 +1896,9 @@ where:
 <ul>
 <li><b>regions</b>: which regions to remove
 </ul>
+If the <b>regions</b> argument is not specified, it defaults to "all". You
+can specify "selected" to return information about the selected regions, or
+a tag value to remove regions having that tag.
 
 <p>
 <font size="+1"><b><u>Save regions from the current image to a file</u></b></font>
@@ -1883,6 +1912,10 @@ where:
 </ul>
 Save the current regions for the displayed image as JS9 regions file. If
 filename is not specified, the file will be saved as "js9.reg".
+<p>
+If the <b>regions</b> argument is not specified, it defaults to "all". You
+can specify "selected" to return information about the selected regions, or
+a tag value to save regions having that tag.
 
 <p>
 <font size="+1"><b><u>Load regions from a file into the current image</u></b></font>

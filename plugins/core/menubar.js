@@ -1106,6 +1106,7 @@ JS9.Menubar.init = function(width, height){
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
             build: function(){
+		var i, s1;
 		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
 		var items = {
@@ -1121,11 +1122,26 @@ JS9.Menubar.init = function(width, height){
 		    "sep2": "------",
 		    "loadRegions" : {name: "load regions"},
 		    "saveRegions" : {name: "save regions"},
+		    "copyto" : {name: "copy regions to",
+				items: { copytotitle: {name: "choose image:",
+						       disabled: true}}},
 		    "listRegions" : {name: "list regions"},
 		    "deleteRegions" : {name: "delete regions"},
 		    "listonchange" : {name: "list on change"},
 		    "xeqonchange" : {name: "xeq on change"}
 		};
+		if( tim && (JS9.images.length > 1) ){
+		    for(i=0; i<JS9.images.length; i++){
+			if( tim !== JS9.images[i] ){
+			    s1 = "copyto_" + JS9.images[i].id;
+			    items.copyto.items[s1] = {name: JS9.images[i].id};
+			}
+		    }
+		    items.copyto.items.copyto_all = { name: "all images" };
+		    items.copyto.disabled = false;
+		} else {
+		    items.copyto.disabled = true;
+		}
 		// disable if we don't have info plugin
 		if( !JS9.hasOwnProperty("Info") ){
 		    items.listRegions.disabled = true;
@@ -1139,6 +1155,7 @@ JS9.Menubar.init = function(width, height){
 		return {
 		    callback: function(key){
 		    getDisplays().forEach(function(val){
+			var uid;
 			var udisp = val;
 			var uim = udisp.image;
 			if( uim ){
@@ -1163,6 +1180,13 @@ JS9.Menubar.init = function(width, height){
 				uim.params.listonchange = !uim.params.listonchange;
 				break;
 			    default:
+				// maybe it's a copyto request
+				if( key.match(/^copyto_/) ){
+				    uid = key.replace(/^copyto_/,"");
+				    uim.copyRegions(uid);
+				    return;
+				}
+				// otherwise it's new region
 				uim.addShapes("regions", key, {ireg: true});
 				break;
 			    }

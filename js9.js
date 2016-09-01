@@ -2165,7 +2165,7 @@ JS9.Image.prototype.putImage = function(opts){
 // plugins: execute plugin callbacks
 // all: colors,scaled,rgb,display,plugins
 JS9.Image.prototype.displayImage = function(imode, opts){
-    var i, im, bopts;
+    var i, im, bopts, obj;
     var allmode = "colors,scaled,rgb,display,plugins";
     var nblend = 0;
     var blends = [];
@@ -2302,6 +2302,14 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	}
 	// mark this image as being in this display
 	this.display.image = this;
+	// now that this is the displayed image, we can add delayed shapes
+	if( this.delayedShapes && this.delayedShapes.length ){
+	    while( this.delayedShapes.length ){
+		obj = this.delayedShapes.shift();
+		this.addShapes(obj.layer, obj.shape, obj.opts);
+	    }
+	    delete this.delayedShapes;
+	}
     }
     // post-processing
     // plugin callbacks
@@ -6956,6 +6964,12 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
     var layer, canvas, dlayer, zoom, bin;
     var ttop, tleft, rarr=[];
     var params = {};
+    // delay adding the region, if this image is not the one being displayed
+    if( this.display.image !== this ){
+	this.delayedShapes = this.delayedShapes || [];
+	this.delayedShapes.push({layer: layerName, shape: shape, opts: opts});
+	return;
+    }
     layer = this.getShapeLayer(layerName);
     // sanity check
     if( !layer || !layer.show ){
@@ -8791,6 +8805,7 @@ JS9.Regions.init = function(layerName){
     JS9.Image.prototype.parseRegions = JS9.Regions.parseRegions;
     JS9.Image.prototype.saveRegions = JS9.Regions.saveRegions;
     JS9.Image.prototype.listRegions = JS9.Regions.listRegions;
+    JS9.Image.prototype.copyRegions = JS9.Regions.copyRegions;
     // init the display shape layer
     dlayer = this.display.newShapeLayer(layerName, JS9.Regions.opts);
     // mouse up: list regions, if necessary
@@ -9063,6 +9078,42 @@ JS9.Regions.listRegions = function(which, mode){
     }
     // always return the region string
     return regstr;
+};
+
+// copy one or more regions
+// call using image context
+JS9.Regions.copyRegions = function(to, which){
+    var i, im, s;
+    var ims = [];
+    if( typeof to === "object" ){
+	ims.push(to);
+    } else if( to === "all" ){
+	for(i=0; i<JS9.images.length; i++){
+	    if( this !== JS9.images[i] ){
+		ims.push(JS9.images[i]);
+	    }
+	}
+    } else {
+	im = JS9.lookupImage(to);
+	if( im ){
+	    ims.push(im);
+	}
+    }
+    if( !ims.length ){
+	return;
+    }
+    // if no 'which' specified, first look for "selected" regions
+    if( !which ){
+	s = this.listRegions("selected", 1);
+    }
+    // if no selected regions found, or 'which' was specified, get regions
+    if( !s ){
+	s = this.listRegions(which, 1);
+    }
+    for(i=0; i<ims.length; i++){
+	ims[i].addShapes("regions", s);
+    }
+    return this;
 };
 
 // parse a string containing a subset of DS9/Funtools regions
@@ -12386,60 +12437,6 @@ JS9.mkPublic("Load", function(file, opts){
     }
 });
 
-// save regions to disk
-// eslint-disable-next-line no-unused-vars
-JS9.mkPublic("SaveRegions", function(fname, which){
-    var file, wh, im;
-    var obj = JS9.parsePublicArgs(arguments);
-    file = obj.argv[0];
-    wh = obj.argv[1];
-    im = JS9.getImage(obj.display);
-    if( im ){
-	return im.saveRegions(file, wh);
-    }
-    return fname;
-});
-
-// load a DS9/funtools regions file
-JS9.mkPublic("LoadRegions", function(file, opts){
-    var display, reader;
-    var obj = JS9.parsePublicArgs(arguments);
-    file = obj.argv[0];
-    opts = obj.argv[1] || {};
-    // sanity check
-    if( !file ){
-	JS9.error("JS9.LoadRegions: no file specified for regions load");
-    }
-    // check for display
-    if( obj.display ){
-	display = obj.display;
-    } else if( opts.display ){
-	display = opts.display;
-    } else {
-	if( JS9.displays.length > 0 ){
-	    display = JS9.displays[0].id;
-	} else {
-	    display = JS9.DEFID;
-	}
-    }
-    // convert blob to string
-    if( typeof file === "object" ){
-	// file reader object
-	reader = new FileReader();
-	reader.onload = function(ev){
-	    JS9.AddRegions(ev.target.result, opts, {display: display});
-	};
-	reader.readAsText(file);
-    } else if( typeof file === "string" ){
-	opts.responseType = "text";
-	opts.display = display;
-	JS9.fetchURL(null, file, opts, JS9.AddRegions);
-    } else {
-	// oops!
-	JS9.error("unknown file type for LoadRegions: " + typeof file);
-    }
-});
-
 // create a new instance of JS9 in a window (light or new)
 // nb: unlike JS9.Load, this requires the opts param
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
@@ -13139,6 +13136,19 @@ JS9.mkPublic("RemoveRegions", function(region){
     return null;
 });
 
+// copy one or more regions
+JS9.mkPublic("CopyRegions", function(to, region){
+    var obj = JS9.parsePublicArgs(arguments);
+    var im = JS9.getImage(obj.display);
+    if( im ){
+	to = obj.argv[0];
+	region = obj.argv[1];
+	im.copyRegions(to, region);
+	return "OK";
+    }
+    return null;
+});
+
 // get one or more regions
 // eslint-disable-next-line no-unused-vars
 JS9.mkPublic("GetRegions", function(region){
@@ -13164,6 +13174,60 @@ JS9.mkPublic("ChangeRegions", function(region, opts){
 	im.changeShapes("regions", region, opts);
     }
     return null;
+});
+
+// save regions to disk
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("SaveRegions", function(fname, which){
+    var file, wh, im;
+    var obj = JS9.parsePublicArgs(arguments);
+    file = obj.argv[0];
+    wh = obj.argv[1];
+    im = JS9.getImage(obj.display);
+    if( im ){
+	return im.saveRegions(file, wh);
+    }
+    return fname;
+});
+
+// load a DS9/funtools regions file
+JS9.mkPublic("LoadRegions", function(file, opts){
+    var display, reader;
+    var obj = JS9.parsePublicArgs(arguments);
+    file = obj.argv[0];
+    opts = obj.argv[1] || {};
+    // sanity check
+    if( !file ){
+	JS9.error("JS9.LoadRegions: no file specified for regions load");
+    }
+    // check for display
+    if( obj.display ){
+	display = obj.display;
+    } else if( opts.display ){
+	display = opts.display;
+    } else {
+	if( JS9.displays.length > 0 ){
+	    display = JS9.displays[0].id;
+	} else {
+	    display = JS9.DEFID;
+	}
+    }
+    // convert blob to string
+    if( typeof file === "object" ){
+	// file reader object
+	reader = new FileReader();
+	reader.onload = function(ev){
+	    JS9.AddRegions(ev.target.result, opts, {display: display});
+	};
+	reader.readAsText(file);
+    } else if( typeof file === "string" ){
+	opts.responseType = "text";
+	opts.display = display;
+	JS9.fetchURL(null, file, opts, JS9.AddRegions);
+    } else {
+	// oops!
+	JS9.error("unknown file type for LoadRegions: " + typeof file);
+    }
 });
 
 // construct directory starting with where JS9 is installed
