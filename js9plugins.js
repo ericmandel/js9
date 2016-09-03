@@ -4546,10 +4546,13 @@ JS9.Menubar.init = function(width, height){
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
             build: function(){
-	        var i, j, s, re, apackages, atasks;
+	        var i, j, s, apackages, atasks;
 		var plugin, pinst, pname;
 		var parr;
-		var pexp = /([A-Za-z0-9_]+)\((.*)\)/;
+		var parexp = /fitsHeader\(([A-Za-z0-9_]+),(.*)\)/;
+		var winexp = /winVar\((.*),(.*)\)/;
+		var js9exp = /js9Var\((.*),(.*)\)/;
+		var imexp = /imVar\((.*),(.*)\)/;
 		var ntask = 0;
 		var n = 0;
 		// var m = 0;
@@ -4557,6 +4560,13 @@ JS9.Menubar.init = function(width, height){
 		var tdisp = getDisplays()[0];
 		var im = tdisp.image;
 		var lastxclass="";
+		var seq = function(s1, s2){
+		    if( !s1 || !s2 ){
+			return false;
+		    }
+		    return String(s1).toUpperCase() === 
+			   String(s2).toUpperCase();
+		};
 		var editAnalysis = function(im, obj){
 		    if( !obj.sigma ){
 			obj.sigma = "none";
@@ -4627,26 +4637,53 @@ JS9.Menubar.init = function(width, height){
 			    if( atasks[i].hidden ){
 				continue;
 			    }
-			    if( atasks[i].files.match(/fits/) &&
+			    if( atasks[i].files.match(/^fits$/) &&
 				!im.fitsFile ){
 				continue;
 			    }
-			    if( atasks[i].files.match(/png/) &&
+			    if( atasks[i].files.match(/^png$/) &&
 				(im.source !== "fits2png") ){
 				continue;
 			    }
-			    if( atasks[i].files.match(/table/) ){
-				if( (im.source !== "fits2png") &&
-				    (im.imtab !== "table") ){
+			    if( atasks[i].files.match(/^table$/) ){
+				if( im.imtab !== "table" ){
 				    continue;
 				}
 			    }
-			    // header params: pname(pvalue)
-			    parr = atasks[i].files.match(pexp);
+			    if( atasks[i].files.match(/^image$/) ){
+				if( im.imtab !== "image" ){
+				    continue;
+				}
+			    }
+			    // header params: fitsHeader(pname,pvalue)
+			    parr = atasks[i].files.match(parexp);
 			    if( parr ){
 				s = im.raw.header[parr[1].toUpperCase()];
-				re = new RegExp(parr[2], "i");
-				if( !s || !s.match(re) ){
+				if( !seq(s, parr[2]) ){
+				    continue;
+				}
+			    }
+			    // win vars: winVar(name,value)
+			    parr = atasks[i].files.match(winexp);
+			    if( parr ){
+				s = JS9.varByName(parr[1], window);
+				if( !seq(s, parr[2]) ){
+				    continue;
+				}
+			    }
+			    // js9 vars: js9Var(name,value)
+			    parr = atasks[i].files.match(js9exp);
+			    if( parr ){
+				s = JS9.varByName(parr[1], JS9);
+				if( !seq(s, parr[2]) ){
+				    continue;
+				}
+			    }
+			    // im vars: imVar(name,value)
+			    parr = atasks[i].files.match(imexp);
+			    if( parr ){
+				s = JS9.varByName(parr[1], im);
+				if( !seq(s, parr[2]) ){
 				    continue;
 				}
 			    }

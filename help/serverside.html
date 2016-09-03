@@ -48,8 +48,8 @@ tool are:
 <ul>
 <li><b>name:</b> a short identifier string (typically one word)
 <li><b>title:</b> a longer string that will be displayed in the Analysis menu
-<li><b>files:</b> a rule that a filename will be matched against to determine
-whether this task is available for the current image (not yet implemented)
+<li><b>files:</b> a rule that will be matched against to determine
+whether this task is available for the current image
 <li><b>purl:</b> a URL pointing to a web page containing a user parameter form
 <li><b>action:</b> The command to execute on the server side
 <li><b>rtype:</b> a return type, which can be <b>text</b> or <b>plot</b>
@@ -57,6 +57,28 @@ whether this task is available for the current image (not yet implemented)
 </ul>
 See the sample json files in the analysis-plugins directory for the
 JSON syntax of this file.
+
+<p>
+The <b>files</b> property is a rule that determines whether an analysis task
+is available for a particular file. The following rules are defined:
+<ul>
+<li><b>fits</b>: true if the displayed image has an associated FITS file
+<li><b>png</b>: true if the displayed image is a png representation file
+<li><b>table</b>: true if the displayed image is a binary table
+<li><b>image</b>: true if the displayed image is an imge
+<li><b>fitsHeader(pname,pvalue)</b>: true if the FITS header of the displayed image has the named parameter with the specified value
+<li><b>imVar(name,value)</b>: true if a property of the displayed image has the specified value
+<li><b>js9Var(name,value)</b>: true if the JS9 variable has the specified value
+<li><b>winVar(name,value)</b>: true if a variable in the window context has the specified value
+</ul>
+Examples:
+<ul>
+<li><b>fitsHeader(INSTRUME,HRC)</b>: true if the FITS instrument parameter is "HRC"
+<li><b>imVar(params.wcssys,FK5)</b>: true if the wcs system for the current image is FK5
+<li><b>js9Var(globalOpts.projectName,Chandra_EPO)</b>: true if the web page has set the JS9.globalOpts.projectName property to "Chandra_EPO"
+<li><b>winVar(MyProject.name,foo)</b>: true if MyProject has a property "name" with the value "foo"
+</ul>
+Note that all checks are case-insensitive.
 
 <p>
 The <b>action</b> string contains the command to execute. For security

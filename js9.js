@@ -10623,6 +10623,21 @@ JS9.xeqByName = function(functionName, context /*, args */) {
     }
 };
 
+// return value of a var passed as a string (based on above)
+JS9.varByName = function(functionName, context){
+    var i, namespaces, vname;
+    context = context || JS9;
+    namespaces = functionName.split(".");
+    vname = namespaces.pop();
+    for(i=0; i<namespaces.length; i++) {
+	context = context[namespaces[i]];
+	if( !context ){
+	    return null;
+	}
+    }
+    return context[vname];
+};
+
 // load a prefs file and integrate preferences into global JS9 object
 JS9.loadPrefs = function(url, doerr) {
     // load site/user preferences synchronously
