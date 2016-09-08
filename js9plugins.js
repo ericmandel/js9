@@ -3202,7 +3202,6 @@ JS9.Menubar.CLASS = "JS9";
 JS9.Menubar.NAME = "Menubar";
 JS9.Menubar.WIDTH = JS9.WIDTH || 512;	// width of Menubar
 JS9.Menubar.HEIGHT = "auto";		// height of Menubar
-JS9.Menubar.HTML = "";
 
 // menu buttons in the menubar
 // NB: names must match actual menus, menu labels are arbitrary
@@ -3222,8 +3221,7 @@ if( JS9.menuButtonOptsArr ){
 }
 
 JS9.Menubar.init = function(width, height){
-    var ii, ss, tt;
-    var menubarHTML;
+    var ii, ss, tt, html;
     var that = this;
     // set width and height on div
     this.width = this.divjq.attr("data-width");
@@ -3233,45 +3231,49 @@ JS9.Menubar.init = function(width, height){
     this.divjq.css("width", this.width);
     this.width = parseInt(this.divjq.css("width"), 10);
     this.height = this.divjq.attr("data-height");
+    this.buttonClass = this.divjq.attr("data-buttonClass") || "JS9Button" ;
+    this.backgroundColor = this.divjq.attr("data-backgroundColor");
     if( !this.height  ){
 	this.height = height || JS9.MENUHEIGHT;
     }
     this.divjq.css("height", this.height);
     this.height = parseInt(this.divjq.css("height"), 10);
-    // init menubarHTML, if necessary
-    if( JS9.Menubar.HTML === "" ){
-	JS9.Menubar.HTML = "<span id='JS9Menus_@@ID@@'>";
-	for(ii=0; ii<JS9.Menubar.buttonOptsArr.length; ii++){
-	    ss = JS9.Menubar.buttonOptsArr[ii].name;
-	    tt = JS9.Menubar.buttonOptsArr[ii].label;
-	    // no help available for all-in-one configuration
-	    if( JS9.allinone && (ss === "help") ){
-		continue;
-	    }
-	    if( ss[0] === "#" ){
-		ss = ss.slice(1);
-		JS9.Menubar.HTML += "<button type='button' id='"+ss+"Menu@@ID@@' class='JS9Button' disabled='disabled'>"+tt+" </button>";
-	    } else {
-		JS9.Menubar.HTML += "<button type='button' id='"+ss+"Menu@@ID@@' class='JS9Button'>"+tt+"</button>";
-	    }
+    // generate html for this menubar
+    html = "<span id='JS9Menus_@@ID@@'>";
+    for(ii=0; ii<JS9.Menubar.buttonOptsArr.length; ii++){
+	ss = JS9.Menubar.buttonOptsArr[ii].name;
+	tt = JS9.Menubar.buttonOptsArr[ii].label;
+	// no help available for all-in-one configuration
+	if( JS9.allinone && (ss === "help") ){
+	    continue;
 	}
-	JS9.Menubar.HTML += "<button type='button' id='hiddenRegionMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
-	JS9.Menubar.HTML += "<button type='button' id='hiddenAnchorMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
-	JS9.Menubar.HTML += "</span>";
+	if( ss[0] === "#" ){
+	    ss = ss.slice(1);
+	    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"' disabled='disabled'>"+tt+" </button>";
+	} else {
+	    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button>";
+	}
     }
+    html += "<button type='button' id='hiddenRegionMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
+    html += "<button type='button' id='hiddenAnchorMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
+    html += "</span>";
     // set the display for this menubar
     this.display = JS9.lookupDisplay(this.id);
     // link back the menubar in the display
     this.display.menubar = this;
     // define menubar
-    menubarHTML = JS9.Menubar.HTML.replace(/@@ID@@/g,this.id);
+    this.html = html.replace(/@@ID@@/g,this.id);
     // add container to the high-level div
     this.menuConjq = $("<div>")
 	.addClass("JS9MenubarContainer")
 	.attr("width", this.width)
 	.attr("height", this.height)
-	.html(menubarHTML)
+	.html(this.html)
 	.appendTo(this.divjq);
+    // menubar background color
+    if( this.backgroundColor ){
+	this.menuConjq.css("background", this.backgroundColor);
+    }
     $(function(){
 	function onhide() {
 	    var tdisp = that.display;

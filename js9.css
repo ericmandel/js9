@@ -94,7 +94,7 @@ div.JS9MenubarContainer
     top: 0px;
     left: 0px;
     /* height: 25px; */
-    background: lightgrey;
+    background: lightblue;
     text-align: center;
     padding: 2px 10px;
 }
@@ -147,7 +147,7 @@ div.JS9Message
     font-weight: 300;
 }
 
-.JS9Button
+.JS9ClassicButton
 {
     font: normal 12px Arial;
     background: white;
@@ -158,25 +158,71 @@ div.JS9Message
     padding-bottom: 3px;
     padding-left: 6px;
     margin:  4px;
+    outline: none;
 }
 
 /* prevent firefox from adding extra button padding */
-.JS9Button::-moz-focus-inner {
+.JS9ClassicButton::-moz-focus-inner {
     padding: 0;
     border: 0;
 }
 
-/* ipad button font is too large */
-@media all and (device-width: 768px) and (device-height: 1024px) {
-.JS9Button
-{
-    font: normal 10px Arial;
-    padding: 2px;
-    margin: 2px;
-}
+.JS9Button,
+.JS9FlatButton {
+  color: #fff;
+  background-color: #6496c8;
+  text-shadow: -1px 1px #417cb8;
+  border: none;
+  padding-top: 4px;
+  padding-right: 8px;
+  padding-bottom: 4px;
+  padding-left: 8px;
+  margin:  4px;
+  outline: none;
 }
 
-/* the commands inside a console */
+.JS9Button:hover,
+.JS9Button.hover,
+.JS9FlatButton:hover,
+.JS9FlatButton.hover {
+  background-color: #346392;
+  text-shadow: -1px 1px #27496d;
+}
+
+.JS9Button:active,
+.JS9Button.active,
+.JS9FlatButton:active,
+.JS9FlatButton.active {
+  background-color: #27496d;
+  text-shadow: -1px 1px #193047;
+}
+
+.JS9Button::-moz-focus-inner,
+.JS9FlatButton::-moz-focus-inner {
+    padding: 0;
+    border: 0;
+}
+
+.JS9BorderButton {
+  color: #6496c8;
+  background: #fff;
+  border: solid 3px #6496c8;
+  margin:  4px;
+  outline: none;
+}
+
+.JS9BorderButton:hover,
+.JS9BorderButton.hover {
+  border-color: #346392;
+  color: #346392;
+}
+
+.JS9BorderButton:active,
+.JS9BorderButton.active {
+  border-color: #27496d;
+  color: #27496d;
+}/* the commands inside a console */
+
 .JS9CmdForm
 {
     border: 0px;
@@ -348,7 +394,7 @@ input:focus.JS9CmdIn{
 {
     /* height: 25px; */
     height: 30px;
-    background: lightgrey;
+    background: lightblue;
     text-align: left;
     color: black;
     font-size: 14px;
@@ -364,21 +410,32 @@ input:focus.JS9CmdIn{
 
 .indentmenu{
     font: normal 11px Arial;
+    margin-left: 12px;
 }
 
 .indentmenu ul{
     border-top: 0px;
-    background: black url(./images/indentbg_grey.png) center center repeat-x;
+    background: #6496c8;
 }
 
 .indentmenu ul li a{
-    border-right: 2px solid #E9E9E9;
-    padding-left: 10px;
-    padding-right: 10px;
+    border-top: 0px;
+    border-bottom: 0px;
+    border-left: 0px;
+    border-right: 6px solid #E9E9E9;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.indentmenu ul li a:hover,
+.indentmenu ul li a.hover {
+    background-color: #346392;
 }
 
 .indentmenu ul li a.selected{
-    background: black url(./images/indentbg2_grey.png) center center repeat-x;
+    padding-top: 5px; /* don't shift text down 1px */
+    padding-bottom: 5px;
+    background: #27496d;
 }
 
 /* 3d surface plot bug */

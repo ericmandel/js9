@@ -65,7 +65,7 @@ is available for a particular file. The following rules are defined:
 <li><b>fits</b>: true if the displayed image has an associated FITS file
 <li><b>png</b>: true if the displayed image is a png representation file
 <li><b>table</b>: true if the displayed image is a binary table
-<li><b>image</b>: true if the displayed image is an imge
+<li><b>image</b>: true if the displayed image is an image
 <li><b>fitsHeader(pname,pvalue)</b>: true if the FITS header of the displayed image has the named parameter with the specified value
 <li><b>imVar(name,value)</b>: true if a property of the displayed image has the specified value
 <li><b>js9Var(name,value)</b>: true if the JS9 variable has the specified value
@@ -194,15 +194,20 @@ while the histogram plot contains only x and y values:
 If your analysis task generates one of these two plot formats, JS9
 will display the plot data. By default, the plot is generated using
 the jQuery <b>flot</b> library (see http://www.flotcharts.org/), which
-is supplied with JS9. If JS9 detects the presence of the <b>plotly</b>
-library (https://plot.ly/), it will use that for plotting. Note that you
-must load plotly yourself: due to its relatively large size, plotly is
-not packaged in the JS9 support file.
+is supplied with JS9.
 
 <p>
-Plotting is still somewhat experimental and rudimentary. We will be
-adding features with time (e.g. ability to change scales between
-linear and log). Please work with us to improve plotting support.
+You also can use the <b>plotly</b> library for plotting. To do this,
+set the <b>JS9.globalOpts.plotLibrary</b> property to "plotly" and
+load the library in the web page header. (Due to its relatively large
+size, plotly is not packaged in the JS9 support file.)
+
+<p>
+Plotting is still somewhat experimental and rudimentary. For example,
+<b>flot</b> (but not <b>plotly)</b> simply uses the <b>x</b>
+and <b>y</b> keys to toggle between linear and log scaling.  We will
+be adding features and improvements with time. Please work with us to
+improve plotting support.
 
 <p>
 Finally, the <b>hidden</b> value determines whether or not a task is

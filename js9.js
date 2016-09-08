@@ -3449,7 +3449,14 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 JS9.Image.prototype.displayAnalysis = function(type, s, opts){
     var i, r, id, did, hstr, pobj, divjq, title, titlefile, winFormat, divid;
     var plot, pdata, popts;
+    var scaleFunc, scaleCur = {x: "linear", y: "linear"};
     var a = JS9.lightOpts[JS9.LIGHTWIN];
+    var lfunc = function(v){
+	return v === 0 ? v : Math.log(v);
+    };
+    var efunc = function(v){
+	return v === 0 ? v : Math.exp(v);
+    };
     var getPos = function(ann, data){
 	var i, x, y;
 	if( !ann.text ){
@@ -3468,24 +3475,29 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	}
 	return {x: x, y: y};
     };
-    var plotlyAnnotate = function(pobj){
-	var i, ann, aobj, pos;
-	var yTextOffset = -30;
-	var data = pobj.data;
-	var ac = pobj.annotations.color || JS9.plotOpts.annotateColor;
-	var annotations = [];
-	for(i=0; i<pobj.annotations.data.length; i++){
-	    ann = pobj.annotations.data[i];
-	    pos = getPos(ann, data);
-	    if( !pos ){
-		continue;
-	    }
-	    aobj = {x: pos.x, y: pos.y, xref: "x", yref: "y",
-		    text: ann.text, arrowcolor: ac, font: {color: ac},
-		    showarrow: true, arrowhead: 2, ax: 0, ay: yTextOffset};
-	    annotations.push(aobj);
+    // eslint-disable-next-line no-unused-vars
+    var flotScale = function(divjq, plot, axis, scale){
+	switch(axis){
+	case "x":
+	    axis = plot.getAxes().xaxis;
+	    break;
+	case "y":
+	    axis = plot.getAxes().yaxis;
+	    break;
 	}
-	return annotations;
+	switch(scale){
+	case "linear":
+	    axis.options.transform = null;
+	    axis.options.inverseTransform = null;
+	    break;
+	case "log":
+	    axis.options.transform = lfunc;
+	    axis.options.inverseTransform = efunc;
+	    break;
+	}
+	scaleCur[axis] = scale;
+	plot.setupGrid();
+	plot.draw();
     };
     // eslint-disable-next-line no-unused-vars
     var flotAnnotate = function(divjq, plot, pobj){
@@ -3506,6 +3518,38 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 			    ac, "&darr;" + ann.text);
 	    divjq.append(ahtml);
 	}
+    };
+    // eslint-disable-next-line no-unused-vars
+    var plotlyScale = function(divjq, plot, axis, scale){
+	var opts;
+	switch(axis){
+	case "x":
+	    opts = {xaxis: {type: scale, autorange: true}};
+	    break;
+	case "y":
+	    opts = {yaxis: {type: scale, autorange: true}};
+	    break;
+	}
+	Plotly.restyle(divjq.attr("id"), opts);
+    };
+    var plotlyAnnotate = function(pobj){
+	var i, ann, aobj, pos;
+	var yTextOffset = -30;
+	var data = pobj.data;
+	var ac = pobj.annotations.color || JS9.plotOpts.annotateColor;
+	var annotations = [];
+	for(i=0; i<pobj.annotations.data.length; i++){
+	    ann = pobj.annotations.data[i];
+	    pos = getPos(ann, data);
+	    if( !pos ){
+		continue;
+	    }
+	    aobj = {x: pos.x, y: pos.y, xref: "x", yref: "y",
+		    text: ann.text, arrowcolor: ac, font: {color: ac},
+		    showarrow: true, arrowhead: 2, ax: 0, ay: yTextOffset};
+	    annotations.push(aobj);
+	}
+	return annotations;
     };
     // opts is optional
     opts = opts || {};
@@ -3572,6 +3616,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	if( pobj.data ){
 	    switch( JS9.globalOpts.plotLibrary ){
 	    case "plotly":
+		scaleFunc = plotlyScale;
 		popts = $.extend(true, {}, JS9.plotOpts, pobj.opts);
 		if( pobj.label ){
 		    popts.title = pobj.label;
@@ -3598,10 +3643,24 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 		if( JS9.plotOpts.annotate && pobj.annotations ){
 		    popts.annotations = plotlyAnnotate(pobj);
 		}
+		if( popts.xscale === "log" ){
+		    popts.xaxis = popts.xaxis || {};
+		    popts.xaxis.type = "log";
+		    popts.xaxis.autorange = true;
+		    scaleCur.x = "log";
+		}
+		if( popts.yscale === "log" ){
+		    popts.yaxis = popts.yaxis || {};
+		    popts.yaxis.type = "log";
+		    popts.yaxis.autorange = true;
+		    scaleCur.y = "log";
+		}
 		try{  Plotly.newPlot(divjq.attr("id"), [pdata], popts); }
 		catch(e){ JS9.error("can't plot data (plotly)", e); }
 		break;
+	    case "flot":
 	    default:
+		scaleFunc = flotScale;
 		popts = $.extend(true, {}, JS9.plotOpts, pobj.opts);
 		// add re-annotate callback, if necessary
 		if( JS9.plotOpts.annotate && pobj.annotations ){
@@ -3611,6 +3670,19 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 		    };
 		}
 		pobj.color = pobj.color || popts.color;
+		// log scale?
+		if( pobj.xscale === "log" ){
+		    popts.xaxis = popts.xaxis || {};
+		    popts.xaxis.transform = lfunc;
+		    popts.xaxis.inverseTransform = efunc;
+		    scaleCur.x = "log";
+		}
+		if( pobj.yscale === "log" ){
+		    popts.yaxis = popts.yaxis || {};
+		    popts.yaxis.transform = lfunc;
+		    popts.yaxis.inverseTransform = efunc;
+		    scaleCur.y = "log";
+		}
 		try{ plot = $.plot(divjq, [pobj], popts); }
 		catch(e){ JS9.error("can't plot data (flot)", e); }
 		// annotate, if necessary
@@ -3619,6 +3691,19 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 		}
 		break;
 	    }
+	    // add keypress handlers
+	    divjq.css("outline", "none");
+	    divjq.attr("tabindex", 0);
+	    divjq.on("keypress", function(evt){
+		var charCode = evt.which || evt.keyCode;
+		var c = String.fromCharCode(charCode);
+		if( scaleCur[c] === "linear" ){
+		    scaleCur[c] = "log";
+		} else {
+		    scaleCur[c] = "linear";
+		}
+		scaleFunc(divjq, plot, c, scaleCur[c]);
+	    });
 	}
 	break;
     case "params":
@@ -11350,10 +11435,11 @@ JS9.init = function(){
 	}
     }
     // use plotly if loaded separately, otherwise use internal flot
-    if( !JS9.globalOpts.plotLibrary && window.hasOwnProperty("Plotly") ){
-	JS9.globalOpts.plotLibrary = "plotly";
-    }
     JS9.globalOpts.plotLibrary = JS9.globalOpts.plotLibrary || "flot";
+    if( (JS9.globalOpts.plotLibrary === "plotly") &&
+	!window.hasOwnProperty("Plotly") ){
+	JS9.globalOpts.plotLibrary = "flot";
+    }
     // set this to false in the page to avoid loading a prefs file
     if( JS9.PREFSFILE ){
 	// load site preferences, if possible

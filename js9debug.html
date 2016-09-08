@@ -10,6 +10,7 @@
   <link type="text/css" rel="stylesheet" href="plugins/plugintest.css">
   <link type="text/css" rel="stylesheet" href="js9debugextras/jquery.datetimepicker.css">
   <script type="text/javascript" src="js9support.js"></script>
+  <script type="text/javascript" src="js9debugextras/plotly.min.js"></script>
   <script type="text/javascript" src="js9.js"></script>
   <script type="text/javascript" src="js9plugins.js"></script>
   <script type="text/javascript" src="plugins/plugintest.js"></script>
@@ -27,12 +28,6 @@
       background: #E9E9E9;
       border: 0px;
       padding: 2px;
-    }
-    #SUPERMENU_ div.JS9MenubarContainer{
-      background: darkgreen;
-    }
-    #myJS9Menubar div.JS9MenubarContainer{
-      background: lightblue;
     }
   </style>
   <title>JS9 Debug Page</title>
@@ -98,7 +93,7 @@
     <input type="text" id="datetimepicker" size="44" value="datepicker test: 3rd party event-handling" class="datepickerText">
     </td>
     <td>
-    <div class="JS9Menubar" id="SUPERMENU_" data-displays="JS9,myJS9"></div>
+    <div class="JS9Menubar" id="SUPERMENU_" data-buttonClass="JS9ClassicButton" data-backgroundColor="darkgreen" data-displays="JS9,myJS9"></div>
     </td>
     </tr>
     <tr valign="top">
@@ -181,7 +176,7 @@
     </tr>
     <tr valign="top">
     <td>
-    <div class="JS9Menubar" id="JS9Menubar" data-width="400px" data-height="60px"></div>
+    <div class="JS9Menubar" id="JS9Menubar" data-buttonClass="JS9BorderButton" data-backgroundColor="white" data-width="400px" data-height="70px"></div>
     <div class="JS9" data-width="400px" data-height="400px"></div>
     <div class="JS9Colorbar" id="JS9Colorbar" data-width="400px"></div>
     <p>

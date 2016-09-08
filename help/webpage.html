@@ -192,6 +192,22 @@ loading a site-specific CSS file after the js9.css file. This makes
 updating much easier.
 
 <p>
+One CSS directive worth noting is the <b>JS9Button</b> class, which defines
+the look and feel of the buttons found on the Menubar, inside plugins, etc.
+The <b>JS9Button</b> class currently is aliased to the <b>JS9FlatButton</b>
+class, which displays a flat blue button that highlights when the mouse hovers
+and darkens when clicked. A <b>lightblue</b> background is often used with
+this class of button. But JS9 also defines two other button classes: <b>JS9ClassicButton</b> a simple black and white button used prior to v1.10, and 
+<b>JS9BorderButton</b> which has a blue colored border and a white
+background.  The JS9 Menubar supports two data properties to make it
+easier to change the button and background:
+<ul>
+<li><b>buttonClass</b>: the class of button to use ("JS9ClassicButton", "JS9FlatButton", "JS9BorderButton" ... or your own class)
+<li><b>backgroundColor</b>: color of background (default: "lightblue")
+</ul>
+The <a href="../js9sizes.html">JS9 Size Demo</a> displays different button styles.
+
+<p>
 <h3>One Menubar to Rule Them All</h3>
 By default, each menubar controls one JS9 display. You can, however,
 create a menubar that controls multiple displays, so that a given menu
