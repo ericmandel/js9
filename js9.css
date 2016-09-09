@@ -390,6 +390,11 @@ input:focus.JS9CmdIn{
     padding: 0px;
 }
 
+.drag-controls
+{
+    padding: 2px;
+}
+
 .drag-handle
 {
     /* height: 25px; */
