@@ -135,6 +135,9 @@ WEBFILES =	js9.js js9.min.js \
 		js9Msg.js js9PostMessage.js js9Helper.js \
 		js9Prefs-default.json js9Prefs.json favicon.ico index.html
 
+GZFILES =	js9.js js9.min.js js9support.js js9support.min.js \
+		js9plugins.js js9-allinone.js
+
 SAOFILES =	index.html
 
 CSSFILES =	css/jquery.contextMenu.css css/dhtmlwindow.css  \
@@ -445,7 +448,15 @@ install-webdata:	FORCE
 	    fi; \
          done;)
 
-install-sao:	saoprefs install-webcgi install-js9tests
+install-gzip:	FORCE
+	@(for i in $(GZFILES) ; do\
+	    if [ -f $(WEBDIR)/$$i ] ; then \
+	        echo "gzip'ing $$i" ; \
+	        gzip -c $(WEBDIR)/$$i > $(WEBDIR)/$$i.gz; \
+	    fi; \
+         done;)
+
+install-sao:	install-gzip saoprefs install-webcgi install-js9tests
 		@(if [ -d "$(SAODIR)" ]; then \
 		    for i in $(SAOFILES) ; \
 		    do \

@@ -20,7 +20,7 @@
 The sample js9basics.html file shows how to add JS9 to a web page by
 assigning JS9 CSS classes to "div" elements.  The js9multi.html web
 page goes further by showing how multiple instances of JS9 can be
-added to a web page using unique IDs.
+added using unique IDs.
 
 <p>
 To start, a few JavaScript and CSS files must be loaded into the web
@@ -41,6 +41,13 @@ will look something like this:
 Order is important: you must load js9support.min.js before you load
 js9.min.js. You must load the plugin files after you load js9.min.js.
 You can simply copy the order of files as specified in the JS9 demo files.
+
+<p>
+You can, of course, arrange to have your web server gzip the javascript
+files, using browser-based capabilities to ungzip them automatically. The
+JS9 web site serves <b>pre-compressed content</b>, as described in the
+<a href="http://httpd.apache.org/docs/current/mod/mod_deflate.html">
+Apache Module mod_deflate</a> page.
 
 <p>
 The text file <b>js9support.txt</b> is a list of the files contained
