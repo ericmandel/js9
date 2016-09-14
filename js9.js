@@ -1474,6 +1474,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 // store section information
 JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
     var sect = this.rgb.sect;
+    // save zoom in case we are about to change it (regions have to be scaled)
+    sect.ozoom  = sect.zoom;
     // process arguments
     switch(arguments.length){
     case 0:
@@ -1484,7 +1486,6 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	sect.height = Math.min(this.raw.height,this.display.canvas.height);
 	break;
     case 1:
-	sect.ozoom  = sect.zoom;
 	sect.zoom   = xcen;
 	sect.width  = Math.min(this.raw.width*sect.zoom,
 			       this.display.canvas.width);
@@ -1500,7 +1501,6 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	// three args: x, y, zoom
 	sect.xcen   = parseInt(xcen, 10);
 	sect.ycen   = parseInt(ycen, 10);
-	sect.ozoom  = sect.zoom;
 	sect.zoom   = zoom;
 	sect.width  = Math.min(this.raw.width*sect.zoom,
 			       this.display.canvas.width);

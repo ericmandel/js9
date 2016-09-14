@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.9, Thu Sep  8 15:18:48 EDT 2016 */
+/* JS9 allinone: v1.9, Wed Sep 14 12:52:22 EDT 2016 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -295,7 +295,81 @@ width: 13px; /*width of resize image*/
 height: 13px; /*height of resize image*/
 cursor: nw-resize;
 font-size: 0;
-}/* ######### CSS for Shade Tabs. Remove if not using ######### */
+}
+
+.osxA {
+  text-decoration: none;
+}
+
+.osxSpan {
+  line-height: 8px;
+  vertical-align: 0%;
+}
+
+.osxButtons {
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 4px;
+  line-height: 0px;
+}
+
+.osxButtons:hover a {
+  visibility: visible;
+}
+
+.osxClose {
+  background: #ff5c5c;
+  font-family: HelveticaNeue, 'Helvetica Neue', 'Lucida Grande', Arial, sans-serif;
+  font-size: 8pt;
+  width: 11px;
+  height: 11px;
+  border: 1px solid #e33e41;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.osxClose:active {
+  background: #c14645;
+  border: 1px solid #b03537;
+}
+
+.osxClose:active .osxClosebutton {
+  color: #4e0002;
+}
+
+.osxClosebutton {
+  color: #820005;
+  visibility: hidden;
+  cursor: default;
+}
+
+.osxMinimize {
+  background: #ffbd4c;
+  font-family: HelveticaNeue, 'Helvetica Neue', 'Lucida Grande', Arial, sans-serif;
+  font-size: 8pt;
+  margin-left: 8px;
+  width: 11px;
+  height: 11px;
+  border: 1px solid #e09e3e;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.osxMinimize:active {
+  background: #c08e38;
+  border: 1px solid #af7c33;
+}
+
+.osxMinimize:active .osxMinimizebutton {
+  color: #5a2607;
+}
+
+.osxMinimizebutton {
+  color: #9a5518;
+  visibility: hidden;
+  cursor: default;
+}
+/* ######### CSS for Shade Tabs. Remove if not using ######### */
 
 .shadetabs{
 padding: 3px 0;
@@ -877,9 +951,9 @@ div.JS9Message
   text-shadow: -1px 1px #417cb8;
   border: none;
   padding-top: 4px;
-  padding-right: 8px;
+  padding-right: 6px;
   padding-bottom: 4px;
-  padding-left: 8px;
+  padding-left: 6px;
   margin:  4px;
   outline: none;
 }
@@ -1093,6 +1167,11 @@ input:focus.JS9CmdIn{
     padding: 0px;
 }
 
+.drag-controls
+{
+    padding: 2px;
+}
+
 .drag-handle
 {
     /* height: 25px; */
@@ -1113,7 +1192,7 @@ input:focus.JS9CmdIn{
 
 .indentmenu{
     font: normal 11px Arial;
-    margin-left: 12px;
+    margin-left: 4px;
 }
 
 .indentmenu ul{
