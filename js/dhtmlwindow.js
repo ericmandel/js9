@@ -23,7 +23,11 @@ init:function(t){
 	domwindow.className="dhtmlwindow"
 	var domwindowdata=''
 	domwindowdata='<div class="drag-handle">'
-	domwindowdata+='DHTML Window <div class="drag-controls"><img src="'+this.imagefiles[0]+'" title="Minimize" /><img src="'+this.imagefiles[1]+'" title="Close" /></div>'
+        if( navigator.platform.match(/^Win/) ){
+	    domwindowdata+='DHTML Window <div class="drag-controls"><img src="'+this.imagefiles[0]+'" title="Minimize" /><img src="'+this.imagefiles[1]+'" title="Close" /></div>'
+	} else {
+            domwindowdata+='DHTML Window <div class="drag-controls"><div class="osxButtons"><div class="osxClose"><a class="osxA osxClosebutton" href="#"><span class="osxSpan"><strong title="Close">x</strong></span></a></div><div class="osxMinimize"><a class="osxA osxMinimizebutton" href="#"><span class="osxSpan"><strong title="Minimize">&ndash;</strong></span></a></div></div></div>';
+	}
 	domwindowdata+='</div>'
 	domwindowdata+='<div class="drag-contentarea"></div>'
 	domwindowdata+='<div class="drag-statusarea"><div class="drag-resizearea" style="background: transparent url('+this.imagefiles[3]+') top right no-repeat;">&nbsp;</div></div>'
