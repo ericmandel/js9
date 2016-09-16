@@ -22,14 +22,28 @@
         margin-bottom: 0px;
       }
       #myTabsContainer {
-        background: lightblue;
-        padding-top: 6px;
-        padding-bottom: 6px;
-        padding-left: 6px;
-        padding-right: 6px;
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0.0, #ebebeb, color-stop(1.0, #d5d5d5)));
+        background: -webkit-linear-gradient(top, #ebebeb, #d5d5d5);
+        background: -moz-linear-gradient(top, #ebebeb, #d5d5d5);
+        background: -ms-linear-gradient(top, #ebebeb, #d5d5d5);
+        background: -o-linear-gradient(top, #ebebeb, #d5d5d5);
+        background: linear-gradient(top, #ebebeb, #d5d5d5);
+        color: #4d494d;
+        padding: 8px;
+      }
+      #myTabsContainer .indentmenu ul li a{
+        border-right: 6px solid transparent;
+        -webkit-border-image: -webkit-gradient(linear, left top, left bottom, color-stop(0.0, #ebebeb, color-stop(1.0, #d5d5d5)));
+        -webkit-border-image: -webkit-linear-gradient(top, #ebebeb, #d5d5d5);
+        -moz-border-image: -moz-linear-gradient(top, #ebebeb, #d5d5d5);
+        -o-border-image: -o-linear-gradient(top, #ebebeb, #d5d5d5);
+        border-image: linear-gradient(top, #ebebeb, #d5d5d5);
+        border-image-slice: 1;
+      }
+      #myTabsContainer .indentmenu ul li a.selected{
+          background: #696969;
       }
       #myTabsDiv {
-        background: #E9E9E9;
         background: #E9E9E9;
         border-width: 0px;
         font: normal 14px Arial;
@@ -70,12 +84,6 @@
         display: inline-block;
         width: 210px;
         height: 210px;
-      }
-      #myTabsContainer .indentmenu ul li a{
-          border-right: 6px solid lightblue;
-      }
-      #myTabsContainer .indentmenu ul li a.selected{
-          background: #27496d;
       }
       @media only screen and (device-width: 768px) {
         /* For general iPad layouts */

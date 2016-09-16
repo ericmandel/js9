@@ -3232,6 +3232,13 @@ JS9.Menubar.init = function(width, height){
     this.width = parseInt(this.divjq.css("width"), 10);
     this.height = this.divjq.attr("data-height");
     this.buttonClass = this.divjq.attr("data-buttonClass") || "JS9Button" ;
+    this.containerClass = "JS9MenubarContainer";
+    // special handling of some known button classes
+    if( this.buttonClass.match(/-flat/) ){
+	this.containerClass += "-flat";
+    } else if( this.buttonClass.match(/-border/) ){
+	this.containerClass += "-border";
+    }
     this.backgroundColor = this.divjq.attr("data-backgroundColor");
     if( !this.height  ){
 	this.height = height || JS9.MENUHEIGHT;
@@ -3265,7 +3272,7 @@ JS9.Menubar.init = function(width, height){
     this.html = html.replace(/@@ID@@/g,this.id);
     // add container to the high-level div
     this.menuConjq = $("<div>")
-	.addClass("JS9MenubarContainer")
+	.addClass(this.containerClass)
 	.attr("width", this.width)
 	.attr("height", this.height)
 	.html(this.html)

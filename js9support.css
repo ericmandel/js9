@@ -750,7 +750,7 @@ span.JS9MefStrike>span {
 
 div.JS9MouseTouchText {
     margin: 5px;
-    padding: 6px;
+    padding: 6px 6px 6px 10px;
     background: #E9E9E9;
     overflow: auto;
     border: 1px solid transparent;
