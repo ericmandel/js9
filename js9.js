@@ -3977,8 +3977,9 @@ JS9.Image.prototype.saveJPEG = function(fname, quality){
 
 // update (and display) pixel and wcs values (connected to info plugin)
 JS9.Image.prototype.updateValpos = function(ipos, disp){
-    var val, vstr, val3, i, c, s;
+    var val, vstr, vstr2, vstr3, val3, i, c, s;
     var obj = null;
+    var sp = "&nbsp;&nbsp;&nbsp;&nbsp;";
     var prec = JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
     var tf = function(fval){
 	return JS9.floatFormattedString(fval, prec, 3);
@@ -4045,17 +4046,20 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	}
 	// create the valpos string
 	// since we can call this in mousemove, optimize by not using sprintf
-	vstr = "value(" + val3 + ") " + c.sys + "(" + tr(c.x, 3) + ", " + tr(c.y, 3) + ")";
+	vstr = val3;
+	vstr2 =  tr(c.x, 3) + " " + tr(c.y, 3) + " (" + c.sys + ")";
 	// object containing all information
 	obj = {ix: i.x, iy: i.y, isys: "image", px: c.x, py: c.y, psys: c.sys,
-	       ra: "", dec: "", wcssys: "", val: val, val3: val3, vstr: vstr,
+	       ra: "", dec: "", wcssys: "", val: val, val3: val3,
+	       vstr: vstr + sp + vstr2,
 	       id: this.id, file: this.file, object: this.object};
 	// add wcs, if necessary
 	if( (this.raw.wcs > 0) &&
 	    (this.params.wcssys !== "image") &&
 	    (this.params.wcssys !== "physical") ){
 	    s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
-	    vstr = vstr + " " + (s[2]||"wcs") + "(" + s[0] + ", " + s[1] + ")";
+	    vstr3 =  s[0] + " " + s[1] + " (" + (s[2]||"wcs") +  ")";
+	    vstr = vstr + sp + vstr3 + sp + vstr2;
 	    // update object with wcs
 	    obj.ra = s[0];
 	    obj.dec = s[1];
@@ -8387,6 +8391,10 @@ JS9.MouseTouch.Actions = {};
 // display value/position
 // eslint-disable-next-line no-unused-vars
 JS9.MouseTouch.Actions["display value/position"] = function(im, ipos, evt){
+    // special key: do nothing
+    if( JS9.specialKey(evt) ){
+	return;
+    }
     // display pixel and wcs values
     if( JS9.globalOpts.internalValPos && im && ipos ){
 	if( (ipos.x > 0) && (ipos.y > 0) &&
