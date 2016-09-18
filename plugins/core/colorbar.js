@@ -53,6 +53,10 @@ JS9.Colorbar.display = function(im){
     }
     // display colorbar
     this.ctx.putImageData(colorImg, 0, 0);
+    // if we are not displaying the tick marks, we're done
+    if( !this.showTicks ){
+	return;
+    }
     // display tick marks
     idx0 = im.psInverse.length / this.ticks;
     // clear tick display
@@ -112,6 +116,15 @@ JS9.Colorbar.init = function(width, height){
     // this.dispMode: display mode (for internal use)
     //
     // set width and height of plugin itself
+    // display the tick marks? this will influence some height params ...
+    this.showTicks = this.divjq.attr("data-showTicks");
+    if( this.showTicks === undefined ){
+	this.showTicks = true;
+    } else if( this.showTicks === "true" ){
+	this.showTicks = true;
+    } else {
+	this.showTicks = false;
+    }
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
 	this.width  = width || JS9.Colorbar.WIDTH;
@@ -120,7 +133,12 @@ JS9.Colorbar.init = function(width, height){
     this.width = parseInt(this.divjq.css("width"), 10);
     this.height = this.divjq.attr("data-height");
     if( !this.height ){
-	this.height  = height || JS9.Colorbar.HEIGHT;
+	// no tick mark display: default height becomes colorbar height
+	if( this.showTicks ){
+	    this.height  = height || JS9.Colorbar.HEIGHT;
+	} else {
+	    this.height  = height || JS9.Colorbar.COLORBARHEIGHT;
+	}
     }
     this.divjq.css("height", this.height);
     this.height = parseInt(this.divjq.css("height"), 10);
@@ -130,6 +148,8 @@ JS9.Colorbar.init = function(width, height){
     if( !this.colorbarHeight ){
 	this.colorbarHeight  = JS9.Colorbar.COLORBARHEIGHT;
     }
+    // but no larger than the overall height
+    this.colorbarHeight = Math.min(this.height, this.colorbarHeight);
     // display scaled or unscaled colorbar?
     this.scaled = this.divjq.attr("data-scaled");
     if( this.scaled === undefined ){
@@ -139,6 +159,7 @@ JS9.Colorbar.init = function(width, height){
     } else {
 	this.scaled = false;
     }
+    // tick marks
     this.ticks = this.divjq.attr("data-ticks");
     if( !this.ticks ){
 	this.ticks = JS9.Colorbar.TICKS;
@@ -157,25 +178,28 @@ JS9.Colorbar.init = function(width, height){
         .attr("height", this.colorbarHeight)
 	.appendTo(this.colorbarContainer);
     this.ctx = this.colorbarjq[0].getContext("2d");
-    // numeric text and tick marks
-    // (height and width changes deal with HiDPI text blur problems!)
-    this.textjq = $("<canvas>")
-	.addClass(JS9.Colorbar.BASE + "TextCanvas")
-	.attr("id", this.id + "TextCanvas")
-        .attr("width", this.width * ratio)
-        .attr("height", (this.height - this.colorbarHeight) * ratio)
-        .css("width", this.width + "px")
-        .css("height", (this.height - this.colorbarHeight) + "px")
-	.appendTo(this.colorbarContainer);
-    this.textctx = this.textjq[0].getContext("2d");
-    // font specified in data property of div element?
-    this.colorbarFont = this.divjq.attr("data-colorbarFont");
-    if( this.colorbarFont ){
-	this.textctx.font = this.colorbarFont;
-    } else if( JS9.Colorbar.COLORBARFONT ){
-	this.textctx.font = JS9.Colorbar.COLORBARFONT;
+    // set up for text display?
+    if( this.showTicks ){
+	// numeric text and tick marks
+	// (height and width changes deal with HiDPI text blur problems!)
+	this.textjq = $("<canvas>")
+	    .addClass(JS9.Colorbar.BASE + "TextCanvas")
+	    .attr("id", this.id + "TextCanvas")
+            .attr("width", this.width * ratio)
+            .attr("height", (this.height - this.colorbarHeight) * ratio)
+            .css("width", this.width + "px")
+            .css("height", (this.height - this.colorbarHeight) + "px")
+	    .appendTo(this.colorbarContainer);
+	this.textctx = this.textjq[0].getContext("2d");
+	// font specified in data property of div element?
+	this.colorbarFont = this.divjq.attr("data-colorbarFont");
+	if( this.colorbarFont ){
+	    this.textctx.font = this.colorbarFont;
+	} else if( JS9.Colorbar.COLORBARFONT ){
+	    this.textctx.font = JS9.Colorbar.COLORBARFONT;
+	}
+	this.textctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     }
-    this.textctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     // display current colorbar, if necessary
     if( this.display.image ){
 	JS9.Colorbar.display.call(this, this.display.image);
