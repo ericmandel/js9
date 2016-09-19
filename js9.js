@@ -8259,14 +8259,8 @@ JS9.Fabric.initGraphics = function(){
 JS9.Fabric.initGraphics();
 
 /*
- * action mousetouch module (May 19, 2016)
+ * mouse/touch module (May 19, 2016)
  */
-
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf */
-
-// use when running jslint
-// "use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.MouseTouch = {};
@@ -12882,6 +12876,62 @@ JS9.mkPublic("GetLoadStatus", function(id){
 	return "other";
     }
     return "none";
+});
+
+// http://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript
+JS9.mkPublic("CopyToClipboard", function(text){
+    var msg, successful;
+    var textArea = document.createElement("textarea");
+    //
+    // *** This styling is an extra step which is likely not required. ***
+    //
+    // Why is it here? To ensure:
+    // 1. the element is able to have focus and selection.
+    // 2. if element was to flash render it has minimal visual impact.
+    // 3. less flakyness with selection and copying which **might** occur if
+    //    the textarea element is not visible.
+    //
+    // The likelihood is the element won't even render, not even a flash,
+    // so some of these are just precautions. However in IE the element
+    // is visible whilst the popup box asking the user for permission for
+    // the web page to copy to the clipboard.
+    //
+    // Place in top-left corner of screen regardless of scroll position.
+    textArea.style.position = "fixed";
+    textArea.style.top = 0;
+    textArea.style.left = 0;
+    // Ensure it has a small width and height. Setting to 1px / 1em
+    // doesn't work as this gives a negative w/h on some browsers.
+    textArea.style.width = "2em";
+    textArea.style.height = "2em";
+    // We don't need padding, reducing the size if it does flash render.
+    textArea.style.padding = 0;
+    // Clean up any borders.
+    textArea.style.border = "none";
+    textArea.style.outline = "none";
+    textArea.style.boxShadow = "none";
+    // Avoid flash of white box if rendered for any reason.
+    textArea.style.background = "transparent";
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+	successful = document.execCommand("copy");
+	if( successful ){
+	    msg = "OK";
+	} else {
+	    msg = "MANUAL";
+	    if( JS9.BROWSER[2].match(/Mac/) ){
+		window.prompt("copy to clipboard: Cmd+C", text);
+	    } else {
+		window.prompt("copy to clipboard: Ctrl+C", text);
+	    }
+	}
+    } catch (err) {
+	msg = "ERROR";
+    }
+    document.body.removeChild(textArea);
+    return msg;
 });
 
 // bring up the file dialog box and open selected FITS file(s)
