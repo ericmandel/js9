@@ -232,7 +232,7 @@ PLUGIN.changecontrastbias = function(im){
     var t, obj;
     // im gives access to image object
     obj = im.getColormap();
-    t = sprintf("change contast bias: %s %s",
+    t = sprintf("change contrast bias: %s %s",
 		obj.contrast.toFixed(2), obj.bias.toFixed(2));
     // context is the calling instance
     this.message(t, 3);
