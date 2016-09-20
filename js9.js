@@ -8807,7 +8807,7 @@ JS9.Regions.opts = {
 	exclude_background: "#FF8C00",
 	source:             "#00FF00",
 	background:         "#FFD700",
-	defcolor:            "#00FF00"
+	defcolor:           "#00FF00"
     },
     // mouse down processing
     onmousedown: function(im, xreg, evt, target){
@@ -9099,10 +9099,11 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 
 // list one or more regions
 JS9.Regions.listRegions = function(which, mode){
-    var i, region, rlen;
-    var tags, tagstr, iestr;
+    var i, region, rlen, key;
+    var tagjoin, tagstr, iestr, optstr;
     var regstr="", sepstr="; ";
     var lasttype="none", dotags = false;
+    var tagcolors = [];
     var pubs = [];
     // default is to display, including non-source tags
     if( mode === undefined ){
@@ -9122,17 +9123,30 @@ JS9.Regions.listRegions = function(which, mode){
 	    }
 	}
     }
+    // get array of colors associated with tags
+    for( key in JS9.Regions.opts.tagcolors ){
+	if( JS9.Regions.opts.tagcolors.hasOwnProperty(key) ){
+	    tagcolors.push(JS9.Regions.opts.tagcolors[key]);
+	}
+    }
     // process all regions
     for(i=0; i<rlen; i++){
 	region = pubs[i];
-	tagstr = region.tags.join(",");
-	if( tagstr.indexOf("exclude") >= 0 ){
+	tagjoin = region.tags.join(",");
+	if( tagjoin.indexOf("exclude") >= 0 ){
 	    iestr = "-";
 	} else {
 	    iestr = "";
 	}
+	// display this color?
+	if( region.color && tagcolors.indexOf(region.color) === -1 ){
+	    optstr = ' {"color": "' + region.color + '"} ';
+	} else {
+	    optstr = "";
+	}
+	// display tags?
 	if( dotags ){
-	    tags = " # " + tagstr;
+	    tagstr = " # " + tagjoin;
 	}
 	// use wcs string, if available
 	if( region.wcsstr &&
@@ -9157,8 +9171,11 @@ JS9.Regions.listRegions = function(which, mode){
 	    }
 	    regstr += (sepstr + iestr + region.imstr);
 	}
-	if( dotags ){
-	    regstr += tags;
+	if( optstr ){
+	    regstr += optstr;
+	}
+	if( tagstr ){
+	    regstr += tagstr;
 	}
     }
     // display the region string, if necessary
