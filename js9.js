@@ -4504,8 +4504,10 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 	if( this.raw.header.bitpix ){
 	    this.raw.bitpix = this.raw.header.bitpix;
 	}
-	// re-calculate min and max
-	this.dataminmax();
+	// re-calculate min and max, if necesary
+	if( opts.dataminmax !== false ){
+	    this.dataminmax();
+	}
 	// redisplay using these data
 	this.displayImage("all", opts);
     }
