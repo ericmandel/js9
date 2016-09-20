@@ -3928,12 +3928,15 @@ JS9.Image.prototype.saveFITS = function(fname){
 // save image as an img file of specified type (e.g., image/png, image/jpeg)
 JS9.Image.prototype.saveIMG = function(fname, type, encoderOpts){
     var key,img, ctx;
+    var canvas, width, height;
     if( window.hasOwnProperty("saveAs") ){
 	fname = fname || "js9.png";
+	width = this.display.width;
+	height = this.display.height;
 	// create off-screen canvas, into which we write all canvases
 	img = document.createElement("canvas");
-	img.setAttribute("width", this.display.width);
-	img.setAttribute("height", this.display.height);
+	img.setAttribute("width", width);
+	img.setAttribute("height", height);
 	ctx = img.getContext("2d");
 	// image display canvas
 	ctx.drawImage(this.display.canvas, 0, 0);
@@ -3942,7 +3945,8 @@ JS9.Image.prototype.saveIMG = function(fname, type, encoderOpts){
 		// each layer canvas
 		if( this.layers[key].dlayer.dtype === "main" &&
 		    this.layers[key].show ){
-		    ctx.drawImage(this.layers[key].dlayer.canvasjq[0], 0, 0);
+		    canvas = this.layers[key].dlayer.canvasjq[0];
+		    ctx.drawImage(canvas, 0, 0, width, height);
 		}
 	    }
 	}
