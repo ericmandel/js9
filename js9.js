@@ -4434,10 +4434,8 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
     if( (cur < 0) || opts.alwaysCopy ){
 	// make copy
 	nraw = $.extend(true, {}, oraw);
-	// save "initial" current
-	if( !nraw.current0 ){
-	    nraw.current0 = oraw;
-	}
+	// save current for next time
+	nraw.current0 = oraw;
 	// but ensure that data is a copy, not a pointer to the original!
 	if( opts.bitpix ){
 	    // different bitpix from oraw specified?
