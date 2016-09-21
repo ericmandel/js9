@@ -322,9 +322,9 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens, char *slice,
   lpixel[iaxis0] = max(lpixel[iaxis0], 1);
   lpixel[iaxis0] = min(lpixel[iaxis0], naxes[iaxis0]);
   fpixel[iaxis1] = max(fpixel[iaxis1], 1);
-  fpixel[iaxis1] = min(fpixel[iaxis1], naxes[iaxis0]);
+  fpixel[iaxis1] = min(fpixel[iaxis1], naxes[iaxis1]);
   lpixel[iaxis1] = max(lpixel[iaxis1], 1);
-  lpixel[iaxis1] = min(lpixel[iaxis1], naxes[iaxis0]);
+  lpixel[iaxis1] = min(lpixel[iaxis1], naxes[iaxis1]);
   // for sliced dimensions, set first and last pixel to the specified slice
   for(i=0; i<min(IDIM,naxis); i++){
     if( saxes[i] ){
