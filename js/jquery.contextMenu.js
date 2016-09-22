@@ -15,18 +15,22 @@
  * Date: 2016-06-13T14:00:33.638Z
  */
 
-(function (factory) {
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as anonymous module.
-        define(['jquery'], factory);
-    } else if (typeof exports === 'object') {
-        // Node / CommonJS
-        factory(require('jquery'));
-    } else {
-        // Browser globals.
-        factory(jQuery);
-    }
-})(function ($) {
+// this method of calling the factory function breaks when loaded into Jupyter,
+// so we had to go back to the old-style ... egm 9/22/16
+// (function (factory) {
+//    if (typeof define === 'function' && define.amd) {
+//        // AMD. Register as anonymous module.
+//        define(['jquery'], factory);
+//    } else if (typeof exports === 'object') {
+//        // Node / CommonJS
+//        factory(require('jquery'));
+//    } else {
+//        // Browser globals.
+//        factory(jQuery);
+//    }
+//})(function ($) {
+
+(function($, undefined){
 
     'use strict';
 
@@ -1919,5 +1923,5 @@
     $.contextMenu.op = op;
     $.contextMenu.menus = menus;
 
-
-});
+// });
+})(jQuery);
