@@ -866,6 +866,55 @@ Finally, note that <b>JS9.AddColormap()</b> adds its new colormap to
 all JS9 displays on the given page.
 
 <p>
+<font size="+1"><b><u>Set RGB Mode</u></b></font>
+<p>
+<code><font size="+1">JS9.SetRGBMode(mode, imobj)</font></code>
+<p>
+where:
+<ul>
+<li><b>mode</b>: boolean true to activate RGB mode, false to disable
+<li><b>imobj</b>: object specifying three images to set to the "red", "green",
+and "blue" colormaps
+</ul>
+In RGB mode, three images assigned the "red", "green", and "blue"
+colormaps are displayed as a single image. The RGB color of each
+displayed pixel is a combination of the "red", "green", and "blue"
+pixel value taken from the appropriate image. Note that all three
+images are not required: you can display an RGB image using two of
+the three colors simply by not assigning the third colormap.
+
+<p>
+The <b>JS9.SetRGBMode()</b> call turns on or off RGB mode. The
+boolean <b>mode</b> argument specifies whether to activate or
+de-activate RGB mode. The optional <b>imobj</b> object specifies
+(already-loaded) images to assign to the three colormaps:
+<ul>
+<li><b>rid</b>: image id (or handle) to set to the "red" colormap
+<li><b>gid</b>: image id (or handle) to set to the "green" colormap
+<li><b>bid</b>: image id (or handle) to set to the "blue" colormap
+</ul>
+If <b>imobj</b> is not specified, it is assumed that images have been
+assigned the "red", "green", and "blue" colormaps by another means.
+(Once again, it is not necessary to assign all three colormaps.)
+
+<p>
+<font size="+1"><b><u>Get RGB Mode</u></b></font>
+<p>
+<code><font size="+1">JS9.GetRGBMode()</font></code>
+<p>
+returns:
+<ul>
+<li><b>obj</b>: object containing RGB mode information
+</ul>
+The returned object will contain the following properties:
+<ul>
+<li><b>active</b>: boolean specifying whether RGB mode is active
+<li><b>rid</b>: image id of "red" image
+<li><b>gid</b>: image id of "green" image
+<li><b>bid</b>: image id of "blue" image
+</ul>
+
+<p>
 <font size="+1"><b><u>Get the image scale</u></b></font>
 <p>
 <code><font size="+1">scale = JS9.GetScale()</font></code>

@@ -12377,6 +12377,39 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
     }
 });
 
+// set RGB mode (and maybe the images themselves)
+JS9.mkPublic("SetRGBMode", function(mode, imobj){
+    var i, im;
+    var colors = ["red", "green", "blue"];
+    var ids = ["rid", "gid", "bid"];
+    var obj = JS9.parsePublicArgs(arguments);
+    mode = obj.argv[0];
+    imobj = obj.argv[1];
+    if( imobj ){
+	for(i=0; i<3; i++){
+	    im = imobj[ids[i]];
+	    if( typeof im === "string" ){
+		im = JS9.LookupImage(im);
+	    }
+	    if( !im ){
+		continue;
+	    }
+	    im.setColormap(colors[i]);
+	}
+    }
+    JS9.globalOpts.rgb.active = !!mode;
+    JS9.DisplayImage({display: obj.display});
+    return JS9.globalOpts.rgb.active;
+});
+
+// get RGB mode info
+JS9.mkPublic("GetRGBMode", function(){
+    return {active: JS9.globalOpts.rgb.active,
+	    rid: JS9.globalOpts.rgb.rim? JS9.globalOpts.rgb.rim.id: null,
+	    gid: JS9.globalOpts.rgb.gim? JS9.globalOpts.rgb.gim.id: null,
+	    bid: JS9.globalOpts.rgb.bim? JS9.globalOpts.rgb.bim.id: null};
+});
+
 // set/clear valpos flag
 JS9.mkPublic("SetValPos", function(mode){
     var got = null;
