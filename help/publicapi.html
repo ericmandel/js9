@@ -866,15 +866,32 @@ Finally, note that <b>JS9.AddColormap()</b> adds its new colormap to
 all JS9 displays on the given page.
 
 <p>
+<font size="+1"><b><u>Get RGB Mode</u></b></font>
+<p>
+<code><font size="+1">JS9.GetRGBMode()</font></code>
+<p>
+returns:
+<ul>
+<li><b>obj</b>: object containing RGB mode information
+</ul>
+The returned object will contain the following properties:
+<ul>
+<li><b>active</b>: boolean specifying whether RGB mode is active
+<li><b>rid</b>: image id of "red" image
+<li><b>gid</b>: image id of "green" image
+<li><b>bid</b>: image id of "blue" image
+</ul>
+
+<p>
 <font size="+1"><b><u>Set RGB Mode</u></b></font>
 <p>
-<code><font size="+1">JS9.SetRGBMode(mode, imobj)</font></code>
+<code><font size="+1">JS9.SetRGBMode(mode, [imobj])</font></code>
 <p>
 where:
 <ul>
 <li><b>mode</b>: boolean true to activate RGB mode, false to disable
-<li><b>imobj</b>: object specifying three images to set to the "red", "green",
-and "blue" colormaps
+<li><b>imobj</b>: optional object specifying three images to set to the
+"red", "green", and "blue" colormaps
 </ul>
 In RGB mode, three images assigned the "red", "green", and "blue"
 colormaps are displayed as a single image. The RGB color of each
@@ -896,23 +913,6 @@ de-activate RGB mode. The optional <b>imobj</b> object specifies
 If <b>imobj</b> is not specified, it is assumed that images have been
 assigned the "red", "green", and "blue" colormaps by another means.
 (Once again, it is not necessary to assign all three colormaps.)
-
-<p>
-<font size="+1"><b><u>Get RGB Mode</u></b></font>
-<p>
-<code><font size="+1">JS9.GetRGBMode()</font></code>
-<p>
-returns:
-<ul>
-<li><b>obj</b>: object containing RGB mode information
-</ul>
-The returned object will contain the following properties:
-<ul>
-<li><b>active</b>: boolean specifying whether RGB mode is active
-<li><b>rid</b>: image id of "red" image
-<li><b>gid</b>: image id of "green" image
-<li><b>bid</b>: image id of "blue" image
-</ul>
 
 <p>
 <font size="+1"><b><u>Get the image scale</u></b></font>
