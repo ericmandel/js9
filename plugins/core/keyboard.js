@@ -1,0 +1,374 @@
+/*
+ * keyboard module (September 21, 2016)
+ */
+
+/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
+/*global $, JS9, sprintf */
+
+// create our namespace, and specify some meta-information and params
+JS9.Keyboard = {};
+JS9.Keyboard.CLASS = "JS9";         // class of plugin
+JS9.Keyboard.NAME = "Keyboard";     // name of this plugin
+JS9.Keyboard.WIDTH =  400;	    // width of light window
+JS9.Keyboard.HEIGHT = 380;	    // height of light window
+JS9.Keyboard.BASE = JS9.Keyboard.CLASS + JS9.Keyboard.NAME;
+
+JS9.Keyboard.actionHTML="<div class='JS9KeyboardText'><b>%s</b></div><div class='JS9KeyboardAction'>%s</div>";
+
+// get an id based on the action
+JS9.Keyboard.actionid = function(cname, aname){
+    return (cname + "_" + aname).replace(/[^A-Za-z0-9_]/g, "_");
+};
+
+// add to the action list
+JS9.Keyboard.addAction = function(container, cname, aname){
+    var s, id, divjq;
+    id = JS9.Keyboard.actionid(cname, aname);
+    // create the html for this action
+    s = sprintf(JS9.Keyboard.actionHTML, cname, aname);
+    // add action html to the action container
+    divjq = $("<div class='JS9KeyboardItem'>")
+	.attr("id", id)
+	.html(s)
+	.appendTo(container);
+    return divjq;
+};
+
+// ---------------------------------------------------------------------
+//
+// Keyboard.Actions: callbacks when on key press
+//
+// the keyboardActions array is in JS9.globalOpts determine
+// the initial mapping of keyboard configuration to callback, e.g.:
+//
+//  JS9.globalOpts.keyboardActions = {'p': 'copy physical coords to clipboard',
+//                                     'v': 'copy pixel value to clipboard',
+//                                     'w': 'copy wcs coords to clipboard',
+//                                    };
+//
+// You can add your own to the Keyboard.Actions object and use them in the
+// globalOpts.keyboardActions object
+//
+// ---------------------------------------------------------------------
+JS9.Keyboard.Actions = {};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["copy wcs coords to clipboard"] = function(im, ipos, evt){
+    var s;
+    // sanity check
+    if( !im || !im.raw.wcs ){
+	return;
+    }
+    // get wcs coords of current position
+    s = JS9.pix2wcs(im.raw.wcs, ipos.x, ipos.y).trim();
+    // copy to clipboard
+    JS9.CopyToClipboard(s);
+    return s;
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["copy physical coords to clipboard"] = function(im, ipos, evt){
+    var phys, s;
+    // sanity check
+    if( !im ){
+	return;
+    }
+    // get physical coords from image coords
+    phys = im.imageToLogicalPos(ipos);
+    s = sprintf("%f %f", phys.x, phys.y);
+    // copy to clipboard
+    JS9.CopyToClipboard(s);
+    return s;
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["copy pixel value to clipboard"] = function(im, ipos, evt){
+    var s, val, prec;
+    // sanity check
+    if( !im ){
+	return;
+    }
+    // value at current position
+    val = im.raw.data[Math.floor(ipos.y-0.5) * im.raw.width +
+		      Math.floor(ipos.x-0.5)];
+    prec = JS9.floatPrecision(im.params.scalemin, im.params.scalemax);
+    s = JS9.floatFormattedString(val, prec, 3);
+    // copy to clipboard
+    JS9.CopyToClipboard(s);
+    return s;
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos, evt){
+    var s;
+    // sanity check
+    if( !im ){
+	return;
+    }
+    // get current valpos and reformat
+    s = im.updateValpos(im.ipos, false).vstr.replace(/&nbsp;/g, " ");
+    // copy to clipboard
+    JS9.CopyToClipboard(s);
+    return s;
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["list regions"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    im.listRegions("all");
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["make selected region a source region"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    return JS9.Keyboard.editregion(im, "source", "background");
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["make selected region a background region"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    return JS9.Keyboard.editregion(im, "background", "source");
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["make selected region an include region"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    return JS9.Keyboard.editregion(im, "include", "exclude");
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["make selected region an exclude region"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    return JS9.Keyboard.editregion(im, "exclude", "include");
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["toggle full screen mode"] = function(im, ipos, evt){
+    var display = evt.data;
+    if( (display.width  === display.width0)  &&
+	(display.height === display.height0) ){
+	display.resize("full");
+    } else {
+	display.resize("reset");
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["zoom in"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    im.setZoom("*2");
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["zoom out"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    im.setZoom("/2");
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["display next image"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    im.display.nextImage();
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["open a local FITS file"] = function(im, ipos, evt){
+    // nb: evt.data is always the js9 display (so no image needed here)
+    JS9.OpenFileMenu({display: evt.data});
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["save image as a FITS file"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    im.saveFITS();
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["save image as a PNG file"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    im.savePNG();
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["save regions as a text file"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    im.saveRegions();
+};
+
+// get action associated with the current keyboard
+// we use keydown instead of keypress, so we need ...
+// http://stackoverflow.com/questions/2220196/how-to-decode-character-pressed-from-jquerys-keydowns-event-handler
+// ... for conversion of keydown into char string
+JS9.Keyboard.getAction = function(im, evt){
+    var action;
+    var c = evt.which || evt.keyCode;
+    var d = evt.data;
+    var _to_ascii = {
+        '188': '44',
+        '109': '45',
+        '190': '46',
+        '191': '47',
+        '192': '96',
+        '220': '92',
+        '222': '39',
+        '221': '93',
+        '219': '91',
+        '173': '45',
+        '187': '61', //IE Key codes
+        '186': '59', //IE Key codes
+        '189': '45'  //IE Key codes
+    };
+    var _shiftUps = {
+        "96": "~",
+        "49": "!",
+        "50": "@",
+        "51": "#",
+        "52": "$",
+        "53": "%",
+        "54": "^",
+        "55": "&",
+        "56": "*",
+        "57": "(",
+        "48": ")",
+        "45": "_",
+        "61": "+",
+        "91": "{",
+        "93": "}",
+        "92": "|",
+        "59": ":",
+        "39": "\"",
+        "44": "<",
+        "46": ">",
+        "47": "?"
+    };
+    //normalize keyCode 
+    if( _to_ascii.hasOwnProperty(c) ){
+        c = _to_ascii[c];
+    }
+    if( !evt.shiftKey && (c >= 65 && c <= 90) ){
+        c = String.fromCharCode(c + 32);
+    } else if( evt.shiftKey && _shiftUps.hasOwnProperty(c) ){
+        //get shifted keyCode value
+        c = _shiftUps[c];
+    } else {
+        c = String.fromCharCode(c);
+    }
+    // get action associated with this key
+    action = d.keyboardActions[c] || d.keyboardActions[c];
+    return action;
+};
+
+// execute the keyboard action routine
+JS9.Keyboard.action = function(im, ipos, evt, action){
+    action = action || JS9.Keyboard.getAction(im, evt);
+    // call the keyboard action
+    if( action && JS9.Keyboard.Actions[action] ){
+	JS9.Keyboard.Actions[action](im, ipos, evt);
+    }
+};
+
+JS9.Keyboard.editregion= function(im, xnew, xold){
+    var i, j, s, tags;
+    // get selected region
+    s = im.getShapes("regions", "selected");
+    if( s.length ){
+	for(i=0; i<s.length; i++){
+	    tags = s[i].tags;
+	    for(j=0; j<tags.length; j++){
+		if( tags[j] === xold ){
+		    tags[j] = xnew;
+		    xnew = "";
+		    break;
+		}
+	    }
+	    if( xnew ){
+		tags.push(xnew);
+	    }
+	}
+	im.changeShapes("regions", "selected", {tags: tags});
+    }
+};
+
+// constructor: add HTML elements to the plugin
+JS9.Keyboard.init = function(){
+    var s, key;
+    // on entry, these elements have already been defined:
+    // this.div:      the DOM element representing the div for this plugin
+    // this.divjq:    the jquery object representing the div for this plugin
+    // this.id:       the id ofthe div (or the plugin name as a default)
+    // this.display:  the display object associated with this plugin
+    // this.dispMode: display mode (for internal use)
+    //
+    // create container to hold action container and header
+    // clean main container
+    this.divjq.html("");
+    // allow scrolling on the plugin
+    this.divjq.addClass("JS9PluginScrolling");
+    // main container
+    this.keyboardContainer = $("<div>")
+	.addClass(JS9.Keyboard.BASE + "Container")
+	.attr("id", this.id + "KeyboardContainer")
+	.appendTo(this.divjq);
+    s = sprintf("<div class='%s'><b>Keys and their corresponding actions:</b></div><p>", JS9.Keyboard.BASE + "Header");
+    this.keyboardHeadContainer = $("<div>")
+	.addClass(JS9.Keyboard.BASE + "Container")
+	.attr("id", this.id + "KeyboardHeadContainer")
+        .html(s)
+	.appendTo(this.keyboardContainer);
+    // container to hold keyboard actions
+    this.keyboardActionContainer = $("<div>")
+	.addClass(JS9.Keyboard.BASE + "ActionContainer")
+	.attr("id", this.id + "ActionContainer")
+        .html("")
+	.appendTo(this.keyboardContainer);
+    // add actions
+    for(key in this.display.keyboardActions ){
+	if( this.display.keyboardActions.hasOwnProperty(key) ){
+	    s = this.display.keyboardActions[key];
+	    JS9.Keyboard.addAction.call(this, this.keyboardActionContainer,
+					key, s);
+	}
+    }
+ };
+
+JS9.RegisterPlugin(JS9.Keyboard.CLASS, JS9.Keyboard.NAME,
+		   JS9.Keyboard.init,
+		   {menuItem: "Keyboard Actions",
+		    onplugindisplay: JS9.Keyboard.init,
+		    help: "help/keyboard.html",
+		    winTitle: "Keyboard Actions",
+		    winResize: true,
+		    winDims: [JS9.Keyboard.WIDTH,JS9.Keyboard.HEIGHT]});

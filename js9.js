@@ -129,6 +129,23 @@ JS9.globalOpts = {
     resizeRedisplay: true,	// redisplay image while resizing?
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
+    keyboardActions: {
+	b: "make selected region a background region",
+	e: "make selected region an exclude region",
+	f: "toggle full screen mode",
+	i: "make selected region an include region",
+        l: "list regions",
+	n: "display next image",
+	p: "copy physical coords to clipboard",
+	s: "make selected region a source region",
+        v: "copy pixel value to clipboard",
+        w: "copy wcs coords to clipboard",
+	o: "open a local FITS file",
+	"+": "zoom in",
+	"-": "zoom out",
+	">": "zoom in",
+	"<": "zoom out"
+    }, // keyboard actions
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     pinchWait: 8,		// number of events to wait before testing pinch
     pinchThresh: 6,		// threshold for pinch test
@@ -5469,6 +5486,7 @@ JS9.Display = function(el){
     // display-based mouse/touch actions initially from global
     this.mouseActions = JS9.globalOpts.mouseActions.slice(0);
     this.touchActions = JS9.globalOpts.touchActions.slice(0);
+    this.keyboardActions = $.extend(true, {}, JS9.globalOpts.keyboardActions);
     // display-based scroll-based zoom initially from global
     this.mousetouchZoom = JS9.globalOpts.mousetouchZoom;
     // add event handlers
@@ -5781,6 +5799,38 @@ JS9.Display.prototype.inResize = function(pos){
 	}
     }
     return false;
+};
+
+// display the next image from the JS9 images list that is in this display
+JS9.Display.prototype.nextImage = function(inc){
+    var idx, curidx, im;
+    inc = inc || 1;
+    if( !this.image ){
+	return;
+    }
+    // get index into images array for the displayed image
+    for(idx=0; idx<JS9.images.length; idx++){
+	if( this.image === JS9.images[idx] ){
+	    break;
+	}
+    }
+    // look for next image, wrap if necessary
+    for(curidx=idx+1; curidx!==idx; curidx += inc){
+	if( curidx >= JS9.images.length ){
+	    curidx = 0;
+	}
+	if( JS9.images[curidx].display === this ){
+	    break;
+	}
+    }
+    // display if we are not back to where we started
+    if( idx !== curidx ){
+	// display image, 2D graphics, etc.
+	im = JS9.images[curidx];
+	im.displayImage("all");
+	im.refreshLayers();
+	im.clearMessage();
+    }
 };
 
 // load session from a json file
@@ -11091,30 +11141,33 @@ JS9.keyPressCB = function(evt){
     var im = display.image;
     // var keycode = evt.which || evt.keyCode;
     evt.preventDefault();
-    // get canvas position
-    im.pos = JS9.eventToDisplayPos(evt);
-    // get image position
-    im.ipos = im.displayToImagePos(im.pos);
     // plugin callbacks
-    im.xeqPlugins("keypress", "onkeypress", evt);
+    if( im ){
+	im.xeqPlugins("keypress", "onkeypress", evt);
+    }
 };
 
 // keydown: assumes display obj is passed in evt.data
 // in case you are wondering: you can't move the mouse via javascript!
 // http://stackoverflow.com/questions/4752501/move-the-mouse-pointer-to-a-specific-position
 JS9.keyDownCB = function(evt){
+    var ipos;
     var display = evt.data;
     var im = display.image;
     // var keycode = evt.which || evt.keyCode;
-    // get canvas position
-    im.pos = JS9.eventToDisplayPos(evt);
-    // get image position
-    im.ipos = im.displayToImagePos(im.pos);
-    // plugin callbacks
-    im.xeqPlugins("keypress", "onkeydown", evt);
+    // actions for key press
+    if( JS9.hasOwnProperty("Keyboard") ){
+	ipos = im ? im.ipos : {x: null, y: null};
+	JS9.Keyboard.action(im, ipos, evt);
+    }
     // fire keydown for keyboard-enabled layer, if necessary
-    if( im.layer && im.layers[im.layer].opts.usekeyboard ){
-	JS9.Regions.keyDownCB(im, im.ipos, evt, im.layer);
+    // (the im.ipos comes from the last mouse move)
+    if( im ){
+	if( im.layer && im.layers[im.layer].opts.usekeyboard ){
+	    JS9.Regions.keyDownCB(im, im.ipos, evt, im.layer);
+	}
+	// plugin callbacksa
+	im.xeqPlugins("keypress", "onkeydown", evt);
     }
 };
 

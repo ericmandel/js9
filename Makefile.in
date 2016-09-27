@@ -145,8 +145,8 @@ CSSFILES =	css/jquery.contextMenu.css css/dhtmlwindow.css  \
 
 PLCSSFILES =	plugins/core/blend.css plugins/core/blink.css \
 		plugins/core/colorbar.css plugins/core/cube.css \
-		plugins/core/imarith.css plugins/core/mef.css \
-		plugins/core/mousetouch.css
+		plugins/core/imarith.css plugins/core/keyboard.css \
+		plugins/core/mef.css plugins/core/mousetouch.css
 
 JSFILES =	js/jquery.min.js js/jquery-ui.min.js js/jquery.contextMenu.min.js js/jquery.flot.min.js js/jquery.flot.errorbars.min.js js/jquery.flot.navigate.min.js js/jquery.flot.resize.min.js js/jquery.flot.selection.min.js js/flot-zoom.min.js js/sprintf.min.js js/dhtmlwindow.min.js js/dhtmlwindow_blurb.js js/fabric.min.js js/pako_inflate.min.js js/FileSaver.min.js js/canvas-toBlob.js js/tabcontent.js js/astroem.js js/arrive.min.js js/jquery.doubletap.min.js js/jquery.flot.axislabels.js js/spin.js js/ElementQueries.js js/ResizeSensor.js js/gaussblur.js js/imagefilters.js js/jquery.ui.touch-punch.js
 
@@ -161,6 +161,7 @@ PLUGINFILES =	plugins/archive/archive.js \
 		plugins/core/cube.js \
 		plugins/core/imarith.js \
 		plugins/core/info.js \
+		plugins/core/keyboard.js \
 		plugins/core/magnifier.js \
 		plugins/core/mef.js \
 		plugins/core/menubar.js \

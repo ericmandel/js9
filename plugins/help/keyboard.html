@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head> 
+<style type="text/css">
+  .container{
+    padding: 10px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+<h3>Keyboard Actions</h3>
+
+JS9 supports the actions that get executed in response to
+(case-sensitive) keypress events. The initial default actions are defined in
+the <b>JS9.globalOpts.keyboardActions</b> array:
+<ul>
+<li><b>b</b>: make selected region a background region
+<li><b>e</b>: make selected region an exclude region
+<li><b>f</b>: toggle full screen mode
+<li><b>i</b>: make selected region an include region
+<li><b>l</b>: list regions
+<li><b>n</b>: display next image
+<li><b>p</b>: copy physical coords to clipboard
+<li><b>s</b>: make selected region a source region
+<li><b>v</b>: copy pixel value to clipboard
+<li><b>w</b>: copy wcs coords to clipboard
+<li><b>o</b>: open a local FITS file
+<li><b>+</b>: zoom in
+<li><b>-</b>: zoom out
+<li><b>></b>: zoom in
+<li><b><</b>: zoom out
+</ul>
+You can view the current mapping between keys and actions using
+this <b>Keyboard</b> plugin.
+
+<p>
+It is possible to add new actions. To do this, first add an entry to
+the <b>JS9.Keyboard.Actions</b> object. The property name for the new
+entry should be descriptive text, like that which is found
+in <b>JS9.globalOpts.keyboardActions</b>. The property value
+will be a function having the calling sequence:
+<pre>
+  function(im, ipos, evt)
+</pre>
+where:
+<ul>
+<li><b>im</b>: the image handle of the current image (or null)
+<li><b>ipos</b>: the current image position of the mouse
+<li><b>evt</b>: the event that triggered this action
+</ul> 
+For example:
+<pre>
+  JS9.Keyboard.Actions["export image as a PNG file"] = function(im, ipos, evt){
+    .... action implementation goes here ...
+  };
+</pre>
+Once this new action property has been defined, you can map it to a
+keypress event in <b>JS9.globalOpts.keyboardActions</b>:
+<pre>
+  JS9.globalOpts.keyboardActions["x"] = "export image as a PNG file";
+</pre>
+The new action will be shown in the Keyboard plugin display, and will be
+executed any time the "x" key is pressed.
+</div>
+</body>
+</html>

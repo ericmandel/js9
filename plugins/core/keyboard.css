@@ -1,0 +1,44 @@
+div.JS9KeyboardContainer {
+    padding: 0px;
+    margin:  0px;
+}
+
+div.JS9KeyboardActionContainer {
+    padding: 0px;
+    margin:  0px;
+}
+
+div.JS9KeyboardItem {
+    padding: 0px;
+    margin:  0px;
+}
+
+div.JS9KeyboardText {
+    margin: 0px;
+    padding: 1px 1px 1px 30px;
+    background: #E9E9E9;
+    overflow: auto;
+    border: 1px solid transparent;
+    display: inline-block;
+    width: 40px;
+}
+
+div.JS9KeyboardAction {
+    margin: 0px;
+    padding: 1px;
+    background: #E9E9E9;
+    overflow: auto;
+    border: 1px solid transparent;
+    display: inline-block;
+}
+
+div.JS9KeyboardHeader, div.JS9KeyboardFooter {
+    background: #E9E9E9;
+    text-align: left;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+    border: 1px solid transparent;
+}

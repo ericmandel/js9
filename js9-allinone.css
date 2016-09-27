@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.9, Tue Sep 27 13:41:51 EDT 2016 */
+/* JS9 allinone: v1.9, Tue Sep 27 17:27:06 EDT 2016 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -704,6 +704,50 @@ div.JS9ImarithLinegroup {
 
 div.JS9ImarithContainer {
     padding: 5px;
+}
+div.JS9KeyboardContainer {
+    padding: 0px;
+    margin:  0px;
+}
+
+div.JS9KeyboardActionContainer {
+    padding: 0px;
+    margin:  0px;
+}
+
+div.JS9KeyboardItem {
+    padding: 0px;
+    margin:  0px;
+}
+
+div.JS9KeyboardText {
+    margin: 0px;
+    padding: 1px 1px 1px 30px;
+    background: #E9E9E9;
+    overflow: auto;
+    border: 1px solid transparent;
+    display: inline-block;
+    width: 40px;
+}
+
+div.JS9KeyboardAction {
+    margin: 0px;
+    padding: 1px;
+    background: #E9E9E9;
+    overflow: auto;
+    border: 1px solid transparent;
+    display: inline-block;
+}
+
+div.JS9KeyboardHeader, div.JS9KeyboardFooter {
+    background: #E9E9E9;
+    text-align: left;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+    border: 1px solid transparent;
 }
 .JS9MefContainer {
     padding: 10px;
