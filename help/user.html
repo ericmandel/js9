@@ -524,11 +524,16 @@ data file.
 <a name="resize"></a> 
 <h3>Resizing the JS9 Display</h3>
 <p>
-By default, the JS9 Display can be resized using the
-the <b>View:change width/height</b>menu option (or the
-JS9.ResizeDisplay() JavaScript routine).  This feature can be turned
-off by setting the JS9.globalOpts.resize variable to <b>false</b> in
-the js9Prefs.json file.
+The JS9 Display can be resized using the the <b>View:change
+width/height</b>menu option (or the JS9.ResizeDisplay() JavaScript
+routine). In addition, the <b>View: set size to full window</b>
+option will resize the JS9 display to the size of the browser window's
+window.innerWidth and window.innerHeight properties.  (Note that the
+rest of the web page is still available via scrolling, including the
+menubar.)  The <b>View: revert to original size</b> option will set
+the display size back to the original size.  This resize feature can
+be turned off by setting the JS9.globalOpts.resize variable
+to <b>false</b> in the js9Prefs.json file.
 <p>
 Also by default, the JS9 Display can be resized using a grab handle in
 the lower right-hand corner of the display.  This feature can be

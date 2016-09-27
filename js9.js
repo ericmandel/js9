@@ -5401,6 +5401,9 @@ JS9.Display = function(el){
     }
     this.divjq.css("height", this.height);
     this.height = parseInt(this.divjq.css("height"), 10);
+    // save original width and height
+    this.width0 = this.width;
+    this.height0 = this.height;
     // create DOM canvas element
     this.canvas = document.createElement("canvas");
     // jquery version for event handling and DOM manipulation
