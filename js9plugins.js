@@ -5226,15 +5226,42 @@ JS9.Menubar.init = function(width, height){
 		var n=1;
 		var last = "";
 		var items = {};
-		items.helptitle = {name: "JS9 Help:", disabled: true};
+		items.helptitle = {name: "JS9 help:", disabled: true};
+		// first, internal js9 pages
 		for( key in JS9.helpOpts ){
 		    if( JS9.helpOpts.hasOwnProperty(key) ){
 			val = JS9.helpOpts[key];
+			if( val.heading === "JS9Help" ){
+			    last = val.type;
+			    items[key] = {name: val.title};
+			}
+		    }
+		}
+		items["sep" + n++] = "------";
+		items.plugintitle = {name: "JS9 plugins:", disabled: true};
+		// second, the JS9 core plugins
+		for( key in JS9.helpOpts ){
+		    if( JS9.helpOpts.hasOwnProperty(key) ){
+			val = JS9.helpOpts[key];
+			if( val.heading === "JS9" ){
+			    last = val.type;
+			    items[key] = {name: val.title};
+			}
+		    }
+		}
+		// last, the others
+		for( key in JS9.helpOpts ){
+		    if( JS9.helpOpts.hasOwnProperty(key) ){
+			val = JS9.helpOpts[key];
+			if( val.heading === "JS9Help" || 
+			    val.heading === "JS9" ){
+			    continue;
+			}
 			if( (last !== "") && (val.type !== last) ){
 			    items["sep" + n++] = "------";
 			    if( val.heading ){
 				items["sep" + n++] =
-				    {name: val.heading + " Help:"};
+				    {name: val.heading + " plugins:"};
 			        items["sep" + (n-1)].disabled = true;
 			    }
 			}

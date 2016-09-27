@@ -260,62 +260,77 @@ JS9.plotOpts = {
 // help pages
 JS9.helpOpts = {
     user: {
+	heading: "JS9Help",
 	type: "help", url:"user.html",
 	title: "User Manual"
     },
     install: {
+	heading: "JS9Help",
 	type: "help", url:"install.html",
 	title: "Installing JS9"
     },
     webpage: {
+	heading: "JS9Help",
 	type: "help", url:"webpage.html",
 	title: "Adding JS9 To A Web Page"
     },
     yourdata: {
+	heading: "JS9Help",
 	type: "help", url:"yourdata.html",
 	title: "Adding Data To A Web Page"
     },
     localtasks: {
+	heading: "JS9Help",
 	type: "help", url:"localtasks.html",
 	title: "Adding Local Analysis Tasks and Plugins"
     },
     helper: {
+	heading: "JS9Help",
 	type: "help", url:"helper.html",
 	title: "Adding Server-side Analysis Tasks"
     },
     serverside: {
+	heading: "JS9Help",
 	type: "help", url:"serverside.html",
 	title: "Server-side Analysis with JS9"
     },
     publicapi: {
+	heading: "JS9Help",
 	type: "help", url:"publicapi.html",
 	title: "The JS9 Public API"
     },
     repfile: {
+	heading: "JS9Help",
 	type: "help", url:"repfile.html",
 	title: "Dealing with Large Files"
     },
     regions: {
+	heading: "JS9Help",
 	type: "help", url:"regions.html",
 	title: "Regions Format"
     },
     extmsg: {
+	heading: "JS9Help",
 	type: "help", url:"extmsg.html",
 	title: "External Messaging"
     },
     python: {
+	heading: "JS9Help",
 	type: "help", url:"python.html",
 	title: "JS9 with Python and Jupyter"
     },
     preferences: {
+	heading: "JS9Help",
 	type: "help", url:"preferences.html",
 	title: "Setting Site Preferences"
     },
     changelog: {
+	heading: "JS9Help",
 	type: "help", url:"changelog.html",
 	title: "ChangeLog"
     },
     issues: {
+	heading: "JS9Help",
 	type: "help", url:"knownissues.html",
 	title: "Known Issues"
     }
