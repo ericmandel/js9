@@ -574,8 +574,8 @@ JS9.Menubar.init = function(width, height){
 			name: "change width/height:",
 			type: "text"
 		    };
-		    items.fullscreen = {name: "set size to full window"};
-		    items.revertscreen = {name: "revert to original size"};
+		    items.fullsize = {name: "set size to full window"};
+		    items.resetsize = {name: "reset to original size"};
 		}
 		return {
 		    callback: function(key){
@@ -607,11 +607,11 @@ JS9.Menubar.init = function(width, height){
 				}
 			    }
 			    break;
-			case "fullscreen":
-			    udisp.resize(window.innerWidth, window.innerHeight);
+			case "fullsize":
+			    udisp.resize("full");
 			    break;
-			case "revertscreen":
-			    udisp.resize(udisp.width0, udisp.height0);
+			case "resetsize":
+			    udisp.resize("reset");
 			    break;
 			default:
 			    // maybe it's a plugin

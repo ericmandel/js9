@@ -5658,6 +5658,14 @@ JS9.Display.prototype.resize = function(width, height, opts){
     if( !width && !height ){
 	return {width: this.width, height: this.height};
     }
+    // 'full' or 'reset'
+    if( width === "full" ){
+	width = window.innerWidth || width;
+	height = window.innerHeight || height;
+    } else if( width === "reset" ){
+	width = this.width0 || width;
+	height = this.height0 || height;
+    }
     // get width and height params
     width = Math.floor(width);
     if( height ){
