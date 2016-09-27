@@ -2433,7 +2433,7 @@ for <b>JS9.RunAnalysis()</b> above.
 <p>
 where:
 <ul>
-<li><b>width</b>: new width of the display in HTML pixels
+<li><b>width</b>: new width of the display in HTML pixels (or "full" or "reset")
 <li><b>height</b>: new height of the display in HTML pixels
 <li><b>opts</b>: optional object containing resize parameters
 </ul>
@@ -2444,6 +2444,15 @@ been increased, more of the image will be displayed as needed (up to
 the new size of the display). For example, if the original display was
 512x512 and you increase it to 1024x1024, a 1024x1024 image will now
 be displayed in its entirety.
+
+<p>
+If the first argument is <b>full</b>, the display is resized to match
+the browser window.innerWidth and window.innerHeight variables, which
+are the width and height (in pixels) of the browser window
+viewport. You can then scroll the window so that the image fills the
+entire browser window.  Alternatively, if the first argument
+is <b>reset</b>, the display is resized to match its original size.
+
 <p>
 The opts object can contain the following properties:
 <ul>
