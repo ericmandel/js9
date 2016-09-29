@@ -3,6 +3,9 @@
 JS9: image display right in your browser
 ========================================
 
+What does it do?
+----------------
+
 JS9 brings astronomical image display to your browser:
 
   - display FITS images and tables in a web page
@@ -21,23 +24,25 @@ JS9 brings astronomical image display to your browser:
   - control JS9 from a command shell or Python
   - print images, save images, etc ...
 
-Availability
-============
+How do I learn more or even try it out?
+---------------------------------------
 
-The [JS9 web site](http://js9.si.edu) contains on-line documentation, demos, and downloads:
+The [JS9 web site](http://js9.si.edu) contains on-line documentation, demos, and release downloads:
 
     http://js9.si.edu
 
-Of course, JS9 also is available on GitHub:
+Just drag and drop your FITS files onto the JS9 display ...
+
+Of course, the latest version is available here on GitHub:
 
     https://github.com/ericmandel/js9
 
-Python users might also want pyjs9, the Python connection to JS9:
+Python users might want to look at pyjs9, the Python connection to JS9:
 
     https://github.com/ericmandel/pyjs9
 
-To Install or Not To Install
-============================
+To install or not to install ...
+--------------------------------
 
 JS9 is changing how we think about image display and analysis, moving
 beyond the Desktop into the web. You can simply drag and drop a FITS
@@ -69,12 +74,14 @@ We are very interested in exploring new uses for JS9 as we evolve its
 functionality in response to community needs. If you would like to 
 join the fun, please contact me at: eric@cfa.harvard.edu.
 
-License
-=======
+What's the license?
+-------------------
 
 JS9 is distributed under the terms of The MIT License.
 
-Author
-======
-Eric Mandel, Harvard-Smithsonian Center for Astrophysics
+Who is responsible?
+-------------------
 
+Eric Mandel, Alexey Vikhlinin
+
+Harvard-Smithsonian Center for Astrophysics
