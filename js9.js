@@ -130,26 +130,26 @@ JS9.globalOpts = {
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     keyboardActions: {
-	b: "make selected region a background region",
-	e: "make selected region an exclude region",
+	b: "tag selected region as 'background'",
+	e: "tag selected region as 'exclude'",
 	f: "toggle full screen mode",
-	i: "make selected region an include region",
+	i: "tag selected region as 'include'",
         l: "list regions",
 	n: "display next image",
 	o: "open a local FITS file",
 	p: "copy physical coords to clipboard",
-	s: "make selected region a source region",
+	s: "tag selected region as 'source'",
         v: "copy pixel value to clipboard",
         w: "copy wcs coords to clipboard",
 	"+": "zoom in",
 	"-": "zoom out",
 	">": "zoom in",
 	"<": "zoom out",
-	"Delete": "remove selected region",
-	"LeftArrow": "move selected region",
-	"UpArrow": "move selected region",
-	"RightArrow": "move selected region",
-	"DownArrow": "move selected region"
+	"delete": "remove selected region",
+	"leftArrow": "move selected region",
+	"upArrow": "move selected region",
+	"rightArrow": "move selected region",
+	"downArrow": "move selected region"
     }, // keyboard actions
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     pinchWait: 8,		// number of events to wait before testing pinch
@@ -10514,12 +10514,12 @@ JS9.error = function(emsg, epattern, dothrow){
 JS9.eventToCharStr = function(evt){
     var c, s;
     var _specialKeys = {
-	'37': 'LeftArrow',
-	'38': 'UpArrow',
-	'39': 'RightArrow',
-	'40': 'DownArrow',
-	 '8': 'Delete',
-	'46': 'Delete'
+	'37': 'leftArrow',
+	'38': 'upArrow',
+	'39': 'rightArrow',
+	'40': 'downArrow',
+	 '8': 'delete',
+	'46': 'delete'
     };
     var _to_ascii = {
         '188': '44',

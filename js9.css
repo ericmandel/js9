@@ -571,6 +571,7 @@ canvas.surfacePlotCanvas {
 
 .text_R {
     width: 100%;
+    font: normal 12px Arial
 }
 
 .nodisplay {

@@ -122,7 +122,7 @@ JS9.Keyboard.Actions["list regions"] = function(im, ipos, evt){
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["make selected region a source region"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["tag selected region as 'source'"] = function(im, ipos, evt){
     // sanity check
     if( !im ){
 	return;
@@ -131,7 +131,7 @@ JS9.Keyboard.Actions["make selected region a source region"] = function(im, ipos
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["make selected region a background region"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["tag selected region as 'background'"] = function(im, ipos, evt){
     // sanity check
     if( !im ){
 	return;
@@ -140,7 +140,7 @@ JS9.Keyboard.Actions["make selected region a background region"] = function(im, 
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["make selected region an include region"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["tag selected region as 'include'"] = function(im, ipos, evt){
     // sanity check
     if( !im ){
 	return;
@@ -149,7 +149,7 @@ JS9.Keyboard.Actions["make selected region an include region"] = function(im, ip
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["make selected region an exclude region"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["tag selected region as 'exclude'"] = function(im, ipos, evt){
     // sanity check
     if( !im ){
 	return;
@@ -257,6 +257,10 @@ JS9.Keyboard.editregion= function(im, xnew, xold){
 	for(i=0; i<s.length; i++){
 	    tags = s[i].tags;
 	    for(j=0; j<tags.length; j++){
+		if( tags[j] === xnew ){
+		    xnew = "";
+		    break;
+		}
 		if( tags[j] === xold ){
 		    tags[j] = xnew;
 		    xnew = "";

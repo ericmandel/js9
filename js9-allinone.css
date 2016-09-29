@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.9, Wed Sep 28 20:33:34 EDT 2016 */
+/* JS9 allinone: v1.9, Thu Sep 29 09:47:35 EDT 2016 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -1392,6 +1392,7 @@ canvas.surfacePlotCanvas {
 
 .text_R {
     width: 100%;
+    font: normal 12px Arial
 }
 
 .nodisplay {

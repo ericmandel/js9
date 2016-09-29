@@ -2914,7 +2914,7 @@ JS9.Keyboard.Actions["list regions"] = function(im, ipos, evt){
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["make selected region a source region"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["tag selected region as 'source'"] = function(im, ipos, evt){
     // sanity check
     if( !im ){
 	return;
@@ -2923,7 +2923,7 @@ JS9.Keyboard.Actions["make selected region a source region"] = function(im, ipos
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["make selected region a background region"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["tag selected region as 'background'"] = function(im, ipos, evt){
     // sanity check
     if( !im ){
 	return;
@@ -2932,7 +2932,7 @@ JS9.Keyboard.Actions["make selected region a background region"] = function(im, 
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["make selected region an include region"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["tag selected region as 'include'"] = function(im, ipos, evt){
     // sanity check
     if( !im ){
 	return;
@@ -2941,7 +2941,7 @@ JS9.Keyboard.Actions["make selected region an include region"] = function(im, ip
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["make selected region an exclude region"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["tag selected region as 'exclude'"] = function(im, ipos, evt){
     // sanity check
     if( !im ){
 	return;
@@ -3049,6 +3049,10 @@ JS9.Keyboard.editregion= function(im, xnew, xold){
 	for(i=0; i<s.length; i++){
 	    tags = s[i].tags;
 	    for(j=0; j<tags.length; j++){
+		if( tags[j] === xnew ){
+		    xnew = "";
+		    break;
+		}
 		if( tags[j] === xold ){
 		    tags[j] = xnew;
 		    xnew = "";
@@ -5630,7 +5634,7 @@ JS9.Prefs = {};
 JS9.Prefs.CLASS = "JS9";        // class of plugins (1st part of div class)
 JS9.Prefs.NAME = "Preferences"; // name of this plugin (2nd part of div class)
 JS9.Prefs.WIDTH =  750;         // default width of window
-JS9.Prefs.HEIGHT = 250;	        // default height of window
+JS9.Prefs.HEIGHT = 300;	        // default height of window
 
 JS9.Prefs.imagesSchema = {
     "title": "Image Preferences",
@@ -5684,17 +5688,9 @@ JS9.Prefs.imagesSchema = {
 	    "type": "string",
 	    "helper": "default logical coordinate system"
 	},
-	"alpha": {
+	"opacity": {
 	    "type": "number",
-	    "helper": "alpha for images"
-	},
-	"alpha1": {
-	    "type": "number",
-	    "helper": "alpha for masked pixels"
-	},
-	"alpha2": {
-	    "type": "number",
-	    "helper": "alpha for unmasked pixels"
+	    "helper": "opacity for images (0.0 to 1.0)"
 	},
 	"zoom": {
 	    "type": "number",
@@ -5842,7 +5838,7 @@ JS9.Prefs.displaysSchema = {
 	    "helper": "array of touch actions"
 	},
 	"keyboardActions": {
-	    "type": "object",
+	    "type": "mobject",
 	    "helper": "array of keyboard actions"
 	},
 	"mousetouchZoom": {
@@ -5877,7 +5873,7 @@ JS9.Prefs.init = function(){
 			id + "Div", source.name);
     }
     html += "</ul>";
-    html += "<br style='clear:left'/></div></div><p>\n";
+    html += "<br style='clear:left'></div></div><p>\n";
     // create each param form (displayed by clicking each tab)
     for(i=0; i<sources.length; i++){
 	source = sources[i];
@@ -5923,11 +5919,19 @@ JS9.Prefs.init = function(){
 		    break;
 		default:
 		    if( typeof source.data[key] === "object" ){
-			s = JSON.stringify(source.data[key]);
+			if( obj.type === "mobject" ){
+			    s = JSON.stringify(source.data[key], null, 2);
+			} else {
+			    s = JSON.stringify(source.data[key]);
+			}
 		    } else {
 			s = source.data[key];
 		    }
-		    html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2l'><input type='text' name='%s' class='text_R' value='%s'/></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
+		    if( obj.type === "mobject" ){
+			html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2l'><textarea name='%s' class='text_R'>%s</textarea></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
+		    } else {
+			html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2l'><input type='text' name='%s' class='text_R' value='%s'></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
+		    }
 		    break;
 		}
 	    }
