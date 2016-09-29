@@ -12591,6 +12591,9 @@ JS9.mkPublic("SetRGBMode", function(mode, imobj){
     var obj = JS9.parsePublicArgs(arguments);
     mode = obj.argv[0];
     imobj = obj.argv[1];
+    if( mode === undefined ){
+	mode =  !JS9.globalOpts.rgb.active;
+    }
     if( imobj ){
 	for(i=0; i<3; i++){
 	    im = imobj[ids[i]];
