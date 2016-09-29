@@ -24,7 +24,7 @@ JS9 brings astronomical image display to your browser:
   - control JS9 from a command shell or Python
   - print images, save images, etc ...
 
-How do I learn more or even try it out?
+How do I learn more or try it out?
 ---------------------------------------
 
 The [JS9 web site](http://js9.si.edu) contains on-line documentation, demos, and release downloads:
