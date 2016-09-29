@@ -278,9 +278,9 @@
     <p>
     Starting with the JS9.Catalogs.opts object as a default, you can
     make the new layer interactive in a few different ways. The first
-    way is to set the <b>moveable</b> property in the opts object
+    way is to set the <b>movable</b> property in the opts object
     to <b>true</b>. This will permit individual shapes to be moved,
-    rotated, resized and deleted. Shapes will also be moveable and
+    rotated, resized and deleted. Shapes will also be movable and
     resizeable as a group.
     <p>
     The second way is to supply one or more event callbacks as properties
@@ -307,8 +307,8 @@
     opts.onmousedown = function(im, xreg, evt){
         console.log("mousedown: %s %s", im.id, xreg.data.tag);
     </pre>
-    Note that the shapes are still not moveable unless you also set
-    the <b>moveable</b> property.
+    Note that the shapes are still not movable unless you also set
+    the <b>movable</b> property.
     <p>
     In addition to firing callbacks on events for individual shapes, you
     can set the <b>ongroupcreate</b> property in the opts object to a

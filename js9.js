@@ -6396,7 +6396,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     dlayer.canvas = new fabric.Canvas(dlayer.canvasjq[0]);
     // don't render on add or remove of objects (do it manually)
     dlayer.canvas.renderOnAddRemove = false;
-    // short-hand for allowing objects to move
+    // movable: short-hand for allowing objects to move
     if( dlayer.opts.movable ){
 	dlayer.opts.hasControls = true;
 	dlayer.opts.hasRotatingPoint = true;
@@ -6410,6 +6410,19 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	dlayer.opts.selectable = true;
 	dlayer.opts.evented = true;
 	dlayer.opts.usekeyboard = true;
+    } else if( dlayer.opts.movable === false ){
+	dlayer.opts.hasControls = false;
+	dlayer.opts.hasRotatingPoint = false;
+	dlayer.opts.hasBorders = false;
+	dlayer.opts.lockMovementX = true;
+	dlayer.opts.lockMovementY = true;
+	dlayer.opts.lockRotation = true;
+	dlayer.opts.lockScalingX = true;
+	dlayer.opts.lockScalingY = true;
+	dlayer.opts.lockUniScaling = true;
+	dlayer.opts.selectable = false;
+	dlayer.opts.evented = false;
+	dlayer.opts.usekeyboard = false;
     }
     // short-hand for allowing group and individual selections
     if( dlayer.opts.selectable ){
