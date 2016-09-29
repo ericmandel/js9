@@ -5839,7 +5839,7 @@ JS9.Prefs.displaysSchema = {
 	},
 	"keyboardActions": {
 	    "type": "mobject",
-	    "helper": "array of keyboard actions"
+	    "helper": "object containing keyboard actions"
 	},
 	"mousetouchZoom": {
 	    "type": "boolean",
