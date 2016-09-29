@@ -608,7 +608,7 @@ JS9.Menubar.init = function(width, height){
 			    }
 			    break;
 			case "fullsize":
-			    udisp.resize("full");
+			    udisp.resize("full", {center: true});
 			    break;
 			case "resetsize":
 			    udisp.resize("reset");

@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.9, Tue Sep 27 19:19:29 EDT 2016 */
+/* JS9 allinone: v1.9, Wed Sep 28 20:33:34 EDT 2016 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -727,7 +727,7 @@ div.JS9KeyboardText {
     overflow: auto;
     border: 1px solid transparent;
     display: inline-block;
-    width: 40px;
+    width: 120px;
 }
 
 div.JS9KeyboardAction {

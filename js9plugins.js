@@ -2801,8 +2801,8 @@ JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 JS9.Keyboard = {};
 JS9.Keyboard.CLASS = "JS9";         // class of plugin
 JS9.Keyboard.NAME = "Keyboard";     // name of this plugin
-JS9.Keyboard.WIDTH =  400;	    // width of light window
-JS9.Keyboard.HEIGHT = 380;	    // height of light window
+JS9.Keyboard.WIDTH =  512;	    // width of light window
+JS9.Keyboard.HEIGHT = 512;	    // height of light window
 JS9.Keyboard.BASE = JS9.Keyboard.CLASS + JS9.Keyboard.NAME;
 
 JS9.Keyboard.actionHTML="<div class='JS9KeyboardText'><b>%s</b></div><div class='JS9KeyboardAction'>%s</div>";
@@ -2954,7 +2954,7 @@ JS9.Keyboard.Actions["toggle full screen mode"] = function(im, ipos, evt){
     var display = evt.data;
     if( (display.width  === display.width0)  &&
 	(display.height === display.height0) ){
-	display.resize("full");
+	display.resize("full", {center: true});
     } else {
 	display.resize("reset");
     }
@@ -3021,65 +3021,14 @@ JS9.Keyboard.Actions["save regions as a text file"] = function(im, ipos, evt){
 };
 
 // get action associated with the current keyboard
-// we use keydown instead of keypress, so we need ...
-// http://stackoverflow.com/questions/2220196/how-to-decode-character-pressed-from-jquerys-keydowns-event-handler
-// ... for conversion of keydown into char string
 JS9.Keyboard.getAction = function(im, evt){
     var action;
-    var c = evt.which || evt.keyCode;
     var d = evt.data;
-    var _to_ascii = {
-        '188': '44',
-        '109': '45',
-        '190': '46',
-        '191': '47',
-        '192': '96',
-        '220': '92',
-        '222': '39',
-        '221': '93',
-        '219': '91',
-        '173': '45',
-        '187': '61', //IE Key codes
-        '186': '59', //IE Key codes
-        '189': '45'  //IE Key codes
-    };
-    var _shiftUps = {
-        "96": "~",
-        "49": "!",
-        "50": "@",
-        "51": "#",
-        "52": "$",
-        "53": "%",
-        "54": "^",
-        "55": "&",
-        "56": "*",
-        "57": "(",
-        "48": ")",
-        "45": "_",
-        "61": "+",
-        "91": "{",
-        "93": "}",
-        "92": "|",
-        "59": ":",
-        "39": "\"",
-        "44": "<",
-        "46": ">",
-        "47": "?"
-    };
-    //normalize keyCode 
-    if( _to_ascii.hasOwnProperty(c) ){
-        c = _to_ascii[c];
+    var s = JS9.eventToCharStr(evt);
+    // look for an action associated with this key
+    if( s ){
+	action = d.keyboardActions[s];
     }
-    if( !evt.shiftKey && (c >= 65 && c <= 90) ){
-        c = String.fromCharCode(c + 32);
-    } else if( evt.shiftKey && _shiftUps.hasOwnProperty(c) ){
-        //get shifted keyCode value
-        c = _shiftUps[c];
-    } else {
-        c = String.fromCharCode(c);
-    }
-    // get action associated with this key
-    action = d.keyboardActions[c] || d.keyboardActions[c];
     return action;
 };
 
@@ -4197,7 +4146,7 @@ JS9.Menubar.init = function(width, height){
 			    }
 			    break;
 			case "fullsize":
-			    udisp.resize("full");
+			    udisp.resize("full", {center: true});
 			    break;
 			case "resetsize":
 			    udisp.resize("reset");
@@ -5892,6 +5841,10 @@ JS9.Prefs.displaysSchema = {
 	    "type": "object",
 	    "helper": "array of touch actions"
 	},
+	"keyboardActions": {
+	    "type": "object",
+	    "helper": "array of keyboard actions"
+	},
 	"mousetouchZoom": {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
@@ -5946,6 +5899,7 @@ JS9.Prefs.init = function(){
 	case "displays":
 	    source.data = {mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,
+			   keyboardActions: JS9.globalOpts.keyboardActions,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom};
 	    break;
 	default:

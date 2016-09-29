@@ -225,6 +225,10 @@ JS9.Prefs.displaysSchema = {
 	    "type": "object",
 	    "helper": "array of touch actions"
 	},
+	"keyboardActions": {
+	    "type": "object",
+	    "helper": "array of keyboard actions"
+	},
 	"mousetouchZoom": {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
@@ -279,6 +283,7 @@ JS9.Prefs.init = function(){
 	case "displays":
 	    source.data = {mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,
+			   keyboardActions: JS9.globalOpts.keyboardActions,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom};
 	    break;
 	default:

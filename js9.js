@@ -144,7 +144,12 @@ JS9.globalOpts = {
 	"+": "zoom in",
 	"-": "zoom out",
 	">": "zoom in",
-	"<": "zoom out"
+	"<": "zoom out",
+	"Delete": "remove selected region",
+	"LeftArrow": "move selected region",
+	"UpArrow": "move selected region",
+	"RightArrow": "move selected region",
+	"DownArrow": "move selected region"
     }, // keyboard actions
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     pinchWait: 8,		// number of events to wait before testing pinch
@@ -5693,9 +5698,11 @@ JS9.Display.prototype.resize = function(width, height, opts){
     }
     // 'full' or 'reset'
     if( width === "full" ){
+	opts = height;
 	width = window.innerWidth || width;
 	height = window.innerHeight || height;
     } else if( width === "reset" ){
+	opts = height;
 	width = this.width0 || width;
 	height = this.height0 || height;
     }
@@ -5802,6 +5809,10 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	this.image.displayImage("all", opts);
 	this.image.refreshLayers();
     }
+    // center, if necessary
+    if( opts.center ){
+	this.center();
+    }
     return this;
 };
 
@@ -5814,6 +5825,35 @@ JS9.Display.prototype.inResize = function(pos){
 	}
     }
     return false;
+};
+
+// scroll the display to the center of the viewport
+// http://stackoverflow.com/questions/18150090/jquery-scroll-element-to-the-middle-of-the-screen-instead-of-to-the-top-with-a
+JS9.Display.prototype.center = function(){
+    var el = this.divjq;
+    var voffset, hoffset;
+    var elVOffset = el.offset().top;
+    var elHeight = el.height();
+    var windowHeight = $(window).height();
+    var elHOffset = el.offset().left;
+    var elWidth = el.width();
+    var windowWidth = $(window).width();
+    var speed = 250;
+    if (elHeight < windowHeight) {
+	voffset = elVOffset - ((windowHeight / 2) - (elHeight / 2));
+    }
+    else {
+	voffset = elVOffset;
+    }
+    if (elWidth < windowWidth) {
+	hoffset = elHOffset - ((windowWidth / 2) - (elWidth / 2));
+    }
+    else {
+	hoffset = elHOffset;
+    }
+    $('html, body').animate({scrollTop: voffset, scrollLeft: hoffset}, speed);
+    // allow chaining
+    return this;
 };
 
 // display the next image from the JS9 images list that is in this display
@@ -5846,6 +5886,8 @@ JS9.Display.prototype.nextImage = function(inc){
 	im.refreshLayers();
 	im.clearMessage();
     }
+    // allow chaining
+    return this;
 };
 
 // load session from a json file
@@ -9578,15 +9620,19 @@ JS9.Regions.saveRegions = function(fname, which){
 // Regions plugin callbacks
 // process a keydown event
 // ---------------------------------------------------------------------
-JS9.Regions.keyDownCB = function(im, ipos, evt, layerName){
-    var tact, canvas;
+JS9.Regions.keyDownCB = function(im, ipos, evt){
+    var tact, canvas, layerName;
     var tobj = {evt: evt};
     var charCode = evt.which || evt.keyCode;
+    // sanity check
+    if( !im ){
+	return;
+    }
+    layerName = im.layer || "regions";
     // this prevents keypress on FF (and others)
     // https://developer.mozilla.org/en-US/docs/Web/Reference/Events/keydown
     // NB: we still have to preventDefault on specific keys ... see below ...
     // evt.preventDefault();
-    layerName = layerName || "regions";
     canvas = im.display.layers[layerName].canvas;
     switch(charCode){
 	// backspace and delete
@@ -10462,6 +10508,82 @@ JS9.error = function(emsg, epattern, dothrow){
     }
 };
 
+// we use keydown instead of keypress, so we need ...
+// http://stackoverflow.com/questions/2220196/how-to-decode-character-pressed-from-jquerys-keydowns-event-handler
+// ... for conversion of keydown into char string
+JS9.eventToCharStr = function(evt){
+    var c, s;
+    var _specialKeys = {
+	'37': 'LeftArrow',
+	'38': 'UpArrow',
+	'39': 'RightArrow',
+	'40': 'DownArrow',
+	 '8': 'Delete',
+	'46': 'Delete'
+    };
+    var _to_ascii = {
+        '188': '44',
+        '109': '45',
+        '190': '46',
+        '191': '47',
+        '192': '96',
+        '220': '92',
+        '222': '39',
+        '221': '93',
+        '219': '91',
+        '173': '45',
+        '187': '61', //IE Key codes
+        '186': '59', //IE Key codes
+        '189': '45'  //IE Key codes
+    };
+    var _shiftUps = {
+        "96": "~",
+        "49": "!",
+        "50": "@",
+        "51": "#",
+        "52": "$",
+        "53": "%",
+        "54": "^",
+        "55": "&",
+        "56": "*",
+        "57": "(",
+        "48": ")",
+        "45": "_",
+        "61": "+",
+        "91": "{",
+        "93": "}",
+        "92": "|",
+        "59": ":",
+        "39": "\"",
+        "44": "<",
+        "46": ">",
+        "47": "?"
+    };
+    // allow direct specification of keycode as a number
+    if( typeof evt === "number" ){
+	c = evt;
+    } else {
+	// otherwise its the event
+	c = evt.which || evt.keyCode;
+    }
+    s = String(c);
+    // normalize keyCode
+    if( _to_ascii.hasOwnProperty(s) ){
+        c = _to_ascii[s];
+    }
+    if( !evt.shiftKey && (c >= 65 && c <= 90) ){
+        c = String.fromCharCode(c + 32);
+    } else if( !evt.shiftKey && _specialKeys.hasOwnProperty(c) ){
+        c = _specialKeys[c];
+    } else if( evt.shiftKey && _shiftUps.hasOwnProperty(c) ){
+        //get shifted keyCode value
+        c = _shiftUps[c];
+    } else {
+        c = String.fromCharCode(c);
+    }
+    return c;
+};
+
 // get position of mouse in a canvas
 // http://stackoverflow.com/questions/1114465/getting-mouse-location-in-canvas
 JS9.eventToDisplayPos = function(evt, offset){
@@ -11175,13 +11297,8 @@ JS9.keyDownCB = function(evt){
 	ipos = im ? im.ipos : {x: null, y: null};
 	JS9.Keyboard.action(im, ipos, evt);
     }
-    // fire keydown for keyboard-enabled layer, if necessary
-    // (the im.ipos comes from the last mouse move)
     if( im ){
-	if( im.layer && im.layers[im.layer].opts.usekeyboard ){
-	    JS9.Regions.keyDownCB(im, im.ipos, evt, im.layer);
-	}
-	// plugin callbacksa
+	// plugin callbacks
 	im.xeqPlugins("keypress", "onkeydown", evt);
     }
 };
@@ -11650,6 +11767,17 @@ JS9.init = function(){
     }, false);
     // set debug flag
     JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
+    // add keyboard plugin actions
+    if( JS9.hasOwnProperty("Keyboard") ){
+	// eslint-disable-next-line no-unused-vars
+	JS9.Keyboard.Actions["move selected region"] = function(im, ipos, evt){
+	    JS9.Regions.keyDownCB(im, ipos, evt);
+	};
+	// eslint-disable-next-line no-unused-vars
+	JS9.Keyboard.Actions["remove selected region"] = function(im, ipos,evt){
+	    JS9.Regions.keyDownCB(im, ipos, evt);
+	};
+    }
     // initialize image filters
     if( window.hasOwnProperty("ImageFilters") ){
 	JS9.ImageFilters = ImageFilters;
@@ -11700,8 +11828,7 @@ JS9.init = function(){
 			winDims: [JS9.MouseTouch.WIDTH,JS9.MouseTouch.HEIGHT]});
     JS9.RegisterPlugin(JS9.Regions.CLASS, JS9.Regions.NAME,
 		       JS9.Regions.init,
-		       {onkeydown:  JS9.Regions.keyDownCB,
-			onregionschange: JS9.Regions.onchange,
+		       {onregionschange: JS9.Regions.onchange,
 			divArgs: ["regions"],
 			winDims: [0, 0]});
     // find divs associated with each plugin and run the constructor
