@@ -276,9 +276,15 @@
       </div>
       <div id="myAnalysisDiv">
 	<div id="myAnalysisResults">
-	  A quick introduction to JS9, regions, and server-side data analysis:
+	  JS9 can be connected to a 
+	  <a href="js9/help/serverside.html" target="_blank">
+	  server-side (back-end) analysis system</a> to run complex
+	  analysis tasks. Text and plot results can be displayed on
+	  the JS9 web page, or new images loaded into JS9. Virtually
+	  any analysis program can be added to the back-end.
+	  <p>
+	  Here is a quick introduction to server-side analysis using regions:
 	  <ul>
-	  <li> Press the mouse in the image and move around to change the contrast and bias (to bring out features).
 	  <li> Create one or more regions using the JS9 Region menu.
 	  <li> Press the mouse inside a region and drag it to a
 	  desired location. (Use an annulus for radial profiles.)
@@ -287,7 +293,7 @@
 	  <li> Group regions by pressing the meta key
 	    and using mouse selection. You then can
 	    move/resize/rotate them together.
-	  <li> Choose an analysis to run on the back-end server:
+	  <li> Choose an analysis to run on the server:
 	  <ul>
 	      <li> Energy Spectrum plots a histogram of the energy
 	      value of photons in the region(s).
@@ -296,9 +302,8 @@
 	      <li> Radial Profile plots the number of photons in each
 	      region of an annulus.
 	  </ul>
-	  <li> As you move or resize, the task will run and
-	  results will be displayed here.
-	  <li> The region context menu has lots of region options.
+	  <li> Every time a region changes, the chosen task will run
+	    on the server, and results will be displayed here.
 	  <li> These tasks also can be run from the JS9 Analysis menu. 
           </ul>
 	  See the Plugins tab for a demo of browser-based analysis.
@@ -308,7 +313,11 @@
     <div id="plugins" class="tabcontent mytabcontent">
     <div class="pluginContainer">
     <p>
-    <a href="js9/help/localtasks.html" target="_blank">Local Analysis Tasks</a>: create a region, move it around ...
+    Extend JS9 with
+    <a href="js9/help/localtasks.html" target="_blank">Plugins</a>,
+    using the
+    <a href="js9/help/publicapi.html" target="_blank">JS9 Public API</a>
+    to perform event-driven, local analysis. Create a region, move it around ...
     <p>
     <table>
     <tr><td><div class="ImExamRegionStats plugin" data-js9id="JS9"></div></td>
