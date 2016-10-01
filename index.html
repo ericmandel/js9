@@ -102,6 +102,16 @@
     var ncall = 0;
     var err = {};
     var plot;
+    var objs = [
+      {scale: "log", colormap: "viridis", contrast: 4.1, bias: 0.75},
+      {scale: "log", colormap: "magma", contrast: 2.9, bias: 0.72},
+      {scale: "log", colormap: "heat", contrast: 2.1, bias: 0.8},
+      {scale: "log", colormap: "cool", contrast: 3.28, bias: 0.63},
+      {scale: "log", colormap: "inferno", contrast: 2.9, bias: 0.72},
+      {scale: "log", colormap: "b", contrast: 1.97, bias: 0.69},
+      {scale: "log", colormap: "grey", contrast: 3.2, bias: 0.69},
+      {scale: "log", colormap: "red", contrast: 2.7, bias: 0.6}
+    ];
     // this is the callback for all region changes
     JS9.Regions.opts.onchange = runMyAnalysis;
     // called when the function changes to redo the last display
@@ -113,6 +123,7 @@
     // add event handlers to the analysis buttons to execute the specified task
     // note that jQuery is available automatically
     function initMyAnalysis(){
+        var idx;
         $("#counts").on("click", function(evt){aname = "counts"; redo()});
         $("#radial").on("click", function(evt){aname = "radial"; redo()});
         $("#spectrum").on("click", function(evt){aname = "spectrum"; redo()});
@@ -120,7 +131,8 @@
         js9tabs.setpersist(false); //toogle persistence of the tabs' state
         js9tabs.setselectedClassTarget("link"); //"link" or "linkparent"
         js9tabs.init();
-        JS9.Preload('js9/png/casa.png', {colormap: 'magma', scale:'log', contrast:2.9, bias:0.72});
+        idx = Math.floor(Math.random() * objs.length);
+        JS9.Preload("js9/png/casa.png", objs[idx]);
     }
     // run analysis on current image, defining a function to display results
     function runMyAnalysis(im, xreg){
