@@ -120,7 +120,7 @@
         js9tabs.setpersist(false); //toogle persistence of the tabs' state
         js9tabs.setselectedClassTarget("link"); //"link" or "linkparent"
         js9tabs.init();
-        JS9.Preload('js9/png/casa.png', {scale:'log', contrast:1.75, bias:0.8});
+        JS9.Preload('js9/png/casa.png', {colormap: 'viridis', scale:'log', contrast:4.1, bias:0.75});
     }
     // run analysis on current image, defining a function to display results
     function runMyAnalysis(im, xreg){
