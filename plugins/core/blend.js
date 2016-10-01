@@ -9,7 +9,7 @@
 JS9.Blend = {};
 JS9.Blend.CLASS = "JS9";      // class of plugins (1st part of div class)
 JS9.Blend.NAME = "Blend";     // name of this plugin (2nd part of div class)
-JS9.Blend.WIDTH =  512;	  // width of light window
+JS9.Blend.WIDTH =  550;	  // width of light window
 JS9.Blend.HEIGHT = 270;	  // height of light window
 JS9.Blend.BASE = JS9.Blend.CLASS + JS9.Blend.NAME;  // CSS base class name
 

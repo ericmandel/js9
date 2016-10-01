@@ -757,6 +757,7 @@ div.JS9KeyboardHeader, div.JS9KeyboardFooter {
     margin: 5px;
     background: #E9E9E9;
     overflow: auto;
+    font-size: 10pt;
 }
 
 .JS9MefHeader {
