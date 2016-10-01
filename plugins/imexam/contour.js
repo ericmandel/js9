@@ -952,7 +952,7 @@ if (typeof exports !== "undefined") {
 	var div = this.div;
 
 	div.innerHTML = '<form class="contour-form">							\
-	    <table><tr>	<td>N</td>									\
+	    <table style="border-collapse: separate; border-spacing: 5px 5px;"><tr>	<td>N</td>	\
 			<td><input type=text name=nlevel value=5 size=10></td>				\
 		       	<td><input type=button value="Draw Contours" class="drw-contour"></td></tr>	\
 	           <tr>	<td>Min</td>									\
@@ -960,12 +960,12 @@ if (typeof exports !== "undefined") {
 		       	<td><input type=button value="Set Min/Max" class="get-min-max"></td></tr>	\
 	           <tr>	<td>Max</td>									\
 			<td><input type=text name=max size=10></td></tr>				\
-	           <tr>	<td valign=top>Levels:</td>							\
-	    		<td rowspan=5><textarea type=textarea rows=12 cols=10 name=level class="contour-levels">	\
+	           <tr>	<td valign=top>Levels</td>							\
+	    		<td rowspan=5><textarea style="margin: 0px; padding: 5px" type=textarea rows=12 cols=10 name=level class="contour-levels">	\
 			    </textarea>									\
 		       	<td valign=top><input type=button value="Make Levels" class="make-levels"></td>	\
 		   </tr>										\
-		   <tr><td><br></td></tr>										\
+		   <tr><td><br></td></tr>								\
 		   <tr>	<td></td><td align=center valign=top>						\
 				Binning									\
 				<select id=binning name=binpix>						\
@@ -985,16 +985,16 @@ if (typeof exports !== "undefined") {
 				Smooth									\
 				<select id=smooth name=smopix>						\
 				<option>None</option>							\
-				<option value=0.75 selected>3</option>							\
-				<option value=1.00>5</option>							\
-				<option value=1.25>7</option>							\
+				<option value=0.75 selected>3</option>					\
+				<option value=1.00>5</option>						\
+				<option value=1.25>7</option>						\
 				</select>								\
 				pix									\
 			</td>										\
 		   </tr>										\
 		   <tr>	<td></td><td align=center valign=top><br>Quality:				\
 				<br>&nbsp;<input type=radio name=quality value=faster checked>Faster	\
-				<br>&nbsp;<input type=radio name=quality value=better>Better		\
+				<br><input type=radio name=quality value=better>Better			\
 			</td>										\
 		   </tr>										\
 	    </table>											\
