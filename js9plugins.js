@@ -11675,7 +11675,7 @@ if (typeof exports !== "undefined") {
 			</td>										\
 		   </tr>										\
 		   <tr>	<td></td><td align=center valign=top><br>Quality:				\
-				<br>&nbsp;<input type=radio name=quality value=faster checked>Faster		\
+				<br>&nbsp;<input type=radio name=quality value=faster checked>Faster	\
 				<br><input type=radio name=quality value=better>Better			\
 			</td>										\
 		   </tr>										\
