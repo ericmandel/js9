@@ -18,6 +18,7 @@ var sockio = require("socket.io/node_modules/socket.io-client"),
     path = require('path'),
     dns = require('dns'),
     opn = require('opn'),
+    timers = require('timers'),
     readline = require("readline");
 
 // internal variables
@@ -44,6 +45,7 @@ var sockopts = {
     reconnection: false,
     timeout: 10000
 };
+var timeout = 3000;
 var verify = false;
 var webpage = "";
 var srcdir = process.env.JS9_SRCDIR;
@@ -61,6 +63,7 @@ var usage = function() {
   console.log("    -i|-id [id]              # client JS9 id (def: JS9)");
   console.log("    -m|-multi                # send to multiple clients");
   console.log("    -|-p|-pipe               # read argument list from stdin");
+  console.log("    -t|-timeout              # browser startup timeout");
   console.log("    -pageid [id]             # unique page id from server");
   console.log("    -w|-webpage [url]        # url to open in new browser");
   console.log(" ");
@@ -165,7 +168,7 @@ var startBrowser = function(){
     if( verify ){
 	console.log("starting webpage: %s in browser: %s", webpage, browser);
     }
-    opn(webpage, opts);
+    return opn(webpage, opts);
 };
 
 // message constructor
@@ -219,7 +222,7 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
 	}
 	// display results
         if( s ){
-	    // on stab at converting objects to json
+	    // take a stab at converting objects to json
 	    if( typeof s === "object" ){
 		try{ t = JSON.stringify(s); }
 		catch(e){ t = s; }
@@ -371,6 +374,11 @@ while( !done ){
       args.shift();
       dopipe = true;
       break;
+    case '-t':
+    case '-timeout':
+      args.shift();
+      timeout = parseInt(args.shift(), 10);
+      break;
     case '-w':
     case '-webpage':
       args.shift();
@@ -463,40 +471,66 @@ dns.lookup(host, 4, function (err, address, family) {
 		socket.emit("msg", msg, function(targets){
 		    // no connection: start up webpage in browser
 		    if( !targets ){
-			startBrowser();
-		    }
-		});
-		// when a browser is started, all args are files to be loaded
-		// use absolute paths
-		for(i=0; i<args.length; i++){
-		    args[i] = path.resolve(args[i]);
-		}
-		args.unshift("load");
-	    }
-	    // package msg (cmd and args)
-	    msg.setArgs(args);
-	    if( verify ){
-		console.log("%s: %s", msg.cmd, JSON.stringify(msg.args));
-	    }
-	    if( dopipe ){
-		process.stdin.resume();
-		process.stdin.on("data", function(buf) {
-		    content += buf.toString();
-		});
-		process.stdin.on("end", function() {
-		    // push the contents of stdin onto the arg array
-		    // msg.args.push(content);
-		    if( msg.args.length > 0 ){
-			msg.args[msg.args.length-1] += "\n" + content;
+			// eslint-disable-next-line no-unused-vars
+			startBrowser().then(function(result) {
+			    // wait a bit for js9 page to load
+			    timers.setTimeout(function(){
+				// all args are files to be loaded
+				for(i=0; i<args.length; i++){
+				    // use absolute paths
+				    args[i] = path.resolve(args[i]);
+				}
+				// prefix with the load argument
+				args.unshift("load");
+				// set arguments
+				msg.setArgs(args);
+				// send message and display results
+				msg.send(socket, null, "exit");
+			    }, timeout);
+			    // eslint-disable-next-line no-unused-vars
+			}, function(err) {
+			    error("can't start up browser: " + browser);
+			});
 		    } else {
-			msg.args[0] = content;
+			// browser is ready: all args are files to be loaded
+			for(i=0; i<args.length; i++){
+			    // use absolute paths
+			    args[i] = path.resolve(args[i]);
+			}
+			// prefix with the load argument
+			args.unshift("load");
+			// set arguments
+			msg.setArgs(args);
+			// target found: send message and display results
+			msg.send(socket, null, "exit");
 		    }
-		    // send message and display results
-		    msg.send(socket, null, "exit");
 		});
 	    } else {
-		// send message and display results
-		msg.send(socket, null, "exit");
+		// package msg (cmd and args)
+		msg.setArgs(args);
+		if( verify ){
+		    console.log("%s: %s", msg.cmd, JSON.stringify(msg.args));
+		}
+		if( dopipe ){
+		    process.stdin.resume();
+		    process.stdin.on("data", function(buf) {
+			content += buf.toString();
+		    });
+		    process.stdin.on("end", function() {
+			// push the contents of stdin onto the arg array
+			// msg.args.push(content);
+			if( msg.args.length > 0 ){
+			    msg.args[msg.args.length-1] += "\n" + content;
+			} else {
+			    msg.args[0] = content;
+			}
+			// send message and display results
+			msg.send(socket, null, "exit");
+		    });
+		} else {
+		    // send message and display results
+		    msg.send(socket, null, "exit");
+		}
 	    }
 	}
     });
