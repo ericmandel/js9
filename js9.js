@@ -5708,10 +5708,6 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	    if( this.pluginInstances.JS9Menubar ){
 		height -= (this.pluginInstances.JS9Menubar.divjq.height()+2);
 	    }
-	    // including colorbar, if available
-	    if( this.pluginInstances.JS9Colorbar ){
-		height -= (this.pluginInstances.JS9Colorbar.divjq.height()+2);
-	    }
 	}
     } else if( width === "reset" ){
 	opts = height;
