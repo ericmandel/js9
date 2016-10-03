@@ -5634,7 +5634,7 @@ JS9.Prefs = {};
 JS9.Prefs.CLASS = "JS9";        // class of plugins (1st part of div class)
 JS9.Prefs.NAME = "Preferences"; // name of this plugin (2nd part of div class)
 JS9.Prefs.WIDTH =  750;         // default width of window
-JS9.Prefs.HEIGHT = 300;	        // default height of window
+JS9.Prefs.HEIGHT = 400;	        // default height of window
 
 JS9.Prefs.imagesSchema = {
     "title": "Image Preferences",
@@ -5830,11 +5830,11 @@ JS9.Prefs.displaysSchema = {
     "description": "preferences for each JS9 display in this page",
     "properties": {
 	"mouseActions": {
-	    "type": "object",
+	    "type": "mobject",
 	    "helper": "array of mouse actions"
 	},
 	"touchActions": {
-	    "type": "object",
+	    "type": "mobject",
 	    "helper": "array of touch actions"
 	},
 	"keyboardActions": {
@@ -5928,7 +5928,7 @@ JS9.Prefs.init = function(){
 			s = source.data[key];
 		    }
 		    if( obj.type === "mobject" ){
-			html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2l'><textarea name='%s' class='text_R'>%s</textarea></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
+			html += sprintf("<div class='linegroup' style='height:64px'><span class='column_R1'><b>%s</b></span><span class='column_R2l'><textarea name='%s' class='text_R' rows='5' style='overflow-x: hidden; resize: none'>%s</textarea></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
 		    } else {
 			html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2l'><input type='text' name='%s' class='text_R' value='%s'></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
 		    }
@@ -6060,7 +6060,8 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	    val = parseFloat(val);
 	    break;
 	case "object":
-	    val = JSON.parse(val);
+	    try{ val = JSON.parse(val); }
+	    catch(e){ JS9.error("invalid JSON (see jsonlint.com): "+val, e); }
 	    break;
 	default:
 	    break;
