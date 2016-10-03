@@ -5699,8 +5699,20 @@ JS9.Display.prototype.resize = function(width, height, opts){
     // 'full' or 'reset'
     if( width === "full" ){
 	opts = height;
-	width = window.innerWidth || width;
-	height = window.innerHeight || height;
+	if( window.innerWidth ){
+	    width = window.innerWidth;
+	}
+	if( window.innerHeight ){
+	    // including menubar, if available
+	    height = window.innerHeight;
+	    if( this.pluginInstances.JS9Menubar ){
+		height -= (this.pluginInstances.JS9Menubar.divjq.height()+2);
+	    }
+	    // including colorbar, if available
+	    if( this.pluginInstances.JS9Colorbar ){
+		height -= (this.pluginInstances.JS9Colorbar.divjq.height()+2);
+	    }
+	}
     } else if( width === "reset" ){
 	opts = height;
 	width = this.width0 || width;

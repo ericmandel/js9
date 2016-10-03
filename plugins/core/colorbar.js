@@ -127,7 +127,7 @@ JS9.Colorbar.init = function(width, height){
     }
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
-	this.width  = width || JS9.Colorbar.WIDTH;
+	this.width = width || JS9.Colorbar.WIDTH;
     }
     this.divjq.css("width", this.width);
     this.width = parseInt(this.divjq.css("width"), 10);
@@ -135,9 +135,9 @@ JS9.Colorbar.init = function(width, height){
     if( !this.height ){
 	// no tick mark display: default height becomes colorbar height
 	if( this.showTicks ){
-	    this.height  = height || JS9.Colorbar.HEIGHT;
+	    this.height = height || JS9.Colorbar.HEIGHT;
 	} else {
-	    this.height  = height || JS9.Colorbar.COLORBARHEIGHT;
+	    this.height = height || JS9.Colorbar.COLORBARHEIGHT;
 	}
     }
     this.divjq.css("height", this.height);

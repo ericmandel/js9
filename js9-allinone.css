@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.9, Thu Sep 29 19:08:28 EDT 2016 */
+/* JS9 allinone: v1.9, Mon Oct  3 15:06:25 EDT 2016 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -758,6 +758,7 @@ div.JS9KeyboardHeader, div.JS9KeyboardFooter {
     margin: 5px;
     background: #E9E9E9;
     overflow: auto;
+    font-size: 10pt;
 }
 
 .JS9MefHeader {
