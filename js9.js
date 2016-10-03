@@ -5859,6 +5859,10 @@ JS9.Display.prototype.center = function(){
     else {
 	hoffset = elHOffset;
     }
+    // take menubar into account
+    if( this.pluginInstances.JS9Menubar ){
+	voffset -= this.pluginInstances.JS9Menubar.divjq.height() / 2;
+    }
     $('html, body').animate({scrollTop: voffset, scrollLeft: hoffset}, speed);
     // allow chaining
     return this;
