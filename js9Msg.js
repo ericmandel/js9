@@ -45,7 +45,9 @@ var sockopts = {
     reconnection: false,
     timeout: 10000
 };
-var timeout = 3000;
+var tries = 20;
+var timeout = 5000;
+var timeout0 = Math.floor(timeout / tries);
 var verify = false;
 var webpage = "";
 var srcdir = process.env.JS9_SRCDIR;
@@ -63,7 +65,7 @@ var usage = function() {
   console.log("    -i|-id [id]              # client JS9 id (def: JS9)");
   console.log("    -m|-multi                # send to multiple clients");
   console.log("    -|-p|-pipe               # read argument list from stdin");
-  console.log("    -t|-timeout              # browser startup timeout");
+  console.log("    -t|-timeout              # timeout for browser startup");
   console.log("    -pageid [id]             # unique page id from server");
   console.log("    -w|-webpage [url]        # url to open in new browser");
   console.log(" ");
@@ -101,9 +103,63 @@ var error = function(s){
     process.exit(1);
 };
 
+// message constructor
+function JS9Msg(){
+    this.cmd = "*";
+    this.args = [];
+    this.id = "JS9";
+    this.browserip = "*";
+    this.multi = false;
+    this.pageid = null;
+    this.timeout = 1000;
+}
+
+JS9Msg.prototype.reset = function() {
+    // reset cmd parameters for next time
+    this.cmd = "*";
+    this.args = [];
+};
+
+// args: set cmd and args from array
+JS9Msg.prototype.setArgs = function(args) {
+    this.cmd = args[0];
+    this.args = args.slice(1) || [];
+};
+
+// waitSend: wait a bit, send message, display results (and maybe exit)
+JS9Msg.prototype.waitSend = function(tries){
+    var that = this;
+    if( !tries ){
+	error("no targets found for: " + browser);
+	return;
+    }
+    // wait a bit for js9 page to load
+    timers.setTimeout(function(){
+	msg.setArgs(["targets"]);
+	socket.emit("msg", msg, function(targets){
+	    var i;
+	    if( targets ){
+		// all args are files to be loaded
+		for(i=0; i<args.length; i++){
+		    // use absolute paths
+		    args[i] = path.resolve(args[i]);
+		}
+		// prefix with the load argument
+		args.unshift("load");
+		// set arguments
+		msg.setArgs(args);
+		// send message and display results
+		msg.send(socket, null, "exit");
+	    } else {
+		that.waitSend(--tries);
+	    }
+	});
+    }, timeout0);
+};
+
 // which web page do we use?
 // changes globals: browser, webpage
-var findWebpage = function(){
+JS9Msg.prototype.findWebpage = function(){
     if( !browser && !webpage ){
 	return;
     }
@@ -143,7 +199,7 @@ var findWebpage = function(){
 
 // start up browser and load web page
 // changes globals: browser
-var startBrowser = function(){
+JS9Msg.prototype.startBrowser = function(){
     var switches;
     var opts = {wait: false};
     switch(browser){
@@ -169,29 +225,6 @@ var startBrowser = function(){
 	console.log("starting webpage: %s in browser: %s", webpage, browser);
     }
     return opn(webpage, opts);
-};
-
-// message constructor
-function JS9Msg(){
-    this.cmd = "*";
-    this.args = [];
-    this.id = "JS9";
-    this.browserip = "*";
-    this.multi = false;
-    this.pageid = null;
-    this.timeout = 1000;
-}
-
-JS9Msg.prototype.reset = function() {
-    // reset cmd parameters for next time
-    this.cmd = "*";
-    this.args = [];
-};
-
-// args: set cmd and args from array
-JS9Msg.prototype.setArgs = function(args) {
-    this.cmd = args[0];
-    this.args = args.slice(1) || [];
 };
 
 // send: send message, display results (and maybe exit)
@@ -378,6 +411,7 @@ while( !done ){
     case '-timeout':
       args.shift();
       timeout = parseInt(args.shift(), 10);
+      timeout0 = Math.floor(timeout / tries);
       break;
     case '-w':
     case '-webpage':
@@ -463,7 +497,7 @@ dns.lookup(host, 4, function (err, address, family) {
   	    msg.server(socket, rl);
 	} else {
 	    // find default web page, if necessary
-	    findWebpage();
+	    msg.findWebpage();
 	    // if we start up a web browser, we'll wait for it to connect
 	    if( webpage ){
 		// see if we already have a connection we can use
@@ -472,21 +506,9 @@ dns.lookup(host, 4, function (err, address, family) {
 		    // no connection: start up webpage in browser
 		    if( !targets ){
 			// eslint-disable-next-line no-unused-vars
-			startBrowser().then(function(result) {
-			    // wait a bit for js9 page to load
-			    timers.setTimeout(function(){
-				// all args are files to be loaded
-				for(i=0; i<args.length; i++){
-				    // use absolute paths
-				    args[i] = path.resolve(args[i]);
-				}
-				// prefix with the load argument
-				args.unshift("load");
-				// set arguments
-				msg.setArgs(args);
-				// send message and display results
-				msg.send(socket, null, "exit");
-			    }, timeout);
+			msg.startBrowser().then(function(result) {
+			    // wait for page to load and then send
+			    msg.waitSend(tries);
 			    // eslint-disable-next-line no-unused-vars
 			}, function(err) {
 			    error("can't start up browser: " + browser);
