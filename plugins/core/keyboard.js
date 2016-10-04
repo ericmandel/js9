@@ -10,7 +10,7 @@ JS9.Keyboard = {};
 JS9.Keyboard.CLASS = "JS9";         // class of plugin
 JS9.Keyboard.NAME = "Keyboard";     // name of this plugin
 JS9.Keyboard.WIDTH =  512;	    // width of light window
-JS9.Keyboard.HEIGHT = 512;	    // height of light window
+JS9.Keyboard.HEIGHT = 380;	    // height of light window
 JS9.Keyboard.BASE = JS9.Keyboard.CLASS + JS9.Keyboard.NAME;
 
 JS9.Keyboard.actionHTML="<div class='JS9KeyboardText'><b>%s</b></div><div class='JS9KeyboardAction'>%s</div>";
@@ -41,9 +41,9 @@ JS9.Keyboard.addAction = function(container, cname, aname){
 // the keyboardActions array is in JS9.globalOpts determine
 // the initial mapping of keyboard configuration to callback, e.g.:
 //
-//  JS9.globalOpts.keyboardActions = {'p': 'copy physical coords to clipboard',
-//                                     'v': 'copy pixel value to clipboard',
-//                                     'w': 'copy wcs coords to clipboard',
+//  JS9.globalOpts.keyboardActions = {'?': 'copy valpos to clipboard',
+//                                     '/': 'copy wcs coords to clipboard',
+//					...
 //                                    };
 //
 // You can add your own to the Keyboard.Actions object and use them in the
@@ -53,7 +53,7 @@ JS9.Keyboard.addAction = function(container, cname, aname){
 JS9.Keyboard.Actions = {};
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["copy wcs coords to clipboard"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt){
     var s;
     // sanity check
     if( !im || !im.raw.wcs ){
@@ -67,7 +67,7 @@ JS9.Keyboard.Actions["copy wcs coords to clipboard"] = function(im, ipos, evt){
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["copy physical coords to clipboard"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["copy physical position to clipboard"] = function(im, ipos, evt){
     var phys, s;
     // sanity check
     if( !im ){
@@ -113,12 +113,21 @@ JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["list regions"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["toggle selected region: source/background"] = function(im, ipos, evt){
     // sanity check
     if( !im ){
 	return;
     }
-    im.listRegions("all");
+    return JS9.Keyboard.toggleregion(im, "source", "background");
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["toggle selected region: include/exclude"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    return JS9.Keyboard.toggleregion(im, "include", "exclude");
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -192,7 +201,16 @@ JS9.Keyboard.Actions["display next image"] = function(im, ipos, evt){
     if( !im ){
 	return;
     }
-    im.display.nextImage();
+    im.display.nextImage(1);
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["display previous image"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    im.display.nextImage(-1);
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -258,20 +276,50 @@ JS9.Keyboard.editregion= function(im, xnew, xold){
 	    tags = s[i].tags;
 	    for(j=0; j<tags.length; j++){
 		if( tags[j] === xnew ){
+		    // already have this tag
 		    xnew = "";
 		    break;
 		}
 		if( tags[j] === xold ){
+		    // switch with "opposite" tag
 		    tags[j] = xnew;
 		    xnew = "";
 		    break;
 		}
 	    }
+	    // add new tag?
 	    if( xnew ){
 		tags.push(xnew);
 	    }
 	}
 	im.changeShapes("regions", "selected", {tags: tags});
+    }
+};
+
+JS9.Keyboard.toggleregion = function(im, x1, x2){
+    var i, j, s, tags, xnew;
+    // get selected region
+    s = im.getShapes("regions", "selected");
+    if( s.length ){
+	for(i=0; i<s.length; i++){
+	    tags = s[i].tags;
+	    xnew = "";
+	    for(j=0; j<tags.length; j++){
+		// switch tags
+		if( tags[j] === x1 ){
+		    tags[j] = x2;
+		    xnew = x2;
+		    break;
+		} else if( tags[j] === x2 ){
+		    tags[j] = x1;
+		    xnew = x1;
+		    break;
+		}
+	    }
+	}
+	if( xnew ){
+	    im.changeShapes("regions", "selected", {tags: tags});
+	}
     }
 };
 

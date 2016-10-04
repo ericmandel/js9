@@ -130,21 +130,15 @@ JS9.globalOpts = {
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     keyboardActions: {
-	b: "tag selected region as 'background'",
-	e: "tag selected region as 'exclude'",
-	f: "toggle full screen mode",
-	i: "tag selected region as 'include'",
-        l: "list regions",
-	n: "display next image",
+	b: "toggle selected region: source/background",
+	e: "toggle selected region: include/exclude",
 	o: "open a local FITS file",
-	p: "copy physical coords to clipboard",
-	s: "tag selected region as 'source'",
-        v: "copy pixel value to clipboard",
-        w: "copy wcs coords to clipboard",
+        "/": "copy wcs position to clipboard",
+        "?": "copy value and position to clipboard",
 	"+": "zoom in",
 	"-": "zoom out",
-	">": "zoom in",
-	"<": "zoom out",
+	">": "display next image",
+	"<": "display previous image",
 	"delete": "remove selected region",
 	"leftArrow": "move selected region",
 	"upArrow": "move selected region",
@@ -152,6 +146,7 @@ JS9.globalOpts = {
 	"downArrow": "move selected region"
     }, // keyboard actions
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
+    centerDivs: ["JS9Menubar"], // divs that take part in JS9.Display.center()
     pinchWait: 8,		// number of events to wait before testing pinch
     pinchThresh: 6,		// threshold for pinch test
     extendedPlugins: true,	// enable extended plugin support?
@@ -5682,7 +5677,7 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 
 //  resize a display
 JS9.Display.prototype.resize = function(width, height, opts){
-    var i, im, key, layer, nwidth, nheight, nleft, ntop, pinst;
+    var i, div, im, key, layer, nwidth, nheight, nleft, ntop, pinst;
     var repos = function(o){
 	o.left += nleft;
 	o.top  += ntop;
@@ -5705,8 +5700,12 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	if( window.innerHeight ){
 	    // including menubar, if available
 	    height = window.innerHeight;
-	    if( this.pluginInstances.JS9Menubar ){
-		height -= (this.pluginInstances.JS9Menubar.divjq.height()+2);
+	    // divs we take into account when centering
+	    for(i=0; i<JS9.globalOpts.centerDivs.length; i++){
+		div = JS9.globalOpts.centerDivs[i];
+		if( this.pluginInstances[div] ){
+		    height -= this.pluginInstances[div].divjq.height();
+		}
 	    }
 	}
     } else if( width === "reset" ){
@@ -5762,7 +5761,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	    // clear colorbar
 	    pinst.divjq.html("");
 	    // re-init colorbar for this size
-	    JS9.Colorbar.init.call(pinst, nwidth, nheight);
+	    JS9.Colorbar.init.call(pinst, nwidth, null);
 	}
     }
     // change size of shape canvases
@@ -5838,6 +5837,7 @@ JS9.Display.prototype.inResize = function(pos){
 // scroll the display to the center of the viewport
 // http://stackoverflow.com/questions/18150090/jquery-scroll-element-to-the-middle-of-the-screen-instead-of-to-the-top-with-a
 JS9.Display.prototype.center = function(){
+    var i, div, tel;
     var el = this.divjq;
     var voffset, hoffset;
     var elVOffset = el.offset().top;
@@ -5847,6 +5847,15 @@ JS9.Display.prototype.center = function(){
     var elWidth = el.width();
     var windowWidth = $(window).width();
     var speed = 250;
+    // divs we take into account when getting total height
+    for(i=0; i<JS9.globalOpts.centerDivs.length; i++){
+	div = JS9.globalOpts.centerDivs[i];
+	if( this.pluginInstances[div] ){
+	    tel = this.pluginInstances[div].divjq;
+	    elHeight += tel.height();
+	    elVOffset = Math.min(tel.offset().top, elVOffset);
+	}
+    }
     if (elHeight < windowHeight) {
 	voffset = elVOffset - ((windowHeight / 2) - (elHeight / 2));
     }
@@ -5858,10 +5867,6 @@ JS9.Display.prototype.center = function(){
     }
     else {
 	hoffset = elHOffset;
-    }
-    // take menubar into account
-    if( this.pluginInstances.JS9Menubar ){
-	voffset -= this.pluginInstances.JS9Menubar.divjq.height() / 2;
     }
     $('html, body').animate({scrollTop: voffset, scrollLeft: hoffset}, speed);
     // allow chaining
@@ -5882,9 +5887,12 @@ JS9.Display.prototype.nextImage = function(inc){
 	}
     }
     // look for next image, wrap if necessary
-    for(curidx=idx+1; curidx!==idx; curidx += inc){
+    for(curidx=idx+inc; curidx!==idx; curidx += inc){
 	if( curidx >= JS9.images.length ){
 	    curidx = 0;
+	}
+	if( curidx < 0 ){
+	    curidx = JS9.images.length - 1;
 	}
 	if( JS9.images[curidx].display === this ){
 	    break;
