@@ -12,24 +12,23 @@
 <h3>Keyboard Actions</h3>
 
 JS9 supports the actions that get executed in response to
-(case-sensitive) keypress events. The initial default actions are defined in
-the <b>JS9.globalOpts.keyboardActions</b> array:
+(case-sensitive) keypress events. The following actions are
+defined in the <b>JS9.globalOpts.keyboardActions</b> array:
 <ul>
-<li><b>b</b>: make selected region a background region
-<li><b>e</b>: make selected region an exclude region
-<li><b>f</b>: toggle full screen mode
-<li><b>i</b>: make selected region an include region
-<li><b>l</b>: list regions
-<li><b>n</b>: display next image
-<li><b>p</b>: copy physical coords to clipboard
-<li><b>s</b>: make selected region a source region
-<li><b>v</b>: copy pixel value to clipboard
-<li><b>w</b>: copy wcs coords to clipboard
+<li><b>b</b>: toggle selected region: source/background
+<li><b>e</b>: toggle selected region: include/exclude
 <li><b>o</b>: open a local FITS file
+<li><b>/</b>: copy wcs position to clipboard
+<li><b>?</b>: copy value and position to clipboard
 <li><b>+</b>: zoom in
 <li><b>-</b>: zoom out
-<li><b>></b>: zoom in
-<li><b><</b>: zoom out
+<li><b>&gt;</b>: display next image
+<li><b>&lt;</b>: display previous image
+<li><b>delete</b>: remove selected region
+<li><b>leftArrow</b>: move selected region
+<li><b>upArrow</b>: move selected region
+<li><b>rightArrow</b>: move selected region
+<li><b>downArrow</b>: move selected region
 </ul>
 You can view the current mapping between keys and actions using
 this <b>Keyboard</b> plugin.
