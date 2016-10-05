@@ -213,7 +213,7 @@ JS9.lightOpts = {
 	plotWin:  "width=830px,height=420px,center=1,resize=1,scrolling=1",
 	dpathWin: "width=830px,height=175px,center=1,resize=1,scrolling=1",
 	paramWin: "width=830px,height=230px,center=1,resize=1,scrolling=1",
-	imageWin: "width=512px,height=590px,center=1,resize=1,scrolling=1",
+	imageWin: "width=512px,height=598px,center=1,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,center=1,resize=1,scrolling=1"
     }
 };
@@ -12913,7 +12913,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
                             "script", "script");
 	}
         // make a body containing the JS9 elements and the preload call
-        body = html || sprintf("<div class='JS9Menubar' id='%sMenubar'></div><div class='JS9' id='%s'></div>", id, id);
+        body = html || sprintf("<div class='JS9Menubar' id='%sMenubar'></div><div class='JS9' id='%s'></div><div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar'></div></div>", id, id, id);
         // combine head and body into a full html file
         html = sprintf("<html><head>%s</head><body", head);
 	if( file ){
@@ -12922,7 +12922,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	}
         html += sprintf(">%s</body></html>\n", body);
         // open the new window
-        win = window.open(null, id, "width=540, height=560");
+        win = window.open(null, id, "width=540, height=605");
         // this is the document associated with the new window
         doc = win.document;
         // open it (not strictly necessary but ...)
