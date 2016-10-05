@@ -2254,8 +2254,8 @@ JS9.Image.prototype.displayImage = function(imode, opts){
     mode.plugins = true;
     // if we have a static RGB image, we skip some steps
     if( this.rgbFile ){
-	imode.colors = false;
-	imode.scaled = false;
+	mode.colors = false;
+	mode.scaled = false;
     }
     // opts are ... optional
     opts = opts || {};
