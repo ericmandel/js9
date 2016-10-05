@@ -698,11 +698,14 @@ JS9.Image.prototype.closeImage = function(){
 			tim.layers[key].canvas.clear();
 		    }
 		}
-		// clear image from display
-		tim.display.image = null;
 	    }
 	    // plugin callbacks
 	    tim.xeqPlugins("image", "onimageclose");
+	    // after callbacks, we can unset the image from the display
+	    if( iscurrent ){
+		// clear image from display
+		tim.display.image = null;
+	    }
 	    // remove from RGB mode, if necessary
 	    switch(tim.cmapObj.name){
 	    case "red":
@@ -5117,6 +5120,8 @@ JS9.Image.prototype.moveToDisplay = function(dname){
     // clear old display first
     this.clearMessage();
     this.display.context.clear();
+    // plugin callbacks
+    this.xeqPlugins("image", "onimageclear");
     // make sure the main layers in the old display are in the new display
     for( key in odisplay.layers ){
 	if( odisplay.layers.hasOwnProperty(key) ){

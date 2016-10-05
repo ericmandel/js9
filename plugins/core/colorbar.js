@@ -40,9 +40,7 @@ JS9.Colorbar.display = function(im){
     }
     // sanity check
     if( !colorBuf ){
-	// clear buffer and return
-	this.ctx.clear();
-	this.textctx.clear();
+	JS9.Colorbar.imageclear(im);
 	return;
     }
     // first line gets colors from main display's rgb array
@@ -220,10 +218,25 @@ JS9.Colorbar.imagedisplay = function(im){
     }
 };
 
+// callback when image is cleared or closed
+JS9.Colorbar.imageclear = function(im){
+    if( im && (im === im.display.image) ){
+	// clear buffers
+	if( this.ctx ){
+	    this.ctx.clear();
+	}
+	if( this.textctx ){
+	    this.textctx.clear();
+	}
+    }
+};
+
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Colorbar.CLASS, JS9.Colorbar.NAME, JS9.Colorbar.init,
 		   {menuItem: "Colorbar",
 		    onimagedisplay: JS9.Colorbar.imagedisplay,
+		    onimageclear: JS9.Colorbar.imageclear,
+		    onimageclose: JS9.Colorbar.imageclear,
 		    help: "help/colorbar.html",
 		    winTitle: "Colorbar",
 		    winDims: [JS9.Colorbar.WIDTH, JS9.Colorbar.HEIGHT]});
