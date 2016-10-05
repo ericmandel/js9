@@ -5137,7 +5137,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 	if( this.layers.hasOwnProperty(key) ){
 	    layer = this.layers[key];
 	    dlayer = ndisplay.layers[key];
-	    if( dlayer && (dlayer.dtype === "main") ){
+	    if( dlayer ){
 		if( ndisplay.image ){
 		    ndisplay.image.showShapeLayer(key, false);
 		}

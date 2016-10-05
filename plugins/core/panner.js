@@ -350,12 +350,13 @@ JS9.Panner.zoom = function(im, zval){
     return im;
 };
 
-// close the panner
-JS9.Panner.close = function(im){
+// clear the panner
+JS9.Panner.clear = function(im){
     var panner = im.display.pluginInstances.JS9Panner;
     if( panner && (im === im.display.image) ){
 	panner.context.clear();
 	im.removeShapes("panner", "all");
+	im.panner.boxid = null;
     }
     return im;
 };
@@ -367,7 +368,8 @@ JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
 		    toolbarHTML: JS9.Panner.HTML,
 		    onplugindisplay: JS9.Panner.display,
 		    onimagedisplay: JS9.Panner.display,
-		    onimageclose: JS9.Panner.close,
+		    onimageclose: JS9.Panner.clear,
+		    onimageclear: JS9.Panner.clear,
 		    winTitle: "Panner",
 		    winDims: [JS9.Panner.WIDTH,  JS9.Panner.HEIGHT],
 		    divArgs: [JS9.Panner.SWIDTH, JS9.Panner.SHEIGHT]});
