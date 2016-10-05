@@ -42,6 +42,7 @@ JS9.Colorbar.display = function(im){
     if( !colorBuf ){
 	// clear buffer and return
 	this.ctx.clear();
+	this.textctx.clear();
 	return;
     }
     // first line gets colors from main display's rgb array
