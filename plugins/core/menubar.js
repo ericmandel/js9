@@ -266,7 +266,7 @@ JS9.Menubar.init = function(width, height){
 				if( uim.raw.header ){
 				    uim.displayAnalysis("text",
 						   JS9.raw2FITS(uim.raw, true),
-						   "FITS Header: "+uim.id);
+						   {title: "FITS Header: "+uim.id});
 				} else {
 				    JS9.error("no FITS header for " + uim.id);
 				}
@@ -277,8 +277,8 @@ JS9.Menubar.init = function(width, height){
 				if( uim.hdus ){
 				    uim.displayAnalysis("text",
 						   JS9.hdus2Str(uim.hdus),
-						   "FITS HDUs: "+uim.id,
-				    "width=800px,height=200px,center=1,resize=1,scrolling=1");
+						   {title: "FITS HDUs: "+uim.id,
+						    winformat: "width=800px,height=200px,center=1,resize=1,scrolling=1"});
 				} else {
 				    JS9.error("no FITS header for " + uim.id);
 				}
@@ -308,13 +308,13 @@ JS9.Menubar.init = function(width, height){
 				      null,
 				      "textline",
 				      JS9.allinone.loadCorsHTML,
-				      "Open a shared CORS link");
+				      {title: "Open a shared CORS link"});
 			    } else {
 				did = JS9.Image.prototype.displayAnalysis.call(
 				      null,
 				      "textline",
 				      JS9.InstallDir(JS9.globalOpts.corsURL),
-				      "Open a shared CORS link");
+				      {title: "Open a shared CORS link"});
 			    }
 			    // save display id
 			    $(did).data("dispid", udisp.id);
@@ -328,7 +328,7 @@ JS9.Menubar.init = function(width, height){
 			    did = JS9.Image.prototype.displayAnalysis.call(null,
 				     "textline",
 				     JS9.InstallDir(JS9.globalOpts.proxyURL),
-				     "Open a link via server proxy");
+				     {title: "Open a link via server proxy"});
 			    // save info for running the task
 			    $(did).data("dispid", udisp.id)
 				  .data("aname", "loadproxy");
@@ -369,8 +369,8 @@ JS9.Menubar.init = function(width, height){
 			    did = JS9.Image.prototype.displayAnalysis.call(null,
 				"params",
 				JS9.InstallDir(JS9.globalOpts.imsectionURL),
-				"Extract Image Section From a 'Parent' File",
-	                        "width=440px,height=230px,center=1,resize=1,scrolling=1");
+				{title: "Extract Image Section From a 'Parent' File",
+	                        winformat: "width=440px,height=230px,center=1,resize=1,scrolling=1"});
 			    // save info for running the task
 			    $(did).data("dispid", udisp.id)
 				  .data("aname", "imsection");
@@ -1565,7 +1565,7 @@ JS9.Menubar.init = function(width, height){
 				});
 				did = uim.displayAnalysis("textline",
 					 JS9.InstallDir(JS9.analOpts.dpathURL),
-					 "Data Path for Drag and Drop");
+					 {title: "Data Path for Drag and Drop"});
 				// save display id
 				$(did).data("dispid", udisp.id);
 				break;
@@ -1578,8 +1578,8 @@ JS9.Menubar.init = function(width, height){
 				    if( a.purl ){
 					did = uim.displayAnalysis("params",
 						  JS9.InstallDir(a.purl),
-						  a.title+": "+uim.fitsFile,
-						  a.pwin);
+						  {title: a.title+": "+uim.fitsFile,
+						  winformat: a.pwin});
 					// save info for running the task
 					$(did).data("dispid", udisp.id)
 				              .data("aname", a.name);

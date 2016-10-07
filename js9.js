@@ -3597,7 +3597,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
     // make up title, if necessary
     title = opts.title || "";
     if( this && !title ){
-	titlefile = (this.fitsFile || this.id);
+	titlefile = (this.fitsFile || this.id || "");
 	titlefile = titlefile.split("/").reverse()[0];
 	title = "AnalysisResults: " + titlefile;
 	// add display to title
