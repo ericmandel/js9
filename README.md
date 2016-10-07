@@ -79,7 +79,7 @@ What's the license?
 
 JS9 is distributed under the terms of The MIT License.
 
-Who is responsible?
+Who's responsible?
 -------------------
 
 Eric Mandel, Alexey Vikhlinin
