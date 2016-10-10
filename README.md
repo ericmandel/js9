@@ -54,10 +54,13 @@ So, in principle, there is no need to install anything: just use the
 [JS9 web site](http://js9.si.edu)
 to view your FITS images. Simply drag and drop an image onto the JS9 display.
 
-Obviously, more flexibility is available if you download JS9.
-For full installation instructions, start with help/install.html. But
-really, just clone or download the JS9 source, display the js9.html page
-in your browser, and drag and drop a FITS file onto the JS9 display.
+Obviously, more flexibility is available if you download JS9: you can
+craft your own web pages, configure default values, add your own
+analysis tasks, etc. For full installation instructions, start with
+the [JS9 install page](http://js9.si.edu/js9/help/install.html). But
+really, you can just clone or download the JS9 source, display the
+js9.html page in your browser, and drag and drop a FITS file onto the
+JS9 display.
 
 You can extend JS9 using the Plugin facility in combination with the
 JS9 Public API. For example, you can perform browser-based analysis on
