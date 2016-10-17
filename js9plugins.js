@@ -143,18 +143,18 @@
 	    <p>											\
 												\
 	    <table width="98%">									\
-	    <tr><td> Object: </td> <td> <input type=text name=object size=10> </td>		\
+	    <tr><td> Object: </td> <td> <input type=text name=object size=11> </td>		\
 		<td></td>									\
 		<td></td>									\
 		<td>&nbsp;&nbsp;</td>								\
 		<td> <input type=checkbox name=gzip> Use Compression</td>			\
 	    </tr>										\
-	    <tr><td> RA:  	</td><td>	<input type=text name=ra	size=10> </td>	\
-		<td> Dec: 	</td><td>	<input type=text name=dec	size=10> </td>	\
+	    <tr><td> RA:  	</td><td>	<input type=text name=ra	size=11> </td>	\
+		<td> Dec: 	</td><td>	<input type=text name=dec	size=11> </td>	\
 		<td></td>									\
 		<td> <input type=checkbox name=CORS checked> Use CORS Proxy</td>		\
-	    <tr><td> Width: </td><td>	<input type=text name=width	size=10 value=15> </td>	\
-		<td> Height: </td><td>	<input type=text name=height	size=10 value=15> </td>	\
+	    <tr><td> Width: </td><td>	<input type=text name=width	size=11 value=15> </td>	\
+		<td> Height: </td><td>	<input type=text name=height	size=11 value=15> </td>	\
 	    </tr>										\
 	    </table>										\
 	    <div class=controls></div>								\
