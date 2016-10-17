@@ -458,7 +458,6 @@ JS9.Menubar.init = function(width, height){
 		var i, plugin, pname, pinst, key;
 		var lastxclass="";
 		var n = 0;
-		var nkey = 0;
 		var items = {};
 		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
@@ -522,26 +521,7 @@ JS9.Menubar.init = function(width, height){
 			}
 		    }
 		}
-		// layers
 		items["sep" + n++] = "------";
-		if( tim ){
-		    for( key in tim.layers ){
-			if( tim.layers.hasOwnProperty(key) ){
-			    if( tim.layers[key].dlayer.dtype === "main" ){
-				nkey++;
-				items[key] = {name: key};
-				if( tim.layers[key].show ){
-				    items[key].icon = "sun";
-				}
-			    }
-			}
-		    }
-		    if( nkey > 1 ){
-			items.hide = {name: "HideAll"};
-			items.show = {name: "ShowAll"};
-			items["sep" + n++] = "------";
-		    }
-		}
 		items.valpos = {name: "display value/position"};
 		// disable if we don't have info plugin
 		if( !JS9.hasOwnProperty("Info") ){

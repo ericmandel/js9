@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.10, Tue Oct 11 08:33:22 EDT 2016 */
+/* JS9 allinone: v1.10, Mon Oct 17 09:16:30 EDT 2016 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -748,6 +748,36 @@ div.JS9KeyboardHeader, div.JS9KeyboardFooter {
     margin-right: 5px;
     margin-bottom: 0px;
     border: 1px solid transparent;
+}
+div.JS9LayersContainer {
+    padding: 2px;
+}
+
+div.JS9LayersHeader {
+    border: 0px solid black;
+    background: #E9E9E9;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+}
+
+div.JS9LayersLayer {
+    margin: 5px;
+    background: #E9E9E9;
+    overflow: auto;
+    padding: 9px;
+    border: 1px solid black;
+}
+
+span.JS9LayersSpan {
+    float: right;
+    margin-right: 10px;
+}
+
+span.JS9NoLayers {
+    margin-left: 15px;
 }
 .JS9MefContainer {
     padding: 10px;

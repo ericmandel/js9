@@ -1,0 +1,30 @@
+div.JS9LayersContainer {
+    padding: 2px;
+}
+
+div.JS9LayersHeader {
+    border: 0px solid black;
+    background: #E9E9E9;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+}
+
+div.JS9LayersLayer {
+    margin: 5px;
+    background: #E9E9E9;
+    overflow: auto;
+    padding: 9px;
+    border: 1px solid black;
+}
+
+span.JS9LayersSpan {
+    float: right;
+    margin-right: 10px;
+}
+
+span.JS9NoLayers {
+    margin-left: 15px;
+}

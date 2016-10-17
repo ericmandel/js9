@@ -33,9 +33,9 @@ JS9.HEIGHT = 512;		// height of js9 canvas
 JS9.ANON = "Anonymous";		// name to use for images with no name
 JS9.PREFSFILE = "js9Prefs.json";// prefs file to load
 JS9.ZINDEX = 0;			// z-index of image canvas: on bottom of js9
-JS9.SHAPEZINDEX = 7;		// z-index of 2d graphics (regions is +2)
+JS9.SHAPEZINDEX = 4;		// base z-index of shape layers layers
 JS9.MESSZINDEX = 8;		// z-index of messages: above graphics
-JS9.BTNZINDEX = 10;		// z-index of buttons on top of plugin canvases
+JS9.BTNZINDEX = 12;		// z-index of buttons on top of plugin canvases
 JS9.MENUZINDEX = 1000;		// z-index of menus: always on top!
 JS9.COLORSIZE = 1024;		// size of contrast/biased color array
 JS9.SCALESIZE = 16384;		// size of scaled color array
@@ -6301,8 +6301,7 @@ JS9.Fabric.opts = {
     // minimizes the jump when first changing the region size
     padding: 0,
     canvas: {
-	selection: true,
-	zindex: JS9.SHAPEZINDEX
+	selection: true
     },
     fill: "transparent"
 };
@@ -6396,7 +6395,6 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     if( dlayer.opts.canvas.selection === undefined ){
 	dlayer.opts.canvas.selection = true;
     }
-    dlayer.opts.canvas.zindex = dlayer.opts.canvas.zindex || JS9.SHAPEZINDEX;
     // additional fabric elements to save using toJSON
     dlayer.el = JS9.Fabric.elements;
     // create container div and append to target
@@ -6694,7 +6692,7 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 		// redisplay this layer
 		canvas.renderAll();
 		canvas.selection = layer.opts.canvas.selection;
-		zindex = dlayer.opts.canvas.zindex;
+		zindex = layer.zindex;
 		dlayer.divjq.css("z-index", zindex);
 		// unselect selected objects in lower-zindex groups
 		for( key in that.layers ){
@@ -6745,6 +6743,12 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 	if( mode === "hide" ){
 	    layer.show = false;
 	}
+    }
+    // plugin callbacks
+    if( (mode === "show") || (mode === true) ){
+	this.xeqPlugins("shape", "onshapelayershow", layerName);
+    } else {
+	this.xeqPlugins("shape", "onshapelayerhide", layerName);
     }
     return this;
 };
@@ -6812,6 +6816,30 @@ JS9.Fabric.getShapeLayer = function(layerName, opts){
     }
     // return layer
     return layer;
+};
+
+// use zindex to make specified shape layer the active layer
+// call using image context
+JS9.Fabric.activeShapeLayer = function(layerName){
+    var key;
+    var zindex0 = JS9.SHAPEZINDEX;
+    // sanity check
+    if( !this.layers || !layerName || !this.layers[layerName] ){
+	return null;
+    }
+    for( key in this.display.layers ){
+	if( this.display.layers.hasOwnProperty(key) ){
+	    if( this.layers[key] ){
+		if( key === layerName ){
+		    this.layers[key].zindex = zindex0 + 1;
+		} else {
+		    this.layers[key].zindex = zindex0;
+		}
+		this.display.layers[key].divjq.css("z-index",
+						   this.layers[key].zindex);
+	    }
+	}
+    }
 };
 
 // process options, separating into fabric opts and paramsJ
@@ -7264,10 +7292,11 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
     // once a shape has been added, we can set the zindex to process events
     if( !canvas.size() ){
 	dlayer = this.display.layers[layerName];
-	if( layerName === "regions" ){
-	    dlayer.opts.canvas.zindex++;
+	if( dlayer.opts.canvas.selection ){
+	    this.activeShapeLayer(layerName);
 	}
-	dlayer.divjq.css("z-index", dlayer.opts.canvas.zindex);
+	// we can now call the shape layer create plugin callbacks
+	this.xeqPlugins("shape", "onshapelayercreate", layerName);
     }
     // baseline opts
     bopts = $.extend(true, {}, JS9.Fabric.opts, layer.opts, myopts);
@@ -8404,6 +8433,7 @@ JS9.Fabric.initGraphics = function(){
     // shape layer methods
     JS9.Image.prototype.getShapeLayer = JS9.Fabric.getShapeLayer;
     JS9.Image.prototype.showShapeLayer = JS9.Fabric.showShapeLayer;
+    JS9.Image.prototype.activeShapeLayer = JS9.Fabric.activeShapeLayer;
     JS9.Image.prototype.displayShapeLayers = JS9.Fabric.displayShapeLayers;
     // print method which know about shapes
     JS9.Image.prototype.print = JS9.Fabric.print;
@@ -8912,11 +8942,6 @@ JS9.Regions.NAME = "Regions";
 
 // defaults for new regions
 JS9.Regions.opts = {
-    // default overrides: regions above other shapes
-    // canvas options
-    canvas: {
-	zindex: JS9.SHAPEZINDEX + 2
-    },
     // pan and zoom enabled
     panzoom: true,
     tags: "source,include",
@@ -12547,6 +12572,7 @@ JS9.mkPublic("SetWCS", "setWCS");
 JS9.mkPublic("GetWCSSys", "getWCSSys");
 JS9.mkPublic("SetWCSSys", "setWCSSys");
 JS9.mkPublic("ShowShapeLayer", "showShapeLayer");
+JS9.mkPublic("ActiveShapeLayer", "activeShapeLayer");
 JS9.mkPublic("AddShapes", "addShapes");
 JS9.mkPublic("RemoveShapes", "removeShapes");
 JS9.mkPublic("GetShapes", "getShapes");

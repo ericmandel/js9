@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head> 
+<style type="text/css">
+  .container{
+    padding: 10px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+<h3>JS9 Shape Layers</h3>
+
+<p>
+JS9 supports individual layers for drawing 2D graphics. The regions
+layer is a special case of a shape layer, created automatically by
+JS9. The Catalog Plugin creates a separate layer for each catalog.
+You can define your own shape layer using the <b>NewShapeLayer()</b>
+public routine, and then add geometric shapes to it.
+
+<p>
+For a given image, one shape layer at a time is <b>active</b>,
+responding to mouse and touch events. Ordinarily, a shape layer
+becomes the active layer when it is first created and shapes are
+added to it. Thus, the first time you create a region, the regions
+layer becomes active. If you then load a catalog into a catalog layer,
+that layer becomes active.
+
+<p>
+The Shape Layers plugin displays the layers defined for the current
+image and allows you to turn on and off the display of any layer.  It
+also allows you to make a layer active by moving that layer to the top
+of the layer stack.
+</div>
+</body>
+</html>

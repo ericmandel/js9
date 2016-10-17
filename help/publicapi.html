@@ -2134,6 +2134,29 @@ example, if you have several catalogs loaded into a display and
 want to view one at a time.
 
 <p>
+<font size="+1"><b><u>Make the specified shape layer the active layer</u></b></font>
+<p>
+<code><font size="+1">JS9.ActiveShapeLayer(layer)</font></code>
+<p>
+where:
+<ul>
+<li><b>layer</b>: name of layer
+</ul>
+For a given image, one shape layer at a time is <b>active</b>,
+responding to mouse and touch events. Ordinarily, a shape layer
+becomes the active layer when it is first created and shapes are
+added to it. Thus, the first time you create a region, the regions
+layer becomes active. If you then load a catalog into a catalog layer,
+that layer becomes active.
+
+<p>
+The <b>JS9.ActiveShapeLayer()</b> routine allows you to make the
+specified layer active, so that it will respond to mouse and touch
+events.  This routine forms the basis for the <b>Shape Layer</b>
+plugin, which provides a graphical way to make a layer active: by
+moving the layer to the top of the layer stack.
+
+<p>
 <font size="+1"><b><u>Add one or more shapes to the specified layer</u></b></font>
 <p>
 <code><font size="+1">JS9.AddShapes(layer, sarr, opts)</font></code>
