@@ -2415,7 +2415,7 @@ JS9.Cube.init = function(opts){
 	}
 	this.lastimage = im;
     } else {
-	    s = "<p><center>FITS cube processing will go here</center>";
+	    s = "<p><center>FITS cube processing will appear here.</center>";
     }
     // clear out old html
     this.divjq.html("");
@@ -2615,7 +2615,7 @@ JS9.Imarith.init = function(opts){
 						 mopts);
 	this.lastimage = im;
     } else {
-	s = "<p><center>image arithmetic will appear here</center>";
+	s = "<p><center>Image arithmetic will appear here.</center>";
     }
     // clear out old html
     this.divjq.html("");

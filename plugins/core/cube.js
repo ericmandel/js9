@@ -313,7 +313,7 @@ JS9.Cube.init = function(opts){
 	}
 	this.lastimage = im;
     } else {
-	    s = "<p><center>FITS cube processing will go here</center>";
+	    s = "<p><center>FITS cube processing will appear here.</center>";
     }
     // clear out old html
     this.divjq.html("");

@@ -170,7 +170,7 @@ JS9.Imarith.init = function(opts){
 						 mopts);
 	this.lastimage = im;
     } else {
-	s = "<p><center>image arithmetic will appear here</center>";
+	s = "<p><center>Image arithmetic will appear here.</center>";
     }
     // clear out old html
     this.divjq.html("");
