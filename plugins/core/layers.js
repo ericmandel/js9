@@ -65,13 +65,18 @@ JS9.Layers.addLayer = function(im, layer){
     var l, s, id, divjq, zindex, added;
     var cls = JS9.Layers.BASE + "Layer";
     var opts = [];
-    if( !im || !layer || !im.layers[layer] ){
+    // sanity checks
+    if( !im || !layer || !im.layers[layer] ||
+	(im.layers[layer].dlayer.dtype !== "main") ){
 	return;
     }
-    zindex = parseInt(im.display.layers[layer].divjq.css("z-index"), 10);
+    // first time through, clear html
     if( !this. nlayer ){
 	this.layersLayerContainer.html("");
     }
+    // get current z-index
+    zindex = parseInt(im.display.layers[layer].divjq.css("z-index"), 10);
+    // getunique id for this layer
     id = JS9.Layers.imid(im, layer);
     // value to pass to the macro expander
     opts.push({name: "imid", value: im.id});
