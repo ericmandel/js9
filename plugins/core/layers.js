@@ -46,7 +46,7 @@ JS9.Layers.xvisible = function(id, layer, target){
 	im.showShapeLayer(layer, mode);
 	// if hiding the currently active layer, make another one active
 	if( mode === "hide" ){
-	    pinst = im.display.pluginInstances.JS9Layers;
+	    pinst = im.display.pluginInstances[JS9.Layers.BASE];
 	    order = pinst.layersLayerContainer.sortable("toArray");
 	    for(i=0; i<order.length; i++){
 		// activate first shown layer in the list
