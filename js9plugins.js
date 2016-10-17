@@ -2149,6 +2149,7 @@ JS9.Cube.doSlice = function(im, slice, elarr){
 	$(elarr[i]).val(slice);
     }
     s = im.expandMacro(plugin.slice, [{name: "slice", value: slice}]);
+    plugin.sval = slice;
     im.displaySlice(s, opts);
 };
 
@@ -2192,7 +2193,7 @@ JS9.Cube.xnext = function(id, target){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval + 1;
 	s = "NAXIS" + plugin.sidx;
-	if( slice >  im.raw.header[s] ){
+	if( slice > im.raw.header[s] ){
 	    slice = 1;
 	}
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
@@ -2307,10 +2308,22 @@ JS9.Cube.xrate = function(id, target){
     }
 };
 
+// re-init when a different image is displayed
+JS9.Cube.display = function(){
+    if( this.lastimage !== this.display.image ){
+	JS9.Cube.init.call(this);
+    }
+};
+
+// clear when an image closes
+JS9.Cube.close = function(){
+    // ensure that plugin display is reset
+    JS9.Cube.init.call(this, {mode: "clear"});
+};
+
 // constructor: add HTML elements to the plugin
-JS9.Cube.init = function(){
-    var i, s, im, arr;
-    var opts = [];
+JS9.Cube.init = function(opts){
+    var i, s, im, arr, mopts;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -2318,6 +2331,8 @@ JS9.Cube.init = function(){
     // this.display:  the display object associated with this plugin
     // this.dispMode: display mode (for internal use)
     //
+    // opts is optional
+    opts = opts || {};
     // set width and height of plugin itself
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
@@ -2339,7 +2354,7 @@ JS9.Cube.init = function(){
     }
     // do we have an image?
     im = this.display.image;
-    if( im ){
+    if( im && (opts.mode !== "clear") ){
 	if( im.slice ){
 	    this.slice = im.slice.replace(/[0-9][0-9]*/,"$slice");
 	    arr = im.slice.split(/[ ,:]/);
@@ -2367,36 +2382,38 @@ JS9.Cube.init = function(){
 	    delete this.blinkMode;
 	}
 	if( im.raw.header.NAXIS > 2 ){
-	    opts.push({name: "header",  value: JS9.Cube.headerHTML});
-	    opts.push({name: "range", 
+	    mopts = [];
+	    mopts.push({name: "header",  value: JS9.Cube.headerHTML});
+	    mopts.push({name: "range",
 		       value: sprintf(JS9.Cube.rangeHTML,
 				      this.smax, this.sval, im.id, this.smax)});
-	    opts.push({name: "value", 
+	    mopts.push({name: "value",
 		       value: sprintf(JS9.Cube.valueHTML, 
 				      this.smax, this.sval, im.id)});
-	    opts.push({name: "first", 
+	    mopts.push({name: "first",
 		       value: sprintf(JS9.Cube.firstHTML, im.id)});
-	    opts.push({name: "next",
+	    mopts.push({name: "next",
 		       value: sprintf(JS9.Cube.nextHTML, im.id)});
-	    opts.push({name: "prev",
+	    mopts.push({name: "prev",
 		       value: sprintf(JS9.Cube.prevHTML, im.id)});
-	    opts.push({name: "last",
+	    mopts.push({name: "last",
 		       value: sprintf(JS9.Cube.lastHTML, im.id)});
-	    opts.push({name: "blink",
+	    mopts.push({name: "blink",
 		       value: sprintf(JS9.Cube.blinkHTML, im.id)});
-	    opts.push({name: "stop",
+	    mopts.push({name: "stop",
 		       value: sprintf(JS9.Cube.stopHTML, im.id)});
-	    opts.push({name: "extname",
+	    mopts.push({name: "extname",
 		       value: sprintf(JS9.Cube.extnameHTML, 
 				      im.raw.header.EXTNAME || "")});
-	    opts.push({name: "order",
+	    mopts.push({name: "order",
 		       value: sprintf(JS9.Cube.orderHTML, im.id)});
-	    opts.push({name: "rate",
+	    mopts.push({name: "rate",
 		       value: sprintf(JS9.Cube.rateHTML, im.id)});
- 	    s = im.expandMacro(JS9.Cube.cubeHTML, opts);
+	    s = im.expandMacro(JS9.Cube.cubeHTML, mopts);
 	} else {
 	    s = "<p><center>This image is not a FITS data cube.</center>";
 	}
+	this.lastimage = im;
     } else {
 	    s = "<p><center>FITS cube processing will go here</center>";
     }
@@ -2421,7 +2438,8 @@ JS9.RegisterPlugin(JS9.Cube.CLASS, JS9.Cube.NAME, JS9.Cube.init,
 		   {menuItem: "Data Cube",
 		    onplugindisplay: JS9.Cube.init,
 		    onimageload: JS9.Cube.init,
-		    onimagedisplay: JS9.Cube.init,
+		    onimagedisplay: JS9.Cube.display,
+		    onimageclose: JS9.Cube.close,
 		    help: "help/cube.html",
 		    winTitle: "FITS Data Cubes",
 		    winDims: [JS9.Cube.WIDTH, JS9.Cube.HEIGHT]});
