@@ -2540,11 +2540,23 @@ JS9.Imarith.xreset = function(id, target){
     }
 };
 
+// init when a different image is displayed
+JS9.Imarith.display = function(){
+    if( this.lastimage !== this.display.image ){
+	JS9.Imarith.init.call(this);
+    }
+};
+
+// clear when an image closes
+JS9.Imarith.close = function(){
+    // ensure that plugin display is reset
+    JS9.Imarith.init.call(this, {mode: "clear"});
+};
+
 // constructor: add HTML elements to the plugin
-JS9.Imarith.init = function(){
-    var i, s, im, tim;
+JS9.Imarith.init = function(opts){
+    var i, s, im, tim, mopts;
     var images = "";
-    var opts = [];
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -2552,6 +2564,8 @@ JS9.Imarith.init = function(){
     // this.display:  the display object associated with this plugin
     // this.dispMode: display mode (for internal use)
     //
+    // opts is optional
+    opts = opts || {};
     // set width and height of plugin itself
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
@@ -2577,7 +2591,7 @@ JS9.Imarith.init = function(){
     delete this.num;
     // do we have an image?
     im = this.display.image;
-    if( im ){
+    if( im && (opts.mode !== "clear") ){
 	// make the last one
 	this.lastim = im.id;
 	// get list of images that can be operands (other than this one)
@@ -2589,15 +2603,17 @@ JS9.Imarith.init = function(){
 	    }
 	}
 	// create the html for this image
-	opts.push({name: "images", value: images});
-	opts.push({name: "imid", value: im.id});
-	opts.push({name: "op", value: sprintf(JS9.Imarith.opHTML, im.id)});
-	opts.push({name: "arg1", value: sprintf(JS9.Imarith.arg1HTML, im.id, images)});
-	opts.push({name: "num", value: sprintf(JS9.Imarith.numHTML, im.id)});
-	opts.push({name: "run", value: sprintf(JS9.Imarith.runHTML, im.id)});
-	opts.push({name: "reset", value: sprintf(JS9.Imarith.resetHTML,im.id)});
+	mopts = [];
+	mopts.push({name: "images", value: images});
+	mopts.push({name: "imid", value: im.id});
+	mopts.push({name: "op", value: sprintf(JS9.Imarith.opHTML, im.id)});
+	mopts.push({name: "arg1", value: sprintf(JS9.Imarith.arg1HTML, im.id, images)});
+	mopts.push({name: "num", value: sprintf(JS9.Imarith.numHTML, im.id)});
+	mopts.push({name: "run", value: sprintf(JS9.Imarith.runHTML, im.id)});
+	mopts.push({name: "reset", value: sprintf(JS9.Imarith.resetHTML,im.id)});
  	s = JS9.Image.prototype.expandMacro.call(im, JS9.Imarith.imageHTML,
-						 opts);
+						 mopts);
+	this.lastimage = im;
     } else {
 	s = "<p><center>image arithmetic will appear here</center>";
     }
@@ -2619,7 +2635,8 @@ JS9.RegisterPlugin(JS9.Imarith.CLASS, JS9.Imarith.NAME, JS9.Imarith.init,
 		   {menuItem: "Imarith",
 		    onplugindisplay: JS9.Imarith.init,
 		    onimageload: JS9.Imarith.init,
-		    onimagedisplay: JS9.Imarith.init,
+		    onimagedisplay: JS9.Imarith.display,
+		    onimageclose: JS9.Imarith.close,
 		    help: "help/imarith.html",
 		    winTitle: "Image Arithmetic",
 		    winDims: [JS9.Imarith.WIDTH, JS9.Imarith.HEIGHT]});
