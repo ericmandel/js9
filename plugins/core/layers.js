@@ -119,8 +119,21 @@ JS9.Layers.addLayer = function(im, layer){
     this.nlayer++;
 };
 
+// init when a different image is displayed
+JS9.Layers.display = function(){
+    if( this.lastimage !== this.display.image ){
+	JS9.Layers.init.call(this);
+    }
+};
+
+// clear when an image closes
+JS9.Layers.close = function(){
+    // ensure that plugin display is reset
+    JS9.Layers.init.call(this, {mode: "clear"});
+};
+
 // constructor: add HTML elements to the plugin
-JS9.Layers.init = function(){
+JS9.Layers.init = function(opts){
     var key, im;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -129,6 +142,8 @@ JS9.Layers.init = function(){
     // this.display:  the display object associated with this plugin
     // this.dispMode: display mode (for internal use)
     //
+    // opts is optional
+    opts = opts || {};
     // create container to hold layer container and header
     // clean main container
     this.divjq.html("");
@@ -154,6 +169,10 @@ JS9.Layers.init = function(){
 	.attr("id", this.id + "LayersLayerContainer")
         .html(JS9.Layers.nolayersHTML)
 	.appendTo(this.layersContainer);
+    // done if we are only clearing
+    if( opts.mode === "clear" ){
+	return;
+    }
     // add current shape layers
     if( this.display.image ){
 	im = this.display.image;
@@ -162,6 +181,7 @@ JS9.Layers.init = function(){
 		JS9.Layers.addLayer.call(this, im, key);
 	    }
 	}
+	this.lastimage = im;
     }
     // the layers within the layer container will be sortable
     // the top one responds to events
@@ -188,8 +208,8 @@ JS9.RegisterPlugin(JS9.Layers.CLASS, JS9.Layers.NAME, JS9.Layers.init,
 		    onshapelayershow: JS9.Layers.init,
 		    onshapelayerhide: JS9.Layers.init,
 		    onimageload: JS9.Layers.init,
-		    onimagedisplay: JS9.Layers.init,
-		    onimageclose: JS9.Layers.init,
+		    onimagedisplay: JS9.Layers.display,
+		    onimageclose: JS9.Layers.close,
 		    help: "help/layers.html",
 		    winTitle: "Shapes Layers",
 		    winResize: true,
