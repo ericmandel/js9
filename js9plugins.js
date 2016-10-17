@@ -253,17 +253,17 @@ function CatalogService(params) {
 	switch ( shape ) {
 	 case "box":
 	    sizefunc = function(row) {
-		    return { width: 5, height: 5 };
+		    return { width: 7, height: 7 };
 		};
 	    break;
 	 case "circle":
 	    sizefunc = function(row) {
-		    return { radius: 2.5 };
+		    return { radius: 3.5};
 		};
 	    break;
 	 case "ellipse":
 	    sizefunc = function(row) {
-		    return { width: 5, height: 5 };
+		    return { width: 7, height: 7 };
 		};
 	    break;
 	}
@@ -280,6 +280,7 @@ function CatalogService(params) {
 			, x: pos.x, y: pos.y
 			, width: siz.width, height: siz.height, radius: siz.radius
 			, angle: 0
+		        , data: {ra: table.data[i][xcol]*15, dec: table.data[i][ycol]}
 		};
 
 	    regs[j++] = reg;
@@ -300,13 +301,15 @@ function CatalogService(params) {
 	var reply = xhr({ url: url, title: "Catalog", status: messages, CORS: values.CORS }, function(e) {
 	    var table = new Starbase(reply.responseText, { type: { default: strtod }, units: values.units });
 	    var im    = JS9.GetImage({display: values.display});
+	    var gopts = $.extend(true, {}, JS9.Catalogs.opts, {tooltip: "$xreg.data.ra $xreg.data.dec"});
+	    var opts = {color: "yellow"};
 
-	    JS9.NewShapeLayer(values.name, JS9.Catalogs.opts, {display: im});
+	    JS9.NewShapeLayer(values.name, gopts, {display: im});
 	    JS9.RemoveShapes(values.name, {display: im});
 
 	    var shapes = catalog.table2cat(im, table);
 
-	    JS9.AddShapes(values.name, shapes, {color: "yellow"}, {display: im});
+	    JS9.AddShapes(values.name, shapes, opts, {display: im});
 	});
     };
 }
@@ -376,7 +379,7 @@ var CatalogService = require("./catalog-service");
 		    values.name = values.source + "@" + this.text;
 		}
 
-	    , shape: "circle"
+	    , shape: "box"
 	    , xcol:  "_RAJ2000", ycol: "_DEJ2000"
 	
 	});
