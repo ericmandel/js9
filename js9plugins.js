@@ -3716,8 +3716,21 @@ JS9.Mef.activeExtension = function(im, i){
     }
 };
 
+// re-init when a different image is displayed
+JS9.Mef.display = function(){
+    if( this.lastimage !== this.display.image ){
+	JS9.Mef.init.call(this);
+    }
+};
+
+// clear when an image closes
+JS9.Mef.close = function(){
+    // ensure that plugin display is reset
+    JS9.Mef.init.call(this, {mode: "clear"});
+};
+
 // constructor: add HTML elements to the plugin
-JS9.Mef.init = function(){
+JS9.Mef.init = function(opts){
     var i, im, id, clas, obj, s, sid, div, htmlString, classbase;
     var that = this;
     var addExt = function(o, s, k){
@@ -3778,6 +3791,8 @@ JS9.Mef.init = function(){
     // this.display:  the display object associated with this plugin
     // this.dispMode: display mode (for internal use)
     //
+    // opts is optional
+    opts = opts || {};
     // allow scrolling on the plugin
     this.divjq.addClass("JS9PluginScrolling");
     // clean main container
@@ -3792,14 +3807,15 @@ JS9.Mef.init = function(){
 	this.separate = false;
     }
     im  = this.display.image;
-    if( !im ){
+    if( !im || (opts.mode === "clear") ){
 	this.mefContainer.html("<p><center>FITS HDU extensions will be displayed here.</center>");
 	return;
     }
     if( !im.hdus ){
-	this.mefContainer.html("<p><center>FITS HDU extensions are not present in this image.</center>");
+	this.mefContainer.html("<p><center>No FITS HDU extensions are present in this image.</center>");
 	return;
     }
+    this.lastimage = im;
     // reset main container
     s = sprintf("<div class='%s'><span><b>Click on a FITS HDU extension to display it:</b></span>", JS9.Mef.BASE + "Header");
     // add the checkbox for displaying each extension separately
@@ -3825,7 +3841,8 @@ JS9.RegisterPlugin(JS9.Mef.CLASS, JS9.Mef.NAME, JS9.Mef.init,
 		    help: "help/mef.html",
 		    onplugindisplay: JS9.Mef.init,
 		    onimageload: JS9.Mef.init,
-		    onimagedisplay: JS9.Mef.init,
+		    onimagedisplay: JS9.Mef.display,
+		    onimageclose: JS9.Mef.close,
 		    winTitle: "Multi-Extension FITS",
 		    winResize: true,
 		    winDims: [JS9.Mef.WIDTH, JS9.Mef.HEIGHT]});
