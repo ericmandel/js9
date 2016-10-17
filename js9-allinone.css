@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.10, Mon Oct 17 09:16:30 EDT 2016 */
+/* JS9 allinone: v1.10, Mon Oct 17 18:15:23 EDT 2016 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -1160,6 +1160,8 @@ input:focus.JS9CmdIn {
     background: #E9E9E9;
     padding: 10px;
     border: 0px;
+    font-family: Helvetica, sans-serif;
+    font-size: 10pt;
     display: none;
 }
 

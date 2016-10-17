@@ -10934,11 +10934,11 @@ CanvasRenderingContext2D.prototype.clear =
 // create a tooltip, with the tip formatted from a string containing
 // variables in the current context, e.g. "$im.id\n$xreg.imstr\n$xreg.data.tag"
 JS9.tooltip = function(x, y, fmt, im, xreg, evt){
-    var tipstr;
+    var tipstr, tx, ty;
     var fmt2str = function(str){
 	// eslint-disable-next-line no-unused-vars
 	var cmd = str.replace(/\$([a-zA-Z0-9_.]+)/g, function(m, t, o){
-            var i, val;
+            var i, v, val;
 	    var arr = t.split(".");
 	    switch(arr[0]){
 	    case "im":
@@ -10954,7 +10954,12 @@ JS9.tooltip = function(x, y, fmt, im, xreg, evt){
 		return m;
 	    }
 	    for(i=1; i<arr.length; i++) {
-		val = val[arr[i]];
+		v = val[arr[i]];
+		if( JS9.isNumber(v) ){
+		    val = v.toFixed(6);
+		} else {
+		    val = v;
+		}
 	    }
 	    return val;
 	});
@@ -10962,8 +10967,10 @@ JS9.tooltip = function(x, y, fmt, im, xreg, evt){
     };
     if( fmt ){
 	tipstr = fmt2str(fmt);
+	tx = Math.min(x, im.display.width - 150);
+	ty = Math.min(y, im.display.height - 25);
 	im.display.tooltip
-	    .html(tipstr).css({left:x, top:y, display: "inline-block"});
+	    .html(tipstr).css({left:tx, top:ty, display: "inline-block"});
     } else {
 	im.display.tooltip
 	    .html("").css({left: -9999, display: "none"});
