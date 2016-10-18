@@ -299,10 +299,14 @@ function CatalogService(params) {
 	var catalog = this;
 
 	var reply = xhr({ url: url, title: "Catalog", status: messages, CORS: values.CORS }, function(e) {
-	    var table = new Starbase(reply.responseText, { type: { default: strtod }, units: values.units });
+	    var table = new Starbase(reply.responseText, { type: { default: strtod }, units: values.units, skip: "#\n" });
 	    var im    = JS9.GetImage({display: values.display});
 	    var gopts = $.extend(true, {}, JS9.Catalogs.opts, {tooltip: "$xreg.data.ra $xreg.data.dec"});
 	    var opts = {color: "yellow"};
+
+	    if( !table.data.length ){
+		JS9.error("no catalog objects found");
+	    }
 
 	    JS9.NewShapeLayer(values.name, gopts, {display: im});
 	    JS9.RemoveShapes(values.name, {display: im});
@@ -580,7 +584,6 @@ exports.Register = function(name, obj) {
 
 "use strict";
 
-
 function I(x) { return x; }
 
 function starbase_Dashline(dash) {
@@ -595,8 +598,10 @@ function starbase_Dashline(dash) {
     return i;
 }
 
-function Starbase(data, options) {
-    var i, j;
+function Starbase(data, opts) {
+    var i, j, skips, done;
+
+    opts = opts || {};
 
     this.head = {};
     this.type = [];
@@ -605,12 +610,23 @@ function Starbase(data, options) {
     data = data.replace(/\s+$/,"").split("\n");
     var line = 0;
 
-    if ( options && options.skip ) {
-	while ( data[line][0] === options.skip ) { line++; }
+    if ( opts.skip ) {
+	skips = opts.skip.split("");
+	for(; line < data.length; line++){
+	    if( (skips[0] !== data[line][0])             &&
+		(skips[1] !== "\n" || data[line] !== "") ){
+		break;
+	    }
+	}
+    }
+
+    // make sure we have a header to process
+    if( (data[line] === undefined) || (data[line+1] === undefined) ){
+	return;
     }
 
     this.headline = data[line++].trim().split(/ *\t */);
-    if ( options.units ) {
+    if ( opts.units ) {
 	this.unitline = data[line++].trim().split(/ *\t */);
     }
     this.dashline = data[line++].trim().split(/ *\t */);
@@ -621,7 +637,7 @@ function Starbase(data, options) {
     //
     while ( dashes === 0 || dashes !== this.headline.length ) {
 
-	if ( !options.units ) {
+	if ( !opts.units ) {
 	    this.headline = this.dashline;
 	} else {
 	    this.headline = this.unitline;
@@ -630,18 +646,17 @@ function Starbase(data, options) {
 
 	this.dashline = data[line++].trim().split(/ *\t */);
 
-
 	dashes = starbase_Dashline(this.dashline);
     }
 
     // Create a vector of type converters
     //
     for ( i = 0; i < this.headline.length; i++ ) {
-	if ( options && options.type && options.type[this.headline[i]] ) {
-	    this.type[i] = options.type[this.headline[i]];
+	if ( opts.type && opts.type[this.headline[i]] ) {
+	    this.type[i] = opts.type[this.headline[i]];
 	} else {
-	    if ( options && options.type && options.type.default ) {
-		this.type[i] = options.type.default;
+	    if ( opts.type && opts.type.default ) {
+		this.type[i] = opts.type.default;
 	    } else {
 		this.type[i] = I;
 	    }
@@ -651,6 +666,12 @@ function Starbase(data, options) {
     // Read the data in and convert to type[]
     //
     for ( j = 0; line < data.length; line++, j++ ) {
+	// skip means end of data
+	if( (skips[0] === data[line][0])             ||
+	    (skips[1] === "\n" && data[line] === "") ){
+	    break;
+	}
+
 	this.data[j] = data[line].split('\t');
 
 	for ( i = 0; i < this.data[j].length; i++ ) {
