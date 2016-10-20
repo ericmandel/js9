@@ -222,6 +222,9 @@ var strtod   = require("./strtod");
 var template = require("./template");
 var xhr      = require("./xhr");
 
+// use starbase code in js9archive? (otherwise use code in JS9)
+var use_internal = false;
+
 function CatalogService(params) {
     RemoteService.Register(params.value, this);
 
@@ -244,9 +247,8 @@ function CatalogService(params) {
 
 	    if( coords ){
 		return { x: coords.x, y: coords.y };
-	    } else {
-		return null;
 	    }
+	    return null;
 	};
 	var sizefunc;
 
@@ -271,19 +273,18 @@ function CatalogService(params) {
 	var regs = [], pos, siz, reg;
 	for ( i = 0, j = 0; i < table.data.length; i++ ) {
 	    pos = pos_func(im, table.data[i][xcol]*15, table.data[i][ycol]);
-	    if( !pos ){
-		continue;
+	    if( pos ){
+		siz = sizefunc(im, table.data[i][wcol], table.data[i][hcol]);
+
+		reg = {   id: i.toString(), shape: shape
+			  , x: pos.x, y: pos.y
+			  , width: siz.width, height: siz.height, radius: siz.radius
+			  , angle: 0
+		          , data: {ra: table.data[i][xcol]*15, dec: table.data[i][ycol]}
+		      };
+
+		regs[j++] = reg;
 	    }
-	    siz = sizefunc(im, table.data[i][wcol], table.data[i][hcol]);
-
-	    reg = {   id: i.toString(), shape: shape
-			, x: pos.x, y: pos.y
-			, width: siz.width, height: siz.height, radius: siz.radius
-			, angle: 0
-		        , data: {ra: table.data[i][xcol]*15, dec: table.data[i][ycol]}
-		};
-
-	    regs[j++] = reg;
 	}
 
 	return regs;
@@ -299,21 +300,29 @@ function CatalogService(params) {
 	var catalog = this;
 
 	var reply = xhr({ url: url, title: "Catalog", status: messages, CORS: values.CORS }, function(e) {
-	    var table = new Starbase(reply.responseText, { type: { default: strtod }, units: values.units, skip: "#\n" });
-	    var im    = JS9.GetImage({display: values.display});
-	    var gopts = $.extend(true, {}, JS9.Catalogs.opts, {tooltip: "$xreg.data.ra $xreg.data.dec"});
-	    var opts = {color: "yellow"};
+	    var table, im, gopts, opts, shapes;
+	    im = JS9.GetImage({display: values.display});
+	    if( use_internal ){
+		table = new Starbase(reply.responseText, {type: {default: strtod}, units: values.units, skip: "#\n"});
+		gopts = $.extend(true, {}, JS9.Catalogs.opts, {tooltip: "$xreg.data.ra $xreg.data.dec"});
+		opts = {color: "yellow"};
 
-	    if( !table.data.length ){
-		JS9.error("no catalog objects found");
+		if( !table.data.length ){
+		    JS9.error("no catalog objects found");
+		}
+
+		JS9.NewShapeLayer(values.name, gopts, {display: im});
+		JS9.RemoveShapes(values.name, {display: im});
+
+		shapes = catalog.table2cat(im, table);
+
+		JS9.AddShapes(values.name, shapes, opts, {display: im});
+	    } else {
+		table = reply.responseText;
+		gopts = $.extend(true, {}, JS9.Catalogs.opts);
+		gopts.units = values.units;
+		JS9.LoadCatalog(values.name, table, gopts, {display: im});
 	    }
-
-	    JS9.NewShapeLayer(values.name, gopts, {display: im});
-	    JS9.RemoveShapes(values.name, {display: im});
-
-	    var shapes = catalog.table2cat(im, table);
-
-	    JS9.AddShapes(values.name, shapes, opts, {display: im});
 	});
     };
 }
@@ -3259,7 +3268,7 @@ JS9.Layers.WIDTH =  460;	// width of light window
 JS9.Layers.HEIGHT = 250;	// height of light window
 JS9.Layers.BASE = JS9.Layers.CLASS + JS9.Layers.NAME;  // CSS base class name
 
-JS9.Layers.headerHTML='Shape layers can be hidden or made visible below. The top layer in the stack is <b>active</b>: it responds to mouse and touch events. Move a layer to the top of the stack to make it active.';
+JS9.Layers.headerHTML='Shape layers can be hidden or made visible below. The topmost visible layer in the stack is <b>active</b>: it responds to mouse and touch events. Move a layer to the top of the stack to make it active.';
 
 JS9.Layers.layerHTML="<span style='float: left'>$visible&nbsp;&nbsp;</span>&nbsp;&nbsp; <span class='JS9LayersSpan'>$layer&nbsp;&nbsp</span>";
 
@@ -3277,11 +3286,29 @@ JS9.Layers.imid = function(im, layer){
 	+ "Layer";
 };
 
+// change the active image
+JS9.Layers.activeLayer = function(im, pinst){
+    var i, s, id, order;
+    if( im ){
+	order = pinst.layersLayerContainer.sortable("toArray");
+	for(i=0; i<order.length; i++){
+	    order[i] = $("#" + order[i]).attr("layer");
+	}
+	s = im.activeShapeLayer(order);
+	id = JS9.Layers.imid(im, s);
+	$("." + JS9.Layers.BASE + "Layer")
+	    .removeClass(JS9.Layers.BASE + "LayerActive")
+	    .addClass(JS9.Layers.BASE + "LayerInactive");
+	$("#" + id)
+	    .removeClass(JS9.Layers.BASE + "LayerInactive")
+	    .addClass(JS9.Layers.BASE + "LayerActive");
+    }
+};
+
 // make shape layer visible/invisible
 JS9.Layers.xvisible = function(id, layer, target){
-    var i, pinst, order, layeri;
+    var pinst, mode;
     var im = JS9.lookupImage(id);
-    var mode;
     if( im ){
 	if( target.checked ){
 	    mode = "show";
@@ -3290,19 +3317,10 @@ JS9.Layers.xvisible = function(id, layer, target){
 	}
 	// change visibility
 	im.showShapeLayer(layer, mode);
-	// if hiding the currently active layer, make another one active
-	if( mode === "hide" ){
-	    pinst = im.display.pluginInstances[JS9.Layers.BASE];
-	    order = pinst.layersLayerContainer.sortable("toArray");
-	    for(i=0; i<order.length; i++){
-		// activate first shown layer in the list
-		layeri = $("#" + order[i]).attr("layer");
-		if( (layeri !== layer) && im.layers[layeri].show ){
-		    im.activeShapeLayer(layeri);
-		    break;
-		}
-	    }
-	}
+	// might have changed the active layer
+	pinst = im.display.pluginInstances[JS9.Layers.BASE];
+	// set active layer
+	JS9.Layers.activeLayer(im, pinst, true);
     }
 };
 
@@ -3353,7 +3371,7 @@ JS9.Layers.addLayer = function(im, layer){
 		    if( tlayer ){
 			tzindex = parseInt(im.display.layers[tlayer].divjq
 					   .css("z-index"), 10);
-			if( zindex > tzindex ){
+			if( Math.abs(zindex) > Math.abs(tzindex) ){
 			    divjq.insertBefore(jqitem);
 			    added = true;
 			}
@@ -3386,6 +3404,7 @@ JS9.Layers.close = function(){
 // constructor: add HTML elements to the plugin
 JS9.Layers.init = function(opts){
     var key, im;
+    var that = this;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -3443,12 +3462,12 @@ JS9.Layers.init = function(opts){
 	},
 	// eslint-disable-next-line no-unused-vars
 	stop: function(event, ui) {
-	    var order = $(this).sortable('toArray');
-	    var layer = $("#" + order[0]).attr("layer");
-	    im.activeShapeLayer(layer);
+	    JS9.Layers.activeLayer(im, that);
 	    return;
 	}
     });
+    // set initial active layer
+    JS9.Layers.activeLayer(im, this);
 };
 
 // add this plugin into JS9
@@ -3457,6 +3476,7 @@ JS9.RegisterPlugin(JS9.Layers.CLASS, JS9.Layers.NAME, JS9.Layers.init,
 		    onplugindisplay: JS9.Layers.init,
 		    onshapelayercreate: JS9.Layers.init,
 		    onshapelayershow: JS9.Layers.init,
+		    onshapelayeractive: JS9.Layers.init,
 		    onshapelayerhide: JS9.Layers.init,
 		    onimageload: JS9.Layers.init,
 		    onimagedisplay: JS9.Layers.display,
@@ -4141,6 +4161,8 @@ JS9.Menubar.init = function(width, height){
 		}
 		items.close = {name: "close image"};
 		items["sep" + n++] = "------";
+		items.loadcatalog = {name: "load catalog ..."};
+		items["sep" + n++] = "------";
 		items.loadsession = {name: "load session ..."};
 		items.savesession = {name: "save session"};
 		items["sep" + n++] = "------";
@@ -4172,6 +4194,11 @@ JS9.Menubar.init = function(width, height){
 			case "loadsession":
 			    if( udisp ){
 				JS9.OpenSessionMenu({display: udisp});
+			    }
+			    break;
+			case "loadcatalog":
+			    if( udisp ){
+				JS9.OpenCatalogsMenu({display: udisp});
 			    }
 			    break;
 			case "header":

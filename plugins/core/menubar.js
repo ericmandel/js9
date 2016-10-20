@@ -228,6 +228,8 @@ JS9.Menubar.init = function(width, height){
 		}
 		items.close = {name: "close image"};
 		items["sep" + n++] = "------";
+		items.loadcatalog = {name: "load catalog ..."};
+		items["sep" + n++] = "------";
 		items.loadsession = {name: "load session ..."};
 		items.savesession = {name: "save session"};
 		items["sep" + n++] = "------";
@@ -259,6 +261,11 @@ JS9.Menubar.init = function(width, height){
 			case "loadsession":
 			    if( udisp ){
 				JS9.OpenSessionMenu({display: udisp});
+			    }
+			    break;
+			case "loadcatalog":
+			    if( udisp ){
+				JS9.OpenCatalogsMenu({display: udisp});
 			    }
 			    break;
 			case "header":

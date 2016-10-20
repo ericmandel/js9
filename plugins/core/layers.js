@@ -13,7 +13,7 @@ JS9.Layers.WIDTH =  460;	// width of light window
 JS9.Layers.HEIGHT = 250;	// height of light window
 JS9.Layers.BASE = JS9.Layers.CLASS + JS9.Layers.NAME;  // CSS base class name
 
-JS9.Layers.headerHTML='Shape layers can be hidden or made visible below. The top layer in the stack is <b>active</b>: it responds to mouse and touch events. Move a layer to the top of the stack to make it active.';
+JS9.Layers.headerHTML='Shape layers can be hidden or made visible below. The topmost visible layer in the stack is <b>active</b>: it responds to mouse and touch events. Move a layer to the top of the stack to make it active.';
 
 JS9.Layers.layerHTML="<span style='float: left'>$visible&nbsp;&nbsp;</span>&nbsp;&nbsp; <span class='JS9LayersSpan'>$layer&nbsp;&nbsp</span>";
 
@@ -31,11 +31,29 @@ JS9.Layers.imid = function(im, layer){
 	+ "Layer";
 };
 
+// change the active image
+JS9.Layers.activeLayer = function(im, pinst){
+    var i, s, id, order;
+    if( im ){
+	order = pinst.layersLayerContainer.sortable("toArray");
+	for(i=0; i<order.length; i++){
+	    order[i] = $("#" + order[i]).attr("layer");
+	}
+	s = im.activeShapeLayer(order);
+	id = JS9.Layers.imid(im, s);
+	$("." + JS9.Layers.BASE + "Layer")
+	    .removeClass(JS9.Layers.BASE + "LayerActive")
+	    .addClass(JS9.Layers.BASE + "LayerInactive");
+	$("#" + id)
+	    .removeClass(JS9.Layers.BASE + "LayerInactive")
+	    .addClass(JS9.Layers.BASE + "LayerActive");
+    }
+};
+
 // make shape layer visible/invisible
 JS9.Layers.xvisible = function(id, layer, target){
-    var i, pinst, order, layeri;
+    var pinst, mode;
     var im = JS9.lookupImage(id);
-    var mode;
     if( im ){
 	if( target.checked ){
 	    mode = "show";
@@ -44,19 +62,10 @@ JS9.Layers.xvisible = function(id, layer, target){
 	}
 	// change visibility
 	im.showShapeLayer(layer, mode);
-	// if hiding the currently active layer, make another one active
-	if( mode === "hide" ){
-	    pinst = im.display.pluginInstances[JS9.Layers.BASE];
-	    order = pinst.layersLayerContainer.sortable("toArray");
-	    for(i=0; i<order.length; i++){
-		// activate first shown layer in the list
-		layeri = $("#" + order[i]).attr("layer");
-		if( (layeri !== layer) && im.layers[layeri].show ){
-		    im.activeShapeLayer(layeri);
-		    break;
-		}
-	    }
-	}
+	// might have changed the active layer
+	pinst = im.display.pluginInstances[JS9.Layers.BASE];
+	// set active layer
+	JS9.Layers.activeLayer(im, pinst, true);
     }
 };
 
@@ -107,7 +116,7 @@ JS9.Layers.addLayer = function(im, layer){
 		    if( tlayer ){
 			tzindex = parseInt(im.display.layers[tlayer].divjq
 					   .css("z-index"), 10);
-			if( zindex > tzindex ){
+			if( Math.abs(zindex) > Math.abs(tzindex) ){
 			    divjq.insertBefore(jqitem);
 			    added = true;
 			}
@@ -140,6 +149,7 @@ JS9.Layers.close = function(){
 // constructor: add HTML elements to the plugin
 JS9.Layers.init = function(opts){
     var key, im;
+    var that = this;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -197,12 +207,12 @@ JS9.Layers.init = function(opts){
 	},
 	// eslint-disable-next-line no-unused-vars
 	stop: function(event, ui) {
-	    var order = $(this).sortable('toArray');
-	    var layer = $("#" + order[0]).attr("layer");
-	    im.activeShapeLayer(layer);
+	    JS9.Layers.activeLayer(im, that);
 	    return;
 	}
     });
+    // set initial active layer
+    JS9.Layers.activeLayer(im, this);
 };
 
 // add this plugin into JS9
@@ -211,6 +221,7 @@ JS9.RegisterPlugin(JS9.Layers.CLASS, JS9.Layers.NAME, JS9.Layers.init,
 		    onplugindisplay: JS9.Layers.init,
 		    onshapelayercreate: JS9.Layers.init,
 		    onshapelayershow: JS9.Layers.init,
+		    onshapelayeractive: JS9.Layers.init,
 		    onshapelayerhide: JS9.Layers.init,
 		    onimageload: JS9.Layers.init,
 		    onimagedisplay: JS9.Layers.display,

@@ -34,8 +34,8 @@ JS9.ANON = "Anonymous";		// name to use for images with no name
 JS9.PREFSFILE = "js9Prefs.json";// prefs file to load
 JS9.ZINDEX = 0;			// z-index of image canvas: on bottom of js9
 JS9.SHAPEZINDEX = 4;		// base z-index of shape layers layers
-JS9.MESSZINDEX = 8;		// z-index of messages: above graphics
-JS9.BTNZINDEX = 12;		// z-index of buttons on top of plugin canvases
+JS9.MESSZINDEX = 80;		// z-index of messages: above graphics
+JS9.BTNZINDEX =  90;		// z-index of buttons on top of plugin canvases
 JS9.MENUZINDEX = 1000;		// z-index of menus: always on top!
 JS9.COLORSIZE = 1024;		// size of contrast/biased color array
 JS9.SCALESIZE = 16384;		// size of scaled color array
@@ -151,7 +151,12 @@ JS9.globalOpts = {
     pinchThresh: 6,		// threshold for pinch test
     extendedPlugins: true,	// enable extended plugin support?
     corsProxy: "http://js9.si.edu/cgi-bin/CORS-proxy.cgi", // CORS proxy url
-    simbadProxy: "http://js9.si.edu/cgi-bin/simbad-proxy.cgi", // simbad proxy url
+    simbadProxy: "http://js9.si.edu/cgi-bin/simbad-proxy.cgi",//simbad proxy url
+    catalogs:   {ras: ["RA", "_RAJ2000", "RAJ2000"],  // cols to search for ..
+		 decs: ["Dec", "_DEJ2000", "DEJ2000"],// when loading catalogs
+		 color: "yellow",                     // object color
+		 skip: "#\n",                         // skip # and blank lines
+		 tooltip: "$xreg.data.ra $xreg.data.dec"},
     debug: 0		        // debug level
 };
 
@@ -498,6 +503,8 @@ JS9.Image = function(file, params, func){
     this.rgb.sect = {zoom: 1, ozoom: 1};
     // graphical layers
     this.layers = {};
+    // current zindex for main layers
+    this.zlayer = JS9.SHAPEZINDEX;
     // no logical coordinate systems
     this.lcs = {};
     // array of aux file pointers
@@ -5556,6 +5563,7 @@ JS9.Display = function(el){
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalRegions-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadRegions(this.files[i], {display:\''+ this.id +'\'}); };this.value=null;return false;"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalSession-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadSession(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalColormap-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.AddColormap(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalCatalogs-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadCatalog(null, this.files[i], $.extend(true, {}, JS9.Catalogs.opts), {display:\''+ this.id +'\'}); };this.value=null;return false;"> </div>');
     // add to list of displays
     JS9.displays.push(this);
     // debugging
@@ -5973,6 +5981,146 @@ JS9.Display.prototype.loadSession = function(file){
 		JS9.error("could not load session: " + file, errorThrown);
 	    }
 	});
+    }
+    // allow chaining
+    return this;
+};
+
+// convert table to a shape array for the given image
+JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
+    var i, j, shape, pos, siz, reg, data, header, sizefunc, xcol, ycol;
+    var xcols = JS9.globalOpts.catalogs.ras;
+    var ycols = JS9.globalOpts.catalogs.decs;
+    var regs = [];
+    var wcol = 1;
+    var hcol = 1;
+    var pos_func = function(im, ra, dec) {
+	var arr;
+	arr = JS9.wcs2pix(im.raw.wcs, ra, dec).trim().split(/ +/);
+	if( arr && arr.length ){
+	    return {x: parseFloat(arr[0]), y: parseFloat(arr[1])};
+	}
+	return null;
+    };
+    var getcol = function(starbase, header, cols, defcol){
+	var i, j, col;
+	if( defcol !== undefined ){
+	    col = defcol;
+	} else {
+	    col = -1;
+	    for(j=0; j<cols.length; j++){
+		for(i=0; i<header.length; i++){
+		    if( cols[j].toLowerCase() === header[i].toLowerCase() ){
+			col = starbase[header[i]];
+			break;
+		    }
+		}
+		if( col >= 0 ){
+		    break;
+		}
+	    }
+	}
+	return col;
+    };
+    // sanity check
+    if( !starbase || !starbase.data || !starbase.headline ){
+	return;
+    }
+    data = starbase.data;
+    header = starbase.headline;
+    // opts is optional
+    opts = opts || {};
+    xcol = getcol(starbase, header, xcols, opts.xcol);
+    if( xcol < 0 ){
+	JS9.error("xcol not specified");
+    }
+    ycol = getcol(starbase, header, ycols, opts.ycol);
+    if( ycol < 0 ){
+	JS9.error("ycol not specified");
+    }
+    // process shape
+    shape = opts.shape || "circle";
+    switch(shape){
+    case "box":
+	// eslint-disable-next-line no-unused-vars
+	sizefunc = function(row, width, height) {
+	    return { width: opts.width || 7, height: opts.height || 7 };
+	};
+	break;
+    case "circle":
+	// eslint-disable-next-line no-unused-vars
+	sizefunc = function(row, width, height) {
+	    return { radius: opts.radius || 3.5};
+	};
+	break;
+    case "ellipse":
+	// eslint-disable-next-line no-unused-vars
+	sizefunc = function(row, width, height) {
+	    return { width: opts.width || 7, height: opts.height || 7 };
+	};
+	break;
+    default:
+	// eslint-disable-next-line no-unused-vars
+	sizefunc = function(row, width, height) {
+	    return { width: opts.width || 7, height: opts.height || 7 };
+	};
+	break;
+    }
+    for(i=0, j=0; i<data.length; i++){
+	pos = pos_func(this, data[i][xcol]*15, data[i][ycol]);
+	if( !pos ){
+	    continue;
+	}
+	siz = sizefunc.call(this, data[i][wcol], data[i][hcol]);
+	reg = {id: i.toString(), shape: shape,
+	       x: pos.x, y: pos.y,
+	       width: siz.width, height: siz.height, radius: siz.radius,
+	       angle: 0,
+	       data: {ra: data[i][xcol]*15, dec: data[i][ycol]}};
+	if( opts.color ){
+	    reg.color = opts.color;
+	}
+	regs[j++] = reg;
+    }
+    return regs;
+};
+
+// read a starbase (tab-delimited, #-commented) table and create a catalog
+JS9.Image.prototype.loadCatalog = function(layer, table, opts){
+    var shapes, topts, starbase;
+    var lopts = $.extend(true, {}, JS9.Catalogs.opts);
+    if( JS9.globalOpts.catalogs.tooltip ){
+	lopts.tooltip = JS9.globalOpts.catalogs.tooltip;
+    }
+    // opts is optional
+    opts = opts || {};
+    // default color, if none specified
+    if( !opts.color ){
+	opts.color = JS9.globalOpts.catalogs.color || "#00FF00";
+    }
+    // starbase opts
+    topts = {convFuncs:  {def: JS9.saostrtod},
+	     units: opts.units || JS9.globalOpts.catalogs.units,
+	     skip:  opts.skip  || JS9.globalOpts.catalogs.skip};
+    // generate starbase table
+    starbase = new JS9.Starbase(table, topts);
+    // sanity checks
+    if( !starbase || !starbase.data || !starbase.data.length ){
+	JS9.error("no objects found in catalog table");
+    }
+    // generate new catalog shapes
+    shapes = this.starbaseToShapes(starbase, opts);
+    if( shapes.length ){
+	// layer name
+	layer = layer || "catalog_" + JS9.uniqueID() ;
+	// create a new layer, if necessary
+	this.display.newShapeLayer(layer, lopts);
+	// delete any old shapes
+	this.removeShapes(layer);
+	// add them to the catalog layer
+	this.addShapes(layer, shapes, opts);
+    } else {
+	JS9.error("no catalog objects found");
     }
     // allow chaining
     return this;
@@ -6679,7 +6827,7 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 	// show
 	if( layer.json && layer.show ){
 	    canvas.loadFromJSON(layer.json, function(){
-		var key, zindex, tdlayer, obj;
+		var key, tdlayer, obj;
 		// translate these shapes if we resized while hidden
 		if( that.resize ){
 		    canvas.getObjects().forEach(function(o) {
@@ -6692,14 +6840,14 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 		// redisplay this layer
 		canvas.renderAll();
 		canvas.selection = layer.opts.canvas.selection;
-		zindex = layer.zindex;
-		dlayer.divjq.css("z-index", zindex);
+		layer.zindex = Math.abs(layer.zindex);
+		dlayer.divjq.css("z-index", layer.zindex);
 		// unselect selected objects in lower-zindex groups
 		for( key in that.layers ){
 		    if( that.layers.hasOwnProperty(key) ){
 			if( (layerName !== key) && that.layers[key].show ){
 			    tdlayer = that.display.layers[key];
-			    if( tdlayer.divjq.css("z-index") < zindex ){
+			    if( tdlayer.divjq.css("z-index") < layer.zindex ){
 				obj = tdlayer.canvas.getActiveObject();
 				if( obj ){
 				    JS9.Fabric.removePolygonAnchors(tdlayer,
@@ -6734,9 +6882,10 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 	    jobj = canvas.toJSON(layer.dlayer.el);
 	    layer.json = JSON.stringify(jobj);
 	    canvas.selection = false;
-	    // push to bottom of the pile
+	    // push towards the bottom of the pile
 	    if( dlayer ){
-		dlayer.divjq.css("z-index", 0);
+		layer.zindex = -Math.abs(layer.zindex);
+		dlayer.divjq.css("z-index", layer.zindex);
 	    }
 	    canvas.clear();
 	}
@@ -6820,26 +6969,74 @@ JS9.Fabric.getShapeLayer = function(layerName, opts){
 
 // use zindex to make specified shape layer the active layer
 // call using image context
-JS9.Fabric.activeShapeLayer = function(layerName){
-    var key;
-    var zindex0 = JS9.SHAPEZINDEX;
-    // sanity check
-    if( !this.layers || !layerName || !this.layers[layerName] ){
-	return null;
-    }
-    for( key in this.display.layers ){
-	if( this.display.layers.hasOwnProperty(key) ){
-	    if( this.layers[key] ){
-		if( key === layerName ){
-		    this.layers[key].zindex = zindex0 + 1;
-		} else {
-		    this.layers[key].zindex = zindex0;
+JS9.Fabric.activeShapeLayer = function(s){
+    var i, j, a, key, layer, tlayer, ozindex, tzindex, rtn;
+    if( !s ){
+	// no args: return layer with highest zindex
+	for(key in this.layers){
+	    if( this.layers.hasOwnProperty(key) ){
+		tlayer = this.layers[key];
+		if( tlayer.dlayer.dtype === "main" ){
+		    if( (tzindex === undefined) || (tlayer.zindex > tzindex) ){
+			tzindex = tlayer.zindex;
+			a = key;
+		    }
 		}
-		this.display.layers[key].divjq.css("z-index",
-						   this.layers[key].zindex);
 	    }
 	}
+	// return highest zindex layer
+	rtn = a;
+    } else if( $.isArray(s) ){
+	// non-public internal call: array of layers was specified
+	// set zindex for layers in decreasing order
+	for(i=0, j=this.zlayer-1; i<s.length; i++){
+	    layer = this.layers[s[i]];
+	    if( layer.dlayer.dtype === "main" ){
+		layer.zindex = j--;
+		if( layer.show ){
+		    // save the active layer for return value
+		    if( !a ){
+			a = s[i];
+		    }
+		} else {
+		    layer.zindex = - layer.zindex;
+		}
+		layer.dlayer.divjq.css("z-index", layer.zindex);
+	    }
+	}
+	// return active layer
+	rtn = a;
+    } else {
+	// public call: hightest layer was specified directly
+	// set the zindex (and switch any layer with same zindex)
+	layer = this.layers[s];
+	if( layer.show ){
+	    // set highest zindex for specified layer
+	    ozindex = layer.zindex;
+	    layer.zindex = this.zlayer - 1;
+	    layer.dlayer.divjq.css("z-index", layer.zindex);
+	    for(key in this.layers){
+		if( this.layers.hasOwnProperty(key) ){
+		    // if another layer has top zindex, switch with original
+		    // zindex of layer we are bringing to the top
+		    // duh ... don't reset the specified layer
+		    tlayer = this.layers[key];
+		    if( (tlayer !== layer)               &&
+			(tlayer.zindex === layer.zindex) &&
+			(tlayer.dlayer.dtype === "main") ){
+			    tlayer.zindex = ozindex;
+			    tlayer.dlayer.divjq.css("z-index", tlayer.zindex);
+		    }
+		}
+	    }
+	    // plugin callbacks
+	    this.xeqPlugins("shape", "onshapelayeractive", s);
+	}
+	// public: allow chaining
+	rtn = this;
     }
+    // return the news
+    return rtn;
 };
 
 // process options, separating into fabric opts and paramsJ
@@ -7291,10 +7488,9 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
     }
     // once a shape has been added, we can set the zindex to process events
     if( !canvas.size() ){
+        layer.zindex = this.zlayer++;
 	dlayer = this.display.layers[layerName];
-	if( dlayer.opts.canvas.selection ){
-	    this.activeShapeLayer(layerName);
-	}
+        dlayer.divjq.css("z-index", layer.zindex);
 	// we can now call the shape layer create plugin callbacks
 	this.xeqPlugins("shape", "onshapelayercreate", layerName);
     }
@@ -9772,7 +9968,7 @@ JS9.Catalogs.opts = {
     hasControls: false,
     hasRotatingPoint: false,
     hasBorders: false,
-    evented: false,
+    // evented: false,
     // catalog objects are locked in place by default
     // set "movable" to true to unlock all, or unlock individually
     lockMovementX: true,
@@ -9808,7 +10004,7 @@ JS9.Catalogs.opts = {
 };
 
 // ---------------------------------------------------------------------
-// Misc. Utilities
+// Utilities
 // ---------------------------------------------------------------------
 
 // sigh ... why do we need this polyfill??? (chrome pre-38)
@@ -11084,6 +11280,105 @@ JS9.isTypedArray = function(obj) {
     type = Object.prototype.toString.call(obj);
     return types.hasOwnProperty(type);
 };
+
+// starbase table support
+// tab-delimited ascii tables, # in first line is a comment
+JS9.Starbase = function(s, opts){
+    var i, j, skips, dashes, data;
+    var line = 0;
+    var checkDashline = function(dash){
+	var i;
+	for(i=0; i<dash.length; i++){
+	    if( dash[i].match(/^-+$/) === null ){
+		return 0;
+	    }
+	}
+	return i;
+    };
+    var I = function(x){
+	return x;
+    };
+    // init returned object
+    this.head = {};
+    this.convFuncs = [];
+    this.data = [];
+    // sanity check
+    if( !s ){
+	return;
+    }
+    // opts is optional
+    opts = opts || {};
+    // get array of data lines
+    data = s.replace(/\s+$/,"").split("\n");
+    // skip comments
+    if( opts.skip ){
+	skips = opts.skip.split("");
+	if( skips && skips.length ){
+	    for(; line < data.length; line++){
+		if( (skips[0] !== data[line][0])             &&
+		    (skips[1] !== "\n" || data[line] !== "") ){
+		    break;
+		}
+	    }
+	}
+    }
+    // make sure we have a header to process
+    if(  (data[line] === undefined) || (data[line+1] === undefined)  ){
+	return;
+    }
+    // look for header and dashes, in various guises
+    this.headline = data[line++].trim().split(/ *\t */);
+    if( opts.units ){
+	this.unitline = data[line++].trim().split(/ *\t */);
+    }
+    this.dashline = data[line++].trim().split(/ *\t */);
+    dashes = checkDashline(this.dashline);
+    // read lines until the dashline is found
+    while ( dashes === 0 || dashes !== this.headline.length ){
+	if( !opts.units ){
+	    this.headline = this.dashline;
+	} else {
+	    this.headline = this.unitline;
+	    this.unitline = this.dashline;
+	}
+	this.dashline = data[line++].trim().split(/ *\t */);
+	dashes = checkDashline(this.dashline);
+    }
+    // create a vector of type converter functions
+    for(i=0; i<this.headline.length; i++ ){
+	if( opts.convFuncs && opts.convFuncs[this.headline[i]] ){
+	    this.convFuncs[i] = opts.convFuncs[this.headline[i]];
+	} else {
+	    if( opts.convFuncs && opts.convFuncs.def ){
+		this.convFuncs[i] = opts.convFuncs.def;
+	    } else {
+		this.convFuncs[i] = I;
+	    }
+	}
+    }
+    // read each line of the data in and convert to type
+    for(j = 0; line < data.length; line++, j++){
+	// skip means end of data
+	if( skips && skips.length ){
+	    if( (skips[0] === data[line][0])             ||
+		(skips[1] === "\n" && data[line] === "") ){
+		break;
+	    }
+	}
+	this.data[j] = data[line].split('\t');
+	for(i=0; i<this.data[j].length; i++){
+	    this.data[j][i] = this.convFuncs[i](this.data[j][i]);
+	}
+    }
+    // what does this do???
+    for(i = 0; i < this.headline.length; i++){
+	this[this.headline[i]] = i;
+    }
+};
+
+// ---------------------------------------------------------------------
+// End of Utilities
+// ---------------------------------------------------------------------
 
 // ---------------------------------------------------------------------
 // global event handlers
@@ -13295,6 +13590,15 @@ JS9.mkPublic("OpenSessionMenu", function(){
     }
 });
 
+// bring up the file dialog box and open selected catalog file
+JS9.mkPublic("OpenCatalogsMenu", function(){
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    if( display ){
+	$('#openLocalCatalogs-' + display.id).click();
+    }
+});
+
 // bring up the file dialog box and load selected colormap file(s)
 JS9.mkPublic("OpenColormapMenu", function(){
     var obj = JS9.parsePublicArgs(arguments);
@@ -13798,6 +14102,42 @@ JS9.mkPublic("LoadSession", function(file, opts){
 	JS9.error("unknown file type for LoadSession: " + typeof file);
     }
 });
+
+// load a starbase catalog file
+JS9.mkPublic("LoadCatalog", function(layer, file, opts){
+    var reader, im;
+    var obj = JS9.parsePublicArgs(arguments);
+    layer = obj.argv[0];
+    file = obj.argv[1];
+    opts = obj.argv[2] || {};
+    // sanity check
+    if( !file ){
+	JS9.error("JS9.LoadCatalog: no file specified for catalog load");
+    }
+    // an image must loaded into the display
+    im = JS9.getImage(obj.display);
+    if( !im ){
+	return;
+    }
+    // convert blob to string
+    if( typeof file === "object" ){
+	// file reader object
+	reader = new FileReader();
+	reader.onload = function(ev){
+	    if( !layer && file.name ){
+		layer = file.name.replace(/\.[^.]*$/, "");
+	    }
+	    im.loadCatalog(layer, ev.target.result, opts);
+	};
+	reader.readAsText(file);
+    } else if( typeof file === "string" ){
+	im.loadCatalog(layer, file, opts);
+    } else {
+	// oops!
+	JS9.error("unknown file type for LoadCatalog: " + typeof file);
+    }
+});
+
 // end of Public Interface
 
 // return namespace

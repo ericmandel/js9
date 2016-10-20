@@ -766,8 +766,16 @@ div.JS9LayersLayer {
     margin: 5px;
     background: #E9E9E9;
     overflow: auto;
-    padding: 9px;
+}
+
+div.JS9LayersLayerInactive {
+    padding: 10px;
     border: 1px solid black;
+}
+
+div.JS9LayersLayerActive {
+    padding: 9px;
+    border: 2px solid #00F000;
 }
 
 span.JS9LayersSpan {
@@ -778,6 +786,7 @@ span.JS9LayersSpan {
 span.JS9NoLayers {
     margin-left: 15px;
 }
+
 .JS9MefContainer {
     padding: 10px;
     overflow: auto;

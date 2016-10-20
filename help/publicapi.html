@@ -2150,11 +2150,16 @@ layer becomes active. If you then load a catalog into a catalog layer,
 that layer becomes active.
 
 <p>
-The <b>JS9.ActiveShapeLayer()</b> routine allows you to make the
-specified layer active, so that it will respond to mouse and touch
-events.  This routine forms the basis for the <b>Shape Layer</b>
-plugin, which provides a graphical way to make a layer active: by
-moving the layer to the top of the layer stack.
+If no arguments are supplied, the <b>JS9.ActiveShapeLayer()</b>
+routine returns the currently active layer. Specify the name of a
+layer as the first argument to make it active. Note that the specified
+layer must be visible.
+
+<p>
+This routine forms the basis for the <b>Shape Layer</b> plugin, which
+provides a graphical way to make a layer active (by moving it to the
+top of the layer stack).
+
 
 <p>
 <font size="+1"><b><u>Add one or more shapes to the specified layer</u></b></font>
