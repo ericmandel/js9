@@ -18,7 +18,7 @@ JS9.Prefs.HEIGHT = 400;	        // default height of window
 
 JS9.Prefs.imagesSchema = {
     "title": "Image Preferences",
-    "description": "preferences for each JS9 image",
+    "description": "Preferences for each displayed image",
     "properties": {
 	"colormap": {
 	    "type": "string",
@@ -102,7 +102,7 @@ JS9.Prefs.imagesSchema = {
     
 JS9.Prefs.regionsSchema = {
     "title": "Region Preferences",
-    "description": "preferences for each JS9 region",
+    "description": "Preferences for each displayed region",
     "type": "object",
     "properties": {
 	"iradius": {
@@ -187,7 +187,7 @@ JS9.Prefs.regionsSchema = {
 // schema for each source
 JS9.Prefs.fitsSchema = {
     "title": "FITS Preferences",
-    "description": "FITS preferences in JS9",
+    "description": "Preferences for processing FITS files",
     "properties": {
 	"extlist": {
 	    "type": "string",
@@ -204,10 +204,38 @@ JS9.Prefs.fitsSchema = {
     }
 };
 
+// catalogs schema
+JS9.Prefs.catalogsSchema = {
+    "title": "Catalogs Preferences",
+    "description": "Preferences for loading tab-delimited catalogs",
+    "properties": {
+	"ras": {
+	    "type": "mobject",
+	    "helper": "RA patterns to look for in table"
+	},
+	"decs": {
+	    "type": "mobject",
+	    "helper": "Dec patterns to look for in table"
+	},
+	"skip": {
+	    "type": "string",
+	    "helper": "comment character in table"
+	},
+	"color": {
+	    "type": "string",
+	    "helper": "color of objects"
+	},
+	"tooltip": {
+	    "type": "string",
+	    "helper": "tooltip format for objects"
+	}
+    }
+};
+
 // display schema for the page
 JS9.Prefs.displaysSchema = {
     "title": "Display Preferences",
-    "description": "preferences for each JS9 display in this page",
+    "description": "Preferences for each JS9 display in this page",
     "properties": {
 	"mouseActions": {
 	    "type": "mobject",
@@ -233,6 +261,7 @@ JS9.Prefs.sources = [
     {name: "images",   schema: JS9.Prefs.imagesSchema},
     {name: "regions",  schema: JS9.Prefs.regionsSchema},
     {name: "fits",     schema: JS9.Prefs.fitsSchema},
+    {name: "catalogs", schema: JS9.Prefs.catalogsSchema},
     {name: "displays", schema: JS9.Prefs.displaysSchema}
 ];
 
@@ -272,6 +301,13 @@ JS9.Prefs.init = function(){
 			   xdim: JS9.fits.options.table.nx, 
 			   ydim: JS9.fits.options.table.ny};
 	    break;
+	case "catalogs":
+	    source.data = {ras: JS9.globalOpts.catalogs.ras,
+			   decs: JS9.globalOpts.catalogs.decs,
+			   color: JS9.globalOpts.catalogs.color,
+			   skip: JS9.globalOpts.catalogs.skip,
+			   tooltip: JS9.globalOpts.catalogs.tooltip};
+	    break;
 	case "displays":
 	    source.data = {mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,
@@ -283,6 +319,8 @@ JS9.Prefs.init = function(){
 	}
 	html += sprintf("<div id='%s' class='tabcontent'>", id + "Div");
 	html += sprintf("<form id='%s' class='js9AnalysisForm' style='max-height: %spx; overflow: hidden'>", id + "Form", this.height-90);
+	html += sprintf("<center><b>%s</b></center><p>",
+			source.schema.description);
 	props = source.schema.properties;
 	for( key in props ){
 	    if( props.hasOwnProperty(key) ){
@@ -420,6 +458,9 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
     case "fits":
 	obj = JS9.fits.options;
 	break;
+    case "catalogs":
+	obj = JS9.globalOpts.catalogs;
+	break;
     case "displays":
 	obj = JS9.globalOpts;
 	break;
@@ -479,9 +520,20 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	        }
 		source.data[key] = val;
 	        break;
+	    case "catalogs":
+	        switch(key){
+ 	        case "skip":
+		    // add back blank lines
+		    obj[key] = val + "\n";
+		    break;
+		default:
+	            obj[key] = val;
+		    break;
+		}
+		break;
 	    case "displays":
-	        // put our "nicer" option values back into raw object
-	        JS9.globalOpts[key] = val;
+	        // set new option value
+	        obj[key] = val;
 		// change option value in this display as well
 		for(j=0; j<JS9.displays.length; j++){
 		    JS9.displays[j][key] = val;
