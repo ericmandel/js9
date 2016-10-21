@@ -5989,6 +5989,7 @@ JS9.Display.prototype.loadSession = function(file){
 // convert table to a shape array for the given image
 JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     var i, j, shape, pos, siz, reg, data, header, sizefunc, xcol, ycol;
+    var owcssys, wcssys;
     var xcols = JS9.globalOpts.catalogs.ras;
     var ycols = JS9.globalOpts.catalogs.decs;
     var regs = [];
@@ -6066,22 +6067,35 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 	};
 	break;
     }
+    // save original wcs system
+    owcssys = this.getWCSSys();
+    // set wcs system for catalogs
+    if( opts.wcssys ){
+	wcssys = opts.wcssys;
+    } else {
+	// umm ...
+	wcssys = "ICRS";
+    }
+    // set wcssys for this catalog
+    this.setWCSSys(wcssys);
+    // process each catalog object in the table
     for(i=0, j=0; i<data.length; i++){
 	pos = pos_func(this, data[i][xcol]*15, data[i][ycol]);
-	if( !pos ){
-	    continue;
+	if( pos ){
+	    siz = sizefunc.call(this, data[i][wcol], data[i][hcol]);
+	    reg = {id: i.toString(), shape: shape,
+		   x: pos.x, y: pos.y,
+		   width: siz.width, height: siz.height, radius: siz.radius,
+		   angle: 0,
+		   data: {ra: data[i][xcol]*15, dec: data[i][ycol]}};
+	    if( opts.color ){
+		reg.color = opts.color;
+	    }
+	    regs[j++] = reg;
 	}
-	siz = sizefunc.call(this, data[i][wcol], data[i][hcol]);
-	reg = {id: i.toString(), shape: shape,
-	       x: pos.x, y: pos.y,
-	       width: siz.width, height: siz.height, radius: siz.radius,
-	       angle: 0,
-	       data: {ra: data[i][xcol]*15, dec: data[i][ycol]}};
-	if( opts.color ){
-	    reg.color = opts.color;
-	}
-	regs[j++] = reg;
     }
+    // restore original wcs
+    this.setWCSSys(owcssys);
     return regs;
 };
 
@@ -6095,9 +6109,9 @@ JS9.Image.prototype.loadCatalog = function(layer, table, opts){
     // opts is optional
     opts = opts || {};
     // default color, if none specified
-    if( !opts.color ){
-	opts.color = JS9.globalOpts.catalogs.color || "#00FF00";
-    }
+    opts.color = opts.color || JS9.globalOpts.catalogs.color || "#00FF00";
+    // wcs system
+    opts.wcssys = opts.wcssys || JS9.globalOpts.catalogs.wcssys;
     // starbase opts
     topts = {convFuncs:  {def: JS9.saostrtod},
 	     units: opts.units || JS9.globalOpts.catalogs.units,
