@@ -6099,8 +6099,8 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     return regs;
 };
 
-// read a starbase (tab-delimited, #-commented) table and create a catalog
-JS9.Image.prototype.loadCatalog = function(layer, table, opts){
+// read a tab-delimited, #-commented table (starbase table), create a catalog
+JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
     var shapes, topts, starbase;
     var lopts = $.extend(true, {}, JS9.Catalogs.opts);
     if( JS9.globalOpts.catalogs.tooltip ){
@@ -6117,10 +6117,10 @@ JS9.Image.prototype.loadCatalog = function(layer, table, opts){
 	     units: opts.units || JS9.globalOpts.catalogs.units,
 	     skip:  opts.skip  || JS9.globalOpts.catalogs.skip};
     // generate starbase table
-    starbase = new JS9.Starbase(table, topts);
+    starbase = new JS9.Starbase(catalog, topts);
     // sanity checks
     if( !starbase || !starbase.data || !starbase.data.length ){
-	JS9.error("no objects found in catalog table");
+	JS9.error("no objects found in catalog");
     }
     // generate new catalog shapes
     shapes = this.starbaseToShapes(starbase, opts);
@@ -6133,11 +6133,35 @@ JS9.Image.prototype.loadCatalog = function(layer, table, opts){
 	this.removeShapes(layer);
 	// add them to the catalog layer
 	this.addShapes(layer, shapes, opts);
+	// save the original catalog for later
+	this.layers[layer].catalog = catalog;
+	this.layers[layer].starbase = starbase;
     } else {
 	JS9.error("no catalog objects found");
     }
     // allow chaining
     return this;
+};
+
+JS9.Image.prototype.saveCatalog = function(layer, fname){
+    var cat, blob;
+    layer = layer || this.activeShapeLayer();
+    if( !this.layers[layer] || !this.layers[layer].catalog ){
+	if( layer && layer !== "undefined" ){
+	    JS9.error("no catalog available: " + layer);
+	} else {
+	    JS9.error("no active catalog available");
+	}
+    }
+    cat = this.layers[layer].catalog;
+    blob = new Blob([cat], {type: "text/plain;charset=utf-8"});
+    fname = fname || layer + ".cat";
+    if( window.hasOwnProperty("saveAs") ){
+	saveAs(blob, fname);
+    } else {
+	JS9.error("no saveAs function available to save catalog");
+    }
+    return fname;
 };
 
 // ---------------------------------------------------------------------
@@ -14115,6 +14139,19 @@ JS9.mkPublic("LoadSession", function(file, opts){
 	// oops!
 	JS9.error("unknown file type for LoadSession: " + typeof file);
     }
+});
+
+// save regions to disk
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("SaveCatalog", function(layer, fname){
+    var obj = JS9.parsePublicArgs(arguments);
+    var im = JS9.getImage(obj.display);
+    layer = obj.argv[0];
+    fname = obj.argv[1];
+    if( im ){
+	return im.saveCatalog(layer, fname);
+    }
+    return;
 });
 
 // load a starbase catalog file

@@ -4162,6 +4162,7 @@ JS9.Menubar.init = function(width, height){
 		items.close = {name: "close image"};
 		items["sep" + n++] = "------";
 		items.loadcatalog = {name: "load catalog ..."};
+		items.savecatalog = {name: "save active catalog ..."};
 		items["sep" + n++] = "------";
 		items.loadsession = {name: "load session ..."};
 		items.savesession = {name: "save session"};
@@ -4200,6 +4201,9 @@ JS9.Menubar.init = function(width, height){
 			    if( udisp ){
 				JS9.OpenCatalogsMenu({display: udisp});
 			    }
+			    break;
+			case "savecatalog":
+			    uim.saveCatalog();
 			    break;
 			case "header":
 			    if( uim ){
