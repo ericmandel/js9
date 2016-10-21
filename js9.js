@@ -5989,7 +5989,7 @@ JS9.Display.prototype.loadSession = function(file){
 // convert table to a shape array for the given image
 JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     var i, j, shape, pos, siz, reg, data, header, sizefunc, xcol, ycol;
-    var owcssys, wcssys;
+    var owcssys, wcssys, tcol, tregexp;
     var xcols = JS9.globalOpts.catalogs.ras;
     var ycols = JS9.globalOpts.catalogs.decs;
     var regs = [];
@@ -6008,6 +6008,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 	if( defcol !== undefined ){
 	    col = defcol;
 	} else {
+	    // look for an exact match
 	    col = -1;
 	    for(j=0; j<cols.length; j++){
 		for(i=0; i<header.length; i++){
@@ -6018,6 +6019,28 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 		}
 		if( col >= 0 ){
 		    break;
+		}
+	    }
+	    // no exact match, look for an approx match
+	    if( col < 0 ){
+		tcol = cols[0];
+		tregexp = new RegExp("^"+tcol, "i");
+		for(i=0; i<header.length; i++){
+		    if( header[i].match(tregexp) ){
+			col = starbase[header[i]];
+			break;
+		    }
+		}
+	    }
+	    // no approx match, look for a less restrictive approx match
+	    if( col < 0 ){
+		tcol = cols[0];
+		tregexp = new RegExp(".*"+tcol+".*", "i");
+		for(i=0; i<header.length; i++){
+		    if( header[i].match(tregexp) ){
+			col = starbase[header[i]];
+			break;
+		    }
 		}
 	    }
 	}
@@ -6033,11 +6056,11 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     opts = opts || {};
     xcol = getcol(starbase, header, xcols, opts.xcol);
     if( xcol < 0 ){
-	JS9.error("xcol not specified");
+	JS9.error("can't find an RA column (see Preferences:catalogs)");
     }
     ycol = getcol(starbase, header, ycols, opts.ycol);
     if( ycol < 0 ){
-	JS9.error("ycol not specified");
+	JS9.error("can't find a Dec column (see Preferences:catalogs)");
     }
     // process shape
     shape = opts.shape || "circle";
@@ -6078,7 +6101,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     }
     // set wcssys for this catalog
     this.setWCSSys(wcssys);
-    // process each catalog object in the table
+    // convert each catalog object in the table into a JS9 shape
     for(i=0, j=0; i<data.length; i++){
 	pos = pos_func(this, data[i][xcol]*15, data[i][ycol]);
 	if( pos ){
