@@ -322,6 +322,12 @@ eslint:		FORCE
 		      eslint $$file;             \
 		done)
 
+peslint:	FORCE
+		@(for file in `ls plugins/core/*.js`; do      \
+		      echo $$file;               \
+		      eslint $$file;             \
+		done)
+
 tar:		FORCE
 		($(RM) config.cache; \
 		cd ..; \
