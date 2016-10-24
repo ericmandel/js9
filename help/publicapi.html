@@ -2301,7 +2301,7 @@ described in the <b>JS9.AddShapes()</b> section. However, you cannot (yet)
 change the shape itself (e.g. from "box" to "circle").
 
 <p>
-<font size="+1"><b><u>Load a catalog from a local file into the current image</u></b></font>
+<font size="+1"><b><u>Load an astronomical catalog</u></b></font>
 <p>
 <code><font size="+1">JS9.LoadCatalog(layer, table, opts)</font></code>
 <p>
@@ -2311,11 +2311,11 @@ where:
 <li><b>table</b>: string or blob containing the catalog table
 <li><b>opts</b>: catalog options
 </ul>
-Catalogs are a special type of JS9 shape layer, in which the shapes
-have been generated from a tab-delimited text file of columns,
-including two columns that contain RA and Dec values. A catalog can
-have a pre-amble of comments, which, by default, have a '#' character
-in the first column.
+Astronomical catalogs are a special type of JS9 shape layer, in which
+the shapes have been generated from a tab-delimited text file of
+columns, including two columns that contain RA and Dec values. An
+astronomical catalog can have a pre-amble of comments, which, by
+default, have a '#' character in the first column.
 
 <p>
 Two examples of catalog files are shown below:
@@ -2428,7 +2428,7 @@ plugin to toggle its visibility and also to change its position in the layer
 stack.
 
 <p>
-<font size="+1"><b><u>Save a catalog from the current image to a file</u></b></font>
+<font size="+1"><b><u>Save an astronomical catalog to a file</u></b></font>
 <p>
 <code><font size="+1">JS9.SaveCatalog(filename, which)</font></code>
 <p>
