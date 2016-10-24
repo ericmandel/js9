@@ -3378,7 +3378,11 @@ JS9.Layers.xsave = function(did, id, layer, target){
 JS9.Layers.xsaveRegions = function(did, id, layer, target){
     var im = JS9.lookupImage(id, did);
     if( im ){
-	im.saveRegions(null, null, layer);
+	if( layer === "regions" ){
+	    im.saveRegions();
+	} else {
+	    im.saveRegions(null, null, layer);
+	}
     }
 };
 
