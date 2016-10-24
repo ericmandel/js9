@@ -322,7 +322,7 @@ eslint:		FORCE
 		      eslint $$file;             \
 		done)
 
-peslint:	FORCE
+eslint2:	FORCE
 		@(for file in `ls plugins/core/*.js`; do      \
 		      echo $$file;               \
 		      eslint $$file;             \
