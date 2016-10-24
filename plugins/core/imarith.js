@@ -15,20 +15,20 @@ JS9.Imarith.BASE = JS9.Imarith.CLASS + JS9.Imarith.NAME;
 
 JS9.Imarith.imageHTML="<div class='JS9ImarithLinegroup'>Choose an op (add, subtract, multiply, divide, min, max) and an operand (number or image) and click Run. Reset will revert to the original data.</div><div class='JS9ImarithLinegroup'><span class='JS9ImarithSpan' style='float: left'><b>$imid</b> &nbsp;&nbsp; $op &nbsp;&nbsp; $arg1 &nbsp;&nbsp; $num</span></div><p><div class='JS9ImarithLinegroup'><span class='JS9ImarithSpan' style='float: left'>$run</span><span style='float: right'>$reset</span></div>";
 
-JS9.Imarith.opHTML='<select class=JS9ImarithOp" onchange="JS9.Imarith.xop(\'%s\',this)"><option value="" selected disabled>op</option><option value="add">add</option><option value="sub">sub</option><option value="mul">mul</option><option value="div">div</option><option value="min">min</option><option value="max">max</option></select>';
+JS9.Imarith.opHTML='<select class=JS9ImarithOp" onchange="JS9.Imarith.xop(\'%s\', \'%s\', this)"><option value="" selected disabled>op</option><option value="add">add</option><option value="sub">sub</option><option value="mul">mul</option><option value="div">div</option><option value="min">min</option><option value="max">max</option></select>';
 
-JS9.Imarith.arg1HTML='<select class=JS9ImarithArg1" onchange="JS9.Imarith.xarg1(\'%s\',this)"><option val="" selected disabled>operand</option><option value="num">number &#8594;</option>%s</select>';
+JS9.Imarith.arg1HTML='<select class=JS9ImarithArg1" onchange="JS9.Imarith.xarg1(\'%s\', \'%s\', this)"><option val="" selected disabled>operand</option><option value="num">number &#8594;</option>%s</select>';
 
-JS9.Imarith.numHTML='<input type="text" class="JS9ImarithNum" value="" onchange="JS9.Imarith.xnum(\'%s\',this)" size="10" placeholder="number">';
+JS9.Imarith.numHTML='<input type="text" class="JS9ImarithNum" value="" onchange="JS9.Imarith.xnum(\'%s\', \'%s\', this)" size="10" placeholder="number">';
 
-JS9.Imarith.runHTML='<input type="button" class=JS9ImarithBtn" value="Run" onclick="JS9.Imarith.xrun(\'%s\',this)">';
+JS9.Imarith.runHTML='<input type="button" class=JS9ImarithBtn" value="Run" onclick="JS9.Imarith.xrun(\'%s\', \'%s\', this)">';
 
-JS9.Imarith.resetHTML='<input type="button" class=JS9ImarithBtn" value="Reset" onclick="JS9.Imarith.xreset(\'%s\',this)">';
+JS9.Imarith.resetHTML='<input type="button" class=JS9ImarithBtn" value="Reset" onclick="JS9.Imarith.xreset(\'%s\', \'%s\', this)">';
 
 // change op
-JS9.Imarith.xop = function(id, target){
+JS9.Imarith.xop = function(did, id, target){
     var op = target.options[target.selectedIndex].value;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     // save new op in instance record
     if( im && op ){
 	im.display.pluginInstances.JS9Imarith.op = op;
@@ -36,8 +36,8 @@ JS9.Imarith.xop = function(id, target){
 };
 
 // change arg1
-JS9.Imarith.xarg1 = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Imarith.xarg1 = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     var arg1 = target.options[target.selectedIndex].value;
     // save new arg1 in instance record
     if( im && arg1 ){
@@ -51,8 +51,8 @@ JS9.Imarith.xarg1 = function(id, target){
 };
 
 // change num
-JS9.Imarith.xnum = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Imarith.xnum = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     var num = target.value;
     // save new num in instance record
     if( JS9.isNumber(num) ){
@@ -66,9 +66,9 @@ JS9.Imarith.xnum = function(id, target){
 
 // run image arithmetic
 // eslint-disable-next-line no-unused-vars
-JS9.Imarith.xrun = function(id, target){
+JS9.Imarith.xrun = function(did, id, target){
     var arg1, plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances.JS9Imarith;
 	if( !plugin.op || !plugin.arg1 ){
@@ -88,8 +88,8 @@ JS9.Imarith.xrun = function(id, target){
 
 // reset to original data
 // eslint-disable-next-line no-unused-vars
-JS9.Imarith.xreset = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Imarith.xreset = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	im.imarithData("reset");
     }
@@ -110,7 +110,7 @@ JS9.Imarith.close = function(){
 
 // constructor: add HTML elements to the plugin
 JS9.Imarith.init = function(opts){
-    var i, s, im, tim, mopts;
+    var i, s, im, tim, mopts, imid, dispid;
     var images = "";
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -147,6 +147,9 @@ JS9.Imarith.init = function(opts){
     // do we have an image?
     im = this.display.image;
     if( im && (opts.mode !== "clear") ){
+	// convenience variables
+	imid = im.id;
+	dispid = im.display.id;
 	// make the last one
 	this.lastim = im.id;
 	// get list of images that can be operands (other than this one)
@@ -160,12 +163,17 @@ JS9.Imarith.init = function(opts){
 	// create the html for this image
 	mopts = [];
 	mopts.push({name: "images", value: images});
-	mopts.push({name: "imid", value: im.id});
-	mopts.push({name: "op", value: sprintf(JS9.Imarith.opHTML, im.id)});
-	mopts.push({name: "arg1", value: sprintf(JS9.Imarith.arg1HTML, im.id, images)});
-	mopts.push({name: "num", value: sprintf(JS9.Imarith.numHTML, im.id)});
-	mopts.push({name: "run", value: sprintf(JS9.Imarith.runHTML, im.id)});
-	mopts.push({name: "reset", value: sprintf(JS9.Imarith.resetHTML,im.id)});
+	mopts.push({name: "imid", value: imid});
+	mopts.push({name: "op", value: sprintf(JS9.Imarith.opHTML, 
+					       dispid, imid)});
+	mopts.push({name: "arg1", value: sprintf(JS9.Imarith.arg1HTML,
+						 dispid, imid, images)});
+	mopts.push({name: "num", value: sprintf(JS9.Imarith.numHTML,
+						dispid, imid)});
+	mopts.push({name: "run", value: sprintf(JS9.Imarith.runHTML,
+						dispid, imid)});
+	mopts.push({name: "reset", value: sprintf(JS9.Imarith.resetHTML,
+						  dispid, imid)});
  	s = JS9.Image.prototype.expandMacro.call(im, JS9.Imarith.imageHTML,
 						 mopts);
 	this.lastimage = im;

@@ -17,34 +17,34 @@ JS9.Cube.cubeHTML="<div class='JS9CubeLinegroup'>$header</div><p><div class='JS9
 
 JS9.Cube.headerHTML='Use the slider, text box, navigation or blink buttons to display a slice of a <b>FITS data cube</b>. Use the menu at the right to specify the slice axis.';
 
-JS9.Cube.rangeHTML='<span class="JS9CubeRangeLine">1<input type="range" min="1" max="%s" value="%s" class="JS9CubeRange" onchange="JS9.Cube.xrange(\'%s\',this)">%s</span>';
+JS9.Cube.rangeHTML='<span class="JS9CubeRangeLine">1<input type="range" min="1" max="%s" value="%s" class="JS9CubeRange" onchange="JS9.Cube.xrange(\'%s\', \'%s\', this)">%s</span>';
 
-JS9.Cube.valueHTML='<input type="text" class="JS9CubeValue" min="1" max="%s" value="%s" onchange="JS9.Cube.xvalue(\'%s\',this)" size="4">';
+JS9.Cube.valueHTML='<input type="text" class="JS9CubeValue" min="1" max="%s" value="%s" onchange="JS9.Cube.xvalue(\'%s\', \'%s\', this)" size="4">';
 
-JS9.Cube.firstHTML='<input type="button" class=JS9CubeBtn" value="First" onclick="JS9.Cube.xfirst(\'%s\',this)">';
+JS9.Cube.firstHTML='<input type="button" class=JS9CubeBtn" value="First" onclick="JS9.Cube.xfirst(\'%s\', \'%s\', this)">';
 
-JS9.Cube.nextHTML='<input type="button" class=JS9CubeBtn" value="Next" onclick="JS9.Cube.xnext(\'%s\',this)">';
+JS9.Cube.nextHTML='<input type="button" class=JS9CubeBtn" value="Next" onclick="JS9.Cube.xnext(\'%s\', \'%s\', this)">';
 
-JS9.Cube.prevHTML='<input type="button" class=JS9CubeBtn" value="Prev" onclick="JS9.Cube.xprev(\'%s\',this)">';
+JS9.Cube.prevHTML='<input type="button" class=JS9CubeBtn" value="Prev" onclick="JS9.Cube.xprev(\'%s\',\'%s\', this)">';
 
-JS9.Cube.lastHTML='<input type="button" class=JS9CubeBtn" value="Last" onclick="JS9.Cube.xlast(\'%s\',this)">';
+JS9.Cube.lastHTML='<input type="button" class=JS9CubeBtn" value="Last" onclick="JS9.Cube.xlast(\'%s\', \'%s\', this)">';
 
-JS9.Cube.blinkHTML='<input type="button" class=JS9CubeBtn" value="Blink" onclick="JS9.Cube.xstart(\'%s\',this)">';
+JS9.Cube.blinkHTML='<input type="button" class=JS9CubeBtn" value="Blink" onclick="JS9.Cube.xstart(\'%s\', \'%s\', this)">';
 
-JS9.Cube.stopHTML='<input type="button" class=JS9CubeBtn" value="Stop" onclick="JS9.Cube.xstop(\'%s\',this)">';
+JS9.Cube.stopHTML='<input type="button" class=JS9CubeBtn" value="Stop" onclick="JS9.Cube.xstop(\'%s\', \'%s\', this)">';
 
 JS9.Cube.extnameHTML='<span class="JS9CubeRangeLine">%s</span>';
 
-JS9.Cube.orderHTML='<select class="JS9CubeOrder" onchange="JS9.Cube.xorder(\'%s\',this)"><option value="$slice,*,*">$slice : * : *</option><option value="*,$slice,*">* : $slice : *</option><option value="*,*,$slice">* : * : $slice</option></select>';
+JS9.Cube.orderHTML='<select class="JS9CubeOrder" onchange="JS9.Cube.xorder(\'%s\', \'%s\', this)"><option value="$slice,*,*">$slice : * : *</option><option value="*,$slice,*">* : $slice : *</option><option value="*,*,$slice">* : * : $slice</option></select>';
 
-JS9.Cube.rateHTML='<select class="JS9CubeRate" onchange="JS9.Cube.xrate(\'%s\',this)"><option selected disabled>Rate</option><option value=".5">0.5 sec</option><option value="1" default>1 sec</option><option value="2">2 sec</option><option value="5">5 sec</option></select>';
+JS9.Cube.rateHTML='<select class="JS9CubeRate" onchange="JS9.Cube.xrate(\'%s\', \'%s\', this)"><option selected disabled>Rate</option><option value=".5">0.5 sec</option><option value="1" default>1 sec</option><option value="2">2 sec</option><option value="5">5 sec</option></select>';
 
 JS9.Cube.doSlice = function(im, slice, elarr){
     var i, s;
     var opts={};
     var plugin = im.display.pluginInstances[JS9.Cube.BASE];
     for(i=0; i<elarr.length; i++){
-	$(elarr[i]).val(slice);
+	plugin.divjq.find(elarr[i]).val(slice);
     }
     s = im.expandMacro(plugin.slice, [{name: "slice", value: slice}]);
     plugin.sval = slice;
@@ -52,9 +52,9 @@ JS9.Cube.doSlice = function(im, slice, elarr){
 };
 
 // change range
-JS9.Cube.xrange = function(id, target){
+JS9.Cube.xrange = function(did, id, target){
     var slice;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	slice = parseInt(target.value, 10);
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue"]);
@@ -62,9 +62,9 @@ JS9.Cube.xrange = function(id, target){
 };
 
 // change slice value
-JS9.Cube.xvalue = function(id, target){
+JS9.Cube.xvalue = function(did, id, target){
     var slice;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	slice = parseInt(target.value, 10);
 	JS9.Cube.doSlice(im, slice, [".JS9CubeRange"]);
@@ -73,9 +73,9 @@ JS9.Cube.xvalue = function(id, target){
 
 // first cube
 // eslint-disable-next-line no-unused-vars
-JS9.Cube.xfirst = function(id, target){
+JS9.Cube.xfirst = function(did, id, target){
     var slice;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	slice = 1;
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
@@ -84,9 +84,9 @@ JS9.Cube.xfirst = function(id, target){
 
 // next cube
 // eslint-disable-next-line no-unused-vars
-JS9.Cube.xnext = function(id, target){
+JS9.Cube.xnext = function(did, id, target){
     var s, slice, plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval + 1;
@@ -100,9 +100,9 @@ JS9.Cube.xnext = function(id, target){
 
 // prev cube
 // eslint-disable-next-line no-unused-vars
-JS9.Cube.xprev = function(id, target){
+JS9.Cube.xprev = function(did, id, target){
     var s, slice, plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval - 1;
@@ -116,9 +116,9 @@ JS9.Cube.xprev = function(id, target){
 
 // last cube
 // eslint-disable-next-line no-unused-vars
-JS9.Cube.xlast = function(id, target){
+JS9.Cube.xlast = function(did, id, target){
     var s, slice, plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	s = "NAXIS" + plugin.sidx;
@@ -128,9 +128,9 @@ JS9.Cube.xlast = function(id, target){
 };
 
 // cube arrangement
-JS9.Cube.xorder = function(id, target){
+JS9.Cube.xorder = function(did, id, target){
     var i, arr, plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	plugin.slice = target.value;
@@ -148,42 +148,42 @@ JS9.Cube.xorder = function(id, target){
 };
 
 // blink
-JS9.Cube.blink = function(id, target){
+JS9.Cube.blink = function(did, id, target){
     var plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	if( plugin.blinkMode === false ){
 	    delete plugin.blinkMode;
 	    return;
 	}
-	JS9.Cube.xnext(im, target);
+	JS9.Cube.xnext(did, id, target);
 	if( plugin.blinkMode === undefined ){
 	    plugin.blinkMode = true;
 	} 
 	JS9.Cube.tid = window.setTimeout(function(){
-		JS9.Cube.blink(im, target);
+		JS9.Cube.blink(did, id, target);
 	    }, plugin.rate);
     }
 };
 
 // start blink
-JS9.Cube.xstart = function(id, target){
+JS9.Cube.xstart = function(did, id, target){
     var plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	if( !plugin.blinkMode ){
-	    JS9.Cube.blink(id, target);
+	    JS9.Cube.blink(did, id, target);
 	}
     }
 };
 
 // stop blink
 // eslint-disable-next-line no-unused-vars
-JS9.Cube.xstop = function(id, target){
+JS9.Cube.xstop = function(did, id, target){
     var plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	if( plugin.blinkMode ){
@@ -197,9 +197,9 @@ JS9.Cube.xstop = function(id, target){
 };
 
 // blink rate
-JS9.Cube.xrate = function(id, target){
+JS9.Cube.xrate = function(did, id, target){
     var plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	plugin.rate = Math.floor(parseFloat(target.value) * 1000);
@@ -221,7 +221,7 @@ JS9.Cube.close = function(){
 
 // constructor: add HTML elements to the plugin
 JS9.Cube.init = function(opts){
-    var i, s, im, arr, mopts;
+    var i, s, im, arr, mopts, imid, dispid;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -253,6 +253,9 @@ JS9.Cube.init = function(opts){
     // do we have an image?
     im = this.display.image;
     if( im && (opts.mode !== "clear") ){
+	// convenience variables
+	imid = im.id;
+	dispid = im.display.id;
 	if( im.slice ){
 	    this.slice = im.slice.replace(/[0-9][0-9]*/,"$slice");
 	    arr = im.slice.split(/[ ,:]/);
@@ -283,30 +286,30 @@ JS9.Cube.init = function(opts){
 	    mopts = [];
 	    mopts.push({name: "header",  value: JS9.Cube.headerHTML});
 	    mopts.push({name: "range",
-		       value: sprintf(JS9.Cube.rangeHTML,
-				      this.smax, this.sval, im.id, this.smax)});
+		       value: sprintf(JS9.Cube.rangeHTML, this.smax, this.sval,
+				      dispid, imid, this.smax)});
 	    mopts.push({name: "value",
-		       value: sprintf(JS9.Cube.valueHTML, 
-				      this.smax, this.sval, im.id)});
+		       value: sprintf(JS9.Cube.valueHTML, this.smax, this.sval,
+				      dispid, imid)});
 	    mopts.push({name: "first",
-		       value: sprintf(JS9.Cube.firstHTML, im.id)});
+		       value: sprintf(JS9.Cube.firstHTML, dispid, imid)});
 	    mopts.push({name: "next",
-		       value: sprintf(JS9.Cube.nextHTML, im.id)});
+		       value: sprintf(JS9.Cube.nextHTML, dispid, imid)});
 	    mopts.push({name: "prev",
-		       value: sprintf(JS9.Cube.prevHTML, im.id)});
+		       value: sprintf(JS9.Cube.prevHTML, dispid, imid)});
 	    mopts.push({name: "last",
-		       value: sprintf(JS9.Cube.lastHTML, im.id)});
+		       value: sprintf(JS9.Cube.lastHTML, dispid, imid)});
 	    mopts.push({name: "blink",
-		       value: sprintf(JS9.Cube.blinkHTML, im.id)});
+		       value: sprintf(JS9.Cube.blinkHTML, dispid, imid)});
 	    mopts.push({name: "stop",
-		       value: sprintf(JS9.Cube.stopHTML, im.id)});
+		       value: sprintf(JS9.Cube.stopHTML, dispid, imid)});
+	    mopts.push({name: "order",
+		       value: sprintf(JS9.Cube.orderHTML, dispid, imid)});
+	    mopts.push({name: "rate",
+		       value: sprintf(JS9.Cube.rateHTML, dispid, imid)});
 	    mopts.push({name: "extname",
 		       value: sprintf(JS9.Cube.extnameHTML, 
 				      im.raw.header.EXTNAME || "")});
-	    mopts.push({name: "order",
-		       value: sprintf(JS9.Cube.orderHTML, im.id)});
-	    mopts.push({name: "rate",
-		       value: sprintf(JS9.Cube.rateHTML, im.id)});
 	    s = im.expandMacro(JS9.Cube.cubeHTML, mopts);
 	} else {
 	    s = "<p><center>This image is not a FITS data cube.</center>";

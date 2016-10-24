@@ -26,7 +26,7 @@ JS9.Blink.manualHTML='<input type="button" id="manual" name="manualBlink" value=
 
 JS9.Blink.imageHTML="<span style='float: left'>$active&nbsp;&nbsp;</span><span id='blinkFile'>$imfile</span>";
 
-JS9.Blink.activeHTML='<input class="blinkActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blink.xactive(\'%s\', this)">blink';
+JS9.Blink.activeHTML='<input class="blinkActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blink.xactive(\'%s\', \'%s\', this)">blink';
 
 JS9.Blink.imfileHTML='<b>%s</b>';
 
@@ -52,7 +52,7 @@ JS9.Blink.start = function(display){
 	}
     }
     if( display.blinkMode ){
-	JS9.Blink.tid = window.setTimeout(function(){
+	display.pluginInstances.JS9Blink.tid = window.setTimeout(function(){
 	    JS9.Blink.start(display);
 	}, plugin.rate);
     }
@@ -60,30 +60,20 @@ JS9.Blink.start = function(display){
 
 // stop blinking
 JS9.Blink.stop = function(display){
-    if( JS9.Blink.tid ){
-	window.clearTimeout(JS9.Blink.tid);
-	delete JS9.Blink.tid;
+    if( display.pluginInstances.JS9Blink.tid ){
+	window.clearTimeout(display.pluginInstances.JS9Blink.tid);
+	delete display.pluginInstances.JS9Blink.tid;
     }
     display.blinkMode = false;
     display.pluginInstances.JS9Blink.idx = 0;
 };
 
 // change active state
-JS9.Blink.xactive = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Blink.xactive = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     var active = target.checked;
     if( im ){
 	im.tmp.blinkMode = active;
-    }
-};
-
-// change current file
-// eslint-disable-next-line no-unused-vars
-JS9.Blink.ximfile = function(id, target){
-    var im = JS9.lookupImage(id);
-    if( im ){
-	// change "current" file to display
-	im.displayImage();
     }
 };
 
@@ -134,17 +124,23 @@ JS9.Blend.xrate = function(id, target){
 
 // get a BlinkImage id based on the file image id
 JS9.Blink.imid = function(im){
-    return im.id
-	.replace(/[^A-Za-z0-9_]/g, "_")
-	+ "BlinkImage";
+    var id = im.display.id + "_" + im.id;
+    return id.replace(/[^A-Za-z0-9_]/g, "_") + "BlinkImage";
+};
+
+// get a class unique between displays
+JS9.Blink.dispclass = function(im){
+    var id = JS9.Blink.BASE + "_" + im.display.id;
+    return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Blink.activeImage = function(im){
-    var id;
+    var id, dcls;
     if( im ){
 	id = JS9.Blink.imid(im);
-	$("." + JS9.Blink.BASE + "Image")
+	dcls = JS9.Blink.dispclass(im) + "_Image";
+	$("." + dcls)
 	    .removeClass(JS9.Blink.BASE + "ImageActive")
 	    .addClass(JS9.Blink.BASE + "ImageInactive");
 	$("#" + id)
@@ -155,16 +151,25 @@ JS9.Blink.activeImage = function(im){
 
 // add an image to the list of available images
 JS9.Blink.addImage = function(im){
-    var s, id, divjq;
+    var s, id, divjq, dcls, dispid, imid;
     var opts = [];
+    var cls = JS9.Blink.BASE + "Image";
     if( !im ){
 	return;
     }
+    // convenience variables
+    imid = im.id;
+    dispid = im.display.id;
+    // unique id
     id = JS9.Blink.imid(im);
+    // get class for this layer 
+    dcls = JS9.Blink.dispclass(im) + "_Image";
     // value to pass to the macro expander
     opts.push({name: "imid", value: im.id});
-    opts.push({name: "active", value: sprintf(JS9.Blink.activeHTML, im.id)});
-    opts.push({name: "imfile", value: sprintf(JS9.Blink.imfileHTML, im.id, im.id)});
+    opts.push({name: "active", value: sprintf(JS9.Blink.activeHTML, 
+					      dispid, imid)});
+    opts.push({name: "imfile", value: sprintf(JS9.Blink.imfileHTML, 
+					      imid)});
     // remove initial message
     if( !this.blinkDivs ){
 	this.blinkImageContainer.html("");
@@ -173,10 +178,10 @@ JS9.Blink.addImage = function(im){
     s = JS9.Image.prototype.expandMacro.call(im, JS9.Blink.imageHTML, opts);
     // add image html to the image container
     divjq = $("<div>")
-	.addClass(JS9.Blink.BASE + "Image")
-	.addClass(JS9.Blink.BASE + "ImageActive")
+	.addClass(cls)
+	.addClass(dcls)
 	.attr("id", id)
-	.prop("imid", im.id)
+	.prop("imid", imid)
 	.html(s)
 	.appendTo(this.blinkImageContainer);
     divjq.on("mousedown touchstart", function(){
@@ -209,7 +214,7 @@ JS9.Blink.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Blink.init = function(){
-    var i, s, im;
+    var i, s, im, dispid;
     var opts = [];
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -239,18 +244,19 @@ JS9.Blink.init = function(){
 	.attr("id", this.id + "BlinkContainer")
         .css("overflow", "auto")
 	.appendTo(this.divjq);
+    dispid = this.display.id;
     opts.push({name: "mode", value: sprintf(JS9.Blink.modeHTML, 
-					    this.display.id)});
+					    dispid)});
     opts.push({name: "manual", value: sprintf(JS9.Blink.manualHTML, 
-					    this.display.id)});
+					      dispid)});
     opts.push({name: "rate", value: sprintf(JS9.Blink.rateHTML, 
-					    this.display.id)});
+					    dispid)});
     s = JS9.Image.prototype.expandMacro.call(null, JS9.Blink.blinkModeHTML, 
 					     opts);
     // header
     this.blinkHeader = $("<div>")
 	.addClass(JS9.Blink.BASE + "Header")
-	.attr("id", this.display.id + "Header")
+	.attr("id", dispid + "Header")
 	.html(s)
 	.appendTo(this.blinkContainer);
     // container to hold images

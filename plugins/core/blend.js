@@ -17,20 +17,19 @@ JS9.Blend.blendModeHTML='When <b>Image Blending</b> is turned on, the images you
 
 JS9.Blend.imageHTML="<span style='float: left'>$active &nbsp;&nbsp; $blend &nbsp;&nbsp; $opacity</span>&nbsp;&nbsp; <span id='blendFile'>$imfile</span>";
 
-JS9.Blend.activeHTML='<input class="blendActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blend.xactive(\'%s\', this)">blend using:';
+JS9.Blend.activeHTML='<input class="blendActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blend.xactive(\'%s\', \'%s\', this)">blend using:';
 
-JS9.Blend.blendHTML='<select class="blendModeSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xblend(\'%s\',this)"><option selected disabled>blend mode</option><option value="normal">normal</option><option value="screen">screen</option><option value="multiply">multiply</option><option value="overlay">overlay</option><option value="darken">darken</option><option value="lighten">lighten</option><option value="color-dodge">color-dodge</option><option value="color-burn">color-burn</option><option value="hard-light">hard-light</option><option value="soft-light">soft-light</option><option value="difference">difference</option><option value="exclusion">exclusion</option><option value="hue">hue</option><option value="saturation">saturation</option><option value="color">color</option> <option value="luminosity">luminosity</option></select>';
+JS9.Blend.blendHTML='<select class="blendModeSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xblend(\'%s\', \'%s\', this)"><option selected disabled>blend mode</option><option value="normal">normal</option><option value="screen">screen</option><option value="multiply">multiply</option><option value="overlay">overlay</option><option value="darken">darken</option><option value="lighten">lighten</option><option value="color-dodge">color-dodge</option><option value="color-burn">color-burn</option><option value="hard-light">hard-light</option><option value="soft-light">soft-light</option><option value="difference">difference</option><option value="exclusion">exclusion</option><option value="hue">hue</option><option value="saturation">saturation</option><option value="color">color</option> <option value="luminosity">luminosity</option></select>';
 
-JS9.Blend.opacityHTML='<select class="blendOpacitySelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xopacity(\'%s\',this)"><option selected disabled>opacity</option><option value="1.00">opaque</option><option value="0.95">0.95</option><option value="0.90">0.90</option><option value="0.85">0.85</option><option value="0.80">0.80</option><option value="0.75">0.75</option><option value="0.70">0.70</option><option value="0.65">0.65</option><option value="0.60">0.60</option><option value="0.55">0.55</option><option value="0.50">0.50</option><option value="0.45">0.45</option><option value="0.40">0.40</option><option value="0.35">0.35</option><option value="0.30">0.30</option><option value="0.25">0.25</option><option value="0.20">0.20</option><option value="0.10">0.10</option><option value="0.0">transparent</option></select>';
+JS9.Blend.opacityHTML='<select class="blendOpacitySelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xopacity(\'%s\', \'%s\', this)"><option selected disabled>opacity</option><option value="1.00">opaque</option><option value="0.95">0.95</option><option value="0.90">0.90</option><option value="0.85">0.85</option><option value="0.80">0.80</option><option value="0.75">0.75</option><option value="0.70">0.70</option><option value="0.65">0.65</option><option value="0.60">0.60</option><option value="0.55">0.55</option><option value="0.50">0.50</option><option value="0.45">0.45</option><option value="0.40">0.40</option><option value="0.35">0.35</option><option value="0.30">0.30</option><option value="0.25">0.25</option><option value="0.20">0.20</option><option value="0.10">0.10</option><option value="0.0">transparent</option></select>';
 
-// JS9.Blend.imfileHTML='<input type="button" value="%s" onclick="javascript:JS9.Blend.ximfile(\'%s\', this)">';
 JS9.Blend.imfileHTML='<b>%s</b>';
 
 JS9.Blend.nofileHTML='<p><span id="blendNoFile">[Images will appear here as they are loaded]</span>';
 
 // change active state
-JS9.Blend.xactive = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Blend.xactive = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     var active = target.checked;
     if( im ){
 	// change active mode
@@ -39,8 +38,8 @@ JS9.Blend.xactive = function(id, target){
 };
 
 // change blend mode
-JS9.Blend.xblend = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Blend.xblend = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     var blend = target.options[target.selectedIndex].value;
     if( im ){
 	// change the blend mode
@@ -51,24 +50,14 @@ JS9.Blend.xblend = function(id, target){
 };
 
 // change opacity
-JS9.Blend.xopacity = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Blend.xopacity = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     var opacity = target.options[target.selectedIndex].value;
     if( im ){
 	// change opacity
 	if( opacity !== "" ){
             im.blendImage(null, parseFloat(opacity));
 	}
-    }
-};
-
-// change current file
-// eslint-disable-next-line no-unused-vars
-JS9.Blend.ximfile = function(id, target){
-    var im = JS9.lookupImage(id);
-    if( im ){
-	// change "current" file to display
-	im.displayImage();
     }
 };
 
@@ -85,17 +74,23 @@ JS9.Blend.xblendmode = function(id, target){
 
 // get a BlendImage id based on the file image id
 JS9.Blend.imid = function(im){
-    return im.id
-	.replace(/[^A-Za-z0-9_]/g, "_")
-	+ "BlendImage";
+    var id = im.display.id + "_" + im.id;
+    return id.replace(/[^A-Za-z0-9_]/g, "_") + "BlendImage";
+};
+
+// get a class unique between displays
+JS9.Blend.dispclass = function(im){
+    var id = JS9.Blend.BASE + "_" + im.display.id;
+    return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Blend.activeImage = function(im){
-    var id;
+    var id, dcls;
     if( im ){
 	id = JS9.Blend.imid(im);
-	$("." + JS9.Blend.BASE + "Image")
+	dcls = JS9.Blend.dispclass(im) + "_Image";
+	$("." + dcls)
 	    .removeClass(JS9.Blend.BASE + "ImageActive")
 	    .addClass(JS9.Blend.BASE + "ImageInactive");
 	$("#" + id)
@@ -106,18 +101,29 @@ JS9.Blend.activeImage = function(im){
 
 // add an image to the list of available images
 JS9.Blend.addImage = function(im){
-    var s, bl, id, divjq;
+    var s, bl, id, divjq, dcls, dispid, imid;
     var opts = [];
+    var cls = JS9.Blend.BASE + "Image";
     if( !im ){
 	return;
     }
+    // convenience variables
+    imid = im.id;
+    dispid = im.display.id;
+    // unique id
     id = JS9.Blend.imid(im);
+    // get class for this layer 
+    dcls = JS9.Blend.dispclass(im) + "_Image";
     // value to pass to the macro expander
-    opts.push({name: "imid", value: im.id});
-    opts.push({name: "active", value: sprintf(JS9.Blend.activeHTML, im.id)});
-    opts.push({name: "opacity", value: sprintf(JS9.Blend.opacityHTML, im.id)});
-    opts.push({name: "imfile", value: sprintf(JS9.Blend.imfileHTML, im.id, im.id)});
-    opts.push({name: "blend", value: sprintf(JS9.Blend.blendHTML, im.id)});
+    opts.push({name: "imid", value: imid});
+    opts.push({name: "active", value: sprintf(JS9.Blend.activeHTML, 
+					      dispid, imid)});
+    opts.push({name: "opacity", value: sprintf(JS9.Blend.opacityHTML, 
+					       dispid,  imid)});
+    opts.push({name: "blend", value: sprintf(JS9.Blend.blendHTML, 
+					     dispid,  imid)});
+    opts.push({name: "imfile", value: sprintf(JS9.Blend.imfileHTML, 
+					      imid)});
     // remove initial message
     if( !this.blendDivs ){
 	this.blendImageContainer.html("");
@@ -126,10 +132,10 @@ JS9.Blend.addImage = function(im){
     s = JS9.Image.prototype.expandMacro.call(im, JS9.Blend.imageHTML, opts);
     // add image html to the image container
     divjq = $("<div>")
-	.addClass(JS9.Blend.BASE + "Image")
-	.addClass(JS9.Blend.BASE + "ImageActive")
+	.addClass(cls)
+	.addClass(dcls)
 	.attr("id", id)
-	.prop("imid", im.id)
+	.prop("imid", imid)
 	.html(s)
 	.appendTo(this.blendImageContainer);
     divjq.on("mousedown touchstart", function(){
