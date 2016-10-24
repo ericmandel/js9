@@ -34,7 +34,7 @@
     // on an ipad, the click handler reload the page!
     var click='ontouchstart' in document.documentElement?'touchstart': 'click';
     function init(){
-        JS9.Load("./png/casa.png", {scale: "log", colormap: "cool"});
+        JS9.Load("./png/casa.png", {scale: "log", colormap: "cool", onload: function(){JS9.DisplayPlugin('JS9Layers')}});
         $("#display").on("change", function(evt){
           try{doit("display", this.value);}
           finally{$("#display").prop('selectedIndex', 0);
@@ -250,7 +250,7 @@
         JS9.LoadCatalog("mycat", mycat, {color: "red", shape: "circle", radius: 5});
     </pre>
     Please see
-    the <a href="./help/publicapi.html" target="_blank">Public Access API</a> for more detailed information about catalog format and catalog options.
+    the <a href="./help/publicapi.html" target="_blank">Public Access API</a> for more detailed information about catalog format and catalog options, including use of global properties in JS9.globalOpts.catalogs.
     <p>
     When saving astronomical catalogs in the <b>Shape Layers</b>
     plugin, you have the choice of saving as regions or saving the
