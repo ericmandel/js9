@@ -1087,20 +1087,19 @@ JS9.Blend.blendModeHTML='When <b>Image Blending</b> is turned on, the images you
 
 JS9.Blend.imageHTML="<span style='float: left'>$active &nbsp;&nbsp; $blend &nbsp;&nbsp; $opacity</span>&nbsp;&nbsp; <span id='blendFile'>$imfile</span>";
 
-JS9.Blend.activeHTML='<input class="blendActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blend.xactive(\'%s\', this)">blend using:';
+JS9.Blend.activeHTML='<input class="blendActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blend.xactive(\'%s\', \'%s\', this)">blend using:';
 
-JS9.Blend.blendHTML='<select class="blendModeSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xblend(\'%s\',this)"><option selected disabled>blend mode</option><option value="normal">normal</option><option value="screen">screen</option><option value="multiply">multiply</option><option value="overlay">overlay</option><option value="darken">darken</option><option value="lighten">lighten</option><option value="color-dodge">color-dodge</option><option value="color-burn">color-burn</option><option value="hard-light">hard-light</option><option value="soft-light">soft-light</option><option value="difference">difference</option><option value="exclusion">exclusion</option><option value="hue">hue</option><option value="saturation">saturation</option><option value="color">color</option> <option value="luminosity">luminosity</option></select>';
+JS9.Blend.blendHTML='<select class="blendModeSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xblend(\'%s\', \'%s\', this)"><option selected disabled>blend mode</option><option value="normal">normal</option><option value="screen">screen</option><option value="multiply">multiply</option><option value="overlay">overlay</option><option value="darken">darken</option><option value="lighten">lighten</option><option value="color-dodge">color-dodge</option><option value="color-burn">color-burn</option><option value="hard-light">hard-light</option><option value="soft-light">soft-light</option><option value="difference">difference</option><option value="exclusion">exclusion</option><option value="hue">hue</option><option value="saturation">saturation</option><option value="color">color</option> <option value="luminosity">luminosity</option></select>';
 
-JS9.Blend.opacityHTML='<select class="blendOpacitySelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xopacity(\'%s\',this)"><option selected disabled>opacity</option><option value="1.00">opaque</option><option value="0.95">0.95</option><option value="0.90">0.90</option><option value="0.85">0.85</option><option value="0.80">0.80</option><option value="0.75">0.75</option><option value="0.70">0.70</option><option value="0.65">0.65</option><option value="0.60">0.60</option><option value="0.55">0.55</option><option value="0.50">0.50</option><option value="0.45">0.45</option><option value="0.40">0.40</option><option value="0.35">0.35</option><option value="0.30">0.30</option><option value="0.25">0.25</option><option value="0.20">0.20</option><option value="0.10">0.10</option><option value="0.0">transparent</option></select>';
+JS9.Blend.opacityHTML='<select class="blendOpacitySelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xopacity(\'%s\', \'%s\', this)"><option selected disabled>opacity</option><option value="1.00">opaque</option><option value="0.95">0.95</option><option value="0.90">0.90</option><option value="0.85">0.85</option><option value="0.80">0.80</option><option value="0.75">0.75</option><option value="0.70">0.70</option><option value="0.65">0.65</option><option value="0.60">0.60</option><option value="0.55">0.55</option><option value="0.50">0.50</option><option value="0.45">0.45</option><option value="0.40">0.40</option><option value="0.35">0.35</option><option value="0.30">0.30</option><option value="0.25">0.25</option><option value="0.20">0.20</option><option value="0.10">0.10</option><option value="0.0">transparent</option></select>';
 
-// JS9.Blend.imfileHTML='<input type="button" value="%s" onclick="javascript:JS9.Blend.ximfile(\'%s\', this)">';
 JS9.Blend.imfileHTML='<b>%s</b>';
 
 JS9.Blend.nofileHTML='<p><span id="blendNoFile">[Images will appear here as they are loaded]</span>';
 
 // change active state
-JS9.Blend.xactive = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Blend.xactive = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     var active = target.checked;
     if( im ){
 	// change active mode
@@ -1109,8 +1108,8 @@ JS9.Blend.xactive = function(id, target){
 };
 
 // change blend mode
-JS9.Blend.xblend = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Blend.xblend = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     var blend = target.options[target.selectedIndex].value;
     if( im ){
 	// change the blend mode
@@ -1121,24 +1120,14 @@ JS9.Blend.xblend = function(id, target){
 };
 
 // change opacity
-JS9.Blend.xopacity = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Blend.xopacity = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     var opacity = target.options[target.selectedIndex].value;
     if( im ){
 	// change opacity
 	if( opacity !== "" ){
             im.blendImage(null, parseFloat(opacity));
 	}
-    }
-};
-
-// change current file
-// eslint-disable-next-line no-unused-vars
-JS9.Blend.ximfile = function(id, target){
-    var im = JS9.lookupImage(id);
-    if( im ){
-	// change "current" file to display
-	im.displayImage();
     }
 };
 
@@ -1155,17 +1144,23 @@ JS9.Blend.xblendmode = function(id, target){
 
 // get a BlendImage id based on the file image id
 JS9.Blend.imid = function(im){
-    return im.id
-	.replace(/[^A-Za-z0-9_]/g, "_")
-	+ "BlendImage";
+    var id = im.display.id + "_" + im.id;
+    return id.replace(/[^A-Za-z0-9_]/g, "_") + "BlendImage";
+};
+
+// get a class unique between displays
+JS9.Blend.dispclass = function(im){
+    var id = JS9.Blend.BASE + "_" + im.display.id;
+    return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Blend.activeImage = function(im){
-    var id;
+    var id, dcls;
     if( im ){
 	id = JS9.Blend.imid(im);
-	$("." + JS9.Blend.BASE + "Image")
+	dcls = JS9.Blend.dispclass(im) + "_Image";
+	$("." + dcls)
 	    .removeClass(JS9.Blend.BASE + "ImageActive")
 	    .addClass(JS9.Blend.BASE + "ImageInactive");
 	$("#" + id)
@@ -1176,18 +1171,29 @@ JS9.Blend.activeImage = function(im){
 
 // add an image to the list of available images
 JS9.Blend.addImage = function(im){
-    var s, bl, id, divjq;
+    var s, bl, id, divjq, dcls, dispid, imid;
     var opts = [];
+    var cls = JS9.Blend.BASE + "Image";
     if( !im ){
 	return;
     }
+    // convenience variables
+    imid = im.id;
+    dispid = im.display.id;
+    // unique id
     id = JS9.Blend.imid(im);
+    // get class for this layer 
+    dcls = JS9.Blend.dispclass(im) + "_Image";
     // value to pass to the macro expander
-    opts.push({name: "imid", value: im.id});
-    opts.push({name: "active", value: sprintf(JS9.Blend.activeHTML, im.id)});
-    opts.push({name: "opacity", value: sprintf(JS9.Blend.opacityHTML, im.id)});
-    opts.push({name: "imfile", value: sprintf(JS9.Blend.imfileHTML, im.id, im.id)});
-    opts.push({name: "blend", value: sprintf(JS9.Blend.blendHTML, im.id)});
+    opts.push({name: "imid", value: imid});
+    opts.push({name: "active", value: sprintf(JS9.Blend.activeHTML, 
+					      dispid, imid)});
+    opts.push({name: "opacity", value: sprintf(JS9.Blend.opacityHTML, 
+					       dispid,  imid)});
+    opts.push({name: "blend", value: sprintf(JS9.Blend.blendHTML, 
+					     dispid,  imid)});
+    opts.push({name: "imfile", value: sprintf(JS9.Blend.imfileHTML, 
+					      imid)});
     // remove initial message
     if( !this.blendDivs ){
 	this.blendImageContainer.html("");
@@ -1196,10 +1202,10 @@ JS9.Blend.addImage = function(im){
     s = JS9.Image.prototype.expandMacro.call(im, JS9.Blend.imageHTML, opts);
     // add image html to the image container
     divjq = $("<div>")
-	.addClass(JS9.Blend.BASE + "Image")
-	.addClass(JS9.Blend.BASE + "ImageActive")
+	.addClass(cls)
+	.addClass(dcls)
 	.attr("id", id)
-	.prop("imid", im.id)
+	.prop("imid", imid)
 	.html(s)
 	.appendTo(this.blendImageContainer);
     divjq.on("mousedown touchstart", function(){
@@ -1358,7 +1364,7 @@ JS9.Blink.manualHTML='<input type="button" id="manual" name="manualBlink" value=
 
 JS9.Blink.imageHTML="<span style='float: left'>$active&nbsp;&nbsp;</span><span id='blinkFile'>$imfile</span>";
 
-JS9.Blink.activeHTML='<input class="blinkActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blink.xactive(\'%s\', this)">blink';
+JS9.Blink.activeHTML='<input class="blinkActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blink.xactive(\'%s\', \'%s\', this)">blink';
 
 JS9.Blink.imfileHTML='<b>%s</b>';
 
@@ -1384,7 +1390,7 @@ JS9.Blink.start = function(display){
 	}
     }
     if( display.blinkMode ){
-	JS9.Blink.tid = window.setTimeout(function(){
+	display.pluginInstances.JS9Blink.tid = window.setTimeout(function(){
 	    JS9.Blink.start(display);
 	}, plugin.rate);
     }
@@ -1392,30 +1398,20 @@ JS9.Blink.start = function(display){
 
 // stop blinking
 JS9.Blink.stop = function(display){
-    if( JS9.Blink.tid ){
-	window.clearTimeout(JS9.Blink.tid);
-	delete JS9.Blink.tid;
+    if( display.pluginInstances.JS9Blink.tid ){
+	window.clearTimeout(display.pluginInstances.JS9Blink.tid);
+	delete display.pluginInstances.JS9Blink.tid;
     }
     display.blinkMode = false;
     display.pluginInstances.JS9Blink.idx = 0;
 };
 
 // change active state
-JS9.Blink.xactive = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Blink.xactive = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     var active = target.checked;
     if( im ){
 	im.tmp.blinkMode = active;
-    }
-};
-
-// change current file
-// eslint-disable-next-line no-unused-vars
-JS9.Blink.ximfile = function(id, target){
-    var im = JS9.lookupImage(id);
-    if( im ){
-	// change "current" file to display
-	im.displayImage();
     }
 };
 
@@ -1466,17 +1462,23 @@ JS9.Blend.xrate = function(id, target){
 
 // get a BlinkImage id based on the file image id
 JS9.Blink.imid = function(im){
-    return im.id
-	.replace(/[^A-Za-z0-9_]/g, "_")
-	+ "BlinkImage";
+    var id = im.display.id + "_" + im.id;
+    return id.replace(/[^A-Za-z0-9_]/g, "_") + "BlinkImage";
+};
+
+// get a class unique between displays
+JS9.Blink.dispclass = function(im){
+    var id = JS9.Blink.BASE + "_" + im.display.id;
+    return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Blink.activeImage = function(im){
-    var id;
+    var id, dcls;
     if( im ){
 	id = JS9.Blink.imid(im);
-	$("." + JS9.Blink.BASE + "Image")
+	dcls = JS9.Blink.dispclass(im) + "_Image";
+	$("." + dcls)
 	    .removeClass(JS9.Blink.BASE + "ImageActive")
 	    .addClass(JS9.Blink.BASE + "ImageInactive");
 	$("#" + id)
@@ -1487,16 +1489,25 @@ JS9.Blink.activeImage = function(im){
 
 // add an image to the list of available images
 JS9.Blink.addImage = function(im){
-    var s, id, divjq;
+    var s, id, divjq, dcls, dispid, imid;
     var opts = [];
+    var cls = JS9.Blink.BASE + "Image";
     if( !im ){
 	return;
     }
+    // convenience variables
+    imid = im.id;
+    dispid = im.display.id;
+    // unique id
     id = JS9.Blink.imid(im);
+    // get class for this layer 
+    dcls = JS9.Blink.dispclass(im) + "_Image";
     // value to pass to the macro expander
     opts.push({name: "imid", value: im.id});
-    opts.push({name: "active", value: sprintf(JS9.Blink.activeHTML, im.id)});
-    opts.push({name: "imfile", value: sprintf(JS9.Blink.imfileHTML, im.id, im.id)});
+    opts.push({name: "active", value: sprintf(JS9.Blink.activeHTML, 
+					      dispid, imid)});
+    opts.push({name: "imfile", value: sprintf(JS9.Blink.imfileHTML, 
+					      imid)});
     // remove initial message
     if( !this.blinkDivs ){
 	this.blinkImageContainer.html("");
@@ -1505,10 +1516,10 @@ JS9.Blink.addImage = function(im){
     s = JS9.Image.prototype.expandMacro.call(im, JS9.Blink.imageHTML, opts);
     // add image html to the image container
     divjq = $("<div>")
-	.addClass(JS9.Blink.BASE + "Image")
-	.addClass(JS9.Blink.BASE + "ImageActive")
+	.addClass(cls)
+	.addClass(dcls)
 	.attr("id", id)
-	.prop("imid", im.id)
+	.prop("imid", imid)
 	.html(s)
 	.appendTo(this.blinkImageContainer);
     divjq.on("mousedown touchstart", function(){
@@ -1541,7 +1552,7 @@ JS9.Blink.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Blink.init = function(){
-    var i, s, im;
+    var i, s, im, dispid;
     var opts = [];
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -1571,18 +1582,19 @@ JS9.Blink.init = function(){
 	.attr("id", this.id + "BlinkContainer")
         .css("overflow", "auto")
 	.appendTo(this.divjq);
+    dispid = this.display.id;
     opts.push({name: "mode", value: sprintf(JS9.Blink.modeHTML, 
-					    this.display.id)});
+					    dispid)});
     opts.push({name: "manual", value: sprintf(JS9.Blink.manualHTML, 
-					    this.display.id)});
+					      dispid)});
     opts.push({name: "rate", value: sprintf(JS9.Blink.rateHTML, 
-					    this.display.id)});
+					    dispid)});
     s = JS9.Image.prototype.expandMacro.call(null, JS9.Blink.blinkModeHTML, 
 					     opts);
     // header
     this.blinkHeader = $("<div>")
 	.addClass(JS9.Blink.BASE + "Header")
-	.attr("id", this.display.id + "Header")
+	.attr("id", dispid + "Header")
 	.html(s)
 	.appendTo(this.blinkContainer);
     // container to hold images
@@ -2152,34 +2164,34 @@ JS9.Cube.cubeHTML="<div class='JS9CubeLinegroup'>$header</div><p><div class='JS9
 
 JS9.Cube.headerHTML='Use the slider, text box, navigation or blink buttons to display a slice of a <b>FITS data cube</b>. Use the menu at the right to specify the slice axis.';
 
-JS9.Cube.rangeHTML='<span class="JS9CubeRangeLine">1<input type="range" min="1" max="%s" value="%s" class="JS9CubeRange" onchange="JS9.Cube.xrange(\'%s\',this)">%s</span>';
+JS9.Cube.rangeHTML='<span class="JS9CubeRangeLine">1<input type="range" min="1" max="%s" value="%s" class="JS9CubeRange" onchange="JS9.Cube.xrange(\'%s\', \'%s\', this)">%s</span>';
 
-JS9.Cube.valueHTML='<input type="text" class="JS9CubeValue" min="1" max="%s" value="%s" onchange="JS9.Cube.xvalue(\'%s\',this)" size="4">';
+JS9.Cube.valueHTML='<input type="text" class="JS9CubeValue" min="1" max="%s" value="%s" onchange="JS9.Cube.xvalue(\'%s\', \'%s\', this)" size="4">';
 
-JS9.Cube.firstHTML='<input type="button" class=JS9CubeBtn" value="First" onclick="JS9.Cube.xfirst(\'%s\',this)">';
+JS9.Cube.firstHTML='<input type="button" class=JS9CubeBtn" value="First" onclick="JS9.Cube.xfirst(\'%s\', \'%s\', this)">';
 
-JS9.Cube.nextHTML='<input type="button" class=JS9CubeBtn" value="Next" onclick="JS9.Cube.xnext(\'%s\',this)">';
+JS9.Cube.nextHTML='<input type="button" class=JS9CubeBtn" value="Next" onclick="JS9.Cube.xnext(\'%s\', \'%s\', this)">';
 
-JS9.Cube.prevHTML='<input type="button" class=JS9CubeBtn" value="Prev" onclick="JS9.Cube.xprev(\'%s\',this)">';
+JS9.Cube.prevHTML='<input type="button" class=JS9CubeBtn" value="Prev" onclick="JS9.Cube.xprev(\'%s\',\'%s\', this)">';
 
-JS9.Cube.lastHTML='<input type="button" class=JS9CubeBtn" value="Last" onclick="JS9.Cube.xlast(\'%s\',this)">';
+JS9.Cube.lastHTML='<input type="button" class=JS9CubeBtn" value="Last" onclick="JS9.Cube.xlast(\'%s\', \'%s\', this)">';
 
-JS9.Cube.blinkHTML='<input type="button" class=JS9CubeBtn" value="Blink" onclick="JS9.Cube.xstart(\'%s\',this)">';
+JS9.Cube.blinkHTML='<input type="button" class=JS9CubeBtn" value="Blink" onclick="JS9.Cube.xstart(\'%s\', \'%s\', this)">';
 
-JS9.Cube.stopHTML='<input type="button" class=JS9CubeBtn" value="Stop" onclick="JS9.Cube.xstop(\'%s\',this)">';
+JS9.Cube.stopHTML='<input type="button" class=JS9CubeBtn" value="Stop" onclick="JS9.Cube.xstop(\'%s\', \'%s\', this)">';
 
 JS9.Cube.extnameHTML='<span class="JS9CubeRangeLine">%s</span>';
 
-JS9.Cube.orderHTML='<select class="JS9CubeOrder" onchange="JS9.Cube.xorder(\'%s\',this)"><option value="$slice,*,*">$slice : * : *</option><option value="*,$slice,*">* : $slice : *</option><option value="*,*,$slice">* : * : $slice</option></select>';
+JS9.Cube.orderHTML='<select class="JS9CubeOrder" onchange="JS9.Cube.xorder(\'%s\', \'%s\', this)"><option value="$slice,*,*">$slice : * : *</option><option value="*,$slice,*">* : $slice : *</option><option value="*,*,$slice">* : * : $slice</option></select>';
 
-JS9.Cube.rateHTML='<select class="JS9CubeRate" onchange="JS9.Cube.xrate(\'%s\',this)"><option selected disabled>Rate</option><option value=".5">0.5 sec</option><option value="1" default>1 sec</option><option value="2">2 sec</option><option value="5">5 sec</option></select>';
+JS9.Cube.rateHTML='<select class="JS9CubeRate" onchange="JS9.Cube.xrate(\'%s\', \'%s\', this)"><option selected disabled>Rate</option><option value=".5">0.5 sec</option><option value="1" default>1 sec</option><option value="2">2 sec</option><option value="5">5 sec</option></select>';
 
 JS9.Cube.doSlice = function(im, slice, elarr){
     var i, s;
     var opts={};
     var plugin = im.display.pluginInstances[JS9.Cube.BASE];
     for(i=0; i<elarr.length; i++){
-	$(elarr[i]).val(slice);
+	plugin.divjq.find(elarr[i]).val(slice);
     }
     s = im.expandMacro(plugin.slice, [{name: "slice", value: slice}]);
     plugin.sval = slice;
@@ -2187,9 +2199,9 @@ JS9.Cube.doSlice = function(im, slice, elarr){
 };
 
 // change range
-JS9.Cube.xrange = function(id, target){
+JS9.Cube.xrange = function(did, id, target){
     var slice;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	slice = parseInt(target.value, 10);
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue"]);
@@ -2197,9 +2209,9 @@ JS9.Cube.xrange = function(id, target){
 };
 
 // change slice value
-JS9.Cube.xvalue = function(id, target){
+JS9.Cube.xvalue = function(did, id, target){
     var slice;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	slice = parseInt(target.value, 10);
 	JS9.Cube.doSlice(im, slice, [".JS9CubeRange"]);
@@ -2208,9 +2220,9 @@ JS9.Cube.xvalue = function(id, target){
 
 // first cube
 // eslint-disable-next-line no-unused-vars
-JS9.Cube.xfirst = function(id, target){
+JS9.Cube.xfirst = function(did, id, target){
     var slice;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	slice = 1;
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
@@ -2219,9 +2231,9 @@ JS9.Cube.xfirst = function(id, target){
 
 // next cube
 // eslint-disable-next-line no-unused-vars
-JS9.Cube.xnext = function(id, target){
+JS9.Cube.xnext = function(did, id, target){
     var s, slice, plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval + 1;
@@ -2235,9 +2247,9 @@ JS9.Cube.xnext = function(id, target){
 
 // prev cube
 // eslint-disable-next-line no-unused-vars
-JS9.Cube.xprev = function(id, target){
+JS9.Cube.xprev = function(did, id, target){
     var s, slice, plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval - 1;
@@ -2251,9 +2263,9 @@ JS9.Cube.xprev = function(id, target){
 
 // last cube
 // eslint-disable-next-line no-unused-vars
-JS9.Cube.xlast = function(id, target){
+JS9.Cube.xlast = function(did, id, target){
     var s, slice, plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	s = "NAXIS" + plugin.sidx;
@@ -2263,9 +2275,9 @@ JS9.Cube.xlast = function(id, target){
 };
 
 // cube arrangement
-JS9.Cube.xorder = function(id, target){
+JS9.Cube.xorder = function(did, id, target){
     var i, arr, plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	plugin.slice = target.value;
@@ -2283,42 +2295,42 @@ JS9.Cube.xorder = function(id, target){
 };
 
 // blink
-JS9.Cube.blink = function(id, target){
+JS9.Cube.blink = function(did, id, target){
     var plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	if( plugin.blinkMode === false ){
 	    delete plugin.blinkMode;
 	    return;
 	}
-	JS9.Cube.xnext(im, target);
+	JS9.Cube.xnext(did, id, target);
 	if( plugin.blinkMode === undefined ){
 	    plugin.blinkMode = true;
 	} 
 	JS9.Cube.tid = window.setTimeout(function(){
-		JS9.Cube.blink(im, target);
+		JS9.Cube.blink(did, id, target);
 	    }, plugin.rate);
     }
 };
 
 // start blink
-JS9.Cube.xstart = function(id, target){
+JS9.Cube.xstart = function(did, id, target){
     var plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	if( !plugin.blinkMode ){
-	    JS9.Cube.blink(id, target);
+	    JS9.Cube.blink(did, id, target);
 	}
     }
 };
 
 // stop blink
 // eslint-disable-next-line no-unused-vars
-JS9.Cube.xstop = function(id, target){
+JS9.Cube.xstop = function(did, id, target){
     var plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	if( plugin.blinkMode ){
@@ -2332,9 +2344,9 @@ JS9.Cube.xstop = function(id, target){
 };
 
 // blink rate
-JS9.Cube.xrate = function(id, target){
+JS9.Cube.xrate = function(did, id, target){
     var plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	plugin.rate = Math.floor(parseFloat(target.value) * 1000);
@@ -2356,7 +2368,7 @@ JS9.Cube.close = function(){
 
 // constructor: add HTML elements to the plugin
 JS9.Cube.init = function(opts){
-    var i, s, im, arr, mopts;
+    var i, s, im, arr, mopts, imid, dispid;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -2388,6 +2400,9 @@ JS9.Cube.init = function(opts){
     // do we have an image?
     im = this.display.image;
     if( im && (opts.mode !== "clear") ){
+	// convenience variables
+	imid = im.id;
+	dispid = im.display.id;
 	if( im.slice ){
 	    this.slice = im.slice.replace(/[0-9][0-9]*/,"$slice");
 	    arr = im.slice.split(/[ ,:]/);
@@ -2418,30 +2433,30 @@ JS9.Cube.init = function(opts){
 	    mopts = [];
 	    mopts.push({name: "header",  value: JS9.Cube.headerHTML});
 	    mopts.push({name: "range",
-		       value: sprintf(JS9.Cube.rangeHTML,
-				      this.smax, this.sval, im.id, this.smax)});
+		       value: sprintf(JS9.Cube.rangeHTML, this.smax, this.sval,
+				      dispid, imid, this.smax)});
 	    mopts.push({name: "value",
-		       value: sprintf(JS9.Cube.valueHTML, 
-				      this.smax, this.sval, im.id)});
+		       value: sprintf(JS9.Cube.valueHTML, this.smax, this.sval,
+				      dispid, imid)});
 	    mopts.push({name: "first",
-		       value: sprintf(JS9.Cube.firstHTML, im.id)});
+		       value: sprintf(JS9.Cube.firstHTML, dispid, imid)});
 	    mopts.push({name: "next",
-		       value: sprintf(JS9.Cube.nextHTML, im.id)});
+		       value: sprintf(JS9.Cube.nextHTML, dispid, imid)});
 	    mopts.push({name: "prev",
-		       value: sprintf(JS9.Cube.prevHTML, im.id)});
+		       value: sprintf(JS9.Cube.prevHTML, dispid, imid)});
 	    mopts.push({name: "last",
-		       value: sprintf(JS9.Cube.lastHTML, im.id)});
+		       value: sprintf(JS9.Cube.lastHTML, dispid, imid)});
 	    mopts.push({name: "blink",
-		       value: sprintf(JS9.Cube.blinkHTML, im.id)});
+		       value: sprintf(JS9.Cube.blinkHTML, dispid, imid)});
 	    mopts.push({name: "stop",
-		       value: sprintf(JS9.Cube.stopHTML, im.id)});
+		       value: sprintf(JS9.Cube.stopHTML, dispid, imid)});
+	    mopts.push({name: "order",
+		       value: sprintf(JS9.Cube.orderHTML, dispid, imid)});
+	    mopts.push({name: "rate",
+		       value: sprintf(JS9.Cube.rateHTML, dispid, imid)});
 	    mopts.push({name: "extname",
 		       value: sprintf(JS9.Cube.extnameHTML, 
 				      im.raw.header.EXTNAME || "")});
-	    mopts.push({name: "order",
-		       value: sprintf(JS9.Cube.orderHTML, im.id)});
-	    mopts.push({name: "rate",
-		       value: sprintf(JS9.Cube.rateHTML, im.id)});
 	    s = im.expandMacro(JS9.Cube.cubeHTML, mopts);
 	} else {
 	    s = "<p><center>This image is not a FITS data cube.</center>";
@@ -2493,20 +2508,20 @@ JS9.Imarith.BASE = JS9.Imarith.CLASS + JS9.Imarith.NAME;
 
 JS9.Imarith.imageHTML="<div class='JS9ImarithLinegroup'>Choose an op (add, subtract, multiply, divide, min, max) and an operand (number or image) and click Run. Reset will revert to the original data.</div><div class='JS9ImarithLinegroup'><span class='JS9ImarithSpan' style='float: left'><b>$imid</b> &nbsp;&nbsp; $op &nbsp;&nbsp; $arg1 &nbsp;&nbsp; $num</span></div><p><div class='JS9ImarithLinegroup'><span class='JS9ImarithSpan' style='float: left'>$run</span><span style='float: right'>$reset</span></div>";
 
-JS9.Imarith.opHTML='<select class=JS9ImarithOp" onchange="JS9.Imarith.xop(\'%s\',this)"><option value="" selected disabled>op</option><option value="add">add</option><option value="sub">sub</option><option value="mul">mul</option><option value="div">div</option><option value="min">min</option><option value="max">max</option></select>';
+JS9.Imarith.opHTML='<select class=JS9ImarithOp" onchange="JS9.Imarith.xop(\'%s\', \'%s\', this)"><option value="" selected disabled>op</option><option value="add">add</option><option value="sub">sub</option><option value="mul">mul</option><option value="div">div</option><option value="min">min</option><option value="max">max</option></select>';
 
-JS9.Imarith.arg1HTML='<select class=JS9ImarithArg1" onchange="JS9.Imarith.xarg1(\'%s\',this)"><option val="" selected disabled>operand</option><option value="num">number &#8594;</option>%s</select>';
+JS9.Imarith.arg1HTML='<select class=JS9ImarithArg1" onchange="JS9.Imarith.xarg1(\'%s\', \'%s\', this)"><option val="" selected disabled>operand</option><option value="num">number &#8594;</option>%s</select>';
 
-JS9.Imarith.numHTML='<input type="text" class="JS9ImarithNum" value="" onchange="JS9.Imarith.xnum(\'%s\',this)" size="10" placeholder="number">';
+JS9.Imarith.numHTML='<input type="text" class="JS9ImarithNum" value="" onchange="JS9.Imarith.xnum(\'%s\', \'%s\', this)" size="10" placeholder="number">';
 
-JS9.Imarith.runHTML='<input type="button" class=JS9ImarithBtn" value="Run" onclick="JS9.Imarith.xrun(\'%s\',this)">';
+JS9.Imarith.runHTML='<input type="button" class=JS9ImarithBtn" value="Run" onclick="JS9.Imarith.xrun(\'%s\', \'%s\', this)">';
 
-JS9.Imarith.resetHTML='<input type="button" class=JS9ImarithBtn" value="Reset" onclick="JS9.Imarith.xreset(\'%s\',this)">';
+JS9.Imarith.resetHTML='<input type="button" class=JS9ImarithBtn" value="Reset" onclick="JS9.Imarith.xreset(\'%s\', \'%s\', this)">';
 
 // change op
-JS9.Imarith.xop = function(id, target){
+JS9.Imarith.xop = function(did, id, target){
     var op = target.options[target.selectedIndex].value;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     // save new op in instance record
     if( im && op ){
 	im.display.pluginInstances.JS9Imarith.op = op;
@@ -2514,8 +2529,8 @@ JS9.Imarith.xop = function(id, target){
 };
 
 // change arg1
-JS9.Imarith.xarg1 = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Imarith.xarg1 = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     var arg1 = target.options[target.selectedIndex].value;
     // save new arg1 in instance record
     if( im && arg1 ){
@@ -2529,8 +2544,8 @@ JS9.Imarith.xarg1 = function(id, target){
 };
 
 // change num
-JS9.Imarith.xnum = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Imarith.xnum = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     var num = target.value;
     // save new num in instance record
     if( JS9.isNumber(num) ){
@@ -2544,9 +2559,9 @@ JS9.Imarith.xnum = function(id, target){
 
 // run image arithmetic
 // eslint-disable-next-line no-unused-vars
-JS9.Imarith.xrun = function(id, target){
+JS9.Imarith.xrun = function(did, id, target){
     var arg1, plugin;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances.JS9Imarith;
 	if( !plugin.op || !plugin.arg1 ){
@@ -2566,8 +2581,8 @@ JS9.Imarith.xrun = function(id, target){
 
 // reset to original data
 // eslint-disable-next-line no-unused-vars
-JS9.Imarith.xreset = function(id, target){
-    var im = JS9.lookupImage(id);
+JS9.Imarith.xreset = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	im.imarithData("reset");
     }
@@ -2588,7 +2603,7 @@ JS9.Imarith.close = function(){
 
 // constructor: add HTML elements to the plugin
 JS9.Imarith.init = function(opts){
-    var i, s, im, tim, mopts;
+    var i, s, im, tim, mopts, imid, dispid;
     var images = "";
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -2625,6 +2640,9 @@ JS9.Imarith.init = function(opts){
     // do we have an image?
     im = this.display.image;
     if( im && (opts.mode !== "clear") ){
+	// convenience variables
+	imid = im.id;
+	dispid = im.display.id;
 	// make the last one
 	this.lastim = im.id;
 	// get list of images that can be operands (other than this one)
@@ -2638,12 +2656,17 @@ JS9.Imarith.init = function(opts){
 	// create the html for this image
 	mopts = [];
 	mopts.push({name: "images", value: images});
-	mopts.push({name: "imid", value: im.id});
-	mopts.push({name: "op", value: sprintf(JS9.Imarith.opHTML, im.id)});
-	mopts.push({name: "arg1", value: sprintf(JS9.Imarith.arg1HTML, im.id, images)});
-	mopts.push({name: "num", value: sprintf(JS9.Imarith.numHTML, im.id)});
-	mopts.push({name: "run", value: sprintf(JS9.Imarith.runHTML, im.id)});
-	mopts.push({name: "reset", value: sprintf(JS9.Imarith.resetHTML,im.id)});
+	mopts.push({name: "imid", value: imid});
+	mopts.push({name: "op", value: sprintf(JS9.Imarith.opHTML, 
+					       dispid, imid)});
+	mopts.push({name: "arg1", value: sprintf(JS9.Imarith.arg1HTML,
+						 dispid, imid, images)});
+	mopts.push({name: "num", value: sprintf(JS9.Imarith.numHTML,
+						dispid, imid)});
+	mopts.push({name: "run", value: sprintf(JS9.Imarith.runHTML,
+						dispid, imid)});
+	mopts.push({name: "reset", value: sprintf(JS9.Imarith.resetHTML,
+						  dispid, imid)});
  	s = JS9.Image.prototype.expandMacro.call(im, JS9.Imarith.imageHTML,
 						 mopts);
 	this.lastimage = im;
@@ -3270,33 +3293,45 @@ JS9.Layers.BASE = JS9.Layers.CLASS + JS9.Layers.NAME;  // CSS base class name
 
 JS9.Layers.headerHTML='Shape layers can be hidden or made visible below. The topmost visible layer in the stack is <b>active</b>: it responds to mouse and touch events. Move a layer to the top of the stack to make it active.';
 
-JS9.Layers.layerHTML="<span style='float: left'>$visible&nbsp;&nbsp;</span>&nbsp;&nbsp; <span class='JS9LayersSpan'>$layer&nbsp;&nbsp</span>";
+JS9.Layers.layerHTML="<span style='float: left'>$visible&nbsp;&nbsp;$save&nbsp;&nbsp;</span>&nbsp;&nbsp; <span class='JS9LayersSpan'>$layer&nbsp;&nbsp</span>";
 
 JS9.Layers.nolayersHTML='<p><span class="JS9NoLayers">[Layers will appear here as they are created]</span>';
 
-JS9.Layers.visibleHTML='<input class="JS9LayersVisibleCheck" type="checkbox" id="visible" name="visible" value="visible" onclick="javascript:JS9.Layers.xvisible(\'%s\', \'%s\', this)">visible';
+JS9.Layers.visibleHTML='<input class="JS9LayersVisibleCheck" type="checkbox" id="visible" name="visible" value="visible" onclick="javascript:JS9.Layers.xvisible(\'%s\', \'%s\', \'%s\', this)">visible';
+
+JS9.Layers.saveBothHTML='<select class="JS9LayersSaveBothSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="catalog">catalog</option><option value="regions">regions</option></select>';
+
+JS9.Layers.saveRegionsHTML='<input class="JS9LayersSave" type="button" value="save regions" onclick="javascript:JS9.Layers.xsaveRegions(\'%s\', \'%s\', \'%s\', this)">';
 
 JS9.Layers.layerNameHTML='<b>%s</b>';
 
 // get an id based on the file image id and layer
 JS9.Layers.imid = function(im, layer){
-    var s = im.id + "_" + layer + "_";
-    return s
-	.replace(/[^A-Za-z0-9_]/g, "_")
-	+ "Layer";
+    var id = im.display.id + "_" + im.id + "_" + layer + "_";
+    return id.replace(/[^A-Za-z0-9_]/g, "_") + "Layer";
+};
+
+// get a class unique between displays
+JS9.Layers.dispclass = function(im){
+    var id = JS9.Layers.BASE + "_" + im.display.id;
+    return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Layers.activeLayer = function(im, pinst){
-    var i, s, id, order;
+    var i, s, id, dcls, order;
     if( im ){
 	order = pinst.layersLayerContainer.sortable("toArray");
+	if( (order.length === 1) && !order[0] ){
+	    return;
+	}
 	for(i=0; i<order.length; i++){
 	    order[i] = $("#" + order[i]).attr("layer");
 	}
 	s = im.activeShapeLayer(order);
 	id = JS9.Layers.imid(im, s);
-	$("." + JS9.Layers.BASE + "Layer")
+	dcls = JS9.Layers.dispclass(im) + "_Layer";
+	$("." + dcls)
 	    .removeClass(JS9.Layers.BASE + "LayerActive")
 	    .addClass(JS9.Layers.BASE + "LayerInactive");
 	$("#" + id)
@@ -3306,9 +3341,9 @@ JS9.Layers.activeLayer = function(im, pinst){
 };
 
 // make shape layer visible/invisible
-JS9.Layers.xvisible = function(id, layer, target){
+JS9.Layers.xvisible = function(did, id, layer, target){
     var pinst, mode;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	if( target.checked ){
 	    mode = "show";
@@ -3324,9 +3359,32 @@ JS9.Layers.xvisible = function(id, layer, target){
     }
 };
 
+// save layer (catalog or regions)
+// eslint-disable-next-line no-unused-vars
+JS9.Layers.xsave = function(did, id, layer, target){
+    var im = JS9.lookupImage(id, did);
+    var save = target.options[target.selectedIndex].value;
+    if( im ){
+	if( save === "catalog" ){
+	    im.saveCatalog(null, layer);
+	} else if( save === "regions" ){
+	    im.saveRegions(null, null, layer);
+	}
+    }
+};
+
+// save regions layer
+// eslint-disable-next-line no-unused-vars
+JS9.Layers.xsaveRegions = function(did, id, layer, target){
+    var im = JS9.lookupImage(id, did);
+    if( im ){
+	im.saveRegions();
+    }
+};
+
 // add a layer to the list
 JS9.Layers.addLayer = function(im, layer){
-    var l, s, id, divjq, zindex, added;
+    var l, s, id, divjq, zindex, added, dcls, imid, dispid;
     var cls = JS9.Layers.BASE + "Layer";
     var opts = [];
     // sanity checks
@@ -3338,13 +3396,26 @@ JS9.Layers.addLayer = function(im, layer){
     if( !this. nlayer ){
 	this.layersLayerContainer.html("");
     }
+    // convenience variables
+    imid = im.id;
+    dispid = im.display.id;
     // get current z-index
     zindex = parseInt(im.display.layers[layer].divjq.css("z-index"), 10);
-    // getunique id for this layer
+    // get unique id for this layer
     id = JS9.Layers.imid(im, layer);
+    // get class for this layer 
+    dcls = JS9.Layers.dispclass(im) + "_Layer";
     // value to pass to the macro expander
-    opts.push({name: "imid", value: im.id});
-    opts.push({name: "visible", value: sprintf(JS9.Layers.visibleHTML, im.id, layer)});
+    opts.push({name: "imid", value: imid});
+    opts.push({name: "visible", value: sprintf(JS9.Layers.visibleHTML, 
+					       dispid, imid, layer)});
+    if( im.layers[layer].catalog ){
+	opts.push({name: "save", value: sprintf(JS9.Layers.saveBothHTML,
+						dispid, imid, layer)});
+    } else {
+	opts.push({name: "save", value: sprintf(JS9.Layers.saveRegionsHTML,
+						dispid, imid, layer)});
+    }
     if( JS9.DEBUG > 1 ){
 	l = sprintf("%s layer [zindex: %s]", layer, zindex);
     } else {
@@ -3356,9 +3427,10 @@ JS9.Layers.addLayer = function(im, layer){
     // add layer html to the layer container
     divjq = $("<div>")
 	.addClass(cls)
+	.addClass(dcls)
 	.attr("id", id)
 	.attr("layer", layer)
-	.prop("imid", im.id)
+	.prop("imid", imid)
         .html(s);
     if( !this.nlayer ){
 	divjq.appendTo(this.layersLayerContainer);
@@ -3482,7 +3554,7 @@ JS9.RegisterPlugin(JS9.Layers.CLASS, JS9.Layers.NAME, JS9.Layers.init,
 		    onimagedisplay: JS9.Layers.display,
 		    onimageclose: JS9.Layers.close,
 		    help: "help/layers.html",
-		    winTitle: "Shapes Layers",
+		    winTitle: "Shape Layers",
 		    winResize: true,
 		    winDims: [JS9.Layers.WIDTH, JS9.Layers.HEIGHT]});
 // ---------------------------------------------------------------------
@@ -6221,17 +6293,45 @@ JS9.Prefs.catalogsSchema = {
 	    "type": "mobject",
 	    "helper": "Dec patterns to look for in table"
 	},
-	"skip": {
+	"wcssys": {
 	    "type": "string",
-	    "helper": "comment character in table"
+	    "helper": "wcs system of catalog"
+	},
+	"shape": {
+	    "type": "string",
+	    "helper": "shape of objects"
 	},
 	"color": {
 	    "type": "string",
 	    "helper": "color of objects"
 	},
+	"width": {
+	    "type": "number",
+	    "helper": "width of box objects"
+	},
+	"height": {
+	    "type": "number",
+	    "helper": "height of box objects"
+	},
+	"radius": {
+	    "type": "number",
+	    "helper": "radius of circle objects"
+	},
+	"r1": {
+	    "type": "number",
+	    "helper": "r1 of ellipse objects"
+	},
+	"r2": {
+	    "type": "number",
+	    "helper": "r2 of ellipse objects"
+	},
 	"tooltip": {
 	    "type": "string",
 	    "helper": "tooltip format for objects"
+	},
+	"skip": {
+	    "type": "string",
+	    "helper": "comment character in table"
 	}
     }
 };
@@ -6308,9 +6408,16 @@ JS9.Prefs.init = function(){
 	case "catalogs":
 	    source.data = {ras: JS9.globalOpts.catalogs.ras,
 			   decs: JS9.globalOpts.catalogs.decs,
+			   wcssys: JS9.globalOpts.catalogs.wcssys,
+			   shape: JS9.globalOpts.catalogs.shape,
 			   color: JS9.globalOpts.catalogs.color,
-			   skip: JS9.globalOpts.catalogs.skip,
-			   tooltip: JS9.globalOpts.catalogs.tooltip};
+			   width: JS9.globalOpts.catalogs.width,
+			   height: JS9.globalOpts.catalogs.height,
+			   radius: JS9.globalOpts.catalogs.radius,
+			   r1: JS9.globalOpts.catalogs.r1,
+			   r2: JS9.globalOpts.catalogs.r2,
+			   tooltip: JS9.globalOpts.catalogs.tooltip,
+			   skip: JS9.globalOpts.catalogs.skip};
 	    break;
 	case "displays":
 	    source.data = {mouseActions: JS9.globalOpts.mouseActions,

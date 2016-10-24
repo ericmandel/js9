@@ -789,6 +789,9 @@ This is useful if you want to edit the current definition to make a new
 colormap.
 
 <p>
+Don't forget that the file is saved by the browser, in whatever location
+you have set up for downloads.
+<p>
 <font size="+1"><b><u>Add a colormap to JS9</u></b></font>
 <p>
 <code><font size="+1">JS9.AddColormap(name, aa|rr,gg,bb|obj|json)</font></code>
@@ -1716,6 +1719,11 @@ This routine saves all essential session information about the currently
 displayed image (filename, scaling, colormap, contrast/bias, zoom, regions,
 catalogs, etc) in a json-formatted file. You can subsequently load this file
 into JS9 to restore the image session.
+
+<p>
+Don't forget that the file is saved by the browser, in whatever location
+you have set up for downloads.
+
 <p>
 The session file is a text file and can be edited, subject to the usual
 rules of json formatting. For example, you can change the colormap,
@@ -1954,19 +1962,32 @@ a tag value to remove regions having that tag.
 <p>
 <font size="+1"><b><u>Save regions from the current image to a file</u></b></font>
 <p>
-<code><font size="+1">JS9.SaveRegions(filename, which)</font></code>
+<code><font size="+1">JS9.SaveRegions(filename, which, layer)</font></code>
 <p>
 where:
 <ul>
 <li><b>filename</b>: output file name
 <li><b>which</b>: which regions to save (default is "all")
+<li><b>layer</b>: which layer save (default is "regions")
 </ul>
-Save the current regions for the displayed image as JS9 regions file. If
+Save the current regions for the displayed image as a JS9 regions file. If
 filename is not specified, the file will be saved as "js9.reg".
+
 <p>
-If the <b>regions</b> argument is not specified, it defaults to "all". You
+Don't forget that the file is saved by the browser, in whatever location
+you have set up for downloads.
+
+<p>
+If the <b>which</b> argument is not specified, it defaults to "all". You
 can specify "selected" to return information about the selected regions, or
 a tag value to save regions having that tag.
+
+<p>
+If the <b>layer</b> argument is not specified, it defaults to
+"regions", i.e.  the usual regions layer. You can specify a different
+layer, e.g., if you want to save a catalog layer as a region file
+(since <b>SaveCatalog()</b> will save the data in table format instead
+of as regions).
 
 <p>
 <font size="+1"><b><u>Load regions from a file into the current image</u></b></font>
@@ -2142,6 +2163,11 @@ where:
 <ul>
 <li><b>layer</b>: name of layer
 </ul>
+returns:
+<ul>
+<li><b>active</b>: the active shape layer (if no args are specified)
+</ul>
+
 For a given image, one shape layer at a time is <b>active</b>,
 responding to mouse and touch events. Ordinarily, a shape layer
 becomes the active layer when it is first created and shapes are
@@ -2159,7 +2185,6 @@ layer must be visible.
 This routine forms the basis for the <b>Shape Layer</b> plugin, which
 provides a graphical way to make a layer active (by moving it to the
 top of the layer stack).
-
 
 <p>
 <font size="+1"><b><u>Add one or more shapes to the specified layer</u></b></font>
@@ -2274,6 +2299,156 @@ where:
 Change one or more shapes. The opts object can contain the parameters 
 described in the <b>JS9.AddShapes()</b> section. However, you cannot (yet)
 change the shape itself (e.g. from "box" to "circle").
+
+<p>
+<font size="+1"><b><u>Load a catalog from a local file into the current image</u></b></font>
+<p>
+<code><font size="+1">JS9.LoadCatalog(layer, table, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>layer</b>: name of shape layer into which to load the catalog
+<li><b>table</b>: string or blob containing the catalog table
+<li><b>opts</b>: catalog options
+</ul>
+Catalogs are a special type of JS9 shape layer, in which the shapes
+have been generated from a tab-delimited text file of columns,
+including two columns that contain RA and Dec values. A catalog can
+have a pre-amble of comments, which, by default, have a '#' character
+in the first column.
+
+<p>
+Two examples of catalog files are shown below:
+<pre>
+  ra        	dec        	magj	magh	magk
+  -----------	------------	------	----	----
+  23:22:56.003	58:44:45.429	15.612	15.103	14.9
+  23:22:56.230	58:45:32.011	13.723	13.174	12.981
+  23:22:56.319	58:45:08.954	14.212	13.119	12.723
+  ...
+
+  #
+  #   VizieR Astronomical Server vizier.u-strasbg.fr
+  # ...
+  #Coosys	J2000:	eq_FK5 J2000
+  # ...
+  #Title: 2MASS All-Sky Catalog of Point Sources (Cutri+ 2003)
+  # ...
+  #Column	_RAJ2000	(A12)		[ucd=pos.eq.ra]
+  #Column	_DEJ2000	(A12)		[ucd=pos.eq.dec]
+  #Column	RAJ2000	(F10.6)		[ucd=pos.eq.ra;meta.main]
+  #Column	DEJ2000	(F10.6)		[ucd=pos.eq.dec;meta.main]
+  #Column	2MASS	(a17)		[ucd=meta.id;meta.main]
+  # ...
+  #Column	Aflg	(I1)		[ucd=meta.code]
+  _RAJ2000	_DEJ2000	RAJ2000	DEJ2000	2MASS	Jmag	e_Jmag	Hmag	  e_Hmag	Kmag	e_Kmag	Qflg	Rflg	Bflg	Cflg	Xflg	Aflg
+  ------------	------------	----------	----------	-----------------	------	------	------	------	------	------	---	---	---	---	-	-
+  23 22 56.002	+58 44 45.43	350.733342	+58.745953	23225600+5844454 	15.612	 0.064	15.103	 0.078	14.900	 0.121	AAB	222	111	ccc	0	0
+  23 22 59.647	+58 44 56.84	350.748531	+58.749123	23225964+5844568 	15.580	 0.063	14.922	 0.072	14.506	 0.079	AAA	222	111	c00	0	0
+  23 22 56.981	+58 44 44.61	350.737422	+58.745724	23225698+5844446 	14.920	 0.049	14.292	 0.049	14.002	 0.055	AAA	222	111	ccc	0	0
+  ...
+</pre>
+Notice that both files have a tab-delimited header, followed by a
+tab-delimited line of dashes, followed by tab-delimited data rows. This file 
+format is sometimes called "tsv"  or "tab-separated values". A very useful
+astronomical package for manipulating tables is
+<a href="http://hopper.si.edu/wiki/mmti/Starbase">Starbase</a>,
+written by John Roll.
+
+<p>
+The <b>JS9.LoadCatalog()</b> routine will read a file in this format,
+processing the data rows by converting the RA and Dec values into
+image position values that will be displayed as shapes in a new
+catalog layer.
+
+<p>
+The first argument to the <b>JS9.LoadCatalog()</b> routine is the name
+of the shape layer that will contain the objects in the catalog. Specifying
+the name of an existing layer is valid: previous shapes in that layer will
+be removed.
+
+<p>
+The second argument is either a blob or a string containing the table
+data described above. Blobs are the result of loading a local file
+into the browser (e.g., the <b>load catalog</b> menu option), while strings
+result from a remote XHR call (e.g., the <b>Archives and Catalogs</b> plugin).
+
+<p>
+The third argument is an optional object used to specify parameters, including:
+<ul>
+<li><b>xcol</b>: name of the RA column in the table (default is a heuristic, see below)
+<li><b>ycol</b>: name of the Dec column in the table (default is a heuristic, see below)
+<li><b>wcssys</b>: wcs system (FK4, FK5, ICRS, galactic, ecliptic) (default is from globalOpts)
+<li><b>shape</b>: shape of catalog object (default is from globalOpts)
+<li><b>color</b>: color of catalog shapes (default is from globalOpts)
+<li><b>width</b>: width of box catalog shapes (default is from globalOpts)
+<li><b>height</b>: height of box catalog shapes (default is from globalOpts)
+<li><b>radius</b>: radius of circle catalog shapes (default is from globalOpts)
+<li><b>r1</b>: r1 of ellipse catalog shapes (default is from globalOpts)
+<li><b>r2</b>: r2 of ellipse catalog shapes (default is from globalOpts)
+<li><b>tooltip</b>: format of tooltip string to display for each object (default is from globalOpts)
+<li><b>skip</b>: comment character in table file  (default is from globalOpts)
+</ul>
+Most of these properties have default values that are stored in
+the <b>JS9.globalOpts.catalogs</b> object: manipulate that object as
+needed. The values listed above also can be changed by users via
+the <b>Catalog</b> tab in the <b>Preferences</b> plugin.
+
+<p>
+Note the second (Vizier) example table above does not actually have a columns
+called "RA" and "Dec".  Instead, it has "_RAJ2000", "_DEJ2000", "RAJ2000",
+and "DEJ2000" columns. In order to pick RA and Dec column, a heuristic is used
+based on the values contained in the <b>JS9.globalOpts.catalogs.ras</b> and
+<b>JS9.globalOpts.catalogs.decs</b> arrays:
+<ul>
+<li> the <b>opts.xcol</b>, if defined, specifies the RA column (similarly for opts.ycol and the Dec column)
+<li> otherwise try to match exactly the catalog header against all the array elements in JS9.globalOpts.catalogs.ras to get the RA column (same for catalogs.decs)
+<li> if no exact match, try a case-insensitive match of the catalog columns against a regular expression that begins with the first array element in JS9.globalOpts.catalogs.ras (e.g. "RA*")
+<li> if no approximate match, try a case-insensitive match of the catalog columns against a regular expression containing the first array element in JS9.globalOpts.catalogs.ras (e.g. "*RA*")
+</ul>
+The default global JS9.globalOpts.catalogs.ras contains:
+<pre>
+  ras:  ["RA", "_RAJ2000", "RAJ2000"]
+  decs: ["Dec", "_DEJ2000", "DEJ2000"]
+</pre>
+These defaults make it easy to process simple catalogs and Vizier
+catalogs.
+
+<p>
+Once the RA and Dec columns are specified, the RA and Dec values from
+each row are converted into image positions, and JS9 shapes are
+generated to be displayed in the new catalog layer. The WCS system
+used to convert RA and Dec into image coordinates can be specified
+using the <b>opts.wcssys</b> or <b>JS9.globalOpts.catalogs.wcssys</b>
+properties.
+
+<p>
+Once the catalog layer has been created, you can use the <b>Shape Layers</b>
+plugin to toggle its visibility and also to change its position in the layer
+stack.
+
+<p>
+<font size="+1"><b><u>Save a catalog from the current image to a file</u></b></font>
+<p>
+<code><font size="+1">JS9.SaveCatalog(filename, which)</font></code>
+<p>
+where:
+<ul>
+<li><b>filename</b>: output file name
+<li><b>which</b>: layer containing catalog objects to save
+</ul>
+Save the specified catalog-containing layer as a text file. If filename is not
+specified, the file will be saved as [layer].cat.
+
+<p>
+Don't forget that the file is saved by the browser, in whatever location
+you have set up for downloads.
+
+<p>
+If the <b>which</b> argument is not specified, the catalog associated
+with the current active layer will be saved. In either case, the
+layer to save must actually be a catalog created from a tab-delimited
+file (or URL) of catalog objects (not, for example, the regions layer).
 
 <p><hr><p>
 <center><b><font size="+1">
@@ -2529,6 +2704,10 @@ Save the currently displayed image as a FITS file. If filename is not
 specified, the file will be saved as "js9.fits".
 
 <p>
+Don't forget that the file is saved by the browser, in whatever location
+you have set up for downloads.
+
+<p>
 <font size="+1"><b><u>Save image as a PNG file</u></b></font>
 <p>
 <code><font size="+1">JS9.SavePNG(filename)</font></code>
@@ -2540,6 +2719,10 @@ where:
 Save the currently displayed image as a PNG file. If filename is not
 specified, the file will be saved as "js9.png". The image is saved
 along with the graphical overlays (regions, etc.).
+
+<p>
+Don't forget that the file is saved by the browser, in whatever location
+you have set up for downloads.
 
 <p>
 <font size="+1"><b><u>Save image as a JPEG file</u></b></font>
@@ -2556,6 +2739,10 @@ specified, the file will be saved as "js9.jpeg". The image is saved
 along with the graphical overlays (regions, etc.). If quality
 parameter is not specified, a suitable default is used. On FireFox (at
 least), this default values is 0.95 (I think).
+
+<p>
+Don't forget that the file is saved by the browser, in whatever location
+you have set up for downloads.
 
 <p>
 <font size="+1"><b><u>Get FITS header as a string</u></b></font>
@@ -2669,7 +2856,6 @@ display. The colormap file can take one of two forms (without the comments):
 This routine is useful if you are building a web interface that
 supports the JS9 menu functions. See <b>JS9.AddColormap()</b> for more
 information about colormap formats.
-
 
 <p>
 <font size="+1"><b><u>Get location of JS9 installation directory</u></b></font>

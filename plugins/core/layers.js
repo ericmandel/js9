@@ -15,33 +15,45 @@ JS9.Layers.BASE = JS9.Layers.CLASS + JS9.Layers.NAME;  // CSS base class name
 
 JS9.Layers.headerHTML='Shape layers can be hidden or made visible below. The topmost visible layer in the stack is <b>active</b>: it responds to mouse and touch events. Move a layer to the top of the stack to make it active.';
 
-JS9.Layers.layerHTML="<span style='float: left'>$visible&nbsp;&nbsp;</span>&nbsp;&nbsp; <span class='JS9LayersSpan'>$layer&nbsp;&nbsp</span>";
+JS9.Layers.layerHTML="<span style='float: left'>$visible&nbsp;&nbsp;$save&nbsp;&nbsp;</span>&nbsp;&nbsp; <span class='JS9LayersSpan'>$layer&nbsp;&nbsp</span>";
 
 JS9.Layers.nolayersHTML='<p><span class="JS9NoLayers">[Layers will appear here as they are created]</span>';
 
-JS9.Layers.visibleHTML='<input class="JS9LayersVisibleCheck" type="checkbox" id="visible" name="visible" value="visible" onclick="javascript:JS9.Layers.xvisible(\'%s\', \'%s\', this)">visible';
+JS9.Layers.visibleHTML='<input class="JS9LayersVisibleCheck" type="checkbox" id="visible" name="visible" value="visible" onclick="javascript:JS9.Layers.xvisible(\'%s\', \'%s\', \'%s\', this)">visible';
+
+JS9.Layers.saveBothHTML='<select class="JS9LayersSaveBothSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="catalog">catalog</option><option value="regions">regions</option></select>';
+
+JS9.Layers.saveRegionsHTML='<input class="JS9LayersSave" type="button" value="save regions" onclick="javascript:JS9.Layers.xsaveRegions(\'%s\', \'%s\', \'%s\', this)">';
 
 JS9.Layers.layerNameHTML='<b>%s</b>';
 
 // get an id based on the file image id and layer
 JS9.Layers.imid = function(im, layer){
-    var s = im.id + "_" + layer + "_";
-    return s
-	.replace(/[^A-Za-z0-9_]/g, "_")
-	+ "Layer";
+    var id = im.display.id + "_" + im.id + "_" + layer + "_";
+    return id.replace(/[^A-Za-z0-9_]/g, "_") + "Layer";
+};
+
+// get a class unique between displays
+JS9.Layers.dispclass = function(im){
+    var id = JS9.Layers.BASE + "_" + im.display.id;
+    return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Layers.activeLayer = function(im, pinst){
-    var i, s, id, order;
+    var i, s, id, dcls, order;
     if( im ){
 	order = pinst.layersLayerContainer.sortable("toArray");
+	if( (order.length === 1) && !order[0] ){
+	    return;
+	}
 	for(i=0; i<order.length; i++){
 	    order[i] = $("#" + order[i]).attr("layer");
 	}
 	s = im.activeShapeLayer(order);
 	id = JS9.Layers.imid(im, s);
-	$("." + JS9.Layers.BASE + "Layer")
+	dcls = JS9.Layers.dispclass(im) + "_Layer";
+	$("." + dcls)
 	    .removeClass(JS9.Layers.BASE + "LayerActive")
 	    .addClass(JS9.Layers.BASE + "LayerInactive");
 	$("#" + id)
@@ -51,9 +63,9 @@ JS9.Layers.activeLayer = function(im, pinst){
 };
 
 // make shape layer visible/invisible
-JS9.Layers.xvisible = function(id, layer, target){
+JS9.Layers.xvisible = function(did, id, layer, target){
     var pinst, mode;
-    var im = JS9.lookupImage(id);
+    var im = JS9.lookupImage(id, did);
     if( im ){
 	if( target.checked ){
 	    mode = "show";
@@ -69,9 +81,32 @@ JS9.Layers.xvisible = function(id, layer, target){
     }
 };
 
+// save layer (catalog or regions)
+// eslint-disable-next-line no-unused-vars
+JS9.Layers.xsave = function(did, id, layer, target){
+    var im = JS9.lookupImage(id, did);
+    var save = target.options[target.selectedIndex].value;
+    if( im ){
+	if( save === "catalog" ){
+	    im.saveCatalog(null, layer);
+	} else if( save === "regions" ){
+	    im.saveRegions(null, null, layer);
+	}
+    }
+};
+
+// save regions layer
+// eslint-disable-next-line no-unused-vars
+JS9.Layers.xsaveRegions = function(did, id, layer, target){
+    var im = JS9.lookupImage(id, did);
+    if( im ){
+	im.saveRegions();
+    }
+};
+
 // add a layer to the list
 JS9.Layers.addLayer = function(im, layer){
-    var l, s, id, divjq, zindex, added;
+    var l, s, id, divjq, zindex, added, dcls, imid, dispid;
     var cls = JS9.Layers.BASE + "Layer";
     var opts = [];
     // sanity checks
@@ -83,13 +118,26 @@ JS9.Layers.addLayer = function(im, layer){
     if( !this. nlayer ){
 	this.layersLayerContainer.html("");
     }
+    // convenience variables
+    imid = im.id;
+    dispid = im.display.id;
     // get current z-index
     zindex = parseInt(im.display.layers[layer].divjq.css("z-index"), 10);
-    // getunique id for this layer
+    // get unique id for this layer
     id = JS9.Layers.imid(im, layer);
+    // get class for this layer 
+    dcls = JS9.Layers.dispclass(im) + "_Layer";
     // value to pass to the macro expander
-    opts.push({name: "imid", value: im.id});
-    opts.push({name: "visible", value: sprintf(JS9.Layers.visibleHTML, im.id, layer)});
+    opts.push({name: "imid", value: imid});
+    opts.push({name: "visible", value: sprintf(JS9.Layers.visibleHTML, 
+					       dispid, imid, layer)});
+    if( im.layers[layer].catalog ){
+	opts.push({name: "save", value: sprintf(JS9.Layers.saveBothHTML,
+						dispid, imid, layer)});
+    } else {
+	opts.push({name: "save", value: sprintf(JS9.Layers.saveRegionsHTML,
+						dispid, imid, layer)});
+    }
     if( JS9.DEBUG > 1 ){
 	l = sprintf("%s layer [zindex: %s]", layer, zindex);
     } else {
@@ -101,9 +149,10 @@ JS9.Layers.addLayer = function(im, layer){
     // add layer html to the layer container
     divjq = $("<div>")
 	.addClass(cls)
+	.addClass(dcls)
 	.attr("id", id)
 	.attr("layer", layer)
-	.prop("imid", im.id)
+	.prop("imid", imid)
         .html(s);
     if( !this.nlayer ){
 	divjq.appendTo(this.layersLayerContainer);
@@ -227,6 +276,6 @@ JS9.RegisterPlugin(JS9.Layers.CLASS, JS9.Layers.NAME, JS9.Layers.init,
 		    onimagedisplay: JS9.Layers.display,
 		    onimageclose: JS9.Layers.close,
 		    help: "help/layers.html",
-		    winTitle: "Shapes Layers",
+		    winTitle: "Shape Layers",
 		    winResize: true,
 		    winDims: [JS9.Layers.WIDTH, JS9.Layers.HEIGHT]});

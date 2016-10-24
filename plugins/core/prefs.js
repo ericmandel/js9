@@ -217,17 +217,45 @@ JS9.Prefs.catalogsSchema = {
 	    "type": "mobject",
 	    "helper": "Dec patterns to look for in table"
 	},
-	"skip": {
+	"wcssys": {
 	    "type": "string",
-	    "helper": "comment character in table"
+	    "helper": "wcs system of catalog"
+	},
+	"shape": {
+	    "type": "string",
+	    "helper": "shape of objects"
 	},
 	"color": {
 	    "type": "string",
 	    "helper": "color of objects"
 	},
+	"width": {
+	    "type": "number",
+	    "helper": "width of box objects"
+	},
+	"height": {
+	    "type": "number",
+	    "helper": "height of box objects"
+	},
+	"radius": {
+	    "type": "number",
+	    "helper": "radius of circle objects"
+	},
+	"r1": {
+	    "type": "number",
+	    "helper": "r1 of ellipse objects"
+	},
+	"r2": {
+	    "type": "number",
+	    "helper": "r2 of ellipse objects"
+	},
 	"tooltip": {
 	    "type": "string",
 	    "helper": "tooltip format for objects"
+	},
+	"skip": {
+	    "type": "string",
+	    "helper": "comment character in table"
 	}
     }
 };
@@ -304,9 +332,16 @@ JS9.Prefs.init = function(){
 	case "catalogs":
 	    source.data = {ras: JS9.globalOpts.catalogs.ras,
 			   decs: JS9.globalOpts.catalogs.decs,
+			   wcssys: JS9.globalOpts.catalogs.wcssys,
+			   shape: JS9.globalOpts.catalogs.shape,
 			   color: JS9.globalOpts.catalogs.color,
-			   skip: JS9.globalOpts.catalogs.skip,
-			   tooltip: JS9.globalOpts.catalogs.tooltip};
+			   width: JS9.globalOpts.catalogs.width,
+			   height: JS9.globalOpts.catalogs.height,
+			   radius: JS9.globalOpts.catalogs.radius,
+			   r1: JS9.globalOpts.catalogs.r1,
+			   r2: JS9.globalOpts.catalogs.r2,
+			   tooltip: JS9.globalOpts.catalogs.tooltip,
+			   skip: JS9.globalOpts.catalogs.skip};
 	    break;
 	case "displays":
 	    source.data = {mouseActions: JS9.globalOpts.mouseActions,

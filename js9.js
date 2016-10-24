@@ -154,9 +154,16 @@ JS9.globalOpts = {
     simbadProxy: "http://js9.si.edu/cgi-bin/simbad-proxy.cgi",//simbad proxy url
     catalogs:   {ras: ["RA", "_RAJ2000", "RAJ2000"],  // cols to search for ..
 		 decs: ["Dec", "_DEJ2000", "DEJ2000"],// when loading catalogs
+		 shape: "circle",                     // object shape
 		 color: "yellow",                     // object color
+		 width: 7,                            // box object width
+		 height: 7,                           // box object height
+		 radius: 3.5,                         // circle object radius
+		 r1: 5.0,                             // ellipse object r1
+		 r2: 3.5,                             // ellipse object r2
+		 wcssys: "ICRS",                      // wcs system
 		 skip: "#\n",                         // skip # and blank lines
-		 tooltip: "$xreg.data.ra $xreg.data.dec"},
+		 tooltip: "$xreg.data.ra $xreg.data.dec"}, // tooltip format
     debug: 0		        // debug level
 };
 
@@ -5220,6 +5227,12 @@ JS9.Image.prototype.saveSession = function(file){
 		tobj.name = key;
 		tobj.json = dlayer.canvas.toJSON(dlayer.el);
 		tobj.dopts = $.extend(true, {}, dlayer.opts);
+		if( layer.catalog ){
+		    tobj.catalog = layer.catalog;
+		}
+		if( layer.starbase ){
+		    tobj.starbase = JSON.stringify(layer.starbase);
+		}
 		obj.layers.push(tobj);
 	    }
         }
@@ -5563,7 +5576,7 @@ JS9.Display = function(el){
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalRegions-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadRegions(this.files[i], {display:\''+ this.id +'\'}); };this.value=null;return false;"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalSession-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadSession(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalColormap-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.AddColormap(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalCatalogs-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadCatalog(null, this.files[i], $.extend(true, {}, JS9.Catalogs.opts), {display:\''+ this.id +'\'}); };this.value=null;return false;"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" id="openLocalCatalogs-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadCatalog(null, this.files[i], {display:\''+ this.id +'\'}); };this.value=null;return false;"> </div>');
     // add to list of displays
     JS9.displays.push(this);
     // debugging
@@ -5929,7 +5942,7 @@ JS9.Display.prototype.loadSession = function(file){
     var that = this;
     var obj;
     var addLayers = function(im){
-	var i, dlayer, layer;
+	var i, dlayer, layer, lname;
 	var dorender = function(){
 	    // change shape positions if the displays sizes differ
 	    im.refreshLayers();
@@ -5938,12 +5951,21 @@ JS9.Display.prototype.loadSession = function(file){
 	if( obj.layers && obj.layers.length ){
 	    for(i=0; i<obj.layers.length; i++){
 		layer = obj.layers[i];
+		lname = layer.name;
 		// make sure layer exists in the display
-		dlayer = that.newShapeLayer(layer.name, layer.dopts);
+		dlayer = that.newShapeLayer(lname, layer.dopts);
 		// add a layer instance to this image (no objects yet)
-		im.addShapes(layer.name, []);
+		im.addShapes(lname, []);
 		// load the session objects into the layer and render
 		dlayer.canvas.loadFromJSON(layer.json, dorender);
+		// restore catalog and starbase, if necessary
+		if( layer.catalog ){
+		    im.layers[lname].catalog = layer.catalog;
+		}
+		if( layer.starbase ){
+		    try{im.layers[lname].starbase = JSON.parse(layer.starbase);}
+		    catch(ignore){}
+		}
 	    }
 	}
     };
@@ -5995,6 +6017,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     var regs = [];
     var wcol = 1;
     var hcol = 1;
+    var global = JS9.globalOpts.catalogs;
     var pos_func = function(im, ra, dec) {
 	var arr;
 	arr = JS9.wcs2pix(im.raw.wcs, ra, dec).trim().split(/ +/);
@@ -6063,24 +6086,26 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 	JS9.error("can't find a Dec column (see Preferences:catalogs)");
     }
     // process shape
-    shape = opts.shape || "circle";
+    shape = opts.shape || global.shape || "circle";
     switch(shape){
     case "box":
 	// eslint-disable-next-line no-unused-vars
 	sizefunc = function(row, width, height) {
-	    return { width: opts.width || 7, height: opts.height || 7 };
+	    return { width: opts.width   || global.width  || 7,
+		     height: opts.height || global.height || 7 };
 	};
 	break;
     case "circle":
 	// eslint-disable-next-line no-unused-vars
 	sizefunc = function(row, width, height) {
-	    return { radius: opts.radius || 3.5};
+	    return { radius: opts.radius || global.radius || 3.5};
 	};
 	break;
     case "ellipse":
 	// eslint-disable-next-line no-unused-vars
 	sizefunc = function(row, width, height) {
-	    return { width: opts.width || 7, height: opts.height || 7 };
+	    return { r1: opts.r1  || global.r1  || 3.5,
+		     r2: opts.r2  || global.r2  || 3.5 };
 	};
 	break;
     default:
@@ -6095,6 +6120,8 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     // set wcs system for catalogs
     if( opts.wcssys ){
 	wcssys = opts.wcssys;
+    } else if( global.wcssys ){
+	wcssys = global.wcssys;
     } else {
 	// umm ...
 	wcssys = "ICRS";
@@ -6108,7 +6135,9 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 	    siz = sizefunc.call(this, data[i][wcol], data[i][hcol]);
 	    reg = {id: i.toString(), shape: shape,
 		   x: pos.x, y: pos.y,
-		   width: siz.width, height: siz.height, radius: siz.radius,
+		   width: siz.width, height: siz.height,
+		   radius: siz.radius,
+		   r1: siz.r1, r2: siz.r2,
 		   angle: 0,
 		   data: {ra: data[i][xcol]*15, dec: data[i][ycol]}};
 	    if( opts.color ){
@@ -6126,21 +6155,25 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
     var shapes, topts, starbase;
     var lopts = $.extend(true, {}, JS9.Catalogs.opts);
-    if( JS9.globalOpts.catalogs.tooltip ){
-	lopts.tooltip = JS9.globalOpts.catalogs.tooltip;
+    var global = JS9.globalOpts.catalogs;
+    if( global.tooltip ){
+	lopts.tooltip = global.tooltip;
     }
     // opts is optional
     opts = opts || {};
     // default color, if none specified
-    opts.color = opts.color || JS9.globalOpts.catalogs.color || "#00FF00";
+    opts.color = opts.color || global.color || "#00FF00";
     // wcs system
-    opts.wcssys = opts.wcssys || JS9.globalOpts.catalogs.wcssys;
+    opts.wcssys = opts.wcssys || global.wcssys;
+    // update the wcsstr when adding a shape
+    opts.dowcsstr = true;
     // starbase opts
     topts = {convFuncs:  {def: JS9.saostrtod},
-	     units: opts.units || JS9.globalOpts.catalogs.units,
-	     skip:  opts.skip  || JS9.globalOpts.catalogs.skip};
+	     units: opts.units || global.units,
+	     skip:  opts.skip  || global.skip};
     // generate starbase table
-    starbase = new JS9.Starbase(catalog, topts);
+    try{ starbase = new JS9.Starbase(catalog, topts); }
+    catch(e){ JS9.error("could not parse catalog. Is it in tab-separated column format?"); }
     // sanity checks
     if( !starbase || !starbase.data || !starbase.data.length ){
 	JS9.error("no objects found in catalog");
@@ -6166,9 +6199,9 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
     return this;
 };
 
-JS9.Image.prototype.saveCatalog = function(layer, fname){
-    var cat, blob;
-    layer = layer || this.activeShapeLayer();
+JS9.Image.prototype.saveCatalog = function(fname, which){
+    var layer, cat, blob;
+    layer = which || this.activeShapeLayer();
     if( !this.layers[layer] || !this.layers[layer].catalog ){
 	if( layer && layer !== "undefined" ){
 	    JS9.error("no catalog available: " + layer);
@@ -9538,7 +9571,7 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 // ---------------------------------------------------------------------------
 
 // list one or more regions
-JS9.Regions.listRegions = function(which, mode){
+JS9.Regions.listRegions = function(which, mode, layer){
     var i, region, rlen, key;
     var tagjoin, tagstr, iestr, optstr;
     var regstr="", sepstr="; ";
@@ -9549,15 +9582,22 @@ JS9.Regions.listRegions = function(which, mode){
     if( mode === undefined ){
 	mode = 2;
     }
+    // default is to list the regions layer
+    if( layer === undefined ){
+	layer = "regions";
+    }
     // get specified regions into an array
-    pubs = this.getShapes("regions", which);
+    pubs = this.getShapes(layer, which);
     // loop through shapes
     rlen = pubs.length;
     // display tags if at least one is not standard "source,include"
     if( mode ){
 	for(i=0; i<rlen; i++){
 	    region = pubs[i];
-	    if( region.tags.join(",") !== "source,include" ){
+	    tagjoin = region.tags.join(",");
+	    if( tagjoin                        &&
+		(tagjoin !== "source,include") &&
+		(tagjoin !== "include,source") ){
 		dotags = true;
 		break;
 	    }
@@ -9922,12 +9962,18 @@ JS9.Regions.parseRegions = function(s){
 };
 
 // save regions to a file
-JS9.Regions.saveRegions = function(fname, which){
+JS9.Regions.saveRegions = function(fname, which, layer){
     var header = sprintf("# Region file format: JS9 version 1.0");
-    var regstr = this.listRegions(which, 1);
+    var regstr = this.listRegions(which, 1, layer);
     var s = sprintf("%s\n%s\n", header, regstr.replace(/; */g, "\n"));
     var blob = new Blob([s], {type: "text/plain;charset=utf-8"});
-    fname = fname || "js9.reg";
+    if( !fname ){
+	if( layer ){
+	    fname = layer + ".reg";
+	} else {
+	    fname = "js9.reg";
+	}
+    }
     if( window.hasOwnProperty("saveAs") ){
 	saveAs(blob, fname);
     } else {
@@ -14036,14 +14082,15 @@ JS9.mkPublic("ChangeRegions", function(region, opts){
 
 // save regions to disk
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("SaveRegions", function(fname, which){
-    var file, wh, im;
+JS9.mkPublic("SaveRegions", function(fname, which, layer){
+    var file, wh, la, im;
     var obj = JS9.parsePublicArgs(arguments);
     file = obj.argv[0];
     wh = obj.argv[1];
+    la = obj.argv[2];
     im = JS9.getImage(obj.display);
     if( im ){
-	return im.saveRegions(file, wh);
+	return im.saveRegions(file, wh, la);
     }
     return fname;
 });
@@ -14166,13 +14213,13 @@ JS9.mkPublic("LoadSession", function(file, opts){
 
 // save regions to disk
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("SaveCatalog", function(layer, fname){
+JS9.mkPublic("SaveCatalog", function(fname, which){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
-    layer = obj.argv[0];
-    fname = obj.argv[1];
+    fname = obj.argv[0];
+    which = obj.argv[1];
     if( im ){
-	return im.saveCatalog(layer, fname);
+	return im.saveCatalog(fname, which);
     }
     return;
 });
@@ -14183,7 +14230,7 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
     var obj = JS9.parsePublicArgs(arguments);
     layer = obj.argv[0];
     file = obj.argv[1];
-    opts = obj.argv[2] || {};
+    opts = obj.argv[2];
     // sanity check
     if( !file ){
 	JS9.error("JS9.LoadCatalog: no file specified for catalog load");
