@@ -319,7 +319,7 @@ function CatalogService(params) {
 		JS9.AddShapes(values.name, shapes, opts, {display: im});
 	    } else {
 		table = reply.responseText;
-		gopts = $.extend(true, {}, JS9.Catalogs.opts);
+		gopts = {};
 		gopts.units = values.units;
 		JS9.LoadCatalog(values.name, table, gopts, {display: im});
 	    }
