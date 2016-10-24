@@ -6187,11 +6187,11 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
 	this.display.newShapeLayer(layer, lopts);
 	// delete any old shapes
 	this.removeShapes(layer);
-	// add them to the catalog layer
-	this.addShapes(layer, shapes, opts);
-	// save the original catalog for later
+	// save the original catalog before adding shapes
 	this.layers[layer].catalog = catalog;
 	this.layers[layer].starbase = starbase;
+	// add them to the catalog layer
+	this.addShapes(layer, shapes, opts);
     } else {
 	JS9.error("no catalog objects found");
     }
