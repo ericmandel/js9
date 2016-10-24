@@ -9,13 +9,19 @@
   <link type="text/css" rel="stylesheet" href="js9support.css">
   <link type="text/css" rel="stylesheet" href="js9.css">
   <script type="text/javascript" src="js9support.min.js"></script>
-  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9.js"></script>
   <script type="text/javascript" src="js9plugins.js"></script>
   <style type="text/css">
       #centerdiv {
-      width: 512px;
-      margin-left: auto ;
-      margin-right: auto ;
+        width: 512px;
+        margin-left: auto ;
+        margin-right: auto ;
+      }
+      #primitive{
+        padding-top: 0px;
+        padding-bottom: 0px;
+        padding-left: 30px;
+        padding-right: 30px;
       }
   </style>
   <title>JS9 cat</title>
@@ -24,9 +30,11 @@
     <script type="text/javascript">
     var n = 500;
     var inc = 4;
+    var astrocat = "#this is an astronomical catalog\n# tab-delimited table with RA and Dec columns \nRA	Dec	magj	magh	magk\n--	---	----	----	----\n23:23:16.548	58:47:35.443	15.186	14.334	13.847\n23:23:17.310	58:47:34.797	16.111	14.987	14.209\n23:23:19.246	58:47:43.449	15.646	15.258	14.913\n23:23:21.883	58:47:24.553	14.572	13.163	12.522\n23:23:22.673	58:47:33.081	16.363	15.308	14.791\n23:23:25.364	58:47:57.621	16.751	15.727	15.453\n23:23:28.269	58:47:47.061	16.071	14.739	14.309\n23:23:34.703	58:47:20.762	15.535	14.848	14.463\n23:23:34.785	58:47:38.560	16.196	15.287	15.001\n23:23:37.628	58:47:27.766	12.989	12.288	12.107\n23:23:38.150	58:47:37.475	16.288	15.536	15.238\n23:23:38.376	58:47:59.214	12.384	11.421	11.073\n23:23:15.614	58:48:18.729	14.261	12.735	12.108\n23:23:15.710	58:49:35.029	16.931	15.782	15.777\n23:23:15.847	58:48:54.723	10.342	9.539	9.286\n23:23:15.930	58:50:16.502	16.029	15.355	15.696\n23:23:16.149	58:50:06.793	16.399	15.316	15.112\n23:23:18.649	58:49:05.105	14.451	14.029	13.858\n23:23:19.054	58:50:11.998	14.351	13.16	12.724\n23:23:19.631	58:49:01.507	15.455	14.19	13.756\n23:23:19.816	58:49:45.068	14.591	13.841	13.547\n23:23:20.105	58:48:32.819	16.935	16.093	15.682\n23:23:20.633	58:48:00.890	14.441	14.088	13.925\n23:23:21.073	58:49:15.528	16.485	16.015	15.579\n23:23:21.464	58:48:44.547	15.191	14.65	14.461\n23:23:21.498	58:49:36.114	16.663	15.812	15.414\n23:23:21.636	58:48:11.451	14.814	14.218	14.079\n23:23:21.883	58:48:03.279	13.7	13.302	13.175\n23:23:22.384	58:48:23.357	11.789	11.446	11.297\n23:23:22.501	58:48:11.093	15.411	13.974	13.418\n23:23:23.188	58:49:33.944	15.779	15.355	15.111\n23:23:23.435	58:48:25.733	12.11	11.722	11.579\n23:23:23.503	58:49:08.524	13.729	13.263	13.136\n23:23:23.874	58:50:13.234	13.371	12.964	12.849\n23:23:24.156	58:49:49.407	17.149	16.018	15.748\n23:23:24.410	58:49:06.465	14.656	14.129	14.006\n23:23:24.472	58:50:09.842	15.633	14.979	14.834\n23:23:24.657	58:49:03.031	14.854	14.3	14.722\n23:23:24.733	58:48:46.840	13.55	13.054	12.912\n23:23:24.952	58:48:03.334	16.513	15.194	15.333\n23:23:26.271	58:49:55.834	16.362	15.722	15.236\n23:23:26.580	58:49:20.225	13.676	13.168	13.06\n23:23:26.607	58:49:27.860	14.539	13.342	12.695\n23:23:27.101	58:49:31.706	15.959	15.162	15.073\n23:23:27.232	58:48:21.173	14.941	14.421	14.165\n23:23:27.603	58:49:58.787	16.047	15.595	15.009\n23:23:27.864	58:48:05.408	16.575	15.62	15.435\n23:23:28.035	58:50:19.318	16.512	15.682	15.231\n23:23:28.152	58:50:15.198	16.245	15.32	14.914\n23:23:28.990	58:49:36.938	16.521	15.792	15.347\n23:23:31.098	58:48:13.428	16.023	15.139	14.767\n23:23:31.304	58:49:27.201	14.812	14.21	14.099\n23:23:32.176	58:48:44.107	12.296	11.91	11.777\n23:23:32.608	58:49:47.416	16.112	15.579	15.177\n23:23:33.885	58:50:07.246	16.54	15.935	14.589\n23:23:34.208	58:48:04.296	16.37	15.76	15.136\n23:23:35.410	58:49:57.070	13.406	12.657	12.464\n23:23:35.582	58:48:47.390	14.36	12.968	12.425\n23:23:36.199	58:49:02.001	13.053	12.827	12.609\n23:23:36.838	58:48:34.220	17.126	15.872	15.416\n23:23:36.852	58:50:00.627	16.864	15.93	15.147\n23:23:36.927	58:50:05.942	16.344	15.609	15.148\n23:23:37.202	58:49:44.120	16.457	15.677	15.863\n23:23:37.799	58:48:36.925	14.825	15.732	14.02\n23:23:37.889	58:48:30.992	12.34	11.796	11.579\n23:23:38.548	58:48:12.261	15.92	15.468	14.986\n";
     // on an ipad, the click handler reload the page!
     var click='ontouchstart' in document.documentElement?'touchstart': 'click';
     function init(){
+        JS9.Load("./png/casa.png", {scale: "log", colormap: "cool"});
         $("#display").on("change", function(evt){
           try{doit("display", this.value);}
           finally{$("#display").prop('selectedIndex', 0);
@@ -134,23 +142,18 @@
                 console.log("mousedown: %s %s", im.id, xreg.data.tag);
 	    };
             switch(who){
+                case "astro":
+	            JS9.LoadCatalog("astro", astrocat);
+                    break;
                 case "box":
                     mkrandom(boxes, n, xdim, ydim, "box", "red");
 	            JS9.NewShapeLayer("box", boxopts);
-                    JS9.AddShapes("box", boxes, {color: "yellow"});
+                    JS9.AddShapes("box", boxes, {color: "cyan"});
                     break;
                     break;
                 case "circle":
-                    mkspirals(circles, n, xcen, ycen, "circle", "black");
+                    mkspirals(circles, n, xcen, ycen, "circle", "yellow");
 	            JS9.NewShapeLayer("circle", ciropts);
-                    JS9.AddShapes("circle", circles);
-                    break;
-                case "both":
-                    mkrandom(boxes, n, xdim, ydim, "box", "red");
-	            JS9.NewShapeLayer("box", JS9.Catalogs.opts);
-                    JS9.AddShapes("box", boxes, {color: "yellow"});
-                    mkspirals(circles, n, xcen, ycen, "circle", "blue");
-	            JS9.NewShapeLayer("circle", JS9.Catalogs.opts);
                     JS9.AddShapes("circle", circles);
                     break;
             }
@@ -158,10 +161,6 @@
           case "show":
           case "hide":
             switch(who){
-                case "both":
-                    JS9.ShowShapeLayer("box", what);
-                    JS9.ShowShapeLayer("circle", what);
-                    break;
 	        default:
                     JS9.ShowShapeLayer(who, what);
 	            break;
@@ -183,51 +182,26 @@
     }
     </script>
     <center><font size="+1"><b>JS9 Demo: catalogs</b></font></center>
-
-    <table cellspacing="15">
+    <table>
     <tr valign="top">
-    <td>
-    <table cellspacing="0">
-    <tr valign="top">
-    <td>
-    PNG files (converted from FITS):
-    <ul>
-    <li> <a href='javascript:JS9.Load("png/casa.png");'>CAS-A (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("png/snr.png", {colormap:"heat"});'>CTB 109 (Einstein)</a>
-    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'>m13 (via SkyView)</a>
-    <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y)</a>
-    </ul>
-    </td>
-    <td>
-    FITS images and binary tables:
-    <ul>
-    <li> <a href='javascript:JS9.Load("fits/3c58.fits");'>3c58 (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("fits/3c273.fits");'>3c273 (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("fits/ngkper.fits");'>gkper (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("fits/ngc1316.fits", {scale:"linear"});'>ngc1316 (AIPS)</a>
-    </ul>
-    </td>
-    </tr>
-    </table>
-
-    <p>
+    <td style="padding:0 30px 0 30px;">
     <select id="display">
       <option value="" selected="selected" style="display:none">Display</option>
-      <option value="box">Box Catalog (with tooltips)</option>
-      <option value="circle">Circle Catalog (event handlers, movable)</option>
-      <option value="both">Both Catalogs (non-interactive)</option>
+      <option value="astro">Astro catalog</option>
+      <option value="box">Box (with tooltips)</option>
+      <option value="circle">Circle (event handlers, movable)</option>
     </select> 
     <select id="hide">
       <option value="" selected="selected" style="display:none">Hide</option>
-      <option value="box">Box Catalog</option>
-      <option value="circle">Circle Catalog</option>
-      <option value="both">Both Catalogs</option>
+      <option value="astro">Astro</option>
+      <option value="box">Box</option>
+      <option value="circle">Circle</option>
     </select> 
     <select id="show">
       <option value="" selected="selected" style="display:none">Show</option>
-      <option value="box">Box Catalog</option>
-      <option value="circle">Circle Catalog</option>
-      <option value="both">Both Catalogs</option>
+      <option value="astro">Astro</option>
+      <option value="box">Box</option>
+      <option value="circle">Circle</option>
     </select> 
     <p>
     <b>Move circle catalog: </b>
@@ -241,8 +215,54 @@
     <p>
     </td>
     <td>
-    Catalogs are arrays of JavaScript objects having the following
-    elements (as well others that you wish to include):
+    <p>
+    <h3>JS9 catalogs come in two flavors:</h3>
+    <ul>
+    <li>Astronomical catalogs are tab-delimited tables containing RA and Dec columns
+    <li>Primitive catalogs are arrays of shapes having x,y positions
+    </ul>
+    <h3>Astronomical catalogs</h3>
+    <p>
+    Astronomical catalogs are a special type of JS9 shape layer, in which
+    the shapes have been generated from a tab-delimited text file of
+    columns, including two columns that contain RA and Dec values:
+    <pre>
+    # comments are allowed
+    ra        	        dec        	magj	magh	magk
+    ------------	------------	------	------	------
+    23:22:56.003	58:44:45.429	15.612	15.103	14.9
+    23:22:56.230	58:45:32.011	13.723	13.174	12.981
+    ...
+    </pre>
+    The <b>Archives and Catalogs</b> plugin will load astronomical catalogs
+    from SAO and <a href="http://vizier.u-strasbg.fr/viz-bin/VizieR">VizieR</a>.
+    You can also load local catalogs using the <b>File: load
+    catalog</b> menu option or the <b>JS9.LoadCatalog()</b> public
+    access routine. This routine takes a layer name as the first
+    argument, and string or blob containing the tab-delimited text as
+    its second argument. The final opts argument sets options:
+    <pre>
+        # retrieve a catalog as text, read a file into a blob, or ...
+        var mycat = "RA	        Dec	        magj\n" + 
+	"------------	--------	------\n" +
+	"23:23:16.548	58:47:35.443	15.186\n" +
+	"23:23:17.310	58:47:34.797	16.111\n";
+        JS9.LoadCatalog("mycat", mycat, {color: "red", shape: "circle", radius: 5});
+    </pre>
+    Please see
+    the <a href="./help/publicapi.html" target="_blank">Public Access API</a> for more detailed information about catalog format and catalog options.
+    <p>
+    When saving astronomical catalogs in the <b>Shape Layers</b>
+    plugin, you have the choice of saving as regions or saving the
+    original tab-delimited catalog.
+    </td>
+    </tr>
+    </table>
+    <div id="primitive">
+    <h3>Primitive catalogs</h3> 
+    At a lower and more general level, primitive catalogs are arrays
+    of JavaScript objects having the following elements (as well
+    others that you wish to include):
     <ul>
     <li> x: image x coordinate
     <li> y: image y coordinate
@@ -274,7 +294,7 @@
     object in that it does not define regions-specific processing (such as
     double-click to edit a region parameters). It also makes the new layer
     non-interactive: individual shapes cannot be moved, rotated, resized,
-    or deleted, nor do they respond to events.
+    or deleted. By default, they will respond to events.
     <p>
     Starting with the JS9.Catalogs.opts object as a default, you can
     make the new layer interactive in a few different ways. The first
@@ -361,9 +381,7 @@
     followed by that object's x,y pixel position, followed by a
     user "tag" property passed in the <b>data</b> object when
     the shape was added.
-    </td>
-    </tr>
-    </table>
+    </div>
 <p>
 JS9 Demos:
 <ul>
