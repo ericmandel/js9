@@ -74,7 +74,7 @@
             y = Math.random() * ydim;
 	    if( i % 2 === 0 ){
                 arr[i] = {x: x, y: y, shape: shape, color: color, 
-		          width: 5, height: 2,
+		          width: 8, height: 6,
 		          data: {tag: sprintf("ebox: %s,%s,%s", x, y, color)}};
             } else {
                 arr[i] = {x: x, y: y, 
@@ -143,7 +143,7 @@
 	    };
             switch(who){
                 case "astro":
-	            JS9.LoadCatalog("astro", astrocat);
+	            JS9.LoadCatalog("astro", astrocat, {shape: "ellipse", color: "#00FF00"});
                     break;
                 case "box":
                     mkrandom(boxes, n, xdim, ydim, "box", "red");
