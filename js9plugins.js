@@ -363,7 +363,7 @@ var CatalogService = require("./catalog-service");
 	});
 
 	var vizCat = new CatalogService({
-	      text: "Vizier"
+	      text: "VizieR"
 	    , value: "vizCat"		
 	    , surveys: [   { value: "II/246",		text: "2MASS"				}
 			 , { value: "2MASX",		text: "2MASS Extended Source"		}
