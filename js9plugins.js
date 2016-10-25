@@ -4520,7 +4520,6 @@ JS9.Menubar.init = function(width, height){
 		    }
 		};
 		// plugins
-		items["sep" + n++] = "------";
 		items["sep" + n++] = {name: "Plugins:"};
 		items["sep" + (n-1)].disabled = true;
 		for(i=0; i<JS9.plugins.length; i++){
@@ -5429,7 +5428,9 @@ JS9.Menubar.init = function(width, height){
 			pinst = tdisp.pluginInstances[pname];
 			if( !pinst || pinst.winHandle ){
 			    if( plugin.xclass !== lastxclass ){
-				items["sep" + n++] = "------";
+				if( n > 0 ){
+				    items["sep" + n++] = "------";
+				}
 				items["sep" + n++] =
 				    {name: plugin.xclass + " Plugins:"};
 			        items["sep" + (n-1)].disabled = true;
