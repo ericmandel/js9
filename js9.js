@@ -164,6 +164,7 @@ JS9.globalOpts = {
 		 wcssys: "ICRS",                      // wcs system
 		 skip: "#\n",                         // skip # and blank lines
 		 tooltip: "$xreg.data.ra $xreg.data.dec"}, // tooltip format
+    topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "a", "b", "red", "green", "blue"], // toplevel colormaps
     debug: 0		        // debug level
 };
 
@@ -13045,9 +13046,11 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
 	    break;
 	case 2:
 	    JS9.checkNew(new JS9.Colormap(colormap, a1));
+	    JS9.globalOpts.topColormaps.push(colormap);
 	    break;
 	case 4:
 	    JS9.checkNew(new JS9.Colormap(colormap, a1, a2, a3));
+	    JS9.globalOpts.topColormaps.push(colormap);
 	    break;
 	default:
 	    JS9.error("AddColormap() requires a colormap name and 1 or 3 args");

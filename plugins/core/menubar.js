@@ -19,7 +19,7 @@ JS9.Menubar.buttonOptsArr = [{name: "file", label: "File"},
 			     {name: "zoom", label: "Zoom"},
 			     {name: "scale", label: "Scale"},
 			     {name: "color", label: "Color"},
-			     {name: "region", label: "Region"},
+			     {name: "region", label: "Regions"},
 			     {name: "wcs", label: "WCS"},
 			     {name: "analysis", label: "Analysis"},
 			     {name: "help", label: "Help"}];
@@ -993,13 +993,28 @@ JS9.Menubar.init = function(width, height){
 		    }
 		};
 		items.cmaptitle = {name: "Colormaps:", disabled: true};
-		for(i=0; i<JS9.colormaps.length; i++){
-		    s1 = JS9.colormaps[i].name;
+		for(i=0; i<JS9.globalOpts.topColormaps.length; i++){
+		    s1 = JS9.globalOpts.topColormaps[i];
 		    s2 = s1;
 		    items[s1] = {name: s2};
 		    if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
 			items[s1].icon = "sun";
 		    }
+		}
+		items.morecmaps = {
+		    name: "more ...",
+		    items: {morecmapstitle: {name: "Colormaps:",
+					  disabled: true}}
+		};
+		for(i=0; i<JS9.colormaps.length; i++){
+		    s1 = JS9.colormaps[i].name;
+		    if( JS9.globalOpts.topColormaps.indexOf(s1) === -1 ){
+		        s2 = s1;
+		        items.morecmaps.items[s1] = {name: s2};
+		        if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
+			    items.morecmaps.items[s1].icon = "sun";
+		        }
+                    }
 		}
 		items["sep" + n++] = "------";
 		items.imfilter = {

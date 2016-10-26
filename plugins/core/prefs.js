@@ -265,6 +265,10 @@ JS9.Prefs.displaysSchema = {
     "title": "Display Preferences",
     "description": "Preferences for each JS9 display in this page",
     "properties": {
+	"topColormaps": {
+	    "type": "mobject",
+	    "helper": "array of top-level colormaps"
+	},
 	"mouseActions": {
 	    "type": "mobject",
 	    "helper": "array of mouse actions"
@@ -344,7 +348,8 @@ JS9.Prefs.init = function(){
 			   skip: JS9.globalOpts.catalogs.skip};
 	    break;
 	case "displays":
-	    source.data = {mouseActions: JS9.globalOpts.mouseActions,
+	    source.data = {topColormaps: JS9.globalOpts.topColormaps,
+			   mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,
 			   keyboardActions: JS9.globalOpts.keyboardActions,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom};
