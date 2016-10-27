@@ -2514,7 +2514,12 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
 	    }
 	}
 	// process the FITS file by going to the extname/extnum
-	JS9.fits.handleFITSFile("", extOpts, newExtHandler);
+	if( JS9.fits.handleFITSFile ){
+	    try{ JS9.fits.handleFITSFile("", extOpts, newExtHandler); }
+	    catch(e){ JS9.error("can't process FITS extension", e); }
+	} else {
+	    JS9.error("no FITS module available to display FITS extension");
+	}
     } else {
 	JS9.error("virtual FITS file is missing for displayExtension()");
     }
@@ -2563,7 +2568,12 @@ JS9.Image.prototype.displaySlice = function(slice, opts){
 	    sliceOpts.slice = slice;
 	}
 	// process the FITS file by going to the slice
-	JS9.fits.handleFITSFile("", sliceOpts, newSliceHandler);
+	if( JS9.fits.handleFITSFile ){
+	    try{ JS9.fits.handleFITSFile("", sliceOpts, newSliceHandler); }
+	    catch(e){ JS9.error("can't process FITS slice", e); }
+	} else {
+	    JS9.error("no FITS module available to display FITS slice");
+	}
     } else {
 	JS9.error("virtual FITS file is missing for displaySlice()");
     }
@@ -10612,47 +10622,6 @@ JS9.lookupVfile = function(vfile){
     return arr;
 };
 
-// process a list of file objects or blobs
-JS9.onFileList = function(files, options, handler){
-    var i;
-    var dofits = function(nfile){
-	var disp;
-	var file = files[nfile];
-	var topts = $.extend({}, options);
-	if( JS9.fits.handleFITSFile ){
-	    if( file.name ){
-		topts.filename = file.name;
-	    }
-	    if( topts.display ){
-		disp = JS9.lookupDisplay(topts.display);
-		if( disp ){
-		    disp = disp.divjq[0];
-		}
-	    }
-	    JS9.waiting(true, disp);
-	    try{ JS9.fits.handleFITSFile(file, topts, handler); }
-	    catch(e){ JS9.error("can't process FITS file from file list", e); }
-	} else {
-	    JS9.error("no FITS module available to load FITS file");
-	}
-    };
-    for(i=0; i<files.length; i++){
-	if( files[i].type.indexOf("image/") !== -1 ){
-	    switch(files[i].type){
-	    case "image/fits":
-		dofits(i);
-		break;
-	    default:
-		JS9.handleImageFile(files[i], options, handler);
-		break;
-	    }
-	} else {
-	    dofits(i);
-	}
-    }
-
-};
-
 // fetch a file URL (as a blob) and process it
 // (as of 2/2015: can't use $.ajax to retrieve a blob, so use low-level xhr)
 JS9.fetchURL = function(name, url, opts, handler) {
@@ -10690,7 +10659,7 @@ JS9.fetchURL = function(name, url, opts, handler) {
 		    if( blob.name === "uc" ){
 			blob.name = "google_" + JS9.uniqueID() + ".fits";
 		    }
-		    JS9.onFileList([blob], topts, handler);
+		    JS9.Load(blob, topts, handler);
 		} else {
 		    if( opts.display ){
 			handler(this.response, opts, {display: opts.display});
@@ -11823,18 +11792,20 @@ JS9.dragexitCB = function(id, evt){
 };
 
 JS9.dragdropCB = function(id, evt, handler){
-    var files, opts;
+    var i, opts, files;
     // convert jquery event to original event, if possible
     if( evt.originalEvent ){
 	evt = evt.originalEvent;
     }
     evt.stopPropagation();
     evt.preventDefault();
-    files = evt.target.files || evt.dataTransfer.files;
     opts = $.extend(true, {}, JS9.fits.options);
-    if( opts.display === undefined ){ opts.display = id; }
-    if( opts.extlist === undefined ){ opts.extlist = JS9.globalOpts.extlist; }
-    JS9.onFileList(files, opts, handler);
+    opts.display = opts.display || id;
+    opts.extlist = opts.extlist || JS9.globalOpts.extlist;
+    files = evt.target.files || evt.dataTransfer.files;
+    for(i=0; i<files.length; i++){
+	JS9.Load(files[i], opts, handler);
+    }
 };
 
 // ---------------------------------------------------------------------
