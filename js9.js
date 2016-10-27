@@ -6011,7 +6011,8 @@ JS9.Display.prototype.loadSession = function(file){
 
 // convert table to a shape array for the given image
 JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
-    var i, j, shape, pos, siz, reg, data, header, sizefunc, xcol, ycol;
+    var i, j, shape, pos, siz, reg, data, header, delims, sizefunc;
+    var xcol, ycol, ra, dec;
     var owcssys, wcssys, tcol, tregexp;
     var xcols = JS9.globalOpts.catalogs.ras;
     var ycols = JS9.globalOpts.catalogs.decs;
@@ -6076,6 +6077,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     }
     data = starbase.data;
     header = starbase.headline;
+    delims = starbase.delims;
     // opts is optional
     opts = opts || {};
     xcol = getcol(starbase, header, xcols, opts.xcol);
@@ -6131,7 +6133,14 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     this.setWCSSys(wcssys);
     // convert each catalog object in the table into a JS9 shape
     for(i=0, j=0; i<data.length; i++){
-	pos = pos_func(this, data[i][xcol]*15, data[i][ycol]);
+	ra = data[i][xcol];
+	dec = data[i][ycol];
+	// various ways we might specify hms
+	if( (delims[xcol]!== "\0")  && (":h ".indexOf(delims[xcol]) >= 0) &&
+	    (wcssys !== "galactic") && (wcssys !== "ecliptic") ){
+	    ra *= 15.0;
+	}
+	pos = pos_func(this, ra, dec);
 	if( pos ){
 	    siz = sizefunc.call(this, data[i][wcol], data[i][hcol]);
 	    reg = {id: i.toString(), shape: shape,
@@ -6140,7 +6149,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 		   radius: siz.radius,
 		   r1: siz.r1, r2: siz.r2,
 		   angle: 0,
-		   data: {ra: data[i][xcol]*15, dec: data[i][ycol]}};
+		   data: {ra: ra, dec: dec}};
 	    if( opts.color ){
 		reg.color = opts.color;
 	    }
@@ -6157,6 +6166,22 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
     var shapes, topts, starbase;
     var lopts = $.extend(true, {}, JS9.Catalogs.opts);
     var global = JS9.globalOpts.catalogs;
+    var defconv = function(s){
+	var delims = " \t-.:hdmsr'\"";
+	var obj = {};
+	obj.val = JS9.saostrtod(s);
+	obj.delim = String.fromCharCode(JS9.saodtype());
+	if( (obj.delim !== "\0") && (delims.indexOf(obj.delim) >= 0) ){
+	    // valid delim means we converted to a float
+	    return obj;
+	} else if( JS9.isNumber(s) ){
+	    // no delim, but its a number, so must be an int
+	    return obj;
+	}
+	// everything else is a string
+	obj.val = s;
+	return obj;
+    };
     if( global.tooltip ){
 	lopts.tooltip = global.tooltip;
     }
@@ -6169,7 +6194,7 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
     // update the wcsstr when adding a shape
     opts.dowcsstr = true;
     // starbase opts
-    topts = {convFuncs:  {def: JS9.saostrtod},
+    topts = {convFuncs:  {def: defconv},
 	     units: opts.units || global.units,
 	     skip:  opts.skip  || global.skip};
     // generate starbase table
@@ -10415,7 +10440,7 @@ JS9.floatFormattedString = function(fval, prec, fix){
 	s = sprintf(fmt, fval);
     } else if( prec < 5){
 	s = fval.toFixed(fix);
-    } else{
+    } else {
 	fmt = "%." + Math.min(prec, 9) + "e";
 	s = sprintf(fmt, fval);
     }
@@ -11392,7 +11417,7 @@ JS9.isTypedArray = function(obj) {
 // starbase table support
 // tab-delimited ascii tables, # in first line is a comment
 JS9.Starbase = function(s, opts){
-    var i, j, skips, dashes, data;
+    var i, j, skips, dashes, data, cobj;
     var line = 0;
     var checkDashline = function(dash){
 	var i;
@@ -11410,6 +11435,7 @@ JS9.Starbase = function(s, opts){
     this.head = {};
     this.convFuncs = [];
     this.data = [];
+    this.delims = [];
     // sanity check
     if( !s ){
 	return;
@@ -11475,10 +11501,12 @@ JS9.Starbase = function(s, opts){
 	}
 	this.data[j] = data[line].split('\t');
 	for(i=0; i<this.data[j].length; i++){
-	    this.data[j][i] = this.convFuncs[i](this.data[j][i]);
+	    cobj = this.convFuncs[i](this.data[j][i]);
+	    this.data[j][i] = cobj.val;
+	    this.delims[i] = cobj.delim || null;
 	}
     }
-    // what does this do???
+    // convenience indexes
     for(i = 0; i < this.headline.length; i++){
 	this[this.headline[i]] = i;
     }
