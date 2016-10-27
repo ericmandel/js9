@@ -4214,11 +4214,17 @@ JS9.Menubar.init = function(width, height){
 		if( !tim || !tim.hdus ){
 		    items.hdus.disabled = true;
 		}
-		items.savefits = {name: "save image as FITS"};
-		items.savepng = {name: "save image as PNG"};
-		items.savejpeg = {name: "save image as JPEG"};
+		items.saveas = {
+		    name: "save image as ...",
+		    items: {saveastitle: {name: "choose output format:",
+					  disabled: true},
+			    savefits: {name: "FITS"},
+			    savejpeg: {name: "JPEG"},
+			    savepng: {name: "PNG"}
+			   }
+		};
 		items.moveto = {
-		    name: "move image to",
+		    name: "move image to ...",
 		    items: {movetotitle: {name: "choose display:",
 					  disabled: true}}
 		};
@@ -4231,7 +4237,7 @@ JS9.Menubar.init = function(width, height){
 			    items.moveto.items[s1] = {name: JS9.displays[i].id};
 			}
 		    }
-		    items.moveto.items.moveto_newdisp = { name: "new display" };
+		    items.moveto.items.moveto_newdisp = { name: "a new display" };
 		} else {
 		    items.moveto.disabled = true;
 		}
