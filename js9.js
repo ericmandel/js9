@@ -10773,7 +10773,7 @@ JS9.handleImageFile = function(file, options, handler){
     if ( handler === undefined ) { handler = JS9.Load; }
     reader.onload = function(ev){
 	var img = new Image();
-	var data, gray, hdu;
+	var data, grey, hdu;
 	img.src = ev.target.result;
 	img.onload = function(){
 	    var x, y, brightness;
@@ -10786,20 +10786,20 @@ JS9.handleImageFile = function(file, options, handler){
 	    canvas.height = h;
 	    ctx.drawImage(img, 0, 0);
 	    data   = ctx.getImageData(0, 0, w, h).data;
-	    gray   = new Float32Array(h*w);
+	    grey   = new Float32Array(h*w);
 	    for ( y = 0; y < h; y++ ) {
 		for ( x = 0; x < w; x++ ) {
 		    // NTSC
 		    brightness = 0.299 * data[i] +
 			         0.587 * data[i + 1] +
 			         0.114 * data[i + 2];
-		    gray[(h - y) * w + x] = brightness;
+		    grey[(h - y) * w + x] = brightness;
 		    i += 4;
 		}
 	    }
-	    hdu = {head: {}, name: file.name, filedata: gray,
+	    hdu = {head: {}, filename: file.name, filedata: grey,
 		   naxis: 2, axis: [0, w, h], bitpix: -32,
-		   data: gray};
+		   data: grey};
 	    hdu.dmin = Number.MAX_VALUE;
 	    hdu.dmax = Number.MIN_VALUE;
 	    for(i=0; i< h*w; i++){
@@ -13140,6 +13140,7 @@ JS9.mkPublic("SetValPos", function(mode){
 JS9.mkPublic("Load", function(file, opts){
     var i, im, ext, disp, display, func, blob, bytes, topts, tfile;
     var obj = JS9.parsePublicArgs(arguments);
+    var ptype = "fits";
     file = obj.argv[0];
     opts = obj.argv[1];
     // sanity check
@@ -13187,12 +13188,31 @@ JS9.mkPublic("Load", function(file, opts){
 	if( !opts.filename ){
 	    opts.filename = JS9.ANON + JS9.uniqueID();
 	}
-	if( JS9.fits.handleFITSFile ){
-	    topts = $.extend(true, {}, opts, JS9.fits.options);
-	    try{ JS9.fits.handleFITSFile(file, topts, JS9.NewFitsImage); }
-	    catch(e){ JS9.error("can't process FITS file", e); }
-	} else {
-	    JS9.error("no FITS module available to load this FITS blob");
+	// look for a mime type to tell us how to process this blob
+	if( file.type && file.type.indexOf("image/") !== -1 ){
+	    switch(file.type){
+	    case "image/fits":
+		break;
+	    default:
+		ptype = "img";
+		break;
+	    }
+	}
+	// processing type: img or fits
+	switch(ptype){
+	case "fits":
+	    if( JS9.fits.handleFITSFile ){
+		topts = $.extend(true, {}, opts, JS9.fits.options);
+		try{ JS9.fits.handleFITSFile(file, topts, JS9.NewFitsImage); }
+		catch(e){ JS9.error("can't process FITS file", e); }
+	    } else {
+		JS9.error("no FITS module available to load this FITS blob");
+	    }
+	    break;
+	case "img":
+	    try{ JS9.handleImageFile(file, opts, JS9.NewFITSImage); }
+	    catch(e){ JS9.error("can't process IMG file", e); }
+	    break;
 	}
 	return;
     }
