@@ -2386,6 +2386,7 @@ The third argument is an optional object used to specify parameters, including:
 <li><b>radius</b>: radius of circle catalog shapes (default is from globalOpts)
 <li><b>r1</b>: r1 of ellipse catalog shapes (default is from globalOpts)
 <li><b>r2</b>: r2 of ellipse catalog shapes (default is from globalOpts)
+<li><b>save</b>: save the catalog properties for each generated shape (default is from globalOpts)
 <li><b>tooltip</b>: format of tooltip string to display for each object (default is from globalOpts)
 <li><b>skip</b>: comment character in table file  (default is from globalOpts)
 </ul>
@@ -2423,7 +2424,20 @@ using the <b>opts.wcssys</b> or <b>JS9.globalOpts.catalogs.wcssys</b>
 properties.
 
 <p>
-Once the catalog layer has been created, you can use the <b>Shape Layers</b>
+The RA and Dec of the catalog object are always saved in the data
+object of each generated shape, for use in the tooltip string. In
+addition, if opts.save (or the default: JS9.globalOpts.catalogs.save)
+property is not false, all of the catalog object properties will also be
+save in the data object for use in the tooltip string, e.g.:
+<pre>
+  opts.tooltip = "$xreg.data.ra $xreg.data.dec $xreg.data.Qflg $xreg.data.Rflg"
+</pre>
+in the above VizieR example. Caveat: any "." (dot) in any catalog property
+name will be converted to "_" (underscore) automatically. For a more detailed
+discussion of tooltips, please see <b>JS9.NewShapeLayer()</b>.
+
+<p>
+When catalog layer has been created, you can use the <b>Shape Layers</b>
 plugin to toggle its visibility and also to change its position in the layer
 stack.
 

@@ -163,6 +163,7 @@ JS9.globalOpts = {
 		 r2: 3.5,                             // ellipse object r2
 		 wcssys: "ICRS",                      // wcs system
 		 skip: "#\n",                         // skip # and blank lines
+		 save: true,                          // save cat cols in shapes
 		 tooltip: "$xreg.data.ra $xreg.data.dec"}, // tooltip format
     topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "a", "b", "red", "green", "blue"], // toplevel colormaps
     debug: 0		        // debug level
@@ -6021,7 +6022,7 @@ JS9.Display.prototype.loadSession = function(file){
 
 // convert table to a shape array for the given image
 JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
-    var i, j, shape, pos, siz, reg, data, header, delims, sizefunc;
+    var i, j, k, shape, pos, siz, reg, data, header, delims, sizefunc;
     var xcol, ycol, ra, dec;
     var owcssys, wcssys, tcol, tregexp;
     var xcols = JS9.globalOpts.catalogs.ras;
@@ -6160,6 +6161,15 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 		   r1: siz.r1, r2: siz.r2,
 		   angle: 0,
 		   data: {ra: ra, dec: dec}};
+	    // save catalog columns for this row
+	    if( (opts.save !== false) &&
+		(JS9.globalOpts.catalogs.save !== false) ){
+		for(k=0; k<=header.length; k++){
+		    if( header[k] ){
+			reg.data[header[k]] = data[i][k];
+		    }
+		}
+	    }
 	    if( opts.color ){
 		reg.color = opts.color;
 	    }
@@ -11232,10 +11242,10 @@ CanvasRenderingContext2D.prototype.clear =
 // create a tooltip, with the tip formatted from a string containing
 // variables in the current context, e.g. "$im.id\n$xreg.imstr\n$xreg.data.tag"
 JS9.tooltip = function(x, y, fmt, im, xreg, evt){
-    var tipstr, tx, ty;
+    var tipstr, tx, ty, meas;
     var fmt2str = function(str){
 	// eslint-disable-next-line no-unused-vars
-	var cmd = str.replace(/\$([a-zA-Z0-9_.]+)/g, function(m, t, o){
+	var cmd = str.replace(/\$([a-zA-Z0-9_./]+)/g, function(m, t, o){
             var i, v, val;
 	    var arr = t.split(".");
 	    switch(arr[0]){
@@ -11259,13 +11269,23 @@ JS9.tooltip = function(x, y, fmt, im, xreg, evt){
 		    val = v;
 		}
 	    }
+	    if( val === undefined ){
+		val = "";
+	    }
 	    return val;
 	});
 	return cmd;
     };
     if( fmt ){
 	tipstr = fmt2str(fmt);
-	tx = Math.min(x, im.display.width - 150);
+	// get width of formatted string ...
+	im.display.context.save();
+	im.display.context.font = im.display.tooltip.css("font");
+	try{ meas = im.display.context.measureText(tipstr); }
+	catch(e){ meas = {width: 150}; }
+	im.display.context.restore();
+	// so we can place the tooltip properly
+	tx = Math.min(x, im.display.width - (meas.width + 10));
 	ty = Math.min(y, im.display.height - 25);
 	im.display.tooltip
 	    .html(tipstr).css({left:tx, top:ty, display: "inline-block"});
@@ -11447,8 +11467,11 @@ JS9.Starbase = function(s, opts){
 	this.dashline = data[line++].trim().split(/ *\t */);
 	dashes = checkDashline(this.dashline);
     }
+    // process header:
+    // replace "." with "_" in header names
     // create a vector of type converter functions
     for(i=0; i<this.headline.length; i++ ){
+	this.headline[i] = this.headline[i].replace(/\./g, "_");
 	if( opts.convFuncs && opts.convFuncs[this.headline[i]] ){
 	    this.convFuncs[i] = opts.convFuncs[this.headline[i]];
 	} else {
