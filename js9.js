@@ -2769,6 +2769,9 @@ JS9.Image.prototype.setZoom = function(zval){
 // refresh all layers
 JS9.Image.prototype.refreshLayers = function(){
     this.setZoom(this.getZoom());
+    // reset these explicitly after refresh
+    this.binning.obin = this.binning.bin;
+    this.rgb.sect.ozoom = this.rgb.sect.zoom;
 };
 
 // return current file-related position for specified image position
@@ -6707,6 +6710,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     dlayer.canvas = new fabric.Canvas(dlayer.canvasjq[0]);
     // don't render on add or remove of objects (do it manually)
     dlayer.canvas.renderOnAddRemove = false;
+    // preserve stacking (required in v1.6.6 to interact with polygon points)
+    dlayer.canvas.preserveObjectStacking = true;
     // movable: short-hand for allowing objects to move
     if( dlayer.opts.movable ){
 	dlayer.opts.hasControls = true;
@@ -6861,7 +6866,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 		var pubs = [];
 		var targets = [];
 		if( dlayer.display.image ){
-		    if( opts.target.type === "group" ){
+		    if( opts.target && opts.target.type === "group" ){
 			opts.target.forEachObject(function(shape){
 			    if( shape.pub ){
 				targets.push(shape);
@@ -6891,18 +6896,20 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 			       {target: dlayer.params.sel});
 	}
 	// selection processing
-	switch(opts.target.type){
-	case "polyline":
-	case "polygon":
-	    JS9.Fabric.addPolygonAnchors(dlayer, opts.target);
-	    dlayer.canvas.renderAll();
-	    break;
-	}
-	// set currently selected shape
-	if( opts.target.polyparams ){
-	    dlayer.params.sel = opts.target.polyparams.polygon;
-	} else if( opts.target.params ){
-	    dlayer.params.sel = opts.target;
+	if( opts.target ){
+	    switch(opts.target.type){
+	    case "polyline":
+	    case "polygon":
+		JS9.Fabric.addPolygonAnchors(dlayer, opts.target);
+		dlayer.canvas.renderAll();
+		break;
+	    }
+	    // set currently selected shape
+	    if( opts.target.polyparams ){
+		dlayer.params.sel = opts.target.polyparams.polygon;
+	    } else if( opts.target.params ){
+		dlayer.params.sel = opts.target;
+	    }
 	}
 	// and currently selected layer
 	if( dlayer.display.image ){
@@ -6918,12 +6925,14 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    dlayer.display.image.layer = null;
 	}
 	// selection cleared processing
-	switch(opts.target.type){
-	case "polyline":
-	case "polygon":
-	    JS9.Fabric.removePolygonAnchors(dlayer, opts.target);
-	    dlayer.canvas.renderAll();
-	    break;
+	if( opts.target ){
+	    switch(opts.target.type){
+	    case "polyline":
+	    case "polygon":
+		JS9.Fabric.removePolygonAnchors(dlayer, opts.target);
+		dlayer.canvas.renderAll();
+		break;
+	    }
 	}
     });
     // if canvas moves (e.g. light window), calcOffset must be called ...
@@ -6977,8 +6986,13 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 		    });
 		    canvas.calcOffset();
 		}
-		// redisplay this layer
-		canvas.renderAll();
+		// refresh and redisplay this layer
+		if( that.layers[layerName].opts.panzoom ){
+		    that.binning.obin = that.binning.bin;
+		    that.refreshShapes(layerName);
+		} else {
+		    canvas.renderAll();
+		}
 		canvas.selection = layer.opts.canvas.selection;
 		layer.zindex = Math.abs(layer.zindex);
 		dlayer.divjq.css("z-index", layer.zindex);
@@ -8134,10 +8148,6 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
     // process the specified shapes
     this.selectShapes(layerName, shape, function(obj, ginfo){
 	JS9.Fabric._updateShape.call(that, layerName, obj, ginfo, "remove");
-	// remove from any group
-	if( ginfo && ginfo.group ){
-	    ginfo.group.remove(obj);
-	}
 	// clear any dialog box
 	if( obj.params && obj.params.winid ){
 	    obj.params.winid.close();
@@ -8169,6 +8179,7 @@ JS9.Fabric.getShapes = function(layerName, shape){
 // call using image context
 JS9.Fabric.changeShapes = function(layerName, shape, opts){
     var i, s, sobj, bopts, layer, canvas, ao, rlen, color, maxr, zoom, bin;
+    var orad = [];
     var that = this;
     layer = this.getShapeLayer(layerName);
     // sanity check
@@ -8193,6 +8204,10 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     // process the specified shapes
     this.selectShapes(layerName, shape, function(obj, ginfo){
 	// combine the objects parametes with the new options
+	// clearing some of the old ones first
+	if( opts.radii ){
+	    obj.params.radii = [];
+	}
 	bopts = $.extend(true, {}, obj.params, opts);
 	// parse options and generate new obj and params
 	sobj = JS9.Fabric._parseShapeOptions.call(this, layerName, bopts, obj);
@@ -8227,10 +8242,16 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    if( opts.radii && opts.radii.length ){
 		color = obj.get("stroke");
 		// remove existing annuli
+		// can't remove inside the forEachObject loop
 		obj.forEachObject(function(tobj){
-		    obj.remove(tobj);
-		    canvas.remove(tobj);
+		    orad.push(tobj);
 		});
+		// so do it outside the loop
+		rlen = orad.length;
+		for(i=0; i<rlen; i++){
+		    obj.remove(orad[i]);
+		    canvas.remove(orad[i]);
+		}
 		// generate new annuli
 		rlen = obj.params.radii.length;
 		maxr = 0;
@@ -8633,7 +8654,7 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
     var i;
     var canvas = dlayer.canvas;
-    if( shape.params && shape.params.anchors ){
+    if( shape && shape.params && shape.params.anchors ){
 	// remove all anchors
 	for(i=0; i<shape.params.anchors.length; i++){
 	    canvas.remove(shape.params.anchors[i]);
