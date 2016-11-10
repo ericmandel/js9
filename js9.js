@@ -2183,14 +2183,9 @@ JS9.Image.prototype.putImage = function(opts){
 	this.wcsiy = opts.wcsim.iy +
 	    opts.wcsim.raw.wcsinfo.crpix2 - this.raw.wcsinfo.crpix2;
     }
-    // wcs alignment of a reprojected layer, or a (current0) copy of one
-    if( this.params.wcsalign &&
-	(this.wcsix !== undefined) && (this.wcsiy !== undefined)  ){
-	this.ix = this.wcsix;
-	this.iy = this.wcsiy;
-    }
     // draw the image into the context
     if( JS9.notNull(opts.opacity) || JS9.notNull(opts.blend) ){
+	// one component of a blended image
 	ctx.save();
 	if( opts.opacity !== undefined ){
 	    ctx.globalAlpha = opts.opacity;
@@ -2201,6 +2196,12 @@ JS9.Image.prototype.putImage = function(opts){
 	ctx.drawImage(img2canvas(this, rgb.img), this.ix, this.iy);
 	ctx.restore();
     } else {
+	// wcs alignment of a reprojected layer, or a (current0) copy of one
+	if( this.params.wcsalign &&
+	    (this.wcsix !== undefined) && (this.wcsiy !== undefined)  ){
+	    this.ix = this.wcsix;
+	    this.iy = this.wcsiy;
+	}
 	ctx.putImageData(rgb.img, this.ix, this.iy);
     }
     // allow chaining
