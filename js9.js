@@ -1020,9 +1020,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 	JS9.log("jsonHeader: %s", hstr);
     }
     try{ s = JSON.parse(hstr); }
-    catch(e){
-	JS9.error("can't read FITS header from PNG file: "+hstr, e);
-    }
+    catch(e){ JS9.error("can't read FITS header from PNG file: "+hstr, e); }
     if( s.js9Protocol === 1.0 ){
 	this.raw.header = s;
 	this.raw.endian = this.raw.header.js9Endian;
@@ -3168,12 +3166,8 @@ JS9.Image.prototype.queryHelper = function(which){
 		JS9.helper.send("getAnalysis", {"fits": this.fitsFile},
 	        function(s){
 		    if( s ){
-			try{
-			    that.analysisPackages = JSON.parse(s);
-			}
-			catch(e){
-	                    JS9.log("can't get analysis", e);
-			}
+			try{ that.analysisPackages = JSON.parse(s); }
+			catch(e){ JS9.log("can't get analysis", e); }
 		    }
 		});
 	    }
@@ -3653,9 +3647,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
     case "plot":
 	// convert results to js object
 	try{ pobj = JSON.parse(s); }
-	catch(e){
-	    JS9.error("can't plot return data: " + s, e);
-	}
+	catch(e){ JS9.error("can't plot return data: " + s, e);	}
 	// sanity check
 	if( !pobj ){
 	    return;
@@ -13174,6 +13166,11 @@ JS9.mkPublic("Load", function(file, opts){
 	    display = JS9.DEFID;
 	}
     }
+    // opts is an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ opts = undefined; }
+    }
     // make sure we can look for properties in opts
     opts = opts || {};
     // if display was implicit, add it to opts
@@ -13515,7 +13512,7 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 // save array of files to preload or preload immediately,
 // depending on the state of processing
 JS9.mkPublic("Preload", function(arg1){
-    var i, j, mode, emsg="", dobj=null;
+    var i, j, mode, emsg="", pobj=null, dobj=null;
     var alen=arguments.length;
     var obj = JS9.parsePublicArgs(arguments);
     arg1 = obj.argv[0];
@@ -13574,6 +13571,11 @@ JS9.mkPublic("Preload", function(arg1){
 	    if( (j < alen) && (typeof arguments[j] === "object") ){
 		JS9.preloads.push([arguments[i], arguments[j], dobj]);
 		i++;
+	    } else if( (j < alen) && (arguments[j].indexOf('{') === 0) ){
+		try{ pobj = JSON.parse(arguments[j]); }
+		catch(e){ pobj = null; }
+		JS9.preloads.push([arguments[i], pobj, dobj]);
+		i++;
 	    } else {
 		JS9.preloads.push([arguments[i], null, dobj]);
 	    }
@@ -13590,6 +13592,19 @@ JS9.mkPublic("Preload", function(arg1){
 			JS9.Load(arguments[i], arguments[j], dobj);
 		    } else {
 			JS9.Load(arguments[i], arguments[j]);
+		    }
+		}
+		catch(e){ emsg = emsg + " " + arguments[i]; }
+		i++;
+
+	    } else if( (j < alen) && (arguments[j].indexOf('{') === 0) ){
+		try{ pobj = JSON.parse(arguments[j]); }
+		catch(e){ pobj = null; }
+		try{
+		    if( dobj ){
+			JS9.Load(arguments[i], pobj, dobj);
+		    } else {
+			JS9.Load(arguments[i], pobj);
 		    }
 		}
 		catch(e){ emsg = emsg + " " + arguments[i]; }

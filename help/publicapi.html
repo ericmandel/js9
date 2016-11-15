@@ -105,7 +105,7 @@ Choose from the following sections:
 where:
 <ul>
 <li><b>url</b>: url, fitsy object, in-memory FITS, or FITS blob
-<li><b>opts</b>: object containing image parameters
+<li><b>opts</b>: optional object or json string containing image parameters
 </ul>
 <p>
 Load a FITS file or a PNG <b>representation file</b> into JS9.
@@ -278,7 +278,7 @@ can be used to view images from arbitrary URLs.
 where:
 <ul>
 <li><b>url</b>: url to load
-<li><b>opts</b>: optional object containing image parameters
+<li><b>opts</b>: optional object or json string containing image parameters
 </ul>
 This routine will pre-load images into a JS9 display. It can be added
 to the web page body element using the onload() JavaScript call or

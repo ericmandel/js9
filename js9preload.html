@@ -13,19 +13,18 @@
   <script type="text/javascript" src="js9plugins.js"></script>
   <title>JS9 preload</title>
 </head>
-<body onload="JS9.Preload('png/casa.png', 
-		'fits/snr.fits[events][pi==pha]', {scale:'log'},
-		'png/m13.png', {scale:'linear', colormap:'sls'},
-		'fits/3c273.fits',
-		'png/3c58.png',
-		'fits/ngc1316.fits', {scale:'linear'},
-		'fits/ngkper.fits', {zoom: 'toFit', scale:'log'});">
+<body onload="init();">
     <center><font size="+1">
     <b>JS9 Demo: preloading images into JS9</b>
     </font></center>
     <p>
     <div class="JS9Menubar"></div>
     <div class="JS9"></div>
+    <script type="text/javascript">
+      function init(){
+          JS9.Preload('png/casa.png', 'fits/snr.fits[events][pi==pha]', '{"scale": "log"}', 'png/m13.png', {scale: 'linear', colormap: 'sls'}, 'fits/3c273.fits', '{"colormap": "viridis", "scale": "log"}', 'png/3c58.png', 'fits/ngc1316.fits', {scale: "linear"}, 'fits/ngkper.fits', {zoom: 'toFit', scale: "log"});
+      }
+    </script>
 <p>
 JS9 Demos:
 <ul>
