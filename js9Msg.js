@@ -4,6 +4,12 @@
  *
  * requires: socket.io
  *
+ * Principals: Eric Mandel
+ * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
+ * Contact: saord@cfa.harvard.edu
+ *
+ * Copyright (c) 2013 - 2016 Smithsonian Astrophysical Observatory
+ *
  */
 
 /*jslint plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, node: true */

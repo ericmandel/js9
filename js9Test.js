@@ -2,11 +2,11 @@
  *
  * js9Test: Node-based testing for JS9
  *
- * Principal: Eric Mandel
+ * Principals: Eric Mandel
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
  * Contact: saord@cfa.harvard.edu
  *
- * Copyright (c) 2015 Smithsonian Astrophysical Observatory
+ * Copyright (c) 2015 - 2016 Smithsonian Astrophysical Observatory
  *
  * Utilizes: minimist, selenium
  *
