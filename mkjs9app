@@ -1,0 +1,71 @@
+#!/bin/bash
+# set -x
+
+PLATFORM=`uname -s`
+PKG="package.json"
+CDIR=`pwd`
+DORENAME=true
+
+error() {
+    echo "ERROR: $1"
+    exit 1
+}
+
+case $PLATFORM in
+    Darwin)
+    EXE="Electron.app"
+
+    # generate a local, clean app directory
+    echo "generate local copy of $EXE ..."
+    SBASE="/Applications"
+    SDIR="$SBASE/$EXE"
+    if [ ! -d $SDIR ]; then
+      error "can't find Electron directory: $SDIR"
+    fi
+    DBASE="`pwd`/.."
+    DDIR="$DBASE/$EXE"
+    if [ -d $DDIR ]; then
+      rm -rf $DDIR
+    fi
+    cd $SBASE  && tar cf - $EXE | (cd $DBASE && tar xf -)
+
+    # install js9 into Electron.app
+    echo "install JS9 files ..."
+    APPDIR="$DDIR/Contents/Resources/app"
+    cd $CDIR 
+    make WEBDIR="$APPDIR" install-webdirs install-webfiles
+    sed  's/"main":.*/"main": "js9Electron.js",/' < $PKG > $APPDIR/$PKG
+
+    # rename application
+    if [ $DORENAME = true ]; then
+        JEXE="js9.app"
+	echo "rename app from $EXE to $JEXE ..."
+        # rename the app contents to js9
+        cd $DDIR || error "can't cd to dest Electron app directory"
+        PFILE="./Contents/Info.plist"
+        sed 's/Electron/js9/g' < "$PFILE" > "$PFILE"-new
+        mv "$PFILE"{,-orig} && mv "$PFILE"{-new,}
+        # PFILE="./Contents/Frameworks/Electron Helper.app/Contents/Info.plist"
+        # sed 's/Electron/js9/g' < "$PFILE" > "$PFILE"-new
+        # mv "$PFILE"{,-orig} && mv "$PFILE"{-new,}
+	cd ./Contents/MacOS && cp -p Electron js9
+        # rename the app to js9
+        cd $DDIR/..
+        if [ -d $JEXE ]; then
+          rm -rf $JEXE
+        fi
+        mv $EXE $JEXE
+        # codesign
+	echo "code sign $JEXE ..."
+        sudo codesign --force --deep --sign - $JEXE/
+    else
+	echo "code sign $EXE ..."
+        sudo codesign --force --deep --sign - $EXE/
+    fi
+    ;;
+
+    *)
+    error "support for $PLATFORM not yet implemented"
+    exit
+    ;;
+esac
