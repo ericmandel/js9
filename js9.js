@@ -951,7 +951,7 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
     this.raw.height = h;
     this.raw.bitpix = -32;
     // set data min and max
-    this.dataminmax();
+    JS9.Image.prototype.dataminmax.call(this);
     // change data source
     this.source = "png";
     // fake header
@@ -1009,7 +1009,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     // see if we have a real PNG file instead of a representation file
     if( (i < 15) || realpng ){
 	// holy moly, its a real png file!
-	this.mkRawDataFromIMG(this.offscreen.img);
+	JS9.Image.prototype.mkRawDataFromIMG.call(this, this.offscreen.img);
 	// save the off-screen image and return;
 	return;
     }
@@ -3914,7 +3914,7 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
 	switch(aux.type){
 	case "mask":
 	    // create an image-like object
-	    aux.im = {};
+	    aux.im = Object.create(JS9.Image);
 	    // dereference
 	    aim = aux.im;
 	    // its an aux file
@@ -3927,6 +3927,8 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
 	    aim.params = {};
 	    aim.params.scalemin = Number.Nan;
 	    aim.params.scalemax = Number.Nan;
+	    // array to hold raw data as we create it
+	    aim.raws = [];
 	    // create the png object
 	    aim.png = {};
 	    // image element holds png file, from which array data is generated
