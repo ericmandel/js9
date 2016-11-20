@@ -70,8 +70,7 @@ if( js9Electron.doHelper ){
 		arguments: 'js9Electron.js'
 	    }, function(err2, rlist2 ) {
 		if( rlist2.length <= 1 ){
-		    js9Electron.helperPath = path.join(__dirname, 
-						       "js9Helper.js");
+		    js9Electron.helperPath = "./js9Helper.js";
 		    js9Electron.helper = require(js9Electron.helperPath);
 		}
 	    });
