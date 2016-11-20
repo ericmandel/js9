@@ -16,12 +16,13 @@
 
 /*jshint smarttabs:true */
 
-/* global require process module */
+/* global require process module __dirname */
 
 "use strict";
 
 // load required modules
 var http = require('http'),
+    path = require('path'),
     https = require('https'),
     Sockio = require('socket.io'),
     url = require('url'),
@@ -39,7 +40,7 @@ var fits2png = {};
 var analysis = {str:[], pkgs:[]};
 var envs = JSON.stringify(process.env);
 var plugins = [];
-var cdir = process.cwd();
+var cdir = __dirname;
 
 // secure options ... change as necessary in securefile
 var secureOpts = {
@@ -53,9 +54,10 @@ var globalOpts = {
     helperPort:       2718,
     helperHost:       "0.0.0.0",
     cmd:              "js9helper",
-    analysisPlugins:  "./analysis-plugins",
-    analysisWrappers: "./analysis-wrappers",
-    helperPlugins:    "./helper-plugins",
+
+    analysisPlugins:  path.join(cdir,"analysis-plugins"),
+    analysisWrappers: path.join(cdir,"analysis-wrappers"),
+    helperPlugins:    path.join(cdir,"helper-plugins"),
     maxBinaryBuffer:  150*1024000, // exec buffer: good for 4096^2 64-bit image
     maxTextBuffer:    5*1024000,   // exec buffer: good for text
     textEncoding:     "ascii",     // encoding for returned stdout from exec
@@ -430,7 +432,10 @@ var execCmd = function(io, socket, obj, cbfunc) {
 	myenv.JS9_DATAPATH = envClean(obj.dataPath);
     } else if( globalOpts.dataPath ){
 	myenv.JS9_DATAPATH = envClean(globalOpts.dataPath);
+    } else {
+	myenv.JS9_DATAPATH = "";
     }
+    myenv.JS9_DATAPATH += ":" + cdir;
     // set max buffer size
     switch(myrtype){
     case "text":
