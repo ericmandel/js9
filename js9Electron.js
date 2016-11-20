@@ -69,7 +69,7 @@ if( js9Electron.doHelper ){
     ps.lookup({
 	command: 'node',
 	psargs: "guwax",
-	arguments: path.join(__dirname, 'js9Helper.js')
+	arguments: 'js9Helper.js'
     }, function(err, rlist ) {
 	// if node JS9 helper is not running, look for an Electron JS9 helper
 	if( rlist.length === 0 ){
