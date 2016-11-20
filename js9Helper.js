@@ -16,7 +16,7 @@
 
 /*jshint smarttabs:true */
 
-/* global require process */
+/* global require process module */
 
 "use strict";
 
@@ -927,3 +927,8 @@ if( process.env.NODEJS_FOO === "analysis" ){
 process.on("uncaughtException", function(e){
     cerr("uncaughtException: %s [%s]", e, e.stack || e.stacktrace || "");
 });
+
+// in case we are called as a module
+module.exports.globalOpts = globalOpts;
+module.exports.io = io;
+module.exports.app = app;
