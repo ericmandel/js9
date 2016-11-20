@@ -65,21 +65,23 @@ var usage = function() {
   console.log("usage: %s [switches] [cmd] [args]", prog);
   console.log("usage: %s -b [bname] -w [url] [switches] [image]", prog);
   console.log("  switches:");
-  console.log("    -help|--help             # print this message");
-  console.log("    -b|-browser [bname]      # chrome|firefox|safari");
-  console.log("    -h|-host|-helper [host]  # helper host (def: localhost)");
-  console.log("    -i|-id [id]              # client JS9 id (def: JS9)");
-  console.log("    -m|-multi                # send to multiple clients");
-  console.log("    -|-p|-pipe               # read argument list from stdin");
-  console.log("    -t|-timeout              # timeout for browser startup");
-  console.log("    -pageid [id]             # unique page id from server");
-  console.log("    -w|-webpage [url]        # url to open in new browser");
+  console.log("    --help                    # print this message");
+  console.log("    -b|--browser [bname]      # chrome|firefox|safari");
+  console.log("    -d|--debug                # output debugging info");
+  console.log("    -h|--host|--helper [host]  # helper host (def: localhost)");
+  console.log("    -i|--id [id]              # client JS9 id (def: JS9)");
+  console.log("    -m|--multi                # send to multiple clients");
+  console.log("    -|-p|--pipe               # read argument list from stdin");
+  console.log("    -t|--timeout              # timeout for browser startup");
+  console.log("    --pageid [id]             # unique page id from server");
+  console.log("    -v|--verify               # output verification info");
+  console.log("    -w|--webpage [url]        # url to open in new browser");
   console.log(" ");
   console.log("  examples:");
   console.log("    %s help                  # list available commands", prog);
   console.log("    %s cmap heat             # change colormap to 'heat'", prog);
   console.log("    %s regions               # return current regions", prog);
-  console.log("    %s -id myJS9 regions     # regions for this instance", prog);
+  console.log("    %s --id myJS9 regions    # regions for this instance", prog);
   console.log("    %s                       # read commands from stdin", prog);
   console.log(" ");
   console.log("  start a local web page in a browser and load an image:");
@@ -172,22 +174,25 @@ JS9Msg.prototype.findWebpage = function(){
     if( browser && !webpage ){
 	if( process.env.JS9_WEBPAGE ){
 	    webpage = process.env.JS9_WEBPAGE;
-	} else if( installdir ){
+	}
+	if( !webpage && installdir ){
 	    webpage = installdir + defpage;
 	    fs.access(webpage, fs.R_OK, function(err) {
 		if( err ){
-		    if( srcdir ){
-			webpage = srcdir + defpage;
-			fs.access(webpage, fs.R_OK, function(err) {
-			    if( err ){
-				error("can't find default web page");
-			    }
-			});
-		    } else {
-			error("can't find default web page");
-		    }
+		    webpage = null;
 		}
 	    });
+	}
+	if( !webpage && srcdir ){
+	    webpage = srcdir + defpage;
+	    fs.access(webpage, fs.R_OK, function(err) {
+		if( err ){
+		    webpage = null;
+		}
+	    });
+	}
+	if( !webpage && (srcdir || installdir) ){
+	    error("can't find web page in src or install directory");
 	}
     }
     // final checks
@@ -359,7 +364,7 @@ if( process.env.JS9_HELPER ){
 while( !done ){
   switch(args[0]){
     case '-b':
-    case '-browser':
+    case '--browser':
       args.shift();
       switch(args[0]){
       case "firefox":
@@ -375,61 +380,62 @@ while( !done ){
 	  }
       }
       break;
-    case '-help':
     case '--help':
       usage();
       break;
     case '-h':
-    case '-helper':
-    case '-host':
+    case '--helper':
+    case '--host':
       args.shift();
       helperHost = args.shift();
       break;
-    case '-helperPort':
+    case '--helperPort':
       args.shift();
       helperPort = args.shift();
       break;
-    case '-helperScheme':
+    case '--helperScheme':
       args.shift();
       helperScheme = args.shift();
       break;
     case '-i':
-    case '-id':
+    case '--id':
       args.shift();
       msg.id = args.shift();
       break;
     case '-m':
-    case '-multi':
+    case '--multi':
       args.shift();
       msg.multi = true;
       break;
-    case '-pageid':
+    case '--pageid':
       args.shift();
       msg.pageid = args.shift();
       break;
     case '-':
     case '-p':
-    case '-pipe':
+    case '--pipe':
       args.shift();
       dopipe = true;
       break;
     case '-t':
-    case '-timeout':
+    case '--timeout':
       args.shift();
       timeout = parseInt(args.shift(), 10);
       timeout0 = Math.floor(timeout / tries);
       break;
     case '-w':
-    case '-webpage':
+    case '--webpage':
       args.shift();
       webpage = args.shift();
       break;
     case '-d':
+    case '--debug':
       args.shift();
       debug = true;
       verify = true;
       break;
     case '-v':
+    case '--verify':
       args.shift();
       verify = true;
       break;

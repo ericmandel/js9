@@ -46,14 +46,22 @@ js9Electron.defpage = "file://" + path.join(__dirname, 'js9.html');
 // command line arguments
 js9Electron.argv = require('minimist')(process.argv.slice(2));
 // command line switch options
-js9Electron.id = js9Electron.argv.id || "JS9";
+js9Electron.id = js9Electron.argv.i || js9Electron.argv.id || "JS9";
 js9Electron.doHelper = isTrue(js9Electron.argv.helper, true);
 js9Electron.debug = isTrue(js9Electron.argv.debug, false);
-js9Electron.page = js9Electron.argv.page || js9Electron.defpage;
-js9Electron.width = js9Electron.argv.width || 1024;
-js9Electron.height = js9Electron.argv.height  || 1024;
+js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || js9Electron.defpage;
+js9Electron.width = js9Electron.argv.w || js9Electron.argv.width || 1024;
+js9Electron.height = js9Electron.argv.h || js9Electron.argv.height  || 1024;
 // the list of files to load
 js9Electron.files = js9Electron.argv._;
+// hack: js9 script level switches might contain a file to load
+// due to how minimist processes arguments
+if( js9Electron.argv.a && typeof js9Electron.argv.a === "string" ){
+    js9Electron.files.unshift(js9Electron.argv.a);
+}
+if( js9Electron.argv.v && typeof js9Electron.argv.v === "string" ){
+    js9Electron.files.unshift(js9Electron.argv.v);
+}
 
 // start up the helper first, if necessary
 if( js9Electron.doHelper ){
@@ -61,7 +69,7 @@ if( js9Electron.doHelper ){
     ps.lookup({
 	command: 'node',
 	psargs: "guwax",
-	arguments: 'js9Helper.js'
+	arguments: path.join(__dirname, 'js9Helper.js')
     }, function(err, rlist ) {
 	// if node JS9 helper is not running, look for an Electron JS9 helper
 	if( rlist.length === 0 ){
@@ -107,10 +115,6 @@ function createWindow() {
 	    cmd = `JS9.Load('${file}')`;
 	}
 	js9Electron.win.webContents.executeJavaScript(cmd);
-	if( js9Electron.debug ){
-	    // eslint-disable-next-line no-console
-	    console.log("executing: %s", cmd);
-	}
     }
     // emitted when the window is closed
     js9Electron.win.on('closed', function () {

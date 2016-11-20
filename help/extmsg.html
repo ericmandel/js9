@@ -40,6 +40,12 @@ and its underlying <b>js9Msg.js</b> module. The script runs
 <b>Node.js</b> with js9Msg.js as its first argument. 
 
 <p>
+To dislay the js9 script options, type:
+<pre>
+  sh> js9 --help
+</pre>
+
+<p>
 Using command line syntax, the js9 script will send a single JS9
 command to the browser and return the results:
 <pre>
@@ -87,7 +93,7 @@ Note that DS9/Funtools region syntax can also be used for regions:
   sh> cat test2.cmds | js9
 </pre>
 <p>
-Finally, the <b>-</b> (or <b>-pipe</b>) switch allows you to specify a
+Finally, the <b>-</b> (or <b>--pipe</b>) switch allows you to specify a
 string on the JS9 command line that will prefix all lines read from
 stdin. This allows you to send a regions file to JS9:
 <pre>
@@ -143,7 +149,7 @@ Note that the <b>js9 script</b> on one host cannot communicate with a
 target browser on another host (unless the first host is the helper host).
 <p>
 If a JS9 instance is connected to a helper on a remote host, you can
-use the <b>-host</b> or <b>-helper</b> switch to specify the remote
+use the <b>-host</b> or <b>--helper</b> switch to specify the remote
 host to contact. For example, if the helper is running on
 js9.cfa.harvard.edu, you can send a command to your instance of JS9
 this way:
@@ -153,19 +159,19 @@ this way:
 </pre>
 <p>
 If more than one instance of JS9 appears on a single web page, the
-<b>-id</b> switch can differentiate between instances. The value of
+<b>--id</b> switch can differentiate between instances. The value of
 the id switch is the div id for that JS9 instance.  For example, if
 two instances of JS9 having div ids of "JS9" and "myJS9" are defined
 on the same page, then js9 can communicate with the latter in this way:
 <pre>
-  sh> js9 -id myJS9 region circle
+  sh> js9 --id myJS9 region circle
   OK
-  sh> js9 -id myJS9 region 
+  sh> js9 --id myJS9 region 
   ICRS; circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
 </pre>
 or, from the readline loop:
 <pre>
-  sh> js9 -id myJS9
+  sh> js9 --id myJS9
   JS9> region circle(23:23:26.929, +58:48:50.381, 14.76&quot;)
   OK
   JS9> region
@@ -175,26 +181,51 @@ or, from the readline loop:
 Putting the last two techniques together, you can talk to one of many JS9
 instances on a page connected to a remote helper this way:
 <pre>
-  sh> js9 -host js9.cfa.harvard.edu -id myJS9 cmap heat
+  sh> js9 -host js9.cfa.harvard.edu --id myJS9 cmap heat
   OK
 </pre>
 
 <p>
-Ordinarily, the js9 script talks to a displayed JS9 web page. But it
-also can be used to start up a new browser, display a JS9 web page,
-and then load an image into that page. To do this, use the <b>-b or
--browser</b> switch to specify the browser (chrome, safari, or
-firefox) and the <b>-w or -webpage</b> switch to specify a web page
-(default is a nice, basic JS9 web page). For example:
+Ordinarily, the js9 script talks to a displayed JS9 web page. It also can be
+used to start the JS9 Desktop app and load an image into the app's web page.
+The JS9 Desktop app simply requires that you install Electron.js, which is
+available her:
 <pre>
-  js9 -b chrome ~/data/casa.fits
+  http://electron.atom.io/
+</pre>
+On a Mac, Electron.app should be installed in the /Applications folder (or
+set the JS9_ELECTRON_APP environment variable to point to the path of
+Electron.app). On Linux, the electron program should be placed in your PATH.
+
+<p>
+Once this is done, use the <b>-a</b> switch to specify the app startup and
+the <b>-w or --webpage</b> switch to specify a web page (default is a
+nice, basic JS9 web page).
+<pre>
+  sh> js9 -a ~/data/casa.fits
+</pre>
+will start the JS9 Desktop app with a basic JS9 web page and load the
+Cas-A FITS files into the page, while:
+<pre>
+<p>
+  sh> js9 -a -w ~/js9/js9basics.html ~/data/casa.fits
+</pre>
+will display the same image in one of the JS9 demo pages.
+
+The js9 script also can be used to start up a new browser, display a
+JS9 web page, and then load an image into that page. To do this, use
+the <b>-b or --browser</b> switch to specify the browser (chrome,
+safari, or firefox) and the <b>-w or --webpage</b> switch to specify a
+web page (default is a nice, basic JS9 web page). For example:
+<pre>
+  sh> js9 -b chrome ~/data/casa.fits
 </pre>
 will start a Chrome browser with a basic JS9 web page and load the
 Cas-A FITS files into the page, while:
 <pre>
 <p>
-  cd ~/data
-  js9 -b firefox -w ~/js9/js9basics.html casa.fits
+  sh> cd ~/data
+  sh> js9 -b firefox -w ~/js9/js9basics.html casa.fits
 </pre>
 will display the same image in one of the JS9 demo pages. (Note that, in
 this case, the js9 script figures out the full pathname of the FITS file.)
@@ -206,14 +237,14 @@ can set the environment variable <b>JS9_BROWSER</b> and just use the
 switch, which tells the script to start a browser.) Similarly, the default
 web page can be configured using the <b>JS9_WEBPAGE</b> environment variable:
 <pre>
-    export JS9_BROWSER=chrome
-    export JS9_WEBPAGE=$HOME/js9/js9basics.html
-    js9 -b ~/data/casa.fits
+    sh> export JS9_BROWSER=chrome
+    sh> export JS9_WEBPAGE=$HOME/js9/js9basics.html
+    sh> js9 -b ~/data/casa.fits
 </pre>
 
 <p>
 Care must be taken that no JS9 web page is already being displayed when the
-<b>-b or -browser</b> switch is utilized, or else the specified image
+<b>-b or --browser</b> switch is utilized, or else the specified image
 will be loaded into the existing web page (and no new browser will be started).
 Also, it is important to note that the Google Chrome browser must be
 started by the js9 script or it must be started by you using the
@@ -223,7 +254,7 @@ Mac OSX Safari occasionally experiences delayed data transfers when
 the js9 messaging script is located in a different Space (desktop)
 from the browser window, so keep these in the same Space.
 
-<h5>Last updated: October 4, 2016</h5>
+<h5>Last updated: November 20, 2016</h5>
 </div>
 
 </body>

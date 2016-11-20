@@ -17,19 +17,135 @@ if [ x${JS9_INSTALLDIR} != x ]; then
   export JS9_INSTALLDIR
 fi
 
+# get OS
+OS=`uname -s`
+
 # error routine
 error () {
   echo "ERROR: $*" >&2
   exit 1
 }
 
-# sanity check: node must be present
-hash node 1>/dev/null 2>&1
-if [ $? != 0 ]; then
-  error "JS9 messaging requires Node.js (see: https://nodejs.org/)"
+usage(){
+  XEQ=`basename $0`
+  printf "$XEQ: communication with the JS9 Desktop app and browser-based web pages\n\n"
+  printf "  usage:\n"
+  printf "  # send a command to an existing JS9 app or web page\n"
+  printf "  %s [switches] [cmd] [args]\n" $XEQ
+  printf "  # start the JS9 Desktop app and load images\n"
+  printf "  %s -a [switches] [image1, image2, ...]\n" $XEQ
+  printf "  # start a JS9 web page in a browser and load images\n"
+  printf "  %s -b [bname] [switches] [image1, image2, ...]\n" $XEQ
+  printf " \n"
+  printf "  general switches:\n"
+  printf "    --help                    # print this message\n"
+  printf " \n"
+  printf "  app (-a) specific switches:\n"
+  printf "    -a                        # start JS9 app (required Electron.js)\n"
+  printf "    --helper [true|false]  # whether to start up helper app (def: true)\n"
+  printf "    --height [h]           # height of app\n"
+  printf "    -w|--webpage [url]     # web page to open in app\n"
+  printf "    --width [w]            # width of app\n"
+  printf " \n"
+  printf "  browser (-b) specific switches:\n"
+  printf "    -b|--browser [bname]      # start browser chrome|firefox|safari\n"
+  printf "    -w|--webpage [url]        # web page to open in browser\n"
+  printf " \n"
+  printf "  command and browser (-b) switches:\n"
+  printf "    -d|--debug                # output debugging info\n"
+  printf "    -h|--host|--helper [host]  # helper host (def: localhost)\n"
+  printf "    -i|--id [id]              # client JS9 id (def: JS9)\n"
+  printf "    -m|--multi                # send to multiple clients\n"
+  printf "    -|-p|--pipe               # read argument list from stdin\n"
+  printf "    -t|--timeout              # timeout for browser startup\n"
+  printf "    --pageid [id]             # unique page id from server\n"
+  printf "    -v|--verify               # output verification info\n"
+  printf " \n"
+  printf "  send commands to an existing JS9 app or web page:\n"
+  printf "    %s help                  # list available commands\n" $XEQ
+  printf "    %s cmap heat             # change colormap to 'heat'\n" $XEQ
+  printf "    %s regions circle        # create a circle region\n" $XEQ
+  printf "    %s --id myJS9 regions    # get regions for this instance\n" $XEQ
+  printf "    %s -s                    # read commands from stdin\n" $XEQ
+  printf " \n"
+  printf "  start app or browser, and load an image:\n"
+  printf "    # start the js9 app and load foo.fits into myjs9.html page\n"
+  printf "    # (requires Electron.js app to be installed)\n"
+  printf "    %s -a foo.fits\n" $XEQ
+  printf "    # start the js9 app and load foo.fits into myjs9.html page\n"
+  printf "    %s -a -w ~/myjs9.html foo.fits\n" $XEQ
+  printf "    # start chrome and load foo.fits into the myjs9.html page\n"
+  printf "    %s -b chrome -w ~/myjs9.html foo.fits\n" $XEQ
+  printf "    # display js9.html web page (or $JS9_WEBPAGE) in $JS9_BROWSER\n"
+  printf "    %s -b foo.fits\n" $XEQ
+  printf "    # ... then carry on as usual\n"
+  printf "    %s cmap heat\n" $XEQ
+  printf " \n"
+  printf "  environment variables:\n"
+  printf "    JS9_SRCDIR               # where to look for files, if you don't build/install\n"
+  printf "    JS9_BROWSER              # browser to use with -b (chrome|firefox|safari)\n"
+  printf "    JS9_WEBPAGE              # web page to use with -b (so -w not needed)\n"
+  printf "\n"
+  exit 0
+}
+
+# no args, print usage and exit
+if [ $# = 0 ]; then
+  usage
+fi
+if [ $# = 1 -a "$1" = "--help" ]; then
+  usage
 fi
 
-# add to node module path (is this still necessary?)
+# script-level parameters
+while getopts ":asv" opt; do
+  case $opt in
+    a) DOAPP=true
+       ;;
+    s) set --
+       ;;
+    v) DOVERIFY=true
+       ;;
+  esac
+done
+
+# look for Node.js program (for messaging, but not for app)
+hash node 1>/dev/null 2>&1
+if [ $? = 0 ]; then
+  NODE_EXE="node"
+fi
+# look for Electron program (for messaging or for app)
+case $OS in
+  Linux) TRY="electron"
+         ;;
+  Darwin) TRY="${JS9_ELECTRON_APP:-/Applications/Electron.app}/Contents/MacOS/Electron"
+          ;;
+esac
+hash "$TRY" 1>/dev/null 2>&1
+if [ $? = 0 ]; then
+  ELECTRON_EXE="$TRY"
+fi
+
+# use Electron or use Node, depending on the mode we are in
+if [ x$DOAPP = xtrue ]; then
+  if [ x"$ELECTRON_EXE" != x ]; then
+    JS9_XEQ="$ELECTRON_EXE"
+  else
+    error "js9 -a requires Electron.js"
+  fi
+  MSGSCRIPT="js9Electron.js"
+else
+  if [ x"$NODE_EXE" != x ]; then
+    JS9_XEQ="$NODE_EXE"
+  elif [ x"$ELECTRON_EXE" != x ]; then
+    JS9_XEQ="$ELECTRON_EXE"
+  else
+    error "js9 scripting requires either Node.js or Electron.js"
+  fi
+  MSGSCRIPT="js9Msg.js"
+fi
+
+# add to node module path (not sure if this is necessary)
 if [ -d ./node_modules ]; then
   NODE_PATH="./node_modules:${NODE_PATH}"
 elif [ -d ${JS9_INSTALLDIR}/node_modules ]; then
@@ -40,15 +156,19 @@ fi
 export NODE_PATH
 
 # make sure we can find the JS9 messaging script
-if [ -r ./js9Msg.js ]; then
-  JS9_MSGSCRIPT="./js9Msg.js"
-elif [ -r ${JS9_INSTALLDIR}/js9Msg.js ]; then
-  JS9_MSGSCRIPT="${JS9_INSTALLDIR}/js9Msg.js"
-elif [ -r ${JS9_SRCDIR}/js9Msg.js ]; then
-  JS9_MSGSCRIPT="${JS9_SRCDIR}/js9Msg.js"
+if [ -r "./${MSGSCRIPT}" ]; then
+  JS9_MSGSCRIPT="./${MSGSCRIPT}"
+elif [ -r "${JS9_INSTALLDIR}/${MSGSCRIPT}" ]; then
+  JS9_MSGSCRIPT="${JS9_INSTALLDIR}/${MSGSCRIPT}"
+elif [ -r "${JS9_SRCDIR}/${MSGSCRIPT}" ]; then
+  JS9_MSGSCRIPT="${JS9_SRCDIR}/${MSGSCRIPT}"
 else
-  error "ERROR: can't find js9Msg.js script (install JS9, or set \$JS9_SRCDIR )"
+  error "ERROR: can't find ${MSGSCRIPT} (install JS9, or set \$JS9_SRCDIR )"
 fi
 
-# run node with the msg script
-exec node $JS9_MSGSCRIPT $*
+# run node or Electron with the msg script
+if [ x$DOVERIFY = xtrue ]; then
+  echo "executing: $JS9_XEQ" "$JS9_MSGSCRIPT" $*
+fi
+exec "$JS9_XEQ" "$JS9_MSGSCRIPT" $*
+
