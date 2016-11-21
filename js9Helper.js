@@ -34,13 +34,13 @@ var http = require('http'),
 
 // internal variables
 var app, io, secure;
-var prefsfile = "js9Prefs.json";
-var securefile = "js9Secure.json";
+var cdir = __dirname;
+var prefsfile  = path.join(cdir, "js9Prefs.json");
+var securefile = path.join(cdir, "js9Secure.json");
 var fits2png = {};
 var analysis = {str:[], pkgs:[]};
 var envs = JSON.stringify(process.env);
 var plugins = [];
-var cdir = __dirname;
 
 // secure options ... change as necessary in securefile
 var secureOpts = {
@@ -55,9 +55,9 @@ var globalOpts = {
     helperHost:       "0.0.0.0",
     cmd:              "js9helper",
 
-    analysisPlugins:  path.join(cdir,"analysis-plugins"),
-    analysisWrappers: path.join(cdir,"analysis-wrappers"),
-    helperPlugins:    path.join(cdir,"helper-plugins"),
+    analysisPlugins:  "analysis-plugins",
+    analysisWrappers: "analysis-wrappers",
+    helperPlugins:    "helper-plugins",
     maxBinaryBuffer:  150*1024000, // exec buffer: good for 4096^2 64-bit image
     maxTextBuffer:    5*1024000,   // exec buffer: good for text
     textEncoding:     "ascii",     // encoding for returned stdout from exec
@@ -66,6 +66,11 @@ var globalOpts = {
     rmWorkDir:        true,        // remove workdir on disconnect?
     remoteMsgs:       1 // 0 => none, 1 => samehost, 2 => all
 };
+// globalOpts that might need to have paths relative to __dirname
+var globalRelatives = ["analysisPlugins",
+		       "analysisWrappers",
+		       "helperPlugins",
+		       "workDir"];
 
 //
 // functions that might depend on specific implementations of socket.io
@@ -275,6 +280,12 @@ var loadPreferences = function(prefsfile){
 		}
 	    }
 	}
+	// some directories should be relative to __dirname
+	globalRelatives.forEach( function(s){
+	    if( globalOpts[s] && globalOpts[s].indexOf(0) !== "/" ){
+		globalOpts[s] = path.join(cdir, globalOpts[s]);
+	    }
+	});
     }
 };
 
