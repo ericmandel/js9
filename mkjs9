@@ -1,11 +1,10 @@
 #!/bin/bash
-# set -x
+#set -x
 
 JS9_SRCDIR=$(pwd)
 if [ x"$1" != x ]; then
   case "$1" in
   -q*)
-  echo "setting up nodejs helper ..."
   ./mkhelper nodejs
   ;;
 
@@ -19,7 +18,7 @@ fi
 IMSGSCR="js9.in"
 OMSGSCR="js9"
 
-echo "generating $OMSGSCR for JS9 messaging ..."
+echo "Generating $OMSGSCR script for JS9 messaging and Desktop use ..."
 X="s#^ *JS9_SRCDIR=\".*\"#export JS9_SRCDIR=\"$JS9_SRCDIR\"#"
 X="$X;s#^ *JS9_INSTALLDIR=\".*\"#export JS9_INSTALLDIR=\"$JS9_INSTALLDIR\"#"
 sed "$X" < $IMSGSCR > $OMSGSCR
