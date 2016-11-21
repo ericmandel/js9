@@ -3,7 +3,16 @@
 
 JS9_SRCDIR=$(pwd)
 if [ x"$1" != x ]; then
+  case "$1" in
+  -q*)
+  echo "setting up nodejs helper ..."
+  ./mkhelper nodejs
+  ;;
+
+  *)
   JS9_INSTALLDIR="$1"
+  ;;
+  esac
 fi
 
 # js9: message script
