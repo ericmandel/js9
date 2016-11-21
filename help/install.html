@@ -18,6 +18,7 @@
 <ul>
 <li> retrieve and unpack the source code tar file or clone the js9 repository
 <li> JS9 is now ready for drag-and-drop image files using the file:// URI
+<li> run "./mkjs9 -q" to set up the js9 command-line script
 <li> to install JS9 into a web server tree, run configure with this switch:
 <pre>
   ./configure --with-webdir=[path]  where path specifies the location to install the JS9 web files
@@ -76,10 +77,37 @@ for colormaps, scaling, etc. See:
 <a href="./preferences.html">JS9 Site Preferences</a> for a
 description of the available parameters.
 
-<h3>Do You Want to Install JS9 in a Web Server?</h3>  If you want to
-run JS9 in a "real" web server tree, build and install the JS9 tools and
-files using the standard GNU <b>./configure; make; make install</b>
-technique. You should run configure with
+<h3>Do You Want to Run JS9 from the Command Line?</h3>  
+JS9 can be used as a Desktop app: you can load images into the app's
+(Chrome) web page instead of using a browser.  The JS9 Desktop app
+simply requires that you install Electron.js, which is available here:
+<pre>
+  http://electron.atom.io/
+</pre>
+On a Mac, Electron.app should be installed in the /Applications
+folder.  On Linux, the electron program should be placed in your PATH.
+
+<p>
+Once Electron.app is installed, generate the quick-start files:
+<pre>
+  ./mkjs9 -q
+</pre>
+This will create a js9Prefs.json file, which you can edit to add preferred
+JS9 properties, as well as a js9 script to start up the JS9 app:
+<pre>
+  js9 -a ~/data/casa.fits
+</pre>
+and interact with the app (or any other JS9-enabled web page):
+<pre>
+  js9 cmap cool
+  js9 regions circle
+</pre>
+See: <a href="./extmsg.html">External Messaging</a> for more details.
+
+<h3>Do You Want to Install JS9 in a Web Server?</h3>  
+If you want to run JS9 in a "real" web server tree, build and install
+the JS9 tools and files using the standard GNU <b>./configure; make;
+make install</b> technique. You should run configure with
 the <b>--with-webdir=[path]</b> switch, which specifies the directory
 into which the JS9 web files (JavaScript, CSS, etc.) will be
 installed.  We recommend that this directory only contain the
