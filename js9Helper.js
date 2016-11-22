@@ -69,8 +69,7 @@ var globalOpts = {
 // globalOpts that might need to have paths relative to __dirname
 var globalRelatives = ["analysisPlugins",
 		       "analysisWrappers",
-		       "helperPlugins",
-		       "workDir"];
+		       "helperPlugins"];
 
 //
 // functions that might depend on specific implementations of socket.io
