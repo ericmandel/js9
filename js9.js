@@ -3187,7 +3187,7 @@ JS9.Image.prototype.expandMacro = function(s, opts){
     }
     // process each $ token
     // eslint-disable-next-line no-unused-vars
-    cmd = s.replace(/\$([a-zA-Z0-9_()]+)/g, function(m, t, o){
+    cmd = s.replace(/\${?([a-zA-Z][a-zA-Z0-9_()]+)}?/g, function(m, t, o){
 	var i, r, owcssys, pos;
 	var savewcs = function(im, wcssys){
 	    var owcs = im.params.wcssys;
