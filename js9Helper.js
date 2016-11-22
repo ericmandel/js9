@@ -16,7 +16,7 @@
 
 /*jshint smarttabs:true */
 
-/* global require process module __dirname */
+/* global require process module __dirname Buffer */
 
 "use strict";
 
@@ -129,6 +129,21 @@ var clog = function(){
     args.push(" [" + datestr() + "]");
     // eslint-disable-next-line no-console
     console.log.apply(null, args);
+};
+
+// output string to log file
+// eslint-disable-next-line no-unused-vars
+var flog = function(s){
+    var buffer = new Buffer(s + "\n");
+    fs.open('tmp/js9node.log', 'a', function(err, fd){
+	if( fd ){
+	    fs.write(fd, buffer, 0, buffer.length, null,
+		     // eslint-disable-next-line no-unused-vars
+		     function(err, written, bytes){
+			 fs.closeSync(fd);
+		     });
+	}
+    });
 };
 
 // output an error message on the console
@@ -417,11 +432,19 @@ var parseArgs = function(argstr){
 // this is the default callback for server-side analysis tasks
 var execCmd = function(io, socket, obj, cbfunc) {
     var cmd, argstr, args, maxbuf;
+    var i, s, froot, fext, parr, res;
     var myworkdir = null;
     var myip = getHost(io, socket);
     var myid = obj.id;
     var myrtype = obj.rtype || "binary";
     var myenv = JSON.parse(envs);
+    // eslint-disable-next-line no-unused-vars
+    var repl = function(m, t, o){
+	if( myenv[t] ){
+	    return myenv[t];
+	}
+	return m;
+    };
     // sanity check
     if( !obj.cmd ){
 	return;
@@ -466,8 +489,46 @@ var execCmd = function(io, socket, obj, cbfunc) {
 	.replace(/\$\{?JS9_WORKDIR\}?/, (socket.js9.workDir || ""));
     // split arguments on spaces, respecting quotes
     args = parseArgs(argstr);
-    // get commmand to execute
+    // handle fitshelper specially
     if( args[0] === globalOpts.cmd ){
+	// if FITS, handle this request internally instead of exec'ing
+	// (makes external analysis possible without building js9 programs)
+	if( obj.image && (path.extname(obj.image ) !== ".png") ){
+	    res = {encoding: globalOpts.textEncoding,
+		   errcode: 0, stdout: "", stderr: ""};
+	    // look for and remove the extension
+	    froot = obj.image.replace(/\[.*]$/,"");
+	    s = obj.image.match(/\[.*]$/,"");
+	    if( s ){
+		fext = s[0];
+	    } else {
+		fext = "";
+	    }
+	    if( path.isAbsolute(froot) ){
+		parr = [""];
+	    } else {
+		parr = myenv.JS9_DATAPATH.split(":");
+	    }
+	    // replace environment variables in path, if possible
+	    for(i=0; i<parr.length; i++){
+		s = parr[i].replace(/\${?([a-zA-Z][a-zA-Z0-9_()]+)}?/g, repl);
+		// make up pathname to check
+		s = path.join(s, froot);
+		if( fs.existsSync(s) ){
+		    // found the file add extension to full path
+		    s += fext;
+		    // callback, if necessary
+		    if( cbfunc ){
+			res.stdout = obj.image + " " + s;
+			cbfunc(res);
+		    }
+		    return;
+		}
+	    }
+	    // didn't find the file in the data path
+	    if( cbfunc ){ cbfunc(res); }
+	    return;
+	}
 	// handle fitshelper specially
 	cmd = args[0];
     } else {
