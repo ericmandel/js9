@@ -8963,6 +8963,13 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
     if( !JS9.globalOpts.internalContrastBias || !im || !ipos ){
 	return;
     }
+    // make sure we moved the mouse a bit
+    if( im.pos0 && im.pos ){
+	if( ((Math.abs(im.pos0.x-im.pos.x) < JS9.NOMOVE)  &&
+	     (Math.abs(im.pos0.y-im.pos.y) < JS9.NOMOVE)) ){
+	    return;
+	}
+    }
     // inside a region or with special key: no contrast/bias
     if( im.clickInRegion || JS9.specialKey(evt) ){
 	return;
