@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.10, Tue Nov 22 10:40:40 EST 2016 */
+/* JS9 allinone: v1.10, Sun Nov 27 11:40:34 EST 2016 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -1007,6 +1007,7 @@ canvas.JS9Layer {
 
 /* message display */
 div.JS9Message {
+    width: 100%;
     padding-top: 10px;
     padding-left: 10px;
     font-family: Helvetica, sans-serif;

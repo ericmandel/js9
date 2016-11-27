@@ -5607,6 +5607,21 @@ JS9.Display.prototype.initMessages = function(){
     this.regionsArea = $("<div>")
 	.addClass("JS9Message")
 	.appendTo(this.messageContainer);
+    // make it draggable, if possible
+    try{
+	this.messageContainer.draggable({
+	    // eslint-disable-next-line no-unused-vars
+	    start: function(event, ui){
+		this.oicb = JS9.globalOpts.internalContrastBias;
+		JS9.globalOpts.internalContrastBias = false;
+	    },
+	    // eslint-disable-next-line no-unused-vars
+	    stop: function(event, ui){
+		JS9.globalOpts.internalContrastBias = this.oicb;
+	    }
+	});
+    }
+    catch(ignore){}
     // allow chaining
     return this;
 };

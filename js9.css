@@ -146,6 +146,7 @@ canvas.JS9Layer {
 
 /* message display */
 div.JS9Message {
+    width: 100%;
     padding-top: 10px;
     padding-left: 10px;
     font-family: Helvetica, sans-serif;
