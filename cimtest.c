@@ -139,6 +139,8 @@ int main(int argc, char *argv[])
   int c, i, args, hdutype, ncard;
   int domem = 0;
   int status = 0;   /*  CFITSIO status value MUST be initialized to zero!  */
+  int start[2];
+  int stop[2];
   int dims[] = {IMDIM, IMDIM};
   void *buf;
   int idim1, idim2, bitpix;
@@ -200,7 +202,7 @@ int main(int argc, char *argv[])
     fptr = openFITSMem((void **)&imem, &ilen, EXTLIST, &hdutype, &status);
   } else {
     // open fits file for reading, go to a useful HDU
-    fptr = openFITSFile(ifile, EXTLIST, &hdutype, &status);
+    fptr = openFITSFile(ifile, READONLY, EXTLIST, &hdutype, &status);
   }
   errchk(status);
   fprintf(stdout, "File: %s\n", ifile);
@@ -224,7 +226,9 @@ int main(int argc, char *argv[])
   case IMAGE_HDU:
     // get image array
     buf = getImageToArray(fptr, NULL, NULL, slice,
-			   &idim1, &idim2, &bitpix, &status);
+			   start, stop, &bitpix, &status);
+    idim1 = stop[0] - start[0] + 1;
+    idim2 = stop[1] - start[1] + 1;
     errchk(status);
     // image statistics on image section
     imstat(buf, idim1, idim2, bitpix);
@@ -244,8 +248,10 @@ int main(int argc, char *argv[])
 	errchk(status);
 	// get image array
 	buf = getImageToArray(ofptr, dims, NULL, slice,
-			      &idim1, &idim2, &bitpix, &status);
+			      start, stop, &bitpix, &status);
 	errchk(status);
+	idim1 = stop[0] - start[0] + 1;
+	idim2 = stop[1] - start[1] + 1;
 	// image statistics on image section
 	imstat(buf, idim1, idim2, bitpix);
 	// clean up
@@ -259,8 +265,10 @@ int main(int argc, char *argv[])
       errchk(status);
       // get image array
       buf = getImageToArray(ofptr, dims, NULL, slice,
-			    &idim1, &idim2, &bitpix, &status);
+			    start, stop, &bitpix, &status);
       errchk(status);
+      idim1 = stop[0] - start[0] + 1;
+      idim2 = stop[1] - start[1] + 1;
       // image statistics on image section
       imstat(buf, idim1, idim2, bitpix);
       // clean up

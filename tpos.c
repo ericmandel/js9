@@ -260,6 +260,8 @@ int main(int argc, char **argv)
   int n;
   int hdutype;
   int maxcard, morekeys;
+  int start[2];
+  int stop[2];
   int dims[2] = {0, 0};
   int block = 1;
   void *dbuf;
@@ -356,7 +358,7 @@ int main(int argc, char **argv)
 
   /* open the input FITS file */
 #if HAVE_CFITSIO
-  fptr = openFITSFile(iname, evtlist, &hdutype, &status);
+  fptr = openFITSFile(iname, READONLY, evtlist, &hdutype, &status);
   errchk(status);
 #elif HAVE_FUNTOOLS
   if( !(ifun = FunOpen(iname, "r", NULL)) ){
@@ -383,8 +385,10 @@ int main(int argc, char **argv)
   case IMAGE_HDU:
     // get image array
     dbuf = getImageToArray(fptr, NULL, NULL, NULL,
-			   &idim1, &idim2, &bitpix, &status);
+			   start, stop, &bitpix, &status);
     errchk(status);
+    idim1 = stop[0] - start[0] + 1;
+    idim2 = stop[1] - start[1] + 1;
     fits_get_hdrspace(fptr, &maxcard, &morekeys, &status);
     errchk(status);
     ofptr = fptr;
@@ -394,8 +398,10 @@ int main(int argc, char **argv)
     errchk(status);
     // get image array
     dbuf = getImageToArray(ofptr, NULL, NULL, NULL,
-			   &idim1, &idim2, &bitpix, &status);
+			   start, stop, &bitpix, &status);
     errchk(status);
+    idim1 = stop[0] - start[0] + 1;
+    idim2 = stop[1] - start[1] + 1;
     // get number of keys
     fits_get_hdrspace(ofptr, &maxcard, &morekeys, &status);
     errchk(status);

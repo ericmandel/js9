@@ -457,7 +457,8 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
 	fprintf(stderr, NOFINFO, cmd);
 	return 1;
       }
-      ifptr = openFITSFile(finfo->fitsfile, EXTLIST, &hdutype, &status);
+      ifptr = openFITSFile(finfo->fitsfile, READONLY, EXTLIST, &hdutype,
+			   &status);
       if( status ){
 	fprintf(stderr, "ERROR: can't open FITS file '%s'\n", finfo->fitsfile);
 	return 1;

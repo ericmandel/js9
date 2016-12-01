@@ -12,6 +12,7 @@
       saodtype:  Module.cwrap('saodtype', 'number'),
       arrfile: Module["arrfile"],
       vfile: Module["vfile"],
+      vsize: Module["vsize"],
       vunlink: Module["vunlink"],
       vheap: Module["HEAPU8"],
       vmalloc: Module["_malloc"],

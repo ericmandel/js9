@@ -212,6 +212,14 @@ Cas-A FITS files into the page, while:
 </pre>
 will display the same image in one of the JS9 demo pages.
 
+<p>
+When JS9 is used in Desktop mode, the browser same-origin policy does
+not apply, so you can load FITS URLs directly:
+<p>
+  sh> js9 -a http://js9.si.edu/js9/fits/m13.fits
+</pre>
+
+<p>
 The js9 script also can be used to start up a new browser, display a
 JS9 web page, and then load an image into that page. To do this, use
 the <b>-b or --browser</b> switch to specify the browser (chrome,

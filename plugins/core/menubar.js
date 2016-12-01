@@ -232,6 +232,7 @@ JS9.Menubar.init = function(width, height){
 		} else {
 		    items.moveto.disabled = true;
 		}
+		items.free = {name: "free image memory"};
 		items.close = {name: "close image"};
 		items["sep" + n++] = "------";
 		items.loadcatalog = {name: "load catalog ..."};
@@ -255,6 +256,12 @@ JS9.Menubar.init = function(width, height){
 			var udisp = val;
 			var uim = udisp.image;
 			switch(key){
+			case "free":
+			    if( uim && uim.raw.hdu && uim.raw.hdu.fits &&
+				JS9.fits.cleanupFITSFile ){
+				JS9.fits.cleanupFITSFile(uim.raw.hdu.fits,true);
+			    }
+			    break;
 			case "close":
 			    if( uim ){
 				uim.closeImage();

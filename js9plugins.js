@@ -917,6 +917,9 @@ module.exports = xhr;
 		});
 		break;
 	    case "cfitsio":
+		if( !hdu.fits || !hdu.fits.fptr ){
+		    JS9.error("virtual FITS file is missing for binning");
+		}
 		JS9.fits.getFITSImage(hdu.fits, hdu, options, function(hdu){
 		    rebin(im, hdu, display);
 		});
@@ -4241,6 +4244,7 @@ JS9.Menubar.init = function(width, height){
 		} else {
 		    items.moveto.disabled = true;
 		}
+		items.free = {name: "free image memory"};
 		items.close = {name: "close image"};
 		items["sep" + n++] = "------";
 		items.loadcatalog = {name: "load catalog ..."};
@@ -4264,6 +4268,12 @@ JS9.Menubar.init = function(width, height){
 			var udisp = val;
 			var uim = udisp.image;
 			switch(key){
+			case "free":
+			    if( uim && uim.raw.hdu && uim.raw.hdu.fits &&
+				JS9.fits.cleanupFITSFile ){
+				JS9.fits.cleanupFITSFile(uim.raw.hdu.fits,true);
+			    }
+			    break;
 			case "close":
 			    if( uim ){
 				uim.closeImage();
@@ -6297,11 +6307,23 @@ JS9.Prefs.fitsSchema = {
 	},
 	"xdim": {
 	    "type": "string",
-	    "helper": "x dimension of extracted image"
+	    "helper": "x dim of image section from table"
 	},
 	"ydim": {
 	    "type": "string",
-	    "helper": "y dimension of extracted image"
+	    "helper": "y dim of image section from image"
+	},
+	"xmax": {
+	    "type": "string",
+	    "helper": "max x size of displayed image"
+	},
+	"ymax": {
+	    "type": "string",
+	    "helper": "max y size of displayed image"
+	},
+	"clear": {
+	    "type": "string",
+	    "helper": "clear image's virtual file memory"
 	}
     }
 };
@@ -6432,8 +6454,11 @@ JS9.Prefs.init = function(){
 	case "fits":
 	    // make up "nicer" option values from raw object
 	    source.data = {extlist: JS9.fits.options.extlist,
-			   xdim: JS9.fits.options.table.nx, 
-			   ydim: JS9.fits.options.table.ny};
+			   xdim: JS9.fits.options.table.nx,
+			   ydim: JS9.fits.options.table.ny,
+			   xmax: JS9.fits.options.image.xmax,
+			   ymax: JS9.fits.options.image.ymax,
+			   clear: JS9.globalOpts.clearImageMemory};
 	    break;
 	case "catalogs":
 	    source.data = {ras: JS9.globalOpts.catalogs.ras,
@@ -6656,6 +6681,15 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	        case "ydim":
 		    obj.table.ny = parseFloat(val);
 	            break;
+	        case "xmax":
+		    obj.image.xmax = parseFloat(val);
+	            break;
+	        case "ymax":
+		    obj.image.ymax = parseFloat(val);
+	            break;
+		case "clear":
+		    JS9.globalOpts.clearImageMemory = val;
+		    break;
 	        default:
 	            obj[key] = val;
 	            break;

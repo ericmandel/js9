@@ -1,10 +1,8 @@
-/*jshint smarttabs:true, sub:true */
-/*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true, sub: true */
-/*global Blob, ArrayBuffer, Uint8Array, Uint16Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue, Pointer_stringify */
+/*global Blob, Uint8Array, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue, Pointer_stringify */
 
-// use when running jslint
-// "use strict";
+/* eslint-disable dot-notation */
 
+// eslint-disable-next-line no-console
 Module['print'] = function(text) { console.log(text); };
 
 Module['rootdir'] = "/";
@@ -26,6 +24,13 @@ Module['vfile'] = function(filename, buf) {
   return {path: filename, size: size};
 };
 
+Module['vsize'] = function(filename) {
+  var buf = {size: -1};
+  try{ buf = FS.stat(Module['rootdir'] + filename); }
+  catch(ignore){ }
+  return buf.size;
+};
+
 Module['vunlink'] = function(filename) {
   try{ FS.unlink(Module['rootdir'] + filename); }
   catch(ignore){ }
@@ -40,27 +45,28 @@ Module['arrfile'] = function(filename, arr) {
 };
 
 Module['gzcompress'] = function(data) {
+  var ret;
   var gzFile = ccall('gzopen', 'number', ['string', 'string'], ['output.gz', 'wb']);
   var buffer = _malloc(data.length);
   HEAPU8.set(data, buffer);
   ccall('gzwrite', 'number', ['number', 'number', 'number'], [gzFile, buffer, data.length]);
   ccall('gzclose', 'number', ['number'], [gzFile]);
   _free(buffer);
-  var ret = new Uint8Array(FS.root.contents['output.gz'].contents);
+  ret = new Uint8Array(FS.root.contents['output.gz'].contents);
   FS.unlink('output.gz');
   return ret;
 };
 
-Module['gzdecompress'] = function(data) {
+Module['gzdecompress'] = function(data, filename) {
+  var i, ret, curr, len, gzFile;
   var BUFSIZE = 1024*1024;
-  FS.createDataFile(Module['rootdir'], 'input.gz', data, true, true);
-  var gzFile = ccall('gzopen', 'number', ['string', 'string'], ['input.gz', 'rb']);
   var buffer = _malloc(BUFSIZE);
   var chunks = [];
   var total = 0;
-  var len;
-  var i, ret, curr;
-  while ( true ){
+  FS.createDataFile(Module['rootdir'], 'input.gz', data, true, true);
+  gzFile = ccall('gzopen', 'number', ['string', 'string'], ['input.gz', 'rb']);
+  // eslint-disable-next-line no-constant-condition
+  while( true ){
     len = ccall('gzread', 'number',
 		['number', 'number', 'number'], [gzFile, buffer, BUFSIZE]);
     if( len <= 0 ){ break; }
@@ -77,6 +83,9 @@ Module['gzdecompress'] = function(data) {
     ret.set(chunks[i], curr);
     curr += chunks[i].length;
   }
+  if( filename ){
+    Module['vfile'](filename, ret);
+  }
   return ret;
 };
 
@@ -88,6 +97,10 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     var cens = [0, 0];
     var dims = [0, 0];
     var bin = 1;
+    // make sure we have valid vfile, opened by cfitsio
+    if( !fptr ){
+      Module["error"]("virtual FITS file is missing for getFITSImage()");
+    }
     // clean up previous image section (but not the FITS file itself)
     if( hdu.fits ){
 	Module["cleanupFITSFile"](hdu.fits, false);
@@ -151,20 +164,30 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	Module["errchk"](status);
 	break;
     }
-    // get entire image section
-    hptr = _malloc(24);
-    setValue(hptr,    0, 'i32');
-    setValue(hptr+4,  0, 'i32');
-    setValue(hptr+20, 0, 'i32');
+    hptr = _malloc(32);
+    if( options && options.image && options.image.xmax && options.image.ymax  ){
+	// limits on image section
+	setValue(hptr,    options.image.xmax, 'i32');
+	setValue(hptr+4,  options.image.ymax, 'i32');
+    } else {
+	// get entire image section
+	setValue(hptr,    0, 'i32');
+	setValue(hptr+4,  0, 'i32');
+    }
+    setValue(hptr+28, 0, 'i32');
     // might want a slice
     slice = options.slice || "";
     bufptr = ccall("getImageToArray", "number",
 	["number", "number", "number", "string", "number", "number", "number", "number"],
-	[ofptr, hptr, 0, slice, hptr+8, hptr+12, hptr+16, hptr+20]);
-    hdu.naxis1  = getValue(hptr+8, 'i32');
-    hdu.naxis2  = getValue(hptr+12, 'i32');
-    hdu.bitpix  = getValue(hptr+16, 'i32');
-    status  = getValue(hptr+20, 'i32');
+	[ofptr, hptr, 0, slice, hptr+8, hptr+16, hptr+24, hptr+28]);
+    hdu.x1  = getValue(hptr+8, 'i32');
+    hdu.y1  = getValue(hptr+12, 'i32');
+    hdu.x2  = getValue(hptr+16, 'i32');
+    hdu.y2  = getValue(hptr+20, 'i32');
+    hdu.naxis1  = hdu.x2 - hdu.x1 + 1;
+    hdu.naxis2  = hdu.y2 - hdu.y1 + 1;
+    hdu.bitpix  = getValue(hptr+24, 'i32');
+    status  = getValue(hptr+28, 'i32');
     _free(hptr);
     Module["errchk"](status);
     if( !bufptr ){
@@ -253,8 +276,8 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    if( options.filename ){
 		// filename with extension to pass to cfitsio
 		fitsname = options.filename
-		.replace(/^\.\.*/, "X")
-		.replace(/\//g, "__");
+		    .replace(/^\.\.*/, "X")
+		    .replace(/\//g, "__");
 		// virtual file name without extension
 		hdu.vfile = fitsname.replace(/\[.*\]/g, "");
 	    } else {
@@ -266,16 +289,32 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    catch(ignore){ }
 	    // create a file in the emscripten virtual file system from the blob
 	    arr = new Uint8Array(this.result);
-	    try { FS.createDataFile(Module['rootdir'], hdu.vfile, arr, true, true); }
-	    catch(e){
-		Module["error"]("can't create virtual file: "+hdu.vfile);
+	    // make a virtual file
+	    if( (arr[0] === 0x1f) && (arr[1] === 0x8B) ){
+		// if original is gzip'ed, unzip to virtual file
+		hdu.vfile = hdu.vfile.replace(/\.gz$/,"");
+		fitsname = fitsname.replace(/\.gz/,"");
+		try{
+		    arr = Module['gzdecompress'](arr, hdu.vfile);
+		}
+		catch(e){
+		    Module["error"]("can't gunzip to virtual file: "+hdu.vfile);
+		}
+	    } else {
+		// regular file to virtual file
+		try{
+		    Module['vfile'](hdu.vfile, arr);
+		}
+		catch(e){
+		    Module["error"]("can't create virtual file: "+hdu.vfile);
+		}
 	    }
 	    // open the virtual file as a FITS file
 	    hptr = _malloc(8);
 	    setValue(hptr+4, 0, 'i32');
 	    fptr = ccall("openFITSFile", "number",
-			 ["string", "string", "number", "number"],
-			 [fitsname, options.extlist, hptr, hptr+4]);
+			 ["string", "number", "string", "number", "number"],
+			 [fitsname, 0, options.extlist, hptr, hptr+4]);
 	    hdu.type = getValue(hptr,   'i32');
 	    status  = getValue(hptr+4, 'i32');
 	    _free(hptr);
@@ -290,9 +329,11 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    // extract image section and call handler
 	    Module["getFITSImage"]({fptr: fptr}, hdu, options, handler);
 	};
+	// eslint-disable-next-line no-unused-vars
 	fileReader.onerror = function(e) {
 	    Module["error"]("fileReader could not read blob as a FITS file");
 	};
+	// eslint-disable-next-line no-unused-vars
 	fileReader.onabort = function(e) {
 	    Module["error"]("fileReader did not read blob as a FITS file");
 	};
@@ -357,8 +398,8 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    hptr = _malloc(8);
 	    setValue(hptr+4, 0, 'i32');
 	    fptr = ccall("openFITSFile", "number",
-			 ["string", "string", "number", "number"],
-			 [fits, options.extlist, hptr, hptr+4]);
+			 ["string", "number", "string", "number", "number"],
+			 [fits, 0, options.extlist, hptr, hptr+4]);
 	    hdu.type = getValue(hptr,   'i32');
 	    status  = getValue(hptr+4, 'i32');
 	    _free(hptr);

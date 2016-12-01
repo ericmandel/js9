@@ -112,7 +112,9 @@ JS9.globalOpts = {
     htimeout: 10000,		// connection timeout for the helper connect
     xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
-    dims: [1024, 1024],		// dims of extracted images
+    table: {xdim: 1024, ydim: 1024},// dimensions of image to extract from table
+    image: {xmax: 0, ymax: 0},  // max section size from image (0 for unlimited)
+    clearImageMemory: "never",  // rm vfile: never, always, auto, noExt, noCube, size,[x]Mb
     helperProtocol: location.protocol, // http: or https:
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",       // location of param html file
@@ -391,6 +393,8 @@ if( (JS9.BROWSER[0] === "Chrome") || (JS9.BROWSER[0] === "Safari") ){
 // chrome appears to have a 500Mb limit on tabs (10/2015)
 if( (JS9.BROWSER[0] === "Chrome") ){
     JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 450000000);
+    JS9.globalOpts.image.xmax = 8192;
+    JS9.globalOpts.image.ymax = 8192;
 }
 
 // ---------------------------------------------------------------------
@@ -1287,7 +1291,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 
 // read input object and convert to image data
 JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
-    var i, s, ui, clen, hdu, pars, card, got, rlen;
+    var i, s, ui, clen, hdu, pars, card, got, rlen, rmvfile, done;
     var owidth, oheight, obitpix;
     opts = opts || {};
     if( $.isArray(obj) || JS9.isTypedArray(obj) || obj instanceof ArrayBuffer ){
@@ -1443,6 +1447,39 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	this.raw.header.NAXIS2 = this.raw.height;
 	this.raw.header.BITPIX = this.raw.bitpix;
     }
+    // if section informationis available, modify the WCS keywords
+    // (values are 1-indexed from cfitsio and we need 0-indexed)
+    if( hdu.x1 !== undefined && hdu.y1 !== undefined &&
+	(hdu.x1 !== 1 || hdu.y1 !== 1 ) ){
+	if( this.raw.header.CRPIX1 !== undefined ){
+	    this.raw.header.CRPIX1 -= hdu.x1 - 1;
+	}
+	if( this.raw.header.CRPIX2 !== undefined ){
+	    this.raw.header.CRPIX2 -= hdu.x2 - 1;
+	}
+	if( this.raw.header.LTM1_1 === undefined ){
+	    this.raw.header.LTM1_1 = 1.0;
+	}
+	if( this.raw.header.LTM2_1 === undefined ){
+	    this.raw.header.LTM2_1 = 0.0;
+	}
+	if( this.raw.header.LTM1_2 === undefined ){
+	    this.raw.header.LTM1_2 = 0.0;
+	}
+	if( this.raw.header.LTM2_2 === undefined ){
+	    this.raw.header.LTM2_2 = 1.0;
+	}
+	if( this.raw.header.LTV1 === undefined ){
+	    this.raw.header.LTV1 = -hdu.x1 - 1;
+	} else {
+	    this.raw.header.LTV1 -= hdu.x1 - 1;
+	}
+	if( this.raw.header.LTV2 === undefined ){
+	    this.raw.header.LTV2 = -hdu.y1 - 1;
+	} else {
+	    this.raw.header.LTV2 -= hdu.y1 - 1;
+	}
+    }
     // look for a filename (needs header so we can add extension name/num
     if( opts.file ){
 	this.file = opts.file;
@@ -1516,6 +1553,72 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	this.hdus = JSON.parse(s);
     }
     catch(ignore){}
+    // can we remove the virtual file?
+    if( JS9.fits.cleanupFITSFile && hdu.fits.vfile  ){
+	s = JS9.globalOpts.clearImageMemory.toLowerCase().split(",");
+	rmvfile = false;
+	// all conditions must be met ...
+	for(i=0, done=false; i<s.length && !done; i++){
+	    switch(s[i]){
+	    case "never":
+		rmvfile = false;
+		done = true;
+		break;
+	    case "always":
+		rmvfile = true;
+		done = true;
+		break;
+	    case "auto":
+		if( (this.raw.header.NAXIS <= 2)  &&
+		    (!this.hdus || this.hdus.length === 1) ){
+		    rmvfile = true;
+		} else {
+		    rmvfile = false;
+		    done = true;
+		}
+		break;
+	    case "nocube":
+		if( this.raw.header.NAXIS <= 2 ){
+		    rmvfile = true;
+		} else {
+		    rmvfile = false;
+		    done = true;
+		}
+		break;
+	    case "noext":
+		if( !this.hdus || this.hdus.length === 1 ){
+		    rmvfile = true;
+		} else {
+		    rmvfile = false;
+		    done = true;
+		}
+		break;
+	    case "size":
+		if( s[i+1] ){
+		    if( JS9.vsize(hdu.fits.vfile) > s[i+1]*1000000 ){
+			rmvfile = true;
+		    } else {
+			rmvfile = false;
+			done = true;
+		    }
+		} else {
+		    rmvfile = false;
+		    done = true;
+		}
+		break;
+	    default:
+		break;
+	    }
+	}
+	// remove virtual file
+	if( rmvfile ){
+	    if( JS9.DEBUG > 1 ){
+		JS9.log("removing underlying FITS vfile for %s: %s",
+			this.id, this.raw.hdu.fits.vfile);
+	    }
+	    JS9.fits.cleanupFITSFile(this.raw.hdu.fits, true);
+	}
+    }
     // allow chaining
     return this;
 };
@@ -2466,7 +2569,8 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
     // only makes sense if we have a virtual file
     if( this.raw.hdu && this.raw.hdu.fits && this.raw.hdu.fits.fptr ){
 	// access virtual file via its fits pointer
-	extOpts = {fptr: this.raw.hdu.fits.fptr, vfile: this.raw.hdu.vfile};
+	extOpts = {fptr: this.raw.hdu.fits.fptr,
+		   vfile: this.raw.hdu.fits.vfile};
 	// extname specified?
 	if( typeof extid === "string" ){
 	    extOpts.extname = extid;
@@ -2521,7 +2625,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
 	    JS9.error("no FITS module available to display FITS extension");
 	}
     } else {
-	JS9.error("virtual FITS file is missing for displayExtension()");
+	JS9.error("virtual FITS file is missing for extension display");
     }
     // allow chaining
     return this;
@@ -2560,7 +2664,8 @@ JS9.Image.prototype.displaySlice = function(slice, opts){
     // only makes sense if we have a virtual file
     if( this.raw.hdu && this.raw.hdu.fits && this.raw.hdu.fits.fptr ){
 	// access virtual file via its fits pointer
-	sliceOpts = {fptr: this.raw.hdu.fits.fptr, vfile: this.raw.hdu.vfile};
+	sliceOpts = {fptr: this.raw.hdu.fits.fptr,
+		     vfile: this.raw.hdu.fits.vfile};
 	// slicename or slicenum specified?
 	if( JS9.isNumber(slice) ){
 	    sliceOpts.slice = sprintf("*,*,%s", slice);
@@ -2575,7 +2680,7 @@ JS9.Image.prototype.displaySlice = function(slice, opts){
 	    JS9.error("no FITS module available to display FITS slice");
 	}
     } else {
-	JS9.error("virtual FITS file is missing for displaySlice()");
+	JS9.error("virtual FITS file is missing for slice display");
     }
     // allow chaining
     return this;
@@ -4391,7 +4496,8 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 			if( raw.hdu && raw.hdu.fits ){
 			    // delete vfile associated with this layer?
 			    carr = JS9.lookupVfile(raw.hdu.fits.vfile);
-			    if( carr.length <= 1 ){
+			    if( (carr.length <= 1) &&
+				JS9.fits.cleanupFITSFile ){
 				JS9.fits.cleanupFITSFile(raw.hdu.fits, true);
 			    }
 			}
@@ -4656,16 +4762,12 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
     }
     // arg1: can be an image object or a numeric value
     if( typeof arg1 === "object" ){
-	if( !arg1.raw.hdu || !arg1.raw.hdu.fits || !arg1.raw.hdu.fits.vfile ){
-	    JS9.error("no virtual FITS file for image arithmetic: " + arg1.id);
-	} else {
-	    opts.argtype = "image";
-	    opts.argval = arg1;
-	}
 	if( (this.raw.width  !== arg1.raw.width)  ||
 	    (this.raw.height !== arg1.raw.height) ){
 	    JS9.error("images must be the same size for image arithmetic");
 	}
+	opts.argtype = "image";
+	opts.argval = arg1;
     } else if( JS9.isNumber(arg1) ){
 	opts.argtype = "value";
 	opts.argval = arg1;
@@ -4901,6 +5003,9 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    !JS9.reproject || !JS9.fits.handleFITSFile ){
 	    return;
 	}
+	if( !that.raw.hdu || !that.raw.hdu.fits || !that.raw.hdu.fits.fptr ){
+	    JS9.error("virtual FITS file is missing for reprojection");
+	}
 	// opts is optional
 	opts = opts || {};
 	// is this a string containing an image name or WCS values?
@@ -4993,9 +5098,9 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	}
 	catch(ignore){}
 	// get reference to existing raw data file (or create one)
-	if( that.raw.hdu && that.raw.hdu.vfile ){
+	if( that.raw.hdu && that.raw.hdu.fits.vfile ){
 	    // input file name
-	    ivfile = that.raw.hdu.vfile;
+	    ivfile = that.raw.hdu.fits.vfile;
 	    // add extension name or number
 	    if( that.raw.hdu.fits.extname ){
 		ivfile += sprintf("[%s]", that.raw.hdu.fits.extname);
@@ -10760,11 +10865,20 @@ JS9.fitsLibrary = function(s){
 		nx: JS9.userOpts.fits.xdim,
 		ny: JS9.userOpts.fits.ydim
 	    };
+	    JS9.fits.options.image = {
+		xmax: JS9.userOpts.fits.xmax,
+		ymax: JS9.userOpts.fits.ymax
+	    };
 	} else {
 	    JS9.fits.options.extlist =  JS9.globalOpts.extlist;
 	    JS9.fits.options.table = {
-		nx: JS9.globalOpts.dims[0],
-		ny: JS9.globalOpts.dims[1]
+		// dims are deprecated 11/27/16
+		nx: JS9.globalOpts.table.xdim || JS9.globalOpts.dims[0],
+		ny: JS9.globalOpts.table.ydim || JS9.globalOpts.dims[1]
+	    };
+	    JS9.fits.options.image = {
+		xmax: JS9.globalOpts.image.xmax,
+		ymax: JS9.globalOpts.image.ymax
 	    };
 	}
 	if( JS9.fits.maxFITSMemory && JS9.globalOpts.maxMemory ){
@@ -12323,6 +12437,7 @@ JS9.init = function(){
 	JS9.vmemcpy = Astroem.vmemcpy;
 	JS9.vfile = Astroem.vfile;
 	JS9.vunlink = Astroem.vunlink;
+	JS9.vsize = Astroem.vsize;
 	JS9.arrfile = Astroem.arrfile;
 	JS9.listhdu = Astroem.listhdu;
 	JS9.initwcs = Astroem.initwcs;

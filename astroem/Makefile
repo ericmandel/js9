@@ -146,8 +146,8 @@ install:	FORCE
 		  fi;)
 
 # turn off cfitsio IO buffering, since 'files' are stored in memory
-LIBCFLAGS =	$(EMFLAGS) -fno-common -D__x86_64__ -DNIOBUF=0 -DMINDIRECT=0
-# LIBCFLAGS =	$(EMFLAGS) -fno-common -D__x86_64__
+# LIBCFLAGS =	$(EMFLAGS) -fno-common -D__x86_64__ -DNIOBUF=0 -DMINDIRECT=0
+LIBCFLAGS =	$(EMFLAGS) -fno-common -D__x86_64__
 
 # cfitsio library
 # don't make zlib in cfitsio, we'll use the emscripten version
