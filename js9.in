@@ -84,7 +84,7 @@ usage(){
   printf "    %s cmap heat\n" $XEQ
   printf " \n"
   printf "  environment variables:\n"
-  printf "    JS9_SRCDIR               # where to look for files, if you don't build/install\n"
+  printf "    JS9_SRCDIR               # where to find files, if you don't build/install\n"
   printf "    JS9_BROWSER              # browser to use with -b (chrome|firefox|safari)\n"
   printf "    JS9_WEBPAGE              # web page to use with -b (so -w not needed)\n"
   printf "\n"
@@ -108,6 +108,8 @@ while getopts ":asv" opt; do
        ;;
     v) DOVERIFY=true
        ;;
+    *) break
+       ;;
   esac
 done
 
@@ -129,7 +131,7 @@ if [ $? = 0 ]; then
 fi
 
 # if we have Electron and all arguments are files, start up the app
-if [ x"$ELECTRON_EXE" != x ]; then
+if [ x"$ELECTRON_EXE" != x -a $# -gt 0 ]; then
   ALLFILES=true
   for f in "$@"
   do
