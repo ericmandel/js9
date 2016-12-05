@@ -106,8 +106,15 @@ function createWindow() {
     // load data files
     for(let i=0; i<js9Electron.files.length; i++){
 	let cmd;
-	const file = js9Electron.files[i];
+	let file = js9Electron.files[i];
 	const jobj = js9Electron.files[i+1];
+	// relative data paths must be relative to js9Electron.js script
+	if( !path.isAbsolute(file) ){
+	    const nfile = path.relative(__dirname, file);
+	    if( nfile ){
+		file = nfile;
+	    }
+	}
 	if( jobj && jobj.startsWith('{') ){
 	    i++;
 	    cmd = `JS9.Load('${file}', '${jobj}')`;
