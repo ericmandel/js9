@@ -33,7 +33,9 @@ usage(){
   printf "  # send a command to an existing JS9 app or web page\n"
   printf "  %s [switches] [cmd] [args]\n" $XEQ
   printf "  # start the JS9 Desktop app and load images\n"
-  printf "  %s -a [switches] [image1, image2, ...]\n" $XEQ
+  printf "  %s [-a] [switches] [image1, image2, ...]\n" $XEQ
+  printf "  # or (no switches specified:)\n"
+  printf "  %s [image1, image2, ...]\n" $XEQ
   printf "  # start a JS9 web page in a browser and load images\n"
   printf "  %s -b [bname] [switches] [image1, image2, ...]\n" $XEQ
   printf " \n"
@@ -42,10 +44,10 @@ usage(){
   printf " \n"
   printf "  app (-a) specific switches:\n"
   printf "    -a                        # start JS9 app (required Electron.js)\n"
-  printf "    --helper [true|false]  # whether to start up helper app (def: true)\n"
-  printf "    --height [h]           # height of app\n"
-  printf "    -w|--webpage [url]     # web page to open in app\n"
-  printf "    --width [w]            # width of app\n"
+  printf "    --helper [true|false]     # whether to start up helper app (def: true)\n"
+  printf "    --height [h]              # height of app\n"
+  printf "    -w|--webpage [url]        # web page to open in app\n"
+  printf "    --width [w]               # width of app\n"
   printf " \n"
   printf "  browser (-b) specific switches:\n"
   printf "    -b|--browser [bname]      # start browser chrome|firefox|safari\n"
@@ -53,7 +55,7 @@ usage(){
   printf " \n"
   printf "  command and browser (-b) switches:\n"
   printf "    -d|--debug                # output debugging info\n"
-  printf "    -h|--host|--helper [host]  # helper host (def: localhost)\n"
+  printf "    -h|--host|--helper [host] # helper host (def: localhost)\n"
   printf "    -i|--id [id]              # client JS9 id (def: JS9)\n"
   printf "    -m|--multi                # send to multiple clients\n"
   printf "    -|-p|--pipe               # read argument list from stdin\n"
@@ -124,6 +126,20 @@ esac
 hash "$TRY" 1>/dev/null 2>&1
 if [ $? = 0 ]; then
   ELECTRON_EXE="$TRY"
+fi
+
+# if we have Electron and all arguments are files, start up the app
+if [ x"$ELECTRON_EXE" != x ]; then
+  ALLFILES=true
+  for f in "$@"
+  do
+    if [ ! -r $f ]; then
+      ALLFILES=false
+    fi
+  done
+  if [ x$ALLFILES = xtrue ]; then
+    DOAPP=true
+  fi
 fi
 
 # use Electron or use Node, depending on the mode we are in
