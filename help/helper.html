@@ -30,8 +30,8 @@ JS9 supports two techniques for server-side analysis: you can use your
 own web server as the JS9 back-end helper using CGI calls, or you can
 run a separate Node.js-based server to process JS9 back-end
 requests. The Node.js server-side helper is faster and more flexible
-than the CGI helper (e.g., it supports messaging between the command
-line and the browser).  However, it obviously requires installation of
+than the CGI helper. It also supports messaging between the command
+line and the browser.  However, it obviously requires installation of
 Node.js, and uses its own socket port to communicate with the outside
 world. You should decide which server-side helper to use before
 running configure. Please contact us if you want to discuss the
@@ -266,10 +266,8 @@ that only the Node.js user can read it:
 </pre>
 and keep that user's password safe!
 <p>
-Also note that Node.js https support appears to missing a needed routine
-in v0.10. Please use v0.12 or above for https.
 
-<h5>Last updated: September 25, 2016</h5>
+<h5>Last updated: December 5, 2016</h5>
 </div>
 
 </body>

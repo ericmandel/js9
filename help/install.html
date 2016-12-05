@@ -101,14 +101,10 @@ Once Electron.app is installed, generate the JS9 quick-start files:
 This will create a js9Prefs.json file, which you should edit to add preferred
 JS9 properties, as well as a js9 script to start the JS9 app:
 <pre>
-  js9 -a ~/data/casa.fits
+  js9 ~/data/casa.fits
 </pre>
-and then interact with the JS9 page (or any other JS9-enabled web page):
-<pre>
-  js9 cmap cool
-  js9 regions circle
-</pre>
-See: <a href="./extmsg.html">External Messaging</a> for more details.
+If you then want to send commands to this (or a browser-based) JS9
+display, you will have to install Node.js as well.
 
 <h3>Do You Want to Install JS9 in a Web Server?</h3>  
 If you want to run JS9 in a "real" web server, build and install
@@ -125,7 +121,7 @@ directory only contain the installed JS9 files, i.e. that you install
 JS9 into its own self-contained directory. This will make upgrading to
 new versions much easier.
 
-<h3>Do You Want to Configure Server-side Analysis?</h3>
+<h3>Do You Want to Configure Server-side Analysis or External Messaging?</h3>
 <p>
 JS9 supports server-side ("back-end") analysis on FITS data using a
 server-side helper. This capability allows you to execute virtually
@@ -138,7 +134,7 @@ useful for archive centers, but also can be attractive to individual
 users who want to integrate their own data analysis programs into JS9.
 <p>
 In addition, JS9 supports communication with external processes via the
-<b>js9 script</b>. This capability requires the configuration of a
+<b>js9 script</b>. This capability also requires the configuration of a
 Node.js-based server-side helper.
 <p>
 You configure a JS9 back-end helper by adding additional switches to
@@ -193,7 +189,7 @@ available on GitHub:
 </pre>
 
 
-<h5>Last updated: June 1, 2016</h5>
+<h5>Last updated: December 5, 2016</h5>
 </div>
 
 </body>
