@@ -390,11 +390,12 @@ if( (JS9.BROWSER[0] === "Firefox") && JS9.BROWSER[2].search(/Linux/) >=0 ){
 if( (JS9.BROWSER[0] === "Chrome") || (JS9.BROWSER[0] === "Safari") ){
     JS9.bugs.webkit_resize = true;
 }
-// chrome appears to have a 500Mb limit on tabs (10/2015)
+// chrome appears to have a 4Gb limit on tabs (12/2016)
+// this is a feeble attempt to avoid "aw, snap" ...
 if( (JS9.BROWSER[0] === "Chrome") ){
-    JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 450000000);
-    JS9.globalOpts.image.xmax = 8192;
-    JS9.globalOpts.image.ymax = 8192;
+    JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 500000000);
+    JS9.globalOpts.image.xmax = 2048 * 3;
+    JS9.globalOpts.image.ymax = 2048 * 3;
 }
 
 // ---------------------------------------------------------------------
