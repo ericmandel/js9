@@ -2618,12 +2618,8 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
 	    }
 	}
 	// process the FITS file by going to the extname/extnum
-	if( JS9.fits.handleFITSFile ){
-	    try{ JS9.fits.handleFITSFile("", extOpts, newExtHandler); }
-	    catch(e){ JS9.error("can't process FITS extension", e); }
-	} else {
-	    JS9.error("no FITS module available to display FITS extension");
-	}
+	try{ JS9.handleFITSFile("", extOpts, newExtHandler); }
+	catch(e){ JS9.error("can't process FITS extension", e); }
     } else {
 	JS9.error("virtual FITS file is missing for extension display");
     }
@@ -2673,12 +2669,8 @@ JS9.Image.prototype.displaySlice = function(slice, opts){
 	    sliceOpts.slice = slice;
 	}
 	// process the FITS file by going to the slice
-	if( JS9.fits.handleFITSFile ){
-	    try{ JS9.fits.handleFITSFile("", sliceOpts, newSliceHandler); }
-	    catch(e){ JS9.error("can't process FITS slice", e); }
-	} else {
-	    JS9.error("no FITS module available to display FITS slice");
-	}
+	try{ JS9.handleFITSFile("", sliceOpts, newSliceHandler); }
+	catch(e){ JS9.error("can't process FITS slice", e); }
     } else {
 	JS9.error("virtual FITS file is missing for slice display");
     }
@@ -4999,8 +4991,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    JS9.waiting(false);
 	};
 	// sanity checks
-	if( !that.raw.wcs || !wcsim ||
-	    !JS9.reproject || !JS9.fits.handleFITSFile ){
+	if( !that.raw.wcs || !wcsim || !JS9.reproject ){
 	    return;
 	}
 	if( !that.raw.hdu || !that.raw.hdu.fits || !that.raw.hdu.fits.fptr ){
@@ -5188,7 +5179,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	// save pointer to original wcs image
 	topts.wcsim = wcsim;
 	// process the FITS file
-	try{ JS9.fits.handleFITSFile(ovfile, topts, reprojHandler); }
+	try{ JS9.handleFITSFile(ovfile, topts, reprojHandler); }
 	catch(e){ JS9.error("can't process reprojected FITS file", e); }
     }, JS9.SPINOUT);
     // allow chaining
@@ -10896,6 +10887,15 @@ JS9.fitsLibrary = function(s){
     return t;
 };
 
+// check for 'real' FITS handling routine and call it
+JS9.handleFITSFile = function(file, options, handler){
+    if( JS9.fits.handleFITSFile ){
+	JS9.fits.handleFITSFile(file, options, handler);
+    } else {
+	JS9.error("no FITS module available to process FITS file");
+    }
+};
+
 // load an image (jpeg, png, etc)
 // taken from fitsy.js
 JS9.handleImageFile = function(file, options, handler){
@@ -11967,7 +11967,7 @@ JS9.dragexitCB = function(id, evt){
 };
 
 JS9.dragdropCB = function(id, evt, handler){
-    var i, opts, files;
+    var i, opts, files, display;
     // convert jquery event to original event, if possible
     if( evt.originalEvent ){
 	evt = evt.originalEvent;
@@ -11978,6 +11978,12 @@ JS9.dragdropCB = function(id, evt, handler){
     opts.display = opts.display || id;
     opts.extlist = opts.extlist || JS9.globalOpts.extlist;
     files = evt.target.files || evt.dataTransfer.files;
+    // turn on waiting, if possible
+    display = JS9.lookupDisplay(opts.display);
+    if( display && display.divjq ){
+	JS9.waiting(true, display.divjq[0]);
+    }
+    // load each file in turn
     for(i=0; i<files.length; i++){
 	JS9.Load(files[i], opts, handler);
     }
@@ -13353,13 +13359,9 @@ JS9.mkPublic("Load", function(file, opts){
 	// processing type: img or fits
 	switch(ptype){
 	case "fits":
-	    if( JS9.fits.handleFITSFile ){
-		topts = $.extend(true, {}, opts, JS9.fits.options);
-		try{ JS9.fits.handleFITSFile(file, topts, JS9.NewFitsImage); }
-		catch(e){ JS9.error("can't process FITS file", e); }
-	    } else {
-		JS9.error("no FITS module available to load this FITS blob");
-	    }
+	    topts = $.extend(true, {}, opts, JS9.fits.options);
+	    try{ JS9.handleFITSFile(file, topts, JS9.NewFitsImage); }
+	    catch(e){ JS9.error("can't process FITS file", e); }
 	    break;
 	case "img":
 	    try{ JS9.handleImageFile(file, opts, JS9.NewFITSImage); }
@@ -13392,13 +13394,9 @@ JS9.mkPublic("Load", function(file, opts){
 	    opts.filename = JS9.ANON + JS9.uniqueID();
 	}
 	blob.name = opts.filename;
-	if( JS9.fits.handleFITSFile ){
-	    topts = $.extend(true, {}, opts, JS9.fits.options);
-	    try{ JS9.fits.handleFITSFile(blob, topts, JS9.NewFitsImage); }
-	    catch(e){ JS9.error("can't process FITS file", e); }
-	} else {
-	    JS9.error("no FITS module available to process this memory FITS");
-	}
+	topts = $.extend(true, {}, opts, JS9.fits.options);
+	try{ JS9.handleFITSFile(blob, topts, JS9.NewFitsImage); }
+	catch(e){ JS9.error("can't process FITS file", e); }
 	return;
     }
     // if this file is already loaded, just redisplay
@@ -13800,19 +13798,15 @@ JS9.mkPublic("RefreshImage", function(fits, opts){
     opts = obj.argv[1] || {};
     if( im ){
 	if( fits instanceof Blob ){
-	    if( JS9.fits.handleFITSFile ){
-		// cleanup previous FITS file support, if necessary
-		// do this before we handle the new FITS file, or else
-		// we end up with a memory leak in the emscripten heap!
-		if( !opts.rawid && JS9.fits.cleanupFITSFile &&
-		     im.raw.hdu && im.raw.hdu.fits ){
-		    JS9.fits.cleanupFITSFile(im.raw.hdu.fits, true);
-		}
-		try{ JS9.fits.handleFITSFile(fits, JS9.fits.options, retry); }
-		catch(e){ JS9.error("can't refresh FITS file", e); }
-	    } else {
-		JS9.error("no FITS module available to refresh this image");
+	    // cleanup previous FITS file support, if necessary
+	    // do this before we handle the new FITS file, or else
+	    // we end up with a memory leak in the emscripten heap!
+	    if( !opts.rawid && JS9.fits.cleanupFITSFile &&
+		im.raw.hdu && im.raw.hdu.fits ){
+		JS9.fits.cleanupFITSFile(im.raw.hdu.fits, true);
 	    }
+	    try{ JS9.handleFITSFile(fits, JS9.fits.options, retry); }
+	    catch(e){ JS9.error("can't refresh FITS file", e); }
 	} else {
 	    JS9.Image.prototype.refreshImage.apply(im, obj.argv);
 	}
