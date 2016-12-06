@@ -34,7 +34,7 @@ OBJS = 		$(SRCS:%.c=%.o)
 
 # wrapper for cfitsio
 JSFITSIO =	./jsfitsio
-JSRCS =  	$(JSFITSIO)/jsfitsio.c \
+JSRCS =  	$(JSFITSIO)/jsfitsio.c $(JSFITSIO)/healpix.c \
 		$(JSFITSIO)/listhdu.c
 JOBJS = 	$(JSRCS:%.c=%.o)
 

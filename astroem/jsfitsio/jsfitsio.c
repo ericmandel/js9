@@ -14,13 +14,14 @@ https://groups.google.com/forum/#!topic/emscripten-discuss/JDaNHIRQ_G4
 #include <string.h>
 #include <stdio.h>
 #include "fitsio.h"
+#include "healpix.h"
 #if EM
 #include <emscripten.h>
 #endif
 
 /* must match what cfitsio expects (i.e., 4 for histogramming) */
 #define IDIM 4
-#define IFILE "mem://";
+#define IFILE "mem://"
 #define MFILE "foo"
 
 #define max(a,b) (a>=b?a:b)
@@ -245,7 +246,7 @@ void updateTLM(fitsfile *fptr, fitsfile *ofptr,
 	       int xcen, int ycen, int dim1, int dim2, int bin){
   int tstatus;
   double dvalue;
-  char comment[81];
+  char comment[FLEN_CARD];
   dvalue = 0.0; *comment = '\0'; tstatus = 0;
   fits_read_key(fptr, TDOUBLE, "LTV1", &dvalue, comment, &tstatus);
   dvalue = ((dim1 / 2) - xcen) / bin; tstatus = 0;
@@ -284,7 +285,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens, char *slice,
   long naxes[IDIM], fpixel[IDIM], lpixel[IDIM], inc[IDIM];
   double bscale = 1.0;
   double bzero = 0.0;
-  char comment[81];
+  char comment[FLEN_CARD];
   char *s, *tslice;
   int nslice, idx, iaxis0, iaxis1;
   int iaxes[2] = {0, 1};
@@ -486,12 +487,14 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens, char *slice,
 // filterTableToImage: filter a binary table, create a temp image
 fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
 			     int *dims, double *cens, int bin, int *status){
-  int i, dim1, dim2;
+  int i, dim1, dim2, hpx, tstatus;
   int imagetype=TINT, naxis=2, recip=0;
   long nirow, norow;
   float weight=1;
   float xcen, ycen;
   double minin[IDIM], maxin[IDIM], binsizein[IDIM];
+  char param[FLEN_CARD];
+  char comment[FLEN_CARD];
   char *rowselect=NULL;
   char *outfile=IFILE;
   char wtcol[FLEN_VALUE];
@@ -506,6 +509,32 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   float binsize[IDIM];
   fitsfile *ofptr;
 
+  // check for HEALPix table, which is handled specially
+  hpx = 0;
+  param[0] = '\0';
+  tstatus = 0;
+  fits_read_key(fptr, TSTRING, "PIXTYPE", param, comment, &tstatus);
+  // look for pixtype param with value of "healpix" ...
+  if( (tstatus == 0) && !strcasecmp(param, "HEALPIX") ){
+    hpx = 1;
+  } else {
+    param[0] = '\0';
+    tstatus = 0;
+    // ... or nside param with non-negative value
+    fits_read_key(fptr, TSTRING, "NSIDE", param, comment, &tstatus);
+    if( (tstatus == 0) && atoi(param) > 0 ){
+      hpx = 2;
+    }
+  }
+  // if either case holds, it's HEALPix ...
+  if( hpx ){
+    ofptr = healpixToImage(fptr, status);
+    if( *status > 0 ){
+      return NULL;
+    }
+    return ofptr;
+  }
+  // otherwise, it's an ordinary binary table
   // set up defaults
   if( !bin ) bin = 1;
   wtcol[0] = '\0';
