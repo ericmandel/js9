@@ -180,7 +180,7 @@ if test x$CFITSIOINC != x; then
 fi
 if test x$CFITSIOLIB != x; then
   CFITSIOLIB="-L $CFITSIOLIB -lcfitsio"
-  CFITSIOOBJS="jsfitsio.o"
+  CFITSIOOBJS="jsfitsio.o healpix.o"
   FITSLIB="cfitsio"
 fi
 # results from cfitsio search

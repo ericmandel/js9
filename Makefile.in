@@ -219,7 +219,7 @@ TPOSOBJS =	tpos.o @CFITSIOOBJS@
 CIMTESTOBJS =	cimtest.o @CFITSIOOBJS@
 
 ifeq ($(FITSLIB), cfitsio)
-HELPEROBJS =	js9helper.o jsfitsio.o
+HELPEROBJS =	js9helper.o jsfitsio.o healpix.o
 else
 HELPEROBJS =	js9helper.o
 endif
@@ -584,6 +584,9 @@ tpos.o:		tpos.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
 jsfitsio.o:	$(JSFITSIO)/jsfitsio.c
+		$(CC) -c $(CC_SW) -o $@ $+
+
+healpix.o:	$(JSFITSIO)/healpix.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
 js9helper.o:	js9helper.c
