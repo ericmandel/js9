@@ -11983,10 +11983,13 @@ JS9.dragdropCB = function(id, evt, handler){
     if( display && display.divjq ){
 	JS9.waiting(true, display.divjq[0]);
     }
-    // load each file in turn
-    for(i=0; i<files.length; i++){
-	JS9.Load(files[i], opts, handler);
-    }
+    // wait for spinner to start ...
+    window.setTimeout(function(){
+	// ... and load each file in turn
+	for(i=0; i<files.length; i++){
+	    JS9.Load(files[i], opts, handler);
+	}
+    }, JS9.SPINOUT);
 };
 
 // ---------------------------------------------------------------------
