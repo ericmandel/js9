@@ -102,45 +102,52 @@ fi
 # script-level parameters
 while getopts ":asv" opt; do
   case $opt in
-    a) DOAPP=true
-       ;;
-    s) set --
-       ;;
-    v) DOVERIFY=true
-       ;;
-    *) break
-       ;;
+    a) DOAPP=true ;;
+    s) set -- ;;
+    v) DOVERIFY=true ;;
+    *) break ;;
   esac
 done
 
 # look for Node.js program (for messaging, but not for app)
-hash node 1>/dev/null 2>&1
+command -v node 1>/dev/null 2>&1
 if [ $? = 0 ]; then
   NODE_EXE="node"
 fi
 # look for Electron program (for messaging or for app)
 case $OS in
-  Linux) TRY="electron"
-         ;;
-  Darwin) TRY="${JS9_ELECTRON_APP:-/Applications/Electron.app}/Contents/MacOS/Electron"
-          ;;
+  Linux)  TRY="electron" ;;
+  Darwin) TRY="${JS9_ELECTRON_APP:-/Applications/Electron.app}/Contents/MacOS/Electron" ;;
 esac
-hash "$TRY" 1>/dev/null 2>&1
+command -v "$TRY" 1>/dev/null 2>&1
 if [ $? = 0 ]; then
   ELECTRON_EXE="$TRY"
 fi
 
-# if we have Electron and all arguments are files, start up the app
-if [ x"$ELECTRON_EXE" != x -a $# -gt 0 ]; then
+# check if we have args, and if all of them are files
+if [ $# -gt 0 ]; then
   ALLFILES=true
   for f in "$@"
-  do
+    do
     if [ ! -r $f ]; then
       ALLFILES=false
     fi
   done
-  if [ x$ALLFILES = xtrue ]; then
+fi
+
+# if all args are files, we would like to start up the app or the browser
+if [ x$ALLFILES = xtrue ]; then
+  if [ x"$ELECTRON_EXE" != x ]; then
+    # start the app
     DOAPP=true
+  elif [ x"$NODE_EXE" != x ]; then
+    # add -b switch to start a browser
+    if [ x$JS9_BROWSER = x ]; then
+      case $OS in
+        Darwin) ARGS="-b safari" ;;
+        *)      ARGS="-b chrome" ;;
+      esac
+    fi
   fi
 fi
 
@@ -188,5 +195,5 @@ fi
 if [ x$DOVERIFY = xtrue ]; then
   echo "executing: $JS9_XEQ" "$JS9_MSGSCRIPT" $*
 fi
-exec "$JS9_XEQ" "$JS9_MSGSCRIPT" $*
+exec "$JS9_XEQ" "$JS9_MSGSCRIPT" $ARGS $*
 
