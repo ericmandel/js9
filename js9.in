@@ -129,7 +129,7 @@ if [ $# -gt 0 ]; then
   ALLFILES=true
   for f in "$@"
     do
-    if [ ! -r $f ]; then
+    if [ ! -r "$f" ]; then
       ALLFILES=false
     fi
   done
