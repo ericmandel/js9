@@ -13,7 +13,7 @@ CFITSIO =	../cfitsio
 # can't use mem file: we don't know where the mem file will resides
 # EMFLAGS = 	-g --memory-init-file 0
 # EMFLAGS = 	-DEM -g --memory-init-file 0
-EMFLAGS	= 	-DEM -O2 --memory-init-file 0
+EMFLAGS	= 	-DEM -O3 --memory-init-file 0
 
 # support zscale up to 2048 * 2048 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=33554432
