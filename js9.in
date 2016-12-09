@@ -144,10 +144,11 @@ if [ x$ALLFILES = xtrue ]; then
     # add -b switch to start a browser
     if [ x$JS9_BROWSER = x ]; then
       case $OS in
-        Darwin) ARGS="-b safari" ;;
-        *)      ARGS="-b chrome" ;;
+        Darwin) JS9_BROWSER="safari" ;;
+        *)      JS9_BROWSER="chrome" ;;
       esac
     fi
+    ARGS="-b $JS9_BROWSER"
   fi
 fi
 
