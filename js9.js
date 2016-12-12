@@ -12,7 +12,7 @@
 
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 
-/*global $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly */
+/*global JS9Prefs, $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly */
 
 /*jshint smarttabs:true */
 
@@ -11485,7 +11485,38 @@ JS9.varByName = function(functionName, context){
     return context[vname];
 };
 
-// load a prefs file and integrate preferences into global JS9 object
+// merge preferences into global JS9 object
+JS9.mergePrefs = function(obj){
+    var otype, jtype, name;
+    // merge preferences with js9 objects and data
+    for( name in obj ){
+	if( obj.hasOwnProperty(name) && JS9.hasOwnProperty(name) ){
+	    jtype = typeof JS9[name];
+	    otype = typeof obj[name];
+	    if( (jtype === otype) || (otype === "string") ){
+		switch(jtype){
+		case "object":
+		    if( $.isArray(obj[name]) ){
+			// arrays get replaced completely
+			JS9[name] = obj[name];
+		    } else {
+			// objects get recursively extended
+			$.extend(true, JS9[name], obj[name]);
+		    }
+		    break;
+		case "number":
+		case "string":
+		    JS9[name] = obj[name];
+		    break;
+		default:
+		    break;
+		}
+	    }
+	}
+    }
+};
+
+// load a prefs file and merge preferences into global JS9 object
 JS9.loadPrefs = function(url, doerr) {
     // load site/user preferences synchronously
     $.ajax({
@@ -11495,45 +11526,19 @@ JS9.loadPrefs = function(url, doerr) {
       mimeType: "application/json",
       async: false,
       success: function(obj){
-	var otype, jtype, name;
-	// merge preferences with js9 objects and data
-	for( name in obj ){
-	    if( obj.hasOwnProperty(name) && JS9.hasOwnProperty(name) ){
-		jtype = typeof JS9[name];
-		otype = typeof obj[name];
-		if( (jtype === otype) || (otype === "string") ){
-		    switch(jtype){
-		    case "object":
-			if( $.isArray(obj[name]) ){
-			    // arrays get replaced completely
-			    JS9[name] = obj[name];
-			} else {
-			    // objects get recursively extended
-			    $.extend(true, JS9[name], obj[name]);
-			}
-			break;
-		    case "number":
-		    case "string":
-			JS9[name] = obj[name];
-			break;
-		    default:
-			break;
-		    }
-		}
-	    }
-	}
+	  JS9.mergePrefs(obj);
       },
       error:  function(jqXHR, textStatus, errorThrown){
-	if( doerr ){
-	    if( JS9.CHROMEFILEWARNING &&
-		(JS9.BROWSER[0] === "Chrome") && (document.domain === "") &&
-		(errorThrown && errorThrown.message && errorThrown.message.match(/Failed to execute 'send' on 'XMLHttpRequest'/)) ){
-		    alert("When using the file:// URI, Chrome must be run with the --allow-file-access-from-files switch to permit JS9 to access the preference file (and data files).");
-		JS9.CHROMEFILEWARNING = false;
-	    } else {
-		JS9.log("JS9 prefs file not available: %s", url);
-	    }
-	}
+	  if( doerr ){
+	      if( JS9.CHROMEFILEWARNING &&
+		  (JS9.BROWSER[0] === "Chrome") && (document.domain === "") &&
+		  (errorThrown && errorThrown.message && errorThrown.message.match(/Failed to execute 'send' on 'XMLHttpRequest'/)) ){
+		  alert("When using the file:// URI, Chrome must be run with the --allow-file-access-from-files switch to permit JS9 to access the preference file (and data files).");
+		  JS9.CHROMEFILEWARNING = false;
+	      } else {
+		  JS9.log("JS9 prefs file not available: %s", url);
+	      }
+	  }
       }
     });
 };
@@ -12316,14 +12321,22 @@ JS9.init = function(){
 	!window.hasOwnProperty("Plotly") ){
 	JS9.globalOpts.plotLibrary = "flot";
     }
-    // set this to false in the page to avoid loading a prefs file
-    if( JS9.PREFSFILE ){
-	// load site preferences, if possible
-	JS9.loadPrefs(JS9.InstallDir(JS9.PREFSFILE), 1);
-	// load page preferences, if possible
-	JS9.loadPrefs(JS9.PREFSFILE, 0);
+    // if js9 prefs were defined/loaded explicitly, merge properties
+    if( window.hasOwnProperty("JS9Prefs") && typeof JS9Prefs === "object" ){
+	JS9.mergePrefs(JS9Prefs);
 	// if we have regionOpts from preferences, add them to Regions.opts
 	$.extend(true, JS9.Regions.opts, JS9.regionOpts);
+    } else {
+	// look for and load json pref files
+	// (set this to false in the page to avoid loading a prefs file)
+	if( JS9.PREFSFILE ){
+	    // load site preferences, if possible
+	    JS9.loadPrefs(JS9.InstallDir(JS9.PREFSFILE), 1);
+	    // load page preferences, if possible
+	    JS9.loadPrefs(JS9.PREFSFILE, 0);
+	    // if we have regionOpts from preferences, add them to Regions.opts
+	    $.extend(true, JS9.Regions.opts, JS9.regionOpts);
+	}
     }
     // reset protocol for file:
     if( JS9.globalOpts.helperProtocol === "file:" ){
