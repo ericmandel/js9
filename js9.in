@@ -44,8 +44,8 @@ usage(){
   printf " \n"
   printf "  app (-a) specific switches:\n"
   printf "    -a                        # start JS9 app (required Electron.js)\n"
-  printf "    --helper [true|false]     # whether to start up helper app (def: true)\n"
   printf "    --height [h]              # height of app\n"
+  printf "    --helper [true|false]     # whether to start up helper app (def: true)\n"
   printf "    -w|--webpage [url]        # web page to open in app\n"
   printf "    --width [w]               # width of app\n"
   printf " \n"
@@ -59,8 +59,8 @@ usage(){
   printf "    -i|--id [id]              # client JS9 id (def: JS9)\n"
   printf "    -m|--multi                # send to multiple clients\n"
   printf "    -|-p|--pipe               # read argument list from stdin\n"
-  printf "    -t|--timeout              # timeout for browser startup\n"
   printf "    --pageid [id]             # unique page id from server\n"
+  printf "    -t|--timeout              # timeout for browser startup\n"
   printf "    -v|--verify               # output verification info\n"
   printf " \n"
   printf "  send commands to an existing JS9 app or web page:\n"
@@ -86,7 +86,7 @@ usage(){
   printf "  environment variables:\n"
   printf "    JS9_SRCDIR               # where to find files, if you don't build/install\n"
   printf "    JS9_BROWSER              # browser to use with -b (chrome|firefox|safari)\n"
-  printf "    JS9_WEBPAGE              # web page to use with -b (so -w not needed)\n"
+  printf "    JS9_WEBPAGE              # web page to use with app or browser\n"
   printf "\n"
   exit 0
 }

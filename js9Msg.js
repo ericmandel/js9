@@ -71,9 +71,9 @@ var usage = function() {
   console.log("    -h|--host|--helper [host]  # helper host (def: localhost)");
   console.log("    -i|--id [id]              # client JS9 id (def: JS9)");
   console.log("    -m|--multi                # send to multiple clients");
+  console.log("    --pageid [id]             # unique page id from server");
   console.log("    -|-p|--pipe               # read argument list from stdin");
   console.log("    -t|--timeout              # timeout for browser startup");
-  console.log("    --pageid [id]             # unique page id from server");
   console.log("    -v|--verify               # output verification info");
   console.log("    -w|--webpage [url]        # url to open in new browser");
   console.log(" ");
