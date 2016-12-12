@@ -50,8 +50,8 @@ js9Electron.id = js9Electron.argv.i || js9Electron.argv.id || "JS9";
 js9Electron.doHelper = isTrue(js9Electron.argv.helper, true);
 js9Electron.debug = isTrue(js9Electron.argv.debug, false);
 js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || process.env.JS9_WEBPAGE || js9Electron.defpage;
-js9Electron.width = js9Electron.argv.w || js9Electron.argv.width || 1024;
-js9Electron.height = js9Electron.argv.h || js9Electron.argv.height  || 768;
+js9Electron.width = js9Electron.argv.width || 1024;
+js9Electron.height = js9Electron.argv.height  || 768;
 // the list of files to load
 js9Electron.files = js9Electron.argv._;
 // hack: js9 script level switches might contain a file to load
