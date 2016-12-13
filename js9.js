@@ -8863,16 +8863,18 @@ JS9.Fabric.print = function(opts){
 	    win.document.write(sprintf("<img "));
 	    win.document.write(sprintf(" src='%s'>", dataURL));
 	    win.document.write("</div>");
-	    // colorbar text/tickmarks canvas
-	    dataURL = pinst.textjq[0].toDataURL("image/png");
-	    yoff += pinst.colorbarjq.height() + 1;
-	    divstr = sprintf(divtmpl, xoff, yoff);
-	    win.document.write(divstr);
-	    // need to rescale the text ... argh!!!
-            win.document.write(sprintf("<img style='width:%spx;'",
-				       this.display.width));
-	    win.document.write(sprintf("src='%s'>", dataURL));
-	    win.document.write("</div>");
+	    if( pinst.textjq && pinst.textjq[0] ){
+		// colorbar text/tickmarks canvas
+		dataURL = pinst.textjq[0].toDataURL("image/png");
+		yoff += pinst.colorbarjq.height() + 1;
+		divstr = sprintf(divtmpl, xoff, yoff);
+		win.document.write(divstr);
+		// need to rescale the text ... argh!!!
+		win.document.write(sprintf("<img style='width:%spx;'",
+					   this.display.width));
+		win.document.write(sprintf("src='%s'>", dataURL));
+		win.document.write("</div>");
+	    }
 	}
     }
     // finish up
