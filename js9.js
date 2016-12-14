@@ -8812,7 +8812,7 @@ JS9.resetPolygonCenter = function(poly){
 // Print support
 // call using image context
 JS9.Fabric.print = function(opts){
-    var s, key, win, dataURL, divstr, pinst, layer;
+    var html, key, win, dataURL, divstr, pinst, layer;
     var xoff = 0, yoff = 0;
     var initialURL = "data:text/html,<html><body><script>window.addEventListener('message', function(ev){document.documentElement.innerHTML=ev.data; window.setTimeout(function(){window.print()}, 250);},false)</script><p>waiting for image ...</body></html>";
     var divtmpl = "<div style='position:absolute; left:%spx; top:%spx'>";
@@ -8822,18 +8822,18 @@ JS9.Fabric.print = function(opts){
     // get the main image as a dataURL
     dataURL = this.display.canvas.toDataURL("image/png");
     // start the web page string
-    s += "<html><body style='padding: 0px; margin: 0px' onload='window.print(); return false'>";
+    html = "<html><body style='padding: 0px; margin: 0px' onload='window.print(); return false'>";
     // initial div to hold image
     divstr = sprintf(divtmpl, xoff, yoff);
     // add the image
-    s += sprintf("%s<img src='%s'></div>", divstr, dataURL);
+    html += sprintf("%s<img src='%s'></div>", divstr, dataURL);
     // add layers
     for( key in this.layers ){
 	if( this.layers.hasOwnProperty(key) ){
 	    layer = this.layers[key];
 	    // output (showing) layers attached to the main display
 	    if( layer.dlayer.dtype === "main" && layer.show ){
-		s += sprintf("%s%s</div>", divstr, layer.dlayer.canvas.toSVG());
+		html += sprintf("%s%s</div>", divstr, layer.dlayer.canvas.toSVG());
 	    }
 	}
     }
@@ -8847,20 +8847,20 @@ JS9.Fabric.print = function(opts){
 	    dataURL = pinst.colorbarjq[0].toDataURL("image/png");
 	    yoff += this.display.height;
 	    divstr = sprintf(divtmpl, xoff, yoff);
-	    s += sprintf("%s<img src='%s'></div>", divstr, dataURL);
+	    html += sprintf("%s<img src='%s'></div>", divstr, dataURL);
 	    if( pinst.textjq && pinst.textjq[0] ){
 		// colorbar text/tickmarks canvas
 		dataURL = pinst.textjq[0].toDataURL("image/png");
 		yoff += pinst.colorbarjq.height() + 1;
 		divstr = sprintf(divtmpl, xoff, yoff);
 		// need to rescale the text ... argh!!!
-		s += sprintf("%s<img style='width:%spx;'src='%s'></div>",
+		html += sprintf("%s<img style='width:%spx;'src='%s'></div>",
 			     divstr, this.display.width, dataURL);
 	    }
 	}
     }
     // finish up
-    s += "</body></html>";
+    html += "</body></html>";
     // make a new window containing the initial URL
     win = window.open(initialURL, this.id, winopts);
     if( !win ){
@@ -8869,12 +8869,16 @@ JS9.Fabric.print = function(opts){
     }
     // open DOM for writing
     if( win.document ){
+        // open it (not strictly necessary but ...)
 	win.document.open();
-	win.document.write(s);
+        // overwrite the doc with our html
+	win.document.write(html);
+        // must close!
 	win.document.close();
     } else if( win.postMessage ){
+	// send html to the window with which to reconfigure itself
 	window.setTimeout(function(){
-	    win.postMessage(s, "*");
+	    win.postMessage(html, "*");
 	}, 250);
     } else {
 	JS9.error("no method available for drawing image into print window");
@@ -13498,8 +13502,9 @@ JS9.mkPublic("Load", function(file, opts){
 // create a new instance of JS9 in a window (light or new)
 // nb: unlike JS9.Load, this requires the opts param
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
-    var id, did, head, body, win, doc, winid;
+    var id, did, head, body, win, winid;
     var idbase = (type || "") + "win";
+    var initialURL = "data:text/html,<html><body><script>window.addEventListener('message', function(ev){document.documentElement.innerHTML=ev.data</script><p></body></html>";
     var title;
     opts = opts || {};
     switch(type){
@@ -13560,6 +13565,8 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	} else {
             id = idbase + JS9.uniqueID();
 	}
+	// window opts
+	winopts = winopts || "width=540, height=605";
         // get our own file's header for css and js files
         // if this page is generated on the server side, hardwire this ...
         // if JS9 is not installed, hardwire this ...
@@ -13581,15 +13588,23 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	}
         html += sprintf(">%s</body></html>\n", body);
         // open the new window
-        win = window.open(null, id, "width=540, height=605");
-        // this is the document associated with the new window
-        doc = win.document;
-        // open it (not strictly necessary but ...)
-        doc.open();
-        // overwrite the doc with our html
-        doc.write(html);
-        // must close!
-        doc.close();
+        win = window.open(initialURL, id, winopts);
+	if( !win ){
+	    JS9.error("could not create window (check your pop-up blockers)");
+	    return;
+	}
+	if( win.document ){
+            // open it (not strictly necessary but ...)
+            win.document.open();
+            // overwrite the doc with our html
+            win.document.write(html);
+            // must close!
+            win.document.close();
+	} else if( win.postMessage ){
+	    JS9.error("LoadWindow(..., 'new') disabled on Desktop for security reasons");
+	} else {
+	    JS9.error("no method available for drawing image into window");
+	}
 	// return the id
 	return id;
     }
