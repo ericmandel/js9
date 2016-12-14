@@ -104,7 +104,7 @@ function createWindow() {
 	js9Electron.win.webContents.openDevTools({mode: 'detach'});
     }
     // inject flag to indicate we are in Electron.js
-    cmd = "JS9.isElectron = true;";
+    cmd = "window.isElectron = true;";
     js9Electron.win.webContents.executeJavaScript(cmd);
     // disable eval in renderer window
     // http://electron.atom.io/docs/tutorial/security/
