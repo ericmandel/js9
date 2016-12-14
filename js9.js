@@ -8814,6 +8814,7 @@ JS9.resetPolygonCenter = function(poly){
 JS9.Fabric.print = function(opts){
     var s, key, win, dataURL, divstr, pinst, layer;
     var xoff = 0, yoff = 0;
+    var initialURL = "data:text/html,<html><body><script>window.addEventListener('message', function(ev){document.documentElement.innerHTML=ev.data; window.setTimeout(function(){window.print()}, 250);},false)</script><p>waiting for image ...</body></html>";
     var divtmpl = "<div style='position:absolute; left:%spx; top:%spx'>";
     var winopts = sprintf("width=%s,height=%s,menubar=1,toolbar=1,status=0,scrollbars=1,resizable=1", this.display.canvasjq.attr("width"), this.display.canvasjq.attr("height"));
     // opts is optional
@@ -8860,8 +8861,8 @@ JS9.Fabric.print = function(opts){
     }
     // finish up
     s += "</body></html>";
-    // make a new window
-    win = window.open(null, this.id, winopts);
+    // make a new window containing the initial URL
+    win = window.open(initialURL, this.id, winopts);
     if( !win ){
 	JS9.error("could not create print window (check your pop-up blockers)");
 	return;
@@ -8871,6 +8872,10 @@ JS9.Fabric.print = function(opts){
 	win.document.open();
 	win.document.write(s);
 	win.document.close();
+    } else if( win.postMessage ){
+	window.setTimeout(function(){
+	    win.postMessage(s, "*");
+	}, 250);
     } else {
 	JS9.error("no method available for drawing image into print window");
     }
