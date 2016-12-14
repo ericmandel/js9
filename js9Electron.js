@@ -99,17 +99,17 @@ function createWindow() {
 	js9Electron.page = "file://" + js9Electron.page;
     }
     js9Electron.win.loadURL(js9Electron.page);
-
     // open the DevTools, if necessary
     if( js9Electron.debug ){
 	js9Electron.win.webContents.openDevTools({mode: 'detach'});
     }
-
+    // inject flag to indicate we are in Electron.js
+    cmd = "JS9.isElectron = true;";
+    js9Electron.win.webContents.executeJavaScript(cmd);
     // disable eval in renderer window
     // http://electron.atom.io/docs/tutorial/security/
     cmd = "window.eval = function(){throw new Error('For security reasons, Desktop JS9 does not support window.eval()');}";
     js9Electron.win.webContents.executeJavaScript(cmd);
-
     // load data files
     for(let i=0; i<js9Electron.files.length; i++){
 	let file = js9Electron.files[i];
