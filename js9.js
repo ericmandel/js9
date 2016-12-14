@@ -8812,9 +8812,8 @@ JS9.resetPolygonCenter = function(poly){
 // Print support
 // call using image context
 JS9.Fabric.print = function(opts){
-    var html, key, win, dataURL, divstr, pinst, layer;
+    var html, key, win, dataURL, divstr, pinst, layer, initialURL;
     var xoff = 0, yoff = 0;
-    var initialURL = "data:text/html,<html><body><script>window.addEventListener('message', function(ev){document.documentElement.innerHTML=ev.data; window.setTimeout(function(){window.print()}, 250);},false)</script><p>waiting for image ...</body></html>";
     var divtmpl = "<div style='position:absolute; left:%spx; top:%spx'>";
     var winopts = sprintf("width=%s,height=%s,menubar=1,toolbar=1,status=0,scrollbars=1,resizable=1", this.display.canvasjq.attr("width"), this.display.canvasjq.attr("height"));
     // opts is optional
@@ -8861,6 +8860,11 @@ JS9.Fabric.print = function(opts){
     }
     // finish up
     html += "</body></html>";
+    // are we in Electron?
+    // https://github.com/electron/electron/issues/2288
+    if( window.isElectron ){
+	initialURL = "data:text/html,<html><body><script>window.addEventListener('message', function(ev){document.documentElement.innerHTML=ev.data; window.setTimeout(function(){window.print()}, 250);},false)</script><p>waiting for image ...</body></html>";
+    }
     // make a new window containing the initial URL
     win = window.open(initialURL, this.id, winopts);
     if( !win ){
