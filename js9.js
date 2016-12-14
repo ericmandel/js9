@@ -13351,9 +13351,11 @@ JS9.mkPublic("Load", function(file, opts){
     }
     // handle blob containing FITS
     if( file instanceof Blob ){
-	if( file.name ){
+	if( file.path || file.name ){
+	    // new file (or, for Electron.js, the path, which is better)
+	    opts.filename = file.path || file.name;
 	    // see if file is already loaded
-	    im = JS9.lookupImage(file.name, opts.display);
+	    im = JS9.lookupImage(opts.filename, opts.display);
 	    if( im ){
 		// display image, 2D graphics, etc.
 		im.displayImage("display", opts);
@@ -13362,8 +13364,6 @@ JS9.mkPublic("Load", function(file, opts){
 		JS9.waiting(false);
 		return;
 	    }
-	    // new file
-	    opts.filename = file.name;
 	}
 	if( !opts.filename ){
 	    opts.filename = JS9.ANON + JS9.uniqueID();
