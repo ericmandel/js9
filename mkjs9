@@ -5,6 +5,7 @@ JS9_SRCDIR=$(pwd)
 if [ x"$1" != x ]; then
   case "$1" in
   -q*)
+  DOQUICK=1
   ./mkhelper nodejs
   ;;
 
@@ -23,5 +24,18 @@ X="s#^ *JS9_SRCDIR=\".*\"#export JS9_SRCDIR=\"$JS9_SRCDIR\"#"
 X="$X;s#^ *JS9_INSTALLDIR=\".*\"#export JS9_INSTALLDIR=\"$JS9_INSTALLDIR\"#"
 sed "$X" < $IMSGSCR > $OMSGSCR
 chmod +x $OMSGSCR
+
+if [ x"$DOQUICK" = x1 ]; then
+  EXE="${JS9_ELECTRON_APP:-/Applications/Electron.app}/Contents/MacOS/Electron"
+  command -v "$EXE" 1>/dev/null 2>&1
+  if [ $? = 0 ]; then
+    echo " "
+    echo "If you plan to use Electron.app with JS9, consider codesign'ing it:"
+    echo " "
+    echo "sudo codesign --force --deep --sign - $EXE/"
+    echo " "
+    echo "This will avoid being repeated requests to allow incoming connections."
+  fi
+fi
 
 exit 0
