@@ -34,7 +34,7 @@ if [ x"$DOQUICK" = x1 ]; then
     echo " "
     echo "sudo codesign --force --deep --sign - $EXE/"
     echo " "
-    echo "This will avoid being repeated requests to allow incoming connections."
+    echo "This will avoid repeated requests to allow incoming connections."
   fi
 fi
 
