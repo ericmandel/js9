@@ -6,7 +6,7 @@
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
  * Contact: saord@cfa.harvard.edu
  *
- * Copyright (c) 2012 - 2016 Smithsonian Astrophysical Observatory
+ * Copyright (c) 2012 - 2017 Smithsonian Astrophysical Observatory
  *
  */
 
@@ -12107,6 +12107,11 @@ JS9.RegisterPlugin = function(xclass, xname, func, opts){
 	JS9.helpOpts[xname] = {type: type, url: url,
 			       heading: xclass, title: title};
     }
+    // if JS9 already is inited, we need to instantiate this plugin
+    // this can happen when using Require.js, for example
+    if( JS9.inited ){
+	JS9.instantiatePlugins();
+    }
 };
 
 // create a new plugin instance, attached to the specified element
@@ -13148,6 +13153,7 @@ JS9.init = function(){
     // scroll to top
     $(document).scrollTop(0);
     // signal that JS9 init is complete
+    JS9.inited = true;
     $(document).trigger("JS9:init");
 };
 
@@ -14443,6 +14449,12 @@ JS9.mkPublic("AddDivs", function(){
     for(i=0; i< obj.argv.length; i++){
 	JS9.checkNew(new JS9.Display(obj.argv[i]));
     }
+    JS9.instantiatePlugins();
+});
+
+// instantiate plugins when $(document).ready fires before scripts are loaded,
+// e.g., Require.js
+JS9.mkPublic("InstantiatePlugins", function(){
     JS9.instantiatePlugins();
 });
 

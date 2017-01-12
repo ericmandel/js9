@@ -2968,6 +2968,24 @@ page and load an image into that display:
 See also <b>JS9.LoadWindow()</b> for a nice way to load images into a
 light-weight or completely new window.
 
+<p>
+<font size="+1"><b><u>Instantiate plugins on this web page</u></b></font>
+<p>
+<code><font size="+1">JS9.InstantiatePlugins()</font></code>
+<p>
+Normally, JS9 will instantiate all of its plugins automatically once the page
+is loaded and ready: internally, jQuery $(document).ready() calls JS9.init().
+However, module loaders such as <a href="http://requirejs.org">Require.js</a>
+can load scripts asynchronously and cause jQuery $(document).ready() to fire
+before all JS9 scripts are available. The <b>RegisterPlugin()</b> routine
+should deal properly with this situation. But just in case ...
+the <b>JS9.InstantiatePlugins()</b> will perform the plugin instantiation 
+explicitly.
+<p>
+In you find you need to call this routine in order make your in-page
+plugins display properly, please let us know the circumstances.
+
+
 <p><hr>
 <center><b><font size="+1">
 <a name="proto">Prototype Routines (not ready for prime time)</a>
