@@ -133,6 +133,7 @@ JS9.globalOpts = {
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     keyboardActions: {
 	b: "toggle selected region: source/background",
+	c: "toggle display of colorbar",
 	d: "move selected region down in stack",
 	e: "toggle selected region: include/exclude",
 	o: "open a local FITS file",
