@@ -133,6 +133,7 @@ JS9.globalOpts = {
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     keyboardActions: {
 	b: "toggle selected region: source/background",
+	d: "move selected region down in stack",
 	e: "toggle selected region: include/exclude",
 	o: "open a local FITS file",
         "/": "copy wcs position to clipboard",
@@ -10227,9 +10228,6 @@ JS9.Regions.keyDownCB = function(im, ipos, evt){
     case 68:
 	tact = "downRegion";
 	break;
-    case 85:
-	tact = "upRegion";
-	break;
     }
     // processing: execute action
     switch(tact){
@@ -10246,11 +10244,6 @@ JS9.Regions.keyDownCB = function(im, ipos, evt){
     case "downRegion":
 	im.selectShapes(layerName, "selected", function(obj){
 	    canvas.sendToBack(obj);
-	});
-	break;
-    case "upRegion":
-	im.selectShapes(layerName, "selected", function(obj){
-	    canvas.bringToFront(obj);
 	});
 	break;
     }
@@ -12503,6 +12496,10 @@ JS9.init = function(){
 	};
 	// eslint-disable-next-line no-unused-vars
 	JS9.Keyboard.Actions["remove selected region"] = function(im, ipos,evt){
+	    JS9.Regions.keyDownCB(im, ipos, evt);
+	};
+	// eslint-disable-next-line no-unused-vars
+	JS9.Keyboard.Actions["move selected region down in stack"] = function(im, ipos,evt){
 	    JS9.Regions.keyDownCB(im, ipos, evt);
 	};
     }
