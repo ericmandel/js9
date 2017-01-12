@@ -116,13 +116,31 @@ if [ $? = 0 ]; then
 fi
 # look for Electron program (for messaging or for app)
 case $OS in
-  Linux)  TRY="electron" ;;
-  Darwin) TRY="${JS9_ELECTRON_APP:-/Applications/Electron.app}/Contents/MacOS/Electron" ;;
+  Linux)  TRY="electron"
+	  command -v "$TRY" 1>/dev/null 2>&1
+	  if [ $? = 0 ]; then
+	      ELECTRON_EXE="$TRY"
+	  fi
+  ;;
+  Darwin) TRY="${JS9_ELECTRON_APP}"
+	  command -v "$TRY" 1>/dev/null 2>&1
+	  if [ $? = 0 ]; then
+	      ELECTRON_EXE="$TRY"
+	  else
+	      TRY="${HOME}/Applications/Electron.app/Contents/MacOS/Electron"
+	      command -v "$TRY" 1>/dev/null 2>&1
+	      if [ $? = 0 ]; then
+		  ELECTRON_EXE="$TRY"
+	      else
+		  TRY="/Applications/Electron.app/Contents/MacOS/Electron"
+		  command -v "$TRY" 1>/dev/null 2>&1
+		  if [ $? = 0 ]; then
+		      ELECTRON_EXE="$TRY"
+		  fi
+	      fi
+	  fi
+  ;;
 esac
-command -v "$TRY" 1>/dev/null 2>&1
-if [ $? = 0 ]; then
-  ELECTRON_EXE="$TRY"
-fi
 
 # check if we have args, and if all of them are files
 if [ $# -gt 0 ]; then
