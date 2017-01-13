@@ -173,6 +173,7 @@ JS9.globalOpts = {
     sessionTemplates: ".ses",        // templates for local session file input
     colormapTemplates: ".cmap",      // templates for local colormap file input
     catalogTemplates: ".cat,.tab",   // templates for local catalog file input
+    controlsMatchRegion: "corner",   // true or "corner" or "border"
     debug: 0		             // debug level
 };
 
@@ -6692,8 +6693,8 @@ JS9.Fabric.opts = {
     originY: "center",
     strokeWidth: 2,
     selectionLineWidth: 2,
-    borderColor: "#00FF00",
-    cornerColor: "#00FF00",
+    borderColor: "#00EEFF",
+    cornerColor: "#00EEFF",
     cornerSize: fabric.isTouchSupported ? 12 : 8,
     hasControls: true,
     hasRotatingPoint: true,
@@ -7664,8 +7665,14 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     nopts.stroke = nparams.color ||
 	           tagColor(nparams.tags, nparams.tagcolors, obj);
     nopts.selectColor = nopts.stroke;
-    nopts.cornerColor = nopts.stroke;
-    nopts.borderColor = nopts.stroke;
+    if( JS9.globalOpts.controlsMatchRegion === true ||
+	JS9.globalOpts.controlsMatchRegion === "corner" ){
+	nopts.cornerColor = nopts.stroke;
+    }
+    if( JS9.globalOpts.controlsMatchRegion === true ||
+	JS9.globalOpts.controlsMatchRegion === "border" ){
+	nopts.borderColor = nopts.stroke;
+    }
     if( nparams.fixinplace !== undefined ){
 	tf = nparams.fixinplace;
 	if( nopts.lockMovementX === undefined ){
