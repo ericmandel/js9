@@ -168,6 +168,7 @@ JS9.globalOpts = {
 		 save: true,                          // save cat cols in shapes
 		 tooltip: "$xreg.data.ra $xreg.data.dec"}, // tooltip format
     topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "a", "b", "red", "green", "blue"], // toplevel colormaps
+    hiddenPluginDivs: [], 	     // which static plugin divs start hidden
     fitsTemplates: ".fits,.gz,.fts", // templates for local FITS file input
     regionTemplates: ".reg",         // templates for local region file input
     sessionTemplates: ".ses",        // templates for local session file input
@@ -12121,6 +12122,7 @@ JS9.RegisterPlugin = function(xclass, xname, func, opts){
 // create a new plugin instance, attached to the specified element
 JS9.instantiatePlugin = function(el, plugin, winhandle, args){
     var i, tplugin, instance, divid, divjq, pdivjq, html, ndiv;
+    var visible = "visible";
     // if plugin is a string, get plugin object by name
     if( typeof plugin === "string" ){
 	for(i=0; i<JS9.plugins.length; i++){
@@ -12201,8 +12203,12 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	// save type
 	instance.winType = "div";
 	divid = divjq.attr("id") || "JS9Plugin";
+	// should this plugin div be hidden at the start?
+	if( $.inArray(instance.name, JS9.globalOpts.hiddenPluginDivs) >=0 ){
+	    visible = "hidden";
+	}
 	// wrap the target div in a container div
-	divjq.wrap("<div class='JS9PluginContainer'>");
+	divjq.wrap(sprintf("<div class='JS9PluginContainer' style='visibility: %s'>", visible));
 	// this is the original div
 	instance.odivjq = divjq;
 	// this is the div that the instance sees
