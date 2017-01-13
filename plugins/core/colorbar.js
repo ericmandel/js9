@@ -21,24 +21,6 @@ JS9.Colorbar.COLORBARHEIGHT = 16;
 // JS9.Colorbar.COLORBARFONT = "11pt Arial";
 // max label length before we start skipping some labels
 JS9.Colorbar.MAXLABELSIZE = 10;
-// key action name
-JS9.Colorbar.KEYACT = "toggle display of colorbar";
-
-// toggle display of colorbar
-JS9.Colorbar.toggleDisplay = function(im){
-    var divjq;
-    var plugin = im.display.pluginInstances.JS9Colorbar;
-    // this action can be called when there is no colorbar ...
-    if( !plugin || plugin.winType !==  "div" ){
-	return;
-    }
-    divjq = plugin.divjq;
-    if( divjq.css("visibility") === "hidden" ){
-	divjq.css("visibility", "visible");
-    } else {
-	divjq.css("visibility", "hidden");
-    }
-};
 
 // redraw colorbar on display
 JS9.Colorbar.display = function(im){
@@ -134,7 +116,7 @@ JS9.Colorbar.init = function(width, height){
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
-    // this.id:       the id ofthe div (or the plugin name as a default)
+    // this.id:       the id of the div (or the plugin name as a default)
     // this.display:  the display object associated with this plugin
     // this.dispMode: display mode (for internal use)
     //
@@ -226,10 +208,6 @@ JS9.Colorbar.init = function(width, height){
     // display current colorbar, if necessary
     if( this.display.image ){
 	JS9.Colorbar.display.call(this, this.display.image);
-    }
-    // add toggle keyboard action
-    if( JS9.hasOwnProperty("Keyboard") ){
-	JS9.Keyboard.Actions[JS9.Colorbar.KEYACT] = JS9.Colorbar.toggleDisplay;
     }
 };
 
