@@ -6996,6 +6996,45 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    });
 	}
     }
+    // object modified: might have to sort overlapping shapes by size
+    dlayer.canvas.on('object:modified', function (opts){
+	var i, o, olen;
+	var objs = [];
+	if( !dlayer.opts.sortOverlapping || !opts.target ){
+	    return;
+	}
+	o = opts.target;
+	o.setCoords();
+	// find objects that intersect with this one
+	dlayer.canvas.forEachObject(function(obj) {
+	    if( obj === o ){
+		return;
+	    }
+	    if( o.intersectsWithObject(obj) ){
+		objs.push({obj: obj, siz: obj.getWidth() * obj.getHeight()});
+	    }
+	});
+	// any intersecting shapes?
+	if( !objs.length ){
+	    return;
+	}
+	// add current shape to array
+	objs.push({obj: o, siz: o.getWidth() * o.getHeight()});
+	// sort in order of increasing size
+	objs.sort(function(a, b){
+	    if( a.siz < b.siz ){
+		return -1;
+	    } else if( a.siz > b.siz ){
+		return 1;
+	    }
+	    return 0;
+	});
+	// re-order so smaller objects are in front
+	olen = objs.length;
+	for(i=0; i<olen; i++){
+	    objs[i].obj.sendToBack();
+	}
+    });
     // object scaled: reset stroke width
     dlayer.canvas.on('object:scaling', function (opts){
 	opts.target.rescaleEvenly();
@@ -9481,6 +9520,8 @@ JS9.Regions.opts = {
     aradius2: 8,
     // region configuration url
     configURL: "./params/regionsconfig.html",
+    // should overlapping shapes be sorted (smallest on top)?
+    sortOverlapping: true,
     // colors for tags
     // these should be ordered from more specific to less specific
     tagcolors: {
@@ -10309,7 +10350,9 @@ JS9.Catalogs.opts = {
     // these should be ordered from more specific to less specific
     tagcolors: {
 	defcolor:            "#00FF00"
-    }
+    },
+    // should overlapping shapes be sorted (smallest on top)?
+    sortOverlapping: false
 };
 
 // ---------------------------------------------------------------------
