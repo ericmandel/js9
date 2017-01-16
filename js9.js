@@ -137,6 +137,8 @@ JS9.globalOpts = {
 	o: "open a local FITS file",
         "/": "copy wcs position to clipboard",
         "?": "copy value and position to clipboard",
+	"0": "reset zoom",
+	"=": "zoom in",
 	"+": "zoom in",
 	"-": "zoom out",
 	">": "display next image",

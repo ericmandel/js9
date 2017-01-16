@@ -3219,6 +3219,15 @@ JS9.Keyboard.Actions["toggle full screen mode"] = function(im, ipos, evt){
 };
 
 // eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["reset zoom"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    im.setZoom("1");
+};
+
+// eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["zoom in"] = function(im, ipos, evt){
     // sanity check
     if( !im ){

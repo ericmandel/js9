@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.11, Fri Jan 13 19:41:11 EST 2017 */
+/* JS9 allinone: v1.11, Sun Jan 15 22:40:51 EST 2017 */
 // fix to allow jquery to be loaded into an electron.js app
 // http://electron.atom.io/docs/faq/
 //
@@ -2744,8 +2744,8 @@ var JS9=function(){var a={NAME:"JS9",VERSION:"1.11",COPYRIGHT:"Copyright (c) 201
 RAWIDX:"alt",REPROJDIM:2300,IDFMT:"  (%s)",MINZOOM:.125,MAXZOOM:16,ADDZOOM:.05,CHROMEFILEWARNING:!0};a.TOUCHSUPPORTED=window.hasOwnProperty("ontouchstart")||0<navigator.maxTouchPoints||0<navigator.msMaxTouchPoints;a.BROWSER=function(){var a=navigator.platform,c=navigator.appName,d=navigator.userAgent,e,f=d.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);e=d.match(/version\/([\.\d]+)/i);f&&null!==e&&(f[2]=e[1]);f=f?[f[1],f[2],a]:[c,navigator.appVersion,"-?",a];f.push(/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(d));
 return f}();a.PIXEL_RATIO=function(){var a=document.createElement("canvas").getContext("2d");return(window.devicePixelRatio||1)/(a.webkitBackingStorePixelRatio||a.mozBackingStorePixelRatio||a.msBackingStorePixelRatio||a.oBackingStorePixelRatio||a.backingStorePixelRatio||1)}();a.globalOpts={helperType:"none",helperPort:2718,winType:"light",rgb:{active:!1,rim:null,gim:null,bim:null},defcolor:"#00FF00",pngisfits:!0,fits2png:!1,alerts:!0,internalValPos:!0,internalContrastBias:!0,containContrastBias:!1,
 htimeout:1E4,xtimeout:18E4,extlist:"EVENTS STDEVT",table:{xdim:1024,ydim:1024},image:{xmax:0,ymax:0},clearImageMemory:"never",helperProtocol:location.protocol,maxMemory:75E7,corsURL:"params/loadcors.html",proxyURL:"params/loadproxy.html",loadProxy:!1,archivesURL:"help/archives.html",imsectionURL:"params/imsection.html",postMessage:!1,waitType:"spinner",spinColor:"#FF0000",spinOpacity:.35,resize:!0,resizeHandle:!0,resizeRedisplay:!0,mouseActions:["display value/position","change contrast/bias","pan the image"],
-touchActions:["display value/position","change contrast/bias","pan the image"],keyboardActions:{b:"toggle selected region: source/background",e:"toggle selected region: include/exclude",o:"open a local FITS file","/":"copy wcs position to clipboard","?":"copy value and position to clipboard","+":"zoom in","-":"zoom out",">":"display next image","<":"display previous image","delete":"remove selected region",leftArrow:"move selected region",upArrow:"move selected region",rightArrow:"move selected region",
-downArrow:"move selected region"},mousetouchZoom:!1,centerDivs:["JS9Menubar"],pinchWait:8,pinchThresh:6,extendedPlugins:!0,corsProxy:"http://js9.si.edu/cgi-bin/CORS-proxy.cgi",simbadProxy:"http://js9.si.edu/cgi-bin/simbad-proxy.cgi",catalogs:{ras:["RA","_RAJ2000","RAJ2000"],decs:["Dec","_DEJ2000","DEJ2000"],shape:"circle",color:"yellow",width:7,height:7,radius:3.5,r1:5,r2:3.5,wcssys:"ICRS",skip:"#\n",save:!0,tooltip:"$xreg.data.ra $xreg.data.dec"},topColormaps:"grey heat cool viridis magma sls a b red green blue".split(" "),
+touchActions:["display value/position","change contrast/bias","pan the image"],keyboardActions:{b:"toggle selected region: source/background",e:"toggle selected region: include/exclude",o:"open a local FITS file","/":"copy wcs position to clipboard","?":"copy value and position to clipboard",0:"reset zoom","=":"zoom in","+":"zoom in","-":"zoom out",">":"display next image","<":"display previous image","delete":"remove selected region",leftArrow:"move selected region",upArrow:"move selected region",
+rightArrow:"move selected region",downArrow:"move selected region"},mousetouchZoom:!1,centerDivs:["JS9Menubar"],pinchWait:8,pinchThresh:6,extendedPlugins:!0,corsProxy:"http://js9.si.edu/cgi-bin/CORS-proxy.cgi",simbadProxy:"http://js9.si.edu/cgi-bin/simbad-proxy.cgi",catalogs:{ras:["RA","_RAJ2000","RAJ2000"],decs:["Dec","_DEJ2000","DEJ2000"],shape:"circle",color:"yellow",width:7,height:7,radius:3.5,r1:5,r2:3.5,wcssys:"ICRS",skip:"#\n",save:!0,tooltip:"$xreg.data.ra $xreg.data.dec"},topColormaps:"grey heat cool viridis magma sls a b red green blue".split(" "),
 hiddenPluginDivs:[],fitsTemplates:".fits,.gz,.fts",regionTemplates:".reg",sessionTemplates:".ses",colormapTemplates:".cmap",catalogTemplates:".cat,.tab",controlsMatchRegion:"corner",debug:0};a.imageOpts={contrast:1,bias:.5,invert:!1,exp:1E3,colormap:"grey",scale:"linear",scaleclipping:"dataminmax",zscalecontrast:.25,zscalesamples:600,zscaleline:120,wcssys:"native",wcsunits:"sexagesimal",lcs:"physical",valpos:!0,opacity:1,sigma:"none",maskOpacity:.4,alpha:255,alpha1:100,zoom:1,zooms:5,nancolor:"#000000",
 wcsalign:!0,listonchange:!1};a.regionOpts={};a.analOpts={epattern:/^(ERROR:[^\n]*)\n/,dpathURL:"params/datapath.html",prependJS9Dir:!0,dataDir:null};a.lightOpts={nclick:0,dhtml:{top:".dhtmlwindow",drag:".drag-contentarea",dragBar:"drag-handle",format:"width=%spx,height=%spx,center=1,resize=%s,scrolling=0",textWin:"width=830px,height=400px,center=1,resize=1,scrolling=1",plotWin:"width=830px,height=420px,center=1,resize=1,scrolling=1",dpathWin:"width=830px,height=175px,center=1,resize=1,scrolling=1",
 paramWin:"width=830px,height=230px,center=1,resize=1,scrolling=1",imageWin:"width=512px,height=598px,center=1,resize=1,scrolling=1",lineWin:"width=400px,height=60px,center=1,resize=1,scrolling=1"}};a.textColorOpts={regions:"#00FF00",info:"#00FF00",inimage:"#000000"};a.plotOpts={annotate:!1,annotateColor:"#FF0000",color:"blue",zoomStack:{enabled:!0},selection:{mode:"xy"},series:{clickable:!0,hoverable:!0,lines:{show:!0},points:{show:!1}},legend:{backgroundColor:null,backgroundOpacity:0},xaxis:{autorange:!0},
@@ -6404,6 +6404,15 @@ JS9.Keyboard.Actions["toggle full screen mode"] = function(im, ipos, evt){
     } else {
 	display.resize("reset");
     }
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["zoom default"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    im.setZoom("1");
 };
 
 // eslint-disable-next-line no-unused-vars
