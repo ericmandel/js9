@@ -10,11 +10,7 @@
  *
  */
 
-/*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
-
 /*global JS9Prefs, $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly */
-
-/*jshint smarttabs:true */
 
 // JS9 module
 var JS9 = (function(){
@@ -6828,8 +6824,13 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     dlayer.canvas.renderOnAddRemove = false;
     // preserve stacking (required in v1.6.6 to interact with polygon points)
     dlayer.canvas.preserveObjectStacking = true;
-    // movable: short-hand for allowing objects to move
-    if( dlayer.opts.movable ){
+    // changeable: short-hand for allowing objects to move
+    // fixinplace: the opposite, for backward compatibility
+    if( (dlayer.opts.changeable === undefined) &&
+	(dlayer.opts.fixinplace !== undefined)  ){
+	dlayer.opts.changeable = !dlayer.opts.fixinplace;
+    }
+    if( dlayer.opts.changeable ){
 	dlayer.opts.hasControls = true;
 	dlayer.opts.hasRotatingPoint = true;
 	dlayer.opts.hasBorders = true;
@@ -6842,7 +6843,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	dlayer.opts.selectable = true;
 	dlayer.opts.evented = true;
 	dlayer.opts.usekeyboard = true;
-    } else if( dlayer.opts.movable === false ){
+    } else if( dlayer.opts.changeable === false ){
 	dlayer.opts.hasControls = false;
 	dlayer.opts.hasRotatingPoint = false;
 	dlayer.opts.hasBorders = false;
@@ -7659,6 +7660,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    case "shadow":
 	    case "borderOpacityWhenMoving":
 	    case "borderScaleFactor":
+	    case "borderDashArray":
 	    case "transformMatrix":
 	    case "minScaleLimit":
 	    case "selectable":
@@ -7704,7 +7706,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	}
     }
     // finalize some properties
-    nopts.stroke = nparams.color ||
+    nopts.stroke = nparams.color || nopts.stroke ||
 	           tagColor(nparams.tags, nparams.tagcolors, obj);
     nopts.selectColor = nopts.stroke;
     if( JS9.globalOpts.controlsMatchRegion === true ||
@@ -7715,8 +7717,12 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	JS9.globalOpts.controlsMatchRegion === "border" ){
 	nopts.borderColor = nopts.stroke;
     }
-    if( nparams.fixinplace !== undefined ){
-	tf = nparams.fixinplace;
+    if( (nparams.changeable === undefined)     &&
+	(nparams.fixinplace !== undefined)  ){
+	nparams.changeable = !nparams.fixinplace;
+    }
+    if( nparams.changeable !== undefined ){
+	tf = !nparams.changeable;
 	if( nopts.lockMovementX === undefined ){
 	    nopts.lockMovementX = tf;
 	}
@@ -7740,6 +7746,30 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	}
 	if( nopts.hasBorders === undefined ){
 	    nopts.hasBorders = !tf;
+	}
+    }
+    // movable means x and y movement
+    if( nparams.movable !== undefined ){
+	tf = !nparams.movable;
+	if( nopts.lockMovementX === undefined ){
+	    nopts.lockMovementX = tf;
+	}
+	if( nopts.lockMovementY === undefined ){
+	    nopts.lockMovementY = tf;
+	}
+    }
+    // resizable
+    if( nparams.resizable !== undefined ){
+	tf = nparams.resizable;
+	nopts.hasControls = tf;
+	nopts.hasBorders = tf;
+    }
+    // rotatable
+    if( nparams.rotatable !== undefined ){
+	tf = !nparams.rotatable;
+	if( nopts.lockRotation === undefined ){
+	    nopts.lockRotation = tf;
+	    nopts.hasRotatingPoint = !tf;
 	}
     }
     // return shape, opts and params
@@ -7927,7 +7957,6 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 	// initalize
 	params.listonchange = false;
 	// breaks panner, magnifier
-	// params.fixinplace = false;
 	// save custom attributes in the params object
 	// s.set("params", params);
 	s.params = params;
@@ -8315,13 +8344,15 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
     canvas = layer.canvas;
     // process the specified shapes
     this.selectShapes(layerName, shape, function(obj, ginfo){
-	JS9.Fabric._updateShape.call(that, layerName, obj, ginfo, "remove");
-	// clear any dialog box
-	if( obj.params && obj.params.winid ){
-	    obj.params.winid.close();
+	if( obj.params.removable !== false ){
+	    JS9.Fabric._updateShape.call(that, layerName, obj, ginfo, "remove");
+	    // clear any dialog box
+	    if( obj.params && obj.params.winid ){
+		obj.params.winid.close();
+	    }
+	    // remove the shape
+	    canvas.remove(obj);
 	}
-	// remove the shape
-	canvas.remove(obj);
     });
     // handle changed selected group specially (fabric.js nuance)
     if( canvas.getActiveGroup() ){
@@ -8543,25 +8574,27 @@ JS9.Fabric.refreshShapes = function(layerName){
 	// change region position
 	obj.setLeft(dpos.x);
 	obj.setTop(dpos.y);
-	// set scaling based on zoom factor
-	switch(obj.params.shape){
-	case "point":
-	case "text":
-	    break;
-	default:
-	    // rescale the region
-	    tscaleX = scaleX;
-	    tscaleY = scaleY;
-	    if( ismain ){
-		// tscale is the resize part of old scale * new bin & zoom
-		tscaleX *= obj.scaleX;
-		tscaleY *= obj.scaleY;
+	// set scaling based on zoom factor, if necessary
+	if( obj.params.zoomable !== false ){
+	    switch(obj.params.shape){
+	    case "point":
+	    case "text":
+		break;
+	    default:
+		// rescale the region
+		tscaleX = scaleX;
+		tscaleY = scaleY;
+		if( ismain ){
+		    // tscale is the resize part of old scale * new bin & zoom
+		    tscaleX *= obj.scaleX;
+		    tscaleY *= obj.scaleY;
+		}
+		obj.scaleX = tscaleX;
+		obj.scaleY = tscaleY;
+		// rescale the width of the stroke lines
+		obj.rescaleBorder();
+		break;
 	    }
-	    obj.scaleX = tscaleX;
-	    obj.scaleY = tscaleY;
-	    // rescale the width of the stroke lines
-	    obj.rescaleBorder();
-	    break;
 	}
 	// recalculate fabric coords
 	obj.setCoords();
@@ -9705,6 +9738,26 @@ JS9.Regions.initConfigForm = function(obj){
 		}
 	    }
 	    break;
+	case "fontFamily":
+	    if( obj.getFontFamily ){
+		val = obj.getFontFamily();
+	    }
+	    break;
+	case "fontSize":
+	    if( obj.getFontSize ){
+		val = obj.getFontSize();
+	    }
+	    break;
+	case "fontStyle":
+	    if( obj.getFontStyle ){
+		val = obj.getFontStyle();
+	    }
+	    break;
+	case "fontWeight":
+	    if( obj.getFontWeight ){
+		val = obj.getFontWeight();
+	    }
+	    break;
 	default:
 	    if( obj.pub[key] !== undefined ){
 		val = obj.pub[key];
@@ -9730,13 +9783,17 @@ JS9.Regions.initConfigForm = function(obj){
     } else {
 	$(form + "[name='listonchange']").prop("checked", false);
     }
-    if( obj.params.fixinplace === undefined ){
-	obj.params.fixinplace = false;
+    if( (obj.params.changeable === undefined)  &&
+	(obj.params.fixinplace !== undefined)  ){
+	obj.params.changeable = !obj.params.fixinplace;
     }
-    if( obj.params.fixinplace ){
-	$(form + "[name='fixinplace']").prop("checked", true);
+    if( obj.params.changeable === undefined ){
+	obj.params.changeable = true;
+    }
+    if( obj.params.changeable ){
+	$(form + "[name='changeable']").prop("checked", true);
     } else {
-	$(form + "[name='fixinplace']").prop("checked", false);
+	$(form + "[name='changeable']").prop("checked", false);
     }
     // shape specific processing
     switch(obj.pub.shape){
@@ -9771,6 +9828,10 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 	}
 	if( (obj.params[key] !== undefined) &&
 	    (String(obj.params[key]) !== val) ){
+	    return true;
+	}
+	if( (obj[key] !== undefined) &&
+	    (String(obj[key]) !== val) ){
 	    return true;
 	}
 	return false;
@@ -9967,9 +10028,81 @@ JS9.Regions.parseRegions = function(s){
     var optsrexp = /(\{[^}]*\})/;
     var argsrexp = /\s*,\s*/;
     var charrexp = /(\(|\{|#|;|\n)/;
+    // convert "0" to false and "1" to true
+    var tf = function(s){
+	if( s === "0" ){return false;}
+	return true;
+    };
+    // ds9 compatibility: get properties from comment string
+    var ds9properties = function(s){
+	var xarr, key, key2, val, nobj;
+	var xobj = {};
+	var rexp = /([a-zA-Z][a-zA-Z0-9_]*)\s*=\s*([^ '"{]+|['"{][^'"}]*['"}])/g;
+	var ds9opts = {
+	    color: function(v){return {color: v};},
+	    dash: function(v){if(v){return {strokeDashArray: [3,1]};}},
+	    dashlist: function(v){
+		var i, arr;
+		if( v ){
+		    arr = v.split(" ");
+		    for(i=0; i<arr.length; i++){
+			arr[i] = parseFloat(arr[i]);
+		    }
+		    return {strokeDashArray: arr};
+		}
+	    },
+	    delete: function(v){return {removable: tf(v)};},
+	    edit: function(v){return {selectable: tf(v)};},
+	    fixed: function(v){return {zoomable: !tf(v)};},
+	    font: function(v){
+		var obj = {};
+		var arr = v.split(" ");
+		var len = arr.length;
+		if( len >= 1 ){ obj.fontFamily = arr[0]; }
+		if( len >= 2 ){ obj.fontSize = parseFloat(arr[1]); }
+		if( len >= 3 ){ obj.fontStyle  = arr[2]; }
+		if( len >= 4 ){ obj.fontWeight = arr[3]; }
+		return obj;
+	    },
+	    highlite: function(v){return {hasControls: tf(v), hasBorders: tf(v), hasRotatingPoint: tf(v)};},
+	    move: function(v){return {movable: tf(v)};},
+	    rotate: function(v){return {rotatable: tf(v)};},
+	    resize: function(v){return {resizable: tf(v)};},
+	    select: function(v){return {selectable: tf(v)};},
+	    text: function(v){return {text: v};},
+	    tag: function(v){return {tags: v};},
+	    width: function(v){return {strokeWidth: parseFloat(v)};}
+	};
+	// loop through DS9 region properties, converting to js9 props
+	while( (xarr = rexp.exec(s)) !== null ){
+	    key = xarr[1];
+	    val = xarr[2].replace(/^['"{]|['"}]$/g, "");
+	    if( ds9opts.hasOwnProperty(key) &&
+		typeof ds9opts[key] === "function" ){
+		nobj = ds9opts[key](val);
+		for(key2 in nobj){
+		    if( nobj.hasOwnProperty(key2) ){
+			if( key2 === "tags" && xobj.hasOwnProperty(key2) ){
+			    xobj[key2] += ("," + nobj[key2]);
+			} else {
+			    xobj[key2] = nobj[key2];
+			}
+		    }
+		}
+	    } else {
+		xobj[key] = val;
+	    }
+	}
+	// save the remaining comment
+	s = s.replace(rexp, "");
+	if( s ){
+	    xobj._comment = s.trim();
+	}
+	return xobj;
+    };
     // parse region line into cmd (shape or wcs), arguments, opts, comment
     var regparse1 = function(s){
-	var tarr;
+	var tarr, ds9props;
 	var tobj = {};
 	// initalize the return object
 	tobj.opts = {};
@@ -9992,7 +10125,11 @@ JS9.Regions.parseRegions = function(s){
 	// look for comments
 	tobj.comment = s.split("#")[1];
 	if( tobj.comment ){
-	    tobj.comment = tobj.comment.trim().toLowerCase();
+	    ds9props = ds9properties(tobj.comment.trim().toLowerCase());
+	    if( ds9props._comment !== undefined ){
+		tobj.comment = ds9props._comment;
+		delete ds9props._comment;
+	    }
 	}
 	// look for json opts after the argument list
 	tarr = optsrexp.exec(s);
@@ -10000,6 +10137,10 @@ JS9.Regions.parseRegions = function(s){
 	    // convert to object
 	    try{ tobj.opts = JSON.parse(tarr[1].trim()); }
 	    catch(e){ tobj.opts = {}; }
+	    // merge with ds9 opts
+	    if( tobj.opts && ds9props ){
+		tobj.opts = $.extend({}, ds9props, tobj.opts);
+	    }
 	}
 	// separate the region arguments into an array
 	tarr = parrexp.exec(s);
@@ -10322,7 +10463,7 @@ JS9.Catalogs.opts = {
     hasBorders: false,
     // evented: false,
     // catalog objects are locked in place by default
-    // set "movable" to true to unlock all, or unlock individually
+    // set "changeable" to true to unlock all, or unlock individually
     lockMovementX: true,
     lockMovementY: true,
     lockRotation: true,

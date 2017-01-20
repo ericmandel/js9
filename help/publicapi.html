@@ -1839,16 +1839,23 @@ property by the <b>JS9.GetRegions()</b> call.
 </ul>
 Other available properties include:
 <ul>
-<li><b>fixinplace</b>: if true, region cannot be moved or resized
-<li><b>lockMovementX</b>: region cannot be moved in the x direction
-<li><b>lockMovementY</b>: region cannot be moved in the y direction
-<li><b>lockRotation</b>: region cannot be rotated
-<li><b>lockScalingX</b>: region cannot be resized in the x direction
-<li><b>lockScalingY</b>: region cannot be resized in the y direction
+<li><b>changeable</b>: if false, region cannot be moved, resized, rotated
+<li><b>movable</b>: if false, region cannot be moved
+<li><b>resizable</b>: if false, region cannot be resized or rotated
+<li><b>rotatable</b>: if false, region cannot be rotated
+<li><b>removable</b>: if false, region cannot be removed
+<li><b>zoomable</b>: if false, region is not resize when image is zoomed
+<li><b>lockMovementX</b>: if true, region cannot be moved in the x direction
+<li><b>lockMovementY</b>: if true, region cannot be moved in the y direction
+<li><b>lockRotation</b>: if true, region cannot be rotated
 <li><b>fontFamily</b>: font parameter for text region
 <li><b>fontSize</b>: font parameter for text region
 <li><b>fontStyle</b>: font parameter for text region
 <li><b>fontWeight</b>: font parameter for text region
+</ul>
+Deprecated properties:
+<ul>
+<li><b>fixinplace</b>: opposite of changeable
 </ul>
 
 <p>
@@ -2060,7 +2067,7 @@ Starting with the JS9.Catalogs.opts object as a default, you can make
 the new layer interactive in a few different ways. The first way is to
 set the <b>movable</b> property in the opts object to <b>true</b>.
 This will permit individual shapes to be moved, rotated, resized and
-deleted. Shapes also will be movable and resizeable as a group.
+deleted. Shapes also will be movable and resizable as a group.
 <p>
 The second way is to supply one or more event callbacks as properties
 to the opts object:
@@ -2229,16 +2236,23 @@ property by the <b>JS9.GetShapes()</b> call.
 </ul>
 Other available properties include:
 <ul>
-<li><b>fixinplace</b>: if true, shape cannot be moved or resized
-<li><b>lockMovementX</b>: shape cannot be moved in the x direction
-<li><b>lockMovementY</b>: shape cannot be moved in the y direction
-<li><b>lockRotation</b>: shape cannot be rotated
-<li><b>lockScalingX</b>: shape cannot be resized in the x direction
-<li><b>lockScalingY</b>: shape cannot be resized in the y direction
-<li><b>fontFamily</b>: font parameter for text shape
-<li><b>fontSize</b>: font parameter for text shape
-<li><b>fontStyle</b>: font parameter for text shape
-<li><b>fontWeight</b>: font parameter for text shape
+<li><b>changeable</b>: if false, region cannot be moved, resized, rotated
+<li><b>movable</b>: if false, region cannot be moved
+<li><b>resizable</b>: if false, region cannot be resized or rotated
+<li><b>rotatable</b>: if false, region cannot be rotated
+<li><b>removable</b>: if false, region cannot be removed
+<li><b>zoomable</b>: if false, region is not resize when image is zoomed
+<li><b>lockMovementX</b>: if true, region cannot be moved in the x direction
+<li><b>lockMovementY</b>: if true, region cannot be moved in the y direction
+<li><b>lockRotation</b>: if true, region cannot be rotated
+<li><b>fontFamily</b>: font parameter for text region
+<li><b>fontSize</b>: font parameter for text region
+<li><b>fontStyle</b>: font parameter for text region
+<li><b>fontWeight</b>: font parameter for text region
+</ul>
+Deprecated properties:
+<ul>
+<li><b>fixinplace</b>: opposite of changeable
 </ul>
 
 <p>
