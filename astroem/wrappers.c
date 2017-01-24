@@ -142,7 +142,7 @@ static int newinfo(struct WorldCoor *wcs){
   // assume we will use next available slot
   cinfo = ninfo;
   // but look for an empty slot
-  for(i=0; i<ninfo; i++){
+  for(i=1; i<ninfo; i++){
     if( infos[i].wcs == NULL ){
       cinfo = i;
       break;
