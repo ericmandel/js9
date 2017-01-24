@@ -754,6 +754,10 @@ JS9.Image.prototype.closeImage = function(){
 			    JS9.fits.cleanupFITSFile(raw.hdu.fits, true);
 			}
 		    }
+		    // free wcs info
+		    if( raw.altwcs ){
+			this.freeWCS(raw);
+		    }
 		}
 	    }
 	    // remove proxy image from server, if necessary
@@ -1326,10 +1330,12 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	JS9.error("can't image a FITS file with less than 2 dimensions");
     }
     // save old essential values, if possible (for use as defaults)
+    // free previous WCS, if possible
     if( this.raw ){
 	owidth = this.raw.width;
 	oheight = this.raw.height;
 	obitpix = this.raw.bitpix;
+	this.freeWCS();
     }
     // initialize raws array?
     rlen = this.raws.length;
@@ -2623,6 +2629,12 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
 		return;
 	    }
 	}
+	// cleanup previous FITS file support, if necessary
+	// do this before we handle the new FITS file, or else
+	// we end up with a memory leak in the emscripten heap!
+	if( JS9.fits.cleanupFITSFile && this.raw.hdu && this.raw.hdu.fits ){
+	    JS9.fits.cleanupFITSFile(this.raw.hdu.fits, false);
+	}
 	// process the FITS file by going to the extname/extnum
 	try{ JS9.handleFITSFile("", extOpts, newExtHandler); }
 	catch(e){ JS9.error("can't process FITS extension", e); }
@@ -2673,6 +2685,11 @@ JS9.Image.prototype.displaySlice = function(slice, opts){
 	    sliceOpts.slice = sprintf("*,*,%s", slice);
 	} else {
 	    sliceOpts.slice = slice;
+	}
+	// cleanup previous FITS file heap before handling the new FITS file,
+	// or we end up with a memory leak in the emscripten heap
+	if( JS9.fits.cleanupFITSFile && this.raw.hdu && this.raw.hdu.fits ){
+	    JS9.fits.cleanupFITSFile(this.raw.hdu.fits, false);
 	}
 	// process the FITS file by going to the slice
 	try{ JS9.handleFITSFile("", sliceOpts, newSliceHandler); }
@@ -3032,6 +3049,8 @@ JS9.Image.prototype.initWCS = function(header){
     }
     // usually it's the raw header
     header = header || this.raw.header;
+    // clean up old wcs
+    this.freeWCS();
     // init object to hold alt wcs objects
     this.raw.altwcs = {};
     // set up the default wcs, using the original header params
@@ -3078,6 +3097,25 @@ JS9.Image.prototype.initWCS = function(header){
     this.setWCS("default");
     // allow chaining
     return this;
+};
+
+// close and free wcs resources
+JS9.Image.prototype.freeWCS = function(raw){
+    var key;
+    // raw defaults to ... default raw
+    raw = raw || this.raw;
+    if( raw.altwcs ){
+	// free all wcs structures
+	for( key in raw.altwcs ){
+	    // loop through alt wcs objects
+	    if( raw.altwcs.hasOwnProperty(key) ){
+		if( raw.altwcs[key].wcs > 0 ){
+		    JS9.freewcs(raw.altwcs[key].wcs);
+		    raw.altwcs[key].wcs = null;
+		}
+	    }
+	}
+    }
 };
 
 // get name of current wcs (from among the alternates)
@@ -12722,6 +12760,7 @@ JS9.init = function(){
 	JS9.arrfile = Astroem.arrfile;
 	JS9.listhdu = Astroem.listhdu;
 	JS9.initwcs = Astroem.initwcs;
+	JS9.freewcs = Astroem.freewcs;
 	JS9.wcsinfo = Astroem.wcsinfo;
 	JS9.wcssys = Astroem.wcssys;
 	JS9.wcsunits = Astroem.wcsunits;
@@ -14085,9 +14124,8 @@ JS9.mkPublic("RefreshImage", function(fits, opts){
     opts = obj.argv[1] || {};
     if( im ){
 	if( fits instanceof Blob ){
-	    // cleanup previous FITS file support, if necessary
-	    // do this before we handle the new FITS file, or else
-	    // we end up with a memory leak in the emscripten heap!
+	    // cleanup previous FITS heap before handling the new FITS file,
+	    // or we end up with a memory leak in the emscripten heap
 	    if( !opts.rawid && JS9.fits.cleanupFITSFile &&
 		im.raw.hdu && im.raw.hdu.fits ){
 		JS9.fits.cleanupFITSFile(im.raw.hdu.fits, true);

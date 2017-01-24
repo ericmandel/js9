@@ -101,10 +101,6 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     if( !fptr ){
       Module["error"]("virtual FITS file is missing for getFITSImage()");
     }
-    // clean up previous image section (but not the FITS file itself)
-    if( hdu.fits ){
-	Module["cleanupFITSFile"](hdu.fits, false);
-    }
     // default hdu type is image
     hdu.type = hdu.type || 0;
     // get extension number and name (of original data)
@@ -216,7 +212,7 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	break;
     }
     // get section header cards as a string
-    hptr = _malloc(16);
+    hptr = _malloc(20);
     setValue(hptr+12, 0, 'i32');
     ccall("getHeaderToString", null,
 	  ["number", "number", "number", "number"],
@@ -229,8 +225,16 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     for(i=0; i<buflen; i++){
 	hdu.cardstr += String.fromCharCode(buf[i]);
     }
+    // free string allocated in getHeaderToString()
+    setValue(hptr+16, 0, 'i32');
+    ccall("fffree", null, ["number", "number"], [bufptr2, hptr+16]);
+    // ignore error on free
+    // status  = getValue(hptr+16, 'i32');
+    // Module["errchk"](status);
+    // this is the returned status from getHeaderToString()
     status  = getValue(hptr+12, 'i32');
     _free(hptr);
+    // error check on getHeaderToString()
     Module["errchk"](status);
     // close the image section "file"
     if( ofptr && (ofptr !== fptr) ){
@@ -421,12 +425,12 @@ Module["cleanupFITSFile"] = function(fits, all) {
     }
     // free up heap space from image section
     if( fits.heap ){
-	Module._free(fits.heap);
+	_free(fits.heap);
 	fits.heap = null;
     }
     // free up header card string
     if( fits.cardstr ){
-	Module._free(fits.cardstr);
+	_free(fits.cardstr);
 	fits.cardstr = null;
     }
     if( all ){

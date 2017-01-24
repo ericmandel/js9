@@ -122,7 +122,8 @@ static int filecontents(char *path, char *obuf, int osize){
 
 /* add a new Info record with a valid wcs struct */
 static int newinfo(struct WorldCoor *wcs){
-  int n;
+  int i, n, cinfo;
+  // init info array
   if( maxinfo == 0 ){
     maxinfo = maxinc;
     infos = malloc(maxinfo * sizeof(InfoRec));
@@ -130,6 +131,7 @@ static int newinfo(struct WorldCoor *wcs){
       return -4;
     }
   }
+  // increase info array, if necessary
   while( ninfo >= maxinfo ){
     maxinfo += maxinc;
     infos = realloc(infos, maxinfo * sizeof(InfoRec));
@@ -137,14 +139,38 @@ static int newinfo(struct WorldCoor *wcs){
       return -3;
     }
   }
+  // assume we will use next available slot
+  cinfo = ninfo;
+  // but look for an empty slot
+  for(i=0; i<ninfo; i++){
+    if( infos[i].wcs == NULL ){
+      cinfo = i;
+      break;
+    }
+  }
+  // populate slot with wcs info
   if( wcs ){
-    n = ninfo;
-    infos[ninfo].wcs = wcs;
-    infos[ninfo].wcsunits = WCS_SEXAGESIMAL;
-    *infos[ninfo].str = '\0';
-    ninfo++;
+    n = cinfo;
+    infos[n].wcs = wcs;
+    infos[n].wcsunits = WCS_SEXAGESIMAL;
+    *infos[n].str = '\0';
+    if( cinfo == ninfo ){
+      ninfo++;
+    }
   } else {
     n = -1;
+  }
+  return n;
+}
+
+// free wcs and info records
+static int freeinfo(int n){
+  if( (n < 0) || (n >= ninfo) ){
+    return 0;
+  }
+  if( infos[n].wcs ){
+    wcsfree(infos[n].wcs);
+    infos[n].wcs = NULL;
   }
   return n;
 }
@@ -191,6 +217,11 @@ int initwcs(char *s, int n){
     wcsoutinit(wcs, getradecsys(wcs));
   }
   return newinfo(wcs);
+}
+
+/* free the wcs struct */
+int freewcs(int n){
+  return freeinfo(n);
 }
 
 /* return important info about the wcs (used by region parsing) */

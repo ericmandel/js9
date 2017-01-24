@@ -1,6 +1,7 @@
 
   return {
       initwcs:  Module.cwrap('initwcs', 'number', ['string', 'number']),
+      freewcs:  Module.cwrap('freewcs', 'number', ['number']),
       listhdu:  Module.cwrap('listhdu', 'string', ['string', 'string']),
       wcsinfo:  Module.cwrap('wcsinfo', 'string', ['number']),
       wcssys:  Module.cwrap('wcssys', 'string', ['number', 'string']),
