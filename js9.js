@@ -7037,72 +7037,118 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    });
 	}
     }
-    // object modified: might have to sort overlapping shapes by size
+    // object modified
     dlayer.canvas.on('object:modified', function (opts){
-	var i, o, olen;
+	var o, i, olen;
 	var objs = [];
-	if( !dlayer.opts.sortOverlapping || !opts.target ){
+	// sanity check
+	if( !opts.target ){
 	    return;
 	}
 	o = opts.target;
-	o.setCoords();
-	// find objects that intersect with this one
-	dlayer.canvas.forEachObject(function(obj) {
-	    if( obj === o ){
+	// update deltas to connected parents
+	JS9.Fabric.updateChildren(dlayer, o, "deltas");
+	// might have to sort overlapping shapes by size
+	if( dlayer.opts.sortOverlapping ){
+	    o.setCoords();
+	    // find objects that intersect with this one
+	    dlayer.canvas.forEachObject(function(obj) {
+		if( obj === o ){
+		    return;
+		}
+		if( o.intersectsWithObject(obj) ){
+		    objs.push({obj: obj, siz: obj.getWidth()*obj.getHeight()});
+		}
+	    });
+	    // any intersecting shapes?
+	    if( !objs.length ){
 		return;
 	    }
-	    if( o.intersectsWithObject(obj) ){
-		objs.push({obj: obj, siz: obj.getWidth() * obj.getHeight()});
+	    // add current shape to array
+	    objs.push({obj: o, siz: o.getWidth() * o.getHeight()});
+	    // sort in order of increasing size
+	    objs.sort(function(a, b){
+		if( a.siz < b.siz ){
+		    return -1;
+		} else if( a.siz > b.siz ){
+		    return 1;
+		}
+		return 0;
+	    });
+	    // re-order so smaller objects are in front
+	    olen = objs.length;
+	    for(i=0; i<olen; i++){
+		objs[i].obj.sendToBack();
 	    }
-	});
-	// any intersecting shapes?
-	if( !objs.length ){
-	    return;
-	}
-	// add current shape to array
-	objs.push({obj: o, siz: o.getWidth() * o.getHeight()});
-	// sort in order of increasing size
-	objs.sort(function(a, b){
-	    if( a.siz < b.siz ){
-		return -1;
-	    } else if( a.siz > b.siz ){
-		return 1;
-	    }
-	    return 0;
-	});
-	// re-order so smaller objects are in front
-	olen = objs.length;
-	for(i=0; i<olen; i++){
-	    objs[i].obj.sendToBack();
 	}
     });
     // object scaled: reset stroke width
     dlayer.canvas.on('object:scaling', function (opts){
-	opts.target.rescaleEvenly();
-	opts.target.rescaleBorder();
+	var o;
+	// sanity check
+	if( !opts.target ){
+	    return;
+	}
+	o = opts.target;
+	o.rescaleEvenly();
+	o.rescaleBorder();
+	JS9.Fabric.updateChildren(dlayer, o, "scaling");
+    });
+    dlayer.canvas.on('object:moving', function (opts){
+	var o;
+	// sanity check
+	if( !opts.target ){
+	    return;
+	}
+	o = opts.target;
+	JS9.Fabric.updateChildren(dlayer, o, "moving");
+    });
+    dlayer.canvas.on('object:rotating', function (opts){
+	var o;
+	// sanity check
+	if( !opts.target ){
+	    return;
+	}
+	o = opts.target;
+	JS9.Fabric.updateChildren(dlayer, o, "rotating");
+    });
+    dlayer.canvas.on('object:removed', function (opts){
+	var o;
+	// sanity check
+	if( !opts.target ){
+	    return;
+	}
+	o = opts.target;
+	JS9.Fabric.updateChildren(dlayer, o, "remove");
     });
     // object selected: add anchors to polygon
     dlayer.canvas.on('object:selected', function (opts){
+	var o;
+	// sanity check
+	if( !opts.target ){
+	    return;
+	}
+	o = opts.target;
 	// fire the selection cleared event, if necesssary
-	if( dlayer.params.sel && opts.target.params &&
-	    (dlayer.params.sel !== opts.target) ){
+	if( dlayer.params.sel && o.params &&
+	    (dlayer.params.sel !== o) ){
 	    dlayer.canvas.fire('before:selection:cleared',
 			       {target: dlayer.params.sel});
 	}
 	// selection processing
-	if( opts.target ){
-	    switch(opts.target.type){
+	if( o ){
+	    switch(o.type){
 	    case "polyline":
 	    case "polygon":
-		JS9.Fabric.addPolygonAnchors(dlayer, opts.target);
+		JS9.Fabric.addPolygonAnchors(dlayer, o);
 		dlayer.canvas.renderAll();
 		break;
 	    }
 	    // set currently selected shape
-	    if( opts.target.polyparams ){
-		dlayer.params.sel = opts.target.polyparams.polygon;
-	    } else if( opts.target.params ){
-		dlayer.params.sel = opts.target;
+	    if( o.polyparams ){
+		dlayer.params.sel = o.polyparams.polygon;
+	    } else if( o.params ){
+		dlayer.params.sel = o;
 	    }
 	}
 	// and currently selected layer
@@ -7112,6 +7158,12 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     });
     // object selection cleared: remove anchors from polygon
     dlayer.canvas.on('before:selection:cleared', function (opts){
+	var o;
+	// sanity check
+	if( !opts.target ){
+	    return;
+	}
+	o = opts.target;
 	// reset currently selected
 	dlayer.params.sel = null;
 	// also reset current layer in the image
@@ -7119,11 +7171,11 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    dlayer.display.image.layer = null;
 	}
 	// selection cleared processing
-	if( opts.target ){
-	    switch(opts.target.type){
+	if( o ){
+	    switch(o.type){
 	    case "polyline":
 	    case "polygon":
-		JS9.Fabric.removePolygonAnchors(dlayer, opts.target);
+		JS9.Fabric.removePolygonAnchors(dlayer, o);
 		dlayer.canvas.renderAll();
 		break;
 	    }
@@ -7816,15 +7868,25 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 
 // add shapes to a layer
 // call using image context
-JS9.Fabric.addShapes = function(layerName, shape, opts){
-    var i, sobj, sarr, ns, s, bopts, myopts;
+JS9.Fabric.addShapes = function(layerName, shape, myopts){
+    var i, sobj, sarr, ns, s, bopts, opts, topts, tobj, npos;
     var layer, canvas, dlayer, zoom, bin;
     var ttop, tleft, rarr=[];
+    var textHeight = 12;
     var params = {};
+    // optional myopts can be an object or a string
+    myopts = myopts || {};
+    if( typeof myopts === "string" ){
+	try{ myopts = JSON.parse(myopts); }
+	catch(e){
+	    JS9.error("can't parse shape opts: " + myopts, e);
+	    return null;
+	}
+    }
     // delay adding the region, if this image is not the one being displayed
     if( this.display.image !== this ){
 	this.delayedShapes = this.delayedShapes || [];
-	this.delayedShapes.push({layer: layerName, shape: shape, opts: opts});
+	this.delayedShapes.push({layer: layerName, shape: shape, opts: myopts});
 	return;
     }
     layer = this.getShapeLayer(layerName);
@@ -7858,16 +7920,6 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 	sarr = [shape];
     } else {
 	return;
-    }
-    // opts can be an object or a string
-    if( typeof opts === "string" ){
-	try{ myopts = JSON.parse(opts); }
-	catch(e){
-	    JS9.error("can't parse shape opts: " + opts, e);
-	    return null;
-	}
-    } else {
-	myopts = opts;
     }
     // once a shape has been added, we can set the zindex to process events
     if( !canvas.size() ){
@@ -7904,6 +7956,9 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 	params = sobj.params;
 	// id for this shape
 	params.id = ++layer.nshape;
+	// no parents or children yet
+	params.parents = [];
+	params.children = [];
 	switch(sobj.shape){
 	case "annulus":
 	    // save shape
@@ -8013,10 +8068,32 @@ JS9.Fabric.addShapes = function(layerName, shape, opts){
 	s.rescaleBorder();
 	// update the shape info
 	JS9.Fabric._updateShape.call(this, layerName, s, null, "add", params);
+	// if shape is not text but text is specified,
+	// make a text shape as a child of this shape
+	if( params.shape !== "text" && opts.text ){
+	    npos = JS9.rotatePoint({x: s.left,
+				    y: s.top - (s.height/2) - textHeight},
+				   s.angle, {x: s.left, y: s.top});
+	    topts = {left: npos.x, top: npos.y, angle: -s.angle,
+		     color: s.stroke, text: opts.text, rtn: "object"};
+	    tobj = JS9.Fabric.addShapes.call(this, layerName, "text", topts);
+	    s.params.children.push(tobj);
+	    tobj.params.parents.push({obj: s,
+				      dleft: s.left - tobj.left,
+				      dtop: s.top - tobj.top,
+				      lastscalex: s.scaleX,
+				      lastscaley: s.scaleY,
+				      lastangle: s.angle,
+				      textheight: textHeight});
+	}
     }
     // redraw (unless explicitly specified otherwise)
     if( (params.redraw === undefined) || params.redraw ){
 	canvas.renderAll();
+    }
+    // return object (internal use, usually)?
+    if( myopts.rtn === "object" ){
+	return s;
     }
     // return shape id
     return params.id;
@@ -8440,6 +8517,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     ao = canvas.getActiveObject();
     // process the specified shapes
     this.selectShapes(layerName, shape, function(obj, ginfo){
+console.log("before change %s: %s %s", obj.type, obj.left, obj.top);
 	// combine the objects parametes with the new options
 	// clearing some of the old ones first
 	if( opts.radii ){
@@ -8646,6 +8724,10 @@ JS9.Fabric.refreshShapes = function(layerName){
 	    }
 	    break;
 	}
+	// update children
+	JS9.Fabric.updateChildren(layer.dlayer, obj, "moving");
+	JS9.Fabric.updateChildren(layer.dlayer, obj, "scaling");
+	JS9.Fabric.updateChildren(layer.dlayer, obj, "rotating");
     });
     // only use the old bin and zoom once (until they change again)
     if( ismain ){
@@ -8899,6 +8981,78 @@ JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
 	    canvas.remove(shape.params.anchors[i]);
 	}
 	delete shape.params.anchors;
+    }
+};
+
+JS9.Fabric.updateChildren = function(dlayer, shape, type){
+    var i, j, p, child, parent, nangle, npos;
+    if( shape.params ){
+	// handle remove specially
+	if( type === "remove" ){
+	    for(i=shape.params.children.length-1; i>=0; i--){
+		child = shape.params.children[i];
+		for(j=child.params.parents.length-1; j>=0; j--){
+		    p = child.params.parents[j];
+		    if( p.obj === shape ){
+			child.params.parents.splice(j, 1);
+		    }
+		}
+	    }
+	    for(i=shape.params.children.length-1; i>=0; i--){
+		child = shape.params.children[i];
+		dlayer.canvas.remove(child);
+		shape.params.children.splice(i, 1);
+	    }
+	    return;
+	}
+	// handle update to parent deltas when a child shape changes
+	if( type === "deltas" ){
+	    for(i=0; i<shape.params.parents.length; i++){
+		p = shape.params.parents[i];
+		p.dleft = p.obj.left - shape.left;
+		p.dtop = p.obj.top - shape.top;
+	    }
+	    return;
+	}
+	// update children after a parent region is modified
+	for(i=0; i<shape.params.children.length; i++){
+	    child = shape.params.children[i];
+	    for(j=0; j<child.params.parents.length; j++){
+		p = child.params.parents[j];
+		if( shape === p.obj ){
+		    parent = shape;
+		    switch(type){
+		    case "moving":
+			child.left  = parent.left - p.dleft;
+			child.top   = parent.top - p.dtop;
+			break;
+		    case "rotating":
+			nangle = parent.angle - p.lastangle;
+			npos = JS9.rotatePoint({x: child.left,y: child.top},
+					       nangle,
+					       {x: parent.left, y: parent.top});
+			child.left = npos.x;
+			child.top = npos.y;
+			p.dleft = parent.left - child.left;
+			p.dtop = parent.top - child.top;
+			child.angle = child.angle + nangle;
+			p.lastangle = parent.angle;
+			break;
+		    case "scaling":
+			p.dleft = p.dleft * (parent.scaleX / p.lastscalex);
+			p.dtop = (p.dtop - p.textheight) * (parent.scaleY / p.lastscaley) + p.textheight;
+			p.lastscalex = parent.scaleX;
+			p.lastscaley = parent.scaleY;
+			child.left  = parent.left - p.dleft;
+			child.top   = parent.top - p.dtop;
+			break;
+		    }
+		    child.setCoords();
+		    dlayer.display.image.updateShapes(child.params.layerName, child,"child");
+		    break;
+		}
+	    }
+	}
     }
 };
 
@@ -10175,10 +10329,10 @@ JS9.Regions.parseRegions = function(s){
 	    // convert to object
 	    try{ tobj.opts = JSON.parse(tarr[1].trim()); }
 	    catch(e){ tobj.opts = {}; }
-	    // merge with ds9 opts
-	    if( tobj.opts && ds9props ){
-		tobj.opts = $.extend({}, ds9props, tobj.opts);
-	    }
+	}
+	// merge with ds9 opts
+	if( ds9props ){
+	    tobj.opts = $.extend({}, ds9props, tobj.opts);
 	}
 	// separate the region arguments into an array
 	tarr = parrexp.exec(s);
