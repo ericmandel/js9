@@ -8517,7 +8517,6 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     ao = canvas.getActiveObject();
     // process the specified shapes
     this.selectShapes(layerName, shape, function(obj, ginfo){
-console.log("before change %s: %s %s", obj.type, obj.left, obj.top);
 	// combine the objects parametes with the new options
 	// clearing some of the old ones first
 	if( opts.radii ){
