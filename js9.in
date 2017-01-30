@@ -38,6 +38,8 @@ usage(){
   printf "  %s [image1, image2, ...]\n" $XEQ
   printf "  # start a JS9 web page in a browser and load images\n"
   printf "  %s -b [bname] [switches] [image1, image2, ...]\n" $XEQ
+  printf "  # convert JS9 region files to DS9 region file\n"
+  printf "  %s -r [regionfile1, regionfile2, ...]\n" $XEQ
   printf " \n"
   printf "  general switches:\n"
   printf "    --help                    # print this message\n"
@@ -100,9 +102,10 @@ if [ $# = 1 -a "$1" = "--help" ]; then
 fi
 
 # script-level parameters
-while getopts ":asv" opt; do
+while getopts ":arsv" opt; do
   case $opt in
     a) DOAPP=true ;;
+    r) DOREG=true ;;
     s) set -- ;;
     v) DOVERIFY=true ;;
     *) break ;;
@@ -186,7 +189,11 @@ else
   else
     error "js9 scripting requires either Node.js or Electron.js"
   fi
-  MSGSCRIPT="js9Msg.js"
+  if [ x$DOREG = xtrue ]; then
+    MSGSCRIPT="js9DS9.js"
+  else
+    MSGSCRIPT="js9Msg.js"
+  fi
 fi
 
 # add to node module path (not sure if this is necessary)

@@ -3435,17 +3435,17 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    break;
 	case "sregions":
 	    owcssys = savewcs(that, u[1]);
-	    r = that.listRegions("source", 0).replace(/\s+/g,"");
+	    r = that.listRegions("source", {mode: 0}).replace(/\s+/g,"");
 	    restorewcs(that, owcssys);
 	    break;
 	case "bregions":
 	    owcssys = savewcs(that, u[1]);
-	    r = that.listRegions("background", 0).replace(/\s+/g,"");
+	    r = that.listRegions("background", {mode: 0}).replace(/\s+/g,"");
 	    restorewcs(that, owcssys);
 	    break;
 	case "regions":
 	    owcssys = savewcs(that, u[1]);
-	    r = that.listRegions("all", 0).replace(/\s+/g,"");
+	    r = that.listRegions("all", {mode: 0}).replace(/\s+/g,"");
 	    restorewcs(that, owcssys);
 	    break;
 	default:
@@ -7783,6 +7783,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    case "textAlign":
 	    case "lineHeight":
 	    case "textBackgroundColor":
+	    case "textOpts":
 		nopts[key] = opts[key];
 		break;
 	    case "shape":
@@ -7866,13 +7867,92 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     return {shape: shape, opts: nopts, params: nparams};
 };
 
+// give an object full of keys, return an array of key names for export
+JS9.Fabric._exportShapeOptions = function(opts){
+    // sanity check
+    if( typeof opts !== "object" ){
+	return [];
+    }
+    // array of export keys, with many stripped out
+    return Object.keys(opts).filter(function(item){
+	switch(item){
+	case "top":
+	case "left":
+	case "width":
+	case "height":
+	case "radius":
+	case "rx":
+	case "ry":
+	case "angle":
+	case "panzoom":
+	case "iradius":
+	case "oradius":
+	case "nannuli":
+	case "aradius1":
+	case "aradius2":
+	case "configURL":
+	case "sortOverlapping":
+	case "tagcolors":
+	case "ptshape":
+	case "ptsize":
+	case "linepoints":
+	case "polypoints":
+	case "responseType":
+	case "display":
+	case "tags":
+	case "r1":
+	case "r2":
+	case "x":
+	case "y":
+	case "shape":
+	case "rtn":
+	    return false;
+	default:
+	    return true;
+	}
+    });
+};
+
+// if shape is not text but text is specified in the opts,
+// make a text shape as a child of this shape
+// call using image context
+JS9.Fabric._handleChildText = function(layerName, s, opts){
+    var t, dpos, npos, topts;
+    var textHeight = 12;
+    if( (s.params.shape !== "text") && opts.text ){
+	dpos = JS9.rotatePoint({x: s.left, y: s.top - (s.height/2) -textHeight},
+			       s.angle, {x: s.left, y: s.top});
+	npos = this.displayToImagePos(dpos);
+	topts = {x: npos.x, y: npos.y, angle: -s.angle,
+		 color: s.stroke, text: opts.text, rtn: "object"};
+	if( opts.textOpts ){
+	    topts = $.extend(true, {}, topts, opts.textOpts);
+	}
+	// create the child shape
+	t = JS9.Fabric.addShapes.call(this, layerName, "text", topts);
+	// parent object keeps track of relationship between parent and child
+	t.params.parent = {obj: s,
+			   dleft: s.left - t.left,
+			   dtop: s.top - t.top,
+			   lastscalex: s.scaleX,
+			   lastscaley: s.scaleY,
+			   lastangle: s.angle,
+			   textheight: textHeight};
+	// text might be moved off default position already
+	if( (npos.x !== topts.x) || (npos.y !== topts.y) ){
+	    t.params.parent.moved = true;
+	}
+	// parent has another child
+	s.params.children.push(t);
+    }
+};
+
 // add shapes to a layer
 // call using image context
 JS9.Fabric.addShapes = function(layerName, shape, myopts){
-    var i, sobj, sarr, ns, s, bopts, opts, topts, tobj, npos;
+    var i, sobj, sarr, ns, s, bopts, opts;
     var layer, canvas, dlayer, zoom, bin;
     var ttop, tleft, rarr=[];
-    var textHeight = 12;
     var params = {};
     // optional myopts can be an object or a string
     myopts = myopts || {};
@@ -7955,9 +8035,14 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	opts = sobj.opts;
 	params = sobj.params;
 	// id for this shape
-	params.id = ++layer.nshape;
+	if( params.id === undefined ){
+	    params.id = ++layer.nshape;
+	}
+	// get array of option names to export when saving regions
+	params.exports = JS9.Fabric._exportShapeOptions(myopts)
+	         .concat(JS9.Fabric._exportShapeOptions(sarr[ns]));
 	// no parents or children yet
-	params.parents = [];
+	params.parent = null;
 	params.children = [];
 	switch(sobj.shape){
 	case "annulus":
@@ -8068,24 +8153,8 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	s.rescaleBorder();
 	// update the shape info
 	JS9.Fabric._updateShape.call(this, layerName, s, null, "add", params);
-	// if shape is not text but text is specified,
-	// make a text shape as a child of this shape
-	if( params.shape !== "text" && opts.text ){
-	    npos = JS9.rotatePoint({x: s.left,
-				    y: s.top - (s.height/2) - textHeight},
-				   s.angle, {x: s.left, y: s.top});
-	    topts = {left: npos.x, top: npos.y, angle: -s.angle,
-		     color: s.stroke, text: opts.text, rtn: "object"};
-	    tobj = JS9.Fabric.addShapes.call(this, layerName, "text", topts);
-	    s.params.children.push(tobj);
-	    tobj.params.parents.push({obj: s,
-				      dleft: s.left - tobj.left,
-				      dtop: s.top - tobj.top,
-				      lastscalex: s.scaleX,
-				      lastscaley: s.scaleY,
-				      lastangle: s.angle,
-				      textheight: textHeight});
-	}
+	// might need to make a text shape as a child of this shape
+	JS9.Fabric._handleChildText.call(this, layerName, s, opts);
     }
     // redraw (unless explicitly specified otherwise)
     if( (params.redraw === undefined) || params.redraw ){
@@ -8479,20 +8548,33 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 
 // return one or more regions
 // call using image context
-JS9.Fabric.getShapes = function(layerName, shape){
-    var sarr = [];
+JS9.Fabric.getShapes = function(layerName, shape, opts){
+    var shapes = [];
+    var myshape = {};
+    // opts is optional
+    opts = opts || {};
     // process the specified shapes
     this.selectShapes(layerName, shape, function(obj){
-	// add this region to the output array
-	sarr.push(obj.pub || {});
+	// public part of the shape
+	myshape = obj.pub || {};
+	// skip child shapes unless explicitly asked for
+	if( !obj.params.parent || opts.includeChildren ){
+	    // might need shape object itself
+	    if( opts.includeObj ){
+		myshape.obj = obj;
+	    }
+	    // add this region to the output array
+	    shapes.push(myshape);
+	}
     });
-    return sarr;
+    return shapes;
 };
 
 // change the specified shape(s)
 // call using image context
 JS9.Fabric.changeShapes = function(layerName, shape, opts){
     var i, s, sobj, bopts, layer, canvas, ao, rlen, color, maxr, zoom, bin;
+    var exports;
     var orad = [];
     var that = this;
     layer = this.getShapeLayer(layerName);
@@ -8535,6 +8617,11 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 		return;
 	    }
 	}
+	// get new option names to export when saving regions
+	exports = JS9.Fabric._exportShapeOptions(opts).filter(function(item) {
+	    return !obj.params.exports.hasOwnProperty(item);
+	});
+	obj.params.exports = obj.params.exports.concat(exports);
 	// shape-specific pre-processing
 	switch(obj.params.shape){
 	case "text":
@@ -8632,6 +8719,8 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	obj.setCoords();
 	// update the shape info and make callbacks
 	JS9.Fabric._updateShape.call(that, layerName, obj, ginfo, "update");
+	// might need to make a text shape as a child of this shape
+	JS9.Fabric._handleChildText.call(that, layerName, obj, opts);
     });
     // redraw (unless explicitly specified otherwise)
     if( (opts.redraw === undefined) || opts.redraw ){
@@ -8891,7 +8980,7 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	JS9.Fabric._updateShape.call(im, poly.params.layerName, poly,
 				     null, "update");
 	if( im && (im.params.listonchange || poly.params.listonchange) ){
-	    im.listRegions(poly, 2);
+	    im.listRegions(poly, {mode: 2});
 	}
 	// redraw
 	canvas.renderAll();
@@ -8984,19 +9073,10 @@ JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
 };
 
 JS9.Fabric.updateChildren = function(dlayer, shape, type){
-    var i, j, p, child, parent, nangle, npos;
+    var i, p, child, nangle, npos;
     if( shape.params ){
 	// handle remove specially
 	if( type === "remove" ){
-	    for(i=shape.params.children.length-1; i>=0; i--){
-		child = shape.params.children[i];
-		for(j=child.params.parents.length-1; j>=0; j--){
-		    p = child.params.parents[j];
-		    if( p.obj === shape ){
-			child.params.parents.splice(j, 1);
-		    }
-		}
-	    }
 	    for(i=shape.params.children.length-1; i>=0; i--){
 		child = shape.params.children[i];
 		dlayer.canvas.remove(child);
@@ -9006,51 +9086,48 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 	}
 	// handle update to parent deltas when a child shape changes
 	if( type === "deltas" ){
-	    for(i=0; i<shape.params.parents.length; i++){
-		p = shape.params.parents[i];
+	    if( shape.params.parent ){
+		p = shape.params.parent;
 		p.dleft = p.obj.left - shape.left;
 		p.dtop = p.obj.top - shape.top;
+		p.moved = true;
 	    }
 	    return;
 	}
 	// update children after a parent region is modified
 	for(i=0; i<shape.params.children.length; i++){
 	    child = shape.params.children[i];
-	    for(j=0; j<child.params.parents.length; j++){
-		p = child.params.parents[j];
-		if( shape === p.obj ){
-		    parent = shape;
-		    switch(type){
-		    case "moving":
-			child.left  = parent.left - p.dleft;
-			child.top   = parent.top - p.dtop;
-			break;
-		    case "rotating":
-			nangle = parent.angle - p.lastangle;
-			npos = JS9.rotatePoint({x: child.left,y: child.top},
-					       nangle,
-					       {x: parent.left, y: parent.top});
-			child.left = npos.x;
-			child.top = npos.y;
-			p.dleft = parent.left - child.left;
-			p.dtop = parent.top - child.top;
-			child.angle = child.angle + nangle;
-			p.lastangle = parent.angle;
-			break;
-		    case "scaling":
-			p.dleft = p.dleft * (parent.scaleX / p.lastscalex);
-			p.dtop = (p.dtop - p.textheight) * (parent.scaleY / p.lastscaley) + p.textheight;
-			p.lastscalex = parent.scaleX;
-			p.lastscaley = parent.scaleY;
-			child.left  = parent.left - p.dleft;
-			child.top   = parent.top - p.dtop;
-			break;
-		    }
-		    child.setCoords();
-		    dlayer.display.image.updateShapes(child.params.layerName, child,"child");
-		    break;
-		}
+	    p = child.params.parent;
+	    switch(type){
+	    case "moving":
+		child.left  = shape.left - p.dleft;
+		child.top   = shape.top - p.dtop;
+		break;
+	    case "rotating":
+		nangle = shape.angle - p.lastangle;
+		npos = JS9.rotatePoint({x: child.left,y: child.top},
+				       nangle,
+				       {x: shape.left, y: shape.top});
+		child.left = npos.x;
+		child.top = npos.y;
+		p.dleft = shape.left - child.left;
+		p.dtop = shape.top - child.top;
+		child.angle = child.angle + nangle;
+		p.lastangle = shape.angle;
+		break;
+	    case "scaling":
+		p.dleft = p.dleft * (shape.scaleX / p.lastscalex);
+		p.dtop = (p.dtop - p.textheight) *
+		         (shape.scaleY / p.lastscaley) + p.textheight;
+		p.lastscalex = shape.scaleX;
+		p.lastscaley = shape.scaleY;
+		child.left  = shape.left - p.dleft;
+		child.top   = shape.top - p.dtop;
+		break;
 	    }
+	    child.setCoords();
+	    dlayer.display.image.updateShapes(child.params.layerName, 
+					      child, "child");
 	}
     }
 };
@@ -9865,9 +9942,9 @@ JS9.Regions.init = function(layerName){
 	    for(i=0; i<objs.length; i++){
 		if( objs[i].params ){
 		    if( tim.params.listonchange ){
-			tim.listRegions("all", 2);
+			tim.listRegions("all", {mode: 2});
 		    } else if( objs[i].params.listonchange ){
-			tim.listRegions("selected", 2);
+			tim.listRegions("selected", {mode: 2});
 		    }
 		    break;
 		}
@@ -9891,7 +9968,8 @@ JS9.Regions.onchange = function(im, xreg){
 // call using image context
 JS9.Regions.initConfigForm = function(obj){
     var key, val;
-    var winid = obj.params.winid;
+    var params = obj.params;
+    var winid = params.winid;
     var wid = $(winid).attr("id");
     var form = "#" + wid + " #regionsConfigForm ";
     // remove the nodisplay class from this shape's div
@@ -9949,6 +10027,11 @@ JS9.Regions.initConfigForm = function(obj){
 		val = obj.getFontWeight();
 	    }
 	    break;
+	case "childtext":
+	    if( obj.params.children.length > 0 ){
+		val = obj.params.children[0].text;
+	    }
+	    break;
 	default:
 	    if( obj.pub[key] !== undefined ){
 		val = obj.pub[key];
@@ -9965,27 +10048,37 @@ JS9.Regions.initConfigForm = function(obj){
     if( obj.pub.wcsstr ){
 	$(form + ".wcs").removeClass("nodisplay");
     }
-    // checkboxes
-    if( obj.params.listonchange === undefined ){
-	obj.params.listonchange = false;
+    // child text display for shapes, editable if no existing children yet
+    if( obj.type !== "text" ){
+	$(form + ".childtext").removeClass("nodisplay");
+	$(form + "[name='childtext']")
+	    .prop("readonly", params.children.length > 0);
     }
-    if( obj.params.listonchange ){
+    // checkboxes
+    if( params.listonchange === undefined ){
+	params.listonchange = false;
+    }
+    if( params.listonchange ){
 	$(form + "[name='listonchange']").prop("checked", true);
     } else {
 	$(form + "[name='listonchange']").prop("checked", false);
     }
-    if( (obj.params.changeable === undefined)  &&
-	(obj.params.fixinplace !== undefined)  ){
-	obj.params.changeable = !obj.params.fixinplace;
+    if( (params.changeable === undefined)  &&
+	(params.fixinplace !== undefined)  ){
+	params.changeable = !params.fixinplace;
     }
-    if( obj.params.changeable === undefined ){
-	obj.params.changeable = true;
+    if( params.changeable === undefined ){
+	params.changeable = true;
     }
-    if( obj.params.changeable ){
+    if( params.changeable ){
 	$(form + "[name='changeable']").prop("checked", true);
     } else {
 	$(form + "[name='changeable']").prop("checked", false);
     }
+    // grey-out read-only text
+    $(form).find('input:text[readonly]')
+	.css("border-color", "A5A5A5")
+	.css("background", "#E9E9E9");
     // shape specific processing
     switch(obj.pub.shape){
     case "box":
@@ -10011,17 +10104,26 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
     var newval = function(obj, key, val){
 	// special keys that have no public or param equivalents
 	if( key === "remove" ){
-	    return true;
+	    return val === "true";
 	}
-	if( (obj.pub[key] !== undefined) &&
+	if( (key === "childtext") && (val !== "") ){
+	    if( obj.params.children.length === 0 ){
+		return false;
+	    }
+	    return val !== obj.params.children[0].text;
+	}
+	if( (key !== "tags") && (val === "") ){
+	    return false;
+	}
+	if( (obj.pub[key] !== undefined)   &&
 	    (String(obj.pub[key]) !== val) ){
 	    return true;
 	}
-	if( (obj.params[key] !== undefined) &&
+	if( (obj.params[key] !== undefined)   &&
 	    (String(obj.params[key]) !== val) ){
 	    return true;
 	}
-	if( (obj[key] !== undefined) &&
+	if( (obj[key] !== undefined)   &&
 	    (String(obj[key]) !== val) ){
 	    return true;
 	}
@@ -10043,6 +10145,20 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 	key = arr[i].name;
 	val = arr[i].value;
 	switch(key){
+	case "text":
+	    if( obj.type === "text" ){
+		if( newval(obj, key, val) ){
+		    opts[key] = getval(val);
+		}
+	    }
+	    break;
+	case "childtext":
+	    if( obj.type !== "text" ){
+		if( newval(obj, key, val) ){
+		    opts.text = getval(val);
+		}
+	    }
+	    break;
 	case "x":
 	    if( newval(obj, key, val) ){
 		opts[key] = getval(val);
@@ -10076,14 +10192,73 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 // ---------------------------------------------------------------------------
 
 // list one or more regions
-JS9.Regions.listRegions = function(which, mode, layer){
-    var i, region, rlen, key;
-    var tagjoin, tagstr, iestr, optstr;
+JS9.Regions.listRegions = function(which, opts, layer){
+    var i, region, rlen, key, obj;
+    var tagjoin, tagstr, iestr, mode;
     var regstr="", sepstr="; ";
     var lasttype="none", dotags = false;
     var tagcolors = [];
     var pubs = [];
+    var exports = {};
+    var getExports = function(obj, region){
+	var i, key, child;
+	var nexports = {};
+	var params = obj.params;
+	var children = params.children;
+	var exports = params.exports;
+	for(i=0; i<exports.length; i++){
+	    // property name
+	    key = exports[i];
+	    // skip some keys
+	    if( key === "textOpts" ){
+		continue;
+	    }
+	    // looks for its value
+	    if( obj[key] !== undefined ){
+		nexports[key] = obj[key];
+	    } else if( params[key] !== undefined ){
+		nexports[key] = params[key];
+	    } else if( region && region[key] !== undefined ){
+		nexports[key] = region[key];
+	    }
+	    // handle text child properties specially
+	    if( children.length > 0 ){
+		child = children[0];
+		switch(key){
+		case "text":
+		    if( child.text ){
+			// create a text child
+			nexports.text = child.text;
+			// get options for text child but ...
+			nexports.textOpts = getExports(child);
+			// ... try to minimize the textOpts output ...
+			if( child.params.parent.moved ){
+			    nexports.textOpts.x = child.pub.x;
+			    nexports.textOpts.y = child.pub.y;
+			}
+			if( obj.angle !== child.angle ){
+			    nexports.textOpts.angle = -child.angle;
+			}
+			if( nexports.textOpts.color === obj.stroke ){
+			    delete nexports.textOpts.color;
+			}
+			if( nexports.textOpts.text ){
+			    delete nexports.textOpts.text;
+			}
+			if( !Object.keys(nexports.textOpts).length ){
+			    delete nexports.textOpts;
+			}
+		    }
+		    break;
+		}
+	    }
+	}
+	return nexports;
+    };
+    // opts is optional
+    opts = opts || {};
     // default is to display, including non-source tags
+    mode = opts.mode;
     if( mode === undefined ){
 	mode = 2;
     }
@@ -10092,7 +10267,7 @@ JS9.Regions.listRegions = function(which, mode, layer){
 	layer = "regions";
     }
     // get specified regions into an array
-    pubs = this.getShapes(layer, which);
+    pubs = this.getShapes(layer, which, {includeObj: true});
     // loop through shapes
     rlen = pubs.length;
     // display tags if at least one is not standard "source,include"
@@ -10117,17 +10292,18 @@ JS9.Regions.listRegions = function(which, mode, layer){
     // process all regions
     for(i=0; i<rlen; i++){
 	region = pubs[i];
+	obj = region.obj;
 	tagjoin = region.tags.join(",");
 	if( tagjoin.indexOf("exclude") >= 0 ){
 	    iestr = "-";
 	} else {
 	    iestr = "";
 	}
-	// display this color?
+	// add exported properties
+	exports = getExports(obj, region);
+	// add color, if necessary
 	if( region.color && tagcolors.indexOf(region.color) === -1 ){
-	    optstr = ' {"color": "' + region.color + '"} ';
-	} else {
-	    optstr = "";
+	    exports.color = region.color;
 	}
 	// display tags?
 	if( dotags ){
@@ -10156,8 +10332,8 @@ JS9.Regions.listRegions = function(which, mode, layer){
 	    }
 	    regstr += (sepstr + iestr + region.imstr);
 	}
-	if( optstr ){
-	    regstr += optstr;
+	if( Object.keys(exports).length > 0 ){
+	    regstr += " " + JSON.stringify(exports);
 	}
 	if( tagstr ){
 	    regstr += tagstr;
@@ -10195,11 +10371,11 @@ JS9.Regions.copyRegions = function(to, which){
     }
     // if no 'which' specified, first look for "selected" regions
     if( !which ){
-	s = this.listRegions("selected", 1);
+	s = this.listRegions("selected", {mode: 1});
     }
     // if no selected regions found, or 'which' was specified, get regions
     if( !s ){
-	s = this.listRegions(which, 1);
+	s = this.listRegions(which, {mode: 1});
     }
     for(i=0; i<ims.length; i++){
 	ims[i].addShapes("regions", s);
@@ -10216,9 +10392,10 @@ JS9.Regions.parseRegions = function(s){
     var wcsrexp = /(fk4)|(fk5)|(icrs)|(galactic)|(ecliptic)|(image)|(physical)/;
     var parrexp = /\(\s*([^)]+?)\s*\)/;
     var seprexp = /\n|;/;
-    var optsrexp = /(\{[^}]*\})/;
+    var optsrexp = /(\{.*\})/;
     var argsrexp = /\s*,\s*/;
     var charrexp = /(\(|\{|#|;|\n)/;
+    var comrexp  = /#(?![a-zA-Z0-9]{6}['"])/;
     // convert "0" to false and "1" to true
     var tf = function(s){
 	if( s === "0" ){return false;}
@@ -10293,7 +10470,7 @@ JS9.Regions.parseRegions = function(s){
     };
     // parse region line into cmd (shape or wcs), arguments, opts, comment
     var regparse1 = function(s){
-	var tarr, ds9props;
+	var t, tarr, ds9props;
 	var tobj = {};
 	// initalize the return object
 	tobj.opts = {};
@@ -10313,21 +10490,23 @@ JS9.Regions.parseRegions = function(s){
 	if( tobj.cmd ){
 	    tobj.isregion = (tobj.cmd.search(regrexp) >=0);
 	}
+	// split on comment (ignore color specifications starting with '#')
+	t = s.trim().split(comrexp);
+	// look for json opts after the argument list
+	tarr = optsrexp.exec(t[0]);
+	if( tarr && tarr[1] ){
+	    // convert to object
+	    try{ tobj.opts = JSON.parse(tarr[1].trim()); }
+	    catch(e){ tobj.opts = {}; }
+	}
 	// look for comments
-	tobj.comment = s.split("#")[1];
+	tobj.comment = t[1];
 	if( tobj.comment ){
 	    ds9props = ds9properties(tobj.comment.trim().toLowerCase());
 	    if( ds9props._comment !== undefined ){
 		tobj.comment = ds9props._comment;
 		delete ds9props._comment;
 	    }
-	}
-	// look for json opts after the argument list
-	tarr = optsrexp.exec(s);
-	if( tarr && tarr[1] ){
-	    // convert to object
-	    try{ tobj.opts = JSON.parse(tarr[1].trim()); }
-	    catch(e){ tobj.opts = {}; }
 	}
 	// merge with ds9 opts
 	if( ds9props ){
@@ -10549,7 +10728,7 @@ JS9.Regions.parseRegions = function(s){
 // save regions to a file
 JS9.Regions.saveRegions = function(fname, which, layer){
     var header = sprintf("# Region file format: JS9 version 1.0");
-    var regstr = this.listRegions(which, 1, layer);
+    var regstr = this.listRegions(which, {mode: 1}, layer);
     var s = sprintf("%s\n%s\n", header, regstr.replace(/; */g, "\n"));
     var blob = new Blob([s], {type: "text/plain;charset=utf-8"});
     if( !fname ){
@@ -12271,7 +12450,7 @@ JS9.mouseMoveCB = function(evt){
 	if( sel ){
 	    if( im.params.listonchange || sel.params.listonchange ){
 		im.updateShape("regions", sel, null, "update", true);
-		im.listRegions("selected", 2);
+		im.listRegions("selected", {mode: 2});
 	    }
 	}
     }
@@ -13338,7 +13517,7 @@ JS9.init = function(){
 	get: function(){
 	    var im = this.image;
 	    if( im ){
-		return im.listRegions("all", 0) || "";
+		return im.listRegions("all", {mode: 0}) || "";
 	    }
 	},
 	set: function(args){

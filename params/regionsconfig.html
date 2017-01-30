@@ -18,7 +18,7 @@
 <input type="text" class="val text_R" id="id" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
-(read-only)
+(selectable region id)
 </span>
 </div>
 
@@ -144,6 +144,21 @@
 </span>
 </div>
 </div>
+
+<div class="nodisplay childtext">
+<div class="linegroup">
+<span class="column_R1">
+<b>Text:</b>
+</span>
+<span class="column_R2L">
+<input type="text" class="val text_R" id="childtext" name="childtext" value="" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R5">
+(text for this region)
+</span>
+</div>
+</div>
+
 <div class="nodisplay text">
 <div class="linegroup">
 <span class="column_R1">
@@ -220,6 +235,9 @@
 <span class="column_R2L">
 <input type="text" class="val text_R" id="color" name="color" value="" autocapitalize="off" autocorrect="off">
 </span>
+<span class="column_R5">
+(name or #RRGGBB)
+</span>
 </div>
 
 <div class="linegroup">
@@ -228,6 +246,9 @@
 </span>
 <span class="column_R2L">
 <input type="text" class="val text_R" id="tags" name="tags" value="" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R5">
+(comma-separated list)
 </span>
 </div>
 
@@ -240,7 +261,7 @@
 <input type="text" class="val text_R" id="wcsstr" name="wcsstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
-(read-only)
+(wcs region string)
 </span>
 </div>
 </div>
@@ -253,7 +274,7 @@
 <input type="text" class="val text_R" id="imstr" name="imstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
-(read-only)
+(image region string)
 </span>
 </div>
 
