@@ -7112,15 +7112,6 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	o = opts.target;
 	JS9.Fabric.updateChildren(dlayer, o, "rotating");
     });
-    dlayer.canvas.on('object:removed', function (opts){
-	var o;
-	// sanity check
-	if( !opts.target ){
-	    return;
-	}
-	o = opts.target;
-	JS9.Fabric.updateChildren(dlayer, o, "remove");
-    });
     // object selected: add anchors to polygon
     dlayer.canvas.on('object:selected', function (opts){
 	var o;
@@ -8528,11 +8519,27 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
     canvas = layer.canvas;
     // process the specified shapes
     this.selectShapes(layerName, shape, function(obj, ginfo){
+	var i, child, parent;
 	if( obj.params.removable !== false ){
 	    JS9.Fabric._updateShape.call(that, layerName, obj, ginfo, "remove");
 	    // clear any dialog box
-	    if( obj.params && obj.params.winid ){
+	    if( obj.params.winid ){
 		obj.params.winid.close();
+	    }
+	    // unlink parent
+	    if( obj.params.parent ){
+		parent = obj.params.parent.obj;
+		for(i=parent.params.children.length-1; i>=0; i--){
+		    if( obj === parent.params.children[i] ){
+			parent.params.children.splice(i,1);
+			break;
+		    }
+		}
+	    }
+	    // remove children
+	    for(i=0; i<obj.params.children.length; i++){
+		child = obj.params.children[i];
+		canvas.remove(child);
 	    }
 	    // remove the shape
 	    canvas.remove(obj);
@@ -9075,15 +9082,6 @@ JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
 JS9.Fabric.updateChildren = function(dlayer, shape, type){
     var i, p, child, nangle, npos;
     if( shape.params ){
-	// handle remove specially
-	if( type === "remove" ){
-	    for(i=shape.params.children.length-1; i>=0; i--){
-		child = shape.params.children[i];
-		dlayer.canvas.remove(child);
-		shape.params.children.splice(i, 1);
-	    }
-	    return;
-	}
 	// handle update to parent deltas when a child shape changes
 	if( type === "deltas" ){
 	    if( shape.params.parent ){
@@ -10104,7 +10102,7 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
     var newval = function(obj, key, val){
 	// special keys that have no public or param equivalents
 	if( key === "remove" ){
-	    return val === "true";
+	    return val === "selected";
 	}
 	if( key === "childtext" ){
 	    if( obj.params.children.length > 0 ){
