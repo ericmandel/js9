@@ -10106,11 +10106,11 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 	if( key === "remove" ){
 	    return val === "true";
 	}
-	if( (key === "childtext") && (val !== "") ){
-	    if( obj.params.children.length === 0 ){
+	if( key === "childtext" ){
+	    if( obj.params.children.length > 0 ){
 		return false;
 	    }
-	    return val !== obj.params.children[0].text;
+	    return val !== "";
 	}
 	if( (key !== "tags") && (val === "") ){
 	    return false;
