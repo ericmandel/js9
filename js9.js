@@ -10207,8 +10207,9 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	for(i=0; i<exports.length; i++){
 	    // property name
 	    key = exports[i];
-	    // skip some keys
-	    if( key === "textOpts" ){
+	    // skip text keys (except text regions), get them from the children
+	    if( (key === "text" && obj.type !== "text") ||
+		(key === "textOpts") ){
 		continue;
 	    }
 	    // looks for its value
@@ -10219,36 +10220,31 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    } else if( region && region[key] !== undefined ){
 		nexports[key] = region[key];
 	    }
-	    // handle text child properties specially
-	    if( children.length > 0 ){
-		child = children[0];
-		switch(key){
-		case "text":
-		    if( child.text ){
-			// create a text child
-			nexports.text = child.text;
-			// get options for text child but ...
-			nexports.textOpts = getExports(child);
-			// ... try to minimize the textOpts output ...
-			if( child.params.parent.moved ){
-			    nexports.textOpts.x = child.pub.x;
-			    nexports.textOpts.y = child.pub.y;
-			}
-			if( obj.angle !== child.angle ){
-			    nexports.textOpts.angle = -child.angle;
-			}
-			if( nexports.textOpts.color === obj.stroke ){
-			    delete nexports.textOpts.color;
-			}
-			if( nexports.textOpts.text ){
-			    delete nexports.textOpts.text;
-			}
-			if( !Object.keys(nexports.textOpts).length ){
-			    delete nexports.textOpts;
-			}
-		    }
-		    break;
-		}
+	}
+	// handle text child properties specially
+	// for now, just output the first one
+	if( (children.length > 0) && (children[0].text) ){
+	    child = children[0];
+	    // create a text child
+	    nexports.text = child.text;
+	    // get options for text child but ...
+	    nexports.textOpts = getExports(child);
+	    // ... try to minimize the textOpts output ...
+	    if( child.params.parent.moved ){
+		nexports.textOpts.x = child.pub.x;
+		nexports.textOpts.y = child.pub.y;
+	    }
+	    if( obj.angle !== child.angle ){
+		nexports.textOpts.angle = -child.angle;
+	    }
+	    if( nexports.textOpts.color === obj.stroke ){
+		delete nexports.textOpts.color;
+	    }
+	    if( nexports.textOpts.text ){
+		delete nexports.textOpts.text;
+	    }
+	    if( !Object.keys(nexports.textOpts).length ){
+		delete nexports.textOpts;
 	    }
 	}
 	return nexports;
