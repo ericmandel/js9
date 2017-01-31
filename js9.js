@@ -7528,6 +7528,12 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	nopts.left = pos.x;
 	nopts.top = pos.y;
     }
+    //  px and py are physical coords, convert to display coords
+    if( (opts.px !== undefined) && (opts.py !== undefined) ){
+	pos = this.logicalToDisplayPos({x: opts.px, y: opts.py});
+	nopts.left = pos.x;
+	nopts.top = pos.y;
+    }
     //  look for primitives
     if( (opts.left !== undefined) ){
 	nopts.left = opts.left;
@@ -7702,6 +7708,8 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    case "tags":
 	    case "x":
 	    case "y":
+	    case "px":
+	    case "py":
 	    case "dx":
 	    case "dy":
 	    case "pts":
@@ -7929,6 +7937,11 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 			   lastscaley: s.scaleY,
 			   lastangle: s.angle,
 			   textheight: textHeight};
+	// since strokeWidth changes with zoom, we need to save the opts
+	// and restore it on export
+	if( opts.strokeWidth !== undefined ){
+	    t.params.parent.strokeWidth = opts.strokeWidth;
+	}
 	// text might be moved off default position already
 	if( (npos.x !== topts.x) || (npos.y !== topts.y) ){
 	    t.params.parent.moved = true;
@@ -9119,6 +9132,7 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 		         (shape.scaleY / p.lastscaley) + p.textheight;
 		p.lastscalex = shape.scaleX;
 		p.lastscaley = shape.scaleY;
+		p.moved = true;
 		child.left  = shape.left - p.dleft;
 		child.top   = shape.top - p.dtop;
 		break;
@@ -10212,6 +10226,12 @@ JS9.Regions.listRegions = function(which, opts, layer){
 		(key === "textOpts") ){
 		continue;
 	    }
+	    // strokeWidth can be changed as part of zooming,
+	    // so use the original value if needed
+	    if( (key === "strokeWidth") && params.sw1 ){
+		nexports[key] = params.sw1;
+		continue;
+	    }
 	    // looks for its value
 	    if( obj[key] !== undefined ){
 		nexports[key] = obj[key];
@@ -10229,13 +10249,30 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    nexports.text = child.text;
 	    // get options for text child but ...
 	    nexports.textOpts = getExports(child);
-	    // ... try to minimize the textOpts output ...
-	    if( child.params.parent.moved ){
-		nexports.textOpts.x = child.pub.x;
-		nexports.textOpts.y = child.pub.y;
-	    }
+	    // try to minimize exported properties
 	    if( obj.angle !== child.angle ){
 		nexports.textOpts.angle = -child.angle;
+		if( (obj.params.shape === "circle")  || 
+		    (obj.params.shape === "annulus") ){
+		    child.params.parent.moved = true;
+		}
+	    } else if( child.angle !== 0 ){
+		if( (obj.params.shape === "circle")  || 
+		    (obj.params.shape === "annulus") ){
+		    nexports.textOpts.angle = -child.angle;
+		    child.params.parent.moved = true;
+		}
+	    }
+	    if( child.params.parent.moved ){
+		// physical coords are preferred ...
+		if( child.pub.lcs ){
+		    nexports.textOpts.px = child.pub.lcs.x;
+		    nexports.textOpts.py = child.pub.lcs.y;
+		} else {
+		    // ... image coords will are only good for this image
+		    nexports.textOpts.x = child.pub.x;
+		    nexports.textOpts.y = child.pub.y;
+		}
 	    }
 	    if( nexports.textOpts.color === obj.stroke ){
 		delete nexports.textOpts.color;
@@ -10488,9 +10525,9 @@ JS9.Regions.parseRegions = function(s){
 	t = s.trim().split(comrexp);
 	// look for json opts after the argument list
 	tarr = optsrexp.exec(t[0]);
-	if( tarr && tarr[1] ){
+	if( tarr && tarr[0] ){
 	    // convert to object
-	    try{ tobj.opts = JSON.parse(tarr[1].trim()); }
+	    try{ tobj.opts = JSON.parse(tarr[0].trim()); }
 	    catch(e){ tobj.opts = {}; }
 	}
 	// look for comments
