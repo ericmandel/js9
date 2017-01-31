@@ -190,7 +190,7 @@ else
     error "js9 scripting requires either Node.js or Electron.js"
   fi
   if [ x$DOREG = xtrue ]; then
-    MSGSCRIPT="js9DS9.js"
+    MSGSCRIPT="js9Regions.js"
   else
     MSGSCRIPT="js9Msg.js"
   fi
