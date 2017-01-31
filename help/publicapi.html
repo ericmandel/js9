@@ -1832,7 +1832,7 @@ more properties, of which the most important are:
 <li><b>points</b>: array of objects containing x and y offsets from the center for polygons
 <li><b>angle</b>: angle in degrees for box and ellipse regions
 <li><b>color</b>: region color (string name or #rrggbb syntax)
-<li><b>text</b>: text associated with text region
+<li><b>text</b>: text associated with text region or for a child region of this region
 <li><b>data</b>: this property can be an object, string, number,
 etc. and will be carried along with the region, and returned as a
 property by the <b>JS9.GetRegions()</b> call.
@@ -1844,7 +1844,7 @@ Other available properties include:
 <li><b>resizable</b>: if false, region cannot be resized or rotated
 <li><b>rotatable</b>: if false, region cannot be rotated
 <li><b>removable</b>: if false, region cannot be removed
-<li><b>zoomable</b>: if false, region is not resize when image is zoomed
+<li><b>zoomable</b>: if false, region is not resized when image is zoomed
 <li><b>lockMovementX</b>: if true, region cannot be moved in the x direction
 <li><b>lockMovementY</b>: if true, region cannot be moved in the y direction
 <li><b>lockRotation</b>: if true, region cannot be rotated
@@ -2241,7 +2241,7 @@ Other available properties include:
 <li><b>resizable</b>: if false, region cannot be resized or rotated
 <li><b>rotatable</b>: if false, region cannot be rotated
 <li><b>removable</b>: if false, region cannot be removed
-<li><b>zoomable</b>: if false, region is not resize when image is zoomed
+<li><b>zoomable</b>: if false, region is not resized when image is zoomed
 <li><b>lockMovementX</b>: if true, region cannot be moved in the x direction
 <li><b>lockMovementY</b>: if true, region cannot be moved in the y direction
 <li><b>lockRotation</b>: if true, region cannot be rotated
