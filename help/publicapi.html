@@ -1818,6 +1818,8 @@ more properties, of which the most important are:
 <li><b>shape</b>: "annulus", "box", "circle", "ellipse", "point", "polygon", "text" <b>[REQUIRED]</b>
 <li><b>x</b>: image x position
 <li><b>y</b>: image y position
+<li><b>px</b>: physical x position
+<li><b>py</b>: physical y position
 <li><b>lcs</b>: object containing logical x, y and sys (e.g. "physical")
 <li><b>dx</b>: increment from current image x position
 <li><b>dy</b>: increment from current image y position
@@ -1857,6 +1859,56 @@ Deprecated properties:
 <ul>
 <li><b>fixinplace</b>: opposite of changeable
 </ul>
+Here are some examples of ways to create regions:
+<pre>
+    # example 1: circular region in the center of the field
+    JS9.AddRegions("circle");
+
+    # example 2: red circular region in the center of the field
+    JS9.AddRegions("circle", {color: "red"});
+
+    # example 3: red circular region with dashed lines
+    JS9.AddRegions("circle", {color: "red", strokeDashArray: [3,1]});
+
+    # example 4: regions using an object in first arg
+    JS9.AddRegions({shape: "circle", color: "red", strokeDashArray: [3,1]})
+
+    # example 5: multiple regions using an array specification in first arg
+    JS9.AddRegions([{shape: "circle", color: "red", strokeDashArray: [3,1]},
+                    {shape: "box", color: "green", strokeDashArray: [6,1]}])
+
+    # example 6: js9 region syntax: properties in the second arg object
+    JS9.AddRegions('ellipse(23:23:22.179, +58:48:10.542, 40", 20", 60)', {text: "ellipse test", color: "violet", tags: "json tag, another tag", textOpts: {color: "yellow", fontSize: 16, fontStyle: "italic", fontWeight: "bold"}});
+
+    # example 7: js9 region syntax: json properties in the first arg string
+    JS9.AddRegions('ellipse(23:23:22.179, +58:48:10.542, 40", 20", 60) {"color": "violet", "text": "ellipse test", "textOpts": {"color": "yellow", "fontSize": 16, "fontStyle": "italic", "fontWeight": "bold"}} # json tag, another tag');
+
+    # example 8: ds9 region syntax: comment properties in the first arg string
+    JS9.AddRegions('box(23:23:35.486, +58:50:03.146, 40", 20", 30) # width=4 text={box test} dash=1 color=red rotate=0 tag="test tag"')
+</pre>
+In sum, you can specify a region using:
+<ul>
+<li> a shape in the first string arg, optional properties in the second object arg
+<li> properties (including the shape) in the first object arg
+<li> array of objects in the first arg
+<li> full region syntax in the first string arg, optional properties in the second arg
+</ul>
+Note the difference between examples 6 and 7: the former passes
+properties in an <b>object</b> (second argument), so the key names
+need not be quoted. The latter passes properties in a <b>json</b>
+string as part of the first string argument: here the key names must be
+quoted using double quotes, as per the json specification.
+
+<p>
+Examples 6 and 7 also show the <b>text</b> property, which allows you
+to associate a text string with a non-text region. JS9 will create a
+separate text region as a <b>child</b> of the original region. You can
+move this child text region around relative to the original region,
+change its angle, etc. The child will then maintain its new position
+relative to the original region as the latter is moved, resized,
+etc. You also can double-click on the text child to bring up its
+configuration dialog box and change its color, font, size, text string,
+etc.
 
 <p>
 <font size="+1"><b><u>Get information about one or more regions</u></b></font>
@@ -3142,7 +3194,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: September 27, 2016</h5>
+<h5>Last updated: February 2, 2017</h5>
 </div>
 
 </body>

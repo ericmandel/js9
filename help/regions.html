@@ -178,7 +178,21 @@ implicitly assumed to be PHYSICAL. In practice this all means that for
 IMAGE and PHYSICAL systems, pure numbers are pixels. Otherwise, for
 all systems, pure numbers are degrees.
 
-<h5>Last updated: June 17, 2015</h5>
+<p>
+<h3>Examples</h3>
+
+<pre>
+    # js9 region format, properties contained in json
+    ellipse(23:23:22.179, +58:48:10.542, 40", 20", 60) {"text": "json ellipse test", "textOpts": {"color": "yellow", "fontSize": 16, "fontStyle": "italic", "fontWeight": "bold"}, "color": "violet"} # json test tag, another tag
+
+    # ds9 format, properties contained in comment string
+    box(23:23:35.486, +58:50:03.146, 40", 20", 30) # width=4 text={ds9 box test} dash=1 color=red fixed=1 rotate=0 tag="ds9 test tag"
+
+    # hybrid js9/ds9 format
+    circle(23:23:29.526, +58:49:09.56, 14.756997") {"strokeWidth": 1, "strokeDashArray": [3,1], "transparentCorners": true} # text="hybrid circle test" tag="ds9 test tag" tag="json test tag"
+</pre>
+
+<h5>Last updated: February 2, 2017</h5>
 </div>
 
 </body>

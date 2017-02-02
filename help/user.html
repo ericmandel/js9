@@ -443,15 +443,17 @@ The configuration menu has the following standard options:
 <li><b>type:</b> the type of region (read-only)
 <li><b>image center:</b> new image pixel values can be entered to change the region position
 <li><b>WCS center:</b> new WCS position values can be entered to change the region position (where WCS is available)
+<li><b>Text:</b> create a child text region with the specified text
+<li><b>Color:</b> change the color of the region (color name or #RRGGBB syntax)
 <li><b>Tags:</b> the default tags (<b>source, background, include, exclude</b>)
 are used in X-ray astronomy but you can enter any string to tag this region and then select programmatically using tags
 <li><b>WCS Region:</b> the WCS representation of this region, where applicable (read-only)
 <li><b>Image Region:</b> the image representation of this region, where applicable (read-only)
 <li><b>Options:</b>
 <ul>
+<li><b>Changeable:</b> enable/disable move and resize capability
 <li><b>List On Change:</b> list this region when it's moved or resized
-<li><b>Fix in Place:</b> disable move and resize capability
-<li><b>Delete:</b> delete this region. On an iPad, this currently is
+<li><b>Remove:</b> remove this region. On an iPad, this currently is
 the only way to delete a region.
 </ul>
 </ul>
@@ -551,7 +553,7 @@ See <a href="knownissues.html">Known Issues</a>
 for a discussion of limitations imposed on resize by Webkit
 browsers such as Chrome and Safari.
 
-<h5>Last updated: September 28, 2016</h5>
+<h5>Last updated: February 2, 2017</h5>
 </div>
 
 </body>
