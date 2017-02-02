@@ -38,8 +38,8 @@ usage(){
   printf "  %s [image1, image2, ...]\n" $XEQ
   printf "  # start a JS9 web page in a browser and load images\n"
   printf "  %s -b [bname] [switches] [image1, image2, ...]\n" $XEQ
-  printf "  # convert JS9 region files to DS9 region file\n"
-  printf "  %s -r [regionfile1, regionfile2, ...]\n" $XEQ
+  printf "  # convert JS9 region file to DS9 region file\n"
+  printf "  %s -r js9RegionFile\n" $XEQ
   printf " \n"
   printf "  general switches:\n"
   printf "    --help                    # print this message\n"

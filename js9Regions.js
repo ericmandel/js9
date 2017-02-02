@@ -30,10 +30,14 @@ const addComment = function(comment, key, val){
     if( val === false ){
 	val = 0;
     }
-    if( (typeof val === "string") && val.match(/[\s'"]/) ){
-	val = "{" + val + "}";
+    if( key ){
+	if( typeof val === "string" ){
+	    val = "{" + val + "}";
+	}
+	comment += key + "=" + val;
+    } else {
+	comment += val;
     }
-    comment += key + "=" + val;
     return comment;
 };
 
@@ -65,8 +69,13 @@ const parseRegion = function(s){
 	    // js9 comment containing tags (convert to series of tags)
 	    const carr = sarr[1].split(",");
 	    for(let i=0; i<carr.length; i++){
-		if( (carr[i] !== "source") && (carr[i] !== "background") ){
-		    comment = addComment(comment, "tag", carr[i].trim());
+		const c = carr[i].trim();
+		if( (c === "source")  || (c === "background") ){
+		    comment = addComment(comment, null, c);
+		} else if( (c === "include") || (c === "exclude") ){
+		    ;
+		} else {
+		    comment = addComment(comment, "tag", c);
 		}
 	    }
 	}
@@ -161,13 +170,16 @@ const convertRegion = function(s){
 };
 
 // required args: region file
-if( !argv.r ){
-    console.log("ERROR: no js9 region file specified");
-    process.exit();
+if( !argv.r || (typeof argv.r !== "string") ){
+    console.error("ERROR: no JS9 region file specified");
+    process.exit(1);
 }
 fs.readFile(argv.r, 'ascii', (err, data) => {
     if( err ){
-	throw err;
+	const s = "ERROR: reading " + argv.r + ": " + err.message
+	console.error(s);
+	process.exit(2);
     }
     convertRegion(data);
+    process.exit(0);
 });
