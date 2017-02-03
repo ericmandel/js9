@@ -8319,6 +8319,11 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     pub.layer = layerName;
     pub.color = obj.stroke;
     pub.tags = obj.params.tags;
+    if( obj.params.parent ){
+	pub.parent = obj.params.parent.obj.params.id;
+    } else {
+	pub.parent = null;
+    }
     dpos = obj.getCenterPoint();
     if( ginfo.group ){
 	gpos = ginfo.group.getCenterPoint();
@@ -8487,6 +8492,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     }
     // special onchange callback for regions
     if( (layerName === "regions") &&
+	!obj.params.parent && (mode !== "child") &&
 	this.params.xeqonchange && layer.show && this.onregionschange ){
 	try{
 	    this.params.xeqonchange = false;
@@ -8499,7 +8505,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	finally{this.params.xeqonchange = true;}
     }
     // onchange callback for this layer
-    if( this.params.xeqonchange && layer.show && layer.opts.onchange ){
+    if( !obj.params.parent && (mode !== "child") &&
+	this.params.xeqonchange && layer.show && layer.opts.onchange ){
 	try{
 	    this.params.xeqonchange = false;
 	    JS9.xeqByName(layer.opts.onchange, window, this, pub);
@@ -8511,10 +8518,11 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	finally{this.params.xeqonchange = true;}
     }
     // plugin callbacks: these have the form on[layer]change,
-    // e.g. onregionschange
-    xname = "on" + layerName + "change";
-    // plugin callbacks
-    this.xeqPlugins("shape", xname, pub);
+    // e.g. onregionschange (not for child shapes)
+    if( !obj.params.parent && (mode !== "child") ){
+	xname = "on" + layerName + "change";
+	this.xeqPlugins("shape", xname, pub);
+    }
     // and return it
     return pub;
 };
@@ -9969,7 +9977,8 @@ JS9.Regions.init = function(layerName){
 // allow a global routine to execute each time a region changes
 // to use this, set JS9.Regions.opts.onchange to point to your function
 JS9.Regions.onchange = function(im, xreg){
-    if( JS9.Regions.opts.onchange &&
+    if( !xreg.parent &&
+	JS9.Regions.opts.onchange &&
 	typeof JS9.Regions.opts.onchange === "function" ){
 	try{ JS9.Regions.opts.onchange(im, xreg); }
 	catch(ignore){}
