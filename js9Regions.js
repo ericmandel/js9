@@ -72,9 +72,7 @@ const parseRegion = function(s){
 		const c = carr[i].trim();
 		if( (c === "source")  || (c === "background") ){
 		    comment = addComment(comment, null, c);
-		} else if( (c === "include") || (c === "exclude") ){
-		    ;
-		} else {
+		} else if( (c !== "include") && (c !== "exclude") ){
 		    comment = addComment(comment, "tag", c);
 		}
 	    }
@@ -176,7 +174,7 @@ if( !argv.r || (typeof argv.r !== "string") ){
 }
 fs.readFile(argv.r, 'ascii', (err, data) => {
     if( err ){
-	const s = "ERROR: reading " + argv.r + ": " + err.message
+	const s = "ERROR: reading " + argv.r + ": " + err.message;
 	console.error(s);
 	process.exit(2);
     }
