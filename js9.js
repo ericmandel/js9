@@ -493,6 +493,7 @@ JS9.Image = function(file, params, func){
     this.clickState = 0;
     // initialize click in region
     this.clickInRegion = false;
+    this.clickInLayer = null;
     // no helper queried yet
     this.queried = false;
     // is this a proxy image?
@@ -6862,7 +6863,19 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     dlayer.canvas.renderOnAddRemove = false;
     // preserve stacking (required in v1.6.6 to interact with polygon points)
     dlayer.canvas.preserveObjectStacking = true;
-    // changeable: short-hand for allowing objects to move
+    // movable: short-hand for allowing objects to move (not resize)
+    if( dlayer.opts.movable ){
+	dlayer.opts.lockMovementX = false;
+	dlayer.opts.lockMovementY = false;
+	dlayer.opts.selectable = true;
+	dlayer.opts.evented = true;
+    } else if( dlayer.opts.movable === false ){
+	dlayer.opts.lockMovementX = true;
+	dlayer.opts.lockMovementY = true;
+	dlayer.opts.selectable = false;
+	dlayer.opts.evented = false;
+    }
+    // changeable: short-hand for allowing objects to move and resize
     // fixinplace: the opposite, for backward compatibility
     if( (dlayer.opts.changeable === undefined) &&
 	(dlayer.opts.fixinplace !== undefined)  ){
@@ -6910,6 +6923,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 		    // on main window, set region click
 		    if( dlayer.dtype === "main" ){
 			dlayer.display.image.clickInRegion = true;
+			dlayer.display.image.clickInLayer = layerName;
 		    }
 		    dlayer.opts.onmousedown.call(this,
 						 dlayer.display.image,
@@ -8486,40 +8500,26 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    obj.params.winid = null;
 	}
     }
-    // stop here is no callbacks were requested
+    // stop here if no callbacks were requested
     if( opts.nocb ){
 	return pub;
     }
-    // special onchange callback for regions
-    if( (layerName === "regions") &&
-	!obj.params.parent && (mode !== "child") &&
-	this.params.xeqonchange && layer.show && this.onregionschange ){
-	try{
-	    this.params.xeqonchange = false;
-	    JS9.xeqByName(this.onregionschange, window, this, pub);
+    // callbacks for regions (but not child regions)
+    if( !obj.params.parent && (mode !== "child") && (mode !== "list") ){
+	// when xeqonchange is set
+	if( this.params.xeqonchange && layer.show && layer.opts.onchange ){
+	    try{
+		this.params.xeqonchange = false;
+		JS9.xeqByName(layer.opts.onchange, window, this, pub);
+	    }
+	    catch(e){
+		JS9.log("error in onchange: %s [%s]\n%s",
+			this.id, e.message, JS9.strace(e));
+	    }
+	    finally{this.params.xeqonchange = true;}
 	}
-	catch(e){
-	    JS9.log("error in xeqonchange: %s [%s]\n%s",
-		    this.id, e.message, JS9.strace(e));
-	}
-	finally{this.params.xeqonchange = true;}
-    }
-    // onchange callback for this layer
-    if( !obj.params.parent && (mode !== "child") &&
-	this.params.xeqonchange && layer.show && layer.opts.onchange ){
-	try{
-	    this.params.xeqonchange = false;
-	    JS9.xeqByName(layer.opts.onchange, window, this, pub);
-	}
-	catch(e){
-	    JS9.log("error in onchange: %s [%s]\n%s",
-		    this.id, e.message, JS9.strace(e));
-	}
-	finally{this.params.xeqonchange = true;}
-    }
-    // plugin callbacks: these have the form on[layer]change,
-    // e.g. onregionschange (not for child shapes)
-    if( !obj.params.parent && (mode !== "child") ){
+	// plugin callbacks: these have the form on[layer]change,
+	// e.g. onregionschange
 	xname = "on" + layerName + "change";
 	this.xeqPlugins("shape", xname, pub);
     }
@@ -9100,55 +9100,58 @@ JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
     }
 };
 
+// update child regions
+// don't need to call using image context
 JS9.Fabric.updateChildren = function(dlayer, shape, type){
     var i, p, child, nangle, npos;
-    if( shape.params ){
-	// handle update to parent deltas when a child shape changes
-	if( type === "deltas" ){
-	    if( shape.params.parent ){
-		p = shape.params.parent;
-		p.dleft = p.obj.left - shape.left;
-		p.dtop = p.obj.top - shape.top;
-		p.moved = true;
-	    }
-	    return;
+    // region layer only, for now
+    if( !shape.params || (shape.params.layerName !== "regions") ){
+	return;
+    }
+    // handle update to parent deltas when a child shape changes
+    if( type === "deltas" ){
+	if( shape.params.parent ){
+	    p = shape.params.parent;
+	    p.dleft = p.obj.left - shape.left;
+	    p.dtop = p.obj.top - shape.top;
+	    p.moved = true;
 	}
-	// update children after a parent region is modified
-	for(i=0; i<shape.params.children.length; i++){
-	    child = shape.params.children[i];
-	    p = child.params.parent;
-	    switch(type){
-	    case "moving":
-		child.left  = shape.left - p.dleft;
-		child.top   = shape.top - p.dtop;
-		break;
-	    case "rotating":
-		nangle = shape.angle - p.lastangle;
-		npos = JS9.rotatePoint({x: child.left,y: child.top},
-				       nangle,
-				       {x: shape.left, y: shape.top});
-		child.left = npos.x;
-		child.top = npos.y;
-		p.dleft = shape.left - child.left;
-		p.dtop = shape.top - child.top;
-		child.angle = child.angle + nangle;
-		p.lastangle = shape.angle;
-		break;
-	    case "scaling":
-		p.dleft = p.dleft * (shape.scaleX / p.lastscalex);
-		p.dtop = (p.dtop - p.textheight) *
-		         (shape.scaleY / p.lastscaley) + p.textheight;
-		p.lastscalex = shape.scaleX;
-		p.lastscaley = shape.scaleY;
-		p.moved = true;
-		child.left  = shape.left - p.dleft;
-		child.top   = shape.top - p.dtop;
-		break;
-	    }
-	    child.setCoords();
-	    dlayer.display.image.updateShapes(child.params.layerName, 
-					      child, "child");
+	return;
+    }
+    // update children after a parent region is modified
+    for(i=0; i<shape.params.children.length; i++){
+	child = shape.params.children[i];
+	p = child.params.parent;
+	switch(type){
+	case "moving":
+	    child.left  = shape.left - p.dleft;
+	    child.top   = shape.top - p.dtop;
+	    break;
+	case "rotating":
+	    nangle = shape.angle - p.lastangle;
+	    npos = JS9.rotatePoint({x: child.left,y: child.top},
+				   nangle,
+				   {x: shape.left, y: shape.top});
+	    child.left = npos.x;
+	    child.top = npos.y;
+	    p.dleft = shape.left - child.left;
+	    p.dtop = shape.top - child.top;
+	    child.angle = child.angle + nangle;
+	    p.lastangle = shape.angle;
+	    break;
+	case "scaling":
+	    p.dleft = p.dleft * (shape.scaleX / p.lastscalex);
+	    p.dtop = (p.dtop - p.textheight) *
+		(shape.scaleY / p.lastscaley) + p.textheight;
+	    p.lastscalex = shape.scaleX;
+	    p.lastscaley = shape.scaleY;
+	    p.moved = true;
+	    child.left  = shape.left - p.dleft;
+	    child.top   = shape.top - p.dtop;
+	    break;
 	}
+	child.setCoords();
+	dlayer.display.image.updateShapes(child.params.layerName,child,"child");
     }
 };
 
@@ -9972,17 +9975,6 @@ JS9.Regions.init = function(layerName){
 	}
     });
     return this;
-};
-
-// allow a global routine to execute each time a region changes
-// to use this, set JS9.Regions.opts.onchange to point to your function
-JS9.Regions.onchange = function(im, xreg){
-    if( !xreg.parent &&
-	JS9.Regions.opts.onchange &&
-	typeof JS9.Regions.opts.onchange === "function" ){
-	try{ JS9.Regions.opts.onchange(im, xreg); }
-	catch(ignore){}
-    }
 };
 
 // initialize the region config form
@@ -12354,7 +12346,7 @@ JS9.mouseDownCB = function(evt){
 	    JS9.MouseTouch.action(im, evt, "start");
 	}
 	// inside a region, clear region display and return;
-	if( im.clickInRegion ){
+	if( im.clickInRegion && (im.clickInLayer === "regions") ){
 	    // clear the region layer
 	    im.clearMessage("regions");
 	    return;
@@ -12409,12 +12401,12 @@ JS9.mouseUpCB = function(evt){
 	JS9.MouseTouch.action(im, evt, "stop");
     }
     // inside a region, update region string
-    if( im.clickInRegion ){
+    if( im.clickInRegion && im.clickInLayer ){
 	if( ((Math.abs(im.pos0.x-im.pos.x) < JS9.NOMOVE)  &&
 	     (Math.abs(im.pos0.y-im.pos.y) < JS9.NOMOVE)) ){
-	    im.updateShapes("regions", "selected", "select");
+	    im.updateShapes(im.clickInLayer, "selected", "select");
 	} else {
-	    im.updateShapes("regions", "selected", "update");
+	    im.updateShapes(im.clickInLayer, "selected", "update");
 	}
     }
     // plugin callbacks
@@ -12423,6 +12415,7 @@ JS9.mouseUpCB = function(evt){
     }
     // safe to unset clickInRegion now
     im.clickInRegion = false;
+    im.clickInLayer = null;
     im.clickState = 0;
     im.posOffset = null;
     // finish resize, if necessary
@@ -12489,8 +12482,10 @@ JS9.mouseMoveCB = function(evt){
 	sel = im.display.layers.regions.params.sel;
 	if( sel ){
 	    if( im.params.listonchange || sel.params.listonchange ){
-		im.updateShape("regions", sel, null, "update", true);
-		im.listRegions("selected", {mode: 2});
+		im.updateShape(im.clickInLayer, sel, null, "list", true);
+		if( im.clickInLayer === "regions" ){
+		    im.listRegions("selected", {mode: 2});
+		}
 	    }
 	}
     }
@@ -12737,7 +12732,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
     instance = Object.create(plugin.func.prototype);
     // save full name
     instance.name = plugin.name;
-    // routine to tell is this instance active
+    // routine to tell if this instance active
     instance.isActive = function(cbname){
 	if( this.status !== "active" ){
 	    return false;
@@ -13168,8 +13163,7 @@ JS9.init = function(){
 			winDims: [JS9.MouseTouch.WIDTH,JS9.MouseTouch.HEIGHT]});
     JS9.RegisterPlugin(JS9.Regions.CLASS, JS9.Regions.NAME,
 		       JS9.Regions.init,
-		       {onregionschange: JS9.Regions.onchange,
-			divArgs: ["regions"],
+		       {divArgs: ["regions"],
 			winDims: [0, 0]});
     // find divs associated with each plugin and run the constructor
     JS9.instantiatePlugins();
