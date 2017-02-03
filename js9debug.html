@@ -343,11 +343,11 @@
 	    }
 	    var ciropts = $.extend(true, {}, JS9.Catalogs.opts);
             ciropts.movable = true;
-	    ciropts.onmouseover = function(im, xreg, evt){
-                console.log("mouseover: %s %s", im.id, xreg.data.tag);
+	    ciropts.onchange = function(im, xreg, evt){
+                console.log("onchange: %s %s", xreg.id, xreg.data.tag);
 	    };
 	    ciropts.onmousedown = function(im, xreg, evt){
-                console.log("mousedown: %s %s", im.id, xreg.data.tag);
+                console.log("mousedown: %s %s", xreg.id, xreg.data.tag);
 	    };
             switch(who){
                 case "box":
@@ -356,7 +356,7 @@
                     JS9.AddShapes("box", boxes, {color: "yellow"});
                     break;
                 case "circle":
-                    mkspirals(circles, n, xcen, ycen, "circle", "black");
+                    mkspirals(circles, n, xcen, ycen, "circle", "violet");
 	            JS9.NewShapeLayer("circle", ciropts);
                     JS9.AddShapes("circle", circles);
                     break;
