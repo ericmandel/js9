@@ -10292,7 +10292,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
     // default is to display, including non-source tags
     mode = opts.mode;
     if( mode === undefined ){
-	mode = 2;
+	mode = 3;
     }
     // default is to list the regions layer
     if( layer === undefined ){
@@ -10364,7 +10364,8 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    }
 	    regstr += (sepstr + iestr + region.imstr);
 	}
-	if( Object.keys(exports).length > 0 ){
+	// odd modes output the exports
+	if( ((mode % 2) === 1) && (Object.keys(exports).length > 0) ){
 	    regstr += " " + JSON.stringify(exports);
 	}
 	if( tagstr ){

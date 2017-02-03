@@ -1206,7 +1206,7 @@ JS9.Menubar.init = function(width, height){
 				uim.saveRegions("js9.reg", "all");
 				break;
 			    case "listRegions":
-				uim.listRegions("all", 2);
+				uim.listRegions("all", {mode: 2});
 				break;
 			    case "xeqonchange":
 				uim.params.xeqonchange = !uim.params.xeqonchange;
