@@ -7937,7 +7937,8 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 			       s.angle, {x: s.left, y: s.top});
 	npos = this.displayToImagePos(dpos);
 	topts = {x: npos.x, y: npos.y, angle: -s.angle,
-		 color: s.stroke, text: opts.text, rtn: "object"};
+		 color: s.stroke, text: opts.text,
+		 parent: "TBD", rtn: "object"};
 	if( opts.textOpts ){
 	    topts = $.extend(true, {}, topts, opts.textOpts);
 	}
@@ -7968,7 +7969,7 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 // add shapes to a layer
 // call using image context
 JS9.Fabric.addShapes = function(layerName, shape, myopts){
-    var i, sobj, sarr, ns, s, bopts, opts;
+    var i, sobj, sarr, ns, s, bopts, opts, mode;
     var layer, canvas, dlayer, zoom, bin;
     var ttop, tleft, rarr=[];
     var params = {};
@@ -8170,7 +8171,8 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	// and then rescale the stroke width
 	s.rescaleBorder();
 	// update the shape info
-	JS9.Fabric._updateShape.call(this, layerName, s, null, "add", params);
+	mode = myopts.parent ? "child" : "add";
+	JS9.Fabric._updateShape.call(this, layerName, s, null, mode, params);
 	// might need to make a text shape as a child of this shape
 	JS9.Fabric._handleChildText.call(this, layerName, s, opts);
     }
@@ -8178,7 +8180,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     if( (params.redraw === undefined) || params.redraw ){
 	canvas.renderAll();
     }
-    // return object (internal use, usually)?
+    // return object (internal use for child regions), if necessary
     if( myopts.rtn === "object" ){
 	return s;
     }
