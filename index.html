@@ -101,7 +101,8 @@
     var aname, im, lastim, lastreg, js9tabs;
     var ncall = 0;
     var err = {};
-    var plot;
+    var plot, pobj;
+    var running = false;
     var objs = [
       {scale: "log", colormap: "viridis", contrast: 3.26, bias: 0.66},
       {scale: "log", colormap: "magma", contrast: 2.9, bias: 0.72},
@@ -139,8 +140,17 @@
         var rarr = [];
         lastim = im;
         lastreg = xreg;
-        // don't run on removal
+        // are we already running?
+        if( running ){
+            return;
+        }
+        // don't run after removing the region
         if( xreg.mode === "remove" ){
+            return;
+        }
+        // only run on changes to source or background regions
+        if( (xreg.tags.indexOf("source") === -1)     &&
+            (xreg.tags.indexOf("background") === -1) ){
             return;
         }
         // check whether we are in the analysis tab
@@ -157,16 +167,19 @@
         if( aname ){
           switch(aname){
           case "counts":
+            running = true;
             JS9.RunAnalysis("counts", null, dispMyAnalysis);
             break;
           case "radial":
+            running = true;
             JS9.RunAnalysis("radialprofile", null, dispMyAnalysis);
             break;
           case "spectrum":
+            running = true;
             JS9.RunAnalysis("energyplot", null, dispMyAnalysis);
             break;
           default:
-            JS9.error("unknown analysis task: "+aname);
+            alert("unknown analysis task: "+aname);
             break;
           }
         }
@@ -182,11 +195,6 @@
       } else {
        // remove previous contents
        rdiv.empty();
-       // we must destroy previous plot, or else some bindings will remain
-       if( plot ){
-           plot.destroy();
-           plot = null;
-       }
        // process return type
        switch(a.rtype){
           case "text":
@@ -200,16 +208,26 @@
 	    // retrieve plot object (should contain a data object)
 	    pobj = JSON.parse(stdout);
             if( pobj && pobj.data ){
+              // destroy previous plot, or else some bindings will remain
+              if( plot && !running ){
+                plot.destroy();
+                plot = null;
+              }
+              // erase explanatory text
+              rdiv.innerHTML = "";
     	      // plot the data
 	      plot = $.plot(rdiv, [pobj], JS9.plotOpts);
 	    } else {
               alert("no analysis data returned");
             }
           }
-	  catch(e){ alert("can't plot data: "+e+" "+stdout)};
+	  catch(e){
+	    alert("can't plot data: "+e+" "+stdout)
+          };
           break;
         }
       }
+      running = false;
     }
     </script>
     <table cellspacing="5">
