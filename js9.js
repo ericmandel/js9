@@ -7918,6 +7918,7 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "x":
 	case "y":
 	case "shape":
+	case "parent":
 	case "rtn":
 	    return false;
 	default:
