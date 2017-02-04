@@ -8652,7 +8652,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	exports = JS9.Fabric._exportShapeOptions(opts).filter(function(item) {
 	    return !obj.params.exports.hasOwnProperty(item);
 	});
-	obj.params.exports = obj.params.exports.concat(exports);
+	sobj.params.exports = obj.params.exports.concat(exports);
 	// shape-specific pre-processing
 	switch(obj.params.shape){
 	case "text":
@@ -8667,6 +8667,11 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	obj.set(sobj.opts);
 	// reestablish params object
 	obj.params = $.extend(false, {}, obj.params, sobj.params);
+	// if strokeWidth is specified, we change params.sw1,
+	// which will be used by the rescaleBorder routine below
+	if( opts.strokeWidth ){
+	    obj.params.sw1 = opts.strokeWidth;
+	}
 	// shape-specific post-processing
 	// mainly: change of size => remove size-based scaling factor
 	switch(obj.params.shape){
@@ -9988,6 +9993,12 @@ JS9.Regions.initConfigForm = function(obj){
     var winid = params.winid;
     var wid = $(winid).attr("id");
     var form = "#" + wid + " #regionsConfigForm ";
+    var fmt= function(val){
+	if( (typeof val === "number") && (val % 1 !== 0) ){
+	    return val.toFixed(2);
+	}
+	return(String(val));
+    };
     // remove the nodisplay class from this shape's div
     $(form + "." + obj.pub.shape).each(function(){
 	$(this).removeClass("nodisplay");
@@ -10043,6 +10054,19 @@ JS9.Regions.initConfigForm = function(obj){
 		val = obj.getFontWeight();
 	    }
 	    break;
+	case "strokeWidth":
+	    val = obj.strokeWidth;
+	    break;
+	case "strokeDashes":
+	    if( obj.strokeDashArray ){
+		val = obj.strokeDashArray.join(" ");
+		if( val.match(/NaN/) ){
+		    val = "";
+		}
+	    } else {
+		val = "";
+	    }
+	    break;
 	case "childtext":
 	    if( obj.params.children.length > 0 ){
 		val = obj.params.children[0].text;
@@ -10050,11 +10074,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    break;
 	default:
 	    if( obj.pub[key] !== undefined ){
-		val = obj.pub[key];
-		// fix floating point values
-		if( (typeof val === "number") && (val % 1 !== 0) ){
-		    val = val.toFixed(2);
-		}
+		val = fmt(obj.pub[key]);
 	    }
 	    break;
 	}
@@ -10114,9 +10134,15 @@ JS9.Regions.initConfigForm = function(obj){
 // process the config form to change the specified shape
 // call using image context
 JS9.Regions.processConfigForm = function(obj, winid, arr){
-    var i, key, val;
+    var i, key, val, nval;
     var alen = arr.length;
     var opts = {};
+    var fmt= function(val){
+	if( (typeof val === "number") && (val % 1 !== 0) ){
+	    return val.toFixed(2);
+	}
+	return(String(val));
+    };
     var newval = function(obj, key, val){
 	// special keys that have no public or param equivalents
 	if( key === "remove" ){
@@ -10128,19 +10154,22 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 	    }
 	    return val !== "";
 	}
+	if( key === "strokeDashes" ){
+	    return JSON.stringify(obj.strokeDashArray) !== JSON.stringify(val);
+	}
 	if( (key !== "tags") && (val === "") ){
 	    return false;
 	}
-	if( (obj.pub[key] !== undefined)   &&
-	    (String(obj.pub[key]) !== val) ){
+	if( (key === "angle") ){
+	    return obj.angle !== -parseFloat(val);
+	}
+	if( (obj.pub[key] !== undefined) && (fmt(obj.pub[key]) !== val) ){
 	    return true;
 	}
-	if( (obj.params[key] !== undefined)   &&
-	    (String(obj.params[key]) !== val) ){
+	if( (obj.params[key] !== undefined) && (fmt(obj.params[key]) !== val) ){
 	    return true;
 	}
-	if( (obj[key] !== undefined)   &&
-	    (String(obj[key]) !== val) ){
+	if( (obj[key] !== undefined) && (fmt(obj[key]) !== val) ){
 	    return true;
 	}
 	return false;
@@ -10152,7 +10181,7 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 	if( s === "false" ){
 	    return false;
 	}
-	if((s === "") || isNaN(s) ){
+	if( !JS9.isNumber(s) ){
 	    return s;
 	}
 	return parseFloat(s);
@@ -10165,6 +10194,18 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 	    if( obj.type === "text" ){
 		if( newval(obj, key, val) ){
 		    opts[key] = getval(val);
+		}
+	    }
+	    break;
+	case "strokeDashes":
+	    nval = val.trim().split(/\s+/);
+	    if( newval(obj, key, nval) ){
+		if( nval.length === 0 ){
+		    opts.strokeDashArray = [];
+		} else {
+		    opts.strokeDashArray = nval.map(function(s){
+			return parseInt(s, 10);
+		    });
 		}
 	    }
 	    break;
@@ -10217,7 +10258,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
     var pubs = [];
     var exports = {};
     var getExports = function(obj, region){
-	var i, key, child;
+	var i, s, key, child;
 	var nexports = {};
 	var params = obj.params;
 	var children = params.children;
@@ -10229,6 +10270,13 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    if( (key === "text" && obj.type !== "text") ||
 		(key === "textOpts") ){
 		continue;
+	    }
+	    // ignore empty stroke dash array
+	    if( key === "strokeDashArray" ){
+		s = obj.strokeDashArray.join("");
+		if( (s === "") || s.match(/NaN/) ){
+		    continue;
+		}
 	    }
 	    // strokeWidth can be changed as part of zooming,
 	    // so use the original value if needed
