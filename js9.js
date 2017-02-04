@@ -10134,7 +10134,7 @@ JS9.Regions.initConfigForm = function(obj){
 // process the config form to change the specified shape
 // call using image context
 JS9.Regions.processConfigForm = function(obj, winid, arr){
-    var i, key, val, nval;
+    var i, key, val, nval, nopts;
     var alen = arr.length;
     var opts = {};
     var fmt= function(val){
@@ -10159,6 +10159,9 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 	}
 	if( (key !== "tags") && (val === "") ){
 	    return false;
+	}
+	if( (key === "misc") && (val !== "") ){
+	    return true;
 	}
 	if( (key === "angle") ){
 	    return obj.angle !== -parseFloat(val);
@@ -10230,6 +10233,12 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 		if( opts.x === undefined ){
 		    opts.x = obj.pub.x;
 		}
+	    }
+	    break;
+	case "misc":
+	    if( val.trim() ){
+		try{ nopts = JSON.parse(val); $.extend(opts, nopts); }
+		catch(e){ JS9.error("invalid json: " + val); }
 	    }
 	    break;
 	default:
