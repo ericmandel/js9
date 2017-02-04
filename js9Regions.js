@@ -31,7 +31,7 @@ const addComment = function(comment, key, val){
 	val = 0;
     }
     if( key ){
-	if( typeof val === "string" ){
+	if( key !== "dashlist" && typeof val === "string" ){
 	    val = "{" + val + "}";
 	}
 	comment += key + "=" + val;
@@ -87,6 +87,7 @@ const parseRegion = function(s){
 		break;
 	    case "strokeDashArray":
 		comment = addComment(comment, "dash", 1);
+		comment = addComment(comment, "dashlist", json[key].join(" "));
 		break;
 	    case "strokeWidth":
 		comment = addComment(comment, "width", json[key]);

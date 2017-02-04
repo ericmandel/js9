@@ -10441,7 +10441,7 @@ JS9.Regions.parseRegions = function(s){
     var ds9properties = function(s){
 	var xarr, key, key2, val, nobj;
 	var xobj = {};
-	var rexp = /([a-zA-Z][a-zA-Z0-9_]*)\s*=\s*([^ '"{]+|['"{][^'"}]*['"}])/g;
+	var rexp = /([a-zA-Z][a-zA-Z0-9_]*)\s*=\s*(\d+(\s*\d+)*|[^ '"{]+|['"{][^'"}]*['"}])/g;
 	var ds9opts = {
 	    color: function(v){return {color: v};},
 	    dash: function(v){if(v){return {strokeDashArray: [3,1]};}},
