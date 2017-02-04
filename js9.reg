@@ -1,0 +1,4 @@
+ICRS
+ellipse(23:23:22.179, +58:48:10.542, 40", 20", 60) {"text": "json ellipse test", "textOpts": {"color": "yellow", "fontSize": 16, "fontStyle": "italic", "fontWeight": "bold"}, "color": "violet"} # source,include
+box(23:23:35.486, +58:50:03.146, 40", 20", 30) # width=4 text={ds9 box test} dash=1 dashlist=8 3 color=red fixed=1 rotate=0 tag="ds9 test tag"
+circle(23:23:29.526, +58:49:09.56, 14.756997") {"strokeWidth": 1, "strokeDashArray": [3,1], "transparentCorners": true} # text="hybrid circle test" tag="ds9 test tag" tag="json test tag"
