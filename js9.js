@@ -12696,14 +12696,24 @@ JS9.dragdropCB = function(id, evt, handler){
     files = evt.target.files || evt.dataTransfer.files;
     // turn on waiting, if possible
     display = JS9.lookupDisplay(opts.display);
-    if( display && display.divjq ){
-	JS9.waiting(true, display.divjq[0]);
-    }
     // wait for spinner to start ...
     window.setTimeout(function(){
+	var fname;
 	// ... and load each file in turn
 	for(i=0; i<files.length; i++){
-	    JS9.Load(files[i], opts, handler);
+	    fname =  files[i].path || files[i].name;
+	    if( fname && fname.match(/\.reg$/) ){
+		JS9.LoadRegions(files[i], {display: opts.display});
+	    } else if( fname && fname.match(/\.cat$/) ){
+		JS9.LoadCatalog(null, files[i], {display: opts.display});
+	    } else if( fname && fname.match(/\.ses$/) ){
+		JS9.LoadSession(files[i], {display: opts.display});
+	    } else {
+		if( display && display.divjq ){
+		    JS9.waiting(true, display.divjq[0]);
+		}
+		JS9.Load(files[i], opts, handler);
+	    }
 	}
     }, JS9.SPINOUT);
 };
