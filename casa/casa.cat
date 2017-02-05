@@ -1,0 +1,47 @@
+#
+#   VizieR Astronomical Server vizier.u-strasbg.fr
+#    Date: 2016-10-18T00:32:08 [V1.99+ (14-Oct-2013)]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	votable-version=1.99+ (14-Oct-2013)	
+#INFO	-ref=VOTx33042	
+#INFO	MaxTuples=50000	
+#INFO	queryParameters=5	
+#-oc.form=s
+#-source=2MASX
+#-out.add=_RAJ,_DEJ
+#-c=23:23:26.992 58:48:49.89
+#-c.bm=8.3x8.3
+#
+#INFO	-c=350.862467+58.813858,bm=8.300000/8.3	
+#
+
+#RESOURCE=yCat_7233
+#Name: VII/233
+#Title: The 2MASS Extended sources (IPAC/UMass, 2003-2006)
+#Table	VII_233_xsc:
+#Name: VII/233/xsc
+#Title: *The 2MASS Extended Catalog (2MASX)
+#Column	_RAJ2000	(A12)		[ucd=pos.eq.ra]
+#Column	_DEJ2000	(A12)		[ucd=pos.eq.dec]
+#Column	2MASX	(a17)		[ucd=meta.id;meta.main]
+#Column	All	(A3)		[ucd=meta.ref.url]
+#Column	RAJ2000	(F10.6)		[ucd=pos.eq.ra;meta.main]
+#Column	DEJ2000	(F10.6)		[ucd=pos.eq.dec;meta.main]
+#Column	Kb/a	(F6.3)		[ucd=phys.size.axisRatio]
+#Column	r.fe	(F6.1)		[ucd=phys.angSize;src]
+#Column	J.ext	(F6.3)		[ucd=phot.mag;em.IR.J]
+#Column	e_J.ext	(F6.3)		[ucd=stat.error]
+#Column	H.ext	(F6.3)		[ucd=phot.mag;em.IR.H]
+#Column	e_H.ext	(F6.3)		[ucd=stat.error]
+#Column	K.ext	(F6.3)		[ucd=phot.mag;em.IR.K]
+#Column	e_K.ext	(F6.3)		[ucd=stat.error]
+#Column	xid	(I1)		[ucd=meta.code]
+_XAJ2000	_XEJ2000	2MASX	All	RAJ2000	DEJ2000	Kb/a	r.fe	J.ext	e_J.ext	H.ext	e_H.ext	K.ext	e_K.ext	xid	s
+------------	------------	-----------------	---	----------	----------	------	------	------	------	------	------	------	------	-	----------
+23 23 17.300	+58 47 34.21	23231729+5847342 	All	3.50822083e2	+58.792835	 0.320	  25.5	14.112	 0.131	13.171	 0.137	12.888	 0.158	0	string1
+23 23 12.539	+58 48 07.21	23231253+5848072 	All	3.50802246e2	+58.802002	 0.820	  17.6	14.729	 0.127	13.905	 0.149	13.325	 0.129	0	string2
+
+

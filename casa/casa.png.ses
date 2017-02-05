@@ -1,0 +1,1747 @@
+{
+    "file": "png/casa.png",
+    "params": {
+        "scalemin": 0,
+        "scalemax": 51,
+        "xeqonchange": true,
+        "contrast": 4.8,
+        "bias": 0.1175,
+        "invert": false,
+        "exp": 1000,
+        "colormap": "cool",
+        "scale": "linear",
+        "scaleclipping": "dataminmax",
+        "zscalecontrast": 0.25,
+        "zscalesamples": 600,
+        "zscaleline": 120,
+        "wcssys": "ICRS",
+        "wcsunits": "sexagesimal",
+        "lcs": "physical",
+        "valpos": true,
+        "opacity": 1,
+        "sigma": "none",
+        "maskOpacity": 0.4,
+        "alpha": 255,
+        "alpha1": 100,
+        "zoom": 1,
+        "zooms": 5,
+        "nancolor": "#000000",
+        "wcsalign": true,
+        "listonchange": false,
+        "wcssys0": "ICRS",
+        "xcen": 506,
+        "ycen": 518
+    },
+    "layers": [
+        {
+            "name": "regions",
+            "json": {
+                "objects": [
+                    {
+                        "type": "ellipse",
+                        "originX": "center",
+                        "originY": "center",
+                        "left": 335.02,
+                        "top": 374,
+                        "width": 129.4,
+                        "height": 64.7,
+                        "fill": "transparent",
+                        "stroke": "violet",
+                        "strokeWidth": 2,
+                        "strokeDashArray": null,
+                        "strokeLineCap": "butt",
+                        "strokeLineJoin": "miter",
+                        "strokeMiterLimit": 10,
+                        "scaleX": 1,
+                        "scaleY": 1,
+                        "angle": -26.28,
+                        "flipX": false,
+                        "flipY": false,
+                        "opacity": 1,
+                        "shadow": null,
+                        "visible": true,
+                        "clipTo": null,
+                        "backgroundColor": "",
+                        "fillRule": "nonzero",
+                        "globalCompositeOperation": "source-over",
+                        "transformMatrix": null,
+                        "skewX": 0,
+                        "skewY": 0,
+                        "cornerSize": 8,
+                        "cornerColor": "violet",
+                        "borderColor": "#00EEFF",
+                        "transparentCorners": false,
+                        "selectionLineWidth": 2,
+                        "centeredScaling": true,
+                        "hasControls": true,
+                        "hasRotatingPoint": true,
+                        "hasBorders": true,
+                        "params": {
+                            "tags": [
+                                "source",
+                                "include"
+                            ],
+                            "canvas": {
+                                "selection": true
+                            },
+                            "panzoom": true,
+                            "iradius": 0,
+                            "oradius": 30,
+                            "nannuli": 10,
+                            "r1": 64.6990323236425,
+                            "r2": 32.34950599715363,
+                            "ptshape": "box",
+                            "ptsize": 2,
+                            "linepoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": -30
+                                }
+                            ],
+                            "polypoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 0,
+                                    "y": -30
+                                }
+                            ],
+                            "aradius1": 4,
+                            "aradius2": 8,
+                            "configURL": "./params/regionsconfig.html",
+                            "sortOverlapping": true,
+                            "tagcolors": {
+                                "include_source": "#00FF00",
+                                "exclude_source": "#FF0000",
+                                "include_background": "#FFD700",
+                                "exclude_background": "#FF8C00",
+                                "source": "#00FF00",
+                                "background": "#FFD700",
+                                "defcolor": "#00FF00"
+                            },
+                            "onchange": null,
+                            "color": "violet",
+                            "id": 1,
+                            "exports": [
+                                "color",
+                                "text",
+                                "textOpts"
+                            ],
+                            "parent": null,
+                            "children": [
+                                {
+                                    "id": 2,
+                                    "obj": {
+                                        "type": "text",
+                                        "originX": "center",
+                                        "originY": "center",
+                                        "left": 316.46,
+                                        "top": 333.98,
+                                        "width": 120.04,
+                                        "height": 18.08,
+                                        "fill": "yellow",
+                                        "stroke": "yellow",
+                                        "strokeWidth": 0,
+                                        "strokeDashArray": null,
+                                        "strokeLineCap": "butt",
+                                        "strokeLineJoin": "miter",
+                                        "strokeMiterLimit": 10,
+                                        "scaleX": 1,
+                                        "scaleY": 1,
+                                        "angle": 693.72,
+                                        "flipX": false,
+                                        "flipY": false,
+                                        "opacity": 1,
+                                        "shadow": null,
+                                        "visible": true,
+                                        "clipTo": null,
+                                        "backgroundColor": "",
+                                        "fillRule": "nonzero",
+                                        "globalCompositeOperation": "source-over",
+                                        "transformMatrix": null,
+                                        "skewX": 0,
+                                        "skewY": 0,
+                                        "text": "json ellipse test",
+                                        "fontSize": 16,
+                                        "fontWeight": "bold",
+                                        "fontFamily": "Helvetica",
+                                        "fontStyle": "italic",
+                                        "lineHeight": 1.16,
+                                        "textDecoration": "",
+                                        "textAlign": "left",
+                                        "textBackgroundColor": "",
+                                        "charSpacing": 0
+                                    }
+                                }
+                            ],
+                            "shape": "ellipse",
+                            "layerName": "regions",
+                            "sw1": 2,
+                            "listonchange": false
+                        },
+                        "pub": {
+                            "mode": "update",
+                            "id": 1,
+                            "shape": "ellipse",
+                            "layer": "regions",
+                            "color": "violet",
+                            "tags": [
+                                "source",
+                                "include"
+                            ],
+                            "parent": null,
+                            "x": 642.0169999999998,
+                            "y": 344.0010000000002,
+                            "imsys": "physical",
+                            "lcs": {
+                                "x": 4157.017,
+                                "y": 3776.001,
+                                "sys": "physical"
+                            },
+                            "angle": 26.28,
+                            "r1": 64.6990323236425,
+                            "r2": 32.34950599715363,
+                            "imstr": "ellipse(4157.0, 3776.0, 64.7, 32.3, 26.2800)",
+                            "wcsstr": "ellipse(23:23:18.761, +58:47:27.252, 31.825443\", 15.912713\", 26.280000)",
+                            "ra": "23:23:18.761",
+                            "dec": "+58:47:27.25",
+                            "wcssys": "ICRS"
+                        },
+                        "rx": 64.6990323236425,
+                        "ry": 32.34950599715363
+                    },
+                    {
+                        "type": "text",
+                        "originX": "center",
+                        "originY": "center",
+                        "left": 316.46,
+                        "top": 333.98,
+                        "width": 120.04,
+                        "height": 18.08,
+                        "fill": "yellow",
+                        "stroke": "yellow",
+                        "strokeWidth": 0,
+                        "strokeDashArray": null,
+                        "strokeLineCap": "butt",
+                        "strokeLineJoin": "miter",
+                        "strokeMiterLimit": 10,
+                        "scaleX": 1,
+                        "scaleY": 1,
+                        "angle": 693.72,
+                        "flipX": false,
+                        "flipY": false,
+                        "opacity": 1,
+                        "shadow": null,
+                        "visible": true,
+                        "clipTo": null,
+                        "backgroundColor": "",
+                        "fillRule": "nonzero",
+                        "globalCompositeOperation": "source-over",
+                        "transformMatrix": null,
+                        "skewX": 0,
+                        "skewY": 0,
+                        "cornerSize": 8,
+                        "cornerColor": "yellow",
+                        "borderColor": "#00EEFF",
+                        "transparentCorners": false,
+                        "selectionLineWidth": 2,
+                        "centeredScaling": true,
+                        "hasControls": true,
+                        "hasRotatingPoint": true,
+                        "hasBorders": true,
+                        "params": {
+                            "tags": [
+                                "source",
+                                "include"
+                            ],
+                            "canvas": {
+                                "selection": true
+                            },
+                            "panzoom": true,
+                            "iradius": 0,
+                            "oradius": 30,
+                            "nannuli": 10,
+                            "r1": 30,
+                            "r2": 20,
+                            "ptshape": "box",
+                            "ptsize": 2,
+                            "linepoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": -30
+                                }
+                            ],
+                            "polypoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 0,
+                                    "y": -30
+                                }
+                            ],
+                            "aradius1": 4,
+                            "aradius2": 8,
+                            "configURL": "./params/regionsconfig.html",
+                            "sortOverlapping": true,
+                            "tagcolors": {
+                                "include_source": "#00FF00",
+                                "exclude_source": "#FF0000",
+                                "include_background": "#FFD700",
+                                "exclude_background": "#FF8C00",
+                                "source": "#00FF00",
+                                "background": "#FFD700",
+                                "defcolor": "#00FF00"
+                            },
+                            "onchange": null,
+                            "color": "yellow",
+                            "parent": {
+                                "id": 1,
+                                "obj": {
+                                    "type": "ellipse",
+                                    "originX": "center",
+                                    "originY": "center",
+                                    "left": 335.02,
+                                    "top": 374,
+                                    "width": 129.4,
+                                    "height": 64.7,
+                                    "fill": "transparent",
+                                    "stroke": "violet",
+                                    "strokeWidth": 2,
+                                    "strokeDashArray": null,
+                                    "strokeLineCap": "butt",
+                                    "strokeLineJoin": "miter",
+                                    "strokeMiterLimit": 10,
+                                    "scaleX": 1,
+                                    "scaleY": 1,
+                                    "angle": -26.28,
+                                    "flipX": false,
+                                    "flipY": false,
+                                    "opacity": 1,
+                                    "shadow": null,
+                                    "visible": true,
+                                    "clipTo": null,
+                                    "backgroundColor": "",
+                                    "fillRule": "nonzero",
+                                    "globalCompositeOperation": "source-over",
+                                    "transformMatrix": null,
+                                    "skewX": 0,
+                                    "skewY": 0,
+                                    "rx": 64.6990323236425,
+                                    "ry": 32.34950599715363
+                                },
+                                "dleft": 18.554270318564875,
+                                "dtop": 40.01807697351671,
+                                "lastscalex": 1,
+                                "lastscaley": 1,
+                                "lastangle": -26.28,
+                                "textheight": 12,
+                                "strokeWidth": 2,
+                                "moved": true
+                            },
+                            "rtn": "object",
+                            "id": 2,
+                            "exports": [
+                                "color",
+                                "text",
+                                "fontSize",
+                                "fontStyle",
+                                "fontWeight",
+                                "px",
+                                "py"
+                            ],
+                            "children": [],
+                            "shape": "text",
+                            "text": "json ellipse test",
+                            "layerName": "regions",
+                            "sw1": 0,
+                            "listonchange": false
+                        },
+                        "pub": {
+                            "mode": "child",
+                            "id": 2,
+                            "shape": "text",
+                            "layer": "regions",
+                            "color": "yellow",
+                            "tags": [
+                                "source",
+                                "include"
+                            ],
+                            "parent": 1,
+                            "x": 623.4627296814349,
+                            "y": 384.0190769735169,
+                            "imsys": "physical",
+                            "lcs": {
+                                "x": 4138.462729681435,
+                                "y": 3816.019076973517,
+                                "sys": "physical"
+                            },
+                            "angle": 26.278958999999986,
+                            "imstr": "text(4138.5, 3816.0, \"json ellipse test\")",
+                            "text": "json ellipse test",
+                            "wcsstr": "text(23:23:19.935, +58:47:46.939, \"json ellipse test\")",
+                            "ra": "23:23:19.935",
+                            "dec": "+58:47:46.94",
+                            "wcssys": "ICRS"
+                        },
+                        "text": "json ellipse test",
+                        "fontSize": 16,
+                        "fontWeight": "bold",
+                        "fontFamily": "Helvetica",
+                        "fontStyle": "italic",
+                        "lineHeight": 1.16,
+                        "textDecoration": "",
+                        "textAlign": "left",
+                        "textBackgroundColor": "",
+                        "charSpacing": 0
+                    },
+                    {
+                        "type": "rect",
+                        "originX": "center",
+                        "originY": "center",
+                        "left": 71,
+                        "top": 57,
+                        "width": 81.32,
+                        "height": 40.66,
+                        "fill": "transparent",
+                        "stroke": "red",
+                        "strokeWidth": 4,
+                        "strokeDashArray": [
+                            8,
+                            3
+                        ],
+                        "strokeLineCap": "butt",
+                        "strokeLineJoin": "miter",
+                        "strokeMiterLimit": 10,
+                        "scaleX": 1,
+                        "scaleY": 1,
+                        "angle": -20,
+                        "flipX": false,
+                        "flipY": false,
+                        "opacity": 1,
+                        "shadow": null,
+                        "visible": true,
+                        "clipTo": null,
+                        "backgroundColor": "",
+                        "fillRule": "nonzero",
+                        "globalCompositeOperation": "source-over",
+                        "transformMatrix": null,
+                        "skewX": 0,
+                        "skewY": 0,
+                        "cornerSize": 8,
+                        "cornerColor": "red",
+                        "borderColor": "#00EEFF",
+                        "transparentCorners": false,
+                        "selectionLineWidth": 2,
+                        "centeredScaling": true,
+                        "hasControls": true,
+                        "hasRotatingPoint": false,
+                        "hasBorders": true,
+                        "params": {
+                            "tags": [
+                                "ds9 test tag"
+                            ],
+                            "canvas": {
+                                "selection": true
+                            },
+                            "panzoom": true,
+                            "iradius": 0,
+                            "oradius": 30,
+                            "nannuli": 10,
+                            "r1": 30,
+                            "r2": 20,
+                            "ptshape": "box",
+                            "ptsize": 2,
+                            "linepoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": -30
+                                }
+                            ],
+                            "polypoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 0,
+                                    "y": -30
+                                }
+                            ],
+                            "aradius1": 4,
+                            "aradius2": 8,
+                            "configURL": "./params/regionsconfig.html",
+                            "sortOverlapping": true,
+                            "tagcolors": {
+                                "include_source": "#00FF00",
+                                "exclude_source": "#FF0000",
+                                "include_background": "#FFD700",
+                                "exclude_background": "#FF8C00",
+                                "source": "#00FF00",
+                                "background": "#FFD700",
+                                "defcolor": "#00FF00"
+                            },
+                            "onchange": null,
+                            "color": "red",
+                            "zoomable": false,
+                            "rotatable": false,
+                            "id": 3,
+                            "exports": [
+                                "strokeWidth",
+                                "strokeDashArray",
+                                "color",
+                                "zoomable",
+                                "rotatable",
+                                "text",
+                                "textOpts"
+                            ],
+                            "parent": null,
+                            "children": [
+                                {
+                                    "id": 4,
+                                    "obj": {
+                                        "type": "text",
+                                        "originX": "center",
+                                        "originY": "center",
+                                        "left": 57.83,
+                                        "top": 28,
+                                        "width": 66.02,
+                                        "height": 13.56,
+                                        "fill": "cyan",
+                                        "stroke": "cyan",
+                                        "strokeWidth": 0,
+                                        "strokeDashArray": null,
+                                        "strokeLineCap": "butt",
+                                        "strokeLineJoin": "miter",
+                                        "strokeMiterLimit": 10,
+                                        "scaleX": 1,
+                                        "scaleY": 1,
+                                        "angle": -20,
+                                        "flipX": false,
+                                        "flipY": false,
+                                        "opacity": 1,
+                                        "shadow": null,
+                                        "visible": true,
+                                        "clipTo": null,
+                                        "backgroundColor": "",
+                                        "fillRule": "nonzero",
+                                        "globalCompositeOperation": "source-over",
+                                        "transformMatrix": null,
+                                        "skewX": 0,
+                                        "skewY": 0,
+                                        "text": "ds9 box test",
+                                        "fontSize": 12,
+                                        "fontWeight": 300,
+                                        "fontFamily": "Helvetica",
+                                        "fontStyle": "normal",
+                                        "lineHeight": 1.16,
+                                        "textDecoration": "",
+                                        "textAlign": "left",
+                                        "textBackgroundColor": "",
+                                        "charSpacing": 0
+                                    }
+                                }
+                            ],
+                            "shape": "box",
+                            "layerName": "regions",
+                            "sw1": 4,
+                            "listonchange": false
+                        },
+                        "pub": {
+                            "mode": "update",
+                            "id": 3,
+                            "shape": "box",
+                            "layer": "regions",
+                            "color": "red",
+                            "tags": [
+                                "ds9 test tag"
+                            ],
+                            "parent": null,
+                            "x": 378.0039999999999,
+                            "y": 660.9989999999998,
+                            "imsys": "physical",
+                            "lcs": {
+                                "x": 3893.004,
+                                "y": 4092.999,
+                                "sys": "physical"
+                            },
+                            "angle": 20,
+                            "width": 81.32,
+                            "height": 40.66,
+                            "imstr": "box(3893.0, 4093.0, 81.3, 40.7, 20.0000)",
+                            "wcsstr": "box(23:23:35.486, +58:50:03.146, 40.001302\", 20.000652\", 20.000000)",
+                            "ra": "23:23:35.486",
+                            "dec": "+58:50:03.15",
+                            "wcssys": "ICRS"
+                        },
+                        "rx": 0,
+                        "ry": 0
+                    },
+                    {
+                        "type": "text",
+                        "originX": "center",
+                        "originY": "center",
+                        "left": 57.83,
+                        "top": 28,
+                        "width": 66.02,
+                        "height": 13.56,
+                        "fill": "cyan",
+                        "stroke": "cyan",
+                        "strokeWidth": 0,
+                        "strokeDashArray": null,
+                        "strokeLineCap": "butt",
+                        "strokeLineJoin": "miter",
+                        "strokeMiterLimit": 10,
+                        "scaleX": 1,
+                        "scaleY": 1,
+                        "angle": -20,
+                        "flipX": false,
+                        "flipY": false,
+                        "opacity": 1,
+                        "shadow": null,
+                        "visible": true,
+                        "clipTo": null,
+                        "backgroundColor": "",
+                        "fillRule": "nonzero",
+                        "globalCompositeOperation": "source-over",
+                        "transformMatrix": null,
+                        "skewX": 0,
+                        "skewY": 0,
+                        "cornerSize": 8,
+                        "cornerColor": "cyan",
+                        "borderColor": "#00EEFF",
+                        "transparentCorners": false,
+                        "selectionLineWidth": 2,
+                        "centeredScaling": true,
+                        "hasControls": true,
+                        "hasRotatingPoint": true,
+                        "hasBorders": true,
+                        "params": {
+                            "tags": [
+                                "source",
+                                "include"
+                            ],
+                            "canvas": {
+                                "selection": true
+                            },
+                            "panzoom": true,
+                            "iradius": 0,
+                            "oradius": 30,
+                            "nannuli": 10,
+                            "r1": 30,
+                            "r2": 20,
+                            "ptshape": "box",
+                            "ptsize": 2,
+                            "linepoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": -30
+                                }
+                            ],
+                            "polypoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 0,
+                                    "y": -30
+                                }
+                            ],
+                            "aradius1": 4,
+                            "aradius2": 8,
+                            "configURL": "./params/regionsconfig.html",
+                            "sortOverlapping": true,
+                            "tagcolors": {
+                                "include_source": "#00FF00",
+                                "exclude_source": "#FF0000",
+                                "include_background": "#FFD700",
+                                "exclude_background": "#FF8C00",
+                                "source": "#00FF00",
+                                "background": "#FFD700",
+                                "defcolor": "#00FF00"
+                            },
+                            "onchange": null,
+                            "color": "cyan",
+                            "parent": {
+                                "id": 3,
+                                "obj": {
+                                    "type": "rect",
+                                    "originX": "center",
+                                    "originY": "center",
+                                    "left": 71,
+                                    "top": 57,
+                                    "width": 81.32,
+                                    "height": 40.66,
+                                    "fill": "transparent",
+                                    "stroke": "red",
+                                    "strokeWidth": 4,
+                                    "strokeDashArray": [
+                                        8,
+                                        3
+                                    ],
+                                    "strokeLineCap": "butt",
+                                    "strokeLineJoin": "miter",
+                                    "strokeMiterLimit": 10,
+                                    "scaleX": 1,
+                                    "scaleY": 1,
+                                    "angle": -20,
+                                    "flipX": false,
+                                    "flipY": false,
+                                    "opacity": 1,
+                                    "shadow": null,
+                                    "visible": true,
+                                    "clipTo": null,
+                                    "backgroundColor": "",
+                                    "fillRule": "nonzero",
+                                    "globalCompositeOperation": "source-over",
+                                    "transformMatrix": null,
+                                    "skewX": 0,
+                                    "skewY": 0,
+                                    "rx": 0,
+                                    "ry": 0
+                                },
+                                "dleft": 13.170666090668533,
+                                "dtop": 28.998022956424165,
+                                "lastscalex": 1,
+                                "lastscaley": 1,
+                                "lastangle": -20,
+                                "textheight": 12,
+                                "strokeWidth": 4,
+                                "moved": true
+                            },
+                            "rtn": "object",
+                            "id": 4,
+                            "exports": [
+                                "color",
+                                "text",
+                                "fontSize",
+                                "px",
+                                "py"
+                            ],
+                            "children": [],
+                            "shape": "text",
+                            "text": "ds9 box test",
+                            "layerName": "regions",
+                            "sw1": 0,
+                            "listonchange": false
+                        },
+                        "pub": {
+                            "mode": "child",
+                            "id": 4,
+                            "shape": "text",
+                            "layer": "regions",
+                            "color": "cyan",
+                            "tags": [
+                                "source",
+                                "include"
+                            ],
+                            "parent": 3,
+                            "x": 364.8333339093314,
+                            "y": 689.997022956424,
+                            "imsys": "physical",
+                            "lcs": {
+                                "x": 3879.8333339093315,
+                                "y": 4121.997022956424,
+                                "sys": "physical"
+                            },
+                            "angle": 20,
+                            "imstr": "text(3879.8, 4122.0, \"ds9 box test\")",
+                            "text": "ds9 box test",
+                            "wcsstr": "text(23:23:36.322, +58:50:17.405, \"ds9 box test\")",
+                            "ra": "23:23:36.322",
+                            "dec": "+58:50:17.40",
+                            "wcssys": "ICRS"
+                        },
+                        "text": "ds9 box test",
+                        "fontSize": 12,
+                        "fontWeight": 300,
+                        "fontFamily": "Helvetica",
+                        "fontStyle": "normal",
+                        "lineHeight": 1.16,
+                        "textDecoration": "",
+                        "textAlign": "left",
+                        "textBackgroundColor": "",
+                        "charSpacing": 0
+                    },
+                    {
+                        "type": "circle",
+                        "originX": "center",
+                        "originY": "center",
+                        "left": 189.02,
+                        "top": 222.99,
+                        "width": 60,
+                        "height": 60,
+                        "fill": "transparent",
+                        "stroke": "#00FF00",
+                        "strokeWidth": 1,
+                        "strokeDashArray": [
+                            3,
+                            1
+                        ],
+                        "strokeLineCap": "butt",
+                        "strokeLineJoin": "miter",
+                        "strokeMiterLimit": 10,
+                        "scaleX": 1,
+                        "scaleY": 1,
+                        "angle": 0,
+                        "flipX": false,
+                        "flipY": false,
+                        "opacity": 1,
+                        "shadow": null,
+                        "visible": true,
+                        "clipTo": null,
+                        "backgroundColor": "",
+                        "fillRule": "nonzero",
+                        "globalCompositeOperation": "source-over",
+                        "transformMatrix": null,
+                        "skewX": 0,
+                        "skewY": 0,
+                        "cornerSize": 8,
+                        "cornerColor": "#00FF00",
+                        "borderColor": "#00EEFF",
+                        "transparentCorners": true,
+                        "selectionLineWidth": 2,
+                        "centeredScaling": true,
+                        "hasControls": true,
+                        "hasRotatingPoint": true,
+                        "hasBorders": true,
+                        "params": {
+                            "tags": [
+                                "ds9 test tag",
+                                "json test tag"
+                            ],
+                            "canvas": {
+                                "selection": true
+                            },
+                            "panzoom": true,
+                            "iradius": 0,
+                            "oradius": 30,
+                            "nannuli": 10,
+                            "r1": 30,
+                            "r2": 20,
+                            "ptshape": "box",
+                            "ptsize": 2,
+                            "linepoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": -30
+                                }
+                            ],
+                            "polypoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 0,
+                                    "y": -30
+                                }
+                            ],
+                            "aradius1": 4,
+                            "aradius2": 8,
+                            "configURL": "./params/regionsconfig.html",
+                            "sortOverlapping": true,
+                            "tagcolors": {
+                                "include_source": "#00FF00",
+                                "exclude_source": "#FF0000",
+                                "include_background": "#FFD700",
+                                "exclude_background": "#FF8C00",
+                                "source": "#00FF00",
+                                "background": "#FFD700",
+                                "defcolor": "#00FF00"
+                            },
+                            "onchange": null,
+                            "id": 5,
+                            "exports": [
+                                "strokeWidth",
+                                "strokeDashArray",
+                                "transparentCorners",
+                                "text"
+                            ],
+                            "parent": null,
+                            "children": [
+                                {
+                                    "id": 6,
+                                    "obj": {
+                                        "type": "text",
+                                        "originX": "center",
+                                        "originY": "center",
+                                        "left": 189.02,
+                                        "top": 181,
+                                        "width": 103.99,
+                                        "height": 15.82,
+                                        "fill": "#00FF00",
+                                        "stroke": "#00FF00",
+                                        "strokeWidth": 0,
+                                        "strokeDashArray": null,
+                                        "strokeLineCap": "butt",
+                                        "strokeLineJoin": "miter",
+                                        "strokeMiterLimit": 10,
+                                        "scaleX": 1,
+                                        "scaleY": 1,
+                                        "angle": 0,
+                                        "flipX": false,
+                                        "flipY": false,
+                                        "opacity": 1,
+                                        "shadow": null,
+                                        "visible": true,
+                                        "clipTo": null,
+                                        "backgroundColor": "",
+                                        "fillRule": "nonzero",
+                                        "globalCompositeOperation": "source-over",
+                                        "transformMatrix": null,
+                                        "skewX": 0,
+                                        "skewY": 0,
+                                        "text": "hybrid circle test",
+                                        "fontSize": 14,
+                                        "fontWeight": 300,
+                                        "fontFamily": "Helvetica",
+                                        "fontStyle": "normal",
+                                        "lineHeight": 1.16,
+                                        "textDecoration": "",
+                                        "textAlign": "left",
+                                        "textBackgroundColor": "",
+                                        "charSpacing": 0
+                                    }
+                                }
+                            ],
+                            "shape": "circle",
+                            "layerName": "regions",
+                            "sw1": 1,
+                            "listonchange": false
+                        },
+                        "pub": {
+                            "mode": "update",
+                            "id": 5,
+                            "shape": "circle",
+                            "layer": "regions",
+                            "color": "#00FF00",
+                            "tags": [
+                                "ds9 test tag",
+                                "json test tag"
+                            ],
+                            "parent": null,
+                            "x": 496.0210000000002,
+                            "y": 495.0050000000001,
+                            "imsys": "physical",
+                            "lcs": {
+                                "x": 4011.021,
+                                "y": 3927.005,
+                                "sys": "physical"
+                            },
+                            "angle": 0,
+                            "radius": 29.999979670664526,
+                            "imstr": "circle(4011.0, 3927.0, 30.0)",
+                            "wcsstr": "circle(23:23:28.004, +58:48:41.527, 14.756988\")",
+                            "ra": "23:23:28.004",
+                            "dec": "+58:48:41.53",
+                            "wcssys": "ICRS"
+                        },
+                        "radius": 29.999979670664526,
+                        "startAngle": 0,
+                        "endAngle": 6.283185307179586
+                    },
+                    {
+                        "type": "text",
+                        "originX": "center",
+                        "originY": "center",
+                        "left": 189.02,
+                        "top": 181,
+                        "width": 103.99,
+                        "height": 15.82,
+                        "fill": "#00FF00",
+                        "stroke": "#00FF00",
+                        "strokeWidth": 0,
+                        "strokeDashArray": null,
+                        "strokeLineCap": "butt",
+                        "strokeLineJoin": "miter",
+                        "strokeMiterLimit": 10,
+                        "scaleX": 1,
+                        "scaleY": 1,
+                        "angle": 0,
+                        "flipX": false,
+                        "flipY": false,
+                        "opacity": 1,
+                        "shadow": null,
+                        "visible": true,
+                        "clipTo": null,
+                        "backgroundColor": "",
+                        "fillRule": "nonzero",
+                        "globalCompositeOperation": "source-over",
+                        "transformMatrix": null,
+                        "skewX": 0,
+                        "skewY": 0,
+                        "cornerSize": 8,
+                        "cornerColor": "#00FF00",
+                        "borderColor": "#00EEFF",
+                        "transparentCorners": false,
+                        "selectionLineWidth": 2,
+                        "centeredScaling": true,
+                        "hasControls": true,
+                        "hasRotatingPoint": true,
+                        "hasBorders": true,
+                        "params": {
+                            "tags": [
+                                "source",
+                                "include"
+                            ],
+                            "canvas": {
+                                "selection": true
+                            },
+                            "panzoom": true,
+                            "iradius": 0,
+                            "oradius": 30,
+                            "nannuli": 10,
+                            "r1": 30,
+                            "r2": 20,
+                            "ptshape": "box",
+                            "ptsize": 2,
+                            "linepoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": -30
+                                }
+                            ],
+                            "polypoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 0,
+                                    "y": -30
+                                }
+                            ],
+                            "aradius1": 4,
+                            "aradius2": 8,
+                            "configURL": "./params/regionsconfig.html",
+                            "sortOverlapping": true,
+                            "tagcolors": {
+                                "include_source": "#00FF00",
+                                "exclude_source": "#FF0000",
+                                "include_background": "#FFD700",
+                                "exclude_background": "#FF8C00",
+                                "source": "#00FF00",
+                                "background": "#FFD700",
+                                "defcolor": "#00FF00"
+                            },
+                            "onchange": null,
+                            "color": "#00FF00",
+                            "parent": {
+                                "id": 5,
+                                "obj": {
+                                    "type": "circle",
+                                    "originX": "center",
+                                    "originY": "center",
+                                    "left": 189.02,
+                                    "top": 222.99,
+                                    "width": 60,
+                                    "height": 60,
+                                    "fill": "transparent",
+                                    "stroke": "#00FF00",
+                                    "strokeWidth": 1,
+                                    "strokeDashArray": [
+                                        3,
+                                        1
+                                    ],
+                                    "strokeLineCap": "butt",
+                                    "strokeLineJoin": "miter",
+                                    "strokeMiterLimit": 10,
+                                    "scaleX": 1,
+                                    "scaleY": 1,
+                                    "angle": 0,
+                                    "flipX": false,
+                                    "flipY": false,
+                                    "opacity": 1,
+                                    "shadow": null,
+                                    "visible": true,
+                                    "clipTo": null,
+                                    "backgroundColor": "",
+                                    "fillRule": "nonzero",
+                                    "globalCompositeOperation": "source-over",
+                                    "transformMatrix": null,
+                                    "skewX": 0,
+                                    "skewY": 0,
+                                    "radius": 29.999979670664526,
+                                    "startAngle": 0,
+                                    "endAngle": 6.283185307179586
+                                },
+                                "dleft": 0,
+                                "dtop": 41.999979670664516,
+                                "lastscalex": 1,
+                                "lastscaley": 1,
+                                "lastangle": 0,
+                                "textheight": 12,
+                                "strokeWidth": 1,
+                                "moved": true
+                            },
+                            "rtn": "object",
+                            "id": 6,
+                            "exports": [
+                                "color",
+                                "text"
+                            ],
+                            "children": [],
+                            "shape": "text",
+                            "text": "hybrid circle test",
+                            "layerName": "regions",
+                            "sw1": 0,
+                            "listonchange": false
+                        },
+                        "pub": {
+                            "mode": "child",
+                            "id": 6,
+                            "shape": "text",
+                            "layer": "regions",
+                            "color": "#00FF00",
+                            "tags": [
+                                "source",
+                                "include"
+                            ],
+                            "parent": 5,
+                            "x": 496.0210000000002,
+                            "y": 537.0049796706646,
+                            "imsys": "physical",
+                            "lcs": {
+                                "x": 4011.021,
+                                "y": 3969.0049796706644,
+                                "sys": "physical"
+                            },
+                            "angle": 0,
+                            "imstr": "text(4011.0, 3969.0, \"hybrid circle test\")",
+                            "text": "hybrid circle test",
+                            "wcsstr": "text(23:23:28.005, +58:49:02.187, \"hybrid circle test\")",
+                            "ra": "23:23:28.005",
+                            "dec": "+58:49:02.19",
+                            "wcssys": "ICRS"
+                        },
+                        "text": "hybrid circle test",
+                        "fontSize": 14,
+                        "fontWeight": 300,
+                        "fontFamily": "Helvetica",
+                        "fontStyle": "normal",
+                        "lineHeight": 1.16,
+                        "textDecoration": "",
+                        "textAlign": "left",
+                        "textBackgroundColor": "",
+                        "charSpacing": 0
+                    },
+                    {
+                        "type": "polygon",
+                        "originX": "center",
+                        "originY": "center",
+                        "left": 24.58,
+                        "top": 291.86,
+                        "width": 72.53,
+                        "height": 111.24,
+                        "fill": "transparent",
+                        "stroke": "#FFD700",
+                        "strokeWidth": 2.01,
+                        "strokeDashArray": null,
+                        "strokeLineCap": "butt",
+                        "strokeLineJoin": "miter",
+                        "strokeMiterLimit": 10,
+                        "scaleX": 1,
+                        "scaleY": 1,
+                        "angle": 0,
+                        "flipX": false,
+                        "flipY": false,
+                        "opacity": 1,
+                        "shadow": null,
+                        "visible": true,
+                        "clipTo": null,
+                        "backgroundColor": "",
+                        "fillRule": "nonzero",
+                        "globalCompositeOperation": "source-over",
+                        "transformMatrix": null,
+                        "skewX": 0,
+                        "skewY": 0,
+                        "cornerSize": 8,
+                        "cornerColor": "#FFD700",
+                        "borderColor": "#00EEFF",
+                        "transparentCorners": false,
+                        "selectionLineWidth": 2,
+                        "centeredScaling": true,
+                        "hasControls": true,
+                        "hasRotatingPoint": true,
+                        "hasBorders": true,
+                        "params": {
+                            "tags": [
+                                "background",
+                                "include"
+                            ],
+                            "canvas": {
+                                "selection": true
+                            },
+                            "panzoom": true,
+                            "iradius": 0,
+                            "oradius": 30,
+                            "nannuli": 10,
+                            "r1": 30,
+                            "r2": 20,
+                            "ptshape": "box",
+                            "ptsize": 2,
+                            "linepoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": -30
+                                }
+                            ],
+                            "polypoints": [
+                                {
+                                    "x": -30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 30,
+                                    "y": 30
+                                },
+                                {
+                                    "x": 0,
+                                    "y": -30
+                                }
+                            ],
+                            "aradius1": 4,
+                            "aradius2": 8,
+                            "configURL": "./params/regionsconfig.html",
+                            "sortOverlapping": true,
+                            "tagcolors": {
+                                "include_source": "#00FF00",
+                                "exclude_source": "#FF0000",
+                                "include_background": "#FFD700",
+                                "exclude_background": "#FF8C00",
+                                "source": "#00FF00",
+                                "background": "#FFD700",
+                                "defcolor": "#00FF00"
+                            },
+                            "onchange": null,
+                            "id": 7,
+                            "exports": [
+                                "pts",
+                                "strokeWidth"
+                            ],
+                            "parent": null,
+                            "children": [],
+                            "shape": "polygon",
+                            "layerName": "regions",
+                            "sw1": 2.0121505036619665,
+                            "listonchange": false
+                        },
+                        "pub": {
+                            "mode": "update",
+                            "id": 7,
+                            "shape": "polygon",
+                            "layer": "regions",
+                            "color": "#FFD700",
+                            "tags": [
+                                "background",
+                                "include"
+                            ],
+                            "parent": null,
+                            "x": 331.5825,
+                            "y": 426.1374999999998,
+                            "imsys": "physical",
+                            "lcs": {
+                                "x": 3846.5825,
+                                "y": 3858.1375,
+                                "sys": "physical"
+                            },
+                            "angle": 0,
+                            "imstr": "polygon(3810.3, 3834.9, 3882.8, 3802.5, 3873.8, 3856.8, 3838.9, 3913.8)",
+                            "pts": [
+                                {
+                                    "x": 295.318,
+                                    "y": 402.94899999999984
+                                },
+                                {
+                                    "x": 367.847,
+                                    "y": 370.51899999999983
+                                },
+                                {
+                                    "x": 358.763,
+                                    "y": 424.8369999999998
+                                },
+                                {
+                                    "x": 323.928,
+                                    "y": 481.7559999999998
+                                }
+                            ],
+                            "wcsstr": "polygon(23:23:40.707, +58:47:56.172, 23:23:36.114, +58:47:40.255, 23:23:36.692, +58:48:06.970, 23:23:38.901, +58:48:34.952)",
+                            "ra": "23:23:38.413",
+                            "dec": "+58:48:07.60",
+                            "wcssys": "ICRS"
+                        },
+                        "points": [
+                            {
+                                "x": -36.2645,
+                                "y": 23.188499999999976
+                            },
+                            {
+                                "x": 36.2645,
+                                "y": 55.61849999999998
+                            },
+                            {
+                                "x": 27.180499999999995,
+                                "y": 1.3004999999999995
+                            },
+                            {
+                                "x": -7.6544999999999845,
+                                "y": -55.61849999999998
+                            }
+                        ]
+                    }
+                ],
+                "background": "",
+                "selectionLineWidth": 1,
+                "centeredScaling": false
+            },
+            "dopts": {
+                "panzoom": true,
+                "tags": "source,include",
+                "strokeWidth": 2,
+                "iradius": 0,
+                "oradius": 30,
+                "nannuli": 10,
+                "width": 60,
+                "height": 60,
+                "radius": 30,
+                "r1": 30,
+                "r2": 20,
+                "ptshape": "box",
+                "ptsize": 2,
+                "linepoints": [
+                    {
+                        "x": -30,
+                        "y": 30
+                    },
+                    {
+                        "x": 30,
+                        "y": -30
+                    }
+                ],
+                "polypoints": [
+                    {
+                        "x": -30,
+                        "y": 30
+                    },
+                    {
+                        "x": 30,
+                        "y": 30
+                    },
+                    {
+                        "x": 0,
+                        "y": -30
+                    }
+                ],
+                "fontFamily": "Helvetica",
+                "fontSize": 14,
+                "fontStyle": "normal",
+                "fontWeight": 300,
+                "textAlign": "left",
+                "angle": 0,
+                "aradius1": 4,
+                "aradius2": 8,
+                "configURL": "./params/regionsconfig.html",
+                "sortOverlapping": true,
+                "tagcolors": {
+                    "include_source": "#00FF00",
+                    "exclude_source": "#FF0000",
+                    "include_background": "#FFD700",
+                    "exclude_background": "#FF8C00",
+                    "source": "#00FF00",
+                    "background": "#FFD700",
+                    "defcolor": "#00FF00"
+                },
+                "onchange": null,
+                "canvas": {
+                    "selection": true
+                },
+                "evented": true
+            }
+        },
+        {
+            "name": "casa",
+            "json": {
+                "objects": [
+                    {
+                        "type": "circle",
+                        "originX": "center",
+                        "originY": "center",
+                        "left": 358.1,
+                        "top": 359.86,
+                        "width": 7,
+                        "height": 7,
+                        "fill": "transparent",
+                        "stroke": "yellow",
+                        "strokeWidth": 2,
+                        "strokeDashArray": null,
+                        "strokeLineCap": "butt",
+                        "strokeLineJoin": "miter",
+                        "strokeMiterLimit": 10,
+                        "scaleX": 1,
+                        "scaleY": 1,
+                        "angle": 0,
+                        "flipX": false,
+                        "flipY": false,
+                        "opacity": 1,
+                        "shadow": null,
+                        "visible": true,
+                        "clipTo": null,
+                        "backgroundColor": "",
+                        "fillRule": "nonzero",
+                        "globalCompositeOperation": "source-over",
+                        "transformMatrix": null,
+                        "skewX": 0,
+                        "skewY": 0,
+                        "cornerSize": 8,
+                        "cornerColor": "yellow",
+                        "borderColor": "#00EEFF",
+                        "transparentCorners": false,
+                        "selectionLineWidth": 2,
+                        "centeredScaling": true,
+                        "hasControls": false,
+                        "hasRotatingPoint": false,
+                        "hasBorders": false,
+                        "params": {
+                            "tags": [],
+                            "canvas": {
+                                "selection": false
+                            },
+                            "panzoom": true,
+                            "eradius": {
+                                "x": 5,
+                                "y": 3
+                            },
+                            "tagcolors": {
+                                "defcolor": "#00FF00"
+                            },
+                            "sortOverlapping": false,
+                            "tooltip": "$xreg.data.ra $xreg.data.dec",
+                            "color": "yellow",
+                            "wcssys": "ICRS",
+                            "dowcsstr": true,
+                            "id": "0",
+                            "data": {
+                                "ra": 350.822083,
+                                "dec": 58.792835,
+                                "_XAJ2000": 23.38813888888889,
+                                "_XEJ2000": 58.79283611111111,
+                                "2MASX": "23231729+5847342 ",
+                                "All": "All",
+                                "RAJ2000": 350.822083,
+                                "DEJ2000": 58.792835,
+                                "Kb/a": 0.32,
+                                "r_fe": 25.5,
+                                "J_ext": 14.112,
+                                "e_J_ext": 0.131,
+                                "H_ext": 13.171,
+                                "e_H_ext": 0.137,
+                                "K_ext": 12.888,
+                                "e_K_ext": 0.158,
+                                "xid": 0,
+                                "s": "string1"
+                            },
+                            "exports": [
+                                "color",
+                                "wcssys",
+                                "dowcsstr",
+                                "id",
+                                "data",
+                                "color"
+                            ],
+                            "parent": null,
+                            "children": [],
+                            "shape": "circle",
+                            "layerName": "casa",
+                            "sw1": 2,
+                            "listonchange": false
+                        },
+                        "pub": {
+                            "mode": "add",
+                            "id": "0",
+                            "shape": "circle",
+                            "layer": "casa",
+                            "color": "yellow",
+                            "tags": [],
+                            "parent": null,
+                            "x": 665.099,
+                            "y": 358.144,
+                            "imsys": "physical",
+                            "lcs": {
+                                "x": 4180.099,
+                                "y": 3790.1440000000002,
+                                "sys": "physical"
+                            },
+                            "angle": 0,
+                            "radius": 3.5,
+                            "imstr": "circle(4180.1, 3790.1, 3.5)",
+                            "wcsstr": "circle(23:23:17.300, +58:47:34.206, 1.721649\")",
+                            "ra": "23:23:17.300",
+                            "dec": "+58:47:34.21",
+                            "wcssys": "ICRS",
+                            "data": {
+                                "ra": 350.822083,
+                                "dec": 58.792835,
+                                "_XAJ2000": 23.38813888888889,
+                                "_XEJ2000": 58.79283611111111,
+                                "2MASX": "23231729+5847342 ",
+                                "All": "All",
+                                "RAJ2000": 350.822083,
+                                "DEJ2000": 58.792835,
+                                "Kb/a": 0.32,
+                                "r_fe": 25.5,
+                                "J_ext": 14.112,
+                                "e_J_ext": 0.131,
+                                "H_ext": 13.171,
+                                "e_H_ext": 0.137,
+                                "K_ext": 12.888,
+                                "e_K_ext": 0.158,
+                                "xid": 0,
+                                "s": "string1"
+                            }
+                        },
+                        "radius": 3.5,
+                        "startAngle": 0,
+                        "endAngle": 6.283185307179586
+                    },
+                    {
+                        "type": "circle",
+                        "originX": "center",
+                        "originY": "center",
+                        "left": 433.28,
+                        "top": 292.73,
+                        "width": 7,
+                        "height": 7,
+                        "fill": "transparent",
+                        "stroke": "yellow",
+                        "strokeWidth": 2,
+                        "strokeDashArray": null,
+                        "strokeLineCap": "butt",
+                        "strokeLineJoin": "miter",
+                        "strokeMiterLimit": 10,
+                        "scaleX": 1,
+                        "scaleY": 1,
+                        "angle": 0,
+                        "flipX": false,
+                        "flipY": false,
+                        "opacity": 1,
+                        "shadow": null,
+                        "visible": true,
+                        "clipTo": null,
+                        "backgroundColor": "",
+                        "fillRule": "nonzero",
+                        "globalCompositeOperation": "source-over",
+                        "transformMatrix": null,
+                        "skewX": 0,
+                        "skewY": 0,
+                        "cornerSize": 8,
+                        "cornerColor": "yellow",
+                        "borderColor": "#00EEFF",
+                        "transparentCorners": false,
+                        "selectionLineWidth": 2,
+                        "centeredScaling": true,
+                        "hasControls": false,
+                        "hasRotatingPoint": false,
+                        "hasBorders": false,
+                        "params": {
+                            "tags": [],
+                            "canvas": {
+                                "selection": false
+                            },
+                            "panzoom": true,
+                            "eradius": {
+                                "x": 5,
+                                "y": 3
+                            },
+                            "tagcolors": {
+                                "defcolor": "#00FF00"
+                            },
+                            "sortOverlapping": false,
+                            "tooltip": "$xreg.data.ra $xreg.data.dec",
+                            "color": "yellow",
+                            "wcssys": "ICRS",
+                            "dowcsstr": true,
+                            "id": "1",
+                            "data": {
+                                "ra": 350.802246,
+                                "dec": 58.802002,
+                                "_XAJ2000": 23.38681638888889,
+                                "_XEJ2000": 58.80200277777777,
+                                "2MASX": "23231253+5848072 ",
+                                "All": "All",
+                                "RAJ2000": 350.802246,
+                                "DEJ2000": 58.802002,
+                                "Kb/a": 0.82,
+                                "r_fe": 17.6,
+                                "J_ext": 14.729,
+                                "e_J_ext": 0.127,
+                                "H_ext": 13.905,
+                                "e_H_ext": 0.149,
+                                "K_ext": 13.325,
+                                "e_K_ext": 0.129,
+                                "xid": 0,
+                                "s": "string2"
+                            },
+                            "exports": [
+                                "color",
+                                "wcssys",
+                                "dowcsstr",
+                                "id",
+                                "data",
+                                "color"
+                            ],
+                            "parent": null,
+                            "children": [],
+                            "shape": "circle",
+                            "layerName": "casa",
+                            "sw1": 2,
+                            "listonchange": false
+                        },
+                        "pub": {
+                            "mode": "add",
+                            "id": "1",
+                            "shape": "circle",
+                            "layer": "casa",
+                            "color": "yellow",
+                            "tags": [],
+                            "parent": null,
+                            "x": 740.279,
+                            "y": 425.269,
+                            "imsys": "physical",
+                            "lcs": {
+                                "x": 4255.279,
+                                "y": 3857.2690000000002,
+                                "sys": "physical"
+                            },
+                            "angle": 0,
+                            "radius": 3.5,
+                            "imstr": "circle(4255.3, 3857.3, 3.5)",
+                            "wcsstr": "circle(23:23:12.539, +58:48:07.207, 1.721649\")",
+                            "ra": "23:23:12.539",
+                            "dec": "+58:48:07.21",
+                            "wcssys": "ICRS",
+                            "data": {
+                                "ra": 350.802246,
+                                "dec": 58.802002,
+                                "_XAJ2000": 23.38681638888889,
+                                "_XEJ2000": 58.80200277777777,
+                                "2MASX": "23231253+5848072 ",
+                                "All": "All",
+                                "RAJ2000": 350.802246,
+                                "DEJ2000": 58.802002,
+                                "Kb/a": 0.82,
+                                "r_fe": 17.6,
+                                "J_ext": 14.729,
+                                "e_J_ext": 0.127,
+                                "H_ext": 13.905,
+                                "e_H_ext": 0.149,
+                                "K_ext": 13.325,
+                                "e_K_ext": 0.129,
+                                "xid": 0,
+                                "s": "string2"
+                            }
+                        },
+                        "radius": 3.5,
+                        "startAngle": 0,
+                        "endAngle": 6.283185307179586
+                    }
+                ],
+                "background": "",
+                "selectionLineWidth": 1,
+                "centeredScaling": false
+            },
+            "dopts": {
+                "hasControls": false,
+                "hasRotatingPoint": false,
+                "hasBorders": false,
+                "lockMovementX": true,
+                "lockMovementY": true,
+                "lockRotation": true,
+                "lockScalingX": true,
+                "lockScalingY": true,
+                "lockUniScaling": true,
+                "selectable": false,
+                "canvas": {
+                    "selection": false
+                },
+                "panzoom": true,
+                "shape": "circle",
+                "strokeWidth": 2,
+                "width": 10,
+                "height": 10,
+                "radius": 5,
+                "eradius": {
+                    "x": 5,
+                    "y": 3
+                },
+                "angle": 0,
+                "tagcolors": {
+                    "defcolor": "#00FF00"
+                },
+                "sortOverlapping": false,
+                "tooltip": "$xreg.data.ra $xreg.data.dec",
+                "evented": true
+            },
+            "catalog": "#\n#   VizieR Astronomical Server vizier.u-strasbg.fr\n#    Date: 2016-10-18T00:32:08 [V1.99+ (14-Oct-2013)]\n#   In case of problem, please report to:\tcds-question@unistra.fr\n#\n#\n#Coosys\tJ2000:\teq_FK5 J2000\n#INFO\tvotable-version=1.99+ (14-Oct-2013)\t\n#INFO\t-ref=VOTx33042\t\n#INFO\tMaxTuples=50000\t\n#INFO\tqueryParameters=5\t\n#-oc.form=s\n#-source=2MASX\n#-out.add=_RAJ,_DEJ\n#-c=23:23:26.992 58:48:49.89\n#-c.bm=8.3x8.3\n#\n#INFO\t-c=350.862467+58.813858,bm=8.300000/8.3\t\n#\n\n#RESOURCE=yCat_7233\n#Name: VII/233\n#Title: The 2MASS Extended sources (IPAC/UMass, 2003-2006)\n#Table\tVII_233_xsc:\n#Name: VII/233/xsc\n#Title: *The 2MASS Extended Catalog (2MASX)\n#Column\t_RAJ2000\t(A12)\t\t[ucd=pos.eq.ra]\n#Column\t_DEJ2000\t(A12)\t\t[ucd=pos.eq.dec]\n#Column\t2MASX\t(a17)\t\t[ucd=meta.id;meta.main]\n#Column\tAll\t(A3)\t\t[ucd=meta.ref.url]\n#Column\tRAJ2000\t(F10.6)\t\t[ucd=pos.eq.ra;meta.main]\n#Column\tDEJ2000\t(F10.6)\t\t[ucd=pos.eq.dec;meta.main]\n#Column\tKb/a\t(F6.3)\t\t[ucd=phys.size.axisRatio]\n#Column\tr.fe\t(F6.1)\t\t[ucd=phys.angSize;src]\n#Column\tJ.ext\t(F6.3)\t\t[ucd=phot.mag;em.IR.J]\n#Column\te_J.ext\t(F6.3)\t\t[ucd=stat.error]\n#Column\tH.ext\t(F6.3)\t\t[ucd=phot.mag;em.IR.H]\n#Column\te_H.ext\t(F6.3)\t\t[ucd=stat.error]\n#Column\tK.ext\t(F6.3)\t\t[ucd=phot.mag;em.IR.K]\n#Column\te_K.ext\t(F6.3)\t\t[ucd=stat.error]\n#Column\txid\t(I1)\t\t[ucd=meta.code]\n_XAJ2000\t_XEJ2000\t2MASX\tAll\tRAJ2000\tDEJ2000\tKb/a\tr.fe\tJ.ext\te_J.ext\tH.ext\te_H.ext\tK.ext\te_K.ext\txid\ts\n------------\t------------\t-----------------\t---\t----------\t----------\t------\t------\t------\t------\t------\t------\t------\t------\t-\t----------\n23 23 17.300\t+58 47 34.21\t23231729+5847342 \tAll\t3.50822083e2\t+58.792835\t 0.320\t  25.5\t14.112\t 0.131\t13.171\t 0.137\t12.888\t 0.158\t0\tstring1\n23 23 12.539\t+58 48 07.21\t23231253+5848072 \tAll\t3.50802246e2\t+58.802002\t 0.820\t  17.6\t14.729\t 0.127\t13.905\t 0.149\t13.325\t 0.129\t0\tstring2\n\n\n",
+            "starbase": "{\"head\":{},\"convFuncs\":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],\"data\":[[23.38813888888889,58.79283611111111,\"23231729+5847342 \",\"All\",350.822083,58.792835,0.32,25.5,14.112,0.131,13.171,0.137,12.888,0.158,0,\"string1\"],[23.38681638888889,58.80200277777777,\"23231253+5848072 \",\"All\",350.802246,58.802002,0.82,17.6,14.729,0.127,13.905,0.149,13.325,0.129,0,\"string2\"]],\"delims\":[\" \",\" \",\"\\u0000\",\"\\u0000\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\"\\u0000\",\"\\u0000\"],\"headline\":[\"_XAJ2000\",\"_XEJ2000\",\"2MASX\",\"All\",\"RAJ2000\",\"DEJ2000\",\"Kb/a\",\"r_fe\",\"J_ext\",\"e_J_ext\",\"H_ext\",\"e_H_ext\",\"K_ext\",\"e_K_ext\",\"xid\",\"s\"],\"dashline\":[\"------------\",\"------------\",\"-----------------\",\"---\",\"----------\",\"----------\",\"------\",\"------\",\"------\",\"------\",\"------\",\"------\",\"------\",\"------\",\"-\",\"----------\"],\"_XAJ2000\":0,\"_XEJ2000\":1,\"2MASX\":2,\"All\":3,\"RAJ2000\":4,\"DEJ2000\":5,\"Kb/a\":6,\"r_fe\":7,\"J_ext\":8,\"e_J_ext\":9,\"H_ext\":10,\"e_H_ext\":11,\"K_ext\":12,\"e_K_ext\":13,\"xid\":14,\"s\":15}"
+        }
+    ],
+    "dwidth": 400,
+    "dheight": 400
+}
