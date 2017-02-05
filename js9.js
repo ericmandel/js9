@@ -7939,6 +7939,10 @@ JS9.Fabric._exportShapeOptions = function(opts){
 JS9.Fabric._handleChildText = function(layerName, s, opts){
     var t, dpos, npos, topts;
     var textHeight = 12;
+    // region layer only, for now
+    if( layerName !== "regions" ){
+	return;
+    }
     if( (s.params.shape !== "text") && opts.text ){
 	dpos = JS9.rotatePoint({x: s.left, y: s.top - (s.height/2) -textHeight},
 			       s.angle, {x: s.left, y: s.top});
@@ -9190,7 +9194,9 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 	    break;
 	}
 	child.setCoords();
-	dlayer.display.image.updateShapes(dlayer.layerName, child, "child");
+	if( dlayer.display.image ){
+	    dlayer.display.image.updateShapes(dlayer.layerName, child, "child");
+	}
     }
 };
 
