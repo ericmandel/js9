@@ -7233,7 +7233,7 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 	    canvas.loadFromJSON(layer.json, function(){
 		var key, tdlayer, obj;
 		// update objects for parents and children
-		JS9.Fabric.updateChildren(dlayer, null, "objects");
+		JS9.Fabric.updateChildren(layer.dlayer, null, "objects");
 		// translate these shapes if we resized while hidden
 		if( that.resize ){
 		    canvas.getObjects().forEach(function(o) {
