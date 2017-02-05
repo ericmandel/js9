@@ -236,10 +236,33 @@
     var click='ontouchstart' in document.documentElement?'touchstart': 'click';
     function init(){
         JS9.DEBUG = 2;
-        JS9.AddColormap("cyan",
-                        [[0,0],[0,0]], [[0,0], [1,1]], [[0,0],[1,1]]);
-        JS9.Preload("png/casa.png", {colormap: "cool"});
-        JS9.Preload("fits/snr.fits[events][pi==pha]", {colormap: "heat", fits2png: false, onload: function(im){JS9.SetZoom(2,{display: "myJS9"});}}, {display: "myJS9"});
+        JS9.AddColormap("cyan", [[0,0],[0,0]], [[0,0], [1,1]], [[0,0],[1,1]]);
+        JS9.Preload("fits/ngc1316.fits", {colormap: "viridis", scale: "linear"},
+                    "png/casa.png", 
+                    {colormap: "cool", contrast: 4.8, bias: 0.1175,
+                      onload: function(im){
+                        JS9.LoadRegions("casa/casa.reg");
+                        $.ajax({
+                          url: "casa/casa.cat",
+                          cache: false,
+                          dataType: "text",
+                          success: function(s){
+                            JS9.LoadCatalog(null, s);
+                          },
+                          error:  function(jqXHR, textStatus, errorThrown){
+                            JS9.error("loading catalog: "+file, errorThrown);
+                          }
+                        });
+                    }});
+        JS9.Preload("fits/snr.fits[events][pi==pha]",
+                    {colormap: "heat", fits2png: false, 
+                     contrast: 5.625, bias: 0.1,
+	             onload: function(im){
+		       JS9.SetZoom(2,{display: "myJS9"}); 
+		       JS9.LoadSession("casa/casa.png.ses",
+                                       {display:"myJS9"});}
+                    }, 
+                    {display: "myJS9"});
         $("#display").on("change", function(evt){
           try{doit("display", this.value);}
           finally{$("#display").prop('selectedIndex', 0);
