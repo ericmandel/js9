@@ -382,7 +382,7 @@ called "gaussBlur" is created, in which the image pixel values are
 blurred using a Gaussian function with the specified sigma. The
 routine uses the fast Gaussian blur algorithm (approximating a full
 Gaussian blur with three passes of a box blur) described <a href="
-http://blog.ivank.net/fastest-gaussian-blur.html"> here</a>.
+http://blog.ivank.net/fastest-gaussian-blur.html" target="_blank"> here</a>.
 
 <p>
 Finally the <b>set data path ...</b> option allows you to specify a
@@ -449,6 +449,7 @@ The configuration menu has the following standard options:
 are used in X-ray astronomy but you can enter any string to tag this region and then select programmatically using tags
 <li><b>WCS Region:</b> the WCS representation of this region, where applicable (read-only)
 <li><b>Image Region:</b> the image representation of this region, where applicable (read-only)
+<li><b>Misc Properties:</b>use JSON format to specify shape properties not listed above (e.g. {"transparentCorners": true}, see <a href="http://fabricjs.com/docs/fabric.Object.html" target="_blank">Fabric.js</a> for more info on shape properties.)
 <li><b>Options:</b>
 <ul>
 <li><b>Changeable:</b> enable/disable move and resize capability
@@ -553,7 +554,7 @@ See <a href="knownissues.html">Known Issues</a>
 for a discussion of limitations imposed on resize by Webkit
 browsers such as Chrome and Safari.
 
-<h5>Last updated: February 2, 2017</h5>
+<h5>Last updated: February 4, 2017</h5>
 </div>
 
 </body>
