@@ -6110,6 +6110,8 @@ JS9.Display.prototype.loadSession = function(file){
     var addLayers = function(im){
 	var i, dlayer, layer, lname;
 	var dorender = function(){
+	    // update objects for parents and children
+	    JS9.Fabric.updateChildren(this, null, "objects");
 	    // change shape positions if the displays sizes differ
 	    im.refreshLayers();
 	};
@@ -6123,7 +6125,7 @@ JS9.Display.prototype.loadSession = function(file){
 		// add a layer instance to this image (no objects yet)
 		im.addShapes(lname, []);
 		// load the session objects into the layer and render
-		dlayer.canvas.loadFromJSON(layer.json, dorender);
+		dlayer.canvas.loadFromJSON(layer.json, dorender.bind(dlayer));
 		// restore catalog and starbase, if necessary
 		if( layer.catalog ){
 		    im.layers[lname].catalog = layer.catalog;
@@ -6813,6 +6815,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     display.layers[layerName] = {};
     // convenience variable(s)
     dlayer = display.layers[layerName];
+    // backlink to name
+    dlayer.layerName = layerName;
     // usual place to save parameters
     dlayer.params = [];
     // no last selected yet
@@ -7228,6 +7232,8 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 	if( layer.json && layer.show ){
 	    canvas.loadFromJSON(layer.json, function(){
 		var key, tdlayer, obj;
+		// update objects for parents and children
+		JS9.Fabric.updateChildren(dlayer, null, "objects");
 		// translate these shapes if we resized while hidden
 		if( that.resize ){
 		    canvas.getObjects().forEach(function(o) {
@@ -7946,7 +7952,8 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 	// create the child shape
 	t = JS9.Fabric.addShapes.call(this, layerName, "text", topts);
 	// parent object keeps track of relationship between parent and child
-	t.params.parent = {obj: s,
+	t.params.parent = {id: s.params.id,
+			   obj: s,
 			   dleft: s.left - t.left,
 			   dtop: s.top - t.top,
 			   lastscalex: s.scaleX,
@@ -7963,7 +7970,7 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 	    t.params.parent.moved = true;
 	}
 	// parent has another child
-	s.params.children.push(t);
+	s.params.children.push({id: t.params.id, obj: t});
     }
 };
 
@@ -8554,7 +8561,7 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 	    if( obj.params.parent ){
 		parent = obj.params.parent.obj;
 		for(i=parent.params.children.length-1; i>=0; i--){
-		    if( obj === parent.params.children[i] ){
+		    if( obj === parent.params.children[i].obj ){
 			parent.params.children.splice(i,1);
 			break;
 		    }
@@ -8562,7 +8569,7 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 	    }
 	    // remove children
 	    for(i=0; i<obj.params.children.length; i++){
-		child = obj.params.children[i];
+		child = obj.params.children[i].obj;
 		canvas.remove(child);
 	    }
 	    // remove the shape
@@ -9111,9 +9118,33 @@ JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
 // update child regions
 // don't need to call using image context
 JS9.Fabric.updateChildren = function(dlayer, shape, type){
-    var i, p, child, nangle, npos;
+    var i, p, x, child, nangle, npos;
     // region layer only, for now
-    if( !shape.params || (shape.params.layerName !== "regions") ){
+    if( dlayer.layerName !== "regions" ){
+	return;
+    }
+    // re-init objects within for parents and children
+    if( type === "objects" ){
+	x = {};
+	// first get a list of parents and children
+	dlayer.canvas.getObjects().forEach(function(o) {
+	    if( o.params ){
+		if( o.params.parent || o.params.children.length ){
+		    x[o.params.id] = o;
+		}
+	    }
+	});
+	// then re-assign obj pointers to parents and children
+	dlayer.canvas.getObjects().forEach(function(o) {
+	    if( o.params ){
+		if( o.params.parent ){
+		    o.params.parent.obj = x[o.params.parent.id];
+		}
+		for(i=0; i<o.params.children.length; i++){
+		    o.params.children[i].obj = x[o.params.children[i].id];
+		}
+	    }
+	});
 	return;
     }
     // handle update to parent deltas when a child shape changes
@@ -9128,7 +9159,7 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
     }
     // update children after a parent region is modified
     for(i=0; i<shape.params.children.length; i++){
-	child = shape.params.children[i];
+	child = shape.params.children[i].obj;
 	p = child.params.parent;
 	switch(type){
 	case "moving":
@@ -9159,7 +9190,7 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 	    break;
 	}
 	child.setCoords();
-	dlayer.display.image.updateShapes(child.params.layerName,child,"child");
+	dlayer.display.image.updateShapes(dlayer.layerName, child, "child");
     }
 };
 
@@ -10069,7 +10100,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    break;
 	case "childtext":
 	    if( obj.params.children.length > 0 ){
-		val = obj.params.children[0].text;
+		val = obj.params.children[0].obj.text;
 	    }
 	    break;
 	default:
@@ -10304,8 +10335,8 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	}
 	// handle text child properties specially
 	// for now, just output the first one
-	if( (children.length > 0) && (children[0].text) ){
-	    child = children[0];
+	if( (children.length > 0) && (children[0].obj.text) ){
+	    child = children[0].obj;
 	    // create a text child
 	    nexports.text = child.text;
 	    // get options for text child but ...
