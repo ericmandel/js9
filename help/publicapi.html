@@ -2374,7 +2374,7 @@ change the shape itself (e.g. from "box" to "circle").
 where:
 <ul>
 <li><b>layer</b>: name of shape layer into which to load the catalog
-<li><b>table</b>: string or blob containing the catalog table
+<li><b>table</b>: string or blob containing the catalog table, or file name
 <li><b>opts</b>: catalog options
 </ul>
 Astronomical catalogs are a special type of JS9 shape layer, in which
@@ -2436,8 +2436,12 @@ be removed.
 <p>
 The second argument is either a blob or a string containing the table
 data described above. Blobs are the result of loading a local file
-into the browser (e.g., the <b>load catalog</b> menu option), while strings
-result from a remote XHR call (e.g., the <b>Archives and Catalogs</b> plugin).
+into the browser (e.g., the <b>load catalog</b> menu option), while
+strings result from a remote XHR call (e.g., the <b>Archives and
+Catalogs</b> plugin).  Alternatively, the second string argument can
+be a file name or URL to load. File names are distinguished from
+strings containing a table in that the latter must contain at least one
+tab.
 
 <p>
 The third argument is an optional object used to specify parameters, including:

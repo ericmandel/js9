@@ -15272,7 +15272,23 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
 	};
 	reader.readAsText(file);
     } else if( typeof file === "string" ){
-	im.loadCatalog(layer, file, opts);
+	if( file.match(/\t/) ){
+	    // it's a table (contains a tab)
+	    im.loadCatalog(layer, file, opts);
+	} else {
+	    // its a file: retrieve and load the catalog
+            $.ajax({
+                url: file,
+                cache: false,
+                dataType: "text",
+                success: function(s){
+		    im.loadCatalog(layer, s, opts);
+                },
+                error:  function(jqXHR, textStatus, errorThrown){
+                    JS9.error("loading catalog: "+file, errorThrown);
+                }
+            });
+	}
     } else {
 	// oops!
 	JS9.error("unknown file type for LoadCatalog: " + typeof file);
