@@ -1,4 +1,6 @@
+# Region file format: JS9 version 1.0
 ICRS
-ellipse(23:23:22.179, +58:48:10.542, 40", 20", 60) {"text": "json ellipse test", "textOpts": {"color": "yellow", "fontSize": 16, "fontStyle": "italic", "fontWeight": "bold"}, "color": "violet"} # source,include
-box(23:23:35.486, +58:50:03.146, 40", 20", 30) # width=4 text={ds9 box test} dash=1 dashlist=8 3 color=red fixed=1 rotate=0 tag="ds9 test tag"
-circle(23:23:29.526, +58:49:09.56, 14.756997") {"strokeWidth": 1, "strokeDashArray": [3,1], "transparentCorners": true} # text="hybrid circle test" tag="ds9 test tag" tag="json test tag"
+ellipse(23:23:18.761, +58:47:27.252, 31.825454", 15.912722", 26.281041) {"color":"violet","text":"json ellipse test","textOpts":{"color":"yellow","fontSize":16,"fontStyle":"italic","fontWeight":"bold","angle":-693.7189594608408,"px":4138.462002600959,"py":3816.018739856647}} # source,include
+box(23:23:35.486, +58:50:03.146, 39.999987", 19.999995", 20.000000) {"strokeWidth":4,"strokeDashArray":[8,3],"color":"red","zoomable":false,"rotatable":false,"text":"ds9 box test","textOpts":{"color":"cyan","fontSize":12,"px":3879.8333339093315,"py":4121.997022956424}} # ds9 test tag
+circle(23:23:28.004, +58:48:41.527, 14.756990") {"strokeWidth":1,"strokeDashArray":[3,1],"transparentCorners":true,"text":"hybrid circle test"} # ds9 test tag,json test tag
+polygon(23:23:40.707, +58:47:56.172, 23:23:36.114, +58:47:40.255, 23:23:36.692, +58:48:06.970, 23:23:38.901, +58:48:34.952) {"pts":[{"x":295.3156078600895,"y":402.94899519569753},{"x":367.8520157497401,"y":370.5194355758689},{"x":358.7642613173903,"y":424.83710536384115},{"x":323.9256008286707,"y":481.75675882622056}],"strokeWidth":2.0121505036619665} # background,include
