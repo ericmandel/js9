@@ -239,25 +239,14 @@
         JS9.AddColormap("cyan", [[0,0],[0,0]], [[0,0], [1,1]], [[0,0],[1,1]]);
         JS9.Preload("png/casa.png",
                     {colormap: "cool", contrast: 4.8, bias: 0.1175,
-                      onload: function(im){
-                        $.ajax({
-                          url: "casa/casa.cat",
-                          cache: false,
-                          dataType: "text",
-                          success: function(s){
-                            JS9.LoadCatalog(null, s);
-                            JS9.LoadRegions("casa/casa.reg");
-                            JS9.Load("fits/ngc1316.fits",
-                                     {colormap: "viridis", scale: "linear",
-                                      onload: function(){
-                                        JS9.Load("png/casa.png")
-                                      }
-                                     });
-                          },
-                          error:  function(jqXHR, textStatus, errorThrown){
-                            JS9.error("loading catalog: "+file, errorThrown);
-                          }
-                        });
+                     onload: function(im){
+                       JS9.LoadRegions("casa/casa.reg");
+                       JS9.Load("fits/ngc1316.fits",
+                                {colormap: "viridis", scale: "linear",
+                                 onload: function(){
+                                   JS9.Load("png/casa.png")
+                                 }});
+
                     }});
         JS9.Preload("fits/snr.fits[events][pi==pha]",
                     {colormap: "heat", fits2png: false, 
