@@ -182,12 +182,14 @@ if [ x$DOAPP = xtrue ]; then
   fi
   MSGSCRIPT="js9Electron.js"
 else
-  if [ x"$NODE_EXE" != x ]; then
-    JS9_XEQ="$NODE_EXE"
-  elif [ x"$ELECTRON_EXE" != x ]; then
-    JS9_XEQ="$ELECTRON_EXE"
-  else
-    error "js9 scripting requires either Node.js or Electron.js"
+  if [ x"$JS9_XEQ" = x ]; then
+    if [ x"$NODE_EXE" != x ]; then
+      JS9_XEQ="$NODE_EXE"
+    elif [ x"$ELECTRON_EXE" != x ]; then
+      JS9_XEQ="$ELECTRON_EXE"
+    else
+      error "js9 scripting requires either Node.js or Electron.js"
+    fi
   fi
   if [ x$DOREG = xtrue ]; then
     MSGSCRIPT="js9Regions.js"
