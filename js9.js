@@ -2026,7 +2026,7 @@ JS9.Image.prototype.mkScaledCells = function(){
 JS9.Image.prototype.mkRGBImage = function(){
     var rgb, sect, img;
     var xrgb, yrgb, wrgb, hrgb, rgbimg, ctx;
-    var xIn, yIn, xOut, yOut, xOutIdx, yOutIdx;
+    var inc, zinc, xIn, yIn, xOut, yOut, xOutIdx, yOutIdx;
     var yZoom, xZoom, idx, odx, yLen, zx, zy, zyLen;
     var alpha, alpha1, alpha2;
     var ridx, gidx, bidx;
@@ -2159,10 +2159,12 @@ JS9.Image.prototype.mkRGBImage = function(){
     // index into scaled data using previously calc'ed data value to get RGB
     // reverse y lines
     odx = 0;
-    for(yIn=sect.y1-1, yOut=0; yIn>=sect.y0; yIn--, yOut++){
+    inc = Math.max(1, Math.floor(1/sect.zoom));
+    zinc = sect.zoom * inc;
+    for(yIn=sect.y1-1, yOut=0; yIn>=sect.y0; yIn -= inc, yOut++){
 	yLen = yIn * this.raw.width;
-	yOutIdx = yOut * sect.zoom;
-	for(xIn=sect.x0, xOut=0; xIn<sect.x1; xIn++, xOut++){
+	yOutIdx = yOut * zinc;
+	for(xIn=sect.x0, xOut=0; xIn<sect.x1; xIn += inc, xOut++){
 	    if( dorgb ){
 		ridx = rthis ? rthis.colorData[yLen + xIn] : 0;
 		gidx = gthis ? gthis.colorData[yLen + xIn] : 0;
@@ -2181,7 +2183,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 	    if( this.maskData ){
 		alpha = this.maskData[yLen +xIn] > 0 ? alpha1 : alpha2;
 	    }
-	    xOutIdx = xOut * sect.zoom;
+	    xOutIdx = xOut * zinc;
 	    for(yZoom=0; yZoom<sect.zoom; yZoom++) {
 		zy = Math.floor(yOutIdx + yZoom);
 		zyLen = zy * sect.width;
