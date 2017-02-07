@@ -7248,6 +7248,7 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 		// refresh and redisplay this layer
 		if( that.layers[layerName].opts.panzoom ){
 		    that.binning.obin = that.binning.bin;
+		    that.rgb.sect.ozoom = that.rgb.sect.zoom;
 		    that.refreshShapes(layerName);
 		} else {
 		    canvas.renderAll();
@@ -8866,11 +8867,6 @@ JS9.Fabric.refreshShapes = function(layerName){
 	JS9.Fabric.updateChildren(layer.dlayer, obj, "scaling");
 	JS9.Fabric.updateChildren(layer.dlayer, obj, "rotating");
     });
-    // only use the old bin and zoom once (until they change again)
-    if( ismain ){
-	this.binning.obin = this.binning.bin;
-	this.rgb.sect.ozoom = this.rgb.sect.zoom;
-    }
     // redraw regions
     if( canvas ){
 	canvas.renderAll();
