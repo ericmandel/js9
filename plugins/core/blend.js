@@ -13,7 +13,7 @@ JS9.Blend.WIDTH =  550;	  // width of light window
 JS9.Blend.HEIGHT = 270;	  // height of light window
 JS9.Blend.BASE = JS9.Blend.CLASS + JS9.Blend.NAME;  // CSS base class name
 
-JS9.Blend.blendModeHTML='When <b>Image Blending</b> is turned on, the images you select below will be combined using your chosen blend mode and optional opacity. See <a href="https://www.w3.org/TR/compositing-1/" target="blank">W3C Compositing and Blending</a> for info about compositing and blending.<p> <input type="checkbox" id="active" name="imageBlending" value="active" onclick="javascript:JS9.Blend.xblendmode(\'%s\', this)" checked><b>Image Blending</b>';
+JS9.Blend.blendModeHTML='When <b>Image Blending</b> is turned on, the images you select below will be combined using your chosen blend mode and optional opacity. See <a href="https://www.w3.org/TR/compositing-1/" target="blank">W3C Compositing and Blending</a> for info about compositing and blending.<p> <input type="checkbox" class="blendModeCheck" id="active" name="imageBlending" value="active" onclick="javascript:JS9.Blend.xblendmode(\'%s\', this)"><b>Image Blending</b>';
 
 JS9.Blend.imageHTML="<span style='float: left'>$active &nbsp;&nbsp; $blend &nbsp;&nbsp; $opacity</span>&nbsp;&nbsp; <span id='blendFile'>$imfile</span>";
 
@@ -147,11 +147,15 @@ JS9.Blend.addImage = function(im){
     if( bl ){
 	divjq.find(".blendActiveCheck").prop("checked", !!bl.active);
 	if( bl.mode !== undefined ){
-	    divjq.find(".blendModeSelect").val(bl.mode);
+	    divjq.find(".blendModeSelect").val(bl.mode).change();
 	}
 	if( bl.opacity !== undefined ){
-	    s = bl.opacity.toFixed(2);
-	    divjq.find(".blendOpacitySelect").val(s);
+	    if( typeof bl.opacity === "number" ){
+		s = bl.opacity.toFixed(2);
+	    } else {
+		s = bl.opacity;
+	    }
+	    divjq.find(".blendOpacitySelect").val(s).change();
 	}
     }
     // one more div in the stack
@@ -210,8 +214,6 @@ JS9.Blend.init = function(){
 	.attr("id", this.id + "BlendImageContainer")
         .html(JS9.Blend.nofileHTML)
 	.appendTo(this.blendContainer);
-    // start with blend mode turned on
-    this.display.blendMode = true;
     // add currently loaded images
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
@@ -219,6 +221,9 @@ JS9.Blend.init = function(){
 	    JS9.Blend.addImage.call(this, im);
 	}
     }
+    // set global blend mode
+    this.divjq.find(".blendModeCheck")
+	.prop("checked", !!this.display.blendMode);
     // the images within the image container will be sortable
     this.blendImageContainer.sortable({
 	start: function(event, ui) {

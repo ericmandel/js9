@@ -2248,6 +2248,9 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 	}
 	// set opacity, if necessary
 	if( JS9.notNull(opacity) ){
+	    if( typeof opacity === "string" ){
+		opacity = parseFloat(opacity);
+	    }
 	    this.blend.opacity = opacity;
 	}
 	// set active state, if necessary
