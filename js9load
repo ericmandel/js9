@@ -1,5 +1,5 @@
 #!/bin/sh
-# set -x
+#set -x
 
 error() {
   echo "ERROR: $1" 1>&2
@@ -39,12 +39,13 @@ if [ $# -lt 1 ]; then
   exit 1
 else
   PATHNAME="$1"
+  shift
 fi
 ROOT=`basename $PATHNAME .fits`
 
 # start the image load
-GOT=`js9 $XARGS load $PATHNAME`
-if [ x"$GOT" != xOK ]; then
+GOT=`js9 $XARGS Load $PATHNAME $1 `
+if [ x"$GOT" != x ]; then
   error "$GOT"
 fi
 
