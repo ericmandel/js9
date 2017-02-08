@@ -14050,6 +14050,11 @@ JS9.mkPublic("SetRGBMode", function(mode, imobj){
 	    im.setColormap(colors[i]);
 	}
     }
+    if( mode === "true" ){
+	mode = true;
+    } else if( mode === "false" ){
+	mode = false;
+    }
     JS9.globalOpts.rgb.active = !!mode;
     JS9.DisplayImage({display: obj.display});
     return JS9.globalOpts.rgb.active;
@@ -14838,6 +14843,7 @@ JS9.mkPublic("BlendDisplay", function(mode){
     var obj = JS9.parsePublicArgs(arguments);
     var id = obj.display || JS9.DEFID;
     var disp = JS9.lookupDisplay(id);
+    mode = obj.argv[0];
     if( !disp ){
 	JS9.error("no JS9 display found: " + id);
     }
@@ -14852,6 +14858,11 @@ JS9.mkPublic("BlendDisplay", function(mode){
 	    }
 	}
 	return imarr;
+    }
+    if( mode === "true" ){
+	mode = true;
+    } else if( mode === "false" ){
+	mode = false;
     }
     // it's true or false
     disp.blendMode = !!mode;
@@ -15303,4 +15314,5 @@ return JS9;
 $(document).ready(function(){
 "use strict";
 JS9.init();
+
 });
