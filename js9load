@@ -14,6 +14,9 @@ SLEEP=1
 
 while [ x"$1" != x ]; do
     case $1 in
+    -h) shift
+	XARGS="$XARGS -h $1"
+        shift;;
    -id) shift
         XARGS="$XARGS -id $1"
 	shift;;
