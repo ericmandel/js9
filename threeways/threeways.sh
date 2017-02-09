@@ -22,7 +22,6 @@ sleep $timeout
 
 echo 'load ./blend/galex.fits'
 ../js9load './blend/galex.fits' '{"scale":"log","colormap":"green","contrast":6.25,"bias":0.25}'
-js9 $XARGS BlendImage 'screen'  1 true > /dev/null
 sleep $timeout
 
 echo 'reproject using chandra wcs'
@@ -33,7 +32,6 @@ sleep $timeout
 
 echo 'load ./blend/spitzer.fits'
 ../js9load './blend/spitzer.fits' '{"scale":"log","colormap":"blue","contrast":6.3,"bias":0.54}'
-js9 $XARGS BlendImage 'screen'  1 true > /dev/null
 sleep $timeout
 
 echo 'reproject using chandra wcs'

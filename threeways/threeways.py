@@ -28,7 +28,6 @@ time.sleep(timeout)
 print 'load ./blend/galex.fits'
 j.Load('./blend/galex.fits', '{"scale":"log","colormap":"green","contrast":6.25,"bias":0.25}')
 waitLoad()
-j.BlendImage('screen', 1, True)
 time.sleep(timeout)
 
 print 'reproject using chandra wcs'
@@ -40,7 +39,6 @@ time.sleep(timeout)
 print 'load ./blend/spitzer.fits'
 j.Load('./blend/spitzer.fits', '{"scale":"log","colormap":"blue","contrast":6.3,"bias":0.54}')
 waitLoad()
-j.BlendImage('screen', 1, True)
 time.sleep(timeout)
 
 print 'reproject using chandra wcs'
