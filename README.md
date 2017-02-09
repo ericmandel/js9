@@ -16,8 +16,8 @@ What does it do?
   - control JS9 using scripts from the Linux shell or Python
   - runs on Macs, Linux, Windows, iPads, iPhones, ...
 
-Where can I try it out?
------------------------
+How can I try it out?
+---------------------
 
 Go to [JS9 web site](http://js9.si.edu) and drag a FITS file onto the
 JS9 display:
@@ -48,7 +48,7 @@ What about scripting?
 ---------------------
 
 The *js9* script allows you to control a JS9 web page from the Linux
-command line using the the JS9 Public API (scripting requires installation of
+command line using the JS9 Public API (scripting requires installation of
 JS9 and either [node.js](https://nodejs.org/) or
 [Electron.js](http://electron.atom.io)):
 
