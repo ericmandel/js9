@@ -1,81 +1,70 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.235865.svg)](https://doi.org/10.5281/zenodo.235865)
 
-JS9: image display right in your browser
-========================================
+JS9: astronomical image display right in your browser
+=====================================================
+
+![JS9](js9Readme.png)
 
 What does it do?
 ----------------
 
-JS9 brings astronomical image display to your browser:
+  - display FITS images, binary tables, data cubes, and multi-extension files
+  - colormaps, scaling, pan, zoom, binning, blending, print, export ...
+  - region support: create, manipulate, import, export, ...
+  - drag and drop images, regions, catalogs
+  - server-side and browser-based analysis using the JS9 public API
+  - control JS9 using scripts from the Linux shell or Python
+  - runs on Macs, Linux, Windows, iPads, iPhones, ...
 
-  - display FITS images and tables in a web page
-  - display FITS data cubes and multi-extension files
-  - drag and drop FITS images and tables
-  - retrieve FITS files from data archives
-  - change the colormap and scale
-  - image pan, zoom and blink, table binning
-  - image arithmetic, Gaussian smoothing
-  - blend images and apply RGB image filters
-  - configure mouse movements and touch events
-  - create and manipulate regions of interest
-  - extend JS9 using plugins and the public API
-  - perform data analysis (local and server-side)
-  - configure and control JS9 from within a web page
-  - control JS9 from a command shell or Python
-  - print images, save images, etc ...
+Where can I try it out?
+-----------------------
 
-Where can I learn more ... or try it out?
----------------------------------------
-
-The [JS9 web site](http://js9.si.edu) contains on-line documentation, demos, and release downloads:
+Go to [JS9 web site](http://js9.si.edu) and drag a FITS file onto the
+JS9 display:
 
     http://js9.si.edu
 
-Just drag and drop your FITS files onto the JS9 display ...
+The JS9 web site also contains on-line documentation, demos, and
+release downloads.
 
-Of course, the latest version is available here on GitHub:
-
-    https://github.com/ericmandel/js9
-
-Python users might want to look at pyjs9, the Python connection to JS9:
-
-    https://github.com/ericmandel/pyjs9
 
 To install or not to install ...
 --------------------------------
 
-JS9 is changing how we think about image display and analysis, moving
-beyond the Desktop into the web. You can simply drag and drop a FITS
-image from your computer onto a JS9 display. All of basic JS9/DS9
-functionality is immediately available: zoom, pan, colormaps, scaling,
-regions, WCS, etc.
+For many users, there is no need to install: simply use the
+[JS9 web site](http://js9.si.edu) to display your data. Installing JS9 allows
+you to create your own web pages, tailor site parameters, add
+browser-based and server analysis tasks ...
 
-So, in principle, there is no need to install anything: just use the 
-[JS9 web site](http://js9.si.edu)
-to view your FITS images. Simply drag and drop an image onto the JS9 display.
+Install latest version from [JS9 on GitHub](https://github.com/ericmandel/js9):
 
-Obviously, more flexibility is available if you download JS9: you can
-craft your own web pages, configure default values, add your own
-analysis tasks, etc. For full installation instructions, start with
-the [JS9 install page](http://js9.si.edu/js9/help/install.html). But
-really, you can just clone or download the JS9 source, display the
-js9.html page in your browser, and drag and drop a FITS file onto the
-JS9 display.
+    git clone https://github.com/ericmandel/js9
 
-You can extend JS9 using the Plugin facility in combination with the
-JS9 Public API. For example, you can perform browser-based analysis on
-the displayed image. On the [JS9 web site](http://js9.si.edu), click the
-Plugins tab, create a region, and move it around ...
+and start with the [JS9 install page](http://js9.si.edu/js9/help/install.html):
 
-In addition, URL-based data files support server-side analysis (using
-the original data files on the back-end server).  Server-side analysis
-can be run, for example, in response to region changes, with the results
-displayed back in your browser. On the [JS9 web site](http://js9.si.edu),
-click the Analysis tab, choose a task, create a region, and move it around ...
+    http://js9.si.edu/js9/help/install.html
 
-We are very interested in exploring new uses for JS9 as we evolve its
-functionality in response to community needs. If you would like to 
-join the fun, please contact me at: eric@cfa.harvard.edu.
+What about scripting?
+---------------------
+
+The *js9* script allows you to control a JS9 web page from the Linux
+command line using the the JS9 Public API (scripting requires installation of
+JS9 and either [node.js](https://nodejs.org/) or
+[Electron.js](http://electron.atom.io)):
+
+    js9 Load chandra.fits '{"scale":"log","colormap":"red","contrast":5.78,"bias":0.15}'
+    js9 Load spitzer.fits '{"scale":"log","colormap":"blue","contrast":6.3,"bias":0.54}'
+    js9 ReprojectData chandra.fits
+
+Python users can install [pyjs9](https://github.com/ericmandel/pyjs9):
+
+    git clone https://github.com/ericmandel/pyjs9
+    ...
+    import pyjs9
+    j = pyjs9.JS9()
+    j.Load('chandra.fits', '{"scale":"log","colormap":"red","contrast":5.78,"bias":0.15}')
+    j.Load('spitzer.fits', '{"scale":"log","colormap":"blue","contrast":6.3,"bias":0.54}')
+    j.ReprojectData('chandra.fits')
 
 What's the license?
 -------------------

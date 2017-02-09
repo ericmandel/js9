@@ -547,6 +547,9 @@ ckwebsite:	FORCE
 		  echo "OK"; \
 		fi;)
 
+view-readme:	FORCE
+		@(grip)
+
 clean:		FORCE
 		@($(RM) *.a *.so *.dylib *.o *.exe core core.* errs *pure* \
 			foo* *~ \#* TAGS *.E a.out errors \
