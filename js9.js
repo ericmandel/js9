@@ -7710,10 +7710,12 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 		       y: (opts.pts[i].y - cpos.y) / zoom};
 		opts.points.push(pos);
 	    }
-	} else if( opts.shape === "polygon" && opts. polypoints ){
-	    opts.points = opts.polypoints;
-	} else if( opts.shape === "line" && opts. linepoints ){
-	    opts.points = opts.linepoints;
+	} else if( !obj || !obj.points || !obj.points.length ){
+	    if( opts.shape === "polygon" && opts. polypoints ){
+		opts.points = opts.polypoints;
+	    } else if( opts.shape === "line" && opts. linepoints ){
+		opts.points = opts.linepoints;
+	    }
 	}
 	if( opts.ireg && JS9.SCALEIREG ){
 	    len = opts.points.length;
@@ -9150,6 +9152,10 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 		}
 	    }
 	});
+	return;
+    }
+    // for the rest, we need top-level shapes (e.g., not polygon anchors)
+    if( !shape || !shape.params ){
 	return;
     }
     // handle update to parent deltas when a child shape changes
