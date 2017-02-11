@@ -10093,7 +10093,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "strokeWidth":
-	    val = obj.strokeWidth;
+	    val = obj.params.sw1;
 	    break;
 	case "strokeDashes":
 	    if( obj.strokeDashArray ){
