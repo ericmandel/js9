@@ -15,23 +15,27 @@ JS9 supports the actions that get executed in response to
 (case-sensitive) keypress events. The following actions are
 defined in the <b>JS9.globalOpts.keyboardActions</b> array:
 <ul>
+<li><b>0</b>: reset zoom
 <li><b>b</b>: toggle selected region: source/background
 <li><b>e</b>: toggle selected region: include/exclude
 <li><b>o</b>: open a local FITS file
 <li><b>/</b>: copy wcs position to clipboard
 <li><b>?</b>: copy value and position to clipboard
+<li><b>=</b>: zoom in
 <li><b>+</b>: zoom in
 <li><b>-</b>: zoom out
 <li><b>&gt;</b>: display next image
 <li><b>&lt;</b>: display previous image
 <li><b>delete</b>: remove selected region
-<li><b>leftArrow</b>: move selected region
-<li><b>upArrow</b>: move selected region
-<li><b>rightArrow</b>: move selected region
-<li><b>downArrow</b>: move selected region
+<li><b>leftArrow</b>: move selected region left
+<li><b>upArrow</b>: move selected region up
+<li><b>rightArrow</b>: move selected region right
+<li><b>downArrow</b>: move selected region down
 </ul>
 You can view the current mapping between keys and actions using
-this <b>Keyboard</b> plugin.
+this <b>Keyboard</b> plugin. Also, you can execute individual
+actions by clicking the 'key' buttons. This is especially useful for
+devices without keyboards, such as iPads and iPhones.
 
 <p>
 It is possible to add new actions. To do this, first add an entry to

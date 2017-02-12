@@ -3055,11 +3055,11 @@ JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 JS9.Keyboard = {};
 JS9.Keyboard.CLASS = "JS9";         // class of plugin
 JS9.Keyboard.NAME = "Keyboard";     // name of this plugin
-JS9.Keyboard.WIDTH =  512;	    // width of light window
-JS9.Keyboard.HEIGHT = 380;	    // height of light window
+JS9.Keyboard.WIDTH =  450;	    // width of light window
+JS9.Keyboard.HEIGHT = 420;	    // height of light window
 JS9.Keyboard.BASE = JS9.Keyboard.CLASS + JS9.Keyboard.NAME;
 
-JS9.Keyboard.actionHTML="<div class='JS9KeyboardText'><b>%s</b></div><div class='JS9KeyboardAction'>%s</div>";
+JS9.Keyboard.actionHTML="<div class='JS9KeyboardText'><button class='JS9Button JS9KeyboardButton' type='button' value='%s'>%s</button></div><div class='JS9KeyboardAction'>%s</div>";
 
 // get an id based on the action
 JS9.Keyboard.actionid = function(cname, aname){
@@ -3068,15 +3068,23 @@ JS9.Keyboard.actionid = function(cname, aname){
 
 // add to the action list
 JS9.Keyboard.addAction = function(container, cname, aname){
+    var that = this;
     var s, id, divjq;
     id = JS9.Keyboard.actionid(cname, aname);
     // create the html for this action
-    s = sprintf(JS9.Keyboard.actionHTML, cname, aname);
+    s = sprintf(JS9.Keyboard.actionHTML, aname, cname, aname);
     // add action html to the action container
     divjq = $("<div class='JS9KeyboardItem'>")
 	.attr("id", id)
 	.html(s)
 	.appendTo(container);
+    divjq.find('.JS9KeyboardButton').on("click", function(evt){
+	var action = this.value;
+	var im = that.display.image;
+	if( im && action && JS9.Keyboard.Actions[action] ){
+	    JS9.Keyboard.Actions[action](im, im.ipos, evt);
+	}
+    });
     return divjq;
 };
 
@@ -3398,7 +3406,7 @@ JS9.Keyboard.init = function(){
 	.addClass(JS9.Keyboard.BASE + "Container")
 	.attr("id", this.id + "KeyboardContainer")
 	.appendTo(this.divjq);
-    s = sprintf("<div class='%s'><b>Keys and their corresponding actions:</b></div><p>", JS9.Keyboard.BASE + "Header");
+    s = sprintf("<div class='%s'><b>Keys and their actions (or click the buttons):</b></div><p>", JS9.Keyboard.BASE + "Header");
     this.keyboardHeadContainer = $("<div>")
 	.addClass(JS9.Keyboard.BASE + "Container")
 	.attr("id", this.id + "KeyboardHeadContainer")
