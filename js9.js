@@ -140,10 +140,10 @@ JS9.globalOpts = {
 	">": "display next image",
 	"<": "display previous image",
 	"delete": "remove selected region",
-	"leftArrow": "move selected region",
-	"upArrow": "move selected region",
-	"rightArrow": "move selected region",
-	"downArrow": "move selected region"
+	"leftArrow": "move selected region left",
+	"upArrow": "move selected region up",
+	"rightArrow": "move selected region right",
+	"downArrow": "move selected region down"
     }, // keyboard actions
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     centerDivs: ["JS9Menubar"], // divs that take part in JS9.Display.center()
@@ -8770,6 +8770,10 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	}
 	// make sure border width is correct
 	obj.rescaleBorder();
+	// update children
+	JS9.Fabric.updateChildren(layer.dlayer, obj, "moving");
+	JS9.Fabric.updateChildren(layer.dlayer, obj, "scaling");
+	JS9.Fabric.updateChildren(layer.dlayer, obj, "rotating");
 	// and reset coords
 	obj.setCoords();
 	// update the shape info and make callbacks
@@ -10881,75 +10885,6 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	JS9.error("no saveAs function available to save region file");
     }
     return fname;
-};
-
-// ---------------------------------------------------------------------
-// Regions plugin callbacks
-// process a keydown event
-// ---------------------------------------------------------------------
-JS9.Regions.keyDownCB = function(im, ipos, evt){
-    var tact, canvas, layerName;
-    var tobj = {evt: evt};
-    var charCode = evt.which || evt.keyCode;
-    // sanity check
-    if( !im ){
-	return;
-    }
-    layerName = im.layer || "regions";
-    // this prevents keypress on FF (and others)
-    // https://developer.mozilla.org/en-US/docs/Web/Reference/Events/keydown
-    // NB: we still have to preventDefault on specific keys ... see below ...
-    // evt.preventDefault();
-    canvas = im.display.layers[layerName].canvas;
-    switch(charCode){
-	// backspace and delete
-    case 8:
-    case 46:
-	evt.preventDefault();
-	tact = "removeRegion";
-	break;
-    case 37:
-	evt.preventDefault();
-	tact = "editRegion";
-	tobj.dx = -1;
-	break;
-    case 38:
-	evt.preventDefault();
-	tact = "editRegion";
-	tobj.dy = 1;
-	break;
-    case 39:
-	evt.preventDefault();
-	tact = "editRegion";
-	tobj.dx = 1;
-	break;
-    case 40:
-	evt.preventDefault();
-	tact = "editRegion";
-	tobj.dy = -1;
-	break;
-    case 68:
-	tact = "downRegion";
-	break;
-    }
-    // processing: execute action
-    switch(tact){
-    case "removeRegion":
-	im.removeShapes(layerName, "selected");
-	im.clearMessage(layerName);
-	// keys need the same callbacks as mouse:up
-	canvas.fire("mouse:up");
-	break;
-    case "editRegion":
-	im.changeShapes(layerName, "selected", tobj);
-	canvas.fire("mouse:up");
-	break;
-    case "downRegion":
-	im.selectShapes(layerName, "selected", function(obj){
-	    canvas.sendToBack(obj);
-	});
-	break;
-    }
 };
 
 // ---------------------------------------------------------------------
@@ -13214,16 +13149,65 @@ JS9.init = function(){
     // add keyboard plugin actions
     if( JS9.hasOwnProperty("Keyboard") ){
 	// eslint-disable-next-line no-unused-vars
-	JS9.Keyboard.Actions["move selected region"] = function(im, ipos, evt){
-	    JS9.Regions.keyDownCB(im, ipos, evt);
+	JS9.Keyboard.Actions["move selected region up"] = function(im, ipos, evt){
+	    var canvas, layerName;
+	    var inc = 1;
+	    // sanity check
+	    if( !im ){ return; }
+	    evt.preventDefault();
+	    if( JS9.specialKey(evt) ){ inc *= 5; }
+	    layerName = im.layer || "regions";
+	    canvas = im.display.layers[layerName].canvas;
+	    im.changeShapes(layerName, "selected", {dy: inc});
+	    canvas.fire("mouse:up");
+	};
+	JS9.Keyboard.Actions["move selected region down"] = function(im, ipos, evt){
+	    var canvas, layerName;
+	    var inc = -1;
+	    // sanity check
+	    if( !im ){ return; }
+	    evt.preventDefault();
+	    if( JS9.specialKey(evt) ){ inc *= 5; }
+	    layerName = im.layer || "regions";
+	    canvas = im.display.layers[layerName].canvas;
+	    im.changeShapes(layerName, "selected", {dy: inc});
+	    canvas.fire("mouse:up");
+	};
+	JS9.Keyboard.Actions["move selected region left"] = function(im, ipos, evt){
+	    var canvas, layerName;
+	    var inc = -1;
+	    // sanity check
+	    if( !im ){ return; }
+	    evt.preventDefault();
+	    if( JS9.specialKey(evt) ){ inc *= 5; }
+	    layerName = im.layer || "regions";
+	    canvas = im.display.layers[layerName].canvas;
+	    im.changeShapes(layerName, "selected", {dx: inc});
+	    canvas.fire("mouse:up");
+	};
+	JS9.Keyboard.Actions["move selected region right"] = function(im, ipos, evt){
+	    var canvas, layerName;
+	    var inc = 1;
+	    // sanity check
+	    if( !im ){ return; }
+	    evt.preventDefault();
+	    if( JS9.specialKey(evt) ){ inc *= 5; }
+	    layerName = im.layer || "regions";
+	    canvas = im.display.layers[layerName].canvas;
+	    im.changeShapes(layerName, "selected", {dx: inc});
+	    canvas.fire("mouse:up");
 	};
 	// eslint-disable-next-line no-unused-vars
-	JS9.Keyboard.Actions["remove selected region"] = function(im, ipos,evt){
-	    JS9.Regions.keyDownCB(im, ipos, evt);
-	};
-	// eslint-disable-next-line no-unused-vars
-	JS9.Keyboard.Actions["move selected region down in stack"] = function(im, ipos,evt){
-	    JS9.Regions.keyDownCB(im, ipos, evt);
+	JS9.Keyboard.Actions["remove selected region"] = function(im, ipos, evt){
+	    var canvas, layerName;
+	    // sanity check
+	    if( !im ){ return; }
+	    evt.preventDefault();
+	    layerName = im.layer || "regions";
+	    canvas = im.display.layers[layerName].canvas;
+	    im.removeShapes(layerName, "selected");
+	    im.clearMessage(layerName);
+	    canvas.fire("mouse:up");
 	};
     }
     // initialize image filters
