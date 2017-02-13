@@ -15,6 +15,8 @@ while [ x"$1" != x ]; do
     esac
 done
 
+js9 $XARGS BlendDisplay false > /dev/null
+
 echo 'load ./blend/chandra.fits'
 ../js9load $XARGS './blend/chandra.fits' '{"scale":"log","colormap":"red","contrast":5.78,"bias":0.15}'
 js9 $XARGS BlendImage 'screen' 1 true > /dev/null
