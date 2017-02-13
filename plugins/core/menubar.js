@@ -1154,14 +1154,18 @@ JS9.Menubar.init = function(width, height){
 		    "point": {name: "point"},
 		    "polygon": {name: "polygon"},
 		    "text": {name: "text"},
-		    "sep2": "------",
+		    "sep1": "------",
 		    "loadRegions" : {name: "load regions"},
 		    "saveRegions" : {name: "save regions"},
 		    "copyto" : {name: "copy regions to",
 				items: { copytotitle: {name: "choose image:",
 						       disabled: true}}},
 		    "listRegions" : {name: "list regions"},
-		    "deleteRegions" : {name: "delete regions"},
+		    "removeRegions" : {name: "remove regions"},
+		    "sep2": "------",
+		    "listSelRegions" : {name: "list selected"},
+		    "removeSelRegions" : {name: "remove selected"},
+		    "sep3": "------",
 		    "listonchange" : {name: "list on change"},
 		    "xeqonchange" : {name: "xeq on change"}
 		};
@@ -1195,8 +1199,12 @@ JS9.Menubar.init = function(width, height){
 			var uim = udisp.image;
 			if( uim ){
 			    switch(key){
-			    case "deleteRegions":
+			    case "removeRegions":
 				uim.removeShapes("regions", "all");
+				uim.clearMessage("regions");
+				break;
+			    case "removeSelRegions":
+				uim.removeShapes("regions", "selected");
 				uim.clearMessage("regions");
 				break;
 			    case "loadRegions":
@@ -1207,6 +1215,9 @@ JS9.Menubar.init = function(width, height){
 				break;
 			    case "listRegions":
 				uim.listRegions("all", {mode: 2});
+				break;
+			    case "listSelRegions":
+				uim.listRegions("selected", {mode: 2});
 				break;
 			    case "xeqonchange":
 				uim.params.xeqonchange = !uim.params.xeqonchange;
