@@ -5010,9 +5010,11 @@ JS9.Menubar.init = function(width, height){
 		var editScale = function(im, obj){
 		    if( JS9.isNumber(obj.scalemin) ){
 			im.params.scalemin = parseFloat(obj.scalemin);
+			im.params.scaleclipping = "user";
 		    }
 		    if( JS9.isNumber(obj.scalemax) ){
 			im.params.scalemax = parseFloat(obj.scalemax);
+			im.params.scaleclipping = "user";
 		    }
 		    im.displayImage("colors");
 		};

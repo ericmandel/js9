@@ -4393,12 +4393,14 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
 	case 2:
 	    this.params.scalemin = parseFloat(s0);
 	    this.params.scalemax = parseFloat(s1);
+	    this.params.scaleclipping = "user";
 	    this.mkColorData();
 	    break;
         default:
 	    newscale(s0);
 	    this.params.scalemin = parseFloat(s1);
 	    this.params.scalemax = parseFloat(s2);
+	    this.params.scaleclipping = "user";
 	    this.mkColorData();
 	    break;
 	}
