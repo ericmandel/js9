@@ -2297,10 +2297,14 @@ JS9.Image.prototype.putImage = function(opts){
     this.iy = Math.floor((display.canvas.height - rgb.img.height)/2);
     // reproject: if reproj wcs header exists, align the display if necessary
     if( this.rawDataLayer() === "reproject" && opts.wcsim ){
-	this.wcsix = opts.wcsim.ix +
-	    opts.wcsim.raw.wcsinfo.crpix1 - this.raw.wcsinfo.crpix1;
-	this.wcsiy = opts.wcsim.iy +
-	    opts.wcsim.raw.wcsinfo.crpix2 - this.raw.wcsinfo.crpix2;
+	this.wcsix = opts.wcsim.ix;
+	this.wcsiy = opts.wcsim.iy + (opts.wcsim.raw.height - this.raw.height);
+    }
+    // wcs alignment of a reprojected layer, or a (current0) copy of one
+    if( this.params.wcsalign &&
+	(this.wcsix !== undefined) && (this.wcsiy !== undefined)  ){
+	this.ix = this.wcsix;
+	this.iy = this.wcsiy;
     }
     // draw the image into the context
     if( JS9.notNull(opts.opacity) || JS9.notNull(opts.blend) ){
@@ -2315,12 +2319,6 @@ JS9.Image.prototype.putImage = function(opts){
 	ctx.drawImage(img2canvas(this, rgb.img), this.ix, this.iy);
 	ctx.restore();
     } else {
-	// wcs alignment of a reprojected layer, or a (current0) copy of one
-	if( this.params.wcsalign &&
-	    (this.wcsix !== undefined) && (this.wcsiy !== undefined)  ){
-	    this.ix = this.wcsix;
-	    this.iy = this.wcsiy;
-	}
 	ctx.putImageData(rgb.img, this.ix, this.iy);
     }
     // allow chaining
