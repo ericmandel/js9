@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.11, Sun Feb 12 13:31:06 EST 2017 */
+/* JS9 allinone: v1.11, Tue Feb 14 09:13:00 EST 2017 */
 // fix to allow jquery to be loaded into an electron.js app
 // http://electron.atom.io/docs/faq/
 //
@@ -2855,10 +2855,10 @@ b&&(b=!0);if(this.valpos)return b&&this.displayMessage("info",this.valpos),this.
 wcssys:"",val:d,val3:h,vstr:e+"&nbsp;&nbsp;&nbsp;&nbsp;"+f,id:this.id,file:this.file,object:this.object};0<this.raw.wcs&&"image"!==this.params.wcssys&&"physical"!==this.params.wcssys&&(k=a.pix2wcs(this.raw.wcs,c.x,c.y).trim().split(/\s+/),g=k[0]+" "+k[1]+" ("+(k[2]||"wcs")+")",d.ra=k[0],d.dec=k[1],d.wcssys=k[2],d.vstr=e+"&nbsp;&nbsp;&nbsp;&nbsp;"+g+"&nbsp;&nbsp;&nbsp;&nbsp;"+f);b&&this.displayMessage("info",d)}return d};a.Image.prototype.getColormap=function(){if(this.cmapObj)return{colormap:this.cmapObj.name,
 contrast:this.params.contrast,bias:this.params.bias}};a.Image.prototype.setColormap=function(c,b,d){switch(arguments.length){case 1:case 3:switch(c){case "rgb":a.globalOpts.rgb.active=!a.globalOpts.rgb.active;break;case "invert":this.params.invert=!this.params.invert;break;case "reset":this.params.invert=a.imageOpts.invert;this.params.contrast=a.imageOpts.contrast;this.params.bias=a.imageOpts.bias;break;default:if(this.cmapObj)switch(this.cmapObj.name){case "red":a.globalOpts.rgb.rim=null;break;case "green":a.globalOpts.rgb.gim=
 null;break;case "blue":a.globalOpts.rgb.bim=null}this.cmapObj=a.lookupColormap(c);this.params.colormap=this.cmapObj.name;switch(c){case "red":a.globalOpts.rgb.rim=this;break;case "green":a.globalOpts.rgb.gim=this;break;case "blue":a.globalOpts.rgb.bim=this}}3===arguments.length&&(isNaN(b)||(this.params.contrast=b),isNaN(d)||(this.params.bias=d));break;case 2:isNaN(c)||(this.params.contrast=c),isNaN(b)||(this.params.bias=b)}this.displayImage("colors");a.globalOpts.extendedPlugins&&this.xeqPlugins("image",
-"onsetcolormap");return this};a.Image.prototype.getScale=function(){if(this.params.scale)return{scale:this.params.scale,scalemin:this.params.scalemin,scalemax:this.params.scalemax}};a.Image.prototype.setScale=function(c,b,d){var e=this,f=function(b){0<=a.scales.indexOf(b)?e.params.scale=b:a.error("unknown scale: "+b)};if(arguments.length){switch(arguments.length){case 1:f(c);break;case 2:this.params.scalemin=parseInt(c,10);this.params.scalemax=parseInt(b,10);this.mkColorData();break;default:f(c),
-this.params.scalemin=parseInt(b,10),this.params.scalemax=parseInt(d,10),this.mkColorData()}this.displayImage("scaled")}a.globalOpts.extendedPlugins&&this.xeqPlugins("image","onsetscale");return this};a.Image.prototype.dataminmax=function(){var a,b,d=isNaN(this.params.scalemin)||void 0===this.params.scalemin,e=isNaN(this.params.scalemax)||void 0===this.params.scalemax;if("dataminmax"===this.params.scaleclipping){if(this.raw.dmin===this.params.scalemin||void 0===this.raw.dmin)d=!0;if(this.raw.dmax===
-this.params.scalemax||void 0===this.raw.dmax)e=!0}this.raw.dmin=Number.MAX_VALUE;this.raw.dmax=Number.MIN_VALUE;if(0<this.raw.bitpix)if(void 0!==this.raw.header.BLANK)for(b=this.raw.header.BLANK,a=0;a<this.raw.data.length;a++)this.raw.data[a]!==b&&(this.raw.dmin=Math.min(this.raw.dmin,this.raw.data[a]),this.raw.dmax=Math.max(this.raw.dmax,this.raw.data[a]));else for(a=0;a<this.raw.data.length;a++)this.raw.dmin=Math.min(this.raw.dmin,this.raw.data[a]),this.raw.dmax=Math.max(this.raw.dmax,this.raw.data[a]);
-else for(a=0;a<this.raw.data.length;a++)isNaN(this.raw.data[a])||(this.raw.dmin=Math.min(this.raw.dmin,this.raw.data[a]),this.raw.dmax=Math.max(this.raw.dmax,this.raw.data[a]));d&&(this.params.scalemin=this.raw.dmin);e&&(this.params.scalemax=this.raw.dmax);return this};a.Image.prototype.zscale=function(c){var b,d,e;if(!a.zscale||!this.raw||!this.raw.data)return this;b=this.raw.data;d=b.length*b.BYTES_PER_ELEMENT;try{e=a.vmalloc(d)}catch(f){a.error("image too large for zscale malloc: "+d,f)}try{a.vmemcpy(new Uint8Array(b.buffer),
+"onsetcolormap");return this};a.Image.prototype.getScale=function(){if(this.params.scale)return{scale:this.params.scale,scalemin:this.params.scalemin,scalemax:this.params.scalemax}};a.Image.prototype.setScale=function(c,b,d){var e=this,f=function(b){0<=a.scales.indexOf(b)?e.params.scale=b:a.error("unknown scale: "+b)};if(arguments.length){switch(arguments.length){case 1:f(c);break;case 2:this.params.scalemin=parseFloat(c);this.params.scalemax=parseFloat(b);this.mkColorData();break;default:f(c),this.params.scalemin=
+parseFloat(b),this.params.scalemax=parseFloat(d),this.mkColorData()}this.displayImage("scaled")}a.globalOpts.extendedPlugins&&this.xeqPlugins("image","onsetscale");return this};a.Image.prototype.dataminmax=function(){var a,b,d=isNaN(this.params.scalemin)||void 0===this.params.scalemin,e=isNaN(this.params.scalemax)||void 0===this.params.scalemax;if("dataminmax"===this.params.scaleclipping){if(this.raw.dmin===this.params.scalemin||void 0===this.raw.dmin)d=!0;if(this.raw.dmax===this.params.scalemax||
+void 0===this.raw.dmax)e=!0}this.raw.dmin=Number.MAX_VALUE;this.raw.dmax=Number.MIN_VALUE;if(0<this.raw.bitpix)if(void 0!==this.raw.header.BLANK)for(b=this.raw.header.BLANK,a=0;a<this.raw.data.length;a++)this.raw.data[a]!==b&&(this.raw.dmin=Math.min(this.raw.dmin,this.raw.data[a]),this.raw.dmax=Math.max(this.raw.dmax,this.raw.data[a]));else for(a=0;a<this.raw.data.length;a++)this.raw.dmin=Math.min(this.raw.dmin,this.raw.data[a]),this.raw.dmax=Math.max(this.raw.dmax,this.raw.data[a]);else for(a=0;a<
+this.raw.data.length;a++)isNaN(this.raw.data[a])||(this.raw.dmin=Math.min(this.raw.dmin,this.raw.data[a]),this.raw.dmax=Math.max(this.raw.dmax,this.raw.data[a]));d&&(this.params.scalemin=this.raw.dmin);e&&(this.params.scalemax=this.raw.dmax);return this};a.Image.prototype.zscale=function(c){var b,d,e;if(!a.zscale||!this.raw||!this.raw.data)return this;b=this.raw.data;d=b.length*b.BYTES_PER_ELEMENT;try{e=a.vmalloc(d)}catch(f){a.error("image too large for zscale malloc: "+d,f)}try{a.vmemcpy(new Uint8Array(b.buffer),
 e)}catch(f){a.error("can't copy image to zscale heap: "+d,f)}b=a.zscale(e,this.raw.width,this.raw.height,this.raw.bitpix,this.params.zscalecontrast,this.params.zscalesamples,this.params.zscaleline);a.vfree(e);e=b.trim().split(/\s+/);this.params.z1=parseFloat(e[0]);this.params.z2=parseFloat(e[1]);c&&(this.params.scalemin=this.params.z1,this.params.scalemax=this.params.z2);return this};a.Image.prototype.rawDataLayer=function(c,b){var d,e,f,g,h,k;if(!arguments.length)return this.raw.id;if("string"===
 typeof c)if("function"===typeof b)c={rawid:c};else{for(d=0;d<this.raws.length;d++)if(f=this.raws[d],c===f.id){if("remove"===b){"raw0"===c&&a.error("can't remove primary (raw0) data layer");f.hdu&&f.hdu.fits&&(e=a.lookupVfile(f.hdu.fits.vfile),1>=e.length&&a.fits.cleanupFITSFile&&a.fits.cleanupFITSFile(f.hdu.fits,!0));this.raw=this.raws[0];if(f.current0&&f.current0.id)for(e=0;e<this.raws.length;e++)if(f.current0.id===this.raws[e].id){this.raw=this.raws[e];break}this.raws.splice(d,1);this.raw.header.bitpix&&
 (this.raw.bitpix=this.raw.header.bitpix);this.dataminmax();this.mkSection();this.displayImage("all",c);return!0}this.raw=f;this.raw.header.bitpix&&(this.raw.bitpix=this.raw.header.bitpix);this.dataminmax();this.mkSection();this.displayImage("all",c);a.globalOpts.extendedPlugins&&this.xeqPlugins("image","onrawdatalayer");return!0}return!1}if("function"!==typeof b)return!1;c=c||{};h=c.rawid||a.RAWIDX;void 0===c.oraw&&(c.oraw="current0");if("current"===c.oraw)e=this.raw;else if("current0"===c.oraw){for(d=
@@ -6263,11 +6263,11 @@ JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 JS9.Keyboard = {};
 JS9.Keyboard.CLASS = "JS9";         // class of plugin
 JS9.Keyboard.NAME = "Keyboard";     // name of this plugin
-JS9.Keyboard.WIDTH =  512;	    // width of light window
-JS9.Keyboard.HEIGHT = 380;	    // height of light window
+JS9.Keyboard.WIDTH =  450;	    // width of light window
+JS9.Keyboard.HEIGHT = 420;	    // height of light window
 JS9.Keyboard.BASE = JS9.Keyboard.CLASS + JS9.Keyboard.NAME;
 
-JS9.Keyboard.actionHTML="<div class='JS9KeyboardText'><b>%s</b></div><div class='JS9KeyboardAction'>%s</div>";
+JS9.Keyboard.actionHTML="<div class='JS9KeyboardText'><button class='JS9Button JS9KeyboardButton' type='button' value='%s'>%s</button></div><div class='JS9KeyboardAction'>%s</div>";
 
 // get an id based on the action
 JS9.Keyboard.actionid = function(cname, aname){
@@ -6276,15 +6276,23 @@ JS9.Keyboard.actionid = function(cname, aname){
 
 // add to the action list
 JS9.Keyboard.addAction = function(container, cname, aname){
+    var that = this;
     var s, id, divjq;
     id = JS9.Keyboard.actionid(cname, aname);
     // create the html for this action
-    s = sprintf(JS9.Keyboard.actionHTML, cname, aname);
+    s = sprintf(JS9.Keyboard.actionHTML, aname, cname, aname);
     // add action html to the action container
     divjq = $("<div class='JS9KeyboardItem'>")
 	.attr("id", id)
 	.html(s)
 	.appendTo(container);
+    divjq.find('.JS9KeyboardButton').on("click", function(evt){
+	var action = this.value;
+	var im = that.display.image;
+	if( im && action && JS9.Keyboard.Actions[action] ){
+	    JS9.Keyboard.Actions[action](im, im.ipos, evt);
+	}
+    });
     return divjq;
 };
 
@@ -6606,7 +6614,7 @@ JS9.Keyboard.init = function(){
 	.addClass(JS9.Keyboard.BASE + "Container")
 	.attr("id", this.id + "KeyboardContainer")
 	.appendTo(this.divjq);
-    s = sprintf("<div class='%s'><b>Keys and their corresponding actions:</b></div><p>", JS9.Keyboard.BASE + "Header");
+    s = sprintf("<div class='%s'><b>Keys and their actions (or click the buttons):</b></div><p>", JS9.Keyboard.BASE + "Header");
     this.keyboardHeadContainer = $("<div>")
 	.addClass(JS9.Keyboard.BASE + "Container")
 	.attr("id", this.id + "KeyboardHeadContainer")
@@ -8523,14 +8531,18 @@ JS9.Menubar.init = function(width, height){
 		    "point": {name: "point"},
 		    "polygon": {name: "polygon"},
 		    "text": {name: "text"},
-		    "sep2": "------",
+		    "sep1": "------",
 		    "loadRegions" : {name: "load regions"},
 		    "saveRegions" : {name: "save regions"},
 		    "copyto" : {name: "copy regions to",
 				items: { copytotitle: {name: "choose image:",
 						       disabled: true}}},
 		    "listRegions" : {name: "list regions"},
-		    "deleteRegions" : {name: "delete regions"},
+		    "removeRegions" : {name: "remove regions"},
+		    "sep2": "------",
+		    "listSelRegions" : {name: "list selected"},
+		    "removeSelRegions" : {name: "remove selected"},
+		    "sep3": "------",
 		    "listonchange" : {name: "list on change"},
 		    "xeqonchange" : {name: "xeq on change"}
 		};
@@ -8564,8 +8576,12 @@ JS9.Menubar.init = function(width, height){
 			var uim = udisp.image;
 			if( uim ){
 			    switch(key){
-			    case "deleteRegions":
+			    case "removeRegions":
 				uim.removeShapes("regions", "all");
+				uim.clearMessage("regions");
+				break;
+			    case "removeSelRegions":
+				uim.removeShapes("regions", "selected");
 				uim.clearMessage("regions");
 				break;
 			    case "loadRegions":
@@ -8576,6 +8592,9 @@ JS9.Menubar.init = function(width, height){
 				break;
 			    case "listRegions":
 				uim.listRegions("all", {mode: 2});
+				break;
+			    case "listSelRegions":
+				uim.listRegions("selected", {mode: 2});
 				break;
 			    case "xeqonchange":
 				uim.params.xeqonchange = !uim.params.xeqonchange;

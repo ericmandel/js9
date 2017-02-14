@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.11, Sun Feb 12 13:31:06 EST 2017 */
+/* JS9 allinone: v1.11, Tue Feb 14 09:13:00 EST 2017 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -762,7 +762,7 @@ div.JS9KeyboardText {
 }
 
 div.JS9KeyboardAction {
-    margin: 0px;
+    margin:  0px 0px 5px 0px;
     padding: 1px;
     background: #E9E9E9;
     overflow: auto;
@@ -780,6 +780,11 @@ div.JS9KeyboardHeader, div.JS9KeyboardFooter {
     margin-bottom: 0px;
     border: 1px solid transparent;
 }
+
+button.JS9KeyboardButton {
+    margin: 0px 0px 5px 0px;
+}
+
 div.JS9LayersContainer {
     padding: 2px;
 }
