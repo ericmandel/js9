@@ -131,6 +131,7 @@ JS9.globalOpts = {
 	b: "toggle selected region: source/background",
 	e: "toggle selected region: include/exclude",
 	o: "open a local FITS file",
+	r: "make regions layer active",
         "/": "copy wcs position to clipboard",
         "?": "copy value and position to clipboard",
 	"0": "reset zoom",
@@ -7424,7 +7425,7 @@ JS9.Fabric.activeShapeLayer = function(s){
 	// return active layer
 	rtn = a;
     } else {
-	// public call: hightest layer was specified directly
+	// public call: highest layer was specified directly
 	// set the zindex (and switch any layer with same zindex)
 	layer = this.layers[s];
 	if( layer.show ){
@@ -13208,6 +13209,12 @@ JS9.init = function(){
 	    im.removeShapes(layerName, "selected");
 	    im.clearMessage(layerName);
 	    canvas.fire("mouse:up");
+	};
+	JS9.Keyboard.Actions["make regions layer active"] = function(im, ipos, evt){
+	    // sanity check
+	    if( !im ){ return; }
+	    evt.preventDefault();
+	    im.activeShapeLayer("regions");
 	};
     }
     // initialize image filters
