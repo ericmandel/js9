@@ -89,6 +89,38 @@ Module['gzdecompress'] = function(data, filename) {
   return ret;
 };
 
+Module['bz2decompress'] = function(data, filename) {
+  var i, ret, curr, len, bz2File;
+  var BUFSIZE = 1024*1024;
+  var buffer = _malloc(BUFSIZE);
+  var chunks = [];
+  var total = 0;
+  FS.createDataFile(Module['rootdir'], 'input.bz2', data, true, true);
+  bz2File = ccall('BZ2_bzopen', 'number', ['string', 'string'], ['input.bz2', 'rb']);
+  // eslint-disable-next-line no-constant-condition
+  while( true ){
+    len = ccall('BZ2_bzread', 'number',
+		['number', 'number', 'number'], [bz2File, buffer, BUFSIZE]);
+    if( len <= 0 ){ break; }
+    chunks.push(new Uint8Array(len));
+    chunks[chunks.length-1].set(HEAPU8.subarray(buffer, buffer+len));
+    total += len;
+  }
+  ccall('BZ2_bzclose', 'number', ['number'], [bz2File]);
+  FS.unlink('input.bz2');
+  _free(buffer);
+  ret = new Uint8Array(total);
+  curr = 0;
+  for (i = 0; i < chunks.length; i++) {
+    ret.set(chunks[i], curr);
+    curr += chunks[i].length;
+  }
+  if( filename ){
+    Module['vfile'](filename, ret);
+  }
+  return ret;
+};
+
 Module["getFITSImage"] = function(fits, hdu, options, handler) {
     var i, ofptr, hptr, status, datalen, extnum, extname;
     var buf, bufptr, buflen, bufptr2, slice;
@@ -303,6 +335,16 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 		}
 		catch(e){
 		    Module["error"]("can't gunzip to virtual file: "+hdu.vfile);
+		}
+	    } else if((arr[0] === 0x42) && (arr[1] === 0x5A) && (arr[2] === 0x68)){
+		// if original is bzip2'ed, bunzip2 to virtual file
+		hdu.vfile = hdu.vfile.replace(/\.bz2$/,"");
+		fitsname = fitsname.replace(/\.bz2/,"");
+		try{
+		    arr = Module['bz2decompress'](arr, hdu.vfile);
+		}
+		catch(e){
+		   Module["error"]("can't bunzip2 to virtual file: "+hdu.vfile);
 		}
 	    } else {
 		// regular file to virtual file

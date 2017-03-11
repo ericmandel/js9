@@ -28,7 +28,7 @@ EMFLAGS	= 	-DEM -O3 --memory-init-file 0
 # https://github.com/kripken/emscripten/wiki/Chrome-Perf-Issues
 EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -s ASM_JS=2
 
-EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_initwcs', '_freewcs', '_wcsinfo', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_saodtype', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek', '_openFITSFile', '_openFITSMem', '_getImageToArray', '_filterTableToImage', '_getHeaderToString', '_closeFITSFile', '_maxFITSMemory', '_ffgerr', '_ffmahd', '_ffghdn','_ffmnhd', '_ffghdt', '_ffgky', '_fffree', '_listhdu', '_tanhdr', '_reproject', '_vls', '_vcat']"
+EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_initwcs', '_freewcs', '_wcsinfo', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_saodtype', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek',  '_BZ2_bzopen', '_BZ2_bzread', '_BZ2_bzwrite', '_BZ2_bzclose', '_openFITSFile', '_openFITSMem', '_getImageToArray', '_filterTableToImage', '_getHeaderToString', '_closeFITSFile', '_maxFITSMemory', '_ffgerr', '_ffmahd', '_ffghdn','_ffmnhd', '_ffghdt', '_ffgky', '_fffree', '_listhdu', '_tanhdr', '_reproject', '_vls', '_vcat']"
 
 EMEXTRAS =	--pre-js pre.js --post-js post.js
 
@@ -107,13 +107,24 @@ ZSRCS = 	$(ZLIB)/adler32.c \
 		$(ZLIB)/zuncompress.c
 ZOBJS = 	$(ZSRCS:%.c=%.o)
 
+# bzip2
+BZ2LIB =	./bzip2
+BZ2SRCS = 	$(BZ2LIB)/blocksort.c \
+		$(BZ2LIB)/huffman.c \
+		$(BZ2LIB)/crctable.c \
+		$(BZ2LIB)/randtable.c \
+		$(BZ2LIB)/compress.c \
+		$(BZ2LIB)/decompress.c \
+		$(BZ2LIB)/bzlib.c
+BZ2OBJS = 	$(BZ2SRCS:%.c=%.o)
+
 # iraf zscale
 ZSCALE =	./zscale
 ZSSRCS =	$(ZSCALE)/cdlzscale.c
 ZSOBJS = 	$(ZSSRCS:%.c=%.o)
 
-PKGOBJS =	$(JOBJS) $(MOBJS) $(UOBJS) $(WOBJS) $(ZOBJS) $(ZSOBJS)
-PKGDIRS =	$(JSFITSIO) $(MONTAGE) $(UTIL) $(WCS) $(ZSCALE) $(ZLIB)
+PKGOBJS =	$(JOBJS) $(MOBJS) $(UOBJS) $(WOBJS) $(ZOBJS) $(BZ2OBJS) $(ZSOBJS)
+PKGDIRS =	$(JSFITSIO) $(MONTAGE) $(UTIL) $(WCS) $(ZSCALE) $(ZLIB) $(BZ2LIB)
 
 LIBS =		lib/libcfitsio.a
 
@@ -121,7 +132,7 @@ LIBS =		lib/libcfitsio.a
 EMCC =		emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMEXTRAS) -I$(CFITSIO)
 
 # flags to generate all emcc objects (i.e. so $(CC) runs emcc)
-CC =		emcc $(EMFLAGS) -I$(CFITSIO) -I$(JSFITSIO) -I$(UTIL) -I$(WCS) -I$(ZLIB) -I$(ZSCALE) -D'exit(n)=em_exit(n)'
+CC =		emcc $(EMFLAGS) -I$(CFITSIO) -I$(JSFITSIO) -I$(UTIL) -I$(WCS) -I$(ZLIB) -I$(BZ2LIB) -I$(ZSCALE) -D'exit(n)=em_exit(n)'
 
 all:		$(ASTROEM)
 
