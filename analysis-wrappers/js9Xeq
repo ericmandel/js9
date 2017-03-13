@@ -181,8 +181,10 @@ histplot)
         ;;
       esac
     elif [ "x$COL" = 'x%time' ]; then
+      COL="time"
+      XAXIS="${COL}"
       case "$TELESCOP" in
-      CHANDRA|EINSTEIN)
+      CHANDRA|EINSTEIN|XMM)
         COL="time"
         XAXIS="time (sec)"
       ;;
