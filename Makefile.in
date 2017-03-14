@@ -134,7 +134,9 @@ WEBFILES =	js9.js js9.min.js \
 		$(ALLIN1).js $(ALLIN1).css \
 		js9Msg.js js9PostMessage.js js9Helper.js \
 		js9Electron.js js9Regions.js \
-		js9Prefs-default.json js9Prefs.json favicon.ico index.html
+		js9Prefs-default.json js9Prefs.json \
+		js9Prefs-default.js js9Prefs.js \
+		favicon.ico index.html
 
 GZFILES =	js9.js js9.min.js js9support.js js9support.min.js \
 		js9plugins.js js9-allinone.js
@@ -183,7 +185,7 @@ PLUGINFILES =	plugins/archive/archive.js \
 		plugins/imexam/3dplot.js \
 		plugins/imexam/contour.js
 
-PREFFILES =	js9Prefs.json
+PREFFILES =	js9Prefs.json js9Prefs.js
 
 CGIFILES =	js9Helper.cgi
 
@@ -255,11 +257,13 @@ cimtest:	$(CIMTESTOBJS)
 
 prefs:		FORCE
 		@(echo "copying default preferences to js9Prefs.json"; \
-		  cp -p js9Prefs-default.json js9Prefs.json;)
+		  cp -p js9Prefs-default.json js9Prefs.json; \
+		  cp -p js9Prefs-default.js js9Prefs.js;)
 
 saoprefs:	FORCE
 		@(echo "editing js9Prefs for SAO installations ..."; \
 		sed -f saoprefs.sed < js9Prefs.json > js9Prefs-sao.json; \
+		sed -f saoprefs.sed < js9Prefs.js > js9Prefs-sao.js; \
 		echo "editing helper file for SAO installations ..."; \
 		./mkhelper "$(HELPER)" \
 		"$(CGIDIR)" "$(CGIURL)" "$(CGIXPATH)" js9Prefs-sao.json;)
@@ -419,6 +423,10 @@ install-webfiles:	FORCE
 		    echo "moving aside old js9Prefs.json" ; \
 		    mv $(WEBDIR)/js9Prefs.json{,-old}; \
 	        fi; \
+		if [ -f $(WEBDIR)/js9Prefs.js ] ; then \
+		    echo "moving aside old js9Prefs.js" ; \
+		    mv $(WEBDIR)/js9Prefs.js{,-old}; \
+	        fi; \
 	fi; \
 	for i in $(PREFFILES) $(WEBFILES) js9*.html ; do\
 	    if [ x$(WEBDIR) != x ]; then \
@@ -481,6 +489,7 @@ install-sao:	install-gzip saoprefs install-webcgi install-js9tests
 		  fi; \
 		  echo "installing SAO js9Prefs.json"; \
 		  $(CP) js9Prefs-sao.json $(WEBDIR)/js9Prefs.json; \
+		  $(CP) js9Prefs-sao.js $(WEBDIR)/js9Prefs.js; \
 		  if [ -d js9debugextras ]; then \
 		    echo "installing js9debugextras"; \
 		    tar cf - js9debugextras | (cd $(WEBDIR); tar xf -); \
@@ -488,7 +497,8 @@ install-sao:	install-gzip saoprefs install-webcgi install-js9tests
 
 install-saoprefs:	saoprefs
 		  @(echo "installing SAO js9Prefs.json"; \
-		  $(CP) js9Prefs-sao.json $(WEBDIR)/js9Prefs.json;)
+		  $(CP) js9Prefs-sao.json $(WEBDIR)/js9Prefs.json; \
+		  $(CP) js9Prefs-sao.js $(WEBDIR)/js9Prefs.js;)
 
 install-js9tests:	FORCE
 		@(echo "installing js9tests ..."; \
@@ -504,6 +514,8 @@ gitprefs:	FORCE
 		@(if [ -d .git ]; then \
                      git checkout -- js9Prefs-sao.json; \
 		     git checkout -- js9Prefs.json; \
+                     git checkout -- js9Prefs-sao.js; \
+		     git checkout -- js9Prefs.js; \
 		  fi;)
 
 release:	clean gitprefs
@@ -554,7 +566,8 @@ clean:		FORCE
 		@($(RM) *.a *.so *.dylib *.o *.exe core core.* errs *pure* \
 			foo* *~ \#* TAGS *.E a.out errors \
 			$(UTILLIB) $(PROGS) $(CGIFILES) $(TESTPROGS) \
-			gmon.out *.pg *.bak  *js9Prefs.json-orig \
+			gmon.out *.pg *.bak  \
+			*js9Prefs.json-orig *js9Prefs.js-orig \
 			config.info config.log ltest \
 			js/*~ params/*~ \
 			doc/*~ notes/*~ test/*~ help/*~ help/*.bak \
