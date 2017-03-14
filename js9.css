@@ -602,6 +602,10 @@ canvas.surfacePlotCanvas {
     padding: 0;
 }
 
+.js9TextInput {
+    font-size: 12pt;
+}
+
 /* to make wait cursor override other element cursors (e.g. fabric.js canvas) */
 body.waiting, body.waiting * { 
     cursor: wait !important;
