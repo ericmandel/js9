@@ -121,6 +121,36 @@ Module['bz2decompress'] = function(data, filename) {
   return ret;
 };
 
+// error handler
+Module["errchk"] = function(status) {
+    var i, c, hptr, bytes;
+    var hlen = 82;  // ffgerr returns 80-byte string + null
+    var s="ERROR from cfitsio.js: ";
+    if( status ){
+	hptr = _malloc(hlen);
+	ccall("ffgerr", null, ["number", "number"], [status, hptr]);
+	bytes = HEAPU8.subarray(hptr, hptr+hlen);
+	for(i=0; i<hlen; i++){
+	    if( bytes[i] === 0 ){
+		break;
+	    }
+            c = String.fromCharCode(bytes[i]);
+	    s += c;
+	}
+	_free(hptr);
+	Module["error"](s);
+    }
+};
+
+// error handler
+Module["error"] = function(s, e) {
+    if( Module["options"].error ){
+	Module["options"].error(s, e, true);
+    } else {
+	throw new Error(s);
+    }
+};
+
 Module["getFITSImage"] = function(fits, hdu, options, handler) {
     var i, ofptr, hptr, status, datalen, extnum, extname;
     var buf, bufptr, buflen, bufptr2, slice;
@@ -219,7 +249,7 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     _free(hptr);
     Module["errchk"](status);
     if( !bufptr ){
-      Module["error"]("image is too large (max is JS9.globalOpts.maxMemory)");
+      Module["error"]("can't convert image to array (image too large?)");
     }
     // save pointer to section data
     datalen = hdu.naxis1 * hdu.naxis2;
@@ -499,36 +529,6 @@ Module["cleanupFITSFile"] = function(fits, all) {
 Module["maxFITSMemory"] = function(bytes) {
     bytes = bytes || 0;
     return ccall("maxFITSMemory", "number", ["number"], [bytes]);
-};
-
-// error handler
-Module["errchk"] = function(status) {
-    var i, c, hptr, bytes;
-    var hlen = 82;  // ffgerr returns 80-byte string + null
-    var s="ERROR from cfitsio.js: ";
-    if( status ){
-	hptr = _malloc(hlen);
-	ccall("ffgerr", null, ["number", "number"], [status, hptr]);
-	bytes = HEAPU8.subarray(hptr, hptr+hlen);
-	for(i=0; i<hlen; i++){
-	    if( bytes[i] === 0 ){
-		break;
-	    }
-            c = String.fromCharCode(bytes[i]);
-	    s += c;
-	}
-	_free(hptr);
-	Module["error"](s);
-    }
-};
-
-// error handler
-Module["error"] = function(s, e) {
-    if( Module["options"].error ){
-	Module["options"].error(s, e, true);
-    } else {
-	throw new Error(s);
-    }
 };
 
 Module["options"] = {"library": "cfitsio"};
