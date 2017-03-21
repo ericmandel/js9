@@ -18,7 +18,6 @@ CFITSIO =	../cfitsio
 # production
 EMFLAGS	= 	-DEM -O3 --memory-init-file 0
 
-
 # support zscale up to 2048 * 2048 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=33554432
 # support zscale up to 4096 * 4096 * 4-byte images
