@@ -5079,7 +5079,8 @@ JS9.Menubar.init = function(width, height){
 				uim.displayImage("colors");
 				return false;
 			    case "zscale":
-				if( !uim.params.z1 || uim.params.z2 ){
+				if( (uim.params.z1 === undefined) || 
+				    (uim.params.z2 === undefined) ){
 				    uim.zscale(false);
 				}
 				uim.params.scaleclipping = "zscale";
