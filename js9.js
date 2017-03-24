@@ -5301,6 +5301,17 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 	    }
 	}
     }
+    // turn of display of layers in new display
+    // don't want them showing on the new image ...
+    if( ndisplay.image ){
+	for( key in ndisplay.layers ){
+	    if( ndisplay.layers.hasOwnProperty(key) ){
+		if( ndisplay.layers[key].dtype === "main" ){
+		    ndisplay.image.showShapeLayer(key, false);
+		}
+	    }
+	}
+    }
     // re-assign each "main" layer from old display to new by:
     // saving the graphics, reassigning the canvas, restoring the graphics
     for( key in this.layers ){
@@ -5308,9 +5319,6 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 	    layer = this.layers[key];
 	    dlayer = ndisplay.layers[key];
 	    if( dlayer ){
-		if( ndisplay.image ){
-		    ndisplay.image.showShapeLayer(key, false);
-		}
 		this.showShapeLayer(key, false);
                 layer.dlayer = dlayer;
                 layer.divjq = dlayer.divjq;
