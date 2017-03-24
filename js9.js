@@ -721,9 +721,8 @@ JS9.Image.prototype.closeImage = function(){
 		// clear all layers
 		for( key in tim.layers ){
 		    if( tim.layers.hasOwnProperty(key) ){
-			// tim.layers[key].canvas.dispose();
-			// tim.layers[key] = null;
-			tim.layers[key].canvas.clear();
+			// tim.layers[key].canvas.clear();
+			tim.showShapeLayer(key, false);
 		    }
 		}
 	    }

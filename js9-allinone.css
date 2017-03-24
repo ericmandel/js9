@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.11, Tue Feb 21 16:32:25 EST 2017 */
+/* JS9 allinone: v1.11, Fri Mar 24 10:13:47 EDT 2017 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -1497,6 +1497,10 @@ canvas.surfacePlotCanvas {
     border-top: 1px solid black;
     margin: 0;
     padding: 0;
+}
+
+.js9TextInput {
+    font-size: 12pt;
 }
 
 /* to make wait cursor override other element cursors (e.g. fabric.js canvas) */
