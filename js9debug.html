@@ -239,7 +239,8 @@
         JS9.DEBUG = 2;
         JS9.AddColormap("cyan", [[0,0],[0,0]], [[0,0], [1,1]], [[0,0],[1,1]]);
         JS9.Preload("png/casa.png",
-                    {colormap: "cool", contrast: 4.8, bias: 0.1175,
+                    {colormap: "cool", scale: "linear",
+                     contrast: 4.8, bias: 0.1175,
                      onload: function(im){
                        JS9.LoadRegions("casa/casa.reg");
                        JS9.Load("fits/ngc1316.fits",
@@ -250,7 +251,7 @@
 
                     }});
         JS9.Preload("fits/snr.fits[events][pi==pha]",
-                    {colormap: "heat", fits2png: false, 
+                    {colormap: "heat", scale: "linear",
                      contrast: 5.625, bias: 0.1,
 	             onload: function(im){
 		       JS9.SetZoom(2,{display: "myJS9"}); 
@@ -481,9 +482,7 @@
       console.log("loading casa1k.fits ...")
       JS9.Load("reproj/casa1k.fits", {display: "JS9", onload:function(im){
 	console.log("loading casa1kr.fits ...")
-	JS9.Load("reproj/casa1kr.fits", {display: "myJS9", onload:function(im2){
-          Astroem.vls();
-        }})
+	JS9.Load("reproj/casa1kr.fits", {display: "myJS9"});
       }})
     }
     function ReprojTest(){
