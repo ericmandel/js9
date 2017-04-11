@@ -28,7 +28,7 @@
 
 #define NDEC 3
 
-#define SZ_LINE  8192
+#define SZ_LINE  65536
 #define MAX_ARGS 10
 
 /* must match Module['rootdir'] in post.js! */
