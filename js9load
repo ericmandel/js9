@@ -1,5 +1,5 @@
 #!/bin/sh
-#set -x
+# set -x
 
 error() {
   echo "ERROR: $1" 1>&2
@@ -44,7 +44,6 @@ else
   PATHNAME="$1"
   shift
 fi
-ROOT=`basename $PATHNAME .fits`
 
 # start the image load
 GOT=`js9 $XARGS Load $PATHNAME $1 `
@@ -55,11 +54,11 @@ fi
 # wait for completion
 while [ $DONE = false ]; do
   # get status of current image
-  GOT=`js9 $XARGS status $ROOT load`
+  GOT=`js9 $XARGS GetLoadStatus $PATHNAME`
   case $GOT in
     error)
       error "could not load: $PATHNAME";;
-    loading|please)
+    loading|please|other)
       if [ x$VERBOSE = xtrue ] ; then
         echo "loading ..."
       fi
