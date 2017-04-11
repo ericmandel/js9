@@ -2881,6 +2881,8 @@ JS9.Info.opts = {
 '</tr> <tr>' +
 '<td colspan="3"><textarea style="background: #E9E9E9; border: #CCCCCC solid 1px" id="regions" rows="4" cols="40" value="" readonly="readonly" /></td>' +
 '</tr>' +
+'<td colspan="3"><div class="JS9Progress"><progress id="progress" class="JS9ProgressBar" value="0" max="100"></progress></div>' +
+'</tr>' +
 '</table>'
 };
 
@@ -2896,12 +2898,17 @@ JS9.Info.init = function(){
 };
 
 // display a message on the image canvas or info plugin
-// call with image or display as context
+// call with display as context
 JS9.Info.display = function(type, message, target){
-    var tobj, split, area, tokens, rexp, s, color, info, key, jel;
+    var tobj, split, area, tokens, rexp, s, color, info, key, el, jel;
+    var disp = this;
+    // backward compatibility -- allow context to be Image
+    if( this.display ){
+	disp = this.display;
+    }
     // if image is context
-    if( this.display && this.display.pluginInstances ){
-	info = this.display.pluginInstances.JS9Info;
+    if( disp.pluginInstances ){
+	info = disp.pluginInstances.JS9Info;
     }
     // if specific target was specified use that
     if( target ){
@@ -2911,15 +2918,41 @@ JS9.Info.display = function(type, message, target){
 	if( info && (info.status === "active") ){
 	    tobj = info;
 	} else {
-	    // use display
-	    if( this.display ){
-		// image context
-		tobj = this.display;
-	    } else {
-		// display context
-		tobj = this;
+	    // image context
+	    tobj = disp;
+	}
+    }
+    // handle progress specially
+    if( type === "progress" ){
+	if( tobj === info ){
+	    el = info.jq;
+	} else {
+	    el = tobj.divjq;
+	}
+	if( el.length > 0 ){
+	    el = el.find("#progress");
+	    switch(typeof message){
+	    case "string":
+	    case "boolean":
+		if( message ){
+		    if( message === "indeterminate" ){
+			el.removeAttr("value");
+		    }
+		    el.parent().css("display", "inline-block");
+		} else {
+		    el.parent().css("display", "none");
+		    el.attr("value", 0);
+		}
+		break;
+	    case "object":
+		if( message[1] ){
+		    el.attr("max", message[1]);
+		}
+		el.attr("value", message[0]);
+		break;
 	    }
 	}
+	return;
     }
     // plugin-based display: fill in html form
     if( tobj === info ){
@@ -2952,7 +2985,7 @@ JS9.Info.display = function(type, message, target){
 	    break;
 	}
 	// allow chaining
-	return this;
+	return disp;
     }
     // height params for text color assignment
     tobj.infoheight = tobj.infoArea.height() + 4;
@@ -2962,8 +2995,7 @@ JS9.Info.display = function(type, message, target){
     switch(type){
     case "regions":
 	area = tobj.regionsArea;
-	if( !this.display.image ||
-	    (this.display.image.iy > tobj.regheight) ){
+	if( !disp.image || (disp.image.iy > tobj.regheight) ){
 	    color = JS9.textColorOpts.inimage;
 	} else {
 	    color = JS9.textColorOpts.regions;
@@ -2972,8 +3004,7 @@ JS9.Info.display = function(type, message, target){
 	break;
     case "info":
 	area = tobj.infoArea;
-	if( !this.display.image ||
-	    (this.display.image.iy > tobj.infoheight) ){
+	if( !disp.image || (disp.image.iy > tobj.infoheight) ){
 	    color = JS9.textColorOpts.inimage;
 	} else {
 	    color = JS9.textColorOpts.info;
@@ -2982,8 +3013,7 @@ JS9.Info.display = function(type, message, target){
 	break;
     default:
 	area = tobj.infoArea;
-	if( !this.display.image ||
-	    (this.display.image.iy > tobj.infoheight) ){
+	if( !disp.image || (disp.image.iy > tobj.infoheight) ){
 	    color = JS9.textColorOpts.inimage;
 	} else {
 	    color = JS9.textColorOpts.info;
@@ -3009,33 +3039,61 @@ JS9.Info.display = function(type, message, target){
     // display the message
     area.css("color", color).html(s);
     // allow chaining
-    return this;
+    return disp;
 };
+JS9.Display.prototype.displayMessage = JS9.Info.display;
+// backwards compatibility
 JS9.Image.prototype.displayMessage = JS9.Info.display;
 
 // clear an info message
 JS9.Info.clear = function(which){
+    var disp = this;
+    // backward compatibility -- allow context to be Image
+    if( this.display ){
+	disp = this.display;
+    }
     if( which ){
-	this.displayMessage(which, "");
+	disp.displayMessage(which, "");
     } else {
-	this.displayMessage("info", "");
-	this.displayMessage("regions", "");
+	disp.displayMessage("info", "");
+	disp.displayMessage("regions", "");
+	disp.displayMessage("progress", false);
     }
     // allow chaining
-    return this;
+    return disp;
 };
+JS9.Display.prototype.clearMessage = JS9.Info.clear;
+// backwards compatibility
 JS9.Image.prototype.clearMessage = JS9.Info.clear;
 
 // when a plugin window is brought up, clear the display window
 JS9.Info.clearMain = function(im){
-    if( im ){
-	im.displayMessage("info", "", im.display);
-	im.displayMessage("regions", "", im.display);
+    var disp;
+    if( im && im.display ){
+	disp = im.display;
+	disp.displayMessage("info", "", disp);
+	disp.displayMessage("regions", "", disp);
+	disp.displayMessage("progress", false, disp);
     }
 };
 
 // having added the prototype displayMessage, we can define a public routine
-JS9.mkPublic("DisplayMessage", "displayMessage");
+JS9.mkPublic("DisplayMessage", function(type, message, target){
+    var got;
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    if( !display ){
+	JS9.error("invalid display for display message");
+    }
+    type = obj.argv[0];
+    message = obj.argv[1];
+    target = obj.argv[2];
+    got = display.displayMessage(type, message, target);
+    if( got === display ){
+	got = "OK";
+    }
+    return got;
+});
 
 // add this plugin into JS9
 JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
@@ -4625,7 +4683,7 @@ JS9.Menubar.init = function(width, height){
 				    // display image, 2D graphics, etc.
 				    uim.displayImage("all");
 				    uim.refreshLayers();
-				    uim.clearMessage();
+				    udisp.clearMessage();
 				    break;
 				}
 			    }
@@ -4760,7 +4818,7 @@ JS9.Menubar.init = function(width, height){
 			    if( uim ){
 				uim.params.valpos = !uim.params.valpos;
 				if( !uim.params.valpos ){
-				    uim.clearMessage();
+				    udisp.clearMessage();
 				}
 			    }
 			    break;
@@ -5373,11 +5431,11 @@ JS9.Menubar.init = function(width, height){
 			    switch(key){
 			    case "removeRegions":
 				uim.removeShapes("regions", "all");
-				uim.clearMessage("regions");
+				udisp.clearMessage("regions");
 				break;
 			    case "removeSelRegions":
 				uim.removeShapes("regions", "selected");
-				uim.clearMessage("regions");
+				udisp.clearMessage("regions");
 				break;
 			    case "loadRegions":
 				JS9.OpenRegionsMenu({display: udisp});

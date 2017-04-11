@@ -432,7 +432,7 @@ JS9.Image = function(file, params, func){
     };
     var finishUp = function(func){
 	// clear previous messages
-	this.clearMessage();
+	this.display.clearMessage();
 	// add to list of images
 	JS9.images.push(this);
 	// call function, if necessary
@@ -539,7 +539,7 @@ JS9.Image = function(file, params, func){
     // temp flag determines if we should update shapes at end of this call
     this.updateshapes = false;
     // change the cursor to show the waiting status
-    JS9.waiting(true, this.display.divjq[0]);
+    JS9.waiting(true, this.display);
     // file argument can be an object containing raw data or
     // a string containing a URL of a PNG image
     switch( typeof file ){
@@ -716,7 +716,7 @@ JS9.Image.prototype.closeImage = function(){
 	    // clear display if this is the currently displayed image
 	    if( iscurrent ){
 		// nothing on the screen
-		tim.clearMessage();
+		tim.display.clearMessage();
 		tim.display.context.clear();
 		// clear all layers
 		for( key in tim.layers ){
@@ -2629,7 +2629,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts){
 	    }
 	    if( got ){
 		im.displayImage("display", opts);
-		im.clearMessage();
+		im.display.clearMessage();
 		return;
 	    }
 	}
@@ -2664,7 +2664,7 @@ JS9.Image.prototype.displaySlice = function(slice, opts){
 	    if( im ){
 		im.slice = sliceOpts.slice;
 		im.displayImage("display", opts);
-		im.clearMessage();
+		im.display.clearMessage();
 	    } else {
 		JS9.Load(hdu, opts, {display: opts.display || that.display});
 	    }
@@ -3566,7 +3566,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     }
     // ask the helper to run the command
     // change the cursor to show the waiting status
-    JS9.waiting(true, this.display.divjq[0]);
+    JS9.waiting(true, this.display);
     JS9.helper.send(m, obj, function(r){
 	var s, robj, f, pf, xobj, files;
 	JS9.waiting(false);
@@ -4220,7 +4220,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	// this is unset and reset in the mousemove callback
 	if( this.valpos ){
 	    if( disp ){
-		this.displayMessage("info", this.valpos);
+		this.display.displayMessage("info", this.valpos);
 	    }
 	    return this.valpos;
 	}
@@ -4275,7 +4275,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    obj.vstr = vstr;
 	}
 	if( disp ){
-	    this.displayMessage("info", obj);
+	    this.display.displayMessage("info", obj);
 	}
     }
     return obj;
@@ -5024,7 +5024,7 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 JS9.Image.prototype.reprojectData = function(wcsim, opts){
     var that = this;
     // could take a while ...
-    JS9.waiting(true, this.display.divjq[0]);
+    JS9.waiting(true, this.display);
     // ... start a timeout to allow the wait spinner to get started
     window.setTimeout(function(){
 	var twcs = {};
@@ -5288,7 +5288,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 	return null;
     }
     // clear old display first
-    this.clearMessage();
+    this.display.clearMessage();
     this.display.context.clear();
     // plugin callbacks
     this.xeqPlugins("image", "onimageclear");
@@ -5367,7 +5367,7 @@ JS9.Image.prototype.saveSession = function(file){
 	JS9.error("no saveAs function available to save session");
     }
     // change the cursor to show the waiting status
-    JS9.waiting(true, this.display.divjq[0]);
+    JS9.waiting(true, this.display);
     // object holding session keys
     obj = {};
     // filename
@@ -5489,14 +5489,6 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
 
 // dummy routines to display/clear message, overwritten in info plugin
 // eslint-disable-next-line no-unused-vars
-JS9.Image.prototype.displayMessage = function(type, message, target){
-    return;
-};
-// eslint-disable-next-line no-unused-vars
-JS9.Image.prototype.clearMessage = function(which){
-    return;
-};
-
 // Colormap
 JS9.Colormap = function(name, a1, a2, a3){
     this.name = name;
@@ -5761,6 +5753,16 @@ JS9.Display.prototype.initMessages = function(){
     this.regionsArea = $("<div>")
 	.addClass("JS9Message")
 	.appendTo(this.messageContainer);
+    this.progressArea = $("<div>")
+	.addClass("JS9Progress")
+	.addClass("JS9Message")
+	.appendTo(this.messageContainer);
+    this.progressBar = $("<progress>")
+	.addClass("JS9ProgressBar")
+	.attr("value", 0)
+	.attr("max", 100)
+	.attr("id", "progress")
+	.appendTo(this.progressArea);
     // make it draggable, if possible
     try{
 	this.messageContainer.draggable({
@@ -6109,7 +6111,7 @@ JS9.Display.prototype.nextImage = function(inc){
 	im = JS9.images[curidx];
 	im.displayImage("all");
 	im.refreshLayers();
-	im.clearMessage();
+	im.display.clearMessage();
     }
     // allow chaining
     return this;
@@ -6167,7 +6169,7 @@ JS9.Display.prototype.loadSession = function(file){
 	JS9.Load(obj.file, obj.params, {display: that.id});
     };
     // change the cursor to show the waiting status
-    JS9.waiting(true, this.divjq[0]);
+    JS9.waiting(true, this);
     if( typeof file === "object" ){
 	loadit(file);
     } else {
@@ -6187,6 +6189,16 @@ JS9.Display.prototype.loadSession = function(file){
     }
     // allow chaining
     return this;
+};
+
+// dummy routines to display/clear message, overwritten in info plugin
+// eslint-disable-next-line no-unused-vars
+JS9.Display.prototype.displayMessage = function(type, message, target){
+    return;
+};
+// eslint-disable-next-line no-unused-vars
+JS9.Display.prototype.clearMessage = function(which){
+    return;
 };
 
 // convert table to a shape array for the given image
@@ -10490,7 +10502,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
     }
     // display the region string, if necessary
     if( mode > 1 ){
-	this.displayMessage("regions", regstr);
+	this.display.displayMessage("regions", regstr);
     }
     // always return the region string
     return regstr;
@@ -11031,13 +11043,17 @@ JS9.uniqueID = (function(){
 }());
 
 // change cursor to waiting/not waiting
-JS9.waiting = function(mode, el){
-    var opts;
+JS9.waiting = function(mode, display){
+    var el, opts;
     switch(mode){
     case true:
 	if( window.hasOwnProperty("Spinner") &&
 	    (JS9.globalOpts.waitType === "spinner") ){
-	    el = el || $("body").get(0);
+	    if( display ){
+		el = display.divjq[0];
+	    } else {
+		el = $("body").get(0);
+	    }
 	    if( !JS9.spinner ){
 		JS9.spinner = {};
 		opts = {color:   JS9.globalOpts.spinColor,
@@ -11059,6 +11075,32 @@ JS9.waiting = function(mode, el){
 	    $("body").removeClass("waiting");
 	}
 	break;
+    }
+};
+
+// display a progress bar
+JS9.progress = function(arg1, arg2){
+    if( (typeof arg1 === "boolean") || (typeof arg1 === "string") ){
+	switch(arg1){
+	case true:
+	case "indeterminate":
+	    if( arg2 ){
+		JS9.progress.display = arg2;
+		JS9.progress.display.displayMessage("progress", arg1);
+	    }
+	    break;
+	case false:
+	case "":
+	    if( JS9.progress.display ){
+		JS9.progress.display.clearMessage("progress");
+		delete JS9.progress.display;
+	    }
+	    break;
+	}
+    } else if( typeof arg1 === "number" ){
+	if( JS9.progress.display ){
+	    JS9.progress.display.displayMessage("progress", [arg1, arg2]);
+	}
     }
 };
 
@@ -12396,7 +12438,7 @@ JS9.mouseDownCB = function(evt){
 	// inside a region, clear region display and return;
 	if( im.clickInRegion && (im.clickInLayer === "regions") ){
 	    // clear the region layer
-	    im.clearMessage("regions");
+	    im.display.clearMessage("regions");
 	    return;
 	}
 	// plugin callbacks
@@ -12697,7 +12739,7 @@ JS9.dragdropCB = function(id, evt, handler){
 		JS9.LoadSession(files[i], {display: opts.display});
 	    } else {
 		if( display && display.divjq ){
-		    JS9.waiting(true, display.divjq[0]);
+		    JS9.waiting(true, display);
 		}
 		JS9.Load(files[i], opts, handler);
 	    }
@@ -13214,7 +13256,7 @@ JS9.init = function(){
 	    layerName = im.layer || "regions";
 	    canvas = im.display.layers[layerName].canvas;
 	    im.removeShapes(layerName, "selected");
-	    im.clearMessage(layerName);
+	    im.display.clearMessage(layerName);
 	    canvas.fire("mouse:up");
 	};
 	JS9.Keyboard.Actions["make regions layer active"] = function(im, ipos, evt){
@@ -14137,7 +14179,7 @@ JS9.mkPublic("Load", function(file, opts){
 		// display image, 2D graphics, etc.
 		im.displayImage("display", opts);
 		im.refreshLayers();
-		im.clearMessage();
+		im.display.clearMessage();
 		JS9.waiting(false);
 		return;
 	    }
@@ -14203,7 +14245,7 @@ JS9.mkPublic("Load", function(file, opts){
     if( im ){
 	// display image, 2D graphics, etc.
 	im.displayImage("all", opts);
-	im.clearMessage();
+	im.display.clearMessage();
 	JS9.waiting(false);
 	return;
     }
@@ -14264,9 +14306,6 @@ JS9.mkPublic("Load", function(file, opts){
 	} else {
 	    if( opts.display ){
 		disp = JS9.lookupDisplay(opts.display);
-		if( disp ){
-		    disp = disp.divjq[0];
-		}
 	    }
 	    JS9.waiting(true, disp);
 	    // remove extension so we can find the file itself
@@ -14414,9 +14453,6 @@ JS9.mkPublic("LoadProxy", function(url, opts){
     }
     if( obj.display ){
 	disp = JS9.lookupDisplay(obj.display);
-	if( disp ){
-	    disp = disp.divjq[0];
-	}
     }
     JS9.waiting(true, disp);
     JS9.Send('loadproxy', {'cmd': 'js9Xeq loadproxy ' + url}, function(r){
@@ -15068,7 +15104,7 @@ JS9.mkPublic("RemoveRegions", function(region){
     if( im ){
 	region = obj.argv[0];
 	im.removeShapes("regions", region);
-	im.clearMessage("regions");
+	im.display.clearMessage("regions");
 	return "OK";
     }
     return null;

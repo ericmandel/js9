@@ -456,7 +456,7 @@ JS9.Menubar.init = function(width, height){
 				    // display image, 2D graphics, etc.
 				    uim.displayImage("all");
 				    uim.refreshLayers();
-				    uim.clearMessage();
+				    udisp.clearMessage();
 				    break;
 				}
 			    }
@@ -591,7 +591,7 @@ JS9.Menubar.init = function(width, height){
 			    if( uim ){
 				uim.params.valpos = !uim.params.valpos;
 				if( !uim.params.valpos ){
-				    uim.clearMessage();
+				    udisp.clearMessage();
 				}
 			    }
 			    break;
@@ -1204,11 +1204,11 @@ JS9.Menubar.init = function(width, height){
 			    switch(key){
 			    case "removeRegions":
 				uim.removeShapes("regions", "all");
-				uim.clearMessage("regions");
+				udisp.clearMessage("regions");
 				break;
 			    case "removeSelRegions":
 				uim.removeShapes("regions", "selected");
-				uim.clearMessage("regions");
+				udisp.clearMessage("regions");
 				break;
 			    case "loadRegions":
 				JS9.OpenRegionsMenu({display: udisp});
