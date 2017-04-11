@@ -12727,21 +12727,20 @@ JS9.dragdropCB = function(id, evt, handler){
     display = JS9.lookupDisplay(opts.display);
     // wait for spinner to start ...
     window.setTimeout(function(){
-	var fname;
+	var file, fname;
 	// ... and load each file in turn
 	for(i=0; i<files.length; i++){
-	    fname =  files[i].path || files[i].name;
+	    file = files[i];
+	    fname =  file.path || file.name;
 	    if( fname && fname.match(/\.reg$/) ){
-		JS9.LoadRegions(files[i], {display: opts.display});
+		JS9.LoadRegions(file, {display: opts.display});
 	    } else if( fname && fname.match(/\.cat$/) ){
-		JS9.LoadCatalog(null, files[i], {display: opts.display});
+		JS9.LoadCatalog(null, file, {display: opts.display});
 	    } else if( fname && fname.match(/\.ses$/) ){
-		JS9.LoadSession(files[i], {display: opts.display});
+		JS9.LoadSession(file, {display: opts.display});
 	    } else {
-		if( display && display.divjq ){
-		    JS9.waiting(true, display);
-		}
-		JS9.Load(files[i], opts, handler);
+		JS9.waiting(true, display);
+		JS9.Load(file, opts, handler);
 	    }
 	}
     }, JS9.SPINOUT);

@@ -407,11 +407,11 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	};
 	// eslint-disable-next-line no-unused-vars
 	fileReader.onerror = function(e) {
-	    Module["error"]("fileReader could not read blob as a FITS file");
+	    Module["error"]("fileReader could not read blob as a FITS file", e);
 	};
 	// eslint-disable-next-line no-unused-vars
 	fileReader.onabort = function(e) {
-	    Module["error"]("fileReader did not read blob as a FITS file");
+	    Module["error"]("fileReader did not read blob as a FITS file", e);
 	};
 	// this starts it all!
 	fileReader.readAsArrayBuffer(fits);
