@@ -376,12 +376,19 @@ to filter events instead.
 </ul>
 If you drag and drop a FITS file onto a JS9 web page connected to a
 remove server (such as <href="http://js9.si.edu">http://js9.si.edu</a>),
-the FITS file of course will not be accessible by the server (it's
-stored in the client). As a result, no server-side analysis tasks will
-be available.  But if the remove server supports <b>proxy loading</b>
-of data, the Analysis menu will display an option to <b>upload FITS to
+the FITS file will, of course, not be accessible on the server (it's only
+stored in the browser). As a result, no server-side analysis tasks will
+be available. But if the remote server supports <b>proxy loading</b>
+of FITS data, the Analysis menu will display an option to <b>upload FITS to
 make tasks available</b>. Select this option and your FITS file will
 be sent to the server so that server-side analysis can be performed.
+
+<p>
+If a proxy file exists (either because it was explicitly uploaded as above,
+or because the File menu's <b>open link via proxy ...</b> option was utilized),
+a menu option will be shown to <b>remove proxy FITS file from server</b>.
+Remote servers generally enforce space quotas, and this option can be used
+to free up space and keep under the quota limit.
 
 <p>
 In addition to server-side analysis, the <b>Analysis</b> menu lists
