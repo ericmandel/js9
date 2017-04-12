@@ -699,13 +699,6 @@ JS9.Image.prototype.closeImage = function(){
     var iscurrent = false;
     var ilen= JS9.images.length;
     var display = this.display;
-    var func = function(r){
-	if( r.stderr ){
-	    JS9.error(r.stderr);
-	} else if( r.stdout ){
-	    JS9.log(r.stdout);
-	}
-    };
     // look for the image in the image list, and remove it
     for(i=0; i<ilen; i++){
 	if( this === JS9.images[i] ){
@@ -763,10 +756,7 @@ JS9.Image.prototype.closeImage = function(){
 		}
 	    }
 	    // remove proxy image from server, if necessary
-	    if( tim.proxyFile ){
-		JS9.Send('removeproxy',
-			 {'cmd': 'js9Xeq removeproxy ' + tim.proxyFile}, func);
-	    }
+	    tim.removeProxyFile();
 	    // good hints to the garbage collector
 	    tim.rgb = null;
 	    tim.offscreen = null;
@@ -5531,6 +5521,28 @@ JS9.Image.prototype.uploadFITSFile = function(){
 	});
     });
     return this;
+};
+
+// remove proxy file from a remote server
+JS9.Image.prototype.removeProxyFile = function(reset){
+    var that = this;
+    var func = function(r){
+	if( reset ){
+	    if( r && r.stdout.trim() === "OK" ){
+		that.proxyFile = null;
+		that.fitsFile = null;
+		that.analysisPackages = null;
+		that.queryHelper("all");
+	    }
+	}
+    };
+    // sanity check
+    if( !this.proxyFile ){
+	return;
+    }
+    // ask to remove proy file, and process result
+    JS9.Send('removeproxy',
+	     {'cmd': 'js9Xeq removeproxy ' + this.proxyFile}, func);
 };
 
 // dummy routines to display/clear message, overwritten in info plugin

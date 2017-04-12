@@ -50,7 +50,7 @@ quotacheck () {
   mb=`du -sk . | awk '{printf("%d", ($1 + 500) / 1000)}'`
   if [ ${JS9_WORKDIR_QUOTA:-0} -gt 0 ]; then
     if [ ${mb:-0} -ge ${JS9_WORKDIR_QUOTA} ]; then
-      error "disk quota exceeded. Please close one or more displayed images."
+      error "disk quota exceeded. Please close a displayed image (File menu) or remove a proxy file (Analysis menu)."
     fi
   fi
 }
@@ -386,6 +386,7 @@ removeproxy)
     if [ $? != 0 ]; then
       error "can't remove proxy file: $FILE"
     fi
+    echo "OK"
     exit 0
     ;;
 
@@ -401,12 +402,14 @@ uploadfits)
     cat > "$FNAME"
     # tell JS9 the new pathname
     echo "${JS9_WORKDIR}/$FNAME"
+    exit 0
     ;;
 
 quotacheck)
     # make sure we are not over quota
     quotacheck
     echo "OK ${JS9_WORKDIR_QUOTA:-0}"
+    exit 0
     ;;
 
 macros)

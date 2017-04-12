@@ -5795,6 +5795,11 @@ JS9.Menubar.init = function(width, height){
 			im && im.raw && im.raw.hdu && im.raw.hdu.vfile ){
 			items.upload = {name: "upload FITS to make tasks available"};
 		    }
+		} else {
+		    if( im && im.proxyFile ){
+			items["sep" + n++] = "------";
+			items.unproxy = {name: "remove proxy FITS file from server"};
+		    }
 		}
 		items["sep" + n++] = "------";
 		items.sigma = {
@@ -5835,6 +5840,10 @@ JS9.Menubar.init = function(width, height){
 				break;
 			    case "upload":
 				uim.uploadFITSFile();
+				break;
+			    case "unproxy":
+				// remove proxy image from remote server
+				uim.removeProxyFile(true);
 				break;
 			    default:
 				// look for analysis routine
