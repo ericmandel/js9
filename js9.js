@@ -11278,6 +11278,7 @@ JS9.msgHandler =  function(msg, cb){
     var args = [];
     var cmd = msg.cmd;
     var id = msg.id;
+    var oalerts = JS9.globalOpts.alerts;
     // turn off alerts
     if( cb ){
 	JS9.globalOpts.alerts = false;
@@ -11309,7 +11310,7 @@ JS9.msgHandler =  function(msg, cb){
 	try{ res = JS9.publics[cmd].apply(null, args); }
 	catch(e){ res = sprintf("ERROR: %s", e.message); }
 	if( cb ){
-	    JS9.globalOpts.alerts = true;
+	    JS9.globalOpts.alerts = oalerts;
 	    cb(res);
 	}
 	return res;
@@ -11320,7 +11321,7 @@ JS9.msgHandler =  function(msg, cb){
 	    cb("");
 	}
 	if( cb ){
-	    JS9.globalOpts.alerts = true;
+	    JS9.globalOpts.alerts = oalerts;
 	}
 	return;
     }
@@ -11359,7 +11360,7 @@ JS9.msgHandler =  function(msg, cb){
     }
     // turn on alerts, do message callback, if necessary
     if( cb ){
-	JS9.globalOpts.alerts = true;
+	JS9.globalOpts.alerts = oalerts;
 	cb(res);
     }
     return res;
@@ -14686,6 +14687,7 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 // depending on the state of processing
 JS9.mkPublic("Preload", function(arg1){
     var i, j, mode, emsg="", pobj=null, dobj=null;
+    var oalerts = JS9.globalOpts.alerts;
     var alen=arguments.length;
     var obj = JS9.parsePublicArgs(arguments);
     arg1 = obj.argv[0];
@@ -14793,7 +14795,7 @@ JS9.mkPublic("Preload", function(arg1){
 		catch(e){ emsg = emsg + " " + arguments[i]; }
 	    }
 	}
-	JS9.globalOpts.alerts = true;
+	JS9.globalOpts.alerts = oalerts;
 	if( emsg ){ JS9.error("could not preload image(s): " + emsg); }
 	break;
     case 2:
@@ -14810,7 +14812,7 @@ JS9.mkPublic("Preload", function(arg1){
 	    }
 	    catch(e){ emsg = emsg + " " + JS9.preloads[i][0]; }
 	}
-	JS9.globalOpts.alerts = true;
+	JS9.globalOpts.alerts = oalerts;
 	if( emsg ){ JS9.error("could not preload image(s): " + emsg); }
 	// remove saved arguments so we don't reload them on reconnect
 	JS9.preloads = [];
