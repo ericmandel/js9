@@ -154,6 +154,11 @@ div.JS9Message {
     font-weight: 300;
 }
 
+/* div enclosing progress bar in message area */
+div.JS9Progress {
+    display: none;
+}
+
 .JS9Button, .JS9Button-classic {
     font: normal 12px Arial;
     background: #F6F6F6;

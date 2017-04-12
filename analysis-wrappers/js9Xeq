@@ -43,6 +43,18 @@ getpar () {
   egrep "$1 *=" | awk -F= '{print $2}' | awk -F/ '{print $1}' | sed "s/[' ]*\([^ ']*\)[ ']*/\1/" | tr [a-z] [A-Z] | head -1
 }
 
+quotacheck () {
+  if [ x"${JS9_WORKDIR}" = x ]; then
+    error "task requires configuration of a temporary work directory"
+  fi
+  mb=`du -sk . | awk '{printf("%d", ($1 + 500) / 1000)}'`
+  if [ ${JS9_WORKDIR_QUOTA:-0} -gt 0 ]; then
+    if [ ${mb:-0} -ge ${JS9_WORKDIR_QUOTA} ]; then
+      error "disk quota exceeded. Please close one or more displayed images."
+    fi
+  fi
+}
+
 # regcnts is preferred
 hash regcnts 1>/dev/null 2>&1
 if [ $? = 0 ]; then
@@ -206,15 +218,8 @@ evfilter)
     if [ "$#" -lt 3 ]; then
 	error "evfilter ifile filter cen dims [$*]"
     fi
-    if [ x"${JS9_WORKDIR}" = x ]; then
-	error "evfilter requires configuration of a temporary work directory"
-    fi
-    mb=`du -sk . | awk '{printf("%d", ($1 + 500) / 1000)}'`
-    if [ ${JS9_WORKDIR_QUOTA:-0} -gt 0 ]; then
-      if [ ${mb:-0} -ge ${JS9_WORKDIR_QUOTA} ]; then
-       error "disk quota exceeded. Please close one or more displayed images."
-      fi
-    fi
+    # make sure we are not over quota
+    quotacheck
     # input file
     IFILE="$1"; shift
     # get filter, remove spaces
@@ -264,15 +269,8 @@ imsection)
     if [ "$#" -lt 2 ]; then
 	error "imsection file section [mode]"
     fi
-    if [ x"${JS9_WORKDIR}" = x ]; then
-	error "imsection requires configuration of a temporary work directory"
-    fi
-    mb=`du -sk . | awk '{printf("%d", ($1 + 500) / 1000)}'`
-    if [ ${JS9_WORKDIR_QUOTA:-0} -gt 0 ]; then
-      if [ ${mb:-0} -ge ${JS9_WORKDIR_QUOTA} ]; then
-       error "disk quota exceeded. Please close one or more displayed images."
-      fi
-    fi
+    # make sure we are not over quota
+    quotacheck
     IFILE="$1"
     SECTION="$2"
     if [ $# -ge 3 ]; then
@@ -298,15 +296,8 @@ loadproxy)
     if [ "$#" -lt 1 ]; then
 	error "loadproxy url"
     fi
-    if [ x"${JS9_WORKDIR}" = x ]; then
-	error "loadproxy requires configuration of a temporary work directory"
-    fi
-    mb=`du -sk . | awk '{printf("%d", ($1 + 500) / 1000)}'`
-    if [ ${JS9_WORKDIR_QUOTA:-0} -gt 0 ]; then
-      if [ ${mb:-0} -ge ${JS9_WORKDIR_QUOTA} ]; then
-       error "disk quota exceeded. Please close one or more displayed images."
-      fi
-    fi
+    # make sure we are not over quota
+    quotacheck
     URL=`echo $1 | sed 's/__ampersand__/\&/g'`
     OFILE=`basename $URL | sed 's/\?.*//g'`
     # hack for google drive
@@ -383,8 +374,10 @@ removeproxy)
 	error "removeproxy requires configuration of a temporary work directory"
     fi
     echo "$DIR" | egrep "$JS9_WORKDIR" 2>&1 >/dev/null
+    # exit if this is not our proxy file
     if [ $? != 0 ]; then
-      error "can't remove proxy file from someone else's working directory"
+      # error "can't remove proxy file from someone else's working directory"
+      exit 0
     fi
     # remove files that match a template of the input file (without extension),
     # but avoid removing files with a similar name
@@ -394,6 +387,26 @@ removeproxy)
       error "can't remove proxy file: $FILE"
     fi
     exit 0
+    ;;
+
+uploadfits)
+    # required args
+    if [ "$#" -lt 1 ]; then
+	error "uploadfits filename"
+    fi
+    FNAME="$1"
+    # make sure we are not over quota
+    quotacheck
+    # save stdin as a file
+    cat > "$FNAME"
+    # tell JS9 the new pathname
+    echo "${JS9_WORKDIR}/$FNAME"
+    ;;
+
+quotacheck)
+    # make sure we are not over quota
+    quotacheck
+    echo "OK ${JS9_WORKDIR_QUOTA:-0}"
     ;;
 
 macros)

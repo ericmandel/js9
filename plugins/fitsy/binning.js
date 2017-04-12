@@ -53,7 +53,7 @@
 		if( !hdu.fits || !hdu.fits.fptr ){
 		    JS9.error("virtual FITS file is missing for binning");
 		}
-		JS9.fits.getFITSImage(hdu.fits, hdu, options, function(hdu){
+		JS9.getFITSImage(hdu.fits, hdu, options, function(hdu){
 		    rebin(im, hdu, display);
 		});
 		break;

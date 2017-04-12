@@ -24,7 +24,7 @@
 var http = require('http'),
     path = require('path'),
     https = require('https'),
-    Sockio = require('socket.io'),
+    Server = require('socket.io'),
     url = require('url'),
     qs = require('querystring'),
     cproc  = require("child_process"),
@@ -38,6 +38,7 @@ var cdir = __dirname;
 var prefsfile  = path.join(cdir, "js9Prefs.json");
 var securefile = path.join(cdir, "js9Secure.json");
 var fits2png = {};
+var quotacheck = {};
 var analysis = {str:[], pkgs:[]};
 var envs = JSON.stringify(process.env);
 var plugins = [];
@@ -53,6 +54,7 @@ var secureOpts = {
 var globalOpts = {
     helperPort:       2718,
     helperHost:       "0.0.0.0",
+    helperOpts:       {'maxHttpBufferSize': Infinity},
     cmd:              "js9helper",
 
     analysisPlugins:  "analysis-plugins",
@@ -62,7 +64,7 @@ var globalOpts = {
     maxTextBuffer:    5*1024000,   // exec buffer: good for text
     textEncoding:     "ascii",     // encoding for returned stdout from exec
     workDir:          "",          // top-level working directory for exec
-    workDirQuota:     100,          // quota on working directory (Mb)
+    workDirQuota:     100,         // quota on working directory (Mb)
     rmWorkDir:        true,        // remove workdir on disconnect?
     remoteMsgs:       1 // 0 => none, 1 => samehost, 2 => all
 };
@@ -119,7 +121,7 @@ var getClients = function(io, socket){
 
 // create a nice date/time string for logging
 var datestr = function(){
-    return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ' UTC');
+    return new Date().toLocaleString(undefined, {hour12: false});
 };
 
 // output a log message on the console
@@ -212,6 +214,34 @@ var getTargets = function(io, socket, msg){
 	}
     }
     return targets;
+};
+
+// connectWorker: identify main socket for this worker
+var connectWorker = function(io, socket, pageid){
+    var i, c, clip;
+    // ip associated with this socket
+    var myip = getHost(io, socket);
+    // list of all clients connected on this socket
+    var clients = getClients(io, socket);
+    // sanity check
+    if( !pageid ){
+	return null;
+    }
+    // look at all clients
+    for(i=0; i<clients.length; i++){
+	// current client
+	c = clients[i];
+	// check for client with same pageid
+	if( c.js9 && (c.js9.pageid === pageid) ){
+	    // get client ip
+	    clip = getHost(io, c);
+	    // ip of worker and client must match!
+	    if( myip === clip ){
+		return c;
+	    }
+	}
+    }
+    return null;
 };
 
 // envClean: clean incoming environment variables
@@ -323,6 +353,10 @@ var loadAnalysisTasks = function(dir){
 			    try{ fits2png = JSON.parse(jstr); }
 			    catch(e1){cerr("can't parse: ", pathname, e1);}
 			    break;
+			case "quotacheck.json":
+			    try{ quotacheck = JSON.parse(jstr); }
+			    catch(e1){cerr("can't parse: ", pathname, e1);}
+			    break;
 			default:
 			    try{
 				analysis.pkgs.push(JSON.parse(jstr));
@@ -430,13 +464,15 @@ var parseArgs = function(argstr){
 // execCmd: exec a analysis wrapper function to run a command
 // this is the default callback for server-side analysis tasks
 var execCmd = function(io, socket, obj, cbfunc) {
-    var cmd, argstr, args, maxbuf;
-    var i, s, froot, fext, parr, res;
+    var cmd, argstr, args, maxbuf, child;
+    var i, s, froot, fext, parr;
     var myworkdir = null;
     var myip = getHost(io, socket);
     var myid = obj.id;
     var myrtype = obj.rtype || "binary";
     var myenv = JSON.parse(envs);
+    var res = { stdout: null, stderr: null, errcode: 0,
+		encoding: globalOpts.textEncoding};
     // eslint-disable-next-line no-unused-vars
     var repl = function(m, t, o){
 	if( myenv[t] ){
@@ -445,7 +481,23 @@ var execCmd = function(io, socket, obj, cbfunc) {
 	return m;
     };
     // sanity check
-    if( !obj.cmd ){
+    if( !obj.cmd || !socket.js9 ){
+	return;
+    }
+    // stdin processing
+    if( obj.stdin && typeof obj.stdin === "object" ){
+	// first chunk gets sent after process is started (see below),
+	// otherwise send a new chunk to stdin now and return
+	socket.js9.child.stdin.write(obj.stdin.data);
+	// if this was the last chunk,  close off stdin and delete child
+	if( (obj.stdin.cur + obj.stdin.len) >= obj.stdin.total ){
+	    socket.js9.child.stdin.end();
+	    delete socket.js9.child;
+	}
+	if( cbfunc ){
+	    res.stdout = "OK";
+	    cbfunc(res);
+	}
 	return;
     }
     // id of js9 display
@@ -493,8 +545,6 @@ var execCmd = function(io, socket, obj, cbfunc) {
 	// if FITS, handle this request internally instead of exec'ing
 	// (makes external analysis possible without building js9 programs)
 	if( obj.image && (path.extname(obj.image ) !== ".png") ){
-	    res = {encoding: globalOpts.textEncoding,
-		   errcode: 0, stdout: "", stderr: ""};
 	    // look for and remove the extension
 	    froot = obj.image.replace(/\[.*]$/,"");
 	    s = obj.image.match(/\[.*]$/,"");
@@ -549,7 +599,7 @@ var execCmd = function(io, socket, obj, cbfunc) {
     clog("exec: %s [%s]", cmd, args.slice(1));
     // execute the analysis script with cmd arguments
     // NB: can't use exec because it's shell breaks, e.g. region command lines
-    cproc.execFile(cmd, args.slice(1),
+    child = cproc.execFile(cmd, args.slice(1),
 		   { encoding: "utf8",
 		     timeout: 0,
 		     maxBuffer: maxbuf,
@@ -559,7 +609,6 @@ var execCmd = function(io, socket, obj, cbfunc) {
 		   },
 		   // return from exec
 		   function(errcode, stdout, stderr) {
-		       var res={stdout: null, stderr: null};
 		       if( errcode ){
 			   res.errcode = errcode.errno || errcode.code;
 		       }
@@ -569,7 +618,6 @@ var execCmd = function(io, socket, obj, cbfunc) {
 			   case "plot":
 			   case "png":
 			   case "alert":
-			       res.encoding = globalOpts.textEncoding;
 			       res.stdout = stdout.toString(res.encoding);
 			       break;
 			   default:
@@ -584,6 +632,13 @@ var execCmd = function(io, socket, obj, cbfunc) {
 		       // send results back to browser
 		       if( cbfunc ){ cbfunc(res); }
 		   });
+    // first time through: save child for uploading data
+    if( obj.stdin === true ){
+	// save child so we can process future chunks of data
+	socket.js9.child = child;
+	// set up to send raw data
+	socket.js9.child.stdin.setEncoding = 'binary';
+    }
 };
 
 // sendAnalysis: send list of analysis routines to browser
@@ -692,8 +747,8 @@ var socketioHandler = function(socket) {
     //   show disconnects in the log
     socket.on("disconnect", function() {
 	var myhost = getHost(io, socket);
-	// only show disconnect for displays (not js9 msgs)
-	if( socket.js9 && socket.js9.displays ){
+	// only process disconnect for displays (not js9 msgs or workers)
+	if( socket.js9 && socket.js9.displays && !socket.js9worker ){
             clog("disconnect: %s (%s)",	myhost, socket.js9.displays);
 	    // clean up working directory
 	    if( socket.js9.workDir && globalOpts.rmWorkDir ){
@@ -736,6 +791,20 @@ var socketioHandler = function(socket) {
 	socket.js9.displays = socket.js9.displays || [];
 	socket.js9.displays.push(obj.display);
 	if( cbfunc ){ cbfunc(socket.js9.pageid); }
+    });
+    socket.on("worker", function(obj, cbfunc) {
+	var main;
+	obj = obj || {};
+	main = connectWorker(io, socket, obj.pageid);
+	if( main ){
+	    // connect worker to main
+	    socket.js9 = main.js9;
+	    // signal this is a worker
+	    socket.js9worker = true;
+	    if( cbfunc ){ cbfunc("OK"); }
+	} else {
+	    if( cbfunc ){ cbfunc("ERROR"); }
+	}
     });
     // on alive: return "OK" to signal a valid connection
     socket.on("alive", function(obj, cbfunc) {
@@ -807,6 +876,21 @@ var socketioHandler = function(socket) {
 	    execCmd(io, socket, obj, cbfunc);
 	}
     });
+    // on quotacheck: check whether temp directory is set up and under quota
+    // returns: object w/ errcode, stderr (error string), stdout (results)
+    // for other implementations, this is needed if you want to:
+    //   allow JS9 to check quota before executing a file-generating task
+    //   (e.g. upload a fits file)
+    socket.on("quotacheck", function(obj, cbfunc) {
+	if( !obj ){return;}
+	if( quotacheck[0] && quotacheck[0].action ){
+	    // make up quotacheck command string from defined quotacheck action
+	    obj.cmd = quotacheck[0].action;
+	    obj.rtype = quotacheck[0].rtype;
+	    // exec the task (via a wrapper function)
+	    execCmd(io, socket, obj, cbfunc);
+	}
+    });
     // on msg: send a command from an external source to a JS9 browser
     // nb: this msg comes from an external source, not from js9 itself
     // returns: results from JS9
@@ -837,6 +921,7 @@ var socketioHandler = function(socket) {
 };
 
 // httpd handler: field pseudo-socket.io http requests
+// GET:
 // public api:
 // wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}'
 // wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "GetColormap"}'
@@ -845,6 +930,10 @@ var socketioHandler = function(socket) {
 // wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom"}'
 // analysis commands:
 // wget $MYHOST'/counts?{"id": "'$ID'", "cmd": "counts", "args": ["counts"]}'
+//
+// POST:
+// wget -q -O- --post-data='{"id": "'$ID'", "cmd": "GetColormap"}' $MYHOST/msg
+// wget -q -O- --post-data='{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}' $MYHOST/msg
 var httpHandler = function(req, res){
     var cmd, gobj, s, jstr;
     var body = "";
@@ -981,7 +1070,7 @@ if( secure ){
 app.setTimeout(0);
 
 // and connect with the socket.io server
-io = new Sockio(app);
+io = new Server(app, globalOpts.helperOpts);
 
 // for each socket.io connection, receive and process custom events
 io.on("connection", socketioHandler);

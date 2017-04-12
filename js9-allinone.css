@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.11, Tue Apr 11 12:38:14 EDT 2017 */
+/* JS9 allinone: v1.11, Tue Apr 11 20:49:14 EDT 2017 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -1049,6 +1049,11 @@ div.JS9Message {
     font-family: Helvetica, sans-serif;
     font-size: 10pt;
     font-weight: 300;
+}
+
+/* div enclosing progress bar in message area */
+div.JS9Progress {
+    display: none;
 }
 
 .JS9Button, .JS9Button-classic {

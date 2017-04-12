@@ -1,0 +1,10 @@
+[
+  {"name"   : "uploadfits",
+   "title"  : "Upload a FITS File to the Remote Server",
+   "files"  : "*",
+   "action" : "js9Xeq uploadfits $uuid",
+   "workDir": true,
+   "hidden" : true,
+   "rtype"  : "text"
+  }
+]

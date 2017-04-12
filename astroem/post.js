@@ -7,21 +7,26 @@ Module['print'] = function(text) { console.log(text); };
 
 Module['rootdir'] = "/";
 
-Module['vfile'] = function(filename, buf) {
+Module["vfile"] = function(filename, buf) {
   var size;
-  try{ FS.unlink(Module['rootdir'] + filename); }
-  catch(ignore){ }
-  FS.createDataFile(Module['rootdir'], filename, buf, true, true);
-  if( buf.length !== undefined ){
+  // two args: create a virtual file
+  if( buf ){
+    try{ FS.unlink(Module["rootdir"] + filename); }
+    catch(ignore){ }
+    FS.createDataFile(Module["rootdir"], filename, buf, true, true);
+    if( buf.length !== undefined ){
       size = buf.length;
-  } else if( buf.byteLength !== undefined ){
+    } else if( buf.byteLength !== undefined ){
       size = buf.byteLength;
-  } else if( buf.size !== undefined ){
+    } else if( buf.size !== undefined ){
       size = buf.size;
-  } else {
+    } else {
       size = -1;
+    }
+    return {path: filename, size: size};
   }
-  return {path: filename, size: size};
+  // one arg: return contents of an existing file
+  return FS.readFile(Module["rootdir"] + filename, {encoding: "binary"});
 };
 
 Module['vsize'] = function(filename) {

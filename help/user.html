@@ -297,7 +297,7 @@ copied. Otherwise, all regions will be copied.
 The <b>list regions</b> menu option will display all regions.
 The <b>remove regions</b> menu option will delete all regions.
 The <b>list selected</b> menu option will display the selected region(s).
-The <b>remove selected</b> menu option will delete the seleted regions(s).
+The <b>remove selected</b> menu option will delete the selected regions(s).
 
 <p>
 The <b>list on change</b> menu option will cause all regions to be
@@ -347,23 +347,41 @@ executing the task. Parameter tasks are identified by the presence of
 an ellipsis (...) after the task name.
 </ul>
 <p>
-For example, the sample implementation of JS9 offers the following tasks:
+For example, the sample implementation of JS9 at
+<href="http://js9.si.edu">http://js9.si.edu</a>
+offers the following tasks:
 <ul>
+<li><b>FITS Header(s):<b> Display all FITS headers for this FITS file.
 <li><b>Counts in Regions:</b> Run the funcnts program on the specified
 source and background regions and return a text display (immediate task).
 <li><b>Radial Profile:</b> Run the funcnts program on the specified
 source and background regions and return a plot display. The source regions
 consist of circles or annuli (immediate task).
-<li><b>Energy Plot:</b> Create a histogram of the pi column of a
-binary table and return a plot display (immediate task). The pi column
-must exist in the data file (e.g., Chandra ACIS data but not Chandra
-HRC data).
+<li><b>Energy Plot:</b> Create a histogram of the pi column (or energy
+column for Chandra data) of a binary table and return a plot display
+(immediate task). The column must exist in the data file (e.g.,
+Chandra ACIS data but not Chandra HRC data).
+<li><b>Light Curve:<b>Create a histogram of the time column of a binary table
+and return a plot display (immediate task). The time column
+must exist in the data file.
 <li><b>Histogram Plot:</b> Create a histogram of the user-specified
 column of a binary table and return a plot display (parameter
 task). Parameters include: histogram column name, number of bins, use
 bin width instead of bin size, and an option to normalize by bin
 width. A help file is appended to the parameter display.
+<li><b>Event Filter:</b> filter the events of a binary table and return
+an image representation of the filtered events. Note that when a FITS file
+is loaded directly into JS9, you can use the <b>Binning/Filtering</b> plugin
+to filter events instead.
 </ul>
+If you drag and drop a FITS file onto a JS9 web page connected to a
+remove server (such as <href="http://js9.si.edu">http://js9.si.edu</a>),
+the FITS file of course will not be accessible by the server (it's
+stored in the client). As a result, no server-side analysis tasks will
+be available.  But if the remove server supports <b>proxy loading</b>
+of data, the Analysis menu will display an option to <b>upload FITS to
+make tasks available</b>. Select this option and your FITS file will
+be sent to the server so that server-side analysis can be performed.
 
 <p>
 In addition to server-side analysis, the <b>Analysis</b> menu lists

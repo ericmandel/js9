@@ -920,7 +920,7 @@ module.exports = xhr;
 		if( !hdu.fits || !hdu.fits.fptr ){
 		    JS9.error("virtual FITS file is missing for binning");
 		}
-		JS9.fits.getFITSImage(hdu.fits, hdu, options, function(hdu){
+		JS9.getFITSImage(hdu.fits, hdu, options, function(hdu){
 		    rebin(im, hdu, display);
 		});
 		break;
@@ -4484,9 +4484,8 @@ JS9.Menubar.init = function(width, height){
 			var uim = udisp.image;
 			switch(key){
 			case "free":
-			    if( uim && uim.raw.hdu && uim.raw.hdu.fits &&
-				JS9.fits.cleanupFITSFile ){
-				JS9.fits.cleanupFITSFile(uim.raw.hdu.fits,true);
+			    if( uim && uim.raw.hdu && uim.raw.hdu.fits ){
+				JS9.cleanupFITSFile(uim.raw.hdu.fits, true);
 			    }
 			    break;
 			case "close":
@@ -5792,6 +5791,10 @@ JS9.Menubar.init = function(width, height){
 			disabled: true,
 			events: {keyup: function(){return;}}
 		    };
+		    if( JS9.globalOpts.loadProxy &&
+			im && im.raw && im.raw.hdu && im.raw.hdu.vfile ){
+			items.upload = {name: "upload FITS to make tasks available"};
+		    }
 		}
 		items["sep" + n++] = "------";
 		items.sigma = {
@@ -5829,6 +5832,9 @@ JS9.Menubar.init = function(width, height){
 					 {title: "Data Path for Drag and Drop"});
 				// save display id
 				$(did).data("dispid", udisp.id);
+				break;
+			    case "upload":
+				uim.uploadFITSFile();
 				break;
 			    default:
 				// look for analysis routine

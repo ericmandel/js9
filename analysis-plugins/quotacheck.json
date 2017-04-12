@@ -1,0 +1,8 @@
+[
+  {"name"   : "quotacheck",
+   "title"  : "Check Quota for Remote Analysis", 
+   "files"  : "*",
+   "action" : "js9Xeq quotacheck",
+   "hidden" : true,
+   "rtype"  : "text"}
+]

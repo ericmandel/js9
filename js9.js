@@ -28,6 +28,7 @@ JS9.WIDTH = 512;	        // width of js9 canvas
 JS9.HEIGHT = 512;		// height of js9 canvas
 JS9.ANON = "Anonymous";		// name to use for images with no name
 JS9.PREFSFILE = "js9Prefs.json";// prefs file to load
+JS9.WORKERFILE = "js9worker.js";// js9 web worker file to load
 JS9.ZINDEX = 0;			// z-index of image canvas: on bottom of js9
 JS9.SHAPEZINDEX = 4;		// base z-index of shape layers layers
 JS9.MESSZINDEX = 80;		// z-index of messages: above graphics
@@ -5487,6 +5488,51 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
     return this;
 };
 
+// upload virtual file to proxy server
+JS9.Image.prototype.uploadFITSFile = function(){
+    var vfile, vdata;
+    var that = this;
+    var uploadCB = function(r){
+	window.setTimeout(function(){ JS9.progress(false); }, 1000);
+	if( r.stderr ){
+	    JS9.error(r.stderr);
+	} else if( r.stdout ){
+	    // set FITS filename and proxy filename
+	    that.fitsFile = r.stdout.trim();
+	    that.proxyFile = that.fitsFile;
+	    if( that.fitsFile.charAt(0) !== "/" ){
+		that.fitsFile = "${JS9_DIR}/" + that.fitsFile;
+	    }
+	    // re-query for analysis
+	    that.queryHelper("all");
+	}
+    };
+    // only supported when using socket.io ...
+    if( JS9.helper.type !== "nodejs" && JS9.helper.type !== "socket.io" ){
+	return;
+    }
+    // ... and only when we have a virtual file to upload
+    if( !this.raw.hdu || !this.raw.hdu.fits || !this.raw.hdu.fits.vfile ){
+	return;
+    }
+    // this is the file to upload
+    vfile = this.raw.hdu.fits.vfile;
+    // ask the remote server if we can upload
+    JS9.helper.send("quotacheck", null, function(robj){
+	// check quota, only errors matter
+	if( robj.stderr || robj.errcode ){
+	    JS9.error(robj.stderr || "from quotacheck: " + robj.errcode);
+	}
+	vdata = JS9.vfile(vfile);
+	JS9.worker.socketio(function(){
+	    JS9.progress(true, that.display);
+	    JS9.worker.postMessage("uploadFITS", 
+				   [vfile, vdata], uploadCB, [vdata.buffer]);
+	});
+    });
+    return this;
+};
+
 // dummy routines to display/clear message, overwritten in info plugin
 // eslint-disable-next-line no-unused-vars
 // Colormap
@@ -6733,6 +6779,116 @@ JS9.Helper.prototype.send = function(key, obj, cb){
     }
     // allow chaining
     return this;
+};
+
+// ---------------------------------------------------------------------
+// JS9 web worker support to off-load CPU intensive tasks
+// ---------------------------------------------------------------------
+
+// create new web worker
+JS9.WebWorker = function(url){
+    this.worker = new Worker(url);
+    this.worker.onmessage = JS9.WebWorker.prototype.msgHandler.bind(this);
+    this.handlers = [];
+};
+
+// handle (known) messages from web worker
+JS9.WebWorker.prototype.msgHandler = function(msg){
+    var i, handler;
+    var obj = msg.data;
+    switch(obj.cmd){
+    case "progress":
+	JS9.progress(obj.result.value, obj.result.max);
+	break;
+    case "initsocketio":
+	this.sockinit = true;
+	for(i=0; i<this.handlers.length; i++){
+	    handler = this.handlers[i];
+	    if( handler.id === obj.id ){
+		handler.func(obj.result);
+		this.handlers.splice(i, 1);
+		break;
+	    }
+	}
+	break;
+    case "uploadFITS":
+	for(i=0; i<this.handlers.length; i++){
+	    handler = this.handlers[i];
+	    if( handler.id === obj.id ){
+		handler.func(obj.result);
+		this.handlers.splice(i, 1);
+		break;
+	    }
+	}
+	break;
+    case "connect_error":
+    case "connect_timeout":
+	if( JS9.DEBUG > 1 ){
+	    JS9.log("JS9 worker socketio: "+obj.cmd);
+	}
+	break;
+    case "disconnect":
+	JS9.waiting(false);
+	if( obj.result ){
+	    JS9.worker.postMessage("initsocketio",
+				   [JS9.helper.url, JS9.helper.pageid],
+				   function(){
+				       JS9.error(obj.result);
+				   });
+	} else {
+	    if( JS9.DEBUG > 1 ){
+		JS9.log("JS9 worker socketio: disconnect");
+	    }
+	}
+	break;
+    case "error":
+	JS9.error(obj.result||"in web worker");
+	break;
+    default:
+	break;
+    }
+};
+
+// send a message to a web worker
+JS9.WebWorker.prototype.postMessage = function(cmd, args, func, xfer){
+    var id = cmd + JS9.uniqueID();
+    var obj = {id: id, cmd: cmd, args: args};
+    // push context
+    if( func ){
+	args = args || [];
+	this.handlers.push({id: id, cmd: cmd, args: args, func: func});
+    }
+    // send message, possible with transferred data
+    if( xfer ){
+	this.worker.postMessage(obj, xfer);
+    } else {
+	this.worker.postMessage(obj);
+    }
+};
+
+// initialize worker socketio connection, then call handler
+JS9.WebWorker.prototype.socketio = function(handler){
+    var h = JS9.helper;
+    if( !JS9.worker.sockinit ){
+	JS9.worker.postMessage("initsocketio", [h.url, h.pageid], function(s){
+	    if( s === "OK" ){
+		if( handler ){
+		    handler();
+		}
+	    } else {
+		JS9.error("can't init  socket.io for JS9 worker: " + s);
+	    }
+	});
+    } else {
+	if( handler ){
+	    handler();
+	}
+    }
+};
+
+// terminate a web worker
+JS9.WebWorker.prototype.terminate = function(){
+    this.worker.terminate();
 };
 
 // ---------------------------------------------------------------------
@@ -11596,6 +11752,16 @@ JS9.handleFITSFile = function(file, options, handler){
     }
 };
 
+// cleanup FITS file by deleting vfile, etc
+JS9.cleanupFITSFile = function(fits, mode){
+    if( JS9.fits.cleanupFITSFile ){
+	JS9.fits.cleanupFITSFile(fits, mode);
+    } else {
+	// just return if there is no available cleanup routine
+	return;
+    }
+};
+
 // load an image (jpeg, png, etc)
 // taken from fitsy.js
 JS9.handleImageFile = function(file, options, handler){
@@ -11641,6 +11807,15 @@ JS9.handleImageFile = function(file, options, handler){
 	};
     };
     reader.readAsDataURL(file);
+};
+
+// check for 'real' FITS handling routine and call it
+JS9.getFITSImage = function(fits, hdu, options, handler){
+    if( JS9.fits.getFITSImage ){
+	JS9.fits.getFITSImage(fits, hdu, options, handler);
+    } else {
+	JS9.error("no FITS module available to process FITS image");
+    }
 };
 
 // return the specified colormap object (or default)
@@ -13043,6 +13218,10 @@ JS9.init = function(){
     }
     if( window.hasOwnProperty("Kinetic") && !window.hasOwnProperty("fabric") ){
 	JS9.error("please load fabric.js instead of Kinetic.js");
+    }
+    // load web worker
+    if( window.Worker ){
+	JS9.worker = new JS9.WebWorker(JS9.InstallDir(JS9.WORKERFILE));
     }
     // set up the dynamic drive html window
     if( JS9.LIGHTWIN === "dhtml" ){
