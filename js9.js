@@ -3586,9 +3586,11 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    s = sprintf("ERROR: while executing %s [%s]",
 				a.name, robj.errcode);
 		}
-		if( s.search(/WARNING/i) >= 0 ){
+		// if its only a warning, log it
+		if( (s.search(/WARNING:/i) >= 0) && (s.search(/ERROR:/i) < 0) ){
 		    JS9.log(s);
 		} else {
+		    // otherwise, throw an error
 		    JS9.error(s, JS9.analOpts.epattern);
 		}
 	    }
