@@ -18,7 +18,7 @@
 /* eslint no-console: "off" */
 
 // load required modules
-var sockio = require("socket.io/node_modules/socket.io-client"),
+var sockio = require("socket.io-client"),
     os = require('os'),
     fs = require('fs'),
     path = require('path'),
