@@ -223,5 +223,5 @@ fi
 if [ x$DOVERIFY = xtrue ]; then
   echo "executing: $JS9_XEQ" "$JS9_MSGSCRIPT" $*
 fi
-exec "$JS9_XEQ" "$JS9_MSGSCRIPT" $ARGS $*
+exec "$JS9_XEQ" "$JS9_MSGSCRIPT" $ARGS $* 2> >(grep -v "Electron Helper" 1>&2)
 
