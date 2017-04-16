@@ -3904,7 +3904,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
     case "params":
     case "textline":
         if( divid ){
-	    if( JS9.allinone){
+	    if( JS9.allinone ){
 		divid.html(s);
 	    } else {
 		$.ajax({
@@ -5499,6 +5499,10 @@ JS9.Image.prototype.uploadFITSFile = function(){
 	    that.queryHelper("all");
 	}
     };
+    // sanity check
+    if( !JS9.worker ){
+	return;
+    }
     // only supported when using socket.io ...
     if( JS9.helper.type !== "nodejs" && JS9.helper.type !== "socket.io" ){
 	return;
@@ -13235,7 +13239,7 @@ JS9.init = function(){
 	JS9.error("please load fabric.js instead of Kinetic.js");
     }
     // load web worker
-    if( window.Worker ){
+    if( window.Worker && !JS9.allinone){
 	JS9.worker = new JS9.WebWorker(JS9.InstallDir(JS9.WORKERFILE));
     }
     // set up the dynamic drive html window
