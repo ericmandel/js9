@@ -14,18 +14,22 @@ case "$HELPER" in
 
 none)
 # js9Prefs.json: preference file
-IPREFS=js9Prefs.json
-OPREFS=js9Prefs-none.json
-echo "Editing $IPREFS for no helper ..."
-sed 's#\("helperType" *:.*"\)[^"]*\("\)#\1none\2#' < $IPREFS > $OPREFS && mv $IPREFS{,-orig} && mv $OPREFS $IPREFS
+for file in js9Prefs.json js9prefs.js; do
+  IPREFS=$file
+  OPREFS=none-$file
+  echo "Editing $IPREFS for no helper ..."
+  sed 's#\("helperType" *:.*"\)[^"]*\("\)#\1none\2#' < $IPREFS > $OPREFS && mv $IPREFS{,-orig} && mv $OPREFS $IPREFS
+done
 ;;
 
 nodejs|socket.io)
 # js9Prefs.json: preference file
-IPREFS=js9Prefs.json
-OPREFS=js9Prefs-nodejs.json
-echo "Editing $IPREFS for Node.js helper ..."
-sed 's#\("helperType" *:.*"\)[^"]*\("\)#\1nodejs\2#' < $IPREFS > $OPREFS && mv $IPREFS{,-orig} && mv $OPREFS $IPREFS
+for file in js9Prefs.json js9prefs.js; do
+  IPREFS=$file
+  OPREFS=nodejs-$file
+  echo "Editing $IPREFS for Node.js helper ..."
+  sed 's#\("helperType" *:.*"\)[^"]*\("\)#\1nodejs\2#' < $IPREFS > $OPREFS && mv $IPREFS{,-orig} && mv $OPREFS $IPREFS
+done
 ;;
 
 get|post)

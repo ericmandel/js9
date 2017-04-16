@@ -23,7 +23,7 @@
 <pre>
   ./configure --with-webdir=[path]  where path specifies the location to install the JS9 web files
 </pre>
-<li> edit the js9Prefs.json to set up your site-specific JS9 parameters
+<li> edit the js9prefs.js to set up your site-specific JS9 parameters
 <li> build, install, clean up: <b>make; make install; make clean</b>
 </ul>
 
@@ -72,7 +72,7 @@ to start Chrome with the --allow-file-access-from-files switch:
 Firefox and Safari do not have this restriction.
 <p>
 If you just want to run JS9 in this simple way, you are done. However,
-you might want to edit the js9Prefs.json file to set up default values
+you might want to edit the js9prefs.js file to set up default values
 for colormaps, scaling, etc. See:
 <a href="./preferences.html">JS9 Site Preferences</a> for a
 description of the available parameters.
@@ -110,6 +110,7 @@ Once the Electron app is installed, generate the JS9 quick-start files:
 <pre>
   ./mkjs9 -q
   Editing js9Prefs.json for Node.js helper ...
+  Editing js9prefs.js for Node.js helper ...
   Generating js9 script for JS9 messaging and Desktop use ...
 
   If you plan to use Electron.app with JS9, consider codesign'ing it:
@@ -118,11 +119,12 @@ Once the Electron app is installed, generate the JS9 quick-start files:
 
   This will avoid repeated requests to allow incoming connections.
 </pre>
-The mkjs9 script will create a js9Prefs.json file, which you can edit
-to add preferred JS9 properties, as well as a js9 script to start the
-JS9 app. On a Mac, you probably will want to codesign the Electron.app
-application to avoid repeated requests about incoming connections (see
-example above).
+The mkjs9 script will create a js9prefs.js file (and deprecated
+js9Prefs.json file), which you can edit to add preferred JS9
+properties, as well as a js9 script to start the JS9 app. On a Mac,
+you probably will want to codesign the Electron.app application to
+avoid repeated requests about incoming connections (see example
+above).
 
 <p>
 Run the js9 script to start the app and load data files:
@@ -187,8 +189,7 @@ and then build the JS9 system using the <b>make</b> command:
 
 <h3>Finalize Your Site Preferences</h3>
 <p>
-When JS9 is loaded into your browser, it reads a file called
-<b>js9Prefs.json</b> from the JS9 web directory.  This file contains
+The js9prefs.js file (and deprecated js9Prefs.json file) contains
 various default settings for JS9, e.g. default colormap and scale for
 image display.  Feel free to edit this file to set up your own
 site-specific parameters. See
@@ -220,7 +221,7 @@ available on GitHub:
 </pre>
 
 
-<h5>Last updated: December 5, 2016</h5>
+<h5>Last updated: April 16, 2017</h5>
 </div>
 
 </body>
