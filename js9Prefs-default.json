@@ -4,6 +4,8 @@
 		 "helperCGI":        "./cgi-bin/js9Helper.cgi",
 		 "fits2png":         false,
 		 "debug":	     0,
+		 "loadProxy":	     false,
+		 "workDir":	     "./tmp",
 		 "dataPath":	     "$HOME/Desktop:$HOME/data",
 		 "analysisPlugins":  "./analysis-plugins",
 		 "analysisWrappers": "./analysis-wrappers"},
