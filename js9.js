@@ -3894,8 +3894,10 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 		var c = String.fromCharCode(charCode);
 		if( scaleCur[c] === "linear" ){
 		    scaleCur[c] = "log";
-		} else {
+		} else if( scaleCur[c] === "log" ){
 		    scaleCur[c] = "linear";
+		} else {
+		    return;
 		}
 		scaleFunc(divjq, plot, c, scaleCur[c]);
 	    });
