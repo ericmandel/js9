@@ -1,7 +1,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.235865.svg)](https://doi.org/10.5281/zenodo.235865)
 
-JS9: astronomical image display right in your browser
-=====================================================
+JS9: astronomical image display everywhere
+==========================================
 
 ![JS9](js9Readme.png)
 
@@ -12,15 +12,16 @@ What does it do?
   - colormaps, scaling, pan, zoom, binning, blending, print, export ...
   - region support: create, manipulate, import, export, ...
   - drag and drop images, regions, catalogs
-  - server-side and browser-based analysis using the JS9 public API
+  - server-side and local analysis using the JS9 public API
   - control JS9 using scripts from the Linux shell or Python
   - runs on Macs, Linux, Windows, iPads, iPhones, ...
+  - as a Desktop app, in all modern browsers, mobile apps are coming ...
 
 How can I try it out?
 ---------------------
 
-Go to [JS9 web site](http://js9.si.edu) and drag a FITS file onto the
-JS9 display:
+Go to [JS9 web site](http://js9.si.edu) and drag a
+[FITS](https://fits.gsfc.nasa.gov/) data file onto the JS9 display:
 
     http://js9.si.edu
 
@@ -31,18 +32,30 @@ release downloads.
 To install or not to install ...
 --------------------------------
 
-For many users, there is no need to install: simply use the
-[JS9 web site](http://js9.si.edu) to display your data. Installing JS9 allows
-you to create your own web pages, tailor site parameters, add
-browser-based and server analysis tasks ...
+For many users, there is no need to install: simply use the [JS9 web
+site](http://js9.si.edu) to display your data. You can even upload your
+FITS files to the web site and run our server-side analysis.
 
-Install latest version from [JS9 on GitHub](https://github.com/ericmandel/js9):
+Installing JS9 allows you to create your own web pages, tailor site
+parameters, and add your own local and server analysis tasks. Grab the
+latest version from [JS9 on GitHub](https://github.com/ericmandel/js9):
 
     git clone https://github.com/ericmandel/js9
 
-and start with the [JS9 install page](http://js9.si.edu/js9/help/install.html):
+Load a local page into your browser:
 
-    http://js9.si.edu/js9/help/install.html
+    file:///path/to/js9/js9.html
+
+(NB: Chrome needs to run with the --allow-file-access-from-files switch to use
+the file URI.)
+
+For Desktop use, install [Electron.js](http://electron.atom.io) and configure:
+
+    ./mkjs9 -q
+
+Use the *js9* script to start the Desktop app and load an image:
+
+    js9 -a ~/data/m13.fits
 
 What about scripting?
 ---------------------
