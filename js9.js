@@ -233,6 +233,7 @@ JS9.lightOpts = {
 	dragBar:  "drag-handle",
 	format:   "width=%spx,height=%spx,center=1,resize=%s,scrolling=0",
 	textWin:  "width=830px,height=400px,center=1,resize=1,scrolling=1",
+	// NB: dimensions are tied to .JS9Plot CSS params
 	plotWin:  "width=830px,height=420px,center=1,resize=1,scrolling=1",
 	dpathWin: "width=830px,height=175px,center=1,resize=1,scrolling=1",
 	paramWin: "width=830px,height=230px,center=1,resize=1,scrolling=1",

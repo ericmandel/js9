@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.11, Thu Apr 20 14:32:49 EDT 2017 */
+/* JS9 allinone: v1.11, Thu Apr 20 16:17:19 EDT 2017 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -1199,6 +1199,7 @@ input:focus.JS9CmdIn {
     padding-left: 10px;
 }
 
+/* NB: dimensions are tied to JS9.lightOpts.dhtml.plotWin in js9.js */
 .JS9Plot {
     width:  800px;
     height: 400px;

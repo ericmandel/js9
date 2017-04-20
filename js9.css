@@ -302,6 +302,7 @@ input:focus.JS9CmdIn {
     padding-left: 10px;
 }
 
+/* NB: dimensions are tied to JS9.lightOpts.dhtml.plotWin in js9.js */
 .JS9Plot {
     width:  800px;
     height: 400px;
