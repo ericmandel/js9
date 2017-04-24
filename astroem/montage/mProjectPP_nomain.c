@@ -256,6 +256,35 @@ int mProjectPP(int argc, char **argv)
    /* Make a NaN value to use setting blank pixels */
    /************************************************/
 
+#if EM
+
+   // from funtools swap.c nd NaN.c
+   union
+   {
+     long l;
+     char c[sizeof (long)];
+   } u;
+   unsigned char nanc[8];
+   double nan;
+
+   for(i=0; i<8; i++){
+     nanc[i] = 1;
+   }
+   // check for endian-ness
+   u.l = 1;
+   if( u.c[sizeof (long) - 1] == 1 ){
+     // big-endian
+     nanc[0] = 0x7F;
+     nanc[1] = 0xF0;
+   }
+   else{
+     // little-endian
+     nanc[7] = 0x7F;
+     nanc[6] = 0xF0;
+   }
+   nan = (*((double *)nanc));
+
+#else
    union
    {
       double d;
@@ -266,10 +295,11 @@ int mProjectPP(int argc, char **argv)
    double nan;
 
    for(i=0; i<8; ++i)
-      value.c[i] = 255;
+      value.c[i] = (char)255;
 
    nan = value.d;
 
+#endif
 
    /***************************************/
    /* Process the command-line parameters */
@@ -852,7 +882,7 @@ int mProjectPP(int argc, char **argv)
 
    if(debug >= 1)
    {
-      printf("\n%lu bytes allocated for image pixels\n", 
+      printf("\n%u bytes allocated for image pixels\n",
          ilength * jlength * sizeof(double));
       fflush(stdout);
    }
@@ -900,7 +930,7 @@ int mProjectPP(int argc, char **argv)
 
    if(debug >= 1)
    {
-      printf("%lu bytes allocated for pixel areas\n", 
+      printf("%u bytes allocated for pixel areas\n",
          ilength * jlength * sizeof(double));
       fflush(stdout);
    }

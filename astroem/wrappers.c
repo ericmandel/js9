@@ -738,3 +738,9 @@ int vls(char *dir){
   closedir(dfd);
   return got;
 }
+
+// dummy routine to work around missing routine in emscripten 1.37.9
+// signature take from: 1.37.9/system/lib/libc/musl/src/thread/__wait.c
+void __wait(volatile int *addr, volatile int *waiters, int val, int priv){
+  return;
+}

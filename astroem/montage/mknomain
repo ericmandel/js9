@@ -1,11 +1,13 @@
 #!/bin/bash
 
-echo "generating nomain version of mProjectPP.c ..."
+echo "mProjectPP_nomain.c must be edited manually to fix emcc warnings ..."
+exit 0
 
 cat mProjectPP.c | \
 sed 's/main/mProjectPP/;s/\(fstatus = stdout\);/\1;optind = 1;/;s/exit(\([0-9]\))/fflush(fstatus); fclose(fstatus); exit(\1)/g;s/ printf("\[struct/ fprintf(fstatus, "[struct/g;s/8000/80000/;s/1000;/10000;/' \
 > mProjectPP_nomain.c
 
+echo "generating nomain version of mTANHdr.c ..."
 cat mTANHdr.c | \
 sed 's/main/mTANHdr/;s/\(useOffscl =  0\);/\1;optind = 1;/;s/exit(\([0-9]\))/fflush(fstatus);fclose(fstatus);exit(\1)/g;s/readTemplate/xreadTemplate/g;s/stradd/xstradd/g;s/ printf("\[struct/ fprintf(fstatus, "[struct/g;' \
 > mTANHdr_nomain.c
