@@ -69,7 +69,6 @@ var globalOpts = {
 // globalOpts that might need to have paths relative to __dirname
 var globalRelatives = ["analysisPlugins",
 		       "analysisWrappers",
-		       "workDir",
 		       "helperPlugins"];
 
 //
