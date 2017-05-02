@@ -30,11 +30,13 @@ usage(){
   XEQ=`basename $0`
   printf "$XEQ: communication with the JS9 Desktop app and browser-based web pages\n\n"
   printf "  usage:\n"
+  printf "  # no args: start JS9 app or JS9 web page in a browser\n"
+  printf "  %s\n" $XEQ
   printf "  # send a command to an existing JS9 app or web page\n"
   printf "  %s [switches] [cmd] [args]\n" $XEQ
   printf "  # start the JS9 Desktop app and load images\n"
   printf "  %s [-a] [switches] [image1, image2, ...]\n" $XEQ
-  printf "  # or (no switches specified:)\n"
+  printf "  # or (NB: no switches specified:)\n"
   printf "  %s [image1, image2, ...]\n" $XEQ
   printf "  # start a JS9 web page in a browser and load images\n"
   printf "  %s -b [bname] [switches] [image1, image2, ...]\n" $XEQ
@@ -45,7 +47,7 @@ usage(){
   printf "    --help                    # print this message\n"
   printf " \n"
   printf "  app (-a) specific switches:\n"
-  printf "    -a                        # start JS9 app (required Electron.js)\n"
+  printf "    -a                        # start JS9 app (requires Electron.js)\n"
   printf "    --height [h]              # height of app\n"
   printf "    --helper [true|false]     # whether to start up helper app (def: true)\n"
   printf "    -w|--webpage [url]        # web page to open in app\n"
@@ -90,27 +92,7 @@ usage(){
   printf "    JS9_BROWSER              # browser to use with -b (chrome|firefox|safari)\n"
   printf "    JS9_WEBPAGE              # web page to use with app or browser\n"
   printf "\n"
-  exit 0
 }
-
-# no args, print usage and exit
-if [ $# = 0 ]; then
-  usage
-fi
-if [ $# = 1 -a "$1" = "--help" ]; then
-  usage
-fi
-
-# script-level parameters
-while getopts ":arsv" opt; do
-  case $opt in
-    a) DOAPP=true ;;
-    r) DOREG=true ;;
-    s) set -- ;;
-    v) DOVERIFY=true ;;
-    *) break ;;
-  esac
-done
 
 # look for Node.js program (for messaging, but not for app)
 command -v node 1>/dev/null 2>&1
@@ -145,8 +127,14 @@ case $OS in
   ;;
 esac
 
-# check if we have args, and if all of them are files
-if [ $# -gt 0 ]; then
+# quick check for --help
+if [ $# = 1 -a "$1" = "--help" ]; then
+  usage
+  exit 0
+fi
+
+# check if all args (if any) are files
+if [ $# -ge 0 ]; then
   ALLFILES=true
   for f in "$@"
     do
@@ -171,6 +159,17 @@ if [ x$ALLFILES = xtrue ]; then
     fi
     ARGS="-b $JS9_BROWSER"
   fi
+else
+  # otherwise look for script-level parameters
+  while getopts ":arsv" opt; do
+    case $opt in
+      a) DOAPP=true ;;
+      r) DOREG=true ;;
+      s) set -- ;;
+      v) DOVERIFY=true ;;
+      *) break ;;
+    esac
+  done
 fi
 
 # use Electron or use Node, depending on the mode we are in
