@@ -536,7 +536,7 @@ var execCmd = function(io, socket, obj, cbfunc) {
     // expand directory macros
     argstr = argstr
 	.replace(/\$\{?JS9_DIR\}?/, cdir)
-	.replace(/\$\{?JS9_WORKDIR\}?/, (socket.js9.workDir || ""));
+	.replace(/\$\{?JS9_WORKDIR\}?/, (socket.js9.rworkDir || ""));
     // split arguments on spaces, respecting quotes
     args = parseArgs(argstr);
     // handle fitshelper specially
@@ -581,10 +581,11 @@ var execCmd = function(io, socket, obj, cbfunc) {
 	cmd = args[0];
     } else {
 	// start in the appropriate work directory, if possible
-	if( (obj.useWorkDir !== false) && socket.js9 && socket.js9.workDir ){
-	    myworkdir = socket.js9.workDir;
-	    // working directory relative to JS9 dir
-	    myenv.JS9_WORKDIR = myworkdir;
+	if( (obj.useWorkDir !== false) && socket.js9 && socket.js9.aworkDir ){
+	    // abdsolute working directory to cd into
+	    myworkdir = socket.js9.aworkDir;
+	    // working directory relative to JS9 dir is for the worker
+	    myenv.JS9_WORKDIR = socket.js9.rworkDir;
 	    myenv.JS9_WORKDIR_QUOTA = globalOpts.workDirQuota;
 	}
 	// construct wrapper
@@ -751,8 +752,8 @@ var socketioHandler = function(socket) {
             clog("disconnect: %s (%s)",	myhost, socket.js9.displays);
 	    // clean up working directory
 	    // use sync to prevent Electron.js from exiting too soon
-	    if( socket.js9.workDir && globalOpts.rmWorkDir ){
-		rmdir.sync(socket.js9.workDir);
+	    if( socket.js9.aworkDir && globalOpts.rmWorkDir ){
+		rmdir.sync(socket.js9.aworkDir);
 	    }
 	}
     });
@@ -762,27 +763,37 @@ var socketioHandler = function(socket) {
     //   support sending external messages to JS9 (i.e., via js9 script)
     socket.on("displays", function(obj, cbfunc) {
 	var myhost = getHost(io, socket);
-	var workdir;
+	var basedir, aworkdir;
 	if( !obj ){return;}
 	socket.js9 = {};
 	socket.js9.displays = obj.displays;
 	socket.js9.pageid = uuid.v4();
-	socket.js9.workDir = null;
+	socket.js9.aworkDir = null;
+	socket.js9.rworkDir = null;
 	// create top-level workDir, if necessary
+	// Electron.js might not be in the default location
+	basedir = globalOpts.workDir;
+	if( !path.isAbsolute(basedir) ){
+	    basedir = path.join(cdir, basedir);
+	}
 	// futz with the case of a link pointing nowhere
-	try { workdir = fs.readlinkSync(globalOpts.workDir); }
-	catch(e){ workdir = globalOpts.workDir; }
-	if( !fs.existsSync(workdir) ){
-	    try{ fs.mkdirSync(workdir, parseInt('0755',8)); }
+	try { aworkdir = fs.readlinkSync(basedir); }
+	catch(e){ aworkdir = basedir; }
+	if( !fs.existsSync(aworkdir) ){
+	    try{ fs.mkdirSync(aworkdir, parseInt('0755',8)); }
 	    catch(e){}
 	}
 	// create workDir for this connection, if possible
-	if( fs.existsSync(workdir) ){
-	    socket.js9.workDir = globalOpts.workDir + "/" + socket.js9.pageid;
-	    try{ fs.mkdirSync(socket.js9.workDir, parseInt('0755',8)); }
+	if( fs.existsSync(aworkdir) ){
+	    // absolute path of workdir
+	    socket.js9.aworkDir = aworkdir + "/" + socket.js9.pageid;
+	    // relative path of workdir
+	    socket.js9.rworkDir = globalOpts.workDir + "/" + socket.js9.pageid;
+	    try{ fs.mkdirSync(socket.js9.aworkDir, parseInt('0755',8)); }
 	    catch(e){
 		cerr("can't create page workDir: ", e.message);
-		socket.js9.workDir = null;
+		socket.js9.aworkDir = null;
+		socket.js9.rworkDir = null;
 	    }
 	}
         clog("connect: %s (%s)", myhost, socket.js9.displays);
