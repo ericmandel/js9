@@ -769,11 +769,19 @@ var socketioHandler = function(socket) {
 	socket.js9.displays = obj.displays;
 	socket.js9.pageid = uuid.v4();
 	socket.js9.workDir = null;
+	// create top-level workDir, if necessary
+	if( !fs.existsSync(globalOpts.workDir) ){
+	    try{ fs.mkdirSync(globalOpts.workDir, parseInt('0755',8)); }
+	    catch(e){
+		cerr("can't create base workDir: ", e.message);
+	    }
+	}
+	// create workDir for this connection, if possible
 	if( fs.existsSync(globalOpts.workDir) ){
 	    socket.js9.workDir = globalOpts.workDir + "/" + socket.js9.pageid;
 	    try{ fs.mkdirSync(socket.js9.workDir, parseInt('0755',8)); }
 	    catch(e){
-		cerr("can't create workDir: ", e.message);
+		cerr("can't create page workDir: ", e.message);
 		socket.js9.workDir = null;
 	    }
 	}
