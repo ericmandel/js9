@@ -115,7 +115,7 @@ function createWindow() {
 	let file = js9Electron.files[i];
 	const jobj = js9Electron.files[i+1];
 	// relative data paths must be relative to js9Electron.js script
-	if( !path.isAbsolute(file) ){
+	if( !file.match(/^https?:\/\//) && !path.isAbsolute(file) ){
 	    const nfile = path.relative(__dirname, file);
 	    if( nfile ){
 		file = nfile;
@@ -123,9 +123,9 @@ function createWindow() {
 	}
 	if( jobj && jobj.startsWith('{') ){
 	    i++;
-	    cmd = `JS9.Load('${file}', '${jobj}')`;
+	    cmd = `JS9.Preload('${file}', '${jobj}')`;
 	}  else {
-	    cmd = `JS9.Load('${file}')`;
+	    cmd = `JS9.Preload('${file}')`;
 	}
 	js9Electron.win.webContents.executeJavaScript(cmd);
     }
