@@ -287,12 +287,12 @@ directories), set the following property in the globalOpts object of
 the js9Prefs.json file:
 <ul>
 <li><b>workDir</b>: set to the relative path of a directory which
-will hold temporary working directories for each loaded web page.
+will hold temporary working directories for each loaded web page (default: ./tmp)
 </ul>
 You also can set the following globalOpts configuration parameters in
 js9Prefs.json:
 <ul>
-<li><b>workDirQuota</b>: the disk quota on working directory (default: 50Mb)
+<li><b>workDirQuota</b>: the disk quota on working directory (default: 100Mb)
 <li><b>rmWorkDir</b>: remove workdir when web page disconnects? (default: true)
 </ul>
 When <b>workDir</b> is configured, user sub-directories will be created
@@ -334,9 +334,10 @@ A CGI or Node.js back-end server can be set up as a proxy server by
 setting the following globalOpts properties in the js9Prefs.json file
 (before starting the server):
 <ul>
-<li><b>loadProxy</b>: set to true to enable proxy load
-<li><b>workDir</b>: set to the relative path of a directory which
-will hold temporary working directories for each loaded web page.
+<li><b>loadProxy</b>: set to true to enable proxy load (default: true)
+<li><b>workDir</b>: see above
+<li><b>workDirQuota</b>: see above
+<li><b>rmWorkDir</b>: see above
 </ul>
 <p>
 When the back-end server supports the proxy service, you will see a
