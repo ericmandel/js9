@@ -69,6 +69,7 @@ var globalOpts = {
 // globalOpts that might need to have paths relative to __dirname
 var globalRelatives = ["analysisPlugins",
 		       "analysisWrappers",
+		       "workDir",
 		       "helperPlugins"];
 
 //
@@ -324,8 +325,9 @@ var loadPreferences = function(prefsfile){
 	}
 	// some directories should be relative to __dirname
 	globalRelatives.forEach( function(s){
-	    if( globalOpts[s] && globalOpts[s].indexOf(0) !== "/" ){
-		globalOpts[s] = path.join(cdir, globalOpts[s]);
+	    var file = globalOpts[s];
+	    if( file && !path.isAbsolute(file) ){
+		globalOpts[s] = path.join(cdir, file);
 	    }
 	});
     }
@@ -749,12 +751,9 @@ var socketioHandler = function(socket) {
 	if( socket.js9 && socket.js9.displays && !socket.js9worker ){
             clog("disconnect: %s (%s)",	myhost, socket.js9.displays);
 	    // clean up working directory
+	    // use sync to prevent Electron.js from exiting too soon
 	    if( socket.js9.workDir && globalOpts.rmWorkDir ){
-		rmdir(socket.js9.workDir, function(error){
-		    if( error ){
-			cerr("can't delete workDir: ", error);
-		    }
-		});
+		rmdir.sync(socket.js9.workDir);
 	    }
 	}
     });
@@ -764,20 +763,22 @@ var socketioHandler = function(socket) {
     //   support sending external messages to JS9 (i.e., via js9 script)
     socket.on("displays", function(obj, cbfunc) {
 	var myhost = getHost(io, socket);
+	var workdir;
 	if( !obj ){return;}
 	socket.js9 = {};
 	socket.js9.displays = obj.displays;
 	socket.js9.pageid = uuid.v4();
 	socket.js9.workDir = null;
 	// create top-level workDir, if necessary
-	if( !fs.existsSync(globalOpts.workDir) ){
-	    try{ fs.mkdirSync(globalOpts.workDir, parseInt('0755',8)); }
-	    catch(e){
-		cerr("can't create base workDir: ", e.message);
-	    }
+	// futz with the case of a link pointing nowhere
+	try { workdir = fs.readlinkSync(globalOpts.workDir) }
+	catch(e){ workdir = globalOpts.workDir };
+	if( !fs.existsSync(workdir) ){
+	    try{ fs.mkdirSync(workdir, parseInt('0755',8)); }
+	    catch(e){};
 	}
 	// create workDir for this connection, if possible
-	if( fs.existsSync(globalOpts.workDir) ){
+	if( fs.existsSync(workdir) ){
 	    socket.js9.workDir = globalOpts.workDir + "/" + socket.js9.pageid;
 	    try{ fs.mkdirSync(socket.js9.workDir, parseInt('0755',8)); }
 	    catch(e){
@@ -855,7 +856,7 @@ var socketioHandler = function(socket) {
     for(j=0; j<analysis.pkgs.length; j++){
 	for(i=0; i<analysis.pkgs[j].length; i++){
 	    a = analysis.pkgs[j][i];
-	    // check for require workDir
+	    // check for required workDir
 	    if( a.workDir && !globalOpts.workDir ){
 		continue;
 	    }
