@@ -26,16 +26,39 @@ sed "$X" < $IMSGSCR > $OMSGSCR
 chmod +x $OMSGSCR
 
 if [ x"$DOQUICK" = x1 ]; then
-  EXE="${JS9_ELECTRON_APP:-/Applications/Electron.app}/Contents/MacOS/Electron"
-  command -v "$EXE" 1>/dev/null 2>&1
-  if [ $? = 0 ]; then
-    echo " "
-    echo "If you plan to use Electron.app with JS9, consider codesign'ing it:"
-    echo " "
-    echo "sudo codesign --force --deep --sign - $EXE/"
-    echo " "
-    echo "This will avoid repeated requests to allow incoming connections."
-  fi
+# look for Electron program (for messaging or for app)
+    OS=`uname -s`
+    case $OS in
+      Linux)  TRY="electron"
+	  command -v "$TRY" 1>/dev/null 2>&1
+	  if [ $? = 0 ]; then
+	      ELECTRON_EXE="$TRY"
+	  fi
+      ;;
+      Darwin) TRY="${JS9_ELECTRON_APP}"
+	  command -v "$TRY" 1>/dev/null 2>&1
+	  if [ $? = 0 ]; then
+	      ELECTRON_EXE="$TRY"
+	  else
+	      TRY="${HOME}/Applications/Electron.app/Contents/MacOS/Electron"
+	      command -v "$TRY" 1>/dev/null 2>&1
+	      if [ $? = 0 ]; then
+		  ELECTRON_EXE="$TRY"
+	      else
+		  TRY="/Applications/Electron.app/Contents/MacOS/Electron"
+		  command -v "$TRY" 1>/dev/null 2>&1
+		  if [ $? = 0 ]; then
+		      ELECTRON_EXE="$TRY"
+		  fi
+	      fi
+	  fi
+      ;;
+    esac
+    if [ x$ELECTRON_EXE != x ]; then
+      printf "\nWhen using Electron.app with JS9, consider codesign'ing it:\n"
+      printf "\nsudo codesign --force --deep --sign - $ELECTRON_EXE/\n"
+      printf "\nThis will avoid repeated requests to allow incoming connections.\n\n"
+    fi
 fi
 
 exit 0
