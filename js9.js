@@ -13071,7 +13071,8 @@ JS9.dragexitCB = function(id, evt){
 };
 
 JS9.dragdropCB = function(id, evt, handler){
-    var i, opts, files, display;
+    var i, s, opts, files, display;
+    var urlexp = /^https?:\/\//;
     // convert jquery event to original event, if possible
     if( evt.originalEvent ){
 	evt = evt.originalEvent;
@@ -13084,7 +13085,17 @@ JS9.dragdropCB = function(id, evt, handler){
     files = evt.target.files || evt.dataTransfer.files;
     // turn on waiting, if possible
     display = JS9.lookupDisplay(opts.display);
-    // wait for spinner to start ...
+    // first check if it's not a file
+    if( !files.length ){
+	// assume text
+	s = evt.dataTransfer.getData("text");
+	// check whether its a URL and load via proxy, if possible
+	if( s.match(urlexp) && JS9.globalOpts.loadProxy ){
+	    JS9.LoadProxy(s, {display: opts.display});
+	}
+	return;
+    }
+    // got files: wait for spinner to start ...
     window.setTimeout(function(){
 	var file, fname;
 	// ... and load each file in turn
