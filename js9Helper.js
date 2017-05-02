@@ -771,11 +771,11 @@ var socketioHandler = function(socket) {
 	socket.js9.workDir = null;
 	// create top-level workDir, if necessary
 	// futz with the case of a link pointing nowhere
-	try { workdir = fs.readlinkSync(globalOpts.workDir) }
-	catch(e){ workdir = globalOpts.workDir };
+	try { workdir = fs.readlinkSync(globalOpts.workDir); }
+	catch(e){ workdir = globalOpts.workDir; }
 	if( !fs.existsSync(workdir) ){
 	    try{ fs.mkdirSync(workdir, parseInt('0755',8)); }
-	    catch(e){};
+	    catch(e){}
 	}
 	// create workDir for this connection, if possible
 	if( fs.existsSync(workdir) ){
