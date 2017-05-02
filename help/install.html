@@ -119,12 +119,12 @@ Once the Electron app is installed, generate the JS9 quick-start files:
 
   This will avoid repeated requests to allow incoming connections.
 </pre>
-The mkjs9 script will create a js9prefs.js file (and deprecated
-js9Prefs.json file), which you can edit to add preferred JS9
-properties, as well as a js9 script to start the JS9 app. On a Mac,
-you probably will want to codesign the Electron.app application to
-avoid repeated requests about incoming connections (see example
-above).
+The mkjs9 script will create a js9prefs.js file (for the browser) and
+a js9Prefs.json file (for the JS9 helper), which you can edit to add
+preferred JS9 properties, as well as a js9 script to start the JS9
+app. On a Mac, you probably will want to codesign the Electron.app
+application to avoid repeated requests about incoming connections (see
+example above).
 
 <p>
 Run the js9 script to start the app and load data files:
@@ -189,10 +189,10 @@ and then build the JS9 system using the <b>make</b> command:
 
 <h3>Finalize Your Site Preferences</h3>
 <p>
-The js9prefs.js file (and deprecated js9Prefs.json file) contains
-various default settings for JS9, e.g. default colormap and scale for
-image display.  Feel free to edit this file to set up your own
-site-specific parameters. See
+The js9prefs.js file and js9Prefs.json file contain various default
+settings for JS9, e.g. default colormap and scale for image display.
+Feel free to edit this file to set up your own site-specific
+parameters. See
 <a href="./preferences.html">JS9 Site Preferences</a> for a
 description of the available parameters.
 

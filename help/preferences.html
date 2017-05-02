@@ -30,7 +30,6 @@ the same directory as the web page and then in the js9 install directory.</del>
 <ins>(Firefox has deprecated synchronous XHR requests in the main
 window. As a result, we have been forced to deprecate automatic loading of
 the <b>js9Prefs.json</b> file. Please use <b>js9prefs.js</b> instead.)</ins>
-
 <p>
 To support site configuration, load the <b>js9prefs.json</b> file in your
 web page before loading other JS9 javascript:
@@ -40,6 +39,10 @@ web page before loading other JS9 javascript:
   &lt;script type="text/javascript" src="js9.min.js"&gt;&lt;/script&gt;
   ...
 </pre>
+<p>
+NB: the JS9 Node.js helper still utilizes the <b>js9Prefs.json</b>
+file. Please ensure that the properties defined in these two files are
+consistent.
 
 <p>
 This preference file can be used to override the default parameter
