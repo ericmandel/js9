@@ -7759,6 +7759,25 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	nopts.left = pos.x;
 	nopts.top = pos.y;
     }
+    //  ra and dec are in degrees, using the current wcs
+    if( (opts.ra !== undefined) && (opts.dec !== undefined) ){
+	if( typeof opts.ra === "string" ){
+	    opts.ra = JS9.saostrtod(opts.ra);
+	    if( (String.fromCharCode(JS9.saodtype()) === ":") &&
+		(this.params.wcsunits === "sexagesimal") &&
+		(this.params.wcssys !== "galactic" )     &&
+		(this.params.wcssys !== "ecliptic" )     ){
+		opts.ra *= 15.0;
+	    }
+	}
+	if( typeof opts.dec === "string" ){
+	    opts.dec = JS9.saostrtod(opts.dec);
+	}
+	pos = JS9.WCSToPix(opts.ra, opts.dec, {display: this});
+	pos = this.imageToDisplayPos({x: pos.x, y: pos.y});
+	nopts.left = pos.x;
+	nopts.top = pos.y;
+    }
     //  look for primitives
     if( (opts.left !== undefined) ){
 	nopts.left = opts.left;
@@ -7939,6 +7958,8 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    case "py":
 	    case "dx":
 	    case "dy":
+	    case "ra":
+	    case "dec":
 	    case "pts":
 	    case "left":
 	    case "top":
@@ -8130,6 +8151,12 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "r2":
 	case "x":
 	case "y":
+	case "dx":
+	case "dy":
+	case "px":
+	case "py":
+	case "ra":
+	case "dec":
 	case "shape":
 	case "parent":
 	case "rtn":
@@ -8703,6 +8730,36 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	if( ((layerName === "regions") && (opts.dowcsstr !== false)) ||
 	    ((layerName !== "regions") && (opts.dowcsstr === true))  ){
 	    pub.wcsstr = JS9.reg2wcs(this.raw.wcs, tstr).replace(/;$/, "");
+	    // wcs size args
+	    s = pub.wcsstr.replace(/.*\(/,"").replace(/\).*/,"").split(",");
+	    for(i=0; i<s.length; i++){
+		s[i] = s[i].trim();
+	    }
+	    pub.wcsposstr = [s[0], s[1]];
+	    switch(pub.shape){
+	    case "annulus":
+		pub.wcssizestr = [s[s.length-1]];
+		break;
+	    case "box":
+		pub.wcssizestr = [s[2], s[3]];
+		break;
+	    case "circle":
+		pub.wcssizestr = [s[2]];
+		break;
+	    case "ellipse":
+		pub.wcssizestr = [s[2], s[3]];
+		break;
+	    case "line":
+		break;
+	    case "point":
+		break;
+	    case "polygon":
+		break;
+	    case "text":
+		break;
+	    default:
+		break;
+	    }
 	}
 	s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
 	pub.ra = s[0];
@@ -10241,8 +10298,11 @@ JS9.Regions.initConfigForm = function(obj){
     var wid = $(winid).attr("id");
     var form = "#" + wid + " #regionsConfigForm ";
     var fmt= function(val){
+	if( val === undefined ){
+	    return undefined;
+	}
 	if( (typeof val === "number") && (val % 1 !== 0) ){
-	    return val.toFixed(2);
+	    val = Math.round((val + 0.00001) * 10000) / 10000;
 	}
 	return(String(val));
     };
@@ -10256,6 +10316,15 @@ JS9.Regions.initConfigForm = function(obj){
 	key = $(this).attr("name");
 	// key-specific pre-processing
 	switch(key){
+	case "x":
+	case "y":
+	    if( obj.pub.lcs      !== undefined &&
+		obj.pub.lcs[key] !== undefined ){
+		val = fmt(obj.pub.lcs[key]);
+	    } else if( obj.pub[key] !== undefined ){
+		val = fmt(obj.pub[key]);
+	    }
+	    break;
 	case "radii":
 	    if( obj.pub.radii ){
 		obj.pub.radii.forEach(function(p){
@@ -10312,6 +10381,26 @@ JS9.Regions.initConfigForm = function(obj){
 		}
 	    } else {
 		val = "";
+	    }
+	    break;
+	case "wcsradius":
+	case "wcsoradius":
+	case "wcslength":
+	case "wcswidth":
+	case "wcsr1":
+	    if( obj.pub.wcssizestr ){
+		val = fmt(obj.pub.wcssizestr[0]);
+	    }
+	    break;
+	case "wcsheight":
+	case "wcsr2":
+	    if( obj.pub.wcssizestr ){
+		val = fmt(obj.pub.wcssizestr[1]);
+	    }
+	    break;
+	case "wcsunits":
+	    if( obj.pub.wcsunits ){
+		val = obj.pub.wcsunits;
 	    }
 	    break;
 	case "childtext":
@@ -10381,14 +10470,24 @@ JS9.Regions.initConfigForm = function(obj){
 // process the config form to change the specified shape
 // call using image context
 JS9.Regions.processConfigForm = function(obj, winid, arr){
-    var i, key, val, nval, nopts;
+    var i, key, nkey, val, nval, nopts;
     var alen = arr.length;
     var opts = {};
+    var wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
     var fmt= function(val){
+	if( val === undefined ){
+	    return undefined;
+	}
 	if( (typeof val === "number") && (val % 1 !== 0) ){
-	    return val.toFixed(2);
+	    val = Math.round((val + 0.00001) * 10000) / 10000;
 	}
 	return(String(val));
+    };
+    var fmtcheck= function(val1, val2){
+	if( val1 === undefined ){
+	    return false;
+	}
+	return fmt(val1) !== fmt(val2);
     };
     var newval = function(obj, key, val){
 	// special keys that have no public or param equivalents
@@ -10413,13 +10512,28 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 	if( (key === "angle") ){
 	    return obj.angle !== -parseFloat(val);
 	}
-	if( (obj.pub[key] !== undefined) && (fmt(obj.pub[key]) !== val) ){
+	if( (key === "ra") ){
+	    return fmtcheck(JS9.saostrtod(obj.pub.wcsposstr[0]),
+			    JS9.saostrtod(val));
+	}
+	if( (key === "dec") ){
+	    return fmtcheck(JS9.saostrtod(obj.pub.wcsposstr[1]),
+			    JS9.saostrtod(val));
+	}
+	if( obj.pub.lcs[key] !== undefined ){
+	    if( fmtcheck(obj.pub.lcs[key], val) ){
+		return true;
+	    }
+	    // don't look further or we end up checking image x, y
+	    return false;
+	}
+	if( fmtcheck(obj.pub[key], val) ){
 	    return true;
 	}
-	if( (obj.params[key] !== undefined) && (fmt(obj.params[key]) !== val) ){
+	if( fmtcheck(obj.params[key], val) ){
 	    return true;
 	}
-	if( (obj[key] !== undefined) && (fmt(obj[key]) !== val) ){
+	if( fmtcheck(obj[key], val) ){
 	    return true;
 	}
 	return false;
@@ -10468,18 +10582,62 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 	    break;
 	case "x":
 	    if( newval(obj, key, val) ){
-		opts[key] = getval(val);
-		if( opts.y === undefined ){
-		    opts.y = obj.pub.y;
+		opts.px = getval(val);
+		if( opts.py === undefined ){
+		    opts.py = obj.pub.lcs.y;
 		}
 	    }
 	    break;
 	case "y":
 	    if( newval(obj, key, val) ){
-		opts[key] = getval(val);
-		if( opts.x === undefined ){
-		    opts.x = obj.pub.x;
+		opts.py = getval(val);
+		if( opts.px === undefined ){
+		    opts.px = obj.pub.lcs.x;
 		}
+	    }
+	    break;
+	case "ra":
+	    if( newval(obj, key, val) ){
+		opts.ra = val;
+		if( opts.dec === undefined ){
+		    opts.dec = obj.pub.wcsposstr[1];
+		}
+	    }
+	    break;
+	case "dec":
+	    if( newval(obj, key, val) ){
+		opts.dec = val;
+		if( opts.ra === undefined ){
+		    opts.ra = obj.pub.wcsposstr[0];
+		}
+	    }
+	    break;
+	case "wcsradius":
+	case "wcslength":
+	case "wcswidth":
+	case "wcsr1":
+	    nval = JS9.strtoscaled(val);
+	    if( nval.dtype === "." ){
+		val = nval.dval;
+	    } else {
+		val = Math.abs(nval.dval / wcsinfo.cdelt1);
+	    }
+	    nkey = key.replace("wcs", "");
+	    if( newval(obj, nkey, val) ){
+		opts[nkey] = getval(val);
+	    }
+	    break;
+	case "wcsheight":
+	case "wcsr2":
+	    nval = JS9.strtoscaled(val);
+	    if( nval.dtype === "." ){
+		val = nval.dval;
+	    } else {
+		val = Math.abs(nval.dval / wcsinfo.cdelt2);
+	    }
+	    nkey = key.replace("wcs", "");
+	    if( newval(obj, nkey, val) ){
+		opts[nkey] = getval(val);
 	    }
 	    break;
 	case "misc":
@@ -10869,31 +11027,11 @@ JS9.Regions.parseRegions = function(s){
 	}
 	return tobj;
     };
-    // convert string to double, returning value and (units) delim
-    var strtod = function(s){
-	var dval = JS9.saostrtod(s);
-	var dtype = String.fromCharCode(JS9.saodtype());
-	// scale for certain units
-	switch(dtype){
-	case '"':
-	    dval /= 3600.0;
-	    break;
-	case "'":
-	    dval /= 60.0;
-	    break;
-	case "r":
-	    dval *= (180.0 / Math.PI) ;
-	    break;
-	default:
-	    break;
-	}
-	return {dval: dval, dtype: dtype};
-    };
     // get image position using delim type to ascertain input units
     var getipos = function(ix, iy){
 	var vt, sarr, ox, oy;
-	var v1 = strtod(ix);
-	var v2 = strtod(iy);
+	var v1 = JS9.strtoscaled(ix);
+	var v2 = JS9.strtoscaled(iy);
 	// local override of wcs if we used sexagesimal
 	if( (v1.dtype === ":") || (v2.dtype === ":") ){
 	    liswcs = true;
@@ -10922,7 +11060,7 @@ JS9.Regions.parseRegions = function(s){
     // get image length
     var getilen = function(len, which){
 	var cstr;
-	var v = strtod(len);
+	var v = JS9.strtoscaled(len);
 	var wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
 	if( iswcs || liswcs ){
 	    if( v.dtype && (v.dtype !== ".") ){
@@ -10934,7 +11072,7 @@ JS9.Regions.parseRegions = function(s){
     };
     // get image angle
     var getang = function(a){
-	var v = strtod(a);
+	var v = JS9.strtoscaled(a);
 	var wcsinfo = this.raw.wcsinfo || {crot: 0};
 	if( (iswcs || liswcs) && wcsinfo.crot ){
             v.dval += wcsinfo.crot;
@@ -12596,6 +12734,28 @@ JS9.colorToHex = function(colour){
     }
     return colour;
 };
+
+// convert string to double, returning (possibly scaled) value and delim
+JS9.strtoscaled = function(s){
+    var dval = JS9.saostrtod(s);
+    var dtype = String.fromCharCode(JS9.saodtype());
+    // scale for certain units
+    switch(dtype){
+    case '"':
+	dval /= 3600.0;
+	break;
+    case "'":
+	dval /= 60.0;
+	break;
+    case "r":
+	dval *= (180.0 / Math.PI) ;
+	break;
+    default:
+	break;
+    }
+    return {dval: dval, dtype: dtype};
+};
+
 
 // ---------------------------------------------------------------------
 // End of Utilities
@@ -15583,5 +15743,4 @@ return JS9;
 $(document).ready(function(){
 "use strict";
 JS9.init();
-
 });

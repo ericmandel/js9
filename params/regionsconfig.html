@@ -15,7 +15,7 @@
 <b>Id:</b>
 </span>
 <span class="column_R2">
-<input type="text" class="val text_R" id="id" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (selectable region id)
@@ -27,7 +27,7 @@
 <b>Shape:</b>
 </span>
 <span class="column_R2">
-<input type="text" class="val text_R" id="shape" name="shape" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="shape" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (see Regions menu)
@@ -36,37 +36,29 @@
 
 <div class="linegroup">
 <span class="column_R1">
+<b>Image Region:</b>
+</span>
+<span class="column_R2L">
+<input type="text" class="val text_R" name="imstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R5">
+(image region string)
+</span>
+</div>
+
+<div class="linegroup">
+<span class="column_R1">
 <b>Image Center:</b>
 </span>
 <span class="column_R2">
-<input type="text" class="val text_R" id="x" name="x" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="x" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R3">
-<input type="text" class="val text_R" id="y" name="y" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="y" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (image pixels)
 </span>
-</div>
-
-<div class="nodisplay wcs">
-<div class="linegroup">
-<span class="column_R1">
-<b>WCS Center:</b>
-</span>
-<span class="column_R2">
-<input type="text" class="val text_R" id="ra" name="ra" value="" autocapitalize="off" autocorrect="off">
-</span>
-<span class="column_R3">
-<input type="text" class="val text_R" id="dec" name="dec" value="" autocapitalize="off" autocorrect="off">
-</span>
-<span class="column_R4">
-<input type="text" class="val text_R" id="wcssys" name="wcssys" value="" autocapitalize="off" autocorrect="off">
-</span>
-<span class="column_R5">
-(using this wcs system)
-</span>
-</div>
 </div>
 
 <div class="nodisplay annulus">
@@ -75,7 +67,7 @@
 <b>Radii:</b>
 </span>
 <span class="column_R2L">
-<input type="text" class="val text_R" id="radii" name="radii" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="radii" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (image pixels)
@@ -89,10 +81,10 @@
 <b>Width, Height:</b>
 </span>
 <span class="column_R2">
-<input type="text" class="val text_R" id="width" name="width" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="width" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R3">
-<input type="text" class="val text_R" id="height" name="height" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="height" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (image pixels)
@@ -106,7 +98,7 @@
 <b>Radius:</b>
 </span>
 <span class="column_R2">
-<input type="text" class="val text_R" id="radius" name="radius" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="radius" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (image pixels)
@@ -120,10 +112,10 @@
 <b>Radii:</b>
 </span>
 <span class="column_R2">
-<input type="text" class="val text_R" id="r1" name="r1" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="r1" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R3">
-<input type="text" class="val text_R" id="r2" name="r2" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="r2" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (image pixels)
@@ -137,11 +129,132 @@
 <b>Points:</b>
 </span>
 <span class="column_R2L">
-<input type="text" class="val text_R" id="pts" name="pts" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="pts" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (image pixels)
 </span>
+</div>
+</div>
+
+<div class="nodisplay line">
+<div class="linegroup">
+<span class="column_R1">
+<b>Points:</b>
+</span>
+<span class="column_R2L">
+<input type="text" class="val text_R" name="pts" value="" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R5">
+(image pixels)
+</span>
+</div>
+</div>
+
+<div class="nodisplay angle">
+<div class="linegroup">
+<span class="column_R1">
+<b>Angle:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" name="angle" value="" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R5">
+(degrees)
+</span>
+</div>
+</div>
+
+<div class="nodisplay wcs">
+<div class="linegroup">
+<span class="column_R1">
+<b>WCS Region:</b>
+</span>
+<span class="column_R2L">
+<input type="text" class="val text_R" name="wcsstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R5">
+(wcs region string)
+</span>
+</div>
+</div>
+
+<div class="nodisplay wcs">
+<div class="linegroup">
+<span class="column_R1">
+<b>WCS Center:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" name="ra" value="" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R3">
+<input type="text" class="val text_R" name="dec" value="" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R4">
+<input type="text" class="val text_R" name="wcssys" value="" autocapitalize="off" autocorrect="off"  readonly="readonly">
+</span>
+<span class="column_R5">
+(using this wcs system)
+</span>
+</div>
+
+<div class="nodisplay annulus">
+<div class="linegroup">
+<span class="column_R1">
+<b>WCS Size:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" name="wcsoradius" value="" autocapitalize="off" autocorrect="off" readonly="readonly">
+</span>
+<span class="column_R5">
+(wcs size)
+</span>
+</div>
+</div>
+<div class="nodisplay box">
+<div class="linegroup">
+<span class="column_R1">
+<b>WCS Size:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" name="wcswidth" value="" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R3">
+<input type="text" class="val text_R" name="wcsheight" value="" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R5">
+(wcs size)
+</span>
+</div>
+</div>
+<div class="nodisplay circle">
+<div class="linegroup">
+<span class="column_R1">
+<b>WCS Radius:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" name="wcsradius" value="" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R5">
+(wcs size)
+</span>
+</div>
+</div>
+<div class="nodisplay ellipse">
+<div class="linegroup">
+<span class="column_R1">
+<b>WCS Radii:</b>
+</span>
+<span class="column_R2">
+<input type="text" class="val text_R" name="wcsr1" value="" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R3">
+<input type="text" class="val text_R" name="wcsr2" value="" autocapitalize="off" autocorrect="off">
+</span>
+<span class="column_R5">
+(wcs size)
+</span>
+</div>
 </div>
 </div>
 
@@ -151,7 +264,7 @@
 <b>Text:</b>
 </span>
 <span class="column_R2L">
-<input type="text" class="val text_R" id="childtext" name="childtext" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="childtext" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (text for this region)
@@ -165,7 +278,7 @@
 <b>Text:</b>
 </span>
 <span class="column_R2L">
-<input type="text" class="val text_R" id="text" name="text" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="text" value="" autocapitalize="off" autocorrect="off">
 </span>
 </div>
 <div class="linegroup">
@@ -173,7 +286,7 @@
 <b>Font Family:</b>
 </span>
 <span class="column_R2">
-<input type="text" class="val text_R" id="fontFamily" name="fontFamily" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="fontFamily" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (font name, serif, etc.)
@@ -184,7 +297,7 @@
 <b>Font Size:</b>
 </span>
 <span class="column_R2">
-<input type="text" class="val text_R" id="fontSize" name="fontSize" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="fontSize" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (size in pixels)
@@ -195,7 +308,7 @@
 <b>Font Style:</b>
 </span>
 <span class="column_R2">
-<input type="text" class="val text_R" id="fontStyle" name="fontStyle" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="fontStyle" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (normal, italic, oblique)
@@ -206,24 +319,10 @@
 <b>Font Weight:</b>
 </span>
 <span class="column_R2">
-<input type="text" class="val text_R" id="fontWeight" name="fontWeight" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="fontWeight" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (normal, bold, 100, 200, ...)
-</span>
-</div>
-</div>
-
-<div class="nodisplay angle">
-<div class="linegroup">
-<span class="column_R1">
-<b>Angle:</b>
-</span>
-<span class="column_R2">
-<input type="text" class="val text_R" id="angle" name="angle" value="" autocapitalize="off" autocorrect="off">
-</span>
-<span class="column_R5">
-(degrees)
 </span>
 </div>
 </div>
@@ -233,7 +332,7 @@
 <b>Color:</b>
 </span>
 <span class="column_R2L">
-<input type="text" class="val text_R" id="color" name="color" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="color" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (name or #RRGGBB)
@@ -245,7 +344,7 @@
 <b>Stroke Width:</b>
 </span>
 <span class="column_R2L">
-<input type="text" class="val text_R" id="strokeWidth" name="strokeWidth" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="strokeWidth" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (width in pixels)
@@ -257,7 +356,7 @@
 <b>Stroke Dashes:</b>
 </span>
 <span class="column_R2L">
-<input type="text" class="val text_R" id="strokeDashes" name="strokeDashes" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="strokeDashes" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (dash/space list, e.g. 3 1)
@@ -269,36 +368,10 @@
 <b>Tags:</b>
 </span>
 <span class="column_R2L">
-<input type="text" class="val text_R" id="tags" name="tags" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="tags" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (comma-separated list)
-</span>
-</div>
-
-<div class="nodisplay wcs">
-<div class="linegroup">
-<span class="column_R1">
-<b>WCS Region:</b>
-</span>
-<span class="column_R2L">
-<input type="text" class="val text_R" id="wcsstr" name="wcsstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
-</span>
-<span class="column_R5">
-(wcs region string)
-</span>
-</div>
-</div>
-
-<div class="linegroup">
-<span class="column_R1">
-<b>Image Region:</b>
-</span>
-<span class="column_R2L">
-<input type="text" class="val text_R" id="imstr" name="imstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
-</span>
-<span class="column_R5">
-(image region string)
 </span>
 </div>
 
@@ -307,7 +380,7 @@
 <b>Misc Properties:</b>
 </span>
 <span class="column_R2L">
-<input type="text" class="val text_R" id="misc" name="misc" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="misc" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="column_R5">
 (in JSON format)
@@ -329,9 +402,10 @@
 </span>
 </div>
 
-<input id="apply" name="Apply" type="button" class="button" value="Apply" 
+<input name="Apply" type="button" class="button" value="Apply"
 onclick="var form = $(this).closest('form');
-var arr = form.serializeArray();
+// var arr = form.serializeArray();
+var arr = $(':input:visible', form).serializeArray();
 var im = form.data('im');
 var shape = form.data('shape');
 var winid = form.data('winid');
@@ -342,7 +416,7 @@ arr = arr.concat(
 JS9.Regions.processConfigForm.call(im, shape, winid, arr);
 return false;">
 
-<input id="close" name="Close" type="button" class="button" value="Close" 
+<input name="Close" type="button" class="button" value="Close"
 onclick="var form = $(this).closest('form');
 var shape = form.data('shape');
 var winid = form.data('winid');
