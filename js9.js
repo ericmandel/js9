@@ -6626,6 +6626,8 @@ JS9.Helper.prototype.connect = function(type){
     } else {
 	this.url = JS9.globalOpts.helperProtocol + "localhost";
     }
+    // save base of url
+    this.baseurl = this.url;
     // try to establish connection, based on connection type
     switch(this.type){
     case "none":
@@ -14695,11 +14697,16 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 // save array of files to preload or preload immediately,
 // depending on the state of processing
 JS9.mkPublic("Preload", function(arg1){
-    var i, j, mode, emsg="", pobj=null, dobj=null;
+    var i, j, mode, urlexp, func, emsg="", pobj=null, dobj=null;
     var oalerts = JS9.globalOpts.alerts;
     var alen=arguments.length;
     var obj = JS9.parsePublicArgs(arguments);
+    var baseexp = /^https?:\/\//;
     arg1 = obj.argv[0];
+    // for socketio and loadProxy, support LoadProxy calls
+    if( JS9.globalOpts.loadProxy && JS9.helper.baseurl ){
+	urlexp = new RegExp("^" + JS9.helper.baseurl);
+    }
     if( obj.display ){
 	dobj = {display: obj.display};
 	alen = alen - 1;
@@ -14769,13 +14776,20 @@ JS9.mkPublic("Preload", function(arg1){
 	// preload the image(s) now from arguments
 	JS9.globalOpts.alerts = false;
 	for(i=0; i<alen; i++){
+	    if( urlexp                      &&
+		arguments[i].match(baseexp) &&
+		!arguments[i].match(urlexp) ){
+		func = JS9.LoadProxy;
+	    } else {
+		func = JS9.Load;
+	    }
 	    j = i + 1;
 	    if( (j < alen) && (typeof arguments[j] === "object") ){
 		try{
 		    if( dobj ){
-			JS9.Load(arguments[i], arguments[j], dobj);
+			func(arguments[i], arguments[j], dobj);
 		    } else {
-			JS9.Load(arguments[i], arguments[j]);
+			func(arguments[i], arguments[j]);
 		    }
 		}
 		catch(e){ emsg = emsg + " " + arguments[i]; }
@@ -14786,9 +14800,9 @@ JS9.mkPublic("Preload", function(arg1){
 		catch(e){ pobj = null; }
 		try{
 		    if( dobj ){
-			JS9.Load(arguments[i], pobj, dobj);
+			func(arguments[i], pobj, dobj);
 		    } else {
-			JS9.Load(arguments[i], pobj);
+			func(arguments[i], pobj);
 		    }
 		}
 		catch(e){ emsg = emsg + " " + arguments[i]; }
@@ -14796,9 +14810,9 @@ JS9.mkPublic("Preload", function(arg1){
 	    } else {
 		try{
 		    if( dobj ){
-			JS9.Load(arguments[i], null, dobj);
+			func(arguments[i], null, dobj);
 		    } else {
-			JS9.Load(arguments[i], null);
+			func(arguments[i], null);
 		    }
 		}
 		catch(e){ emsg = emsg + " " + arguments[i]; }
@@ -14811,12 +14825,19 @@ JS9.mkPublic("Preload", function(arg1){
 	// preload the image(s) now from saved arguments
 	JS9.globalOpts.alerts = false;
 	for(i=0; i<JS9.preloads.length; i++){
+	    if( urlexp                            &&
+		JS9.preloads[i][0].match(baseexp) &&
+		!JS9.preloads[i][0].match(urlexp) ){
+		func = JS9.LoadProxy;
+	    } else {
+		func = JS9.Load;
+	    }
 	    try{
 		if( JS9.preloads[i][2] ){
-		    JS9.Load(JS9.preloads[i][0], JS9.preloads[i][1],
-			     JS9.preloads[i][2]);
+		    func(JS9.preloads[i][0], JS9.preloads[i][1],
+			 JS9.preloads[i][2]);
 		} else {
-		    JS9.Load(JS9.preloads[i][0], JS9.preloads[i][1]);
+		    func(JS9.preloads[i][0], JS9.preloads[i][1]);
 		}
 	    }
 	    catch(e){ emsg = emsg + " " + JS9.preloads[i][0]; }
