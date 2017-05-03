@@ -13072,7 +13072,7 @@ JS9.dragexitCB = function(id, evt){
 
 JS9.dragdropCB = function(id, evt, handler){
     var i, s, opts, files, display;
-    var urlexp = /^https?:\/\//;
+    var urlexp = /^(https?|ftp):\/\//;
     // convert jquery event to original event, if possible
     if( evt.originalEvent ){
 	evt = evt.originalEvent;
@@ -14872,7 +14872,7 @@ JS9.mkPublic("Preload", function(arg1){
     var oalerts = JS9.globalOpts.alerts;
     var alen=arguments.length;
     var obj = JS9.parsePublicArgs(arguments);
-    var baseexp = /^https?:\/\//;
+    var baseexp = /^(https?|ftp):\/\//;
     arg1 = obj.argv[0];
     // for socketio and loadProxy, support LoadProxy calls
     if( JS9.globalOpts.loadProxy && JS9.helper.baseurl ){
