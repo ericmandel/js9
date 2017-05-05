@@ -168,7 +168,7 @@ JS9.globalOpts = {
 		 save: true,                          // save cat cols in shapes
 		 tooltip: "$xreg.data.ra $xreg.data.dec"}, // tooltip format
     topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "a", "b", "red", "green", "blue"], // toplevel colormaps
-    infoBox: ["file", "object", "wcsfov", "wcscen", "value", "impos", "physpos", "wcspos", "regions"],
+    infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos", "impos", "physpos", "value", "regions"],
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
     fitsTemplates: ".fits,.gz,.fts", // templates for local FITS file input
     regionTemplates: ".reg",         // templates for local region file input
