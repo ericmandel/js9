@@ -2850,22 +2850,22 @@ JS9.RegisterPlugin(JS9.Imarith.CLASS, JS9.Imarith.NAME, JS9.Imarith.init,
 JS9.Info = {};
 JS9.Info.CLASS = "JS9";
 JS9.Info.NAME = "Info";
-JS9.Info.WIDTH = 350;	// width of js9Info box
-JS9.Info.HEIGHT = 300;	// height of js9Info box
+JS9.Info.WIDTH = 365;	// width of js9Info box
+JS9.Info.HEIGHT = 320;	// height of js9Info box
 
 JS9.Info.opts = {
     // info url
     infoURL: "./params/info.html",
     infoObj: {
-	file: '<tr><td>file</td><td colspan="2"><input type="text" name="id" size="32" value="" readonly="readonly" /></td></tr>',
-	object: '<tr><td>object</td><td colspan="2"><input type="text" name="object" size="32" value="" readonly="readonly" /></td></tr>',
-	wcscen: '<tr><td>center</td><td><input type="text" name="racen" size="15" value="" readonly="readonly" /></td><td><input type="text" name="deccen" size="15" value="" readonly="readonly" /></td></tr>',
-	wcsfov: '<tr><td>fov</td><td><input type="text" name="wcsfov" size="15" value="" readonly="readonly" /></td><td><input type="text" name="wcspix" size="15" value="" readonly="readonly" /></td></tr>',
-	 value: '<tr><td>value</td><td colspan="2"><input type="text" name="val3" size="15" value="" readonly="readonly" /></td></tr>',
-	impos: '<tr><td><input style="background: transparent;border: none" type="text" name="isys" size="10" value="image" readonly="readonly" /></td><td><input type="text" name="ix" size="15" value="" readonly="readonly" /></td><td><input type="text" name="iy" size="15" value="" readonly="readonly" /></td></tr>',
-	physpos: '<tr><td><input style="background: transparent;border: none" type="text" name="psys" size="10" value="physical" readonly="readonly" /></td><td><input type="text" name="px" size="15" value="" readonly="readonly" /></td><td><input type="text" name="py" size="15" value="" readonly="readonly" /></td></tr>',
-	wcspos: '<tr><td><input style="background: transparent;border: none" type="text" name="wcssys" size="10" value="wcs" readonly="readonly" /></span></td><td><input type="text" name="ra" size="15" value="" readonly="readonly" /></td><td><input type="text" name="dec" size="15" value="" readonly="readonly" /></td></tr>',
-	 regions: '<tr><td colspan="3"><textarea style="background: #E9E9E9; border: #CCCCCC solid 1px" name="regions" rows="4" cols="42" value="" readonly="readonly" /></td></tr><td colspan="3"><div class="JS9Progress"><progress name="progress" class="JS9ProgressBar" value="0" max="100"></progress></div></tr>'
+	file: '<tr><td>file</td><td colspan="2"><input type="text" name="id" class="input2" value="" readonly="readonly" /></td></tr>',
+	object: '<tr><td>object</td><td colspan="2"><input type="text" name="object" class="input2" value="" readonly="readonly" /></td></tr>',
+	wcscen: '<tr><td>center</td><td><input type="text" name="racen" class="input1" value="" readonly="readonly" /></td><td><input type="text" name="deccen" class="input1" value="" readonly="readonly" /></td></tr>',
+	wcsfov: '<tr><td>fov</td><td><input type="text" name="wcsfov" class="input1" value="" readonly="readonly" /></td><td><input type="text" name="wcspix" class="input1" value="" readonly="readonly" /></td></tr>',
+	 value: '<tr><td>value</td><td colspan="2"><input type="text" name="val3" class="input1" value="" readonly="readonly" /></td></tr>',
+	impos: '<tr><td><input type="text" name="isys" class="input0" value="image" readonly="readonly" /></td><td><input type="text" name="ix" class="input1" value="" readonly="readonly" /></td><td><input type="text" name="iy" class="input1" value="" readonly="readonly" /></td></tr>',
+	physpos: '<tr><td><input text" name="psys" class="input0" value="physical" readonly="readonly" /></td><td><input type="text" name="px" class="input1" value="" readonly="readonly" /></td><td><input type="text" name="py" class="input1" value="" readonly="readonly" /></td></tr>',
+	wcspos: '<tr><td><input type="text" name="wcssys" class="input0" value="wcs" readonly="readonly" /></span></td><td><input type="text" name="ra" class="input1" value="" readonly="readonly" /></td><td><input type="text" name="dec" class="input1" value="" readonly="readonly" /></td></tr>',
+	 regions: '<tr><td colspan="3"><textarea class="text0" name="regions" rows="4" cols="44" value="" readonly="readonly" /></td></tr><td colspan="3"><div class="JS9Progress"><progress name="progress" class="JS9ProgressBar" value="0" max="100"></progress></div></tr>'
     }
 };
 

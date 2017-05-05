@@ -445,18 +445,49 @@ canvas.surfacePlotCanvas {
 
 /* js9 info */
 .js9InfoTable {
-    border: 0px;
     margin: 0px;
     padding: 8px;
     font-size: 12px;
     font-family: monospace;
+    border-collapse: separate;
     border-spacing: 2px 4px;
 }
 
-.js9InfoTable input,  .js9InfoTable textarea{
+.js9InfoTable input{
     font-size: 12px;
     font-family: monospace;
     overflow-x: hidden;
+    padding: 2px 0px 1px 2px;
+    margin: 0px;
+}
+
+.js9InfoTable .input0{
+    background: transparent;
+    border: none;
+    width: 75px;
+}
+
+.js9InfoTable .input1{
+    width: 115px;
+}
+
+.js9InfoTable .input2{
+    width: 240px;
+}
+
+.js9InfoTable textarea{
+    font-size: 12px;
+    font-family: monospace;
+    overflow-x: hidden;
+    padding: 2px 0px 1px 2px;
+    margin: 0px;
+    background: #E9E9E9;
+    border: #CCCCCC solid 1px;
+}
+
+.js9InfoTable td{
+    padding: 2px 0px 1px 2px;
+    margin: 0px;
 }
 
 /* js9Analysis forms */
