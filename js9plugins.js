@@ -4263,7 +4263,7 @@ if( JS9.menuButtonOptsArr ){
 }
 
 JS9.Menubar.init = function(width, height){
-    var ii, ss, tt, html;
+    var ii, jj, ss, tt, menu, html;
     var that = this;
     // set width and height on div
     this.width = this.divjq.attr("data-width");
@@ -4289,18 +4289,24 @@ JS9.Menubar.init = function(width, height){
     this.height = parseInt(this.divjq.css("height"), 10);
     // generate html for this menubar
     html = "<span id='JS9Menus_@@ID@@'>";
-    for(ii=0; ii<JS9.Menubar.buttonOptsArr.length; ii++){
-	ss = JS9.Menubar.buttonOptsArr[ii].name;
-	tt = JS9.Menubar.buttonOptsArr[ii].label;
-	// no help available for all-in-one configuration
-	if( JS9.allinone && (ss === "help") ){
-	    continue;
-	}
-	if( ss[0] === "#" ){
-	    ss = ss.slice(1);
-	    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"' disabled='disabled'>"+tt+" </button>";
-	} else {
-	    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button>";
+    for(jj=0; jj<JS9.globalOpts.menuBar.length; jj++){
+	menu = JS9.globalOpts.menuBar[jj];
+	for(ii=0; ii<JS9.Menubar.buttonOptsArr.length; ii++){
+	    ss = JS9.Menubar.buttonOptsArr[ii].name;
+	    if( menu === ss ){
+		tt = JS9.Menubar.buttonOptsArr[ii].label;
+		// no help available for all-in-one configuration
+		if( JS9.allinone && (ss === "help") ){
+		    break;
+		}
+		if( ss[0] === "#" ){
+		    ss = ss.slice(1);
+		    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"' disabled='disabled'>"+tt+" </button>";
+		} else {
+		    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button>";
+		}
+		break;
+	    }
 	}
     }
     html += "<button type='button' id='hiddenRegionMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
