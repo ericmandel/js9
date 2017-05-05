@@ -37,11 +37,21 @@ JS9.Info.init = function(){
     infoHTML = '<table name="info" class="js9InfoTable">';
     for(i=0; i<opts.length; i++){
 	key = opts[i];
+	// aesthetic condideration: skip wcs display if we have no wcs
+	if( key.match(/^wcs/)
+	    && this.display.image && !(this.display.image.raw.wcs>0) ){
+	    continue;
+	}
+	// add html for this line of the display
 	if( key in obj ){
 	    infoHTML += obj[key];
 	}
     }
     infoHTML += '</table>';
+    // reset previous
+    if( this.infoConjq ){
+	this.infoConjq.html("");
+    }
     // add container to the high-level div
     this.infoConjq = $("<div>")
 	.addClass("JS9Container")
@@ -121,14 +131,6 @@ JS9.Info.display = function(type, message, target){
 	    // process all key in the object
 	    for( key in message ){
 		if( message.hasOwnProperty(key) ){
-		    // key-specific processing
-		    switch(key){
-		    case "wcssys":
-			if( !message[key] ){
-			    message[key] = "wcs";
-			}
-			break;
-		    }
 		    // set value, if possible
 		    jel = info.jq.find("[name='"+key+"']");
 		    if( jel.length > 0 ){
@@ -253,6 +255,7 @@ JS9.mkPublic("DisplayMessage", function(type, message, target){
 JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 		   {menuItem: "InfoBox",
 		    onplugindisplay: JS9.Info.clearMain,
+		    onimagedisplay: JS9.Info.init,
 		    winTitle: "Info",
 		    winResize: true,
 		    winDims: [JS9.Info.WIDTH, JS9.Info.HEIGHT]});
