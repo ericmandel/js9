@@ -296,6 +296,10 @@ JS9.Prefs.displaysSchema = {
 	"mousetouchZoom": {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
+	},
+	"infoBox": {
+	    "type": "mobject",
+	    "helper": "array of infoBox items to display"
 	}
     }
 };
@@ -367,7 +371,8 @@ JS9.Prefs.init = function(){
 			   mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,
 			   keyboardActions: JS9.globalOpts.keyboardActions,
-			   mousetouchZoom: JS9.globalOpts.mousetouchZoom};
+			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
+			   infoBox: JS9.globalOpts.infoBox};
 	    break;
 	default:
 	    break;

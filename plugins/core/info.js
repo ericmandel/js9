@@ -31,6 +31,14 @@ JS9.Info.opts = {
 // init plugin
 JS9.Info.init = function(){
     var i, key, opts, obj, infoHTML;
+    // only init if we are displaying a new image
+    // i.e., avoid re-init when changing contrast/bias
+    if( this.display.image ){
+	if( this.lastimage === this.display.image.id ){
+	    return;
+	}
+	this.lastimage = this.display.image.id;
+    }
     // generate the web page
     opts = JS9.globalOpts.infoBox;
     obj = JS9.Info.opts.infoObj;

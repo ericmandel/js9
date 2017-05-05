@@ -2871,7 +2871,16 @@ JS9.Info.opts = {
 
 // init plugin
 JS9.Info.init = function(){
-    var i, key, opts, obj, infoHTML;
+    var i, lastimage, key, opts, obj, infoHTML;
+    // only init if we are displaying a new image
+    // i.e., avoid re-init when changing contrast/bias
+    if( this.display.image ){
+	if( this.lastimage === this.display.image.id ){
+	    return;
+	}
+	this.lastimage = this.display.image.id;
+    }
+console.log("init");
     // generate the web page
     opts = JS9.globalOpts.infoBox;
     obj = JS9.Info.opts.infoObj;
@@ -6650,7 +6659,12 @@ JS9.Prefs.displaysSchema = {
 	"mousetouchZoom": {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
-	}
+	},
+	"infoBox": {
+	    "type": "mobject",
+	    "helper": "array of infoBox items to display"
+	},
+
     }
 };
 
@@ -6721,7 +6735,8 @@ JS9.Prefs.init = function(){
 			   mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,
 			   keyboardActions: JS9.globalOpts.keyboardActions,
-			   mousetouchZoom: JS9.globalOpts.mousetouchZoom};
+			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
+			   infoBox: JS9.globalOpts.infoBox};
 	    break;
 	default:
 	    break;
