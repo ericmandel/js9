@@ -34,10 +34,10 @@ JS9.Info.init = function(){
     // only init if we are displaying a new image
     // i.e., avoid re-init when changing contrast/bias
     if( this.display.image ){
-	if( this.lastimage === this.display.image.id ){
+	if( this.lastimage === this.display.image ){
 	    return;
 	}
-	this.lastimage = this.display.image.id;
+	this.lastimage = this.display.image;
     }
     // generate the web page
     opts = JS9.globalOpts.infoBox;
