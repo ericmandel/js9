@@ -2850,51 +2850,46 @@ JS9.RegisterPlugin(JS9.Imarith.CLASS, JS9.Imarith.NAME, JS9.Imarith.init,
 JS9.Info = {};
 JS9.Info.CLASS = "JS9";
 JS9.Info.NAME = "Info";
-JS9.Info.WIDTH = 345;	// width of js9Info box
-JS9.Info.HEIGHT = 265;	// height of js9Info box
+JS9.Info.WIDTH = 350;	// width of js9Info box
+JS9.Info.HEIGHT = 300;	// height of js9Info box
 
 JS9.Info.opts = {
     // info url
     infoURL: "./params/info.html",
-    infoHTML: '<table id="info" class="js9InfoTable">' +
-'<tr>' +
-'<td>file:</td>' +
-'<td colspan="2"><input type="text" id="id" size="28" value="" readonly="readonly" /></td>' +
-'</tr> <tr>' +
-'<td>object:</td>' +
-'<td colspan="2"><input type="text" id="object" size="28" value="" readonly="readonly" /></td>' +
-'</tr> <tr>' +
-'<td>value:</td>' +
-'<td colspan="2"><input type="text" id="val3" size="28" value="" readonly="readonly" /></td>' +
-'</tr> <tr>' +
-'<td><input type="text" id="isys" size="10" value="" readonly="readonly" /></td>' +
-'<td><input type="text" id="ix" size="13" value="" readonly="readonly" /></td>' +
-'<td><input type="text" id="iy" size="13" value="" readonly="readonly" /></td>' +
-'</tr> <tr>' +
-'<td><input type="text" id="psys" size="10" value="" readonly="readonly" /></td>' +
-'<td><input type="text" id="px" size="13" value="" readonly="readonly" /></td>' +
-'<td><input type="text" id="py" size="13" value="" readonly="readonly" /></td>' +
-'</tr> <tr>' +
-'<td><input type="text" id="wcssys" size="10" value="" readonly="readonly" /></span></td>' +
-'<td><input type="text" id="ra" size="13" value="" readonly="readonly" /></td>' +
-'<td><input type="text" id="dec" size="13" value="" readonly="readonly" /></td>' +
-'</tr> <tr>' +
-'<td colspan="3"><textarea style="background: #E9E9E9; border: #CCCCCC solid 1px" id="regions" rows="4" cols="40" value="" readonly="readonly" /></td>' +
-'</tr>' +
-'<td colspan="3"><div class="JS9Progress"><progress id="progress" class="JS9ProgressBar" value="0" max="100"></progress></div>' +
-'</tr>' +
-'</table>'
+    infoObj: {
+	file: '<tr><td>file:</td><td colspan="2"><input type="text" name="id" size="32" value="" readonly="readonly" /></td></tr>',
+	object: '<tr><td>object:</td><td colspan="2"><input type="text" name="object" size="32" value="" readonly="readonly" /></td></tr>',
+	wcscen: '<tr><td>center:</td><td><input type="text" name="racen" size="15" value="" readonly="readonly" /></td><td><input type="text" name="deccen" size="15" value="" readonly="readonly" /></td></tr>',
+	wcsfov: '<tr><td>fov:</td><td><input type="text" name="wcsfov" size="15" value="" readonly="readonly" /></td><td><input type="text" name="wcspix" size="15" value="" readonly="readonly" /></td></tr>',
+	 value: '<tr><td>value:</td><td colspan="2"><input type="text" name="val3" size="32" value="" readonly="readonly" /></td></tr>',
+	impos: '<tr><td><input type="text" name="isys" size="10" value="" readonly="readonly" /></td><td><input type="text" name="ix" size="15" value="" readonly="readonly" /></td><td><input type="text" name="iy" size="15" value="" readonly="readonly" /></td></tr>',
+	physpos: '<tr><td><input type="text" name="psys" size="10" value="" readonly="readonly" /></td><td><input type="text" name="px" size="15" value="" readonly="readonly" /></td><td><input type="text" name="py" size="15" value="" readonly="readonly" /></td></tr>',
+	wcspos: '<tr><td><input type="text" name="wcssys" size="10" value="" readonly="readonly" /></span></td><td><input type="text" name="ra" size="15" value="" readonly="readonly" /></td><td><input type="text" name="dec" size="15" value="" readonly="readonly" /></td></tr>',
+	 regions: '<tr><td colspan="3"><textarea style="background: #E9E9E9; border: #CCCCCC solid 1px" name="regions" rows="4" cols="42" value="" readonly="readonly" /></td></tr><td colspan="3"><div class="JS9Progress"><progress name="progress" class="JS9ProgressBar" value="0" max="100"></progress></div></tr>'
+    }
 };
 
 // init plugin
 JS9.Info.init = function(){
+    var i, key, opts, obj, infoHTML;
+    // generate the web page
+    opts = JS9.globalOpts.infoBox;
+    obj = JS9.Info.opts.infoObj;
+    infoHTML = '<table name="info" class="js9InfoTable">';
+    for(i=0; i<opts.length; i++){
+	key = opts[i];
+	if( key in obj ){
+	    infoHTML += obj[key];
+	}
+    }
+    infoHTML += '</table>';
     // add container to the high-level div
     this.infoConjq = $("<div>")
 	.addClass("JS9Container")
-	.append(JS9.Info.opts.infoHTML)
+	.append(infoHTML)
 	.appendTo(this.divjq);
     // save the jquery element for later processing
-    this.jq = this.infoConjq.find("#info");
+    this.jq = this.infoConjq.find("[name='info']");
 };
 
 // display a message on the image canvas or info plugin
@@ -2930,7 +2925,7 @@ JS9.Info.display = function(type, message, target){
 	    el = tobj.divjq;
 	}
 	if( el.length > 0 ){
-	    el = el.find("#progress");
+	    el = el.find("[name='progress']");
 	    switch(typeof message){
 	    case "string":
 	    case "boolean":
@@ -2958,7 +2953,7 @@ JS9.Info.display = function(type, message, target){
     if( tobj === info ){
 	switch( typeof message ){
 	case "string":
-	    jel = info.jq.find("#" + type);
+	    jel = info.jq.find("[name='"+type+"']");
 	    if( jel.length > 0 ){
 		jel.val(message);
 	    }
@@ -2976,7 +2971,7 @@ JS9.Info.display = function(type, message, target){
 			break;
 		    }
 		    // set value, if possible
-		    jel = info.jq.find("#" + key);
+		    jel = info.jq.find("[name='"+key+"']");
 		    if( jel.length > 0 ){
 			jel.val(message[key]);
 		    }

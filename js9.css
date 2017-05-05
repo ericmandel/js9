@@ -450,7 +450,7 @@ canvas.surfacePlotCanvas {
     padding: 8px;
     font-size: 12px;
     font-family: monospace;
-    border-spacing: 4px;
+    border-spacing: 2px 4px;
 }
 
 .js9InfoTable input,  .js9InfoTable textarea{

@@ -168,6 +168,7 @@ JS9.globalOpts = {
 		 save: true,                          // save cat cols in shapes
 		 tooltip: "$xreg.data.ra $xreg.data.dec"}, // tooltip format
     topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "a", "b", "red", "green", "blue"], // toplevel colormaps
+    infoBox: ["file", "object", "wcsfov", "wcscen", "value", "impos", "physpos", "wcspos", "regions"],
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
     fitsTemplates: ".fits,.gz,.fts", // templates for local FITS file input
     regionTemplates: ".reg",         // templates for local region file input
@@ -1798,7 +1799,7 @@ JS9.Image.prototype.mkScaledCells = function(){
 	var i, k, int1, int2;
 	var hex_alphabets = "0123456789ABCDEF";
 	var value = [];
-	//Remove the '#' char - if there is one.
+	//Remove the "#" char - if there is one.
 	if(hex.charAt(0) === "#"){
 	    hex = hex.slice(1);
 	}
@@ -4182,6 +4183,7 @@ JS9.Image.prototype.saveJPEG = function(fname, quality){
 // update (and display) pixel and wcs values (connected to info plugin)
 JS9.Image.prototype.updateValpos = function(ipos, disp){
     var val, vstr, vstr2, vstr3, val3, i, c, s;
+    var cd1, cd2, v1, v2, units, sect, bin;
     var obj = null;
     var sp = "&nbsp;&nbsp;&nbsp;&nbsp;";
     var prec = JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
@@ -4254,7 +4256,10 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	vstr2 =  tr(c.x, 3) + " " + tr(c.y, 3) + " (" + c.sys + ")";
 	// object containing all information
 	obj = {ix: i.x, iy: i.y, isys: "image", px: c.x, py: c.y, psys: c.sys,
-	       ra: "", dec: "", wcssys: "", val: val, val3: val3,
+	       ra: "", dec: "", wcssys: "",
+	       racen: "", deccen: "",
+	       wcsfov: "", wcspix: "",
+	       val: val, val3: val3,
 	       vstr: vstr + sp + vstr2,
 	       id: this.id, file: this.file, object: this.object};
 	// add wcs, if necessary
@@ -4268,7 +4273,33 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    obj.ra = s[0];
 	    obj.dec = s[1];
 	    obj.wcssys = s[2];
+	    cd1 = Math.abs(this.raw.header.CDELT1);
+	    cd2 = Math.abs(this.raw.header.CDELT2);
+	    v1 = 1/60;
+	    if( (cd1 >= 1) || (cd2 >= 1) ){
+		units = "deg";
+	    } else if( (cd1 >= v1) || (cd2 >= v1) ){
+		units = "'";
+		cd1 *= 60;
+		cd2 *= 60;
+	    } else {
+		units = '"';
+		cd1 *= 3600;
+		cd2 *= 3600;
+	    }
+	    sect = this.rgb.sect;
+	    bin = this.binning.bin;
+	    v1 = ((sect.x1 - sect.x0) * cd1).toFixed(0);
+	    v2 = ((sect.y1 - sect.y0) * cd2).toFixed(0);
+	    obj.wcsfov = sprintf('%s%s x %s%s', v1, units, v2, units);
+	    v1 = cd1.toFixed(2) * bin / sect.zoom;
+	    obj.wcspix = sprintf('%s%s / pixel', v1, units);
 	    obj.vstr = vstr;
+	    s = JS9.pix2wcs(this.raw.wcs,
+			    (sect.x1 + sect.x0)/2, (sect.y1 + sect.y0)/2)
+	    .trim().split(/\s+/);
+	    obj.racen = s[0];
+	    obj.deccen = s[1];
 	}
 	if( disp ){
 	    this.display.displayMessage("info", obj);
@@ -10988,7 +11019,7 @@ JS9.Regions.parseRegions = function(s){
 	if( tobj.cmd ){
 	    tobj.isregion = (tobj.cmd.search(regrexp) >=0);
 	}
-	// split on comment (ignore color specifications starting with '#')
+	// split on comment (ignore color specifications starting with "#")
 	t = s.trim().split(comrexp);
 	// look for json opts after the argument list
 	tarr = optsrexp.exec(t[0]);
@@ -15132,7 +15163,7 @@ JS9.mkPublic("OpenFileMenu", function(){
     var obj = JS9.parsePublicArgs(arguments);
     var display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$('#openLocalFile-' + display.id).click();
+	$("#openLocalFile-" + display.id).click();
     }
 });
 
@@ -15141,7 +15172,7 @@ JS9.mkPublic("OpenRegionsMenu", function(){
     var obj = JS9.parsePublicArgs(arguments);
     var display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$('#openLocalRegions-' + display.id).click();
+	$("#openLocalRegions-" + display.id).click();
     }
 });
 
@@ -15150,7 +15181,7 @@ JS9.mkPublic("OpenSessionMenu", function(){
     var obj = JS9.parsePublicArgs(arguments);
     var display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$('#openLocalSession-' + display.id).click();
+	$("#openLocalSession-" + display.id).click();
     }
 });
 
@@ -15159,7 +15190,7 @@ JS9.mkPublic("OpenCatalogsMenu", function(){
     var obj = JS9.parsePublicArgs(arguments);
     var display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$('#openLocalCatalogs-' + display.id).click();
+	$("#openLocalCatalogs-" + display.id).click();
     }
 });
 
@@ -15168,7 +15199,7 @@ JS9.mkPublic("OpenColormapMenu", function(){
     var obj = JS9.parsePublicArgs(arguments);
     var display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$('#openLocalColormap-' + display.id).click();
+	$("#openLocalColormap-" + display.id).click();
     }
 });
 

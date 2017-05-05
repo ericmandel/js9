@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.11, Wed May  3 03:07:30 EDT 2017 */
+/* JS9 allinone: v1.11, Fri May  5 09:56:52 EDT 2017 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -1347,7 +1347,7 @@ canvas.surfacePlotCanvas {
     padding: 8px;
     font-size: 12px;
     font-family: monospace;
-    border-spacing: 4px;
+    border-spacing: 2px 4px;
 }
 
 .js9InfoTable input,  .js9InfoTable textarea{
