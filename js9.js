@@ -5864,7 +5864,7 @@ JS9.Display.prototype.initMessages = function(){
 	.addClass("JS9ProgressBar")
 	.attr("value", 0)
 	.attr("max", 100)
-	.attr("id", "progress")
+	.attr("name", "progress")
 	.appendTo(this.progressArea);
     // make it draggable, if possible
     try{
