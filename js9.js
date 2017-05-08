@@ -5190,16 +5190,20 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    .replace(/\.png$/, ".fits")
 	    .replace(/\.gz$/, "");
 	ovfile = "reproj_" + JS9.uniqueID() + "_" + s;
-	// if input is a table, we have to bin it by adding a bin specification
+	// for tables, we probably have to bin it by adding a bin specification
 	// also need to pass the HDU name. For now, "EVENTS" is all we know ...
 	if( that.imtab === "table" ){
-	    tab = that.raw.hdu.table;
-	    tx1 = Math.floor(tab.cx - ((tab.nx+1)/2) + 1);
-	    tx2 = Math.floor(tab.cx + (tab.nx/2));
-	    ty1 = Math.floor(tab.cy - ((tab.ny+1)/2) + 1);
-	    ty2 = Math.floor(tab.cy + (tab.ny/2));
-	    s = sprintf("[EVENTS][bin X=%s:%s,Y=%s:%s]", tx1, tx2, ty1, ty2);
-	    ivfile += s;
+	    if( !ivfile.match(/\[bin /) ){
+		if( !ivfile.match(/\[EVENTS\]/) ){
+		    ivfile += "[EVENTS]";
+		}
+		tab = that.raw.hdu.table;
+		tx1 = Math.floor(tab.cx - ((tab.nx+1)/2) + 1);
+		tx2 = Math.floor(tab.cx + (tab.nx/2));
+		ty1 = Math.floor(tab.cy - ((tab.ny+1)/2) + 1);
+		ty2 = Math.floor(tab.cy + (tab.ny/2));
+		ivfile += sprintf("[bin X=%s:%s,Y=%s:%s]", tx1, tx2, ty1, ty2);
+	    }
 	}
 	// call the reproject routine
 	try{
