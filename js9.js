@@ -207,6 +207,7 @@ JS9.imageOpts = {
     zooms: 5,				// how many zooms in each direction?
     nancolor: "#000000",		// 6-digit #hex color for NaN values
     wcsalign: true,			// align image using wcs after reproj?
+    rotationMode: "relative",		// default: relative or absolute?
     listonchange: false			// whether to list after a reg change
 };
 
@@ -480,7 +481,7 @@ JS9.Image = function(file, params, func){
     this.display = JS9.lookupDisplay(display);
     // initialize image params
     this.params = {};
-    // image-specific scratch space for plugins
+    // image-specific scratch space
     this.tmp = {};
     // scale min and max to impossible numbers
     this.params.scalemin = Number.Nan;
@@ -830,50 +831,6 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
 // initialize keywords for various logical coordinate systems
 JS9.Image.prototype.initLCS = function(header){
     var arr = [[0,0,0], [0,0,0], [0,0,0]];
-    var invertm3 = function(xin){
-	var i, j;
-	var det_1;
-	var prec = 1.0e-15;
-	var pos = 0.0;
-	var neg = 0.0;
-	var xout = [[0,0,0], [0,0,0], [0,0,0]];
-	var temp =  xin[0][0] * xin[1][1];
-	var accum = function(){
-	    if( temp >= 0.0 ){
-		pos += temp;
-	    } else {
-		neg += temp;
-	    }
-	};
-	// sanity check for a header param missing or NaN
-	for(i=0; i<3; i++){
-	    for(j=0; j<2; j++){
-		if( (xin[i][j] === undefined) || isNaN(xin[i][j]) ){
-		    return null;
-		}
-	    }
-	}
-	accum();
-	temp = -xin[0][1] * xin[1][0];
-	accum();
-	det_1 = pos + neg;
-	// Is the submatrix A singular?
-	if( (det_1 === 0.0) || (Math.abs(det_1 / (pos - neg)) < prec) ){
-	    // Matrix M has no inverse
-	    return null;
-	}
-	// Calculate inverse(A) = adj(A) / det(A)
-	det_1 = 1.0 / det_1;
-	xout[0][0] =   xin[1][1] * det_1;
-	xout[1][0] = - xin[1][0] * det_1;
-	xout[0][1] = - xin[0][1] * det_1;
-	xout[1][1] =   xin[0][0] * det_1;
-	// Calculate -C * inverse(A)
-	xout[2][0] = - (xin[2][0] * xout[0][0] + xin[2][1] * xout[1][0]);
-	xout[2][1] = - (xin[2][0] * xout[0][1] + xin[2][1] * xout[1][1]);
-	return xout;
-    };
-
     // header usually is raw header
     header = header || this.raw.header;
     // physical coords
@@ -884,7 +841,7 @@ JS9.Image.prototype.initLCS = function(header){
     arr[2][0] = header.LTV1   || 0.0;
     arr[2][1] = header.LTV2   || 0.0;
     this.lcs.physical = {forward: $.extend(true, [], arr),
-			 reverse: invertm3(arr)};
+			 reverse: JS9.invertMatrix3(arr)};
     if( !this.lcs.physical.reverse ){
 	delete this.lcs.physical;
     }
@@ -896,7 +853,7 @@ JS9.Image.prototype.initLCS = function(header){
     arr[2][0] = header.DTV1   || 0.0;
     arr[2][1] = header.DTV2   || 0.0;
     this.lcs.detector = {forward: $.extend(true, [], arr),
-			reverse: invertm3(arr)};
+			reverse: JS9.invertMatrix3(arr)};
     if( !this.lcs.detector.reverse ){
 	delete this.lcs.detector;
     }
@@ -908,7 +865,7 @@ JS9.Image.prototype.initLCS = function(header){
     arr[2][0] = header.ATV1   || 0.0;
     arr[2][1] = header.ATV2   || 0.0;
     this.lcs.amplifier = {forward: $.extend(true, [], arr),
-			  reverse: invertm3(arr)};
+			  reverse: JS9.invertMatrix3(arr)};
     if( !this.lcs.amplifier.reverse ){
 	delete this.lcs.amplifier;
     }
@@ -1390,6 +1347,10 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	for(i=0; i<s.length; i++){
 	   ui[i] = s.charCodeAt(i);
 	}
+    }
+    // rotation info
+    if( opts.rotation ){
+	this.raw.rotation = $.extend(true, {}, opts.rotation);
     }
     // make sure we have a typed array
     // flatten if necessary
@@ -2509,7 +2470,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     // generate new data
     this.mkRawDataFromHDU(obj, opts);
     // if binning changed, we have to update the regions and other shape layers
-    doreg = (this.binning.obin !== this.binning.bin);
+    doreg = opts.refreshRegions || (this.binning.obin !== this.binning.bin);
     // restore section unless dims changed (in which case we update regions)
     if( (this.raw.width === owidth) && (this.raw.height === oheight) ){
 	this.mkSection(oxcen, oycen, ozoom);
@@ -2523,7 +2484,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     // update shape layers if necessary
     if( doreg ){
 	this.refreshLayers();
-	// also update region values
+	// update region values
 	this.updateShapes("regions", "all", "binning");
     }
     // call onrefresh function, if necessary
@@ -2893,7 +2854,7 @@ JS9.Image.prototype.refreshLayers = function(){
 
 // return current file-related position for specified image position
 JS9.Image.prototype.imageToLogicalPos = function(ipos, lcs){
-    var arr;
+    var arr, m, tx, ty, cx, cy;
     var opos = {x: ipos.x, y: ipos.y};
     var osys = "image";
     lcs = lcs || this.params.lcs || "image";
@@ -2919,6 +2880,15 @@ JS9.Image.prototype.imageToLogicalPos = function(ipos, lcs){
 	}
 	break;
     }
+    if( this.raw.rotation ){
+	m = this.raw.rotation.inv;
+	cx = this.raw.header.CRPIX1;
+	cy = this.raw.header.CRPIX2;
+	tx = cx + ((ipos.x-cx) * m[0][0]) + ((ipos.y-cy) * m[1][0]) + m[2][0];
+	ty = cy + ((ipos.x-cx) * m[0][1]) + ((ipos.y-cy) * m[1][1]) + m[2][1];
+	ipos.x = tx;
+	ipos.y = ty;
+    }
     if( arr ){
 	opos.x = ipos.x * arr[0][0] + ipos.y * arr[1][0] + arr[2][0];
 	opos.y = ipos.x * arr[0][1] + ipos.y * arr[1][1] + arr[2][1];
@@ -2928,7 +2898,7 @@ JS9.Image.prototype.imageToLogicalPos = function(ipos, lcs){
 
 // return current image position from file-related position
 JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
-    var arr;
+    var arr, m, tx, ty, cx, cy;
     var opos = {x: lpos.x, y: lpos.y};
     lcs = lcs || this.params.lcs || "image";
     switch(lcs){
@@ -2953,6 +2923,15 @@ JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
     if( arr ){
 	opos.x = lpos.x * arr[0][0] + lpos.y * arr[1][0] + arr[2][0];
 	opos.y = lpos.x * arr[0][1] + lpos.y * arr[1][1] + arr[2][1];
+    }
+    if( this.raw.rotation ){
+	m = this.raw.rotation.mat;
+	cx = this.raw.header.CRPIX1;
+	cy = this.raw.header.CRPIX2;
+	tx = cx + ((opos.x-cx) * m[0][0]) + ((opos.y-cy) * m[1][0]) + m[2][0];
+	ty = cy + ((opos.x-cx) * m[0][1]) + ((opos.y-cy) * m[1][1]) + m[2][1];
+	opos.x = tx;
+	opos.y = ty;
     }
     return opos;
 };
@@ -2990,8 +2969,8 @@ JS9.Image.prototype.imageToDisplayPos = function(ipos){
 };
 
 // return 0-indexed display pos from 1-indexed logical pos
-JS9.Image.prototype.logicalToDisplayPos = function(lpos){
-    return this.imageToDisplayPos(this.logicalToImagePos(lpos));
+JS9.Image.prototype.logicalToDisplayPos = function(lpos, lcs, mode){
+    return this.imageToDisplayPos(this.logicalToImagePos(lpos, lcs, mode));
 };
 
 // return 1-indexed logical pos from 0-indexed display pos
@@ -3027,7 +3006,7 @@ JS9.Image.prototype.setWCSSys = function(wcssys){
 		wu = this.params.wcsunits;
 	    }
 	    this.setWCSUnits(wu);
-	    this.updateShapes("regions", "all", "update");
+	    // this.updateShapes("regions", "all", "update");
 	}
     }
     // extended plugins
@@ -3200,7 +3179,7 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
 	s = JS9.wcsunits(this.raw.wcs, wcsunits);
 	if( s ){
 	    this.params.wcsunits = s.trim();
-	    this.updateShapes("regions", "all", "update");
+	    // this.updateShapes("regions", "all", "update");
 	}
     }
     // extended plugins
@@ -4594,6 +4573,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 			this.dataminmax();
 			this.mkSection();
 			this.displayImage("all", opts);
+			this.refreshLayers();
 			return true;
 		    }
 		    this.raw = raw;
@@ -4604,6 +4584,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 		    this.mkSection();
 		    // redisplay using these data
 		    this.displayImage("all", opts);
+		    this.refreshLayers();
 		    // extended plugins
 		    if( JS9.globalOpts.extendedPlugins ){
 			this.xeqPlugins("image", "onrawdatalayer");
@@ -5047,6 +5028,77 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
     return this;
 };
 
+// rotate image by changing WCS info and calling reprojectData
+// creates a new raw data layer ("rotate")
+// angle is in degrees (since CROTA2 is in degrees)
+JS9.Image.prototype.rotateData = function(angle, opts){
+    var mode, oheader, ocrot, ocdelt1, ocdelt2, nheader, northup;
+    var lcen, ncrot, nrad, sinrot, cosrot;
+    if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
+	return;
+    }
+    // opts is ... optional
+    opts = opts || {};
+    // but make sure we can set the id
+    opts.rawid = "rotate";
+    // default mode for rotation
+    mode = opts.rotationMode || JS9.imageOpts.rotationMode;
+    // if mode is absolute, we have to go back to the original data
+    if( mode === "absolute" ){
+	this.raw = this.raws[0];
+    }
+    // old and new header
+    oheader = this.raw.header;
+    nheader = $.extend(true, {}, oheader);
+    // normalized values from wcslib
+    ocdelt1 = this.raw.wcsinfo.cdelt1 || 0;
+    ocdelt2 = this.raw.wcsinfo.cdelt2 || 0;
+    ocrot =   this.raw.wcsinfo.crot   || 0;
+    // string directives instead of a numeric angle
+    if( typeof angle === "string" ){
+	switch(angle.toLowerCase()){
+	case "northisup":
+	case "northup":
+	    angle = 0;
+	    northup = true;
+	    break;
+	}
+    }
+    // new header same as old, but with a changed angle
+    ncrot = angle;
+    if( mode === "relative" && !northup ){
+	ncrot += ocrot;
+    }
+    // rotation in radians
+    nrad = -(ncrot * Math.PI / 180.0);
+    sinrot = Math.sin(nrad);
+    cosrot = Math.cos(nrad);
+    // make up new WCS keywords
+    // if not using CD matrix, set CROTA2
+    if( oheader.CD1_1 === undefined  ){
+	nheader.CROTA2 = ncrot;
+    } else {
+	nheader.CD1_1 =  ocdelt1 * cosrot;
+	nheader.CD1_2 = -ocdelt2 * sinrot;
+	nheader.CD2_1 =  ocdelt1 * sinrot;
+	nheader.CD2_2 =  ocdelt2 * cosrot;
+    }
+    if( this.raw.wcsinfo ){
+	nheader.ptype = this.raw.wcsinfo.ptype;
+    }
+    // save rotation for logical transforms
+    opts.rotation = {};
+    opts.rotation.angle = ncrot;
+    opts.rotation.ix = this.raw.header.CRPIX1 || 0;
+    opts.rotation.iy = this.raw.header.CRPIX2 || 0;
+    lcen = this.imageToLogicalPos({x: opts.rotation.ix, y: opts.rotation.iy});
+    opts.rotation.lx = lcen.x;
+    opts.rotation.ly = lcen.y;
+    opts.rotation.mat = [[cosrot,-sinrot,0], [sinrot,cosrot,0], [0,0,0]];
+    opts.rotation.inv = JS9.invertMatrix3(opts.rotation.mat);
+    return this.reprojectData(nheader, opts);
+};
+
 // reproject image using WCS info
 // creates a new raw data layer ("reproject")
 JS9.Image.prototype.reprojectData = function(wcsim, opts){
@@ -5062,9 +5114,12 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	var im, arr, ivfile, ovfile, rstr, key, topts;
 	var tab, tx1, tx2, ty1, ty2, s;
 	var n, avfile, earr, cmdswitches;
+	var reprojHandler;
 	var wcsexp = /SIMPLE|BITPIX|NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
 	var ptypeexp = /TAN|SIN|ZEA|STG|ARC/;
-	var reprojHandler = function(hdu){
+	var defaultReprojHandler = function(hdu){
+	    topts = topts || {};
+	    topts.refreshRegions = true;
 	    that.refreshImage(hdu, topts);
 	    JS9.waiting(false);
 	};
@@ -5072,11 +5127,10 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	if( !that.raw.wcs || !wcsim || !JS9.reproject ){
 	    return;
 	}
-	if( !that.raw.hdu || !that.raw.hdu.fits || !that.raw.hdu.fits.fptr ){
-	    JS9.error("virtual FITS file is missing for reprojection");
-	}
 	// opts is optional
 	opts = opts || {};
+	// handler
+	reprojHandler = opts.reprojHandler || defaultReprojHandler;
 	// is this a string containing an image name or WCS values?
 	if( typeof wcsim === "string" ){
 	    im = JS9.getImage(wcsim);
@@ -5148,7 +5202,8 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 		}
 	    }
 	    // try to change reproject WCS to a sys usable by mProjectPP
-	    if( !ptypeexp.test(wcsim.raw.wcsinfo.ptype) ){
+	    if( (wcsim.raw && !ptypeexp.test(wcsim.raw.wcsinfo.ptype)) ||
+		(wcsim.ptype && !ptypeexp.test(wcsim.ptype))           ){
 		owvfile = "owcs_" + JS9.uniqueID() + ".txt";
 		JS9.vfile(owvfile, JS9.raw2FITS(nheader, true));
 		awvfile2 = "awcs_" + JS9.uniqueID() + ".txt";
@@ -5226,6 +5281,9 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    if( awvfile ){
 		JS9.vunlink(awvfile);
 	    }
+	    if( arr ){
+		JS9.vunlink(ivfile);
+	    }
 	    // ... then error check
 	    if( rstr.search(/\[struct stat="OK"/) < 0 ){
 		// signal that we completed the reproject attempt
@@ -5259,7 +5317,9 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	// ... in a new raw data layer
 	topts.rawid = topts.rawid || "reproject";
 	// save pointer to original wcs image
-	topts.wcsim = wcsim;
+	if( wcsim.raw && wcsim.raw.header ){
+	    topts.wcsim = wcsim;
+	}
 	// process the FITS file
 	try{ JS9.handleFITSFile(ovfile, topts, reprojHandler); }
 	catch(e){ JS9.error("can't process reprojected FITS file", e); }
@@ -5702,6 +5762,8 @@ JS9.Display = function(el){
     }
     // save id
     this.id = this.divjq.attr("id");
+    // display-specific scratch space
+    this.tmp = {};
     // add class
     this.divjq.addClass("JS9");
     // set width and height on div
@@ -9129,6 +9191,14 @@ JS9.Fabric.refreshShapes = function(layerName){
 	// change region position
 	obj.setLeft(dpos.x);
 	obj.setTop(dpos.y);
+	// change angle if necessary
+	if( obj.pub.angle ){
+	    if( that.raw.rotation ){
+		obj.setAngle(-obj.pub.angle - that.raw.rotation.angle);
+	    } else {
+		obj.setAngle(-obj.pub.angle);
+	    }
+	}
 	// set scaling based on zoom factor, if necessary
 	if( obj.params.zoomable !== false ){
 	    switch(obj.params.shape){
@@ -12254,6 +12324,51 @@ JS9.rotatePoint = function(point, angle, cen)
         x: (cosA * (point.x - cen.x) - sinA * (point.y - cen.y) + cen.x),
 	y: (sinA * (point.x - cen.x) + cosA * (point.y - cen.y) + cen.y)
     };
+};
+
+// invert a 3x3 matrix
+JS9.invertMatrix3 = function(xin){
+    var i, j;
+    var det_1;
+    var prec = 1.0e-15;
+    var pos = 0.0;
+    var neg = 0.0;
+    var xout = [[0,0,0], [0,0,0], [0,0,0]];
+    var temp =  xin[0][0] * xin[1][1];
+    var accum = function(){
+	if( temp >= 0.0 ){
+	    pos += temp;
+	} else {
+	    neg += temp;
+	}
+    };
+    // sanity check for NaN
+    for(i=0; i<3; i++){
+	for(j=0; j<2; j++){
+	    if( (xin[i][j] === undefined) || isNaN(xin[i][j]) ){
+		return null;
+	    }
+	}
+    }
+    accum();
+    temp = -xin[0][1] * xin[1][0];
+    accum();
+    det_1 = pos + neg;
+    // Is the submatrix A singular?
+    if( (det_1 === 0.0) || (Math.abs(det_1 / (pos - neg)) < prec) ){
+	// Matrix M has no inverse
+	return null;
+    }
+    // Calculate inverse(A) = adj(A) / det(A)
+    det_1 = 1.0 / det_1;
+    xout[0][0] =   xin[1][1] * det_1;
+    xout[1][0] = - xin[1][0] * det_1;
+    xout[0][1] = - xin[0][1] * det_1;
+    xout[1][1] =   xin[0][0] * det_1;
+    // Calculate -C * inverse(A)
+    xout[2][0] = - (xin[2][0] * xout[0][0] + xin[2][1] * xout[1][0]);
+    xout[2][1] = - (xin[2][0] * xout[0][1] + xin[2][1] * xout[1][1]);
+    return xout;
 };
 
 // logging: IE9 does not expose console.log by default

@@ -140,6 +140,7 @@ struct
 
 
 double crpix1, crpix2;
+double ltv1, ltv2;
 
 double pixelArea;
 
@@ -1530,6 +1531,15 @@ int mProjectPP(int argc, char **argv)
       printFitsError(status);           
 
 
+   if(fits_update_key_dbl(output.fptr, "LTV1", ltv1-imin, -14,
+                                  (char *)NULL, &status))
+      printFitsError(status);           
+
+   if(fits_update_key_dbl(output.fptr, "LTV2", ltv2-jmin, -14,
+                                  (char *)NULL, &status))
+      printFitsError(status);           
+
+
 
    if(fits_update_key_lng(output_area.fptr, "NAXIS", 2,
                                   (char *)NULL, &status))
@@ -1548,6 +1558,14 @@ int mProjectPP(int argc, char **argv)
       printFitsError(status);           
 
    if(fits_update_key_dbl(output_area.fptr, "CRPIX2", crpix2-jmin, -14,
+                                  (char *)NULL, &status))
+      printFitsError(status);           
+
+   if(fits_update_key_dbl(output_area.fptr, "LTV1", ltv1-imin, -14,
+                                  (char *)NULL, &status))
+      printFitsError(status);           
+
+   if(fits_update_key_dbl(output_area.fptr, "LTV2", ltv2-jmin, -14,
                                   (char *)NULL, &status))
       printFitsError(status);           
 
@@ -1993,6 +2011,21 @@ int parseLine(char *linein, int headerType)
 
          sprintf(linein, "CRPIX2  = %11.6f", crpix2);
       }
+
+      if(strcmp(keyword, "LTV1") == 0)
+      {
+         ltv1 = atof(value) + offset;
+
+         sprintf(linein, "LTV1  = %11.6f", ltv1);
+      }
+
+      if(strcmp(keyword, "LTV2") == 0)
+      {
+         ltv2 = atof(value) + offset;
+
+         sprintf(linein, "LTV2  = %11.6f", ltv2);
+      }
+
    }
 
    return 0;

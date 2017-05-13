@@ -4725,6 +4725,7 @@ JS9.Menubar.init = function(width, height){
 		var tim = tdisp.image;
 		var editResize = function(disp, obj){
 		    var v1, v2, arr;
+		    delete tdisp.tmp.editingMenu;
 		    if( obj.resize ){
 			arr = obj.resize.split(/[\s,\/]+/);
 			switch(arr.length){
@@ -4754,10 +4755,9 @@ JS9.Menubar.init = function(width, height){
 		    case 9:
 		    case 13:
 			editResize(vdisp, obj);
-			e.data.edited = false;
 			break;
 		    default:
-			e.data.edited = true;
+			vdisp.tmp.editingMenu = true;
 			break;
 		    }
 		};
@@ -4913,8 +4913,7 @@ JS9.Menubar.init = function(width, height){
 			    var udisp = that.display;
 			    if( udisp ){
 				// if a key was pressed, do the edit
-				if( opt.edited ){
-				    delete opt.edited;
+				if( udisp.tmp.editingMenu ){
 				    obj = $.contextMenu.getInputValues(opt);
 				    editResize(udisp, obj);
 				}
@@ -4941,6 +4940,7 @@ JS9.Menubar.init = function(width, height){
 		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
 		var editZoom = function(im, obj){
+		    delete tdisp.tmp.editingMenu;
 		    if( !isNaN(obj.zoom) ){
 			im.setZoom(obj.zoom);
 		    }
@@ -4955,11 +4955,10 @@ JS9.Menubar.init = function(width, height){
 		    case 13:
 			if( vim ){
 			    editZoom(vim, obj);
-			    e.data.edited = false;
 			}
 			break;
 		    default:
-			e.data.edited = true;
+			vdisp.tmp.editingMenu = true;
 			break;
 		    }
 		};
@@ -5049,8 +5048,7 @@ JS9.Menubar.init = function(width, height){
 			    var uim = udisp.image;
 			    if( uim ){
 				// if a key was pressed, do the edit
-				if( opt.edited ){
-				    delete opt.edited;
+				if( udisp.tmp.editingMenu ){
 				    obj = $.contextMenu.getInputValues(opt);
 				    editZoom(uim, obj);
 				}
@@ -5077,6 +5075,7 @@ JS9.Menubar.init = function(width, height){
 		var items = {};
 		var tdisp = getDisplays()[0];
 		var editScale = function(im, obj){
+		    delete tdisp.tmp.editingMenu;
 		    if( JS9.isNumber(obj.scalemin) ){
 			im.params.scalemin = parseFloat(obj.scalemin);
 			im.params.scaleclipping = "user";
@@ -5096,10 +5095,9 @@ JS9.Menubar.init = function(width, height){
 		    case 9:
 		    case 13:
 			editScale(vim, obj);
-			e.data.edited = false;
 			break;
 		    default:
-			e.data.edited = true;
+			vdisp.tmp.editingMenu = true;
 			break;
 		    }
 		};
@@ -5187,8 +5185,7 @@ JS9.Menubar.init = function(width, height){
 			    var uim = udisp.image;
 			    if( uim ){
 				// if a key was pressed, do the edit
-				if( opt.edited ){
-				    delete opt.edited;
+				if( udisp.tmp.editingMenu ){
 				    obj = $.contextMenu.getInputValues(opt);
 				    editScale(uim, obj);
 				}
@@ -5215,6 +5212,7 @@ JS9.Menubar.init = function(width, height){
 		var items = {};
 		var tdisp = getDisplays()[0];
 		var editColor = function(im, obj){
+		    delete tdisp.tmp.editingMenu;
 		    if( obj.contrast && !isNaN(obj.contrast) ){
 			im.params.contrast = parseFloat(obj.contrast);
 		    }
@@ -5239,10 +5237,9 @@ JS9.Menubar.init = function(width, height){
 		    case 9:
 		    case 13:
 			editColor(vim, obj);
-			e.data.edited = false;
 			break;
 		    default:
-			e.data.edited = true;
+			vdisp.tmp.editingMenu = true;
 			break;
 		    }
 		};
@@ -5359,8 +5356,7 @@ JS9.Menubar.init = function(width, height){
 			    var uim = udisp.image;
 			    if( uim ){
 				// if a key was pressed, do the edit
-				if( opt.edited ){
-				    delete opt.edited;
+				if( udisp.tmp.editingMenu ){
 				    obj = $.contextMenu.getInputValues(opt);
 				    editColor(uim, obj);
 				}
@@ -5500,6 +5496,34 @@ JS9.Menubar.init = function(width, height){
 		var items = {};
 		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
+		var editRotate = function(im, obj){
+		    delete tdisp.tmp.editingMenu;
+		    if( JS9.isNumber(obj.relrot) ){
+			im.rotateData(parseFloat(obj.relrot),
+				      {rotationMode: "relative"});
+		    }
+		    if( JS9.isNumber(obj.absrot) ){
+			im.rotateData(parseFloat(obj.absrot),
+				      {rotationMode: "absolute"});
+		    }
+		};
+		var keyRotate = function(e){
+		    var obj = $.contextMenu.getInputValues(e.data);
+		    var keycode = e.which || e.keyCode;
+		    var vdisp = that.display;
+		    var vim = vdisp.image;
+		    switch( keycode ){
+		    case 9:
+		    case 13:
+			if( vim ){
+			    editRotate(vim, obj);
+			}
+			break;
+		    default:
+			vdisp.tmp.editingMenu = true;
+			break;
+		    }
+		};
 		items.wcssystitle = {name: "WCS Systems:", disabled: true};
 		for(i=0; i<JS9.wcssyss.length; i++){
 		    s1 = JS9.wcssyss[i];
@@ -5562,7 +5586,7 @@ JS9.Menubar.init = function(width, height){
 		items["sep" + n++] = "------";
 		items.reproject = {
 		    name: "reproject",
-		    items: {reprojtitle: {name: "wcs from:", disabled: true}}
+		    items: {reprojtitle: {name: "using the wcs from:", disabled: true}}
 		};
 		for(i=0, nwcs=0; i<JS9.images.length; i++){
 		    if( tim !== JS9.images[i]  &&
@@ -5575,7 +5599,6 @@ JS9.Menubar.init = function(width, height){
 		    }
 		}
 		if( nwcs === 0 ){
-		    items.reproject.disabled = true;
 		    items.reproject.items.notasks = {
 			name: "[none]",
 			disabled: true,
@@ -5591,6 +5614,23 @@ JS9.Menubar.init = function(width, height){
 			items.reproject.items.reproject_wcsalign.icon = "sun";
 		    }
 		}
+		items.reproject.items["sep" + n++] = "------";
+		items.reproject.items.rotatetitle = {
+		    name: "by rotating the image:", disabled: true
+		};
+		items.reproject.items.reproject_northup = {
+		    name: "so that north is up"
+		};
+		items.reproject.items.relrot = {
+		    events: {keyup: keyRotate},
+		    name: "adding to the current rotation:",
+		    type: "text"
+		};
+		items.reproject.items.absrot = {
+		    events: {keyup: keyRotate},
+		    name: "utilizing a new rotation:",
+		    type: "text"
+		};
 		return {
                     callback: function(key){
 		    getDisplays().forEach(function(val){
@@ -5610,6 +5650,8 @@ JS9.Menubar.init = function(width, height){
 				if( key === "reproject_wcsalign" ){
 				    uim.params.wcsalign = !uim.params.wcsalign;
 				    uim.displayImage("display");
+				} else if( key === "reproject_northup" ){
+				    uim.rotateData("northisup");
 				}  else {
 				    file = key.replace(/^reproject_/,"");
 				    uim.reprojectData(file);
@@ -5626,6 +5668,31 @@ JS9.Menubar.init = function(width, height){
 			    }
 			}
 		    });
+		    },
+		    events: {
+			show: function(opt){
+			    var udisp = that.display;
+			    var uim = udisp.image;
+			    var obj = {};
+			    if( uim ){
+				obj.relrot = "";
+				obj.absrot = "";
+				$.contextMenu.setInputValues(opt, obj);
+				JS9.jupyterFocus(".context-menu-item");
+			    }
+			},
+			hide: function(opt){
+			    var obj;
+			    var udisp = that.display;
+			    var uim = udisp.image;
+			    if( uim ){
+				obj = $.contextMenu.getInputValues(opt);
+				// if a key was pressed, do the edit
+				if( udisp.tmp.editingMenu ){
+				    editRotate(uim, obj);
+				}
+			    }
+			}
 		    },
 		    items: items
 		};
@@ -5664,6 +5731,7 @@ JS9.Menubar.init = function(width, height){
 			   String(s2).toUpperCase();
 		};
 		var editAnalysis = function(im, obj){
+		    delete tdisp.tmp.editingMenu;
 		    if( !obj.sigma ){
 			obj.sigma = "none";
 		    }
@@ -5684,10 +5752,9 @@ JS9.Menubar.init = function(width, height){
 		    case 9:
 		    case 13:
 			editAnalysis(vim, obj);
-			e.data.edited = false;
 			break;
 		    default:
-			e.data.edited = true;
+			vdisp.tmp.editingMenu = true;
 			break;
 		    }
 		};
@@ -5898,8 +5965,7 @@ JS9.Menubar.init = function(width, height){
 			    var uim = udisp.image;
 			    if( uim ){
 				// if a key was pressed, do the edit
-				if( opt.edited ){
-				    delete opt.edited;
+				if( udisp.tmp.editingMenu ){
 				    obj = $.contextMenu.getInputValues(opt);
 				    editAnalysis(uim, obj);
 				}
