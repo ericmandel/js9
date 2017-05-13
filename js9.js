@@ -14536,6 +14536,7 @@ JS9.mkPublic("RunAnalysis", "runAnalysis");
 JS9.mkPublic("RawDataLayer", "rawDataLayer");
 JS9.mkPublic("GaussBlurData", "gaussBlurData");
 JS9.mkPublic("ImarithData", "imarithData");
+JS9.mkPublic("RotateData", "rotateData");
 JS9.mkPublic("ReprojectData", "reprojectData");
 JS9.mkPublic("ShiftData", "shiftData");
 JS9.mkPublic("FilterRGBImage", "filterRGBImage");
