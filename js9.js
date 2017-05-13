@@ -5035,7 +5035,7 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     var mode, oheader, ocrot, ocdelt1, ocdelt2, nheader, northup;
     var lcen, ncrot, nrad, sinrot, cosrot;
     if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
-	return;
+	JS9.error("no WCS info available for rotation");
     }
     // opts is ... optional
     opts = opts || {};
