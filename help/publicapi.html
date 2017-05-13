@@ -1713,9 +1713,28 @@ documentation for more information about command switches.
 Reprojection is an intensive process which can take a considerable
 amount of memory and processing time. To avoid crashes, we currently
 restrict the WCS image size used for reprojection to a value defined
-by JS9.REPROJDIM, currently 2200 x 2200. Even this might be too large
+by JS9.REPROJDIM, currently 2300 x 2300. Even this might be too large
 for iOS devices under certain circumstances, although issues regarding
 memory are evolving rapidly.
+
+<p>
+<font size="+1"><b><u>Rotate an image around the  WCS CRPIX point</u></b></font>
+<p>
+<code><font size="+1">JS9.RotateData(angle, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>angle</b>: rotation angle in degrees
+<li><b>opts</b>: options object
+</ul>
+The <b>JS9.RotateData()</b> routine using <b>JS9.ReprojectData()</b>
+to rotate image data by the specified angle (in degrees). If the string
+"northup" or "northisup" is specified, the rotation angle is set to 0.
+The rotation is performed about the WCS CRPIX1, CRPIX2 point.
+<p>
+The opts object can contain a <b>rotationMode</b> parameter to
+specify whether the angle is "relative" to the current rotation or
+"absolute" from a zero rotation. The default is "relative".
 
 <p>
 <font size="+1"><b><u>Save an image session to a file</u></b></font>
