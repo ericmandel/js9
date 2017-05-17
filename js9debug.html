@@ -109,6 +109,8 @@
     &nbsp; &nbsp;
     <input type="button" value="Heap Test" onclick="javascript:HeapTest()">
     &nbsp; &nbsp;
+    <input type="button" value="Load Test" onclick="javascript:LoadTest()">
+    &nbsp; &nbsp;
     <input type="button" value="Refresh Test" onclick="javascript:RefreshTest()">
     &nbsp; &nbsp;
     <input type="button" value="Reproj Load" onclick="javascript:ReprojLoad()">
@@ -417,17 +419,25 @@
     }
     // heap and refresh test blobs
     var fileBlobs;
-    var timeTotal=30;
+    var timeTotal=60*10;
     var refreshTimeout=2000;
+    var loadTimeout=1000;
     var heapTimeout=100, heapAlloc = 1024000;
     var heapBuf, heapStart, heapCur, heapIter;
+    var doingheaptest = false;
+    var doingrefreshtest = false;
+    var doingloadtest = false;
     function GetBlobs(files){
       fileBlobs = files;
     }
     function HeapTest(){
-      heapStart = 0;
-      heapBuf = new ArrayBuffer(heapAlloc);
-      heapTest(timeTotal*1000/heapTimeout);
+      if( doingheaptest ){
+        doingheaptest = false;
+      } else {
+        heapStart = 0;
+        heapBuf = new ArrayBuffer(heapAlloc);
+        heapTest(timeTotal*1000/heapTimeout);
+      }
     }
     function heapTest(nn, ii){
         var buf;
@@ -441,7 +451,7 @@
          } else {
            JS9.error("please choose an image to refresh");
          }
-         if( ii++ < nn ){
+         if( (ii++ < nn) && doingheaptest ){
            buf = Astroem.vmalloc(heapAlloc);
            if( !heapStart ){
              heapStart = buf;
@@ -458,7 +468,11 @@
     }
     // refresh test
     function RefreshTest(files){
-      refreshTest(timeTotal*1000/refreshTimeout);
+      if( doingrefreshtest ){
+        doingrefreshtest = false;
+      } else {
+        refreshTest(timeTotal*1000/refreshTimeout);
+      }
     }
     function refreshTest(nn, ii){
         var buf;
@@ -471,9 +485,32 @@
          } else {
            JS9.error("please choose an image to refresh");
          }
-         if( ii++ < nn ){
+         if( (ii++ < nn) && doingrefreshtest ){
 	   console.log("refresh: %s", ii);
            setTimeout(function(){refreshTest(nn, ii);}, refreshTimeout);
+        } else {
+           console.log("all done!");
+        };
+    }
+    // load test
+    function LoadTest(){
+      if( doingloadtest ){
+        doingloadtest = false;
+      } else {
+        doingloadtest = true;
+        loadTest(timeTotal*1000/loadTimeout);
+      }
+    }
+    function loadTest(nn, ii){
+        var buf;
+        if( ii === undefined ){
+          ii = 0;
+         }
+         JS9.CloseImage({display: "myJS9"})
+         JS9.Load("./fits/casa.fits", {display: "myJS9"});
+         if( (ii++ < nn) && doingloadtest ){
+	   console.log("load: %s", ii);
+           setTimeout(function(){loadTest(nn, ii);}, loadTimeout);
         } else {
            console.log("all done!");
         };
