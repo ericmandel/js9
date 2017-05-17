@@ -829,10 +829,31 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
 };
 
 // initialize keywords for various logical coordinate systems
-JS9.Image.prototype.initLCS = function(header){
+JS9.Image.prototype.initLCS = function(iheader){
+    var rrot, frot;
     var arr = [[0,0,0], [0,0,0], [0,0,0]];
     // header usually is raw header
-    header = header || this.raw.header;
+    var header = iheader || this.raw.header;
+    var cx = this.raw.header.CRPIX1 || 1;
+    var cy = this.raw.header.CRPIX2 || 1;
+    // screen rotation angle is reversed from FITS convention
+    var a = -(header.CROTA2||0) * Math.PI / 180.0;
+    var sina = Math.sin(a);
+    var cosa = Math.cos(a);
+    // seed rotation matrix and its inverse, if necessary
+    if( a ){
+	frot = [[0,0,0], [0,0,0], [0,0,0]];
+	frot[0][0] = cosa;
+	frot[0][1] = -sina;
+	frot[0][2] = 0;
+	frot[1][0] = sina;
+	frot[1][1] = cosa;
+	frot[1][2] = 0;
+	rrot = JS9.invertMatrix3(frot);
+	if( !rrot ){
+	    frot = null;
+	}
+    }
     // physical coords
     arr[0][0] = header.LTM1_1 || 1.0;
     arr[1][0] = header.LTM2_1 || 0.0;
@@ -842,7 +863,14 @@ JS9.Image.prototype.initLCS = function(header){
     arr[2][1] = header.LTV2   || 0.0;
     this.lcs.physical = {forward: $.extend(true, [], arr),
 			 reverse: JS9.invertMatrix3(arr)};
-    if( !this.lcs.physical.reverse ){
+    if( this.lcs.physical.reverse ){
+	if( frot ){
+	    this.lcs.physical.frot = $.extend(true, [], frot);
+	    this.lcs.physical.rrot = $.extend(true, [], rrot);
+	    this.lcs.physical.cx = cx - arr[2][0];
+	    this.lcs.physical.cy = cy - arr[2][1];
+	}
+    } else {
 	delete this.lcs.physical;
     }
     // detector coordinates
@@ -854,7 +882,14 @@ JS9.Image.prototype.initLCS = function(header){
     arr[2][1] = header.DTV2   || 0.0;
     this.lcs.detector = {forward: $.extend(true, [], arr),
 			reverse: JS9.invertMatrix3(arr)};
-    if( !this.lcs.detector.reverse ){
+    if( this.lcs.detector.reverse ){
+	if( frot ){
+	    this.lcs.detector.frot = $.extend(true, [], frot);
+	    this.lcs.detector.rrot = $.extend(true, [], rrot);
+	    this.lcs.detector.cx = cx - arr[2][0];
+	    this.lcs.detector.cy = cy - arr[2][1];
+	}
+    } else {
 	delete this.lcs.detector;
     }
     // amplifier coordinates
@@ -866,7 +901,14 @@ JS9.Image.prototype.initLCS = function(header){
     arr[2][1] = header.ATV2   || 0.0;
     this.lcs.amplifier = {forward: $.extend(true, [], arr),
 			  reverse: JS9.invertMatrix3(arr)};
-    if( !this.lcs.amplifier.reverse ){
+    if( this.lcs.amplifier.reverse ){
+	if( frot ){
+	    this.lcs.amplifier.frot = $.extend(true, [], frot);
+	    this.lcs.amplifier.rrot = $.extend(true, [], rrot);
+	    this.lcs.amplifier.cx = cx - arr[2][0];
+	    this.lcs.amplifier.cy = cy - arr[2][1];
+	}
+    } else {
 	delete this.lcs.amplifier;
     }
     // reset lcs to image, if necessary
@@ -1347,10 +1389,6 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	for(i=0; i<s.length; i++){
 	   ui[i] = s.charCodeAt(i);
 	}
-    }
-    // rotation info
-    if( opts.rotation ){
-	this.raw.rotation = $.extend(true, {}, opts.rotation);
     }
     // make sure we have a typed array
     // flatten if necessary
@@ -2854,7 +2892,7 @@ JS9.Image.prototype.refreshLayers = function(){
 
 // return current file-related position for specified image position
 JS9.Image.prototype.imageToLogicalPos = function(ipos, lcs){
-    var arr, m, tx, ty, cx, cy;
+    var arr, rot, tx, ty, cx, cy;
     var opos = {x: ipos.x, y: ipos.y};
     var osys = "image";
     lcs = lcs || this.params.lcs || "image";
@@ -2865,41 +2903,51 @@ JS9.Image.prototype.imageToLogicalPos = function(ipos, lcs){
 	if( this.lcs.physical ){
 	    osys = lcs;
 	    arr = this.lcs.physical.reverse;
+	    rot = this.lcs.physical.rrot;
+	    cx = this.lcs.physical.cx;
+	    cy = this.lcs.physical.cy;
 	}
 	break;
     case "detector":
 	if( this.lcs.detector ){
 	    osys = lcs;
 	    arr = this.lcs.detector.reverse;
+	    rot = this.lcs.detector.rrot;
+	    cx = this.lcs.detector.cx;
+	    cy = this.lcs.detector.cy;
 	}
 	break;
     case "amplifier":
 	if( this.lcs.amplifier ){
 	    osys = lcs;
 	    arr = this.lcs.amplifier.reverse;
+	    rot = this.lcs.amplifier.rrot;
+	    cx = this.lcs.amplifier.cx;
+	    cy = this.lcs.amplifier.cy;
 	}
 	break;
-    }
-    if( this.raw.rotation ){
-	m = this.raw.rotation.inv;
-	cx = this.raw.header.CRPIX1;
-	cy = this.raw.header.CRPIX2;
-	tx = cx + ((ipos.x-cx) * m[0][0]) + ((ipos.y-cy) * m[1][0]) + m[2][0];
-	ty = cy + ((ipos.x-cx) * m[0][1]) + ((ipos.y-cy) * m[1][1]) + m[2][1];
-	ipos.x = tx;
-	ipos.y = ty;
     }
     if( arr ){
 	opos.x = ipos.x * arr[0][0] + ipos.y * arr[1][0] + arr[2][0];
 	opos.y = ipos.x * arr[0][1] + ipos.y * arr[1][1] + arr[2][1];
+	if( rot ){
+	    tx = cx + (opos.x - cx) * rot[0][0] + (opos.y - cy) * rot[1][0] +
+		rot[2][0];
+	    ty = cy + (opos.x - cx) * rot[0][1] + (opos.y - cy) * rot[1][1] +
+		rot[2][1];
+	    opos.x = tx;
+	    opos.y = ty;
+	}
     }
     return {x: opos.x, y: opos.y, sys: osys};
 };
 
 // return current image position from file-related position
 JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
-    var arr, m, tx, ty, cx, cy;
+    var arr, rot, tx, ty, cx, cy;
     var opos = {x: lpos.x, y: lpos.y};
+    cx = this.raw.header.CRPIX1 || 1;
+    cy = this.raw.header.CRPIX2 || 1;
     lcs = lcs || this.params.lcs || "image";
     switch(lcs){
     case "image":
@@ -2907,31 +2955,33 @@ JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
     case "physical":
 	if( this.lcs.physical ){
 	    arr = this.lcs.physical.forward;
+	    rot = this.lcs.physical.frot;
 	}
 	break;
     case "detector":
 	if( this.lcs.detector ){
 	    arr = this.lcs.detector.forward;
+	    rot = this.lcs.detector.frot;
 	}
 	break;
     case "amplifier":
 	if( this.lcs.amplifier ){
 	    arr = this.lcs.amplifier.forward;
+	    rot = this.lcs.amplifier.frot;
 	}
 	break;
     }
     if( arr ){
 	opos.x = lpos.x * arr[0][0] + lpos.y * arr[1][0] + arr[2][0];
 	opos.y = lpos.x * arr[0][1] + lpos.y * arr[1][1] + arr[2][1];
-    }
-    if( this.raw.rotation ){
-	m = this.raw.rotation.mat;
-	cx = this.raw.header.CRPIX1;
-	cy = this.raw.header.CRPIX2;
-	tx = cx + ((opos.x-cx) * m[0][0]) + ((opos.y-cy) * m[1][0]) + m[2][0];
-	ty = cy + ((opos.x-cx) * m[0][1]) + ((opos.y-cy) * m[1][1]) + m[2][1];
-	opos.x = tx;
-	opos.y = ty;
+	if( rot ){
+	    tx = cx + (opos.x - cx) * rot[0][0] + (opos.y - cy) * rot[1][0] +
+		rot[2][0];
+	    ty = cy + (opos.x - cx) * rot[0][1] + (opos.y - cy) * rot[1][1] +
+		rot[2][1];
+	    opos.x = tx;
+	    opos.y = ty;
+	}
     }
     return opos;
 };
@@ -5033,7 +5083,7 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 // angle is in degrees (since CROTA2 is in degrees)
 JS9.Image.prototype.rotateData = function(angle, opts){
     var mode, oheader, ocrot, ocdelt1, ocdelt2, nheader, northup;
-    var lcen, ncrot, nrad, sinrot, cosrot;
+    var ncrot, nrad, sinrot, cosrot;
     if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
 	JS9.error("no WCS info available for rotation");
     }
@@ -5041,12 +5091,8 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     opts = opts || {};
     // but make sure we can set the id
     opts.rawid = "rotate";
-    // default mode for rotation
-    mode = opts.rotationMode || JS9.imageOpts.rotationMode;
-    // if mode is absolute, we have to go back to the original data
-    if( mode === "absolute" ){
-	this.raw = this.raws[0];
-    }
+    // we always go back to the original data
+    this.raw = this.raws[0];
     // old and new header
     oheader = this.raw.header;
     nheader = $.extend(true, {}, oheader);
@@ -5083,19 +5129,11 @@ JS9.Image.prototype.rotateData = function(angle, opts){
 	nheader.CD2_1 =  ocdelt1 * sinrot;
 	nheader.CD2_2 =  ocdelt2 * cosrot;
     }
+    // save ptype if possible
     if( this.raw.wcsinfo ){
 	nheader.ptype = this.raw.wcsinfo.ptype;
     }
-    // save rotation for logical transforms
-    opts.rotation = {};
-    opts.rotation.angle = ncrot;
-    opts.rotation.ix = this.raw.header.CRPIX1 || 0;
-    opts.rotation.iy = this.raw.header.CRPIX2 || 0;
-    lcen = this.imageToLogicalPos({x: opts.rotation.ix, y: opts.rotation.iy});
-    opts.rotation.lx = lcen.x;
-    opts.rotation.ly = lcen.y;
-    opts.rotation.mat = [[cosrot,-sinrot,0], [sinrot,cosrot,0], [0,0,0]];
-    opts.rotation.inv = JS9.invertMatrix3(opts.rotation.mat);
+    // rotate by reprojecting the data
     return this.reprojectData(nheader, opts);
 };
 
@@ -8238,6 +8276,7 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "configURL":
 	case "sortOverlapping":
 	case "tagcolors":
+	case "pts":
 	case "ptshape":
 	case "ptsize":
 	case "linepoints":
@@ -8778,6 +8817,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.imstr = pub.shape + "(";
 	tstr = pub.shape + " ";
 	pub.pts = [];
+	pub.lcs.pts = [];
 	for(i=0; i<obj.points.length; i++){
 	    if( i > 0 ){
 		pub.imstr += ", ";
@@ -8794,6 +8834,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    } else {
 		lcs = this.imageToLogicalPos(npos);
 		pub.imstr += (tr(lcs.x) + ", " + tr(lcs.y));
+		pub.lcs.pts.push({x: lcs.x, y: lcs.y});
 	    }
 	    tstr += (npos.x + " " + npos.y);
 	    pub.pts.push(npos);
@@ -9151,7 +9192,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 // use the old ones here, and then reset the old ones to the new ones. Hmmm ...
 // call using image context
 JS9.Fabric.refreshShapes = function(layerName){
-    var dpos, ao, bin, zoom, scaleX, scaleY, tscaleX, tscaleY;
+    var ao, bin, zoom, scaleX, scaleY, tscaleX, tscaleY;
     var layer, canvas;
     var ismain = false;
     var that = this;
@@ -9183,6 +9224,7 @@ JS9.Fabric.refreshShapes = function(layerName){
     ao = canvas.getActiveObject();
     // process the specified shapes
     this.selectShapes(layerName, "all", function(obj){
+	var i, dpos, cen, pts;
 	// convert current image pos to new display pos
 	// dpos = that.imageToDisplayPos(obj.pub);
 	// convert current logical position to new display position
@@ -9193,11 +9235,10 @@ JS9.Fabric.refreshShapes = function(layerName){
 	obj.setTop(dpos.y);
 	// change angle if necessary
 	if( obj.pub.angle ){
-	    if( that.raw.rotation ){
-		obj.setAngle(-obj.pub.angle - that.raw.rotation.angle);
-	    } else {
-		obj.setAngle(-obj.pub.angle);
-	    }
+	    obj.setAngle(-obj.pub.angle);
+	}
+	if( that.raw.wcsinfo.crot ){
+	    obj.setAngle(obj.getAngle() - that.raw.wcsinfo.crot);
 	}
 	// set scaling based on zoom factor, if necessary
 	if( obj.params.zoomable !== false ){
@@ -9218,6 +9259,16 @@ JS9.Fabric.refreshShapes = function(layerName){
 		obj.scaleY = tscaleY;
 		// rescale the width of the stroke lines
 		obj.rescaleBorder();
+		//  refresh polygon and line coordinates from physical
+		if( obj.pub.lcs.pts && obj.points ){
+		    cen = obj.getCenterPoint();
+		    pts = obj.pub.lcs.pts;
+		    for(i=0; i<pts.length; i++){
+			dpos = that.logicalToDisplayPos(obj.pub.lcs.pts[i]);
+			obj.points[i] = {x: (dpos.x - cen.x)/obj.scaleX,
+					 y: (dpos.y - cen.y)/obj.scaleY};
+		    }
+		}
 		break;
 	    }
 	}
@@ -11180,7 +11231,8 @@ JS9.Regions.parseRegions = function(s){
     var getang = function(a){
 	var v = JS9.strtoscaled(a);
 	var wcsinfo = this.raw.wcsinfo || {crot: 0};
-	if( (iswcs || liswcs) && wcsinfo.crot ){
+//	if( (iswcs || liswcs) && wcsinfo.crot ){
+	if( wcsinfo.crot ){
             v.dval += wcsinfo.crot;
 	}
 	return v.dval;

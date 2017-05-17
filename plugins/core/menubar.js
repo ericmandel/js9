@@ -1265,13 +1265,8 @@ JS9.Menubar.init = function(width, height){
 		var tim = tdisp.image;
 		var editRotate = function(im, obj){
 		    delete tdisp.tmp.editingMenu;
-		    if( JS9.isNumber(obj.relrot) ){
-			im.rotateData(parseFloat(obj.relrot),
-				      {rotationMode: "relative"});
-		    }
-		    if( JS9.isNumber(obj.absrot) ){
-			im.rotateData(parseFloat(obj.absrot),
-				      {rotationMode: "absolute"});
+		    if( JS9.isNumber(obj.rot) ){
+			im.rotateData(parseFloat(obj.rot));
 		    }
 		};
 		var keyRotate = function(e){
@@ -1388,14 +1383,9 @@ JS9.Menubar.init = function(width, height){
 		items.reproject.items.reproject_northup = {
 		    name: "so that north is up"
 		};
-		items.reproject.items.relrot = {
+		items.reproject.items.rot = {
 		    events: {keyup: keyRotate},
-		    name: "adding to the current rotation:",
-		    type: "text"
-		};
-		items.reproject.items.absrot = {
-		    events: {keyup: keyRotate},
-		    name: "utilizing a new rotation:",
+		    name: "using angle in degrees:",
 		    type: "text"
 		};
 		return {
@@ -1442,8 +1432,7 @@ JS9.Menubar.init = function(width, height){
 			    var uim = udisp.image;
 			    var obj = {};
 			    if( uim ){
-				obj.relrot = "";
-				obj.absrot = "";
+				obj.rot = "";
 				$.contextMenu.setInputValues(opt, obj);
 				JS9.jupyterFocus(".context-menu-item");
 			    }

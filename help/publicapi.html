@@ -1732,9 +1732,8 @@ to rotate image data by the specified angle (in degrees). If the string
 "northup" or "northisup" is specified, the rotation angle is set to 0.
 The rotation is performed about the WCS CRPIX1, CRPIX2 point.
 <p>
-The opts object can contain a <b>rotationMode</b> parameter to
-specify whether the angle is "relative" to the current rotation or
-"absolute" from a zero rotation. The default is "relative".
+The optional opts object is passed directly to the <b>JS9.ReprojectData()</b>
+routine. See <b>JS9.ReprojectData()</b> below for more information.
 
 <p>
 <font size="+1"><b><u>Save an image session to a file</u></b></font>
