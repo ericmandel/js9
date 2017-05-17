@@ -9234,11 +9234,8 @@ JS9.Fabric.refreshShapes = function(layerName){
 	obj.setLeft(dpos.x);
 	obj.setTop(dpos.y);
 	// change angle if necessary
-	if( obj.pub.angle ){
-	    obj.setAngle(-obj.pub.angle);
-	}
-	if( that.raw.wcsinfo.crot ){
-	    obj.setAngle(obj.getAngle() - that.raw.wcsinfo.crot);
+	if( obj.params.shape !== "polygon" && obj.params.shape !== "line" ){
+	    obj.setAngle(-(obj.pub.angle + (that.raw.wcsinfo.crot || 0)));
 	}
 	// set scaling based on zoom factor, if necessary
 	if( obj.params.zoomable !== false ){
