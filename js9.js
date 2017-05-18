@@ -8695,7 +8695,7 @@ JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
 // primitive to update one shape
 // call using image context
 JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
-    var i, xname, s, scalex, scaley, px, py, lcs;
+    var i, xname, s, scalex, scaley, px, py, lcs, v0, v1;
     var bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius, oangle;
     var opos, dist;
     var pub ={};
@@ -8869,6 +8869,19 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // it's the region layer and opts.dowcsstr is not explicitly false
     // it's the not region layer and opts.dowcsstr is explicitly true
     if( this.raw.wcs && (this.raw.wcs > 0) ){
+	// get ra and dec of central position
+	s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
+	pub.ra = s[0];
+	pub.dec = s[1];
+	pub.wcssys = s[2];
+	v0 = JS9.strtoscaled(s[0]);
+	if( (v0.dtype === ":") &&
+	    (s[2] !== "galactic") && (s[2] !== "ecliptic") ){
+	    v0.dval *= 15.0;
+	}
+	v1 = JS9.strtoscaled(s[1]);
+	pub.wcspos = {ra: v0.dval, dec: v1.dval};
+	// special processing for regions
 	if( ((layerName === "regions") && (opts.dowcsstr !== false)) ||
 	    ((layerName !== "regions") && (opts.dowcsstr === true))  ){
 	    pub.wcsstr = JS9.reg2wcs(this.raw.wcs, tstr).replace(/;$/, "");
@@ -8891,11 +8904,21 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    case "ellipse":
 		pub.wcssizestr = [s[2], s[3]];
 		break;
-	    case "line":
-		break;
 	    case "point":
 		break;
+	    case "line":
 	    case "polygon":
+		pub.wcspts = [];
+		for(i=0; i<s.length; i+=2){
+		    v0 = JS9.strtoscaled(s[i]);
+		    if( (v0.dtype === ":") &&
+			(pub.wcssys !== "galactic") &&
+			(pub.wcssys !== "ecliptic") ){
+			v0.dval *= 15.0;
+		    }
+		    v1 = JS9.strtoscaled(s[i+1]);
+		    pub.wcspts.push({ra: v0.dval, dec: v1.dval});
+		}
 		break;
 	    case "text":
 		break;
@@ -8903,10 +8926,6 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 		break;
 	    }
 	}
-	s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
-	pub.ra = s[0];
-	pub.dec = s[1];
-	pub.wcssys = s[2];
     }
     // generic "data" property, optionally supplied when the shape is created
     pub.data = obj.params.data;
@@ -9199,6 +9218,7 @@ JS9.Fabric.refreshShapes = function(layerName){
     var layer, canvas;
     var ismain = false;
     var that = this;
+    var wcs = this.raw.wcs;
     layer = this.getShapeLayer(layerName);
     // sanity check
     if( !layer ){
@@ -9227,17 +9247,25 @@ JS9.Fabric.refreshShapes = function(layerName){
     ao = canvas.getActiveObject();
     // process the specified shapes
     this.selectShapes(layerName, "all", function(obj){
-	var i, dpos, cen, pts;
+	var i, s, pos, cen, pts;
 	// convert current image pos to new display pos
-	// dpos = that.imageToDisplayPos(obj.pub);
+	// pos = that.imageToDisplayPos(obj.pub);
 	// convert current logical position to new display position
 	// this takes binning, etc. into consideration
-	dpos = that.logicalToDisplayPos(obj.pub.lcs);
+	if( wcs > 0 && obj.pub.wcspos ){
+	    s = JS9.wcs2pix(wcs, obj.pub.wcspos.ra, obj.pub.wcspos.dec)
+		.trim().split(/ +/);
+	    pos = this.imageToDisplayPos({x: parseFloat(s[0]),
+					  y: parseFloat(s[1])});
+	} else {
+	    pos = that.logicalToDisplayPos(obj.pub.lcs);
+	}
 	// change region position
-	obj.setLeft(dpos.x);
-	obj.setTop(dpos.y);
+	obj.setLeft(pos.x);
+	obj.setTop(pos.y);
 	// change angle if necessary
-	if( obj.params.shape !== "polygon" && obj.params.shape !== "line" ){
+	if( obj.params.shape !== "polygon" && obj.params.shape !== "line" &&
+	    obj.params.shape !== "point" && obj.params.shape !== "text" ){
 	    obj.setAngle(-(obj.pub.angle + (that.raw.wcsinfo.crot || 0)));
 	}
 	// set scaling based on zoom factor, if necessary
@@ -9259,14 +9287,26 @@ JS9.Fabric.refreshShapes = function(layerName){
 		obj.scaleY = tscaleY;
 		// rescale the width of the stroke lines
 		obj.rescaleBorder();
-		//  refresh polygon and line coordinates from physical
-		if( obj.pub.lcs.pts && obj.points ){
+		//  refresh polygon and line coordinates from wcs or physical
+		if( obj.points ){
 		    cen = obj.getCenterPoint();
-		    pts = obj.pub.lcs.pts;
-		    for(i=0; i<pts.length; i++){
-			dpos = that.logicalToDisplayPos(obj.pub.lcs.pts[i]);
-			obj.points[i] = {x: (dpos.x - cen.x)/obj.scaleX,
-					 y: (dpos.y - cen.y)/obj.scaleY};
+		    if( wcs > 0 && obj.pub.wcspts ){
+			pts = obj.pub.wcspts;
+			for(i=0; i<pts.length; i++){
+			    s = JS9.wcs2pix(wcs, pts[i].ra, pts[i].dec)
+				.trim().split(/ +/);
+			    pos = this.imageToDisplayPos({x: parseFloat(s[0]),
+							  y: parseFloat(s[1])});
+			    obj.points[i] = {x: (pos.x - cen.x)/obj.scaleX,
+					     y: (pos.y - cen.y)/obj.scaleY};
+			}
+		    } else if( obj.pub.lcs.pts ){
+			pts = obj.pub.lcs.pts;
+			for(i=0; i<pts.length; i++){
+			    pos = that.logicalToDisplayPos(obj.pub.lcs.pts[i]);
+			    obj.points[i] = {x: (pos.x - cen.x)/obj.scaleX,
+					     y: (pos.y - cen.y)/obj.scaleY};
+			}
 		    }
 		}
 		break;
