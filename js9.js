@@ -5085,7 +5085,7 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 // creates a new raw data layer ("rotate")
 // angle is in degrees (since CROTA2 is in degrees)
 JS9.Image.prototype.rotateData = function(angle, opts){
-    var mode, oheader, ocrot, ocdelt1, ocdelt2, nheader, northup;
+    var oheader, ocdelt1, ocdelt2, nheader;
     var ncrot, nrad, sinrot, cosrot;
     if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
 	JS9.error("no WCS info available for rotation");
@@ -5102,22 +5102,17 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     // normalized values from wcslib
     ocdelt1 = this.raw.wcsinfo.cdelt1 || 0;
     ocdelt2 = this.raw.wcsinfo.cdelt2 || 0;
-    ocrot =   this.raw.wcsinfo.crot   || 0;
     // string directives instead of a numeric angle
     if( typeof angle === "string" ){
 	switch(angle.toLowerCase()){
 	case "northisup":
 	case "northup":
 	    angle = 0;
-	    northup = true;
 	    break;
 	}
     }
     // new header same as old, but with a changed angle
     ncrot = angle;
-    if( mode === "relative" && !northup ){
-	ncrot += ocrot;
-    }
     // rotation in radians
     nrad = -(ncrot * Math.PI / 180.0);
     sinrot = Math.sin(nrad);
@@ -7899,11 +7894,11 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	nopts.top = pos.y;
     }
     //  ra and dec are in degrees, using the current wcs
-    if( (opts.ra !== undefined) && (opts.dec !== undefined) ){
+    if( (opts.ra !== undefined) && (opts.dec !== undefined) &&
+	(this.raw.wcs > 0) ){
 	if( typeof opts.ra === "string" ){
 	    opts.ra = JS9.saostrtod(opts.ra);
 	    if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-		(this.params.wcsunits === "sexagesimal") &&
 		(this.params.wcssys !== "galactic" )     &&
 		(this.params.wcssys !== "ecliptic" )     ){
 		opts.ra *= 15.0;
@@ -7912,8 +7907,9 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	if( typeof opts.dec === "string" ){
 	    opts.dec = JS9.saostrtod(opts.dec);
 	}
-	pos = JS9.WCSToPix(opts.ra, opts.dec, {display: this});
-	pos = this.imageToDisplayPos({x: pos.x, y: pos.y});
+	arr = JS9.wcs2pix(this.raw.wcs, opts.ra, opts.dec).trim().split(/ +/);
+	pos = this.imageToDisplayPos({x: parseFloat(arr[0]),
+				      y: parseFloat(arr[1])});
 	nopts.left = pos.x;
 	nopts.top = pos.y;
     }
@@ -8295,8 +8291,6 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "dy":
 	case "px":
 	case "py":
-	case "ra":
-	case "dec":
 	case "shape":
 	case "parent":
 	case "rtn":
@@ -8312,14 +8306,20 @@ JS9.Fabric._exportShapeOptions = function(opts){
 // call using image context
 JS9.Fabric._handleChildText = function(layerName, s, opts){
     var t, dpos, npos, topts;
-    var textHeight = 12;
+    var textht = 12;
     // region layer only, for now
     if( layerName !== "regions" ){
 	return;
     }
     if( (s.params.shape !== "text") && opts.text ){
-	dpos = JS9.rotatePoint({x: s.left, y: s.top - (s.height/2) -textHeight},
-			       s.angle, {x: s.left, y: s.top});
+	// default position for text (might be overridden by textOpts)
+	if( Math.abs(s.angle) < 0.000001 ){
+	    dpos = {x: s.left, y: s.top - (s.height/2) - textht};
+	} else {
+	    dpos = JS9.rotatePoint({x: s.left,
+				    y: s.top - (s.height/2) - textht},
+				   s.angle, {x: s.left, y: s.top});
+	}
 	npos = this.displayToImagePos(dpos);
 	topts = {x: npos.x, y: npos.y, angle: -s.angle,
 		 color: s.stroke, text: opts.text,
@@ -8327,11 +8327,6 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 	if( opts.textOpts ){
 	    topts = $.extend(true, {}, topts, opts.textOpts);
 	}
-	// having set image coords, remove other coords to avoid confusion
-	delete topts.px;
-	delete topts.py;
-	delete topts.ra;
-	delete topts.dec;
 	// create the child shape
 	t = JS9.Fabric.addShapes.call(this, layerName, "text", topts);
 	// parent object keeps track of relationship between parent and child
@@ -8342,7 +8337,7 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 			   lastscalex: s.scaleX,
 			   lastscaley: s.scaleY,
 			   lastangle: s.angle,
-			   textheight: textHeight};
+			   textheight: textht};
 	// since strokeWidth changes with zoom, we need to save the opts
 	// and restore it on export
 	if( opts.strokeWidth !== undefined ){
@@ -8757,16 +8752,16 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     if( ginfo.group ){
 	pub.angle -= ginfo.group.angle;
     }
+    // remove file rotation?
+    oangle = pub.angle;
+    if( this.raw.wcsinfo && this.raw.wcsinfo.crot ){
+	pub.angle -= this.raw.wcsinfo.crot;
+    }
     while( pub.angle < 0 ){
 	pub.angle += 360;
     }
     while( pub.angle > 360 ){
 	pub.angle -= 360;
-    }
-    // remove file rotation?
-    oangle = pub.angle;
-    if( this.raw.wcsinfo && this.raw.wcsinfo.crot ){
-	pub.angle -= this.raw.wcsinfo.crot;
     }
     // the parts of the obj.scale[XY] values related to size (not zoom, binning)
     scalex = obj.scaleX / zoom * bin;
@@ -8876,8 +8871,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     if( this.raw.wcs && (this.raw.wcs > 0) ){
 	// get ra and dec of central position
 	s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
-	pub.ra = s[0];
-	pub.dec = s[1];
+	pub.rastr = s[0];
+	pub.decstr = s[1];
 	pub.wcssys = s[2];
 	v0 = JS9.strtoscaled(s[0]);
 	if( (v0.dtype === ":") &&
@@ -8885,7 +8880,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    v0.dval *= 15.0;
 	}
 	v1 = JS9.strtoscaled(s[1]);
-	pub.wcspos = {ra: v0.dval, dec: v1.dval};
+	pub.ra = v0.dval;
+	pub.dec = v1.dval;
 	// special processing for regions
 	if( ((layerName === "regions") && (opts.dowcsstr !== false)) ||
 	    ((layerName !== "regions") && (opts.dowcsstr === true))  ){
@@ -9257,9 +9253,19 @@ JS9.Fabric.refreshShapes = function(layerName){
 	// pos = that.imageToDisplayPos(obj.pub);
 	// convert current logical position to new display position
 	// this takes binning, etc. into consideration
-	if( wcs > 0 && obj.pub.wcspos ){
-	    s = JS9.wcs2pix(wcs, obj.pub.wcspos.ra, obj.pub.wcspos.dec)
-		.trim().split(/ +/);
+	if( wcs > 0 && obj.pub.ra && obj.pub.dec ){
+	    if( typeof obj.pub.ra === "string" ){
+		obj.pub.ra = JS9.saostrtod(obj.pub.ra);
+		if( (String.fromCharCode(JS9.saodtype()) === ":") &&
+		    (this.params.wcssys !== "galactic" )          &&
+		    (this.params.wcssys !== "ecliptic" )          ){
+		    obj.pub.ra *= 15.0;
+		}
+	    }
+	    if( typeof obj.pub.dec === "string" ){
+		obj.pub.dec = JS9.saostrtod(obj.pub.dec);
+	    }
+	    s = JS9.wcs2pix(wcs, obj.pub.ra, obj.pub.dec).trim().split(/ +/);
 	    pos = this.imageToDisplayPos({x: parseFloat(s[0]),
 					  y: parseFloat(s[1])});
 	} else {
@@ -9269,8 +9275,9 @@ JS9.Fabric.refreshShapes = function(layerName){
 	obj.setLeft(pos.x);
 	obj.setTop(pos.y);
 	// change angle if necessary
-	if( obj.params.shape !== "polygon" && obj.params.shape !== "line" &&
-	    obj.params.shape !== "point" && obj.params.shape !== "text" ){
+	if( obj.params.shape !== "circle" && obj.params.shape !== "line"    &&
+	    obj.params.shape !== "point"  && obj.params.shape !== "polygon" &&
+	    obj.params.shape !== "text"                                     ){
 	    obj.setAngle(-(obj.pub.angle + (that.raw.wcsinfo.crot || 0)));
 	}
 	// set scaling based on zoom factor, if necessary
@@ -9640,6 +9647,12 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 	    child.top   = shape.top - p.dtop;
 	    break;
 	case "rotating":
+	    while( shape.angle < 0 ){
+		shape.angle += 360;
+	    }
+	    while( shape.angle > 360 ){
+		shape.angle -= 360;
+	    }
 	    nangle = shape.angle - p.lastangle;
 	    npos = JS9.rotatePoint({x: child.left,y: child.top},
 				   nangle,
@@ -9649,6 +9662,12 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 	    p.dleft = shape.left - child.left;
 	    p.dtop = shape.top - child.top;
 	    child.angle = child.angle + nangle;
+	    while( child.angle < 0 ){
+		child.angle += 360;
+	    }
+	    while( child.angle > 360 ){
+		child.angle -= 360;
+	    }
 	    p.lastangle = shape.angle;
 	    break;
 	case "scaling":
@@ -10932,8 +10951,11 @@ JS9.Regions.listRegions = function(which, opts, layer){
 		}
 	    }
 	    if( child.params.parent.moved ){
-		// physical coords are preferred ...
-		if( child.pub.lcs ){
+		// wcs, then physical coords are preferred ...
+		if( child.pub.ra && child.pub.dec ){
+		    nexports.textOpts.ra  = child.pub.ra;
+		    nexports.textOpts.dec = child.pub.dec;
+		} else if( child.pub.lcs ){
 		    nexports.textOpts.px = child.pub.lcs.x;
 		    nexports.textOpts.py = child.pub.lcs.y;
 		} else {
