@@ -519,7 +519,9 @@
       console.log("loading casa1k.fits ...")
       JS9.Load("reproj/casa1k.fits", {display: "JS9", onload:function(im){
 	console.log("loading casa1kr.fits ...")
-	JS9.Load("reproj/casa1kr.fits", {display: "myJS9"});
+	JS9.Load("reproj/casa1kr.fits", {display: "myJS9", onload: function(im){
+          JS9.LoadRegions("./casa/casa.reg", {display: "myJS9"});
+	}});
       }})
     }
     function ReprojTest(){
