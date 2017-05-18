@@ -20,7 +20,7 @@ var JS9 = (function(){
 var JS9 = {};
 JS9.NAME = "JS9";		// The name of this namespace
 JS9.VERSION = "1.11";		// The version of this namespace
-JS9.COPYRIGHT = "Copyright (c) 2012-2016 Smithsonian Institution";
+JS9.COPYRIGHT = "Copyright (c) 2012-2017 Smithsonian Institution";
 
 // internal defaults (not usually changed by users)
 JS9.DEFID = "JS9";		// default JS9 display id
@@ -4625,6 +4625,8 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 			// re-calculate min and max
 			this.dataminmax();
 			this.mkSection();
+			this.initWCS();
+			this.initLCS();
 			this.displayImage("all", opts);
 			this.refreshLayers();
 			return true;
@@ -4633,10 +4635,13 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 		    if( this.raw.header.bitpix ){
 			this.raw.bitpix = this.raw.header.bitpix;
 		    }
+		    // set data min and max
 		    this.dataminmax();
 		    this.mkSection();
+		    this.initWCS();
+		    this.initLCS();
 		    // redisplay using these data
-		    this.displayImage("all", opts);
+		    this.displayImage("all");
 		    this.refreshLayers();
 		    // extended plugins
 		    if( JS9.globalOpts.extendedPlugins ){
