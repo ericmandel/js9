@@ -867,8 +867,9 @@ JS9.Image.prototype.initLCS = function(iheader){
 	if( frot ){
 	    this.lcs.physical.frot = $.extend(true, [], frot);
 	    this.lcs.physical.rrot = $.extend(true, [], rrot);
-	    this.lcs.physical.cx = cx - arr[2][0];
-	    this.lcs.physical.cy = cy - arr[2][1];
+	    // zero-index center
+	    this.lcs.physical.cx = cx - arr[2][0] - 1;
+	    this.lcs.physical.cy = cy - arr[2][1] - 1;
 	}
     } else {
 	delete this.lcs.physical;
@@ -886,8 +887,9 @@ JS9.Image.prototype.initLCS = function(iheader){
 	if( frot ){
 	    this.lcs.detector.frot = $.extend(true, [], frot);
 	    this.lcs.detector.rrot = $.extend(true, [], rrot);
-	    this.lcs.detector.cx = cx - arr[2][0];
-	    this.lcs.detector.cy = cy - arr[2][1];
+	    // zero-index center
+	    this.lcs.detector.cx = cx - arr[2][0] - 1;
+	    this.lcs.detector.cy = cy - arr[2][1] - 1;
 	}
     } else {
 	delete this.lcs.detector;
@@ -905,8 +907,9 @@ JS9.Image.prototype.initLCS = function(iheader){
 	if( frot ){
 	    this.lcs.amplifier.frot = $.extend(true, [], frot);
 	    this.lcs.amplifier.rrot = $.extend(true, [], rrot);
-	    this.lcs.amplifier.cx = cx - arr[2][0];
-	    this.lcs.amplifier.cy = cy - arr[2][1];
+	    // zero-index center
+	    this.lcs.amplifier.cx = cx - arr[2][0] - 1;
+	    this.lcs.amplifier.cy = cy - arr[2][1] - 1;
 	}
     } else {
 	delete this.lcs.amplifier;
