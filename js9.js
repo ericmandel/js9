@@ -13619,7 +13619,8 @@ JS9.init = function(){
     }
     // load web worker
     if( window.Worker && !JS9.allinone){
-	JS9.worker = new JS9.WebWorker(JS9.InstallDir(JS9.WORKERFILE));
+	try{ JS9.worker = new JS9.WebWorker(JS9.InstallDir(JS9.WORKERFILE)); }
+	catch(e){}
     }
     // set up the dynamic drive html window
     if( JS9.LIGHTWIN === "dhtml" ){
