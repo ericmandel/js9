@@ -8327,6 +8327,11 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 	if( opts.textOpts ){
 	    topts = $.extend(true, {}, topts, opts.textOpts);
 	}
+	// having set image coords, remove other coords to avoid confusion
+	delete topts.px;
+	delete topts.py;
+	delete topts.ra;
+	delete topts.dec;
 	// create the child shape
 	t = JS9.Fabric.addShapes.call(this, layerName, "text", topts);
 	// parent object keeps track of relationship between parent and child
