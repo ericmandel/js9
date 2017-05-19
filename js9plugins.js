@@ -2850,22 +2850,23 @@ JS9.RegisterPlugin(JS9.Imarith.CLASS, JS9.Imarith.NAME, JS9.Imarith.init,
 JS9.Info = {};
 JS9.Info.CLASS = "JS9";
 JS9.Info.NAME = "Info";
-JS9.Info.WIDTH = 365;	// width of js9Info box
-JS9.Info.HEIGHT = 320;	// height of js9Info box
+JS9.Info.WIDTH = 325;	// width of js9Info box
+JS9.Info.HEIGHT = 325;	// height of js9Info box
 
 JS9.Info.opts = {
     // info url
     infoURL: "./params/info.html",
     infoObj: {
-	file: '<tr><td>file</td><td colspan="2"><input type="text" name="id" class="input2" value="" readonly="readonly" /></td></tr>',
-	object: '<tr><td>object</td><td colspan="2"><input type="text" name="object" class="input2" value="" readonly="readonly" /></td></tr>',
-	wcscen: '<tr><td>center</td><td><input type="text" name="racen" class="input1" value="" readonly="readonly" /></td><td><input type="text" name="deccen" class="input1" value="" readonly="readonly" /></td></tr>',
-	wcsfov: '<tr><td>fov</td><td><input type="text" name="wcsfov" class="input1" value="" readonly="readonly" /></td><td><input type="text" name="wcspix" class="input1" value="" readonly="readonly" /></td></tr>',
-	 value: '<tr><td>value</td><td colspan="2"><input type="text" name="val3" class="input1" value="" readonly="readonly" /></td></tr>',
-	impos: '<tr><td><input type="text" name="isys" class="input0" value="image" readonly="readonly" /></td><td><input type="text" name="ix" class="input1" value="" readonly="readonly" /></td><td><input type="text" name="iy" class="input1" value="" readonly="readonly" /></td></tr>',
-	physpos: '<tr><td><input text" name="psys" class="input0" value="physical" readonly="readonly" /></td><td><input type="text" name="px" class="input1" value="" readonly="readonly" /></td><td><input type="text" name="py" class="input1" value="" readonly="readonly" /></td></tr>',
-	wcspos: '<tr><td><input type="text" name="wcssys" class="input0" value="wcs" readonly="readonly" /></span></td><td><input type="text" name="ra" class="input1" value="" readonly="readonly" /></td><td><input type="text" name="dec" class="input1" value="" readonly="readonly" /></td></tr>',
-	 regions: '<tr><td colspan="3"><textarea class="text0" name="regions" rows="4" cols="44" value="" readonly="readonly" /></td></tr><td colspan="3"><div class="JS9Progress"><progress name="progress" class="JS9ProgressBar" value="0" max="100"></progress></div></tr>'
+	file: '<tr><td><input type="text" class="column0" value="file" readonly="readonly" /></td><td colspan="2"><input type="text" name="id" class="input2" value="" readonly="readonly" /></td></tr>',
+	object: '<tr><td><input type="text" class="column0" value="object" readonly="readonly" /></td><td colspan="2"><input type="text" name="object" class="input2" value="" readonly="readonly" /></td></tr>',
+	wcscen: '<tr><td><input type="text" class="column0" value="center" readonly="readonly" /></td><td colspan="2"><input type="text" name="wcscen" class="input2" value="" readonly="readonly" /></td></tr>',
+	wcsfov: '<tr><td><input type="text" class="column0" value="fov" readonly="readonly" /></td><td colspan="2"><input type="text" name="wcsfovpix" class="input2" value="" readonly="readonly" /></td></tr>',
+	value: '<tr><td><input type="text" class="column0" value="value" readonly="readonly" /></td><td colspan="2"><input type="text" name="val3" class="input2" value="" readonly="readonly" /></td></tr>',
+	impos: '<tr><td><input type="text" class="column0" value="image" readonly="readonly" /></td><td colspan="2"><input type="text" name="ipos" class="input2" value="" readonly="readonly" /></td></tr>',
+	physpos: '<tr><td><input type="text" class="column0" value="physical" readonly="readonly" /></td><td colspan="2"><input type="text" name="ppos" class="input2" value="" readonly="readonly" /></td></tr>',
+	wcspos: '<tr><td><input type="text" class="column0" value="wcs" readonly="readonly" /></td><td colspan="2"><input type="text" name="wcspos" class="input2" value="" readonly="readonly" /></td></tr>',
+	 regions: '<tr><td><input type="text" class="column0" value="regions" readonly="readonly" /></td><td colspan="2"><textarea class="text2" name="regions" rows="4" value="" readonly="readonly" /></td></tr>',
+	 progress: '<tr><td colspan="2"><div class="JS9Progress"><progress name="progress" class="JS9ProgressBar" value="0" max="100"></progress></div></td></tr>'
     }
 };
 
@@ -2901,6 +2902,19 @@ JS9.Info.init = function(){
     if( this.infoConjq ){
 	this.infoConjq.html("");
     }
+    // set width and height on div
+    this.width = this.divjq.attr("data-width");
+    if( !this.width  ){
+	this.width  = JS9.Info.WIDTH;
+    }
+    this.divjq.css("width", this.width);
+    this.width = parseInt(this.divjq.css("width"), 10);
+    this.height = this.divjq.attr("data-height");
+    if( !this.height ){
+	this.height = JS9.Info.HEIGHT;
+    }
+    this.divjq.css("height", this.height);
+    this.height = parseInt(this.divjq.css("height"), 10);
     // add container to the high-level div
     this.infoConjq = $("<div>")
 	.addClass("JS9Container")
@@ -5129,6 +5143,9 @@ JS9.Menubar.init = function(width, height){
 		items.zscale = {
 		    name: "set limits to zscale z1/z2"
 		};
+		items.zmax = {
+		    name: "set limits to zscale z1/data max"
+		};
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val){
@@ -5153,6 +5170,18 @@ JS9.Menubar.init = function(width, height){
 				uim.params.scaleclipping = "zscale";
 				uim.params.scalemin = uim.params.z1;
 				uim.params.scalemax = uim.params.z2;
+				$.contextMenu.setInputValues(opt,
+				     {scalemin: String(uim.params.scalemin),
+				      scalemax: String(uim.params.scalemax)});
+				uim.displayImage("colors");
+				return false;
+			    case "zmax":
+				if( (uim.params.z1 === undefined) ){
+				    uim.zscale(false);
+				}
+				uim.params.scaleclipping = "zmax";
+				uim.params.scalemin = uim.params.z1;
+				uim.params.scalemax = uim.raw.dmax;
 				$.contextMenu.setInputValues(opt,
 				     {scalemin: String(uim.params.scalemin),
 				      scalemax: String(uim.params.scalemax)});

@@ -896,6 +896,9 @@ JS9.Menubar.init = function(width, height){
 		items.zscale = {
 		    name: "set limits to zscale z1/z2"
 		};
+		items.zmax = {
+		    name: "set limits to zscale z1/data max"
+		};
 		return {
                     callback: function(key, opt){
 		    getDisplays().forEach(function(val){
@@ -920,6 +923,18 @@ JS9.Menubar.init = function(width, height){
 				uim.params.scaleclipping = "zscale";
 				uim.params.scalemin = uim.params.z1;
 				uim.params.scalemax = uim.params.z2;
+				$.contextMenu.setInputValues(opt,
+				     {scalemin: String(uim.params.scalemin),
+				      scalemax: String(uim.params.scalemax)});
+				uim.displayImage("colors");
+				return false;
+			    case "zmax":
+				if( (uim.params.z1 === undefined) ){
+				    uim.zscale(false);
+				}
+				uim.params.scaleclipping = "zmax";
+				uim.params.scalemin = uim.params.z1;
+				uim.params.scalemax = uim.raw.dmax;
 				$.contextMenu.setInputValues(opt,
 				     {scalemin: String(uim.params.scalemin),
 				      scalemax: String(uim.params.scalemax)});

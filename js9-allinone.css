@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.11, Thu May 18 17:26:06 EDT 2017 */
+/* JS9 allinone: v1.11, Fri May 19 13:13:10 EDT 2017 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -1344,24 +1344,21 @@ canvas.surfacePlotCanvas {
 .js9InfoTable {
     margin: 0px;
     padding: 8px;
-    font-size: 12px;
-    font-family: monospace;
+    font: normal 12px Arial;
     border-collapse: separate;
     border-spacing: 2px 4px;
 }
 
 .js9InfoTable input{
-    font-size: 12px;
-    font-family: monospace;
     overflow-x: hidden;
     padding: 2px 0px 1px 2px;
     margin: 0px;
 }
 
-.js9InfoTable .input0{
+.js9InfoTable .column0{
     background: transparent;
     border: none;
-    width: 75px;
+    width: 50px;
 }
 
 .js9InfoTable .input1{
@@ -1370,16 +1367,21 @@ canvas.surfacePlotCanvas {
 
 .js9InfoTable .input2{
     width: 240px;
+    font-size: 12px;
+    font-family: monospace;
 }
 
 .js9InfoTable textarea{
-    font-size: 12px;
-    font-family: monospace;
     overflow-x: hidden;
     padding: 2px 0px 1px 2px;
     margin: 0px;
-    background: #E9E9E9;
-    border: #CCCCCC solid 1px;
+    border: none;
+}
+
+.js9InfoTable .text2{
+    width: 242px;
+    font-size: 12px;
+    font-family: monospace;
 }
 
 .js9InfoTable td{

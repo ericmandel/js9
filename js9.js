@@ -168,7 +168,7 @@ JS9.globalOpts = {
 		 save: true,                          // save cat cols in shapes
 		 tooltip: "$xreg.data.ra $xreg.data.dec"}, // tooltip format
     topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "a", "b", "red", "green", "blue"], // toplevel colormaps
-    infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos", "impos", "physpos", "value", "regions"],
+    infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos", "impos", "physpos", "value", "regions", "progress"],
     menuBar: ["file", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
     fitsTemplates: ".fits,.gz,.fts", // templates for local FITS file input
@@ -557,6 +557,8 @@ JS9.Image = function(file, params, func){
 	// do zscale, if necessary
 	if( this.params.scaleclipping === "zscale" ){
 	    this.zscale(true);
+	} else if( this.params.scaleclipping === "zmax" ){
+	    this.zscale("zmax");
 	}
 	// set up initial section
 	this.mkSection();
@@ -624,6 +626,8 @@ JS9.Image = function(file, params, func){
 	    // do zscale, if necessary
 	    if( that.params.scaleclipping === "zscale" ){
 		that.zscale(true);
+	    } else if( that.params.scaleclipping === "zmax" ){
+		that.zscale("zmax");
 	    }
 	    // set up initial section
 	    that.mkSection();
@@ -1077,8 +1081,10 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     } else {
 	JS9.error("js9Endian missing from PNG-based FITS header");
     }
-    // object name
+    // object, telescope, instrument names
     this.object = this.raw.header.OBJECT;
+    this.telescope = this.raw.header.TELESCOP;
+    this.instrument = this.raw.header.INSTRUME;
     // number of data pixels
     dlen = this.raw.width * this.raw.height;
     // mode: process next image pixel based on starting index into RGBA pixel
@@ -1544,8 +1550,10 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     } else {
 	this.imtab = hdu.table ? "table" : "image";
     }
-    // object name
+    // object, telescope, instrument names
     this.object = this.raw.header.OBJECT;
+    this.telescope = this.raw.header.TELESCOP;
+    this.instrument = this.raw.header.INSTRUME;
     // set or reset binning properties
     if( (this.imtab === "table") && hdu.table ){
 	this.binning.bin = Number(hdu.table.bin) || 1;
@@ -4218,6 +4226,8 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
     var val, vstr, vstr2, vstr3, val3, i, c, s;
     var cd1, cd2, v1, v2, units, sect, bin;
     var obj = null;
+    var sep1 = "\t ";
+    var sep2 = "\t\t ";
     var sp = "&nbsp;&nbsp;&nbsp;&nbsp;";
     var prec = JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
     var tf = function(fval){
@@ -4288,13 +4298,29 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	vstr = val3;
 	vstr2 =  tr(c.x, 3) + " " + tr(c.y, 3) + " (" + c.sys + ")";
 	// object containing all information
-	obj = {ix: i.x, iy: i.y, isys: "image", px: c.x, py: c.y, psys: c.sys,
-	       ra: "", dec: "", wcssys: "",
+	obj = {ix: i.x, iy: i.y, ipos: i.x + sep2 + i.y,
+	       isys: "image",
+	       px: c.x, py: c.y, ppos: c.x + sep2 + c.y,
+	       psys: c.sys,
+	       ra: "", dec: "", wcspos: "", wcssys: "",
 	       racen: "", deccen: "",
 	       wcsfov: "", wcspix: "",
 	       val: val, val3: val3,
 	       vstr: vstr + sp + vstr2,
 	       id: this.id, file: this.file, object: this.object};
+	if( this.telescope || this.instrument ){
+	    obj.object += "  (";
+	    if( this.telescope ){
+		obj.object += this.telescope;
+		if( this.instrument ){
+		    obj.object += ", ";
+		}
+	    }
+	    if( this.instrument ){
+		obj.object += this.instrument;
+	    }
+	    obj.object += ")";
+	}
 	// add wcs, if necessary
 	if( (this.raw.wcs > 0) &&
 	    (this.params.wcssys !== "image") &&
@@ -4305,6 +4331,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    // update object with wcs
 	    obj.ra = s[0];
 	    obj.dec = s[1];
+	    obj.wcspos = s[0] + sep1 + s[1];
 	    obj.wcssys = s[2];
 	    cd1 = Math.abs(this.raw.header.CDELT1);
 	    cd2 = Math.abs(this.raw.header.CDELT2);
@@ -4324,15 +4351,17 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    bin = this.binning.bin;
 	    v1 = ((sect.x1 - sect.x0) * cd1).toFixed(0);
 	    v2 = ((sect.y1 - sect.y0) * cd2).toFixed(0);
-	    obj.wcsfov = sprintf('%s%s x %s%s', v1, units, v2, units);
+	    obj.wcsfov = v1 + units + " x " + v2 + units;
 	    v1 = cd1.toFixed(2) * bin / sect.zoom;
-	    obj.wcspix = sprintf('%s%s / pixel', v1, units);
+	    obj.wcspix = v1 + units + " / pixel";
+	    obj.wcsfovpix = obj.wcsfov + "  (" + obj.wcspix + ")";
 	    obj.vstr = vstr;
 	    s = JS9.pix2wcs(this.raw.wcs,
 			    (sect.x1 + sect.x0)/2, (sect.y1 + sect.y0)/2)
 	    .trim().split(/\s+/);
 	    obj.racen = s[0];
 	    obj.deccen = s[1];
+	    obj.wcscen = s[0] + sep1 + s[1];
 	}
 	if( disp ){
 	    this.display.displayMessage("info", obj);
@@ -4561,7 +4590,10 @@ JS9.Image.prototype.zscale = function(setvals){
     this.params.z1 = parseFloat(vals[0]);
     this.params.z2 = parseFloat(vals[1]);
     // make z1 and z2 the scale clip values, if necessary
-    if( setvals ){
+    if( setvals === "zmax" ){
+	this.params.scalemin = this.params.z1;
+	this.params.scalemax = this.raw.dmax;
+    } else if( setvals ){
 	this.params.scalemin = this.params.z1;
 	this.params.scalemax = this.params.z2;
     }
@@ -5662,7 +5694,7 @@ JS9.Image.prototype.uploadFITSFile = function(){
 	vdata = JS9.vfile(vfile);
 	JS9.worker.socketio(function(){
 	    JS9.progress(true, that.display);
-	    JS9.worker.postMessage("uploadFITS", 
+	    JS9.worker.postMessage("uploadFITS",
 				   [vfile, vdata], uploadCB, [vdata.buffer]);
 	});
     });
@@ -10944,12 +10976,12 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    // try to minimize exported properties
 	    if( obj.angle !== child.angle ){
 		nexports.textOpts.angle = -child.angle;
-		if( (obj.params.shape === "circle")  || 
+		if( (obj.params.shape === "circle")  ||
 		    (obj.params.shape === "annulus") ){
 		    child.params.parent.moved = true;
 		}
 	    } else if( child.angle !== 0 ){
-		if( (obj.params.shape === "circle")  || 
+		if( (obj.params.shape === "circle")  ||
 		    (obj.params.shape === "annulus") ){
 		    nexports.textOpts.angle = -child.angle;
 		    child.params.parent.moved = true;
@@ -12812,7 +12844,7 @@ JS9.mergePrefs = function(obj){
 			JS9[name] = obj[name];
 		    } else {
 			// objects get recursively extended
-			$.extend(true, JS9[name], obj[name]);
+			$.extend(JS9[name], obj[name]);
 		    }
 		    break;
 		case "number":

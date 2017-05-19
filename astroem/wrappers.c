@@ -336,6 +336,7 @@ char *wcsunits(int n, char *s){
 	info->wcsunits = WCS_DEGREES;
       } else {
 	setwcsdeg(info->wcs, WCS_SEXAGESIMAL);
+        wcsndec(info->wcs, 3);
 	info->wcsunits = WCS_SEXAGESIMAL;
       }
     }
