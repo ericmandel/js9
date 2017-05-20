@@ -87,7 +87,7 @@ if( js9Electron.doHelper ){
 }
 
 function createWindow() {
-    let cmd;
+    let cmd, nfile;
     // create the browser window
     js9Electron.win = new BrowserWindow({
 	webPreferences: { nodeIntegration: false },
@@ -116,7 +116,11 @@ function createWindow() {
 	const jobj = js9Electron.files[i+1];
 	// relative data paths must be relative to js9Electron.js script
 	if( !file.match(/^https?:\/\//) && !path.isAbsolute(file) ){
-	    const nfile = path.relative(__dirname, file);
+	    if( process.env.PWD ){
+		nfile = process.env.PWD + "/" + file;
+	    } else {
+		nfile = path.relative(__dirname, file);
+	    }
 	    if( nfile ){
 		file = nfile;
 	    }
