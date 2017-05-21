@@ -172,6 +172,9 @@ else
   done
 fi
 
+# do nothing by default
+JS9_XEQ="echo"
+
 # use Electron or use Node, depending on the mode we are in
 if [ x$DOAPP = xtrue ]; then
   if [ x"$ELECTRON_EXE" != x ]; then
@@ -222,5 +225,17 @@ fi
 if [ x$DOVERIFY = xtrue ]; then
   echo "executing: $JS9_XEQ" "$JS9_MSGSCRIPT" $*
 fi
-exec "$JS9_XEQ" "$JS9_MSGSCRIPT" $ARGS $* 2> >(grep -v "Electron Helper" 1>&2)
 
+# we need to quote the remaining arguments to deal with spaces in filenames
+# https://superuser.com/questions/403263/how-to-pass-bash-script-arguments-to-a-subshell
+declare -a XARGS
+COUNT=$#
+for ((INDEX=0; INDEX<COUNT; ++INDEX))
+do
+    XARG="$(printf "%q" "$1")"
+    XARGS[INDEX]="$(printf "%q" "$XARG")"
+    shift
+done
+
+# eval properly handles the quoted args
+eval "$JS9_XEQ" "$JS9_MSGSCRIPT" $ARGS ${XARGS[*]} 2> >(grep -v "Electron Helper" 1>&2)
