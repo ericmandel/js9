@@ -15,6 +15,8 @@ CFITSIO =	../cfitsio
 # EMFLAGS = 	-DEM -g --memory-init-file 0
 # debugging
 # EMFLAGS	= 	-DEM --memory-init-file 0 -s ASSERTIONS=1
+# debugging with symbols
+# EMFLAGS	= 	-DEM -O0 --memory-init-file 0  -s ASSERTIONS=1
 # production
 EMFLAGS	= 	-DEM -O3 --memory-init-file 0
 

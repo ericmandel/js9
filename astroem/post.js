@@ -13,7 +13,7 @@ Module["vfile"] = function(filename, buf) {
   if( buf ){
     try{ FS.unlink(Module["rootdir"] + filename); }
     catch(ignore){ }
-    FS.createDataFile(Module["rootdir"], filename, buf, true, true);
+    FS.createDataFile(Module["rootdir"], filename, buf, true, true, true);
     if( buf.length !== undefined ){
       size = buf.length;
     } else if( buf.byteLength !== undefined ){
