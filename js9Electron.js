@@ -116,6 +116,11 @@ function createWindow() {
 	const jobj = js9Electron.files[i+1];
 	// relative data paths must be relative to js9Electron.js script
 	if( !file.match(/^https?:\/\//) && !path.isAbsolute(file) ){
+	    // cfitsio can have trouble with special characters in pathnnames
+	    // (such as parentheses), so this hack allows you to make a link
+	    // to a troublesome path and use that link in your filename ...
+	    // e.g. link "dropbox" to "Dropbox (Personal)" for those lucky
+	    // enough to have Dropbox business accounts ...
 	    if( process.env.PWD ){
 		nfile = process.env.PWD + "/" + file;
 	    } else {
