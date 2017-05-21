@@ -172,9 +172,6 @@ else
   done
 fi
 
-# do nothing by default
-JS9_XEQ="echo"
-
 # use Electron or use Node, depending on the mode we are in
 if [ x$DOAPP = xtrue ]; then
   if [ x"$ELECTRON_EXE" != x ]; then
