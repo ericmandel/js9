@@ -1,0 +1,137 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<style type="text/css">
+  .container{
+    padding: 10px;
+  }
+</style>
+<title>Dealing with Memory Limitations</title>
+</head>
+<body>
+<div class="container">
+
+<center><h3>Dealing with Memory Limitations</h3></center>
+<p>
+Desktop application developers count on a semi-infinite amount of
+memory for applications.  This is a luxury not afforded to browser
+application developers. Browsers have two memory-related issues that
+must kept in mind when developing applications:
+<ul>
+<li> browsers often impose per-tab memory limitations
+<li> browser memory is managed automatically by garbage collection algorithms
+</ul>
+
+<center><h3>Per-tab memory limits</h3></center>
+
+Browser limitations on per-tab memory are not well documented.  The
+64-bit Chrome browsers are known to have a 4Gb per-tab memory limit.
+iOS devices have more stringent limitations:
+<a href="https://stackoverflow.com/questions/6044147/ios-memory-allocation-how-much-memory-can-be-used-in-an-application">empirical evidence</a> indicates that the iPhone 6 is limited to 645Mb, the
+iPhone 6s to 1Gb, and the iPhone 7 to 2Gb.
+
+<p>
+To better deal with memory limits, JS9 offers a number of global
+parameters in the <b>JS9.globalOpts</b> object. New values for these
+parameters can be added to the JS9 preference file. (See
+<a href="preferences.html">Configuring JS9 Site Preferences</a>
+for more information about preferences.)
+
+The <b>JS9.globalOpts.maxMemory</b> parameter specifies the largest
+array size (in bytes) that can be allocated in the heap to hold a FITS
+image. The default is currently set to 750000000 (i.e., 750Mb). It is
+automatically set to lower values for Chrome (500000000 or 500Mb) and
+mobile (300000000).
+
+<p>
+Similarly, the <b>JS9.globalOpts.image</b> object allows you to set
+the max size image section that will be created from a FITS image.
+The general default values are {x: 0, y: 0}, where 0 values specify
+unlimited section size.  For Chrome, the limits are set to {x: 6144,
+y: 6144} while for mobile devices, they are set to {x: 4096, y:
+4096}. Obviously, these are just empirical guesses on our part!
+
+<p>
+When a FITS files is displayed by JS9, the file itself is maintained in memory,
+which is useful in many cases:
+<ul>
+<li> displaying multi-extension FITS files (use the Extensions plugin
+to switch between extensions)
+<li> displaying data cubes (use the Data Cube plugin to display a different
+slice of the image)
+<li> binning and filtering X-ray binary tables (use the Binning/Filtering
+plugin for binning and filtering)
+<li> performing wcs reprojections, including image rotation
+</ul>
+If none of the above apply to your use of JS9, you can save memory by
+removing the virtual FITS file. This can be done manually by choosing
+the <b>File -> free image memory</b> option.
+
+<p>
+Alternatively, the <b>JS9.globalOpts.clearImageMemory</b> parameter
+can be used to specify when JS9 should automatically remove the FITS
+virtual file after displaying each image. Options include:
+<ul>
+<li><b>never</b>: no automatic removal of the virtual FITS file (default)
+<li><b>always</b>: always remove the virtual FITS file
+<li><b>auto</b>: remove the virtual file if the displayed image is a 2D image (not a table or cube) and there are no other HDU extensions
+<li><b>noExt</b>: remove the virtual file if there are no other HDU extensions
+<li><b>noCube</b>: remove the file is the displayed image is not a cube
+<li><b>size,[x]</b>: remove the file is its size is greater than [x] Mb
+</ul>
+
+<center><h3>Garbage collection</h3></center>
+
+<p>
+In the early days of desktop programming, memory was allocated and
+freed explicitly. This allowed fine-grained control over the amount of
+memory being used at any one time, but often led to memory leaks if
+the developer forgot to free previously allocated memory.
+
+<p>
+Modern languages, including Javascript, use automatic techniques such as
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_Management">garbage collection</a> to manage memory. In principle, memory gets
+freed when it is "no longer needed". But since the concept of "no
+longer needed" cannot be decided unambiguously, approximate algorithms
+are used.
+
+<p>
+Problems then arise because these garbage collection algorithms are only
+run periodically and they do not always identify all of the memory
+objects that can be freed.  Developers often supply "hints" to the
+garbage collector by setting object to null or deleting large
+properties of an object.
+
+<p>
+Because JS9 deals with large chunks of data, garbage collection delays
+and misses can lead to larger than expected memory utilization. In May
+2017, we found that continuously loading and closing an image was not
+freeing memory properly. The problem was traced to the JS9's HTML5
+fileReader code: the garbage collector was not properly sensing that
+the fileReader result memory was available for clearing. To remedy the
+situation, we had to delete the fileReader result object explicitly
+(see
+<a href="http://stackoverflow.com/questions/32102361/filereader-memory-leak">http://stackoverflow.com/questions/32102361/filereader-memory-leak</a> for discussion of a similar problem.)
+
+<p>
+If you find that JS9 is taking much more memory than you expect,
+especially in situations where images are being loaded in a loop
+(e.g., telescope control), please let us know and we will try to help
+diagnose the problem. Note that Chrome and Firefox Memory both have
+Memory utilities in their Developer Tools that are very useful in
+understanding memory allocation issues.
+
+<p>
+Alternatively, in situations where loading images in a loop is
+utilizing more memory than expected, you might consider embedding JS9
+inside an iframe in your web page, and reloading the JS9 page
+periodically. This should prevent garbage collection-related memory
+problems, because memory is reset each time the page is loaded.
+
+<h5>Last updated: May 23, 2017</h5>
+</div>
+
+</body>
+</html>
