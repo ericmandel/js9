@@ -13,7 +13,7 @@ Module["vfile"] = function(filename, buf) {
   if( buf ){
     try{ FS.unlink(Module["rootdir"] + filename); }
     catch(ignore){ }
-    FS.createDataFile(Module["rootdir"], filename, buf, true, true, true);
+    FS.createDataFile(Module["rootdir"], filename, buf, true, true, false);
     if( buf.length !== undefined ){
       size = buf.length;
     } else if( buf.byteLength !== undefined ){
@@ -45,7 +45,7 @@ Module['vunlink'] = function(filename) {
 Module['arrfile'] = function(filename, arr) {
   try{ FS.unlink(Module['rootdir'] + filename); }
   catch(ignore){ }
-  FS.createDataFile(Module['rootdir'], filename, arr, true, true);
+  FS.createDataFile(Module['rootdir'], filename, arr, true, true, false);
   return {path: filename, size: arr.byteLength};
 };
 
@@ -68,7 +68,7 @@ Module['gzdecompress'] = function(data, filename) {
   var buffer = _malloc(BUFSIZE);
   var chunks = [];
   var total = 0;
-  FS.createDataFile(Module['rootdir'], 'input.gz', data, true, true);
+  FS.createDataFile(Module['rootdir'], 'input.gz', data, true, true, false);
   gzFile = ccall('gzopen', 'number', ['string', 'string'], ['input.gz', 'rb']);
   // eslint-disable-next-line no-constant-condition
   while( true ){
@@ -100,7 +100,7 @@ Module['bz2decompress'] = function(data, filename) {
   var buffer = _malloc(BUFSIZE);
   var chunks = [];
   var total = 0;
-  FS.createDataFile(Module['rootdir'], 'input.bz2', data, true, true);
+  FS.createDataFile(Module['rootdir'], 'input.bz2', data, true, true, false);
   bz2File = ccall('BZ2_bzopen', 'number', ['string', 'string'], ['input.bz2', 'rb']);
   // eslint-disable-next-line no-constant-condition
   while( true ){
@@ -328,8 +328,7 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 };
 
 Module["handleFITSFile"] = function(fits, options, handler) {
-    var fptr, hptr, fitsname, status;
-    var fileReader, arr;
+    var fptr, hptr, status, fileReader;
     var hdu = {};
     // set up options and handler (might want to use defaults)
     options = options || {};
@@ -339,6 +338,9 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	// convert blob into array
 	fileReader = new FileReader();
 	fileReader.onload = function() {
+	    var fitsname, arr;
+	    // eslint-disable-next-line no-unused-vars
+	    var narr;
 	    // file name might be in the blob itself
 	    if( !options.filename && fits.name ){
 		options.filename = fits.name;
@@ -359,14 +361,14 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    try{ FS.unlink(Module['rootdir'] + hdu.vfile); }
 	    catch(ignore){ }
 	    // create a file in the emscripten virtual file system from the blob
-	    arr = new Uint8Array(this.result);
+	    arr = new Uint8Array(fileReader.result);
 	    // make a virtual file
 	    if( (arr[0] === 0x1f) && (arr[1] === 0x8B) ){
 		// if original is gzip'ed, unzip to virtual file
 		hdu.vfile = hdu.vfile.replace(/\.gz$/,"");
 		fitsname = fitsname.replace(/\.gz/,"");
 		try{
-		    arr = Module['gzdecompress'](arr, hdu.vfile);
+		    narr = Module['gzdecompress'](arr, hdu.vfile);
 		}
 		catch(e){
 		    Module["error"]("can't gunzip to virtual file: "+hdu.vfile);
@@ -376,7 +378,7 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 		hdu.vfile = hdu.vfile.replace(/\.bz2$/,"");
 		fitsname = fitsname.replace(/\.bz2/,"");
 		try{
-		    arr = Module['bz2decompress'](arr, hdu.vfile);
+		    narr = Module['bz2decompress'](arr, hdu.vfile);
 		}
 		catch(e){
 		   Module["error"]("can't bunzip2 to virtual file: "+hdu.vfile);
@@ -409,6 +411,13 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    _free(hptr);
 	    // extract image section and call handler
 	    Module["getFITSImage"]({fptr: fptr}, hdu, options, handler);
+	    // hints to the GC; for problems with fileReaders and GC, see:
+	    //http://stackoverflow.com/questions/32102361/filereader-memory-leak
+	    // but this makes a difference:
+	    delete fileReader.result;
+	    // these don't see to have any effect:
+	    arr = null;
+	    narr = null;
 	};
 	// eslint-disable-next-line no-unused-vars
 	fileReader.onerror = function(e) {
