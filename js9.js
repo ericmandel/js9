@@ -1571,7 +1571,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     catch(ignore){}
     // can we remove the virtual file?
-    if( JS9.fits.cleanupFITSFile && hdu.fits.vfile  ){
+    if( JS9.fits.cleanupFITSFile && 
+	this.raw.hdu.fits && this.raw.hdu.fits.vfile  ){
 	s = JS9.globalOpts.clearImageMemory.toLowerCase().split(",");
 	rmvfile = false;
 	// all conditions must be met ...
@@ -12195,7 +12196,6 @@ JS9.handleImageFile = function(file, options, handler){
     reader.onload = function(ev){
 	var img = new Image();
 	var data, grey, hdu;
-	img.src = ev.target.result;
 	img.onload = function(){
 	    var x, y, brightness;
 	    var i = 0;
@@ -12229,6 +12229,7 @@ JS9.handleImageFile = function(file, options, handler){
 	    }
 	    handler(hdu, options);
 	};
+	img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
 };
