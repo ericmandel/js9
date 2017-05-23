@@ -423,7 +423,7 @@ if( (JS9.BROWSER[0] === "Chrome") ){
 // JS9 Image object to manage images
 // ---------------------------------------------------------------------
 JS9.Image = function(file, params, func){
-    var sarr;
+    var sarr, nzoom;
     var display;
     var that = this;
     var localOpts=null;
@@ -570,6 +570,12 @@ JS9.Image = function(file, params, func){
 	} else if( this.params.scaleclipping === "zmax" ){
 	    this.zscale("zmax");
 	}
+	// set up initial zoom
+	if( this.params.zoom ){
+	    nzoom = this.parseZoom(this.params.zoom);
+	    this.rgb.sect.zoom = nzoom;
+	    this.rgb.sect.ozoom = nzoom;
+	}
 	// set up initial section
 	this.mkSection();
 	// change center and zoom if necessary
@@ -638,6 +644,12 @@ JS9.Image = function(file, params, func){
 		that.zscale(true);
 	    } else if( that.params.scaleclipping === "zmax" ){
 		that.zscale("zmax");
+	    }
+	    // set up initial zoom
+	    if( that.params.zoom ){
+		nzoom = that.parseZoom(that.params.zoom);
+		that.rgb.sect.zoom = nzoom;
+		that.rgb.sect.ozoom = nzoom;
 	    }
 	    // set up initial section
 	    that.mkSection();
