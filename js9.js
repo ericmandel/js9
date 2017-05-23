@@ -326,6 +326,11 @@ JS9.helpOpts = {
 	type: "help", url:"publicapi.html",
 	title: "The JS9 Public API"
     },
+    memory: {
+	heading: "JS9Help",
+	type: "help", url:"memory.html",
+	title: "Dealing with Memory Limitations"
+    },
     repfile: {
 	heading: "JS9Help",
 	type: "help", url:"repfile.html",
@@ -407,6 +412,11 @@ if( (JS9.BROWSER[0] === "Chrome") ){
     JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 500000000);
     JS9.globalOpts.image.xmax = 2048 * 3;
     JS9.globalOpts.image.ymax = 2048 * 3;
+// same for mobile devices ...
+} else if( JS9.BROWSER[3] ){
+    JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 300000000);
+    JS9.globalOpts.image.xmax = 2048 * 2;
+    JS9.globalOpts.image.ymax = 2048 * 2;
 }
 
 // ---------------------------------------------------------------------
