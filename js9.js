@@ -6045,6 +6045,7 @@ JS9.Display.prototype.initMessages = function(){
 
 //  display a plugin in a light window or a new window
 JS9.Display.prototype.displayPlugin = function(plugin){
+    var that = this;
     var a, name, did, oid, iid, odiv, pdiv, pinst, win, w, h, r, s, title;
     pinst = this.pluginInstances[plugin.name];
     // some day we want to support light windows and new (external) windows
@@ -6102,6 +6103,15 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 		// just hide the window
 		pinst.winHandle.hide();
 		pinst.status = "inactive";
+		if( plugin.opts.onpluginclose ){
+		    try{
+			plugin.opts.onpluginclose.call(pinst, that.image);
+		    }
+		    catch(e){
+			JS9.log("onplugincloseCB: %s [%s]\n%s",
+				plugin.name, e.message, JS9.strace(e));
+		    }
+		}
 		return false;
 	    };
 	    pinst.status = "active";
@@ -6134,6 +6144,15 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 	    if( pinst.winHandle ){
 		pinst.winHandle.hide();
 		pinst.status = "inactive";
+		if( plugin.opts.onpluginclose ){
+		    try{
+			plugin.opts.onpluginclose.call(pinst, that.image);
+		    }
+		    catch(e){
+			JS9.log("onplugincloseCB: %s [%s]\n%s",
+				plugin.name, e.message, JS9.strace(e));
+		    }
+		}
 	    }
 	}
 	break;

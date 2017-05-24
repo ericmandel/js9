@@ -3085,14 +3085,26 @@ JS9.Display.prototype.clearMessage = JS9.Info.clear;
 // backwards compatibility
 JS9.Image.prototype.clearMessage = JS9.Info.clear;
 
-// when a plugin window is brought up, clear the display window
-JS9.Info.clearMain = function(im){
+// when a plugin window is brought up:
+// clear the display window, savel valpos and set to true
+JS9.Info.pluginDisplay = function(im){
     var disp;
     if( im && im.display ){
 	disp = im.display;
 	disp.displayMessage("info", "", disp);
 	disp.displayMessage("regions", "", disp);
 	disp.displayMessage("progress", false, disp);
+	this.ovalpos = im.params.valpos;
+	im.params.valpos = true;
+    }
+};
+
+// when a plugin window is closed, reset valpos to previous
+JS9.Info.pluginClose = function(im){
+    if( im && im.display ){
+	if( this.ovalpos !== undefined ){
+	    im.params.valpos = this.ovalpos;
+	}
     }
 };
 
@@ -3117,7 +3129,8 @@ JS9.mkPublic("DisplayMessage", function(type, message, target){
 // add this plugin into JS9
 JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 		   {menuItem: "InfoBox",
-		    onplugindisplay: JS9.Info.clearMain,
+		    onplugindisplay: JS9.Info.pluginDisplay,
+		    onpluginclose: JS9.Info.pluginClose,
 		    onimagedisplay: JS9.Info.init,
 		    winTitle: "Info",
 		    winResize: true,
