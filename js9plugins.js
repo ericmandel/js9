@@ -3094,7 +3094,9 @@ JS9.Info.pluginDisplay = function(im){
 	disp.displayMessage("info", "", disp);
 	disp.displayMessage("regions", "", disp);
 	disp.displayMessage("progress", false, disp);
-	this.ovalpos = im.params.valpos;
+	if( im.tmp ){
+	    im.tmp.info_ovalpos = im.params.valpos;
+	}
 	im.params.valpos = true;
     }
 };
@@ -3102,8 +3104,8 @@ JS9.Info.pluginDisplay = function(im){
 // when a plugin window is closed, reset valpos to previous
 JS9.Info.pluginClose = function(im){
     if( im && im.display ){
-	if( this.ovalpos !== undefined ){
-	    im.params.valpos = this.ovalpos;
+	if( im.tmp && (im.tmp.info_ovalpos !== undefined) ){
+	    im.params.valpos = im.tmp.info_ovalpos;
 	}
     }
 };
