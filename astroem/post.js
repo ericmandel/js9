@@ -3,17 +3,17 @@
 /* eslint-disable dot-notation */
 
 // eslint-disable-next-line no-console
-Module['print'] = function(text) { console.log(text); };
+Module["print"] = function(text) { console.log(text); };
 
-Module['rootdir'] = "/";
+Module["rootdir"] = "/";
 
-Module["vfile"] = function(filename, buf) {
+Module["vfile"] = function(filename, buf, canOwn) {
   var size;
   // two args: create a virtual file
   if( buf ){
     try{ FS.unlink(Module["rootdir"] + filename); }
     catch(ignore){ }
-    FS.createDataFile(Module["rootdir"], filename, buf, true, true, false);
+    FS.createDataFile(Module["rootdir"], filename, buf, true, true, canOwn);
     if( buf.length !== undefined ){
       size = buf.length;
     } else if( buf.byteLength !== undefined ){
@@ -29,58 +29,57 @@ Module["vfile"] = function(filename, buf) {
   return FS.readFile(Module["rootdir"] + filename, {encoding: "binary"});
 };
 
-Module['vsize'] = function(filename) {
+Module["vsize"] = function(filename) {
   var buf = {size: -1};
-  try{ buf = FS.stat(Module['rootdir'] + filename); }
+  try{ buf = FS.stat(Module["rootdir"] + filename); }
   catch(ignore){ }
   return buf.size;
 };
 
-Module['vunlink'] = function(filename) {
-  try{ FS.unlink(Module['rootdir'] + filename); }
+Module["vunlink"] = function(filename) {
+  try{ FS.unlink(Module["rootdir"] + filename); }
   catch(ignore){ }
 };
 
 // legacy routine used by fitsy
-Module['arrfile'] = function(filename, arr) {
-  try{ FS.unlink(Module['rootdir'] + filename); }
-  catch(ignore){ }
-  FS.createDataFile(Module['rootdir'], filename, arr, true, true, false);
+Module["arrfile"] = function(filename, arr) {
+  Module["vunlink"](filename);
+  FS.createDataFile(Module["rootdir"], filename, arr, true, true, false);
   return {path: filename, size: arr.byteLength};
 };
 
-Module['gzcompress'] = function(data) {
+Module["gzcompress"] = function(data) {
   var ret;
-  var gzFile = ccall('gzopen', 'number', ['string', 'string'], ['output.gz', 'wb']);
+  var gzFile = ccall("gzopen", "number", ["string", "string"], ["output.gz", "wb"]);
   var buffer = _malloc(data.length);
   HEAPU8.set(data, buffer);
-  ccall('gzwrite', 'number', ['number', 'number', 'number'], [gzFile, buffer, data.length]);
-  ccall('gzclose', 'number', ['number'], [gzFile]);
+  ccall("gzwrite", "number", ["number", "number", "number"], [gzFile, buffer, data.length]);
+  ccall("gzclose", "number", ["number"], [gzFile]);
   _free(buffer);
-  ret = new Uint8Array(FS.root.contents['output.gz'].contents);
-  FS.unlink('output.gz');
+  ret = new Uint8Array(FS.root.contents["output.gz"].contents);
+  FS.unlink("output.gz");
   return ret;
 };
 
-Module['gzdecompress'] = function(data, filename) {
+Module["gzdecompress"] = function(data, filename, canOwn) {
   var i, ret, curr, len, gzFile;
   var BUFSIZE = 1024*1024;
   var buffer = _malloc(BUFSIZE);
   var chunks = [];
   var total = 0;
-  FS.createDataFile(Module['rootdir'], 'input.gz', data, true, true, false);
-  gzFile = ccall('gzopen', 'number', ['string', 'string'], ['input.gz', 'rb']);
+  FS.createDataFile(Module["rootdir"], "input.gz", data, true, true, false);
+  gzFile = ccall("gzopen", "number", ["string", "string"], ["input.gz", "rb"]);
   // eslint-disable-next-line no-constant-condition
   while( true ){
-    len = ccall('gzread', 'number',
-		['number', 'number', 'number'], [gzFile, buffer, BUFSIZE]);
+    len = ccall("gzread", "number",
+		["number", "number", "number"], [gzFile, buffer, BUFSIZE]);
     if( len <= 0 ){ break; }
     chunks.push(new Uint8Array(len));
     chunks[chunks.length-1].set(HEAPU8.subarray(buffer, buffer+len));
     total += len;
   }
-  ccall('gzclose', 'number', ['number'], [gzFile]);
-  FS.unlink('input.gz');
+  ccall("gzclose", "number", ["number"], [gzFile]);
+  FS.unlink("input.gz");
   _free(buffer);
   ret = new Uint8Array(total);
   curr = 0;
@@ -89,30 +88,30 @@ Module['gzdecompress'] = function(data, filename) {
     curr += chunks[i].length;
   }
   if( filename ){
-    Module['vfile'](filename, ret);
+    Module["vfile"](filename, ret, canOwn);
   }
   return ret;
 };
 
-Module['bz2decompress'] = function(data, filename) {
+Module["bz2decompress"] = function(data, filename, canOwn) {
   var i, ret, curr, len, bz2File;
   var BUFSIZE = 1024*1024;
   var buffer = _malloc(BUFSIZE);
   var chunks = [];
   var total = 0;
-  FS.createDataFile(Module['rootdir'], 'input.bz2', data, true, true, false);
-  bz2File = ccall('BZ2_bzopen', 'number', ['string', 'string'], ['input.bz2', 'rb']);
+  FS.createDataFile(Module["rootdir"], "input.bz2", data, true, true, false);
+  bz2File = ccall("BZ2_bzopen", "number", ["string", "string"], ["input.bz2", "rb"]);
   // eslint-disable-next-line no-constant-condition
   while( true ){
-    len = ccall('BZ2_bzread', 'number',
-		['number', 'number', 'number'], [bz2File, buffer, BUFSIZE]);
+    len = ccall("BZ2_bzread", "number",
+		["number", "number", "number"], [bz2File, buffer, BUFSIZE]);
     if( len <= 0 ){ break; }
     chunks.push(new Uint8Array(len));
     chunks[chunks.length-1].set(HEAPU8.subarray(buffer, buffer+len));
     total += len;
   }
-  ccall('BZ2_bzclose', 'number', ['number'], [bz2File]);
-  FS.unlink('input.bz2');
+  ccall("BZ2_bzclose", "number", ["number"], [bz2File]);
+  FS.unlink("input.bz2");
   _free(buffer);
   ret = new Uint8Array(total);
   curr = 0;
@@ -121,7 +120,7 @@ Module['bz2decompress'] = function(data, filename) {
     curr += chunks[i].length;
   }
   if( filename ){
-    Module['vfile'](filename, ret);
+    Module["vfile"](filename, ret, canOwn);
   }
   return ret;
 };
@@ -173,13 +172,13 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     // get extension number and name (of original data)
     hptr = _malloc(4);
     ccall("ffghdn", null, ["number", "number"], [fptr, hptr]);
-    extnum  = getValue(hptr, 'i32') - 1;
+    extnum  = getValue(hptr, "i32") - 1;
     _free(hptr);
     // try to get extname (ignore errors)
     hptr = _malloc(86);
-    setValue(hptr+82, 0, 'i32');
+    setValue(hptr+82, 0, "i32");
     ccall("ffgky", null, ["number", "number", "string", "number", "number", "number"], [fptr, 16, "EXTNAME", hptr, 0, hptr+82]);
-    status  = getValue(hptr+82, 'i32');
+    status  = getValue(hptr+82, "i32");
     if( status === 0 ){
 	extname = Pointer_stringify(hptr)
 	          .replace(/^'/,"").replace(/'$/,"").trim();
@@ -208,21 +207,21 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	    if( options.table.bin ){ bin = options.table.bin; }
 	}
 	hptr = _malloc(28);
-	setValue(hptr,    dims[0], 'i32');
-	setValue(hptr+4,  dims[1], 'i32');
-	setValue(hptr+8,  cens[0], 'double');
-	setValue(hptr+16, cens[1], 'double');
-	setValue(hptr+24, 0, 'i32');
+	setValue(hptr,    dims[0], "i32");
+	setValue(hptr+4,  dims[1], "i32");
+	setValue(hptr+8,  cens[0], "double");
+	setValue(hptr+16, cens[1], "double");
+	setValue(hptr+24, 0, "i32");
 	ofptr = ccall("filterTableToImage", "number",
         ["number", "string", "number", "number", "number", "number", "number"],
         [fptr, filter, 0, hptr, hptr+8, bin, hptr+24]);
-	hdu.table.nx = getValue(hptr,     'i32');
-	hdu.table.ny = getValue(hptr+4,   'i32');
-	hdu.table.cx = getValue(hptr+8,   'double');
-	hdu.table.cy = getValue(hptr+16,  'double');
+	hdu.table.nx = getValue(hptr,     "i32");
+	hdu.table.ny = getValue(hptr+4,   "i32");
+	hdu.table.cx = getValue(hptr+8,   "double");
+	hdu.table.cy = getValue(hptr+16,  "double");
 	hdu.table.bin = bin;
 	hdu.table.filter = filter;
-	status  = getValue(hptr+24, 'i32');
+	status  = getValue(hptr+24, "i32");
 	_free(hptr);
 	Module["errchk"](status);
 	break;
@@ -230,27 +229,27 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     hptr = _malloc(32);
     if( options && options.image && options.image.xmax && options.image.ymax  ){
 	// limits on image section
-	setValue(hptr,    options.image.xmax, 'i32');
-	setValue(hptr+4,  options.image.ymax, 'i32');
+	setValue(hptr,    options.image.xmax, "i32");
+	setValue(hptr+4,  options.image.ymax, "i32");
     } else {
 	// get entire image section
-	setValue(hptr,    0, 'i32');
-	setValue(hptr+4,  0, 'i32');
+	setValue(hptr,    0, "i32");
+	setValue(hptr+4,  0, "i32");
     }
-    setValue(hptr+28, 0, 'i32');
+    setValue(hptr+28, 0, "i32");
     // might want a slice
     slice = options.slice || "";
     bufptr = ccall("getImageToArray", "number",
 	["number", "number", "number", "string", "number", "number", "number", "number"],
 	[ofptr, hptr, 0, slice, hptr+8, hptr+16, hptr+24, hptr+28]);
-    hdu.x1  = getValue(hptr+8, 'i32');
-    hdu.y1  = getValue(hptr+12, 'i32');
-    hdu.x2  = getValue(hptr+16, 'i32');
-    hdu.y2  = getValue(hptr+20, 'i32');
+    hdu.x1  = getValue(hptr+8, "i32");
+    hdu.y1  = getValue(hptr+12, "i32");
+    hdu.x2  = getValue(hptr+16, "i32");
+    hdu.y2  = getValue(hptr+20, "i32");
     hdu.naxis1  = hdu.x2 - hdu.x1 + 1;
     hdu.naxis2  = hdu.y2 - hdu.y1 + 1;
-    hdu.bitpix  = getValue(hptr+24, 'i32');
-    status  = getValue(hptr+28, 'i32');
+    hdu.bitpix  = getValue(hptr+24, "i32");
+    status  = getValue(hptr+28, "i32");
     _free(hptr);
     Module["errchk"](status);
     if( !bufptr ){
@@ -280,12 +279,12 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     }
     // get section header cards as a string
     hptr = _malloc(20);
-    setValue(hptr+12, 0, 'i32');
+    setValue(hptr+12, 0, "i32");
     ccall("getHeaderToString", null,
 	  ["number", "number", "number", "number"],
 	  [ofptr, hptr, hptr+8, hptr+12]);
-    hdu.ncard  = getValue(hptr+8, 'i32');
-    bufptr2 = getValue(hptr, '*');
+    hdu.ncard  = getValue(hptr+8, "i32");
+    bufptr2 = getValue(hptr, "*");
     buf = HEAPU8.subarray(bufptr2, bufptr2+(hdu.ncard*80));
     buflen = buf.byteLength;
     hdu.cardstr = "";
@@ -293,22 +292,22 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	hdu.cardstr += String.fromCharCode(buf[i]);
     }
     // free string allocated in getHeaderToString()
-    setValue(hptr+16, 0, 'i32');
+    setValue(hptr+16, 0, "i32");
     ccall("fffree", null, ["number", "number"], [bufptr2, hptr+16]);
     // ignore error on free
-    // status  = getValue(hptr+16, 'i32');
+    // status  = getValue(hptr+16, "i32");
     // Module["errchk"](status);
     // this is the returned status from getHeaderToString()
-    status  = getValue(hptr+12, 'i32');
+    status  = getValue(hptr+12, "i32");
     _free(hptr);
     // error check on getHeaderToString()
     Module["errchk"](status);
     // close the image section "file"
     if( ofptr && (ofptr !== fptr) ){
         hptr = _malloc(4);
-	setValue(hptr, 0, 'i32');
+	setValue(hptr, 0, "i32");
 	ccall("closeFITSFile", null, ["number", "number"], [ofptr, hptr]);
-	status  = getValue(hptr, 'i32');
+	status  = getValue(hptr, "i32");
 	_free(hptr);
 	Module["errchk"](status);
     }
@@ -358,8 +357,7 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 		hdu.vfile = fitsname;
 	    }
 	    // delete old version, ignoring errors
-	    try{ FS.unlink(Module['rootdir'] + hdu.vfile); }
-	    catch(ignore){ }
+	    Module["vunlink"](hdu.vfile);
 	    // create a file in the emscripten virtual file system from the blob
 	    arr = new Uint8Array(fileReader.result);
 	    // make a virtual file
@@ -368,7 +366,7 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 		hdu.vfile = hdu.vfile.replace(/\.gz$/,"");
 		fitsname = fitsname.replace(/\.gz/,"");
 		try{
-		    narr = Module['gzdecompress'](arr, hdu.vfile);
+		    narr = Module["gzdecompress"](arr, hdu.vfile, false);
 		}
 		catch(e){
 		    Module["error"]("can't gunzip to virtual file: "+hdu.vfile);
@@ -378,7 +376,7 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 		hdu.vfile = hdu.vfile.replace(/\.bz2$/,"");
 		fitsname = fitsname.replace(/\.bz2/,"");
 		try{
-		    narr = Module['bz2decompress'](arr, hdu.vfile);
+		    narr = Module["bz2decompress"](arr, hdu.vfile, false);
 		}
 		catch(e){
 		   Module["error"]("can't bunzip2 to virtual file: "+hdu.vfile);
@@ -386,7 +384,7 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    } else {
 		// regular file to virtual file
 		try{
-		    Module['vfile'](hdu.vfile, arr);
+		    Module["vfile"](hdu.vfile, arr, false);
 		}
 		catch(e){
 		    Module["error"]("can't create virtual file: "+hdu.vfile);
@@ -394,12 +392,12 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    }
 	    // open the virtual file as a FITS file
 	    hptr = _malloc(8);
-	    setValue(hptr+4, 0, 'i32');
+	    setValue(hptr+4, 0, "i32");
 	    fptr = ccall("openFITSFile", "number",
 			 ["string", "number", "string", "number", "number"],
 			 [fitsname, 0, options.extlist, hptr, hptr+4]);
-	    hdu.type = getValue(hptr,   'i32');
-	    status  = getValue(hptr+4, 'i32');
+	    hdu.type = getValue(hptr,   "i32");
+	    status  = getValue(hptr+4, "i32");
 	    _free(hptr);
 	    Module["errchk"](status);
 	    // save current extension number
@@ -407,15 +405,15 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    ccall("ffghdn", null,
 		  ["number", "number"],
 		  [fptr, hptr]);
-	    hdu.extnum = getValue(hptr,   'i32') - 1;
+	    hdu.extnum = getValue(hptr,   "i32") - 1;
 	    _free(hptr);
 	    // extract image section and call handler
 	    Module["getFITSImage"]({fptr: fptr}, hdu, options, handler);
 	    // hints to the GC; for problems with fileReaders and GC, see:
 	    //http://stackoverflow.com/questions/32102361/filereader-memory-leak
-	    // but this makes a difference:
+	    // this seems to make a difference:
 	    delete fileReader.result;
-	    // these don't see to have any effect:
+	    // but these don't seem to have any effect:
 	    arr = null;
 	    narr = null;
 	};
@@ -439,41 +437,41 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    if( options.extname ){
 		// look for extension with specified name
 		hptr = _malloc(4);
-		setValue(hptr, 0, 'i32');
+		setValue(hptr, 0, "i32");
 		ccall("ffmnhd", null,
 		      ["number", "number", "string", "number", "number"],
 		      [fptr, -1, options.extname, 0, hptr]);
-		status  = getValue(hptr, 'i32');
+		status  = getValue(hptr, "i32");
 		_free(hptr);
 		Module["errchk"](status);
 		// get type of extension (image or table)
 		hptr = _malloc(8);
-		setValue(hptr+4, 0, 'i32');
+		setValue(hptr+4, 0, "i32");
 		ccall("ffghdt", null,
 		      ["number", "number", "number"],
 		      [fptr, hptr, hptr+4]);
-		hdu.type = getValue(hptr,   'i32');
-		status  = getValue(hptr+4, 'i32');
+		hdu.type = getValue(hptr,   "i32");
+		status  = getValue(hptr+4, "i32");
 		_free(hptr);
 		Module["errchk"](status);
 	    } else if( options.extnum !== undefined ){
 		// go to extension number
 		hptr = _malloc(8);
-		setValue(hptr+4, 0, 'i32');
+		setValue(hptr+4, 0, "i32");
 		ccall("ffmahd", null,
 		      ["number", "number", "number", "number"],
 		      [fptr, options.extnum + 1, hptr, hptr+4]);
-		hdu.type = getValue(hptr,   'i32');
-		status  = getValue(hptr+4, 'i32');
+		hdu.type = getValue(hptr,   "i32");
+		status  = getValue(hptr+4, "i32");
 		_free(hptr);
 		Module["errchk"](status);
 	    } else if( options.slice !== undefined ){
 		hptr = _malloc(8);
-		setValue(hptr+4, 0, 'i32');
+		setValue(hptr+4, 0, "i32");
 		ccall("ffghdt", null,
 		      ["number", "number", "number"],
 		      [fptr, hptr, hptr+4]);
-		hdu.type = getValue(hptr,   'i32');
+		hdu.type = getValue(hptr,   "i32");
 		_free(hptr);
 		Module["errchk"](status);
 	    } else {
@@ -486,12 +484,12 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    }
 	    hdu.vfile = fits;
 	    hptr = _malloc(8);
-	    setValue(hptr+4, 0, 'i32');
+	    setValue(hptr+4, 0, "i32");
 	    fptr = ccall("openFITSFile", "number",
 			 ["string", "number", "string", "number", "number"],
 			 [fits, 0, options.extlist, hptr, hptr+4]);
-	    hdu.type = getValue(hptr,   'i32');
-	    status  = getValue(hptr+4, 'i32');
+	    hdu.type = getValue(hptr,   "i32");
+	    status  = getValue(hptr+4, "i32");
 	    _free(hptr);
 	    Module["errchk"](status);
 	}
@@ -523,18 +521,17 @@ Module["cleanupFITSFile"] = function(fits, all) {
 	// close FITS file
 	if( fits.fptr ){
 	    hptr = _malloc(4);
-	    setValue(hptr, 0, 'i32');
+	    setValue(hptr, 0, "i32");
 	    ccall("closeFITSFile", null,
 		  ["number", "number"], [fits.fptr, hptr]);
-	    // status  = getValue(hptr, 'i32');
+	    // status  = getValue(hptr, "i32");
 	    _free(hptr);
 	    // Module["errchk"](status);
 	    fits.fptr = null;
 	}
 	// delete virtual FITS file
 	if( fits.vfile ){
-	    try{ FS.unlink(Module['rootdir'] + fits.vfile); }
-	    catch(ignore){ }
+	    Module["vunlink"](fits.vfile);
 	}
     }
 };
