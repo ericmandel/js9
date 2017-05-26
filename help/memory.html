@@ -21,7 +21,8 @@ application developers. Browsers have two memory-related issues that
 must kept in mind when developing applications:
 <ul>
 <li> browsers often impose per-tab memory limitations
-<li> browser memory is managed automatically by garbage collection algorithms
+<li> browser memory is managed automatically by garbage collection
+(GC) algorithms
 </ul>
 
 <center><h3>Per-tab memory limits</h3></center>
@@ -92,7 +93,7 @@ the developer forgot to free previously allocated memory.
 
 <p>
 Modern languages, including Javascript, use automatic techniques such as
-<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_Management">garbage collection</a> to manage memory. In principle, memory gets
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_Management">garbage collection</a> (GC) to manage memory. In principle, memory gets
 freed when it is "no longer needed". But since the concept of "no
 longer needed" cannot be decided unambiguously, approximate algorithms
 are used.
@@ -108,19 +109,66 @@ properties of an object.
 Because JS9 deals with large chunks of data, garbage collection delays
 and misses can lead to larger than expected memory utilization. In May
 2017, we found that continuously loading and closing an image was not
-freeing memory properly. The problem was traced to the JS9's HTML5
-fileReader code: the garbage collector was not properly sensing that
-the fileReader result memory was available for clearing. To remedy the
-situation, we had to delete the fileReader result object explicitly
-(see
-<a href="http://stackoverflow.com/questions/32102361/filereader-memory-leak">http://stackoverflow.com/questions/32102361/filereader-memory-leak</a> for discussion of a similar problem.)
+freeing memory properly. The problem was traced to two different
+factors.  First, especially in Chrome, the garbage
+collector was not properly sensing that the fileReader result memory
+was available for clearing. To remedy the situation, we had to delete
+the fileReader result object explicitly:
+<pre>
+  fileReader = new FileReader();
+  fileReader.onload(function(){
+    ... do work on the fileReader.result array ...
+    // give the garbage collector a hint that we're done with the array
+    delete fileReader.result;
+  });
+  // start reading the file as a an array
+  fileReader.readAsArrayBuffer(fits);
+</pre>
+See
+<a href="http://stackoverflow.com/questions/32102361/filereader-memory-leak">http://stackoverflow.com/questions/32102361/filereader-memory-leak</a> for discussion of a similar problem.
 
+<p>
+Second, we found that if a continuous Javascript loop was too tight,
+the GC might not be run. This was especially true of Firefox. In the
+example below, each LoadFITS() call is making an xhr() call to check
+status of a FITS file, and loading the file using JS9.Load() if necessary.
+Since JS9.Load() runs asynchronously, there never was enough
+idle time to start the GC, and memory was not released properly. This
+situation actually could be seen using the Performance tab in the
+Firefox Developer Tools: the GC was run at the start of the loop, but
+never run again:
+<pre>
+  var timeout = 1000;
+  setInterval(function() {
+    LoadFITS("foo1");
+    LoadFITS("foo2");
+  }, timeout);
+</pre>
+<p>
+As a remedy, we used a longer timeout and also skipped processing for
+a few several cycles over time, to ensure that the browser had enough
+idle time to start the GC.
+<p>
+  var nloop = 0;
+  var modcycle = 1;
+  var loopcycle = 10;
+  var timeout = 3000;
+  setInterval(function() {
+    nloop++;
+    nmod = nloop % loopcycle;
+    // skip modcycle loops to give the GC time to be run
+    if( nmod > modcycle ) {
+      LoadFITS("foo1");
+      LoadFITS("foo2");
+    }
+    // timeout should be long enough to give the GC time to be run
+  }, timeout);
 <p>
 If you find that JS9 is taking much more memory than you expect,
 especially in situations where images are being loaded in a loop
-(e.g., telescope control), please let us know and we will try to help
-diagnose the problem. Note that Chrome and Firefox Memory both have
-Memory utilities in their Developer Tools that are very useful in
+please let us know and we will try to help diagnose the problem. Note
+that Chrome and Firefox Memory both have Memory and Performance
+utilities in their Developer Tools that are very useful in
 understanding memory allocation issues.
 
 <p>
@@ -130,7 +178,7 @@ inside an iframe in your web page, and reloading the JS9 page
 periodically. This should prevent garbage collection-related memory
 problems, because memory is reset each time the page is loaded.
 
-<h5>Last updated: May 23, 2017</h5>
+<h5>Last updated: May 26, 2017</h5>
 </div>
 
 </body>
