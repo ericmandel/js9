@@ -148,7 +148,7 @@ never run again:
 As a remedy, we used a longer timeout and also skipped processing for
 a few several cycles over time, to ensure that the browser had enough
 idle time to start the GC.
-<p>
+<pre>
   var nloop = 0;
   var modcycle = 1;
   var loopcycle = 10;
@@ -157,12 +157,13 @@ idle time to start the GC.
     nloop++;
     nmod = nloop % loopcycle;
     // skip modcycle loops to give the GC time to be run
-    if( nmod > modcycle ) {
+    if( nmod &gt; modcycle ) {
       LoadFITS("foo1");
       LoadFITS("foo2");
     }
     // timeout should be long enough to give the GC time to be run
   }, timeout);
+</pre>
 <p>
 If you find that JS9 is taking much more memory than you expect,
 especially in situations where images are being loaded in a loop
