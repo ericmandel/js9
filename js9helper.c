@@ -471,7 +471,7 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
       if( args[1] ){
 	omode = args[1];
       } else {
-	omode = "native";
+	omode = "image";
       }
       ofile = "stdout";
       // create image if ifile is an image or omode is not native
