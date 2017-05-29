@@ -365,11 +365,9 @@ int parseSection(char *s, int *x0, int *x1, int *y0, int *y1, int *block){
   }
   /* if we are processing dim@center, we need to calculate section values */
   if( itype ){
-    tx0 = cen1 - ((dim1+1)/2) + 1;
-    ty0 = cen2 - ((dim2+1)/2) + 1;
-    /* this method maintains the center and changes the dimensions */
-    /* Frank, Eric, and John all prefer this method, so that the user
-       gets the center he asked for, even if the image is reduced */
+    // preserve image dimensions at the expense of moving center slightly
+    tx0 = cen1 - (dim1/2) + 1;
+    ty0 = cen2 - (dim2/2) + 1;
     tx1 = cen1 + (dim1/2);
     ty1 = cen2 + (dim2/2);
   }
@@ -392,6 +390,7 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
   int xcolnum, ycolnum, hdunum, hdutype;
   int status=0, status2=0;
   int dims[2];
+  long naxes[2];
   double cens[2];
   char *cols[2] = {"X", "Y"};
   char *ofile=NULL;
@@ -477,6 +476,7 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
       ofile = "stdout";
       // create image if ifile is an image or omode is not native
       if( (hdutype == IMAGE_HDU) || strcmp(omode, "native") ){
+	// output image
 	fits_create_file(&ofptr, ofile, &status);
 	if( status ){
 	  fits_get_errstatus(status, tbuf);
@@ -493,10 +493,22 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
 		    finfo->fitsfile);
 	    return 1;
 	  }
+	  // sanity check on limits
+	  x0 = MAX(1, x0);
+	  y0 = MAX(1, y0);
+	  fits_get_img_size(ifptr, 2, naxes, &status);
+	  if( status == 0 ){
+	    x1 = MIN(x1, naxes[0]);
+	    y1 = MIN(y1, naxes[1]);
+	  } else {
+	    status = 0;
+	  }
+	  // let cfitsio make a section
 	  snprintf(tbuf, SZ_LINE-1, "%d:%d,%d:%d", x0, x1, y0, y1);
 	  fits_copy_image_section(ifptr, ofptr, tbuf, &status);
 	  break;
 	default:
+	  // let jsfitsio make a section
 	  dims[0] = x1 - x0 + 1;
 	  dims[1] = y1 - y0 + 1;
 	  cens[0] = (x0 + x1) / 2;
