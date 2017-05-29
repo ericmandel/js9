@@ -466,7 +466,7 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
       if( !args || !parseSection(args[0], &x0, &x1, &y0, &y1, &bin) ){
 	fprintf(stderr,
 		"ERROR: can't parse section for '%s' [%s]\n",
-		finfo->fitsfile, (args && args[1]) ? args[1] : "NONE");
+		finfo->fitsfile, (args && args[0]) ? args[0] : "NONE");
 	return 1;
       }
       if( args[1] ){
