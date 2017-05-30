@@ -280,13 +280,16 @@ static int FinfoFree(char *fname)
 
 #define SLEN 33
 
-int parseSection(char *s, int *x0, int *x1, int *y0, int *y1, int *block){
-  int itype=0, got=0;
+int parseSection(fitsfile *fptr, int hdutype, char *s,
+		 int *xlims, int *ylims, int *dims, double *cens, int *block){
+  int got=0;
+  int status=0;
+  long naxes[2];
   double tx0=0, tx1=0, ty0=0, ty1=0;
-  double dim1, dim2, cen1, cen2;
   char s1[SLEN], s2[SLEN], s3[SLEN], s4[SLEN], s5[SLEN];
   char *t;
   /* look for different ways of specifying the section -- order counts! */
+  /* specify limits, with and without blocking factor */
   if(sscanf(s,
      "%32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[0-9]",
      s1, s2, s3, s4, s5) == 5){
@@ -323,59 +326,111 @@ int parseSection(char *s, int *x0, int *x1, int *y0, int *y1, int *block){
     ty1 = tx1;
     *block = 1;
     got = 1;
+  /* specify dimensions and center, with and without blocking factor */
   } else if(sscanf(s,
 	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9]",
 	    s1, s2, s3, s4, s5) == 5){
-    dim1 = atof(s1);
-    cen1 = atof(s2);
-    dim2 = atof(s3);
-    cen2 = atof(s4);
+    dims[0] = atof(s1);
+    cens[0] = atof(s2);
+    dims[1] = atof(s3);
+    cens[1] = atof(s4);
     *block = MAX(1, strtol(s5, &t, 0));
-    itype = 1;
-    got = 1;
+    got = 2;
   } else if(sscanf(s,
 	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9.dDeE] @ %32[-0-9.dDeE]",
 	     s1, s2, s3, s4) == 4){
-    dim1 = atof(s1);
-    cen1 = atof(s2);
-    dim2 = atof(s3);
-    cen2 = atof(s4);
+    dims[0] = atof(s1);
+    cens[0] = atof(s2);
+    dims[1] = atof(s3);
+    cens[1] = atof(s4);
     *block = 1;
-    itype = 1;
-    got = 1;
+    got = 2;
   } else if(sscanf(s,
-	    "%32[0-9.dDeE] @ %32[-0-9.dDeE]  , %32[0-9]",
-		   s1, s2, s3) == 3){
-    dim1 = atof(s1);
-    cen1 = atof(s2);
-    dim2 = dim1;
-    cen2 = cen1;
+	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9]",
+	    s1, s2, s3) == 3){
+    dims[0] = atof(s1);
+    cens[0] = atof(s2);
+    dims[1] = dims[0];
+    cens[1] = cens[0];
     *block = MAX(1, strtol(s3, &t, 0));
-    itype = 1;
-    got = 1;
+    got = 2;
   } else if(sscanf(s,
 	    "%32[0-9.dDeE] @ %32[-0-9.dDeE]",
 	    s1, s2) == 2){
-    dim1 = atof(s1);
-    cen1 = atof(s2);
-    dim2 = dim1;
-    cen2 = cen1;
-    itype = 1;
-    got = 1;
+    dims[0] = atof(s1);
+    cens[0] = atof(s2);
+    dims[1] = dims[0];
+    cens[1] = cens[0];
+    *block = 1;
+    got = 2;
+  /* specify dimensions, with and without blocking factor */
+  } else if(sscanf(s,
+	    "%32[0-9.dDeE] , %32[-0-9.dDeE] , %32[-0-9.dDeE]",
+	    s1, s2, s3) == 3){
+    dims[0] = atof(s1);
+    cens[0] = 0;
+    dims[1] = atof(s2);
+    cens[1] = 0;
+    *block = MAX(1, strtol(s3, &t, 0));
+    got = 3;
+  } else if(sscanf(s,
+	    "%32[0-9.dDeE] , %32[-0-9.dDeE]",
+	    s1, s2) == 2){
+    dims[0] = atof(s1);
+    cens[0] = 0;
+    dims[1] = atof(s2);
+    cens[1] = 0;
+    *block = 1;
+    got = 3;
   }
-  /* if we are processing dim@center, we need to calculate section values */
-  if( itype ){
-    // preserve image dimensions at the expense of moving center slightly
-    tx0 = cen1 - (dim1/2) + 1;
-    ty0 = cen2 - (dim2/2) + 1;
-    tx1 = cen1 + (dim1/2);
-    ty1 = cen2 + (dim2/2);
+  /*
+     if we have dims but no cens:
+       image: we can easily calculate cens as center of whole image
+       table: we leave cens as 0,0 and pass back dims, cens but no limits
+  */
+  if( got == 3 ){
+    if( hdutype == IMAGE_HDU ){
+      fits_get_img_size(fptr, 2, naxes, &status);
+      if( status == 0 ){
+	cens[0] = naxes[0] / 2;
+	cens[1] = naxes[1] / 2;
+	/* we now have dims and cens, so change to got == 2 */
+	got = 2;
+      } else {
+	/* this will end up as an error */
+	got = 0;
+      }
+    } else {
+      /* table: pass back dims and cens for jsfitsio to handle */
+      dims[0] = dims[0];
+      dims[1] = dims[1];
+      cens[0] = cens[0];
+      cens[1] = cens[1];
+    }
   }
-  /* now we can integerize and set the output values */
-  *x0 = (int)tx0;
-  *x1 = (int)tx1;
-  *y0 = (int)ty0;
-  *y1 = (int)ty1;
+  /* final processing */
+  if( got == 1 ){
+    /* now we can integerize limits and set the output values */
+    xlims[0] = (int)tx0;
+    xlims[1] = (int)tx1;
+    ylims[0] = (int)ty0;
+    ylims[1] = (int)ty1;
+    /* calculate dims and cens from limits */
+    dims[0] = xlims[1] - xlims[0] + 1;
+    dims[1] = ylims[1] - ylims[0] + 1;
+    cens[0] = (xlims[1] + xlims[0]) / 2;
+    cens[1] = (ylims[1] + ylims[0]) / 2;
+  } else if( got == 2 ){
+    /* if we are processing dim@center, we need to calculate section values */
+    tx0 = cens[0] - (dims[0]/2) + 1;
+    ty0 = cens[1] - (dims[1]/2) + 1;
+    tx1 = cens[0] + (dims[0]/2);
+    ty1 = cens[1] + (dims[1]/2);
+    xlims[0] = (int)tx0;
+    xlims[1] = (int)tx1;
+    ylims[0] = (int)ty0;
+    ylims[1] = (int)ty1;
+  }
   return got;
 }
 
@@ -386,7 +441,7 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
   char tbuf[SZ_LINE];
   Finfo finfo, tfinfo;
 #if HAVE_CFITSIO
-  int x0, x1, y0, y1, bin;
+  int xlims[2], ylims[2], bin, got;
   int xcolnum, ycolnum, hdunum, hdutype;
   int status=0, status2=0;
   int dims[2];
@@ -462,7 +517,8 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
 	fprintf(stderr, "ERROR: can't open FITS file '%s'\n", finfo->fitsfile);
 	return 1;
       }
-      if( !args || !parseSection(args[0], &x0, &x1, &y0, &y1, &bin) ){
+      if( !args || !(got = parseSection(ifptr, hdutype, args[0],
+					xlims, ylims, dims, cens, &bin)) ){
 	fprintf(stderr,
 		"ERROR: can't parse section for '%s' [%s]\n",
 		finfo->fitsfile, (args && args[0]) ? args[0] : "NONE");
@@ -474,9 +530,9 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
 	omode = "image";
       }
       ofile = "stdout";
-      // create image if ifile is an image or omode is not native
+      /* create image if ifile is an image or omode is not native */
       if( (hdutype == IMAGE_HDU) || strcmp(omode, "native") ){
-	// output image
+	/* output image */
 	fits_create_file(&ofptr, ofile, &status);
 	if( status ){
 	  fits_get_errstatus(status, tbuf);
@@ -487,32 +543,29 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
 	}
 	switch(hdutype){
 	case IMAGE_HDU:
+	  /* image: let cfitsio make a section */
 	  if( bin != 1 ){
 	    fprintf(stderr,
 		    "ERROR: imsection of an image must use bin 1 for '%s'\n",
 		    finfo->fitsfile);
 	    return 1;
 	  }
-	  // sanity check on limits
-	  x0 = MAX(1, x0);
-	  y0 = MAX(1, y0);
+	  /* sanity check on image limits */
+	  xlims[0] = MAX(1, xlims[0]);
+	  ylims[0] = MAX(1, ylims[0]);
 	  fits_get_img_size(ifptr, 2, naxes, &status);
 	  if( status == 0 ){
-	    x1 = MIN(x1, naxes[0]);
-	    y1 = MIN(y1, naxes[1]);
+	    xlims[1] = MIN(xlims[1], naxes[0]);
+	    ylims[1] = MIN(ylims[1], naxes[1]);
 	  } else {
 	    status = 0;
 	  }
-	  // let cfitsio make a section
-	  snprintf(tbuf, SZ_LINE-1, "%d:%d,%d:%d", x0, x1, y0, y1);
+	  snprintf(tbuf, SZ_LINE-1,
+		   "%d:%d,%d:%d", xlims[0], xlims[1], ylims[0], ylims[1]);
 	  fits_copy_image_section(ifptr, ofptr, tbuf, &status);
 	  break;
 	default:
-	  // let jsfitsio make a section
-	  dims[0] = x1 - x0 + 1;
-	  dims[1] = y1 - y0 + 1;
-	  cens[0] = (x0 + x1) / 2;
-	  cens[1] = (y0 + y1) / 2;
+	  /* table: let jsfitsio create an image section */
 	  tfptr = filterTableToImage(ifptr, NULL, cols, dims, cens, bin,
 				     &status);
 	  if( status ){
@@ -536,12 +589,12 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
 	}
 	closeFITSFile(ofptr, &status);
       } else {
-	// extract (native) table
+	/* let cfitsio extract a (native) table */
 	snprintf(tbuf, SZ_LINE-1,
 		 "x >= %d && x <= %d && y >= %d && y <= %d",
-		 x0, x1, y0, y1);
-	// ffselect_table(&ifptr, ofile, tbuf, &status);
-	// copied from cfileio.c/ffselect_table()
+		 xlims[0], xlims[1], ylims[0], ylims[1]);
+	/* ffselect_table(&ifptr, ofile, tbuf, &status); */
+	/* copied from cfileio.c/ffselect_table() */
 	/* create new empty file to hold copy of the image */
 	if (ffinit(&ofptr, ofile, &status) > 0) {
 	  fits_get_errstatus(status, tbuf);
@@ -610,22 +663,22 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
 	/* we can ignore errors here */
 	status = 0;
 	snprintf(tbuf, SZ_LINE-1, "TALEN%d", xcolnum);
-	fits_modify_key_lng(ofptr, tbuf, x1-x0, NULL, &status);
+	fits_modify_key_lng(ofptr, tbuf, xlims[1]-xlims[0], NULL, &status);
 	status = 0;
 	snprintf(tbuf, SZ_LINE-1, "TALEN%d", ycolnum);
-	fits_modify_key_lng(ofptr, tbuf, y1-y0, NULL, &status);
+	fits_modify_key_lng(ofptr, tbuf, ylims[1]-ylims[0], NULL, &status);
 	status = 0;
 	snprintf(tbuf, SZ_LINE-1, "TLMIN%d", xcolnum);
-	fits_modify_key_flt(ofptr, tbuf, x0, 6, NULL, &status);
+	fits_modify_key_flt(ofptr, tbuf, xlims[0], 6, NULL, &status);
 	status = 0;
 	snprintf(tbuf, SZ_LINE-1, "TLMAX%d", xcolnum);
-	fits_modify_key_flt(ofptr, tbuf, x1, 6, NULL, &status);
+	fits_modify_key_flt(ofptr, tbuf, xlims[1], 6, NULL, &status);
 	status = 0;
 	snprintf(tbuf, SZ_LINE-1, "TLMIN%d", ycolnum);
-	fits_modify_key_flt(ofptr, tbuf, y0, 6, NULL, &status);
+	fits_modify_key_flt(ofptr, tbuf, ylims[0], 6, NULL, &status);
 	status = 0;
 	snprintf(tbuf, SZ_LINE-1, "TLMAX%d", ycolnum);
-	fits_modify_key_flt(ofptr, tbuf, y1, 6, NULL, &status);
+	fits_modify_key_flt(ofptr, tbuf, ylims[1], 6, NULL, &status);
 	/* close the output file */
 	status = 0;
 	fits_close_file(ofptr, &status);
