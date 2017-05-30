@@ -146,7 +146,7 @@ never run again:
 </pre>
 <p>
 As a remedy, we used a longer timeout and also skipped processing for
-a few several cycles over time, to ensure that the browser had enough
+a few several cycles over time, to try to ensure that the browser had enough
 idle time to start the GC.
 <pre>
   var nloop = 0;
@@ -156,6 +156,30 @@ idle time to start the GC.
   setInterval(function() {
     nloop++;
     nmod = nloop % loopcycle;
+    // skip modcycle loops to give the GC time to be run
+    if( nmod &gt; modcycle ) {
+      LoadFITS("foo1");
+      LoadFITS("foo2");
+    }
+    // timeout should be long enough to give the GC time to be run
+  }, timeout);
+</pre>
+<p>
+Another possible remedy is to reload the page periodically in order to
+reset browser memory:
+<pre>
+  var nloop = 0;
+  var modcycle = 1;
+  var loopcycle = 10;
+  var timeout = 3000;
+  var maxloop = 1800 * 1000 / timeout;
+  setInterval(function() {
+    nloop++;
+    nmod = nloop % loopcycle;
+    // reload page, approx every half hour
+    if( nloop &gt; maxloop ){
+        window.location.href = window.location.href;
+    }
     // skip modcycle loops to give the GC time to be run
     if( nmod &gt; modcycle ) {
       LoadFITS("foo1");
@@ -179,7 +203,7 @@ inside an iframe in your web page, and reloading the JS9 page
 periodically. This should prevent garbage collection-related memory
 problems, because memory is reset each time the page is loaded.
 
-<h5>Last updated: May 26, 2017</h5>
+<h5>Last updated: May 29, 2017</h5>
 </div>
 
 </body>
