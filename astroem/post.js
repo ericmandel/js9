@@ -155,7 +155,7 @@ Module["error"] = function(s, e) {
     }
 };
 
-Module["getFITSImage"] = function(fits, hdu, options, handler) {
+Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     var i, ofptr, hptr, status, datalen, extnum, extname;
     var buf, bufptr, buflen, bufptr2, slice;
     var filter = null;
@@ -163,6 +163,8 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     var cens = [0, 0];
     var dims = [0, 0];
     var bin = 1;
+    // opts is optional
+    opts = opts || {};
     // make sure we have valid vfile, opened by cfitsio
     if( !fptr ){
       Module["error"]("virtual FITS file is missing for getFITSImage()");
@@ -198,13 +200,13 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	// ascii or binary tables: bin table to image
 	hdu.imtab = "table";
 	hdu.table = {};
-	if( options && options.table ){
-	    if( options.table.filter ){ filter = options.table.filter; }
-	    if( options.table.cx ){ cens[0] = options.table.cx; }
-	    if( options.table.cy ){ cens[1] = options.table.cy; }
-	    if( options.table.nx ){ dims[0] = options.table.nx; }
-	    if( options.table.ny ){ dims[1] = options.table.ny; }
-	    if( options.table.bin ){ bin = options.table.bin; }
+	if( opts.table ){
+	    if( opts.table.filter ){ filter = opts.table.filter; }
+	    if( opts.table.cx ){ cens[0] = opts.table.cx; }
+	    if( opts.table.cy ){ cens[1] = opts.table.cy; }
+	    if( opts.table.nx ){ dims[0] = opts.table.nx; }
+	    if( opts.table.ny ){ dims[1] = opts.table.ny; }
+	    if( opts.table.bin ){ bin = opts.table.bin; }
 	}
 	hptr = _malloc(28);
 	setValue(hptr,    dims[0], "i32");
@@ -227,10 +229,14 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	break;
     }
     hptr = _malloc(32);
-    if( options && options.image && options.image.xmax && options.image.ymax  ){
+    if( opts.image && opts.image.xdim && opts.image.ydim  ){
 	// limits on image section
-	setValue(hptr,    options.image.xmax, "i32");
-	setValue(hptr+4,  options.image.ymax, "i32");
+	setValue(hptr,    opts.image.xdim, "i32");
+	setValue(hptr+4,  opts.image.ydim, "i32");
+    } else if( opts.image && opts.image.xmax && opts.image.ymax  ){
+	// limits on image section
+	setValue(hptr,    opts.image.xmax, "i32");
+	setValue(hptr+4,  opts.image.ymax, "i32");
     } else {
 	// get entire image section
 	setValue(hptr,    0, "i32");
@@ -238,7 +244,7 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
     }
     setValue(hptr+28, 0, "i32");
     // might want a slice
-    slice = options.slice || "";
+    slice = opts.slice || "";
     bufptr = ccall("getImageToArray", "number",
 	["number", "number", "number", "string", "number", "number", "number", "number"],
 	[ofptr, hptr, 0, slice, hptr+8, hptr+16, hptr+24, hptr+28]);
@@ -312,25 +318,25 @@ Module["getFITSImage"] = function(fits, hdu, options, handler) {
 	Module["errchk"](status);
     }
     // set file name, if possible
-    if( options.filename ){
-	hdu.filename = options.filename;
+    if( opts.filename ){
+	hdu.filename = opts.filename;
     }
     // make up the return fits object
     hdu.fits = {fptr: fptr, vfile: hdu.vfile, heap: bufptr,
 		cardstr: hdu.cardstr, extnum: extnum, extname: extname };
     // call the handler
     if( handler ){
-	handler(hdu, options);
+	handler(hdu, opts);
     } else {
 	Module["error"]("no handler specified for this FITS file");
     }
 };
 
-Module["handleFITSFile"] = function(fits, options, handler) {
+Module["handleFITSFile"] = function(fits, opts, handler) {
     var fptr, hptr, status, fileReader;
     var hdu = {};
-    // set up options and handler (might want to use defaults)
-    options = options || {};
+    // opts is optional
+    opts = opts || {};
     handler = handler || Module["options"].handler;
     // blob: turn blob into virtual file, the open with cfitsio
     if( fits instanceof Blob ){
@@ -341,13 +347,13 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    // eslint-disable-next-line no-unused-vars
 	    var narr;
 	    // file name might be in the blob itself
-	    if( !options.filename && fits.name ){
-		options.filename = fits.name;
+	    if( !opts.filename && fits.name ){
+		opts.filename = fits.name;
 	    }
 	    // filename or assume gzip'ed: cfitsio will do the right thing ...
-	    if( options.filename ){
+	    if( opts.filename ){
 		// filename with extension to pass to cfitsio
-		fitsname = options.filename
+		fitsname = opts.filename
 		    .replace(/^\.\.*/, "X")
 		    .replace(/\//g, "__");
 		// virtual file name without extension
@@ -395,7 +401,7 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    setValue(hptr+4, 0, "i32");
 	    fptr = ccall("openFITSFile", "number",
 			 ["string", "number", "string", "number", "number"],
-			 [fitsname, 0, options.extlist, hptr, hptr+4]);
+			 [fitsname, 0, opts.extlist, hptr, hptr+4]);
 	    hdu.type = getValue(hptr,   "i32");
 	    status  = getValue(hptr+4, "i32");
 	    _free(hptr);
@@ -408,7 +414,7 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    hdu.extnum = getValue(hptr,   "i32") - 1;
 	    _free(hptr);
 	    // extract image section and call handler
-	    Module["getFITSImage"]({fptr: fptr}, hdu, options, handler);
+	    Module["getFITSImage"]({fptr: fptr}, hdu, opts, handler);
 	    // hints to the GC; for problems with fileReaders and GC, see:
 	    //http://stackoverflow.com/questions/32102361/filereader-memory-leak
 	    // this seems to make a difference:
@@ -429,18 +435,18 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	fileReader.readAsArrayBuffer(fits);
     } else if( typeof fits === "string" ){
 	// are we changing extensions on an existing virtual file?
-	if( options.fptr ){
-	    fptr = options.fptr;
-	    if( options.vfile ){
-		hdu.vfile = options.vfile;
+	if( opts.fptr ){
+	    fptr = opts.fptr;
+	    if( opts.vfile ){
+		hdu.vfile = opts.vfile;
 	    }
-	    if( options.extname ){
+	    if( opts.extname ){
 		// look for extension with specified name
 		hptr = _malloc(4);
 		setValue(hptr, 0, "i32");
 		ccall("ffmnhd", null,
 		      ["number", "number", "string", "number", "number"],
-		      [fptr, -1, options.extname, 0, hptr]);
+		      [fptr, -1, opts.extname, 0, hptr]);
 		status  = getValue(hptr, "i32");
 		_free(hptr);
 		Module["errchk"](status);
@@ -454,18 +460,18 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 		status  = getValue(hptr+4, "i32");
 		_free(hptr);
 		Module["errchk"](status);
-	    } else if( options.extnum !== undefined ){
+	    } else if( opts.extnum !== undefined ){
 		// go to extension number
 		hptr = _malloc(8);
 		setValue(hptr+4, 0, "i32");
 		ccall("ffmahd", null,
 		      ["number", "number", "number", "number"],
-		      [fptr, options.extnum + 1, hptr, hptr+4]);
+		      [fptr, opts.extnum + 1, hptr, hptr+4]);
 		hdu.type = getValue(hptr,   "i32");
 		status  = getValue(hptr+4, "i32");
 		_free(hptr);
 		Module["errchk"](status);
-	    } else if( options.slice !== undefined ){
+	    } else if( opts.slice !== undefined ){
 		hptr = _malloc(8);
 		setValue(hptr+4, 0, "i32");
 		ccall("ffghdt", null,
@@ -487,14 +493,14 @@ Module["handleFITSFile"] = function(fits, options, handler) {
 	    setValue(hptr+4, 0, "i32");
 	    fptr = ccall("openFITSFile", "number",
 			 ["string", "number", "string", "number", "number"],
-			 [fits, 0, options.extlist, hptr, hptr+4]);
+			 [fits, 0, opts.extlist, hptr, hptr+4]);
 	    hdu.type = getValue(hptr,   "i32");
 	    status  = getValue(hptr+4, "i32");
 	    _free(hptr);
 	    Module["errchk"](status);
 	}
 	// extract image section and call handler
-	Module["getFITSImage"]({fptr: fptr}, hdu, options, handler);
+	Module["getFITSImage"]({fptr: fptr}, hdu, opts, handler);
     } else {
 	Module["error"]("invalid fits input for handleFITSFile");
     }
