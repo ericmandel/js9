@@ -101,7 +101,7 @@ JS9.globalOpts = {
 	  bim: null},
     defcolor: "#00FF00",	// graphics color when all else fails
     pngisfits: true,		// are PNGs really PNG representation files?
-    fits2png: false,		// do we convert FITS to  PNG representation?
+    fits2png: false,		// convert FITS to PNG rep files?
     alerts: true,		// set to false to turn off alerts
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
@@ -109,8 +109,8 @@ JS9.globalOpts = {
     htimeout: 10000,		// connection timeout for the helper connect
     xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
-    table: {xdim: 1024, ydim: 1024},// dimensions of image to extract from table
-    image: {xmax: 0, ymax: 0},  // max section size from image (0 for unlimited)
+    table: {xdim: 2048, ydim: 2048},// image section size to extract from table
+    image: {xdim: 8192, ydim: 8192},// image section size (0 for unlimited)
     clearImageMemory: "never",  // rm vfile: never, always, auto, noExt, noCube, size,[x]Mb
     helperProtocol: location.protocol, // http: or https:
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
@@ -406,17 +406,11 @@ if( (JS9.BROWSER[0] === "Firefox") && JS9.BROWSER[2].search(/Linux/) >=0 ){
 if( (JS9.BROWSER[0] === "Chrome") || (JS9.BROWSER[0] === "Safari") ){
     JS9.bugs.webkit_resize = true;
 }
-// chrome appears to have a 4Gb limit on tabs (12/2016)
-// this is a feeble attempt to avoid "aw, snap" ...
-if( (JS9.BROWSER[0] === "Chrome") ){
-    JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 500000000);
-    JS9.globalOpts.image.xmax = 2048 * 3;
-    JS9.globalOpts.image.ymax = 2048 * 3;
-// same for mobile devices ...
-} else if( JS9.BROWSER[3] ){
-    JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 300000000);
-    JS9.globalOpts.image.xmax = 2048 * 2;
-    JS9.globalOpts.image.ymax = 2048 * 2;
+// iOS has severe memory limits (05/2017)
+if( JS9.BROWSER[3] ){
+    JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 350000000);
+    JS9.globalOpts.image.xdim = 2048 * 2;
+    JS9.globalOpts.image.ydim = 2048 * 2;
 }
 
 // ---------------------------------------------------------------------
@@ -12190,8 +12184,8 @@ JS9.fitsLibrary = function(s){
 		ny: JS9.globalOpts.table.ydim || JS9.globalOpts.dims[1]
 	    };
 	    JS9.fits.options.image = {
-		xmax: JS9.globalOpts.image.xmax,
-		ymax: JS9.globalOpts.image.ymax
+		xmax: JS9.globalOpts.image.xdim || JS9.globalOpts.image.xmax,
+		ymax: JS9.globalOpts.image.ydim || JS9.globalOpts.image.ymax
 	    };
 	}
 	if( JS9.fits.maxFITSMemory && JS9.globalOpts.maxMemory ){
