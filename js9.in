@@ -50,12 +50,12 @@ usage(){
   printf "    -a                        # start JS9 app (requires Electron.js)\n"
   printf "    --height [h]              # height of app\n"
   printf "    --helper [true|false]     # whether to start up helper app (def: true)\n"
-  printf "    -w|--webpage [url]        # web page to open in app\n"
+  printf "    -w|--webpage [url]        # url or full path of web page to open\n"
   printf "    --width [w]               # width of app\n"
   printf " \n"
   printf "  browser (-b) specific switches:\n"
   printf "    -b|--browser [bname]      # start browser chrome|firefox|safari\n"
-  printf "    -w|--webpage [url]        # web page to open in browser\n"
+  printf "    -w|--webpage [url]        # url or full path of web page to open\n"
   printf " \n"
   printf "  command and browser (-b) switches:\n"
   printf "    -d|--debug                # output debugging info\n"
@@ -90,7 +90,7 @@ usage(){
   printf "  environment variables:\n"
   printf "    JS9_SRCDIR               # where to find files, if you don't build/install\n"
   printf "    JS9_BROWSER              # browser to use with -b (chrome|firefox|safari)\n"
-  printf "    JS9_WEBPAGE              # web page to use with app or browser\n"
+  printf "    JS9_WEBPAGE              # url or full path of web page to use with app or browser\n"
   printf "\n"
 }
 
