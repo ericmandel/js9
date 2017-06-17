@@ -311,7 +311,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS WEBDIR HELPER USEHELPER build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT RANLIB ac_ct_RANLIB CPP EGREP CGIDIR CGIURL CGIXPATH FUNINC FUNLIB CFITSIOINC CFITSIOLIB CFITSIOOBJS FITSLIB PNGLIB PNGINC EXTRA_LIBS SAODIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS WEBDIR HELPER USEHELPER build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT RANLIB ac_ct_RANLIB CPP EGREP CGIDIR CGIURL CGIXPATH FUNINC FUNLIB CFITSIOINC CFITSIOLIB CFITSIOOBJS FITSLIB PNGLIB PNGINC USEFITS2PNG EXTRA_LIBS SAODIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -4631,9 +4631,9 @@ echo "${ECHO_T}no funtools or cfitsio: back-end programs will not be built" >&6
   USEHELPER="no"
 fi
 
-# check for external png libraries
-echo "$as_me:$LINENO: checking for png" >&5
-echo $ECHO_N "checking for png... $ECHO_C" >&6
+# check for external png libraries and build of tpos
+echo "$as_me:$LINENO: checking for png library (for building fits2png)" >&5
+echo $ECHO_N "checking for png library (for building fits2png)... $ECHO_C" >&6
 
 # Check whether --with-png or --without-png was given.
 if test "${with_png+set}" = set; then
@@ -4653,6 +4653,7 @@ if test x"$havelib" = x1 ; then
           PNGLIB="$RFLAG $PNGBASE/lib$LSUFFIX $PNGLIB"
       fi
       PNGINC="-I$PNGBASE/include"
+      USEFITS2PNG="yes"
       echo "$as_me:$LINENO: result: yes ($PNGBASE)" >&5
 echo "${ECHO_T}yes ($PNGBASE)" >&6
   elif test -r $PNGBASE/lib/libpng.a -o \
@@ -4663,17 +4664,11 @@ echo "${ECHO_T}yes ($PNGBASE)" >&6
           PNGLIB="$RFLAG $PNGBASE/lib $PNGLIB"
       fi
       PNGINC="-I$PNGBASE/include"
+      USEFITS2PNG="yes"
       echo "$as_me:$LINENO: result: yes ($PNGBASE)" >&5
 echo "${ECHO_T}yes ($PNGBASE)" >&6
   else
-    echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-    { { echo "$as_me:$LINENO: error: can't find png library" >&5
-echo "$as_me: error: can't find png library" >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-else
-  echo "$as_me:$LINENO: checking for png_create_write_struct in -lpng" >&5
+      echo "$as_me:$LINENO: checking for png_create_write_struct in -lpng" >&5
 echo $ECHO_N "checking for png_create_write_struct in -lpng... $ECHO_C" >&6
 if test "${ac_cv_lib_png_png_create_write_struct+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -4743,16 +4738,25 @@ else
   have_png=no
 fi
 
-  if test "$have_png" = yes; then
-    PNGLIB="-lpng"
-    PNGINC=""
-  else
-    { { echo "$as_me:$LINENO: error: png library is required (visit: http://www.libpng.org)" >&5
-echo "$as_me: error: png library is required (visit: http://www.libpng.org)" >&2;}
-   { (exit 1); exit 1; }; }
+      if test "$have_png" = yes; then
+        PNGLIB="-lpng"
+        PNGINC=""
+        USEFITS2PNG="yes"
+        echo "$as_me:$LINENO: result: yes (default libs)" >&5
+echo "${ECHO_T}yes (default libs)" >&6
+      else
+        USEFITS2PNG="no"
+        echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+      fi
   fi
+else
+  USEFITS2PNG="no"
+  echo "$as_me:$LINENO: result: fits2png will not be built" >&5
+echo "${ECHO_T}fits2png will not be built" >&6
 fi
 # results from png search
+
 
 
 
@@ -5885,6 +5889,7 @@ s,@CFITSIOOBJS@,$CFITSIOOBJS,;t t
 s,@FITSLIB@,$FITSLIB,;t t
 s,@PNGLIB@,$PNGLIB,;t t
 s,@PNGINC@,$PNGINC,;t t
+s,@USEFITS2PNG@,$USEFITS2PNG,;t t
 s,@EXTRA_LIBS@,$EXTRA_LIBS,;t t
 s,@SAODIR@,$SAODIR,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t

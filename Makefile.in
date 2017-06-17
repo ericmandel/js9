@@ -105,13 +105,16 @@ CP =		cp -p
 
 CC =		@CC@
 
-CC_SW =		${CFLAGS} ${AC_FLAGS} ${INCS}
+CC_SW =		 -DFITS2PNG=$(FITS2PNG) ${CFLAGS} ${AC_FLAGS} ${INCS}
 
 DEPEND_SW = 	${CFLAGS} -I. ${AC_FLAGS}
 
 # type of backend server (or none)
 HELPER =	@HELPER@
 USEHELPER =	@USEHELPER@
+
+# do we build and use tpos?
+USEFITS2PNG =	@USEFITS2PNG@
 
 # which library
 FITSLIB =	@FITSLIB@
@@ -200,7 +203,8 @@ LWEBSITE=	http://localhost/~eric/
 
 SRCS =		tpos.c js9helper.c
 
-PROGS =		tpos js9helper
+PROGS =		js9helper
+ALLPROGS =	$(PROGS) tpos
 
 JS9TESTS =	js9Test.js js9Test.html js9Tests
 
@@ -235,8 +239,15 @@ UTILOBJS = 	$(wildcard util/*.o)
 all:		progs helper
 
 ifeq ($(USEHELPER), yes)
-progs:		$(PROGS)
+ifeq ($(USEFITS2PNG), yes)
+FITS2PNG=1
+progs:		$(ALLPROGS)
 else
+FITS2PNG=0
+progs:		$(PROGS)
+endif
+else
+FITS2PNG=0
 progs:	
 endif
 
@@ -356,7 +367,7 @@ install-binaries: FORCE
 		else true; \
 		fi; \
 	    done; \
-	  for i in $(PROGS) ; \
+	  for i in $(ALLPROGS) ; \
 	    do \
 		if [ -f $$i.exe ] ; then \
 		    echo "installing $$i.exe" ; \
@@ -561,7 +572,7 @@ view-readme:	FORCE
 clean:		FORCE
 		@($(RM) *.a *.so *.dylib *.o *.exe core core.* errs *pure* \
 			foo* *~ \#* TAGS *.E a.out errors \
-			$(UTILLIB) $(PROGS) $(CGIFILES) $(TESTPROGS) \
+			$(UTILLIB) $(ALLPROGS) $(TESTPROGS) $(CGIFILES) \
 			gmon.out *.pg *.bak  \
 			*js9Prefs.json-orig *js9prefs.js-orig \
 			config.info config.log ltest \

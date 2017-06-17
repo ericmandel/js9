@@ -40,21 +40,9 @@ case $name in
 		--with-webdir=/home/mred/public_html/htdocs/js9		\
 		--with-helper=get					\
 		--with-cfitsio=/proj/rd/linux64				\
-		--with-png=/proj/rd/linux64				\
 		--with-cgidir=/home/mred/public_html/cgi-bin/js9	\
 		--with-cgiurl=./cgi-bin/js9				\
 		--with-cgixpath=/soft/saord/bin				\
-  		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
- 		$*
-  ;;
-
-  mred*)
-  ./configure 	$CF							\
-		--prefix=/export/eric					\
-		--with-webdir=/home/mred/public_html/htdocs/js9		\
-		--with-helper="nodejs"					\
-		--with-cfitsio=/export/eric				\
-		--with-png=/export/eric					\
   		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
  		$*
   ;;
@@ -76,8 +64,8 @@ case $name in
 		--with-webdir=$HOME/Sites/js9				\
 		--with-helper="socket.io"				\
 		--with-cfitsio=$HOME					\
-		--with-png=$HOME					\
 		--with-saodir=$HOME/Sites				\
+		--with-png=$HOME					\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 

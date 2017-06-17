@@ -196,8 +196,8 @@ if test x"${CFITSIOINC}${FUNINC}" = x; then
   USEHELPER="no"
 fi
 
-# check for external png libraries
-AC_MSG_CHECKING(for png)
+# check for external png libraries and build of tpos
+AC_MSG_CHECKING(for png library (for building fits2png))
 AC_ARG_WITH(png,
     [ --with-png=<path> directory containing lib/libpng e.g. /usr/local], havelib=1, havelib=0)
 if test x"$havelib" = x1 ; then
@@ -211,6 +211,7 @@ if test x"$havelib" = x1 ; then
           PNGLIB="$RFLAG $PNGBASE/lib$LSUFFIX $PNGLIB"
       fi
       PNGINC="-I$PNGBASE/include"
+      USEFITS2PNG="yes"
       AC_MSG_RESULT(yes ($PNGBASE))
   elif test -r $PNGBASE/lib/libpng.a -o \
 	    -r $PNGBASE/lib/libpng.so -o \
@@ -220,23 +221,28 @@ if test x"$havelib" = x1 ; then
           PNGLIB="$RFLAG $PNGBASE/lib $PNGLIB"
       fi
       PNGINC="-I$PNGBASE/include"
+      USEFITS2PNG="yes"
       AC_MSG_RESULT(yes ($PNGBASE))
   else
-    AC_MSG_RESULT(no)
-    AC_MSG_ERROR([can't find png library])
+      AC_CHECK_LIB(png, png_create_write_struct, have_png=yes, have_png=no)
+      if test "$have_png" = yes; then
+        PNGLIB="-lpng"
+        PNGINC=""
+        USEFITS2PNG="yes"
+        AC_MSG_RESULT(yes (default libs))
+      else
+        USEFITS2PNG="no"
+        AC_MSG_RESULT(no)
+      fi
   fi
 else
-  AC_CHECK_LIB(png, png_create_write_struct, have_png=yes, have_png=no)
-  if test "$have_png" = yes; then
-    PNGLIB="-lpng"
-    PNGINC=""
-  else
-    AC_MSG_ERROR([png library is required (visit: http://www.libpng.org)])
-  fi
+  USEFITS2PNG="no"
+  AC_MSG_RESULT(fits2png will not be built)
 fi
 # results from png search
 AC_SUBST(PNGLIB)
 AC_SUBST(PNGINC)
+AC_SUBST(USEFITS2PNG)
 
 AC_CHECK_FUNC(connect)
 if test $ac_cv_func_connect = no; then
