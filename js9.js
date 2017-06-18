@@ -1486,7 +1486,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    this.raw.header.CRPIX1 -= hdu.x1 - 1;
 	}
 	if( this.raw.header.CRPIX2 !== undefined ){
-	    this.raw.header.CRPIX2 -= hdu.x2 - 1;
+	    this.raw.header.CRPIX2 -= hdu.y1 - 1;
 	}
 	if( this.raw.header.LTM1_1 === undefined ){
 	    this.raw.header.LTM1_1 = 1.0;
@@ -5915,7 +5915,6 @@ JS9.Display = function(el){
     // turn off anti-aliasing
     if( !JS9.ANTIALIAS ){
 	this.context.imageSmoothingEnabled = false;
-	this.context.mozImageSmoothingEnabled = false;
 	this.context.webkitImageSmoothingEnabled = false;
 	this.context.msImageSmoothingEnabled = false;
     }
