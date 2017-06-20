@@ -240,6 +240,11 @@ JS9.Menubar.init = function(width, height){
 		}
 		items.free = {name: "free image memory"};
 		items.close = {name: "close image"};
+		items.removeproxy = {name: "remove proxy file from server",
+				     disable: false};
+		if( tim && !tim.proxyFile ){
+		    items.removeproxy.disabled = true;
+		}
 		items["sep" + n++] = "------";
 		items.loadcatalog = {name: "load catalog ..."};
 		items.savecatalog = {name: "save active catalog"};
@@ -270,6 +275,11 @@ JS9.Menubar.init = function(width, height){
 			case "close":
 			    if( uim ){
 				uim.closeImage();
+			    }
+			    break;
+			case "removeproxy":
+			    if( uim ){
+				uim.removeProxyFile();
 			    }
 			    break;
 			case "savesession":
@@ -399,7 +409,7 @@ JS9.Menubar.init = function(width, height){
 				"params",
 				JS9.InstallDir(JS9.globalOpts.imsectionURL),
 				{title: "Extract Image Section From a 'Parent' File",
-	                        winformat: "width=440px,height=230px,center=1,resize=1,scrolling=1"});
+	                        winformat: "width=480px,height=200px,center=1,resize=1,scrolling=1"});
 			    // save info for running the task
 			    $(did).data("dispid", udisp.id)
 				  .data("aname", "imsection");
@@ -1645,11 +1655,6 @@ JS9.Menubar.init = function(width, height){
 			im && im.raw && im.raw.hdu && im.raw.hdu.vfile ){
 			items.upload = {name: "upload FITS to make tasks available"};
 		    }
-		} else {
-		    if( im && im.proxyFile ){
-			items["sep" + n++] = "------";
-			items.unproxy = {name: "remove proxy FITS file from server"};
-		    }
 		}
 		items["sep" + n++] = "------";
 		items.sigma = {
@@ -1690,10 +1695,6 @@ JS9.Menubar.init = function(width, height){
 				break;
 			    case "upload":
 				uim.uploadFITSFile();
-				break;
-			    case "unproxy":
-				// remove proxy image from remote server
-				uim.removeProxyFile(true);
 				break;
 			    default:
 				// look for analysis routine

@@ -157,7 +157,7 @@ Module["error"] = function(s, e) {
 
 Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     var i, ofptr, hptr, status, datalen, extnum, extname;
-    var buf, bufptr, buflen, bufptr2, slice;
+    var buf, bufptr, buflen, bufptr2, slice, doerr;
     var filter = null;
     var fptr = fits.fptr;
     var cens = [0, 0];
@@ -200,65 +200,122 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	// ascii or binary tables: bin table to image
 	hdu.imtab = "table";
 	hdu.table = {};
+	hptr = _malloc(28);
 	if( opts.table ){
 	    if( opts.table.filter ){ filter = opts.table.filter; }
-	    if( opts.table.cx ){ cens[0] = opts.table.cx; }
-	    if( opts.table.cy ){ cens[1] = opts.table.cy; }
-	    if( opts.table.nx ){ dims[0] = opts.table.nx; }
-	    if( opts.table.ny ){ dims[1] = opts.table.ny; }
 	    if( opts.table.bin ){ bin = opts.table.bin; }
+	    // backward compatibity with pre-v1.12 globals
+            if( opts.table.nx ){ dims[0] = opts.table.nx; }
+            if( opts.table.ny ){ dims[1] = opts.table.ny; }
+            if( opts.table.cx ){ cens[0] = opts.table.cx; }
+            if( opts.table.cy ){ cens[1] = opts.table.cy; }
+	    // global defaults from fits.options
+	    if( opts.table.xdim ){ dims[0] = opts.table.xdim; }
+	    if( opts.table.ydim ){ dims[1] = opts.table.ydim; }
+	    if( opts.table.xcen ){ cens[0] = opts.table.xcen; }
+	    if( opts.table.ycen ){ cens[1] = opts.table.ycen; }
 	}
-	hptr = _malloc(28);
+	// overridden by options passed in this call
+	if( opts.xdim ){ dims[0] = opts.xdim; }
+	if( opts.ydim ){ dims[1] = opts.ydim; }
+	if( opts.xcen ){ cens[0] = opts.xcen; }
+	if( opts.ycen ){ cens[1] = opts.ycen; }
+	if( opts.filter ){ filter = opts.filter; }
+	if( opts.bin ){ bin = opts.bin; }
 	setValue(hptr,    dims[0], "i32");
 	setValue(hptr+4,  dims[1], "i32");
+	// use center to generate image
 	setValue(hptr+8,  cens[0], "double");
 	setValue(hptr+16, cens[1], "double");
+	// clear return status
 	setValue(hptr+24, 0, "i32");
-	ofptr = ccall("filterTableToImage", "number",
-        ["number", "string", "number", "number", "number", "number", "number"],
-        [fptr, filter, 0, hptr, hptr+8, bin, hptr+24]);
-	hdu.table.nx = getValue(hptr,     "i32");
-	hdu.table.ny = getValue(hptr+4,   "i32");
-	hdu.table.cx = getValue(hptr+8,   "double");
-	hdu.table.cy = getValue(hptr+16,  "double");
+	// filter an event file and generate an image
+	doerr = false;
+	try{
+	    ofptr = ccall("filterTableToImage", "number",
+            ["number", "string", "number", "number", "number", "number",
+	     "number"],
+	    [fptr, filter, 0, hptr, hptr+8, bin, hptr+24]);
+	}
+	catch(e){
+	    doerr = true;
+	}
+	// return values
+	hdu.table.xdim = getValue(hptr,     "i32");
+	hdu.table.ydim = getValue(hptr+4,   "i32");
+	hdu.table.xcen = getValue(hptr+8,   "double");
+	hdu.table.ycen = getValue(hptr+16,  "double");
 	hdu.table.bin = bin;
 	hdu.table.filter = filter;
 	status  = getValue(hptr+24, "i32");
 	_free(hptr);
 	Module["errchk"](status);
+	if( !ofptr || doerr ){
+	    Module["error"]("can't convert table to image (image too large?)");
+	}
+	// clear cens so that we extract at center of resulting image (below)
+	delete opts.xcen;
+	delete opts.ycen;
+	delete opts.xdim;
+	delete opts.ydim;
+	delete opts.bin;
+	// reset dim and cen values
+	dims[0] = 0;
+	dims[1] = 0;
+	cens[0] = 0;
+	cens[1] = 0;
+	bin = 1;
 	break;
     }
-    hptr = _malloc(32);
-    if( opts.image && opts.image.xdim && opts.image.ydim  ){
-	// limits on image section
-	setValue(hptr,    opts.image.xdim, "i32");
-	setValue(hptr+4,  opts.image.ydim, "i32");
-    } else if( opts.image && opts.image.xmax && opts.image.ymax  ){
-	// limits on image section
-	setValue(hptr,    opts.image.xmax, "i32");
-	setValue(hptr+4,  opts.image.ymax, "i32");
-    } else {
-	// get entire image section
-	setValue(hptr,    0, "i32");
-	setValue(hptr+4,  0, "i32");
+    hptr = _malloc(48);
+    if( opts.image ){
+	// backward-compatibility with pre-v1.12
+	if( opts.image.xmax ){ dims[0] = opts.image.xmax; }
+	if( opts.image.ymax ){ dims[1] = opts.image.ymax; }
+	// global defaults from fits.options
+	if( opts.image.xdim ){ dims[0] = opts.image.xdim; }
+	if( opts.image.ydim ){ dims[1] = opts.image.ydim; }
     }
-    setValue(hptr+28, 0, "i32");
+    // overridden by options passed in this call
+    if( opts.bin ) { bin = opts.bin; }
+    if( opts.xdim ){ dims[0] = opts.xdim; }
+    if( opts.ydim ){ dims[1] = opts.ydim; }
+    if( opts.xcen ){ cens[0] = opts.xcen; }
+    if( opts.ycen ){ cens[1] = opts.ycen; }
+    // limits on image section
+    setValue(hptr,    dims[0], "i32");
+    setValue(hptr+4,  dims[1], "i32");
+    setValue(hptr+8,  cens[0], "double");
+    setValue(hptr+16, cens[1], "double");
+    // clear return status
+    setValue(hptr+44, 0, "i32");
     // might want a slice
     slice = opts.slice || "";
-    bufptr = ccall("getImageToArray", "number",
-	["number", "number", "number", "string", "number", "number", "number", "number"],
-	[ofptr, hptr, 0, slice, hptr+8, hptr+16, hptr+24, hptr+28]);
-    hdu.x1  = getValue(hptr+8, "i32");
-    hdu.y1  = getValue(hptr+12, "i32");
-    hdu.x2  = getValue(hptr+16, "i32");
-    hdu.y2  = getValue(hptr+20, "i32");
-    hdu.naxis1  = hdu.x2 - hdu.x1 + 1;
-    hdu.naxis2  = hdu.y2 - hdu.y1 + 1;
-    hdu.bitpix  = getValue(hptr+24, "i32");
-    status  = getValue(hptr+28, "i32");
+    // get array from image file
+    doerr = false;
+    try{
+	bufptr = ccall("getImageToArray", "number",
+	["number", "number", "number", "number", "string", "number",
+	 "number", "number", "number"],
+	[ofptr, hptr, hptr+8, bin, slice, hptr+24, hptr+32, hptr+40, hptr+44]);
+    }
+    catch(e){
+	doerr = true;
+    }
+    // return the section values so called can update LTM/LTV
+    // we don't want to update the FITS file itself, since it hasn't changed
+    hdu.bin = bin;
+    hdu.x1  = getValue(hptr+24, "i32");
+    hdu.y1  = getValue(hptr+28, "i32");
+    hdu.x2  = getValue(hptr+32, "i32");
+    hdu.y2  = getValue(hptr+36, "i32");
+    hdu.naxis1  = Math.floor((hdu.x2 - hdu.x1) / bin + 1);
+    hdu.naxis2  = Math.floor((hdu.y2 - hdu.y1) / bin + 1);
+    hdu.bitpix  = getValue(hptr+40, "i32");
+    status  = getValue(hptr+44, "i32");
     _free(hptr);
     Module["errchk"](status);
-    if( !bufptr ){
+    if( !bufptr || doerr ){
       Module["error"]("can't convert image to array (image too large?)");
     }
     // save pointer to section data

@@ -109,8 +109,8 @@ JS9.globalOpts = {
     htimeout: 10000,		// connection timeout for the helper connect
     xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
-    table: {xdim: 2048, ydim: 2048},// image section size to extract from table
-    image: {xdim: 8192, ydim: 8192},// image section size (0 for unlimited)
+    table: {xdim: 2048, ydim: 2048, bin: 1},// image section size to extract from table
+    image: {xdim: 2048, ydim: 2048, bin: 1},// image section size (0 for unlimited)
     clearImageMemory: "never",  // rm vfile: never, always, auto, noExt, noCube, size,[x]Mb
     helperProtocol: location.protocol, // http: or https:
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
@@ -854,8 +854,8 @@ JS9.Image.prototype.initLCS = function(iheader){
     var arr = [[0,0,0], [0,0,0], [0,0,0]];
     // header usually is raw header
     var header = iheader || this.raw.header;
-    var cx = this.raw.header.CRPIX1 || 1;
-    var cy = this.raw.header.CRPIX2 || 1;
+    var cx = header.CRPIX1 || 1;
+    var cy = header.CRPIX2 || 1;
     // screen rotation angle is reversed from FITS convention
     var a = -(header.CROTA2||0) * Math.PI / 180.0;
     var sina = Math.sin(a);
@@ -1321,6 +1321,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 // read input object and convert to image data
 JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     var i, s, ui, clen, hdu, pars, card, got, rlen, rmvfile, done;
+    var header, x1, y1, bin;
     var owidth, oheight, obitpix;
     opts = opts || {};
     if( $.isArray(obj) || JS9.isTypedArray(obj) || obj instanceof ArrayBuffer ){
@@ -1478,38 +1479,43 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	this.raw.header.NAXIS2 = this.raw.height;
 	this.raw.header.BITPIX = this.raw.bitpix;
     }
-    // if section informationis available, modify the WCS keywords
-    // (values are 1-indexed from cfitsio and we need 0-indexed)
-    if( hdu.x1 !== undefined && hdu.y1 !== undefined &&
-	(hdu.x1 !== 1 || hdu.y1 !== 1 ) ){
-	if( this.raw.header.CRPIX1 !== undefined ){
-	    this.raw.header.CRPIX1 -= hdu.x1 - 1;
+    header = this.raw.header;
+    // if section information is available, modify the WCS keywords
+    // e.g., image sections from astroem/getFITSImage()
+    if( hdu.imtab === "image"  &&
+	(hdu.x1 !== undefined  && hdu.x1 !== 1)  ||
+	(hdu.y1 !== undefined  && hdu.y1 !== 1)  ||
+	(hdu.bin === undefined || hdu.bin !== 1) ){
+	// bin factor is optional
+	bin = hdu.bin || 1;
+	// convert 1-index to 0-index
+	x1 = hdu.x1 - 1;
+	y1 = hdu.y1 - 1;
+	bin = hdu.bin || 1;
+	if( header.CRPIX1 !== undefined ){
+	    header.CRPIX1 = (header.CRPIX1 - x1) / bin;
 	}
-	if( this.raw.header.CRPIX2 !== undefined ){
-	    this.raw.header.CRPIX2 -= hdu.y1 - 1;
+	if( header.CRPIX2 !== undefined ){
+	    header.CRPIX2 = (header.CRPIX2 - y1) / bin;
 	}
-	if( this.raw.header.LTM1_1 === undefined ){
-	    this.raw.header.LTM1_1 = 1.0;
+	if( header.CDELT1 !== undefined ){
+	    header.CDELT1 = header.CDELT1 * bin;
 	}
-	if( this.raw.header.LTM2_1 === undefined ){
-	    this.raw.header.LTM2_1 = 0.0;
+	if( header.CDELT2 !== undefined ){
+	    header.CDELT2 = header.CDELT2 * bin;
 	}
-	if( this.raw.header.LTM1_2 === undefined ){
-	    this.raw.header.LTM1_2 = 0.0;
-	}
-	if( this.raw.header.LTM2_2 === undefined ){
-	    this.raw.header.LTM2_2 = 1.0;
-	}
-	if( this.raw.header.LTV1 === undefined ){
-	    this.raw.header.LTV1 = -hdu.x1 - 1;
-	} else {
-	    this.raw.header.LTV1 -= hdu.x1 - 1;
-	}
-	if( this.raw.header.LTV2 === undefined ){
-	    this.raw.header.LTV2 = -hdu.y1 - 1;
-	} else {
-	    this.raw.header.LTV2 -= hdu.y1 - 1;
-	}
+	header.LTM1_1 = header.LTM1_1 || 1.0;
+	header.LTM1_1 = header.LTM1_1 / bin;
+	header.LTM2_1 = header.LTM2_1 || 0.0;
+	header.LTM2_1 = header.LTM2_1 / bin;
+	header.LTM1_2 = header.LTM1_2 || 0.0;
+	header.LTM1_2 = header.LTM1_2 / bin;
+	header.LTM2_2 = header.LTM2_2 || 1.0;
+	header.LTM2_2 = header.LTM2_2 / bin;
+	header.LTV1 = header.LTV1 || 0;
+	header.LTV1 = (header.LTV1 - x1) / bin ;
+	header.LTV2 = header.LTV2 || 0;
+	header.LTV2 = (header.LTV2 - y1) / bin;
     }
     // look for a filename (needs header so we can add extension name/num
     if( opts.file ){
@@ -1578,7 +1584,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     // init WCS, if possible
     this.initWCS();
-    // init the logical coordinate system, if possible
+    // init the logical coordinate system, using temp header if TLM/TLV changed
     this.initLCS();
     // get hdu info, if possible
     try{
@@ -1587,7 +1593,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     catch(ignore){}
     // can we remove the virtual file?
-    if( JS9.fits.cleanupFITSFile && 
+    if( JS9.fits.cleanupFITSFile &&
 	this.raw.hdu.fits && this.raw.hdu.fits.vfile  ){
 	s = JS9.globalOpts.clearImageMemory.toLowerCase().split(",");
 	rmvfile = false;
@@ -2726,6 +2732,171 @@ JS9.Image.prototype.displaySlice = function(slice, opts){
     return this;
 };
 
+// extract and display a section of an image, with table filtering
+JS9.Image.prototype.displaySection = function(opts, func) {
+    var that = this;
+    var hdu, fits, from;
+    var arr = [];
+    var disp = function(hdu, opts, func){
+	var ss;
+	var rexp = /(\[.*[a-zA-Z0-9_].*\])\[.*\]/;
+	opts = opts || {};
+	// start the waiting!
+	JS9.waiting(true, that.display);
+	if( opts.separate ){
+	    // replace old extensions with new
+	    if( opts.filter ){
+		ss = '[' + opts.filter.replace(/\s+/g,"") + ']';
+		opts.id = that.id.replace(rexp, "$1") + ss;
+		if( that.fitsFile ){
+		    opts.file = that.fitsFile.replace(rexp, "$1") + ss;
+		} else {
+		    opts.file = opts.id;
+		}
+	    }
+	    opts.display = that.display;
+	    JS9.checkNew(new JS9.Image(hdu, opts, func));
+	    // done waiting
+	    JS9.waiting(false);
+	} else {
+	    // refresh the current image with the new hdu
+	    that.refreshImage(hdu, opts);
+	    // done waiting
+	    JS9.waiting(false);
+	    // call function, if necessary
+	    if( func ){
+		try{ JS9.xeqByName(func, window, this); }
+		catch(e){ JS9.error("in imsection callback", e, false); }
+	    }
+	}
+    };
+    // opts is ... optional
+    opts = opts || {};
+    // from where do we extract the section?
+    from = opts.from;
+    if( !from ){
+	if( this.parentFile ){
+	    from = "parentFile";
+	} else if( this.raw && this.raw.hdu && this.raw.hdu.fits ){
+	    hdu = this.raw.hdu;
+	    fits = hdu.fits;
+	    from = "virtualFile";
+	}
+    }
+    // sensible (required) defaults
+    opts.bin = opts.bin || 1;
+    switch(this.imtab){
+    case "table":
+	opts.xdim = opts.xdim || JS9.globalOpts.table.xdim;
+	opts.ydim = opts.ydim || JS9.globalOpts.table.ydim;
+	opts.bin = opts.bin || JS9.globalOpts.table.bin;
+	break;
+    default:
+	opts.xdim = opts.xdim || JS9.globalOpts.image.xdim;
+	opts.ydim = opts.ydim || JS9.globalOpts.image.ydim;
+	opts.bin = opts.bin || JS9.globalOpts.image.bin;
+	break;
+    }
+    // start the waiting!
+    JS9.waiting(true, that.display);
+    // ... need a timeout to allow the wait spinner to get started
+    window.setTimeout(function(){
+	// get image section
+	switch(from){
+	case "parentFile":
+	    // parentFile: image sect. from external parent file of cur file
+	    // opts arr is for runAnalysis, remove opts for later processing
+	    if( opts.xcen !== undefined ){
+		arr.push({name: "xcen", value: opts.xcen});
+		delete opts.xcen;
+	    }
+	    if( opts.ycen !== undefined ){
+		arr.push({name: "ycen", value: opts.ycen});
+		delete opts.ycen;
+	    }
+	    if( opts.xdim !== undefined ){
+		arr.push({name: "xdim", value: opts.xdim});
+		delete opts.xdim;
+	    }
+	    if( opts.ydim !== undefined ){
+		arr.push({name: "ydim", value: opts.ydim});
+		delete opts.ydim;
+	    }
+	    if( opts.bin !== undefined ){
+		arr.push({name: "bin", value: opts.bin});
+		delete opts.bin;
+	    }
+	    if( opts.filter !== undefined ){
+		arr.push({name: "filter", value: opts.filter});
+		delete opts.filter;
+	    }
+	    if( opts.mode !== undefined ){
+		arr.push({name: "mode", value: opts.mode});
+		delete opts.mode;
+	    }
+	    // get image section from external file
+	    that.runAnalysis("imsection", arr, function(stdout,stderr,errcode){
+		var rarr, f, pf;
+		if( stderr ){
+		    JS9.error(stderr);
+		    return;
+		}
+		if( errcode ){
+		    JS9.error("in displaySection: " + errcode);
+		    return;
+		}
+		// output is file and possibly parentFile
+		rarr = stdout.split(/\s+/);
+		// file
+		f = rarr[0].trim().replace(/\/\.\//, "/");
+		// relative path: add install dir prefix
+		if( f.charAt(0) !== "/" ){
+		    f = JS9.InstallDir(f);
+		}
+		// which is a proxy file (meaning: delete it on close)
+		opts.proxyFile = f;
+		// look for parentFile (path relative to helper, not install)
+		if( rarr[1] && rarr[1] !== "NONE" ){
+		    pf = rarr[1].trim().replace(/\/\.\//, "/");
+		    opts.parentFile = pf;
+		}
+		if( rarr[2] === "true" ){
+		    opts.separate = true;
+		}
+		// retrieve and display newly created image section file
+		JS9.fetchURL(f, f, opts, function(result){
+		    // cleanup previous FITS file support, if necessary
+		    // do this before we handle the new FITS file, or else
+		    // we end up with a memory leak in the emscripten heap!
+		    if( JS9.fits.cleanupFITSFile &&
+			that.raw.hdu && that.raw.hdu.fits ){
+			JS9.fits.cleanupFITSFile(that.raw.hdu.fits, true);
+		    }
+		    // remove current proxy file, if necessary
+		    that.removeProxyFile();
+		    // start the waiting!
+		    JS9.waiting(true, that.display);
+		    // process the newly retrieved data as FITS
+		    JS9.fits.handleFITSFile(result, opts, disp);
+		});
+	    });
+	    break;
+	case "virtualFile":
+	    if( opts.mode ){
+		opts.separate = true;
+	    }
+	    // extract image section from current virtual file
+	    JS9.getFITSImage(fits, hdu, opts, function(hdu){
+		disp(hdu, opts, func);
+	    });
+	    break;
+	default:
+	    JS9.error("image section cannot be extracted from this data file");
+	    break;
+	}
+    }, JS9.SPINOUT);
+};
+
 // convert current image to array
 JS9.Image.prototype.toArray = function(){
     var i, j, k, bpe, idx, le;
@@ -3111,7 +3282,7 @@ JS9.Image.prototype.initWCS = function(header){
     // set up the default wcs, using the original header params
     alt = "default";
     this.raw.altwcs[alt] = {};
-    this.raw.altwcs[alt].header = this.raw.header;
+    this.raw.altwcs[alt].header = header;
     // look for wcs alternates
     // see: http://www.atnf.csiro.au/people/mcalabre/WCS/wcs.pdf
     for( key in header ){
@@ -3125,7 +3296,7 @@ JS9.Image.prototype.initWCS = function(header){
 		if( !this.raw.altwcs[alt] ){
 		    this.raw.altwcs[alt] = {};
 		    // start with original header
-		    this.raw.altwcs[alt].header = $.extend({}, this.raw.header);
+		    this.raw.altwcs[alt].header = $.extend({}, header);
 		}
 		// wcslib seems to want "RADECSYS", not "RADESYS"
 		if( varr[1] === "RADESYS" ){
@@ -5343,10 +5514,10 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 		    ivfile += "[EVENTS]";
 		}
 		tab = that.raw.hdu.table;
-		tx1 = Math.floor(tab.cx - ((tab.nx+1)/2) + 1);
-		tx2 = Math.floor(tab.cx + (tab.nx/2));
-		ty1 = Math.floor(tab.cy - ((tab.ny+1)/2) + 1);
-		ty2 = Math.floor(tab.cy + (tab.ny/2));
+		tx1 = Math.floor(tab.xcen - (tab.xdim/2) + 1);
+		tx2 = Math.floor(tab.xcen + (tab.xdim/2));
+		ty1 = Math.floor(tab.ycen - (tab.ydim/2) + 1);
+		ty2 = Math.floor(tab.ycen + (tab.ydim/2));
 		ivfile += sprintf("[bin X=%s:%s,Y=%s:%s]", tx1, tx2, ty1, ty2);
 	    }
 	}

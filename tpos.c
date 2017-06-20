@@ -384,8 +384,8 @@ int main(int argc, char **argv)
   switch(hdutype){
   case IMAGE_HDU:
     // get image array
-    dbuf = getImageToArray(fptr, NULL, NULL, NULL,
-			   start, stop, &bitpix, &status);
+    dbuf = getImageToArray(fptr, NULL, NULL, 1, NULL, start, stop, &bitpix,
+			   &status);
     errchk(status);
     idim1 = stop[0] - start[0] + 1;
     idim2 = stop[1] - start[1] + 1;
@@ -397,8 +397,8 @@ int main(int argc, char **argv)
     ofptr = filterTableToImage(fptr, filter, NULL, dims, cens, block, &status);
     errchk(status);
     // get image array
-    dbuf = getImageToArray(ofptr, NULL, NULL, NULL,
-			   start, stop, &bitpix, &status);
+    dbuf = getImageToArray(ofptr, NULL, NULL, 1, NULL, start, stop, &bitpix,
+			   &status);
     errchk(status);
     idim1 = stop[0] - start[0] + 1;
     idim2 = stop[1] - start[1] + 1;

@@ -119,6 +119,7 @@ uncompressed).  It also contains options to:
 (either an existing display or a new light window)
 <li><b>free image memory</b>free up memory used to store the FITS file internally (which is needed for WCS reprojections, viewing FITS extensions and data cubes).
 <li><b>close image</b> to clear the image and release browser resources
+<li><b>remove proxy file</b> to clear a server proxy file and release browser resources
 <li><b>load catalog ...</b> load a tab-delimited catalog file into the display
 <li><b>save active catalog</b> save the currently active catalog (Shape Layers plugin has more general support)
 <li><b>load session ...</b> load a previously saved session into the display
@@ -383,13 +384,6 @@ be available. But if the remote server supports <b>proxy loading</b>
 of FITS data, the Analysis menu will display an option to <b>upload FITS to
 make tasks available</b>. Select this option and your FITS file will
 be sent to the server so that server-side analysis can be performed.
-
-<p>
-If a proxy file exists (either because it was explicitly uploaded as above,
-or because the File menu's <b>open link via proxy ...</b> option was utilized),
-a menu option will be shown to <b>remove proxy FITS file from server</b>.
-Remote servers generally enforce space quotas, and this option can be used
-to free up space and keep under the quota limit.
 
 <p>
 In addition to server-side analysis, the <b>Analysis</b> menu lists

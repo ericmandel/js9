@@ -6,7 +6,7 @@
 (function() {
 
     function reBinImage(div, display) {
-	var hdu, options;
+	var hdu, options, ipos, lpos;
 	var im   = JS9.GetImage({display: display});
 	var form = $(div).find(".binning-form")[0];
 	var rebin = function(im, hdu, display){
@@ -32,37 +32,41 @@
 	};
 	if ( !im ) { return; }
 
-	options = $.extend(true, {}, JS9.fits.options,
-	      { table: { cx: form.cx.value , cy: form.cy.value,
-			 nx: form.nx.value , ny: form.ny.value,
-			 bin: form.bin.value , filter: form.filter.value }
-	      });
-
 	hdu = im.raw.hdu;
 
-	if ( hdu.type === "image" ) {
-	      JS9.error("image binning not implemented");
-	} else {
-	    switch(JS9.fitsLibrary()){
-	    case "fitsy":
+	switch(JS9.fitsLibrary()){
+	case "fitsy":
+	    if ( hdu.imtab === "image" ) {
+		JS9.error("image binning not implemented");
+	    } else {
+		options = $.extend(true, {}, JS9.fits.options,
+	        { table: { xcen: form.xcen.value , ycen: form.ycen.value,
+			   xdim: form.xdim.value , ydim: form.ydim.value,
+			   bin: form.bin.value , filter: form.filter.value }
+	        });
 		Fitsy.readTableHDUData(hdu.fits, hdu, options, function(hdu){
 		    rebin(im, hdu, display);
 		});
-		break;
-	    case "cfitsio":
-		if( !hdu.fits || !hdu.fits.fptr ){
-		    JS9.error("virtual FITS file is missing for binning");
-		}
-		JS9.getFITSImage(hdu.fits, hdu, options, function(hdu){
-		    rebin(im, hdu, display);
-		});
-		break;
 	    }
+	    break;
+	case "cfitsio":
+	    options = {xcen: parseFloat(form.xcen.value),
+		       ycen: parseFloat(form.ycen.value),
+		       xdim: parseInt(form.xdim.value, 10),
+		       ydim: parseInt(form.ydim.value, 10),
+		       bin:  parseInt(form.bin.value, 10),
+		       filter: form.filter.value,
+		       mode: $(form.mode).prop("checked")};
+	    if( !hdu.fits || !hdu.fits.fptr ){
+		JS9.error("virtual FITS file is missing for binning");
+	    }
+	    im.displaySection(options);
+	    break;
 	}
     }
 
     function getBinParams(div, display) {
-	var im, form;
+	var im, ipos, lpos, form, hdu;
 	if ( display === undefined ) {
 	    div     = this.div;
 	    display = this.display;
@@ -73,38 +77,42 @@
 	    form = $(div).find(".binning-form")[0];
 
 	    if ( im.raw.hdu !== undefined ) {
+		hdu = im.raw.hdu;
+		hdu.bin = hdu.bin || 1;
 		form.rebin.disabled = false;
-		form.bin.disabled = false;
+	        if ( hdu.table !== undefined ) {
+		    form.bin.value = String(Math.floor(hdu.table.bin));
+		    form.xcen.value = String(Math.floor(hdu.table.xcen));
+		    form.ycen.value = String(Math.floor(hdu.table.ycen));
+		    form.xdim.value = String(Math.floor(hdu.table.xdim));
+		    form.ydim.value = String(Math.floor(hdu.table.ydim));
+		    form.filter.value = hdu.table.filter || "";
 
-	        if ( im.raw.hdu.table !== undefined ) {
-		    form.bin.value = im.raw.hdu.table.bin;
-		     form.cx.value = im.raw.hdu.table.cx;
-		     form.cy.value = im.raw.hdu.table.cy;
-		     form.nx.value = im.raw.hdu.table.nx;
-		     form.ny.value = im.raw.hdu.table.ny;
-		     form.filter.value = im.raw.hdu.table.filter || "";
-
-		     form.cx.disabled = false;
-		     form.cy.disabled = false;
-		     form.nx.disabled = false;
-		     form.ny.disabled = false;
-		     form.filter.disabled = false;
+		    form.bin.disabled = false;
+		    form.xcen.disabled = false;
+		    form.ycen.disabled = false;
+		    form.xdim.disabled = false;
+		    form.ydim.disabled = false;
+		    form.filter.disabled = false;
 		} else {
-		    if ( im.raw.hdu.bin !== undefined ) {
-			form.bin.value = im.raw.hdu.bin;
-		    } else {
-			form.bin.value = 1;
-		    }
+		    ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
+		    lpos = im.imageToLogicalPos(ipos);
+		    form.xcen.value = String(Math.floor(lpos.x));
+		    form.ycen.value = String(Math.floor(lpos.y));
+		    form.xdim.value = String(Math.floor(hdu.naxis1));
+		    form.ydim.value = String(Math.floor(hdu.naxis2));
+		    form.bin.value = String(Math.floor(hdu.bin || 1));
+		    form.filter.value = "";
 
-		     form.cx.disabled = true;
-		     form.cy.disabled = true;
-		     form.nx.disabled = true;
-		     form.ny.disabled = true;
-		     form.filter.disabled = true;
+		    form.bin.disabled = false;
+		    form.xcen.disabled = false;
+		    form.ycen.disabled = false;
+		    form.xdim.disabled = false;
+		    form.ydim.disabled = false;
+		    form.filter.disabled = true;
 		}
 	    } else {
 		form.rebin.disabled = true;
-		  form.bin.disabled = true;
 	    }
 	}
     }
@@ -117,8 +125,8 @@
 	var disclose = "";
 	var im  = JS9.GetImage({display: this.display});
 
-	if( !im || (im && (!im.raw.hdu || !im.raw.hdu.table)) ){
-	    div.innerHTML = '<p><center>Binning is available for FITS binary tables.</center>';
+	if( !im || (im && !im.raw.hdu) ){
+	    div.innerHTML = '<p style="padding: 5px"><center>FITS image sections, with binning and filtering</center>';
 	    return;
 	}
 
@@ -127,47 +135,37 @@
 	}
 
 	/*eslint-disable no-multi-str */
-	$(div).html('<form class="binning-form" style="margin: 10px">					\
-	    <table><tr>	<td>Bin&nbsp;factor:</td>							\
+	$(div).html('<form class="binning-form" style="margin: 0px; padding: 8px; width: 100%; height: 100%">	\
+	    <table style="margin:0px; cellspacing:0; border-collapse:separate; border-spacing:4px 10px;"> \
+	           <tr>	<td><b>center:</b></td>								\
+			<td><input type=text name=xcen size=10 style="text-align:right;"></td>		\
+			<td><input type=text name=ycen size=10 style="text-align:right;"></td>    	\
+			<td>&nbsp(file coords of center of section)</td>						\
+		   </tr>										\
+	           <tr>	<td><b>size:</b></td>								\
+			<td><input type=text name=xdim size=10 style="text-align:right;"></td>		\
+			<td><input type=text name=ydim size=10 style="text-align:right;"></td>		\
+			<td>&nbsp(pixel width, height of section)</td>						\
+		   </tr>										\
+                   <tr>	<td><b>bin:</b></td>							\
 			<td><input type=text name=bin value=1 size=10 style="text-align:right;"></td>	\
-			<td>&nbsp;</td>									\
-			<td>&nbsp;</td>									\
+			<td></td>									\
+			<td>&nbsp(bin*bin size of each pixel)</td>						\
 		   </tr>										\
-	           <tr>	<td>Image&nbsp;center:</td>									\
-			<td><input type=text name=cx size=10 style="text-align:right;"></td>		\
-			<td><input type=text name=cy size=10 style="text-align:right;"></td>    	\
-			<td>&nbsp;</td>									\
+	           <tr>	<td><b>filter:</b></td>								\
+			<td colspan="2"><input type=text name=filter size="22" style="text-align:left;"></td>	\
+			<td>&nbsp(event/row filter for tables)</td>						\
 		   </tr>										\
-	           <tr>	<td>Image&nbsp;size:</td>							\
-			<td><input type=text name=nx size=10 style="text-align:right;"></td>		\
-			<td><input type=text name=ny size=10 style="text-align:right;"></td>		\
-			<td>&nbsp;</td>									\
-		   </tr>										\
-	           <tr>	<td>Event filter:</td>									\
-			<td colspan="2"><input type=text name=filter size="32" style="text-align:left;"></td>	\
-			<td>&nbsp;</td>									\
-			<td>&nbsp;</td>									\
-		   </tr>										\
-	           <tr>	<td>&nbsp;</td>									\
-			<td>&nbsp;</td>									\
-			<td>&nbsp;</td>									\
-			<td>&nbsp;</td>									\
-		   </tr>										\
-	           <tr>	<td colspan="2">Display as a separate image?</td>				\
-			<td><input type=checkbox name=separate class="sep-image" style="text-align:left;"></td>	\
-			<td>&nbsp;</td>									\
-			<td>&nbsp;</td>									\
-		   </tr>										\
-	           <tr>	<td>&nbsp;</td>									\
-			<td>&nbsp;</td>									\
-			<td>&nbsp;</td>									\
-			<td>&nbsp;</td>									\
+	           <tr>	<td><b>separate:</b></td>			\
+                        <td><input type=checkbox name=mode class="sep-image" style="text-align:left;"></td>	\
+			<td></td>									\
+			<td>&nbsp(display as a separate image?)</td>						\
 		   </tr>										\
 		   <tr>											\
-			<td><input type=button name=rebin value="Run" class="rebin-image"></td>	\
+			<td><input type=button name=rebin value="Run" class="rebin-image"></td>         \
 			<td>&nbsp;</td>									\
 			<td>&nbsp;</td>									\
-		       	<td><input type=button name=close value="Close" class="close-image" ' + disclose + '></td>	\
+                        <td>&nbsp;<input type=button name=close value="Close" class="close-image" ' + disclose + '></td> \
 		   </tr>										\
 	    </table>											\
 	    </form>');
@@ -187,13 +185,13 @@
 	}
     }
 
-    JS9.RegisterPlugin("Fits", "Binning", binningInit, {
+    JS9.RegisterPlugin("FITS", "Binning", binningInit, {
 	    menu: "view",
 
-            winTitle: "FITS Binary Table Binning/Filtering",
+            winTitle: "Image Sections with Binning/Filtering",
 	    winResize: true,
 
-            menuItem: "Binning/Filtering",
+            menuItem: "Bin/Filter/Section",
 
 	    onplugindisplay:  binningInit,
 	    onimageload:      binningInit,
@@ -201,6 +199,6 @@
 
 	    help:     "fitsy/binning.html",
 
-            winDims: [480, 240]
+            winDims: [480, 220]
     });
 }());

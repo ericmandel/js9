@@ -7,7 +7,9 @@
 #include <macro.h>
 #include <word.h>
 #include <xalloc.h>
+#if FITS2PNG
 #include <png.h>
+#endif
 
 #if HAVE_CONFIG_H
 #include <conf.h>
@@ -65,9 +67,11 @@ typedef struct finforec{
   int ftype;
   FILE *fp;
   char *fitsfile;
+#if FITS2PNG
   png_structp png_ptr;
   png_infop info_ptr;
   png_textp text_ptr;
+#endif
   int num_text;
 } *Finfo, FinfoRec;
 
