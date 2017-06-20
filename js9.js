@@ -729,7 +729,7 @@ JS9.Image.prototype.closeImage = function(){
 	    tim = JS9.images[i];
 	    // is this the currently displayed image?
 	    if( tim === tim.display.image ){
-		iscurrent = true;
+		iscurrent = i+1;
 	    }
 	    // clear display if this is the currently displayed image
 	    if( iscurrent ){
@@ -798,7 +798,19 @@ JS9.Image.prototype.closeImage = function(){
     }
     // display another image, if necessary and if possible
     if( iscurrent ){
-	for(i=0; i<JS9.images.length; i++){
+	iscurrent -= 2;
+	for(i=iscurrent; i>=0; i--){
+	    tim = JS9.images[i];
+	    if( display === tim.display ){
+		// display image, 2D graphics, etc.
+		tim.displayImage("all");
+		tim.refreshLayers();
+		// signal that we're done
+		iscurrent = JS9.images.length;
+		break;
+	    }
+	}
+	for(i=JS9.images.length-1; i>iscurrent; i--){
 	    tim = JS9.images[i];
 	    if( display === tim.display ){
 		// display image, 2D graphics, etc.
