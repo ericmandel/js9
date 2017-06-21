@@ -111,7 +111,7 @@ JS9.globalOpts = {
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     table: {xdim: 2048, ydim: 2048, bin: 1},// image section size to extract from table
     image: {xdim: 2048, ydim: 2048, bin: 1},// image section size (0 for unlimited)
-    clearImageMemory: "never",  // rm vfile: never, always, auto, noExt, noCube, size,[x]Mb
+    clearImageMemory: "never",  // rm vfile: never, always, auto, noExt, noCube, size>x Mb
     helperProtocol: location.protocol, // http: or https:
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",       // location of param html file
@@ -554,7 +554,7 @@ JS9.Image = function(file, params, func){
     switch( typeof file ){
     case "object":
 	// save source
-	this.source = "fits";
+	this.source = localOpts.source || "fits";
 	// generate the raw data array from the hdu
 	this.mkRawDataFromHDU(file,
 			      $.extend({}, {file: file.filename}, localOpts));
@@ -616,7 +616,7 @@ JS9.Image = function(file, params, func){
 	break;
     case "string":
 	// save source
-	this.source = "fits2png";
+	this.source = localOpts.source || "fits2png";
 	// image or table
 	this.imtab = "image";
 	// downloaded image file, path relative to displayed Web page
@@ -838,7 +838,7 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
     // turn off anti-aliasing
     if( !JS9.ANTIALIAS ){
 	this.offscreen.context.imageSmoothingEnabled = false;
-	this.offscreen.context.mozImageSmoothingEnabled = false;
+	// this.offscreen.context.mozImageSmoothingEnabled = false;
 	this.offscreen.context.webkitImageSmoothingEnabled = false;
 	this.offscreen.context.msImageSmoothingEnabled = false;
     }
@@ -1608,7 +1608,14 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     // can we remove the virtual file?
     if( JS9.fits.cleanupFITSFile &&
 	this.raw.hdu.fits && this.raw.hdu.fits.vfile  ){
-	s = JS9.globalOpts.clearImageMemory.toLowerCase().split(",");
+	s = JS9.globalOpts.clearImageMemory;
+	if( s === false ){
+	    s = ["never"];
+	} else if( s === true ){
+	    s = ["always"];
+	} else {
+	    s = s.toLowerCase().split(/[,>]/);
+	}
 	rmvfile = false;
 	// all conditions must be met ...
 	for(i=0, done=false; i<s.length && !done; i++){
@@ -11842,14 +11849,22 @@ JS9.uniqueID = (function(){
 
 // change cursor to waiting/not waiting
 JS9.waiting = function(mode, display){
-    var el, opts;
+    var el, opts, tdisp;
     switch(mode){
     case true:
 	if( window.hasOwnProperty("Spinner") &&
 	    (JS9.globalOpts.waitType === "spinner") ){
 	    if( display ){
-		el = display.divjq[0];
-	    } else {
+		if( typeof display === "object" ){
+		    el = display.divjq[0];
+		} else if( typeof display === "string" ){
+		    tdisp = JS9.lookupDisplay(display);
+		    if( tdisp ){
+			el = tdisp.divjq[0];
+		    }
+		}
+	    }
+	    if( !el ){
 		el = $("body").get(0);
 	    }
 	    if( !JS9.spinner ){
