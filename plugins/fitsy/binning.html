@@ -1,36 +1,45 @@
 <p>
 <a name="binning">
-<h3>Fits Binary Table Binning</h3>
+<h3>FITS Image Sections, with Binning and Filtering</h3>
 
 The rows in a FITS binary table must be binned before being displayed
-as an image.  By default, JS9 used a bin factor of 1 to extract the
-central 1024 x 1024 section of the data for display.
+as an image.  By default, JS9 uses a bin factor of 1 to extract the
+central 2048 x 2048 section of the data for display. This default is
+controlled by the JS9.globalOpts.table object properties, which can be
+set in your js9Prefs.js file.
 
 <p>
-The Binning plugin allows you to bin FITS binary table data in other
-ways, by choosing the bin factor, the center and the image dimensions.
-It also allows you to filter rows of the table by means of arithmetic
-and boolean operations on the table columns.
+Also by default, the central 2048 x 2048 section of a FITS image is displayed
+at bin 1. This default is controlled by the JS9.globalOpts.image object
+properties, which can be set in your js9Prefs.js file.
 
 <p>
-When binning, you can set one or more of the following options:
+The Binning plugin allows you to extract sections from FITS binary
+tables and images, allowing you to choose the image center, image
+dimensions, and bin factor.  For tables, the plugin also allows you to
+filter rows of the table by means of arithmetic and boolean operations
+on the table columns.
+
+<p>
+When extracting an image section, you can set one or more of the
+following options:
 <ul>
-<li> <b>Bin Factor:</b> determines how many physical pixels are summed into
+<li> <b>center:</b> the file (physical) coordinates around which to
+perform the section extraction.
+<li> <b>dims:</b> the size of the image to extract (before binning is
+performed).
+<li> <b>bin:</b> determines how many physical pixels are summed into
 an image pixel.
-<li> <b>Center:</b> the physical (i.e. file) coordinates around
-which to perform the binning.
-<li> <b>Dimensions:</b> the size of the image to display (i.e., the
-size after binning is performed).
 </ul>
 <p>
 For example, if a table has FITS (tlmin, tlmax) dimensions 4096 x 4096, then:
 <ul>
-<li> <b>bin: 4, dimensions: 1024 x 1024</b> will bin the entire file by 4 to
+<li> <b>bin: 4, dimensions: 4096 x 4096</b> will bin the entire file by 4 to
 produce a 1024 x 1024 image.
-<li> <b>bin: 2, dimensions: 1024 x 1024</b> will bin the central 2048 x 2048 
-section of the image by 2 to produce a 1024 x 1024 image.
+<li> <b>bin: 2, dimensions: 1024 x 1024</b> will bin the central 1024 x 1024
+section of the image by 2 to produce a 512 x 512 image.
 <li> <b>bin: 2, dimensions: 1024 x 1024, center: 1024, 1024</b> will bin the upper left
-2048 x 2048 section of the image by 2 to produce a 1024 x 1024 image.
+2048 x 2048 section of the image by 2 to produce a 512 x 512 image.
 </ul> 
 
 <p>

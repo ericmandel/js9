@@ -302,7 +302,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     catch(e){
 	doerr = true;
     }
-    // return the section values so called can update LTM/LTV
+    // return the section values so caller can update LTM/LTV
     // we don't want to update the FITS file itself, since it hasn't changed
     hdu.bin = bin;
     hdu.x1  = getValue(hptr+24, "i32");

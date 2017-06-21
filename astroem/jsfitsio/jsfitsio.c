@@ -244,34 +244,67 @@ fitsfile *openFITSMem(void **buf, size_t *buflen, char *extlist,
 // update/add LTM and LTV header params
 // ftp://iraf.noao.edu/iraf/web/projects/fitswcs/specwcs.html
 void updateLTM(fitsfile *fptr, fitsfile *ofptr,
-	       int xcen, int ycen, int dim1, int dim2, int bin){
-  int tstatus;
-  double dvalue;
+	       int xcen, int ycen, int dim1, int dim2, int bin, int dowcs){
+  int status;
+  double x1, y1;
+  double dval;
   char comment[FLEN_CARD];
-  dvalue = 0.0; *comment = '\0'; tstatus = 0;
-  fits_read_key(fptr, TDOUBLE, "LTV1", &dvalue, comment, &tstatus);
-  dvalue = ((dim1 / 2) - xcen) / bin; tstatus = 0;
-  fits_update_key(ofptr, TDOUBLE, "LTV1", &dvalue, comment, &tstatus);
-  dvalue = 0.0; *comment = '\0'; tstatus = 0;
-  fits_read_key(fptr, TDOUBLE, "LTV2", &dvalue, comment, &tstatus);
-  dvalue = ((dim2 / 2) - ycen) / bin; tstatus = 0;
-  fits_update_key(ofptr, TDOUBLE, "LTV2", &dvalue, comment, &tstatus);
-  dvalue = 1.0 / bin; *comment = '\0'; tstatus = 0;
-  fits_read_key(fptr, TDOUBLE, "LTM1_1", &dvalue, comment, &tstatus);
-  tstatus = 0;
-  fits_update_key(ofptr, TDOUBLE, "LTM1_1", &dvalue, comment, &tstatus);
-  dvalue = 0.0; *comment = '\0'; tstatus = 0;
-  fits_read_key(fptr, TDOUBLE, "LTM1_2", &dvalue, comment, &tstatus);
-  tstatus = 0;
-  fits_update_key(ofptr, TDOUBLE, "LTM1_2", &dvalue, comment, &tstatus);
-  dvalue = 0.0; *comment = '\0'; tstatus = 0;
-  fits_read_key(fptr, TDOUBLE, "LTM2_1", &dvalue, comment, &tstatus);
-  tstatus = 0;
-  fits_update_key(ofptr, TDOUBLE, "LTM2_1", &dvalue, comment, &tstatus);
-  dvalue = 1.0 / bin; *comment = '\0'; tstatus = 0;
-  fits_read_key(fptr, TDOUBLE, "LTM2_2", &dvalue, comment, &tstatus);
-  tstatus = 0;
-  fits_update_key(ofptr, TDOUBLE, "LTM2_2", &dvalue, comment, &tstatus);
+  /* use 0-index. is this correct? */
+  x1 = (int)(xcen - (dim1 / 2.0));
+  y1 = (int)(ycen - (dim2 / 2.0));
+  if( !bin ){
+    bin = 1;
+  }
+  if( dowcs ){
+    dval = 0.0; *comment = '\0'; status = 0;
+    fits_read_key(fptr, TDOUBLE, "CRPIX1", &dval, comment, &status);
+    if( status == 0 ){
+      dval = (dval - x1) / bin;
+      fits_update_key(ofptr, TDOUBLE, "CRPIX1", &dval, comment, &status);
+    }
+    dval = 0.0; *comment = '\0'; status = 0;
+    fits_read_key(fptr, TDOUBLE, "CRPIX2", &dval, comment, &status);
+    if( status == 0 ){
+      dval = (dval - x1) / bin;
+      fits_update_key(ofptr, TDOUBLE, "CRPIX2", &dval, comment, &status);
+    }
+    dval = 0.0; *comment = '\0'; status = 0;
+    fits_read_key(fptr, TDOUBLE, "CDELT1", &dval, comment, &status);
+    if( status == 0 ){
+      dval = dval * bin;
+      fits_update_key(ofptr, TDOUBLE, "CDELT1", &dval, comment, &status);
+    }
+    dval = 0.0; *comment = '\0'; status = 0;
+    fits_read_key(fptr, TDOUBLE, "CDELT2", &dval, comment, &status);
+    if( status == 0 ){
+      dval = dval * bin;
+      fits_update_key(ofptr, TDOUBLE, "CDELT2", &dval, comment, &status);
+    }
+  }
+  dval = 1.0; *comment = '\0'; status = 0;
+  fits_read_key(fptr, TDOUBLE, "LTM1_1", &dval, comment, &status);
+  dval = dval / bin; status = 0;
+  fits_update_key(ofptr, TDOUBLE, "LTM1_1", &dval, comment, &status);
+  dval = 0.0; *comment = '\0'; status = 0;
+  fits_read_key(fptr, TDOUBLE, "LTM1_2", &dval, comment, &status);
+  dval = dval / bin; status = 0;
+  fits_update_key(ofptr, TDOUBLE, "LTM1_2", &dval, comment, &status);
+  dval = 0.0; *comment = '\0'; status = 0;
+  fits_read_key(fptr, TDOUBLE, "LTM2_1", &dval, comment, &status);
+  dval = dval / bin; status = 0;
+  fits_update_key(ofptr, TDOUBLE, "LTM2_1", &dval, comment, &status);
+  dval = 1.0; *comment = '\0'; status = 0;
+  fits_read_key(fptr, TDOUBLE, "LTM2_2", &dval, comment, &status);
+  dval = dval / bin; status = 0;
+  fits_update_key(ofptr, TDOUBLE, "LTM2_2", &dval, comment, &status);
+  dval = 0.0; *comment = '\0'; status = 0;
+  fits_read_key(fptr, TDOUBLE, "LTV1", &dval, comment, &status);
+  dval = (dval - x1) / bin; status = 0;
+  fits_update_key(ofptr, TDOUBLE, "LTV1", &dval, comment, &status);
+  dval = 0.0; *comment = '\0'; status = 0;
+  fits_read_key(fptr, TDOUBLE, "LTV2", &dval, comment, &status);
+  dval = (dval - y1) / bin; status = 0;
+  fits_update_key(ofptr, TDOUBLE, "LTV2", &dval, comment, &status);
 }
 
 // getImageToArray: extract a sub-section from an image HDU, return array
@@ -351,8 +384,8 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   maxdim2 = (int)(naxes[iaxis1] / bin) * bin;
   // get limits of extracted section taking binning into account
   if( dims && dims[0] && dims[1] ){
-    dim1 = min(dims[0]*bin, maxdim1);
-    dim2 = min(dims[1]*bin, maxdim2);
+    dim1 = min(dims[0], maxdim1);
+    dim2 = min(dims[1], maxdim2);
     // read image section
     if( cens && cens[0] && cens[1] ){
       xcen = cens[0];
@@ -728,8 +761,8 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
 	dim2 = dims[1];
       }
     }
-    dim1 *= bin;
-    dim2 *= bin;
+//    dim1 *= bin;
+//    dim2 *= bin;
     // min and max, indexed from 1
     minin[0] = (int)(xcen - (dim1/2.0));
     minin[1] = (int)(ycen - (dim2/2.0));
@@ -744,11 +777,13 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
     return NULL;
   }
   // update/add LTM and LTV header params
-  updateLTM(fptr, ofptr, xcen, ycen, dim1, dim2, bin);
+  updateLTM(fptr, ofptr, xcen, ycen, dim1, dim2, bin, 0);
   // return the center and dims used
   if( dims ){
-    dims[0] = dim1 / bin;
-    dims[1] = dim2 / bin;
+//    dims[0] = dim1 / bin;
+//    dims[1] = dim2 / bin;
+    dims[0] = dim1;
+    dims[1] = dim2;
   }
   if( cens ){
     cens[0] = xcen;

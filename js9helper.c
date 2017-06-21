@@ -97,10 +97,12 @@ static int _FinfoFree(Finfo finfo)
   /* free up strings */
   xfree(finfo->fname);
   xfree(finfo->fitsfile);
+#if FITS2PNG
   /* free up png structs */
   if( finfo->png_ptr || finfo->info_ptr ){
     png_destroy_read_struct(&finfo->png_ptr, &finfo->info_ptr, NULL);
   }
+#endif
   /* close file */
   if( finfo->fp ){
     fclose(finfo->fp);
@@ -114,11 +116,14 @@ static int _FinfoFree(Finfo finfo)
 /* create a new finfo record, open FITS file */
 static Finfo FinfoNew(char *fname)
 {
-  int i, len;
+  int len;
   char *e=NULL;
   char *f=NULL;
   char *s=NULL;
+#if FITS2PNG
+  int i;
   unsigned char header[8];
+#endif
   Finfo finfo;
 
   /* sanity check */
@@ -143,6 +148,7 @@ static Finfo FinfoNew(char *fname)
   /* open file */
   switch(finfo->ftype){
   case FTYPE_PNG:
+#if FITS2PNG
     /* code taken from "PNG: The Definitive Guide" by Greg Roelofs,
        Chapter 13 "Reading PNG Images" */
     /* set data path */
@@ -198,6 +204,11 @@ static Finfo FinfoNew(char *fname)
 	      fname, datapath?datapath:"none");
       goto error;
     }
+#else
+    fprintf(stderr,
+	    "ERROR: for fits2png support, build JS9 using --with-png\n");
+    goto error;
+#endif
     break;
     /* look for an error */
   case FTYPE_FITS:
@@ -336,6 +347,16 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     cens[1] = atof(s4);
     *block = MAX(1, strtol(s5, &t, 0));
     got = 2;
+
+  } else if(sscanf(s,
+	    "%32[0-9.dDeE] @ $xcen , %32[0-9.dDeE] @ $ycen , %32[0-9]",
+	    s1, s2, s3) == 3){
+    dims[0] = atof(s1);
+    cens[0] = 0;
+    dims[1] = atof(s2);
+    cens[1] = 0;
+    *block = MAX(1, strtol(s3, &t, 0));
+    got = 3;
   } else if(sscanf(s,
 	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9.dDeE] @ %32[-0-9.dDeE]",
 	     s1, s2, s3, s4) == 4){
@@ -345,6 +366,15 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     cens[1] = atof(s4);
     *block = 1;
     got = 2;
+  } else if(sscanf(s,
+	    "%32[0-9.dDeE] @ $xcen , %32[0-9.dDeE] @ $ycen",
+	     s1, s2) == 2){
+    dims[0] = atof(s1);
+    cens[0] = 0;
+    dims[1] = atof(s2);
+    cens[1] = 0;
+    *block = 1;
+    got = 3;
   } else if(sscanf(s,
 	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9]",
 	    s1, s2, s3) == 3){
@@ -400,12 +430,6 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
 	/* this will end up as an error */
 	got = 0;
       }
-    } else {
-      /* table: pass back dims and cens for jsfitsio to handle */
-      dims[0] = dims[0];
-      dims[1] = dims[1];
-      cens[0] = cens[0];
-      cens[1] = cens[1];
     }
   }
   /* final processing */
@@ -432,6 +456,90 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     ylims[1] = (int)ty1;
   }
   return got;
+}
+
+/* copy image section from input to putput, with binning */
+int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
+		     int *dims, double *cens, int bin, int *status)
+{
+#if HAVE_CFITSIO
+  void *buf;
+  char card[FLEN_CARD];
+  int numkeys, nkey, bitpix, dtype;
+  int start[2];
+  int end[2];
+  int naxis = 2;
+  long nelements;
+  long naxes[2];
+  long fpixel[2] = {1,1};
+  buf = getImageToArray(ifptr, dims, cens, bin, NULL, start, end, &bitpix,
+			status);
+  if( !buf || *status ){
+    fprintf(stderr, "ERROR: could not create section for output image\n");
+    return *status;
+  }
+  /* get image size and total number of elements */
+  naxes[0] = (int)((end[0] - start[0] + 1) / bin);
+  naxes[1] = (int)((end[1] - start[1] + 1) / bin);
+  nelements = naxes[0] * naxes[1];
+  /* convert bitpix to cfitio data type */
+  switch(bitpix){
+  case 8:
+    dtype = TBYTE;
+    break;
+  case 16:
+    dtype = TSHORT;
+    break;
+  case -16:
+    dtype = TUSHORT;
+    break;
+  case 32:
+    dtype = TINT;
+    break;
+  case 64:
+    dtype = TLONGLONG;
+    break;
+  case -32:
+    dtype = TFLOAT;
+    break;
+  case -64:
+    dtype = TDOUBLE;
+    break;
+  default:
+    fprintf(stderr, "ERROR: unknown data type for image section\n");
+    return -1;
+  }
+  /* this code is modeled after cfitsio/cfileio.c/fits_copy_image_section() */
+  fits_create_img(ofptr, bitpix, naxis, naxes, status);
+  /* copy all other non-structural keywords from the input to output file */
+  fits_get_hdrspace(ifptr, &numkeys, NULL, status);
+  for(nkey=4; nkey<=numkeys; nkey++) {
+    fits_read_record(ifptr, nkey, card, status);
+    if (fits_get_keyclass(card) > TYP_CMPRS_KEY){
+      /* write the record to the output file */
+      fits_write_record(ofptr, card, status);
+    }
+  }
+  if( *status > 0 ){
+    fprintf(stderr,
+	    "Error: can't copy header from input image to output section");
+    return(*status);
+  }
+  /* write image to FITS file */
+  fits_write_pix(ofptr, dtype, fpixel, nelements, buf, status);
+
+  /* update LTM/TLV values in header */
+  updateLTM(ifptr, ofptr,
+	    (int)((end[0] + start[0]) / 2), (int)((end[1] + start[1]) / 2), 
+	    (int)(end[0] - start[0] + 1), (int)(end[1] - start[1] + 1),
+	    bin, 1);
+  /* return status */
+  return *status;
+#else
+  fprintf(stderr,
+	  "ERROR: for section support, build js9helper with cfitsio\n");
+  return 1;
+#endif
 }
 
 /* process this command */
@@ -544,12 +652,6 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
 	switch(hdutype){
 	case IMAGE_HDU:
 	  /* image: let cfitsio make a section */
-	  if( bin != 1 ){
-	    fprintf(stderr,
-		    "ERROR: imsection of an image must use bin 1 for '%s'\n",
-		    finfo->fitsfile);
-	    return 1;
-	  }
 	  /* sanity check on image limits */
 	  xlims[0] = MAX(1, xlims[0]);
 	  ylims[0] = MAX(1, ylims[0]);
@@ -560,14 +662,17 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
 	  } else {
 	    status = 0;
 	  }
-	  snprintf(tbuf, SZ_LINE-1,
-		   "%d:%d,%d:%d", xlims[0], xlims[1], ylims[0], ylims[1]);
-	  fits_copy_image_section(ifptr, ofptr, tbuf, &status);
+	  /* copy section to new image */
+	  if( copyImageSection(ifptr, ofptr, dims, cens, bin, &status) != 0 ){
+	    fprintf(stderr,
+		    "ERROR: can't copy image section for '%s' [%s]\n",
+		    finfo->fitsfile, tbuf);
+	    return 1;
+	  }
 	  break;
 	default:
 	  /* table: let jsfitsio create an image section */
-	  tfptr = filterTableToImage(ifptr, NULL, cols, dims, cens, bin,
-				     &status);
+	  tfptr = filterTableToImage(ifptr, NULL, cols, dims, cens, 1, &status);
 	  if( status ){
 	    fits_get_errstatus(status, tbuf);
 	    fprintf(stderr,
@@ -575,14 +680,20 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
 		    finfo->fitsfile, tbuf);
 	    return 1;
 	  }
-	  fits_copy_image_section(tfptr, ofptr, "*,*", &status);
+	  /* copy section to new image */
+	  if( copyImageSection(tfptr, ofptr, dims, NULL, bin, &status) != 0 ){
+	    fprintf(stderr,
+		    "ERROR: can't copy image section for '%s' [%s]\n",
+		    finfo->fitsfile, tbuf);
+	    return 1;
+	  }
 	  closeFITSFile(tfptr, &status2);
 	  break;
 	}
 	if( status ){
 	  fits_get_errstatus(status, tbuf);
 	  fprintf(stderr,
-		  "ERROR: can't write section FITS file for '%s' [%s]\n",
+		  "ERROR: can't create section FITS file for '%s' [%s]\n",
 		  finfo->fitsfile, tbuf);
 	  closeFITSFile(ofptr, &status);
 	  return 1;

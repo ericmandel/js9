@@ -873,7 +873,7 @@ module.exports = xhr;
 (function() {
 
     function reBinImage(div, display) {
-	var hdu, options, ipos, lpos;
+	var hdu, options;
 	var im   = JS9.GetImage({display: display});
 	var form = $(div).find(".binning-form")[0];
 	var rebin = function(im, hdu, display){
@@ -1017,7 +1017,7 @@ module.exports = xhr;
                    <tr>	<td><b>bin:</b></td>							\
 			<td><input type=text name=bin value=1 size=10 style="text-align:right;"></td>	\
 			<td></td>									\
-			<td>&nbsp(bin*bin size of each pixel)</td>						\
+			<td>&nbsp(bin factor after extracting section)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>filter:</b></td>								\
 			<td colspan="2"><input type=text name=filter size="22" style="text-align:left;"></td>	\

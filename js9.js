@@ -1494,13 +1494,14 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     header = this.raw.header;
     // if section information is available, modify the WCS keywords
     // e.g., image sections from astroem/getFITSImage()
+    // this code should (more or less) match updateLTM() in jsfitsio.c
     if( hdu.imtab === "image"  &&
 	(hdu.x1 !== undefined  && hdu.x1 !== 1)  ||
 	(hdu.y1 !== undefined  && hdu.y1 !== 1)  ||
 	(hdu.bin === undefined || hdu.bin !== 1) ){
 	// bin factor is optional
 	bin = hdu.bin || 1;
-	// convert 1-index to 0-index
+	// convert 1-index to 0-index (is this correct?)
 	x1 = hdu.x1 - 1;
 	y1 = hdu.y1 - 1;
 	bin = hdu.bin || 1;

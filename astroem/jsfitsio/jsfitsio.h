@@ -15,6 +15,6 @@ void getHeaderToString(fitsfile *fptr, char **cardstr, int *ncard, int *status);
 
 
 void updateLTM(fitsfile *fptr, fitsfile *ofptr,
-	       int xcen, int ycen, int dim1, int dim2, int bin);
+	       int xcen, int ycen, int dim1, int dim2, int bin, int dowcs);
 
 void closeFITSFile(fitsfile *fptr, int *status);
