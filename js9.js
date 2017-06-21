@@ -101,7 +101,7 @@ JS9.globalOpts = {
 	  bim: null},
     defcolor: "#00FF00",	// graphics color when all else fails
     pngisfits: true,		// are PNGs really PNG representation files?
-    fits2png: false,		// convert FITS to PNG rep files?
+    fits2png: false,		// convert FITS to PNG rep files? true, false
     alerts: true,		// set to false to turn off alerts
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
@@ -1530,7 +1530,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	header.LTV2 = header.LTV2 || 0;
 	header.LTV2 = (header.LTV2 - y1) / bin;
     }
-    // look for a filename (needs header so we can add extension name/num
+    // look for a filename (needs header so we can add extension name/num)
     if( opts.file ){
 	this.file = opts.file;
     } else if( hdu.filename ){
@@ -1597,7 +1597,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     // init WCS, if possible
     this.initWCS();
-    // init the logical coordinate system, using temp header if TLM/TLV changed
+    // init the logical coordinate system, if possible
     this.initLCS();
     // get hdu info, if possible
     try{
@@ -2819,7 +2819,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     }
     // start the waiting!
     JS9.waiting(true, that.display);
-    // ... need a timeout to allow the wait spinner to get started
+    // ... start a timeout to allow the wait spinner to get started
     window.setTimeout(function(){
 	// get image section
 	switch(from){
@@ -14893,6 +14893,7 @@ JS9.mkPublic("CloseImage", "closeImage");
 JS9.mkPublic("DisplayImage", "displayImage");
 JS9.mkPublic("DisplayExtension", "displayExtension");
 JS9.mkPublic("DisplaySlice", "displaySlice");
+JS9.mkPublic("DisplaySection", "displaySection");
 JS9.mkPublic("BlendImage", "blendImage");
 JS9.mkPublic("GetColormap", "getColormap");
 JS9.mkPublic("SetColormap", "setColormap");
