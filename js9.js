@@ -2813,8 +2813,11 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    }
 	}
     };
-    // opts is ... optional
     opts = opts || {};
+    // sanity checks
+    if( opts.xcen === undefined || opts.ycen === undefined ){
+	JS9.error("displaySection() requires specification of xcen, ycen");
+    }
     // from where do we extract the section?
     from = opts.from;
     if( !from ){

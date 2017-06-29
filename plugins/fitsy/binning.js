@@ -50,6 +50,10 @@
 	    }
 	    break;
 	case "cfitsio":
+	    if( !JS9.isNumber(form.xcen.value) ||
+		!JS9.isNumber(form.ycen.value) ){
+		JS9.error("image section requires specification of xcen, ycen");
+	    }
 	    options = {xcen: parseFloat(form.xcen.value),
 		       ycen: parseFloat(form.ycen.value),
 		       xdim: parseInt(form.xdim.value, 10),
