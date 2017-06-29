@@ -50,7 +50,7 @@ quotacheck () {
   mb=`du -sk . | awk '{printf("%d", ($1 + 500) / 1000)}'`
   if [ ${JS9_WORKDIR_QUOTA:-0} -gt 0 ]; then
     if [ ${mb:-0} -ge ${JS9_WORKDIR_QUOTA} ]; then
-      error "disk quota exceeded. Please close a displayed image (File menu) or remove a proxy file (Analysis menu)."
+      error "disk quota exceeded. Please close a displayed image or remove a proxy file (see File menu)."
     fi
   fi
 }
@@ -232,11 +232,7 @@ evfilter)
     Y=`echo $CEN | awk -F, '{print $2}'`
     EXT="[$DIMS@$X,$DIMS@$Y]"
     # try to get a base name for output
-    XBASE=`basename $IFILE`
-    IBASE=`basename $IFILE .fits`
-    if [ x"$XBASE" = x"$IBASE" ]; then
-	IBASE=`basename $IFILE .fits.gz`
-    fi
+    IBASE=`basename $IFILE | sed 's/\.gz$//' | sed 's/\.fits$//' | sed 's/\.ftz$//'`
     # make up unique output file base
     OBASE=`echo ${IBASE}_${FILTER} | sed 's/\[.*\]//g' | awk -F/ '{print $NF}' | sed 's/[,<>$&|!\*]/_/g'`
     # make up new filter ... might need to combine with old filter
@@ -265,29 +261,58 @@ evfilter)
     ;;
 
 imsection)
+    # optional args
+    while [ x"$1" != x ]; do
+        case $1 in
+	# not currently used
+	-gzip) DOGZIP=1
+	       shift
+	       continue;;
+	-parent) DOPARENT=1
+	       shift
+	       continue;;
+        *)     break;;
+        esac
+    done
     # required args
     if [ "$#" -lt 2 ]; then
 	error "imsection file section [mode]"
     fi
-    # make sure we are not over quota
-    quotacheck
+    hash js9helper 1>/dev/null 2>&1
+    if [ $? != 0 ]; then
+	error "for imsection support, please build and install js9helper"
+    fi
     IFILE="$1"
-    SECTION="$2"
-    if [ $# -ge 3 ]; then
-      MODE="$3"
+    # get section
+    SECTION="$2";
+    # get filter
+    FILTER="$3"
+    # false means no filter
+    if [ "$FILTER" = "false" ]; then
+      FILTER=""
     fi
     # try to get a base name for output
-    XBASE=`basename $IFILE`
-    IBASE=`basename $IFILE .fits`
-    if [ x"$XBASE" = x"$IBASE" ]; then
-	IBASE=`basename $IFILE .fits.gz`
-    fi
-    # output FITS file
-    OBASE=`echo ${IBASE}_${SECTION} | awk -F/ '{print $NF}' | sed 's/[,]/_/g'`
+    IBASE=`basename $IFILE | sed 's/\.gz$//' | sed 's/\.fits$//' | sed 's/\.ftz$//'`
+    OBASE=`echo ${IBASE}_${SECTION} | sed 's/\[.*\]//g' | awk -F/ '{print $NF}' | sed 's/[,]/_/g'`
     OFILE=${OBASE}.fits
-    js9helper -i ${IFILE} imsection ${SECTION} ${MODE} > ${OFILE}
-    # send back relative path to the output file
-    echo "${JS9_WORKDIR}/${OFILE}"
+    # make sure we are not over quota
+    quotacheck
+    # run imsection in the js9helper to generate a FITS image
+    if [ x$DOGZIP = x1 ]; then
+	OFILE=${OFILE}.gz
+        js9helper -i "$IFILE" imsection "$SECTION" "$FILTER" image | gzip -c > $OFILE
+    else
+        js9helper -i "$IFILE" imsection "$SECTION" "$FILTER" image > $OFILE
+    fi
+    if [ x$DOPARENT = x1 ]; then
+      # send back relative path to the output file
+      # send parent file, so analysis is performed on the original file
+      echo "${JS9_WORKDIR}/${OFILE}" "${IFILE}"
+    else
+      # send back relative path to the output file
+      # no parent file: perform analysis on this file
+      echo "${JS9_WORKDIR}/${OFILE}"
+    fi
     exit 0
     ;;
 

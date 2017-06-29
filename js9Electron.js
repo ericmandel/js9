@@ -87,7 +87,7 @@ if( js9Electron.doHelper ){
 }
 
 function createWindow() {
-    let cmd, nfile;
+    let cmd, ncmd, nfile;
     // create the browser window
     js9Electron.win = new BrowserWindow({
 	webPreferences: { nodeIntegration: false },
@@ -111,6 +111,8 @@ function createWindow() {
     cmd = "window.eval = function(){throw new Error('For security reasons, Desktop JS9 does not support window.eval()');}";
     js9Electron.win.webContents.executeJavaScript(cmd);
     // load data files
+    cmd = "$(document).on('JS9:ready', function(){";
+    ncmd = 0;
     for(let i=0; i<js9Electron.files.length; i++){
 	let file = js9Electron.files[i];
 	const jobj = js9Electron.files[i+1];
@@ -132,10 +134,14 @@ function createWindow() {
 	}
 	if( jobj && jobj.startsWith('{') ){
 	    i++;
-	    cmd = `JS9.Preload('${file}', '${jobj}')`;
+	    cmd += `JS9.Load('${file}', '${jobj}');`;
 	}  else {
-	    cmd = `JS9.Preload('${file}')`;
+	    cmd += `JS9.Load('${file}');`;
 	}
+	ncmd++;
+    }
+    if( ncmd ){
+	cmd += '});';
 	js9Electron.win.webContents.executeJavaScript(cmd);
     }
     // emitted when the window is closed

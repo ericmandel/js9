@@ -56,10 +56,7 @@
 		       ydim: parseInt(form.ydim.value, 10),
 		       bin:  parseInt(form.bin.value, 10),
 		       filter: form.filter.value,
-		       mode: $(form.mode).prop("checked")};
-	    if( !hdu.fits || !hdu.fits.fptr ){
-		JS9.error("virtual FITS file is missing for binning");
-	    }
+		       separate: $(form.separate).prop("checked")};
 	    im.displaySection(options);
 	    break;
 	}
@@ -67,6 +64,8 @@
 
     function getBinParams(div, display) {
 	var im, ipos, lpos, form, hdu;
+	var dval1 = 1;
+	var dval2 = 1;
 	if ( display === undefined ) {
 	    div     = this.div;
 	    display = this.display;
@@ -95,13 +94,18 @@
 		    form.ydim.disabled = false;
 		    form.filter.disabled = false;
 		} else {
+		    // incorporate ltm value in bin, if necessary
+		    if( im.parentFile && im.raw.header ){
+			dval1 = im.raw.header.LTM1_1 || 1;
+			dval2 = im.raw.header.LTM2_2 || 1;
+		    }
 		    ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
 		    lpos = im.imageToLogicalPos(ipos);
 		    form.xcen.value = String(Math.floor(lpos.x));
 		    form.ycen.value = String(Math.floor(lpos.y));
-		    form.xdim.value = String(Math.floor(hdu.naxis1));
-		    form.ydim.value = String(Math.floor(hdu.naxis2));
-		    form.bin.value = String(Math.floor(hdu.bin || 1));
+		    form.xdim.value = String(Math.floor(hdu.naxis1 / dval1));
+		    form.ydim.value = String(Math.floor(hdu.naxis2 / dval2));
+		    form.bin.value = String(Math.floor((hdu.bin || 1) / dval1));
 		    form.filter.value = "";
 
 		    form.bin.disabled = false;
@@ -109,7 +113,7 @@
 		    form.ycen.disabled = false;
 		    form.xdim.disabled = false;
 		    form.ydim.disabled = false;
-		    form.filter.disabled = true;
+		    form.filter.disabled = false;
 		}
 	    } else {
 		form.rebin.disabled = true;
@@ -150,14 +154,14 @@
                    <tr>	<td><b>bin:</b></td>							\
 			<td><input type=text name=bin value=1 size=10 style="text-align:right;"></td>	\
 			<td></td>									\
-			<td>&nbsp(bin factor after extracting section)</td>						\
+			<td>&nbsp(bin factor applied to section)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>filter:</b></td>								\
 			<td colspan="2"><input type=text name=filter size="22" style="text-align:left;"></td>	\
 			<td>&nbsp(event/row filter for tables)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>separate:</b></td>			\
-                        <td><input type=checkbox name=mode class="sep-image" style="text-align:left;"></td>	\
+                        <td><input type=checkbox name=separate class="sep-image" style="text-align:left;"></td>	\
 			<td></td>									\
 			<td>&nbsp(display as a separate image?)</td>						\
 		   </tr>										\
@@ -188,7 +192,7 @@
     JS9.RegisterPlugin("FITS", "Binning", binningInit, {
 	    menu: "view",
 
-            winTitle: "Image Sections with Binning/Filtering",
+            winTitle: "Image Sections, with Binning and Filtering",
 	    winResize: true,
 
             menuItem: "Bin/Filter/Section",

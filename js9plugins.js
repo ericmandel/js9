@@ -923,10 +923,7 @@ module.exports = xhr;
 		       ydim: parseInt(form.ydim.value, 10),
 		       bin:  parseInt(form.bin.value, 10),
 		       filter: form.filter.value,
-		       mode: $(form.mode).prop("checked")};
-	    if( !hdu.fits || !hdu.fits.fptr ){
-		JS9.error("virtual FITS file is missing for binning");
-	    }
+		       separate: $(form.separate).prop("checked")};
 	    im.displaySection(options);
 	    break;
 	}
@@ -934,6 +931,8 @@ module.exports = xhr;
 
     function getBinParams(div, display) {
 	var im, ipos, lpos, form, hdu;
+	var dval1 = 1;
+	var dval2 = 1;
 	if ( display === undefined ) {
 	    div     = this.div;
 	    display = this.display;
@@ -962,13 +961,18 @@ module.exports = xhr;
 		    form.ydim.disabled = false;
 		    form.filter.disabled = false;
 		} else {
+		    // incorporate ltm value in bin, if necessary
+		    if( im.parentFile && im.raw.header ){
+			dval1 = im.raw.header.LTM1_1 || 1;
+			dval2 = im.raw.header.LTM2_2 || 1;
+		    }
 		    ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
 		    lpos = im.imageToLogicalPos(ipos);
 		    form.xcen.value = String(Math.floor(lpos.x));
 		    form.ycen.value = String(Math.floor(lpos.y));
-		    form.xdim.value = String(Math.floor(hdu.naxis1));
-		    form.ydim.value = String(Math.floor(hdu.naxis2));
-		    form.bin.value = String(Math.floor(hdu.bin || 1));
+		    form.xdim.value = String(Math.floor(hdu.naxis1 / dval1));
+		    form.ydim.value = String(Math.floor(hdu.naxis2 / dval2));
+		    form.bin.value = String(Math.floor((hdu.bin || 1) / dval1));
 		    form.filter.value = "";
 
 		    form.bin.disabled = false;
@@ -976,7 +980,7 @@ module.exports = xhr;
 		    form.ycen.disabled = false;
 		    form.xdim.disabled = false;
 		    form.ydim.disabled = false;
-		    form.filter.disabled = true;
+		    form.filter.disabled = false;
 		}
 	    } else {
 		form.rebin.disabled = true;
@@ -1017,14 +1021,14 @@ module.exports = xhr;
                    <tr>	<td><b>bin:</b></td>							\
 			<td><input type=text name=bin value=1 size=10 style="text-align:right;"></td>	\
 			<td></td>									\
-			<td>&nbsp(bin factor after extracting section)</td>						\
+			<td>&nbsp(bin factor applied to section)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>filter:</b></td>								\
 			<td colspan="2"><input type=text name=filter size="22" style="text-align:left;"></td>	\
 			<td>&nbsp(event/row filter for tables)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>separate:</b></td>			\
-                        <td><input type=checkbox name=mode class="sep-image" style="text-align:left;"></td>	\
+                        <td><input type=checkbox name=separate class="sep-image" style="text-align:left;"></td>	\
 			<td></td>									\
 			<td>&nbsp(display as a separate image?)</td>						\
 		   </tr>										\
@@ -1055,7 +1059,7 @@ module.exports = xhr;
     JS9.RegisterPlugin("FITS", "Binning", binningInit, {
 	    menu: "view",
 
-            winTitle: "Image Sections with Binning/Filtering",
+            winTitle: "Image Sections, with Binning and Filtering",
 	    winResize: true,
 
             menuItem: "Bin/Filter/Section",
@@ -2190,7 +2194,7 @@ JS9.Cube.extnameHTML='<span class="JS9CubeRangeLine">%s</span>';
 
 JS9.Cube.orderHTML='<select class="JS9CubeOrder" onchange="JS9.Cube.xorder(\'%s\', \'%s\', this)"><option value="$slice,*,*">$slice : * : *</option><option value="*,$slice,*">* : $slice : *</option><option value="*,*,$slice">* : * : $slice</option></select>';
 
-JS9.Cube.rateHTML='<select class="JS9CubeRate" onchange="JS9.Cube.xrate(\'%s\', \'%s\', this)"><option selected disabled>Rate</option><option value=".5">0.5 sec</option><option value="1" default>1 sec</option><option value="2">2 sec</option><option value="5">5 sec</option></select>';
+JS9.Cube.rateHTML='<select class="JS9CubeRate" onchange="JS9.Cube.xrate(\'%s\', \'%s\', this)"><option selected disabled>Rate</option><option value=".1">0.1 sec</option><option value=".25">0.25 sec</option><option value=".5">0.5 sec</option><option value="1" default>1 sec</option><option value="2">2 sec</option><option value="5">5 sec</option></select>';
 
 JS9.Cube.doSlice = function(im, slice, elarr){
     var i, s;
@@ -4453,17 +4457,6 @@ JS9.Menubar.init = function(width, height){
 		} else {
 		    items.loadcors.disabled = true;
 		}
-		// only show imsection if the fits file differs from the
-		// displayed file (i.e. its a representation file)
-		items.imsection = {name: "extract image section ..."};
-		if( !JS9.allinone 			 &&
-		    JS9.globalOpts.helperType !== "none" &&
-		    JS9.globalOpts.workDir      	 &&
-		    tim && tim.parentFile 		 ){
-		    items.imsection.disabled = false;
-		} else {
-		    items.imsection.disabled = true;
-		}
 		items["sep" + n++] = "------";
 		items.print = {name: "print ..."};
 		items.header = {name: "display FITS header"};
@@ -4500,10 +4493,8 @@ JS9.Menubar.init = function(width, height){
 		}
 		items.free = {name: "free image memory"};
 		items.close = {name: "close image"};
-		items.removeproxy = {name: "remove proxy file from server",
-				     disable: false};
-		if( tim && !tim.proxyFile ){
-		    items.removeproxy.disabled = true;
+		if( tim && tim.proxyFile ){
+		    items.removeproxy = {name: "remove proxy file from server"};
 		}
 		items["sep" + n++] = "------";
 		items.loadcatalog = {name: "load catalog ..."};
@@ -4523,7 +4514,7 @@ JS9.Menubar.init = function(width, height){
 		return {
                     callback: function(key){
 		    getDisplays().forEach(function(val){
-			var j, s, t, did, save_orc, kid, unew, uwin;
+			var j, s, t, did, kid, unew, uwin;
 			var udisp = val;
 			var uim = udisp.image;
 			switch(key){
@@ -4631,48 +4622,6 @@ JS9.Menubar.init = function(width, height){
 			    // save info for running the task
 			    $(did).data("dispid", udisp.id)
 				  .data("aname", "loadproxy");
-			    break;
-			case "imsection":
-			    // load param url to run analysis task
-			    // param url is relative to js9 install dir
-			    save_orc = JS9.Regions.opts.onchange;
-			    $("#dhtmlwindowholder").arrive("#imageSectionForm",
-                            {onceOnly: true}, function(){
-				 var f = "#imageSectionForm";
-				 JS9.Regions.opts.onchange = function(im, xreg){
-				    var w, h, ltm1, ltm2;
-				    // call previous
-				    if( save_orc ){ save_orc(im, xreg); }
-				    // verify this image can be imsection'ed
-				    if( !im.parentFile ){ return; }
-				    // are we using a region for pos/size?
-				    if( $(f+" input:radio[name=imode]:checked")
-					  .val() !== "region" ){ return; }
-				    // do we have a box region?
-				    if( xreg.shape !== "box" ){	return; }
-				    // set current size and position
-				    ltm1 = im.raw.header.LTM1_1 || 1.0;
-				    w = xreg.width / ltm1;
-				    ltm2 = im.raw.header.LTM2_2 || 1.0;
-				    h = xreg.height / ltm2;
-				    $(f+" #xcen").val(Math.floor(xreg.lcs.x));
-				    $(f+" #ycen").val(Math.floor(xreg.lcs.y));
-				    $(f+" #xdim").val(Math.floor(w));
-				    $(f+" #ydim").val(Math.floor(h));
-				};
-			    });
-			    $("#dhtmlwindowholder").leave("#imageSectionForm",
-			    {onceOnly: true}, function(){
-				JS9.Regions.opts.onchange = save_orc;
-			    });
-			    did = JS9.Image.prototype.displayAnalysis.call(null,
-				"params",
-				JS9.InstallDir(JS9.globalOpts.imsectionURL),
-				{title: "Extract Image Section From a 'Parent' File",
-	                        winformat: "width=480px,height=200px,center=1,resize=1,scrolling=1"});
-			    // save info for running the task
-			    $(did).data("dispid", udisp.id)
-				  .data("aname", "imsection");
 			    break;
 			case "refresh":
 			    $('#refreshLocalFile-' + udisp.id).click();
@@ -6665,15 +6614,23 @@ JS9.Prefs.fitsSchema = {
 	},
 	"ydim": {
 	    "type": "string",
-	    "helper": "y dim of image section from image"
+	    "helper": "y dim of image section from table"
 	},
-	"xmax": {
+	"bin": {
 	    "type": "string",
-	    "helper": "max x size of displayed image"
+	    "helper": "bin factor for tables"
 	},
-	"ymax": {
+	"ixdim": {
 	    "type": "string",
-	    "helper": "max y size of displayed image"
+	    "helper": "x dim of image section from image"
+	},
+	"iydim": {
+	    "type": "string",
+	    "helper": "y dim of image section from table"
+	},
+	"ibin": {
+	    "type": "string",
+	    "helper": "bin factor for images"
 	},
 	"clear": {
 	    "type": "string",
@@ -6747,6 +6704,10 @@ JS9.Prefs.displaysSchema = {
 	    "type": "mobject",
 	    "helper": "array of top-level colormaps"
 	},
+	"infoBox": {
+	    "type": "mobject",
+	    "helper": "array of infoBox items to display"
+	},
 	"mouseActions": {
 	    "type": "mobject",
 	    "helper": "array of mouse actions"
@@ -6763,9 +6724,13 @@ JS9.Prefs.displaysSchema = {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
 	},
-	"infoBox": {
-	    "type": "mobject",
-	    "helper": "array of infoBox items to display"
+	"fits2fits": {
+	    "type": "string",
+	    "helper": "make rep file?: true,false,size>N"
+	},
+	"fits2png": {
+	    "type": "boolean",
+	    "helper": "convert FITS to PNG rep files?"
 	}
     }
 };
@@ -6812,10 +6777,12 @@ JS9.Prefs.init = function(){
 	case "fits":
 	    // make up "nicer" option values from raw object
 	    source.data = {extlist: JS9.fits.options.extlist,
-			   xdim: JS9.fits.options.table.nx,
-			   ydim: JS9.fits.options.table.ny,
-			   xmax: JS9.fits.options.image.xmax,
-			   ymax: JS9.fits.options.image.ymax,
+			   xdim: JS9.fits.options.table.xdim,
+			   ydim: JS9.fits.options.table.ydim,
+			   bin: JS9.fits.options.table.bin,
+			   ixdim: JS9.fits.options.image.xdim,
+			   iydim: JS9.fits.options.image.ydim,
+			   ibin: JS9.fits.options.image.bin,
 			   clear: JS9.globalOpts.clearImageMemory};
 	    break;
 	case "catalogs":
@@ -6833,7 +6800,9 @@ JS9.Prefs.init = function(){
 			   skip: JS9.globalOpts.catalogs.skip};
 	    break;
 	case "displays":
-	    source.data = {topColormaps: JS9.globalOpts.topColormaps,
+	    source.data = {fits2png: JS9.globalOpts.fits2png,
+			   fits2fits: JS9.globalOpts.fits2fits,
+			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,
 			   keyboardActions: JS9.globalOpts.keyboardActions,
@@ -6994,14 +6963,14 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
     for(i=0; i<len; i++){
 	key = arr[i].name;
 	val = arr[i].value;
+	if( val === "true" ){
+	    val = true;
+	}
+	if( val === "false" ){
+	    val = false;
+	}
 	switch( typeof obj[key] ){
 	case "boolean":
-	    if( val === "true" ){
-		val = true;
-	    }
-	    if( val === "false" ){
-		val = false;
-	    }
 	    break;
 	case "number":
 	    val = parseFloat(val);
@@ -7035,16 +7004,22 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	        // note that the values are still strings
 	        switch(key){
  	        case "xdim":
-		    obj.table.nx = parseFloat(val);
+		    obj.table.xdim = Math.floor(parseFloat(val));
 	            break;
 	        case "ydim":
-		    obj.table.ny = parseFloat(val);
+		    obj.table.ydim = Math.floor(parseFloat(val));
 	            break;
-	        case "xmax":
-		    obj.image.xmax = parseFloat(val);
+	        case "bin":
+		    obj.table.bin = Math.floor(parseFloat(val));
 	            break;
-	        case "ymax":
-		    obj.image.ymax = parseFloat(val);
+	        case "ixdim":
+		    obj.image.xdim = Math.floor(parseFloat(val));
+	            break;
+	        case "iydim":
+		    obj.image.ydim = Math.floor(parseFloat(val));
+	            break;
+	        case "ibin":
+		    obj.image.bin = Math.floor(parseFloat(val));
 	            break;
 		case "clear":
 		    JS9.globalOpts.clearImageMemory = val;

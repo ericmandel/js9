@@ -6,7 +6,7 @@
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
  * Contact: saord@cfa.harvard.edu
  *
- * Copyright (c) 2012 - 2016 Smithsonian Astrophysical Observatory
+ * Copyright (c) 2012 - 2017 Smithsonian Astrophysical Observatory
  *
  * Utilizes: socket.io, node-uuid
  *
@@ -33,14 +33,14 @@ var http = require('http'),
     rmdir = require('rimraf');
 
 // internal variables
-var app, io, secure;
+var app, io, secure, envs;
 var cdir = __dirname;
 var prefsfile  = path.join(cdir, "js9Prefs.json");
 var securefile = path.join(cdir, "js9Secure.json");
 var fits2png = {};
+var fits2fits = {};
 var quotacheck = {};
 var analysis = {str:[], pkgs:[]};
-var envs = JSON.stringify(process.env);
 var plugins = [];
 
 // secure options ... change as necessary in securefile
@@ -56,7 +56,6 @@ var globalOpts = {
     helperHost:       "0.0.0.0",
     helperOpts:       {'maxHttpBufferSize': Infinity},
     cmd:              "js9helper",
-
     analysisPlugins:  "analysis-plugins",
     analysisWrappers: "analysis-wrappers",
     helperPlugins:    "helper-plugins",
@@ -352,6 +351,10 @@ var loadAnalysisTasks = function(dir){
 			    try{ fits2png = JSON.parse(jstr); }
 			    catch(e1){cerr("can't parse: ", pathname, e1);}
 			    break;
+			case "fits2fits.json":
+			    try{ fits2fits = JSON.parse(jstr); }
+			    catch(e1){cerr("can't parse: ", pathname, e1);}
+			    break;
 			case "quotacheck.json":
 			    try{ quotacheck = JSON.parse(jstr); }
 			    catch(e1){cerr("can't parse: ", pathname, e1);}
@@ -456,6 +459,75 @@ var parseArgs = function(argstr){
     return args;
 };
 
+// get data path
+var getDataPath = function(s){
+    var dpath;
+    if( s ){
+	dpath = envClean(s);
+    } else if( globalOpts.dataPath ){
+	dpath = envClean(globalOpts.dataPath);
+    } else {
+	dpath = "";
+    }
+    dpath += ":" + cdir;
+    return dpath;
+};
+
+// see if a file exists in the dataPath
+var getFilePath = function(file, dataPath, myenv){
+    var i, s, froot, fext, parr;
+    // eslint-disable-next-line no-unused-vars
+    var repl = function(m, t, o){
+	if( myenv && myenv[t] ){
+	    return myenv[t];
+	}
+	return m;
+    };
+    // sanity check
+    if( !file ){
+	return;
+    }
+    // look for and remove the extension
+    froot = file.replace(/\[.*]$/,"");
+    s = file.match(/\[.*]$/,"");
+    if( s ){
+	fext = s[0];
+    } else {
+	fext = "";
+    }
+    if( path.isAbsolute(froot) ){
+	parr = [""];
+    } else {
+	parr = dataPath.split(":");
+    }
+    // replace environment variables in path, if possible
+    for(i=0; i<parr.length; i++){
+	s = parr[i].replace(/\${?([a-zA-Z][a-zA-Z0-9_()]+)}?/g, repl);
+	// make up pathname to check
+	s = path.join(s, froot);
+	if( fs.existsSync(s) ){
+	    // found the file add extension to full path
+	    s += fext;
+	    return s;
+	}
+    }
+    return;
+};
+
+// get size of a file
+var getFileSize = function(file){
+    var stats;
+    var size = 0;
+    var froot = file.replace(/\[.*]$/,"");
+    if( fs.existsSync(froot) ){
+	stats = fs.statSync(froot);
+	if( stats ){
+	    size = stats.size;
+	}
+    }
+    return size;
+};
+
 //
 // message callbacks
 //
@@ -463,22 +535,14 @@ var parseArgs = function(argstr){
 // execCmd: exec a analysis wrapper function to run a command
 // this is the default callback for server-side analysis tasks
 var execCmd = function(io, socket, obj, cbfunc) {
-    var cmd, argstr, args, maxbuf, child;
-    var i, s, froot, fext, parr;
+    var cmd, argstr, args, maxbuf, child, s;
     var myworkdir = null;
     var myip = getHost(io, socket);
     var myid = obj.id;
     var myrtype = obj.rtype || "binary";
     var myenv = JSON.parse(envs);
-    var res = { stdout: null, stderr: null, errcode: 0,
-		encoding: globalOpts.textEncoding};
-    // eslint-disable-next-line no-unused-vars
-    var repl = function(m, t, o){
-	if( myenv[t] ){
-	    return myenv[t];
-	}
-	return m;
-    };
+    var res = {stdout: null, stderr: null, errcode: 0,
+	       encoding: globalOpts.textEncoding};
     // sanity check
     if( !obj.cmd || !socket.js9 ){
 	return;
@@ -512,14 +576,7 @@ var execCmd = function(io, socket, obj, cbfunc) {
 	myenv.HTTP_COOKIE = envClean(obj.cookie);
     }
     // datapath (for finding data files)
-    if( obj.dataPath ){
-	myenv.JS9_DATAPATH = envClean(obj.dataPath);
-    } else if( globalOpts.dataPath ){
-	myenv.JS9_DATAPATH = envClean(globalOpts.dataPath);
-    } else {
-	myenv.JS9_DATAPATH = "";
-    }
-    myenv.JS9_DATAPATH += ":" + cdir;
+    myenv.JS9_DATAPATH = getDataPath(obj.dataPath);
     // set max buffer size
     switch(myrtype){
     case "text":
@@ -544,37 +601,13 @@ var execCmd = function(io, socket, obj, cbfunc) {
 	// if FITS, handle this request internally instead of exec'ing
 	// (makes external analysis possible without building js9 programs)
 	if( obj.image && (path.extname(obj.image ) !== ".png") ){
-	    // look for and remove the extension
-	    froot = obj.image.replace(/\[.*]$/,"");
-	    s = obj.image.match(/\[.*]$/,"");
+	    s = getFilePath(obj.image, myenv.JS9_DATAPATH, myenv);
 	    if( s ){
-		fext = s[0];
-	    } else {
-		fext = "";
+		res.stdout = obj.image + " " + s;
 	    }
-	    if( path.isAbsolute(froot) ){
-		parr = [""];
-	    } else {
-		parr = myenv.JS9_DATAPATH.split(":");
+	    if( cbfunc ){
+		cbfunc(res);
 	    }
-	    // replace environment variables in path, if possible
-	    for(i=0; i<parr.length; i++){
-		s = parr[i].replace(/\${?([a-zA-Z][a-zA-Z0-9_()]+)}?/g, repl);
-		// make up pathname to check
-		s = path.join(s, froot);
-		if( fs.existsSync(s) ){
-		    // found the file add extension to full path
-		    s += fext;
-		    // callback, if necessary
-		    if( cbfunc ){
-			res.stdout = obj.image + " " + s;
-			cbfunc(res);
-		    }
-		    return;
-		}
-	    }
-	    // didn't find the file in the data path
-	    if( cbfunc ){ cbfunc(res); }
 	    return;
 	}
 	// handle fitshelper specially
@@ -761,9 +794,9 @@ var socketioHandler = function(socket) {
     // returns: unique page id (not currently used)
     // for other implementations, this is needed if you want to:
     //   support sending external messages to JS9 (i.e., via js9 script)
-    socket.on("displays", function(obj, cbfunc) {
+    socket.on("initialize", function(obj, cbfunc) {
 	var myhost = getHost(io, socket);
-	var basedir, aworkdir;
+	var basedir, aworkdir, jpath;
 	if( !obj ){return;}
 	socket.js9 = {};
 	socket.js9.displays = obj.displays;
@@ -796,8 +829,11 @@ var socketioHandler = function(socket) {
 		socket.js9.rworkDir = null;
 	    }
 	}
+	// can we find the helper program?
+	jpath = !!getFilePath(globalOpts.cmd, process.env.PATH, process.env);
+	// log results
         clog("connect: %s (%s)", myhost, socket.js9.displays);
-	if( cbfunc ){ cbfunc(socket.js9.pageid); }
+	if( cbfunc ){ cbfunc({pageid: socket.js9.pageid, js9helper: jpath}); }
     });
     // on display: add a display to the display list
     // returns: unique page id (not currently used)
@@ -878,6 +914,56 @@ var socketioHandler = function(socket) {
 	    socket.on(m, xfunc);
 	}
     }
+    // on fits2fits: convert raw fits to fits representation file
+    // returns: object w/ errcode, stderr (error string), stdout (results)
+    // for other implementations, this is needed if you want to:
+    //   support conversion of fits to fits representation
+    socket.on("fits2fits", function(obj, cbfunc) {
+	var myenv, s, size;
+	var res = {stdout: null, stderr: null, errcode: 0,
+		   encoding: globalOpts.textEncoding};
+	// sanity checks
+	if( !fits2fits[0] || !fits2fits[0].action || !obj ){
+	    return;
+	}
+	// environment, and datapath (for finding data files)
+	myenv = JSON.parse(envs);
+	myenv.JS9_DATAPATH = getDataPath(obj.dataPath);
+	s = getFilePath(obj.fits, myenv.JS9_DATAPATH, myenv);
+	if( !s ){
+	    // did not find file, let js9 take care of it
+	    if( cbfunc ){
+		res.stdout = obj.fits;
+		cbfunc(res);
+	    }
+	    return;
+	}
+	if( obj.maxsize ){
+	    size = getFileSize(s);
+	    if( size < obj.maxsize ){
+		// file size does not warrant using imsection
+		if( cbfunc ){
+		    res.stdout = obj.fits;
+		    cbfunc(res);
+		}
+		return;
+	    }
+	}
+	if( (obj.fits.charAt(0) !== "/") && !obj.fits.match(/^\${JS9_DIR}/) ){
+	    obj.fits = "${JS9_DIR}/" + obj.fits;
+	}
+	// make up fits2fits command string from defined fits2fits action
+	obj.cmd = fits2fits[0].action;
+        if( obj.gzip ){
+ 	    obj.cmd = obj.cmd + " -gzip";
+        }
+        if( obj.parent ){
+ 	    obj.cmd = obj.cmd + " -parent";
+        }
+	obj.cmd = obj.cmd + " " + obj.fits + " " + obj.sect;
+	// exec the conversion task (via a wrapper function)
+	execCmd(io, socket, obj, cbfunc);
+    });
     // on fits2png: convert raw fits to png
     // returns: object w/ errcode, stderr (error string), stdout (results)
     // for other implementations, this is needed if you want to:
@@ -1063,6 +1149,13 @@ var httpHandler = function(req, res){
 //
 // initialization
 //
+
+// add runtime directory to PATH
+if( process.env.PATH ){
+    process.env.PATH += (":" + cdir);
+}
+// save as json
+envs = JSON.stringify(process.env);
 
 // load secure preferences
 secure = loadSecurePreferences(securefile);

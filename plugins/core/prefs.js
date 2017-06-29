@@ -199,15 +199,23 @@ JS9.Prefs.fitsSchema = {
 	},
 	"ydim": {
 	    "type": "string",
-	    "helper": "y dim of image section from image"
+	    "helper": "y dim of image section from table"
 	},
-	"xmax": {
+	"bin": {
 	    "type": "string",
-	    "helper": "max x size of displayed image"
+	    "helper": "bin factor for tables"
 	},
-	"ymax": {
+	"ixdim": {
 	    "type": "string",
-	    "helper": "max y size of displayed image"
+	    "helper": "x dim of image section from image"
+	},
+	"iydim": {
+	    "type": "string",
+	    "helper": "y dim of image section from table"
+	},
+	"ibin": {
+	    "type": "string",
+	    "helper": "bin factor for images"
 	},
 	"clear": {
 	    "type": "string",
@@ -281,6 +289,10 @@ JS9.Prefs.displaysSchema = {
 	    "type": "mobject",
 	    "helper": "array of top-level colormaps"
 	},
+	"infoBox": {
+	    "type": "mobject",
+	    "helper": "array of infoBox items to display"
+	},
 	"mouseActions": {
 	    "type": "mobject",
 	    "helper": "array of mouse actions"
@@ -297,9 +309,13 @@ JS9.Prefs.displaysSchema = {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
 	},
-	"infoBox": {
-	    "type": "mobject",
-	    "helper": "array of infoBox items to display"
+	"fits2fits": {
+	    "type": "string",
+	    "helper": "make rep file?: true,false,size>N"
+	},
+	"fits2png": {
+	    "type": "boolean",
+	    "helper": "convert FITS to PNG rep files?"
 	}
     }
 };
@@ -346,10 +362,12 @@ JS9.Prefs.init = function(){
 	case "fits":
 	    // make up "nicer" option values from raw object
 	    source.data = {extlist: JS9.fits.options.extlist,
-			   xdim: JS9.fits.options.table.nx,
-			   ydim: JS9.fits.options.table.ny,
-			   xmax: JS9.fits.options.image.xmax,
-			   ymax: JS9.fits.options.image.ymax,
+			   xdim: JS9.fits.options.table.xdim,
+			   ydim: JS9.fits.options.table.ydim,
+			   bin: JS9.fits.options.table.bin,
+			   ixdim: JS9.fits.options.image.xdim,
+			   iydim: JS9.fits.options.image.ydim,
+			   ibin: JS9.fits.options.image.bin,
 			   clear: JS9.globalOpts.clearImageMemory};
 	    break;
 	case "catalogs":
@@ -367,7 +385,9 @@ JS9.Prefs.init = function(){
 			   skip: JS9.globalOpts.catalogs.skip};
 	    break;
 	case "displays":
-	    source.data = {topColormaps: JS9.globalOpts.topColormaps,
+	    source.data = {fits2png: JS9.globalOpts.fits2png,
+			   fits2fits: JS9.globalOpts.fits2fits,
+			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,
 			   keyboardActions: JS9.globalOpts.keyboardActions,
@@ -528,14 +548,14 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
     for(i=0; i<len; i++){
 	key = arr[i].name;
 	val = arr[i].value;
+	if( val === "true" ){
+	    val = true;
+	}
+	if( val === "false" ){
+	    val = false;
+	}
 	switch( typeof obj[key] ){
 	case "boolean":
-	    if( val === "true" ){
-		val = true;
-	    }
-	    if( val === "false" ){
-		val = false;
-	    }
 	    break;
 	case "number":
 	    val = parseFloat(val);
@@ -569,16 +589,22 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	        // note that the values are still strings
 	        switch(key){
  	        case "xdim":
-		    obj.table.nx = parseFloat(val);
+		    obj.table.xdim = Math.floor(parseFloat(val));
 	            break;
 	        case "ydim":
-		    obj.table.ny = parseFloat(val);
+		    obj.table.ydim = Math.floor(parseFloat(val));
 	            break;
-	        case "xmax":
-		    obj.image.xmax = parseFloat(val);
+	        case "bin":
+		    obj.table.bin = Math.floor(parseFloat(val));
 	            break;
-	        case "ymax":
-		    obj.image.ymax = parseFloat(val);
+	        case "ixdim":
+		    obj.image.xdim = Math.floor(parseFloat(val));
+	            break;
+	        case "iydim":
+		    obj.image.ydim = Math.floor(parseFloat(val));
+	            break;
+	        case "ibin":
+		    obj.image.bin = Math.floor(parseFloat(val));
 	            break;
 		case "clear":
 		    JS9.globalOpts.clearImageMemory = val;

@@ -1,5 +1,5 @@
 /*
- *	Copyright (c) 2012 Smithsonian Astrophysical Observatory
+ *	Copyright (c) 2012-2017 Smithsonian Astrophysical Observatory
  */
 #include "js9helper.h"
 
@@ -543,7 +543,7 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
 }
 
 /* process this command */
-static int ProcessCmd(char *cmd, char **args, int node, int tty)
+static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 {
   int ip=0;
   char tbuf[SZ_LINE];
@@ -558,9 +558,9 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
   char *cols[2] = {"X", "Y"};
   char *ofile=NULL;
   char *omode=NULL;
+  char *filter=NULL;
   fitsfile *ifptr, *ofptr, *tfptr;
 #endif
-
   switch(*cmd){
   case 'f':
     if( !strcmp(cmd, "fitsFile") ){
@@ -632,8 +632,13 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
 		finfo->fitsfile, (args && args[0]) ? args[0] : "NONE");
 	return 1;
       }
-      if( args[1] ){
-	omode = args[1];
+      if( narg >= 2 && args[1] ){
+	filter = args[1];
+      } else {
+	filter = NULL;
+      }
+      if( narg >= 3 && args[2] ){
+	omode = args[2];
       } else {
 	omode = "image";
       }
@@ -672,7 +677,8 @@ static int ProcessCmd(char *cmd, char **args, int node, int tty)
 	  break;
 	default:
 	  /* table: let jsfitsio create an image section */
-	  tfptr = filterTableToImage(ifptr, NULL, cols, dims, cens, 1, &status);
+	  tfptr = filterTableToImage(ifptr, filter, cols, dims, cens, 1, 
+				     &status);
 	  if( status ){
 	    fits_get_errstatus(status, tbuf);
 	    fprintf(stderr,
@@ -894,7 +900,7 @@ int main(int argc, char **argv)
     switch(args){
     case 0:
       /* get image info and exit */
-      if( ProcessCmd("image", &image, 0, 0) == 0 ){
+      if( ProcessCmd("image", &image, 1, 0, 0) == 0 ){
 	FinfoFree(image);
 	return 0;
       } else {
@@ -903,11 +909,11 @@ int main(int argc, char **argv)
       break;
     case 1:
       /* set image (no info returned) */
-      if( ProcessCmd("image_", &image, 0, 0) != 0 ){
+      if( ProcessCmd("image_", &image, 1, 0, 0) != 0 ){
 	return 1;
       }
       /* process command without args */
-      if( ProcessCmd(argv[optind+0], NULL, 0, 0) == 0 ){
+      if( ProcessCmd(argv[optind+0], NULL, 0, 0, 0) == 0 ){
 	FinfoFree(image);
 	return 0;
       } else {
@@ -916,11 +922,11 @@ int main(int argc, char **argv)
       break;
     default:
       /* set image (no info returned) */
-      if( ProcessCmd("image_", &image, 0, 0) != 0 ){
+      if( ProcessCmd("image_", &image, 1, 0, 0) != 0 ){
 	return 1;
       }
       /* process command with args */
-      if( ProcessCmd(argv[optind+0], &(argv[optind+1]), 0, 0) == 0 ){
+      if( ProcessCmd(argv[optind+0], &(argv[optind+1]), args-1, 0, 0) == 0 ){
 	FinfoFree(image);
 	return 0;
       } else {
@@ -955,7 +961,7 @@ int main(int argc, char **argv)
     }
     /* process this command */
     p = &lbuf[ip];
-    ProcessCmd(tbuf, &p, node, tty);
+    ProcessCmd(tbuf, &p, 1, node, tty);
     /* re-prompt, if necessary */
     if( !node ){
       fprintf(stdout, "js9helper> ");

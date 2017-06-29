@@ -101,7 +101,8 @@ JS9.globalOpts = {
 	  bim: null},
     defcolor: "#00FF00",	// graphics color when all else fails
     pngisfits: true,		// are PNGs really PNG representation files?
-    fits2png: false,		// convert FITS to PNG rep files? true, false
+    fits2fits: "size>100,gzip",	// convert to repfile? always|never|size>x Mb, gzip
+    fits2png: false,		// convert FITS to PNG rep files? true|false
     alerts: true,		// set to false to turn off alerts
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
@@ -111,7 +112,7 @@ JS9.globalOpts = {
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     table: {xdim: 2048, ydim: 2048, bin: 1},// image section size to extract from table
     image: {xdim: 2048, ydim: 2048, bin: 1},// image section size (0 for unlimited)
-    clearImageMemory: "never",  // rm vfile: never, always, auto, noExt, noCube, size>x Mb
+    clearImageMemory: "never",  // rm vfile: always|never|auto|noExt|noCube|size>x Mb
     helperProtocol: location.protocol, // http: or https:
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",       // location of param html file
@@ -1334,7 +1335,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     var i, s, ui, clen, hdu, pars, card, got, rlen, rmvfile, done;
     var header, x1, y1, bin;
-    var owidth, oheight, obitpix;
+    var owidth, oheight, obitpix, oltm1_1;
     opts = opts || {};
     if( $.isArray(obj) || JS9.isTypedArray(obj) || obj instanceof ArrayBuffer ){
 	// flatten if necessary
@@ -1367,6 +1368,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	owidth = this.raw.width;
 	oheight = this.raw.height;
 	obitpix = this.raw.bitpix;
+	oltm1_1 = this.raw.header.LTM1_1 || 1;
 	this.freeWCS();
     }
     // initialize raws array?
@@ -1570,6 +1572,10 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	// get a unique id for this image
 	this.id = JS9.getImageID(this.id0, this.display.id);
     }
+    // is this a proxy image?
+    if( opts.proxyFile ){
+	this.proxyFile = opts.proxyFile;
+    }
     // min and max data values
     if( hdu.dmin && hdu.dmax ){
 	// from object
@@ -1591,9 +1597,15 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     this.instrument = this.raw.header.INSTRUME;
     // set or reset binning properties
     if( (this.imtab === "table") && hdu.table ){
-	this.binning.bin = Number(hdu.table.bin) || 1;
+	this.binning.bin = hdu.table.bin || 1;
+    } else if( hdu.bin ){
+	this.binning.bin = hdu.bin;
     } else {
 	this.binning.bin = 1;
+    }
+    // hack: try to figure out obin vs bin for sections
+    if( opts.ltm2obin && header.LTM1_1 ){
+	this.binning.obin = header.LTM1_1 / oltm1_1;
     }
     // init WCS, if possible
     this.initWCS();
@@ -2758,7 +2770,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     var hdu, fits, from;
     var arr = [];
     var disp = function(hdu, opts, func){
-	var ss;
+	var ss, tim;
 	var rexp = /(\[.*[a-zA-Z0-9_].*\])\[.*\]/;
 	opts = opts || {};
 	// start the waiting!
@@ -2775,6 +2787,15 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		}
 	    }
 	    opts.display = that.display;
+	    // lame attempt to get to original parentFile
+	    if( that.fitsFile ){
+		tim = JS9.lookupImage(that.fitsFile);
+		if( tim && tim.parentFile ){
+		    opts.parentFile = tim.parentFile;
+		} else {
+		    opts.parentFile = that.fitsFile;
+		}
+	    }
 	    JS9.checkNew(new JS9.Image(hdu, opts, func));
 	    // done waiting
 	    JS9.waiting(false);
@@ -2807,14 +2828,14 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     opts.bin = opts.bin || 1;
     switch(this.imtab){
     case "table":
-	opts.xdim = opts.xdim || JS9.globalOpts.table.xdim;
-	opts.ydim = opts.ydim || JS9.globalOpts.table.ydim;
-	opts.bin = opts.bin || JS9.globalOpts.table.bin;
+	opts.xdim = opts.xdim || JS9.fits.options.table.xdim;
+	opts.ydim = opts.ydim || JS9.fits.options.table.ydim;
+	opts.bin = opts.bin || JS9.fits.options.table.bin;
 	break;
     default:
-	opts.xdim = opts.xdim || JS9.globalOpts.image.xdim;
-	opts.ydim = opts.ydim || JS9.globalOpts.image.ydim;
-	opts.bin = opts.bin || JS9.globalOpts.image.bin;
+	opts.xdim = opts.xdim || JS9.fits.options.image.xdim;
+	opts.ydim = opts.ydim || JS9.fits.options.image.ydim;
+	opts.bin = opts.bin || JS9.fits.options.image.bin;
 	break;
     }
     // start the waiting!
@@ -2850,10 +2871,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		arr.push({name: "filter", value: opts.filter});
 		delete opts.filter;
 	    }
-	    if( opts.mode !== undefined ){
-		arr.push({name: "mode", value: opts.mode});
-		delete opts.mode;
-	    }
 	    // get image section from external file
 	    that.runAnalysis("imsection", arr, function(stdout,stderr,errcode){
 		var rarr, f, pf;
@@ -2876,13 +2893,12 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		// which is a proxy file (meaning: delete it on close)
 		opts.proxyFile = f;
 		// look for parentFile (path relative to helper, not install)
-		if( rarr[1] && rarr[1] !== "NONE" ){
+		if( rarr[1] ){
 		    pf = rarr[1].trim().replace(/\/\.\//, "/");
 		    opts.parentFile = pf;
 		}
-		if( rarr[2] === "true" ){
-		    opts.separate = true;
-		}
+		// hack: use LTM to determine bin/obin, since both will be 1
+		opts.ltm2obin = true;
 		// retrieve and display newly created image section file
 		JS9.fetchURL(f, f, opts, function(result){
 		    // cleanup previous FITS file support, if necessary
@@ -2902,9 +2918,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    });
 	    break;
 	case "virtualFile":
-	    if( opts.mode ){
-		opts.separate = true;
-	    }
 	    // extract image section from current virtual file
 	    JS9.getFITSImage(fits, hdu, opts, function(hdu){
 		disp(hdu, opts, func);
@@ -3506,12 +3519,14 @@ JS9.Image.prototype.notifyHelper = function(){
 			}
 			// prepend JS9_DIR on files if fits is not absolute
 			if( JS9.analOpts.prependJS9Dir ){
-			    if( im.fitsFile
-				&& im.fitsFile.charAt(0) !== "/" ){
+			    if( im.fitsFile &&
+				!im.fitsFile.match(/^\${JS9_DIR}/) &&
+				im.fitsFile.charAt(0) !== "/" ){
 				im.fitsFile = "${JS9_DIR}/" + im.fitsFile;
 			    }
-			    if( im.parentFile
-				&& im.parentFile.charAt(0) !== "/" ){
+			    if( im.parentFile &&
+				!im.parentFile.match(/^\${JS9_DIR}/) &&
+				im.parentFile.charAt(0) !== "/" ){
 				im.parentFile = "${JS9_DIR}/" + im.parentFile;
 			    }
 			}
@@ -3878,6 +3893,8 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    pf = files[1].trim().replace(/\/\.\//, "/");
 		    xobj.parentFile = pf;
 		}
+		// don't convert this FITS file into another FITS file!
+		xobj.fits2fits = false;
 		// load new file
 	        JS9.Load(f, xobj, {display: that.display});
 		break;
@@ -5872,7 +5889,8 @@ JS9.Image.prototype.uploadFITSFile = function(){
 	    // set FITS filename and proxy filename
 	    that.fitsFile = r.stdout.trim();
 	    that.proxyFile = that.fitsFile;
-	    if( that.fitsFile.charAt(0) !== "/" ){
+	    if( !that.fitsFile.match(/^\${JS9_DIR}/) &&
+		that.fitsFile.charAt(0) !== "/" ){
 		that.fitsFile = "${JS9_DIR}/" + that.fitsFile;
 	    }
 	    // re-query for analysis
@@ -7079,15 +7097,18 @@ JS9.Helper.prototype.connect = function(type){
 		    for(ii=0; ii<JS9.displays.length; ii++){
 			d.push(JS9.displays[ii].id);
 		    }
-		    that.socket.emit("displays", {displays: d}, function(pid){
-			that.pageid = pid;
+		    that.socket.emit("initialize", {displays: d}, function(obj){
+			that.pageid = obj.pageid;
+			that.js9helper = obj.js9helper;
+			$(document).trigger("JS9:ready",
+					    {type: "socket.io", status: "OK"});
+			JS9.Preload(true);
+			if( JS9.DEBUG ){
+			    JS9.log("JS9 helper: connect: " + that.type);
+			}
 		    });
-                    $(document).trigger("JS9:ready",
-                        {type: "socket.io", status: "OK"});
-		    JS9.Preload(true);
-		    if( JS9.DEBUG ){
-			JS9.log("JS9 helper: connect: " + that.type);
-		    }
+		    $(document).trigger("JS9:connected",
+					{type: "socket.io", status: "OK"});
 		});
 		that.socket.on("connect_error", function(){
 		    that.connected = false;
@@ -12284,12 +12305,10 @@ JS9.lookupVfile = function(vfile){
 // (as of 2/2015: can't use $.ajax to retrieve a blob, so use low-level xhr)
 JS9.fetchURL = function(name, url, opts, handler) {
     var xhr = new XMLHttpRequest();
-    var topts;
     if( !url ){
 	url = name;
 	name = /([^\\\/]+)$/.exec(url)[1];
     }
-    topts = $.extend(true, {}, opts, JS9.fits.options);
     xhr.open('GET', url, true);
     if( opts.responseType ){
 	xhr.responseType = opts.responseType;
@@ -12317,7 +12336,11 @@ JS9.fetchURL = function(name, url, opts, handler) {
 		    if( blob.name === "uc" ){
 			blob.name = "google_" + JS9.uniqueID() + ".fits";
 		    }
-		    JS9.Load(blob, topts, handler);
+		    if( handler ){
+			handler(blob, opts);
+		    } else {
+			JS9.Load(blob, opts);
+		    }
 		} else {
 		    if( opts.display ){
 			handler(this.response, opts, {display: opts.display});
@@ -12367,23 +12390,27 @@ JS9.fitsLibrary = function(s){
 	if( JS9.userOpts.fits ){
 	    JS9.fits.options.extlist =  JS9.userOpts.fits.extlist;
 	    JS9.fits.options.table = {
-		nx: JS9.userOpts.fits.xdim,
-		ny: JS9.userOpts.fits.ydim
+		xdim: JS9.userOpts.fits.xdim,
+		ydim: JS9.userOpts.fits.ydim,
+		bin: JS9.userOpts.fits.bin || 1
 	    };
 	    JS9.fits.options.image = {
-		xmax: JS9.userOpts.fits.xmax,
-		ymax: JS9.userOpts.fits.ymax
+		xdim: JS9.userOpts.fits.ixdim || JS9.userOpts.fits.xmax,
+		ydim: JS9.userOpts.fits.iydim || JS9.userOpts.fits.ymax,
+		bin: JS9.userOpts.fits.ibin || 1
 	    };
 	} else {
 	    JS9.fits.options.extlist =  JS9.globalOpts.extlist;
 	    JS9.fits.options.table = {
 		// dims are deprecated 11/27/16
-		nx: JS9.globalOpts.table.xdim || JS9.globalOpts.dims[0],
-		ny: JS9.globalOpts.table.ydim || JS9.globalOpts.dims[1]
+		xdim: JS9.globalOpts.table.xdim || JS9.globalOpts.dims[0],
+		ydim: JS9.globalOpts.table.ydim || JS9.globalOpts.dims[1],
+		bin: JS9.globalOpts.table.bin || 1
 	    };
 	    JS9.fits.options.image = {
-		xmax: JS9.globalOpts.image.xdim || JS9.globalOpts.image.xmax,
-		ymax: JS9.globalOpts.image.ydim || JS9.globalOpts.image.ymax
+		xdim: JS9.globalOpts.image.xdim || JS9.globalOpts.image.xmax,
+		ydim: JS9.globalOpts.image.ydim || JS9.globalOpts.image.ymax,
+		bin: JS9.globalOpts.image.bin || 1
 	    };
 	}
 	if( JS9.fits.maxFITSMemory && JS9.globalOpts.maxMemory ){
@@ -12402,9 +12429,9 @@ JS9.fitsLibrary = function(s){
 };
 
 // check for 'real' FITS handling routine and call it
-JS9.handleFITSFile = function(file, options, handler){
+JS9.handleFITSFile = function(file, opts, handler){
     if( JS9.fits.handleFITSFile ){
-	JS9.fits.handleFITSFile(file, options, handler);
+	JS9.fits.handleFITSFile(file, opts, handler);
     } else {
 	JS9.error("no FITS module available to process FITS file");
     }
@@ -12474,6 +12501,140 @@ JS9.getFITSImage = function(fits, hdu, options, handler){
     } else {
 	JS9.error("no FITS module available to process FITS image");
     }
+};
+
+// common code for processing fits2fits and fits2png
+// JS9.fits2rep(display, file, opts, "png", "fits2png", func)
+// JS9.fits2rep(display, file, opts, "fits", "imsection")
+JS9.fits2RepFile = function(display, file, opts, xtype, func){
+    var i, s, xdim, ydim, bin;
+    var xopts = {};
+    var xmsg = "fits2" + xtype;
+    var xcond = opts[xmsg] ||
+	((opts[xmsg] === undefined) && JS9.globalOpts[xmsg]);
+    // check for repfile condition
+    if( !xcond || xcond.match(/never/) ){
+	return false;
+    }
+    // repfiles require a connected helper and associated js9helper program
+    if( !JS9.helper.connected || !JS9.helper.js9helper ){
+	return false;
+    }
+    // sanity check and pre-processing
+    switch(xmsg){
+    case "fits2png":
+	break;
+    case "fits2fits":
+	// requires a tmp workdir
+	if( !JS9.globalOpts.workDir ){
+	    return false;
+	}
+	xdim = JS9.fits.options.image.xdim;
+	ydim = JS9.fits.options.image.ydim;
+	bin = JS9.fits.options.image.bin || 1;
+	xopts.sect = sprintf("%s,%s,%s", xdim, ydim,bin);
+	s = xcond.toLowerCase().split(/[>,]/);
+	for(i=0; i<s.length; i++){
+	    switch(s[i]){
+	    case "gzip":
+		xopts.gzip = true;
+		break;
+	    case "size":
+		if( s[i+1] ){
+		    xopts.maxsize = parseFloat(s[i+1])*1000000;
+		    i++;
+		}
+		break;
+	    }
+	}
+	if( !xopts.gzip ){
+	    xopts.maxsize = Math.min(xopts.maxsize, xdim * ydim * 4);
+	}
+	break;
+    default:
+	JS9.error("unknown FITS representation type: " + xtype);
+	break;
+    }
+    xopts.fits = file;
+    xopts.parent = true;
+    // start the waiting!
+    JS9.waiting(true, display);
+    // send message to helper to do conversion
+    JS9.helper.send(xmsg, xopts, function(r){
+	var nfile, next, robj, files, f, pf, nopts;
+	// return type can be string or object
+	if( typeof r === "object" ){
+	    // object from node.js
+	    robj = r;
+	} else {
+	    // string from cgi
+	    if( r.search(JS9.analOpts.epattern) >=0 ){
+		robj = {stderr: r};
+	    } else {
+		robj = {stdout: r};
+	    }
+	}
+	if( robj.stderr ){
+	    JS9.error(robj.stderr, JS9.analOpts.epattern);
+	}
+	if( robj.stdout ){
+	    // is it the correct file type
+	    switch(xmsg){
+	    case "fits2png":
+		// last line is the file name (ignore what comes before)
+		nfile = robj.stdout.replace(/\n*$/, "")
+		    .split("\n").pop();
+		next = nfile.split(".").pop().toLowerCase();
+		// is it a png file?
+		if( next === "png" ){
+		    // new png file: call constructor, save the result
+		    opts.source = "fits2png";
+		    JS9.checkNew(new JS9.Image(nfile, opts, func));
+		} else {
+		    // not a png file ... give up
+		    JS9.error("fits2png conversion failed: " + nfile);
+		}
+		break;
+	    case "fits2fits":
+		// output is file and possibly parentFile
+		files = robj.stdout.split(/\s+/);
+		// file
+		f = files[0].trim().replace(/\/\.\//, "/");
+		if( f === file ){
+		    // same file (imsection not run)
+		    nopts = $.extend(true, {}, opts);
+		} else {
+		    // new file using imsection
+		    // relative path: add install dir prefix
+		    if( f.charAt(0) !== "/" ){
+			f = JS9.InstallDir(f);
+		    }
+		    nopts = $.extend(true, {}, opts);
+		    // save source
+		    nopts.source = "fits2fits";
+		    // it's a proxy file (i.e., delete it on close)
+		    nopts.proxyFile = f;
+		    // look for parentFile (relative to helper, not install)
+		    if( files[1] ){
+			pf = files[1].trim().replace(/\/\.\//, "/");
+			nopts.parentFile = pf;
+		    }
+		    // add onload, if necessary
+		    if( func ){
+			nopts.onload = func;
+		    }
+		}
+		// no recursion!
+		nopts.fits2fits = false;
+		// load new file
+		JS9.Load(f, nopts, {display: display});
+		break;
+	    default:
+		break;
+	    }
+	}
+    });
+    return true;
 };
 
 // return the specified colormap object (or default)
@@ -15178,57 +15339,18 @@ JS9.mkPublic("Load", function(file, opts){
 	    JS9.fetchURL(null, file, opts, JS9.NewFitsImage);
 	}
     } else {
-	// if opts explcitly specifies fits2png or if it's set globally ...
-	if( opts.fits2png ||
-	    ((opts.fits2png === undefined) && JS9.globalOpts.fits2png) ){
-	    // not png, so try to convert to png
-	    if( JS9.helper.connected ){
-		JS9.helper.send("fits2png", {"fits": file},
-		function(r){
-		    var nfile, next, robj;
-		    // return type can be string or object
-		    if( typeof r === "object" ){
-			// object from node.js
-			robj = r;
-		    } else {
-			// string from cgi
-			if( r.search(JS9.analOpts.epattern) >=0 ){
-			    robj = {stderr: r};
-			} else {
-			    robj = {stdout: r};
-			}
-		    }
-		    if( robj.stderr ){
-			JS9.error(robj.stderr, JS9.analOpts.epattern);
-		    }
-		    if( robj.stdout ){
-			// last line is the file name (ignore what comes before)
-			nfile = robj.stdout
-			.replace(/\n*$/, "").split("\n").pop();
-			next = nfile.split(".").pop().toLowerCase();
-			// is it a png file?
-			if( next === "png" ){
-			    // new png file: call constructor, save the result
-			    JS9.checkNew(new JS9.Image(nfile, opts, func));
-			} else {
-			    // still not a png file ... give up
-			    JS9.error("fits2png conversion failed: " + nfile);
-			}
-		    }
-		});
-	    } else {
-		// no helper to do conversion
-		JS9.error("no JS9 helper available to convert image: " + file);
-	    }
-	} else {
-	    if( opts.display ){
-		disp = JS9.lookupDisplay(opts.display);
-	    }
-	    JS9.waiting(true, disp);
-	    // remove extension so we can find the file itself
-	    tfile = file.replace(/\[.*\]/, "");
-	    JS9.fetchURL(file, tfile, opts, JS9.NewFitsImage);
+	if( JS9.fits2RepFile(opts.display, file, opts, "fits") ){
+	    return;
+	} else if( JS9.fits2RepFile(opts.display, file, opts, "png", func) ){
+	    return;
 	}
+	if( opts.display ){
+	    disp = JS9.lookupDisplay(opts.display);
+	}
+	JS9.waiting(true, disp);
+	// remove extension so we can find the file itself
+	tfile = file.replace(/\[.*\]/, "");
+	JS9.fetchURL(file, tfile, opts);
     }
 });
 

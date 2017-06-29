@@ -193,17 +193,6 @@ JS9.Menubar.init = function(width, height){
 		} else {
 		    items.loadcors.disabled = true;
 		}
-		// only show imsection if the fits file differs from the
-		// displayed file (i.e. its a representation file)
-		items.imsection = {name: "extract image section ..."};
-		if( !JS9.allinone 			 &&
-		    JS9.globalOpts.helperType !== "none" &&
-		    JS9.globalOpts.workDir      	 &&
-		    tim && tim.parentFile 		 ){
-		    items.imsection.disabled = false;
-		} else {
-		    items.imsection.disabled = true;
-		}
 		items["sep" + n++] = "------";
 		items.print = {name: "print ..."};
 		items.header = {name: "display FITS header"};
@@ -240,10 +229,8 @@ JS9.Menubar.init = function(width, height){
 		}
 		items.free = {name: "free image memory"};
 		items.close = {name: "close image"};
-		items.removeproxy = {name: "remove proxy file from server",
-				     disable: false};
-		if( tim && !tim.proxyFile ){
-		    items.removeproxy.disabled = true;
+		if( tim && tim.proxyFile ){
+		    items.removeproxy = {name: "remove proxy file from server"};
 		}
 		items["sep" + n++] = "------";
 		items.loadcatalog = {name: "load catalog ..."};
@@ -263,7 +250,7 @@ JS9.Menubar.init = function(width, height){
 		return {
                     callback: function(key){
 		    getDisplays().forEach(function(val){
-			var j, s, t, did, save_orc, kid, unew, uwin;
+			var j, s, t, did, kid, unew, uwin;
 			var udisp = val;
 			var uim = udisp.image;
 			switch(key){
@@ -371,48 +358,6 @@ JS9.Menubar.init = function(width, height){
 			    // save info for running the task
 			    $(did).data("dispid", udisp.id)
 				  .data("aname", "loadproxy");
-			    break;
-			case "imsection":
-			    // load param url to run analysis task
-			    // param url is relative to js9 install dir
-			    save_orc = JS9.Regions.opts.onchange;
-			    $("#dhtmlwindowholder").arrive("#imageSectionForm",
-                            {onceOnly: true}, function(){
-				 var f = "#imageSectionForm";
-				 JS9.Regions.opts.onchange = function(im, xreg){
-				    var w, h, ltm1, ltm2;
-				    // call previous
-				    if( save_orc ){ save_orc(im, xreg); }
-				    // verify this image can be imsection'ed
-				    if( !im.parentFile ){ return; }
-				    // are we using a region for pos/size?
-				    if( $(f+" input:radio[name=imode]:checked")
-					  .val() !== "region" ){ return; }
-				    // do we have a box region?
-				    if( xreg.shape !== "box" ){	return; }
-				    // set current size and position
-				    ltm1 = im.raw.header.LTM1_1 || 1.0;
-				    w = xreg.width / ltm1;
-				    ltm2 = im.raw.header.LTM2_2 || 1.0;
-				    h = xreg.height / ltm2;
-				    $(f+" #xcen").val(Math.floor(xreg.lcs.x));
-				    $(f+" #ycen").val(Math.floor(xreg.lcs.y));
-				    $(f+" #xdim").val(Math.floor(w));
-				    $(f+" #ydim").val(Math.floor(h));
-				};
-			    });
-			    $("#dhtmlwindowholder").leave("#imageSectionForm",
-			    {onceOnly: true}, function(){
-				JS9.Regions.opts.onchange = save_orc;
-			    });
-			    did = JS9.Image.prototype.displayAnalysis.call(null,
-				"params",
-				JS9.InstallDir(JS9.globalOpts.imsectionURL),
-				{title: "Extract Image Section From a 'Parent' File",
-	                        winformat: "width=480px,height=200px,center=1,resize=1,scrolling=1"});
-			    // save info for running the task
-			    $(did).data("dispid", udisp.id)
-				  .data("aname", "imsection");
 			    break;
 			case "refresh":
 			    $('#refreshLocalFile-' + udisp.id).click();
