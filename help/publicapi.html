@@ -537,6 +537,83 @@ existing image, while the latter adds a completely new image to the
 display.
 
 <p>
+<font size="+1"><b><u>Extract and display a section of a FITS file</u></b></font>
+<p>
+<code><font size="+1">JS9.DisplaySection(opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>opts</b>: object containing section options
+</ul>
+This routine allows you to extract and display a section of FITS file.
+The opts object contains properties specifying how to generate and
+display the section:
+<ul>
+<li><b>xcen</b>: x center of the section in file (physical) coords (required)
+<li><b>ycen</b>: y center of the section in file (physical) coords (required)
+<li><b>xdim</b>: x dimension of section to extract before binning
+<li><b>ydim</b>: y dimension of section to extract before binning
+<li><b>bin</b>:  bin factor to apply after extracting the section
+<li><b>filter</b>: for tables, row/event filter to apply when extracting section
+<li><b>separate</b>: if true, display as a separate image (default is to update the current image)
+</ul>
+The xcen and ycen properties are required but all other properties are optional.
+
+<p>
+For example, if an image has dimensions 4096 x 4096, then specifying:
+<ul>
+<li> center: 1024, 1024
+<li> dimensions: 1024, 1024
+<li> bin: 2
+</ul>
+will bin the upper left 1024 x 1024 section of the image by 2 to
+produce a 512 x 512 image.
+
+<p>
+Table filtering allows you  to select rows from an FITS binary table
+(e.g., an X-ray event list) by checking each row against an expression
+involving the columns in the table. When a table is filtered, only
+valid rows satisfying these expressions are used to make the image.
+
+<p>
+A filter expression consists of an arithmetic or logical operation
+involving one or more column values from a table. Columns can be
+compared to other columns or to numeric constants. Standard JavaScript
+math functions can be applied to columns. JavaScript (or C) semantics
+are used when constructing expressions, with the usual precedence and
+associativity rules holding sway:
+<pre>
+  Operator                                Associativity
+  --------                                -------------
+  ()                                      left to right
+  !  (bitwise not) - (unary minus)        right to left
+  *  /                                    left to right
+  +  -                                    left to right
+  &lt; &lt;= &gt; &gt;=                               left to right
+  == !=                                   left to right
+  &  (bitwise and)                        left to right
+  ^  (bitwise exclusive or)               left to right
+  |  (bitwise inclusive or)               left to right
+  && (logical and)                        left to right
+  || (logical or)                         left to right
+  =                                       right to left
+</pre>
+For example, if energy and pha are columns in a table, then the
+following are valid expressions:
+<pre>
+  pha &gt; 1
+  energy == pha
+  pha &gt; 1 && energy &le; 2
+  max(pha,energy) &ge; 2.5
+</pre>
+
+<p>
+NB: JS9 uses cfitsio by default (you can, but should not, use the
+deprecated fitsy.js), and therefore follows cfitsio filtering
+conventions, which are documented
+<a href="https://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/node97.html">here</a>.
+
+<p>
 <font size="+1"><b><u>Display an extension from a multi-extension FITS file</u></b></font>
 <p>
 <code><font size="+1">JS9.DisplayExtension(extid, opts)</font></code>

@@ -24,22 +24,20 @@ on the table columns.
 When extracting an image section, you can set one or more of the
 following options:
 <ul>
-<li> <b>center:</b> the file (physical) coordinates around which to
+<li><b>center:</b> the file (physical) coordinates around which to
 perform the section extraction.
-<li> <b>dims:</b> the size of the image to extract (before binning is
+<li><b>size:</b> the size of the image to extract (before binning is
 performed).
-<li> <b>bin:</b> determines how many physical pixels are summed into
-an image pixel.
+<li><b>bin:</b> determines how many physical pixels are summed into
+an image pixel after the section is extracted
+<li><b>filter:</b>for tables, row/event filter to apply when extracting the section
+<li><b>separate:</b> if true, display as a separate image (default is to update the current image)
 </ul>
 <p>
 For example, if a table has FITS (tlmin, tlmax) dimensions 4096 x 4096, then:
 <ul>
-<li> <b>bin: 4, dimensions: 4096 x 4096</b> will bin the entire file by 4 to
-produce a 1024 x 1024 image.
-<li> <b>bin: 2, dimensions: 1024 x 1024</b> will bin the central 1024 x 1024
-section of the image by 2 to produce a 512 x 512 image.
-<li> <b>bin: 2, dimensions: 1024 x 1024, center: 1024, 1024</b> will bin the upper left
-2048 x 2048 section of the image by 2 to produce a 512 x 512 image.
+<li> <b>center: 2048, 2048; dimensions: 4096, 4096; bin: 4</b> will bin the entire file by 4 to produce a 1024 x 1024 image.
+<li> <b>center: 1024, 1024; dimensions: 1024, 1024, bin: 2</b> will bin the upper left 1024 x 1024 section of the image by 2 to produce a 512 x 512 image.
 </ul> 
 
 <p>
@@ -74,48 +72,20 @@ associativity rules holding sway:
 For example, if energy and pha are columns in a table, 
 then the following are valid expressions:
 <pre>
-  pha > 1
+  pha &gt; 1
   energy == pha
-  pha > 1 && energy <= 2
-  max(pha,energy)>=2.5
+  pha &gt; 1 && energy &le; 2
+  max(pha,energy)&ge;2.5
 </pre>
 
 <p>
-NB: when using cfitsio (the default, instead of fitsy.js), table
-filtering follows cfitsio conventions, which is documented
+NB: when using cfitsio (the default, instead of the deprecated
+fitsy.js), table filtering follows cfitsio conventions, which is
+documented
 <a href="https://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/node97.html">here</a>.
 
 <p>
-NB: the range list support described below works only when using
-fitsy.js. It does not work for cfitsio.
-
-<p>
-In addition to the standard JavaScript/C syntax, fitsy.js filter expressions
-can make use of IRAF-style <b>range lists</b> which specify a range of
-values. The syntax requires that the column name be followed by an '='
-sign, which is followed by a range expression of the form:
-<pre>
-  col = :v            # col <= v in range
-  col = v:            # col >= v in range
-  col = v1:v2         # v1 <= col <= v2 in range
-</pre>
-The v values above must be numeric constants. 
-<p>
-[A note for DS9/funtools users: the DS9/funtools syntax supported a
-comma operator, which I now consider to be one of the bigger design
-mistakes of my career. The problem is that the operator either meant
-logical AND or logical OR, depending on context. This led to a lot of
-confusion. For JS9, the comma operator has been removed, so that you
-now explicitly and clearly specify the logical operator:
-<pre>
-  pi=1:4 || pi=7:9    # equivalent to DS9's pi=1:4,7:9
-  pi > 5 || pha > 6   # equivalent to DS9's pi > 5, pha > 6
-  pi > 5 && pha > 6   # this had no comma equivalent and caused confusion!
-</pre>
-Hmmm ... I might have mixed up the last two examples. QED]
-
-<p>
-Once the desired parameters have been set, pressing the <b>Rebin</b>
+Once the desired parameters have been set, pressing the <b>Run</b>
 button will filter, bin and display the data.
 
 
