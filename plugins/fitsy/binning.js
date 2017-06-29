@@ -106,7 +106,7 @@
 		    form.xdim.value = String(Math.floor(hdu.naxis1 / dval1));
 		    form.ydim.value = String(Math.floor(hdu.naxis2 / dval2));
 		    form.bin.value = String(Math.floor((hdu.bin || 1) / dval1));
-		    form.filter.value = "";
+		    form.filter.value = im.raw.filter || "";
 
 		    form.bin.disabled = false;
 		    form.xcen.disabled = false;

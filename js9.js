@@ -1568,7 +1568,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     // last chance: get it from the file
     if( !this.id ){
 	// save id in case we have to change it for uniqueness
-	this.id0 = this.file.split("/").reverse()[0];
+	this.id0 = (this.parentFile||this.file).split("/").reverse()[0];
 	// get a unique id for this image
 	this.id = JS9.getImageID(this.id0, this.display.id);
     }
@@ -1576,6 +1576,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     if( opts.proxyFile ){
 	this.proxyFile = opts.proxyFile;
     }
+    // save filter, if necessary
+    this.raw.filter = opts.filter || "";
     // min and max data values
     if( hdu.dmin && hdu.dmax ){
 	// from object
@@ -2777,7 +2779,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	JS9.waiting(true, that.display);
 	if( opts.separate ){
 	    // replace old extensions with new
-	    if( opts.filter ){
+	    if( that.raw.filter ){
 		ss = '[' + opts.filter.replace(/\s+/g,"") + ']';
 		opts.id = that.id.replace(rexp, "$1") + ss;
 		if( that.fitsFile ){
@@ -2838,6 +2840,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	opts.bin = opts.bin || JS9.fits.options.image.bin;
 	break;
     }
+    // save the filter, if necessary
+    this.raw.filter = opts.filter || "";
     // start the waiting!
     JS9.waiting(true, that.display);
     // ... start a timeout to allow the wait spinner to get started
@@ -2846,7 +2850,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	switch(from){
 	case "parentFile":
 	    // parentFile: image sect. from external parent file of cur file
-	    // opts arr is for runAnalysis, remove opts for later processing
+	    // arr is for runAnalysis, remove opts for later processing
 	    if( opts.xcen !== undefined ){
 		arr.push({name: "xcen", value: opts.xcen});
 		delete opts.xcen;
@@ -2869,7 +2873,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    }
 	    if( opts.filter !== undefined ){
 		arr.push({name: "filter", value: opts.filter});
-		delete opts.filter;
+		// hack: pass filter along so that it can reach binning plugin
+		// delete opts.filter;
 	    }
 	    // get image section from external file
 	    that.runAnalysis("imsection", arr, function(stdout,stderr,errcode){
@@ -3656,6 +3661,10 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	case "filename":
 	    if( that.parentFile && (u[1] !== "this") ){
 		r = that.parentFile;
+		// if a filter is defined, assume parent is a table
+		if( that.raw && that.raw.filter ){
+		    r += '[EVENTS][' + that.raw.filter + ']';
+		}
 	    } else if( that.fitsFile ){
 		r = withext(that, that.fitsFile);
 	    } else {

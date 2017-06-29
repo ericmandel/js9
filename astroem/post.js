@@ -312,6 +312,8 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     hdu.naxis1  = Math.floor((hdu.x2 - hdu.x1) / bin + 1);
     hdu.naxis2  = Math.floor((hdu.y2 - hdu.y1) / bin + 1);
     hdu.bitpix  = getValue(hptr+40, "i32");
+    // pass along filter, even if we did not use it
+    if( opts.filter ){ hdu.filter = opts.filter; }
     status  = getValue(hptr+44, "i32");
     _free(hptr);
     Module["errchk"](status);
