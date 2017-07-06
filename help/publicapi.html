@@ -549,15 +549,15 @@ This routine allows you to extract and display a section of FITS file.
 The opts object contains properties specifying how to generate and
 display the section:
 <ul>
-<li><b>xcen</b>: x center of the section in file (physical) coords (required)
-<li><b>ycen</b>: y center of the section in file (physical) coords (required)
+<li><b>xcen</b>: x center of the section in file (physical) coords
+<li><b>ycen</b>: y center of the section in file (physical) coords
 <li><b>xdim</b>: x dimension of section to extract before binning
 <li><b>ydim</b>: y dimension of section to extract before binning
 <li><b>bin</b>:  bin factor to apply after extracting the section
 <li><b>filter</b>: for tables, row/event filter to apply when extracting section
 <li><b>separate</b>: if true, display as a separate image (default is to update the current image)
 </ul>
-The xcen and ycen properties are required but all other properties are optional.
+All properties are optional: by default, the routine will extract a bin 1 image from the center of the file.
 
 <p>
 For example, if an image has dimensions 4096 x 4096, then specifying:

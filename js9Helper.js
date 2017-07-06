@@ -954,9 +954,6 @@ var socketioHandler = function(socket) {
 	}
 	// make up fits2fits command string from defined fits2fits action
 	obj.cmd = fits2fits[0].action;
-        if( obj.gzip ){
- 	    obj.cmd = obj.cmd + " -gzip";
-        }
         if( obj.parent ){
  	    obj.cmd = obj.cmd + " -parent";
         }

@@ -78,3 +78,5 @@ typedef struct finforec{
 #ifndef SZ_LINE
 #define SZ_LINE 4096
 #endif
+
+int _listhdu(char *iname, char *oname);

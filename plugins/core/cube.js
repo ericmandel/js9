@@ -43,12 +43,19 @@ JS9.Cube.doSlice = function(im, slice, elarr){
     var i, s;
     var opts={};
     var plugin = im.display.pluginInstances[JS9.Cube.BASE];
+    // are we still working on the previous slice?
+    if( im.parentFile && plugin.inProcess ){
+	// if so, return
+	return;
+    }
     for(i=0; i<elarr.length; i++){
 	plugin.divjq.find(elarr[i]).val(slice);
     }
     s = im.expandMacro(plugin.slice, [{name: "slice", value: slice}]);
     plugin.sval = slice;
-    im.displaySlice(s, opts);
+    plugin.inProcess = true;
+    // display slice and signal process complete
+    im.displaySlice(s, opts, function(){plugin.inProcess = false;});
 };
 
 // change range
@@ -85,13 +92,18 @@ JS9.Cube.xfirst = function(did, id, target){
 // next cube
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xnext = function(did, id, target){
-    var s, slice, plugin;
+    var s, slice, plugin, header;
     var im = JS9.lookupImage(id, did);
     if( im ){
+	if( im.parent && im.parent.raw.header ){
+	    header = im.parent.raw.header;
+	} else {
+	    header = im.raw.header;
+	}
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval + 1;
 	s = "NAXIS" + plugin.sidx;
-	if( slice > im.raw.header[s] ){
+	if( slice > header[s] ){
 	    slice = 1;
 	}
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
@@ -101,14 +113,19 @@ JS9.Cube.xnext = function(did, id, target){
 // prev cube
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xprev = function(did, id, target){
-    var s, slice, plugin;
+    var s, slice, plugin, header;
     var im = JS9.lookupImage(id, did);
     if( im ){
+	if( im.parent && im.parent.raw.header ){
+	    header = im.parent.raw.header;
+	} else {
+	    header = im.raw.header;
+	}
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval - 1;
 	if( slice < 1 ){
 	    s = "NAXIS" + plugin.sidx;
-	    slice = im.raw.header[s];
+	    slice = header[s];
 	}
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
     }
@@ -117,21 +134,31 @@ JS9.Cube.xprev = function(did, id, target){
 // last cube
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xlast = function(did, id, target){
-    var s, slice, plugin;
+    var s, slice, plugin, header;
     var im = JS9.lookupImage(id, did);
     if( im ){
+	if( im.parent && im.parent.raw.header ){
+	    header = im.parent.raw.header;
+	} else {
+	    header = im.raw.header;
+	}
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	s = "NAXIS" + plugin.sidx;
-	slice = im.raw.header[s];
+	slice = header[s];
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
     }
 };
 
 // cube arrangement
 JS9.Cube.xorder = function(did, id, target){
-    var i, arr, plugin;
+    var i, arr, plugin, header;
     var im = JS9.lookupImage(id, did);
     if( im ){
+	if( im.parent && im.parent.raw.header ){
+	    header = im.parent.raw.header;
+	} else {
+	    header = im.raw.header;
+	}
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	plugin.slice = target.value;
 	arr = plugin.slice.split(/[ ,:]/);
@@ -139,7 +166,7 @@ JS9.Cube.xorder = function(did, id, target){
 	    if( arr[i] !== "*" ){
 		plugin.sidx = i+1;
 		plugin.sval = 1;
-		plugin.smax = im.raw.header["NAXIS"+plugin.sidx];
+		plugin.smax = header["NAXIS"+plugin.sidx];
 	    }
 	}
 	$(".JS9CubeRange").prop("max", plugin.smax);
@@ -162,8 +189,8 @@ JS9.Cube.blink = function(did, id, target){
 	    plugin.blinkMode = true;
 	} 
 	JS9.Cube.tid = window.setTimeout(function(){
-		JS9.Cube.blink(did, id, target);
-	    }, plugin.rate);
+	    JS9.Cube.blink(did, id, target);
+	}, plugin.rate);
     }
 };
 
@@ -186,6 +213,7 @@ JS9.Cube.xstop = function(did, id, target){
     var im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
+	plugin.inProcess = false;
 	if( plugin.blinkMode ){
 	    if( plugin.tid ){
 		window.clearTimeout(plugin.tid);
@@ -221,7 +249,7 @@ JS9.Cube.close = function(){
 
 // constructor: add HTML elements to the plugin
 JS9.Cube.init = function(opts){
-    var i, s, im, arr, mopts, imid, dispid;
+    var i, s, im, arr, mopts, imid, dispid, header;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -253,6 +281,11 @@ JS9.Cube.init = function(opts){
     // do we have an image?
     im = this.display.image;
     if( im && (opts.mode !== "clear") ){
+	if( im.parent && im.parent.raw.header ){
+	    header = im.parent.raw.header;
+	} else {
+	    header = im.raw.header;
+	}
 	// convenience variables
 	imid = im.id;
 	dispid = im.display.id;
@@ -262,13 +295,13 @@ JS9.Cube.init = function(opts){
 	    for(i=0; i<arr.length; i++){
 		if( arr[i] !== "*" ){
 		    this.sidx = i+1;
-		    this.smax = im.raw.header["NAXIS"+this.sidx];
+		    this.smax = header["NAXIS"+this.sidx];
 		    this.sval = parseInt(arr[i], 10);
 		}
 	    }
 	} else {
 	    this.slice = "*,*,$slice";
-	    this.smax = im.raw.header.NAXIS3;
+	    this.smax = header.NAXIS3;
 	    this.sidx = 3;
 	    this.sval = 1;
 	}
@@ -282,7 +315,7 @@ JS9.Cube.init = function(opts){
 	if( this.blinkMode !== undefined ){
 	    delete this.blinkMode;
 	}
-	if( im.raw.header.NAXIS > 2 ){
+	if( header.NAXIS > 2 ){
 	    mopts = [];
 	    mopts.push({name: "header",  value: JS9.Cube.headerHTML});
 	    mopts.push({name: "range",
@@ -309,7 +342,7 @@ JS9.Cube.init = function(opts){
 		       value: sprintf(JS9.Cube.rateHTML, dispid, imid)});
 	    mopts.push({name: "extname",
 		       value: sprintf(JS9.Cube.extnameHTML, 
-				      im.raw.header.EXTNAME || "")});
+				      header.EXTNAME || "")});
 	    s = im.expandMacro(JS9.Cube.cubeHTML, mopts);
 	} else {
 	    s = "<p><center>This image is not a FITS data cube.</center>";

@@ -101,7 +101,7 @@ JS9.globalOpts = {
 	  bim: null},
     defcolor: "#00FF00",	// graphics color when all else fails
     pngisfits: true,		// are PNGs really PNG representation files?
-    fits2fits: "size>100,gzip",	// convert to repfile? always|never|size>x Mb, gzip
+    fits2fits: "size>100",	// convert to repfile? always|never|size>x Mb
     fits2png: false,		// convert FITS to PNG rep files? true|false
     alerts: true,		// set to false to turn off alerts
     internalValPos: true,	// a fancy info plugin can turns this off
@@ -418,7 +418,7 @@ if( JS9.BROWSER[3] ){
 // JS9 Image object to manage images
 // ---------------------------------------------------------------------
 JS9.Image = function(file, params, func){
-    var sarr, nzoom;
+    var i, card, pars, sarr, nzoom;
     var display;
     var that = this;
     var localOpts=null;
@@ -514,6 +514,25 @@ JS9.Image = function(file, params, func){
     // was a "parent" FITS file specified?
     if( localOpts && localOpts.parentFile ){
 	this.parentFile = localOpts.parentFile;
+    }
+    // was "parent" info specified?
+    if( localOpts && localOpts.parent ){
+	this.parent = localOpts.parent;
+	// convert card string to header
+	if( this.parent.cardstr && this.parent.ncard ){
+	    this.parent.raw = {header: {}};
+	    for(i=0; i<this.parent.ncard; i++){
+		card = this.parent.cardstr.slice(i*80, (i+1)*80);
+		pars = JS9.cardpars(card);
+		if( pars !== undefined ){
+		    this.parent.raw.header[pars[0]] = pars[1];
+		}
+	    }
+	    // initialize LCS for this parent header
+	    this.parent.lcs = {};
+	    JS9.Image.prototype.initLCS.call(this.parent,
+					     this.parent.raw.header);
+	}
     }
     // was an id specified?
     if( localOpts && localOpts.id ){
@@ -948,13 +967,17 @@ JS9.Image.prototype.initLCS = function(iheader){
 	delete this.lcs.amplifier;
     }
     // reset lcs to image, if necessary
-    if( !this.lcs[this.params.lcs] ){
+    if( this.params && !this.lcs[this.params.lcs] ){
 	this.params.lcs = "image";
     }
     // set current, if not already done
-    if( !this.params.wcssys0 ){
+    if( this.params && !this.params.wcssys0 ){
 	this.setWCSSys("physical");
 	this.params.wcssys0 = this.params.lcs;
+    }
+    // save original physical
+    if( this.lcs.physical && !this.lcs.ophysical ){
+	this.lcs.ophysical = $.extend(true, {}, this.lcs.physical);
     }
     // allow chaining
     return this;
@@ -1080,7 +1103,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 	for(i=0; i<clen; i++){
 	    card = this.raw.cardstr.slice(i*80, (i+1)*80);
 	    pars = JS9.cardpars(card);
-	    if ( pars !== undefined ) {
+	    if( pars !== undefined ){
 		this.raw.header[pars[0]] = pars[1];
 	    }
 	}
@@ -1333,6 +1356,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 
 // read input object and convert to image data
 JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
+    var that = this;
     var i, s, ui, clen, hdu, pars, card, got, rlen, rmvfile, done;
     var header, x1, y1, bin;
     var owidth, oheight, obitpix, oltm1_1;
@@ -1469,7 +1493,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	clen = this.raw.card.length;
 	for(i=0; i<clen; i++){
 	    pars = JS9.cardpars(this.raw.card[i]);
-	    if ( pars !== undefined ) {
+	    if( pars !== undefined ){
 		this.raw.header[pars[0]] = pars[1];
 	    }
 	}
@@ -1480,7 +1504,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	for(i=0; i<clen; i++){
 	    card = this.raw.cardstr.slice(i*80, (i+1)*80);
 	    pars = JS9.cardpars(card);
-	    if ( pars !== undefined ) {
+	    if( pars !== undefined ){
 		this.raw.header[pars[0]] = pars[1];
 	    }
 	}
@@ -1549,14 +1573,29 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     // add extname or extnum, if possible
     if( !this.id && this.file && !this.file.match(/\[.*[^a-zA-Z0-9_].*\]/) ){
-	if( this.raw.hdu.fits ){
-	    if( this.raw.hdu.fits.extname ){
+	if( opts.extname || opts.extnum ){
+	    if( opts.extname ){
 		this.file = this.file.replace(/\[.*\]/, "");
-		this.file += sprintf("[%s]", this.raw.hdu.fits.extname);
-	    } else if( this.raw.hdu.fits.extnum &&
-		       (this.raw.hdu.fits.extnum > 0) ){
+		this.file += sprintf("[%s]", opts.extname);
+	    } else if( opts.extnum && (opts.extnum > 0) ){
 		this.file = this.file.replace(/\[.*\]/, "");
-		this.file += sprintf("[%s]", this.raw.hdu.fits.extnum);
+		this.file += sprintf("[%s]", opts.extnum);
+	    }
+	    if( hdu && hdu.fits ){
+		if( opts.extname ){
+		    hdu.fits.extname = opts.extname;
+		}
+		if( opts.extnum && (opts.extnum > 0) ){
+		    hdu.fits.extnum = opts.extnum;
+		}
+	    }
+	} else if( hdu.fits ){
+	    if( hdu.fits.extname ){
+		this.file = this.file.replace(/\[.*\]/, "");
+		this.file += sprintf("[%s]", hdu.fits.extname);
+	    } else if( hdu.fits.extnum && (hdu.fits.extnum > 0) ){
+		this.file = this.file.replace(/\[.*\]/, "");
+		this.file += sprintf("[%s]", hdu.fits.extnum);
 	    }
 	} else if( this.raw.header ){
 	    if( this.raw.header.EXTNAME ){
@@ -1615,8 +1654,32 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     this.initLCS();
     // get hdu info, if possible
     try{
-	s = JS9.listhdu(this.raw.hdu.fits.vfile);
-	this.hdus = JSON.parse(s);
+	if( opts.hdus ){
+	    that.hdus = opts.hdus;
+	} else if( this.parentFile &&
+		   JS9.helper.connected && JS9.helper.js9helper ){
+	    obj = {
+		id: this.expandMacro("$id"),
+		cmd: this.expandMacro("js9Xeq listhdus $filename"),
+		image: this.file,
+		fits: this.parentFile,
+		rtype: "text"
+	    };
+	    JS9.helper.send("listhdus", obj, function(obj){
+		if( obj.stderr ){
+		    return;
+		}
+		if( obj.errcode ){
+		    return;
+		}
+		if( obj.stdout ){
+		    that.hdus = JSON.parse(obj.stdout);
+		}
+	    });
+	} else if( this.raw && this.raw.hdu && this.raw.hdu.fits ){
+	    s = JS9.listhdu(this.raw.hdu.fits.vfile);
+	    this.hdus = JSON.parse(s);
+	}
     }
     catch(ignore){}
     // can we remove the virtual file?
@@ -2604,190 +2667,34 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     return this;
 };
 
-// display the specified extension of a multi-extension FITS file
-JS9.Image.prototype.displayExtension = function(extid, opts){
-    var i, s, got, extOpts, extname, im, id;
+// extract and display a section of an image, with table filtering
+JS9.Image.prototype.displaySection = function(opts, func) {
     var that = this;
-    var newExtHandler = function(hdu){
-	var iid;
+    var hdu, fits, from, obj;
+    var arr = [];
+    var disp = function(hdu, opts){
+	var tim, iid;
 	var ss = "";
-	var topts = {};
+	opts = opts || {};
+	// start the waiting!
+	if( opts.waiting !== false ){
+	    JS9.waiting(true, that.display);
+	}
 	// the id might have changed if we changed extensions
 	if( hdu.fits.extname ){
 	    ss = sprintf("[%s]", hdu.fits.extname);
-	} else if( hdu.fits.extnum ){
-	    if( hdu.fits.extnum > 0 ){
-		ss = sprintf("[%s]", hdu.fits.extnum);
-	    } else {
-		ss = "";
+	} else if( hdu.fits.extnum && hdu.fits.extnum > 0 ){
+	    ss = sprintf("[%s]", hdu.fits.extnum);
+	} else if( that.parent ){
+	    if( that.parent.extname ){
+		ss = sprintf("[%s]", that.parent.extname);
+	    } else if( that.parent.extnum && that.parent.extnum > 0 ){
+		ss = sprintf("[%s]", that.parent.extnum);
 	    }
 	}
 	iid = that.id.replace(/\[.*\]/,"") + ss;
 	if( opts.separate ){
-	    topts.id = iid;
-	    topts.display = that.display;
-	    JS9.checkNew(new JS9.Image(hdu, topts));
-	} else {
-	    topts.file = iid;
-	    topts.id = iid;
-	    that.refreshImage(hdu, topts);
-	}
-    };
-    // sanity check
-    if( extid === undefined ){
-	JS9.error("missing extname/extnum for displayExtension()");
-    }
-    // opts is ... optional
-    opts = opts || {};
-    // only makes sense if we have hdus
-    if( !this.hdus ){
-	JS9.error("no FITS HDUs found for displayExtension()");
-    }
-    // only makes sense if we have a virtual file
-    if( this.raw.hdu && this.raw.hdu.fits && this.raw.hdu.fits.fptr ){
-	// access virtual file via its fits pointer
-	extOpts = {fptr: this.raw.hdu.fits.fptr,
-		   vfile: this.raw.hdu.fits.vfile};
-	// extname specified?
-	if( typeof extid === "string" ){
-	    extOpts.extname = extid;
-	    extname = extid.toLowerCase();
-	    for(i=0, got=0; i<this.hdus.length; i++){
-		if( this.hdus[i].name &&
-		    this.hdus[i].name.toLowerCase() === extname ){
-		    got++;
-		    break;
-		}
-	    }
-	    if( !got ){
-		JS9.error(sprintf("no FITS HDU %s for displayExtension()",
-				  extid));
-	    }
-	// extnum specified?
-	} else if( typeof extid === "number" ){
-	    extOpts.extnum = extid;
-	    if( this.hdus[extid] ){
-		extname = this.hdus[extid].name || extid.toString();
-	    } else {
-		JS9.error(sprintf("no FITS HDU %s for displayExtension()",
-				 extid));
-	    }
-	}
-	// if we are creating a separate file, see if we already have it
-	if( opts.separate ){
-	    s = sprintf("[%s]", extname);
-	    id = this.id.replace(/\[.*\]/,"") + s;
-	    for(i=0, got=0; i<JS9.images.length; i++){
-		im = JS9.images[i];
-		if( id === im.id ){
-		    if( $("#"+im.display.id).length > 0 ){
-			if( this.display.id === im.display.id ){
-			    got++;
-			    break;
-			}
-		    }
-		}
-	    }
-	    if( got ){
-		im.displayImage("display", opts);
-		im.display.clearMessage();
-		return;
-	    }
-	}
-	// cleanup previous FITS file support, if necessary
-	// do this before we handle the new FITS file, or else
-	// we end up with a memory leak in the emscripten heap!
-	if( JS9.fits.cleanupFITSFile && this.raw.hdu && this.raw.hdu.fits ){
-	    JS9.fits.cleanupFITSFile(this.raw.hdu.fits, false);
-	}
-	// process the FITS file by going to the extname/extnum
-	try{ JS9.handleFITSFile("", extOpts, newExtHandler); }
-	catch(e){ JS9.error("can't process FITS extension", e); }
-    } else {
-	JS9.error("virtual FITS file is missing for extension display");
-    }
-    // allow chaining
-    return this;
-};
-
-// display the specified slice of a 3D or 4d FITS cube
-JS9.Image.prototype.displaySlice = function(slice, opts){
-    var sliceOpts;
-    var that = this;
-    var newSliceHandler = function(hdu){
-	var im, s;
-	if( opts.separate ){
-	    s = sprintf("[%s]", sliceOpts.slice);
-	    s = s.replace(/([0-9][0-9]*)/, "$1:$1");
-	    opts.id = that.id.replace(/\[.*\]/,"") + s;
-	    hdu.filename = that.file.replace(/\[.*\]/,"") + s;
-	    im = JS9.lookupImage(opts.id, that.display.id);
-	    if( im ){
-		im.slice = sliceOpts.slice;
-		im.displayImage("display", opts);
-		im.display.clearMessage();
-	    } else {
-		JS9.Load(hdu, opts, {display: opts.display || that.display});
-	    }
-	} else {
-	    that.slice = sliceOpts.slice;
-	    that.refreshImage(hdu, JS9.fits.options);
-	}
-    };
-    // sanity check
-    if( slice === undefined ){
-	JS9.error("missing slice for displaySlice()");
-    }
-    // opts is ... optional
-    opts = opts || {};
-    // only makes sense if we have a virtual file
-    if( this.raw.hdu && this.raw.hdu.fits && this.raw.hdu.fits.fptr ){
-	// access virtual file via its fits pointer
-	sliceOpts = {fptr: this.raw.hdu.fits.fptr,
-		     vfile: this.raw.hdu.fits.vfile};
-	// slicename or slicenum specified?
-	if( JS9.isNumber(slice) ){
-	    sliceOpts.slice = sprintf("*,*,%s", slice);
-	} else {
-	    sliceOpts.slice = slice;
-	}
-	// cleanup previous FITS file heap before handling the new FITS file,
-	// or we end up with a memory leak in the emscripten heap
-	if( JS9.fits.cleanupFITSFile && this.raw.hdu && this.raw.hdu.fits ){
-	    JS9.fits.cleanupFITSFile(this.raw.hdu.fits, false);
-	}
-	// process the FITS file by going to the slice
-	try{ JS9.handleFITSFile("", sliceOpts, newSliceHandler); }
-	catch(e){ JS9.error("can't process FITS slice", e); }
-    } else {
-	JS9.error("virtual FITS file is missing for slice display");
-    }
-    // allow chaining
-    return this;
-};
-
-// extract and display a section of an image, with table filtering
-JS9.Image.prototype.displaySection = function(opts, func) {
-    var that = this;
-    var hdu, fits, from;
-    var arr = [];
-    var disp = function(hdu, opts, func){
-	var ss, tim;
-	var rexp = /(\[.*[a-zA-Z0-9_].*\])\[.*\]/;
-	opts = opts || {};
-	// start the waiting!
-	JS9.waiting(true, that.display);
-	if( opts.separate ){
-	    // replace old extensions with new
-	    if( that.raw.filter ){
-		ss = '[' + opts.filter.replace(/\s+/g,"") + ']';
-		opts.id = that.id.replace(rexp, "$1") + ss;
-		if( that.fitsFile ){
-		    opts.file = that.fitsFile.replace(rexp, "$1") + ss;
-		} else {
-		    opts.file = opts.id;
-		}
-	    }
+	    opts.id = iid;
 	    opts.display = that.display;
 	    // lame attempt to get to original parentFile
 	    if( that.fitsFile ){
@@ -2799,29 +2706,21 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		}
 	    }
 	    JS9.checkNew(new JS9.Image(hdu, opts, func));
-	    // done waiting
-	    JS9.waiting(false);
 	} else {
+	    opts.file = iid;
+	    opts.id = iid;
+	    if( func ){ opts.onrefresh = func; }
 	    // refresh the current image with the new hdu
 	    that.refreshImage(hdu, opts);
-	    // done waiting
-	    JS9.waiting(false);
-	    // call function, if necessary
-	    if( func ){
-		try{ JS9.xeqByName(func, window, this); }
-		catch(e){ JS9.error("in imsection callback", e, false); }
-	    }
 	}
+	// done waiting
+	JS9.waiting(false);
     };
     opts = opts || {};
-    // sanity checks
-    if( opts.xcen === undefined || opts.ycen === undefined ){
-	JS9.error("displaySection() requires specification of xcen, ycen");
-    }
     // from where do we extract the section?
     from = opts.from;
     if( !from ){
-	if( this.parentFile ){
+	if( this.parentFile && JS9.helper.connected && JS9.helper.js9helper ){
 	    from = "parentFile";
 	} else if( this.raw && this.raw.hdu && this.raw.hdu.fits ){
 	    hdu = this.raw.hdu;
@@ -2830,68 +2729,91 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	}
     }
     // sensible (required) defaults
-    opts.bin = opts.bin || 1;
+    opts.xcen = opts.xcen || 0;
+    opts.ycen = opts.ycen || 0;
+    opts.bin  = opts.bin  || 1;
     switch(this.imtab){
     case "table":
 	opts.xdim = opts.xdim || JS9.fits.options.table.xdim;
 	opts.ydim = opts.ydim || JS9.fits.options.table.ydim;
-	opts.bin = opts.bin || JS9.fits.options.table.bin;
+	opts.bin  = opts.bin  || JS9.fits.options.table.bin;
 	break;
     default:
 	opts.xdim = opts.xdim || JS9.fits.options.image.xdim;
 	opts.ydim = opts.ydim || JS9.fits.options.image.ydim;
-	opts.bin = opts.bin || JS9.fits.options.image.bin;
+	opts.bin  = opts.bin  || JS9.fits.options.image.bin;
 	break;
     }
     // save the filter, if necessary
     this.raw.filter = opts.filter || "";
     // start the waiting!
-    JS9.waiting(true, that.display);
+    if( opts.waiting !== false ){
+	JS9.waiting(true, that.display);
+    }
     // ... start a timeout to allow the wait spinner to get started
     window.setTimeout(function(){
 	// get image section
 	switch(from){
 	case "parentFile":
+	    // remove current proxy file, if necessary
+	    that.removeProxyFile();
 	    // parentFile: image sect. from external parent file of cur file
 	    // arr is for runAnalysis, remove opts for later processing
-	    if( opts.xcen !== undefined ){
-		arr.push({name: "xcen", value: opts.xcen});
-		delete opts.xcen;
-	    }
-	    if( opts.ycen !== undefined ){
-		arr.push({name: "ycen", value: opts.ycen});
-		delete opts.ycen;
-	    }
-	    if( opts.xdim !== undefined ){
-		arr.push({name: "xdim", value: opts.xdim});
-		delete opts.xdim;
-	    }
-	    if( opts.ydim !== undefined ){
-		arr.push({name: "ydim", value: opts.ydim});
-		delete opts.ydim;
-	    }
-	    if( opts.bin !== undefined ){
-		arr.push({name: "bin", value: opts.bin});
-		delete opts.bin;
-	    }
-	    if( opts.filter !== undefined ){
-		arr.push({name: "filter", value: opts.filter});
-		// hack: pass filter along so that it can reach binning plugin
-		// delete opts.filter;
-	    }
+	    arr.push({name: "xcen", value: opts.xcen});
+	    delete opts.xcen;
+	    arr.push({name: "ycen", value: opts.ycen});
+	    delete opts.ycen;
+	    arr.push({name: "xdim", value: opts.xdim});
+	    delete opts.xdim;
+	    arr.push({name: "ydim", value: opts.ydim});
+	    delete opts.ydim;
+	    arr.push({name: "bin", value: opts.bin});
+	    delete opts.bin;
+	    arr.push({name: "filter", value: opts.filter||""});
+	    // hack: pass filter along so that it can reach binning plugin
+	    // delete opts.filter;
 	    // get image section from external file
-	    that.runAnalysis("imsection", arr, function(stdout,stderr,errcode){
-		var rarr, f, pf;
-		if( stderr ){
-		    JS9.error(stderr);
+	    arr.push({name: "slice", value: opts.slice||""});
+	    delete opts.slice;
+	    obj = {id: that.expandMacro("$id"),
+		   image: that.file,
+		   fits: that.parentFile,
+		   rtype: "text"};
+	    obj.cmd = "js9Xeq imsection " + that.parentFile;
+	    if( opts.extname || opts.extnum ){
+		obj.cmd = obj.cmd.replace(/\[.*\]/,"");
+		if( opts.extname ){
+		    obj.cmd += "[" + opts.extname + "]";
+		} else {
+		    obj.cmd += "[" + opts.extnum + "]";
+		}
+		delete opts.extname;
+		delete opts.extnum;
+	    }
+	    obj.cmd += that.expandMacro(" $xdim@$xcen,$ydim@$ycen,$bin $filter $slice", arr);
+	    JS9.helper.send("imsection", obj, function(r){
+		var obj, jobj, rarr, f, pf;
+		if( typeof r === "object" ){
+		    // with socketio, we get an object
+		    obj = r;
+		} else {
+		    // with cgi, we just get a text string
+		    if( r.search(JS9.analOpts.epattern) >=0 ){
+			obj = {stderr: r};
+		    } else {
+			obj = {stdout: r};
+		    }
+		}
+		if( obj.stderr ){
+		    JS9.error(obj.stderr);
 		    return;
 		}
-		if( errcode ){
-		    JS9.error("in displaySection: " + errcode);
+		if( obj.errcode ){
+		    JS9.error("in displaySection: " + obj.errcode);
 		    return;
 		}
 		// output is file and possibly parentFile
-		rarr = stdout.split(/\s+/);
+		rarr = obj.stdout.split(/\n/);
 		// file
 		f = rarr[0].trim().replace(/\/\.\//, "/");
 		// relative path: add install dir prefix
@@ -2900,9 +2822,20 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		}
 		// which is a proxy file (meaning: delete it on close)
 		opts.proxyFile = f;
-		// look for parentFile (path relative to helper, not install)
+		// json fits info
 		if( rarr[1] ){
-		    pf = rarr[1].trim().replace(/\/\.\//, "/");
+		    try{ jobj = JSON.parse(rarr[1]); }
+		    catch(ignore){}
+		    if( jobj ){
+			opts.extname = jobj.extname;
+			opts.extnum = jobj.extnum;
+			opts.hdus = jobj.hdus;
+			opts.parent = jobj;
+		    }
+		}
+		// look for parentFile (path relative to helper, not install)
+		if( rarr[2] ){
+		    pf = rarr[2].trim().replace(/\/\.\//, "/");
 		    opts.parentFile = pf;
 		}
 		// hack: use LTM to determine bin/obin, since both will be 1
@@ -2916,10 +2849,10 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 			that.raw.hdu && that.raw.hdu.fits ){
 			JS9.fits.cleanupFITSFile(that.raw.hdu.fits, true);
 		    }
-		    // remove current proxy file, if necessary
-		    that.removeProxyFile();
 		    // start the waiting!
-		    JS9.waiting(true, that.display);
+		    if( opts.waiting !== false ){
+			JS9.waiting(true, that.display);
+		    }
 		    // process the newly retrieved data as FITS
 		    JS9.fits.handleFITSFile(result, opts, disp);
 		});
@@ -2928,7 +2861,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	case "virtualFile":
 	    // extract image section from current virtual file
 	    JS9.getFITSImage(fits, hdu, opts, function(hdu){
-		disp(hdu, opts, func);
+		disp(hdu, opts);
 	    });
 	    break;
 	default:
@@ -2936,6 +2869,102 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    break;
 	}
     }, JS9.SPINOUT);
+};
+
+// display the specified extension of a multi-extension FITS file
+JS9.Image.prototype.displayExtension = function(extid, opts, func){
+    var i, s, got, extname, im, id;
+    // opts is ... optional
+    opts = opts || {};
+    opts.waiting = false;
+    // only makes sense if we have hdus
+    if( !this.hdus ){
+	JS9.error("no FITS HDUs found for displayExtension()");
+    }
+    // sanity check
+    if( extid === undefined ){
+	JS9.error("missing extname/extnum for displayExtension()");
+    }
+    // extname specified?
+    if( typeof extid === "string" ){
+	opts.extname = extid;
+	extname = extid.toLowerCase();
+	for(i=0, got=0; i<this.hdus.length; i++){
+	    if( this.hdus[i].name &&
+		this.hdus[i].name.toLowerCase() === extname ){
+		got++;
+		break;
+	    }
+	}
+	if( !got ){
+	    JS9.error(sprintf("no FITS HDU %s for displayExtension()", extid));
+	}
+	// extnum specified?
+    } else if( typeof extid === "number" ){
+	opts.extnum = extid;
+	if( this.hdus[extid] ){
+	    extname = this.hdus[extid].name || extid.toString();
+	} else {
+	    JS9.error(sprintf("no FITS HDU %s for displayExtension()", extid));
+	}
+    }
+    // if we are creating a separate file, see if we already have it
+    if( opts.separate ){
+	s = sprintf("[%s]", extname);
+	id = this.id.replace(/\[.*\]/,"") + s;
+	for(i=0, got=0; i<JS9.images.length; i++){
+	    im = JS9.images[i];
+	    if( id === im.id ){
+		if( $("#"+im.display.id).length > 0 ){
+		    if( this.display.id === im.display.id ){
+			got++;
+			break;
+		    }
+		}
+	    }
+	}
+	if( got ){
+	    im.displayImage("display", opts);
+	    im.display.clearMessage();
+	    return;
+	}
+    }
+    // cleanup previous FITS file support, if necessary
+    // do this before we handle the new FITS file, or else
+    // we end up with a memory leak in the emscripten heap!
+    if( JS9.fits.cleanupFITSFile && this.raw.hdu && this.raw.hdu.fits ){
+	JS9.fits.cleanupFITSFile(this.raw.hdu.fits, false);
+    }
+    // process the FITS file by going to the extname/extnum
+    this.displaySection(opts, func);
+    // allow chaining
+    return this;
+};
+
+// display the specified slice of a 3D or 4d FITS cube
+JS9.Image.prototype.displaySlice = function(slice, opts, func){
+    // opts is ... optional
+    opts = opts || {};
+    opts.waiting = false;
+    // sanity check
+    if( slice === undefined ){
+	JS9.error("missing slice for displaySlice()");
+    }
+    // slicename or slicenum specified?
+    if( JS9.isNumber(slice) ){
+	opts.slice = sprintf("*,*,%s", slice);
+    } else {
+	opts.slice = slice;
+    }
+    // cleanup previous FITS file heap before handling the new FITS file,
+    // or we end up with a memory leak in the emscripten heap
+    if( JS9.fits.cleanupFITSFile && this.raw.hdu && this.raw.hdu.fits ){
+	JS9.fits.cleanupFITSFile(this.raw.hdu.fits, false);
+    }
+    // process the FITS file by going to the slice
+    this.displaySection(opts, func);
+    // allow chaining
+    return this;
 };
 
 // convert current image to array
@@ -3191,6 +3220,15 @@ JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
     lcs = lcs || this.params.lcs || "image";
     switch(lcs){
     case "image":
+	break;
+    case "ophysical":
+	if( this.lcs.ophysical ){
+	    arr = this.lcs.ophysical.forward;
+	    rot = this.lcs.ophysical.frot;
+	} else if( this.lcs.physical ){
+	    arr = this.lcs.physical.forward;
+	    rot = this.lcs.physical.frot;
+	}
 	break;
     case "physical":
 	if( this.lcs.physical ){
@@ -3663,10 +3701,14 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    break;
 	case "filename":
 	    if( that.parentFile && (u[1] !== "this") ){
-		r = that.parentFile;
-		// if a filter is defined, assume parent is a table
+		// if a filter is defined, add it
 		if( that.raw && that.raw.filter ){
-		    r += '[EVENTS][' + that.raw.filter + ']';
+		    r = that.parentFile;
+		    // assume parent is a table with EVENTS
+		    if( !r.match(/\[.*\]/) ){ r += '[EVENTS]'; }
+		    r += '[' + that.raw.filter + ']';
+		} else {
+		    r = withext(that, that.parentFile);
 		}
 	    } else if( that.fitsFile ){
 		r = withext(that, that.fitsFile);
@@ -3731,13 +3773,9 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 			break;
 		    }
 		}
-		// handle checkboxes there were not checked
-		if( !r ){
-		    r = "false";
-		}
 	    }
 	    // if all else fails, return original macro unexpanded
-	    if( !r ){
+	    if( r === undefined ){
 		r = m;
 	    }
 	    break;
@@ -12440,7 +12478,9 @@ JS9.fitsLibrary = function(s){
     return t;
 };
 
-// check for 'real' FITS handling routine and call it
+// check for 'real' FITS handling routine and call it. This routine can:
+// read a blob as a FITS file
+// open an existing virtual FITS file (e.g. created by Montage reprojection)
 JS9.handleFITSFile = function(file, opts, handler){
     if( JS9.fits.handleFITSFile ){
 	JS9.fits.handleFITSFile(file, opts, handler);
@@ -12519,7 +12559,7 @@ JS9.getFITSImage = function(fits, hdu, options, handler){
 // JS9.fits2rep(display, file, opts, "png", "fits2png", func)
 // JS9.fits2rep(display, file, opts, "fits", "imsection")
 JS9.fits2RepFile = function(display, file, opts, xtype, func){
-    var i, s, xdim, ydim, bin;
+    var i, s, xdim, ydim, bin, obj;
     var xopts = {};
     var xmsg = "fits2" + xtype;
     var xcond = opts[xmsg] ||
@@ -12548,19 +12588,14 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	s = xcond.toLowerCase().split(/[>,]/);
 	for(i=0; i<s.length; i++){
 	    switch(s[i]){
-	    case "gzip":
-		xopts.gzip = true;
-		break;
 	    case "size":
 		if( s[i+1] ){
-		    xopts.maxsize = parseFloat(s[i+1])*1000000;
+		    xopts.maxsize = Math.min(parseFloat(s[i+1])*1000000,
+					     xdim * ydim * 4);
 		    i++;
 		}
 		break;
 	    }
-	}
-	if( !xopts.gzip ){
-	    xopts.maxsize = Math.min(xopts.maxsize, xdim * ydim * 4);
 	}
 	break;
     default:
@@ -12573,7 +12608,7 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
     JS9.waiting(true, display);
     // send message to helper to do conversion
     JS9.helper.send(xmsg, xopts, function(r){
-	var nfile, next, robj, files, f, pf, nopts;
+	var nfile, next, robj, rarr, f, pf, nopts;
 	// return type can be string or object
 	if( typeof r === "object" ){
 	    // object from node.js
@@ -12609,9 +12644,9 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 		break;
 	    case "fits2fits":
 		// output is file and possibly parentFile
-		files = robj.stdout.split(/\s+/);
+		rarr = robj.stdout.split(/\n/);
 		// file
-		f = files[0].trim().replace(/\/\.\//, "/");
+		f = rarr[0].trim().replace(/\/\.\//, "/");
 		if( f === file ){
 		    // same file (imsection not run)
 		    nopts = $.extend(true, {}, opts);
@@ -12626,10 +12661,34 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 		    nopts.source = "fits2fits";
 		    // it's a proxy file (i.e., delete it on close)
 		    nopts.proxyFile = f;
+		    // json fits info
+		    if( rarr[1] ){
+			try{ obj = JSON.parse(rarr[1]); }
+			catch(ignore){}
+			if( obj ){
+			    nopts.extname = obj.extname;
+			    nopts.extnum = obj.extnum;
+			    nopts.hdus = obj.hdus;
+			    nopts.parent = obj;
+			}
+		    }
 		    // look for parentFile (relative to helper, not install)
-		    if( files[1] ){
-			pf = files[1].trim().replace(/\/\.\//, "/");
+		    if( rarr[2] ){
+			pf = rarr[2].trim().replace(/\/\.\//, "/");
 			nopts.parentFile = pf;
+			// now add extension info, if possible
+			if( nopts.extname ){
+			    nopts.parentFile = nopts.parentFile
+				.replace(/\[.*\]/, "");
+			    nopts.parentFile += sprintf("[%s]",
+							nopts.extname);
+			} else if( nopts.extnum && (nopts.extnum > 0) ){
+			    nopts.parentFile = nopts.parentFile
+				.replace(/\[.*\]/, "");
+			    nopts.parentFile.file += sprintf("[%s]",
+							     nopts.extnum);
+			}
+
 		    }
 		    // add onload, if necessary
 		    if( func ){
@@ -16029,7 +16088,12 @@ JS9.mkPublic("SubmitAnalysis", function(el, aname, func){
     // make sure we have an image and run the analysis
     if( im ){
 	formjq = $(el).closest("form");
-	try{ obj = formjq.serializeArray(); }
+	// try{ obj = formjq.serializeArray(); }
+	// make sure unchecked elements are in the array
+	try{
+	    obj = $(':input:visible', formjq).serializeArray();
+	    obj = obj.concat($('#' + formjq.attr('id') + ' input[type=checkbox]:not(:checked)').map(function(){return {'name': this.name, 'value': 'false'};}).get());
+	}
 	catch(e){ obj = null; }
 	im.runAnalysis(aname, obj, func);
     } else {

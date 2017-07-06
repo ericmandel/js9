@@ -5,8 +5,48 @@
 
 (function() {
 
+    /* maybePhysicalToImage: it's a hack!
+       The physical position defined by LTM/LTV is not always the file position,
+       For example, if the file foo.fits was created from another file:
+           funimage somefile.fits'[*,*,2]' foo.fits
+       its LTM/LTV keywords will referring to the parent, instead of itself.
+       In such a case, we want to convert physical position to image position
+       of the physical file.
+       We try to detect this condition by:
+       a. if current file has no parent and has LTM/LTV keywords
+       b. if current file has a parent file and the parent has LTM/LTV
+    */
+    function maybePhysicalToImage(im, pos){
+	var tim, header, lpos, ipos, npos;
+	var dol2i = false;
+	if( (im.imtab === "image") && (pos.x && pos.y) ){
+	    if( im.parentFile && im.parent && im.parent.lcs ){
+		tim = im.parent;
+		header = im.parent.raw.header;
+		dol2i = true;
+	    } else if( im.raw && im.raw.header ){
+		tim = im;
+		header = im.raw.header;
+		if( header &&
+		    (header.LTM1_1 !== undefined ||
+		     header.LTM2_2 !== undefined ||
+		     header.LTV1 !== undefined   ||
+		     header.LTV2 !== undefined)  ){
+		    dol2i = true;
+		}
+	    }
+	}
+	if( dol2i ){
+	    lpos = {x: pos.x, y: pos.y};
+	    ipos = JS9.Image.prototype.logicalToImagePos.call(tim, lpos,
+							      "ophysical");
+	    npos = {x: Math.floor(ipos.x+0.5), y: Math.floor(ipos.y+0.5)};
+	}
+	return npos;
+    }
+
     function reBinImage(div, display) {
-	var hdu, options;
+	var hdu, opts, npos;
 	var im   = JS9.GetImage({display: display});
 	var form = $(div).find(".binning-form")[0];
 	var rebin = function(im, hdu, display){
@@ -30,7 +70,7 @@
 		JS9.RefreshImage(hdu, topts);
 	    }
 	};
-	if ( !im ) { return; }
+	if ( !im || !im.raw ) { return; }
 
 	hdu = im.raw.hdu;
 
@@ -39,35 +79,47 @@
 	    if ( hdu.imtab === "image" ) {
 		JS9.error("image binning not implemented");
 	    } else {
-		options = $.extend(true, {}, JS9.fits.options,
+		opts = $.extend(true, {}, JS9.fits.opts,
 	        { table: { xcen: form.xcen.value , ycen: form.ycen.value,
 			   xdim: form.xdim.value , ydim: form.ydim.value,
 			   bin: form.bin.value , filter: form.filter.value }
 	        });
-		Fitsy.readTableHDUData(hdu.fits, hdu, options, function(hdu){
+		Fitsy.readTableHDUData(hdu.fits, hdu, opts, function(hdu){
 		    rebin(im, hdu, display);
 		});
 	    }
 	    break;
 	case "cfitsio":
-	    if( !JS9.isNumber(form.xcen.value) ||
-		!JS9.isNumber(form.ycen.value) ){
-		JS9.error("image section requires specification of xcen, ycen");
+	    opts = {xcen: 0, ycen: 0, xdim: 0, ydim: 0, bin: 1, filter: ""};
+	    if( JS9.isNumber(form.xcen.value) ){
+		opts.xcen = parseFloat(form.xcen.value);
 	    }
-	    options = {xcen: parseFloat(form.xcen.value),
-		       ycen: parseFloat(form.ycen.value),
-		       xdim: parseInt(form.xdim.value, 10),
-		       ydim: parseInt(form.ydim.value, 10),
-		       bin:  parseInt(form.bin.value, 10),
-		       filter: form.filter.value,
-		       separate: $(form.separate).prop("checked")};
-	    im.displaySection(options);
+	    if( JS9.isNumber(form.ycen.value) ){
+		opts.ycen = parseFloat(form.ycen.value);
+	    }
+	    npos = maybePhysicalToImage(im, {x: opts.xcen, y: opts.ycen});
+	    if( npos ){
+		opts.xcen = npos.x;
+		opts.ycen = npos.y;
+	    }
+	    if( JS9.isNumber(form.xdim.value) ){
+		opts.xdim = Math.floor(parseFloat(form.xdim.value));
+	    }
+	    if( JS9.isNumber(form.ydim.value) ){
+		opts.ydim = Math.floor(parseFloat(form.ydim.value));
+	    }
+	    if( JS9.isNumber(form.bin.value) ){
+		opts.bin = Math.floor(parseFloat(form.bin.value));
+	    }
+	    opts.filter = form.filter.value;
+	    opts.separate = $(form.separate).prop("checked");
+	    im.displaySection(opts);
 	    break;
 	}
     }
 
     function getBinParams(div, display) {
-	var im, ipos, lpos, form, hdu;
+	var im, ipos, lpos, form, hdu, bin;
 	var dval1 = 1;
 	var dval2 = 1;
 	if ( display === undefined ) {
@@ -101,15 +153,15 @@
 		    // incorporate ltm value in bin, if necessary
 		    if( im.parentFile && im.raw.header ){
 			dval1 = im.raw.header.LTM1_1 || 1;
-			dval2 = im.raw.header.LTM2_2 || 1;
 		    }
 		    ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
 		    lpos = im.imageToLogicalPos(ipos);
 		    form.xcen.value = String(Math.floor(lpos.x));
 		    form.ycen.value = String(Math.floor(lpos.y));
-		    form.xdim.value = String(Math.floor(hdu.naxis1 / dval1));
-		    form.ydim.value = String(Math.floor(hdu.naxis2 / dval2));
-		    form.bin.value = String(Math.floor((hdu.bin || 1) / dval1));
+		    bin = Math.floor((hdu.bin || 1) / dval1);
+		    form.bin.value = String(bin);
+		    form.xdim.value = String(Math.floor(hdu.naxis1 * bin));
+		    form.ydim.value = String(Math.floor(hdu.naxis2 * bin));
 		    form.filter.value = im.raw.filter || "";
 
 		    form.bin.disabled = false;

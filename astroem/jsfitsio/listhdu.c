@@ -14,7 +14,6 @@ int _listhdu(char *iname, char *oname){
     int status = 0;   /* CFITSIO status value MUST be initialized to zero! */
     int hdupos, hdutype, bitpix, naxis, ncols, ii;
     long naxes[10], nrows;
-    char *fname;
     FILE *fd = stdout;
 
     if( !fits_open_file(&fptr, iname, READONLY, &status) ){
@@ -35,52 +34,52 @@ int _listhdu(char *iname, char *oname){
       for (; !status; hdupos++){   /* Main loop for each HDU */
         fprintf(fd, "{");
         fits_get_hdu_type(fptr, &hdutype, &status);  /* Get the HDU type */
-        fprintf(fd, "\"hdu\": %d", hdupos);
+        fprintf(fd, "\"hdu\":%d", hdupos);
 	/* output extname, if possible */
 	fits_read_key(fptr, TSTRING, "EXTNAME", colname, NULL, &status);
 	if( status == 0 ){
-	  fprintf(fd, ", \"name\": \"%s\"", colname);
+	  fprintf(fd, ",\"name\":\"%s\"", colname);
 	}
 	status = 0;
 	/* type-specific processing (image or table) */
         if( hdutype == IMAGE_HDU ){   /* primary array or image HDU */
           fits_get_img_param(fptr, 10, &bitpix, &naxis, naxes, &status);
 	  /* number of axes */
-          fprintf(fd, ", \"type\": \"image\", \"naxis\": %d", naxis);
+          fprintf(fd, ",\"type\":\"image\",\"naxis\":%d", naxis);
 	  /* axis dimensions, if there are any */
-	  fprintf(fd, ", \"naxes\": [");
+	  fprintf(fd, ",\"naxes\":[");
 	  for (ii = 0; ii < naxis; ii++){
 	    if( ii != 0 ){
-	      fprintf(fd, ", ");
+	      fprintf(fd, ",");
 	    }
 	    fprintf(fd, "%ld", naxes[ii]);  
 	  }
 	  fprintf(fd, "]");
 	  /* bitpix */
-          fprintf(fd, ", \"bitpix\": %d", bitpix);
+          fprintf(fd, ",\"bitpix\":%d", bitpix);
         } else {
 	  /* a table HDU */
           fits_get_num_rows(fptr, &nrows, &status);
           fits_get_num_cols(fptr, &ncols, &status);
 	  /* which type of table? */
           if( hdutype == ASCII_TBL ){
-            fprintf(fd, ", \"type\": \"ascii\"");
+            fprintf(fd, ",\"type\":\"ascii\"");
 	  } else {
-            fprintf(fd, ", \"type\": \"table\"");
+            fprintf(fd, ",\"type\":\"table\"");
 	  }
 	  /* rows */
-          fprintf(fd, ", \"rows\": %ld", nrows);
+          fprintf(fd, ",\"rows\":%ld", nrows);
 	  /* array of column names and types */
-          fprintf(fd, ", \"cols\": [");
+          fprintf(fd, ",\"cols\":[");
           for (ii = 1; ii <= ncols; ii++){
             fits_make_keyn("TTYPE", ii, keyname, &status); /* make keyword */
             fits_read_key(fptr, TSTRING, keyname, colname, NULL, &status);
             fits_make_keyn("TFORM", ii, keyname, &status); /* make keyword */
             fits_read_key(fptr, TSTRING, keyname, coltype, NULL, &status);
-            fprintf(fd, "{\"name\": \"%s\", \"type\": \"%s\"}", 
+            fprintf(fd, "{\"name\":\"%s\",\"type\":\"%s\"}", 
 		    colname, coltype);
 	    if( ii != ncols ){
-	      fprintf(fd, ", ");
+	      fprintf(fd, ",");
 	    }
           }
           fprintf(fd, "]");
@@ -88,10 +87,10 @@ int _listhdu(char *iname, char *oname){
 	fprintf(fd, "}");
         fits_movrel_hdu(fptr, 1, NULL, &status);  /* try move to next ext */
         if( status == 0 ){
-	  fprintf(fd, ",\n");
+	  fprintf(fd, ",");
 	}
       }
-      fprintf(fd, "]\n");
+      fprintf(fd, "]");
       if( status == END_OF_FILE ){
 	status = 0; /* Reset normal error */
       }
@@ -108,7 +107,7 @@ int _listhdu(char *iname, char *oname){
     return(status);
 }
 
-#ifndef EM
+#ifdef LISTHDUMAIN
 int main(int argc, char **argv){
     char *iname=NULL, *oname=NULL;
     if (argc < 2) {

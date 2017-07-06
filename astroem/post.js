@@ -155,6 +155,8 @@ Module["error"] = function(s, e) {
     }
 };
 
+// get immage from an already-opened virtual FITS file
+// fits object contains fptr
 Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     var i, ofptr, hptr, status, datalen, extnum, extname;
     var buf, bufptr, buflen, bufptr2, slice, doerr;
@@ -169,8 +171,48 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     if( !fptr ){
       Module["error"]("virtual FITS file is missing for getFITSImage()");
     }
-    // default hdu type is image
-    hdu.type = hdu.type || 0;
+    // are we changing extensions on an existing virtual file?
+    if( opts.extname ){
+	// look for extension with specified name
+	hptr = _malloc(4);
+	setValue(hptr, 0, "i32");
+	ccall("ffmnhd", null,
+	      ["number", "number", "string", "number", "number"],
+	      [fptr, -1, opts.extname, 0, hptr]);
+	status  = getValue(hptr, "i32");
+	_free(hptr);
+	Module["errchk"](status);
+	// get type of extension (image or table)
+	hptr = _malloc(8);
+	setValue(hptr+4, 0, "i32");
+	ccall("ffghdt", null,
+	      ["number", "number", "number"],
+	      [fptr, hptr, hptr+4]);
+	hdu.type = getValue(hptr,   "i32");
+	status  = getValue(hptr+4, "i32");
+	_free(hptr);
+	Module["errchk"](status);
+    } else if( opts.extnum !== undefined ){
+	// go to extension number
+	hptr = _malloc(8);
+	setValue(hptr+4, 0, "i32");
+	ccall("ffmahd", null,
+	      ["number", "number", "number", "number"],
+	      [fptr, opts.extnum + 1, hptr, hptr+4]);
+	hdu.type = getValue(hptr,   "i32");
+	status  = getValue(hptr+4, "i32");
+	_free(hptr);
+	Module["errchk"](status);
+    }
+    // get hdu type
+    hptr = _malloc(8);
+    setValue(hptr+4, 0, "i32");
+    ccall("ffghdt", null,
+	  ["number", "number", "number"],
+	  [fptr, hptr, hptr+4]);
+    hdu.type = getValue(hptr,   "i32");
+    _free(hptr);
+    Module["errchk"](status);
     // get extension number and name (of original data)
     hptr = _malloc(4);
     ccall("ffghdn", null, ["number", "number"], [fptr, hptr]);
@@ -183,7 +225,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     status  = getValue(hptr+82, "i32");
     if( status === 0 ){
 	extname = Pointer_stringify(hptr)
-	          .replace(/^'/,"").replace(/'$/,"").trim();
+	    .replace(/^'/,"").replace(/'$/,"").trim();
     } else {
 	extname = "";
     }
@@ -391,6 +433,8 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     }
 };
 
+// read a blob as a FITS file
+// open an existing virtual FITS file (e.g. created by Montage reprojection)
 Module["handleFITSFile"] = function(fits, opts, handler) {
     var fptr, hptr, status, fileReader;
     var hdu = {};
@@ -493,71 +537,20 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 	// this starts it all!
 	fileReader.readAsArrayBuffer(fits);
     } else if( typeof fits === "string" ){
-	// are we changing extensions on an existing virtual file?
-	if( opts.fptr ){
-	    fptr = opts.fptr;
-	    if( opts.vfile ){
-		hdu.vfile = opts.vfile;
-	    }
-	    if( opts.extname ){
-		// look for extension with specified name
-		hptr = _malloc(4);
-		setValue(hptr, 0, "i32");
-		ccall("ffmnhd", null,
-		      ["number", "number", "string", "number", "number"],
-		      [fptr, -1, opts.extname, 0, hptr]);
-		status  = getValue(hptr, "i32");
-		_free(hptr);
-		Module["errchk"](status);
-		// get type of extension (image or table)
-		hptr = _malloc(8);
-		setValue(hptr+4, 0, "i32");
-		ccall("ffghdt", null,
-		      ["number", "number", "number"],
-		      [fptr, hptr, hptr+4]);
-		hdu.type = getValue(hptr,   "i32");
-		status  = getValue(hptr+4, "i32");
-		_free(hptr);
-		Module["errchk"](status);
-	    } else if( opts.extnum !== undefined ){
-		// go to extension number
-		hptr = _malloc(8);
-		setValue(hptr+4, 0, "i32");
-		ccall("ffmahd", null,
-		      ["number", "number", "number", "number"],
-		      [fptr, opts.extnum + 1, hptr, hptr+4]);
-		hdu.type = getValue(hptr,   "i32");
-		status  = getValue(hptr+4, "i32");
-		_free(hptr);
-		Module["errchk"](status);
-	    } else if( opts.slice !== undefined ){
-		hptr = _malloc(8);
-		setValue(hptr+4, 0, "i32");
-		ccall("ffghdt", null,
-		      ["number", "number", "number"],
-		      [fptr, hptr, hptr+4]);
-		hdu.type = getValue(hptr,   "i32");
-		_free(hptr);
-		Module["errchk"](status);
-	    } else {
-		Module["error"]("missing extname/extnum/slice for FITS file");
-	    }
-	} else {
-	    // open existing virtual file as a FITS file
-	    if( !fits ){
-		Module["error"]("FITS file name not specified");
-	    }
-	    hdu.vfile = fits;
-	    hptr = _malloc(8);
-	    setValue(hptr+4, 0, "i32");
-	    fptr = ccall("openFITSFile", "number",
-			 ["string", "number", "string", "number", "number"],
-			 [fits, 0, opts.extlist, hptr, hptr+4]);
-	    hdu.type = getValue(hptr,   "i32");
-	    status  = getValue(hptr+4, "i32");
-	    _free(hptr);
-	    Module["errchk"](status);
+	// open existing virtual file as a FITS file
+	if( !fits ){
+	    Module["error"]("FITS file name not specified");
 	}
+	hdu.vfile = fits;
+	hptr = _malloc(8);
+	setValue(hptr+4, 0, "i32");
+	fptr = ccall("openFITSFile", "number",
+		     ["string", "number", "string", "number", "number"],
+		     [fits, 0, opts.extlist, hptr, hptr+4]);
+	hdu.type = getValue(hptr,   "i32");
+	status  = getValue(hptr+4, "i32");
+	_free(hptr);
+	Module["errchk"](status);
 	// extract image section and call handler
 	Module["getFITSImage"]({fptr: fptr}, hdu, opts, handler);
     } else {

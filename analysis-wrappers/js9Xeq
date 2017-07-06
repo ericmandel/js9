@@ -264,10 +264,6 @@ imsection)
     # optional args
     while [ x"$1" != x ]; do
         case $1 in
-	# not currently used
-	-gzip) DOGZIP=1
-	       shift
-	       continue;;
 	-parent) DOPARENT=1
 	       shift
 	       continue;;
@@ -276,17 +272,22 @@ imsection)
     done
     # required args
     if [ "$#" -lt 2 ]; then
-	error "imsection file section [mode]"
+	error "imsection file section filter slice"
     fi
     hash js9helper 1>/dev/null 2>&1
     if [ $? != 0 ]; then
 	error "for imsection support, please build and install js9helper"
     fi
+    # gzip files
+    DOGZIP=1
+    # input file
     IFILE="$1"
     # get section
     SECTION="$2";
     # get filter
     FILTER="$3"
+    # get filter
+    SLICE="$4"
     # false means no filter
     if [ "$FILTER" = "false" ]; then
       FILTER=""
@@ -294,26 +295,35 @@ imsection)
     # try to get a base name for output
     IBASE=`basename $IFILE | sed 's/\.gz$//' | sed 's/\.fits$//' | sed 's/\.ftz$//'`
     OBASE=`echo ${IBASE}_${SECTION} | sed 's/\[.*\]//g' | awk -F/ '{print $NF}' | sed 's/[,]/_/g'`
-    OFILE=${OBASE}.fits
+    if [ x$DOGZIP = x1 ]; then
+        OFILE=${OBASE}.fits.gz
+    fi
     # make sure we are not over quota
     quotacheck
+    # send back relative path to the output file
+    echo "${JS9_WORKDIR}/${OFILE}"
     # run imsection in the js9helper to generate a FITS image
-    if [ x$DOGZIP = x1 ]; then
-	OFILE=${OFILE}.gz
-        js9helper -i "$IFILE" imsection "$SECTION" "$FILTER" image | gzip -c > $OFILE
-    else
-        js9helper -i "$IFILE" imsection "$SECTION" "$FILTER" image > $OFILE
-    fi
+    # (and send back json with useful info)
+    rm -rf "$OFILE"
+    js9helper -i "$IFILE" imsection "$OFILE" "$SECTION" "$FILTER" "$SLICE"
     if [ x$DOPARENT = x1 ]; then
-      # send back relative path to the output file
       # send parent file, so analysis is performed on the original file
-      echo "${JS9_WORKDIR}/${OFILE}" "${IFILE}"
-    else
-      # send back relative path to the output file
-      # no parent file: perform analysis on this file
-      echo "${JS9_WORKDIR}/${OFILE}"
+      echo "${IFILE}"
     fi
     exit 0
+    ;;
+
+listhdus)
+    # required args
+    if [ "$#" -lt 1 ]; then
+	error "listhdus file"
+    fi
+    hash js9helper 1>/dev/null 2>&1
+    if [ $? != 0 ]; then
+	error "for listhdus support, please build and install js9helper"
+    fi
+    IFILE="$1"
+    js9helper -i "$IFILE" listhdus
     ;;
 
 loadproxy)

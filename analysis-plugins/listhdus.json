@@ -1,0 +1,8 @@
+[
+  {"name"   : "listhdus",
+   "title"  : "List HDUs in a FITS File",
+   "files"  : "fits",
+   "action" : "js9Xeq listhdus $filename",
+   "hidden" : true,
+   "rtype"  : "text"}
+]

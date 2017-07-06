@@ -1,0 +1,11 @@
+[
+  {"name"   : "imsection",
+   "title"  : "Extract an Image Section",
+   "files"  : "fits",
+   "purl"   : "./params/imsection.html",
+   "action" : "js9Xeq imsection $filename $xdim@$xcen,$ydim@$ycen,$bin $filter $slice",
+   "workDir": true,
+   "hidden" : true,
+   "rtype"  : "fits"}
+]
+

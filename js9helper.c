@@ -349,15 +349,6 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     got = 2;
 
   } else if(sscanf(s,
-	    "%32[0-9.dDeE] @ $xcen , %32[0-9.dDeE] @ $ycen , %32[0-9]",
-	    s1, s2, s3) == 3){
-    dims[0] = atof(s1);
-    cens[0] = 0;
-    dims[1] = atof(s2);
-    cens[1] = 0;
-    *block = MAX(1, strtol(s3, &t, 0));
-    got = 3;
-  } else if(sscanf(s,
 	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9.dDeE] @ %32[-0-9.dDeE]",
 	     s1, s2, s3, s4) == 4){
     dims[0] = atof(s1);
@@ -366,15 +357,6 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     cens[1] = atof(s4);
     *block = 1;
     got = 2;
-  } else if(sscanf(s,
-	    "%32[0-9.dDeE] @ $xcen , %32[0-9.dDeE] @ $ycen",
-	     s1, s2) == 2){
-    dims[0] = atof(s1);
-    cens[0] = 0;
-    dims[1] = atof(s2);
-    cens[1] = 0;
-    *block = 1;
-    got = 3;
   } else if(sscanf(s,
 	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9]",
 	    s1, s2, s3) == 3){
@@ -460,11 +442,13 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
 
 /* copy image section from input to putput, with binning */
 int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
-		     int *dims, double *cens, int bin, int *status)
+		     int *dims, double *cens, int bin, char *slice,
+		     int *status)
 {
 #if HAVE_CFITSIO
   void *buf;
   char card[FLEN_CARD];
+  char tbuf[SZ_LINE];
   int numkeys, nkey, bitpix, dtype;
   int start[2];
   int end[2];
@@ -472,10 +456,12 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
   long nelements;
   long naxes[2];
   long fpixel[2] = {1,1};
-  buf = getImageToArray(ifptr, dims, cens, bin, NULL, start, end, &bitpix,
+  buf = getImageToArray(ifptr, dims, cens, bin, slice, start, end, &bitpix,
 			status);
   if( !buf || *status ){
-    fprintf(stderr, "ERROR: could not create section for output image\n");
+    fits_get_errstatus(*status, tbuf);
+    fprintf(stderr, "ERROR: could not create section for output image: %s\n",
+	    tbuf);
     return *status;
   }
   /* get image size and total number of elements */
@@ -522,7 +508,7 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
   }
   if( *status > 0 ){
     fprintf(stderr,
-	    "Error: can't copy header from input image to output section");
+	    "ERROR: can't copy header from input image to output section");
     return(*status);
   }
   /* write image to FITS file */
@@ -549,16 +535,17 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
   char tbuf[SZ_LINE];
   Finfo finfo, tfinfo;
 #if HAVE_CFITSIO
-  int xlims[2], ylims[2], bin, got;
-  int xcolnum, ycolnum, hdunum, hdutype;
-  int status=0, status2=0;
+  int xlims[2], ylims[2], bin, got, hdutype, hdunum, ncard;
+  int status=0, status2=0, tstatus=0;
   int dims[2];
-  long naxes[2];
   double cens[2];
+  char extname[FLEN_CARD];
   char *cols[2] = {"X", "Y"};
-  char *ofile=NULL;
-  char *omode=NULL;
+  char *ofile="stdout";
+  char *section=NULL;
   char *filter=NULL;
+  char *slice=NULL;
+  char *cardstr=NULL;
   fitsfile *ifptr, *ofptr, *tfptr;
 #endif
   switch(*cmd){
@@ -619,188 +606,102 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 	fprintf(stderr, NOFINFO, cmd);
 	return 1;
       }
+      if( narg < 2 ){
+	fprintf(stderr, WRONGARGS2, cmd, 2);
+	return 1;
+      }
       ifptr = openFITSFile(finfo->fitsfile, READONLY, EXTLIST, &hdutype,
 			   &status);
       if( status ){
 	fprintf(stderr, "ERROR: can't open FITS file '%s'\n", finfo->fitsfile);
 	return 1;
       }
-      if( !args || !(got = parseSection(ifptr, hdutype, args[0],
-					xlims, ylims, dims, cens, &bin)) ){
+      /* process args */
+      ofile = args[0];
+      section = args[1];
+      if( narg >= 3 && args[2] ){
+	filter = args[2];
+      }
+      if( narg >= 4 && args[3] ){
+	slice = args[3];
+      }
+      if( !section || !(got = parseSection(ifptr, hdutype, section,
+					   xlims, ylims, dims, cens, &bin)) ){
 	fprintf(stderr,
 		"ERROR: can't parse section for '%s' [%s]\n",
 		finfo->fitsfile, (args && args[0]) ? args[0] : "NONE");
 	return 1;
       }
-      if( narg >= 2 && args[1] ){
-	filter = args[1];
-      } else {
-	filter = NULL;
+      /* output image */
+      fits_create_file(&ofptr, ofile, &status);
+      if( status ){
+	fits_get_errstatus(status, tbuf);
+	fprintf(stderr,
+		"ERROR: can't open output FITS file to section '%s' [%s]\n",
+		finfo->fitsfile, tbuf);
+	return 1;
       }
-      if( narg >= 3 && args[2] ){
-	omode = args[2];
-      } else {
-	omode = "image";
-      }
-      ofile = "stdout";
-      /* create image if ifile is an image or omode is not native */
-      if( (hdutype == IMAGE_HDU) || strcmp(omode, "native") ){
-	/* output image */
-	fits_create_file(&ofptr, ofile, &status);
-	if( status ){
-	  fits_get_errstatus(status, tbuf);
+      switch(hdutype){
+      case IMAGE_HDU:
+	/* image: let cfitsio make a section */
+	if( copyImageSection(ifptr, ofptr, dims, cens, bin, slice, &status) ){
 	  fprintf(stderr,
-		  "ERROR: can't open output FITS file to section '%s' [%s]\n",
+		  "ERROR: can't copy image section for '%s' [%s]\n",
 		  finfo->fitsfile, tbuf);
 	  return 1;
 	}
-	switch(hdutype){
-	case IMAGE_HDU:
-	  /* image: let cfitsio make a section */
-	  /* sanity check on image limits */
-	  xlims[0] = MAX(1, xlims[0]);
-	  ylims[0] = MAX(1, ylims[0]);
-	  fits_get_img_size(ifptr, 2, naxes, &status);
-	  if( status == 0 ){
-	    xlims[1] = MIN(xlims[1], naxes[0]);
-	    ylims[1] = MIN(ylims[1], naxes[1]);
-	  } else {
-	    status = 0;
-	  }
-	  /* copy section to new image */
-	  if( copyImageSection(ifptr, ofptr, dims, cens, bin, &status) != 0 ){
-	    fprintf(stderr,
-		    "ERROR: can't copy image section for '%s' [%s]\n",
-		    finfo->fitsfile, tbuf);
-	    return 1;
-	  }
-	  break;
-	default:
-	  /* table: let jsfitsio create an image section */
-	  tfptr = filterTableToImage(ifptr, filter, cols, dims, cens, 1, 
-				     &status);
-	  if( status ){
-	    fits_get_errstatus(status, tbuf);
-	    fprintf(stderr,
-		    "ERROR: can't create image from table for '%s' [%s]\n",
-		    finfo->fitsfile, tbuf);
-	    return 1;
-	  }
-	  /* copy section to new image */
-	  if( copyImageSection(tfptr, ofptr, dims, NULL, bin, &status) != 0 ){
-	    fprintf(stderr,
-		    "ERROR: can't copy image section for '%s' [%s]\n",
-		    finfo->fitsfile, tbuf);
-	    return 1;
-	  }
-	  closeFITSFile(tfptr, &status2);
-	  break;
-	}
+	break;
+      default:
+	/* table: let jsfitsio create an image section by binning the table */
+	tfptr = filterTableToImage(ifptr, filter, cols, dims, cens, 1, &status);
 	if( status ){
 	  fits_get_errstatus(status, tbuf);
 	  fprintf(stderr,
-		  "ERROR: can't create section FITS file for '%s' [%s]\n",
+		  "ERROR: can't create image from table for '%s' [%s]\n",
 		  finfo->fitsfile, tbuf);
-	  closeFITSFile(ofptr, &status);
 	  return 1;
 	}
+	/* copy section to new image */
+	if( copyImageSection(tfptr, ofptr, dims, NULL, bin, NULL, &status) ){
+	  fprintf(stderr,
+		  "ERROR: can't copy image section for '%s' [%s]\n",
+		  finfo->fitsfile, tbuf);
+	  return 1;
+	}
+	closeFITSFile(tfptr, &status2);
+	break;
+      }
+      if( status ){
+	fits_get_errstatus(status, tbuf);
+	fprintf(stderr,
+		"ERROR: can't create section FITS file for '%s' [%s]\n",
+		finfo->fitsfile, tbuf);
 	closeFITSFile(ofptr, &status);
-      } else {
-	/* let cfitsio extract a (native) table */
-	snprintf(tbuf, SZ_LINE-1,
-		 "x >= %d && x <= %d && y >= %d && y <= %d",
-		 xlims[0], xlims[1], ylims[0], ylims[1]);
-	/* ffselect_table(&ifptr, ofile, tbuf, &status); */
-	/* copied from cfileio.c/ffselect_table() */
-	/* create new empty file to hold copy of the image */
-	if (ffinit(&ofptr, ofile, &status) > 0) {
-	  fits_get_errstatus(status, tbuf);
-	  fprintf(stderr,
-		  "ERROR: can't init section file for '%s' [%s]\n",
-		  finfo->fitsfile, tbuf);
-	  return 1;
-	}
-	/* save current HDU number in input file */
-	fits_get_hdu_num(ifptr, &hdunum);
-	/* copy the primary array */
-	fits_movabs_hdu(ifptr, 1, NULL, &status);
-	if( fits_copy_hdu(ifptr, ofptr, 0, &status) > 0){
-	  fits_get_errstatus(status, tbuf);
-	  fprintf(stderr,
-		  "ERROR: can't copy primary for section file '%s' [%s]\n",
-		  finfo->fitsfile, tbuf);
-	  fits_close_file(ofptr, &status);
-	  return 1;
-	}
-	/* back to current hdu */
-	fits_movabs_hdu(ifptr, hdunum, NULL, &status);
-	/* copy all the header keywords from the input to output file */
-	if (fits_copy_header(ifptr, ofptr, &status) > 0){
-	  fits_get_errstatus(status, tbuf);
-	  fprintf(stderr,
-		  "ERROR: can't copy header for section file '%s' [%s]\n",
-		  finfo->fitsfile, tbuf);
-	  fits_close_file(ofptr, &status);
-	  return 1;
-	}
-	/* set number of rows = 0 */
-	/* warning: start of cfitsio black magic */
-	fits_modify_key_lng(ofptr, "NAXIS2", 0, NULL, &status);
-	(ofptr->Fptr)->numrows = 0;
-	(ofptr->Fptr)->origrows = 0;
-	/* force the header to be scanned */
-	if (ffrdef(ofptr, &status) > 0){
-	  fits_get_errstatus(status, tbuf);
-	  fprintf(stderr,
-		  "ERROR: can't rdef for section file '%s' [%s]\n",
-		  finfo->fitsfile, tbuf);
-	  fits_close_file(ofptr, &status);
-	  return 1;
-	}
-	/* warning: end of cfitsio black magic */
-	/* select filtered rows and write to output file */
-	if (fits_select_rows(ifptr, ofptr, tbuf, &status) > 0){
-	  fits_get_errstatus(status, tbuf);
-	  fprintf(stderr,
-		  "ERROR: can't select rows for section file '%s' [%s]\n",
-		  finfo->fitsfile, tbuf);
-	  fits_close_file(ofptr, &status);
-	  return 1;
-	}
-	/* update params for this section */
-	if( (fits_get_colnum(ofptr, CASEINSEN, "X", &xcolnum, &status) > 0) ||
-	    (fits_get_colnum(ofptr, CASEINSEN, "Y", &ycolnum, &status) > 0) ){
-	  fits_get_errstatus(status, tbuf);
-	  fprintf(stderr,
-		  "ERROR: can't find X,Y cols for section file '%s' [%s]\n",
-		  finfo->fitsfile, tbuf);
-	  fits_close_file(ofptr, &status);
-	  return 1;
-	}
-	/* we can ignore errors here */
-	status = 0;
-	snprintf(tbuf, SZ_LINE-1, "TALEN%d", xcolnum);
-	fits_modify_key_lng(ofptr, tbuf, xlims[1]-xlims[0], NULL, &status);
-	status = 0;
-	snprintf(tbuf, SZ_LINE-1, "TALEN%d", ycolnum);
-	fits_modify_key_lng(ofptr, tbuf, ylims[1]-ylims[0], NULL, &status);
-	status = 0;
-	snprintf(tbuf, SZ_LINE-1, "TLMIN%d", xcolnum);
-	fits_modify_key_flt(ofptr, tbuf, xlims[0], 6, NULL, &status);
-	status = 0;
-	snprintf(tbuf, SZ_LINE-1, "TLMAX%d", xcolnum);
-	fits_modify_key_flt(ofptr, tbuf, xlims[1], 6, NULL, &status);
-	status = 0;
-	snprintf(tbuf, SZ_LINE-1, "TLMIN%d", ycolnum);
-	fits_modify_key_flt(ofptr, tbuf, ylims[0], 6, NULL, &status);
-	status = 0;
-	snprintf(tbuf, SZ_LINE-1, "TLMAX%d", ycolnum);
-	fits_modify_key_flt(ofptr, tbuf, ylims[1], 6, NULL, &status);
-	/* close the output file */
-	status = 0;
-	fits_close_file(ofptr, &status);
+	return 1;
       }
+      // return a json object with info about original data
+      fprintf(stdout, "{\"file\":\"%s\"", finfo->fitsfile);
+      fprintf(stdout, ",\"type\":%d", hdutype);
+      ffghdn(ifptr, &hdunum);
+      fprintf(stdout, ",\"extnum\":%d", hdunum-1);
+      tstatus=0;
+      ffgky(ifptr, TSTRING, "EXTNAME", extname, NULL, &tstatus);
+      if( !tstatus ){
+	fprintf(stdout, ",\"extname\":\"%s\"", extname);
+      }
+      fprintf(stdout, ",\"hdus\":");
+      _listhdu(finfo->fitsfile, NULL);
+      tstatus=0;
+      getHeaderToString(ifptr, &cardstr, &ncard, &tstatus);
+      if( cardstr ){
+	fprintf(stdout, ",\"ncard\":%d",ncard);
+	fprintf(stdout, ",\"cardstr\":\"%s\"",cardstr);
+	free(cardstr);
+      }
+      fprintf(stdout, "}\n");
+      fflush(stdout);
       closeFITSFile(ifptr, &status);
+      closeFITSFile(ofptr, &status);
       return 0;
 #else
       fprintf(stderr,
@@ -825,6 +726,14 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
     /* list all images */
     if( !strcmp(cmd, "list") ){
       FinfoList(stdout);
+      return 0;
+    } else if( !strcmp(cmd, "listhdus") ){
+      if( !(finfo=FinfoGetCurrent()) ){
+	fprintf(stderr, NOFINFO, cmd);
+	return 1;
+      }
+      _listhdu(finfo->fitsfile, NULL);
+      fflush(stdout);
       return 0;
     }
     break;
