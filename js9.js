@@ -12586,17 +12586,18 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	if( !JS9.globalOpts.workDir ){
 	    return false;
 	}
-	xdim = JS9.fits.options.image.xdim;
-	ydim = JS9.fits.options.image.ydim;
-	bin = JS9.fits.options.image.bin || 1;
+	xdim = JS9.fits.options.table.xdim;
+	ydim = JS9.fits.options.table.ydim;
+	bin = JS9.fits.options.table.bin || 1;
 	xopts.sect = sprintf("%s,%s,%s", xdim, ydim,bin);
 	s = xcond.toLowerCase().split(/[>,]/);
 	for(i=0; i<s.length; i++){
 	    switch(s[i]){
 	    case "size":
 		if( s[i+1] ){
-		    xopts.maxsize = Math.min(parseFloat(s[i+1])*1000000,
-					     xdim * ydim * 4);
+		    if( JS9.isNumber(s[i+1]) ){
+			xopts.maxsize = parseFloat(s[i+1])*1000000;
+		    }
 		    i++;
 		}
 		break;
