@@ -327,15 +327,15 @@ JS9.helpOpts = {
 	type: "help", url:"publicapi.html",
 	title: "The JS9 Public API"
     },
-    memory: {
-	heading: "JS9Help",
-	type: "help", url:"memory.html",
-	title: "Dealing with Memory Limitations"
-    },
     repfile: {
 	heading: "JS9Help",
 	type: "help", url:"repfile.html",
 	title: "Dealing with Large Files"
+    },
+    memory: {
+	heading: "JS9Help",
+	type: "help", url:"memory.html",
+	title: "Dealing with Memory Limitations"
     },
     regions: {
 	heading: "JS9Help",
@@ -12564,8 +12564,13 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
     var xmsg = "fits2" + xtype;
     var xcond = opts[xmsg] ||
 	((opts[xmsg] === undefined) && JS9.globalOpts[xmsg]);
+    if( xcond === true ){
+	xcond = "always";
+    } else if(  xcond === false ){
+	xcond = "never";
+    }
     // check for repfile condition
-    if( !xcond || xcond.match(/never/) ){
+    if( xcond.match(/never/i) ){
 	return false;
     }
     // repfiles require a connected helper and associated js9helper program
