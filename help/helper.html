@@ -49,9 +49,9 @@ install</b> technique. When configuring server-side analysis, you will
 add switches to the configure command line. The most important of
 these switches are:
 <pre>
---with-cfitsio=[path]   cfitsio location for building js9helper, e.g. /usr/local
 --with-helper=[type]    type of helper: nodejs (for Node.js) , get (for CGI)
 --prefix=[path]         location to install the non-web programs and scripts
+--with-cfitsio=[path]   cfitsio location for building js9helper, e.g. /usr/local
 </pre>
 Other switches are:
 <pre>
@@ -62,16 +62,20 @@ Other switches are:
 </pre>
 
 <p>
-Both the Node.js and CGI helpers make use of a C program called js9helper to
-handle certain types of JS9 requests. This program requires the cfitsio library
-(version 3.39 or later is preferred).  Cfitsio is the de facto standard FITS
-library and is available from NASA/HEASARC at the Goddard Space Flight Center:
+Both the Node.js and CGI helpers make use of a C program called
+js9helper to handle certain types of JS9 requests.  To support
+extraction of FITS representation files from large FITS files, it must
+be linked against the cfitsio library (version 3.39 or later is
+preferred).  Cfitsio is the de facto standard FITS library and is
+available from NASA/HEASARC at the Goddard Space Flight Center:
 <pre>
     https://heasarc.gsfc.nasa.gov/fitsio/fitsio.html
 </pre>
 To tell configure where cfitsio libraries are located, use the
---with-cfitsio=[dir] switch, e.g. --with-cfitsio=/usr/local will find the
-cfitsio libraries in /usr/local/lib and include files in /usr/local/include.
+--with-cfitsio=[dir] switch, e.g. --with-cfitsio=/usr/local will find
+the cfitsio libraries in /usr/local/lib and include files in
+/usr/local/include.  If cfitsio is not used in the build, the js9helper will
+still support server-side analysis, but will not support representation files.
 
 <p>
 Note that the non-web files, programs, and scripts (e.g., js9helper)
