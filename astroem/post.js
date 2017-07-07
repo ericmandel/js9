@@ -172,13 +172,13 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
       Module["error"]("virtual FITS file is missing for getFITSImage()");
     }
     // are we changing extensions on an existing virtual file?
-    if( opts.extname ){
+    if( typeof opts.extension === "string" ){
 	// look for extension with specified name
 	hptr = _malloc(4);
 	setValue(hptr, 0, "i32");
 	ccall("ffmnhd", null,
 	      ["number", "number", "string", "number", "number"],
-	      [fptr, -1, opts.extname, 0, hptr]);
+	      [fptr, -1, opts.extension, 0, hptr]);
 	status  = getValue(hptr, "i32");
 	_free(hptr);
 	Module["errchk"](status);
@@ -192,13 +192,13 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	status  = getValue(hptr+4, "i32");
 	_free(hptr);
 	Module["errchk"](status);
-    } else if( opts.extnum !== undefined ){
+    } else if( typeof opts.extension === "number" ){
 	// go to extension number
 	hptr = _malloc(8);
 	setValue(hptr+4, 0, "i32");
 	ccall("ffmahd", null,
 	      ["number", "number", "number", "number"],
-	      [fptr, opts.extnum + 1, hptr, hptr+4]);
+	      [fptr, opts.extension + 1, hptr, hptr+4]);
 	hdu.type = getValue(hptr,   "i32");
 	status  = getValue(hptr+4, "i32");
 	_free(hptr);

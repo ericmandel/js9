@@ -2887,7 +2887,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
     }
     // extname specified?
     if( typeof extid === "string" ){
-	opts.extname = extid;
+	opts.extension = extid;
 	extname = extid.toLowerCase();
 	for(i=0, got=0; i<this.hdus.length; i++){
 	    if( this.hdus[i].name &&
@@ -2901,7 +2901,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 	}
 	// extnum specified?
     } else if( typeof extid === "number" ){
-	opts.extnum = extid;
+	opts.extension = extid;
 	if( this.hdus[extid] ){
 	    extname = this.hdus[extid].name || extid.toString();
 	} else {
