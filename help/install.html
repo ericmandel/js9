@@ -77,7 +77,7 @@ for colormaps, scaling, etc. See:
 <a href="./preferences.html">JS9 Site Preferences</a> for a
 description of the available parameters.
 
-<h3>Do You Want to Run JS9 from the Command Line?</h3>  
+<h3>Do You Want to Run JS9 as a Desktop Program from the Command Line?</h3>  
 JS9 can be used as a Desktop app: you can load images into the app's
 (Chrome) web page instead of using a browser.  The JS9 Desktop app
 simply requires that you install Electron.js, which is described here:
@@ -166,11 +166,17 @@ back-end requests.  The server-side analysis capability is especially
 useful for archive centers, but also can be attractive to individual
 users who want to integrate their own data analysis programs into JS9.
 <p>
-In addition, JS9 supports communication with external processes via the
-<b>js9 script</b>. This capability also requires the configuration of a
+In addition, JS9 supports
+<a href="./extmsg.html">command-line messaging</a>
+between the shell and JS9,
+<a href="./python.html">pyjs9 Python messaging</a>
+between the Python and JS9,
+and also has large-file support via the use of 
+<a href="./repfile.html">representation files</a>.
+These capabilities requires the configuration of a
 Node.js-based server-side helper.
 <p>
-You configure a JS9 back-end helper by adding additional switches to
+You configure a JS9 helper by adding additional switches to
 the configure command. See:
 <a href="./helper.html">Installing a Server-side Helper</a>
 for details.
@@ -221,7 +227,7 @@ available on GitHub:
 </pre>
 
 
-<h5>Last updated: April 16, 2017</h5>
+<h5>Last updated: July 7, 2017</h5>
 </div>
 
 </body>

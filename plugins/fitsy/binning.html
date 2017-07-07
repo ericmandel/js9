@@ -1,3 +1,13 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head> 
+<style type="text/css">
+  .container{
+    padding: 10px;
+  }
+</style>
+</head>
+<body>
 <p>
 <a name="binning">
 <h3>FITS Image Sections, with Binning and Filtering</h3>
@@ -14,11 +24,20 @@ at bin 1. This default is controlled by the JS9.globalOpts.image object
 properties, which can be set in your js9Prefs.js file.
 
 <p>
-The Binning plugin allows you to extract sections from FITS binary
-tables and images, allowing you to choose the image center, image
-dimensions, and bin factor.  For tables, the plugin also allows you to
-filter rows of the table by means of arithmetic and boolean operations
-on the table columns.
+The <b>Bin/Filter/Section</b> plugin allows you to extract sections
+from FITS binary tables and images, with options to choose the image
+center, image dimensions, and bin factor.  For tables, the plugin also
+allows you to filter rows of the table by means of arithmetic and
+boolean operations on the table columns.
+
+<p>
+The <b>Bin/Filter/Section</b> plugin works with both FITS representation
+files and with ordinary in-memory FITS files. If the displayed FITS
+file is a representation file (i.e., it has a parent file, a JS9
+helper is connected, etc.), the plugin will ask the JS9 helper to
+extract the image section from the parent.  Otherwise, it extracts the
+section from the in-memory FITS file. This behavior is meant to be
+transparent to the user.
 
 <p>
 When extracting an image section, you can set one or more of the
@@ -88,5 +107,8 @@ documented
 Once the desired parameters have been set, pressing the <b>Run</b>
 button will filter, bin and display the data.
 
+<h5>Last updated: July 7, 2017</h5>
 
+</body>
+</html>
 
