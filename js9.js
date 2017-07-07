@@ -2780,15 +2780,12 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		   fits: that.parentFile,
 		   rtype: "text"};
 	    obj.cmd = "js9Xeq imsection " + that.parentFile;
-	    if( opts.extname || opts.extnum ){
+	    // if we are changing the extension, replace the old extension
+	    // with the new one
+	    if( opts.extension ){
 		obj.cmd = obj.cmd.replace(/\[.*\]/,"");
-		if( opts.extname ){
-		    obj.cmd += "[" + opts.extname + "]";
-		} else {
-		    obj.cmd += "[" + opts.extnum + "]";
-		}
-		delete opts.extname;
-		delete opts.extnum;
+		obj.cmd += "[" + opts.extension + "]";
+		delete opts.extension;
 	    }
 	    obj.cmd += that.expandMacro(" $xdim@$xcen,$ydim@$ycen,$bin $filter $slice", arr);
 	    JS9.helper.send("imsection", obj, function(r){
