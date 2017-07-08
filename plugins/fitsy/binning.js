@@ -123,7 +123,6 @@
     function getBinParams(div, display) {
 	var im, ipos, lpos, form, hdu, bin;
 	var dval1 = 1;
-	var dval2 = 1;
 	if ( display === undefined ) {
 	    div     = this.div;
 	    display = this.display;
