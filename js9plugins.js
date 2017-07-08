@@ -887,10 +887,12 @@ module.exports = xhr;
 	var tim, header, lpos, ipos, npos;
 	var dol2i = false;
 	if( (im.imtab === "image") && (pos.x && pos.y) ){
-	    if( im.parentFile && im.parent && im.parent.lcs ){
-		tim = im.parent;
-		header = im.parent.raw.header;
-		dol2i = true;
+	    if( im.parentFile ){
+		if( im.parent && im.parent.lcs ){
+		    tim = im.parent;
+		    header = im.parent.raw.header;
+		    dol2i = true;
+		}
 	    } else if( im.raw && im.raw.header ){
 		tim = im;
 		header = im.raw.header;
@@ -1025,7 +1027,7 @@ module.exports = xhr;
 		    lpos = im.imageToLogicalPos(ipos);
 		    form.xcen.value = String(Math.floor(lpos.x));
 		    form.ycen.value = String(Math.floor(lpos.y));
-		    bin = Math.floor((hdu.bin || 1) / dval1);
+		    bin = Math.floor(((hdu.bin || 1) / dval1) + 0.5);
 		    form.bin.value = String(bin);
 		    form.xdim.value = String(Math.floor(hdu.naxis1 * bin));
 		    form.ydim.value = String(Math.floor(hdu.naxis2 * bin));
