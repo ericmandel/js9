@@ -14,46 +14,44 @@
 <div class="container">
 <center><h3>Adding a JS9 Server-side Helper</h3></center>
 
-<h3>Do You Need a Server-side Helper? Which One?</h3> 
+<h3>Do You Need a Server-side Helper? Which One?</h3>  
+
 JS9 supports server-side analysis on FITS data, allowing you to
 execute virtually any command-line analysis program from JS9, run that
-analysis command on the server, and view results on your web page. It also
-can support external communicate with JS9 (shell and Python) and help
-handle the display of large files.
+analysis command on the server, and view results on your web page. It
+also can support external communication with JS9 (via the shell and
+Python) and handle the display of large files.
 
 <p>
-The server-side analysis capability is especially useful for archive
-centers, but also can be attractive to individual users who want to
-integrate their own data analysis programs into JS9. You configure a
-JS9 server-side helper by adding additional switches to the configure
-command described in <a href="./install.html">Installing JS9</a>.
+The server-side analysis capability is useful for archive centers and
+individual users who want to integrate their own data analysis
+programs into JS9. You configure a JS9 server-side helper by adding
+additional switches to the configure command described in
+<a href="./install.html">Installing JS9</a>.
 
 <p>
-JS9 supports two techniques for server-side analysis: you can run a
+JS9 supports two mechanisms for server-side analysis: you can run a
 separate Node.js-based server to process requests using WebSockets, or
-use your own web server as the JS9 helper via CGI calls.  The Node.js
-server-side helper is the much-preferred method: it is faster and more
-flexible than the CGI helper. In addition to analysis tasks,
-Node-js-based helpers also support
-<a href="./extmsg.html">command-line messaging</a>
-between the shell and JS9,
-<a href="./python.html">pyjs9 Python messaging</a>
-between the Python and JS9,
-and also has large-file support via the use of 
-<a href="./repfile.html">representation files</a>.
+use CGI calls to your own web server.  The Node.js server-side helper
+is the recommended method: it is faster and more flexible than the CGI
+helper: in addition to analysis tasks, Node-js-based helper also supports:
+<ul>
+<li><a href="./extmsg.html">command-line messaging</a> between the shell and JS9
+<li><a href="./python.html">pyjs9 messaging</a> between the Python and JS9
+<li>large-file support via the use of <a href="./repfile.html">representation files</a>
+</ul>
 
 <h3>Add Switches to Configure the Server-side Helper</h3>
 <p>
 JS9 is built using the standard GNU <b>./configure; make; make
-install</b> technique. When configuring server-side analysis, you will
-add switches to the configure command line. The most important of
-these switches are:
+install</b> method. To configure server-side analysis, you
+add switches to the configure command line. The most important switches are:
 <pre>
 --with-helper=[type]    type of helper: nodejs (for Node.js) , get (for CGI)
 --prefix=[path]         location to install the non-web programs and scripts
 --with-cfitsio=[path]   cfitsio location for building js9helper, e.g. /usr/local
 </pre>
-Other switches are:
+Other less-used switches are:
 <pre>
 --with-cgidir=[path]     cgi install directory e.g. /var/www/public_html/cgi-bin
 --with-cgiurl=[url]      cgi url relative to the web root, e.g. ./cgi-bin/js9
@@ -63,11 +61,11 @@ Other switches are:
 
 <p>
 Both the Node.js and CGI helpers make use of a C program called
-js9helper to handle certain types of JS9 requests.  To support
-extraction of FITS representation files from large FITS files, it must
-be linked against the cfitsio library (version 3.39 or later is
-preferred).  Cfitsio is the de facto standard FITS library and is
-available from NASA/HEASARC at the Goddard Space Flight Center:
+<b>js9helper</b> to handle certain types of JS9 requests.  To support
+extraction of FITS representation files from large FITS files,
+js9helper must be linked against the cfitsio library (version 3.39 or
+later is preferred).  Cfitsio is the de facto standard FITS library
+and is available from NASA/HEASARC at the Goddard Space Flight Center:
 <pre>
     https://heasarc.gsfc.nasa.gov/fitsio/fitsio.html
 </pre>
@@ -84,15 +82,8 @@ will be installed in accordance with the standard GNU
 
 <p>
 Example configure commands are shown below for a typical Linux Apache setup
-and for a personal Mac setup:
+(using CGI) and for a personal Mac setup (using Node.js):
 <pre>
-  mac-nodejs)
-  ./configure 	--prefix=$HOME						\
-		--with-helper=nodejs					\
-		--with-webdir=/Users/me/Sites/js9			\
-		--with-cfitsio=/Users/me/soft				\
-		CC=gcc $*
-
   linux-cgi)
   ./configure 	--prefix=/soft/saord					\
 		--with-helper=get					\
@@ -102,13 +93,21 @@ and for a personal Mac setup:
 		--with-cgixpath=/soft/saord/bin				\
 		--with-cfitsio=/soft/saord				\
   		CC=gcc $*
+
+  mac-nodejs)
+  ./configure 	--prefix=$HOME						\
+		--with-helper=nodejs					\
+		--with-webdir=/Users/me/Sites/js9			\
+		--with-cfitsio=/Users/me/soft				\
+		CC=gcc $*
+
 </pre>
-In these examples, the JS9 web files (JavsScript, CSS etc.) will be
+In these examples, the JS9 web files (JavaScript, CSS etc.) will be
 installed in a js9 sub-directory of htdocs in the /var/www directory
 or in the Mac user's personal Sites directory.  JS9 CGI files will be
 installed in a subdirectory of the cgi-bin directory. C programs and
 shell scripts will be installed in sub-directories of the user's home
-directory or /soft/saord.
+directory or the system-wide /soft/saord directory.
 
 <h3>Build the JS9 System</h3>
 <p> Once the configure arguments are set up, you run configure, etc.
@@ -158,7 +157,7 @@ helper when requested by the client.
 Clients will automatically connect to the Node.js helper when an image
 is loaded into JS9. The server-side helper listens on a port specified
 in the js9Prefs.json file by the globalOpts.helper.Port value. The
-default is 2718, but you can change this to any open port you like.
+default is 2718, but you can change this to any open port.
 
 <p>
 If you are running in a secure environment (i.e. your web pages use
