@@ -182,6 +182,31 @@ specify a <b>parentFile</b> property in the options object:
 Once the parentFile has been specified, the in-memory file should act as a
 representation file.
 
+<p>
+Of course, the two files need to be connected to one another. For
+server-side data analysis, having agreement between WCS parameters is
+sufficient. In order to use the <b>Bin/Filter/Section</b> plugin,
+however, the representation file also must be connected to the parent
+file using IRAF LTM/LTV keywords, so that the physical coordinates of
+the representation file point to the file coordinates of the parent.
+The js9helper program will generate a FITS image section with
+the correct keywords. The syntax is:
+<pre>
+    js9helper -i parentFile imsection repFile section filter
+</pre>
+where section can be:
+<ul>
+<li>x1:x2,y1:y2[,bin]          # specify lo and hi values of the image section
+<li>xdim@xcen,ydim@ycen[,bin]  # specify center and image dimensions
+<li>xdim@0,ydim@0[,bin]        # image dimensions taken around center
+</ul>
+and <b>filter</b> specifies a column filter for binary tables. For example:
+<pre>
+    js9helper -i f814w.fits.gz imsection f814_bin24.fits "12000@0,12000@0,24"
+</pre>
+was used to generate the binned representation image in the <b>JS9 Large</b>
+demo.
+
 <center><h3>Automatic Generation of the PNG Representation File</h3></center>
 
 <b>
