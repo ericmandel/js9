@@ -18,10 +18,16 @@
 <ul>
 <li> retrieve and unpack the source code tar file or clone the js9 repository
 <li> JS9 is now ready for drag-and-drop image files using the file:// URI
-<li> run "./mkjs9 -q" to set up the js9 command-line script
-<li> to install JS9 into a web server tree, run configure with this switch:
+<li> run "./mkjs9 -q" to set up the js9 command-line script in its simplest form
+<li> to install JS9 into a web server tree, run configure this way:
 <pre>
-  ./configure --with-webdir=[path]  where path specifies the location to install the JS9 web files
+  ./configure --with-webdir=[path]  # location to install the JS9 web files
+</pre>
+<li> for desktop use with large file support, run configure this way:
+<pre>
+  # where to find cfitsio and install binaries, what sort of helper to build
+  # e.g.:
+  ./configure  --with-cfitsio=/usr/local --prefix=$HOME --with-helper=nodejs
 </pre>
 <li> edit the js9prefs.js to set up your site-specific JS9 parameters
 <li> build, install, clean up: <b>make; make install; make clean</b>
@@ -177,7 +183,14 @@ These capabilities requires the configuration of a
 Node.js-based server-side helper.
 <p>
 You configure a JS9 helper by adding additional switches to
-the configure command. See:
+the configure command, e.g.:
+<pre>
+  # where to find cfitsio and install binaries, what sort of helper to build
+  ./configure  --with-cfitsio=/usr/local --prefix=$HOME --with-helper=nodejs
+  make
+  make install
+</pre>
+See:
 <a href="./helper.html">Installing a Server-side Helper</a>
 for details.
 
@@ -227,7 +240,7 @@ available on GitHub:
 </pre>
 
 
-<h5>Last updated: July 7, 2017</h5>
+<h5>Last updated: July 10, 2017</h5>
 </div>
 
 </body>
