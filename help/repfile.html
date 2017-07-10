@@ -68,8 +68,10 @@ first configure a Node.js-based
 <a href="helper.html" target="_blank">Server-side Helper</a> using the
 standard GNU configure/make setup:
 <pre>
-  ./configure --with-helper=nodejs --with-cfitsio=/usr/local
+  # where to find cfitsio and install binaries, what sort of helper to build
+  ./configure  --with-cfitsio=/usr/local --prefix=$HOME --with-helper=nodejs
   make
+  make install
 </pre>
 
 <p>
