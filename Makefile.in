@@ -407,7 +407,8 @@ install-scripts: $(SCRIPTS) $(SCRIPTS2)
 install-web:		install-webdirs install-webfiles install-webcgi
 
 install-webdirs:	FORCE
-	@(echo "Installing web directories ..."; \
+	@(if [ x$(WEBDIR) != x ]; then \
+	 echo "Installing web directories ..."; \
 	 for i in $(WEBDIRS) $(WEBHELP); do \
 	    if [ x$(WEBDIR) != x ]; then \
 		mkdir -p $(WEBDIR); \
@@ -425,10 +426,14 @@ install-webdirs:	FORCE
 		    tar cf - $$i | (cd $(WEBDIR); tar xf -); \
 		fi; \
            done; \
-	 fi;)
+	 fi; \
+         else \
+	    echo "nothing to install for web directories ..." ; \
+         fi;)
 
 install-webfiles:	FORCE
-	@(echo "Installing web files ..."; \
+	@(if [ x$(WEBDIR) != x ]; then \
+	echo "Installing web files ..."; \
 	if [ x$(WEBDIR) != x ]; then \
 		mkdir -p $(WEBDIR); \
 		if [ -f $(WEBDIR)/js9Prefs.json ] ; then \
@@ -449,7 +454,10 @@ install-webfiles:	FORCE
 		fi; \
 		tar cf - $$i | (cd $(WEBDIR); tar xf -); \
 	    fi; \
-        done;)
+        done; \
+        else \
+          echo "nothing to install for web files ..." ; \
+        fi;)
 
 install-webcgi:	FORCE
 	@(if [ -d "$(CGIDIR)" ]; then \
@@ -467,7 +475,7 @@ install-webcgi:	FORCE
 	        fi; \
 	    done; \
 	else \
-	    echo "nothing to install in cgi (no helper configured)"; \
+	    echo "nothing to install in cgi"; \
 	fi;)
 
 install-webdata:	FORCE
