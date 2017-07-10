@@ -10,7 +10,7 @@ if test x"$haveweb" = x1 ; then
   WEBDIR=$withval
   AC_MSG_RESULT(yes ($WEBDIR))
 else
-  AC_MSG_ERROR([--with-webdir=<path> is required to specify the Web install directory])
+  AC_MSG_RESULT(no)
 fi
 AC_SUBST(WEBDIR)
 

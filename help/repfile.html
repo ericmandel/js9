@@ -65,7 +65,12 @@ JS9 supports FITS <b>representation file</b> generation and display,
 as well as extraction of binned image sections from the original parent
 file, using the <b>fits2fits</b> scheme. To utilize it at your site,
 first configure a Node.js-based
-<a href="helper.html" target="_blank">Server-side Helper</a>.
+<a href="helper.html" target="_blank">Server-side Helper</a> using the
+standard GNU configure/make setup:
+<pre>
+  ./configure --with-helper=nodejs --with-cfitsio=/usr/local
+  make
+</pre>
 
 <p>
 Once the js9Helper is running, configure <b>fits2fits</b> by
