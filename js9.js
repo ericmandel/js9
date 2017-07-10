@@ -12352,8 +12352,14 @@ JS9.lookupVfile = function(vfile){
 // (as of 2/2015: can't use $.ajax to retrieve a blob, so use low-level xhr)
 JS9.fetchURL = function(name, url, opts, handler) {
     var xhr = new XMLHttpRequest();
+    if( !name && !url ){
+	JS9.error("invalid url specification for fetchURL");
+    }
     if( !url ){
 	url = name;
+	name = /([^\\\/]+)$/.exec(url)[1];
+    }
+    if( !name ){
 	name = /([^\\\/]+)$/.exec(url)[1];
     }
     xhr.open('GET', url, true);
