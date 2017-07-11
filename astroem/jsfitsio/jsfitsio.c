@@ -265,7 +265,7 @@ void updateLTM(fitsfile *fptr, fitsfile *ofptr,
     dval = 0.0; *comment = '\0'; status = 0;
     fits_read_key(fptr, TDOUBLE, "CRPIX2", &dval, comment, &status);
     if( status == 0 ){
-      dval = (dval - x1) / bin;
+      dval = (dval - y1) / bin;
       fits_update_key(ofptr, TDOUBLE, "CRPIX2", &dval, comment, &status);
     }
     dval = 0.0; *comment = '\0'; status = 0;

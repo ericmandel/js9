@@ -1517,7 +1517,23 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	this.raw.header.NAXIS2 = this.raw.height;
 	this.raw.header.BITPIX = this.raw.bitpix;
     }
+    // convenience variable
     header = this.raw.header;
+    // if the original file header has LTM/LTV keywords, save them now,
+    // so that we can go back to file coords (e.g. in binning.js) at any time
+    if( !this.parent ){
+	this.parent = {};
+	if( header.LTV1 !== undefined   ||
+	    header.LTV2 !== undefined   ||
+	    header.LTM1_1 !== undefined ||
+	    header.LTM2_2 !== undefined ){
+	    this.parent.raw = {header: $.extend(true, {}, header)};
+	    // initialize LCS for this parent header
+	    this.parent.lcs = {};
+	    JS9.Image.prototype.initLCS.call(this.parent,
+					     this.parent.raw.header);
+	}
+    }
     // if section information is available, modify the WCS keywords
     // e.g., image sections from astroem/getFITSImage()
     // this code should (more or less) match updateLTM() in jsfitsio.c
@@ -2709,6 +2725,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	} else {
 	    opts.file = iid;
 	    opts.id = iid;
+	    opts.refreshRegions = true;
 	    if( func ){ opts.onrefresh = func; }
 	    // refresh the current image with the new hdu
 	    that.refreshImage(hdu, opts);

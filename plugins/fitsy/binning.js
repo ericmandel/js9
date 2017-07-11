@@ -12,35 +12,13 @@
        its LTM/LTV keywords will referring to the parent, instead of itself.
        In such a case, we want to convert physical position to image position
        of the physical file.
-       We try to detect this condition by:
-       a. if current file has no parent and has LTM/LTV keywords
-       b. if current file has a parent file and the parent has LTM/LTV
+       This situation is signalled by the presence of a parent lcs object.
     */
     function maybePhysicalToImage(im, pos){
-	var tim, header, lpos, ipos, npos;
-	var dol2i = false;
-	if( (im.imtab === "image") && (pos.x && pos.y) ){
-	    if( im.parentFile ){
-		if( im.parent && im.parent.lcs ){
-		    tim = im.parent;
-		    header = im.parent.raw.header;
-		    dol2i = true;
-		}
-	    } else if( im.raw && im.raw.header ){
-		tim = im;
-		header = im.raw.header;
-		if( header &&
-		    (header.LTM1_1 !== undefined ||
-		     header.LTM2_2 !== undefined ||
-		     header.LTV1 !== undefined   ||
-		     header.LTV2 !== undefined)  ){
-		    dol2i = true;
-		}
-	    }
-	}
-	if( dol2i ){
+	var lpos, ipos, npos;
+	if( pos.x && pos.y && im.parent && im.parent.lcs ){
 	    lpos = {x: pos.x, y: pos.y};
-	    ipos = JS9.Image.prototype.logicalToImagePos.call(tim, lpos,
+	    ipos = JS9.Image.prototype.logicalToImagePos.call(im.parent, lpos,
 							      "ophysical");
 	    npos = {x: Math.floor(ipos.x+0.5), y: Math.floor(ipos.y+0.5)};
 	}
