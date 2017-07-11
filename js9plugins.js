@@ -883,7 +883,8 @@ module.exports = xhr;
     */
     function maybePhysicalToImage(im, pos){
 	var lpos, ipos, npos;
-	if( pos.x && pos.y && im.parent && im.parent.lcs ){
+	if( im.imtab === "image" && im.parent && im.parent.lcs &&
+	    pos.x && pos.y ){
 	    lpos = {x: pos.x, y: pos.y};
 	    ipos = JS9.Image.prototype.logicalToImagePos.call(im.parent, lpos,
 							      "ophysical");
