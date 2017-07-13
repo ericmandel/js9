@@ -1359,7 +1359,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     var that = this;
     var i, s, ui, clen, hdu, pars, card, got, rlen, rmvfile, done;
     var header, x1, y1, bin;
-    var owidth, oheight, obitpix, oltm1_1;
+    var oraw, owidth, oheight, obitpix, oltm1_1;
     opts = opts || {};
     if( $.isArray(obj) || JS9.isTypedArray(obj) || obj instanceof ArrayBuffer ){
 	// flatten if necessary
@@ -1389,6 +1389,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     // save old essential values, if possible (for use as defaults)
     // free previous WCS, if possible
     if( this.raw ){
+	oraw = this.raw;
 	owidth = this.raw.width;
 	oheight = this.raw.height;
 	obitpix = this.raw.bitpix;
@@ -1521,7 +1522,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     header = this.raw.header;
     // if the original file header has LTM/LTV keywords, save them now,
     // so that we can go back to file coords (e.g. in binning.js) at any time
-    if( !this.parent ){
+    if( !oraw && !this.parent ){
 	this.parent = {};
 	if( header.LTV1 !== undefined   ||
 	    header.LTV2 !== undefined   ||
@@ -2686,12 +2687,13 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 // extract and display a section of an image, with table filtering
 JS9.Image.prototype.displaySection = function(opts, func) {
     var that = this;
-    var hdu, fits, from, obj;
+    var hdu, fits, from, obj, oreg, nim, topts;
     var arr = [];
     var disp = function(hdu, opts){
 	var tim, iid;
 	var ss = "";
 	opts = opts || {};
+	topts = $.extend(true, {}, opts);
 	// start the waiting!
 	if( opts.waiting !== false ){
 	    JS9.waiting(true, that.display);
@@ -2710,25 +2712,36 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	}
 	iid = that.id.replace(/\[.*\]/,"") + ss;
 	if( opts.separate ){
-	    opts.id = iid;
-	    opts.display = that.display;
+	    delete topts.xcen;
+	    delete topts.ycen;
+	    topts.id = iid;
+	    topts.display = that.display;
 	    // lame attempt to get to original parentFile
-	    if( that.fitsFile ){
+	    if( from === "parentFile" && that.fitsFile ){
 		tim = JS9.lookupImage(that.fitsFile);
 		if( tim && tim.parentFile ){
-		    opts.parentFile = tim.parentFile;
+		    topts.parentFile = tim.parentFile;
 		} else {
-		    opts.parentFile = that.fitsFile;
+		    topts.parentFile = that.fitsFile;
 		}
 	    }
-	    JS9.checkNew(new JS9.Image(hdu, opts, func));
+	    // save current regions (before displaying new image)
+	    oreg = that.listRegions("all", {mode: 1});
+	    // set up new and display new image
+	    nim = new JS9.Image(hdu, topts, func);
+	    // reset obin to be bin, since new images have no previous bin
+	    nim.binning.obin = nim.binning.bin;
+	    // add regions to new image
+	    if( oreg ){
+		nim.addShapes("regions", oreg);
+	    }
 	} else {
-	    opts.file = iid;
-	    opts.id = iid;
-	    opts.refreshRegions = true;
-	    if( func ){ opts.onrefresh = func; }
+	    topts.file = iid;
+	    topts.id = iid;
+	    topts.refreshRegions = true;
+	    if( func ){ topts.onrefresh = func; }
 	    // refresh the current image with the new hdu
-	    that.refreshImage(hdu, opts);
+	    that.refreshImage(hdu, topts);
 	}
 	// done waiting
 	JS9.waiting(false);
@@ -3348,7 +3361,6 @@ JS9.Image.prototype.setWCSSys = function(wcssys){
 		wu = this.params.wcsunits;
 	    }
 	    this.setWCSUnits(wu);
-	    // this.updateShapes("regions", "all", "update");
 	}
     }
     // extended plugins
@@ -8199,7 +8211,8 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	zoom = 1;
     }
     if( this.display.layers[layerName].dtype === "main" ){
-	bin = this.binning.bin || 1;
+	// bin = this.binning.bin || 1;
+	bin = 1;
     } else {
 	bin = 1;
     }
@@ -8731,7 +8744,8 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
 	zoom = this.rgb.sect.zoom;
-	bin = this.binning.bin || 1;
+//	bin = this.binning.bin || 1;
+	bin = 1;
     } else {
 	zoom = 1;
 	bin = 1;
@@ -8739,7 +8753,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     // figure out the first argument
     if( typeof shape === "string" ){
 	// look for a region string
-	s = this.parseRegions(shape);
+	s = this.parseRegions(shape, myopts);
 	if( typeof s === "string" ){
 	    // nope, normal shape string
 	    sarr = [{shape: s}];
@@ -9056,8 +9070,11 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
 	zoom = this.rgb.sect.zoom;
-	// bin = this.binning.bin || 1;
-	bin = 1;
+	if( this.params.wcssys === "image" ){
+	    bin = 1;
+	} else {
+	    bin = this.binning.bin || 1;
+	}
     } else {
 	zoom = 1;
 	bin = 1;
@@ -9406,7 +9423,8 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
 	zoom = this.rgb.sect.zoom;
-	bin = this.binning.bin || 1;
+//	bin = this.binning.bin || 1;
+	bin = 1;
     } else {
 	zoom = 1;
 	bin = 1;
@@ -11454,7 +11472,7 @@ JS9.Regions.copyRegions = function(to, which){
 };
 
 // parse a string containing a subset of DS9/Funtools regions
-JS9.Regions.parseRegions = function(s){
+JS9.Regions.parseRegions = function(s, opts){
     var regions = [];
     var i, j, k, lines, obj, robj;
     var owcssys, wcssys, iswcs, liswcs, pos, alen;
@@ -11511,6 +11529,8 @@ JS9.Regions.parseRegions = function(s){
 	    tag: function(v){return {tags: v};},
 	    width: function(v){return {strokeWidth: parseFloat(v)};}
 	};
+	// opts is ... optional
+	opts = opts || {};
 	// loop through DS9 region properties, converting to js9 props
 	while( (xarr = rexp.exec(s)) !== null ){
 	    key = xarr[1];
@@ -11617,15 +11637,13 @@ JS9.Regions.parseRegions = function(s){
 	    sarr = JS9.wcs2pix(this.raw.wcs, v1.dval, v2.dval).split(/ +/);
 	    ox = parseFloat(sarr[0]);
 	    oy = parseFloat(sarr[1]);
+	} else if( wcssys === "physical" ){
+	    vt = this.logicalToImagePos({x: v1.dval, y: v2.dval});
+	    ox = vt.x;
+	    oy = vt.y;
 	} else {
-	    if( wcssys === "physical" ){
-		vt = this.logicalToImagePos({x: v1.dval, y: v2.dval});
-		ox = vt.x;
-		oy = vt.y;
-	    } else {
-		ox = v1.dval;
-		oy = v2.dval;
-	    }
+	    ox = v1.dval;
+	    oy = v2.dval;
 	}
 	return [ox, oy];
     };
@@ -11639,6 +11657,11 @@ JS9.Regions.parseRegions = function(s){
 		cstr = "cdelt" + which;
 		v.dval = Math.abs(v.dval / wcsinfo[cstr]);
 	    }
+	} else if( wcssys === "physical" ){
+	    // use the LTM1_1 value stored for logical to image transforms
+	    if( this.lcs && this.lcs.physical ){
+		v.dval = v.dval * this.lcs.physical.forward[0][0];
+	    }
 	}
 	return v.dval;
     };
@@ -11646,7 +11669,6 @@ JS9.Regions.parseRegions = function(s){
     var getang = function(a){
 	var v = JS9.strtoscaled(a);
 	var wcsinfo = this.raw.wcsinfo || {crot: 0};
-//	if( (iswcs || liswcs) && wcsinfo.crot ){
 	if( wcsinfo.crot ){
             v.dval += wcsinfo.crot;
 	}
