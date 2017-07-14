@@ -44,7 +44,7 @@ When extracting an image section, you can set one or more of the
 following options:
 <ul>
 <li><b>center:</b> the file (physical) coordinates around which to
-perform the section extraction.
+perform the section extraction (0,0 can be used to specify the file center).
 <li><b>size:</b> the size of the image to extract (before binning is
 performed).
 <li><b>bin:</b> determines how many physical pixels are summed into
@@ -58,6 +58,8 @@ For example, if a table has FITS (tlmin, tlmax) dimensions 4096 x 4096, then:
 <li> <b>center: 2048, 2048; dimensions: 4096, 4096; bin: 4</b> will bin the entire file by 4 to produce a 1024 x 1024 image.
 <li> <b>center: 1024, 1024; dimensions: 1024, 1024, bin: 2</b> will bin the upper left 1024 x 1024 section of the image by 2 to produce a 512 x 512 image.
 </ul> 
+Specifying 0,0 for the center will cause the section to be extracted from the
+center of the image.
 
 <p>
 Table filtering allows you  to select rows from an FITS binary table
