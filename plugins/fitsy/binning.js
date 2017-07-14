@@ -239,6 +239,6 @@
 
 	    help:     "fitsy/binning.html",
 
-            winDims: [480, 220]
+            winDims: [480, 240]
     });
 }());
