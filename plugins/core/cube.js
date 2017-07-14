@@ -95,7 +95,7 @@ JS9.Cube.xnext = function(did, id, target){
     var s, slice, plugin, header;
     var im = JS9.lookupImage(id, did);
     if( im ){
-	if( im.parent && im.parent.raw.header ){
+	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
 	} else {
 	    header = im.raw.header;
@@ -116,7 +116,7 @@ JS9.Cube.xprev = function(did, id, target){
     var s, slice, plugin, header;
     var im = JS9.lookupImage(id, did);
     if( im ){
-	if( im.parent && im.parent.raw.header ){
+	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
 	} else {
 	    header = im.raw.header;
@@ -137,7 +137,7 @@ JS9.Cube.xlast = function(did, id, target){
     var s, slice, plugin, header;
     var im = JS9.lookupImage(id, did);
     if( im ){
-	if( im.parent && im.parent.raw.header ){
+	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
 	} else {
 	    header = im.raw.header;
@@ -154,7 +154,7 @@ JS9.Cube.xorder = function(did, id, target){
     var i, arr, plugin, header;
     var im = JS9.lookupImage(id, did);
     if( im ){
-	if( im.parent && im.parent.raw.header ){
+	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
 	} else {
 	    header = im.raw.header;
@@ -281,7 +281,7 @@ JS9.Cube.init = function(opts){
     // do we have an image?
     im = this.display.image;
     if( im && (opts.mode !== "clear") ){
-	if( im.parent && im.parent.raw.header ){
+	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
 	} else {
 	    header = im.raw.header;
