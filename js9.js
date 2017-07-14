@@ -12391,9 +12391,11 @@ JS9.lookupVfile = function(vfile){
 // (as of 2/2015: can't use $.ajax to retrieve a blob, so use low-level xhr)
 JS9.fetchURL = function(name, url, opts, handler) {
     var xhr = new XMLHttpRequest();
+    // sanity check
     if( !name && !url ){
 	JS9.error("invalid url specification for fetchURL");
     }
+    // either url or name can be blank
     if( !url ){
 	url = name;
 	name = /([^\\\/]+)$/.exec(url)[1];
@@ -12401,7 +12403,13 @@ JS9.fetchURL = function(name, url, opts, handler) {
     if( !name ){
 	name = /([^\\\/]+)$/.exec(url)[1];
     }
+    // avoid the cache (Safari is especially agressive about caching)
+    if( !url.match(/\?/) ){
+	url += "?r=" + Math.random();
+    }
+    // set up connection
     xhr.open('GET', url, true);
+    // and parameters
     if( opts.responseType ){
 	xhr.responseType = opts.responseType;
     } else {
@@ -12455,6 +12463,7 @@ JS9.fetchURL = function(name, url, opts, handler) {
     xhr.ontimeout = function() {
 	JS9.error("timeout awaiting response from server: " + url);
     };
+    // fetch the data!
     try{ xhr.send(); }
     catch(e){ JS9.error("request to load " + url + " failed", e); }
 };
