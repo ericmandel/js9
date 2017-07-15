@@ -2555,9 +2555,9 @@ JS9.Cube.init = function(opts){
 	.appendTo(this.divjq);
     this.cubeContainer.html(s);
     // set current values
-    $(".JS9CubeRange").prop("max", this.smax);
-    $(".JS9CubeValue").prop("max", this.smax);
-    $(".JS9CubeOrder").val(this.slice);
+    this.divjq.find(".JS9CubeRange").prop("max", this.smax);
+    this.divjq.find(".JS9CubeValue").prop("max", this.smax);
+    this.divjq.find(".JS9CubeOrder").val(this.slice);
 };
 
 // add this plugin into JS9
