@@ -19,15 +19,15 @@
 <li> retrieve and unpack the source code tar file or clone the js9 repository
 <li> JS9 is now ready for drag-and-drop image files using the file:// URI
 <li> run "./mkjs9 -q" to set up the js9 command-line script in its simplest form
-<li> to install JS9 into a web server tree, run configure this way:
+<li> to install JS9 into a web server tree, run configure with this switch:
 <pre>
-  ./configure --with-webdir=[path]  # location to install the JS9 web files
+  # location to install the JS9 web files:
+  ./configure --with-webdir=[path_to_web_install]
 </pre>
-<li> for desktop use with large file support, run configure this way:
+<li> to add large file support, build the helper with these switches:
 <pre>
-  # where to find cfitsio and install binaries, what sort of helper to build
-  # e.g.:
-  ./configure  --with-cfitsio=/usr/local --prefix=$HOME --with-helper=nodejs
+  # where to find cfitsio and install binaries, what sort of helper to build:
+  ./configure  --with-cfitsio=[path_to_cfitsio] --prefix=$HOME --with-helper=nodejs
 </pre>
 <li> edit the js9prefs.js to set up your site-specific JS9 parameters
 <li> build, install, clean up: <b>make; make install; make clean</b>
@@ -46,7 +46,7 @@ the usual tar command, e.g:
 </pre>
 You also can clone JS9 from GitHub:
 <pre>
-    https://github.com/ericmandel/js9
+    git clone https://github.com/ericmandel/js9
 </pre>
 
 <h3>Run JS9 using the file:// URI</h3>
@@ -153,8 +153,8 @@ the JS9 tools and files using the standard GNU procedure:
   make
   make install
 </pre>
-You should run configure with the <b>--with-webdir=[path]</b> switch,
-which specifies the directory into which the JS9 web files
+At a minimum, you should run configure with the <b>--with-webdir=[path]</b>
+switch, which specifies the directory into which the JS9 web files
 (JavaScript, CSS, etc.) will be installed.  We recommend that this
 directory only contain the installed JS9 files, i.e. that you install
 JS9 into its own self-contained directory. This will make upgrading to
@@ -185,8 +185,8 @@ Node.js-based server-side helper.
 You configure a JS9 helper by adding additional switches to
 the configure command, e.g.:
 <pre>
-  # where to find cfitsio and install binaries, what sort of helper to build
-  ./configure  --with-cfitsio=/usr/local --prefix=$HOME --with-helper=nodejs
+  # where to find cfitsio and install binaries, what sort of helper to build:
+  ./configure  --with-cfitsio=[path_to_cfitsio] --prefix=$HOME --with-helper=nod
   make
   make install
 </pre>
