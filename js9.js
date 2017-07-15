@@ -14855,9 +14855,21 @@ JS9.init = function(){
 	name: "load",
 	help: "load image(s)",
 	set: function(args){
-	    var i;
-	    for(i=0; i<args.length; i++){
-		JS9.Load(args[i], {display: this.display.id});
+	    var i, j, obj;
+	    var alen = args.length;
+	    for(i=0; i<alen; i++){
+		obj = null;
+		j = i + 1;
+		if( (j < alen) && (args[j].indexOf('{') === 0) ){
+		    try{ obj = JSON.parse(args[j]); }
+		    catch(e){ obj = null; }
+		}
+		if( obj ){
+		    JS9.Load(args[i], obj, {display: this.display.id});
+		    i++;
+		} else {
+		    JS9.Load(args[i], {display: this.display.id});
+		}
 	    }
 	}
     }));
