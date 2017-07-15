@@ -15,7 +15,7 @@ What does it do?
   - server-side and local analysis using the JS9 public API
   - control JS9 using scripts from the Linux shell or Python
   - runs on Macs, Linux, Windows, iPads, iPhones, ...
-  - as a Desktop app, in all modern browsers, mobile apps are coming ...
+  - runs as a Desktop app, in all modern browsers, mobile apps are coming ...
 
 How can I try it out?
 ---------------------
@@ -49,13 +49,33 @@ Load a local page into your browser:
 (NB: Chrome needs to run with the --allow-file-access-from-files switch to use
 the file URI.)
 
-For Desktop use, install [Electron.js](http://electron.atom.io) and configure:
+For Desktop use, install [Electron.js](http://electron.atom.io) and generate *js9* script:
 
     ./mkjs9 -q
 
 Use the *js9* script to start the Desktop app and load an image:
 
     js9 -a ~/data/m13.fits
+
+For more advanced support (web-based support, support for handling large files),
+build the JS9 helper and install JS9 in a web directory:
+
+    # configure location to install the JS9 web files,
+    # where to find cfitsio library and include files,
+    # where to install programs and scripts,
+    # what sort of helper to build:
+    ./configure --with-webdir=[path_to_web_install] \
+                --with-cfitsio=[path_to_cfitsio]    \
+                --prefix=[path_to_prog_install]     \
+                --with-helper=nodejs
+
+    # the usual ...
+    make
+    make install
+
+    # start helper
+    cd path_to_web_install
+    node js9Helper.js 2>&1 > js9node.log &
 
 What about scripting?
 ---------------------
