@@ -289,6 +289,8 @@ static int FinfoFree(char *fname)
   return 1;
 }
 
+#if HAVE_CFITSIO
+
 #define SLEN 33
 
 int parseSection(fitsfile *fptr, int hdutype, char *s,
@@ -445,7 +447,6 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
 		     int *dims, double *cens, int bin, char *slice,
 		     int *status)
 {
-#if HAVE_CFITSIO
   void *buf;
   char card[FLEN_CARD];
   char tbuf[SZ_LINE];
@@ -521,12 +522,8 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
 	    bin, 1);
   /* return status */
   return *status;
-#else
-  fprintf(stderr,
-	  "ERROR: for section support, build js9helper with cfitsio\n");
-  return 1;
-#endif
 }
+#endif
 
 /* process this command */
 static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
@@ -571,7 +568,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
     break;
   case 'i':
     if( !strcmp(cmd, "image") ){
-      if( !args || !word(args[0], tbuf, &ip) ){
+      if( !narg || !word(args[0], tbuf, &ip) ){
 	fprintf(stderr, WRONGARGS, cmd, 1, 0);
 	return 1;
       }
@@ -588,7 +585,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
       fflush(stdout);
       return 0;
     } else if( !strcmp(cmd, "image_") ){
-      if( !args || !word(args[0], tbuf, &ip) ){
+      if( !narg || !word(args[0], tbuf, &ip) ){
 	fprintf(stderr, WRONGARGS, cmd, 1, 0);
 	return 1;
       }
@@ -727,6 +724,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
     if( !strcmp(cmd, "list") ){
       FinfoList(stdout);
       return 0;
+#if HAVE_CFITSIO
     } else if( !strcmp(cmd, "listhdus") ){
       if( !(finfo=FinfoGetCurrent()) ){
 	fprintf(stderr, NOFINFO, cmd);
@@ -735,6 +733,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
       _listhdu(finfo->fitsfile, NULL);
       fflush(stdout);
       return 0;
+#endif
     }
     break;
   case 's':
