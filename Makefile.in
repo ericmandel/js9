@@ -141,6 +141,8 @@ WEBFILES =	js9.js js9.min.js js9worker.js \
 		js9prefs-default.js js9prefs.js \
 		favicon.ico index.html
 
+RMFILES =	analysis-plugins/imageSection.json
+
 GZFILES =	js9.js js9.min.js js9support.js js9support.min.js \
 		js9plugins.js js9-allinone.js
 
@@ -453,6 +455,12 @@ install-webfiles:	FORCE
 		    echo "installing web file: $$i" ; \
 		fi; \
 		tar cf - $$i | (cd $(WEBDIR); tar xf -); \
+	    fi; \
+        done; \
+	for i in $(RMFILES); do\
+	    if [ -r $(WEBDIR)/$$i ]; then \
+	        echo "removing $$i file ..."; \
+	        rm -f $(WEBDIR)/$$i; \
 	    fi; \
         done; \
         else \
