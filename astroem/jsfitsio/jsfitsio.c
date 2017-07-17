@@ -321,7 +321,6 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   long totpix, totbytes;
   long naxes[IDIM], fpixel[IDIM], lpixel[IDIM], myfpixel[IDIM], inc[IDIM];
   double xcen, ycen;
-  double binsq = 1.0;
   double bscale = 1.0;
   double bzero = 0.0;
   char comment[FLEN_CARD];
@@ -556,8 +555,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       *status = MEMORY_ALLOCATION;
       return NULL;
     }
-    /* remove factor of binsq from total bytes */
-    binsq = bin * bin;
+    // get total bytes
     totbytes = (int)((int)(odim1 / bin) * (int)(odim2 / bin) * tsize);
     /* allocate memory for the output binned image section */
     if( !(obuf = (void *)calloc(totbytes, sizeof(char))) ){
