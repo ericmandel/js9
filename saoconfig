@@ -52,7 +52,7 @@ case $name in
 		--prefix=/smartx					\
 		--with-webdir=/smartx/www/html/js9			\
 		--with-helper=nodejs					\
-		--with-cfitsio=/smartx					\
+		--with-cfitsio=/smartx/cfitsio				\
 		--with-png=/smartx					\
   		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
  		$*
