@@ -304,8 +304,7 @@ imsection)
     echo "${JS9_WORKDIR}/${OFILE}"
     # run imsection in the js9helper to generate a FITS image
     # (and send back json with useful info)
-    rm -rf "$OFILE"
-    js9helper -i "$IFILE" imsection "$OFILE" "$SECTION" "$FILTER" "$SLICE"
+    js9helper -i "$IFILE" imsection \!"$OFILE" "$SECTION" "$FILTER" "$SLICE"
     if [ x$DOPARENT = x1 ]; then
       # send parent file, so analysis is performed on the original file
       echo "${IFILE}"
