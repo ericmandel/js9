@@ -514,12 +514,15 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
   }
   /* write image to FITS file */
   fits_write_pix(ofptr, dtype, fpixel, nelements, buf, status);
-
   /* update LTM/TLV values in header */
   updateLTM(ifptr, ofptr,
 	    (int)((end[0] + start[0]) / 2), (int)((end[1] + start[1]) / 2), 
 	    (int)(end[0] - start[0] + 1), (int)(end[1] - start[1] + 1),
 	    bin, 1);
+  /* free up space */
+  if( buf ){
+    free(buf);
+  }
   /* return status */
   return *status;
 }
@@ -533,7 +536,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
   Finfo finfo, tfinfo;
 #if HAVE_CFITSIO
   int xlims[2], ylims[2], bin, got, hdutype, hdunum, ncard;
-  int status=0, status2=0, tstatus=0;
+  int status=0, tstatus=0;
   int dims[2];
   double cens[2];
   char extname[FLEN_CARD];
@@ -665,7 +668,8 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 		  finfo->fitsfile, tbuf);
 	  return 1;
 	}
-	closeFITSFile(tfptr, &status2);
+	tstatus = 0;
+	closeFITSFile(tfptr, &tstatus);
 	break;
       }
       if( status ){
@@ -697,8 +701,10 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
       }
       fprintf(stdout, "}\n");
       fflush(stdout);
-      closeFITSFile(ifptr, &status);
-      closeFITSFile(ofptr, &status);
+      tstatus=0;
+      closeFITSFile(ifptr, &tstatus);
+      tstatus=0;
+      closeFITSFile(ofptr, &tstatus);
       return 0;
 #else
       fprintf(stderr,
