@@ -36,10 +36,10 @@ case $name in
 
   bokhara*)
   ./configure 	$CF							\
-		--prefix=/soft/saord					\
+		--prefix=$HOME						\
+		--with-cfitsio=$HOME					\
 		--with-webdir=/home/mred/public_html/htdocs/js9		\
 		--with-helper=get					\
-		--with-cfitsio=/proj/rd/linux64				\
 		--with-cgidir=/home/mred/public_html/cgi-bin/js9	\
 		--with-cgiurl=./cgi-bin/js9				\
 		--with-cgixpath=/soft/saord/bin				\
