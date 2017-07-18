@@ -143,7 +143,7 @@ install:	FORCE
 # get the astroem libraries
 astroem:	FORCE
 		@(cp -p $(ASTROEM)/include/*.h include/.; \
-		  cp -p $(ASTROEM)/lib/*.a lib/.);)
+		  cp -p $(ASTROEM)/lib/*.a lib/.;)
 
 clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#*  \
