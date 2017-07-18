@@ -67,52 +67,26 @@ USRCS =		$(UTIL)/strtod.c
 UOBJS = 	$(USRCS:%.c=%.o)
 
 # zlib
-ZLIB =		./zee.js
-ZSRCS = 	$(ZLIB)/adler32.c \
-		$(ZLIB)/compress.c \
-		$(ZLIB)/crc32.c \
-		$(ZLIB)/deflate.c \
-		$(ZLIB)/gzclose.c \
-		$(ZLIB)/gzlib.c \
-		$(ZLIB)/gzread.c \
-		$(ZLIB)/gzwrite.c \
-		$(ZLIB)/infback.c \
-		$(ZLIB)/inffast.c \
-		$(ZLIB)/inflate.c \
-		$(ZLIB)/inftrees.c \
-		$(ZLIB)/trees.c \
-		$(ZLIB)/uncompr.c \
-		$(ZLIB)/zutil.c \
-		$(ZLIB)/zcompress.c \
-		$(ZLIB)/zuncompress.c
+ZEXTRA =		./zextra
+ZSRCS =		$(ZEXTRA)/zcompress.c \
+		$(ZEXTRA)/zuncompress.c
 ZOBJS = 	$(ZSRCS:%.c=%.o)
-
-# bzip2
-BZ2LIB =	./bzip2
-BZ2SRCS = 	$(BZ2LIB)/blocksort.c \
-		$(BZ2LIB)/huffman.c \
-		$(BZ2LIB)/crctable.c \
-		$(BZ2LIB)/randtable.c \
-		$(BZ2LIB)/compress.c \
-		$(BZ2LIB)/decompress.c \
-		$(BZ2LIB)/bzlib.c
-BZ2OBJS = 	$(BZ2SRCS:%.c=%.o)
 
 # iraf zscale
 ZSCALE =	./zscale
 ZSSRCS =	$(ZSCALE)/cdlzscale.c
 ZSOBJS = 	$(ZSSRCS:%.c=%.o)
 
-PKGOBJS =	$(JOBJS) $(MOBJS) $(UOBJS) $(ZOBJS) $(BZ2OBJS) $(ZSOBJS)
-PKGDIRS =	$(JSFITSIO) $(MONTAGE) $(UTIL) $(ZSCALE) $(ZLIB) $(BZ2LIB)
+PKGOBJS =	$(JOBJS) $(MOBJS) $(UOBJS) $(ZOBJS) $(ZSOBJS)
+PKGDIRS =	$(JSFITSIO) $(MONTAGE) $(UTIL) $(ZSCALE) $(ZEXTRA)
 
-LIBS =		lib/libwcs.a lib/libcfitsio.a
+LIBS =		lib/libwcs.a lib/libcfitsio.a lib/libz.a lib/libbz2.a
 
 # combine into EMCC command
 EMCC =		emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMINCS) $(EMEXTRAS)
 
-# flags to generate all emcc objects (i.e. so $(CC) runs emcc)
-CC =		emcc $(EMFLAGS) -I./include -I$(JSFITSIO) -I$(UTIL) -I$(ZLIB) -I$(BZ2LIB) -I$(ZSCALE) -D'exit(n)=em_exit(n)'
+# flags to generate all emcc objects (i.e. so default rule for $(CC) runs emcc)
+CC =		emcc $(EMFLAGS) -I./include -I$(JSFITSIO) -I$(UTIL) -I$(ZSCALE) -D'exit(n)=em_exit(n)'
 
 all:		$(ASTROEMJS)
 

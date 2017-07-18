@@ -1,5 +1,0 @@
-
-var Module = {
-  'noExitRuntime': true
-};
-
