@@ -109,6 +109,7 @@ fitsfile *healpixToImage(fitsfile *ifptr, int *status){
   hpxdat.ordering = 'R';
   hpxdat.layout   = 0;
   hpxdat.quad     = 0;
+  hpxdat.infile   = "";
 
   /* sanity check */
   if( !ifptr ){
@@ -622,8 +623,10 @@ int HPXout(struct healpix *hpxdat)
   }
 
   /* Write history. */
-  sprintf(history, "Original input file: %s", hpxdat->infile);
-  fits_write_history(fptr, history, &status);
+  if( hpxdat->infile && *hpxdat->infile ){
+    sprintf(history, "Original input file: %s", hpxdat->infile);
+    fits_write_history(fptr, history, &status);
+  }
   sprintf(history, "     Original NSIDE: %d", hpxdat->nside);
   fits_write_history(fptr, history, &status);
   sprintf(history, "  Original ordering: %s",
