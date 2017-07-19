@@ -232,7 +232,7 @@ evfilter)
     Y=`echo $CEN | awk -F, '{print $2}'`
     EXT="[$DIMS@$X,$DIMS@$Y]"
     # try to get a base name for output
-    IBASE=`basename $IFILE | sed 's/\.gz$//' | sed 's/\.fits$//' | sed 's/\.ftz$//'`
+    IBASE=`basename "$IFILE" | sed 's/\.gz$//' | sed 's/\.fits$//' | sed 's/\.ftz$//'`
     # make up unique output file base
     OBASE=`echo ${IBASE}_${FILTER} | sed 's/\[.*\]//g' | awk -F/ '{print $NF}' | sed 's/[,<>$&|!\*]/_/g'`
     # make up new filter ... might need to combine with old filter
@@ -293,7 +293,7 @@ imsection)
       FILTER=""
     fi
     # try to get a base name for output
-    IBASE=`basename $IFILE | sed 's/\.gz$//' | sed 's/\.fits$//' | sed 's/\.ftz$//'`
+    IBASE=`basename "$IFILE" | sed 's/\.gz$//' | sed 's/\.fits$//' | sed 's/\.ftz$//'`
     OBASE=`echo ${IBASE}_${SECTION} | sed 's/\[.*\]//g' | awk -F/ '{print $NF}' | sed 's/[,]/_/g'`
     if [ x$DOGZIP = x1 ]; then
         OFILE=${OBASE}.fits.gz
@@ -333,7 +333,7 @@ loadproxy)
     # make sure we are not over quota
     quotacheck
     URL=`echo $1 | sed 's/__ampersand__/\&/g'`
-    OFILE=`basename $URL | sed 's/\?.*//g'`
+    OFILE=`basename "$URL" | sed 's/\?.*//g'`
     # hack for google drive
     if [ x"$OFILE" = xuc ]; then
       OFILE="google_"$RANDOM".fits"
@@ -401,8 +401,8 @@ removeproxy)
 	error "removeproxy file"
     else
       PROXY=`echo $1 | sed 's/__ampersand__/\&/g'`
-      FILE=`basename $PROXY`
-      DIR=`dirname $PROXY`
+      FILE=`basename "$PROXY"`
+      DIR=`dirname "$PROXY"`
     fi
     if [ x"${JS9_WORKDIR}" = x ]; then
 	error "removeproxy requires configuration of a temporary work directory"
@@ -413,12 +413,11 @@ removeproxy)
       # error "can't remove proxy file from someone else's working directory"
       exit 0
     fi
-    # remove files that match a template of the input file (without extension),
-    # but avoid removing files with a similar name
-    TMPL=`echo $FILE | rev | cut -f 2- -d '.' | rev`
-    rm -rf `ls ${TMPL} ${TMPL}.* 2>/dev/null | egrep -v "${TMPL}\..*\..*"`
+    # remove file
+    rm -f "$FILE"
     if [ $? != 0 ]; then
-      error "can't remove proxy file: $FILE"
+      # error "can't remove proxy file: $FILE"
+      exit 0
     fi
     echo "OK"
     exit 0

@@ -531,7 +531,6 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
 /* process this command */
 static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 {
-  int ip=0;
   char tbuf[SZ_LINE];
   Finfo finfo, tfinfo;
 #if HAVE_CFITSIO
@@ -551,9 +550,9 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
   switch(*cmd){
   case 'f':
     if( !strcmp(cmd, "fitsFile") ){
-      if( args && word(args[0], tbuf, &ip) ){
-	if( !(tfinfo=FinfoLookup(tbuf)) ){
-	  fprintf(stderr, NOIMAGE, tbuf);
+      if( narg ){
+	if( !(tfinfo=FinfoLookup(args[0])) ){
+	  fprintf(stderr, NOIMAGE, args[0]);
 	  return 1;
 	}
       } else if( !(tfinfo=FinfoGetCurrent()) ){
@@ -571,12 +570,12 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
     break;
   case 'i':
     if( !strcmp(cmd, "image") ){
-      if( !narg || !word(args[0], tbuf, &ip) ){
+      if( !narg ){
 	fprintf(stderr, WRONGARGS, cmd, 1, 0);
 	return 1;
       }
       /* new image */
-      if( !(finfo = FinfoNew(tbuf)) ){
+      if( !(finfo = FinfoNew(args[0])) ){
 	return 1;
       }
       /* make it current */
@@ -588,12 +587,12 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
       fflush(stdout);
       return 0;
     } else if( !strcmp(cmd, "image_") ){
-      if( !narg || !word(args[0], tbuf, &ip) ){
+      if( !narg ){
 	fprintf(stderr, WRONGARGS, cmd, 1, 0);
 	return 1;
       }
       /* new image */
-      if( !(finfo = FinfoNew(tbuf)) ){
+      if( !(finfo = FinfoNew(args[0])) ){
 	return 1;
       }
       /* make it current */
@@ -645,6 +644,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
       case IMAGE_HDU:
 	/* image: let cfitsio make a section */
 	if( copyImageSection(ifptr, ofptr, dims, cens, bin, slice, &status) ){
+	  fits_get_errstatus(status, tbuf);
 	  fprintf(stderr,
 		  "ERROR: can't copy image section for '%s' [%s]\n",
 		  finfo->fitsfile, tbuf);
@@ -663,6 +663,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 	}
 	/* copy section to new image */
 	if( copyImageSection(tfptr, ofptr, dims, NULL, bin, NULL, &status) ){
+	  fits_get_errstatus(status, tbuf);
 	  fprintf(stderr,
 		  "ERROR: can't copy image section for '%s' [%s]\n",
 		  finfo->fitsfile, tbuf);
@@ -744,8 +745,8 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
     break;
   case 's':
     if( !strcmp(cmd, "setDataPath") ){
-      if( args && word(args[0], tbuf, &ip) ){
-	setenv("JS9_DATAPATH", tbuf, 1);
+      if( narg ){
+	setenv("JS9_DATAPATH", args[0], 1);
 	if( node ) fprintf(stdout, "setDataPath\r");
 	fprintf(stdout, "%s\n", getenv("JS9_DATAPATH"));
 	fflush(stdout);
@@ -758,12 +759,12 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
     break;
   case 'u':
     if( !strcmp(cmd, "unimage") ){
-      if( !args || !word(args[0], tbuf, &ip) ){
+      if( !narg ){
 	fprintf(stderr, WRONGARGS, cmd, 1, 0);
 	return 1;
       }
       /* close this image */
-      FinfoFree(tbuf);
+      FinfoFree(args[0]);
       return 0;
     }
     break;

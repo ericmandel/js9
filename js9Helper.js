@@ -413,8 +413,11 @@ var loadHelperPlugins = function(dir){
 var parseArgs = function(argstr){
     var targs, i, j, ci, c1, c2, s;
     var args = [];
+    // temporarily replace spaces inside file extension brackets
+    // https://stackoverflow.com/questions/16644159/regex-to-remove-spaces-between-and
+    var nargstr = argstr.replace(/\s+(?=[^[\]]*\])/g, "__sp__");
     // split arguments on spaces
-    targs = argstr.split(" ");
+    targs = nargstr.split(" ");
     // now re-combine quoted args into one arg
     for(i=0, j=0, ci=-1; i<targs.length; i++){
 	// remove or rename dangerous characters
@@ -455,6 +458,10 @@ var parseArgs = function(argstr){
 		j++;
 	    }
 	}
+    }
+    // now put back the spaces
+    for(i=0; i<args.length; i++){
+	args[i] = args[i].replace(/__sp__/g, " ");
     }
     return args;
 };
@@ -631,7 +638,7 @@ var execCmd = function(io, socket, obj, cbfunc) {
     // log what we are about to do
     clog("exec: %s [%s]", cmd, args.slice(1));
     // execute the analysis script with cmd arguments
-    // NB: can't use exec because it's shell breaks, e.g. region command lines
+    // NB: can't use exec because the shell breaks, e.g. region command lines
     child = cproc.execFile(cmd, args.slice(1),
 		   { encoding: "utf8",
 		     timeout: 0,
