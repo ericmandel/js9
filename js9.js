@@ -6007,7 +6007,8 @@ JS9.Image.prototype.uploadFITSFile = function(){
 };
 
 // remove proxy file from a remote server
-JS9.Image.prototype.removeProxyFile = function(reset){
+JS9.Image.prototype.removeProxyFile = function(s){
+    var reset, file;
     var that = this;
     var func = function(r){
 	if( reset ){
@@ -6019,13 +6020,30 @@ JS9.Image.prototype.removeProxyFile = function(reset){
 	    }
 	}
     };
+    // arg can be a boolean, which means remove proxyFile and reset
+    if( typeof s === "boolean" ){
+	reset = s;
+    } else if( typeof s === "string" ){
+	// specify file to remove in the working directory
+	// check for attempt to break out of the working dir
+	if( s.match(/^\//) || s.match(/\.\./) ){
+	    JS9.error("attempt to remove file outside working directory");
+	    return;
+	}
+	file = s;
+    } else {
+	// default is to remove the proxy file
+	if( !this.proxyFile ){
+	    return;
+	}
+	file = this.proxyFile;
+    }
     // sanity check
-    if( !this.proxyFile ){
+    if( !file ){
 	return;
     }
-    // ask to remove proy file, and process result
-    JS9.Send('removeproxy',
-	     {'cmd': 'js9Xeq removeproxy ' + this.proxyFile}, func);
+    // ask to remove proxy file, and process result
+    JS9.Send('removeproxy', {'cmd': 'js9Xeq removeproxy ' + file}, func);
 };
 
 // dummy routines to display/clear message, overwritten in info plugin
