@@ -2687,7 +2687,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 // extract and display a section of an image, with table filtering
 JS9.Image.prototype.displaySection = function(opts, func) {
     var that = this;
-    var hdu, fits, from, obj, oreg, nim, topts;
+    var oproxy, hdu, fits, from, obj, oreg, nim, topts;
     var arr = [];
     var disp = function(hdu, opts){
 	var tim, iid;
@@ -2785,8 +2785,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	// get image section
 	switch(from){
 	case "parentFile":
-	    // remove current proxy file, if necessary
-	    that.removeProxyFile();
+	    oproxy = that.proxyFile;
 	    // parentFile: image sect. from external parent file of cur file
 	    // arr is for runAnalysis, remove opts for later processing
 	    arr.push({name: "xcen", value: opts.xcen});
@@ -2847,8 +2846,12 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		if( f.charAt(0) !== "/" ){
 		    f = JS9.InstallDir(f);
 		}
-		// which is a proxy file (meaning: delete it on close)
+		// this is the proxy file (meaning: delete it on close)
 		opts.proxyFile = f;
+		// remove oproxy file if not the same as the current file
+		if( oproxy && (oproxy !== opts.proxyFile) ){
+		    that.removeProxyFile(oproxy);
+		}
 		// json fits info
 		if( rarr[1] ){
 		    try{ jobj = JSON.parse(rarr[1]); }
