@@ -159,7 +159,7 @@ Module["error"] = function(s, e) {
 // fits object contains fptr
 Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     var i, ofptr, hptr, status, datalen, extnum, extname;
-    var buf, bufptr, buflen, bufptr2, slice, doerr;
+    var buf, bufptr, buflen, bufptr2, slice, doerr, ctype1;
     var filter = null;
     var fptr = fits.fptr;
     var cens = [0, 0];
@@ -295,21 +295,33 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	if( !ofptr || doerr ){
 	    Module["error"]("can't convert table to image (image too large?)");
 	}
-	// clear cens so that we extract at center of resulting image (below)
-	delete opts.xcen;
-	delete opts.ycen;
-	delete opts.xdim;
-	delete opts.ydim;
-	delete opts.bin;
-	// reset dim and cen values
-	dims[0] = 0;
-	dims[1] = 0;
-	cens[0] = 0;
-	cens[1] = 0;
-	bin = 1;
+	// try to get CTYPE1 to check for HEALPix (ignore errors)
+	hptr = _malloc(86);
+	setValue(hptr+82, 0, "i32");
+	ccall("ffgky", null, ["number", "number", "string", "number", "number", "number"], [ofptr, 16, "CTYPE1", hptr, 0, hptr+82]);
+	status  = getValue(hptr+82, "i32");
+	if( status === 0 ){
+	    ctype1 = Pointer_stringify(hptr)
+		.replace(/^'/,"").replace(/'$/,"").trim();
+	}
+	_free(hptr);
+	if( !ctype1 || !ctype1.match(/\-\-HPX/i) ){
+	    // if we don't have a HEALPix image, we clear cens and dims
+	    // to extract at center of resulting image (below)
+	    delete opts.xcen;
+	    delete opts.ycen;
+	    delete opts.xdim;
+	    delete opts.ydim;
+	    delete opts.bin;
+	    // reset dim and cen values
+	    dims[0] = 0;
+	    dims[1] = 0;
+	    cens[0] = 0;
+	    cens[1] = 0;
+	    bin = 1;
+	}
 	break;
     }
-    hptr = _malloc(48);
     if( opts.image ){
 	// backward-compatibility with pre-v1.12
 	if( opts.image.xmax ){ dims[0] = opts.image.xmax; }
@@ -325,6 +337,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     if( opts.xcen ){ cens[0] = opts.xcen; }
     if( opts.ycen ){ cens[1] = opts.ycen; }
     // limits on image section
+    hptr = _malloc(48);
     setValue(hptr,    dims[0], "i32");
     setValue(hptr+4,  dims[1], "i32");
     setValue(hptr+8,  cens[0], "double");

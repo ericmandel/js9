@@ -545,6 +545,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
   char *filter=NULL;
   char *slice=NULL;
   char *cardstr=NULL;
+  void *tcens=NULL;
   fitsfile *ifptr, *ofptr, *tfptr;
 #endif
   switch(*cmd){
@@ -661,8 +662,16 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 		  finfo->fitsfile, tbuf);
 	  return 1;
 	}
+	fits_read_key(tfptr, TSTRING, "CTYPE1", tbuf, NULL, &status);
+	if( status == 0 ){
+	  if( strcasestr(tbuf, "--HPX") ){
+	    tcens = cens;
+	  }
+	}
+	status = 0;
+
 	/* copy section to new image */
-	if( copyImageSection(tfptr, ofptr, dims, NULL, bin, NULL, &status) ){
+	if( copyImageSection(tfptr, ofptr, dims, tcens, bin, NULL, &status) ){
 	  fits_get_errstatus(status, tbuf);
 	  fprintf(stderr,
 		  "ERROR: can't copy image section for '%s' [%s]\n",

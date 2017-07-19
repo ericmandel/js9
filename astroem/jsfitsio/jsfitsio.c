@@ -666,6 +666,7 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   char binname[IDIM][FLEN_VALUE];
   int colnum[IDIM];
   long haxes[IDIM];
+  long naxes[IDIM];
   float amin[IDIM];
   float amax[IDIM];
   float binsize[IDIM];
@@ -693,6 +694,17 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
     ofptr = healpixToImage(fptr, status);
     if( *status > 0 ){
       return NULL;
+    }
+    // if 0,0 was input, change to center of image
+    if( cens && ((cens[0] == 0) || (cens[1] == 0)) ){
+      tstatus = 0;
+      fits_get_img_size(ofptr, 2, naxes, &tstatus);
+      if( cens[0] == 0 ){
+	cens[0] = naxes[0]/2;
+      }
+      if( cens[1] == 0 ){
+	cens[1] = naxes[1]/2;
+      }
     }
     return ofptr;
   }
