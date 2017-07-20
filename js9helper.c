@@ -664,7 +664,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 	}
 	fits_read_key(tfptr, TSTRING, "CTYPE1", tbuf, NULL, &status);
 	if( status == 0 ){
-	  if( strcasestr(tbuf, "--HPX") ){
+	  if( strstr(tbuf, "--HPX") || strstr(tbuf, "--hpx") ){
 	    tcens = cens;
 	  }
 	}
