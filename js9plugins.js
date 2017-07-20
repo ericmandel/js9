@@ -4474,6 +4474,7 @@ JS9.Menubar.init = function(width, height){
 		var items = {};
 		var tdisp = getDisplays()[0];
 		var tim = tdisp.image;
+		items.filetitle = {name: "Images:", disabled: true};
 		imlen = JS9.images.length;
 		for(i=0; i<imlen; i++){
 		    im = JS9.images[i];
@@ -4562,8 +4563,9 @@ JS9.Menubar.init = function(width, height){
 		}
 		items.free = {name: "free image memory"};
 		items.close = {name: "close image"};
-		if( tim && tim.proxyFile ){
-		    items.removeproxy = {name: "remove proxy file from server"};
+		items.removeproxy = {name: "remove proxy file from server"};
+		if( !tim || !tim.proxyFile ){
+		    items.removeproxy.disabled = true;
 		}
 		items["sep" + n++] = "------";
 		items.loadcatalog = {name: "load catalog ..."};
@@ -4845,12 +4847,12 @@ JS9.Menubar.init = function(width, height){
 		} else if( tdisp.image && tdisp.image.params.valpos ){
 		    items.valpos.icon = "sun";
 		}
+		items["sep" + n++] = "------";
+		items.rawlayer = {
+		    name: "raw data layers",
+		    items: {}
+		};
 		if( tim && tim.raws.length > 1 ){
-		    items["sep" + n++] = "------";
-		    items.rawlayer = {
-			name: "raw data layers",
-			items: {}
-		    };
 		    for(i=0; i<tim.raws.length; i++){
 			key = "rawlayer_" + tim.raws[i].id;
 			items.rawlayer.items[key] = {
@@ -4862,16 +4864,21 @@ JS9.Menubar.init = function(width, height){
 		    }
 		    items.rawlayer.items["sep" + n++] = "------";
 		    items.rawlayer.items.rawlayer_remove = {name: "remove"};
+		} else {
+		    items.rawlayer.disabled = true;
 		}
-		if( JS9.globalOpts.resize ){
-		    items["sep" + n++] = "------";
-		    items.resize = {
-			events: {keyup: keyResize},
-			name: "change width/height:",
-			type: "text"
-		    };
-		    items.fullsize = {name: "set size to full window"};
-		    items.resetsize = {name: "reset to original size"};
+		items["sep" + n++] = "------";
+		items.resize = {
+		    events: {keyup: keyResize},
+		    name: "change width/height:",
+		    type: "text"
+		};
+		items.fullsize = {name: "set size to full window"};
+		items.resetsize = {name: "reset to original size"};
+		if( !JS9.globalOpts.resize ){
+		    items.resize.disabled = true;
+		    items.fullsize.disabled = true;
+		    items.resetsize.disabled = true;
 		}
 		return {
 		    callback: function(key){
@@ -5614,13 +5621,15 @@ JS9.Menubar.init = function(width, height){
 			items[s1].icon = "sun";
 		    }
 		}
-		if( tim && tim.raw.altwcs ){
-		    items["sep" + n++] = "------";
-		    items.altwcs = {
-			name: "alternate wcs",
-			items: {altwcstitle: {name: "choose a wcs:", 
-					      disabled: true}}
-		    };
+		items["sep" + n++] = "------";
+		items.altwcs = {
+		    name: "alternate wcs",
+		    items: {altwcstitle: {name: "choose a wcs:",
+					  disabled: true}}
+		};
+		if( !tim || !tim.raw || !tim.raw.altwcs ){
+		    items.altwcs.disabled = true;
+		} else {
 		    altwcs = tim.raw.altwcs;
 		    for(key in altwcs ){
 			if( altwcs.hasOwnProperty(key) ){
@@ -5691,6 +5700,9 @@ JS9.Menubar.init = function(width, height){
 		    name: "using angle in degrees:",
 		    type: "text"
 		};
+		if( !tim || !tim.raw || !tim.raw.header || !tim.raw.wcsinfo ){
+		    items.reproject.disabled = true;
+		}
 		return {
                     callback: function(key){
 		    getDisplays().forEach(function(val){
