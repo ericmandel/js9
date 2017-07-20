@@ -5426,7 +5426,8 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 // creates a new raw data layer ("rotate")
 // angle is in degrees (since CROTA2 is in degrees)
 JS9.Image.prototype.rotateData = function(angle, opts){
-    var oheader, ocdelt1, ocdelt2, nheader;
+    var oheader, nheader;
+    var ocdelt1=0, ocdelt2=0;
     var ncrot, nrad, sinrot, cosrot;
     if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
 	JS9.error("no WCS info available for rotation");
@@ -5441,8 +5442,10 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     oheader = this.raw.header;
     nheader = $.extend(true, {}, oheader);
     // normalized values from wcslib
-    ocdelt1 = this.raw.wcsinfo.cdelt1 || 0;
-    ocdelt2 = this.raw.wcsinfo.cdelt2 || 0;
+    if( this.raw.wcsinfo ){
+	ocdelt1 = this.raw.wcsinfo.cdelt1 || 0;
+	ocdelt2 = this.raw.wcsinfo.cdelt2 || 0;
+    }
     // string directives instead of a numeric angle
     if( typeof angle === "string" ){
 	switch(angle.toLowerCase()){
@@ -5501,7 +5504,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    JS9.waiting(false);
 	};
 	// sanity checks
-	if( !that.raw.wcs || !wcsim || !JS9.reproject ){
+	if( !that.raw.wcs || !that.raw.wcsinfo || !wcsim || !JS9.reproject ){
 	    return;
 	}
 	// opts is optional
@@ -9665,7 +9668,11 @@ JS9.Fabric.refreshShapes = function(layerName){
 	if( obj.params.shape !== "circle" && obj.params.shape !== "line"    &&
 	    obj.params.shape !== "point"  && obj.params.shape !== "polygon" &&
 	    obj.params.shape !== "text"                                     ){
-	    obj.setAngle(-(obj.pub.angle + (that.raw.wcsinfo.crot || 0)));
+	    if( that.raw.wcsinfo && that.raw.wcsinfo.crot ){
+		obj.setAngle(-(obj.pub.angle + that.raw.wcsinfo.crot));
+	    } else {
+		obj.setAngle(-obj.pub.angle);
+	    }
 	}
 	// set scaling based on zoom factor, if necessary
 	if( obj.params.zoomable !== false ){
