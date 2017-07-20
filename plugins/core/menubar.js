@@ -1326,7 +1326,7 @@ JS9.Menubar.init = function(width, height){
 		}
 		items["sep" + n++] = "------";
 		items.reproject = {
-		    name: "reproject",
+		    name: "wcs reproject",
 		    items: {reprojtitle: {name: "using the wcs from:", disabled: true}}
 		};
 		for(i=0, nwcs=0; i<JS9.images.length; i++){
