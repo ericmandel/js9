@@ -243,6 +243,9 @@ JS9.Menubar.init = function(width, height){
 		items["sep" + n++] = "------";
 		items.lite = {name: "new JS9 light window"};
 		items.xnew = {name: "new JS9 separate window"};
+		if( window.isElectron ){
+		    items.xnew.disabled = true;
+		}
 		items["sep" + n++] = "------";
 		items.pageid = {name: "display page id"};
 		if( JS9.DEBUG > 2 ){

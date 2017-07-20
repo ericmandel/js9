@@ -15529,9 +15529,8 @@ JS9.mkPublic("Load", function(file, opts){
 // create a new instance of JS9 in a window (light or new)
 // nb: unlike JS9.Load, this requires the opts param
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
-    var id, did, head, body, win, winid;
+    var id, did, head, body, win, winid, initialURL;
     var idbase = (type || "") + "win";
-    var initialURL = "data:text/html,<html><body><script>window.addEventListener('message', function(ev){document.documentElement.innerHTML=ev.data</script><p></body></html>";
     var title;
     opts = opts || {};
     switch(type){
@@ -15615,6 +15614,9 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	}
         html += sprintf(">%s</body></html>\n", body);
         // open the new window
+	if( window.isElectron ){
+	    initialURL = "data:text/html,<html><body><script>window.addEventListener('message', function(ev){document.documentElement.innerHTML=ev.data</script><p></body></html>";
+	}
         win = window.open(initialURL, id, winopts);
 	if( !win ){
 	    JS9.error("could not create window (check your pop-up blockers)");
