@@ -5429,6 +5429,7 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     var oheader, nheader;
     var ocdelt1=0, ocdelt2=0;
     var ncrot, nrad, sinrot, cosrot;
+    // sanity checks
     if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
 	JS9.error("no WCS info available for rotation");
     }
@@ -5483,6 +5484,13 @@ JS9.Image.prototype.rotateData = function(angle, opts){
 // creates a new raw data layer ("reproject")
 JS9.Image.prototype.reprojectData = function(wcsim, opts){
     var that = this;
+    // sanity checks
+    if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
+	JS9.error("no WCS info available for reprojection");
+    }
+    if( !wcsim || !JS9.reproject ){
+	return;
+    }
     // could take a while ...
     JS9.waiting(true, this.display);
     // ... start a timeout to allow the wait spinner to get started
@@ -5503,10 +5511,6 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    that.refreshImage(hdu, topts);
 	    JS9.waiting(false);
 	};
-	// sanity checks
-	if( !that.raw.wcs || !that.raw.wcsinfo || !wcsim || !JS9.reproject ){
-	    return;
-	}
 	// opts is optional
 	opts = opts || {};
 	// handler
