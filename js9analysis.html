@@ -104,26 +104,24 @@
     }
     </script>
     <center><font size="+1">
-    <b>JS9 Demo: two ways of doing remote (server-based) data analysis</b>
+    <b>JS9 Demo: remote (server-based) data analysis</b>
     </font></center>
     <table cellspacing="20">
     <tr valign="top">
     <td>
-    PNG files (converted from FITS):
+    FITS representation files:
     <ul>
-    <li> <a href='javascript:JS9.Load("png/casa.png");'>CAS-A (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("png/snr.png", {colormap:"heat"});'>CTB 109 (Einstein)</a>
-    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'>m13 (via SkyView)</a>
-    <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y)</a>
+    <li> <a href='javascript:JS9.Load("fits/casa.fits.gz", {scale:"log", parentFile:"fits/casa.fits"});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/3c273.fits.gz", {scale:"log", colormap:"heat", parentFile:"fits/3c273.fits"});'>3c273 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/3c58.fits.gz", {scale:"log", colormap:"cool", parentFile:"fits/3c58.fits"});'>3c58 (Chandra)</a>
     </ul>
     </td>
     <td>
     FITS images and binary tables:
     <ul>
-    <li> <a href='javascript:JS9.Load("fits/3c58.fits");'>3c58 (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("fits/3c273.fits");'>3c273 (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("fits/ngkper.fits");'>gkper (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("fits/ngc1316.fits", {scale:"linear"});'>ngc1316 (AIPS)</a>
+    <li> <a href='javascript:JS9.Load("fits/snr.fits", {scale:"log", colormap:"heat"});'>CTB 109 (Einstein, small)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngc1316.fits", {scale:"linear", colormap:"cool"});'>ngc1316 (AIPS, small)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngkper.fits", {scale:"log"});'>gkper (Chandra, 7.6Mb)</a>
     </ul>
     </td>
     </tr>

@@ -50,10 +50,10 @@
       An example of a Plugin div element already defined to hold the
       Plugin message divs, which will be created by the Plugin constructor.
     <ul>
-    <li> <a href='javascript:JS9.Load("png/casa.png");'>CAS-A (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("png/snr.png", {colormap:"heat"});'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:JS9.Load("fits/casa.fits.gz", {scale:"log", parentFile:"fits/casa.fits"});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/snr.fits", {scale:"log", colormap:"heat"});'>CTB 109 (Einstein)</a>
     <li> <a href='javascript:JS9.Load("fits/m13.fits", {scale:"linear", colormap:"sls"});'>m13 (via SkyView)</a>
-    <li> <a href='javascript:JS9.Load("fits/i1000.fits", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y)</a>
+    <li> <a href='javascript:JS9.Load("fits/i1000.fits", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y, 4Mb)</a>
     </ul>
     Load an image, then move the mouse, or create and manipulate a
     region, or press a key to see callbacks fire in the blue display region:
@@ -71,9 +71,9 @@
       An example of a Plugin div element already defined to hold the
       Plugin message divs, which will be created by the Plugin constructor.
     <ul>
-    <li> <a href='javascript:JS9.Load("png/casa.png", {display: "myJS9"});'>CAS-A (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("png/snr.png", {colormap:"heat"}, {display: "myJS9"});'>CTB 109 (Einstein)</a>
-    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"}, {display: "myJS9"});'>m13 (via SkyView)</a>
+    <li> <a href='javascript:JS9.Load("fits/casa.fits.gz", {scale:"log", parentFile:"fits/casa.fits"}, {display: "myJS9"});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/snr.fits", {scale:"log", colormap:"heat"}, {display: "myJS9"});'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:JS9.Load("fits/m13.fits", {scale:"linear", colormap:"sls"}, {display: "myJS9"});'>m13 (via SkyView)</a>
     <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"}, {display: "myJS9"});'>i1000 (v=x*1000+y)</a>
     </ul>
     Load an image, then move the mouse, or create and manipulate a
@@ -93,9 +93,9 @@
       In this example, no Plugin div element has been defined on the page.
       It therefore will be offered in the View menu as a light window.
     <ul>
-    <li> <a href='javascript:JS9.Load("png/casa.png", {display: "otherJS9"});'>CAS-A (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("png/snr.png", {colormap:"heat"}, {display: "otherJS9"});'>CTB 109 (Einstein)</a>
-    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"}, {display: "otherJS9"});'>m13 (via SkyView)</a>
+    <li> <a href='javascript:JS9.Load("fits/casa.fits.gz", {scale:"log", parentFile:"fits/casa.fits"}, {display: "otherJS9"});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/snr.fits", {scale:"log", colormap:"heat"}, {display: "otherJS9"});'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:JS9.Load("fits/m13.fits", {scale:"linear", colormap:"sls"}, {display: "otherJS9"});'>m13 (via SkyView)</a>
     <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"}, {display: "otherJS9"});'>i1000 (v=x*1000+y)</a>
     </ul>
     Load an image and choose View->pluginTest, then move the mouse,

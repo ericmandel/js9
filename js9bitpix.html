@@ -16,18 +16,18 @@
 </head>
 <body>
     <center><font size="+1">
-    <b>JS9 Demo: displaying different FITS datatypes</b>
+    <b>JS9 Demo: displaying different FITS data types</b>
     </font></center>
     <table cellspacing="50">
     <tr valign="top">
     <td>
-    PNG files with different FITS formats:
+    FITS files with different data types:
     <ul>
-    <li> <a href='javascript:JS9.Load("png/d1000.png");'>double 1000x1000 (v=x.y/1000)</a>
-    <li> <a href='javascript:JS9.Load("png/f1000.png");'>float 1000x1000 (v=x.y/1000)</a>
-    <li> <a href='javascript:JS9.Load("png/i1000.png");'>int 1000x1000 (v=x*1000+y)</a>
-    <li> <a href='javascript:JS9.Load("png/s100.png");'>short 100x100 (v=x*100+y)</a>
-    <li> <a href='javascript:JS9.Load("png/b10.png");'>byte 10x10 (v=x*10+y)</a>
+    <li> <a href='javascript:JS9.Load("fits/d1000.fits");'>double 1000x1000 (v=x.y/1000, 8Mb!)</a>
+    <li> <a href='javascript:JS9.Load("fits/f1000.fits");'>float 1000x1000 (v=x.y/1000, 4Mb)</a>
+    <li> <a href='javascript:JS9.Load("fits/i1000.fits");'>int 1000x1000 (v=x*1000+y, 4Mb)</a>
+    <li> <a href='javascript:JS9.Load("fits/s100.fits");'>short 100x100 (v=x*100+y, small)</a>
+    <li> <a href='javascript:JS9.Load("fits/b10.fits");'>byte 10x10 (v=x*10+y, tiny)</a>
     </ul>
     </td>
     <td>

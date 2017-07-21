@@ -42,10 +42,9 @@
     imexam windows from the Analysis menu to see other cuts of the
     data.
     <ul>
-    <li> <a href='javascript:JS9.Load("png/casa.png");'>CAS-A (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("png/snr.png", {colormap:"heat"});'>CTB 109 (Einstein)</a>
-    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});'>m13 (via SkyView)</a>
-    <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y)</a>
+    <li> <a href='javascript:JS9.Load("fits/casa.fits.gz", {scale:"log", parentFile:"fits/casa.fits"});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/snr.fits", {scale:"log", colormap:"heat"});'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:JS9.Load("fits/m13.fits", {scale:"linear", colormap:"sls"});'>m13 (via SkyView)</a>
     </ul>
     </td>
     </tr>
@@ -79,10 +78,9 @@
 	Load an image, choose one or more plugins, create a region,
 	and move it around to see the imexam windows update.
     <ul>
-    <li> <a href='javascript:JS9.Load("png/casa.png", {display: "myJS9"});'>CAS-A (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("png/snr.png", {colormap:"heat"}, {display:"myJS9"});'>CTB 109 (Einstein)</a>
-    <li> <a href='javascript:JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"}, {display:"myJS9"});'>m13 (via SkyView)</a>
-    <li> <a href='javascript:JS9.Load("png/i1000.png", {scale:"linear", colormap:"grey"}, {display:"myJS9"});'>i1000 (v=x*1000+y)</a>
+    <li> <a href='javascript:JS9.Load("fits/casa.fits.gz", {scale:"log", parentFile:"fits/casa.fits"}, {display: "myJS9"});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/snr.fits", {scale:"log", colormap:"heat"}, {display: "myJS9"});'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:JS9.Load("fits/m13.fits", {scale:"linear", colormap:"sls"}, {display: "myJS9"});'>m13 (via SkyView)</a>
     </ul>
     Load an image, create a region, select one or more imexam windows
     from the Analysis menu. Then move the regions around to see the

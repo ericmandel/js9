@@ -22,10 +22,10 @@
   <title>JS9 sizes</title>
 </head>
 <body onload="JS9.Preload(
-    'png/casa.png', {colormap: 'red', scale: 'log', display: 'JS9'},
-    'png/m13.png', {scale:'linear', colormap:'heat', display: 'JS9-128'},
+    'fits/casa.fits.gz', {parentFile: 'fits/casa.fits', colormap: 'red', scale: 'log', display: 'JS9'},
+    'fits/m13.fits', {scale:'linear', colormap:'heat', display: 'JS9-128'},
     'fits/ngc1316.fits', {zoom: 'toFit', scale:'linear', colormap: 'cool', display: 'JS9-256'},
-    'png/ngkper.png', {scale: 'log', display: 'JS9-1024'});">
+    'fits/ngkper.fits.gz', {parentFile: 'fits/ngkper.fits', scale: 'log', display: 'JS9-1024'});">
     <center><font size="+1">
         <b>JS9 Demo: specifying width and height for JS9 displays</b>
     </font></center>
