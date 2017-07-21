@@ -184,13 +184,17 @@ Assuming the JS9 helper is set up, but <b>fits2fits</b> is set to
 "never", you can load a small FITS file using JS9.Load() and manually
 specify a <b>parentFile</b> property in the options object:
 <pre>
-    JS9.Load("fits/f814w_bin24.fits.gz", {colormap:"cool", parentFile: "fits/f814w.fits.gz"})
+    JS9.Load("js9/fits/f814w_bin24.fits.gz", {colormap:"cool", parentFile: "fits/f814w.fits.gz"})
 </pre>
-Once the parentFile has been specified, the in-memory file should act as a
-representation file.
+One important note: the pathname of the URL to load is (as usual)
+relative to the web page, while the pathname of the parentFile must be
+relative to the JS9 install directory (i.e., where the JS9 helper was
+started). In the above example, the web page is one level up from the
+JS9 install directory.  Once the parentFile has been specified, the
+in-memory file should act as a representation file.
 
 <p>
-Of course, the two files need to be connected to one another. For
+Of course, the two files need to be tied to one another spatially. For
 server-side data analysis, having agreement between WCS parameters is
 sufficient. In order to use the <b>Bin/Filter/Section</b> plugin,
 however, the representation file also must be connected to the parent
