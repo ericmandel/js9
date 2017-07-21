@@ -172,7 +172,7 @@ JS9.globalOpts = {
     infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos", "impos", "physpos", "value", "regions", "progress"],
     menuBar: ["file", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
-    fitsTemplates: ".fits,.gz,.fts", // templates for local FITS file input
+    localTemplates: ".fits,.gz,.fts,.png,.jpg,.jpeg", // templates for local FITS file input
     regionTemplates: ".reg",         // templates for local region file input
     sessionTemplates: ".ses",        // templates for local session file input
     colormapTemplates: ".cmap",      // templates for local colormap file input
@@ -6294,8 +6294,8 @@ JS9.Display = function(el){
     this.divjq.on("contextmenu", this, function(){
 	return false;
     });
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.fitsTemplates+' id="openLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.Load(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.fitsTemplates+' id="refreshLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.RefreshImage(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.localTemplates+' id="openLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.Load(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
+    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.localTemplates+' id="refreshLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.RefreshImage(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.regionTemplates+' id="openLocalRegions-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadRegions(this.files[i], {display:\''+ this.id +'\'}); };this.value=null;return false;"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.sessionTemplates+' id="openLocalSession-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadSession(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
     this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.colormapTemplates+' id="openLocalColormap-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.AddColormap(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
