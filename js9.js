@@ -13293,7 +13293,7 @@ CanvasRenderingContext2D.prototype.clear =
 // create a tooltip, with the tip formatted from a string containing
 // variables in the current context, e.g. "$im.id\n$xreg.imstr\n$xreg.data.tag"
 JS9.tooltip = function(x, y, fmt, im, xreg, evt){
-    var tipstr, tx, ty, meas;
+    var tipstr, tx, ty, w, h;
     var fmt2str = function(str){
 	// eslint-disable-next-line no-unused-vars
 	var cmd = str.replace(/\$([a-zA-Z0-9_./]+)/g, function(m, t, o){
@@ -13329,17 +13329,14 @@ JS9.tooltip = function(x, y, fmt, im, xreg, evt){
     };
     if( fmt ){
 	tipstr = fmt2str(fmt);
-	// get width of formatted string ...
-	im.display.context.save();
-	im.display.context.font = im.display.tooltip.css("font");
-	try{ meas = im.display.context.measureText(tipstr); }
-	catch(e){ meas = {width: 150}; }
-	im.display.context.restore();
-	// so we can place the tooltip properly
-	tx = Math.min(x, im.display.width - (meas.width + 10));
-	ty = Math.min(y, im.display.height - 25);
-	im.display.tooltip
-	    .html(tipstr).css({left:tx, top:ty, display: "inline-block"});
+	im.display.tooltip.html(tipstr);
+	// get size of div ...
+	w = im.display.tooltip.width();
+	h = im.display.tooltip.height();
+	// ... so we can place the tooltip properly
+	tx = Math.max(2, Math.min(x, im.display.width - (w + 10)));
+	ty = Math.max(2, Math.min(y, im.display.height - (h + 10)));
+	im.display.tooltip.css({left:tx, top:ty, display: "inline-block"});
     } else {
 	im.display.tooltip
 	    .html("").css({left: -9999, display: "none"});
