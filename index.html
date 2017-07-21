@@ -124,7 +124,7 @@
     // add event handlers to the analysis buttons to execute the specified task
     // note that jQuery is available automatically
     function initMyAnalysis(){
-        var idx;
+        var idx, obj;
         $("#counts").on("click", function(evt){aname = "counts"; redo()});
         $("#radial").on("click", function(evt){aname = "radial"; redo()});
         $("#spectrum").on("click", function(evt){aname = "spectrum"; redo()});
@@ -134,7 +134,9 @@
         js9tabs.setselectedClassTarget("link"); //"link" or "linkparent"
         js9tabs.init();
         idx = Math.floor(Math.random() * objs.length);
-        JS9.Preload("js9/png/casa.png", objs[idx]);
+        obj = $.extend(true, {}, objs[idx]);
+        obj.parentFile = "fits/casa.fits";
+        JS9.Preload("js9/fits/casa.fits.gz", obj);
     }
     // run analysis on current image, defining a function to display results
     function runMyAnalysis(im, xreg){
