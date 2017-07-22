@@ -91,6 +91,9 @@ usage(){
   printf "    JS9_SRCDIR               # where to find files, if you don't build/install\n"
   printf "    JS9_BROWSER              # browser to use with -b (chrome|firefox|safari)\n"
   printf "    JS9_WEBPAGE              # url or full path of web page to use with app or browser\n"
+  printf " \n"
+  printf "  notes:\n"
+  printf "    make sure the relative paths to the js9 files in your web page are correct!"
   printf "\n"
 }
 
