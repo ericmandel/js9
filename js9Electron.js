@@ -109,6 +109,9 @@ function createWindow() {
     // disable eval in renderer window
     // http://electron.atom.io/docs/tutorial/security/
     cmd = "window.eval = function(){throw new Error('For security reasons, Desktop JS9 does not support window.eval()');}";
+    // make sure JS9 loaded properly
+    js9Electron.win.webContents.executeJavaScript(cmd);
+    cmd = "if( typeof JS9 !== 'object' || typeof JS9.Image !== 'function'  ){alert('JS9 was not loaded properly. Please check the paths to the JS9 css and js files in your web page header and try again.');}";
     js9Electron.win.webContents.executeJavaScript(cmd);
     // load data files
     cmd = "$(document).on('JS9:ready', function(){";
