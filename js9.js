@@ -1545,8 +1545,16 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	// bin factor is optional
 	bin = hdu.bin || 1;
 	// convert 1-index to 0-index (is this correct?)
-	x1 = hdu.x1 - 1;
-	y1 = hdu.y1 - 1;
+	if( hdu.x1 !== undefined ){
+	    x1 = hdu.x1 - 1;
+	} else {
+	    x1 = 0;
+	}
+	if( hdu.y1 !== undefined ){
+	    y1 = hdu.y1 - 1;
+	} else {
+	    y1 = 0;
+	}
 	bin = hdu.bin || 1;
 	if( header.CRPIX1 !== undefined ){
 	    header.CRPIX1 = (header.CRPIX1 - x1) / bin;
@@ -4458,7 +4466,11 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
 JS9.Image.prototype.saveFITS = function(fname){
     var arr, blob;
     if( window.hasOwnProperty("saveAs") ){
-	fname = fname || "js9.fits";
+	if( fname ){
+	    fname = fname.replace(/(png|jpg|jpeg)$/, "fits");
+	} else {
+	    fname = "js9.fits";
+	}
 	// first convert to array
 	arr = this.toArray();
 	// then convert array to blob
@@ -12592,7 +12604,7 @@ JS9.handleImageFile = function(file, options, handler){
 	var img = new Image();
 	var data, grey, hdu;
 	img.onload = function(){
-	    var x, y, brightness;
+	    var x, y, brightness, header;
 	    var i = 0;
 	    var canvas = document.createElement('canvas');
 	    var ctx    = canvas.getContext('2d');
@@ -12613,7 +12625,12 @@ JS9.handleImageFile = function(file, options, handler){
 		    i += 4;
 		}
 	    }
-	    hdu = {head: {}, filename: file.name, filedata: grey,
+	    header = {SIMPLE: true,
+		      BITPIX: -32,
+		      NAXIS: 2,
+		      NAXIS1: w,
+		      NAXIS2: h};
+	    hdu = {head: header, filename: file.name, filedata: grey,
 		   naxis: 2, axis: [0, w, h], bitpix: -32,
 		   data: grey};
 	    hdu.dmin = Number.MAX_VALUE;
@@ -13169,33 +13186,47 @@ JS9.raw2FITS = function(raw, forDisplay){
 		t += "\n";
 	    }
 	}
-    } else if( raw.header ){
-	// minimal header without comments
-	obj = raw.header;
-	for( key in obj ){
-	    if( obj.hasOwnProperty(key) ){
-		if( key === "js9Protocol" || key === "js9Endian" ){
-		    continue;
-		}
-		if( key === "END" ){
-		    hasend = true;
-		}
-		val = obj[key];
-		if( val === true ){
-		    val = "T";
-		}
-		t += sprintf("%-8s%-2s%-70s", key, "=", val);
-		if( forDisplay ){
-		    t += "\n";
-		}
-	    }
+    } else if( raw.header || raw.BITPIX ){
+	if( raw.header ){
+	    // minimal header without comments
+	    obj = raw.header;
+	} else {
+	    // directly specified object containing header without comments
+	    obj = raw;
 	}
-    } else if( raw.BITPIX ){
-	// directly specified object containing header without comments
-	obj = raw;
+	// cfitsio requires simple and bitpix to be first and second params
+	if( obj.SIMPLE !== undefined || obj.simple !== undefined ){
+	    if( obj.SIMPLE !== undefined ){
+		val = obj.SIMPLE;
+	    } else {
+		val = obj.simple;
+	    }
+	    if( val === true ){
+		val = "T";
+	    } else if( val === false ){
+		val = "F";
+	    }
+	    t += sprintf("%-8s%-2s%-70s", "SIMPLE", "=", val);
+	    if( forDisplay ){ t += "\n"; }
+	}
+	if( obj.BITPIX !== undefined || obj.bitpix !== undefined ){
+	    if( obj.BITPIX !== undefined ){
+		val = obj.BITPIX;
+	    } else {
+		val = obj.bitpix;
+	    }
+	    t += sprintf("%-8s%-2s%-70s", "BITPIX", "=", val);
+	    if( forDisplay ){ t += "\n"; }
+	}
 	for( key in obj ){
 	    if( obj.hasOwnProperty(key) ){
 		if( key === "js9Protocol" || key === "js9Endian" ){
+		    continue;
+		}
+		if( key === "SIMPLE" || key === "simple" ){
+		    continue;
+		}
+		if( key === "BITPIX" || key === "bitpix" ){
 		    continue;
 		}
 		if( key === "END" ){
@@ -13204,6 +13235,8 @@ JS9.raw2FITS = function(raw, forDisplay){
 		val = obj[key];
 		if( val === true ){
 		    val = "T";
+		} else if( val === false ){
+		    val = "F";
 		}
 		t += sprintf("%-8s%-2s%-70s", key, "=", val);
 		if( forDisplay ){
