@@ -4467,7 +4467,7 @@ JS9.Image.prototype.saveFITS = function(fname){
     var arr, blob;
     if( window.hasOwnProperty("saveAs") ){
 	if( fname ){
-	    fname = fname.replace(/(png|jpg|jpeg)$/, "fits");
+	    fname = fname.replace(/(png|jpg|jpeg)$/i, "fits");
 	} else {
 	    fname = "js9.fits";
 	}
@@ -12631,7 +12631,7 @@ JS9.handleImageFile = function(file, options, handler){
 		      NAXIS1: w,
 		      NAXIS2: h};
 	    hdu = {head: header, filename: file.name, filedata: grey,
-		   naxis: 2, axis: [0, w, h], bitpix: -32,
+		   naxis: 2, axis: [0, w, h], bitpix: -32, bin: 1,
 		   data: grey};
 	    hdu.dmin = Number.MAX_VALUE;
 	    hdu.dmax = Number.MIN_VALUE;
