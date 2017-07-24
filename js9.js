@@ -2665,10 +2665,12 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     this.mkRawDataFromHDU(obj, opts);
     // if binning changed, we have to update the regions and other shape layers
     doreg = opts.refreshRegions || (this.binning.obin !== this.binning.bin);
-    // restore section unless dims changed (in which case we update regions)
-    if( (this.raw.width === owidth) && (this.raw.height === oheight) ){
+    // restore section if dims have not changed
+    if( !opts.resetSection &&
+	(this.raw.width === owidth) && (this.raw.height === oheight) ){
 	this.mkSection(oxcen, oycen, ozoom);
     } else {
+	// reset section (in which case we update regions)
 	this.mkSection();
 	this.mkSection(ozoom);
         doreg = true;
@@ -2747,6 +2749,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    topts.file = iid;
 	    topts.id = iid;
 	    topts.refreshRegions = true;
+	    topts.resetSection = true;
 	    if( func ){ topts.onrefresh = func; }
 	    // refresh the current image with the new hdu
 	    that.refreshImage(hdu, topts);
@@ -5520,6 +5523,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	var defaultReprojHandler = function(hdu){
 	    topts = topts || {};
 	    topts.refreshRegions = true;
+	    topts.resetSection = true;
 	    that.refreshImage(hdu, topts);
 	    JS9.waiting(false);
 	};
