@@ -4,7 +4,7 @@
 <head> 
   <meta name="publisher" content="Center for Astrophysics">
   <meta name="language" content="en">
-  <meta name="date" content="2017-01-09">
+  <meta name="date" content="2017-07-25">
   <meta name="author" content="Eric Mandel, CfA">
   <meta name="keywords" content="Harvard Smithsonian Astrophysics high-energy chandra x-ray astronomy visualization DS9 JS9 telescope observatory research">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -422,6 +422,11 @@
     <div id="status" class="tabcontent mytabcontent">
       <b>Recent Public Releases:</b>
       <p>
+      <b>Release 1.12 (07/25/17)</b> adds support for handling large
+      FITS files using FITS rep files, uploading local FITS files to
+      the remote server for analysis, drag/drop regions/catalogs/sessions,
+      improved and expanded region support.
+      <p>
       <b>Release 1.11 (01/09/17)</b> adds Desktop support (Mac, Windows, 
       recent Linux) using Electron.js, load/save catalogs, improved memory
       management, support for HEALPix files.
@@ -447,18 +452,6 @@
       <b>Release 1.5 (7/9/15)</b> adds support for importing DS9/Funtools
       regions, and for running the back-end helper using https.
       <p>
-      <b>Release 1.4 (5/3/15)</b> provides bug fixes for the binning
-      plugin, adds a user preference plugin, and supports export to
-      FITS and PNG files.
-      <p>
-      <b>Release 1.3 (3/30/15)</b> incorporates the standard
-      <a href="https://heasarc.gsfc.nasa.gov/docs/software/fitsio/" target="_blank" rel="noopener noreferrer">cfitsio</a>
-      FITS library, using Emscripten to compile to JavaScript.
-      <p>
-      <b>Release 1.2 (1/4/15)</b> adds support for the new
-      <a href="https://github.com/ericmandel/pyjs9">pyjs9</a> Python interface
-      via GET/POST support in the back-end Node.js server.
-      <p>
       For more details, see the <a href="js9/help/changelog.html" target="_blank">ChangeLog</a>.
       <p>
       JS9 is distributed under the terms of The MIT License.
@@ -482,7 +475,7 @@
       <p>
       Tar files:
       <ul>
-      <li><a href="downloads/js9-1.11.tar.gz">js9 v1.11</a>
+      <li><a href="downloads/js9-1.12.tar.gz">js9 v1.12</a>
       <li><a href="downloads/pyjs9-1.0.tar.gz">pyjs9 v1.0</a>
       <li><a href="downloads/js9-data.tar.gz">js9 data</a>
       </ul>
@@ -520,7 +513,7 @@
       Thanks for important suggestions and (sometimes) code from:
       <ul>
       <li> Brian Cherinka, JHU (multi-extension FITS, data cubes)
-      <li> Joseph DePasquale, CfA (image blending techniques)
+      <li> Joseph DePasquale, STScI (image blending techniques)
       <li> Karl Glazebrook, Swinburne (iPad support)
       <li> Matias Carrasco Kind, NCSA (Jupyter support)
       <li> Kathy Lestition, CfA (EPO)
