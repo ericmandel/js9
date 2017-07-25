@@ -1772,7 +1772,7 @@ JS9.Menubar.init = function(width, height){
 		    callback: function(key){
 			switch(key){
 			case "about":
-			    alert(sprintf("JS9: image display right in your browser\nversion: %s\nprincipals: Eric Mandel (lead), Alexey Vikhlinin (science,management)\ncontact: saord@cfa.harvard.edu\n%s", JS9.VERSION, JS9.COPYRIGHT));
+			    alert(sprintf("JS9: astronomical image display everywhere\nversion: %s\nprincipals: Eric Mandel (lead), Alexey Vikhlinin (science,management)\ncontact: saord@cfa.harvard.edu\n%s", JS9.VERSION, JS9.COPYRIGHT));
 			    break;
 			default:
 			    JS9.DisplayHelp(key);
