@@ -1643,10 +1643,9 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     // save filter, if necessary
     this.raw.filter = opts.filter || "";
     // min and max data values
-    if( hdu.dmin && hdu.dmax ){
-	// from object
-	this.raw.dmin = hdu.dmin;
-	this.raw.dmax = hdu.dmax;
+    if( hdu.dmin !== undefined && hdu.dmax !== undefined ){
+	// data min and max in object
+	this.dataminmax(hdu.dmin, hdu.dmax);
     } else {
 	// calculate data min and max
 	this.dataminmax();
@@ -4820,7 +4819,7 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
 };
 
 // re-calculate data min and max (and set scale params, if necessary)
-JS9.Image.prototype.dataminmax = function(){
+JS9.Image.prototype.dataminmax = function(dmin, dmax){
     var i, blankval;
     var reminscale = isNaN(this.params.scalemin) ||
                      (this.params.scalemin === undefined);
@@ -4837,32 +4836,38 @@ JS9.Image.prototype.dataminmax = function(){
 	    remaxscale = true;
 	}
     }
-    // re-calculate data min and max values
-    this.raw.dmin = Number.MAX_VALUE;
-    this.raw.dmax = Number.MIN_VALUE;
-    // get data min and max, ignoring type-dependent blank values
-    if( this.raw.bitpix > 0 ){
-	// integer data: BLANK header value specifies data value to ignore
-	if( this.raw.header.BLANK !== undefined ){
-	    blankval = this.raw.header.BLANK;
-	    for(i=0; i<this.raw.data.length; i++) {
-		if( this.raw.data[i] !== blankval ){
+    // used supplied values, if possible
+    if( dmin !== undefined && dmax !== undefined ){
+	this.raw.dmin = dmin;
+	this.raw.dmax = dmax;
+    } else {
+	// re-calculate data min and max values
+	this.raw.dmin = Number.MAX_VALUE;
+	this.raw.dmax = Number.MIN_VALUE;
+	// get data min and max, ignoring type-dependent blank values
+	if( this.raw.bitpix > 0 ){
+	    // integer data: BLANK header value specifies data value to ignore
+	    if( this.raw.header.BLANK !== undefined ){
+		blankval = this.raw.header.BLANK;
+		for(i=0; i<this.raw.data.length; i++) {
+		    if( this.raw.data[i] !== blankval ){
+			this.raw.dmin=Math.min(this.raw.dmin, this.raw.data[i]);
+			this.raw.dmax=Math.max(this.raw.dmax, this.raw.data[i]);
+		    }
+		}
+	    } else {
+		for(i=0; i<this.raw.data.length; i++) {
 		    this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
 		    this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
 		}
 	    }
 	} else {
+	    // float data: ignore NaN
 	    for(i=0; i<this.raw.data.length; i++) {
-		this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
-		this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
-	    }
-	}
-    } else {
-	// float data: ignore NaN
-	for(i=0; i<this.raw.data.length; i++) {
-	    if( !isNaN(this.raw.data[i]) ){
-		this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
-		this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
+		if( !isNaN(this.raw.data[i]) ){
+		    this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
+		    this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
+		}
 	    }
 	}
     }
@@ -12640,8 +12645,10 @@ JS9.handleImageFile = function(file, options, handler){
 	    hdu.dmin = Number.MAX_VALUE;
 	    hdu.dmax = Number.MIN_VALUE;
 	    for(i=0; i< h*w; i++){
-		hdu.dmin = Math.min(hdu.dmin, hdu.data[i]);
-		hdu.dmax = Math.max(hdu.dmax, hdu.data[i]);
+		if( !isNaN(hdu.data[i]) ){
+		    hdu.dmin = Math.min(hdu.dmin, hdu.data[i]);
+		    hdu.dmax = Math.max(hdu.dmax, hdu.data[i]);
+		}
 	    }
 	    handler(hdu, options);
 	};
