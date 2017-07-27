@@ -16,9 +16,6 @@ https://groups.google.com/forum/#!topic/emscripten-discuss/JDaNHIRQ_G4
 #include <math.h>
 #include "fitsio.h"
 #include "healpix.h"
-#if EM
-#include <emscripten.h>
-#endif
 
 /* must match what cfitsio expects (i.e., 4 for histogramming) */
 #define IDIM 4
@@ -535,7 +532,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   }
   if( bin == 1 ){
     totbytes = totpix * tsize;
-#if EM
+#if __EMSCRIPTEN__
     // sanity check on memory limits
     if( totbytes > max_memory ){
       *status = MEMORY_ALLOCATION;

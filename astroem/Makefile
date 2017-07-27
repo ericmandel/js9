@@ -1,5 +1,11 @@
-# main output file name
+# astroem: astronomy/astrophysics C code compiled to javascript via emscripten
+# see: http://kripken.github.io/emscripten-site/index.html
+
+# output file name for the emscripten-compiled javascript file
 ASTROEMJS	=	astroem.js
+
+# wasm support (it's coming):
+# ASTROEMWASM	=	astroem.wasm
 
 # where is output file is installed
 INSTALLDIR =	../js
@@ -17,7 +23,7 @@ ASTROEM =	$$HOME/astroem
 # debugging with symbols
 # EMFLAGS	= 	-DEM -O0 --memory-init-file 0  -s ASSERTIONS=1
 # production
-EMFLAGS	= 	-DEM -O3 --memory-init-file 0
+EMFLAGS	= 	-O3 --memory-init-file 0
 
 # support zscale up to 2048 * 2048 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=33554432
@@ -26,7 +32,10 @@ EMFLAGS	= 	-DEM -O3 --memory-init-file 0
 # cfitsio requires memory growth
 # but disable asm.js validation to avoid chrome slowdown with memory growth:
 # https://github.com/kripken/emscripten/wiki/Chrome-Perf-Issues
-EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -s ASM_JS=2
+# EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -s ASM_JS=2
+# wasm support (it's coming):
+EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1  -s ASM_JS=2 \
+#		-s WASM=1 -s "BINARYEN_METHOD='native-wasm,asmjs'"
 
 EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_initwcs', '_freewcs', '_wcsinfo', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_saodtype', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek',  '_BZ2_bzopen', '_BZ2_bzread', '_BZ2_bzwrite', '_BZ2_bzclose', '_openFITSFile', '_openFITSMem', '_getImageToArray', '_filterTableToImage', '_getHeaderToString', '_closeFITSFile', '_maxFITSMemory', '_ffgerr', '_ffmahd', '_ffghdn','_ffmnhd', '_ffghdt', '_ffgky', '_fffree', '_listhdu', '_tanhdr', '_reproject', '_vls', '_vcat']"
 
@@ -95,19 +104,21 @@ astroem.bc:	$(OBJS) $(PKGOBJS) $(LIBS)
 
 $(ASTROEMJS):	astroem.bc pre.js post.js shell-pre.js shell-post.js Makefile
 		@(echo "generating raw $(ASTROEMJS) ..."; \
-		$(EMCC) astroem.bc -o astroem.raw.js; \
+		$(EMCC) astroem.bc -o $(ASTROEMJS); \
 		echo "adding shell wrapper to generate $(ASTROEMJS) ..."; \
-		cat shell-pre.js > $(ASTROEMJS); \
-		cat astroem.raw.js >> $(ASTROEMJS); \
-		cat shell-post.js >> $(ASTROEMJS))
+		cat shell-pre.js > full_$(ASTROEMJS); \
+		cat $(ASTROEMJS) >> full_$(ASTROEMJS); \
+		cat shell-post.js >> full_$(ASTROEMJS); \
+		mv full_$(ASTROEMJS) $(ASTROEMJS); \
+		)
 
 install:	FORCE
 		@(if [ -d $(INSTALLDIR) ]; then \
 		    echo "installing $(ASTROEMJS) in: $(INSTALLDIR)"; \
 		    cp -p $(ASTROEMJS) $(INSTALLDIR)/.; \
-		    if [ x"$(ASTROEMEXTRA)" != x ]; then \
-		      echo "also installing $(ASTROEMEXTRA): $(INSTALLDIR)"; \
-		      cp -p $(ASTROEMEXTRA) $(INSTALLDIR)/.; \
+		    if [ x"$(ASTROEMWASM)" != x ]; then \
+		      echo "also installing $(ASTROEMWASM): $(INSTALLDIR)/.."; \
+		      cp -p $(ASTROEMWASM) $(INSTALLDIR)/..; \
 		    fi; \
 		    cd .. && $(MAKE) js9support; \
 		  else \
@@ -121,7 +132,8 @@ astroem:	FORCE
 
 clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#*  \
-		$(ASTROEMJS) astroem.raw.js astroem*.mem astroem.bc; \
+		$(ASTROEMJS) astroem*.mem astroem.bc \
+		astroem.asm.js astroem.wasm; \
 		for d in $(PKGDIRS); do \
 		  rm -rf $$d/*{.a,.o,~}; \
 		done;)

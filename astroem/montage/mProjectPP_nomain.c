@@ -257,7 +257,7 @@ int mProjectPP(int argc, char **argv)
    /* Make a NaN value to use setting blank pixels */
    /************************************************/
 
-#if EM
+#if __EMSCRIPTEN__
 
    // from funtools swap.c nd NaN.c
    union
