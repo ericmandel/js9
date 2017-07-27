@@ -105,7 +105,6 @@ JS9.Magnifier.init = function(width, height){
     // turn off anti-aliasing
     if( !JS9.ANTIALIAS ){
 	this.context.imageSmoothingEnabled = false;
-	this.context.mozImageSmoothingEnabled = false;
 	this.context.webkitImageSmoothingEnabled = false;
 	this.context.msImageSmoothingEnabled = false;
     }
