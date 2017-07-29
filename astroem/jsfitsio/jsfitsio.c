@@ -325,13 +325,13 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   int nslice, idx, iaxis0, iaxis1;
   int iaxes[2] = {0, 1};
   int saxes[IDIM] = {0, 0, 0, 0};
-  unsigned char *crbuf, *cobuf;
-  short *srbuf, *sobuf;
-  unsigned short *usrbuf, *usobuf;
-  int *irbuf, *iobuf;
-  long long *lrbuf, *lobuf;
-  float *frbuf, *fobuf;
-  double *drbuf, *dobuf;
+  unsigned char *crbuf=NULL, *cobuf=NULL;
+  short *srbuf=NULL, *sobuf=NULL;
+  unsigned short *usrbuf=NULL, *usobuf=NULL;
+  int *irbuf=NULL, *iobuf=NULL;
+  long long *lrbuf=NULL, *lobuf=NULL;
+  float *frbuf=NULL, *fobuf=NULL;
+  double *drbuf=NULL, *dobuf=NULL;
   // seed buffers
   for(i=0; i<IDIM; i++){
     naxes[i] = 0;
