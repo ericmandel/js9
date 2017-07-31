@@ -16232,10 +16232,10 @@ JS9.mkPublic("SubmitAnalysis", function(el, aname, func){
     // make sure we have an image and run the analysis
     if( im ){
 	formjq = $(el).closest("form");
-	// try{ obj = formjq.serializeArray(); }
 	// make sure unchecked elements are in the array
 	try{
-	    obj = $(':input:visible', formjq).serializeArray();
+	    // obj = $(':input:visible', formjq).serializeArray();
+	    obj = formjq.serializeArray();
 	    obj = obj.concat($('#' + formjq.attr('id') + ' input[type=checkbox]:not(:checked)').map(function(){return {'name': this.name, 'value': 'false'};}).get());
 	}
 	catch(e){ obj = null; }
