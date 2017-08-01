@@ -22,7 +22,7 @@ if [ x"$LDFLAGS" = x ]; then
   export LDFLAGS
 fi
 
-GCCFLAGS="-W -Wall -Wno-implicit-int"
+GCCFLAGS="-W -Wall -Wno-implicit-int -O2"
 STRICTFLAGS="-pedantic -Wall -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wredundant-decls -Wnested-externs -Wconversion -Wno-implicit-int"
 CF="--config-cache"
 
