@@ -137,7 +137,6 @@ JS9.globalOpts = {
     keyboardActions: {
 	b: "toggle selected region: source/background",
 	e: "toggle selected region: include/exclude",
-	o: "open a local FITS file",
 	r: "make regions layer active",
         "/": "copy wcs position to clipboard",
         "?": "copy value and position to clipboard",
@@ -177,7 +176,7 @@ JS9.globalOpts = {
     infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos", "impos", "physpos", "value", "regions", "progress"],
     menuBar: ["file", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
-    imageTemplates: ".fits,.gz,.fts,.png,.jpg,.jpeg", // templates for local FITS, png, etc.
+    imageTemplates: ".fits,.fts,.png,.jpg,.jpeg", // templates for local images
     regionTemplates: ".reg",         // templates for local region file input
     sessionTemplates: ".ses",        // templates for local session file input
     colormapTemplates: ".cmap",      // templates for local colormap file input
@@ -411,6 +410,10 @@ if( (JS9.BROWSER[0] === "Firefox") && JS9.BROWSER[2].search(/Linux/) >=0 ){
 // webkit resize is not quite up to par
 if( (JS9.BROWSER[0] === "Chrome") || (JS9.BROWSER[0] === "Safari") ){
     JS9.bugs.webkit_resize = true;
+}
+// chrome does not deal with ".gz" file templates, but other browsers do
+if( (JS9.BROWSER[0] !== "Chrome") ){
+    JS9.globalOpts.imageTemplates += ",.gz";
 }
 // iOS has severe memory limits (05/2017)
 if( JS9.BROWSER[3] ){
@@ -6323,18 +6326,57 @@ JS9.Display = function(el){
     this.divjq.on("contextmenu", this, function(){
 	return false;
     });
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.imageTemplates+' id="openLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.Load(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.imageTemplates+' id="refreshLocalFile-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.RefreshImage(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.regionTemplates+' id="openLocalRegions-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadRegions(this.files[i], {display:\''+ this.id +'\'}); };this.value=null;return false;"> </div>');
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.sessionTemplates+' id="openLocalSession-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadSession(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.colormapTemplates+' id="openLocalColormap-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.AddColormap(this.files[i], {display:\''+ this.id +'\'});};this.value=null;return false;"> </div>');
-    this.divjq.append('<div style="visibility:hidden; position:relative; top:-50;left:-50"> <input type="file" accept='+JS9.globalOpts.catalogTemplates+' id="openLocalCatalogs-' + this.id + '" multiple="true" onchange="javascript:for(var i=0; i<this.files.length; i++){JS9.LoadCatalog(null, this.files[i], {display:\''+ this.id +'\'}); };this.value=null;return false;"> </div>');
+    // add local file open support
+    this.addFileDialog("Load", JS9.globalOpts.imageTemplates);
+    this.addFileDialog("RefreshImage", JS9.globalOpts.imageTemplates);
+    this.addFileDialog("LoadRegions", JS9.globalOpts.regionTemplates);
+    this.addFileDialog("LoadSession", JS9.globalOpts.sessionTemplates);
+    this.addFileDialog("LoadColormap", JS9.globalOpts.colormapTemplates);
+    this.addFileDialog("LoadCatalog", JS9.globalOpts.catalogTemplates);
     // add to list of displays
     JS9.displays.push(this);
     // debugging
     if( JS9.DEBUG ){
 	JS9.log("JS9 display:  %s", this.id);
     }
+};
+
+// add support for file dialog box that executes JS9 routine on file blobs
+JS9.Display.prototype.addFileDialog = function(funcName, template){
+    var that = this;
+    var jdiv, jinput, id;
+    // sanity check
+    if( !funcName || !JS9.publics[funcName] ){
+	return;
+    }
+    id = "openLocal" + funcName + "-" + that.id;
+    // outer div
+    jdiv = $("<div>")
+	.css("opacity", 0)
+	.css("position", "relative")
+	.css("top", -50)
+	.css("left", -50)
+	.appendTo(that.divjq);
+    // inner file input element
+    jinput = $("<input>")
+	.attr("type", "file")
+	.attr("id", id)
+	.attr("multiple", true)
+	.appendTo(jdiv);
+    // add accept template, if possible
+    if( template ){
+	jinput.attr("accept", template);
+    }
+    // add callback for when input changes
+    jinput.on("change", function(){
+	var i;
+	for(i=0; i<this.files.length; i++){
+	    // execute a JS9 public access routine
+	    JS9.publics[funcName](this.files[i], {display: that.id});
+	}
+	this.value = null;
+	return false;
+    });
 };
 
 // initialize message layers
@@ -6998,6 +7040,21 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
 	obj.val = s;
 	return obj;
     };
+    // special case: 1 non-string arg is the catalog, not the layer
+    if( arguments.length === 1 && typeof layer !== "string" ){
+	catalog = layer;
+	layer = null;
+    }
+    // special case: 2 non-string args: file and obj, not the layer
+    if( arguments.length === 2 && typeof layer !== "string" ){
+	opts = catalog;
+	catalog = layer;
+	layer = null;
+    }
+    // sanity check
+    if( !catalog ){
+	return;
+    }
     if( global.tooltip ){
 	lopts.tooltip = global.tooltip;
     }
@@ -16108,7 +16165,7 @@ JS9.mkPublic("OpenFileMenu", function(){
     var obj = JS9.parsePublicArgs(arguments);
     var display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$("#openLocalFile-" + display.id).click();
+	$("#openLocalLoad-" + display.id).click();
     }
 });
 
@@ -16117,7 +16174,7 @@ JS9.mkPublic("OpenRegionsMenu", function(){
     var obj = JS9.parsePublicArgs(arguments);
     var display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$("#openLocalRegions-" + display.id).click();
+	$("#openLocalLoadRegions-" + display.id).click();
     }
 });
 
@@ -16126,7 +16183,7 @@ JS9.mkPublic("OpenSessionMenu", function(){
     var obj = JS9.parsePublicArgs(arguments);
     var display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$("#openLocalSession-" + display.id).click();
+	$("#openLocalLoadSession-" + display.id).click();
     }
 });
 
@@ -16135,7 +16192,7 @@ JS9.mkPublic("OpenCatalogsMenu", function(){
     var obj = JS9.parsePublicArgs(arguments);
     var display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$("#openLocalCatalogs-" + display.id).click();
+	$("#openLocalLoadCatalog-" + display.id).click();
     }
 });
 
@@ -16144,7 +16201,7 @@ JS9.mkPublic("OpenColormapMenu", function(){
     var obj = JS9.parsePublicArgs(arguments);
     var display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$("#openLocalColormap-" + display.id).click();
+	$("#openLocalLoadColormap-" + display.id).click();
     }
 });
 
