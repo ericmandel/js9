@@ -10,6 +10,7 @@ goo*
 node.log
 js9node.log
 /Makefile
+/libutil.a
 conf.h
 config.status
 config.log
