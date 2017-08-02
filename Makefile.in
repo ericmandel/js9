@@ -139,12 +139,14 @@ WEBFILES =	js9.js js9.min.js js9worker.js \
 		js9Electron.js js9Regions.js \
 		js9Prefs-default.json js9Prefs.json \
 		js9prefs-default.js js9prefs.js \
+		astroem.js astroemw.js astroemw.wasm \
 		favicon.ico index.html
 
 RMFILES =	analysis-plugins/imageSection.json
 
 GZFILES =	js9.js js9.min.js js9support.js js9support.min.js \
-		js9plugins.js js9-allinone.js
+		js9plugins.js js9-allinone.js \
+		astroem.js astroemw.js astroemw.wasm
 
 SAOFILES =	index.html
 
@@ -158,7 +160,7 @@ PLCSSFILES =	plugins/core/blend.css plugins/core/blink.css \
 		plugins/core/layers.css plugins/core/mef.css \
 		plugins/core/mousetouch.css
 
-JSFILES =	js/winmod.js js/jquery.min.js js/jquery-ui.min.js js/jquery.contextMenu.min.js js/jquery.flot.min.js js/jquery.flot.errorbars.min.js js/jquery.flot.navigate.min.js js/jquery.flot.resize.min.js js/jquery.flot.selection.min.js js/flot-zoom.min.js js/sprintf.min.js js/dhtmlwindow.min.js js/dhtmlwindow_blurb.js js/fabric.min.js js/pako_inflate.min.js js/FileSaver.min.js js/canvas-toBlob.js js/tabcontent.js js/astroem.js js/arrive.min.js js/jquery.doubletap.min.js js/jquery.flot.axislabels.js js/spin.js js/ElementQueries.js js/ResizeSensor.js js/gaussblur.js js/imagefilters.js js/jquery.ui.touch-punch.js
+JSFILES =	js/winmod.js js/jquery.min.js js/jquery-ui.min.js js/jquery.contextMenu.min.js js/jquery.flot.min.js js/jquery.flot.errorbars.min.js js/jquery.flot.navigate.min.js js/jquery.flot.resize.min.js js/jquery.flot.selection.min.js js/flot-zoom.min.js js/sprintf.min.js js/dhtmlwindow.min.js js/dhtmlwindow_blurb.js js/fabric.min.js js/pako_inflate.min.js js/FileSaver.min.js js/canvas-toBlob.js js/tabcontent.js js/arrive.min.js js/jquery.doubletap.min.js js/jquery.flot.axislabels.js js/spin.js js/ElementQueries.js js/ResizeSensor.js js/gaussblur.js js/imagefilters.js js/jquery.ui.touch-punch.js
 
 JSLINT =	js9.js js9worker.js js9Helper.js js9Electron.js js9Msg.js \
 		js9PostMessage.js js9Regions.js js9Test.js astroem/post.js
@@ -345,7 +347,7 @@ eslint:		FORCE
 		done)
 
 eslint2:	FORCE
-		@(for file in `ls plugins/core/*.js`; do      \
+		@(for file in `ls plugins/core/*.js plugins/fitsy/binning.js`; do      \
 		      echo $$file;               \
 		      eslint $$file;             \
 		done)

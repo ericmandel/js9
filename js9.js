@@ -12,6 +12,10 @@
 
 /*global JS9Prefs, $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly */
 
+// define Escripten Module so we can pass properties (e.g. wasmBinary)
+// eslint-disable-next-line no-unused-vars
+var Module = {};
+
 // JS9 module
 var JS9 = (function(){
 "use strict";
@@ -94,6 +98,7 @@ JS9.PIXEL_RATIO = (function(){
 JS9.globalOpts = {
     helperType: "none",		// one of: sock.io, get, post, none
     helperPort: 2718,		// default port for node.js helper
+    useWasm: true,		// use WebAssembly if available?
     winType: "light",		// plugin window: "light" or "new"
     rgb: {active: false,	// RGB mode
 	  rim: null,
@@ -4652,35 +4657,37 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    obj.dec = s[1];
 	    obj.wcspos = s[0] + sep1 + s[1];
 	    obj.wcssys = s[2];
-	    cd1 = Math.abs(this.raw.header.CDELT1);
-	    cd2 = Math.abs(this.raw.header.CDELT2);
-	    v1 = 1/60;
-	    if( (cd1 >= 1) || (cd2 >= 1) ){
-		units = "deg";
-	    } else if( (cd1 >= v1) || (cd2 >= v1) ){
-		units = "'";
-		cd1 *= 60;
-		cd2 *= 60;
-	    } else {
-		units = '"';
-		cd1 *= 3600;
-		cd2 *= 3600;
+	    if( this.raw.wcsinfo ){
+		cd1 = Math.abs(this.raw.wcsinfo.cdelt1);
+		cd2 = Math.abs(this.raw.wcsinfo.cdelt2);
+		v1 = 1/60;
+		if( (cd1 >= 1) || (cd2 >= 1) ){
+		    units = "deg";
+		} else if( (cd1 >= v1) || (cd2 >= v1) ){
+		    units = "'";
+		    cd1 *= 60;
+		    cd2 *= 60;
+		} else {
+		    units = '"';
+		    cd1 *= 3600;
+		    cd2 *= 3600;
+		}
+		sect = this.rgb.sect;
+		bin = this.binning.bin;
+		v1 = ((sect.x1 - sect.x0) * cd1).toFixed(0);
+		v2 = ((sect.y1 - sect.y0) * cd2).toFixed(0);
+		obj.wcsfov = v1 + units + " x " + v2 + units;
+		v1 = cd1.toFixed(2) * bin / sect.zoom;
+		obj.wcspix = v1 + units + " / pixel";
+		obj.wcsfovpix = obj.wcsfov + "  (" + obj.wcspix + ")";
+		obj.vstr = vstr;
+		s = JS9.pix2wcs(this.raw.wcs,
+				(sect.x1 + sect.x0)/2, (sect.y1 + sect.y0)/2)
+		    .trim().split(/\s+/);
+		obj.racen = s[0];
+		obj.deccen = s[1];
+		obj.wcscen = s[0] + sep1 + s[1];
 	    }
-	    sect = this.rgb.sect;
-	    bin = this.binning.bin;
-	    v1 = ((sect.x1 - sect.x0) * cd1).toFixed(0);
-	    v2 = ((sect.y1 - sect.y0) * cd2).toFixed(0);
-	    obj.wcsfov = v1 + units + " x " + v2 + units;
-	    v1 = cd1.toFixed(2) * bin / sect.zoom;
-	    obj.wcspix = v1 + units + " / pixel";
-	    obj.wcsfovpix = obj.wcsfov + "  (" + obj.wcspix + ")";
-	    obj.vstr = vstr;
-	    s = JS9.pix2wcs(this.raw.wcs,
-			    (sect.x1 + sect.x0)/2, (sect.y1 + sect.y0)/2)
-	    .trim().split(/\s+/);
-	    obj.racen = s[0];
-	    obj.deccen = s[1];
-	    obj.wcscen = s[0] + sep1 + s[1];
 	}
 	if( disp ){
 	    this.display.displayMessage("info", obj);
@@ -7112,6 +7119,12 @@ JS9.Command.prototype.getWhich = function(args){
 // JS9 helper to manage connection to back-end services
 // ---------------------------------------------------------------------
 JS9.Helper = function(){
+    // reset protocol for file:
+    if( JS9.globalOpts.helperProtocol === "file:" ){
+	JS9.globalOpts.helperProtocol = "http:";
+    }
+    // add suffix
+    JS9.globalOpts.helperProtocol += "//";
     // assume the worst
     this.connected = false;
     this.helper = false;
@@ -7173,9 +7186,9 @@ JS9.Helper.prototype.connect = function(type){
     switch(this.type){
     case "none":
         this.connected = null;
+	this.ready = true;
         // signal that JS9 helper is ready
-        $(document).trigger("JS9:ready", {type: "none", status: "OK"});
-	JS9.Preload(true);
+        $(document).trigger("JS9:helperReady", {type: "none", status: "OK"});
         break;
     case "get":
     case "post":
@@ -7189,8 +7202,8 @@ JS9.Helper.prototype.connect = function(type){
         if( JS9.DEBUG ){
 	    JS9.log("JS9 helper: connect: " + this.type);
         }
-        $(document).trigger("JS9:ready", {type: "get", status: "OK"});
-	JS9.Preload(true);
+	this.ready = true;
+        $(document).trigger("JS9:helperReady", {type: "get", status: "OK"});
 	break;
     case "sock.io":
     case "nodejs":
@@ -7226,9 +7239,9 @@ JS9.Helper.prototype.connect = function(type){
 		    that.socket.emit("initialize", {displays: d}, function(obj){
 			that.pageid = obj.pageid;
 			that.js9helper = obj.js9helper;
-			$(document).trigger("JS9:ready",
+			that.ready = true;
+			$(document).trigger("JS9:helperReady",
 					    {type: "socket.io", status: "OK"});
-			JS9.Preload(true);
 			if( JS9.DEBUG ){
 			    JS9.log("JS9 helper: connect: " + that.type);
 			}
@@ -7239,7 +7252,6 @@ JS9.Helper.prototype.connect = function(type){
 		that.socket.on("connect_error", function(){
 		    that.connected = false;
 		    that.helper = false;
-		    JS9.Preload(true);
 		    if( JS9.DEBUG > 1 ){
 			JS9.log("JS9 helper: connect error");
 		    }
@@ -7247,7 +7259,6 @@ JS9.Helper.prototype.connect = function(type){
 		that.socket.on("connect_timeout", function(){
 		    that.connected = false;
 		    that.helper = false;
-		    JS9.Preload(true);
 		    if( JS9.DEBUG > 1 ){
 			JS9.log("JS9 helper: connect timeout");
 		    }
@@ -7271,9 +7282,9 @@ JS9.Helper.prototype.connect = function(type){
 	    error:  function(jqXHR, textStatus, errorThrown){
 		that.connected = false;
 		that.helper = false;
-                $(document).trigger("JS9:ready",
+		that.ready = true;
+                $(document).trigger("JS9:helperReady",
                     {type: "socket.io", status: "error"});
-		JS9.Preload(true);
 		if( JS9.DEBUG ){
 	            JS9.log("JS9 helper: connect failure: " +
 			    textStatus + " " + errorThrown);
@@ -12441,10 +12452,32 @@ JS9.lookupVfile = function(vfile){
     return arr;
 };
 
+// load javascript dynamically
+// https://stackoverflow.com/questions/21294/dynamically-load-a-javascript-file
+JS9.loadScript = function(url, func, error){
+    // adding the script tag to the head as suggested before
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    // callback
+    if( func ){
+	script.onload = func;
+    }
+    // error
+    if( error ){
+	script.onerror = error;
+    }
+    script.src = url;
+    // fire the loading
+    head.appendChild(script);
+};
+
 // fetch a file URL (as a blob) and process it
 // (as of 2/2015: can't use $.ajax to retrieve a blob, so use low-level xhr)
 JS9.fetchURL = function(name, url, opts, handler) {
     var xhr = new XMLHttpRequest();
+    // opts is optional
+    opts = opts || {};
     // sanity check
     if( !name && !url ){
 	JS9.error("invalid url specification for fetchURL");
@@ -12577,6 +12610,7 @@ JS9.fitsLibrary = function(s){
 	break;
     }
     // common code
+    JS9.fits.ready = true;
     JS9.fits.name = t;
     JS9.fits.options.error = JS9.error;
     JS9.fits.options.waiting = JS9.waiting;
@@ -14290,264 +14324,49 @@ JS9.instantiatePlugins = function(){
 };
 
 // ---------------------------------------------------------------------
-// the init routine to start up JS9
+// the init routine to start up the Emscripten runtime
 // ---------------------------------------------------------------------
 
-JS9.init = function(){
-    var uopts;
-    // check for HTML5 canvas, which we need
-    if( !window.HTMLCanvasElement ){
-	JS9.error("sorry: your browser does not support JS9 (no HTML5 canvas support). Try a modern version of Firefox, Chrome, or Safari.");
+JS9.initEmscripten = function(){
+    var opts;
+    // sanity check
+    if( window.hasOwnProperty("Astroem") ){
+	return;
     }
-    // check for JSON, which we need
-    if( !JSON ){
-	JS9.error("sorry: your browser does not support JS9 (no JSON support). Try a modern version of Firefox, Chrome, or Safari.");
-    }
-    // get relative location of installed js9.css file
-    // which tells us where JS9 installed files (and the helper) are located
-    if( !JS9.INSTALLDIR ){
-	try{
-	    JS9.INSTALLDIR = $('link[href$="js9.css"]')
-		.attr("href")
-		.replace(/js9\.css$/, "") || "";
-	} catch(e){
-	    JS9.INSTALLDIR = "";
-	}
-	JS9.TOROOT = JS9.INSTALLDIR.replace(/([^\/.])+/g, "..");
-    }
-    if( window.hasOwnProperty("Kinetic") && !window.hasOwnProperty("fabric") ){
-	JS9.error("please load fabric.js instead of Kinetic.js");
-    }
-    // load web worker
-    if( window.Worker && !JS9.allinone){
-	try{ JS9.worker = new JS9.WebWorker(JS9.InstallDir(JS9.WORKERFILE)); }
-	catch(e){}
-    }
-    // set up the dynamic drive html window
-    if( JS9.LIGHTWIN === "dhtml" ){
-	// Creation of dhtmlwindowholder was done by a document.write in
-	// dhtmlwindow.js. We removed it from dhtmlwindow.js file because it
-	// intefered with the jquery search for js9.css above. Oh boy ...
-	// But it has to be somewhere!
-	$("<div>")
-	    .attr("id", "dhtmlwindowholder")
-	    .appendTo($(document.body))
-	    .append("<span style='display:none'>.</span>");
-	// allow in-line specification of images for all-in-one configuration
-	if( JS9.allinone ){
-	    dhtmlwindow.imagefiles = [JS9.allinone.min,
-				      JS9.allinone.close,
-				      JS9.allinone.restore,
-				      JS9.allinone.resize];
-	} else {
-	    dhtmlwindow.imagefiles=[JS9.InstallDir("images/min.gif"),
-				    JS9.InstallDir("images/close.gif"),
-				    JS9.InstallDir("images/restore.gif"),
-				    JS9.InstallDir("images/resize.gif")];
-	}
-	// once a window is loaded, set jupyter focus, if necessary
-	if( window.hasOwnProperty("Jupyter") ){
-	   $("#dhtmlwindowholder").arrive("input", function(){
-	       JS9.jupyterFocus($(this).parent());
-	   });
-	}
-    }
-    // use plotly if loaded separately, otherwise use internal flot
-    JS9.globalOpts.plotLibrary = JS9.globalOpts.plotLibrary || "flot";
-    if( (JS9.globalOpts.plotLibrary === "plotly") &&
-	!window.hasOwnProperty("Plotly") ){
-	JS9.globalOpts.plotLibrary = "flot";
-    }
-    // if js9 prefs were defined/loaded explicitly, merge properties
-    if( window.hasOwnProperty("JS9Prefs") && typeof JS9Prefs === "object" ){
-	JS9.mergePrefs(JS9Prefs);
-	// if we have regionOpts from preferences, add them to Regions.opts
-	$.extend(true, JS9.Regions.opts, JS9.regionOpts);
-    } else {
-	// look for and load json pref files
-	// (set this to false in the page to avoid loading a prefs file)
-	if( JS9.PREFSFILE ){
-	    // load site preferences, if possible
-	    JS9.loadPrefs(JS9.InstallDir(JS9.PREFSFILE), 1);
-	    // load page preferences, if possible
-	    JS9.loadPrefs(JS9.PREFSFILE, 0);
-	    // if we have regionOpts from preferences, add them to Regions.opts
-	    $.extend(true, JS9.Regions.opts, JS9.regionOpts);
-	}
-    }
-    // reset protocol for file:
-    if( JS9.globalOpts.helperProtocol === "file:" ){
-	JS9.globalOpts.helperProtocol = "http:";
-    }
-    // regularize resize params
-    if( !JS9.globalOpts.resize ){
-	JS9.globalOpts.resizeHandle = false;
-    }
-    // turn off resize on mobile platforms
-    if( JS9.BROWSER[3] ){
-	JS9.globalOpts.resizeHandle = false;
-    }
-    // add suffix
-    JS9.globalOpts.helperProtocol += "//";
-    // replace with global opts with user opts, if necessary
-    if( window.hasOwnProperty("localStorage") ){
-	try{ uopts = localStorage.getItem("images"); }
-	catch(e){ uopts = null; }
-	if( uopts ){
-	    try{ JS9.userOpts.images = JSON.parse(uopts); }
-	    catch(ignore){}
-	    if( JS9.userOpts.images ){
-		$.extend(true, JS9.imageOpts, JS9.userOpts.images);
+    // load astroem, based on whether we have native WebAssembly or not
+    opts = {responseType: "arraybuffer"};
+    if( JS9.globalOpts.useWasm          &&
+	typeof WebAssembly === 'object' &&
+	location.protocol !== "file:"   ){
+	JS9.globalOpts.astroemURL = JS9.InstallDir("astroemw.wasm");
+	// load astroem wasm file
+	JS9.fetchURL(JS9.globalOpts.astroemURL, null, opts, function(data){
+	    // tell Emscripten we already have wasm binary
+	    // eslint-disable-next-line no-unused-vars
+	    Module.wasmBinary = data;
+	    JS9.globalOpts.astroemURL = JS9.InstallDir("astroemw.js");
+	    // load astroem wasm js file
+	    try{
+		JS9.loadScript(JS9.globalOpts.astroemURL);
 	    }
-	}
-	try{ uopts = localStorage.getItem("regions"); }
-	catch(e){ uopts = null; }
-	if( uopts ){
-	    try{ JS9.userOpts.regions = JSON.parse(uopts); }
-	    catch(ignore){}
-	    if( JS9.userOpts.regions ){
-		$.extend(true, JS9.Regions.opts, JS9.userOpts.regions);
+	    catch(e){
+		JS9.error("can't find "+JS9.globalOpts.astroemURL);
 	    }
-	}
-	// this gets replaced below
-	try{ uopts = localStorage.getItem("fits"); }
-	catch(e){ uopts = null; }
-	if( uopts ){
-	    try{ JS9.userOpts.fits = JSON.parse(uopts); }
-	    catch(ignore){}
-	}
-	try{ uopts = localStorage.getItem("displays"); }
-	catch(e){ uopts = null; }
-	if( uopts ){
-	    try{ JS9.userOpts.displays = JSON.parse(uopts); }
-	    catch(ignore){}
-	    if( JS9.userOpts.displays ){
-		$.extend(true, JS9.globalOpts, JS9.userOpts.displays);
-	    }
-	}
-    }
-    // add handler for postMessage events
-    window.addEventListener("message", function(ev){
-	var s;
-	var msg;
-	var data = ev.data;
-	// For Chrome, origin property is in the ev.originalEvent object
-	var origin = ev.origin || ev.originalEvent.origin;
-	if( origin === "null" ){
-	    origin = "unknown";
-	}
-	// if postMessage handling is disabled, just (log and) return
-	if( !JS9.globalOpts.postMessage ){
-	    if( JS9.DEBUG ){
-		s = sprintf("JS9 ignoring postMessage, origin: %s", origin);
-		if( typeof data === "string" ){
-		    s += sprintf(" data: %s", data);
-		} else if( typeof data === "object" ){
-		    s += sprintf(" obj: %s", JSON.stringify(Object.keys(data)));
-		} else {
-		    s += sprintf(" typeof: %s", typeof data);
-		}
-		JS9.log(s);
-	    }
-	    return;
-	}
-	// var origin = ev.origin;
-	// var source = ev.source;
-	if( typeof data === "string" ){
-	    // json string passed (we hope)
-	    try{ msg = JSON.parse(data); }
-	    catch(e){ JS9.error("can't parse msg: "+data, e); }
-	} else if( typeof data === "object" ){
-	    // object was passed directly
-	    msg = data;
-	} else {
-	    JS9.error("invalid msg from postMessage");
-	}
-	// call the msg handler for JS9 API calls
-	JS9.msgHandler(msg, function(stdout, stderr, errcode, a){
-	    var res;
-            a = a || {};
-	    res = {name: a.name, rtype: a.rtype, rdata: stdout,
-		   stdout: stdout, stderr: stderr, errcode: errcode};
-	    parent.postMessage({cmd: msg.cmd, res: res}, "*");
 	});
-    }, false);
-    // set debug flag
-    JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
-    // add keyboard plugin actions
-    if( JS9.hasOwnProperty("Keyboard") ){
-	// eslint-disable-next-line no-unused-vars
-	JS9.Keyboard.Actions["move selected region up"] = function(im, ipos, evt){
-	    var canvas, layerName;
-	    var inc = 1;
-	    // sanity check
-	    if( !im ){ return; }
-	    evt.preventDefault();
-	    if( JS9.specialKey(evt) ){ inc *= 5; }
-	    layerName = im.layer || "regions";
-	    canvas = im.display.layers[layerName].canvas;
-	    im.changeShapes(layerName, "selected", {dy: inc});
-	    canvas.fire("mouse:up");
-	};
-	JS9.Keyboard.Actions["move selected region down"] = function(im, ipos, evt){
-	    var canvas, layerName;
-	    var inc = -1;
-	    // sanity check
-	    if( !im ){ return; }
-	    evt.preventDefault();
-	    if( JS9.specialKey(evt) ){ inc *= 5; }
-	    layerName = im.layer || "regions";
-	    canvas = im.display.layers[layerName].canvas;
-	    im.changeShapes(layerName, "selected", {dy: inc});
-	    canvas.fire("mouse:up");
-	};
-	JS9.Keyboard.Actions["move selected region left"] = function(im, ipos, evt){
-	    var canvas, layerName;
-	    var inc = -1;
-	    // sanity check
-	    if( !im ){ return; }
-	    evt.preventDefault();
-	    if( JS9.specialKey(evt) ){ inc *= 5; }
-	    layerName = im.layer || "regions";
-	    canvas = im.display.layers[layerName].canvas;
-	    im.changeShapes(layerName, "selected", {dx: inc});
-	    canvas.fire("mouse:up");
-	};
-	JS9.Keyboard.Actions["move selected region right"] = function(im, ipos, evt){
-	    var canvas, layerName;
-	    var inc = 1;
-	    // sanity check
-	    if( !im ){ return; }
-	    evt.preventDefault();
-	    if( JS9.specialKey(evt) ){ inc *= 5; }
-	    layerName = im.layer || "regions";
-	    canvas = im.display.layers[layerName].canvas;
-	    im.changeShapes(layerName, "selected", {dx: inc});
-	    canvas.fire("mouse:up");
-	};
-	// eslint-disable-next-line no-unused-vars
-	JS9.Keyboard.Actions["remove selected region"] = function(im, ipos, evt){
-	    var canvas, layerName;
-	    // sanity check
-	    if( !im ){ return; }
-	    evt.preventDefault();
-	    layerName = im.layer || "regions";
-	    canvas = im.display.layers[layerName].canvas;
-	    im.removeShapes(layerName, "selected");
-	    im.display.clearMessage(layerName);
-	    canvas.fire("mouse:up");
-	};
-	JS9.Keyboard.Actions["make regions layer active"] = function(im, ipos, evt){
-	    // sanity check
-	    if( !im ){ return; }
-	    evt.preventDefault();
-	    im.activeShapeLayer("regions");
-	};
+    } else {
+	JS9.globalOpts.astroemURL = JS9.InstallDir("astroem.js");
+	// load astroem ams.js file
+	try{
+	    JS9.loadScript(JS9.globalOpts.astroemURL);
+	}
+	catch(e){
+	    JS9.error("can't find "+JS9.globalOpts.astroemURL);
+	}
     }
-    // initialize image filters
-    if( window.hasOwnProperty("ImageFilters") ){
-	JS9.ImageFilters = ImageFilters;
-    }
+};
+
+// initialize FITS support
+JS9.initFITS = function(){
     // initialize astronomy emscripten routines (wcslib, etc), if possible
     if( window.hasOwnProperty("Astroem") ){
 	JS9.vmalloc = Astroem.vmalloc;
@@ -14572,52 +14391,18 @@ JS9.init = function(){
 	JS9.zscale = Astroem.zscale;
 	JS9.tanhdr = Astroem.tanhdr;
 	JS9.reproject = Astroem.reproject;
-    }
-    // configure fits library
-    if( window.hasOwnProperty("Fitsy") ){
-	JS9.fitsLibrary("fitsy");
-	JS9.fits = Fitsy;
-    } else if( window.hasOwnProperty("Astroem") ){
 	JS9.fitsLibrary("cfitsio");
-	JS9.fits = Astroem;
+    } else if( window.hasOwnProperty("Fitsy") ){
+	JS9.fitsLibrary("fitsy");
     }
-    // init main display(s)
-    $("div.JS9").each(function(){
-	JS9.checkNew(new JS9.Display($(this)));
-    });
-    // register essential plugins
-    JS9.RegisterPlugin(JS9.MouseTouch.CLASS, JS9.MouseTouch.NAME,
-		       JS9.MouseTouch.init,
-		       {menuItem: "Mouse/Touch",
-			onplugindisplay: JS9.MouseTouch.init,
-			help: "help/mousetouch.html",
-			winTitle: "Mouse/Touch Actions",
-			winResize: true,
-			winDims: [JS9.MouseTouch.WIDTH,JS9.MouseTouch.HEIGHT]});
-    JS9.RegisterPlugin(JS9.Regions.CLASS, JS9.Regions.NAME,
-		       JS9.Regions.init,
-		       {divArgs: ["regions"],
-			winDims: [0, 0]});
-    // find divs associated with each plugin and run the constructor
-    JS9.instantiatePlugins();
-    // sort plugins
-    JS9.plugins.sort(function(a,b){
-	var t1 = a.opts.menuItem;
-	var t2 = b.opts.menuItem;
-	if( !t1 ){
-	    return 1;
-	}
-	if( !t2 ){
-	    return -1;
-	}
-	if( t1 < t2 ){
-	    return -1;
-	}
-	if( t1 > t2 ){
-	    return 1;
-	}
-	return 0;
-    });
+};
+
+// init colormaps
+JS9.initColormaps = function(){
+    // sanity check
+    if( !JS9.hasOwnProperty("Colormap") ){
+	return;
+    }
     // load colormaps
     JS9.checkNew(new JS9.Colormap("grey",
 	[[0,0], [1,1]],
@@ -14767,6 +14552,14 @@ JS9.init = function(){
 	return a;}())));
     JS9.checkNew(new JS9.Colormap("color",
 [[0,0,0], [0.18431, 0.18431, 0.18431], [0.37255, 0.37255, 0.37255], [0.56078, 0.56078, 0.56078], [0.74902, 0.74902, 0.74902], [0.93725, 0.93725, 0.93725], [0, 0.18431, 0.93725], [0, 0.37255, 0.74902], [0, 0.49804, 0.49804], [0, 0.74902, 0.30980], [0, 0.93725, 0], [0.30980, 0.62353, 0], [0.49804, 0.49804, 0], [0.62353, 0.30980, 0], [0.93725, 0, 0], [0.74902, 0, 0.30980]]));
+};
+
+// init console commands
+JS9.initCommands = function(){
+    // sanity check
+    if( !JS9.hasOwnProperty("Command") ){
+	return;
+    }
     // load commands
     JS9.checkNew(new JS9.Command({
 	name: "analysis",
@@ -15190,8 +14983,308 @@ JS9.init = function(){
 	    }
 	}
     }));
-    // load external helper support
+};
+
+// init keyboard plugin actions
+JS9.initKeyboardActions = function(){
+    // sanity check
+    if( !JS9.hasOwnProperty("Keyboard") ){
+	return;
+    }
+    // eslint-disable-next-line no-unused-vars
+    JS9.Keyboard.Actions["move selected region up"] = function(im, ipos, evt){
+	var canvas, layerName;
+	var inc = 1;
+	// sanity check
+	if( !im ){ return; }
+	evt.preventDefault();
+	if( JS9.specialKey(evt) ){ inc *= 5; }
+	layerName = im.layer || "regions";
+	canvas = im.display.layers[layerName].canvas;
+	im.changeShapes(layerName, "selected", {dy: inc});
+	canvas.fire("mouse:up");
+    };
+    JS9.Keyboard.Actions["move selected region down"] = function(im, ipos, evt){
+	var canvas, layerName;
+	var inc = -1;
+	// sanity check
+	if( !im ){ return; }
+	evt.preventDefault();
+	if( JS9.specialKey(evt) ){ inc *= 5; }
+	layerName = im.layer || "regions";
+	canvas = im.display.layers[layerName].canvas;
+	im.changeShapes(layerName, "selected", {dy: inc});
+	canvas.fire("mouse:up");
+    };
+    JS9.Keyboard.Actions["move selected region left"] = function(im, ipos, evt){
+	var canvas, layerName;
+	var inc = -1;
+	// sanity check
+	if( !im ){ return; }
+	evt.preventDefault();
+	if( JS9.specialKey(evt) ){ inc *= 5; }
+	layerName = im.layer || "regions";
+	canvas = im.display.layers[layerName].canvas;
+	im.changeShapes(layerName, "selected", {dx: inc});
+	canvas.fire("mouse:up");
+    };
+    JS9.Keyboard.Actions["move selected region right"] = function(im, ipos,evt){
+	var canvas, layerName;
+	var inc = 1;
+	// sanity check
+	if( !im ){ return; }
+	evt.preventDefault();
+	if( JS9.specialKey(evt) ){ inc *= 5; }
+	layerName = im.layer || "regions";
+	canvas = im.display.layers[layerName].canvas;
+	im.changeShapes(layerName, "selected", {dx: inc});
+	canvas.fire("mouse:up");
+    };
+    // eslint-disable-next-line no-unused-vars
+    JS9.Keyboard.Actions["remove selected region"] = function(im, ipos, evt){
+	var canvas, layerName;
+	// sanity check
+	if( !im ){ return; }
+	evt.preventDefault();
+	layerName = im.layer || "regions";
+	canvas = im.display.layers[layerName].canvas;
+	im.removeShapes(layerName, "selected");
+	im.display.clearMessage(layerName);
+	canvas.fire("mouse:up");
+    };
+    JS9.Keyboard.Actions["make regions layer active"] = function(im, ipos, evt){
+	// sanity check
+	if( !im ){ return; }
+	evt.preventDefault();
+	im.activeShapeLayer("regions");
+    };
+};
+
+// ---------------------------------------------------------------------
+// the init routine to start up JS9
+// ---------------------------------------------------------------------
+
+JS9.init = function(){
+    var uopts;
+    // sanity check: need HTML5 canvas and JSON
+    if( !window.HTMLCanvasElement || !JSON ){
+	JS9.error("sorry: your browser does not support JS9 (no HTML5 canvas and/or JSON). Try a modern version of Firefox, Chrome, Safari, Opera, or IE.");
+    }
+    // get relative location of installed js9.css file
+    // which tells us where JS9 installed files (and the helper) are located
+    if( !JS9.INSTALLDIR ){
+	try{
+	    JS9.INSTALLDIR = $('link[href$="js9.css"]')
+		.attr("href")
+		.replace(/js9\.css$/, "") || "";
+	} catch(e){
+	    JS9.INSTALLDIR = "";
+	}
+	JS9.TOROOT = JS9.INSTALLDIR.replace(/([^\/.])+/g, "..");
+    }
+    // set up the dynamic drive html window
+    if( JS9.LIGHTWIN === "dhtml" ){
+	// Creation of dhtmlwindowholder was done by a document.write in
+	// dhtmlwindow.js. We removed it from dhtmlwindow.js file because it
+	// intefered with the jquery search for js9.css above. Oh boy ...
+	// But it has to be somewhere!
+	$("<div>")
+	    .attr("id", "dhtmlwindowholder")
+	    .appendTo($(document.body))
+	    .append("<span style='display:none'>.</span>");
+	// allow in-line specification of images for all-in-one configuration
+	if( JS9.allinone ){
+	    dhtmlwindow.imagefiles = [JS9.allinone.min,
+				      JS9.allinone.close,
+				      JS9.allinone.restore,
+				      JS9.allinone.resize];
+	} else {
+	    dhtmlwindow.imagefiles=[JS9.InstallDir("images/min.gif"),
+				    JS9.InstallDir("images/close.gif"),
+				    JS9.InstallDir("images/restore.gif"),
+				    JS9.InstallDir("images/resize.gif")];
+	}
+	// once a window is loaded, set jupyter focus, if necessary
+	if( window.hasOwnProperty("Jupyter") ){
+	   $("#dhtmlwindowholder").arrive("input", function(){
+	       JS9.jupyterFocus($(this).parent());
+	   });
+	}
+    }
+    // use plotly if loaded separately, otherwise use internal flot
+    JS9.globalOpts.plotLibrary = JS9.globalOpts.plotLibrary || "flot";
+    if( (JS9.globalOpts.plotLibrary === "plotly") &&
+	!window.hasOwnProperty("Plotly") ){
+	JS9.globalOpts.plotLibrary = "flot";
+    }
+    // if js9 prefs were defined/loaded explicitly, merge properties
+    if( window.hasOwnProperty("JS9Prefs") && typeof JS9Prefs === "object" ){
+	JS9.mergePrefs(JS9Prefs);
+	// if we have regionOpts from preferences, add them to Regions.opts
+	$.extend(true, JS9.Regions.opts, JS9.regionOpts);
+    } else {
+	// look for and load json pref files
+	// (set this to false in the page to avoid loading a prefs file)
+	if( JS9.PREFSFILE ){
+	    // load site preferences, if possible
+	    JS9.loadPrefs(JS9.InstallDir(JS9.PREFSFILE), 1);
+	    // load page preferences, if possible
+	    JS9.loadPrefs(JS9.PREFSFILE, 0);
+	    // if we have regionOpts from preferences, add them to Regions.opts
+	    $.extend(true, JS9.Regions.opts, JS9.regionOpts);
+	}
+    }
+    // regularize resize params
+    if( !JS9.globalOpts.resize ){
+	JS9.globalOpts.resizeHandle = false;
+    }
+    // turn off resize on mobile platforms
+    if( JS9.BROWSER[3] ){
+	JS9.globalOpts.resizeHandle = false;
+    }
+    // replace with global opts with user opts, if necessary
+    if( window.hasOwnProperty("localStorage") ){
+	try{ uopts = localStorage.getItem("images"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.images = JSON.parse(uopts); }
+	    catch(ignore){}
+	    if( JS9.userOpts.images ){
+		$.extend(true, JS9.imageOpts, JS9.userOpts.images);
+	    }
+	}
+	try{ uopts = localStorage.getItem("regions"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.regions = JSON.parse(uopts); }
+	    catch(ignore){}
+	    if( JS9.userOpts.regions ){
+		$.extend(true, JS9.Regions.opts, JS9.userOpts.regions);
+	    }
+	}
+	// this gets replaced below
+	try{ uopts = localStorage.getItem("fits"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.fits = JSON.parse(uopts); }
+	    catch(ignore){}
+	}
+	try{ uopts = localStorage.getItem("displays"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.displays = JSON.parse(uopts); }
+	    catch(ignore){}
+	    if( JS9.userOpts.displays ){
+		$.extend(true, JS9.globalOpts, JS9.userOpts.displays);
+	    }
+	}
+    }
+    // set debug flag
+    JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
+    // init main display(s)
+    $("div.JS9").each(function(){
+	JS9.checkNew(new JS9.Display($(this)));
+    });
+    // load web worker
+    if( window.Worker && !JS9.allinone){
+	try{ JS9.worker = new JS9.WebWorker(JS9.InstallDir(JS9.WORKERFILE)); }
+	catch(e){}
+    }
+    // load emscripten
+    JS9.initEmscripten();
+    // initialize helper support
     JS9.helper = new JS9.Helper();
+    // add handler for postMessage events
+    window.addEventListener("message", function(ev){
+	var s;
+	var msg;
+	var data = ev.data;
+	// For Chrome, origin property is in the ev.originalEvent object
+	var origin = ev.origin || ev.originalEvent.origin;
+	if( origin === "null" ){
+	    origin = "unknown";
+	}
+	// if postMessage handling is disabled, just (log and) return
+	if( !JS9.globalOpts.postMessage ){
+	    if( JS9.DEBUG ){
+		s = sprintf("JS9 ignoring postMessage, origin: %s", origin);
+		if( typeof data === "string" ){
+		    s += sprintf(" data: %s", data);
+		} else if( typeof data === "object" ){
+		    s += sprintf(" obj: %s", JSON.stringify(Object.keys(data)));
+		} else {
+		    s += sprintf(" typeof: %s", typeof data);
+		}
+		JS9.log(s);
+	    }
+	    return;
+	}
+	// var origin = ev.origin;
+	// var source = ev.source;
+	if( typeof data === "string" ){
+	    // json string passed (we hope)
+	    try{ msg = JSON.parse(data); }
+	    catch(e){ JS9.error("can't parse msg: "+data, e); }
+	} else if( typeof data === "object" ){
+	    // object was passed directly
+	    msg = data;
+	} else {
+	    JS9.error("invalid msg from postMessage");
+	}
+	// call the msg handler for JS9 API calls
+	JS9.msgHandler(msg, function(stdout, stderr, errcode, a){
+	    var res;
+            a = a || {};
+	    res = {name: a.name, rtype: a.rtype, rdata: stdout,
+		   stdout: stdout, stderr: stderr, errcode: errcode};
+	    parent.postMessage({cmd: msg.cmd, res: res}, "*");
+	});
+    }, false);
+    // intialize keyboard actions
+    if( JS9.hasOwnProperty("Keyboard") ){
+	JS9.initKeyboardActions();
+    }
+    // initialize image filters
+    if( window.hasOwnProperty("ImageFilters") ){
+	JS9.ImageFilters = ImageFilters;
+    }
+    // register essential plugins
+    JS9.RegisterPlugin(JS9.MouseTouch.CLASS, JS9.MouseTouch.NAME,
+		       JS9.MouseTouch.init,
+		       {menuItem: "Mouse/Touch",
+			onplugindisplay: JS9.MouseTouch.init,
+			help: "help/mousetouch.html",
+			winTitle: "Mouse/Touch Actions",
+			winResize: true,
+			winDims: [JS9.MouseTouch.WIDTH,JS9.MouseTouch.HEIGHT]});
+    JS9.RegisterPlugin(JS9.Regions.CLASS, JS9.Regions.NAME,
+		       JS9.Regions.init,
+		       {divArgs: ["regions"],
+			winDims: [0, 0]});
+    // find divs associated with each plugin and run the constructor
+    JS9.instantiatePlugins();
+    // sort plugins
+    JS9.plugins.sort(function(a,b){
+	var t1 = a.opts.menuItem;
+	var t2 = b.opts.menuItem;
+	if( !t1 ){
+	    return 1;
+	}
+	if( !t2 ){
+	    return -1;
+	}
+	if( t1 < t2 ){
+	    return -1;
+	}
+	if( t1 > t2 ){
+	    return 1;
+	}
+	return 0;
+    });
+    // initialize colormaps
+    JS9.initColormaps();
+    // initialize console commands
+    JS9.initCommands();
     //  for analysis forms, Enter should not Submit
     $(document).on("keyup keypress", ".js9AnalysisForm", function(e){
 	var code = e.which || e.keyCode;
@@ -15569,7 +15662,6 @@ JS9.mkPublic("Load", function(file, opts){
 });
 
 // create a new instance of JS9 in a window (light or new)
-// nb: unlike JS9.Load, this requires the opts param
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     var id, did, head, body, win, winid, initialURL;
     var idbase = (type || "") + "win";
@@ -15770,7 +15862,7 @@ JS9.mkPublic("Preload", function(arg1){
 	// if we are connected and have previously saved images, load now
 	// if connected is undefined, we have no back-end and we do our best
 	if( ((JS9.helper.connected === null) || JS9.helper.connected) &&
-	    (JS9.preloads.length > 0) ){
+	    JS9.fits.name && (JS9.preloads.length > 0) ){
 	    mode = 2;
 	} else {
 	    // do nothing
@@ -15778,10 +15870,10 @@ JS9.mkPublic("Preload", function(arg1){
 	}
 	break;
     case 1:
-	// boolean => inside the helper constructor, we are ready to load
+	// boolean => we are ready to load
 	if( typeof arg1 === "boolean" ){
 	    // if we have previously saved images, load now
-	    if( JS9.preloads.length > 0 ){
+	    if( arg1 && (JS9.preloads.length > 0) ){
 		mode = 2;
 	    } else {
 		// do nothing
@@ -15789,7 +15881,8 @@ JS9.mkPublic("Preload", function(arg1){
 	    }
 	} else {
 	    // image args => if we are connected,  we can load the images now
-	    if( (JS9.helper.connected === null) || JS9.helper.connected ){
+	    if( ((JS9.helper.connected === null) || JS9.helper.connected) &&
+	        JS9.fits.name ){
 		mode = 1;
 	    } else {
 		// save images and wait
@@ -15799,7 +15892,8 @@ JS9.mkPublic("Preload", function(arg1){
 	break;
     default:
 	// image args => if we already are connected, we can load the images now
-	if( (JS9.helper.connected === null) || JS9.helper.connected ){
+	if( ((JS9.helper.connected === null) || JS9.helper.connected) &&
+	    JS9.fits.name ){
 	    mode = 1;
 	} else {
 	    // save images and wait
@@ -16639,6 +16733,34 @@ return JS9;
 
 // INIT: after document is loaded, perform js9 initialization
 $(document).ready(function(){
-"use strict";
-JS9.init();
+    // when all is ready, we can preload images
+    // when all is ready, we can preload images
+    $(document).on("JS9:ready", function(){
+	// so we can preload images and ...
+	JS9.Preload(true);
+    });
+    $(document).on("JS9:init", function(){
+	if( JS9.helper.ready && JS9.fits.ready ){
+	    // ... signal that we are completely ready
+	    $(document).trigger("JS9:ready", {status: "OK"});
+	}
+    });
+    // ... might need to wait for astroem (via emscripten) to finish ...
+    $(document).on("astroem:ready", function(){
+	// astroem is loaded: we can now initialize FITS support
+	JS9.initFITS();
+	if( JS9.helper.ready && JS9.inited ){
+	    // ... signal that we are completely ready
+	    $(document).trigger("JS9:ready", {status: "OK"});
+	}
+    });
+    // wait for helper
+    $(document).on("JS9:helperReady", function(){
+	if( JS9.fits.ready && JS9.inited ){
+	    // ... signal that we are completely ready
+	    $(document).trigger("JS9:ready", {status: "OK"});
+	}
+    });
+    // init JS9
+    JS9.init();
 });

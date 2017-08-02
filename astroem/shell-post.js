@@ -1,5 +1,5 @@
-
-  return {
+// set Astroem object with important properties and wrapped calls
+Astroem = {
       initwcs:  Module.cwrap('initwcs', 'number', ['string', 'number']),
       freewcs:  Module.cwrap('freewcs', 'number', ['number']),
       listhdu:  Module.cwrap('listhdu', 'string', ['string', 'string']),
@@ -37,5 +37,12 @@
       vcat: Module.cwrap('vcat', 'string', ['string', 'number']),
       options: Module["options"]
   };
-})();
 
+// signal that astroem is ready
+if( window.jQuery ){
+    if( Module["astroemReady"] ){
+	$(document).trigger("astroem:ready", {status: "OK"});
+    } else {
+	Module["astroemReady"] = true;
+    }
+}

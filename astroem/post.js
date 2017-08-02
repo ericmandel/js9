@@ -219,10 +219,10 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     extnum  = getValue(hptr, "i32") - 1;
     _free(hptr);
     // try to get extname (ignore errors)
-    hptr = _malloc(86);
-    setValue(hptr+82, 0, "i32");
-    ccall("ffgky", null, ["number", "number", "string", "number", "number", "number"], [fptr, 16, "EXTNAME", hptr, 0, hptr+82]);
-    status  = getValue(hptr+82, "i32");
+    hptr = _malloc(88);
+    setValue(hptr+84, 0, "i32");
+    ccall("ffgky", null, ["number", "number", "string", "number", "number", "number"], [fptr, 16, "EXTNAME", hptr, 0, hptr+84]);
+    status  = getValue(hptr+84, "i32");
     if( status === 0 ){
 	extname = Pointer_stringify(hptr)
 	    .replace(/^'/,"").replace(/'$/,"").trim();
@@ -296,10 +296,10 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	    Module["error"]("can't convert table to image (image too large?)");
 	}
 	// try to get CTYPE1 to check for HEALPix (ignore errors)
-	hptr = _malloc(86);
-	setValue(hptr+82, 0, "i32");
-	ccall("ffgky", null, ["number", "number", "string", "number", "number", "number"], [ofptr, 16, "CTYPE1", hptr, 0, hptr+82]);
-	status  = getValue(hptr+82, "i32");
+	hptr = _malloc(88);
+	setValue(hptr+84, 0, "i32");
+	ccall("ffgky", null, ["number", "number", "string", "number", "number", "number"], [ofptr, 16, "CTYPE1", hptr, 0, hptr+84]);
+	status  = getValue(hptr+84, "i32");
 	if( status === 0 ){
 	    ctype1 = Pointer_stringify(hptr)
 		.replace(/^'/,"").replace(/'$/,"").trim();
