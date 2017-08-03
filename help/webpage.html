@@ -118,8 +118,11 @@ them individually, e.g.:
 will load only the menubar and info display plugins.
 
 <p>
-During startup, JS9 will try to load the <b>js9worker.js</b> file in order
-to create a worker process.
+During startup, JS9 will asynchronously load the <b>js9worker.js</b>
+file in order to create a worker process. It also will load either
+the <b>astroem.js</b> file or the <b>astroemw.js</b>
+and <b>astroemw.wasm</b> files, depending on whether
+<a href="http://webassembly.org/">WebAssembly</a> is supported on your browser.
 
 <p>
 As of version 1.3, the cfitsio library is used to process FITS files
@@ -306,7 +309,7 @@ See:
 <a href="yourdata.html">Adding Data Files To a Web Page</a> for more
 information.
 
-<h5>Last updated: April 16, 2017</h5>
+<h5>Last updated: August 2, 2017</h5>
 </div>
 
 </body>

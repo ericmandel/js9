@@ -149,7 +149,7 @@ See: <a href="./extmsg.html">External Messaging</a> for more details.
 If you want to run JS9 in a "real" web server, build and install
 the JS9 tools and files using the standard GNU procedure:
 <pre>
-  ./configure --switches...
+  ./configure <b>--with-webdir=[path]</b> ... other switches ...
   make
   make install
 </pre>
@@ -159,6 +159,89 @@ switch, which specifies the directory into which the JS9 web files
 directory only contain the installed JS9 files, i.e. that you install
 JS9 into its own self-contained directory. This will make upgrading to
 new versions much easier.
+
+<p>
+As described in <a href="./webpage.html">Creating a JS9 Web Page</a>,
+a few JavaScript and CSS files must be loaded into a JS9-enabled web page.
+Ordinarily this is done in the page's header, which typically will
+look something like this:
+<pre>
+  &lt;head&gt;
+  &lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8"&gt;
+  &lt;meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" &gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1" &gt;
+  &lt;link type="image/x-icon" rel="shortcut icon" href="./favicon.ico"&gt;
+  &lt;link type="text/css" rel="stylesheet" href="js9support.css"&gt;
+  &lt;link type="text/css" rel="stylesheet" href="js9.css"&gt;
+  &lt;script type="text/javascript" src="js9prefs.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="js9support.min.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="js9.min.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="js9plugins.js"&gt;&lt;/script&gt;
+  &lt;/head&gt;
+</pre>
+Also during startup, JS9 will asynchronously load
+the <b>js9worker.js</b> file in order to create a worker process and
+will load either the <b>astroem.js</b> file or the <b>astroemw.js</b>
+and <b>astroemw.wasm</b> files, depending on whether
+<a href="http://webassembly.org/">WebAssembly</a> is supported on your browser.
+
+<p>
+Although none of these files are large, it always is worthwhile making
+downloaded files smaller to shorten the web page load time.  One
+straight-forward way to do this, if you have control of the Apache web
+server, is to use the Apache rewrite capability to serve gzip'ed files
+in place of requested (uncompressed) files, if the former exist. Using
+this technique, your header can remain as shown above, but the Apache
+server will send gzip'ed versions when available. To do this, you can
+add code such as the following to the Apache httpd.conf:
+<pre>
+  &lt;IfModule mod_headers.c%gt;
+    # turn on rewrite
+    RewriteEngine on
+
+    # Serve gzip compressed CSS files if they exist
+    # and the client accepts gzip.
+    RewriteCond "%{HTTP:Accept-encoding}" "gzip"
+    RewriteCond "%{REQUEST_FILENAME}\.gz" -s
+    RewriteRule "^(.*)\.css" "$1\.css\.gz" [QSA]
+
+    # Serve gzip compressed JS files if they exist
+    # and the client accepts gzip.
+    RewriteCond "%{HTTP:Accept-encoding}" "gzip"
+    RewriteCond "%{REQUEST_FILENAME}\.gz" -s
+    RewriteRule "^(.*)\.js" "$1\.js\.gz" [QSA]
+
+    # Serve gzip compressed wasm files if they exist
+    # and the client accepts gzip.
+    RewriteCond "%{HTTP:Accept-encoding}" "gzip"
+    RewriteCond "%{REQUEST_FILENAME}\.gz" -s
+    RewriteRule "^(.*)\.wasm" "$1\.wasm\.gz" [QSA]
+
+    # Serve correct content types, and prevent mod_deflate double gzip.
+    RewriteRule "\.css\.gz$" "-" [T=text/css,E=no-gzip:1]
+    RewriteRule "\.js\.gz$" "-" [T=text/javascript,E=no-gzip:1]
+    RewriteRule "\.wasm\.gz$" "-" [T=application/octet-stream,E=no-gzip:1]
+
+    &lt;FilesMatch "(\.js\.gz|\.css\.gz|\.wasm\.gz)$"%gt;
+    # Serve correct encoding type.
+    Header append Content-Encoding gzip
+    # Force proxies to cache gzipped &
+    # non-gzipped css/js files separately.
+    Header append Vary Accept-Encoding
+    &lt;/FilesMatch%gt;
+  &lt;/IfModule%gt;
+</pre>
+
+<p>
+Note that the JS9 Makefile contains a rule called <b>install-gzip</b> which
+will install gzip'ed copies of several JS9 files along side the uncompressed
+versions:
+<pre>
+  ./configure ...
+  make
+  make install
+  make install-gzip
+</pre>
 
 <h3>Do You Want to Configure Server-side Analysis or External Messaging?</h3>
 <p>
@@ -240,7 +323,7 @@ available on GitHub:
 </pre>
 
 
-<h5>Last updated: July 10, 2017</h5>
+<h5>Last updated: August 2, 2017</h5>
 </div>
 
 </body>
