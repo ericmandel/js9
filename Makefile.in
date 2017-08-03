@@ -136,7 +136,7 @@ WEBFILES =	js9.js js9.min.js js9worker.js \
 		js9support.txt js9.css fitsy.js fitsy.min.js \
 		$(ALLIN1).js $(ALLIN1).css \
 		js9Msg.js js9PostMessage.js js9Helper.js \
-		js9Electron.js js9Regions.js \
+		js9Electron.js js9ElectronPreload.js js9Regions.js \
 		js9Prefs-default.json js9Prefs.json \
 		js9prefs-default.js js9prefs.js \
 		astroem.js astroemw.js astroemw.wasm \
