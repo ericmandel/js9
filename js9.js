@@ -185,6 +185,8 @@ JS9.globalOpts = {
     colormapTemplates: ".cmap",      // templates for local colormap file input
     catalogTemplates: ".cat,.tab",   // templates for local catalog file input
     controlsMatchRegion: "corner",   // true or "corner" or "border"
+    newWindowWidth: 530,	     // width of LoadWindow("new")
+    newWindowHeight: 625,	     // height of LoadWindow("new")
     debug: 0		             // debug level
 };
 
@@ -15823,7 +15825,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
             id = idbase + JS9.uniqueID();
 	}
 	// window opts
-	winopts = winopts || "width=540, height=605";
+	winopts = winopts || sprintf("width=%s, height=%s", JS9.globalOpts.newWindowWidth, JS9.globalOpts.newWindowHeight);
         // get our own file's header for css and js files
         // if this page is generated on the server side, hardwire this ...
         // if JS9 is not installed, hardwire this ...
