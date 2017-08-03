@@ -6356,8 +6356,10 @@ JS9.Display.prototype.addFileDialog = function(funcName, template){
     }
     id = "openLocal" + funcName + "-" + that.id;
     // outer div
+    // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
+    // recommends opacity over visibility, but it breaks the menubar in ios
     jdiv = $("<div>")
-	.css("opacity", 0)
+	.css("visibility", "hidden")
 	.css("position", "relative")
 	.css("top", -50)
 	.css("left", -50)
