@@ -112,7 +112,10 @@ JS9.globalOpts = {
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
-    htimeout: 10000,		// connection timeout for the helper connect
+    htimeout: 5000,		// connection timeout for the helper connect
+    lhtimeout: 1000,		// connection timeout for local helper connect
+    ehtimeout: 1000,		// connection timeout for Electron connect
+    ehretries: 10,		// connection retries Electron connect
     xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     table: {xdim: 2048, ydim: 2048, bin: 1},// image section size to extract from table
@@ -7180,6 +7183,10 @@ JS9.Helper = function(){
     if( JS9.globalOpts.helperProtocol === "file:" ){
 	JS9.globalOpts.helperProtocol = "http:";
     }
+    // reset helper timeout for local access
+    if( !document.domain || document.domain === "localhost" ){
+	JS9.globalOpts.htimeout = JS9.globalOpts.lhtimeout;
+    }
     // add suffix
     JS9.globalOpts.helperProtocol += "//";
     // assume the worst
@@ -7214,64 +7221,28 @@ JS9.Helper.prototype.connectinfo = function(){
 
 // connect to back-end helper
 JS9.Helper.prototype.connect = function(type){
+    var tries = JS9.globalOpts.ehretries;
+    var delay = JS9.globalOpts.ehtimeout;
     var that = this;
-    // might be establishing a new type
-    if( type ){
-	this.type = type;
-    }
-    // close off previous socket connection, if necessary
-    if( this.socket ){
-	try{this.socket.disconnect();}
-	catch(e){JS9.log("warning: can't disconnect from socket");}
-	this.socket = null;
-    }
-    // base of helper url is either specified, same as current domain, or local
-    if( JS9.globalOpts.helperURL ){
-	if( JS9.globalOpts.helperURL.search(/:\/\//) >=0 ){
-	    this.url = JS9.globalOpts.helperURL;
-	} else {
-	    this.url = JS9.globalOpts.helperProtocol + JS9.globalOpts.helperURL;
+    var failedHelper = function(jqXHR, textStatus, errorThrown){
+	that.connected = false;
+	that.helper = false;
+	that.ready = true;
+	$(document).trigger("JS9:helperReady",
+			    {type: "socket.io", status: "error"});
+	if( JS9.DEBUG ){
+	    textStatus = textStatus || "timeout";
+	    if( !errorThrown || errorThrown === "timeout" ){
+		errorThrown = "or connection refused";
+	    }
+	    JS9.log(sprintf("JS9 helper connect error: %s (%s)",
+			    textStatus, errorThrown));
 	}
-    } else if( document.domain ){
-	this.url = JS9.globalOpts.helperProtocol + document.domain;
-    } else {
-	this.url = JS9.globalOpts.helperProtocol + "localhost";
-    }
-    // save base of url
-    this.baseurl = this.url;
-    // try to establish connection, based on connection type
-    switch(this.type){
-    case "none":
-        this.connected = null;
-	this.ready = true;
-        // signal that JS9 helper is ready
-        $(document).trigger("JS9:helperReady", {type: "none", status: "OK"});
-        break;
-    case "get":
-    case "post":
-	// sanity check
-	if( !JS9.globalOpts.helperCGI ){
-	    JS9.error("cgi script name missing for helper");
-	}
-	this.url += "/" + JS9.globalOpts.helperCGI;
-	this.connected = true;
-	this.helper = true;
-        if( JS9.DEBUG ){
-	    JS9.log("JS9 helper: connect: " + this.type);
-        }
-	this.ready = true;
-        $(document).trigger("JS9:helperReady", {type: "get", status: "OK"});
-	break;
-    case "sock.io":
-    case "nodejs":
-	if( !JS9.globalOpts.helperPort ){
-	    JS9.error("port missing for helper");
-	}
-	this.url += ":" +  JS9.globalOpts.helperPort;
-	this.sockurl = this.url + "/socket.io/socket.io.js";
+    };
+    var connectHelper = function(url){
 	// connect to helper
 	$.ajax({
-	    url: this.sockurl,
+	    url: url,
 	    dataType: "script",
 	    timeout: JS9.globalOpts.htimeout,
 	    success:  function(){
@@ -7337,17 +7308,86 @@ JS9.Helper.prototype.connect = function(type){
 		that.socket.on("msg", JS9.msgHandler);
 	    },
 	    error:  function(jqXHR, textStatus, errorThrown){
-		that.connected = false;
-		that.helper = false;
-		that.ready = true;
-                $(document).trigger("JS9:helperReady",
-                    {type: "socket.io", status: "error"});
-		if( JS9.DEBUG ){
-	            JS9.log("JS9 helper: connect failure: " +
-			    textStatus + " " + errorThrown);
-		}
+		failedHelper(jqXHR, textStatus, errorThrown);
 	    }
 	});
+    };
+    var waitForHelper = function(eurl, hurl, tries){
+	$.ajax(eurl)
+	    .done(function(){
+		connectHelper(hurl);
+	    })
+	    .fail(function(){
+		if( --tries > 0 ){
+		    window.setTimeout(function(){
+			waitForHelper(eurl, hurl, tries);
+		    }, delay);
+		} else {
+		    failedHelper();
+		}
+	    });
+    };
+    // might be establishing a new type
+    if( type ){
+	this.type = type;
+    }
+    // close off previous socket connection, if necessary
+    if( this.socket ){
+	try{this.socket.disconnect();}
+	catch(e){JS9.log("warning: can't disconnect from socket");}
+	this.socket = null;
+    }
+    // base of helper url is either specified, same as current domain, or local
+    if( JS9.globalOpts.helperURL ){
+	if( JS9.globalOpts.helperURL.search(/:\/\//) >=0 ){
+	    this.url = JS9.globalOpts.helperURL;
+	} else {
+	    this.url = JS9.globalOpts.helperProtocol + JS9.globalOpts.helperURL;
+	}
+    } else if( document.domain ){
+	this.url = JS9.globalOpts.helperProtocol + document.domain;
+    } else {
+	this.url = JS9.globalOpts.helperProtocol + "localhost";
+    }
+    // save base of url
+    this.baseurl = this.url;
+    // try to establish connection, based on connection type
+    switch(this.type){
+    case "none":
+        this.connected = null;
+	this.ready = true;
+        // signal that JS9 helper is ready
+        $(document).trigger("JS9:helperReady", {type: "none", status: "OK"});
+        break;
+    case "get":
+    case "post":
+	// sanity check
+	if( !JS9.globalOpts.helperCGI ){
+	    JS9.error("cgi script name missing for helper");
+	}
+	this.url += "/" + JS9.globalOpts.helperCGI;
+	this.connected = true;
+	this.helper = true;
+        if( JS9.DEBUG ){
+	    JS9.log("JS9 helper: connect: " + this.type);
+        }
+	this.ready = true;
+        $(document).trigger("JS9:helperReady", {type: "get", status: "OK"});
+	break;
+    case "sock.io":
+    case "nodejs":
+	if( !JS9.globalOpts.helperPort ){
+	    JS9.error("port missing for helper");
+	}
+	this.url += ":" +  JS9.globalOpts.helperPort;
+	this.sockurl  = this.url + "/socket.io/socket.io.js";
+	// make sure helper is running and then connect
+	if( window.isElectron ){
+	    this.aliveurl = this.url + "/alive";
+	    waitForHelper(this.aliveurl, this.sockurl, tries);
+	} else {
+	    connectHelper(this.sockurl);
+	}
 	break;
     default:
 	JS9.error("unknown helper type: "+this.type);
@@ -14392,9 +14432,7 @@ JS9.initEmscripten = function(){
     }
     // load astroem, based on whether we have native WebAssembly or not
     opts = {responseType: "arraybuffer"};
-    if( JS9.globalOpts.useWasm          &&
-	typeof WebAssembly === 'object' &&
-	location.protocol !== "file:"   ){
+    if( JS9.globalOpts.useWasm && (typeof WebAssembly === "object") ){
 	JS9.globalOpts.astroemURL = JS9.InstallDir("astroemw.wasm");
 	// load astroem wasm file
 	JS9.fetchURL(JS9.globalOpts.astroemURL, null, opts, function(data){
