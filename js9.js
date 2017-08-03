@@ -14432,7 +14432,9 @@ JS9.initEmscripten = function(){
     }
     // load astroem, based on whether we have native WebAssembly or not
     opts = {responseType: "arraybuffer"};
-    if( JS9.globalOpts.useWasm && (typeof WebAssembly === "object") ){
+    if( JS9.globalOpts.useWasm          &&
+	typeof WebAssembly === 'object' &&
+	location.protocol !== "file:"   ){
 	JS9.globalOpts.astroemURL = JS9.InstallDir("astroemw.wasm");
 	// load astroem wasm file
 	JS9.fetchURL(JS9.globalOpts.astroemURL, null, opts, function(data){
@@ -15826,6 +15828,8 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
         // if this page is generated on the server side, hardwire this ...
         // if JS9 is not installed, hardwire this ...
         head = document.getElementsByTagName('head')[0].innerHTML;
+	// remove load of astroem[w].js, so it will be loaded during init
+	head = head.replace(/src=['"]astroemw?\.js['"]/, "");
         // but why doesn't the returned header contain the js9 js file??
 	// umm... it seems to have it, at least FF does as of 8/25/15 ...
 	if( !head.match(/src=["'].*js9\.js/)      &&
