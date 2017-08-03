@@ -60,9 +60,9 @@ if [ x"$DOQUICK" = x1 ]; then
     fi
     # give user a hint about 
     if [ x$ELECTRON_EXE != x -a x"$OS" = xDarwin ]; then
-      printf "\nWhen using Electron.app with JS9, consider codesign'ing it:\n"
+      printf "\nWhen using Electron.app with JS9, you will want to codesign it:\n"
       printf "\nsudo codesign --force --deep --sign - $ELECTRON_EXE/\n"
-      printf "\nThis will avoid repeated requests to allow incoming connections.\n\n"
+      printf "\nThis will avoid the repeated request to allow incoming connections.\n\n"
     fi
 fi
 
