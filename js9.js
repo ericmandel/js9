@@ -3370,6 +3370,7 @@ JS9.Image.prototype.getWCSSys = function(){
 // set the WCS sys for this image
 JS9.Image.prototype.setWCSSys = function(wcssys){
     var s, wu;
+    var doregupdate = true;
     if( wcssys === "image" ){
 	this.params.wcssys = "image";
 	this.params.wcsunits = "pixels";
@@ -3389,7 +3390,13 @@ JS9.Image.prototype.setWCSSys = function(wcssys){
 		wu = this.params.wcsunits;
 	    }
 	    this.setWCSUnits(wu);
+	    // just updated regins, won't need to do it below
+	    doregupdate = false;
 	}
+    }
+    // update regions to reflect change in wcs sys (if not already done)
+    if( doregupdate ){
+	this.updateShapes("regions", "all", "update");
     }
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
@@ -3561,9 +3568,10 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
 	s = JS9.wcsunits(this.raw.wcs, wcsunits);
 	if( s ){
 	    this.params.wcsunits = s.trim();
-	    // this.updateShapes("regions", "all", "update");
 	}
     }
+    // update regions to reflect this change
+    this.updateShapes("regions", "all", "update");
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
 	this.xeqPlugins("image", "onsetwcsunits");
