@@ -9072,7 +9072,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	// backlink to layer name
 	params.layerName = layerName;
 	// save original strokeWidth for zooming
-	params.sw1 = s.strokeWidth;
+	params.sw1 = Math.max(1, Math.floor(s.strokeWidth + 0.5));
 	// initalize
 	params.listonchange = false;
 	// breaks panner, magnifier
