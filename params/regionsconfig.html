@@ -437,22 +437,8 @@
 
 <div class="rlinegroup">
 <span class="col_R1">
-<b>Options:</b>
-</span>
-<span class="col_R2l">
-<input type="checkbox" name="changeable" value="true">Changeable
-</span>
-<span class="col_R3l">
-<input type="checkbox" name="listonchange" value="true" >List on Change
-</span>
-<span class="col_R5l">
-<input type="checkbox" name="remove" value="selected">Remove
-</span>
-</div>
-
 <input name="Apply" type="button" class="button" value="Apply"
 onclick="var form = $(this).closest('form');
-// var arr = form.serializeArray();
 var arr = $(':input:visible', form).serializeArray();
 var im = form.data('im');
 var shape = form.data('shape');
@@ -463,7 +449,16 @@ arr = arr.concat(
   ).get());
 JS9.Regions.processConfigForm.call(im, shape, winid, arr);
 return false;">
-
+</span>
+<span class="col_R2l">
+<input type="checkbox" name="changeable" value="true">Changeable
+</span>
+<span class="col_R3l">
+<input type="checkbox" name="listonchange" value="true" >List on Change
+</span>
+<span class="col_R5l">
+<input type="checkbox" name="remove" value="selected">Remove
+</span>
 <input name="Close" type="button" class="button" value="Close"
 onclick="var form = $(this).closest('form');
 var shape = form.data('shape');
@@ -471,6 +466,10 @@ var winid = form.data('winid');
 shape.params.winid = null;
 winid.close();
 return false;" style="float: right;">
+</div>
+
+<p>
+&nbsp;
 
 </form>
 
