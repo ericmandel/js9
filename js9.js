@@ -250,6 +250,7 @@ JS9.lightOpts = {
 	plotWin:  "width=830px,height=420px,center=1,resize=1,scrolling=1",
 	dpathWin: "width=830px,height=175px,center=1,resize=1,scrolling=1",
 	paramWin: "width=830px,height=230px,center=1,resize=1,scrolling=1",
+	regWin:   "width=750px,height=400px,center=1,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,center=1,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,center=1,resize=1,scrolling=1"
     }
@@ -4275,6 +4276,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	}
 	break;
     case "params":
+    case "regions":
     case "textline":
         if( divid ){
 	    if( JS9.allinone ){
@@ -4290,6 +4292,8 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	} else {
 	    if( type === "params" ){
 		winFormat = winFormat || a.paramWin;
+	    } else if( type === "regions" ){
+		winFormat = winFormat || a.regWin;
 	    } else {
 		winFormat = winFormat || a.dpathWin;
 	    }
@@ -10950,11 +10954,11 @@ JS9.Regions.opts = {
 			}
 		    });
 		if( JS9.allinone ){
-		    target.params.winid = im.displayAnalysis("params",
+		    target.params.winid = im.displayAnalysis("regions",
 			  JS9.allinone.regionsConfigHTML,
 			  {title: "Region Configuration"});
 		} else {
-		    target.params.winid = im.displayAnalysis("params",
+		    target.params.winid = im.displayAnalysis("regions",
 			  JS9.InstallDir(JS9.Regions.opts.configURL),
 			  {title: "Region Configuration"});
 		}
@@ -15161,6 +15165,26 @@ JS9.initKeyboardActions = function(){
     };
 };
 
+// init analysis
+JS9.initAnalysis = function(){
+    // for analysis forms, Enter should not Submit, but allow specification
+    // of the name of an element to click
+    $(document).on("keyup keypress", ".js9AnalysisForm", function(e){
+	var that = $(this);
+	var code = e.which || e.keyCode;
+	var id;
+	if( code === 13 ){
+	    e.preventDefault();
+	    id = $(this).data("enterfunc");
+	    if( id ){
+		that.find("[name='" + id + "']").click();
+	    }
+	    return false;
+	}
+    });
+};
+
+
 // ---------------------------------------------------------------------
 // the init routine to start up JS9
 // ---------------------------------------------------------------------
@@ -15386,14 +15410,8 @@ JS9.init = function(){
     JS9.initColormaps();
     // initialize console commands
     JS9.initCommands();
-    //  for analysis forms, Enter should not Submit
-    $(document).on("keyup keypress", ".js9AnalysisForm", function(e){
-	var code = e.which || e.keyCode;
-	if( code === 13 ){
-	    e.preventDefault();
-	    return false;
-	}
-    });
+    // init analysis
+    JS9.initAnalysis();
     // scroll to top
     $(document).scrollTop(0);
     // signal that JS9 init is complete
