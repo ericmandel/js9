@@ -261,10 +261,18 @@
 <input type="text" class="val text_R" name="dec" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="col_R4">
-<input type="text" class="val text_R" name="wcssys" value="" autocapitalize="off" autocorrect="off"  readonly="readonly">
+<select name="wcssys" class="val" onchange="
+var form = $(this).closest('form');
+var wcs =  $(this).val();
+var im = form.data('im');
+if( im && wcs ){
+  im.setWCSSys(wcs);
+}
+return false;">
+</select>
 </span>
 <span class="col_R5">
-(using this wcs system)
+(coords at current wcs system)
 </span>
 </div>
 

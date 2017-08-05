@@ -11057,7 +11057,7 @@ JS9.Regions.init = function(layerName){
 // initialize the region config form
 // call using image context
 JS9.Regions.initConfigForm = function(obj){
-    var key, val;
+    var i, key, val, el, wcssys;
     var params = obj.params;
     var winid = params.winid;
     var wid = $(winid).attr("id");
@@ -11161,6 +11161,26 @@ JS9.Regions.initConfigForm = function(obj){
 	case "wcsr2":
 	    if( obj.pub.wcssizestr ){
 		val = fmt(obj.pub.wcssizestr[1]);
+	    }
+	    break;
+	case "wcssys":
+	    // add all wcs sys options
+	    el = $(form).find("[name='wcssys']");
+	    if( !el.find('option').length ){
+		for(i=0; i<JS9.wcssyss.length; i++){
+		    wcssys = JS9.wcssyss[i];
+		    if( wcssys === "image" || wcssys === "physical" ){
+			continue;
+		    }
+		    el.append("<option>" + wcssys + "</option>");
+		}
+	    }
+	    if( obj.pub.wcssys ){
+		el.find('option').each(function(index, element){
+		    if( obj.pub.wcssys === element.value ){
+			val = element.value;
+		    }
+		});
 	    }
 	    break;
 	case "wcsunits":
@@ -11376,6 +11396,8 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 		    opts.ra = obj.pub.wcsposstr[0];
 		}
 	    }
+	    break;
+	case "wcssys":
 	    break;
 	case "wcsradius":
 	case "wcslength":
