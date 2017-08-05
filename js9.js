@@ -1373,7 +1373,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     var that = this;
     var i, s, ui, clen, hdu, pars, card, got, rlen, rmvfile, done;
     var header, x1, y1, bin;
-    var oraw, owidth, oheight, obitpix, oltm1_1;
+    var oraw, owidth, oheight, obitpix, oltm1_1, owcssys, owcsunits;
     opts = opts || {};
     if( $.isArray(obj) || JS9.isTypedArray(obj) || obj instanceof ArrayBuffer ){
 	// flatten if necessary
@@ -1408,7 +1408,9 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	oheight = this.raw.height;
 	obitpix = this.raw.bitpix;
 	oltm1_1 = this.raw.header.LTM1_1 || 1;
-	this.freeWCS();
+	owcssys = this.params.wcssys;
+	owcsunits = this.params.wcsunits;
+//	this.freeWCS();
     }
     // initialize raws array?
     rlen = this.raws.length;
@@ -1689,6 +1691,13 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     // init WCS, if possible
     this.initWCS();
+    // reset the wcssys and wcsunits to previous, if necessary
+    if( owcssys ){
+	this.setWCSSys(owcssys);
+    }
+    if( owcsunits ){
+	this.setWCSUnits(owcsunits);
+    }
     // init the logical coordinate system, if possible
     this.initLCS();
     // get hdu info, if possible

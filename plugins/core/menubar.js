@@ -1403,8 +1403,10 @@ JS9.Menubar.init = function(width, height){
 			    // otherwise it's a wcs directive
 			    if( JS9.wcssyss.join("@").search(rexp) >=0 ){
 				uim.setWCSSys(key);
+				uim.updateShapes("regions", "all", "wcs");
 			    } else if( JS9.wcsunitss.join("@").search(rexp)>=0){
 				uim.setWCSUnits(key);
+				uim.updateShapes("regions", "all", "wcs");
 			    } else {
 				JS9.error("unknown wcs sys/units: " + key);
 			    }

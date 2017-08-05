@@ -267,6 +267,7 @@ var wcs =  $(this).val();
 var im = form.data('im');
 if( im && wcs ){
   im.setWCSSys(wcs);
+  im.updateShapes('regions', 'all', 'wcs');
 }
 return false;">
 </select>
