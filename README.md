@@ -16,6 +16,7 @@ What does it do?
   - control JS9 using scripts from the Linux shell or Python
   - runs on Macs, Linux, Windows, iPads, iPhones, ...
   - runs as a Desktop app, in all modern browsers, mobile apps are coming ...
+  - utilizes WebAssembly, if present (FITS processing at near native speed!)
 
 How can I try it out?
 ---------------------
