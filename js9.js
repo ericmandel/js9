@@ -12625,8 +12625,8 @@ JS9.fetchURL = function(name, url, opts, handler) {
     if( !name ){
 	name = /([^\\\/]+)$/.exec(url)[1];
     }
-    // avoid the cache (Safari is especially agressive about caching)
-    if( !url.match(/\?/) ){
+    // avoid the cache (Safari is especially agressive) for FITS files
+    if( !opts.allowCache && !url.match(/\?/) ){
 	url += "?r=" + Math.random();
     }
     // set up connection
@@ -14469,7 +14469,7 @@ JS9.initEmscripten = function(){
 	return;
     }
     // load astroem, based on whether we have native WebAssembly or not
-    opts = {responseType: "arraybuffer"};
+    opts = {responseType: "arraybuffer", allowCache: true};
     if( JS9.globalOpts.useWasm          &&
 	typeof WebAssembly === 'object' &&
 	location.protocol !== "file:"   ){
