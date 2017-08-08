@@ -76,7 +76,7 @@ build the JS9 helper and install JS9 in a web directory:
 
     # start helper
     cd path_to_web_install
-    node js9Helper.js 2>&1 > js9node.log &
+    node js9Helper.js 1>js9node.log 2>&1 &
 
 What about scripting?
 ---------------------

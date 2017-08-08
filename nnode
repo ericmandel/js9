@@ -51,4 +51,4 @@ done
 killp js9Helper.js >& /dev/null
 
 echo "starting node $HELPER $PSTR"
-node $HELPER 2>&1 > $LOG &
+node $HELPER 1>$LOG 2>&1 &
