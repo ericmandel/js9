@@ -123,8 +123,12 @@ static Finfo FinfoNew(char *fname)
 #if FITS2PNG
   int i;
   unsigned char header[8];
+  /* use volatile to make gcc [-Wclobbered] happy (because of setjmp below) */
+  volatile Finfo finfo;	  
+#else
+  Finfo finfo;	  
 #endif
-  Finfo finfo;
+
 
   /* sanity check */
   if( !fname ) return NULL;
