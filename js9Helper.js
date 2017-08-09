@@ -54,7 +54,7 @@ var secureOpts = {
 var globalOpts = {
     helperPort:       2718,
     helperHost:       "0.0.0.0",
-    helperOpts:       {'maxHttpBufferSize': Infinity},
+    helperOpts:       {"maxHttpBufferSize": 10E9},
     cmd:              "js9helper",
     analysisPlugins:  "analysis-plugins",
     analysisWrappers: "analysis-wrappers",
