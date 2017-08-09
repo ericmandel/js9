@@ -16732,7 +16732,12 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 
 // construct directory starting with where JS9 is installed
 JS9.mkPublic("InstallDir", function(dir){
-    return JS9.INSTALLDIR + dir;
+    var regexp = new RegExp("^"+JS9.INSTALLDIR);
+    // but don't add it twice
+    if( JS9.INSTALLDIR && !dir.match(regexp) ){
+	return JS9.INSTALLDIR + dir;
+    }
+    return dir;
 });
 
 // add new display divs and/or new plugins
