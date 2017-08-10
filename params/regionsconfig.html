@@ -81,6 +81,12 @@
     width: 150px;
 }
 
+.text_R {
+    box-sizing:border-box;
+    webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+}
+
 .js9AnalysisForm {
     overflow: hidden;
 }
@@ -261,7 +267,7 @@
 <input type="text" class="val text_R" name="dec" value="" autocapitalize="off" autocorrect="off">
 </span>
 <span class="col_R4">
-<select name="wcssys" class="val" onchange="
+<select name="wcssys" class="val select_R" onchange="
 var form = $(this).closest('form');
 var wcs =  $(this).val();
 var im = form.data('im');
