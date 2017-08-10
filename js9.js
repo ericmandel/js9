@@ -654,7 +654,7 @@ JS9.Image = function(file, params, func){
 	// image or table
 	this.imtab = "image";
 	// downloaded image file, path relative to displayed Web page
-	this.file = file.replace(/\/\.\//, "/");
+	this.file = JS9.cleanPath(file);
 	// take file but discard path (or scheme) up to slashes
 	this.id0 = this.file.split("/").reverse()[0];
 	// save id in case we have to change it for uniqueness
@@ -2875,7 +2875,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		// output is file and possibly parentFile
 		rarr = obj.stdout.split(/\n/);
 		// file
-		f = rarr[0].trim().replace(/\/\.\//, "/");
+		f = JS9.cleanPath(rarr[0]);
 		// relative path: add install dir prefix
 		if( f.charAt(0) !== "/" ){
 		    f = JS9.InstallDir(f);
@@ -2899,7 +2899,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		}
 		// look for parentFile (path relative to helper, not install)
 		if( rarr[2] ){
-		    pf = rarr[2].trim().replace(/\/\.\//, "/");
+		    pf = JS9.cleanPath(rarr[2]);
 		    opts.parentFile = pf;
 		}
 		// hack: use LTM to determine bin/obin, since both will be 1
@@ -3648,10 +3648,10 @@ JS9.Image.prototype.notifyHelper = function(){
 		}
 	    }
 	    if( im && im.fitsFile ){
-		im.fitsFile = im.fitsFile.replace(/\/\.\//g, "/");
+		im.fitsFile = JS9.cleanPath(im.fitsFile);
 	    }
 	    if( im && im.parentFile ){
-		im.parentFile = im.parentFile.replace(/\/\.\//g, "/");
+		im.parentFile = JS9.cleanPath(im.parentFile);
 	    }
 	    // first time through, query the helper for info
 	    if( !that.queried ){
@@ -3993,7 +3993,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		// output is file and possibly parentFile
 		files = robj.stdout.split(/\s+/);
 		// file
-		f = files[0].trim().replace(/\/\.\//, "/");
+		f = JS9.cleanPath(files[0]);
 		// relative path: add install dir prefix
 		if( f.charAt(0) !== "/" ){
 		    f = JS9.InstallDir(f);
@@ -4002,7 +4002,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		xobj = {proxyFile: f};
 		// look for parentFile (path relative to helper, not install)
 		if( files[1] ){
-		    pf = files[1].trim().replace(/\/\.\//, "/");
+		    pf = JS9.cleanPath(files[1]);
 		    xobj.parentFile = pf;
 		}
 		// don't convert this FITS file into another FITS file!
@@ -6064,7 +6064,7 @@ JS9.Image.prototype.uploadFITSFile = function(){
 
 // remove proxy file from a remote server
 JS9.Image.prototype.removeProxyFile = function(s){
-    var reset, file;
+    var t, reset, file, regexp;
     var that = this;
     var func = function(r){
 	if( reset ){
@@ -6081,9 +6081,15 @@ JS9.Image.prototype.removeProxyFile = function(s){
 	reset = s;
     } else if( typeof s === "string" ){
 	// specify file to remove in the working directory
-	// check for attempt to break out of the working dir
-	if( s.match(/^\//) || s.match(/\.\./) ){
-	    JS9.error("attempt to remove file outside working directory");
+	// check for attempt to break out of the working dir using abs path
+	if( s.match(/^\//) ){
+	    return;
+	}
+	// remove possible install dir prefix and then ...
+	// check attempt to break out of the working dir using ".."
+	regexp = new RegExp("^"+JS9.INSTALLDIR);
+	t = s.replace(regexp, "");
+	if( t.match(/\.\./) ){
 	    return;
 	}
 	file = s;
@@ -12889,7 +12895,7 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	JS9.error("unknown FITS representation type: " + xtype);
 	break;
     }
-    xopts.fits = file;
+    xopts.fits = JS9.cleanPath(file);
     xopts.parent = true;
     // start the waiting!
     JS9.waiting(true, display);
@@ -12933,8 +12939,8 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 		// output is file and possibly parentFile
 		rarr = robj.stdout.split(/\n/);
 		// file
-		f = rarr[0].trim().replace(/\/\.\//, "/");
-		if( f === file ){
+		f = JS9.cleanPath(rarr[0]);
+		if( f === xopts.fits ){
 		    // same file (imsection not run)
 		    nopts = $.extend(true, {}, opts);
 		} else {
@@ -12961,7 +12967,7 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 		    }
 		    // look for parentFile (relative to helper, not install)
 		    if( rarr[2] ){
-			pf = rarr[2].trim().replace(/\/\.\//, "/");
+			pf = JS9.cleanPath(rarr[2]);
 			nopts.parentFile = pf;
 			// now add extension info, if possible
 			if( nopts.extname ){
@@ -13829,6 +13835,13 @@ JS9.strtoscaled = function(s){
     return {dval: dval, dtype: dtype};
 };
 
+// clean file path
+JS9.cleanPath = function(s){
+    if( !s ){
+	return "";
+    }
+    return s.trim().replace(/\/\.\//, "/").replace(/^\.\//, "");
+};
 
 // ---------------------------------------------------------------------
 // End of Utilities
@@ -15223,7 +15236,7 @@ JS9.init = function(){
     var uopts;
     // sanity check: need HTML5 canvas and JSON
     if( !window.HTMLCanvasElement || !JSON ){
-	JS9.error("sorry: your browser does not support JS9 (no HTML5 canvas and/or JSON). Try a modern version of Firefox, Chrome, Safari, Opera, or IE.");
+	JS9.error("your browser does not support JS9 (no HTML5 canvas and/or JSON). Please try a modern version of Firefox, Chrome, Safari, Opera, or IE.");
     }
     // get relative location of installed js9.css file
     // which tells us where JS9 installed files (and the helper) are located
@@ -15234,6 +15247,9 @@ JS9.init = function(){
 		.replace(/js9\.css$/, "") || "";
 	} catch(e){
 	    JS9.INSTALLDIR = "";
+	}
+	if( JS9.INSTALLDIR ){
+	    JS9.INSTALLDIR = JS9.cleanPath(JS9.INSTALLDIR);
 	}
 	JS9.TOROOT = JS9.INSTALLDIR.replace(/([^\/.])+/g, "..");
     }
@@ -15783,8 +15799,7 @@ JS9.mkPublic("Load", function(file, opts){
 	JS9.waiting(false);
 	return;
     }
-    // save to get rid of whitespace
-    file = file.trim();
+    file = JS9.cleanPath(file);
     // check file extension
     ext = file.split(".").pop().toLowerCase();
     if( ext === "png" ){
@@ -15975,7 +15990,7 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 	    if( opts.fits2png === undefined ){
 		opts.fits2png = false;
 	    }
-	    f = robj.stdout.trim().replace(/\/\.\//, "/");
+	    f = JS9.cleanPath(robj.stdout);
 	    // proxy file
 	    opts.proxyFile = f;
 	    // relative path: add install dir prefix
@@ -16732,12 +16747,12 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 
 // construct directory starting with where JS9 is installed
 JS9.mkPublic("InstallDir", function(dir){
-    var regexp = new RegExp("^"+JS9.INSTALLDIR);
-    // but don't add it twice
-    if( JS9.INSTALLDIR && !dir.match(regexp) ){
-	return JS9.INSTALLDIR + dir;
+    // sanity check
+    if( !dir ){
+	return "";
     }
-    return dir;
+    // add path to install directory, clean path a little bit
+    return JS9.cleanPath(JS9.INSTALLDIR + dir);
 });
 
 // add new display divs and/or new plugins
