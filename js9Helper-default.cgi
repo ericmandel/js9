@@ -83,6 +83,7 @@ for arg in $ARGS ; do
         saved=$1
 	gsub(/\+/,      " ")
 	gsub(/%09/,     "\t")
+	gsub(/%20/,     " ")
 	gsub(/%21/,     "!")
 	gsub(/%23/,     "#")
 	gsub(/%22/,     "\\\042")
