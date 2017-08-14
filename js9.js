@@ -2453,7 +2453,7 @@ JS9.Image.prototype.putImage = function(opts){
 	    // turn off anti-aliasing
 	    if( !JS9.ANTIALIAS ){
 		octx.imageSmoothingEnabled = false;
-		octx.mozImageSmoothingEnabled = false;
+		// octx.mozImageSmoothingEnabled = false;
 		octx.webkitImageSmoothingEnabled = false;
 		octx.msImageSmoothingEnabled = false;
 	    }
