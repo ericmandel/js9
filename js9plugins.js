@@ -1047,17 +1047,17 @@ module.exports = xhr;
 	           <tr>	<td><b>center:</b></td>								\
 			<td><input type=text name=xcen size=10 style="text-align:right;"></td>		\
 			<td><input type=text name=ycen size=10 style="text-align:right;"></td>    	\
-			<td>&nbsp(file coords of center of section)</td>						\
+			<td>&nbsp(center position of section)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>size:</b></td>								\
 			<td><input type=text name=xdim size=10 style="text-align:right;"></td>		\
 			<td><input type=text name=ydim size=10 style="text-align:right;"></td>		\
-			<td>&nbsp(pixel width, height of section)</td>						\
+			<td>&nbsp(width, height of section)</td>						\
 		   </tr>										\
                    <tr>	<td><b>bin:</b></td>							\
 			<td><input type=text name=bin value=1 size=10 style="text-align:right;"></td>	\
 			<td></td>									\
-			<td>&nbsp(bin factor applied to section)</td>						\
+			<td>&nbsp(apply bin factor to section)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>filter:</b></td>								\
 			<td colspan="2"><input type=text name=filter size="22" style="text-align:left;"></td>	\
@@ -1066,7 +1066,7 @@ module.exports = xhr;
 	           <tr>	<td><b>separate:</b></td>			\
                         <td><input type=checkbox name=separate class="sep-image" style="text-align:left;"></td>	\
 			<td></td>									\
-			<td>&nbsp(display as a separate image?)</td>						\
+			<td>&nbsp(display as separate image?)</td>						\
 		   </tr>										\
 		   <tr>											\
 			<td><input type=button name=rebin value="Run" class="rebin-image"></td>         \
