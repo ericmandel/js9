@@ -299,8 +299,12 @@ When <b>workDir</b> is configured, user sub-directories will be created
 in the <b>workDir</b> directory to contain temporary files. Analysis
 tasks will be started in the work sub-directory.
 <p>
-By default, the work directory is removed when the web page is unloaded,
-but this can be changed by setting <b>rmWorkDir</b> to false.
+For Node.js-base helpers, the work directory is removed when the web
+page is unloaded. This can be changed by setting <b>rmWorkDir</b> to
+false in the preference file. For CGI-based helpers, you must remove
+the work directory manually (e.g. using a cron job that checks for
+time-last-accessed of work directories).
+
 <p>
 Note that the <b>workDirQuota</b> is not a hard quota: JS9 tasks such
 as <b>load proxy</b> enforce their own checks using this value.  For

@@ -1,6 +1,6 @@
 /*
  *
- * JS9: image display right in your browser (December 10, 2012)
+ * JS9: astronomical image display everywhere (December 10, 2012)
  *
  * Principals: Eric Mandel, Alexey Vikhlinin
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
@@ -3587,6 +3587,18 @@ JS9.Image.prototype.notifyHelper = function(){
     var imexp = new RegExp("^"+JS9.ANON+"[0-9]*");
     // notify the helper
     if( JS9.helper.connected && !this.file.match(imexp) ){
+	// get pageid from CGI helper (socket.io does this when connecting)
+	switch(JS9.helper.type){
+	case "get":
+	case "post":
+	    JS9.helper.send("pageid", null, function(s){
+		if( s && s.trim().match(/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/) ){
+		    JS9.helper.pageid = s;
+		}
+	    });
+	break;
+	}
+	// get helper info about this image
 	JS9.helper.send("image", {"image": this.file},
         function(res){
 	    var rstr, r, s, cc, im, regexp;
@@ -7443,6 +7455,9 @@ JS9.Helper.prototype.send = function(key, obj, cb){
     case "get":
     case "post":
 	obj.key = key;
+	if( JS9.helper.pageid ){
+	    obj.pageid = JS9.helper.pageid;
+	}
         if( JS9.DEBUG ){
 	    JS9.log("JS9 cgi helper [%s, %s]: %s",
 		    this.type, JSON.stringify(obj), this.url);

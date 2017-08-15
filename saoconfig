@@ -29,67 +29,39 @@ CF="--config-cache"
 echo "configure for: " $name
 
 case $name in
-  strict)
-  ./configure	$CF					\
-		CC=gcc CFLAGS="$CFLAGS $STRICTFLAGS" $*
-  ;;
-
-  bokhara*)
+  js9*)
+  BASE=/proj/web-js9
   ./configure 	$CF							\
-		--prefix=$HOME						\
-		--with-cfitsio=$HOME					\
-		--with-webdir=/home/mred/public_html/htdocs/js9		\
-		--with-helper=get					\
-		--with-cgidir=/home/mred/public_html/cgi-bin/js9	\
-		--with-cgiurl=./cgi-bin/js9				\
-		--with-cgixpath=/soft/saord/bin				\
-  		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
- 		$*
-  ;;
-
-  smartx*)
-  ./configure 	$CF							\
-		--prefix=/smartx					\
-		--with-webdir=/smartx/www/html/js9			\
-		--with-helper=nodejs					\
-		--with-cfitsio=/smartx/cfitsio				\
-		--with-png=/smartx					\
-  		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
- 		$*
+		--with-helper="nodejs"					\
+		--prefix=$BASE						\
+		--with-webdir=$BASE/www/js9				\
+		--with-cfitsio=$BASE					\
+		--with-png=$BASE					\
+		--with-saodir=$BASE/www					\
+		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
   baba|baba.local|baba-nodejs)
   ./configure 	$CF							\
+		--with-helper="socket.io"				\
 		--prefix=$HOME						\
 		--with-webdir=$HOME/Sites/js9				\
-		--with-helper="socket.io"				\
 		--with-cfitsio=$HOME					\
-		--with-saodir=$HOME/Sites				\
 		--with-png=$HOME					\
-		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
-  ;;
-
- baba-funtools)
-  ./configure 	$CF							\
-		--prefix=$HOME						\
-		--with-webdir=$HOME/Sites/js9				\
-		--with-helper="socket.io"				\
-		--with-funtools=$HOME					\
-		--with-png=/usr/local					\
 		--with-saodir=$HOME/Sites				\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
   baba-cgi)
   ./configure 	$CF							\
+		--with-helper="post"					\
 		--prefix=$HOME						\
 		--with-webdir=$HOME/Sites/js9				\
-		--with-helper=get					\
-		--with-cfitsio=/usr/local				\
-		--with-png=/usr/local					\
+		--with-cfitsio=$HOME					\
+		--with-png=$HOME					\
 		--with-cgidir=$HOME/Sites/cgi-bin			\
-		--with-cgiurl=$HOME/cgi-bin				\
-		--with-cgixpath=/usr/local/bin				\
+		--with-cgiurl='~'$USER'/cgi-bin'			\
+		--with-cgixpath=$HOME/bin				\
 		--with-saodir=$HOME/Sites				\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
@@ -99,23 +71,39 @@ case $name in
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
-  js9*)
-  BASE=/proj/web-js9
+ baba-funtools)
   ./configure 	$CF							\
-		--prefix=$BASE						\
-		--with-cfitsio=$BASE					\
-		--with-png=$BASE					\
-		--with-webdir=$BASE/www/js9				\
-		--with-saodir=$BASE/www					\
-		--with-helper=nodejs					\
+		--with-helper="socket.io"				\
+		--prefix=$HOME						\
+		--with-webdir=$HOME/Sites/js9				\
+		--with-funtools=$HOME					\
+		--with-png=$HOME					\
+		--with-saodir=$HOME/Sites				\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
-  ascpub*)
-  ASCPUB=/proj/web-chandra/htdocs/edu/stop/js9
+  bokhara*)
+  BASE=/home/mred/public_html
   ./configure 	$CF							\
-		--with-webdir=$ASCPUB					\
-		--with-helper=none					\
+		--with-helper="post"					\
+		--prefix=$HOME						\
+		--with-cfitsio=$HOME					\
+		--with-webdir=$BASE/htdocs/js9				\
+		--with-cgidir=$BASE/cgi-bin/js9				\
+		--with-cgiurl=cgi-bin/js9				\
+		--with-cgixpath=/soft/saord/bin				\
+		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
+		$*
+  ;;
+
+  smartx*)
+  BASE=/smartx
+  ./configure 	$CF							\
+		--with-helper="nodejs"					\
+		--prefix=$BASE						\
+		--with-webdir=$BASE/www/html/js9			\
+		--with-cfitsio=$BASE/cfitsio				\
+		--with-png=$BASE					\
   		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
  		$*
   ;;

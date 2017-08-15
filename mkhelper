@@ -153,7 +153,12 @@ if [ x"$CGIURL" = x ]; then
 fi
 
 echo "Editing $IPREFS for CGI ..."
-sed 's#\("helperCGI" *:.*"\)[^"]*\("\)#\1'"$CGIURL"'/js9Helper.cgi\2#;s#\("helperType":.*"\)[^"]*\("\)#\1get\2#' < $IPREFS > $OPREFS && mv $IPREFS{,-orig} && mv $OPREFS $IPREFS
+for file in js9Prefs.json js9prefs.js; do
+  IPREFS=$file
+  OPREFS=nodejs-$file
+  echo "Editing $IPREFS for Node.js helper ..."
+  sed 's#\("helperCGI" *:.*"\)[^"]*\("\)#\1'"$CGIURL"'/js9Helper.cgi\2#;s#\("helperType":.*"\)[^"]*\("\)#\1'$HELPER'\2#' < $IPREFS > $OPREFS && mv $IPREFS{,-orig} && mv $OPREFS $IPREFS
+done
 ;;
 
 esac

@@ -48,6 +48,23 @@ error() {
   exit 1
 }
 
+# go to working directory
+cdworkdir() {
+    if [ -d "$JWORKDIR" ]; then
+	export JS9_WORKDIR="$JWORKDIR"
+	cd "$JS9_WORKDIR" || error "can't go to work dir: $JS9_WORKDIR"
+	if [ x$CGIpageid != x ]; then
+	    echo "$CGIpageid" | egrep '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$' >/dev/null 2>&1
+	    if [ $? != 0 ]; then
+		error "invalid pageid: $CGIpageid"
+	    fi
+	    mkdir -p "$CGIpageid"
+	    cd $CGIpageid || error "can't go to pageid dir: $CGIpageid"
+	    export JS9_WORKDIR="$JS9_WORKDIR"/"$CGIpageid"
+        fi
+    fi
+}
+
 # temporary file
 tmpbase=`basename $0`
 TMPFILE=`mktemp /tmp/${tmpbase}.XXXXXX` || error "Cannot create temp file"
@@ -128,7 +145,7 @@ done
 #   rm -f $TMPFILE
 #   exit 0
 
-# load the set of CGIkey=value
+# load the set of CGIkey=value parameters
 . $TMPFILE
 rm -f $TMPFILE
 
@@ -146,6 +163,13 @@ fi
 case $CGIkey in
     image)
 	js9helper -i "$CGIimage"
+	;;
+
+    pageid)
+	hash uuidgen 1>/dev/null 2>&1
+	if [ $? = 0 ]; then
+	    uuidgen
+	fi
 	;;
 
     getAnalysis)
@@ -172,11 +196,8 @@ case $CGIkey in
 
     runAnalysis)
 	if [ -d "$JWRAPPERS" ]; then
-	    # cd to the work directory, if necessary
-	    if [ -d "$JWORKDIR" ]; then
-		export JS9_WORKDIR="$JWORKDIR"
-		cd "$JS9_WORKDIR" || error "can't find work dir: $JS9_WORKDIR"
-	    fi
+	    # go to work directory, if it exists
+	    cdworkdir
 	    OFS="$IFS"
 	    IFS=" "
 	    set -- $CGIcmd
@@ -209,9 +230,9 @@ case $CGIkey in
 	    if [ x"$JLOADPROXY" != xtrue ]; then
 		error "loadProxy not enabled on this host"
 	    fi
+	    # go to the mandatory work directory
 	    if [ -d "$JWORKDIR" ]; then
-		export JS9_WORKDIR="$JWORKDIR"
-		cd "$JS9_WORKDIR" || error "can't find work dir: $JS9_WORKDIR"
+	        cdworkdir
 	    else
 		error "requires configuration of temp work directory"
 	    fi
