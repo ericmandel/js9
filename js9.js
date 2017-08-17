@@ -9141,6 +9141,11 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
     }
     // no id means "all"
     id = id || "all";
+    // if id is a positive int in string format, convert it to it now
+    // so we can process it as a region id coming from the command line
+    if( (typeof id === "string") && /^[1-9]\d*$/.test(id) ){
+	id = parseInt(id, 10);
+    }
     // convenience variable(s)
     canvas = this.layers[layerName].canvas;
     // see if we have an active group
