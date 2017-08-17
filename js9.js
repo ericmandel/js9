@@ -9209,8 +9209,8 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
             olen = objects.length;
 	    while( olen-- ){
 		obj = objects[olen];
-		ocolor = obj.stroke.toLowerCase();
 		if( obj.params ){
+		    ocolor = obj.stroke.toLowerCase();
 		    if( group && group.contains(obj) ){
 			ginfo.group = group;
 		    } else {
