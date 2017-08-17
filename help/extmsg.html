@@ -137,8 +137,14 @@ In addition to the commands above, you also can execute calls from the
 <pre>
   # add a red circle region
   sh> js9 AddRegions circle '{"color":"red", "tags": "foo"}'
-  # change color of all selected regions to green and change the tags too
-  sh> js9 ChangeRegions selected '{"color":"green", "tags": "goo"}'
+  # change color of all regions to violet and change the tags too
+  sh> js9 ChangeRegions all '{"color":"violet","tags":"goo"}'
+  # change color of selected regions to violet and change the tags too
+  sh> js9 ChangeRegions selected '{"color":"violet","tags":"goo"}'
+  # change color of red regions to violet
+  sh> js9 ChangeRegions red '{"color":"violet"}'
+  # change color of regions with "source" tag to violet
+  sh> js9 ChangeRegions source '{"color":"violet"}'
   # get colormap
   sh> js9 GetColormap
   {"colormap":"grey","contrast":"3","bias":"0.8"}
