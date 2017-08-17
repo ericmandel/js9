@@ -135,20 +135,20 @@ These are the same commands that are available to the JS9 light-weight
 In addition to the commands above, you also can execute calls from the
 <a href="publicapi.html">JS9 Public API</a>:
 <pre>
-  # add a red circle
-  js9 AddRegions circle '{"color":"red", "tags": "foo"}'
-  # change color of all selected regions to green and change the tags
-  js9 ChangeRegions selected '{"color":"green", "tags": "goo"}'
+  # add a red circle region
+  sh> js9 AddRegions circle '{"color":"red", "tags": "foo"}'
+  # change color of all selected regions to green and change the tags too
+  sh> js9 ChangeRegions selected '{"color":"green", "tags": "goo"}'
   # get colormap
-  js9 GetColormap
+  sh> js9 GetColormap
   {"colormap":"grey","contrast":"3","bias":"0.8"}
   # set colormap
-  js9 SetColormap viridis 1 0.5
+  sh> js9 SetColormap viridis 1 0.5
   # get scale parameters
-  js9 GetScale 
+  sh> js9 GetScale 
   {"scale":"log","scalemin":0,"scalemax":51}
   # set scale
-  js9 SetScale linear
+  sh> js9 SetScale linear
 </pre>
 Note that the opts object is passed as a JSON string, and returned objects
 are also in JSON format.
