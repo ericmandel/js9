@@ -31,97 +31,91 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 130px;
-}
-
-.col_R1a {
-    position: absolute;
-    top: 0;
-    left: 66px;
+    width: 80px;
 }
 
 .col_R2 {
     position: absolute;
     top: 0;
-    left: 146px;
-    width: 80px;
+    left:  80px;
+    width: 100px;
 }
 
 .col_R2L {
     position: absolute;
     top: 0;
-    left: 146px;
-    width: 250px;
+    left:  80px;
+    width: 320px;
 }
 
 .col_R2LL {
     position: absolute;
     top: 0;
-    left: 146px;
-    width: 460px;
+    left:  80px;
+    width: 320px;
 }
 
 .col_R3 {
     position: absolute;
     top: 0;
-    left: 230px;
-    width: 80px;
+    left:  190px;
+    width: 100px;
 }
 
 .col_R4 {
     position: absolute;
     top: 0;
-    left: 315px;
-    width: 80px;
+    left:  300px;
+    width: 100px;
 }
 
 .col_R4L {
     position: absolute;
     top: 0;
-    left: 315px;
+    left:  300px;
     width: 300px;
 }
 
 .col_R5 {
     position: absolute;
     top: 0;
-    left: 400px;
-    width: 80px;
+    left:  410px;
+    width: 100px;
 }
 
 .col_R5L {
     position: absolute;
     top: 0;
-    left: 400px;
+    left:  410px;
     width: 300px;
 }
 
 .col_R6 {
     position: absolute;
     top: 0;
-    left: 485px;
-    width: 80px;
+    left:  520px;
+    width: 50px;
 }
 
 .col_R2l {
     position: absolute;
     top: 0;
-    left: 145px;
-    width: 150px;
+    left:  80px;
+    width: 100px;
 }
 
 .col_R3l {
     position: absolute;
     top: 0;
-    left: 260px;
-    width: 150px;
+    left:  190px;
+    width: 100px;
 }
 
-.col_R5l {
+.col_R4l {
     position: absolute;
     top: 0;
-    left: 400px;
-    width: 150px;
+    left:  300px;
+    width: 120px;
 }
 
 .text_R0 {
@@ -156,24 +150,14 @@
 
 <div class="rlinegroup">
 <span class="col_R col_R1">
-Show <input type="text" class="val text_R0" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off">:
+Reg&nbsp;<input type="text" class="val text_R0" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off">:
 </span>
-<span class="col_R col_R1a">
-<select name="wcssys" class="val select_R" onchange="
-var form = $(this).closest('form');
-var wcs =  $(this).val();
-var im = form.data('im');
-if( im && wcs ){
-  im.setWCSSys(wcs);
-  im.updateShapes('regions', 'all', 'wcs');
-}
-return false;">
-</select>
-</span>
+
 <span class="col_R col_R2LL">
 <input type="text" class="val text_R" name="regstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
 </span>
 
+<span class="col_R col_R5">
 <input name="copy" type="button" class="button" value="Copy Position"
 onclick="var form = $(this).closest('form');
 var im = form.data('im');
@@ -199,7 +183,22 @@ if( im ){
     JS9.CopyToClipboard(s);
   }
 }
-return false;" style="float: right;">
+return false;">
+</span>
+
+<span class="col_R col_R6">
+<select name="wcssys" class="val select_R" onchange="
+var form = $(this).closest('form');
+var wcs =  $(this).val();
+var im = form.data('im');
+if( im && wcs ){
+  im.setWCSSys(wcs);
+  im.updateShapes('regions', 'all', 'wcs');
+}
+return false;">
+</select>
+</span>
+
 </div>
 
 
@@ -289,9 +288,6 @@ Style:
 <span class="col_R col_R4">
 <input type="text" class="val text_R" name="strokeDashes" value="" autocapitalize="off" autocorrect="off">
 </span>
-<span class="col_R col_R5L">
-name or #rrggbb; width; dash pattern (e.g. 3 1)
-</span>
 </div>
 
 <div class="nodisplay text">
@@ -301,9 +297,6 @@ Text:
 </span>
 <span class="col_R col_R2L">
 <input type="text" class="val text_R" name="text" value="" autocapitalize="off" autocorrect="off">
-</span>
-<span class="col_R col_R5L">
-text associated with a parent region
 </span>
 </div>
 
@@ -335,9 +328,6 @@ Text:
 <span class="col_R col_R2L">
 <input type="text" class="val text_R" name="childtext" value="" autocapitalize="off" autocorrect="off">
 </span>
-<span class="col_R col_R5L">
-text will be accessible in a child region
-</span>
 </div>
 </div>
 
@@ -348,9 +338,6 @@ Tags:
 <span class="col_R col_R2L">
 <input type="text" class="val text_R" name="tags" value="" autocapitalize="off" autocorrect="off">
 </span>
-<span class="col_R col_R5L">
-comma-separated list of tags
-</span>
 </div>
 
 <div class="rlinegroup">
@@ -359,9 +346,6 @@ Misc:
 </span>
 <span class="col_R col_R2L">
 <input type="text" class="val text_R" name="misc" value="" autocapitalize="off" autocorrect="off">
-</span>
-<span class="col_R col_R5L">
-misc <a href="http://fabricjs.com/">fabric.js</a> properties, in JSON format
 </span>
 </div>
 
@@ -381,21 +365,23 @@ JS9.Regions.processConfigForm.call(im, shape, winid, arr);
 return false;">
 </span>
 <span class="col_R col_R2l">
-<input type="checkbox" name="changeable" value="true">Changeable
-</span>
-<span class="col_R col_R3l">
-<input type="checkbox" name="listonchange" value="true" >List on Change
-</span>
-<span class="col_R col_R5l">
 <input type="checkbox" name="remove" value="selected">Remove
 </span>
+<span class="col_R col_R3l">
+<input type="checkbox" name="changeable" value="true">Changeable
+</span>
+<span class="col_R col_R4l">
+<input type="checkbox" name="listonchange" value="true" >List on Change
+</span>
+<span class="col_R col_R6">
 <input name="Close" type="button" class="button" value="Close"
 onclick="var form = $(this).closest('form');
 var shape = form.data('shape');
 var winid = form.data('winid');
 shape.params.winid = null;
 winid.close();
-return false;" style="float: right;">
+return false;">
+</span>
 </div>
 
 </form>
