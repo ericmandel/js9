@@ -135,6 +135,7 @@ JS9.globalOpts = {
     resize: true,		// allow resize of display?
     resizeHandle: true,		// add resize handle to display?
     resizeRedisplay: true,	// redisplay image while resizing?
+    regionConfigSize: "medium", // "small", "medium"
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     keyboardActions: {
@@ -250,7 +251,8 @@ JS9.lightOpts = {
 	plotWin:  "width=830px,height=420px,center=1,resize=1,scrolling=1",
 	dpathWin: "width=830px,height=175px,center=1,resize=1,scrolling=1",
 	paramWin: "width=830px,height=230px,center=1,resize=1,scrolling=1",
-	regWin:   "width=750px,height=382px,center=1,resize=1,scrolling=1",
+	regWin0:  "width=750px,height=75px,center=1,resize=1,scrolling=1",
+	regWin:   "width=750px,height=240px,center=1,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,center=1,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,center=1,resize=1,scrolling=1"
     }
@@ -4315,7 +4317,11 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    if( type === "params" ){
 		winFormat = winFormat || a.paramWin;
 	    } else if( type === "regions" ){
-		winFormat = winFormat || a.regWin;
+		if( JS9.globalOpts.regionConfigSize === "small" ){
+		    winFormat = winFormat || a.regWin0;
+		} else {
+		    winFormat = winFormat || a.regWin;
+		}
 	    } else {
 		winFormat = winFormat || a.dpathWin;
 	    }
@@ -11089,6 +11095,7 @@ JS9.Regions.init = function(layerName){
 // initialize the region config form
 // call using image context
 JS9.Regions.initConfigForm = function(obj){
+    var that = this;
     var i, key, val, el, wcssys;
     var params = obj.params;
     var winid = params.winid;
@@ -11180,19 +11187,82 @@ JS9.Regions.initConfigForm = function(obj){
 		val = "";
 	    }
 	    break;
-	case "wcsradius":
-	case "wcsoradius":
-	case "wcslength":
-	case "wcswidth":
-	case "wcsr1":
-	    if( obj.pub.wcssizestr ){
-		val = fmt(obj.pub.wcssizestr[0]);
+	case "regstr":
+	    if( that.params.wcssys === "image"    ||
+		that.params.wcssys === "physical" ||
+		!obj.pub.wcsstr                    ){
+		val = obj.pub.imsys + "; " + obj.pub.imstr;
+	    } else {
+		val = obj.pub.wcssys + "; " + obj.pub.wcsstr;
 	    }
 	    break;
-	case "wcsheight":
-	case "wcsr2":
-	    if( obj.pub.wcssizestr ){
-		val = fmt(obj.pub.wcssizestr[1]);
+	case "xpos":
+	    switch(that.params.wcssys){
+	    case 'image':
+		val = sprintf('%.1f', obj.pub.x);
+		break;
+	    case 'physical':
+		if( obj.pub.lcs ){
+		    val = sprintf('%.1f', obj.pub.lcs.x);
+		} else {
+		    val = sprintf('%.1f', obj.pub.x);
+		}
+		break;
+	    default:
+		val = sprintf('%.6f', obj.pub.ra);
+		break;
+	    }
+	    break;
+	case "ypos":
+	    switch(that.params.wcssys){
+	    case 'image':
+		val = sprintf('%.1f', obj.pub.y);
+		break;
+	    case 'physical':
+		if( obj.pub.lcs ){
+		    val = sprintf('%.1f', obj.pub.lcs.y);
+		} else {
+		    val = sprintf('%.1f', obj.pub.y);
+		}
+		break;
+	    default:
+		val = sprintf('%.6f', obj.pub.dec);
+		break;
+	    }
+	    break;
+	case "radius":
+	case "oradius":
+	case "length":
+	case "width":
+	case "r1":
+	    switch(that.params.wcssys){
+	    case 'image':
+	    case 'physical':
+		if( obj.pub[key] !== undefined ){
+		    val = fmt(obj.pub[key]);
+		}
+		break;
+	    default:
+		if( obj.pub.wcssizestr ){
+		    val = fmt(obj.pub.wcssizestr[0]);
+		}
+		break;
+	    }
+	    break;
+	case "height":
+	case "r2":
+	    switch(that.params.wcssys){
+	    case 'image':
+	    case 'physical':
+		if( obj.pub[key] !== undefined ){
+		    val = fmt(obj.pub[key]);
+		}
+		break;
+	    default:
+		if( obj.pub.wcssizestr ){
+		    val = fmt(obj.pub.wcssizestr[1]);
+		}
+		break;
 	    }
 	    break;
 	case "wcssys":
@@ -11201,19 +11271,14 @@ JS9.Regions.initConfigForm = function(obj){
 	    if( !el.find('option').length ){
 		for(i=0; i<JS9.wcssyss.length; i++){
 		    wcssys = JS9.wcssyss[i];
-		    if( wcssys === "image" || wcssys === "physical" ){
-			continue;
-		    }
 		    el.append("<option>" + wcssys + "</option>");
 		}
 	    }
-	    if( obj.pub.wcssys ){
-		el.find('option').each(function(index, element){
-		    if( obj.pub.wcssys === element.value ){
-			val = element.value;
-		    }
-		});
-	    }
+	    el.find('option').each(function(index, element){
+		if( that.params.wcssys === element.value ){
+		    val = element.value;
+		}
+	    });
 	    break;
 	case "wcsunits":
 	    if( obj.pub.wcsunits ){
@@ -11224,6 +11289,9 @@ JS9.Regions.initConfigForm = function(obj){
 	    if( obj.params.children.length > 0 ){
 		val = obj.params.children[0].obj.text;
 	    }
+	    break;
+	case "id":
+	    val = obj.pub.id;
 	    break;
 	default:
 	    if( obj.pub[key] !== undefined ){
@@ -11236,6 +11304,8 @@ JS9.Regions.initConfigForm = function(obj){
     // wcs display
     if( obj.pub.wcsstr ){
 	$(form + ".wcs").removeClass("nodisplay");
+    } else {
+	$(form + ".image").removeClass("nodisplay");
     }
     // child text display for shapes, editable if no existing children yet
     if( obj.type !== "text" ){
@@ -11272,8 +11342,10 @@ JS9.Regions.initConfigForm = function(obj){
     switch(obj.pub.shape){
     case "box":
     case "ellipse":
-    case "text":
 	$(form + ".angle").removeClass("nodisplay");
+	break;
+    case "text":
+	$(form + ".textangle").removeClass("nodisplay");
 	break;
     }
     // save the image for later processing
@@ -11329,6 +11401,18 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 	if( (key === "angle") ){
 	    return obj.angle !== -parseFloat(val);
 	}
+	if( (key === "ix") ){
+	    return fmtcheck(obj.pub.x, JS9.saostrtod(val));
+	}
+	if( (key === "iy") ){
+	    return fmtcheck(obj.pub.y, JS9.saostrtod(val));
+	}
+	if( (key === "px") ){
+	    return fmtcheck(obj.pub.lcs.x, JS9.saostrtod(val));
+	}
+	if( (key === "py") ){
+	    return fmtcheck(obj.pub.lcs.y, JS9.saostrtod(val));
+	}
 	if( (key === "ra") ){
 	    return fmtcheck(JS9.saostrtod(obj.pub.wcsposstr[0]),
 			    JS9.saostrtod(val));
@@ -11370,6 +11454,24 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
     for(i=0; i<alen; i++){
 	key = arr[i].name;
 	val = arr[i].value;
+	// pos keys have to be converted to correct type of position
+	if( key === "xpos" || key === "ypos" ){
+	    switch(this.params.wcssys){
+	    case 'image':
+		key = "i" + key.charAt(0);
+		break;
+	    case 'physical':
+		key = "p" + key.charAt(0);
+		break;
+	    default:
+		if( key === "xpos" ){
+		    key = "ra";
+		} else {
+		    key = "dec";
+		}
+		break;
+	    }
+	}
 	switch(key){
 	case "text":
 	    if( obj.type === "text" ){
@@ -11397,7 +11499,23 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 		}
 	    }
 	    break;
-	case "x":
+	case "ix":
+	    if( newval(obj, key, val) ){
+		opts.x = getval(val);
+		if( opts.y === undefined ){
+		    opts.y = obj.pub.y;
+		}
+	    }
+	    break;
+	case "iy":
+	    if( newval(obj, key, val) ){
+		opts.y = getval(val);
+		if( opts.x === undefined ){
+		    opts.x = obj.pub.x;
+		}
+	    }
+	    break;
+	case "px":
 	    if( newval(obj, key, val) ){
 		opts.px = getval(val);
 		if( opts.py === undefined ){
@@ -11405,7 +11523,7 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 		}
 	    }
 	    break;
-	case "y":
+	case "py":
 	    if( newval(obj, key, val) ){
 		opts.py = getval(val);
 		if( opts.px === undefined ){
@@ -11431,32 +11549,52 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 	    break;
 	case "wcssys":
 	    break;
-	case "wcsradius":
-	case "wcslength":
-	case "wcswidth":
-	case "wcsr1":
-	    nval = JS9.strtoscaled(val);
-	    if( nval.dtype === "." ){
-		val = nval.dval;
-	    } else {
-		val = Math.abs(nval.dval / wcsinfo.cdelt1);
-	    }
-	    nkey = key.replace("wcs", "");
-	    if( newval(obj, nkey, val) ){
-		opts[nkey] = getval(val);
+	case "radius":
+	case "length":
+	case "width":
+	case "r1":
+	    switch(this.params.wcssys){
+	    case 'image':
+	    case 'physical':
+		if( newval(obj, key, val) ){
+		    opts[key] = getval(val);
+		}
+		break;
+	    default:
+		nval = JS9.strtoscaled(val);
+		if( nval.dtype === "." ){
+		    val = nval.dval;
+		} else {
+		    val = Math.abs(nval.dval / wcsinfo.cdelt1);
+		}
+		nkey = key.replace("wcs", "");
+		if( newval(obj, nkey, val) ){
+		    opts[nkey] = getval(val);
+		}
+		break;
 	    }
 	    break;
-	case "wcsheight":
-	case "wcsr2":
-	    nval = JS9.strtoscaled(val);
-	    if( nval.dtype === "." ){
-		val = nval.dval;
-	    } else {
-		val = Math.abs(nval.dval / wcsinfo.cdelt2);
-	    }
-	    nkey = key.replace("wcs", "");
-	    if( newval(obj, nkey, val) ){
-		opts[nkey] = getval(val);
+	case "height":
+	case "r2":
+	    switch(this.params.wcssys){
+	    case 'image':
+	    case 'physical':
+		if( newval(obj, key, val) ){
+		    opts[key] = getval(val);
+		}
+		break;
+	    default:
+		nval = JS9.strtoscaled(val);
+		if( nval.dtype === "." ){
+		    val = nval.dval;
+		} else {
+		    val = Math.abs(nval.dval / wcsinfo.cdelt2);
+		}
+		nkey = key.replace("wcs", "");
+		if( newval(obj, nkey, val) ){
+		    opts[nkey] = getval(val);
+		}
+		break;
 	    }
 	    break;
 	case "misc":

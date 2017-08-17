@@ -309,6 +309,10 @@ JS9.Prefs.displaysSchema = {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
 	},
+	"regionConfigSize": {
+	    "type": "string",
+	    "helper": "size of region dialog: small, medium"
+	},
 	"fits2fits": {
 	    "type": "string",
 	    "helper": "make rep file?: true,false,size>N"
@@ -392,6 +396,7 @@ JS9.Prefs.init = function(){
 			   touchActions: JS9.globalOpts.touchActions,
 			   keyboardActions: JS9.globalOpts.keyboardActions,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
+			   regionConfigSize: JS9.globalOpts.regionConfigSize,
 			   infoBox: JS9.globalOpts.infoBox};
 	    break;
 	default:
