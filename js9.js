@@ -8921,10 +8921,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     myopts = myopts || {};
     if( typeof myopts === "string" ){
 	try{ myopts = JSON.parse(myopts); }
-	catch(e){
-	    JS9.error("can't parse shape opts: " + myopts, e);
-	    return null;
-	}
+	catch(e){ JS9.error("can't parse shape opts: " + myopts, e); }
     }
     // delay adding the region, if this image is not the one being displayed
     if( this.display.image !== this ){
@@ -9615,6 +9612,11 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     // sanity check
     if( !opts ){
 	return;
+    }
+    // allow opts to be a JSON string
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse shape opts: " + opts, e); }
     }
     canvas = layer.canvas;
     // is image zoom part of scale?

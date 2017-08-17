@@ -57,21 +57,11 @@ command to the browser and return the results:
   sh> js9 cmap             # return the current colormap
   heat
 </pre>
-<p>
-Alternatively, if no command-line arguments are specified, js9 will
-enter a "read-line" loop, executing commands as they are input:
-<pre>
-  sh> js9 
-  JS9> cmap heat
-  OK
-  JS9> cmap
-  heat
-</pre>
 
 <p>
-When no arguments are supplied, js9 will read stdin. You can send
-multiple commands to the script's standard input (comments and blank
-lines are ignored):
+If the "-" or "--pipe" argument is supplied, js9 will read commands from
+stdin. You can send multiple commands to the script's standard input
+(comments and blank lines are ignored):
 <pre>
   sh> cat test.cmds
   # colormap
@@ -81,7 +71,7 @@ lines are ignored):
   # regions using image coords
   region circle {"x":588, "y":590, "radius":30, "tags":"source"}
   region circle {"x":390, "y":430, "radius":50, "tags":"background"}
-  sh> cat test.cmds | js9
+  sh> cat test.cmds | js9 -
 </pre>
 <p>
 Note that DS9/Funtools region syntax can also be used for regions:
@@ -93,10 +83,10 @@ Note that DS9/Funtools region syntax can also be used for regions:
   region box(23:23:35.236,+58:50:00.95,39.352",20.1679",24.0163)
   region ellipse(23:23:33.323,+58:47:41.50,29.6394",11.0139",25.7599)
   region polygon(23:23:19.379,+58:49:30.02,23:23:17.270,+58:49:40.93,23:23:14.834,+58:49:38.59,23:23:17.974,+58:49:13.64) {"tags": "background"}
-  sh> cat test2.cmds | js9
+  sh> cat test2.cmds | js9 -
 </pre>
 <p>
-Finally, the <b>-</b> (or <b>--pipe</b>) switch allows you to specify a
+Finally, the <b>-</b> (or <b>--pipe</b>) switch also allows you to specify a
 string on the JS9 command line that will prefix all lines read from
 stdin. This allows you to send a regions file to JS9:
 <pre>
@@ -140,6 +130,28 @@ A list of available JS9 commands can be retrieved using the ''help' command:
 </pre>
 These are the same commands that are available to the JS9 light-weight 
 <b>Console</b> window.
+
+<p>
+In addition to the commands above, you also can execute calls from the
+<a href="publicapi.html">JS9 Public API</a>:
+<pre>
+  # add a red circle
+  js9 AddRegions circle '{"color":"red", "tags": "foo"}'
+  # change color of all selected regions to green and change the tags
+  js9 ChangeRegions selected '{"color":"green", "tags": "goo"}'
+  # get colormap
+  js9 GetColormap
+  {"colormap":"grey","contrast":"3","bias":"0.8"}
+  # set colormap
+  js9 SetColormap viridis 1 0.5
+  # get scale parameters
+  js9 GetScale 
+  {"scale":"log","scalemin":0,"scalemax":51}
+  # set scale
+  js9 SetScale linear
+</pre>
+Note that the opts object is passed as a JSON string, and returned objects
+are also in JSON format.
 
 <p>
 The <b>js9 script</b> can talk to a JS9 instance if the script is run from:
@@ -265,7 +277,7 @@ Mac OSX Safari occasionally experiences delayed data transfers when
 the js9 messaging script is located in a different Space (desktop)
 from the browser window, so keep these in the same Space.
 
-<h5>Last updated: November 20, 2016</h5>
+<h5>Last updated: August 16, 2017</h5>
 </div>
 
 </body>

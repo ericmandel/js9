@@ -132,6 +132,11 @@ JS9Msg.prototype.reset = function() {
 JS9Msg.prototype.setArgs = function(args) {
     this.cmd = args[0];
     this.args = args.slice(1) || [];
+    if( this.args.length ){
+	// js9 script quoted the strings (to deal with pathnames with spaces),
+	// all of which can now be removed
+	this.args = this.args.map(function(x){return x.replace(/\\/g,"");});
+    }
 };
 
 // waitSend: wait a bit, send message, display results (and maybe exit)
