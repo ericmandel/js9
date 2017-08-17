@@ -9133,7 +9133,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 // select a one of more shapes by id or tag and execute a callback
 // call using image context
 JS9.Fabric.selectShapes = function(layerName, id, cb){
-    var i, group, ginfo, sobj, canvas, objects, olen, obj;
+    var i, group, ginfo, sobj, canvas, objects, olen, obj, ocolor;
     var that = this;
     // sanity check
     if( !this.layers || !layerName || !this.layers[layerName] ){
@@ -9209,6 +9209,7 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
             olen = objects.length;
 	    while( olen-- ){
 		obj = objects[olen];
+		ocolor = obj.stroke.toLowerCase();
 		if( obj.params ){
 		    if( group && group.contains(obj) ){
 			ginfo.group = group;
@@ -9218,7 +9219,8 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 		    if( id === "all" ){
 			// all
 			cb.call(that, obj, ginfo);
-		    } else if( JS9.colorToHex(id) === obj.stroke.toLowerCase()){
+		    } else if( (id.toLowerCase() === ocolor) ||
+			       (JS9.colorToHex(id).toLowerCase() === ocolor) ){
 			// color
 			cb.call(that, obj, ginfo);
 		    } else if( id === obj.params.shape ){
@@ -13829,7 +13831,7 @@ JS9.colorToHex = function(colour){
     "yellow":"#ffff00","yellowgreen":"#9acd32"};
     var c;
     if( !colour ){
-	return;
+	return "";
     }
     c = colour.toLowerCase();
     if( typeof colours[c] !== 'undefined' ){
