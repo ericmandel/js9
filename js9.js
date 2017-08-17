@@ -11354,6 +11354,27 @@ JS9.Regions.initConfigForm = function(obj){
     $(form).data("shape", obj);
     // save the window id for later processing
     $(form).data("winid", winid);
+    // add tooltip callbacks
+    $(".col_R").on("mouseover", function() {
+	var html, nhtml;
+	var tooltip = $(this).find("input").attr("data-tooltip");
+	var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
+	if( tooltip && el.length ){
+	    html = $(el).html();
+	    nhtml = html.replace(/^[^\<]+/,
+				 "Region Configuration" + ": " + tooltip);
+	    $(el).html(nhtml);
+	}
+    });
+    $(".col_R").on("mouseout", function() {
+	var html, nhtml;
+	var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
+	if( el.length ){
+	    html = $(el).html();
+	    nhtml = html.replace(/^[^\<]+/, "Region Configuration");
+	    $(el).html(nhtml);
+	}
+    });
 };
 
 // process the config form to change the specified shape

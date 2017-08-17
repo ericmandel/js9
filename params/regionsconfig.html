@@ -150,11 +150,11 @@
 
 <div class="rlinegroup">
 <span class="col_R col_R1">
-Reg&nbsp;<input type="text" class="val text_R0" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off">:
+Reg&nbsp;<input type="text" class="val text_R0" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off"  data-tooltip="region id can be used in selection">:
 </span>
 
 <span class="col_R col_R2LL">
-<input type="text" class="val text_R" name="regstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="regstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off" data-tooltip="region in current coordinate system">
 </span>
 
 <span class="col_R col_R5">
@@ -201,74 +201,57 @@ return false;">
 
 </div>
 
-
 <div class="nodisplay wcs">
 <div class="rlinegroup">
 <span class="col_R col_R1">
 Edit:
 </span>
-<!--
-<span class="col_R col_R1a">
-<select name="lwcssys" class="val select_R" onchange="
-var form = $(this).closest('form');
-var wcs =  $(this).val();
-var im = form.data('im');
-if( im && wcs ){
-  reg = im.getShapes('regions' , 'selected')[0]
-  if( reg ){
-      console.log('change pos from %s to %s', reg.wcssys, wcs);
-  }
-}
-return false;">
-</select>
-</span>
--->
 <span class="col_R col_R2">
-<input type="text" class="val text_R" name="xpos" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="xpos" value="" autocapitalize="off" autocorrect="off" data-tooltip="x position in current coordinate system">
 </span>
 <span class="col_R col_R3">
-<input type="text" class="val text_R" name="ypos" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="ypos" value="" autocapitalize="off" autocorrect="off"  data-tooltip="y position in current coordinate system">
 </span>
 
 <div class="nodisplay annulus">
 <span class="col_R col_R4">
-<input type="text" class="val text_R" name="oradius" value="" autocapitalize="off" autocorrect="off" readonly="readonly">
+<input type="text" class="val text_R" name="oradius" value="" autocapitalize="off" autocorrect="off" readonly="readonly" data-tooltip="outer radius of annulus">
 </span>
 </div>
 
 <div class="nodisplay box">
 <span class="col_R col_R4">
-<input type="text" class="val text_R" name="width" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="width" value="" autocapitalize="off" autocorrect="off" data-tooltip="width in current coordinate system units">
 </span>
 <span class="col_R col_R5">
-<input type="text" class="val text_R" name="height" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="height" value="" autocapitalize="off" autocorrect="off" data-tooltip="height in current coordinate system units">
 </span>
 </div>
 
 <div class="nodisplay circle">
 <span class="col_R col_R4">
-<input type="text" class="val text_R" name="radius" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="radius" value="" autocapitalize="off" autocorrect="off" data-tooltip="radius in current coordinate system units">
 </span>
 </div>
 
 <div class="nodisplay ellipse">
 <span class="col_R col_R4">
-<input type="text" class="val text_R" name="r1" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="r1" value="" autocapitalize="off" autocorrect="off" data-tooltip="r1 in current coordinate system units">
 </span>
 <span class="col_R col_R5">
-<input type="text" class="val text_R" name="r2" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="r2" value="" autocapitalize="off" autocorrect="off" data-tooltip="r2 in current coordinate system units">
 </span>
 </div>
 
 <div class="nodisplay angle">
-<span class="col_R6">
-<input type="text" class="val text_R" name="angle" value="" autocapitalize="off" autocorrect="off">
+<span class="col_R col_R6">
+<input type="text" class="val text_R" name="angle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle in degrees">
 </span>
 </div>
 
 <div class="nodisplay textangle">
-<span class="col_R4">
-<input type="text" class="val text_R" name="angle" value="" autocapitalize="off" autocorrect="off">
+<span class="col_R col_R4">
+<input type="text" class="val text_R" name="angle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle of text in degrees">
 </span>
 </div>
 
@@ -280,13 +263,13 @@ return false;">
 Style:
 </span>
 <span class="col_R col_R2">
-<input type="text" class="val text_R" name="color" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="color" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke color name or #rrggbb hex value">
 </span>
 <span class="col_R col_R3">
-<input type="text" class="val text_R" name="strokeWidth" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="strokeWidth" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke width in pixels">
 </span>
 <span class="col_R col_R4">
-<input type="text" class="val text_R" name="strokeDashes" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="strokeDashes" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke dash/line pattern, e.g. 3 1">
 </span>
 </div>
 
@@ -296,7 +279,7 @@ Style:
 Text:
 </span>
 <span class="col_R col_R2L">
-<input type="text" class="val text_R" name="text" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="text" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to display (edit using the child region)">
 </span>
 </div>
 
@@ -305,16 +288,16 @@ Text:
 Font:
 </span>
 <span class="col_R col_R2">
-<input type="text" class="val text_R" name="fontFamily" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="fontFamily" value="" autocapitalize="off" autocorrect="off" data-tooltip="font family, e.g. Helvetica">
 </span>
 <span class="col_R col_R3">
-<input type="text" class="val text_R" name="fontSize" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="fontSize" value="" autocapitalize="off" autocorrect="off" data-tooltip="font size in units of pt, e.g. 12">
 </span>
 <span class="col_R col_R4">
-<input type="text" class="val text_R" name="fontStyle" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="fontStyle" value="" autocapitalize="off" autocorrect="off" data-tooltip="font style, e.g. italic, normal, oblique">
 </span>
 <span class="col_R col_R5">
-<input type="text" class="val text_R" name="fontWeight" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="fontWeight" value="" autocapitalize="off" autocorrect="off" data-tooltip="font weight, e.g. normal, bold, 900">
 </span>
 </div>
 
@@ -326,7 +309,7 @@ Font:
 Text:
 </span>
 <span class="col_R col_R2L">
-<input type="text" class="val text_R" name="childtext" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="childtext" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to associate with a parent region">
 </span>
 </div>
 </div>
@@ -336,7 +319,7 @@ Text:
 Tags:
 </span>
 <span class="col_R col_R2L">
-<input type="text" class="val text_R" name="tags" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="tags" value="" autocapitalize="off" autocorrect="off" data-tooltip="comma-separated list of tags">
 </span>
 </div>
 
@@ -345,7 +328,7 @@ Tags:
 Misc:
 </span>
 <span class="col_R col_R2L">
-<input type="text" class="val text_R" name="misc" value="" autocapitalize="off" autocorrect="off">
+<input type="text" class="val text_R" name="misc" value="" autocapitalize="off" autocorrect="off" data-tooltip="misc fabric.js properties, in JSON format">
 </span>
 </div>
 
@@ -365,13 +348,13 @@ JS9.Regions.processConfigForm.call(im, shape, winid, arr);
 return false;">
 </span>
 <span class="col_R col_R2l">
-<input type="checkbox" name="remove" value="selected">Remove
+<input type="checkbox" name="remove" value="selected" data-tooltip="remove region requires clicking Apply">Remove
 </span>
 <span class="col_R col_R3l">
-<input type="checkbox" name="changeable" value="true">Changeable
+<input type="checkbox" name="changeable" value="true" data-tooltip="toggle changeable requires clicking Apply">Changeable
 </span>
 <span class="col_R col_R4l">
-<input type="checkbox" name="listonchange" value="true" >List on Change
+<input type="checkbox" name="listonchange" value="true" data-tooltip="toggle list on change requires clicking Apply">List on Change
 </span>
 <span class="col_R col_R6">
 <input name="Close" type="button" class="button" value="Close"
@@ -385,6 +368,5 @@ return false;">
 </div>
 
 </form>
-
 </body>
 </html>
