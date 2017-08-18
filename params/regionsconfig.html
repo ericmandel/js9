@@ -31,42 +31,42 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 80px;
+    width: 75px;
 }
 
 .col_R2 {
     position: absolute;
     top: 0;
     left:  80px;
-    width: 100px;
+    width: 75px;
 }
 
 .col_R2L {
     position: absolute;
     top: 0;
     left:  80px;
-    width: 320px;
+    width: 330px;
 }
 
 .col_R2LL {
     position: absolute;
     top: 0;
     left:  80px;
-    width: 320px;
+    width: 330px;
 }
 
 .col_R3 {
     position: absolute;
     top: 0;
-    left:  190px;
-    width: 100px;
+    left:  165px;
+    width: 75px;
 }
 
 .col_R4 {
     position: absolute;
     top: 0;
-    left:  300px;
-    width: 100px;
+    left:  250px;
+    width: 75px;
 }
 
 .col_R4L {
@@ -79,8 +79,8 @@
 .col_R5 {
     position: absolute;
     top: 0;
-    left:  410px;
-    width: 100px;
+    left:  335px;
+    width: 75px;
 }
 
 .col_R5L {
@@ -93,7 +93,14 @@
 .col_R6 {
     position: absolute;
     top: 0;
-    left:  520px;
+    left:  420px;
+    width: 50px;
+}
+
+.col_R7 {
+    position: absolute;
+    top: 0;
+    left:  480px;
     width: 50px;
 }
 
@@ -150,15 +157,15 @@
 
 <div class="rlinegroup">
 <span class="col_R col_R1">
-Reg&nbsp;<input type="text" class="val text_R0" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off"  data-tooltip="region id can be used in selection">:
+Reg:&nbsp;<input type="text" class="val text_R0" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off"  data-tooltip="region id can be used in selection">
 </span>
 
 <span class="col_R col_R2LL">
-<input type="text" class="val text_R" name="regstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off" data-tooltip="region in current coordinate system">
+<input type="text" class="val text_R" name="regstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off" data-tooltip="region in current global coordinate system">
 </span>
 
-<span class="col_R col_R5">
-<input name="copy" type="button" class="button" value="Copy Position"
+<span class="col_R col_R6">
+<input name="copy" type="button" class="button" value="Copy"
 onclick="var form = $(this).closest('form');
 var im = form.data('im');
 var s, reg;
@@ -186,7 +193,7 @@ if( im ){
 return false;">
 </span>
 
-<span class="col_R col_R6">
+<span class="col_R col_R7">
 <select name="wcssys" class="val select_R" onchange="
 var form = $(this).closest('form');
 var wcs =  $(this).val();
@@ -207,10 +214,10 @@ return false;">
 Edit:
 </span>
 <span class="col_R col_R2">
-<input type="text" class="val text_R" name="xpos" value="" autocapitalize="off" autocorrect="off" data-tooltip="x position in current coordinate system">
+<input type="text" class="val text_R" name="xpos" value="" autocapitalize="off" autocorrect="off" data-tooltip="x position in units of coordinate system to the right">
 </span>
 <span class="col_R col_R3">
-<input type="text" class="val text_R" name="ypos" value="" autocapitalize="off" autocorrect="off"  data-tooltip="y position in current coordinate system">
+<input type="text" class="val text_R" name="ypos" value="" autocapitalize="off" autocorrect="off"  data-tooltip="y position in units of coordinate system to the right">
 </span>
 
 <div class="nodisplay annulus">
@@ -221,25 +228,25 @@ Edit:
 
 <div class="nodisplay box">
 <span class="col_R col_R4">
-<input type="text" class="val text_R" name="width" value="" autocapitalize="off" autocorrect="off" data-tooltip="width in current coordinate system units">
+<input type="text" class="val text_R" name="width" value="" autocapitalize="off" autocorrect="off" data-tooltip="width in units of coordinate system to the right">
 </span>
 <span class="col_R col_R5">
-<input type="text" class="val text_R" name="height" value="" autocapitalize="off" autocorrect="off" data-tooltip="height in current coordinate system units">
+<input type="text" class="val text_R" name="height" value="" autocapitalize="off" autocorrect="off" data-tooltip="height in units of coordinate system to the right">
 </span>
 </div>
 
 <div class="nodisplay circle">
 <span class="col_R col_R4">
-<input type="text" class="val text_R" name="radius" value="" autocapitalize="off" autocorrect="off" data-tooltip="radius in current coordinate system units">
+<input type="text" class="val text_R" name="radius" value="" autocapitalize="off" autocorrect="off" data-tooltip="radius in units of coordinate system to the right">
 </span>
 </div>
 
 <div class="nodisplay ellipse">
 <span class="col_R col_R4">
-<input type="text" class="val text_R" name="r1" value="" autocapitalize="off" autocorrect="off" data-tooltip="r1 in current coordinate system units">
+<input type="text" class="val text_R" name="r1" value="" autocapitalize="off" autocorrect="off" data-tooltip="r1 in units of coordinate system to the right">
 </span>
 <span class="col_R col_R5">
-<input type="text" class="val text_R" name="r2" value="" autocapitalize="off" autocorrect="off" data-tooltip="r2 in current coordinate system units">
+<input type="text" class="val text_R" name="r2" value="" autocapitalize="off" autocorrect="off" data-tooltip="r2 in units of coordinate system to the right">
 </span>
 </div>
 
@@ -254,6 +261,17 @@ Edit:
 <input type="text" class="val text_R" name="angle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle of text in degrees">
 </span>
 </div>
+
+<span class="col_R col_R7">
+<select name="altwcssys" class="val select_R" onchange="
+var form = $(this).closest('form');
+var wcs =  $(this).val();
+var im = form.data('im');
+if( im && wcs ){
+}
+return false;">:
+</select>
+</span>
 
 </div>
 </div>
@@ -279,7 +297,7 @@ Style:
 Text:
 </span>
 <span class="col_R col_R2L">
-<input type="text" class="val text_R" name="text" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to display (edit using the child region)">
+<input type="text" class="val text_R" name="text" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to associate with a parent region">
 </span>
 </div>
 
@@ -309,7 +327,7 @@ Font:
 Text:
 </span>
 <span class="col_R col_R2L">
-<input type="text" class="val text_R" name="childtext" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to associate with a parent region">
+<input type="text" class="val text_R" name="childtext" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to display (edit via the associated child region)">
 </span>
 </div>
 </div>

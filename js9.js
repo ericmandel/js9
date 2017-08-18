@@ -251,8 +251,8 @@ JS9.lightOpts = {
 	plotWin:  "width=830px,height=420px,center=1,resize=1,scrolling=1",
 	dpathWin: "width=830px,height=175px,center=1,resize=1,scrolling=1",
 	paramWin: "width=830px,height=230px,center=1,resize=1,scrolling=1",
-	regWin0:  "width=630px,height=75px,center=1,resize=1,scrolling=1",
-	regWin:   "width=630px,height=235px,center=1,resize=1,scrolling=1",
+	regWin0:  "width=600px,height=75px,center=1,resize=1,scrolling=1",
+	regWin:   "width=600px,height=235px,center=1,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,center=1,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,center=1,resize=1,scrolling=1"
     }
@@ -7164,6 +7164,57 @@ JS9.Image.prototype.saveCatalog = function(fname, which){
     return fname;
 };
 
+// convert ra, dec from one wcs to another
+JS9.Image.prototype.convertWCS = function(from, ra, dec, to){
+    var owcs, ounits, nwcs, arr, x, y, s, v0;
+    // sanity check
+    if( !from || !ra || !dec ){
+	return;
+    }
+    //  convert ra, dec from string input to float degrees, if necessary
+    if( typeof ra === "string" ){
+	v0 = JS9.strtoscaled(ra);
+	if( (v0.dtype === ":") &&
+	    (from !== "galactic") && (from !== "ecliptic") ){
+	    v0.dval *= 15.0;
+	}
+	ra = v0.dval;
+    }
+    if( typeof dec === "string" ){
+	v0 = JS9.strtoscaled(dec);
+	dec = v0.dval;
+    }
+    // sve current wcs and units
+    owcs = this.getWCSSys();
+    ounits = this.getWCSUnits();
+    // to is optional and defaults to current wcs
+    to = to || owcs;
+    // temporarily set the wcs to what we are converting from
+    nwcs = this.setWCSSys(from).getWCSSys();
+    // make sure change was successful
+    if( from !== "native" ){
+	if( nwcs !== from ){
+	    JS9.error("unknown or invalid wcs: " + from);
+	}
+    }
+    // convert input ra, dec into image pixels in this wcs
+    arr = JS9.wcs2pix(this.raw.wcs, ra, dec).trim().split(/ +/);
+    x = parseFloat(arr[0]);
+    y = parseFloat(arr[1]);
+    // set wcs back to the target wcs
+    this.setWCSSys(to);
+    // convert image pixels from input ra, dec into target wcs
+    this.setWCSUnits("degrees");
+    s = JS9.pix2wcs(this.raw.wcs, x, y).trim();
+    // reset wcs to original
+    this.setWCSUnits(ounits);
+    if( owcs !== to ){
+	this.setWCSSys(owcs);
+    }
+    // return result
+    return s;
+};
+
 // ---------------------------------------------------------------------
 // JS9 Command, commands for console window
 // ---------------------------------------------------------------------
@@ -11095,8 +11146,8 @@ JS9.Regions.init = function(layerName){
 // initialize the region config form
 // call using image context
 JS9.Regions.initConfigForm = function(obj){
-    var that = this;
     var i, key, val, el, wcssys;
+    var that = this;
     var params = obj.params;
     var winid = params.winid;
     var wid = $(winid).attr("id");
@@ -11266,8 +11317,9 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "wcssys":
+	case "altwcssys":
 	    // add all wcs sys options
-	    el = $(form).find("[name='wcssys']");
+	    el = $(form).find("[name='" + key + "']");
 	    if( !el.find('option').length ){
 		for(i=0; i<JS9.wcssyss.length; i++){
 		    wcssys = JS9.wcssyss[i];
@@ -11354,27 +11406,32 @@ JS9.Regions.initConfigForm = function(obj){
     $(form).data("shape", obj);
     // save the window id for later processing
     $(form).data("winid", winid);
-    // add tooltip callbacks
-    $(".col_R").on("mouseover", function() {
-	var html, nhtml;
-	var tooltip = $(this).find("input").attr("data-tooltip");
-	var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
-	if( tooltip && el.length ){
-	    html = $(el).html();
-	    nhtml = html.replace(/^[^\<]+/,
-				 "Region Configuration" + ": " + tooltip);
-	    $(el).html(nhtml);
-	}
-    });
-    $(".col_R").on("mouseout", function() {
-	var html, nhtml;
-	var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
-	if( el.length ){
-	    html = $(el).html();
-	    nhtml = html.replace(/^[^\<]+/, "Region Configuration");
-	    $(el).html(nhtml);
-	}
-    });
+    // add tooltip callbacks (not mobile: ios buttons stop working!)
+    if( !$(form).data("tooltipInit") && !JS9.BROWSER[3] ){
+	$(form).data("tooltipInit", true);
+	$(".col_R").on("mouseover", function(evt) {
+	    var html, nhtml;
+	    var tooltip = $(this).find("input").data("tooltip");
+	    var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
+	    evt.preventDefault();
+	    if( tooltip && el.length ){
+		html = $(el).html();
+		nhtml = html.replace(/^[^\<]+/,
+				     "Region Configuration" + ": " + tooltip);
+		$(el).html(nhtml);
+	    }
+	});
+	$(".col_R").on("mouseout", function(evt) {
+	    var html, nhtml;
+	    var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
+	    evt.preventDefault();
+	    if( el.length ){
+		html = $(el).html();
+		nhtml = html.replace(/^[^\<]+/, "Region Configuration");
+		$(el).html(nhtml);
+	    }
+	});
+    }
 };
 
 // process the config form to change the specified shape
