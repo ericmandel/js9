@@ -214,10 +214,10 @@ return false;">
 Edit:
 </span>
 <span class="col_R col_R2">
-<input type="text" class="val text_R" name="xpos" value="" autocapitalize="off" autocorrect="off" data-tooltip="x position in units of coordinate system to the right">
+<input type="text" class="val text_R" name="xpos" value="" autocapitalize="off" autocorrect="off" data-tooltip="x position in units of degrees (for wcs) or pixels (no wcs)">
 </span>
 <span class="col_R col_R3">
-<input type="text" class="val text_R" name="ypos" value="" autocapitalize="off" autocorrect="off"  data-tooltip="y position in units of coordinate system to the right">
+<input type="text" class="val text_R" name="ypos" value="" autocapitalize="off" autocorrect="off"  data-tooltip="y position in units of degrees (for wcs) or pixels (no wcs)">
 </span>
 
 <div class="nodisplay annulus">
@@ -228,25 +228,25 @@ Edit:
 
 <div class="nodisplay box">
 <span class="col_R col_R4">
-<input type="text" class="val text_R" name="width" value="" autocapitalize="off" autocorrect="off" data-tooltip="width in units of coordinate system to the right">
+<input type="text" class="val text_R" name="width" value="" autocapitalize="off" autocorrect="off" data-tooltip="width in units of coordinate system shown on the right">
 </span>
 <span class="col_R col_R5">
-<input type="text" class="val text_R" name="height" value="" autocapitalize="off" autocorrect="off" data-tooltip="height in units of coordinate system to the right">
+<input type="text" class="val text_R" name="height" value="" autocapitalize="off" autocorrect="off" data-tooltip="height in units of coordinate system shown on the right">
 </span>
 </div>
 
 <div class="nodisplay circle">
 <span class="col_R col_R4">
-<input type="text" class="val text_R" name="radius" value="" autocapitalize="off" autocorrect="off" data-tooltip="radius in units of coordinate system to the right">
+<input type="text" class="val text_R" name="radius" value="" autocapitalize="off" autocorrect="off" data-tooltip="radius in units of coordinate system shown on the right">
 </span>
 </div>
 
 <div class="nodisplay ellipse">
 <span class="col_R col_R4">
-<input type="text" class="val text_R" name="r1" value="" autocapitalize="off" autocorrect="off" data-tooltip="r1 in units of coordinate system to the right">
+<input type="text" class="val text_R" name="r1" value="" autocapitalize="off" autocorrect="off" data-tooltip="r1 in units of coordinate system shown on the right">
 </span>
 <span class="col_R col_R5">
-<input type="text" class="val text_R" name="r2" value="" autocapitalize="off" autocorrect="off" data-tooltip="r2 in units of coordinate system to the right">
+<input type="text" class="val text_R" name="r2" value="" autocapitalize="off" autocorrect="off" data-tooltip="r2 in units of coordinate system shown on the right">
 </span>
 </div>
 
@@ -265,11 +265,17 @@ Edit:
 <span class="col_R col_R7">
 <select name="altwcssys" class="val select_R" onchange="
 var form = $(this).closest('form');
-var wcs =  $(this).val();
+var wcssys =  $(this).val();
 var im = form.data('im');
-if( im && wcs ){
+if( im && wcssys ){
+    if( wcssys === im.params.wcssys ){
+        form.removeData('wcssys');
+    } else {
+        form.data('wcssys', wcssys);
+    }
+    im.updateShapes('regions', 'all', 'wcs');
 }
-return false;">:
+return false;">
 </select>
 </span>
 
@@ -362,7 +368,7 @@ arr = arr.concat(
   $('#' + form.attr('id') + ' input[type=checkbox]:not(:checked)').map(
     function(){return {'name': this.name, 'value': 'false'};}
   ).get());
-JS9.Regions.processConfigForm.call(im, shape, winid, arr);
+JS9.Regions.processConfigForm.call(im, form, shape, winid, arr);
 return false;">
 </span>
 <span class="col_R col_R2l">

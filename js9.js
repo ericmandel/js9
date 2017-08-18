@@ -251,7 +251,7 @@ JS9.lightOpts = {
 	plotWin:  "width=830px,height=420px,center=1,resize=1,scrolling=1",
 	dpathWin: "width=830px,height=175px,center=1,resize=1,scrolling=1",
 	paramWin: "width=830px,height=230px,center=1,resize=1,scrolling=1",
-	regWin0:  "width=600px,height=75px,center=1,resize=1,scrolling=1",
+	regWin0:  "width=600px,height=72px,center=1,resize=1,scrolling=1",
 	regWin:   "width=600px,height=235px,center=1,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,center=1,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,center=1,resize=1,scrolling=1"
@@ -7165,12 +7165,14 @@ JS9.Image.prototype.saveCatalog = function(fname, which){
 };
 
 // convert ra, dec from one wcs to another
-JS9.Image.prototype.convertWCS = function(from, ra, dec, to){
-    var owcs, ounits, nwcs, arr, x, y, s, v0;
-    // sanity check
-    if( !from || !ra || !dec ){
-	return;
-    }
+JS9.Image.prototype.convertWCS = function(from, to, ra, dec){
+    var owcssys, ounits, nwcs, arr, x, y, s, v0;
+    // sve current wcs and units
+    owcssys = this.getWCSSys();
+    ounits = this.getWCSUnits();
+    // to, from default to current wcs
+    from = from || owcssys;
+    to = to || owcssys;
     //  convert ra, dec from string input to float degrees, if necessary
     if( typeof ra === "string" ){
 	v0 = JS9.strtoscaled(ra);
@@ -7184,11 +7186,6 @@ JS9.Image.prototype.convertWCS = function(from, ra, dec, to){
 	v0 = JS9.strtoscaled(dec);
 	dec = v0.dval;
     }
-    // sve current wcs and units
-    owcs = this.getWCSSys();
-    ounits = this.getWCSUnits();
-    // to is optional and defaults to current wcs
-    to = to || owcs;
     // temporarily set the wcs to what we are converting from
     nwcs = this.setWCSSys(from).getWCSSys();
     // make sure change was successful
@@ -7208,8 +7205,8 @@ JS9.Image.prototype.convertWCS = function(from, ra, dec, to){
     s = JS9.pix2wcs(this.raw.wcs, x, y).trim();
     // reset wcs to original
     this.setWCSUnits(ounits);
-    if( owcs !== to ){
-	this.setWCSSys(owcs);
+    if( owcssys !== to ){
+	this.setWCSSys(owcssys);
     }
     // return result
     return s;
@@ -11146,7 +11143,7 @@ JS9.Regions.init = function(layerName){
 // initialize the region config form
 // call using image context
 JS9.Regions.initConfigForm = function(obj){
-    var i, key, val, el, wcssys;
+    var i, s, key, val, el, wcssys, altwcssys, ra, dec;
     var that = this;
     var params = obj.params;
     var winid = params.winid;
@@ -11161,6 +11158,8 @@ JS9.Regions.initConfigForm = function(obj){
 	}
 	return(String(val));
     };
+    // get alternate wcssys, if necessary
+    altwcssys = $(form).data("wcssys");
     // remove the nodisplay class from this shape's div
     $(form + "." + obj.pub.shape).each(function(){
 	$(this).removeClass("nodisplay");
@@ -11263,6 +11262,8 @@ JS9.Regions.initConfigForm = function(obj){
 		val = sprintf('%.6f', obj.pub.ra);
 		break;
 	    }
+	    // save for later processing
+	    ra = val;
 	    break;
 	case "ypos":
 	    switch(that.params.wcssys){
@@ -11280,6 +11281,8 @@ JS9.Regions.initConfigForm = function(obj){
 		val = sprintf('%.6f', obj.pub.dec);
 		break;
 	    }
+	    // save for later processing
+	    dec = val;
 	    break;
 	case "radius":
 	case "oradius":
@@ -11317,7 +11320,6 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "wcssys":
-	case "altwcssys":
 	    // add all wcs sys options
 	    el = $(form).find("[name='" + key + "']");
 	    if( !el.find('option').length ){
@@ -11331,6 +11333,27 @@ JS9.Regions.initConfigForm = function(obj){
 		    val = element.value;
 		}
 	    });
+	    break;
+	case "altwcssys":
+	    // add all wcs sys options
+	    el = $(form).find("[name='" + key + "']");
+	    if( !el.find('option').length ){
+		for(i=0; i<JS9.wcssyss.length; i++){
+		    wcssys = JS9.wcssyss[i];
+		    if( (wcssys === "image") || (wcssys === "physical") ){
+			continue;
+		    }
+		    el.append("<option>" + wcssys + "</option>");
+		}
+	    }
+	    val = $(form).data("wcssys");
+	    if( !val ){
+		el.find('option').each(function(index, element){
+		    if( that.params.wcssys === element.value ){
+			val = element.value;
+		    }
+		});
+	    }
 	    break;
 	case "wcsunits":
 	    if( obj.pub.wcsunits ){
@@ -11353,6 +11376,18 @@ JS9.Regions.initConfigForm = function(obj){
 	}
 	$(this).val(val);
     });
+    if( (this.params.wcssys === "image") ||
+	(this.params.wcssys === "physical") ){
+	$(form).find("[name='altwcssys']").hide();
+    } else {
+	$(form).find("[name='altwcssys']").show();
+	// process altwcs, if necessary
+	if( altwcssys && (that.params.wcssys !== altwcssys) ){
+	    s = that.convertWCS(null, altwcssys, ra, dec).split(/\s+/);
+	    $(form).find("[name='xpos']").val(s[0]);
+	    $(form).find("[name='ypos']").val(s[1]);
+	}
+    }
     // wcs display
     if( obj.pub.wcsstr ){
 	$(form + ".wcs").removeClass("nodisplay");
@@ -11436,8 +11471,8 @@ JS9.Regions.initConfigForm = function(obj){
 
 // process the config form to change the specified shape
 // call using image context
-JS9.Regions.processConfigForm = function(obj, winid, arr){
-    var i, key, nkey, val, nval, nopts;
+JS9.Regions.processConfigForm = function(form, obj, winid, arr){
+    var i, s, key, nkey, val, nval, nopts, altwcssys;
     var alen = arr.length;
     var opts = {};
     var wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
@@ -11686,6 +11721,17 @@ JS9.Regions.processConfigForm = function(obj, winid, arr){
 		opts[key] = getval(val);
 	    }
 	    break;
+	}
+    }
+    if( opts.ra && opts.dec ){
+	// get alternate wcssys, if necessary
+	altwcssys = $(form).data("wcssys");
+	// process altwcs, if necessary
+	if( altwcssys && (this.params.wcssys !== altwcssys) ){
+	    s = this.convertWCS(altwcssys, null, opts.ra, opts.dec)
+		.split(/\s+/);
+	    opts.ra = s[0];
+	    opts.dec = s[1];
 	}
     }
     // change the shape
