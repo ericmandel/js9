@@ -27,7 +27,7 @@
   </style>
   <title>JS9 cat</title>
 </head>
-<body onload="init();">
+<body>
     <script type="text/javascript">
     var n = 500;
     var inc = 4;
@@ -35,7 +35,7 @@
     // on an ipad, the click handler reload the page!
     var click='ontouchstart' in document.documentElement?'touchstart': 'click';
     function init(){
-        JS9.Load("fits/casa.fits.gz", {parentFile: "fits/casa.fits", scale: "log", colormap: "cool", onload: function(){JS9.DisplayPlugin('JS9Layers')}});
+        JS9.Preload("fits/casa.fits.gz", {parentFile: "fits/casa.fits", scale: "log", colormap: "cool", onload: function(){JS9.DisplayPlugin('JS9Layers')}});
         $("#display").on("change", function(evt){
           try{doit("display", this.value);}
           finally{$("#display").prop('selectedIndex', 0);
@@ -181,6 +181,9 @@
             break;
         }
     }
+    $(document).on("JS9:ready", function(){
+        init();
+    });
     </script>
     <center><font size="+1"><b>JS9 Demo: catalogs</b></font></center>
     <table>
