@@ -114,7 +114,7 @@ function createWindow() {
     cmd = "if( typeof JS9 !== 'object' || typeof JS9.Image !== 'function'  ){alert('JS9 was not loaded properly. Please check the paths to the JS9 css and js files in your web page header and try again.');}";
     js9Electron.win.webContents.executeJavaScript(cmd);
     // load data files
-    cmd = "$(document).on('JS9:ready', function(){";
+    cmd = "$(document).ready(function(){";
     ncmd = 0;
     for(let i=0; i<js9Electron.files.length; i++){
 	let file = js9Electron.files[i];
@@ -137,9 +137,9 @@ function createWindow() {
 	}
 	if( jobj && jobj.startsWith('{') ){
 	    i++;
-	    cmd += `JS9.Load('${file}', '${jobj}');`;
+	    cmd += `JS9.Preload('${file}', '${jobj}');`;
 	}  else {
-	    cmd += `JS9.Load('${file}');`;
+	    cmd += `JS9.Preload('${file}');`;
 	}
 	ncmd++;
     }
