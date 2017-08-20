@@ -11143,7 +11143,7 @@ JS9.Regions.init = function(layerName){
 // initialize the region config form
 // call using image context
 JS9.Regions.initConfigForm = function(obj){
-    var i, s, key, val, el, wcssys, altwcssys, ra, dec;
+    var i, s, key, val, el, wcssys, altwcssys, ra, dec, mover, mout;
     var that = this;
     var params = obj.params;
     var winid = params.winid;
@@ -11442,13 +11442,19 @@ JS9.Regions.initConfigForm = function(obj){
     // save the window id for later processing
     $(form).data("winid", winid);
     // add tooltip callbacks (not mobile: ios buttons stop working!)
-    if( !$(form).data("tooltipInit") && !JS9.BROWSER[3] ){
+    if( !$(form).data("tooltipInit") ){
 	$(form).data("tooltipInit", true);
-	$(".col_R").on("mouseover", function(evt) {
+	if( JS9.BROWSER[3] ){
+	    mover = "touchstart";
+	    mout = "touchend";
+	} else {
+	    mover = "mouseover";
+	    mout = "mouseout";
+	}
+	$(".col_R").on(mover, function() {
 	    var html, nhtml;
 	    var tooltip = $(this).find("input").data("tooltip");
 	    var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
-	    evt.preventDefault();
 	    if( tooltip && el.length ){
 		html = $(el).html();
 		nhtml = html.replace(/^[^\<]+/,
@@ -11456,10 +11462,9 @@ JS9.Regions.initConfigForm = function(obj){
 		$(el).html(nhtml);
 	    }
 	});
-	$(".col_R").on("mouseout", function(evt) {
+	$(".col_R").on(mout, function() {
 	    var html, nhtml;
 	    var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
-	    evt.preventDefault();
 	    if( el.length ){
 		html = $(el).html();
 		nhtml = html.replace(/^[^\<]+/, "Region Configuration");
