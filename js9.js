@@ -7165,7 +7165,7 @@ JS9.Image.prototype.saveCatalog = function(fname, which){
 };
 
 // convert ra, dec from one wcs to another
-JS9.Image.prototype.convertWCS = function(from, to, ra, dec){
+JS9.Image.prototype.wcs2wcs = function(from, to, ra, dec){
     var owcssys, ounits, nwcs, arr, x, y, s, v0;
     // sve current wcs and units
     owcssys = this.getWCSSys();
@@ -7210,6 +7210,42 @@ JS9.Image.prototype.convertWCS = function(from, to, ra, dec){
     }
     // return result
     return s;
+};
+
+// convert wcs, physical or image image length to image length,
+// using current wcs and string delimiters to determine what input type
+JS9.Image.prototype.wcs2imlen = function(s){
+    var v, wcsinfo;
+    var dpp = 1;
+    // sanity check
+    if( !s ){
+	return;
+    }
+    v = JS9.strtoscaled(s);
+    wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
+    // oh dear, this is cheating ...
+    if( wcsinfo.cdelt1 !== undefined ){
+	dpp = wcsinfo.cdelt1;
+    } else if( wcsinfo.cdelt2 !== undefined ){
+	dpp = wcsinfo.cdelt2;
+    }
+    switch(this.params.wcssys){
+    case "image":
+	break;
+    case "physical":
+	// use the LTM1_1 value stored for logical to image transforms
+	if( this.lcs && this.lcs.physical ){
+	    v.dval = v.dval * this.lcs.physical.forward[0][0];
+	}
+	break;
+    default:
+	// cheap conversion of wcs len to image len
+	if( v.dtype && (v.dtype !== ".") ){
+	    v.dval = Math.abs(v.dval / dpp);
+	}
+	break;
+    }
+    return v.dval;
 };
 
 // ---------------------------------------------------------------------
@@ -8564,7 +8600,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 		nparams.radii = opts.radii.replace(/ /g, "").split(",");
 		for(i=0, j=0; i<nparams.radii.length; i++){
 		    if( nparams.radii[i] !== "" ){
-			nparams.radii[j++] = parseInt(nparams.radii[i], 10);
+			nparams.radii[j++] = this.wcs2imlen(nparams.radii[i]);
 		    }
 		}
 	    } else {
@@ -11181,12 +11217,17 @@ JS9.Regions.initConfigForm = function(obj){
 	    break;
 	case "radii":
 	    if( obj.pub.radii ){
-		obj.pub.radii.forEach(function(p){
-		    if( val ){
-			val += ", ";
-		    }
-		    val += p.toFixed(1);
-		});
+		if( that.params.wcssys === "image"    ||
+		    that.params.wcssys === "physical" ||
+		    !obj.pub.wcsstr                   ){
+		    val = obj.pub.imstr
+			.replace(/^annulus\(/,"").replace(/\)$/,"")
+			.split(",").slice(2).join(",");
+		} else {
+		    val = obj.pub.wcsstr
+			.replace(/^annulus\(/,"").replace(/\)$/,"")
+			.split(",").slice(2).join(",");
+		}
 	    }
 	    break;
 	case "pts":
@@ -11383,7 +11424,7 @@ JS9.Regions.initConfigForm = function(obj){
 	$(form).find("[name='altwcssys']").show();
 	// process altwcs, if necessary
 	if( altwcssys && (that.params.wcssys !== altwcssys) ){
-	    s = that.convertWCS(null, altwcssys, ra, dec).split(/\s+/);
+	    s = that.wcs2wcs(null, altwcssys, ra, dec).split(/\s+/);
 	    $(form).find("[name='xpos']").val(s[0]);
 	    $(form).find("[name='ypos']").val(s[1]);
 	}
@@ -11733,7 +11774,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	altwcssys = $(form).data("wcssys");
 	// process altwcs, if necessary
 	if( altwcssys && (this.params.wcssys !== altwcssys) ){
-	    s = this.convertWCS(altwcssys, null, opts.ra, opts.dec)
+	    s = this.wcs2wcs(altwcssys, null, opts.ra, opts.dec)
 		.split(/\s+/);
 	    opts.ra = s[0];
 	    opts.dec = s[1];
