@@ -21,17 +21,12 @@ const electron = require('electron');
 const app = electron.app;
 // module to create native browser window
 const BrowserWindow = electron.BrowserWindow;
+// module to control ipc
+const ipcMain = electron.ipcMain;
 
 const path = require('path');
 // const proc = require('child_process');
 const ps = require('ps-node');
-
-function isTrue(s, d){
-    if( s === undefined ){
-	return d;
-    }
-    return !!JSON.parse(String(s).toLowerCase());
-}
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -40,11 +35,51 @@ function isTrue(s, d){
 // js9Electron object contains everything specific to our server
 const js9Electron = {};
 
+function isTrue(s, d){
+    if( s === undefined ){
+	return d;
+    }
+    return !!JSON.parse(String(s).toLowerCase());
+}
+
+// start up a JS9 helper, if possible and necessary
+function startHelper(mode){
+    // start up the helper first, if necessary
+    if( js9Electron.doHelper ){
+	// if mode is true, just try to start the helper and return
+	if( mode ){
+	    js9Electron.helper = require(js9Electron.helperpage);
+	    return;
+	}
+	// look for a node JS9 helper already running
+	ps.lookup({
+	    command: 'node',
+	    psargs: "guwax",
+	    arguments: 'js9Helper.js'
+	}, function(err, rlist ) {
+	    if( rlist.length === 0 ){
+		// if node helper not running, look for an Electron helper
+		ps.lookup({
+		    psargs: "guwax",
+		    arguments: 'js9Electron.js'
+		}, function(err2, rlist2 ) {
+		    if( (rlist2.length <= 1) ){
+			js9Electron.helper = require(js9Electron.helperpage);
+		    }
+		});
+	    }
+	});
+    }
+}
+
 // defaults passed to the tests
 js9Electron.defpage = "file://" + path.join(__dirname, 'js9.html');
 
 // preload page contains initialization values needed before loading JS9
-js9Electron.preload = path.join(__dirname, "js9ElectronPreload.js") ;
+js9Electron.preload = path.join(__dirname, "js9ElectronPreload.js");
+
+// helper page
+js9Electron.helperpage = path.join(__dirname, "js9Helper.js");
 
 // command line arguments
 js9Electron.argv = require('minimist')(process.argv.slice(2));
@@ -64,29 +99,6 @@ if( js9Electron.argv.a && typeof js9Electron.argv.a === "string" ){
 }
 if( js9Electron.argv.v && typeof js9Electron.argv.v === "string" ){
     js9Electron.files.unshift(js9Electron.argv.v);
-}
-
-// start up the helper first, if necessary
-if( js9Electron.doHelper ){
-    // look for a node JS9 helper already running
-    ps.lookup({
-	command: 'node',
-	psargs: "guwax",
-	arguments: 'js9Helper.js'
-    }, function(err, rlist ) {
-	// if node JS9 helper is not running, look for an Electron JS9 helper
-	if( rlist.length === 0 ){
-	    ps.lookup({
-		psargs: "guwax",
-		arguments: 'js9Electron.js'
-	    }, function(err2, rlist2 ) {
-		if( rlist2.length <= 1 ){
-		    js9Electron.helperPath = "./js9Helper.js";
-		    js9Electron.helper = require(js9Electron.helperPath);
-		}
-	    });
-	}
-    });
 }
 
 function createWindow() {
@@ -156,6 +168,9 @@ function createWindow() {
     });
 }
 
+// start helper, if necessary
+startHelper();
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -172,6 +187,17 @@ app.on('activate', () => {
     // dock icon is clicked and there are no other windows open.
     if( js9Electron.win === null ){
 	createWindow();
+    }
+});
+
+// process messages from js9
+ipcMain.on('msg', (event, arg) => {
+    switch(arg){
+    case "startHelper":
+	startHelper(true);
+	break;
+    default:
+	break;
     }
 });
 

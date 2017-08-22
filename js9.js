@@ -7375,9 +7375,9 @@ JS9.Helper.prototype.connect = function(type){
 		var ii, d;
 		var sockopts = {
 		    reconnection: true,
-		    reconnectionDelay: 10000,
+		    reconnectionDelay: 1000,
 		    reconnectionDelayMax : 10000,
-		    reconnectionAttempts: 6,
+		    reconnectionAttempts: 100,
 		    timeout: JS9.globalOpts.htimeout
 		};
 		// connect to the helper

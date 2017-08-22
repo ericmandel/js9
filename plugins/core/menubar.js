@@ -247,6 +247,12 @@ JS9.Menubar.init = function(width, height){
 		    items.xnew.disabled = true;
 		}
 		items["sep" + n++] = "------";
+		if( window.isElectron && window.electronIPC ){
+		    items.electronHelper = {name: "connect to JS9 helper"};
+		    if(  JS9.helper.connected ){
+			items.electronHelper.disabled = true;
+		    }
+		}
 		items.pageid = {name: "display page id"};
 		if( JS9.DEBUG > 2 ){
 		  items["sep" + n++] = "------";
@@ -321,8 +327,17 @@ JS9.Menubar.init = function(width, height){
 			case "xnew":
 			    JS9.LoadWindow(null, null, "new");
 			    break;
+			case "electronHelper":
+			    // Electron.js: send message to main
+			    if( window.isElectron && window.electronIPC ){
+				try{ window.electronIPC.send("msg",
+							     "startHelper"); }
+				catch(ignore){}
+			    }
+			    break;
 			case "pageid":
-			    s = sprintf("<center><p>pageid: %s</center>", JS9.helper.pageid || "none");
+			    s = sprintf("<center><p>pageid: %s</center>",
+					JS9.helper.pageid || "none");
 			    t = "JS9 page id";
 			    // add display to title
 			    t += sprintf(JS9.IDFMT, udisp.id);
