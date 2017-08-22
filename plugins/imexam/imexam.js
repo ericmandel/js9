@@ -371,7 +371,7 @@ imops.mksection = function(x, y, w, h) {
         return [[x-(w/2), x+(w/2)], [y-(h/2), y+(h/2)]];
 };
 
-imops._rproj = typed(function(a, cx, cy, radius, length) {
+imops._rproj = typed(function (a, cx, cy, radius, length) {
     var rad = new Float32Array(length);
     var val = new Float32Array(length);
     var r = Math.sqrt(radius*radius);
