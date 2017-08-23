@@ -304,7 +304,16 @@ description of the available parameters.
     make install
 </pre>
 <p>
-and then clean up the build directory using the command:
+The first time you install JS9, your preference files will also be
+installed. After that, the install command will not install these
+files in order to avoid overwriting custom files. You can explicitly
+re-install preference files using:
+<pre>
+    make install-prefs
+</pre>
+or simply copy them into the install directory.
+
+Clean up the build directory using the command:
 <pre>
     make clean
 </pre>
