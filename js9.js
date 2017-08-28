@@ -1045,6 +1045,8 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
 	NAXIS2: this.raw.height,
 	BITPIX: this.raw.bitpix
     };
+    // plugin callbacks
+    this.xeqPlugins("image", "onrawdata");
     // allow chaining
     return this;
 };
@@ -1366,6 +1368,8 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     this.initWCS();
     // init the logical coordinate system, if possible
     this.initLCS();
+    // plugin callbacks
+    this.xeqPlugins("image", "onrawdata");
     // allow chaining
     return this;
 };
@@ -1806,6 +1810,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    JS9.fits.cleanupFITSFile(this.raw.hdu.fits, true);
 	}
     }
+    // plugin callbacks
+    this.xeqPlugins("image", "onrawdata");
     // allow chaining
     return this;
 };
