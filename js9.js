@@ -4766,13 +4766,19 @@ JS9.Image.prototype.setColormap = function(arg, arg2, arg3){
 	    if( this.cmapObj ){
 		switch(this.cmapObj.name){
 		case "red":
-		    JS9.globalOpts.rgb.rim = null;
+		    if( this === JS9.globalOpts.rgb.rim ){
+			JS9.globalOpts.rgb.rim = null;
+		    }
 		    break;
 		case "green":
-		    JS9.globalOpts.rgb.gim = null;
+		    if( this === JS9.globalOpts.rgb.gim ){
+			JS9.globalOpts.rgb.gim = null;
+		    }
 		    break;
 		case "blue":
-		    JS9.globalOpts.rgb.bim = null;
+		    if( this === JS9.globalOpts.rgb.bim ){
+			JS9.globalOpts.rgb.bim = null;
+		    }
 		    break;
 		}
 	    }
