@@ -96,7 +96,7 @@ case $name in
 		$*
   ;;
 
-  smartx*)
+  lynx*)
   BASE=/smartx
   ./configure 	$CF							\
 		--with-helper="nodejs"					\
@@ -106,6 +106,18 @@ case $name in
 		--with-png=$BASE					\
   		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
  		$*
+  ;;
+
+  smartx*)
+  BASE=/smartx
+  ./configure 	$CF							\
+		--with-helper="nodejs"					\
+		--prefix=$BASE						\
+		--with-webdir=$BASE/js9/www/js9				\
+		--with-cfitsio=$BASE/cfitsio				\
+		--with-png=$BASE					\
+		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
+		$*
   ;;
 
   *)
