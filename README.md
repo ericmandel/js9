@@ -21,10 +21,10 @@ What does it do?
 How can I try it out?
 ---------------------
 
-Go to [JS9 web site](http://js9.si.edu) and drag a
+Go to [JS9 web site](https://js9.si.edu) and drag a
 [FITS](https://fits.gsfc.nasa.gov/) data file onto the JS9 display:
 
-    http://js9.si.edu
+    https://js9.si.edu
 
 The JS9 web site also contains on-line documentation, demos, and
 release downloads.
@@ -34,7 +34,7 @@ To install or not to install ...
 --------------------------------
 
 For many users, there is no need to install: simply use the [JS9 web
-site](http://js9.si.edu) to display your data. You can even upload your
+site](https://js9.si.edu) to display your data. You can even upload your
 FITS files to the web site and run our server-side analysis.
 
 Installing JS9 allows you to create your own web pages, tailor site
