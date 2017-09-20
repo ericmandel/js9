@@ -87,6 +87,7 @@ js9Electron.argv = require('minimist')(process.argv.slice(2));
 js9Electron.id = js9Electron.argv.i || js9Electron.argv.id || "JS9";
 js9Electron.doHelper = isTrue(js9Electron.argv.helper, true);
 js9Electron.debug = isTrue(js9Electron.argv.debug, false);
+js9Electron.eval = isTrue(js9Electron.argv.eval, false);
 js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || process.env.JS9_WEBPAGE || js9Electron.defpage;
 js9Electron.width = js9Electron.argv.width || 1024;
 js9Electron.height = js9Electron.argv.height  || 768;
@@ -102,7 +103,8 @@ if( js9Electron.argv.v && typeof js9Electron.argv.v === "string" ){
 }
 
 function createWindow() {
-    let cmd, ncmd, nfile;
+    let cmd, nfile;
+    let ncmd=0;
     // create the browser window
     js9Electron.win = new BrowserWindow({
 	webPreferences: {nodeIntegration: false, preload: js9Electron.preload},
@@ -118,16 +120,19 @@ function createWindow() {
     if( js9Electron.debug ){
 	js9Electron.win.webContents.openDevTools({mode: 'detach'});
     }
-    // disable eval in renderer window
-    // http://electron.atom.io/docs/tutorial/security/
-    cmd = "window.eval = function(){throw new Error('For security reasons, Desktop JS9 does not support window.eval()');}";
-    // make sure JS9 loaded properly
-    js9Electron.win.webContents.executeJavaScript(cmd);
     cmd = "if( typeof JS9 !== 'object' || typeof JS9.Image !== 'function'  ){alert('JS9 was not loaded properly. Please check the paths to the JS9 css and js files in your web page header and try again.');}";
     js9Electron.win.webContents.executeJavaScript(cmd);
-    // load data files
+    // processing when document is ready
     cmd = "$(document).ready(function(){";
-    ncmd = 0;
+    if( !js9Electron.eval ){
+	// disable eval in renderer window after JS9 is ready
+	// http://electron.atom.io/docs/tutorial/security/
+	cmd +="$(document).on('JS9:ready', function(){"
+	cmd += "window.eval = function(){throw new Error('For security reasons, Desktop JS9 does not support window.eval()');}";
+	cmd += "});";
+	ncmd++;
+    }
+    // 2. load data files
     for(let i=0; i<js9Electron.files.length; i++){
 	let file = js9Electron.files[i];
 	const jobj = js9Electron.files[i+1];

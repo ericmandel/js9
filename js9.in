@@ -48,6 +48,8 @@ usage(){
   printf " \n"
   printf "  app (-a) specific switches:\n"
   printf "    -a                        # start JS9 app (requires Electron.js)\n"
+  printf "    --debug  [true|false]     # bring up Chrome debugger\n"
+  printf "    --eval   [true|false]     # enable eval (def: false, not recommended)\n"
   printf "    --height [h]              # height of app\n"
   printf "    --helper [true|false]     # whether to start up helper app (def: true)\n"
   printf "    -w|--webpage [url]        # url or full path of web page to open\n"
