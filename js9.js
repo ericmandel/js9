@@ -161,8 +161,8 @@ JS9.globalOpts = {
     pinchWait: 8,		// number of events to wait before testing pinch
     pinchThresh: 6,		// threshold for pinch test
     extendedPlugins: true,	// enable extended plugin support?
-    corsProxy:   "//js9.si.edu/cgi-bin/CORS-proxy.cgi",   // CORS proxy URL
-    simbadProxy: "//js9.si.edu/cgi-bin/simbad-proxy.cgi", // simbad proxy URL
+    corsProxy:   "https://js9.si.edu/cgi-bin/CORS-proxy.cgi",   // CORS proxy
+    simbadProxy: "https://js9.si.edu/cgi-bin/simbad-proxy.cgi", // simbad proxy
     catalogs:   {ras: ["RA", "_RAJ2000", "RAJ2000"],  // cols to search for ..
 		 decs: ["Dec", "_DEJ2000", "DEJ2000"],// when loading catalogs
 		 shape: "circle",                     // object shape
