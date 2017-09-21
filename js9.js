@@ -8213,7 +8213,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 JS9.Fabric.showShapeLayer = function(layerName, mode){
     var that = this;
     var left = 0;
-    var jobj, xkey, layer, dlayer, canvas;
+    var jobj, xkey, layer, dlayer, canvas, objects, olen, obj;
     layer = this.getShapeLayer(layerName);
     // sanity check
     if( !layer ){
@@ -8281,13 +8281,22 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
     } else if( (mode === "hide") || (mode === false) ){
 	// save and hide
 	if( layer.show ){
-	    canvas.forEachObject(function(obj){
-		JS9.Fabric.removePolygonAnchors(dlayer, obj);
-		if( obj.params && obj.params.winid ){
-		    obj.params.winid.close();
-		    obj.params.winid = null;
+	    // can't use forEachObject, which loops in ascending order,
+	    // because removing anchors changes the array destructively!
+	    objects = canvas.getObjects();
+	    olen = objects.length;
+	    while( olen-- ){
+		obj = objects[olen];
+		if( obj.params ){
+		    if( obj.params.winid ){
+			obj.params.winid.close();
+			obj.params.winid = null;
+		    }
+		    if( obj.params.anchors ){
+			JS9.Fabric.removePolygonAnchors(layer.dlayer, obj);
+		    }
 		}
-	    });
+	    }
 	    jobj = canvas.toJSON(layer.dlayer.el);
 	    layer.json = JSON.stringify(jobj);
 	    canvas.selection = false;
