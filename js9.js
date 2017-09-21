@@ -7744,7 +7744,8 @@ JS9.Fabric.opts = {
     canvas: {
 	selection: true
     },
-    fill: "transparent"
+    fill: "transparent",
+    objectCaching: false
 };
 
 // rescale the width of shapes in the shape layers
