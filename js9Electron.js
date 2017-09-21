@@ -127,7 +127,7 @@ function createWindow() {
     if( !js9Electron.eval ){
 	// disable eval in renderer window after JS9 is ready
 	// http://electron.atom.io/docs/tutorial/security/
-	cmd +="$(document).on('JS9:ready', function(){"
+	cmd +="$(document).on('JS9:ready', function(){";
 	cmd += "window.eval = function(){throw new Error('For security reasons, Desktop JS9 does not support window.eval()');}";
 	cmd += "});";
 	ncmd++;
