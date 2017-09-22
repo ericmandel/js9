@@ -115,6 +115,7 @@ case $name in
 		--prefix=$BASE						\
 		--with-webdir=$BASE/js9/www/js9				\
 		--with-cfitsio=$BASE/cfitsio				\
+		--with-saodir=$BASE/js9/www				\
 		--with-png=$BASE					\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
 		$*
