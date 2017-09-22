@@ -71,7 +71,7 @@
 	var form = $(div).find(".JS9Archive-form")[0];
 
 	if ( form.object.value !== "" ) {
-	    var simurl = JS9.globalOpts.simbadProxy || "http://js9.si.edu/cgi-bin/simbad-proxy.cgi";
+	    var simurl = JS9.globalOpts.simbadProxy || "https://js9.si.edu/cgi-bin/simbad-proxy.cgi";
 	    var simbad = encodeURI(simurl + '?' + form.object.value);
 
 	    xhr({ url: simbad, title: "Name", status: status }, function(e, xhr) {
@@ -814,7 +814,7 @@ module.exports = template;
 	var status = params.status;
 	var title = "";
 
-	var corsurl = JS9.globalOpts.corsProxy || "http://js9.si.edu/cgi-bin/CORS-proxy.cgi";
+	var corsurl = JS9.globalOpts.corsProxy || "https://js9.si.edu/cgi-bin/CORS-proxy.cgi";
 
 	if ( params.CORS ) {
 	    params.url = params.url.replace(/\?/g, "@");
