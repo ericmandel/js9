@@ -77,6 +77,14 @@
       .mytabcontent {
         max-width: 440px;
       }
+      .myfooter {
+        font: normal 14px Arial;
+      }
+      .mycontact {
+        font: normal 12px Arial;
+        margin-top: 8px;
+        float: right;
+      }
       .pluginContainer {
         padding: 5px;
         padding-left: 4px;
@@ -87,12 +95,24 @@
         width: 210px;
         height: 210px;
       }
-      @media only screen and (device-width: 768px) {
-        /* For general iPad layouts */
+      /* http://stephen.io/mediaqueries/ */
+      /* For general ipad layouts */
+      @media only screen
+      and (min-device-width : 768px)
+      and (max-device-width : 1024px) {
+      }
+      /* For general iphone layouts */
+      @media only screen
+      and (min-device-width : 375px)
+      and (max-device-width : 667px) {
         #myTabsDiv {
-          min-height: 510px;
+            font: normal 8px Arial;
+        }
+        .myfooter {
+            font: normal 8px Arial;
         }
       }
+
   </style>
 <title>JS9</title>
 </head>
@@ -279,21 +299,20 @@
     <div id="intro" class="tabcontent mytabcontent">
       JS9 brings astronomical image display to your browser and Desktop:
       <ul>
-	<li> display FITS images and tables in a web page
-	<li> display FITS data cubes and multi-extension files
-	<li> drag and drop FITS images and tables
-	<li> retrieve FITS files from data archives
-	<li> change the colormap and scale
-	<li> image pan, zoom and blink, table binning
-        <li> image arithmetic, Gaussian smoothing
+	<li> display FITS images, tables, data cubes, multi-extension files
+	<li> drag and drop FITS files and urls, PNG and JPEG images
+	<li> retrieve FITS files and catalogs from astronomical archives
+	<li> adjust the colormap and data scaling
+	<li> pan, zoom, and blink images
+        <li> perform image arithmetic, Gaussian smoothing
 	<li> blend images and apply RGB image filters
-	<li> configure mouse movements and touch events
-	<li> create and manipulate regions of interest
+	<li> configure mouse buttons and movements, touch events
+	<li> create and manipulate geometric regions of interest
 	<li> extend JS9 using plugins and the public API
-	<li> perform data analysis (local and server-side)
-	<li> configure and control JS9 from within a web page
+	<li> perform data analysis (browser and server-side)
+	<li> configure and control JS9 via HTML elements in a web page
 	<li> control JS9 from a command shell or Python
-	<li> print images, save images, etc ...
+	<li> print images, save images and sessions, multiple displays, ...
       </ul>
       <p>
       Drag and drop a FITS astronomical data file onto the display and JS9
@@ -304,11 +323,10 @@
       can perform local analysis on the displayed image: click
       the Plugins tab, create a region, move it around ...
       <p>
-      In addition, images loaded from the server, images loaded via
-      proxy (File menu), and uploaded drag-and-drop images (Analysis
-      menu) all support server-side analysis. Analysis can be run when
-      a region changes, with results displayed back in your display:
-      click the Analysis tab, choose a task, create a region, move it around ...
+      Images loaded on the server, loaded via proxy (File menu), or uploaded
+      (Analysis menu) all support server-side analysis. Results are
+      displayed in your browser: click the Analysis tab, choose a
+      task, create a region, move it around ...
       <p>
     </div>
     <div id="analysis" class="tabcontent mytabcontent">
@@ -530,24 +548,15 @@
       <a href="https://universe-of-learning.org/" target="_blank" rel="noopener noreferrer">NASA's Universe of Learning</a> (STScI-509913).
     </div>
     </div>
-    <div style="margin-top: 10px; margin-left: 2px; float: right">
-    <font size="-1">
+    <div class="mycontact">
     Questions? Please contact
-    <a href="mailto:eric@cfa.harvard.edu?subject=JS9 inquiry">
-      Eric Mandel
-    </a>
-    </font>
+    <a href="mailto:eric@cfa.harvard.edu?subject=JS9 inquiry">Eric Mandel</a>
     </div>
     </td>
     </tr>
-    </table>
-<div class="cfaFooter">
-<!-- open footer table -->
-<table class="footer2" border="0" cellspacing="0" cellpadding="0">
-<tr align="left" valign="middle">
-<td style="text-align:center" width="75px" rowspan="2"> </td>
-<td height="25px">
-<span class="navfooter">
+    <tr>
+    <td style="text-align:center" colspan="2">
+    <div class="myfooter">
 <a href="http://www.cfa.harvard.edu/about/" class="navfooter">About</a>&nbsp;|&nbsp;
 <a href="http://www.cfa.harvard.edu/research/" class="navfooter">Research</a>&nbsp;|&nbsp;
 <a href="http://www.cfa.harvard.edu/education/" class="navfooter">Education &amp; Outreach</a>&nbsp;|&nbsp;
@@ -558,22 +567,20 @@
 <a href="http://www.cfa.harvard.edu/about/contact.html" class="navfooter">Contacts</a>&nbsp;|&nbsp;
 <a href="http://www.cfa.harvard.edu/support/donatecfa.html" class="navfooter">Support CfA</a>&nbsp;|&nbsp;
 <a href="http://www.cfa.harvard.edu/policies/privacy.html" class="navfooter">Privacy</a> 
-</span>
-</td>
-</tr>
-<tr align="left" valign="top">
-<td style="text-align:center" height="40px">&nbsp;&nbsp;&nbsp;&nbsp;
-<a href="http://www.harvard.edu"><img src="js9/images/xfooter-harvard.gif" alt="Harvard Logo" width="20" height="20" align="middle"></a>
-<a href="http://www.si.edu"><img src="js9/images/xfooter-si.gif" alt="Smithsonian Logo" width="20" height="20" align="middle"></a>
-<span class="navfooter">
+    </div>
+    </td>
+    </tr>
+    <tr>
+    <td style="text-align:center" colspan="2">
+    <div class="myfooter">
+    <a href="http://www.harvard.edu"><img src="js9/images/xfooter-harvard.gif" alt="Harvard Logo" width="20" height="20" align="middle"></a>
+    <a href="http://www.si.edu"><img src="js9/images/xfooter-si.gif" alt="Smithsonian Logo" width="20" height="20" align="middle"></a>
 &nbsp;&nbsp;Harvard-Smithsonian Center for Astrophysics&nbsp;&nbsp;|&nbsp;&nbsp;
 60 Garden Street&nbsp;&nbsp;|&nbsp;&nbsp;
 Cambridge, MA 02138
-</span>
-</td>
-</tr>
-</table>
-<!-- close footer table -->
-</div>	
+    </div>
+    </td>
+    </tr>
+    </table>
 </body>
 </html>
