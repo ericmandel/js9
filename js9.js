@@ -16102,6 +16102,8 @@ JS9.mkPublic("Load", function(file, opts){
 		ptype = "img";
 		break;
 	    }
+	} else if( opts.filename.split(".").pop().match(/(png|jpg|jpeg)/i) ){
+	    ptype = "img";
 	}
 	// processing type: img or fits
 	switch(ptype){

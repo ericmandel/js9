@@ -333,7 +333,7 @@ loadproxy)
     # make sure we are not over quota
     quotacheck
     URL=`echo $1 | sed 's/__ampersand__/\&/g'`
-    OFILE=`basename "$URL" | sed 's/\?.*//g'`
+    OFILE=`basename "$URL" | sed 's/\?.*//g;s/  *//g;s/%[0-9A-Fa-f][0-9A-Fa-f]//g'`
     # hack for google drive
     if [ x"$OFILE" = xuc ]; then
       OFILE="google_"$RANDOM".fits"
@@ -382,12 +382,15 @@ loadproxy)
           mv $OFILE $NFILE && OFILE="$NFILE"
         fi
       else
-	# better be a valid FITS file
-        f=`echo $s | egrep "FITS image data" 1>/dev/null 2>&1`
-        if [ $? != 0 ]; then
-	    rm -rf $OFILE
-	    error "$OFILE is not a valid FITS file"
-        fi
+	# better be a known image file type
+        f=`echo $s | egrep -o '(FITS|JPEG|PNG) image data' | awk '{print $1}'`
+	case "$f" in
+	    FITS|JPEG|PNG)
+	    ;;
+	    *)	rm -rf $OFILE
+		error "$OFILE is not a FITS, JPEG, or PNG image file"
+	    ;;
+	 esac
       fi
       # tell JS9 the new file name to load
       echo "${JS9_WORKDIR}/$OFILE"

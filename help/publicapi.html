@@ -198,7 +198,7 @@ To create a new light window without loading an image, use:
 See js9create.html for examples of how to use this routine.
 
 <p>
-<font size="+1"><b><u>Load an FITS image link into JS9 using a proxy server</u></b></font>
+<font size="+1"><b><u>Load an image URL into JS9 using a proxy server</u></b></font>
 <p> 
 <code><font size="+1">JS9.LoadProxy(url, opts)</font></code>
 <p>
@@ -208,7 +208,7 @@ where:
 <li><b>opts</b>: object containing image parameters
 </ul>
 <p>
-Load a FITS file specified by an arbitrary URL into JS9 using the
+Load a FITS, PNG, or JPEG file specified by an arbitrary URL into JS9 using the
 JS9 back-end helper as a proxy server.
 <p>
 For security reasons, JavaScript contained in one web page can
@@ -216,14 +216,15 @@ access data in another web page only if both web pages have the
 same origin (i.e., basically coming from the same host).  This
 policy is called the 
 <a href="https://en.wikipedia.org/wiki/Same-origin_policy">
-Same Origin Policy</a>. This means that JS9 cannot load a FITS file from
-an arbitrary URL without using special techniques.
+Same Origin Policy</a>. This means that JS9 cannot load a image files
+(i.e., FITS, PNG, or JPG) from an arbitrary URL without using special
+techniques.
 <p>
 One such technique is
 <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing">
 Cross-Origin Resource Sharing</a>, by which the second server grants
 permission to access its image data. Dropbox is CORS-enabled, so that
-FITS files can be loaded directly into JS9. But obviously this requires
+image files can be loaded directly into JS9. But obviously this requires
 that explicit permission be granted by the other server.
 <p>
 A second technique is to use a proxy server: the URL is not
@@ -237,8 +238,9 @@ property. In addition, the back-end server must be configured to
 support temporary working directories for each loaded page by setting
 the <b>JS9.globalOpts.workDir</b> property. If the back-end server is
 thus configured as a proxy server, JS9 will support the <b>JS9.LoadProxy()</b>
-call and allow you to load FITS files from arbitrary URLs. JS9 also
-will display a <b>open link via proxy</b> menu option in the <b>File</b> menu.
+call and allow you to load FITS, PNG, and JPG files from arbitrary URLs. 
+JS9 also will display a <b>open link via proxy</b> menu option in the
+<b>File</b> menu.
 <p>
 The <b>JS9.LoadProxy()</b> call takes a URL as its first
 argument. This URL will be retrieved using curl or wget and stored on
