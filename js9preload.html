@@ -9,22 +9,82 @@
   <link type="text/css" rel="stylesheet" href="js9support.css">
   <link type="text/css" rel="stylesheet" href="js9.css">
   <script type="text/javascript" src="js9prefs.js"></script>
-  <script type="text/javascript" src="js9support.min.js"></script>
-  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9support.js"></script>
+  <script type="text/javascript" src="js9.js"></script>
   <script type="text/javascript" src="js9plugins.js"></script>
   <title>JS9 preload</title>
 </head>
-<body onload="init();">
+<body>
     <center><font size="+1">
     <b>JS9 Demo: preloading images into JS9</b>
     </font></center>
     <p>
-    <div class="JS9Menubar"></div>
-    <div class="JS9"></div>
+    <table>
+    <tr>
+    <td>
+      Load two images with one JS9.Preload() call:
+    </td>
+    <td colspan="2">
+      <center>Load images into alternating displays by calling JS9.Preload() repeatedly in a loop:</center>
+    </td>
+    </tr>
+    <tr>
+    <td>
+    <div class="JS9Menubar" id="my0_JS9Menubar" data-width="300px"></div>
+    <div class="JS9" id="my0_JS9" data-width="300px" data-height="300px"></div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="my1_JS9Menubar" data-width="300px"></div>
+    <div class="JS9" id="my1_JS9" data-width="300px" data-height="300px"></div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="my2_JS9Menubar" data-width="300px"></div>
+    <div class="JS9" id="my2_JS9" data-width="300px" data-height="300px"></div>
+    </td>
+    </tr>
+
+    <tr>
+    <td colspan="3">
+    See web page source for details.
+    <td>
+    </tr>
+    </table>
     <script type="text/javascript">
+      var files = [
+        "fits/casa.fits.gz",
+        "fits/snr.fits[events][pi==pha]",
+        "fits/m13.fits",
+        "fits/3c273.fits.gz",
+        "fits/3c58.fits.gz",
+        "fits/ngc1316.fits",
+        "fits/ngkper.fits.gz",
+        "http://hea-www.cfa.harvard.edu/~eric/coma.fits.gz"
+      ];
+      var opts = [
+        {parentFile:"fits/casa.fits", scale:"log",colormap:"cool"},
+        '{"scale": "log"}',
+        {scale: "linear", colormap: "sls"},
+        {parentFile:"fits/3c273.fits",colormap:"viridis",scale:"log"},
+        {parentFile:"fits/3c58.fits",scale:"log"},
+        {scale:"linear"},
+        {parentFile:"ngkper.fits", zoom: "toFit", scale: "log"},
+        '{"scale":"linear", "colormap":"heat"}'
+      ];
       function init(){
-          JS9.Preload("fits/casa.fits.gz", {parentFile:"fits/casa.fits", scale:"log",colormap:"cool"}, "fits/snr.fits[events][pi==pha]", '{"scale": "log"}', "fits/m13.fits", {scale: "linear", colormap: "sls"}, "fits/3c273.fits.gz", {parentFile:"fits/3c273.fits",colormap:"viridis",scale:"log"}, "fits/3c58.fits.gz", {parentFile:"fits/3c58.fits",scale:"log"}, "fits/ngc1316.fits", {scale:"linear"}, "fits/ngkper.fits.gz", {parentFile:"ngkper.fits", zoom: "toFit", scale: "log"}, "http://hea-www.cfa.harvard.edu/~eric/coma.fits.gz", '{"scale":"linear", "colormap":"heat"}');
+          var i, s;
+          // set wcs display to degrees
+          JS9.imageOpts.wcsunits = "degrees";
+          // one call to load files into display 0:
+          JS9.Preload(files[0], opts[0], files[1], opts[1]);
+          // a loop of calls to load files into alternating displays:
+          for(i=2; i<files.length; i++){
+              s = "my" + String(i%2+1) + "_JS9";
+              JS9.Preload(files[i], opts[i], {display: s});
+          }
       }
+      $(document).ready(function(){
+        init();
+      });
     </script>
 <p>
 JS9 Demos:
