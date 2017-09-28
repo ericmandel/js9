@@ -12972,6 +12972,7 @@ JS9.loadScript = function(url, func, error){
 // fetch a file URL (as a blob) and process it
 // (as of 2/2015: can't use $.ajax to retrieve a blob, so use low-level xhr)
 JS9.fetchURL = function(name, url, opts, handler) {
+    var nurl;
     var xhr = new XMLHttpRequest();
     // opts is optional
     opts = opts || {};
@@ -12989,10 +12990,12 @@ JS9.fetchURL = function(name, url, opts, handler) {
     }
     // avoid the cache (Safari is especially agressive) for FITS files
     if( !opts.allowCache && !url.match(/\?/) ){
-	url += "?r=" + Math.random();
+	nurl = url + "?r=" + Math.random();
+    } else {
+	nurl = url;
     }
     // set up connection
-    xhr.open('GET', url, true);
+    xhr.open('GET', nurl, true);
     // and parameters
     if( opts.responseType ){
 	xhr.responseType = opts.responseType;
