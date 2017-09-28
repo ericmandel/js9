@@ -17262,6 +17262,11 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
     layer = obj.argv[0];
     file = obj.argv[1];
     opts = obj.argv[2];
+    // special case: 1 arg is the catalog, not the layer
+    if( layer && !file ){
+	file = layer;
+	layer = null;
+    }
     // sanity check
     if( !file ){
 	JS9.error("JS9.LoadCatalog: no file specified for catalog load");
