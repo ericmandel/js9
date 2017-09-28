@@ -16058,13 +16058,18 @@ JS9.mkPublic("Load", function(file, opts){
 	    display = JS9.DEFID;
 	}
     }
-    // opts is an object or json
-    if( typeof opts === "string" ){
+    // opts can be an object or json
+    if( typeof opts === "object" ){
+	// make a copy so we can modify it
+	opts = $.extend(true, {}, opts);
+    } else if( typeof opts === "string" ){
+	// convert json to object
 	try{ opts = JSON.parse(opts); }
-	catch(e){ opts = undefined; }
+	catch(e){ opts = {}; }
+    } else {
+	// init as an empty object
+	opts = {};
     }
-    // make sure we can look for properties in opts
-    opts = opts || {};
     // if display was implicit, add it to opts
     opts.display = opts.display || display;
     // check for onload function
@@ -16188,7 +16193,18 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     var id, did, head, body, win, winid, initialURL;
     var idbase = (type || "") + "win";
     var title;
-    opts = opts || {};
+    // opts can be an object or json
+    if( typeof opts === "object" ){
+	// make a copy so we can modify it
+	opts = $.extend(true, {}, opts);
+    } else if( typeof opts === "string" ){
+	// convert json to object
+	try{ opts = JSON.parse(opts); }
+	catch(e){ opts = {}; }
+    } else {
+	// init as an empty object
+	opts = {};
+    }
     switch(type){
     case "light":
         // use supplied id or make a reasonably unique id for the JS9 elements
@@ -16325,6 +16341,18 @@ JS9.mkPublic("LoadProxy", function(url, opts){
     if( obj.display ){
 	disp = JS9.lookupDisplay(obj.display);
     }
+    // opts can be an object or json
+    if( typeof opts === "object" ){
+	// make a copy so we can modify it
+	opts = $.extend(true, {}, opts);
+    } else if( typeof opts === "string" ){
+	// convert json to object
+	try{ opts = JSON.parse(opts); }
+	catch(e){ opts = {}; }
+    } else {
+	// init as an empty object
+	opts = {};
+    }
     JS9.waiting(true, disp);
     JS9.Send('loadproxy', {'cmd': 'js9Xeq loadproxy ' + url}, function(r){
         var robj;
@@ -16344,7 +16372,6 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 	if( robj.stderr ){
 	    JS9.error(robj.stderr);
 	} else if( robj.stdout ){
-	    opts = opts || {};
 	    if( opts.fits2png === undefined ){
 		opts.fits2png = false;
 	    }
@@ -17069,10 +17096,22 @@ JS9.mkPublic("LoadRegions", function(file, opts){
     var display, reader;
     var obj = JS9.parsePublicArgs(arguments);
     file = obj.argv[0];
-    opts = obj.argv[1] || {};
+    opts = obj.argv[1];
     // sanity check
     if( !file ){
 	JS9.error("JS9.LoadRegions: no file specified for regions load");
+    }
+    // opts can be an object or json
+    if( typeof opts === "object" ){
+	// make a copy so we can modify it
+	opts = $.extend(true, {}, opts);
+    } else if( typeof opts === "string" ){
+	// convert json to object
+	try{ opts = JSON.parse(opts); }
+	catch(e){ opts = {}; }
+    } else {
+	// init as an empty object
+	opts = {};
     }
     // check for display
     if( obj.display ){
@@ -17150,10 +17189,22 @@ JS9.mkPublic("LoadSession", function(file, opts){
     var display, reader, disp;
     var obj = JS9.parsePublicArgs(arguments);
     file = obj.argv[0];
-    opts = obj.argv[1] || {};
+    opts = obj.argv[1];
     // sanity check
     if( !file ){
 	JS9.error("JS9.LoadSession: no file specified for load");
+    }
+    // opts can be an object or json
+    if( typeof opts === "object" ){
+	// make a copy so we can modify it
+	opts = $.extend(true, {}, opts);
+    } else if( typeof opts === "string" ){
+	// convert json to object
+	try{ opts = JSON.parse(opts); }
+	catch(e){ opts = {}; }
+    } else {
+	// init as an empty object
+	opts = {};
     }
     // check for display
     if( obj.display ){
@@ -17219,6 +17270,18 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
     im = JS9.getImage(obj.display);
     if( !im ){
 	return;
+    }
+    // opts can be an object or json
+    if( typeof opts === "object" ){
+	// make a copy so we can modify it
+	opts = $.extend(true, {}, opts);
+    } else if( typeof opts === "string" ){
+	// convert json to object
+	try{ opts = JSON.parse(opts); }
+	catch(e){ opts = {}; }
+    } else {
+	// init as an empty object
+	opts = {};
     }
     // convert blob to string
     if( typeof file === "object" ){
