@@ -16431,7 +16431,8 @@ JS9.mkPublic("Preload", function(arg1){
 	for(i=0; i<alen; i++){
 	    j = i + 1;
 	    if( (j < alen) && (typeof arguments[j] === "object") ){
-		JS9.preloads.push([arguments[i], arguments[j], dobj]);
+		pobj = $.extend(true, {}, arguments[j]);
+		JS9.preloads.push([arguments[i], pobj, dobj]);
 		i++;
 	    } else if( (j < alen) && (arguments[j].indexOf('{') === 0) ){
 		try{ pobj = JSON.parse(arguments[j]); }
