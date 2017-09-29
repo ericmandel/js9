@@ -144,7 +144,7 @@ Once Node.js is installed, you must start the server-side helper from
 the JS9 web install directory, i.e. the location where you installed
 (among other things) js9.js and the node_modules directory:
 <pre>
-    node js9Helper.js >& node.log &
+    node js9Helper.js >& ~/logs/js9node.log &
 </pre>
 Unlike CGI, Node can be run as any user: it does not have to be run as
 the http daemon user. It certainly should not be run as root! We run
@@ -152,7 +152,8 @@ it as a non-privileged user with sufficient permissions to run analysis
 programs. In any case, it should be run with its Unix PATH set to
 include the directory containing the JS9 helper program, as well as
 any analysis programs that will be executed by the JS9 server-side
-helper when requested by the client.
+helper when requested by the client. Also note that the log file should
+be created outside the web server directory structure.
 
 <p>
 Clients will automatically connect to the Node.js helper when an image
