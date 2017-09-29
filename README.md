@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.998178.svg)](https://doi.org/10.5281/zenodo.998178)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.999343.svg)](https://doi.org/10.5281/zenodo.999343)
 
 JS9: astronomical image display everywhere
 ==========================================
