@@ -5564,11 +5564,26 @@ JS9.Image.prototype.rotateData = function(angle, opts){
 // creates a new raw data layer ("reproject")
 JS9.Image.prototype.reprojectData = function(wcsim, opts){
     var that = this;
+    var im;
     // sanity checks
     if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
 	JS9.error("no WCS info available for reprojection");
     }
     if( !wcsim || !JS9.reproject ){
+	return;
+    }
+    // is this a string containing an image name or WCS values?
+    if( typeof wcsim === "string" ){
+	im = JS9.getImage(wcsim);
+	if( im ){
+	    // it was an image name, so change wcsim to the image handle
+	    wcsim = im;
+	} else {
+	    JS9.error("unknown WCS for reproject: " + wcsim);
+	}
+    }
+    // don't reproject myself (useful in supermenu support)
+    if( this === wcsim ){
 	return;
     }
     // could take a while ...
@@ -5579,7 +5594,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	var rcomplete = false;
 	var awvfile, awvfile2, wvfile, owvfile;
 	var wcsheader, wcsstr, oheader, nheader;
-	var im, arr, ivfile, ovfile, rstr, key, topts;
+	var arr, ivfile, ovfile, rstr, key, topts;
 	var tab, tx1, tx2, ty1, ty2, s;
 	var n, avfile, earr, cmdswitches;
 	var reprojHandler;
@@ -5596,16 +5611,6 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	opts = opts || {};
 	// handler
 	reprojHandler = opts.reprojHandler || defaultReprojHandler;
-	// is this a string containing an image name or WCS values?
-	if( typeof wcsim === "string" ){
-	    im = JS9.getImage(wcsim);
-	    if( im ){
-		// it was an image name, so change wcsim to the image handle
-		wcsim = im;
-	    } else {
-		JS9.error("unknown WCS for reproject: " + wcsim);
-	    }
-	}
 	// make copy of input header, removing wcs keywords
 	oheader = $.extend(true, {}, that.raw.header);
 	for(key in oheader){

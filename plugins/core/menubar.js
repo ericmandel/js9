@@ -1358,8 +1358,11 @@ JS9.Menubar.init = function(width, height){
 		    items: {reprojtitle: {name: "using the wcs from:", disabled: true}}
 		};
 		for(i=0, nwcs=0; i<JS9.images.length; i++){
-		    if( tim !== JS9.images[i]  &&
-			JS9.images[i].raw.wcs ){
+		    if( JS9.images[i].raw.wcs ){
+			if( (tim === JS9.images[i]) &&
+			    (that.id.search(JS9.SUPERMENU) < 0) ){
+			    continue;
+			}
 			s1 = "reproject_" + JS9.images[i].id;
 			items.reproject.items[s1] = {
 			    name: JS9.images[i].id
