@@ -490,9 +490,10 @@ JS9.Menubar.init = function(width, height){
 		    }
 		};
 		var keyResize = function(e){
+		    getDisplays().forEach(function(val){
 		    var obj = $.contextMenu.getInputValues(e.data);
 		    var keycode = e.which || e.keyCode;
-		    var vdisp = that.display;
+		    var vdisp = val;
 		    switch( keycode ){
 		    case 9:
 		    case 13:
@@ -502,6 +503,7 @@ JS9.Menubar.init = function(width, height){
 			vdisp.tmp.editingMenu = true;
 			break;
 		    }
+		    });
 		};
 		// plugins
 		items["sep" + n++] = {name: "Plugins:"};
@@ -693,9 +695,10 @@ JS9.Menubar.init = function(width, height){
 		    }
 		};
 		var keyZoom = function(e){
+		    getDisplays().forEach(function(val){
 		    var obj = $.contextMenu.getInputValues(e.data);
 		    var keycode = e.which || e.keyCode;
-		    var vdisp = that.display;
+		    var vdisp = val;
 		    var vim = vdisp.image;
 		    switch( keycode ){
 		    case 9:
@@ -708,6 +711,7 @@ JS9.Menubar.init = function(width, height){
 			vdisp.tmp.editingMenu = true;
 			break;
 		    }
+		    });
 		};
 		var items = {};
 		items.zoomtitle = {name: "Zoom Factors:", disabled: true};
@@ -834,9 +838,10 @@ JS9.Menubar.init = function(width, height){
 		    im.displayImage("colors");
 		};
 		var keyScale = function(e){
+		    getDisplays().forEach(function(val){
 		    var obj = $.contextMenu.getInputValues(e.data);
 		    var keycode = e.which || e.keyCode;
-		    var vdisp = that.display;
+		    var vdisp = val;
 		    var vim = vdisp.image;
 		    switch( keycode ){
 		    case 9:
@@ -847,6 +852,7 @@ JS9.Menubar.init = function(width, height){
 			vdisp.tmp.editingMenu = true;
 			break;
 		    }
+		    });
 		};
 		items.scaletitle = {name: "Scaling Algorithms:",
 				    disabled: true};
@@ -991,9 +997,10 @@ JS9.Menubar.init = function(width, height){
 		    im.displayImage("colors");
 		};
 		var keyColor = function(e){
+		    getDisplays().forEach(function(val){
 		    var obj = $.contextMenu.getInputValues(e.data);
 		    var keycode = e.which || e.keyCode;
-		    var vdisp = that.display;
+		    var vdisp = val;
 		    var vim = vdisp.image;
 		    switch( keycode ){
 		    case 9:
@@ -1004,6 +1011,7 @@ JS9.Menubar.init = function(width, height){
 			vdisp.tmp.editingMenu = true;
 			break;
 		    }
+		    });
 		};
 		items.cmaptitle = {name: "Colormaps:", disabled: true};
 		for(i=0; i<JS9.globalOpts.topColormaps.length; i++){
@@ -1265,9 +1273,10 @@ JS9.Menubar.init = function(width, height){
 		    }
 		};
 		var keyRotate = function(e){
+		    getDisplays().forEach(function(val){
 		    var obj = $.contextMenu.getInputValues(e.data);
 		    var keycode = e.which || e.keyCode;
-		    var vdisp = that.display;
+		    var vdisp = val;
 		    var vim = vdisp.image;
 		    switch( keycode ){
 		    case 9:
@@ -1280,6 +1289,7 @@ JS9.Menubar.init = function(width, height){
 			vdisp.tmp.editingMenu = true;
 			break;
 		    }
+		    });
 		};
 		items.wcssystitle = {name: "WCS Systems:", disabled: true};
 		for(i=0; i<JS9.wcssyss.length; i++){
@@ -1502,9 +1512,10 @@ JS9.Menubar.init = function(width, height){
 		    }
 		};
 		var keyAnalysis = function(e){
+		    getDisplays().forEach(function(val){
 		    var obj = $.contextMenu.getInputValues(e.data);
 		    var keycode = e.which || e.keyCode;
-		    var vdisp = that.display;
+		    var vdisp = val;
 		    var vim = vdisp.image;
 		    switch( keycode ){
 		    case 9:
@@ -1515,6 +1526,7 @@ JS9.Menubar.init = function(width, height){
 			vdisp.tmp.editingMenu = true;
 			break;
 		    }
+		    });
 		};
 		for(i=0; i<JS9.plugins.length; i++){
 		    plugin = JS9.plugins[i];
