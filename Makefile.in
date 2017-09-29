@@ -354,7 +354,7 @@ eslint2:	FORCE
 tar:		FORCE
 		($(RM) config.cache; \
 		cd ..; \
-		tar cf - $(DISTNAME) | gzip -9 -c > $(DISTNAME).tar.gz)
+		tar cf - $(DISTNAME) | gzip -9 -c > $(DISTNAME).tgz)
 
 install:	install-binaries install-scripts install-web
 
@@ -562,11 +562,11 @@ release:	clean gitprefs
 			 $(SRCS) $(INCLUDES) $(SCRIPTS) $(MFILES) |\
 		(cd $(DISTDIR)/$(DISTNAME) && tar xf -); \
 		cd $(DISTDIR) ; \
-		tar cf - $(DISTNAME) | gzip -c > $(DISTNAME).tar.gz; \
+		tar cf - $(DISTNAME) | gzip -c > $(DISTNAME).tgz; \
 		rm -rf foo $(DISTNAME))
 
 release-data:	FORCE
-		tar cf - $(WEBDATA) | gzip -c > $(DISTDIR)/$(DDISTNAME).tar.gz;
+		tar cf - $(WEBDATA) | gzip -c > $(DISTDIR)/$(DDISTNAME).tgz;
 
 spell:		FORCE
 		@(for f in index.html $(WEBHELP)/*.html; do \
