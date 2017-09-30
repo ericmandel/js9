@@ -32,10 +32,14 @@ if( JS9.menuButtonOptsArr ){
 JS9.Menubar.init = function(width, height){
     var ii, jj, ss, tt, menu, html;
     var that = this;
+    var issuper = this.id.search(JS9.SUPERMENU) >= 0;
     // set width and height on div
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
-	this.width = width || JS9.MENUWIDTH;
+        this.width = width || JS9.Menubar.WIDTH;
+        if( issuper ){
+            this.width += 10;
+        }
     }
     this.divjq.css("width", this.width);
     this.width = parseInt(this.divjq.css("width"), 10);
@@ -56,6 +60,9 @@ JS9.Menubar.init = function(width, height){
     this.height = parseInt(this.divjq.css("height"), 10);
     // generate html for this menubar
     html = "<span id='JS9Menus_@@ID@@'>";
+    if( issuper ){
+       html += "<button type='button' id='superMenu@@ID@@'class='JS9Button'>Super</button>";
+    }
     for(jj=0; jj<JS9.globalOpts.menuBar.length; jj++){
 	menu = JS9.globalOpts.menuBar[jj];
 	for(ii=0; ii<JS9.Menubar.buttonOptsArr.length; ii++){
