@@ -14280,7 +14280,7 @@ JS9.mouseDownCB = function(evt){
 
 // mouseup: assumes display obj is passed in evt.data
 JS9.mouseUpCB = function(evt){
-    var i, dwidth, dheight, tdisp;
+    var i, dwidth, dheight, tdisp, isclick;
     var display = evt.data;
     var im = display.image;
     // sanity checks
@@ -14291,6 +14291,8 @@ JS9.mouseUpCB = function(evt){
     im.pos = JS9.eventToDisplayPos(evt, im.posOffset);
     // image position
     im.ipos = im.displayToImagePos(im.pos);
+    isclick = 	((Math.abs(im.pos0.x-im.pos.x) < JS9.NOMOVE)  &&
+		 (Math.abs(im.pos0.y-im.pos.y) < JS9.NOMOVE));
     // prevent default unless we are close to the resize area
     if( !display.inResize(im.pos) ){
 	evt.preventDefault();
@@ -14301,8 +14303,7 @@ JS9.mouseUpCB = function(evt){
     }
     // inside a region, update region string
     if( im.clickInRegion && im.clickInLayer ){
-	if( ((Math.abs(im.pos0.x-im.pos.x) < JS9.NOMOVE)  &&
-	     (Math.abs(im.pos0.y-im.pos.y) < JS9.NOMOVE)) ){
+	if( isclick ){
 	    im.updateShapes(im.clickInLayer, "selected", "select");
 	} else {
 	    im.updateShapes(im.clickInLayer, "selected", "update");
@@ -14311,6 +14312,9 @@ JS9.mouseUpCB = function(evt){
     // plugin callbacks
     if( !JS9.specialKey(evt) ){
 	im.xeqPlugins("mouse", "onmouseup", evt);
+	if( isclick ){
+	    im.xeqPlugins("mouse", "onclick", evt);
+	}
     }
     // safe to unset clickInRegion now
     im.clickInRegion = false;

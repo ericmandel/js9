@@ -56,6 +56,13 @@ PLUGIN.init.prototype.message = function(message, row) {
     this.divjq.children("#message" + row).html(message);
 };
 
+// callback when mouse is clicked (down,up)
+PLUGIN.click = function(im, ipos, evt){
+    var t = sprintf("click: ipos=%s,%s",
+		    ipos.x.toFixed(2), ipos.y.toFixed(2));
+    this.message(t, 1);
+};
+
 // callback when mouse is pressed
 // im:   image handle
 // ipos: image position; origin at 1,1 (FITS convention)
@@ -241,6 +248,7 @@ PLUGIN.changecontrastbias = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(PLUGIN.CLASS, PLUGIN.NAME, PLUGIN.init,
 		   {menuItem: "pluginTest",
+		    onclick: PLUGIN.click,
 		    onmousedown: PLUGIN.mousedown,
 		    onmouseup: PLUGIN.mouseup,
 		    onmousemove: PLUGIN.mousemove,
