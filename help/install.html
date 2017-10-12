@@ -195,7 +195,7 @@ this technique, your header can remain as shown above, but the Apache
 server will send gzip'ed versions when available. To do this, you can
 add code such as the following to the Apache httpd.conf:
 <pre>
-  &lt;IfModule mod_headers.c%gt;
+  &lt;IfModule mod_headers.c&gt;
     # turn on rewrite
     RewriteEngine on
 
@@ -222,14 +222,14 @@ add code such as the following to the Apache httpd.conf:
     RewriteRule "\.js\.gz$" "-" [T=text/javascript,E=no-gzip:1]
     RewriteRule "\.wasm\.gz$" "-" [T=application/octet-stream,E=no-gzip:1]
 
-    &lt;FilesMatch "(\.js\.gz|\.css\.gz|\.wasm\.gz)$"%gt;
+    &lt;FilesMatch "(\.js\.gz|\.css\.gz|\.wasm\.gz)$"&gt;
     # Serve correct encoding type.
     Header append Content-Encoding gzip
     # Force proxies to cache gzipped &
     # non-gzipped css/js files separately.
     Header append Vary Accept-Encoding
-    &lt;/FilesMatch%gt;
-  &lt;/IfModule%gt;
+    &lt;/FilesMatch&gt;
+  &lt;/IfModule&gt;
 </pre>
 
 <p>
