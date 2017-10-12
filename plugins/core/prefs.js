@@ -92,6 +92,10 @@ JS9.Prefs.imagesSchema = {
 	    "type": "boolean",
 	    "helper": "display value/position?"
 	},
+	"inherit": {
+	    "type": "boolean",
+	    "helper": "new images inherit current params?"
+	},
 	"invert": {
 	    "type": "boolean",
 	    "helper": "by default, invert colormap?"
@@ -576,6 +580,9 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	    switch( source.name ){
 	    case "images":
 		// set new option value
+		if( key === "inherit" && display && display.image ){
+		    display.image.params.inherit = val;
+		}
 	        obj[key] = val;
 	        break;
 	    case "regions":

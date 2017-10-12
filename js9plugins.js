@@ -4361,10 +4361,72 @@ if( JS9.menuButtonOptsArr ){
     JS9.Menubar.buttonOptsArr = JS9.menuButtonOptsArr;
 }
 
+// get displays associated with this menubar, taking supermenus into account
+JS9.Menubar.getDisplays = function(mode){
+    var i, s, disp;
+    var arr = [];
+    mode = mode || "any";
+    if( this.id.search(JS9.SUPERMENU) >= 0 ){
+	if( mode !== "all" && this.selectedDisplay ){
+	    return [this.selectedDisplay];
+	}
+	s = this.divjq.data("displays").split(",");
+	if( s[0] === "*" ){
+	    for(i=0; i<JS9.displays.length; i++){
+		arr.push(JS9.displays[i]);
+	    }
+	} else {
+	    for(i=0; i<s.length; i++){
+		disp = JS9.lookupDisplay(s[i]);
+		if( disp ){
+		    arr.push(disp);
+		}
+	    }
+	}
+    }
+    if( !arr.length ){
+	arr.push(this.display);
+    }
+    return arr;
+};
+
+// this callback happens when a click is registered on a display
+// we then go through the supermenus, and if one of them contains this display,
+// we set its selectedDisplay value so that use of that supermenu is then aimed
+// only at the selected display
+// also used to unset previously set selectedDisplay
+//
+// called by JS9.mouseupCB with no context, passing current image object
+JS9.Menubar.onclick = function(disp){
+    var i, arr, supermenu;
+    if( (typeof disp === "string") && (disp !== "all") ){
+	disp = JS9.lookupDisplay(disp);
+    }
+    for(i=0; i<JS9.supermenus.length; i++){
+	supermenu = JS9.supermenus[i];
+	arr = JS9.Menubar.getDisplays.call(supermenu, "all");
+	if( ($.inArray(disp, arr) >= 0) || (disp === "all") ){
+	    $(".JS9").find(".JS9Image").removeClass("JS9Highlight");
+	    if( (disp === supermenu.selectedDisplay) || (disp === "all") ){
+		// unselect
+		supermenu.selectedDisplay = null;
+	    } else {
+		// select
+		supermenu.selectedDisplay = disp;
+		$(disp.divjq).find(".JS9Image").addClass("JS9Highlight");
+	    }
+	}
+    }
+};
+
 JS9.Menubar.init = function(width, height){
     var ii, jj, ss, tt, menu, html;
     var that = this;
     var issuper = this.id.search(JS9.SUPERMENU) >= 0;
+    // save object in super array, if necessary
+    if( issuper ){
+	JS9.supermenus.push(this);
+    }
     // set width and height on div
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
@@ -4393,7 +4455,7 @@ JS9.Menubar.init = function(width, height){
     // generate html for this menubar
     html = "<span id='JS9Menus_@@ID@@'>";
     if( issuper ){
-       html += "<button type='button' id='superMenu@@ID@@'class='JS9Button'>Super</button>";
+       html += "<button type='button' id='superMenu@@ID@@'class='"+ this.buttonClass+"'>Super</button>";
     }
     for(jj=0; jj<JS9.globalOpts.menuBar.length; jj++){
 	menu = JS9.globalOpts.menuBar[jj];
@@ -4442,28 +4504,45 @@ JS9.Menubar.init = function(width, height){
 		tdisp.image.displayImage("rgb");
 	    }
 	}
-	function getDisplays() {
-	    var i, s, disp;
-	    var arr = [];
-	    if( that.id.search(JS9.SUPERMENU) >= 0 ){
-		s = that.divjq.data("displays").split(",");
-		if( s[0] === "*" ){
-		    for(i=0; i<JS9.displays.length; i++){
-			arr.push(JS9.displays[i]);
-		    }
-		} else {
-		    for(i=0; i<s.length; i++){
-			disp = JS9.lookupDisplay(s[i]);
-			if( disp ){
-			    arr.push(disp);
-			}
+	if( issuper ){
+	// supermenu: make button open the contextMenu
+	$("#superMenu" + that.id).on("mousedown", function(evt){
+            evt.preventDefault();
+            $("#superMenu" + that.id).contextMenu();
+	});
+	$.contextMenu({
+            selector: "#superMenu" + that.id,
+	    zIndex: JS9.MENUZINDEX,
+	    events: { hide: onhide },
+            build: function(){
+		var i, name, tdisp;
+		var n = 0;
+		var items = {};
+		var arr = JS9.Menubar.getDisplays.call(that, "all");
+		items.supertitle = {name: "selected display:", disabled: true};
+		for(i=0; i<arr.length; i++){
+		    tdisp = arr[i];
+		    name = tdisp.id;
+		    items[name] = {name: name};
+		    if( that.selectedDisplay === tdisp ){
+			items[name].icon = "sun";
+			n++;
 		    }
 		}
+		name = "all displays";
+		items.all = {name: name};
+		if( !n ){
+		    items.all.icon = "sun";
+		}
+		items["sep" + n++] = "------";
+		return{
+		    callback: function(key){
+			JS9.Menubar.onclick.call(that, key);
+		    },
+		    items: items
+		};
 	    }
-	    if( !arr.length ){
-		arr.push(that.display);
-	    }
-	    return arr;
+	});
 	}
 	// file: make button open the contextMenu
 	$("#fileMenu" + that.id).on("mousedown", function(evt){
@@ -4478,7 +4557,7 @@ JS9.Menubar.init = function(width, height){
 		var i, im, name, imlen, s1;
 		var n = 0;
 		var items = {};
-		var tdisp = getDisplays()[0];
+		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 		var tim = tdisp.image;
 		items.filetitle = {name: "Images:", disabled: true};
 		imlen = JS9.images.length;
@@ -4550,10 +4629,12 @@ JS9.Menubar.init = function(width, height){
 			   }
 		};
 		items.moveto = {
-		    name: "move image to ...",
+		    name: "move this image to ...",
 		    items: {movetotitle: {name: "choose display:",
 					  disabled: true}}
 		};
+		items.separate = { name: "separate these images" };
+		items.gather = { name: "gather all images here" };
 		if( tim ){
 		    items.moveto.disabled = false;
 		    for(i=0; i<JS9.displays.length; i++){
@@ -4599,10 +4680,14 @@ JS9.Menubar.init = function(width, height){
 		}
 		return {
                     callback: function(key){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 			var j, s, t, did, kid, unew, uwin;
 			var udisp = val;
 			var uim = udisp.image;
+			// make sure display is still valid
+			if( $.inArray(udisp, JS9.displays) < 0 ){
+			    return;
+			}
 			switch(key){
 			case "free":
 			    if( uim && uim.raw.hdu && uim.raw.hdu.fits ){
@@ -4661,7 +4746,7 @@ JS9.Menubar.init = function(width, height){
 			    }
 			    break;
 			case "lite":
-			    JS9.LoadWindow(null, null, "light");
+			    JS9.LoadWindow(null, {clone: udisp.id}, "light");
 			    break;
 			case "xnew":
 			    JS9.LoadWindow(null, null, "new");
@@ -4751,17 +4836,33 @@ JS9.Menubar.init = function(width, height){
 				uim.print();
 			    }
 			    break;
+			case "separate":
+			    if( udisp ){
+				udisp.separate();
+			    }
+			    break;
+			case "gather":
+			    if( udisp ){
+				if( (that.id.search(JS9.SUPERMENU) >= 0) &&
+				    !that.selectedDisplay 		 ){
+				    JS9.error("gather requires a selected display");
+				}
+				udisp.gather();
+			    }
+			    break;
 			default:
 			    // maybe it's a moveto request
 			    if( key.match(/^moveto_/) ){
 				unew = key.replace(/^moveto_/,"");
 				if( unew === "newdisp" ){
-				    uwin = "lightwin" + JS9.uniqueID();
+				    uwin = "JS9_light" + JS9.uniqueID();
 			            $("#dhtmlwindowholder").arrive("#" + uwin,
                                     {onceOnly: true}, function(){
 					uim.moveToDisplay(uwin);
 				    });
-				    JS9.LoadWindow(null, {id: uwin}, "light");
+				    JS9.LoadWindow(null,
+                                                   {id: uwin, clone: udisp.id},
+                                                   "light");
 				} else {
 				    uim.moveToDisplay(unew);
 				}
@@ -4802,7 +4903,7 @@ JS9.Menubar.init = function(width, height){
 		var lastxclass="";
 		var n = 0;
 		var items = {};
-		var tdisp = getDisplays()[0];
+		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 		var tim = tdisp.image;
 		var editResize = function(disp, obj){
 		    var v1, v2, arr;
@@ -4813,13 +4914,21 @@ JS9.Menubar.init = function(width, height){
 			case 0:
 			    break;
 			case 1:
-			    if( JS9.isNumber(arr[0]) ){
+			    if( tim ){
+				v1 = tim.wcs2imlen(arr[0]);
+				disp.resize(v1, v1);
+			    } else if( JS9.isNumber(arr[0]) ){
 				v1 = parseInt(arr[0], 10);
 				disp.resize(v1, v1);
 			    }
 			    break;
 			default:
-			    if( JS9.isNumber(arr[0]) && JS9.isNumber(arr[1]) ){
+			    if( tim && tim.wcs ){
+				v1 = tim.wcs2imlen(arr[0]);
+				v2 = tim.wcs2imlen(arr[1]);
+				disp.resize(v1, v2);
+			    } else if( JS9.isNumber(arr[0]) && 
+				       JS9.isNumber(arr[1]) ){
 				v1 = parseInt(arr[0], 10);
 				v2 = parseInt(arr[1], 10);
 				disp.resize(v1, v2);
@@ -4829,10 +4938,14 @@ JS9.Menubar.init = function(width, height){
 		    }
 		};
 		var keyResize = function(e){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 		    var obj = $.contextMenu.getInputValues(e.data);
 		    var keycode = e.which || e.keyCode;
 		    var vdisp = val;
+		    // make sure display is still valid
+		    if( $.inArray(vdisp, JS9.displays) < 0 ){
+			return;
+		    }
 		    switch( keycode ){
 		    case 9:
 		    case 13:
@@ -4873,6 +4986,10 @@ JS9.Menubar.init = function(width, height){
 		} else if( tdisp.image && tdisp.image.params.valpos ){
 		    items.valpos.icon = "sun";
 		}
+		items.inherit = {name: "new image inherits current params"};
+		if( tdisp.image && tdisp.image.params.inherit ){
+		    items.inherit.icon = "sun";
+		}
 		items["sep" + n++] = "------";
 		items.rawlayer = {
 		    name: "raw data layers",
@@ -4899,19 +5016,27 @@ JS9.Menubar.init = function(width, height){
 		    name: "change width/height:",
 		    type: "text"
 		};
+		items.imagesize = {name: "set to image size"};
 		items.fullsize = {name: "set size to full window"};
 		items.resetsize = {name: "reset to original size"};
 		if( !JS9.globalOpts.resize ){
 		    items.resize.disabled = true;
 		    items.fullsize.disabled = true;
+		    items.imagesize.disabled = true;
 		    items.resetsize.disabled = true;
+		} else if( !tim ){
+		    items.imagesize.disabled = true;
 		}
 		return {
 		    callback: function(key){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 		        var jj, ucat, umode, uplugin, s;
 			var udisp = val;
 			var uim = udisp.image;
+			// make sure display is still valid
+			if( $.inArray(udisp, JS9.displays) < 0 ){
+			    return;
+			}
 			switch(key){
 			case "valpos":
 			    if( uim ){
@@ -4919,6 +5044,11 @@ JS9.Menubar.init = function(width, height){
 				if( !uim.params.valpos ){
 				    udisp.clearMessage();
 				}
+			    }
+			    break;
+			case "inherit":
+			    if( uim ){
+				uim.params.inherit = !uim.params.inherit;
 			    }
 			    break;
 			case "show":
@@ -4938,6 +5068,9 @@ JS9.Menubar.init = function(width, height){
 			    break;
 			case "fullsize":
 			    udisp.resize("full", {center: true});
+			    break;
+			case "imagesize":
+			    udisp.resize("image");
 			    break;
 			case "resetsize":
 			    udisp.resize("reset");
@@ -5025,7 +5158,7 @@ JS9.Menubar.init = function(width, height){
             build: function(){
 		var i, zoom, zoomp, name, name2;
 		var n = 0;
-		var tdisp = getDisplays()[0];
+		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 		var tim = tdisp.image;
 		var editZoom = function(im, obj){
 		    delete tdisp.tmp.editingMenu;
@@ -5034,11 +5167,15 @@ JS9.Menubar.init = function(width, height){
 		    }
 		};
 		var keyZoom = function(e){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 		    var obj = $.contextMenu.getInputValues(e.data);
 		    var keycode = e.which || e.keyCode;
 		    var vdisp = val;
 		    var vim = vdisp.image;
+		    // make sure display is still valid
+		    if( $.inArray(vdisp, JS9.displays) < 0 ){
+			return;
+		    }
 		    switch( keycode ){
 		    case 9:
 		    case 13:
@@ -5089,9 +5226,13 @@ JS9.Menubar.init = function(width, height){
 		items.reset = {name: "reset zoom/pan"};
 		return {
 		    callback: function(key){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 			var udisp = val;
 			var uim = udisp.image;
+			// make sure display is still valid
+			if( $.inArray(udisp, JS9.displays) < 0 ){
+			    return;
+			}
 			if( uim ){
 			    switch(key){
 			    case "zoomIn":
@@ -5163,7 +5304,7 @@ JS9.Menubar.init = function(width, height){
 		var i, s1, s2;
 		var n = 0;
 		var items = {};
-		var tdisp = getDisplays()[0];
+		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 		var editScale = function(im, obj){
 		    delete tdisp.tmp.editingMenu;
 		    if( JS9.isNumber(obj.scalemin) ){
@@ -5177,11 +5318,15 @@ JS9.Menubar.init = function(width, height){
 		    im.displayImage("colors");
 		};
 		var keyScale = function(e){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 		    var obj = $.contextMenu.getInputValues(e.data);
 		    var keycode = e.which || e.keyCode;
 		    var vdisp = val;
 		    var vim = vdisp.image;
+		    // make sure display is still valid
+		    if( $.inArray(vdisp, JS9.displays) < 0 ){
+			return;
+		    }
 		    switch( keycode ){
 		    case 9:
 		    case 13:
@@ -5226,9 +5371,13 @@ JS9.Menubar.init = function(width, height){
 		};
 		return {
                     callback: function(key, opt){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 			var udisp = val;
 			var uim = udisp.image;
+			// make sure display is still valid
+			if( $.inArray(udisp, JS9.displays) < 0 ){
+			    return;
+			}
 			if( uim ){
 			    switch(key){
 			    case "dminmax":
@@ -5317,7 +5466,7 @@ JS9.Menubar.init = function(width, height){
 		var i, s1, s2, arr;
 		var n = 0;
 		var items = {};
-		var tdisp = getDisplays()[0];
+		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 		var editColor = function(im, obj){
 		    delete tdisp.tmp.editingMenu;
 		    if( obj.contrast && !isNaN(obj.contrast) ){
@@ -5336,11 +5485,15 @@ JS9.Menubar.init = function(width, height){
 		    im.displayImage("colors");
 		};
 		var keyColor = function(e){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 		    var obj = $.contextMenu.getInputValues(e.data);
 		    var keycode = e.which || e.keyCode;
 		    var vdisp = val;
 		    var vim = vdisp.image;
+		    // make sure display is still valid
+		    if( $.inArray(vdisp, JS9.displays) < 0 ){
+			return;
+		    }
 		    switch( keycode ){
 		    case 9:
 		    case 13:
@@ -5423,9 +5576,13 @@ JS9.Menubar.init = function(width, height){
 		}
 		return {
 		    callback: function(key){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 			var udisp = val;
 			var uim = udisp.image;
+			// make sure display is still valid
+			if( $.inArray(udisp, JS9.displays) < 0 ){
+			    return;
+			}
 			if( uim ){
 			    switch(key){
 			    case "loadcmap":
@@ -5488,7 +5645,7 @@ JS9.Menubar.init = function(width, height){
 	    events: { hide: onhide },
             build: function(){
 		var i, s1;
-		var tdisp = getDisplays()[0];
+		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 		var tim = tdisp.image;
 		var items = {
 		    "regiontitle": {name: "Regions:", disabled: true},
@@ -5539,10 +5696,14 @@ JS9.Menubar.init = function(width, height){
 		}
 		return {
 		    callback: function(key){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 			var uid;
 			var udisp = val;
 			var uim = udisp.image;
+			// make sure display is still valid
+			if( $.inArray(udisp, JS9.displays) < 0 ){
+			    return;
+			}
 			if( uim ){
 			    switch(key){
 			    case "removeRegions":
@@ -5603,7 +5764,7 @@ JS9.Menubar.init = function(width, height){
 		var i, s1, s2, key, altwcs;
 		var n=0, nwcs=0, got=0;
 		var items = {};
-		var tdisp = getDisplays()[0];
+		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 		var tim = tdisp.image;
 		var editRotate = function(im, obj){
 		    delete tdisp.tmp.editingMenu;
@@ -5612,11 +5773,15 @@ JS9.Menubar.init = function(width, height){
 		    }
 		};
 		var keyRotate = function(e){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 		    var obj = $.contextMenu.getInputValues(e.data);
 		    var keycode = e.which || e.keyCode;
 		    var vdisp = val;
 		    var vim = vdisp.image;
+		    // make sure display is still valid
+		    if( $.inArray(vdisp, JS9.displays) < 0 ){
+			return;
+		    }
 		    switch( keycode ){
 		    case 9:
 		    case 13:
@@ -5742,11 +5907,15 @@ JS9.Menubar.init = function(width, height){
 		}
 		return {
                     callback: function(key){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 			var file, s;
 			var rexp = new RegExp(key);
 			var udisp = val;
 			var uim = udisp.image;
+			// make sure display is still valid
+			if( $.inArray(udisp, JS9.displays) < 0 ){
+			    return;
+			}
 			if( uim ){
 			    // maybe it's an alt wcs request
 			    if( key.match(/^altwcs_/) ){
@@ -5830,7 +5999,7 @@ JS9.Menubar.init = function(width, height){
 		var n = 0;
 		// var m = 0;
 		var items = {};
-		var tdisp = getDisplays()[0];
+		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 		var im = tdisp.image;
 		var lastxclass="";
 		var seq = function(s1, s2){
@@ -5854,11 +6023,15 @@ JS9.Menubar.init = function(width, height){
 		    }
 		};
 		var keyAnalysis = function(e){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 		    var obj = $.contextMenu.getInputValues(e.data);
 		    var keycode = e.which || e.keyCode;
 		    var vdisp = val;
 		    var vim = vdisp.image;
+		    // make sure display is still valid
+		    if( $.inArray(vdisp, JS9.displays) < 0 ){
+			return;
+		    }
 		    switch( keycode ){
 		    case 9:
 		    case 13:
@@ -6001,10 +6174,14 @@ JS9.Menubar.init = function(width, height){
 		}
 		return {
                     callback: function(key){
-		    getDisplays().forEach(function(val){
+		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 			var a, did, jj, tplugin;
 			var udisp = val;
 			var uim = udisp.image;
+			// make sure display is still valid
+			if( $.inArray(udisp, JS9.displays) < 0 ){
+			    return;
+			}
 			// first look for a plugin -- no image rquired
 			for(jj=0; jj<JS9.plugins.length; jj++){
 			    tplugin = JS9.plugins[jj];
@@ -6095,7 +6272,7 @@ JS9.Menubar.init = function(width, height){
 	    events: { hide: onhide },
             build: function(){
 		var key, val;
-		var n=1;
+		var n = 1;
 		var last = "";
 		var items = {};
 		items.helptitle = {name: "JS9 help:", disabled: true};
@@ -6632,6 +6809,10 @@ JS9.Prefs.imagesSchema = {
 	    "type": "boolean",
 	    "helper": "display value/position?"
 	},
+	"inherit": {
+	    "type": "boolean",
+	    "helper": "new images inherit current params?"
+	},
 	"invert": {
 	    "type": "boolean",
 	    "helper": "by default, invert colormap?"
@@ -7116,6 +7297,9 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	    switch( source.name ){
 	    case "images":
 		// set new option value
+		if( key === "inherit" && display && display.image ){
+		    display.image.params.inherit = val;
+		}
 	        obj[key] = val;
 	        break;
 	    case "regions":

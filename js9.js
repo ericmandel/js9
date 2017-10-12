@@ -135,6 +135,7 @@ JS9.globalOpts = {
     resize: true,		// allow resize of display?
     resizeHandle: true,		// add resize handle to display?
     resizeRedisplay: true,	// redisplay image while resizing?
+    cloneNewDisplay: true,      // clone size of display, when possible?
     regionConfigSize: "medium", // "small", "medium"
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
@@ -193,6 +194,7 @@ JS9.globalOpts = {
 
 // image param defaults
 JS9.imageOpts = {
+    inherit: false,			// inherit props from previous image?
     contrast: 1.0,			// default color contrast
     bias: 0.5,				// default color bias
     invert: false,			// default colormap invert
@@ -389,6 +391,7 @@ JS9.commands = [];		// array of commands
 JS9.plugins = [];		// array of defined plugins
 JS9.preloads = [];		// array of images to preload
 JS9.auxFiles = [];		// array of auxiliary files
+JS9.supermenus = [];		// array containing supermenu instances
 JS9.publics = {};		// object containing defined public API calls
 JS9.helper = {};		// only one helper per page, please
 JS9.fits = {};			// object holding FITS access routines
@@ -511,6 +514,14 @@ JS9.Image = function(file, params, func){
     this.params.xeqonchange = true;
     // copy image parameters
     this.params = $.extend(true, this.params, JS9.imageOpts, localOpts);
+    // inherit properties, if necessary
+    if( this.display.image ){
+	this.params.inherit = this.display.image.params.inherit;
+	if( this.params.inherit ){
+	    this.params = $.extend(true,
+				   this.params, this.display.image.params);
+	}
+    }
     // set the colormap object from colormap name (text string)
     // this.cmapObj = JS9.lookupColormap(this.params.colormap);
     this.setColormap(this.params.colormap);
@@ -1888,6 +1899,8 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
     sect.y0 = Math.max(0, sect.y0);
     // we changed section, so the offsreen RGB image is invalid
     this.offscreenRGB = null;
+    // put zoom back into params
+    this.params.zoom = sect.zoom;
     // allow chaining
     return this;
 };
@@ -5517,8 +5530,8 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     opts = opts || {};
     // but make sure we can set the id
     opts.rawid = "rotate";
-    // we always go back to the original data
-    this.raw = this.raws[0];
+    // rotate current (e.g. reprojected data)
+    opts.oraw = "current";
     // old and new header
     oheader = this.raw.header;
     nheader = $.extend(true, {}, oheader);
@@ -5842,6 +5855,7 @@ JS9.Image.prototype.filterRGBImage = function(filter){
 // ... and should (some of) this code be in the Fabric section??
 JS9.Image.prototype.moveToDisplay = function(dname){
     var i, im, key, layer, dlayer;
+    var got = 0;
     var odisplay = this.display;
     var ndisplay = JS9.lookupDisplay(dname);
     // sanity check
@@ -5904,7 +5918,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
     this.refreshLayers();
     // old display has no image
     odisplay.image = null;
-    // so display a different image in old display, if possible
+    // display a different image in old display, if possible
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
 	if( odisplay === im.display ){
@@ -5913,8 +5927,18 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 	    im.displayImage("all");
 	    // ensure proper positions for graphics
 	    im.refreshLayers();
+	    // flag that we found an image
+	    got++;
 	    break;
 	}
+    }
+    // if display is in a lightwin and there are no other images, close it
+    if( !got && odisplay.winid && odisplay.winid.close ){
+	i = $.inArray(odisplay, JS9.displays);
+	if( i >= 0 ){
+	    JS9.displays.splice(i, 1);
+	}
+	odisplay.winid.close();
     }
     // allow chaining
     return this;
@@ -6617,7 +6641,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
     if( !width && !height ){
 	return {width: this.width, height: this.height};
     }
-    // 'full' or 'reset'
+    // 'full' or 'reset' or 'image'
     if( width === "full" ){
 	opts = height;
 	if( window.innerWidth ){
@@ -6634,6 +6658,13 @@ JS9.Display.prototype.resize = function(width, height, opts){
 		}
 	    }
 	}
+    } else if( width === "image" ){
+	if( !this.image ){
+	    JS9.error("can't resize display to 'image' without an image");
+	}
+	opts = height;
+	width = this.image.raw.width;
+	height = this.image.raw.height;
     } else if( width === "reset" ){
 	opts = height;
 	width = this.width0 || width;
@@ -6797,6 +6828,44 @@ JS9.Display.prototype.center = function(){
     $('html, body').animate({scrollTop: voffset, scrollLeft: hoffset}, speed);
     // allow chaining
     return this;
+};
+
+// gather images from other displays into this display
+JS9.Display.prototype.gather = function(){
+    var i, uim;
+    for(i=0; i<JS9.images.length; i++){
+	uim = JS9.images[i];
+	if( this !== uim.display ){
+	    uim.moveToDisplay(this);
+	}
+    }
+};
+
+// separate images in this display into new displays
+JS9.Display.prototype.separate = function(){
+    var that = this;
+    var separateim = function(n){
+	var im, d1, d2;
+	if( JS9.images.length > n ){
+	    im = JS9.images[n];
+	    if( n > 1 ){
+		d2 = JS9.images[n-1].display.id;
+	    } else {
+		d2 = JS9.images[0].display.id;
+	    }
+	    if( that === im.display ){
+		d1 = "lightwin" + JS9.uniqueID();
+		$("#dhtmlwindowholder").arrive("#"+d1,
+					       {onceOnly: true}, function(){
+						   im.moveToDisplay(d1);
+						   separateim(n+1);
+					       });
+		JS9.LoadWindow(null, {id: d1, clone: d2});
+	    }
+	}
+    };
+    //  start separating the images
+    separateim(1);
 };
 
 // display the next image from the JS9 images list that is in this display
@@ -7257,7 +7326,7 @@ JS9.Image.prototype.wcs2imlen = function(s){
 	break;
     default:
 	// cheap conversion of wcs len to image len
-	if( v.dtype && (v.dtype !== ".") ){
+	if( v.dtype && (v.dtype !== ".") && (v.dtype !== "\0")  ){
 	    v.dval = Math.abs(v.dval / dpp);
 	}
 	break;
@@ -14314,6 +14383,8 @@ JS9.mouseUpCB = function(evt){
 	im.xeqPlugins("mouse", "onmouseup", evt);
 	if( isclick ){
 	    im.xeqPlugins("mouse", "onclick", evt);
+	    // handle supermenu clicks specially
+	    JS9.Menubar.onclick(im.display);
 	}
     }
     // safe to unset clickInRegion now
@@ -16048,6 +16119,29 @@ JS9.mkPublic("SetValPos", function(mode){
     return got;
 });
 
+// set/clear image inherit flag
+JS9.mkPublic("SetImageInherit", function(mode){
+    var got = null;
+    var obj = JS9.parsePublicArgs(arguments);
+    var im = JS9.getImage(obj.display);
+    if( im ){
+	mode = obj.argv[0];
+	got = im.params.inherit;
+	im.params.inherit = mode;
+    }
+    return got;
+});
+
+JS9.mkPublic("GetImageInherit", function(){
+    var got = null;
+    var obj = JS9.parsePublicArgs(arguments);
+    var im = JS9.getImage(obj.display);
+    if( im ){
+	got = im.params.inherit;
+    }
+    return got;
+});
+
 // display in-page FITS images and png files
 JS9.mkPublic("Load", function(file, opts){
     var i, im, ext, disp, display, func, blob, bytes, topts, tfile;
@@ -16202,9 +16296,15 @@ JS9.mkPublic("Load", function(file, opts){
 
 // create a new instance of JS9 in a window (light or new)
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
-    var id, did, head, body, win, winid, initialURL;
+    var display, id, did, head, body, win, winid, initialURL;
+    var lel, lelm, lelc, lwidth, lheight, ltop, lleft;
     var idbase = (type || "") + "win";
+    var TOP_FUDGE = 7, LEFT_FUDGE = 5, SIZE_FUDGE = 0;
     var title;
+    type = type || "light";
+    if( (JS9.BROWSER[0] === "Chrome") || (JS9.BROWSER[0] === "Safari") ){
+	SIZE_FUDGE = 5;
+    }
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
@@ -16219,12 +16319,38 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     }
     switch(type){
     case "light":
+        winopts = winopts || JS9.lightOpts[JS9.LIGHTWIN].imageWin;
         // use supplied id or make a reasonably unique id for the JS9 elements
 	if( opts.id ){
 	    id = opts.id;
 	    delete opts.id;
 	} else {
             id = idbase + JS9.uniqueID();
+	}
+	// if we are making a copy of a display, fill in html and winopts
+	if( JS9.globalOpts.cloneNewDisplay && opts.clone ){
+	    lel = $("#"+opts.clone);
+	    lelm = $("#"+opts.clone+"Menubar");
+	    lelc = $("#"+opts.clone+"Colorbar");
+	    if( lel.length > 0 ){
+		lwidth = lel.width();
+		lheight = lel.height();
+		ltop = lel.offset().top - $(window).scrollTop()  + TOP_FUDGE;
+		lleft = lel.offset().left - $(document).scrollLeft() + LEFT_FUDGE + lwidth;
+		html = "";
+		if( lelm.length > 0 ){
+		    html += sprintf("<div class='JS9Menubar' id='%sMenubar' data-width=%s></div>", id, lel.width());
+		    lheight += lelm.height();
+		    ltop -= lelm.height();
+		}
+		html += sprintf("<div class='JS9' id='%s' data-width=%s data-height=%s></div>", id, lel.width()-SIZE_FUDGE, lel.height()-SIZE_FUDGE);
+		if( lelc.length > 0 ){
+		    html += sprintf("<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' data-width=%s></div></div>", id, lel.width());
+		    lheight += lelc.height();
+		    ltop -= lelc.height();
+		}
+	    }
+	    winopts = sprintf("width=%s,height=%s,top=%s,left=%s,resize=1,scolling=1", lwidth, lheight, ltop, lleft);
 	}
         // and a second one for controlling the light window
         did = "d" + id;
@@ -16239,6 +16365,11 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	winid.onclose = function(){
 	    var i, im;
 	    var ims = [];
+	    // remove from display list
+	    i = $.inArray(im.display, JS9.displays);
+	    if( i >= 0 ){
+		JS9.displays.splice(i, 1);
+	    }
 	    // make a list of images in this display
 	    for(i=0; i<JS9.images.length; i++){
 		im = JS9.images[i];
@@ -16254,7 +16385,9 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    return true;
 	};
         // create the new JS9 Display
-        JS9.checkNew(new JS9.Display(id));
+        display = new JS9.Display(id);
+	// save the light window id;
+	display.winid = winid;
 	// add to list of displays
 	JS9.helper.send("addDisplay", {"display": id});
         // instantiate new plugins

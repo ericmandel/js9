@@ -225,6 +225,10 @@ div.JS9Progress {
   color: #27496d;
 }/* the commands inside a console */
 
+.JS9Highlight {
+  border: solid 2px #00FF00;
+}
+
 .JS9CmdForm {
     border: 0px;
     padding: 1px;

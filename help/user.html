@@ -183,6 +183,11 @@ displayed in the upper left of the image. You can redirect the display
 to a movable, light-weight window by choosing the <b>InfoBox</b> menu
 option.
 <p>
+The <b>new image inherits current params</b> option specifies whether
+a new image grabs the image params (e.g., colormap, scale, zoom, etc.)
+from the currently displayed image. If false, these params are taken
+from the default JS9.imageOpts object.
+<p>
 Finally, the <b>change width/height</b> menu option allows you to
 specify a new width and height for the JS9 display.
 
@@ -566,15 +571,22 @@ Analysis menu to help JS9 locate the original data file.
 <p>
 The JS9 Display can be resized using the the <b>View:change
 width/height</b>menu option (or the JS9.ResizeDisplay() JavaScript
-routine). In addition, the <b>View: set size to full window</b> option
-will resize the JS9 display to the size of the browser window's
-window.innerWidth and window.innerHeight properties, and will scroll
-the display to the center of the window.  (Note that the rest of the
-web page is still available via scrolling, including the menubar.)
-The <b>View: reset to original size</b> option will set the display
-size back to the original size.  This resize feature can be turned off
-by setting the JS9.globalOpts.resize variable to <b>false</b> in the
-js9Prefs.json file.
+routine).  The View menu's resize parameter can be two values (width
+and height) or a single value representing both.  In addition, if an
+image containing wcs info is being displayed, you can append a single
+quote to specify a size in arc minutes (e.g. 5') or a double quote to
+specify a size in arc seconds (e.g. 300").
+<p>
+The <b>View: set to image size</b> option will set the display size to
+the size of the current image. The <b>View: set size to full
+window</b> option will resize the JS9 display to the size of the
+browser window's window.innerWidth and window.innerHeight properties,
+and will scroll the display to the center of the window.  (Note that
+the rest of the web page is still available via scrolling, including
+the menubar.)  The <b>View: reset to original size</b> option will set
+the display size back to the original size.  Display resize can be
+turned off by setting the JS9.globalOpts.resize variable
+to <b>false</b> in the js9Prefs.json file.
 <p>
 Also by default, the JS9 Display can be resized using a grab handle in
 the lower right-hand corner of the display.  This feature can be
@@ -585,7 +597,7 @@ See <a href="knownissues.html">Known Issues</a>
 for a discussion of limitations imposed on resize by Webkit
 browsers such as Chrome and Safari.
 
-<h5>Last updated: August 22, 2017</h5>
+<h5>Last updated: October 3, 2017</h5>
 </div>
 
 </body>

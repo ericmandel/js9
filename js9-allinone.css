@@ -1,4 +1,4 @@
-/* JS9 allinone: v2.0.1, Sat Sep 30 10:12:07 EDT 2017 */
+/* JS9 allinone: v2.0.1, Thu Oct 12 12:09:09 EDT 2017 */
 @charset "UTF-8";
 /*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
@@ -1121,6 +1121,10 @@ div.JS9Progress {
   border-color: #27496d;
   color: #27496d;
 }/* the commands inside a console */
+
+.JS9Highlight {
+  border: solid 2px #00FF00;
+}
 
 .JS9CmdForm {
     border: 0px;

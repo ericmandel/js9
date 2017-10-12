@@ -1249,6 +1249,33 @@ where:
 </ul>
 Set the display mode of the value/position display for the specified image.
 
+<p>
+<font size="+1"><b><u>Get the image inherit mode</u></b></font>
+<p>
+<code><font size="+1">inherit = JS9.GetImageInherit()</font></code>
+<p>
+returns:
+<ul>
+<li><b>inherit</b>: true if new image inherits params from current image
+</ul>
+The <b>JS9.GetImageInherit()</b> routine returns a boolean specifying whether
+a new image grabs the image params (e.g., colormap, scale, zoom, etc.)
+from the currently displayed image. If false, these params are taken
+from the default JS9.imageOpts object.
+
+<p>
+<font size="+1"><b><u>Set the image inherit mode</u></b></font>
+<p>
+<code><font size="+1">JS9.SetImageInherit(mode)</font></code>
+<p>
+where:
+<ul>
+<li><b>mode</b>: true (inherit params from currently displayed image) or false
+</ul>
+The <b>JS9.SetImageInherit()</b> routine specifies whether
+a new image grabs the image params (e.g., colormap, scale, zoom, etc.)
+from the currently displayed image. If false, these params are taken
+from the default JS9.imageOpts object.
 
 <p>
 <font size="+1"><b><u>Get information about the current WCS</u></b></font>

@@ -235,14 +235,14 @@ and background:
 The <a href="../js9sizes.html">JS9 Size Demo</a> displays different button styles.
 
 <p>
-<h3>One Menubar to Rule Them All</h3>
-By default, each menubar controls one JS9 display. You can, however,
-create a menubar that controls multiple displays, so that a given menu
-selection is applied to each display. This is done by creating a
-menubar div with two special characteristics:
+<h3>Supermenus: One Menubar to Rule Them All</h3> By default, each
+menubar controls one JS9 display. You can, however, create a menubar
+that controls multiple displays, so that a given menu selection is
+applied to each display (or to a specifically selected image). This is
+done by creating a menubar div with two special characteristics:
 <ul>
 <li> the id of the menu bar starts with <b>SUPERMENU_</b> (it can end with anything, or nothing)
-<li> an HTML5 data attribute called <b>data-displays</b> lists the JS9 displays to control
+<li> an HTML5 data attribute called <b>data-displays</b> lists the JS9 displays to control or "*" for all displays
 </ul>
 For example, to control two JS9 displays:
 <pre>
@@ -255,18 +255,29 @@ A super-menu acts like an ordinary menu, except that it will control
 all of the JS9 displays in the list. Thus, you can change multiple
 colormaps at once, run analysis on all displays, etc.
 <p>
-You still can define a menubar for each display in order to control
-them individually. Since the actions of an ordinary menu and a
+You also can click on an individual display to make it the <b>selected
+display</b> for the supermenu. The selected display will be
+highlighted, and the supermenu will target its actions at this display
+alone, rather than at all of the displays. Click again in a selected
+display (or clicking in another display) to unselect it. In this way,
+a single supermenu can be used to control several displays
+individually (akin to how the top-level Apple menu functions with
+regard to applications).
+<p>
+A supermenu displays an additional <b>Super</b> menu button on the
+left side of the menubar. This button contains a list of all displays
+controlled by the supermenu, with the selected display starred. You
+can choose a new selected display from this menu, or choose "all
+displays" to unselect.
+<p>
+Of course, you also can define a menubar for each display in order to
+control them individually. Since the actions of an ordinary menu and a
 super-menu can be mixed for a given JS9 display, the displays will not
 always be perfectly synchronized. In such a case, the super-menu's
 selected values will be tied to the first display in the
 <b>data-displays</b> list.  For example, if the first display listed
 is at zoom 2 and the second is at zoom 4, the Zoom menu will show
 a current zoom value of 2.
-<p>
-Finally, note that regions created with a super-menu are not tied to
-one another across displays.  We will tie together events across
-displays in a future release.
 
 <p>
 <h3>Adding Server-side Analysis Tasks to Your Web Page</h3>
