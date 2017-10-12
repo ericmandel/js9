@@ -6844,28 +6844,42 @@ JS9.Display.prototype.gather = function(){
 // separate images in this display into new displays
 JS9.Display.prototype.separate = function(){
     var that = this;
+    var d1, d2;
+    var rexp = /_sep[0-9][0-9]*/;
     var separateim = function(n){
-	var im, d1, d2;
+	var im;
 	if( JS9.images.length > n ){
 	    im = JS9.images[n];
-	    if( n > 1 ){
-		d2 = JS9.images[n-1].display.id;
-	    } else {
-		d2 = JS9.images[0].display.id;
-	    }
+	    // look for images in this display
 	    if( that === im.display ){
-		d1 = d2.replace(/_sep[0-9][0-9]*/,"") + "_sep" + JS9.uniqueID();
-		$("#dhtmlwindowholder").arrive("#"+d1,
-					       {onceOnly: true}, function(){
-						   im.moveToDisplay(d1);
-						   separateim(n+1);
-					       });
-		JS9.LoadWindow(null, {id: d1, clone: d2});
+		// leave the first one in place
+		if( d2 === undefined ){
+		    d2 = JS9.images[n].display.id;
+		    separateim(n+1);
+		} else {
+		    // create a new window for this image
+		    d1 = d2.replace(rexp, "") + "_sep" + JS9.uniqueID();
+		    // code to run when new window exists
+		    $("#dhtmlwindowholder").arrive("#"+d1, {onceOnly: true},
+					   function(){
+					       // move this image
+					       im.moveToDisplay(d1);
+					       // next image goes after this one
+					       d2 = d1;
+					       // process next image
+					       separateim(n+1);
+					   });
+		    // load new window, code above gets run when window exists
+		    JS9.LoadWindow(null, {id: d1, clone: d2});
+		}
+	    } else {
+		// this image is in a diffferent display, so process next image
+		separateim(n+1);
 	    }
 	}
     };
     //  start separating the images
-    separateim(1);
+    separateim(0);
 };
 
 // display the next image from the JS9 images list that is in this display
@@ -17327,6 +17341,39 @@ JS9.mkPublic("ResizeDisplay", function(){
 	got = "OK";
     }
     return got;
+});
+
+// gather images from other displays into this display
+JS9.mkPublic("GatherDisplay", function(){
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    if( !display ){
+	JS9.error("invalid display for gather");
+    }
+    JS9.Display.prototype.gather.call(display);
+    return;
+});
+
+// separate images in a display into new displays
+JS9.mkPublic("SeparateDisplay", function(){
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    if( !display ){
+	JS9.error("invalid display for separate");
+    }
+    JS9.Display.prototype.separate.call(display);
+    return;
+});
+
+// center the image in a display
+JS9.mkPublic("CenterDisplay", function(){
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    if( !display ){
+	JS9.error("invalid display for center");
+    }
+    JS9.Display.prototype.center.call(display);
+    return;
 });
 
 // load a session file
