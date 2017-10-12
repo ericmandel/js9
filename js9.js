@@ -6854,7 +6854,7 @@ JS9.Display.prototype.separate = function(){
 		d2 = JS9.images[0].display.id;
 	    }
 	    if( that === im.display ){
-		d1 = "lightwin" + JS9.uniqueID();
+		d1 = d2.replace(/_sep[0-9][0-9]*/,"") + "_sep" + JS9.uniqueID();
 		$("#dhtmlwindowholder").arrive("#"+d1,
 					       {onceOnly: true}, function(){
 						   im.moveToDisplay(d1);
