@@ -74,14 +74,22 @@ JS9.Menubar.onclick = function(disp){
 	supermenu = JS9.supermenus[i];
 	arr = JS9.Menubar.getDisplays.call(supermenu, "all");
 	if( ($.inArray(disp, arr) >= 0) || (disp === "all") ){
-	    $(".JS9").find(".JS9Image").removeClass("JS9Highlight");
+	    if( JS9.bugs.webkit_resize ){
+		$(".JS9").find(".JS9Image").removeClass("JS9Highlight");
+	    } else {
+		$(".JS9").removeClass("JS9Highlight");
+	    }
 	    if( (disp === supermenu.selectedDisplay) || (disp === "all") ){
 		// unselect
 		supermenu.selectedDisplay = null;
 	    } else {
 		// select
 		supermenu.selectedDisplay = disp;
-		$(disp.divjq).find(".JS9Image").addClass("JS9Highlight");
+		if( JS9.bugs.webkit_resize ){
+		    $(disp.divjq).find(".JS9Image").addClass("JS9Highlight");
+		} else {
+		    $(disp.divjq).addClass("JS9Highlight");
+		}
 	    }
 	}
     }
