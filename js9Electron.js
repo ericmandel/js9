@@ -54,13 +54,11 @@ function startHelper(mode){
 	// look for a node JS9 helper already running
 	ps.lookup({
 	    command: 'node',
-	    psargs: "guwax",
 	    arguments: 'js9Helper.js'
 	}, function(err, rlist ) {
 	    if( rlist.length === 0 ){
 		// if node helper not running, look for an Electron helper
 		ps.lookup({
-		    psargs: "guwax",
 		    arguments: 'js9Electron.js'
 		}, function(err2, rlist2 ) {
 		    if( (rlist2.length <= 1) ){
