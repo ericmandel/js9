@@ -16429,7 +16429,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
         // if JS9 is not installed, hardwire this ...
         head = document.getElementsByTagName('head')[0].innerHTML;
 	// remove load of astroem[w].js, so it will be loaded during init
-	head = head.replace(/src=['"]astroemw?\.js['"]/, "");
+	head = head.replace(/src=['"].*astroemw?\.js['"]/, "");
         // but why doesn't the returned header contain the js9 js file??
 	// umm... it seems to have it, at least FF does as of 8/25/15 ...
 	if( !head.match(/src=["'].*js9\.js/)      &&
