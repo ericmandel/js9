@@ -210,8 +210,9 @@ div.JS9Progress {
 .JS9Button-border {
   color: #6496c8;
   background: #fff;
-  border: solid 3px #6496c8;
-  margin:  4px;
+  border: solid 2px #6496c8;
+  padding: 3px 6px 3px 6px;
+  margin: 6px 4px 6px 4px;
   outline: none;
 }
 
