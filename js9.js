@@ -14368,6 +14368,10 @@ JS9.mouseUpCB = function(evt){
     var im = display.image;
     // sanity checks
     if( !im ){
+	// handle supermenu clicks specially (even if no image is loaded)
+	if( JS9.hasOwnProperty("Menubar") ){
+	    JS9.Menubar.onclick(evt.data);
+	}
 	return;
     }
     // get canvas position
@@ -14398,7 +14402,9 @@ JS9.mouseUpCB = function(evt){
 	if( isclick ){
 	    im.xeqPlugins("mouse", "onclick", evt);
 	    // handle supermenu clicks specially
-	    JS9.Menubar.onclick(im.display);
+	    if( JS9.hasOwnProperty("Menubar") ){
+		JS9.Menubar.onclick(im.display);
+	    }
 	}
     }
     // safe to unset clickInRegion now
