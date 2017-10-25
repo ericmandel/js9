@@ -4849,7 +4849,8 @@ JS9.Image.prototype.getScale = function(){
     if( this.params.scale ){
 	return {scale: this.params.scale,
 		scalemin: this.params.scalemin,
-		scalemax: this.params.scalemax};
+		scalemax: this.params.scalemax,
+	        scaleclipping: this.params.scaleclipping};
     }
 };
 
@@ -4859,6 +4860,25 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
     var newscale = function(s){
 	if( JS9.scales.indexOf(s) >= 0 ){
 	    that.params.scale = s;
+	} else if( s === "dataminmax" ){
+	    that.params.scaleclipping = "dataminmax";
+	    that.params.scalemin = that.raw.dmin;
+	    that.params.scalemax = that.raw.dmax;
+	} else if( s === "zscale" ){
+	    if( (that.params.z1 === undefined) ||
+		(that.params.z2 === undefined) ){
+		that.zscale(false);
+	    }
+	    that.params.scaleclipping = "zscale";
+	    that.params.scalemin = that.params.z1;
+	    that.params.scalemax = that.params.z2;
+	} else if( s === "zmax" ){
+	    if( (that.params.z1 === undefined) ){
+		that.zscale(false);
+	    }
+	    that.params.scaleclipping = "zmax";
+	    that.params.scalemin = that.params.z1;
+	    that.params.scalemax = that.raw.dmax;
 	} else {
 	    JS9.error("unknown scale: " + s);
 	}
@@ -4872,17 +4892,17 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
 	    this.params.scalemin = parseFloat(s0);
 	    this.params.scalemax = parseFloat(s1);
 	    this.params.scaleclipping = "user";
-	    this.mkColorData();
 	    break;
         default:
 	    newscale(s0);
-	    this.params.scalemin = parseFloat(s1);
-	    this.params.scalemax = parseFloat(s2);
-	    this.params.scaleclipping = "user";
-	    this.mkColorData();
+	    if( (s0 !== "zscale") && (s0 !== "zmax") ){
+		this.params.scalemin = parseFloat(s1);
+		this.params.scalemax = parseFloat(s2);
+		this.params.scaleclipping = "user";
+	    }
 	    break;
 	}
-	this.displayImage("scaled");
+	this.displayImage("colors");
     }
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
