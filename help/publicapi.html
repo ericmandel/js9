@@ -1013,12 +1013,13 @@ The returned scale object will contain the following properties:
 <p>
 where:
 <ul>
-<li><b>scale</b>: scale name
+<li><b>scale</b>: scale name, "zscale", "zmax", or "dataminmax"
 <li><b>smin</b>: scale min value
 <li><b>smax</b>: scale max value
 </ul>
 Set the current scale, min/max, or both. This call takes one
-(scale), two (smin, max) or three (scale, smin, smax) arguments.
+(scale), two (smin, max) or three (scale, smin, smax) arguments. (If "zscale"
+or "zmax" is specified, any supplied smin and smax values are ignored.)
 
 <p>
 <font size="+1"><b><u>Get the image zoom factor</u></b></font>
