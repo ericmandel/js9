@@ -13019,6 +13019,39 @@ JS9.lookupDisplay = function(id){
     return JS9.displays[0];
 };
 
+// check whether a display exists for the specified id
+JS9.Image.prototype.isDisplay = function(id){
+    var i;
+    var regexp = new RegExp(sprintf("[-_]?(%s)$", JS9.PLUGINS));
+    if( id && (id !== "*") && (id.toString().search(JS9.SUPERMENU) < 0) ){
+	// look for whole id
+	for(i=0; i<JS9.displays.length; i++){
+	    if( (id === JS9.displays[i]) || (id === JS9.displays[i].id) ){
+		//return JS9.displays[i];
+	        return true;
+            }
+	}
+	// try removing id suffix to get base id
+	if( typeof id === "string" ){
+	    id = id.replace(regexp,"");
+	    for(i=0; i<JS9.displays.length; i++){
+		if( (id === JS9.displays[i]) || (id === JS9.displays[i].id) ){
+		    //return JS9.displays[i];
+		    return true;
+                }
+	    }
+	}
+	// an id was specified but not found: this is an error
+	//JS9.error("can't find JS9 display with id: " + id);
+    
+        return false;
+    }
+    // no id: return whatever we have
+    //return JS9.displays[0];
+
+    JS9.error("ID has to be specified");
+};
+
 // return the image object for the specified image id or display id
 JS9.getImage = function(id){
     var im=null, display=null;
@@ -16046,6 +16079,7 @@ JS9.mkPublic("ShiftData", "shiftData");
 JS9.mkPublic("FilterRGBImage", "filterRGBImage");
 JS9.mkPublic("MoveToDisplay", "moveToDisplay");
 JS9.mkPublic("SaveSession", "saveSession");
+JS9.mkPublic("IsDisplay", "isDisplay");
 
 // lookup an image
 // eslint-disable-next-line no-unused-vars
@@ -17194,8 +17228,22 @@ JS9.mkPublic("NewShapeLayer", function(layer, opts){
 // add a region
 // eslint-disable-next-line no-unused-vars
 JS9.mkPublic("AddRegions", function(region, opts){
+        
     var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+    
+    // check for display
+    if( obj.display ){
+	display = obj.display;
+    } else {
+	if( JS9.displays.length > 0 ){
+	    display = JS9.displays[0].id;
+	} else {
+	    display = JS9.DEFID;
+	}
+    }
+    
+    var im = JS9.getImage(display);
+    
     if( im ){
 	region = obj.argv[0];
 	opts = obj.argv[1];
