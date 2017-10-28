@@ -1,4 +1,4 @@
-/* JS9 allinone: v1.12, Wed Oct 25 13:49:34 EDT 2017 */
+/* JS9 allinone: v2.0.1 */
 // fix to allow jquery to be loaded into an electron.js app
 // http://electron.atom.io/docs/faq/
 //
