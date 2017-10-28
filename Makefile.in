@@ -322,8 +322,9 @@ js9support:	FORCE
 		  cat $$X  > js9support.js; \
 		  echo "plugin files in js9plugins.js: " >> js9support.txt; \
 		  echo $(PLUGINFILES)  >> js9support.txt; \
-		  cat $(PLUGINFILES)   >  js9plugins.js;)
-
+		  cat $(PLUGINFILES)   >  js9plugins.js; \
+		  echo "remaking all in one ..."; \
+		  mkallinone $(ALLIN1) $(VERSION);)
 
 js9min:		FORCE
 		@(echo "remaking js9.min.js ..."; \
