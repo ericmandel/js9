@@ -12993,7 +12993,7 @@ JS9.lookupImage = function(id, display){
 
 // return the display for the specified id
 // id can be a display object or an id from a display object
-JS9.lookupDisplay = function(id){
+JS9.lookupDisplay = function(id, mustExist = true){
     var i;
     var regexp = new RegExp(sprintf("[-_]?(%s)$", JS9.PLUGINS));
     if( id && (id !== "*") && (id.toString().search(JS9.SUPERMENU) < 0) ){
@@ -13012,44 +13012,17 @@ JS9.lookupDisplay = function(id){
 		}
 	    }
 	}
-	// an id was specified but not found: this is an error
-	JS9.error("can't find JS9 display with id: " + id);
+	
+        // an id was specified but not found
+        if (mustExist){
+	    JS9.error("can't find JS9 display with id: " + id);
+        }
+        else {
+            return null;
+        }
     }
     // no id: return whatever we have
     return JS9.displays[0];
-};
-
-// check whether a display exists for the specified id
-JS9.Image.prototype.isDisplay = function(id){
-    var i;
-    var regexp = new RegExp(sprintf("[-_]?(%s)$", JS9.PLUGINS));
-    if( id && (id !== "*") && (id.toString().search(JS9.SUPERMENU) < 0) ){
-	// look for whole id
-	for(i=0; i<JS9.displays.length; i++){
-	    if( (id === JS9.displays[i]) || (id === JS9.displays[i].id) ){
-		//return JS9.displays[i];
-	        return true;
-            }
-	}
-	// try removing id suffix to get base id
-	if( typeof id === "string" ){
-	    id = id.replace(regexp,"");
-	    for(i=0; i<JS9.displays.length; i++){
-		if( (id === JS9.displays[i]) || (id === JS9.displays[i].id) ){
-		    //return JS9.displays[i];
-		    return true;
-                }
-	    }
-	}
-	// an id was specified but not found: this is an error
-	//JS9.error("can't find JS9 display with id: " + id);
-    
-        return false;
-    }
-    // no id: return whatever we have
-    //return JS9.displays[0];
-
-    JS9.error("ID has to be specified");
 };
 
 // return the image object for the specified image id or display id
@@ -16079,7 +16052,6 @@ JS9.mkPublic("ShiftData", "shiftData");
 JS9.mkPublic("FilterRGBImage", "filterRGBImage");
 JS9.mkPublic("MoveToDisplay", "moveToDisplay");
 JS9.mkPublic("SaveSession", "saveSession");
-JS9.mkPublic("IsDisplay", "isDisplay");
 
 // lookup an image
 // eslint-disable-next-line no-unused-vars
@@ -16087,6 +16059,9 @@ JS9.mkPublic("LookupImage", function(id){
     var obj = JS9.parsePublicArgs(arguments);
     return JS9.lookupImage(obj.argv[0], obj.display);
 });
+
+// lookup a display
+JS9.mkPublic("LookupDisplay", "lookupDisplay");
 
 // add a colormap to JS9
 JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
