@@ -16061,7 +16061,10 @@ JS9.mkPublic("LookupImage", function(id){
 });
 
 // lookup a display
-JS9.mkPublic("LookupDisplay", "lookupDisplay");
+JS9.mkPublic("LookupDisplay", function(id, mustExist = true){
+   var obj = JS9.parsePublicArgs(arguments);
+   return JS9.lookupDisplay(obj.display, obj.argv[1]);
+});
 
 // add a colormap to JS9
 JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
@@ -17205,6 +17208,18 @@ JS9.mkPublic("NewShapeLayer", function(layer, opts){
 JS9.mkPublic("AddRegions", function(region, opts){
         
     var obj = JS9.parsePublicArgs(arguments);
+    
+    // check for display
+    if( obj.display ){
+    display = obj.display; } 
+    else {
+    if( JS9.displays.length > 0 ){
+   	    display = JS9.displays[0].id;
+    	} else {
+    	    display = JS9.DEFID;
+        }
+    }
+    
     var im = JS9.getImage(display);
     if( im ){
 	region = obj.argv[0];
