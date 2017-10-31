@@ -16063,7 +16063,8 @@ JS9.mkPublic("LookupImage", function(id){
 // lookup a display
 JS9.mkPublic("LookupDisplay", function(id, mustExist = true){
    var obj = JS9.parsePublicArgs(arguments);
-   return JS9.lookupDisplay(obj.display, obj.argv[1]);
+   var display = obj.argv[0] || obj.display.id;
+   return JS9.lookupDisplay(display, obj.argv[1]);
 });
 
 // add a colormap to JS9
