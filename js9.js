@@ -17208,19 +17208,7 @@ JS9.mkPublic("NewShapeLayer", function(layer, opts){
 JS9.mkPublic("AddRegions", function(region, opts){
         
     var obj = JS9.parsePublicArgs(arguments);
-    
-    // check for display
-    if( obj.display ){
-    display = obj.display; } 
-    else {
-    if( JS9.displays.length > 0 ){
-   	    display = JS9.displays[0].id;
-    	} else {
-    	    display = JS9.DEFID;
-        }
-    }
-    
-    var im = JS9.getImage(display);
+    var im = JS9.getImage(obj.display);
     if( im ){
 	region = obj.argv[0];
 	opts = obj.argv[1];
