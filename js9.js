@@ -12993,7 +12993,8 @@ JS9.lookupImage = function(id, display){
 
 // return the display for the specified id
 // id can be a display object or an id from a display object
-JS9.lookupDisplay = function(id, mustExist = true){
+JS9.lookupDisplay = function(id, mustExist){
+    if( mustExist === undefined ) mustExist = true;
     var i;
     var regexp = new RegExp(sprintf("[-_]?(%s)$", JS9.PLUGINS));
     if( id && (id !== "*") && (id.toString().search(JS9.SUPERMENU) < 0) ){
@@ -16061,11 +16062,7 @@ JS9.mkPublic("LookupImage", function(id){
 });
 
 // lookup a display
-JS9.mkPublic("LookupDisplay", function(id, mustExist = true){
-   var obj = JS9.parsePublicArgs(arguments);
-   var display = obj.argv[0] || obj.display.id;
-   return JS9.lookupDisplay(display, obj.argv[1]);
-});
+JS9.mkPublic("LookupDisplay", "lookupDisplay");
 
 // add a colormap to JS9
 JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
