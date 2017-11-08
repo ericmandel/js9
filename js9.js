@@ -12994,9 +12994,12 @@ JS9.lookupImage = function(id, display){
 // return the display for the specified id
 // id can be a display object or an id from a display object
 JS9.lookupDisplay = function(id, mustExist){
-    if( mustExist === undefined ) mustExist = true;
     var i;
     var regexp = new RegExp(sprintf("[-_]?(%s)$", JS9.PLUGINS));
+    // default is that the id must exist
+    if( mustExist === undefined ){
+	mustExist = true;
+    }
     if( id && (id !== "*") && (id.toString().search(JS9.SUPERMENU) < 0) ){
 	// look for whole id
 	for(i=0; i<JS9.displays.length; i++){
@@ -13015,7 +13018,7 @@ JS9.lookupDisplay = function(id, mustExist){
 	}
 	
         // an id was specified but not found
-        if (mustExist){
+        if( mustExist ){
 	    JS9.error("can't find JS9 display with id: " + id);
         }
         else {
@@ -16062,7 +16065,11 @@ JS9.mkPublic("LookupImage", function(id){
 });
 
 // lookup a display
-JS9.mkPublic("LookupDisplay", "lookupDisplay");
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("LookupDisplay", function(id, mustExist){
+    var obj = JS9.parsePublicArgs(arguments);
+    return JS9.lookupDisplay(obj.argv[0]||obj.display, obj.argv[1]);
+});
 
 // add a colormap to JS9
 JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){

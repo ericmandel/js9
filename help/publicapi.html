@@ -2877,6 +2877,27 @@ Don't forget to supply the display object:
     JS9.ResizeDisplay(350, 400, {display: "myJS9"});
 </pre>
 
+<p>
+<font size="+1"><b><u>Lookup a JS9 display</u></b></font>
+<p>
+<code><font size="+1">dobj = JS9.LookupDisplay(dname, mustExist)</font></code>
+<p>
+where:
+<ul>
+<li><b>dname</b>: name of JS9 display to look up
+<li><b>mustExist</b>: whether to throw error if a dname display does not exist
+</ul>
+returns:
+<ul>
+<li><b>dobj</b>: the JS9 display object
+</ul>
+The <b>JS9.LookupDisplay()</b> routine returns the display object associated
+with the specified <b>dname</b> parameter. If no <b>dname</b> is specified,
+the first available display is returned.
+<p>
+If <b>dname</b> is specified but does not exist, an error is thrown unless
+the <b>mustExist</b> parameter is explicitly set to false (i.e., the default
+is that the id must exist).
 
 <p>
 <font size="+1"><b><u>Move an image to a new JS9 display</u></b></font>
