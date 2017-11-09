@@ -2834,12 +2834,35 @@ for <b>JS9.RunAnalysis()</b> above.
 </font></b></center>
 <p>
 
-<font size="+1"><b><u>Resize the JS9 Display</u></b></font>
 <p>
-<code><font size="+1">JS9.ResizeDisplay(width, height, opts)</font></code>
+<font size="+1"><b><u>Lookup a JS9 display</u></b></font>
+<p>
+<code><font size="+1">dobj = JS9.LookupDisplay(dname, mustExist)</font></code>
 <p>
 where:
 <ul>
+<li><b>dname</b>: name of JS9 display to look up
+<li><b>mustExist</b>: whether to throw error if a dname display does not exist
+</ul>
+returns:
+<ul>
+<li><b>dobj</b>: the JS9 display object
+</ul>
+The <b>JS9.LookupDisplay()</b> routine returns the display object associated
+with the specified <b>dname</b> parameter. If no <b>dname</b> is specified,
+the first available display is returned.
+<p>
+If <b>dname</b> is specified but does not exist, an error is thrown unless
+the <b>mustExist</b> parameter is explicitly set to false (i.e., the default
+is that the id must exist).
+
+<font size="+1"><b><u>Resize the JS9 Display</u></b></font>
+<p>
+<code><font size="+1">JS9.ResizeDisplay(dname, width, height, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>dname</b>: optional name of JS9 display to resize
 <li><b>width</b>: new width of the display in HTML pixels (or "full" or "reset")
 <li><b>height</b>: new height of the display in HTML pixels
 <li><b>opts</b>: optional object containing resize parameters
@@ -2872,32 +2895,14 @@ If no arguments are passed to this routine, it returns an object
 containing the current display width and height. Otherwise, the
 display object is returned.
 <p>
-Don't forget to supply the display object:
+You can supply a display name as the first argument, or the display object:
+<pre>
+    JS9.ResizeDisplay("myJS9", 350, 400);
+</pre>
+or:
 <pre>
     JS9.ResizeDisplay(350, 400, {display: "myJS9"});
 </pre>
-
-<p>
-<font size="+1"><b><u>Lookup a JS9 display</u></b></font>
-<p>
-<code><font size="+1">dobj = JS9.LookupDisplay(dname, mustExist)</font></code>
-<p>
-where:
-<ul>
-<li><b>dname</b>: name of JS9 display to look up
-<li><b>mustExist</b>: whether to throw error if a dname display does not exist
-</ul>
-returns:
-<ul>
-<li><b>dobj</b>: the JS9 display object
-</ul>
-The <b>JS9.LookupDisplay()</b> routine returns the display object associated
-with the specified <b>dname</b> parameter. If no <b>dname</b> is specified,
-the first available display is returned.
-<p>
-If <b>dname</b> is specified but does not exist, an error is thrown unless
-the <b>mustExist</b> parameter is explicitly set to false (i.e., the default
-is that the id must exist).
 
 <p>
 <font size="+1"><b><u>Move an image to a new JS9 display</u></b></font>
@@ -2923,10 +2928,19 @@ the <b>File:new JS9 light window</b> menu option.
 <p>
 <font size="+1"><b><u>Gather other images to this JS9 Display</u></b></font>
 <p>
-<code><font size="+1">JS9.GatherDisplay()</font></code>
+<code><font size="+1">JS9.GatherDisplay(dname)</font></code>
+<p>
+where:
+<ul>
+<li><b>dname</b>: name of JS9 display to which the images will be gathered
+</ul>
 <p>
 This routine move all images in other displays to this display. 
-Don't forget to supply the display object:
+You can supply a display name or the display object:
+<pre>
+    JS9.GatherDisplay("myJS9");
+</pre>
+or:
 <pre>
     JS9.GatherDisplay({display: "myJS9"});
 </pre>
@@ -2934,10 +2948,19 @@ Don't forget to supply the display object:
 <p>
 <font size="+1"><b><u>Separate images in this JS9 Display into new displays</u></b></font>
 <p>
-<code><font size="+1">JS9.SeparateDisplay()</font></code>
+<code><font size="+1">JS9.SeparateDisplay(dname)</font></code>
+<p>
+where:
+<ul>
+<li><b>dname</b>: name of JS9 display from which the images will be separated
+</ul>
 <p>
 This routine moves each image in this display to a new display. 
-Don't forget to supply the display object:
+You can supply a display name or the display object:
+<pre>
+    JS9.SeparateDisplay("myJS9");
+</pre>
+or:
 <pre>
     JS9.SeparateDisplay({display: "myJS9"});
 </pre>
@@ -2945,10 +2968,14 @@ Don't forget to supply the display object:
 <p>
 <font size="+1"><b><u>Scroll the JS9 display to the center of the viewport</u></b></font>
 <p>
-<code><font size="+1">JS9.CenterDisplay()</font></code>
+<code><font size="+1">JS9.CenterDisplay(dname)</font></code>
 <p>
 This routine scrolls this display to the center of the viewport.
-Don't forget to supply the display object:
+You can supply a display name or the display object:
+<pre>
+    JS9.CenterDisplay("myJS9");
+</pre>
+or:
 <pre>
     JS9.CenterDisplay({display: "myJS9"});
 </pre>

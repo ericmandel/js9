@@ -6881,14 +6881,17 @@ JS9.Display.prototype.separate = function(){
 		    d1 = d2.replace(rexp, "") + "_sep" + JS9.uniqueID();
 		    // code to run when new window exists
 		    $("#dhtmlwindowholder").arrive("#"+d1, {onceOnly: true},
-					   function(){
-					       // move this image
-					       im.moveToDisplay(d1);
-					       // next image goes after this one
-					       d2 = d1;
-					       // process next image
-					       separateim(n+1);
-					   });
+			function(){
+			    // FF (at least) needs this 0ms delay
+			    window.setTimeout(function(){
+				// move this image
+				im.moveToDisplay(d1);
+				// next image goes after this one
+				d2 = d1;
+				// process next image
+				separateim(n+1);
+			    }, 0);
+			});
 		    // load new window, code above gets run when window exists
 		    JS9.LoadWindow(null, {id: d1, clone: d2});
 		}
@@ -17377,9 +17380,20 @@ JS9.mkPublic("InstantiatePlugins", function(){
 
 // change the size of a display
 JS9.mkPublic("ResizeDisplay", function(){
-    var got;
+    var got, display;
     var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
+    // special handling of first string argument:
+    // might be display name or might be resize params
+    if( typeof obj.argv[0] === "string" &&
+	!JS9.isNumber(obj.argv[0])      &&
+	obj.argv[0] !== "full"          &&
+	obj.argv[0] !== "reset"         &&
+	obj.argv[0] !== "image"         ){
+	display = JS9.lookupDisplay(obj.argv[0] || obj.display);
+	obj.argv.splice(0,1);
+    } else {
+	display = JS9.lookupDisplay(obj.display);
+    }
     if( !display ){
 	JS9.error("invalid display for resize");
     }
@@ -17390,10 +17404,24 @@ JS9.mkPublic("ResizeDisplay", function(){
     return got;
 });
 
+// select (or de-select) a display as the current display
+JS9.mkPublic("SelectDisplay", function(){
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.argv[0] || obj.display);
+    if( !display ){
+	JS9.error("invalid display for separate");
+    }
+    if( !JS9.hasOwnProperty("Menubar") ){
+	JS9.error("Menubar is required for display selection");
+    }
+    JS9.Menubar.onclick(display);
+    return;
+});
+
 // gather images from other displays into this display
 JS9.mkPublic("GatherDisplay", function(){
     var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
+    var display = JS9.lookupDisplay(obj.argv[0] || obj.display);
     if( !display ){
 	JS9.error("invalid display for gather");
     }
@@ -17404,7 +17432,7 @@ JS9.mkPublic("GatherDisplay", function(){
 // separate images in a display into new displays
 JS9.mkPublic("SeparateDisplay", function(){
     var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
+    var display = JS9.lookupDisplay(obj.argv[0] || obj.display);
     if( !display ){
 	JS9.error("invalid display for separate");
     }
@@ -17415,7 +17443,7 @@ JS9.mkPublic("SeparateDisplay", function(){
 // center the image in a display
 JS9.mkPublic("CenterDisplay", function(){
     var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
+    var display = JS9.lookupDisplay(obj.argv[0] || obj.display);
     if( !display ){
 	JS9.error("invalid display for center");
     }
