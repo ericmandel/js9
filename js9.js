@@ -16785,15 +16785,18 @@ JS9.mkPublic("RefreshImage", function(fits, opts){
 
 // get status of a Load ("complete" means ... complete)
 JS9.mkPublic("GetLoadStatus", function(id){
-    var fname0;
+    var fname0, id0;
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
 	id = obj.argv[0];
+	if( id ){
+	    id0 = id.split('/').reverse()[0];
+	}
 	if( im.file0 ){
 	    fname0 = im.file0.split('/').reverse()[0];
 	}
-	if( !id || (im.id0 === id) || (im.file0 === id) || (fname0 === id) ){
+	if( !id || (im.id0 === id) || (im.file0 === id) || (fname0 === id0) ){
 	    return im.status.load;
 	}
 	return "other";
