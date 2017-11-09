@@ -40,7 +40,7 @@
   <title>JS9</title>
 </head>
 <body>
-    <center><h1>JS9: image display right in your browser</h1></center>
+    <center><h1>JS9: astronomical image display everywhere</h1></center>
     <div id="centerdiv">
     <div id="message"></div>
     <p>
@@ -49,7 +49,10 @@
     <div style="margin-top: 2px;">
     <div class="JS9Colorbar" id="JS9Colorbar"></div>
     </div>
+    <p>
+    <button type="button" onclick="dostop()">Stop</button>
     </div>
+
     <script type="text/javascript">
     $(document).ready(function(){
         $("#centerdiv").draggable({
@@ -64,7 +67,7 @@
                 }, 100);
             }
             window.setTimeout(function(){
-                if( demoFuncs[n] ){
+	        if( demoFuncs[n] && !stop ){
 	            demoFuncs[n++]();
 	        }
             }, to);

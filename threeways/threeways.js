@@ -1,12 +1,17 @@
 /*global $, JS9, sprintf */
 
 "use strict";
+var stop = false;
 var n = 0;
 var tot = 0;
 var to = 3000;
 var images = {};
 var demoFuncs = [];
 var js9id = "JS9";
+
+function dostop(){
+    stop = true;
+}
 
 function message(s, t){
    var x;
@@ -23,7 +28,7 @@ function threeways(){
     n =  0;
     message("image blending: NCG 2207/IC 2163");
     window.setTimeout(function(){
-        if( demoFuncs[n] ){
+        if( demoFuncs[n] && !stop ){
             demoFuncs[n++]();
         }
     }, to);
@@ -38,7 +43,7 @@ demoFuncs[tot++] = function() {
         JS9.SetColormap("red", 5.78, 0.15, {display: im});
 	JS9.BlendImage("screen", 1, true, {display: im});
         window.setTimeout(function(){
-            if( demoFuncs[n] ){
+            if( demoFuncs[n] && !stop ){
                 demoFuncs[n++]();
             }
         }, to);
@@ -56,7 +61,7 @@ demoFuncs[tot++] = function() {
             JS9.SetColormap("green", 5.6, 0.74, {display: im});
 	    JS9.BlendImage("screen", 1, true, {display: im});
 	    window.setTimeout(function(){
-		if( demoFuncs[n] ){
+		if( demoFuncs[n] && !stop ){
 		    demoFuncs[n++]();
 		}
 	    }, to);
@@ -75,7 +80,7 @@ demoFuncs[tot++] = function() {
 	    JS9.SetColormap("blue", 6.3, 0.54, {display: im});
 	    JS9.BlendImage("screen", 1, true, {display: im});
 	    window.setTimeout(function(){
-		if( demoFuncs[n] ){
+		if( demoFuncs[n] && !stop ){
 		    demoFuncs[n++]();
 		}
 	    }, to);
@@ -87,7 +92,7 @@ demoFuncs[tot++] = function() {
     message("blend all three images");
     JS9.BlendDisplay(true, {display: js9id});
     window.setTimeout(function(){
-	if( demoFuncs[n] ){
+	if( demoFuncs[n] && !stop ){
 	    demoFuncs[n++]();
 	}
     }, to * 2);
