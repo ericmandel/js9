@@ -12736,6 +12736,10 @@ JS9.msgHandler =  function(msg, cb){
 	catch(e){ res = sprintf("ERROR: %s", e.message); }
 	if( cb ){
 	    JS9.globalOpts.alerts = oalerts;
+	    // last ditch effort to avoid passing back image or display objects
+	    if( res instanceof JS9.Display || res instanceof JS9.Image ){
+		res = res.id;
+	    }
 	    cb(res);
 	}
 	return res;
@@ -12786,6 +12790,10 @@ JS9.msgHandler =  function(msg, cb){
     // turn on alerts, do message callback, if necessary
     if( cb ){
 	JS9.globalOpts.alerts = oalerts;
+	// last ditch effort to avoid passing back image or display objects
+	if( res instanceof JS9.Display || res instanceof JS9.Image ){
+	    res = res.id;
+	}
 	cb(res);
     }
     return res;
