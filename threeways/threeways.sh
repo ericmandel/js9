@@ -4,10 +4,12 @@
 # blend image directory relative to web page
 BLEND="./blend"
 
-timeout=3
+timeout=1
 XARGS=""
 while [ x"$1" != x ]; do
     case $1 in
+    -a) shift
+	doapp=true;;
     -b) shift
 	BLEND="$1"
         shift;;
@@ -45,6 +47,11 @@ echo "${REPLY}" | od -a
       sleep $timeout
     fi
 }
+
+if [ x${doapp} = xtrue ]; then
+  js9 -a &
+  sleep 1
+fi
 
 js9 $XARGS BlendDisplay false > /dev/null
 
