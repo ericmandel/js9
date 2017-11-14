@@ -16119,10 +16119,26 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
 	    obj2cmap(cobj);
 	    break;
 	case 2:
+	    if( typeof a1 === "string" ){
+		try{ a1 = JSON.parse(a1); }
+		catch(e){ JS9.error("can't parse JSON colormap", e); }
+	    }
 	    JS9.checkNew(new JS9.Colormap(colormap, a1));
 	    JS9.globalOpts.topColormaps.push(colormap);
 	    break;
 	case 4:
+	    if( typeof a1 === "string" ){
+		try{ a1 = JSON.parse(a1); }
+		catch(e){ JS9.error("can't parse JSON colormap", e); }
+	    }
+	    if( typeof a2 === "string" ){
+		try{ a2 = JSON.parse(a2); }
+		catch(e){ JS9.error("can't parse JSON colormap", e); }
+	    }
+	    if( typeof a3 === "string" ){
+		try{ a3 = JSON.parse(a3); }
+		catch(e){ JS9.error("can't parse JSON colormap", e); }
+	    }
 	    JS9.checkNew(new JS9.Colormap(colormap, a1, a2, a3));
 	    JS9.globalOpts.topColormaps.push(colormap);
 	    break;
