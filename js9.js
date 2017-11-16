@@ -2459,6 +2459,24 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
     return this;
 };
 
+// calculate and set offsets into display where image is to be written
+JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
+    var xoff, yoff;
+    // calculate offsets
+    this.ix = Math.floor((this.display.canvas.width - this.rgb.img.width)/2);
+    this.iy = Math.floor((this.display.canvas.height - this.rgb.img.height)/2);
+    // wcs alignment of a reprojected layer, or a (current0) copy of one
+    if( dowcs && this.wcsim && this.params.wcsalign ){
+	// calc offsets into the wcs image
+	xoff = 0;
+	yoff = (this.wcsim.raw.height - this.raw.height) * this.rgb.sect.zoom;
+	this.ix = this.wcsim.ix + xoff;
+	this.iy = this.wcsim.iy + yoff;
+    }
+    // allow chaining
+    return this;
+};
+
 // primitive to put image data on screen
 JS9.Image.prototype.putImage = function(opts){
     var rgb = this.rgb;
@@ -2485,20 +2503,12 @@ JS9.Image.prototype.putImage = function(opts){
     };
     // opts is optional
     opts = opts || {};
-    // offsets into display
-    this.ix = Math.floor((display.canvas.width - rgb.img.width)/2);
-    this.iy = Math.floor((display.canvas.height - rgb.img.height)/2);
-    // reproject: if reproj wcs header exists, align the display if necessary
+    // reproject: if reproj wcs header exists, save it for alignment
     if( this.rawDataLayer() === "reproject" && opts.wcsim ){
-	this.wcsix = opts.wcsim.ix;
-	this.wcsiy = opts.wcsim.iy + (opts.wcsim.raw.height - this.raw.height);
+	this.wcsim = opts.wcsim;
     }
-    // wcs alignment of a reprojected layer, or a (current0) copy of one
-    if( this.params.wcsalign &&
-	(this.wcsix !== undefined) && (this.wcsiy !== undefined)  ){
-	this.ix = this.wcsix;
-	this.iy = this.wcsiy;
-    }
+    // get display offsets
+    this.calcDisplayOffsets(true);
     // draw the image into the context
     if( JS9.notNull(opts.opacity) || JS9.notNull(opts.blend) ){
 	// one component of a blended image
@@ -2638,6 +2648,12 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	// clear image
 	this.display.context.clear();
 	if( nblend ){
+	    // pre-calculate image offsets in case of zoom changed for an image
+	    // which acts as wcsim for another blended image ... in case the
+	    // blended image gets loaded before the wcs image ... messy!
+	    for(i=blends.length-1; i>=0; i--){
+		blends[i].calcDisplayOffsets(false);
+	    }
 	    for(i=blends.length-1; i>=0; i--){
 		im = blends[i];
 		// display the image
