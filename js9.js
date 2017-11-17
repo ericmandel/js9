@@ -2461,17 +2461,20 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 
 // calculate and set offsets into display where image is to be written
 JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
-    var xoff, yoff;
+    var xoff, yoff, sect, wcsim, wcssect;
     // calculate offsets
     this.ix = Math.floor((this.display.canvas.width - this.rgb.img.width)/2);
     this.iy = Math.floor((this.display.canvas.height - this.rgb.img.height)/2);
     // wcs alignment of a reprojected layer, or a (current0) copy of one
     if( dowcs && this.wcsim && this.params.wcsalign ){
-	// calc offsets into the wcs image
-	xoff = 0;
-	yoff = (this.wcsim.raw.height - this.raw.height) * this.rgb.sect.zoom;
-	this.ix = this.wcsim.ix + xoff;
-	this.iy = this.wcsim.iy + yoff;
+	// calc offsets so as to align with the wcs image
+	sect = this.rgb.sect;
+	wcsim = this.wcsim;
+	wcssect = wcsim.rgb.sect;
+	xoff = 0 - ((wcssect.x0 - sect.x0) * wcssect.zoom);
+	yoff = ((wcsim.raw.height - this.raw.height) - (wcssect.y0 - sect.y0)) * wcssect.zoom;
+	this.ix = wcsim.ix + xoff;
+	this.iy = wcsim.iy + yoff;
     }
     // allow chaining
     return this;
