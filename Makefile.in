@@ -355,6 +355,7 @@ eslint2:	FORCE
 tar:		FORCE
 		($(RM) config.cache; \
 		cd ..; \
+		export COPYFILE_DISABLE=true; \
 		tar cf - $(DISTNAME) | gzip -9 -c > $(DISTNAME).tgz)
 
 install:	install-binaries install-scripts install-web
@@ -555,6 +556,7 @@ gitprefs:	FORCE
 release:	clean gitprefs
 		(mkdir -p $(DISTDIR)/$(DISTNAME); \
 	        touch $(DISTDIR)/foo; \
+		export COPYFILE_DISABLE=true; \
 		tar cf - \
 			 --exclude='node_modules/selenium-webdriver' \
 			 --exclude='node_modules/socket.io_v[0-9]*' \
