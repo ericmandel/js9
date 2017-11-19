@@ -339,8 +339,8 @@ var loadAnalysisTasks = function(dir){
 	    for(i=0; i<files.length; i++){
 		pathname = dir + "/" + files[i];
 		if( fs.existsSync(pathname) ){
-		    // only json files, please
-		    if( !pathname.match(/.json$/) ){
+		    // only json files ... also avoid Mac OSX xattr files
+		    if( !pathname.match(/.json$/) || files[i].match(/\._/) ){
 			continue;
 		    }
 		    analysis.temp = fs.readFileSync(pathname, "utf-8");
