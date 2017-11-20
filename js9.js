@@ -3659,8 +3659,9 @@ JS9.Image.prototype.notifyHelper = function(){
 	    if( !rstr ){
 		return;
 	    }
-	    // returns: [png, fits, wcs]
-	    r = rstr.trim().split(/ +/);
+	    // returns: [file, path, wcs]
+	    // split args, dealing with spaces inside brackets
+	    r = rstr.trim().match(/(?:[^\s\[]+|\[[^\]]*\])+/g);
 	    im = JS9.lookupImage(r[0], that.display.id||JS9.DEFID );
 	    if( im && !im.fitsFile ){
 		s = r[1];
