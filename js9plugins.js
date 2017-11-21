@@ -6166,8 +6166,7 @@ JS9.Menubar.init = function(width, height){
 		    if( JS9.globalOpts.loadProxy &&
 			im && im.raw && im.raw.hdu && im.raw.hdu.vfile ){
 			items.upload = {name: "upload FITS to make tasks available"};
-			if( JS9.helper.type !== "nodejs" &&
-			    JS9.helper.type !== "socket.io" ){
+			if( !JS9.helper.connected || (JS9.helper.type !== "nodejs" && JS9.helper.type !== "socket.io") ){
 			    items.upload.disabled = true;
 			}
 		    }
