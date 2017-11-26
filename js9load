@@ -17,8 +17,9 @@ while [ x"$1" != x ]; do
     -h) shift
 	XARGS="$XARGS -h $1"
         shift;;
-   -id) shift
-        XARGS="$XARGS -id $1"
+
+    -id|--id) shift
+        XARGS="$XARGS --id $1"
 	shift;;
 
     -s) shift
