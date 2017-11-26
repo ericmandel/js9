@@ -7843,6 +7843,7 @@ JS9.Menubar.init = function(width, height){
 		}
 		items.free = {name: "free image memory"};
 		items.close = {name: "close image"};
+		items.closeall = {name: "close all images"};
 		items.removeproxy = {name: "remove proxy file from server"};
 		if( !tim || !tim.proxyFile ){
 		    items.removeproxy.disabled = true;
@@ -7892,6 +7893,17 @@ JS9.Menubar.init = function(width, height){
 				uim.closeImage();
 			    }
 			    break;
+			case "closeall":
+			    if( udisp ){
+				// reverse loop because we slice JS9.images
+				for(j=JS9.images.length-1; j>=0; j--){
+				    uim = JS9.images[j];
+				    if( uim.display === udisp ){
+					uim.closeImage();
+				    }
+				}
+			    }
+			    break;
 			case "removeproxy":
 			    if( uim ){
 				uim.removeProxyFile();
@@ -7913,7 +7925,9 @@ JS9.Menubar.init = function(width, height){
 			    }
 			    break;
 			case "savecatalog":
-			    uim.saveCatalog();
+			    if( uim ){
+				uim.saveCatalog();
+			    }
 			    break;
 			case "header":
 			    if( uim ){
