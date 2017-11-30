@@ -482,7 +482,7 @@ var getDataPath = function(s){
 
 // see if a file exists in the dataPath
 var getFilePath = function(file, dataPath, myenv){
-    var i, s, froot, fext, parr;
+    var i, s, s1, s2, froot1, froot2, fext, parr;
     // eslint-disable-next-line no-unused-vars
     var repl = function(m, t, o){
 	if( myenv && myenv[t] ){
@@ -495,14 +495,16 @@ var getFilePath = function(file, dataPath, myenv){
 	return;
     }
     // look for and remove the extension
-    froot = file.replace(/\[.*]$/,"");
+    froot1 = file.replace(/\[.*]$/,"");
+    // root without any path
+    froot2 = froot1.split("/").reverse()[0];
     s = file.match(/\[.*]$/,"");
     if( s ){
 	fext = s[0];
     } else {
 	fext = "";
     }
-    if( path.isAbsolute(froot) ){
+    if( path.isAbsolute(froot1) ){
 	parr = [""];
     } else {
 	parr = dataPath.split(":");
@@ -510,12 +512,17 @@ var getFilePath = function(file, dataPath, myenv){
     // replace environment variables in path, if possible
     for(i=0; i<parr.length; i++){
 	s = parr[i].replace(/\${?([a-zA-Z][a-zA-Z0-9_()]+)}?/g, repl);
-	// make up pathname to check
-	s = path.join(s, froot);
-	if( fs.existsSync(s) ){
+	// make up pathnames to check
+	s1 = path.join(s, froot1);
+	s2 = path.join(s, froot2);
+	if( fs.existsSync(s1) ){
 	    // found the file add extension to full path
-	    s += fext;
-	    return s;
+	    s1 += fext;
+	    return s1;
+	} else if( (s1 !== s2) && fs.existsSync(s2) ){
+	    // found the file add extension to full path
+	    s2 += fext;
+	    return s2;
 	}
     }
     return;
