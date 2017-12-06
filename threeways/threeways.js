@@ -26,7 +26,7 @@ function message(s, t){
 // eslint-disable-next-line no-unused-vars
 function threeways(){
     n =  0;
-    message("image blending: NCG 2207/IC 2163");
+    message("image blending: NGC 2207/IC 2163");
     window.setTimeout(function(){
         if( demoFuncs[n] && !stop ){
             demoFuncs[n++]();
@@ -89,7 +89,26 @@ demoFuncs[tot++] = function() {
 };
 
 demoFuncs[tot++] = function() {
-    message("blend all three images");
+    JS9.Load("../blend/hst.fits", {scale:"log",scaleclipping:"user",scalemin:0,scalemax:5,colormap:"heat",contrast:4.0,bias:0.67, onload: function(im){
+        message("display %s", im.id);
+	JS9.SetScale("log", {display: im});
+	JS9.SetColormap("heat", 4.0, 0.67, {display: im});
+	window.setTimeout(function(){
+            message("reproject using chandra wcs");
+            JS9.ReprojectData("chandra.fits", {display: im});
+	    JS9.SetColormap("heat", 3.0, 0.535, {display: im});
+	    JS9.BlendImage("screen", 1, true, {display: im});
+	    window.setTimeout(function(){
+		if( demoFuncs[n] && !stop ){
+		    demoFuncs[n++]();
+		}
+	    }, to);
+	}, to);
+    }}, {display: js9id});
+};
+
+demoFuncs[tot++] = function() {
+    message("blend all images");
     JS9.BlendDisplay(true, {display: js9id});
     window.setTimeout(function(){
 	if( demoFuncs[n] && !stop ){

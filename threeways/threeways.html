@@ -61,7 +61,7 @@
         demoFuncs[tot++] = function() {
             var i;
             message("close images and begin again");
-            for(i=0; i<3; i++){
+            for(i=0; i<JS9.images.length; i++){
                 window.setTimeout(function(){
                     JS9.CloseImage({display: js9id});
                 }, 100);

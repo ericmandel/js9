@@ -49,10 +49,6 @@ dowait (){
     fi
     if [ x"$doyesno" = xtrue ]; then
         read -p "$ASK"
-        if [[ ! $REPLY =~ ^[Yy]$ ]]
-        then
-            exit
-        fi
     else
       echo "$ACT"
       sleep $TIMEOUT
@@ -69,13 +65,13 @@ xjs9load (){
   js9load $XARGS $*
 }
 
-echo "start processing"
 # js9 $XARGS ResizeDisplay 1024 > /dev/null
-xjs9 $XARGS BlendDisplay false > /dev/null
-xjs9 $XARGS CloseImage chandra.fits > /dev/null
-xjs9 $XARGS CloseImage galex.fits > /dev/null
-xjs9 $XARGS CloseImage spitzer.fits > /dev/null
-xjs9 $XARGS CloseImage hubble.fits > /dev/null
+echo "Merging multi-wavelength data for colliding galaxies NGC 2207 and IC 2163"
+js9 $XARGS BlendDisplay false > /dev/null
+js9 $XARGS CloseImage chandra.fits > /dev/null
+js9 $XARGS CloseImage galex.fits > /dev/null
+js9 $XARGS CloseImage spitzer.fits > /dev/null
+js9 $XARGS CloseImage hubble.fits > /dev/null
 
 dowait "load chandra.fits"
 xjs9load $XARGS "${BLDIR}/chandra.fits" '{"scale":"log","colormap":"red","contrast":5.78,"bias":0.15}'
@@ -92,7 +88,7 @@ xjs9 $XARGS SetZoom $ZOOM > /dev/null
 xjs9 $XARGS BlendImage "screen" 1 true > /dev/null
 
 dowait "load spitzer.fits"
-xjs9load $XARGS "${BLDIR}/spitzer.fits" '{"scale":"log","colormap":"blue","contrast":4.89,"bias":0.41}'
+xjs9load $XARGS "${BLDIR}/spitzer.fits" '{"scale":"log","colormap":"blue","contrast":4.14,"bias":0.545}'
 
 dowait "reproject spitzer using the chandra wcs"
 xjs9 $XARGS ReprojectData "chandra.fits" > /dev/null
