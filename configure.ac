@@ -197,7 +197,7 @@ if test x"${CFITSIOINC}${FUNINC}" = x; then
 fi
 
 # check for external png libraries and build of tpos
-AC_MSG_CHECKING(for png library (for building fits2png))
+AC_MSG_CHECKING(for png library (for building deprecated fits2png))
 AC_ARG_WITH(png,
     [ --with-png=<path> directory containing lib/libpng e.g. /usr/local], havelib=1, havelib=0)
 if test x"$havelib" = x1 ; then
@@ -237,7 +237,7 @@ if test x"$havelib" = x1 ; then
   fi
 else
   USEFITS2PNG="no"
-  AC_MSG_RESULT(fits2png will not be built)
+  AC_MSG_RESULT(good ... fits2png will not be built)
 fi
 # results from png search
 AC_SUBST(PNGLIB)
