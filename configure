@@ -4751,8 +4751,8 @@ echo "${ECHO_T}no" >&6
   fi
 else
   USEFITS2PNG="no"
-  echo "$as_me:$LINENO: result: good ... fits2png will not be built" >&5
-echo "${ECHO_T}good ... fits2png will not be built" >&6
+  echo "$as_me:$LINENO: result: fits2png will not be built" >&5
+echo "${ECHO_T}fits2png will not be built" >&6
 fi
 # results from png search
 

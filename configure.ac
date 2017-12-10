@@ -237,7 +237,7 @@ if test x"$havelib" = x1 ; then
   fi
 else
   USEFITS2PNG="no"
-  AC_MSG_RESULT(good ... fits2png will not be built)
+  AC_MSG_RESULT(fits2png will not be built)
 fi
 # results from png search
 AC_SUBST(PNGLIB)
