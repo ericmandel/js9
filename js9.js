@@ -15881,8 +15881,13 @@ JS9.init = function(){
 	try{ JS9.worker = new JS9.WebWorker(JS9.InstallDir(JS9.WORKERFILE)); }
 	catch(e){}
     }
-    // load emscripten
-    JS9.initEmscripten();
+    // for allinone files, emscripten is already loaded so init FITS now
+    if( JS9.allinone ){
+	JS9.initFITS();
+    } else {
+	// load emscripten, which will trigger init FITS later
+	JS9.initEmscripten();
+    }
     // initialize helper support
     JS9.helper = new JS9.Helper();
     // add handler for postMessage events
