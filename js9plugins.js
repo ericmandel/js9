@@ -1292,7 +1292,7 @@ JS9.Blend.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Blend.init = function(){
-    var i, im;
+    var i, im, omode;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -1325,12 +1325,19 @@ JS9.Blend.init = function(){
 	.attr("id", this.id + "BlendImageContainer")
         .html(JS9.Blend.nofileHTML)
 	.appendTo(this.blendContainer);
-    // add currently loaded images
+    // add currently loaded images (but avoid multiple redisplys)
+    omode = this.display.blendMode;
+    this.display.blendMode = false;
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
 	if( im.display === this.display ){
 	    JS9.Blend.addImage.call(this, im);
 	}
+    }
+    // final redisplay
+    this.display.blendMode = omode;
+    if( this.display.image ){
+	this.display.image.displayImage();
     }
     // set global blend mode
     this.divjq.find(".blendModeCheck")
