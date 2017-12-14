@@ -2465,8 +2465,9 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
     // calculate offsets
     this.ix = Math.floor((this.display.canvas.width - this.rgb.img.width)/2);
     this.iy = Math.floor((this.display.canvas.height - this.rgb.img.height)/2);
-    // wcs alignment of a reprojected layer, or a (current0) copy of one
-    if( dowcs && this.wcsim && this.params.wcsalign ){
+    // do wcs alignment, if necessary
+    if( dowcs && this.wcsim && (this.display === this.wcsim.display) &&
+	this.params.wcsalign ){
 	// calc offsets so as to align with the wcs image
 	sect = this.rgb.sect;
 	wcsim = this.wcsim;
