@@ -1,6 +1,6 @@
 {
   "name": "js9",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "astronomical image display everywhere",
   "main": "js9.js",
   "scripts": {
