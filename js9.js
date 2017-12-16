@@ -7615,7 +7615,11 @@ JS9.Helper.prototype.connect = function(type){
 	    this.url = JS9.globalOpts.helperProtocol + JS9.globalOpts.helperURL;
 	}
     } else if( document.domain ){
-	this.url = JS9.globalOpts.helperProtocol + document.domain;
+	if( location.origin ){
+	    this.url = location.origin;
+	} else {
+	    this.url = JS9.globalOpts.helperProtocol + document.domain;
+	}
     } else {
 	this.url = JS9.globalOpts.helperProtocol + "localhost";
     }
