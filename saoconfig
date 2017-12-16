@@ -54,13 +54,13 @@ case $name in
 
   baba-cgi)
   ./configure 	$CF							\
-		--with-helper="post"					\
+		--with-helper="get"					\
 		--prefix=$HOME						\
 		--with-webdir=$HOME/Sites/js9				\
 		--with-cfitsio=$HOME					\
 		--with-png=$HOME					\
 		--with-cgidir=$HOME/Sites/cgi-bin			\
-		--with-cgiurl='~'$USER'/cgi-bin'			\
+		--with-cgiurl=cgi-bin					\
 		--with-cgixpath=$HOME/bin				\
 		--with-saodir=$HOME/Sites				\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
