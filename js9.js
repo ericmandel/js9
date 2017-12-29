@@ -183,7 +183,7 @@ JS9.globalOpts = {
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
     imageTemplates: ".fits,.fts,.png,.jpg,.jpeg", // templates for local images
     regionTemplates: ".reg",         // templates for local region file input
-    sessionTemplates: ".ses",        // templates for local session file input
+    sessionTemplates: ".ses,.js9ses",// templates for local session file input
     colormapTemplates: ".cmap",      // templates for local colormap file input
     catalogTemplates: ".cat,.tab",   // templates for local catalog file input
     controlsMatchRegion: "corner",   // true or "corner" or "border"
@@ -4616,12 +4616,18 @@ JS9.Image.prototype.saveIMG = function(fname, type, encoderOpts){
 // save image as a PNG file
 JS9.Image.prototype.savePNG = function(fname){
     fname = fname || "js9.png";
+    if( !fname.match(/\.png$/) ){
+	fname += ".png";
+    }
     return this.saveIMG(fname, "image/png");
 };
 
 // save image as a JPEG file
 JS9.Image.prototype.saveJPEG = function(fname, quality){
-    fname = fname || "js9.jpeg";
+    fname = fname || "js9.jpg";
+    if( !fname.match(/\.jpg$/) && !fname.match(/\.jpeg$/)  ){
+	fname += ".jpg";
+    }
     return this.saveIMG(fname, "image/jpeg", quality);
 };
 
@@ -5989,9 +5995,12 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 // NB: save is an image method, load is a display method
 JS9.Image.prototype.saveSession = function(file){
     var obj, str, blob, layer, dlayer, tobj, key;
-    file = file || "js9.ses";
     if( !window.hasOwnProperty("saveAs") ){
 	JS9.error("no saveAs function available to save session");
+    }
+    file = file || "js9.ses";
+    if( !file.match(/\.ses$/) && !file.match(/\.js9ses$/) ){
+	file += ".ses";
     }
     // change the cursor to show the waiting status
     JS9.waiting(true, this.display);
@@ -7300,6 +7309,9 @@ JS9.Image.prototype.saveCatalog = function(fname, which){
     cat = this.layers[layer].catalog;
     blob = new Blob([cat], {type: "text/plain;charset=utf-8"});
     fname = fname || layer + ".cat";
+    if( !fname.match(/\.cat$/) ){
+	fname += ".cat";
+    }
     if( window.hasOwnProperty("saveAs") ){
 	saveAs(blob, fname);
     } else {
@@ -14718,6 +14730,8 @@ JS9.dragdropCB = function(id, evt, handler){
 	    } else if( fname && fname.match(/\.cat$/) ){
 		JS9.LoadCatalog(null, file, {display: opts.display});
 	    } else if( fname && fname.match(/\.ses$/) ){
+		JS9.LoadSession(file, {display: opts.display});
+	    } else if( fname && fname.match(/\.js9ses$/) ){
 		JS9.LoadSession(file, {display: opts.display});
 	    } else {
 		JS9.waiting(true, display);
