@@ -6937,11 +6937,12 @@ JS9.Display.prototype.separate = function(){
 
 // display the next image from the JS9 images list that is in this display
 JS9.Display.prototype.nextImage = function(inc){
-    var idx, curidx, im;
+    var idx, curidx, im, dpos, npos;
     inc = inc || 1;
     if( !this.image ){
 	return;
     }
+    dpos = this.image.pos;
     // get index into images array for the displayed image
     for(idx=0; idx<JS9.images.length; idx++){
 	if( this.image === JS9.images[idx] ){
@@ -6967,6 +6968,11 @@ JS9.Display.prototype.nextImage = function(inc){
 	im.displayImage("all");
 	im.refreshLayers();
 	im.display.clearMessage();
+	if( dpos ){
+	    npos = im.displayToImagePos(dpos);
+	    im.valpos = null;
+	    im.valpos = im.updateValpos(npos, true);
+	}
     }
     // allow chaining
     return this;
