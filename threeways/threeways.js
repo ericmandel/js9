@@ -8,6 +8,7 @@ var to = 3000;
 var images = {};
 var demoFuncs = [];
 var js9id = "JS9";
+var blenddir = "../blend";
 
 function dostop(){
     stop = true;
@@ -36,7 +37,7 @@ function threeways(){
 
 demoFuncs[tot++] = function() {
     JS9.BlendDisplay(false, {display: js9id});
-    JS9.Load("../blend/chandra.fits", {onload: function(im){
+    JS9.Load(blenddir + "/chandra.fits", {onload: function(im){
         message("display %s", im.id);
         images.chandra = im;
         JS9.SetScale("log", {display: im});
@@ -51,7 +52,7 @@ demoFuncs[tot++] = function() {
 };
 
 demoFuncs[tot++] = function() {
-    JS9.Load("../blend/galex.fits", {onload: function(im){
+    JS9.Load(blenddir + "/galex.fits", {onload: function(im){
         message("display %s", im.id);
 	JS9.SetScale("log", {display: im});
 	JS9.SetColormap("green", 6.25, 0.25, {display: im});
@@ -70,7 +71,7 @@ demoFuncs[tot++] = function() {
 };
 
 demoFuncs[tot++] = function() {
-    JS9.Load("../blend/spitzer.fits", {onload: function(im){
+    JS9.Load(blenddir + "/spitzer.fits", {onload: function(im){
         message("display %s", im.id);
 	JS9.SetScale("log", {display: im});
 	JS9.SetColormap("blue", 3.5, 0.55, {display: im});
@@ -89,7 +90,7 @@ demoFuncs[tot++] = function() {
 };
 
 demoFuncs[tot++] = function() {
-    JS9.Load("../blend/hst.fits", {scale:"log",scaleclipping:"user",scalemin:0,scalemax:5,colormap:"heat",contrast:4.0,bias:0.67, onload: function(im){
+    JS9.Load(blenddir + "/hst.fits", {scale:"log",scaleclipping:"user",scalemin:0,scalemax:5,colormap:"heat",contrast:4.0,bias:0.67, onload: function(im){
         message("display %s", im.id);
 	JS9.SetScale("log", {display: im});
 	JS9.SetColormap("heat", 4.0, 0.67, {display: im});
