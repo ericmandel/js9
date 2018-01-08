@@ -368,7 +368,8 @@ imops.backgr = function(data, width) {
 };
 
 imops.mksection = function(x, y, w, h) {
-        return [[x-(w/2), x+(w/2)], [y-(h/2), y+(h/2)]];
+        return [[Math.floor(x-(w/2)), Math.floor(x+(w/2))],
+		[Math.floor(y-(h/2)), Math.floor(y+(h/2))]];
 };
 
 imops._rproj = typed(function (a, cx, cy, radius, length) {
