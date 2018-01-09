@@ -2426,6 +2426,8 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
     // if first argument is true or false, this turns on/off blending
     if( (mode === true) || (mode === false) ){
 	this.blend.active = mode;
+	// trigger option redisplay
+	this.xeqPlugins("image", "onimageblend");
 	if( this.display.blendMode ){
 	    this.displayImage();
 	}
@@ -2443,13 +2445,17 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 	if( JS9.notNull(opacity) ){
 	    if( typeof opacity === "string" ){
 		opacity = parseFloat(opacity);
+	    } else if( typeof opacity !== "number" ){
+		JS9.error("invalid opacity: " + opacity);
 	    }
-	    this.blend.opacity = opacity;
+	    this.blend.opacity = Math.min(Math.max(opacity, 0), 1);
 	}
 	// set active state, if necessary
 	if( JS9.notNull(active) ){
 	    this.blend.active = active;
 	}
+	// trigger option redisplay
+	this.xeqPlugins("image", "onimageblend");
 	// display blended result, if necessary
 	if( this.display.blendMode && this.blend.active ){
 	    this.displayImage();
@@ -6113,7 +6119,7 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
 			    xtrig(xname, {im: this, ipos: this.ipos, evt: evt});
                         }
 			catch(e){ pinst.errLog(xname, e); }
-	    }
+		    }
 		    break;
 		}
 	    }
@@ -17117,6 +17123,9 @@ JS9.mkPublic("BlendDisplay", function(mode){
     // it's true or false
     disp.blendMode = !!mode;
     if( disp.image ){
+	// trigger option redisplay
+	disp.image.xeqPlugins("image", "ondisplayblend");
+	// redisplay image
 	disp.image.displayImage();
     }
     return disp.blendMode;

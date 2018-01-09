@@ -1130,9 +1130,9 @@ JS9.Blend.imageHTML="<span style='float: left'>$active &nbsp;&nbsp; $blend &nbsp
 
 JS9.Blend.activeHTML='<input class="blendActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blend.xactive(\'%s\', \'%s\', this)">blend using:';
 
-JS9.Blend.blendHTML='<select class="blendModeSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xblend(\'%s\', \'%s\', this)"><option selected disabled>blend mode</option><option value="normal">normal</option><option value="screen">screen</option><option value="multiply">multiply</option><option value="overlay">overlay</option><option value="darken">darken</option><option value="lighten">lighten</option><option value="color-dodge">color-dodge</option><option value="color-burn">color-burn</option><option value="hard-light">hard-light</option><option value="soft-light">soft-light</option><option value="difference">difference</option><option value="exclusion">exclusion</option><option value="hue">hue</option><option value="saturation">saturation</option><option value="color">color</option> <option value="luminosity">luminosity</option></select>';
+JS9.Blend.blendHTML='<select class="blendModeSelect" onchange="JS9.Blend.xblend(\'%s\', \'%s\', this)"><option selected disabled>blend mode</option><option value="normal">normal</option><option value="screen">screen</option><option value="multiply">multiply</option><option value="overlay">overlay</option><option value="darken">darken</option><option value="lighten">lighten</option><option value="color-dodge">color-dodge</option><option value="color-burn">color-burn</option><option value="hard-light">hard-light</option><option value="soft-light">soft-light</option><option value="difference">difference</option><option value="exclusion">exclusion</option><option value="hue">hue</option><option value="saturation">saturation</option><option value="color">color</option> <option value="luminosity">luminosity</option></select>';
 
-JS9.Blend.opacityHTML='<select class="blendOpacitySelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xopacity(\'%s\', \'%s\', this)"><option selected disabled>opacity</option><option value="1.00">opaque</option><option value="0.95">0.95</option><option value="0.90">0.90</option><option value="0.85">0.85</option><option value="0.80">0.80</option><option value="0.75">0.75</option><option value="0.70">0.70</option><option value="0.65">0.65</option><option value="0.60">0.60</option><option value="0.55">0.55</option><option value="0.50">0.50</option><option value="0.45">0.45</option><option value="0.40">0.40</option><option value="0.35">0.35</option><option value="0.30">0.30</option><option value="0.25">0.25</option><option value="0.20">0.20</option><option value="0.10">0.10</option><option value="0.0">transparent</option></select>';
+JS9.Blend.opacityHTML='<select class="blendOpacitySelect" onchange="JS9.Blend.xopacity(\'%s\', \'%s\', this)"><option selected disabled>opacity</option><option value="1.00">opaque</option><option value="0.95">0.95</option><option value="0.90">0.90</option><option value="0.85">0.85</option><option value="0.80">0.80</option><option value="0.75">0.75</option><option value="0.70">0.70</option><option value="0.65">0.65</option><option value="0.60">0.60</option><option value="0.55">0.55</option><option value="0.50">0.50</option><option value="0.45">0.45</option><option value="0.40">0.40</option><option value="0.35">0.35</option><option value="0.30">0.30</option><option value="0.25">0.25</option><option value="0.20">0.20</option><option value="0.10">0.10</option><option value="0.00">transparent</option></select>';
 
 JS9.Blend.imfileHTML='<b>%s</b>';
 
@@ -1140,34 +1140,51 @@ JS9.Blend.nofileHTML='<p><span id="blendNoFile">[Images will appear here as they
 
 // change active state
 JS9.Blend.xactive = function(did, id, target){
+    var bl;
     var im = JS9.lookupImage(id, did);
     var active = target.checked;
     if( im ){
 	// change active mode
-	im.blendImage(active);
+	bl = im.blendImage();
+	if( bl.active !== active ){
+	    im.blendImage(active);
+	}
     }
 };
 
 // change blend mode
 JS9.Blend.xblend = function(did, id, target){
+    var bl, mode;
     var im = JS9.lookupImage(id, did);
-    var blend = target.options[target.selectedIndex].value;
+    if( target.selectedIndex >= 0 ){
+	mode = target.options[target.selectedIndex].value;
+    }
     if( im ){
 	// change the blend mode
-	if( blend !== "" ){
-            im.blendImage(blend);
+	if( JS9.notNull(mode) ){
+	    bl = im.blendImage();
+	    if( bl.mode !== mode ){
+		im.blendImage(mode);
+	    }
 	}
     }
 };
 
 // change opacity
 JS9.Blend.xopacity = function(did, id, target){
+    var bl, opacity;
     var im = JS9.lookupImage(id, did);
-    var opacity = target.options[target.selectedIndex].value;
+    if( target.selectedIndex >= 0 ){
+	opacity = target.options[target.selectedIndex].value;
+    }
     if( im ){
 	// change opacity
-	if( opacity !== "" ){
-            im.blendImage(null, parseFloat(opacity));
+	if( JS9.notNull(opacity) ){
+	    bl = im.blendImage();
+	    opacity = parseFloat(opacity);
+	    if( bl.opacity !== opacity ){
+		im.blendImage(null, opacity);
+	    }
 	}
     }
 };
@@ -1179,7 +1196,6 @@ JS9.Blend.xblendmode = function(id, target){
     // change global blend mode
     if( display ){
         JS9.BlendDisplay(blendMode, {display: display});
-	$(".blendActive").prop("disabled", !blendMode);
     }
 };
 
@@ -1193,6 +1209,45 @@ JS9.Blend.imid = function(im){
 JS9.Blend.dispclass = function(im){
     var id = JS9.Blend.BASE + "_" + im.display.id;
     return id.replace(/[^A-Za-z0-9_]/g, "_");
+};
+
+// set global blend option in the GUI
+JS9.Blend.displayBlend = function(im){
+    var disp;
+    if( im ){
+	disp = im.display;
+	this.divjq.find(".blendModeCheck").prop("checked", disp.blendMode);
+    }
+};
+
+// set image blend options in the GUI
+JS9.Blend.imageBlend = function(im, dochange){
+    var s, bl, id, el, el2;
+    // get the current options
+    bl = im.blendImage();
+    // get id associated with this image
+    id = JS9.Blend.imid(im);
+    if( bl ){
+	el = this.divjq.find("#"+id);
+	el.find(".blendActiveCheck").prop("checked", bl.active);
+	if( bl.mode !== undefined ){
+	    el2 = el.find(".blendModeSelect").val(bl.mode);
+	    if( dochange ){
+		el2.change();
+	    }
+	}
+	if( bl.opacity !== undefined ){
+	    if( typeof bl.opacity === "number" ){
+		s = bl.opacity.toFixed(2);
+	    } else {
+		s = bl.opacity;
+	    }
+	    el2 = el.find(".blendOpacitySelect").val(s);
+	    if( dochange ){
+		el2.change();
+	    }
+	}
+    }
 };
 
 // change the active image
@@ -1212,7 +1267,7 @@ JS9.Blend.activeImage = function(im){
 
 // add an image to the list of available images
 JS9.Blend.addImage = function(im){
-    var s, bl, id, divjq, dcls, dispid, imid;
+    var s, id, divjq, dcls, dispid, imid;
     var opts = [];
     var cls = JS9.Blend.BASE + "Image";
     if( !im ){
@@ -1254,21 +1309,9 @@ JS9.Blend.addImage = function(im){
 	    JS9.Blend.activeImage.call(this, im);
     });
     // set the current options
-    bl = im.blendImage();
-    if( bl ){
-	divjq.find(".blendActiveCheck").prop("checked", !!bl.active);
-	if( bl.mode !== undefined ){
-	    divjq.find(".blendModeSelect").val(bl.mode).change();
-	}
-	if( bl.opacity !== undefined ){
-	    if( typeof bl.opacity === "number" ){
-		s = bl.opacity.toFixed(2);
-	    } else {
-		s = bl.opacity;
-	    }
-	    divjq.find(".blendOpacitySelect").val(s).change();
-	}
-    }
+    JS9.Blend.imageBlend.call(this, im, false);
+    // set the current options
+    JS9.Blend.displayBlend.call(this, im);
     // one more div in the stack
     this.blendDivs++;
     //make it the current one
@@ -1291,7 +1334,7 @@ JS9.Blend.removeImage = function(im){
 };
 
 // constructor: add HTML elements to the plugin
-JS9.Blend.init = function(){
+JS9.Blend.init = function(width, height){
     var i, im, omode;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -1302,6 +1345,22 @@ JS9.Blend.init = function(){
     //
     // create container to hold image container and header
     var that = this;
+    // allow size specification for divs
+    if( this.winType === "div" ){
+	// set width and height on div
+	this.width = this.divjq.attr("data-width");
+	if( !this.width  ){
+	    this.width = width || JS9.Blend.WIDTH;
+	}
+	this.divjq.css("width", this.width);
+	this.width = parseInt(this.divjq.css("width"), 10);
+	this.height = this.divjq.attr("data-height");
+	if( !this.height ){
+	    this.height = height || JS9.Blend.HEIGHT;
+	}
+	this.divjq.css("height", this.height);
+	this.height = parseInt(this.divjq.css("height"), 10);
+    }
     // clean main container
     this.divjq.html("");
     // no images/divs loaded yet
@@ -1325,7 +1384,7 @@ JS9.Blend.init = function(){
 	.attr("id", this.id + "BlendImageContainer")
         .html(JS9.Blend.nofileHTML)
 	.appendTo(this.blendContainer);
-    // add currently loaded images (but avoid multiple redisplys)
+    // add currently loaded images (but avoid multiple redisplays)
     omode = this.display.blendMode;
     this.display.blendMode = false;
     for(i=0; i<JS9.images.length; i++){
@@ -1359,6 +1418,23 @@ JS9.Blend.init = function(){
     });
 };
 
+// callback when global blend option is set externally
+JS9.Blend.displayblend = function(im){
+    // disp gives access to display object
+    if( im ){
+	JS9.Blend.displayBlend.call(this, im);
+    }
+};
+
+
+// callback when blend options are set externally
+JS9.Blend.imageblend = function(im){
+    // im gives access to image object
+    if( im ){
+	JS9.Blend.imageBlend.call(this, im, false);
+    }
+};
+
 // callback when an image is loaded
 JS9.Blend.imageload = function(im){
     // im gives access to image object
@@ -1381,6 +1457,8 @@ JS9.Blend.imageclose = function(im){
 JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		   {menuItem: "Blending",
 		    onplugindisplay: JS9.Blend.init,
+		    ondisplayblend: JS9.Blend.displayblend,
+		    onimageblend: JS9.Blend.imageblend,
 		    onimageload: JS9.Blend.imageload,
 		    onimagedisplay: JS9.Blend.imagedisplay,
 		    onimageclose: JS9.Blend.imageclose,
