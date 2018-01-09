@@ -336,7 +336,14 @@ JS9.Menubar.init = function(width, height){
 		items.savecatalog = {name: "save active catalog"};
 		items["sep" + n++] = "------";
 		items.loadsession = {name: "load session ..."};
-		items.savesession = {name: "save session"};
+		items.savesession = {
+		    name: "save session ...",
+		    items: {savesessiontitle: {name: "include these images:",
+					       disabled: true},
+			    savecurrent: {name: "the current image"},
+			    savedisplay: {name: "all images in this display"}
+			   }
+		};
 		items["sep" + n++] = "------";
 		items.lite = {name: "new JS9 light window"};
 		items.xnew = {name: "new JS9 separate window"};
@@ -392,9 +399,16 @@ JS9.Menubar.init = function(width, height){
 				uim.removeProxyFile();
 			    }
 			    break;
-			case "savesession":
-			    if( uim ){
-				uim.saveSession(uim.id + ".ses");
+			case "savecurrent":
+			    if( udisp && uim ){
+				JS9.SaveSession({mode: "image"},
+						{display: udisp});
+			    }
+			    break;
+			case "savedisplay":
+			    if( udisp ){
+				JS9.SaveSession({mode: "display"},
+						{display: udisp});
 			    }
 			    break;
 			case "loadsession":

@@ -5999,57 +5999,85 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 
 // save session to a json file
 // NB: save is an image method, load is a display method
-JS9.Image.prototype.saveSession = function(file){
-    var obj, str, blob, layer, dlayer, tobj, key;
+JS9.Image.prototype.saveSession = function(file, opts){
+    var i, obj, str, blob, layer, dlayer, tobj, key, im;
+    var saveim = function(){
+	// object holding session keys
+	var obj = {};
+	// filename
+	obj.file = this.file;
+	// display size info
+	obj.dwidth = this.display.width;
+	obj.dheight = this.display.height;
+	// image params
+	obj.params = $.extend(true, {}, this.params);
+	// section info
+	obj.params.xcen = this.rgb.sect.xcen;
+	obj.params.ycen = this.rgb.sect.ycen;
+	obj.params.zoom = this.rgb.sect.zoom;
+	// layers
+	obj.layers = [];
+	for( key in this.layers ){
+	    // save each main layer so it can be reconstituted
+            if( this.layers.hasOwnProperty(key) ){
+		layer = this.layers[key];
+		dlayer = layer.dlayer;
+		// only save layers on main display
+		if( dlayer.dtype === "main" ){
+		    tobj = {};
+		    tobj.name = key;
+		    tobj.json = dlayer.canvas.toJSON(dlayer.el);
+		    tobj.dopts = $.extend(true, {}, dlayer.opts);
+		    if( layer.catalog ){
+			tobj.catalog = layer.catalog;
+		    }
+		    if( layer.starbase ){
+			tobj.starbase = JSON.stringify(layer.starbase);
+		    }
+		    obj.layers.push(tobj);
+		}
+	    }
+	}
+	// remove old display info
+	if( obj.params.display ){
+	    delete obj.params.display;
+	}
+	return obj;
+    };
     if( !window.hasOwnProperty("saveAs") ){
 	JS9.error("no saveAs function available to save session");
     }
+    // filename for saving
     file = file || "js9.ses";
-    if( !file.match(/\.ses$/) && !file.match(/\.js9ses$/) ){
+    // maje sure we have the right extension
+    if( !file.match(/\.ses$/) ){
 	file += ".ses";
     }
+    // opts is optional
+    opts = opts || {};
     // change the cursor to show the waiting status
     JS9.waiting(true, this.display);
-    // object holding session keys
+    // object we will save
     obj = {};
-    // filename
-    obj.file = this.file;
-    // image params
-    obj.params = $.extend(true, {}, this.params);
-    // section info
-    obj.params.xcen = this.rgb.sect.xcen;
-    obj.params.ycen = this.rgb.sect.ycen;
-    obj.params.zoom = this.rgb.sect.zoom;
-    // layers
-    obj.layers = [];
-    for( key in this.layers ){
-	// save each main layer so it can be reconstituted
-        if( this.layers.hasOwnProperty(key) ){
-	    layer = this.layers[key];
-	    dlayer = layer.dlayer;
-	    // only save layers on main display
-	    if( dlayer.dtype === "main" ){
-		tobj = {};
-		tobj.name = key;
-		tobj.json = dlayer.canvas.toJSON(dlayer.el);
-		tobj.dopts = $.extend(true, {}, dlayer.opts);
-		if( layer.catalog ){
-		    tobj.catalog = layer.catalog;
-		}
-		if( layer.starbase ){
-		    tobj.starbase = JSON.stringify(layer.starbase);
-		}
-		obj.layers.push(tobj);
+    // list of images to save
+    obj.images = [];
+    // which images to save?
+    if( opts.mode === "display" ){
+	// save all images in this display
+	for(i=0; i<JS9.images.length; i++){
+	    im = JS9.images[i];
+	    if( im.display.id === this.display.id ){
+		obj.images.push(saveim.call(im));
 	    }
-        }
+	}
+    } else {
+	// save current image
+	obj.images.push(saveim.call(this));
     }
-    // display size info
-    obj.dwidth = this.display.width;
-    obj.dheight = this.display.height;
-    // remove old display info
-    if( obj.params.display ){
-	delete obj.params.display;
-    }
+    // save global params
+    obj.globals = $.extend(true, {}, JS9.globalOpts);
+    // but delete properties that cause circular errors
+    delete obj.globals.rgb;
     // make a blob from the stringified session object
     str = JSON.stringify(obj, null, 4);
     blob = new Blob([str], {type: "application/json"});
@@ -7025,7 +7053,7 @@ JS9.Display.prototype.loadSession = function(file){
 	    JS9.error("session does not contain a filename");
 	}
 	// save object so addLayers can find it
-	obj = jobj;
+	obj = $.extend(true, {}, jobj);
 	// include an onload callback to load the layers
 	obj.params.onload = addLayers;
 	// delete old display info
@@ -7035,10 +7063,25 @@ JS9.Display.prototype.loadSession = function(file){
 	// load the image
 	JS9.Load(obj.file, obj.params, {display: that.id});
     };
+    var loadem = function(jobj){
+	var i;
+	// save (and remove) globals
+	if( jobj.globalOpts ){
+	    $.extend(true, JS9.globalOpts, jobj.globalOpts);
+	    delete jobj.globalOpts;
+	}
+	if( jobj.images ){
+	    for(i=0; i<jobj.images.length; i++){
+		loadit(jobj.images[i]);
+	    }
+	} else {
+	    loadit(jobj);
+	}
+    };
     // change the cursor to show the waiting status
     JS9.waiting(true, this);
     if( typeof file === "object" ){
-	loadit(file);
+	loadem(file);
     } else {
 	$.ajax({
 	    url: file,
@@ -7047,7 +7090,7 @@ JS9.Display.prototype.loadSession = function(file){
 	    mimeType: "application/json",
 	    async: false,
 	    success: function(jobj){
-		loadit(jobj);
+		loadem(jobj);
 	    },
 	    error:  function(jqXHR, textStatus, errorThrown){
 		JS9.error("could not load session: " + file, errorThrown);
@@ -16122,7 +16165,6 @@ JS9.mkPublic("ReprojectData", "reprojectData");
 JS9.mkPublic("ShiftData", "shiftData");
 JS9.mkPublic("FilterRGBImage", "filterRGBImage");
 JS9.mkPublic("MoveToDisplay", "moveToDisplay");
-JS9.mkPublic("SaveSession", "saveSession");
 
 // lookup an image
 // eslint-disable-next-line no-unused-vars
@@ -17532,6 +17574,69 @@ JS9.mkPublic("CenterDisplay", function(){
     }
     JS9.Display.prototype.center.call(display);
     return;
+});
+
+// save a session (current image, images in current display, or all images)
+JS9.mkPublic("SaveSession", function(arg1, arg2){
+    var fname, display, disp;
+    var opts = {};
+    var obj = JS9.parsePublicArgs(arguments);
+    arg1 = obj.argv[0];
+    arg2 = obj.argv[1];
+    // opts can be an object or json or a filename
+    if( typeof arg1 === "object" ){
+	// make a copy so we can modify it
+	opts = $.extend(true, {}, arg1);
+    } else if( typeof arg1 === "string" ){
+	// try to convert json to object, but default to a file name
+	try{ opts = JSON.parse(arg1); }
+	catch(e){
+	    fname = arg1;
+	    // but is there a second opts argument?
+	    if( arg2 ){
+		if( typeof arg2 === "object" ){
+		    opts = $.extend(true, {}, arg2);
+		} else {
+		    try{ opts = JSON.parse(arg2); }
+		    catch(e2){ opts = {}; }
+		}
+	    }
+	}
+    }
+    // default save mode
+    if( !opts.mode ){
+	opts.mode = "display";
+    }
+    // check for display
+    if( obj.display ){
+	display = obj.display;
+    } else if( opts.display ){
+	display = opts.display;
+    } else {
+	if( JS9.displays.length > 0 ){
+	    display = JS9.displays[0].id;
+	} else {
+	    display = JS9.DEFID;
+	}
+    }
+    // display we are saving
+    disp = JS9.lookupDisplay(display);
+    // better have an image
+    if( !disp.image ){
+	return null;
+    }
+    // default filename, if none specified
+    if( !fname ){
+	if( opts.mode === "display" ){
+	    // generic file name for saving multiple images
+	    fname = "js9-" + new Date().toISOString().slice(0,10) + ".ses";
+	} else {
+	    // file name tied to image being saved
+	    fname = disp.image.id + ".ses";
+	}
+    }
+    // save the session
+    return disp.image.saveSession(fname, opts);
 });
 
 // load a session file

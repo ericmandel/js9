@@ -1825,22 +1825,33 @@ routine. See <b>JS9.ReprojectData()</b> below for more information.
 <p>
 <font size="+1"><b><u>Save an image session to a file</u></b></font>
 <p>
-<code><font size="+1">JS9.SaveSession(session)</font></code>
+<code><font size="+1">JS9.SaveSession(session, opts)</font></code>
 <p>
 where:
 <ul>
-<li><b>session</b>: name of the file to create when saving this session
+<li><b>session</b>: optional name of the file to create when saving this session
+<li><b>opts</b>: optional object or json string containing session parameters
 </ul>
 <p>
-This routine saves all essential session information about the currently
-displayed image (filename, scaling, colormap, contrast/bias, zoom, regions,
-catalogs, etc) in a json-formatted file. You can subsequently load this file
-into JS9 to restore the image session.
-
+This routine saves session information related to the currently
+displayed image or all images in the specified display. The first
+argument can be a filename or an options object. If a filename is
+specified, the second argument can be the options object.
 <p>
-Don't forget that the file is saved by the browser, in whatever location
+The <b>opts</b> options object supports a <b>mode</b> property
+whose value can be "display" (save all images in the specified
+display) or "image" (save the currently displayed image. If this
+property is not specified, the default is to save all images in the display.
+<p>
+If no filename is specified, the default filename depends on the save mode.
+If mode is "display", the default filename takes the form <b>js9-[date].ses<b>,
+e.g. "js9-2018-01-09.ses". If mode is "image", the default filename is <b>[im.id].ses</b>, e.g. "casa.fits.ses".
+<p>
+Saved information (filename, scaling, colormap, contrast/bias, zoom,
+regions, catalogs, etc) is stored in a json-formatted text file. You can
+subsequently load this file into JS9 to restore the image session.
+Don't forget that the file is saved by the browser in whatever location
 you have set up for downloads.
-
 <p>
 The session file is a text file and can be edited, subject to the usual
 rules of json formatting. For example, you can change the colormap,
