@@ -42,6 +42,7 @@ old/
 reproj/
 talks/
 tmp/
+ses/
 /png
 png/
 png-v[0-9]*/
