@@ -5279,6 +5279,9 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     if( sigma === undefined ){
 	JS9.error("missing sigma value for gaussBlurData");
     }
+    // save this routine so it can be reconsituted in a restored session
+    this.xeqStash("gaussBlurData", Array.prototype.slice.call(arguments));
+    // opts is optional
     opts = opts || {};
     // the blurred image will be floating point
     if( this.raw.bitpix === -64 ){
@@ -5326,6 +5329,7 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
     if( !arguments.length ){
 	return ["add", "sub", "mul", "div", "min", "max", "reset"];
     }
+    // opts is optional
     opts = opts || {};
     opts.rawid = opts.rawid || "imarith";
     // special case: reset by deleting the layer
@@ -5337,6 +5341,8 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
     if( op === undefined || arg1 === undefined ){
 	JS9.error("missing arg(s) for image arithmetic");
     }
+    // save this routine so it can be reconsituted in a restored session
+    this.xeqStash("imarithData", Array.prototype.slice.call(arguments));
     // operation: add, sub, mul, div ...
     switch(op){
     case "add":
@@ -5507,6 +5513,9 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
     if( x === undefined || y === undefined ){
 	JS9.error("missing translation value(s) for shiftData");
     }
+    // save this routine so it can be reconsituted in a restored session
+    this.xeqStash("shiftData", Array.prototype.slice.call(arguments));
+    // opts is optional
     opts = opts || {};
     opts.rawid = opts.rawid || "shift";
     opts.x = x;
@@ -5579,7 +5588,9 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
 	JS9.error("no WCS info available for rotation");
     }
-    // opts is ... optional
+    // save this routine so it can be reconsituted in a restored session
+    this.xeqStash("rotateData", Array.prototype.slice.call(arguments));
+    // opts is optional
     opts = opts || {};
     // but make sure we can set the id
     opts.rawid = "rotate";
@@ -5651,6 +5662,11 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     // don't reproject myself (useful in supermenu support)
     if( this === wcsim ){
 	return;
+    }
+    // save this routine so it can be reconsituted in a restored session
+    // (unless another xxxData routine is calling us)
+    if( !opts || !opts.rawid ){
+	this.xeqStash("reprojectData", Array.prototype.slice.call(arguments));
     }
     // could take a while ...
     JS9.waiting(true, this.display);
@@ -5886,6 +5902,8 @@ JS9.Image.prototype.filterRGBImage = function(filter){
 	this.setColormap("reset");
 	return this;
     }
+    // save this routine so it can be reconsituted in a restored session
+    this.xeqStash("filterRGBImage", Array.prototype.slice.call(arguments));
     // remove filter name argument
     argv.shift();
     // add display context and RGB img argument
@@ -6038,6 +6056,14 @@ JS9.Image.prototype.saveSession = function(file, opts){
 		}
 	    }
 	}
+	// save blend state
+	obj.blend = this.blend;
+	// save routines that must be executed when restoring session
+	obj.xeqstash = this.xeqstash;
+	// save wcsim reference, if necessary
+	if( this.wcsim && this.wcsim.id ){
+	    obj.wcsim = this.wcsim.id;
+	}
 	// remove old display info
 	if( obj.params.display ){
 	    delete obj.params.display;
@@ -6074,12 +6100,15 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	// save current image
 	obj.images.push(saveim.call(this));
     }
+    // save display parameters
+    obj.display = {blendMode: this.display.blendMode};
     // save global params
     obj.globals = $.extend(true, {}, JS9.globalOpts);
     // but delete properties that cause circular errors
     delete obj.globals.rgb;
     // make a blob from the stringified session object
-    str = JSON.stringify(obj, null, 4);
+    try{ str = JSON.stringify(obj, null, 4); }
+    catch(e){ JS9.error("can't create json file for save session", e); }
     blob = new Blob([str], {type: "application/json"});
     // save it
     saveAs(blob, file);
@@ -6087,6 +6116,38 @@ JS9.Image.prototype.saveSession = function(file, opts){
     JS9.waiting(false);
     // return file name
     return file;
+};
+
+// stash a routine name and arguments
+// the routine will be re-executed when the session is loaded
+JS9.Image.prototype.xeqStash = function(func, args, context){
+    var i, stash;
+    // default context is image
+    context = context || "image";
+    // stash routine name and args
+    this.xeqstash = this.xeqstash || [];
+    // change display or image object to id
+    for(i=0; i<args.length; i++){
+	if( typeof args[i] === "object" ){
+	    if( args[i] instanceof JS9.Image ){
+		args[i] = args[i].id;
+	    } else if( args[i] instanceof JS9.Display ){
+		args[i] = args[i].id;
+	    }
+	}
+    }
+    // overwrite a previous stash having the same func, if it exists
+    for(i=0; i<this.xeqstash.length; i++){
+	stash = this.xeqstash[i];
+	if( (stash.func === func) && (stash.context === context) ){
+	    stash.args = args;
+	    return this;
+	}
+    }
+    // add new stash
+    this.xeqstash.push({func: func, args: args, context: context});
+    // allow chaining
+    return this;
 };
 
 // execute plugins of various types (using type-specific values)
@@ -7016,16 +7077,26 @@ JS9.Display.prototype.nextImage = function(inc){
 // NB: save is an image method, load is a display method
 JS9.Display.prototype.loadSession = function(file){
     var that = this;
+    var objs = {};
     var obj;
-    var addLayers = function(im){
-	var i, dlayer, layer, lname;
+    var finish = function(im){
+	var i, dlayer, layer, lname, xeq, obj;
 	var dorender = function(){
 	    // update objects for parents and children
 	    JS9.Fabric.updateChildren(this, null, "objects");
 	    // change shape positions if the displays sizes differ
 	    im.refreshLayers();
 	};
-	// reconstitute each layer
+	obj = objs[im.file] || {};
+	// reconstitute blend state
+	if( obj.blend ){
+	    im.blend = $.extend(true, {}, obj.blend);
+	}
+	// reconstitute wcsim state
+	if( obj.wcsim ){
+	    im.wcsim = JS9.lookupImage(obj.wcsim);
+	}
+	// reconstitute layers
 	if( obj.layers && obj.layers.length ){
 	    for(i=0; i<obj.layers.length; i++){
 		layer = obj.layers[i];
@@ -7046,25 +7117,51 @@ JS9.Display.prototype.loadSession = function(file){
 		}
 	    }
 	}
+	// re-execute from the xeq stash
+	if( obj.xeqstash ){
+	    for(i=0; i<obj.xeqstash.length; i++){
+		xeq = obj.xeqstash[i];
+		xeq.context = xeq.context || "image";
+		try{
+		    switch(xeq.context){
+		    case "image":
+			im[xeq.func].apply(im, xeq.args);
+			break;
+		    case "display":
+			im.display[xeq.func].apply(im.display, xeq.args);
+			break;
+		    default:
+			im[xeq.func].apply(im, xeq.args);
+			break;
+		    }
+		}
+		catch(e){
+		    JS9.error("error executing stash: "+ xeq.func, e, false);
+		}
+	    }
+
+	}
     };
     var loadit = function(jobj){
 	// sanity check
 	if( !jobj.file ){
 	    JS9.error("session does not contain a filename");
 	}
-	// save object so addLayers can find it
+	// save object so finish can find it
 	obj = $.extend(true, {}, jobj);
 	// include an onload callback to load the layers
-	obj.params.onload = addLayers;
+	obj.params.onload = finish;
 	// delete old display info
 	if( obj.params.display ){
 	    delete obj.params.display;
 	}
+	// save for finish
+	objs[obj.file] = obj;
 	// load the image
 	JS9.Load(obj.file, obj.params, {display: that.id});
     };
     var loadem = function(jobj){
-	var i;
+	var i, key;
 	// save (and remove) globals
 	if( jobj.globalOpts ){
 	    $.extend(true, JS9.globalOpts, jobj.globalOpts);
@@ -7076,6 +7173,21 @@ JS9.Display.prototype.loadSession = function(file){
 	    }
 	} else {
 	    loadit(jobj);
+	}
+	// reconstitute display parameters
+	if( jobj.display ){
+	    for( key in jobj.display ){
+		if( jobj.display.hasOwnProperty(key) ){
+		    switch(key){
+		    case "blendMode":
+			JS9.BlendDisplay(jobj.display[key], {display: that});
+			break;
+		    default:
+			that[key] = jobj.display[key];
+			break;
+		    }
+		}
+	    }
 	}
     };
     // change the cursor to show the waiting status
