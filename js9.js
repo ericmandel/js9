@@ -177,7 +177,7 @@ JS9.globalOpts = {
 		 skip: "#\n",                         // skip # and blank lines
 		 save: true,                          // save cat cols in shapes
 		 tooltip: "$xreg.data.ra $xreg.data.dec"}, // tooltip format
-    topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "a", "b", "red", "green", "blue"], // toplevel colormaps
+    topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "red", "green", "blue"], // toplevel colormaps
     infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos", "impos", "physpos", "value", "regions", "progress"],
     menuBar: ["file", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
