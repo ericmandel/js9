@@ -118,7 +118,7 @@ void imstat(void *buf, int idim1, int idim2, int bitpix){
     }
   }
   if (totpix > 0) meanval = sum / totpix;
-  printf("Statistics for %d x %d [bitpix %d] image\n", idim1, idim2, bitpix);
+  printf("\nStatistics for %d x %d [bitpix %d] image\n", idim1, idim2, bitpix);
   printf("  sum of pixels = %.3f\n", sum);
   printf("  mean value    = %.3f\n", meanval);
   printf("  minimum value = %.3f\n", minval);
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
   // filename is required, filter is optional
   args = argc - optind;
   if( args < 1 ){
-    ifile = strdup("test/snr.ev.gz");
+    ifile = strdup("fits/casa.fits");
   } else {
     // emscripten: if path is relative, make it relative to the virtual dir
 #if NODEJS
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
   errchk(status);
   if( ncard && cardstr ){
     // print cards individually to make it easier to diff
-    fprintf(stdout, "Cards [%d]:\n", ncard);
+    fprintf(stdout, "Input cards [%d]:\n", ncard);
     tbuf[80] = '\0';
     for(i=0; i<ncard; i++){
       memcpy(tbuf, &cardstr[i*80], 80);
@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
   switch(hdutype){
   case IMAGE_HDU:
     // get image array
-    buf = getImageToArray(fptr, NULL, NULL, slice,
+    buf = getImageToArray(fptr, NULL, NULL, 1, slice,
 			   start, stop, &bitpix, &status);
     idim1 = stop[0] - start[0] + 1;
     idim2 = stop[1] - start[1] + 1;
@@ -247,9 +247,24 @@ int main(int argc, char *argv[])
 				   &status);
 	errchk(status);
 	// get image array
-	buf = getImageToArray(ofptr, dims, NULL, slice,
+	buf = getImageToArray(ofptr, dims, NULL, 1, slice,
 			      start, stop, &bitpix, &status);
 	errchk(status);
+
+	// get cards as a string
+	getHeaderToString(ofptr, &cardstr, &ncard, &status);
+	errchk(status);
+	if( ncard && cardstr ){
+	  // print cards individually to make it easier to diff
+	  fprintf(stdout, "\nOutput cards [%d]:\n", ncard);
+	  tbuf[80] = '\0';
+	  for(i=0; i<ncard; i++){
+	    memcpy(tbuf, &cardstr[i*80], 80);
+	    fprintf(stdout, "%s\n", tbuf);
+	  }
+	  free(cardstr);
+	}
+
 	idim1 = stop[0] - start[0] + 1;
 	idim2 = stop[1] - start[1] + 1;
 	// image statistics on image section
@@ -264,9 +279,24 @@ int main(int argc, char *argv[])
       ofptr = filterTableToImage(fptr, NULL, colname, dims, NULL, 1, &status);
       errchk(status);
       // get image array
-      buf = getImageToArray(ofptr, dims, NULL, slice,
+      buf = getImageToArray(ofptr, dims, NULL, 1, slice,
 			    start, stop, &bitpix, &status);
       errchk(status);
+
+      // get cards as a string
+      getHeaderToString(ofptr, &cardstr, &ncard, &status);
+      errchk(status);
+      if( ncard && cardstr ){
+	// print cards individually to make it easier to diff
+	fprintf(stdout, "\nOutput cards [%d]:\n", ncard);
+	tbuf[80] = '\0';
+	for(i=0; i<ncard; i++){
+	  memcpy(tbuf, &cardstr[i*80], 80);
+	  fprintf(stdout, "%s\n", tbuf);
+	}
+	free(cardstr);
+      }
+
       idim1 = stop[0] - start[0] + 1;
       idim2 = stop[1] - start[1] + 1;
       // image statistics on image section
