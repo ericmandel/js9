@@ -893,32 +893,6 @@ module.exports = xhr;
 	return npos;
     }
 
-    function centerBinImage(xdim, ydim, div, display) {
-	var im   = JS9.GetImage({display: display});
-	var form = $(div).find(".binning-form")[0];
-	form.xcen.value = 0;
-	form.ycen.value = 0;
-	if( xdim > 0 ){
-	    form.xdim.value = xdim;
-	} else {
-	    if( im.parent ){
-		form.xdim.value = im.parent.raw.header.NAXIS1;
-	    } else {
-		form.xdim.value = im.raw.header.NAXIS1;
-	    }
-	}
-	if( ydim > 0 ){
-	    form.ydim.value = ydim;
-	} else {
-	    if( im.parent ){
-		form.ydim.value = im.parent.raw.header.NAXIS2;
-	    } else {
-		form.ydim.value = im.raw.header.NAXIS2;
-	    }
-	}
-	reBinImage(div, display);
-    }
-
     function reBinImage(div, display) {
 	var hdu, opts, npos;
 	var im   = JS9.GetImage({display: display});
@@ -990,6 +964,40 @@ module.exports = xhr;
 	    im.displaySection(opts);
 	    break;
 	}
+    }
+
+    function centerBinImage(xdim, ydim, div, display) {
+	var im   = JS9.GetImage({display: display});
+	var form = $(div).find(".binning-form")[0];
+	form.xcen.value = 0;
+	form.ycen.value = 0;
+	if( xdim > 0 ){
+	    form.xdim.value = xdim;
+	} else {
+	    if( im.parent ){
+		if( im.parent.raw.header.TABDIM1 ){
+		    form.xdim.value = im.parent.raw.header.TABDIM1;
+		} else {
+		    form.xdim.value = im.parent.raw.header.NAXIS1;
+		}
+	    } else {
+		form.xdim.value = im.raw.header.NAXIS1;
+	    }
+	}
+	if( ydim > 0 ){
+	    form.ydim.value = ydim;
+	} else {
+	    if( im.parent ){
+		if( im.parent.raw.header.TABDIM2 ){
+		    form.ydim.value = im.parent.raw.header.TABDIM2;
+		} else {
+		    form.ydim.value = im.parent.raw.header.NAXIS2;
+		}
+	    } else {
+		form.ydim.value = im.raw.header.NAXIS2;
+	    }
+	}
+	reBinImage(div, display);
     }
 
     function getBinParams(div, display) {

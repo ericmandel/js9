@@ -768,8 +768,6 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
 	dim2 = dims[1];
       }
     }
-//    dim1 *= bin;
-//    dim2 *= bin;
     // min and max, indexed from 1
     minin[0] = (int)(xcen - (dim1/2.0));
     minin[1] = (int)(ycen - (dim2/2.0));
@@ -783,12 +781,15 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   if( *status > 0 ){
     return NULL;
   }
+  // store original table dimensions in header
+  tstatus = 0;
+  fits_update_key(ofptr, TLONG, "TABDIM1", &haxes[0], "original table dim1", &tstatus);
+  tstatus = 0;
+  fits_update_key(ofptr, TLONG, "TABDIM2", &haxes[1], "original table dim2", &tstatus);
   // update/add LTM and LTV header params
   updateLTM(fptr, ofptr, xcen, ycen, dim1, dim2, bin, 0);
   // return the center and dims used
   if( dims ){
-//    dims[0] = dim1 / bin;
-//    dims[1] = dim2 / bin;
     dims[0] = dim1;
     dims[1] = dim2;
   }
