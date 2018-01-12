@@ -1562,7 +1562,7 @@ JS9.Menubar.init = function(width, height){
 		}
 		items["sep" + n++] = "------";
 		items.reproject = {
-		    name: "wcs reproject",
+		    name: "wcs reproject ...",
 		    items: {reprojtitle: {name: "using the wcs from:", disabled: true}}
 		};
 		for(i=0, nwcs=0; i<JS9.images.length; i++){
@@ -1974,30 +1974,40 @@ JS9.Menubar.init = function(width, height){
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
             build: function(){
-		var key, val;
+		var t, key, val;
 		var n = 1;
 		var last = "";
 		var items = {};
-		items.helptitle = {name: "JS9 help:", disabled: true};
+		items.js9help = {
+		    name: "General help ...", 
+		    items: {helptitle: {name: "General help:", disabled: true}}
+		};
 		// first, internal js9 pages
 		for( key in JS9.helpOpts ){
 		    if( JS9.helpOpts.hasOwnProperty(key) ){
 			val = JS9.helpOpts[key];
 			if( val.heading === "JS9Help" ){
 			    last = val.type;
-			    items[key] = {name: val.title};
+			    items.js9help.items[key] = {
+				name: val.title
+			    };
 			}
 		    }
 		}
 		items["sep" + n++] = "------";
-		items.plugintitle = {name: "JS9 plugins:", disabled: true};
+		items.pluginhelp = {
+		    name: "JS9 plugins ...", 
+		    items: {helptitle: {name: "JS9 plugins:", disabled: true}}
+		};
 		// second, the JS9 core plugins
 		for( key in JS9.helpOpts ){
 		    if( JS9.helpOpts.hasOwnProperty(key) ){
 			val = JS9.helpOpts[key];
 			if( val.heading === "JS9" ){
 			    last = val.type;
-			    items[key] = {name: val.title};
+			    items.pluginhelp.items[key] = {
+				name: val.title
+			    };
 			}
 		    }
 		}
@@ -2012,13 +2022,16 @@ JS9.Menubar.init = function(width, height){
 			if( (last !== "") && (val.type !== last) ){
 			    items["sep" + n++] = "------";
 			    if( val.heading ){
-				items["sep" + n++] =
-				    {name: val.heading + " plugins:"};
-			        items["sep" + (n-1)].disabled = true;
+				t = val.heading + " plugins";
+				items["sep" + n++] = {
+				    name: t + " ...",
+				    items: {title: {name: t + ":",
+						    disabled: true}}
+				};
 			    }
 			}
 			last = val.type;
-			items[key] = {name: val.title};
+			items["sep" + (n-1)].items[key] = {name: val.title};
 		    }
 		}
 		items["sep" + n++] = "------";
