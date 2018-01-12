@@ -1,5 +1,6 @@
 #!/bin/bash
 # set -x
+# exec 2>$HOME/foo.log
 
 # make sure we have minimum arg count
 if [ $# -lt 1 ]; then
@@ -410,13 +411,7 @@ removeproxy)
     if [ x"${JS9_WORKDIR}" = x ]; then
 	error "removeproxy requires configuration of a temporary work directory"
     fi
-    echo "$DIR" | egrep "$JS9_WORKDIR" 2>&1 >/dev/null
-    # exit if this is not our proxy file
-    if [ $? != 0 ]; then
-      # error "can't remove proxy file from someone else's working directory"
-      exit 0
-    fi
-    # remove file
+    # remove file from our working directory
     rm -f "$FILE"
     if [ $? != 0 ]; then
       # error "can't remove proxy file: $FILE"
