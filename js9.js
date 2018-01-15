@@ -137,18 +137,21 @@ JS9.globalOpts = {
     resizeRedisplay: true,	// redisplay image while resizing?
     cloneNewDisplay: true,      // clone size of display, when possible?
     regionConfigSize: "medium", // "small", "medium"
+    refreshDragDrop: true,	// refresh on drag/drag and open file?
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     keyboardActions: {
 	b: "toggle selected region: source/background",
 	e: "toggle selected region: include/exclude",
-	r: "make regions layer active",
+	f: "display full image",
+	r: "refresh image",
         "/": "copy wcs position to clipboard",
         "?": "copy value and position to clipboard",
 	"0": "reset zoom",
 	"=": "zoom in",
 	"+": "zoom in",
 	"-": "zoom out",
+	"^": "raise region layer to top",
 	">": "display next image",
 	"<": "display previous image",
 	"delete": "remove selected region",
@@ -234,6 +237,8 @@ JS9.analOpts = {
     epattern: /^(ERROR:[^\n]*)\n/,
     // location of datapath's param html file
     dpathURL: "params/datapath.html",
+    // location of filepath's param html file
+    fpathURL: "params/filepath.html",
     // prepend $JS9_DIR to relative fitsFile paths?
     prependJS9Dir: true,
     // use as path to FITS data or use incoming path if not set
@@ -499,6 +504,7 @@ JS9.Image = function(file, params, func){
 	    display = JS9.DEFID;
 	}
     }
+    // save url, if available
     // it's an image
     this.type = "image";
     // set the display
@@ -1427,7 +1433,6 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	oltm1_1 = this.raw.header.LTM1_1 || 1;
 	owcssys = this.params.wcssys;
 	owcsunits = this.params.wcsunits;
-//	this.freeWCS();
     }
     // initialize raws array?
     rlen = this.raws.length;
@@ -1616,10 +1621,15 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	header.LTV2 = (header.LTV2 - y1) / bin;
     }
     // look for a filename (needs header so we can add extension name/num)
-    if( opts.file ){
+    if( opts.file && opts.file !== this.file ){
 	this.file = opts.file;
-    } else if( hdu.filename ){
+	this.fitsFile = null;
+    } else if( opts.filename && opts.filename !== this.file ){
+	this.file = opts.filename;
+	this.fitsFile = null;
+    } else if( hdu.filename && hdu.filename !== this.file ){
 	this.file = hdu.filename;
+	this.fitsFile = null;
     }
     this.file = this.file || (JS9.ANON + JS9.uniqueID());
     // save original file in case we add an extension
@@ -1821,6 +1831,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    JS9.fits.cleanupFITSFile(this.raw.hdu.fits, true);
 	}
     }
+    // notify helper about this new data
+    this.notifyHelper();
     // plugin callbacks
     this.xeqPlugins("image", "onrawdata");
     // allow chaining
@@ -2607,7 +2619,12 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	mode.colors = false;
 	mode.scaled = false;
     }
-    // opts are ... optional
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse displayImage opts: " + opts, e); }
+    }
+    // opts are optional
     opts = opts || {};
     // do we need to blend?
     if( this.display.blendMode && (opts.blendMode !== false) ){
@@ -2709,10 +2726,27 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 // refresh data for an existing image
 // input obj is a fits object, array, typed array, etc.
 JS9.Image.prototype.refreshImage = function(obj, opts){
-    var oxcen, oycen, owidth, oheight, ozoom, doreg;
+    var s, oxcen, oycen, owidth, oheight, ozoom, doreg;
     var func;
-    // check for refresh function
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse refresh opts: " + opts, e); }
+    }
+    // opts is optional
     opts = opts || {};
+    // no obj or obj is a string, this is a load with refresh turned on
+    if( !obj || typeof obj === "string" ){
+	if( opts.onrefresh ){
+	    opts.onload = opts.onrefresh;
+	    delete opts.onrefresh;
+	}
+	opts.refresh = true;
+	s = obj || this.file;
+	JS9.Load(s, opts, {display: this.display});
+	return;
+    }
+    // check for refresh function
     opts.rawid = opts.rawid || JS9.RAWID0;
     // allow explicit specification of a function, for backward-compatibility
     if( typeof opts === "function" ){
@@ -2760,6 +2794,8 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     }
     // plugin callbacks
     this.xeqPlugins("image", "onimagerefresh");
+    // all done
+    JS9.waiting(false);
     // allow chaining
     return this;
 };
@@ -2767,7 +2803,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 // extract and display a section of an image, with table filtering
 JS9.Image.prototype.displaySection = function(opts, func) {
     var that = this;
-    var oproxy, hdu, fits, from, obj, oreg, nim, topts;
+    var oproxy, hdu, fits, from, obj, oreg, nim, topts, xdim, ydim;
     var arr = [];
     var disp = function(hdu, opts){
 	var tim, iid;
@@ -2827,6 +2863,32 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	// done waiting
 	JS9.waiting(false);
     };
+    // special case: if opts is "full", display full image
+    if( opts === "full" ){
+	if( this.parent ){
+	    if( this.parent.raw.header.TABDIM1 ){
+		xdim = this.parent.raw.header.TABDIM1;
+	    } else {
+		xdim = this.parent.raw.header.NAXIS1;
+	    }
+	} else {
+	    xdim = this.raw.header.NAXIS1;
+	}
+	if( this.parent ){
+	    if( this.parent.raw.header.TABDIM2 ){
+		ydim = this.parent.raw.header.TABDIM2;
+	    } else {
+		ydim = this.parent.raw.header.NAXIS2;
+	    }
+	} else {
+	    ydim = this.raw.header.NAXIS2;
+	}
+	opts = {xdim: xdim, ydim: ydim, xcen: 0, ycen: 0};
+    } else if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse section opts: " + opts, e); }
+    }
+    // opts is optional
     opts = opts || {};
     // from where do we extract the section?
     from = opts.from;
@@ -2985,7 +3047,12 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 // display the specified extension of a multi-extension FITS file
 JS9.Image.prototype.displayExtension = function(extid, opts, func){
     var i, s, got, extname, im, id;
-    // opts is ... optional
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse extension opts: " + opts, e); }
+    }
+    // opts is optional
     opts = opts || {};
     opts.waiting = false;
     // only makes sense if we have hdus
@@ -3054,7 +3121,12 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 
 // display the specified slice of a 3D or 4d FITS cube
 JS9.Image.prototype.displaySlice = function(slice, opts, func){
-    // opts is ... optional
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse slice opts: " + opts, e); }
+    }
+    // opts is optional
     opts = opts || {};
     opts.waiting = false;
     // sanity check
@@ -3951,6 +4023,11 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     var i, a, m;
     var that = this;
     var obj = {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse analysis opts: " + opts, e); }
+    }
     // func can be passed, or it can be global
     func = func || JS9.globalOpts.analysisFunc;
     // sanity checks
@@ -4190,6 +4267,11 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	}
 	return annotations;
     };
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse display opts: " + opts, e); }
+    }
     // opts is optional
     opts = opts || {};
     // window format ...
@@ -5139,7 +5221,12 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
     if( typeof func !== "function" ){
 	return false;
     }
-    // opts is ... optional
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse rawData opts: " + opts, e); }
+    }
+    // opts is optional
     opts = opts || {};
     // but the id is not
     rawid = opts.rawid || JS9.RAWIDX;
@@ -5281,6 +5368,11 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     }
     // save this routine so it can be reconsituted in a restored session
     this.xeqStash("gaussBlurData", Array.prototype.slice.call(arguments));
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse gaussBlur opts: " + opts, e); }
+    }
     // opts is optional
     opts = opts || {};
     // the blurred image will be floating point
@@ -5328,6 +5420,11 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
     // no args means return the available ops
     if( !arguments.length ){
 	return ["add", "sub", "mul", "div", "min", "max", "reset"];
+    }
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse imarith opts: " + opts, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -5515,6 +5612,11 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
     }
     // save this routine so it can be reconsituted in a restored session
     this.xeqStash("shiftData", Array.prototype.slice.call(arguments));
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse shift opts: " + opts, e); }
+    }
     // opts is optional
     opts = opts || {};
     opts.rawid = opts.rawid || "shift";
@@ -5590,6 +5692,11 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     }
     // save this routine so it can be reconsituted in a restored session
     this.xeqStash("rotateData", Array.prototype.slice.call(arguments));
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse rotate opts: " + opts, e); }
+    }
     // opts is optional
     opts = opts || {};
     // but make sure we can set the id
@@ -5687,8 +5794,12 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    topts.refreshRegions = true;
 	    topts.resetSection = true;
 	    that.refreshImage(hdu, topts);
-	    JS9.waiting(false);
 	};
+	// opts can be an object or json
+	if( typeof opts === "string" ){
+	    try{ opts = JSON.parse(opts); }
+	    catch(e){ JS9.error("can't parse reproject opts: " + opts, e); }
+	}
 	// opts is optional
 	opts = opts || {};
 	// handler
@@ -6078,6 +6189,11 @@ JS9.Image.prototype.saveSession = function(file, opts){
     // maje sure we have the right extension
     if( !file.match(/\.ses$/) ){
 	file += ".ses";
+    }
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse session opts: " + opts, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -6549,7 +6665,7 @@ JS9.Display = function(el){
 	return JS9.dragexitCB(this.id, evt);
     });
     this.divjq.on("drop", this, function(evt){
-	return JS9.dragdropCB(this.id, evt, JS9.NewFITSImage);
+	return JS9.dragdropCB(this.id, evt);
     });
     // no context menus on the display
     this.divjq.on("contextmenu", this, function(){
@@ -7422,6 +7538,11 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
     }
     if( global.tooltip ){
 	lopts.tooltip = global.tooltip;
+    }
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse catalog opts: " + opts, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -9344,12 +9465,13 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     var layer, canvas, dlayer, zoom, bin;
     var ttop, tleft, rarr=[];
     var params = {};
-    // optional myopts can be an object or a string
-    myopts = myopts || {};
+    // opts can be an object or json
     if( typeof myopts === "string" ){
 	try{ myopts = JSON.parse(myopts); }
 	catch(e){ JS9.error("can't parse shape opts: " + myopts, e); }
     }
+    // optional myopts can be an object or a string
+    myopts = myopts || {};
     // delay adding the region, if this image is not the one being displayed
     if( this.display.image !== this ){
 	this.delayedShapes = this.delayedShapes || [];
@@ -10012,6 +10134,11 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 JS9.Fabric.getShapes = function(layerName, shape, opts){
     var shapes = [];
     var myshape = {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse getShapes opts: " + opts, e); }
+    }
     // opts is optional
     opts = opts || {};
     // process the specified shapes
@@ -10737,6 +10864,11 @@ JS9.Fabric.print = function(opts){
     var xoff = 0, yoff = 0;
     var divtmpl = "<div style='position:absolute; left:%spx; top:%spx'>";
     var winopts = sprintf("width=%s,height=%s,menubar=1,toolbar=1,status=0,scrollbars=1,resizable=1", this.display.canvasjq.attr("width"), this.display.canvasjq.attr("height"));
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse print opts: " + opts, e); }
+    }
     // opts is optional
     opts = opts || {};
     // get the main image as a dataURL
@@ -12219,6 +12351,11 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	}
 	return nexports;
     };
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse listRegions opts: " + opts, e); }
+    }
     // opts is optional
     opts = opts || {};
     // default is to display, including non-source tags
@@ -12406,7 +12543,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	    tag: function(v){return {tags: v};},
 	    width: function(v){return {strokeWidth: parseFloat(v)};}
 	};
-	// opts is ... optional
+	// opts is optional
 	opts = opts || {};
 	// loop through DS9 region properties, converting to js9 props
 	while( (xarr = rexp.exec(s)) !== null ){
@@ -13182,7 +13319,7 @@ JS9.centroidPolygon = function(points){
 
 // return the image object for the specified image object, name, or filename
 JS9.lookupImage = function(id, display){
-    var i, im;
+    var i, im, did;
     var ilen= JS9.images.length;
     // sanity check
     if( !id ){
@@ -13190,14 +13327,17 @@ JS9.lookupImage = function(id, display){
     }
     for(i=0; i<ilen; i++){
 	im = JS9.images[i];
-	if( (id === im )                          ||
-	    (id === im.id) || (id === im.id0)     ||
-	    (id === im.file) || (id === im.file0) ||
-	    (id === (JS9.TOROOT + im.file))       ||
-	    (im.fitsFile && (id === im.fitsFile)) ){
+	if( (id === im )      || (id === im.id)                          ||
+            (id === im.id0)   || (id === im.id0.replace(/\[.*\]$/, ""))  ||
+	    (id === im.file)  || (id === im.file.replace(/\[.*\]$/, "")) ||
+	    (id === im.file0) || (id === (JS9.TOROOT + im.file))         ||
+	    (im.fitsFile      && (id === im.fitsFile)) ){
 	    // make sure the display still exists (light windows disappear)
 	    if( $("#"+im.display.id).length > 0 ){
-		if( !display || (display === im.display.id) ){
+		did = im.display.id;
+		if( !display                                            ||
+		    (typeof display === "string" && display === did)    ||
+		    (typeof display === "object" && display.id === did) ){
 		    return im;
 		}
 	    }
@@ -13476,7 +13616,7 @@ JS9.cleanupFITSFile = function(fits, mode){
 JS9.handleImageFile = function(file, options, handler){
     var reader = new FileReader();
     options = $.extend(true, {}, options, JS9.fits.options);
-    if ( handler === undefined ) { handler = JS9.Load; }
+    handler = handler || JS9.Load;
     reader.onload = function(ev){
 	var img = new Image();
 	var data, grey, hdu;
@@ -14860,7 +15000,7 @@ JS9.dragexitCB = function(id, evt){
     evt.preventDefault();
 };
 
-JS9.dragdropCB = function(id, evt, handler){
+JS9.dragdropCB = function(id, evt){
     var i, s, opts, files, display;
     var urlexp = /^(https?|ftp):\/\//;
     // convert jquery event to original event, if possible
@@ -14873,7 +15013,6 @@ JS9.dragdropCB = function(id, evt, handler){
     opts.display = opts.display || id;
     opts.extlist = opts.extlist || JS9.globalOpts.extlist;
     files = evt.target.files || evt.dataTransfer.files;
-    // turn on waiting, if possible
     display = JS9.lookupDisplay(opts.display);
     // first check if it's not a file
     if( !files.length ){
@@ -14902,7 +15041,8 @@ JS9.dragdropCB = function(id, evt, handler){
 		JS9.LoadSession(file, {display: opts.display});
 	    } else {
 		JS9.waiting(true, display);
-		JS9.Load(file, opts, handler);
+		opts.refresh = JS9.globalOpts.refreshDragDrop;
+		JS9.Load(file, opts, {display: opts.display});
 	    }
 	}
     }, JS9.SPINOUT);
@@ -15636,6 +15776,37 @@ JS9.initCommands = function(){
 	}
     }));
     JS9.checkNew(new JS9.Command({
+	name: "refresh",
+	help: "refresh current image using specified file (def: use last file)",
+	set: function(args){
+	    var i, j, obj;
+	    var alen = args.length;
+	    var im = this.image;
+	    // no args: refresh current image
+	    if( alen === 0 ){
+		obj = {refresh: true};
+		JS9.Load(im.file, obj, {display: this.display.id});
+		return;
+	    }
+	    for(i=0; i<alen; i++){
+		obj = null;
+		j = i + 1;
+		if( (j < alen) && (args[j].indexOf('{') === 0) ){
+		    try{ obj = JSON.parse(args[j]); }
+		    catch(e){ obj = null; }
+		}
+		if( obj ){
+		    obj.refresh = true;
+		    JS9.Load(args[i], obj, {display: this.display.id});
+		    i++;
+		} else {
+		    obj = {refresh: true};
+		    JS9.Load(args[i], obj, {display: this.display.id});
+		}
+	    }
+	}
+    }));
+    JS9.checkNew(new JS9.Command({
 	name:   "regions",
 	alias:  "reg",
 	alias2: "region",
@@ -15713,6 +15884,26 @@ JS9.initCommands = function(){
 	    return JS9.scales.join(", ");
 	}
     }));
+
+    JS9.checkNew(new JS9.Command({
+	name: "section",
+	help: "display section of current image",
+	set: function(args){
+	    var s, obj;
+	    var alen = args.length;
+	    var im = this.image;
+	    if( alen === 1 && args[0] === "full" ){
+		im.displaySection("full");
+	    } else {
+		s = args.join(" ");
+		try{ obj = JSON.parse(s); }
+		catch(e){ JS9.error("invalid JSON section"); }
+		im.displaySection(obj);
+	    }
+	}
+    }));
+
+
     JS9.checkNew(new JS9.Command({
 	name: "status",
 	help: "get status for specified (or current) image",
@@ -15906,11 +16097,23 @@ JS9.initKeyboardActions = function(){
 	im.display.clearMessage(layerName);
 	canvas.fire("mouse:up");
     };
-    JS9.Keyboard.Actions["make regions layer active"] = function(im, ipos, evt){
+    JS9.Keyboard.Actions["raise region layer to top"] = function(im, ipos, evt){
 	// sanity check
 	if( !im ){ return; }
 	evt.preventDefault();
 	im.activeShapeLayer("regions");
+    };
+    JS9.Keyboard.Actions["display full image"] = function(im, ipos, evt){
+	// sanity check
+	if( !im ){ return; }
+	evt.preventDefault();
+	im.displaySection("full");
+    };
+    JS9.Keyboard.Actions["refresh image"] = function(im, ipos, evt){
+	// sanity check
+	if( !im ){ return; }
+	evt.preventDefault();
+	im.refreshImage();
     };
 };
 
@@ -16438,7 +16641,7 @@ JS9.mkPublic("GetImageInherit", function(){
 
 // display in-page FITS images and png files
 JS9.mkPublic("Load", function(file, opts){
-    var i, im, ext, disp, display, func, blob, bytes, topts, tfile;
+    var i, s, im, ext, disp, display, func, blob, bytes, topts, tfile;
     var obj = JS9.parsePublicArgs(arguments);
     var ptype = "fits";
     file = obj.argv[0];
@@ -16484,16 +16687,32 @@ JS9.mkPublic("Load", function(file, opts){
 	if( file.path || file.name ){
 	    // new file (or, for Electron.js, the path, which is better)
 	    opts.filename = file.path || file.name;
-	    // see if file is already loaded
-	    im = JS9.lookupImage(opts.filename, opts.display);
-	    if( im ){
-		// display image, 2D graphics, etc.
-		im.displayImage("display", opts);
-		im.refreshLayers();
-		im.display.clearMessage();
-		JS9.waiting(false);
-		return;
+	    // if this file is already loaded, just redisplay
+	    if( opts.refresh ){
+		// when refreshing, use the current image
+		disp = JS9.lookupDisplay(opts.display, false);
+		if( disp ){ im = disp.image; }
+	    } else {
+		// when not refreshing, use narrow search for existing file
+		im = JS9.lookupImage(opts.filename, opts.display);
 	    }
+	    if( im ){
+		// if not refreshing, just re-display and exit
+		if( !opts. refresh ){
+		    // display image, 2D graphics, etc.
+		    im.displayImage("display", opts);
+		    im.refreshLayers();
+		    im.display.clearMessage();
+		    JS9.waiting(false);
+		    return;
+		}
+	    } else {
+		// remove any extraneous refresh flag
+		delete opts.refresh;
+	    }
+	} else {
+	    // remove any extraneous refresh flag
+	    delete opts.refresh;
 	}
 	if( !opts.filename ){
 	    opts.filename = JS9.ANON + JS9.uniqueID();
@@ -16518,7 +16737,7 @@ JS9.mkPublic("Load", function(file, opts){
 	    catch(e){ JS9.error("can't process FITS file", e); }
 	    break;
 	case "img":
-	    try{ JS9.handleImageFile(file, opts, JS9.NewFITSImage); }
+	    try{ JS9.handleImageFile(file, opts, JS9.Load); }
 	    catch(e){ JS9.error("can't process IMG file", e); }
 	    break;
 	}
@@ -16554,8 +16773,15 @@ JS9.mkPublic("Load", function(file, opts){
 	return;
     }
     // if this file is already loaded, just redisplay
-    im = JS9.lookupImage(file, opts.display);
-    if( im ){
+    if( opts.refresh ){
+	// when refreshing, broaden the search for existing file
+	s = file.replace(/\[.*\]$/, "").split("/").reverse()[0];
+	im = JS9.lookupImage(s, opts.display);
+    } else {
+	// when not refreshing, use narrow search for existing file
+	im = JS9.lookupImage(file, opts.display);
+    }
+    if( im && !opts.refresh ){
 	// display image, 2D graphics, etc.
 	im.displayImage("all", opts);
 	im.display.clearMessage();
@@ -17189,11 +17415,23 @@ JS9.mkPublic("DisplayPlugin", function(name){
 
 // call the image constructor as a function
 JS9.mkPublic("NewFitsImage", function(hdu, opts){
-    var func;
-    if( opts && opts.onload ){
-	func = opts.onload;
+    var func, disp;
+    var obj = JS9.parsePublicArgs(arguments);
+    hdu = obj.argv[0];
+    opts = obj.argv[1] || {};
+    disp = JS9.lookupDisplay(obj.display || opts.display || JS9.DEFID);
+    if( opts.refresh && disp && disp.image ){
+	if( opts.onload ){
+	    opts.onrefresh = opts.onload;
+	    delete opts.onload;
+	}
+	disp.image.refreshImage(hdu, opts);
+    } else {
+	if( opts.onload ){
+	    func = opts.onload;
+	}
+	JS9.checkNew(new JS9.Image(hdu, opts, func));
     }
-    JS9.checkNew(new JS9.Image(hdu, opts, func));
 });
 
 // return the image object for the specified image name or the display id

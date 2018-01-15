@@ -1873,7 +1873,12 @@ JS9.Menubar.init = function(width, height){
 		    name: "Gaussian blur sigma:",
 		    type: "text"
 		};
-		items.dpath = {name: "set data path ..."};
+		items.dpath = {name: "set data analysis path ..."};
+		items.fpath = {name: "set this image file's path ..."};
+		if( !im || 
+		    (document.domain && document.domain !== "localhost") ){
+		    items.fpath.disabled = true;
+		}
 		}
 		return {
                     callback: function(key){
@@ -1904,9 +1909,22 @@ JS9.Menubar.init = function(width, height){
 				});
 				did = uim.displayAnalysis("textline",
 					 JS9.InstallDir(JS9.analOpts.dpathURL),
-					 {title: "Data Path for Drag and Drop"});
+					 {title: "Data path for analysis"});
 				// save display id
 				$(did).data("dispid", udisp.id);
+				break;
+			    case "fpath":
+				// call this once window is loaded
+			        $("#dhtmlwindowholder").arrive("#filePathForm",
+                                {onceOnly: true}, function(){
+				    $('#filePath').val(uim.file);
+				});
+				did = uim.displayAnalysis("textline",
+					 JS9.InstallDir(JS9.analOpts.fpathURL),
+					 {title: "File path for this image"});
+				// save display id
+				$(did).data("dispid", udisp.id);
+				$(did).data("imid", uim.id);
 				break;
 			    case "upload":
 				uim.uploadFITSFile();

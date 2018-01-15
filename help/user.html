@@ -424,13 +424,22 @@ Gaussian blur with three passes of a box blur) described <a href="
 http://blog.ivank.net/fastest-gaussian-blur.html" target="_blank"> here</a>.
 
 <p>
-Finally the <b>set data path ...</b> option allows you to specify a
+The <b>set data analysis path ...</b> option allows you to specify a
 colon-separated list of directories for JS9 to search when looking for
 FITS data files that have been dropped onto the display. This is used
 by JS9 when performing server-side data analysis on local
 drag-and-drop FITS files. It is necessary to specify data paths
 explicitly since web pages are not allowed to determine the pathname
 of such files automatically (for obvious security reasons).
+
+<p>
+For local servers, the <b>set this image file's path</b> option allows
+you to specify the path (absolute or relative to the displayed web
+page) of an image file loaded via <i>Drag and Drop</i> or <i>Open
+Local File</i>.  For security reasons, browsers do not expose the path
+of files loaded in these two ways. However, for a local web page, you can
+safely specify the image path in order to refresh the image or run
+server-based analysis.
 
 <li><p><b>Help:</b> Show this and other JS9 help pages. The <b>Help</b> menu
 also contains help for <b>Plugins</b>, including the <b>Imexam</b> plugins
@@ -600,7 +609,7 @@ See <a href="knownissues.html">Known Issues</a>
 for a discussion of limitations imposed on resize by Webkit
 browsers such as Chrome and Safari.
 
-<h5>Last updated: October 3, 2017</h5>
+<h5>Last updated: January 15, 2018</h5>
 </div>
 
 </body>

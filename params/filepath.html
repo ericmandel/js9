@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<title>Modify this Image File's Path</title>
+</head>
+<body>
+<form id="filePathForm" name="filePathForm" class="js9AnalysisForm" action="">
+<b>The image file path is either an absolute path or a path relative to the web page. For security reasons, browsers do not expose the path of files loaded via <i>Drag and Drop</i> or <i>Open Local File</i>. However, for a local web page, you can safely enter a missing image path here, in order to refresh the image or run server-based analysis:</b>
+<p>
+<textarea id="filePath" name="filePath" rows="2" cols="100" style="width:90%;"></textarea>
+<p>
+<input id="run" name="run" type="button" class="button" value="Submit" 
+onclick="var arr = $('#filePathForm').serializeArray();
+var form = $(this).closest('form');
+var dhtml = form.closest('.dhtmlwindow')[0];
+var dispid = $(dhtml).data('dispid');
+var imid = $(dhtml).data('imid');
+var im = JS9.GetImage(imid);
+if( im ){
+  im.file = arr[0].value;
+  im.notifyHelper();
+}
+dhtml.close();
+return false;">
+
+<input id="close" name="Close" type="button" class="button" value="Close" 
+onclick="var form = $(this).closest('form');
+var dhtml = form.closest('.dhtmlwindow')[0];
+dhtml.close();
+return false;" style="float: right;">
+</form>
+
+</body>
+</html>

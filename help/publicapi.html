@@ -495,13 +495,15 @@ explicitly changed parameter(s) used in a prior step.
 <p>
 where:
 <ul>
-<li><b>input</b>: object, javascript array, typed array, or FITS blob
+<li><b>input</b>: object, javascript array, typed array, FITS blob, or string
 <li><b>func</b>: optional function to call when image refresh is complete
 </ul>
 This routine can be used, for example, in laboratory settings where
 data is being gathered in real-time and the JS9 display needs to be
-refreshed periodically. The first <b>input</b> argument can be one of the following:
+refreshed periodically. The first <b>input</b> argument can be one of
+the following:
 <ul>
+<li> a text string specifying a new URL to retrieve
 <li> a javascript array containing raw data
 <li> a typed array containing raw data
 <li> a blob containing a FITS file
@@ -517,6 +519,21 @@ following optional properties:
 <li><b>dmax</b>: data max (optional)
 </ul>
 </ul>
+A text string passed to the <b>input>/b> argument is assumed to be a
+URL (or local file pathname) to retrieve and utilize when refreshing
+the data. This option is used, for example, where an external program
+rewrites the image file, and the new data are then used to refresh the
+display. Note that the specified file becomes the current image file and
+will be used for subsequent server-based analysis request as well as
+refreshImage() calls with a null input argument (see next paragraph).
+<p>
+If the <b>input</b> argument is null, the current image file is
+reloaded, assuming its file path (or URL) is known. For security
+reasons, browsers do not expose the path of files loaded via <i>Drag
+and Drop</i> or <i>Open Local File</i>. On a local web page, you can
+safely use the <b>File -> set this image file's path</b> menu option
+to enter the image path here for subsequent reloading (or analysis).
+<p>
 When passing an object as <b>input</b>, the required <b>image</b>
 property containing the image data can be a javascript array or a
 typed data array. It also can contain a base64-encoded string
@@ -546,10 +563,12 @@ display.
 <p>
 where:
 <ul>
-<li><b>opts</b>: object containing section options
+<li><b>opts</b>: object containing section options or "full"
 </ul>
 This routine allows you to extract and display a section of FITS file.
-The opts object contains properties specifying how to generate and
+If the first argument is the text string "full", the full image is
+displayed (assuming there is sufficient memory available).  Otherwise
+the opts object contains properties specifying how to generate and
 display the section:
 <ul>
 <li><b>xcen</b>: x center of the section in file (physical) coords
@@ -560,7 +579,9 @@ display the section:
 <li><b>filter</b>: for tables, row/event filter to apply when extracting section
 <li><b>separate</b>: if true, display as a separate image (default is to update the current image)
 </ul>
-All properties are optional: by default, the routine will extract a bin 1 image from the center of the file.
+All properties are optional: by default, the routine will extract an
+image from the center of the file, with dimensions and binning
+specified by JS9.globalOpts.table and JS9.globalOpts.image objects.
 
 <p>
 For example, if an image has dimensions 4096 x 4096, then specifying:
@@ -3441,7 +3462,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: February 2, 2017</h5>
+<h5>Last updated: January 15, 2018</h5>
 </div>
 
 </body>
