@@ -469,6 +469,8 @@ JS9.Image = function(file, params, func){
 	this.display.clearMessage();
 	// add to list of images
 	JS9.images.push(this);
+	// notify the helper
+	this.notifyHelper();
 	// call function, if necessary
 	if( func ){
 	    try{ JS9.xeqByName(func, window, this); }
@@ -1620,16 +1622,16 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	header.LTV2 = header.LTV2 || 0;
 	header.LTV2 = (header.LTV2 - y1) / bin;
     }
-    // look for a filename (needs header so we can add extension name/num)
+    // look for a file/url (we'll also get a new id, see below)
     if( opts.file && opts.file !== this.file ){
 	this.file = opts.file;
-	this.fitsFile = null;
+	this.id = null;
     } else if( opts.filename && opts.filename !== this.file ){
 	this.file = opts.filename;
-	this.fitsFile = null;
+	this.id = null;
     } else if( hdu.filename && hdu.filename !== this.file ){
 	this.file = hdu.filename;
-	this.fitsFile = null;
+	this.id = null;
     }
     this.file = this.file || (JS9.ANON + JS9.uniqueID());
     // save original file in case we add an extension
@@ -1678,7 +1680,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	// save id in case we have to change it for uniqueness
 	this.id0 = (this.parentFile||this.file).split("/").reverse()[0];
 	// get a unique id for this image
-	this.id = JS9.getImageID(this.id0, this.display.id);
+	this.id = JS9.getImageID(this.id0, this.display.id, this);
     }
     // is this a proxy image?
     if( opts.proxyFile ){
@@ -1831,8 +1833,6 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    JS9.fits.cleanupFITSFile(this.raw.hdu.fits, true);
 	}
     }
-    // notify helper about this new data
-    this.notifyHelper();
     // plugin callbacks
     this.xeqPlugins("image", "onrawdata");
     // allow chaining
@@ -2689,10 +2689,6 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 		if( im === this ){
 		    // display layers for this image
 		    im.displayShapeLayers();
-		    // notify the helper
-		    if( mode.notify ){
-			im.notifyHelper();
-		    }
 		}
 	    }
 	} else {
@@ -2700,10 +2696,6 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	    this.putImage(opts);
 	    // display layers for this image
 	    this.displayShapeLayers();
-	    // notify the helper
-	    if( mode.notify ){
-		this.notifyHelper();
-	    }
 	}
 	// mark this image as being in this display
 	this.display.image = this;
@@ -2781,6 +2773,8 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     }
     // display new image data with old section
     this.displayImage("colors", opts);
+    // notify the helper
+    this.notifyHelper();
     // update shape layers if necessary
     if( doreg ){
 	this.refreshLayers();
@@ -3742,7 +3736,7 @@ JS9.Image.prototype.notifyHelper = function(){
 	    // split args, dealing with spaces inside brackets
 	    r = rstr.trim().match(/(?:[^\s\[]+|\[[^\]]*\])+/g);
 	    im = JS9.lookupImage(r[0], that.display.id||JS9.DEFID );
-	    if( im && !im.fitsFile ){
+	    if( im ){
 		s = r[1];
 		if( s !== "?" ){
 		    if( !JS9.analOpts.dataDir ){
@@ -4096,15 +4090,19 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	    func(robj.stdout, robj.stderr, robj.errcode, a);
 	} else {
 	    // handle errors before we start
-	    if( robj.errcode || robj.stderr ){
-		if( robj.stderr ){
-		    s = robj.stderr;
-		} else {
-		    s = sprintf("ERROR: while executing %s [%s]",
-				a.name, robj.errcode);
-		}
+	    if( robj.stderr ){
+		s = robj.stderr;
 		// if its only a warning, log it
 		if( (s.search(/WARNING:/i) >= 0) && (s.search(/ERROR:/i) < 0) ){
+		    JS9.log(s);
+		} else {
+		    // otherwise, throw an error
+		    JS9.error(s, JS9.analOpts.epattern);
+		}
+	    } else if( robj.errcode ){
+		s = sprintf("ERROR: running %s [%s]", a.name, robj.errcode);
+		// not sure what this means, so just log it if stdout exists
+		if( robj.stdout ){
 		    JS9.log(s);
 		} else {
 		    // otherwise, throw an error
@@ -12946,7 +12944,7 @@ JS9.getImageID = function(imid, dispid, myim){
 	im = JS9.images[i];
 	if( im.display.id === dispid ){
 	    if( (im !== myim) && (imid === im.id0) ){
-		if( im.id.search(rexp) >= 0 ){
+		if( im.id && im.id.search(rexp) >= 0 ){
 		    s = im.id.replace(rexp, "$1");
 		    idmax = Math.max(idmax, parseInt(s, 10));
 		}

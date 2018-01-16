@@ -1912,6 +1912,7 @@ JS9.Menubar.init = function(width, height){
 					 {title: "Data path for analysis"});
 				// save display id
 				$(did).data("dispid", udisp.id);
+				$(did).data("imid", uim.id);
 				break;
 			    case "fpath":
 				// call this once window is loaded

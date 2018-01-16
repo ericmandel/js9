@@ -18,10 +18,7 @@ var dhtml = form.closest('.dhtmlwindow')[0];
 var dispid = $(dhtml).data('dispid');
 var imid = $(dhtml).data('imid');
 var im = JS9.GetImage(imid);
-if( im ){
-  im.file = arr[0].value;
-  im.notifyHelper();
-}
+if( im ){ im.file = arr[0].value; im.notifyHelper(); }
 dhtml.close();
 return false;">
 

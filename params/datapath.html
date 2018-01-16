@@ -16,8 +16,10 @@ onclick="var arr = $('#dataPathForm').serializeArray();
 var form = $(this).closest('form');
 var dhtml = form.closest('.dhtmlwindow')[0];
 var dispid = $(dhtml).data('dispid');
+var imid = $(dhtml).data('imid');
 JS9.globalOpts.dataPath = arr[0].value;
-JS9.DisplayImage('display', {display: dispid});
+var im = JS9.GetImage(imid);
+if( im ){ im.notifyHelper(); }
 dhtml.close();
 return false;">
 
