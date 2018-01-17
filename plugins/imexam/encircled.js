@@ -50,7 +50,7 @@
 
     function energInit() {
 	imexam.fixupDiv(this);
-        $(this.div).append("Create a region to see encircled energy<br>");
+        $(this.div).append("<p style='padding-left: 20px'>create, click, move, or resize a region to see encircled energy<br>");
     }
 
     JS9.RegisterPlugin("ImExam", "EncEnergy", energInit, {

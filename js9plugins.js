@@ -10150,7 +10150,7 @@ module.exports = template;
 
     function energInit() {
 	imexam.fixupDiv(this);
-        $(this.div).append("Create a region to see encircled energy<br>");
+        $(this.div).append("<p style='padding-left: 20px'>create, click, move, or resize a region to see encircled energy<br>");
     }
 
     JS9.RegisterPlugin("ImExam", "EncEnergy", energInit, {
@@ -10347,7 +10347,7 @@ module.exports = template;
 
     function rprojInit() {
 	imexam.fixupDiv(this);
-        $(this.div).append("Create a region to see radial projection<br>");
+        $(this.div).append("<p style='padding-left: 20px'>create, click, move, or resize a region to see radial projection<br>");
     }
 
     JS9.RegisterPlugin("ImExam", "RadialProj", rprojInit, {
@@ -10437,7 +10437,7 @@ module.exports = template;
 
     function histInit() {
 	imexam.fixupDiv(this);
-        $(this.div).append("Create a region to see histogram<br>");
+        $(this.div).append("<p style='padding-left: 20px'>create, click, move, or resize a region to see histogram<br>");
     }
 
     JS9.RegisterPlugin("ImExam", "Histogram", histInit, {
@@ -10513,7 +10513,7 @@ module.exports = template;
 
     function statInit() {
 	imexam.fixupDiv(this);
-        $(this.div).append("Create a region to see stats<br>");
+        $(this.div).append("<p style='padding-left: 20px'>create, click, move, or resize a region to see stats<br>");
     }
 
     JS9.RegisterPlugin("ImExam", "RegionStats", statInit, {
@@ -10605,7 +10605,7 @@ module.exports = template;
 
     function projInit() {
 	imexam.fixupDiv(this);
-        $(this.div).append("Create a region to see projection<br>");
+        $(this.div).append("<p style='padding-left: 20px'>create, click, move, or resize a region to see projection<br>");
     }
 
     JS9.RegisterPlugin("ImExam", "XProj", projInit, {
@@ -10733,7 +10733,7 @@ module.exports = template;
 
     function pluginInit() {
 	imexam.fixupDiv(this);
-        $(this.div).append("Create a region to see 3d plot<br>");
+        $(this.div).append("<p style='padding-left: 20px'>create, click, move, or resize a region to see 3d plot<br>");
     }
 
     JS9.RegisterPlugin("ImExam", "3dPlot", pluginInit, {
