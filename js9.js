@@ -8863,7 +8863,7 @@ JS9.Fabric.activeShapeLayer = function(s){
 	// public call: highest layer was specified directly
 	// set the zindex (and switch any layer with same zindex)
 	layer = this.layers[s];
-	if( layer.show ){
+	if( layer && layer.show ){
 	    // set highest zindex for specified layer
 	    ozindex = layer.zindex;
 	    layer.zindex = this.zlayer - 1;
