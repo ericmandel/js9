@@ -431,6 +431,10 @@ if( (JS9.BROWSER[0] === "Chrome") || (JS9.BROWSER[0] === "Safari") ){
 if( (JS9.BROWSER[0] !== "Chrome") ){
     JS9.globalOpts.imageTemplates += ",.gz";
 }
+// wasm broken in ios 11.2.2 (1/22/2018)
+if(  /iPad|iPhone|iPod/.test(navigator.platform) ){
+    JS9.globalOpts.useWasm = false;
+}
 // iOS has severe memory limits (05/2017)
 if( JS9.BROWSER[3] ){
     JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 350000000);
