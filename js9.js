@@ -16689,15 +16689,8 @@ JS9.mkPublic("Load", function(file, opts){
 	if( file.path || file.name ){
 	    // new file (or, for Electron.js, the path, which is better)
 	    opts.filename = file.path || file.name;
-	    // if this file is already loaded, just redisplay
-	    if( opts.refresh ){
-		// when refreshing, use the current image
-		disp = JS9.lookupDisplay(opts.display, false);
-		if( disp ){ im = disp.image; }
-	    } else {
-		// when not refreshing, use narrow search for existing file
-		im = JS9.lookupImage(opts.filename, opts.display);
-	    }
+	    // does this image already exist?
+	    im = JS9.lookupImage(opts.filename, opts.display);
 	    if( im ){
 		// if not refreshing, just re-display and exit
 		if( !opts. refresh ){
