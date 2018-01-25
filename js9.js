@@ -8534,7 +8534,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    // re-order so smaller objects are in front
 	    olen = objs.length;
 	    for(i=0; i<olen; i++){
-		objs[i].obj.sendToBack();
+		try{ objs[i].obj.sendToBack(); }
+		catch(e){}
 	    }
 	}
     });
@@ -10591,6 +10592,12 @@ JS9.Fabric.removePolygonPoint = function(layerName, obj){
     // get info on this point
     polygon = obj.polyparams.polygon;
     points = polygon.points;
+    // maintain minimum number of points
+    if( (polygon.type === "polygon") && (points.length <= 3) ){
+	return;
+    } else if( (polygon.type === "polyline") && (points.length <= 2) ){
+	return;
+    }
     pt = obj.polyparams.point;
     // get layer
     layer = this.getShapeLayer(layerName);
