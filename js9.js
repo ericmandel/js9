@@ -10690,7 +10690,7 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	    hoverCursor: 'pointer',
 	    width: JS9.Fabric.opts.cornerSize,
 	    height: JS9.Fabric.opts.cornerSize,
-	    padding: 2
+	    padding: 10
 	});
 	// add resize function on move
 	a.on("moving", movePoint);
