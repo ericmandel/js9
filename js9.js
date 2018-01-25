@@ -12254,6 +12254,11 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 		break;
 	    }
 	    break;
+	case "remove":
+	    if( newval(obj, key, val) ){
+		opts[key] = obj.pub.id;
+	    }
+	    break;
 	case "misc":
 	    if( val.trim() ){
 		try{ nopts = JSON.parse(val); $.extend(opts, nopts); }
