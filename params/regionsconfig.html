@@ -107,7 +107,7 @@
 .col_R3l {
     position: absolute;
     top: 0;
-    left:  190px;
+    left:  180px;
     width: 100px;
 }
 
@@ -177,7 +177,11 @@ if( im ){
 	}
         break;
     default:
-        s = sprintf('%.6f %.6f', reg.ra, reg.dec);
+        if( reg.ra !== undefined && reg.dec !== undefined ){
+            s = sprintf('%.6f %.6f', reg.ra, reg.dec);
+        } else {
+            s = sprintf('%.1f %.1f', reg.x, reg.y);
+        }
         break;
     }
     JS9.CopyToClipboard(s);
@@ -201,7 +205,7 @@ return false;">
 
 </div>
 
-<div class="nodisplay wcs">
+<div class="edit">
 <div class="rlinegroup">
 <span class="col_R col_R1">
 Edit:

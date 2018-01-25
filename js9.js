@@ -11773,7 +11773,11 @@ JS9.Regions.initConfigForm = function(obj){
 		}
 		break;
 	    default:
-		val = sprintf('%.6f', obj.pub.ra);
+		if( obj.pub.ra !== undefined ){
+		    val = sprintf('%.6f', obj.pub.ra);
+		} else {
+		    val = sprintf('%.1f', obj.pub.x);
+		}
 		break;
 	    }
 	    // save for later processing
@@ -11792,7 +11796,11 @@ JS9.Regions.initConfigForm = function(obj){
 		}
 		break;
 	    default:
-		val = sprintf('%.6f', obj.pub.dec);
+		if( obj.pub.dec !== undefined ){
+		    val = sprintf('%.6f', obj.pub.dec);
+		} else {
+		    val = sprintf('%.1f', obj.pub.y);
+		}
 		break;
 	    }
 	    // save for later processing
@@ -11813,6 +11821,8 @@ JS9.Regions.initConfigForm = function(obj){
 	    default:
 		if( obj.pub.wcssizestr ){
 		    val = fmt(obj.pub.wcssizestr[0]);
+		} else {
+		    val = fmt(obj.pub[key]);
 		}
 		break;
 	    }
@@ -11829,6 +11839,8 @@ JS9.Regions.initConfigForm = function(obj){
 	    default:
 		if( obj.pub.wcssizestr ){
 		    val = fmt(obj.pub.wcssizestr[1]);
+		} else {
+		    val = fmt(obj.pub[key]);
 		}
 		break;
 	    }
@@ -11890,8 +11902,10 @@ JS9.Regions.initConfigForm = function(obj){
 	}
 	$(this).val(val);
     });
-    if( (this.params.wcssys === "image") ||
-	(this.params.wcssys === "physical") ){
+    if( (this.params.wcssys === "image")    ||
+	(this.params.wcssys === "physical") ||
+	(this.params.wcssys === "native" && (!this.raw.wcs||this.raw.wcs<0)) ){
+	$(form).find("[name='wcssys']").hide();
 	$(form).find("[name='altwcssys']").hide();
     } else {
 	$(form).find("[name='altwcssys']").show();
@@ -11902,12 +11916,8 @@ JS9.Regions.initConfigForm = function(obj){
 	    $(form).find("[name='ypos']").val(s[1]);
 	}
     }
-    // wcs display
-    if( obj.pub.wcsstr ){
-	$(form + ".wcs").removeClass("nodisplay");
-    } else {
-	$(form + ".image").removeClass("nodisplay");
-    }
+    // edit-able parameters
+    // $(form + ".edit").removeClass("nodisplay");
     // child text display for shapes, editable if no existing children yet
     if( obj.type !== "text" ){
 	$(form + ".childtext").removeClass("nodisplay");
@@ -12096,10 +12106,18 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 		key = "p" + key.charAt(0);
 		break;
 	    default:
-		if( key === "xpos" ){
-		    key = "ra";
+		if( this.raw.wcs && this.raw.wcs > 0 ){
+		    if( key === "xpos" ){
+			key = "ra";
+		    } else {
+			key = "dec";
+		    }
 		} else {
-		    key = "dec";
+		    if( key === "xpos" ){
+			key = "ix";
+		    } else {
+			key = "iy";
+		    }
 		}
 		break;
 	    }
