@@ -11909,10 +11909,12 @@ JS9.Regions.initConfigForm = function(obj){
 	}
 	$(this).val(val);
     });
+    if( !this.raw.wcs || this.raw.wcs < 0 ){
+	$(form).find("[name='wcssys']").hide();
+    }
     if( (this.params.wcssys === "image")    ||
 	(this.params.wcssys === "physical") ||
-	(this.params.wcssys === "native" && (!this.raw.wcs||this.raw.wcs<0)) ){
-	$(form).find("[name='wcssys']").hide();
+	(!this.raw.wcs || this.raw.wcs<0)   ){
 	$(form).find("[name='altwcssys']").hide();
     } else {
 	$(form).find("[name='altwcssys']").show();
