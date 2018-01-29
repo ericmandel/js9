@@ -772,8 +772,11 @@ JS9.Image.prototype.getImageData = function(dflag){
 	    width: this.raw.width,
 	    height: this.raw.height,
 	    bitpix: this.raw.bitpix,
+	    bin: this.binning.bin,
 	    header: this.raw.header,
 	    hdus: this.hdus,
+	    dwidth: this.display.width,
+	    dheight: this.display.height,
 	    data: data
 	   };
 };
