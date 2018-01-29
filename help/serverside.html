@@ -126,6 +126,7 @@ following intrinsic macros are defined:
 <li><b>$id:</b> id of the JS9 display
 <li><b>$image:</b> name of the image file being displayed
 <li><b>$filename:</b> pathname of the parent file, if available, or the original FITS file
+<li><b>$filename(this):</b> pathname of the original FITS file, even if a parent is available
 <li><b>$fits:</b> pathname of the original FITS file
 <li><b>$parent:</b> pathname of the parent file, if available
 <li><b>$regions:</b> all currently defined regions
@@ -134,6 +135,13 @@ following intrinsic macros are defined:
 <li><b>$imcenter:</b>center of displayed image in image coords (x,y)
 <li><b>$wcscenter:</b>center of displayed image in WCS coords (ra,dec)
 </ul>
+Note that <b>$filename</b> macro will return the pathname of the
+parent by default, so that analysis can be done on the parent file. Use
+<b>$filename(this)</b> or <b>$fits</b> to return the pathname of the
+displayed FITS file, regardless of the presence of a parent. This is
+useful if you want to run analysis on the representation file instead
+of the parent.
+<p>
 The three regions macros return region info in the current wcs
 system. To specify an alternate wcs system, append "physical",
 "image", or "wcs" in parentheses, e.g. $regions(physical).
