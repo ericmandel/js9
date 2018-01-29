@@ -181,7 +181,21 @@ The <b>rtype</b> property determine how JS9 handles return values:
 <ul>
 <li><b>text:</b> the returned text is displayed in a lightweight window
 <li><b>plot:</b> the returned plot data is plotted
+<li><b>fits:</b> the returned URL to a FITS file is loaded using <b>JS9.Load()</b>
+<li><b>png:</b> the returned URL to a PNG file is loaded using <b>JS9.Load()</b>
+<li><b>none:</b> check for an error return, but otherwise do nothing 
 </ul>
+When text is returned, be aware that file pathnames are often output
+by programs. For security reasons, you should remove or modify these
+pathnames before returning the text. For example, JS9 funtools
+analysis routines use a sed command like this:
+<pre>
+  sed 's#'${JS9_DIR:-none}'#${JS9_DIR}#g;'
+</pre>
+to change pathnames containing the JS9 working directory so that they display
+the string "${JS9_DIR}" instead.
+
+<p>
 Sample scripts such as <b>funcnts2flot</b> and <b>funhist2plot</b>
 generate a JSON string that contains a valid flot object. For
 example, the radial profile plot contains x, y, and error values:
