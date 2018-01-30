@@ -439,6 +439,12 @@ The <b>file</b> value can be a FITS file or a representation PNG file. The
 this image. For a presentation PNG file, the path generally will be
 relative to the JS9 install directory. For a normal FITS file, the path
 usually is an absolute path to the FITS file.
+
+<p>
+The <b>header</b> object contains FITS header keywords. Note that all
+HISTORY and COMMENT keywords have two underscores and a numeric value
+appended, in order to make them unique within the object.
+
 <p>
 If you are calling <b>JS9.GetImageData()</b> from an external process (via
 the msg protocol), you almost certainly want to set <b>dflag</b> to "array". 
