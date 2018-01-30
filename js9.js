@@ -13761,8 +13761,8 @@ JS9.getFITSImage = function(fits, hdu, options, handler){
 };
 
 // common code for processing fits2fits and fits2png
-// JS9.fits2rep(display, file, opts, "png", "fits2png", func)
-// JS9.fits2rep(display, file, opts, "fits", "imsection")
+// JS9.fits2repFile(display, file, opts, "png", "fits2png", func)
+// JS9.fits2repFile(display, file, opts, "fits", "imsection")
 JS9.fits2RepFile = function(display, file, opts, xtype, func){
     var i, s, xdim, ydim, bin, obj;
     var xopts = {};
@@ -13778,8 +13778,10 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
     if( xcond.match(/never/i) ){
 	return false;
     }
-    // repfiles require a connected helper and associated js9helper program
-    if( !JS9.helper.connected || !JS9.helper.js9helper ){
+    // repfiles require a connected helper, a js9helper program, and a
+    // socket.io connection
+    if( !JS9.helper.connected || !JS9.helper.js9helper ||
+	(JS9.helper.type !== "nodejs" && JS9.helper.type !== "socket.io") ){
 	return false;
     }
     // sanity check and pre-processing
