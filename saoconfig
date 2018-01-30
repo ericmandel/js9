@@ -60,7 +60,7 @@ case $name in
 		--with-cfitsio=$HOME					\
 		--with-png=$HOME					\
 		--with-cgidir=$HOME/Sites/cgi-bin			\
-		--with-cgiurl=cgi-bin					\
+		--with-cgiurl="~eric/cgi-bin"				\
 		--with-cgixpath=$HOME/bin				\
 		--with-saodir=$HOME/Sites				\
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*

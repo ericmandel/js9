@@ -224,6 +224,26 @@ case $CGIkey in
 	fi
 	;;
 
+    imsection)
+	if [ -d "$JWRAPPERS" ]; then
+	    # go to the mandatory work directory
+	    if [ -d "$JWORKDIR" ]; then
+	        cdworkdir
+	    else
+		error "requires configuration of temp work directory"
+	    fi
+	    OFS="$IFS"
+	    IFS=" "
+	    set -- $CGIcmd
+	    IFS="$OFS"
+	    CMD="$JWRAPPERS/$1"
+	    shift
+	    $CMD $*
+        else
+	    error "wrapper function missing for: $CMD"
+	fi
+	;;
+
     loadproxy)
 	if [ -d "$JWRAPPERS" ]; then
 	    # cd to the work directory, if necessary

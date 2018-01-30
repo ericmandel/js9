@@ -3737,6 +3737,7 @@ JS9.Image.prototype.notifyHelper = function(){
 		JS9.helper.send("pageid", null, function(s){
 		    if( s && s.trim().match(/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/) ){
 			JS9.helper.pageid = s;
+			JS9.helper.js9helper = "js9helper";
 		    }
 		});
 		break;
