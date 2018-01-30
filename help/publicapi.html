@@ -3168,6 +3168,52 @@ This routine is useful if you are building a web interface that
 supports the JS9 menu functions.
 
 <p>
+<font size="+1"><b><u>Display content in a light window</u></b></font>
+<p>
+<code><font size="+1">JS9.LightWindow(id, type, content, title, opts)</font></code>
+<p>
+where:
+<ul>
+<li><b>id</b>: unique id for light window div(default: "lightWindow" + uniqueID)
+<li><b>type</b>: content type: "inline", "div", "ajax", "iframe" (default: "inline")
+<li><b>content</b>: content of the light window (default: none)
+<li><b>title</b>: title (default: "JS9 light window")
+<li><b>opts</b>: configuration string (default: "width=830px,height=400px,center=1,resize=1,scrolling=1")
+</ul>
+Display arbitrary content inside a light window. There are any number
+of light window routines available on the Net. JS9 uses light window
+routines developed by Dynamic Drive (http://www.dynamicdrive.com).
+Their extensive documentation can be found
+<a href="http://www.dynamicdrive.com/dynamicindex8/dhtmlwindow/">here</a>.
+
+<p>
+The content shown inside the window depends on the <b>content</b> parameter:
+<ul>
+<li> <b>iframe</b>: the URL of the page to display (ie: "http://www.google.com")
+<li><b>inline</b>: the HTML to display (backslashing any special JavaScript characters, such as apostrophes)
+<li><b>ajax</b>: the relative path to the external page to display, relative to the current page (ie: "../external.htm")
+<li><b>div</b>: define a DIV element on the page with a unique ID attribute (probably hidden using style="display:none") and the use the DIV's id as the content value
+</ul>
+
+<p>
+The <b>opts</b> parameter specifies options for the light window, such
+as its size.  This parameter consists of a string with comma-separated
+keywords, e.g.:
+<pre>
+    "width=830px,height=400px,center=1,resize=1,scrolling=1"
+</pre>
+The opts keywords, defined in the Dynamic Drive documentation, are:
+width, height, left, top, center, resize, and scrolling.  The
+JS9.lightOpts.dhtml object defines oft-used lightwin configurations,
+and the JS9.lightOpts.dhtml.textWin property is used as the
+default for this call. You can utilize these properties in your own call
+to <b>JS9.LightWindow()</b> or make up your own configuration string.
+
+<p>
+As an extension to the Dynamic Drive light window support, JS9 adds the ability
+to double-click the title bar in order to close the window.
+
+<p>
 <font size="+1"><b><u>Use the file dialog box to load a FITS file</u></b></font>
 <p>
 <code><font size="+1">JS9.OpenFileMenu()</font></code>

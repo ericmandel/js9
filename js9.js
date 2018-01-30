@@ -17478,27 +17478,6 @@ JS9.mkPublic("SaveColormap", function(fname){
     return fname;
 });
 
-// display the named plugin
-JS9.mkPublic("DisplayPlugin", function(name){
-    var i, plugin, pname, lcname;
-    var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
-    if( display && obj.argv[0] ){
-	name = obj.argv[0];
-	lcname = name.toLowerCase();
-	for(i=0; i<JS9.plugins.length; i++){
-	    plugin = JS9.plugins[i];
-	    pname = plugin.name;
-	    if( (pname === name) ||
-		(pname.toLowerCase().substr(-lcname.length) === lcname) ){
-		display.displayPlugin(plugin);
-		return;
-	    }
-	}
-	JS9.error("can't find plugin: " + name);
-    }
-});
-
 // call the image constructor as a function
 JS9.mkPublic("NewFitsImage", function(hdu, opts){
     var func, disp;
@@ -17736,30 +17715,6 @@ JS9.mkPublic("WCSToPix", function(ra, dec){
 });
 // backwards compatibility
 JS9.WCS2Pix = JS9.WCSToPix;
-
-//  display a help page (or a general url, actually)
-JS9.mkPublic("DisplayHelp", function(hname){
-    var id, title, url;
-    var opts = JS9.lightOpts.dhtml.textWin;
-    var type = "iframe";
-    var help;
-    // sanity check
-    if( !hname ){
-	return;
-    }
-    title = hname.split("/").reverse()[0];
-    id = "help_" + JS9.uniqueID();
-    // look for known help file
-    help = JS9.helpOpts[hname];
-    if( help ){
-	// help file
-	url = JS9.InstallDir(help.type + "/" + help.url);
-	JS9.lightWin(id, type, url, help.title || title, opts);
-    } else {
-	// its a random url
-	JS9.lightWin(id, type, hname, title, opts);
-    }
-});
 
 // initialize a new shape layer
 // NB: don't be fooled, this is not a standard image routine
@@ -18210,6 +18165,66 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
 	// oops!
 	JS9.error("unknown file type for LoadCatalog: " + typeof file);
     }
+});
+
+// display the named plugin
+JS9.mkPublic("DisplayPlugin", function(name){
+    var i, plugin, pname, lcname;
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    if( display && obj.argv[0] ){
+	name = obj.argv[0];
+	lcname = name.toLowerCase();
+	for(i=0; i<JS9.plugins.length; i++){
+	    plugin = JS9.plugins[i];
+	    pname = plugin.name;
+	    if( (pname === name) ||
+		(pname.toLowerCase().substr(-lcname.length) === lcname) ){
+		display.displayPlugin(plugin);
+		return;
+	    }
+	}
+	JS9.error("can't find plugin: " + name);
+    }
+});
+
+//  display a help page (or a general url, actually)
+JS9.mkPublic("DisplayHelp", function(hname){
+    var id, title, url;
+    var opts = JS9.lightOpts.dhtml.textWin;
+    var type = "iframe";
+    var help;
+    // sanity check
+    if( !hname ){
+	return;
+    }
+    title = hname.split("/").reverse()[0];
+    id = "help_" + JS9.uniqueID();
+    // look for known help file
+    help = JS9.helpOpts[hname];
+    if( help ){
+	// help file
+	url = JS9.InstallDir(help.type + "/" + help.url);
+	JS9.lightWin(id, type, url, help.title || title, opts);
+    } else {
+	// its a random url
+	JS9.lightWin(id, type, hname, title, opts);
+    }
+});
+
+// display a light window
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("LightWindow", function(id, type, content, title, opts){
+    var obj = JS9.parsePublicArgs(arguments);
+    id      = obj.argv[0] || "lightWindow" + JS9.uniqueID();
+    type    = obj.argv[1] || "inline";
+    content = obj.argv[2];
+    if( !content ){
+	JS9.error("no content specified for LightWindow");
+    }
+    title   = obj.argv[3] || "JS9 light window";
+    opts    = obj.argv[4] || JS9.lightOpts.dhtml.textWin;
+    return JS9.lightWin(id, type, content, title, opts);
 });
 
 // end of Public Interface
