@@ -804,7 +804,7 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
 }
 
 void getHeaderToString(fitsfile *fptr, char **cardstr, int *ncard, int *status){
-  fits_convert_hdr2str(fptr, 1, NULL, 0, cardstr, ncard, status);
+  fits_convert_hdr2str(fptr, 0, NULL, 0, cardstr, ncard, status);
 }
 
 

@@ -452,6 +452,7 @@ JS9.Image = function(file, params, func){
     var display;
     var that = this;
     var localOpts=null;
+    var nhist=0, ncomm=0;
     var mksect = function(that, localOpts){
 	var zoom;
 	var arr = [];
@@ -561,12 +562,18 @@ JS9.Image = function(file, params, func){
 	this.parent = localOpts.parent;
 	// convert card string to header
 	if( this.parent.cardstr && this.parent.ncard ){
-	    this.parent.raw = {header: {}};
+	    this.parent.raw = {header: {}, history:[], comments: []};
 	    for(i=0; i<this.parent.ncard; i++){
 		card = this.parent.cardstr.slice(i*80, (i+1)*80);
 		pars = JS9.cardpars(card);
 		if( pars !== undefined ){
-		    this.parent.raw.header[pars[0]] = pars[1];
+		    if( pars[0] === "HISTORY" ){
+			this.parent.raw.header[pars[0]+'__'+nhist++] = pars[1];
+		    } else if( pars[0] === "COMMENT" ){
+			this.parent.raw.header[pars[0]+'__'+ncomm++] = pars[1];
+		    } else {
+			this.parent.raw.header[pars[0]] = pars[1];
+		    }
 		}
 	    }
 	    // initialize LCS for this parent header
@@ -1408,6 +1415,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     var i, s, ui, clen, hdu, pars, card, got, rlen, rmvfile, done;
     var header, x1, y1, bin;
     var oraw, owidth, oheight, obitpix, oltm1_1, owcssys, owcsunits;
+    var nhist=0, ncomm=0;
     opts = opts || {};
     if( $.isArray(obj) || JS9.isTypedArray(obj) || obj instanceof ArrayBuffer ){
 	// flatten if necessary
@@ -1544,7 +1552,13 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	for(i=0; i<clen; i++){
 	    pars = JS9.cardpars(this.raw.card[i]);
 	    if( pars !== undefined ){
-		this.raw.header[pars[0]] = pars[1];
+		if( pars[0] === "HISTORY" ){
+		    this.raw.header[pars[0]+'__'+nhist++] = pars[1];
+		} else if( pars[0] === "COMMENT" ){
+		    this.raw.header[pars[0]+'__'+ncomm++] = pars[1];
+		} else {
+		    this.raw.header[pars[0]] = pars[1];
+		}
 	    }
 	}
     } else if( this.raw.cardstr ){
@@ -1555,7 +1569,13 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    card = this.raw.cardstr.slice(i*80, (i+1)*80);
 	    pars = JS9.cardpars(card);
 	    if( pars !== undefined ){
-		this.raw.header[pars[0]] = pars[1];
+		if( pars[0] === "HISTORY" ){
+		    this.raw.header[pars[0]+'__'+nhist++] = pars[1];
+		} else if( pars[0] === "COMMENT" ){
+		    this.raw.header[pars[0]+'__'+ncomm++] = pars[1];
+		} else {
+		    this.raw.header[pars[0]] = pars[1];
+		}
 	    }
 	}
     } else {
@@ -14212,8 +14232,10 @@ JS9.notNull = function(s) {
 // parse a FITS card and return name and value
 JS9.cardpars = function(card){
     var name, value;
-    if ( card[8] !== "=" ){ return undefined; }
     name = card.slice(0, 8).trim();
+    if( name === "HISTORY" ){ return [name, card.slice(9).trim()]; }
+    if( name === "COMMENT" ){ return [name, card.slice(9).trim()]; }
+    if( card[8] !== "=" ){ return undefined; }
     value = card.slice(10).replace(/\'/g, " ").replace(/\/.*/, "").trim();
     if( value === "T" ){
 	value = true;
@@ -14316,13 +14338,19 @@ JS9.raw2FITS = function(raw, forDisplay){
 		if( key === "END" ){
 		    hasend = true;
 		}
-		val = obj[key];
-		if( val === true ){
-		    val = "T";
-		} else if( val === false ){
-		    val = "F";
+		if( key.match(/HISTORY__[0-9]+/) ){
+		    t += sprintf("HISTORY %s", obj[key]);
+		} else if( key.match(/COMMENT__[0-9]+/) ){
+		    t += sprintf("COMMENT %s", obj[key]);
+		} else {
+		    val = obj[key];
+		    if( val === true ){
+			val = "T";
+		    } else if( val === false ){
+			val = "F";
+		    }
+		    t += sprintf("%-8s%-2s%-70s", key, "=", val);
 		}
-		t += sprintf("%-8s%-2s%-70s", key, "=", val);
 		if( forDisplay ){
 		    t += "\n";
 		}
