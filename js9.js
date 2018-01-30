@@ -2888,23 +2888,28 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     };
     // special case: if opts is "full", display full image
     if( opts === "full" ){
-	if( this.parent ){
+	if( this.parent && this.parent.raw.header.XTENSION !== "BINTABLE" ){
 	    if( this.parent.raw.header.TABDIM1 ){
 		xdim = this.parent.raw.header.TABDIM1;
 	    } else {
 		xdim = this.parent.raw.header.NAXIS1;
 	    }
-	} else {
-	    xdim = this.raw.header.NAXIS1;
-	}
-	if( this.parent ){
 	    if( this.parent.raw.header.TABDIM2 ){
 		ydim = this.parent.raw.header.TABDIM2;
 	    } else {
 		ydim = this.parent.raw.header.NAXIS2;
 	    }
 	} else {
-	    ydim = this.raw.header.NAXIS2;
+	    if( this.raw.header.TABDIM1 ){
+		xdim = this.raw.header.TABDIM1;
+	    } else {
+		xdim = this.raw.header.NAXIS1;
+	    }
+	    if( this.raw.header.TABDIM2 ){
+		ydim = this.raw.header.TABDIM2;
+	    } else {
+		ydim = this.raw.header.NAXIS2;
+	    }
 	}
 	opts = {xdim: xdim, ydim: ydim, xcen: 0, ycen: 0};
     } else if( typeof opts === "string" ){
@@ -14342,9 +14347,9 @@ JS9.raw2FITS = function(raw, forDisplay){
 		    hasend = true;
 		}
 		if( key.match(/HISTORY__[0-9]+/) ){
-		    t += sprintf("HISTORY %s", obj[key]);
+		    t += sprintf("HISTORY %72s", obj[key]);
 		} else if( key.match(/COMMENT__[0-9]+/) ){
-		    t += sprintf("COMMENT %s", obj[key]);
+		    t += sprintf("COMMENT %72s", obj[key]);
 		} else {
 		    val = obj[key];
 		    if( val === true ){
