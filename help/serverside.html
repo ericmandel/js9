@@ -179,13 +179,18 @@ to the server for execution.  See <b>histplot.html</b> for sample syntax.
 <p>
 The <b>rtype</b> property determine how JS9 handles return values:
 <ul>
-<li><b>text:</b> the returned text is displayed in a lightweight window
-<li><b>plot:</b> the returned plot data is plotted
-<li><b>fits:</b> the returned URL to a FITS file is loaded using <b>JS9.Load()</b>
-<li><b>png:</b> the returned URL to a PNG file is loaded using <b>JS9.Load()</b>
+<li><b>alert:</b> call JavaScript alert() function on the returned string
+<li><b>catalog:</b> the returned URL to a catalog file is loaded on the current image
+<li><b>fits:</b> the returned URL to a FITS file is loaded (2nd argument can be a parent file)
 <li><b>none:</b> check for an error return, but otherwise do nothing 
+<li><b>plot:</b> the returned plot data is plotted
+<li><b>png:</b> the returned URL to a PNG file is loaded
+<li><b>regions:</b> the returned URL to a regions file is loaded on the current image
+<li><b>text:</b> the returned text is displayed in a lightweight window
 </ul>
-When text is returned, be aware that file pathnames are often output
+The <b>text</b> and <b>plot</b> returns are the most commonly used types.
+<p>
+NB: when text is returned, be aware that file pathnames are often output
 by programs. For security reasons, you should remove or modify these
 pathnames before returning the text. For example, JS9 funtools
 analysis routines use a sed command like this:

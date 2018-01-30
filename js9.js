@@ -4138,23 +4138,49 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	    case "png":
 		// output is file and possibly parentFile
 		files = robj.stdout.split(/\s+/);
-		// file
-		f = JS9.cleanPath(files[0]);
-		// relative path: add install dir prefix
-		if( f.charAt(0) !== "/" ){
-		    f = JS9.InstallDir(f);
+		if( files && files[0] ){
+		    // file
+		    f = JS9.cleanPath(files[0]);
+		    // relative path: add install dir prefix
+		    if( f.charAt(0) !== "/" ){
+			f = JS9.InstallDir(f);
+		    }
+		    // which is a proxy file (meaning: delete it on close)
+		    xobj = {proxyFile: f};
+		    // look for parentFile (relative to helper, not install)
+		    if( files[1] ){
+			pf = JS9.cleanPath(files[1]);
+			xobj.parentFile = pf;
+		    }
+		    // don't convert this FITS file into another FITS file!
+		    xobj.fits2fits = false;
+		    // load new file
+	            JS9.Load(f, xobj, {display: that.display});
 		}
-		// which is a proxy file (meaning: delete it on close)
-		xobj = {proxyFile: f};
-		// look for parentFile (path relative to helper, not install)
-		if( files[1] ){
-		    pf = JS9.cleanPath(files[1]);
-		    xobj.parentFile = pf;
+		break;
+	    case "regions":
+		// output is region file
+		files = robj.stdout.split(/\s+/);
+		if( files && files[0] ){
+		    f = JS9.cleanPath(files[0]);
+		    // load new region file
+		    obj = {responseType: "text"};
+		    JS9.fetchURL(null, f, obj, function(regions, opts){
+			that.addShapes("regions", regions, opts);
+		    });
 		}
-		// don't convert this FITS file into another FITS file!
-		xobj.fits2fits = false;
-		// load new file
-	        JS9.Load(f, xobj, {display: that.display});
+		break;
+	    case "catalog":
+		// output is catalog file
+		files = robj.stdout.split(/\s+/);
+		if( files && files[0] ){
+		    f = JS9.cleanPath(files[0]);
+		    // load new catalog file
+		    obj = {responseType: "text"};
+		    JS9.fetchURL(null, f, obj, function(catalog, opts){
+			that.loadCatalog(null, catalog, opts);
+		    });
+		}
 		break;
 	    case "none":
 		break;
@@ -17724,7 +17750,6 @@ JS9.mkPublic("NewShapeLayer", function(layer, opts){
 // add a region
 // eslint-disable-next-line no-unused-vars
 JS9.mkPublic("AddRegions", function(region, opts){
-        
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
@@ -17733,7 +17758,6 @@ JS9.mkPublic("AddRegions", function(region, opts){
 	if( !region ){
 	    JS9.error("no region specified for AddRegions");
 	}
-	opts = obj.argv[1];
 	return im.addShapes("regions", region, opts);
     }
     return null;
