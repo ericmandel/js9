@@ -970,6 +970,72 @@ Finally, note that <b>JS9.AddColormap()</b> adds its new colormap to
 all JS9 displays on the given page.
 
 <p>
+<font size="+1"><b><u>Load a colormap file into JS9</u></b></font>
+<p>
+<code><font size="+1">JS9.LoadColormap(filename)</font></code>
+<p>
+where:
+<ul>
+<li><b>filename</b>: input file name or URL
+</ul>
+Load the specified colormap file into the web page. The filename,
+which must be specified, can be a local file (with absolute path or a
+path relative to the displayed web page) or a URL. It should contain a
+JSON representation of a colormap, either in RGB color format or in
+vertex format (see <b>JS9.AddColormap()</b> above):
+<pre>
+    # RGB color format
+    {
+      "name": "purplish",
+      "colors": [
+	[0.196, 0.196, 0.196],
+	[0.475, 0, 0.608],
+	[0, 0, 0.785],
+	[0.373, 0.655, 0.925],
+	[0, 0.596, 0],
+	[0, 0.965, 0],
+	[1, 1, 0],
+	[1, 0.694, 0],
+	[1, 0, 0]
+      ]
+    }
+
+    # vertex format
+    {
+      "name": "aips0",
+      "vertices": [
+	[
+	    [0.203, 0],
+	    [0.236, 0.245],
+	    [0.282, 0.5],
+	    [0.342, 0.706],
+	    [0.411, 0.882],
+	    [0.497, 1]
+	],
+	[
+	    [0.394, 0],
+	    [0.411, 0.196],
+	    [0.464, 0.48],
+	    [0.526, 0.696],
+	    [0.593, 0.882],
+	    [0.673, 1],
+	    [0.94, 1],
+	    [0.94, 0]
+	],
+	[
+	    [0.091, 0],
+	    [0.091, 0.373],
+	    [0.262, 1],
+	    [0.94, 1],
+	    [0.94, 0]
+	]
+      ]
+    }
+</pre>
+As with <b>JS9.AddColormap()</b>, the new colormap will be available
+in all displays.
+
+<p>
 <font size="+1"><b><u>Get RGB Mode</u></b></font>
 <p>
 <code><font size="+1">JS9.GetRGBMode()</font></code>

@@ -15131,15 +15131,17 @@ JS9.dragdropCB = function(id, evt){
 	// ... and load each file in turn
 	for(i=0; i<files.length; i++){
 	    file = files[i];
-	    fname =  file.path || file.name;
-	    if( fname && fname.match(/\.reg$/) ){
+	    fname =  file.path || file.name || "";
+	    if( fname.match(/\.reg$/) ){
 		JS9.LoadRegions(file, {display: opts.display});
-	    } else if( fname && fname.match(/\.cat$/) ){
+	    } else if( fname.match(/\.cat$/) ){
 		JS9.LoadCatalog(null, file, {display: opts.display});
-	    } else if( fname && fname.match(/\.ses$/) ){
+	    } else if( fname.match(/\.ses$/) ){
 		JS9.LoadSession(file, {display: opts.display});
-	    } else if( fname && fname.match(/\.js9ses$/) ){
+	    } else if( fname.match(/\.js9ses$/) ){
 		JS9.LoadSession(file, {display: opts.display});
+	    } else if( fname.match(/\.cmap$/) ){
+		JS9.LoadColormap(file);
 	    } else {
 		JS9.waiting(true, display);
 		opts.refresh = JS9.globalOpts.refreshDragDrop;
@@ -16660,6 +16662,31 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
 	    JS9.error("AddColormap() requires a colormap name and 1 or 3 args");
 	    break;
 	}
+    }
+});
+
+// load a colormap file
+JS9.mkPublic("LoadColormap", function(file){
+    var reader;
+    var obj = JS9.parsePublicArgs(arguments);
+    file = obj.argv[0];
+    // sanity check
+    if( !file ){
+	JS9.error("JS9.LoadColormap: no file specified for colormap load");
+    }
+    // convert blob to string
+    if( typeof file === "object" ){
+	// file reader object
+	reader = new FileReader();
+	reader.onload = function(ev){
+	    JS9.AddColormap(ev.target.result);
+	};
+	reader.readAsText(file);
+    } else if( typeof file === "string" ){
+	JS9.fetchURL(null, file, null, JS9.AddColormap);
+    } else {
+	// oops!
+	JS9.error("unknown file type for LoadColormap: " + typeof file);
     }
 });
 
