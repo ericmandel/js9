@@ -43,6 +43,7 @@ reproj/
 talks/
 tmp/
 ses/
+cmaps/
 /png
 png/
 png-v[0-9]*/
