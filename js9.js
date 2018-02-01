@@ -1625,7 +1625,6 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	} else {
 	    y1 = 0;
 	}
-	bin = hdu.bin || 1;
 	if( header.CRPIX1 !== undefined ){
 	    header.CRPIX1 = (header.CRPIX1 - x1) / bin;
 	}
@@ -1735,13 +1734,15 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     this.object = this.raw.header.OBJECT;
     this.telescope = this.raw.header.TELESCOP;
     this.instrument = this.raw.header.INSTRUME;
-    // set or reset binning properties
-    if( (this.imtab === "table") && hdu.table ){
-	this.binning.bin = hdu.table.bin || 1;
-    } else if( hdu.bin ){
-	this.binning.bin = hdu.bin;
-    } else {
-	this.binning.bin = 1;
+    // reset binning properties, if necessary
+    if( oraw ){
+	if( (this.imtab === "table") && hdu.table ){
+	    this.binning.bin = hdu.table.bin || 1;
+	} else if( hdu.bin ){
+	    this.binning.bin = hdu.bin;
+	} else {
+	    this.binning.bin = 1;
+	}
     }
     // hack: try to figure out obin vs bin for sections
     if( opts.ltm2obin && header.LTM1_1 ){
@@ -9547,7 +9548,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
 	zoom = this.rgb.sect.zoom;
-//	bin = this.binning.bin || 1;
+	// bin = this.binning.bin || 1;
 	bin = 1;
     } else {
 	zoom = 1;
@@ -9883,7 +9884,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	if( this.params.wcssys === "image" ){
 	    bin = 1;
 	} else {
-	    bin = this.binning.bin || 1;
+	    // bin = this.binning.bin || 1;
+	    bin = 1;
 	}
     } else {
 	zoom = 1;
@@ -10243,7 +10245,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
 	zoom = this.rgb.sect.zoom;
-//	bin = this.binning.bin || 1;
+	// bin = this.binning.bin || 1;
 	bin = 1;
     } else {
 	zoom = 1;
