@@ -747,11 +747,14 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   if( *status > 0 ){
     return(NULL);
   }
+  // add bin factor back into haxes to get table dimensions
+  haxes[0] = haxes[0] * bin;
+  haxes[1] = haxes[1] * bin;
   // why truncate to int? otherwise, cfitsio is 0.5 pixels off from js9 ...
   xcen = (int)(amax[0] + amin[0])/2.0;
   ycen = (int)(amax[1] + amin[1])/2.0;
   dim1 = haxes[0];
-  dim2 = haxes[0];
+  dim2 = haxes[1];
   // get limits of extracted section
   if( dims && dims[0] && dims[1] ){
     // read image section

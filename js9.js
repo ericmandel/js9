@@ -6035,7 +6035,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    }
 	}
 	// refresh image using the reprojected file ...
-	topts = $.extend(true, {}, opts || {}, JS9.fits.options);
+	topts = $.extend(true, {}, JS9.fits.options, opts);
 	// ... in a new raw data layer
 	topts.rawid = topts.rawid || "reproject";
 	// save pointer to original wcs image
@@ -13706,7 +13706,7 @@ JS9.cleanupFITSFile = function(fits, mode){
 // taken from fitsy.js
 JS9.handleImageFile = function(file, options, handler){
     var reader = new FileReader();
-    options = $.extend(true, {}, options, JS9.fits.options);
+    options = $.extend(true, {}, JS9.fits.options, options);
     handler = handler || JS9.Load;
     reader.onload = function(ev){
 	var img = new Image();
@@ -16853,7 +16853,7 @@ JS9.mkPublic("Load", function(file, opts){
 	// processing type: img or fits
 	switch(ptype){
 	case "fits":
-	    topts = $.extend(true, {}, opts, JS9.fits.options);
+	    topts = $.extend(true, {}, JS9.fits.options, opts);
 	    try{ JS9.handleFITSFile(file, topts, JS9.NewFitsImage); }
 	    catch(e){ JS9.error("can't process FITS file", e); }
 	    break;
@@ -16888,7 +16888,7 @@ JS9.mkPublic("Load", function(file, opts){
 	    opts.filename = JS9.ANON + JS9.uniqueID();
 	}
 	blob.name = opts.filename;
-	topts = $.extend(true, {}, opts, JS9.fits.options);
+	topts = $.extend(true, {}, JS9.fits.options, opts);
 	try{ JS9.handleFITSFile(blob, topts, JS9.NewFitsImage); }
 	catch(e){ JS9.error("can't process FITS file", e); }
 	return;
