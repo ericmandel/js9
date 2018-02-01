@@ -8013,7 +8013,10 @@ JS9.Helper.prototype.connect = function(type){
 	if( !JS9.globalOpts.helperPort ){
 	    JS9.error("port missing for helper");
 	}
-	this.url += ":" +  JS9.globalOpts.helperPort;
+	// ignore port on url, add our own
+	this.url = this.url.replace(/:[0-9][0-9]*$/, "")
+	    + ":" +  JS9.globalOpts.helperPort;
+	// this is the url of the socket.io.js file
 	this.sockurl  = this.url + "/socket.io/socket.io.js";
 	// make sure helper is running and then connect
 	if( window.isElectron ){
