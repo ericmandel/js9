@@ -9366,40 +9366,20 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     }
     if( nparams.changeable !== undefined ){
 	tf = !nparams.changeable;
-	if( nopts.lockMovementX === undefined ){
-	    nopts.lockMovementX = tf;
-	}
-	if( nopts.lockMovementY === undefined ){
-	    nopts.lockMovementY = tf;
-	}
-	if( nopts.lockRotation === undefined ){
-	    nopts.lockRotation = tf;
-	}
-	if( nopts.lockScalingX === undefined ){
-	    nopts.lockScalingX = tf;
-	}
-	if( nopts.lockScalingY === undefined ){
-	    nopts.lockScalingY = tf;
-	}
-	if( nopts.hasControls === undefined ){
-	    nopts.hasControls = !tf;
-	}
-	if( nopts.hasRotatingPoint === undefined ){
-	    nopts.hasRotatingPoint = !tf;
-	}
-	if( nopts.hasBorders === undefined ){
-	    nopts.hasBorders = !tf;
-	}
+	nopts.lockMovementX = tf;
+	nopts.lockMovementY = tf;
+	nopts.lockRotation = tf;
+	nopts.lockScalingX = tf;
+	nopts.lockScalingY = tf;
+	nopts.hasControls = !tf;
+	nopts.hasRotatingPoint = !tf;
+	nopts.hasBorders = !tf;
     }
     // movable means x and y movement
     if( nparams.movable !== undefined ){
 	tf = !nparams.movable;
-	if( nopts.lockMovementX === undefined ){
-	    nopts.lockMovementX = tf;
-	}
-	if( nopts.lockMovementY === undefined ){
-	    nopts.lockMovementY = tf;
-	}
+	nopts.lockMovementX = tf;
+	nopts.lockMovementY = tf;
     }
     // resizable
     if( nparams.resizable !== undefined ){
@@ -10682,6 +10662,10 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	var pt = anchor.polyparams.point;
 	var points = poly.get('points');
 	var im = dlayer.display.image;
+	// if the region is not changeable, just return
+	if( poly.params.changeable === false ){
+	    return;
+	}
 	// new point for this anchor relative to center
 	// NB: anchor was rotated onto the vertex
 	if( poly.angle ){
@@ -10729,6 +10713,10 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
     };
     // sanity check: don't add anchors twice
     if( obj.params.anchors ){
+	return;
+    }
+    // sanity check: don't add if polyon is not changeable
+    if( obj.params.changeable === false ){
 	return;
     }
     obj.params.anchors = [];
@@ -10784,6 +10772,9 @@ JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
     var i;
     var canvas = dlayer.canvas;
     if( shape && shape.params && shape.params.anchors ){
+	if( shape.params.changeable === false ){
+	    return;
+	}
 	// remove all anchors
 	for(i=0; i<shape.params.anchors.length; i++){
 	    canvas.remove(shape.params.anchors[i]);
@@ -11615,7 +11606,7 @@ JS9.Regions.opts = {
 	    }
 	}
 	if( dblclick ){
-	    if( !target.params.winid ){
+	    if( !target.params.winid && target.params.changeable !== false ){
 		// call this once window is loaded
 		$("#dhtmlwindowholder").arrive("#regionsConfigForm",
                     {onceOnly: true}, function(){
