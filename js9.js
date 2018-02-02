@@ -747,6 +747,7 @@ JS9.Image = function(file, params, func){
 
 // return the image data in a relatively standard format
 JS9.Image.prototype.getImageData = function(dflag){
+    var fdims;
     var data = null;
     var atob64 = function(a){
 	var i;
@@ -771,6 +772,7 @@ JS9.Image.prototype.getImageData = function(dflag){
 	    data = this.raw.data;
 	}
     }
+    fdims = this.fileDimensions();
     return {id: this.id,
 	    file: this.file,
 	    fits: this.fitsFile || "",
@@ -782,6 +784,8 @@ JS9.Image.prototype.getImageData = function(dflag){
 	    bin: this.binning.bin,
 	    header: this.raw.header,
 	    hdus: this.hdus,
+	    fwidth: fdims.xdim,
+	    fheight: fdims.ydim,
 	    dwidth: this.display.width,
 	    dheight: this.display.height,
 	    data: data
@@ -2824,10 +2828,41 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     return this;
 };
 
+// get dimensions of "original" file
+// this is the hackiest routine in the JS9 module
+// why is it so hard???
+JS9.Image.prototype.fileDimensions = function() {
+    var xdim, ydim;
+    if( this.parent && this.parent.raw.header.XTENSION !== "BINTABLE" ){
+	if( this.parent.raw.header.TABDIM1 ){
+	    xdim = this.parent.raw.header.TABDIM1;
+	} else {
+	    xdim = this.parent.raw.header.NAXIS1;
+	}
+	if( this.parent.raw.header.TABDIM2 ){
+	    ydim = this.parent.raw.header.TABDIM2;
+	} else {
+	    ydim = this.parent.raw.header.NAXIS2;
+	}
+    } else {
+	if( this.raw.header.TABDIM1 ){
+	    xdim = this.raw.header.TABDIM1;
+	} else {
+	    xdim = this.raw.header.NAXIS1;
+	}
+	if( this.raw.header.TABDIM2 ){
+	    ydim = this.raw.header.TABDIM2;
+	} else {
+	    ydim = this.raw.header.NAXIS2;
+	}
+    }
+    return {xdim: xdim, ydim: ydim};
+};
+
 // extract and display a section of an image, with table filtering
 JS9.Image.prototype.displaySection = function(opts, func) {
     var that = this;
-    var oproxy, hdu, fits, from, obj, oreg, nim, topts, xdim, ydim;
+    var oproxy, hdu, fits, from, obj, oreg, nim, topts, fdims;
     var arr = [];
     var disp = function(hdu, opts){
 	var tim, iid;
@@ -2889,30 +2924,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     };
     // special case: if opts is "full", display full image
     if( opts === "full" ){
-	if( this.parent && this.parent.raw.header.XTENSION !== "BINTABLE" ){
-	    if( this.parent.raw.header.TABDIM1 ){
-		xdim = this.parent.raw.header.TABDIM1;
-	    } else {
-		xdim = this.parent.raw.header.NAXIS1;
-	    }
-	    if( this.parent.raw.header.TABDIM2 ){
-		ydim = this.parent.raw.header.TABDIM2;
-	    } else {
-		ydim = this.parent.raw.header.NAXIS2;
-	    }
-	} else {
-	    if( this.raw.header.TABDIM1 ){
-		xdim = this.raw.header.TABDIM1;
-	    } else {
-		xdim = this.raw.header.NAXIS1;
-	    }
-	    if( this.raw.header.TABDIM2 ){
-		ydim = this.raw.header.TABDIM2;
-	    } else {
-		ydim = this.raw.header.NAXIS2;
-	    }
-	}
-	opts = {xdim: xdim, ydim: ydim, xcen: 0, ycen: 0};
+	fdims = this.fileDimensions();
+	opts = {xdim: fdims.xdim, ydim: fdims.ydim, xcen: 0, ycen: 0};
     } else if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error("can't parse section opts: " + opts, e); }
