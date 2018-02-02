@@ -1738,15 +1738,13 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     this.object = this.raw.header.OBJECT;
     this.telescope = this.raw.header.TELESCOP;
     this.instrument = this.raw.header.INSTRUME;
-    // reset binning properties, if necessary
-    if( oraw ){
-	if( (this.imtab === "table") && hdu.table ){
-	    this.binning.bin = hdu.table.bin || 1;
-	} else if( hdu.bin ){
-	    this.binning.bin = hdu.bin;
-	} else {
-	    this.binning.bin = 1;
-	}
+    // reset binning properties, as necessary
+    if( (this.imtab === "table") && hdu.table ){
+	this.binning.bin = hdu.table.bin || 1;
+    } else if( hdu.bin ){
+	this.binning.bin = hdu.bin;
+    } else {
+	this.binning.bin = 1;
     }
     // hack: try to figure out obin vs bin for sections
     if( opts.ltm2obin && header.LTM1_1 ){
