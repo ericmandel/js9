@@ -1749,6 +1749,9 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     // hack: try to figure out obin vs bin for sections
     if( opts.ltm2obin && header.LTM1_1 ){
 	this.binning.obin = header.LTM1_1 / oltm1_1;
+    } else if( !oraw ){
+	// otherwise make sure obin matches bin for first load of data
+	this.binning.obin = this.binning.bin;
     }
     // init WCS, if possible
     this.initWCS();
