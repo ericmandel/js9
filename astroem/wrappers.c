@@ -257,7 +257,6 @@ char *wcsinfo(int n){
     ptype = info->wcs->ptype;
     radecsys = info->wcs->radecsys;
   }
-  // convert to 1-indexed image coords
   str = info->str;
   snprintf(str, SZ_LINE-1,
 	   "{\"crval1\": %.14g, \"crval2\": %.14g, \"crpix1\": %.14g, \"crpix2\": %.14g, \"cdelt1\": %.14g, \"cdelt2\": %.14g, \"crot\": %.14g, \"ctype1\": \"%s\", \"ctype2\": \"%s\",  \"ptype\": \"%s\", \"radecsys\": \"%s\"}",
@@ -273,8 +272,8 @@ char *pix2wcsstr(int n, double xpix, double ypix){
   if( info->wcs ){
     str = info->str;
     *str = '\0';
-    /* convert image x,y to ra,dec (convert 1-index to 0-index) */
-    pix2wcst(info->wcs, xpix-1, ypix-1, str, SZ_LINE);
+    /* convert image x,y to ra,dec */
+    pix2wcst(info->wcs, xpix, ypix, str, SZ_LINE);
   }
   return str;
 }
@@ -287,8 +286,7 @@ char *wcs2pixstr(int n, double ra, double dec){
   int offscale;
   if( info->wcs ){
     wcs2pix(info->wcs, ra, dec, &xpix, &ypix, &offscale);
-    // convert to 1-indexed image coords
-    snprintf(str, SZ_LINE-1, "%.3f %.3f", xpix+1, ypix+1);
+    snprintf(str, SZ_LINE-1, "%.3f %.3f", xpix, ypix);
     nowhite(str, info->str);
     return info->str;
   } else {
@@ -396,8 +394,8 @@ char *reg2wcsstr(int n, char *regstr){
       /* these are the coords of the region */
       saves1 = s1;
       if( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) ){
-	/* convert image x,y to ra,dec (convert 1-index to 0-index) */
-	pix2wcs(info->wcs, dval1-1, dval2-1, &rval1, &rval2);
+	/* convert image x,y to ra,dec */
+	pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);
 	if( s ){
 	  snprintf(tbuf, SZ_LINE, "%s(", s);
 	  strncat(str, tbuf, SZ_LINE-1);
@@ -430,8 +428,8 @@ char *reg2wcsstr(int n, char *regstr){
 	} else if( !strcmp(s, "polygon") || !strcmp(s, "line") ){
 	  /* for polygons and lines, convert successive image pos to RA, Dec */
 	  while( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) ){
-	    /* convert image x,y to ra,dec (convert 1-index to 0-index) */
-	    pix2wcs(info->wcs, dval1-1, dval2-1, &rval1, &rval2);
+	    /* convert image x,y to ra,dec */
+	    pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);
 	    /* convert to proper units */
 	    switch(info->wcsunits){
 	    case WCS_DEGREES:
@@ -460,9 +458,9 @@ char *reg2wcsstr(int n, char *regstr){
 	    /* use successive x1,y1,x2,y2 to calculate separation (arcsecs) */
 	    if( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) ){
 	      while(  (dval3=strtod(s1, &s2)) && (dval4=strtod(s2, &s1)) ){
-		/* convert image x,y to ra,dec (convert 1-index to 0-index) */
-		pix2wcs(info->wcs, dval1-1, dval2-1, &rval1, &rval2);
-		pix2wcs(info->wcs, dval3-1, dval4-1, &rval3, &rval4);
+		/* convert image x,y to ra,dec */
+		pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);
+		pix2wcs(info->wcs, dval3, dval4, &rval3, &rval4);
 		/* calculate and output separation between the two points */
 		sep += wcsdist(rval1, rval2, rval3, rval4)*3600.0;
 		/* set up for next separation */
@@ -475,9 +473,9 @@ char *reg2wcsstr(int n, char *regstr){
 	  /* use successive x1,y1,x2,y2 to calculate separation (arcsecs) */
 	  while( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) &&
 		 (dval3=strtod(s1, &s2)) && (dval4=strtod(s2, &s1)) ){
-	    /* convert image x,y to ra,dec (convert 1-index to 0-index) */
-	    pix2wcs(info->wcs, dval1-1, dval2-1, &rval1, &rval2);
-	    pix2wcs(info->wcs, dval3-1, dval4-1, &rval3, &rval4);
+	    /* convert image x,y to ra,dec */
+	    pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);
+	    pix2wcs(info->wcs, dval3, dval4, &rval3, &rval4);
 	    /* calculate and output separation between the two points */
 	    sep = wcsdist(rval1, rval2, rval3, rval4)*3600.0;
 	    if( sep <= 60 ){
