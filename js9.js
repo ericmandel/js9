@@ -10679,7 +10679,7 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	var points = poly.get('points');
 	var im = dlayer.display.image;
 	// if pt was deleted, stop the callback
-	if( !pt ){
+	if( pt === undefined ){
 	    return;
 	}
 	// if the region is not changeable, just return
