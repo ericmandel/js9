@@ -5230,7 +5230,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 		raw = this.raws[i];
 		if( opts === raw.id ){
 		    if( func === "remove" ){
-			if( opts === "raw0" ){
+			if( opts === JS9.RAWID0 ){
 			    JS9.error("can't remove primary (raw0) data layer");
 			}
 			if( raw.hdu && raw.hdu.fits ){
@@ -5455,8 +5455,8 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     } else {
 	opts.bitpix = -32;
     }
-    // use current (and keep using it)
-    opts.oraw = "current0";
+    // use original raw data
+    opts.oraw = JS9.RAWID0;
     // nraw should be a floating point copy of oraw
     opts.alwaysCopy = true;
     // new layer
