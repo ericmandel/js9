@@ -9360,16 +9360,13 @@ JS9.Menubar.init = function(width, height){
 		};
 		var editAnalysis = function(im, obj){
 		    delete tdisp.tmp.editingMenu;
-		    if( !obj.sigma ){
-			obj.sigma = "none";
+		    obj.sigma = obj.sigma || "0";
+		    if( obj.sigma == "none" ){
+			obj.sigma = "0";
 		    }
-		    if( obj.sigma === "none" ){
-			im.params.sigma = obj.sigma;
-			im.rawDataLayer("gaussBlur", "remove");
-		    } else {
-			im.params.sigma = parseFloat(obj.sigma);
-			im.gaussBlurData(im.params.sigma);
-		    }
+		    try{ im.params.sigma = parseFloat(obj.sigma); }
+		    catch(e){ im.params.sigma = 0; }
+		    im.gaussBlurData(im.params.sigma);
 		};
 		var keyAnalysis = function(e){
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
