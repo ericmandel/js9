@@ -10653,6 +10653,8 @@ JS9.Fabric.removePolygonPoint = function(layerName, obj){
 	return;
     }
     pt = obj.polyparams.point;
+    // delete to stop an executing movePoint callback
+    delete obj.polyparams.point;
     // get layer
     layer = this.getShapeLayer(layerName);
     // remove anchors
@@ -10676,6 +10678,10 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	var pt = anchor.polyparams.point;
 	var points = poly.get('points');
 	var im = dlayer.display.image;
+	// if pt was deleted, stop the callback
+	if( !pt ){
+	    return;
+	}
 	// if the region is not changeable, just return
 	if( poly.params.changeable === false ){
 	    return;
