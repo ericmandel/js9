@@ -189,7 +189,7 @@ JS9.globalOpts = {
     sessionTemplates: ".ses,.js9ses",// templates for local session file input
     colormapTemplates: ".cmap",      // templates for local colormap file input
     catalogTemplates: ".cat,.tab",   // templates for local catalog file input
-    controlsMatchRegion: "corner",   // true or "corner" or "border"
+    controlsMatchRegion: false,      // true, false, "corner" or "border"
     newWindowWidth: 530,	     // width of LoadWindow("new")
     newWindowHeight: 625,	     // height of LoadWindow("new")
     debug: 0		             // debug level
@@ -8231,7 +8231,8 @@ JS9.Fabric = {};
 
 // extra fabric elements to save when switching between images
 
-JS9.Fabric.elements = ["cornerSize", "cornerColor", "borderColor",
+JS9.Fabric.elements = ["cornerSize", "cornerColor", "cornerStyle",
+		       "borderColor",
 		       "transparentCorners", "selectionLineWidth",
 		       "centeredScaling", "hasControls", "hasRotatingPoint",
 		       "hasBorders", "params", "pub"];
@@ -8245,7 +8246,8 @@ JS9.Fabric.opts = {
     selectionLineWidth: 2,
     borderColor: "#00EEFF",
     cornerColor: "#00EEFF",
-    cornerSize: fabric.isTouchSupported ? 12 : 8,
+    cornerSize: fabric.isTouchSupported ? 10 : 6,
+    cornerStyle: "circle",
     hasControls: true,
     hasRotatingPoint: true,
     hasBorders: true,
@@ -10756,9 +10758,9 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	    selectable: true,
 	    fill: obj.get("stroke"),
 	    hoverCursor: 'pointer',
-	    width: JS9.Fabric.opts.cornerSize,
-	    height: JS9.Fabric.opts.cornerSize,
-	    padding: 10
+	    width: JS9.Fabric.opts.cornerSize + 2,
+	    height: JS9.Fabric.opts.cornerSize + 2,
+	    padding: 2
 	});
 	// add resize function on move
 	a.on("moving", movePoint);
