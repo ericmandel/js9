@@ -106,7 +106,7 @@ JS9.globalOpts = {
 	  bim: null},
     defcolor: "#00FF00",	// graphics color when all else fails
     pngisfits: true,		// are PNGs really PNG representation files?
-    fits2fits: "size>100",	// convert to repfile? always|never|size>x Mb
+    fits2fits: "never",		// convert to repfile? always|never|size>x Mb
     fits2png: false,		// convert FITS to PNG rep files? true|false
     alerts: true,		// set to false to turn off alerts
     internalValPos: true,	// a fancy info plugin can turns this off
