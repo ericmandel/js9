@@ -150,9 +150,10 @@
 		    form.filter.disabled = false;
 		} else {
 		    // hack: looking for binning value ...
-		    if( im.parentFile && im.raw.header ){
+		    if( im.parentFile && im.raw.header && 
+			im.raw.header.LTM1_1 !== undefined ){
 			binval1 = 1;
-			binval2 = im.raw.header.LTM1_1 || 1;
+			binval2 = im.raw.header.LTM1_1;
 		    } else {
 			binval1 = hdu.bin || 1;
 			binval2 = 1;
