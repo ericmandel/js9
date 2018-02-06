@@ -1716,7 +1716,7 @@ JS9.Menubar.init = function(width, height){
 		var editAnalysis = function(im, obj){
 		    delete tdisp.tmp.editingMenu;
 		    obj.sigma = obj.sigma || "0";
-		    if( obj.sigma == "none" ){
+		    if( obj.sigma === "none" ){
 			obj.sigma = "0";
 		    }
 		    try{ im.params.sigma = parseFloat(obj.sigma); }

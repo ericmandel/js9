@@ -4190,7 +4190,7 @@ module.exports = xhr;
 
     function getBinParams(div, display) {
 	var im, ipos, lpos, form, hdu, bin;
-	var dval1 = 1;
+	var binval1, binval2;
 	if ( display === undefined ) {
 	    div     = this.div;
 	    display = this.display;
@@ -4219,15 +4219,19 @@ module.exports = xhr;
 		    form.ydim.disabled = false;
 		    form.filter.disabled = false;
 		} else {
-		    // incorporate ltm value in bin, if necessary
+		    // hack: looking for binning value ...
 		    if( im.parentFile && im.raw.header ){
-			dval1 = im.raw.header.LTM1_1 || 1;
+			binval1 = 1;
+			binval2 = im.raw.header.LTM1_1 || 1;
+		    } else {
+			binval1 = hdu.bin || 1;
+			binval2 = 1;
 		    }
 		    ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
 		    lpos = im.imageToLogicalPos(ipos);
 		    form.xcen.value = String(Math.floor(lpos.x));
 		    form.ycen.value = String(Math.floor(lpos.y));
-		    bin = Math.floor(((hdu.bin || 1) / dval1) + 0.5);
+		    bin = Math.floor((binval1 / binval2) + 0.5);
 		    form.bin.value = String(bin);
 		    form.xdim.value = String(Math.floor(hdu.naxis1 * bin));
 		    form.ydim.value = String(Math.floor(hdu.naxis2 * bin));
@@ -9361,7 +9365,7 @@ JS9.Menubar.init = function(width, height){
 		var editAnalysis = function(im, obj){
 		    delete tdisp.tmp.editingMenu;
 		    obj.sigma = obj.sigma || "0";
-		    if( obj.sigma == "none" ){
+		    if( obj.sigma === "none" ){
 			obj.sigma = "0";
 		    }
 		    try{ im.params.sigma = parseFloat(obj.sigma); }
