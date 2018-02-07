@@ -2947,7 +2947,41 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     // sensible (required) defaults
     opts.xcen = opts.xcen || 0;
     opts.ycen = opts.ycen || 0;
-    opts.bin  = opts.bin  || 1;
+    // allow binning relative to current, e.g., *2, /4, +1, -3
+    if( typeof opts.bin === "string" ){
+	switch( opts.bin.charAt(0) ){
+	case "*":
+	case "x":
+	case "X":
+	    opts.bin = this.binning.bin * parseInt(opts.bin.slice(1), 10);
+	    break;
+	case "/":
+	    opts.bin = this.binning.bin / parseInt(opts.bin.slice(1), 10);
+	    break;
+	case "+":
+	    opts.bin = this.binning.bin + parseInt(opts.bin.slice(1), 10);
+	    break;
+	case "-":
+	    opts.bin = this.binning.bin - parseInt(opts.bin.slice(1), 10);
+	    break;
+	case "i":
+	case "I":
+	    opts.bin = this.binning.bin * 2;
+	    break;
+	case "o":
+	case "O":
+	    opts.bin = this.binning.bin / 2;
+	    break;
+	default:
+	    if( JS9.isNumber(opts.bin) ){
+		opts.bin = parseInt(opts.bin, 10);
+	    } else {
+		JS9.error("invalid bin for displaySection: " + opts.bin);
+	    }
+	    break;
+	}
+    }
+    opts.bin  = Math.max(1, opts.bin || 1);
     switch(this.imtab){
     case "table":
 	opts.xdim = opts.xdim || JS9.fits.options.table.xdim;

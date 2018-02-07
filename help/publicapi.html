@@ -587,6 +587,17 @@ display the section:
 <li><b>xdim</b>: x dimension of section to extract before binning
 <li><b>ydim</b>: y dimension of section to extract before binning
 <li><b>bin</b>:  bin factor to apply after extracting the section
+<li><b>bin</b>: integer bin factor or bin directive string
+</ul>
+The bin directives are:
+<ul>
+<li><b>x[n]|X[n]|*[n]</b>: multiply the current bin by n (e.g. "x2")
+<li><b>/[n]</b>: divide the current bin by n (e.g. "/2")
+<li><b>+[n]</b>: add n to the current bin (e.g. "+2")
+<li><b>-[n]</b>: subtract n from the current bin (e.g. "-2")
+<li><b>in|In</b>: multiply the current bin by 2
+<li><b>out|Out</b>: divide the current bin by 2
+</ul>
 <li><b>filter</b>: for tables, row/event filter to apply when extracting section
 <li><b>separate</b>: if true, display as a separate image (default is to update the current image)
 </ul>
@@ -1141,10 +1152,10 @@ where:
 </ul>
 The zoom directives are:
 <ul>
-<li><b>x[n]|X[n]</b>: multiply the zoom by n (e.g. "x2")
-<li><b>/[n]</b>: divide the zoom by n (e.g. "/2")
-<li><b>in|In</b>: zoom in by a factor of two
-<li><b>out|Out</b>: zoom out by a factor of two
+<li><b>x[n]|X[n]|*[n]</b>: multiply the current zoom by n (e.g. "x2")
+<li><b>/[n]</b>: divide the current zoom by n (e.g. "/2")
+<li><b>in|In</b>: multiply the current zoom by 2
+<li><b>out|Out</b>: divide the current zoom by 2
 <li><b>toFit|ToFit</b>: zoom to fit image in display
 </ul>
 
