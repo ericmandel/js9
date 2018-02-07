@@ -2277,6 +2277,31 @@ layer, e.g., if you want to save a catalog layer as a region file
 of as regions).
 
 <p>
+<font size="+1"><b><u>Toggle region tags from the current image</u></b></font>
+<p>
+<code><font size="+1">JS9.ToggleRegionTags(which, t1, t2)</font></code>
+<p>
+where:
+<ul>
+<li><b>which</b>: which regions to process (default is "all")
+<li><b>t1</b>: tag#1
+<li><b>t2</b>: tag#2
+</ul>
+While region tags can be changed using the <b>ChangeRegions()</b> routine, a
+bespoke user interface might want to toggle between a <b>source</b>
+region and <b>background</b> region, or between <b>include</b> and
+<b>exclude</b>. This convenience routine will do that. For example:
+<pre>
+    JS9.ToggleRegionTags("selected", "source", "background");
+</pre>
+will change a <b>background</b> region into a <b>source/</b> region
+or vice-versa, depending on the state of the region, while:
+<pre>
+    JS9.ToggleRegionTags("selected", "include", "exclude");
+</pre>
+will toggle between <b>include</b> and <b>exclude</b>.
+
+<p>
 <font size="+1"><b><u>Load regions from a file into the current image</u></b></font>
 <p>
 <code><font size="+1">JS9.LoadRegions(filename)</font></code>

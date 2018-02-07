@@ -11697,6 +11697,7 @@ JS9.Regions.init = function(layerName){
     JS9.Image.prototype.saveRegions = JS9.Regions.saveRegions;
     JS9.Image.prototype.listRegions = JS9.Regions.listRegions;
     JS9.Image.prototype.copyRegions = JS9.Regions.copyRegions;
+    JS9.Image.prototype.toggleRegionTags = JS9.Regions.toggleRegionTags;
     // init the display shape layer
     dlayer = this.display.newShapeLayer(layerName, JS9.Regions.opts);
     // mouse up: list regions, if necessary
@@ -12595,6 +12596,7 @@ JS9.Regions.copyRegions = function(to, which){
 };
 
 // parse a string containing a subset of DS9/Funtools regions
+// call using image context
 JS9.Regions.parseRegions = function(s, opts){
     var regions = [];
     var i, j, k, lines, obj, robj;
@@ -12940,6 +12942,35 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	JS9.error("no saveAs function available to save region file");
     }
     return fname;
+};
+
+// toggle region tags, e.g. source <-> background, include <-> exclude
+// e.g. im.toggleRegionTags("selected", "source", "background");
+// call using image context
+JS9.Regions.toggleRegionTags = function(which, x1, x2){
+    var i, j, s, tags, xnew;
+    s = this.getShapes("regions", which);
+    if( s.length ){
+	for(i=0; i<s.length; i++){
+	    tags = s[i].tags;
+	    xnew = "";
+	    for(j=0; j<tags.length; j++){
+		// switch tags
+		if( tags[j] === x1 ){
+		    tags[j] = x2;
+		    xnew = x2;
+		    break;
+		} else if( tags[j] === x2 ){
+		    tags[j] = x1;
+		    xnew = x1;
+		    break;
+		}
+	    }
+	}
+	if( xnew ){
+	    this.changeShapes("regions", which, {tags: tags});
+	}
+    }
 };
 
 // ---------------------------------------------------------------------
@@ -17865,6 +17896,20 @@ JS9.mkPublic("SaveRegions", function(fname, which, layer){
 	return im.saveRegions(file, wh, la);
     }
     return fname;
+});
+
+// toggle region tags, e.g. source <-> background, include <-> exclude
+// e.g. JS9.ToggleRegionTags("selected", "source", "background");
+JS9.mkPublic("ToggleRegionTags", function(which, x1, x2){
+    var obj = JS9.parsePublicArgs(arguments);
+    var im = JS9.getImage(obj.display);
+    if( im ){
+	which = obj.argv[0];
+	x1 = obj.argv[1];
+	x2 = obj.argv[2];
+	return im.toggleRegionTags(which, x1, x2);
+    }
+    return null;
 });
 
 // load a DS9/funtools regions file

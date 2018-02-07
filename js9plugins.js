@@ -3451,7 +3451,7 @@ JS9.Keyboard.Actions["toggle selected region: source/background"] = function(im,
     if( !im ){
 	return;
     }
-    return JS9.Keyboard.toggleregion(im, "source", "background");
+    return im.toggleRegionTags("selected", "source", "background");
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -3460,7 +3460,7 @@ JS9.Keyboard.Actions["toggle selected region: include/exclude"] = function(im, i
     if( !im ){
 	return;
     }
-    return JS9.Keyboard.toggleregion(im, "include", "exclude");
+    return im.toggleRegionTags("selected", "include", "exclude");
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -3635,33 +3635,6 @@ JS9.Keyboard.editregion= function(im, xnew, xold){
 	    }
 	}
 	im.changeShapes("regions", "selected", {tags: tags});
-    }
-};
-
-JS9.Keyboard.toggleregion = function(im, x1, x2){
-    var i, j, s, tags, xnew;
-    // get selected region
-    s = im.getShapes("regions", "selected");
-    if( s.length ){
-	for(i=0; i<s.length; i++){
-	    tags = s[i].tags;
-	    xnew = "";
-	    for(j=0; j<tags.length; j++){
-		// switch tags
-		if( tags[j] === x1 ){
-		    tags[j] = x2;
-		    xnew = x2;
-		    break;
-		} else if( tags[j] === x2 ){
-		    tags[j] = x1;
-		    xnew = x1;
-		    break;
-		}
-	    }
-	}
-	if( xnew ){
-	    im.changeShapes("regions", "selected", {tags: tags});
-	}
     }
 };
 
