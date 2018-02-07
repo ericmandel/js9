@@ -586,8 +586,9 @@ display the section:
 <li><b>ycen</b>: y center of the section in file (physical) coords
 <li><b>xdim</b>: x dimension of section to extract before binning
 <li><b>ydim</b>: y dimension of section to extract before binning
-<li><b>bin</b>:  bin factor to apply after extracting the section
 <li><b>bin</b>: integer bin factor or bin directive string
+<li><b>filter</b>: for tables, row/event filter to apply when extracting section
+<li><b>separate</b>: if true, display as a separate image (default is to update the current image)
 </ul>
 The bin directives are:
 <ul>
@@ -598,9 +599,8 @@ The bin directives are:
 <li><b>in|In</b>: multiply the current bin by 2
 <li><b>out|Out</b>: divide the current bin by 2
 </ul>
-<li><b>filter</b>: for tables, row/event filter to apply when extracting section
-<li><b>separate</b>: if true, display as a separate image (default is to update the current image)
-</ul>
+
+<p>
 All properties are optional: by default, the routine will extract an
 image from the center of the file, with dimensions and binning
 specified by JS9.globalOpts.table and JS9.globalOpts.image objects.
