@@ -895,6 +895,63 @@ div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
     margin-bottom: 0px;
     border: 1px solid transparent;
 }
+.JS9ToolbarContainer{
+    border-style: solid;
+    border-color: black;
+    border-width: 0px;
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0.0, #ebebeb, color-stop(1.0, #d5d5d5)));
+    background: -webkit-linear-gradient(top, #ebebeb, #d5d5d5);
+    background: -moz-linear-gradient(top, #ebebeb, #d5d5d5);
+    background: -ms-linear-gradient(top, #ebebeb, #d5d5d5);
+    background: -o-linear-gradient(top, #ebebeb, #d5d5d5);
+    background: linear-gradient(top, #ebebeb, #d5d5d5);
+}
+
+.JS9ToolbarDiv{
+    overflow: auto;
+    border-style: solid;
+    border-color: black;
+    border-width: 0px;
+    margin: 0px;
+    padding: 8px 0px 8px 0px;
+}
+
+.JS9ToolbarButtonDiv{
+    margin:  0px 0px 0px 2px;
+    padding: 2px;
+    display: inline;
+}
+
+.JS9ToolbarImageButton{
+    padding: 2px;
+    margin: 0px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.JS9ToolbarImageButton:focus {
+    outline: 2px dotted grey;
+}
+
+.JS9ToolbarButtonButton{
+    vertical-align: middle;
+    background-color: white;
+    border: 1px black solid;
+    color: black;
+    padding: 6px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 10px;
+    margin: 0px;
+    border-radius: 4px;
+}
+
+.JS9ToolbarButtonButton:focus {
+    outline: 2px dotted grey;
+}
+
+
 /*
  *
  * JS9 CSS specifications

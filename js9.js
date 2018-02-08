@@ -7080,6 +7080,16 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	    $("#" + this.id + "Menubar").css("width", nwidth);
 	}
     }
+    // change the toolbar width, unless explicitly told not to
+    if( opts.resizeToolbar === undefined || opts.resizeToolbar ){
+	pinst = this.pluginInstances.JS9Toolbar;
+	if( pinst ){
+	    // clear toolbar
+	    pinst.divjq.html("");
+	    // re-init toolbar for this size
+	    JS9.Toolbar.init.call(pinst, nwidth, null);
+	}
+    }
     // change the colorbar width, unless explicitly told not to
     if( opts.resizeColorbar === undefined || opts.resizeColorbar ){
 	pinst = this.pluginInstances.JS9Colorbar;

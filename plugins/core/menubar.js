@@ -690,6 +690,13 @@ JS9.Menubar.init = function(width, height){
 		} else if( tdisp.image && tdisp.image.params.valpos ){
 		    items.valpos.icon = "sun";
 		}
+		items.toolbar = {name: "display toolbar tooltips"};
+		// disable if we don't have toolbar plugin
+		if( !JS9.hasOwnProperty("Toolbar") ){
+		    items.toolbar.disabled = true;
+		} else if( JS9.GetToolbar("showTooltips") ){
+		    items.toolbar.icon = "sun";
+		}
 		items.inherit = {name: "new image inherits current params"};
 		if( tdisp.image && tdisp.image.params.inherit ){
 		    items.inherit.icon = "sun";
@@ -749,6 +756,10 @@ JS9.Menubar.init = function(width, height){
 				    udisp.clearMessage();
 				}
 			    }
+			    break;
+			case "toolbar":
+			    s = !JS9.GetToolbar("showTooltips");
+			    JS9.SetToolbar("showTooltips", s);
 			    break;
 			case "inherit":
 			    if( uim ){
