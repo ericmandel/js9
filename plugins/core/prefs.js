@@ -297,6 +297,10 @@ JS9.Prefs.displaysSchema = {
 	    "type": "mobject",
 	    "helper": "array of infoBox items to display"
 	},
+	"toolBar": {
+	    "type": "mobject",
+	    "helper": "array of toolbar tools to display"
+	},
 	"mouseActions": {
 	    "type": "mobject",
 	    "helper": "array of mouse actions"
@@ -401,7 +405,8 @@ JS9.Prefs.init = function(){
 			   keyboardActions: JS9.globalOpts.keyboardActions,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
-			   infoBox: JS9.globalOpts.infoBox};
+			   infoBox: JS9.globalOpts.infoBox,
+			   toolBar: JS9.globalOpts.toolBar};
 	    break;
 	default:
 	    break;
@@ -639,13 +644,24 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 		}
 		break;
 	    case "displays":
-	        // set new option value
-	        obj[key] = val;
-		// change option value in this display as well
-		for(j=0; j<JS9.displays.length; j++){
-		    JS9.displays[j][key] = val;
+	        switch(key){
+ 	        case "toolBar":
+	            // set new option value
+	            obj[key] = val;
+		    // re-init toolbar
+		    JS9.SetToolbar("init");
+		    source.data[key] = val;
+		    break;
+		default:
+	            // set new option value
+	            obj[key] = val;
+		    // change option value in this display as well
+		    for(j=0; j<JS9.displays.length; j++){
+			JS9.displays[j][key] = val;
+		    }
+		    source.data[key] = val;
+		    break;
 		}
-		source.data[key] = val;
 		break;
 	    default:
 		// set new option value

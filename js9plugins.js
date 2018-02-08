@@ -7177,6 +7177,10 @@ JS9.Prefs.displaysSchema = {
 	    "type": "mobject",
 	    "helper": "array of infoBox items to display"
 	},
+	"toolBar": {
+	    "type": "mobject",
+	    "helper": "array of toolbar tools to display"
+	},
 	"mouseActions": {
 	    "type": "mobject",
 	    "helper": "array of mouse actions"
@@ -7281,7 +7285,8 @@ JS9.Prefs.init = function(){
 			   keyboardActions: JS9.globalOpts.keyboardActions,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
-			   infoBox: JS9.globalOpts.infoBox};
+			   infoBox: JS9.globalOpts.infoBox,
+			   toolBar: JS9.globalOpts.toolBar};
 	    break;
 	default:
 	    break;
@@ -7519,13 +7524,24 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 		}
 		break;
 	    case "displays":
-	        // set new option value
-	        obj[key] = val;
-		// change option value in this display as well
-		for(j=0; j<JS9.displays.length; j++){
-		    JS9.displays[j][key] = val;
+	        switch(key){
+ 	        case "toolBar":
+	            // set new option value
+	            obj[key] = val;
+		    // re-init toolbar
+		    JS9.SetToolbar("init");
+		    source.data[key] = val;
+		    break;
+		default:
+	            // set new option value
+	            obj[key] = val;
+		    // change option value in this display as well
+		    for(j=0; j<JS9.displays.length; j++){
+			JS9.displays[j][key] = val;
+		    }
+		    source.data[key] = val;
+		    break;
 		}
-		source.data[key] = val;
 		break;
 	    default:
 		// set new option value
@@ -7565,9 +7581,6 @@ JS9.Toolbar.TOOLTIPOFFSETY = 14;
 // parameter that can be changed programmatically
 // tooltips ... but not for mobile devices
 JS9.Toolbar.showTooltips = !JS9.BROWSER[3];
-
-// which tools go into the active toolbar
-JS9.globalOpts.toolbar = ["linear", "log", "annulus", "box", "circle", "ellipse", "line", "polygon", "remove", "incexcl", "srcbkgd", "zoomin", "zoomout", "zoom1"];
 
 JS9.Toolbar.tools = [
   {
@@ -7905,8 +7918,8 @@ JS9.Toolbar.init = function(width, height){
 	.addClass("JS9Tooltip")
 	.appendTo(this.divjq);
     // add tools from globalOpts to the list
-    for(j=0; j<JS9.globalOpts.toolbar.length; j++){
-	name = JS9.globalOpts.toolbar[j];
+    for(j=0; j<JS9.globalOpts.toolBar.length; j++){
+	name = JS9.globalOpts.toolBar[j];
 	for(i=0; i<JS9.Toolbar.tools.length; i++){
 	    tool = JS9.Toolbar.tools[i];
 	    if( name === tool.name ){
@@ -7919,7 +7932,7 @@ JS9.Toolbar.init = function(width, height){
     // add tools not in the globalOpts to the bottom of the list
     for(i=0; i<JS9.Toolbar.tools.length; i++){
 	tool = JS9.Toolbar.tools[i];
-	if( $.inArray(tool.name, JS9.globalOpts.toolbar) < 0 ){
+	if( $.inArray(tool.name, JS9.globalOpts.toolBar) < 0 ){
 	    JS9.Toolbar.addTool.call(this, tool);
 	}
     }

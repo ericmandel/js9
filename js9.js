@@ -183,6 +183,7 @@ JS9.globalOpts = {
     topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "red", "green", "blue"], // toplevel colormaps
     infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos", "impos", "physpos", "value", "regions", "progress"],
     menuBar: ["file", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
+    toolBar: ["linear", "log", "annulus", "box", "circle", "ellipse", "line", "polygon", "remove", "incexcl", "srcbkgd", "zoomin", "zoomout", "zoom1"],
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
     imageTemplates: ".fits,.fts,.png,.jpg,.jpeg", // templates for local images
     regionTemplates: ".reg",         // templates for local region file input

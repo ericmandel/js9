@@ -21,9 +21,6 @@ JS9.Toolbar.TOOLTIPOFFSETY = 14;
 // tooltips ... but not for mobile devices
 JS9.Toolbar.showTooltips = !JS9.BROWSER[3];
 
-// which tools go into the active toolbar
-JS9.globalOpts.toolbar = ["linear", "log", "annulus", "box", "circle", "ellipse", "line", "polygon", "remove", "incexcl", "srcbkgd", "zoomin", "zoomout", "zoom1"];
-
 JS9.Toolbar.tools = [
   {
     "name": "linear",
@@ -360,8 +357,8 @@ JS9.Toolbar.init = function(width, height){
 	.addClass("JS9Tooltip")
 	.appendTo(this.divjq);
     // add tools from globalOpts to the list
-    for(j=0; j<JS9.globalOpts.toolbar.length; j++){
-	name = JS9.globalOpts.toolbar[j];
+    for(j=0; j<JS9.globalOpts.toolBar.length; j++){
+	name = JS9.globalOpts.toolBar[j];
 	for(i=0; i<JS9.Toolbar.tools.length; i++){
 	    tool = JS9.Toolbar.tools[i];
 	    if( name === tool.name ){
@@ -374,7 +371,7 @@ JS9.Toolbar.init = function(width, height){
     // add tools not in the globalOpts to the bottom of the list
     for(i=0; i<JS9.Toolbar.tools.length; i++){
 	tool = JS9.Toolbar.tools[i];
-	if( $.inArray(tool.name, JS9.globalOpts.toolbar) < 0 ){
+	if( $.inArray(tool.name, JS9.globalOpts.toolBar) < 0 ){
 	    JS9.Toolbar.addTool.call(this, tool);
 	}
     }
