@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head> 
+<style type="text/css">
+  .container{
+    padding: 10px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+<h3>JS9 Toolbar</h3>
+<p>
+The JS9 Toolbar plugin displays tool icons that can be clicked to
+execute shortcut functions such as creating a region, zooming in and
+out of the image, or changing the scaling algorithm. Hover the mouse
+over an icon to identify the action that will be performed (non-mobile
+devices only).
+
+<p>
+The display of tools supplied by JS9 is separated into two lists:
+the top-level list consists of the tools that are specified in the
+<b>JS9.globalOpts.toolBar</b> array. Other tools are displayed in a
+lower list, accessible by scrolling down. In this way, your favorite
+tools can be placed at the top-level, but all tools remain available.
+See
+<a href="../../help/preferences.html">Configuring JS9 Site Preferences</a> and
+the <a href="./prefs.html">JS9 User Preferences</a> plugin for discussions
+of how to see preferences such as <b>JS9.globalOpts.toolBar</b> on a site-wide
+and an individual basis, respectively.
+
+<p>
+New tools can be added to the toolbar at any time using the 
+<b>JS9.SetToolbar()</b> public access routine. The text properties
+associated with a tool object are:
+<ul>
+<li><b>name</b>: name of the tool
+<li><b>tip</b>: a tooltip to display when the mouse hovers over the tool
+<li><b>image</b>: url (relative to the install directory) containing a PNG
+image file to display as the tool icon
+<li><b>cmd</b>: name of the JS9 public routine to execute when the tool is
+clicked
+<li><b>args</b>: array of arguments to pass to the JS9 public routine
+</ul>
+Only the name and cmd properties are required. If no image is
+specified, a button labeled by the name value will be used.
+
+<p>
+Examples of tool objects:
+<pre>
+  {
+    "name": "linear",
+    "tip": "linear scale",
+    "image": "images/toolbar/dax_images/lin.png",
+    "cmd": "SetScale",
+    "args": ["linear"]
+  },
+  {
+    "name": "histeq",
+    "tip": "histogram equalization",
+    "cmd": "SetScale",
+    "args": ["histeq"]
+  },
+  {
+    "name": "annulus",
+    "tip": "annulus region",
+    "image": "images/toolbar/dax_images/annulus.png",
+    "cmd": "AddRegions",
+    "args": ["annulus"]
+  },
+  {
+    "name": "remove",
+    "tip": "remove selected region",
+    "image": "images/toolbar/dax_images/erase.png",
+    "cmd": "RemoveRegions",
+    "args": ["selected"]
+  },
+  {
+    "name": "zoom1",
+    "tip": "zoom 1",
+    "image": "images/toolbar/dax_images/mag_one.png",
+    "cmd": "SetZoom",
+    "args": [1]
+  },
+  {
+    "name": "magnifier",
+    "tip": "toggle magnifier display",
+    "image": "images/toolbar/dax_images/mag.png",
+    "cmd": "DisplayPlugin",
+    "args": ["JS9Magnifier"]
+  }
+</pre>
+See the 
+<a href="../../help/publicapi.html">The JS9 Public API</a> for more
+information about this routine.
+
+</div>
+</body>
+</html>
