@@ -11776,6 +11776,7 @@ function reg2section(xreg) {
             break;
 
        	case "polygon":
+        case "line":
 	    var i, xx = 0, yy = 0, minx = 1000000, maxx = 0, miny = 1000000, maxy = 0;
 
 	    for ( i = 0; i < xreg.pts.length; i++ ) {
@@ -11791,20 +11792,25 @@ function reg2section(xreg) {
 	    xreg.x = xx/xreg.pts.length;
 	    xreg.y = yy/xreg.pts.length;
 
-	    xreg.width  = maxx - minx;
-	    xreg.height = maxy - miny;
-
+	    if( xreg.shape === "line" && xreg.pts.length === 2 ){
+                xreg.width = Math.sqrt(((xreg.pts[0].x - xreg.pts[1].x)  *
+                                        (xreg.pts[0].x - xreg.pts[1].x)) +
+                                       ((xreg.pts[0].y - xreg.pts[1].y)  *
+                                        (xreg.pts[0].y - xreg.pts[1].y)));
+                xreg.height = 1;
+	    } else {
+	        xreg.width  = maxx - minx;
+		xreg.height = maxy - miny;
+	    }
 	    break;
 
 	case "text":
 	    xreg.width = 10;
 	    xreg.height = 10;
-	
 	    break;
 
        	default:
-
-	    break;	
+	    break;
     }
 
     return imops.mksection(xreg.x, xreg.y, xreg.width, xreg.height);
