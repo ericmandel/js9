@@ -71,7 +71,7 @@
 
     function histInit() {
 	imexam.fixupDiv(this);
-        $(this.div).append("<p style='padding-left: 20px; margin: 0px'>create, click, move, or resize a region to see histogram<br>");
+        $(this.div).append("<p style='padding: 20px 0px 0px 20px; margin: 0px'>create, click, move, or resize a region to see histogram<br>");
     }
 
     JS9.RegisterPlugin("ImExam", "Histogram", histInit, {

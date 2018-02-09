@@ -89,7 +89,7 @@
 
     function pluginInit() {
 	imexam.fixupDiv(this);
-        $(this.div).append("<p style='padding-left: 20px; margin: 0px'>create, click, move, or resize a region to see 3d plot<br>");
+        $(this.div).append("<p style='padding: 20px 0px 0px 20px; margin: 0px'>create, click, move, or resize a region to see 3d plot<br>");
     }
 
     JS9.RegisterPlugin("ImExam", "3dPlot", pluginInit, {
