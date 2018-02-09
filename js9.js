@@ -161,7 +161,7 @@ JS9.globalOpts = {
 	"downArrow": "move selected region down"
     }, // keyboard actions
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
-    toolbarTooltips: !JS9.BROWSER[3],  // display tooltips (never on mobile)?
+    toolbarTooltips: false,     // display tooltips on toolbar?
     centerDivs: ["JS9Menubar"], // divs that take part in JS9.Display.center()
     pinchWait: 8,		// number of events to wait before testing pinch
     pinchThresh: 6,		// threshold for pinch test
