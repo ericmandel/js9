@@ -951,6 +951,17 @@ div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
     outline: 2px dotted grey;
 }
 
+.JS9ToolbarTooltip{
+    position: relative;
+    z-index: 999;
+    background: #E9E9E9;
+    padding: 9px;
+    border: 1px solid grey;
+    font-family: Helvetica, sans-serif;
+    font-size: 10pt;
+    display: none;
+}
+
 
 /*
  *

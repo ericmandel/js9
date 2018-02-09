@@ -10794,8 +10794,12 @@ JS9.Toolbar.BASE = JS9.Toolbar.CLASS + JS9.Toolbar.NAME;
 JS9.Toolbar.IMAGEWIDTH  = 24;
 JS9.Toolbar.IMAGEHEIGHT = 24;
 JS9.Toolbar.TOOLBARHEIGHT = 30;
-JS9.Toolbar.TOOLTIPOFFSETX = 14;
-JS9.Toolbar.TOOLTIPOFFSETY = 14;
+// hacky offsets to place tooltips nicely
+// why are lighwins different from static elements?
+JS9.Toolbar.TOOLTIPX = 30;
+JS9.Toolbar.TOOLTIPY = 50;
+JS9.Toolbar.TOOLTIPLX = 30;
+JS9.Toolbar.TOOLTIPLY = 82;
 
 JS9.Toolbar.tools = [
   {
@@ -10999,18 +11003,25 @@ JS9.Toolbar.tools = [
 ];
 
 JS9.Toolbar.tooltip = function(tool, tooltip, e){
-    var x, y, offset;
+    var x, y, w, offset;
     if( tooltip ){
 	offset = $(e.currentTarget).position();
-	x = offset.left + JS9.Toolbar.TOOLTIPOFFSETX;
-	y = offset.top - JS9.Toolbar.TOOLTIPOFFSETY;
-	this.tooltip
-	    .html(tooltip)
-	    .css({left: x, top: y, display: "inline-block"});
+	this.tooltip.html(tooltip);
+	if( this.winType === "light" ){
+	    x = offset.left + JS9.Toolbar.TOOLTIPLX;
+	    y = offset.top - JS9.Toolbar.TOOLTIPLY;
+	} else {
+	    x = offset.left + JS9.Toolbar.TOOLTIPX;
+	    y = offset.top - JS9.Toolbar.TOOLTIPY;
+	}
+	w = this.tooltip.width();
+	// desperate attempt to place the tooltip properly
+	if( (x + w + 20) > this.width ){
+	    x = offset.left - w - 20;
+	}
+	this.tooltip.css({left: x, top: y, display: "inline-block"});
     } else {
-	this.tooltip
-	    .html("")
-	    .css({left: -9999, display: "none"});
+	this.tooltip.html("").css({left: -9999, display: "none"});
     }
     return;
 };
@@ -11130,7 +11141,7 @@ JS9.Toolbar.init = function(width, height){
     // add a tooltip
     this.tooltip = $("<div>")
 	.attr("id", "tooltip_" + this.id)
-	.addClass("JS9Tooltip")
+	.addClass("JS9ToolbarTooltip")
 	.appendTo(this.divjq);
     // add tools from globalOpts to the list
     for(j=0; j<JS9.globalOpts.toolBar.length; j++){
