@@ -556,9 +556,13 @@ function reg2section(xreg) {
 
 	    break;
 
-       	default:
+	case "text":
 	    xreg.width = 10;
 	    xreg.height = 10;
+	
+	    break;
+
+       	default:
 
 	    break;	
     }
