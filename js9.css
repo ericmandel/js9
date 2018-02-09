@@ -39,7 +39,7 @@ div.JS9PluginContainer {
     /* background: #E9E9E9; */
     background: transparent;
     position: relative;
-    display: inline-block;
+    display: block;
     outline: none;
 }
 
