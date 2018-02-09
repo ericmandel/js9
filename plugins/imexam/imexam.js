@@ -557,6 +557,10 @@ function reg2section(xreg) {
 	    break;
 
        	default:
+	    xreg.width = 10;
+	    xreg.height = 10;
+
+	    break;	
     }
 
     return imops.mksection(xreg.x, xreg.y, xreg.width, xreg.height);
