@@ -56,7 +56,7 @@
 
     function statInit() {
 	imexam.fixupDiv(this);
-        $(this.div).append("<p style='padding-left: 20px'>create, click, move, or resize a region to see stats<br>");
+        $(this.div).append("<p style='padding-left: 20px; margin: 0px'>create, click, move, or resize a region to see stats<br>");
     }
 
     JS9.RegisterPlugin("ImExam", "RegionStats", statInit, {

@@ -74,7 +74,7 @@
 
     function projInit() {
 	imexam.fixupDiv(this);
-        $(this.div).append("<p style='padding-left: 20px'>create, click, move, or resize a region to see projection<br>");
+        $(this.div).append("<p style='padding-left: 20px; margin: 0px'>create, click, move, or resize a region to see projection<br>");
     }
 
     JS9.RegisterPlugin("ImExam", "XProj", projInit, {

@@ -51,7 +51,7 @@
 
     function pixtInit() {
 	imexam.fixupDiv(this);
-        $(this.div).append("<p style='padding-left: 20px'>create, click, move, or resize a region to see the pixel stack<br>");
+        $(this.div).append("<p style='padding-left: 20px; margin: 0px'>create, click, move, or resize a region to see the pixel stack<br>");
     }
 
     JS9.RegisterPlugin("HxRG", "PixelStack", pixtInit, {
