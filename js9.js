@@ -8559,7 +8559,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	if( dlayer.opts.tooltip ){
 	    dlayer.canvas.on("mouse:over", function(opts){
 		if( dlayer.display.image && opts.target ){
-		    JS9.tooltip(opts.target.left, opts.target.top,
+		    JS9.tooltip(opts.target.left+opts.target.width+2,
+				opts.target.top+opts.target.height+2,
 				dlayer.opts.tooltip,
 				dlayer.display.image,
 				opts.target.pub,
