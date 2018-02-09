@@ -7208,6 +7208,10 @@ JS9.Prefs.displaysSchema = {
 	"fits2png": {
 	    "type": "boolean",
 	    "helper": "convert FITS to PNG rep files?"
+	},
+	"toolbarTooltips": {
+	    "type": "boolean",
+	    "helper": "show tooltips in Toolbar plugin?"
 	}
     }
 };
@@ -7279,6 +7283,7 @@ JS9.Prefs.init = function(){
 	case "displays":
 	    source.data = {fits2png: JS9.globalOpts.fits2png,
 			   fits2fits: JS9.globalOpts.fits2fits,
+			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
 			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,
@@ -7532,6 +7537,13 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 		    JS9.SetToolbar("init");
 		    source.data[key] = val;
 		    break;
+ 	        case "toolbarTooltips":
+	            // set new option value
+	            obj[key] = val;
+		    // re-init toolbar
+		    JS9.SetToolbar("init");
+		    source.data[key] = val;
+		    break;
 		default:
 	            // set new option value
 	            obj[key] = val;
@@ -7578,9 +7590,6 @@ JS9.Toolbar.IMAGEHEIGHT = 24;
 JS9.Toolbar.TOOLBARHEIGHT = 30;
 JS9.Toolbar.TOOLTIPOFFSETX = 14;
 JS9.Toolbar.TOOLTIPOFFSETY = 14;
-// parameter that can be changed programmatically
-// tooltips ... but not for mobile devices
-JS9.Toolbar.showTooltips = !JS9.BROWSER[3];
 
 JS9.Toolbar.tools = [
   {
@@ -7862,7 +7871,7 @@ JS9.Toolbar.addTool = function(tool){
         }
     });
     // tool tip is optional
-    if( JS9.Toolbar.showTooltips ){
+    if( JS9.globalOpts.toolbarTooltips ){
 	btn.on("mouseover", function(e){
 	    JS9.Toolbar.tooltip.call(that, tool, tool.tip||tool.name, e);
 	});
@@ -7946,7 +7955,7 @@ JS9.mkPublic("GetToolbar", function(arg1){
     var obj = JS9.parsePublicArgs(arguments);
     arg1 = obj.argv[0];
     if( arg1 === "showTooltips" ){
-	return JS9.Toolbar.showTooltips;
+	return JS9.globalOpts.toolbarTooltips;
     }
     return JS9.Toolbar.tools;
 });
@@ -7978,7 +7987,7 @@ JS9.mkPublic("SetToolbar", function(arg1, arg2){
 	return;
     } else if( arg1 === "showTooltips" ){
 	// change value
-	JS9.Toolbar.showTooltips = !!arg2;
+	JS9.globalOpts.toolbarTooltips = !!arg2;
 	// reinit toolbar
 	reinit();
 	return;

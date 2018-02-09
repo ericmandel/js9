@@ -17,9 +17,6 @@ JS9.Toolbar.IMAGEHEIGHT = 24;
 JS9.Toolbar.TOOLBARHEIGHT = 30;
 JS9.Toolbar.TOOLTIPOFFSETX = 14;
 JS9.Toolbar.TOOLTIPOFFSETY = 14;
-// parameter that can be changed programmatically
-// tooltips ... but not for mobile devices
-JS9.Toolbar.showTooltips = !JS9.BROWSER[3];
 
 JS9.Toolbar.tools = [
   {
@@ -301,7 +298,7 @@ JS9.Toolbar.addTool = function(tool){
         }
     });
     // tool tip is optional
-    if( JS9.Toolbar.showTooltips ){
+    if( JS9.globalOpts.toolbarTooltips ){
 	btn.on("mouseover", function(e){
 	    JS9.Toolbar.tooltip.call(that, tool, tool.tip||tool.name, e);
 	});
@@ -385,7 +382,7 @@ JS9.mkPublic("GetToolbar", function(arg1){
     var obj = JS9.parsePublicArgs(arguments);
     arg1 = obj.argv[0];
     if( arg1 === "showTooltips" ){
-	return JS9.Toolbar.showTooltips;
+	return JS9.globalOpts.toolbarTooltips;
     }
     return JS9.Toolbar.tools;
 });
@@ -417,7 +414,7 @@ JS9.mkPublic("SetToolbar", function(arg1, arg2){
 	return;
     } else if( arg1 === "showTooltips" ){
 	// change value
-	JS9.Toolbar.showTooltips = !!arg2;
+	JS9.globalOpts.toolbarTooltips = !!arg2;
 	// reinit toolbar
 	reinit();
 	return;
