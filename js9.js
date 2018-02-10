@@ -9814,7 +9814,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 // select a one of more shapes by id or tag and execute a callback
 // call using image context
 JS9.Fabric.selectShapes = function(layerName, id, cb){
-    var i, group, ginfo, sobj, canvas, objects, olen, obj, ocolor;
+    var i, group, ginfo, sobj, canvas, objects, olen, obj, ocolor, tag;
     var that = this;
     // sanity check
     if( !this.layers || !layerName || !this.layers[layerName] ){
@@ -9911,7 +9911,11 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 			// tags
 			if( obj.params.tags){
 			    for(i=0; i<obj.params.tags.length; i++){
-				if( id === obj.params.tags[i] ){
+				tag = obj.params.tags[i];
+				if( id.match(/^\/.*\/$/) &&
+				    tag.match(new RegExp(id.slice(1,-1)))){
+				    cb.call(that, obj, ginfo);
+				} else if( id === tag ){
 				    cb.call(that, obj, ginfo);
 				}
 			    }

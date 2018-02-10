@@ -2222,8 +2222,18 @@ returns:
 </ul>
 <p>
 If the <b>regions</b> argument is not specified, it defaults to "all". You
-can specify "selected" to return information about the selected regions, or
-a tag value to return information about regions having that tag.
+can specify regions using any of the following:
+<ul>
+<li><b>all</b>: all regions
+<li><b>selected</b>: the selected region (or regions in a selected group)
+<li><b>[color]</b>: regions of the specified color
+<li><b>[shape]</b>: regions of the specified shape
+<li><b>[tag]</b>:  regions having the specified tag
+<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
+</ul>
+In this context, a regexp is a string enclosed between slashes.e.g.,
+"/foo[1-4]/" will match regions with tags "foo1", "foo2", "foo3", or "foo4";
+
 <p>
 Each returned region object contains the following properties:
 <ul>
@@ -2279,8 +2289,18 @@ where:
 </ul>
 Change one or more regions. 
 If the <b>regions</b> argument is not specified, it defaults to "all". You
-can specify "selected" to return information about the selected regions, or
-a tag value to change regions having that tag.
+can specify regions using any of the following:
+<ul>
+<li><b>all</b>: all regions
+<li><b>selected</b>: the selected region (or regions in a selected group)
+<li><b>[color]</b>: regions of the specified color
+<li><b>[shape]</b>: regions of the specified shape
+<li><b>[tag]</b>:  regions having the specified tag
+<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
+</ul>
+In this context, a regexp is a string enclosed between "/"
+slashes.e.g. "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
+
 <p>
 The opts object can contain the parameters 
 described in the <b>JS9.AddRegions()</b> section. However, you cannot (yet)
@@ -2294,15 +2314,24 @@ for examples of how to use this routine.
 <p>
 where:
 <ul>
-  <li><b>to</b>: image id to which to copy regions
+<li><b>to</b>: image id to which to copy regions
 <li><b>regions</b>: which regions to copy
 </ul>
 Copy regions to a different image. If <b>to</b> is "all", then the regions are
-copied to all images. If <b>regions</b> is not specified, the default will be
+copied to all images.
+<p>
+If the <b>regions</b> argument is not specified, it defaults to "all". You
+can specify regions using any of the following:
 <ul>
-<li> the selected regions, if any regions are selected
-<li> all regions
+<li><b>all</b>: all regions
+<li><b>selected</b>: the selected region (or regions in a selected group)
+<li><b>[color]</b>: regions of the specified color
+<li><b>[shape]</b>: regions of the specified shape
+<li><b>[tag]</b>:  regions having the specified tag
+<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
 </ul>
+In this context, a regexp is a string enclosed between "/"
+slashes.e.g. "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
 
 <p>
 <font size="+1"><b><u>Remove one or more regions from the region layer</u></b></font>
@@ -2314,8 +2343,17 @@ where:
 <li><b>regions</b>: which regions to remove
 </ul>
 If the <b>regions</b> argument is not specified, it defaults to "all". You
-can specify "selected" to return information about the selected regions, or
-a tag value to remove regions having that tag.
+can specify regions using any of the following:
+<ul>
+<li><b>all</b>: all regions
+<li><b>selected</b>: the selected region (or regions in a selected group)
+<li><b>[color]</b>: regions of the specified color
+<li><b>[shape]</b>: regions of the specified shape
+<li><b>[tag]</b>:  regions having the specified tag
+<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
+</ul>
+In this context, a regexp is a string enclosed between "/"
+slashes.e.g. "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
 
 <p>
 <font size="+1"><b><u>Save regions from the current image to a file</u></b></font>
