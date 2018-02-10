@@ -3430,11 +3430,15 @@ information about colormap formats.
 <p>
 <font size="+1"><b><u>Get toolbar values from the Toolbar plugin</u></b></font>
 <p>
-<code><font size="+1">JS9.GetToolbar(type)</font></code>
+<code><font size="+1">val = JS9.GetToolbar(type)</font></code>
 <p>
 where:
 <ul>
 <li><b>type</b>: type of information to retrieve
+</ul>
+returns:
+<ul>
+<li><b>val</b>: array of tool objects (or an argument-dependent return)
 </ul>
 The <b>JS9.GetToolbar()</b> routine returns global information about the Toolbar
 plugin. If the first argument is "showTooltips", the returned value specifies
