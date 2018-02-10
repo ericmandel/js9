@@ -1189,6 +1189,57 @@ Note that you can use <b>JS9.WCSToPix()</b> and <b>JS9.PixToWCS()</b> to
 convert between image and WCS coordinates.
 
 <p>
+<font size="+1"><b><u>Get an image parameter value</u></b></font>
+<p>
+<code><font size="+1">val = JS9.GetParam(param)</font></code>
+<p>
+where:
+<ul>
+<li><b>param</b>: name of the parameter
+</ul>
+<p>
+returns:
+<ul>
+<li><b>val</b>: value of the parameter
+</ul>
+Return the value of an image parameter. The available parameters are listed
+below in the <b>SetParam()</b> section.
+
+<p>
+<font size="+1"><b><u>Set an image parameter value</u></b></font>
+<p>
+<code><font size="+1">JS9.SetParam(param, value)</font></code>
+<p>
+where:
+<ul>
+<li><b>param</b>: name of the parameter
+<li><b>val</b>: new value of the parameter
+</ul>
+<p>
+returns:
+<ul>
+<li><b>ovalue</b>: the previous value of the parameter
+</ul>
+A number of miscellaneous image parameters are copied from the
+JS9.imageOpts object to each image when it is first loaded. You can
+use the <b>JS9.SetParam()</b> routine to modify these values
+subsequently. The available parameters and their current default
+values are listed below:
+<ul>
+<li><b>exp</b>: 1000, default exp value for scaling
+<li><b>listonchange</b>: false, list regions after a region change?
+<li><b>opacity</b>: 1.0, image display opacity, between 0 and 1
+<li><b>nancolor</b>: "#000000", 6-digit #hex color for NaN values
+<li><b>valpos</b>: true, display value/position?
+<li><b>wcsalign</b>: true, align image using wcs after reproj?
+<li><b>xeqonchange</b>: true, xeq an onchange callback after a region change?
+<li><b>zscalecontrast</b>: 0.25, default zscale value from ds9
+<li><b>zscalesamples</b>: 600,	default zscale value from ds9
+<li><b>zscaleline</b>: 120, default zscale value from ds9
+</ul>
+The routine returns the previous value of the parameter.
+
+<p>
 <font size="+1"><b><u>Get the display coordinates from an event</u></b></font>
 <p>
 <code><font size="+1">dpos = JS9.EventToDisplayPos(evt)</font></code>

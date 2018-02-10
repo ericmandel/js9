@@ -5136,6 +5136,31 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
     return this;
 };
 
+// get an image param value
+JS9.Image.prototype.getParam = function(param){
+    // sanity check
+    if( !param ){
+	return null;
+    }
+    // return value
+    return this.params[param];
+};
+
+// set an image param value
+JS9.Image.prototype.setParam = function(param, value){
+    var ovalue;
+    // sanity check
+    if( !param ){
+	return null;
+    }
+    // save old value
+    ovalue = this.params[param];
+    // set new value
+    this.params[param] = value;
+    // return old value
+    return ovalue;
+};
+
 // re-calculate data min and max (and set scale params, if necessary)
 JS9.Image.prototype.dataminmax = function(dmin, dmax){
     var i, blankval;
@@ -16649,6 +16674,8 @@ JS9.mkPublic("GetPan", "getPan");
 JS9.mkPublic("SetPan", "setPan");
 JS9.mkPublic("GetScale", "getScale");
 JS9.mkPublic("SetScale", "setScale");
+JS9.mkPublic("GetParam", "getParam");
+JS9.mkPublic("SetParam", "setParam");
 JS9.mkPublic("GetValPos", "updateValpos");
 JS9.mkPublic("ImageToDisplayPos", "imageToDisplayPos");
 JS9.mkPublic("DisplayToImagePos", "displayToImagePos");
