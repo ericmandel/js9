@@ -1237,14 +1237,16 @@ values are listed below:
 <li><b>zscalesamples</b>: 600,	default zscale value from ds9
 <li><b>zscaleline</b>: 120, default zscale value from ds9
 </ul>
-The routine returns the previous value of the parameter. For example:
+The routine returns the previous value of the parameter, which can
+be useful when temporarily turning off a function. For example:
 <pre>
     oval = JS9.SetParam("xeqonchange", false);
     .... processing ...
     JS9.SetParam("xeqonchange", oval);
 </pre>
-will temporarily turn off execution of the regions onload callback, and then
-reset it to its old value after processing is complete.
+will temporarily disable execution of the previously defined regions
+onload callback, resetting it to the old value after processing
+is complete.
 
 <p>
 <font size="+1"><b><u>Get the display coordinates from an event</u></b></font>
