@@ -3172,14 +3172,14 @@ or:
 
 <h5 id="JS9.SeparateDisplay">Separate images in this JS9 Display into new displays</h5>
 <p>
-<code class="api">JS9.SeparateDisplay(dname)</code>
+<code class="api">JS9.SeparateDisplay(dname, opts)</code>
 <p>
 where:
 <ul>
 <li><b>dname</b>: name of JS9 display from which the images will be separated
+<li><b>opts</b>: optional object for layout properties
 </ul>
-<p>
-This routine moves each image in this display to a new display. 
+This routine moves each image in the specified display to a new display.
 You can supply a display name or the display object:
 <pre>
     JS9.SeparateDisplay("myJS9");
@@ -3188,10 +3188,33 @@ or:
 <pre>
     JS9.SeparateDisplay({display: "myJS9"});
 </pre>
+You also can supply an opts object containing the layout properties:
+<ul>
+<li><b>layout</b>: can be "horizontal", "vertical", "auto" (default: "auto")
+<li><b>leftMargin</b>: margin in pixels between horizontally separated images
+<li><b>topMargin</b>: margin in pixels between vertically separated images
+</ul>
+The "horizontal" layout will generate a single row of images. The
+"vertical" layout will generate a single column of images.  The "auto"
+option will layout the images in one or more rows. Each row will
+contain one or more images such that at least one-half of the right-most
+image is visible in the browser without the need for horizontal scrolling.
+<p>
+Note that you can supply the opts object without supplying the display
+parameter, e.g:
+<pre>
+    JS9.SeparateDisplay({layout: "horizontal"});
+</pre>
+will separate images from the default "JS9" display in a horizontal layout.
 
 <h5 id="JS9.CenterDisplay">Scroll the JS9 display to the center of the viewport</h5>
 <p>
 <code class="api">JS9.CenterDisplay(dname)</code>
+<p>
+where:
+<ul>
+<li><b>dname</b>: name of JS9 display to center
+</ul>
 <p>
 This routine scrolls this display to the center of the viewport.
 You can supply a display name or the display object:
@@ -3201,6 +3224,25 @@ You can supply a display name or the display object:
 or:
 <pre>
     JS9.CenterDisplay({display: "myJS9"});
+</pre>
+
+<h5 id="JS9.CloseDisplay">Close all images in a display</h5>
+<p>
+<code class="api">JS9.CloseDisplay(dname)</code>
+<p>
+where:
+<ul>
+<li><b>dname</b>: name of JS9 display whose images will be closed
+</ul>
+<p>
+This routine closes all images in the specified display.
+You can supply a display name as the first argument or the display object:
+<pre>
+    JS9.CloseDisplay("myJS9");
+</pre>
+or:
+<pre>
+    JS9.CloseDisplay({display: "myJS9"});
 </pre>
 
 <p><hr>
