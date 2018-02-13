@@ -4805,13 +4805,8 @@ JS9.Menubar.init = function(width, height){
 			    break;
 			case "closeall":
 			    if( udisp ){
-				// reverse loop because we slice JS9.images
-				for(j=JS9.images.length-1; j>=0; j--){
-				    uim = JS9.images[j];
-				    if( uim.display === udisp ){
-					uim.closeImage();
-				    }
-				}
+				// close all images in this display
+				JS9.CloseDisplay(udisp.id);
 			    }
 			    break;
 			case "removeproxy":
@@ -7181,6 +7176,10 @@ JS9.Prefs.displaysSchema = {
 	    "type": "mobject",
 	    "helper": "array of toolbar tools to display"
 	},
+	"separate": {
+	    "type": "mobject",
+	    "helper": "options when separating images"
+	},
 	"mouseActions": {
 	    "type": "mobject",
 	    "helper": "array of mouse actions"
@@ -7291,7 +7290,8 @@ JS9.Prefs.init = function(){
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
 			   infoBox: JS9.globalOpts.infoBox,
-			   toolBar: JS9.globalOpts.toolBar};
+			   toolBar: JS9.globalOpts.toolBar,
+			   separate: JS9.globalOpts.separate};
 	    break;
 	default:
 	    break;
@@ -7542,6 +7542,11 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	            obj[key] = val;
 		    // re-init toolbar
 		    JS9.SetToolbar("init");
+		    source.data[key] = val;
+		    break;
+		case "separate":
+	            // set new option value
+	            obj[key] = val;
 		    source.data[key] = val;
 		    break;
 		default:

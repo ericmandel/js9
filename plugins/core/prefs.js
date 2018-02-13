@@ -301,6 +301,10 @@ JS9.Prefs.displaysSchema = {
 	    "type": "mobject",
 	    "helper": "array of toolbar tools to display"
 	},
+	"separate": {
+	    "type": "mobject",
+	    "helper": "options when separating images"
+	},
 	"mouseActions": {
 	    "type": "mobject",
 	    "helper": "array of mouse actions"
@@ -411,7 +415,8 @@ JS9.Prefs.init = function(){
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
 			   infoBox: JS9.globalOpts.infoBox,
-			   toolBar: JS9.globalOpts.toolBar};
+			   toolBar: JS9.globalOpts.toolBar,
+			   separate: JS9.globalOpts.separate};
 	    break;
 	default:
 	    break;
@@ -662,6 +667,11 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	            obj[key] = val;
 		    // re-init toolbar
 		    JS9.SetToolbar("init");
+		    source.data[key] = val;
+		    break;
+		case "separate":
+	            // set new option value
+	            obj[key] = val;
 		    source.data[key] = val;
 		    break;
 		default:

@@ -385,13 +385,8 @@ JS9.Menubar.init = function(width, height){
 			    break;
 			case "closeall":
 			    if( udisp ){
-				// reverse loop because we slice JS9.images
-				for(j=JS9.images.length-1; j>=0; j--){
-				    uim = JS9.images[j];
-				    if( uim.display === udisp ){
-					uim.closeImage();
-				    }
-				}
+				// close all images in this display
+				JS9.CloseDisplay(udisp.id);
 			    }
 			    break;
 			case "removeproxy":

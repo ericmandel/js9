@@ -186,6 +186,7 @@ JS9.globalOpts = {
     menuBar: ["file", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
     toolBar: ["linear", "log", "annulus", "box", "circle", "ellipse", "line", "polygon", "remove", "incexcl", "srcbkgd", "zoomin", "zoomout", "zoom1"],
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
+    separate: {layout: "auto", leftMargin: 10, topMargin: 10}, // separate a display
     imageTemplates: ".fits,.fts,.png,.jpg,.jpeg", // templates for local images
     regionTemplates: ".reg",         // templates for local region file input
     sessionTemplates: ".ses,.js9ses",// templates for local session file input
@@ -7248,23 +7249,129 @@ JS9.Display.prototype.gather = function(){
 };
 
 // separate images in this display into new displays
-JS9.Display.prototype.separate = function(){
+JS9.Display.prototype.separate = function(opts){
     var that = this;
-    var d1, d2;
+    var d0, d1;
+    var sep = {};
+    var row = 0, col = 0;
     var rexp = /_sep[0-9][0-9]*/;
+    var sepopts = JS9.globalOpts.separate;
+    var menuStr = "<div class='JS9Menubar' id='%sMenubar' data-width=%s></div>";
+    var toolStr = "<div class='JS9Toolbar' id='%sToolbar' data-width=%s></div>";
+    var js9Str = "<div class='JS9' id='%s' data-width=%s data-height=%s></div>";
+    var colorStr = "<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' data-width=%s></div></div>";
+    var winoptsStr = "width=%s,height=%s,top=%s,left=%s,resize=1,scolling=1";
+    var TOP_FUDGE = 7, LEFT_FUDGE = 0;
+    var SIZE_FUDGE = JS9.bugs.webkit_resize ? JS9.RESIZEFUDGE : 0;
+    var DHTML_HEIGHT = 30 + 13; // height of dhtml lightwin extras;
+    var initopts = function(fromID, opts){
+	// sanify check
+	if( !fromID ){
+	    JS9.error("can't init seapration ops: no from id");
+	}
+	sep.layout = opts.layout || JS9.globalOpts.separate.layout || "auto";
+	sep.leftMargin = opts.leftMargin || sepopts.leftMargin || 0;
+	sep.topMargin  = opts.topMargin  || sepopts.topMargin  || 0;
+	switch(sep.layout){
+	case "auto":
+	    col = 1;
+	    row = 0;
+	    break;
+	case "horizontal":
+	    col = 1;
+	    row = 0;
+	    break;
+	case "vertical":
+	    col = 0;
+	    row = 1;
+	    break;
+	default:
+	    col = 1;
+	    row = 0;
+	    break;
+	}
+	sep.topExtra = DHTML_HEIGHT;
+	sep.leftExtra = 0;
+	sep.js9 = $("#"+fromID);
+	sep.menubar = $("#"+fromID+"Menubar");
+	sep.toolbar = $("#"+fromID+"Toolbar");
+	sep.colorbar = $("#"+fromID+"Colorbar");
+	if( sep.js9.length > 0 ){
+	    // hack: height of the dhtml drag handle and status area
+	    sep.width = sep.js9.width();
+	    sep.height = sep.js9.height();
+	    sep.top = sep.js9.offset().top -
+		$(window).scrollTop()  + TOP_FUDGE;
+	    sep.left = sep.js9.offset().left -
+		$(document).scrollLeft() + LEFT_FUDGE;
+	    if( sep.menubar.length > 0 ){
+		sep.height += sep.menubar.height();
+		sep.top -= sep.menubar.height();
+	    }
+	    if( sep.toolbar.length > 0 ){
+		sep.height += sep.toolbar.height();
+		sep.top -= sep.toolbar.height();
+	    }
+	    if( sep.colorbar.length > 0 ){
+		sep.height += sep.colorbar.height();
+		sep.top -= sep.colorbar.height();
+	    }
+	}
+    };
+    var getopts = function(fromID, toID){
+	var html, winopts;
+	if( fromID ){
+	    if( sep.js9.length > 0 ){
+		html = "";
+		if( sep.menubar.length > 0 ){
+		    html += sprintf(menuStr, toID, sep.js9.width());
+		}
+		if( sep.toolbar.length > 0 ){
+		    html += sprintf(toolStr, toID, sep.js9.width());
+		}
+		html += sprintf(js9Str,
+				toID,
+				sep.js9.width()-SIZE_FUDGE,
+				sep.js9.height()-SIZE_FUDGE);
+		if( sep.colorbar.length > 0 ){
+		    html += sprintf(colorStr, toID, sep.js9.width());
+		}
+	    }
+	    if( sep.layout === "auto" ){
+		if( (sep.left + (sep.width * (col+0.5))) > window.innerWidth ){
+		    row++;
+		    col = 0;
+		}
+	    }
+	    winopts = sprintf(winoptsStr,
+	      sep.width,
+	      sep.height,
+	      sep.top  + ((sep.height + sep.topMargin  + sep.topExtra) * row),
+              sep.left + ((sep.width  + sep.leftMargin + sep.leftExtra) * col));
+	    // move to next column
+	    if( sep.layout === "auto" || sep.layout === "horizontal" ){
+		col++;
+	    } else if( sep.layout === "vertical" ){
+		row++;
+	    }
+	}
+	// return info for this  column;
+	return {id: toID, html: html, winopts: winopts};
+    };
     var separateim = function(n){
-	var im;
+	var im, winopts;
 	if( JS9.images.length > n ){
 	    im = JS9.images[n];
 	    // look for images in this display
 	    if( that === im.display ){
 		// leave the first one in place
-		if( d2 === undefined ){
-		    d2 = JS9.images[n].display.id;
+		if( d0 === undefined ){
+		    d0 = JS9.images[n].display.id;
+		    initopts(d0, opts);
 		    separateim(n+1);
 		} else {
 		    // create a new window for this image
-		    d1 = d2.replace(rexp, "") + "_sep" + JS9.uniqueID();
+		    d1 = d0.replace(rexp, "") + "_sep" + JS9.uniqueID();
 		    // code to run when new window exists
 		    $("#dhtmlwindowholder").arrive("#"+d1, {onceOnly: true},
 			function(){
@@ -7272,14 +7379,13 @@ JS9.Display.prototype.separate = function(){
 			    window.setTimeout(function(){
 				// move this image
 				im.moveToDisplay(d1);
-				// next image goes after this one
-				d2 = d1;
 				// process next image
 				separateim(n+1);
 			    }, 0);
 			});
+		    winopts = getopts(d0, d1);
 		    // load new window, code above gets run when window exists
-		    JS9.LoadWindow(null, {id: d1, clone: d2});
+		    JS9.LoadWindow(null, winopts);
 		}
 	    } else {
 		// this image is in a diffferent display, so process next image
@@ -7287,6 +7393,12 @@ JS9.Display.prototype.separate = function(){
 	    }
 	}
     };
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse displaySeparate opts: " + opts, e); }
+    }
+    // opts are optional
+    opts = opts || {};
     //  start separating the images
     separateim(0);
 };
@@ -16730,6 +16842,21 @@ JS9.mkPublic("LookupDisplay", function(id, mustExist){
     return JS9.lookupDisplay(obj.argv[0]||obj.display, obj.argv[1]);
 });
 
+// close all displayed images
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("CloseDisplay", function(disp){
+    var i, im;
+    var obj = JS9.parsePublicArgs(arguments);
+    disp = JS9.lookupDisplay(obj.argv[0] || obj.display);
+    // reverse loop because we slice JS9.images
+    for(i=JS9.images.length-1; i>=0; i--){
+	im = JS9.images[i];
+	if( im.display === disp ){
+	    im.closeImage();
+	}
+    }
+});
+
 // add a colormap to JS9
 JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
     var reader, cobj;
@@ -17070,14 +17197,10 @@ JS9.mkPublic("Load", function(file, opts){
 // create a new instance of JS9 in a window (light or new)
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     var display, id, did, head, body, win, winid, initialURL;
-    var lel, lelm, lelc, lwidth, lheight, ltop, lleft;
+    var lopts = JS9.lightOpts[JS9.LIGHTWIN];
     var idbase = (type || "") + "win";
-    var TOP_FUDGE = 7, LEFT_FUDGE = 5, SIZE_FUDGE = 0;
     var title;
     type = type || "light";
-    if( (JS9.BROWSER[0] === "Chrome") || (JS9.BROWSER[0] === "Safari") ){
-	SIZE_FUDGE = 5;
-    }
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
@@ -17092,7 +17215,6 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     }
     switch(type){
     case "light":
-        winopts = winopts || JS9.lightOpts[JS9.LIGHTWIN].imageWin;
         // use supplied id or make a reasonably unique id for the JS9 elements
 	if( opts.id ){
 	    id = opts.id;
@@ -17100,36 +17222,12 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	} else {
             id = idbase + JS9.uniqueID();
 	}
-	// if we are making a copy of a display, fill in html and winopts
-	if( JS9.globalOpts.cloneNewDisplay && opts.clone ){
-	    lel = $("#"+opts.clone);
-	    lelm = $("#"+opts.clone+"Menubar");
-	    lelc = $("#"+opts.clone+"Colorbar");
-	    if( lel.length > 0 ){
-		lwidth = lel.width();
-		lheight = lel.height();
-		ltop = lel.offset().top - $(window).scrollTop()  + TOP_FUDGE;
-		lleft = lel.offset().left - $(document).scrollLeft() + LEFT_FUDGE + lwidth;
-		html = "";
-		if( lelm.length > 0 ){
-		    html += sprintf("<div class='JS9Menubar' id='%sMenubar' data-width=%s></div>", id, lel.width());
-		    lheight += lelm.height();
-		    ltop -= lelm.height();
-		}
-		html += sprintf("<div class='JS9' id='%s' data-width=%s data-height=%s></div>", id, lel.width()-SIZE_FUDGE, lel.height()-SIZE_FUDGE);
-		if( lelc.length > 0 ){
-		    html += sprintf("<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' data-width=%s></div></div>", id, lel.width());
-		    lheight += lelc.height();
-		    ltop -= lelc.height();
-		}
-	    }
-	    winopts = sprintf("width=%s,height=%s,top=%s,left=%s,resize=1,scolling=1", lwidth, lheight, ltop, lleft);
-	}
         // and a second one for controlling the light window
         did = "d" + id;
         // make up the html with the unique id
-        html = html || sprintf("<hr class='hline0'><div class='JS9Menubar' id='%sMenubar'></div><div class='JS9' id='%s'></div><div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar'></div></div>", id, id, id);
-        winopts = winopts || JS9.lightOpts[JS9.LIGHTWIN].imageWin;
+        html = html || opts.html || sprintf("<hr class='hline0'><div class='JS9Menubar' id='%sMenubar'></div><div class='JS9' id='%s'></div><div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar'></div></div>", id, id, id);
+	// window opts
+        winopts = winopts || opts.winopts || lopts.imageWin;
 	// nice title
 	title = sprintf("JS9 Display"+JS9.IDFMT, id);
         // create the light window
@@ -18125,13 +18223,32 @@ JS9.mkPublic("GatherDisplay", function(){
 });
 
 // separate images in a display into new displays
-JS9.mkPublic("SeparateDisplay", function(){
+JS9.mkPublic("SeparateDisplay", function(did, opts){
+    var display;
     var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.argv[0] || obj.display);
+    switch(obj.argv.length){
+    case 0:
+	did = obj.display;
+	break;
+    case 1:
+	if( typeof obj.argv[0] === "object" ||
+	    (typeof obj.argv[0] === "string" && obj.argv[0].charAt(0) === "{")){
+	    did = obj.display;
+	    opts = obj.argv[0];
+	} else {
+	    did = obj.argv[0] || obj.display;
+	}
+	break;
+    default:
+	did = obj.argv[0] || obj.display;
+	opts = obj.argv[1];
+	break;
+    }
+    display = JS9.lookupDisplay(did);
     if( !display ){
 	JS9.error("invalid display for separate");
     }
-    JS9.Display.prototype.separate.call(display);
+    JS9.Display.prototype.separate.call(display, opts);
     return;
 });
 
