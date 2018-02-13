@@ -15149,6 +15149,11 @@ JS9.mouseOutCB = function(evt){
     }
     // unset focus
     im.display.displayConjq.blur();
+    // if processing a region, update it now
+    // (in case the mouseup happens outside the display)
+    if( im.clickInRegion && im.clickInLayer ){
+	im.updateShapes(im.clickInLayer, "selected", "mouseout");
+    }
     // plugin callbacks
     if( !JS9.specialKey(evt) ){
 	// get canvas position
