@@ -7112,20 +7112,20 @@ JS9.Display.prototype.resize = function(width, height, opts){
     if( opts.resizeToolbar === undefined || opts.resizeToolbar ){
 	pinst = this.pluginInstances.JS9Toolbar;
 	if( pinst ){
-	    // clear toolbar
-	    pinst.divjq.html("");
+	    // set new value for width
+	    pinst.divjq.attr("data-width", String(nwidth)+"px");
 	    // re-init toolbar for this size
-	    JS9.Toolbar.init.call(pinst, nwidth, null);
+	    JS9.Toolbar.init.call(pinst);
 	}
     }
     // change the colorbar width, unless explicitly told not to
     if( opts.resizeColorbar === undefined || opts.resizeColorbar ){
 	pinst = this.pluginInstances.JS9Colorbar;
 	if( pinst ){
-	    // clear colorbar
-	    pinst.divjq.html("");
+	    // set new value for width
+	    pinst.divjq.attr("data-width", String(nwidth)+"px");
 	    // re-init colorbar for this size
-	    JS9.Colorbar.init.call(pinst, nwidth, null);
+	    JS9.Colorbar.init.call(pinst);
 	}
     }
     // change size of shape canvases

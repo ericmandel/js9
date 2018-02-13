@@ -344,7 +344,7 @@ JS9.Toolbar.init = function(width, height){
     }
     this.divjq.css("height", this.height);
     this.height = parseInt(this.divjq.css("height"), 10);
-    // clean main container
+    // clean plugin container
     this.divjq.html("");
     // toolbar container
     this.toolbarContainer = $("<div>")

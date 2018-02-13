@@ -169,6 +169,9 @@ JS9.Colorbar.init = function(width, height){
     if( !this.ticks ){
 	this.ticks = JS9.Colorbar.TICKS;
     }
+    // clean plugin container
+    this.divjq.html("");
+    // colorbar container
     this.colorbarContainer = $("<div>")
 	.addClass(JS9.Colorbar.BASE + "Container")
 	.attr("id", this.id + "Container")
