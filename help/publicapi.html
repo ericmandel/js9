@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <meta charset="UTF-8">
 <title>The JS9 Public API</title>
-<style type="text/css">
+<style>
   .container{
     padding: 10px;
   }
@@ -55,7 +55,7 @@ or
 <a href="#JS9.PixToWCS">JS9.PixtoWCS()</a>:
 <pre>
     var im = JS9.GetImage({display: "myJS9"});
-    for(i=0; i<1000; i++){
+    for(i=0; i&lt;1000; i++){
       x = ...
       y = ... 
       wcs = JS9.PixtoWCS(x, y, {display: im});
@@ -93,12 +93,12 @@ Choose from the following sections:
 <li><a href="#displays">Working with Displays</a>
 <li><a href="#misc">Miscellaneous</a>
 <li><a href="#proto">Prototypes (in development)</a>
+<li><a href="#history">API Change History</a>
 </ul>
 
-<p><hr><p>
-<center><b><font size="+1">
-<a name="load">Loading Images</a>
-</font></b></center>
+<p><hr>
+<p id="load">
+<center><b><font size="+1">Loading Images</font></b></center>
 
 <p id="JS9.Load">
 <font size="+1"><b><u>Load an image into JS9</u></b></font>
@@ -332,10 +332,9 @@ Thus, to check for image load, one can do this in python:
     j.SetZoom(2)
 </pre>
 
-<p><hr><p>
-<center><b><font size="+1">
-<a name="images">Working with Images</a>
-</font></b></center>
+<p><hr>
+<p id="images">
+<center><b><font size="+1">Working with Images</font></b></center>
 <p>
 
 <p id="JS9.GetImage">
@@ -2100,10 +2099,9 @@ the data file need not be in the same location as it was originally: you
 can adjust the path of the data file by editing the <b>file</b> property
 as needed.
 
-<p><hr><p>
-<center><b><font size="+1">
-<a name="regions">Working with Regions</a>
-</font></b></center>
+<p><hr>
+<p id="regions">
+<center><b><font size="+1">Working with Regions</font></b></center>
 <p>
 Spatial regions of interest are a crucial part of astronomical data
 analysis.  The regions layer is a special case of the more generalized
@@ -2466,10 +2464,9 @@ Load the specified regions file into the displayed image. The filename,
 which must be specified, can be a local file (with absolute path or a
 path relative to the displayed web page) or a URL.
 
-<p><hr><p>
-<center><b><font size="+1">
-<a name="shapes">Working with Shape Layers</a>
-</font></b></center>
+<p><hr>
+<p id="shapes">
+<center><b><font size="+1">Working with Shape Layers</font></b></center>
 <p>
 JS9 supports individual layers for drawing 2D graphics. The regions
 layer is a special case of a shape layer, created automatically by
@@ -2947,10 +2944,9 @@ with the current active layer will be saved. In either case, the
 layer to save must actually be a catalog created from a tab-delimited
 file (or URL) of catalog objects (not, for example, the regions layer).
 
-<p><hr><p>
-<center><b><font size="+1">
-<a name="gestures">Mouse/Touch Gestures</a>
-</font></b></center>
+<p><hr>
+<p id="gestures">
+<center><b><font size="+1">Mouse/Touch Gestures</font></b></center>
 <p>
 JS9 supports the following configurable mouse and touch actions:
 <ul>
@@ -3027,15 +3023,13 @@ and/or JS9.globalOpts.touchActions arrays to make it active immediately:
     JS9.globalOpts.mouseActions[1] = "all contrast/bias";
     JS9.globalOpts.touchActions[1] = "all contrast/bias";
 </pre>
-</ul>
 Here, we have replaced the one-button mouse move and two-button touch
 move actions (whose defaults are to "change contrast/bias") with our
 new action.
 
-<p><hr><p>
-<center><b><font size="+1">
-<a name="server">Server-side Analysis</a>
-</font></b></center>
+<p><hr>
+<p id="server">
+<center><b><font size="+1">Server-side Analysis</font></b></center>
 <p>
 
 <p id="JS9.RunAnalysis">
@@ -3124,10 +3118,9 @@ for
 <a href="#JS9.RunAnalysis"><b>JS9.RunAnalysis()</b></a>
 above.
 
-<p><hr><p>
-<center><b><font size="+1">
-<a name="displays">Working with Displays</a>
-</font></b></center>
+<p><hr>
+<p id="displays">
+<center><b><font size="+1">Working with Displays</font></b></center>
 <p>
 
 <p id="JS9.LookupDisplay">
@@ -3280,10 +3273,9 @@ or:
     JS9.CenterDisplay({display: "myJS9"});
 </pre>
 
-<p><hr><p>
-<center><b><font size="+1">
-<a name="misc">Miscellaneous</a>
-</font></b></center>
+<p><hr>
+<p id="misc">
+<center><b><font size="+1">Miscellaneous</font></b></center>
 <p>
 
 <p id="JS9.Print">
@@ -3758,9 +3750,8 @@ In you find you need to call this routine in order make your in-page
 plugins display properly, please let us know the circumstances.
 
 <p><hr>
-<center><b><font size="+1">
-<a name="proto">Prototype Routines (not ready for prime time)</a>
-</font></b></center>
+<p id="proto">
+<center><b><font size="+1">Prototype Routines (not ready for prime time)</font></b></center>
 <p>
 NB: The routines in this section are prototypes and therefore are
 subject to change. Feel free to contact us to discuss your needs so
@@ -3853,10 +3844,9 @@ object. Please contact us if you want to work with auxiliary files, so
 that we can continue to think about what is required for their support.
 
 
-<p><hr><p>
-<center><b><font size="+1">
-<a name="proto">API Change History</a>
-</font></b></center>
+<p><hr>
+<p id="history">
+<center><b><font size="+1">API Change History</font></b></center>
 <p>
 The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.
@@ -3906,7 +3896,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: February 12, 2018</h5>
+<h5>Last updated: February 13, 2018</h5>
 </div>
 
 </body>
