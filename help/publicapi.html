@@ -19,6 +19,10 @@
     font-size: larger;
     text-decoration: underline;
   }
+
+  code.api {
+    font-size: larger;
+  }
 </style>
 </head>
 <body>
@@ -114,7 +118,7 @@ Choose from the following sections:
 
 <h5 id="JS9.Load">Load an image into JS9</h5>
 <p> 
-<code><font size="+1">JS9.Load(url, opts)</font></code>
+<code class="api">JS9.Load(url, opts)</code>
 <p>
 where:
 <ul>
@@ -165,7 +169,7 @@ how to use this routine.
 
 <h5 id="JS9.LoadWindow">Load an image into a light window or a new (separate) window</h5>
 <p>
-<code><font size="+1">JS9.LoadWindow(url, opts, type, html, winopts)</font></code>
+<code class="api">JS9.LoadWindow(url, opts, type, html, winopts)</code>
 <p>
 where:
 <ul>
@@ -215,7 +219,7 @@ See js9create.html for examples of how to use this routine.
 
 <h5 id="JS9.LoadProxy">Load an image URL into JS9 using a proxy server</h5>
 <p> 
-<code><font size="+1">JS9.LoadProxy(url, opts)</font></code>
+<code class="api">JS9.LoadProxy(url, opts)</code>
 <p>
 where:
 <ul>
@@ -289,7 +293,7 @@ can be used to view images from arbitrary URLs.
 
 <h5 id="JS9.Preload">Load one or more images when the web page is ready</h5>
 <p>
-<code><font size="+1">JS9.Preload(url1, opts1, url2, opts2, ... url2, optsn)</font></code>
+<code class="api">JS9.Preload(url1, opts1, url2, opts2, ... url2, optsn)</code>
 <p>
 where:
 <ul>
@@ -308,7 +312,7 @@ generally is called using an onload routine tied to the web page body.
   
 <h5 id="JS9.GetLoadStatus">Get Load Status</h5>
 <p> 
-<code><font size="+1">status = JS9.GetLoadStatus(id)</font></code>
+<code class="api">status = JS9.GetLoadStatus(id)</code>
 <p>
 where:
 <ul>
@@ -344,7 +348,7 @@ Thus, to check for image load, one can do this in python:
 
 <h5 id="JS9.GetImage">Get image handle for the current image</h5>
 <p>
-<code><font size="+1">im = JS9.GetImage()</font></code>
+<code class="api">im = JS9.GetImage()</code>
 <p>
 returns:
 <ul>
@@ -359,7 +363,7 @@ determine the current image for each call.
 
 <h5 id="JS9.LookupImage">Lookup an image by id</h5>
 <p>
-<code><font size="+1">im = JS9.LookupImage(id)</font></code>
+<code class="api">im = JS9.LookupImage(id)</code>
 <p>
 where:
 <ul>
@@ -393,7 +397,7 @@ you can close foo2.fits this way:
 
 <h5 id="JS9.GetImageData">Get image data and auxiliary info for the specified image</h5>
 <p>
-<code><font size="+1">imdata = JS9.GetImageData(dflag)</font></code>
+<code class="api">imdata = JS9.GetImageData(dflag)</code>
 <p>
 where:
 <ul>
@@ -475,7 +479,7 @@ by convention, x.0, y.0 is the middle of the pixel.
 
 <h5 id="JS9.GetDisplayData">Get image data for all images loaded into the specified display</h5>
 <p>
-<code><font size="+1">imarr = JS9.GetDisplayData()</font></code>
+<code class="api">imarr = JS9.GetDisplayData()</code>
 <p>
 returns:
 <ul>
@@ -491,7 +495,7 @@ with the display, not just the current image.
 
 <h5 id="JS9.DisplayImage">Display an image</h5>
 <p>
-<code><font size="+1">JS9.DisplayImage(step)</font></code>
+<code class="api">JS9.DisplayImage(step)</code>
 <p>
 where:
 <ul>
@@ -507,7 +511,7 @@ explicitly changed parameter(s) used in a prior step.
 
 <h5 id="JS9.RefreshImage">Re-read the image data and re-display</h5>
 <p>
-<code><font size="+1">JS9.RefreshImage(input, func)</font></code>
+<code class="api">JS9.RefreshImage(input, func)</code>
 <p>
 where:
 <ul>
@@ -575,7 +579,7 @@ display.
 
 <h5 id="JS9.DisplaySection">Extract and display a section of a FITS file</h5>
 <p>
-<code><font size="+1">JS9.DisplaySection(opts)</font></code>
+<code class="api">JS9.DisplaySection(opts)</code>
 <p>
 where:
 <ul>
@@ -667,7 +671,7 @@ conventions, which are documented
 
 <h5 id="JS9.DisplayExtension">Display an extension from a multi-extension FITS file</h5>
 <p>
-<code><font size="+1">JS9.DisplayExtension(extid, opts)</font></code>
+<code class="api">JS9.DisplayExtension(extid, opts)</code>
 <p>
 where:
 <ul>
@@ -681,7 +685,7 @@ for information about HDUs and multi-extension FITS).
 
 <h5 id="JS9.DisplaySlice">Display a slice of a FITS data cube</h5>
 <p>
-<code><font size="+1">JS9.DisplaySlice(slice, opts)</font></code>
+<code class="api">JS9.DisplaySlice(slice, opts)</code>
 <p>
 where:
 <ul>
@@ -726,7 +730,7 @@ appended.
 
 <h5 id="JS9.BlendImage">Blend the image in an image stack using W3C composite/blend modes</h5>
 <p>
-<code><font size="+1">JS9.BlendImage(blendMode, opacity)</font></code>
+<code class="api">JS9.BlendImage(blendMode, opacity)</code>
 <p>
 Calling sequences:
 <pre>
@@ -832,7 +836,7 @@ Other actions will be added as we gain experience with blending operations
 
 <h5 id="JS9.BlendDisplay">Set the global image blend more for the specified display</h5>
 <p>
-<code><font size="+1">mode = JS9.BlendDisplay(true|false)</font></code>
+<code class="api">mode = JS9.BlendDisplay(true|false)</code>
 <p>
 returns:
 <ul>
@@ -843,7 +847,7 @@ display. If no argument is specified, it returns the current blend mode.
 
 <h5 id="JS9.CloseImage">Clear the image from the display and mark resources for release</h5>
 <p>
-<code><font size="+1">JS9.CloseImage()</font></code>
+<code class="api">JS9.CloseImage()</code>
 <p>
 Each loaded image claims a non-trivial amount of memory from a finite
 amount of browser heap space. For example, the default 32-bit version
@@ -860,7 +864,7 @@ go away ...
 
 <h5 id="JS9.GetColormap">Get the image colormap</h5>
 <p>
-<code><font size="+1">cmap = JS9.GetColormap()</font></code>
+<code class="api">cmap = JS9.GetColormap()</code>
 <p>
 returns:
 <ul>
@@ -875,7 +879,7 @@ The returned cmap object will contain the following properties:
 
 <h5 id="JS9.SetColormap">Set the image colormap</h5>
 <p>
-<code><font size="+1">JS9.SetColormap(colormap, [contrast, bias])</font></code>
+<code class="api">JS9.SetColormap(colormap, [contrast, bias])</code>
 <p>
 where:
 <ul>
@@ -889,7 +893,7 @@ arguments.
 
 <h5 id="JS9.SaveColormap">Save current colormap definition</h5>
 <p>
-<code><font size="+1">JS9.SaveColormap(filename)</font></code>
+<code class="api">JS9.SaveColormap(filename)</code>
 <p>
 where:
 <ul>
@@ -907,7 +911,7 @@ you have set up for downloads.
 
 <h5 id="JS9.AddColormap">Add a colormap to JS9</h5>
 <p>
-<code><font size="+1">JS9.AddColormap(name, aa|rr,gg,bb|obj|json)</font></code>
+<code class="api">JS9.AddColormap(name, aa|rr,gg,bb|obj|json)</code>
 <p>
 where:
 <ul>
@@ -984,7 +988,7 @@ all JS9 displays on the given page.
 
 <h5 id="JS9.LoadColormap">Load a colormap file into JS9</h5>
 <p>
-<code><font size="+1">JS9.LoadColormap(filename)</font></code>
+<code class="api">JS9.LoadColormap(filename)</code>
 <p>
 where:
 <ul>
@@ -1055,7 +1059,7 @@ the new colormap will be available in all displays.
 
 <h5 id="JS9.GetRGBMode">Get RGB Mode</h5>
 <p>
-<code><font size="+1">JS9.GetRGBMode()</font></code>
+<code class="api">JS9.GetRGBMode()</code>
 <p>
 returns:
 <ul>
@@ -1071,7 +1075,7 @@ The returned object will contain the following properties:
 
 <h5 id="JS9.SetRGBMode">Set RGB Mode</h5>
 <p>
-<code><font size="+1">JS9.SetRGBMode(mode, [imobj])</font></code>
+<code class="api">JS9.SetRGBMode(mode, [imobj])</code>
 <p>
 where:
 <ul>
@@ -1104,7 +1108,7 @@ If no arguments are specified, the current RGB mode is toggled;
 
 <h5 id="JS9.GetScale">Get the image scale</h5>
 <p>
-<code><font size="+1">scale = JS9.GetScale()</font></code>
+<code class="api">scale = JS9.GetScale()</code>
 <p>
 returns:
 <ul>
@@ -1119,7 +1123,7 @@ The returned scale object will contain the following properties:
 
 <h5 id="JS9.SetScale">Set the image scale</h5>
 <p>
-<code><font size="+1">JS9.SetScale(scale, smin, smax)</font></code>
+<code class="api">JS9.SetScale(scale, smin, smax)</code>
 <p>
 where:
 <ul>
@@ -1133,7 +1137,7 @@ or "zmax" is specified, any supplied smin and smax values are ignored.)
 
 <h5 id="JS9.GetZoom">Get the image zoom factor</h5>
 <p>
-<code><font size="+1">zoom = JS9.GetZoom()</font></code>
+<code class="api">zoom = JS9.GetZoom()</code>
 <p>
 returns:
 <ul>
@@ -1143,7 +1147,7 @@ Get the zoom factor.
 
 <h5 id="JS9.SetZoom">Set the image zoom factor</h5>
 <p>
-<code><font size="+1">JS9.SetZoom(zoom)</font></code>
+<code class="api">JS9.SetZoom(zoom)</code>
 <p>
 where:
 <ul>
@@ -1160,7 +1164,7 @@ The zoom directives are:
 
 <h5 id="JS9.GetPan">Get the image pan position</h5>
 <p>
-<code><font size="+1">ipos = JS9.GetPan()</font></code>
+<code class="api">ipos = JS9.GetPan()</code>
 <p>
 returns:
 <ul>
@@ -1174,7 +1178,7 @@ The returned ipos object will contain the following properties:
 
 <h5 id="JS9.SetPan">Set the image pan position</h5>
 <p>
-<code><font size="+1">JS9.SetPan(x, y)</font></code>
+<code class="api">JS9.SetPan(x, y)</code>
 <p>
 where:
 <ul>
@@ -1193,7 +1197,7 @@ to convert between image and WCS coordinates.
 
 <h5 id="JS9.GetParam">Get an image parameter value</h5>
 <p>
-<code><font size="+1">val = JS9.GetParam(param)</font></code>
+<code class="api">val = JS9.GetParam(param)</code>
 <p>
 where:
 <ul>
@@ -1214,7 +1218,7 @@ section.
 
 <h5 id="JS9.SetParam">Set an image parameter value</h5>
 <p>
-<code><font size="+1">ovalue = JS9.SetParam(param, value)</font></code>
+<code class="api">ovalue = JS9.SetParam(param, value)</code>
 <p>
 where:
 <ul>
@@ -1256,7 +1260,7 @@ is complete.
 
 <h5 id="JS9.EventToDisplayPos">Get the display coordinates from an event</h5>
 <p>
-<code><font size="+1">dpos = JS9.EventToDisplayPos(evt)</font></code>
+<code class="api">dpos = JS9.EventToDisplayPos(evt)</code>
 <p>
 where:
 <ul>
@@ -1273,7 +1277,7 @@ image position (see below).
 
 <h5 id="JS9.DIsplayToImagePos">Get the image coordinates from the display coordinates</h5>
 <p>
-<code><font size="+1">ipos = JS9.DisplayToImagePos(dpos)</font></code>
+<code class="api">ipos = JS9.DisplayToImagePos(dpos)</code>
 <p>
 where:
 <ul>
@@ -1290,7 +1294,7 @@ display coordinate are 0-indexed.
 
 <h5 id="JS9.ImageToDisplayPos">Get the display coordinates from the image coordinates</h5>
 <p>
-<code><font size="+1">dpos = JS9.ImageToDisplayPos(ipos)</font></code>
+<code class="api">dpos = JS9.ImageToDisplayPos(ipos)</code>
 <p>
 where:
 <ul>
@@ -1308,7 +1312,7 @@ display coordinate are 0-indexed.
 
 <h5 id="JS9.LogicalToImagePos">Get the image coordinates from the logical coordinates</h5>
 <p>
-<code><font size="+1">ipos = JS9.LogicalToImagePos(lpos, lcs)</font></code>
+<code class="api">ipos = JS9.LogicalToImagePos(lpos, lcs)</code>
 <p>
 where:
 <ul>
@@ -1332,7 +1336,7 @@ coordinate system (assuming the appropriate keywords have been defined).
 
 <h5 id="JS9.ImageToLogicalPos">Get the logical coordinates from the image coordinates</h5>
 <p>
-<code><font size="+1">lpos = JS9.ImageToLogicalPos(ipos, lcs)</font></code>
+<code class="api">lpos = JS9.ImageToLogicalPos(ipos, lcs)</code>
 <p>
 where:
 <ul>
@@ -1355,7 +1359,7 @@ coordinate system (assuming the appropriate keywords have been defined).
 
 <h5 id="JS9.GetValPos">Get value/position information</h5>
 <p>
-<code><font size="+1">valpos = JS9.GetValPos(ipos, display)</font></code>
+<code class="api">valpos = JS9.GetValPos(ipos, display)</code>
 <p>
 where:
 <ul>
@@ -1389,7 +1393,7 @@ or "physical") for the above px, py values
 
 <h5 id="JS9.SetValPos">Set the value/position display mode</h5>
 <p>
-<code><font size="+1">JS9.SetValPos(mode)</font></code>
+<code class="api">JS9.SetValPos(mode)</code>
 <p>
 where:
 <ul>
@@ -1399,7 +1403,7 @@ Set the display mode of the value/position display for the specified image.
 
 <h5 id="JS9.GetImageInherit">Get the image inherit mode</h5>
 <p>
-<code><font size="+1">inherit = JS9.GetImageInherit()</font></code>
+<code class="api">inherit = JS9.GetImageInherit()</code>
 <p>
 returns:
 <ul>
@@ -1412,7 +1416,7 @@ from the default JS9.imageOpts object.
 
 <h5 id="JS9.SetImageInherit">Set the image inherit mode</h5>
 <p>
-<code><font size="+1">JS9.SetImageInherit(mode)</font></code>
+<code class="api">JS9.SetImageInherit(mode)</code>
 <p>
 where:
 <ul>
@@ -1425,7 +1429,7 @@ from the default JS9.imageOpts object.
 
 <h5 id="JS9.GetWCS">Get information about the current WCS</h5>
 <p>
-<code><font size="+1">wcsobj = JS9.GetWCS()</font></code>
+<code class="api">wcsobj = JS9.GetWCS()</code>
 <p>
 returns:
 <ul>
@@ -1448,7 +1452,7 @@ with this WCS, if present
 
 <h5 id="JS9.SetWCS">Set the current WCS</h5>
 <p>
-<code><font size="+1">JS9.SetWCS(which)</font></code>
+<code class="api">JS9.SetWCS(which)</code>
 <p>
 where:
 <ul>
@@ -1472,7 +1476,7 @@ If no argument is supplied, the default WCS is set up.
 
 <h5 id="JS9.GetWCSUnits">Get the current WCS units</h5>
 <p>
-<code><font size="+1">unitsstr = JS9.GetWCSUnits()</font></code>
+<code class="api">unitsstr = JS9.GetWCSUnits()</code>
 <p>
 returns:
 <ul>
@@ -1482,7 +1486,7 @@ Get the current WCS units.
 
 <h5 id="JS9>SetWCSUnits">Set the current WCS units</h5>
 <p>
-<code><font size="+1">JS9.SetWCSUnits(unitsstr)</font></code>
+<code class="api">JS9.SetWCSUnits(unitsstr)</code>
 <p>
 where:
 <ul>
@@ -1492,7 +1496,7 @@ Set the current WCS units.
 
 <h5 id="JS9.GetWCSSys">Get the current World Coordinate System</h5>
 <p>
-<code><font size="+1">sysstr = JS9.GetWCSSys()</font></code>
+<code class="api">sysstr = JS9.GetWCSSys()</code>
 <p>
 returns:
 <ul>
@@ -1503,7 +1507,7 @@ Get current WCS system.
 
 <h5 id="JS9.SetWCSSys">Set the current World Coordinate System</h5>
 <p>
-<code><font size="+1">JS9.SetWCSSys(sysstr)</font></code>
+<code class="api">JS9.SetWCSSys(sysstr)</code>
 <p>
 where:
 <ul>
@@ -1519,7 +1523,7 @@ For optical images, image and physical coordinate usually are identical.
 
 <h5 id="JS9.PixToWCS">Convert image pixel position to WCS position</h5>
 <p>
-<code><font size="+1">wcsobj = JS9.PixToWCS(x, y)</font></code>
+<code class="api">wcsobj = JS9.PixToWCS(x, y)</code>
 <p>
 where:
 <ul>
@@ -1541,7 +1545,7 @@ The wcs object contains the following properties:
 
 <h5 id="JS9.WCSToPix">Convert WCS position to image pixel position</h5>
 <p>
-<code><font size="+1">pixobj = JS9.WCSToPix(ra, dec)</font></code>
+<code class="api">pixobj = JS9.WCSToPix(ra, dec)</code>
 <p>
 where:
 <ul>
@@ -1561,7 +1565,7 @@ The pixel object contains the following properties:
 
 <h5 id="JS9.DisplayMessage">Display a text message</h5>
 <p>
-<code><font size="+1">JS9.DisplayMessage(which, text)</font></code>
+<code class="api">JS9.DisplayMessage(which, text)</code>
 <p>
 where:
 <ul>
@@ -1574,7 +1578,7 @@ empty string will clear the previous message.
 
 <h5 id="JS9.RawDataLayer">Create or modify a raw data layer</h5>
 <p>
-<code><font size="+1">JS9.RawDataLayer(opts, func)</font></code>
+<code class="api">JS9.RawDataLayer(opts, func)</code>
 <p>
 where:
 <ul>
@@ -1688,7 +1692,7 @@ To get the currently displayed layer, call the routine with no arguments:
 
 <h5 id="JS9.GaussBlurData">Gaussian blur of raw data</h5>
 <p>
-<code><font size="+1">JS9.GaussBlurData(sigma, opts)</font></code>
+<code class="api">JS9.GaussBlurData(sigma, opts)</code>
 <p>
 where:
 <ul>
@@ -1704,7 +1708,7 @@ here</a>.
 
 <h5 id="JS9.ImarithData">Perform image arithmetic on raw data</h5>
 <p>
-<code><font size="+1">JS9.ImarithData(op, arg1, opts)</font></code>
+<code class="api">JS9.ImarithData(op, arg1, opts)</code>
 <p>
 where:
 <ul>
@@ -1765,7 +1769,7 @@ it is unclear how one lines up images of different dimensions.
 
 <h5 id="JS9.ShiftData">Shift raw data</h5>
 <p>
-<code><font size="+1">JS9.ShiftData(x, y, opts)</font></code>
+<code class="api">JS9.ShiftData(x, y, opts)</code>
 <p>
 where:
 <ul>
@@ -1782,7 +1786,7 @@ that are only slightly offset from one another.
 
 <h5 id="JS9.FilterRGBImage">Apply a filter to the RGB image</h5>
 <p>
-<code><font size="+1">JS9.FilterRGBImage(filter, args)</font></code>
+<code class="api">JS9.FilterRGBImage(filter, args)</code>
 <p>
 where:
 <ul>
@@ -1900,7 +1904,7 @@ With no arguments, the routine returns an array of available filters:
 
 <h5 id="JS9.ReprojectData">Reproject an image using a specified WCS</h5>
 <p>
-<code><font size="+1">JS9.ReprojectData(wcsim, opts)</font></code>
+<code class="api">JS9.ReprojectData(wcsim, opts)</code>
 <p>
 where:
 <ul>
@@ -1962,7 +1966,7 @@ memory are evolving rapidly.
 
 <h5 id="JS9.RotateData">Rotate an image around the  WCS CRPIX point</h5>
 <p>
-<code><font size="+1">JS9.RotateData(angle, opts)</font></code>
+<code class="api">JS9.RotateData(angle, opts)</code>
 <p>
 where:
 <ul>
@@ -1980,7 +1984,7 @@ routine. See <b>JS9.ReprojectData()</b> above for more information.
 
 <h5 id="JS9.SaveSession">Save an image session to a file</h5>
 <p>
-<code><font size="+1">JS9.SaveSession(session, opts)</font></code>
+<code class="api">JS9.SaveSession(session, opts)</code>
 <p>
 where:
 <ul>
@@ -2023,7 +2027,7 @@ re-loading the session.
 
 <h5 id="JS9.LoadSession">Load a previously saved image session from a file</h5>
 <p>
-<code><font size="+1">JS9.LoadSession(session)</font></code>
+<code class="api">JS9.LoadSession(session)</code>
 <p>
 where:
 <ul>
@@ -2084,7 +2088,7 @@ Thus, it is possible to act on multiple regions at the same time.
 
 <h5 id="JS9.AddRegions">Add one or more regions to the regions layer</h5>
 <p>
-<code><font size="+1">id = JS9.AddRegions(rarr, opts)</font></code>
+<code class="api">id = JS9.AddRegions(rarr, opts)</code>
 <p>
 where:
 <ul>
@@ -2197,7 +2201,7 @@ etc.
 
 <h5 id="JS9.GetRegions">Get information about one or more regions</h5>
 <p>
-<code><font size="+1">rarr = JS9.GetRegions(regions)</font></code>
+<code class="api">rarr = JS9.GetRegions(regions)</code>
 <p>
 where:
 <ul>
@@ -2266,7 +2270,7 @@ by convention, x.0, y.0 is the middle of the pixel.
 
 <h5 id="JS9.ChangeRegions">Change one or more regions</h5>
 <p>
-<code><font size="+1">JS9.ChangeRegions(regions, opts)</font></code>
+<code class="api">JS9.ChangeRegions(regions, opts)</code>
 <p>
 where:
 <ul>
@@ -2297,7 +2301,7 @@ for examples of how to use this routine.
 
 <h5 id="JS9.CopyRegions">Copy one or more regions to another image</h5>
 <p>
-<code><font size="+1">JS9.CopyRegions(to, regions)</font></code>
+<code class="api">JS9.CopyRegions(to, regions)</code>
 <p>
 where:
 <ul>
@@ -2322,7 +2326,7 @@ slashes.e.g. "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
 
 <h5 id="JS9.RemoveRegions">Remove one or more regions from the region layer</h5>
 <p>
-<code><font size="+1">JS9.RemoveRegions(regions)</font></code>
+<code class="api">JS9.RemoveRegions(regions)</code>
 <p>
 where:
 <ul>
@@ -2343,7 +2347,7 @@ slashes.e.g. "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
 
 <h5 id="JS9.SaveRegions">Save regions from the current image to a file</h5>
 <p>
-<code><font size="+1">JS9.SaveRegions(filename, which, layer)</font></code>
+<code class="api">JS9.SaveRegions(filename, which, layer)</code>
 <p>
 where:
 <ul>
@@ -2373,7 +2377,7 @@ will save the data in table format instead of as regions).
 
 <h5 id="JS9.ToggleRegionTags">Toggle region tags from the current image</h5>
 <p>
-<code><font size="+1">JS9.ToggleRegionTags(which, t1, t2)</font></code>
+<code class="api">JS9.ToggleRegionTags(which, t1, t2)</code>
 <p>
 where:
 <ul>
@@ -2398,7 +2402,7 @@ will toggle between <b>include</b> and <b>exclude</b>.
 
 <h5 id="JS9.LoadRegions">Load regions from a file into the current image</h5>
 <p>
-<code><font size="+1">JS9.LoadRegions(filename)</font></code>
+<code class="api">JS9.LoadRegions(filename)</code>
 <p>
 where:
 <ul>
@@ -2438,7 +2442,7 @@ Thus, it is possible to act on multiple shapes at the same time.
 
 <h5 id="JS9.NewShapeLayer">Create a new shape layer</h5>
 <p>
-<code><font size="+1">lid = JS9.NewShapeLayer(layer, opts)</font></code>
+<code class="api">lid = JS9.NewShapeLayer(layer, opts)</code>
 <p>
 where:
 <ul>
@@ -2551,7 +2555,7 @@ property passed in the <b>data</b> object when the shape was added.
 
 <h5 id="JS9.ShowShapeLayer">Show or hide the specified shape layer</h5>
 <p>
-<code><font size="+1">JS9.ShowShapeLayer(layer, mode)</font></code>
+<code class="api">JS9.ShowShapeLayer(layer, mode)</code>
 <p>
 where:
 <ul>
@@ -2564,7 +2568,7 @@ want to view one at a time.
 
 <h5 id="JS9.ActiveShapeLayer">Make the specified shape layer the active layer</h5>
 <p>
-<code><font size="+1">JS9.ActiveShapeLayer(layer)</font></code>
+<code class="api">JS9.ActiveShapeLayer(layer)</code>
 <p>
 where:
 <ul>
@@ -2595,7 +2599,7 @@ top of the layer stack).
 
 <h5 id="JS9.AddShapes">Add one or more shapes to the specified layer</h5>
 <p>
-<code><font size="+1">JS9.AddShapes(layer, sarr, opts)</font></code>
+<code class="api">JS9.AddShapes(layer, sarr, opts)</code>
 <p>
 where:
 <ul>
@@ -2657,7 +2661,7 @@ Deprecated properties:
 
 <h5 id="JS9.RemoveShapes">Remove one or more shapes from the specified shape layer</h5>
 <p>
-<code><font size="+1">JS9.RemoveShapes(layer, shapes)</font></code>
+<code class="api">JS9.RemoveShapes(layer, shapes)</code>
 <p>
 where:
 <ul>
@@ -2667,7 +2671,7 @@ where:
 
 <h5 id="JS9.GetShapes">Get information about one or more shapes in the specified shape layer</h5>
 <p>
-<code><font size="+1">JS9.GetShapes(layer, shapes)</font></code>
+<code class="api">JS9.GetShapes(layer, shapes)</code>
 <p>
 where:
 <ul>
@@ -2699,7 +2703,7 @@ Each returned shape object contains the following properties:
 
 <h5 id="JS9.ChangeShapes">Change one or more shapes in the specified layer</h5>
 <p>
-<code><font size="+1">JS9.ChangeShapes(layer, shapes, opts)</font></code>
+<code class="api">JS9.ChangeShapes(layer, shapes, opts)</code>
 <p>
 where:
 <ul>
@@ -2715,7 +2719,7 @@ change the shape itself (e.g. from "box" to "circle").
 
 <h5 id="JS9.LoadCatalog">Load an astronomical catalog</h5>
 <p>
-<code><font size="+1">JS9.LoadCatalog(layer, table, opts)</font></code>
+<code class="api">JS9.LoadCatalog(layer, table, opts)</code>
 <p>
 where:
 <ul>
@@ -2860,7 +2864,7 @@ stack.
 
 <h5 id="JS9.SaveCatalog">Save an astronomical catalog to a file</h5>
 <p>
-<code><font size="+1">JS9.SaveCatalog(filename, which)</font></code>
+<code class="api">JS9.SaveCatalog(filename, which)</code>
 <p>
 where:
 <ul>
@@ -2970,7 +2974,7 @@ new action.
 
 <h5 id="JS9.RunAnalysis">Run a simple server-side analysis task</h5>
 <p>
-<code><font size="+1">JS9.RunAnalysis(name, parr, func)</font></code>
+<code class="api">JS9.RunAnalysis(name, parr, func)</code>
 <p>
 where:
 <ul>
@@ -3032,7 +3036,7 @@ are going to plot results.
 <h5 id="JS9.SubmitAnalysis">Run a server-side analysis task, utilizing
 parameters in a form</h5>
 <p>
-<code><font size="+1">JS9.SubmitAnalysis(el, name, func)</font></code>
+<code class="api">JS9.SubmitAnalysis(el, name, func)</code>
 <p>
 where:
 <ul>
@@ -3058,7 +3062,7 @@ above.
 
 <h5 id="JS9.LookupDisplay">Lookup a JS9 display</h5>
 <p>
-<code><font size="+1">dobj = JS9.LookupDisplay(dname, mustExist)</font></code>
+<code class="api">dobj = JS9.LookupDisplay(dname, mustExist)</code>
 <p>
 where:
 <ul>
@@ -3080,7 +3084,7 @@ is that the id must exist).
 <h5 id="JS9.ResizeDisplay">Resize the JS9 Display</h5>
 </p>
 <p>
-<code><font size="+1">JS9.ResizeDisplay(dname, width, height, opts)</font></code>
+<code class="api">JS9.ResizeDisplay(dname, width, height, opts)</code>
 <p>
 where:
 <ul>
@@ -3128,7 +3132,7 @@ or:
 
 <h5 id="JS9.MoveToDisplay">Move an image to a new JS9 display</h5>
 <p>
-<code><font size="+1">JS9.MoveToDisplay(dname)</font></code>
+<code class="api">JS9.MoveToDisplay(dname)</code>
 <p>
 where:
 <ul>
@@ -3150,7 +3154,7 @@ the <b>File:new JS9 light window</b> menu option.
 
 <h5 id="JS9.GatherDisplay">Gather other images to this JS9 Display</h5>
 <p>
-<code><font size="+1">JS9.GatherDisplay(dname)</font></code>
+<code class="api">JS9.GatherDisplay(dname)</code>
 <p>
 where:
 <ul>
@@ -3169,7 +3173,7 @@ or:
 
 <h5 id="JS9.SeparateDisplay">Separate images in this JS9 Display into new displays</h5>
 <p>
-<code><font size="+1">JS9.SeparateDisplay(dname)</font></code>
+<code class="api">JS9.SeparateDisplay(dname)</code>
 <p>
 where:
 <ul>
@@ -3188,7 +3192,7 @@ or:
 
 <h5 id="JS9.CenterDisplay">Scroll the JS9 display to the center of the viewport</h5>
 <p>
-<code><font size="+1">JS9.CenterDisplay(dname)</font></code>
+<code class="api">JS9.CenterDisplay(dname)</code>
 <p>
 This routine scrolls this display to the center of the viewport.
 You can supply a display name or the display object:
@@ -3206,7 +3210,7 @@ or:
 
 <h5 id="JS9.Print">Print an image</h5>
 <p>
-<code><font size="+1">JS9.Print(opts)</font></code>
+<code class="api">JS9.Print(opts)</code>
 <p>
 where:
 <ul>
@@ -3226,7 +3230,7 @@ in the <b>opts</b> object to avoid printing the active colorbar.
 
 <h5 id="JS9.SaveFITS">Save image as a FITS file</h5>
 <p>
-<code><font size="+1">JS9.SaveFITS(filename)</font></code>
+<code class="api">JS9.SaveFITS(filename)</code>
 <p>
 where:
 <ul>
@@ -3241,7 +3245,7 @@ you have set up for downloads.
 
 <h5 id="JS9.SavePNG">Save image as a PNG file</h5>
 <p>
-<code><font size="+1">JS9.SavePNG(filename)</font></code>
+<code class="api">JS9.SavePNG(filename)</code>
 <p>
 where:
 <ul>
@@ -3257,7 +3261,7 @@ you have set up for downloads.
 
 <h5 id="JS9.SaveJPEG">Save image as a JPEG file</h5>
 <p>
-<code><font size="+1">JS9.SaveJPEG(filename, quality)</font></code>
+<code class="api">JS9.SaveJPEG(filename, quality)</code>
 <p>
 where:
 <ul>
@@ -3276,7 +3280,7 @@ you have set up for downloads.
 
 <h5 id="JS9.GetFITSHeader">Get FITS header as a string</h5>
 <p>
-<code><font size="+1">JS9.GetFITSHeader(nlflag)</font></code>
+<code class="api">JS9.GetFITSHeader(nlflag)</code>
 <p>
 where:
 <ul>
@@ -3297,7 +3301,7 @@ associated with each header card.
 
 <h5 id="JS9.DisplayHelp">Display help in a light window</h5>
 <p>
-<code><font size="+1">JS9.DisplayHelp(name)</font></code>
+<code class="api">JS9.DisplayHelp(name)</code>
 <p>
 where:
 <ul>
@@ -3309,7 +3313,7 @@ specify an arbitrary URL to display (just because).
 
 <h5 id="JS9.DisplayPlugin">Display plugin in a light window</h5>
 <p>
-<code><font size="+1">JS9.DisplayPlugin(name)</font></code>
+<code class="api">JS9.DisplayPlugin(name)</code>
 <p>
 where:
 <ul>
@@ -3347,7 +3351,7 @@ supports the JS9 menu functions.
 
 <h5 id="JS9.LightWindow">Display content in a light window</h5>
 <p>
-<code><font size="+1">JS9.LightWindow(id, type, content, title, opts)</font></code>
+<code class="api">JS9.LightWindow(id, type, content, title, opts)</code>
 <p>
 where:
 <ul>
@@ -3395,7 +3399,7 @@ to double-click the title bar in order to close the window.
 
 <h5 id="JS9.OpenFileMenu">Use the file dialog box to load a FITS file</h5>
 <p>
-<code><font size="+1">JS9.OpenFileMenu()</font></code>
+<code class="api">JS9.OpenFileMenu()</code>
 <p>
 Calling this routine brings up the browser's file dialog box. When a
 FITS file is selected, if will be loaded into the JS9 display.
@@ -3405,7 +3409,7 @@ supports the JS9 menu functions.
 
 <h5 id="JS9.OpenRegionsMenu">Use the file dialog box to load a region file</h5>
 <p>
-<code><font size="+1">JS9.OpenRegionsMenu()</font></code>
+<code class="api">JS9.OpenRegionsMenu()</code>
 <p>
 Calling this routine brings up the browser file menu. When a region file is
 selected, if will be loaded into the JS9 display.
@@ -3415,7 +3419,7 @@ supports the JS9 menu functions.
 
 <h5 id="JS9.OpenColormapMenu">Use the file dialog box to load a colormap file</h5>
 <p>
-<code><font size="+1">JS9.OpenColormapMenu()</font></code>
+<code class="api">JS9.OpenColormapMenu()</code>
 <p>
 Calling this routine brings up the browser file menu. When a
 json-format colormap file is selected, it will be loaded into the JS9
@@ -3434,7 +3438,7 @@ information about colormap formats.
 
 <h5 id="JS9.GetToolbar">Get toolbar values from the Toolbar plugin</h5>
 <p>
-<code><font size="+1">val = JS9.GetToolbar(type)</font></code>
+<code class="api">val = JS9.GetToolbar(type)</code>
 <p>
 where:
 <ul>
@@ -3451,7 +3455,7 @@ returned, one for each of the defined tools in the toolbar.
 
 <h5 id="JS9.SetToolbar">Set toolbar values for the Toolbar plugin</h5>
 <p>
-<code><font size="+1">JS9.SetToolbar(arg1, arg2)</font></code>
+<code class="api">JS9.SetToolbar(arg1, arg2)</code>
 <p>
 where:
 <ul>
@@ -3544,7 +3548,7 @@ active toolbars by calling:
 
 <h5 id="JS9.InstallDir">Get location of JS9 installation directory</h5>
 <p>
-<code><font size="+1">rpath = JS9.InstallDir(file)</font></code>
+<code class="api">rpath = JS9.InstallDir(file)</code>
 <p>
 where:
 <ul>
@@ -3561,7 +3565,7 @@ returns a relative path to the js9 install directory.
 
 <h5 id="JS9.Send">Send a message to a back-end server</h5>
 <p>
-<code><font size="+1">JS9.Send(msg, obj, cb)</font></code>
+<code class="api">JS9.Send(msg, obj, cb)</code>
 <p>
 where:
 <ul>
@@ -3611,7 +3615,7 @@ server returns a list of available analysis tasks in json format.
 
 <h5 id="JS9.AddDivs">Add a JS9 display div and/or associated plugins</h5>
 <p>
-<code><font size="+1">JS9.AddDivs(id1, id2, ...)</font></code>
+<code class="api">JS9.AddDivs(id1, id2, ...)</code>
 <p>
 where:
 <ul>
@@ -3643,7 +3647,7 @@ light-weight or completely new window.
 
 <h5 id="JS9.InstantiatePlugins">Instantiate plugins on this web page</h5>
 <p>
-<code><font size="+1">JS9.InstantiatePlugins()</font></code>
+<code class="api">JS9.InstantiatePlugins()</code>
 <p>
 Normally, JS9 will instantiate all of its plugins automatically once the page
 is loaded and ready: internally, jQuery $(document).ready() calls JS9.init().
@@ -3669,7 +3673,7 @@ that we can gain a better understanding of what is required in these cases.
 
 <h5 id="JS9.LoadAuxFile">Load an auxiliary file</h5>
 <p>
-<code><font size="+1">JS9.LoadAuxFile(name, func)</font></code>
+<code class="api">JS9.LoadAuxFile(name, func)</code>
 <p>
 where:
 <ul>
