@@ -6,11 +6,20 @@
   .container{
     padding: 10px;
   }
+
+  h3 , h4 {
+    text-align: center;
+  }
+
+  h4 {
+    font-size: larger;
+    font-weight: bold;
+  }
 </style>
 </head>
 <body>
 <div class="container">
-<center><h3>The JS9 Public API</h3></center>
+<h3>The JS9 Public API</h3>
 
 <p>
 The JS9 Public API provides a JavaScript programming interface for
@@ -97,8 +106,7 @@ Choose from the following sections:
 </ul>
 
 <p><hr>
-<p id="load">
-<center><b><font size="+1">Loading Images</font></b></center>
+<h4 id="load">Loading Images</h4>
 
 <p id="JS9.Load">
 <font size="+1"><b><u>Load an image into JS9</u></b></font>
@@ -333,9 +341,7 @@ Thus, to check for image load, one can do this in python:
 </pre>
 
 <p><hr>
-<p id="images">
-<center><b><font size="+1">Working with Images</font></b></center>
-<p>
+<h4 id="images">Working with Images</h4>
 
 <p id="JS9.GetImage">
 <font size="+1"><b><u>Get image handle for the current image</u></b></font>
@@ -2100,8 +2106,9 @@ can adjust the path of the data file by editing the <b>file</b> property
 as needed.
 
 <p><hr>
-<p id="regions">
-<center><b><font size="+1">Working with Regions</font></b></center>
+  
+<h4 id="regions">Working with Regions</h4>
+  
 <p>
 Spatial regions of interest are a crucial part of astronomical data
 analysis.  The regions layer is a special case of the more generalized
@@ -2465,8 +2472,9 @@ which must be specified, can be a local file (with absolute path or a
 path relative to the displayed web page) or a URL.
 
 <p><hr>
-<p id="shapes">
-<center><b><font size="+1">Working with Shape Layers</font></b></center>
+  
+<h4 id="shapes">Working with Shape Layers</h4>
+  
 <p>
 JS9 supports individual layers for drawing 2D graphics. The regions
 layer is a special case of a shape layer, created automatically by
@@ -2945,8 +2953,9 @@ layer to save must actually be a catalog created from a tab-delimited
 file (or URL) of catalog objects (not, for example, the regions layer).
 
 <p><hr>
-<p id="gestures">
-<center><b><font size="+1">Mouse/Touch Gestures</font></b></center>
+  
+<h4 id="gestures">Mouse/Touch Gestures</h4>
+
 <p>
 JS9 supports the following configurable mouse and touch actions:
 <ul>
@@ -3028,9 +3037,8 @@ move actions (whose defaults are to "change contrast/bias") with our
 new action.
 
 <p><hr>
-<p id="server">
-<center><b><font size="+1">Server-side Analysis</font></b></center>
-<p>
+  
+<h4 id="server">Server-side Analysis</h4>
 
 <p id="JS9.RunAnalysis">
 <font size="+1"><b><u>Run a simple server-side analysis task</u></b></font>
@@ -3119,9 +3127,8 @@ for
 above.
 
 <p><hr>
-<p id="displays">
-<center><b><font size="+1">Working with Displays</font></b></center>
-<p>
+  
+<h4 id="displays">Working with Displays</h4>
 
 <p id="JS9.LookupDisplay">
 <font size="+1"><b><u>Lookup a JS9 display</u></b></font>
@@ -3274,9 +3281,8 @@ or:
 </pre>
 
 <p><hr>
-<p id="misc">
-<center><b><font size="+1">Miscellaneous</font></b></center>
-<p>
+  
+<h4 id="misc">Miscellaneous</h4>
 
 <p id="JS9.Print">
 <font size="+1"><b><u>Print an image</u></b></font>
@@ -3750,8 +3756,9 @@ In you find you need to call this routine in order make your in-page
 plugins display properly, please let us know the circumstances.
 
 <p><hr>
-<p id="proto">
-<center><b><font size="+1">Prototype Routines (not ready for prime time)</font></b></center>
+  
+<h4 id="proto">Prototype Routines (not ready for prime time)</h4>
+  
 <p>
 NB: The routines in this section are prototypes and therefore are
 subject to change. Feel free to contact us to discuss your needs so
@@ -3845,8 +3852,9 @@ that we can continue to think about what is required for their support.
 
 
 <p><hr>
-<p id="history">
-<center><b><font size="+1">API Change History</font></b></center>
+  
+<h4 id="history">API Change History</h4>
+  
 <p>
 The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.
