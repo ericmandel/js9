@@ -49,8 +49,10 @@ property and always is specified as the final argument in a call.
 The display property can specify an image handle instead of a JS9 div
 id. When the image handle in question points to the currently
 displayed image, this alternate usage is nothing more than a trivial
-optimization.  Thus, to call a routine such as JS9.WCSToPix() or
-JS9.PixtoWCS():
+optimization.  Thus, to call a routine such as
+<a href="#JS9.WCSToPix">JS9.WCSToPix()</a>
+or
+<a href="#JS9.PixToWCS">JS9.PixtoWCS()</a>:
 <pre>
     var im = JS9.GetImage({display: "myJS9"});
     for(i=0; i<1000; i++){
@@ -63,7 +65,9 @@ JS9.PixtoWCS():
 However, the image handle does not need to point to the currently
 displayed image. When it does not, the public routine will act on the
 image associated with the image handle, not the current image.  In
-particular, you can use <b>JS9.LookupImage()</b> to get the image
+particular, you can use
+<a href="#JS9.LookupImage"><b>JS9.LookupImage()</b></a>
+to get the image
 handle of any image, and then act on that image. For example, if two
 images, foo1.fits and foo2.fits, are loaded into a JS9 display, and
 foo1.fits is currently being displayed, you can close foo2.fits this way:
@@ -96,7 +100,7 @@ Choose from the following sections:
 <a name="load">Loading Images</a>
 </font></b></center>
 
-<p>
+<p id="JS9.Load">
 <font size="+1"><b><u>Load an image into JS9</u></b></font>
 <p> 
 <code><font size="+1">JS9.Load(url, opts)</font></code>
@@ -122,7 +126,9 @@ Finally, you can pass a fits object containing the following properties:
 <li><b>dmin</b>: data min (optional)
 <li><b>dmax</b>: data max (optional)
 </ul>
-The difference between <b>JS9.RefreshImage()</b> and <b>JS9.Load()</b> is
+The difference between
+<a href="#JS9.RefreshImage"><b>JS9.RefreshImage()</b></a>
+and <b>JS9.Load()</b> is
 that the former updates the data into an existing image, while the latter adds
 a completely new image to the display.
 <p>
@@ -146,7 +152,7 @@ To load an image into a specified display, pass the <b>display object</b> as the
 See <a href="./yourdata.html">Displaying Your Data</a> for further discussion of
 how to use this routine.
 
-<p>
+<p id="JS9.LoadWindow">
 <font size="+1"><b><u>Load an image into a light window or a new (separate) window</u></b></font>
 <p>
 <code><font size="+1">JS9.LoadWindow(url, opts, type, html, winopts)</font></code>
@@ -165,7 +171,8 @@ returns:
 </ul>
 This routine will load an image into a light-weight window or an entirely new
 window. The <b>url</b> and <b>opts</b> arguments are identical to the standard
-<b>JS9.Load()</b> call, except that <b>opts</b> can contain an <b>id</b>
+<a href="#JS9.Load"><b>JS9.Load()</b></a>
+call, except that <b>opts</b> can contain an <b>id</b>
 string to specify the id of the JS9 div being created. If no id is specified,
 a unique id is generated. In either case, the id is returned by the call.
 <p>
@@ -196,7 +203,7 @@ To create a new light window without loading an image, use:
 <p>
 See js9create.html for examples of how to use this routine.
 
-<p>
+<p id="JS9.LoadProxy">
 <font size="+1"><b><u>Load an image URL into JS9 using a proxy server</u></b></font>
 <p> 
 <code><font size="+1">JS9.LoadProxy(url, opts)</font></code>
@@ -271,7 +278,7 @@ The main
 <a href="https://js9.si.edu">JS9 web site</a> does support proxy service, and
 can be used to view images from arbitrary URLs.
 
-<p>
+<p id="JS9.Preload">
 <font size="+1"><b><u>Load one or more images when the web page is ready</u></b></font>
 <p>
 <code><font size="+1">JS9.Preload(url1, opts1, url2, opts2, ... url2, optsn)</font></code>
@@ -291,7 +298,7 @@ until the web page is fully loaded, since JS9 itself is not fully
 initialized until then. It is for this reason that <b>JS9.Preload()</b>
 generally is called using an onload routine tied to the web page body.
   
-<p>
+<p id="JS9.GetLoadStatus">
 <font size="+1"><b><u>Get Load Status</u></b></font>
 <p> 
 <code><font size="+1">status = JS9.GetLoadStatus(id)</font></code>
@@ -331,7 +338,7 @@ Thus, to check for image load, one can do this in python:
 </font></b></center>
 <p>
 
-<p>
+<p id="JS9.GetImage">
 <font size="+1"><b><u>Get image handle for the current image</u></b></font>
 <p>
 <code><font size="+1">im = JS9.GetImage()</font></code>
@@ -347,7 +354,7 @@ The returned image handle can be passed in the display object.  This
 is marginally more efficient than the default behavior, which is to
 determine the current image for each call.
 
-<p>
+<p id="JS9.LookupImage">
 <font size="+1"><b><u>Lookup an image by id</u></b></font>
 <p>
 <code><font size="+1">im = JS9.LookupImage(id)</font></code>
@@ -365,7 +372,8 @@ returns:
 The <b>JS9.LookupImage()</b> routine takes a string id as input and
 returns the image handle of the image having that id (or null). The id
 is the same as is found in the <b>File</b> menu list of displayed images.
-This routine is similar to the standard <b>JS9.GetImage()</b>
+This routine is similar to the standard
+<a href="#JS9.GetImage"><b>JS9.GetImage()</b></a>
 routine, but returns an image by name, regardless of whether it is
 currently being displayed.
 
@@ -381,7 +389,7 @@ you can close foo2.fits this way:
     }
 </pre>
 
-<p>
+<p id="JS9.GetImageData">
 <font size="+1"><b><u>Get image data and auxiliary info for the specified image</u></b></font>
 <p>
 <code><font size="+1">imdata = JS9.GetImageData(dflag)</font></code>
@@ -464,7 +472,7 @@ Also note that since we need 0-based data array indexes, we subtract 1 from
 the 1-based image position.  But then we must add 0.5 before rounding because
 by convention, x.0, y.0 is the middle of the pixel.
 
-<p>
+<p id="JS9.GetDisplayData">
 <font size="+1"><b><u>Get image data for all images loaded into the specified display</u></b></font>
 <p>
 <code><font size="+1">imarr = JS9.GetDisplayData()</font></code>
@@ -476,11 +484,12 @@ returns:
 <p>
 The <b>JS9.GetDisplayData()</b> routine returns an array of image data
 objects, one for each images loaded into the specified display.
-That is, it returns the same type of information
-as <b>JS9.GetImageData()</b>, but does so for each image associated
+That is, it returns the same type of information as
+<a href="#JS9.GetImageData"><b>JS9.GetImageData()</b></a>,
+but does so for each image associated
 with the display, not just the current image.
 
-<p>
+<p id="JS9.DisplayImage">
 <font size="+1"><b><u>Display an image</u></b></font>
 <p>
 <code><font size="+1">JS9.DisplayImage(step)</font></code>
@@ -497,7 +506,7 @@ The default step is "primary", which displays the image without recalculating
 color data, scaled data, etc. This generally is what you want, unless you have
 explicitly changed parameter(s) used in a prior step.
 
-<p>
+<p id="JS9.RefreshImage">
 <font size="+1"><b><u>Re-read the image data and re-display</u></b></font>
 <p>
 <code><font size="+1">JS9.RefreshImage(input, func)</font></code>
@@ -560,12 +569,13 @@ routine. The blob will be passed to the underlying FITS-handler before
 being displayed. Thus, processing time is slightly greater than if you just
 pass the image data directly.
 <p>
-The main difference between <b>JS9.RefreshImage()</b>
-and <b>JS9.Load()</b> is that the former updates the data into an
+The main difference between <b>JS9.RefreshImage()</b> and
+<a href="#JS9.Load"><b>JS9.Load()</b></a>
+is that the former updates the data into an
 existing image, while the latter adds a completely new image to the
 display.
 
-<p>
+<p id="JS9.DisplaySection">
 <font size="+1"><b><u>Extract and display a section of a FITS file</u></b></font>
 <p>
 <code><font size="+1">JS9.DisplaySection(opts)</font></code>
@@ -658,7 +668,7 @@ deprecated fitsy.js), and therefore follows cfitsio filtering
 conventions, which are documented
 <a href="https://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/node97.html">here</a>.
 
-<p>
+<p id="JS9.DisplayExtension">
 <font size="+1"><b><u>Display an extension from a multi-extension FITS file</u></b></font>
 <p>
 <code><font size="+1">JS9.DisplayExtension(extid, opts)</font></code>
@@ -673,7 +683,7 @@ a multi-extension FITS file. (See, for example,
 <a href=" http://fits.gsfc.nasa.gov/fits_primer.html">the FITS Primer</a>
 for information about HDUs and multi-extension FITS).
 
-<p>
+<p id="JS9.DisplaySlice">
 <font size="+1"><b><u>Display a slice of a FITS data cube</u></b></font>
 <p>
 <code><font size="+1">JS9.DisplaySlice(slice, opts)</font></code>
@@ -719,7 +729,7 @@ the two "files".  Note that the new id and filename are adjusted to be
 the original file's values with the cfitsio image section <b>[6:6,*,*]</b>
 appended.
 
-<p>
+<p id="JS9.BlendImage">
 <font size="+1"><b><u>Blend the image in an image stack using W3C composite/blend modes </u></b></font>
 <p>
 <code><font size="+1">JS9.BlendImage(blendMode, opacity)</font></code>
@@ -778,7 +788,8 @@ and in this <a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API
 
 <p>
 JS9 allows you to use these modes to blend images together. If you load two
-images of the same object into JS9, you can use the <b>JS9.ReprojectData()</b> 
+images of the same object into JS9, you can use the
+<a href="#JS9.ReprojectData"><b>JS9.ReprojectData()</b></a>
 routine to align them by WCS. You then can blend one image into the other by
 specifying a blend mode and an optional opacity. For example, if chandra.fits
 and spitzer.fits are two aligned images of the same object, and chandra.fits is
@@ -825,7 +836,7 @@ arguments to perform a variety of functions:
 </ul>
 Other actions will be added as we gain experience with blending operations
 
-<p>
+<p id="JS9.BlendDisplay">
 <font size="+1"><b><u>Set the global image blend more for the specified display</u></b></font>
 <p>
 <code><font size="+1">mode = JS9.BlendDisplay(true|false)</font></code>
@@ -837,7 +848,7 @@ returns:
 This routine will turn on/off the global image blend mode for the specified
 display. If no argument is specified, it returns the current blend mode.
 
-<p>
+<p id="JS9.CloseImage">
 <font size="+1"><b><u>Clear the image from the display and mark resources for release</u></b></font>
 <p>
 <code><font size="+1">JS9.CloseImage()</font></code>
@@ -855,7 +866,7 @@ accessible to JavaScript programming.
 Some day, all browsers will support full 64-bit addressing and this problem will
 go away ...
 
-<p>
+<p id="JS9.GetColormap">
 <font size="+1"><b><u>Get the image colormap</u></b></font>
 <p>
 <code><font size="+1">cmap = JS9.GetColormap()</font></code>
@@ -871,7 +882,7 @@ The returned cmap object will contain the following properties:
 <li><b>bias</b>: bias value (range 0 to 1)
 </ul>
 
-<p>
+<p id="JS9.SetColormap">
 <font size="+1"><b><u>Set the image colormap</u></b></font>
 <p>
 <code><font size="+1">JS9.SetColormap(colormap, [contrast, bias])</font></code>
@@ -886,7 +897,7 @@ Set the current colormap, contrast/bias, or both. This call takes one
 (colormap), two (contrast, bias) or three (colormap, contrast, bias)
 arguments.
 
-<p>
+<p id="JS9.SaveColormap">
 <font size="+1"><b><u>Save current colormap definition</u></b></font>
 <p>
 <code><font size="+1">JS9.SaveColormap(filename)</font></code>
@@ -903,7 +914,9 @@ colormap.
 <p>
 Don't forget that the file is saved by the browser, in whatever location
 you have set up for downloads.
-<p>
+</p>
+
+<p id="JS9.AddColormap">
 <font size="+1"><b><u>Add a colormap to JS9</u></b></font>
 <p>
 <code><font size="+1">JS9.AddColormap(name, aa|rr,gg,bb|obj|json)</font></code>
@@ -979,8 +992,9 @@ colormap definition:
 <p>
 Finally, note that <b>JS9.AddColormap()</b> adds its new colormap to
 all JS9 displays on the given page.
+</p>
 
-<p>
+<p id="JS9.LoadColormap">
 <font size="+1"><b><u>Load a colormap file into JS9</u></b></font>
 <p>
 <code><font size="+1">JS9.LoadColormap(filename)</font></code>
@@ -993,7 +1007,9 @@ Load the specified colormap file into the web page. The filename,
 which must be specified, can be a local file (with absolute path or a
 path relative to the displayed web page) or a URL. It should contain a
 JSON representation of a colormap, either in RGB color format or in
-vertex format (see <b>JS9.AddColormap()</b> above):
+vertex format (see
+<a href="#JS9.AddColormap"><b>JS9.AddColormap()</b></a>
+above):
 <pre>
     # RGB color format
     {
@@ -1043,10 +1059,14 @@ vertex format (see <b>JS9.AddColormap()</b> above):
       ]
     }
 </pre>
-As with <b>JS9.AddColormap()</b>, the new colormap will be available
-in all displays.
 
 <p>
+As with
+<a href="#JS9.AddColormap"><b>JS9.AddColormap()</b></a>,
+the new colormap will be available in all displays.
+</p>
+
+<p id="JS9.GetRGBMode">
 <font size="+1"><b><u>Get RGB Mode</u></b></font>
 <p>
 <code><font size="+1">JS9.GetRGBMode()</font></code>
@@ -1063,7 +1083,7 @@ The returned object will contain the following properties:
 <li><b>bid</b>: image id of "blue" image
 </ul>
 
-<p>
+<p id="JS9.SetRGBMode">
 <font size="+1"><b><u>Set RGB Mode</u></b></font>
 <p>
 <code><font size="+1">JS9.SetRGBMode(mode, [imobj])</font></code>
@@ -1097,7 +1117,7 @@ assigned the "red", "green", and "blue" colormaps by another means.
 <p>
 If no arguments are specified, the current RGB mode is toggled;
 
-<p>
+<p id="JS9.GetScale">
 <font size="+1"><b><u>Get the image scale</u></b></font>
 <p>
 <code><font size="+1">scale = JS9.GetScale()</font></code>
@@ -1113,7 +1133,7 @@ The returned scale object will contain the following properties:
 <li><b>scalemax</b>: max value for scaling
 </ul>
 
-<p>
+<p id="JS9.SetScale">
 <font size="+1"><b><u>Set the image scale</u></b></font>
 <p>
 <code><font size="+1">JS9.SetScale(scale, smin, smax)</font></code>
@@ -1128,7 +1148,7 @@ Set the current scale, min/max, or both. This call takes one
 (scale), two (smin, max) or three (scale, smin, smax) arguments. (If "zscale"
 or "zmax" is specified, any supplied smin and smax values are ignored.)
 
-<p>
+<p id="JS9.GetZoom">
 <font size="+1"><b><u>Get the image zoom factor</u></b></font>
 <p>
 <code><font size="+1">zoom = JS9.GetZoom()</font></code>
@@ -1139,7 +1159,7 @@ returns:
 </ul>
 Get the zoom factor.
 
-<p>
+<p id="JS9.SetZoom">
 <font size="+1"><b><u>Set the image zoom factor</u></b></font>
 <p>
 <code><font size="+1">JS9.SetZoom(zoom)</font></code>
@@ -1157,7 +1177,7 @@ The zoom directives are:
 <li><b>toFit|ToFit</b>: zoom to fit image in display
 </ul>
 
-<p>
+<p id="JS9.GetPan">
 <font size="+1"><b><u>Get the image pan position</u></b></font>
 <p>
 <code><font size="+1">ipos = JS9.GetPan()</font></code>
@@ -1172,7 +1192,7 @@ The returned ipos object will contain the following properties:
 <li><b>y</b>: y image coordinate of center
 </ul>
 
-<p>
+<p id="JS9.SetPan">
 <font size="+1"><b><u>Set the image pan position</u></b></font>
 <p>
 <code><font size="+1">JS9.SetPan(x, y)</font></code>
@@ -1182,11 +1202,17 @@ where:
 <li><b>x</b>: x image coordinate
 <li><b>y</b>: y image coordinate
 </ul>
-Set the current pan position using image coordinates.  
-Note that you can use <b>JS9.WCSToPix()</b> and <b>JS9.PixToWCS()</b> to
-convert between image and WCS coordinates.
 
 <p>
+Set the current pan position using image coordinates.  
+Note that you can use
+<a href="#JS9.WCSToPix"><b>JS9.WCSToPix()</b></a>
+and
+<a href="#JS9.PixToWCS"><b>JS9.PixToWCS()</b></a>
+to convert between image and WCS coordinates.
+</p>
+
+<p id="JS9.GetParam">
 <font size="+1"><b><u>Get an image parameter value</u></b></font>
 <p>
 <code><font size="+1">val = JS9.GetParam(param)</font></code>
@@ -1200,10 +1226,15 @@ returns:
 <ul>
 <li><b>val</b>: value of the parameter
 </ul>
-Return the value of an image parameter. The available parameters are listed
-below in the <b>SetParam()</b> section.
 
 <p>
+Return the value of an image parameter. The available parameters are listed
+below in the
+<a href="#JS9.SetParam"><b>SetParam()</b></a>
+section.
+</p>
+
+<p id="JS9.SetParam">
 <font size="+1"><b><u>Set an image parameter value</u></b></font>
 <p>
 <code><font size="+1">ovalue = JS9.SetParam(param, value)</font></code>
@@ -1246,7 +1277,7 @@ will temporarily disable execution of the previously defined regions
 onload callback, resetting it to the old value after processing
 is complete.
 
-<p>
+<p id="JS9.EventToDisplayPos">
 <font size="+1"><b><u>Get the display coordinates from an event</u></b></font>
 <p>
 <code><font size="+1">dpos = JS9.EventToDisplayPos(evt)</font></code>
@@ -1264,7 +1295,7 @@ If you define your own event callbacks, you can use this routine to convert
 the event position to a display position, which can then be used to get the
 image position (see below).
 
-<p>
+<p id="JS9.DIsplayToImagePos">
 <font size="+1"><b><u>Get the image coordinates from the display coordinates</u></b></font>
 <p>
 <code><font size="+1">ipos = JS9.DisplayToImagePos(dpos)</font></code>
@@ -1282,7 +1313,7 @@ coordinate values
 Note that image coordinates are one-indexed, as per FITS conventions, while
 display coordinate are 0-indexed.
 
-<p>
+<p id="JS9.ImageToDisplayPos">
 <font size="+1"><b><u>Get the display coordinates from the image coordinates</u></b></font>
 <p>
 <code><font size="+1">dpos = JS9.ImageToDisplayPos(ipos)</font></code>
@@ -1301,7 +1332,7 @@ Get display (screen) coordinates from image coordinates.  Note that
 image coordinates are one-indexed, as per FITS conventions, while
 display coordinate are 0-indexed.
 
-<p>
+<p id="JS9.LogicalToImagePos">
 <font size="+1"><b><u>Get the image coordinates from the logical coordinates</u></b></font>
 <p>
 <code><font size="+1">ipos = JS9.LogicalToImagePos(lpos, lcs)</font></code>
@@ -1326,7 +1357,7 @@ This routine will convert from logical to image coordinates. By default, the
 current logical coordinate system is used. You can specify a different logical
 coordinate system (assuming the appropriate keywords have been defined).
 
-<p>
+<p id="JS9.ImageToLogicalPos">
 <font size="+1"><b><u>Get the logical coordinates from the image coordinates</u></b></font>
 <p>
 <code><font size="+1">lpos = JS9.ImageToLogicalPos(ipos, lcs)</font></code>
@@ -1350,7 +1381,7 @@ This routine will convert from image to logical coordinates. By default, the
 current logical coordinate system is used. You can specify a different logical
 coordinate system (assuming the appropriate keywords have been defined).
 
-<p>
+<p id="JS9.GetValPos">
 <font size="+1"><b><u>Get value/position information</u></b></font>
 <p>
 <code><font size="+1">valpos = JS9.GetValPos(ipos, display)</font></code>
@@ -1385,7 +1416,7 @@ or "physical") for the above px, py values
 <li><b>object</b>: object name of the image from the FITS header
 </ul>
 
-<p>
+<p id="JS9.SetValPos">
 <font size="+1"><b><u>Set the value/position display mode</u></b></font>
 <p>
 <code><font size="+1">JS9.SetValPos(mode)</font></code>
@@ -1396,7 +1427,7 @@ where:
 </ul>
 Set the display mode of the value/position display for the specified image.
 
-<p>
+<p id="JS9.GetImageInherit">
 <font size="+1"><b><u>Get the image inherit mode</u></b></font>
 <p>
 <code><font size="+1">inherit = JS9.GetImageInherit()</font></code>
@@ -1410,7 +1441,7 @@ a new image grabs the image params (e.g., colormap, scale, zoom, etc.)
 from the currently displayed image. If false, these params are taken
 from the default JS9.imageOpts object.
 
-<p>
+<p id="JS9.SetImageInherit">
 <font size="+1"><b><u>Set the image inherit mode</u></b></font>
 <p>
 <code><font size="+1">JS9.SetImageInherit(mode)</font></code>
@@ -1424,7 +1455,7 @@ a new image grabs the image params (e.g., colormap, scale, zoom, etc.)
 from the currently displayed image. If false, these params are taken
 from the default JS9.imageOpts object.
 
-<p>
+<p id="JS9.GetWCS">
 <font size="+1"><b><u>Get information about the current WCS</u></b></font>
 <p>
 <code><font size="+1">wcsobj = JS9.GetWCS()</font></code>
@@ -1448,7 +1479,7 @@ with this WCS, if present
 <li><b>radecsys</b>: radecsys value (e.g., "ICRS") from the wcs library
 </ul>
 
-<p>
+<p id="JS9.SetWCS">
 <font size="+1"><b><u>Set the current WCS</u></b></font>
 <p>
 <code><font size="+1">JS9.SetWCS(which)</font></code>
@@ -1473,7 +1504,7 @@ with this WCS, if present
 </ul>
 If no argument is supplied, the default WCS is set up.
 
-<p>
+<p id="JS9.GetWCSUnits">
 <font size="+1"><b><u>Get the current WCS units</u></b></font>
 <p>
 <code><font size="+1">unitsstr = JS9.GetWCSUnits()</font></code>
@@ -1484,7 +1515,7 @@ returns:
 </ul>
 Get the current WCS units.
 
-<p>
+<p id="JS9>SetWCSUnits">
 <font size="+1"><b><u>Set the current WCS units</u></b></font>
 <p>
 <code><font size="+1">JS9.SetWCSUnits(unitsstr)</font></code>
@@ -1495,7 +1526,7 @@ where:
 </ul>
 Set the current WCS units.
 
-<p>
+<p id="JS9.GetWCSSys">
 <font size="+1"><b><u>Get the current World Coordinate System</u></b></font>
 <p>
 <code><font size="+1">sysstr = JS9.GetWCSSys()</font></code>
@@ -1507,7 +1538,7 @@ returns:
 </ul>
 Get current WCS system.
 
-<p>
+<p id="JS9.SetWCSSys">
 <font size="+1"><b><u>Set the current World Coordinate System</u></b></font>
 <p>
 <code><font size="+1">JS9.SetWCSSys(sysstr)</font></code>
@@ -1524,7 +1555,7 @@ mainly used in X-ray astronomy where individually detected photon
 events are binned into an image, possibly using a blocking factor.
 For optical images, image and physical coordinate usually are identical.
 
-<p>
+<p id="JS9.PixToWCS">
 <font size="+1"><b><u>Convert image pixel position to WCS position</u></b></font>
 <p>
 <code><font size="+1">wcsobj = JS9.PixToWCS(x, y)</font></code>
@@ -1547,7 +1578,7 @@ The wcs object contains the following properties:
 <li><b>str</b>: string of wcs in current system ("[ra] [dec] [sys]")
 </ul>
 
-<p>
+<p id="JS9.WCSToPix">
 <font size="+1"><b><u>Convert WCS position to image pixel position</u></b></font>
 <p>
 <code><font size="+1">pixobj = JS9.WCSToPix(ra, dec)</font></code>
@@ -1568,7 +1599,7 @@ The pixel object contains the following properties:
 <li><b>str</b>: string of pixel values ("[x]" "[y]")
 </ul>
 
-<p>
+<p id="JS9.DisplayMessage">
 <font size="+1"><b><u>Display a text message</u></b></font>
 <p>
 <code><font size="+1">JS9.DisplayMessage(which, text)</font></code>
@@ -1582,7 +1613,7 @@ The text string is displayed in the "info" area (usually occupied by the
 valpos display) or the "region" area (where regions are displayed). The
 empty string will clear the previous message.
 
-<p>
+<p id="JS9.RawDataLayer">
 <font size="+1"><b><u>Create or modify a raw data layer</u></b></font>
 <p>
 <code><font size="+1">JS9.RawDataLayer(opts, func)</font></code>
@@ -1595,7 +1626,8 @@ where:
 Each image has raw data associated with it, i.e. the underlying
 astronomical image pixels that are scaled and displayed using the
 chosen scale and colormap. You can manipulate the raw data by creating
-a new <b>raw data layer</b> using <b>JS9.RawDataLayer()</b>, setting
+a new <b>raw data layer</b> using <b>JS9.RawDataLayer()</b>,
+setting
 the image pixel values, and then making this layer the current
 one. The original raw data (with id "raw0") will be maintained in
 separate layer, so you can switch between layers (also using this
@@ -1674,7 +1706,7 @@ that the addition is cumulative.
 
 <p>
 The oraw and nraw objects contain a subset of the properties returned by
-<b>JS9.GetImageData()</b>:
+<a href="#JS9.GetImageData"><b>JS9.GetImageData()</b></a>:
 <ul>
 <li><b>width</b>: x dimension of image
 <li><b>height</b>: y dimension of image
@@ -1684,7 +1716,8 @@ The oraw and nraw objects contain a subset of the properties returned by
 </ul>
 
 <p>
-To switch to a layer, call <b>JS9.RawDataLayer()</b> with a single argument, the layer name:
+To switch to a layer, call <b>JS9.RawDataLayer()</b>
+with a single argument, the layer name:
 <pre>
     JS9.RawDataLayer("raw0")   # switch to original data
     JS9.RawDataLayer("clip")   # switch to clipped data
@@ -1695,7 +1728,7 @@ To get the currently displayed layer, call the routine with no arguments:
     JS9.RawDataLayer()         # returns "clip"
 </pre>
 
-<p>
+<p id="JS9.GaussBlurData">
 <font size="+1"><b><u>Gaussian blur of raw data</u></b></font>
 <p>
 <code><font size="+1">JS9.GaussBlurData(sigma, opts)</font></code>
@@ -1712,7 +1745,7 @@ specified sigma. The routine uses the fast Gaussian blur algorithm
 described <a href="http://blog.ivank.net/fastest-gaussian-blur.html">
 here</a>.
 
-<p>
+<p id="JS9.ImarithData">
 <font size="+1"><b><u>Perform image arithmetic on raw data</u></b></font>
 <p>
 <code><font size="+1">JS9.ImarithData(op, arg1, opts)</font></code>
@@ -1774,7 +1807,7 @@ Finally, note that the two images must have the same dimensions. We
 might be able to remove this restriction in the future, although
 it is unclear how one lines up images of different dimensions.
 
-<p>
+<p id="JS9.ShiftData">
 <font size="+1"><b><u>Shift raw data</u></b></font>
 <p>
 <code><font size="+1">JS9.ShiftData(x, y, opts)</font></code>
@@ -1792,7 +1825,7 @@ cumulative. The routine is used by the Harvard-Smithsonian Center for
 Astrophysics MicroObservatory project interactively to align images
 that are only slightly offset from one another.
 
-<p>
+<p id="JS9.FilterRGBImage">
 <font size="+1"><b><u>Apply a filter to the RGB image</u></b></font>
 <p>
 <code><font size="+1">JS9.FilterRGBImage(filter, args)</font></code>
@@ -1803,8 +1836,11 @@ where:
 <li><b>args</b>: filter-specific arguments, where applicable
 </ul>
 In JS9, you can change the raw data (and hence the displayed image) using
-routines such as <b>JS9.GaussBlurData()</b> or the more general
-<b>JS9.RawDataLayer()</b>. You also can apply image processing
+routines such as
+<a href="#JS9.GaussBlurData"><b>JS9.GaussBlurData()</b></a>
+or the more general
+<a href="#JS9.RawDataLayer"><b>JS9.RawDataLayer()</b></a>.
+You also can apply image processing
 techniques directly to the displayed RGB image without changing the
 underlying raw data, using this routine. The web has an overwhelming
 amount of information about image processing.  A good technical
@@ -1908,7 +1944,7 @@ With no arguments, the routine returns an array of available filters:
     ["convolve", "luminance", ..., "blur", "emboss", "lighten", "darken"]
 </pre>
 
-<p>
+<p id="JS9.ReprojectData">
 <font size="+1"><b><u>Reproject an image using a specified WCS</u></b></font>
 <p>
 <code><font size="+1">JS9.ReprojectData(wcsim, opts)</font></code>
@@ -1971,7 +2007,7 @@ by JS9.REPROJDIM, currently 2300 x 2300. Even this might be too large
 for iOS devices under certain circumstances, although issues regarding
 memory are evolving rapidly.
 
-<p>
+<p id="JS9.RotateData">
 <font size="+1"><b><u>Rotate an image around the  WCS CRPIX point</u></b></font>
 <p>
 <code><font size="+1">JS9.RotateData(angle, opts)</font></code>
@@ -1981,15 +2017,16 @@ where:
 <li><b>angle</b>: rotation angle in degrees
 <li><b>opts</b>: options object
 </ul>
-The <b>JS9.RotateData()</b> routine using <b>JS9.ReprojectData()</b>
+The <b>JS9.RotateData()</b> routine uses
+<a href="#JS9.ReprojectData"><b>JS9.ReprojectData()</b></a>
 to rotate image data by the specified angle (in degrees). If the string
 "northup" or "northisup" is specified, the rotation angle is set to 0.
 The rotation is performed about the WCS CRPIX1, CRPIX2 point.
 <p>
 The optional opts object is passed directly to the <b>JS9.ReprojectData()</b>
-routine. See <b>JS9.ReprojectData()</b> below for more information.
+routine. See <b>JS9.ReprojectData()</b> above for more information.
 
-<p>
+<p id="JS9.SaveSession">
 <font size="+1"><b><u>Save an image session to a file</u></b></font>
 <p>
 <code><font size="+1">JS9.SaveSession(session, opts)</font></code>
@@ -2033,7 +2070,7 @@ security protocols. In this case, you must edit the session file to
 supply the path (either absolute or relative to the web page) before
 re-loading the session.
 
-<p>
+<p id="JS9.LoadSession">
 <font size="+1"><b><u>Load a previously saved image session from a file</u></b></font>
 <p>
 <code><font size="+1">JS9.LoadSession(session)</font></code>
@@ -2078,12 +2115,16 @@ The regions layer has the special property that, by default,
 its <b>z-index</b> is higher than other shape layers, so that regions
 are displayed on top of other shape layers.
 <p>
-Note that the <b>GetRegions(), ChangeRegions(), RemoveRegions()</b> calls
+Note that the
+<b><a href="#JS9.GetRegions">GetRegions()</a>,
+<a href="#JS9.ChangeRegions">ChangeRegions()</a>,
+<a href="#JS9.RemoveRegions">RemoveRegions()</a></b> calls
 all take a regions specification as the second argument, which can be
 any of the following (in order of precedence):
 <ul>
 <li><b>"all"</b>: all regions
-<li><b>[id]</b>: a specific region id returned by <b>JS9.AddRegions()</b>
+<li><b>[id]</b>: a specific region id returned by
+  <a href="#JS9.AddRegions"><b>JS9.AddRegions()</b></a>
 <li><b>"selected"</b>: the selected region (or all regions in the selected group)
 <li><b>[color]</b>: all regions having the specified color (e.g., "red")
 <li><b>[shape]</b>: all regions having the specified shape (e.g., "circle")
@@ -2091,7 +2132,7 @@ any of the following (in order of precedence):
 </ul>
 Thus, it is possible to act on multiple regions at the same time.
 
-<p>
+<p id="JS9.AddRegions">
 <font size="+1"><b><u>Add one or more regions to the regions layer</u></b></font>
 <p>
 <code><font size="+1">id = JS9.AddRegions(rarr, opts)</font></code>
@@ -2205,7 +2246,7 @@ etc. You also can double-click on the text child to bring up its
 configuration dialog box and change its color, font, size, text string,
 etc.
 
-<p>
+<p id="JS9.GetRegions">
 <font size="+1"><b><u>Get information about one or more regions</u></b></font>
 <p>
 <code><font size="+1">rarr = JS9.GetRegions(regions)</font></code>
@@ -2275,7 +2316,7 @@ Also note that since we need 0-based data array indexes, we subtract 1 from
 the 1-based image position.  But then we must add 0.5 before rounding because
 by convention, x.0, y.0 is the middle of the pixel.
 
-<p>
+<p id="JS9.ChangeRegions">
 <font size="+1"><b><u>Change one or more regions</u></b></font>
 <p>
 <code><font size="+1">JS9.ChangeRegions(regions, opts)</font></code>
@@ -2301,11 +2342,13 @@ slashes.e.g. "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
 
 <p>
 The opts object can contain the parameters 
-described in the <b>JS9.AddRegions()</b> section. However, you cannot (yet)
+described in the
+<a href="#JS9.AddRegions"><b>JS9.AddRegions()</b></a>
+section. However, you cannot (yet)
 change the shape itself (e.g. from "box" to "circle"). See js9onchange.html
 for examples of how to use this routine.
 
-<p>
+<p id="JS9.CopyRegions">
 <font size="+1"><b><u>Copy one or more regions to another image</u></b></font>
 <p>
 <code><font size="+1">JS9.CopyRegions(to, regions)</font></code>
@@ -2331,7 +2374,7 @@ can specify regions using any of the following:
 In this context, a regexp is a string enclosed between "/"
 slashes.e.g. "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
 
-<p>
+<p id="JS9.RemoveRegions">
 <font size="+1"><b><u>Remove one or more regions from the region layer</u></b></font>
 <p>
 <code><font size="+1">JS9.RemoveRegions(regions)</font></code>
@@ -2353,7 +2396,7 @@ can specify regions using any of the following:
 In this context, a regexp is a string enclosed between "/"
 slashes.e.g. "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
 
-<p>
+<p id="JS9.SaveRegions">
 <font size="+1"><b><u>Save regions from the current image to a file</u></b></font>
 <p>
 <code><font size="+1">JS9.SaveRegions(filename, which, layer)</font></code>
@@ -2380,10 +2423,11 @@ a tag value to save regions having that tag.
 If the <b>layer</b> argument is not specified, it defaults to
 "regions", i.e.  the usual regions layer. You can specify a different
 layer, e.g., if you want to save a catalog layer as a region file
-(since <b>SaveCatalog()</b> will save the data in table format instead
-of as regions).
+(since
+<a href="#JS9.SaveCatalog"><b>SaveCatalog()</b></a>
+will save the data in table format instead of as regions).
 
-<p>
+<p id="JS9.ToggleRegionTags">
 <font size="+1"><b><u>Toggle region tags from the current image</u></b></font>
 <p>
 <code><font size="+1">JS9.ToggleRegionTags(which, t1, t2)</font></code>
@@ -2394,7 +2438,8 @@ where:
 <li><b>t1</b>: tag#1
 <li><b>t2</b>: tag#2
 </ul>
-While region tags can be changed using the <b>ChangeRegions()</b> routine, a
+While region tags can be changed using the
+<a href="#JS9.ChangeRegions"><b>ChangeRegions()</b></a> routine, a
 bespoke user interface might want to toggle between a <b>source</b>
 region and <b>background</b> region, or between <b>include</b> and
 <b>exclude</b>. This convenience routine will do that. For example:
@@ -2408,7 +2453,7 @@ or vice-versa, depending on the state of the region, while:
 </pre>
 will toggle between <b>include</b> and <b>exclude</b>.
 
-<p>
+<p id="JS9.LoadRegions">
 <font size="+1"><b><u>Load regions from a file into the current image</u></b></font>
 <p>
 <code><font size="+1">JS9.LoadRegions(filename)</font></code>
@@ -2432,12 +2477,16 @@ JS9. The Catalog plugin creates a separate layer for each catalog.
 You can define your own shape layer using the <b>NewShapeLayer()</b>
 call and then add geometric shapes to it.
 <p>
-Note that the <b>JS9.GetShapes(), JS9.ChangeShapes(), JS9.RemoveShapes()</b> 
+Note that the
+<b><a href="#JS9.GetShapes">JS9.GetShapes()</a>,
+<a href="#JS9.ChangeShapes">JS9.ChangeShapes()</a>,
+<a href="#JS9.RemoveShapes">JS9.RemoveShapes()</a></b> 
 calls all take a shape specification as the second argument, which can
 be any of the following (in order of precedence):
 <ul>
 <li><b>"all"</b>: all regions
-<li><b>[id]</b>: a specific region id returned by <b>JS9.AddRegions()</b>
+<li><b>[id]</b>: a specific region id returned by
+  <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
 <li><b>"selected"</b>: the selected region (or all regions in the selected group)
 <li><b>[color]</b>: all regions having the specified color (e.g., "red")
 <li><b>[shape]</b>: all regions having the specified shape (e.g., "circle")
@@ -2445,7 +2494,7 @@ be any of the following (in order of precedence):
 </ul>
 Thus, it is possible to act on multiple shapes at the same time.
 
-<p>
+<p id="JS9.NewShapeLayer">
 <font size="+1"><b><u>Create a new shape layer</u></b></font>
 <p>
 <code><font size="+1">lid = JS9.NewShapeLayer(layer, opts)</font></code>
@@ -2559,7 +2608,7 @@ generated tooltip will display current image id in bold, followed by
 that object's x,y pixel position, followed by a user <b>tag</b>
 property passed in the <b>data</b> object when the shape was added.
 
-<p>
+<p id="JS9.ShowShapeLayer">
 <font size="+1"><b><u>Show or hide the specified shape layer</u></b></font>
 <p>
 <code><font size="+1">JS9.ShowShapeLayer(layer, mode)</font></code>
@@ -2573,7 +2622,7 @@ Shape layers can be hidden from display. This could be useful, for
 example, if you have several catalogs loaded into a display and
 want to view one at a time.
 
-<p>
+<p id="JS9.ActiveShapeLayer">
 <font size="+1"><b><u>Make the specified shape layer the active layer</u></b></font>
 <p>
 <code><font size="+1">JS9.ActiveShapeLayer(layer)</font></code>
@@ -2605,7 +2654,7 @@ This routine forms the basis for the <b>Shape Layer</b> plugin, which
 provides a graphical way to make a layer active (by moving it to the
 top of the layer stack).
 
-<p>
+<p id="JS9.AddShapes">
 <font size="+1"><b><u>Add one or more shapes to the specified layer</u></b></font>
 <p>
 <code><font size="+1">JS9.AddShapes(layer, sarr, opts)</font></code>
@@ -2644,7 +2693,8 @@ more properties, of which the most important are:
 <li><b>text</b>: text associated with text shape
 <li><b>data</b>: this property can be an object, string, number,
 etc. and will be carried along with the shape, and returned as a
-property by the <b>JS9.GetShapes()</b> call.
+property by the
+<a href="#JS9.GetShapes"><b>JS9.GetShapes()</b></a> call.
 </ul>
 Other available properties include:
 <ul>
@@ -2667,7 +2717,7 @@ Deprecated properties:
 <li><b>fixinplace</b>: opposite of changeable
 </ul>
 
-<p>
+<p id="JS9.RemoveShapes">
 <font size="+1"><b><u>Remove one or more shapes from the specified shape layer</u></b></font>
 <p>
 <code><font size="+1">JS9.RemoveShapes(layer, shapes)</font></code>
@@ -2678,7 +2728,7 @@ where:
 <li><b>shapes</b>: which shapes to remove
 </ul>
 
-<p>
+<p id="JS9.GetShapes">
 <font size="+1"><b><u>Get information about one or more shapes in the specified shape layer</u></b></font>
 <p>
 <code><font size="+1">JS9.GetShapes(layer, shapes)</font></code>
@@ -2711,7 +2761,7 @@ Each returned shape object contains the following properties:
 <li><b>data</b>: data property passed in options object when this shape was created.
 </ul>
 
-<p>
+<p id="JS9.ChangeShapes">
 <font size="+1"><b><u>Change one or more shapes in the specified layer</u></b></font>
 <p>
 <code><font size="+1">JS9.ChangeShapes(layer, shapes, opts)</font></code>
@@ -2723,10 +2773,12 @@ where:
 <li><b>opts</b>: object containing options to change in each shape
 </ul>
 Change one or more shapes. The opts object can contain the parameters 
-described in the <b>JS9.AddShapes()</b> section. However, you cannot (yet)
+described in the
+<a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
+section. However, you cannot (yet)
 change the shape itself (e.g. from "box" to "circle").
 
-<p>
+<p id="JS9.LoadCatalog">
 <font size="+1"><b><u>Load an astronomical catalog</u></b></font>
 <p>
 <code><font size="+1">JS9.LoadCatalog(layer, table, opts)</font></code>
@@ -2864,14 +2916,15 @@ save in the data object for use in the tooltip string, e.g.:
 </pre>
 in the above VizieR example. Caveat: any "." (dot) in any catalog property
 name will be converted to "_" (underscore) automatically. For a more detailed
-discussion of tooltips, please see <b>JS9.NewShapeLayer()</b>.
+discussion of tooltips, please see
+<a href="#JS9.NewShapeLayer"><b>JS9.NewShapeLayer()</b></a>.
 
 <p>
 When catalog layer has been created, you can use the <b>Shape Layers</b>
 plugin to toggle its visibility and also to change its position in the layer
 stack.
 
-<p>
+<p id="JS9.SaveCatalog">
 <font size="+1"><b><u>Save an astronomical catalog to a file</u></b></font>
 <p>
 <code><font size="+1">JS9.SaveCatalog(filename, which)</font></code>
@@ -2985,7 +3038,7 @@ new action.
 </font></b></center>
 <p>
 
-<p>
+<p id="JS9.RunAnalysis">
 <font size="+1"><b><u>Run a simple server-side analysis task</u></b></font>
 <p>
 <code><font size="+1">JS9.RunAnalysis(name, parr, func)</font></code>
@@ -3047,7 +3100,7 @@ property <b>JS9.globalOpts.analysisDiv</b> to the id of your new
 target div. The div must have CSS height and width properties if you
 are going to plot results.
 
-<p>
+<p id="JS9.SubmitAnalysis">
 <font size="+1"><b><u>Run a server-side analysis task, utilizing
 parameters in a form</u></b></font>
 <p>
@@ -3067,7 +3120,9 @@ that these values can be integrated into the analysis command line.
 See js9analysis.html for a simple example.
 <p>
 The <b>func</b> callback and global options are the same as
-for <b>JS9.RunAnalysis()</b> above.
+for
+<a href="#JS9.RunAnalysis"><b>JS9.RunAnalysis()</b></a>
+above.
 
 <p><hr><p>
 <center><b><font size="+1">
@@ -3075,7 +3130,7 @@ for <b>JS9.RunAnalysis()</b> above.
 </font></b></center>
 <p>
 
-<p>
+<p id="JS9.LookupDisplay">
 <font size="+1"><b><u>Lookup a JS9 display</u></b></font>
 <p>
 <code><font size="+1">dobj = JS9.LookupDisplay(dname, mustExist)</font></code>
@@ -3097,7 +3152,9 @@ If <b>dname</b> is specified but does not exist, an error is thrown unless
 the <b>mustExist</b> parameter is explicitly set to false (i.e., the default
 is that the id must exist).
 
+<p id="JS9.ResizeDisplay">
 <font size="+1"><b><u>Resize the JS9 Display</u></b></font>
+</p>
 <p>
 <code><font size="+1">JS9.ResizeDisplay(dname, width, height, opts)</font></code>
 <p>
@@ -3145,7 +3202,7 @@ or:
     JS9.ResizeDisplay(350, 400, {display: "myJS9"});
 </pre>
 
-<p>
+<p id="JS9.MoveToDisplay">
 <font size="+1"><b><u>Move an image to a new JS9 display</u></b></font>
 <p>
 <code><font size="+1">JS9.MoveToDisplay(dname)</font></code>
@@ -3163,10 +3220,12 @@ will move the current image displayed in the "JS9" display window to
 the "myJS9" window. 
 <p>
 Note that the new JS9 display must already exist. New displays can be
-created with the <b>JS9.LoadWindow()</b> public access routine or
+created with the
+<a href="#JS9.LoadWindow"><b>JS9.LoadWindow()</b></a>
+public access routine or
 the <b>File:new JS9 light window</b> menu option.
 
-<p>
+<p id="JS9.GatherDisplay">
 <font size="+1"><b><u>Gather other images to this JS9 Display</u></b></font>
 <p>
 <code><font size="+1">JS9.GatherDisplay(dname)</font></code>
@@ -3186,7 +3245,7 @@ or:
     JS9.GatherDisplay({display: "myJS9"});
 </pre>
 
-<p>
+<p id="JS9.SeparateDisplay">
 <font size="+1"><b><u>Separate images in this JS9 Display into new displays</u></b></font>
 <p>
 <code><font size="+1">JS9.SeparateDisplay(dname)</font></code>
@@ -3206,7 +3265,7 @@ or:
     JS9.SeparateDisplay({display: "myJS9"});
 </pre>
 
-<p>
+<p id="JS9.CenterDisplay">
 <font size="+1"><b><u>Scroll the JS9 display to the center of the viewport</u></b></font>
 <p>
 <code><font size="+1">JS9.CenterDisplay(dname)</font></code>
@@ -3227,7 +3286,7 @@ or:
 </font></b></center>
 <p>
 
-<p>
+<p id="JS9.Print">
 <font size="+1"><b><u>Print an image</u></b></font>
 <p>
 <code><font size="+1">JS9.Print(opts)</font></code>
@@ -3248,7 +3307,7 @@ By default, if a colorbar is active on the page, it will be placed
 beneath the image. You can pass the <b>colorbar: false</b> option
 in the <b>opts</b> object to avoid printing the active colorbar.
 
-<p>
+<p id="JS9.SaveFITS">
 <font size="+1"><b><u>Save image as a FITS file</u></b></font>
 <p>
 <code><font size="+1">JS9.SaveFITS(filename)</font></code>
@@ -3264,7 +3323,7 @@ specified, the file will be saved as "js9.fits".
 Don't forget that the file is saved by the browser, in whatever location
 you have set up for downloads.
 
-<p>
+<p id="JS9.SavePNG">
 <font size="+1"><b><u>Save image as a PNG file</u></b></font>
 <p>
 <code><font size="+1">JS9.SavePNG(filename)</font></code>
@@ -3281,7 +3340,7 @@ along with the graphical overlays (regions, etc.).
 Don't forget that the file is saved by the browser, in whatever location
 you have set up for downloads.
 
-<p>
+<p id="JS9.SaveJPEG">
 <font size="+1"><b><u>Save image as a JPEG file</u></b></font>
 <p>
 <code><font size="+1">JS9.SaveJPEG(filename, quality)</font></code>
@@ -3301,7 +3360,7 @@ least), this default values is 0.95 (I think).
 Don't forget that the file is saved by the browser, in whatever location
 you have set up for downloads.
 
-<p>
+<p id="JS9.GetFITSHeader">
 <font size="+1"><b><u>Get FITS header as a string</u></b></font>
 <p>
 <code><font size="+1">JS9.GetFITSHeader(nlflag)</font></code>
@@ -3314,14 +3373,16 @@ Return the FITS header as a string. By default, the returned string contains
 the 80-character FITS cards all concatenated together. If <b>nlflag</b>
 is <b>true</b>, each card will have a new-line appended.
 <p>
-Note that the <b>JS9.GetImageData()</b> routine also returns the
+Note that the
+<a href="#JS9.GetImageData"><b>JS9.GetImageData()</b></a>
+routine also returns the
 FITS header, but as an object whose properties contain the header
 values. For example, obj.SIMPLE will usually have a value of true,
 obj.BITPIX will have contain the bits/pixel, etc. This object is more
 useful for programming tasks, but does not contain the FITS comments
 associated with each header card.
 
-<p>
+<p id="JS9.DisplayHelp">
 <font size="+1"><b><u>Display help in a light window</u></b></font>
 <p>
 <code><font size="+1">JS9.DisplayHelp(name)</font></code>
@@ -3334,7 +3395,7 @@ The help file names are the property names in JS9.helpOpts (e.g., "user" for
 the user page, "install" for the install page, etc.). Alternatively, you can
 specify an arbitrary URL to display (just because).
 
-<p>
+<p id="JS9.DisplayPlugin">
 <font size="+1"><b><u>Display plugin in a light window</u></b></font>
 <p>
 <code><font size="+1">JS9.DisplayPlugin(name)</font></code>
@@ -3373,7 +3434,7 @@ nothing if the plugin is explicitly defined on the web page.
 This routine is useful if you are building a web interface that
 supports the JS9 menu functions.
 
-<p>
+<p id="JS9.LightWindow">
 <font size="+1"><b><u>Display content in a light window</u></b></font>
 <p>
 <code><font size="+1">JS9.LightWindow(id, type, content, title, opts)</font></code>
@@ -3422,7 +3483,7 @@ to <b>JS9.LightWindow()</b> or make up your own configuration string.
 As an extension to the Dynamic Drive light window support, JS9 adds the ability
 to double-click the title bar in order to close the window.
 
-<p>
+<p id="JS9.OpenFileMenu">
 <font size="+1"><b><u>Use the file dialog box to load a FITS file</u></b></font>
 <p>
 <code><font size="+1">JS9.OpenFileMenu()</font></code>
@@ -3433,7 +3494,7 @@ FITS file is selected, if will be loaded into the JS9 display.
 This routine is useful if you are building a web interface that
 supports the JS9 menu functions.
 
-<p>
+<p id="JS9.OpenRegionsMenu">
 <font size="+1"><b><u>Use the file dialog box to load a region file</u></b></font>
 <p>
 <code><font size="+1">JS9.OpenRegionsMenu()</font></code>
@@ -3444,7 +3505,7 @@ selected, if will be loaded into the JS9 display.
 This routine is useful if you are building a web interface that
 supports the JS9 menu functions.
 
-<p>
+<p id="JS9.OpenColormapMenu">
 <font size="+1"><b><u>Use the file dialog box to load a colormap file</u></b></font>
 <p>
 <code><font size="+1">JS9.OpenColormapMenu()</font></code>
@@ -3460,10 +3521,11 @@ display. The colormap file can take one of two forms (without the comments):
     {"name":"purple","vertices":[[[0,0],[1,1]],[[0,0],[0,0]],[[0,0],[1,1]]]}
 </pre>
 This routine is useful if you are building a web interface that
-supports the JS9 menu functions. See <b>JS9.AddColormap()</b> for more
+supports the JS9 menu functions. See
+<a href="#JS9.AddColormap"><b>JS9.AddColormap()</b></a> for more
 information about colormap formats.
 
-<p>
+<p id="JS9.GetToolbar">
 <font size="+1"><b><u>Get toolbar values from the Toolbar plugin</u></b></font>
 <p>
 <code><font size="+1">val = JS9.GetToolbar(type)</font></code>
@@ -3481,7 +3543,7 @@ plugin. If the first argument is "showTooltips", the returned value specifies
 whether tooltips are currently displayed. Otherwise an array of tool objects is
 returned, one for each of the defined tools in the toolbar.
 
-<p>
+<p id="JS9.SetToolbar">
 <font size="+1"><b><u>Set toolbar values for the Toolbar plugin</u></b></font>
 <p>
 <code><font size="+1">JS9.SetToolbar(arg1, arg2)</font></code>
@@ -3575,7 +3637,7 @@ active toolbars by calling:
     JS9.SetToolbar("init");
 </pre>
 
-<p>
+<p id="JS9.InstalLDir">
 <font size="+1"><b><u>Get location of JS9 installation directory</u></b></font>
 <p>
 <code><font size="+1">rpath = JS9.InstallDir(file)</font></code>
@@ -3593,7 +3655,7 @@ sub-directory. The web page loading the plugin has an arbitrary
 location relative to the JS9 install directory, so this routine
 returns a relative path to the js9 install directory.
 
-<p>
+<p id="JS9.Send">
 <font size="+1"><b><u>Send a message to a back-end server</u></b></font>
 <p>
 <code><font size="+1">JS9.Send(msg, obj, cb)</font></code>
@@ -3618,15 +3680,18 @@ write your own socket.io-based server, you might want to add
 project-specific messages to your implementation. For example, a
 Perl-based or Python-based server might add its own special messages
 that execute Perl or Python commands within the server in response to
-JS9 messages. In this case, you can use <b>JS9.Send()</b> to send a
-message to these message handlers.
+JS9 messages. In this case, you can use
+<a href="#JS9.Send"><b>JS9.Send()</b></a>
+to send a message to these message handlers.
 <p>
 The <b>msg</b> name is the name of the message, as defined by the
 server. By convention, an object is usually passed to the
 message handler. JS9 will add a <b>dataPath</b> property to this
 object to indicate the current list of directories in which to
 search for data. All other properties are specific to the message being handled.
-You can pass a null instead of an object and <b>JS9.Send()</b> will generate
+You can pass a null instead of an object and
+<a href="#JS9.Send"><b>JS9.Send()</b></a>
+will generate
 a temporary object to hold the dataPath.
 <p>
 The <b>cb</b> function will be called if the message sends an
@@ -3641,7 +3706,7 @@ list of available analysis tasks and then display this list using the call:
 The "getAnalysis" message passes no parameters to the server. The
 server returns a list of available analysis tasks in json format.
 
-<p>
+<p id="JS9.AddDivs">
 <font size="+1"><b><u>Add a JS9 display div and/or associated plugins</u></b></font>
 <p>
 <code><font size="+1">JS9.AddDivs(id1, id2, ...)</font></code>
@@ -3669,10 +3734,12 @@ page and load an image into that display:
     // just a standard load to that display
     JS9.Load("foo.fits", {scale: "log"}, {display: "myJS9"});
 </pre>
-See also <b>JS9.LoadWindow()</b> for a nice way to load images into a
+See also
+<a href="#JS9.LoadWindow"><b>JS9.LoadWindow()</b></a>
+for a nice way to load images into a
 light-weight or completely new window.
 
-<p>
+<p id="JS9.InstantiatePlugins">
 <font size="+1"><b><u>Instantiate plugins on this web page</u></b></font>
 <p>
 <code><font size="+1">JS9.InstantiatePlugins()</font></code>
@@ -3681,8 +3748,9 @@ Normally, JS9 will instantiate all of its plugins automatically once the page
 is loaded and ready: internally, jQuery $(document).ready() calls JS9.init().
 However, module loaders such as <a href="http://requirejs.org">Require.js</a>
 can load scripts asynchronously and cause jQuery $(document).ready() to fire
-before all JS9 scripts are available. The <b>RegisterPlugin()</b> routine
-should deal properly with this situation. But just in case ...
+before all JS9 scripts are available. The
+<a href="#JS9.RegisterPlugin"><b>RegisterPlugin()</b></a>
+routine should deal properly with this situation. But just in case ...
 the <b>JS9.InstantiatePlugins()</b> will perform the plugin instantiation 
 explicitly.
 <p>
@@ -3698,7 +3766,7 @@ NB: The routines in this section are prototypes and therefore are
 subject to change. Feel free to contact us to discuss your needs so
 that we can gain a better understanding of what is required in these cases.
 
-<p>
+<p id="JS9.LoadAuxFile">
 <font size="+1"><b><u>Load an auxiliary file</u></b></font>
 <p>
 <code><font size="+1">JS9.LoadAuxFile(name, func)</font></code>
@@ -3797,7 +3865,10 @@ forced to make an incompatible change to the API, it will be documented here.
 20151218: OpenFileMenu and OpenRegionsMenu don't require a display argument
 </u></b></font>
 <p>
-The routines <b>OpenFileMenu()</b> and <b>OpenRegionsMenu()</b>
+The routines
+<a href="#JS9.OpenFileMenu"><b>OpenFileMenu()</b></a>
+and
+<a href="#JS9.OpenRegionsMenu"><b>OpenRegionsMenu()</b></a>
 required a display argument, instead of utilizing the standard
 optional display object. This mistake has been corrected, with the
 result that both routines now target the default display, as expected,
@@ -3807,7 +3878,9 @@ if no display is passed.
 20141117: The Set routines now return "OK" instead of true on success
 </u></b></font>
 <p>
-The public Set routines (<b>SetZoom()</b>, <b>SetColormap()</b>, etc)
+The public Set routines
+(<a href="#JS9.SetZoom"><b>SetZoom()</b></a>,
+<a href="#JS9.SetColormap"><b>SetColormap()</b></a>, etc)
 were returning a boolean true when successful. This has been changed
 to "OK", to make it clear that the return value is a status value,
 not a boolean data value.
@@ -3817,8 +3890,10 @@ not a boolean data value.
 </u></b></font>
 <p>
 Due to an oversight, the signature of the callback function supplied to
-<b>RunAnalysis()</b> (and its derivative function, 
-<b>SubmitAnalysis()</b>) was missing the errcode argument. 
+<a href="#JS9.RunAnalysis"><b>RunAnalysis()</b></a>
+(and its derivative function, 
+<a href="#JS9.SubmitAnalysis"><b>SubmitAnalysis()</b></a>)
+was missing the errcode argument. 
 To correct this mistake, the signature was changed from:
 <pre>
     func(stdout, stderr, aobj)
@@ -3831,7 +3906,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: January 29, 2018</h5>
+<h5>Last updated: February 12, 2018</h5>
 </div>
 
 </body>
