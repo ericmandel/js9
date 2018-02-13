@@ -2060,14 +2060,13 @@ as needed.
   
 <p>
 Spatial regions of interest are a crucial part of astronomical data
-analysis.  The regions layer is a special case of the more generalized
-shape layers, automatically created by JS9 to support the options in
-the <b>Regions</b> menu, as well as local and server-side data analysis
-using regions.
-<p>
-The regions layer has the special property that, by default,
-its <b>z-index</b> is higher than other shape layers, so that regions
-are displayed on top of other shape layers.
+analysis. The regions layer is a special case of the more generalized
+<b><a href="#shapes">Shape</a></b> layers, automatically created by
+JS9 to support the options in the <b>Regions</b> menu, as well as
+local and server-side data analysis using regions. As such, these
+region routines are just a thin layer on top of the Shape routines,
+calling the equivalent Shape routine with "region" as the first argument.
+
 <p>
 Note that the
 <b><a href="#JS9.GetRegions">GetRegions()</a>,
@@ -2457,10 +2456,12 @@ This routine creates a new named shape layer. You can then, add, change,
 and remove shapes in this layer using the routines below. The catalogs
 displayed by the Catalog plugin are examples of separate shape layers.
 <p>
-The optional <b>opts</b> parameter allows you to specify default
-options for the new layer. You can set a default for any property needed
-by your shape layer. See JS9.Regions.opts in js9.js for example of the
-default options for the regions layer.
+The <b>opts</b> parameter allows you to specify default options for
+the new layer. Although this argument is optional, you generally will
+want to set default values for various properties utilized by your
+new shape layer. See JS9.Regions.opts in js9.js for example of the default
+options for the regions layer. This is a good set of options to pass if
+you want region-like behavior in your new layer.
 <p>
 The JS9.Catalogs.opts object is also supplied as a possible default
 object for new shape layers.  It differs from the JS9.Regions.opts
