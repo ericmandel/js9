@@ -2463,12 +2463,16 @@ new shape layer. See JS9.Regions.opts in js9.js for example of the default
 options for the regions layer. This is a good set of options to pass if
 you want region-like behavior in your new layer.
 <p>
-The JS9.Catalogs.opts object is also supplied as a possible default
-object for new shape layers.  It differs from the JS9.Regions.opts
-object in that it does not define regions-specific processing (such as
-double-click to edit a region parameters). It also makes the new layer
-non-interactive: individual shapes cannot be moved, rotated, resized,
-or deleted, nor do they respond to events.
+The JS9.Catalogs.opts object is also supplied as a possible baseline
+object for new shape layers.  It differs from the JS9.Regions.opts in a
+few important ways:
+<ul>
+<li> it makes the new layer non-interactive: individual shapes cannot be
+moved, rotated, resized, or deleted, nor do they respond to events
+<li> it sets the <b>updateWCSString</b> property to false, so the relatively expensive operation of updating the wcs string is not performed when an object is modified
+<li> it does not sort overlapping shapes so that the smallest is on top when a shape is moved
+<li> it does not define regions-specific processing (e.g., double-click to edit a region parameters)
+</ul>
 <p>
 Starting with the JS9.Catalogs.opts object as a default, you can make
 the new layer interactive in a few different ways. The first way is to
