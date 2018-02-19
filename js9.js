@@ -7807,8 +7807,8 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
     opts.color = opts.color || global.color || "#00FF00";
     // wcs system
     opts.wcssys = opts.wcssys || global.wcssys;
-    // update the wcsstr when adding a shape
-    opts.updateWCSString = true;
+    // update the WCS strings when adding a catalog shape
+    opts.updateWCS = true;
     // starbase opts
     topts = {convFuncs:  {def: defconv},
 	     units: opts.units || global.units,
@@ -10244,9 +10244,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	v1 = JS9.strtoscaled(s[1]);
 	pub.ra = v0.dval;
 	pub.dec = v1.dval;
-	// generate wcs string iff updateWCSString is true
-	if( (opts.updateWCSString !== false) &&
-	    (opts.updateWCSString || layer.opts.updateWCSString) ){
+	// generate WCS strings iff updateWCS is true
+	if( (opts.updateWCS !== false) &&
+	    (opts.updateWCS || layer.opts.updateWCS) ){
 	    pub.wcsstr = JS9.reg2wcs(this.raw.wcs, tstr).replace(/;$/, "");
 	    // wcs size args
 	    s = pub.wcsstr.replace(/.*\(/,"").replace(/\).*/,"").split(",");
@@ -11745,8 +11745,8 @@ JS9.Regions.NAME = "Regions";
 
 // defaults for new regions
 JS9.Regions.opts = {
-    // update wcs string
-    updateWCSString: true,
+    // update WCS strings
+    updateWCS: true,
     // pan and zoom enabled
     panzoom: true,
     tags: "source,include",
@@ -13191,8 +13191,8 @@ JS9.Catalogs.opts = {
     canvas: {
 	selection: false
     },
-    // don't update wcs string
-    updateWCSString: false,
+    // don't update WCS strings
+    updateWCS: false,
     // pan and zoom enabled
     panzoom: true,
     // default shape
