@@ -467,15 +467,11 @@ a considerable amount of transfer data.
 Given a FITS-standard 1-indexed image pixel x,y, you can find the data value 
 at that location using:
 <pre>
-    val = obj.data[Math.floor(y-0.5) * obj.width + Math.floor(x-0.5)];
+    val = obj.data[Math.floor(y-1) * obj.width + Math.floor(x-1)];
 </pre>
 Note the need to integerize the x and y values: JavaScript arrays are
 objects and so floating point array indices do not get truncated
 automatically as in C. They will return null values.
-<p>
-Also note that since we need 0-based data array indexes, we subtract 1 from
-the 1-based image position.  But then we must add 0.5 before rounding because
-by convention, x.0, y.0 is the middle of the pixel.
 
 <h5 id="JS9.GetDisplayData">Get image data for all images loaded into the specified display</h5>
 <p>
@@ -2256,16 +2252,12 @@ The image position can be used to access the image data returned by the
 <pre>
     obj = JS9.GetImageData();
     xreg = JS9.GetRegions("selected")[0];
-    val = obj.data[Math.floor(xreg.y-0.5) * obj.width + Math.floor(xreg.x-0.5)];
+    val = obj.data[Math.floor(xreg.y-1) * obj.width + Math.floor(xreg.x-1)];
 </pre>
 <p>
 Note the need to integerize the x and y values: JavaScript arrays are
 objects and so floating point array indices do not get truncated
 automatically as in C. They will return null values.
-<p>
-Also note that since we need 0-based data array indexes, we subtract 1 from
-the 1-based image position.  But then we must add 0.5 before rounding because
-by convention, x.0, y.0 is the middle of the pixel.
 
 <h5 id="JS9.ChangeRegions">Change one or more regions</h5>
 <p>

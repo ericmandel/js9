@@ -120,6 +120,7 @@ JS9.globalOpts = {
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     table: {xdim: 2048, ydim: 2048, bin: 1},// image section size to extract from table
     image: {xdim: 2048, ydim: 2048, bin: 1},// image section size (0 for unlimited)
+    centerOffset: 0,		// the confusing question of the pixel center
     clearImageMemory: "never",  // rm vfile: always|never|auto|noExt|noCube|size>x Mb
     helperProtocol: location.protocol, // http: or https:
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
@@ -3532,14 +3533,9 @@ JS9.Image.prototype.displayToImagePos = function(dpos){
     var rgb = this.rgb;
     var sect = this.rgb.sect;
     var ipos = {};
-    // for zoomed images, the image coordinate is at the center
-    if( sect.zoom <= 1 ){
-	ipos.x = (dpos.x - this.ix) / sect.zoom + sect.x0 + 1;
-	ipos.y = ((rgb.img.height - 1) - (dpos.y - this.iy)) / sect.zoom + sect.y0 + 1;
-    } else {
-	ipos.x = (dpos.x - this.ix) / sect.zoom + sect.x0 + 1 - 0.5;
-	ipos.y = ((rgb.img.height - 1) - (dpos.y - this.iy)) / sect.zoom + sect.y0 + 1 - 0.5;
-    }
+    var cenoff = JS9.globalOpts.centerOffset;
+    ipos.x = (dpos.x - this.ix) / sect.zoom + sect.x0 + 1 - cenoff;
+    ipos.y = ((rgb.img.height - 1) - (dpos.y - this.iy)) / sect.zoom + sect.y0 + 1 - cenoff;
     return ipos;
 };
 
@@ -3548,14 +3544,9 @@ JS9.Image.prototype.imageToDisplayPos = function(ipos){
     var rgb = this.rgb;
     var sect = this.rgb.sect;
     var dpos = {};
-    // for zoomed images, the image coordinate is at the center
-    if( sect.zoom <= 1 ){
-	dpos.x = (((ipos.x - 1) - sect.x0) * sect.zoom) + this.ix;
-	dpos.y = (sect.y0 - (ipos.y - 1)) * sect.zoom + (rgb.img.height - 1) + this.iy;
-    } else {
-	dpos.x = (((ipos.x - 1 + 0.5) - sect.x0) * sect.zoom) + this.ix;
-	dpos.y = (sect.y0 - (ipos.y - 1 + 0.5)) * sect.zoom + (rgb.img.height - 1) + this.iy;
-    }
+    var cenoff = JS9.globalOpts.centerOffset;
+    dpos.x = (((ipos.x - 1 + cenoff) - sect.x0) * sect.zoom) + this.ix;
+    dpos.y = (sect.y0 - (ipos.y - 1 + cenoff)) * sect.zoom + (rgb.img.height - 1) + this.iy;
     return dpos;
 };
 
@@ -4838,6 +4829,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
     var sep1 = "\t ";
     var sep2 = "\t\t ";
     var sp = "&nbsp;&nbsp;&nbsp;&nbsp;";
+    var cenoff = JS9.globalOpts.centerOffset;
     var prec = JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
     var tf = function(fval){
 	return JS9.floatFormattedString(fval, prec, 3);
@@ -4883,9 +4875,8 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    c = this.imageToLogicalPos(ipos);
 	}
 	// get image value: here we need 0-indexed positions, so subtract 1
-	// but add 0.5 before rounding since x.0 is in the middle of the pixel
-	val = this.raw.data[Math.floor(ipos.y-0.5) * this.raw.width +
-			    Math.floor(ipos.x-0.5)];
+	val = this.raw.data[Math.floor(ipos.y - 1 + cenoff) * this.raw.width +
+			    Math.floor(ipos.x - 1 + cenoff)];
 	// fix the significant digits in the value
 	switch(this.raw.bitpix){
 	case 8:
