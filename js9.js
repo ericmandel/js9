@@ -7252,8 +7252,8 @@ JS9.Display.prototype.separate = function(opts){
     var js9Str = "<div class='JS9' id='%s' data-width=%s data-height=%s></div>";
     var colorStr = "<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' data-width=%s></div></div>";
     var winoptsStr = "width=%s,height=%s,top=%s,left=%s,resize=1,scolling=1";
-    var TOP_FUDGE = 7, LEFT_FUDGE = 0;
     var SIZE_FUDGE = JS9.bugs.webkit_resize ? JS9.RESIZEFUDGE : 0;
+    var COLORBAR_FUDGE = 7;
     var DHTML_HEIGHT = 30 + 13; // height of dhtml lightwin extras;
     var initopts = function(fromID, opts){
 	// sanify check
@@ -7291,10 +7291,8 @@ JS9.Display.prototype.separate = function(opts){
 	    // hack: height of the dhtml drag handle and status area
 	    sep.width = sep.js9.width();
 	    sep.height = sep.js9.height();
-	    sep.top = sep.js9.offset().top -
-		$(window).scrollTop()  + TOP_FUDGE;
-	    sep.left = sep.js9.offset().left -
-		$(document).scrollLeft() + LEFT_FUDGE;
+	    sep.top = sep.js9.offset().top - $(window).scrollTop();
+	    sep.left = sep.js9.offset().left - $(document).scrollLeft();
 	    if( sep.menubar.length > 0 ){
 		sep.height += sep.menubar.height();
 		sep.top -= sep.menubar.height();
@@ -7306,6 +7304,7 @@ JS9.Display.prototype.separate = function(opts){
 	    if( sep.colorbar.length > 0 ){
 		sep.height += sep.colorbar.height();
 		sep.top -= sep.colorbar.height();
+		sep.top += COLORBAR_FUDGE;
 	    }
 	}
     };
