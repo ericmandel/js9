@@ -246,7 +246,6 @@ void updateLTM(fitsfile *fptr, fitsfile *ofptr,
   double x1, y1;
   double dval;
   char comment[FLEN_CARD];
-  /* use 0-index. is this correct? */
   x1 = (int)(xcen - (dim1 / 2.0));
   y1 = (int)(ycen - (dim2 / 2.0));
   if( !bin ){
@@ -256,13 +255,14 @@ void updateLTM(fitsfile *fptr, fitsfile *ofptr,
     dval = 0.0; *comment = '\0'; status = 0;
     fits_read_key(fptr, TDOUBLE, "CRPIX1", &dval, comment, &status);
     if( status == 0 ){
-      dval = (dval - x1) / bin;
+      // see funtools/funcopy.c/_FunCopy2ImageHeader
+      dval = (dval + 1.0 - x1 - 0.5) / bin + 0.5;
       fits_update_key(ofptr, TDOUBLE, "CRPIX1", &dval, comment, &status);
     }
     dval = 0.0; *comment = '\0'; status = 0;
     fits_read_key(fptr, TDOUBLE, "CRPIX2", &dval, comment, &status);
     if( status == 0 ){
-      dval = (dval - y1) / bin;
+      dval = (dval + 1.0 - y1 - 0.5) / bin + 0.5;
       fits_update_key(ofptr, TDOUBLE, "CRPIX2", &dval, comment, &status);
     }
     dval = 0.0; *comment = '\0'; status = 0;
@@ -296,11 +296,11 @@ void updateLTM(fitsfile *fptr, fitsfile *ofptr,
   fits_update_key(ofptr, TDOUBLE, "LTM2_2", &dval, comment, &status);
   dval = 0.0; *comment = '\0'; status = 0;
   fits_read_key(fptr, TDOUBLE, "LTV1", &dval, comment, &status);
-  dval = (dval - x1) / bin; status = 0;
+  dval = (dval + 1.0 - x1 - 0.5) / bin + 0.5; status = 0;
   fits_update_key(ofptr, TDOUBLE, "LTV1", &dval, comment, &status);
   dval = 0.0; *comment = '\0'; status = 0;
   fits_read_key(fptr, TDOUBLE, "LTV2", &dval, comment, &status);
-  dval = (dval - y1) / bin; status = 0;
+  dval = (dval + 1.0 - y1 - 0.5) / bin + 0.5; status = 0;
   fits_update_key(ofptr, TDOUBLE, "LTV2", &dval, comment, &status);
 }
 
