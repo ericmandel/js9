@@ -3190,6 +3190,7 @@ You also can supply an opts object containing the layout properties:
 <li><b>layout</b>: can be "horizontal", "vertical", "auto" (default: "auto")
 <li><b>leftMargin</b>: margin in pixels between horizontally separated images
 <li><b>topMargin</b>: margin in pixels between vertically separated images
+<li><b>idbase</b>: base string for ids of separated displays
 </ul>
 The "horizontal" layout will generate a single row of images. The
 "vertical" layout will generate a single column of images.  The "auto"
@@ -3203,6 +3204,14 @@ parameter, e.g:
     JS9.SeparateDisplay({layout: "horizontal"});
 </pre>
 will separate images from the default "JS9" display in a horizontal layout.
+<p>
+By default, the ids of the successive JS9 displays will consist of
+the original display id, followed by the string "_sep", followed by an
+increasing integer (not necessarily starting at 1). If you pass
+the <b>idbase</b> property in the opts object, the id of each successive
+display will be the specified base id followed by an increasing integer
+that does start from 1. In the latter case, it is your responsibility to
+ensure that the new ids to not conflict with existing ids.
 
 <h5 id="JS9.CenterDisplay">Scroll the JS9 display to the center of the viewport</h5>
 <p>

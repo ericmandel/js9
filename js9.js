@@ -7245,6 +7245,7 @@ JS9.Display.prototype.separate = function(opts){
     var d0, d1;
     var sep = {};
     var row = 0, col = 0;
+    var myid = 1;
     var rexp = /_sep[0-9][0-9]*/;
     var sepopts = JS9.globalOpts.separate;
     var menuStr = "<div class='JS9Menubar' id='%sMenubar' data-width=%s></div>";
@@ -7350,6 +7351,7 @@ JS9.Display.prototype.separate = function(opts){
     };
     var separateim = function(n){
 	var im, winopts;
+	var id;
 	if( JS9.images.length > n ){
 	    im = JS9.images[n];
 	    // look for images in this display
@@ -7361,7 +7363,12 @@ JS9.Display.prototype.separate = function(opts){
 		    separateim(n+1);
 		} else {
 		    // create a new window for this image
-		    d1 = d0.replace(rexp, "") + "_sep" + JS9.uniqueID();
+		    if( typeof opts.idbase === "string" ){
+			id = opts.idbase + myid++;
+			d1 = id;
+		    } else {
+			d1 = d0.replace(rexp, "") + "_sep" + JS9.uniqueID();
+		    }
 		    // code to run when new window exists
 		    $("#dhtmlwindowholder").arrive("#"+d1, {onceOnly: true},
 			function(){
@@ -7374,6 +7381,10 @@ JS9.Display.prototype.separate = function(opts){
 			    }, 0);
 			});
 		    winopts = getopts(d0, d1);
+		    // add id, if idbase was supplied in opts
+		    if( id ){
+			winopts.id = id;
+		    }
 		    // load new window, code above gets run when window exists
 		    JS9.LoadWindow(null, winopts);
 		}
