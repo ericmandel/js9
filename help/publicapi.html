@@ -309,6 +309,11 @@ It is worth emphasizing that <b>JS9.Preload()</b> should not be called
 until the web page is fully loaded, since JS9 itself is not fully
 initialized until then. It is for this reason that <b>JS9.Preload()</b>
 generally is called using an onload routine tied to the web page body.
+
+<p>
+You can load URLs outside the current web page domain if you are running a
+JS9 helper which has enabled the server side <b>Proxy Load</b> capability.
+See <a href="serverside.js">Server-side Analysis Tasks</a> for more information.
   
 <h5 id="JS9.GetLoadStatus">Get Load Status</h5>
 <p> 
@@ -2393,15 +2398,33 @@ will toggle between <b>include</b> and <b>exclude</b>.
 
 <h5 id="JS9.LoadRegions">Load regions from a file into the current image</h5>
 <p>
-<code class="api">JS9.LoadRegions(filename)</code>
+<code class="api">JS9.LoadRegions(filename, opts)</code>
 <p>
 where:
 <ul>
 <li><b>filename</b>: input file name or URL
+<li><b>opts</b>: global region options for all regions
 </ul>
 Load the specified regions file into the displayed image. The filename, 
 which must be specified, can be a local file (with absolute path or a
 path relative to the displayed web page) or a URL.
+<p>
+The <b>opts</b> property specifies global options that are applied to
+all regions in the file. They will be over-ridden by individual region
+properties attached to a given region.  For example, if a region file
+named "foo.reg" contains the following regions:
+<pre>
+    # Region file format: JS9 version 1.0
+    image
+    circle(512.0, 512.0, 40) {"color": "red"}
+    box(512.0, 512.0, 40, 40)
+    annulus(512.0, 512.0, 0.0, 3.0, 12.0, 18.0, 27.0)
+</pre>
+then a command such as:
+<pre>
+    JS9.LoadRegions("foo.reg", {color: "blue"});
+</pre>
+will create a red circle, a blue box, and a blue annulus.
 
 <p><hr>
   

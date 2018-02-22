@@ -18079,7 +18079,7 @@ JS9.mkPublic("SaveRegions", function(fname, which, layer){
     if( im ){
 	return im.saveRegions(file, wh, la);
     }
-    return fname;
+    return null;
 });
 
 // toggle region tags, e.g. source <-> background, include <-> exclude
@@ -18098,13 +18098,22 @@ JS9.mkPublic("ToggleRegionTags", function(which, x1, x2){
 
 // load a DS9/funtools regions file
 JS9.mkPublic("LoadRegions", function(file, opts){
-    var display, reader;
+    var reader;
     var obj = JS9.parsePublicArgs(arguments);
+    var im = JS9.getImage(obj.display);
+    var addregions = function(reg, ropts){
+	if( ropts && ropts.display !== undefined ){ delete ropts.display; }
+	im.addShapes("regions", reg, ropts);
+    };
     file = obj.argv[0];
     opts = obj.argv[1];
     // sanity check
     if( !file ){
 	JS9.error("JS9.LoadRegions: no file specified for regions load");
+    }
+    // no action if no current image
+    if( !im ){
+	return;
     }
     // opts can be an object or json
     if( typeof opts === "object" ){
@@ -18118,30 +18127,17 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 	// init as an empty object
 	opts = {};
     }
-    // check for display
-    if( obj.display ){
-	display = obj.display;
-    } else if( opts.display ){
-	display = opts.display;
-    } else {
-	if( JS9.displays.length > 0 ){
-	    display = JS9.displays[0].id;
-	} else {
-	    display = JS9.DEFID;
-	}
-    }
     // convert blob to string
     if( typeof file === "object" ){
 	// file reader object
 	reader = new FileReader();
 	reader.onload = function(ev){
-	    JS9.AddRegions(ev.target.result, opts, {display: display});
+	    addregions(ev.target.result);
 	};
 	reader.readAsText(file);
     } else if( typeof file === "string" ){
 	opts.responseType = "text";
-	opts.display = display;
-	JS9.fetchURL(null, file, opts, JS9.AddRegions);
+	JS9.fetchURL(null, file, opts, addregions);
     } else {
 	// oops!
 	JS9.error("unknown file type for LoadRegions: " + typeof file);
