@@ -7354,6 +7354,8 @@ JS9.Display.prototype.separate = function(opts){
 	var id;
 	if( JS9.images.length > n ){
 	    im = JS9.images[n];
+	    // display this image so it's the current one we move
+	    im.displayImage("all");
 	    // look for images in this display
 	    if( that === im.display ){
 		// leave the first one in place
