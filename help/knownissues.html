@@ -16,6 +16,22 @@
 
 <ol>
 
+<li><b>Linux platforms using Firefox (February 20, 2018 : not resolved)</b>
+<p>
+One of the simplest ways to use JS9 locally is by means of the file://
+URL scheme, e.g., point your browser to file:///home/me/js9/js9basics.html.
+<p>
+On Linux, although this works in Firefox for files in the web page's
+domain, it does not work for files outside the domain:
+<pre>
+    JS9.Load("foo.fits")         # works
+    JS9.Load("fits/foo.fits")    # works
+    JS9.Load("../foo.fits")      # does not work
+</pre>
+Firefox does load files outside the web domain properly on a Mac (at
+least for today!).
+<p>
+
 <li><b>Safari (October 4, 2016 : NOT resolved)</b>
 <p>
 On Mac OSX, if the Terminal running the js9 messaging script is
@@ -114,7 +130,7 @@ further processing commands).
 
 </ol>
 
-<h5>Last updated: October 4, 2016</h5>
+<h5>Last updated: February 20, 2018</h5>
 </div>
 
 </body>
