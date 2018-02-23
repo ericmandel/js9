@@ -4597,6 +4597,15 @@ JS9.Menubar.init = function(width, height){
 	this.menuConjq.css("background", this.backgroundColor);
     }
     $(function(){
+	// eslint-disable-next-line no-unused-vars
+	function mypos(opt,  x,  y)  {
+	    opt.$menu.position({
+		my:  'left top',
+		at:  'right-5 bottom-5',
+		of:  opt.$trigger,
+		collision: "fit"
+	    });
+	}
 	function onhide() {
 	    var tdisp = that.display;
 	    if( JS9.bugs.hide_menu && tdisp.image ){
@@ -4613,6 +4622,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#superMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
+	    position: mypos,
             build: function(){
 		var i, name, tdisp;
 		var n = 0;
@@ -4652,6 +4662,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#fileMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
+	    position: mypos,
             build: function(){
 		var i, im, name, imlen, s1;
 		var n = 0;
@@ -5020,6 +5031,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#viewMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
+	    position: mypos,
             build: function(){
 		var i, plugin, pname, pinst, key;
 		var lastxclass="";
@@ -5288,6 +5300,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#zoomMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
+	    position: mypos,
             build: function(){
 		var i, zoom, zoomp, name, name2;
 		var n = 0;
@@ -5433,6 +5446,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#scaleMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
+	    position: mypos,
             build: function(){
 		var i, s1, s2;
 		var n = 0;
@@ -5595,6 +5609,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#colorMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
+	    position: mypos,
             build: function(){
 		var i, s1, s2, arr;
 		var n = 0;
@@ -5776,6 +5791,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#regionMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
+	    position: mypos,
             build: function(){
 		var i, s1;
 		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
@@ -5893,6 +5909,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#wcsMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
+	    position: mypos,
             build: function(){
 		var i, s1, s2, key, altwcs;
 		var n=0, nwcs=0, got=0;
@@ -6120,6 +6137,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#analysisMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
+	    position: mypos,
             build: function(){
 	        var i, j, s, apackages, atasks;
 		var plugin, pinst, pname;
@@ -6418,6 +6436,7 @@ JS9.Menubar.init = function(width, height){
             selector: "#helpMenu" + that.id,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
+	    position: mypos,
             build: function(){
 		var t, key, val;
 		var n = 1;
