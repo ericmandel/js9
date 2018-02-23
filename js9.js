@@ -6209,7 +6209,6 @@ JS9.Image.prototype.moveToDisplay = function(dname){
                 layer.divjq = dlayer.divjq;
                 layer.canvasjq = dlayer.canvasjq;
                 layer.canvas = dlayer.canvas;
-		this.showShapeLayer(key, true);
 	    } else {
 		delete this.layers[key];
 	    }
@@ -6223,6 +6222,12 @@ JS9.Image.prototype.moveToDisplay = function(dname){
     this.mkSection();
     // and redisplay
     this.displayImage("all");
+    // show shape layers in new display
+    for( key in this.layers ){
+	if( this.layers.hasOwnProperty(key) ){
+	    this.showShapeLayer(key, true);
+	}
+    }
     // ensure proper positions for graphics
     this.refreshLayers();
     // old display has no image
