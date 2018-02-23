@@ -15,13 +15,15 @@
 <div class="container">
 <center><h3>JS9 ChangeLog</h3></center>
 
-<h3> Minor Patch Release 2.0.3 (TBD)</h3>
+<h3> Public Release 2.1 (TBD)</h3>
 <ul>
+<li> add support for Toolbar plugin
 <li> add JS9.SetParam() and JS9.GetParam() public routines
 <li> add JS9.SetToolbar() and JS9.GetToolbar() public routines
-<li> add support for Toolbar plugin
-<li> add JS9.LoadColormap() public API routine
-<li> add JS9.LightWindow() public API routine
+<li> add JS9.SeparateDisplay() public routine to separate images in a display
+<li> add JS9.GatherDisplay() public routine to gather images into a display
+<li> add JS9.LoadColormap() public routine
+<li> add JS9.LightWindow() public routine
 <li> JS9.GetImageData() now returns display size, bin factor
 <li> JS9.RunAnalysis() return types now include "regions" and "catalog"
 <li> include comments and history in display of FITS header 
@@ -44,6 +46,7 @@
 <li> fix imexam routines needing integer section limits
 <li> update emscripten to v1.37.28
 <li> update fabric.js to v1.7.22
+<li> update contextMenu to v2.6.3
 </ul>
 
 <h3> Minor Patch Release 2.0.2 (December 15, 2017)</h3>
@@ -238,7 +241,7 @@
 <h3> Public Release 1.6 (November 7, 2015)</h3>
 <ul>
 <li> add support for extracting image/table sections from "parent" files
-<li> add JS9.LoadProxy() public API routine to load FITS URLs via proxy server
+<li> add JS9.LoadProxy() public routine to load FITS URLs via proxy server
 <li> add support for loading Dropbox (and other CORS enabled) shared links
 <li> add support for loading links by proxy through the back-end server
 <li> add SetValPos and DisplayMessage public routines
