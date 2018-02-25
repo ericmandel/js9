@@ -438,7 +438,7 @@ if( (JS9.BROWSER[0] !== "Chrome") ){
 // wasm broken in ios 11.2.2 and 11.2.5 but fixed in 11.3beta1 (1/22/2018)
 // see: https://github.com/kripken/emscripten/issues/6042
 if(  /iPad|iPhone|iPod/.test(navigator.platform) &&
-     /11_2_(?:2|5)/.test(navigator.userAgent)    ){
+     /11_2_(?:2|5|6)/.test(navigator.userAgent)    ){
     JS9.globalOpts.useWasm = false;
 }
 // iOS has severe memory limits (05/2017)
