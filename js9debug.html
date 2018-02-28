@@ -249,6 +249,7 @@
                        JS9.Load("fits/ngc1316.fits",
                                 {colormap: "viridis", scale: "linear",
                                  onload: function(){
+                                   JS9.SetScale("zscale");
                                    JS9.Load("fits/casa.fits");
                                    JS9.SetZoom(2);
                                  }});
