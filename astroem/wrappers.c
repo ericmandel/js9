@@ -286,7 +286,7 @@ char *wcs2pixstr(int n, double ra, double dec){
   int offscale;
   if( info->wcs ){
     wcs2pix(info->wcs, ra, dec, &xpix, &ypix, &offscale);
-    snprintf(str, SZ_LINE-1, "%.3f %.3f", xpix, ypix);
+    snprintf(str, SZ_LINE-1, "%.6f %.6f", xpix, ypix);
     nowhite(str, info->str);
     return info->str;
   } else {

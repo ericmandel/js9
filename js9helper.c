@@ -451,6 +451,7 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
 		     int *dims, double *cens, int bin, char *slice,
 		     int *status)
 {
+  int i;
   void *buf;
   char card[FLEN_CARD];
   char tbuf[SZ_LINE];
@@ -461,6 +462,7 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
   long nelements;
   long naxes[2];
   long fpixel[2] = {1,1};
+  float amin[2];
   buf = getImageToArray(ifptr, dims, cens, bin, slice, start, end, &bitpix,
 			status);
   if( !buf || *status ){
@@ -518,11 +520,14 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
   }
   /* write image to FITS file */
   fits_write_pix(ofptr, dtype, fpixel, nelements, buf, status);
-  /* update LTM/TLV values in header */
-  updateLTM(ifptr, ofptr,
-	    (int)((end[0] + start[0]) / 2), (int)((end[1] + start[1]) / 2), 
+  /* update basic WCS and LTM/TLV values in header */
+  for(i=0; i<2; i++){
+    amin[i] = (float)start[i];
+  }
+  updateWCS(ifptr, ofptr,
+	    (int)((end[0] + start[0]) / 2), (int)((end[1] + start[1]) / 2),
 	    (int)(end[0] - start[0] + 1), (int)(end[1] - start[1] + 1),
-	    bin, 1);
+	    bin, amin);
   /* free up space */
   if( buf ){
     free(buf);

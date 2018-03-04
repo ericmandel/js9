@@ -120,7 +120,6 @@ JS9.globalOpts = {
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     table: {xdim: 2048, ydim: 2048, bin: 1},// image section size to extract from table
     image: {xdim: 2048, ydim: 2048, bin: 1},// image section size (0 for unlimited)
-    centerOffset: 0,		// the confusing question of the pixel center
     clearImageMemory: "never",  // rm vfile: always|never|auto|noExt|noCube|size>x Mb
     helperProtocol: location.protocol, // http: or https:
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
@@ -1088,6 +1087,8 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
 	NAXIS2: this.raw.height,
 	BITPIX: this.raw.bitpix
     };
+    // where is the center of the image pixel?
+    this.params.centerAt = 1.0;
     // plugin callbacks
     this.xeqPlugins("image", "onrawdata");
     // allow chaining
@@ -1194,6 +1195,8 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     } else {
 	JS9.error("js9Endian missing from PNG-based FITS header");
     }
+    // where is the center of the image pixel?
+    this.params.centerAt = this.calcCenterAt();
     // object, telescope, instrument names
     this.object = this.raw.header.OBJECT;
     this.telescope = this.raw.header.TELESCOP;
@@ -1615,29 +1618,30 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     // if section information is available, modify the WCS keywords
     // e.g., image sections from astroem/getFITSImage()
-    // this code should (more or less) match updateLTM() in jsfitsio.c
+    // this code should match the algorithm in jsfitsio.c/updateWCS()
     if( hdu.imtab === "image"  &&
 	(hdu.x1 !== undefined  && hdu.x1 !== 1)  ||
 	(hdu.y1 !== undefined  && hdu.y1 !== 1)  ||
 	(hdu.bin === undefined || hdu.bin !== 1) ){
 	// bin factor is optional
 	bin = hdu.bin || 1;
-	// convert 1-index to 0-index (is this correct?)
 	if( hdu.x1 !== undefined ){
-	    x1 = hdu.x1 - 1;
+	    x1 = hdu.x1;
 	} else {
 	    x1 = 0;
 	}
 	if( hdu.y1 !== undefined ){
-	    y1 = hdu.y1 - 1;
+	    y1 = hdu.y1;
 	} else {
 	    y1 = 0;
 	}
 	if( header.CRPIX1 !== undefined ){
-	    header.CRPIX1 = (header.CRPIX1 - x1) / bin;
+	    // cfitsio-style: see cfitsio/histo.c
+	    header.CRPIX1 = (header.CRPIX1 - x1) / bin + 0.5;
 	}
 	if( header.CRPIX2 !== undefined ){
-	    header.CRPIX2 = (header.CRPIX2 - y1) / bin;
+	    // cfitsio-style: see cfitsio/histo.c
+	    header.CRPIX2 = (header.CRPIX2 - y1) / bin + 0.5;
 	}
 	if( header.CDELT1 !== undefined ){
 	    header.CDELT1 = header.CDELT1 * bin;
@@ -1654,9 +1658,9 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	header.LTM2_2 = header.LTM2_2 || 1.0;
 	header.LTM2_2 = header.LTM2_2 / bin;
 	header.LTV1 = header.LTV1 || 0;
-	header.LTV1 = (header.LTV1 - x1) / bin ;
+	header.LTV1 = (header.LTV1 - x1) / bin + 0.5;
 	header.LTV2 = header.LTV2 || 0;
-	header.LTV2 = (header.LTV2 - y1) / bin;
+	header.LTV2 = (header.LTV2 - y1) / bin + 0.5;
     }
     // look for a file/url (we'll also get a new id, see below)
     if( opts.file && opts.file !== this.file ){
@@ -1724,6 +1728,12 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     // save filter, if necessary
     this.raw.filter = opts.filter || "";
+    // image or table?
+    if( hdu.imtab ){
+	this.imtab = hdu.imtab;
+    } else {
+	this.imtab = hdu.table ? "table" : "image";
+    }
     // min and max data values
     if( hdu.dmin !== undefined && hdu.dmax !== undefined ){
 	// data min and max in object
@@ -1732,12 +1742,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	// calculate data min and max
 	this.dataminmax();
     }
-    // image or table
-    if( hdu.imtab ){
-	this.imtab = hdu.imtab;
-    } else {
-	this.imtab = hdu.table ? "table" : "image";
-    }
+    // where is the center of the image pixel?
+    this.params.centerAt = this.calcCenterAt();
     // object, telescope, instrument names
     this.object = this.raw.header.OBJECT;
     this.telescope = this.raw.header.TELESCOP;
@@ -1876,6 +1882,34 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     this.xeqPlugins("image", "onrawdata");
     // allow chaining
     return this;
+};
+
+// where is the center of the image pixel?
+JS9.Image.prototype.calcCenterAt = function(){
+    var centerAt = 1.0;
+    // possibly different for images and tables
+    if( this.imtab === "image" ){
+	// where is the center of the image pixel?
+	if( typeof this.raw.header.LTM1_1 === "number" ){
+	    // why is this needed??
+	    // to line up blocked images with binned tables ..
+	    // both ds9 and js9 shows a slight offset without this factor ..
+	    // but it is an empirical hack
+	    if( this.raw.header.LTM1_1 < 1 ){
+		// ltm has 0.5 incorporated, so start at 0.5 instead of 1
+		centerAt = 0.5 - this.raw.header.LTM1_1;
+	    } else {
+		centerAt = this.raw.header.LTM1_1;
+	    }
+	}
+    } else {
+	// tabmin cfitio's amin value from the fits_calc_binning() routine,
+	// stored in the header by jsfitsio.c/updateWCS()
+	if( this.raw.header.TABMIN1 !== undefined ){
+	    centerAt = this.raw.header.TABMIN1;
+	}
+    }
+    return centerAt;
 };
 
 // store section information
@@ -3533,9 +3567,9 @@ JS9.Image.prototype.displayToImagePos = function(dpos){
     var rgb = this.rgb;
     var sect = this.rgb.sect;
     var ipos = {};
-    var cenoff = JS9.globalOpts.centerOffset;
-    ipos.x = (dpos.x - this.ix) / sect.zoom + sect.x0 + 1 - cenoff;
-    ipos.y = ((rgb.img.height - 1) - (dpos.y - this.iy)) / sect.zoom + sect.y0 + 1 - cenoff;
+    var centerAt = this.params.centerAt;
+    ipos.x = (dpos.x - this.ix) / sect.zoom + sect.x0 + centerAt;
+    ipos.y = ((rgb.img.height - 1) - (dpos.y - this.iy)) / sect.zoom + sect.y0 + centerAt;
     return ipos;
 };
 
@@ -3544,9 +3578,9 @@ JS9.Image.prototype.imageToDisplayPos = function(ipos){
     var rgb = this.rgb;
     var sect = this.rgb.sect;
     var dpos = {};
-    var cenoff = JS9.globalOpts.centerOffset;
-    dpos.x = (((ipos.x - 1 + cenoff) - sect.x0) * sect.zoom) + this.ix;
-    dpos.y = (sect.y0 - (ipos.y - 1 + cenoff)) * sect.zoom + (rgb.img.height - 1) + this.iy;
+    var centerAt = this.params.centerAt;
+    dpos.x = (((ipos.x - centerAt) - sect.x0) * sect.zoom) + this.ix;
+    dpos.y = (sect.y0 - (ipos.y - centerAt)) * sect.zoom + (rgb.img.height - 1) + this.iy;
     return dpos;
 };
 
@@ -4826,10 +4860,10 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
     var val, vstr, vstr2, vstr3, val3, i, c, s;
     var cd1, cd2, v1, v2, units, sect, bin;
     var obj = null;
+    var centerAt = this.params.centerAt;
     var sep1 = "\t ";
     var sep2 = "\t\t ";
     var sp = "&nbsp;&nbsp;&nbsp;&nbsp;";
-    var cenoff = JS9.globalOpts.centerOffset;
     var prec = JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
     var tf = function(fval){
 	return JS9.floatFormattedString(fval, prec, 3);
@@ -4874,9 +4908,10 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	} else {
 	    c = this.imageToLogicalPos(ipos);
 	}
-	// get image value: here we need 0-indexed positions, so subtract 1
-	val = this.raw.data[Math.floor(ipos.y - 1 + cenoff) * this.raw.width +
-			    Math.floor(ipos.x - 1 + cenoff)];
+	// get image value: here we need 0-indexed display positions,
+	// so subtract the centerAt of the image pixel
+	val = this.raw.data[Math.floor(ipos.y - centerAt) * this.raw.width +
+			    Math.floor(ipos.x - centerAt)];
 	// fix the significant digits in the value
 	switch(this.raw.bitpix){
 	case 8:
@@ -9663,19 +9698,19 @@ JS9.Fabric._exportShapeOptions = function(opts){
 // make a text shape as a child of this shape
 // call using image context
 JS9.Fabric._handleChildText = function(layerName, s, opts){
-    var t, dpos, npos, topts;
+    var t, dpos, npos, topts, yoff;
     var textht = 12;
     // region layer only, for now
     if( layerName !== "regions" ){
 	return;
     }
     if( (s.params.shape !== "text") && opts.text ){
+	yoff = (s.height * s.scaleX / 2) - textht;
 	// default position for text (might be overridden by textOpts)
 	if( Math.abs(s.angle) < 0.000001 ){
-	    dpos = {x: s.left, y: s.top - (s.height/2) - textht};
+	    dpos = {x: s.left, y: s.top - yoff};
 	} else {
-	    dpos = JS9.rotatePoint({x: s.left,
-				    y: s.top - (s.height/2) - textht},
+	    dpos = JS9.rotatePoint({x: s.left, y: s.top - yoff},
 				   s.angle, {x: s.left, y: s.top});
 	}
 	npos = this.displayToImagePos(dpos);
@@ -10068,7 +10103,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     var opos, dist;
     var pub ={};
     var layer = this.layers[layerName];
-    var tr  = function(x){return x.toFixed(1);};
+    var tr  = function(x){return x.toFixed(2);};
     var tr4 = function(x){return x.toFixed(4);};
     ginfo = ginfo || {};
     opts = opts || {};

@@ -15,7 +15,7 @@ conf.h
 config.status
 config.log
 config.cache
-debug.html
+debug*.html
 ofitsy.js
 TODO
 BUGS
