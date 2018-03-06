@@ -1087,8 +1087,6 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
 	NAXIS2: this.raw.height,
 	BITPIX: this.raw.bitpix
     };
-    // where is the center of the image pixel?
-    this.params.centerAt = 1.0;
     // plugin callbacks
     this.xeqPlugins("image", "onrawdata");
     // allow chaining
@@ -1195,8 +1193,6 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     } else {
 	JS9.error("js9Endian missing from PNG-based FITS header");
     }
-    // where is the center of the image pixel?
-    this.params.centerAt = this.calcCenterAt();
     // object, telescope, instrument names
     this.object = this.raw.header.OBJECT;
     this.telescope = this.raw.header.TELESCOP;
@@ -1742,8 +1738,6 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	// calculate data min and max
 	this.dataminmax();
     }
-    // where is the center of the image pixel?
-    this.params.centerAt = this.calcCenterAt();
     // object, telescope, instrument names
     this.object = this.raw.header.OBJECT;
     this.telescope = this.raw.header.TELESCOP;
@@ -1884,34 +1878,6 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     return this;
 };
 
-// where is the center of the image pixel?
-JS9.Image.prototype.calcCenterAt = function(){
-    var centerAt = 1.0;
-    // possibly different for images and tables
-    if( this.imtab === "image" ){
-	// where is the center of the image pixel?
-	if( typeof this.raw.header.LTM1_1 === "number" ){
-	    // why is this needed??
-	    // to line up blocked images with binned tables ..
-	    // both ds9 and js9 shows a slight offset without this factor ..
-	    // but it is an empirical hack
-	    if( this.raw.header.LTM1_1 < 1 ){
-		// ltm has 0.5 incorporated, so start at 0.5 instead of 1
-		centerAt = 0.5 - this.raw.header.LTM1_1;
-	    } else {
-		centerAt = this.raw.header.LTM1_1;
-	    }
-	}
-    } else {
-	// tabmin cfitio's amin value from the fits_calc_binning() routine,
-	// stored in the header by jsfitsio.c/updateWCS()
-	if( this.raw.header.TABMIN1 !== undefined ){
-	    centerAt = this.raw.header.TABMIN1;
-	}
-    }
-    return centerAt;
-};
-
 // store section information
 JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
     var sect = this.rgb.sect;
@@ -1935,13 +1901,13 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	break;
     case 2:
 	// two args: x, y
-	sect.xcen   = parseInt(xcen, 10);
-	sect.ycen   = parseInt(ycen, 10);
+	sect.xcen   = parseFloat(xcen);
+	sect.ycen   = parseFloat(ycen);
 	break;
     case 3:
 	// three args: x, y, zoom
-	sect.xcen   = parseInt(xcen, 10);
-	sect.ycen   = parseInt(ycen, 10);
+	sect.xcen   = parseFloat(xcen);
+	sect.ycen   = parseFloat(ycen);
 	sect.zoom   = zoom;
 	sect.width  = Math.min(this.raw.width*sect.zoom,
 			       this.display.canvas.width);
@@ -1954,34 +1920,15 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
     // need integer dimensions
     sect.width  = Math.floor(sect.width);
     sect.height  = Math.floor(sect.height);
-    sect.x0 = Math.floor(sect.xcen - ((sect.width+1)/(2*sect.zoom)) + 1);
-    sect.y0 = Math.floor(sect.ycen - ((sect.height+1)/(2*sect.zoom)) + 1);
-    // from funtools/funutil.c:
-    // this method maintains the center and changes the dimensions
-    // Frank, Eric, and John all prefer this method, so that the user
-    // gets the center he asked for, even if the image is reduced
+    sect.x0 = Math.floor(sect.xcen - (sect.width/(2*sect.zoom)));
+    sect.y0 = Math.floor(sect.ycen - (sect.height/(2*sect.zoom)));
     sect.x1 = Math.floor(sect.xcen + (sect.width/(2*sect.zoom)));
     sect.y1 = Math.floor(sect.ycen + (sect.height/(2*sect.zoom)));
-    // final check: make sure we're within bounds
-    if( sect.x0 < 0 ){
-	sect.x1 -= sect.x0;
-	sect.x0 = 0;
-    }
-    if( sect.y0 < 0 ){
-	sect.y1 -= sect.y0;
-	sect.y0 = 0;
-    }
-    if( sect.x1 > this.raw.width ){
-	sect.x0 -= (sect.x1 - this.raw.width);
-	sect.x1 = this.raw.width;
-    }
-    if( sect.y1 > this.raw.height ){
-	sect.y0 -= (sect.y1 - this.raw.height);
-	sect.y1 = this.raw.height;
-    }
-    // last desperate attempt!
+    // make sure we're within bounds
     sect.x0 = Math.max(0, sect.x0);
+    sect.x1 = Math.min(this.raw.width, sect.x1);
     sect.y0 = Math.max(0, sect.y0);
+    sect.y1 = Math.min(this.raw.height, sect.y1);
     // we changed section, so the offsreen RGB image is invalid
     this.offscreenRGB = null;
     // put zoom back into params
@@ -3564,24 +3511,30 @@ JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
 
 // return 1-indexed image coords for specified 0-indexed display position
 JS9.Image.prototype.displayToImagePos = function(dpos){
-    var rgb = this.rgb;
+    var x, y;
     var sect = this.rgb.sect;
-    var ipos = {};
-    var centerAt = this.params.centerAt;
-    ipos.x = (dpos.x - this.ix) / sect.zoom + sect.x0 + centerAt;
-    ipos.y = ((rgb.img.height - 1) - (dpos.y - this.iy)) / sect.zoom + sect.y0 + centerAt;
-    return ipos;
+    var iheight = this.rgb.img.height - 1;
+    // see funtools/funcopy.c/_FunCopy2ImageHeader
+    x = (dpos.x - this.ix + 0.5) / sect.zoom + sect.x0 + 0.5;
+    y = (iheight - (dpos.y - this.iy - 0.5)) / sect.zoom + sect.y0 + 0.5;
+    // this appears to be ds9's algorithm (but it does not work)
+    // x = (dpos.x - this.ix) / sect.zoom + sect.x0 + 0.5 + 0.5;
+    // y = (iheight - (dpos.y - this.iy)) / sect.zoom + sect.y0 + 0.5 + 0.5;
+    return {x: x, y: y};
 };
 
 // return 0-indexed display coords for specified 1-indexed image position
 JS9.Image.prototype.imageToDisplayPos = function(ipos){
-    var rgb = this.rgb;
+    var x, y;
     var sect = this.rgb.sect;
-    var dpos = {};
-    var centerAt = this.params.centerAt;
-    dpos.x = (((ipos.x - centerAt) - sect.x0) * sect.zoom) + this.ix;
-    dpos.y = (sect.y0 - (ipos.y - centerAt)) * sect.zoom + (rgb.img.height - 1) + this.iy;
-    return dpos;
+    var iheight = this.rgb.img.height - 1;
+    // see funtools/funcopy.c/_FunCopy2ImageHeader
+    x = (((ipos.x - 0.5) - sect.x0) * sect.zoom) + this.ix - 0.5;
+    y = (sect.y0 - (ipos.y - 0.5)) * sect.zoom + iheight + this.iy + 0.5;
+    // this appears to be ds9's algorithm (but it does not work)
+    // x = (((ipos.x - 0.5 - 0.5) - sect.x0) * sect.zoom) + this.ix;
+    // y = (sect.y0 - (ipos.y - 0.5 - 0.5)) * sect.zoom + iheight + this.iy;
+    return {x: x, y: y};
 };
 
 // return 0-indexed display pos from 1-indexed logical pos
@@ -4860,7 +4813,6 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
     var val, vstr, vstr2, vstr3, val3, i, c, s;
     var cd1, cd2, v1, v2, units, sect, bin;
     var obj = null;
-    var centerAt = this.params.centerAt;
     var sep1 = "\t ";
     var sep2 = "\t\t ";
     var sp = "&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -4909,9 +4861,9 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    c = this.imageToLogicalPos(ipos);
 	}
 	// get image value: here we need 0-indexed display positions,
-	// so subtract the centerAt of the image pixel
-	val = this.raw.data[Math.floor(ipos.y - centerAt) * this.raw.width +
-			    Math.floor(ipos.x - centerAt)];
+	// so subtract the 0.5 of the image pixel
+	val = this.raw.data[Math.floor(ipos.y - 0.5) * this.raw.width +
+			    Math.floor(ipos.x - 0.5)];
 	// fix the significant digits in the value
 	switch(this.raw.bitpix){
 	case 8:
