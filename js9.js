@@ -3452,6 +3452,16 @@ JS9.Image.prototype.imageToLogicalPos = function(ipos, lcs){
 	    opos.x = tx;
 	    opos.y = ty;
 	}
+	// for tables, incorporate tlmin into physical coords
+	// the tlmin value is saved by jsfitio as tabmin
+	if( this.imtab === "table" ){
+	    if( this.raw.header.TABMIN1 !== undefined ){
+		opos.x += this.raw.header.TABMIN1;
+	    }
+	    if( this.raw.header.TABMIN2 !== undefined ){
+		opos.y += this.raw.header.TABMIN2;
+	    }
+	}
     }
     return {x: opos.x, y: opos.y, sys: osys};
 };
@@ -3495,6 +3505,16 @@ JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
 	break;
     }
     if( arr ){
+	// for tables, incorporate tlmin into physical coords
+	// the tlmin value is saved by jsfitio as tabmin
+	if( this.imtab === "table" ){
+	    if( this.raw.header.TABMIN1 !== undefined ){
+		lpos.x -= this.raw.header.TABMIN1;
+	    }
+	    if( this.raw.header.TABMIN2 !== undefined ){
+		lpos.y -= this.raw.header.TABMIN2;
+	    }
+	}
 	opos.x = lpos.x * arr[0][0] + lpos.y * arr[1][0] + arr[2][0];
 	opos.y = lpos.x * arr[0][1] + lpos.y * arr[1][1] + arr[2][1];
 	if( rot ){
