@@ -3406,7 +3406,7 @@ JS9.Image.prototype.refreshLayers = function(){
 
 // return current file-related position for specified image position
 JS9.Image.prototype.imageToLogicalPos = function(ipos, lcs){
-    var arr, rot, tx, ty, cx, cy;
+    var arr, rot, tx, ty, cx, cy, dval;
     var opos = {x: ipos.x, y: ipos.y};
     var osys = "image";
     lcs = lcs || this.params.lcs || "image";
@@ -3455,11 +3455,12 @@ JS9.Image.prototype.imageToLogicalPos = function(ipos, lcs){
 	// for tables, incorporate tlmin into physical coords
 	// the tlmin value is saved by jsfitio as tabmin
 	if( this.imtab === "table" ){
+	    dval = this.raw.bitpix < 0 ? 0.5 : 1;
 	    if( this.raw.header.TABMIN1 !== undefined ){
-		opos.x += this.raw.header.TABMIN1;
+		opos.x = opos.x - dval + this.raw.header.TABMIN1;
 	    }
 	    if( this.raw.header.TABMIN2 !== undefined ){
-		opos.y += this.raw.header.TABMIN2;
+		opos.y = opos.y - dval + this.raw.header.TABMIN2;
 	    }
 	}
     }
@@ -3468,7 +3469,7 @@ JS9.Image.prototype.imageToLogicalPos = function(ipos, lcs){
 
 // return current image position from file-related position
 JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
-    var arr, rot, tx, ty, cx, cy;
+    var arr, rot, tx, ty, cx, cy, dval;
     var opos = {x: lpos.x, y: lpos.y};
     cx = this.raw.header.CRPIX1 || 1;
     cy = this.raw.header.CRPIX2 || 1;
@@ -3508,11 +3509,12 @@ JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
 	// for tables, incorporate tlmin into physical coords
 	// the tlmin value is saved by jsfitio as tabmin
 	if( this.imtab === "table" ){
+	    dval = this.raw.bitpix < 0 ? 0.5 : 1;
 	    if( this.raw.header.TABMIN1 !== undefined ){
-		lpos.x -= this.raw.header.TABMIN1;
+		lpos.x = lpos.x - this.raw.header.TABMIN1 + dval;
 	    }
 	    if( this.raw.header.TABMIN2 !== undefined ){
-		lpos.y -= this.raw.header.TABMIN2;
+		lpos.y = lpos.y - this.raw.header.TABMIN2 + dval;
 	    }
 	}
 	opos.x = lpos.x * arr[0][0] + lpos.y * arr[1][0] + arr[2][0];
