@@ -227,6 +227,7 @@ JS9.imageOpts = {
     nancolor: "#000000",		// 6-digit #hex color for NaN values
     wcsalign: true,			// align image using wcs after reproj?
     rotationMode: "relative",		// default: relative or absolute?
+    ltvbug:  true,			// add 0.5/ltm to image LTV values?
     listonchange: false			// whether to list after a reg change
 };
 
@@ -971,6 +972,16 @@ JS9.Image.prototype.initLCS = function(iheader){
     arr[1][1] = header.LTM2_2 || 1.0;
     arr[2][0] = header.LTV1   || 0.0;
     arr[2][1] = header.LTV2   || 0.0;
+    if( this.imtab === "image" && this.params.ltvbug ){
+	// There seems to be a tiny misalignment between wcs->image and
+	// physical->image when ltv is involved. No idea why, but the fix is:
+	if( header.LTV1 !== undefined && arr[0][0] < 1 ){
+	    arr[2][0] += arr[0][0] * 0.5;
+	}
+	if( header.LTV2 !== undefined && arr[1][1] < 1 ){
+	    arr[2][1] += arr[1][1] * 0.5;
+	}
+    }
     this.lcs.physical = {forward: $.extend(true, [], arr),
 			 reverse: JS9.invertMatrix3(arr)};
     if( this.lcs.physical.reverse ){
@@ -3535,13 +3546,10 @@ JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
 JS9.Image.prototype.displayToImagePos = function(dpos){
     var x, y;
     var sect = this.rgb.sect;
-    var iheight = this.rgb.img.height - 1;
+    var iheight = this.rgb.img.height;
     // see funtools/funcopy.c/_FunCopy2ImageHeader
     x = (dpos.x - this.ix + 0.5) / sect.zoom + sect.x0 + 0.5;
-    y = (iheight - (dpos.y - this.iy - 0.5)) / sect.zoom + sect.y0 + 0.5;
-    // this appears to be ds9's algorithm (but it does not work)
-    // x = (dpos.x - this.ix) / sect.zoom + sect.x0 + 0.5 + 0.5;
-    // y = (iheight - (dpos.y - this.iy)) / sect.zoom + sect.y0 + 0.5 + 0.5;
+    y = (iheight - (dpos.y - this.iy + 0.5)) / sect.zoom + sect.y0 + 0.5;
     return {x: x, y: y};
 };
 
@@ -3549,13 +3557,10 @@ JS9.Image.prototype.displayToImagePos = function(dpos){
 JS9.Image.prototype.imageToDisplayPos = function(ipos){
     var x, y;
     var sect = this.rgb.sect;
-    var iheight = this.rgb.img.height - 1;
+    var iheight = this.rgb.img.height;
     // see funtools/funcopy.c/_FunCopy2ImageHeader
     x = (((ipos.x - 0.5) - sect.x0) * sect.zoom) + this.ix - 0.5;
-    y = (sect.y0 - (ipos.y - 0.5)) * sect.zoom + iheight + this.iy + 0.5;
-    // this appears to be ds9's algorithm (but it does not work)
-    // x = (((ipos.x - 0.5 - 0.5) - sect.x0) * sect.zoom) + this.ix;
-    // y = (sect.y0 - (ipos.y - 0.5 - 0.5)) * sect.zoom + iheight + this.iy;
+    y = (sect.y0 - (ipos.y - 0.5)) * sect.zoom + iheight + this.iy - 0.5;
     return {x: x, y: y};
 };
 
