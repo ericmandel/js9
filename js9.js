@@ -1069,7 +1069,7 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
     this.raw = this.raws[this.raws.length-1];
     // this is the default raw data
     this.raw.id = JS9.RAWID0;
-    // create a raw array to hold the reconsituted data
+    // create a raw array to hold the reconstituted data
     this.raw.data = new Float32Array(h*w);
     // get data value from RGB
     for(i=0, y=0; y<h; y++){
@@ -5507,7 +5507,7 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     if( sigma === undefined ){
 	JS9.error("missing sigma value for gaussBlurData");
     }
-    // save this routine so it can be reconsituted in a restored session
+    // save this routine so it can be reconstituted in a restored session
     this.xeqStash("gaussBlurData", Array.prototype.slice.call(arguments));
     // opts can be an object or json
     if( typeof opts === "string" ){
@@ -5579,7 +5579,7 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
     if( op === undefined || arg1 === undefined ){
 	JS9.error("missing arg(s) for image arithmetic");
     }
-    // save this routine so it can be reconsituted in a restored session
+    // save this routine so it can be reconstituted in a restored session
     this.xeqStash("imarithData", Array.prototype.slice.call(arguments));
     // operation: add, sub, mul, div ...
     switch(op){
@@ -5751,7 +5751,7 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
     if( x === undefined || y === undefined ){
 	JS9.error("missing translation value(s) for shiftData");
     }
-    // save this routine so it can be reconsituted in a restored session
+    // save this routine so it can be reconstituted in a restored session
     this.xeqStash("shiftData", Array.prototype.slice.call(arguments));
     // opts can be an object or json
     if( typeof opts === "string" ){
@@ -5831,7 +5831,7 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
 	JS9.error("no WCS info available for rotation");
     }
-    // save this routine so it can be reconsituted in a restored session
+    // save this routine so it can be reconstituted in a restored session
     this.xeqStash("rotateData", Array.prototype.slice.call(arguments));
     // opts can be an object or json
     if( typeof opts === "string" ){
@@ -5911,7 +5911,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     if( this === wcsim ){
 	return;
     }
-    // save this routine so it can be reconsituted in a restored session
+    // save this routine so it can be reconstituted in a restored session
     // (unless another xxxData routine is calling us)
     if( !opts || !opts.rawid ){
 	this.xeqStash("reprojectData", Array.prototype.slice.call(arguments));
@@ -6154,7 +6154,7 @@ JS9.Image.prototype.filterRGBImage = function(filter){
 	this.setColormap("reset");
 	return this;
     }
-    // save this routine so it can be reconsituted in a restored session
+    // save this routine so it can be reconstituted in a restored session
     this.xeqStash("filterRGBImage", Array.prototype.slice.call(arguments));
     // remove filter name argument
     argv.shift();
