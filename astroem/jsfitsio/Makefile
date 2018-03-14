@@ -1,13 +1,13 @@
 RM =		rm -rf
-PROGS =		cimtest
+PROGS =		listhdu
 LIBS =	 	-L$$HOME/lib -lcfitsio -ldl -lm
 # CFLAGS =	-I. -I$$HOME/include
 CC =		gcc
-CFLAGS =	-Wall -I. -I$$HOME/include
+CFLAGS =	-Wall -I. -I$$HOME/include -DLISTHDUMAIN
 
 all:		$(PROGS)
 
-cimtest:	cimtest.o jsfitsio.o
+listhdu:	listhdu.o
 		$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $+ $(LIBS)
 
 
