@@ -619,6 +619,10 @@ JS9.Image = function(file, params, func){
     this.blend = {active: undefined, mode: "normal", opacity: 1};
     // temp flag determines if we should update shapes at end of this call
     this.updateshapes = false;
+    // request for an empty image object ends here
+    if( !file ){
+	return;
+    }
     // change the cursor to show the waiting status
     JS9.waiting(true, this.display);
     // file argument can be an object containing raw data or
@@ -1472,6 +1476,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	owcsunits = this.params.wcsunits;
     }
     // initialize raws array?
+    this.raws = this.raws || [];
     rlen = this.raws.length;
     if( !rlen ){
 	// create object to hold raw data and add to raws array
