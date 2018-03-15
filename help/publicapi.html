@@ -3348,6 +3348,15 @@ least), this default values is 0.95 (I think).
 Don't forget that the file is saved by the browser, in whatever location
 you have set up for downloads.
 
+<h5 id="JS9.UploadFITSFile">upload currently displayed FITS file to proxy server</h5>
+<p>
+<code class="api">JS9.UploadFITSFile()</code>
+<p>
+Upload the currently displayed FITS file to the proxy server, so that
+back-end analysis can be performed. This routine requires that a Node.js-based
+JS9 helper is running and that the helper has enabled the <b>loadProxy</b>
+property and set up a <b>workDir</b> directory in which to store the FITS file.
+
 <h5 id="JS9.GetFITSHeader">Get FITS header as a string</h5>
 <p>
 <code class="api">JS9.GetFITSHeader(nlflag)</code>

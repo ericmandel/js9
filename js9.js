@@ -16864,6 +16864,7 @@ JS9.mkPublic("Print", "print");
 JS9.mkPublic("SavePNG", "savePNG");
 JS9.mkPublic("SaveJPEG", "saveJPEG");
 JS9.mkPublic("SaveFITS", "saveFITS");
+JS9.mkPublic("UploadFITSFile", "uploadFITSFile");
 JS9.mkPublic("RunAnalysis", "runAnalysis");
 JS9.mkPublic("RawDataLayer", "rawDataLayer");
 JS9.mkPublic("GaussBlurData", "gaussBlurData");
