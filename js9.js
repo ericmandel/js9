@@ -1940,7 +1940,24 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
     sect.y0 = Math.floor(sect.ycen - (sect.height/(2*sect.zoom)));
     sect.x1 = Math.floor(sect.xcen + (sect.width/(2*sect.zoom)));
     sect.y1 = Math.floor(sect.ycen + (sect.height/(2*sect.zoom)));
-    // make sure we're within bounds
+    // make sure we're within bounds while maintaining section dimensions
+    if( sect.x0 < 0 ){
+        sect.x1 -= sect.x0;
+        sect.x0 = 0;
+    }
+    if( sect.y0 < 0 ){
+        sect.y1 -= sect.y0;
+        sect.y0 = 0;
+    }
+    if( sect.x1 > this.raw.width ){
+        sect.x0 -= (sect.x1 - this.raw.width);
+        sect.x1 = this.raw.width;
+    }
+    if( sect.y1 > this.raw.height ){
+        sect.y0 -= (sect.y1 - this.raw.height);
+        sect.y1 = this.raw.height;
+    }
+    // final check: make sure we're within bounds
     sect.x0 = Math.max(0, sect.x0);
     sect.x1 = Math.min(this.raw.width, sect.x1);
     sect.y0 = Math.max(0, sect.y0);
