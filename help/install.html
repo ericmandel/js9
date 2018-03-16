@@ -161,6 +161,19 @@ JS9 into its own self-contained directory. This will make upgrading to
 new versions much easier.
 
 <p>
+Furthermore, we recommend that you not split up the JS9 files and
+install them in different directories, e.g., putting the JavaScript files
+in one location and the CSS files in another. Not only is this difficult
+to update, but it actually will break JS9: at runtime, it is assumed
+that js9.css is located in the JS9 install directory, and its actual
+location is used to determine the JS9 install location relative to the
+main web page. If you must move the js9.css file, you also need to add
+the <b>installDir</b> property to the <b>globalOpts</b> object within
+js9prefs.js, specifying the relative path from the web page to the JS9
+install directory. Failure to do this correctly will cause unexpected
+problems. Please contact us if you find yourself in this predicament.
+
+<p>
 As described in <a href="./webpage.html">Creating a JS9 Web Page</a>,
 a few JavaScript and CSS files must be loaded into a JS9-enabled web page.
 Ordinarily this is done in the page's header, which typically will
@@ -332,7 +345,7 @@ available on GitHub:
 </pre>
 
 
-<h5>Last updated: August 23, 2017</h5>
+<h5>Last updated: March 16, 2018</h5>
 </div>
 
 </body>
