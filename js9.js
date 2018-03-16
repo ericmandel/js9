@@ -16540,6 +16540,14 @@ JS9.init = function(){
     }
     // get relative location of installed js9.css file
     // which tells us where JS9 installed files (and the helper) are located
+    //
+    // allow specification of installdir in js9prefs.js
+    // check this manually: it's happening before processing the prefs
+    if( window.hasOwnProperty("JS9Prefs") && typeof JS9Prefs === "object" ){
+	if( JS9Prefs.globalOpts && JS9Prefs.globalOpts.installDir ){
+	    JS9.INSTALLDIR = JS9Prefs.globalOpts.installDir;
+	}
+    }
     if( !JS9.INSTALLDIR ){
 	try{
 	    JS9.INSTALLDIR = $('link[href$="js9.css"]')
@@ -16551,8 +16559,12 @@ JS9.init = function(){
 	if( JS9.INSTALLDIR ){
 	    JS9.INSTALLDIR = JS9.cleanPath(JS9.INSTALLDIR);
 	}
-	JS9.TOROOT = JS9.INSTALLDIR.replace(/([^\/.])+/g, "..");
     }
+    if( JS9.INSTALLDIR && JS9.INSTALLDIR.slice(-1) !== "/" ){
+	// make sure there is a trailing slash
+	JS9.INSTALLDIR += "/";
+    }
+    JS9.TOROOT = JS9.INSTALLDIR.replace(/([^\/.])+/g, "..");
     // set up the dynamic drive html window
     if( JS9.LIGHTWIN === "dhtml" ){
 	// Creation of dhtmlwindowholder was done by a document.write in
