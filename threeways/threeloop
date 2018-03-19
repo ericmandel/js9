@@ -9,6 +9,6 @@ js9 -a --width $WIDTH --height $HEIGHT --webpage $WEBPAGE $* &
 sleep 2
 
 while true; do
-    threeways.sh -a -b ../blend -i $ID -t 1 -z 2 $*
+    threeways.sh -a -b ../blend -i $ID -t 3 -z 2 $*
     sleep 5
 done
