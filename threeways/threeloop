@@ -1,6 +1,14 @@
 #!/bin/bash
 
+WEBPAGE=$HOME/js9/threeways/threeways_app.html
+WIDTH=800
+HEIGHT=800
+ID=myJS9
+
+js9 -a --width $WIDTH --height $HEIGHT --webpage $WEBPAGE $* &
+sleep 2
+
 while true; do
-    threeways.sh $*
+    threeways.sh -a -b ../blend -i $ID -t 1 -z 2 $*
     sleep 5
 done
