@@ -42,6 +42,7 @@ demoFuncs[tot++] = function() {
         images.chandra = im;
         JS9.SetScale("log", {display: im});
         JS9.SetColormap("red", 5.78, 0.15, {display: im});
+        JS9.SetZoom(2, {display: im});
 	JS9.BlendImage("screen", 1, true, {display: im});
         window.setTimeout(function(){
             if( demoFuncs[n] && !stop ){
@@ -60,6 +61,7 @@ demoFuncs[tot++] = function() {
             message("reproject using chandra wcs");
             JS9.ReprojectData("chandra.fits", {display: im});
             JS9.SetColormap("green", 5.6, 0.74, {display: im});
+            JS9.SetZoom(2, {display: im});
 	    JS9.BlendImage("screen", 1, true, {display: im});
 	    window.setTimeout(function(){
 		if( demoFuncs[n] && !stop ){
@@ -79,6 +81,7 @@ demoFuncs[tot++] = function() {
             message("reproject using chandra wcs");
             JS9.ReprojectData("chandra.fits", {display: im});
 	    JS9.SetColormap("blue", 6.3, 0.54, {display: im});
+            JS9.SetZoom(2, {display: im});
 	    JS9.BlendImage("screen", 1, true, {display: im});
 	    window.setTimeout(function(){
 		if( demoFuncs[n] && !stop ){
@@ -98,6 +101,7 @@ demoFuncs[tot++] = function() {
             message("reproject using chandra wcs");
             JS9.ReprojectData("chandra.fits", {display: im});
 	    JS9.SetColormap("heat", 3.0, 0.535, {display: im});
+            JS9.SetZoom(2, {display: im});
 	    JS9.BlendImage("screen", 1, true, {display: im});
 	    window.setTimeout(function(){
 		if( demoFuncs[n] && !stop ){
