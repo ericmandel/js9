@@ -18,10 +18,12 @@ def waitLoad():
             time.sleep(loadTimeout)
 
 j = pyjs9.JS9()
+j.BlendDisplay(False)
 
 print 'load ./blend/chandra.fits'
 j.Load('./blend/chandra.fits', '{"scale":"log","colormap":"red","contrast":5.78,"bias":0.15}')
 waitLoad()
+j.SetZoom(2)
 j.BlendImage('screen', 1, True)
 time.sleep(timeout)
 
@@ -33,6 +35,7 @@ time.sleep(timeout)
 print 'reproject using chandra wcs'
 j.ReprojectData('chandra.fits')
 j.SetColormap('green', 5.6, 0.74)
+j.SetZoom(2)
 j.BlendImage('screen', 1, True)
 time.sleep(timeout)
 
@@ -44,8 +47,21 @@ time.sleep(timeout)
 print 'reproject using chandra wcs'
 j.ReprojectData('chandra.fits')
 j.SetColormap('blue', 6.3, 0.54)
+j.SetZoom(2)
 j.BlendImage('screen', 1, True)
 time.sleep(timeout)
 
-print 'blend all three images'
+print 'load ./blend/hst.fits'
+j.Load('./blend/hst.fits', '{"scale":"log","scaleclipping":"user","scalemin":0,"scalemax":5,"colormap":"heat","contrast":4.0,"bias":0.67}')
+waitLoad()
+time.sleep(timeout)
+
+print 'reproject using chandra wcs'
+j.ReprojectData('chandra.fits')
+j.SetColormap('heat', 3.0, 0.535)
+j.SetZoom(2)
+j.BlendImage('screen', 1, True)
+time.sleep(timeout)
+
+print 'blend the images'
 j.BlendDisplay(True)
