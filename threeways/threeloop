@@ -1,14 +1,23 @@
 #!/bin/bash
+# set -x
 
 WEBPAGE=$HOME/js9/threeways/threeways_app.html
-WIDTH=800
-HEIGHT=800
+WIDTH=660
+HEIGHT=860
 ID=myJS9
 
 js9 -a --width $WIDTH --height $HEIGHT --webpage $WEBPAGE $* &
 sleep 2
 
+METHOD="python"
 while true; do
-    threeways.sh -a -b ../blend -i $ID -t 3 -z 2 $*
+    echo "using $METHOD ..."
+    if [ x$METHOD = "xshell" ]; then
+        threeways.sh -a -b ../blend -i $ID -t 3 -z 2 $*
+        METHOD="python"
+    else
+        python threeways.py
+        METHOD="shell"
+    fi
     sleep 5
 done
