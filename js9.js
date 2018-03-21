@@ -2881,7 +2881,8 @@ JS9.Image.prototype.fileDimensions = function() {
 // extract and display a section of an image, with table filtering
 JS9.Image.prototype.displaySection = function(opts, func) {
     var that = this;
-    var oproxy, hdu, fits, from, obj, oreg, nim, topts, fdims;
+    var oproxy, hdu, fits, from, obj, oreg, nim, topts, fdims, ipos, lpos;
+    var sect = {bin: 1};
     var arr = [];
     var disp = function(hdu, opts){
 	var tim, iid;
@@ -2960,11 +2961,28 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    hdu = this.raw.hdu;
 	    fits = hdu.fits;
 	    from = "virtualFile";
+	    if( hdu.table ){
+		sect = hdu.table;
+	    } else {
+		if( hdu.xcen && hdu.ycen ){
+		    lpos = {x: hdu.xcen, y: hdu.ycen};
+		} else {
+		    ipos = {x: this.raw.width / 2, y: this.raw.height / 2};
+		    lpos = this.imageToLogicalPos(ipos);
+		}
+		sect.xcen = Math.floor(lpos.x);
+		sect.ycen = Math.floor(lpos.y);
+		sect.bin = hdu.bin || 1;
+		sect.xdim = Math.floor(hdu.naxis1 * sect.bin);
+		sect.ydim = Math.floor(hdu.naxis2 * sect.bin);
+	    }
 	}
     }
+    // make sure this is defined
+    sect = sect || {};
     // sensible (required) defaults
-    opts.xcen = opts.xcen || 0;
-    opts.ycen = opts.ycen || 0;
+    opts.xcen = opts.xcen || sect.xcen || 0;
+    opts.ycen = opts.ycen || sect.ycen || 0;
     // allow binning relative to current, e.g., *2, /4, +1, -3
     if( typeof opts.bin === "string" ){
 	switch( opts.bin.charAt(0) ){
@@ -2999,19 +3017,24 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    break;
 	}
     }
-    opts.bin  = Math.max(1, opts.bin || 1);
     switch(this.imtab){
     case "table":
-	opts.xdim = opts.xdim || JS9.fits.options.table.xdim;
-	opts.ydim = opts.ydim || JS9.fits.options.table.ydim;
-	opts.bin  = opts.bin  || JS9.fits.options.table.bin;
+	opts.xdim   = opts.xdim   || sect.xdim || JS9.fits.options.table.xdim;
+	opts.ydim   = opts.ydim   || sect.ydim || JS9.fits.options.table.ydim;
+	opts.bin    = opts.bin    || sect.bin  || JS9.fits.options.table.bin;
+	if( opts.filter === undefined && sect.filter !== undefined ){
+	    opts.filter = sect.filter;
+	}
+	opts.filter = opts.filter || "";
 	break;
     default:
-	opts.xdim = opts.xdim || JS9.fits.options.image.xdim;
-	opts.ydim = opts.ydim || JS9.fits.options.image.ydim;
-	opts.bin  = opts.bin  || JS9.fits.options.image.bin;
+	opts.xdim = opts.xdim || sect.xdim || JS9.fits.options.image.xdim;
+	opts.ydim = opts.ydim || sect.ydim || JS9.fits.options.image.ydim;
+	opts.bin  = opts.bin  || sect.bin  || JS9.fits.options.image.bin;
+	opts.filter = opts.filter || "";
 	break;
     }
+    opts.bin  = Math.max(1, opts.bin || 1);
     // save the filter, if necessary
     this.raw.filter = opts.filter || "";
     // start the waiting!

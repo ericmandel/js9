@@ -1025,8 +1025,14 @@ module.exports = xhr;
 			binval1 = hdu.bin || 1;
 			binval2 = 1;
 		    }
-		    ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
-		    lpos = im.imageToLogicalPos(ipos);
+		    if( hdu.xcen && hdu.ycen ){
+			// use center if returned from cfitsio section code
+			lpos = {x: hdu.xcen, y: hdu.ycen};
+		    } else {
+			// otherwise calculate it from the image dims
+			ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
+			lpos = im.imageToLogicalPos(ipos);
+		    }
 		    form.xcen.value = String(Math.floor(lpos.x));
 		    form.ycen.value = String(Math.floor(lpos.y));
 		    bin = Math.floor((binval1 / binval2) + 0.5);
