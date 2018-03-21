@@ -2988,9 +2988,11 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	// convert to physial (file) coords
 	lpos = this.imageToLogicalPos(ipos);
 	sect = {};
-	sect.xcen = Math.floor(lpos.x);
-	sect.ycen = Math.floor(lpos.y);
 	sect.bin  = Math.floor((binval1 / binval2) + 0.5);
+	// sect.xcen = Math.floor(lpos.x + 0.5);
+	// sect.ycen = Math.floor(lpos.y + 0.5);
+	sect.xcen = Math.floor(lpos.x + 0.5*(sect.bin-1));
+	sect.ycen = Math.floor(lpos.y + 0.5*(sect.bin-1));
 	sect.xdim = Math.floor(hdu.naxis1 * sect.bin);
 	sect.ydim = Math.floor(hdu.naxis2 * sect.bin);
 	sect.filter = this.raw.filter || "";

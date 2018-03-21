@@ -158,13 +158,15 @@
 			binval1 = hdu.bin || 1;
 			binval2 = 1;
 		    }
+		    bin = Math.floor((binval1 / binval2) + 0.5);
 		    // get image center from raw data
 		    ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
 		    // convert to physial (file) coords
 		    lpos = im.imageToLogicalPos(ipos);
-		    form.xcen.value = String(Math.floor(lpos.x + 0.5));
-		    form.ycen.value = String(Math.floor(lpos.y + 0.5));
-		    bin = Math.floor((binval1 / binval2) + 0.5);
+//		    form.xcen.value = String(Math.floor(lpos.x + 0.5));
+//		    form.ycen.value = String(Math.floor(lpos.y + 0.5));
+		    form.xcen.value = String(Math.floor(lpos.x + 0.5*(bin-1)));
+		    form.ycen.value = String(Math.floor(lpos.y + 0.5*(bin-1)));
 		    form.bin.value = String(bin);
 		    form.xdim.value = String(Math.floor(hdu.naxis1 * bin));
 		    form.ydim.value = String(Math.floor(hdu.naxis2 * bin));
