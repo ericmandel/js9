@@ -360,11 +360,6 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     // return the section values so caller can update LTM/LTV
     // we don't want to update the FITS file itself, since it hasn't changed
     hdu.bin = bin;
-    // only return center if it was not set to 0 (for default)
-    if( cens[0] && cens[1] ){
-	hdu.xcen = cens[0];
-	hdu.ycen = cens[1];
-    }
     hdu.x1  = getValue(hptr+24, "i32");
     hdu.y1  = getValue(hptr+28, "i32");
     hdu.x2  = getValue(hptr+32, "i32");

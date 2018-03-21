@@ -2881,8 +2881,8 @@ JS9.Image.prototype.fileDimensions = function() {
 // extract and display a section of an image, with table filtering
 JS9.Image.prototype.displaySection = function(opts, func) {
     var that = this;
-    var oproxy, hdu, fits, from, obj, oreg, nim, topts, fdims, ipos, lpos;
-    var sect = {bin: 1};
+    var oproxy, hdu, from, obj, oreg, nim, topts, fdims;
+    var ipos, lpos, binval1, binval2, sect;
     var arr = [];
     var disp = function(hdu, opts){
 	var tim, iid;
@@ -2950,37 +2950,52 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error("can't parse section opts: " + opts, e); }
     }
+    // sanity check
+    if( !this.raw || !this.raw.hdu || !this.raw.hdu.fits ){
+	JS9.error("invalid image for displaySection");
+    }
+    hdu = this.raw.hdu;
     // opts is optional
     opts = opts || {};
     // from where do we extract the section?
     from = opts.from;
     if( !from ){
 	if( this.parentFile && JS9.helper.connected && JS9.helper.js9helper ){
+	    // we will be processing a parent file to get the section
 	    from = "parentFile";
-	} else if( this.raw && this.raw.hdu && this.raw.hdu.fits ){
-	    hdu = this.raw.hdu;
-	    fits = hdu.fits;
+	} else {
+	    // we will be processing a virtual file to get the section
 	    from = "virtualFile";
-	    if( hdu.table ){
-		sect = hdu.table;
-	    } else {
-		if( hdu.xcen && hdu.ycen ){
-		    lpos = {x: hdu.xcen, y: hdu.ycen};
-		} else {
-		    ipos = {x: this.raw.width / 2, y: this.raw.height / 2};
-		    lpos = this.imageToLogicalPos(ipos);
-		}
-		sect.xcen = Math.floor(lpos.x);
-		sect.ycen = Math.floor(lpos.y);
-		sect.bin = hdu.bin || 1;
-		sect.xdim = Math.floor(hdu.naxis1 * sect.bin);
-		sect.ydim = Math.floor(hdu.naxis2 * sect.bin);
-	    }
 	}
     }
-    // make sure this is defined
-    sect = sect || {};
-    // sensible (required) defaults
+    // get previous values to use as defaults
+    if( hdu.table ){
+	// tables are easy: all the previous values should be present
+	sect = hdu.table;
+    } else {
+	// images are a bit more difficult
+	// when using a parent, look for bin value relative to the parent ...
+	if( from === "parentFile" &&
+	    this.raw.header && JS9.notNull(this.raw.header.LTM1_1) ){
+		binval1 = 1;
+		binval2 = this.raw.header.LTM1_1;
+	} else {
+	    binval1 = hdu.bin || 1;
+	    binval2 = 1;
+	}
+	// get image center from raw data
+	ipos = {x: this.raw.width / 2, y: this.raw.height / 2};
+	// convert to physial (file) coords
+	lpos = this.imageToLogicalPos(ipos);
+	sect = {};
+	sect.xcen = Math.floor(lpos.x);
+	sect.ycen = Math.floor(lpos.y);
+	sect.bin  = Math.floor((binval1 / binval2) + 0.5);
+	sect.xdim = Math.floor(hdu.naxis1 * sect.bin);
+	sect.ydim = Math.floor(hdu.naxis2 * sect.bin);
+	sect.filter = this.raw.filter || "";
+    }
+    // now we can make sure opts has sensible defaults
     opts.xcen = opts.xcen || sect.xcen || 0;
     opts.ycen = opts.ycen || sect.ycen || 0;
     // allow binning relative to current, e.g., *2, /4, +1, -3
@@ -3022,19 +3037,21 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	opts.xdim   = opts.xdim   || sect.xdim || JS9.fits.options.table.xdim;
 	opts.ydim   = opts.ydim   || sect.ydim || JS9.fits.options.table.ydim;
 	opts.bin    = opts.bin    || sect.bin  || JS9.fits.options.table.bin;
-	if( opts.filter === undefined && sect.filter !== undefined ){
-	    opts.filter = sect.filter;
-	}
-	opts.filter = opts.filter || "";
 	break;
     default:
 	opts.xdim = opts.xdim || sect.xdim || JS9.fits.options.image.xdim;
 	opts.ydim = opts.ydim || sect.ydim || JS9.fits.options.image.ydim;
 	opts.bin  = opts.bin  || sect.bin  || JS9.fits.options.image.bin;
-	opts.filter = opts.filter || "";
 	break;
     }
+    // one final check on binning
     opts.bin  = Math.max(1, opts.bin || 1);
+    // filter: manually check for undefined, since empty string is valid
+    if( JS9.isNull(opts.filter) && JS9.notNull(sect.filter) ){
+	opts.filter = sect.filter;
+    }
+    // one final check on filter
+    opts.filter = opts.filter || "";
     // save the filter, if necessary
     this.raw.filter = opts.filter || "";
     // start the waiting!
@@ -3151,7 +3168,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    break;
 	case "virtualFile":
 	    // extract image section from current virtual file
-	    JS9.getFITSImage(fits, hdu, opts, function(hdu){
+	    JS9.getFITSImage(hdu.fits, hdu, opts, function(hdu){
 		disp(hdu, opts);
 	    });
 	    break;
@@ -14541,6 +14558,10 @@ JS9.isNumber = function(s) {
 // check if a variable is neither undefined nor null
 JS9.notNull = function(s) {
     return s !== undefined && s !== null;
+};
+
+JS9.isNull = function(s) {
+    return s === undefined || s === null;
 };
 
 // parse a FITS card and return name and value

@@ -158,16 +158,12 @@
 			binval1 = hdu.bin || 1;
 			binval2 = 1;
 		    }
-		    if( hdu.xcen && hdu.ycen ){
-			// use center if returned from cfitsio section code
-			lpos = {x: hdu.xcen, y: hdu.ycen};
-		    } else {
-			// otherwise calculate it from the image dims
-			ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
-			lpos = im.imageToLogicalPos(ipos);
-		    }
-		    form.xcen.value = String(Math.floor(lpos.x));
-		    form.ycen.value = String(Math.floor(lpos.y));
+		    // get image center from raw data
+		    ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
+		    // convert to physial (file) coords
+		    lpos = im.imageToLogicalPos(ipos);
+		    form.xcen.value = String(Math.floor(lpos.x + 0.5));
+		    form.ycen.value = String(Math.floor(lpos.y + 0.5));
 		    bin = Math.floor((binval1 / binval2) + 0.5);
 		    form.bin.value = String(bin);
 		    form.xdim.value = String(Math.floor(hdu.naxis1 * bin));
