@@ -872,27 +872,6 @@ module.exports = xhr;
 
 (function() {
 
-    /* maybePhysicalToImage: it's a hack!
-       The physical position defined by LTM/LTV is not always the file position,
-       For example, if the file foo.fits was created from another file:
-           funimage somefile.fits'[*,*,2]' foo.fits
-       its LTM/LTV keywords will referring to the parent, instead of itself.
-       In such a case, we want to convert physical position to image position
-       of the physical file.
-       This situation is signalled by the presence of a parent lcs object.
-    */
-    function maybePhysicalToImage(im, pos){
-	var lpos, ipos, npos;
-	if( im.imtab === "image" && im.parent && im.parent.lcs &&
-	    pos.x && pos.y ){
-	    lpos = {x: pos.x, y: pos.y};
-	    ipos = JS9.Image.prototype.logicalToImagePos.call(im.parent, lpos,
-							      "ophysical");
-	    npos = {x: Math.floor(ipos.x+0.5), y: Math.floor(ipos.y+0.5)};
-	}
-	return npos;
-    }
-
     function reBinImage(div, display) {
 	var hdu, opts, npos;
 	var im   = JS9.GetImage({display: display});
@@ -945,7 +924,7 @@ module.exports = xhr;
 	    if( JS9.isNumber(form.ycen.value) ){
 		opts.ycen = parseFloat(form.ycen.value);
 	    }
-	    npos = maybePhysicalToImage(im, {x: opts.xcen, y: opts.ycen});
+	    npos = im.maybePhysicalToImage({x: opts.xcen, y: opts.ycen});
 	    if( npos ){
 		opts.xcen = npos.x;
 		opts.ycen = npos.y;

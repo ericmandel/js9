@@ -2847,7 +2847,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     return this;
 };
 
-// get dimensions of "original" file
+// fileDimensions: get dimensions of "original" file
 // this is the hackiest routine in the JS9 module
 // why is it so hard???
 JS9.Image.prototype.fileDimensions = function() {
@@ -2878,11 +2878,34 @@ JS9.Image.prototype.fileDimensions = function() {
     return {xdim: xdim, ydim: ydim};
 };
 
+/*
+   maybePhysicalToImage: the second hackiest routine in the JS9 module!
+   The physical position defined by LTM/LTV is not always the file position,
+   For example, if the file foo.fits was created from another file:
+       funimage somefile.fits'[*,*,2]' foo.fits
+   its LTM/LTV keywords will referring to the parent, instead of itself.
+   In such a case, we want to convert physical position to the image position
+   of the physical file.
+   This situation is signalled by the presence of a parent lcs object.
+   This routine is used in displaySection and the fitsy binning.js plugin.
+*/
+JS9.Image.prototype.maybePhysicalToImage = function(pos){
+    var lpos, ipos, npos;
+    if( this.imtab === "image" &&
+	this.parent && this.parent.lcs && pos.x && pos.y ){
+	lpos = {x: pos.x, y: pos.y};
+	ipos = JS9.Image.prototype.logicalToImagePos.call(this.parent, lpos,
+							  "ophysical");
+	npos = {x: Math.floor(ipos.x+0.5), y: Math.floor(ipos.y+0.5)};
+    }
+    return npos;
+};
+
 // extract and display a section of an image, with table filtering
 JS9.Image.prototype.displaySection = function(opts, func) {
     var that = this;
     var oproxy, hdu, from, obj, oreg, nim, topts, fdims;
-    var ipos, lpos, binval1, binval2, arr, sect;
+    var ipos, lpos, npos, binval1, binval2, arr, sect;
     var getval3 = function(val1, val2, val3){
 	var res;
 	if( !JS9.isNull(val1) ){
@@ -3001,6 +3024,12 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	// sect.ycen = Math.floor(lpos.y + 0.5);
 	sect.xcen = Math.floor(lpos.x + 0.5*(sect.bin-1));
 	sect.ycen = Math.floor(lpos.y + 0.5*(sect.bin-1));
+	npos = this.maybePhysicalToImage({x: sect.xcen, y: sect.ycen});
+	if( npos ){
+	    sect.xcen = npos.x;
+	    sect.ycen = npos.y;
+	}
+
 	sect.xdim = Math.floor(hdu.naxis1 * sect.bin);
 	sect.ydim = Math.floor(hdu.naxis2 * sect.bin);
 	sect.filter = this.raw.filter || "";
@@ -3195,13 +3224,6 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
     }
     // opts is optional
     opts = opts || {};
-    // default is to use center of image
-    if( JS9.isNull(opts.xcen) ){
-	opts.xcen = 0;
-    }
-    if( JS9.isNull(opts.ycen) ){
-	opts.ycen = 0;
-    }
     opts.waiting = false;
     // only makes sense if we have hdus
     if( !this.hdus ){
@@ -3276,13 +3298,6 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
     }
     // opts is optional
     opts = opts || {};
-    // default is to use center of image
-    if( JS9.isNull(opts.xcen) ){
-	opts.xcen = 0;
-    }
-    if( JS9.isNull(opts.ycen) ){
-	opts.ycen = 0;
-    }
     opts.waiting = false;
     // sanity check
     if( slice === undefined ){
