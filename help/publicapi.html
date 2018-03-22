@@ -512,12 +512,12 @@ explicitly changed parameter(s) used in a prior step.
 
 <h5 id="JS9.RefreshImage">Re-read the image data and re-display</h5>
 <p>
-<code class="api">JS9.RefreshImage(input, func)</code>
+<code class="api">JS9.RefreshImage(input, opts)</code>
 <p>
 where:
 <ul>
 <li><b>input</b>: object, javascript array, typed array, FITS blob, or string
-<li><b>func</b>: optional function to call when image refresh is complete
+<li><b>opts</b>: optional options or function to call when refresh is complete
 </ul>
 This routine can be used, for example, in laboratory settings where
 data is being gathered in real-time and the JS9 display needs to be
@@ -572,11 +572,26 @@ routine. The blob will be passed to the underlying FITS-handler before
 being displayed. Thus, processing time is slightly greater than if you just
 pass the image data directly.
 <p>
+The second optional argument can be an object containing the following:
+<ul>
+<li><b>onrefresh</b>: function to perform when refresh is complete
+</ul>
+For backwards compatibility, the onrefresh function can be specified directly
+by this argument. In both cases, the image handle is passed to the function:
+<pre>
+    # preferred method
+    JS9.RefreshImage(blob, {onrefresh: xrefresh});
+    # for backwards compatibility
+    JS9.RefreshImage(blob, xrefresh);
+    # both call this function
+    function xrefresh(im){ ... };
+</pre>
+
+<p>
 The main difference between <b>JS9.RefreshImage()</b> and
 <a href="#JS9.Load"><b>JS9.Load()</b></a>
-is that the former updates the data into an
-existing image, while the latter adds a completely new image to the
-display.
+is that the former updates the data into an existing image,
+while the latter adds a completely new image to the display.
 
 <h5 id="JS9.DisplaySection">Extract and display a section of a FITS file</h5>
 <p>
@@ -599,6 +614,7 @@ display the section:
 <li><b>bin</b>: integer bin factor or bin directive string
 <li><b>filter</b>: for tables, row/event filter to apply when extracting section
 <li><b>separate</b>: if true, display as a separate image (default is to update the current image)
+<li><b>ondisplaysection</b>: function to perform after section is displayed
 </ul>
 The bin directives are:
 <ul>
@@ -611,9 +627,15 @@ The bin directives are:
 </ul>
 
 <p>
-All properties are optional: by default, the routine will extract an
-image from the center of the file, with dimensions and binning
+All properties are optional: if a property is not specified,
+the routine will use
+<del>
+the center of the file, with dimensions and binning
 specified by JS9.globalOpts.table and JS9.globalOpts.image objects.
+</del>
+the image's current settings. This allows you to set up the section once,
+and then repeatedly change a property such as the center or filter,
+without having to specify the other properties.
 
 <p>
 For example, if an image has dimensions 4096 x 4096, then specifying:
@@ -623,8 +645,11 @@ For example, if an image has dimensions 4096 x 4096, then specifying:
 <li> bin: 2
 </ul>
 will bin the upper left 1024 x 1024 section of the image by 2 to
-produce a 512 x 512 image. Note that 0,0 can be used to specify the
-file center.
+produce a 512 x 512 image. Subsequent calls to change the center
+values will pan the image using the same bin factor and dimension.
+
+<p>
+Note that setting xcen,ycen to 0,0 will specify the file center. 
 
 <p>
 Table filtering allows you  to select rows from an FITS binary table
@@ -3844,6 +3869,21 @@ that we can continue to think about what is required for their support.
 The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.
 
+<h5>20180322: DisplaySection now uses current values for unspecified properties</h5>
+
+<p>
+Prior to JS9 version 2.1,
+<a href="#JS9.DisplaySection"><b>DisplaySection()</b></a> always used
+the center of the file, along with dimensions and binning specified by
+the JS9.globalOpts.table and JS9.globalOpts.image objects, if these
+properties were not explicitly specified. This was just wrong: it
+meant that you could not set up a section and then repeated change the
+filter or position without re-specifying the current section
+parameters. We therefore changed the default behavior so that unspecified
+properties take on the current values. To use the original defaults,
+simply specify 0 for xcen and ycen, and use the globalOpts values
+for dimensions and binning.
+
 <h5>20151218: OpenFileMenu and OpenRegionsMenu don't require a display argument</h5>
 
 <p>
@@ -3886,7 +3926,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: February 13, 2018</h5>
+<h5>Last updated: March 22, 2018</h5>
 </div>
 
 </body>

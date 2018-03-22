@@ -2953,6 +2953,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    }
 	    // save current regions (before displaying new image)
 	    oreg = that.listRegions("all", {mode: 1});
+	    // function to perform when image is loaded
+	    func = topts.ondisplaysection || topts.onrefresh || func;
 	    // set up new and display new image
 	    nim = new JS9.Image(hdu, topts, func);
 	    // reset obin to be bin, since new images have no previous bin
@@ -2966,7 +2968,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    topts.id = iid;
 	    topts.refreshRegions = true;
 	    topts.resetSection = true;
-	    if( func ){ topts.onrefresh = func; }
+	    // function to perform when image is refreshed
+	    topts.onrefresh = topts.ondisplaysection || topts.onrefresh || func;
 	    // refresh the current image with the new hdu
 	    that.refreshImage(hdu, topts);
 	}
