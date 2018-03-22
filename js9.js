@@ -2882,8 +2882,16 @@ JS9.Image.prototype.fileDimensions = function() {
 JS9.Image.prototype.displaySection = function(opts, func) {
     var that = this;
     var oproxy, hdu, from, obj, oreg, nim, topts, fdims;
-    var ipos, lpos, binval1, binval2, sect;
-    var arr = [];
+    var ipos, lpos, binval1, binval2, arr, sect;
+    var getval3 = function(val1, val2, val3){
+	var res;
+	if( !JS9.isNull(val1) ){
+	    res = val1;
+	} else if( !JS9.isNull(val2) ){
+	    res = val2;
+	}
+	return res || val3;
+    };
     var disp = function(hdu, opts){
 	var tim, iid;
 	var ss = "";
@@ -2997,9 +3005,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	sect.ydim = Math.floor(hdu.naxis2 * sect.bin);
 	sect.filter = this.raw.filter || "";
     }
-    // now we can make sure opts has sensible defaults
-    opts.xcen = opts.xcen || sect.xcen || 0;
-    opts.ycen = opts.ycen || sect.ycen || 0;
     // allow binning relative to current, e.g., *2, /4, +1, -3
     if( typeof opts.bin === "string" ){
 	switch( opts.bin.charAt(0) ){
@@ -3034,26 +3039,24 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    break;
 	}
     }
+    // now we can make sure opts has sensible defaults
+    opts.xcen = getval3(opts.xcen, sect.xcen, 0);
+    opts.ycen = getval3(opts.ycen, sect.ycen, 0);
     switch(this.imtab){
     case "table":
-	opts.xdim   = opts.xdim   || sect.xdim || JS9.fits.options.table.xdim;
-	opts.ydim   = opts.ydim   || sect.ydim || JS9.fits.options.table.ydim;
-	opts.bin    = opts.bin    || sect.bin  || JS9.fits.options.table.bin;
+	opts.xdim = getval3(opts.xdim, sect.xdim, JS9.fits.options.table.xdim);
+	opts.ydim = getval3(opts.ydim, sect.ydim, JS9.fits.options.table.ydim);
+	opts.bin  = getval3(opts.bin,  sect.bin,  JS9.fits.options.table.bin);
 	break;
     default:
-	opts.xdim = opts.xdim || sect.xdim || JS9.fits.options.image.xdim;
-	opts.ydim = opts.ydim || sect.ydim || JS9.fits.options.image.ydim;
-	opts.bin  = opts.bin  || sect.bin  || JS9.fits.options.image.bin;
+	opts.xdim = getval3(opts.xdim, sect.xdim, JS9.fits.options.image.xdim);
+	opts.ydim = getval3(opts.ydim, sect.ydim, JS9.fits.options.image.ydim);
+	opts.bin  = getval3(opts.bin,  sect.bin,  JS9.fits.options.image.bin);
 	break;
     }
     // one final check on binning
     opts.bin  = Math.max(1, opts.bin || 1);
-    // filter: manually check for undefined, since empty string is valid
-    if( JS9.isNull(opts.filter) && JS9.notNull(sect.filter) ){
-	opts.filter = sect.filter;
-    }
-    // one final check on filter
-    opts.filter = opts.filter || "";
+    opts.filter = getval3(opts.filter, sect.filter, "");
     // save the filter, if necessary
     this.raw.filter = opts.filter || "";
     // start the waiting!
@@ -3068,6 +3071,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    oproxy = that.proxyFile;
 	    // parentFile: image sect. from external parent file of cur file
 	    // arr is for runAnalysis, remove opts for later processing
+	    arr = [];
 	    arr.push({name: "xcen", value: opts.xcen});
 	    delete opts.xcen;
 	    arr.push({name: "ycen", value: opts.ycen});
@@ -3191,6 +3195,13 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
     }
     // opts is optional
     opts = opts || {};
+    // default is to use center of image
+    if( JS9.isNull(opts.xcen) ){
+	opts.xcen = 0;
+    }
+    if( JS9.isNull(opts.ycen) ){
+	opts.ycen = 0;
+    }
     opts.waiting = false;
     // only makes sense if we have hdus
     if( !this.hdus ){
@@ -3265,6 +3276,13 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
     }
     // opts is optional
     opts = opts || {};
+    // default is to use center of image
+    if( JS9.isNull(opts.xcen) ){
+	opts.xcen = 0;
+    }
+    if( JS9.isNull(opts.ycen) ){
+	opts.ycen = 0;
+    }
     opts.waiting = false;
     // sanity check
     if( slice === undefined ){
