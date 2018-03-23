@@ -1553,7 +1553,7 @@ For optical images, image and physical coordinate usually are identical.
 <p>
 where:
 <ul>
-<li><b>x</b>: x image coordinate
+<li><b>x</b>: x image coordinate (or object containing x and y properties)
 <li><b>y</b>: y image coordinate
 </ul>
 returns:
@@ -1561,13 +1561,15 @@ returns:
 <li><b>wcsobj</b>: world coordinate system object
 </ul>
 <p>
-The wcs object contains the following properties:
+The returned wcs object contains the following properties:
 <ul>
 <li><b>ra</b>: right ascension in floating point degrees
 <li><b>dec</b>: declination in floating point degrees 
 <li><b>sys</b>: current world coordinate system being used
 <li><b>str</b>: string of wcs in current system ("[ra] [dec] [sys]")
 </ul>
+You can either supply the x and y image coordinates as two numeric
+arguments, or supply a single object containing numeric x and y properties.
 
 <h5 id="JS9.WCSToPix">Convert WCS position to image pixel position</h5>
 <p>
@@ -1575,19 +1577,21 @@ The wcs object contains the following properties:
 <p>
 where:
 <ul>
-<li><b>ra</b>: right ascension in floating point degrees
+<li><b>ra</b>: right ascension in floating point degrees (or object containing ra and dec properties)
 <li><b>dec</b>: declination in floating point degrees 
 </ul>
 returns:
 <ul>
 <li><b>pixobj</b>: pixel object
 </ul>
-The pixel object contains the following properties:
+The returned pixel object contains the following properties:
 <ul>
 <li><b>x</b>: x image coordinate
 <li><b>y</b>: y image coordinate
 <li><b>str</b>: string of pixel values ("[x]" "[y]")
 </ul>
+You can either supply the RA and Dec as two numeric arguments, or supply a
+single object containing numeric ra and dec properties.
 
 <h5 id="JS9.DisplayMessage">Display a text message</h5>
 <p>

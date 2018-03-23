@@ -18073,13 +18073,20 @@ JS9.mkPublic("EventToDisplayPos", function(evt){
 // convert image position to wcs (in degrees)
 // NB: input image coordinates are 1-indexed
 JS9.mkPublic("PixToWCS", function(ix, iy){
-    var s, arr;
+    var s, arr, arg0;
     var x = 1.0;
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
-	ix = obj.argv[0];
-	iy = obj.argv[1];
+	arg0 = obj.argv[0];
+	if( typeof arg0 === "object" &&
+	    JS9.notNull(arg0.x) && JS9.notNull(arg0.y) ){
+	    ix = arg0.x;
+	    iy = arg0.y;
+	} else {
+	    ix = obj.argv[0];
+	    iy = obj.argv[1];
+	}
 	if( !JS9.isNumber(ix) || !JS9.isNumber(iy) ){
 	    JS9.error("invalid input for PixToWCS");
 	}
@@ -18104,12 +18111,19 @@ JS9.Pix2WCS = JS9.PixToWCS;
 // convert wcs to image position
 // NB: returned image coordinates are 1-indexed
 JS9.mkPublic("WCSToPix", function(ra, dec){
-    var s, x, y, arr;
+    var s, x, y, arr, arg0;
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     if( im ){
-	ra = obj.argv[0];
-	dec = obj.argv[1];
+	arg0 = obj.argv[0];
+	if( typeof arg0 === "object" &&
+	    JS9.notNull(arg0.ra) && JS9.notNull(arg0.dec) ){
+	    ra = arg0.ra;
+	    dec = arg0.dec;
+	} else {
+	    ra = obj.argv[0];
+	    dec = obj.argv[1];
+	}
 	if( !JS9.isNumber(ra) || !JS9.isNumber(dec) ){
 	    JS9.error("invalid input for WCSToPix");
 	}
