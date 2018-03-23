@@ -1049,7 +1049,7 @@ module.exports = xhr;
 	}
 
 	/*eslint-disable no-multi-str */
-	$(div).html('<form class="binning-form" style="margin: 0px; padding: 8px; width: 100%; height: 100%">	\
+	$(div).html('<form class="binning-form js9Form" style="margin: 0px; padding: 8px; width: 100%; height: 100%">	\
 	    <table style="margin:0px; cellspacing:0; border-collapse:separate; border-spacing:4px 10px;">       \
 	           <tr>	<td><input type=button class=full-image value="Load full image" style="text-align:right;"></td>	\
 			<td>&nbsp;</td>    								\
@@ -1072,7 +1072,7 @@ module.exports = xhr;
 			<td>&nbsp(apply bin factor to section)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>filter:</b></td>								\
-			<td colspan="2"><input type=text name=filter size="22" style="text-align:left;"></td>	\
+			<td colspan="2"><textarea name=filter rows="1" cols="22" style="text-align:left;"></textarea></td>	\
 			<td>&nbsp(event/row filter for tables)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>separate:</b></td>			\
@@ -13567,23 +13567,22 @@ if (typeof exports !== "undefined") {
 	var im  = JS9.GetImage({display: this.display});
 	var div = this.div;
 
-	div.innerHTML = '<form class="contour-form">							\
-	    <table style="border-collapse: separate; border-spacing: 5px 5px;"><tr>	<td>N</td>	\
-			<td><input type=text name=nlevel value=5 size=10></td>				\
+	div.innerHTML = '<form class="contour-form js9Form">							\
+	    <table style="border-collapse: separate; border-spacing: 10px 5px;"><tr>	<td><b>num:</b></td>	\
+			<td><input type=text name=nlevel value=5 size="10" style="text-align:right;"></td>				\
 		       	<td><input type=button value="Draw Contours" class="drw-contour"></td></tr>	\
-	           <tr>	<td>Min</td>									\
-			<td><input type=text name=min size=10></td>					\
-		       	<td><input type=button value="Set Min/Max" class="get-min-max"></td></tr>	\
-	           <tr>	<td>Max</td>									\
-			<td><input type=text name=max size=10></td></tr>				\
-	           <tr>	<td valign=top>Levels</td>							\
-	    		<td rowspan=5><textarea style="margin: 0px; padding: 5px" type=textarea rows=12 cols=10 name=level class="contour-levels">	\
+	           <tr>	<td><b>min:</b></td>									\
+			<td><input type=text name=min size="10" style="text-align:right;"></td>					\
+		       	<td><input type=button value="Reset Min/Max" class="get-min-max"></td></tr>	\
+	           <tr>	<td><b>max:</b></td>									\
+			<td><input type=text name=max size="10" style="text-align:right;"></td></tr>				\
+	           <tr>	<td valign=top><b>levels:</b></td>							\
+	    		<td rowspan=5><textarea rows=12 cols="10" name=level class="contour-levels" style="text-align:right;">	\
 			    </textarea>									\
 		       	<td valign=top><input type=button value="Make Levels" class="make-levels"></td>	\
 		   </tr>										\
-		   <tr><td><br></td></tr>								\
-		   <tr>	<td></td><td align=center valign=top>						\
-				Binning									\
+		   <tr><td></td><td valign=top>								\
+				<b>binning:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				\
 				<select id=binning name=binpix>						\
 				<option>None</option>							\
 				<option>2</option>							\
@@ -13597,8 +13596,8 @@ if (typeof exports !== "undefined") {
 				pix									\
 			</td>										\
 		   </tr>										\
-		   <tr>	<td></td><td align=center valign=top>						\
-				Smooth									\
+		   <tr><td></td><td valign=top>								\
+				<b>smoothing:</b>&nbsp;								\
 				<select id=smooth name=smopix>						\
 				<option>None</option>							\
 				<option value=0.75 selected>3</option>					\
@@ -13608,9 +13607,10 @@ if (typeof exports !== "undefined") {
 				pix									\
 			</td>										\
 		   </tr>										\
-		   <tr>	<td></td><td align=center valign=top><br>Quality:				\
-				<br>&nbsp;<input type=radio name=quality value=faster checked>Faster	\
-				<br><input type=radio name=quality value=better>Better			\
+		   <tr><td></td><td valign=top>								\
+				<b>quality:</b>&nbsp;							\
+				<input type=radio name=quality value=faster checked>faster		\
+				<input type=radio name=quality value=better>better			\
 			</td>										\
 		   </tr>										\
 	    </table>											\
@@ -13641,7 +13641,7 @@ if (typeof exports !== "undefined") {
 
 	    toolbarSeparate: true,
 
-            winDims: [325, 300],
+            winDims: [370, 300],
     });
 }());
 

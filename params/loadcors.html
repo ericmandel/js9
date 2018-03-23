@@ -8,12 +8,12 @@
 
 <body>
 
-<form id="sharedURLForm" name="sharedURLForm" class="js9AnalysisForm" action="">
+<form id="sharedURLForm" name="sharedURLForm" class="js9AnalysisForm js9Form" action="">
 <b>
 Dropbox allows you to share files using public links that can be given to others. These links support <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing"> Cross-Origin Resource Sharing</a>, so JS9 can display them directly. Enter a Dropbox shared link to a FITS file below:
 </b>
 <p>
-<input type="text" class="js9TextInput" id="sharedURL" name="sharedURL" size="80" autocapitalize="off" autocorrect="off">
+<input type="text" class="js9LargeInputText" id="sharedURL" name="sharedURL" size="80" autocapitalize="off" autocorrect="off">
 <p>
 <input id="run" name="run" type="button" class="button" value="Load" 
 onclick="var arr = $('#sharedURLForm').serializeArray();

@@ -261,7 +261,7 @@ JS9.lightOpts = {
 	// NB: dimensions are tied to .JS9Plot CSS params
 	plotWin:  "width=830px,height=420px,center=1,resize=1,scrolling=1",
 	dpathWin: "width=830px,height=175px,center=1,resize=1,scrolling=1",
-	paramWin: "width=830px,height=230px,center=1,resize=1,scrolling=1",
+	paramWin: "width=830px,height=235px,center=1,resize=1,scrolling=1",
 	regWin0:  "width=600px,height=72px,center=1,resize=1,scrolling=1",
 	regWin:   "width=600px,height=235px,center=1,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,center=1,resize=1,scrolling=1",

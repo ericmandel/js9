@@ -182,7 +182,7 @@
 	}
 
 	/*eslint-disable no-multi-str */
-	$(div).html('<form class="binning-form" style="margin: 0px; padding: 8px; width: 100%; height: 100%">	\
+	$(div).html('<form class="binning-form js9Form" style="margin: 0px; padding: 8px; width: 100%; height: 100%">	\
 	    <table style="margin:0px; cellspacing:0; border-collapse:separate; border-spacing:4px 10px;">       \
 	           <tr>	<td><input type=button class=full-image value="Load full image" style="text-align:right;"></td>	\
 			<td>&nbsp;</td>    								\
@@ -205,7 +205,7 @@
 			<td>&nbsp(apply bin factor to section)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>filter:</b></td>								\
-			<td colspan="2"><input type=text name=filter size="22" style="text-align:left;"></td>	\
+			<td colspan="2"><textarea name=filter rows="1" cols="22" style="text-align:left;"></textarea></td>	\
 			<td>&nbsp(event/row filter for tables)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>separate:</b></td>			\

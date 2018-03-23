@@ -1512,12 +1512,26 @@ canvas.surfacePlotCanvas {
     margin: 0px;
 }
 
-/* js9Analysis forms */
+/* regularize textarea and input text (e.g. binning.js, contour.js) */
+.js9Form textarea, .js9Form input[type=text]{
+    display: block;
+    margin: 0px;
+    box-sizing: border-box;
+    border: 0px solid transparent;
+    padding: 2px;
+}
+
+/* js9Analysis forms (e.g. parameter dialog boxes) */
 .js9AnalysisForm {
     border: solid grey 1px;
     margin: 8px;
     padding: 8px;
     background: #E9E9E9;
+}
+
+/* larger text for some analysis dialog boxes (loadproxy, loadcors) */
+.js9LargeInputText {
+    font-size: 11pt;
 }
 
 .JS9Archive-form {
@@ -1659,10 +1673,6 @@ canvas.surfacePlotCanvas {
     border-top: 1px solid black;
     margin: 0;
     padding: 0;
-}
-
-.js9TextInput {
-    font-size: 12pt;
 }
 
 /* to make wait cursor override other element cursors (e.g. fabric.js canvas) */

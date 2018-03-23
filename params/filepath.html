@@ -6,10 +6,10 @@
 <title>Modify this Image File's Path</title>
 </head>
 <body>
-<form id="filePathForm" name="filePathForm" class="js9AnalysisForm" action="">
+<form id="filePathForm" name="filePathForm" class="js9AnalysisForm js9Form" action="">
 <b>The image file path is either an absolute path or a path relative to the web page. For security reasons, browsers do not expose the path of files loaded via <i>Drag and Drop</i> or <i>Open Local File</i>. However, for a local web page, you can safely enter a missing image path here, in order to refresh the image or run server-based analysis:</b>
 <p>
-<textarea id="filePath" name="filePath" rows="2" cols="100" style="width:90%;"></textarea>
+<textarea id="filePath" name="filePath" class="js9LargeInputText" rows="1" cols="100" style="width:90%;"></textarea>
 <p>
 <input id="run" name="run" type="button" class="button" value="Submit" 
 onclick="var arr = $('#filePathForm').serializeArray();

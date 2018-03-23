@@ -6,10 +6,10 @@
 <title>Set or Modify the Analysis Data Path</title>
 </head>
 <body>
-<form id="dataPathForm" name="dataPathForm" class="js9AnalysisForm" action="">
-<b>The data path is a colon-separated list of data directories to search when performing server-based analysis. It is used to find image files loaded via <i>Drag and Drop</i> or <i>Open Local File</i> (which have no valid paths):</b>
+<form id="dataPathForm" name="dataPathForm" class="js9AnalysisForm js9Form" action="">
+<b>The data path is a colon-separated list of data directories to search when performing server-based analysis. It is needed to locate image files loaded via <i>Drag and Drop</i> or <i>Open Local File</i> (which, for security reasons, are not supplied with valid paths by the browser):</b>
 <p>
-<textarea id="dataPath" name="dataPath" rows="2" cols="100" style="width:90%;"></textarea>
+<textarea id="dataPath" name="dataPath" class="js9LargeInputText" rows="1" cols="100" style="width:90%;"></textarea>
 <p>
 <input id="run" name="run" type="button" class="button" value="Submit" 
 onclick="var arr = $('#dataPathForm').serializeArray();
