@@ -205,7 +205,7 @@
 			<td>&nbsp(apply bin factor to section)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>filter:</b></td>								\
-			<td colspan="2"><textarea name=filter rows="1" cols="22" style="text-align:left;"></textarea></td>	\
+			<td colspan="2"><textarea name=filter rows="1" cols="22" style="text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>	\
 			<td>&nbsp(event/row filter for tables)</td>						\
 		   </tr>										\
 	           <tr>	<td><b>separate:</b></td>			\
