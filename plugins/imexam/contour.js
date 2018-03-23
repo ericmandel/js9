@@ -835,7 +835,7 @@ if (typeof exports !== "undefined") {
 	var quality	= $(form).find("input[type=radio]:checked").val();
 
 
-	if ( binning === "None" ) {
+	if ( binning === "none" ) {
 	    binning = 1;
 	} else {
 	    data = binner.bin2d(data, parseInt(binning));
@@ -843,7 +843,7 @@ if (typeof exports !== "undefined") {
 
 	var level = JSON.parse("[" + levelString.trim().split(/\s+/).join(",") + "]").map(function(x) { return x*binning*binning; });
 	
-	if ( smooth !== "None" ) {
+	if ( smooth !== "none" ) {
 	    data = binner.smooth_gaussian2d(data, parseFloat(smooth));
 	}
 
@@ -954,21 +954,21 @@ if (typeof exports !== "undefined") {
 	div.innerHTML = '<form class="contour-form js9Form">							\
 	    <table style="border-collapse: separate; border-spacing: 10px 5px;"><tr>	<td><b>num:</b></td>	\
 			<td><input type=text name=nlevel value=5 size="10" style="text-align:right;"></td>				\
-		       	<td><input type=button value="Draw Contours" class="drw-contour"></td></tr>	\
+		       	<td><input type=button value="Draw contours" class="drw-contour"></td></tr>	\
 	           <tr>	<td><b>min:</b></td>									\
 			<td><input type=text name=min size="10" style="text-align:right;"></td>					\
-		       	<td><input type=button value="Reset Min/Max" class="get-min-max"></td></tr>	\
+		       	<td><input type=button value="Reset min/max" class="get-min-max"></td></tr>	\
 	           <tr>	<td><b>max:</b></td>									\
 			<td><input type=text name=max size="10" style="text-align:right;"></td></tr>				\
 	           <tr>	<td valign=top><b>levels:</b></td>							\
 	    		<td rowspan=5><textarea rows=12 cols="10" name=level class="contour-levels" style="text-align:right;">	\
 			    </textarea>									\
-		       	<td valign=top><input type=button value="Make Levels" class="make-levels"></td>	\
+		       	<td valign=top><input type=button value="Make levels" class="make-levels"></td>	\
 		   </tr>										\
 		   <tr><td></td><td valign=top>								\
 				<b>binning:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				\
 				<select id=binning name=binpix>						\
-				<option>None</option>							\
+				<option>none</option>							\
 				<option>2</option>							\
 				<option>3</option>							\
 				<option>4</option>							\
@@ -983,7 +983,7 @@ if (typeof exports !== "undefined") {
 		   <tr><td></td><td valign=top>								\
 				<b>smoothing:</b>&nbsp;								\
 				<select id=smooth name=smopix>						\
-				<option>None</option>							\
+				<option>none</option>							\
 				<option value=0.75 selected>3</option>					\
 				<option value=1.00>5</option>						\
 				<option value=1.25>7</option>						\
