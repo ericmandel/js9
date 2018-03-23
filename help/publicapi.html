@@ -1208,18 +1208,18 @@ The returned ipos object will contain the following properties:
 <p>
 where:
 <ul>
-<li><b>x</b>: x image coordinate
+<li><b>x</b>: x image coordinate (or object containing x and y properties)
 <li><b>y</b>: y image coordinate
 </ul>
 
 <p>
-Set the current pan position using image coordinates.  
-Note that you can use
+Set the current pan position using image coordinates. Note that you can use
 <a href="#JS9.WCSToPix"><b>JS9.WCSToPix()</b></a>
 and
 <a href="#JS9.PixToWCS"><b>JS9.PixToWCS()</b></a>
 to convert between image and WCS coordinates.
 </p>
+An object containing x and y properties can also be supplied.
 
 <h5 id="JS9.GetParam">Get an image parameter value</h5>
 <p>

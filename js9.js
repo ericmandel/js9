@@ -3380,6 +3380,10 @@ JS9.Image.prototype.setPan = function(panx, pany){
     if( arguments.length === 0 ){
 	panx = w2;
 	pany = h2;
+    } else if( typeof panx === "object" &&
+	       JS9.notNull(panx.x) && JS9.notNull(panx.y) ){
+	pany = panx.y;
+	panx = panx.x;
     }
     this.mkSection(panx, pany);
     // set pan for blended images, if necessary
