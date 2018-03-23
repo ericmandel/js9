@@ -3368,8 +3368,8 @@ JS9.Image.prototype.toArray = function(){
 
 // get pan location
 JS9.Image.prototype.getPan = function(){
-    return {x: (this.rgb.sect.x0 + this.rgb.sect.x1)/2+1,
-	    y: (this.rgb.sect.y0 + this.rgb.sect.y1)/2+1};
+    return {x: (this.rgb.sect.x0 + this.rgb.sect.x1)/2,
+	    y: (this.rgb.sect.y0 + this.rgb.sect.y1)/2};
 };
 
 // set pan location of RGB image (using image coordinates)
