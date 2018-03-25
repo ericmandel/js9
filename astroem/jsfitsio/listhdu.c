@@ -10,10 +10,12 @@
 // list all hdu elements
 int _listhdu(char *iname, char *oname){
     fitsfile *fptr;         /* FITS file pointer, defined in fitsio.h */
-    char keyname[FLEN_KEYWORD], colname[FLEN_VALUE], coltype[FLEN_VALUE];
+    char colname[FLEN_VALUE], coltype[FLEN_VALUE], vbuf[FLEN_VALUE];
+    char keyname[FLEN_KEYWORD], kbuf[FLEN_KEYWORD];
     int status = 0;   /* CFITSIO status value MUST be initialized to zero! */
-    int hdupos, hdutype, bitpix, naxis, ncols, ii;
+    int hdupos, hdutype, bitpix, naxis, ncols, ii, jj, tstatus;
     long naxes[10], nrows;
+    double dval;
     FILE *fd = stdout;
 
     if( !fits_open_file(&fptr, iname, READONLY, &status) ){
@@ -32,22 +34,22 @@ int _listhdu(char *iname, char *oname){
       fprintf(fd, "[");
       /* process all hdus */
       for (; !status; hdupos++){   /* Main loop for each HDU */
-        fprintf(fd, "{");
+        fprintf(fd, "\n  {\n");
         fits_get_hdu_type(fptr, &hdutype, &status);  /* Get the HDU type */
-        fprintf(fd, "\"hdu\":%d", hdupos);
+        fprintf(fd, "    \"hdu\": %d", hdupos);
 	/* output extname, if possible */
 	fits_read_key(fptr, TSTRING, "EXTNAME", colname, NULL, &status);
 	if( status == 0 ){
-	  fprintf(fd, ",\"name\":\"%s\"", colname);
+	  fprintf(fd, ",\n    \"name\":\"%s\"", colname);
 	}
 	status = 0;
 	/* type-specific processing (image or table) */
         if( hdutype == IMAGE_HDU ){   /* primary array or image HDU */
           fits_get_img_param(fptr, 10, &bitpix, &naxis, naxes, &status);
 	  /* number of axes */
-          fprintf(fd, ",\"type\":\"image\",\"naxis\":%d", naxis);
+          fprintf(fd, ",\n    \"type\":\"image\",\n    \"naxis\": %d", naxis);
 	  /* axis dimensions, if there are any */
-	  fprintf(fd, ",\"naxes\":[");
+	  fprintf(fd, ",\n    \"naxes\":[");
 	  for (ii = 0; ii < naxis; ii++){
 	    if( ii != 0 ){
 	      fprintf(fd, ",");
@@ -56,41 +58,101 @@ int _listhdu(char *iname, char *oname){
 	  }
 	  fprintf(fd, "]");
 	  /* bitpix */
-          fprintf(fd, ",\"bitpix\":%d", bitpix);
+          fprintf(fd, ",\n    \"bitpix\": %d", bitpix);
+	  /* wcs parameters are used for mosaics (mainly crpix and crval) */
+	  for (ii = 1; ii <= 2; ii++){
+	    tstatus = 0;
+            fits_make_keyn("CTYPE", ii, keyname, &tstatus);
+	    fits_read_key(fptr, TSTRING, keyname, vbuf, NULL, &tstatus);
+	    if( tstatus == 0 ){
+	      fprintf(fd, ",\n    \"%s\": \"%s\"", keyname, vbuf);
+	    }
+	    tstatus = 0;
+            fits_make_keyn("CUNIT", ii, keyname, &tstatus);
+	    fits_read_key(fptr, TSTRING, keyname, vbuf, NULL, &tstatus);
+	    if( tstatus == 0 ){
+	      fprintf(fd, ",\n    \"%s\": \"%s\"", keyname, vbuf);
+	    }
+            tstatus = 0;
+            fits_make_keyn("CRPIX", ii, keyname, &tstatus);
+            fits_read_key(fptr, TDOUBLE, keyname, &dval, NULL, &tstatus);
+	    if( tstatus == 0 ){
+	      fprintf(fd, ",\n    \"%s\": %f", keyname, dval);
+	    }
+            tstatus = 0;
+            fits_make_keyn("CRVAL", ii, keyname, &tstatus);
+            fits_read_key(fptr, TDOUBLE, keyname, &dval, NULL, &tstatus);
+	    if( tstatus == 0 ){
+	      fprintf(fd, ",\n    \"%s\": %f", keyname, dval);
+	    }
+            tstatus = 0;
+            fits_make_keyn("CDELT", ii, keyname, &tstatus);
+            fits_read_key(fptr, TDOUBLE, keyname, &dval, NULL, &tstatus);
+	    if( tstatus == 0 ){
+	      fprintf(fd, ",\n    \"%s\": %f", keyname, dval);
+	    }
+            tstatus = 0;
+            fits_make_keyn("CROTA", ii, keyname, &tstatus);
+            fits_read_key(fptr, TDOUBLE, keyname, &dval, NULL, &tstatus);
+	    if( tstatus == 0 ){
+	      fprintf(fd, ",\n    \"%s\": %f", keyname, dval);
+	    }
+	    for (jj = 1; jj <= 2; jj++){
+	      tstatus = 0;
+	      snprintf(kbuf, FLEN_KEYWORD, "CD%d_", ii);
+	      fits_make_keyn(kbuf, jj, keyname, &tstatus);
+	      fits_read_key(fptr, TDOUBLE, keyname, &dval, NULL, &tstatus);
+	      if( tstatus == 0 ){
+		fprintf(fd, ",\n    \"%s\": %f", keyname, dval);
+	      }
+	    }
+	  }
+	  tstatus = 0;
+	  strcpy(keyname, "RADECSYS");
+	  fits_read_key(fptr, TSTRING, keyname, vbuf, NULL, &tstatus);
+	  if( tstatus == 0 ){
+	    fprintf(fd, ",\n    \"%s\": \"%s\"", keyname, vbuf);
+	  }
+	  tstatus = 0;
+	  strcpy(keyname, "EQUINOX");
+	  fits_read_key(fptr, TSTRING, keyname, vbuf, NULL, &tstatus);
+	  if( tstatus == 0 ){
+	    fprintf(fd, ",\n    \"%s\": \"%s\"", keyname, vbuf);
+	  }
         } else {
 	  /* a table HDU */
           fits_get_num_rows(fptr, &nrows, &status);
           fits_get_num_cols(fptr, &ncols, &status);
 	  /* which type of table? */
           if( hdutype == ASCII_TBL ){
-            fprintf(fd, ",\"type\":\"ascii\"");
+            fprintf(fd, ",\n    \"type\":\"ascii\"");
 	  } else {
-            fprintf(fd, ",\"type\":\"table\"");
+            fprintf(fd, ",\n    \"type\":\"table\"");
 	  }
 	  /* rows */
-          fprintf(fd, ",\"rows\":%ld", nrows);
+          fprintf(fd, ",\n    \"rows\": %ld", nrows);
 	  /* array of column names and types */
-          fprintf(fd, ",\"cols\":[");
+          fprintf(fd, ",\n    \"cols\":[");
           for (ii = 1; ii <= ncols; ii++){
             fits_make_keyn("TTYPE", ii, keyname, &status); /* make keyword */
             fits_read_key(fptr, TSTRING, keyname, colname, NULL, &status);
             fits_make_keyn("TFORM", ii, keyname, &status); /* make keyword */
             fits_read_key(fptr, TSTRING, keyname, coltype, NULL, &status);
-            fprintf(fd, "{\"name\":\"%s\",\"type\":\"%s\"}", 
+            fprintf(fd, "\n      {\"name\":\"%s\", \"type\":\"%s\"}", 
 		    colname, coltype);
 	    if( ii != ncols ){
 	      fprintf(fd, ",");
 	    }
           }
-          fprintf(fd, "]");
+          fprintf(fd, "\n    ]");
         }
-	fprintf(fd, "}");
+	fprintf(fd, "\n  }");
         fits_movrel_hdu(fptr, 1, NULL, &status);  /* try move to next ext */
         if( status == 0 ){
 	  fprintf(fd, ",");
 	}
       }
-      fprintf(fd, "]");
+      fprintf(fd, "\n]");
       if( status == END_OF_FILE ){
 	status = 0; /* Reset normal error */
       }
