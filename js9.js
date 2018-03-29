@@ -10673,7 +10673,8 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    break;
 	case "line":
 	case "polygon":
-	    if( opts.points && opts.points.length ){
+	    if( (opts.points && opts.points.length) ||
+		(opts.pts && opts.pts.length)       ){
 		obj.scaleX = zoom / bin;
 		obj.scaleY = zoom / bin;
 	    }
