@@ -1,0 +1,22 @@
+#!/bin/bash
+# set -x
+
+FILES=`eval ls images/{close,min,resize,restore}.gif images/toolbar/dax_images/{lin,log,pow,annulus,box,circle,ellipse,poly,text,erase,incexl,srcbkg,mag_plus,mag_minus,mag_one,bin_plus,bin_minus,bin_one,open,pan,mag,stats,smooth}.png`
+INLINE="js/js9inline.js"
+
+rm -rf $INLINE
+
+echo "" >> $INLINE
+echo "JS9Inline = {};" >> $INLINE
+
+for file in $FILES; do
+  if [ -r $file ]; then
+      base=$(basename -- "$file")
+      ext="${base##*.}"
+      echo "JS9Inline['$file'] = 'data:image/${ext};base64,"`cat $file | base64`"';" >> $INLINE
+  else
+      echo "WARNING: file not found: $file"
+  fi
+done
+
+

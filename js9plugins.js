@@ -7855,7 +7855,11 @@ JS9.Toolbar.addTool = function(tool){
     if( tool.image ){
 	// relative path: add install dir prefix
 	img = tool.image;
-	if( img.charAt(0) !== "/" ){
+	if( JS9.inline && JS9.inline[img] ){
+	    // inline version is available
+	    img = JS9.inline[img];
+	} else if( img.charAt(0) !== "/" ){
+	    // external version
 	    img = JS9.InstallDir(img);
 	}
 	btn = $("<input>")

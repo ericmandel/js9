@@ -10,7 +10,7 @@
  *
  */
 
-/*global JS9Prefs, $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly */
+/*global JS9Prefs, JS9Inline, $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly */
 
 // define Escripten Module so we can pass properties (e.g. wasmBinary)
 // eslint-disable-next-line no-unused-vars
@@ -16652,6 +16652,10 @@ JS9.init = function(){
 	JS9.INSTALLDIR += "/";
     }
     JS9.TOROOT = JS9.INSTALLDIR.replace(/([^\/.])+/g, "..");
+    // if the js9 inline object exists, add it the JS9 object
+    if( window.hasOwnProperty("JS9Inline") && typeof JS9Inline === "object" ){
+	JS9.inline = $.extend(true, {}, JS9Inline);
+    }
     // set up the dynamic drive html window
     if( JS9.LIGHTWIN === "dhtml" ){
 	// Creation of dhtmlwindowholder was done by a document.write in
@@ -16663,7 +16667,12 @@ JS9.init = function(){
 	    .appendTo($(document.body))
 	    .append("<span style='display:none'>.</span>");
 	// allow in-line specification of images for all-in-one configuration
-	if( JS9.allinone ){
+	if( JS9.inline ){
+	    dhtmlwindow.imagefiles = [JS9.inline["images/min.gif"],
+				      JS9.inline["images/close.gif"],
+				      JS9.inline["images/restore.gif"],
+				      JS9.inline["images/resize.gif"]];
+	} else if( JS9.allinone ){
 	    dhtmlwindow.imagefiles = [JS9.allinone.min,
 				      JS9.allinone.close,
 				      JS9.allinone.restore,
