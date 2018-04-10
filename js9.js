@@ -14164,10 +14164,26 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	if( !JS9.globalOpts.workDir ){
 	    return false;
 	}
-	xdim = JS9.fits.options.table.xdim;
-	ydim = JS9.fits.options.table.ydim;
-	bin = JS9.fits.options.table.bin || 1;
-	xopts.sect = sprintf("%s,%s,%s", xdim, ydim,bin);
+	xdim =
+	    opts.xdim ||
+	    JS9.fits.options.image.xdim ||
+	    JS9.fits.options.table.xdim;
+	ydim =
+	    opts.ydim ||
+	    JS9.fits.options.image.ydim ||
+	    JS9.fits.options.table.ydim;
+	bin =
+	    opts.bin ||
+	    JS9.fits.options.image.bin ||
+	    JS9.fits.options.table.bin;
+	if( opts.xcen !== undefined && opts.ycen !== undefined ){
+	    xopts.sect = sprintf("%s@%s,%s@%s,%s",
+				 xdim, opts.xcen,
+				 ydim, opts.ycen,
+				 bin);
+	} else {
+	    xopts.sect = sprintf("%s,%s,%s", xdim, ydim, bin);
+	}
 	s = xcond.toLowerCase().split(/[>,]/);
 	for(i=0; i<s.length; i++){
 	    switch(s[i]){
@@ -14241,6 +14257,12 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 			f = JS9.InstallDir(f);
 		    }
 		    nopts = $.extend(true, {}, opts);
+		    // but remove already-used section properties from opts
+		    delete nopts.xdim;
+		    delete nopts.ydim;
+		    delete nopts.bin;
+		    delete nopts.xcen;
+		    delete nopts.ycen;
 		    // save source
 		    nopts.source = "fits2fits";
 		    // it's a proxy file (i.e., delete it on close)
