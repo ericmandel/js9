@@ -16659,9 +16659,17 @@ JS9.init = function(){
     }
     if( !JS9.INSTALLDIR ){
 	try{
-	    JS9.INSTALLDIR = $('link[href$="js9.css"]')
-		.attr("href")
-		.replace(/js9\.css$/, "") || "";
+	    // process all links that end in 'js9.css'
+	    $('link[href$="js9.css"]').each(function(){
+		var h = $(this).attr("href");
+		if( h ){
+		    // look for 'js9.css' (not one that simply ends that way)
+		    if( h.split("/").reverse()[0] === "js9.css" ){
+			// set install dir to its directory
+			JS9.INSTALLDIR = h.replace(/js9\.css$/, "");
+		    }
+		}
+	    });
 	} catch(e){
 	    JS9.INSTALLDIR = "";
 	}
