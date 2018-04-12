@@ -9287,7 +9287,7 @@ JS9.Fabric.activeShapeLayer = function(s){
 // process options, separating into fabric opts and paramsJ
 // call using image context
 JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
-    var i, j, tags, pos, cpos, len, zoom, bin, zfactor;
+    var i, j, tags, pos, cpos, len, zoom;
     var key, shape, radinc, nrad, radius, tf, arr;
     var nopts = {}, nparams = {};
     var YFUDGE = 1;
@@ -9345,14 +9345,6 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     } else {
 	zoom = 1;
     }
-    if( this.display.layers[layerName].dtype === "main" ){
-	// bin = this.binning.bin || 1;
-	bin = 1;
-    } else {
-	bin = 1;
-    }
-    // combined zoom/bin factor
-    zfactor = zoom / bin;
     // remove means nothing else matters
     if( opts.remove ){
 	return {remove: opts.remove};
@@ -9457,10 +9449,10 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	} else {
 	    if( opts.ireg && JS9.SCALEIREG ){
 		if( opts.iradius ){
-		    opts.iradius /= zfactor;
+		    opts.iradius /= zoom;
 		}
 		if( opts.oradius ){
-		    opts.oradius /= zfactor;
+		    opts.oradius /= zoom;
 		}
 	    }
 	    radinc = (opts.oradius - opts.iradius) / opts.nannuli;
@@ -9474,27 +9466,27 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     case "box":
 	if( opts.ireg && JS9.SCALEIREG ){
 	    if( opts.width ){
-		opts.width /= zfactor;
+		opts.width /= zoom;
 	    }
 	    if( opts.height ){
-		opts.height /= zfactor;
+		opts.height /= zoom;
 	    }
 	}
 	break;
     case "circle":
 	if( opts.ireg && JS9.SCALEIREG ){
 	    if( opts.radius ){
-		opts.radius /= zfactor;
+		opts.radius /= zoom;
 	    }
 	}
 	break;
     case "ellipse":
 	if( opts.ireg && JS9.SCALEIREG ){
 	    if( opts.r1 ){
-		opts.r1 /= zfactor;
+		opts.r1 /= zoom;
 	    }
 	    if( opts.r2 ){
-		opts.r2 /= zfactor;
+		opts.r2 /= zoom;
 	    }
 	}
 	break;
@@ -9569,8 +9561,8 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	if( opts.ireg && JS9.SCALEIREG ){
 	    len = opts.points.length;
 	    for(i=0; i<len; i++){
-		opts.points[i].x /= zfactor;
-		opts.points[i].y /= zfactor;
+		opts.points[i].x /= zoom;
+		opts.points[i].y /= zoom;
 	    }
 	}
 	break;
@@ -9832,7 +9824,7 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 // call using image context
 JS9.Fabric.addShapes = function(layerName, shape, myopts){
     var i, sobj, sarr, ns, s, bopts, opts, mode;
-    var layer, canvas, dlayer, zoom, bin;
+    var layer, canvas, dlayer, zoom;
     var ttop, tleft, rarr=[];
     var params = {};
     // opts can be an object or json
@@ -9857,11 +9849,8 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
 	zoom = this.rgb.sect.zoom;
-	// bin = this.binning.bin || 1;
-	bin = 1;
     } else {
 	zoom = 1;
-	bin = 1;
     }
     // figure out the first argument
     if( typeof shape === "string" ){
@@ -10025,7 +10014,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    case "text":
 		break;
 	    default:
-		s.scale(zoom/bin);
+		s.scale(zoom);
 		break;
 	    }
 	}
@@ -10181,7 +10170,7 @@ JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
 // primitive to update one shape
 // call using image context
 JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
-    var i, xname, s, scalex, scaley, px, py, lcs, v0, v1;
+    var i, xname, s, scalex, scaley, px, py, lcs, v0, v1, tval1, tval2;
     var bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius, oangle;
     var opos, dist;
     var pub ={};
@@ -10194,15 +10183,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
 	zoom = this.rgb.sect.zoom;
-	if( this.params.wcssys === "image" ){
-	    bin = 1;
-	} else {
-	    // bin = this.binning.bin || 1;
-	    bin = 1;
-	}
     } else {
 	zoom = 1;
-	bin = 1;
     }
     // fill in the blanks
     pub.mode = mode;
@@ -10225,17 +10207,19 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     ipos = this.displayToImagePos(dpos);
     pub.x = ipos.x;
     pub.y = ipos.y;
-    pub.imsys = "image";
     // logical position
     pub.lcs = this.imageToLogicalPos(ipos);
     // convenience variables
     if( this.params.wcssys === "image" ){
 	px = pub.x;
 	py = pub.y;
+	pub.imsys = "image";
+	bin = 1;
     } else {
 	px = pub.lcs.x;
 	py = pub.lcs.y;
 	pub.imsys = pub.lcs.sys;
+	bin = this.binning.bin;
     }
     // display position
     pub.angle = -obj.angle;
@@ -10254,8 +10238,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.angle -= 360;
     }
     // the parts of the obj.scale[XY] values related to size (not zoom, binning)
-    scalex = obj.scaleX / zoom * bin;
-    scaley = obj.scaleY / zoom * bin;
+    scalex = obj.scaleX / zoom;
+    scaley = obj.scaleY / zoom;
     if( ginfo.group ){
 	scalex *= ginfo.group.scaleX;
 	scaley *= ginfo.group.scaleY;
@@ -10270,9 +10254,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	objs = obj.getObjects();
 	olen = objs.length;
 	for(i=0; i<olen; i++){
-	    radius = objs[i].radius * scalex;
+	    tval1 = objs[i].radius * scalex;
+	    radius = tval1 * bin;
 	    pub.imstr += tr(radius);
-	    tstr += (pub.x + " " +  pub.y + " " + (pub.x + radius) + " " + pub.y + " ");
+	    tstr += (pub.x + " " +  pub.y + " " + (pub.x + tval1) + " " + pub.y + " ");
 	    if( i === (olen - 1) ){
 		pub.imstr += ")";
 	    } else {
@@ -10283,25 +10268,32 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	break;
     case "box":
 	pub.shape = "box";
-	pub.width =  obj.width * scalex;
-	pub.height = obj.height * scaley;
+	tval1 =  obj.width * scalex;
+	tval2 = obj.height * scaley;
+	pub.width =  tval1 * bin;
+	pub.height = tval2 * bin;
 	pub.imstr = "box(" + tr(px) + ", " + tr(py) + ", " + tr(pub.width) + ", " + tr(pub.height) + ", " + tr4(pub.angle) + ")";
-	tstr = "box " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + pub.width) + " " + pub.y + " " + pub.x + " " + pub.y + " " + pub.x + " " + (pub.y + pub.height) + " " + (pub.angle * Math.PI / 180.0);
+	tstr = "box " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + tval1) + " " + pub.y + " " + pub.x + " " + pub.y + " " + pub.x + " " + (pub.y + tval2) + " " + (pub.angle * Math.PI / 180.0);
 	break;
     case "circle":
-	pub.radius = obj.radius * scalex;
+	tval1 = obj.radius * scalex;
+	pub.radius = tval1 * bin;
 	pub.imstr = "circle(" + tr(px) + ", " + tr(py) + ", " + tr(pub.radius) + ")";
-	tstr = "circle " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + pub.radius) + " " + pub.y;
+	tstr = "circle " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + tval1) + " " + pub.y;
 	break;
     case "ellipse":
-	pub.r1 = obj.width * scalex / 2;
-	pub.r2 = obj.height * scaley / 2;
+	tval1 = obj.width * scalex / 2;
+	tval2 = obj.height * scaley / 2;
+	pub.r1 = tval1 * bin;
+	pub.r2 = tval2 * bin;
 	pub.imstr = "ellipse(" + tr(px) + ", " + tr(py) + ", " + tr(pub.r1) + ", " + tr(pub.r2) + ", " + tr4(pub.angle) + ")";
-	tstr = "ellipse " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + pub.r1) + " " + pub.y + " " + pub.x + " " + pub.y + " " + pub.x + " " + (pub.y + pub.r2) + " " + (pub.angle * Math.PI / 180.0);
+	tstr = "ellipse " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + tval1) + " " + pub.y + " " + pub.x + " " + pub.y + " " + pub.x + " " + (pub.y + tval2) + " " + (pub.angle * Math.PI / 180.0);
 	break;
     case "point":
-	pub.width =  obj.width * scalex;
-	pub.height = obj.height * scaley;
+	tval1 =  obj.width * scalex;
+	tval2 = obj.height * scaley;
+	pub.width =  tval1 * bin;
+	pub.height = tval2 * bin;
 	pub.imstr = "point(" + tr(px) + ", " + tr(py) + ")";
 	tstr = "point " + pub.x + " " + pub.y;
 	break;
@@ -10534,7 +10526,7 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 // change the specified shape(s)
 // call using image context
 JS9.Fabric.changeShapes = function(layerName, shape, opts){
-    var i, s, sobj, bopts, layer, canvas, ao, rlen, color, maxr, zoom, bin;
+    var i, s, sobj, bopts, layer, canvas, ao, rlen, color, maxr, zoom;
     var exports;
     var orad = [];
     var that = this;
@@ -10556,11 +10548,8 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     // is image zoom part of scale?
     if( this.display.layers[layerName].dtype === "main" ){
 	zoom = this.rgb.sect.zoom;
-	// bin = this.binning.bin || 1;
-	bin = 1;
     } else {
 	zoom = 1;
-	bin = 1;
     }
     // active object
     ao = canvas.getActiveObject();
@@ -10634,8 +10623,8 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 		    maxr = Math.max(maxr, obj.params.radii[i]);
 		    obj.add(s);
 		}
-		obj.scaleX = zoom / bin;
-		obj.scaleY = zoom / bin;
+		obj.scaleX = zoom;
+		obj.scaleY = zoom;
 		// reset size of group
 		obj.width = maxr * 2;
 		obj.height = maxr * 2;
@@ -10646,28 +10635,28 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    break;
 	case "box":
 	    if( opts.width ){
-		obj.scaleX = zoom / bin;
+		obj.scaleX = zoom;
 	    }
 	    if( opts.height ){
-		obj.scaleY = zoom / bin;
+		obj.scaleY = zoom;
 	    }
 	    break;
 	case "circle":
 	    if( opts.radius ){
-		obj.scaleX = zoom / bin;
-		obj.scaleY = zoom / bin;
+		obj.scaleX = zoom;
+		obj.scaleY = zoom;
 	    }
 	    break;
 	case "ellipse":
 	    if( opts.r1 ){
 		obj.rx = opts.r1;
-		obj.scaleX = zoom / bin;
+		obj.scaleX = zoom;
 		// why is this not done automatically???
 		obj.width = obj.rx * 2;
 	    }
 	    if( opts.r2 ){
 		obj.ry = opts.r2;
-		obj.scaleY = zoom / bin;
+		obj.scaleY = zoom;
 		obj.height = obj.ry * 2;
 	    }
 	    break;
@@ -10675,8 +10664,8 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	case "polygon":
 	    if( (opts.points && opts.points.length) ||
 		(opts.pts && opts.pts.length)       ){
-		obj.scaleX = zoom / bin;
-		obj.scaleY = zoom / bin;
+		obj.scaleX = zoom;
+		obj.scaleY = zoom;
 	    }
 	    if( ao === obj ){
 		JS9.Fabric.removePolygonAnchors(layer.dlayer, obj);
