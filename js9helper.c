@@ -235,6 +235,7 @@ static Finfo FinfoNew(char *fname)
       if( e ){
         strcat(finfo->fitsfile, e);
       }
+      xfree(e);
       xfree(s);
     } else {
       fprintf(stderr, "ERROR: can't find FITS file '%s' [data path: %s]\n",
