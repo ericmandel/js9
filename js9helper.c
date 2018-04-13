@@ -296,6 +296,11 @@ static int FinfoFree(char *fname)
 
 #if HAVE_CFITSIO
 
+/* this version of cfitio has a broken fits_calc_binning routine */
+#if ((CFITSIO_MAJOR == 3) && (CFITSIO_MINOR == 44))
+    #error "cfitsio v3.44 contains a bug that breaks JS9. Please upgrade your cfitsio library."
+#endif
+
 #define SLEN 33
 
 int parseSection(fitsfile *fptr, int hdutype, char *s,
@@ -700,7 +705,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 	closeFITSFile(ofptr, &status);
 	return 1;
       }
-      // return a json object with info about original data
+      /* return a json object with info about original data */
       fprintf(stdout, "{\"file\":\"%s\"", finfo->fitsfile);
       fprintf(stdout, ",\"type\":%d", hdutype);
       ffghdn(ifptr, &hdunum);

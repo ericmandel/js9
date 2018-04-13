@@ -56,6 +56,12 @@ quotacheck () {
   fi
 }
 
+# sanity check that we have system programs in the path
+hash awk sed egrep du mv rm cat echo 1>/dev/null 2>&1
+if [ $? != 0 ]; then
+      error "can't find system programs (e.g. awk, sed). Please check the PATH of the JS9 helper."
+fi
+
 # regcnts is preferred
 hash regcnts 1>/dev/null 2>&1
 if [ $? = 0 ]; then
