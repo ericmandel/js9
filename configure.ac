@@ -180,6 +180,10 @@ if test x$CFITSIOINC != x; then
 fi
 if test x$CFITSIOLIB != x; then
   CFITSIOLIB="-L $CFITSIOLIB -lcfitsio"
+  # cfitsio 3.440 probably requires the curl library in the link line!
+  # might also require bz2 library ...
+  AC_CHECK_LIB(curl, curl_easy_init, CFITSIOLIB="$CFITSIOLIB -lcurl")
+  AC_CHECK_LIB(bz2, BZ2_bzReadOpen, CFITSIOLIB="$CFITSIOLIB -lbz2")
   CFITSIOOBJS="jsfitsio.o healpix.o"
   FITSLIB="cfitsio"
 fi
