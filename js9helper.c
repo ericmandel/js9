@@ -298,7 +298,7 @@ static int FinfoFree(char *fname)
 
 /* this version of cfitio has a broken fits_calc_binning routine */
 #if ((CFITSIO_MAJOR == 3) && (CFITSIO_MINOR == 44))
-    #error "cfitsio v3.44 contains a bug that breaks JS9. Please upgrade your cfitsio library."
+    #warning "The unpatched cfitsio v3440 breaks JS9. Please ensure you have added the patched 'histo.c' file to your cfitsio library. See https://heasarc.gsfc.nasa.gov/fitsio/fitsio.html for details."
 #endif
 
 #define SLEN 33
