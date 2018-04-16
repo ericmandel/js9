@@ -8,13 +8,10 @@
  *
  * Copyright (c) 2012 - 2018 Smithsonian Astrophysical Observatory
  *
- * Utilizes: socket.io, node-uuid
  *
  */
 
 /*jslint bitwise: true, plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, node: true, stupid: true */
-
-/*jshint smarttabs:true */
 
 /* global require process module __dirname Buffer */
 
@@ -29,7 +26,7 @@ var http = require('http'),
     qs = require('querystring'),
     cproc  = require("child_process"),
     fs     = require("fs"),
-    uuid   = require('node-uuid'),
+    uuidv4   = require('uuid/v4'),
     rmdir = require('rimraf');
 
 // internal variables
@@ -832,7 +829,7 @@ var socketioHandler = function(socket) {
 	if( !obj ){return;}
 	socket.js9 = {};
 	socket.js9.displays = obj.displays;
-	socket.js9.pageid = uuid.v4();
+	socket.js9.pageid = uuidv4();
 	socket.js9.aworkDir = null;
 	socket.js9.rworkDir = null;
 	// create top-level workDir, if necessary

@@ -21,7 +21,17 @@
     "url": "https://github.com/ericmandel/js9/issues"
   },
   "bundledDependencies": [
-    "connected-domain", "minimist", "node-uuid", "opn", "ps-node", "rimraf", "socket.io", "table-parser"
+    "connected-domain",
+    "minimist",
+    "uuid",
+    "opn",
+    "ps-node",
+    "rimraf",
+    "socket.io",
+    "table-parser"
   ],
-  "homepage": "https://js9.si.edu"
+  "homepage": "https://js9.si.edu",
+  "dependencies": {
+    "uuid": "^3.2.1"
+  }
 }
