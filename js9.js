@@ -8220,6 +8220,7 @@ JS9.Helper.prototype.connect = function(type){
 		    that.socket.emit("initialize", {displays: d}, function(obj){
 			that.pageid = obj.pageid;
 			that.js9helper = obj.js9helper;
+			JS9.globalOpts.dataPathModify = obj.dataPathModify;
 			that.ready = true;
 			$(document).trigger("JS9:helperReady",
 					    {type: "socket.io", status: "OK"});

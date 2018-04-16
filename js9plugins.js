@@ -6301,8 +6301,11 @@ JS9.Menubar.init = function(width, height){
 		    type: "text"
 		};
 		items.dpath = {name: "set data analysis path ..."};
+		if( JS9.globalOpts.dataPathModify === false ){
+		    items.dpath.disabled = true;
+		}
 		items.fpath = {name: "set this image file's path ..."};
-		if( !im || 
+		if( !im ||
 		    (document.domain && document.domain !== "localhost") ){
 		    items.fpath.disabled = true;
 		}

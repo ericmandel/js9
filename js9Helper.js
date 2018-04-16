@@ -6,7 +6,7 @@
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
  * Contact: saord@cfa.harvard.edu
  *
- * Copyright (c) 2012 - 2017 Smithsonian Astrophysical Observatory
+ * Copyright (c) 2012 - 2018 Smithsonian Astrophysical Observatory
  *
  * Utilizes: socket.io, node-uuid
  *
@@ -59,6 +59,7 @@ var globalOpts = {
     analysisPlugins:  "analysis-plugins",
     analysisWrappers: "analysis-wrappers",
     helperPlugins:    "helper-plugins",
+    dataPathModify:   true,
     maxBinaryBuffer:  150*1024000, // exec buffer: good for 4096^2 64-bit image
     maxTextBuffer:    5*1024000,   // exec buffer: good for text
     textEncoding:     "ascii",     // encoding for returned stdout from exec
@@ -468,21 +469,38 @@ var parseArgs = function(argstr){
 
 // get data path
 var getDataPath = function(s){
-    var dpath;
-    if( s ){
-	dpath = envClean(s);
-    } else if( globalOpts.dataPath ){
-	dpath = envClean(globalOpts.dataPath);
-    } else {
-	dpath = "";
+    var i, t, narr;
+    var arr = [];
+    var dataPath="";
+    // always use the global dataPath set by the site
+    if( globalOpts.dataPath ){
+	dataPath = envClean(globalOpts.dataPath);
+	arr = dataPath.split(":");
     }
-    dpath += ":" + cdir;
-    return dpath;
+    // add user dataPath, if permitted
+    if( s && globalOpts.dataPathModify ){
+	t = envClean(s);
+	narr = t.split(":");
+	for(i=0; i<narr.length; i++){
+	    if( !arr.includes(narr[i]) ){
+		if( dataPath ){
+		    dataPath += ":";
+		}
+		dataPath += narr[i];
+	    }
+	}
+    }
+    // always add js9Helper install directory
+    if( dataPath ){
+	dataPath += ":";
+    }
+    dataPath += cdir;
+    return dataPath;
 };
 
 // see if a file exists in the dataPath
 var getFilePath = function(file, dataPath, myenv){
-    var i, s, s1, s2, froot1, froot2, fext, parr;
+    var i, s, s1, froot1, fext, parr;
     // eslint-disable-next-line no-unused-vars
     var repl = function(m, t, o){
 	if( myenv && myenv[t] ){
@@ -490,14 +508,16 @@ var getFilePath = function(file, dataPath, myenv){
 	}
 	return m;
     };
+    var hide = function(s){
+	var rexp = new RegExp("^" + cdir);
+	return s.replace(rexp, "${JS9_DIR}");
+    };
     // sanity check
     if( !file ){
 	return;
     }
     // look for and remove the extension
     froot1 = file.replace(/\[.*]$/,"");
-    // root without any path
-    froot2 = froot1.split("/").reverse()[0];
     s = file.match(/\[.*]$/,"");
     if( s ){
 	fext = s[0];
@@ -508,21 +528,19 @@ var getFilePath = function(file, dataPath, myenv){
 	parr = [""];
     } else {
 	parr = dataPath.split(":");
+	// always check current directory first
+	parr.unshift("");
     }
-    // replace environment variables in path, if possible
+    // check is file is in any of the directories in the path
     for(i=0; i<parr.length; i++){
+	// replace environment variables in path, if possible
 	s = parr[i].replace(/\${?([a-zA-Z][a-zA-Z0-9_()]+)}?/g, repl);
 	// make up pathnames to check
 	s1 = path.join(s, froot1);
-	s2 = path.join(s, froot2);
 	if( fs.existsSync(s1) ){
 	    // found the file add extension to full path
 	    s1 += fext;
-	    return s1;
-	} else if( (s1 !== s2) && fs.existsSync(s2) ){
-	    // found the file add extension to full path
-	    s2 += fext;
-	    return s2;
+	    return hide(s1);
 	}
     }
     return;
@@ -847,7 +865,7 @@ var socketioHandler = function(socket) {
 	jpath = !!getFilePath(globalOpts.cmd, process.env.PATH, process.env);
 	// log results
         clog("connect: %s (%s)", myhost, socket.js9.displays);
-	if( cbfunc ){ cbfunc({pageid: socket.js9.pageid, js9helper: jpath}); }
+	if( cbfunc ){ cbfunc({pageid: socket.js9.pageid, js9helper: jpath, dataPathModify: globalOpts.dataPathModify}); }
     });
     // on display: add a display to the display list
     // returns: unique page id (not currently used)
@@ -963,9 +981,7 @@ var socketioHandler = function(socket) {
 		return;
 	    }
 	}
-	if( (obj.fits.charAt(0) !== "/") && !obj.fits.match(/^\${JS9_DIR}/) ){
-	    obj.fits = "${JS9_DIR}/" + obj.fits;
-	}
+	obj.fits = s;
 	// make up fits2fits command string from defined fits2fits action
 	obj.cmd = fits2fits[0].action;
         if( obj.parent ){

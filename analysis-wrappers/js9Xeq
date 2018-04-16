@@ -314,7 +314,7 @@ imsection)
     js9helper -i "$IFILE" imsection \!"$OFILE" "$SECTION" "$FILTER" "$SLICE"
     if [ x$DOPARENT = x1 ]; then
       # send parent file, so analysis is performed on the original file
-      echo "${IFILE}"
+      echo "${IFILE}" | xsed
     fi
     exit 0
     ;;

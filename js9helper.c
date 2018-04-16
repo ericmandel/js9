@@ -1,5 +1,5 @@
 /*
- *	Copyright (c) 2012-2017 Smithsonian Astrophysical Observatory
+ *	Copyright (c) 2012-2018 Smithsonian Astrophysical Observatory
  */
 #include "js9helper.h"
 
@@ -218,7 +218,7 @@ static Finfo FinfoNew(char *fname)
   case FTYPE_FITS:
     /* fits file can have an extension */
     f = FileRoot(fname);
-    /* set data path */
+    /* get data path */
     datapath = getenv("JS9_DATAPATH");
     /* look for path of the FITS file */
     s = Find(f, "r", NULL, datapath);
@@ -546,6 +546,9 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
 /* process this command */
 static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 {
+  char *s=NULL;
+  char *t=NULL;
+  char *jdir=NULL;
   char tbuf[SZ_LINE];
   Finfo finfo, tfinfo;
 #if HAVE_CFITSIO
@@ -597,9 +600,21 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
       /* make it current */
       FinfoSetCurrent(finfo);
       if( node ) fprintf(stdout, "image\r");
+      s = finfo->fitsfile ? finfo->fitsfile : "?";
+      /* get install directory (which we want to hide) */
+      jdir = getenv("JS9_DIR");
+      // hide install directory with environment variable
+      if( jdir && *jdir ){
+	t = strstr(s, jdir);
+	if( t && *t && !strcmp(t, s) ){
+	  strncpy(tbuf, "${JS9_DIR}", SZ_LINE-1);
+	  strncat(tbuf, &s[strlen(jdir)], SZ_LINE-1);
+	  xfree(s);
+	  s = tbuf;
+	}
+      }
       /* return the FITS file name, if possible */
-      fprintf(stdout, "%s %s\n",
-	      finfo->fname, finfo->fitsfile ? finfo->fitsfile : "?");
+      fprintf(stdout, "%s %s\n", finfo->fname, s);
       fflush(stdout);
       return 0;
     } else if( !strcmp(cmd, "image_") ){
