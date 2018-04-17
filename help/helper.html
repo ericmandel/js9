@@ -144,6 +144,9 @@ Once Node.js is installed, you must start the server-side helper from
 the JS9 web install directory, i.e. the location where you installed
 (among other things) js9.js and the node_modules directory:
 <pre>
+    # in the bash shell:
+    node js9Helper.js 1>~/logs/js9node.log 2>&1 &
+    # or, in the tcsh shell:
     node js9Helper.js >& ~/logs/js9node.log &
 </pre>
 Unlike CGI, Node can be run as any user: it does not have to be run as
