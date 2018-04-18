@@ -10220,7 +10220,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	px = pub.lcs.x;
 	py = pub.lcs.y;
 	pub.imsys = pub.lcs.sys;
-	bin = this.binning.bin;
+	bin = this.lcs.physical.reverse[0][0];
     }
     // display position
     pub.angle = -obj.angle;
