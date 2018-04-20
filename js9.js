@@ -1504,6 +1504,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    this.raws.push({from: "hdu", id: opts.rawid});
 	    // assign this object to the high-level raw data object
 	    this.raw = this.raws[rlen];
+	    // the old raw object is invalid
+	    oraw = null;
 	}
     }
     // now save the hdu in the raw object
@@ -1746,6 +1748,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     } else {
 	this.imtab = hdu.table ? "table" : "image";
     }
+    // also associate imtab with this raw layer
+    this.raw.imtab = this.imtab;
     // min and max data values
     if( hdu.dmin !== undefined && hdu.dmax !== undefined ){
 	// data min and max in object
@@ -2968,6 +2972,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    topts.id = iid;
 	    topts.refreshRegions = true;
 	    topts.resetSection = true;
+	    topts.rawid = that.raw.id;
 	    // function to perform when image is refreshed
 	    topts.onrefresh = topts.ondisplaysection || topts.onrefresh || func;
 	    // refresh the current image with the new hdu
@@ -5379,29 +5384,43 @@ JS9.Image.prototype.zscale = function(setvals){
 };
 
 // make (or select) a raw data layer
-// im.rawDataLayer(obj, func) -- editing existing or create new raw data layer
-// obj properties:
+// calling sequences:
+//   im.rawDataLayer(obj, func) -- editing existing or create new raw data layer
+// where obj can contain:
 //    rawid: id of new raw data (default: "alt")
 //    oraw: id of raw data to pass to func or "current" (default: "raw0")
 //    from: string describing origin of this raw data (def: "func")
-// im.rawDataLayer(id) -- switch to existing raw data later with specified id
+// or:
+//   im.rawDataLayer(id, func) -- editing existing or create new raw data layer
+// or:
+//   im.rawDataLayer(id) -- switch to existing raw data later with specified id
+// or:
+//   im.rawDataLayer(id, "remove") -- remove raw data later with specified id
+// or:
+//   im.rawDataLayer() -- return name of th current layer
 JS9.Image.prototype.rawDataLayer = function(opts, func){
-    var i, j, raw, oraw, nraw, rawid, cur, nlen, carr;
+    var i, j, id, mode, raw, oraw, nraw, rawid, cur, nlen, carr;
     // no arg => return name of current raw
     if( !arguments.length ){
 	return this.raw.id;
     }
-    // opts is a string and no function: switch to a different raw data layer
-    // opts is a string with function: generate opts object
+    // opts is a string with second arg a function: generate opts object
+    // opts is a string, no function: switch to a different raw data layer
+    // opts is a string + "remove": remove specified layer
     if( typeof opts === "string" ){
 	if( typeof func === "function" ){
+	    // change: rawDataLayer(id, func) to rawDataLater(obj, func)
 	    opts = {rawid: opts};
 	} else {
+	    id = opts;
+	    mode = func;
+	    // look for raw layer with the specified id
 	    for(i=0; i<this.raws.length; i++){
 		raw = this.raws[i];
-		if( opts === raw.id ){
-		    if( func === "remove" ){
-			if( opts === JS9.RAWID0 ){
+		// are we deleting this raw layer?
+		if( id === raw.id ){
+		    if( mode === "remove" ){
+			if( id === JS9.RAWID0 ){
 			    JS9.error("can't remove primary (raw0) data layer");
 			}
 			if( raw.hdu && raw.hdu.fits ){
@@ -5427,30 +5446,26 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 			}
 			// remove layer
 			this.raws.splice(i, 1);
-			// renew bitpix, if necessary
-			if( this.raw.header.bitpix ){
-			    this.raw.bitpix = this.raw.header.bitpix;
-			}
-			// re-calculate min and max
-			this.dataminmax();
-			this.mkSection();
-			this.initWCS();
-			this.initLCS();
-			this.displayImage("all", opts);
-			this.refreshLayers();
-			return true;
+		    } else {
+			// switch to new raw layer
+			this.raw = raw;
 		    }
-		    this.raw = raw;
-		    if( this.raw.header.bitpix ){
-			this.raw.bitpix = this.raw.header.bitpix;
+		    // configure the current raw layer
+		    if( this.raw.header.BITPIX ){
+			this.raw.bitpix = this.raw.header.BITPIX;
 		    }
+		    // reset imtab
+		    this.imtab = this.raw.imtab || this.imtab;
 		    // set data min and max
 		    this.dataminmax();
+		    // reset section
 		    this.mkSection();
+		    // reinit coordinate transforms
 		    this.initWCS();
 		    this.initLCS();
 		    // redisplay using these data
 		    this.displayImage("all");
+		    // refresh layers
 		    this.refreshLayers();
 		    // extended plugins
 		    if( JS9.globalOpts.extendedPlugins ){
@@ -5459,6 +5474,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 		    return true;
 		}
 	    }
+	    // did not find the specified layer
 	    return false;
 	}
     }
@@ -5989,15 +6005,210 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     return this.reprojectData(nheader, opts);
 };
 
-// reproject image using WCS info
-// creates a new raw data layer ("reproject")
-JS9.Image.prototype.reprojectData = function(wcsim, opts){
-    var that = this;
-    var im;
+// low-level reprojection: creates reprojected file, but does not display it
+// instead, it returns the name of the reprojected FITS file (emscripten vfile)
+// this is the basis for reprojectData, but can be used in other routines that
+// require a reprojection
+JS9.Image.prototype.reproject = function(wcsim, opts){
+    var twcs = {};
+    var rcomplete = false;
+    var awvfile, awvfile2, wvfile, owvfile;
+    var wcsheader, wcsstr, oheader, nheader;
+    var arr, ivfile, ovfile, rstr, key;
+    var tab, tx1, tx2, ty1, ty2, s;
+    var n, avfile, earr, cmdswitches;
+    var wcsexp = /SIMPLE|BITPIX|NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
+    var ptypeexp = /TAN|SIN|ZEA|STG|ARC/;
     // sanity checks
+    if( !JS9.reproject || !wcsim || this === wcsim ){
+	return;
+    }
     if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
 	JS9.error("no WCS info available for reprojection");
     }
+    // opts is optional
+    opts = opts || {};
+    // make copy of input header, removing wcs keywords
+    oheader = $.extend(true, {}, this.raw.header);
+    for(key in oheader){
+	if( oheader.hasOwnProperty(key) ){
+	    if( wcsexp.test(key) ){
+		delete oheader[key];
+	    }
+	}
+    }
+    // get wcs keywords from new header
+    if( wcsim.raw && wcsim.raw.header ){
+	nheader = wcsim.raw.header;
+    } else if( wcsim.BITPIX && wcsim.NAXIS1 && wcsim.NAXIS2 ){
+	// assume its a WCS header
+	nheader = wcsim;
+    } else {
+	JS9.error("invalid wcs object input to reproject()");
+    }
+    for(key in nheader){
+	if( nheader.hasOwnProperty(key) ){
+	    if( wcsexp.test(key) ){
+		twcs[key] = nheader[key];
+	    }
+	}
+    }
+    // combine new wcs keywords + old header keywords
+    wcsheader = $.extend(true, {}, twcs, oheader);
+    // sanity check on result
+    if( !wcsheader.NAXIS || !wcsheader.NAXIS1 || !wcsheader.NAXIS2 ){
+	// JS9.error("invalid FITS image header");
+	return;
+    }
+    // keep within the limits of current memory constraints
+    if((wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.REPROJDIM*JS9.REPROJDIM)){
+	JS9.error("for now, the max image size for reprojection is approximately " + JS9.REPROJDIM  + " * " + JS9.REPROJDIM);
+    }
+    // convert reprojection header to a string
+    wcsstr = JS9.raw2FITS(wcsheader, true);
+    // create vfile text file containing reprojection WCS
+    wvfile = "wcs_" + JS9.uniqueID() + ".txt";
+    JS9.vfile(wvfile, wcsstr);
+    // check input and reproj WCS to make sure we can run fast mProjectPP
+    // if not, try to make an alternate WCS header amenable to mProjectPP
+    try{
+	// try to change input WCS to a sys usable by mProjectPP
+	if( !ptypeexp.test(this.raw.wcsinfo.ptype) ){
+	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
+	    JS9.vfile(owvfile, JS9.raw2FITS(this.raw.header, true));
+	    awvfile = "awcs_" + JS9.uniqueID() + ".txt";
+	    rstr = JS9.tanhdr(owvfile, awvfile, "");
+	    if( JS9.DEBUG > 1 ){
+		JS9.log("tanhdr (input): %s %s -> %s",
+			owvfile, awvfile, rstr);
+	    }
+	    JS9.vunlink(owvfile);
+	    if( rstr.search(/\[struct stat="OK"/) >= 0 ){
+		// add command switch to use this alternate wcs
+		opts.cmdswitches = opts.cmdswitches || "";
+		opts.cmdswitches += (" -i " + awvfile);
+	    }
+	}
+	// try to change reproject WCS to a sys usable by mProjectPP
+	if( (wcsim.raw && !ptypeexp.test(wcsim.raw.wcsinfo.ptype)) ||
+	    (wcsim.ptype && !ptypeexp.test(wcsim.ptype))           ){
+	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
+	    JS9.vfile(owvfile, JS9.raw2FITS(nheader, true));
+	    awvfile2 = "awcs_" + JS9.uniqueID() + ".txt";
+	    rstr = JS9.tanhdr(owvfile, awvfile2, "");
+	    if( JS9.DEBUG > 1 ){
+		JS9.log("tanhdr (reproj): %s %s -> %s",
+			owvfile, awvfile2, rstr);
+	    }
+	    JS9.vunlink(owvfile);
+	    if( rstr.search(/\[struct stat="OK"/) >= 0 ){
+		// delete old wcs file and use this alternate wcsfile
+		JS9.vunlink(wvfile);
+		wvfile = awvfile2;
+	    }
+	}
+    }
+    catch(ignore){}
+    // get reference to existing raw data file (or create one)
+    if( this.raw.hdu && this.raw.hdu.fits.vfile ){
+	// input file name
+	ivfile = this.raw.hdu.fits.vfile;
+	// add extension name or number
+	if( this.raw.hdu.fits.extname ){
+	    ivfile += sprintf("[%s]", this.raw.hdu.fits.extname);
+	} else if( this.raw.hdu.fits.extnum &&
+		   (this.raw.hdu.fits.extnum > 0) ){
+	    ivfile += sprintf("[%s]", this.raw.hdu.fits.extnum);
+	}
+    } else {
+	// input file name
+	arr = this.toArray();
+	ivfile = this.id.replace(/\.png$/, "_png" +  ".fits");
+	JS9.vfile(ivfile, arr);
+    }
+    // output file name
+    s = this.id
+	.replace(/\[.*\]/, "")
+	.replace(/\.png$/, ".fits")
+	.replace(/\.gz$/, "");
+    ovfile = "reproj_" + JS9.uniqueID() + "_" + s;
+    // for tables, we probably have to bin it by adding a bin specification
+    // also need to pass the HDU name. For now, "EVENTS" is all we know ...
+    if( this.imtab === "table" ){
+	if( !ivfile.match(/\[bin /) ){
+	    if( !ivfile.match(/\[EVENTS\]/) ){
+		ivfile += "[EVENTS]";
+	    }
+	    tab = this.raw.hdu.table;
+	    tx1 = Math.floor(tab.xcen - (tab.xdim/2) + 1);
+	    tx2 = Math.floor(tab.xcen + (tab.xdim/2));
+	    ty1 = Math.floor(tab.ycen - (tab.ydim/2) + 1);
+	    ty2 = Math.floor(tab.ycen + (tab.ydim/2));
+	    ivfile += sprintf("[bin X=%s:%s,Y=%s:%s]", tx1, tx2, ty1, ty2);
+	}
+    }
+    // call the reproject routine
+    try{
+	// name of (unneeded) area file
+	n = ovfile.lastIndexOf(".");
+	if( n >= 0 ) {
+	    avfile = ovfile.substring(0, n) + "_area" + ovfile.substring(n);
+	}
+	// optional command line args
+	cmdswitches = opts.cmdswitches || "";
+	// call reproject
+	rstr = JS9.reproject(ivfile, ovfile, wvfile, cmdswitches);
+	if( JS9.DEBUG > 1 ){
+	    JS9.log("reproject: %s %s %s [%s] -> %s",
+		    ivfile, ovfile, wvfile, cmdswitches, rstr);
+	}
+	// delete unneeded files ...
+	JS9.vunlink(avfile);
+	JS9.vunlink(wvfile);
+	if( awvfile ){
+	    JS9.vunlink(awvfile);
+	}
+	if( arr ){
+	    JS9.vunlink(ivfile);
+	}
+	// ... then error check
+	if( rstr.search(/\[struct stat="OK"/) < 0 ){
+	    // signal this we completed the reproject attempt
+	    rcomplete = true;
+	    earr = rstr.match(/msg="(.*)"/);
+	    if( earr && earr[1] ){
+		JS9.error(earr[1] + " (from mProjectPP)");
+	    } else {
+		JS9.error(rstr);
+	    }
+	}
+    }
+    catch(e){
+	// avoid double error reporting
+	if( !rcomplete ){
+	    // delete unneeded files ...
+	    JS9.vunlink(avfile);
+	    JS9.vunlink(wvfile);
+	    // call error handler
+	    if( rstr ){
+		JS9.error(rstr);
+	    } else {
+		JS9.error("WCS reproject failed", e);
+	    }
+	} else {
+	    return;
+	}
+    }
+    // return output file name
+    return ovfile;
+};
+
+// high-level routine to reproject image using WCS info
+// creates a new raw data layer ("reproject")
+JS9.Image.prototype.reprojectData = function(wcsim, opts){
+    var that = this;
+    var im, ovfile;
+    // sanity checks
     if( !wcsim || !JS9.reproject ){
 	return;
     }
@@ -6015,222 +6226,49 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     if( this === wcsim ){
 	return;
     }
+    // opts is optional
+    opts = opts || {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse reproject opts: " + opts, e); }
+    }
     // save this routine so it can be reconstituted in a restored session
     // (unless another xxxData routine is calling us)
-    if( !opts || !opts.rawid ){
+    if( !opts.rawid ){
 	this.xeqStash("reprojectData", Array.prototype.slice.call(arguments));
     }
     // could take a while ...
     JS9.waiting(true, this.display);
     // ... start a timeout to allow the wait spinner to get started
     window.setTimeout(function(){
-	var twcs = {};
-	var rcomplete = false;
-	var awvfile, awvfile2, wvfile, owvfile;
-	var wcsheader, wcsstr, oheader, nheader;
-	var arr, ivfile, ovfile, rstr, key, topts;
-	var tab, tx1, tx2, ty1, ty2, s;
-	var n, avfile, earr, cmdswitches;
+	var topts;
 	var reprojHandler;
-	var wcsexp = /SIMPLE|BITPIX|NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
-	var ptypeexp = /TAN|SIN|ZEA|STG|ARC/;
 	var defaultReprojHandler = function(hdu){
 	    topts = topts || {};
 	    topts.refreshRegions = true;
 	    topts.resetSection = true;
 	    that.refreshImage(hdu, topts);
 	};
-	// opts can be an object or json
-	if( typeof opts === "string" ){
-	    try{ opts = JSON.parse(opts); }
-	    catch(e){ JS9.error("can't parse reproject opts: " + opts, e); }
-	}
 	// opts is optional
 	opts = opts || {};
 	// handler
 	reprojHandler = opts.reprojHandler || defaultReprojHandler;
-	// make copy of input header, removing wcs keywords
-	oheader = $.extend(true, {}, that.raw.header);
-	for(key in oheader){
-	    if( oheader.hasOwnProperty(key) ){
-		if( wcsexp.test(key) ){
-		    delete oheader[key];
-		}
+	// call the low-level reproject routine, returning reprojected file
+	ovfile = that.reproject(wcsim, opts);
+	if( ovfile ){
+	    // refresh image using the reprojected file ...
+	    topts = $.extend(true, {}, JS9.fits.options, opts);
+	    // ... in a new raw data layer
+	    topts.rawid = topts.rawid || "reproject";
+	    // save pointer to original wcs image
+	    if( wcsim.raw && wcsim.raw.header ){
+		topts.wcsim = wcsim;
 	    }
+	    // process the FITS file
+	    try{ JS9.handleFITSFile(ovfile, topts, reprojHandler); }
+	    catch(e){ JS9.error("can't process reprojected FITS file", e); }
 	}
-	// get wcs keywords from new header
-	if( wcsim.raw && wcsim.raw.header ){
-	    nheader = wcsim.raw.header;
-	} else if( wcsim.BITPIX && wcsim.NAXIS1 && wcsim.NAXIS2 ){
-	    // assume its a WCS header
-	    nheader = wcsim;
-	} else {
-	    JS9.error("invalid wcs object input to reproject()");
-	}
-	for(key in nheader){
-	    if( nheader.hasOwnProperty(key) ){
-		if( wcsexp.test(key) ){
-		    twcs[key] = nheader[key];
-		}
-	    }
-	}
-	// combine new wcs keywords + old header keywords
-	wcsheader = $.extend(true, {}, twcs, oheader);
-	// sanity check on result
-	if( !wcsheader.NAXIS || !wcsheader.NAXIS1 || !wcsheader.NAXIS2 ){
-	    JS9.error("invalid FITS image header");
-	}
-	// keep within the limits of current memory constraints
-	if((wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.REPROJDIM*JS9.REPROJDIM)){
-	    JS9.error("for now, the max image size for reprojection is approximately " + JS9.REPROJDIM  + " * " + JS9.REPROJDIM);
-	}
-	// convert reprojection header to a string
-	wcsstr = JS9.raw2FITS(wcsheader, true);
-	// create vfile text file containing reprojection WCS
-	wvfile = "wcs_" + JS9.uniqueID() + ".txt";
-	JS9.vfile(wvfile, wcsstr);
-	// check input and reproj WCS to make sure we can run fast mProjectPP
-	// if not, try to make an alternate WCS header amenable to mProjectPP
-	try{
-	    // try to change input WCS to a sys usable by mProjectPP
-	    if( !ptypeexp.test(that.raw.wcsinfo.ptype) ){
-		owvfile = "owcs_" + JS9.uniqueID() + ".txt";
-		JS9.vfile(owvfile, JS9.raw2FITS(that.raw.header, true));
-		awvfile = "awcs_" + JS9.uniqueID() + ".txt";
-		rstr = JS9.tanhdr(owvfile, awvfile, "");
-		if( JS9.DEBUG > 1 ){
-		    JS9.log("tanhdr (input): %s %s -> %s",
-			    owvfile, awvfile, rstr);
-		}
-		JS9.vunlink(owvfile);
-		if( rstr.search(/\[struct stat="OK"/) >= 0 ){
-		    // add command switch to use this alternate wcs
-		    opts.cmdswitches = opts.cmdswitches || "";
-		    opts.cmdswitches += (" -i " + awvfile);
-		}
-	    }
-	    // try to change reproject WCS to a sys usable by mProjectPP
-	    if( (wcsim.raw && !ptypeexp.test(wcsim.raw.wcsinfo.ptype)) ||
-		(wcsim.ptype && !ptypeexp.test(wcsim.ptype))           ){
-		owvfile = "owcs_" + JS9.uniqueID() + ".txt";
-		JS9.vfile(owvfile, JS9.raw2FITS(nheader, true));
-		awvfile2 = "awcs_" + JS9.uniqueID() + ".txt";
-		rstr = JS9.tanhdr(owvfile, awvfile2, "");
-		if( JS9.DEBUG > 1 ){
-		    JS9.log("tanhdr (reproj): %s %s -> %s",
-			    owvfile, awvfile2, rstr);
-		}
-		JS9.vunlink(owvfile);
-		if( rstr.search(/\[struct stat="OK"/) >= 0 ){
-		    // delete old wcs file and use this alternate wcsfile
-		    JS9.vunlink(wvfile);
-		    wvfile = awvfile2;
-		}
-	    }
-	}
-	catch(ignore){}
-	// get reference to existing raw data file (or create one)
-	if( that.raw.hdu && that.raw.hdu.fits.vfile ){
-	    // input file name
-	    ivfile = that.raw.hdu.fits.vfile;
-	    // add extension name or number
-	    if( that.raw.hdu.fits.extname ){
-		ivfile += sprintf("[%s]", that.raw.hdu.fits.extname);
-	    } else if( that.raw.hdu.fits.extnum &&
-		       (that.raw.hdu.fits.extnum > 0) ){
-		ivfile += sprintf("[%s]", that.raw.hdu.fits.extnum);
-	    }
-
-	} else {
-	    // input file name
-	    arr = that.toArray();
-	    ivfile = that.id.replace(/\.png$/, "_png" +  ".fits");
-	    JS9.vfile(ivfile, arr);
-	}
-	// output file name
-	s = that.id
-	    .replace(/\[.*\]/, "")
-	    .replace(/\.png$/, ".fits")
-	    .replace(/\.gz$/, "");
-	ovfile = "reproj_" + JS9.uniqueID() + "_" + s;
-	// for tables, we probably have to bin it by adding a bin specification
-	// also need to pass the HDU name. For now, "EVENTS" is all we know ...
-	if( that.imtab === "table" ){
-	    if( !ivfile.match(/\[bin /) ){
-		if( !ivfile.match(/\[EVENTS\]/) ){
-		    ivfile += "[EVENTS]";
-		}
-		tab = that.raw.hdu.table;
-		tx1 = Math.floor(tab.xcen - (tab.xdim/2) + 1);
-		tx2 = Math.floor(tab.xcen + (tab.xdim/2));
-		ty1 = Math.floor(tab.ycen - (tab.ydim/2) + 1);
-		ty2 = Math.floor(tab.ycen + (tab.ydim/2));
-		ivfile += sprintf("[bin X=%s:%s,Y=%s:%s]", tx1, tx2, ty1, ty2);
-	    }
-	}
-	// call the reproject routine
-	try{
-	    // name of (unneeded) area file
-	    n = ovfile.lastIndexOf(".");
-	    if( n >= 0 ) {
-		avfile = ovfile.substring(0, n) + "_area" + ovfile.substring(n);
-	    }
-	    // optional command line args
-	    cmdswitches = opts.cmdswitches || "";
-	    // call reproject
-	    rstr = JS9.reproject(ivfile, ovfile, wvfile, cmdswitches);
-	    if( JS9.DEBUG > 1 ){
-		JS9.log("reproject: %s %s %s [%s] -> %s",
-			ivfile, ovfile, wvfile, cmdswitches, rstr);
-	    }
-	    // delete unneeded files ...
-	    JS9.vunlink(avfile);
-	    JS9.vunlink(wvfile);
-	    if( awvfile ){
-		JS9.vunlink(awvfile);
-	    }
-	    if( arr ){
-		JS9.vunlink(ivfile);
-	    }
-	    // ... then error check
-	    if( rstr.search(/\[struct stat="OK"/) < 0 ){
-		// signal that we completed the reproject attempt
-		rcomplete = true;
-		earr = rstr.match(/msg="(.*)"/);
-		if( earr && earr[1] ){
-		    JS9.error(earr[1] + " (from mProjectPP)");
-		} else {
-		    JS9.error(rstr);
-		}
-	    }
-	}
-	catch(e){
-	    // avoid double error reporting
-	    if( !rcomplete ){
-		// delete unneeded files ...
-		JS9.vunlink(avfile);
-		JS9.vunlink(wvfile);
-		// call error handler
-		if( rstr ){
-		    JS9.error(rstr);
-		} else {
-		    JS9.error("WCS reproject failed", e);
-		}
-	    } else {
-		return;
-	    }
-	}
-	// refresh image using the reprojected file ...
-	topts = $.extend(true, {}, JS9.fits.options, opts);
-	// ... in a new raw data layer
-	topts.rawid = topts.rawid || "reproject";
-	// save pointer to original wcs image
-	if( wcsim.raw && wcsim.raw.header ){
-	    topts.wcsim = wcsim;
-	}
-	// process the FITS file
-	try{ JS9.handleFITSFile(ovfile, topts, reprojHandler); }
-	catch(e){ JS9.error("can't process reprojected FITS file", e); }
     }, JS9.SPINOUT);
     // allow chaining
     return this;
