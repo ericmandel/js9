@@ -11943,6 +11943,8 @@ JS9.Regions.opts = {
     configURL: "./params/regionsconfig.html",
     // should overlapping shapes be sorted (smallest on top)?
     sortOverlapping: true,
+    // title for region config dialog box
+    title: "Region Configuration",
     // colors for tags
     // these should be ordered from more specific to less specific
     tagcolors: {
@@ -11982,11 +11984,11 @@ JS9.Regions.opts = {
 		if( JS9.allinone ){
 		    target.params.winid = im.displayAnalysis("regions",
 			  JS9.allinone.regionsConfigHTML,
-			  {title: "Region Configuration"});
+			  {title: JS9.Regions.opts.title});
 		} else {
 		    target.params.winid = im.displayAnalysis("regions",
 			  JS9.InstallDir(JS9.Regions.opts.configURL),
-			  {title: "Region Configuration"});
+			  {title: JS9.Regions.opts.title});
 		}
 	    }
 	    return;
@@ -12406,17 +12408,15 @@ JS9.Regions.initConfigForm = function(obj){
 	    var tooltip = $(this).find("input").data("tooltip");
 	    var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
 	    if( tooltip && el.length ){
-		title = "Region Configuration" + ": " + tooltip;
-		// set title: see dhtmlwindow.js load() @line 130
+		// change title: see dhtmlwindow.js load() @line 130
+		title = JS9.Regions.opts.title + ": " + tooltip;
 		$(el)[0].childNodes[0].nodeValue = title;
 	    }
 	});
 	$(".col_R").on(mout, function() {
-	    var title;
 	    var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
 	    if( el.length ){
-		title = "Region Configuration";
-		$(el)[0].childNodes[0].nodeValue = title;
+		$(el)[0].childNodes[0].nodeValue = JS9.Regions.opts.title;
 	    }
 	});
     }
