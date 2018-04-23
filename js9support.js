@@ -47825,6 +47825,10 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
         else {
           return this.minScaleLimit;
         }
+      } else if (value !== value) {
+          return this.minScaleLimit;
+      } else if (value === 0) {
+          return 1e-4;
       }
       return value;
     },
