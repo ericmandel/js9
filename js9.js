@@ -12402,23 +12402,21 @@ JS9.Regions.initConfigForm = function(obj){
 	    mout = "mouseout";
 	}
 	$(".col_R").on(mover, function() {
-	    var html, nhtml;
+	    var title;
 	    var tooltip = $(this).find("input").data("tooltip");
 	    var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
 	    if( tooltip && el.length ){
-		html = $(el).html();
-		nhtml = html.replace(/^[^\<]+/,
-				     "Region Configuration" + ": " + tooltip);
-		$(el).html(nhtml);
+		title = "Region Configuration" + ": " + tooltip;
+		// set title: see dhtmlwindow.js load() @line 130
+		$(el)[0].childNodes[0].nodeValue = title;
 	    }
 	});
 	$(".col_R").on(mout, function() {
-	    var html, nhtml;
+	    var title;
 	    var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
 	    if( el.length ){
-		html = $(el).html();
-		nhtml = html.replace(/^[^\<]+/, "Region Configuration");
-		$(el).html(nhtml);
+		title = "Region Configuration";
+		$(el)[0].childNodes[0].nodeValue = title;
 	    }
 	});
     }
