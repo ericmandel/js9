@@ -1222,6 +1222,15 @@ if( process.env.NODEJS_FOO === "analysis" ){
 		     keys: ["filename", "regions", "id"]});
 }
 
+// re-init analysis tasks and plugins on USR2
+// eslint-disable-next-line no-unused-vars
+process.on('SIGUSR2', function(signal){
+    analysis = {str:[], pkgs:[]};
+    loadAnalysisTasks(globalOpts.analysisPlugins);
+    plugins = [];
+    loadHelperPlugins(globalOpts.helperPlugins);
+});
+
 // last ditch attempt to keep the server up
 process.on("uncaughtException", function(e){
     cerr("uncaughtException: %s [%s]", e, e.stack || e.stacktrace || "");

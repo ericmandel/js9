@@ -41,6 +41,18 @@ the plugin directory. The other two are optional and should be removed
 if funtools is not available.
 
 <p>
+The analysis definition files are loaded by the Node.js-based helper on
+startup and passed to each newly loaded image. In you change the
+definition of a tool in one of these files, or add a new definition
+file, you either need to restart the Node helper, or send it a SIGUSR2
+signal:
+<pre>
+  kill -USR2 `ps guwax | egrep js9Helper | egrep -v egrep | awk '{print $2}'`
+</pre>
+Re-initialization is not required for CGI-based support, since the analysis
+tool definitions are sent to each image in raw form.
+
+<p>
 Analysis definition files are in JSON format
 (http://www.json.org/) and consist of an array of JavaScript objects,
 one for each analysis tool. The properties which define an analysis
