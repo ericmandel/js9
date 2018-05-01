@@ -472,7 +472,7 @@ a considerable amount of transfer data.
 Given a FITS-standard 1-indexed image pixel x,y, you can find the data value 
 at that location using:
 <pre>
-    val = obj.data[Math.floor(y-1) * obj.width + Math.floor(x-1)];
+    val = obj.data[Math.floor(y-0.5) * obj.width + Math.floor(x-0.5)];
 </pre>
 Note the need to integerize the x and y values: JavaScript arrays are
 objects and so floating point array indices do not get truncated
@@ -2286,7 +2286,7 @@ The image position can be used to access the image data returned by the
 <pre>
     obj = JS9.GetImageData();
     xreg = JS9.GetRegions("selected")[0];
-    val = obj.data[Math.floor(xreg.y-1) * obj.width + Math.floor(xreg.x-1)];
+    val = obj.data[Math.floor(xreg.y-0.5) * obj.width + Math.floor(xreg.x-0.5)];
 </pre>
 <p>
 Note the need to integerize the x and y values: JavaScript arrays are
