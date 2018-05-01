@@ -10248,16 +10248,16 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     pub.y = ipos.y;
     // logical position
     pub.lcs = this.imageToLogicalPos(ipos);
-    // convenience variables
+    // wcs system and some convenience variables
     if( this.params.wcssys === "image" ){
+	pub.imsys = "image";
 	px = pub.x;
 	py = pub.y;
-	pub.imsys = "image";
 	bin = 1;
     } else {
+	pub.imsys = pub.lcs.sys;
 	px = pub.lcs.x;
 	py = pub.lcs.y;
-	pub.imsys = pub.lcs.sys;
 	bin = this.lcs.physical.reverse[0][0];
     }
     // display position
@@ -10288,51 +10288,72 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     case "annulus":
 	pub.shape = "annulus";
 	pub.radii = [];
+	if( pub.imsys !== "image" ){
+	    pub.lcs.radii = [];
+	}
 	pub.imstr = "annulus(" + tr(px) + ", " + tr(py) + ", ";
 	tstr = "annulus " + pub.x + " " + pub.y + " ";
 	objs = obj.getObjects();
 	olen = objs.length;
 	for(i=0; i<olen; i++){
-	    tval1 = objs[i].radius * scalex;
-	    radius = tval1 * bin;
-	    pub.imstr += tr(radius);
-	    tstr += (pub.x + " " +  pub.y + " " + (pub.x + tval1) + " " + pub.y + " ");
+	    radius = objs[i].radius * scalex;
+	    tval1 = radius * bin;
+	    pub.imstr += tr(tval1);
+	    tstr += (pub.x + " " +  pub.y + " " + (pub.x + radius) + " " + pub.y + " ");
 	    if( i === (olen - 1) ){
 		pub.imstr += ")";
 	    } else {
 		pub.imstr += ", ";
 	    }
 	    pub.radii.push(radius);
+	    if( pub.imsys !== "image" ){
+		pub.lcs.radii.push(tval1);
+	    }
 	}
 	break;
     case "box":
 	pub.shape = "box";
-	tval1 =  obj.width * scalex;
-	tval2 = obj.height * scaley;
-	pub.width =  tval1 * bin;
-	pub.height = tval2 * bin;
-	pub.imstr = "box(" + tr(px) + ", " + tr(py) + ", " + tr(pub.width) + ", " + tr(pub.height) + ", " + tr4(pub.angle) + ")";
-	tstr = "box " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + tval1) + " " + pub.y + " " + pub.x + " " + pub.y + " " + pub.x + " " + (pub.y + tval2) + " " + (pub.angle * Math.PI / 180.0);
+	pub.width = obj.width * scalex;
+	pub.height = obj.height * scaley;
+	tval1 = pub.width * bin;
+	tval2 = pub.height * bin;
+	if( pub.imsys !== "image" ){
+	    pub.lcs.width = tval1;
+	    pub.lcs.height = tval2;
+	}
+	pub.imstr = "box(" + tr(px) + ", " + tr(py) + ", " + tr(tval1) + ", " + tr(tval2) + ", " + tr4(pub.angle) + ")";
+	tstr = "box " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + pub.width) + " " + pub.y + " " + pub.x + " " + pub.y + " " + pub.x + " " + (pub.y + pub.height) + " " + (pub.angle * Math.PI / 180.0);
 	break;
     case "circle":
-	tval1 = obj.radius * scalex;
-	pub.radius = tval1 * bin;
-	pub.imstr = "circle(" + tr(px) + ", " + tr(py) + ", " + tr(pub.radius) + ")";
-	tstr = "circle " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + tval1) + " " + pub.y;
+	pub.radius = obj.radius * scalex;
+	tval1 = pub.radius * bin;
+	if( pub.imsys !== "image" ){
+	    pub.lcs.radius = tval1;
+	}
+	pub.imstr = "circle(" + tr(px) + ", " + tr(py) + ", " + tr(tval1) + ")";
+	tstr = "circle " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + pub.radius) + " " + pub.y;
 	break;
     case "ellipse":
-	tval1 = obj.width * scalex / 2;
-	tval2 = obj.height * scaley / 2;
-	pub.r1 = tval1 * bin;
-	pub.r2 = tval2 * bin;
-	pub.imstr = "ellipse(" + tr(px) + ", " + tr(py) + ", " + tr(pub.r1) + ", " + tr(pub.r2) + ", " + tr4(pub.angle) + ")";
-	tstr = "ellipse " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + tval1) + " " + pub.y + " " + pub.x + " " + pub.y + " " + pub.x + " " + (pub.y + tval2) + " " + (pub.angle * Math.PI / 180.0);
+	pub.r1 = obj.width * scalex / 2;
+	pub.r2 = obj.height * scaley / 2;
+	tval1 = pub.r1 * bin;
+	tval2 = pub.r2 * bin;
+	if( pub.imsys !== "image" ){
+	    pub.lcs.r1 = tval1;
+	    pub.lcs.r2 = tval2;
+	}
+	pub.imstr = "ellipse(" + tr(px) + ", " + tr(py) + ", " + tr(tval1) + ", " + tr(tval2) + ", " + tr4(pub.angle) + ")";
+	tstr = "ellipse " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + pub.r1) + " " + pub.y + " " + pub.x + " " + pub.y + " " + pub.x + " " + (pub.y + pub.r2) + " " + (pub.angle * Math.PI / 180.0);
 	break;
     case "point":
-	tval1 =  obj.width * scalex;
-	tval2 = obj.height * scaley;
-	pub.width =  tval1 * bin;
-	pub.height = tval2 * bin;
+	pub.width =  obj.width * scalex;
+	pub.height = obj.height * scaley;
+	tval1 = pub.width * bin;
+	tval2 = pub.height * bin;
+	if( pub.imsys !== "image" ){
+	    pub.lcs.width = tval1;
+	    pub.lcs.height = tval2;
+	}
 	pub.imstr = "point(" + tr(px) + ", " + tr(py) + ")";
 	tstr = "point " + pub.x + " " + pub.y;
 	break;
@@ -10341,7 +10362,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.imstr = pub.shape + "(";
 	tstr = pub.shape + " ";
 	pub.pts = [];
-	pub.lcs.pts = [];
+	if( pub.imsys !== "image" ){
+	    pub.lcs.pts = [];
+	}
 	for(i=0; i<obj.points.length; i++){
 	    if( i > 0 ){
 		pub.imstr += ", ";
@@ -12239,9 +12262,13 @@ JS9.Regions.initConfigForm = function(obj){
 	case "r1":
 	    switch(that.params.wcssys){
 	    case 'image':
-	    case 'physical':
 		if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
+		}
+		break;
+	    case 'physical':
+		if( obj.pub.lcs[key] !== undefined ){
+		    val = fmt(obj.pub.lcs[key]);
 		}
 		break;
 	    default:
@@ -12257,9 +12284,13 @@ JS9.Regions.initConfigForm = function(obj){
 	case "r2":
 	    switch(that.params.wcssys){
 	    case 'image':
-	    case 'physical':
 		if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
+		}
+		break;
+	    case 'physical':
+		if( obj.pub.lcs[key] !== undefined ){
+		    val = fmt(obj.pub.lcs[key]);
 		}
 		break;
 	    default:
