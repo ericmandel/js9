@@ -12458,6 +12458,7 @@ JS9.Regions.initConfigForm = function(obj){
 JS9.Regions.processConfigForm = function(form, obj, winid, arr){
     var i, s, key, nkey, val, nval, nopts, altwcssys;
     var alen = arr.length;
+    var bin = 1;
     var opts = {};
     var wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
     var fmt= function(val){
@@ -12548,6 +12549,11 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	}
 	return parseFloat(s);
     };
+    // set physical to image conversion, if possible
+    if( this.lcs && this.lcs.physical ){
+	bin = this.lcs.physical.forward[0][0] || 1;
+    }
+    // process array of keyword/values
     for(i=0; i<alen; i++){
 	key = arr[i].name;
 	val = arr[i].value;
@@ -12660,9 +12666,13 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "r1":
 	    switch(this.params.wcssys){
 	    case 'image':
-	    case 'physical':
 		if( newval(obj, key, val) ){
 		    opts[key] = getval(val);
+		}
+		break;
+	    case 'physical':
+		if( newval(obj, key, val) ){
+		    opts[key] = getval(val) * bin;
 		}
 		break;
 	    default:
@@ -12683,9 +12693,13 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "r2":
 	    switch(this.params.wcssys){
 	    case 'image':
-	    case 'physical':
 		if( newval(obj, key, val) ){
 		    opts[key] = getval(val);
+		}
+		break;
+	    case 'physical':
+		if( newval(obj, key, val) ){
+		    opts[key] = getval(val) * bin;
 		}
 		break;
 	    default:
