@@ -2279,9 +2279,17 @@ Each returned region object contains the following properties:
 <li><b>wcssys</b>: wcs system (e.g. "FK5")
 <li><b>imstr</b>: region string in image or physical coordinates
 <li><b>imsys</b>: image system ("image" or "physical")
+<li><b>lcs</b>: object containing logical x, y and sys (e.g. "physical")
 <li><b>data</b>: data property passed in options object when this shape was created.
 </ul>
-The image position can be used to access the image data returned by the
+The x, y, radii, pts, radius, width, height, r1, r2 values are all
+returned in the image coordinate system. The lcs object will contain x
+and y in logical (i.e., physical) coordinates. Moreover, if the
+imsys value is not "image" (i.e. the JS9 coordinate system is not
+explicitly set to "image"), then the lcs object also will contain
+radii, pts, radius, width, height, r1, r2 in the logical coordinate system.
+<p>
+The image position x, y can be used to access the image data returned by the
 <b>JS9.GetImageData()</b> routine:
 <pre>
     obj = JS9.GetImageData();
@@ -3930,7 +3938,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: March 22, 2018</h5>
+<h5>Last updated: May 1, 2018</h5>
 </div>
 
 </body>
