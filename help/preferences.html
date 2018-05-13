@@ -75,13 +75,37 @@ to each FITS filename instead of the pathname stored in the PNG
 file. You can set this variable if you have moved the location of the
 raw FITS files after generating the PNG files.
 
-<li><p><b>JS9.Regions.opts:</b> This JavaScript object contains default
-values for regions, including the initial size of various regions,
-initial inner and outer radii for annuli, initial angle, etc.
+<li><p><b>JS9.Regions.opts:</b> This JavaScript object contains
+default values for regions, including the initial size of various
+regions, initial inner and outer radii for annuli, initial angle,
+etc. You can set or override properties for this object by adding them
+to the <b>regionOpts</b> object in the js9prefs.js file.
 
 <li><p><b>JS9.menuButtonOptsArr:</b> this JavaScript array of objects allows
 you to change and re-arrange which menu options are provided. If you
 prefix the name of a menu option with '<b>#</b>', that option is disabled.
+
+<li><p><b>Module:</b> a global JavaScript object with attributes that
+Emscripten-generated code calls at various points in its execution.
+You can set or override properties for this object by adding them to
+the <b>emscriptenOpts</b> object in the js9prefs.js file.  One
+important case occurs when you have installed the astroemw.wasm binary
+file in a location other than the JS9 install directory. You would
+then use Emscripten's <b>wasmBinaryFile</b> property to specify a path
+to this file, relative to the JS9 install directory. For example, if
+the JS9 install directory and the resources directory are at the same
+level in the directory hierarchy:
+<pre>
+var JS9Prefs = {
+  "emscriptenOpts": {
+     "wasmBinaryFile": "../resources/js/astroemw.wasm"
+  },
+  # other preferences ...
+}
+</pre>
+See Emscripten's
+<a href="https://kripken.github.io/emscripten-site/docs/api_reference/module.html#creating-the-module-object">Module Object</a>
+documentation for more information, and please let us know if you have problems.
 
 </ol>
 In addition to the above-mentioned objects, the preference file can be
@@ -89,7 +113,7 @@ used to set some internal variables. The <b>JS9.DEBUG</b> parameter is an
 example, as shown in the default preference file. Ordinarily, users
 need not be concerned with these variables.
 
-<h5>Last updated: May 23, 2017</h5>
+<h5>Last updated: May 15, 2018</h5>
 </div>
 
 </body>

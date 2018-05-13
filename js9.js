@@ -12,12 +12,15 @@
 
 /*global JS9Prefs, JS9Inline, $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly */
 
-// define Escripten Module so we can pass properties (e.g. wasmBinary)
-// eslint-disable-next-line no-unused-vars
-var Module = {};
+// these are the objects created in this module
+var JS9, Module;
 
-// JS9 module
-var JS9 = (function(){
+// create Emscripten Module object, if necessary
+// (so we can pass properties, e.g. wasmBinary, in js9prefs.js and during init)
+if( typeof Module !== "object" ){ Module = {}; }
+
+// generate JS9 module
+JS9 = (function(){
 "use strict";
 
 // module header
@@ -231,9 +234,10 @@ JS9.imageOpts = {
     listonchange: false			// whether to list after a reg change
 };
 
-// allows regions opts to be overridden in preferences
-JS9.regionOpts = {
-};
+// allows regions opts (in Regions.opts) to be overridden via js9prefs.js
+JS9.regionOpts = {};
+// allows emscripten opts (in Module) to be overridden via js9prefs.js
+JS9.emscriptenOpts = {};
 
 // defaults for analysis (macro expansion)
 JS9.analOpts = {
@@ -15903,9 +15907,16 @@ JS9.initEmscripten = function(){
     if( JS9.globalOpts.useWasm          &&
 	typeof WebAssembly === 'object' &&
 	location.protocol !== "file:"   ){
-	JS9.globalOpts.astroemURL = JS9.InstallDir("astroemw.wasm");
+	if( typeof Module.wasmBinaryFile === "string" &&
+	    Module.wasmBinaryFile !== "astroemw.wasm" ){
+	    // site-specified wasm file, relative to install dir
+	    JS9.globalOpts.astroemWasm = JS9.InstallDir(Module.wasmBinaryFile);
+	} else {
+	    // default wasm file, relative to install dir
+	    JS9.globalOpts.astroemWasm = JS9.InstallDir("astroemw.wasm");
+	}
 	// load astroem wasm file
-	JS9.fetchURL(JS9.globalOpts.astroemURL, null, opts, function(data){
+	JS9.fetchURL(JS9.globalOpts.astroemWasm, null, opts, function(data){
 	    // tell Emscripten we already have wasm binary
 	    // eslint-disable-next-line no-unused-vars
 	    Module.wasmBinary = data;
@@ -16800,8 +16811,6 @@ JS9.init = function(){
     // if js9 prefs were defined/loaded explicitly, merge properties
     if( window.hasOwnProperty("JS9Prefs") && typeof JS9Prefs === "object" ){
 	JS9.mergePrefs(JS9Prefs);
-	// if we have regionOpts from preferences, add them to Regions.opts
-	$.extend(true, JS9.Regions.opts, JS9.regionOpts);
     } else {
 	// look for and load json pref files
 	// (set this to false in the page to avoid loading a prefs file)
@@ -16810,10 +16819,14 @@ JS9.init = function(){
 	    JS9.loadPrefs(JS9.InstallDir(JS9.PREFSFILE), 1);
 	    // load page preferences, if possible
 	    JS9.loadPrefs(JS9.PREFSFILE, 0);
-	    // if we have regionOpts from preferences, add them to Regions.opts
-	    $.extend(true, JS9.Regions.opts, JS9.regionOpts);
 	}
     }
+    // if JS9 prefs have regionOpts, transfer them to Regions.opts
+    $.extend(true, JS9.Regions.opts, JS9.regionOpts);
+    delete JS9.regionOpts;
+    // if JS9 prefs have emscriptenOpts, transfer them to Module
+    $.extend(true, Module, JS9.emscriptenOpts);
+    delete JS9.emscriptenOpts;
     // regularize resize params
     if( !JS9.globalOpts.resize ){
 	JS9.globalOpts.resizeHandle = false;
