@@ -15907,14 +15907,9 @@ JS9.initEmscripten = function(){
     if( JS9.globalOpts.useWasm          &&
 	typeof WebAssembly === 'object' &&
 	location.protocol !== "file:"   ){
-	if( typeof Module.wasmBinaryFile === "string" &&
-	    Module.wasmBinaryFile !== "astroemw.wasm" ){
-	    // site-specified wasm file, relative to install dir
-	    JS9.globalOpts.astroemWasm = JS9.InstallDir(Module.wasmBinaryFile);
-	} else {
-	    // default wasm file, relative to install dir
-	    JS9.globalOpts.astroemWasm = JS9.InstallDir("astroemw.wasm");
-	}
+	// use site-specified file if available, else default file
+	JS9.globalOpts.astroemWasm =
+	    JS9.InstallDir(Module.wasmBinaryFile || "astroemw.wasm");
 	// load astroem wasm file
 	JS9.fetchURL(JS9.globalOpts.astroemWasm, null, opts, function(data){
 	    // tell Emscripten we already have wasm binary
