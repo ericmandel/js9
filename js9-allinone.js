@@ -8578,6 +8578,15 @@ JS9.Menubar.init = function(width, height){
 			   }
 		};
 		items["sep" + n++] = "------";
+		items.createmosaic = {
+		    name: "create mosaic ...",
+		    items: {createmosaictitle: {name: "include these images:",
+					       disabled: true},
+			    mosaiccurrent: {name: "the current image"},
+			    mosaicdisplay: {name: "all images in this display"}
+			   }
+		};
+		items["sep" + n++] = "------";
 		items.lite = {name: "new JS9 light window"};
 		items.xnew = {name: "new JS9 separate window"};
 		if( window.isElectron ){
@@ -8652,6 +8661,16 @@ JS9.Menubar.init = function(width, height){
 			case "savecatalog":
 			    if( uim ){
 				uim.saveCatalog();
+			    }
+			    break;
+			case "mosaiccurrent":
+			    if( udisp && uim ){
+				JS9.CreateMosaic("current", {display: udisp});
+			    }
+			    break;
+			case "mosaicdisplay":
+			    if( udisp ){
+				JS9.CreateMosaic("all", {display: udisp});
 			    }
 			    break;
 			case "header":
