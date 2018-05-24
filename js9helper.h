@@ -1,3 +1,12 @@
+#ifdef __EMSCRIPTEN__
+#define HAVE_CFITSIO  1
+#define HAVE_UNISTD_H 1
+#define HAVE_STRING_H 1
+#define HAVE_STDLIB_H 1
+#define HAVE_MALLOC_H 1
+#define HAVE_GETOPT_H 1
+#endif
+
 #if HAVE_CFITSIO
 #include <fitsio.h>
 #include "jsfitsio.h"

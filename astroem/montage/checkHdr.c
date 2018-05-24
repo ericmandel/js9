@@ -190,8 +190,7 @@ int checkHdr(char *infile, int hdrflag, int hdu)
       if(fout == (FILE *)NULL)
       {
          fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Cannot open output file %s.\"]\n", hdrCheck_outfile);
-         fflush(fstatus);
-         exit(1);
+	 fflush(fstatus);fclose(fstatus);exit(1);
       }
    }
 
@@ -209,8 +208,7 @@ int checkHdr(char *infile, int hdrflag, int hdu)
       {
        fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"FITS file (%s) cannot be used as a header template\"]\n",
                 infile);
-         fflush(fstatus);
-         exit(1);
+       fflush(fstatus);fclose(fstatus);exit(1);
       }
 
       if(hdu > 0)
@@ -274,16 +272,14 @@ int checkHdr(char *infile, int hdrflag, int hdu)
          if(fp == (FILE *)NULL)
          {
             fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"File %s not found.\"]\n", infile);
-            fflush(fstatus);
-            exit(1);
+	    fflush(fstatus);fclose(fstatus);exit(1);
          }
 
          fclose(fp);
 
          fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"File (%s) is not a FITS image\"]\n",
                 infile);
-         fflush(fstatus);
-         exit(1);
+	 fflush(fstatus);fclose(fstatus);exit(1);
       }
 
       fp = fopen(infile, "r");
@@ -291,8 +287,7 @@ int checkHdr(char *infile, int hdrflag, int hdu)
       if(fp == (FILE *)NULL)
       {
          fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"File %s not found.\"]\n", infile);
-         fflush(fstatus);
-         exit(1);
+	 fflush(fstatus);fclose(fstatus);exit(1);
       }
 
       while(1)
@@ -311,8 +306,7 @@ int checkHdr(char *infile, int hdrflag, int hdu)
          if((int)strlen(line) > 80)
          {
             fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"FITS header lines cannot be greater than 80 characters.\"]\n");
-            fflush(fstatus);
-            exit(1);
+	    fflush(fstatus);fclose(fstatus);exit(1);
          }
 
          len = (int)strlen(pline);
@@ -475,8 +469,7 @@ int checkHdr(char *infile, int hdrflag, int hdu)
    {
       fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"%d Errors\"]\n", 
          errorCount);
-      fflush(fstatus);
-      exit(1);
+      fflush(fstatus);fclose(fstatus);exit(1);
    }
 
    return(0);
@@ -767,8 +760,7 @@ int errorOutput(char *msg)
    else
    {
       fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"%s\"]\n", msg);
-      fflush(fstatus);
-      exit(1);
+      fflush(fstatus);fclose(fstatus);exit(1);
    }
 
    return(0);
@@ -812,6 +804,5 @@ int FITSerror(int status)
    fits_get_errstatus(status, status_str);
 
    fprintf(fstatus, "[struct stat=\"ERROR\", status=%d, msg=\"%s\"]\n", status, status_str);
-
-   exit(1);
+   fflush(fstatus);fclose(fstatus);exit(1);
 }

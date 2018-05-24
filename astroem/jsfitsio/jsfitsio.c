@@ -180,12 +180,14 @@ fitsfile *ffhist3(fitsfile *fptr, /* I - ptr to table with X and Y cols*/
 // this is how xray binary tables are imaged automatically
 fitsfile *gotoFITSHDU(fitsfile *fptr, char *extlist, int *hdutype, int *status){
   int hdunum, naxis, thdutype, gotext=0;
+  long naxes[IDIM] = {0, 0, 0, 0};
   char *ext, *textlist;
   // if this is the primary array and it does not contain an image,
   // try to move to something more reasonble
   fits_get_hdu_num(fptr, &hdunum); *status = 0;
   fits_get_img_dim(fptr, &naxis, status); *status = 0;
-  if( (hdunum == 1) && (naxis == 0) ){
+  fits_get_img_size(fptr, min(IDIM,naxis), naxes, status); *status = 0;
+  if( (hdunum == 1) && ((naxis == 0) || naxes[0] == 0) ){
     // look through the extension list
     if( extlist ){
       gotext = 0;
@@ -284,6 +286,30 @@ void updateWCS(fitsfile *fptr, fitsfile *ofptr,
     if( status == 0 ){
       dval = dval * bin;
       fits_update_key(ofptr, TDOUBLE, "CDELT2", &dval, comment, &status);
+    }
+    dval = 0.0; *comment = '\0'; status = 0;
+    fits_read_key(fptr, TDOUBLE, "CD1_1", &dval, comment, &status);
+    if( status == 0 ){
+      dval = dval * bin;
+      fits_update_key(ofptr, TDOUBLE, "CD1_1", &dval, comment, &status);
+    }
+    dval = 0.0; *comment = '\0'; status = 0;
+    fits_read_key(fptr, TDOUBLE, "CD1_2", &dval, comment, &status);
+    if( status == 0 ){
+      dval = dval * bin;
+      fits_update_key(ofptr, TDOUBLE, "CD1_2", &dval, comment, &status);
+    }
+    dval = 0.0; *comment = '\0'; status = 0;
+    fits_read_key(fptr, TDOUBLE, "CD2_1", &dval, comment, &status);
+    if( status == 0 ){
+      dval = dval * bin;
+      fits_update_key(ofptr, TDOUBLE, "CD2_1", &dval, comment, &status);
+    }
+    dval = 0.0; *comment = '\0'; status = 0;
+    fits_read_key(fptr, TDOUBLE, "CD2_2", &dval, comment, &status);
+    if( status == 0 ){
+      dval = dval * bin;
+      fits_update_key(ofptr, TDOUBLE, "CD2_2", &dval, comment, &status);
     }
   }
   // update ltm/ltv values, using center to calculate ltv values

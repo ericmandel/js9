@@ -1,6 +1,7 @@
 /*
  *	Copyright (c) 2012-2018 Smithsonian Astrophysical Observatory
  */
+
 #include "js9helper.h"
 
 /* the Finfo stuff supports using js9helper as a server, as opposed
@@ -720,6 +721,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
 	closeFITSFile(ofptr, &status);
 	return 1;
       }
+#ifndef __EMSCRIPTEN__
       /* return a json object with info about original data */
       fprintf(stdout, "{\"file\":\"%s\"", finfo->fitsfile);
       fprintf(stdout, ",\"type\":%d", hdutype);
@@ -741,6 +743,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
       }
       fprintf(stdout, "}\n");
       fflush(stdout);
+#endif
       tstatus=0;
       closeFITSFile(ifptr, &tstatus);
       tstatus=0;
@@ -819,7 +822,11 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
   return 2;
 }
 
+#ifdef __EMSCRIPTEN__
+int js9helper(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
   int c;
   int args;
@@ -836,6 +843,8 @@ int main(int argc, char **argv)
   /* we want the args in the same order in which they arrived, and
      gnu getopt sometimes changes things without this */
   putenv("POSIXLY_CORRECT=true");
+  /* parse args from beginning */
+  optind = 1;
   /* process switch arguments */
   while ((c = getopt(argc, argv, "i:v")) != -1){
     switch(c){

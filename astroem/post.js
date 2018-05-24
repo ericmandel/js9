@@ -25,8 +25,14 @@ Module["vfile"] = function(filename, buf, canOwn) {
     }
     return {path: filename, size: size};
   }
-  // one arg: return contents of an existing file
+  // one arg: return contents of an existing file as binary
   return FS.readFile(Module["rootdir"] + filename, {encoding: "binary"});
+};
+
+Module["vread"] = function(filename, mode) {
+    mode = mode || "utf8";
+    // return contents of an existing file as text or binary
+    return FS.readFile(Module["rootdir"] + filename, {encoding: mode});
 };
 
 Module["vsize"] = function(filename) {

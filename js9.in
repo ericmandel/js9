@@ -141,8 +141,9 @@ fi
 # check if all args (if any) are files
 if [ $# -ge 0 ]; then
   ALLFILES=true
-  for f in "$@"
+  for file in "$@"
     do
+    f=`echo $file | sed 's/\[.*\]//'`
     if [[ ! "$f" =~ ^https?:// && ! -r "$f" ]]; then
       ALLFILES=false
     fi

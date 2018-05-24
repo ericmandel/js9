@@ -1962,6 +1962,8 @@ mProjectPP from the Montage web site, which includes this explanation:
     to galactic coordinates), though these changes can be facilitated by the
     use of an alternate header.
 </pre>
+These Montage programs have been compiled into JS9 using
+<a href="https://kripken.github.io/emscripten-site/">Emscripten</a>.
 
 <p>
 The <b>wcsim</b> argument is an image id, image filename, or image
@@ -3116,6 +3118,77 @@ above.
 <p><hr>
   
 <h4 id="displays">Working with Displays</h4>
+
+<h5 id="JS9.CreateMosaic">Create a Mosaic Image</h5>
+<p>
+<code class="api">JS9.CreateMosaic(which, opts)</code>
+<p>
+where:
+<ul>
+<li><b>which</b>: which images to use in the mosaic
+<li><b>opts</b>: mosaic options
+</ul>
+
+The <b>JS9.CreateMosaic()</b> creates a mosaic image from the
+specified FITS images using the
+<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html">mProjectPP</a>
+and
+<a href="http://montage.ipac.caltech.edu/docs/mAdd.html">mAdd</a>
+programs from the
+<a href="http://montage.ipac.caltech.edu/">Montage</a> software suite.
+These Montage programs have been compiled into JS9 using
+<a href="https://kripken.github.io/emscripten-site/">Emscripten</a>.
+
+<p>
+Because the browser environment is memory-limited, there are some
+restrictions on generating mosaics in JS9. The FITS files must be
+well-behaved, i.e. they must have WCS projections which can be
+approximated by tangent-plane projections (TAN, SIN, ZEA, STG, ARC).
+This precludes creating mosaics from images covering large portions of
+the sky. For large sky areas, please use Montage itself on your desktop
+to create a mosaic. A simplified js9mosaic script is included in
+the JS9 distribution or, for more control, use the Montage programs
+directly. Of course, in either case, you must install Montage.
+
+<p>
+The <b>which</b> parameter determine which images are used in the mosaic:
+<ul>
+<li><b>"current" or null</b>: the current image in this display
+<li><b>"all"</b>: all images in this display
+<li><b>im</b>: the image id or image handle of an image from any display
+<li><b>[im1, im2, ...]</b>: an array of image ids or handles from any display
+</ul>
+In general, use "current" (or null) if you have loaded a multi-extension
+FITS mosaic (e.g. a CFHT FITS file) into JS9. Use "all" if you have loaded
+several FITS files into JS9 and want to create a mosaic.
+
+<p>
+In order to keep the size of the resulting mosaic within memory
+limits, JS9 reduces the size of each image before adding them all
+together The <b>options</b> parameter determines how the reduction is
+performed:
+<ul>
+<li><b>dim</b>: size of mosaic (def: max of JS9.globalOpts.image.[xdim,ydim])
+<li><b>reduce</b>: image size reduction technique: "js9" (def) or "shrink"
+<li><b>verbose</b>: if true, processing output is sent to the javascript console
+</ul>
+The "dim" parameter is a target size: the larger of the resulting
+mosaic dimensions will be approximately this value, depending on how
+Montage processes the images. The "reduce" technique either runs
+internal JS9 image sectioning code (to produce smaller internal
+images, each of which are reprojected and added together) or runs the
+Montage mShrinkHdr code (which reprojects the full images into smaller
+files). The former seems to be faster than the latter in most
+cases. The "verbose" parameter will display output on the JavaScript
+console to let you know that the CreateMosaic() call is running properly.
+
+<p>
+The resulting mosaic will be loaded into the specified JS9 display as
+a separate image. Because the mosaic is separate from the original
+image(s), you can view each of the latter individually (or view each
+image extension of a single image using the <b>Extensions</b> plugin).
+Internal analysis can be performed on the mosaic (e.g. ImExam functions)
+but, of course, no external analysis tasks will be available.
 
 <h5 id="JS9.LookupDisplay">Lookup a JS9 display</h5>
 <p>

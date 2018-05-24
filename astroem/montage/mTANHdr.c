@@ -73,10 +73,10 @@ extern int getopt(int argc, char *const *argv, const char *options);
 int    checkHdr    (char *infile, int hdrflag, int hdu);
 int    checkWCS    (struct WorldCoor *wcs, int action);
 
-int    readTemplate(char *template);
+static int    readTemplate(char *template);
 int    extractCD   (char *template);
 int    makeWCS     ();
-int    stradd      (char *header, char *card);
+static int    stradd      (char *header, char *card);
 int    printHeader (char *header);
 double distance    (double ra, double dec, double rao, double deco);
 void   fixxy       (double *x, double *y, int *offscl);
@@ -154,7 +154,7 @@ int debug;
 /*                                                                       */
 /*************************************************************************/
 
-int main(int argc, char **argv)
+int mTANHdr(int argc, char **argv)
 {
    char     origtmpl[MAXSTR];
    char     newtmpl [MAXSTR];
@@ -205,7 +205,7 @@ int main(int argc, char **argv)
    maxiter   = 50;
    tolerance =  0.01;
    fstatus   = stdout;
-   useOffscl =  0;
+   useOffscl =  0;optind = 1;
 
    while ((c = getopt(argc, argv, "dui:o:t:s:")) != EOF) 
    {
@@ -224,9 +224,9 @@ int main(int argc, char **argv)
 
             if(end < optarg + strlen(optarg))
             {
-               printf("[struct stat=\"ERROR\", msg=\"-i (iterations) argument \"%s\" not an integer\"]\n", optarg);
+               fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"-i (iterations) argument \"%s\" not an integer\"]\n", optarg);
                fflush(stdout);
-               exit(1);
+               fflush(fstatus);fclose(fstatus);exit(1);
             }
 
             if(maxiter < 1)
@@ -238,9 +238,9 @@ int main(int argc, char **argv)
 
             if(end < optarg + strlen(optarg))
             {
-               printf("[struct stat=\"ERROR\", msg=\"-o (order) argument \"%s\" not an integer\"]\n", optarg);
+               fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"-o (order) argument \"%s\" not an integer\"]\n", optarg);
                fflush(stdout);
-               exit(1);
+               fflush(fstatus);fclose(fstatus);exit(1);
             }
 
             if(order < 0)
@@ -252,9 +252,9 @@ int main(int argc, char **argv)
 
             if(end < optarg + strlen(optarg))
             {
-               printf("[struct stat=\"ERROR\", msg=\"-t (tolerance) argument \"%s\" not a real number\"]\n", optarg);
+               fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"-t (tolerance) argument \"%s\" not a real number\"]\n", optarg);
                fflush(stdout);
-               exit(1);
+               fflush(fstatus);fclose(fstatus);exit(1);
             }
 
             if(tolerance < 0)
@@ -264,16 +264,16 @@ int main(int argc, char **argv)
          case 's':
             if((fstatus = fopen(optarg, "w+")) == (FILE *)NULL)
             {
-               printf("[struct stat=\"ERROR\", msg=\"Cannot open status file: %s\"]\n",
+               fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Cannot open status file: %s\"]\n",
                   optarg);
-               exit(1);
+               fflush(fstatus);fclose(fstatus);exit(1);
             }
             break;
 
          default:
             fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Usage: %s [-d][-o order][-i maxiter][-t tolerance][-s statusfile] orig.hdr new.hdr (default: order = 5, maxiter = 50, tolerance = 0.01)\"]\n", 
                argv[0]);
-            exit(1);
+            fflush(fstatus);fclose(fstatus);exit(1);
             break;
       }
    }
@@ -282,7 +282,7 @@ int main(int argc, char **argv)
    {
       fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Usage: %s [-d][-o order][-i maxiter][-t tolerance][-s statusfile] orig.hdr new.hdr (default: order = 5, maxiter = 50, tolerance = 0.01)\"]\n", 
          argv[0]);
-      exit(1);
+      fflush(fstatus);fclose(fstatus);exit(1);
    }
 
    strcpy(origtmpl, argv[optind]);
@@ -300,7 +300,7 @@ int main(int argc, char **argv)
          newtmpl);
       fflush(stdout);
 
-      exit(1);
+      fflush(fstatus);fclose(fstatus);exit(1);
    }
 
    if(debug)
@@ -608,7 +608,7 @@ int main(int argc, char **argv)
       if(matrix[n-1][n-1] == 0.0)
       {
          fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"All points offscale in forward transform\"]\n");
-         exit(1);
+         fflush(fstatus);fclose(fstatus);exit(1);
       }
 
       if(debug)
@@ -913,7 +913,7 @@ int main(int argc, char **argv)
       if(matrix[n-1][n-1] == 0.0)
       {
          fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"All points offscale in reverse transform\"]\n");
-         exit(1);
+         fflush(fstatus);fclose(fstatus);exit(1);
       }
 
       if(debug)
@@ -1192,7 +1192,7 @@ int main(int argc, char **argv)
       revmaxx, revmaxy, reviter+1);
    fflush(stdout);
 
-   exit(0);
+   fflush(fstatus);fclose(fstatus);exit(0);
 }
 
 
@@ -1243,7 +1243,7 @@ int extractCD(char *template)
    {
       fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Bad template: %s\"]\n", 
          template);
-      exit(1);
+      fflush(fstatus);fclose(fstatus);exit(1);
    }
 
    haveCdelt1  = 0;
@@ -1411,7 +1411,7 @@ int extractCD(char *template)
 /*                                                */
 /**************************************************/
 
-int readTemplate(char *template)
+static int readTemplate(char *template)
 {
    int      j;
    FILE    *fp;
@@ -1428,7 +1428,7 @@ int readTemplate(char *template)
    {
       fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Bad template: %s\"]\n", 
          template);
-      exit(1);
+      fflush(fstatus);fclose(fstatus);exit(1);
    }
 
    strcpy(header, "");
@@ -1461,7 +1461,7 @@ int readTemplate(char *template)
    if(wcs == (struct WorldCoor *)NULL)
    {
       fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Output wcsinit() failed.\"]\n");
-      exit(1);
+      fflush(fstatus);fclose(fstatus);exit(1);
    }
 
    checkWCS(wcs, 0);
@@ -1501,7 +1501,7 @@ int readTemplate(char *template)
 
 
 
-int stradd(char *header, char *card)
+static int stradd(char *header, char *card)
 {
    int i, hlen, clen;
 
@@ -1810,7 +1810,7 @@ int makeWCS()
    if(WCS == (struct WorldCoor *)NULL)
    {
       fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Output wcsinit() failed.\"]\n");
-      exit(1);
+      fflush(fstatus);fclose(fstatus);exit(1);
    }
 
    if(debug)
@@ -2044,7 +2044,7 @@ void gaussj(double **a, int n, double **b, int m)
 void nrerror(char *error_text)
 {
         fprintf(fstatus, "[struct stat=\"ERROR\" msg=\"%s\"]\n", error_text);
-        exit(1);
+        fflush(fstatus);fclose(fstatus);exit(1);
 }
 
 

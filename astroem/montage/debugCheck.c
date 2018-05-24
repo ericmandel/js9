@@ -31,13 +31,13 @@ int debugCheck(char *debugStr)
    if(end - debugStr < (int)strlen(debugStr))
    {
       fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Debug level string is invalid: '%s'\"]\n", debugStr);
-      exit(1);
+      fflush(fstatus);fclose(fstatus);exit(1);
    }
 
    if(debug < 0)
    {
       fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Debug level value cannot be negative\"]\n");
-      exit(1);
+      fflush(fstatus);fclose(fstatus);exit(1);
    }
 
    return debug;

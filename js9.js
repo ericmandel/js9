@@ -455,6 +455,7 @@ if( JS9.BROWSER[3] ){
 // ---------------------------------------------------------------------
 // JS9 Image object to manage images
 // ---------------------------------------------------------------------
+
 JS9.Image = function(file, params, func){
     var i, card, pars, sarr, nzoom;
     var display;
@@ -1666,6 +1667,18 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	}
 	if( header.CDELT2 !== undefined ){
 	    header.CDELT2 = header.CDELT2 * bin;
+	}
+	if( header.CD1_1 !== undefined ){
+	    header.CD1_1 = header.CD1_1 * bin;
+	}
+	if( header.CD1_2 !== undefined ){
+	    header.CD1_2 = header.CD1_2 * bin;
+	}
+	if( header.CD2_1 !== undefined ){
+	    header.CD2_1 = header.CD2_1 * bin;
+	}
+	if( header.CD2_2 !== undefined ){
+	    header.CD2_2 = header.CD2_2 * bin;
 	}
 	header.LTM1_1 = header.LTM1_1 || 1.0;
 	header.LTM1_1 = header.LTM1_1 / bin;
@@ -4872,7 +4885,9 @@ JS9.Image.prototype.saveFITS = function(fname){
     var arr, blob;
     if( window.hasOwnProperty("saveAs") ){
 	if( fname ){
-	    fname = fname.replace(/(png|jpg|jpeg)$/i, "fits");
+	    fname = fname
+		.replace(/\.fz$/i, "")
+		.replace(/(png|jpg|jpeg)$/i, "fits");
 	} else {
 	    fname = "js9.fits";
 	}
@@ -6041,38 +6056,42 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	    }
 	}
     }
-    // get wcs keywords from new header
-    if( wcsim.raw && wcsim.raw.header ){
-	nheader = wcsim.raw.header;
-    } else if( wcsim.BITPIX && wcsim.NAXIS1 && wcsim.NAXIS2 ){
-	// assume its a WCS header
+    if( typeof wcsim === "object" ){
+	// get wcs keywords from new header
+	if( wcsim.raw && wcsim.raw.header ){
+	    nheader = wcsim.raw.header;
+	} else if( wcsim.BITPIX && wcsim.NAXIS1 && wcsim.NAXIS2 ){
+	    // assume its a WCS header
 	nheader = wcsim;
-    } else {
-	JS9.error("invalid wcs object input to reproject()");
-    }
-    for(key in nheader){
-	if( nheader.hasOwnProperty(key) ){
-	    if( wcsexp.test(key) ){
-		twcs[key] = nheader[key];
+	} else {
+	    JS9.error("invalid wcs object input to reproject()");
+	}
+	for(key in nheader){
+	    if( nheader.hasOwnProperty(key) ){
+		if( wcsexp.test(key) ){
+		    twcs[key] = nheader[key];
+		}
 	    }
 	}
+	// combine new wcs keywords + old header keywords
+	wcsheader = $.extend(true, {}, twcs, oheader);
+	// sanity check on result
+	if( !wcsheader.NAXIS || !wcsheader.NAXIS1 || !wcsheader.NAXIS2 ){
+	    // JS9.error("invalid FITS image header");
+	    return;
+	}
+	// keep within the limits of current memory constraints
+	if((wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.REPROJDIM*JS9.REPROJDIM)){
+	    JS9.error("for now, the max image size for reprojection is approximately " + JS9.REPROJDIM  + " * " + JS9.REPROJDIM);
+	}
+	// convert reprojection header to a string
+	wcsstr = JS9.raw2FITS(wcsheader, true);
+	// create vfile text file containing reprojection WCS
+	wvfile = "wcs_" + JS9.uniqueID() + ".txt";
+	JS9.vfile(wvfile, wcsstr);
+    } else {
+	wvfile = wcsim;
     }
-    // combine new wcs keywords + old header keywords
-    wcsheader = $.extend(true, {}, twcs, oheader);
-    // sanity check on result
-    if( !wcsheader.NAXIS || !wcsheader.NAXIS1 || !wcsheader.NAXIS2 ){
-	// JS9.error("invalid FITS image header");
-	return;
-    }
-    // keep within the limits of current memory constraints
-    if((wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.REPROJDIM*JS9.REPROJDIM)){
-	JS9.error("for now, the max image size for reprojection is approximately " + JS9.REPROJDIM  + " * " + JS9.REPROJDIM);
-    }
-    // convert reprojection header to a string
-    wcsstr = JS9.raw2FITS(wcsheader, true);
-    // create vfile text file containing reprojection WCS
-    wvfile = "wcs_" + JS9.uniqueID() + ".txt";
-    JS9.vfile(wvfile, wcsstr);
     // check input and reproj WCS to make sure we can run fast mProjectPP
     // if not, try to make an alternate WCS header amenable to mProjectPP
     try{
@@ -6133,8 +6152,9 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     // output file name
     s = this.id
 	.replace(/\[.*\]/, "")
-	.replace(/\.png$/, ".fits")
-	.replace(/\.gz$/, "");
+	.replace(/\.png$/i, ".fits")
+	.replace(/\.fz$/i, "")
+	.replace(/\.gz$/i, "");
     ovfile = "reproj_" + JS9.uniqueID() + "_" + s;
     // for tables, we probably have to bin it by adding a bin specification
     // also need to pass the HDU name. For now, "EVENTS" is all we know ...
@@ -6666,7 +6686,7 @@ JS9.Image.prototype.uploadFITSFile = function(){
 	if( robj.stderr || robj.errcode ){
 	    JS9.error(robj.stderr || "from quotacheck: " + robj.errcode);
 	}
-	vdata = JS9.vfile(vfile);
+	vdata = JS9.vread(vfile, "binary");
 	JS9.worker.socketio(function(){
 	    JS9.progress(true, that.display);
 	    JS9.worker.postMessage("uploadFITS",
@@ -6722,9 +6742,364 @@ JS9.Image.prototype.removeProxyFile = function(s){
     JS9.Send('removeproxy', {'cmd': 'js9Xeq removeproxy ' + file}, func);
 };
 
-// dummy routines to display/clear message, overwritten in info plugin
-// eslint-disable-next-line no-unused-vars
-// Colormap
+// convert table to a shape array for the given image
+JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
+    var i, j, k, shape, pos, siz, reg, data, header, delims, sizefunc;
+    var xcol, ycol, ra, dec;
+    var owcssys, wcssys, tcol, tregexp;
+    var xcols = JS9.globalOpts.catalogs.ras;
+    var ycols = JS9.globalOpts.catalogs.decs;
+    var regs = [];
+    var wcol = 1;
+    var hcol = 1;
+    var global = JS9.globalOpts.catalogs;
+    var pos_func = function(im, ra, dec) {
+	var arr;
+	arr = JS9.wcs2pix(im.raw.wcs, ra, dec).trim().split(/ +/);
+	if( arr && arr.length ){
+	    return {x: parseFloat(arr[0]), y: parseFloat(arr[1])};
+	}
+	return null;
+    };
+    var getcol = function(starbase, header, cols, defcol){
+	var i, j, col;
+	if( defcol !== undefined ){
+	    col = defcol;
+	} else {
+	    // look for an exact match
+	    col = -1;
+	    for(j=0; j<cols.length; j++){
+		for(i=0; i<header.length; i++){
+		    if( cols[j].toLowerCase() === header[i].toLowerCase() ){
+			col = starbase[header[i]];
+			break;
+		    }
+		}
+		if( col >= 0 ){
+		    break;
+		}
+	    }
+	    // no exact match, look for an approx match
+	    if( col < 0 ){
+		tcol = cols[0];
+		tregexp = new RegExp("^"+tcol, "i");
+		for(i=0; i<header.length; i++){
+		    if( header[i].match(tregexp) ){
+			col = starbase[header[i]];
+			break;
+		    }
+		}
+	    }
+	    // no approx match, look for a less restrictive approx match
+	    if( col < 0 ){
+		tcol = cols[0];
+		tregexp = new RegExp(".*"+tcol+".*", "i");
+		for(i=0; i<header.length; i++){
+		    if( header[i].match(tregexp) ){
+			col = starbase[header[i]];
+			break;
+		    }
+		}
+	    }
+	}
+	return col;
+    };
+    // sanity check
+    if( !starbase || !starbase.data || !starbase.headline ){
+	return;
+    }
+    data = starbase.data;
+    header = starbase.headline;
+    delims = starbase.delims;
+    // opts is optional
+    opts = opts || {};
+    xcol = getcol(starbase, header, xcols, opts.xcol);
+    if( xcol < 0 ){
+	JS9.error("can't find an RA column (see Preferences:catalogs)");
+    }
+    ycol = getcol(starbase, header, ycols, opts.ycol);
+    if( ycol < 0 ){
+	JS9.error("can't find a Dec column (see Preferences:catalogs)");
+    }
+    // process shape
+    shape = opts.shape || global.shape || "circle";
+    switch(shape){
+    case "box":
+	// eslint-disable-next-line no-unused-vars
+	sizefunc = function(row, width, height) {
+	    return { width: opts.width   || global.width  || 7,
+		     height: opts.height || global.height || 7 };
+	};
+	break;
+    case "circle":
+	// eslint-disable-next-line no-unused-vars
+	sizefunc = function(row, width, height) {
+	    return { radius: opts.radius || global.radius || 3.5};
+	};
+	break;
+    case "ellipse":
+	// eslint-disable-next-line no-unused-vars
+	sizefunc = function(row, width, height) {
+	    return { r1: opts.r1  || global.r1  || 3.5,
+		     r2: opts.r2  || global.r2  || 3.5 };
+	};
+	break;
+    default:
+	// eslint-disable-next-line no-unused-vars
+	sizefunc = function(row, width, height) {
+	    return { width: opts.width || 7, height: opts.height || 7 };
+	};
+	break;
+    }
+    // save original wcs system
+    owcssys = this.getWCSSys();
+    // set wcs system for catalogs
+    if( opts.wcssys ){
+	wcssys = opts.wcssys;
+    } else if( global.wcssys ){
+	wcssys = global.wcssys;
+    } else {
+	// umm ...
+	wcssys = "ICRS";
+    }
+    // set wcssys for this catalog
+    this.setWCSSys(wcssys);
+    // convert each catalog object in the table into a JS9 shape
+    for(i=0, j=0; i<data.length; i++){
+	ra = data[i][xcol];
+	dec = data[i][ycol];
+	// various ways we might specify hms
+	if( (delims[xcol]!== "\0")  && (":h ".indexOf(delims[xcol]) >= 0) &&
+	    (wcssys !== "galactic") && (wcssys !== "ecliptic") ){
+	    ra *= 15.0;
+	}
+	pos = pos_func(this, ra, dec);
+	if( pos ){
+	    siz = sizefunc.call(this, data[i][wcol], data[i][hcol]);
+	    reg = {id: i.toString(), shape: shape,
+		   x: pos.x, y: pos.y,
+		   width: siz.width, height: siz.height,
+		   radius: siz.radius,
+		   r1: siz.r1, r2: siz.r2,
+		   angle: 0,
+		   data: {ra: ra, dec: dec}};
+	    // save catalog columns for this row
+	    if( (opts.save !== false) &&
+		(JS9.globalOpts.catalogs.save !== false) ){
+		for(k=0; k<=header.length; k++){
+		    if( header[k] ){
+			reg.data[header[k]] = data[i][k];
+		    }
+		}
+	    }
+	    if( opts.color ){
+		reg.color = opts.color;
+	    }
+	    regs[j++] = reg;
+	}
+    }
+    // restore original wcs
+    this.setWCSSys(owcssys);
+    return regs;
+};
+
+// read a tab-delimited, #-commented table (starbase table), create a catalog
+JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
+    var shapes, topts, starbase;
+    var lopts = $.extend(true, {}, JS9.Catalogs.opts);
+    var global = JS9.globalOpts.catalogs;
+    var defconv = function(s){
+	var delims = " \t-.:hdmsr'\"";
+	var obj = {};
+	obj.val = JS9.saostrtod(s);
+	obj.delim = String.fromCharCode(JS9.saodtype());
+	if( (obj.delim !== "\0") && (delims.indexOf(obj.delim) >= 0) ){
+	    // valid delim means we converted to a float
+	    return obj;
+	} else if( JS9.isNumber(s) ){
+	    // no delim, but its a number, so must be an int
+	    return obj;
+	}
+	// everything else is a string
+	obj.val = s;
+	return obj;
+    };
+    // special case: 1 non-string arg is the catalog, not the layer
+    if( arguments.length === 1 && typeof layer !== "string" ){
+	catalog = layer;
+	layer = null;
+    }
+    // special case: 2 non-string args: file and obj, not the layer
+    if( arguments.length === 2 && typeof layer !== "string" ){
+	opts = catalog;
+	catalog = layer;
+	layer = null;
+    }
+    // sanity check
+    if( !catalog ){
+	return;
+    }
+    if( global.tooltip ){
+	lopts.tooltip = global.tooltip;
+    }
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse catalog opts: " + opts, e); }
+    }
+    // opts is optional
+    opts = opts || {};
+    // default color, if none specified
+    opts.color = opts.color || global.color || "#00FF00";
+    // wcs system
+    opts.wcssys = opts.wcssys || global.wcssys;
+    // update the WCS strings when adding a catalog shape
+    opts.updateWCS = true;
+    // starbase opts
+    topts = {convFuncs:  {def: defconv},
+	     units: opts.units || global.units,
+	     skip:  opts.skip  || global.skip};
+    // generate starbase table
+    try{ starbase = new JS9.Starbase(catalog, topts); }
+    catch(e){ JS9.error("could not parse catalog. Is it in tab-separated column format?"); }
+    // sanity checks
+    if( !starbase || !starbase.data || !starbase.data.length ){
+	JS9.error("no objects found in catalog");
+    }
+    // generate new catalog shapes
+    shapes = this.starbaseToShapes(starbase, opts);
+    if( shapes.length ){
+	// layer name
+	layer = layer || "catalog_" + JS9.uniqueID() ;
+	// create a new layer, if necessary
+	this.display.newShapeLayer(layer, lopts);
+	// delete any old shapes
+	this.removeShapes(layer);
+	// save the original catalog before adding shapes
+	this.layers[layer].catalog = catalog;
+	this.layers[layer].starbase = starbase;
+	// add them to the catalog layer
+	this.addShapes(layer, shapes, opts);
+    } else {
+	JS9.error("no catalog objects found");
+    }
+    // allow chaining
+    return this;
+};
+
+// save catalog as a file
+JS9.Image.prototype.saveCatalog = function(fname, which){
+    var layer, cat, blob;
+    layer = which || this.activeShapeLayer();
+    if( !this.layers[layer] || !this.layers[layer].catalog ){
+	if( layer && layer !== "undefined" ){
+	    JS9.error("no catalog available: " + layer);
+	} else {
+	    JS9.error("no active catalog available");
+	}
+    }
+    cat = this.layers[layer].catalog;
+    blob = new Blob([cat], {type: "text/plain;charset=utf-8"});
+    fname = fname || layer + ".cat";
+    if( !fname.match(/\.cat$/) ){
+	fname += ".cat";
+    }
+    if( window.hasOwnProperty("saveAs") ){
+	saveAs(blob, fname);
+    } else {
+	JS9.error("no saveAs function available to save catalog");
+    }
+    return fname;
+};
+
+// convert ra, dec from one wcs to another
+JS9.Image.prototype.wcs2wcs = function(from, to, ra, dec){
+    var owcssys, ounits, nwcs, arr, x, y, s, v0;
+    // sve current wcs and units
+    owcssys = this.getWCSSys();
+    ounits = this.getWCSUnits();
+    // to, from default to current wcs
+    from = from || owcssys;
+    to = to || owcssys;
+    //  convert ra, dec from string input to float degrees, if necessary
+    if( typeof ra === "string" ){
+	v0 = JS9.strtoscaled(ra);
+	if( (v0.dtype === ":") &&
+	    (from !== "galactic") && (from !== "ecliptic") ){
+	    v0.dval *= 15.0;
+	}
+	ra = v0.dval;
+    }
+    if( typeof dec === "string" ){
+	v0 = JS9.strtoscaled(dec);
+	dec = v0.dval;
+    }
+    // temporarily set the wcs to what we are converting from
+    nwcs = this.setWCSSys(from).getWCSSys();
+    // make sure change was successful
+    if( from !== "native" ){
+	if( nwcs !== from ){
+	    JS9.error("unknown or invalid wcs: " + from);
+	}
+    }
+    // convert input ra, dec into image pixels in this wcs
+    arr = JS9.wcs2pix(this.raw.wcs, ra, dec).trim().split(/ +/);
+    x = parseFloat(arr[0]);
+    y = parseFloat(arr[1]);
+    // set wcs back to the target wcs
+    this.setWCSSys(to);
+    // convert image pixels from input ra, dec into target wcs
+    this.setWCSUnits("degrees");
+    s = JS9.pix2wcs(this.raw.wcs, x, y).trim();
+    // reset wcs to original
+    this.setWCSUnits(ounits);
+    if( owcssys !== to ){
+	this.setWCSSys(owcssys);
+    }
+    // return result
+    return s;
+};
+
+// convert wcs, physical or image image length to image length,
+// using current wcs and string delimiters to determine what input type
+JS9.Image.prototype.wcs2imlen = function(s){
+    var v, wcsinfo;
+    var dpp = 1;
+    // sanity check
+    if( !s ){
+	return;
+    }
+    v = JS9.strtoscaled(s);
+    wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
+    // oh dear, this is cheating ...
+    if( wcsinfo.cdelt1 !== undefined ){
+	dpp = wcsinfo.cdelt1;
+    } else if( wcsinfo.cdelt2 !== undefined ){
+	dpp = wcsinfo.cdelt2;
+    }
+    switch(this.params.wcssys){
+    case "image":
+	break;
+    case "physical":
+	// use the LTM1_1 value stored for logical to image transforms
+	if( this.lcs && this.lcs.physical ){
+	    v.dval = v.dval * this.lcs.physical.forward[0][0];
+	}
+	break;
+    default:
+	// cheap conversion of wcs len to image len
+	if( v.dtype && (v.dtype !== ".") && (v.dtype !== "\0")  ){
+	    v.dval = Math.abs(v.dval / dpp);
+	}
+	break;
+    }
+    return v.dval;
+};
+
+// ---------------------------------------------------------------------
+// JS9 Colormap support
+// ---------------------------------------------------------------------
+
 JS9.Colormap = function(name, a1, a2, a3){
     this.name = name;
     switch(arguments.length){
@@ -6818,6 +7193,7 @@ JS9.Colormap.prototype.mkColorCell = function(ii){
 // ---------------------------------------------------------------------
 // JS9 display object for the screen display
 // ---------------------------------------------------------------------
+
 JS9.Display = function(el){
     var that = this;
     // pass jQuery element, DOM element, or id
@@ -7764,362 +8140,317 @@ JS9.Display.prototype.clearMessage = function(which){
     return;
 };
 
-// convert table to a shape array for the given image
-JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
-    var i, j, k, shape, pos, siz, reg, data, header, delims, sizefunc;
-    var xcol, ycol, ra, dec;
-    var owcssys, wcssys, tcol, tregexp;
-    var xcols = JS9.globalOpts.catalogs.ras;
-    var ycols = JS9.globalOpts.catalogs.decs;
-    var regs = [];
-    var wcol = 1;
-    var hcol = 1;
-    var global = JS9.globalOpts.catalogs;
-    var pos_func = function(im, ra, dec) {
-	var arr;
-	arr = JS9.wcs2pix(im.raw.wcs, ra, dec).trim().split(/ +/);
-	if( arr && arr.length ){
-	    return {x: parseFloat(arr[0]), y: parseFloat(arr[1])};
+// create a mosaic from a multi-extension FITS file or a number of images
+JS9.Display.prototype.createMosaic = function(ims, opts){
+    var i, im, bin, carr;
+    var that = this;
+    var line1 = '|                                                    fname|';
+    var line2 = '|                                                     char|';
+    // remove temp files
+    var cleanup = function(){
+	var i;
+	for(i=0; i<carr.length; i++){
+	    JS9.vunlink(carr[i]);
 	}
-	return null;
     };
-    var getcol = function(starbase, header, cols, defcol){
-	var i, j, col;
-	if( defcol !== undefined ){
-	    col = defcol;
+    // check for Montage error and cleanup as needed
+    var chkerr = function(prog, rstr){
+	var earr;
+	// check for Montage error
+	if( rstr.search(/\[struct stat="OK"/) < 0 ){
+	    // no longer waiting
+	    JS9.waiting(false);
+	    // first remove temp files
+	    cleanup();
+	    // signal this we completed the reproject attempt
+	    earr = rstr.match(/msg="(.*)"/);
+	    if( earr && earr[1] ){
+		JS9.error(earr[1] + " (from " + prog + ")");
+	    } else {
+		JS9.error(rstr || "unknown " + prog + " failure");
+	    }
+	}
+    };
+    // display mosaic as a new image
+    var disp = function(hdu, opts){
+	var topts;
+	opts = opts || {};
+	topts = $.extend(true, {}, opts);
+	// start the waiting!
+	if( opts.waiting !== false ){
+	    JS9.waiting(true, that);
+	}
+	// make sure we use the current display
+	topts.display = that.id;
+	// set up new and display new image
+	JS9.checkNew(new JS9.Image(hdu, topts));
+	// done waiting
+	JS9.waiting(false);
+    };
+    // write comforting messages to the console while we wait and wait
+    var log = function(){
+	var s;
+	if( opts.verbose || JS9.DEBUG > 1 ){
+	    s = sprintf.apply(null, arguments);
+	    // eslint-disable-next-line no-console
+	    console.log(s);
+	}
+    };
+    // opts is optional
+    opts = opts || {};
+    // but dim requires a value
+    opts.dim = opts.dim ||
+	Math.max(JS9.globalOpts.image.xdim, JS9.globalOpts.image.ydim);
+    // ims can be: array of ims or a single im or null (use displayed image)
+    // each im can itself be an im object or the image string id
+    if( !ims ){
+	// use currently display image, if possible
+	if( this.image ){
+	    ims = [this.image];
 	} else {
-	    // look for an exact match
-	    col = -1;
-	    for(j=0; j<cols.length; j++){
-		for(i=0; i<header.length; i++){
-		    if( cols[j].toLowerCase() === header[i].toLowerCase() ){
-			col = starbase[header[i]];
-			break;
-		    }
+	    ims = [];
+	}
+    } else if( typeof ims === "string" ){
+	if( ims === "current" ){
+	    // use the currently loaded image
+	    if( this.image ){
+		ims = [this.image];
+	    } else {
+		ims = [];
+	    }
+	} else if( ims === "all" ){
+	    // use all images in this display
+	    ims = [];
+	    for(i=0; i<JS9.images.length; i++){
+		if( ims[i].display.id === that.id ){
+		    ims.push(ims[i]);
 		}
-		if( col >= 0 ){
+	    }
+	} else {
+	    // hopefully, it's the id of an image
+	    ims = [ims];
+	}
+    } else if( !$.isArray(ims) ){
+	JS9.error("unknown input type for createMosaic()");
+    }
+    // sanity check
+    if( !ims.length ){
+	JS9.error("no images specified for createMosaic()");
+    }
+    // convert all string id ims to im objects
+    for(i=0; i<ims.length; i++){
+	if( typeof ims[i] === "string" ){
+	    im = JS9.lookupImage(ims[i]);
+	    if( im ){
+		ims[i] = im;
+	    } else {
+		JS9.error("unknown image for mosaic: " + ims[i]);
+	    }
+	}
+	im = ims[i];
+	// sanity check: they all require a virtual file
+	if( !im.raw.hdu || !im.raw.hdu.fits || !im.raw.hdu.fits.vfile ){
+	    JS9.error("no virtual file available for mosaic: " + im.id);
+	}
+    }
+    // could take a while ...
+    JS9.waiting(true, that);
+    window.setTimeout(function(){
+	var s, t;
+	var sw, naxis, rstr, inbuf, ext;
+	var vfile, ivfile, ovfile, bvfile, sect, topts;
+	var inlst, intbl, inhdr, inarr;
+	var binlst, bintbl;
+	var outlst, outtbl, outhdr, areafile, outfile;
+	var id = JS9.uniqueID();
+	var imsw = "-C"; // skip naxis[3,4]: they write garbage into the table
+	var mktmp = function(suffix){
+	    return "mosaic_" + id + "_" + suffix;
+	};
+	// temps files get unique names
+	inlst = mktmp("in.lst");
+	intbl = mktmp("in.tbl");
+	inhdr = mktmp("in.hdr");
+	binlst = mktmp("bin.lst");
+	bintbl = mktmp("bin.tbl");
+	outlst = mktmp("out.lst");
+	outtbl = mktmp("out.tbl");
+	outhdr = mktmp("out.hdr");
+	// output file name comes from the first image name
+	outfile = ims[0].id
+	    .replace(/\[.*\]/, "")
+	    .replace(/\.fz$/i, "")
+	    .replace(/\.gz$/i, "")
+	    .replace(/\.fits$/i, "_mosaic.fits");
+	// Montage temp areafile comes from the output file name
+	areafile = outfile.replace(/\.fits$/, "_area.fits");
+	// init cleanup array to make sure temp files get deleted
+	carr = [inlst, intbl, inhdr, binlst, bintbl,
+		outlst, outtbl, outhdr, areafile];
+	// how do we reduce the size of the image?
+	if( JS9.isNull(opts.reduce) ){
+	    // emperically, using js9helper to make a blocked image is faster
+	    // than shrinking the wcs using Montage
+	    opts.reduce = "js9";
+	    // opts.reduce = "shrink";
+	}
+	// generate input list from array of ims
+	s = sprintf("%s\n%s\n", line1, line2);
+	for(i=0; i<ims.length; i++){
+	    s += sprintf("%s\n", ims[i].raw.hdu.fits.vfile);
+	}
+	// save in list file
+	JS9.vfile(inlst, s);
+	// call the Mosaic/mImgtbl routine to make meta table
+	rstr = JS9.imgtbl(inlst, ".", intbl, imsw);
+	// check for errors
+	chkerr("mImgtbl", rstr);
+	// make sure input table actually has FITS files
+	if( !JS9.vsize(intbl) ){
+	    JS9.error("no image data found with which to construct a mosaic");
+	}
+	// make initial input header from input images
+	rstr = JS9.makehdr(intbl, inhdr, "");
+	// check for errors
+	chkerr("mMakeHdr", rstr);
+	// if we are using the js9helper, calculate a bin factor
+	if( opts.reduce === "js9" ){
+	    // calculate bin factor:
+	    // get input header as an array of cr-delimited lines
+	    s = JS9.vread(inhdr). split("\n");
+	    naxis = 0;
+	    // looks for dimensions of the image in this header
+	    for(i=0; i<s.length; i++){
+		t = s[i].split("=");
+		switch(t[0].trim()){
+		    case "NAXIS1":
+		    naxis = Math.max(naxis, parseFloat(t[1].trim()));
+		    break;
+		    case "NAXIS2":
+		    naxis = Math.max(naxis, parseFloat(t[1].trim()));
 		    break;
 		}
 	    }
-	    // no exact match, look for an approx match
-	    if( col < 0 ){
-		tcol = cols[0];
-		tregexp = new RegExp("^"+tcol, "i");
-		for(i=0; i<header.length; i++){
-		    if( header[i].match(tregexp) ){
-			col = starbase[header[i]];
-			break;
-		    }
+	    // bin based on image dims and desired mosaic dim
+	    bin = Math.floor((naxis / opts.dim) + 0.5);
+	    // generate binned files, which become the input for reprojection
+	    s = sprintf("%s\n%s\n", line1, line2);
+	    // get array of input images
+	    inbuf = JS9.vread(intbl);
+	    // ignore the first 3 header lines
+	    inarr = inbuf.trim().split("\n");
+	    inarr.splice(0,3);
+	    // bin each image
+	    for(i=0; i<inarr.length; i++){
+		t = inarr[i].trim().split(/\s+/);
+		ext  = t[t.length-2];
+		vfile = t[t.length-1];
+		if( ext && vfile ){
+		    // section input file + extension
+		    ivfile = sprintf("%s[%s]", vfile, ext);
+		    // binned file name
+		    bvfile = sprintf("bin_%s_%s", ext, 
+				     vfile.replace(/\.(g|f)z$/, ""));
+		    // make sure binned file eventually gets deleted
+		    carr.push(bvfile);
+		    // section specification consists of bin factor
+		    sect = sprintf("0@0,0@0,%s", bin);
+		    log("bin %s [%s]", ivfile, bin);
+		    // extract a section at the specified bin factor
+		    JS9.imsection(ivfile, bvfile, sect, "");
+		    // add file to new input list
+		    s += sprintf("%s\n", bvfile);
 		}
 	    }
-	    // no approx match, look for a less restrictive approx match
-	    if( col < 0 ){
-		tcol = cols[0];
-		tregexp = new RegExp(".*"+tcol+".*", "i");
-		for(i=0; i<header.length; i++){
-		    if( header[i].match(tregexp) ){
-			col = starbase[header[i]];
-			break;
-		    }
+	    // save in new image list file
+	    JS9.vfile(binlst, s);
+	    // call the Mosaic/mImgtbl routine
+	    rstr = JS9.imgtbl(binlst, ".", bintbl, imsw);
+	    // check for errors
+	    chkerr("mImgtbl", rstr);
+	    // make sure input table actually has FITS files
+	    if( !JS9.vsize(bintbl) ){
+		JS9.error("no image data found to construct a mosaic");
+	    }
+	    // make output header from binned images
+	    rstr = JS9.makehdr(bintbl, outhdr, "");
+	    // check for errors
+	    chkerr("mMakeHdr", rstr);
+	    // array of input images
+	    inbuf = JS9.vread(bintbl);
+	} else {
+	    // shrink inhdr to make outhdr
+	    rstr = JS9.shrinkhdr(opts.dim, inhdr, outhdr);
+	    // check for errors
+	    chkerr("mShrinkHdr", rstr);
+	    // array of input images
+	    inbuf = JS9.vread(intbl);
+	}
+	// ignore the first 3 header lines
+	inarr = inbuf.trim().split("\n");
+	inarr.splice(0,3);
+	// reproject and generate output list from reprojected files
+	s = sprintf("%s\n%s\n", line1, line2);
+	for(i=0; i<inarr.length; i++){
+	    t = inarr[i].trim().split(/\s+/);
+	    ext  = t[t.length-2];
+	    vfile = t[t.length-1];
+	    if( ext && vfile ){
+		if( opts.reduce === "shrink" ){
+		    // pass extension number in switches
+		    sw = sprintf("-h %s", ext);
+		} else {
+		    sw = "";
 		}
+		// output filename
+		ovfile = sprintf("reproj_%s_%s", ext, 
+				 vfile.replace(/\.(g|f)z$/, ""));
+		// add to the output file list
+		s += sprintf("%s\n", ovfile);
+		// make sure it eventually gets deleted
+		carr.push(ovfile);
+		// make sure associated area file eventually gets deleted
+		carr.push(ovfile.replace(/\.fits$/i, "_area.fits"));
+		// call Montage/reproject
+		log("reproject: %s [%s]", vfile, ext);
+		rstr = JS9.reproject(vfile, ovfile, outhdr, sw);
+		// check for errors
+		chkerr("mProjectPP", rstr);
 	    }
 	}
-	return col;
-    };
-    // sanity check
-    if( !starbase || !starbase.data || !starbase.headline ){
-	return;
-    }
-    data = starbase.data;
-    header = starbase.headline;
-    delims = starbase.delims;
-    // opts is optional
-    opts = opts || {};
-    xcol = getcol(starbase, header, xcols, opts.xcol);
-    if( xcol < 0 ){
-	JS9.error("can't find an RA column (see Preferences:catalogs)");
-    }
-    ycol = getcol(starbase, header, ycols, opts.ycol);
-    if( ycol < 0 ){
-	JS9.error("can't find a Dec column (see Preferences:catalogs)");
-    }
-    // process shape
-    shape = opts.shape || global.shape || "circle";
-    switch(shape){
-    case "box":
-	// eslint-disable-next-line no-unused-vars
-	sizefunc = function(row, width, height) {
-	    return { width: opts.width   || global.width  || 7,
-		     height: opts.height || global.height || 7 };
-	};
-	break;
-    case "circle":
-	// eslint-disable-next-line no-unused-vars
-	sizefunc = function(row, width, height) {
-	    return { radius: opts.radius || global.radius || 3.5};
-	};
-	break;
-    case "ellipse":
-	// eslint-disable-next-line no-unused-vars
-	sizefunc = function(row, width, height) {
-	    return { r1: opts.r1  || global.r1  || 3.5,
-		     r2: opts.r2  || global.r2  || 3.5 };
-	};
-	break;
-    default:
-	// eslint-disable-next-line no-unused-vars
-	sizefunc = function(row, width, height) {
-	    return { width: opts.width || 7, height: opts.height || 7 };
-	};
-	break;
-    }
-    // save original wcs system
-    owcssys = this.getWCSSys();
-    // set wcs system for catalogs
-    if( opts.wcssys ){
-	wcssys = opts.wcssys;
-    } else if( global.wcssys ){
-	wcssys = global.wcssys;
-    } else {
-	// umm ...
-	wcssys = "ICRS";
-    }
-    // set wcssys for this catalog
-    this.setWCSSys(wcssys);
-    // convert each catalog object in the table into a JS9 shape
-    for(i=0, j=0; i<data.length; i++){
-	ra = data[i][xcol];
-	dec = data[i][ycol];
-	// various ways we might specify hms
-	if( (delims[xcol]!== "\0")  && (":h ".indexOf(delims[xcol]) >= 0) &&
-	    (wcssys !== "galactic") && (wcssys !== "ecliptic") ){
-	    ra *= 15.0;
+	// save output list in file
+	JS9.vfile(outlst, s);
+	// call the Mosaic/mImgtbl routine
+	rstr = JS9.imgtbl(outlst, ".", outtbl, "");
+	// check for errors
+	chkerr("mImgtbl", rstr);
+	// make sure input table has FITS files
+	if( !JS9.vsize(outtbl) ){
+	    JS9.error("no FITS files were added to output table for mosaic");
 	}
-	pos = pos_func(this, ra, dec);
-	if( pos ){
-	    siz = sizefunc.call(this, data[i][wcol], data[i][hcol]);
-	    reg = {id: i.toString(), shape: shape,
-		   x: pos.x, y: pos.y,
-		   width: siz.width, height: siz.height,
-		   radius: siz.radius,
-		   r1: siz.r1, r2: siz.r2,
-		   angle: 0,
-		   data: {ra: ra, dec: dec}};
-	    // save catalog columns for this row
-	    if( (opts.save !== false) &&
-		(JS9.globalOpts.catalogs.save !== false) ){
-		for(k=0; k<=header.length; k++){
-		    if( header[k] ){
-			reg.data[header[k]] = data[i][k];
-		    }
-		}
-	    }
-	    if( opts.color ){
-		reg.color = opts.color;
-	    }
-	    regs[j++] = reg;
-	}
-    }
-    // restore original wcs
-    this.setWCSSys(owcssys);
-    return regs;
-};
-
-// read a tab-delimited, #-commented table (starbase table), create a catalog
-JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
-    var shapes, topts, starbase;
-    var lopts = $.extend(true, {}, JS9.Catalogs.opts);
-    var global = JS9.globalOpts.catalogs;
-    var defconv = function(s){
-	var delims = " \t-.:hdmsr'\"";
-	var obj = {};
-	obj.val = JS9.saostrtod(s);
-	obj.delim = String.fromCharCode(JS9.saodtype());
-	if( (obj.delim !== "\0") && (delims.indexOf(obj.delim) >= 0) ){
-	    // valid delim means we converted to a float
-	    return obj;
-	} else if( JS9.isNumber(s) ){
-	    // no delim, but its a number, so must be an int
-	    return obj;
-	}
-	// everything else is a string
-	obj.val = s;
-	return obj;
-    };
-    // special case: 1 non-string arg is the catalog, not the layer
-    if( arguments.length === 1 && typeof layer !== "string" ){
-	catalog = layer;
-	layer = null;
-    }
-    // special case: 2 non-string args: file and obj, not the layer
-    if( arguments.length === 2 && typeof layer !== "string" ){
-	opts = catalog;
-	catalog = layer;
-	layer = null;
-    }
-    // sanity check
-    if( !catalog ){
-	return;
-    }
-    if( global.tooltip ){
-	lopts.tooltip = global.tooltip;
-    }
-    // opts can be an object or json
-    if( typeof opts === "string" ){
-	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse catalog opts: " + opts, e); }
-    }
-    // opts is optional
-    opts = opts || {};
-    // default color, if none specified
-    opts.color = opts.color || global.color || "#00FF00";
-    // wcs system
-    opts.wcssys = opts.wcssys || global.wcssys;
-    // update the WCS strings when adding a catalog shape
-    opts.updateWCS = true;
-    // starbase opts
-    topts = {convFuncs:  {def: defconv},
-	     units: opts.units || global.units,
-	     skip:  opts.skip  || global.skip};
-    // generate starbase table
-    try{ starbase = new JS9.Starbase(catalog, topts); }
-    catch(e){ JS9.error("could not parse catalog. Is it in tab-separated column format?"); }
-    // sanity checks
-    if( !starbase || !starbase.data || !starbase.data.length ){
-	JS9.error("no objects found in catalog");
-    }
-    // generate new catalog shapes
-    shapes = this.starbaseToShapes(starbase, opts);
-    if( shapes.length ){
-	// layer name
-	layer = layer || "catalog_" + JS9.uniqueID() ;
-	// create a new layer, if necessary
-	this.display.newShapeLayer(layer, lopts);
-	// delete any old shapes
-	this.removeShapes(layer);
-	// save the original catalog before adding shapes
-	this.layers[layer].catalog = catalog;
-	this.layers[layer].starbase = starbase;
-	// add them to the catalog layer
-	this.addShapes(layer, shapes, opts);
-    } else {
-	JS9.error("no catalog objects found");
-    }
+	// make the mosaic
+	log("create mosaic: %s", outfile);
+	rstr = JS9.madd(outtbl, outhdr, outfile, "");
+	// check for errors
+	chkerr("mAdd", rstr);
+	// cleanup temp files
+	cleanup();
+	// construct options
+	topts = $.extend(true, {}, JS9.fits.options, opts);
+	// we want the full image
+	topts.image = {xdim: 0, ydim: 0};
+	topts.file = outfile;
+	// process the newly retrieved data as FITS
+	JS9.fits.handleFITSFile(outfile, topts, disp);
+    }, JS9.SPINOUT);
     // allow chaining
     return this;
-};
-
-JS9.Image.prototype.saveCatalog = function(fname, which){
-    var layer, cat, blob;
-    layer = which || this.activeShapeLayer();
-    if( !this.layers[layer] || !this.layers[layer].catalog ){
-	if( layer && layer !== "undefined" ){
-	    JS9.error("no catalog available: " + layer);
-	} else {
-	    JS9.error("no active catalog available");
-	}
-    }
-    cat = this.layers[layer].catalog;
-    blob = new Blob([cat], {type: "text/plain;charset=utf-8"});
-    fname = fname || layer + ".cat";
-    if( !fname.match(/\.cat$/) ){
-	fname += ".cat";
-    }
-    if( window.hasOwnProperty("saveAs") ){
-	saveAs(blob, fname);
-    } else {
-	JS9.error("no saveAs function available to save catalog");
-    }
-    return fname;
-};
-
-// convert ra, dec from one wcs to another
-JS9.Image.prototype.wcs2wcs = function(from, to, ra, dec){
-    var owcssys, ounits, nwcs, arr, x, y, s, v0;
-    // sve current wcs and units
-    owcssys = this.getWCSSys();
-    ounits = this.getWCSUnits();
-    // to, from default to current wcs
-    from = from || owcssys;
-    to = to || owcssys;
-    //  convert ra, dec from string input to float degrees, if necessary
-    if( typeof ra === "string" ){
-	v0 = JS9.strtoscaled(ra);
-	if( (v0.dtype === ":") &&
-	    (from !== "galactic") && (from !== "ecliptic") ){
-	    v0.dval *= 15.0;
-	}
-	ra = v0.dval;
-    }
-    if( typeof dec === "string" ){
-	v0 = JS9.strtoscaled(dec);
-	dec = v0.dval;
-    }
-    // temporarily set the wcs to what we are converting from
-    nwcs = this.setWCSSys(from).getWCSSys();
-    // make sure change was successful
-    if( from !== "native" ){
-	if( nwcs !== from ){
-	    JS9.error("unknown or invalid wcs: " + from);
-	}
-    }
-    // convert input ra, dec into image pixels in this wcs
-    arr = JS9.wcs2pix(this.raw.wcs, ra, dec).trim().split(/ +/);
-    x = parseFloat(arr[0]);
-    y = parseFloat(arr[1]);
-    // set wcs back to the target wcs
-    this.setWCSSys(to);
-    // convert image pixels from input ra, dec into target wcs
-    this.setWCSUnits("degrees");
-    s = JS9.pix2wcs(this.raw.wcs, x, y).trim();
-    // reset wcs to original
-    this.setWCSUnits(ounits);
-    if( owcssys !== to ){
-	this.setWCSSys(owcssys);
-    }
-    // return result
-    return s;
-};
-
-// convert wcs, physical or image image length to image length,
-// using current wcs and string delimiters to determine what input type
-JS9.Image.prototype.wcs2imlen = function(s){
-    var v, wcsinfo;
-    var dpp = 1;
-    // sanity check
-    if( !s ){
-	return;
-    }
-    v = JS9.strtoscaled(s);
-    wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
-    // oh dear, this is cheating ...
-    if( wcsinfo.cdelt1 !== undefined ){
-	dpp = wcsinfo.cdelt1;
-    } else if( wcsinfo.cdelt2 !== undefined ){
-	dpp = wcsinfo.cdelt2;
-    }
-    switch(this.params.wcssys){
-    case "image":
-	break;
-    case "physical":
-	// use the LTM1_1 value stored for logical to image transforms
-	if( this.lcs && this.lcs.physical ){
-	    v.dval = v.dval * this.lcs.physical.forward[0][0];
-	}
-	break;
-    default:
-	// cheap conversion of wcs len to image len
-	if( v.dtype && (v.dtype !== ".") && (v.dtype !== "\0")  ){
-	    v.dval = Math.abs(v.dval / dpp);
-	}
-	break;
-    }
-    return v.dval;
 };
 
 // ---------------------------------------------------------------------
 // JS9 Command, commands for console window
 // ---------------------------------------------------------------------
+
 JS9.Command = function(obj){
     var p;
     // copy properties to new object
@@ -8173,6 +8504,7 @@ JS9.Command.prototype.getWhich = function(args){
 // ---------------------------------------------------------------------
 // JS9 helper to manage connection to back-end services
 // ---------------------------------------------------------------------
+
 JS9.Helper = function(){
     // reset protocol for file:
     if( JS9.globalOpts.helperProtocol === "file:" ){
@@ -15244,10 +15576,6 @@ JS9.cleanPath = function(s){
 };
 
 // ---------------------------------------------------------------------
-// End of Utilities
-// ---------------------------------------------------------------------
-
-// ---------------------------------------------------------------------
 // global event handlers
 // ---------------------------------------------------------------------
 
@@ -15558,6 +15886,7 @@ JS9.keyDownCB = function(evt){
 // ---------------------------------------------------------------------
 // drag and drop event handlers
 // ---------------------------------------------------------------------
+
 JS9.dragenterCB = function(id, evt){
     evt.stopPropagation();
     evt.preventDefault();
@@ -15945,6 +16274,7 @@ JS9.initFITS = function(){
 	JS9.vheap = Astroem.vheap;
 	JS9.vmemcpy = Astroem.vmemcpy;
 	JS9.vfile = Astroem.vfile;
+	JS9.vread = Astroem.vread;
 	JS9.vunlink = Astroem.vunlink;
 	JS9.vsize = Astroem.vsize;
 	JS9.arrfile = Astroem.arrfile;
@@ -15962,6 +16292,11 @@ JS9.initFITS = function(){
 	JS9.zscale = Astroem.zscale;
 	JS9.tanhdr = Astroem.tanhdr;
 	JS9.reproject = Astroem.reproject;
+	JS9.madd = Astroem.madd;
+	JS9.imgtbl = Astroem.imgtbl;
+	JS9.makehdr = Astroem.makehdr;
+	JS9.shrinkhdr = Astroem.shrinkhdr;
+	JS9.imsection = Astroem.imsection;
 	JS9.fitsLibrary("cfitsio");
     } else if( window.hasOwnProperty("Fitsy") ){
 	JS9.fitsLibrary("fitsy");
@@ -18736,6 +19071,17 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
     } else {
 	// oops!
 	JS9.error("unknown file type for LoadCatalog: " + typeof file);
+    }
+});
+
+// create an image mosaic
+JS9.mkPublic("CreateMosaic", function(){
+    var obj = JS9.parsePublicArgs(arguments);
+    var display = JS9.lookupDisplay(obj.display);
+    var ims = obj.argv[0];
+    var opts = obj.argv[1];
+    if( display ){
+	return display.createMosaic(ims, opts);
     }
 });
 

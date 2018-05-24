@@ -49,12 +49,17 @@ static Info infos=NULL;
 static int ninfo = 1;
 static int maxinfo = 0;
 static int maxinc = 10;
-static int nreproj=0;
+static int nstatus=0;
 
 static jmp_buf em_jmpbuf;
 
 int mTANHdr(int argc, char **argv);
 int mProjectPP(int argc, char **argv);
+int mAdd(int argc, char **argv);
+int mImgtbl(int argc, char **argv);
+int mMakeHdr(int argc, char **argv);
+int mShrinkHdr(int argc, char **argv);
+int js9helper(int argc, char **argv);
 int _listhdu(char *iname, char *oname);
 void emscripten_exit_with_live_runtime(void);
 
@@ -581,7 +586,7 @@ char *tanhdr(char *iname, char *oname, char *cmdswitches){
     if( targs ) free(targs);
   }
   args[i++] = "-s";
-  snprintf(file0, SZ_LINE-1, "%sstatus_%d.txt", ROOTDIR, nreproj++);
+  snprintf(file0, SZ_LINE-1, "%sstatus_%d.txt", ROOTDIR, nstatus++);
   args[i++] = file0;
   snprintf(file1, SZ_LINE-1, "%s%s", ROOTDIR, iname);
   args[i++] = file1;
@@ -626,7 +631,7 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
     if( targs ) free(targs);
   }
   args[i++] = "-s";
-  snprintf(file0, SZ_LINE-1, "%sstatus_%d.txt", ROOTDIR, nreproj++);
+  snprintf(file0, SZ_LINE-1, "%sstatus_%d.txt", ROOTDIR, nstatus++);
   args[i++] = file0;
   snprintf(file1, SZ_LINE-1, "%s%s", ROOTDIR, iname);
   args[i++] = file1;
@@ -646,6 +651,212 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
   } else {
     return "Error: reproject failed; no status file created";
   }
+}
+
+/* add mosaics using Montage/mAdd */
+char *madd(char *tname, char *hname, char *oname, char *cmdswitches){
+  int i=0, j=0;
+  char *targs=NULL, *targ=NULL;
+  char *args[SZ_LINE];
+  char tbufs[MAX_ARGS][SZ_LINE];
+  char file0[SZ_LINE];
+  char file1[SZ_LINE];
+  char file2[SZ_LINE];
+  char file3[SZ_LINE];
+  args[i++] = "mAdd";
+  if( cmdswitches && *cmdswitches ){
+    targs = (char *)strdup(cmdswitches);
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL; 
+	targ=(char *)strtok(NULL," \t")){
+      if( j < MAX_ARGS ){
+	strncpy(tbufs[j], targ, SZ_LINE-1);
+	args[i++] = tbufs[j++];
+      } else {
+	break;
+      }
+    }
+    if( targs ) free(targs);
+  }
+  args[i++] = "-s";
+  snprintf(file0, SZ_LINE-1, "%sstatus_%d.txt", ROOTDIR, nstatus++);
+  args[i++] = file0;
+  snprintf(file1, SZ_LINE-1, "%s%s", ROOTDIR, tname);
+  args[i++] = file1;
+  snprintf(file2, SZ_LINE-1, "%s%s", ROOTDIR, hname);
+  args[i++] = file2;
+  snprintf(file3, SZ_LINE-1, "%s%s", ROOTDIR, oname);
+  args[i++] = file3;
+  /* we have changed montage exit() calls to longjmp() */
+  if( !setjmp(em_jmpbuf) ){
+    /* make the mAdd call */
+    mAdd(i, args);
+  }
+  /* look for a return value */
+  if( filecontents(file0, rstr, SZ_LINE) > 0 ){
+    unlink(file0);
+    return rstr;
+  } else {
+    return "Error: madd failed; no status file created";
+  }
+}
+
+/* create image metadata table using Montage/mImgtbl */
+char *imgtbl(char *iname, char *dname, char *tname, char *cmdswitches){
+  int i=0, j=0;
+  char *targs=NULL, *targ=NULL;
+  char *args[SZ_LINE];
+  char tbufs[MAX_ARGS][SZ_LINE];
+  char file0[SZ_LINE];
+  char file1[SZ_LINE];
+  char file2[SZ_LINE];
+  char file3[SZ_LINE];
+  args[i++] = "mImgtbl";
+  if( cmdswitches && *cmdswitches ){
+    targs = (char *)strdup(cmdswitches);
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL; 
+	targ=(char *)strtok(NULL," \t")){
+      if( j < MAX_ARGS ){
+	strncpy(tbufs[j], targ, SZ_LINE-1);
+	args[i++] = tbufs[j++];
+      } else {
+	break;
+      }
+    }
+    if( targs ) free(targs);
+  }
+  args[i++] = "-s";
+  snprintf(file0, SZ_LINE-1, "%sstatus_%d.txt", ROOTDIR, nstatus++);
+  args[i++] = file0;
+  args[i++] = "-t";
+  snprintf(file1, SZ_LINE-1, "%s%s", ROOTDIR, iname);
+  args[i++] = file1;
+  snprintf(file2, SZ_LINE-1, "%s%s", ROOTDIR, dname);
+  args[i++] = file2;
+  snprintf(file3, SZ_LINE-1, "%s%s", ROOTDIR, tname);
+  args[i++] = file3;
+  /* we have changed montage exit() calls to longjmp() */
+  if( !setjmp(em_jmpbuf) ){
+    /* make the mImgtbl  call */
+    mImgtbl(i, args);
+  }
+  /* look for a return value */
+  if( filecontents(file0, rstr, SZ_LINE) > 0 ){
+    unlink(file0);
+    return rstr;
+  } else {
+    return "Error: imgtbl failed; no status file created";
+  }
+}
+
+/* create new FITS header using Montage/mMakeHdr */
+char *makehdr(char *tname, char *hname, char *cmdswitches){
+  int i=0, j=0;
+  char *targs=NULL, *targ=NULL;
+  char *args[SZ_LINE];
+  char tbufs[MAX_ARGS][SZ_LINE];
+  char file0[SZ_LINE];
+  char file1[SZ_LINE];
+  char file2[SZ_LINE];
+  args[i++] = "mMakeHdr";
+  if( cmdswitches && *cmdswitches ){
+    targs = (char *)strdup(cmdswitches);
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL; 
+	targ=(char *)strtok(NULL," \t")){
+      if( j < MAX_ARGS ){
+	strncpy(tbufs[j], targ, SZ_LINE-1);
+	args[i++] = tbufs[j++];
+      } else {
+	break;
+      }
+    }
+    if( targs ) free(targs);
+  }
+  args[i++] = "-s";
+  snprintf(file0, SZ_LINE-1, "%sstatus_%d.txt", ROOTDIR, nstatus++);
+  args[i++] = file0;
+  snprintf(file1, SZ_LINE-1, "%s%s", ROOTDIR, tname);
+  args[i++] = file1;
+  snprintf(file2, SZ_LINE-1, "%s%s", ROOTDIR, hname);
+  args[i++] = file2;
+  /* we have changed montage exit() calls to longjmp() */
+  if( !setjmp(em_jmpbuf) ){
+    /* make the mMakeHdr call */
+    mMakeHdr(i, args);
+  }
+  /* look for a return value */
+  if( filecontents(file0, rstr, SZ_LINE) > 0 ){
+    unlink(file0);
+    return rstr;
+  } else {
+    return "Error: makehdr failed; no status file created";
+  }
+}
+
+char *shrinkhdr(int dim, char *iname, char *oname, char *cmdswitches){
+  int i=0, j=0;
+  char *targs=NULL, *targ=NULL;
+  char *args[SZ_LINE];
+  char tbufs[MAX_ARGS][SZ_LINE];
+  char dimstr[SZ_LINE];
+  char file0[SZ_LINE];
+  char file1[SZ_LINE];
+  char file2[SZ_LINE];
+  char file3[SZ_LINE];
+  args[i++] = "mShrinkHdr";
+  if( cmdswitches && *cmdswitches ){
+    targs = (char *)strdup(cmdswitches);
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL; 
+	targ=(char *)strtok(NULL," \t")){
+      if( j < MAX_ARGS ){
+	strncpy(tbufs[j], targ, SZ_LINE-1);
+	args[i++] = tbufs[j++];
+      } else {
+	break;
+      }
+    }
+    if( targs ) free(targs);
+  }
+  args[i++] = "-S";
+  snprintf(dimstr, SZ_LINE-1, "%d", dim);
+  args[i++] = dimstr;
+  args[i++] = "-s";
+  snprintf(file0, SZ_LINE-1, "%sstatus_%d.txt", ROOTDIR, nstatus++);
+  args[i++] = file0;
+  snprintf(file1, SZ_LINE-1, "%s%s", ROOTDIR, iname);
+  args[i++] = file1;
+  snprintf(file2, SZ_LINE-1, "%s%s", ROOTDIR, oname);
+  args[i++] = file2;
+  /* we have changed montage exit() calls to longjmp() */
+  if( !setjmp(em_jmpbuf) ){
+    /* make the mShrinkHdr call */
+    mShrinkHdr(i, args);
+  }
+  /* look for a return value */
+  if( filecontents(file0, rstr, SZ_LINE) > 0 ){
+    unlink(file0);
+    return rstr;
+  } else {
+    return "Error: shrinkhdr failed; no status file created";
+  }
+}
+
+/* call js9helper program to perform imsection commands */
+int imsection(char *iname, char *oname, char *section, char *filter){
+  int i=0;
+  char *args[SZ_LINE];
+  char file0[SZ_LINE];
+  char file1[SZ_LINE];
+  args[i++] = "js9helper";
+  args[i++] = "-i";
+  snprintf(file0, SZ_LINE-1, "%s%s", ROOTDIR, iname);
+  args[i++] = file0;
+  args[i++] = "imsection";
+  snprintf(file1, SZ_LINE-1, "%s%s", ROOTDIR, oname);
+  args[i++] = file1;
+  args[i++] = section;
+  args[i++] = filter;
+  /* make the js9 helper call */
+  return js9helper(i, args);
 }
 
 /* get info about the hdus in a FITS file */

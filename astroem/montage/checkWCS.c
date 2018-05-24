@@ -45,7 +45,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
       if(action == ERROR_OFF)
       {
 	 fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"No WCS information (or not FITS header)\"]\n");
-	 exit(1);
+	 fflush(fstatus);fclose(fstatus);exit(1);
       }
       else
       {
@@ -111,7 +111,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
       if(action == ERROR_OFF)
       {
 	 fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Must have at least two dimensions\"]\n");
-	 exit(1);
+	 fflush(fstatus);fclose(fstatus);exit(1);
       }
       else
 	 {
@@ -127,7 +127,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
       if(action == ERROR_OFF)
       {
 	 fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Invalid projection\"]\n");
-	 exit(1);
+	 fflush(fstatus);fclose(fstatus);exit(1);
       }
       else
 	 {
@@ -143,7 +143,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
       if(action == ERROR_OFF)
       {
 	 fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Invalid NAXIS1\"]\n");
-	 exit(1);
+	 fflush(fstatus);fclose(fstatus);exit(1);
       }
       else
 	 {
@@ -156,7 +156,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
       if(action == ERROR_OFF)
       {
 	 fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Invalid NAXIS2\"]\n");
-	 exit(1);
+	 fflush(fstatus);fclose(fstatus);exit(1);
       }
       else
 	 {
@@ -174,7 +174,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
 	 if(action == ERROR_OFF)
 	 {
 	    fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"CTYPE1 and CTYPE2 don't match\"]\n");
-	    exit(1);
+	    fflush(fstatus);fclose(fstatus);exit(1);
 	 }
 	 else
 	 {
@@ -189,7 +189,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
 	 if(action == ERROR_OFF)
 	 {
 	    fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"CTYPE1 and CTYPE2 don't match\"]\n");
-	    exit(1);
+	    fflush(fstatus);fclose(fstatus);exit(1);
 	 }
 	 else
 	 {
@@ -204,7 +204,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
 	 if(action == ERROR_OFF)
 	 {
 	    fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"CTYPE1 and CTYPE2 don't match\"]\n");
-	    exit(1);
+	    fflush(fstatus);fclose(fstatus);exit(1);
 	 }
 	 else
 	 {
@@ -219,7 +219,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
 	 if(action == ERROR_OFF)
 	 {
 	    fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"CTYPE1 and CTYPE2 don't match\"]\n");
-	    exit(1);
+	    fflush(fstatus);fclose(fstatus);exit(1);
 	 }
 	 else
 	 {
@@ -234,7 +234,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
 	 if(action == ERROR_OFF)
 	 {
 	    fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"CTYPE1 and CTYPE2 don't match\"]\n");
-	    exit(1);
+	    fflush(fstatus);fclose(fstatus);exit(1);
 	 }
 	 else
 	 {
@@ -249,7 +249,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
 	 if(action == ERROR_OFF)
 	 {
 	    fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"CTYPE1 and CTYPE2 don't match\"]\n");
-	    exit(1);
+	    fflush(fstatus);fclose(fstatus);exit(1);
 	 }
 	 else
 	 {
@@ -262,7 +262,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
       if(action == ERROR_OFF)
       {
 	 fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Invalid CTYPE1\"]\n");
-	 exit(1);
+	 fflush(fstatus);fclose(fstatus);exit(1);
       }
       else
 	 {
@@ -281,7 +281,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
 	 if(action == ERROR_OFF)
 	 {
 	    fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Invalid CD matrix\"]\n");
-	    exit(1);
+	    fflush(fstatus);fclose(fstatus);exit(1);
 	 }
 	 else
 	 {
@@ -296,7 +296,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
 	 if(action == ERROR_OFF)
 	 {
 	    fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Invalid CDELT1\"]\n");
-	    exit(1);
+	    fflush(fstatus);fclose(fstatus);exit(1);
 	 }
 	 else
 	 {
@@ -309,7 +309,7 @@ int checkWCS(struct WorldCoor *wcs, int action)
 	 if(action == ERROR_OFF)
 	 {
 	    fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Invalid CDELT2\"]\n");
-	    exit(1);
+	    fflush(fstatus);fclose(fstatus);exit(1);
 	 }
 	 else
 	 {

@@ -1,0 +1,288 @@
+#!/bin/bash
+# set -x
+
+# mosaic available at: http://montage.ipac.caltech.edu/
+# js9helper available at: https://js9.si.edu
+
+# clean up on exit or error
+cleanup() {
+  if [ -s $CLEANLST ]; then
+    vlog "cleaning up"
+    for F in `cat $CLEANLST`; do
+      rm -f "$F"
+    done
+    rm -f $CLEANLST
+  fi
+}
+
+# error handler: send to stderr
+error() {
+  echo "ERROR: $*" >&2
+  cleanup
+  exit 1
+}
+
+# vlog output, if necessary
+vlog() {
+  if [ x"$VERBOSE" = xtrue ]; then
+    echo "$*"
+  fi
+}
+
+usage(){
+  echo "$0 [switches] image1 image2 ... imagen ofile"
+  echo "switches:"
+  echo "  -dim [dim]     # shrink using mShrinkHdr or js9helper before reprojecting"
+  echo "  -nopp          # use mProject instead of mProjectPP"
+  echo "  -nojs9         # always use mShrinkHdr, don't use js9helper"
+  echo "  -save          # save logs, tables, and headers"
+  echo "  -v             # verbose output"
+  echo ""
+  exit 0
+}
+
+# init varibles
+DOFAST=true
+BASEDIR=.
+ROOT=_mosaic
+STATUS=${ROOT}_status_$$.log
+INLST=${ROOT}_in_$$.lst
+OUTLST=${ROOT}_out_$$.lst
+INTBL=${ROOT}_in_$$.tbl
+OUTTBL=${ROOT}_out_$$.tbl
+INHDR=${ROOT}_$$.hdr
+OUTHDR=${ROOT}_out_$$.hdr
+LINE1='|                                                    fname|'
+LINE2='|                                                     char|'
+CLEANLST=${ROOT}_clean_$$.lst
+USEJS9=true
+
+# sanity check that we have system programs in the path
+hash mImgtbl mMakeHdr mProjectPP mAdd 1>/dev/null 2>&1
+if [ $? != 0 ]; then
+    error "can't find Montage programs. Check the PATH or install Montage (http://montage.ipac.caltech.edu)"
+fi
+
+# process command line arguments
+while [ x"$1" != x ]; do
+    case $1 in
+	-dim*) shift
+	    DIM=$1
+	    shift
+	    continue;;
+	-nopp) shift
+	    DOFAST=false
+	    continue;;
+	-nojs9) shift
+	    USEJS9=false
+	    continue;;
+	-save) shift
+	    DOSAVE=true
+	    continue;;
+	-v) shift
+	    VERBOSE=true
+	    continue;;
+	*)  break;;
+    esac
+done
+
+# we don't necesssarily use js9helper, but check it we have it
+if [ x"$USEJS9" = xtrue ]; then
+  hash js9helper 1>/dev/null 2>&1
+  if [ $? = 0 ]; then
+    JS9HELPER=true
+  fi
+fi
+
+# required args: FITS file(s) for mosaic and output file
+if [ $# -lt 2 ]; then
+  usage
+fi
+# output file is last argument
+OFILE=${@:$#}
+# input file are all but the last argument
+set -- ${@:1:$(($# - 1))}
+
+# cleanup these files
+if [ x${DOSAVE} = x ]; then
+  echo ${OUTHDR} >> ${CLEANLST}
+  echo ${STATUS} >> ${CLEANLST}
+fi
+
+# choose shrink/bin method:
+# if we have more exactly 1 input file, use js9helper if available
+# if we have more than 1 input file, use shrink instead of js9helper
+if [ x"$DIM" != x ]; then
+  # if we have exactly 1 input file, use js9helper instead of shrink
+  if [ $# = 1 ]; then
+    if [ x"$JS9HELPER" = xtrue ]; then
+      vlog "use js9helper instead of shrink for a single file"
+      DOJS9=true
+      DOSHRINK=false
+    else
+      vlog "use shrink (js9helper not available) for a single file"
+      DOSHRINK=true
+      DOJS9=false
+    fi
+  else
+    vlog "use shrink instead of js9helper for multiple files"
+    DOSHRINK=true
+    DOJS9=false
+  fi
+fi
+
+# generate input list from command line arguments
+echo "$LINE1" >> $INLST
+echo "$LINE2" >> $INLST
+if [ x${DOSAVE} = x ]; then
+  echo ${INLST} >> ${CLEANLST}
+fi
+while [ x"$1" != x ]; do
+  FILE="$1"
+  if [ ! -r "$FILE" ]; then
+    error "$FILE not found"
+  fi
+  if [[ "$FILE" =~ \.fz$ ]]; then 
+    LINK=`echo $FILE | sed 's/\.fz//'`
+    LINK=`basename $LINK`
+    if [ ! -r $LINK ]; then
+      vlog "linking $LINK to $FILE"
+      ln -s $FILE $LINK
+      echo ${LINK} >> ${CLEANLST}
+    fi
+    FILE=$LINK
+  fi
+  echo $FILE >> $INLST
+  shift
+done
+
+vlog "making input table for $FILE"
+if [ x${DOSAVE} = x ]; then
+  echo ${INTBL} >> ${CLEANLST}
+fi
+mImgtbl -t ${INLST} -s ${STATUS} ${BASEDIR} ${INTBL}
+if [ $? != 0 ]; then
+  cat $STATUS
+  exit
+fi
+# make sure input table has FITS files
+if [ ! -s ${INTBL} ]; then
+  error "no FITS files were added to input table"
+fi
+
+vlog "making input header"
+if [ x${DOSAVE} = x ]; then
+  echo ${INHDR} >> ${CLEANLST}
+fi
+mMakeHdr -s ${STATUS} ${INTBL} ${INHDR}
+if [ $? != 0 ]; then
+  cat $STATUS
+  exit
+fi
+
+# auto binning
+if [ x"$DOJS9" = xtrue ]; then
+  BIN=`awk -v dim=$DIM '
+    /^NAXIS1/{ naxis1 = $3}
+    /^NAXIS2/{ naxis2 = $3}
+    END{
+      if( naxis1 > naxis2 ){
+        naxis = naxis1
+      } else {
+        naxis = naxis2
+      }
+      bin = int((naxis / dim) + 0.5)
+      print bin
+    }
+  ' < ${INHDR}`
+  if [ $BIN -le 2 ]; then
+      vlog "small bin ($BIN) warrants use of shrink instead of js9helper"
+      DOSHRINK=true
+      DOJS9=false
+  else
+      vlog "bin factor: $BIN"
+  fi
+fi
+
+# shrink header, if necessary
+if [ x$DOSHRINK = xtrue ]; then
+    # use shrink input header for reprojection
+    vlog "shrink input header using mShrinkHdr $DIM"
+    mShrinkHdr -s ${DIM} ${INHDR} ${OUTHDR}  2>&1 1>/dev/null
+    if [ $? != 0 ]; then
+      error "mShrinkHdr failed: $F"
+    fi
+else
+    # use original input header for reprojection
+    cp -p ${INHDR} ${OUTHDR}
+fi
+
+# header for output list
+echo "$LINE1" >> $OUTLST
+echo "$LINE2" >> $OUTLST
+if [ x${DOSAVE} = x ]; then
+  echo ${OUTLST} >> ${CLEANLST}
+fi
+vlog "processing input table"
+awk < ${INTBL} '/^[^|\\]/{EXT=NF-1; print $NF, $EXT}' | while read F E
+do
+  if [ x$DOJS9 = xtrue ]; then
+    # bin each input image extension into a smaller file before reprojecting
+    vlog "  bin $F[$E] using js9helper $DIM [$BIN]"
+    S=bin_${E}_`basename ${F}`
+    js9helper -i ${F}'['${E}']' imsection \!${S} '0@0,0@0,'"$BIN" 2>&1 1>/dev/null
+    if [ $? != 0 ]; then
+      error "js9helper failed: $F"
+    fi
+    echo ${S} >> ${CLEANLST}
+  else
+    # reproject each extension of the input image
+    S=${F}
+    ARGS="-h ${E}"
+  fi
+  # reproject the (possibly binned or shrunk) image
+  R=reproj_${E}_`basename ${F}`
+  if [ x"$DOFAST" = xtrue ]; then
+    vlog "  mProjectPP ${S} ${ARGS}"
+    mProjectPP $ARGS -s ${STATUS} ${S} ${R} ${OUTHDR}
+  else
+    vlog "  mProject ${S} ${ARGS}"
+    mProject $ARGS -s ${STATUS} ${S} ${R} ${OUTHDR}
+  fi
+  if [ $? != 0 ]; then
+    cat $STATUS
+    exit
+  fi
+  # add reprojected file to output list
+  echo ${R} >> ${OUTLST}
+  R1=`echo ${R} | sed 's/\[[^]]*\]//'`
+  echo ${R1} >> ${CLEANLST}
+  R2=`echo ${R1} | sed 's/\.fits/_area\.fits/'`
+  echo ${R2} >> ${CLEANLST}
+done
+
+vlog "making output table"
+if [ x${DOSAVE} = x ]; then
+  echo ${OUTTBL} >> ${CLEANLST}
+fi
+mImgtbl -t ${OUTLST} -s ${STATUS} ${BASEDIR} ${OUTTBL}
+if [ $? != 0 ]; then
+  cat $STATUS
+  exit
+fi
+# make sure output table has FITS files
+if [ ! -s ${OUTTBL} ]; then
+  error "no FITS files were added to output table"
+  exit
+fi
+
+vlog "making mosaic: ${OFILE}"
+mAdd -s ${STATUS} ${OUTTBL} ${OUTHDR} ${OFILE}
+if [ $? != 0 ]; then
+  cat $STATUS
+  exit
+fi
+echo ${OFILE} | sed 's/\.fits/_area\.fits/' >> ${CLEANLST}
+
+# clean up on exit
+trap cleanup EXIT

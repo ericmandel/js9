@@ -3,7 +3,7 @@ CFLAGS=		-I$(BASE)/include
 LIBS=		-L$(BASE)/lib -lwcs -lcfitsio -lm
 
 MSRCS =		mtest.c \
-		mProjectPP_nomain.c \
+		mProjectPP.c \
 		overlapAreaPP.c \
 		debugCheck.c \
 		checkHdr.c \
@@ -24,9 +24,5 @@ mtest:		$(MOBJS)
 
 clean:		FORCE
 		@(rm -rf $(PROGS) *.o *~ a.out* foo* *.map \#* mProjectPP)
-
-# generate a C file where main is changed to an ordinary subroutine
-nomain:		FORCE
-		@mknomain
 
 FORCE:
