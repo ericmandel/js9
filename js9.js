@@ -6062,7 +6062,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	    nheader = wcsim.raw.header;
 	} else if( wcsim.BITPIX && wcsim.NAXIS1 && wcsim.NAXIS2 ){
 	    // assume its a WCS header
-	nheader = wcsim;
+	    nheader = wcsim;
 	} else {
 	    JS9.error("invalid wcs object input to reproject()");
 	}
