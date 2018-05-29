@@ -3255,9 +3255,9 @@ JS9=function(){var b={NAME:"JS9",VERSION:"2.1",COPYRIGHT:"Copyright (c) 2012-201
 RAWID0:"raw0",RAWIDX:"alt",REPROJDIM:2300,IDFMT:"  (%s)",MINZOOM:.125,MAXZOOM:16,ADDZOOM:.05,CHROMEFILEWARNING:!0};b.TOUCHSUPPORTED=window.hasOwnProperty("ontouchstart")||0<navigator.maxTouchPoints||0<navigator.msMaxTouchPoints;b.BROWSER=function(){var a=navigator.platform,b=navigator.appName,d=navigator.userAgent,e,f=d.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);e=d.match(/version\/([\.\d]+)/i);f&&null!==e&&(f[2]=e[1]);f=f?[f[1],f[2],a]:[b,navigator.appVersion,"-?",a];f.push(/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(d));
 return f}();b.PIXEL_RATIO=function(){var a=document.createElement("canvas").getContext("2d");return(window.devicePixelRatio||1)/(a.webkitBackingStorePixelRatio||a.mozBackingStorePixelRatio||a.msBackingStorePixelRatio||a.oBackingStorePixelRatio||a.backingStorePixelRatio||1)}();b.globalOpts={helperType:"none",helperPort:2718,useWasm:!0,winType:"light",rgb:{active:!1,rim:null,gim:null,bim:null},defcolor:"#00FF00",pngisfits:!0,fits2fits:"never",fits2png:!1,alerts:!0,internalValPos:!0,internalContrastBias:!0,
 containContrastBias:!1,htimeout:5E3,lhtimeout:1E3,ehtimeout:1E3,ehretries:10,xtimeout:18E4,extlist:"EVENTS STDEVT",table:{xdim:2048,ydim:2048,bin:1},image:{xdim:2048,ydim:2048,bin:1},clearImageMemory:"never",helperProtocol:location.protocol,maxMemory:75E7,corsURL:"params/loadcors.html",proxyURL:"params/loadproxy.html",loadProxy:!1,archivesURL:"help/archives.html",imsectionURL:"params/imsection.html",postMessage:!1,waitType:"spinner",spinColor:"#FF0000",spinOpacity:.35,resize:!0,resizeHandle:!0,resizeRedisplay:!0,
-cloneNewDisplay:!0,regionConfigSize:"medium",refreshDragDrop:!0,mouseActions:["display value/position","change contrast/bias","pan the image"],touchActions:["display value/position","change contrast/bias","pan the image"],keyboardActions:{b:"toggle selected region: source/background",e:"toggle selected region: include/exclude",f:"display full image",r:"refresh image","/":"copy wcs position to clipboard","?":"copy value and position to clipboard",0:"reset zoom","=":"zoom in","+":"zoom in","-":"zoom out",
-"^":"raise region layer to top",">":"display next image","<":"display previous image","delete":"remove selected region",leftArrow:"move selected region left",upArrow:"move selected region up",rightArrow:"move selected region right",downArrow:"move selected region down"},mousetouchZoom:!1,toolbarTooltips:!1,centerDivs:["JS9Menubar"],pinchWait:8,pinchThresh:6,extendedPlugins:!0,corsProxy:"https://js9.si.edu/cgi-bin/CORS-proxy.cgi",simbadProxy:"https://js9.si.edu/cgi-bin/simbad-proxy.cgi",catalogs:{ras:["RA",
-"_RAJ2000","RAJ2000"],decs:["Dec","_DEJ2000","DEJ2000"],shape:"circle",color:"yellow",width:7,height:7,radius:3.5,r1:5,r2:3.5,wcssys:"ICRS",skip:"#\n",save:!0,tooltip:"$xreg.data.ra $xreg.data.dec"},topColormaps:"grey heat cool viridis magma sls red green blue".split(" "),infoBox:"file object wcsfov wcscen wcspos impos physpos value regions progress".split(" "),menuBar:"file view zoom scale color region wcs analysis help".split(" "),toolBar:"linear log annulus box circle ellipse line polygon remove incexcl srcbkgd zoomin zoomout zoom1".split(" "),
+cloneNewDisplay:!0,regionConfigSize:"medium",refreshDragDrop:!0,copyWcsPosFormat:"$ra $dec $sys",mouseActions:["display value/position","change contrast/bias","pan the image"],touchActions:["display value/position","change contrast/bias","pan the image"],keyboardActions:{b:"toggle selected region: source/background",e:"toggle selected region: include/exclude",f:"display full image",r:"refresh image","/":"copy wcs position to clipboard","?":"copy value and position to clipboard",0:"reset zoom","=":"zoom in",
+"+":"zoom in","-":"zoom out","^":"raise region layer to top",">":"display next image","<":"display previous image","delete":"remove selected region",leftArrow:"move selected region left",upArrow:"move selected region up",rightArrow:"move selected region right",downArrow:"move selected region down"},mousetouchZoom:!1,toolbarTooltips:!1,centerDivs:["JS9Menubar"],pinchWait:8,pinchThresh:6,extendedPlugins:!0,corsProxy:"https://js9.si.edu/cgi-bin/CORS-proxy.cgi",simbadProxy:"https://js9.si.edu/cgi-bin/simbad-proxy.cgi",
+catalogs:{ras:["RA","_RAJ2000","RAJ2000"],decs:["Dec","_DEJ2000","DEJ2000"],shape:"circle",color:"yellow",width:7,height:7,radius:3.5,r1:5,r2:3.5,wcssys:"ICRS",skip:"#\n",save:!0,tooltip:"$xreg.data.ra $xreg.data.dec"},topColormaps:"grey heat cool viridis magma sls red green blue".split(" "),infoBox:"file object wcsfov wcscen wcspos impos physpos value regions progress".split(" "),menuBar:"file view zoom scale color region wcs analysis help".split(" "),toolBar:"linear log annulus box circle ellipse line polygon remove incexcl srcbkgd zoomin zoomout zoom1".split(" "),
 hiddenPluginDivs:[],separate:{layout:"auto",leftMargin:10,topMargin:10},imageTemplates:".fits,.fts,.png,.jpg,.jpeg",regionTemplates:".reg",sessionTemplates:".ses,.js9ses",colormapTemplates:".cmap",catalogTemplates:".cat,.tab",controlsMatchRegion:!1,newWindowWidth:530,newWindowHeight:625,debug:0};b.imageOpts={inherit:!1,contrast:1,bias:.5,invert:!1,exp:1E3,colormap:"grey",scale:"linear",scaleclipping:"dataminmax",zscalecontrast:.25,zscalesamples:600,zscaleline:120,wcssys:"native",wcsunits:"sexagesimal",
 lcs:"physical",valpos:!0,opacity:1,sigma:"none",maskOpacity:.4,alpha:255,alpha1:100,zoom:1,zooms:5,nancolor:"#000000",wcsalign:!0,rotationMode:"relative",ltvbug:!0,listonchange:!1};b.regionOpts={};b.emscriptenOpts={};b.analOpts={epattern:/^(ERROR:[^\n]*)\n/,dpathURL:"params/datapath.html",fpathURL:"params/filepath.html",prependJS9Dir:!0,dataDir:null};b.lightOpts={nclick:0,dhtml:{top:".dhtmlwindow",drag:".drag-contentarea",dragBar:"drag-handle",format:"width=%spx,height=%spx,center=1,resize=%s,scrolling=0",
 textWin:"width=830px,height=400px,center=1,resize=1,scrolling=1",plotWin:"width=830px,height=420px,center=1,resize=1,scrolling=1",dpathWin:"width=830px,height=175px,center=1,resize=1,scrolling=1",paramWin:"width=830px,height=235px,center=1,resize=1,scrolling=1",regWin0:"width=600px,height=72px,center=1,resize=1,scrolling=1",regWin:"width=600px,height=235px,center=1,resize=1,scrolling=1",imageWin:"width=512px,height=598px,center=1,resize=1,scrolling=1",lineWin:"width=400px,height=60px,center=1,resize=1,scrolling=1"}};
@@ -7189,13 +7189,20 @@ JS9.Keyboard.Actions = {};
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt){
-    var s;
+    var s, arr, opts;
     // sanity check
     if( !im || !im.raw.wcs ){
 	return;
     }
     // get wcs coords of current position
     s = JS9.pix2wcs(im.raw.wcs, ipos.x, ipos.y).trim();
+    if( JS9.globalOpts.copyWcsPosFormat ){
+	arr = s.split(/\s+/);
+	opts = [{name: "ra",  value: arr[0]},
+		{name: "dec", value: arr[1]},
+		{name: "sys", value: arr[2]}];
+	s = im.expandMacro(JS9.globalOpts.copyWcsPosFormat, opts);
+    }
     // copy to clipboard
     JS9.CopyToClipboard(s);
     return s;
@@ -11039,6 +11046,10 @@ JS9.Prefs.displaysSchema = {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
 	},
+	"copyWcsPosFormat": {
+	    "type": "string",
+	    "helper": "format string using: $ra $dec $sys"
+	},
 	"regionConfigSize": {
 	    "type": "string",
 	    "helper": "size of region dialog: small, medium"
@@ -11131,6 +11142,7 @@ JS9.Prefs.init = function(){
 			   touchActions: JS9.globalOpts.touchActions,
 			   keyboardActions: JS9.globalOpts.keyboardActions,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
+			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
 			   infoBox: JS9.globalOpts.infoBox,
 			   toolBar: JS9.globalOpts.toolBar,

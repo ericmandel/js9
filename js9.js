@@ -141,6 +141,7 @@ JS9.globalOpts = {
     cloneNewDisplay: true,      // clone size of display, when possible?
     regionConfigSize: "medium", // "small", "medium"
     refreshDragDrop: true,	// refresh on drag/drag and open file?
+    copyWcsPosFormat: "$ra $dec $sys", // format for copy wcs pos to clipboard
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     keyboardActions: {

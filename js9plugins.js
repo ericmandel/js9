@@ -3373,13 +3373,20 @@ JS9.Keyboard.Actions = {};
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt){
-    var s;
+    var s, arr, opts;
     // sanity check
     if( !im || !im.raw.wcs ){
 	return;
     }
     // get wcs coords of current position
     s = JS9.pix2wcs(im.raw.wcs, ipos.x, ipos.y).trim();
+    if( JS9.globalOpts.copyWcsPosFormat ){
+	arr = s.split(/\s+/);
+	opts = [{name: "ra",  value: arr[0]},
+		{name: "dec", value: arr[1]},
+		{name: "sys", value: arr[2]}];
+	s = im.expandMacro(JS9.globalOpts.copyWcsPosFormat, opts);
+    }
     // copy to clipboard
     JS9.CopyToClipboard(s);
     return s;
@@ -7223,6 +7230,10 @@ JS9.Prefs.displaysSchema = {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
 	},
+	"copyWcsPosFormat": {
+	    "type": "string",
+	    "helper": "format string using: $ra $dec $sys"
+	},
 	"regionConfigSize": {
 	    "type": "string",
 	    "helper": "size of region dialog: small, medium"
@@ -7315,6 +7326,7 @@ JS9.Prefs.init = function(){
 			   touchActions: JS9.globalOpts.touchActions,
 			   keyboardActions: JS9.globalOpts.keyboardActions,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
+			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
 			   infoBox: JS9.globalOpts.infoBox,
 			   toolBar: JS9.globalOpts.toolBar,

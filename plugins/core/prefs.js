@@ -321,6 +321,10 @@ JS9.Prefs.displaysSchema = {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
 	},
+	"copyWcsPosFormat": {
+	    "type": "string",
+	    "helper": "format string using: $ra $dec $sys"
+	},
 	"regionConfigSize": {
 	    "type": "string",
 	    "helper": "size of region dialog: small, medium"
@@ -413,6 +417,7 @@ JS9.Prefs.init = function(){
 			   touchActions: JS9.globalOpts.touchActions,
 			   keyboardActions: JS9.globalOpts.keyboardActions,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
+			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
 			   infoBox: JS9.globalOpts.infoBox,
 			   toolBar: JS9.globalOpts.toolBar,
