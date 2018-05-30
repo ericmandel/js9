@@ -115,6 +115,7 @@ JS9.globalOpts = {
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
+    crosshair: false,		// display wcs crosshair?
     htimeout: 5000,		// connection timeout for the helper connect
     lhtimeout: 1000,		// connection timeout for local helper connect
     ehtimeout: 1000,		// connection timeout for Electron connect
@@ -237,6 +238,10 @@ JS9.imageOpts = {
 
 // allows regions opts (in Regions.opts) to be overridden via js9prefs.js
 JS9.regionOpts = {};
+// allows catalog opts (in Catalogs.opts) to be overridden via js9prefs.js
+JS9.catalogOpts = {};
+// allows crosshair opts (in Crosshair.opts) to be overridden via js9prefs.js
+JS9.crosshairOpts = {};
 // allows emscripten opts (in Module) to be overridden via js9prefs.js
 JS9.emscriptenOpts = {};
 
@@ -13752,6 +13757,141 @@ JS9.Catalogs.opts = {
 };
 
 // ---------------------------------------------------------------------
+// Crosshair object displays a wcs-aligned crosshair on other displays
+// ---------------------------------------------------------------------
+
+JS9.Crosshair = {};
+JS9.Crosshair.CLASS = "JS9";
+JS9.Crosshair.NAME = "Crosshair";
+JS9.Crosshair.layerName = "crosshair";
+
+// defaults for crosshair layer
+JS9.Crosshair.opts = {
+    // override fabric defaults
+    hasControls: false,
+    hasRotatingPoint: false,
+    hasBorders: false,
+    // evented: false,
+    // user does not move the crosshair
+    lockMovementX: true,
+    lockMovementY: true,
+    lockRotation: true,
+    lockScalingX: true,
+    lockScalingY: true,
+    lockUniScaling: true,
+    selectable: false,
+    // canvas options
+    canvas: {
+	selection: false
+    },
+    // don't update WCS strings
+    updateWCS: false,
+    // pan and zoom enabled
+    panzoom: false,
+    // general
+    strokeWidth: 1,
+    // stroke color
+    color: "#00FF00",
+    // should overlapping shapes be sorted (smallest on top)?
+    sortOverlapping: false
+};
+
+// display: display crosshair as the mouse moves
+// eslint-disable-next-line no-unused-vars
+JS9.Crosshair.display = function(im, ipos, evt){
+    var i, arr, cim, ra, dec, w, h, x, y, hopts, vopts;
+    var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
+    var layername = JS9.Crosshair.layerName;
+    // if crosshair mode is on and this image has wcs ...
+    if( JS9.globalOpts.crosshair && im && im.raw.wcs && im.raw.wcs > 0 ){
+	// get wcs coords of current mouse position
+	arr = JS9.pix2wcs(im.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
+	ra = JS9.saostrtod(arr[0]);
+	if( (String.fromCharCode(JS9.saodtype()) === ":") &&
+	    (im.params.wcssys !== "galactic" )     &&
+	    (im.params.wcssys !== "ecliptic" )     ){
+	    ra *= 15.0;
+	}
+	dec = JS9.saostrtod(arr[1]);
+	// for each displayed image ...
+	for(i=0; i<JS9.displays.length; i++){
+	    cim = JS9.displays[i].image;
+	    if( cim && cim.crosshair ){
+		if( cim === im && cim.crosshair.visible ){
+		    // on entering a display, hide crosshair if necessary
+		    cim.changeShapes(layername, cim.crosshair.h, opts);
+		    cim.changeShapes(layername, cim.crosshair.v, opts);
+		    cim.crosshair.visible = false;
+		} else if( cim !== im ){
+		    // if the ra, dec pos is on this image, display crosshair
+		    w = cim.raw.width;
+		    h = cim.raw.height;
+		    // convert wcs pos to image pos for this image
+		    arr = JS9.wcs2pix(cim.raw.wcs, ra, dec).trim().split(/\s+/);
+		    x = parseFloat(arr[0]);
+		    y = parseFloat(arr[1]);
+		    // if image pos is within the image boundaries ...
+		    if( x > 0 && x < w && y > 0 && y < h ){
+			// draw the crosshair, centered on the image pos
+			hopts = {pts: [{x: 0, y: y}, {x: w, y: y}]};
+			cim.changeShapes(layername, cim.crosshair.h, hopts);
+			vopts = {pts: [{x: x, y: 0}, {x: x, y: h}]};
+			cim.changeShapes(layername, cim.crosshair.v, vopts);
+			cim.crosshair.visible = true;
+		    }
+		}
+	    }
+	}
+    }
+};
+
+// hide: move the crosshair out of the display
+// eslint-disable-next-line no-unused-vars
+JS9.Crosshair.hide = function(im, ipos, evt){
+    var i, cim;
+    var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
+    var layername = JS9.Crosshair.layerName;
+    // for each displayed image ...
+    for(i=0; i<JS9.displays.length; i++){
+	cim = JS9.displays[i].image;
+	// if the crosshair is visble ...
+	if( cim && (cim !== im) && cim.crosshair.visible ){
+	    // move it off the display
+	    cim.changeShapes(layername, cim.crosshair.h, opts);
+	    cim.changeShapes(layername, cim.crosshair.v, opts);
+	    cim.crosshair.visible = false;
+	}
+    }
+};
+
+// image load: create the cross hair for this image
+JS9.Crosshair.create = function(im){
+    var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
+    var layername = JS9.Crosshair.layerName;
+    if( im && !im.crosshair ){
+	// create the crosshair object for this image
+	im.crosshair = {};
+	// create the crosshair, but don't display it yet
+	im.crosshair.h = im.addShapes(layername, "line", opts);
+	im.crosshair.v = im.addShapes(layername, "line", opts);
+	im.crosshair.visible = false;
+    }
+};
+
+// init: create the shape layer for this display
+JS9.Crosshair.init = function(){
+    var i;
+    var layername = JS9.Crosshair.layerName;
+    // init the crosshair shape layer, but only once per display
+    for(i=0; i<JS9.displays.length; i++){
+	if( !JS9.displays[i].layers.crosshair ){
+	    JS9.displays[i].newShapeLayer(layername, JS9.Crosshair.opts);
+	}
+    }
+    return this;
+};
+
+// ---------------------------------------------------------------------
 // Utilities
 // ---------------------------------------------------------------------
 
@@ -17155,6 +17295,12 @@ JS9.init = function(){
     // if JS9 prefs have regionOpts, transfer them to Regions.opts
     $.extend(true, JS9.Regions.opts, JS9.regionOpts);
     delete JS9.regionOpts;
+    // if JS9 prefs have catalogOpts, transfer them to Catalogs.opts
+    $.extend(true, JS9.Catalogs.opts, JS9.catalogOpts);
+    delete JS9.catalogOpts;
+    // if JS9 prefs have crosshairOpts, transfer them to Crosshair.opts
+    $.extend(true, JS9.Crosshair.opts, JS9.crosshairOpts);
+    delete JS9.crosshairOpts;
     // if JS9 prefs have emscriptenOpts, transfer them to Module
     $.extend(true, Module, JS9.emscriptenOpts);
     delete JS9.emscriptenOpts;
@@ -17289,6 +17435,12 @@ JS9.init = function(){
     JS9.RegisterPlugin(JS9.Regions.CLASS, JS9.Regions.NAME,
 		       JS9.Regions.init,
 		       {divArgs: ["regions"],
+			winDims: [0, 0]});
+    JS9.RegisterPlugin(JS9.Crosshair.CLASS, JS9.Crosshair.NAME,
+		       JS9.Crosshair.init,
+		       {onmousemove: JS9.Crosshair.display,
+			onmouseout:  JS9.Crosshair.hide,
+			onimageload: JS9.Crosshair.create,
 			winDims: [0, 0]});
     // find divs associated with each plugin and run the constructor
     JS9.instantiatePlugins();
