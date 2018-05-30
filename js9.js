@@ -10253,7 +10253,13 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     }
     // once a shape has been added, we can set the zindex to process events
     if( !canvas.size() ){
-        layer.zindex = this.zlayer++;
+	if( layerName === JS9.Crosshair.layerName ){
+	    // crosshair should never cover any other layer
+	    layer.zindex = 1;
+	} else {
+	    // otherwise this layer goes to the top
+            layer.zindex = this.zlayer++;
+	}
 	dlayer = this.display.layers[layerName];
         dlayer.divjq.css("z-index", layer.zindex);
 	// we can now call the shape layer create plugin callbacks
