@@ -60,7 +60,7 @@ JS9.RESIZEDIST = 20;		// size of rectangle defining resize handle
 JS9.RESIZEFUDGE = 5;            // fudge for webkit resize problems
 JS9.RAWID0 = "raw0";		// default raw id
 JS9.RAWIDX = "alt";		// default "alternate" raw id
-JS9.REPROJDIM = 2300;		// max dimension for reprojection
+JS9.REPROJDIM = 2048;		// max dim for reproj before we shrink image
 JS9.IDFMT = "  (%s)";           // format for light window id
 JS9.MINZOOM = 0.125;		// min zoom using scrool wheel
 JS9.MAXZOOM = 16.0;		// max zoom using scrool wheel
@@ -456,6 +456,7 @@ if( JS9.BROWSER[3] ){
     JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 350000000);
     JS9.globalOpts.image.xdim = 2048 * 2;
     JS9.globalOpts.image.ydim = 2048 * 2;
+    JS9.REPROJDIM = 1024;
 }
 
 // ---------------------------------------------------------------------
@@ -1124,6 +1125,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     var i, s, idx, offscreen, dlen, mode, tval,  getfunc, littleEndian;
     var card, pars, clen;
     var realpng, hstr, hstrs = [];
+    var nhist=0, ncomm=0;
     // memory array of 8 bytes
     var abuf = new ArrayBuffer(8);
     // we will transfer unsigned bytes from the png file into the mem array
@@ -1190,7 +1192,13 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 	    card = this.raw.cardstr.slice(i*80, (i+1)*80);
 	    pars = JS9.cardpars(card);
 	    if( pars !== undefined ){
-		this.raw.header[pars[0]] = pars[1];
+		if( pars[0] === "HISTORY" ){
+		    this.raw.header[pars[0]+'__'+nhist++] = pars[1];
+		} else if( pars[0] === "COMMENT" ){
+		    this.raw.header[pars[0]+'__'+ncomm++] = pars[1];
+		} else {
+		    this.raw.header[pars[0]] = pars[1];
+		}
 	    }
 	}
     }
@@ -1537,6 +1545,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     } else if( obitpix ){
 	this.raw.bitpix = obitpix;
     }
+
     // if the data is base64-encoded, decode it now
     if( hdu.encoding === "base64" ){
 	s = window.atob(hdu.image);
@@ -3357,7 +3366,7 @@ JS9.Image.prototype.toArray = function(){
     var header, npad, arr, buf, dbuf, _dbuf;
     dbuf = this.raw.data.buffer;
     // get header
-    header = JS9.raw2FITS(this.raw);
+    header = JS9.raw2FITS(this.raw, {simple: true});
     // append padding to header now
     npad = 2880 - (header.length % 2880);
     if( npad === 2880 ){ npad = 0; }
@@ -5992,6 +6001,11 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     // old and new header
     oheader = this.raw.header;
     nheader = $.extend(true, {}, oheader);
+    // restrict size of reprojection to raw data size
+    if( this.raw.width && this.raw.height ){
+	nheader.NAXIS1 = this.raw.width;
+	nheader.NAXIS2 = this.raw.height;
+    }
     // normalized values from wcslib
     if( this.raw.wcsinfo ){
 	ocdelt1 = this.raw.wcsinfo.cdelt1 || 0;
@@ -6037,7 +6051,7 @@ JS9.Image.prototype.rotateData = function(angle, opts){
 JS9.Image.prototype.reproject = function(wcsim, opts){
     var twcs = {};
     var rcomplete = false;
-    var awvfile, awvfile2, wvfile, owvfile;
+    var awvfile, awvfile2, wvfile, owvfile, nwvfile;
     var wcsheader, wcsstr, oheader, nheader;
     var arr, ivfile, ovfile, rstr, key;
     var tab, tx1, tx2, ty1, ty2, s;
@@ -6086,15 +6100,25 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	    // JS9.error("invalid FITS image header");
 	    return;
 	}
-	// keep within the limits of current memory constraints
-	if((wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.REPROJDIM*JS9.REPROJDIM)){
-	    JS9.error("for now, the max image size for reprojection is approximately " + JS9.REPROJDIM  + " * " + JS9.REPROJDIM);
-	}
 	// convert reprojection header to a string
-	wcsstr = JS9.raw2FITS(wcsheader, true);
+	wcsstr = JS9.raw2FITS(wcsheader, {addcr: true});
 	// create vfile text file containing reprojection WCS
 	wvfile = "wcs_" + JS9.uniqueID() + ".txt";
 	JS9.vfile(wvfile, wcsstr);
+	// keep within the limits of current memory constraints, or die
+	if((wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.REPROJDIM*JS9.REPROJDIM)){
+	    if( opts.shrink !== false ){
+		// shrink header, which will shrink the output FITS file
+		nwvfile = "shrink_" + wvfile;
+		rstr = JS9.shrinkhdr(JS9.REPROJDIM, wvfile, nwvfile);
+		if( rstr.search(/\[struct stat="OK"/) >= 0 ){
+		    Astroem.vunlink(wvfile);
+		    wvfile = nwvfile;
+		}
+	    } else {
+		JS9.error("without allowing shrinking, the max image size for wcs reprojection is " + JS9.REPROJDIM  + " * " + JS9.REPROJDIM);
+	    }
+	}
     } else {
 	wvfile = wcsim;
     }
@@ -6104,7 +6128,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	// try to change input WCS to a sys usable by mProjectPP
 	if( !ptypeexp.test(this.raw.wcsinfo.ptype) ){
 	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
-	    JS9.vfile(owvfile, JS9.raw2FITS(this.raw.header, true));
+	    JS9.vfile(owvfile, JS9.raw2FITS(this.raw.header, {addcr: true}));
 	    awvfile = "awcs_" + JS9.uniqueID() + ".txt";
 	    rstr = JS9.tanhdr(owvfile, awvfile, "");
 	    if( JS9.DEBUG > 1 ){
@@ -6122,7 +6146,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	if( (wcsim.raw && !ptypeexp.test(wcsim.raw.wcsinfo.ptype)) ||
 	    (wcsim.ptype && !ptypeexp.test(wcsim.ptype))           ){
 	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
-	    JS9.vfile(owvfile, JS9.raw2FITS(nheader, true));
+	    JS9.vfile(owvfile, JS9.raw2FITS(nheader, {addcr: true}));
 	    awvfile2 = "awcs_" + JS9.uniqueID() + ".txt";
 	    rstr = JS9.tanhdr(owvfile, awvfile2, "");
 	    if( JS9.DEBUG > 1 ){
@@ -8199,7 +8223,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	if( opts.verbose || JS9.DEBUG > 1 ){
 	    s = sprintf.apply(null, arguments);
 	    // eslint-disable-next-line no-console
-	    console.log(s);
+	    JS9.log(s);
 	}
     };
     // opts is optional
@@ -15202,47 +15226,67 @@ JS9.cardpars = function(card){
 };
 
 // convert obj to FITS-style string
-JS9.raw2FITS = function(raw, forDisplay){
-    var i, obj, key, val, card, s, obp;
+JS9.raw2FITS = function(raw, opts){
+    var i, obj, key, val, card, ncard;
     var hasend=false;
     var t="";
+    var fixparam = function(card, name, val, comm){
+	var s, oval, regexp;
+	var ncard = card;
+	if( name === "XTENSION" && !val ){
+	    ncard = sprintf("%s  = %20s / %-47s",
+			    "SIMPLE",
+			    "T",
+			    "file does conform to FITS standard");
+
+	} else {
+	    regexp = new RegExp(name +  "*= *(-?[0-9][0-9]*) *");
+	    s = card.replace(regexp, "$1");
+	    oval = parseInt(s, 10);
+	    if( oval !== val ){
+		ncard = sprintf("%s  = %20s / %-47s", name, val, comm||"");
+	    }
+	}
+	return ncard;
+    };
     // sanity check
     if( !raw ){
 	return t;
     }
-    if( raw.card ){
-	// raw.card has comments, so use this if we are displaying header
-	for(i=0; i<raw.card.length; i++){
-	    card = raw.card[i];
-	    t += card;
-	    if( card.substring(0,4) === "END " ){
-		hasend = true;
-	    }
-	    if( forDisplay ){
-		t += "\n";
-	    }
+    // opts is optional
+    opts = opts || {};
+    // backward compatibility: orig. version used boolean to specify addcr
+    if( typeof opts === "boolean" ){
+	opts = {addcr: opts};
+    }
+    // raw.card and raw.cardstr contain comments, so use them if possible
+    if( raw.card || raw.cardstr ){
+	if( raw.card ){
+	    ncard = raw.card.length;
+	} else {
+	    ncard = raw.ncard;
 	}
-    } else if( raw.cardstr ){
-	// raw.cardstr has comments, so use this if we are displaying header
-	for(i=0; i<raw.ncard; i++){
-	    card = raw.cardstr.slice(i*80, (i+1)*80);
-	    // hack: if bitpix was changed by a raw data layer, fix it now
-	    if( card.match(/^BITPIX/) && raw.bitpix ){
-		s = card.replace(/BITPIX *= *(-?[0-9][0-9]*) */, "$1");
-		obp = parseInt(s, 10);
-		if( obp !== raw.bitpix ){
-		    t += sprintf("BITPIX  = %20s / %-47s",
-				 raw.bitpix, "bits/pixel");
-		} else {
-		    t += card;
-		}
+	for(i=0; i<ncard; i++){
+	    if( raw.card ){
+		card = raw.card[i].slice(0, 80);
+	    } else {
+		card = raw.cardstr.slice(i*80, (i+1)*80);
+	    }
+	    if( card.match(/^XTENSION/) && i === 0 && opts.simple ){
+		t += fixparam(card, "XTENSION");
+	    } else if( card.match(/^BITPIX/) && raw.bitpix ){
+		t += fixparam(card, "BITPIX", raw.bitpix, "bits/pixel");
+	    } else if( card.match(/^NAXIS1/) && raw.width ){
+		t += fixparam(card, "NAXIS1", raw.width, "x image dim");
+	    } else if( card.match(/^NAXIS2/) && raw.height ){
+		t += fixparam(card, "NAXIS2", raw.height, "y image dim");
 	    } else {
 		t += card;
 	    }
 	    if( card.substring(0,4) === "END " ){
 		hasend = true;
 	    }
-	    if( forDisplay ){
+	    if( opts.addcr ){
 		t += "\n";
 	    }
 	}
@@ -15267,7 +15311,7 @@ JS9.raw2FITS = function(raw, forDisplay){
 		val = "F";
 	    }
 	    t += sprintf("%-8s%-2s%-70s", "SIMPLE", "=", val);
-	    if( forDisplay ){ t += "\n"; }
+	    if( opts.addcr ){ t += "\n"; }
 	}
 	if( obj.BITPIX !== undefined || obj.bitpix !== undefined ){
 	    if( obj.BITPIX !== undefined ){
@@ -15276,7 +15320,7 @@ JS9.raw2FITS = function(raw, forDisplay){
 		val = obj.bitpix;
 	    }
 	    t += sprintf("%-8s%-2s%-70s", "BITPIX", "=", val);
-	    if( forDisplay ){ t += "\n"; }
+	    if( opts.addcr ){ t += "\n"; }
 	}
 	for( key in obj ){
 	    if( obj.hasOwnProperty(key) ){
@@ -15305,7 +15349,7 @@ JS9.raw2FITS = function(raw, forDisplay){
 		    }
 		    t += sprintf("%-8s%-2s%-70s", key, "=", val);
 		}
-		if( forDisplay ){
+		if( opts.addcr ){
 		    t += "\n";
 		}
 	    }
@@ -15314,7 +15358,7 @@ JS9.raw2FITS = function(raw, forDisplay){
     // add end card, if necessary
     if( !hasend ){
 	t += sprintf("%-8s%-72s", "END", " ");
-	if( forDisplay ){
+	if( opts.addcr ){
 	    t += "\n";
 	}
     }
@@ -18567,7 +18611,7 @@ JS9.mkPublic("GetFITSHeader", function(flag){
     var im = JS9.getImage(obj.display);
     if( im && im.raw ){
 	flag = obj.argv[0];
-	s = JS9.raw2FITS(im.raw, flag);
+	s = JS9.raw2FITS(im.raw, {addcr: flag});
     }
     return s;
 });

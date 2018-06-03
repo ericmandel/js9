@@ -4868,8 +4868,8 @@ JS9.Menubar.init = function(width, height){
 			    if( uim ){
 				if( uim.raw.header ){
 				    uim.displayAnalysis("text",
-						   JS9.raw2FITS(uim.raw, true),
-						   {title: "FITS Header: "+uim.id});
+					JS9.raw2FITS(uim.raw, {addcr: true}),
+					{title: "FITS Header: "+uim.id});
 				} else {
 				    JS9.error("no FITS header for " + uim.id);
 				}

@@ -1974,6 +1974,7 @@ The <b>opts</b> object can contain the following reproject-specific properties:
 <ul>
 <li><b>rawid</b>: the id of the raw data layer to create (default: "reproject")
 <li><b>cmdswitches</b>: a string containing mProjectPP command line switches
+<li><b>shrink</b>: allow image to be made smaller to avoid memory limits
 </ul>
 The cmdswitches will be prepended to the mProjectPP command line. For example:
 <pre>
@@ -1990,11 +1991,21 @@ documentation for more information about command switches.
 
 <p>
 Reprojection is an intensive process which can take a considerable
-amount of memory and processing time. To avoid crashes, we currently
+amount of memory and processing time. To avoid memory crashes, we
 restrict the WCS image size used for reprojection to a value defined
-by JS9.REPROJDIM, currently 2300 x 2300. Even this might be too large
-for iOS devices under certain circumstances, although issues regarding
-memory are evolving rapidly.
+by JS9.REPROJDIM, currently 2048 x 2048. (For iOS devices, the limit
+is set to 1024 x 1024.) If the WCS image exceeds this size, the WCS
+(and hence the output image) will be shrunk down to the value of
+JS9.REPROJDIM x JS9.REPROJDIM, i.e. the output image will be binned to
+a smaller size so that memory limits are not exceeded. You can set
+the <b>shrink</b> property of <b>opts</b> to false if you would
+prefer that JS9 throw an error in these circumstances.
+
+<p>
+That said, reprojection of large images probably will not give very
+satisfactory results: processing will take a long time and the resulting
+image might be binned to unacceptably low resolution. We will continue
+to improve the JS9 reprojection capability as the technology evolves.
 
 <h5 id="JS9.RotateData">Rotate an image around the  WCS CRPIX point</h5>
 <p>
@@ -4011,7 +4022,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: May 1, 2018</h5>
+<h5>Last updated: June 3, 2018</h5>
 </div>
 
 </body>
