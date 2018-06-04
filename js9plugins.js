@@ -3971,7 +3971,7 @@ JS9.RegisterPlugin(JS9.Layers.CLASS, JS9.Layers.NAME, JS9.Layers.init,
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, JS9 */
+/*global $, JS9, fabric */
 
 // create our namespace, and specify some meta-information and params
 JS9.Magnifier = {};
@@ -4151,6 +4151,16 @@ JS9.Magnifier.display = function(im, ipos){
     // display magnifier image
     magDisp.context.clear();
     magDisp.context.drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh);
+    // overlay regions by drawing the fabric.js canvas into the magnifier
+    if( JS9.globalOpts.magnifierRegions &&
+	im.display.layers && im.display.layers.regions ){
+	canvas = im.display.layers.regions.canvas.getElement();
+	sx *= fabric.devicePixelRatio;
+	sy *= fabric.devicePixelRatio;
+	sw *= fabric.devicePixelRatio;
+	sh *= fabric.devicePixelRatio;
+	magDisp.context.drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh);
+    }
     // stuff we only do once
     if( !im.magnifier.boxid ){
 	// add the center point to the magnifier, if necessary
@@ -7259,6 +7269,10 @@ JS9.Prefs.displaysSchema = {
 	"toolbarTooltips": {
 	    "type": "boolean",
 	    "helper": "show tooltips in Toolbar plugin?"
+	},
+	"magnifierRegions": {
+	    "type": "boolean",
+	    "helper": "show regions in magnifier?"
 	}
     }
 };
@@ -7331,6 +7345,7 @@ JS9.Prefs.init = function(){
 	    source.data = {fits2png: JS9.globalOpts.fits2png,
 			   fits2fits: JS9.globalOpts.fits2fits,
 			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
+			   magnifierRegions: JS9.globalOpts.magnifierRegions,
 			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,

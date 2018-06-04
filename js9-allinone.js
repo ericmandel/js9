@@ -3254,8 +3254,8 @@ $jscomp.polyfill("Array.prototype.fill",function(b){return b?b:function(a,b,d){v
 JS9=function(){var b={NAME:"JS9",VERSION:"2.1",COPYRIGHT:"Copyright (c) 2012-2018 Smithsonian Institution",DEFID:"JS9",WIDTH:512,HEIGHT:512,ANON:"Anonymous",PREFSFILE:"js9Prefs.json",WORKERFILE:"js9worker.js",ZINDEX:0,SHAPEZINDEX:4,MESSZINDEX:80,BTNZINDEX:90,MENUZINDEX:1E3,COLORSIZE:1024,SCALESIZE:16384,INVSIZE:1024,HISTSIZE:16384,INSTALLDIR:"",TOROOT:"",PLUGINS:"",LIGHTWIN:"dhtml",ANTIALIAS:!1,SCALEIREG:!0,NOMOVE:3,DBLCLICK:300,TIMEOUT:250,SPINOUT:250,SUPERMENU:/^SUPERMENU_/,RESIZEDIST:20,RESIZEFUDGE:5,
 RAWID0:"raw0",RAWIDX:"alt",REPROJDIM:2048,IDFMT:"  (%s)",MINZOOM:.125,MAXZOOM:16,ADDZOOM:.05,CHROMEFILEWARNING:!0};b.TOUCHSUPPORTED=window.hasOwnProperty("ontouchstart")||0<navigator.maxTouchPoints||0<navigator.msMaxTouchPoints;b.BROWSER=function(){var a=navigator.platform,b=navigator.appName,d=navigator.userAgent,e,f=d.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);e=d.match(/version\/([\.\d]+)/i);f&&null!==e&&(f[2]=e[1]);f=f?[f[1],f[2],a]:[b,navigator.appVersion,"-?",a];f.push(/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(d));
 return f}();b.PIXEL_RATIO=function(){var a=document.createElement("canvas").getContext("2d");return(window.devicePixelRatio||1)/(a.webkitBackingStorePixelRatio||a.mozBackingStorePixelRatio||a.msBackingStorePixelRatio||a.oBackingStorePixelRatio||a.backingStorePixelRatio||1)}();b.globalOpts={helperType:"none",helperPort:2718,useWasm:!0,winType:"light",rgb:{active:!1,rim:null,gim:null,bim:null},defcolor:"#00FF00",pngisfits:!0,fits2fits:"never",fits2png:!1,alerts:!0,internalValPos:!0,internalContrastBias:!0,
-containContrastBias:!1,crosshair:!1,htimeout:5E3,lhtimeout:1E3,ehtimeout:1E3,ehretries:10,xtimeout:18E4,extlist:"EVENTS STDEVT",table:{xdim:2048,ydim:2048,bin:1},image:{xdim:2048,ydim:2048,bin:1},clearImageMemory:"never",helperProtocol:location.protocol,maxMemory:75E7,corsURL:"params/loadcors.html",proxyURL:"params/loadproxy.html",loadProxy:!1,archivesURL:"help/archives.html",imsectionURL:"params/imsection.html",postMessage:!1,waitType:"spinner",spinColor:"#FF0000",spinOpacity:.35,resize:!0,resizeHandle:!0,
-resizeRedisplay:!0,cloneNewDisplay:!0,regionConfigSize:"medium",refreshDragDrop:!0,copyWcsPosFormat:"$ra $dec $sys",mouseActions:["display value/position","change contrast/bias","pan the image"],touchActions:["display value/position","change contrast/bias","pan the image"],keyboardActions:{b:"toggle selected region: source/background",e:"toggle selected region: include/exclude",f:"display full image",r:"refresh image","/":"copy wcs position to clipboard","?":"copy value and position to clipboard",
+containContrastBias:!1,crosshair:!1,magnifierRegions:!0,htimeout:5E3,lhtimeout:1E3,ehtimeout:1E3,ehretries:10,xtimeout:18E4,extlist:"EVENTS STDEVT",table:{xdim:2048,ydim:2048,bin:1},image:{xdim:2048,ydim:2048,bin:1},clearImageMemory:"never",helperProtocol:location.protocol,maxMemory:75E7,corsURL:"params/loadcors.html",proxyURL:"params/loadproxy.html",loadProxy:!1,archivesURL:"help/archives.html",imsectionURL:"params/imsection.html",postMessage:!1,waitType:"spinner",spinColor:"#FF0000",spinOpacity:.35,
+resize:!0,resizeHandle:!0,resizeRedisplay:!0,cloneNewDisplay:!0,regionConfigSize:"medium",refreshDragDrop:!0,copyWcsPosFormat:"$ra $dec $sys",mouseActions:["display value/position","change contrast/bias","pan the image"],touchActions:["display value/position","change contrast/bias","pan the image"],keyboardActions:{b:"toggle selected region: source/background",e:"toggle selected region: include/exclude",f:"display full image",r:"refresh image","/":"copy wcs position to clipboard","?":"copy value and position to clipboard",
 0:"reset zoom","=":"zoom in","+":"zoom in","-":"zoom out","^":"raise region layer to top",">":"display next image","<":"display previous image","delete":"remove selected region",leftArrow:"move selected region left",upArrow:"move selected region up",rightArrow:"move selected region right",downArrow:"move selected region down"},mousetouchZoom:!1,toolbarTooltips:!1,centerDivs:["JS9Menubar"],pinchWait:8,pinchThresh:6,extendedPlugins:!0,corsProxy:"https://js9.si.edu/cgi-bin/CORS-proxy.cgi",simbadProxy:"https://js9.si.edu/cgi-bin/simbad-proxy.cgi",
 catalogs:{ras:["RA","_RAJ2000","RAJ2000"],decs:["Dec","_DEJ2000","DEJ2000"],shape:"circle",color:"yellow",width:7,height:7,radius:3.5,r1:5,r2:3.5,wcssys:"ICRS",skip:"#\n",save:!0,tooltip:"$xreg.data.ra $xreg.data.dec"},topColormaps:"grey heat cool viridis magma sls red green blue".split(" "),infoBox:"file object wcsfov wcscen wcspos impos physpos value regions progress".split(" "),menuBar:"file view zoom scale color region wcs analysis help".split(" "),toolBar:"linear log annulus box circle ellipse line polygon remove incexcl srcbkgd zoomin zoomout zoom1".split(" "),
 hiddenPluginDivs:[],separate:{layout:"auto",leftMargin:10,topMargin:10},imageTemplates:".fits,.fts,.png,.jpg,.jpeg",regionTemplates:".reg",sessionTemplates:".ses,.js9ses",colormapTemplates:".cmap",catalogTemplates:".cat,.tab",controlsMatchRegion:!1,newWindowWidth:530,newWindowHeight:625,debug:0};b.imageOpts={inherit:!1,contrast:1,bias:.5,invert:!1,exp:1E3,colormap:"grey",scale:"linear",scaleclipping:"dataminmax",zscalecontrast:.25,zscalesamples:600,zscaleline:120,wcssys:"native",wcsunits:"sexagesimal",
@@ -7793,7 +7793,7 @@ JS9.RegisterPlugin(JS9.Layers.CLASS, JS9.Layers.NAME, JS9.Layers.init,
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, JS9 */
+/*global $, JS9, fabric */
 
 // create our namespace, and specify some meta-information and params
 JS9.Magnifier = {};
@@ -7973,6 +7973,16 @@ JS9.Magnifier.display = function(im, ipos){
     // display magnifier image
     magDisp.context.clear();
     magDisp.context.drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh);
+    // overlay regions by drawing the fabric.js canvas into the magnifier
+    if( JS9.globalOpts.magnifierRegions &&
+	im.display.layers && im.display.layers.regions ){
+	canvas = im.display.layers.regions.canvas.getElement();
+	sx *= fabric.devicePixelRatio;
+	sy *= fabric.devicePixelRatio;
+	sw *= fabric.devicePixelRatio;
+	sh *= fabric.devicePixelRatio;
+	magDisp.context.drawImage(canvas, sx, sy, sw, sh, dx, dy, dw, dh);
+    }
     // stuff we only do once
     if( !im.magnifier.boxid ){
 	// add the center point to the magnifier, if necessary
@@ -11081,6 +11091,10 @@ JS9.Prefs.displaysSchema = {
 	"toolbarTooltips": {
 	    "type": "boolean",
 	    "helper": "show tooltips in Toolbar plugin?"
+	},
+	"magnifierRegions": {
+	    "type": "boolean",
+	    "helper": "show regions in magnifier?"
 	}
     }
 };
@@ -11153,6 +11167,7 @@ JS9.Prefs.init = function(){
 	    source.data = {fits2png: JS9.globalOpts.fits2png,
 			   fits2fits: JS9.globalOpts.fits2fits,
 			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
+			   magnifierRegions: JS9.globalOpts.magnifierRegions,
 			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,

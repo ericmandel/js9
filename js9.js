@@ -116,6 +116,7 @@ JS9.globalOpts = {
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
     crosshair: false,		// display wcs crosshair?
+    magnifierRegions: true,	// display regions in magnifier?
     htimeout: 5000,		// connection timeout for the helper connect
     lhtimeout: 1000,		// connection timeout for local helper connect
     ehtimeout: 1000,		// connection timeout for Electron connect

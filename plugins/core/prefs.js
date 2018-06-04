@@ -340,6 +340,10 @@ JS9.Prefs.displaysSchema = {
 	"toolbarTooltips": {
 	    "type": "boolean",
 	    "helper": "show tooltips in Toolbar plugin?"
+	},
+	"magnifierRegions": {
+	    "type": "boolean",
+	    "helper": "show regions in magnifier?"
 	}
     }
 };
@@ -412,6 +416,7 @@ JS9.Prefs.init = function(){
 	    source.data = {fits2png: JS9.globalOpts.fits2png,
 			   fits2fits: JS9.globalOpts.fits2fits,
 			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
+			   magnifierRegions: JS9.globalOpts.magnifierRegions,
 			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,
