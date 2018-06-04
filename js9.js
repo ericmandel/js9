@@ -8993,7 +8993,7 @@ JS9.Fabric.rescaleStrokeWidth = function(scale, sw1){
 	    JS9.Fabric.rescaleStrokeWidth.call(obj, scale, sw1);
 	});
     } else {
-	this.setStrokeWidth(sw1 / scale);
+	this.set("strokeWidth", sw1 / scale);
     }
 };
 
@@ -11195,16 +11195,16 @@ JS9.Fabric.refreshShapes = function(layerName){
 	    pos = that.logicalToDisplayPos(obj.pub.lcs);
 	}
 	// change region position
-	obj.setLeft(pos.x);
-	obj.setTop(pos.y);
+	obj.set("left", pos.x);
+	obj.set("top", pos.y);
 	// change angle if necessary
 	if( obj.params.shape !== "circle" && obj.params.shape !== "line"    &&
 	    obj.params.shape !== "point"  && obj.params.shape !== "polygon" &&
 	    obj.params.shape !== "text"                                     ){
 	    if( that.raw.wcsinfo && that.raw.wcsinfo.crot ){
-		obj.setAngle(-(obj.pub.angle + that.raw.wcsinfo.crot));
+		obj.set("angle", -(obj.pub.angle + that.raw.wcsinfo.crot));
 	    } else {
-		obj.setAngle(-obj.pub.angle);
+		obj.set("angle", -obj.pub.angle);
 	    }
 	}
 	// set scaling based on zoom factor, if necessary
