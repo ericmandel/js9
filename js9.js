@@ -13891,7 +13891,7 @@ JS9.Crosshair.hide = function(im, ipos, evt){
     for(i=0; i<JS9.displays.length; i++){
 	cim = JS9.displays[i].image;
 	// if the crosshair is visble ...
-	if( cim && (cim !== im) && cim.crosshair.visible ){
+	if( cim && (cim !== im) && cim.crosshair && cim.crosshair.visible ){
 	    // move it off the display
 	    cim.changeShapes(layername, cim.crosshair.h, opts);
 	    cim.changeShapes(layername, cim.crosshair.v, opts);
@@ -13904,7 +13904,7 @@ JS9.Crosshair.hide = function(im, ipos, evt){
 JS9.Crosshair.create = function(im){
     var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
     var layername = JS9.Crosshair.layerName;
-    if( im && !im.crosshair ){
+    if( im && !im.crosshair && (im.raw.wcs > 0) ){
 	// create the crosshair object for this image
 	im.crosshair = {};
 	// create the crosshair, but don't display it yet
