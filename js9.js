@@ -13830,7 +13830,7 @@ JS9.Crosshair.opts = {
 // display: display crosshair as the mouse moves
 // eslint-disable-next-line no-unused-vars
 JS9.Crosshair.display = function(im, ipos, evt){
-    var i, arr, cim, ra, dec, w, h, x, y, hopts, vopts;
+    var i, s, arr, cim, ra, dec, w, h, x, y, hopts, vopts;
     var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
     var layername = JS9.Crosshair.layerName;
     // if crosshair mode is on and this image has wcs ...
@@ -13853,22 +13853,27 @@ JS9.Crosshair.display = function(im, ipos, evt){
 		    cim.changeShapes(layername, cim.crosshair.h, opts);
 		    cim.changeShapes(layername, cim.crosshair.v, opts);
 		    cim.crosshair.visible = false;
-		} else if( cim !== im ){
+		} else if( cim !== im && (cim.raw.wcs > 0) ){
 		    // if the ra, dec pos is on this image, display crosshair
 		    w = cim.raw.width;
 		    h = cim.raw.height;
 		    // convert wcs pos to image pos for this image
-		    arr = JS9.wcs2pix(cim.raw.wcs, ra, dec).trim().split(/\s+/);
-		    x = parseFloat(arr[0]);
-		    y = parseFloat(arr[1]);
-		    // if image pos is within the image boundaries ...
-		    if( x > 0 && x < w && y > 0 && y < h ){
-			// draw the crosshair, centered on the image pos
-			hopts = {pts: [{x: 0, y: y}, {x: w, y: y}]};
-			cim.changeShapes(layername, cim.crosshair.h, hopts);
-			vopts = {pts: [{x: x, y: 0}, {x: x, y: h}]};
-			cim.changeShapes(layername, cim.crosshair.v, vopts);
-			cim.crosshair.visible = true;
+		    // trap uncaught errors => we were way off scale
+		    try{ s = JS9.wcs2pix(cim.raw.wcs, ra, dec); }
+		    catch(e){ s = null; }
+		    if( s ){
+			arr = s.trim().split(/\s+/);
+			x = parseFloat(arr[0]);
+			y = parseFloat(arr[1]);
+			// if image pos is within the image boundaries ...
+			if( x > 0 && x < w && y > 0 && y < h ){
+			    // draw the crosshair, centered on the image pos
+			    hopts = {pts: [{x: 0, y: y}, {x: w, y: y}]};
+			    cim.changeShapes(layername, cim.crosshair.h, hopts);
+			    vopts = {pts: [{x: x, y: 0}, {x: x, y: h}]};
+			    cim.changeShapes(layername, cim.crosshair.v, vopts);
+			    cim.crosshair.visible = true;
+			}
 		    }
 		}
 	    }
