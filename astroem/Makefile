@@ -34,6 +34,7 @@ EMFLAGS	= 	-O3 --memory-init-file 0
 # https://github.com/kripken/emscripten/wiki/Chrome-Perf-Issues
 EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -s ASM_JS=2
 # wasm support:
+NOWASMOPTS =	-s WASM=0
 WASMOPTS =	-s WASM=1
 # WASMOPTS =	-s WASM=1 -s SAFE_HEAP=1 -s ASSERTIONS=1
 
@@ -126,7 +127,7 @@ astroem.bc:	$(OBJS) $(PKGOBJS) $(LIBS)
 
 $(ASTROEMJS):	astroem.bc pre.js post.js shell-pre.js shell-post.js Makefile
 		@(echo "generating raw $(ASTROEMJS) ..."; \
-		$(EMCC) astroem.bc -o $(ASTROEMJS); \
+		$(EMCC) $(NOWASMOPTS) astroem.bc -o $(ASTROEMJS); \
 		echo "adding shell wrapper to generate $(ASTROEMJS) ..."; \
 		cat shell-pre.js > full_$(ASTROEMJS); \
 		cat $(ASTROEMJS) >> full_$(ASTROEMJS); \

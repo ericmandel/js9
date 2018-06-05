@@ -390,19 +390,19 @@ int mAdd(int argc, char **argv)
    double nan;
 
    for(i=0; i<8; i++){
-     nanc[i] = 1;
+     nanc[i] = 0;
    }
    // check for endian-ness
    u.l = 1;
    if( u.c[sizeof (long) - 1] == 1 ){
      // big-endian
      nanc[0] = 0x7F;
-     nanc[1] = 0xF0;
+     nanc[1] = 0xF8;
    }
    else{
      // little-endian
      nanc[7] = 0x7F;
-     nanc[6] = 0xF0;
+     nanc[6] = 0xF8;
    }
    nan = (*((double *)nanc));
 
