@@ -92,11 +92,6 @@ MSRCS =		$(MONTAGE)/mProjectPP.c \
 		$(MONTAGE)/mtbl.c
 MOBJS =		$(MSRCS:%.c=%.o)
 
-# utilities
-UTIL =		./util
-USRCS =		$(UTIL)/strtod.c
-UOBJS = 	$(USRCS:%.c=%.o)
-
 # zlib
 ZEXTRA =		./zextra
 ZSRCS =		$(ZEXTRA)/zcompress.c \
@@ -109,16 +104,16 @@ ZSSRCS =	$(ZSCALE)/cdlzscale.c
 ZSOBJS = 	$(ZSSRCS:%.c=%.o)
 
 PKGOBJS =	$(JOBJS) $(MOBJS) $(UOBJS) $(ZOBJS) $(ZSOBJS)
-PKGDIRS =	$(JSFITSIO) $(MONTAGE) $(UTIL) $(ZSCALE) $(ZEXTRA)
+PKGDIRS =	$(JSFITSIO) $(MONTAGE) $(ZSCALE) $(ZEXTRA)
 
-LIBS =		lib/libwcs.a lib/libcfitsio.a lib/libz.a lib/libbz2.a \
-		lib/libutil.a 
+LIBS =		lib/libcfitsio.a lib/libwcs.a lib/libutil.a \
+		lib/libz.a lib/libbz2.a
 
 # combine into EMCC command
 EMCC =		emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMINCS) $(EMEXTRAS)
 
 # flags to generate all emcc objects (i.e. so default rule for $(CC) runs emcc)
-CC =		emcc $(EMFLAGS) -I./include -I$(JSFITSIO) -I$(UTIL) -I$(ZSCALE) -D'exit(n)=em_exit(n)'
+CC =		emcc $(EMFLAGS) -I./include -I$(JSFITSIO) -I$(ZSCALE) -D'exit(n)=em_exit(n)'
 
 all:		$(ASTROEMJS) $(ASTROEMWJS)
 
