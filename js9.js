@@ -143,6 +143,8 @@ JS9.globalOpts = {
     cloneNewDisplay: true,      // clone size of display, when possible?
     regionConfigSize: "medium", // "small", "medium"
     refreshDragDrop: true,	// refresh on drag/drag and open file?
+    reduceMosaic: "js9",        // "js9" or "shrink" ("js9" seems to be faster)
+    reduceRegcnts: true,        // reduce image when doing counts in regions?
     copyWcsPosFormat: "$ra $dec $sys", // format for copy wcs pos to clipboard
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
@@ -3362,12 +3364,16 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
 };
 
 // convert current image to array
-JS9.Image.prototype.toArray = function(){
+JS9.Image.prototype.toArray = function(opts){
     var i, j, k, bpe, idx, le;
-    var header, npad, arr, buf, dbuf, _dbuf;
-    dbuf = this.raw.data.buffer;
+    var header, npad, arr, buf, _dbuf;
+    var dbuf = this.raw.data.buffer;
+    // opts is optonal
+    opts = opts || {};
+    // always perform the header keyword fix
+    opts.simple = true;
     // get header
-    header = JS9.raw2FITS(this.raw, {simple: true});
+    header = JS9.raw2FITS(this.raw, opts);
     // append padding to header now
     npad = 2880 - (header.length % 2880);
     if( npad === 2880 ){ npad = 0; }
@@ -4908,7 +4914,7 @@ JS9.Image.prototype.saveFITS = function(fname){
 	    fname = "js9.fits";
 	}
 	// first convert to array
-	arr = this.toArray();
+	arr = this.toArray({notab: true});
 	// then convert array to blob
 	blob = new Blob([arr], {type: "application/octet-binary"});
 	// save to disk
@@ -5416,6 +5422,135 @@ JS9.Image.prototype.zscale = function(setvals){
     }
     // allow chaining
     return this;
+};
+
+// background-subtracted counts in regions
+// eslint-disable-next-line no-unused-vars
+JS9.Image.prototype.countsInRegions = function(args){
+    var i, s, vfile, bvfile, sect, ext, filter, dims, bin, opts, cmdswitches;
+    var sregion="field";
+    var bregion="";
+    // sanity check
+    if( !this.raw.hdu || !this.raw.hdu.fits || !this.raw.hdu.fits.vfile ){
+	JS9.error("no virtual file available for regcnts: " + this.id);
+    }
+    // convert json to an object
+    for(i=0; i<arguments.length; i++){
+	s = arguments[i];
+	if( typeof s === "string" && s.charAt(0) === '{' ){
+	    try{ arguments[i] = JSON.parse(s); }
+	    catch(e){ JS9.error("can't parse json arg in regcnts: "+s, e); }
+	}
+    }
+    // analyze arguments
+    switch(arguments.length){
+    case 0:
+	break;
+    case 1:
+	if( typeof arguments[0] === "object" ){
+	    opts = arguments[0];
+	} else {
+	    if( arguments[0] === "$sregions" ){
+		sregion = this.expandMacro("$sregions");
+	    } else {
+		sregion = arguments[0] || "field";
+	    }
+	}
+	break;
+    case 2:
+	// regcnts(sregion)
+	if( arguments[0] === "$sregions" ){
+	    sregion = this.expandMacro("$sregions");
+	} else {
+	    sregion = arguments[0] || "field";
+	}
+	if( typeof arguments[1] === "object" ){
+	    opts = arguments[1];
+	} else {
+	    if( arguments[1] === "$bregions" ){
+		bregion = this.expandMacro("$bregions");
+	    } else {
+		bregion = arguments[1] || "";
+	    }
+	}
+	break;
+    default:
+	if( arguments[0] === "$sregions" ){
+	    sregion = this.expandMacro("$sregions");
+	} else {
+	    sregion = arguments[0] || "field";
+	}
+	if( arguments[1] === "$bregions" ){
+	    bregion = this.expandMacro("$bregions");
+	} else {
+	    bregion = arguments[1] || "";
+	}
+	opts = arguments[2];
+	break;
+    }
+    // opts is optional
+    opts = opts || {};
+    // reduce can be taken from the global value
+    opts.reduce = opts.reduce || JS9.globalOpts.reduceRegcnts;
+    // same for reduction dims
+    opts.dim = opts.dim ||
+	Math.max(JS9.globalOpts.image.xdim, JS9.globalOpts.image.ydim);
+    // check for command switches
+    cmdswitches = opts.cmdswitches || "";
+    // get final file, including filters and extensions
+    vfile = this.raw.hdu.fits.vfile;
+    ext =  this.file.match(/\[.*\]/);
+    if( ext ){
+	vfile += ext;
+    }
+    if( this.imtab === "table" ){
+	filter = this.raw.hdu.table.filter;
+	if( filter && !vfile.match(filter) ){
+	    if( vfile.match(/\]\[/) ){
+		vfile = vfile.slice(0, -1) + '&&' + filter + ']';
+	    } else {
+		vfile += '[' + filter + ']';
+	    }
+	}
+    }
+    // reduce file size, if necessary
+    if( opts.reduce ){
+	dims = this.fileDimensions();
+	bin = Math.floor((Math.max(dims.xdim, dims.ydim) / opts.dim) + 0.5);
+	if( bin > 1 ){
+	    if( this.imtab === "table" ){
+		// for tables, regcnts has a -b switch
+		cmdswitches += sprintf(" -b %s", bin);
+	    } else {
+		// for images, make a new binned file
+		bvfile = sprintf("bin%s_%s", bin, vfile);
+		sect = sprintf("0@0,0@0,%s", bin);
+		JS9.imsection(vfile, bvfile, sect, "");
+		vfile = bvfile;
+	    }
+	}
+    }
+    // could take a while ...
+    JS9.waiting(true, this.display);
+    // call low-level regcnts
+    s = JS9.regcnts(vfile, sregion, bregion, cmdswitches);
+    // all done waiting
+    JS9.waiting(false);
+    // remove binned file, if necessary
+    if( bvfile ){
+	Astroem.vunlink(bvfile);
+    }
+    // check for regions or cfitio errors
+    if( s.match(/^ERROR/) || s.match(/FITSIO status/) ){
+	JS9.error(s);
+    }
+    // display in a lightwin, if necessary
+    if( opts.lightwin ){
+	// display counts in a light window
+	this.displayAnalysis("text", s, {divid: JS9.globalOpts.analysisDiv});
+    }
+    // return results, including errors
+    return s;
 };
 
 // make (or select) a raw data layer
@@ -8229,7 +8364,9 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
     };
     // opts is optional
     opts = opts || {};
-    // but dim requires a value
+    // reduce can be taken from the global value
+    opts.reduce = opts.reduce || JS9.globalOpts.reduceMosaic;
+    // same for reduction dims
     opts.dim = opts.dim ||
 	Math.max(JS9.globalOpts.image.xdim, JS9.globalOpts.image.ydim);
     // ims can be: array of ims or a single im or null (use displayed image)
@@ -8318,13 +8455,6 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	// init cleanup array to make sure temp files get deleted
 	carr = [inlst, intbl, inhdr, binlst, bintbl,
 		outlst, outtbl, outhdr, areafile];
-	// how do we reduce the size of the image?
-	if( JS9.isNull(opts.reduce) ){
-	    // emperically, using js9helper to make a blocked image is faster
-	    // than shrinking the wcs using Montage
-	    opts.reduce = "js9";
-	    // opts.reduce = "shrink";
-	}
 	// generate input list from array of ims
 	s = sprintf("%s\n%s\n", line1, line2);
 	for(i=0; i<ims.length; i++){
@@ -8363,7 +8493,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 		}
 	    }
 	    // bin based on image dims and desired mosaic dim
-	    bin = Math.floor((naxis / opts.dim) + 0.5);
+	    bin = Math.max(1, Math.floor((naxis / opts.dim) + 0.5));
 	    // generate binned files, which become the input for reprojection
 	    s = sprintf("%s\n%s\n", line1, line2);
 	    // get array of input images
@@ -15278,6 +15408,9 @@ JS9.raw2FITS = function(raw, opts){
 	    } else {
 		card = raw.cardstr.slice(i*80, (i+1)*80);
 	    }
+	    if( opts.notab && card.match(/^TAB(TYP|MIN|MAX|DIM)[1,2]/) ){
+		continue;
+	    }
 	    if( card.match(/^XTENSION/) && i === 0 && opts.simple ){
 		t += fixparam(card, "XTENSION");
 	    } else if( card.match(/^BITPIX/) && raw.bitpix ){
@@ -16494,6 +16627,7 @@ JS9.initFITS = function(){
 	JS9.makehdr = Astroem.makehdr;
 	JS9.shrinkhdr = Astroem.shrinkhdr;
 	JS9.imsection = Astroem.imsection;
+	JS9.regcnts = Astroem.regcnts;
 	JS9.fitsLibrary("cfitsio");
     } else if( window.hasOwnProperty("Fitsy") ){
 	JS9.fitsLibrary("fitsy");
@@ -16912,6 +17046,23 @@ JS9.initCommands = function(){
 		    obj = {refresh: true};
 		    JS9.Load(args[i], obj, {display: this.display.id});
 		}
+	    }
+	}
+    }));
+    JS9.checkNew(new JS9.Command({
+	name: "regcnts",
+	help: "counts in regions for current image",
+	get: function(){
+	    var im = this.image;
+	    if( im ){
+		im.countsInRegions("$sregions", "$bregions",
+				   {lightwin: true});
+	    }
+	},
+	set: function(args){
+	    var im = this.image;
+	    if( im ){
+		return im.countsInRegions.apply(im, args);
 	    }
 	}
     }));
@@ -17626,6 +17777,7 @@ JS9.mkPublic("SavePNG", "savePNG");
 JS9.mkPublic("SaveJPEG", "saveJPEG");
 JS9.mkPublic("SaveFITS", "saveFITS");
 JS9.mkPublic("UploadFITSFile", "uploadFITSFile");
+JS9.mkPublic("CountsInRegions", "countsInRegions");
 JS9.mkPublic("RunAnalysis", "runAnalysis");
 JS9.mkPublic("RawDataLayer", "rawDataLayer");
 JS9.mkPublic("GaussBlurData", "gaussBlurData");

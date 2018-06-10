@@ -618,10 +618,10 @@ display the section:
 </ul>
 The bin directives are:
 <ul>
-<li><b>x[n]|X[n]|*[n]</b>: multiply the current bin by n (e.g. "x2")
-<li><b>/[n]</b>: divide the current bin by n (e.g. "/2")
-<li><b>+[n]</b>: add n to the current bin (e.g. "+2")
-<li><b>-[n]</b>: subtract n from the current bin (e.g. "-2")
+<li><b>x[n]|X[n]|*[n]</b>: multiply the current bin by n (e.g., "x2")
+<li><b>/[n]</b>: divide the current bin by n (e.g., "/2")
+<li><b>+[n]</b>: add n to the current bin (e.g., "+2")
+<li><b>-[n]</b>: subtract n from the current bin (e.g., "-2")
 <li><b>in|In</b>: multiply the current bin by 2
 <li><b>out|Out</b>: divide the current bin by 2
 </ul>
@@ -719,7 +719,7 @@ where:
 <li><b>opts</b>: object containing options
 </ul>
 This routine allows you to display a 2D slice of a 3D or 4D FITS data
-cube, i.e.  a FITS image containing 3 or 4 axes.
+cube, i.e.,  a FITS image containing 3 or 4 axes.
 
 <p>
 The <b>slice</b> parameter can either be the numeric value of the
@@ -948,7 +948,7 @@ where:
 <li><b>json</b>: json string containing one of the colormap definition formats
 </ul>
 You can add new colormaps to JS9 using one of two formats. The first
-is an array of RGB triplets (i.e. an array of 3-D arrays), where each
+is an array of RGB triplets (i.e., an array of 3-D arrays), where each
 triplet defines a color. The elements of the colormap are divided
 evenly between these 3-D triplets.  For example, the <b>i8</b>
 colormap is defined as:
@@ -1181,8 +1181,8 @@ where:
 </ul>
 The zoom directives are:
 <ul>
-<li><b>x[n]|X[n]|*[n]</b>: multiply the current zoom by n (e.g. "x2")
-<li><b>/[n]</b>: divide the current zoom by n (e.g. "/2")
+<li><b>x[n]|X[n]|*[n]</b>: multiply the current zoom by n (e.g., "x2")
+<li><b>/[n]</b>: divide the current zoom by n (e.g., "/2")
 <li><b>in|In</b>: multiply the current zoom by 2
 <li><b>out|Out</b>: divide the current zoom by 2
 <li><b>toFit|ToFit</b>: zoom to fit image in display
@@ -1401,10 +1401,10 @@ and returns an object containing the following information:
 <ul>
 <li><b>ix</b>: image x coordinate
 <li><b>iy</b>: image y coordinate
-<li><b>isys</b>: image system (i.e. "image")
+<li><b>isys</b>: image system (i.e., "image")
 <li><b>px</b>: physical x coordinate
 <li><b>py</b>: physical y coordinate
-<li><b>psys</b>: currently selected pixel-based system (i.e. "image"
+<li><b>psys</b>: currently selected pixel-based system (i.e., "image"
 or "physical") for the above px, py values
 <li><b>ra</b>: ra in degrees (if WCS is available)
 <li><b>dec</b>: dec in degrees  (if WCS is available)
@@ -1494,7 +1494,7 @@ the <b>File->alternate wcs</b> menu option.
 The <b>which</b> argument can be one of the following:
 <ul>
 <li><b>default</b>: the default WCS from the original file
-<li><b>[version]</b>: the version letter of the alternate WCS, i.e. <b>A-Z</b>
+<li><b>[version]</b>: the version letter of the alternate WCS, i.e., <b>A-Z</b>
 <li><b>[wcsname]</b>: the value of the WCSNAME header parameter associated
 with this WCS, if present
 </ul>
@@ -1606,6 +1606,129 @@ The text string is displayed in the "info" area (usually occupied by the
 valpos display) or the "region" area (where regions are displayed). The
 empty string will clear the previous message.
 
+<h5 id="JS9.CountsInRegions">Get background-subtracted counts in regions</h5>
+<p>
+<code class="api">JS9.CountsInRegions(sregion, bregion, opts)</code>
+<p>
+where:
+<ul>
+<li><b>sregion</b>: any source region, or "$sregions" for displayed source regions
+<li><b>bregion</b>: any background region, or "$bregions" for displayed background regions
+<li><b>opts</b>:  optional object or json string containing region parameters
+</ul>
+The <a href="https://js9.si.edu/regions/regcnts.html">regcnts</a>
+program (and its predecessor, funcnts) counts photons in specified
+source regions and optionally, in specified background regions.
+Displayed results include the bkgd-subtracted counts in each region,
+as well as the error on the counts, the area in each region, and the
+surface brightness (cnts/area**2) calculated for each region. Regcnts
+for desktop use is available on
+<a href="https://github.com/ericmandel/regions">GitHub</a>.
+
+<p>
+The regcnts program has been compiled into JS9 using
+<a href="https://kripken.github.io/emscripten-site/">Emscripten</a>.
+Using this routine, it can be run on the FITS file stored in memory
+for the currently displayed image.  The first two arguments specify
+the <b>source region(s)</b> and <b>background region(s)</b>,
+respectively. You can pass a standard region specifier as the source
+or background region. If the string "$sregions" ("$bregions") is
+specified, the source (background) regions are taken from the
+currently displayed image.
+
+<p>
+In keeping with how desktop regcnts works, if no argument or null or a
+null string is specified as the source region, the entire field is
+used as the source region. If no argument or null or a null string is
+explicitly specified as a background region, no regions are used for
+the background.  In particular, if you pass only the source region
+argument, or pass only the source region and opts arguments, no
+background region is used. To recap:
+<pre>
+    # use entire field, no background
+    JS9.CountsInRegions([opts])
+    JS9.CountsInRegions("field"||null||""[, opts])
+
+    # use displayed source and displayed background
+    JS9.CountsInRegions("$sregions", "$bregions"[, opts])
+
+    # use displayed source, no background
+    JS9.CountsInRegions("$sregions"[, opts])
+
+    # use displayed source and specified background
+    JS9.CountsInRegions("$sregions", bregions[, opts])
+
+    # use specified source, no background
+    JS9.CountsInRegions(sregions[, opts])
+
+    # use specified source and specified background
+    JS9.CountsInRegions(sregions, bregions[, opts])
+
+    # use specified source and displayed background
+    JS9.CountsInRegions(sregions, "$bregions"[, opts])
+
+   # use entire field and specified background
+    JS9.CountsInRegions("field"||null||"", bregions[, opts])
+
+    # use entire field and displayed background
+    JS9.CountsInRegions("field"||null||"", "$bregions"[, opts])
+</pre>
+
+The third argument allows you to specify options to regcnts:
+<ul>
+<li><b>cmdswitches</b>: command line switches passed to regcnts
+<li><b>dim</b>: size of reduced image (def: max of JS9.globalOpts.image.[xdim,ydim])
+<li><b>reduce</b>: reduce image size? (def: true)
+<li><b>lightwin</b>: if true, results are displayed in a light window
+</ul>
+The command line switches that can be specified in <b>cmdswitches</b> are
+detailed in the
+<a href="https://js9.si.edu/regions/regcnts.html">regcnts help
+page</a>.  Aside from switches which control important aspects of the
+analysis, the "-j" switch (which returns the output in JSON format)
+might be useful in the browser environment. Some examples:
+<pre>
+    # display results in a light window
+    JS9.CountsInRegions({lightwin: true})
+
+    # return json using maximum precision in output
+    JS9.CountsInRegions({cmdswitches: "-j -G"})
+</pre>
+Results are also returned as a text string.
+
+<p>
+The regcnts code is memory (and cpu) intensive. In the desktop
+environment, this is not typically a problem, but the
+memory-constrained browser environment can present a challenge for
+large images and binary tables.  To avoid running out of memory (and
+for large images, to speed up processing considerably), the
+JS9.CountsInRegions() routine will bin the image to reduce its size,
+unless the <b>reduce</b> option is explicitly set to false. The binned
+image size can be specified by the <b>dim</b> option, defaulting to
+the global value of the image dimension options. When a file is binned
+in this manner, the returned resolution value (e.g., arcsec/pixel)
+will reflect the applied binning. Note that the number of photons
+found inside a binned and unbinned region differ slightly, due to the
+difference in the pixel boundaries in the two cases.
+
+<p>
+The <b>Counts in Regions</b> option of the <b>Analysis -> Client-side
+Analysis</b> menu runs regcnts on the source and background regions of
+the currently displayed image. The results are displayed in a light window.
+
+<p>
+Finally, note that the main <a href="https://js9.si.edu">JS9 web
+site</a> also offers regcnts as a server-based analysis program in the
+Analysis menu. The displayed source and background regions are passed
+to the server for processing. Because this version runs the desktop
+program, it runs on the original file and does no binning to reduce
+the image size (which, by the way, could lengthen the processing
+time). But the server-side task also can be useful for
+<a href="./repfile.html">large file support</a>, which involves
+displaying a small representation file associated with a much larger
+parent file stored on the server. In this case, you often want to run
+the analysis on the larger (original) file.
+
 <h5 id="JS9.RawDataLayer">Create or modify a raw data layer</h5>
 <p>
 <code class="api">JS9.RawDataLayer(opts, func)</code>
@@ -1615,7 +1738,7 @@ where:
 <li><b>opts</b>: layer name or opts object
 <li><b>func</b>: function used to create or modify raw data
 </ul>
-Each image has raw data associated with it, i.e. the underlying
+Each image has raw data associated with it, i.e., the underlying
 astronomical image pixels that are scaled and displayed using the
 chosen scale and colormap. You can manipulate the raw data by creating
 a new <b>raw data layer</b> using <b>JS9.RawDataLayer()</b>,
@@ -1958,7 +2081,7 @@ mProjectPP from the Montage web site, which includes this explanation:
     mProjectPP is only suitable for projections which can be approximated
     by tangent-plane projections (TAN, SIN, ZEA, STG, ARC), and is therefore
     not suited for images covering large portions of the sky. Also note that
-    it does not directly support changes in coordinate system (i.e. equatorial
+    it does not directly support changes in coordinate system (i.e., equatorial
     to galactic coordinates), though these changes can be facilitated by the
     use of an alternate header.
 </pre>
@@ -1996,7 +2119,7 @@ restrict the WCS image size used for reprojection to a value defined
 by JS9.REPROJDIM, currently 2048 x 2048. (For iOS devices, the limit
 is set to 1024 x 1024.) If the WCS image exceeds this size, the WCS
 (and hence the output image) will be shrunk down to the value of
-JS9.REPROJDIM x JS9.REPROJDIM, i.e. the output image will be binned to
+JS9.REPROJDIM x JS9.REPROJDIM, i.e., the output image will be binned to
 a smaller size so that memory limits are not exceeded. You can set
 the <b>shrink</b> property of <b>opts</b> to false if you would
 prefer that JS9 throw an error in these circumstances.
@@ -2047,7 +2170,7 @@ property is not specified, the default is to save all images in the display.
 <p>
 If no filename is specified, the default filename depends on the save mode.
 If mode is "display", the default filename takes the form <b>js9-[date].ses</b>,
-e.g. "js9-2018-01-09.ses". If mode is "image", the default filename is <b>[im.id].ses</b>, e.g. "casa.fits.ses".
+e.g., "js9-2018-01-09.ses". If mode is "image", the default filename is <b>[im.id].ses</b>, e.g., "casa.fits.ses".
 <p>
 Saved information (filename, scaling, colormap, contrast/bias, zoom,
 regions, catalogs, etc) is stored in a json-formatted text file. You can
@@ -2151,7 +2274,7 @@ more properties, of which the most important are:
 <li><b>y</b>: image y position
 <li><b>px</b>: physical x position
 <li><b>py</b>: physical y position
-<li><b>lcs</b>: object containing logical x, y and sys (e.g. "physical")
+<li><b>lcs</b>: object containing logical x, y and sys (e.g., "physical")
 <li><b>dx</b>: increment from current image x position
 <li><b>dy</b>: increment from current image y position
 <li><b>tags</b>: comma-separated list of tag strings or array of tag strings
@@ -2289,16 +2412,16 @@ Each returned region object contains the following properties:
 <li><b>ra</b>: RA of center in degrees
 <li><b>dec</b>: Dec of center in degrees
 <li><b>wcsstr</b>: region string in wcs coordinates
-<li><b>wcssys</b>: wcs system (e.g. "FK5")
+<li><b>wcssys</b>: wcs system (e.g., "FK5")
 <li><b>imstr</b>: region string in image or physical coordinates
 <li><b>imsys</b>: image system ("image" or "physical")
-<li><b>lcs</b>: object containing logical x, y and sys (e.g. "physical")
+<li><b>lcs</b>: object containing logical x, y and sys (e.g., "physical")
 <li><b>data</b>: data property passed in options object when this shape was created.
 </ul>
 The x, y, radii, pts, radius, width, height, r1, r2 values are all
 returned in the image coordinate system. The lcs object will contain x
 and y in logical (i.e., physical) coordinates. Moreover, if the
-imsys value is not "image" (i.e. the JS9 coordinate system is not
+imsys value is not "image" (i.e., the JS9 coordinate system is not
 explicitly set to "image"), then the lcs object also will contain
 radii, pts, radius, width, height, r1, r2 in the logical coordinate system.
 <p>
@@ -2335,14 +2458,14 @@ can specify regions using any of the following:
 <li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
 </ul>
 In this context, a regexp is a string enclosed between "/"
-slashes.e.g. "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
+slashes.e.g., "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
 
 <p>
 The opts object can contain the parameters 
 described in the
 <a href="#JS9.AddRegions"><b>JS9.AddRegions()</b></a>
 section. However, you cannot (yet)
-change the shape itself (e.g. from "box" to "circle"). See js9onchange.html
+change the shape itself (e.g., from "box" to "circle"). See js9onchange.html
 for examples of how to use this routine.
 
 <h5 id="JS9.CopyRegions">Copy one or more regions to another image</h5>
@@ -2368,7 +2491,7 @@ can specify regions using any of the following:
 <li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
 </ul>
 In this context, a regexp is a string enclosed between "/"
-slashes.e.g. "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
+slashes.e.g., "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
 
 <h5 id="JS9.RemoveRegions">Remove one or more regions from the region layer</h5>
 <p>
@@ -2389,7 +2512,7 @@ can specify regions using any of the following:
 <li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
 </ul>
 In this context, a regexp is a string enclosed between "/"
-slashes.e.g. "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
+slashes.e.g., "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
 
 <h5 id="JS9.SaveRegions">Save regions from the current image to a file</h5>
 <p>
@@ -2415,7 +2538,7 @@ a tag value to save regions having that tag.
 
 <p>
 If the <b>layer</b> argument is not specified, it defaults to
-"regions", i.e.  the usual regions layer. You can specify a different
+"regions", i.e.,  the usual regions layer. You can specify a different
 layer, e.g., if you want to save a catalog layer as a region file
 (since
 <a href="#JS9.SaveCatalog"><b>SaveCatalog()</b></a>
@@ -2785,7 +2908,7 @@ Change one or more shapes. The opts object can contain the parameters
 described in the
 <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
 section. However, you cannot (yet)
-change the shape itself (e.g. from "box" to "circle").
+change the shape itself (e.g., from "box" to "circle").
 
 <h5 id="JS9.LoadCatalog">Load an astronomical catalog</h5>
 <p>
@@ -2894,8 +3017,8 @@ based on the values contained in the <b>JS9.globalOpts.catalogs.ras</b> and
 <ul>
 <li> the <b>opts.xcol</b>, if defined, specifies the RA column (similarly for opts.ycol and the Dec column)
 <li> otherwise try to match exactly the catalog header against all the array elements in JS9.globalOpts.catalogs.ras to get the RA column (same for catalogs.decs)
-<li> if no exact match, try a case-insensitive match of the catalog columns against a regular expression that begins with the first array element in JS9.globalOpts.catalogs.ras (e.g. "RA*")
-<li> if no approximate match, try a case-insensitive match of the catalog columns against a regular expression containing the first array element in JS9.globalOpts.catalogs.ras (e.g. "*RA*")
+<li> if no exact match, try a case-insensitive match of the catalog columns against a regular expression that begins with the first array element in JS9.globalOpts.catalogs.ras (e.g., "RA*")
+<li> if no approximate match, try a case-insensitive match of the catalog columns against a regular expression containing the first array element in JS9.globalOpts.catalogs.ras (e.g., "*RA*")
 </ul>
 The default global JS9.globalOpts.catalogs.ras contains:
 <pre>
@@ -3153,7 +3276,7 @@ These Montage programs have been compiled into JS9 using
 <p>
 Because the browser environment is memory-limited, there are some
 restrictions on generating mosaics in JS9. The FITS files must be
-well-behaved, i.e. they must have WCS projections which can be
+well-behaved, i.e., they must have WCS projections which can be
 approximated by tangent-plane projections (TAN, SIN, ZEA, STG, ARC).
 This precludes creating mosaics from images covering large portions of
 the sky. For large sky areas, please use Montage itself on your desktop
@@ -3170,7 +3293,7 @@ The <b>which</b> parameter determine which images are used in the mosaic:
 <li><b>[im1, im2, ...]</b>: an array of image ids or handles from any display
 </ul>
 In general, use "current" (or null) if you have loaded a multi-extension
-FITS mosaic (e.g. a CFHT FITS file) into JS9. Use "all" if you have loaded
+FITS mosaic (e.g., a CFHT FITS file) into JS9. Use "all" if you have loaded
 several FITS files into JS9 and want to create a mosaic.
 
 <p>
@@ -3198,7 +3321,7 @@ The resulting mosaic will be loaded into the specified JS9 display as
 a separate image. Because the mosaic is separate from the original
 image(s), you can view each of the latter individually (or view each
 image extension of a single image using the <b>Extensions</b> plugin).
-Internal analysis can be performed on the mosaic (e.g. ImExam functions)
+Internal analysis can be performed on the mosaic (e.g., ImExam functions)
 but, of course, no external analysis tasks will be available.
 
 <h5 id="JS9.LookupDisplay">Lookup a JS9 display</h5>

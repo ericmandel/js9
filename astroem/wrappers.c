@@ -2,20 +2,21 @@
  * wrappers.c -- enscripten wrapper functions
  *
  * Eric Mandel 10/11/2013 (during the Great Government Shutdown)
- * 
+ *
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <setjmp.h>
 #include <time.h>
 #include <math.h>
 #include <ctype.h>
-#include <setjmp.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include "wcs.h"
+#include "em.h"
 #include "strtod.h"
 #include "cdl.h"
 
@@ -51,8 +52,7 @@ static int maxinfo = 0;
 static int maxinc = 10;
 static int nstatus=0;
 
-static jmp_buf em_jmpbuf;
-
+/* low-level routines called in emscripten enironment */
 int mTANHdr(int argc, char **argv);
 int mProjectPP(int argc, char **argv);
 int mAdd(int argc, char **argv);
@@ -61,6 +61,7 @@ int mMakeHdr(int argc, char **argv);
 int mShrinkHdr(int argc, char **argv);
 int js9helper(int argc, char **argv);
 int _listhdu(char *iname, char *oname);
+int _regcnts (int argc, char **argv);
 void emscripten_exit_with_live_runtime(void);
 
 /*
@@ -194,15 +195,21 @@ static Info getinfo(int n){
  * semi-public routines: these are used within emscripten elsewhere
  *
  */
-/* in emscripten-compiled programs, we change exit(1) to em_exit(1)
-   to avoid exiting the emscripten environment. see reproject() below */
-void em_exit(int n){
-  // don't return with a 0, it will cause recursion! */
-  if( n == 0 ){
-    n = 1;
-  }
-  longjmp(em_jmpbuf, n);
-}
+
+/*
+   When running emscripten-compiled programs, we want to to avoid exiting the
+   emscripten environment if the program calls exit(). So we do a setjmp and
+   redefine exit to do a longjmp.
+
+   The basic pattern is:
+
+   if( !EM_SETJMP ){
+     _regcnts(i, args);
+   }
+
+   where an exit() in the program will call longjmp();
+
+*/
 
 /*
  *
@@ -302,11 +309,11 @@ char *wcs2pixstr(int n, double ra, double dec){
 /* set or get wcssys (FK4, FK5, etc) */
 char *wcssys(int n, char *s){
   Info info = getinfo(n);
-  char *str = NULL;  
+  char *str = NULL;
   if( info->wcs ){
     str = info->str;
     *str = '\0';
-    if( s && *s && 
+    if( s && *s &&
 	(!strcasecmp(s, "galactic") || !strcasecmp(s, "ecliptic") ||
 	 !strcasecmp(s, "linear")   || (wcsceq(s) > 0.0)) ){
       /* try to set the wcs system */
@@ -384,7 +391,7 @@ char *reg2wcsstr(int n, char *regstr){
     *str = '\0';
     /* start with original input string */
     targs = (char *)strdup(regstr);
-    for(targ=(char *)strtok(targs, ";"); targ != NULL; 
+    for(targ=(char *)strtok(targs, ";"); targ != NULL;
 	targ=(char *)strtok(NULL,";")){
       s = targ;
       /* look for region type */
@@ -545,15 +552,15 @@ int saodtype(){
 int cdl_debug=0;
 
 /* calculate zscale parameters */
-char *zscale(unsigned char *im, int nx, int ny, int bitpix, 
+char *zscale(unsigned char *im, int nx, int ny, int bitpix,
 	     float contrast, int numsamples, int perline){
   float z1, z2;
   char tbuf[SZ_LINE];
   /* assume the worst */
   *tbuf = '\0';
-  /* in case there are any exit() calls changes to em_exit() */
-  if( !setjmp(em_jmpbuf) ){
-    /* make the zscale call */
+  /* call the low-level routine, guarding against exit() calls */
+  if( !EM_SETJMP ){
+    /* make the low-level zscale call */
     cdl_zscale(im, nx, ny, bitpix, &z1, &z2, contrast, numsamples, perline);
     /* encode in a string for easy return */
     snprintf(tbuf, SZ_LINE-1, "%f %f", z1, z2);
@@ -574,7 +581,7 @@ char *tanhdr(char *iname, char *oname, char *cmdswitches){
   args[i++] = "mTANHdr";
   if( cmdswitches && *cmdswitches ){
     targs = (char *)strdup(cmdswitches);
-    for(targ=(char *)strtok(targs, " \t"); targ != NULL; 
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL;
 	targ=(char *)strtok(NULL," \t")){
       if( j < MAX_ARGS ){
 	strncpy(tbufs[j], targ, SZ_LINE-1);
@@ -592,9 +599,9 @@ char *tanhdr(char *iname, char *oname, char *cmdswitches){
   args[i++] = file1;
   snprintf(file2, SZ_LINE-1, "%s%s", ROOTDIR, oname);
   args[i++] = file2;
-  /* we have changed montage exit() calls to longjmp() */
-  if( !setjmp(em_jmpbuf) ){
-    /* make the tanhdr call */
+  /* call the low-level routine, guarding against exit() calls */
+  if( !EM_SETJMP ){
+    /* make the low-level tan hdr generation call */
     mTANHdr(i, args);
   }
   /* look for a return value */
@@ -619,7 +626,7 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
   args[i++] = "mProjectPP";
   if( cmdswitches && *cmdswitches ){
     targs = (char *)strdup(cmdswitches);
-    for(targ=(char *)strtok(targs, " \t"); targ != NULL; 
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL;
 	targ=(char *)strtok(NULL," \t")){
       if( j < MAX_ARGS ){
 	strncpy(tbufs[j], targ, SZ_LINE-1);
@@ -639,9 +646,9 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
   args[i++] = file2;
   snprintf(file3, SZ_LINE-1, "%s%s", ROOTDIR, wname);
   args[i++] = file3;
-  /* we have changed montage exit() calls to longjmp() */
-  if( !setjmp(em_jmpbuf) ){
-    /* make the reprojection call */
+  /* call the low-level routine, guarding against exit() calls */
+  if( !EM_SETJMP ){
+    /* make the low-level reprojection call */
     mProjectPP(i, args);
   }
   /* look for a return value */
@@ -666,7 +673,7 @@ char *madd(char *tname, char *hname, char *oname, char *cmdswitches){
   args[i++] = "mAdd";
   if( cmdswitches && *cmdswitches ){
     targs = (char *)strdup(cmdswitches);
-    for(targ=(char *)strtok(targs, " \t"); targ != NULL; 
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL;
 	targ=(char *)strtok(NULL," \t")){
       if( j < MAX_ARGS ){
 	strncpy(tbufs[j], targ, SZ_LINE-1);
@@ -686,9 +693,9 @@ char *madd(char *tname, char *hname, char *oname, char *cmdswitches){
   args[i++] = file2;
   snprintf(file3, SZ_LINE-1, "%s%s", ROOTDIR, oname);
   args[i++] = file3;
-  /* we have changed montage exit() calls to longjmp() */
-  if( !setjmp(em_jmpbuf) ){
-    /* make the mAdd call */
+  /* call the low-level routine, guarding against exit() calls */
+  if( !EM_SETJMP ){
+    /* make the low-level mosaic add call */
     mAdd(i, args);
   }
   /* look for a return value */
@@ -713,7 +720,7 @@ char *imgtbl(char *iname, char *dname, char *tname, char *cmdswitches){
   args[i++] = "mImgtbl";
   if( cmdswitches && *cmdswitches ){
     targs = (char *)strdup(cmdswitches);
-    for(targ=(char *)strtok(targs, " \t"); targ != NULL; 
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL;
 	targ=(char *)strtok(NULL," \t")){
       if( j < MAX_ARGS ){
 	strncpy(tbufs[j], targ, SZ_LINE-1);
@@ -734,9 +741,9 @@ char *imgtbl(char *iname, char *dname, char *tname, char *cmdswitches){
   args[i++] = file2;
   snprintf(file3, SZ_LINE-1, "%s%s", ROOTDIR, tname);
   args[i++] = file3;
-  /* we have changed montage exit() calls to longjmp() */
-  if( !setjmp(em_jmpbuf) ){
-    /* make the mImgtbl  call */
+  /* call the low-level routine, guarding against exit() calls */
+  if( !EM_SETJMP ){
+    /* make the low-level image table generation call */
     mImgtbl(i, args);
   }
   /* look for a return value */
@@ -760,7 +767,7 @@ char *makehdr(char *tname, char *hname, char *cmdswitches){
   args[i++] = "mMakeHdr";
   if( cmdswitches && *cmdswitches ){
     targs = (char *)strdup(cmdswitches);
-    for(targ=(char *)strtok(targs, " \t"); targ != NULL; 
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL;
 	targ=(char *)strtok(NULL," \t")){
       if( j < MAX_ARGS ){
 	strncpy(tbufs[j], targ, SZ_LINE-1);
@@ -778,9 +785,9 @@ char *makehdr(char *tname, char *hname, char *cmdswitches){
   args[i++] = file1;
   snprintf(file2, SZ_LINE-1, "%s%s", ROOTDIR, hname);
   args[i++] = file2;
-  /* we have changed montage exit() calls to longjmp() */
-  if( !setjmp(em_jmpbuf) ){
-    /* make the mMakeHdr call */
+  /* call the low-level routine, guarding against exit() calls */
+  if( !EM_SETJMP ){
+    /* make the low-level header generation call */
     mMakeHdr(i, args);
   }
   /* look for a return value */
@@ -805,7 +812,7 @@ char *shrinkhdr(int dim, char *iname, char *oname, char *cmdswitches){
   args[i++] = "mShrinkHdr";
   if( cmdswitches && *cmdswitches ){
     targs = (char *)strdup(cmdswitches);
-    for(targ=(char *)strtok(targs, " \t"); targ != NULL; 
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL;
 	targ=(char *)strtok(NULL," \t")){
       if( j < MAX_ARGS ){
 	strncpy(tbufs[j], targ, SZ_LINE-1);
@@ -826,9 +833,9 @@ char *shrinkhdr(int dim, char *iname, char *oname, char *cmdswitches){
   args[i++] = file1;
   snprintf(file2, SZ_LINE-1, "%s%s", ROOTDIR, oname);
   args[i++] = file2;
-  /* we have changed montage exit() calls to longjmp() */
-  if( !setjmp(em_jmpbuf) ){
-    /* make the mShrinkHdr call */
+  /* call the low-level routine, guarding against exit() calls */
+  if( !EM_SETJMP ){
+    /* make the low-level shrink header call */
     mShrinkHdr(i, args);
   }
   /* look for a return value */
@@ -874,6 +881,62 @@ char *listhdu(char *iname){
   }
 }
 
+char *regcnts(char *iname, char *sregion, char *bregion, char *cmdswitches){
+  int i=0, j=0;
+  char *targs=NULL, *targ=NULL;
+  char *args[SZ_LINE];
+  char tbufs[MAX_ARGS][SZ_LINE];
+  char file0[SZ_LINE];
+  char file1[SZ_LINE];
+  char file2[SZ_LINE];
+  args[i++] = "_regcnts";
+  if( cmdswitches && *cmdswitches ){
+    targs = (char *)strdup(cmdswitches);
+    for(targ=(char *)strtok(targs, " \t"); targ != NULL;
+	targ=(char *)strtok(NULL," \t")){
+      if( j < MAX_ARGS ){
+	strncpy(tbufs[j], targ, SZ_LINE-1);
+	args[i++] = tbufs[j++];
+      } else {
+	break;
+      }
+    }
+    if( targs ) free(targs);
+  }
+  args[i++] = "-e";
+  snprintf(file0, SZ_LINE-1, "%sregcnts_errors_%d.txt", ROOTDIR, nstatus++);
+  args[i++] = file0;
+  /* make up output file */
+  args[i++] = "-o";
+  snprintf(file1, SZ_LINE-1, "%sregcnts_%d.txt", ROOTDIR, nstatus++);
+  args[i++] = file1;
+  /* input file */
+  snprintf(file2, SZ_LINE-1, "%s%s", ROOTDIR, iname);
+  args[i++] = file2;
+  /* regions */
+  args[i++] = sregion;
+  args[i++] = bregion;
+  /* call the low-level routine, guarding against exit() calls */
+  if( !EM_SETJMP ){
+    /* make the low-level counts in regions call */
+    _regcnts(i, args);
+  }
+  /* look for an error */
+  if( filecontents(file0, rstr, SZ_LINE) > 0 ){
+    unlink(file0);
+    unlink(file1);
+    return rstr;
+  }
+  /* look for a return value */
+  if( filecontents(file1, rstr, SZ_LINE) >= 0 ){
+    unlink(file0);
+    unlink(file1);
+    return rstr;
+  } else {
+    return "Error: regcnts failed; no output file created";
+  }
+}
+
 /* debugging tool: get content of a virtual file */
 char *vcat(char *file, int flen){
   FILE *fd;
@@ -914,7 +977,7 @@ int vls(char *dir){
   while( (dirent = readdir(dfd)) ){
     if (!strcmp (dirent->d_name, "."))
       continue;
-    if (!strcmp (dirent->d_name, ".."))    
+    if (!strcmp (dirent->d_name, ".."))
       continue;
     if( mydir[strlen(mydir)-1] == '/' ){
       snprintf(tbuf, SZ_LINE, "%s%s", mydir, dirent->d_name);
@@ -935,7 +998,7 @@ int vls(char *dir){
       if( !strcmp(type, "dir") ){
 	fprintf(stdout, "%s (dir)\n", dirent->d_name);
       } else {
-	fprintf(stdout, "%s (%s):\n\tsize: %d\n\tcre: %s\tmod: %s\n", 
+	fprintf(stdout, "%s (%s):\n\tsize: %d\n\tcre: %s\tmod: %s\n",
 		dirent->d_name, type, (int)buf.st_size, cretime, modtime);
       }
       fflush(stdout);

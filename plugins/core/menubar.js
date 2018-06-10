@@ -1828,8 +1828,22 @@ JS9.Menubar.init = function(width, height){
 		if( n > 0 ){
 		    items["sep" + n++] = "------";
 		}
+	        items.localtitle = {
+		    name: "Client-side Analysis:",
+		    disabled: true
+	        };
+		items.regcnts = {name: "Counts in Regions"};
+		if( !im || !im.raw || !im.raw.hdu || !im.raw.hdu.vfile ){
+		    items.regcnts.disabled = true;
+		}
+		items.sigma = {
+		    events: {keyup: keyAnalysis},
+		    name: "Gaussian Blur, Sigma:",
+		    type: "text"
+		};
+		items["sep" + n++] = "------";
 	        items.remotetitle = {
-		    name: "Server-side Tasks:",
+		    name: "Server-side Analysis:",
 		    disabled: true
 	        };
 		if( im && im.analysisPackages ){
@@ -1918,11 +1932,10 @@ JS9.Menubar.init = function(width, height){
 		    }
 		}
 		items["sep" + n++] = "------";
-		items.sigma = {
-		    events: {keyup: keyAnalysis},
-		    name: "Gaussian blur sigma:",
-		    type: "text"
-		};
+	        items.serverconfig = {
+		    name: "Server-side Configuration:",
+		    disabled: true
+	        };
 		items.dpath = {name: "set data analysis path ..."};
 		if( JS9.globalOpts.dataPathModify === false ){
 		    items.dpath.disabled = true;
@@ -1954,6 +1967,11 @@ JS9.Menubar.init = function(width, height){
 			// the rest need an image loaded
 			if( uim ){
 			    switch(key){
+			    case "regcnts":
+				JS9.CountsInRegions("$sregions", "$bregions",
+						    {lightwin: true},
+						    {display: udisp.id});
+				break;
 			    case "dpath":
 				// call this once window is loaded
 			        $("#dhtmlwindowholder").arrive("#dataPathForm",
