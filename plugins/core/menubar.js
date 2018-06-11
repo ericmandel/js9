@@ -1833,6 +1833,7 @@ JS9.Menubar.init = function(width, height){
 		    disabled: true
 	        };
 		items.regcnts = {name: "Counts in Regions"};
+		items.radprof = {name: "Radial Profile"};
 		if( !im || !im.raw || !im.raw.hdu || !im.raw.hdu.vfile ){
 		    items.regcnts.disabled = true;
 		}
@@ -1971,6 +1972,10 @@ JS9.Menubar.init = function(width, height){
 				JS9.CountsInRegions("$sregions", "$bregions",
 						    {lightwin: true},
 						    {display: udisp.id});
+				break;
+			    case "radprof":
+				JS9.RadialProfile("$sregions", "$bregions",
+						  {display: udisp.id});
 				break;
 			    case "dpath":
 				// call this once window is loaded

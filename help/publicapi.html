@@ -1023,7 +1023,7 @@ where:
 Load the specified colormap file into the web page. The filename,
 which must be specified, can be a local file (with absolute path or a
 path relative to the displayed web page) or a URL. It should contain a
-JSON representation of a colormap, either in RGB color format or in
+json representation of a colormap, either in RGB color format or in
 vertex format (see
 <a href="#JS9.AddColormap"><b>JS9.AddColormap()</b></a>
 above):
@@ -1685,7 +1685,7 @@ The command line switches that can be specified in <b>cmdswitches</b> are
 detailed in the
 <a href="https://js9.si.edu/regions/regcnts.html">regcnts help
 page</a>.  Aside from switches which control important aspects of the
-analysis, the "-j" switch (which returns the output in JSON format)
+analysis, the "-j" switch (which returns the output in json format)
 might be useful in the browser environment. Some examples:
 <pre>
     # display results in a light window
@@ -1728,6 +1728,40 @@ time). But the server-side task also can be useful for
 displaying a small representation file associated with a much larger
 parent file stored on the server. In this case, you often want to run
 the analysis on the larger (original) file.
+
+<h5 id="JS9.RadialProfile">Generate a radial profile plot</h5>
+<p>
+<code class="api">JS9.RadialProfile(sregion, bregion, opts)</code>
+<p>
+where:
+<ul>
+<li><b>sregion</b>: annulus region, or "$sregions" to use displayed annulus
+<li><b>bregion</b>: any background region, or "$bregions" for displayed background regions
+<li><b>opts</b>:  optional object or json string containing region and plot parameters
+</ul>
+The <b>JS9.RadialProfile()</b> routine
+uses <a href="#JS9.CountsInRegions"><b>JS9.CountsInRegions()</b></a>
+to produce a radial profile plot. The source region argument should
+be an annulus region (or, when using "$sregions", the displayed source
+region should be an annulus). The background region can be any
+region(s), the same as for the counts routine.
+
+<p>
+The third argument allows you to specify options to the counts routine,
+as well as the following options for the radial profile plot:
+<ul>
+<li><b>color</b>: color of the plot line (default: "green")
+<li><b>errorbars</b>: show error bars? (default: true)
+<li><b>errorcolor</b>: color of the error bars (default: "red")
+</ul>
+Note that "-j" (json format) and "-r" (output radii) are always added to
+the cmdswitches property (and should not be overridden.) This means you can
+retrieve the json output without generating the plot simply by calling
+<a href="#JS9.CountsInRegions"><b>JS9.CountsInRegions()</b></a> directly:
+<pre>
+    JS9.CountsInRegions(sregions, bregions, {cmdswitches: "-j -r"})
+</pre>
+The return value is the id of the light window containing the plot.
 
 <h5 id="JS9.RawDataLayer">Create or modify a raw data layer</h5>
 <p>
@@ -3795,7 +3829,7 @@ top-level tools.
 <li><b>showTooltips</b>: the text "showTooltips" uses the value of the
 boolean arg2 to specify whether tooltips are displayed as the mouse hovers
 over a tool.
-<li><b>[text]</b>: other text is assumed to be a JSON-formatted text
+<li><b>[text]</b>: other text is assumed to be a json-formatted text
 containing either a new tool to add to the toolbar, or an array of tools.
 <li><b>[object]</b>: an object is assumed to be new tool to add to the toolbar
 <li><b>[array]</b>: an array is assumed to be an array of new tools to add to the toolbar

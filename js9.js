@@ -4572,8 +4572,12 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	break;
     case "plot":
 	// convert results to js object
-	try{ pobj = JSON.parse(s); }
-	catch(e){ JS9.error("can't plot return data: " + s, e);	}
+	if( typeof s === "string" ){
+	    try{ pobj = JSON.parse(s); }
+	    catch(e){ JS9.error("can't plot return data: " + s, e);	}
+	} else if( typeof s === "object" ){
+	    pobj = s;
+	}
 	// sanity check
 	if( !pobj ){
 	    return;
@@ -5551,6 +5555,67 @@ JS9.Image.prototype.countsInRegions = function(args){
     }
     // return results, including errors
     return s;
+};
+
+// radial profile plot
+// eslint-disable-next-line no-unused-vars
+JS9.Image.prototype.radialProfile = function(args){
+    var i, s, xlabel, ylabel, obj, cobj, pobj, res, el, opts;
+    var color, errorbars, errorcolor;
+    var carr = [];
+    var swobj = {cmdswitches: "-j -r"};
+    // make up argument list, add required radial profile switches to opts
+    for(i=0; i<arguments.length; i++){
+	if( typeof arguments[i] === "object" ){
+	    // integrate our switches into passed opts
+	    cobj = $.extend(true, {}, arguments[i], swobj);
+	    carr.push(cobj);
+	    opts = cobj;
+	} else {
+	    carr.push(arguments[i]);
+	}
+    }
+    // if no opts supplied, add the switches manually
+    if( !cobj ){
+	carr.push(swobj);
+    }
+    // opts is optional
+    opts = opts || {};
+    // call regcnts routine
+    s = JS9.Image.prototype.countsInRegions.apply(this, carr);
+    // need a json string in return
+    try{ obj = JSON.parse(s); }
+    catch(e){ JS9.error("can't parse regcnts JSON", e); }
+    if( !obj.columnUnits.radii ){
+	JS9.error("no radii available for radial profile");
+    }
+    // get plot labels
+    xlabel = obj.columnUnits.radii;
+    ylabel = obj.columnUnits.surfBrightness;
+    // get plot colors
+    color = opts.color || "green";
+    errorcolor = opts.errorcolor || "red";
+    if( JS9.isNull(opts.errorbars) || opts.errorbars ){
+	errorbars = "y";
+    } else {
+	errorbars = "n";
+    }
+    // init plot object
+    pobj = {color: sprintf("%s", color), label : sprintf("surface brightness(%s) vs. radius(%s)", ylabel, xlabel), points:{"errorbars" : sprintf("%s", errorbars), "yerr" : {"show" : "true", "color" : sprintf("%s", errorcolor)}}, data: []};
+    // add data values
+    for(i=0; i<obj.backgroundSubtractedResults.length; i++){
+	res = obj.backgroundSubtractedResults[i];
+	if( res.radius2 === "undefined" ||
+	    res.radius2 === "NA"        ||
+	    res.radius1 > res.radius2   ){
+	    JS9.error("radial profile source region must be an annulus");
+	}
+	el = [(res.radius1 + res.radius2)/2, res.surfBrightness, res.surfError];
+	pobj.data.push(el);
+    }
+    // display results
+    return this.displayAnalysis("plot", pobj,
+				{divid: JS9.globalOpts.analysisDiv});
 };
 
 // make (or select) a raw data layer
@@ -17778,6 +17843,7 @@ JS9.mkPublic("SaveJPEG", "saveJPEG");
 JS9.mkPublic("SaveFITS", "saveFITS");
 JS9.mkPublic("UploadFITSFile", "uploadFITSFile");
 JS9.mkPublic("CountsInRegions", "countsInRegions");
+JS9.mkPublic("RadialProfile", "radialProfile");
 JS9.mkPublic("RunAnalysis", "runAnalysis");
 JS9.mkPublic("RawDataLayer", "rawDataLayer");
 JS9.mkPublic("GaussBlurData", "gaussBlurData");
