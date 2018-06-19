@@ -1632,9 +1632,33 @@ Using this routine, it can be run on the FITS file stored in memory
 for the currently displayed image.  The first two arguments specify
 the <b>source region(s)</b> and <b>background region(s)</b>,
 respectively. You can pass a standard region specifier as the source
-or background region. If the string "$sregions" ("$bregions") is
+or background region:
+<pre>
+    JS9.CountsInRegions('ICRS; circle(23:23:18.76, +58:47:27.25, 31.8&#34;)');
+</pre>
+If the string "$sregions" ("$bregions") is
 specified, the source (background) regions are taken from the
-currently displayed image.
+currently displayed image. You also can specify a region selector
+using any of the following:
+<ul>
+<li><b>all</b>: all regions
+<li><b>selected</b>: the selected region (or regions in a selected group)
+<li><b>[color]</b>: regions of the specified color
+<li><b>[shape]</b>: regions of the specified shape
+<li><b>[tag]</b>:  regions having the specified tag
+<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
+</ul>
+For example:
+<pre>
+    # all regions
+    JS9.CountsInRegions('all');
+    # selected regions
+    JS9.CountsInRegions('selected');
+    # regions tagged with the "foo" tag
+    JS9.CountsInRegions('foo');
+</pre>
+Note that if you pass a region selector and no regions are returned, the
+routine will throw an error.
 
 <p>
 In keeping with how desktop regcnts works, if no argument or null or a
@@ -2482,7 +2506,7 @@ where:
 </ul>
 Change one or more regions. 
 If the <b>regions</b> argument is not specified, it defaults to "all". You
-can specify regions using any of the following:
+can specify a region selector using any of the following:
 <ul>
 <li><b>all</b>: all regions
 <li><b>selected</b>: the selected region (or regions in a selected group)
@@ -2515,7 +2539,7 @@ Copy regions to a different image. If <b>to</b> is "all", then the regions are
 copied to all images.
 <p>
 If the <b>regions</b> argument is not specified, it defaults to "all". You
-can specify regions using any of the following:
+can specify a region selector using any of the following:
 <ul>
 <li><b>all</b>: all regions
 <li><b>selected</b>: the selected region (or regions in a selected group)
@@ -2536,7 +2560,7 @@ where:
 <li><b>regions</b>: which regions to remove
 </ul>
 If the <b>regions</b> argument is not specified, it defaults to "all". You
-can specify regions using any of the following:
+can specify a region selector using any of the following:
 <ul>
 <li><b>all</b>: all regions
 <li><b>selected</b>: the selected region (or regions in a selected group)

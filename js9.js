@@ -5431,9 +5431,55 @@ JS9.Image.prototype.zscale = function(setvals){
 // background-subtracted counts in regions
 // eslint-disable-next-line no-unused-vars
 JS9.Image.prototype.countsInRegions = function(args){
+    var that = this;
     var i, s, vfile, bvfile, sect, ext, filter, dims, bin, opts, cmdswitches;
-    var sregion="field";
-    var bregion="";
+    var sregions="field";
+    var bregions="";
+    var getreg = function(arg, macro, def){
+	var ii, rarr, reg, narg;
+	var regrexp= /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
+	// if we have no region, we're done
+	if( !arg ){
+	    return def;
+	}
+	if( typeof arg === "string" ){
+	    narg = that.expandMacro(arg);
+	    // if we have no region, we're done
+	    if( !narg ){
+		return def;
+	    }
+	    // if its a known region, we are done
+	    if( narg.match(regrexp) ){
+		return narg;
+	    }
+	}
+	// look for a region specifier
+	rarr = that.getShapes("regions", arg);
+	// region are returned: this is an error
+	if( !rarr || !rarr.length ){
+	    JS9.error("no regions found: " + arg);
+	}
+	// compose a region string from the returned regions
+	narg = "";
+	for(ii=0; ii<rarr.length; ii++){
+	    reg = rarr[ii];
+	    if( that.params.wcssys ){
+		// put wcs sys at the start
+		if( !narg ){
+		    narg = reg.wcssys || "";
+		}
+		// add wcs region string
+		narg += sprintf("; %s", reg.wcsstr);
+	    } else {
+		if( !narg ){
+		    narg = reg.imsys || "";
+		}
+		// add image region string
+		narg += sprintf("; %s", reg.imstr);
+	    }
+	}
+	return narg || def;
+    };
     // sanity check
     if( !this.raw.hdu || !this.raw.hdu.fits || !this.raw.hdu.fits.vfile ){
 	JS9.error("no virtual file available for regcnts: " + this.id);
@@ -5454,41 +5500,20 @@ JS9.Image.prototype.countsInRegions = function(args){
 	if( typeof arguments[0] === "object" ){
 	    opts = arguments[0];
 	} else {
-	    if( arguments[0] === "$sregions" ){
-		sregion = this.expandMacro("$sregions");
-	    } else {
-		sregion = arguments[0] || "field";
-	    }
+	    sregions = getreg(arguments[0], "$sregions", "field");
 	}
 	break;
     case 2:
-	// regcnts(sregion)
-	if( arguments[0] === "$sregions" ){
-	    sregion = this.expandMacro("$sregions");
-	} else {
-	    sregion = arguments[0] || "field";
-	}
+	sregions = getreg(arguments[0], "$sregions", "field");
 	if( typeof arguments[1] === "object" ){
 	    opts = arguments[1];
 	} else {
-	    if( arguments[1] === "$bregions" ){
-		bregion = this.expandMacro("$bregions");
-	    } else {
-		bregion = arguments[1] || "";
-	    }
+	    bregions = getreg(arguments[1], "$bregions", "");
 	}
 	break;
     default:
-	if( arguments[0] === "$sregions" ){
-	    sregion = this.expandMacro("$sregions");
-	} else {
-	    sregion = arguments[0] || "field";
-	}
-	if( arguments[1] === "$bregions" ){
-	    bregion = this.expandMacro("$bregions");
-	} else {
-	    bregion = arguments[1] || "";
-	}
+	sregions = getreg(arguments[0], "$sregions", "field");
+	bregions = getreg(arguments[1], "$bregions", "");
 	opts = arguments[2];
 	break;
     }
@@ -5537,7 +5562,7 @@ JS9.Image.prototype.countsInRegions = function(args){
     // could take a while ...
     JS9.waiting(true, this.display);
     // call low-level regcnts
-    s = JS9.regcnts(vfile, sregion, bregion, cmdswitches);
+    s = JS9.regcnts(vfile, sregions, bregions, cmdswitches);
     // all done waiting
     JS9.waiting(false);
     // remove binned file, if necessary
