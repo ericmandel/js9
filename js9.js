@@ -5448,14 +5448,14 @@ JS9.Image.prototype.countsInRegions = function(args){
 	    if( !narg ){
 		return def;
 	    }
-	    // if its a known region, we are done
+	    // if its a known region, we're done
 	    if( narg.match(regrexp) ){
 		return narg;
 	    }
 	}
 	// look for a region specifier
 	rarr = that.getShapes("regions", arg);
-	// region are returned: this is an error
+	// no region are returned: this is an error
 	if( !rarr || !rarr.length ){
 	    JS9.error("no regions found: " + arg);
 	}
@@ -5471,6 +5471,7 @@ JS9.Image.prototype.countsInRegions = function(args){
 		// add wcs region string
 		narg += sprintf("; %s", reg.wcsstr);
 	    } else {
+		// put image sys at the start
 		if( !narg ){
 		    narg = reg.imsys || "";
 		}
