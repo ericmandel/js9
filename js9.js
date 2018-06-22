@@ -14258,7 +14258,7 @@ JS9.Grid.getLabel = function(opts, v, which){
 
 // generate and display a coordinate grid of Line shapes
 // call with image context
-JS9.Grid.coordGrid = function(mode, myopts){
+JS9.Grid.coordinateGrid = function(mode, myopts){
     var i, n, s, t, x, y, lineloc, arr, inc, got;
     var ra, dec, ra0, ra1, dec0, dec1, rainc, decinc;
     var raoffx, raoffy, decoffx, decoffy;
@@ -14291,6 +14291,10 @@ JS9.Grid.coordGrid = function(mode, myopts){
     }
     // local opts are optional
     myopts = myopts || {};
+    if( typeof myopts === "string" ){
+	try{ myopts = JSON.parse(myopts); }
+	catch(e){ JS9.error("can't parse coordinateGrid JSON", e); }
+    }
     // we are actively creating a grid
     this.tmp.gridStatus = "processing";
     // get opts
@@ -14527,11 +14531,11 @@ JS9.Grid.toggle = function(im){
     case null:
     case "inactive":
 	// start afresh
-	im.coordGrid(true);
+	im.coordinateGrid(true);
 	break;
     case "active":
 	// clear the grid
-	im.coordGrid(false);
+	im.coordinateGrid(false);
 	break;
     case "processing":
     default:
@@ -14547,7 +14551,7 @@ JS9.Grid.regrid = function(im){
 	    return;
 	}
 	// redraw the grid
-	im.coordGrid(true);
+	im.coordinateGrid(true);
     }
 };
 
@@ -14565,7 +14569,7 @@ JS9.Grid.init = function(opts){
 };
 
 // add to image prototypes
-JS9.Image.prototype.coordGrid = JS9.Grid.coordGrid;
+JS9.Image.prototype.coordinateGrid = JS9.Grid.coordinateGrid;
 
 // ---------------------------------------------------------------------
 // Utilities
@@ -18308,7 +18312,7 @@ JS9.mkPublic("AddShapes", "addShapes");
 JS9.mkPublic("RemoveShapes", "removeShapes");
 JS9.mkPublic("GetShapes", "getShapes");
 JS9.mkPublic("ChangeShapes", "changeShapes");
-JS9.mkPublic("CoordGrid", "coordGrid");
+JS9.mkPublic("CoordinateGrid", "coordinateGrid");
 JS9.mkPublic("Print", "print");
 JS9.mkPublic("SavePNG", "savePNG");
 JS9.mkPublic("SaveJPEG", "saveJPEG");
