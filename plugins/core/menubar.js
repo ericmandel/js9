@@ -1842,6 +1842,7 @@ JS9.Menubar.init = function(width, height){
 		items.radprof = {name: "Radial Profile"};
 		if( !im || !im.raw || !im.raw.hdu || !im.raw.hdu.vfile ){
 		    items.regcnts.disabled = true;
+		    items.radprof.disabled = true;
 		}
 		items.sigma = {
 		    events: {keyup: keyAnalysis},
