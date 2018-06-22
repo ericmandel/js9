@@ -6255,6 +6255,12 @@ JS9.Menubar.init = function(width, height){
 		    name: "Client-side Analysis:",
 		    disabled: true
 	        };
+		items.grid = {name: "Coordinate Grid"};
+		if( !im || !im.raw.wcs || im.raw.wcs <=0 ){
+		    items.grid.disabled = true;
+		} else {
+		    if( im.grid() ){ items.grid.icon = "sun"; }
+		}
 		items.regcnts = {name: "Counts in Regions"};
 		items.radprof = {name: "Radial Profile"};
 		if( !im || !im.raw || !im.raw.hdu || !im.raw.hdu.vfile ){
@@ -6425,6 +6431,9 @@ JS9.Menubar.init = function(width, height){
 				// save display id
 				$(did).data("dispid", udisp.id);
 				$(did).data("imid", uim.id);
+				break;
+			    case "grid":
+				uim.grid(!uim.grid());
 				break;
 			    case "upload":
 				uim.uploadFITSFile();
@@ -7140,6 +7149,74 @@ JS9.Prefs.regionsSchema = {
     }
 };
 
+JS9.Prefs.gridSchema = {
+    "title": "Grid Preferences",
+    "description": "Preferences for wcs coordinate grids",
+    "type": "object",
+    "properties": {
+	"cover": {
+	    "type": "string",
+	    "helper": "grid lines cover: display or image"
+	},
+	"raLines": {
+	    "type": "number",
+	    "helper": "approx. number of RA grid lines"
+	},
+	"decLines": {
+	    "type": "number",
+	    "helper": "approx. number of Dec grid lines"
+	},
+	"stride": {
+	    "type": "number",
+	    "helper": "fineness of grid lines"
+	},
+	"margin": {
+	    "type": "number",
+	    "helper": "edge margin for displaying a line"
+	},
+	"gridColor": {
+	    "type": "string",
+	    "helper": "color of grid lines"
+	},
+	"strokeWidth": {
+	    "type": "number",
+	    "helper": "grid stroke width"
+	},
+	"labelColor": {
+	    "type": "string",
+	    "helper": "color of text labels"
+	},
+	"labelFontFamily": {
+	    "type": "string",
+	    "helper": "label font"
+	},
+	"labelFontSize": {
+	    "type": "string",
+	    "helper": "label font size"
+	},
+	"labelRAOffx": {
+	    "type": "number",
+	    "helper": "x offset of RA labels"
+	},
+	"labelRAOffy": {
+	    "type": "number",
+	    "helper": "y offset of RA labels"
+	},
+	"labelDecOffx": {
+	    "type": "number",
+	    "helper": "x offset of Dec labels"
+	},
+	"labelDecOffy": {
+	    "type": "number",
+	    "helper": "y offset of Dec labels"
+	},
+	"reduceDims": {
+	    "type": "boolean",
+	    "helper": "reduce lines of smaller image dim?"
+	}
+    }
+};
+
 // schema for each source
 JS9.Prefs.fitsSchema = {
     "title": "FITS Preferences",
@@ -7304,6 +7381,7 @@ JS9.Prefs.displaysSchema = {
 JS9.Prefs.sources = [
     {name: "images",   schema: JS9.Prefs.imagesSchema},
     {name: "regions",  schema: JS9.Prefs.regionsSchema},
+    {name: "grid",     schema: JS9.Prefs.gridSchema},
     {name: "fits",     schema: JS9.Prefs.fitsSchema},
     {name: "catalogs", schema: JS9.Prefs.catalogsSchema},
     {name: "displays", schema: JS9.Prefs.displaysSchema}
@@ -7338,6 +7416,9 @@ JS9.Prefs.init = function(){
 	    break;
 	case "regions":
 	    source.data = JS9.Regions.opts;
+	    break;
+	case "grid":
+	    source.data = JS9.Grid.opts;
 	    break;
 	case "fits":
 	    // make up "nicer" option values from raw object
@@ -7520,6 +7601,9 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	break;
     case "regions":
 	obj = JS9.Regions.opts;
+	break;
+    case "grid":
+	obj = JS9.Grid.opts;
 	break;
     case "fits":
 	obj = JS9.fits.options;

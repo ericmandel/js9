@@ -152,6 +152,7 @@ JS9.globalOpts = {
 	b: "toggle selected region: source/background",
 	e: "toggle selected region: include/exclude",
 	f: "display full image",
+	g: "toggle coordinate grid",
 	r: "refresh image",
         "/": "copy wcs position to clipboard",
         "?": "copy value and position to clipboard",
@@ -245,6 +246,8 @@ JS9.regionOpts = {};
 JS9.catalogOpts = {};
 // allows crosshair opts (in Crosshair.opts) to be overridden via js9prefs.js
 JS9.crosshairOpts = {};
+// allows grid opts (in Grid.opts) to be overridden via js9prefs.js
+JS9.gridOpts = {};
 // allows emscripten opts (in Module) to be overridden via js9prefs.js
 JS9.emscriptenOpts = {};
 
@@ -10997,7 +11000,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
         break;
     case "text":
 	pub.imstr = "text(" + tr(px) + ", " + tr(py) + ', "' + obj.text + '", ' + tr4(pub.angle) + ')';
-	tstr = "text " + pub.x + " " + pub.y + ' "' + obj.text + '"' + " " + (pub.angle * Math.PI / 180.0);;
+	tstr = "text " + pub.x + " " + pub.y + ' "' + obj.text + '"' + " " + (pub.angle * Math.PI / 180.0);
 	pub.text = obj.text;
 	break;
     default:
@@ -14152,6 +14155,415 @@ JS9.Crosshair.init = function(){
     }
     return this;
 };
+
+// ---------------------------------------------------------------------
+// Grid object displays a wcs coordinate grid
+// ---------------------------------------------------------------------
+
+JS9.Grid = {};
+JS9.Grid.CLASS = "JS9";
+JS9.Grid.NAME = "Grid";
+JS9.Grid.LAYERNAME = "grid";
+
+// defaults for grids
+JS9.Grid.opts = {
+    evented: true,
+    movable: false,
+    cover: "display",
+    reduceDims: true,
+    strokeWidth: 1,
+    margin:   0,
+    stride:  32,
+    xAngle:  0,
+    yAngle:  90,
+    raLines:  8,
+    decLines: 8,
+    gridColor: "#00BB00",
+    labelColor: "red",
+    labelFontFamily: "Helvetica",
+    labelFontSize: 11,
+    labelRAOffx: 3,
+    labelRAOffy: -1,
+    labelDecOffx: -14,
+    labelDecOffy: 6
+};
+
+// this is the problem routine: hard to get a heuristic that will:
+// 1. pick a "natural" number of lines (depends on size of image)
+// 2. put the lines on "natural" wcs boundaries (.1 degree or every 10 arcsec)
+JS9.Grid.limits = function(opts, in0, in1, n){
+    var trange, tscale, out0, out1, outinc;
+    trange = in1 - in0;
+    if( trange > 1 ){
+	tscale = 10;
+    } else if( trange > 0.1 ){
+	tscale = 100;
+    } else if( trange > 0.01 ){
+	tscale = 1000;
+    } else if( trange > 0.001 ){
+	tscale = 10000;
+    } else if( trange > 0.0001 ){
+	tscale = 100000;
+    } else {
+	tscale = 1000000;
+    }
+    out0 = Math.floor(in0 * tscale) / tscale;
+    out1 = Math.ceil(in1 * tscale) / tscale;
+    outinc = Math.ceil(((out1 - out0) / n) * tscale) / tscale;
+    return {lo: out0, hi: out1, inc: outinc};
+};
+
+// generate label value
+JS9.Grid.getLabel = function(opts, v, which){
+    var i, t, idx, arr;
+    var doall = false;
+    switch(opts.wcsunits){
+    case "sexagesimal":
+	if( (which === "ra") &&
+	    ((opts.wcssys !== "galactic") && (opts.wcssys !== "ecliptic")) ){
+	    v /= 15.0;
+	}
+	t = JS9.saodtostr(v, ":", -1);
+	t = t.replace(/0*$/, "");
+	if( t.charAt(t.length-1) === "." ){
+	    t = t.replace(/\.$/, "");
+	}
+	arr = t.split(":");
+	if( opts.last[which] ){
+	    t = "";
+	    for(i=0; i<arr.length; i++){
+		if( t ){ t += ":"; }
+		if( doall || arr[i] !== opts.last[which][i] ){
+		    t += arr[i];
+		    doall = true;
+		}
+	    }
+	}
+	opts.last[which] = $.extend({}, arr);
+	break;
+    default:
+	t = v.toFixed(3);
+	break;
+    }
+    t = t.replace(/0+$/, "");
+    idx = t.indexOf(".");
+    if( idx < 0 ){
+	t += ".0";
+    } else if( idx === t.length -1 ){
+	t += "0";
+    }
+    t = t.replace(/:\.0/, ":0.0");
+    return t;
+};
+
+// generate and display a coordinate grid of Line shapes
+// call with image context
+JS9.Grid.coordGrid = function(mode){
+    var i, n, s, t, x, y, lineloc, arr, inc, got;
+    var ra, dec, ra0, ra1, dec0, dec1, rainc, decinc;
+    var raoffx, raoffy, decoffx, decoffy;
+    var ratios, corners, opts;
+    var xrainc0, xrainc, xralim, xdecinc0, xdecinc, xdeclim, ipos, dpos;
+    var out = {};
+    var display = this.display;
+    var raw = this.raw;
+    var lims = [{ra:0, dec:0}, {ra:0, dec:0}, {ra:0, dec:0}, {ra:0, dec:0}];
+    // no arg: return current grid dispaly status
+    if( JS9.isNull(mode) ){
+	// toggle display
+	switch(this.tmp.gridStatus){
+	case "inactive":
+	case undefined:
+	    return false;
+	case "active":
+	case "processing":
+	    return true;
+	default:
+	    return true;
+	}
+    }
+    // delete previous grid
+    this.removeShapes(JS9.Grid.LAYERNAME);
+    // if false or no wcs, set inactive status and return
+    if( mode === false || !this.raw.wcs || this.raw.wcs <= 0 ){
+	this.tmp.gridStatus = "inactive";
+	return;
+    }
+    // we are actively creating a grid
+    this.tmp.gridStatus = "processing";
+    // get opts
+    opts = $.extend(true, {}, JS9.Grid.opts);
+    // labels will follow current wcs units
+    opts.wcsunits = this.getWCSUnits();
+    opts.wcssys = this.getWCSSys();
+    // keep track of labels as we go along
+    opts.last = {};
+    // wcslib wants degrees
+    JS9.wcsunits(this.raw.wcs, "degrees");
+    // if we will cover the whole image, change the ratio and corner values
+    if( opts.cover === "image" ){
+	ratios = [Math.max(1, Math.floor(raw.width  / display.width)),
+		  Math.max(1, Math.floor(raw.height / display.height))];
+	corners = [{x: 0, y: 0}, {x: raw.width-1, y: raw.height-1}];
+    } else {
+	if( opts.reduceDims ){
+	    if( raw.width < raw.height ){
+		ratios = [raw.width / raw.height, 1];
+	    } else if( raw.height < raw.width ){
+		ratios = [1, raw.height / raw.width];
+	    } else {
+		ratios = [1,1];
+	    }
+	} else {
+	    ratios = [1,1];
+	}
+	corners = [];
+	dpos = {x: this.ix + opts.margin,
+		y: this.iy - opts.margin};
+	ipos = this.displayToImagePos(dpos);
+	corners[0] = {x: ipos.x, y: ipos.y};
+	dpos = {x: display.width  - this.ix - opts.margin,
+		y: display.height - this.iy - opts.margin};
+	ipos = this.displayToImagePos(dpos);
+	corners[1] = {x: ipos.x, y: ipos.y};
+    }
+    // wcs coords at corners of display
+    s = JS9.pix2wcs(raw.wcs, corners[0].x, corners[0].y).trim().split(/\s+/);
+    lims[0].ra = JS9.saostrtod(s[0]);
+    lims[0].dec = JS9.saostrtod(s[1]);
+    s = JS9.pix2wcs(raw.wcs, corners[0].x, corners[1].y).trim().split(/\s+/);
+    lims[1].ra = JS9.saostrtod(s[0]);
+    lims[1].dec = JS9.saostrtod(s[1]);
+    s = JS9.pix2wcs(raw.wcs, corners[1].x, corners[0].y).trim().split(/\s+/);
+    lims[2].ra = JS9.saostrtod(s[0]);
+    lims[2].dec = JS9.saostrtod(s[1]);
+    s = JS9.pix2wcs(raw.wcs, corners[1].x, corners[1].y).trim().split(/\s+/);
+    lims[3].ra = JS9.saostrtod(s[0]);
+    lims[3].dec = JS9.saostrtod(s[1]);
+    ra0 = lims[0].ra;
+    dec0 = lims[0].dec;
+    ra1 = lims[0].ra;
+    dec1 = lims[0].dec;
+    // initial ra,dec limits in ascending order
+    for(i=1; i<4; i++){
+	ra0 = Math.min(ra0, lims[i].ra);
+	dec0 = Math.min(dec0, lims[i].dec);
+	ra1 = Math.max(ra1, lims[i].ra);
+	dec1 = Math.max(dec1, lims[i].dec);
+    }
+    // calculate normalized ra limits
+    out = JS9.Grid.limits.call(this, opts, ra0, ra1, opts.raLines*ratios[0]);
+    ra0 = out.lo;
+    ra1 = out.hi;
+    rainc = out.inc;
+    // find best line for RA labels
+    // calculate normalized dec limits
+    out = JS9.Grid.limits.call(this, opts, dec0, dec1, opts.decLines*ratios[1]);
+    dec0 = out.lo;
+    dec1 = out.hi;
+    decinc = out.inc;
+    // restore original values
+    JS9.wcsunits(this.raw.wcs, opts.wcsunits);
+    // loop limits
+    xrainc0 = Math.abs(this.raw.wcsinfo.cdelt1);
+    xrainc = xrainc0 * JS9.Grid.opts.stride;
+    xralim = ra1 - xrainc;
+    xdecinc0 = Math.abs(this.raw.wcsinfo.cdelt2);
+    xdecinc = xdecinc0 * JS9.Grid.opts.stride;
+    xdeclim = dec1 - xdecinc;
+    // start grid regions
+    s = "image;";
+    // lines of constant RA
+    for(ra=ra0; ra<=ra1; ra=ra+rainc){
+	t = "line(";
+	inc = xdecinc0;
+	lineloc = 0;
+	n = 0;
+        for(dec=dec0; dec<=dec1; dec=dec+inc){
+	    arr = JS9.wcs2pix(raw.wcs, ra, dec).trim().split(/ +/);
+	    if( arr && arr.length ){
+		x = parseFloat(arr[0]);
+		y = parseFloat(arr[1]);
+		if( x >= -opts.margin && x <= raw.width + opts.margin  && 
+		    y >= -opts.margin && y <= raw.height + opts.margin ){
+		    t += String(x + 1 + "," + y + 1 + ", ");
+		    n++;
+		    if( lineloc === 0 ){
+			lineloc = 1;
+			if( dec < xdeclim ){
+			    inc = xdecinc;
+			}
+		    } else if( lineloc === 1 ){
+			if( dec > xdeclim ){
+			    lineloc = 2;
+			    inc = xdecinc0;
+			}
+		    }
+		} else {
+		    if( lineloc === 1 ){
+			lineloc = 2;
+			dec = dec - inc;
+			inc = xdecinc0;
+		    }
+		}
+	    }
+	}
+	if( n > 1 ){
+	    s += t.replace(/,\s+$/, ") ");
+	    s += sprintf(' {"color": "%s"};', opts.gridColor);
+	}
+    }
+    // lines of constant Dec
+    for(dec=dec0; dec<=dec1; dec=dec+decinc){
+	t = "line(";
+	inc = xrainc0;
+	lineloc = 0;
+	n = 0;
+        for(ra=ra0; ra<=ra1; ra=ra+inc){
+	    arr = JS9.wcs2pix(raw.wcs, ra, dec).trim().split(/ +/);
+	    if( arr && arr.length ){
+		x = parseFloat(arr[0]);
+		y = parseFloat(arr[1]);
+		if( x >= -opts.margin && x <= raw.width + opts.margin  && 
+		    y >= -opts.margin && y <= raw.height + opts.margin ){
+		    t += String(x + 1 + "," + y + 1 + ", ");
+		    n++;
+		    if( lineloc === 0 ){
+			lineloc = 1;
+			if( ra < xralim ){
+			    inc = xrainc;
+			}
+		    } else if( lineloc === 1 ){
+			if( ra > xralim ){
+			    lineloc = 2;
+			    inc = xrainc0;
+			}
+		    }
+		} else {
+		    if( lineloc === 1 ){
+			lineloc = 2;
+			ra = ra - inc;
+			inc = xrainc0;
+		    }
+		}
+	    }
+	}
+	if( n > 1 ){
+	    s += t.replace(/,\s+$/, ") ");
+	    s += sprintf(' {"color": "%s"};', opts.gridColor);
+	}
+    }
+    // dec labels along constant ra line
+    decoffx = opts.labelDecOffx / this.rgb.sect.zoom;
+    decoffy = opts.labelDecOffy / this.rgb.sect.zoom;
+    for(ra=ra0, got=0; ra<=ra1; ra=ra+rainc){
+	for(dec=dec0; dec<=dec1; dec=dec+decinc){
+	    arr = JS9.wcs2pix(raw.wcs, ra, dec).trim().split(/ +/);
+	    if( arr && arr.length ){
+		x = parseFloat(arr[0]);
+		y = parseFloat(arr[1]);
+		dpos = this.imageToDisplayPos({x: x, y: y});
+		if( dpos.x > this.ix && dpos.x < (this.rgb.img.width+this.ix) &&
+		    dpos.y > this.iy && dpos.y < (this.rgb.img.height+this.iy)){
+		    s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "originX":"left", "originY":"top"};',
+				 x + decoffx, y + decoffy,
+				 JS9.Grid.getLabel.call(this, opts, dec, "dec"),
+				 opts.yAngle,
+				 opts.labelColor,
+				 opts.labelFontFamily,
+				 opts.labelFontSize);
+		    got++;
+		}
+	    }
+	}
+	if( got ){
+	    break;
+	}
+    }
+    // ra labels along constant dec line
+    raoffx = opts.labelRAOffx / this.rgb.sect.zoom;
+    raoffy = opts.labelRAOffy / this.rgb.sect.zoom;
+    for(dec=dec0, got=0; dec<=dec1; dec=dec+decinc){
+	for(ra=ra0; ra<=ra1; ra=ra+rainc){
+	    arr = JS9.wcs2pix(raw.wcs, ra, dec).trim().split(/ +/);
+	    if( arr && arr.length ){
+		x = parseFloat(arr[0]);
+		y = parseFloat(arr[1]);
+		dpos = this.imageToDisplayPos({x: x, y: y});
+		if( dpos.x > this.ix && dpos.x < (this.rgb.img.width+this.ix) &&
+		    dpos.y > this.iy && dpos.y < (this.rgb.img.height+this.iy)){
+		    s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "originX":"left", "originY":"top"};',
+				 x + raoffx, y + raoffy,
+				 JS9.Grid.getLabel.call(this, opts, ra, "ra"),
+				 opts.xAngle,
+				 opts.labelColor,
+				 opts.labelFontFamily,
+				 opts.labelFontSize);
+		    got++;
+		}
+	    }
+	}
+	if( got ){
+	    break;
+	}
+    }
+    // add the grid shapes
+    this.addShapes(JS9.Grid.LAYERNAME, s);
+    // grid is complete and active
+    this.tmp.gridStatus = "active";
+};
+
+// toggle grid on/off
+JS9.Grid.toggle = function(im){
+    // sanity check
+    if( !im ){
+	return;
+    }
+    // toggle display
+    switch(im.tmp.gridStatus){
+    case undefined:
+    case null:
+    case "inactive":
+	// start afresh
+	im.coordGrid(true);
+	break;
+    case "active":
+	// clear the grid
+	im.coordGrid(false);
+	break;
+    case "processing":
+    default:
+	break;
+    }
+};
+
+// display grid, as needed
+JS9.Grid.regrid = function(im){
+    if( im ){
+	// ignore if grid is not active or the image is not loaded
+	if( im.tmp.gridStatus !== "active" || im.status.load !== "complete" ){
+	    return;
+	}
+	// redraw the grid
+	im.coordGrid(true);
+    }
+};
+
+// plugin init: load our grid methods
+// eslint-disable-next-line no-unused-vars
+JS9.Grid.init = function(opts){
+    var dlayer;
+    opts = $.extend(true, {}, JS9.Catalogs.opts, JS9.Grid.opts, opts);
+    // init the display shape layer
+    dlayer = this.display.newShapeLayer(JS9.Grid.LAYERNAME, opts);
+    // mouse up: no-op
+    dlayer.canvas.on("mouse:up", function(){
+	    return false;
+    });
+};
+
+// add to image prototypes
+JS9.Image.prototype.coordGrid = JS9.Grid.coordGrid;
 
 // ---------------------------------------------------------------------
 // Utilities
@@ -17472,6 +17884,10 @@ JS9.initKeyboardActions = function(){
 	evt.preventDefault();
 	im.refreshImage();
     };
+    // eslint-disable-next-line no-unused-vars
+    JS9.Keyboard.Actions["toggle coordinate grid"] = function(im, ipos, evt){
+	JS9.Grid.toggle(im);
+    };
 };
 
 // init analysis
@@ -17597,16 +18013,29 @@ JS9.init = function(){
 	}
     }
     // if JS9 prefs have regionOpts, transfer them to Regions.opts
-    $.extend(true, JS9.Regions.opts, JS9.regionOpts);
+    if( JS9.hasOwnProperty("Regions") ){
+	$.extend(true, JS9.Regions.opts, JS9.regionOpts);
+    }
     delete JS9.regionOpts;
     // if JS9 prefs have catalogOpts, transfer them to Catalogs.opts
-    $.extend(true, JS9.Catalogs.opts, JS9.catalogOpts);
+    if( JS9.hasOwnProperty("Catalogs") ){
+	$.extend(true, JS9.Catalogs.opts, JS9.catalogOpts);
+    }
     delete JS9.catalogOpts;
     // if JS9 prefs have crosshairOpts, transfer them to Crosshair.opts
-    $.extend(true, JS9.Crosshair.opts, JS9.crosshairOpts);
+    if( JS9.hasOwnProperty("Crosshair") ){
+	$.extend(true, JS9.Crosshair.opts, JS9.crosshairOpts);
+    }
     delete JS9.crosshairOpts;
+    // if JS9 prefs have gridOpts, transfer them to Grid.opts
+    if( JS9.hasOwnProperty("Grid") ){
+	$.extend(true, JS9.Grid.opts, JS9.gridOpts);
+    }
+    delete JS9.gridOpts;
     // if JS9 prefs have emscriptenOpts, transfer them to Module
-    $.extend(true, Module, JS9.emscriptenOpts);
+    if( JS9.hasOwnProperty("Module") ){
+	$.extend(true, Module, JS9.emscriptenOpts);
+    }
     delete JS9.emscriptenOpts;
     // regularize resize params
     if( !JS9.globalOpts.resize ){
@@ -17746,6 +18175,14 @@ JS9.init = function(){
 			onmouseout:  JS9.Crosshair.hide,
 			onimageload: JS9.Crosshair.create,
 			winDims: [0, 0]});
+    JS9.RegisterPlugin(JS9.Grid.CLASS, JS9.Grid.NAME,
+		       JS9.Grid.init,
+		       {onsetpan:      JS9.Grid.regrid,
+			onsetzoom:     JS9.Grid.regrid,
+			onsetwcssys:   JS9.Grid.regrid,
+			onsetwcsunits: JS9.Grid.regrid,
+			onimageload  : JS9.Grid.regrid,
+			winDims:       [0, 0]});
     // find divs associated with each plugin and run the constructor
     JS9.instantiatePlugins();
     // sort plugins
@@ -17869,6 +18306,7 @@ JS9.mkPublic("AddShapes", "addShapes");
 JS9.mkPublic("RemoveShapes", "removeShapes");
 JS9.mkPublic("GetShapes", "getShapes");
 JS9.mkPublic("ChangeShapes", "changeShapes");
+JS9.mkPublic("CoordGrid", "coordGrid");
 JS9.mkPublic("Print", "print");
 JS9.mkPublic("SavePNG", "savePNG");
 JS9.mkPublic("SaveJPEG", "saveJPEG");
