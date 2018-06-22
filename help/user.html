@@ -187,6 +187,9 @@ displayed in the upper left of the image. You can redirect the display
 to a movable, light-weight window by choosing the <b>InfoBox</b> menu
 option.
 <p>
+The <b>display wcs crosshair</b> option will display a crosshair in
+other JS9 displays, matching the WCS position of the mouse in this display.
+<p>
 The <b>display toolbar tooltips</b> option specifies whether tooltips
 are displayed as the mouse hovers over an icon in the <b>Toolbar</b>
 plugin. (For mobile devices, a single tap will display the tooltip,
@@ -358,8 +361,61 @@ reprojected data is placed in a new <b>raw data layer</b> called
 "reproject". You can switch between layers using the <b>View->raw data
 layers</b> option.
 
-<li><p><b>Analysis:</b> Each JS9 site can define server-side analysis
-tasks to be run from the Analysis menu. Tasks are of two types:
+<li><p><b>Analysis:</b>
+JS9 supports both client-side analysis (i.e.,
+analysis in the browser) and server-side analysis (where requests are
+made to a back-end server, and returned results are displayed in the
+browser).
+
+<p>
+Client-side analysis tasks can be written using the JS9
+<a href="localtasks.html">Plugin</a> capability, and
+the <b>Analysis</b> menu lists the currently loaded <b>Analysis
+Plugins</b>. For example, JS9 supplies the
+<b>Imexam</b> plugin, which offers the following tasks:
+<ul>
+<li> 3dPlot
+<li> Encircled Energy
+<li> Histogram
+<li> Radial Proj
+<li> Region Stats
+<li> X Proj
+<li> Y Proj
+</ul>
+
+<p>
+JS9 supplies a few other client-side analysis tasks:
+<ul>
+<li><b>Coordinate Grid:</b> display a WCS-based coordinate grid. The
+coordinate grid parameters can be changed using the <b>Preferences</b>
+plugin in the <b>View</b> menu.
+<li><b>Counts in Regions:</b> Run the
+<a href="https://js9.si.edu/regions/regcnts.html" target="_blank">regcnts</a>
+program (compiled into the browser using
+<a href="https://kripken.github.io/emscripten-site/" target="_blank">
+Emscripten</a>) on the specified
+source and background regions and return a text display.  This is the
+same task as the server-side task, but running on the internal FITS file.
+<li><b>Radial Profile:</b> Run the
+<a href="https://js9.si.edu/regions/regcnts.html" target="_blank">regcnts</a>
+program (compiled into the browser using
+<a href="https://kripken.github.io/emscripten-site/" target="_blank">
+Emscripten</a>) on the specified
+source and background regions and return a plot display. The source
+regions consist of circles.  This is the same task as the server-side
+task, but running on the internal FITS file.
+<li><b>Gaussian Blur:</b> enter a sigma (radius) to create a new raw
+data layer called "gaussBlur", in which the image pixel values are
+blurred using a Gaussian function with the specified sigma. The
+routine uses the fast Gaussian blur algorithm (approximating a full
+Gaussian blur with three passes of a box blur) described <a href="
+http://blog.ivank.net/fastest-gaussian-blur.html" target="_blank">
+here</a>.
+</ul>
+
+<p>
+In addition, each JS9 site can define server-side analysis
+tasks to be run from the Analysis menu. Server-side tasks are of two types:
 <ul>
 <li><b>immediate tasks:</b> These tasks are executed directly and
 immediately from the Analysis menu. No parameter setup is needed.
@@ -370,13 +426,17 @@ an ellipsis (...) after the task name.
 </ul>
 <p>
 For example, the JS9 web page at
-<href="https://js9.si.edu">https://js9.si.edu</a>
+<href="https://js9.si.edu" target="_blank">https://js9.si.edu</a>
 offers the following tasks:
 <ul>
 <li><b>FITS Header(s):</b> Display all FITS headers for this FITS file.
-<li><b>Counts in Regions:</b> Run the funcnts program on the specified
+<li><b>Counts in Regions:</b> Run the
+<a href="https://js9.si.edu/regions/regcnts.html" target="_blank">regcnts</a>
+program on the specified
 source and background regions and return a text display (immediate task).
-<li><b>Radial Profile:</b> Run the funcnts program on the specified
+<li><b>Radial Profile:</b> Run the
+<a href="https://js9.si.edu/regions/regcnts.html" target="_blank">regcnts</a>
+program on the specified
 source and background regions and return a plot display. The source regions
 consist of circles or annuli (immediate task).
 <li><b>Energy Plot:</b> Create a histogram of the pi column (or energy
@@ -398,36 +458,14 @@ to filter events instead.
 </ul>
 <p>
 If you drag and drop a FITS file onto a JS9 web page connected to a
-remove server (such as <href="https://js9.si.edu">https://js9.si.edu</a>),
+remove server (such as <href="https://js9.si.edu" target="_blank">
+https://js9.si.edu</a>),
 the FITS file will, of course, not be accessible on the server (it's only
 stored in the browser). As a result, no server-side analysis tasks will
 be available. But if the remote server supports <b>proxy loading</b>
 of FITS data, the Analysis menu will display an option to <b>upload FITS to
 make tasks available</b>. Select this option and your FITS file will
 be sent to the server so that server-side analysis can be performed.
-
-<p>
-In addition to server-side analysis, the <b>Analysis</b> menu lists
-the currently loaded <b>Analysis Plugins</b>. JS9 itself supplies the
-<b>Imexam</b> plugin, which offers the following tasks:
-<ul>
-<li> 3dPlot
-<li> Encircled Energy
-<li> Histogram
-<li> Radial Proj
-<li> Region Stats
-<li> X Proj
-<li> Y Proj
-</ul>
-
-<p>
-You also can perform a fast <b>Gaussian blur</b> by entering a sigma (radius)
-value into the <b>Gaussian blur sigma</b> option.  A new raw data layer
-called "gaussBlur" is created, in which the image pixel values are
-blurred using a Gaussian function with the specified sigma. The
-routine uses the fast Gaussian blur algorithm (approximating a full
-Gaussian blur with three passes of a box blur) described <a href="
-http://blog.ivank.net/fastest-gaussian-blur.html" target="_blank"> here</a>.
 
 <p>
 The <b>set data analysis path ...</b> option allows you to specify a
@@ -602,7 +640,7 @@ routine).  The View menu's resize parameter can be two values (width
 and height) or a single value representing both.  In addition, if an
 image containing wcs info is being displayed, you can append a single
 quote to specify a size in arc minutes (e.g. 5') or a double quote to
-specify a size in arc seconds (e.g. 300").
+specify a size in arc seconds (e.g. 300&#34;).
 <p>
 The <b>View: set to image size</b> option will set the display size to
 the size of the current image. The <b>View: set size to full
@@ -624,7 +662,7 @@ See <a href="knownissues.html">Known Issues</a>
 for a discussion of limitations imposed on resize by Webkit
 browsers such as Chrome and Safari.
 
-<h5>Last updated: February 9, 2018</h5>
+<h5>Last updated: June 22, 2018</h5>
 </div>
 
 </body>
