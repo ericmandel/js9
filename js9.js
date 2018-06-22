@@ -14178,7 +14178,7 @@ JS9.Grid.opts = {
     yAngle:  90,
     raLines:  8,
     decLines: 8,
-    gridColor: "#00BB00",
+    lineColor: "#00BB00",
     labelColor: "red",
     labelFontFamily: "Helvetica",
     labelFontSize: 11,
@@ -14258,7 +14258,7 @@ JS9.Grid.getLabel = function(opts, v, which){
 
 // generate and display a coordinate grid of Line shapes
 // call with image context
-JS9.Grid.coordGrid = function(mode){
+JS9.Grid.coordGrid = function(mode, myopts){
     var i, n, s, t, x, y, lineloc, arr, inc, got;
     var ra, dec, ra0, ra1, dec0, dec1, rainc, decinc;
     var raoffx, raoffy, decoffx, decoffy;
@@ -14289,10 +14289,12 @@ JS9.Grid.coordGrid = function(mode){
 	this.tmp.gridStatus = "inactive";
 	return;
     }
+    // local opts are optional
+    myopts = myopts || {};
     // we are actively creating a grid
     this.tmp.gridStatus = "processing";
     // get opts
-    opts = $.extend(true, {}, JS9.Grid.opts);
+    opts = $.extend(true, {}, JS9.Grid.opts, myopts);
     // labels will follow current wcs units
     opts.wcsunits = this.getWCSUnits();
     opts.wcssys = this.getWCSSys();
@@ -14410,7 +14412,7 @@ JS9.Grid.coordGrid = function(mode){
 	}
 	if( n > 1 ){
 	    s += t.replace(/,\s+$/, ") ");
-	    s += sprintf(' {"color": "%s"};', opts.gridColor);
+	    s += sprintf(' {"color": "%s"};', opts.lineColor);
 	}
     }
     // lines of constant Dec
@@ -14450,7 +14452,7 @@ JS9.Grid.coordGrid = function(mode){
 	}
 	if( n > 1 ){
 	    s += t.replace(/,\s+$/, ") ");
-	    s += sprintf(' {"color": "%s"};', opts.gridColor);
+	    s += sprintf(' {"color": "%s"};', opts.lineColor);
 	}
     }
     // dec labels along constant ra line

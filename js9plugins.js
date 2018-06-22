@@ -7175,7 +7175,7 @@ JS9.Prefs.gridSchema = {
 	    "type": "number",
 	    "helper": "edge margin for displaying a line"
 	},
-	"gridColor": {
+	"lineColor": {
 	    "type": "string",
 	    "helper": "color of grid lines"
 	},
