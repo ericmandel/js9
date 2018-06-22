@@ -14258,7 +14258,7 @@ JS9.Grid.getLabel = function(opts, v, which){
 
 // generate and display a coordinate grid of Line shapes
 // call with image context
-JS9.Grid.coordinateGrid = function(mode, myopts){
+JS9.Grid.display = function(mode, myopts){
     var i, n, s, t, x, y, lineloc, arr, inc, got;
     var ra, dec, ra0, ra1, dec0, dec1, rainc, decinc;
     var raoffx, raoffy, decoffx, decoffy;
@@ -14293,7 +14293,7 @@ JS9.Grid.coordinateGrid = function(mode, myopts){
     myopts = myopts || {};
     if( typeof myopts === "string" ){
 	try{ myopts = JSON.parse(myopts); }
-	catch(e){ JS9.error("can't parse coordinateGrid JSON", e); }
+	catch(e){ JS9.error("can't parse displayCoordGrid JSON", e); }
     }
     // we are actively creating a grid
     this.tmp.gridStatus = "processing";
@@ -14531,11 +14531,11 @@ JS9.Grid.toggle = function(im){
     case null:
     case "inactive":
 	// start afresh
-	im.coordinateGrid(true);
+	im.displayCoordGrid(true);
 	break;
     case "active":
 	// clear the grid
-	im.coordinateGrid(false);
+	im.displayCoordGrid(false);
 	break;
     case "processing":
     default:
@@ -14551,7 +14551,7 @@ JS9.Grid.regrid = function(im){
 	    return;
 	}
 	// redraw the grid
-	im.coordinateGrid(true);
+	im.displayCoordGrid(true);
     }
 };
 
@@ -14569,7 +14569,7 @@ JS9.Grid.init = function(opts){
 };
 
 // add to image prototypes
-JS9.Image.prototype.coordinateGrid = JS9.Grid.coordinateGrid;
+JS9.Image.prototype.displayCoordGrid = JS9.Grid.display;
 
 // ---------------------------------------------------------------------
 // Utilities
@@ -17400,6 +17400,30 @@ JS9.initCommands = function(){
 	}
     }));
     JS9.checkNew(new JS9.Command({
+	name: "grid",
+	help: "set/get coordinate grid for current image",
+	get: function(){
+	    var msg;
+	    var im = this.image;
+	    if( im ){
+		msg = im.displayCoordGrid();
+	    }
+	    return msg ? "true" : "false";
+	},
+	set: function(args){
+	    var im = this.image;
+	    var mode;
+	    if( im ){
+		if( args[0].match(/true/i) ){
+		    mode = true;
+		} else {
+		    mode = false;
+		}
+		im.displayCoordGrid(mode, args[1]);
+	    }
+	}
+    }));
+    JS9.checkNew(new JS9.Command({
 	name: "help",
 	help: "get list of available commmands",
 	get: function(){
@@ -17659,7 +17683,6 @@ JS9.initCommands = function(){
 	    return JS9.scales.join(", ");
 	}
     }));
-
     JS9.checkNew(new JS9.Command({
 	name: "section",
 	help: "display section of current image",
@@ -17677,8 +17700,6 @@ JS9.initCommands = function(){
 	    }
 	}
     }));
-
-
     JS9.checkNew(new JS9.Command({
 	name: "status",
 	help: "get status for specified (or current) image",
@@ -18312,7 +18333,7 @@ JS9.mkPublic("AddShapes", "addShapes");
 JS9.mkPublic("RemoveShapes", "removeShapes");
 JS9.mkPublic("GetShapes", "getShapes");
 JS9.mkPublic("ChangeShapes", "changeShapes");
-JS9.mkPublic("CoordinateGrid", "coordinateGrid");
+JS9.mkPublic("DisplayCoordGrid", "displayCoordGrid");
 JS9.mkPublic("Print", "print");
 JS9.mkPublic("SavePNG", "savePNG");
 JS9.mkPublic("SaveJPEG", "saveJPEG");

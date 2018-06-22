@@ -6259,7 +6259,7 @@ JS9.Menubar.init = function(width, height){
 		if( !im || !im.raw.wcs || im.raw.wcs <=0 ){
 		    items.grid.disabled = true;
 		} else {
-		    if( im.coordinateGrid() ){ items.grid.icon = "sun"; }
+		    if( im.displayCoordGrid() ){ items.grid.icon = "sun"; }
 		}
 		items.regcnts = {name: "Counts in Regions"};
 		items.radprof = {name: "Radial Profile"};
@@ -6434,7 +6434,7 @@ JS9.Menubar.init = function(width, height){
 				$(did).data("imid", uim.id);
 				break;
 			    case "grid":
-				uim.coordinateGrid(!uim.coordinateGrid());
+				uim.displayCoordGrid(!uim.displayCoordGrid());
 				break;
 			    case "upload":
 				uim.uploadFITSFile();
