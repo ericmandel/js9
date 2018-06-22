@@ -10996,9 +10996,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	}
         break;
     case "text":
-	pub.imstr = "text(" + tr(px) + ", " + tr(py) + ', "' + obj.text + '")';
+	pub.imstr = "text(" + tr(px) + ", " + tr(py) + ', "' + obj.text + '", ' + tr4(pub.angle) + ')';
+	tstr = "text " + pub.x + " " + pub.y + ' "' + obj.text + '"' + " " + (pub.angle * Math.PI / 180.0);;
 	pub.text = obj.text;
-	tstr = "text " + pub.x + " " + pub.y + ' "' + obj.text + '"';
 	break;
     default:
 	break;
@@ -13580,7 +13580,7 @@ JS9.Regions.copyRegions = function(to, which){
 JS9.Regions.parseRegions = function(s, opts){
     var regions = [];
     var i, j, k, lines, obj, robj;
-    var owcssys, wcssys, iswcs, liswcs, pos, alen;
+    var owcssys, owcsunits, wcssys, iswcs, liswcs, pos, alen;
     var regrexp = /(annulus)|(box)|(circle)|(ellipse)|(line)|(polygon)|(point)|(text)/;
     var wcsrexp = /(fk4)|(fk5)|(icrs)|(galactic)|(ecliptic)|(image)|(physical)/;
     var parrexp = /\(\s*([^)]+?)\s*\)/;
@@ -13791,6 +13791,7 @@ JS9.Regions.parseRegions = function(s, opts){
     }
     // save original wcs
     owcssys = this.getWCSSys();
+    owcsunits = this.getWCSUnits();
     // this is the default wcs for regions
     wcssys = "physical";
     // set default for regions
@@ -13872,6 +13873,9 @@ JS9.Regions.parseRegions = function(s, opts){
 		    if( alen >= 3 ){
 			obj.text = getstr.call(this, robj.args[2]);
 		    }
+		    if( alen >= 4 ){
+			obj.angle = getang.call(this, robj.args[3]);
+		    }
 		    break;
 		default:
 		    break;
@@ -13899,6 +13903,7 @@ JS9.Regions.parseRegions = function(s, opts){
     }
     // restore original wcs
     this.setWCSSys(owcssys);
+    this.setWCSUnits(owcsunits);
     // return the generated object
     return regions;
 };
@@ -16709,6 +16714,7 @@ JS9.initFITS = function(){
 	JS9.wcs2pix = Astroem.wcs2pix;
 	JS9.reg2wcs = Astroem.reg2wcs;
 	JS9.saostrtod = Astroem.saostrtod;
+	JS9.saodtostr = Astroem.saodtostr;
 	JS9.saodtype = Astroem.saodtype;
 	JS9.zscale = Astroem.zscale;
 	JS9.tanhdr = Astroem.tanhdr;

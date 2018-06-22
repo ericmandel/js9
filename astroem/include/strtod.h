@@ -14,5 +14,6 @@
 extern int SAOdtype;
 
 double SAOstrtod(char *s, char **t);
+char *SAOconvert(char *buff, double val, int type, int prec);
 
 #endif

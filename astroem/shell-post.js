@@ -11,6 +11,7 @@ Astroem = {
       reg2wcs: Module.cwrap('reg2wcsstr', 'string', ['number', 'string']),
       saostrtod: Module.cwrap('saostrtod', 'number', ['string']),
       saodtype:  Module.cwrap('saodtype', 'number'),
+      saodtostr: Module.cwrap('saodtostr', 'string', ['number', 'string', 'number']),
       arrfile: Module["arrfile"],
       vfile: Module["vfile"],
       vread: Module["vread"],

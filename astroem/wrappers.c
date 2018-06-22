@@ -376,6 +376,7 @@ char *reg2wcsstr(int n, char *regstr){
   char *targs=NULL, *targ=NULL;
   char *mywcssys=NULL;
   int alwaysdeg = 0;
+  int nq = 0;
   double sep = 0.0;
   double dval1, dval2, dval3, dval4;
   double rval1, rval2, rval3, rval4;
@@ -433,10 +434,19 @@ char *reg2wcsstr(int n, char *regstr){
 	  strncat(str, tbuf, SZ_LINE-1);
 	  break;
 	}
-	/* for text, just copy the rest */
+	/* for text, copy the quoted string and get final angle */
 	if( !strcmp(s, "text") ){
-	  snprintf(tbuf, SZ_LINE, ",%s", s1);
+	  t = tbuf;
+	  *t++ = ',';
+	  while( *s1 && nq < 2 ){
+	    if( *s1 == '"' ){ nq++; }
+	    *t++ = *s1++;
+	  }
+	  *t = '\0';
+	  /* this is the text string */
 	  strncat(str, tbuf, SZ_LINE-1);
+	  /* this is the angle */
+	  dval1=strtod(s1, &s2);
 	} else if( !strcmp(s, "polygon") || !strcmp(s, "line") ){
 	  /* for polygons and lines, convert successive image pos to RA, Dec */
 	  while( (dval1=strtod(s1, &s2)) && (dval2=strtod(s2, &s1)) ){
@@ -503,7 +513,7 @@ char *reg2wcsstr(int n, char *regstr){
 	  }
 	}
 	/* output angle, as needed */
-	if( !strcmp(s, "box") || !strcmp(s, "ellipse") ){
+	if( !strcmp(s, "box") || !strcmp(s, "ellipse") || !strcmp(s, "text") ){
 	  while( dval1 < 0 ) dval1 += (2.0 * PI);
 	  snprintf(tbuf, SZ_LINE, ", %.6f", RAD2DEG(dval1));
 	  strncat(str, tbuf, SZ_LINE-1);
@@ -541,6 +551,13 @@ char *reg2wcsstr(int n, char *regstr){
 /* convert string to float (includes sexagesimal strings) */
 double saostrtod(char *s){
   return SAOstrtod(s, NULL);
+}
+
+/* convert float to string (includes sexagesimal strings) */
+char *saodtostr(double val, char *vtype, int prec){
+  int type = vtype[0];
+  SAOconvert(rstr, val, type, prec);
+  return rstr;
 }
 
 /* return last delimiter from saostrtod call */
