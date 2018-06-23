@@ -14177,6 +14177,8 @@ JS9.Grid.opts = {
     yAngle:  90,
     raLines:  8,
     decLines: 8,
+    sexaPrec: 1,
+    degPrec: 3,
     lineColor: "#00BB00",
     labelColor: "red",
     labelFontFamily: "Helvetica",
@@ -14222,11 +14224,7 @@ JS9.Grid.getLabel = function(opts, v, which){
 	    ((opts.wcssys !== "galactic") && (opts.wcssys !== "ecliptic")) ){
 	    v /= 15.0;
 	}
-	t = JS9.saodtostr(v, ":", 1);
-	t = t.replace(/0*$/, "");
-	if( t.charAt(t.length-1) === "." ){
-	    t = t.replace(/\.$/, "");
-	}
+	t = JS9.saodtostr(v, ":", opts.sexaPrec);
 	arr = t.split(":");
 	if( opts.last[which] ){
 	    t = "";
@@ -14241,7 +14239,7 @@ JS9.Grid.getLabel = function(opts, v, which){
 	opts.last[which] = $.extend({}, arr);
 	break;
     default:
-	t = v.toFixed(3);
+	t = v.toFixed(opts.degPrec);
 	break;
     }
     t = t.replace(/0+$/, "");

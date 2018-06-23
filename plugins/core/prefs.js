@@ -193,10 +193,6 @@ JS9.Prefs.gridSchema = {
     "description": "Preferences for wcs coordinate grids",
     "type": "object",
     "properties": {
-	"cover": {
-	    "type": "string",
-	    "helper": "grid lines cover: display or image"
-	},
 	"raLines": {
 	    "type": "number",
 	    "helper": "approx. number of RA grid lines"
@@ -249,9 +245,21 @@ JS9.Prefs.gridSchema = {
 	    "type": "number",
 	    "helper": "y offset of Dec labels"
 	},
+	"degPrec": {
+	    "type": "number",
+	    "helper": "precision for degree labels"
+	},
+	"sexaPrec": {
+	    "type": "number",
+	    "helper": "precision for sexagesimal labels"
+	},
 	"reduceDims": {
 	    "type": "boolean",
 	    "helper": "reduce lines of smaller image dim?"
+	},
+	"cover": {
+	    "type": "string",
+	    "helper": "grid lines cover: display or image"
 	}
     }
 };
