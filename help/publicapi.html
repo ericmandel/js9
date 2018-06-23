@@ -1606,6 +1606,71 @@ The text string is displayed in the "info" area (usually occupied by the
 valpos display) or the "region" area (where regions are displayed). The
 empty string will clear the previous message.
 
+<h5 id="JS9.DisplayCoordGrid">Display a WCS-based coordinate grid</h5>
+<p>
+<code class="api">JS9.DisplayCoordGrid(mode, opts)</code>
+<p>
+where:
+<ul>
+<li><b>mode</b>: true (display) or false (hide)
+<li><b>opts</b>: optional object or json string containing grid parameters
+</ul>
+A coordinate grid displays lines of constant RA and constant Dec, with
+the points of intersection labeled by their RA and Dec values. The
+labels are in sexagesimal notation if the WCS units are sexagesimal,
+otherwise they are in degrees. When using sexagesimal notation, labels
+will be shortened if possible, e.g., if the RA hours are the same in
+two successive labels but the minutes are different, only the minutes
+are shown in the second label.
+
+<p>
+If no arguments are supplied, the routine returns true if the
+coordinate grid is currently being displayed, false otherwise. A
+boolean first argument specifies whether to display the coordinate
+grid or not.
+
+<p>
+The optional second argument is an opts object (or a json-formatted
+string) containing properties to override the default JS9.Grid.opts
+properties. These properties include:
+<ul>
+<li><b>raLines</b>: approx. number of RA grid lines
+<li><b>decLines</b>: approx. number of Dec grid lines
+<li><b>stride</b>: fineness of grid lines
+<li><b>margin</b>: edge margin for displaying a line
+<li><b>lineColor</b>: color of grid lines
+<li><b>strokeWidth</b>: grid stroke width
+<li><b>labelColor</b>: color of text labels
+<li><b>labelFontFamily</b>: label font
+<li><b>labelFontSize</b>: label font size
+<li><b>labelRAOffx</b>: x offset of RA labels
+<li><b>labelRAOffy</b>: y offset of RA labels
+<li><b>labelDecOffx</b>: x offset of Dec labels
+<li><b>labelDecOffy</b>: y offset of Dec labels
+<li><b>reduceDims</b>: reduce lines of smaller image dim?
+<li><b>cover</b>: grid lines cover: display or image
+</ul>
+The four label[RA,Dec]Off[x,y] properties allow you to move the label with
+respect to the grid lines. The <b>reduceDims</b> property will reduce
+the <b>raLines</b> and <b>decLines</b> properties by the ratio of image
+dimensions if one dimension is smaller than the other. This can
+prevent crowding in the smaller dimension.  The <b>cover</b> property
+is (more or less) internal: it determines whether the grid is drawn
+over the entire image or just the displayed part of the image. At the
+moment, drawing lines over the displayed part of the image seems to be
+sufficient.
+
+<p>
+Note that you can specify global site-wide values for all these parameters
+(overriding the JS9.Grid.opts defaults) by supplying them in a <b>grid</b>
+object within the globalOpts object in the js9prefs.js file.
+
+<p>
+Example: display a coordinate grid, specifying the line color:
+<pre>
+    JS9.DisplayCoordGrid(true, {lineColor: "pink"});
+</pre>
+
 <h5 id="JS9.CountsInRegions">Get background-subtracted counts in regions</h5>
 <p>
 <code class="api">JS9.CountsInRegions(sregion, bregion, opts)</code>
