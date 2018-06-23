@@ -7179,6 +7179,14 @@ JS9.Prefs.gridSchema = {
 	    "type": "number",
 	    "helper": "grid stroke width"
 	},
+	"raAngle": {
+	    "type": "number",
+	    "helper": "rotation for RA label"
+	},
+	"decAngle": {
+	    "type": "number",
+	    "helper": "rotation for Dec label"
+	},
 	"labelColor": {
 	    "type": "string",
 	    "helper": "color of text labels"

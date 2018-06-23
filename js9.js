@@ -14173,8 +14173,8 @@ JS9.Grid.opts = {
     strokeWidth: 1,
     margin:   0,
     stride:  32,
-    xAngle:  0,
-    yAngle:  90,
+    raAngle:  0,
+    decAngle:  90,
     raLines:  8,
     decLines: 8,
     sexaPrec: 1,
@@ -14471,7 +14471,7 @@ JS9.Grid.display = function(mode, myopts){
 		    s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "originX":"left", "originY":"top"};',
 				 x + decoffx, y + decoffy,
 				 JS9.Grid.getLabel.call(this, opts, dec, "dec"),
-				 opts.yAngle,
+				 opts.decAngle,
 				 opts.labelColor,
 				 opts.labelFontFamily,
 				 opts.labelFontSize);
@@ -14498,7 +14498,7 @@ JS9.Grid.display = function(mode, myopts){
 		    s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "originX":"left", "originY":"top"};',
 				 x + raoffx, y + raoffy,
 				 JS9.Grid.getLabel.call(this, opts, ra, "ra"),
-				 opts.xAngle,
+				 opts.raAngle,
 				 opts.labelColor,
 				 opts.labelFontFamily,
 				 opts.labelFontSize);
