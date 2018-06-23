@@ -237,6 +237,14 @@ JS9.Prefs.gridSchema = {
 	    "type": "string",
 	    "helper": "label font size"
 	},
+	"labelFontStyle": {
+	    "type": "string",
+	    "helper": "label font style"
+	},
+	"labelFontWeight": {
+	    "type": "string",
+	    "helper": "label font weight"
+	},
 	"labelRAOffx": {
 	    "type": "number",
 	    "helper": "x offset of RA labels"

@@ -10501,12 +10501,16 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     }
     // once a shape has been added, we can set the zindex to process events
     if( !canvas.size() ){
-	if( layerName === JS9.Crosshair.layerName ){
-	    // crosshair should never cover any other layer
+	switch(layerName){
+	case JS9.Crosshair.LAYERNAME:
+	case JS9.Grid.LAYERNAME:
+	    // these should never cover any other interactive layer
 	    layer.zindex = 1;
-	} else {
+	    break;
+	default:
 	    // otherwise this layer goes to the top
             layer.zindex = this.zlayer++;
+	    break;
 	}
 	dlayer = this.display.layers[layerName];
         dlayer.divjq.css("z-index", layer.zindex);
@@ -14022,7 +14026,7 @@ JS9.Catalogs.opts = {
 JS9.Crosshair = {};
 JS9.Crosshair.CLASS = "JS9";
 JS9.Crosshair.NAME = "Crosshair";
-JS9.Crosshair.layerName = "crosshair";
+JS9.Crosshair.LAYERNAME = "crosshair";
 
 // defaults for crosshair layer
 JS9.Crosshair.opts = {
@@ -14060,7 +14064,7 @@ JS9.Crosshair.opts = {
 JS9.Crosshair.display = function(im, ipos, evt){
     var i, s, arr, cim, ra, dec, w, h, x, y, hopts, vopts;
     var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
-    var layername = JS9.Crosshair.layerName;
+    var layername = JS9.Crosshair.LAYERNAME;
     // if crosshair mode is on and this image has wcs ...
     if( JS9.globalOpts.crosshair && im && im.raw.wcs && im.raw.wcs > 0 ){
 	// get wcs coords of current mouse position
@@ -14114,7 +14118,7 @@ JS9.Crosshair.display = function(im, ipos, evt){
 JS9.Crosshair.hide = function(im, ipos, evt){
     var i, cim;
     var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
-    var layername = JS9.Crosshair.layerName;
+    var layername = JS9.Crosshair.LAYERNAME;
     // for each displayed image ...
     for(i=0; i<JS9.displays.length; i++){
 	cim = JS9.displays[i].image;
@@ -14131,7 +14135,7 @@ JS9.Crosshair.hide = function(im, ipos, evt){
 // image load: create the cross hair for this image
 JS9.Crosshair.create = function(im){
     var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
-    var layername = JS9.Crosshair.layerName;
+    var layername = JS9.Crosshair.LAYERNAME;
     if( im && !im.crosshair && (im.raw.wcs > 0) ){
 	// create the crosshair object for this image
 	im.crosshair = {};
@@ -14145,7 +14149,7 @@ JS9.Crosshair.create = function(im){
 // init: create the shape layer for this display
 JS9.Crosshair.init = function(){
     var i;
-    var layername = JS9.Crosshair.layerName;
+    var layername = JS9.Crosshair.LAYERNAME;
     // init the crosshair shape layer, but only once per display
     for(i=0; i<JS9.displays.length; i++){
 	if( !JS9.displays[i].layers.crosshair ){
@@ -14179,10 +14183,12 @@ JS9.Grid.opts = {
     decLines: 8,
     sexaPrec: 1,
     degPrec: 3,
-    lineColor: "#00BB00",
-    labelColor: "red",
-    labelFontFamily: "Helvetica",
+    lineColor: "#00FFFF",
+    labelColor: "#00FFFF",
+    labelFontFamily: "Helvetica, sans-serif",
     labelFontSize: 11,
+    labelFontStyle: "normal",
+    labelFontWeight: 300,
     labelRAOffx: 3,
     labelRAOffy: -1,
     labelDecOffx: -14,
@@ -14468,13 +14474,15 @@ JS9.Grid.display = function(mode, myopts){
 		dpos = this.imageToDisplayPos({x: x, y: y});
 		if( dpos.x > this.ix && dpos.x < (this.rgb.img.width+this.ix) &&
 		    dpos.y > this.iy && dpos.y < (this.rgb.img.height+this.iy)){
-		    s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "originX":"left", "originY":"top"};',
+		    s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "fontStyle":"%s", "fontWeight":"%s", "originX":"left", "originY":"top"};',
 				 x + decoffx, y + decoffy,
 				 JS9.Grid.getLabel.call(this, opts, dec, "dec"),
 				 opts.decAngle,
 				 opts.labelColor,
 				 opts.labelFontFamily,
-				 opts.labelFontSize);
+				 opts.labelFontSize,
+				 opts.labelFontStyle,
+				 opts.labelFontWeight);
 		    got++;
 		}
 	    }
@@ -14495,13 +14503,15 @@ JS9.Grid.display = function(mode, myopts){
 		dpos = this.imageToDisplayPos({x: x, y: y});
 		if( dpos.x > this.ix && dpos.x < (this.rgb.img.width+this.ix) &&
 		    dpos.y > this.iy && dpos.y < (this.rgb.img.height+this.iy)){
-		    s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "originX":"left", "originY":"top"};',
+		    s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "fontStyle":"%s", "fontWeight":"%s", "originX":"left", "originY":"top"};',
 				 x + raoffx, y + raoffy,
 				 JS9.Grid.getLabel.call(this, opts, ra, "ra"),
 				 opts.raAngle,
 				 opts.labelColor,
 				 opts.labelFontFamily,
-				 opts.labelFontSize);
+				 opts.labelFontSize,
+				 opts.labelFontStyle,
+				 opts.labelFontWeight);
 		    got++;
 		}
 	    }
