@@ -14170,7 +14170,7 @@ JS9.Grid.LAYERNAME = "grid";
 
 // defaults for grids
 JS9.Grid.opts = {
-    evented: true,
+    // evented: false,
     movable: false,
     cover: "display",
     reduceDims: true,
