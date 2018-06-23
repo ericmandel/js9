@@ -14222,7 +14222,7 @@ JS9.Grid.getLabel = function(opts, v, which){
 	    ((opts.wcssys !== "galactic") && (opts.wcssys !== "ecliptic")) ){
 	    v /= 15.0;
 	}
-	t = JS9.saodtostr(v, ":", -1);
+	t = JS9.saodtostr(v, ":", 1);
 	t = t.replace(/0*$/, "");
 	if( t.charAt(t.length-1) === "." ){
 	    t = t.replace(/\.$/, "");
