@@ -14514,7 +14514,7 @@ JS9.Grid.display = function(mode, myopts){
 	}
     }
     // add the grid shapes
-    this.addShapes(JS9.Grid.LAYERNAME, s);
+    this.addShapes(JS9.Grid.LAYERNAME, s, opts);
     // grid is complete and active
     this.tmp.gridStatus = "active";
 };
