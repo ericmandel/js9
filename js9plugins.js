@@ -7739,6 +7739,14 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	    }
 	}
     }
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	for(j=0; j<JS9.displays.length; j++){
+	    if( JS9.displays[j].image ){
+		JS9.displays[j].image.xeqPlugins("image", "onupdateprefs");
+	    }
+	}
+    }
 };
 
 // add preference plugin into JS9

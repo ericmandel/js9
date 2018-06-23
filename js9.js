@@ -152,7 +152,6 @@ JS9.globalOpts = {
 	b: "toggle selected region: source/background",
 	e: "toggle selected region: include/exclude",
 	f: "display full image",
-	g: "toggle coordinate grid",
 	r: "refresh image",
         "/": "copy wcs position to clipboard",
         "?": "copy value and position to clipboard",
@@ -18208,7 +18207,8 @@ JS9.init = function(){
 			onsetzoom:     JS9.Grid.regrid,
 			onsetwcssys:   JS9.Grid.regrid,
 			onsetwcsunits: JS9.Grid.regrid,
-			onimageload  : JS9.Grid.regrid,
+			onimageload:   JS9.Grid.regrid,
+			onupdateprefs: JS9.Grid.regrid,
 			winDims:       [0, 0]});
     // find divs associated with each plugin and run the constructor
     JS9.instantiatePlugins();
