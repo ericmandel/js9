@@ -1634,14 +1634,14 @@ The optional second argument is an opts object (or a json-formatted
 string) containing properties to override the default JS9.Grid.opts
 properties. These properties include:
 <ul>
-<li><b>raLines</b>: approx. number of RA grid lines
-<li><b>decLines</b>: approx. number of Dec grid lines
-<li><b>stride</b>: fineness of grid lines
-<li><b>margin</b>: edge margin for displaying a line
-<li><b>lineColor</b>: color of grid lines
 <li><b>strokeWidth</b>: grid stroke width
+<li><b>lineColor</b>: color of RA and Dec grid lines
+<li><b>raLines</b>: approx. number of RA grid lines
 <li><b>raAngle</b>: rotation for RA label
+<li><b>raSkip</b>: number of RA lines to skip
+<li><b>decLines</b>: approx. number of Dec grid lines
 <li><b>decAngle</b>: rotation for Dec label
+<li><b>decSkip</b>: number of Dec lines to skip
 <li><b>labelColor</b>: color of text labels
 <li><b>labelFontFamily</b>: label font
 <li><b>labelFontSize</b>: label font size
@@ -1652,20 +1652,43 @@ properties. These properties include:
 <li><b>degPrec</b>: precision for degree labels
 <li><b>sexaPrec</b>: precision for sexagesimal labels
 <li><b>reduceDims</b>: reduce lines of smaller image dim?
+<li><b>stride</b>: fineness of grid lines
+<li><b>margin</b>: edge margin for displaying a line
 <li><b>cover</b>: grid lines cover: display or image
 </ul>
-The <b>raAngle</b> and <b>decAngle</b> properties allow you to rotate
-the labels with respect to the grid lines.  The four
-label[RA,Dec]Off[x,y] properties allow you to move the label with
-respect to the grid lines. These six properties can be useful in cases
-where JS9's simple label placement algorithm is not sufficient.
-The <b>reduceDims</b> property will reduce the <b>raLines</b>
+The <b>strokeWidth</b> property determines the width of the grid
+lines. It also serves as a reminder that you can pass other standard
+shape properties in the opts object.
+
+<p>
+JS9's label placement algorithm puts labels close to the intersection
+of RA and Dec lines. A number of properties can be useful in cases
+where this simple algorithm is not sufficient: the <b>raAngle</b>
+and <b>decAngle</b> properties allow you to rotate the labels with
+respect to the grid lines. The four label[RA,Dec]Off[x,y] properties
+allow you to move the label with respect to the grid lines.
+The <b>raSkip</b> and <b>decSkip</b> properties allow you to skip
+labelling the first available lines within the display. It can be
+useful, for example, on a rotated image, when the labels are placed in
+a corner.
+
+<p>
+The <b>degPrec</b> and <b>sexaPrec</b> properties specify the precision for
+degree values and segagesimal values, respectively. Higher precision will
+use more digits and take more space along each line.
+
+<p>
+A number of properties are (more or less) internal but might be of
+use: the <b>reduceDims</b> property will reduce the <b>raLines</b>
 and <b>decLines</b> properties by the ratio of image dimensions if one
 dimension is smaller than the other. This can prevent crowding in the
-smaller dimension.  The <b>cover</b> property is (more or less)
-internal: it determines whether the grid is drawn over the entire
-image or just the displayed part of the image. At the moment, drawing
-lines over the displayed part of the image seems to be sufficient.
+smaller dimension.  The <b>stride</b> property specifies the length of
+each line segment that together make up a grid line. A smaller stride
+might make the grid lines smoother in some cases, at the price of more
+processing time.  The <b>cover</b> property determines whether the
+grid is drawn over the entire image or just the displayed part of the
+image. At the moment, drawing lines over the displayed part of the
+image seems to be sufficient.
 
 <p>
 Note that you can specify global site-wide values for all these parameters

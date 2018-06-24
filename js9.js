@@ -14177,10 +14177,12 @@ JS9.Grid.opts = {
     strokeWidth: 1,
     margin:   0,
     stride:  32,
-    raAngle:  0,
-    decAngle:  90,
     raLines:  8,
+    raSkip:  0,
+    raAngle:  0,
     decLines: 8,
+    decSkip: 0,
+    decAngle:  90,
     sexaPrec: 1,
     degPrec: 3,
     lineColor: "#00FFFF",
@@ -14264,7 +14266,7 @@ JS9.Grid.getLabel = function(opts, v, which){
 JS9.Grid.display = function(mode, myopts){
     var i, n, s, t, x, y, lineloc, arr, inc, got;
     var ra, dec, ra0, ra1, dec0, dec1, rainc, decinc;
-    var raoffx, raoffy, decoffx, decoffy;
+    var raoffx, raoffy, decoffx, decoffy, raskip, decskip, lastra, lastdec;
     var ratios, corners, opts;
     var xrainc0, xrainc, xralim, xdecinc0, xdecinc, xdeclim, ipos, dpos;
     var out = {};
@@ -14465,6 +14467,8 @@ JS9.Grid.display = function(mode, myopts){
     // dec labels along constant ra line
     decoffx = opts.labelDecOffx / this.rgb.sect.zoom;
     decoffy = opts.labelDecOffy / this.rgb.sect.zoom;
+    decskip = 0;
+    lastra = ra0;
     for(ra=ra0, got=0; ra<=ra1; ra=ra+rainc){
 	for(dec=dec0; dec<=dec1; dec=dec+decinc){
 	    arr = JS9.wcs2pix(raw.wcs, ra, dec).trim().split(/ +/);
@@ -14474,7 +14478,8 @@ JS9.Grid.display = function(mode, myopts){
 		dpos = this.imageToDisplayPos({x: x, y: y});
 		if( dpos.x > this.ix && dpos.x < (this.rgb.img.width+this.ix) &&
 		    dpos.y > this.iy && dpos.y < (this.rgb.img.height+this.iy)){
-		    s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "fontStyle":"%s", "fontWeight":"%s", "originX":"left", "originY":"top"};',
+		    if( decskip >= opts.decSkip ){
+			s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "fontStyle":"%s", "fontWeight":"%s", "originX":"left", "originY":"top"};',
 				 x + decoffx, y + decoffy,
 				 JS9.Grid.getLabel.call(this, opts, dec, "dec"),
 				 opts.decAngle,
@@ -14483,7 +14488,13 @@ JS9.Grid.display = function(mode, myopts){
 				 opts.labelFontSize,
 				 opts.labelFontStyle,
 				 opts.labelFontWeight);
-		    got++;
+			got++;
+		    } else {
+			if( ra !== lastra ){
+			    decskip++;
+			}
+			lastra = ra;
+		    }
 		}
 	    }
 	}
@@ -14494,6 +14505,8 @@ JS9.Grid.display = function(mode, myopts){
     // ra labels along constant dec line
     raoffx = opts.labelRAOffx / this.rgb.sect.zoom;
     raoffy = opts.labelRAOffy / this.rgb.sect.zoom;
+    raskip = 0;
+    lastdec = dec0;
     for(dec=dec0, got=0; dec<=dec1; dec=dec+decinc){
 	for(ra=ra0; ra<=ra1; ra=ra+rainc){
 	    arr = JS9.wcs2pix(raw.wcs, ra, dec).trim().split(/ +/);
@@ -14503,7 +14516,8 @@ JS9.Grid.display = function(mode, myopts){
 		dpos = this.imageToDisplayPos({x: x, y: y});
 		if( dpos.x > this.ix && dpos.x < (this.rgb.img.width+this.ix) &&
 		    dpos.y > this.iy && dpos.y < (this.rgb.img.height+this.iy)){
-		    s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "fontStyle":"%s", "fontWeight":"%s", "originX":"left", "originY":"top"};',
+		    if( raskip >= opts.raSkip ){
+			s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "fontStyle":"%s", "fontWeight":"%s", "originX":"left", "originY":"top"};',
 				 x + raoffx, y + raoffy,
 				 JS9.Grid.getLabel.call(this, opts, ra, "ra"),
 				 opts.raAngle,
@@ -14512,7 +14526,13 @@ JS9.Grid.display = function(mode, myopts){
 				 opts.labelFontSize,
 				 opts.labelFontStyle,
 				 opts.labelFontWeight);
-		    got++;
+			got++;
+		    } else {
+			if( dec !== lastdec ){
+			    raskip++;
+			}
+			lastdec = dec;
+		    }
 		}
 	    }
 	}
