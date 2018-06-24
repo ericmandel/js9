@@ -193,37 +193,37 @@ JS9.Prefs.gridSchema = {
     "description": "Preferences for wcs coordinate grids",
     "type": "object",
     "properties": {
-	"raLines": {
+	"strokeWidth": {
 	    "type": "number",
-	    "helper": "approx. number of RA grid lines"
-	},
-	"decLines": {
-	    "type": "number",
-	    "helper": "approx. number of Dec grid lines"
-	},
-	"stride": {
-	    "type": "number",
-	    "helper": "fineness of grid lines"
-	},
-	"margin": {
-	    "type": "number",
-	    "helper": "edge margin for displaying a line"
+	    "helper": "grid stroke width"
 	},
 	"lineColor": {
 	    "type": "string",
 	    "helper": "color of grid lines"
 	},
-	"strokeWidth": {
+	"raLines": {
 	    "type": "number",
-	    "helper": "grid stroke width"
+	    "helper": "approx. number of RA grid lines"
 	},
 	"raAngle": {
 	    "type": "number",
 	    "helper": "rotation for RA label"
 	},
+	"raSkip": {
+	    "type": "number",
+	    "helper": "number of RA lines to skip"
+	},
+	"decLines": {
+	    "type": "number",
+	    "helper": "approx. number of Dec grid lines"
+	},
 	"decAngle": {
 	    "type": "number",
 	    "helper": "rotation for Dec label"
+	},
+	"decSkip": {
+	    "type": "number",
+	    "helper": "number of Dec lines to skip"
 	},
 	"labelColor": {
 	    "type": "string",
@@ -272,6 +272,14 @@ JS9.Prefs.gridSchema = {
 	"reduceDims": {
 	    "type": "boolean",
 	    "helper": "reduce lines of smaller image dim?"
+	},
+	"stride": {
+	    "type": "number",
+	    "helper": "fineness of grid lines"
+	},
+	"margin": {
+	    "type": "number",
+	    "helper": "edge margin for displaying a line"
 	},
 	"cover": {
 	    "type": "string",
