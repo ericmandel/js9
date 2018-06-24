@@ -1654,15 +1654,18 @@ properties. These properties include:
 <li><b>reduceDims</b>: reduce lines of smaller image dim?
 <li><b>cover</b>: grid lines cover: display or image
 </ul>
-The four label[RA,Dec]Off[x,y] properties allow you to move the label with
-respect to the grid lines. The <b>reduceDims</b> property will reduce
-the <b>raLines</b> and <b>decLines</b> properties by the ratio of image
-dimensions if one dimension is smaller than the other. This can
-prevent crowding in the smaller dimension.  The <b>cover</b> property
-is (more or less) internal: it determines whether the grid is drawn
-over the entire image or just the displayed part of the image. At the
-moment, drawing lines over the displayed part of the image seems to be
-sufficient.
+The <b>raAngle</b> and <b>decAngle</b> properties allow you to rotate
+the labels with respect to the grid lines.  The four
+label[RA,Dec]Off[x,y] properties allow you to move the label with
+respect to the grid lines. These six properties can be useful in cases
+where JS9's simple label placement algorithm is not sufficient.
+The <b>reduceDims</b> property will reduce the <b>raLines</b>
+and <b>decLines</b> properties by the ratio of image dimensions if one
+dimension is smaller than the other. This can prevent crowding in the
+smaller dimension.  The <b>cover</b> property is (more or less)
+internal: it determines whether the grid is drawn over the entire
+image or just the displayed part of the image. At the moment, drawing
+lines over the displayed part of the image seems to be sufficient.
 
 <p>
 Note that you can specify global site-wide values for all these parameters
