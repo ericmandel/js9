@@ -10347,6 +10347,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 };
 
 // give an object full of keys, return an array of key names for export
+// call using image context
 JS9.Fabric._exportShapeOptions = function(opts){
     // sanity check
     if( typeof opts !== "object" ){
@@ -10392,6 +10393,11 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "parent":
 	case "rtn":
 	    return false;
+	case "text":
+	    if( opts.shape === "text" ){
+		return false;
+	    }
+	    return true;
 	default:
 	    return true;
 	}
@@ -10547,8 +10553,8 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    params.id = ++layer.nshape;
 	}
 	// get array of option names to export when saving regions
-	params.exports = JS9.Fabric._exportShapeOptions(myopts)
-	         .concat(JS9.Fabric._exportShapeOptions(sarr[ns]));
+	params.exports = JS9.Fabric._exportShapeOptions.call(this, myopts)
+	         .concat(JS9.Fabric._exportShapeOptions.call(this, sarr[ns]));
 	// no parents or children yet
 	params.parent = null;
 	params.children = [];
@@ -11236,8 +11242,9 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    }
 	}
 	// get new option names to export when saving regions
-	exports = JS9.Fabric._exportShapeOptions(opts).filter(function(item) {
-	    return !obj.params.exports.hasOwnProperty(item);
+	exports = JS9.Fabric._exportShapeOptions.call(this, opts)
+	    .filter(function(item) {
+		return !obj.params.exports.hasOwnProperty(item);
 	});
 	sobj.params.exports = obj.params.exports.concat(exports);
 	// shape-specific pre-processing
