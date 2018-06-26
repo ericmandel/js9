@@ -152,6 +152,7 @@ JS9.globalOpts = {
 	b: "toggle selected region: source/background",
 	e: "toggle selected region: include/exclude",
 	f: "display full image",
+	l: "toggle active shape layers",
 	r: "refresh image",
         "/": "copy wcs position to clipboard",
         "?": "copy value and position to clipboard",
@@ -840,7 +841,7 @@ JS9.Image.prototype.closeImage = function(){
 		for( key in tim.layers ){
 		    if( tim.layers.hasOwnProperty(key) ){
 			// tim.layers[key].canvas.clear();
-			tim.showShapeLayer(key, false);
+			tim.showShapeLayer(key, false, {local: true});
 		    }
 		}
 	    }
@@ -6631,7 +6632,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 	for( key in ndisplay.layers ){
 	    if( ndisplay.layers.hasOwnProperty(key) ){
 		if( ndisplay.layers[key].dtype === "main" ){
-		    ndisplay.image.showShapeLayer(key, false);
+		    ndisplay.image.showShapeLayer(key, false, {local: true});
 		}
 	    }
 	}
@@ -6643,7 +6644,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 	    layer = this.layers[key];
 	    dlayer = ndisplay.layers[key];
 	    if( dlayer ){
-		this.showShapeLayer(key, false);
+		this.showShapeLayer(key, false, {local: true});
                 layer.dlayer = dlayer;
                 layer.divjq = dlayer.divjq;
                 layer.canvasjq = dlayer.canvasjq;
@@ -6664,7 +6665,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
     // show shape layers in new display
     for( key in this.layers ){
 	if( this.layers.hasOwnProperty(key) ){
-	    this.showShapeLayer(key, true);
+	    this.showShapeLayer(key, true, {local: true});
 	}
     }
     // ensure proper positions for graphics
@@ -9664,9 +9665,10 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 // Shape prototype additions to JS9 Image class
 // ---------------------------------------------------------------------------
 
-// if mode is true, layer is displayed, otherwise hidden
+// showShapeLayer: if mode is true, layer is displayed, otherwise hidden
+// also an internal call that uses {local: true} to maybe hide/show layers
 // call using image context
-JS9.Fabric.showShapeLayer = function(layerName, mode){
+JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
     var that = this;
     var left = 0;
     var jobj, xkey, layer, dlayer, canvas, objects, olen, obj;
@@ -9675,13 +9677,15 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
     if( !layer ){
 	return;
     }
+    // opts is optional
+    opts = opts || {};
     canvas = layer.canvas;
     dlayer = this.display.layers[layerName];
-    if( (mode === "show") || (mode === true) ){
-	if( mode === "show" ){
+    if( mode ){
+	// restore and show layer
+	if( !opts.local ){
 	    layer.show = true;
 	}
-	// show
 	if( layer.json && layer.show ){
 	    canvas.loadFromJSON(layer.json, function(){
 		var key, tdlayer, obj;
@@ -9734,8 +9738,10 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 	if( !left ){
 	    this.resize = null;
 	}
-    } else if( (mode === "hide") || (mode === false) ){
-	// save and hide
+	// plugin callbacks
+	this.xeqPlugins("shape", "onshapelayershow", layerName);
+    } else {
+	// save and hide layer
 	if( layer.show ){
 	    // can't use forEachObject, which loops in ascending order,
 	    // because removing anchors changes the array destructively!
@@ -9763,14 +9769,10 @@ JS9.Fabric.showShapeLayer = function(layerName, mode){
 	    }
 	    canvas.clear();
 	}
-	if( mode === "hide" ){
+	if( !opts.local ){
 	    layer.show = false;
 	}
-    }
-    // plugin callbacks
-    if( (mode === "show") || (mode === true) ){
-	this.xeqPlugins("shape", "onshapelayershow", layerName);
-    } else {
+	// plugin callbacks
 	this.xeqPlugins("shape", "onshapelayerhide", layerName);
     }
     return this;
@@ -9789,7 +9791,7 @@ JS9.Fabric.displayShapeLayers = function(){
     if( this.display.image && this.display.image.layers ){
 	for( key in this.display.image.layers ){
 	    if( this.display.image.layers.hasOwnProperty(key) ){
-		this.display.image.showShapeLayer(key, false);
+		this.display.image.showShapeLayer(key, false, {local: true});
 	    }
 	}
     }
@@ -9797,7 +9799,40 @@ JS9.Fabric.displayShapeLayers = function(){
     if( this.layers ){
 	for( key in this.layers ){
 	    if( this.layers.hasOwnProperty(key) ){
-		this.showShapeLayer(key, true);
+		this.showShapeLayer(key, true, {local: true});
+	    }
+	}
+    }
+};
+
+// toggle display of active layers for the current image (save previous)
+// call using image context
+JS9.Fabric.toggleShapeLayers = function(){
+    var key, layer;
+    if( this.toggleLayers ){
+	// toggleLayers => we are currently hidden, so display them
+	for( key in this.layers ){
+	    if( this.layers.hasOwnProperty(key) ){
+		layer = this.layers[key];
+		if( layer && this.toggleLayers[key] ){
+		    this.showShapeLayer(key, true);
+		}
+	    }
+	}
+	delete this.toggleLayers;
+    } else {
+	// no toggleLayers => we are currently displayed, so hide them
+	this.toggleLayers = {};
+	for( key in this.layers ){
+	    if( this.layers.hasOwnProperty(key) ){
+		if( key === "crosshair" ){
+		    continue;
+		}
+		layer = this.layers[key];
+		if( layer && layer.show && layer.dlayer.dtype === "main" ){
+		    this.toggleLayers[key] = true;
+		    this.showShapeLayer(key, false);
+		}
 	    }
 	}
     }
@@ -12027,6 +12062,7 @@ JS9.Fabric.initGraphics = function(){
     JS9.Image.prototype.showShapeLayer = JS9.Fabric.showShapeLayer;
     JS9.Image.prototype.activeShapeLayer = JS9.Fabric.activeShapeLayer;
     JS9.Image.prototype.displayShapeLayers = JS9.Fabric.displayShapeLayers;
+    JS9.Image.prototype.toggleShapeLayers = JS9.Fabric.toggleShapeLayers;
     // print method which know about shapes
     JS9.Image.prototype.print = JS9.Fabric.print;
     // incorporate our defaults into fabric
@@ -17935,6 +17971,13 @@ JS9.initKeyboardActions = function(){
 	evt.preventDefault();
 	im.displaySection("full");
     };
+    JS9.Keyboard.Actions["toggle active shape layers"] = function(im, ipos, evt){
+	// sanity check
+	if( !im ){ return; }
+	evt.preventDefault();
+	im.toggleShapeLayers();
+    };
+
     JS9.Keyboard.Actions["refresh image"] = function(im, ipos, evt){
 	// sanity check
 	if( !im ){ return; }
@@ -18360,6 +18403,7 @@ JS9.mkPublic("GetWCSSys", "getWCSSys");
 JS9.mkPublic("SetWCSSys", "setWCSSys");
 JS9.mkPublic("ShowShapeLayer", "showShapeLayer");
 JS9.mkPublic("ActiveShapeLayer", "activeShapeLayer");
+JS9.mkPublic("ToggleShapeLayers", "toggleShapeLayers");
 JS9.mkPublic("AddShapes", "addShapes");
 JS9.mkPublic("RemoveShapes", "removeShapes");
 JS9.mkPublic("GetShapes", "getShapes");

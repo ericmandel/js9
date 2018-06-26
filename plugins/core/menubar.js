@@ -730,6 +730,11 @@ JS9.Menubar.init = function(width, height){
 		} else if( JS9.GetToolbar("showTooltips") ){
 		    items.toolbar.icon = "sun";
 		}
+		if( tim && tim.toggleLayers ){
+		    items.togglelayers = {name: "show active shape layers"};
+		} else {
+		    items.togglelayers = {name: "hide active shape layers"};
+		}
 		items.inherit = {name: "new image inherits current params"};
 		if( tdisp.image && tdisp.image.params.inherit ){
 		    items.inherit.icon = "sun";
@@ -774,7 +779,7 @@ JS9.Menubar.init = function(width, height){
 		return {
 		    callback: function(key){
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		        var jj, ucat, umode, uplugin, s;
+		        var jj, uplugin, s;
 			var udisp = val;
 			var uim = udisp.image;
 			// make sure display is still valid
@@ -797,24 +802,14 @@ JS9.Menubar.init = function(width, height){
 			    s = !JS9.GetToolbar("showTooltips");
 			    JS9.SetToolbar("showTooltips", s);
 			    break;
+			case "togglelayers":
+			    if( uim ){
+				uim.toggleShapeLayers();
+			    }
+			    break;
 			case "inherit":
 			    if( uim ){
 				uim.params.inherit = !uim.params.inherit;
-			    }
-			    break;
-			case "show":
-			case "hide":
-			    if( uim ){
-				for( ucat in uim.layers ){
-				    if( uim.layers.hasOwnProperty(ucat) ){
-					if( uim.layers[ucat].dlayer.dtype === "main" ){
-					    uim.showShapeLayer(ucat, key);
-					    if( key === "show" ){
-						uim.refreshLayers();
-					    }
-					}
-				    }
-				}
 			    }
 			    break;
 			case "fullsize":
@@ -833,22 +828,6 @@ JS9.Menubar.init = function(width, height){
 				if( uplugin.name === key ){
 				    udisp.displayPlugin(uplugin);
 				    return;
-				}
-			    }
-			    // maybe it's a shape layer
-			    if( uim ){
-				for( ucat in uim.layers ){
-				    if( uim.layers.hasOwnProperty(ucat) ){
-					if( key === ucat ){
-					    umode = uim.layers[ucat].show ?
-						"hide" : "show";
-					    uim.showShapeLayer(ucat, umode);
-					    if( umode === "show" ){
-						uim.refreshLayers();
-					    }
-					    return;
-					}
-				    }
 				}
 			    }
 			    // maybe its a raw data layer

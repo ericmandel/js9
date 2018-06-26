@@ -68,9 +68,9 @@ JS9.Layers.xvisible = function(did, id, layer, target){
     var im = JS9.lookupImage(id, did);
     if( im ){
 	if( target.checked ){
-	    mode = "show";
+	    mode = true;
 	} else {
-	    mode = "hide";
+	    mode = false;
 	}
 	// change visibility
 	im.showShapeLayer(layer, mode);
@@ -245,6 +245,9 @@ JS9.Layers.init = function(opts){
     if( this.display.image ){
 	im = this.display.image;
 	for( key in im.layers ){
+	    if( key === "crosshair" ){
+		continue;
+	    }
 	    if( im.layers.hasOwnProperty(key) ){
 		JS9.Layers.addLayer.call(this, im, key);
 	    }

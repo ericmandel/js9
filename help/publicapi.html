@@ -1676,7 +1676,7 @@ a corner.
 
 <p>
 The <b>degPrec</b> and <b>sexaPrec</b> properties specify the precision for
-degree values and segagesimal values, respectively. Higher precision will
+degree values and sexagesimal values, respectively. Higher precision will
 use more digits and take more space along each line.
 
 <p>
@@ -2913,6 +2913,23 @@ where:
 Shape layers can be hidden from display. This could be useful, for
 example, if you have several catalogs loaded into a display and
 want to view one at a time.
+
+<h5 id="JS9.ToggleShapeLayers">Toggle display of the active shape layers</h5>
+<p>
+<code class="api">JS9.ToggleShapeLayers()</code>
+<p>
+While <a href="#JS9.ShowShapeLayer">ShowShapeLayer()</a> allows you to
+display or hide a single shape layer, this routine will toggle display
+of all active layers in the current image. An active layer is one that
+has not been turned off using the <b>Shape Layers</b> plugin or
+<a href="#JS9.ShowShapeLayer">ShowShapeLayer()</a>.
+
+<p>
+The routine remembers which layers were active at the moment when
+layers are hidden and restores only those layers in the next toggle.
+Thus, if you have two layers, "regions" and "catalog1", and the
+"catalog1" layer has previously been turned off, calling this routine
+repeatedly will turn on and off the "regions" layer only.
 
 <h5 id="JS9.ActiveShapeLayer">Make the specified shape layer the active layer</h5>
 <p>
