@@ -115,7 +115,7 @@ JS9.globalOpts = {
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
-    crosshair: false,		// display wcs crosshair?
+    wcsCrosshair: false,	// enable wcs crosshair matching?
     magnifierRegions: true,	// display regions in magnifier?
     htimeout: 5000,		// connection timeout for the helper connect
     lhtimeout: 1000,		// connection timeout for local helper connect
@@ -236,6 +236,7 @@ JS9.imageOpts = {
     nancolor: "#000000",		// 6-digit #hex color for NaN values
     wcsalign: true,			// align image using wcs after reproj?
     rotationMode: "relative",		// default: relative or absolute?
+    crosshair: true,			// enable crosshair?
     ltvbug:  true,			// add 0.5/ltm to image LTV values?
     listonchange: false			// whether to list after a reg change
 };
@@ -457,12 +458,15 @@ if(  /iPad|iPhone|iPod/.test(navigator.platform) &&
      /11_2_(?:[2-9])/.test(navigator.userAgent)    ){
     JS9.globalOpts.useWasm = false;
 }
+
 // iOS has severe memory limits (05/2017)
+// also force user to turn on crosshair, since it works with one finger
 if( JS9.BROWSER[3] ){
     JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 350000000);
     JS9.globalOpts.image.xdim = 2048 * 2;
     JS9.globalOpts.image.ydim = 2048 * 2;
     JS9.REPROJDIM = 1024;
+    JS9.imageOpts.crosshair = false;
 }
 
 // ---------------------------------------------------------------------
@@ -14116,11 +14120,34 @@ JS9.Crosshair.opts = {
 // display: display crosshair as the mouse moves
 // eslint-disable-next-line no-unused-vars
 JS9.Crosshair.display = function(im, ipos, evt){
-    var i, s, arr, cim, ra, dec, w, h, x, y, hopts, vopts;
-    var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
+    var i, s, arr, cim, ra, dec, w, h, x, y, hopts, vopts, shift;
     var layername = JS9.Crosshair.LAYERNAME;
+    // for computers, shift key must be down
+    // for ipad, assume always true
+    if( /iPad|iPhone|iPod/.test(navigator.platform) ){
+	shift = true;
+    } else {
+	shift = evt.shiftKey;
+    }
+    // exit if crosshair is not enabled for this image
+    // exit if we are not actively tracking the crosshair via shift
+    if( !im.params.crosshair || !shift ){
+	return;
+    }
+    // crosshair for current image
+    cim = im;
+    w = cim.raw.width;
+    h = cim.raw.height;
+    x = cim.ipos.x;
+    y = cim.ipos.y;
+    // draw the crosshair, centered on the image pos
+    hopts = {pts: [{x: 0, y: y}, {x: w, y: y}]};
+    cim.changeShapes(layername, cim.crosshair.h, hopts);
+    vopts = {pts: [{x: x, y: 0}, {x: x, y: h}]};
+    cim.changeShapes(layername, cim.crosshair.v, vopts);
+    cim.crosshair.visible = true;
     // if crosshair mode is on and this image has wcs ...
-    if( JS9.globalOpts.crosshair && im && im.raw.wcs && im.raw.wcs > 0 ){
+    if( JS9.globalOpts.wcsCrosshair && im && im.raw.wcs && im.raw.wcs > 0 ){
 	// get wcs coords of current mouse position
 	arr = JS9.pix2wcs(im.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
 	ra = JS9.saostrtod(arr[0]);
@@ -14133,33 +14160,28 @@ JS9.Crosshair.display = function(im, ipos, evt){
 	// for each displayed image ...
 	for(i=0; i<JS9.displays.length; i++){
 	    cim = JS9.displays[i].image;
-	    if( cim && cim.crosshair ){
-		if( cim === im && cim.crosshair.visible ){
-		    // on entering a display, hide crosshair if necessary
-		    cim.changeShapes(layername, cim.crosshair.h, opts);
-		    cim.changeShapes(layername, cim.crosshair.v, opts);
-		    cim.crosshair.visible = false;
-		} else if( cim !== im && (cim.raw.wcs > 0) ){
-		    // if the ra, dec pos is on this image, display crosshair
-		    w = cim.raw.width;
-		    h = cim.raw.height;
-		    // convert wcs pos to image pos for this image
-		    // trap uncaught errors => we were way off scale
-		    try{ s = JS9.wcs2pix(cim.raw.wcs, ra, dec); }
-		    catch(e){ s = null; }
-		    if( s ){
-			arr = s.trim().split(/\s+/);
-			x = parseFloat(arr[0]);
-			y = parseFloat(arr[1]);
-			// if image pos is within the image boundaries ...
-			if( x > 0 && x < w && y > 0 && y < h ){
-			    // draw the crosshair, centered on the image pos
-			    hopts = {pts: [{x: 0, y: y}, {x: w, y: y}]};
-			    cim.changeShapes(layername, cim.crosshair.h, hopts);
-			    vopts = {pts: [{x: x, y: 0}, {x: x, y: h}]};
-			    cim.changeShapes(layername, cim.crosshair.v, vopts);
-			    cim.crosshair.visible = true;
-			}
+	    if( cim && cim !== im                     &&
+		cim.crosshair && cim.params.crosshair &&
+		cim.raw.wcs > 0                       ){
+		// if the ra, dec pos is on this image, display crosshair
+		w = cim.raw.width;
+		h = cim.raw.height;
+		// convert wcs pos to image pos for this image
+		// trap uncaught errors => we were way off scale
+		try{ s = JS9.wcs2pix(cim.raw.wcs, ra, dec); }
+		catch(e){ s = null; }
+		if( s ){
+		    arr = s.trim().split(/\s+/);
+		    x = parseFloat(arr[0]);
+		    y = parseFloat(arr[1]);
+		    // if image pos is within the image boundaries ...
+		    if( x > 0 && x < w && y > 0 && y < h ){
+			// draw the crosshair, centered on the image pos
+			hopts = {pts: [{x: 0, y: y}, {x: w, y: y}]};
+			cim.changeShapes(layername, cim.crosshair.h, hopts);
+			vopts = {pts: [{x: x, y: 0}, {x: x, y: h}]};
+			cim.changeShapes(layername, cim.crosshair.v, vopts);
+			cim.crosshair.visible = true;
 		    }
 		}
 	    }
@@ -14170,19 +14192,14 @@ JS9.Crosshair.display = function(im, ipos, evt){
 // hide: move the crosshair out of the display
 // eslint-disable-next-line no-unused-vars
 JS9.Crosshair.hide = function(im, ipos, evt){
-    var i, cim;
-    var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
     var layername = JS9.Crosshair.LAYERNAME;
-    // for each displayed image ...
-    for(i=0; i<JS9.displays.length; i++){
-	cim = JS9.displays[i].image;
-	// if the crosshair is visble ...
-	if( cim && (cim !== im) && cim.crosshair && cim.crosshair.visible ){
-	    // move it off the display
-	    cim.changeShapes(layername, cim.crosshair.h, opts);
-	    cim.changeShapes(layername, cim.crosshair.v, opts);
-	    cim.crosshair.visible = false;
-	}
+    var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
+    // if the crosshair is visble ...
+    if( im && im.crosshair && im.crosshair.visible ){
+	// move it off the display
+	im.changeShapes(layername, im.crosshair.h, opts);
+	im.changeShapes(layername, im.crosshair.v, opts);
+	im.crosshair.visible = false;
     }
 };
 
@@ -18272,7 +18289,6 @@ JS9.init = function(){
     JS9.RegisterPlugin(JS9.Crosshair.CLASS, JS9.Crosshair.NAME,
 		       JS9.Crosshair.init,
 		       {onmousemove: JS9.Crosshair.display,
-			onmouseout:  JS9.Crosshair.hide,
 			onimageload: JS9.Crosshair.create,
 			winDims: [0, 0]});
     JS9.RegisterPlugin(JS9.Grid.CLASS, JS9.Grid.NAME,

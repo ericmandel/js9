@@ -716,12 +716,19 @@ JS9.Menubar.init = function(width, height){
 		} else if( tdisp.image && tdisp.image.params.valpos ){
 		    items.valpos.icon = "sun";
 		}
-		items.xhair = {name: "display wcs crosshair"};
+		items.xhair = {name: "display crosshair for this image"};
+		// disable if we don't have info plugin
+		if( !JS9.hasOwnProperty("Crosshair") || !tim ){
+		    items.xhair.disabled = true;
+		} else if( tim && tim.params.crosshair ){
+		    items.xhair.icon = "sun";
+		}
+		items.xhairwcs = {name: "match wcs with other crosshairs"};
 		// disable if we don't have info plugin
 		if( !JS9.hasOwnProperty("Crosshair") ){
-		    items.xhair.disabled = true;
-		} else if( JS9.globalOpts.crosshair ){
-		    items.xhair.icon = "sun";
+		    items.xhairwcs.disabled = true;
+		} else if( JS9.globalOpts.wcsCrosshair ){
+		    items.xhairwcs.icon = "sun";
 		}
 		items.toolbar = {name: "display toolbar tooltips"};
 		// disable if we don't have toolbar plugin
@@ -796,7 +803,16 @@ JS9.Menubar.init = function(width, height){
 			    }
 			    break;
 			case "xhair":
-			    JS9.globalOpts.crosshair=!JS9.globalOpts.crosshair;
+			    if( uim ){
+				uim.params.crosshair = !uim.params.crosshair;
+				if( !uim.params.crosshair ){
+				    JS9.Crosshair.hide(uim);
+				}
+			    }
+			    break;
+			case "xhairwcs":
+			    JS9.globalOpts.wcsCrosshair =
+				!JS9.globalOpts.wcsCrosshair;
 			    break;
 			case "toolbar":
 			    s = !JS9.GetToolbar("showTooltips");
