@@ -8148,7 +8148,7 @@ JS9.Toolbar.init = function(width, height){
 	.addClass(JS9.Toolbar.BASE + "Div")
 	.attr("id", this.id + "Toolbar")
         .css("width", this.width)
-        .css("height", JS9.Toolbar.TOOLBARHEIGHT)
+        .css("height", this.height)
         .css("min-height", JS9.Toolbar.TOOLBARHEIGHT)
 	.appendTo(this.toolbarContainer);
     // add a tooltip
@@ -8232,7 +8232,7 @@ JS9.mkPublic("SetToolbar", function(arg1, arg2){
     } else if( $.isArray(arg1) ){
 	// array of new tools
 	for(i=0; i<arg1.length; i++){
-	    JS9.Toolbar.addTool(arg1[i]);
+	    JS9.Toolbar.tools.push(arg1[i]);
 	}
 	// reinit toolbar
 	reinit();
