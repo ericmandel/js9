@@ -4631,7 +4631,10 @@ JS9.Menubar.init = function(width, height){
 		var n = 0;
 		var items = {};
 		var arr = JS9.Menubar.getDisplays.call(that, "all");
-		items.supertitle = {name: "selected display:", disabled: true};
+		items.supertitle = {
+		    name: "selected display:",
+		    disabled: true
+		};
 		for(i=0; i<arr.length; i++){
 		    tdisp = arr[i];
 		    name = tdisp.id;
@@ -4672,7 +4675,10 @@ JS9.Menubar.init = function(width, height){
 		var items = {};
 		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 		var tim = tdisp.image;
-		items.filetitle = {name: "Images:", disabled: true};
+		items.filetitle = {
+		    name: "Images:",
+		    disabled: true
+		};
 		imlen = JS9.images.length;
 		for(i=0; i<imlen; i++){
 		    im = JS9.images[i];
@@ -4734,17 +4740,24 @@ JS9.Menubar.init = function(width, height){
 		}
 		items.saveas = {
 		    name: "save image as ...",
-		    items: {saveastitle: {name: "choose output format:",
-					  disabled: true},
-			    savefits: {name: "FITS"},
-			    savejpeg: {name: "JPEG"},
-			    savepng: {name: "PNG"}
-			   }
+		    items: {
+			saveastitle: {
+			    name: "choose output format:",
+			    disabled: true
+			},
+			savefits: {name: "FITS"},
+			savejpeg: {name: "JPEG"},
+			savepng: {name: "PNG"}
+		    }
 		};
 		items.moveto = {
 		    name: "move this image to ...",
-		    items: {movetotitle: {name: "choose display:",
-					  disabled: true}}
+		    items: {
+			movetotitle: {
+			    name: "choose display:",
+			    disabled: true
+			}
+		    }
 		};
 		items.separate = { name: "separate these images" };
 		items.gather = { name: "gather all images here" };
@@ -4757,7 +4770,7 @@ JS9.Menubar.init = function(width, height){
 			    items.moveto.items[s1] = {name: JS9.displays[i].id};
 			}
 		    }
-		    items.moveto.items.moveto_newdisp = { name: "a new display" };
+		    items.moveto.items.moveto_newdisp = {name: "a new display"};
 		} else {
 		    items.moveto.disabled = true;
 		}
@@ -4775,20 +4788,26 @@ JS9.Menubar.init = function(width, height){
 		items.loadsession = {name: "load session ..."};
 		items.savesession = {
 		    name: "save session ...",
-		    items: {savesessiontitle: {name: "include these images:",
-					       disabled: true},
-			    savecurrent: {name: "the current image"},
-			    savedisplay: {name: "all images in this display"}
-			   }
+		    items: {
+			savesessiontitle: {
+			    name: "include these images:",
+			    disabled: true
+			},
+			savecurrent: {name: "the current image"},
+			savedisplay: {name: "all images in this display"}
+		    }
 		};
 		items["sep" + n++] = "------";
 		items.createmosaic = {
 		    name: "create mosaic ...",
-		    items: {createmosaictitle: {name: "include these images:",
-					       disabled: true},
-			    mosaiccurrent: {name: "the current image"},
-			    mosaicdisplay: {name: "all images in this display"}
-			   }
+		    items: {
+			createmosaictitle: {
+			    name: "include these images:",
+			    disabled: true
+			},
+			mosaiccurrent: {name: "the current image"},
+			mosaicdisplay: {name: "all images in this display"}
+		    }
 		};
 		items["sep" + n++] = "------";
 		items.lite = {name: "new JS9 light window"};
@@ -5363,7 +5382,10 @@ JS9.Menubar.init = function(width, height){
 		    });
 		};
 		var items = {};
-		items.zoomtitle = {name: "Zoom Factors:", disabled: true};
+		items.zoomtitle = {
+		    name: "Zoom Factors:",
+		    disabled: true
+		};
 		for(i=JS9.imageOpts.zooms; i>=1; i--){
 		    zoom = Math.pow(2,-i);
 		    zoomp = Math.pow(2,i);
@@ -5384,7 +5406,10 @@ JS9.Menubar.init = function(width, height){
 		    }
 		}
 		items["sep" + n++] = "------";
-		items.zoomiotitle = {name: "Zoom In/Out:", disabled: true};
+		items.zoomiotitle = {
+		    name: "Zoom In/Out:",
+		    disabled: true
+		};
 		items.zoomIn = {name: "zoom in"};
 		items.zoomOut = {name: "zoom out"};
 		items.zoomToFit = {name: "zoom to fit"};
@@ -5680,7 +5705,10 @@ JS9.Menubar.init = function(width, height){
 		    }
 		    });
 		};
-		items.cmaptitle = {name: "Colormaps:", disabled: true};
+		items.cmaptitle = {
+		    name: "Colormaps:",
+		    disabled: true
+		};
 		for(i=0; i<JS9.globalOpts.topColormaps.length; i++){
 		    s1 = JS9.globalOpts.topColormaps[i];
 		    s2 = s1;
@@ -5690,9 +5718,13 @@ JS9.Menubar.init = function(width, height){
 		    }
 		}
 		items.morecmaps = {
-		    name: "more ...",
-		    items: {morecmapstitle: {name: "Colormaps:",
-					  disabled: true}}
+		    name: "more colormaps ...",
+		    items: {
+			morecmapstitle: {
+			    name: "Colormaps:",
+			    disabled: true
+			}
+		    }
 		};
 		for(i=0; i<JS9.colormaps.length; i++){
 		    s1 = JS9.colormaps[i].name;
@@ -5707,7 +5739,13 @@ JS9.Menubar.init = function(width, height){
 		items["sep" + n++] = "------";
 		items.imfilter = {
 		    name: "image filters",
-		    items: {}
+		    items: {
+			imfiltertitle: {
+			    name: "adjust colors using:",
+			    disabled: true
+			}
+
+		    }
 		};
 		arr = JS9.Image.prototype.filterRGBImage.call(null).sort();
 		for(i=0; i<arr.length; i++){
@@ -5823,36 +5861,70 @@ JS9.Menubar.init = function(width, height){
 		var i, s1;
 		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 		var tim = tdisp.image;
-		var items = {
-		    "regiontitle": {name: "Regions:", disabled: true},
-		    "annulus": {name: "annulus"},
-		    "box": {name: "box"},
-		    "circle": {name: "circle"},
-		    "ellipse": {name: "ellipse"},
-		    "line": {name: "line"},
-		    "point": {name: "point"},
-		    "polygon": {name: "polygon"},
-		    "text": {name: "text"},
-		    "sep1": "------",
-		    "loadRegions" : {name: "load regions"},
-		    "saveRegions" : {name: "save regions"},
-		    "copyto" : {name: "copy regions to",
-				items: { copytotitle: {name: "choose image:",
-						       disabled: true}}},
-		    "listRegions" : {name: "list regions"},
-		    "removeRegions" : {name: "remove regions"},
-		    "sep2": "------",
-		    "listSelRegions" : {name: "list selected"},
-		    "removeSelRegions" : {name: "remove selected"},
-		    "sep3": "------",
-		    "listonchange" : {name: "list on change"},
-		    "xeqonchange" : {name: "xeq on change"}
+		var items = {};
+		items.regiontitle = {
+		    name: "Regions:",
+		    disabled: true
 		};
+		items.annulus = {name: "annulus"};
+		items.box = {name: "box"};
+		items.circle = {name: "circle"};
+		items.ellipse = {name: "ellipse"};
+		items.line = {name: "line"};
+		items.point = {name: "point"};
+		items.polygon = {name: "polygon"};
+		items.text = {name: "text"};
+		items.sep1 = "------";
+		items.loadRegions  = {name: "load new regions"};
+		items.saveRegions  = {name: "save all regions"};
+		items.listRegions  = {name: "list all regions"};
+		items.removeRegions  = {name: "remove all regions"};
+		items.copyto  = {
+		    name: "copy all regions to ...",
+		    items: {
+			copytotitle: {
+			    name: "choose image:",
+			    disabled: true
+			}
+		    }
+		};
+		items.sep2 = "------";
+		items.selectops = {
+		    name: "selected regions ...",
+		    items: {
+			selopstitle:{
+			    name:"actions on selected:",
+			    disabled: true
+			},
+			srcSelReg: {name: "set tag: source"},
+			bkgSelReg: {name: "set tag: bkgd"},
+			incSelReg: {name: "set tag: include"},
+			exclSelReg: {name: "set tag: exclude"},
+			listSelReg: {name: "list selected"},
+			removeSelReg: {name: "remove selected"},
+			copySelReg: {
+			    name: "copy selected to ...",
+			    items: {
+				copyseltotitle: {
+				    name: "choose image:",
+				    disabled: true
+				}
+			    }
+			}
+		    } 
+		};
+		items.sep3 = "------";
+		items.listonchange  = {name: "list on change"};
+		items.xeqonchange  = {name: "xeq on change"};
 		if( tim && (JS9.images.length > 1) ){
 		    for(i=0; i<JS9.images.length; i++){
 			if( tim !== JS9.images[i] ){
 			    s1 = "copyto_" + JS9.images[i].id;
 			    items.copyto.items[s1] = {name: JS9.images[i].id};
+			    s1 = "copyselto_" + JS9.images[i].id;
+			    items.selectops.items.copySelReg.items[s1] = {
+				name: JS9.images[i].id
+			    };
 			}
 		    }
 		    items.copyto.items.copyto_all = { name: "all images" };
@@ -5882,14 +5954,6 @@ JS9.Menubar.init = function(width, height){
 			}
 			if( uim ){
 			    switch(key){
-			    case "removeRegions":
-				uim.removeShapes("regions", "all");
-				udisp.clearMessage("regions");
-				break;
-			    case "removeSelRegions":
-				uim.removeShapes("regions", "selected");
-				udisp.clearMessage("regions");
-				break;
 			    case "loadRegions":
 				JS9.OpenRegionsMenu({display: udisp});
 				break;
@@ -5899,8 +5963,32 @@ JS9.Menubar.init = function(width, height){
 			    case "listRegions":
 				uim.listRegions("all", {mode: 2});
 				break;
-			    case "listSelRegions":
+			    case "removeRegions":
+				uim.removeShapes("regions", "all");
+				udisp.clearMessage("regions");
+				break;
+			    case "srcSelReg":
+				uim.editRegionTags("selected",
+						   "source", "background");
+				break;
+			    case "bkgSelReg":
+				uim.editRegionTags("selected",
+						   "background", "source");
+				break;
+			    case "incSelReg":
+				uim.editRegionTags("selected",
+						   "include", "exclude");
+				break;
+			    case "exclSelReg":
+				uim.editRegionTags("selected",
+						   "exclude", "include");
+				break;
+			    case "listSelReg":
 				uim.listRegions("selected", {mode: 2});
+				break;
+			    case "removeSelReg":
+				uim.removeShapes("regions", "selected");
+				udisp.clearMessage("regions");
 				break;
 			    case "xeqonchange":
 				uim.params.xeqonchange = !uim.params.xeqonchange;
@@ -5913,6 +6001,11 @@ JS9.Menubar.init = function(width, height){
 				if( key.match(/^copyto_/) ){
 				    uid = key.replace(/^copyto_/,"");
 				    uim.copyRegions(uid);
+				    return;
+				}
+				if( key.match(/^copyselto_/) ){
+				    uid = key.replace(/^copyselto_/,"");
+				    uim.copyRegions(uid, "selected");
 				    return;
 				}
 				// otherwise it's new region
@@ -5972,7 +6065,10 @@ JS9.Menubar.init = function(width, height){
 		    }
 		    });
 		};
-		items.wcssystitle = {name: "WCS Systems:", disabled: true};
+		items.wcssystitle = {
+		    name: "WCS Systems:",
+		    disabled: true
+		};
 		for(i=0; i<JS9.wcssyss.length; i++){
 		    s1 = JS9.wcssyss[i];
 		    s2 = s1;
@@ -5988,7 +6084,10 @@ JS9.Menubar.init = function(width, height){
 		    items[s1].icon = "sun";
 		}
 		items["sep" + n++] = "------";
-		items.wcsutitle = {name: "WCS Units:", disabled: true};
+		items.wcsutitle = {
+		    name: "WCS Units:",
+		    disabled: true
+		};
 		for(i=0; i<JS9.wcsunitss.length; i++){
 		    s1 = JS9.wcsunitss[i];
 		    s2 = s1;
@@ -6000,8 +6099,12 @@ JS9.Menubar.init = function(width, height){
 		items["sep" + n++] = "------";
 		items.altwcs = {
 		    name: "alternate wcs",
-		    items: {altwcstitle: {name: "choose a wcs:",
-					  disabled: true}}
+		    items: {
+			altwcstitle: {
+			    name: "choose a wcs:",
+			    disabled: true
+			}
+		    }
 		};
 		if( !tim || !tim.raw || !tim.raw.altwcs ){
 		    items.altwcs.disabled = true;
@@ -6036,7 +6139,12 @@ JS9.Menubar.init = function(width, height){
 		items["sep" + n++] = "------";
 		items.reproject = {
 		    name: "wcs reproject ...",
-		    items: {reprojtitle: {name: "using the wcs from:", disabled: true}}
+		    items: {
+			reprojtitle: {
+			    name: "using the wcs from:",
+			    disabled: true
+			}
+		    }
 		};
 		for(i=0, nwcs=0; i<JS9.images.length; i++){
 		    if( JS9.images[i].raw.wcs ){
@@ -6069,7 +6177,8 @@ JS9.Menubar.init = function(width, height){
 		}
 		items.reproject.items["sep" + n++] = "------";
 		items.reproject.items.rotatetitle = {
-		    name: "by rotating the image:", disabled: true
+		    name: "by rotating the image:",
+		    disabled: true
 		};
 		items.reproject.items.reproject_northup = {
 		    name: "so that north is up"
@@ -6354,8 +6463,12 @@ JS9.Menubar.init = function(width, height){
 		    };
 		    if( JS9.globalOpts.loadProxy &&
 			im && im.raw && im.raw.hdu && im.raw.hdu.vfile ){
-			items.upload = {name: "upload FITS to make tasks available"};
-			if( !JS9.helper.connected || (JS9.helper.type !== "nodejs" && JS9.helper.type !== "socket.io") ){
+			items.upload = {
+			    name: "upload FITS to make tasks available"
+			};
+			if( !JS9.helper.connected ||
+			    (JS9.helper.type !== "nodejs" &&
+			     JS9.helper.type !== "socket.io") ){
 			    items.upload.disabled = true;
 			}
 		    }
@@ -6507,7 +6620,12 @@ JS9.Menubar.init = function(width, height){
 		var items = {};
 		items.js9help = {
 		    name: "General help ...", 
-		    items: {helptitle: {name: "General help:", disabled: true}}
+		    items: {
+			helptitle: {
+			    name: "General help:",
+			    disabled: true
+			}
+		    }
 		};
 		// first, internal js9 pages
 		for( key in JS9.helpOpts ){
@@ -6524,7 +6642,12 @@ JS9.Menubar.init = function(width, height){
 		items["sep" + n++] = "------";
 		items.pluginhelp = {
 		    name: "JS9 plugins ...", 
-		    items: {helptitle: {name: "JS9 plugins:", disabled: true}}
+		    items: {
+			helptitle: {
+			    name: "JS9 plugins:",
+			    disabled: true
+			}
+		    }
 		};
 		// second, the JS9 core plugins
 		for( key in JS9.helpOpts ){
@@ -6552,8 +6675,12 @@ JS9.Menubar.init = function(width, height){
 				t = val.heading + " plugins";
 				items["sep" + n++] = {
 				    name: t + " ...",
-				    items: {title: {name: t + ":",
-						    disabled: true}}
+				    items: {
+					title: {
+					    name: t + ":",
+					    disabled: true
+					}
+				    }
 				};
 			    }
 			}

@@ -12723,6 +12723,7 @@ JS9.Regions.init = function(layerName){
     JS9.Image.prototype.saveRegions = JS9.Regions.saveRegions;
     JS9.Image.prototype.listRegions = JS9.Regions.listRegions;
     JS9.Image.prototype.copyRegions = JS9.Regions.copyRegions;
+    JS9.Image.prototype.editRegionTags = JS9.Regions.editRegionTags;
     JS9.Image.prototype.toggleRegionTags = JS9.Regions.toggleRegionTags;
     // init the display shape layer
     dlayer = this.display.newShapeLayer(layerName, JS9.Regions.opts);
@@ -13991,6 +13992,29 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	JS9.error("no saveAs function available to save region file");
     }
     return fname;
+};
+
+// change region tags, e.g. set source, delete background
+// e.g. im.changeRegionTags("selected", "source", "background");
+// call using image context
+JS9.Regions.editRegionTags = function(which, add1, rem1){
+    var i, j, s, tags;
+    var ntags = [];
+    s = this.getShapes("regions", which);
+    if( s.length ){
+	for(i=0; i<s.length; i++){
+	    tags = s[i].tags;
+	    // add the new tag
+	    ntags.push(add1);
+	    for(j=0; j<tags.length; j++){
+		// copy other tags, except the one we want to remove
+		if( tags[j] !== rem1 ){
+		    ntags.push(tags[j]);
+		}
+	    }
+	}
+	this.changeShapes("regions", which, {tags: ntags});
+    }
 };
 
 // toggle region tags, e.g. source <-> background, include <-> exclude
@@ -19703,6 +19727,20 @@ JS9.mkPublic("SaveRegions", function(fname, which, layer){
     im = JS9.getImage(obj.display);
     if( im ){
 	return im.saveRegions(file, wh, la);
+    }
+    return null;
+});
+
+// edit region tags, e.g. add source, remove background
+// e.g. JS9.EditRegionTags("selected", "source", "background");
+JS9.mkPublic("EditRegionTags", function(which, add1, rem1){
+    var obj = JS9.parsePublicArgs(arguments);
+    var im = JS9.getImage(obj.display);
+    if( im ){
+	which = obj.argv[0];
+	add1 = obj.argv[1];
+	rem1 = obj.argv[2];
+	return im.editRegionTags(which, add1, rem1);
     }
     return null;
 });
