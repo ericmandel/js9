@@ -14155,21 +14155,19 @@ JS9.Crosshair.display = function(im, ipos, evt){
     }
     // exit if crosshair is not enabled for this image
     // exit if we are not actively tracking the crosshair via shift
-    if( !im.params.crosshair || !shift ){
+    if( !shift || !im || !im.crosshair || !im.params.crosshair ){
 	return;
     }
-    // crosshair for current image
-    cim = im;
-    w = cim.raw.width;
-    h = cim.raw.height;
-    x = cim.ipos.x;
-    y = cim.ipos.y;
+    w = im.raw.width;
+    h = im.raw.height;
+    x = im.ipos.x;
+    y = im.ipos.y;
     // draw the crosshair, centered on the image pos
     hopts = {pts: [{x: 0, y: y}, {x: w, y: y}]};
-    cim.changeShapes(layername, cim.crosshair.h, hopts);
+    im.changeShapes(layername, im.crosshair.h, hopts);
     vopts = {pts: [{x: x, y: 0}, {x: x, y: h}]};
-    cim.changeShapes(layername, cim.crosshair.v, vopts);
-    cim.crosshair.visible = true;
+    im.changeShapes(layername, im.crosshair.v, vopts);
+    im.crosshair.visible = true;
     // if crosshair mode is on and this image has wcs ...
     if( JS9.globalOpts.wcsCrosshair && im && im.raw.wcs && im.raw.wcs > 0 ){
 	// get wcs coords of current mouse position
