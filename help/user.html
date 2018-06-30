@@ -109,7 +109,7 @@ uncompressed).  It also contains options to:
 <li><b>print ...</b> print the current image display window (including 2D graphics)
 <li><b>display FITS header</b> display FITS header of the current image
 <li><b>display FITS HDUs</b> display a list of HDUs in a multi-extension FITS file
-<li><b>save image as...</b> save the current image data in one of these formats:
+<li><b>save this image as...</b> save the current image data in one of these formats:
 <ul>
 <li><b>FITS</b> (standard astronomical image file, without 2D graphics)
 <li><b>JPEG</b> (also includes 2D graphics, such as regions)
@@ -119,8 +119,15 @@ uncompressed).  It also contains options to:
 (either an existing display or a new light window)
 <li><b>separate these images</b> move each image in this display to a new display
 <li><b>gather all images here</b>move all images from other displays to this display
+<li><b>refresh this image</b>: an advanced option that will call the
+internal redisplay routine for the displayed image (useful, for
+example, if you are reprocessing the image on disk and want to view
+the new data)
+<li><b>display the full image</b>: an advanced option that tries to
+load and display the entire image (might cause the page to crash if
+the image is too large)
 <li><b>free image memory</b>free up memory used to store the FITS file internally (which is needed for WCS reprojections, viewing FITS extensions and data cubes).
-<li><b>close image</b> to clear the current image and release browser resources
+<li><b>close this image</b> to clear the current image and release browser resources
 <li><b>close all images</b> to clear all images and release browser resources
 <li><b>remove proxy file</b> to clear a server proxy file and release browser resources
 <li><b>load catalog ...</b> load a tab-delimited catalog file into the display
@@ -138,6 +145,24 @@ apps no longer have access to that helper.  Within five minutes of the
 termination, use this option to start the helper in one remaining
 app and other apps will reconnect.
 <li><b>display pageID</b>, a unique ID for this page that can be used to communicate externally with a JS9 instance when multiple JS9 instances are running (js9 --pageid [pageid])
+</ul>
+
+<li><p><b>Edit:</b> allows you to copy and paste regions, positions,
+and pixel values to/from the clipboard:
+<ul>
+<li><b>copy sel region</b>: copy the selected region to the system
+clipboard, so that you can transfer it to other JS9 displays or to
+programs outside of JS9.
+<li><b>copy all regions</b>: copy all regions to the system clipboard,
+so that you can transfer them to other JS9 displays or programs
+outside of JS9.
+<li><b>paste regions</b>: paste previously copied regions to another
+JS9 display. For security reasons, web pages are not permitted to read
+the system clipboard, so the paste command reads an internal variable filled
+from the previous JS9 copy. Thus, you cannot paste data copied from outside
+JS9. Some day ...
+<li><b>copy wcs pos</b>: copy the current WCS position to the system clipboard
+<li><b>copy value/pos</b>: copy the current pixel value and WCS position to the system clipboard
 </ul>
 
 <li><p><b>View:</b> displays a list of plugin menu options, including the following core options:
@@ -311,29 +336,35 @@ a dialect of the widely-used DS9/Funtools regions format, as described
 <a href="regions.html">here</a>.
 
 <p>
-The <b>save regions</b> menu option will save all regions to a file
+The <b>save all regions</b> menu option will save all regions to a file
 named js9.reg. The file will be saved in the folder where your other
 browser downloads are stored. NB: As of 4/2015, Safari does not permit
-this sort of file saving. The <b>save regions</b> command therefore
+this sort of file saving. The <b>save all regions</b> command therefore
 displays the region text in a new tab (or window). Use Safari's 
 <b>File:Save As</b> option to save the regions to disk.
 
 <p>
-The <b>copy regions to</b> menu option will copy regions from the
+The <b>list all regions</b> menu option will display all regions.
+
+<p>
+The <b>remove all regions</b> menu option will delete all regions.
+
+<p>
+The <b>copy all regions to</b> menu option will copy regions from the
 current image to a specified image (or to all images). If one or more
 regions are actively selected in the current image, they alone will be
 copied. Otherwise, all regions will be copied.
 
 <p>
-The <b>list regions</b> menu option will display all regions.
-The <b>remove regions</b> menu option will delete all regions.
-The <b>list selected</b> menu option will display the selected region(s).
-The <b>remove selected</b> menu option will delete the selected regions(s).
+The <b>selected regions ...</b> submenu contains options that apply to
+the selected region, including the ability to set the tag of a
+selected region to "source", "background", "include", "exclude" (used
+heavily in X-ray astronomy data analysis), toggle "source"/"background"
+or "include"/"exclude", or list, remove, copy the selected region.
 
 <p>
 The <b>list on change</b> menu option will cause all regions to be
 listed whenever one changes.
-
 
 <li><p><b>WCS:</b> Use this menu option to select a world coordinate
 system when displaying pixel positions and regions (assuming

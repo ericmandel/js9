@@ -384,10 +384,10 @@ JS9.Prefs.catalogsSchema = {
     }
 };
 
-// display schema for the page
-JS9.Prefs.displaysSchema = {
-    "title": "Display Preferences",
-    "description": "Preferences for each JS9 display in this page",
+// global schema for the page
+JS9.Prefs.globalsSchema = {
+    "title": "Global Preferences",
+    "description": "Global preferences for all JS9 displays in this page",
     "properties": {
 	"topColormaps": {
 	    "type": "mobject",
@@ -455,7 +455,7 @@ JS9.Prefs.sources = [
     {name: "grid",     schema: JS9.Prefs.gridSchema},
     {name: "fits",     schema: JS9.Prefs.fitsSchema},
     {name: "catalogs", schema: JS9.Prefs.catalogsSchema},
-    {name: "displays", schema: JS9.Prefs.displaysSchema}
+    {name: "globals", schema: JS9.Prefs.globalsSchema}
 ];
 
 // init preference plugin
@@ -516,7 +516,7 @@ JS9.Prefs.init = function(){
 			   tooltip: JS9.globalOpts.catalogs.tooltip,
 			   skip: JS9.globalOpts.catalogs.skip};
 	    break;
-	case "displays":
+	case "globals":
 	    source.data = {fits2png: JS9.globalOpts.fits2png,
 			   fits2fits: JS9.globalOpts.fits2fits,
 			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
@@ -682,7 +682,7 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
     case "catalogs":
 	obj = JS9.globalOpts.catalogs;
 	break;
-    case "displays":
+    case "globals":
 	obj = JS9.globalOpts;
 	break;
     }
@@ -770,7 +770,7 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 		    break;
 		}
 		break;
-	    case "displays":
+	    case "globals":
 	        switch(key){
  	        case "toolBar":
 	            // set new option value
@@ -794,10 +794,6 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 		default:
 	            // set new option value
 	            obj[key] = val;
-		    // change option value in this display as well
-		    for(j=0; j<JS9.displays.length; j++){
-			JS9.displays[j][key] = val;
-		    }
 		    source.data[key] = val;
 		    break;
 		}

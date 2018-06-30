@@ -273,11 +273,10 @@ JS9.Keyboard.Actions["save regions as a text file"] = function(im, ipos, evt){
 // get action associated with the current keyboard
 JS9.Keyboard.getAction = function(im, evt){
     var action;
-    var d = evt.data;
     var s = JS9.eventToCharStr(evt);
     // look for an action associated with this key
     if( s ){
-	action = d.keyboardActions[s];
+	action = JS9.globalOpts.keyboardActions[s];
     }
     return action;
 };
@@ -288,6 +287,10 @@ JS9.Keyboard.action = function(im, ipos, evt, action){
     // call the keyboard action
     if( action && JS9.Keyboard.Actions[action] ){
 	JS9.Keyboard.Actions[action](im, ipos, evt);
+	// extended plugins
+	if( im && JS9.globalOpts.extendedPlugins ){
+	    im.xeqPlugins("keypress", "onkeyboardaction", evt);
+	}
     }
 };
 
@@ -353,9 +356,9 @@ JS9.Keyboard.init = function(){
         .html("")
 	.appendTo(this.keyboardContainer);
     // add actions
-    for(key in this.display.keyboardActions ){
-	if( this.display.keyboardActions.hasOwnProperty(key) ){
-	    s = this.display.keyboardActions[key];
+    for(key in JS9.globalOpts.keyboardActions ){
+	if( JS9.globalOpts.keyboardActions.hasOwnProperty(key) ){
+	    s = JS9.globalOpts.keyboardActions[key];
 	    JS9.Keyboard.addAction.call(this, this.keyboardActionContainer,
 					key, s);
 	}

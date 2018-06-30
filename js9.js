@@ -150,10 +150,14 @@ JS9.globalOpts = {
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     keyboardActions: {
 	b: "toggle selected region: source/background",
+	c: "toggle crosshair",
 	e: "toggle selected region: include/exclude",
-	f: "display full image",
+	i: "refresh image",
+	I: "display full image",
 	l: "toggle active shape layers",
-	r: "refresh image",
+        p: "paste regions from local clipboard",
+	r: "copy selected region to clipboard",
+	R: "copy all regions to clipboard",
         "/": "copy wcs position to clipboard",
         "?": "copy value and position to clipboard",
 	"0": "reset zoom",
@@ -192,7 +196,7 @@ JS9.globalOpts = {
 		 tooltip: "$xreg.data.ra $xreg.data.dec"}, // tooltip format
     topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "red", "green", "blue"], // toplevel colormaps
     infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos", "impos", "physpos", "value", "regions", "progress"],
-    menuBar: ["file", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
+    menuBar: ["file", "edit", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
     toolBar: ["linear", "log", "annulus", "box", "circle", "ellipse", "line", "polygon", "remove", "incexcl", "srcbkgd", "zoomin", "zoomout", "zoom1"],
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
     separate: {layout: "auto", leftMargin: 10, topMargin: 10}, // separate a display
@@ -5147,6 +5151,14 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
     return obj;
 };
 
+// toggle display of value/position
+JS9.Image.prototype.toggleValpos = function(){
+    this.params.valpos = !this.params.valpos;
+    if( !this.params.valpos ){
+	this.display.clearMessage();
+    }
+};
+
 // get color map name
 JS9.Image.prototype.getColormap = function(){
     if(  this.cmapObj ){
@@ -7558,7 +7570,6 @@ JS9.Display = function(el){
     // display-based mouse/touch actions initially from global
     this.mouseActions = JS9.globalOpts.mouseActions.slice(0);
     this.touchActions = JS9.globalOpts.touchActions.slice(0);
-    this.keyboardActions = $.extend(true, {}, JS9.globalOpts.keyboardActions);
     // display-based scroll-based zoom initially from global
     this.mousetouchZoom = JS9.globalOpts.mousetouchZoom;
     // add event handlers
@@ -7582,6 +7593,9 @@ JS9.Display = function(el){
     });
     this.divjq.on("keydown", this, function(evt){
 	return JS9.keyDownCB(evt);
+    });
+    this.divjq.on("keyup", this, function(evt){
+	return JS9.keyUpCB(evt);
     });
     this.divjq.on("wheel", this, function(evt){
 	return JS9.wheelCB(evt);
@@ -14155,7 +14169,8 @@ JS9.Crosshair.display = function(im, ipos, evt){
     }
     // exit if crosshair is not enabled for this image
     // exit if we are not actively tracking the crosshair via shift
-    if( !shift || !im || !im.crosshair || !im.params.crosshair ){
+    if( !shift || !im ||
+	im.tmp.shiftKey || !im.crosshair || !im.params.crosshair ){
 	return;
     }
     w = im.raw.width;
@@ -14239,6 +14254,22 @@ JS9.Crosshair.create = function(im){
     }
 };
 
+// mark key actions that use the shift key
+JS9.Crosshair.keyaction = function(im, ipos, evt){
+    // add shiftKey marker, if necessary
+    if( im && evt && evt.shiftKey ){
+	im.tmp.shiftKey = true;
+    }
+};
+
+// unmark key action-based shift key use
+JS9.Crosshair.keyup = function(im, ipos, evt){
+    // remove shiftKey marker, if necessary
+    if( im && im.tmp.shiftKey && evt && !evt.shiftKey ){
+	delete im.tmp.shiftKey;
+    }
+};
+
 // init: create the shape layer for this display
 JS9.Crosshair.init = function(){
     var i;
@@ -14250,6 +14281,19 @@ JS9.Crosshair.init = function(){
 	}
     }
     return this;
+};
+
+// toggle display of crosshair
+JS9.Image.prototype.toggleCrosshair = function(){
+    this.params.crosshair = !this.params.crosshair;
+    if( !this.params.crosshair ){
+        JS9.Crosshair.hide(this);
+    }
+};
+
+// toggle display of wcs crosshair
+JS9.Image.prototype.toggleWCSCrosshair = function(){
+    JS9.globalOpts.wcsCrosshair = !JS9.globalOpts.wcsCrosshair;
 };
 
 // ---------------------------------------------------------------------
@@ -16832,6 +16876,16 @@ JS9.keyDownCB = function(evt){
     }
 };
 
+// keyup: assumes display obj is passed in evt.data
+JS9.keyUpCB = function(evt){
+    var display = evt.data;
+    var im = display.image;
+    if( im ){
+	// plugin callbacks
+	im.xeqPlugins("keypress", "onkeyup", evt);
+    }
+};
+
 // ---------------------------------------------------------------------
 // drag and drop event handlers
 // ---------------------------------------------------------------------
@@ -18004,28 +18058,78 @@ JS9.initKeyboardActions = function(){
 	evt.preventDefault();
 	im.activeShapeLayer("regions");
     };
-    JS9.Keyboard.Actions["display full image"] = function(im, ipos, evt){
-	// sanity check
-	if( !im ){ return; }
-	evt.preventDefault();
-	im.displaySection("full");
-    };
     JS9.Keyboard.Actions["toggle active shape layers"] = function(im, ipos, evt){
 	// sanity check
 	if( !im ){ return; }
 	evt.preventDefault();
 	im.toggleShapeLayers();
     };
-
+    // eslint-disable-next-line no-unused-vars
+    JS9.Keyboard.Actions["copy selected region to clipboard"] = function(im, ipos, evt){
+	var s;
+	// sanity check
+	if( !im ){ return; }
+	// get selected region(s)
+	s = im.listRegions("selected", {mode: 1});
+	// copy to clipboard
+	JS9.CopyToClipboard(s);
+	return s;
+    };
+    // eslint-disable-next-line no-unused-vars
+    JS9.Keyboard.Actions["copy all regions to clipboard"] = function(im, ipos, evt){
+	var s;
+	// sanity check
+	if( !im ){ return; }
+	// get all regions
+	s = im.listRegions("all", {mode: 1});
+	// copy to clipboard
+	JS9.CopyToClipboard(s);
+	return s;
+    };
+    // eslint-disable-next-line no-unused-vars
+    JS9.Keyboard.Actions["paste regions from local clipboard"] = function(im, ipos, evt){
+	var s;
+	var rregexp = /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
+	// sanity check
+	if( !im ){ return; }
+	// try to get from clipboard
+	s = JS9.CopyFromClipboard();
+	// see if we have something valid
+	if( !s ){
+	    JS9.error("the local clipboard (which only holds data copied from within JS9) does not contain any content. Were you trying to paste something copied outside JS9? ");
+	}
+	if( s.match(rregexp) ){
+	    im.addShapes("regions", s);
+	} else {
+	    JS9.error("the local clipboard (which only holds data copied from within JS9) does not contain any regions");
+	}
+	return s;
+    };
     JS9.Keyboard.Actions["refresh image"] = function(im, ipos, evt){
 	// sanity check
 	if( !im ){ return; }
 	evt.preventDefault();
 	im.refreshImage();
     };
+    JS9.Keyboard.Actions["display full image"] = function(im, ipos, evt){
+	// sanity check
+	if( !im ){ return; }
+	evt.preventDefault();
+	im.displaySection("full");
+    };
     // eslint-disable-next-line no-unused-vars
     JS9.Keyboard.Actions["toggle coordinate grid"] = function(im, ipos, evt){
 	JS9.Grid.toggle(im);
+    };
+    // eslint-disable-next-line no-unused-vars
+    JS9.Keyboard.Actions["toggle crosshair"] = function(im, ipos, evt){
+	// sanity check
+	if( !im ){ return; }
+	evt.preventDefault();
+	im.params.crosshair = !im.params.crosshair;
+	if( !im.params.crosshair ){
+	    JS9.Crosshair.hide(im);
+	}
     };
 };
 
@@ -18311,6 +18415,8 @@ JS9.init = function(){
     JS9.RegisterPlugin(JS9.Crosshair.CLASS, JS9.Crosshair.NAME,
 		       JS9.Crosshair.init,
 		       {onmousemove: JS9.Crosshair.display,
+			onkeyboardaction: JS9.Crosshair.keyaction,
+			onkeyup: JS9.Crosshair.keyup,
 			onimageload: JS9.Crosshair.create,
 			winDims: [0, 0]});
     JS9.RegisterPlugin(JS9.Grid.CLASS, JS9.Grid.NAME,
@@ -19307,7 +19413,13 @@ JS9.mkPublic("CopyToClipboard", function(text){
 	msg = "ERROR";
     }
     document.body.removeChild(textArea);
+    // save text for pseudo-pasting
+    JS9.clipboard = text;
     return msg;
+});
+
+JS9.mkPublic("CopyFromClipboard", function(){
+    return JS9.clipboard || "";
 });
 
 // bring up the file dialog box and open selected FITS file(s)
