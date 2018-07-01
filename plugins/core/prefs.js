@@ -387,7 +387,7 @@ JS9.Prefs.catalogsSchema = {
 // global schema for the page
 JS9.Prefs.globalsSchema = {
     "title": "Global Preferences",
-    "description": "Global preferences for all JS9 displays in this page",
+    "description": "Global preferences for all JS9 displays",
     "properties": {
 	"topColormaps": {
 	    "type": "mobject",
@@ -450,12 +450,12 @@ JS9.Prefs.globalsSchema = {
 
 // source object for preferences
 JS9.Prefs.sources = [
+    {name: "globals",  schema: JS9.Prefs.globalsSchema},
     {name: "images",   schema: JS9.Prefs.imagesSchema},
+    {name: "fits",     schema: JS9.Prefs.fitsSchema},
     {name: "regions",  schema: JS9.Prefs.regionsSchema},
     {name: "grid",     schema: JS9.Prefs.gridSchema},
-    {name: "fits",     schema: JS9.Prefs.fitsSchema},
-    {name: "catalogs", schema: JS9.Prefs.catalogsSchema},
-    {name: "globals", schema: JS9.Prefs.globalsSchema}
+    {name: "catalogs", schema: JS9.Prefs.catalogsSchema}
 ];
 
 // init preference plugin

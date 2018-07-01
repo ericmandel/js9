@@ -155,9 +155,12 @@ JS9.globalOpts = {
 	i: "refresh image",
 	I: "display full image",
 	l: "toggle active shape layers",
+	M: "toggle mouse/touch plugin",
         p: "paste regions from local clipboard",
+	P: "toggle preferences plugin",
 	r: "copy selected region to clipboard",
 	R: "copy all regions to clipboard",
+	S: "toggle shape layers plugin",
         "/": "copy wcs position to clipboard",
         "?": "copy value and position to clipboard",
 	"0": "reset zoom",
@@ -7716,7 +7719,20 @@ JS9.Display.prototype.initMessages = function(){
 //  display a plugin in a light window or a new window
 JS9.Display.prototype.displayPlugin = function(plugin){
     var that = this;
-    var a, name, did, oid, iid, odiv, pdiv, pinst, win, w, h, r, s, title;
+    var i, a, w, h, p, r, s, title;
+    var name, did, oid, iid, odiv, pdiv, pinst, win;
+    if( typeof plugin === "string" ){
+	for(i=0; i<JS9.plugins.length; i++){
+	    p = JS9.plugins[i];
+	    if( p.name === plugin ){
+		plugin = p;
+		break;
+	    }
+	}
+    }
+    if( typeof plugin !== "object" || !plugin.name ){
+	JS9.error("unknown plugin type for displayPlugin");
+    }
     pinst = this.pluginInstances[plugin.name];
     // some day we want to support light windows and new (external) windows
     switch(JS9.globalOpts.winType){
@@ -18129,6 +18145,24 @@ JS9.initKeyboardActions = function(){
 	im.params.crosshair = !im.params.crosshair;
 	if( !im.params.crosshair ){
 	    JS9.Crosshair.hide(im);
+	}
+    };
+    // eslint-disable-next-line no-unused-vars
+    JS9.Keyboard.Actions["toggle mouse/touch plugin"] = function(im, ipos, evt){
+	if( im ){
+	    im.display.displayPlugin("JS9MouseTouch");
+	}
+    };
+    // eslint-disable-next-line no-unused-vars
+    JS9.Keyboard.Actions["toggle preferences plugin"] = function(im, ipos, evt){
+	if( im ){
+	    im.display.displayPlugin("JS9Preferences");
+	}
+    };
+    // eslint-disable-next-line no-unused-vars
+    JS9.Keyboard.Actions["toggle shape layers plugin"] = function(im, ipos, evt){
+	if( im ){
+	    im.display.displayPlugin("JS9Layers");
 	}
     };
 };
