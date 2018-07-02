@@ -873,7 +873,13 @@ display. If no argument is specified, it returns the current blend mode.
 
 <h5 id="JS9.CloseImage">Clear the image from the display and mark resources for release</h5>
 <p>
-<code class="api">JS9.CloseImage()</code>
+<code class="api">JS9.CloseImage(opts)</code>
+<p>
+where:
+<ul>
+<li><b>opts</b>: optional object or json string containing image parameters
+</ul>
+<p>
 <p>
 Each loaded image claims a non-trivial amount of memory from a finite
 amount of browser heap space. For example, the default 32-bit version
@@ -883,10 +889,15 @@ image's memory can be freed. In principle, this is can help reduce
 overall memory usage as successive images are loaded and
 discarded. Note, however, that closing an image only provides a hint
 to the browser, since this sort of garbage collection is not directly
-accessible to JavaScript programming.
+accessible to JavaScript programming and happens when it happens.
 <p>
-Some day, all browsers will support full 64-bit addressing and this problem will
-go away ...
+The optional first argument is an opts object (or a json-formatted
+string) containing:
+<ul>
+<li><b>clear</b>: if explicitly set to false, the image will not be cleared
+</ul>
+The <b>clear</b> option is useful if you are repeatedly loading the same image
+and want to avoid the image blink associated with the clear.
 
 <h5 id="JS9.GetColormap">Get the image colormap</h5>
 <p>

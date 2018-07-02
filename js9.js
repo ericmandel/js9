@@ -830,11 +830,16 @@ JS9.Image.prototype.getImageData = function(dflag){
 };
 
 // undisplay the image, release resources
-JS9.Image.prototype.closeImage = function(){
+JS9.Image.prototype.closeImage = function(opts){
     var i, j, tim, key, raw, carr;
     var iscurrent = false;
     var ilen= JS9.images.length;
     var display = this.display;
+    opts = opts || {};
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse closeImage opts: " + opts, e); }
+    }
     // look for the image in the image list, and remove it
     for(i=0; i<ilen; i++){
 	if( this === JS9.images[i] ){
@@ -845,9 +850,11 @@ JS9.Image.prototype.closeImage = function(){
 	    }
 	    // clear display if this is the currently displayed image
 	    if( iscurrent ){
-		// nothing on the screen
-		tim.display.clearMessage();
-		tim.display.context.clear();
+		// clear unless specifically asked not to
+		if( opts.clear !== false ){
+		    tim.display.clearMessage();
+		    tim.display.context.clear();
+		}
 		// clear all layers
 		for( key in tim.layers ){
 		    if( tim.layers.hasOwnProperty(key) ){
