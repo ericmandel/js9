@@ -4633,12 +4633,19 @@ JS9.Menubar.init = function(width, height){
     $(function(){
 	// eslint-disable-next-line no-unused-vars
 	function mypos(opt,  x,  y)  {
-	    opt.$menu.position({
-		my:  'left top',
-		at:  'right-5 bottom-5',
-		of:  opt.$trigger,
-		collision: "fit"
-	    });
+	    var pos;
+	    if( !window.hasOwnProperty("Jupyter") ){
+		opt.$menu.position({
+		    my:  'left top',
+		    at:  'right-5 bottom-5',
+		    of:  opt.$trigger,
+		    collision: "fit"
+		});
+	    } else {
+		// Jupyter gets the wrong position when using $trigger ...
+		pos = this.offset();
+		opt.$menu.css({"left": pos.left+20, "top": pos.top+10});
+	    }
 	}
 	function onhide() {
 	    var tdisp = that.display;
