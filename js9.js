@@ -8881,6 +8881,11 @@ JS9.Helper.prototype.connect = function(type){
 		    reconnectionAttempts: 100,
 		    timeout: JS9.globalOpts.htimeout
 		};
+		// if there is no io object, we didn't really succeed
+		// this can happen, for example, in the Jupyter environment
+		if( typeof io === undefined ){
+		    failedHelper(null, "socket io object is undefined", null);
+		}
 		// connect to the helper
 		that.socket = io.connect(that.url, sockopts);
 		// on-event processing
@@ -9039,9 +9044,9 @@ JS9.Helper.prototype.send = function(key, obj, cb){
     // add cookie value
     // add dataPath, if available (but always look in the helper directory)
     if( obj && (typeof obj === "object") ){
-	if( !window.hasOwnProperty("Jupyter") ){
-            obj.cookie = document.cookie;
-	}
+	// wrap this in a try to catch CORS errors
+        try{ obj.cookie = document.cookie; }
+	catch(e){ delete obj.cookie; }
 	if( JS9.globalOpts.dataPath && !obj.dataPath ){
 	    obj.dataPath = JS9.globalOpts.dataPath + ":.";
 	}
