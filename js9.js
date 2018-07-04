@@ -465,6 +465,10 @@ if(  /iPad|iPhone|iPod/.test(navigator.platform) &&
      /11_2_(?:[2-9])/.test(navigator.userAgent)    ){
     JS9.globalOpts.useWasm = false;
 }
+// Jupyter doesn't seem to be able to load wasm (7/4/2018)
+if( window.hasOwnProperty("Jupyter") ){
+    JS9.globalOpts.useWasm = false;
+}
 
 // iOS has severe memory limits (05/2017)
 // also force user to turn on crosshair, since it works with one finger
