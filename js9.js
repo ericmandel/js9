@@ -9039,7 +9039,9 @@ JS9.Helper.prototype.send = function(key, obj, cb){
     // add cookie value
     // add dataPath, if available (but always look in the helper directory)
     if( obj && (typeof obj === "object") ){
-	obj.cookie = document.cookie;
+	if( !window.hasOwnProperty("Jupyter") ){
+            obj.cookie = document.cookie;
+	}
 	if( JS9.globalOpts.dataPath && !obj.dataPath ){
 	    obj.dataPath = JS9.globalOpts.dataPath + ":.";
 	}
