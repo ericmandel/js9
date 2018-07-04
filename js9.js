@@ -8883,8 +8883,9 @@ JS9.Helper.prototype.connect = function(type){
 		};
 		// if there is no io object, we didn't really succeed
 		// this can happen, for example, in the Jupyter environment
-		if( typeof io === undefined ){
+		if( typeof io === "undefined" ){
 		    failedHelper(null, "socket io object is undefined", null);
+		    return;
 		}
 		// connect to the helper
 		that.socket = io.connect(that.url, sockopts);
