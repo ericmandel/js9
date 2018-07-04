@@ -1212,6 +1212,9 @@ io.on("connection", socketioHandler);
 // start listening on the helper port
 app.listen(globalOpts.helperPort, globalOpts.helperHost);
 
+// signal that we are listening for connections
+clog("helper: %s %s", globalOpts.helperHost, globalOpts.helperPort);
+
 // an example of adding an in-line messsage to the analysis task list
 if( process.env.NODEJS_FOO === "analysis" ){
     // add foo to the list of analysis tasks sent to JS9
