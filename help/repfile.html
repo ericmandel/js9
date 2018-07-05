@@ -76,7 +76,7 @@ standard GNU configure/make setup:
 
 <p>
 Once the js9Helper is running, configure <b>fits2fits</b> by
-setting the following global parameters in your js9Prefs.json file:
+setting the following global parameters in your js9prefs.js file:
 <ul>
 <li><b>globalOpts.workDir</b>: where to store temporary representation files
 <li><b>globalOpts.workDirQuota</b>: optional user quota on work directory
@@ -86,7 +86,7 @@ setting the following global parameters in your js9Prefs.json file:
 </ul>
 The server-side helper must support temporary user work directories in
 which to store the FITS representation files. This is accomplished by
-setting the <b>globalOpts.workDir</b> property in js9Prefs.json to a
+setting the <b>globalOpts.workDir</b> property in js9prefs.js to a
 top-level directory which will contain the individual work
 sub-directories for each JS9 connection.  The workDir path should
 either be an absolute path, or one that is relative to the JS9 helper
@@ -378,7 +378,7 @@ path will be utilized by the server-side JS9 helper to locate the FITS
 file.  This means that if the helper is not started in the same
 directory that tpos (fits2png) was run, the relative path will not be
 correct. In this case, you can set the <b>JS9.analOpts.dataDir</b>
-parameter in the <b>js9Prefs.json</b> file to a path that will be used
+parameter in the <b>js9prefs.js</b> file to a path that will be used
 instead of the relative path.
 
 <p>
@@ -463,7 +463,7 @@ documentation about the <b>JS9.Load()</b> routine.
 If you don't generate PNG files beforehand, you can still specify a
 FITS file as the first argument to <b>JS9.Load()</b> and have the JS9
 server-side helper run fits2png at run-time.. To do this, you set
-the <b>fits2png</b> property in js9Prefs.json:
+the <b>fits2png</b> property in js9prefs.js:
 <pre>
 {
   "globalOpts": {"fits2png": true ...}
