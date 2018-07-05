@@ -57,6 +57,9 @@ case $host_os in
     ;;
 esac
 
+# host-based suffix to look for libraries suffix
+OSSUFFIX=`echo $host | sed 's#-unknown##'`
+
 AC_PROG_RANLIB
 
 AC_CHECK_SIZEOF([void *])
@@ -125,6 +128,12 @@ if test x"$havelib" = x1 ; then
       FUNTOOLSLIB=$FUNTOOLSBASE/lib$LSUFFIX
       FUNTOOLSINC=$FUNTOOLSBASE/include
       AC_MSG_RESULT(yes ($FUNTOOLSBASE))
+  elif test -r $FUNTOOLSBASE/lib/$OSSUFFIX/libfuntools.a -o \
+	    -r $FUNTOOLSBASE/lib/$OSSUFFIX/libfuntools.so -o \
+	    -r $FUNTOOLSBASE/lib/$OSSUFFIX/libfuntools.dylib; then
+      FUNTOOLSLIB=$FUNTOOLSBASE/lib/$OSSUFFIX
+      FUNTOOLSINC=$FUNTOOLSBASE/include
+      AC_MSG_RESULT(yes ($FUNTOOLSBASE))
   elif test -r $FUNTOOLSBASE/lib/libfuntools.a -o \
 	    -r $FUNTOOLSBASE/lib/libfuntools.so -o \
 	    -r $FUNTOOLSBASE/lib/libfuntools.dylib; then
@@ -160,6 +169,12 @@ if test x"$havelib" = x1 ; then
 	    -r $CFITSIOBASE/lib$LSUFFIX/libcfitsio.so -o \
 	    -r $CFITSIOBASE/lib$LSUFFIX/libcfitsio.dylib; then
       CFITSIOLIB=$CFITSIOBASE/lib$LSUFFIX
+      CFITSIOINC=$CFITSIOBASE/include
+      AC_MSG_RESULT(yes ($CFITSIOBASE))
+  elif test -r $CFITSIOBASE/lib/$OSSUFFIX/libcfitsio.a -o \
+	    -r $CFITSIOBASE/lib/$OSSUFFIX/libcfitsio.so -o \
+	    -r $CFITSIOBASE/lib/$OSSUFFIX/libcfitsio.dylib; then
+      CFITSIOLIB=$CFITSIOBASE/lib/$OSSUFFIX
       CFITSIOINC=$CFITSIOBASE/include
       AC_MSG_RESULT(yes ($CFITSIOBASE))
   elif test -r $CFITSIOBASE/lib/libcfitsio.a -o \
@@ -213,6 +228,16 @@ if test x"$havelib" = x1 ; then
       PNGLIB="-L $PNGBASE/lib$LSUFFIX -lpng"
       if test x"$RFLAG" != x; then
           PNGLIB="$RFLAG $PNGBASE/lib$LSUFFIX $PNGLIB"
+      fi
+      PNGINC="-I$PNGBASE/include"
+      USEFITS2PNG="yes"
+      AC_MSG_RESULT(yes ($PNGBASE))
+  elif test -r $PNGBASE/lib/$OSSUFFIX/libpng.a -o \
+            -r $PNGBASE/lib/$OSSUFFIX/libpng.so -o \
+	    -r $PNGBASE/lib/$OSSUFFIX/libpng.dylib; then
+      PNGLIB="-L $PNGBASE/lib/$OSSUFFIX -lpng"
+      if test x"$RFLAG" != x; then
+          PNGLIB="$RFLAG $PNGBASE/lib/$OSSUFFIX $PNGLIB"
       fi
       PNGINC="-I$PNGBASE/include"
       USEFITS2PNG="yes"
