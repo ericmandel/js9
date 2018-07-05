@@ -111,6 +111,8 @@ JS9.globalOpts = {
     pngisfits: true,		// are PNGs really PNG representation files?
     fits2fits: "never",		// convert to repfile? always|never|size>x Mb
     fits2png: false,		// convert FITS to PNG rep files? true|false
+    prependJS9Dir: true,        // prepend $JS9_DIR to relative fitsFile paths?
+    dataDir: null,              // use as path to FITS data (use incoming path if not set)
     alerts: true,		// set to false to turn off alerts
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
@@ -266,11 +268,7 @@ JS9.analOpts = {
     // location of datapath's param html file
     dpathURL: "params/datapath.html",
     // location of filepath's param html file
-    fpathURL: "params/filepath.html",
-    // prepend $JS9_DIR to relative fitsFile paths?
-    prependJS9Dir: true,
-    // use as path to FITS data or use incoming path if not set
-    dataDir: null
+    fpathURL: "params/filepath.html"
 };
 
 // light window opts
@@ -4004,7 +4002,7 @@ JS9.Image.prototype.notifyHelper = function(){
 	    if( im ){
 		s = r[1];
 		if( s !== "?" ){
-		    if( !JS9.analOpts.dataDir ){
+		    if( !JS9.globalOpts.dataDir ){
 			im.fitsFile = s;
 			// prepend base of png path if fits file has no path
 			// is this a bad "feature" in tpos?? probably ...
@@ -4019,7 +4017,7 @@ JS9.Image.prototype.notifyHelper = function(){
 			    }
 			}
 			// prepend JS9_DIR on files if fits is not absolute
-			if( JS9.analOpts.prependJS9Dir ){
+			if( JS9.globalOpts.prependJS9Dir ){
 			    if( im.fitsFile &&
 				!im.fitsFile.match(/^\${JS9_DIR}/) &&
 				im.fitsFile.charAt(0) !== "/" ){
@@ -4033,7 +4031,7 @@ JS9.Image.prototype.notifyHelper = function(){
 			}
 		    } else {
 			cc = s.lastIndexOf("/") + 1;
-			im.fitsFile = JS9.analOpts.dataDir + "/" + s.slice(cc);
+			im.fitsFile = JS9.globalOpts.dataDir+"/"+ s.slice(cc);
 		    }
 		    if( JS9.DEBUG > 1 ){
 			JS9.log("JS9 fitsFile: %s %s", im.file, im.fitsFile);
@@ -5577,7 +5575,7 @@ JS9.Image.prototype.countsInRegions = function(args){
 	}
     }
     // reduce file size, if necessary
-    if( opts.reduce ){
+    if( opts.reduce && !this.parentFile ){
 	dims = this.fileDimensions();
 	bin = Math.floor((Math.max(dims.xdim, dims.ydim) / opts.dim) + 0.5);
 	if( bin > 1 ){
@@ -6948,8 +6946,9 @@ JS9.Image.prototype.uploadFITSFile = function(){
 	    // set FITS filename and proxy filename
 	    that.fitsFile = r.stdout.trim();
 	    that.proxyFile = that.fitsFile;
-	    if( !that.fitsFile.match(/^\${JS9_DIR}/) &&
-		that.fitsFile.charAt(0) !== "/" ){
+	    if( JS9.globalOpts.prependJS9Dir         &&
+		!that.fitsFile.match(/^\${JS9_DIR}/) &&
+		that.fitsFile.charAt(0) !== "/"      ){
 		that.fitsFile = "${JS9_DIR}/" + that.fitsFile;
 	    }
 	    // re-query for analysis
@@ -18336,6 +18335,16 @@ JS9.init = function(){
     // regularize resize params
     if( !JS9.globalOpts.resize ){
 	JS9.globalOpts.resizeHandle = false;
+    }
+    // backward compatibility (we moved this property 7/2018)
+    if( JS9.analOpts.prependJS9Dir !== undefined ){
+	JS9.globalOpts.prependJS9Dir = JS9.analOpts.prependJS9Dir;
+	delete JS9.analOpts.prependJS9Dir;
+    }
+    // backward compatibility (we moved this property 7/2018)
+    if( JS9.analOpts.dataDir !== undefined ){
+	JS9.globalOpts.dataDir = JS9.analOpts.dataDir;
+	delete JS9.analOpts.dataDir;
     }
     // turn off resize on mobile platforms
     if( JS9.BROWSER[3] ){

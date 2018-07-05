@@ -30,10 +30,13 @@ var http = require('http'),
     rmdir = require('rimraf');
 
 // internal variables
-var app, io, secure, envs;
-var cdir = __dirname;
-var prefsfile  = path.join(cdir, "js9Prefs.json");
-var securefile = path.join(cdir, "js9Secure.json");
+var i, app, io, secure, envs;
+var myProg = process.argv[0].split("/").reverse()[0];
+var myArgs = process.argv.slice(2);
+var installDir = __dirname;
+var currentDir = process.cwd();
+var prefsfile  = path.join(installDir, "js9Prefs.json");
+var securefile = path.join(installDir, "js9Secure.json");
 var fits2png = {};
 var fits2fits = {};
 var quotacheck = {};
@@ -287,33 +290,35 @@ var loadSecurePreferences = function(securefile){
 };
 
 // load preference file, if possible
-var loadPreferences = function(prefsfile){
+var loadPreferences = function(prefs){
     var s, obj, opt, otype, jtype;
-    if( fs.existsSync(prefsfile) ){
-	s = fs.readFileSync(prefsfile, "utf-8");
-	if( s ){
-	    try{ obj = JSON.parse(s.toString()); }
-	    catch(e){ cerr("can't parse: ", prefsfile, e); }
-	    // look for globalOpts and merge
-	    if( obj && obj.globalOpts ){
-		for( opt in obj.globalOpts ){
-		    if( obj.globalOpts.hasOwnProperty(opt) ){
-			otype = typeof obj.globalOpts[opt];
-			jtype = typeof globalOpts[opt];
-			if( (jtype === otype) || (jtype === "undefined") ){
-			    switch(otype){
-			    case "number":
-				globalOpts[opt] = obj.globalOpts[opt];
-				break;
-			    case "boolean":
-				globalOpts[opt] = obj.globalOpts[opt];
-				break;
-			    case "string":
-				globalOpts[opt] = obj.globalOpts[opt];
-				break;
-			    default:
-				break;
-			    }
+    if( fs.existsSync(prefs) ){
+	s = fs.readFileSync(prefs, "utf-8");
+    } else if( typeof prefs === "string" ){
+	s = '{"globalOpts": ' + prefs + "}";
+    }
+    if( s ){
+	try{ obj = JSON.parse(s.toString()); }
+	catch(e){ cerr("can't parse: ", prefsfile, e); }
+	// look for globalOpts and merge
+	if( obj && obj.globalOpts ){
+	    for( opt in obj.globalOpts ){
+		if( obj.globalOpts.hasOwnProperty(opt) ){
+		    otype = typeof obj.globalOpts[opt];
+		    jtype = typeof globalOpts[opt];
+		    if( (jtype === otype) || (jtype === "undefined") ){
+			switch(otype){
+			case "number":
+			    globalOpts[opt] = obj.globalOpts[opt];
+			    break;
+			case "boolean":
+			    globalOpts[opt] = obj.globalOpts[opt];
+			    break;
+			case "string":
+			    globalOpts[opt] = obj.globalOpts[opt];
+			    break;
+			default:
+			    break;
 			}
 		    }
 		}
@@ -323,7 +328,7 @@ var loadPreferences = function(prefsfile){
 	globalRelatives.forEach( function(s){
 	    var file = globalOpts[s];
 	    if( file && !path.isAbsolute(file) ){
-		globalOpts[s] = path.join(cdir, file);
+		globalOpts[s] = path.join(installDir, file);
 	    }
 	});
     }
@@ -487,11 +492,11 @@ var getDataPath = function(s){
 	    }
 	}
     }
-    // always add js9Helper install directory
     if( dataPath ){
 	dataPath += ":";
     }
-    dataPath += cdir;
+    // always add js9Helper install directory
+    dataPath += installDir;
     return dataPath;
 };
 
@@ -506,7 +511,7 @@ var getFilePath = function(file, dataPath, myenv){
 	return m;
     };
     var hide = function(s){
-	var rexp = new RegExp("^" + cdir);
+	var rexp = new RegExp("^" + installDir);
 	return s.replace(rexp, "${JS9_DIR}");
     };
     // sanity check
@@ -521,13 +526,13 @@ var getFilePath = function(file, dataPath, myenv){
     } else {
 	fext = "";
     }
+    parr = dataPath.split(":");
+    // absolute paths get tested on their own
     if( path.isAbsolute(froot1) ){
-	parr = [""];
-    } else {
-	parr = dataPath.split(":");
-	// always check current directory first
 	parr.unshift("");
     }
+    // and everything gets tested relative to the current directory
+    parr.unshift(".");
     // check is file is in any of the directories in the path
     for(i=0; i<parr.length; i++){
 	// replace environment variables in path, if possible
@@ -535,6 +540,9 @@ var getFilePath = function(file, dataPath, myenv){
 	// make up pathnames to check
 	s1 = path.join(s, froot1);
 	if( fs.existsSync(s1) ){
+	    if( !s1.match(/\//) ){
+		s1 = currentDir + "/" + s1;
+	    }
 	    // found the file add extension to full path
 	    s1 += fext;
 	    return hide(s1);
@@ -597,7 +605,7 @@ var execCmd = function(io, socket, obj, cbfunc) {
     // host ip
     myenv.JS9_HOST = envClean(myip);
     // JS9 base dir
-    myenv.JS9_DIR = cdir;
+    myenv.JS9_DIR = installDir;
     // JS9 unique page id
     myenv.JS9_PAGEID = 	socket.js9.pageid;
     // js9 cookie in the sending browser
@@ -621,7 +629,7 @@ var execCmd = function(io, socket, obj, cbfunc) {
     argstr = obj.cmd || "";
     // expand directory macros
     argstr = argstr
-	.replace(/\$\{?JS9_DIR\}?/, cdir)
+	.replace(/\$\{?JS9_DIR\}?/, installDir)
 	.replace(/\$\{?JS9_WORKDIR\}?/, (socket.js9.rworkDir || ""));
     // split arguments on spaces, respecting quotes
     args = parseArgs(argstr);
@@ -654,7 +662,7 @@ var execCmd = function(io, socket, obj, cbfunc) {
 	cmd = globalOpts.analysisWrappers + "/" + args[0];
 	// make path absolute in case we change directories
 	if( cmd.charAt(0) !== "/" ){
-	    cmd = cdir + "/" + cmd;
+	    cmd = installDir + "/" + cmd;
 	}
     }
     // log what we are about to do
@@ -836,7 +844,7 @@ var socketioHandler = function(socket) {
 	// Electron.js might not be in the default location
 	basedir = globalOpts.workDir;
 	if( !path.isAbsolute(basedir) ){
-	    basedir = path.join(cdir, basedir);
+	    basedir = path.join(installDir, basedir);
 	}
 	// futz with the case of a link pointing nowhere
 	try { aworkdir = fs.readlinkSync(basedir); }
@@ -1176,7 +1184,7 @@ var httpHandler = function(req, res){
 
 // add runtime directory to PATH
 if( process.env.PATH ){
-    process.env.PATH += (":" + cdir);
+    process.env.PATH += (":" + installDir);
 }
 // save as json
 envs = JSON.stringify(process.env);
@@ -1186,6 +1194,15 @@ secure = loadSecurePreferences(securefile);
 
 // load preference file
 loadPreferences(prefsfile);
+
+// override preferences with json on the command line
+// but only if we are in a basic node program (i.e not Electron)
+if( (myProg === "node" || myProg === "nodejs") &&
+    myArgs && myArgs.length > 0                ){
+    for(i=0; i<myArgs.length; i++){
+	loadPreferences(myArgs[i]);
+    }
+}
 
 // load analysis plugins
 loadAnalysisTasks(globalOpts.analysisPlugins);

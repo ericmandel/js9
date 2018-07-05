@@ -2800,10 +2800,10 @@ JS9.Divs.init = function(opts){
 
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Divs.CLASS, JS9.Divs.NAME, JS9.Divs.init,
-		   {menuItem: "Plugin Visibility",
+		   {menuItem: "Show/Hide Plugins",
 		    onplugindisplay: JS9.Divs.init,
 		    help: "help/divs.html",
-		    winTitle: "Visibility of JS9 Plugin Divs",
+		    winTitle: "Show/Hide Plugins",
 		    winResize: true,
 		    winDims: [JS9.Divs.WIDTH, JS9.Divs.HEIGHT]});
 /*
