@@ -13696,6 +13696,8 @@ JS9.Regions.parseRegions = function(s, opts){
     var owcssys, owcsunits, wcssys, iswcs, liswcs, pos, alen;
     var regrexp = /(annulus)|(box)|(circle)|(ellipse)|(line)|(polygon)|(point)|(text)/;
     var wcsrexp = /(fk4)|(fk5)|(icrs)|(galactic)|(ecliptic)|(image)|(physical)/;
+    var imrexp = /(image)|(physical)/;
+    var unrexp = /[dr:]/;
     var parrexp = /\(\s*([^)]+?)\s*\)/;
     var seprexp = /\n|;/;
     var optsrexp = /(\{.*\})/;
@@ -13842,16 +13844,22 @@ JS9.Regions.parseRegions = function(s, opts){
 	var vt, sarr, ox, oy;
 	var v1 = JS9.strtoscaled(ix);
 	var v2 = JS9.strtoscaled(iy);
-	// local override of wcs if we used sexagesimal
-	if( (v1.dtype === ":") || (v2.dtype === ":") ){
+	// local override of wcs if we used sexagesimal units or appended d,r
+	if( ((v1.dtype.match(unrexp)) || (v2.dtype.match(unrexp))) &&
+	    !owcssys.match(imrexp) ){
 	    liswcs = true;
+	    wcssys = owcssys;
 	}
 	if( iswcs || liswcs ){
-	    /* arg1 coords are hms, but ecliptic, galactic are deg */
-	    if( (v1.dtype === ":") &&
-		(wcssys !== "galactic") && (wcssys !== "ecliptic") ){
+	    // arg1 coords are hms, but ecliptic, galactic are deg
+	    if( (v1.dtype.match(unrexp)) &&
+		(wcssys !== "galactic")  && (wcssys !== "ecliptic") ){
 		v1.dval *= 15.0;
 	    }
+	    // convert to degrees, if necessary
+	    if( v1.dtype === "r" ){ v1.dval = v1.dval * 180 / Math.PI; }
+	    if( v2.dtype === "r" ){ v2.dval = v2.dval * 180 / Math.PI; }
+	    // get image coordinates
 	    sarr = JS9.wcs2pix(this.raw.wcs, v1.dval, v2.dval).split(/ +/);
 	    ox = parseFloat(sarr[0]);
 	    oy = parseFloat(sarr[1]);
@@ -13907,8 +13915,6 @@ JS9.Regions.parseRegions = function(s, opts){
     owcsunits = this.getWCSUnits();
     // this is the default wcs for regions
     wcssys = "physical";
-    // set default for regions
-    this.setWCSSys(wcssys);
     // do we have a real wcs?
     iswcs = (wcssys !== "image" && wcssys !== "physical");
     // get individual "lines" (new-line or semi-colon separated)
