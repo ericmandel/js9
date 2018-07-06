@@ -13852,7 +13852,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	}
 	if( iswcs || liswcs ){
 	    // arg1 coords are hms, but ecliptic, galactic are deg
-	    if( (v1.dtype.match(unrexp)) &&
+	    if( (v1.dtype === ":" ) &&
 		(wcssys !== "galactic")  && (wcssys !== "ecliptic") ){
 		v1.dval *= 15.0;
 	    }
