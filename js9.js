@@ -14192,7 +14192,9 @@ JS9.Crosshair.opts = {
     // stroke color
     color: "#00FF00",
     // should overlapping shapes be sorted (smallest on top)?
-    sortOverlapping: false
+    sortOverlapping: false,
+    // where the crosshair is placed in order to hide it
+    hiddenPts: {pts: [{x: -9999, y: -9999}, {x: -9999, y: -9900}]}
 };
 
 // display: display crosshair as the mouse moves
@@ -14270,7 +14272,7 @@ JS9.Crosshair.display = function(im, ipos, evt){
 // eslint-disable-next-line no-unused-vars
 JS9.Crosshair.hide = function(im, ipos, evt){
     var layername = JS9.Crosshair.LAYERNAME;
-    var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
+    var opts = JS9.Crosshair.opts.hiddenPts;
     // if the crosshair is visble ...
     if( im && im.crosshair && im.crosshair.visible ){
 	// move it off the display
@@ -14282,7 +14284,7 @@ JS9.Crosshair.hide = function(im, ipos, evt){
 
 // image load: create the cross hair for this image
 JS9.Crosshair.create = function(im){
-    var opts = {pts: [{x: -100, y: -100}, {x: -100, y: -200}]};
+    var opts = JS9.Crosshair.opts.hiddenPts;
     var layername = JS9.Crosshair.LAYERNAME;
     if( im && !im.crosshair && (im.raw.wcs > 0) ){
 	// create the crosshair object for this image
