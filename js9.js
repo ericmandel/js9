@@ -13706,7 +13706,7 @@ JS9.Regions.parseRegions = function(s, opts){
     var comrexp  = /#(?![a-zA-Z0-9]{6}['"])/;
     // convert "0" to false and "1" to true
     var tf = function(s){
-	if( s === "0" ){return false;}
+	if( s === "0" || s === "false" ){return false;}
 	return true;
     };
     // ds9 compatibility: get properties from comment string
@@ -13744,6 +13744,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	    move: function(v){return {movable: tf(v)};},
 	    rotate: function(v){return {rotatable: tf(v)};},
 	    resize: function(v){return {resizable: tf(v)};},
+	    changeable: function(v){return {changeable: tf(v)};},
 	    select: function(v){return {selectable: tf(v)};},
 	    text: function(v){return {text: v};},
 	    tag: function(v){return {tags: v};},
