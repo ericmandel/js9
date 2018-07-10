@@ -185,6 +185,7 @@ JS9.globalOpts = {
     resizeDivs: ["JS9Menubar", "JS9Colorbar", "JS9Toolbar"], // divs that take part in JS9.Display.resize()
     pinchWait: 8,		// number of events to wait before testing pinch
     pinchThresh: 6,		// threshold for pinch test
+    xeqPlugins: true,		// execute plugin callbacks?
     extendedPlugins: true,	// enable extended plugin support?
     corsProxy:   "https://js9.si.edu/cgi-bin/CORS-proxy.cgi",   // CORS proxy
     simbadProxy: "https://js9.si.edu/cgi-bin/simbad-proxy.cgi", // simbad proxy
@@ -485,8 +486,7 @@ if( JS9.BROWSER[3] ){
 // ---------------------------------------------------------------------
 
 JS9.Image = function(file, params, func){
-    var i, card, pars, sarr, nzoom;
-    var display;
+    var i, card, pars, sarr, nzoom, display, txeq;
     var that = this;
     var localOpts=null;
     var nhist=0, ncomm=0;
@@ -576,7 +576,11 @@ JS9.Image = function(file, params, func){
     }
     // set the colormap object from colormap name (text string)
     // this.cmapObj = JS9.lookupColormap(this.params.colormap);
+    // (turn off plugin call, since we are not fully loaded)
+    txeq = JS9.globalOpts.xeqPlugins;
+    JS9.globalOpts.xeqPlugins = false;
     this.setColormap(this.params.colormap);
+    JS9.globalOpts.xeqPlugins = txeq;
     // do we display?
     this.displayMode = true;
     // initialize click state
@@ -6875,8 +6879,8 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
         var s = "JS9:" + name;
         $(document).trigger(s, obj);
     };
-    // sanity check
-    if( !xtype || !xname ){
+    // sanity checks
+    if( !xtype || !xname || !JS9.globalOpts.xeqPlugins ){
 	return;
     }
     // array of plugin instances

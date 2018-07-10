@@ -185,6 +185,9 @@ types and their standard callbacks are:
 </ul>
 </ul>
 <p>
+You can globally toggle execution of all plugin callbacks by setting
+the value of the <b>JS9.globalOpts.xeqPlugins</b> property to true or false.
+<p>
 In addition to these standard callbacks, JS9 also supports an extended set of
 <b>image</b> callbacks that get triggered when internal JS9 routines are called.
 These callbacks are only active if the <b>JS9.globalOpts.extendedPlugins</b>
@@ -306,7 +309,7 @@ JS9.RegisterPlugin("MyPlugins", "allconstrastbias",
 		   function(){return;},
 		   {onchangecontrastbias: function(im){
 		       var i, tim, obj;
-		       JS9.globalOpts.extendedPlugins = false;
+		       JS9.globalOpts.xeqPlugins = false;
 		       obj = JS9.GetColormap({display: im});
 		       for(i=0; i&lt;JS9.displays.length; i++){
 			   tim = JS9.displays[i].image;
@@ -315,7 +318,7 @@ JS9.RegisterPlugin("MyPlugins", "allconstrastbias",
 					      {display: tim});
 			   }
 		       }
-		       JS9.globalOpts.extendedPlugins = true;
+		       JS9.globalOpts.xeqPlugins = true;
 		   },
 		   winDims: [0, 0]});
 </pre>
@@ -323,11 +326,11 @@ Here, a <b>virtual</b> plugin is created with no user interface. It thus is
 active all of the time. The plugin defines a single action that gets
 triggered when the contrast/bias is changed. This action changes the
 contrast/bias of all other displays. Note that the
-<b>JS9.globalOpts.extendedPlugins</b> property is set to false temporarily
+<b>JS9.globalOpts.xeqPlugins</b> property is set to false temporarily
 to avoid recursion.
 
 <p>
-<h5>Last updated: July 2, 2016</h5>
+<h5>Last updated: July 10, 2018</h5>
 </div>
 
 </body>
