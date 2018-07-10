@@ -13879,11 +13879,17 @@ JS9.Regions.parseRegions = function(s, opts){
 	var cstr;
 	var v = JS9.strtoscaled(len);
 	var wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
+	// local override of wcs if we used sexagesimal units or appended d,r
+	if( v.dtype.match(unrexp) && !owcssys.match(imrexp) ){
+	    liswcs = true;
+	    wcssys = owcssys;
+	}
 	if( iswcs || liswcs ){
-	    if( v.dtype && (v.dtype !== ".") ){
-		cstr = "cdelt" + which;
-		v.dval = Math.abs(v.dval / wcsinfo[cstr]);
-	    }
+	    // convert to degrees, if necessary
+	    if( v.dtype === "r" ){ v.dval = v.dval * 180 / Math.PI; }
+	    // wcs-based size
+	    cstr = "cdelt" + which;
+	    v.dval = Math.abs(v.dval / wcsinfo[cstr]);
 	} else if( wcssys === "physical" ){
 	    // use the LTM1_1 value stored for logical to image transforms
 	    if( this.lcs && this.lcs.physical ){
