@@ -181,6 +181,7 @@ JS9.globalOpts = {
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     toolbarTooltips: false,     // display tooltips on toolbar?
     centerDivs: ["JS9Menubar"], // divs that take part in JS9.Display.center()
+    resizeDivs: ["JS9Menubar", "JS9Colorbar", "JS9Toolbar"], // divs that take part in JS9.Display.resize()
     pinchWait: 8,		// number of events to wait before testing pinch
     pinchThresh: 6,		// threshold for pinch test
     extendedPlugins: true,	// enable extended plugin support?
@@ -7938,14 +7939,16 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	}
     }
     // change the menubar width, unless explicitly told not to
-    if( opts.resizeMenubar === undefined || opts.resizeMenubar ){
+    if( $.inArray("JS9Menubar", JS9.globalOpts.resizeDivs) >= 0 &&
+	(JS9.isNull(opts.resizeMenubar) || opts.resizeMenubar) ){
 	pinst = this.pluginInstances.JS9Menubar;
 	if( pinst ){
 	    $("#" + this.id + "Menubar").css("width", nwidth);
 	}
     }
     // change the toolbar width, unless explicitly told not to
-    if( opts.resizeToolbar === undefined || opts.resizeToolbar ){
+    if( $.inArray("JS9Toolbar", JS9.globalOpts.resizeDivs) >= 0 &&
+	(JS9.isNull(opts.resizeToolbar) || opts.resizeToolbar) ){
 	pinst = this.pluginInstances.JS9Toolbar;
 	if( pinst ){
 	    // set new value for width
@@ -7955,7 +7958,8 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	}
     }
     // change the colorbar width, unless explicitly told not to
-    if( opts.resizeColorbar === undefined || opts.resizeColorbar ){
+    if( $.inArray("JS9Colorbar", JS9.globalOpts.resizeDivs) >= 0 &&
+	(JS9.isNull(opts.resizeColorbar) || opts.resizeColorbar) ){
 	pinst = this.pluginInstances.JS9Colorbar;
 	if( pinst ){
 	    // set new value for width

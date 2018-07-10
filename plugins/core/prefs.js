@@ -417,9 +417,13 @@ JS9.Prefs.globalsSchema = {
 	    "type": "mobject",
 	    "helper": "object containing keyboard actions"
 	},
-	"mousetouchZoom": {
-	    "type": "boolean",
-	    "helper": "scroll/pinch to zoom?"
+	"centerDivs": {
+	    "type": "mobject",
+	    "helper": "divs taken into account when centering"
+	},
+	"resizeDivs": {
+	    "type": "mobject",
+	    "helper": "divs taken into account when resizing"
 	},
 	"copyWcsPosFormat": {
 	    "type": "string",
@@ -436,6 +440,10 @@ JS9.Prefs.globalsSchema = {
 	"fits2png": {
 	    "type": "boolean",
 	    "helper": "convert FITS to PNG rep files?"
+	},
+	"mousetouchZoom": {
+	    "type": "boolean",
+	    "helper": "scroll/pinch to zoom?"
 	},
 	"toolbarTooltips": {
 	    "type": "boolean",
@@ -525,6 +533,8 @@ JS9.Prefs.init = function(){
 			   mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,
 			   keyboardActions: JS9.globalOpts.keyboardActions,
+			   centerDivs: JS9.globalOpts.centerDivs,
+			   resizeDivs: JS9.globalOpts.resizeDivs,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
 			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
