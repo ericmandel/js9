@@ -156,6 +156,7 @@ JS9.globalOpts = {
 	e: "toggle selected region: include/exclude",
 	i: "refresh image",
 	I: "display full image",
+	K: "toggle keyboard actions plugin",
 	l: "toggle active shape layers",
 	M: "toggle mouse/touch plugin",
         p: "paste regions from local clipboard",
@@ -18188,6 +18189,12 @@ JS9.initKeyboardActions = function(){
     JS9.Keyboard.Actions["toggle mouse/touch plugin"] = function(im, ipos, evt){
 	if( im ){
 	    im.display.displayPlugin("JS9MouseTouch");
+	}
+    };
+    // eslint-disable-next-line no-unused-vars
+    JS9.Keyboard.Actions["toggle keyboard actions plugin"] = function(im, ipos, evt){
+	if( im ){
+	    im.display.displayPlugin("JS9Keyboard");
 	}
     };
     // eslint-disable-next-line no-unused-vars

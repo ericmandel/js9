@@ -34,6 +34,7 @@ JS9.Menubar.keyMap = {
     "refresh this image": "refresh image",
     "show active shape layers": "toggle active shape layers",
     "hide active shape layers": "toggle active shape layers",
+    "Keyboard Actions": "toggle keyboard actions plugin",
     "Mouse/Touch": "toggle mouse/touch plugin",
     "Preferences": "toggle preferences plugin",
     "Shape Layers": "toggle shape layers plugin",
