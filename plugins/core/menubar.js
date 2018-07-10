@@ -120,9 +120,9 @@ JS9.Menubar.onclick = function(disp){
     }
 };
 
-// invalidate the reverse key map when preferences change
+// reset: invalidate the reverse key map when preferences change
 // eslint-disable-next-line no-unused-vars
-JS9.Menubar.regrid = function(im){
+JS9.Menubar.reset = function(im){
     JS9.Menubar.rkeyMap = null;
 };
 
@@ -229,7 +229,7 @@ JS9.Menubar.init = function(width, height){
 	    var obj = {name: name};
 	    var gkeyActions = JS9.globalOpts.keyboardActions;
 	    var act = JS9.Menubar.keyMap[name];
-	    if( !JS9.Menubar.keyActions ){
+	    if( !JS9.Menubar.rkeyMap ){
 		JS9.Menubar.rkeyMap = {};
 		for( key in gkeyActions ){
 		    if( gkeyActions.hasOwnProperty(key) ){
@@ -238,7 +238,7 @@ JS9.Menubar.init = function(width, height){
 		}
 		JS9.Menubar.keyActions = $.extend(true, {}, gkeyActions);
 	    }
-	    if( !JS9.isNull(act) ){
+	    if( !JS9.isNull(act) && JS9.Menubar.rkeyMap ){
 		key = JS9.Menubar.rkeyMap[act];
 		if( key ){
 		    hstr = "<span>" + name + " <span style='float:right'><b>" + key + "</b></span></span>";

@@ -6884,8 +6884,8 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
     for( pname in parr ){
 	if( parr.hasOwnProperty(pname) ){
 	    pinst = parr[pname];
-	    if( pinst.isActive(xname) ){
-		popts = pinst.plugin.opts;
+	    popts = pinst.plugin.opts;
+	    if( pinst.isActive(xname) && typeof popts[xname] === "function" ){
 		switch(xtype){
 		case "image":
 		    // used for: onimage[load,close,refresh,display]
