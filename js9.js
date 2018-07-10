@@ -3239,8 +3239,13 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		}
 		// json fits info
 		if( rarr[1] ){
-		    try{ jobj = JSON.parse(rarr[1]); }
-		    catch(ignore){}
+		    try{
+			jobj = JSON.parse(rarr[1]);
+		    }
+		    catch(ignore){
+			JS9.log("couldn't parse imsection as JSON: %s", f);
+			jobj = null;
+		    }
 		    if( jobj ){
 			opts.extname = jobj.extname;
 			opts.extnum = jobj.extnum;
