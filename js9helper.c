@@ -553,6 +553,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
   char tbuf[SZ_LINE];
   Finfo finfo, tfinfo;
 #if HAVE_CFITSIO
+  int i, j;
   int xlims[2], ylims[2], bin, got, hdutype, hdunum, ncard;
   int status=0, tstatus=0;
   int dims[2];
@@ -564,6 +565,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
   char *filter=NULL;
   char *slice=NULL;
   char *cardstr=NULL;
+  char *ncardstr=NULL;
   void *tcens=NULL;
   fitsfile *ifptr, *ofptr, *tfptr;
 #endif
@@ -735,10 +737,22 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
       fprintf(stdout, ",\"hdus\":");
       _listhdu(finfo->fitsfile, NULL);
       tstatus=0;
+      // get header cards as a string
       getHeaderToString(ifptr, &cardstr, &ncard, &tstatus);
+      // clean header cards for json
+      ncardstr = calloc(sizeof(char), strlen(cardstr)*2+1);
+      for(i=0, j=0; i<(int)strlen(cardstr); i++, j++){
+	if( cardstr[i] == '"' ){
+	  ncardstr[j++] = '\\';
+	}
+	ncardstr[j] = cardstr[i];
+      }
+      if( ncardstr ){
+	fprintf(stdout, ",\"ncard\":%d", ncard);
+	fprintf(stdout, ",\"cardstr\":\"%s\"", ncardstr);
+	free(ncardstr);
+      }
       if( cardstr ){
-	fprintf(stdout, ",\"ncard\":%d",ncard);
-	fprintf(stdout, ",\"cardstr\":\"%s\"",cardstr);
 	free(cardstr);
       }
       fprintf(stdout, "}\n");
