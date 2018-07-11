@@ -616,6 +616,7 @@ display the section:
 <li><b>separate</b>: if true, display as a separate image (default is to update the current image)
 <li><b>ondisplaysection</b>: function to perform after section is displayed
 </ul>
+<p>
 The bin directives are:
 <ul>
 <li><b>x[n]|X[n]|*[n]</b>: multiply the current bin by n (e.g., "x2")
@@ -624,7 +625,13 @@ The bin directives are:
 <li><b>-[n]</b>: subtract n from the current bin (e.g., "-2")
 <li><b>in|In</b>: multiply the current bin by 2
 <li><b>out|Out</b>: divide the current bin by 2
+<li><b>[n]a</b>: bin by n, averaging the binned pixels
+<li><b>[n]s</b>: bin by n, summing the binned pixels
 </ul>
+Note that the <b>JS9.globalOpts.binMode</b> property specifies the
+default action for whether the binned pixels are summed together (if
+binMode is "s") or averaged (if binMode is "a"). This action is overridden
+by the last two bin directives listed above.
 
 <p>
 All properties are optional: if a property is not specified,

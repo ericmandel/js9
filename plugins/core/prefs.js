@@ -321,6 +321,10 @@ JS9.Prefs.fitsSchema = {
 	    "type": "string",
 	    "helper": "bin factor for images"
 	},
+	"binMode": {
+	    "type": "string",
+	    "helper": "'s' for summing, 'a' for averaging"
+	},
 	"clear": {
 	    "type": "string",
 	    "helper": "clear image's virtual file memory"
@@ -508,6 +512,7 @@ JS9.Prefs.init = function(){
 			   ixdim: JS9.fits.options.image.xdim,
 			   iydim: JS9.fits.options.image.ydim,
 			   ibin: JS9.fits.options.image.bin,
+			   binMode: JS9.globalOpts.binMode,
 			   clear: JS9.globalOpts.clearImageMemory};
 	    break;
 	case "catalogs":
@@ -760,6 +765,9 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	        case "ibin":
 		    obj.image.bin = Math.floor(parseFloat(val));
 	            break;
+		case "binMode":
+		    JS9.globalOpts.binMode = val;
+		    break;
 		case "clear":
 		    JS9.globalOpts.clearImageMemory = val;
 		    break;

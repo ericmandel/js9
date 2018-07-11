@@ -351,7 +351,7 @@ void updateWCS(fitsfile *fptr, fitsfile *ofptr,
 
 // getImageToArray: extract a sub-section from an image HDU, return array
 void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
-		      int bin, char *slice,
+		      int bin, int binMode, char *slice,
 		      int *start, int *end, int *bitpix, int *status){
   int i, j, naxis, dim1, dim2, maxdim1, maxdim2, odim1, odim2, hidim1, hidim2;
   int ttype, tsize;
@@ -359,6 +359,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   int ojoff = 0;
   int tstatus = 0;
   int doscale = 0;
+  int bin2;
   void *obuf, *rbuf;
   long totpix, totbytes;
   long naxes[IDIM], fpixel[IDIM], lpixel[IDIM], myfpixel[IDIM], inc[IDIM];
@@ -684,6 +685,36 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
     free(rbuf);
   }
 
+  // average, if necessary
+  if( (bin > 1) && ((binMode == 1) || (binMode == 'a')) ){
+    bin2 = bin * bin;
+    totpix = odim1 * odim2 / bin2;
+    for(i=0; i<totpix; i++){
+      switch(*bitpix){
+      case 8:
+	cobuf[i] /= bin2;
+	break;
+      case 16:
+	sobuf[i] /= bin2;
+	break;
+      case -16:
+	usobuf[i] /= bin2;
+	break;
+      case 32:
+	iobuf[i] /= bin2;
+	break;
+      case 64:
+	lobuf[i] /= bin2;
+	break;
+      case -32:
+	fobuf[i] /= bin2;
+	break;
+      case -64:
+	dobuf[i] /= bin2;
+	break;
+      }
+    }
+  }
   // return pixel buffer (and section dimensions)
   return obuf;
 }

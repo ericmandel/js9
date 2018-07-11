@@ -68,8 +68,11 @@
 	    if( JS9.isNumber(form.ydim.value) ){
 		opts.ydim = Math.floor(parseFloat(form.ydim.value));
 	    }
-	    if( JS9.isNumber(form.bin.value) ){
+	    if( !form.bin.value.match(/^[+-]/) &&
+		JS9.isNumber(form.bin.value) ){
 		opts.bin = Math.floor(parseFloat(form.bin.value));
+	    } else {
+		opts.bin = form.bin.value;
 	    }
 	    opts.filter = form.filter.value;
 	    opts.separate = $(form.separate).prop("checked");

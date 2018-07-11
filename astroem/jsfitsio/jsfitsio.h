@@ -8,7 +8,7 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
 			     int *dims, double *cens, int bin, int *status);
 
 int *getImageToArray(fitsfile *fptr, int *dims, double *cens,
-		     int bin, char *slice,
+		     int bin, int binMode, char *slice,
 		     int *start, int *stop, int *bitpix, int *status);
 
 void getHeaderToString(fitsfile *fptr, char **cardstr, int *ncard, int *status);

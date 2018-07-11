@@ -171,6 +171,13 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     var cens = [0, 0];
     var dims = [0, 0];
     var bin = 1;
+    var binMode = 0;
+    var bmode = function(x){
+	if( x && (x === 1 || x === 'a') ){
+	    return 1;
+	}
+	return 0;
+    };
     // opts is optional
     opts = opts || {};
     // make sure we have valid vfile, opened by cfitsio
@@ -252,6 +259,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	if( opts.table ){
 	    if( opts.table.filter ){ filter = opts.table.filter; }
 	    if( opts.table.bin ){ bin = opts.table.bin; }
+	    if( opts.table.binMode ){ binMode = bmode(opts.table.binMode); }
 	    // backward compatibity with pre-v1.12 globals
             if( opts.table.nx ){ dims[0] = opts.table.nx; }
             if( opts.table.ny ){ dims[1] = opts.table.ny; }
@@ -270,6 +278,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	if( opts.ycen ){ cens[1] = opts.ycen; }
 	if( opts.filter ){ filter = opts.filter; }
 	if( opts.bin ){ bin = opts.bin; }
+	if( opts.binMode ){ binMode = bmode(opts.binMode); }
 	setValue(hptr,    dims[0], "i32");
 	setValue(hptr+4,  dims[1], "i32");
 	// use center to generate image
@@ -338,6 +347,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     }
     // overridden by options passed in this call
     if( opts.bin ) { bin = opts.bin; }
+    if( opts.binMode ) { binMode = bmode(opts.binMode); }
     if( opts.xdim ){ dims[0] = opts.xdim; }
     if( opts.ydim ){ dims[1] = opts.ydim; }
     if( opts.xcen ){ cens[0] = opts.xcen; }
@@ -356,9 +366,9 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     doerr = false;
     try{
 	bufptr = ccall("getImageToArray", "number",
-	["number", "number", "number", "number", "string", "number",
+	["number", "number", "number", "number", "number", "string", "number",
 	 "number", "number", "number"],
-	[ofptr, hptr, hptr+8, bin, slice, hptr+24, hptr+32, hptr+40, hptr+44]);
+	[ofptr, hptr, hptr+8, bin, binMode, slice, hptr+24, hptr+32, hptr+40, hptr+44]);
     }
     catch(e){
 	doerr = true;

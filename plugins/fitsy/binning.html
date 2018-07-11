@@ -47,11 +47,14 @@ following options:
 perform the section extraction (0,0 can be used to specify the file center).
 <li><b>size:</b> the size of the image to extract (before binning is
 performed).
-<li><b>bin:</b> determines how many physical pixels are summed into
-an image pixel after the section is extracted
-<li><b>filter:</b>for tables, row/event filter to apply when extracting the section
-<li><b>separate:</b> if true, display as a separate image (default is to update the current image)
+<li><b>bin:</b> determines how many physical pixels are combined into
+a single image pixel after the section is extracted.
+<li><b>filter:</b>for tables, row/event filter to apply when extracting the section.
+<li><b>separate:</b> if true, display as a separate image (default is to update the current image).
 </ul>
+In addtion, the <b>JS9.globalOpts.binMode</b> property determines
+whether the binned pixels are summed together (if binMode is "s") or
+averaged (if binMode is "a").
 <p>
 For example, if a table has FITS (tlmin, tlmax) dimensions 4096 x 4096, then:
 <ul>
@@ -62,7 +65,25 @@ Specifying 0,0 for the center will cause the section to be extracted from the
 center of the image.
 
 <p>
-Table filtering allows you  to select rows from an FITS binary table
+Although the binning parameter is usually input as an integer value, there are
+other options available:
+<ul>
+<li><b>x[n]|X[n]|*[n]</b>: multiply the current bin by n (e.g., "x2")
+<li><b>/[n]</b>: divide the current bin by n (e.g., "/2")
+<li><b>+[n]</b>: add n to the current bin (e.g., "+2")
+<li><b>-[n]</b>: subtract n from the current bin (e.g., "-2")
+<li><b>in|In</b>: multiply the current bin by 2
+<li><b>out|Out</b>: divide the current bin by 2
+<li><b>[n]a</b>: bin by n, averaging the binned pixels
+<li><b>[n]s</b>: bin by n, summing the binned pixels
+</ul>
+Note that the <b>JS9.globalOpts.binMode</b> property specifies the
+default action for whether the binned pixels are summed together (if
+binMode is "s") or averaged (if binMode is "a"). This action is overridden
+by the last two bin directives listed above.
+
+<p>
+Table filtering allows you to select rows from an FITS binary table
 (e.g., an X-ray event list) by checking each row against an expression
 involving the columns in the table. When a table is filtered, only
 valid rows satisfying these expressions are used to make the image.
@@ -109,7 +130,7 @@ documented
 Once the desired parameters have been set, pressing the <b>Run</b>
 button will filter, bin and display the data.
 
-<h5>Last updated: July 7, 2017</h5>
+<h5>Last updated: July 11, 2018</h5>
 
 </body>
 </html>

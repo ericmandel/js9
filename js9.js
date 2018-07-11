@@ -127,6 +127,7 @@ JS9.globalOpts = {
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     table: {xdim: 2048, ydim: 2048, bin: 1},// image section size to extract from table
     image: {xdim: 2048, ydim: 2048, bin: 1},// image section size (0 for unlimited)
+    binMode: "s",             // "s" (sum) or "a" (average) pixels when binning
     clearImageMemory: "never",  // rm vfile: always|never|auto|noExt|noCube|size>x Mb
     helperProtocol: location.protocol, // http: or https:
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
@@ -2955,7 +2956,7 @@ JS9.Image.prototype.fileDimensions = function() {
    In such a case, we want to convert physical position to the image position
    of the physical file.
    This situation is signalled by the presence of a parent lcs object.
-   This routine is used in displaySection and the fitsy binning.js plugin.
+   This routine is used to display sections and the fitsy binning.js plugin.
 */
 JS9.Image.prototype.maybePhysicalToImage = function(pos){
     var lpos, ipos, npos;
@@ -2973,7 +2974,7 @@ JS9.Image.prototype.maybePhysicalToImage = function(pos){
 JS9.Image.prototype.displaySection = function(opts, func) {
     var that = this;
     var oproxy, hdu, from, obj, oreg, nim, topts, fdims;
-    var ipos, lpos, npos, binval1, binval2, arr, sect;
+    var ipos, lpos, npos, binval1, binval2, tbin, arr, sect;
     var getval3 = function(val1, val2, val3){
 	var res;
 	if( !JS9.isNull(val1) ){
@@ -3108,28 +3109,35 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     }
     // allow binning relative to current, e.g., *2, /4, +1, -3
     if( typeof opts.bin === "string" ){
+	// save and remove mode flag
+	if( opts.bin.match(/[as]$/) ){
+	    opts.binMode = opts.bin.slice(-1);
+	    opts.bin = opts.bin.slice(0, -1); 
+	}
+	// temp binning value
+	tbin = sect.bin || this.binning.bin;
 	switch( opts.bin.charAt(0) ){
 	case "*":
 	case "x":
 	case "X":
-	    opts.bin = this.binning.bin * parseInt(opts.bin.slice(1), 10);
+	    opts.bin = tbin * parseInt(opts.bin.slice(1), 10);
 	    break;
 	case "/":
-	    opts.bin = this.binning.bin / parseInt(opts.bin.slice(1), 10);
+	    opts.bin = tbin / parseInt(opts.bin.slice(1), 10);
 	    break;
 	case "+":
-	    opts.bin = this.binning.bin + parseInt(opts.bin.slice(1), 10);
+	    opts.bin = tbin + parseInt(opts.bin.slice(1), 10);
 	    break;
 	case "-":
-	    opts.bin = this.binning.bin - parseInt(opts.bin.slice(1), 10);
+	    opts.bin = tbin - parseInt(opts.bin.slice(1), 10);
 	    break;
 	case "i":
 	case "I":
-	    opts.bin = this.binning.bin * 2;
+	    opts.bin = tbin * 2;
 	    break;
 	case "o":
 	case "O":
-	    opts.bin = this.binning.bin / 2;
+	    opts.bin = tbin / 2;
 	    break;
 	default:
 	    if( JS9.isNumber(opts.bin) ){
@@ -3155,8 +3163,10 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	opts.bin  = getval3(opts.bin,  sect.bin,  JS9.fits.options.image.bin);
 	break;
     }
+    opts.binMode  = getval3(opts.binMode, sect.binMode, JS9.globalOpts.binMode);
     // one final check on binning
     opts.bin  = Math.max(1, opts.bin || 1);
+    // filter
     opts.filter = getval3(opts.filter, sect.filter, "");
     // save the filter, if necessary
     this.raw.filter = opts.filter || "";
@@ -3183,7 +3193,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    delete opts.ydim;
 	    arr.push({name: "bin", value: opts.bin});
 	    delete opts.bin;
-	    arr.push({name: "filter", value: opts.filter||""});
+	    arr.push({name: "filter", value: opts.filter || ""});
 	    // hack: pass filter along so that it can reach binning plugin
 	    // delete opts.filter;
 	    // get image section from external file
@@ -15590,7 +15600,7 @@ JS9.getFITSImage = function(fits, hdu, options, handler){
 // JS9.fits2repFile(display, file, opts, "png", "fits2png", func)
 // JS9.fits2repFile(display, file, opts, "fits", "imsection")
 JS9.fits2RepFile = function(display, file, opts, xtype, func){
-    var i, s, xdim, ydim, bin, obj;
+    var i, s, xdim, ydim, bin, binMode, obj;
     var xopts = {};
     var xmsg = "fits2" + xtype;
     var xcond = opts[xmsg] ||
@@ -15631,13 +15641,15 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	    opts.bin ||
 	    JS9.fits.options.image.bin ||
 	    JS9.fits.options.table.bin;
+	binMode = opts.binMode || JS9.globalOpts.binMode;
+	binMode = binMode === "a" ? "a" : "";
 	if( opts.xcen !== undefined && opts.ycen !== undefined ){
-	    xopts.sect = sprintf("%s@%s,%s@%s,%s",
+	    xopts.sect = sprintf("%s@%s,%s@%s,%s%s",
 				 xdim, opts.xcen,
 				 ydim, opts.ycen,
-				 bin);
+				 bin, binMode);
 	} else {
-	    xopts.sect = sprintf("%s,%s,%s", xdim, ydim, bin);
+	    xopts.sect = sprintf("%s,%s,%s%s", xdim, ydim, bin, binMode);
 	}
 	s = xcond.toLowerCase().split(/[>,]/);
 	for(i=0; i<s.length; i++){
