@@ -172,6 +172,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     var dims = [0, 0];
     var bin = 1;
     var binMode = 0;
+    var binFactor = 0;
     var bmode = function(x){
 	if( x && (x === 1 || x === 'a') ){
 	    return 1;
@@ -321,6 +322,10 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	}
 	_free(hptr);
 	if( !ctype1 || !ctype1.match(/\-\-HPX/i) ){
+	    // see if we have to average the pixels later on
+	    if( binMode > 0 && opts.bin > 1 ){
+		binFactor = opts.bin * opts.bin;
+	    }
 	    // if we don't have a HEALPix image, we clear cens and dims
 	    // to extract at center of resulting image (below)
 	    delete opts.xcen;
@@ -412,6 +417,13 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     case -64:
 	hdu.image = HEAPF64.subarray(bufptr/8, bufptr/8 + datalen);
 	break;
+    }
+    // for a binned table, we might have to average the pixel values now,
+    // since this was not done in getImageToArray()
+    if( binFactor ){
+	for(i=0; i<datalen; i++){
+	    hdu.image[i] /= binFactor;
+	}
     }
     // get section header cards as a string
     hptr = _malloc(20);
