@@ -1211,15 +1211,16 @@ JS9.Menubar.init = function(width, height){
 		var items = {};
 		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 		var editScale = function(im, obj){
+		    var dval1 = im.params.scalemin;
+		    var dval2 = im.params.scalemax;
 		    delete tdisp.tmp.editingMenu;
 		    if( JS9.isNumber(obj.scalemin) ){
-			im.params.scalemin = parseFloat(obj.scalemin);
-			im.params.scaleclipping = "user";
+			dval1 = parseFloat(obj.scalemin);
 		    }
 		    if( JS9.isNumber(obj.scalemax) ){
-			im.params.scalemax = parseFloat(obj.scalemax);
-			im.params.scaleclipping = "user";
+			dval2 = parseFloat(obj.scalemax);
 		    }
+		    im.setScale(dval1, dval2);
 		    im.displayImage("colors");
 		};
 		var keyScale = function(e){
@@ -1235,7 +1236,9 @@ JS9.Menubar.init = function(width, height){
 		    switch( keycode ){
 		    case 9:
 		    case 13:
-			editScale(vim, obj);
+			if( vim ){
+			    editScale(vim, obj);
+			}
 			break;
 		    default:
 			vdisp.tmp.editingMenu = true;
@@ -1286,9 +1289,9 @@ JS9.Menubar.init = function(width, height){
 			if( uim ){
 			    switch(key){
 			    case "dminmax":
-				uim.params.scaleclipping = "dataminmax";
-				uim.params.scalemin = uim.raw.dmin;
-				uim.params.scalemax = uim.raw.dmax;
+				uim.setScale("dataminmax",
+					     uim.raw.dmin,
+					     uim.raw.dmax);
 				$.contextMenu.setInputValues(opt,
 				     {scalemin: String(uim.params.scalemin),
 				      scalemax: String(uim.params.scalemax)});
@@ -1299,9 +1302,9 @@ JS9.Menubar.init = function(width, height){
 				    (uim.params.z2 === undefined) ){
 				    uim.zscale(false);
 				}
-				uim.params.scaleclipping = "zscale";
-				uim.params.scalemin = uim.params.z1;
-				uim.params.scalemax = uim.params.z2;
+				uim.setScale("zscale",
+					     uim.params.z1,
+					     uim.params.z2);
 				$.contextMenu.setInputValues(opt,
 				     {scalemin: String(uim.params.scalemin),
 				      scalemax: String(uim.params.scalemax)});
@@ -1311,9 +1314,9 @@ JS9.Menubar.init = function(width, height){
 				if( (uim.params.z1 === undefined) ){
 				    uim.zscale(false);
 				}
-				uim.params.scaleclipping = "zmax";
-				uim.params.scalemin = uim.params.z1;
-				uim.params.scalemax = uim.raw.dmax;
+				uim.setScale("zmax",
+					     uim.params.z1,
+					     uim.raw.dmax);
 				$.contextMenu.setInputValues(opt,
 				     {scalemin: String(uim.params.scalemin),
 				      scalemax: String(uim.params.scalemax)});

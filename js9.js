@@ -5316,6 +5316,8 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
 	    that.params.scaleclipping = "zmax";
 	    that.params.scalemin = that.params.z1;
 	    that.params.scalemax = that.raw.dmax;
+	} else if( s === "user" ){
+	    that.params.scaleclipping = "user";
 	} else {
 	    JS9.error("unknown scale: " + s);
 	}
