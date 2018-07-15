@@ -142,7 +142,7 @@ Instances of JS9 are placed on a web page by assigning JS9 classes
 to ordinary "div" elements. The two important JS9 classes are:
 <ul>
 <li><b>JS9:</b> this class will display the main JS9 image window
-<li><b>JS9Menubar:</b> this class will display the JS9 menu bar
+<li><b>JS9Menubar:</b> this class will display the JS9 menubar
 </ul>
 Thus, for example, to place a menubar on top of a JS9 display, use:
 <pre>
@@ -206,7 +206,7 @@ JS9 components together, the IDs should be specified as follows:
 <p> An example of how to define multiple instances of JS9 is found in
 the js9multi.html file. Two DS9 instances are defined, having IDs of
 "JS9" (the default) and "myJS9". When "myJS9" is the display ID,
-"myJS9-Menubar" specifies the associated menu bar and "myJS9Console"
+"myJS9-Menubar" specifies the associated menubar and "myJS9Console"
 specifies the associated console.  
 
 <p>
@@ -242,13 +242,30 @@ and background:
 The <a href="../js9sizes.html">JS9 Size Demo</a> displays different button styles.
 
 <p>
+<h3>Menubar Styles</h3> The default menubar has a style in which all
+of the major menus are shown at the top-level of the menubar. This is
+the <b>classic</b> style. JS9 also supports a <b>mac</b> style
+menubar, in which the <b>File</b>, <b>Edit</b> and <b>View</b> menus
+are placed on the left side of the menubar and the <b>Help</b> menu on
+the right.  The other main menus are displayed as sub-menus within
+the <b>View</b> menu. The <b>mac</b> style can be specified in two
+ways: you can set the JS9globalOpts.menubarStyle property to "mac" in
+your js9prefs.js file to set the default menubar style for all menus
+in the page. Alternatively you can supply a <b>data-style="mac"</b>
+attribute to the Menubar div element:
+<pre>
+  &lt;div class="JS9Menubar" data-style="mac" &gt;
+</pre>
+This will set the menubar style for this element only.
+
+<p>
 <h3>Supermenus: One Menubar to Rule Them All</h3> By default, each
 menubar controls one JS9 display. You can, however, create a menubar
 that controls multiple displays, so that a given menu selection is
 applied to each display (or to a specifically selected image). This is
 done by creating a menubar div with two special characteristics:
 <ul>
-<li> the id of the menu bar starts with <b>SUPERMENU_</b> (it can end with anything, or nothing)
+<li> the id of the menubar starts with <b>SUPERMENU_</b> (it can end with anything, or nothing)
 <li> an HTML5 data attribute called <b>data-displays</b> lists the JS9 displays to control or "*" for all displays
 </ul>
 For example, to control two JS9 displays:

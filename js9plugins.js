@@ -4568,6 +4568,10 @@ JS9.Menubar.init = function(width, height){
     if( issuper ){
 	JS9.supermenus.push(this);
     }
+    this.style = this.divjq.attr("data-style") ||
+	         JS9.globalOpts.menubarStyle   ||
+                 "classic";
+    this.style = this.style.toLowerCase();
     // set width and height on div
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
@@ -4603,16 +4607,45 @@ JS9.Menubar.init = function(width, height){
 		    break;
 		}
 		if( ss[0] === "#" ){
-		    ss = ss.slice(1);
-		    if( ss[1] !== "#" ){
-			html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"' disabled='disabled'>"+tt+" </button>";
+		    if( this.syle === "classic" ){
+			ss = ss.slice(1);
+			if( ss[1] !== "#" ){
+			    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"' disabled='disabled'>"+tt+" </button>";
+			}
 		    }
 		} else {
-		    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button>";
+		    if( this.style === "classic" ){
+			html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button>";
+		    } else {
+			switch(ss){
+			case "file":
+			case "edit":
+			    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button>";
+			    break;
+			case "help":
+			    html += "<span style='float:right'><button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button></span>";
+			    break;
+			default:
+			    if( !this.macmenus ){
+				html += "<span style='position:relative;'><button type='button' id='"+"viewMacMenu@@ID@@' class='"+ this.buttonClass +"'>"+"View"+"</button>";
+				this.macmenus = [];
+			    }
+			    if( tt === "View" ){
+				tt = "Plugins";
+			    }
+			    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"' style='position:absolute;top:0px;left:0px;visibility:hidden;zindex:-1'>"+""+"</button>";
+			    this.macmenus.push({name: ss, title: tt});
+			    break;
+			}
+		    }
 		}
 		break;
 	    }
 	}
+    }
+    // close mac-style span on View menux
+    if( this.macmenus ){
+	html += "</span>";
     }
     html += "<button type='button' id='hiddenRegionMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
     html += "<button type='button' id='hiddenAnchorMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
@@ -5205,6 +5238,43 @@ JS9.Menubar.init = function(width, height){
 		};
 	    }
 	});
+	// viewMac: make button open the contextMenu
+	$("#viewMacMenu" + that.id).on("mousedown", function(evt){
+            evt.preventDefault();
+            $("#viewMacMenu" + that.id).contextMenu();
+	});
+	// define contextMenu actions
+	$.contextMenu({
+            selector: "#viewMacMenu" + that.id,
+	    zIndex: JS9.MENUZINDEX,
+	    events: { hide: onhide },
+	    position: mypos,
+            build: function(){
+		var i, menu;
+		var items = {};
+		items.edittitle1 = {
+		    name: "View:",
+		    disabled: true
+		};
+		for(i=0; i<that.macmenus.length; i++){
+		    menu = that.macmenus[i];
+		    items[menu.name] = {
+			name: menu.title + " ..."
+		    };
+		}
+		return{
+		    callback: function(key){
+			switch(key){
+			default:
+			    $("#" + key + "Menu" + that.id).contextMenu();
+			    break;
+			}
+		    },
+		    items: items
+		};
+	    }
+	});
+
 	// View: make button open the contextMenu
 	$("#viewMenu" + that.id).on("mousedown", function(evt){
             evt.preventDefault();
