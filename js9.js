@@ -3164,7 +3164,14 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	break;
     }
     opts.binMode  = getval3(opts.binMode, sect.binMode, JS9.globalOpts.binMode);
-    // one final check on binning
+    // final checks on binning
+    // handle string bin, possibly containing explicit binMode
+    if( typeof opts.bin === "string" ){
+	if( opts.bin.match(/[as]$/) ){
+	    opts.binMode = opts.bin.slice(-1);
+	}
+	opts.bin = parseInt(opts.bin, 10);
+    }
     opts.bin  = Math.max(1, opts.bin || 1);
     // filter
     opts.filter = getval3(opts.filter, sect.filter, "");
@@ -3191,6 +3198,11 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    delete opts.xdim;
 	    arr.push({name: "ydim", value: opts.ydim});
 	    delete opts.ydim;
+	    // recombine bin and binMode, if necessary
+	    if( opts.binMode ){
+		opts.bin = sprintf("%s%s", opts.bin, opts.binMode);
+		delete opts.binMode;
+	    }
 	    arr.push({name: "bin", value: opts.bin});
 	    delete opts.bin;
 	    arr.push({name: "filter", value: opts.filter || ""});
@@ -15645,6 +15657,14 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	    JS9.fits.options.table.bin;
 	binMode = opts.binMode || JS9.globalOpts.binMode;
 	binMode = binMode === "a" ? "a" : "";
+	// handle string bin, possibly containing explicit binMode
+	if( typeof bin === "string" ){
+	    if( bin.match(/[as]$/) ){
+		binMode = bin.slice(-1);
+	    }
+	    bin = parseInt(bin, 10);
+	}
+	bin = Math.max(1, bin || 1);
 	if( opts.xcen !== undefined && opts.ycen !== undefined ){
 	    xopts.sect = sprintf("%s@%s,%s@%s,%s%s",
 				 xdim, opts.xcen,

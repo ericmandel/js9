@@ -405,7 +405,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     got = 2;
   /* specify dimensions, with and without blocking factor */
   } else if(sscanf(s,
-	    "%32[0-9.dDeE] , %32[-0-9.dDeE] , %32[-0-9.dDeE]",
+	    "%32[0-9.dDeE] , %32[-0-9.dDeE] , %32[0-9as]",
 	    s1, s2, s3) == 3){
     dims[0] = atof(s1);
     cens[0] = 0;

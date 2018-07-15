@@ -289,6 +289,14 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	setValue(hptr+24, 0, "i32");
 	// filter an event file and generate an image
 	doerr = false;
+	// handle string bin, possibly containing explicit binMode
+	if( typeof bin === "string" ){
+	    if( bin.match(/[as]$/) ){
+		binMode = bmode(bin.slice(-1));
+	    }
+	    bin = parseInt(bin, 10);
+	}
+	bin = Math.max(1, bin || 1);
 	try{
 	    ofptr = ccall("filterTableToImage", "number",
             ["number", "string", "number", "number", "number", "number",
@@ -369,6 +377,14 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     slice = opts.slice || "";
     // get array from image file
     doerr = false;
+    // handle string bin, possibly containing explicit binMode
+    if( typeof bin === "string" ){
+	if( bin.match(/[as]$/) ){
+	    binMode = bmode(bin.slice(-1));
+	}
+	bin = parseInt(bin, 10);
+    }
+    bin = Math.max(1, bin || 1);
     try{
 	bufptr = ccall("getImageToArray", "number",
 	["number", "number", "number", "number", "number", "string", "number",
