@@ -493,13 +493,22 @@ JS9.Image = function(file, params, func){
     var nhist=0, ncomm=0;
     var mksect = function(that, localOpts){
 	var zoom;
+	var bin = 1;
 	var arr = [];
+	// image xcen and ycen values must take binning into account
+	if( localOpts.bin !== undefined ){
+	    if( typeof localOpts.bin === "string" ){
+		bin = parseInt(localOpts.bin, 10);
+	    } else {
+		bin = localOpts.bin;
+	    }
+	}
 	// make up section array from default values
 	if( localOpts && (localOpts.xcen !== undefined) ){
-	    arr.push(localOpts.xcen);
+	    arr.push(localOpts.xcen/bin);
 	}
 	if( localOpts && (localOpts.ycen !== undefined) ){
-	    arr.push(localOpts.ycen);
+	    arr.push(localOpts.ycen/bin);
 	}
 	if( localOpts && (localOpts.zoom !== undefined) ){
 	    zoom = that.parseZoom(localOpts.zoom);
