@@ -60,6 +60,7 @@ var globalOpts = {
     analysisWrappers: "analysis-wrappers",
     helperPlugins:    "helper-plugins",
     dataPathModify:   true,
+    fileTranslate:    [],          // file translation, e.g. ["/notebooks/",""]
     maxBinaryBuffer:  150*1024000, // exec buffer: good for 4096^2 64-bit image
     maxTextBuffer:    5*1024000,   // exec buffer: good for text
     textEncoding:     "ascii",     // encoding for returned stdout from exec
@@ -317,6 +318,9 @@ var loadPreferences = function(prefs){
 			case "string":
 			    globalOpts[opt] = obj.globalOpts[opt];
 			    break;
+			case "object":
+			    globalOpts[opt] = obj.globalOpts[opt];
+			    break;
 			default:
 			    break;
 			}
@@ -503,6 +507,7 @@ var getDataPath = function(s){
 // see if a file exists in the dataPath
 var getFilePath = function(file, dataPath, myenv){
     var i, s, s1, froot1, fext, parr;
+    var from, to;
     // eslint-disable-next-line no-unused-vars
     var repl = function(m, t, o){
 	if( myenv && myenv[t] ){
@@ -517,6 +522,14 @@ var getFilePath = function(file, dataPath, myenv){
     // sanity check
     if( !file ){
 	return;
+    }
+    // translate filename, if necessary
+    if( globalOpts.fileTranslate                &&
+	Array.isArray(globalOpts.fileTranslate) &&
+	globalOpts.fileTranslate[0]             ){
+	from = new RegExp(globalOpts.fileTranslate[0]);
+	to = globalOpts.fileTranslate[1] || "";
+	file = file.replace(from, to);
     }
     // look for and remove the extension
     froot1 = file.replace(/\[.*]$/,"");
