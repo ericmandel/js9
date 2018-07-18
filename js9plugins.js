@@ -4724,7 +4724,7 @@ JS9.Menubar.init = function(width, height){
 	    events: { hide: onhide },
 	    position: mypos,
             build: function(){
-		var i, im, name, imlen, s1, arr;
+		var i, im, name, imlen, s1, arr, cdisp;
 		var n = 0;
 		var items = {};
 		var tdisp = JS9.Menubar.getDisplays.call(that)[0];
@@ -4736,10 +4736,10 @@ JS9.Menubar.init = function(width, height){
 			disabled: true
 		    };
 		    for(i=0; i<arr.length; i++){
-			tdisp = arr[i];
-			name = tdisp.id;
+			cdisp = arr[i];
+			name = cdisp.id;
 			items["super_"+name] = xname(name);
-			if( that.selectedDisplay === tdisp ){
+			if( that.selectedDisplay === cdisp ){
 			    items["super_"+name].icon = "sun";
 			    n++;
 			}
