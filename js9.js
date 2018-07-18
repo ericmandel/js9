@@ -526,11 +526,6 @@ JS9.Image = function(file, params, func){
 	JS9.images.push(this);
 	// notify the helper
 	this.notifyHelper();
-	// call function, if necessary
-	if( func ){
-	    try{ JS9.xeqByName(func, window, this); }
-	    catch(e){ JS9.error("in image onload callback", e, false); }
-	}
 	// plugin callbacks
 	this.xeqPlugins("image", "onimageload");
 	// update shapes?
@@ -541,6 +536,11 @@ JS9.Image = function(file, params, func){
 	this.status.load = "complete";
 	// done loading, reset wait cursor
 	JS9.waiting(false);
+	// everything else is done so call onload func, if necessary
+	if( func ){
+	    try{ JS9.xeqByName(func, window, this); }
+	    catch(e){ JS9.error("in image onload callback", e, false); }
+	}
     };
     // params can be an object containing local params, or the display string
     if( params ){
@@ -2913,15 +2913,15 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	// update region values
 	this.updateShapes("regions", "all", "binning");
     }
-    // call onrefresh function, if necessary
-    if( opts.onrefresh ){
-	try{ JS9.xeqByName(opts.onrefresh, window, this); }
-	catch(e){ JS9.error("in image refresh callback", e); }
-    }
     // plugin callbacks
     this.xeqPlugins("image", "onimagerefresh");
     // all done
     JS9.waiting(false);
+    // everything else is done so call refresh func, if necessary
+    if( opts.onrefresh ){
+	try{ JS9.xeqByName(opts.onrefresh, window, this); }
+	catch(e){ JS9.error("in image refresh callback", e); }
+    }
     // allow chaining
     return this;
 };
@@ -14275,9 +14275,9 @@ JS9.Crosshair.display = function(im, ipos, evt){
     x = im.ipos.x;
     y = im.ipos.y;
     // draw the crosshair, centered on the image pos
-    hopts = {pts: [{x: 0, y: y}, {x: w, y: y}]};
+    hopts = {pts: [{x: 0, y: y}, {x: w, y: y}], redraw: false};
     im.changeShapes(layername, im.crosshair.h, hopts);
-    vopts = {pts: [{x: x, y: 0}, {x: x, y: h}]};
+    vopts = {pts: [{x: x, y: 0}, {x: x, y: h}], redraw: true};
     im.changeShapes(layername, im.crosshair.v, vopts);
     im.crosshair.visible = true;
     // if crosshair mode is on and this image has wcs ...
@@ -14311,9 +14311,11 @@ JS9.Crosshair.display = function(im, ipos, evt){
 		    // if image pos is within the image boundaries ...
 		    if( x > 0 && x < w && y > 0 && y < h ){
 			// draw the crosshair, centered on the image pos
-			hopts = {pts: [{x: 0, y: y}, {x: w, y: y}]};
+			hopts = {pts: [{x: 0, y: y}, {x: w, y: y}],
+				 redraw:false};
 			cim.changeShapes(layername, cim.crosshair.h, hopts);
-			vopts = {pts: [{x: x, y: 0}, {x: x, y: h}]};
+			vopts = {pts: [{x: x, y: 0}, {x: x, y: h}],
+				redraw: true};
 			cim.changeShapes(layername, cim.crosshair.v, vopts);
 			cim.crosshair.visible = true;
 		    }
