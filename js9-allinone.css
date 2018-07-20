@@ -1121,6 +1121,11 @@ div.JS9MenubarContainer-flat, div.JS9MenubarContainer-border {
     background-color: lightblue;
 }
 
+/* CSS for images loaded as part of the user-defined menubar */
+img.JS9MenubarUserImage{
+    width: 50%
+}
+
 div.JS9ConsoleContainer {
     /* absolute pos top/left for positioning, Flanagan's JavaScript, p 357 */
     /* why is this relative?? absolute positions make it tiny!! */

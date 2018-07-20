@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <script type="text/javascript" src="js9prefs.js"></script>
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="js9.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <script type="text/javascript" src="js9usermenus.js"></script>
+  <style type="text/css">
+    td.loadimages {
+        padding:0 50px 0 0px;
+    }
+</style>
+  <title>JS9 menubar styles</title>
+</head>
+<body>
+    <center><font size="+1">
+    <b>JS9 Demo: JS9 menubar styles</b>
+    </font></center>
+    <table cellspacing="30">
+    <tr>
+    <td colspan="2">
+    JS9 supports two styles of menubar: the default <b>classic</b> style
+    (all top-level menus are displayed in the menubar) and a <b>mac</b> style
+    (some top-level menus are in the View menu). Specify the style globally
+    by setting <b>JS9.globalOpts.menubarStyle</b> to "mac" or "classic".
+    Specify a style for specific menubar by using the <b>data-style</b>
+    attribute on that element.
+    <p>
+    You also can display user-defined menus by setting the
+    <b>JS9.globalOpts.userMenuBar</b> to an array of menu options, and then
+    either setting <b>JS9.globalOpts.userMenus</b> to true for all menubars
+    or setting the <b>data-usermenus</b> attribute to "true" for a specific
+    menubar. See 
+    <a href="./js9usermenus.js" target="_blank">js9usermenus.js</a>
+    for an example of a user menubar array.
+    <p>
+    Note that <a href="js9super.html" target="blank">supermenus</a> support
+    styles and user menus, as shown in the examples below the image displays.
+    </td>
+    </tr>
+    <tr valign="top">
+    <td>
+    A classic menubar displaying all top-level menus:
+    <p>
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    <p>
+    Super-menus of style classic, mac, mac/user to control both displays:<br>
+    <div class="JS9Menubar" id="SUPERMENU_1" data-displays="JS9,myJS9"></div>
+    <p>
+    <div class="JS9Menubar" id="SUPERMENU_2" data-displays="JS9,myJS9" data-style="mac"></div>
+    <p>
+    <div class="JS9Menubar" id="SUPERMENU_3" data-displays="JS9,myJS9" data-style="mac" data-usermenus="true"></div>
+    </td>
+    <td>
+    A Mac-style menubar (top-level menus in View) and user-defined menus:
+    <p>
+    <div class="JS9Menubar" id="myJS9Menubar" data-style="mac" data-usermenus="true"></div>
+    <div class="JS9" id="myJS9"></div>
+    <p>
+    <table>
+    <tr valign="top">
+    <td class="loadimages">
+    Left-hand display:
+    <ul>
+    <li> <a href='javascript:JS9.Load("fits/casa.fits.gz", {scale:"log", parentFile:"fits/casa.fits"});'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/3c273.fits.gz", {scale:"log", colormap:"heat", parentFile:"fits/3c273.fits"});'>3c273 (Chandra)</a>
+    <li> <a href='javascript:JS9.Load("fits/3c58.fits.gz", {scale:"log", colormap:"cool", parentFile:"fits/3c58.fits"});'>3c58 (Chandra)</a>
+    </ul>
+    </td>
+    <td>
+    Right-hand display:
+    <ul>
+    <li> <a href='javascript:JS9.Load("fits/snr.fits", {scale:"log", colormap:"heat"}, {display: "myJS9"});'>CTB 109 (Einstein, small)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngc1316.fits", {scale:"linear", colormap:"cool"}, {display: "myJS9"});'>ngc1316 (AIPS, small)</a>
+    <li> <a href='javascript:JS9.Load("fits/ngkper.fits", {scale:"log"}, {display: "myJS9"});'>gkper (Chandra, 7.6Mb)</a>
+    </ul>
+    </td>
+    </tr>
+    </table>
+    </td>
+    </tr>
+    </table>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9bespoke.html'>JS9 Demo: web page control of JS9</a>
+<li><a href='js9menustyles.html'>JS9 Demo: JS9 menubar styles</a>
+<li><a href='js9sizes.html'>JS9 Demo: setting the size of the JS9 display</a>
+<li><a href='js9super.html'>JS9 Demo: control multiple JS9 displays</a>
+<li><a href='js9large.html'>JS9 Demo: support for large FITS files</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9blend.html'>JS9 Demo: image blending</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9allinone.html'>JS9 Demo: using the all-in-one files</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>

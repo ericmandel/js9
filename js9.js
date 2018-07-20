@@ -207,6 +207,7 @@ JS9.globalOpts = {
     infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos", "impos", "physpos", "value", "regions", "progress"],
     menuBar: ["file", "edit", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
     menubarStyle: "classic",                              // mac or classic
+    userMenus: false,                                     // add user menus?
     toolBar: ["linear", "log", "annulus", "box", "circle", "ellipse", "line", "polygon", "remove", "incexcl", "srcbkgd", "zoomin", "zoomout", "zoom1"],
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
     separate: {layout: "auto", leftMargin: 10, topMargin: 10}, // separate a display

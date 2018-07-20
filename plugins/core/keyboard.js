@@ -64,7 +64,7 @@ JS9.Keyboard.Actions = {};
 JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt){
     var s, arr, opts;
     // sanity check
-    if( !im || !im.raw.wcs ){
+    if( !im || !im.raw.wcs || !ipos ){
 	return;
     }
     // get wcs coords of current position
@@ -85,7 +85,7 @@ JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt)
 JS9.Keyboard.Actions["copy physical position to clipboard"] = function(im, ipos, evt){
     var phys, s;
     // sanity check
-    if( !im ){
+    if( !im || !ipos ){
 	return;
     }
     // get physical coords from image coords
@@ -100,7 +100,7 @@ JS9.Keyboard.Actions["copy physical position to clipboard"] = function(im, ipos,
 JS9.Keyboard.Actions["copy pixel value to clipboard"] = function(im, ipos, evt){
     var s, val, prec;
     // sanity check
-    if( !im ){
+    if( !im || !ipos ){
 	return;
     }
     // value at current position
@@ -117,11 +117,11 @@ JS9.Keyboard.Actions["copy pixel value to clipboard"] = function(im, ipos, evt){
 JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos, evt){
     var s;
     // sanity check
-    if( !im ){
+    if( !im || !ipos ){
 	return;
     }
     // get current valpos and reformat
-    s = im.updateValpos(im.ipos, false).vstr.replace(/&nbsp;/g, " ");
+    s = im.updateValpos(ipos, false).vstr.replace(/&nbsp;/g, " ");
     // copy to clipboard
     JS9.CopyToClipboard(s);
     return s;
