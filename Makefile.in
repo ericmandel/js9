@@ -133,7 +133,7 @@ BEDIRS =	node_modules analysis-plugins analysis-wrappers
 
 WEBFILES =	js9.js js9.min.js js9worker.js \
 		js9support.js js9support.min.js js9support.css js9plugins.js \
-		js9support.txt js9.css fitsy.js fitsy.min.js \
+		js9support.txt js9usermenus.js js9.css fitsy.js fitsy.min.js \
 		$(ALLIN1).js $(ALLIN1).css \
 		js9Msg.js js9PostMessage.js js9Helper.js \
 		js9Electron.js js9ElectronPreload.js js9Regions.js \
