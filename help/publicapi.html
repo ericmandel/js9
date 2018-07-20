@@ -722,7 +722,7 @@ for information about HDUs and multi-extension FITS).
 <p>
 where:
 <ul>
-<li><b>slice</b>: slice description or slice number
+<li><b>slice</b>: slice description, slice number, or "all"
 <li><b>opts</b>: object containing options
 </ul>
 This routine allows you to display a 2D slice of a 3D or 4D FITS data
@@ -760,6 +760,9 @@ from the original file, allowing blinking, image blending, etc. between
 the two "files".  Note that the new id and filename are adjusted to be
 the original file's values with the cfitsio image section <b>[6:6,*,*]</b>
 appended.
+
+<p>
+If the first argument is "all", then all slices will be loaded into JS9 separately.
 
 <h5 id="JS9.BlendImage">Blend the image in an image stack using W3C composite/blend modes</h5>
 <p>
