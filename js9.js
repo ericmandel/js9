@@ -3401,6 +3401,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 
 // display the specified slice of a 3D or 4d FITS cube
 JS9.Image.prototype.displaySlice = function(slice, opts, func){
+    var i, topts;
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
@@ -3413,19 +3414,29 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
     if( slice === undefined ){
 	JS9.error("missing slice for displaySlice()");
     }
-    // slicename or slicenum specified?
-    if( JS9.isNumber(slice) ){
-	opts.slice = sprintf("*,*,%s", slice);
+    if( slice === "all" && this.raw.header.NAXIS === 3 ){
+	// start with slice 1, already loaded
+	this.displaySlice(1, topts, func);
+	// load and display the other slices separately
+	for(i=2; i<=this.raw.header.NAXIS3; i++){
+	    topts = $.extend(true, {}, opts, {separate: true});
+	    this.displaySlice(i, topts, func);
+	}
     } else {
-	opts.slice = slice;
+	// slicename or slicenum specified?
+	if( JS9.isNumber(slice) ){
+	    opts.slice = sprintf("*,*,%s", slice);
+	} else {
+	    opts.slice = slice;
+	}
+	// cleanup previous FITS file heap before handling the new FITS file,
+	// or we end up with a memory leak in the emscripten heap
+	if( JS9.fits.cleanupFITSFile && this.raw.hdu && this.raw.hdu.fits ){
+	    JS9.fits.cleanupFITSFile(this.raw.hdu.fits, false);
+	}
+	// process the FITS file by going to the slice
+	this.displaySection(opts, func);
     }
-    // cleanup previous FITS file heap before handling the new FITS file,
-    // or we end up with a memory leak in the emscripten heap
-    if( JS9.fits.cleanupFITSFile && this.raw.hdu && this.raw.hdu.fits ){
-	JS9.fits.cleanupFITSFile(this.raw.hdu.fits, false);
-    }
-    // process the FITS file by going to the slice
-    this.displaySection(opts, func);
     // allow chaining
     return this;
 };

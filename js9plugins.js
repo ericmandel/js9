@@ -2307,10 +2307,10 @@ JS9.Cube = {};
 JS9.Cube.CLASS = "JS9";  // class of plugins (1st part of div class)
 JS9.Cube.NAME = "Cube";  // name of this plugin (2nd part of div class)
 JS9.Cube.WIDTH = 512;	 // width of light window
-JS9.Cube.HEIGHT = 170;	 // height of light window
+JS9.Cube.HEIGHT = 240;	 // height of light window
 JS9.Cube.BASE = JS9.Cube.CLASS + JS9.Cube.NAME;
 
-JS9.Cube.cubeHTML="<div class='JS9CubeLinegroup'>$header</div><p><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$range&nbsp;&nbsp;&nbsp;&nbsp;$value&nbsp;&nbsp;&nbsp;&nbsp;$extname</span><span class='JS9CubeSpan' style='float: right'>$order</span></div><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$first&nbsp;$next&nbsp;$prev&nbsp;$last</span><span class='JS9CubeSpan' style='float: right'>$blink&nbsp;$stop&nbsp;$rate</span></div>";
+JS9.Cube.cubeHTML="<div class='JS9CubeLinegroup'>$header</div><p><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$range&nbsp;&nbsp;&nbsp;&nbsp;$value&nbsp;&nbsp;&nbsp;&nbsp;$extname</span><span class='JS9CubeSpan' style='float: right'>$order</span></div><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$first&nbsp;$next&nbsp;$prev&nbsp;$last</span><span class='JS9CubeSpan' style='float: right'>$blink&nbsp;$stop&nbsp;$rate</span></div><p><div class='JS9CubeLinegroup'>$header2</div><p><div class='JS9CubeLinegroup'><span class='JS9CubeSpan' style='float: left'>$load</span></div>";
 
 JS9.Cube.headerHTML='Use the slider, text box, navigation or blink buttons to display a slice of a <b>FITS data cube</b>. Use the menu at the right to specify the slice axis.';
 
@@ -2335,6 +2335,10 @@ JS9.Cube.extnameHTML='<span class="JS9CubeRangeLine">%s</span>';
 JS9.Cube.orderHTML='<select class="JS9CubeOrder" onchange="JS9.Cube.xorder(\'%s\', \'%s\', this)"><option value="$slice,*,*">$slice : * : *</option><option value="*,$slice,*">* : $slice : *</option><option value="*,*,$slice">* : * : $slice</option></select>';
 
 JS9.Cube.rateHTML='<select class="JS9CubeRate" onchange="JS9.Cube.xrate(\'%s\', \'%s\', this)"><option selected disabled>Rate</option><option value=".1">0.1 sec</option><option value=".25">0.25 sec</option><option value=".5">0.5 sec</option><option value="1" default>1 sec</option><option value="2">2 sec</option><option value="5">5 sec</option></select>';
+
+JS9.Cube.header2HTML='Or load each slice separately into JS9:';
+
+JS9.Cube.loadHTML='<input type="button" class=JS9CubeBtn" value="Load All" onclick="JS9.Cube.loadall(\'%s\',\'%s\', this)">';
 
 JS9.Cube.doSlice = function(im, slice, elarr){
     var i, s;
@@ -2531,6 +2535,16 @@ JS9.Cube.xrate = function(did, id, target){
     }
 };
 
+// load all slices separately
+// eslint-disable-next-line no-unused-vars
+JS9.Cube.loadall = function(did, id, target){
+    var im = JS9.lookupImage(id, did);
+    if( im ){
+	im.displaySlice("all");
+    }
+};
+
+
 // re-init when a different image is displayed
 JS9.Cube.display = function(){
     if( this.lastimage !== this.display.image ){
@@ -2640,6 +2654,9 @@ JS9.Cube.init = function(opts){
 	    mopts.push({name: "extname",
 		       value: sprintf(JS9.Cube.extnameHTML, 
 				      header.EXTNAME || "")});
+	    mopts.push({name: "header2",  value: JS9.Cube.header2HTML});
+	    mopts.push({name: "load",
+		       value: sprintf(JS9.Cube.loadHTML, dispid, imid)});
 	    s = im.expandMacro(JS9.Cube.cubeHTML, mopts);
 	} else {
 	    s = "<p><center>This image is not a FITS data cube.</center>";
