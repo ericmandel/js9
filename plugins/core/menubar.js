@@ -264,7 +264,7 @@ JS9.Menubar.createMenus = function(){
 	    var items = {};
 	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 	    var tim = tdisp.image;
-	    if( this.issuper ){
+	    if( that.issuper ){
 		arr = JS9.Menubar.getDisplays.call(that, "all");
 		items.supertitle = {
 		    name: "Supermenu Controls:",
