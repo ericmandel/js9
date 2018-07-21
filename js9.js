@@ -10063,7 +10063,7 @@ JS9.Fabric.activeShapeLayer = function(s){
 // process options, separating into fabric opts and paramsJ
 // call using image context
 JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
-    var i, j, tags, pos, cpos, len, zoom;
+    var i, j, tags, pos, cpos, len, zoom, owcssys, txeq;
     var key, shape, radinc, nrad, radius, tf, arr;
     var nopts = {}, nparams = {};
     var YFUDGE = 1;
@@ -10171,7 +10171,30 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	if( typeof opts.dec === "string" ){
 	    opts.dec = JS9.saostrtod(opts.dec);
 	}
+	// make sure we have the right wcssys
+	if( opts._wcssys ){
+	    // local override from parseRegions
+	    owcssys = this.getWCSSys();
+	    txeq = JS9.globalOpts.xeqPlugins;
+	    JS9.globalOpts.xeqPlugins = false;
+	    this.setWCSSys(opts._wcssys);
+	    // no longer needed or wanted
+	    delete opts._wcssys;
+	} else if( opts.wcssys ){
+	    // from the  passed-in opts
+	    owcssys = this.getWCSSys();
+	    txeq = JS9.globalOpts.xeqPlugins;
+	    JS9.globalOpts.xeqPlugins = false;
+	    this.setWCSSys(opts.wcssys);
+	}
+	// convert to image coords
 	arr = JS9.wcs2pix(this.raw.wcs, opts.ra, opts.dec).trim().split(/ +/);
+	// restore original wcssys
+	if( owcssys ){
+	    this.setWCSSys(owcssys);
+	    JS9.globalOpts.xeqPlugins = txeq;
+	}
+	// convert to display coords
 	pos = this.imageToDisplayPos({x: parseFloat(arr[0]),
 				      y: parseFloat(arr[1])});
 	nopts.left = pos.x;
@@ -10539,6 +10562,7 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "shape":
 	case "parent":
 	case "rtn":
+	case "_wcssys":
 	    return false;
 	case "text":
 	    if( opts.shape === "text" ){
@@ -13752,7 +13776,7 @@ JS9.Regions.copyRegions = function(to, which){
 // call using image context
 JS9.Regions.parseRegions = function(s, opts){
     var regions = [];
-    var i, j, k, lines, obj, robj;
+    var i, j, k, lines, obj, robj, txeq;
     var owcssys, owcsunits, wcssys, iswcs, liswcs, pos, alen;
     var regrexp = /(annulus)|(box)|(circle)|(ellipse)|(line)|(polygon)|(point)|(text)/;
     var wcsrexp = /(fk4)|(fk5)|(icrs)|(galactic)|(ecliptic)|(image)|(physical)/;
@@ -14008,6 +14032,13 @@ JS9.Regions.parseRegions = function(s, opts){
 		    obj.x = pos[0];
 		    obj.y = pos[1];
 		}
+		// if textOpts has ra, dec, save the wcssys, it may be
+		// different by the time textOpts gets processed
+		if( obj.textOpts                    &&
+		    obj.textOpts.ra  !== undefined  &&
+		    obj.textOpts.dec !== undefined  ){
+		    obj.textOpts._wcssys = wcssys;
+		}
 		// region arguments are optional
 		switch(robj.cmd){
 		case 'annulus':
@@ -14076,7 +14107,10 @@ JS9.Regions.parseRegions = function(s, opts){
 		// if its a wcs command
 		if( robj.cmd.match(wcsrexp) ){
 		    // reset the wcs system
+		    txeq = JS9.globalOpts.xeqPlugins;
+		    JS9.globalOpts.xeqPlugins = false;
 		    this.setWCSSys(robj.cmd);
+		    JS9.globalOpts.xeqPlugins = txeq;
 		    // get new wcssys
 		    wcssys = this.getWCSSys();
 		    // is this a real wcs?
@@ -14088,8 +14122,11 @@ JS9.Regions.parseRegions = function(s, opts){
 	}
     }
     // restore original wcs
+    txeq = JS9.globalOpts.xeqPlugins;
+    JS9.globalOpts.xeqPlugins = false;
     this.setWCSSys(owcssys);
     this.setWCSUnits(owcsunits);
+    JS9.globalOpts.xeqPlugins = txeq;
     // return the generated object
     return regions;
 };
