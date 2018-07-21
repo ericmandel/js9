@@ -279,7 +279,11 @@ JS9.Prefs.gridSchema = {
 	},
 	"margin": {
 	    "type": "number",
-	    "helper": "edge margin for displaying a line"
+	    "helper": "edge margin for displaying a grid line"
+	},
+	"labelMargin": {
+	    "type": "number",
+	    "helper": "edge margin for displaying a label"
 	},
 	"cover": {
 	    "type": "string",

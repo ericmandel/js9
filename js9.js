@@ -14461,6 +14461,7 @@ JS9.Grid.opts = {
     reduceDims: true,
     strokeWidth: 1,
     margin:   0,
+    labelMargin: 10,
     stride:  32,
     raLines:  8,
     raSkip:  0,
@@ -14761,8 +14762,8 @@ JS9.Grid.display = function(mode, myopts){
 		x = parseFloat(arr[0]);
 		y = parseFloat(arr[1]);
 		dpos = this.imageToDisplayPos({x: x, y: y});
-		if( dpos.x > this.ix && dpos.x < (this.rgb.img.width+this.ix) &&
-		    dpos.y > this.iy && dpos.y < (this.rgb.img.height+this.iy)){
+		if( dpos.x > (this.ix+opts.labelMargin) && dpos.x < (this.rgb.img.width+this.ix-opts.labelMargin) &&
+		    dpos.y > (this.iy+opts.labelMargin) && dpos.y < (this.rgb.img.height+this.iy-opts.labelMargin)){
 		    if( decskip >= opts.decSkip ){
 			s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "fontStyle":"%s", "fontWeight":"%s", "originX":"left", "originY":"top"};',
 				 x + decoffx, y + decoffy,
@@ -14799,8 +14800,8 @@ JS9.Grid.display = function(mode, myopts){
 		x = parseFloat(arr[0]);
 		y = parseFloat(arr[1]);
 		dpos = this.imageToDisplayPos({x: x, y: y});
-		if( dpos.x > this.ix && dpos.x < (this.rgb.img.width+this.ix) &&
-		    dpos.y > this.iy && dpos.y < (this.rgb.img.height+this.iy)){
+		if( dpos.x > (this.ix+opts.labelMargin) && dpos.x < (this.rgb.img.width+this.ix-opts.labelMargin) &&
+		    dpos.y > (this.iy+opts.labelMargin) && dpos.y < (this.rgb.img.height+this.iy-opts.labelMargin)){
 		    if( raskip >= opts.raSkip ){
 			s += sprintf('text(%s,%s,%s,%s) {"color":"%s", "fontFamily":"%s", "fontSize":%s, "fontStyle":"%s", "fontWeight":"%s", "originX":"left", "originY":"top"};',
 				 x + raoffx, y + raoffy,
