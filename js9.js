@@ -10172,7 +10172,13 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    opts.dec = JS9.saostrtod(opts.dec);
 	}
 	// make sure we have the right wcssys
-	if( opts._wcssys ){
+	if( opts.wcssys ){
+	    // from passed-in opts
+	    owcssys = this.getWCSSys();
+	    txeq = JS9.globalOpts.xeqPlugins;
+	    JS9.globalOpts.xeqPlugins = false;
+	    this.setWCSSys(opts.wcssys);
+	} else if( opts._wcssys ){
 	    // local override from parseRegions
 	    owcssys = this.getWCSSys();
 	    txeq = JS9.globalOpts.xeqPlugins;
@@ -10180,12 +10186,6 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    this.setWCSSys(opts._wcssys);
 	    // no longer needed or wanted
 	    delete opts._wcssys;
-	} else if( opts.wcssys ){
-	    // from the  passed-in opts
-	    owcssys = this.getWCSSys();
-	    txeq = JS9.globalOpts.xeqPlugins;
-	    JS9.globalOpts.xeqPlugins = false;
-	    this.setWCSSys(opts.wcssys);
 	}
 	// convert to image coords
 	arr = JS9.wcs2pix(this.raw.wcs, opts.ra, opts.dec).trim().split(/ +/);
