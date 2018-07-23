@@ -344,6 +344,10 @@ JS9.Menubar.createMenus = function(){
 		}
 		items["sep" + n++] = "------";
 		items.print = xname("print ...");
+		if( window.isElectron && window.electronIPC ){
+		    items.windowPrint = xname("print window ...");
+		    items.windowPDF = xname("save window to pdf");
+		}
 		items.header = xname("display FITS header");
 		items.hdus = xname("display FITS HDUs");
 		if( !tim || !tim.hdus ){
@@ -630,6 +634,16 @@ JS9.Menubar.createMenus = function(){
 			case "print":
 			    if( uim ){
 				uim.print();
+			    }
+			    break;
+			case "windowPrint":
+			    if( window.isElectron && window.electronIPC ){
+				JS9.WindowPrint();
+			    }
+			    break;
+			case "windowPDF":
+			    if( window.isElectron && window.electronIPC ){
+				JS9.WindowToPDF();
 			    }
 			    break;
 			case "separate":

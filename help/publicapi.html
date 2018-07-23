@@ -3736,6 +3736,53 @@ By default, if a colorbar is active on the page, it will be placed
 beneath the image. You can pass the <b>colorbar: false</b> option
 in the <b>opts</b> object to avoid printing the active colorbar.
 
+<h5 id="JS9.WindowPrint">Print the desktop window (<b>desktop app only</b>)</h5>
+<p>
+<code class="api">JS9.WindowPrint(opts)</code>
+<p>
+where:
+<ul>
+<li><b>opts</b>: options for print
+</ul>
+<p>
+The JS9 desktop application that utilizes 
+<a href="https://electronjs.org">Electron.js</a> has the ability to
+print the whole application window. When executed, the system print
+dialog box is displayed (unless the <b>silent</b> the option is passed in
+opts) and the window will be printed according to your print configuration.
+<p>
+The first argument allows you to specify the following options:
+<ul>
+<li><b>silent</b>: don't ask user for print settings (def: false)
+<li><b>printBackground</b>: prints the background color and image of the web page (def: true)
+<li><b>deviceName</b>: set the printer device name to use (def: "")
+</ul>
+
+
+<h5 id="JS9.WindowToPDF">Save the desktop window to a PDF file (<b>desktop app only</b>)</h5>
+<p>
+<code class="api">JS9.WindowToPDF(filename, opts)</code>
+<p>
+where:
+<ul>
+<li><b>filename</b>: PDF file name
+<li><b>opts</b>: options for save
+</ul>
+<p>
+The JS9 desktop application that utilizes 
+<a href="https://electronjs.org">Electron.js</a> has the ability to
+save the whole application window to a PDF file. The first argument specifies
+the name of the PDF file.
+<p>
+The second argument allows you to specify the following options:
+<ul>
+<li><b>marginsType</b>: the type of margins to use: 0 for default margin, 1 for no margin, and 2 for minimum margin
+<li><b>pageSize</b>: page size of the generated PDF: A3, A4, A5, Legal, Letter, Tabloid (NB: might not work with all printers)
+<li><b>printBackground</b>: prints the background color and image of the web page (def: true)
+<li><b>printSelectionOnly</b>: whether to print selection only (<b>NB: This seems to crash the application!</b>)
+<li><b>landscape</b>: true for landscape, false for portrait
+</ul>
+
 <h5 id="JS9.SaveFITS">Save image as a FITS file</h5>
 <p>
 <code class="api">JS9.SaveFITS(filename)</code>

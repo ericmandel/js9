@@ -20501,6 +20501,43 @@ JS9.mkPublic("LightWindow", function(id, type, content, title, opts){
     return JS9.lightWin(id, type, content, title, opts);
 });
 
+// print window (Desktop JS9 only)
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("WindowPrint", function(args){
+    var opts = {cmd: "print"};
+    var obj = JS9.parsePublicArgs(arguments);
+    if( obj.argv[0] ){
+	opts.opts = obj.argv[0];
+    }
+    if( window.isElectron && window.electronIPC ){
+	window.setTimeout(function(){
+	    try{ window.electronIPC.send("msg", opts); }
+	    catch(e){ JS9.error("could not print window", e); }
+	}, JS9.TIMEOUT);
+    } else {
+	JS9.error("WindowPrint is only available for the JS9 desktop app");
+    }
+});
+
+// save PDF of window (Desktop JS9 only)
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("WindowToPDF", function(args){
+    var obj = JS9.parsePublicArgs(arguments);
+    var opts = {cmd: "pdf"};
+    opts.filename = obj.argv[0] || "js9.pdf";
+    if( obj.argv[1] ){
+	opts.opts = obj.argv[1];
+    }
+    if( window.isElectron && window.electronIPC ){
+	window.setTimeout(function(){
+	    try{ window.electronIPC.send("msg", opts); }
+	    catch(e){ JS9.error("could not create window pdf", e); }
+	}, JS9.TIMEOUT);
+    } else {
+	JS9.error("WindowToPDF is only available for the JS9 desktop app");
+    }
+});
+
 // end of Public Interface
 
 // return namespace

@@ -23,8 +23,11 @@ const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 // module to control ipc
 const ipcMain = electron.ipcMain;
+// dialog support
+const dialog = electron.dialog;
 
 const path = require('path');
+const fs = require('fs');
 // const proc = require('child_process');
 const ps = require('ps-node');
 
@@ -80,6 +83,22 @@ js9Electron.preload = path.join(__dirname, "js9ElectronPreload.js");
 
 // helper page
 js9Electron.helperpage = path.join(__dirname, "js9Helper.js");
+
+// pdf options
+js9Electron.printOpts = {
+    silent: false,
+    printBackground: true,
+    deviceName: ""
+};
+
+// print options
+js9Electron.pdfOpts = {
+    marginsType: 0,
+    pageSize: "A3",
+    printBackground: true,
+    printSelectionOnly: false,
+    landscape: false
+};
 
 // command line arguments
 js9Electron.argv = require('minimist')(process.argv.slice(2));
@@ -197,11 +216,64 @@ app.on('activate', () => {
 
 // process messages from js9
 ipcMain.on('msg', (event, arg) => {
+    var obj, file, opts;
+    var win = js9Electron.win;
     switch(arg){
     case "startHelper":
 	startHelper(true);
 	break;
     default:
+	obj = arg;
+	if( typeof obj === "string" ){
+	    try{ obj = JSON.parse(obj); }
+	    catch(e){
+		dialog.showErrorBox("ERROR parsing JSON opts: ", e.message);
+	    }
+	}
+	if( typeof obj === "object" ){
+	    switch(obj.cmd){
+	    case "print":
+		opts = Object.assign(js9Electron.printOpts, obj.opts);
+		try{
+		    win.webContents.print(opts, function(e){
+			if( !e ){
+			    dialog.showErrorBox("ERROR WindowPrint", e.message);
+			    return;
+			}
+		    });
+		}
+		catch(e){
+		    dialog.showErrorBox("ERROR WindowPrint", e.message);
+		}
+		break;
+	    case "pdf":
+		file = obj.filename || "js9.pdf";
+		opts = Object.assign(js9Electron.pdfOpts, obj.opts);
+		try{
+		    win.webContents.printToPDF(opts, function(e, data){
+			if( e ){
+			    dialog.showErrorBox("ERROR WindowToPDF: ",
+						e.message);
+			    return;
+			}
+			fs.writeFile(file, data, function(e) {
+			    if( e ){
+				dialog.showErrorBox("ERROR WindowToPDF: ",
+						    e.message);
+				return;
+			    }
+			});
+		    });
+		}
+		catch(e){
+		    dialog.showErrorBox("ERROR WindowToPDF", e.message);
+		}
+
+		break;
+	    default:
+		break;
+	    }
+	}
 	break;
     }
 });
