@@ -8984,12 +8984,22 @@ JS9.Helper.prototype.connect = function(type){
 			JS9.log("JS9 helper: connect timeout");
 		    }
 		});
-		that.socket.on("disconnect", function(){
+		that.socket.on("disconnect", function(reason){
 		    that.connected = false;
 		    that.helper = false;
 		    if( JS9.DEBUG > 1 ){
 			JS9.log("JS9 helper: disconnect");
 		    }
+		    // https://github.com/socketio/socket.io-client/blob/master/docs/API.md#event-disconnect
+		    if( reason === 'io server disconnect' ){
+			// the disconnection was initiated by the server,
+			// you need to reconnect manually
+			if( JS9.DEBUG > 1 ){
+			    JS9.log("JS9 helper: manual reconnect");
+			}
+			that.socket.connect();
+		    }
+		    // else the socket will automatically try to reconnect
 		});
 		that.socket.on("reconnect", function(){
 		    that.connected = true;
