@@ -8191,23 +8191,32 @@ JS9.Display.prototype.separate = function(opts){
 	sep.leftExtra = 0;
 	sep.js9 = $("#"+fromID);
 	sep.menubar = $("#"+fromID+"Menubar");
+	if( sep.menubar.length > 0 ){
+	    sep.menubar.isactive = sep.menubar.closest(".JS9PluginContainer").css("visibility") === "visible";
+	}
 	sep.toolbar = $("#"+fromID+"Toolbar");
+	if( sep.toolbar.length > 0 ){
+	    sep.toolbar.isactive = sep.toolbar.closest(".JS9PluginContainer").css("visibility") === "visible";
+	}
 	sep.colorbar = $("#"+fromID+"Colorbar");
+	if( sep.colorbar.length > 0 ){
+	    sep.colorbar.isactive = sep.colorbar.closest(".JS9PluginContainer").css("visibility") === "visible";
+	}
 	if( sep.js9.length > 0 ){
 	    // hack: height of the dhtml drag handle and status area
 	    sep.width = sep.js9.width();
 	    sep.height = sep.js9.height();
 	    sep.top = sep.js9.offset().top - $(window).scrollTop();
 	    sep.left = sep.js9.offset().left - $(document).scrollLeft();
-	    if( sep.menubar.length > 0 ){
+	    if( sep.menubar.isactive ){
 		sep.height += sep.menubar.height();
 		sep.top -= sep.menubar.height();
 	    }
-	    if( sep.toolbar.length > 0 ){
+	    if( sep.toolbar.isactive ){
 		sep.height += sep.toolbar.height();
 		sep.top -= sep.toolbar.height();
 	    }
-	    if( sep.colorbar.length > 0 ){
+	    if( sep.colorbar.isactive ){
 		sep.height += sep.colorbar.height();
 		sep.top -= sep.colorbar.height();
 		sep.top += COLORBAR_FUDGE;
@@ -8219,17 +8228,17 @@ JS9.Display.prototype.separate = function(opts){
 	if( fromID ){
 	    if( sep.js9.length > 0 ){
 		html = "";
-		if( sep.menubar.length > 0 ){
+		if( sep.menubar.isactive ){
 		    html += sprintf(menuStr, toID, sep.js9.width());
 		}
-		if( sep.toolbar.length > 0 ){
+		if( sep.toolbar.isactive ){
 		    html += sprintf(toolStr, toID, sep.js9.width());
 		}
 		html += sprintf(js9Str,
 				toID,
 				sep.js9.width()-SIZE_FUDGE,
 				sep.js9.height()-SIZE_FUDGE);
-		if( sep.colorbar.length > 0 ){
+		if( sep.colorbar.isactive ){
 		    html += sprintf(colorStr, toID, sep.js9.width());
 		}
 	    }
