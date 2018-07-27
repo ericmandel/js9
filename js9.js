@@ -8135,7 +8135,13 @@ JS9.Display.prototype.center = function(){
 
 // gather images from other displays into this display
 JS9.Display.prototype.gather = function(opts){
+    var that = this;
     var i, arr, uim;
+    // allow json opts
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error("can't parse gather opts: " + opts, e); }
+    }
     // opts are optional
     opts = opts || {};
     // array of images to use or all of them
@@ -8148,6 +8154,12 @@ JS9.Display.prototype.gather = function(opts){
 	}
 	if( uim && uim.display !== this ){
 	    uim.moveToDisplay(this);
+	}
+    }
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	if( that.image ){
+	    that.image.xeqPlugins("image", "ongatherdisplay");
 	}
     }
 };
@@ -8320,11 +8332,19 @@ JS9.Display.prototype.separate = function(opts){
 		// this image is in a different display, so process next image
 		separateim(arr, n+1);
 	    }
+	} else {
+	    // extended plugins
+	    if( JS9.globalOpts.extendedPlugins ){
+		if( that.image ){
+		    that.image.xeqPlugins("image", "onseparatedisplay");
+		}
+	    }
 	}
     };
+    // allow json opts
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse displaySeparate opts: " + opts, e); }
+	catch(e){ JS9.error("can't parse separate opts: " + opts, e); }
     }
     // opts are optional
     opts = opts || {};

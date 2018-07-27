@@ -167,6 +167,9 @@ JS9.Separate.addImage = function(im){
     });
     // one more div in the stack
     this.separateDivs++;
+    // check the selected box, if necessary
+    divjq.find('.separateActiveCheck')
+	.prop('checked', im.tmp.separateMode === true);
     //make it the current one
     JS9.Separate.activeImage(im);
 };
@@ -189,6 +192,7 @@ JS9.Separate.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Separate.init = function(){
+    var that = this;
     var i, s, im, dispid;
     var opts = [];
     // on entry, these elements have already been defined:
@@ -199,7 +203,6 @@ JS9.Separate.init = function(){
     // this.dispMode: display mode (for internal use)
     //
     // create container to hold image container and header
-    var that = this;
     // clean main container
     this.divjq.html("");
     // no images/divs loaded yet
@@ -273,10 +276,18 @@ JS9.Separate.imageclose = function(im){
     JS9.Separate.removeImage.call(this, im);
 };
 
+// callback when image is displayed
+JS9.Separate.reinit = function(im){
+    if( im ){
+	JS9.Separate.init.call(this);
+    }
+};
+
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Separate.CLASS, JS9.Separate.NAME, JS9.Separate.init,
 		   {menuItem: "Separate/Gather",
 		    onplugindisplay: JS9.Separate.init,
+		    ongatherdisplay: JS9.Separate.reinit,
 		    onimageload: JS9.Separate.imageload,
 		    onimagedisplay: JS9.Separate.imagedisplay,
 		    onimageclose: JS9.Separate.imageclose,
