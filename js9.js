@@ -8134,11 +8134,19 @@ JS9.Display.prototype.center = function(){
 };
 
 // gather images from other displays into this display
-JS9.Display.prototype.gather = function(){
-    var i, uim;
-    for(i=0; i<JS9.images.length; i++){
-	uim = JS9.images[i];
-	if( this !== uim.display ){
+JS9.Display.prototype.gather = function(opts){
+    var i, arr, uim;
+    // opts are optional
+    opts = opts || {};
+    // array of images to use or all of them
+    arr = opts.images || JS9.images;
+    for(i=0; i<arr.length; i++){
+	if( typeof arr[i] === "number" ){
+	    uim = JS9.images[arr[i]];
+	} else {
+	    uim = arr[i];
+	}
+	if( uim && uim.display !== this ){
 	    uim.moveToDisplay(this);
 	}
     }
@@ -8147,7 +8155,7 @@ JS9.Display.prototype.gather = function(){
 // separate images in this display into new displays
 JS9.Display.prototype.separate = function(opts){
     var that = this;
-    var d0, d1;
+    var arr, d0, d1;
     var sep = {};
     var row = 0, col = 0;
     var myid = 1;
@@ -8263,20 +8271,24 @@ JS9.Display.prototype.separate = function(opts){
 	// return info for this  column;
 	return {id: toID, html: html, winopts: winopts};
     };
-    var separateim = function(n){
+    var separateim = function(arr, n){
 	var im, winopts;
 	var id;
-	if( JS9.images.length > n ){
-	    im = JS9.images[n];
-	    // display this image so it's the current one we move
-	    im.displayImage("all");
+	if( arr.length > n ){
+	    if( typeof arr[n] === "number" ){
+		im = JS9.images[arr[n]];
+	    } else {
+		im = arr[n];
+	    }
 	    // look for images in this display
-	    if( that === im.display ){
+	    if( im && im.display === that ){
+		// display this image so it's the current one we move
+		im.displayImage("all");
 		// leave the first one in place
 		if( d0 === undefined ){
-		    d0 = JS9.images[n].display.id;
+		    d0 = im.display.id;
 		    initopts(d0, opts);
-		    separateim(n+1);
+		    separateim(arr, n+1);
 		} else {
 		    // create a new window for this image
 		    if( typeof opts.idbase === "string" ){
@@ -8293,7 +8305,7 @@ JS9.Display.prototype.separate = function(opts){
 				// move this image
 				im.moveToDisplay(d1);
 				// process next image
-				separateim(n+1);
+				separateim(arr, n+1);
 			    }, 0);
 			});
 		    winopts = getopts(d0, d1);
@@ -8305,8 +8317,8 @@ JS9.Display.prototype.separate = function(opts){
 		    JS9.LoadWindow(null, winopts);
 		}
 	    } else {
-		// this image is in a diffferent display, so process next image
-		separateim(n+1);
+		// this image is in a different display, so process next image
+		separateim(arr, n+1);
 	    }
 	}
     };
@@ -8316,8 +8328,10 @@ JS9.Display.prototype.separate = function(opts){
     }
     // opts are optional
     opts = opts || {};
+    // array of images to use
+    arr = opts.images || JS9.images;
     //  start separating the images
-    separateim(0);
+    separateim(arr, 0);
 };
 
 // display the next image from the JS9 images list that is in this display
@@ -20196,13 +20210,33 @@ JS9.mkPublic("SelectDisplay", function(){
 });
 
 // gather images from other displays into this display
-JS9.mkPublic("GatherDisplay", function(){
+JS9.mkPublic("GatherDisplay", function(did, opts){
+    var display;
     var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.argv[0] || obj.display);
+    switch(obj.argv.length){
+    case 0:
+	did = obj.display;
+	opts = null;
+	break;
+    case 1:
+	if( typeof obj.argv[0] === "object" ||
+	    (typeof obj.argv[0] === "string" && obj.argv[0].charAt(0) === "{")){
+	    did = obj.display;
+	    opts = obj.argv[0];
+	} else {
+	    did = obj.argv[0] || obj.display;
+	}
+	break;
+    default:
+	did = obj.argv[0] || obj.display;
+	opts = obj.argv[1];
+	break;
+    }
+    display = JS9.lookupDisplay(did);
     if( !display ){
 	JS9.error("invalid display for gather");
     }
-    JS9.Display.prototype.gather.call(display);
+    JS9.Display.prototype.gather.call(display, opts);
     return;
 });
 
@@ -20213,6 +20247,7 @@ JS9.mkPublic("SeparateDisplay", function(did, opts){
     switch(obj.argv.length){
     case 0:
 	did = obj.display;
+	opts = null;
 	break;
     case 1:
 	if( typeof obj.argv[0] === "object" ||

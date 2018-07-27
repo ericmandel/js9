@@ -1,0 +1,54 @@
+div.JS9SeparateContainer {
+    padding: 2px;
+}
+
+div.JS9SeparateImage {
+    margin: 5px;
+    background: #E9E9E9;
+    overflow: auto;
+}
+
+div.JS9SeparateImageInactive {
+    padding: 10px;
+    border: 1px solid black;
+}
+
+div.JS9SeparateImageActive {
+    padding: 9px;
+    border: 2px solid #00F000;
+}
+
+div.JS9SeparateHeader {
+    border: 0px solid black;
+    background: #E9E9E9;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+}
+
+input.separateButton1 {
+    position: relative;
+    width: 120px;
+    left: 10px;
+}
+
+input.separateButton2 {
+    position: relative;
+    width: 90px;
+    left: 30px;
+}
+
+select.separateLayoutSelect {
+   margin-right: 5px;
+}
+
+#separateFile {
+    float: right;
+}
+
+#separateNoFile {
+    margin-left: 15px;
+}
+

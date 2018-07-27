@@ -3611,11 +3611,12 @@ the <b>File:new JS9 light window</b> menu option.
 
 <h5 id="JS9.GatherDisplay">Gather other images to this JS9 Display</h5>
 <p>
-<code class="api">JS9.GatherDisplay(dname)</code>
+<code class="api">JS9.GatherDisplay(dname, opts)</code>
 <p>
 where:
 <ul>
 <li><b>dname</b>: name of JS9 display to which the images will be gathered
+<li><b>opts</b>: optional object
 </ul>
 <p>
 This routine move all images in other displays to this display. 
@@ -3627,6 +3628,10 @@ or:
 <pre>
     JS9.GatherDisplay({display: "myJS9"});
 </pre>
+You can supply an opts object containing the properties:
+<ul>
+<li><b>images</b>: array of image handles (or indexes into JS9.images array) to gather
+</ul>
 
 <h5 id="JS9.SeparateDisplay">Separate images in this JS9 Display into new displays</h5>
 <p>
@@ -3646,8 +3651,9 @@ or:
 <pre>
     JS9.SeparateDisplay({display: "myJS9"});
 </pre>
-You also can supply an opts object containing the layout properties:
+You also can supply an opts object containing the properties:
 <ul>
+<li><b>images</b>: array of image handles (or indexes into JS9.images array) to separate
 <li><b>layout</b>: can be "horizontal", "vertical", "auto" (default: "auto")
 <li><b>leftMargin</b>: margin in pixels between horizontally separated images
 <li><b>topMargin</b>: margin in pixels between vertically separated images
