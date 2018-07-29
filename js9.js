@@ -251,7 +251,7 @@ JS9.imageOpts = {
     nancolor: "#000000",		// 6-digit #hex color for NaN values
     wcsalign: true,			// align image using wcs after reproj?
     rotationMode: "relative",		// default: relative or absolute?
-    crosshair: true,			// enable crosshair?
+    crosshair: false,			// enable crosshair?
     ltvbug:  true,			// add 0.5/ltm to image LTV values?
     listonchange: false			// whether to list after a reg change
 };
