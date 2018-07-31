@@ -101,6 +101,7 @@ JS9.PIXEL_RATIO = (function(){
 JS9.globalOpts = {
     helperType: "none",		// one of: sock.io, get, post, none
     helperPort: 2718,		// default port for node.js helper
+    requireHelper: false,       // throw error if helper is needed but not available?
     useWasm: true,		// use WebAssembly if available?
     winType: "light",		// plugin window: "light" or "new"
     rgb: {active: false,	// RGB mode
@@ -8959,11 +8960,20 @@ JS9.Helper.prototype.connect = function(type){
 	that.ready = true;
 	$(document).trigger("JS9:helperReady",
 			    {type: "socket.io", status: "error"});
-	if( JS9.DEBUG ){
-	    textStatus = textStatus || "timeout";
-	    if( !errorThrown || errorThrown === "timeout" ){
-		errorThrown = "or connection refused";
-	    }
+	textStatus = textStatus || "timeout";
+	if( !errorThrown || errorThrown === "timeout" ){
+	    errorThrown = "or connection refused";
+	}
+	if( errorThrown === textStatus  ){
+	    textStatus = "";
+	}
+	if( errorThrown === "error" ){
+	    errorThrown = "is the helper running?";
+	}
+	// thow error if needed
+	if( JS9.globalOpts.requireHelper ){
+	    JS9.error("helper connect error: " + textStatus + " " + errorThrown);
+	} else if( JS9.DEBUG ){
 	    JS9.log(sprintf("JS9 helper connect error: %s (%s)",
 			    textStatus, errorThrown));
 	}
@@ -15745,9 +15755,17 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
     }
     // repfiles require a connected helper, a js9helper program, and a
     // socket.io connection
-    if( !JS9.helper.connected || !JS9.helper.js9helper ||
+    if( !JS9.helper.connected ||
 	(JS9.helper.type !== "nodejs" && JS9.helper.type !== "socket.io") ){
 	return false;
+    }
+    // if the helper program does not exist, we might want to throw an error
+    if( !JS9.helper.js9helper ){
+	if( JS9.globalOpts.requireHelper ){
+	    JS9.error("js9helper executable not found for fits2fits processing");
+	} else {
+	    return false;
+	}
     }
     // sanity check and pre-processing
     switch(xmsg){
