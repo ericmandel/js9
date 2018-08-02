@@ -120,9 +120,9 @@ JS9.globalOpts = {
     containContrastBias: false, // contrast/bias only when mouse is in display?
     wcsCrosshair: false,	// enable wcs crosshair matching?
     magnifierRegions: true,	// display regions in magnifier?
-    htimeout: 5000,		// connection timeout for the helper connect
-    lhtimeout: 1000,		// connection timeout for local helper connect
-    ehtimeout: 1000,		// connection timeout for Electron connect
+    htimeout: 20000,		// connection timeout for the helper connect
+    lhtimeout: 10000,		// connection timeout for local helper connect
+    ehtimeout: 10000,		// connection timeout for Electron connect
     ehretries: 10,		// connection retries Electron connect
     xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
@@ -9041,7 +9041,7 @@ JS9.Helper.prototype.connect = function(type){
 		    that.connected = false;
 		    that.helper = false;
 		    if( JS9.DEBUG > 1 ){
-			JS9.log("JS9 helper: disconnect");
+			JS9.log("JS9 helper: disconnect: " + reason);
 		    }
 		    // https://github.com/socketio/socket.io-client/blob/master/docs/API.md#event-disconnect
 		    if( reason === 'io server disconnect' ){
