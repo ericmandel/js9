@@ -120,9 +120,9 @@ JS9.globalOpts = {
     containContrastBias: false, // contrast/bias only when mouse is in display?
     wcsCrosshair: false,	// enable wcs crosshair matching?
     magnifierRegions: true,	// display regions in magnifier?
-    htimeout: 20000,		// connection timeout for the helper connect
-    lhtimeout: 10000,		// connection timeout for local helper connect
-    ehtimeout: 10000,		// connection timeout for Electron connect
+    htimeout: 5000,		// connection timeout for the helper connect
+    lhtimeout: 1000,		// connection timeout for local helper connect
+    ehtimeout: 1000,		// connection timeout for Electron connect
     ehretries: 10,		// connection retries Electron connect
     xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
@@ -4336,6 +4336,31 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     var i, a, m;
     var that = this;
     var obj = {};
+    var analError = function(s, t){
+	// shouldn't happen
+	if( !JS9.helper ){
+	    JS9.error(s, t);
+	}
+	switch(JS9.helper.type){
+	case 'nodejs':
+	case 'socket.io':
+	    // when socket.io is long-polling, throwing an error prevent the
+	    // polling from completing, leading to a timeout error and disaster.
+	    // to allow the polling to complete, throw the error after a delay
+	    if( JS9.helper.socket &&
+		JS9.helper.socket.io.engine.transport.name === "polling"){
+		window.setTimeout(function(){
+		    JS9.error(s, t);
+		}, 0);
+	    } else {
+		JS9.error(s, t);
+	    }
+	    break;
+	default:
+	    JS9.error(s, t);
+	    break;
+	}
+    };
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
@@ -4416,7 +4441,8 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    JS9.log(s);
 		} else {
 		    // otherwise, throw an error
-		    JS9.error(s, JS9.analOpts.epattern);
+		    analError(s, JS9.analOpts.epattern);
+		    return;
 		}
 	    } else if( robj.errcode ){
 		s = sprintf("ERROR: running %s [%s]", a.name, robj.errcode);
@@ -4425,7 +4451,8 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    JS9.log(s);
 		} else {
 		    // otherwise, throw an error
-		    JS9.error(s, JS9.analOpts.epattern);
+		    analError(s, JS9.analOpts.epattern);
+		    return;
 		}
 	    }
 	    // display according to type
@@ -8985,7 +9012,6 @@ JS9.Helper.prototype.connect = function(type){
 	    dataType: "script",
 	    timeout: JS9.globalOpts.htimeout,
 	    success:  function(){
-		var ii, d;
 		var sockopts = {
 		    reconnection: true,
 		    reconnectionDelay: 1000,
@@ -9003,13 +9029,15 @@ JS9.Helper.prototype.connect = function(type){
 		that.socket = io.connect(that.url, sockopts);
 		// on-event processing
 		that.socket.on("connect", function(){
+		    var ii, d, p;
 		    that.connected = true;
 		    that.helper = true;
 		    d = [];
 		    for(ii=0; ii<JS9.displays.length; ii++){
 			d.push(JS9.displays[ii].id);
 		    }
-		    that.socket.emit("initialize", {displays: d}, function(obj){
+		    p = that.pageid;
+		    that.socket.emit("initialize", {displays: d, pageid: p}, function(obj){
 			that.pageid = obj.pageid;
 			that.js9helper = obj.js9helper;
 			JS9.globalOpts.dataPathModify = obj.dataPathModify;
@@ -20193,10 +20221,14 @@ JS9.mkPublic("InstallDir", function(dir){
 
 // add new display divs and/or new plugins
 JS9.mkPublic("AddDivs", function(){
-    var i;
+    var i, id;
     var obj = JS9.parsePublicArgs(arguments);
     for(i=0; i< obj.argv.length; i++){
-	JS9.checkNew(new JS9.Display(obj.argv[i]));
+	id = obj.argv[i];
+	// add this dsplay to array of displays
+	JS9.checkNew(new JS9.Display(id));
+	// tell helper about this display
+	JS9.helper.send("addDisplay", {"display": id});
     }
     JS9.instantiatePlugins();
 });

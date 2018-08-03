@@ -42,6 +42,8 @@ var fits2fits = {};
 var quotacheck = {};
 var analysis = {str:[], pkgs:[]};
 var plugins = [];
+var js9Queue = {};
+var rmQueue = {};
 
 // secure options ... change as necessary in securefile
 var secureOpts = {
@@ -65,6 +67,7 @@ var globalOpts = {
     maxTextBuffer:    5*1024000,   // exec buffer: good for text
     textEncoding:     "ascii",     // encoding for returned stdout from exec
     rmWorkDir:        true,        // remove workdir on disconnect?
+    rmWorkDelay:      15000,       // delay before removing workdir
     remoteMsgs:       1 // 0 => none, 1 => samehost, 2 => all
 };
 // globalOpts that might need to have paths relative to __dirname
@@ -595,6 +598,10 @@ var execCmd = function(io, socket, obj, cbfunc) {
 	       encoding: globalOpts.textEncoding};
     // sanity check
     if( !obj.cmd || !socket.js9 ){
+	if( cbfunc ){
+	    res.stderr = "js9 helper is unavailable";
+	    cbfunc(res);
+	}
 	return;
     }
     // stdin processing
@@ -828,15 +835,23 @@ var socketioHandler = function(socket) {
     // returns: N/A
     // for other implementations, this is needed if you want to:
     //   show disconnects in the log
-    socket.on("disconnect", function() {
+    socket.on("disconnect", function(reason) {
 	var myhost = getHost(io, socket);
 	// only process disconnect for displays (not js9 msgs or workers)
 	if( socket.js9 && socket.js9.displays && !socket.js9worker ){
-            clog("disconnect: %s (%s)",	myhost, socket.js9.displays);
-	    // clean up working directory
+            clog("disconnect: %s (%s) [%s]",
+		 myhost, socket.js9.displays, reason);
+	    // clean up working directory, unless we reconnected
 	    // use sync to prevent Electron.js from exiting too soon
 	    if( socket.js9.aworkDir && globalOpts.rmWorkDir ){
-		rmdir.sync(socket.js9.aworkDir);
+		// timeout allows page to reconnect before we delete
+		rmQueue[socket.js9.pageid] = socket.js9.aworkDir;
+		setTimeout(function(){
+		    if( rmQueue[socket.js9.pageid] ){
+			rmdir.sync(socket.js9.aworkDir);
+			delete rmQueue[socket.js9.pageid];
+		    }
+		}, globalOpts.rmWorkDelay);
 	    }
 	}
     });
@@ -850,7 +865,16 @@ var socketioHandler = function(socket) {
 	if( !obj ){return;}
 	socket.js9 = {};
 	socket.js9.displays = obj.displays;
-	socket.js9.pageid = uuidv4();
+	if( obj.pageid ){
+	    // reconnect: use old pageid
+	    socket.js9.pageid = obj.pageid;
+	    // remove from queue, if necessary
+	    delete rmQueue[socket.js9.pageid];
+	} else {
+	    // new page: use new pageid
+	    socket.js9.pageid = uuidv4();
+	}
+	js9Queue[socket.js9.pageid] = socket.js9;
 	socket.js9.aworkDir = null;
 	socket.js9.rworkDir = null;
 	// create top-level workDir, if necessary
@@ -872,11 +896,13 @@ var socketioHandler = function(socket) {
 	    socket.js9.aworkDir = aworkdir + "/" + socket.js9.pageid;
 	    // relative path of workdir
 	    socket.js9.rworkDir = globalOpts.workDir + "/" + socket.js9.pageid;
-	    try{ fs.mkdirSync(socket.js9.aworkDir, parseInt('0755',8)); }
-	    catch(e){
-		cerr("can't create page workDir: ", e.message);
-		socket.js9.aworkDir = null;
-		socket.js9.rworkDir = null;
+	    if( !fs.existsSync(socket.js9.aworkDir) ){
+		try{ fs.mkdirSync(socket.js9.aworkDir, parseInt('0755',8)); }
+		catch(e){
+		    cerr("can't create page workDir: ", e.message);
+		    socket.js9.aworkDir = null;
+		    socket.js9.rworkDir = null;
+		}
 	    }
 	}
 	// can we find the helper program?
@@ -1267,6 +1293,21 @@ process.on('SIGUSR2', function(signal){
 // last ditch attempt to keep the server up
 process.on("uncaughtException", function(e){
     cerr("uncaughtException: %s [%s]", e, e.stack || e.stacktrace || "");
+});
+
+// clean up on exit
+process.on("exit", function(){
+    var i, client;
+    var clients = getClients(io);
+    // remove client work dirs, if necessary
+    if( globalOpts.rmWorkDir ){
+	for(i=0; i<clients.length; i++){
+	    client = clients[i];
+	    if( client && client.js9 && client.js9.aworkDir ){
+		rmdir.sync(client.js9.aworkDir);
+	    }
+	}
+    }
 });
 
 // in case we are called as a module
