@@ -5436,6 +5436,13 @@ JS9.Image.prototype.setParam = function(param, value){
     // merge in new params
     if( param === "all" && typeof value === "object" ){
 	$.extend(true, this.params, value);
+	//hack: make this routine sort of work like setScale and setColormap
+	if( value.colormap ){
+	    this.setColormap(value.colormap, value.contrast, value.bias);
+	}
+	if( value.scale ){
+	    this.setScale(value.scale);
+	}
 	return this.params;
     }
     // save old value
