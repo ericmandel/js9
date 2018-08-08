@@ -1248,7 +1248,7 @@ An object containing x and y properties can also be supplied.
 <p>
 where:
 <ul>
-<li><b>param</b>: name of the parameter
+<li><b>param</b>: name of the parameter or "all"
 </ul>
 <p>
 returns:
@@ -1262,6 +1262,7 @@ below in the
 <a href="#JS9.SetParam"><b>SetParam()</b></a>
 section.
 </p>
+In the value of param is "all", the entire param object is returned.
 
 <h5 id="JS9.SetParam">Set an image parameter value</h5>
 <p>
@@ -1269,13 +1270,13 @@ section.
 <p>
 where:
 <ul>
-<li><b>param</b>: name of the parameter
-<li><b>val</b>: new value of the parameter
+<li><b>param</b>: name of the parameter or "all"
+<li><b>val</b>: new value of the parameter or param object to merge
 </ul>
 <p>
 returns:
 <ul>
-<li><b>ovalue</b>: the previous value of the parameter
+<li><b>ovalue</b>: the previous value of the parameter or the new param object
 </ul>
 A number of miscellaneous image parameters are copied from the
 JS9.imageOpts object to each image when it is first loaded. You can
@@ -1304,6 +1305,17 @@ be useful when temporarily turning off a function. For example:
 will temporarily disable execution of the previously defined regions
 onload callback, resetting it to the old value after processing
 is complete.
+<p>
+If param is "all" and the second argument is an object, this object is
+merged into the current param object. This allows you to save the params from
+one image and restore them to another.
+<p>
+Note that setting one or all of the params does not change the
+displayed image.  To redisplay the image with the new parameters
+in effect, call:
+<pre>
+    JS9.DisplayImage("all");
+</pre>
 
 <h5 id="JS9.EventToDisplayPos">Get the display coordinates from an event</h5>
 <p>

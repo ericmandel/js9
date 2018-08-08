@@ -5418,6 +5418,10 @@ JS9.Image.prototype.getParam = function(param){
     if( !param ){
 	return null;
     }
+    // return param object
+    if( param === "all" ){
+	return this.params;
+    }
     // return value
     return this.params[param];
 };
@@ -5428,6 +5432,11 @@ JS9.Image.prototype.setParam = function(param, value){
     // sanity check
     if( !param ){
 	return null;
+    }
+    // merge in new params
+    if( param === "all" && typeof value === "object" ){
+	$.extend(true, this.params, value);
+	return this.params;
     }
     // save old value
     ovalue = this.params[param];
