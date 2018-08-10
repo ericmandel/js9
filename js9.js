@@ -528,6 +528,10 @@ JS9.Image = function(file, params, func){
 	JS9.images.push(this);
 	// notify the helper
 	this.notifyHelper();
+	// add regions, if necessary
+	if( localOpts && localOpts.regions ){
+	    this.addShapes("regions", localOpts.regions);
+	}
 	// plugin callbacks
 	this.xeqPlugins("image", "onimageload");
 	// update shapes?
@@ -11458,6 +11462,10 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
     }
     // opts is optional
     opts = opts || {};
+    // return regions in text format, if necessary
+    if( layerName === "regions" && opts.format === "text" ){
+	return this.listRegions(shape, {mode: opts.mode || 1});
+    }
     // process the specified shapes
     this.selectShapes(layerName, shape, function(obj){
 	// public part of the shape

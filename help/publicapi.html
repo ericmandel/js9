@@ -143,13 +143,17 @@ Finally, you can pass a fits object containing the following properties:
 </ul>
 The difference between
 <a href="#JS9.RefreshImage"><b>JS9.RefreshImage()</b></a>
-and <b>JS9.Load()</b> is
+and <a href="#JS9.Load"><b>JS9.Load()</b></a> is
 that the former updates the data into an existing image, while the latter adds
 a completely new image to the display.
 <p>
 To override default image parameters, pass the image opts argument:
 <pre>
     JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});
+</pre>
+You can also pass a regions property to add regions:
+<pre>
+    JS9.Load("./fits/casa.fits", {regions:'ICRS; box(23:23:40.340, +58:47:04.059, 29.5", 29.5", 0)'});
 </pre>
 <p>
 If an onload callback function is specified in opts, it will be called
@@ -2548,15 +2552,16 @@ etc.
 
 <h5 id="JS9.GetRegions">Get information about one or more regions</h5>
 <p>
-<code class="api">rarr = JS9.GetRegions(regions)</code>
+<code class="api">rarr = JS9.GetRegions(regions, opts)</code>
 <p>
 where:
 <ul>
 <li><b>regions</b>: which regions to retrieve
+<li><b>opts</b>: optional object
 </ul>
 returns:
 <ul>
-<li><b>rarr</b>: array of region objects
+<li><b>rarr</b>: array of region objects (or text if opts.format is "text")
 </ul>
 <p>
 If the <b>regions</b> argument is not specified, it defaults to "all". You
@@ -2618,6 +2623,13 @@ The image position x, y can be used to access the image data returned by the
 Note the need to integerize the x and y values: JavaScript arrays are
 objects and so floating point array indices do not get truncated
 automatically as in C. They will return null values.
+<p>
+In opts.format is set to "text", the regions are returned as a string
+in standard regions format, using semi-colon delimiters:
+<pre>
+    JS9.GetRegions("all", {format: "text"})
+    "ICRS; box(23:23:40.340, +58:47:04.059, 29.513978\", 29.513974\", 0.000000) # background,include; circle(23:23:28.069, +58:48:40.540, 14.756998\") # source,include"
+</pre>
 
 <h5 id="JS9.ChangeRegions">Change one or more regions</h5>
 <p>
