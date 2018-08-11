@@ -191,7 +191,7 @@ the value of the <b>JS9.globalOpts.xeqPlugins</b> property to true or false.
 In addition to these standard callbacks, JS9 also supports an extended set of
 <b>image</b> callbacks that get triggered when internal JS9 routines are called.
 These callbacks are only active if the <b>JS9.globalOpts.extendedPlugins</b>
-variable is set to <b>true</b> (which is the default).
+property is set to <b>true</b> (which is the default).
 <ul>
 <li><b>onsetpan</b>: called when pan value is set by im.setPan()
 <li><b>onsetzoom</b> called when zoom value is set by im.setZoom()
@@ -204,8 +204,16 @@ variable is set to <b>true</b> (which is the default).
 <li><b>onchangecontrastbias</b> called when the "change contrast/bias"
 mouse/touch gesture changes the contrast/bias
 </ul>
-(Please let us know if you require a callback to be associated with
-another JS9 function.)
+<p>
+Finally, JS9 supports the <b>onregionsmove</b> callback if the
+<b>JS9.globalOpts.intensivePlugins</b> property is set to true (the
+default is false). Executing this callback requires that the region
+parameters be updated continually as the mouse moves. Such an update
+is a relatively intensive operation, so the intensivePlugins property
+should only be enabled if you need it.
+<p>
+Please let us know if you require a callback to be associated with
+another JS9 function.
 
 <p>
 Each callback function gets executed when the specified event takes

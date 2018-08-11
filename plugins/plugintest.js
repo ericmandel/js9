@@ -114,6 +114,13 @@ PLUGIN.keypress = function(im, ipos, evt){
     this.message(t, 2);
 };
 
+// callback when regions move
+PLUGIN.regionsmove = function(im, xreg){
+    var t = sprintf("%sMove: ipos=%.2f,%.2f", xreg.shape, xreg.x, xreg.y);
+    // context is the calling instance
+    this.message(t, 1);
+};
+
 // callback when regions change
 PLUGIN.regionschange = function(im, xreg){
     var i;
@@ -255,6 +262,7 @@ JS9.RegisterPlugin(PLUGIN.CLASS, PLUGIN.NAME, PLUGIN.init,
 		    onmouseover: PLUGIN.mouseover,
 		    onmouseout: PLUGIN.mouseout,
 		    onkeypress: PLUGIN.keypress,
+		    onregionsmove: PLUGIN.regionsmove,
 		    onregionschange: PLUGIN.regionschange,
 		    onimageload: PLUGIN.imageload,
 		    onimageclose: PLUGIN.imageclose,

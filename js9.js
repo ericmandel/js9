@@ -189,6 +189,7 @@ JS9.globalOpts = {
     pinchThresh: 6,		// threshold for pinch test
     xeqPlugins: true,		// execute plugin callbacks?
     extendedPlugins: true,	// enable extended plugin support?
+    intensivePlugins: false,	// enable intensive plugin support?
     corsProxy:   "https://js9.si.edu/cgi-bin/CORS-proxy.cgi",   // CORS proxy
     simbadProxy: "https://js9.si.edu/cgi-bin/simbad-proxy.cgi", // simbad proxy
     catalogs:   {ras: ["RA", "_RAJ2000", "RAJ2000"],  // cols to search for ..
@@ -11380,8 +11381,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     if( opts.nocb ){
 	return pub;
     }
-    // callbacks for regions (but not child regions)
-    if( !obj.params.parent && (mode !== "child") && (mode !== "list") ){
+    // callbacks for regions (but not child regions or some modes)
+    if( !obj.params.parent && (mode !== "child") && (mode !== "move") ){
 	// when xeqonchange is set
 	if( this.params.xeqonchange && layer.show && layer.opts.onchange ){
 	    try{
@@ -17028,14 +17029,21 @@ JS9.mouseMoveCB = function(evt){
     // reset the valpos object
     im.valpos = null;
     // in a region, update the region info
-    if( im.clickInRegion ){
+    if( im.clickInRegion && (im.clickInLayer === "regions") ){
 	sel = im.display.layers.regions.params.sel;
 	if( sel ){
+	    if( im.params.listonchange          ||
+		sel.params.listonchange         ||
+		JS9.globalOpts.intensivePlugins ){
+		im.updateShape("regions", sel, null, "move");
+	    }
+	    // list regions
 	    if( im.params.listonchange || sel.params.listonchange ){
-		im.updateShape(im.clickInLayer, sel, null, "list", true);
-		if( im.clickInLayer === "regions" ){
-		    im.listRegions("selected", {mode: 2});
-		}
+		im.listRegions("selected", {mode: 2});
+	    }
+	    // regions move callback
+	    if( JS9.globalOpts.intensivePlugins ){
+		im.xeqPlugins("region", "onregionsmove", sel.pub);
 	    }
 	}
     }
