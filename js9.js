@@ -101,7 +101,8 @@ JS9.PIXEL_RATIO = (function(){
 JS9.globalOpts = {
     helperType: "none",		// one of: sock.io, get, post, none
     helperPort: 2718,		// default port for node.js helper
-    requireHelper: false,       // throw error if helper is needed but not available?
+    requireHelper: false,       // throw error if helper is not available?
+    requireFits2Fits: false,    // throw error if fits2fits can't be run?
     useWasm: true,		// use WebAssembly if available?
     winType: "light",		// plugin window: "light" or "new"
     rgb: {active: false,	// RGB mode
@@ -113,7 +114,7 @@ JS9.globalOpts = {
     fits2fits: "never",		// convert to repfile? always|never|size>x Mb
     fits2png: false,		// convert FITS to PNG rep files? true|false
     prependJS9Dir: true,        // prepend $JS9_DIR to relative fitsFile paths?
-    dataDir: null,              // use as path to FITS data (use incoming path if not set)
+    dataDir: null,              // path to FITS data (def: use incoming path)
     alerts: true,		// set to false to turn off alerts
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
@@ -122,7 +123,7 @@ JS9.globalOpts = {
     magnifierRegions: true,	// display regions in magnifier?
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
-    ehtimeout: 10000,		// connection timeout for Electron connect
+    ehtimeout: 5000,		// connection timeout for Electron connect
     ehretries: 10,		// connection retries Electron connect
     xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
@@ -15810,12 +15811,15 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
     // socket.io connection
     if( !JS9.helper.connected ||
 	(JS9.helper.type !== "nodejs" && JS9.helper.type !== "socket.io") ){
+	if(  xcond === "always" && JS9.globalOpts.requireFits2Fits ){
+	    JS9.error("can't run fits2fits without connected JS9 helper");
+	}
 	return false;
     }
     // if the helper program does not exist, we might want to throw an error
     if( !JS9.helper.js9helper ){
-	if( JS9.globalOpts.requireHelper ){
-	    JS9.error("js9helper executable not found for fits2fits processing");
+	if( JS9.globalOpts.requireFits2Fits ){
+	    JS9.error("js9helper not found for fits2fits processing");
 	} else {
 	    return false;
 	}
@@ -15827,6 +15831,9 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
     case "fits2fits":
 	// requires a tmp workdir
 	if( !JS9.globalOpts.workDir ){
+	    if( JS9.globalOpts.requireFits2Fits ){
+		JS9.error("can't run fits2fits without a workdir");
+	    }
 	    return false;
 	}
 	xdim =
@@ -15904,8 +15911,7 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	    switch(xmsg){
 	    case "fits2png":
 		// last line is the file name (ignore what comes before)
-		nfile = robj.stdout.replace(/\n*$/, "")
-		    .split("\n").pop();
+		nfile = robj.stdout.replace(/\n*$/, "").split("\n").pop();
 		next = nfile.split(".").pop().toLowerCase();
 		// is it a png file?
 		if( next === "png" ){
@@ -15918,6 +15924,14 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 		}
 		break;
 	    case "fits2fits":
+		// look for error condition, which we might throw or swallow
+		if( robj.stdout.match(/^ERROR:/) ){
+		    if( JS9.globalOpts.requireFits2Fits ){
+			JS9.error(robj.stdout);
+		    } else {
+			robj.stdout = xopts.fits;
+		    }
+		}
 		// output is file and possibly parentFile
 		rarr = robj.stdout.split(/\n/);
 		// file

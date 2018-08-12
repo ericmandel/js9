@@ -1000,6 +1000,9 @@ var socketioHandler = function(socket) {
 		   encoding: globalOpts.textEncoding};
 	// sanity checks
 	if( !fits2fits[0] || !fits2fits[0].action || !obj ){
+	    // let client decide whether to use default file or throw error
+	    res.stdout = "ERROR: no fits2fits action defined";
+	    cbfunc(res);
 	    return;
 	}
 	// environment, and datapath (for finding data files)
@@ -1009,7 +1012,8 @@ var socketioHandler = function(socket) {
 	if( !s ){
 	    // did not find file, let js9 take care of it
 	    if( cbfunc ){
-		res.stdout = obj.fits;
+		// let client decide whether to use default file or throw error
+		res.stdout = "ERROR: could not find FITS file in data path";
 		cbfunc(res);
 	    }
 	    return;
