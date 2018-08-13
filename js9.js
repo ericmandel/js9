@@ -15336,24 +15336,24 @@ JS9.floatPrecision = function(fval1, fval2){
 
 // convert float value to a string with decent precision
 // from: /tksao1.0/colorbar/colorbarbase.C
-JS9.floatFormattedString = function(fval, prec, fix){
+JS9.floatFormattedString = function(fval, prec, jj){
     var fmt;
     var s = "";
     if( fval === undefined ){
 	return s;
     }
-    if( prec < -2){
-	fmt = "%." + Math.min(Math.abs(prec),9) + "e";
+    if( prec < -2 ){
+	fmt = "%." + String(2+jj) + "e";
 	s = sprintf(fmt, fval);
-    } else if( prec < 0){
-	s = fval.toFixed(Math.abs(prec)+3);
-    } else if( prec < 2){
-	fmt = "%." + Math.abs(prec) + "f";
+    } else if( prec < 0 ){
+	s = fval.toFixed(Math.abs(prec)+3+jj);
+    } else if( prec < 2 ){
+	fmt = "%." + String(prec+jj) + "f";
 	s = sprintf(fmt, fval);
-    } else if( prec < 5){
-	s = fval.toFixed(fix);
+    } else if( prec < 5 ){
+	s = fval.toFixed(0+jj);
     } else {
-	fmt = "%." + Math.min(prec, 9) + "e";
+	fmt = "%." + String(2+jj) + "e";
 	s = sprintf(fmt, fval);
     }
     return s;

@@ -1875,15 +1875,15 @@ JS9.Colorbar.display = function(im){
     // clear tick display
     this.textctx.clear();
     // get precision estimate
-    prec = JS9.floatPrecision(im.psInverse[0], 
-			      im.psInverse[im.psInverse.length-1]);
+    prec = JS9.floatPrecision(Math.min(im.params.scalemin, im.psInverse[0]), 
+			      Math.max(im.params.scalemax, im.psInverse[im.psInverse.length-1]));
     // make labels, with a feeble attempt to avoid duplicates
     for(j=0; j<3; j++){
 	done = true;
 	// gather array of labels
 	for(i=0; i<this.ticks; i++){
 	    tval = im.psInverse[Math.floor(i*idx0)];
-	    tlabels[i] = JS9.floatFormattedString(tval, prec+j, j);
+	    tlabels[i] = JS9.floatFormattedString(tval, prec, j);
 	}
 	// look for dups
 	for(i=1; i<this.ticks; i++){
