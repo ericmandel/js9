@@ -11383,7 +11383,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	return pub;
     }
     // callbacks for regions (but not child regions or some modes)
-    if( !obj.params.parent && (mode !== "child") && (mode !== "move") ){
+    if( !obj.params.parent && (mode !== "child")    &&
+	(mode !== "move")  && (mode !== "mouseout") ){
 	// when xeqonchange is set
 	if( this.params.xeqonchange && layer.show && layer.opts.onchange ){
 	    try{
