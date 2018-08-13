@@ -259,6 +259,7 @@
         JS9.Preload("fits/snr.fits[events][pi==pha]",
                     {colormap: "heat", scale: "linear",
                      contrast: 5.625, bias: 0.1,
+                     scaleclipping: "user", scalemin: 1, scalemax: 15,
 	             onload: function(im){
 		       JS9.SetZoom(2,{display: "myJS9"}); 
 		       JS9.LoadSession("casa/casa.png.ses",

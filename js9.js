@@ -234,7 +234,9 @@ JS9.imageOpts = {
     exp: 1000,				// default exp value for scaling
     colormap: "grey",			// default color map
     scale: "linear",			// default scale algorithm
-    scaleclipping: "dataminmax",	// "dataminmax" or "zscale" to start
+    scaleclipping: "dataminmax",	// "dataminmax", "zscale", or "user" (when scalemin, scalemax is supplied)
+    scalemin: Number.NaN,               // default scale min is undefined
+    scalemax: Number.NaN,               // default scale max is undefined
     zscalecontrast: 0.25,		// default from ds9
     zscalesamples: 600,			// default from ds9
     zscaleline: 120,			// default from ds9
@@ -578,9 +580,6 @@ JS9.Image = function(file, params, func){
     this.params = {};
     // image-specific scratch space
     this.tmp = {};
-    // scale min and max to impossible numbers
-    this.params.scalemin = Number.Nan;
-    this.params.scalemax = Number.Nan;
     // xeq callback for region changes?
     this.params.xeqonchange = true;
     // copy image parameters
@@ -4976,8 +4975,8 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
 	    aim.id = aim.file.split("/").reverse()[0];
 	    // init some parameters
 	    aim.params = {};
-	    aim.params.scalemin = Number.Nan;
-	    aim.params.scalemax = Number.Nan;
+	    aim.params.scalemin = Number.NaN;
+	    aim.params.scalemax = Number.NaN;
 	    // array to hold raw data as we create it
 	    aim.raws = [];
 	    // create the png object
