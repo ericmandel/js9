@@ -20267,15 +20267,42 @@ JS9.mkPublic("InstallDir", function(dir){
 
 // add new display divs and/or new plugins
 JS9.mkPublic("AddDivs", function(){
-    var i, id;
+    var i, j, div, dexist, id;
     var obj = JS9.parsePublicArgs(arguments);
+    // process all divs
     for(i=0; i< obj.argv.length; i++){
+	// get next id
 	id = obj.argv[i];
-	// add this dsplay to array of displays
-	JS9.checkNew(new JS9.Display(id));
-	// tell helper about this display
-	JS9.helper.send("addDisplay", {"display": id});
+	// sanity check
+	if( !id ){
+	    continue;
+	}
+	// make sure this div exists ...
+	if( $("#" + id).length === 0 ){
+	    if( JS9.DEBUG ){
+		JS9.log("warning: can't find div, skipping AddDivs(): %s", id);
+	    }
+	    continue;
+	}
+	// ... but has not already been added
+	for(j=0; j<JS9.displays.length; j++){
+	    div = JS9.displays[j];
+	    if( div.id === id ){
+		dexist = true;
+		break;
+	    }
+	}
+	// add div as a new display
+	if( !dexist ){
+	    // add this display to array of displays
+	    JS9.checkNew(new JS9.Display(id));
+	    // tell helper about this display
+	    JS9.helper.send("addDisplay", {"display": id});
+	} else if( JS9.DEBUG ){
+	    JS9.log("warning: div already added, skipping AddDivs(): %s", id);
+	}
     }
+    // re-instantiate plugins
     JS9.instantiatePlugins();
 });
 
