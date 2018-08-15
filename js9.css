@@ -170,7 +170,8 @@ div.JS9Progress {
     border:  black 2px;
     border-radius: 4px;
     padding: 3px 6px 3px 6px;
-    margin: 6px 4px 6px 4px;
+    /* back off left margin or else Linux menubar Help button wraps ... */
+    margin: 6px 4px 6px 3px;
     outline: none;
 }
 
