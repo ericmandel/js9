@@ -273,8 +273,8 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	    if( opts.table.ycen ){ cens[1] = opts.table.ycen; }
 	}
 	// overridden by options passed in this call
-	if( opts.xdim ){ dims[0] = opts.xdim; }
-	if( opts.ydim ){ dims[1] = opts.ydim; }
+	if( opts.xdim !== undefined ){ dims[0] = opts.xdim; }
+	if( opts.ydim !== undefined ){ dims[1] = opts.ydim; }
 	if( opts.xcen ){ cens[0] = opts.xcen; }
 	if( opts.ycen ){ cens[1] = opts.ycen; }
 	if( opts.filter ){ filter = opts.filter; }
@@ -338,9 +338,10 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	    // to extract at center of resulting image (below)
 	    delete opts.xcen;
 	    delete opts.ycen;
-	    delete opts.xdim;
-	    delete opts.ydim;
 	    delete opts.bin;
+	    // if dims were specified, clear them to read full image section
+	    if( opts.xdim !== undefined ){ opts.xdim = 0; }
+	    if( opts.ydim !== undefined ){ opts.ydim = 0; }
 	    // reset dim and cen values
 	    dims[0] = 0;
 	    dims[1] = 0;
@@ -355,14 +356,14 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	if( opts.image.xmax ){ dims[0] = opts.image.xmax; }
 	if( opts.image.ymax ){ dims[1] = opts.image.ymax; }
 	// global defaults from fits.options
-	if( opts.image.xdim ){ dims[0] = opts.image.xdim; }
-	if( opts.image.ydim ){ dims[1] = opts.image.ydim; }
+	if( opts.image.xdim !== undefined ){ dims[0] = opts.image.xdim; }
+	if( opts.image.ydim !== undefined ){ dims[1] = opts.image.ydim; }
     }
     // overridden by options passed in this call
     if( opts.bin ) { bin = opts.bin; }
     if( opts.binMode ) { binMode = bmode(opts.binMode); }
-    if( opts.xdim ){ dims[0] = opts.xdim; }
-    if( opts.ydim ){ dims[1] = opts.ydim; }
+    if( opts.xdim !== undefined ){ dims[0] = opts.xdim; }
+    if( opts.ydim !== undefined ){ dims[1] = opts.ydim; }
     if( opts.xcen ){ cens[0] = opts.xcen; }
     if( opts.ycen ){ cens[1] = opts.ycen; }
     // limits on image section

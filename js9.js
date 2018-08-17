@@ -3212,9 +3212,10 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    arr.push({name: "ycen", value: opts.ycen});
 	    delete opts.ycen;
 	    arr.push({name: "xdim", value: opts.xdim});
-	    delete opts.xdim;
 	    arr.push({name: "ydim", value: opts.ydim});
-	    delete opts.ydim;
+	    // load entire image section
+	    if( opts.xdim !== undefined ){ opts.xdim = 0; }
+	    if( opts.ydim !== undefined ){ opts.ydim = 0; }
 	    // recombine bin and binMode, if necessary
 	    if( opts.binMode ){
 		opts.bin = sprintf("%s%s", opts.bin, opts.binMode);
@@ -15947,11 +15948,12 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 		    }
 		    nopts = $.extend(true, {}, opts);
 		    // but remove already-used section properties from opts
-		    delete nopts.xdim;
-		    delete nopts.ydim;
-		    delete nopts.bin;
 		    delete nopts.xcen;
 		    delete nopts.ycen;
+		    delete nopts.bin;
+		    // but load entire image section
+		    if( nopts.xdim !== undefined ){ nopts.xdim = 0; }
+		    if( nopts.ydim !== undefined ){ nopts.ydim = 0; }
 		    // save source
 		    nopts.source = "fits2fits";
 		    // it's a proxy file (i.e., delete it on close)
