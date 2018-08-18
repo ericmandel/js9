@@ -240,7 +240,7 @@
     var click='ontouchstart' in document.documentElement?'touchstart': 'click';
     function init(){
         JS9.DEBUG = 2;
-        JS9.AddColormap("cyan", [[0,0],[0,0]], [[0,0],[1,1]], [[0,0],[1,1]]);
+        JS9.AddColormap("cyan", [[0,0],[0,0]], [[0,0],[1,1]], [[0,0],[1,1]], {toplevel: false});
         JS9.AddColormap("yellow", "[[0,1],[1,1]]", "[[0,1],[1,1]]", "[[0,1],[1,0]]");
         JS9.Preload("./fits/casa.fits[events][energy=3000:7000]",
                     {colormap: "cool", contrast: 5.9, bias: 0.66, scale: "log",

@@ -962,7 +962,7 @@ you have set up for downloads.
 
 <h5 id="JS9.AddColormap">Add a colormap to JS9</h5>
 <p>
-<code class="api">JS9.AddColormap(name, aa|rr,gg,bb|obj|json)</code>
+<code class="api">JS9.AddColormap(name, aa|rr,gg,bb|obj|json, opts)</code>
 <p>
 where:
 <ul>
@@ -971,6 +971,7 @@ where:
 <li><b>rr,gg,bb</b>: 3 arrays of vertices specifying color changes
 <li><b>obj</b>: object containing one of the two colormap definition formats
 <li><b>json</b>: json string containing one of the colormap definition formats
+<li><b>opts</b>: optional opts object (to set toplevel property to false)
 </ul>
 You can add new colormaps to JS9 using one of two formats. The first
 is an array of RGB triplets (i.e., an array of 3-D arrays), where each
@@ -1033,6 +1034,11 @@ colormap definition:
     {"name":"purple","vertices":[[[0,0],[1,1]],[[0,0],[0,0]],[[0,0],[1,1]]]}
 </pre>
 <p>
+The colormap is added to the toplevel of the <b>Colormap</b> menu, unless you
+pass a final opts argument that sets the <b>toplevel</b> property to false:
+<pre>
+  JS9.AddColormap("cyan", [[0,0],[0,0]], [[0,0],[1,1]], [[0,0],[1,1]], {toplevel:false});
+</pre>
 Finally, note that <b>JS9.AddColormap()</b> adds its new colormap to
 all JS9 displays on the given page.
 </p>

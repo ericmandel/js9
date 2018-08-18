@@ -18940,7 +18940,7 @@ JS9.mkPublic("CloseDisplay", function(disp){
 });
 
 // add a colormap to JS9
-JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
+JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
     var reader, cobj;
     var obj = JS9.parsePublicArgs(arguments);
     var obj2cmap = function(xobj){
@@ -18955,6 +18955,10 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
 	    JS9.error("invalid colormap object for JS9.AddColormap()");
 	}
     };
+    a1 = obj.argv[1];
+    a2 = obj.argv[2];
+    a3 = obj.argv[3];
+    a4 = obj.argv[4];
     // blob passed by OpenColormapMenu()
     if( obj.argv[0] instanceof Blob ){
 	// file reader object
@@ -18976,14 +18980,20 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
 	    obj2cmap(cobj);
 	    break;
 	case 2:
+	case 3:
 	    if( typeof a1 === "string" ){
 		try{ a1 = JSON.parse(a1); }
 		catch(e){ JS9.error("can't parse JSON colormap", e); }
 	    }
 	    JS9.checkNew(new JS9.Colormap(colormap, a1));
-	    JS9.globalOpts.topColormaps.push(colormap);
+	    if( obj.argv.length === 2 ){
+		JS9.globalOpts.topColormaps.push(colormap);
+	    } else if( typeof a3 !== "object" || a3.toplevel !== false ){
+		JS9.globalOpts.topColormaps.push(colormap);
+	    }
 	    break;
 	case 4:
+	case 5:
 	    if( typeof a1 === "string" ){
 		try{ a1 = JSON.parse(a1); }
 		catch(e){ JS9.error("can't parse JSON colormap", e); }
@@ -18997,7 +19007,11 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3){
 		catch(e){ JS9.error("can't parse JSON colormap", e); }
 	    }
 	    JS9.checkNew(new JS9.Colormap(colormap, a1, a2, a3));
-	    JS9.globalOpts.topColormaps.push(colormap);
+	    if( obj.argv.length === 4 ){
+		JS9.globalOpts.topColormaps.push(colormap);
+	    } else if( typeof a4 !== "object" || a4.toplevel !== false ){
+		JS9.globalOpts.topColormaps.push(colormap);
+	    }
 	    break;
 	default:
 	    JS9.error("AddColormap() requires a colormap name and 1 or 3 args");
