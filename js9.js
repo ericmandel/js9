@@ -18988,7 +18988,7 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
 	    JS9.checkNew(new JS9.Colormap(colormap, a1));
 	    if( obj.argv.length === 2 ){
 		JS9.globalOpts.topColormaps.push(colormap);
-	    } else if( typeof a3 !== "object" || a3.toplevel !== false ){
+	    } else if( typeof a2 !== "object" || a2.toplevel !== false ){
 		JS9.globalOpts.topColormaps.push(colormap);
 	    }
 	    break;
