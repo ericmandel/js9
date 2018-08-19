@@ -18943,7 +18943,7 @@ JS9.mkPublic("CloseDisplay", function(disp){
 JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
     var reader, cobj;
     var obj = JS9.parsePublicArgs(arguments);
-    var obj2cmap = function(xobj){
+    var obj2cmap = function(xobj, opts){
 	if( typeof xobj !== "object" || !xobj.name ){
 	    JS9.error("invalid colormap object for JS9.AddColormap()");
 	}
@@ -18951,9 +18951,10 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
 	    JS9.AddColormap(xobj.name,
 			    xobj.vertices[0],
 			    xobj.vertices[1],
-			    xobj.vertices[2]);
+			    xobj.vertices[2],
+			    opts);
 	} else if( xobj.colors ){
-	    JS9.AddColormap(xobj.name, xobj.colors);
+	    JS9.AddColormap(xobj.name, xobj.colors, opts);
 	} else {
 	    JS9.error("invalid colormap object for JS9.AddColormap()");
 	}
@@ -18964,16 +18965,17 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
     a3 = obj.argv[3];
     a4 = obj.argv[4];
     if( colormap instanceof Blob ){
-	// file reader object
+	// file reader object from openLocalLoadColormap
 	reader = new FileReader();
 	reader.onload = function(ev){
 	    try{ cobj = JSON.parse(ev.target.result); }
 	    catch(e){ JS9.error("can't parse json colormap", e); }
-	    obj2cmap(cobj);
+	    obj2cmap(cobj, a1);
 	};
 	reader.readAsText(colormap);
     } else if( typeof colormap  === "object" ){
-	obj2cmap(colormap);
+	// from LoadColormap
+	obj2cmap(colormap, a1);
     } else {
 	switch(obj.argv.length){
 	case 1:
@@ -19024,7 +19026,7 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
 });
 
 // load a colormap file
-JS9.mkPublic("LoadColormap", function(file){
+JS9.mkPublic("LoadColormap", function(file, opts){
     var reader;
     var obj = JS9.parsePublicArgs(arguments);
     file = obj.argv[0];
@@ -19037,11 +19039,13 @@ JS9.mkPublic("LoadColormap", function(file){
 	// file reader object
 	reader = new FileReader();
 	reader.onload = function(ev){
-	    JS9.AddColormap(ev.target.result);
+	    JS9.AddColormap(ev.target.result, opts);
 	};
 	reader.readAsText(file);
     } else if( typeof file === "string" ){
-	JS9.fetchURL(null, file, null, JS9.AddColormap);
+	JS9.fetchURL(null, file, null, function(data){
+	    JS9.AddColormap(data, opts);
+	});
     } else {
 	// oops!
 	JS9.error("unknown file type for LoadColormap: " + typeof file);

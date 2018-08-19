@@ -1034,8 +1034,9 @@ colormap definition:
     {"name":"purple","vertices":[[[0,0],[1,1]],[[0,0],[0,0]],[[0,0],[1,1]]]}
 </pre>
 <p>
-The colormap is added to the toplevel of the <b>Colormap</b> menu, unless you
-pass a final opts argument that sets the <b>toplevel</b> property to false:
+The colormap will be added to the toplevel of the <b>Colormap</b>
+menu, unless you pass a final opts argument that sets
+the <b>toplevel</b> property to false:
 <pre>
   JS9.AddColormap("cyan", [[0,0],[0,0]], [[0,0],[1,1]], [[0,0],[1,1]], {toplevel:false});
 </pre>
@@ -1045,11 +1046,12 @@ all JS9 displays on the given page.
 
 <h5 id="JS9.LoadColormap">Load a colormap file into JS9</h5>
 <p>
-<code class="api">JS9.LoadColormap(filename)</code>
+<code class="api">JS9.LoadColormap(filename, opts)</code>
 <p>
 where:
 <ul>
 <li><b>filename</b>: input file name or URL
+<li><b>opts</b>: optional object to set toplevel property to false
 </ul>
 Load the specified colormap file into the web page. The filename,
 which must be specified, can be a local file (with absolute path or a
@@ -1109,6 +1111,12 @@ above):
 </pre>
 
 <p>
+The colormap will be added to the toplevel of the <b>Colormap</b>
+menu, unless you pass a final opts argument that sets
+the <b>toplevel</b> property to false:
+<pre>
+  JS9.LoadColormap("secondary.cmap", {toplevel:false});
+</pre>
 As with
 <a href="#JS9.AddColormap"><b>JS9.AddColormap()</b></a>,
 the new colormap will be available in all displays.
