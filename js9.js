@@ -18944,6 +18944,9 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
     var reader, cobj;
     var obj = JS9.parsePublicArgs(arguments);
     var obj2cmap = function(xobj){
+	if( typeof xobj !== "object" || !xobj.name ){
+	    JS9.error("invalid colormap object for JS9.AddColormap()");
+	}
 	if( xobj.vertices ){
 	    JS9.AddColormap(xobj.name,
 			    xobj.vertices[0],
@@ -18955,12 +18958,12 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
 	    JS9.error("invalid colormap object for JS9.AddColormap()");
 	}
     };
+    colormap = obj.argv[0];
     a1 = obj.argv[1];
     a2 = obj.argv[2];
     a3 = obj.argv[3];
     a4 = obj.argv[4];
-    // blob passed by OpenColormapMenu()
-    if( obj.argv[0] instanceof Blob ){
+    if( colormap instanceof Blob ){
 	// file reader object
 	reader = new FileReader();
 	reader.onload = function(ev){
@@ -18968,9 +18971,9 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
 	    catch(e){ JS9.error("can't parse json colormap", e); }
 	    obj2cmap(cobj);
 	};
-	reader.readAsText(obj.argv[0]);
-    } else if( typeof obj.argv[0]  === "object" ){
-	obj2cmap(obj.argv[0]);
+	reader.readAsText(colormap);
+    } else if( typeof colormap  === "object" ){
+	obj2cmap(colormap);
     } else {
 	switch(obj.argv.length){
 	case 1:
