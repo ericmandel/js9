@@ -942,6 +942,23 @@ div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
     margin-bottom: 0px;
     border: 1px solid transparent;
 }
+.JS9ScaleContainer {
+    padding: 5px;
+}
+
+.JS9ScaleLinegroup {
+    float: left;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 95%;
+    padding: 5px;
+    margin: 5px;
+}
+
+.JS9ScalePlot {
+    border: 1px black solid;
+}
 div.JS9SeparateContainer {
     padding: 2px;
 }

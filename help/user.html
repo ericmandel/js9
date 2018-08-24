@@ -266,17 +266,15 @@ star burst.
 
 <p>
 You also can change the low and high values used to clip the image
-data before scaling by changing the <b>low value for clipping</b>
-and/or <b>high value for clipping</b> numbers. These values are set
+data before scaling by changing the <b>low clipping value</b>
+and/or <b>high clipping value</b> numbers. These values are set
 initially with the data's min and max values or the z1,z2 values
 calculated by the <b>IRAF zscale</b> algorithm (depending on the value
 of the web site's <b>JS9.imageOpts.scaleclipping</b> parameter. The
-default usually is "dataminmax".). Finally, you can set (or reset) the
-low and high values to data min,max or zscale z1,z2 using the <b>set
-vals to data min/max</b> or <b>set vals to zscale z1/z2</b> options,
-respectively. (Note that zscale requires a considerable amount of
-memory and does not work on very large images. We will try to remove
-this restriction in the future.)
+default usually is "dataminmax".). Finally, you can use the
+<b>Other Clipping Options ...</b> plugin to set the clipping values
+to data min/max, zscale z1/z2 or zscale z1/max, or set the clipping
+values using the pixel distribution plot.
 
 <li><p><b>Colormap:</b> Each colormap option specifies a different
 distribution of RGB values to use when converting image pixel values to RGB.
@@ -710,7 +708,7 @@ See <a href="knownissues.html">Known Issues</a>
 for a discussion of limitations imposed on resize by Webkit
 browsers such as Chrome and Safari.
 
-<h5>Last updated: July 15, 2018</h5>
+<h5>Last updated: August 24, 2018</h5>
 </div>
 
 </body>

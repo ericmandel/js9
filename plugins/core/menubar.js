@@ -1258,6 +1258,8 @@ JS9.Menubar.createMenus = function(){
 	position: mypos,
         build: function(){
 	    var i, s1, s2;
+	    var plugin, pname, pinst;
+	    var lastxclass="";
 	    var n = 0;
 	    var items = {};
 	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
@@ -1310,26 +1312,37 @@ JS9.Menubar.createMenus = function(){
 	    items["sep" + n++] = "------";
 	    items.scalemin = {
 		events: {keyup: keyScale},
-		name: "low limit for clipping:",
+		name: "low clipping limit:",
 		type: "text"
 	    };
 	    items.scalemax = {
 		events: {keyup: keyScale},
-		name: "high limit for clipping:",
+		name: "high clipping limit:",
 		type: "text"
 	    };
 	    items["sep" + n++] = "------";
-	    items.dminmax = {
-		name: "set limits to data min/max"
-	    };
-	    items.zscale = {
-		name: "set limits to zscale z1/z2"
-	    };
-	    items.zmax = {
-		name: "set limits to zscale z1/data max"
-	    };
+	    // plugins
+	    for(i=0; i<JS9.plugins.length; i++){
+		plugin = JS9.plugins[i];
+		pname = plugin.name;
+		if( plugin.opts.menuItem && (plugin.opts.menu === "scale") ){
+		    pinst = tdisp.pluginInstances[pname];
+		    if( !pinst || pinst.winHandle ){
+			if( plugin.xclass !== lastxclass ){
+			    // items["sep" + n] = "------";
+			    n = n + 1;
+			}
+			lastxclass = plugin.xclass;
+			items[pname] = xname(plugin.opts.menuItem);
+			if( pinst && (pinst.status === "active") ){
+			    items[pname].icon = "sun";
+			}
+		    }
+		}
+	    }
 	    return {
-                callback: function(key, opt){
+                callback: function(key){
+		    var ii, uplugin;
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
 			var udisp = val;
 			var uim = udisp.image;
@@ -1339,41 +1352,15 @@ JS9.Menubar.createMenus = function(){
 			}
 			if( uim ){
 			    switch(key){
-			    case "dminmax":
-				uim.setScale("dataminmax",
-					     uim.raw.dmin,
-					     uim.raw.dmax);
-				$.contextMenu.setInputValues(opt,
-							     {scalemin: String(uim.params.scalemin),
-							      scalemax: String(uim.params.scalemax)});
-				uim.displayImage("colors");
-				return false;
-			    case "zscale":
-				if( (uim.params.z1 === undefined) || 
-				    (uim.params.z2 === undefined) ){
-				    uim.zscale(false);
-				}
-				uim.setScale("zscale",
-					     uim.params.z1,
-					     uim.params.z2);
-				$.contextMenu.setInputValues(opt,
-							     {scalemin: String(uim.params.scalemin),
-							      scalemax: String(uim.params.scalemax)});
-				uim.displayImage("colors");
-				return false;
-			    case "zmax":
-				if( (uim.params.z1 === undefined) ){
-				    uim.zscale(false);
-				}
-				uim.setScale("zmax",
-					     uim.params.z1,
-					     uim.raw.dmax);
-				$.contextMenu.setInputValues(opt,
-							     {scalemin: String(uim.params.scalemin),
-							      scalemax: String(uim.params.scalemax)});
-				uim.displayImage("colors");
-				return false;
 			    default:
+				// maybe it's a plugin
+				for(ii=0; ii<JS9.plugins.length; ii++){
+				    uplugin = JS9.plugins[ii];
+				    if( uplugin.name === key ){
+					udisp.displayPlugin(uplugin);
+					return;
+				    }
+				}
 				uim.setScale(key);
 				break;
 			    }
@@ -2425,7 +2412,7 @@ JS9.Menubar.createMenus = function(){
 		    if( val.heading === "JS9" ){
 			last = val.type;
 			items.pluginhelp.items[key] = {
-			    name: val.title
+			    name: val.title.replace(/ \.\.\./, "")
 			};
 		    }
 		}

@@ -1,0 +1,17 @@
+.JS9ScaleContainer {
+    padding: 5px;
+}
+
+.JS9ScaleLinegroup {
+    float: left;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 95%;
+    padding: 5px;
+    margin: 5px;
+}
+
+.JS9ScalePlot {
+    border: 1px black solid;
+}
