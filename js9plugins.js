@@ -8744,7 +8744,7 @@ JS9.ScaleLimits.init = function(opts){
 JS9.RegisterPlugin(JS9.ScaleLimits.CLASS, JS9.ScaleLimits.NAME,
 		   JS9.ScaleLimits.init,
 		   {menu: "scale",
-		    menuItem: "Clipping Options ...",
+		    menuItem: "Clipping Limits ...",
 		    onplugindisplay: JS9.ScaleLimits.init,
 		    onsetscale: JS9.ScaleLimits.init,
 		    onimagedisplay: JS9.ScaleLimits.display,
