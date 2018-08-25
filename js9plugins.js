@@ -8298,28 +8298,23 @@ JS9.ScaleLimits.XTEXTCOLOR="black";
 // display of float data
 JS9.ScaleLimits.FLOATFORMAT = "%.6f";
 // plot colors
-JS9.ScaleLimits.PLOTCOLOR = "#888888";
-JS9.ScaleLimits.XLOCOLOR = "#FF0000";
-JS9.ScaleLimits.XHICOLOR = "#00FF00";
+// see: https://htmlcolorcodes.com/color-picker/
+JS9.ScaleLimits.PLOTCOLOR = "#030AE4";
+JS9.ScaleLimits.XLOCOLOR  = "#FF0000";
+JS9.ScaleLimits.XHICOLOR  = "#00FF00";
 // ever-present fudge for dealing with mouse positions
 JS9.ScaleLimits.FUDGE = 1;
 // data options
 JS9.ScaleLimits.dataOpts = {
-    color: "#888888",
-    data:[]
+    bars: {show: true, align: "left"},
+    clickable: true,
+    hoverable: true,
+    data: []
 };
 // plot options
 JS9.ScaleLimits.plotOpts = {
-    zoomStack: {
-	enabled: false
-    },
     selection: {
-	mode: "x"
-    },
-    series: {
-	clickable: true,
-	hoverable: true,
-	bars:  {show: true, align: "left", barWidth: 1}
+	mode:      "x"
     },
     grid: {
 	hoverable: true
@@ -8328,7 +8323,7 @@ JS9.ScaleLimits.plotOpts = {
 
 JS9.ScaleLimits.scalelimsHTML="<div class='JS9ScaleLinegroup'>$header</div><div class='JS9ScaleLinegroup'>$scales&nbsp;&nbsp;$limits&nbsp;&nbsp;$axes</div><p><div class='JS9ScaleLinegroup'>$plot</div><p><div class='JS9ScaleLinegroup'><span class='JS9ScaleSpan' style='float: left'>&nbsp;&nbsp;$lo&nbsp;&nbsp;&nbsp;&nbsp;$hi</span></div>";
 
-JS9.ScaleLimits.headerHTML='Set clipping limits via the Data Limits menu, or by selecting part of the Pixel Distribution plot, or by changing the Low and/or High Limit.';
+JS9.ScaleLimits.headerHTML='Set clipping limits via the Data Limits menu, or by selecting part of the Pixel Distribution plot, or by changing the Low and/or High limit.';
 
 JS9.ScaleLimits.scalesHTML='<select class="JS9ScaleSelect" onchange="JS9.ScaleLimits.xsetscale(\'%s\', \'%s\', this)">%s</select>';
 
@@ -8336,11 +8331,11 @@ JS9.ScaleLimits.limitsHTML='<select class="JS9ScaleSelect" onchange="JS9.ScaleLi
 
 JS9.ScaleLimits.axesHTML='<select class="JS9ScaleSelect" onchange="JS9.ScaleLimits.xaxes(\'%s\', \'%s\', this)"><option selected disabled>Plot Axes</option><option disabled>x axis:</option><option value="xlinear">linear</option><option value="xlog">log</option><option disabled>y axis:</option><option value="ylinear">linear</option><option value="ylog">log</option></select>';
 
-JS9.ScaleLimits.plotHTML='<div><center>Pixel Distribution</center></div><div class="JS9ScalePlot" style="width:%spx;height:%spx"></div>';
+JS9.ScaleLimits.plotHTML='<div><center>Pixel Distribution: %s</center></div><div class="JS9ScalePlot" style="width:%spx;height:%spx"></div>';
 
-JS9.ScaleLimits.loHTML='Low Limit:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue" value="%s" onchange="JS9.ScaleLimits.xsetlo(\'%s\', \'%s\', this)" size="20">';
+JS9.ScaleLimits.loHTML='Low:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue" value="%s" onchange="JS9.ScaleLimits.xsetlo(\'%s\', \'%s\', this)" size="20">';
 
-JS9.ScaleLimits.hiHTML='High Limit:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue" value="%s" onchange="JS9.ScaleLimits.xsethi(\'%s\', \'%s\', this)" size="20">';
+JS9.ScaleLimits.hiHTML='High:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue" value="%s" onchange="JS9.ScaleLimits.xsethi(\'%s\', \'%s\', this)" size="20">';
 
 // change scale
 JS9.ScaleLimits.xsetscale = function(did, id, target){
@@ -8440,16 +8435,18 @@ JS9.ScaleLimits.xaxes = function(did, id, target){
 JS9.ScaleLimits.getPixelDist = function(im, ndist){
     var i, idx;
     var dist = [];
+    var dmin = im.raw.dmin;
     var drange = im.raw.dmax - im.raw.dmin;
     var imlen = im.raw.width * im.raw.height;
     for(i=0; i<ndist; i++){
         dist[i] = 0;
     }
     for(i=0; i<imlen; i++){
-        idx = Math.floor((im.raw.data[i] / drange) * ndist + 0.5);
+//        idx = Math.floor((im.raw.data[i] / drange) * ndist + 0.5);
+        idx = Math.floor(((im.raw.data[i] - dmin) / drange) * ndist + 0.5);
         if( idx >= 0 && idx < ndist ){
             dist[idx] += 1;
-        }
+	}
     }
     return dist;
 };
@@ -8457,37 +8454,38 @@ JS9.ScaleLimits.getPixelDist = function(im, ndist){
 JS9.ScaleLimits.doplot = function(im){
     var that = this;
     var i, j, s, el, xmin, xmax;
-    var distmin, distmax, ntick, tickinc;
-    var dist, drange = im.raw.dmax - im.raw.dmin;
+    var dist, distmin, distmax, ntick, tickinc;
+    var dmin = im.raw.dmin;
+    var drange = im.raw.dmax - im.raw.dmin;
     var pobj =  $.extend(true, {}, JS9.ScaleLimits.dataOpts);
     var popts = $.extend(true, {}, JS9.ScaleLimits.plotOpts);
-    var gettickinc = function(drange){
+    var gettickinc = function(datarange){
 	var tickinc;
-	if( drange < 10 ){
+	if( datarange < 10 ){
             tickinc = 1;
-	} else if( drange < 50 ){
+	} else if( datarange < 50 ){
             tickinc = 5;
-	} else if( drange < 100 ){
+	} else if( datarange < 100 ){
             tickinc = 10;
-	} else if( drange < 500 ){
+	} else if( datarange < 500 ){
             tickinc = 50;
-	} else if( drange < 1000 ){
+	} else if( datarange < 1000 ){
             tickinc = 100;
-	} else if( drange < 5000 ){
+	} else if( datarange < 5000 ){
             tickinc = 500;
-	} else if( drange < 10000 ){
+	} else if( datarange < 10000 ){
             tickinc = 1000;
-	} else if( drange < 50000 ){
+	} else if( datarange < 50000 ){
             tickinc = 5000;
-	} else if( drange < 100000 ){
+	} else if( datarange < 100000 ){
             tickinc = 10000;
-	} else if( drange < 500000 ){
+	} else if( datarange < 500000 ){
             tickinc = 50000;
-	} else if( drange < 1000000 ){
+	} else if( datarange < 1000000 ){
             tickinc = 100000;
-	} else if( drange < 5000000 ){
+	} else if( datarange < 5000000 ){
             tickinc = 500000;
-	} else if( drange < 10000000 ){
+	} else if( datarange < 10000000 ){
             tickinc = 1000000;
 	} else {
             tickinc = 10000000;
@@ -8527,7 +8525,7 @@ JS9.ScaleLimits.doplot = function(im){
 	for(i=0; i<ntick; i++){
             j = i * tickinc;
 	    s = String(j);
-            popts.xaxis.ticks[i] = [j * (this.ndist/drange), s];
+            popts.xaxis.ticks[i] = [(j - dmin) * this.ndist / drange, s];
 	}
     } else if( this.xscale === "log"  ){
 	popts.xaxis.transform = JS9.ScaleLimits.logfunc;
@@ -8538,12 +8536,12 @@ JS9.ScaleLimits.doplot = function(im){
 	for(i=0; i<ntick; i++){
             j = i * tickinc;
 	    s = j.toExponential(0).replace("e", "E").replace("+", "");
-            popts.xaxis.ticks[i] = [j * (this.ndist/drange), s];
+            popts.xaxis.ticks[i] = [(j - dmin) * this.ndist / drange, s];
 	}
     }
     // plot location of current scaling min and max for annotations
-    xmin = im.params.scalemin * this.ndist / drange;
-    xmax = im.params.scalemax * this.ndist / drange;
+    xmin = ((im.params.scalemin - dmin) / drange) * this.ndist;
+    xmax = ((im.params.scalemax - dmin) / drange) * this.ndist;
     // y axis
     popts.yaxis = popts.yaxis || {};
     if( this.yscale === "linear"  ){
@@ -8580,15 +8578,15 @@ JS9.ScaleLimits.doplot = function(im){
     el.on("plotselected", function(event, ranges){
 	var start = ranges.xaxis.from - JS9.ScaleLimits.FUDGE;
 	var end   = ranges.xaxis.to - JS9.ScaleLimits.FUDGE;
-	start = start * drange / that.ndist;
-	end   = end   * drange / that.ndist;
+	start = start * drange / that.ndist + dmin;
+	end   = end   * drange / that.ndist + dmin;
 	im.setScale("user", start, end);
     });
     el.off("plothover");
     el.on("plothover", function(event, pos) {
 	var ctx, text, xval, s, x, y, w, h;
 	if( that.plot ){
-	    xval = pos.x * drange / that.ndist;
+	    xval = pos.x * drange / that.ndist + dmin;
 	    s = sprintf(JS9.ScaleLimits.FLOATFORMAT, xval);
 	    // display x value in upper right corner of plot
 	    ctx = that.plot.getCanvas().getContext("2d");
@@ -8612,8 +8610,8 @@ JS9.ScaleLimits.doplot = function(im){
     this.timeout = window.setTimeout(function(){
 	that.plot = $.plot(el, [pobj], popts);
 	that.timeout = null;
-	annotate(that.plot, xmin, JS9.ScaleLimits.XLOCOLOR);
-	annotate(that.plot, xmax, JS9.ScaleLimits.XHICOLOR);
+	annotate(that.plot, xmin, that.xlocolor);
+	annotate(that.plot, xmax, that.xhicolor);
     }, JS9.ScaleLimits.TIMEOUT);
 };
 
@@ -8681,10 +8679,20 @@ JS9.ScaleLimits.init = function(opts){
     if( !this.yscale ){
 	this.yscale  = JS9.ScaleLimits.YSCALE;
     }
-    // plot color
+    // plot colors
     this.plotColor = this.plotColor || this.divjq.attr("data-plotColor");
     if( !this.plotColor ){
 	this.plotColor  = JS9.ScaleLimits.PLOTCOLOR;
+    }
+    // plot color
+    this.xlocolor = this.xlocolor || this.divjq.attr("data-xlocolor");
+    if( !this.xlocolor ){
+	this.xlocolor  = JS9.ScaleLimits.XLOCOLOR;
+    }
+    // plot color
+    this.xhicolor = this.xhicolor || this.divjq.attr("data-xhicolor");
+    if( !this.xhicolor ){
+	this.xhicolor  = JS9.ScaleLimits.XHICOLOR;
     }
     // set number of distribution points
     this.ndist = this.divjq.attr("data-ndist");
@@ -8719,7 +8727,7 @@ JS9.ScaleLimits.init = function(opts){
 				   dispid, imid)});
 	mopts.push({name: "plot",
 		    value: sprintf(JS9.ScaleLimits.plotHTML,
-				   this.plotWidth, this.plotHeight)});
+				   imid, this.plotWidth, this.plotHeight)});
 	mopts.push({name: "lo",
 		    value: sprintf(JS9.ScaleLimits.loHTML,
 				   im.params.scalemin,
