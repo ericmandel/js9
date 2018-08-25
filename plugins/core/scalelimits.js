@@ -40,7 +40,7 @@ JS9.ScaleLimits.XHICOLOR  = "#00FF00";
 JS9.ScaleLimits.FUDGE = 1;
 // data options
 JS9.ScaleLimits.dataOpts = {
-    bars: {show: true, align: "left"},
+    bars: {show: true, align: "center", barWidth: 0.1},
     clickable: true,
     hoverable: true,
     data: []
@@ -67,9 +67,9 @@ JS9.ScaleLimits.axesHTML='<select class="JS9ScaleSelect" onchange="JS9.ScaleLimi
 
 JS9.ScaleLimits.plotHTML='<div><center>Pixel Distribution: %s</center></div><div class="JS9ScalePlot" style="width:%spx;height:%spx"></div>';
 
-JS9.ScaleLimits.loHTML='Low:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue" value="%s" onchange="JS9.ScaleLimits.xsetlo(\'%s\', \'%s\', this)" size="20">';
+JS9.ScaleLimits.loHTML='Low:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue" value="%.6f" onchange="JS9.ScaleLimits.xsetlo(\'%s\', \'%s\', this)" size="16">';
 
-JS9.ScaleLimits.hiHTML='High:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue" value="%s" onchange="JS9.ScaleLimits.xsethi(\'%s\', \'%s\', this)" size="20">';
+JS9.ScaleLimits.hiHTML='High:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue" value="%.6f" onchange="JS9.ScaleLimits.xsethi(\'%s\', \'%s\', this)" size="16">';
 
 // change scale
 JS9.ScaleLimits.xsetscale = function(did, id, target){
