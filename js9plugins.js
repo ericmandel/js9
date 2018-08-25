@@ -5823,9 +5823,11 @@ JS9.Menubar.createMenus = function(){
 			var obj = {};
 			if( uim  ){
 			    obj.scalemin =
-				sprintf("%.6f", uim.params.scalemin);
+				sprintf(JS9.globalOpts.floatFormat,
+					uim.params.scalemin);
 			    obj.scalemax =
-				sprintf("%.6f", uim.params.scalemax);
+				sprintf(JS9.globalOpts.floatFormat,
+					uim.params.scalemax);
 			}
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
@@ -8295,8 +8297,6 @@ JS9.ScaleLimits.XTEXTHEIGHT=14;
 JS9.ScaleLimits.XTEXTFONT="Ariel";
 // font for xval text without size
 JS9.ScaleLimits.XTEXTCOLOR="black";
-// display of float data
-JS9.ScaleLimits.FLOATFORMAT = "%.6f";
 // plot colors
 // see: https://htmlcolorcodes.com/color-picker/
 JS9.ScaleLimits.PLOTCOLOR = "#030AE4";
@@ -8333,9 +8333,9 @@ JS9.ScaleLimits.axesHTML='<select class="JS9ScaleSelect" onchange="JS9.ScaleLimi
 
 JS9.ScaleLimits.plotHTML='<div><center>Pixel Distribution: %s</center></div><div class="JS9ScalePlot" style="width:%spx;height:%spx"></div>';
 
-JS9.ScaleLimits.loHTML='Low:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue" value="%.6f" onchange="JS9.ScaleLimits.xsetlo(\'%s\', \'%s\', this)" size="16">';
+JS9.ScaleLimits.loHTML='Low:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue" value='+JS9.globalOpts.floatFormat+' onchange="JS9.ScaleLimits.xsetlo(\'%s\', \'%s\', this)" size="16">';
 
-JS9.ScaleLimits.hiHTML='High:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue" value="%.6f" onchange="JS9.ScaleLimits.xsethi(\'%s\', \'%s\', this)" size="16">';
+JS9.ScaleLimits.hiHTML='High:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue" value='+JS9.globalOpts.floatFormat+' onchange="JS9.ScaleLimits.xsethi(\'%s\', \'%s\', this)" size="16">';
 
 // change scale
 JS9.ScaleLimits.xsetscale = function(did, id, target){
@@ -8587,7 +8587,7 @@ JS9.ScaleLimits.doplot = function(im){
 	var ctx, text, xval, s, x, y, w, h;
 	if( that.plot ){
 	    xval = pos.x * drange / that.ndist + dmin;
-	    s = sprintf(JS9.ScaleLimits.FLOATFORMAT, xval);
+	    s = sprintf(JS9.globalOpts.floatFormat, xval);
 	    // display x value in upper right corner of plot
 	    ctx = that.plot.getCanvas().getContext("2d");
 	    ctx.save();

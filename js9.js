@@ -151,6 +151,7 @@ JS9.globalOpts = {
     reduceMosaic: "js9",        // "js9" or "shrink" ("js9" seems to be faster)
     reduceRegcnts: true,        // reduce image when doing counts in regions?
     copyWcsPosFormat: "$ra $dec $sys", // format for copy wcs pos to clipboard
+    floatFormat: "%.6f",        // format for float pixel values
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     keyboardActions: {
