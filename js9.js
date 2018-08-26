@@ -15322,6 +15322,12 @@ JS9.strace = function(e){
     return s;
 };
 
+// try to make a nice string from a float
+// ints remain ints, floats get truncated at 6 significant digits
+JS9.floatToString = function(fval){
+    return sprintf("%g", parseFloat(fval.toFixed(6)));
+};
+
 // figure out precision from range of values
 // from: /tksao1.0/colorbar/colorbarbase.C
 JS9.floatPrecision = function(fval1, fval2){

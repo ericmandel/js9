@@ -1374,11 +1374,9 @@ JS9.Menubar.createMenus = function(){
 			var obj = {};
 			if( uim  ){
 			    obj.scalemin =
-				sprintf(JS9.globalOpts.floatFormat,
-					uim.params.scalemin);
+				JS9.floatToString(uim.params.scalemin);
 			    obj.scalemax =
-				sprintf(JS9.globalOpts.floatFormat,
-					uim.params.scalemax);
+				JS9.floatToString(uim.params.scalemax);
 			}
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
