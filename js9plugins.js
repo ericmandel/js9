@@ -8300,8 +8300,6 @@ JS9.ScaleLimits.XTEXTCOLOR="black";
 JS9.ScaleLimits.PLOTCOLOR = "#030AE4";
 JS9.ScaleLimits.XLOCOLOR  = "#FF0000";
 JS9.ScaleLimits.XHICOLOR  = "#00FF00";
-// ever-present fudge for dealing with mouse positions
-JS9.ScaleLimits.FUDGE = 1;
 // data options
 JS9.ScaleLimits.dataOpts = {
     bars: {show: true, align: "center", barWidth: 0.1},
@@ -8383,14 +8381,9 @@ JS9.ScaleLimits.xsetlims = function(did, id, target){
     }
 };
 
-// log scaling
-JS9.ScaleLimits.logfunc = function(v){
-    return v === 0 ? v : Math.log(v);
-};
-
-// inverse of log scaling
-JS9.ScaleLimits.expfunc = function(v){
-    return v === 0 ? v : Math.exp(v);
+// log10 scaling
+JS9.ScaleLimits.log10 = function(v){
+    return v <= 0 ? null : Math.log(v) / Math.LN10;
 };
 
 // other ways to determine limits
@@ -8463,27 +8456,27 @@ JS9.ScaleLimits.doplot = function(im){
             tickinc = 1;
 	} else if( datarange < 50 ){
             tickinc = 5;
-	} else if( datarange < 100 ){
+	} else if( datarange < 250 ){
             tickinc = 10;
 	} else if( datarange < 500 ){
             tickinc = 50;
-	} else if( datarange < 1000 ){
+	} else if( datarange < 2500 ){
             tickinc = 100;
 	} else if( datarange < 5000 ){
             tickinc = 500;
-	} else if( datarange < 10000 ){
+	} else if( datarange < 25000 ){
             tickinc = 1000;
 	} else if( datarange < 50000 ){
             tickinc = 5000;
-	} else if( datarange < 100000 ){
+	} else if( datarange < 250000 ){
             tickinc = 10000;
 	} else if( datarange < 500000 ){
             tickinc = 50000;
-	} else if( datarange < 1000000 ){
+	} else if( datarange < 2500000 ){
             tickinc = 100000;
 	} else if( datarange < 5000000 ){
             tickinc = 500000;
-	} else if( datarange < 10000000 ){
+	} else if( datarange < 25000000 ){
             tickinc = 1000000;
 	} else {
             tickinc = 10000000;
@@ -8502,6 +8495,8 @@ JS9.ScaleLimits.doplot = function(im){
 	ctx.fillStyle = color;
 	ctx.fill();
     };
+    // flag we have just started
+    this.plotComplete = false;
     // plot options
     if( this.plotColor ){
 	pobj.color = this.plotColor;
@@ -8516,7 +8511,6 @@ JS9.ScaleLimits.doplot = function(im){
     popts.xaxis = popts.xaxis || {};
     if( this.xscale === "linear"  ){
 	popts.xaxis.transform = null;
-	popts.xaxis.inverseTransform = null;
 	popts.xaxis.ticks = [];
 	tickinc = gettickinc(drange);
 	ntick = Math.floor(drange/tickinc + 0.5) + 1;
@@ -8526,15 +8520,13 @@ JS9.ScaleLimits.doplot = function(im){
             popts.xaxis.ticks[i] = [(j - dmin) * this.ndist / drange, s];
 	}
     } else if( this.xscale === "log"  ){
-	popts.xaxis.transform = JS9.ScaleLimits.logfunc;
-	popts.xaxis.inverseTransform = JS9.ScaleLimits.expfunc;
+	popts.xaxis.transform = JS9.ScaleLimits.log10;
+	popts.xaxis.min = 1;
 	popts.xaxis.ticks = [];
-	tickinc = gettickinc(drange);
-	ntick = Math.log10(Math.floor(drange/tickinc + 0.5)) + 3;
+	ntick = JS9.ScaleLimits.log10(this.ndist) + 1;
 	for(i=0; i<ntick; i++){
-            j = i * tickinc;
-	    s = j.toExponential(0).replace("e", "E").replace("+", "");
-            popts.xaxis.ticks[i] = [(j - dmin) * this.ndist / drange, s];
+	    j = Math.floor( (Math.pow(10, i) - dmin) * this.ndist / drange);
+            popts.xaxis.ticks[i] = [j, "1E"+String(i)];
 	}
     }
     // plot location of current scaling min and max for annotations
@@ -8544,9 +8536,11 @@ JS9.ScaleLimits.doplot = function(im){
     popts.yaxis = popts.yaxis || {};
     if( this.yscale === "linear"  ){
 	popts.yaxis.transform = null;
-	popts.yaxis.inverseTransform = null;
 	popts.yaxis.ticks = null;
     } else if( this.yscale === "log"  ){
+	popts.yaxis.transform = JS9.ScaleLimits.log10;
+	popts.yaxis.min = 1;
+	popts.yaxis.ticks = [];
 	// distribution limits
 	for(i=0; i<this.ndist; i++){
             if( distmin === undefined || dist[i] < distmin ){
@@ -8556,10 +8550,7 @@ JS9.ScaleLimits.doplot = function(im){
 		distmax = dist[i];
             }
 	}      
-	popts.yaxis.transform = JS9.ScaleLimits.logfunc;
-	popts.yaxis.inverseTransform = JS9.ScaleLimits.expfunc;
-	popts.yaxis.ticks = [];
-	ntick = Math.log10(distmax - distmin + 1);
+	ntick = JS9.ScaleLimits.log10(distmax - distmin + 1);
 	for(i=0; i<ntick; i++){
             popts.yaxis.ticks[i] = [Math.pow(10, i), "1E"+String(i)];
 	}
@@ -8574,42 +8565,55 @@ JS9.ScaleLimits.doplot = function(im){
     // select limits
     el.off("plotselected");
     el.on("plotselected", function(event, ranges){
-	var start = ranges.xaxis.from - JS9.ScaleLimits.FUDGE;
-	var end   = ranges.xaxis.to - JS9.ScaleLimits.FUDGE;
+	var start = ranges.xaxis.from;
+	var end   = ranges.xaxis.to;
+	if( that.xscale === "log" ){
+	    start = Math.pow(10, start);
+	    end = Math.pow(10, end);
+	}
 	start = start * drange / that.ndist + dmin;
 	end   = end   * drange / that.ndist + dmin;
 	im.setScale("user", start, end);
     });
     el.off("plothover");
     el.on("plothover", function(event, pos) {
-	var ctx, text, xval, s, x, y, w, h;
-	if( that.plot ){
-	    xval = pos.x * drange / that.ndist + dmin;
-	    s = JS9.floatToString(xval);
-	    // display x value in upper right corner of plot
-	    ctx = that.plot.getCanvas().getContext("2d");
-	    ctx.save();
-	    ctx.textBaseline = 'top';
-	    ctx.font = JS9.ScaleLimits.XTEXTHEIGHT + "px " +
-		       JS9.ScaleLimits.XTEXTFONT;
-	    ctx.fillStyle = JS9.ScaleLimits.XTEXTCOLOR || "black";
-	    text = ctx.measureText(s);
-	    if( !that.xTextWidth ){ that.xTextWidth = 1; }
-	    that.xTextWidth = Math.max(text.width, that.xTextWidth);
-	    w = that.xTextWidth + 2;
-	    h = JS9.ScaleLimits.XTEXTHEIGHT + 2;
-	    x = that.plotWidth - Math.floor(w * 1.5);
-	    y = Math.floor(1.5 * h);
-	    ctx.clearRect(x, y, w, h);
-	    ctx.fillText(s, x, y); 
-	    ctx.restore();
+	var ctx, text, s, x, y, w, h, xval;
+	var px = pos.x;
+	// sanity checks
+	if( !that.plot || !that.plotComplete ){ 
+	    return;
 	}
+	if( that.xscale === "log" ){
+	    px = Math.pow(10, px);
+	}
+	xval = px * drange / that.ndist + dmin;
+	if( !isFinite(xval) ){
+	    return;
+	}
+	s = JS9.floatToString(xval);
+	// display x value in upper right corner of plot
+	ctx = that.plot.getCanvas().getContext("2d");
+	ctx.save();
+	ctx.textBaseline = 'top';
+	ctx.font = JS9.ScaleLimits.XTEXTHEIGHT + "px " +
+	    JS9.ScaleLimits.XTEXTFONT;
+	ctx.fillStyle = JS9.ScaleLimits.XTEXTCOLOR || "black";
+	text = ctx.measureText(s);
+	w = Math.max(that.lastTextWidth, text.width + 2);
+	h = JS9.ScaleLimits.XTEXTHEIGHT + 2;
+	x = that.plotWidth - Math.floor(w * 1.5);
+	y = Math.floor(1.5 * h);
+	ctx.clearRect(x, y, w, h);
+	ctx.fillText(s, x, y); 
+	ctx.restore();
+	that.lastTextWidth = w;
     });
     this.timeout = window.setTimeout(function(){
 	that.plot = $.plot(el, [pobj], popts);
 	that.timeout = null;
 	annotate(that.plot, xmin, that.xlocolor);
 	annotate(that.plot, xmax, that.xhicolor);
+	that.plotComplete = true;
     }, JS9.ScaleLimits.TIMEOUT);
 };
 
@@ -8697,7 +8701,9 @@ JS9.ScaleLimits.init = function(opts){
     if( !this.ndist  ){
 	this.ndist  = JS9.ScaleLimits.NDIST;
     }
+    // clear out html
     this.divjq.html("");
+    this.lastTextWidth = 0;
     // set up new html
     this.scalelimsContainer = $("<div>")
 	.addClass(JS9.ScaleLimits.BASE + "Container")
