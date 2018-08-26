@@ -29,6 +29,9 @@ JS9.ScaleLimits.XTEXTHEIGHT=14;
 JS9.ScaleLimits.XTEXTFONT="Ariel";
 // font for xval text without size
 JS9.ScaleLimits.XTEXTCOLOR="black";
+// where to place the xval (as a fraction of plot size)
+JS9.ScaleLimits.XTEXTFRAC = 0.75;
+JS9.ScaleLimits.YTEXTFRAC = 0.15;
 // plot colors
 // see: https://htmlcolorcodes.com/color-picker/
 JS9.ScaleLimits.PLOTCOLOR = "#030AE4";
@@ -335,8 +338,8 @@ JS9.ScaleLimits.doplot = function(im){
 	text = ctx.measureText(s);
 	w = Math.max(that.lastTextWidth, text.width + 2);
 	h = JS9.ScaleLimits.XTEXTHEIGHT + 2;
-	x = that.plotWidth - Math.floor(w * 1.5);
-	y = Math.floor(1.5 * h);
+	x = that.plotWidth  * JS9.ScaleLimits.XTEXTFRAC;
+	y = that.plotHeight * JS9.ScaleLimits.YTEXTFRAC;
 	ctx.clearRect(x, y, w, h);
 	ctx.fillText(s, x, y); 
 	ctx.restore();
