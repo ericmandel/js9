@@ -151,7 +151,7 @@ JS9.globalOpts = {
     reduceMosaic: "js9",        // "js9" or "shrink" ("js9" seems to be faster)
     reduceRegcnts: true,        // reduce image when doing counts in regions?
     copyWcsPosFormat: "$ra $dec $sys", // format for copy wcs pos to clipboard
-    floatFormat: "%.6f",        // format for float pixel values
+    floatPrecision: 6,          // precision for floatToString()
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     keyboardActions: {
@@ -15325,7 +15325,8 @@ JS9.strace = function(e){
 // try to make a nice string from a float
 // ints remain ints, floats get truncated at 6 significant digits
 JS9.floatToString = function(fval){
-    return sprintf("%g", parseFloat(fval.toFixed(6)));
+    return sprintf("%g",
+		   parseFloat(fval.toFixed(JS9.globalOpts.floatPrecision)));
 };
 
 // figure out precision from range of values
