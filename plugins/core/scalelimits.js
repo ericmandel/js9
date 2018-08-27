@@ -37,6 +37,9 @@ JS9.ScaleLimits.YTEXTFRAC = 0.15;
 JS9.ScaleLimits.PLOTCOLOR = "#030AE4";
 JS9.ScaleLimits.XLOCOLOR  = "#FF0000";
 JS9.ScaleLimits.XHICOLOR  = "#00FF00";
+// axis font
+JS9.ScaleLimits.AXISFONT = {size: 12, family: "Ariel", color: "black"};
+JS9.ScaleLimits.AXISFANCY = true;
 // data options
 JS9.ScaleLimits.dataOpts = {
     bars: {show: true, align: "center", barWidth: 0.1},
@@ -179,6 +182,14 @@ JS9.ScaleLimits.getPixelDist = function(im, ndist){
     return dist;
 };
 
+JS9.ScaleLimits.to10E = function(i){
+    var superscripts = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
+    if( JS9.ScaleLimits.AXISFANCY && i >= 0 && i <= 9 ){
+	return "10" + superscripts[i];
+    }
+    return "10E" + String(i);
+};
+
 JS9.ScaleLimits.doplot = function(im){
     var that = this;
     var i, j, s, el, xmin, xmax;
@@ -246,6 +257,7 @@ JS9.ScaleLimits.doplot = function(im){
     }      
     // xaxis
     popts.xaxis = popts.xaxis || {};
+    popts.xaxis.font = JS9.ScaleLimits.AXISFONT;
     if( this.xscale === "linear"  ){
 	popts.xaxis.transform = null;
 	popts.xaxis.ticks = [];
@@ -263,7 +275,7 @@ JS9.ScaleLimits.doplot = function(im){
 	ntick = JS9.ScaleLimits.log10(this.ndist) + 1;
 	for(i=0; i<ntick; i++){
 	    j = Math.floor( (Math.pow(10, i) - dmin) * this.ndist / drange);
-            popts.xaxis.ticks[i] = [j, "1E"+String(i)];
+            popts.xaxis.ticks[i] = [j, JS9.ScaleLimits.to10E(i)];
 	}
     }
     // plot location of current scaling min and max for annotations
@@ -271,6 +283,7 @@ JS9.ScaleLimits.doplot = function(im){
     xmax = ((im.params.scalemax - dmin) / drange) * this.ndist;
     // y axis
     popts.yaxis = popts.yaxis || {};
+    popts.yaxis.font = JS9.ScaleLimits.AXISFONT;
     if( this.yscale === "linear"  ){
 	popts.yaxis.transform = null;
 	popts.yaxis.ticks = null;
@@ -289,7 +302,7 @@ JS9.ScaleLimits.doplot = function(im){
 	}      
 	ntick = JS9.ScaleLimits.log10(distmax - distmin + 1);
 	for(i=0; i<ntick; i++){
-            popts.yaxis.ticks[i] = [Math.pow(10, i), "1E"+String(i)];
+            popts.yaxis.ticks[i] = [Math.pow(10, i), JS9.ScaleLimits.to10E(i)];
 	}
     }
     el = this.divjq.find(".JS9ScalePlot");
