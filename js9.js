@@ -258,6 +258,7 @@ JS9.imageOpts = {
     wcsalign: true,			// align image using wcs after reproj?
     rotationMode: "relative",		// default: relative or absolute?
     crosshair: false,			// enable crosshair?
+    disable: [],			// list of disabled core services
     ltvbug:  true,			// add 0.5/ltm to image LTV values?
     listonchange: false			// whether to list after a reg change
 };
@@ -3507,6 +3508,10 @@ JS9.Image.prototype.setPan = function(panx, pany){
     var i, key, bpanx, bpany, bw2, bh2, im;
     var w2 = this.raw.width / 2;
     var h2 = this.raw.height / 2;
+    // is this core service disabled?
+    if( $.inArray("pan", this.params.disable) >= 0 ){
+	return;
+    }
     if( arguments.length === 0 ){
 	panx = w2;
 	pany = h2;
@@ -3606,6 +3611,10 @@ JS9.Image.prototype.parseZoom = function(zval){
 // set zoom of RGB image
 JS9.Image.prototype.setZoom = function(zval){
     var i, nzoom, key, im;
+    // is this core service disabled?
+    if( $.inArray("zoom", this.params.disable) >= 0 ){
+	return;
+    }
     nzoom = this.parseZoom(zval);
     if( !nzoom ){
 	return;
@@ -3817,6 +3826,10 @@ JS9.Image.prototype.getWCSSys = function(){
 // set the WCS sys for this image
 JS9.Image.prototype.setWCSSys = function(wcssys){
     var s, wu;
+    // is this core service disabled?
+    if( $.inArray("wcs", this.params.disable) >= 0 ){
+	return;
+    }
     if( wcssys === "image" ){
 	this.params.wcssys = "image";
 	this.params.wcsunits = "pixels";
@@ -3996,6 +4009,10 @@ JS9.Image.prototype.getWCSUnits = function(){
 // set the WCS units for this image
 JS9.Image.prototype.setWCSUnits = function(wcsunits){
     var s, ws;
+    // is this core service disabled?
+    if( $.inArray("wcs", this.params.disable) >= 0 ){
+	return;
+    }
     if( wcsunits === "pixels" ){
 	this.params.wcssys = "physical";
 	this.params.wcsunits = "pixels";
@@ -5272,6 +5289,11 @@ JS9.Image.prototype.getColormap = function(){
 
 // set color map
 JS9.Image.prototype.setColormap = function(arg, arg2, arg3){
+    // is this core service disabled?
+    // (only if the colormap has been set at least once!)
+    if( $.inArray("colormap", this.params.disable) >= 0 && this.cmapObj ){
+	return;
+    }
     switch(arguments.length){
     case 1:
     case 3:
@@ -5391,6 +5413,10 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
 	    JS9.error("unknown scale: " + s);
 	}
     };
+    // is this core service disabled?
+    if( $.inArray("scale", this.params.disable) >= 0 ){
+	return;
+    }
     if( arguments.length ){
 	switch(arguments.length){
 	case 1:
@@ -5435,7 +5461,7 @@ JS9.Image.prototype.getParam = function(param){
 
 // set an image param value
 JS9.Image.prototype.setParam = function(param, value){
-    var ovalue;
+    var i, idx, ovalue;
     // sanity check
     if( !param ){
 	return null;
@@ -5451,6 +5477,28 @@ JS9.Image.prototype.setParam = function(param, value){
 	    this.setScale(value.scale);
 	}
 	return this.params;
+    } else if( param === "disable" ){
+	if( !$.isArray(value) ){
+	    value = [value];
+	}
+	for(i=0; i<value.length; i++){
+	    idx = $.inArray(value[i], this.params.disable);
+	    if( idx < 0 ){
+		this.params.disable.push(value[i]);
+	    }
+	}
+	return this.params.disable;
+    } else if( param === "enable" ){
+	if( !$.isArray(value) ){
+	    value = [value];
+	}
+	for(i=0; i<value.length; i++){
+	    idx = $.inArray(value[i], this.params.disable);
+	    if( idx >= 0 ){
+		this.params.disable.splice(idx, 1);
+	    }
+	}
+	return this.params.disable;
     }
     // save old value
     ovalue = this.params[param];
@@ -8476,6 +8524,11 @@ JS9.Display.prototype.loadSession = function(file){
 	    for(i=0; i<obj.layers.length; i++){
 		layer = obj.layers[i];
 		lname = layer.name;
+		// are regions disabled?
+		if( $.inArray("regions", im.params.disable) >= 0 &&
+		    lname === "regions" ){
+		    continue;
+		}
 		// make sure layer exists in the display
 		dlayer = that.newShapeLayer(lname, layer.dopts);
 		// add a layer instance to this image (no objects yet)
@@ -10747,6 +10800,11 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     var layer, canvas, dlayer, zoom;
     var ttop, tleft, rarr=[];
     var params = {};
+    // is this core service disabled?
+    if( $.inArray("regions", this.params.disable) >= 0 &&
+	layerName === "regions" ){
+	return;
+    }
     // opts can be an object or json
     if( typeof myopts === "string" ){
 	try{ myopts = JSON.parse(myopts); }

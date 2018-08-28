@@ -1303,6 +1303,7 @@ subsequently. The available parameters and their current default
 values are listed below:
 <ul>
 <li><b>exp</b>: 1000, default exp value for scaling
+<li><b>disable</b>: which core services to disable for this image
 <li><b>listonchange</b>: false, list regions after a region change?
 <li><b>opacity</b>: 1.0, image display opacity, between 0 and 1
 <li><b>nancolor</b>: "#000000", 6-digit #hex color for NaN values
@@ -1312,6 +1313,7 @@ values are listed below:
 <li><b>zscalecontrast</b>: 0.25, default zscale value from ds9
 <li><b>zscalesamples</b>: 600,	default zscale value from ds9
 <li><b>zscaleline</b>: 120, default zscale value from ds9
+<li><b>disable</b>: array of core functionality to disable
 </ul>
 The routine returns the previous value of the parameter, which can
 be useful when temporarily turning off a function. For example:
@@ -1327,6 +1329,22 @@ is complete.
 If param is "all" and the second argument is an object, this object is
 merged into the current param object. This allows you to save the params from
 one image and restore them to another.
+<p>
+If param is "disable", the specified value (or array of values) is
+added to the <b>disable</b> array for this image, thereby disabling core
+functionality  (i.e. "colormap", "pan", "regions", "scale", "wcs", or "zoom").
+The resulting <b>disable array</b> is returned. Thus, for example:
+<pre>
+    JS9.SetParam("disable", ["zoom", "pan"]);
+</pre>
+will disable zoom and pan functionality for this image. Note that
+disabling regions means that you cannot create new regions,
+but you can still change and even remove existing regions.
+<p>
+If param is "enable", the specified value (or array of values) is
+removed to the <b>disable</b> array for this image, thereby enabling core
+functionality (i.e. "colormap", "pan", "regions", "scale", "wcs", or "zoom").
+The resulting <b>disable array</b> is returned.
 
 <h5 id="JS9.EventToDisplayPos">Get the display coordinates from an event</h5>
 <p>
