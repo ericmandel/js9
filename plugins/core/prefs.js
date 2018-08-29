@@ -99,8 +99,11 @@ JS9.Prefs.imagesSchema = {
 	"invert": {
 	    "type": "boolean",
 	    "helper": "by default, invert colormap?"
+	},
+	"disable": {
+	    "type": "mobject",
+	    "helper": "array of core functions to disable"
 	}
-
     }
 };
     
@@ -731,10 +734,16 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	    switch( source.name ){
 	    case "images":
 		// set new option value
-		if( key === "inherit" && display && display.image ){
-		    display.image.params.inherit = val;
-		}
 	        obj[key] = val;
+		// set the current image's internal params as well
+		if( display && display.image ){
+	            if( key === "disable" ){
+			// overwrite the current disable list
+			display.image.params.disable = val;
+		    } else {
+			display.image.setParam(key, val);
+		    }
+		}
 	        break;
 	    case "regions":
 		// set new option value
