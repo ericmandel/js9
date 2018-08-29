@@ -1315,6 +1315,24 @@ values are listed below:
 <li><b>zscaleline</b>: 120, default zscale value from ds9
 <li><b>disable</b>: array of core functionality to disable
 </ul>
+<p>
+In addition, you can set the internal values associated with core functionality
+("colormap", "pan", "regions", "scale", "wcs", or "zoom") and the
+corresponding core function will be called. The core parameters that can be
+set in this way are:
+<ul>
+<li><b>colormap</b>: calls JS9.SetColormap()
+<li><b>contrast</b>: calls JS9.SetColormap()
+<li><b>bias</b>: calls JS9.SetColormap()
+<li><b>scale</b>: calls JS9.SetScale()
+<li><b>scalemin</b>: calls JS9.SetScale()
+<li><b>scalemax</b>: calls JS9.SetScale()
+<li><b>scaleclipping</b>: calls JS9.SetScale()
+<li><b>wcssys</b>: calls JS9.SetWCSSys()
+<li><b>wcsunits</b>: calls JS9.SetWCSUnits()
+<li><b>zoom</b>: calls JS9.SetZoom()
+</ul>
+<p>
 The routine returns the previous value of the parameter, which can
 be useful when temporarily turning off a function. For example:
 <pre>
@@ -1328,12 +1346,13 @@ is complete.
 <p>
 If param is "all" and the second argument is an object, this object is
 merged into the current param object. This allows you to save the params from
-one image and restore them to another.
+one image and restore them to another. If the object contains internal
+core parameters (see above), the corresponding core function will be called.
 <p>
 If param is "disable", the specified value (or array of values) is
-added to the <b>disable</b> array for this image, thereby disabling core
-functionality  (i.e. "colormap", "pan", "regions", "scale", "wcs", or "zoom").
-The resulting <b>disable array</b> is returned. Thus, for example:
+added to the <b>disable</b> array for this image, thereby disabling
+core functionality. The resulting <b>disable array</b> is
+returned. Thus, for example:
 <pre>
     JS9.SetParam("disable", ["zoom", "pan"]);
 </pre>
@@ -1343,8 +1362,7 @@ but you can still change and even remove existing regions.
 <p>
 If param is "enable", the specified value (or array of values) is
 removed to the <b>disable</b> array for this image, thereby enabling core
-functionality (i.e. "colormap", "pan", "regions", "scale", "wcs", or "zoom").
-The resulting <b>disable array</b> is returned.
+functionality. The resulting <b>disable array</b> is returned.
 
 <h5 id="JS9.EventToDisplayPos">Get the display coordinates from an event</h5>
 <p>

@@ -5461,7 +5461,7 @@ JS9.Image.prototype.getParam = function(param){
 
 // set an image param value
 JS9.Image.prototype.setParam = function(param, value){
-    var i, idx, ovalue;
+    var i, idx, ovalue, obj;
     // sanity check
     if( !param ){
 	return null;
@@ -5469,12 +5469,33 @@ JS9.Image.prototype.setParam = function(param, value){
     // merge in new params
     if( param === "all" && typeof value === "object" ){
 	$.extend(true, this.params, value);
-	//hack: make this routine sort of work like setScale and setColormap
-	if( value.colormap ){
+	// call core methods as needed
+	if( value.colormap || value.contrast || value.bias ){
+	    obj = this.getColormap();
+	    value.colormap = value.colormap || obj.colormap;
+	    value.contrast = value.contrast || obj.contrast;
+	    value.bias = value.bias || obj.bias;
 	    this.setColormap(value.colormap, value.contrast, value.bias);
 	}
-	if( value.scale ){
-	    this.setScale(value.scale);
+	if( value.scale || value.scalemin || value.scalemax ){
+	    obj = this.getScale();
+	    value.scale = value.scale || obj.scale;
+	    value.scalemin = value.scalemin || obj.scalemin;
+	    value.scalemax = value.scalemax || obj.scalemax;
+	    this.setScale(value.scale, value.scalemin, value.scalemax);
+	}
+	if( value.invert ){
+	    this.params.invert = value.invert;
+	    this.displayImage("colors");
+	}
+	if( value.zoom ){
+	    this.setZoom(value.zoom);
+	}
+	if( value.wcssys ){
+	    this.setWCSSys(value.wcssys);
+	}
+	if( value.wcsunits ){
+	    this.setWCSUnits(value.wcsunits);
 	}
 	return this.params;
     } else if( param === "disable" ){
@@ -5504,6 +5525,47 @@ JS9.Image.prototype.setParam = function(param, value){
     ovalue = this.params[param];
     // set new value
     this.params[param] = value;
+    // call core methods as needed
+    switch(param){
+    case "colormap":
+	this.setColormap(value);
+	break;
+    case "invert":
+	this.displayImage("colors");
+	break;
+    case "contrast":
+	obj = this.getColormap();
+	this.setColormap(obj.colormap, value, obj.bias);
+	break;
+    case "bias":
+	obj = this.getColormap();
+	this.setColormap(obj.colormap, obj.contrast, value);
+	break;
+    case "scale":
+	this.setScale(value);
+	break;
+    case "scalemin":
+	obj = this.getScale();
+	this.setScale("user", value, obj.scalemax);
+	break;
+    case "scalemax":
+	obj = this.getScale();
+	this.setScale("user", obj.scalemin, value);
+	break;
+    case "scaleclipping":
+	obj = this.getScale();
+	this.setScale(value, obj.scalemin, obj.scalemax);
+	break;
+    case "wcssys":
+	this.setWCSSys(value);
+	break;
+    case "wcsunits":
+	this.setWCSUnits(value);
+	break;
+    case "zoom":
+	this.setZoom(value);
+	break;
+    }
     // return old value
     return ovalue;
 };
