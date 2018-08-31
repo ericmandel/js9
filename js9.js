@@ -1997,7 +1997,10 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	sect.height = Math.min(this.raw.height,this.display.canvas.height);
 	break;
     case 1:
-	sect.zoom   = xcen;
+	if( !JS9.isNumber(xcen) ){
+	    JS9.error("invalid input for generating section");
+	}
+	sect.zoom   = parseFloat(xcen);
 	sect.width  = Math.min(this.raw.width*sect.zoom,
 			       this.display.canvas.width);
 	sect.height = Math.min(this.raw.height*sect.zoom,
@@ -2005,14 +2008,20 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	break;
     case 2:
 	// two args: x, y
+	if( !JS9.isNumber(xcen) || !JS9.isNumber(ycen) ){
+	    JS9.error("invalid input for generating section");
+	}
 	sect.xcen   = parseFloat(xcen);
 	sect.ycen   = parseFloat(ycen);
 	break;
     case 3:
 	// three args: x, y, zoom
+	if( !JS9.isNumber(xcen) || !JS9.isNumber(ycen) || !JS9.isNumber(zoom) ){
+	    JS9.error("invalid input for generating section");
+	}
 	sect.xcen   = parseFloat(xcen);
 	sect.ycen   = parseFloat(ycen);
-	sect.zoom   = zoom;
+	sect.zoom   = parseFloat(zoom);
 	sect.width  = Math.min(this.raw.width*sect.zoom,
 			       this.display.canvas.width);
 	sect.height = Math.min(this.raw.height*sect.zoom,
@@ -3580,6 +3589,9 @@ JS9.Image.prototype.setPan = function(panx, pany){
 	}
     }
     // generate section from new image coords
+    if( !JS9.isNumber(panx) || !JS9.isNumber(pany) ){
+	JS9.error("invalid input for setPan: " + panx + " " + pany);
+    }
     this.mkSection(panx, pany);
     // set pan for blended images, if necessary
     if( this.display.blendMode ){
@@ -3677,7 +3689,7 @@ JS9.Image.prototype.setZoom = function(zval){
     }
     nzoom = this.parseZoom(zval);
     if( !nzoom ){
-	return;
+	JS9.error("invalid input for setZoom: " + zval);
     }
     // remake section
     this.mkSection(nzoom);
