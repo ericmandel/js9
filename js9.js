@@ -3505,21 +3505,81 @@ JS9.Image.prototype.getPan = function(){
 
 // set pan location of RGB image (using image coordinates)
 JS9.Image.prototype.setPan = function(panx, pany){
-    var i, key, bpanx, bpany, bw2, bh2, im;
+    var i, key, bpanx, bpany, bw2, bh2, im, pos, owcssys, txeq, arr;
     var w2 = this.raw.width / 2;
     var h2 = this.raw.height / 2;
     // is this core service disabled?
     if( $.inArray("pan", this.params.disable) >= 0 ){
 	return;
     }
+    // default is to pan to center
     if( arguments.length === 0 ){
 	panx = w2;
 	pany = h2;
-    } else if( typeof panx === "object" &&
-	       JS9.notNull(panx.x) && JS9.notNull(panx.y) ){
-	pany = panx.y;
-	panx = panx.x;
     }
+    // one string argument is a json specification
+    // (two string args is panx, pany in string format)
+    if( arguments.length === 1 && typeof panx === "string" ){
+	try{ panx = JSON.parse(panx); }
+	catch(e){ JS9.error("can't parse setPan JSON: " + panx, e); }
+    }
+    if( typeof panx === "object" ){
+	// passing an object supports image, physical, wcs coordinates
+	if( JS9.notNull(panx.x) && JS9.notNull(panx.y) ){
+	    // image coords
+	    panx = panx.x;
+	    pany = panx.y;
+	}
+	if( JS9.notNull(panx.px) && JS9.notNull(panx.py) ){
+	    // physical coords
+	    pos = this.logicalToImagePos({x: panx.px, y: panx.py});
+	    panx = pos.x;
+	    pany = pos.y;
+	}
+	if( typeof panx.wcs === "string" ){
+	    // wcs string: ra dec [wcssys]
+            arr = panx.wcs.trim().split(/ +/);
+            panx.ra  = arr[0];
+            panx.dec = arr[1];
+            if( arr.length >= 3 ){
+		panx.wcssys = arr[2];
+            }
+	}
+	if( JS9.notNull(panx.ra) && JS9.notNull(panx.dec) &&
+	    (this.raw.wcs > 0) ){
+	    // wcs coords
+	    // use supplied wcs, if necessary
+	    if( panx.wcssys ){
+		owcssys = this.getWCSSys();
+		txeq = JS9.globalOpts.xeqPlugins;
+		JS9.globalOpts.xeqPlugins = false;
+		this.setWCSSys(panx.wcssys);
+	    }
+	    // convert wcs supplied as strings
+	    if( typeof panx.ra === "string" ){
+		panx.ra = JS9.saostrtod(panx.ra);
+		if( (String.fromCharCode(JS9.saodtype()) === ":") &&
+		    (this.params.wcssys !== "galactic" )          &&
+		    (this.params.wcssys !== "ecliptic" )          ){
+		    panx.ra *= 15.0;
+		}
+	    }
+	    if( typeof panx.dec === "string" ){
+		panx.dec = JS9.saostrtod(panx.dec);
+	    }
+	    // convert to image coords
+	    arr = JS9.wcs2pix(this.raw.wcs, panx.ra, panx.dec)
+		.trim().split(/ +/);
+	    panx = parseFloat(arr[0]);
+	    pany = parseFloat(arr[1]);
+	    // restore original wcssys
+	    if( owcssys ){
+		this.setWCSSys(owcssys);
+		JS9.globalOpts.xeqPlugins = txeq;
+	    }
+	}
+    }
+    // generate section from new image coords
     this.mkSection(panx, pany);
     // set pan for blended images, if necessary
     if( this.display.blendMode ){
@@ -10386,20 +10446,18 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	nopts.left = pos.x;
 	nopts.top = pos.y;
     }
+    // wcs string: ra dec [wcssys]
+    if( typeof opts.wcs === "string" ){
+        arr = opts.wcs.trim().split(/ +/);
+        opts.ra  = arr[0];
+        opts.dec = arr[1];
+        if( arr.length >= 3 ){
+	    opts.wcssys = arr[2];
+        }
+    }
     //  ra and dec are in degrees, using the current wcs
     if( (opts.ra !== undefined) && (opts.dec !== undefined) &&
 	(this.raw.wcs > 0) ){
-	if( typeof opts.ra === "string" ){
-	    opts.ra = JS9.saostrtod(opts.ra);
-	    if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-		(this.params.wcssys !== "galactic" )     &&
-		(this.params.wcssys !== "ecliptic" )     ){
-		opts.ra *= 15.0;
-	    }
-	}
-	if( typeof opts.dec === "string" ){
-	    opts.dec = JS9.saostrtod(opts.dec);
-	}
 	// make sure we have the right wcssys
 	if( opts.wcssys ){
 	    // from passed-in opts
@@ -10415,6 +10473,18 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    this.setWCSSys(opts._wcssys);
 	    // no longer needed or wanted
 	    delete opts._wcssys;
+	}
+	// convert wcs supplied as strings
+	if( typeof opts.ra === "string" ){
+	    opts.ra = JS9.saostrtod(opts.ra);
+	    if( (String.fromCharCode(JS9.saodtype()) === ":") &&
+		(this.params.wcssys !== "galactic" )     &&
+		(this.params.wcssys !== "ecliptic" )     ){
+		opts.ra *= 15.0;
+	    }
+	}
+	if( typeof opts.dec === "string" ){
+	    opts.dec = JS9.saostrtod(opts.dec);
 	}
 	// convert to image coords
 	arr = JS9.wcs2pix(this.raw.wcs, opts.ra, opts.dec).trim().split(/ +/);

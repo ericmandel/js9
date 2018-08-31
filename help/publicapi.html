@@ -123,7 +123,7 @@ Choose from the following sections:
 where:
 <ul>
 <li><b>url</b>: url, fitsy object, in-memory FITS, or FITS blob
-<li><b>opts</b>: optional object or json string containing image parameters
+<li><b>opts</b>: optional object or JSON string containing image parameters
 </ul>
 <p>
 Load a FITS file or a PNG <b>representation file</b> into JS9.
@@ -178,7 +178,7 @@ how to use this routine.
 where:
 <ul>
 <li><b>url</b>: url to load
-<li><b>opts</b>: optional object or json string containing image parameters and/or the div id
+<li><b>opts</b>: optional object or JSON string containing image parameters and/or the div id
 <li><b>type</b>: "light" or "new" 
 <li><b>html</b>: html for the new page (default is to display a menubar above the image)
 <li><b>winopts</b>: for "light", optional dhtml window options
@@ -228,7 +228,7 @@ See js9create.html for examples of how to use this routine.
 where:
 <ul>
 <li><b>url</b>: remote URL link to load
-<li><b>opts</b>: optional object or json string containing image parameters
+<li><b>opts</b>: optional object or JSON string containing image parameters
 </ul>
 <p>
 Load a FITS, PNG, or JPEG file specified by an arbitrary URL into JS9 using the
@@ -302,7 +302,7 @@ can be used to view images from arbitrary URLs.
 where:
 <ul>
 <li><b>url</b>: url to load
-<li><b>opts</b>: optional object or json string containing image parameters
+<li><b>opts</b>: optional object or JSON string containing image parameters
 </ul>
 This routine will pre-load images into a JS9 display. It can be added
 to the web page body element using the onload() JavaScript call or
@@ -891,7 +891,7 @@ display. If no argument is specified, it returns the current blend mode.
 <p>
 where:
 <ul>
-<li><b>opts</b>: optional object or json string containing image parameters
+<li><b>opts</b>: optional object or JSON string containing image parameters
 </ul>
 <p>
 <p>
@@ -905,7 +905,7 @@ discarded. Note, however, that closing an image only provides a hint
 to the browser, since this sort of garbage collection is not directly
 accessible to JavaScript programming and happens when it happens.
 <p>
-The optional first argument is an opts object (or a json-formatted
+The optional first argument is an opts object (or a JSON-formatted
 string) containing:
 <ul>
 <li><b>clear</b>: if explicitly set to false, the image will not be cleared
@@ -950,7 +950,7 @@ where:
 <ul>
 <li><b>filename</b>: output file name
 </ul>
-Save the current colormap definition for displayed image as a json
+Save the current colormap definition for displayed image as a JSON
 file. If filename is not specified, the file will be saved as "js9.cmap".
 This is useful if you want to edit the current definition to make a new
 colormap.
@@ -970,7 +970,7 @@ where:
 <li><b>aa</b>: an array containing RGB color triplets
 <li><b>rr,gg,bb</b>: 3 arrays of vertices specifying color changes
 <li><b>obj</b>: object containing one of the two colormap definition formats
-<li><b>json</b>: json string containing one of the colormap definition formats
+<li><b>json</b>: JSON string containing one of the colormap definition formats
 <li><b>opts</b>: optional object to set toplevel property to false
 </ul>
 You can add new colormaps to JS9 using one of two formats. The first
@@ -1024,7 +1024,7 @@ result is that you see, for example, green at the beginning and yellow
 (red + green) at the end, with some purple (red + blue) in the middle
 of the colormap.
 <p>
-As a convenience, you also can pass an object or json string containing the
+As a convenience, you also can pass an object or JSON string containing the
 colormap definition:
 <pre>
     # RGB color triplets for the I8 colormap in a "colors" property
@@ -1056,7 +1056,7 @@ where:
 Load the specified colormap file into the web page. The filename,
 which must be specified, can be a local file (with absolute path or a
 path relative to the displayed web page) or a URL. It should contain a
-json representation of a colormap, either in RGB color format or in
+JSON representation of a colormap, either in RGB color format or in
 vertex format (see
 <a href="#JS9.AddColormap"><b>JS9.AddColormap()</b></a>
 above):
@@ -1247,10 +1247,9 @@ The returned ipos object will contain the following properties:
 <p>
 where:
 <ul>
-<li><b>x</b>: x image coordinate (or object containing x and y properties)
+<li><b>x</b>: x image coordinate (or an object containing a position)
 <li><b>y</b>: y image coordinate
 </ul>
-
 <p>
 Set the current pan position using image coordinates. Note that you can use
 <a href="#JS9.WCSToPix"><b>JS9.WCSToPix()</b></a>
@@ -1258,7 +1257,25 @@ and
 <a href="#JS9.PixToWCS"><b>JS9.PixToWCS()</b></a>
 to convert between image and WCS coordinates.
 </p>
-An object containing x and y properties can also be supplied.
+An object can also be supplied with a position specified in image,
+physical, or WCS coordinates:
+<ul>
+<li><b>x</b>: image x position
+<li><b>y</b>: image y position
+<li><b>px</b>: physical x position
+<li><b>py</b>: physical y position
+<li><b>ra</b>: RA in degrees
+<li><b>dec</b>: Dec in degrees
+<li><b>wcs</b>: sexagesimal WCS string with optional WCS system
+</ul>
+For example:
+<pre>
+    JS9.SetPan({wcs: "23:23:28.895 +58:49:43.50 ICRS"});
+</pre>
+will set the pan position to the specified RA and Dec using the ICRS
+system. Note that the WCS string above is returned by the <b>Edit</b>
+menu's "copy wcs pos" option (i.e., the "/" keystroke).
+
 
 <h5 id="JS9.GetParam">Get an image parameter value</h5>
 <p>
@@ -1308,7 +1325,7 @@ values are listed below:
 <li><b>opacity</b>: 1.0, image display opacity, between 0 and 1
 <li><b>nancolor</b>: "#000000", 6-digit #hex color for NaN values
 <li><b>valpos</b>: true, display value/position?
-<li><b>wcsalign</b>: true, align image using wcs after reproj?
+<li><b>wcsalign</b>: true, align image using WCS after reproj?
 <li><b>xeqonchange</b>: true, xeq an onchange callback after a region change?
 <li><b>zscalecontrast</b>: 0.25, default zscale value from ds9
 <li><b>zscalesamples</b>: 600,	default zscale value from ds9
@@ -1547,13 +1564,13 @@ Get information about the current WCS, including:
 <li><b>version</b>: the WCS version ("default" or the letter "A"-"Z" for an alternate WCS)
 <li><b>wcsname</b>: the value of the WCSNAME header parameter associated
 with this WCS, if present
-<li><b>crot</b>: crot value (i.e., the CROT1 value) from wcs library 
-<li><b>crpix[1,2]</b>: crpix values from wcs library
-<li><b>crval[1,2]</b>: crval values from wcs library
-<li><b>crdelt[1,2]</b>: crdelt values from wcs library
-<li><b>crtype[1,2]</b>: crtype values (e.g., "RA" and "Dec") from wcs library
-<li><b>ptype</b>: ptype value (e.g., "TAN") from wcs library
-<li><b>radecsys</b>: radecsys value (e.g., "ICRS") from the wcs library
+<li><b>crot</b>: crot value (i.e., the CROT1 value) from WCS library
+<li><b>crpix[1,2]</b>: crpix values from WCS library
+<li><b>crval[1,2]</b>: crval values from WCS library
+<li><b>crdelt[1,2]</b>: crdelt values from WCS library
+<li><b>crtype[1,2]</b>: crtype values (e.g., "RA" and "Dec") from WCS library
+<li><b>ptype</b>: ptype value (e.g., "TAN") from WCS library
+<li><b>radecsys</b>: radecsys value (e.g., "ICRS") from the WCS library
 </ul>
 
 <h5 id="JS9.SetWCS">Set the current WCS</h5>
@@ -1641,12 +1658,12 @@ returns:
 <li><b>wcsobj</b>: world coordinate system object
 </ul>
 <p>
-The returned wcs object contains the following properties:
+The returned WCS object contains the following properties:
 <ul>
 <li><b>ra</b>: right ascension in floating point degrees
 <li><b>dec</b>: declination in floating point degrees 
 <li><b>sys</b>: current world coordinate system being used
-<li><b>str</b>: string of wcs in current system ("[ra] [dec] [sys]")
+<li><b>str</b>: string of WCS in current system ("[ra] [dec] [sys]")
 </ul>
 You can either supply the x and y image coordinates as two numeric
 arguments, or supply a single object containing numeric x and y properties.
@@ -1693,7 +1710,7 @@ empty string will clear the previous message.
 where:
 <ul>
 <li><b>mode</b>: true (display) or false (hide)
-<li><b>opts</b>: optional object or json string containing grid parameters
+<li><b>opts</b>: optional object or JSON string containing grid parameters
 </ul>
 A coordinate grid displays lines of constant RA and constant Dec, with
 the points of intersection labeled by their RA and Dec values. The
@@ -1710,7 +1727,7 @@ boolean first argument specifies whether to display the coordinate
 grid or not.
 
 <p>
-The optional second argument is an opts object (or a json-formatted
+The optional second argument is an opts object (or a JSON-formatted
 string) containing properties to override the default JS9.Grid.opts
 properties. These properties include:
 <ul>
@@ -1792,7 +1809,7 @@ where:
 <ul>
 <li><b>sregion</b>: any source region, or "$sregions" for displayed source regions
 <li><b>bregion</b>: any background region, or "$bregions" for displayed background regions
-<li><b>opts</b>:  optional object or json string containing region parameters
+<li><b>opts</b>:  optional object or JSON string containing region parameters
 </ul>
 The <a href="https://js9.si.edu/regions/regcnts.html">regcnts</a>
 program (and its predecessor, funcnts) counts photons in specified
@@ -1887,13 +1904,13 @@ The command line switches that can be specified in <b>cmdswitches</b> are
 detailed in the
 <a href="https://js9.si.edu/regions/regcnts.html">regcnts help
 page</a>.  Aside from switches which control important aspects of the
-analysis, the "-j" switch (which returns the output in json format)
+analysis, the "-j" switch (which returns the output in JSON format)
 might be useful in the browser environment. Some examples:
 <pre>
     # display results in a light window
     JS9.CountsInRegions({lightwin: true})
 
-    # return json using maximum precision in output
+    # return JSON using maximum precision in output
     JS9.CountsInRegions({cmdswitches: "-j -G"})
 </pre>
 Results are also returned as a text string.
@@ -1939,7 +1956,7 @@ where:
 <ul>
 <li><b>sregion</b>: annulus region, or "$sregions" to use displayed annulus
 <li><b>bregion</b>: any background region, or "$bregions" for displayed background regions
-<li><b>opts</b>:  optional object or json string containing region and plot parameters
+<li><b>opts</b>:  optional object or JSON string containing region and plot parameters
 </ul>
 The <b>JS9.RadialProfile()</b> routine
 uses <a href="#JS9.CountsInRegions"><b>JS9.CountsInRegions()</b></a>
@@ -1956,9 +1973,9 @@ as well as the following options for the radial profile plot:
 <li><b>errorbars</b>: show error bars? (default: true)
 <li><b>errorcolor</b>: color of the error bars (default: "red")
 </ul>
-Note that "-j" (json format) and "-r" (output radii) are always added to
+Note that "-j" (JSON format) and "-r" (output radii) are always added to
 the cmdswitches property (and should not be overridden.) This means you can
-retrieve the json output without generating the plot simply by calling
+retrieve the JSON output without generating the plot simply by calling
 <a href="#JS9.CountsInRegions"><b>JS9.CountsInRegions()</b></a> directly:
 <pre>
     JS9.CountsInRegions(sregions, bregions, {cmdswitches: "-j -r"})
@@ -2391,7 +2408,7 @@ routine. See <b>JS9.ReprojectData()</b> above for more information.
 where:
 <ul>
 <li><b>session</b>: optional name of the file to create when saving this session
-<li><b>opts</b>: optional object or json string containing session parameters
+<li><b>opts</b>: optional object or JSON string containing session parameters
 </ul>
 <p>
 This routine saves session information related to the currently
@@ -2409,13 +2426,13 @@ If mode is "display", the default filename takes the form <b>js9-[date].ses</b>,
 e.g., "js9-2018-01-09.ses". If mode is "image", the default filename is <b>[im.id].ses</b>, e.g., "casa.fits.ses".
 <p>
 Saved information (filename, scaling, colormap, contrast/bias, zoom,
-regions, catalogs, etc) is stored in a json-formatted text file. You can
+regions, catalogs, etc) is stored in a JSON-formatted text file. You can
 subsequently load this file into JS9 to restore the image session.
 Don't forget that the file is saved by the browser in whatever location
 you have set up for downloads.
 <p>
 The session file is a text file and can be edited, subject to the usual
-rules of json formatting. For example, you can change the colormap,
+rules of JSON formatting. For example, you can change the colormap,
 scaling, etc. after the fact.
 <p>
 The session file contains a <b>file</b> property near the top that
@@ -2436,7 +2453,7 @@ where:
 <li><b>session</b>: name of the session file to load
 </ul>
 <p>
-Restore an image session by loading a json-formatted session file. The
+Restore an image session by loading a JSON-formatted session file. The
 image itself is retrieved and loaded, and all of the saved parameters
 and graphics (scale, colormap, regions, catalogs etc) are applied to
 the display.
@@ -2510,6 +2527,9 @@ more properties, of which the most important are:
 <li><b>y</b>: image y position
 <li><b>px</b>: physical x position
 <li><b>py</b>: physical y position
+<li><b>ra</b>: RA in degrees
+<li><b>dec</b>: Dec in degrees
+<li><b>wcs</b>: sexagesimal WCS string with optional WCS system
 <li><b>lcs</b>: object containing logical x, y and sys (e.g., "physical")
 <li><b>dx</b>: increment from current image x position
 <li><b>dy</b>: increment from current image y position
@@ -2570,11 +2590,16 @@ Here are some examples of ways to create regions:
     # example 6: js9 region syntax: properties in the second arg object
     JS9.AddRegions('ellipse(23:23:22.179, +58:48:10.542, 40", 20", 60)', {text: "ellipse test", color: "violet", tags: "json tag, another tag", textOpts: {color: "yellow", fontSize: 16, fontStyle: "italic", fontWeight: "bold"}});
 
-    # example 7: js9 region syntax: json properties in the first arg string
+    # example 7: js9 region syntax: JSON properties in the first arg string
     JS9.AddRegions('ellipse(23:23:22.179, +58:48:10.542, 40", 20", 60) {"color": "violet", "text": "ellipse test", "textOpts": {"color": "yellow", "fontSize": 16, "fontStyle": "italic", "fontWeight": "bold"}} # json tag, another tag');
 
     # example 8: ds9 region syntax: comment properties in the first arg string
     JS9.AddRegions('box(23:23:35.486, +58:50:03.146, 40", 20", 30) # width=4 text={box test} dash=1 color=red rotate=0 tag="test tag"')
+
+    # example 9: create a region at the specified RA and Dec using ICRS
+    # Note that the WCS string is returned by the Edit menu's "copy wcs pos"
+    # option (i.e., the "/" keystroke.)
+    JS9.AddRegions("circle", {wcs: "23:23:28.895 +58:49:43.50 ICRS"});
 </pre>
 In sum, you can specify a region using:
 <ul>
@@ -2585,9 +2610,9 @@ In sum, you can specify a region using:
 </ul>
 Note the difference between examples 6 and 7: the former passes
 properties in an <b>object</b> (second argument), so the key names
-need not be quoted. The latter passes properties in a <b>json</b>
+need not be quoted. The latter passes properties in a <b>JSON</b>
 string as part of the first string argument: here the key names must be
-quoted using double quotes, as per the json specification.
+quoted using double quotes, as per the JSON specification.
 
 <p>
 Examples 6 and 7 also show the <b>text</b> property, which allows you
@@ -2648,8 +2673,8 @@ Each returned region object contains the following properties:
 <li><b>angle</b>: angle in degrees for box and ellipse regions
 <li><b>ra</b>: RA of center in degrees
 <li><b>dec</b>: Dec of center in degrees
-<li><b>wcsstr</b>: region string in wcs coordinates
-<li><b>wcssys</b>: wcs system (e.g., "FK5")
+<li><b>wcsstr</b>: region string in WCS coordinates
+<li><b>WCSsys</b>: WCS system (e.g., "FK5")
 <li><b>imstr</b>: region string in image or physical coordinates
 <li><b>imsys</b>: image system ("image" or "physical")
 <li><b>lcs</b>: object containing logical x, y and sys (e.g., "physical")
@@ -2901,7 +2926,7 @@ few important ways:
 <ul>
 <li> it makes the new layer non-interactive: individual shapes cannot be
 moved, rotated, resized, or deleted, nor do they respond to events
-<li> it sets the <b>updateWCS</b> property to false, so the relatively expensive operation of updating the wcs string is not performed when an object is modified
+<li> it sets the <b>updateWCS</b> property to false, so the relatively expensive operation of updating the WCS string is not performed when an object is modified
 <li> it does not sort overlapping shapes so that the smallest is on top when a shape is moved
 <li> it does not define regions-specific processing (e.g., double-click to edit a region parameters)
 </ul>
@@ -3252,7 +3277,7 @@ The third argument is an optional object used to specify parameters, including:
 <ul>
 <li><b>xcol</b>: name of the RA column in the table (default is a heuristic, see below)
 <li><b>ycol</b>: name of the Dec column in the table (default is a heuristic, see below)
-<li><b>wcssys</b>: wcs system (FK4, FK5, ICRS, galactic, ecliptic) (default is from globalOpts)
+<li><b>wcssys</b>: WCS system (FK4, FK5, ICRS, galactic, ecliptic) (default is from globalOpts)
 <li><b>shape</b>: shape of catalog object (default is from globalOpts)
 <li><b>color</b>: color of catalog shapes (default is from globalOpts)
 <li><b>width</b>: width of box catalog shapes (default is from globalOpts)
@@ -4059,7 +4084,7 @@ supports the JS9 menu functions.
 <code class="api">JS9.OpenColormapMenu()</code>
 <p>
 Calling this routine brings up the browser file menu. When a
-json-format colormap file is selected, it will be loaded into the JS9
+JSON-format colormap file is selected, it will be loaded into the JS9
 display. The colormap file can take one of two forms (without the comments):
 <pre>
     # RGB color triplets for the I8 colormap in a "colors" property
@@ -4109,7 +4134,7 @@ top-level tools.
 <li><b>showTooltips</b>: the text "showTooltips" uses the value of the
 boolean arg2 to specify whether tooltips are displayed as the mouse hovers
 over a tool.
-<li><b>[text]</b>: other text is assumed to be a json-formatted text
+<li><b>[text]</b>: other text is assumed to be a JSON-formatted text
 containing either a new tool to add to the toolbar, or an array of tools.
 <li><b>[object]</b>: an object is assumed to be new tool to add to the toolbar
 <li><b>[array]</b>: an array is assumed to be an array of new tools to add to the toolbar
@@ -4248,7 +4273,7 @@ list of available analysis tasks and then display this list using the call:
     JS9.Send("getAnalysis", null, function(s){alert(s)});
 </pre>
 The "getAnalysis" message passes no parameters to the server. The
-server returns a list of available analysis tasks in json format.
+server returns a list of available analysis tasks in JSON format.
 
 <h5 id="JS9.AddDivs">Add a JS9 display div and/or associated plugins</h5>
 <p>
