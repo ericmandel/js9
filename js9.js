@@ -62,8 +62,8 @@ JS9.RAWID0 = "raw0";		// default raw id
 JS9.RAWIDX = "alt";		// default "alternate" raw id
 JS9.REPROJDIM = 2048;		// max dim for reproj before we shrink image
 JS9.IDFMT = "  (%s)";           // format for light window id
-JS9.MINZOOM = 0.125;		// min zoom using scrool wheel
-JS9.MAXZOOM = 16.0;		// max zoom using scrool wheel
+JS9.MINZOOM = 0.125;		// min zoom using scroll wheel
+JS9.MAXZOOM = 16.0;		// max zoom using scroll wheel
 JS9.ADDZOOM = 0.05;		// add/subtract amount per mouse wheel click
 JS9.CHROMEFILEWARNING = true;	// whether to alert chrome users about file URI
 
@@ -2580,7 +2580,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 //  blendImage(true||false)        # turn on/off blending
 //  blendImage(mode, opacity)      # set blend mode and opacity
 JS9.Image.prototype.blendImage = function(mode, opacity, active){
-    // see composite and blend opetations: https://www.w3.org/TR/compositing-1/
+    // see composite and blend operations: https://www.w3.org/TR/compositing-1/
     var blendexp = /normal|multiply|screen|overlay|darken|lighten|color-dodge|color-burn|hard-light|soft-light|difference|exclusion|hue|saturation|color|luminosity|clear|copy|source-over|destination-over|source-in|destination-in|source-out|destination-out|source-atop|destination-atop|xor|lighter/i;
     if( arguments.length === 0 ){
 	return this.blend;
@@ -3117,7 +3117,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	}
 	// get image center from raw data
 	ipos = {x: this.raw.width / 2, y: this.raw.height / 2};
-	// convert to physial (file) coords
+	// convert to physical (file) coords
 	lpos = this.imageToLogicalPos(ipos);
 	sect = {};
 	sect.bin  = Math.floor((binval1 / binval2) + 0.5);
@@ -3464,7 +3464,7 @@ JS9.Image.prototype.toArray = function(opts){
     var i, j, k, bpe, idx, le;
     var header, npad, arr, buf, _dbuf;
     var dbuf = this.raw.data.buffer;
-    // opts is optonal
+    // opts is optional
     opts = opts || {};
     // always perform the header keyword fix
     opts.simple = true;
@@ -4390,7 +4390,7 @@ JS9.Image.prototype.expandMacro = function(s, opts){
     return cmd;
 };
 
-// looku an analysis command by name
+// lookup an analysis command by name
 JS9.Image.prototype.lookupAnalysis = function(name){
     var i, j, tasks;
     var a = null;
@@ -5730,7 +5730,7 @@ JS9.Image.prototype.zscale = function(setvals){
 		   this.params.zscalecontrast,
 		   this.params.zscalesamples,
 		   this.params.zscaleline);
-    // free empscripten heap space
+    // free emscripten heap space
     JS9.vfree(buf);
     // clean up return values
     vals = s.trim().split(/\s+/);
@@ -7076,7 +7076,7 @@ JS9.Image.prototype.saveSession = function(file, opts){
     }
     // filename for saving
     file = file || "js9.ses";
-    // maje sure we have the right extension
+    // make sure we have the right extension
     if( !file.match(/\.ses$/) ){
 	file += ".ses";
     }
@@ -7594,7 +7594,7 @@ JS9.Image.prototype.saveCatalog = function(fname, which){
 // convert ra, dec from one wcs to another
 JS9.Image.prototype.wcs2wcs = function(from, to, ra, dec){
     var owcssys, ounits, nwcs, arr, x, y, s, v0;
-    // sve current wcs and units
+    // save current wcs and units
     owcssys = this.getWCSSys();
     ounits = this.getWCSUnits();
     // to, from default to current wcs
@@ -8415,7 +8415,7 @@ JS9.Display.prototype.separate = function(opts){
     var COLORBAR_FUDGE = 7;
     var DHTML_HEIGHT = 30 + 13; // height of dhtml lightwin extras;
     var initopts = function(fromID, opts){
-	// sanify check
+	// sanity check
 	if( !fromID ){
 	    JS9.error("can't init seapration ops: no from id");
 	}
@@ -9207,7 +9207,7 @@ JS9.Helper.prototype.connect = function(type){
 	if( errorThrown === "error" ){
 	    errorThrown = "is the helper running?";
 	}
-	// thow error if needed
+	// throw error if needed
 	if( JS9.globalOpts.requireHelper ){
 	    JS9.error("helper connect error: " + textStatus + " " + errorThrown);
 	} else if( JS9.DEBUG ){
@@ -10005,7 +10005,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    return;
 	}
 	o = opts.target;
-	// fire the selection cleared event, if necesssary
+	// fire the selection cleared event, if necessary
 	if( dlayer.params.sel && o.params &&
 	    (dlayer.params.sel !== o) ){
 	    dlayer.canvas.fire('before:selection:cleared',
@@ -10361,7 +10361,7 @@ JS9.Fabric.activeShapeLayer = function(s){
     return rtn;
 };
 
-// process options, separating into fabric opts and paramsJ
+// process options, separating into fabric opts and params
 // call using image context
 JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     var i, j, tags, pos, cpos, len, zoom, owcssys, txeq;
@@ -11139,7 +11139,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	params.layerName = layerName;
 	// save original strokeWidth for zooming
 	params.sw1 = Math.max(1, Math.floor(s.strokeWidth + 0.5));
-	// initalize
+	// initialize
 	params.listonchange = false;
 	// breaks panner, magnifier
 	// save custom attributes in the params object
@@ -11721,7 +11721,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     ao = canvas.getActiveObject();
     // process the specified shapes
     this.selectShapes(layerName, shape, function(obj, ginfo){
-	// combine the objects parametes with the new options
+	// combine the objects parameters with the new options
 	// clearing some of the old ones first
 	if( opts.radii ){
 	    obj.params.radii = [];
@@ -12020,7 +12020,7 @@ JS9.Fabric.addPolygonPoint = function(layerName, obj, evt){
     var i, points, p1, p2, minX, minY, maxX, maxY, dir, m, dot, d, angle;
     var layer;
     var mpos={}, canv={}, local={}, newpt={}, pos = {}, pVec = {}, p = {};
-    var diff = Number.MAX_VALUE;   // a bloated diff, for minimum comparision
+    var diff = Number.MAX_VALUE;   // a bloated diff, for minimum comparison
     // sanity check
     if( !obj || !obj.points){
         return;
@@ -12089,7 +12089,7 @@ JS9.Fabric.addPolygonPoint = function(layerName, obj, evt){
 	}
         //Distance calculation.
         d = (p.x-pos.x) * (p.x-pos.x) + (p.y-pos.y) * (p.y-pos.y);
-        //Minimum comparision.
+        //Minimum comparison.
         if( d < diff ){
             diff = d;
 	    newpt.x = p.x;
@@ -12192,8 +12192,8 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	    tpos.x = obj.left + obj.points[ii].x * obj.scaleX;
 	    tpos.y = obj.top  + obj.points[ii].y * obj.scaleY;
 	    if( obj.angle ){
-		// anchor is rotated onto the vertice
-		// (easier than taking rotation out of each vertice)
+		// anchor is rotated onto the vertex
+		// (easier than taking rotation out of each vertex)
 		tpos = JS9.rotatePoint(tpos, obj.angle,
 				       {x: obj.left, y: obj.top});
 	    }
@@ -12211,7 +12211,7 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
     if( obj.params.anchors ){
 	return;
     }
-    // sanity check: don't add if polyon is not changeable
+    // sanity check: don't add if polygon is not changeable
     if( obj.params.changeable === false ){
 	return;
     }
@@ -12898,7 +12898,7 @@ JS9.MouseTouch.init = function(){
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
-    // this.id:       the id ofthe div (or the plugin name as a default)
+    // this.id:       the id of the div (or the plugin name as a default)
     // this.display:  the display object associated with this plugin
     // this.dispMode: display mode (for internal use)
     //
@@ -13155,7 +13155,7 @@ JS9.Regions.opts = {
 	if( this.getActiveGroup() ){
 	    objs = this.getActiveGroup().getObjects();
 	}
-	// re-select polyon that was just processed
+	// re-select polygon that was just processed
 	for(i=0; i<objs.length; i++){
 	    if( objs[i].polyparams ){
 		this.setActiveObject(objs[i].polyparams.polygon);
@@ -14188,7 +14188,7 @@ JS9.Regions.parseRegions = function(s, opts){
     var regparse1 = function(s){
 	var t, tarr, ds9props;
 	var tobj = {};
-	// initalize the return object
+	// initialize the return object
 	tobj.opts = {};
 	tobj.args = [];
 	tobj.isregion = 0;
@@ -14700,7 +14700,7 @@ JS9.Crosshair.display = function(im, ipos, evt){
 JS9.Crosshair.hide = function(im, ipos, evt){
     var layername = JS9.Crosshair.LAYERNAME;
     var opts = JS9.Crosshair.opts.hiddenPts;
-    // if the crosshair is visble ...
+    // if the crosshair is visible ...
     if( im && im.crosshair && im.crosshair.visible ){
 	// move it off the display
 	im.changeShapes(layername, im.crosshair.h, opts);
@@ -14880,7 +14880,7 @@ JS9.Grid.display = function(mode, myopts){
     var display = this.display;
     var raw = this.raw;
     var lims = [{ra:0, dec:0}, {ra:0, dec:0}, {ra:0, dec:0}, {ra:0, dec:0}];
-    // no arg: return current grid dispaly status
+    // no arg: return current grid display status
     if( JS9.isNull(mode) ){
 	// toggle display
 	switch(this.tmp.gridStatus){
@@ -15597,7 +15597,7 @@ JS9.centerPolygon = function(points){
 };
 
 // calculate centroid for a polygon
-// wont work for self-interecting polygons but that's all I do right now!
+// wont work for self-intersecting polygons but that's all I do right now!
 // adapted from: http://en.wikipedia.org/wiki/Centroid
 JS9.centroidPolygon = function(points){
     var i, plen, factor, area;
@@ -15787,7 +15787,7 @@ JS9.fetchURL = function(name, url, opts, handler) {
     if( !name ){
 	name = /([^\\\/]+)$/.exec(url)[1];
     }
-    // avoid the cache (Safari is especially agressive) for FITS files
+    // avoid the cache (Safari is especially aggressive) for FITS files
     if( !opts.allowCache && !url.match(/\?/) ){
 	nurl = url + "?r=" + Math.random();
     } else {
@@ -16429,7 +16429,7 @@ JS9.eventToDisplayPos = function(evt, offset){
     upOff = offset.top  + YFUDGE;
     // display position
     pos = {x: Math.floor(pageX - leftOff), y: Math.floor(pageY - upOff)};
-    // touch positions, if necesary
+    // touch positions, if necessary
     if( touches && touches.length ){
 	pos.touches = [{x: pos.x, y: pos.y}];
 	for(i=1; i<touches.length; i++){
@@ -17512,7 +17512,7 @@ JS9.RegisterPlugin = function(xclass, xname, func, opts){
     // save the plug-in
     JS9.plugins.push({xclass: xclass, xname: xname, name: name,
 		opts: opts, func: func, instances: []});
-    // save help, if necessry
+    // save help, if necessary
     if( opts.help ){
 	m = opts.help.match(/^.*[\\\/]/);
 	if( m[0] ){
@@ -18746,7 +18746,7 @@ JS9.init = function(){
     if( JS9.LIGHTWIN === "dhtml" ){
 	// Creation of dhtmlwindowholder was done by a document.write in
 	// dhtmlwindow.js. We removed it from dhtmlwindow.js file because it
-	// intefered with the jquery search for js9.css above. Oh boy ...
+	// interfered with the jquery search for js9.css above. Oh boy ...
 	// But it has to be somewhere!
 	$("<div>")
 	    .attr("id", "dhtmlwindowholder")
@@ -18941,7 +18941,7 @@ JS9.init = function(){
 	    parent.postMessage({cmd: msg.cmd, res: res}, "*");
 	});
     }, false);
-    // intialize keyboard actions
+    // initialize keyboard actions
     if( JS9.hasOwnProperty("Keyboard") ){
 	JS9.initKeyboardActions();
     }
