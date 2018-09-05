@@ -12762,15 +12762,21 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
 // pan the image
 // eslint-disable-next-line no-unused-vars
 JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
-    var x, y;
+    var dx, dy, sect;
     // sanity check
     if( !im ){
 	return;
     }
-    x = im.rgb.sect.xcen + ((im.pos0.x - im.pos.x) / im.rgb.sect.zoom);
-    y = im.rgb.sect.ycen - ((im.pos0.y - im.pos.y) / im.rgb.sect.zoom);
-    im.setPan(x, y);
-    im.pos0 = im.pos;
+    sect = im.rgb.sect;
+    // how much would we pan by?
+    dx = ((im.pos0.x - im.pos.x) / sect.zoom);
+    dy = ((im.pos0.y - im.pos.y) / sect.zoom);
+    // pan the image (but avoid a redisplay, if we haven't moved much)
+    if( Math.abs(dx) >= 1 || Math.abs(dy) >= 1 ){
+	im.setPan(sect.xcen + dx, sect.ycen - dy);
+	// reset initial position
+	im.pos0 = im.pos;
+    }
 };
 
 // pinch zoom
