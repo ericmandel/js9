@@ -10550,53 +10550,105 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 		nparams.radii = opts.radii.replace(/ /g, "").split(",");
 		for(i=0, j=0; i<nparams.radii.length; i++){
 		    if( nparams.radii[i] !== "" ){
+			if( opts.sizeScale ){
+			    nparams.radii[i] *= opts.sizeScale;
+			}
 			nparams.radii[j++] = this.wcs2imlen(nparams.radii[i]);
 		    }
 		}
 	    } else {
 		nparams.radii = opts.radii;
+		if( opts.sizeScale ){
+		    for(i=0; i<nparams.radii.length; i++){
+			nparams.radii[i] *= opts.sizeScale;
+		    }
+		}
 	    }
 	} else {
+	    // we can scale menu-created regions to be reasonably sized
 	    if( opts.ireg && JS9.SCALEIREG ){
-		if( opts.iradius ){
+		if( JS9.notNull(opts.iradius) ){
 		    opts.iradius /= zoom;
 		}
-		if( opts.oradius ){
+		if( JS9.notNull(opts.oradius) ){
 		    opts.oradius /= zoom;
+		}
+	    }
+	    // useful if you pass one image's region object to another, e.g.,
+	    // when sync'ing between two images of different cdelt1
+	    if( opts.sizeScale ){
+		if( JS9.notNull(opts.iradius) ){
+		    opts.iradius *= opts.sizeScale;
+		}
+		if( JS9.notNull(opts.oradius) ){
+		    opts.oradius *= opts.sizeScale;
 		}
 	    }
 	    radinc = (opts.oradius - opts.iradius) / opts.nannuli;
 	    nrad = opts.nannuli + 1;
 	    for(i=0; i<nrad; i++){
 		radius = opts.iradius + (radinc * i);
+		if( opts.sizeScale ){
+		    radius *= opts.sizeScale;
+		}
 		nparams.radii.push(radius);
 	    }
 	}
 	break;
     case "box":
+	// we can scale menu-created regions to be reasonably sized
 	if( opts.ireg && JS9.SCALEIREG ){
-	    if( opts.width ){
+	    if( JS9.notNull(opts.width) ){
 		opts.width /= zoom;
 	    }
-	    if( opts.height ){
+	    if( JS9.notNull(opts.height) ){
 		opts.height /= zoom;
+	    }
+	}
+	// useful if you pass one image's region object to another, e.g.,
+	// when sync'ing between two images of different cdelt1
+	if( opts.sizeScale ){
+	    if( JS9.notNull(opts.width) ){
+		opts.width *= opts.sizeScale;
+	    }
+	    if( JS9.notNull(opts.height) ){
+		opts.height *= opts.sizeScale;
 	    }
 	}
 	break;
     case "circle":
+	// we can scale menu-created regions to be reasonably sized
 	if( opts.ireg && JS9.SCALEIREG ){
-	    if( opts.radius ){
+	    if( JS9.notNull(opts.radius) ){
 		opts.radius /= zoom;
+	    }
+	}
+	// useful if you pass one image's region object to another, e.g.,
+	// when sync'ing between two images of different cdelt1
+	if( opts.sizeScale ){
+	    if( JS9.notNull(opts.radius) ){
+		opts.radius *= opts.sizeScale;
 	    }
 	}
 	break;
     case "ellipse":
+	// we can scale menu-created regions to be reasonably sized
 	if( opts.ireg && JS9.SCALEIREG ){
-	    if( opts.r1 ){
+	    if( JS9.notNull(opts.r1) ){
 		opts.r1 /= zoom;
 	    }
-	    if( opts.r2 ){
+	    if( JS9.notNull(opts.r2) ){
 		opts.r2 /= zoom;
+	    }
+	}
+	// useful if you pass one image's region object to another, e.g.,
+	// when sync'ing between two images of different cdelt1
+	if( opts.sizeScale ){
+	    if( JS9.notNull(opts.r1) ){
+		opts.r1 *= opts.sizeScale;
+	    }
+	    if( JS9.notNull(opts.r2) ){
+		opts.r2 *= opts.sizeScale;
 	    }
 	}
 	break;
@@ -10693,6 +10745,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 		opts.points = opts.linepoints;
 	    }
 	}
+	// we can scale menu-created regions to be reasonably sized
 	if( opts.ireg && JS9.SCALEIREG ){
 	    len = opts.points.length;
 	    for(i=0; i<len; i++){
@@ -11183,11 +11236,11 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	}
 	// and then rescale the stroke width
 	s.rescaleBorder();
+	// might need to make a text shape as a child of this shape
+	JS9.Fabric._handleChildText.call(this, layerName, s, opts);
 	// update the shape info
 	mode = myopts.parent ? "child" : "add";
 	JS9.Fabric._updateShape.call(this, layerName, s, null, mode, params);
-	// might need to make a text shape as a child of this shape
-	JS9.Fabric._handleChildText.call(this, layerName, s, opts);
     }
     // redraw (unless explicitly specified otherwise)
     if( (params.redraw === undefined) || params.redraw ){
@@ -11848,14 +11901,17 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    break;
 	case "ellipse":
 	    if( opts.r1 ){
-		obj.rx = opts.r1;
+		obj.rx = obj.params.r1;
 		obj.scaleX = zoom;
-		// why is this not done automatically???
+		// this sets the width of the control box
+		// why is it not done automatically???
 		obj.width = obj.rx * 2;
 	    }
 	    if( opts.r2 ){
-		obj.ry = opts.r2;
+		obj.ry = obj.params.r2;
 		obj.scaleY = zoom;
+		// this sets the height of the control box
+		// why is it not done automatically???
 		obj.height = obj.ry * 2;
 	    }
 	    break;
@@ -11882,10 +11938,10 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	JS9.Fabric.updateChildren(layer.dlayer, obj, "rotating");
 	// and reset coords
 	obj.setCoords();
-	// update the shape info and make callbacks
-	JS9.Fabric._updateShape.call(that, layerName, obj, ginfo, "update");
 	// might need to make a text shape as a child of this shape
 	JS9.Fabric._handleChildText.call(that, layerName, obj, opts);
+	// update the shape info and make callbacks
+	JS9.Fabric._updateShape.call(that, layerName, obj, ginfo, "update");
     });
     // redraw (unless explicitly specified otherwise)
     if( (opts.redraw === undefined) || opts.redraw ){
