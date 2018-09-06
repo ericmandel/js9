@@ -10624,6 +10624,31 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	break;
     case "line":
     case "polygon":
+	//  wcspts in degrees, using the current wcs
+	if( (opts.wcspts !== undefined) && (this.raw.wcs > 0) ){
+            // fill pts array with better values from wcs, to be used below
+	    opts.pts = [];
+	    // make sure we have the right wcssys
+	    if( opts.wcssys ){
+		// from passed-in opts
+		owcssys = this.getWCSSys();
+		txeq = JS9.globalOpts.xeqPlugins;
+		JS9.globalOpts.xeqPlugins = false;
+		this.setWCSSys(opts.wcssys);
+	    }
+	    for(i=0; i<opts.wcspts.length; i++){
+		// convert to image coords
+		arr = JS9.wcs2pix(this.raw.wcs,
+				opts.wcspts[i].ra, opts.wcspts[i].dec)
+		    .trim().split(/ +/);
+		opts.pts.push({x:parseFloat(arr[0]), y:parseFloat(arr[1])});
+	    }
+	    // restore original wcssys
+	    if( owcssys ){
+		this.setWCSSys(owcssys);
+		JS9.globalOpts.xeqPlugins = txeq;
+	    }
+	}
 	if( opts.pts && opts.pts.length ){
 	    if( typeof opts.pts === "string" ){
 		arr = opts.pts.replace(/ /g, "").split(",");
@@ -11359,7 +11384,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	py = pub.lcs.y;
 	bin = this.lcs.physical.reverse[0][0];
     }
-    // display position
+    // fabric angle is in opposite direction
     pub.angle = -obj.angle;
     if( ginfo.group ){
 	pub.angle -= ginfo.group.angle;
@@ -11499,6 +11524,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	} else {
 	    pub.imstr += ")";
 	}
+	// points already have the angle incorporated into them
+	pub.angle = 0;
         break;
     case "text":
 	pub.imstr = "text(" + tr(px) + ", " + tr(py) + ', "' + obj.text + '", ' + tr4(pub.angle) + ')';
