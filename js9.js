@@ -13929,6 +13929,11 @@ JS9.Regions.listRegions = function(which, opts, layer){
 		    continue;
 		}
 	    }
+	    // skip data if export is turned off explicitly
+	    if( key === "data" && typeof params.data === "object" &&
+		params.data.doexport === false ){
+		continue;
+	    }
 	    // strokeWidth can be changed as part of zooming,
 	    // so use the original value if needed
 	    if( (key === "strokeWidth") && params.sw1 ){
