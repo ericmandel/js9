@@ -4527,7 +4527,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	robj.errcode = robj.errcode || 0;
 	// if a processing function was supplied, call it and don't display
 	if( func ){
-	    func(robj.stdout, robj.stderr, robj.errcode, a);
+	    func.call(that, robj.stdout, robj.stderr, robj.errcode, a);
 	} else {
 	    // handle errors before we start
 	    if( robj.stderr ){
