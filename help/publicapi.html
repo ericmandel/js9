@@ -885,6 +885,138 @@ returns:
 This routine will turn on/off the global image blend mode for the specified
 display. If no argument is specified, it returns the current blend mode.
 
+<h5 id="JS9.SyncImages">Synchronize operations between two or more images</h5>
+<p>
+<code class="api">JS9.SyncImages(ops, images, opts)</code>
+<p>
+Calling sequences:
+<pre>
+    JS9.SyncImages([ops], [images], [opts])  # set up synchronization
+    JS9.SyncImages(true||false)              # turn on/off synchronization
+</pre>
+<p>
+where:
+<ul>
+<li><b>ops</b>: array of operations on which to sync
+<li><b>images</b>: array of images to sync with this image
+<li><b>opts</b>: options for sync'ing
+</ul>
+Synchronize two or more images, so that when an operation is performed
+on one image, it also is performed on the other(s). For example, when
+the colormap or scale is changed on an image, it also is changed on
+the sync'ed images. Or, when a region is created, moved, resized, or
+removed on an image, the same happens on the sync'ed images.
+
+<p>
+When the JS9.SyncImages() call is invoked, the current image is
+configured to synchronize the specified images.  In addition, if
+the <b>reciprocate</b> property is set in the opts object (see below),
+the other images are also configured to synchronize one another (as
+well as the current image). Once configuration is complete, a sync
+command is executed immediately. If the current image already
+displays one or more regions, these will be created in the target images.
+
+<p>
+The operations that can be specified for sync'ing are:
+"colormap", "pan", "regions", "scale", "wcs", "zoom", and "contrastbias".
+If no array is specified, the default array in JS9.globalOpts.syncOps is
+used.
+
+<p>
+Images to synchronize can be specified as an array of image handles or
+image ids. If no array is specified, all currently displayed images
+are sync'ed.
+
+<p>
+The optional opts object can contain:
+<ul>
+<li><b>reciprocate</b>: boolean determining whether images sync one another
+<li><b>reverse</b>: boolean to reverse this image and target images (def: false)
+</ul>
+If the opts object is not specified, the default value of
+<b>reciprocate</b> is the value of the JS9.globalOpts.syncReciprocate
+property.
+
+<p>
+Examples:
+<pre>
+    # the current image will sync all operations for all images
+    # this will happen reciprocally, so that changing any image syncs the others
+    JS9.SyncImages()
+
+    # the current image will sync the specified ops for foo1.fits, foo2.fits:
+    JS9.SyncImages(["scale", "colormap"], ["foo1.fits", "foo2.fits"])
+
+    # the current image will sync two images with default ops,
+    # but the two images themselves will not sync images reciprocally
+    JS9.SyncImages(null, ["foo1.fits", "foo2.fits"], {reciprocate: false});
+</pre>
+
+<p>
+Note that if the pan operation syncs two images having differently
+sized fields of view, the smaller image will stop panning when it
+reaches its edge, rather than displaying a blank field.
+
+<p>
+You can turn on/off syncing for a given image by specifying a single boolean
+argument:
+<pre>
+    # turn off sync'ing temporarily
+    JS9.SyncImages(false);
+</pre>
+This is different from unsync'ing in that you can turn sync'ing back on without
+having to re-sync the images.
+
+<h5 id="JS9.UnsyncImages">Unsynchronize two or more previously synchronized images</h5>
+<p>
+<code class="api">JS9.UnsyncImages(ops, images, opts)</code>
+<p>
+Calling sequence:
+<pre>
+    JS9.UnsyncImages([ops], [images], [opts])  # clear synchronization
+</pre>
+<p>
+where:
+<ul>
+<li><b>ops</b>: array of operations to unsync
+<li><b>images</b>: array of images to unsync with this image
+<li><b>opts</b>: options for unsync'ing
+</ul>
+Unsynchronize previously sync'ed images.
+
+<p>
+The operations that can be specified for unsync'ing are:
+"colormap", "pan", "regions", "scale", "wcs", "zoom", and "contrastbias".
+If no array is specified, the default array in JS9.globalOpts.syncOps is
+used. Thus, you can turn off sync'ing for specified operations, while leaving
+others to be sync'ed.
+
+<p>
+Images to be unsync'ed can be specified as an array of image handles or
+image ids. If no array is specified, all currently displayed images
+are unsync'ed.
+
+<p>
+The optional opts object can contain:
+<ul>
+<li><b>reciprocate</b>: boolean determining whether images sync one another
+<li><b>reverse</b>: boolean to reverse this image and target images (def: false)
+</ul>
+If the opts object is not specified, the default is to <b>reciprocate</b> based
+on the value of the JS9.globalOpts.syncReciprocate property.
+
+<p>
+Examples:
+<pre>
+    # this image will no longer sync on scale for foo1.fits and foo2.fits,
+    # and they also will stop sync'ing
+    JS9.UnsyncImages(["scale"], ["foo1.fits", "foo2.fits"])
+
+    # this image will still sync foo1.fits and foo2.fits, but
+    # foo1.fits and foo2.fits will no longer sync this image:
+    JS9.UnsyncImages(null, ["foo1.fits", "foo2.fits"], {reverse: true, reciprocal: false})
+</pre>
+
 <h5 id="JS9.CloseImage">Clear the image from the display and mark resources for release</h5>
 <p>
 <code class="api">JS9.CloseImage(opts)</code>
@@ -2674,7 +2806,7 @@ Each returned region object contains the following properties:
 <li><b>ra</b>: RA of center in degrees
 <li><b>dec</b>: Dec of center in degrees
 <li><b>wcsstr</b>: region string in WCS coordinates
-<li><b>WCSsys</b>: WCS system (e.g., "FK5")
+<li><b>wcssys</b>: WCS system (e.g., "FK5")
 <li><b>imstr</b>: region string in image or physical coordinates
 <li><b>imsys</b>: image system ("image" or "physical")
 <li><b>lcs</b>: object containing logical x, y and sys (e.g., "physical")
@@ -2703,7 +2835,7 @@ In opts.format is set to "text", the regions are returned as a string
 in standard regions format, using semi-colon delimiters:
 <pre>
     JS9.GetRegions("all", {format: "text"})
-    "ICRS; box(23:23:40.340, +58:47:04.059, 29.513978\", 29.513974\", 0.000000) # background,include; circle(23:23:28.069, +58:48:40.540, 14.756998\") # source,include"
+    "ICRS; box(23:23:40.340, +58:47:04.059, 29.513978\", 29.513974\", 0.000000) # background,include; ellipse(23:23:28.069, +58:48:40.540, 14.756998\", 15.756998\") # source,include"
 </pre>
 
 <h5 id="JS9.ChangeRegions">Change one or more regions</h5>
@@ -2867,6 +2999,10 @@ then a command such as:
     JS9.LoadRegions("foo.reg", {color: "blue"});
 </pre>
 will create a red circle, a blue box, and a blue annulus.
+<p>
+The <b>opts</b> object also can include an <b>onload</b> property containing a
+function to be called when the load is complete. The image handle is passed
+as an argument to this function.
 
 <p><hr>
   
@@ -3293,6 +3429,11 @@ Most of these properties have default values that are stored in
 the <b>JS9.globalOpts.catalogs</b> object: manipulate that object as
 needed. The values listed above also can be changed by users via
 the <b>Catalog</b> tab in the <b>Preferences</b> plugin.
+
+<p>
+The <b>opts</b> object also can include an <b>onload</b> property containing a
+function to be called when the load is complete. The image handle is passed
+as an argument to this function.
 
 <p>
 Note the second (Vizier) example table above does not actually have a columns

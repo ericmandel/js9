@@ -184,6 +184,7 @@ PLUGINFILES =	plugins/archive/archive.js \
 		plugins/core/prefs.js \
 		plugins/core/scalelimits.js \
 		plugins/core/separate.js \
+		plugins/core/sync.js \
 		plugins/core/toolbar.js \
 		plugins/imexam/imexam.js \
 		plugins/imexam/encircled.js \

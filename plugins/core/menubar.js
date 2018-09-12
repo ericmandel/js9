@@ -374,9 +374,28 @@ JS9.Menubar.createMenus = function(){
 			}
 		    }
 		};
+		items.sync = {
+		    name: "sync this image ...",
+		    items: {
+			synctitle: {
+			    name: "image(s) to keep in sync:",
+			    disabled: true
+			}
+		    }
+		};
+		items.unsync = {
+		    name: "unsync this image ...",
+		    items: {
+			unsynctitle: {
+			    name: "image(s) to keep in sync:",
+			    disabled: true
+			}
+		    }
+		};
 		items.separate = xname("separate these images");
 		items.gather = xname("gather all images here");
 		if( tim ){
+		    // move image to
 		    items.moveto.disabled = false;
 		    for(i=0; i<JS9.displays.length; i++){
 			if( $("#"+JS9.displays[i].id).length > 0 &&
@@ -386,8 +405,56 @@ JS9.Menubar.createMenus = function(){
 			}
 		    }
 		    items.moveto.items.moveto_newdisp = xname("a new display");
+		    // sync target images to this image
+		    items.sync.disabled = false;
+		    for(i=0; i<JS9.images.length; i++){
+			if( tim !== JS9.images[i]    	     ){
+			    s1 = "sync_" + JS9.images[i].id;
+			    items.sync.items[s1] = xname(JS9.images[i].id);
+			}
+		    }
+		    items.sync.items.sync_allimages = xname("all images");
+		    items.sync.items["sep" + n++] = "------";
+		    items.sync.items.sync_opstitle = {
+			name: "op(s) that trigger syncing:",
+			disabled: true
+		    };
+		    items.sync.items.syncops = {
+			value: JS9.globalOpts.syncOps,
+			type: "textarea"
+		    };
+		    items.sync.items.syncreciprocate = {
+			name: "reciprocal syncing",
+			selected: JS9.globalOpts.syncReciprocate,
+			type: "checkbox"
+		    };
+		    // unsync target images to this image
+		    items.unsync.disabled = false;
+		    for(i=0; i<JS9.images.length; i++){
+			if( tim !== JS9.images[i]    	     ){
+			    s1 = "unsync_" + JS9.images[i].id;
+			    items.unsync.items[s1] = xname(JS9.images[i].id);
+			}
+		    }
+		    items.unsync.items.unsync_allimages = xname("all images");
+		    items.unsync.items["sep" + n++] = "------";
+		    items.unsync.items.unsync_opstitle = {
+			name: "op(s) that trigger syncing:",
+			disabled: true
+		    };
+		    items.unsync.items.unsyncops = {
+			value: JS9.globalOpts.syncOps,
+			type: "textarea"
+		    };
+		    items.unsync.items.unsyncreciprocate = {
+			name: "reciprocal syncing",
+			selected: JS9.globalOpts.syncReciprocate,
+			type: "checkbox"
+		    };
 		} else {
 		    items.moveto.disabled = true;
+		    items.sync.disabled = true;
+		    items.unsync.disabled = true;
 		}
 		items.refresh = xname("refresh this image");
 		items.full = xname("display the full image");
@@ -446,10 +513,10 @@ JS9.Menubar.createMenus = function(){
 		}
 		items.pageid = xname("display page id");
 		return {
-                    callback: function(key){
+                    callback: function(key, opt){
 		    JS9.Menubar.getDisplays.call(that, "any", key)
 			    .forEach(function(val){
-			var j, s, t, did, kid, unew, uwin;
+			var j, s, t, did, kid, unew, uwin, uobj, uarr, uopts;
 			var udisp = val;
 			var uim = udisp.image;
 			// make sure display is still valid
@@ -681,6 +748,38 @@ JS9.Menubar.createMenus = function(){
                                                    "light");
 				} else {
 				    uim.moveToDisplay(unew);
+				}
+				return;
+			    }
+			    if( uim && key.match(/^sync_/) ){
+				uobj = $.contextMenu.getInputValues(opt);
+				if( uobj.syncops ){
+				    uarr = uobj.syncops.trim().split(",");
+				} else {
+				    uarr = null;
+				}
+				uopts = {reciprocate: uobj.syncreciprocate};
+				unew = key.replace(/^sync_/,"");
+				if( unew === "allimages" ){
+				    uim.syncImages(uarr, null, uopts);
+				} else {
+				    uim.syncImages(uarr, [unew], uopts);
+				}
+				return;
+			    }
+			    if( uim && key.match(/^unsync_/) ){
+				uobj = $.contextMenu.getInputValues(opt);
+				if( uobj.unsyncops ){
+				    uarr = uobj.unsyncops.trim().split(",");
+				} else {
+				    uarr = null;
+				}
+				uopts = {reciprocate: uobj.syncreciprocate};
+				unew = key.replace(/^unsync_/,"");
+				if( unew === "allimages" ){
+				    uim.unsyncImages(uarr, null, uopts);
+				} else {
+				    uim.unsyncImages(uarr, [unew], uopts);
 				}
 				return;
 			    }

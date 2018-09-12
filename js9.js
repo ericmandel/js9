@@ -213,6 +213,8 @@ JS9.globalOpts = {
     menubarStyle: "classic",                              // mac or classic
     userMenus: false,                                     // add user menus?
     toolBar: ["linear", "log", "annulus", "box", "circle", "ellipse", "line", "polygon", "remove", "incexcl", "srcbkgd", "zoomin", "zoomout", "zoom1"],
+    syncOps: ["colormap","contrastbias","pan","regions","scale","wcs","zoom"],                                   // which ops are sync'ed?
+    syncReciprocate: true,           // default value for reciprocal sync'ing
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
     separate: {layout: "auto", leftMargin: 10, topMargin: 10}, // separate a display
     imageTemplates: ".fits,.fts,.png,.jpg,.jpeg,.fz", // templates for local images
@@ -10428,6 +10430,9 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     }
     // initialize
     nparams.tags = [];
+    // remove dangerous options (e.g., passed in JS9.GetRegions() object)
+    delete opts.parent;
+    delete opts.id;
     // pre-processing special keys
     if( opts.tags ){
 	if( typeof opts.tags === "string" ){
@@ -11692,6 +11697,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 // remove the active shape
 // eslint-disable-next-line no-unused-vars
 JS9.Fabric.removeShapes = function(layerName, shape, opts){
+    var i;
+    var arr = [];
     var that = this;
     var layer, canvas;
     layer = this.getShapeLayer(layerName);
@@ -11719,15 +11726,20 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 		    }
 		}
 	    }
-	    // remove children
+	    // mark children for removal
 	    for(i=0; i<obj.params.children.length; i++){
 		child = obj.params.children[i].obj;
-		canvas.remove(child);
+		// mark for removal
+		arr.push(child);
 	    }
-	    // remove the shape
-	    canvas.remove(obj);
+	    // mark for removal
+	    arr.push(obj);
 	}
     });
+    // remove marked objects
+    for(i=0; i<arr.length; i++){
+	canvas.remove(arr[i]);
+    }
     // handle changed selected group specially (fabric.js nuance)
     if( canvas.getActiveGroup() ){
 	canvas.discardActiveGroup();
@@ -20542,6 +20554,7 @@ JS9.mkPublic("LoadRegions", function(file, opts){
     var addregions = function(reg, ropts){
 	if( ropts && ropts.display !== undefined ){ delete ropts.display; }
 	im.addShapes("regions", reg, ropts);
+	if( opts && opts.onload ){ opts.onload(im); }
     };
     file = obj.argv[0];
     opts = obj.argv[1];
@@ -20928,12 +20941,14 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
 		layer = file.name.replace(/\.[^.]*$/, "");
 	    }
 	    im.loadCatalog(layer, ev.target.result, opts);
+	    if( opts && opts.onload ){ opts.onload(im); }
 	};
 	reader.readAsText(file);
     } else if( typeof file === "string" ){
 	if( file.match(/\t/) ){
 	    // it's a table (contains a tab)
 	    im.loadCatalog(layer, file, opts);
+	    if( opts && opts.onload ){ opts.onload(im); }
 	} else {
 	    // its a file: retrieve and load the catalog
             $.ajax({
@@ -20942,6 +20957,7 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
                 dataType: "text",
                 success: function(s){
 		    im.loadCatalog(layer, s, opts);
+		    if( opts && opts.onload ){ opts.onload(im); }
                 },
                 error:  function(jqXHR, textStatus, errorThrown){
                     JS9.error("loading catalog: "+file, errorThrown);

@@ -1453,6 +1453,11 @@ input:focus.JS9CmdIn {
    padding: 2px;
 }
 
+.context-menu-input > label > textarea {
+  width: 85%;
+  height: 3em;
+}
+
 /* jqueryContextMenu pre-v2.2 */
 .pre-v2.2-context-menu-item.icon-sun {
    background-image: url(images/sun.png);

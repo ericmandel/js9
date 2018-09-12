@@ -430,11 +430,15 @@ JS9.Prefs.globalsSchema = {
 	},
 	"centerDivs": {
 	    "type": "mobject",
-	    "helper": "divs taken into account when centering"
+	    "helper": "divs used when centering"
 	},
 	"resizeDivs": {
 	    "type": "mobject",
-	    "helper": "divs taken into account when resizing"
+	    "helper": "divs used when resizing"
+	},
+	"syncOps": {
+	    "type": "mobject",
+	    "helper": "ops to sync between images"
 	},
 	"copyWcsPosFormat": {
 	    "type": "string",
@@ -459,6 +463,10 @@ JS9.Prefs.globalsSchema = {
 	"toolbarTooltips": {
 	    "type": "boolean",
 	    "helper": "show tooltips in Toolbar plugin?"
+	},
+	"syncReciprocate": {
+	    "type": "boolean",
+	    "helper": "reciprocal image sync'ing?"
 	},
 	"magnifierRegions": {
 	    "type": "boolean",
@@ -540,6 +548,7 @@ JS9.Prefs.init = function(){
 	    source.data = {fits2png: JS9.globalOpts.fits2png,
 			   fits2fits: JS9.globalOpts.fits2fits,
 			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
+			   syncReciprocate: JS9.globalOpts.syncReciprocate,
 			   magnifierRegions: JS9.globalOpts.magnifierRegions,
 			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
@@ -547,6 +556,7 @@ JS9.Prefs.init = function(){
 			   keyboardActions: JS9.globalOpts.keyboardActions,
 			   centerDivs: JS9.globalOpts.centerDivs,
 			   resizeDivs: JS9.globalOpts.resizeDivs,
+			   syncOps: JS9.globalOpts.syncOps,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
 			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,

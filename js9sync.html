@@ -1,0 +1,188 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+  <link type="text/css" rel="stylesheet" href="js9support.css">
+  <link type="text/css" rel="stylesheet" href="js9.css">
+  <script type="text/javascript" src="js9prefs.js"></script>
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9plugins.js"></script>
+  <title>JS9 sync</title>
+  <style type="text/css">
+      .myAnalysisResults {
+        background: #E9E9E9;
+        border: black solid 1px
+        padding: 0px;
+        margin:  0px;
+        width: 400px;
+        height: 200px;
+      }
+  </style>
+</head>
+<body>
+    <center><font size="+1">
+    <b>JS9 Sync: synchronize operations between two or more images</b>
+    </font></center>
+    <p>
+    You can use the <b>File->sync images ...</b> menu option to
+    synchronize two or more images, so that when an operation is
+    performed on one image (e.g. change of <b>colormap, contrast/bias,
+    pan, regions, scale, wcs, zoom</b>), it also is performed on the
+    other image(s).
+
+    <p>
+    By default, synchronization is <b>reciprocated</b>: a change in any
+    image causes the others to be synchronized. Synchronization can be
+    configured one direction only by unchecking the <b>reciprocate</b>
+    option. For advanced use, the
+    <a href="./help/publicapi.html#JS9.SyncImages" target="_blank">JS9.SyncImages()</a>
+    and
+    <a href="./help/publicapi.html#JS9.UnsyncImages" target="_blank">JS9.UnsyncImages()</a>
+    public API calls are available programmatically or from the command line.
+    <p>
+    The demo below displays three energy cuts of the Chandra Kes 75
+    supernova remnant. The first two images are sync'ed to changes in
+    all operations (colormap, contrast/bias, etc.) The third is
+    sync'ed to all but zoom. Change a region to see all the energy plots
+    get updated, or change the colormap, scale ... or use the File menu to
+    unsync or sync your own choice of images and ops.
+    <p>
+    <table cellpadding="2px">
+    <tr>
+    <td>
+    <div class="JS9Menubar" id="im0_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="im0_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="im0_JS9Colorbar" data-width="400"></div>
+    <div class="myAnalysisResults" id="im0_Plot"></div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="im1_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="im1_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="im1_JS9Colorbar" data-width="400"></div>
+    <div class="myAnalysisResults" id="im1_Plot"></div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="im2_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="im2_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="im2_JS9Colorbar" data-width="400"></div>
+    <div class="myAnalysisResults" id="im2_Plot"></div>
+    </td>
+    </tr>
+    </table>
+    <script type="text/javascript">
+    JS9.Regions.opts.onchange = runMyAnalysis;
+    var images = [
+      "kes75/kes75_500_1500.fits",
+      "kes75/kes75_1500_2500.fits",
+      "kes75/kes75_2500_8000.fits"
+    ];
+    var cmaps = [["cool",4.0,0.09], ["heat",5.9,0.14], ["viridis",5.875,0.083]];
+    var ops1 = ["colormap","contrastbias","pan","regions","scale","wcs"];
+    var ims1 = [images[1], images[2]]
+    var ops2 = ["zoom"];
+    var ims2 = [images[1]]
+    $(document).on("JS9:ready", function(){
+      JS9.Load(images[0], {onload: function(im0){
+        im0.setColormap.apply(im0, cmaps[0]);
+        JS9.Load(images[1], {onload: function(im1){
+          im1.setColormap.apply(im1, cmaps[1]);
+          JS9.Load(images[2], {bin: 2, onload: function(im2){
+              im2.setColormap.apply(im2, cmaps[2]);
+              // wait so last image has time to get analysis tasks from helper
+              window.setTimeout(function(){
+                // sync first image with the others
+                JS9.SyncImages(ops1, ims1, {display: "im0_JS9"});
+                JS9.SyncImages(ops2, ims2, {display: "im0_JS9"});
+                // change these in the first image, they will be sync'ed
+                im0.setScale("log");
+                im0.setPan({px: 4018, py: 4000});
+                im0.addShapes("regions", "physical;circle(4018,4000,40)");
+              }, 250);
+          }}, {display: "im2_JS9"});
+        }}, {display: "im1_JS9"});
+      }}, {display: "im0_JS9"});
+    });
+    function runMyAnalysis(xim, xreg){
+        xim.runAnalysis("energyplot", null, dispMyAnalysis);
+    }
+    function dispMyAnalysis(stdout, stderr, errcode, a){
+      var plot = this.tmp.plot;
+      var nid = this.display.id.replace(/_.*/, "_Name");
+      var ndiv = $("#" + nid);
+      var rid = this.display.id.replace(/_.*/, "_Plot");
+      var rdiv = $("#" + rid);
+      if( !rdiv ){
+        alert("the analysis results area is missing on this web page");
+      }
+      else if( stderr ){
+        alert(stderr);
+      } else {
+        ndiv.html("<center>"+ this.id + ":<\/center>");
+        // remove previous contents
+        rdiv.empty();
+        // process return type
+        switch(a.rtype){
+        case "text":
+          // text can just get shoved into the div
+          rdiv.html("<pre>" + stdout + "<\/pre>");
+          break;
+        case "plot":
+          // plot can make use of the already-loaded flot routines
+          // (JS9.plotOpts is defined in js9.js)
+          try{ 
+	    // retrieve plot object (should contain a data object)
+	    pobj = JSON.parse(stdout);
+            if( pobj && pobj.data ){
+              // destroy previous plot, or else some bindings will remain
+              if( plot ){
+                plot.destroy();
+                plot = null;
+              }
+              // erase explanatory text
+              rdiv.innerHTML = "";
+    	      // plot the data
+	      plot = $.plot(rdiv, [pobj], JS9.plotOpts);
+	    } else {
+              alert("no analysis data returned");
+            }
+          }
+	  catch(e){
+	    alert("can't plot data: "+e+" "+stdout)
+          };
+          break;
+        }
+      }
+    }
+    </script>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9bespoke.html'>JS9 Demo: web page control of JS9</a>
+<li><a href='js9menustyles.html'>JS9 Demo: JS9 menubar styles</a>
+<li><a href='js9sizes.html'>JS9 Demo: setting the size of the JS9 display</a>
+<li><a href='js9super.html'>JS9 Demo: control multiple JS9 displays</a>
+<li><a href='js9large.html'>JS9 Demo: support for large FITS files</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9blend.html'>JS9 Demo: image blending</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9allinone.html'>JS9 Demo: using the all-in-one files</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>
+
