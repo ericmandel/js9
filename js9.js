@@ -11006,6 +11006,10 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 			   lastscaley: s.scaleY,
 			   lastangle: s.angle,
 			   textheight: textht};
+	// updateShape was skipped in addShapes because parent was TBD
+	// we can now updateShape with parent info ...
+	JS9.Fabric._updateShape.call(this,
+				     layerName, t, null, "child", t.params);
 	// since strokeWidth changes with zoom, we need to save the opts
 	// and restore it on export
 	if( opts.strokeWidth !== undefined ){
@@ -11023,7 +11027,7 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 // add shapes to a layer
 // call using image context
 JS9.Fabric.addShapes = function(layerName, shape, myopts){
-    var i, sobj, sarr, ns, s, bopts, opts, mode;
+    var i, sobj, sarr, ns, s, bopts, opts;
     var layer, canvas, dlayer, zoom;
     var ttop, tleft, rarr=[];
     var params = {};
@@ -11243,9 +11247,11 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	s.rescaleBorder();
 	// might need to make a text shape as a child of this shape
 	JS9.Fabric._handleChildText.call(this, layerName, s, opts);
-	// update the shape info
-	mode = myopts.parent ? "child" : "add";
-	JS9.Fabric._updateShape.call(this, layerName, s, null, mode, params);
+	// update the shape info, but not TBD children (will get done later)
+	if( myopts.parent !== "TBD" ){
+	    JS9.Fabric._updateShape.call(this,
+					 layerName, s, null, "add", params);
+	}
     }
     // redraw (unless explicitly specified otherwise)
     if( (params.redraw === undefined) || params.redraw ){
@@ -11948,6 +11954,8 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	JS9.Fabric.updateChildren(layer.dlayer, obj, "moving");
 	JS9.Fabric.updateChildren(layer.dlayer, obj, "scaling");
 	JS9.Fabric.updateChildren(layer.dlayer, obj, "rotating");
+	// update child's parent deltas
+	JS9.Fabric.updateChildren(layer.dlayer, obj, "deltas");
 	// and reset coords
 	obj.setCoords();
 	// might need to make a text shape as a child of this shape
