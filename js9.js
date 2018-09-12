@@ -15994,17 +15994,29 @@ JS9.fitsLibrary = function(s){
 	    };
 	} else {
 	    JS9.fits.options.extlist =  JS9.globalOpts.extlist;
-	    JS9.fits.options.table = {
-		// dims are deprecated 11/27/16
-		xdim: JS9.globalOpts.table.xdim || JS9.globalOpts.dims[0],
-		ydim: JS9.globalOpts.table.ydim || JS9.globalOpts.dims[1],
-		bin: JS9.globalOpts.table.bin || 1
-	    };
-	    JS9.fits.options.image = {
-		xdim: JS9.globalOpts.image.xdim || JS9.globalOpts.image.xmax,
-		ydim: JS9.globalOpts.image.ydim || JS9.globalOpts.image.ymax,
-		bin: JS9.globalOpts.image.bin || 1
-	    };
+	    JS9.fits.options.table = {bin: (JS9.globalOpts.table.bin || 1)};
+	    // NB: dims are deprecated 11/27/16
+	    if( JS9.notNull(JS9.globalOpts.table.xdim) ){
+		JS9.fits.options.table.xdim = JS9.globalOpts.table.xdim;
+	    } else if( JS9.notNull(JS9.globalOpts.dims) ){
+		JS9.fits.options.table.xdim = JS9.globalOpts.dims[0];
+	    }
+	    if( JS9.notNull(JS9.globalOpts.table.ydim) ){
+		JS9.fits.options.table.ydim = JS9.globalOpts.table.ydim;
+	    } else if( JS9.notNull(JS9.globalOpts.dims) ){
+		JS9.fits.options.table.ydim = JS9.globalOpts.dims[1];
+	    }
+	    JS9.fits.options.image = {bin: (JS9.globalOpts.image.bin || 1)};
+	    if( JS9.notNull(JS9.globalOpts.image.xdim) ){
+		JS9.fits.options.image.xdim = JS9.globalOpts.image.xdim;
+	    } else if( JS9.notNull(JS9.globalOpts.xmax) ){
+		JS9.fits.options.image.xdim = JS9.globalOpts.xmax;
+	    }
+	    if( JS9.notNull(JS9.globalOpts.image.ydim) ){
+		JS9.fits.options.image.ydim = JS9.globalOpts.image.ydim;
+	    } else if( JS9.notNull(JS9.globalOpts.ymax) ){
+		JS9.fits.options.image.ydim = JS9.globalOpts.ymax;
+	    }
 	}
 	if( JS9.fits.maxFITSMemory && JS9.globalOpts.maxMemory ){
 	    JS9.fits.maxFITSMemory(JS9.globalOpts.maxMemory);
