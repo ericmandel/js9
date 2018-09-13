@@ -6694,9 +6694,16 @@ JS9.Menubar.createMenus = function(){
 		    for(j=0; j<apackages.length; j++){
 			atasks = apackages[j];
 			for(i=0; i<atasks.length; i++){
+			    // sanity check
+			    if( !atasks[i].title || !atasks[i].name ){
+				continue;
+			    }
+			    // is this task hidden?
 			    if( atasks[i].hidden ){
 				continue;
 			    }
+			    // file validators
+			    if( atasks[i].files ){
 			    if( atasks[i].files.match(/^fits$/) &&
 				!im.fitsFile ){
 				continue;
@@ -6746,6 +6753,17 @@ JS9.Menubar.createMenus = function(){
 				if( !seq(s, parr[2]) ){
 				    continue;
 				}
+			    }
+			    } // end of file validators
+			    // separator
+			    if( atasks[i].rtype &&
+				atasks[i].rtype.match(/^---/) ){
+				items["sep" + n++] = "------";
+				items[atasks[i].name] = {
+				    name: atasks[i].title + ":",
+				    disabled: true
+				};
+				continue;
 			    }
 			    s = atasks[i].title;
 			    if( atasks[i].purl ){
