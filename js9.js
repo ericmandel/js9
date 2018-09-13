@@ -9589,7 +9589,9 @@ JS9.Fabric.elements = ["cornerSize", "cornerColor", "cornerStyle",
 		       "borderColor",
 		       "transparentCorners", "selectionLineWidth",
 		       "centeredScaling", "hasControls", "hasRotatingPoint",
-		       "hasBorders", "params", "pub"];
+		       "lockMovementX", "lockMovementY", "lockRotation",
+		       "lockScalingX", "lockScalingY", "lockUniScaling",
+		       "selectable", "hasBorders", "params", "pub"];
 
 // global options for all shapes
 JS9.Fabric.opts = {
