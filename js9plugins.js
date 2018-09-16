@@ -9527,11 +9527,14 @@ JS9.Sync.xeqSync = function(arr){
 			    break;
 			case "move":
 			case "update":
-			    // account for difference in image scales
+			    // account for difference in image scales, angles
 			    if( this.raw.wcsinfo && xim.raw.wcsinfo ){
 				// with a scale factor
 				myobj.sizeScale =
 				    this.raw.wcsinfo.cdelt1 / xim.raw.wcsinfo.cdelt1;
+				if( xim.raw.wcsinfo.crot ){
+				    myobj.angle += xim.raw.wcsinfo.crot;
+				}
 			    } else {
 				// no scale factor
 				delete myobj.sizeScale;
