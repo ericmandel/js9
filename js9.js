@@ -12040,10 +12040,10 @@ JS9.Fabric.refreshShapes = function(layerName){
 	// change region position
 	obj.set("left", pos.x);
 	obj.set("top", pos.y);
-	// change angle if necessary
-	if( obj.params.shape !== "circle" && obj.params.shape !== "line"    &&
-	    obj.params.shape !== "point"  && obj.params.shape !== "polygon" &&
-	    obj.params.shape !== "text"                                     ){
+	// change angle for shapes accepting angles
+	if( obj.params.shape === "box"                           ||
+	    obj.params.shape === "ellipse"                       ||
+	    (obj.params.shape === "text"  && !obj.params.parent) ){
 	    if( that.raw.wcsinfo && that.raw.wcsinfo.crot ){
 		obj.set("angle", -(obj.pub.angle + that.raw.wcsinfo.crot));
 	    } else {
