@@ -10450,12 +10450,8 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	}
     }
     // fabric angle is in opposite direction
-    if( opts.angle !== undefined ){
+    if( (opts.angle !== undefined) ){
 	nopts.angle = -opts.angle;
-	// add internal rotation, if necessary
-	if( this.raw.wcsinfo && this.raw.wcsinfo.crot ){
-            nopts.angle -= this.raw.wcsinfo.crot;
-	}
     }
     //  x and y are image coords, convert to display coords
     if( (opts.x !== undefined) && (opts.y !== undefined) ){
@@ -14426,6 +14422,10 @@ JS9.Regions.parseRegions = function(s, opts){
     // get image angle
     var getang = function(a){
 	var v = JS9.strtoscaled(a);
+	var wcsinfo = this.raw.wcsinfo || {crot: 0};
+	if( wcsinfo.crot ){
+            v.dval += wcsinfo.crot;
+	}
 	return v.dval;
     };
     // get cleaned-up string
