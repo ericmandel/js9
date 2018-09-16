@@ -374,7 +374,7 @@ JS9.Sync.maybeSync = function(op, arg){
     var i, ims;
     var arr = [];
     // sanity check
-    if( !JS9.Sync.ready || this.syncs.running ){
+    if( !JS9.Sync.ready || !this.syncs || this.syncs.running ){
 	return;
     }
     // do we need to sync images for this operation?
