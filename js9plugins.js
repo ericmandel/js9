@@ -9484,7 +9484,8 @@ JS9.Sync.xeqSync = function(arr){
 		    }
 		    // process all regions ...
 		    for(j=0; j<args.length; j++){
-			myobj = args[j];
+			// get a copy of the regions object so we can change it
+			myobj = $.extend(true, {}, args[j]);
 			// get a sync id
 			if( myobj.data && myobj.data.syncid ){
 			    // reuse its syncid, if possible
