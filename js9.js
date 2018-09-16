@@ -12079,6 +12079,9 @@ JS9.Fabric.refreshShapes = function(layerName){
 				.trim().split(/ +/);
 			    pos = this.imageToDisplayPos({x: parseFloat(s[0]),
 							  y: parseFloat(s[1])});
+			    if( obj.angle ){
+				pos = JS9.rotatePoint(pos, -obj.angle, cen);
+			    }
 			    obj.points[i] = {x: (pos.x - cen.x)/obj.scaleX,
 					     y: (pos.y - cen.y)/obj.scaleY};
 			}
@@ -12086,6 +12089,9 @@ JS9.Fabric.refreshShapes = function(layerName){
 			pts = obj.pub.lcs.pts;
 			for(i=0; i<pts.length; i++){
 			    pos = that.logicalToDisplayPos(obj.pub.lcs.pts[i]);
+			    if( obj.angle ){
+				pos = JS9.rotatePoint(pos, -obj.angle, cen);
+			    }
 			    obj.points[i] = {x: (pos.x - cen.x)/obj.scaleX,
 					     y: (pos.y - cen.y)/obj.scaleY};
 			}
