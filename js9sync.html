@@ -14,6 +14,15 @@
   <script type="text/javascript" src="js9plugins.js"></script>
   <title>JS9 sync</title>
   <style type="text/css">
+      .ImExamRegionStats {
+        background: #E9E9E9;
+        border: black solid 1px
+        padding: 0px;
+        margin:  0px;
+        width: 410px;
+        height: 200px;
+        overflow: auto;
+      }
       .myAnalysisResults {
         background: #E9E9E9;
         border: black solid 1px
@@ -34,7 +43,6 @@
     performed on one image (e.g. change of <b>colormap, contrast/bias,
     pan, regions, scale, wcs, zoom</b>), it also is performed on the
     other image(s).
-
     <p>
     By default, synchronization is <b>reciprocated</b>: a change in any
     image causes the others to be synchronized. Synchronization can be
@@ -44,71 +52,121 @@
     and
     <a href="./help/publicapi.html#JS9.UnsyncImages" target="_blank">JS9.UnsyncImages()</a>
     public API calls are available programmatically or from the command line.
+
     <p>
-    The demo below displays three energy cuts of the Chandra Kes 75
-    supernova remnant. The first two images are sync'ed to changes in
-    all operations (colormap, contrast/bias, etc.) The third is
-    sync'ed to all but zoom. Change a region to see all the energy plots
-    get updated, or change the colormap, scale ... or use the File menu to
-    unsync or sync your own choice of images and ops.
+    <center><font size="+1"><b>Synchronizing different images</b></font></center>
+    <p>
+    This demo displays Chandra, Galex, Spitzer images of the
+    colliding galaxies NGC 2207 and IC 2163, synchronized on region
+    operations. The region screen sizes differ because the
+    image scales differ, but their wcs sizes are identical. Move
+    a region around to see updated region stats for all three.  (You
+    can, of course, use
+    <b>WCS:reproject</b> to display the same scale and orientation.)
     <p>
     <table cellpadding="2px">
     <tr>
     <td>
-    <div class="JS9Menubar" id="im0_JS9Menubar" data-width="400"></div>
-    <div class="JS9" id="im0_JS9"  data-width="400"  data-height="400"></div>
-    <div class="JS9Colorbar" id="im0_JS9Colorbar" data-width="400"></div>
-    <div class="myAnalysisResults" id="im0_Plot"></div>
+    <div class="JS9Menubar" id="bim0_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="bim0_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="bim0_JS9Colorbar" data-width="400"></div>
+    <div class="ImExamRegionStats" data-js9id="bim0_JS9" data-width="400"></div>
     </td>
     <td>
-    <div class="JS9Menubar" id="im1_JS9Menubar" data-width="400"></div>
-    <div class="JS9" id="im1_JS9"  data-width="400"  data-height="400"></div>
-    <div class="JS9Colorbar" id="im1_JS9Colorbar" data-width="400"></div>
-    <div class="myAnalysisResults" id="im1_Plot"></div>
+    <div class="JS9Menubar" id="bim1_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="bim1_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="bim1_JS9Colorbar" data-width="400"></div>
+    <div class="ImExamRegionStats" data-js9id="bim1_JS9" data-width="400"></div>
     </td>
     <td>
-    <div class="JS9Menubar" id="im2_JS9Menubar" data-width="400"></div>
-    <div class="JS9" id="im2_JS9"  data-width="400"  data-height="400"></div>
-    <div class="JS9Colorbar" id="im2_JS9Colorbar" data-width="400"></div>
-    <div class="myAnalysisResults" id="im2_Plot"></div>
+    <div class="JS9Menubar" id="bim2_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="bim2_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="bim2_JS9Colorbar" data-width="400"></div>
+    <div class="ImExamRegionStats" data-js9id="bim2_JS9" data-width="400"></div>
     </td>
     </tr>
     </table>
+
+    <p>
+    <center><font size="+1"><b>Synchronizing views of the same image</b></font></center>
+    <p>
+    <p>
+    This demo displays three energy cuts of the Chandra Kes 75
+    supernova remnant. The first two images are sync'ed to changes in
+    all operations (colormap, contrast/bias, etc.) The third binned image is
+    sync'ed to all ops except zoom. Change a region to see all the energy plots
+    get updated, or change the colormap, contrast/bias, scale, etc.
+    <table cellpadding="2px">
+    <tr>
+    <td>
+    <div class="JS9Menubar" id="xim0_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="xim0_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="xim0_JS9Colorbar" data-width="400"></div>
+    <div class="myAnalysisResults" id="xim0_Plot"></div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="xim1_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="xim1_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="xim1_JS9Colorbar" data-width="400"></div>
+    <div class="myAnalysisResults" id="xim1_Plot"></div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="xim2_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="xim2_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="xim2_JS9Colorbar" data-width="400"></div>
+    <div class="myAnalysisResults" id="xim2_Plot"></div>
+    </td>
+    </tr>
+    </table>
+
     <script type="text/javascript">
     JS9.Regions.opts.onchange = runMyAnalysis;
-    var images = [
+    var ximages = [
       "kes75/kes75_500_1500.fits",
       "kes75/kes75_1500_2500.fits",
       "kes75/kes75_2500_8000.fits"
     ];
-    var cmaps = [["cool",4.0,0.09], ["heat",5.9,0.14], ["viridis",5.875,0.083]];
-    var ops1 = ["colormap","contrastbias","pan","regions","scale","wcs"];
-    var ims1 = [images[1], images[2]]
-    var ops2 = ["zoom"];
-    var ims2 = [images[1]]
-    $(document).on("JS9:ready", function(){
-      JS9.Load(images[0], {onload: function(im0){
-        im0.setColormap.apply(im0, cmaps[0]);
-        JS9.Load(images[1], {onload: function(im1){
-          im1.setColormap.apply(im1, cmaps[1]);
-          JS9.Load(images[2], {bin: 2, onload: function(im2){
-              im2.setColormap.apply(im2, cmaps[2]);
+    var xcmaps = [["cool",4.0,0.09],["heat",5.9,0.14],["viridis",5.875,0.083]];
+    var xops1 = ["colormap","contrastbias","pan","regions","scale","wcs"];
+    var xims1 = [ximages[1], ximages[2]]
+    var xops2 = ["zoom"];
+    var xims2 = [ximages[1]]
+    function xinit(){
+      JS9.Load(ximages[0], {onload: function(xim0){
+        xim0.setColormap.apply(xim0, xcmaps[0]);
+        JS9.Load(ximages[1], {onload: function(xim1){
+          xim1.setColormap.apply(xim1, xcmaps[1]);
+          JS9.Load(ximages[2], {bin: 2, onload: function(xim2){
+              xim2.setColormap.apply(xim2, xcmaps[2]);
               // wait so last image has time to get analysis tasks from helper
               window.setTimeout(function(){
                 // sync first image with the others
-                JS9.SyncImages(ops1, ims1, {display: "im0_JS9"});
-                JS9.SyncImages(ops2, ims2, {display: "im0_JS9"});
+                JS9.SyncImages(xops1, xims1, {display: "xim0_JS9"});
+                JS9.SyncImages(xops2, xims2, {display: "xim0_JS9"});
                 // change these in the first image, they will be sync'ed
-                im0.setScale("log");
-                im0.setPan({px: 4018, py: 4000});
-                im0.addShapes("regions", "physical;circle(4018,4000,40)");
-              }, 250);
-          }}, {display: "im2_JS9"});
-        }}, {display: "im1_JS9"});
-      }}, {display: "im0_JS9"});
-    });
+                xim0.setScale("log");
+                xim0.setPan({px: 4018, py: 4000});
+                xim0.addShapes("regions", "physical;circle(4018,4000,40)");
+              }, 1000);
+          }}, {display: "xim2_JS9"});
+        }}, {display: "xim1_JS9"});
+      }}, {display: "xim0_JS9"});
+    }
+
+    var bimages = [
+      "blend/chandra.fits",
+      "blend/galex.fits",
+      "blend/spitzer.fits"
+    ];
+    var bcmaps = [["cool",4.0,0.09],["heat",3.18,0.21],["viridis",2.63,0.62]];
+    var bops1 = ["regions","scale","wcs"];
+    var bims1 = [bimages[1], bimages[2]]
+    var bops2 = ["regions", "scale"];
+    var bims2 = [bimages[1]]
     function runMyAnalysis(xim, xreg){
-        xim.runAnalysis("energyplot", null, dispMyAnalysis);
+        if( xim && xim.id.match(/^kes/) ){
+            xim.runAnalysis("energyplot", null, dispMyAnalysis);
+        }
     }
     function dispMyAnalysis(stdout, stderr, errcode, a){
       var plot = this.tmp.plot;
@@ -158,7 +216,34 @@
         }
       }
     }
+    function binit(){
+      JS9.Load(bimages[0], {onload: function(bim0){
+        bim0.setColormap.apply(bim0, bcmaps[0]);
+        JS9.Load(bimages[1], {onload: function(bim1){
+          bim1.setColormap.apply(bim1, bcmaps[1]);
+          JS9.Load(bimages[2], {onload: function(bim2){
+              bim2.setColormap.apply(bim2, bcmaps[2]);
+              // wait so last image has time to get analysis tasks from helper
+              window.setTimeout(function(){
+                // sync first image with the others
+                JS9.SyncImages(bops1, bims1, {display: "bim0_JS9"});
+                JS9.SyncImages(bops2, bims2, {display: "bim0_JS9"});
+                // change these in the first image, they will be sync'ed
+                bim0.setScale("log");
+                bim0.setPan({px: 4018, py: 4000});
+                bim0.addShapes("regions",
+                    'FK5; box(06:16:22.055, -21:22:24.017, 40", 30")');
+              }, 250);
+          }}, {display: "bim2_JS9"});
+        }}, {display: "bim1_JS9"});
+      }}, {display: "bim0_JS9"});
+    }
+    $(document).on("JS9:ready", function(){
+      xinit();
+      binit();
+    });
     </script>
+
 <p>
 JS9 Demos:
 <ul>
