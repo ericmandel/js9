@@ -234,12 +234,14 @@
                 bim0.addShapes("regions",
                     'FK5; box(06:16:22.055, -21:22:24.017, 40", 30")');
               }, 250);
+              window.setTimeout(function(){
+	          xinit();
+	      }, 1000);
           }}, {display: "bim2_JS9"});
         }}, {display: "bim1_JS9"});
       }}, {display: "bim0_JS9"});
     }
     $(document).on("JS9:ready", function(){
-      xinit();
       binit();
     });
     </script>
