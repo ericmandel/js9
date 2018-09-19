@@ -20051,13 +20051,17 @@ JS9.mkPublic("GetLoadStatus", function(id){
     var im = JS9.getImage(obj.display);
     if( im ){
 	id = obj.argv[0];
-	if( id ){
+	if( id && typeof id === "object" && id.hasOwnProperty("id")  ){
+	    id = id.id;
+	}
+	if( typeof id === "string" ){
 	    id0 = id.split('/').reverse()[0];
 	}
 	if( im.file0 ){
 	    fname0 = im.file0.split('/').reverse()[0];
 	}
-	if( !id || (im.id0 === id) || (im.file0 === id) || (fname0 === id0) ){
+	if( !id || (im.id0 === id) || (im.file0 === id) ||
+	    (fname0 && id0 && fname0 === id0) ){
 	    return im.status.load;
 	}
 	return "other";
