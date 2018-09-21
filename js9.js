@@ -63,8 +63,8 @@ JS9.RAWIDX = "alt";		// default "alternate" raw id
 JS9.REPROJDIM = 2048;		// max dim for reproj before we shrink image
 JS9.IDFMT = "  (%s)";           // format for light window id
 JS9.MINZOOM = 0.125;		// min zoom using scroll wheel
-JS9.MAXZOOM = 16.0;		// max zoom using scroll wheel
-JS9.ADDZOOM = 0.05;		// add/subtract amount per mouse wheel click
+JS9.MAXZOOM = 32.0;		// max zoom using scroll wheel
+JS9.ADDZOOM = 0.1;		// add/subtract amount per mouse wheel click
 JS9.CHROMEFILEWARNING = true;	// whether to alert chrome users about file URI
 
 // https://hacks.mozilla.org/2013/04/detecting-touch-its-the-why-not-the-how/
@@ -2061,7 +2061,10 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
     sect.x1 = Math.min(this.raw.width, sect.x1);
     sect.y0 = Math.max(0, sect.y0);
     sect.y1 = Math.min(this.raw.height, sect.y1);
-    // we changed section, so the offsreen RGB image is invalid
+    // we have final section limits: derive new width and height
+    sect.width   = Math.ceil((sect.x1 - sect.x0) * sect.zoom);
+    sect.height  = Math.ceil((sect.y1 - sect.y0) * sect.zoom);
+    // we changed section, so the offscreen RGB image is invalid
     this.offscreenRGB = null;
     // put zoom back into params
     this.params.zoom = sect.zoom;
