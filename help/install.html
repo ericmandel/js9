@@ -135,11 +135,13 @@ example above).
 <p>
 Run the js9 script to start the app and load data files:
 <pre>
-  js9 ~/data/casa.fits &
+  # the -a switch tells the script to bring up the Desktop js9 app
+  js9 -a ~/data/casa.fits &
 </pre>
 and then use the same script to interact with the JS9 page (or any
 other JS9-enabled web page):
 <pre>
+  # without -a, the script sends commands to the JS9 display
   js9 cmap cool
   js9 regions circle
 </pre>
@@ -347,7 +349,7 @@ available on GitHub:
 </pre>
 
 
-<h5>Last updated: March 16, 2018</h5>
+<h5>Last updated: September 20, 2018</h5>
 </div>
 
 </body>
