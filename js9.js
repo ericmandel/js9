@@ -18838,7 +18838,7 @@ JS9.init = function(){
     var uopts;
     // sanity check: need HTML5 canvas and JSON
     if( !window.HTMLCanvasElement || !JSON ){
-	JS9.error("your browser does not support JS9 (no HTML5 canvas and/or JSON). Please try a modern version of Firefox, Chrome, Safari, Opera, or IE.");
+	JS9.error("your browser does not support JS9 (no HTML5 canvas and/or JSON). Please try a modern version of Firefox, Chrome, Safari, Opera, or Edge.");
     }
     // get relative location of installed js9.css file
     // which tells us where JS9 installed files (and the helper) are located
