@@ -2526,6 +2526,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 	yOutIdx = yOut * zinc;
 	for(xIn=sect.x0, xOut=0; xIn<sect.x1; xIn += inc, xOut++){
 	    if( dorgb ){
+		// rgb mode: special case
 		ridx = rthis ? rthis.colorData[yLen + xIn] : 0;
 		gidx = gthis ? gthis.colorData[yLen + xIn] : 0;
 		bidx = bthis ? bthis.colorData[yLen + xIn] : 0;
@@ -2538,6 +2539,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 		    return this;
 		}
 	    } else {
+		// ordinary case
 		idx = this.colorData[yLen + xIn];
 	    }
 	    if( this.maskData ){
@@ -2545,33 +2547,41 @@ JS9.Image.prototype.mkRGBImage = function(){
 	    }
 	    xOutIdx = xOut * zinc;
 	    for(yZoom=0; yZoom<sect.zoom; yZoom++) {
-		zy = Math.floor(yOutIdx + yZoom);
+		// ceil avoids non-integer zoom cross-hair artifacts ...
+		zy = Math.ceil(yOutIdx + yZoom);
 		zyLen = zy * sect.width;
 		for(xZoom=0; xZoom<sect.zoom; xZoom++) {
-		    zx = Math.floor(xOutIdx + xZoom);
+		    // ceil avoids non-integer zoom cross-hair artifacts ...
+		    zx = Math.ceil(xOutIdx + xZoom);
+		    // final index into output buffer
 		    odx = (zyLen + zx) * 4;
-		    if( dorgb ){
-			if( rthis ){
-			    img.data[odx]   = rthis.psColors[ridx][0];
+		    // check for odx out-of-bounds
+		    if( odx < img.data.length ){
+			if( dorgb ){
+			    // rgb mode: special case
+			    if( rthis ){
+				img.data[odx]   = rthis.psColors[ridx][0];
+			    } else {
+				img.data[odx] = 0;
+			    }
+			    if( gthis ){
+				img.data[odx+1] = gthis.psColors[gidx][1];
+			    } else {
+				img.data[odx+1] = 0;
+			    }
+			    if( bthis ){
+				img.data[odx+2] = bthis.psColors[bidx][2];
+			    } else {
+				img.data[odx+2] = 0;
+			    }
 			} else {
-			    img.data[odx] = 0;
+			    // ordinary case
+			    img.data[odx]   = this.psColors[idx][0];
+			    img.data[odx+1] = this.psColors[idx][1];
+			    img.data[odx+2] = this.psColors[idx][2];
 			}
-			if( gthis ){
-			    img.data[odx+1] = gthis.psColors[gidx][1];
-			} else {
-			    img.data[odx+1] = 0;
-			}
-			if( bthis ){
-			    img.data[odx+2] = bthis.psColors[bidx][2];
-			} else {
-			    img.data[odx+2] = 0;
-			}
-		    } else {
-			img.data[odx]   = this.psColors[idx][0];
-			img.data[odx+1] = this.psColors[idx][1];
-			img.data[odx+2] = this.psColors[idx][2];
+			img.data[odx+3] = alpha;
 		    }
-		    img.data[odx+3] = alpha;
 		}
 	    }
 	}
