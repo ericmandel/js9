@@ -229,6 +229,14 @@ RewriteRule /(.*)           ws://otherhost:2718/$1 [P,L]
 ProxyPass        /socket.io http://otherhost:2718/socket.io
 ProxyPassReverse /socket.io http://otherhost:2718/socket.io
 </pre>
+<p>
+NB: when configuring a proxy, you should set the "helperPort" in
+js9prefs.js to 80 (or whatever port your web server listens on) so
+that the browser connects to the helper via the public-facing web
+server. Set the "helperPort" in js9Prefs.json to 2718 (or whatever
+port you choose), so that the helper listens on its own port. This is
+a special situation where the ports will be different for the client
+and the helper.
 
 <h3>Notes on the CGI-based Server-side helper</h3>
 
