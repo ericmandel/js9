@@ -1,7 +1,7 @@
 #	This file is an input file used by the GNU "autoconf" program to
 #	generate the file "configure", which is run during XPA installation
 #	to configure the system for the local environment.
-AC_INIT(js9, 2.1, eric@cfa.harvard.edu, js9)
+AC_INIT(js9, 2.2, eric@cfa.harvard.edu, js9)
 
 AC_MSG_CHECKING(for web install directory)
 AC_ARG_WITH(webdir,
