@@ -16363,8 +16363,12 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 };
 
 // return the specified colormap object (or default)
-JS9.lookupColormap = function(name){
+JS9.lookupColormap = function(name, mustExist){
     var i;
+    // default is that the id must exist
+    if( mustExist === undefined ){
+	mustExist = true;
+    }
     if( !name ){
 	name = JS9.imageOpts.colormap;
     }
@@ -16375,7 +16379,11 @@ JS9.lookupColormap = function(name){
 	    }
 	}
     }
-    JS9.error("unknown colormap '" + name + "'");
+    if( mustExist ){
+        JS9.error("unknown colormap '" + name + "'");
+    } else {
+	return null;
+    }
 };
 
 // lookup command
