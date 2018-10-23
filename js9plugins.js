@@ -3613,6 +3613,184 @@ JS9.Keyboard.Actions["save regions as a text file"] = function(im, ipos, evt){
     im.saveRegions();
 };
 
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["move selected region up"] = function(im, ipos, evt){
+    var canvas, layerName;
+    var inc = 1;
+    // sanity check
+    if( !im ){ return; }
+    evt.preventDefault();
+    if( JS9.specialKey(evt) ){ inc *= 5; }
+    layerName = im.layer || "regions";
+    canvas = im.display.layers[layerName].canvas;
+    im.changeShapes(layerName, "selected", {dy: inc});
+    canvas.fire("mouse:up");
+};
+
+JS9.Keyboard.Actions["move selected region down"] = function(im, ipos, evt){
+    var canvas, layerName;
+    var inc = -1;
+    // sanity check
+    if( !im ){ return; }
+    evt.preventDefault();
+    if( JS9.specialKey(evt) ){ inc *= 5; }
+    layerName = im.layer || "regions";
+    canvas = im.display.layers[layerName].canvas;
+    im.changeShapes(layerName, "selected", {dy: inc});
+    canvas.fire("mouse:up");
+};
+
+JS9.Keyboard.Actions["move selected region left"] = function(im, ipos, evt){
+    var canvas, layerName;
+    var inc = -1;
+    // sanity check
+    if( !im ){ return; }
+    evt.preventDefault();
+    if( JS9.specialKey(evt) ){ inc *= 5; }
+    layerName = im.layer || "regions";
+    canvas = im.display.layers[layerName].canvas;
+    im.changeShapes(layerName, "selected", {dx: inc});
+    canvas.fire("mouse:up");
+};
+
+JS9.Keyboard.Actions["move selected region right"] = function(im, ipos,evt){
+    var canvas, layerName;
+    var inc = 1;
+    // sanity check
+    if( !im ){ return; }
+    evt.preventDefault();
+    if( JS9.specialKey(evt) ){ inc *= 5; }
+    layerName = im.layer || "regions";
+    canvas = im.display.layers[layerName].canvas;
+    im.changeShapes(layerName, "selected", {dx: inc});
+    canvas.fire("mouse:up");
+};
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["remove selected region"] = function(im, ipos, evt){
+    var canvas, layerName;
+    // sanity check
+    if( !im ){ return; }
+    evt.preventDefault();
+    layerName = im.layer || "regions";
+    canvas = im.display.layers[layerName].canvas;
+    im.removeShapes(layerName, "selected");
+    im.display.clearMessage(layerName);
+    canvas.fire("mouse:up");
+};
+
+JS9.Keyboard.Actions["raise region layer to top"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){ return; }
+    evt.preventDefault();
+    im.activeShapeLayer("regions");
+};
+
+JS9.Keyboard.Actions["toggle active shape layers"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){ return; }
+    evt.preventDefault();
+    im.toggleShapeLayers();
+};
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["copy selected region to clipboard"] = function(im, ipos, evt){
+    var s;
+    // sanity check
+    if( !im ){ return; }
+    // get selected region(s)
+    s = im.listRegions("selected", {mode: 1});
+    // copy to clipboard
+    JS9.CopyToClipboard(s);
+    return s;
+};
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["copy all regions to clipboard"] = function(im, ipos, evt){
+    var s;
+    // sanity check
+    if( !im ){ return; }
+    // get all regions
+    s = im.listRegions("all", {mode: 1});
+    // copy to clipboard
+    JS9.CopyToClipboard(s);
+    return s;
+};
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["paste regions from local clipboard"] = function(im, ipos, evt){
+    var s;
+    var rregexp = /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
+    // sanity check
+    if( !im ){ return; }
+    // try to get from clipboard
+    s = JS9.CopyFromClipboard();
+    // see if we have something valid
+    if( !s ){
+	JS9.error("the local clipboard (which only holds data copied from within JS9) does not contain any content. Were you trying to paste something copied outside JS9? ");
+    }
+    if( s.match(rregexp) ){
+	im.addShapes("regions", s);
+    } else {
+	JS9.error("the local clipboard (which only holds data copied from within JS9) does not contain any regions");
+    }
+    return s;
+};
+
+JS9.Keyboard.Actions["refresh image"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){ return; }
+    evt.preventDefault();
+    im.refreshImage();
+};
+
+JS9.Keyboard.Actions["display full image"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){ return; }
+    evt.preventDefault();
+    im.displaySection("full");
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["toggle coordinate grid"] = function(im, ipos, evt){
+    JS9.Grid.toggle(im);
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["toggle crosshair"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){ return; }
+    evt.preventDefault();
+    im.params.crosshair = !im.params.crosshair;
+    if( !im.params.crosshair ){
+	JS9.Crosshair.hide(im);
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["toggle mouse/touch plugin"] = function(im, ipos, evt){
+    if( im ){
+	im.display.displayPlugin("JS9MouseTouch");
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["toggle keyboard actions plugin"] = function(im, ipos, evt){
+    if( im ){
+	im.display.displayPlugin("JS9Keyboard");
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["toggle preferences plugin"] = function(im, ipos, evt){
+    if( im ){
+	im.display.displayPlugin("JS9Preferences");
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["toggle shape layers plugin"] = function(im, ipos, evt){
+    if( im ){
+	im.display.displayPlugin("JS9Layers");
+    }
+};
+
 // get action associated with the current keyboard
 JS9.Keyboard.getAction = function(im, evt){
     var action;
