@@ -88,6 +88,10 @@ JS9.Prefs.imagesSchema = {
 	    "type": "boolean",
 	    "helper": "list after a region change?"
 	},
+	"whichonchange": {
+	    "type": "string",
+	    "helper": "list 'all' or 'selected'?"
+	},
 	"valpos": {
 	    "type": "boolean",
 	    "helper": "display value/position?"

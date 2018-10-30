@@ -3373,6 +3373,29 @@ JS9.Keyboard.addAction = function(container, cname, aname){
     return divjq;
 };
 
+// common code for arrow key processing
+JS9.Keyboard.arrowKey = function(im, evt, inc, active){
+    // change display and image position, redisplay magnifier
+    im.pos.x += inc.x;
+    im.pos.y += inc.y;
+    im.ipos = im.displayToImagePos(im.pos);
+    if( JS9.hasOwnProperty("MouseTouch") ){
+	im.valpos = null;
+	JS9.MouseTouch.Actions["display value/position"](im, im.ipos, evt);
+    }
+    if( JS9.hasOwnProperty("Magnifier") ){
+	JS9.Magnifier.display(im, im.ipos);
+    }
+    if( JS9.hasOwnProperty("Crosshair") && !active ){
+	if( !im.clickInRegion ){
+	    im.tmp.arrowCrosshair = true;
+	    im.tmp.arrowCrosshairVisible = true;
+	    JS9.Crosshair.display(im, im.ipos, evt);
+	    delete im.tmp.arrowCrosshair;
+	}
+    }
+};
+
 // ---------------------------------------------------------------------
 //
 // Keyboard.Actions: callbacks when on key press
@@ -3392,6 +3415,18 @@ JS9.Keyboard.addAction = function(container, cname, aname){
 JS9.Keyboard.Actions = {};
 
 // eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["open local file"] = function(im, ipos, evt){
+    JS9.OpenFileMenu({display: evt.data});
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["close image"] = function(im, ipos, evt){
+    if( im ){
+	im.closeImage();
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt){
     var s, arr, opts;
     // sanity check
@@ -3408,7 +3443,7 @@ JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt)
 	s = im.expandMacro(JS9.globalOpts.copyWcsPosFormat, opts);
     }
     // copy to clipboard
-    JS9.CopyToClipboard(s);
+    JS9.CopyToClipboard(s, im);
     return s;
 };
 
@@ -3423,7 +3458,7 @@ JS9.Keyboard.Actions["copy physical position to clipboard"] = function(im, ipos,
     phys = im.imageToLogicalPos(ipos);
     s = sprintf("%f %f", phys.x, phys.y);
     // copy to clipboard
-    JS9.CopyToClipboard(s);
+    JS9.CopyToClipboard(s, im);
     return s;
 };
 
@@ -3440,7 +3475,7 @@ JS9.Keyboard.Actions["copy pixel value to clipboard"] = function(im, ipos, evt){
     prec = JS9.floatPrecision(im.params.scalemin, im.params.scalemax);
     s = JS9.floatFormattedString(val, prec, 3);
     // copy to clipboard
-    JS9.CopyToClipboard(s);
+    JS9.CopyToClipboard(s, im);
     return s;
 };
 
@@ -3466,8 +3501,22 @@ JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos
 	s = " ";
     }
     // copy to clipboard
-    JS9.CopyToClipboard(s);
+    JS9.CopyToClipboard(s, im);
     return s;
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["edit selected region"] = function(im, ipos, evt){
+    var layer, target;
+    // sanity check
+    if( !im ){
+	return;
+    }
+    layer = im.layers.regions;
+    if( layer ){
+	target = layer.canvas.getActiveObject();
+	JS9.Regions.displayConfigForm.call(im, target);
+    }
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -3614,63 +3663,79 @@ JS9.Keyboard.Actions["save regions as a text file"] = function(im, ipos, evt){
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["move selected region up"] = function(im, ipos, evt){
-    var canvas, layerName;
+JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
+    var canvas, layerName, active;
     var inc = 1;
+    evt.preventDefault();
     // sanity check
     if( !im ){ return; }
-    evt.preventDefault();
     if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
-    im.changeShapes(layerName, "selected", {dy: inc});
+    active = canvas.getActiveObject() || canvas.getActiveGroup();
+    if( active ){
+	im.changeShapes(layerName, "selected", {dy: inc});
+    }
+    JS9.Keyboard.arrowKey(im, evt, {x: 0, y: inc * -1}, active);
     canvas.fire("mouse:up");
 };
 
-JS9.Keyboard.Actions["move selected region down"] = function(im, ipos, evt){
-    var canvas, layerName;
+JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
+    var canvas, layerName, active;
     var inc = -1;
+    evt.preventDefault();
     // sanity check
     if( !im ){ return; }
-    evt.preventDefault();
     if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
-    im.changeShapes(layerName, "selected", {dy: inc});
+    active = canvas.getActiveObject() || canvas.getActiveGroup();
+    if( active ){
+	im.changeShapes(layerName, "selected", {dy: inc});
+    }
+    JS9.Keyboard.arrowKey(im, evt, {x: 0, y: inc * -1}, active);
     canvas.fire("mouse:up");
 };
 
-JS9.Keyboard.Actions["move selected region left"] = function(im, ipos, evt){
-    var canvas, layerName;
+JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
+    var canvas, layerName, active;
     var inc = -1;
+    evt.preventDefault();
     // sanity check
     if( !im ){ return; }
-    evt.preventDefault();
     if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
-    im.changeShapes(layerName, "selected", {dx: inc});
+    active = canvas.getActiveObject() || canvas.getActiveGroup();
+    if( canvas.getActiveObject() || canvas.getActiveGroup() ){
+	im.changeShapes(layerName, "selected", {dx: inc});
+    }
+    JS9.Keyboard.arrowKey(im, evt, {x: inc, y: 0}, active);
     canvas.fire("mouse:up");
 };
 
-JS9.Keyboard.Actions["move selected region right"] = function(im, ipos,evt){
-    var canvas, layerName;
+JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
+    var canvas, layerName, active;
     var inc = 1;
+    evt.preventDefault();
     // sanity check
     if( !im ){ return; }
-    evt.preventDefault();
     if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
-    im.changeShapes(layerName, "selected", {dx: inc});
+    active = canvas.getActiveObject() || canvas.getActiveGroup();
+    if( canvas.getActiveObject() || canvas.getActiveGroup() ){
+	im.changeShapes(layerName, "selected", {dx: inc});
+    }
+    JS9.Keyboard.arrowKey(im, evt, {x: inc, y: 0}, active);
     canvas.fire("mouse:up");
 };
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["remove selected region"] = function(im, ipos, evt){
     var canvas, layerName;
+    evt.preventDefault();
     // sanity check
     if( !im ){ return; }
-    evt.preventDefault();
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
     im.removeShapes(layerName, "selected");
@@ -3679,18 +3744,19 @@ JS9.Keyboard.Actions["remove selected region"] = function(im, ipos, evt){
 };
 
 JS9.Keyboard.Actions["raise region layer to top"] = function(im, ipos, evt){
+    evt.preventDefault();
     // sanity check
     if( !im ){ return; }
-    evt.preventDefault();
     im.activeShapeLayer("regions");
 };
 
 JS9.Keyboard.Actions["toggle active shape layers"] = function(im, ipos, evt){
+    evt.preventDefault();
     // sanity check
     if( !im ){ return; }
-    evt.preventDefault();
     im.toggleShapeLayers();
 };
+
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy selected region to clipboard"] = function(im, ipos, evt){
     var s;
@@ -3699,9 +3765,10 @@ JS9.Keyboard.Actions["copy selected region to clipboard"] = function(im, ipos, e
     // get selected region(s)
     s = im.listRegions("selected", {mode: 1});
     // copy to clipboard
-    JS9.CopyToClipboard(s);
+    JS9.CopyToClipboard(s, im);
     return s;
 };
+
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy all regions to clipboard"] = function(im, ipos, evt){
     var s;
@@ -3710,27 +3777,35 @@ JS9.Keyboard.Actions["copy all regions to clipboard"] = function(im, ipos, evt){
     // get all regions
     s = im.listRegions("all", {mode: 1});
     // copy to clipboard
-    JS9.CopyToClipboard(s);
+    JS9.CopyToClipboard(s, im);
     return s;
 };
+
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["paste regions from local clipboard"] = function(im, ipos, evt){
-    var s;
-    var rregexp = /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
+    return JS9.Regions.pasteFromClipboard.call(im, false);
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["paste regions to current position"] = function(im, ipos, evt){
+    return JS9.Regions.pasteFromClipboard.call(im, true);
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["select region"] = function(im, ipos, evt){
+    var i, layer, canvas, obj, objs;
     // sanity check
     if( !im ){ return; }
-    // try to get from clipboard
-    s = JS9.CopyFromClipboard();
-    // see if we have something valid
-    if( !s ){
-	JS9.error("the local clipboard (which only holds data copied from within JS9) does not contain any content. Were you trying to paste something copied outside JS9? ");
+    layer = im.layer || "regions";
+    canvas = im.layers[layer].canvas;
+    objs = canvas.getObjects();
+    for(i=0; i<objs.length; i++){
+	obj = objs[i];
+	if( canvas.containsPoint(null, obj, im.pos) ){
+	    canvas.setActiveObject(obj);
+	    break;
+	}
     }
-    if( s.match(rregexp) ){
-	im.addShapes("regions", s);
-    } else {
-	JS9.error("the local clipboard (which only holds data copied from within JS9) does not contain any regions");
-    }
-    return s;
 };
 
 JS9.Keyboard.Actions["refresh image"] = function(im, ipos, evt){
@@ -4666,6 +4741,7 @@ JS9.Menubar.buttonOptsArr = [{name: "file", label: "File"},
 
 // map correspondance between menu items and keyboard actions
 JS9.Menubar.keyMap = {
+    "open local file ...": "open local file",
     "toggle: src/bkgd": "toggle selected region: source/background",
     "display crosshair for this image": "toggle crosshair",
     "toggle: incl/excl": "toggle selected region: include/exclude",
@@ -4677,9 +4753,11 @@ JS9.Menubar.keyMap = {
     "Mouse/Touch": "toggle mouse/touch plugin",
     "Preferences": "toggle preferences plugin",
     "Shape Layers": "toggle shape layers plugin",
+    "edit selected": "edit selected region",
+    "copy selected": "copy selected region to clipboard",
+    "copy all": "copy all regions to clipboard",
     "paste region(s)": "paste regions from local clipboard",
-    "copy sel region": "copy selected region to clipboard",
-    "copy all regions": "copy all regions to clipboard",
+    "paste to cur pos": "paste regions to current position",
     "copy wcs pos": "copy wcs position to clipboard",
     "copy value/pos": "copy value and position to clipboard",
     "zoom 1": "reset zoom",
@@ -4810,7 +4888,7 @@ JS9.Menubar.createMenus = function(){
 	if( !JS9.isNull(act) && JS9.Menubar.rkeyMap ){
 	    key = JS9.Menubar.rkeyMap[act];
 	    if( key ){
-		hstr = "<span>" + name + " <span style='float:right'><b>" + key + "</b></span></span>";
+		hstr = "<span>" + name + " <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;" + key + "</span></span>";
 		obj = {name: hstr, isHtmlName: true};
 	    }
 	}
@@ -5456,15 +5534,16 @@ JS9.Menubar.createMenus = function(){
         build: function(){
 	    var n=0;
 	    var items = {};
-	    var rregexp = /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
 	    // plugins
 	    items.edittitle1 = {
 		name: "Regions:",
 		disabled: true
 	    };
-	    items.copySelReg = xname("copy sel region");
-	    items.copyAllReg = xname("copy all regions");
+	    items.configSelReg = xname("edit selected");
+	    items.copySelReg = xname("copy selected");
+	    items.copyAllReg = xname("copy all");
 	    items.pasteReg = xname("paste region(s)");
+	    items.pastePos = xname("paste to cur pos");
 	    items["sep" + n++] = "------";
 	    items.edittitle2 = {
 		name: "Position/Value:",
@@ -5475,7 +5554,7 @@ JS9.Menubar.createMenus = function(){
 	    return {
 		callback: function(key){
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		        var s;
+		        var s, ulayer, utarget;
 			var udisp = val;
 			var uim = udisp.image;
 			// make sure display is still valid
@@ -5495,15 +5574,25 @@ JS9.Menubar.createMenus = function(){
 				JS9.CopyToClipboard(s);
 			    }
 			    break;
-			case "pasteReg":
-			    s = JS9.CopyFromClipboard();
-			    if( !s ){
-				JS9.error("the local clipboard (which only holds data copied from within JS9) does not contain any content. Were you trying to paste something copied outside JS9? ");
+			case "configSelReg":
+			    if( uim ){
+				ulayer = uim.layers.regions;
+				if( ulayer ){
+				    utarget = ulayer.canvas.getActiveObject();
+				    JS9.Regions.displayConfigForm.call(uim,
+								       utarget);
+				}
 			    }
-			    if( s.match(rregexp) ){
-				uim.addShapes("regions", s);
-			    } else {
-				JS9.error("the local clipboard does not appear to contain any regions");
+			    break;
+			case "pasteReg":
+			    if( uim ){
+				JS9.Regions.pasteFromClipboard.call(uim);
+			    }
+			    break;
+			case "pastePos":
+			    if( uim ){
+				JS9.Regions.pasteFromClipboard.call(uim,
+								    true);
 			    }
 			    break;
 			case "copyWCSPos":
@@ -6387,6 +6476,7 @@ JS9.Menubar.createMenus = function(){
 		    exclSelReg: xname("set tag: exclude"),
 		    sbSelReg: xname("toggle: src/bkgd"),
 		    ieSelReg: xname("toggle: incl/excl"),
+		    configSelReg: xname("edit selected"),
 		    listSelReg: xname("list selected"),
 		    removeSelReg: xname("remove selected"),
 		    copySelReg: {
@@ -6431,7 +6521,7 @@ JS9.Menubar.createMenus = function(){
 	    return {
 		callback: function(key){
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var uid;
+			var uid, ulayer, utarget;
 			var udisp = val;
 			var uim = udisp.image;
 			// make sure display is still valid
@@ -6476,6 +6566,14 @@ JS9.Menubar.createMenus = function(){
 			    case "ieSelReg":
 				uim.toggleRegionTags("selected",
 						     "exclude", "include");
+				break;
+			    case "configSelReg":
+				ulayer = uim.layers.regions;
+				if( ulayer ){
+				    utarget = ulayer.canvas.getActiveObject();
+				    JS9.Regions.displayConfigForm.call(uim,
+								       utarget);
+				}
 				break;
 			    case "listSelReg":
 				uim.listRegions("selected", {mode: 2});
@@ -7814,6 +7912,10 @@ JS9.Prefs.imagesSchema = {
 	"listonchange": {
 	    "type": "boolean",
 	    "helper": "list after a region change?"
+	},
+	"whichonchange": {
+	    "type": "string",
+	    "helper": "list 'all' or 'selected'?"
 	},
 	"valpos": {
 	    "type": "boolean",

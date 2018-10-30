@@ -66,6 +66,8 @@ JS9.MINZOOM = 0.125;		// min zoom using scroll wheel
 JS9.MAXZOOM = 32.0;		// max zoom using scroll wheel
 JS9.ADDZOOM = 0.1;		// add/subtract amount per mouse wheel click
 JS9.CHROMEFILEWARNING = true;	// whether to alert chrome users about file URI
+JS9.CLIPBOARDERROR = "the local clipboard (which only holds data copied from within JS9) does not contain any content. Were you trying to paste something copied outside JS9?";
+JS9.CLIPBOARDERROR2 = "the local clipboard (which only holds data copied from within JS9) does not contain any regions";
 
 // https://hacks.mozilla.org/2013/04/detecting-touch-its-the-why-not-the-how/
 JS9.TOUCHSUPPORTED = ( window.hasOwnProperty("ontouchstart") ||
@@ -158,16 +160,21 @@ JS9.globalOpts = {
 	b: "toggle selected region: source/background",
 	c: "toggle crosshair",
 	e: "toggle selected region: include/exclude",
+	"M-e": "edit selected region",
 	i: "refresh image",
 	I: "display full image",
-	K: "toggle keyboard actions plugin",
+	"M-k": "toggle keyboard actions plugin",
 	l: "toggle active shape layers",
-	M: "toggle mouse/touch plugin",
+	"M-m": "toggle mouse/touch plugin",
+	"M-o": "open local file",
         p: "paste regions from local clipboard",
-	P: "toggle preferences plugin",
+        P: "paste regions to current position",
+	"M-,": "toggle preferences plugin",
+	"M-p": "toggle preferences plugin",
 	r: "copy selected region to clipboard",
 	R: "copy all regions to clipboard",
-	S: "toggle shape layers plugin",
+	s: "select region",
+	"M-s": "toggle shape layers plugin",
         "/": "copy wcs position to clipboard",
         "?": "copy value and position to clipboard",
 	"0": "reset zoom",
@@ -178,10 +185,10 @@ JS9.globalOpts = {
 	">": "display next image",
 	"<": "display previous image",
 	"delete": "remove selected region",
-	"leftArrow": "move selected region left",
-	"upArrow": "move selected region up",
-	"rightArrow": "move selected region right",
-	"downArrow": "move selected region down"
+	"leftArrow": "move region/position left",
+	"upArrow": "move region/position up",
+	"rightArrow": "move region/position right",
+	"downArrow": "move region/position down"
     }, // keyboard actions
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     toolbarTooltips: false,     // display tooltips on toolbar?
@@ -262,7 +269,8 @@ JS9.imageOpts = {
     crosshair: false,			// enable crosshair?
     disable: [],			// list of disabled core services
     ltvbug:  true,			// add 0.5/ltm to image LTV values?
-    listonchange: false			// whether to list after a reg change
+    listonchange: false,		// whether to list after a reg change
+    whichonchange: "selected"		// which to list ("all" or "selected")
 };
 
 // allows regions opts (in Regions.opts) to be overridden via js9prefs.js
@@ -8654,6 +8662,11 @@ JS9.Display.prototype.loadSession = function(file){
     var finish = function(im){
 	var i, dlayer, layer, lname, xeq, obj;
 	var dorender = function(){
+	    // update layer's shape counter
+	    var objs = this.canvas.getObjects();
+	    if( objs && typeof objs.length !== "undefined" ){
+		im.layers[this.layerName].nshape = objs.length + 1;
+	    }
 	    // update objects for parents and children
 	    JS9.Fabric.updateChildren(this, null, "objects");
 	    // change shape positions if the displays sizes differ
@@ -10994,6 +11007,8 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
     if( layerName !== "regions" ){
 	return;
     }
+    // opts are optional
+    opts = opts || {};
     if( (s.params.shape !== "text") && opts.text ){
 	yoff = (s.height * s.scaleX / 2) - textht;
 	// default position for text (might be overridden by textOpts)
@@ -11034,6 +11049,12 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 	if( (npos.x !== topts.x) || (npos.y !== topts.y) ){
 	    t.params.parent.moved = true;
 	}
+	// flag if text RA and Dec were passed in textOpts
+	if( opts.textOpts                    &&
+	    opts.textOpts.ra  !== undefined  &&
+	    opts.textOpts.dec !== undefined  ){
+	    t.params.hasTextOpts = true;
+	}
 	// parent has another child
 	s.params.children.push({id: t.params.id, obj: t});
     }
@@ -11044,7 +11065,8 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 JS9.Fabric.addShapes = function(layerName, shape, myopts){
     var i, sobj, sarr, ns, s, bopts, opts;
     var layer, canvas, dlayer, zoom;
-    var ttop, tleft, rarr=[];
+    var ttop, tleft, rarr = [];
+    var objs = [];
     var params = {};
     // is this core service disabled?
     if( $.inArray("regions", this.params.disable) >= 0 &&
@@ -11267,14 +11289,25 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    JS9.Fabric._updateShape.call(this,
 					 layerName, s, null, "add", params);
 	}
+	// callback if necessary
+	if( myopts.onaddshapes && s.pub ){
+	    try{ JS9.xeqByName(myopts.onaddshapes, this, this, s.pub); }
+	    catch(e){ JS9.error("in onaddshapes callback", e, false); }
+	}
+	// save public object in object array, might be needed in return
+	objs.push(s);
     }
     // redraw (unless explicitly specified otherwise)
     if( (params.redraw === undefined) || params.redraw ){
 	canvas.renderAll();
     }
-    // return object (internal use for child regions), if necessary
+    // return last object (internal use for child regions), if necessary
     if( myopts.rtn === "object" ){
 	return s;
+    }
+    // return all objects (internal use for paste regions), if necessary
+    if( myopts.rtn === "objs" ){
+	return objs;
     }
     // return shape id
     return params.id;
@@ -11442,8 +11475,14 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     }
     dpos = obj.getCenterPoint();
     if( ginfo.group ){
+	// in a group, the display pos is relative to group pos,
+	// so we need to add them together
 	gpos = ginfo.group.getCenterPoint();
 	dpos = {x: dpos.x + gpos.x, y: dpos.y + gpos.y};
+	// also need to rotate the position by the group angle
+	if( ginfo.group.angle ){
+	    dpos = JS9.rotatePoint(dpos, ginfo.group.angle, gpos);
+	}
     }
     // image position
     ipos = this.displayToImagePos(dpos);
@@ -11486,7 +11525,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	scalex *= ginfo.group.scaleX;
 	scaley *= ginfo.group.scaleY;
     }
-    // since can can call this in mousemove, optimize by not using sprintf
+    // since we can call this in mousemove, optimize by not using sprintf
     switch(pub.shape){
     case "annulus":
 	pub.shape = "annulus";
@@ -11977,6 +12016,11 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	JS9.Fabric._handleChildText.call(that, layerName, obj, opts);
 	// update the shape info and make callbacks
 	JS9.Fabric._updateShape.call(that, layerName, obj, ginfo, "update");
+	// callback if necessary
+	if( opts.onchangeshapes && obj.pub ){
+	    try{ JS9.xeqByName(opts.onchangeshapes, this, this, obj.pub); }
+	    catch(e){ JS9.error("in onchangeshapes callback", e, false); }
+	}
     });
     // redraw (unless explicitly specified otherwise)
     if( (opts.redraw === undefined) || opts.redraw ){
@@ -13238,22 +13282,7 @@ JS9.Regions.opts = {
 	}
 	if( dblclick ){
 	    if( !target.params.winid && target.params.changeable !== false ){
-		// call this once window is loaded
-		$("#dhtmlwindowholder").arrive("#regionsConfigForm",
-                    {onceOnly: true}, function(){
-			if( target.pub ){
-			    JS9.Regions.initConfigForm.call(im, target);
-			}
-		    });
-		if( JS9.allinone ){
-		    target.params.winid = im.displayAnalysis("regions",
-			  JS9.allinone.regionsConfigHTML,
-			  {title: JS9.Regions.opts.title});
-		} else {
-		    target.params.winid = im.displayAnalysis("regions",
-			  JS9.InstallDir(JS9.Regions.opts.configURL),
-			  {title: JS9.Regions.opts.title});
-		}
+		JS9.Regions.displayConfigForm.call(im, target);
 	    }
 	    return;
 	}
@@ -13328,7 +13357,11 @@ JS9.Regions.init = function(layerName){
 	    for(i=0; i<objs.length; i++){
 		if( objs[i].params ){
 		    if( tim.params.listonchange ){
-			tim.listRegions("all", {mode: 2});
+			if( tim.params.whichonchange === "all" ){
+			    tim.listRegions("all", {mode: 2});
+			} else {
+			    tim.listRegions("selected", {mode: 2});
+			}
 		    } else if( objs[i].params.listonchange ){
 			tim.listRegions("selected", {mode: 2});
 		    }
@@ -13338,6 +13371,31 @@ JS9.Regions.init = function(layerName){
 	}
     });
     return this;
+};
+
+// display the region config form
+JS9.Regions.displayConfigForm = function(shape){
+    var s;
+    var im = this;
+    var title = JS9.Regions.opts.title;
+    // sanity check
+    if( !shape ){
+	return;
+    }
+    // call this once window is loaded
+    $("#dhtmlwindowholder")
+	.arrive("#regionsConfigForm", {onceOnly: true}, function(){
+	    if( shape.pub ){
+		JS9.Regions.initConfigForm.call(im, shape);
+	    }
+	});
+    if( JS9.allinone ){
+	s = JS9.allinone.regionsConfigHTML;
+	shape.params.winid = im.displayAnalysis("regions", s, {title: title});
+    } else {
+	s = JS9.InstallDir(JS9.Regions.opts.configURL);
+	shape.params.winid = im.displayAnalysis("regions", s, {title: title});
+    }
 };
 
 // initialize the region config form
@@ -13992,6 +14050,51 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
     JS9.Regions.initConfigForm.call(this, obj, winid);
 };
 
+// paste a region from clipboard
+// call using image context
+JS9.Regions.pasteFromClipboard = function(curpos){
+    var i, s, nobj, xpos, ypos;
+    var objs = [];
+    var xcen = 0, ycen = 0;
+    var rregexp = /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
+    // sanity check
+    if( !this ){ return; }
+    // get string from clipboard
+    s = JS9.CopyFromClipboard().trim();
+    // see if we have anything at all
+    if( !s ){
+	JS9.error(JS9.CLIPBOARDERROR);
+    }
+    // see if we have region(s)
+    if( s.match(rregexp) ){
+	// add regions
+	objs = this.addShapes("regions", s, {rtn: "objs"});
+	// if we're not placing regions in the position specified by the mouse,
+	// we are done
+	if( !curpos ){
+	    return s;
+	}
+	// number of regions
+	nobj = objs.length;
+	// get centroid
+	for(i=0; i<nobj; i++){
+	    xcen += objs[i].pub.x;
+	    ycen += objs[i].pub.y;
+	}
+	xcen /= nobj;
+	ycen /= nobj;
+	// move to current position specified by mouse
+	for(i=0; i<nobj; i++){
+	    xpos = objs[i].pub.x - xcen + this.ipos.x;
+	    ypos = objs[i].pub.y - ycen + this.ipos.y;
+	    this.changeShapes("regions", objs[i].pub.id, {x: xpos, y:ypos});
+	}
+    } else {
+	JS9.error(JS9.CLIPBOARDERROR2);
+    }
+    return s;
+};
+
 // ---------------------------------------------------------------------------
 // Regions prototype additions to JS9 Image class
 // ---------------------------------------------------------------------------
@@ -14056,19 +14159,28 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    nexports.textOpts = getExports(child);
 	    // try to minimize exported properties
 	    if( obj.angle !== child.angle ){
+		// child has an explicit angle different from parent
 		nexports.textOpts.angle = -child.angle;
 		if( (obj.params.shape === "circle")  ||
 		    (obj.params.shape === "annulus") ){
-		    child.params.parent.moved = true;
+		    child.params.hasTextOpts = true;
 		}
 	    } else if( child.angle !== 0 ){
+		// parent is circle/annulus and child has an angle
 		if( (obj.params.shape === "circle")  ||
 		    (obj.params.shape === "annulus") ){
 		    nexports.textOpts.angle = -child.angle;
-		    child.params.parent.moved = true;
+		    child.params.hasTextOpts = true;
+		}
+	    } else if( obj.angle === 0 && obj.pub.angle !== 0 ){
+		// parent is circle/annulus and group has an angle
+		if( (obj.params.shape === "circle")  ||
+		    (obj.params.shape === "annulus") ){
+		    nexports.textOpts.angle = obj.pub.angle;
+		    child.params.hasTextOpts = true;
 		}
 	    }
-	    if( child.params.parent.moved ){
+	    if( child.params.parent.moved || child.params.hasTextOpts ){
 		// wcs, then physical coords are preferred ...
 		if( child.pub.ra && child.pub.dec ){
 		    nexports.textOpts.ra  = child.pub.ra;
@@ -14747,6 +14859,8 @@ JS9.Crosshair.opts = {
     updateWCS: false,
     // pan and zoom enabled
     panzoom: false,
+    // width and height when displaying arrow-key crosshair
+    arrowSize: 20,
     // general
     strokeWidth: 1,
     // stroke color
@@ -14760,7 +14874,7 @@ JS9.Crosshair.opts = {
 // display: display crosshair as the mouse moves
 // eslint-disable-next-line no-unused-vars
 JS9.Crosshair.display = function(im, ipos, evt){
-    var i, s, arr, cim, ra, dec, w, h, x, y, hopts, vopts, shift;
+    var i, s, arr, cim, ra, dec, w, h, x, y, hopts, vopts, shift, size;
     var layername = JS9.Crosshair.LAYERNAME;
     // for computers, shift key must be down
     // for ipad, assume always true
@@ -14769,20 +14883,32 @@ JS9.Crosshair.display = function(im, ipos, evt){
     } else {
 	shift = evt.shiftKey;
     }
+
+    // always do arrow crosshair, otherwise:
     // exit if crosshair is not enabled for this image
     // exit if we are not actively tracking the crosshair via shift
-    if( !shift || !im ||
-	im.tmp.shiftKey || !im.crosshair || !im.params.crosshair ){
+    if( !im.tmp.arrowCrosshair && (!shift || !im ||
+	im.tmp.shiftKey || !im.crosshair || !im.params.crosshair) ){
 	return;
     }
-    w = im.raw.width;
-    h = im.raw.height;
-    x = im.ipos.x;
-    y = im.ipos.y;
+    if( im.tmp.arrowCrosshair && !im.params.crosshair ){
+	// special crosshair used with arrow keys
+	size = JS9.Crosshair.opts.arrowSize / im.rgb.sect.zoom;
+	x = ipos.x - size;
+	w = ipos.x + size;
+	y = ipos.y - size;
+	h = ipos.y + size;
+    } else {
+	// default crosshair
+	x = 0;
+	w = im.raw.width;
+	y = 0;
+	h = im.raw.height;
+    }
     // draw the crosshair, centered on the image pos
-    hopts = {pts: [{x: 0, y: y}, {x: w, y: y}], redraw: false};
+    hopts = {pts: [{x: x, y: ipos.y}, {x: w, y: ipos.y}], redraw: false};
     im.changeShapes(layername, im.crosshair.h, hopts);
-    vopts = {pts: [{x: x, y: 0}, {x: x, y: h}], redraw: true};
+    vopts = {pts: [{x: ipos.x, y: y}, {x: ipos.x, y: h}], redraw: true};
     im.changeShapes(layername, im.crosshair.v, vopts);
     im.crosshair.visible = true;
     // if crosshair mode is on and this image has wcs ...
@@ -14836,11 +14962,14 @@ JS9.Crosshair.hide = function(im, ipos, evt){
     var layername = JS9.Crosshair.LAYERNAME;
     var opts = JS9.Crosshair.opts.hiddenPts;
     // if the crosshair is visible ...
-    if( im && im.crosshair && im.crosshair.visible ){
+    if( im &&
+	(im.crosshair && im.crosshair.visible) ||
+	im.tmp.arrowCrosshairVisible           ){
 	// move it off the display
 	im.changeShapes(layername, im.crosshair.h, opts);
 	im.changeShapes(layername, im.crosshair.v, opts);
 	im.crosshair.visible = false;
+	delete im.tmp.arrowCrosshairVisible;
     }
 };
 
@@ -14860,7 +14989,6 @@ JS9.Crosshair.create = function(im){
 
 // mark key actions that use the shift key
 JS9.Crosshair.keyaction = function(im, ipos, evt){
-    // add shiftKey marker, if necessary
     if( im && evt && evt.shiftKey ){
 	im.tmp.shiftKey = true;
     }
@@ -16531,6 +16659,10 @@ JS9.eventToCharStr = function(evt){
     } else {
         c = String.fromCharCode(c);
     }
+    // check for special key
+    if( JS9.specialKey(evt) ){
+	c = "M-" + c;
+    }
     return c;
 };
 
@@ -17391,6 +17523,10 @@ JS9.mouseMoveCB = function(evt){
     if( !im ){
 	return;
     }
+    // is mouse movement disabled with the meta key?
+    if( JS9.specialKey(evt) ){
+	return;
+    }
     // get canvas position
     im.pos = JS9.eventToDisplayPos(evt, im.posOffset);
     // get image position
@@ -17432,15 +17568,19 @@ JS9.mouseMoveCB = function(evt){
     if( JS9.hasOwnProperty("MouseTouch") ){
 	JS9.MouseTouch.action(im, evt);
     }
+    // actions for crosshair
+    if( JS9.hasOwnProperty("Crosshair") ){
+	if( im.tmp.arrowCrosshairVisible && !im.params.crosshair ){
+	    JS9.Crosshair.hide(im, im.ipos, evt);
+	}
+    }
+    // update valpos, in case a plugin wants it, and we did not do it above
+    if( !im.valpos ){
+	im.valpos = im.updateValpos(im.ipos, false);
+    }
+    // plugin callbacks
     if( !JS9.specialKey(evt) ){
-	// update valpos, in case a plugin wants it, and we did not do it above
-	if( !im.valpos ){
-	    im.valpos = im.updateValpos(im.ipos, false);
-	}
-	// plugin callbacks
-	if( !JS9.specialKey(evt) ){
-	    im.xeqPlugins("mouse", "onmousemove", evt);
-	}
+	im.xeqPlugins("mouse", "onmousemove", evt);
     }
 };
 
@@ -17514,6 +17654,7 @@ JS9.wheelCB = function(evt){
     }
 };
 
+// this does not seem to fire on a canvas ... so we use keydown instead
 // keypress: assumes display obj is passed in evt.data
 // in case you are wondering: you can't move the mouse via javascript!
 // http://stackoverflow.com/questions/4752501/move-the-mouse-pointer-to-a-specific-position
@@ -17535,6 +17676,7 @@ JS9.keyDownCB = function(evt){
     var ipos;
     var display = evt.data;
     var im = display.image;
+    evt.preventDefault();
     // var keycode = evt.which || evt.keyCode;
     // actions for key press
     if( JS9.hasOwnProperty("Keyboard") ){
@@ -19915,9 +20057,12 @@ JS9.mkPublic("GetLoadStatus", function(id){
 });
 
 // http://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript
-JS9.mkPublic("CopyToClipboard", function(text){
-    var msg, successful;
-    var textArea = document.createElement("textarea");
+JS9.mkPublic("CopyToClipboard", function(text, im){
+    var msg, successful, textArea;
+    // save text for pseudo-pasting
+    JS9.clipboard = text;
+    // tmp textarea which from which the selection will be copied
+    textArea = document.createElement("textarea");
     //
     // *** This styling is an extra step which is likely not required. ***
     //
@@ -19967,8 +20112,12 @@ JS9.mkPublic("CopyToClipboard", function(text){
 	msg = "ERROR";
     }
     document.body.removeChild(textArea);
-    // save text for pseudo-pasting
-    JS9.clipboard = text;
+    // this is required to detatch keydown from textArea
+    // otherwise, the next keydown has no effect
+    if( im && im.display ){
+	im.display.divjq.trigger("mouseout");
+	im.display.divjq.trigger("mouseenter");
+    }
     return msg;
 });
 

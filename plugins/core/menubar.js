@@ -27,6 +27,7 @@ JS9.Menubar.buttonOptsArr = [{name: "file", label: "File"},
 
 // map correspondance between menu items and keyboard actions
 JS9.Menubar.keyMap = {
+    "open local file ...": "open local file",
     "toggle: src/bkgd": "toggle selected region: source/background",
     "display crosshair for this image": "toggle crosshair",
     "toggle: incl/excl": "toggle selected region: include/exclude",
@@ -38,9 +39,11 @@ JS9.Menubar.keyMap = {
     "Mouse/Touch": "toggle mouse/touch plugin",
     "Preferences": "toggle preferences plugin",
     "Shape Layers": "toggle shape layers plugin",
+    "edit selected": "edit selected region",
+    "copy selected": "copy selected region to clipboard",
+    "copy all": "copy all regions to clipboard",
     "paste region(s)": "paste regions from local clipboard",
-    "copy sel region": "copy selected region to clipboard",
-    "copy all regions": "copy all regions to clipboard",
+    "paste to cur pos": "paste regions to current position",
     "copy wcs pos": "copy wcs position to clipboard",
     "copy value/pos": "copy value and position to clipboard",
     "zoom 1": "reset zoom",
@@ -171,7 +174,7 @@ JS9.Menubar.createMenus = function(){
 	if( !JS9.isNull(act) && JS9.Menubar.rkeyMap ){
 	    key = JS9.Menubar.rkeyMap[act];
 	    if( key ){
-		hstr = "<span>" + name + " <span style='float:right'><b>" + key + "</b></span></span>";
+		hstr = "<span>" + name + " <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;" + key + "</span></span>";
 		obj = {name: hstr, isHtmlName: true};
 	    }
 	}
@@ -817,15 +820,16 @@ JS9.Menubar.createMenus = function(){
         build: function(){
 	    var n=0;
 	    var items = {};
-	    var rregexp = /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
 	    // plugins
 	    items.edittitle1 = {
 		name: "Regions:",
 		disabled: true
 	    };
-	    items.copySelReg = xname("copy sel region");
-	    items.copyAllReg = xname("copy all regions");
+	    items.configSelReg = xname("edit selected");
+	    items.copySelReg = xname("copy selected");
+	    items.copyAllReg = xname("copy all");
 	    items.pasteReg = xname("paste region(s)");
+	    items.pastePos = xname("paste to cur pos");
 	    items["sep" + n++] = "------";
 	    items.edittitle2 = {
 		name: "Position/Value:",
@@ -836,7 +840,7 @@ JS9.Menubar.createMenus = function(){
 	    return {
 		callback: function(key){
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		        var s;
+		        var s, ulayer, utarget;
 			var udisp = val;
 			var uim = udisp.image;
 			// make sure display is still valid
@@ -856,15 +860,25 @@ JS9.Menubar.createMenus = function(){
 				JS9.CopyToClipboard(s);
 			    }
 			    break;
-			case "pasteReg":
-			    s = JS9.CopyFromClipboard();
-			    if( !s ){
-				JS9.error("the local clipboard (which only holds data copied from within JS9) does not contain any content. Were you trying to paste something copied outside JS9? ");
+			case "configSelReg":
+			    if( uim ){
+				ulayer = uim.layers.regions;
+				if( ulayer ){
+				    utarget = ulayer.canvas.getActiveObject();
+				    JS9.Regions.displayConfigForm.call(uim,
+								       utarget);
+				}
 			    }
-			    if( s.match(rregexp) ){
-				uim.addShapes("regions", s);
-			    } else {
-				JS9.error("the local clipboard does not appear to contain any regions");
+			    break;
+			case "pasteReg":
+			    if( uim ){
+				JS9.Regions.pasteFromClipboard.call(uim);
+			    }
+			    break;
+			case "pastePos":
+			    if( uim ){
+				JS9.Regions.pasteFromClipboard.call(uim,
+								    true);
 			    }
 			    break;
 			case "copyWCSPos":
@@ -1748,6 +1762,7 @@ JS9.Menubar.createMenus = function(){
 		    exclSelReg: xname("set tag: exclude"),
 		    sbSelReg: xname("toggle: src/bkgd"),
 		    ieSelReg: xname("toggle: incl/excl"),
+		    configSelReg: xname("edit selected"),
 		    listSelReg: xname("list selected"),
 		    removeSelReg: xname("remove selected"),
 		    copySelReg: {
@@ -1792,7 +1807,7 @@ JS9.Menubar.createMenus = function(){
 	    return {
 		callback: function(key){
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var uid;
+			var uid, ulayer, utarget;
 			var udisp = val;
 			var uim = udisp.image;
 			// make sure display is still valid
@@ -1837,6 +1852,14 @@ JS9.Menubar.createMenus = function(){
 			    case "ieSelReg":
 				uim.toggleRegionTags("selected",
 						     "exclude", "include");
+				break;
+			    case "configSelReg":
+				ulayer = uim.layers.regions;
+				if( ulayer ){
+				    utarget = ulayer.canvas.getActiveObject();
+				    JS9.Regions.displayConfigForm.call(uim,
+								       utarget);
+				}
 				break;
 			    case "listSelReg":
 				uim.listRegions("selected", {mode: 2});
