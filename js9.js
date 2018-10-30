@@ -9188,7 +9188,11 @@ JS9.Helper = function(){
     this.connected = false;
     this.helper = false;
     // set up initial type of helper connection
-    this.type = JS9.globalOpts.helperType || "sock.io";
+    if( JS9.allinone ){
+	this.type = "none";
+    } else {
+	this.type = JS9.globalOpts.helperType || "sock.io";
+    }
     // no page id yet
     this.pageid = null;
     // make the connection
