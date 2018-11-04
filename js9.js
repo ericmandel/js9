@@ -104,6 +104,7 @@ JS9.globalOpts = {
     helperType: "none",		// one of: sock.io, get, post, none
     helperPort: 2718,		// default port for node.js helper
     requireHelper: false,       // throw error if helper is not available?
+    allinoneHelper: false,      // allow allinone to use helper?
     requireFits2Fits: false,    // throw error if fits2fits can't be run?
     useWasm: true,		// use WebAssembly if available?
     winType: "light",		// plugin window: "light" or "new"
@@ -9188,7 +9189,7 @@ JS9.Helper = function(){
     this.connected = false;
     this.helper = false;
     // set up initial type of helper connection
-    if( JS9.allinone ){
+    if( JS9.allinone && !JS9.globalOpts.allinoneHelper ){
 	this.type = "none";
     } else {
 	this.type = JS9.globalOpts.helperType || "sock.io";
