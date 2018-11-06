@@ -21118,10 +21118,11 @@ return JS9;
 // INIT: after document is loaded, perform js9 initialization
 $(document).ready(function(){
     // when all is ready, we can preload images
-    // when all is ready, we can preload images
     $(document).on("JS9:ready", function(){
-	// so we can preload images and ...
-	JS9.Preload(true);
+	if( !JS9.readied ){
+	    JS9.readied = true;
+	    JS9.Preload(true);
+	}
     });
     $(document).on("JS9:init", function(){
 	if( JS9.helper.ready && JS9.fits.ready ){
@@ -21140,8 +21141,8 @@ $(document).ready(function(){
     });
     // wait for helper
     $(document).on("JS9:helperReady", function(){
-	if( JS9.fits.ready && JS9.inited ){
-	    // ... signal that we are completely ready
+	if( JS9.fits.ready && JS9.inited && !JS9.readied ){
+	    // ... signal that we are completely ready (but only once)
 	    $(document).trigger("JS9:ready", {status: "OK"});
 	}
     });
