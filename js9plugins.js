@@ -4756,8 +4756,8 @@ JS9.Menubar.keyMap = {
     "edit selected": "edit selected region",
     "copy selected": "copy selected region to clipboard",
     "copy all": "copy all regions to clipboard",
-    "paste region(s)": "paste regions from local clipboard",
-    "paste to cur pos": "paste regions to current position",
+    "paste to region pos": "paste regions from local clipboard",
+    "paste to current pos": "paste regions to current position",
     "copy wcs pos": "copy wcs position to clipboard",
     "copy value/pos": "copy value and position to clipboard",
     "zoom 1": "reset zoom",
@@ -5542,8 +5542,8 @@ JS9.Menubar.createMenus = function(){
 	    items.configSelReg = xname("edit selected");
 	    items.copySelReg = xname("copy selected");
 	    items.copyAllReg = xname("copy all");
-	    items.pasteReg = xname("paste region(s)");
-	    items.pastePos = xname("paste to cur pos");
+	    items.pasteReg = xname("paste to region pos");
+	    items.pastePos = xname("paste to current pos");
 	    items["sep" + n++] = "------";
 	    items.edittitle2 = {
 		name: "Position/Value:",
