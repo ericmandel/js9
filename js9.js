@@ -19363,7 +19363,6 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
 
 // load a colormap file
 JS9.mkPublic("LoadColormap", function(file, opts){
-    var reader;
     var obj = JS9.parsePublicArgs(arguments);
     file = obj.argv[0];
     // sanity check
@@ -19372,12 +19371,7 @@ JS9.mkPublic("LoadColormap", function(file, opts){
     }
     // convert blob to string
     if( typeof file === "object" ){
-	// file reader object
-	reader = new FileReader();
-	reader.onload = function(ev){
-	    JS9.AddColormap(ev.target.result, opts);
-	};
-	reader.readAsText(file);
+	JS9.AddColormap(file, opts);
     } else if( typeof file === "string" ){
 	JS9.fetchURL(null, file, null, function(data){
 	    JS9.AddColormap(data, opts);
