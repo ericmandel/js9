@@ -19075,6 +19075,12 @@ JS9.init = function(){
     if( window.hasOwnProperty("ImageFilters") ){
 	JS9.ImageFilters = ImageFilters;
     }
+    // initialize colormaps
+    JS9.initColormaps();
+    // initialize console commands
+    JS9.initCommands();
+    // init analysis
+    JS9.initAnalysis();
     // register essential plugins
     JS9.RegisterPlugin(JS9.MouseTouch.CLASS, JS9.MouseTouch.NAME,
 		       JS9.MouseTouch.init,
@@ -19124,12 +19130,6 @@ JS9.init = function(){
 	}
 	return 0;
     });
-    // initialize colormaps
-    JS9.initColormaps();
-    // initialize console commands
-    JS9.initCommands();
-    // init analysis
-    JS9.initAnalysis();
     // scroll to top
     $(document).scrollTop(0);
     // signal that JS9 init is complete
