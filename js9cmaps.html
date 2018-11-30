@@ -9,32 +9,32 @@
   <link type="text/css" rel="stylesheet" href="js9support.css">
   <link type="text/css" rel="stylesheet" href="js9.css">
   <script type="text/javascript" src="js9prefs.js"></script>
-  <script type="text/javascript" src="js9support.js"></script>
-  <script type="text/javascript" src="js9.js"></script>
+  <script type="text/javascript" src="js9support.min.js"></script>
+  <script type="text/javascript" src="js9.min.js"></script>
   <script type="text/javascript" src="js9plugins.js"></script>
   <title>JS9 cmaps</title>
 </head>
 <body>
     <p>
     <center><font size="+1">
-    <b>JS9 Demo: creating (complementary) colormaps</b>
+    <b>JS9 Demo: creating new colormaps</b>
     </font></center>
     <table>
     <tr>
     <td>
     <ul>
       <li> Choose "File:separate these images" to make four separate displays.
-      <li> Click the colored rectangle to display the color picker.
-      <li> Choose to create 3 colormaps.
+      <li> In the colormaps plugin, choose to create 3 colormaps.
       <li> Click the button to the left of the chandra, galex, and spiter images.
+      <li> Click the colored rectangle to display the color picker.
       <li> Use the color picker to choose a base color and see the three colormaps change.
     </ul>
     </td>
     <td>
     <ul>
-      <li> In the fourth display, choose "View:colormaps" to see a new colormaps plugin.
-      <li> Click its colored rectangle switch the color picker to this plugin.
+      <li> In the fourth display, choose "View:colormaps" to bring up a new colormaps plugin.
       <li> Click the button to the left of the hst image.
+      <li> Click the colored rectangle to switch the color picker to this plugin.
       <li> Choose a base color and see how only this colormap changes.
       <li> Switch between plugins by clicking the appropriate colored rectangle.
     </ul>
@@ -53,8 +53,8 @@
       var nload = 0;
       var imdir = "blend/";
       var images = ["chandra.fits", "galex.fits", "spitzer.fits", "hst.fits"];
-      var contrasts =  [7.2, 3.25, 4.7, 6.3];
-      var biases =  [0.07, 0.43, 0.68, 0.37];
+      var contrasts =  [7.2, 4.2, 4.2, 6.3];
+      var biases =  [0.07, 0.73, 0.5, 0.37];
       var scales = ["log", "log", "log", "log"];
       var cmaps =  ["red", "green", "blue", "heat"];
 
@@ -107,6 +107,7 @@ JS9 Demos:
 <li><a href='js9sizes.html'>JS9 Demo: setting the size of the JS9 display</a>
 <li><a href='js9super.html'>JS9 Demo: control multiple JS9 displays</a>
 <li><a href='js9large.html'>JS9 Demo: support for large FITS files</a>
+<li><a href='js9cmaps.html'>JS9 Demo: creating new colormaps</a>
 <li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
 <li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
 <li><a href='js9blend.html'>JS9 Demo: image blending</a> 
