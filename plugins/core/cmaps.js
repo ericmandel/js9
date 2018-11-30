@@ -442,8 +442,8 @@ JS9.Cmaps.removeImage = function(im){
 
 // plugin initialization
 JS9.Cmaps.init = function(width, height){
-    var i, dispid, html;
     var that = this;
+    var i, dispid, html, el1, el2;
     var elid1 = "." + JS9.Cmaps.COLORCLASS;
     var elid2 = "." + JS9.Cmaps.CMAPCLASS;
     var display = this.display;
@@ -529,8 +529,11 @@ JS9.Cmaps.init = function(width, height){
 	    }
 	}
     });
+    // convenience variables
+    el1 = this.cmapsContainer.find(elid1);
+    el2 = this.cmapsContainer.find(elid2);
     // set up colormap select menu
-    $(elid2).each(function(){
+    el2.each(function(){
 	var i, cmap;
 	for(i=0; i<JS9.colormaps.length; i++){
 	    cmap = JS9.colormaps[i].name;
@@ -542,10 +545,10 @@ JS9.Cmaps.init = function(width, height){
 	// set up event callbacks
 	if( !JS9.globalOpts.internalColorPicker ||
 	    !$.fn.spectrum.inputTypeColorSupport() ){
-	    $(elid1).spectrum({showButtons: false,
-			     showInput: true,
-			     preferredFormat: "hex6"});
-	    $(elid1).on('move.spectrum', function(evt, tinycolor) {
+	    el1.spectrum({showButtons: false,
+			  showInput: true,
+			  preferredFormat: "hex6"});
+	    el1.on('move.spectrum', function(evt, tinycolor){
 		var cname = tinycolor.toHex();
 		JS9.Cmaps.mkCmaps(display, cname, display.cmaps.nmap,
 				  {mode: display.cmaps.mode,
@@ -553,7 +556,7 @@ JS9.Cmaps.init = function(width, height){
 		display.cmaps.lastCname = cname;
 	    });
 	}
-	$(elid1).on("input", function(evt){
+	el1.on("input", function(evt){
 	    var cname = evt.target.value;
 	    var pdisplay = $(evt.target).parent().attr("display");
 	    if( pdisplay !== display.id ){
