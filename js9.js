@@ -231,6 +231,7 @@ JS9.globalOpts = {
     colormapTemplates: ".cmap",      // templates for local colormap file input
     catalogTemplates: ".cat,.tab",   // templates for local catalog file input
     controlsMatchRegion: false,      // true, false, "corner" or "border"
+    internalColorPicker: true,       // use HTML5 color picker, if available?
     newWindowWidth: 530,	     // width of LoadWindow("new")
     newWindowHeight: 625,	     // height of LoadWindow("new")
     debug: 0		             // debug level
@@ -500,6 +501,11 @@ if( JS9.BROWSER[3] ){
     JS9.globalOpts.image.ydim = 2048 * 2;
     JS9.REPROJDIM = 1024;
     JS9.imageOpts.crosshair = false;
+}
+
+// Electron.js app (v3.0.10) SEGVs by clicking colorpicker's exit (11/26/2018)
+if( window.isElectron ){
+    JS9.globalOpts.internalColorPicker = false;
 }
 
 // ---------------------------------------------------------------------
