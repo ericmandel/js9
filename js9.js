@@ -3043,7 +3043,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	return res || val3;
     };
     var disp = function(hdu, opts){
-	var tim, iid;
+	var tim, iid, arr;
 	var ss = "";
 	opts = opts || {};
 	topts = $.extend(true, {}, opts);
@@ -3068,7 +3068,20 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    delete topts.xcen;
 	    delete topts.ycen;
 	    topts.id = iid;
-	    topts.display = that.display;
+	    if( typeof opts.separate === "string" ){
+		arr = opts.separate.split(":");
+		switch(arr.length){
+		case 1:
+		    topts.display = arr[0];
+		    break;
+		default:
+		    topts.display = arr[0];
+		    topts.id = arr[1];
+		    break;
+		}
+	    } else {
+		topts.display = that.display;
+	    }
 	    // lame attempt to get to original parentFile
 	    if( from === "parentFile" && that.fitsFile ){
 		tim = JS9.lookupImage(that.fitsFile);

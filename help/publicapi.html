@@ -617,7 +617,7 @@ display the section:
 <li><b>ydim</b>: y dimension of section to extract before binning
 <li><b>bin</b>: integer bin factor or bin directive string
 <li><b>filter</b>: for tables, row/event filter to apply when extracting section
-<li><b>separate</b>: if true, display as a separate image (default is to update the current image)
+<li><b>separate</b>: display as a separate image (default is to update the current image)
 <li><b>ondisplaysection</b>: function to perform after section is displayed
 </ul>
 <p>
@@ -661,6 +661,36 @@ values will pan the image using the same bin factor and dimension.
 
 <p>
 Note that setting xcen,ycen to 0,0 will specify the file center. 
+
+<p>
+By default, the new section replaces the data in the currently displayed
+image. You can display the section as a separate image in the current display
+by supplying an <b>opts</b> object with the <b>separate</b> property
+set to <b>true</b>.  For example:
+<pre>
+  JS9.DisplaySection({ ... separate: true});
+</pre>
+will display the new section separately from the original file,
+allowing blinking, image blending, etc. between the two "files".
+
+<p>
+You also can display the section as a separate image in a different display by
+supplying a string value to the <b>opts.separate</b> property. The string value
+takes two forms:
+<ul>
+<li><b>[display]</b>: display the image in the specified JS9 display, using the same image id
+<li><b>[display]:[id]</b>: display the image in the specified JS9 display, using the specified image id
+</ul>
+For example:
+<pre>
+  # separate into a new display, same image id
+  JS9.DisplaySection({ ... separate: "myJS9"});
+  # separate into a new display, and with a new image id
+  JS9.DisplaySection({ ... separate: "myJS9:newsection.fits"});
+</pre>
+Both of these commands will display the new section "myJS9" display.
+The first will retain the original image id, while the second will
+use "newsection.fits" as the image id.
 
 <p>
 Table filtering allows you  to select rows from an FITS binary table
@@ -753,9 +783,9 @@ string description:
 </pre>
 <p>
 By default, the new slice replaces the data in the currently displayed
-image. You can display the slice as a separate image by supplying
-an <b>opts</b> object with its <b>separate</b> property set to <b>true</b>.
-For example:
+image. You can display the slice as a separate image in the current display
+by supplying an <b>opts</b> object with the <b>separate</b> property
+set to <b>true</b>.  For example:
 <pre>
   JS9.DisplaySlice("6,*,*", {separate: true});
 </pre>
@@ -764,7 +794,6 @@ from the original file, allowing blinking, image blending, etc. between
 the two "files".  Note that the new id and filename are adjusted to be
 the original file's values with the cfitsio image section <b>[6:6,*,*]</b>
 appended.
-
 <p>
 If the first argument is "all", then all slices will be loaded into JS9 separately.
 
