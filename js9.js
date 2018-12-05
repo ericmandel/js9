@@ -5162,8 +5162,8 @@ JS9.Image.prototype.saveFITS = function(fname){
 	} else {
 	    fname = "js9.fits";
 	}
-	// first convert to array
-	arr = this.toArray({notab: true});
+	// first convert to array (with two axes)
+	arr = this.toArray({notab: true, twoaxes: true});
 	// then convert array to blob
 	blob = new Blob([arr], {type: "application/octet-binary"});
 	// save to disk
@@ -16878,7 +16878,7 @@ JS9.raw2FITS = function(raw, opts){
 	    s = card.replace(regexp, "$1");
 	    oval = parseInt(s, 10);
 	    if( oval !== val ){
-		ncard = sprintf("%s  = %20s / %-47s", name, val, comm||"");
+		ncard = sprintf("%-8s= %20s / %-47s", name, val, comm||"");
 	    }
 	}
 	return ncard;
@@ -16917,6 +16917,12 @@ JS9.raw2FITS = function(raw, opts){
 		t += fixparam(card, "NAXIS1", raw.width, "x image dim");
 	    } else if( card.match(/^NAXIS2/) && raw.height ){
 		t += fixparam(card, "NAXIS2", raw.height, "y image dim");
+	    } else if( opts.twoaxes && card.match(/^NAXIS /) ){
+		t += fixparam(card, "NAXIS", 2, "number of data axes");
+	    } else if( opts.twoaxes && card.match(/^(NAXIS|CRPIX|CRVAL|CTYPE|CUNIT|CDELT)[34567]/) ){
+		continue;
+	    } else if( opts.twoaxes && card.match(/^(DATASUM|CHECKSUM)/) ){
+		continue;
 	    } else {
 		t += card;
 	    }
