@@ -10,8 +10,16 @@
 #define EMDIR "/mydir"
 #endif
 
+/*
+    cimtest img2d.fits                  processes entire 2D image
+    cimtest cube3d.fits                 processes slice 0 of 3D cube
+    cimtest -c "*:*:1234" cube3d.fits   processes slice 1234 of 3D cube
+    cimtest -c "*:*:all" cube3d.fits    processes entire 3D cube
+*/
+
 #define EXTLIST "EVENTS STDEVT"
 #define IMDIM 2048
+#define NDIM 4
 
 void errchk(int status) {
     if (status){
@@ -56,7 +64,7 @@ char *FileContents(char *path, size_t *osize)
   return(tbuf);
 }
 
-void imstat(void *buf, int idim1, int idim2, int bitpix){
+void imstat(void *buf, int idim1, int idim2, int bitpix, int n){
   int ii, totpix;
   double sum = 0.0, meanval = 0.0, minval = 1.E33, maxval = -1.E33;
   char *cbuf;
@@ -118,11 +126,19 @@ void imstat(void *buf, int idim1, int idim2, int bitpix){
     }
   }
   if (totpix > 0) meanval = sum / totpix;
-  printf("\nStatistics for %d x %d [bitpix %d] image\n", idim1, idim2, bitpix);
-  printf("  sum of pixels = %.3f\n", sum);
-  printf("  mean value    = %.3f\n", meanval);
-  printf("  minimum value = %.3f\n", minval);
-  printf("  maximum value = %.3f\n", maxval);
+  if( n >= 0 ){
+    if( n == 0 ){
+      printf("imstat: %d x %d [bitpix %d] image\n", idim1, idim2, bitpix);
+    }
+    printf("%4d: sum=%.3f mean=%.3f min=%.3f max=%.3f\n",
+	   n+1, sum, meanval, minval, maxval);
+  } else {
+    printf("imstat for %d x %d [bitpix %d] image\n", idim1, idim2, bitpix);
+    printf("  sum of pixels = %.3f\n", sum);
+    printf("  mean value    = %.3f\n", meanval);
+    printf("  minimum value = %.3f\n", minval);
+    printf("  maximum value = %.3f\n", maxval);
+  }
 }
 
 int main(int argc, char *argv[])
@@ -134,16 +150,19 @@ int main(int argc, char *argv[])
   char *tfilt=NULL;
   char *imem=NULL;
   char *cardstr=NULL;
-  char *slice=NULL;
+  char *cube=NULL;
   char tbuf[81];
-  int c, i, args, hdutype, ncard;
+  int c, i, args, hdutype, ncard, ioff;
   int domem = 0;
+  int dohdr = 0;
   int status = 0;   /*  CFITSIO status value MUST be initialized to zero!  */
-  int start[2];
-  int stop[2];
+  int bin = 1;
+  int binMode = 0;
+  int start[NDIM];
+  int stop[NDIM];
   int dims[] = {IMDIM, IMDIM};
   void *buf;
-  int idim1, idim2, bitpix;
+  int idim1, idim2, idim3, bitpix;
   size_t ilen=0;
   fitsfile *fptr, *ofptr;
 
@@ -161,20 +180,23 @@ int main(int argc, char *argv[])
 #endif
 
   /* process switch arguments */
-  while ((c = getopt(argc, argv, "ms:")) != -1){
+  while ((c = getopt(argc, argv, "c:hm")) != -1){
     switch(c){
+    case 'c':
+      cube = optarg;
+      break;
+    case 'h':
+      dohdr = 1;
+      break;
     case 'm':
       domem = 1;
-      break;
-    case 's':
-      slice = optarg;
       break;
     }
   }
   // filename is required, filter is optional
   args = argc - optind;
   if( args < 1 ){
-    ifile = strdup("fits/casa.fits");
+    ifile = strdup("test/snr.ev.gz");
   } else {
     // emscripten: if path is relative, make it relative to the virtual dir
 #if NODEJS
@@ -207,31 +229,43 @@ int main(int argc, char *argv[])
   errchk(status);
   fprintf(stdout, "File: %s\n", ifile);
 
-  // get cards as a string
-  getHeaderToString(fptr, &cardstr, &ncard, &status);
-  errchk(status);
-  if( ncard && cardstr ){
-    // print cards individually to make it easier to diff
-    fprintf(stdout, "Input cards [%d]:\n", ncard);
-    tbuf[80] = '\0';
-    for(i=0; i<ncard; i++){
-      memcpy(tbuf, &cardstr[i*80], 80);
-      fprintf(stdout, "%s\n", tbuf);
+  // display header, if necessary
+  if( dohdr ){
+    // get cards as a string
+    getHeaderToString(fptr, &cardstr, &ncard, &status);
+    errchk(status);
+    if( ncard && cardstr ){
+      // print cards individually to make it easier to diff
+      fprintf(stdout, "Cards [%d]:\n", ncard);
+      tbuf[80] = '\0';
+      for(i=0; i<ncard; i++){
+	memcpy(tbuf, &cardstr[i*80], 80);
+	fprintf(stdout, "%s\n", tbuf);
+      }
+      free(cardstr);
     }
-    free(cardstr);
   }
   
   // process based on hdu type
   switch(hdutype){
   case IMAGE_HDU:
     // get image array
-    buf = getImageToArray(fptr, NULL, NULL, 1, slice,
+    buf = getImageToArray(fptr, NULL, NULL, bin, binMode, cube,
 			   start, stop, &bitpix, &status);
     idim1 = stop[0] - start[0] + 1;
     idim2 = stop[1] - start[1] + 1;
+    if( cube && strstr(cube, "all") ){
+      idim3 = stop[2] - start[2] + 1;
+    } else {
+      idim3 = 1;
+    }
     errchk(status);
+    // size in bytes of one slice
+    ioff = idim1 * idim2 * abs(bitpix)/8;
     // image statistics on image section
-    imstat(buf, idim1, idim2, bitpix);
+    for(i=0; i<idim3; i++){
+      imstat(buf+(i * ioff), idim1, idim2, bitpix, i);
+    }
     // clean up
     free(buf);
     break;
@@ -247,28 +281,13 @@ int main(int argc, char *argv[])
 				   &status);
 	errchk(status);
 	// get image array
-	buf = getImageToArray(ofptr, dims, NULL, 1, slice,
+	buf = getImageToArray(ofptr, NULL, NULL, bin, binMode, cube,
 			      start, stop, &bitpix, &status);
 	errchk(status);
-
-	// get cards as a string
-	getHeaderToString(ofptr, &cardstr, &ncard, &status);
-	errchk(status);
-	if( ncard && cardstr ){
-	  // print cards individually to make it easier to diff
-	  fprintf(stdout, "\nOutput cards [%d]:\n", ncard);
-	  tbuf[80] = '\0';
-	  for(i=0; i<ncard; i++){
-	    memcpy(tbuf, &cardstr[i*80], 80);
-	    fprintf(stdout, "%s\n", tbuf);
-	  }
-	  free(cardstr);
-	}
-
 	idim1 = stop[0] - start[0] + 1;
 	idim2 = stop[1] - start[1] + 1;
 	// image statistics on image section
-	imstat(buf, idim1, idim2, bitpix);
+	imstat(buf, idim1, idim2, bitpix, -1);
 	// clean up
 	free(buf);
 	closeFITSFile(ofptr, &status);
@@ -279,28 +298,13 @@ int main(int argc, char *argv[])
       ofptr = filterTableToImage(fptr, NULL, colname, dims, NULL, 1, &status);
       errchk(status);
       // get image array
-      buf = getImageToArray(ofptr, dims, NULL, 1, slice,
+      buf = getImageToArray(ofptr, dims, NULL, bin, binMode, cube,
 			    start, stop, &bitpix, &status);
       errchk(status);
-
-      // get cards as a string
-      getHeaderToString(ofptr, &cardstr, &ncard, &status);
-      errchk(status);
-      if( ncard && cardstr ){
-	// print cards individually to make it easier to diff
-	fprintf(stdout, "\nOutput cards [%d]:\n", ncard);
-	tbuf[80] = '\0';
-	for(i=0; i<ncard; i++){
-	  memcpy(tbuf, &cardstr[i*80], 80);
-	  fprintf(stdout, "%s\n", tbuf);
-	}
-	free(cardstr);
-      }
-
       idim1 = stop[0] - start[0] + 1;
       idim2 = stop[1] - start[1] + 1;
       // image statistics on image section
-      imstat(buf, idim1, idim2, bitpix);
+      imstat(buf, idim1, idim2, bitpix, -1);
       // clean up
       free(buf);
       closeFITSFile(ofptr, &status);

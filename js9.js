@@ -3486,7 +3486,7 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
     } else {
 	// slicename or slicenum specified?
 	if( JS9.isNumber(slice) ){
-	    opts.slice = sprintf("*,*,%s", slice);
+	    opts.slice = sprintf("*:*:%s", slice);
 	} else {
 	    opts.slice = slice;
 	}
@@ -5906,6 +5906,8 @@ JS9.Image.prototype.countsInRegions = function(args){
 		vfile += '[' + filter + ']';
 	    }
 	}
+    } else if( this.raw.hdu.slice ){
+	cmdswitches += sprintf(" -c %s", this.raw.hdu.slice);
     }
     // reduce file size, if necessary
     if( opts.reduce && !this.parentFile ){

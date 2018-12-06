@@ -2956,7 +2956,7 @@ JS9.Cube.stopHTML='<input type="button" class=JS9CubeBtn" value="Stop" onclick="
 
 JS9.Cube.extnameHTML='<span class="JS9CubeRangeLine">%s</span>';
 
-JS9.Cube.orderHTML='<select class="JS9CubeOrder" onchange="JS9.Cube.xorder(\'%s\', \'%s\', this)"><option value="$slice,*,*">$slice : * : *</option><option value="*,$slice,*">* : $slice : *</option><option value="*,*,$slice">* : * : $slice</option></select>';
+JS9.Cube.orderHTML='<select class="JS9CubeOrder" onchange="JS9.Cube.xorder(\'%s\', \'%s\', this)"><option value="$slice:*:*">$slice : * : *</option><option value="*:$slice:*">* : $slice : *</option><option value="*:*:$slice">* : * : $slice</option></select>';
 
 JS9.Cube.rateHTML='<select class="JS9CubeRate" onchange="JS9.Cube.xrate(\'%s\', \'%s\', this)"><option selected disabled>Rate</option><option value=".1">0.1 sec</option><option value=".25">0.25 sec</option><option value=".5">0.5 sec</option><option value="1" default>1 sec</option><option value="2">2 sec</option><option value="5">5 sec</option></select>';
 
@@ -3235,7 +3235,7 @@ JS9.Cube.init = function(opts){
 		}
 	    }
 	} else {
-	    this.slice = "*,*,$slice";
+	    this.slice = "*:*:$slice";
 	    this.smax = header.NAXIS3;
 	    this.sidx = 3;
 	    this.sval = 1;

@@ -766,20 +766,23 @@ cube, i.e.,  a FITS image containing 3 or 4 axes.
 The <b>slice</b> parameter can either be the numeric value of the
 slice in the third (or fourth) image dimension (starting
 with <b>1</b>) or it can be a slice description string: a combination
-of asterisks and a numeric value defines the slice axis. Thus, for
-example, in a 1024 x 1024 x 16 cube, you can display the sixth slice
-along the third axis in one of two ways:
+of asterisks (or commas) and a numeric value defines the slice
+axis. Thus, for example, in a 1024 x 1024 x 16 cube, you can display
+the sixth slice along the third axis in one of two ways:
 <pre>
   JS9.DisplaySlice(6);
 </pre>
 or:
 <pre>
+  # sixth slice along third axis
+  JS9.DisplaySlice("*:*:6");
+  # comma separators also can be used
   JS9.DisplaySlice("*,*,6");
 </pre>
 If the image was organized as 16 x 1024 x 1024, you would use the
 string description:
 <pre>
-  JS9.DisplaySlice("6,*,*");
+  JS9.DisplaySlice("6:*:*");
 </pre>
 <p>
 By default, the new slice replaces the data in the currently displayed
@@ -787,12 +790,12 @@ image. You can display the slice as a separate image in the current display
 by supplying an <b>opts</b> object with the <b>separate</b> property
 set to <b>true</b>.  For example:
 <pre>
-  JS9.DisplaySlice("6,*,*", {separate: true});
+  JS9.DisplaySlice("6:*:*", {separate: true});
 </pre>
 will display the sixth slice of the first image dimension separately
 from the original file, allowing blinking, image blending, etc. between
 the two "files".  Note that the new id and filename are adjusted to be
-the original file's values with the cfitsio image section <b>[6:6,*,*]</b>
+the original file's values with the cfitsio image section <b>[6:6:*:*]</b>
 appended.
 <p>
 If the first argument is "all", then all slices will be loaded into JS9 separately.

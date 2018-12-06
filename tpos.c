@@ -260,8 +260,8 @@ int main(int argc, char **argv)
   int n;
   int hdutype;
   int maxcard, morekeys;
-  int start[2];
-  int stop[2];
+  int start[4];
+  int stop[4];
   int dims[2] = {0, 0};
   int block = 1;
   void *dbuf;
