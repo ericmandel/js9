@@ -5906,8 +5906,9 @@ JS9.Image.prototype.countsInRegions = function(args){
 		vfile += '[' + filter + ']';
 	    }
 	}
-    } else if( this.raw.hdu.slice ){
-	cmdswitches += sprintf(" -c %s", this.raw.hdu.slice);
+    } else if( this.raw.header.NAXIS === 3 &&
+	       cmdswitches.search(/(^| )-c/) < 0 ){
+	cmdswitches += sprintf(" -c %s", this.raw.hdu.slice || 1);
     }
     // reduce file size, if necessary
     if( opts.reduce && !this.parentFile ){
