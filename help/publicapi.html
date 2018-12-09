@@ -617,7 +617,8 @@ display the section:
 <li><b>ydim</b>: y dimension of section to extract before binning
 <li><b>bin</b>: integer bin factor or bin directive string
 <li><b>filter</b>: for tables, row/event filter to apply when extracting section
-<li><b>separate</b>: display as a separate image (default is to update the current image)
+<li><b>separate</b>: display as a separate image (default is to refresh the current image)
+<li><b>refresh</b>: display as a refreshed image in a different display (default is to refresh the current image)
 <li><b>ondisplaysection</b>: function to perform after section is displayed
 </ul>
 <p>
@@ -691,6 +692,26 @@ For example:
 Both of these commands will display the new section "myJS9" display.
 The first will retain the original image id, while the second will
 use "newsection.fits" as the image id.
+
+Alternatively, you can display the section by refreshing the image in a
+different display by supplying a string value to the <b>opts.refresh</b>
+property. Again, the string value takes two forms:
+<ul>
+<li><b>[display]</b>: refresh the image in the specified JS9 display,
+using the same image id
+<li><b>[display]:[id]</b>: refresh the image in the specified JS9
+display, using the specified image id
+</ul>
+For example:
+<pre>
+  # refresh image in a new display, same image id
+  JS9.DisplaySection({ ... refresh: "myJS9"});
+  # refresh the new display, and change to a new image id
+  JS9.DisplaySection({ ... refresh: "myJS9:newsection.fits"});
+</pre>
+If no image is currently loaded in the specified display, the first call
+to this routine using the <b>refresh</b> property will create a new
+image in that display.  Subsequent calls will refresh that image.
 
 <p>
 Table filtering allows you  to select rows from an FITS binary table
@@ -766,20 +787,23 @@ cube, i.e.,  a FITS image containing 3 or 4 axes.
 The <b>slice</b> parameter can either be the numeric value of the
 slice in the third (or fourth) image dimension (starting
 with <b>1</b>) or it can be a slice description string: a combination
-of asterisks and a numeric value defines the slice axis. Thus, for
-example, in a 1024 x 1024 x 16 cube, you can display the sixth slice
-along the third axis in one of two ways:
+of asterisks (or commas) and a numeric value defines the slice
+axis. Thus, for example, in a 1024 x 1024 x 16 cube, you can display
+the sixth slice along the third axis in one of two ways:
 <pre>
   JS9.DisplaySlice(6);
 </pre>
 or:
 <pre>
+  # sixth slice along third axis
+  JS9.DisplaySlice("*:*:6");
+  # comma separators also can be used
   JS9.DisplaySlice("*,*,6");
 </pre>
 If the image was organized as 16 x 1024 x 1024, you would use the
 string description:
 <pre>
-  JS9.DisplaySlice("6,*,*");
+  JS9.DisplaySlice("6:*:*");
 </pre>
 <p>
 By default, the new slice replaces the data in the currently displayed
@@ -787,12 +811,12 @@ image. You can display the slice as a separate image in the current display
 by supplying an <b>opts</b> object with the <b>separate</b> property
 set to <b>true</b>.  For example:
 <pre>
-  JS9.DisplaySlice("6,*,*", {separate: true});
+  JS9.DisplaySlice("6:*:*", {separate: true});
 </pre>
 will display the sixth slice of the first image dimension separately
 from the original file, allowing blinking, image blending, etc. between
 the two "files".  Note that the new id and filename are adjusted to be
-the original file's values with the cfitsio image section <b>[6:6,*,*]</b>
+the original file's values with the cfitsio image section <b>[6:6:*:*]</b>
 appended.
 <p>
 If the first argument is "all", then all slices will be loaded into JS9 separately.

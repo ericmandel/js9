@@ -3043,7 +3043,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	return res || val3;
     };
     var disp = function(hdu, opts){
-	var tim, iid, arr;
+	var tim, iid, did, arr;
 	var ss = "";
 	opts = opts || {};
 	topts = $.extend(true, {}, opts);
@@ -3065,6 +3065,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	}
 	iid = that.id.replace(/\[.*\]/,"") + ss;
 	if( opts.separate ){
+	    // display section as a separate image in the specified display
 	    delete topts.xcen;
 	    delete topts.ycen;
 	    topts.id = iid;
@@ -3072,13 +3073,15 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		arr = opts.separate.split(":");
 		switch(arr.length){
 		case 1:
-		    topts.display = arr[0];
+		    did = arr[0];
 		    break;
 		default:
-		    topts.display = arr[0];
+		    did = arr[0];
 		    topts.id = arr[1];
 		    break;
 		}
+		// make sure we can find the display
+		topts.display = JS9.lookupDisplay(did);
 	    } else {
 		topts.display = that.display;
 	    }
@@ -3103,7 +3106,58 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    if( oreg ){
 		nim.addShapes("regions", oreg);
 	    }
+	} else if( typeof opts.refresh === "string" ){
+	    // refresh the image in the specified display
+	    delete topts.xcen;
+	    delete topts.ycen;
+	    topts.id = iid;
+	    arr = opts.refresh.split(":");
+	    switch(arr.length){
+	    case 1:
+		did = arr[0];
+		break;
+	    default:
+		did = arr[0];
+		topts.id = arr[1];
+		break;
+	    }
+	    // make sure we can find the display
+	    topts.display = JS9.lookupDisplay(did);
+	    if( topts.display.image ){
+		topts.refreshRegions = true;
+		topts.resetSection = true;
+		topts.rawid = that.raw.id;
+		// function to perform when image is refreshed
+		topts.onrefresh = topts.ondisplaysection || topts.onrefresh || func;
+		// refresh the image with the new hdu
+		topts.display.image.refreshImage(hdu, topts);
+	    } else {
+		// no image in the specified display, so make a new one
+		// lame attempt to get to original parentFile
+		if( from === "parentFile" && that.fitsFile ){
+		    tim = JS9.lookupImage(that.fitsFile);
+		    if( tim && tim.parentFile ){
+			topts.parentFile = tim.parentFile;
+		    } else {
+			topts.parentFile = that.fitsFile;
+		    }
+		}
+		// save current regions (before displaying new image)
+		oreg = that.listRegions("all", {mode: 1});
+		// function to perform when image is loaded
+		func = topts.ondisplaysection || topts.onrefresh || func;
+		// set up new and display new image
+		nim = new JS9.Image(hdu, topts, func);
+		// reset obin to be bin, since new images have no previous bin
+		nim.binning.obin = nim.binning.bin;
+		// add regions to new image
+		if( oreg ){
+		    nim.addShapes("regions", oreg);
+		}
+	    }
 	} else {
+	    // this is the default behavior for displaySection:
+	    // refresh the image in the current display
 	    topts.file = iid;
 	    topts.id = iid;
 	    topts.refreshRegions = true;
@@ -3486,7 +3540,7 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
     } else {
 	// slicename or slicenum specified?
 	if( JS9.isNumber(slice) ){
-	    opts.slice = sprintf("*,*,%s", slice);
+	    opts.slice = sprintf("*:*:%s", slice);
 	} else {
 	    opts.slice = slice;
 	}
@@ -5906,6 +5960,9 @@ JS9.Image.prototype.countsInRegions = function(args){
 		vfile += '[' + filter + ']';
 	    }
 	}
+    } else if( this.raw.header.NAXIS === 3 &&
+	       cmdswitches.search(/(^| )-c/) < 0 ){
+	cmdswitches += sprintf(" -c %s", this.raw.hdu.slice || 1);
     }
     // reduce file size, if necessary
     if( opts.reduce && !this.parentFile ){
@@ -15984,7 +16041,6 @@ JS9.lookupDisplay = function(id, mustExist){
 		}
 	    }
 	}
-	
         // an id was specified but not found
         if( mustExist ){
 	    JS9.error("can't find JS9 display with id: " + id);
