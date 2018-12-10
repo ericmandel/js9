@@ -6700,12 +6700,39 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     var twcs = {};
     var rcomplete = false;
     var awvfile, awvfile2, wvfile, owvfile, nwvfile;
-    var wcsheader, wcsstr, oheader, nheader;
+    var wcsheader, wcsstr, oheader, nheader, theader;
     var arr, ivfile, ovfile, rstr, key;
     var tab, tx1, tx2, ty1, ty2, s;
     var n, avfile, earr, cmdswitches;
     var wcsexp = /SIMPLE|BITPIX|NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
     var ptypeexp = /TAN|SIN|ZEA|STG|ARC/;
+    var addwcsinfo = function(header, wcsinfo){
+	var theader;
+	if( !wcsinfo ){ return header; }
+	theader = $.extend(true, {}, header);
+	if( JS9.isNull(theader.CRVAL1) && !JS9.isNull(wcsinfo.crval1) ){
+	    theader.CRVAL1 = wcsinfo.crval1;
+	}
+	if( JS9.isNull(theader.CRVAL2) && !JS9.isNull(wcsinfo.crval2) ){
+	    theader.CRVAL2 = wcsinfo.crval2;
+	}
+	if( JS9.isNull(theader.CRPIX1) && !JS9.isNull(wcsinfo.crpix1) ){
+	    theader.CRPIX1 = wcsinfo.crpix1;
+	}
+	if( JS9.isNull(theader.CRPIX2) && !JS9.isNull(wcsinfo.crpix2) ){
+	    theader.CRPIX2 = wcsinfo.crpix2;
+	}
+	if( JS9.isNull(theader.CDELT1) && !JS9.isNull(wcsinfo.cdelt1) ){
+	    theader.CDELT1 = wcsinfo.cdelt1;
+	}
+	if( JS9.isNull(theader.CDELT2) && !JS9.isNull(wcsinfo.cdelt2) ){
+	    theader.CDELT2 = wcsinfo.cdelt2;
+	}
+	if( JS9.isNull(theader.CROTA2) && !JS9.isNull(wcsinfo.crot) ){
+	    theader.CROTA2 = wcsinfo.crot;
+	}
+	return theader;
+    };
     // sanity checks
     if( !JS9.reproject || !wcsim || this === wcsim ){
 	return;
@@ -6775,8 +6802,9 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     try{
 	// try to change input WCS to a sys usable by mProjectPP
 	if( !ptypeexp.test(this.raw.wcsinfo.ptype) ){
+	    theader = addwcsinfo(this.raw.header, this.raw.wcsinfo);
 	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
-	    JS9.vfile(owvfile, JS9.raw2FITS(this.raw.header, {addcr: true}));
+	    JS9.vfile(owvfile, JS9.raw2FITS(theader, {addcr: true}));
 	    awvfile = "awcs_" + JS9.uniqueID() + ".txt";
 	    rstr = JS9.tanhdr(owvfile, awvfile, "");
 	    if( JS9.DEBUG > 1 ){
@@ -6793,8 +6821,9 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	// try to change reproject WCS to a sys usable by mProjectPP
 	if( (wcsim.raw && !ptypeexp.test(wcsim.raw.wcsinfo.ptype)) ||
 	    (wcsim.ptype && !ptypeexp.test(wcsim.ptype))           ){
+	    theader = addwcsinfo(nheader, wcsim.raw.wcsinfo);
 	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
-	    JS9.vfile(owvfile, JS9.raw2FITS(nheader, {addcr: true}));
+	    JS9.vfile(owvfile, JS9.raw2FITS(theader, {addcr: true}));
 	    awvfile2 = "awcs_" + JS9.uniqueID() + ".txt";
 	    rstr = JS9.tanhdr(owvfile, awvfile2, "");
 	    if( JS9.DEBUG > 1 ){
