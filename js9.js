@@ -153,6 +153,7 @@ JS9.globalOpts = {
     refreshDragDrop: true,	// refresh on drag/drag and open file?
     reduceMosaic: "js9",        // "js9" or "shrink" ("js9" seems to be faster)
     reduceRegcnts: true,        // reduce image when doing counts in regions?
+    plot3d: {cube:"*:*:all", mode:"avg", areaunits:"pixels", color: "green"}, // plot3d options: avg/sum, pixels/arcsecs
     copyWcsPosFormat: "$ra $dec $sys", // format for copy wcs pos to clipboard
     floatPrecision: 6,          // precision for floatToString()
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
@@ -6063,6 +6064,95 @@ JS9.Image.prototype.radialProfile = function(args){
     // display results
     return this.displayAnalysis("plot", pobj,
 				{divid: JS9.globalOpts.analysisDiv});
+};
+
+// plot of a 3D cube a region
+// eslint-disable-next-line no-unused-vars
+JS9.Image.prototype.plot3d = function(src, bkg, opts){
+    var i, j, s, arr;
+    var jobj, el, pobj, color, mode, divid, xlabel, ylabel;
+    var index3, xoff, xdelt;
+    var counts=[];
+    if( !this.raw.header || this.raw.header.NAXIS !== 3 ){
+	JS9.error("plot3d requires a data cube with 3 dimensions");
+    }
+    // opts is optional
+    opts = $.extend(true, {}, opts, JS9.globalOpts.plot3d);
+    // slice
+    opts.cube = opts.cube || "*:*:all";
+    // make sure 'all' is specified
+    arr = opts.cube.split(":");
+    for(i=0; i<arr.length; i++){
+	if( arr[i] === "all" ){
+	    index3 = i+1;
+	    break;
+	}
+    }
+    if( !index3 ){
+	JS9.error("plot3d requires specification of cube's third index");
+    }
+    // but these regcnts command switches are not
+    opts.cmdswitches = sprintf("-j -c %s", opts.cube);
+    // average or sum?
+    mode =  opts.mode || "avg";
+    // for avg: what sort of area (pixels or arcsec)?
+    if( !opts.areaunits ){
+	opts.areaunits = "pixels";
+	opts.cmdswitches += " -p";
+    } else if( opts.areaunits.match(/^p/) ){
+	opts.areaunits = "pixels";
+	opts.cmdswitches += " -p";
+    } else if( opts.areaunits.match(/^a/) ){
+	opts.areaunits = "arcsec";
+    } else {
+	opts.areaunits = "pixels";
+	opts.cmdswitches += " -p";
+    }
+    // plot colors
+    color = opts.color || "green";
+    // get counts in regions for all slices in the cube
+    s = this.countsInRegions(src, bkg, opts);
+    // convert to json format
+    try{ jobj = JSON.parse(s); }
+    catch(e){ JS9.error("can't parse regcnts results: " + s, e); }
+    // init plot object
+    s = this.raw.header["CTYPE"+String(index3)];
+    if( s ){
+	xlabel = sprintf("%s", s.toLowerCase());
+    } else {
+	xlabel = "slice";
+    }
+    if( mode === "avg" ){
+	if( opts.areaunits === "pixels"){
+	    ylabel = "counts/pixel**2";
+	} else {
+	    ylabel = "counts/arcsec**2";
+	}
+    } else {
+	ylabel = sprintf("summed counts");
+    }
+    pobj = {color: sprintf("%s", color), label : sprintf("%s vs %s ", ylabel, xlabel), data: []};
+    // offset for 3rd dimension
+    xoff = this.raw.header["CRVAL"+String(index3)]  || 0;
+    xdelt = this.raw.header["CDELT"+String(index3)] || 1;
+    // get bkgd-subtracted counts in each slice
+    for(i=0; i<jobj.source.cubeSlices; i++){
+        s = "backgroundSubtractedResults" + String(i+1);
+	counts[i] = 0;
+	for(j=0; j<jobj[s].length; j++){
+	    if( mode === "avg" ){
+		counts[i] += jobj[s][j].surfBrightness;
+	    } else {
+		counts[i] += jobj[s][j].netCounts;
+	    }
+	}
+	el = [(i * xdelt) + xoff, counts[i]];
+	pobj.data.push(el);
+    }
+    // which div?
+    divid = opts.divid || JS9.globalOpts.analysisDiv;
+    // display results
+    return this.displayAnalysis("plot", pobj, {divid: divid});
 };
 
 // make (or select) a raw data layer
@@ -19346,6 +19436,7 @@ JS9.mkPublic("SaveFITS", "saveFITS");
 JS9.mkPublic("UploadFITSFile", "uploadFITSFile");
 JS9.mkPublic("CountsInRegions", "countsInRegions");
 JS9.mkPublic("RadialProfile", "radialProfile");
+JS9.mkPublic("Plot3D", "plot3d");
 JS9.mkPublic("RunAnalysis", "runAnalysis");
 JS9.mkPublic("RawDataLayer", "rawDataLayer");
 JS9.mkPublic("GaussBlurData", "gaussBlurData");

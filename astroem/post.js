@@ -367,13 +367,13 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     if( opts.xcen ){ cens[0] = opts.xcen; }
     if( opts.ycen ){ cens[1] = opts.ycen; }
     // limits on image section
-    hptr = _malloc(48);
+    hptr = _malloc(64);
     setValue(hptr,    dims[0], "i32");
     setValue(hptr+4,  dims[1], "i32");
     setValue(hptr+8,  cens[0], "double");
     setValue(hptr+16, cens[1], "double");
     // clear return status
-    setValue(hptr+44, 0, "i32");
+    setValue(hptr+60, 0, "i32");
     // might want a slice
     slice = opts.slice || "";
     // get array from image file
@@ -390,7 +390,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	bufptr = ccall("getImageToArray", "number",
 	["number", "number", "number", "number", "number", "string", "number",
 	 "number", "number", "number"],
-	[ofptr, hptr, hptr+8, bin, binMode, slice, hptr+24, hptr+32, hptr+40, hptr+44]);
+	[ofptr, hptr, hptr+8, bin, binMode, slice, hptr+24, hptr+40, hptr+56, hptr+60]);
     }
     catch(e){
 	doerr = true;
@@ -398,16 +398,19 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     // return the section values so caller can update LTM/LTV
     // we don't want to update the FITS file itself, since it hasn't changed
     hdu.bin = bin;
+    // nb: return start, end arrays are 4 ints wide, we only use the first two
     hdu.x1  = getValue(hptr+24, "i32");
     hdu.y1  = getValue(hptr+28, "i32");
-    hdu.x2  = getValue(hptr+32, "i32");
-    hdu.y2  = getValue(hptr+36, "i32");
+    hdu.x2  = getValue(hptr+40, "i32");
+    hdu.y2  = getValue(hptr+44, "i32");
     hdu.naxis1  = Math.floor((hdu.x2 - hdu.x1) / bin + 1);
     hdu.naxis2  = Math.floor((hdu.y2 - hdu.y1) / bin + 1);
-    hdu.bitpix  = getValue(hptr+40, "i32");
+    hdu.bitpix  = getValue(hptr+56, "i32");
     // pass along filter, even if we did not use it
     if( opts.filter ){ hdu.filter = opts.filter; }
-    status  = getValue(hptr+44, "i32");
+    // pass back slice we used
+    if( slice ){ hdu.slice = slice; }
+    status  = getValue(hptr+60, "i32");
     _free(hptr);
     Module["errchk"](status);
     if( !bufptr || doerr ){

@@ -459,6 +459,19 @@ Emscripten</a>) on the specified
 source and background regions and return a plot display. The source
 regions consist of circles.  This is the same task as the server-side
 task, but running on the internal FITS file.
+<li><b>3D Counts in Regions:</b> Run the
+<a href="https://js9.si.edu/regions/regcnts.html" target="_blank">regcnts</a>
+program (compiled into the browser using
+<a href="https://kripken.github.io/emscripten-site/" target="_blank">
+Emscripten</a>) on the specified
+source and background regions for each slice in a 3D data cube and return a
+text display.
+<li><b>3D Plot using Regions :</b> Run the
+<a href="https://js9.si.edu/regions/regcnts.html" target="_blank">regcnts</a>
+program (compiled into the browser using
+<a href="https://kripken.github.io/emscripten-site/" target="_blank">
+Emscripten</a>) on the specified source and background regions for
+each slice in a 3D data cube and plot the background-subtracted results.
 <li><b>Gaussian Blur:</b> enter a sigma (radius) to create a new raw
 data layer called "gaussBlur", in which the image pixel values are
 blurred using a Gaussian function with the specified sigma. The

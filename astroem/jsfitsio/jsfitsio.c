@@ -21,6 +21,9 @@ https://groups.google.com/forum/#!topic/emscripten-discuss/JDaNHIRQ_G4
 #define IDIM 4
 #define IFILE "mem://"
 #define MFILE "foo"
+#ifndef SZ_LINE
+#define SZ_LINE 1024
+#endif
 
 #define max(a,b) (a>=b?a:b)
 #define min(a,b) (a<=b?a:b)
@@ -353,7 +356,8 @@ void updateWCS(fitsfile *fptr, fitsfile *ofptr,
 void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
 		      int bin, int binMode, char *slice,
 		      int *start, int *end, int *bitpix, int *status){
-  int i, j, naxis, dim1, dim2, maxdim1, maxdim2, odim1, odim2, hidim1, hidim2;
+  int i, j, k, naxis;
+  int dim1, dim2, maxdim1, maxdim2, odim1, odim2, odim3, hidim1, hidim2, hidim3;
   int ttype, tsize;
   int ooff = 0;
   int ojoff = 0;
@@ -361,15 +365,16 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   int doscale = 0;
   int bin2;
   void *obuf, *rbuf;
-  long totpix, totbytes;
+  long totim, totpix, totbytes;
   long naxes[IDIM], fpixel[IDIM], lpixel[IDIM], myfpixel[IDIM], inc[IDIM];
   double xcen, ycen;
   double bscale = 1.0;
   double bzero = 0.0;
   char comment[FLEN_CARD];
+  char tbuf[SZ_LINE];
   char *s, *tslice;
-  int nslice, idx, iaxis0, iaxis1;
-  int iaxes[2] = {0, 1};
+  int nslice, idx, iaxis0=0, iaxis1=0, iaxis2=0;
+  int iaxes[3] = {0, 1, 2};
   int saxes[IDIM] = {0, 0, 0, 0};
   unsigned char *crbuf=NULL, *cobuf=NULL;
   short *srbuf=NULL, *sobuf=NULL;
@@ -400,19 +405,35 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   }
   // parse slice string into primary axes and slice axes
   if( slice && *slice ){
-    tslice = (char *)strdup(slice);
-    for(s=(char *)strtok(tslice, " :,"), nslice=0, idx=0;
+    if( !strcmp(slice, "all") ){
+      tslice = (char *)strdup("*:*:all");
+    } else {
+      if( strchr(slice, ':') || strchr(slice, ',') ){
+	tslice = (char *)strdup(slice);
+      } else {
+	snprintf(tbuf, SZ_LINE, "*:*:%s", slice);
+	tslice = (char *)strdup(tbuf);
+      }
+    }
+    for(s=(char *)strtok(tslice, ":,"), nslice=0, idx=0;
 	(s != NULL) && (nslice < IDIM);
-	s=(char *)strtok(NULL," :,"), nslice++){
+	s=(char *)strtok(NULL,":,"), nslice++){
       if( !strcmp(s, "*") ){
 	if( idx < 2 ){
 	  iaxes[idx++] = nslice;
 	}
       } else {
-	saxes[nslice] = atoi(s);
-	if( (saxes[nslice] < 1) || (saxes[nslice] > naxes[nslice]) ){
-	  *status = SEEK_ERROR;
-	  return NULL;
+	// all slices (i.e. the whole data cube)?
+	if( !strcmp(s, "all") ){
+	  saxes[nslice] = -naxes[nslice];
+	  iaxis2 = nslice;
+	} else {
+	  // specific slice
+	  saxes[nslice] = atoi(s);
+	  if( (saxes[nslice] < 1) || (saxes[nslice] > naxes[nslice]) ){
+	    *status = SEEK_ERROR;
+	    return NULL;
+	  }
 	}
       }
     }
@@ -473,11 +494,19 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
     lpixel[iaxis1] -= 1;
   }
   // for sliced dimensions, set first and last pixel to the specified slice
+  odim3 = 1;
   for(i=0; i<min(IDIM,naxis); i++){
     if( saxes[i] ){
-      // 1 pixel slice in this dimension
-      fpixel[i] = saxes[i];
-      lpixel[i] = saxes[i];
+      if( saxes[i] < 0 ){
+	// entire slice dimension
+	fpixel[i] = 1;
+	lpixel[i] = naxes[i];
+	odim3 = naxes[i];
+      } else {
+	// 1 pixel slice in this dimension
+	fpixel[i] = saxes[i];
+	lpixel[i] = saxes[i];
+      }
       // stay within image limits
       fpixel[i] = max(fpixel[i], 1);
       fpixel[i] = min(fpixel[i], naxes[i]);
@@ -489,13 +518,22 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   if( start ){
     start[0] = fpixel[iaxis0];
     start[1] = fpixel[iaxis1];
+    if( iaxis2 ){
+      start[2] = fpixel[iaxis2];
+    }
   }
   if( end ){
     end[0] = lpixel[iaxis0];
     end[1] = lpixel[iaxis1];
+    if( iaxis2 ){
+      end[2] = lpixel[iaxis2];
+    }
   }
+  // total pixels in one slice of the image
+  totim = odim1 * odim2;
+  // total pixels in the image
+  totpix = odim1 * odim2 * odim3;
   // make sure we have an image with valid dimensions size
-  totpix = odim1 * odim2;
   if( totpix <= 1 ){
     *status = NEG_AXIS;
     return NULL;
@@ -599,7 +637,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       return NULL;
     }
     // get total bytes
-    totbytes = (int)((int)(odim1 / bin) * (int)(odim2 / bin) * tsize);
+    totbytes = (int)(odim3 * (int)(odim1 / bin) * (int)(odim2 / bin) * tsize);
     /* allocate memory for the output binned image section */
     if( !(obuf = (void *)calloc(totbytes, sizeof(char))) ){
       *status = MEMORY_ALLOCATION;
@@ -642,53 +680,58 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
     // loop limits
     hidim1 = (int)(odim1/bin)*bin;
     hidim2 = (int)(odim2/bin)*bin;
-    /* for each row */
-    for(j=0; j<hidim2; j++){
-      /* read next line of the section */
-      myfpixel[1] = fpixel[1] + j;
-      tstatus = 0;
-      /* read next line */
-      fits_read_pix(fptr, ttype, myfpixel, odim1, NULL, rbuf, NULL, &tstatus);
-      /* exit on error, perhaps we still have something to show */
-      if( tstatus ){
-	break;
-      }
-      ojoff = (int)(j / bin) * (int)(odim1 / bin);
-      /* for each column */
-      for(i=0; i<hidim1; i++){
-	ooff = ojoff + (int)(i / bin);
-	switch(*bitpix){
-	case 8:
-	  cobuf[ooff] += crbuf[i];
-	  break;
-	case 16:
-	  sobuf[ooff] += srbuf[i];
-	  break;
-	case -16:
-	  usobuf[ooff] += usrbuf[i];
-	  break;
-	case 32:
-	  iobuf[ooff] += irbuf[i];
-	  break;
-	case 64:
-	  lobuf[ooff] += lrbuf[i];
-	  break;
-	case -32:
-	  fobuf[ooff] += frbuf[i];
-	  break;
-	case -64:
-	  dobuf[ooff] += drbuf[i];
+    hidim3 = odim3;
+    for(k=0; k<hidim3; k++){
+      /* read next line slice */
+      myfpixel[2] = fpixel[2] + k;
+      /* for each row */
+      for(j=0; j<hidim2; j++){
+	/* read next line of the section */
+	myfpixel[1] = fpixel[1] + j;
+	tstatus = 0;
+	/* read next line */
+	fits_read_pix(fptr, ttype, myfpixel, odim1, NULL, rbuf, NULL, &tstatus);
+	/* exit on error, perhaps we still have something to show */
+	if( tstatus ){
 	  break;
 	}
+	ojoff = (int)(k * totim) + (int)(j / bin) * (int)(odim1 / bin);
+	/* for each column */
+	for(i=0; i<hidim1; i++){
+	  ooff = ojoff + (int)(i / bin);
+	  switch(*bitpix){
+	  case 8:
+	    cobuf[ooff] += crbuf[i];
+	    break;
+	  case 16:
+	    sobuf[ooff] += srbuf[i];
+	    break;
+	  case -16:
+	    usobuf[ooff] += usrbuf[i];
+	    break;
+	  case 32:
+	    iobuf[ooff] += irbuf[i];
+	    break;
+	  case 64:
+	    lobuf[ooff] += lrbuf[i];
+	    break;
+	  case -32:
+	    fobuf[ooff] += frbuf[i];
+	    break;
+	  case -64:
+	    dobuf[ooff] += drbuf[i];
+	    break;
+	  }
+	}
       }
+      free(rbuf);
     }
-    free(rbuf);
   }
 
   // average, if necessary
   if( (bin > 1) && ((binMode == 1) || (binMode == 'a')) ){
     bin2 = bin * bin;
-    totpix = odim1 * odim2 / bin2;
+    totpix = (odim1 * odim2 * odim3) / bin2;
     for(i=0; i<totpix; i++){
       switch(*bitpix){
       case 8:

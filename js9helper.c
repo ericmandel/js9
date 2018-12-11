@@ -481,8 +481,8 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
   char card[FLEN_CARD];
   char tbuf[SZ_LINE];
   int numkeys, nkey, bitpix, dtype;
-  int start[2];
-  int end[2];
+  int start[4];
+  int end[4];
   int naxis = 2;
   long nelements;
   long naxes[2];

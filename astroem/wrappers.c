@@ -37,6 +37,8 @@
 
 /* static return buffer */
 static char rstr[SZ_LINE];
+static char *fstr;
+static int fsize = 0;
 
 /* hold information about wcs for individual images */
 typedef struct infostruct {
@@ -124,6 +126,27 @@ static int filecontents(char *path, char *obuf, int osize){
   fclose(fd);
   obuf[got] = '\0';
   return got;
+}
+
+static int filecontents2(char *path, char **obuf, int *osize){
+  int fsize;
+  struct stat buf;
+  if( stat(path, &buf) <0 ){
+    return -1;
+  }
+  fsize = buf.st_size;
+  if( fsize >= *osize ){
+    if( *obuf != NULL ){
+      free(*obuf);
+    }
+    *obuf = (char *)calloc(fsize+1, sizeof(char));
+    if( *obuf ){
+      *osize = fsize+1;
+    } else {
+      return -1;
+    }
+  }
+  return filecontents(path, *obuf, *osize);
 }
 
 /* add a new Info record with a valid wcs struct */
@@ -944,11 +967,11 @@ char *regcnts(char *iname, char *sregion, char *bregion, char *cmdswitches){
     unlink(file1);
     return rstr;
   }
-  /* look for a return value */
-  if( filecontents(file1, rstr, SZ_LINE) >= 0 ){
+  /* look for a return value (return all contents) */
+  if( filecontents2(file1, &fstr, &fsize) >= 0 ){
     unlink(file0);
     unlink(file1);
-    return rstr;
+    return fstr;
   } else {
     return "Error: regcnts failed; no output file created";
   }
