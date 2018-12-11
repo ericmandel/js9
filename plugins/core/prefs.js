@@ -440,6 +440,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "mobject",
 	    "helper": "divs used when resizing"
 	},
+	"plot3d": {
+	    "type": "mobject",
+	    "helper": "options for 3D data cube plot"
+	},
 	"syncOps": {
 	    "type": "mobject",
 	    "helper": "ops to sync between images"
@@ -560,6 +564,7 @@ JS9.Prefs.init = function(){
 			   keyboardActions: JS9.globalOpts.keyboardActions,
 			   centerDivs: JS9.globalOpts.centerDivs,
 			   resizeDivs: JS9.globalOpts.resizeDivs,
+			   plot3d: JS9.globalOpts.plot3d,
 			   syncOps: JS9.globalOpts.syncOps,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
 			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,

@@ -2248,9 +2248,16 @@ JS9.Menubar.createMenus = function(){
 		}
 		items.regcnts = xname("Counts in Regions");
 		items.radprof = xname("Radial Profile");
+		items.cnts3d = xname("3D Counts in Regions");
+		items.plot3d = xname("3D Plot using Regions");
 		if( !im || !im.raw || !im.raw.hdu || !im.raw.hdu.vfile ){
 		    items.regcnts.disabled = true;
 		    items.radprof.disabled = true;
+		    items.cnts3d.disabled = true;
+		    items.plot3d.disabled = true;
+		} else if( im.raw.header.NAXIS !== 3 ){
+		    items.cnts3d.disabled = true;
+		    items.plot3d.disabled = true;
 		}
 		items.sigma = {
 		    events: {keyup: keyAnalysis},
@@ -2387,7 +2394,7 @@ JS9.Menubar.createMenus = function(){
 	    return {
                 callback: function(key){
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var a, did, ii, tplugin;
+			var a, s, did, ii, tplugin;
 			var udisp = val;
 			var uim = udisp.image;
 			// make sure display is still valid
@@ -2413,6 +2420,17 @@ JS9.Menubar.createMenus = function(){
 			    case "radprof":
 				JS9.RadialProfile("$sregions", "$bregions",
 						  {display: udisp.id});
+				break;
+			    case "cnts3d":
+				s = JS9.globalOpts.plot3d.cube;
+				JS9.CountsInRegions("$sregions", "$bregions",
+						    {lightwin: true,
+						    cmdswitches: "-c " + s},
+						    {display: udisp.id});
+				break;
+			    case "plot3d":
+				JS9.Plot3D("$sregions", "$bregions", null,
+					   {display: udisp.id});
 				break;
 			    case "dpath":
 				// call this once window is loaded
