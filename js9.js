@@ -1563,6 +1563,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	oltm1_1 = this.raw.header.LTM1_1 || 1;
 	owcssys = this.params.wcssys;
 	owcsunits = this.params.wcsunits;
+	this.freeWCS();
     }
     // initialize raws array?
     this.raws = this.raws || [];
@@ -3428,6 +3429,13 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    });
 	    break;
 	case "virtualFile":
+	    // cleanup previous FITS file support, if necessary
+	    // do this before we handle the new FITS file, or else
+	    // we end up with a memory leak in the emscripten heap!
+	    if( JS9.fits.cleanupFITSFile &&
+		that.raw.hdu && that.raw.hdu.fits ){
+		JS9.fits.cleanupFITSFile(that.raw.hdu.fits, false);
+	    }
 	    // extract image section from current virtual file
 	    JS9.getFITSImage(hdu.fits, hdu, opts, function(hdu){
 		disp(hdu, opts);
