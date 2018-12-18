@@ -55,8 +55,11 @@ var secureOpts = {
 // default options ... change as necessary in prefsfile
 var globalOpts = {
     helperPort:       2718,
+    // listen on all interfaces
     helperHost:       "0.0.0.0",
-    helperOpts:       {"maxHttpBufferSize": 10E9},
+    // we need a large buffer for returning arbitrary analysis results
+    // default ping timeout is too short, and Chrome gets disconnect errors
+    helperOpts:       {maxHttpBufferSize: 10E9, pingTimeout: 30000},
     cmd:              "js9helper",
     analysisPlugins:  "analysis-plugins",
     analysisWrappers: "analysis-wrappers",
