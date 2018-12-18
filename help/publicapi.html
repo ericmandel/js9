@@ -529,9 +529,9 @@ refreshed periodically. The first <b>input</b> argument can be one of
 the following:
 <ul>
 <li> a text string specifying a new URL to retrieve
-<li> a javascript array containing raw data
-<li> a typed array containing raw data
-<li> a blob containing a FITS file
+<li> a javascript array containing raw image data
+<li> a typed array containing raw image data
+<li> a blob containing a FITS image file
 <li> an object containing a required <b>image</b> property and any of the
 following optional properties: 
 <ul>
@@ -571,7 +571,7 @@ can change these values on the fly, and JS9 will process the new data
 correctly.  Also, if you do not pass <b>dmin</b> or <b>dmax</b>, they
 will be calculated by JS9.
 <p>
-Note that you can pass a <b>blob</b> containing a complete FITS file to this
+Note that you can pass a <b>blob</b> containing a complete FITS image to this
 routine. The blob will be passed to the underlying FITS-handler before
 being displayed. Thus, processing time is slightly greater than if you just
 pass the image data directly.
