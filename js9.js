@@ -13624,6 +13624,12 @@ JS9.Regions.initConfigForm = function(obj){
 	}
 	return(String(val));
     };
+    var replaceNewline = function(s){
+	var t;
+	s = s || "";
+	t = s.replace(/\n/g, "\\n");
+	return t;
+    };
     // get alternate wcssys, if necessary
     altwcssys = $(form).data("wcssys");
     // remove the nodisplay class from this shape's div
@@ -13853,7 +13859,12 @@ JS9.Regions.initConfigForm = function(obj){
 	    break;
 	case "childtext":
 	    if( obj.params.children.length > 0 ){
-		val = obj.params.children[0].obj.text;
+		val = replaceNewline(obj.params.children[0].obj.text);
+	    }
+	    break;
+	case "text":
+	    if( obj.pub[key] !== undefined ){
+		val = replaceNewline(fmt(obj.pub[key]));
 	    }
 	    break;
 	case "id":
@@ -14057,6 +14068,13 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	}
 	return parseFloat(s);
     };
+    var replaceNewline = function(s){
+	var t;
+	var nl = String.fromCharCode(13, 10);
+	s = s || "";
+	t = s.replace(/\\n/g, nl);
+	return t;
+    };
     // set physical to image conversion, if possible
     if( this.lcs && this.lcs.physical ){
 	bin = this.lcs.physical.forward[0][0] || 1;
@@ -14095,7 +14113,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "text":
 	    if( obj.type === "text" ){
 		if( newval(obj, key, val) ){
-		    opts[key] = getval(val);
+		    opts[key] = replaceNewline(getval(val));
 		}
 	    }
 	    break;
@@ -14114,7 +14132,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "childtext":
 	    if( obj.type !== "text" ){
 		if( newval(obj, key, val) ){
-		    opts.text = getval(val);
+		    opts.text = replaceNewline(getval(val));
 		}
 	    }
 	    break;
