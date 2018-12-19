@@ -15091,7 +15091,6 @@ JS9.Crosshair.display = function(im, ipos, evt){
     } else {
 	shift = evt.shiftKey;
     }
-
     // always do arrow crosshair, otherwise:
     // exit if crosshair is not enabled for this image
     // exit if we are not actively tracking the crosshair via shift
@@ -15185,7 +15184,7 @@ JS9.Crosshair.hide = function(im, ipos, evt){
 JS9.Crosshair.create = function(im){
     var opts = JS9.Crosshair.opts.hiddenPts;
     var layername = JS9.Crosshair.LAYERNAME;
-    if( im && !im.crosshair && (im.raw.wcs > 0) ){
+    if( im && !im.crosshair ){
 	// create the crosshair object for this image
 	im.crosshair = {};
 	// create the crosshair, but don't display it yet
