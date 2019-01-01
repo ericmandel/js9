@@ -6,7 +6,7 @@
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
  * Contact: saord@cfa.harvard.edu
  *
- * Copyright (c) 2012 - 2018 Smithsonian Astrophysical Observatory
+ * Copyright (c) 2012 - 2019 Smithsonian Astrophysical Observatory
  *
  *
  */
@@ -29,6 +29,7 @@ var http = require('http'),
     uuidv4   = require('uuid/v4'),
     rmdir = require('rimraf');
 
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes
 // https://tc39.github.io/ecma262/#sec-array.prototype.includes
 if (!Array.prototype.includes) {
   Object.defineProperty(Array.prototype, 'includes', {
