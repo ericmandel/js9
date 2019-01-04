@@ -567,6 +567,7 @@ var getDataPath = function(s){
 var getFilePath = function(file, dataPath, myenv){
     var i, s, s1, froot1, fext, parr;
     var from, to;
+    clog("getFilePath", file)
     // eslint-disable-next-line no-unused-vars
     var repl = function(m, t, o){
 	if( myenv && myenv[t] ){
@@ -618,6 +619,7 @@ var getFilePath = function(file, dataPath, myenv){
 	    }
 	    // found the file add extension to full path
 	    s1 += fext;
+        clog("getFilePath found", s1)
 	    return hide(s1);
 	}
     }
