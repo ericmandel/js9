@@ -242,6 +242,18 @@ and background:
 The <a href="../js9sizes.html">JS9 Size Demo</a> displays different button styles.
 
 <p>
+Normally, JS9 will initialize itself automatically once the page is
+loaded and ready: internally, jQuery $(document).ready() calls
+<b>JS9.init()</b>. If you need to delay JS9 initialization (e.g., you
+are using a platform that fires $(document).ready() before the
+platform is really ready), you can set <b>data-js9init</b> to "false"
+on any JS9 div. In this case, you must call the init routine manually:
+<pre>
+  JS9.init();
+</pre>
+Until you do this, no JS9 div elements will be visible.
+
+<p>
 <h3>Menubar Styles</h3> The default menubar has a style in which all
 of the major menus are shown at the top-level of the menubar. This is
 the <b>classic</b> style. JS9 also supports a <b>mac</b> style

@@ -21366,6 +21366,8 @@ $(document).ready(function(){
 	    $(document).trigger("JS9:ready", {status: "OK"});
 	}
     });
-    // init JS9
-    JS9.init();
+    // init JS9 (unless explicitly specified not to)
+    if( $('div[data-js9init="false"]').length === 0 ){
+	JS9.init();
+    }
 });
