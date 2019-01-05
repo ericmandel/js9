@@ -546,12 +546,13 @@ var getFilePath = function(file, dataPath, myenv){
 	fext = "";
     }
     parr = dataPath.split(":");
-    // absolute paths get tested on their own
+    // everything gets tested relative to the current directory
+    // (we'll use an absolute path to it to help the analysis wrapper)
+    parr.unshift(process.cwd());
+    // absolute paths get tested on their own (BEFORE testing ./absolute/path)
     if( path.isAbsolute(froot1) ){
 	parr.unshift("");
     }
-    // and everything gets tested relative to the current directory
-    parr.unshift(".");
     // check is file is in any of the directories in the path
     for(i=0; i<parr.length; i++){
 	// replace environment variables in path, if possible
