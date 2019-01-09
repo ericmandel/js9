@@ -2063,7 +2063,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	    items.reproject.items.rot = {
 		events: {keyup: keyRotate},
-		name: "using angle in degrees:",
+		name: "by this angle in deg:",
 		type: "text"
 	    };
 	    if( !tim || !tim.raw || !tim.raw.header || !tim.raw.wcsinfo ){

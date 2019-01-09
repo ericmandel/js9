@@ -7401,7 +7401,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	    items.reproject.items.rot = {
 		events: {keyup: keyRotate},
-		name: "using angle in degrees:",
+		name: "by this angle in deg:",
 		type: "text"
 	    };
 	    if( !tim || !tim.raw || !tim.raw.header || !tim.raw.wcsinfo ){
@@ -9847,13 +9847,13 @@ JS9.ScaleLimits.init = function(opts){
 JS9.RegisterPlugin(JS9.ScaleLimits.CLASS, JS9.ScaleLimits.NAME,
 		   JS9.ScaleLimits.init,
 		   {menu: "scale",
-		    menuItem: "Clipping Limits ...",
+		    menuItem: "Scale Controls ...",
 		    onplugindisplay: JS9.ScaleLimits.init,
 		    onsetscale: JS9.ScaleLimits.init,
 		    onimagedisplay: JS9.ScaleLimits.display,
 		    onimageclose: JS9.ScaleLimits.close,
 		    help: "help/scalelimits.html",
-		    winTitle: "Scale Clipping Limits",
+		    winTitle: "Scale Controls",
 		    winDims: [JS9.ScaleLimits.WIDTH, JS9.ScaleLimits.HEIGHT]});
 /*
  * image separate/gather images module (July 26, 2018)

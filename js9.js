@@ -151,6 +151,7 @@ JS9.globalOpts = {
     cloneNewDisplay: true,      // clone size of display, when possible?
     regionConfigSize: "medium", // "small", "medium"
     refreshDragDrop: true,	// refresh on drag/drag and open file?
+    reduceReproject: true,      // allow large reprojection to be reduced?
     reduceMosaic: "js9",        // "js9" or "shrink" ("js9" seems to be faster)
     reduceRegcnts: true,        // reduce image when doing counts in regions?
     plot3d: {cube:"*:*:all", mode:"avg", areaunits:"pixels", color: "green"}, // plot3d options: avg/sum, pixels/arcsecs
@@ -1876,6 +1877,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     // hack: try to figure out obin vs bin for sections
     if( opts.ltm2obin && header.LTM1_1 ){
 	this.binning.obin = header.LTM1_1 / oltm1_1;
+    } else if( opts.shrinkobin ){
+	this.binning.obin = opts.shrinkobin;
     } else if( !oraw ){
 	// otherwise make sure obin matches bin for first load of data
 	this.binning.obin = this.binning.bin;
@@ -2900,7 +2903,7 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 // refresh data for an existing image
 // input obj is a fits object, array, typed array, etc.
 JS9.Image.prototype.refreshImage = function(obj, opts){
-    var s, oxcen, oycen, owidth, oheight, ozoom, doreg;
+    var s, ozoom, olpos, ipos;
     var func;
     // opts can be an object or json
     if( typeof opts === "string" ){
@@ -2931,34 +2934,37 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	// use global onrefresh, if possible
 	opts.onrefresh = JS9.imageOpts.onrefresh;
     }
-    // save section in case it gets reset
-    oxcen = this.rgb.sect.xcen;
-    oycen = this.rgb.sect.ycen;
+    // save section params (in physical coords) in case it gets reset
+    olpos = this.imageToLogicalPos({x: this.rgb.sect.xcen,
+				    y: this.rgb.sect.ycen});
+    // hack to make physical coords work after using mShrinkHdr
+    if( opts.shrinkpos ){
+	olpos.x *= opts.shrinkpos;
+	olpos.y *= opts.shrinkpos;
+    }
     ozoom = this.rgb.sect.zoom;
-    owidth = this.raw.width;
-    oheight = this.raw.height;
     // save old binning
     this.binning.obin = this.binning.bin;
     // generate new data
     this.mkRawDataFromHDU(obj, opts);
-    // if binning changed, we have to update the regions and other shape layers
-    doreg = opts.refreshRegions || (this.binning.obin !== this.binning.bin);
-    // restore section if dims have not changed
-    if( !opts.resetSection &&
-	(this.raw.width === owidth) && (this.raw.height === oheight) ){
-	this.mkSection(oxcen, oycen, ozoom);
-    } else {
-	// reset section (in which case we update regions)
+    // reset or restore section?
+    if( opts.resetSection ){
+	// reset section
 	this.mkSection();
 	this.mkSection(ozoom);
-        doreg = true;
+    } else {
+	// restore section using saved coords
+	ipos = this.logicalToImagePos({x: olpos.x, y: olpos.y});
+	this.mkSection(ipos.x, ipos.y, ozoom);
     }
     // display new image data with old section
     this.displayImage("colors", opts);
     // notify the helper
     this.notifyHelper();
     // update shape layers if necessary
-    if( doreg ){
+    if( opts.refreshRegions                      ||
+	opts.resetSection                        ||
+	(this.binning.obin !== this.binning.bin) ){
 	this.refreshLayers();
 	// update region values
 	this.updateShapes("regions", "all", "binning");
@@ -6724,12 +6730,17 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 // creates a new raw data layer ("rotate")
 // angle is in degrees (since CROTA2 is in degrees)
 JS9.Image.prototype.rotateData = function(angle, opts){
-    var oheader, nheader;
+    var raw, oheader, nheader;
     var ocdelt1=0, ocdelt2=0;
     var ncrot, nrad, sinrot, cosrot;
     // sanity checks
-    if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
-	JS9.error("no WCS info available for rotation");
+    if( !this.raws || !this.raws[0] ){
+	JS9.error("no raw data for reprojection");
+    }
+    // go back to original data for reprojection
+    raw = this.raws[0];
+    if( !raw.header || !raw.wcsinfo ){
+	JS9.error("no WCS info available for reprojection");
     }
     // save this routine so it can be reconstituted in a restored session
     this.xeqStash("rotateData", Array.prototype.slice.call(arguments));
@@ -6743,19 +6754,23 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     // but make sure we can set the id
     opts.rawid = "rotate";
     // rotate current (e.g. reprojected data)
-    opts.oraw = "current";
+    opts.oraw = "current0";
+    // maintain current section, unless specified otherwise
+    if( opts.resetSection !== true ){
+	opts.resetSection = false;
+    }
     // old and new header
-    oheader = this.raw.header;
+    oheader = raw.header;
     nheader = $.extend(true, {}, oheader);
     // restrict size of reprojection to raw data size
-    if( this.raw.width && this.raw.height ){
-	nheader.NAXIS1 = this.raw.width;
-	nheader.NAXIS2 = this.raw.height;
+    if( raw.width && raw.height ){
+	nheader.NAXIS1 = raw.width;
+	nheader.NAXIS2 = raw.height;
     }
     // normalized values from wcslib
-    if( this.raw.wcsinfo ){
-	ocdelt1 = this.raw.wcsinfo.cdelt1 || 0;
-	ocdelt2 = this.raw.wcsinfo.cdelt2 || 0;
+    if( raw.wcsinfo ){
+	ocdelt1 = raw.wcsinfo.cdelt1 || 0;
+	ocdelt2 = raw.wcsinfo.cdelt2 || 0;
     }
     // string directives instead of a numeric angle
     if( typeof angle === "string" ){
@@ -6783,8 +6798,8 @@ JS9.Image.prototype.rotateData = function(angle, opts){
 	nheader.CD2_2 =  ocdelt2 * cosrot;
     }
     // save ptype if possible
-    if( this.raw.wcsinfo ){
-	nheader.ptype = this.raw.wcsinfo.ptype;
+    if( raw.wcsinfo ){
+	nheader.ptype = raw.wcsinfo.ptype;
     }
     // rotate by reprojecting the data
     return this.reprojectData(nheader, opts);
@@ -6801,7 +6816,8 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     var wcsheader, wcsstr, oheader, nheader, theader;
     var arr, ivfile, ovfile, rstr, key;
     var tab, tx1, tx2, ty1, ty2, s;
-    var n, avfile, earr, cmdswitches;
+    var n, raw, avfile, earr, cmdswitches;
+    var i, tid, traw;
     var wcsexp = /SIMPLE|BITPIX|NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
     var ptypeexp = /TAN|SIN|ZEA|STG|ARC/;
     var addwcsinfo = function(header, wcsinfo){
@@ -6835,13 +6851,18 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     if( !JS9.reproject || !wcsim || this === wcsim ){
 	return;
     }
-    if( !this.raw || !this.raw.header || !this.raw.wcsinfo ){
+    if( !this.raws || !this.raws[0] ){
+	JS9.error("no raw data for reprojection");
+    }
+    // go back to original data for reprojection
+    raw = this.raws[0];
+    if( !raw.header || !raw.wcsinfo ){
 	JS9.error("no WCS info available for reprojection");
     }
     // opts is optional
     opts = opts || {};
     // make copy of input header, removing wcs keywords
-    oheader = $.extend(true, {}, this.raw.header);
+    oheader = $.extend(true, {}, raw.header);
     for(key in oheader){
 	if( oheader.hasOwnProperty(key) ){
 	    if( wcsexp.test(key) ){
@@ -6880,13 +6901,19 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	JS9.vfile(wvfile, wcsstr);
 	// keep within the limits of current memory constraints, or die
 	if((wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.REPROJDIM*JS9.REPROJDIM)){
-	    if( opts.shrink !== false ){
+	    if( JS9.globalOpts.reduceReproject && opts.shrink !== false ){
 		// shrink header, which will shrink the output FITS file
 		nwvfile = "shrink_" + wvfile;
 		rstr = JS9.shrinkhdr(JS9.REPROJDIM, wvfile, nwvfile);
 		if( rstr.search(/\[struct stat="OK"/) >= 0 ){
 		    Astroem.vunlink(wvfile);
 		    wvfile = nwvfile;
+		    // save shrink factor for later hacks ...
+		    // (overcome some problems with mShrinkHdr)
+		    opts.shrinkobin =
+                    JS9.REPROJDIM / Math.max(wcsheader.NAXIS1,wcsheader.NAXIS2);
+		    opts.shrinkpos =
+                    JS9.REPROJDIM / Math.max(raw.header.NAXIS1,raw.header.NAXIS2);
 		}
 	    } else {
 		JS9.error("without allowing shrinking, the max image size for wcs reprojection is " + JS9.REPROJDIM  + " * " + JS9.REPROJDIM);
@@ -6899,8 +6926,8 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     // if not, try to make an alternate WCS header amenable to mProjectPP
     try{
 	// try to change input WCS to a sys usable by mProjectPP
-	if( !ptypeexp.test(this.raw.wcsinfo.ptype) ){
-	    theader = addwcsinfo(this.raw.header, this.raw.wcsinfo);
+	if( !ptypeexp.test(raw.wcsinfo.ptype) ){
+	    theader = addwcsinfo(raw.header, raw.wcsinfo);
 	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
 	    JS9.vfile(owvfile, JS9.raw2FITS(theader, {addcr: true}));
 	    awvfile = "awcs_" + JS9.uniqueID() + ".txt";
@@ -6938,15 +6965,15 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     }
     catch(ignore){}
     // get reference to existing raw data file (or create one)
-    if( this.raw.hdu && this.raw.hdu.fits.vfile ){
+    if( raw.hdu && raw.hdu.fits.vfile ){
 	// input file name
-	ivfile = this.raw.hdu.fits.vfile;
+	ivfile = raw.hdu.fits.vfile;
 	// add extension name or number
-	if( this.raw.hdu.fits.extname ){
-	    ivfile += sprintf("[%s]", this.raw.hdu.fits.extname);
-	} else if( this.raw.hdu.fits.extnum &&
-		   (this.raw.hdu.fits.extnum > 0) ){
-	    ivfile += sprintf("[%s]", this.raw.hdu.fits.extnum);
+	if( raw.hdu.fits.extname ){
+	    ivfile += sprintf("[%s]", raw.hdu.fits.extname);
+	} else if( raw.hdu.fits.extnum &&
+		   (raw.hdu.fits.extnum > 0) ){
+	    ivfile += sprintf("[%s]", raw.hdu.fits.extnum);
 	}
     } else {
 	// input file name
@@ -6961,14 +6988,24 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	.replace(/\.fz$/i, "")
 	.replace(/\.gz$/i, "");
     ovfile = "reproj_" + JS9.uniqueID() + "_" + s;
+    // remove previous vfile for this reprojection layer, if necessary
+    tid = opts.rawid || "reproject";
+    for(i=0; i<this.raws.length; i++){
+	traw = this.raws[i];
+	if( (traw.id === tid) &&
+	    traw.hdu && traw.hdu.fits && traw.hdu.fits.vfile ){
+	    Astroem.vunlink(traw.hdu.fits.vfile);
+	    break;
+	}
+    }
     // for tables, we probably have to bin it by adding a bin specification
     // also need to pass the HDU name. For now, "EVENTS" is all we know ...
-    if( this.imtab === "table" ){
+    if( raw.hdu && raw.hdu.imtab === "table" && raw.hdu.table ){
 	if( !ivfile.match(/\[bin /) ){
 	    if( !ivfile.match(/\[EVENTS\]/) ){
 		ivfile += "[EVENTS]";
 	    }
-	    tab = this.raw.hdu.table;
+	    tab = raw.hdu.table;
 	    tx1 = Math.floor(tab.xcen - (tab.xdim/2) + 1);
 	    tx2 = Math.floor(tab.xcen + (tab.xdim/2));
 	    ty1 = Math.floor(tab.ycen - (tab.ydim/2) + 1);
@@ -7076,7 +7113,10 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	var defaultReprojHandler = function(hdu){
 	    topts = topts || {};
 	    topts.refreshRegions = true;
-	    topts.resetSection = true;
+	    // reset section, unless specified otherwise
+	    if( opts.resetSection !== false ){
+		topts.resetSection = true;
+	    }
 	    that.refreshImage(hdu, topts);
 	};
 	// opts is optional
