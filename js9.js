@@ -6905,6 +6905,9 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 		// shrink header, which will shrink the output FITS file
 		nwvfile = "shrink_" + wvfile;
 		rstr = JS9.shrinkhdr(JS9.REPROJDIM, wvfile, nwvfile);
+		if( JS9.DEBUG > 1 ){
+		    JS9.log("shrinkHdr: %s", JS9.REPROJDIM);
+		}
 		if( rstr.search(/\[struct stat="OK"/) >= 0 ){
 		    Astroem.vunlink(wvfile);
 		    wvfile = nwvfile;

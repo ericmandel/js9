@@ -465,6 +465,10 @@ int checkHdr(char *infile, int hdrflag, int hdu)
 
    checkWCS(hdrCheck_wcs, 0);
 
+   if( hdrCheck_wcs != (struct WorldCoor *)NULL ){
+     wcsfree(hdrCheck_wcs);
+   }
+
    if(errorCount > 0)
    {
       fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"%d Errors\"]\n", 

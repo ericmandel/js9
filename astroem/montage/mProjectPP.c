@@ -85,7 +85,7 @@ char   weight_file  [MAXSTR];
 char   altout       [MAXSTR];
 char   altin        [MAXSTR];
 
-char  *input_header;
+char  *input_header=NULL;
 char   template_header  [HDRLEN];
 char   alt_input_header [HDRLEN];
 char   alt_output_header[HDRLEN];
@@ -157,8 +157,8 @@ struct Ipos
    int    offscl;
 };
 
-struct Ipos *topl, *bottoml;
-struct Ipos *topr, *bottomr;
+struct Ipos *topl=NULL, *bottoml=NULL;
+struct Ipos *topr=NULL, *bottomr=NULL;
 struct Ipos *postmp;
 
 
@@ -218,7 +218,7 @@ int mProjectPP(int argc, char **argv)
    int       istart, ilength;
    int       jstart, jlength;
    int       offscl, offscl1, use, border, bordertype;
-   double    *buffer;
+   double    *buffer=NULL;
    double    *weights;
    double    datamin, datamax;
    double    areamin, areamax;
@@ -1594,7 +1594,11 @@ int mProjectPP(int argc, char **argv)
       ++fpixel[1];
    }
 
-   free(data[0]);
+   /* free(data[0]); */
+   for(j=0; j<jlength; j++){
+     free(data[j]);
+   }
+   free(data);
 
    if(debug >= 1)
    {
@@ -1607,6 +1611,7 @@ int mProjectPP(int argc, char **argv)
    /* Write the area data */
    /***********************/
 
+#ifndef  __EMSCRIPTEN__
    fpixel[0] = 1;
    fpixel[1] = 1;
    nelements = imax - imin + 1;
@@ -1619,15 +1624,19 @@ int mProjectPP(int argc, char **argv)
 
       ++fpixel[1];
    }
+#endif
 
-   free(area[0]);
+   /* free(area[0]); */
+   for(j=0; j<jlength; j++){
+     free(area[j]);
+   }
+   free(area);
 
    if(debug >= 1)
    {
       printf("Data written to FITS area image\n\n"); 
       fflush(stdout);
    }
-
 
    /***********************/
    /* Close the FITS file */
@@ -1649,6 +1658,23 @@ int mProjectPP(int argc, char **argv)
    {
       printf("FITS area image finalized\n\n"); 
       fflush(stdout);
+   }
+
+
+   /* free up allocated space */
+   if( topl ) free(topl);
+   if( bottoml ) free(bottoml);
+   if( topr ) free(topr);
+   if( bottomr ) free(bottomr);
+   if( buffer ) free(buffer);
+   if( input.wcs != (struct WorldCoor *)NULL ){
+     wcsfree(input.wcs);
+   }
+   if( output.wcs != (struct WorldCoor *)NULL ){
+     wcsfree(output.wcs);
+   }
+   if( input_header != NULL ){
+     free(input_header);
    }
 
    time(&currtime);
