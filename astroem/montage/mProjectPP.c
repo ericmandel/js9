@@ -883,7 +883,7 @@ int mProjectPP(int argc, char **argv)
 
    if(debug >= 1)
    {
-      printf("\n%u bytes allocated for image pixels\n",
+      printf("\n%lu bytes allocated for image pixels\n",
          ilength * jlength * sizeof(double));
       fflush(stdout);
    }
@@ -931,7 +931,7 @@ int mProjectPP(int argc, char **argv)
 
    if(debug >= 1)
    {
-      printf("%u bytes allocated for pixel areas\n",
+      printf("%lu bytes allocated for pixel areas\n",
          ilength * jlength * sizeof(double));
       fflush(stdout);
    }
