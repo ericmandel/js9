@@ -6991,14 +6991,16 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	.replace(/\.fz$/i, "")
 	.replace(/\.gz$/i, "");
     ovfile = "reproj_" + JS9.uniqueID() + "_" + s;
-    // remove previous vfile for this reprojection layer, if necessary
-    tid = opts.rawid || "reproject";
-    for(i=0; i<this.raws.length; i++){
-	traw = this.raws[i];
-	if( (traw.id === tid) &&
-	    traw.hdu && traw.hdu.fits && traw.hdu.fits.vfile ){
-	    Astroem.vunlink(traw.hdu.fits.vfile);
-	    break;
+    // remove previous vfile for this reprojection layer, if possible
+    if( JS9.fits.cleanupFITSFile ){
+	tid = opts.rawid || "reproject";
+	for(i=0; i<this.raws.length; i++){
+	    traw = this.raws[i];
+	    if( (traw.id === tid) &&
+		traw.hdu && traw.hdu.fits && traw.hdu.fits.vfile ){
+		JS9.fits.cleanupFITSFile(traw.hdu.fits, true);
+		break;
+	    }
 	}
     }
     // for tables, we probably have to bin it by adding a bin specification
