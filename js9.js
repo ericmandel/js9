@@ -60,7 +60,6 @@ JS9.RESIZEDIST = 20;		// size of rectangle defining resize handle
 JS9.RESIZEFUDGE = 5;            // fudge for webkit resize problems
 JS9.RAWID0 = "raw0";		// default raw id
 JS9.RAWIDX = "alt";		// default "alternate" raw id
-JS9.REPROJDIM = 2048;		// max dim for reproj before we shrink image
 JS9.IDFMT = "  (%s)";           // format for light window id
 JS9.MINZOOM = 0.125;		// min zoom using scroll wheel
 JS9.MAXZOOM = 32.0;		// max zoom using scroll wheel
@@ -131,7 +130,7 @@ JS9.globalOpts = {
     xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     table: {xdim: 2048, ydim: 2048, bin: 1},// image section size to extract from table
-    image: {xdim: 2048, ydim: 2048, bin: 1},// image section size (0 for unlimited)
+    image: {xdim: 4096, ydim: 4096, bin: 1},// image section size (0 for unlimited)
     binMode: "s",             // "s" (sum) or "a" (average) pixels when binning
     clearImageMemory: "never",  // rm vfile: always|never|auto|noExt|noCube|size>x Mb
     helperProtocol: location.protocol, // http: or https:
@@ -151,7 +150,6 @@ JS9.globalOpts = {
     cloneNewDisplay: true,      // clone size of display, when possible?
     regionConfigSize: "medium", // "small", "medium"
     refreshDragDrop: true,	// refresh on drag/drag and open file?
-    reduceReproject: true,      // allow large reprojection to be reduced?
     reduceMosaic: "js9",        // "js9" or "shrink" ("js9" seems to be faster)
     reduceRegcnts: true,        // reduce image when doing counts in regions?
     plot3d: {cube:"*:*:all", mode:"avg", areaunits:"pixels", color: "green"}, // plot3d options: avg/sum, pixels/arcsecs
@@ -499,9 +497,8 @@ if( window.hasOwnProperty("Jupyter") ){
 // also force user to turn on crosshair, since it works with one finger
 if( JS9.BROWSER[3] ){
     JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 350000000);
-    JS9.globalOpts.image.xdim = 2048 * 2;
-    JS9.globalOpts.image.ydim = 2048 * 2;
-    JS9.REPROJDIM = 1024;
+    JS9.globalOpts.image.xdim = 2048;
+    JS9.globalOpts.image.ydim = 2048;
     JS9.imageOpts.crosshair = false;
 }
 
@@ -1877,8 +1874,6 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     // hack: try to figure out obin vs bin for sections
     if( opts.ltm2obin && header.LTM1_1 ){
 	this.binning.obin = header.LTM1_1 / oltm1_1;
-    } else if( opts.shrinkobin ){
-	this.binning.obin = opts.shrinkobin;
     } else if( !oraw ){
 	// otherwise make sure obin matches bin for first load of data
 	this.binning.obin = this.binning.bin;
@@ -2937,11 +2932,6 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     // save section params (in physical coords) in case it gets reset
     olpos = this.imageToLogicalPos({x: this.rgb.sect.xcen,
 				    y: this.rgb.sect.ycen});
-    // hack to make physical coords work after using mShrinkHdr
-    if( opts.shrinkpos ){
-	olpos.x *= opts.shrinkpos;
-	olpos.y *= opts.shrinkpos;
-    }
     ozoom = this.rgb.sect.zoom;
     // save old binning
     this.binning.obin = this.binning.bin;
@@ -6812,7 +6802,7 @@ JS9.Image.prototype.rotateData = function(angle, opts){
 JS9.Image.prototype.reproject = function(wcsim, opts){
     var twcs = {};
     var rcomplete = false;
-    var awvfile, awvfile2, wvfile, owvfile, nwvfile;
+    var awvfile, awvfile2, wvfile, owvfile;
     var wcsheader, wcsstr, oheader, nheader, theader;
     var arr, ivfile, ovfile, rstr, key;
     var tab, tx1, tx2, ty1, ty2, s;
@@ -6900,27 +6890,8 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	wvfile = "wcs_" + JS9.uniqueID() + ".txt";
 	JS9.vfile(wvfile, wcsstr);
 	// keep within the limits of current memory constraints, or die
-	if((wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.REPROJDIM*JS9.REPROJDIM)){
-	    if( JS9.globalOpts.reduceReproject && opts.shrink !== false ){
-		// shrink header, which will shrink the output FITS file
-		nwvfile = "shrink_" + wvfile;
-		rstr = JS9.shrinkhdr(JS9.REPROJDIM, wvfile, nwvfile);
-		if( JS9.DEBUG > 1 ){
-		    JS9.log("shrinkHdr: %s", JS9.REPROJDIM);
-		}
-		if( rstr.search(/\[struct stat="OK"/) >= 0 ){
-		    Astroem.vunlink(wvfile);
-		    wvfile = nwvfile;
-		    // save shrink factor for later hacks ...
-		    // (overcome some problems with mShrinkHdr)
-		    opts.shrinkobin =
-                    JS9.REPROJDIM / Math.max(wcsheader.NAXIS1,wcsheader.NAXIS2);
-		    opts.shrinkpos =
-                    JS9.REPROJDIM / Math.max(raw.header.NAXIS1,raw.header.NAXIS2);
-		}
-	    } else {
-		JS9.error("without allowing shrinking, the max image size for wcs reprojection is " + JS9.REPROJDIM  + " * " + JS9.REPROJDIM);
-	    }
+	if((wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.globalOpts.image.xdim*JS9.globalOpts.image.ydim)){
+	    JS9.error("the max image size for wcs reprojection is " + JS9.globalOpts.image.xdim  + " * " + JS9.globalOpts.image.ydim);
 	}
     } else {
 	wvfile = wcsim;

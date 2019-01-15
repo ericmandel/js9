@@ -1438,12 +1438,14 @@ int mProjectPP(int argc, char **argv)
    remove(output_file);               
    remove(area_file);               
 
+
    if(fits_create_file(&output.fptr, output_file, &status)) 
       printFitsError(status);           
 
+#ifndef  __EMSCRIPTEN__
    if(fits_create_file(&output_area.fptr, area_file, &status)) 
       printFitsError(status);           
-
+#endif
 
    /*********************************************************/
    /* Create the FITS image.  All the required keywords are */
@@ -1459,6 +1461,7 @@ int mProjectPP(int argc, char **argv)
       fflush(stdout);
    }
 
+#ifndef  __EMSCRIPTEN__
    if (fits_create_img(output_area.fptr, bitpix, naxis, output_area.naxes, &status))
       printFitsError(status);          
 
@@ -1467,7 +1470,7 @@ int mProjectPP(int argc, char **argv)
       printf("FITS area image created (not yet populated)\n"); 
       fflush(stdout);
    }
-
+#endif
 
    /****************************************/
    /* Set FITS header from a template file */
@@ -1482,6 +1485,7 @@ int mProjectPP(int argc, char **argv)
       fflush(stdout);
    }
 
+#ifndef  __EMSCRIPTEN__
    if(fits_write_key_template(output_area.fptr, template_file, &status))
       printFitsError(status);           
 
@@ -1490,7 +1494,7 @@ int mProjectPP(int argc, char **argv)
       printf("Template keywords written to FITS area image\n\n"); 
       fflush(stdout);
    }
-
+#endif
 
    /***************************/
    /* Modify BITPIX to be -64 */
@@ -1500,10 +1504,11 @@ int mProjectPP(int argc, char **argv)
                                   (char *)NULL, &status))
       printFitsError(status);           
 
+#ifndef  __EMSCRIPTEN__
    if(fits_update_key_lng(output_area.fptr, "BITPIX", -64,
                                   (char *)NULL, &status))
       printFitsError(status);           
-
+#endif
 
    /***************************************************/
    /* Update NAXIS, NAXIS1, NAXIS2, CRPIX1 and CRPIX2 */
@@ -1541,6 +1546,7 @@ int mProjectPP(int argc, char **argv)
 
 
 
+#ifndef  __EMSCRIPTEN__
    if(fits_update_key_lng(output_area.fptr, "NAXIS", 2,
                                   (char *)NULL, &status))
       printFitsError(status);           
@@ -1575,7 +1581,7 @@ int mProjectPP(int argc, char **argv)
       printf("Template keywords BITPIX, CRPIX, and NAXIS updated\n");
       fflush(stdout);
    }
-
+#endif
 
    /************************/
    /* Write the image data */
@@ -1595,10 +1601,6 @@ int mProjectPP(int argc, char **argv)
    }
 
    /* free(data[0]); */
-   for(j=0; j<jlength; j++){
-     free(data[j]);
-   }
-   free(data);
 
    if(debug >= 1)
    {
@@ -1627,10 +1629,6 @@ int mProjectPP(int argc, char **argv)
 #endif
 
    /* free(area[0]); */
-   for(j=0; j<jlength; j++){
-     free(area[j]);
-   }
-   free(area);
 
    if(debug >= 1)
    {
@@ -1651,6 +1649,7 @@ int mProjectPP(int argc, char **argv)
       fflush(stdout);
    }
 
+#ifndef  __EMSCRIPTEN__
    if(fits_close_file(output_area.fptr, &status))
       printFitsError(status);           
 
@@ -1659,9 +1658,17 @@ int mProjectPP(int argc, char **argv)
       printf("FITS area image finalized\n\n"); 
       fflush(stdout);
    }
-
+#endif
 
    /* free up allocated space */
+   for(j=0; j<jlength; j++){
+     free(data[j]);
+   }
+   free(data);
+   for(j=0; j<jlength; j++){
+     free(area[j]);
+   }
+   free(area);
    if( topl ) free(topl);
    if( bottoml ) free(bottoml);
    if( topr ) free(topr);
