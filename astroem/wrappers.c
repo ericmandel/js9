@@ -20,6 +20,8 @@
 #include "strtod.h"
 #include "cdl.h"
 
+#include <emscripten.h>
+
 #define PI		3.141592653589793238462643
 #define DEG2RAD(a)	((PI/180.0)*a)
 #define RAD2DEG(a)	((180.0/PI)*a)
@@ -662,6 +664,7 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
   char file0[SZ_LINE];
   char file1[SZ_LINE];
   char file2[SZ_LINE];
+  char temp2[SZ_LINE];
   char file3[SZ_LINE];
   args[i++] = "mProjectPP";
   if( cmdswitches && *cmdswitches ){
@@ -682,8 +685,9 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
   args[i++] = file0;
   snprintf(file1, SZ_LINE-1, "%s%s", ROOTDIR, iname);
   args[i++] = file1;
+  snprintf(temp2, SZ_LINE-1, "%sreproj_%d.fits", ROOTDIR, nstatus++);
+  args[i++] = temp2;
   snprintf(file2, SZ_LINE-1, "%s%s", ROOTDIR, oname);
-  args[i++] = file2;
   snprintf(file3, SZ_LINE-1, "%s%s", ROOTDIR, wname);
   args[i++] = file3;
   /* call the low-level routine, guarding against exit() calls */
@@ -691,6 +695,13 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
     /* make the low-level reprojection call */
     mProjectPP(i, args);
   }
+  // copy temp file to output file:
+  // Emscripten has created the temp file as a huge JS array,
+  // and we are converting it back to a smaller typed array ...
+  EM_ASM({
+      FS.writeFile(UTF8ToString($1), FS.readFile(UTF8ToString($0)));
+      FS.unlink(UTF8ToString($0));
+  }, temp2, file2);
   /* look for a return value */
   if( filecontents(file0, rstr, SZ_LINE) >= 0 ){
     unlink(file0);
