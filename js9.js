@@ -17109,6 +17109,8 @@ JS9.raw2FITS = function(raw, opts){
 	gots[name] = true;
 	return ncard;
     };
+    // basically, we are adding wcs keywords that might have been placed in
+    // the header object when a section was generated (see mkRawDataFromHDU)
     var addExtras = function(t, raw, opts){
 	var header = raw.header;
 	if( header.CRPIX1 && !gots.CRPIX1 ){
@@ -17201,6 +17203,8 @@ JS9.raw2FITS = function(raw, opts){
         }
 	return t;
     };
+    // basically, we are updating wcs keywords that might have been changed in
+    // the header object when a section was generated (see mkRawDataFromHDU)
     var processCard = function(t, card, raw, opts){
 	var header = raw.header;
 	if( card.match(/^XTENSION/) && i === 0 && opts.simple ){
