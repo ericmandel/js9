@@ -17077,27 +17077,198 @@ JS9.cardpars = function(card){
 
 // convert obj to FITS-style string
 JS9.raw2FITS = function(raw, opts){
-    var i, obj, key, val, card, ncard;
+    var i, obj, key, val, card, ncard, dtype;
+    var gots = {};
     var hasend=false;
     var t="";
-    var fixparam = function(card, name, val, comm){
-	var s, oval, regexp;
-	var ncard = card;
+    var addCard = function(name, val, comm, dtype){
+	var s, ncard, fmt;
 	if( name === "XTENSION" && !val ){
 	    ncard = sprintf("%s  = %20s / %-47s",
 			    "SIMPLE",
 			    "T",
 			    "file does conform to FITS standard");
-
 	} else {
-	    regexp = new RegExp(name +  "*= *(-?[0-9][0-9]*) *");
-	    s = card.replace(regexp, "$1");
-	    oval = parseInt(s, 10);
-	    if( oval !== val ){
-		ncard = sprintf("%-8s= %20s / %-47s", name, val, comm||"");
+	    comm = comm || "";
+	    switch(dtype){
+	    case "b":
+		ncard = sprintf("%-8s= %20s / %-47s", name, val, comm);
+		break;
+	    case "i":
+	    case "f":
+		ncard = sprintf("%-8s= %20s / %-47s", name, val, comm);
+		break;
+	    case "s":
+		val = "'" + val + "'";
+		s = sprintf("%-8s= %-20s / ", name, val);
+		fmt = "%s%-" + String(80 - s.length) + "s";
+		ncard = sprintf(fmt, s, comm);
+		break;
 	    }
 	}
+	gots[name] = true;
 	return ncard;
+    };
+    var addExtras = function(t, raw, opts){
+	var header = raw.header;
+	if( header.CRPIX1 && !gots.CRPIX1 ){
+	    t += addCard("CRPIX1", header.CRPIX1, "reference point", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CRPIX2 && !gots.CRPIX2 ){
+	    t += addCard("CRPIX2", header.CRPIX2, "reference point", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CRVAL1 && !gots.CRVAL1 ){
+	    t += addCard("CRVAL1", header.CRVAL1, "wcs value at ref. point", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CRVAL2 && !gots.CRVAL2 ){
+	    t += addCard("CRVAL2", header.CRVAL2, "wcs value at ref. point", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CTYPE1 && !gots.CTYPE1 ){
+	    t += addCard("CTYPE1", header.CTYPE1, "type of coord axis", "s");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CTYPE2 && !gots.CTYPE2 ){
+	    t += addCard("CTYPE2", header.CTYPE2, "type of coord axis", "s");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CUNIT1 && !gots.CUNIT1 ){
+	    t += addCard("CUNIT1", header.CUNIT1, "phys units of CRVAL", "s");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CUNIT2 && !gots.CUNIT2 ){
+	    t += addCard("CUNIT2", header.CUNIT2, "phys units of CRVAL", "s");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CDELT1 && !gots.CDELT1 ){
+	    t += addCard("CDELT1", header.CDELT1, "degrees/pixel", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CDELT2 && !gots.CDELT2 ){
+	    t += addCard("CDELT2", header.CDELT2, "degrees/pixel", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CROTA1 && !gots.CROTA1 ){
+	    t += addCard("CROTA1", header.CROTA1, "rotation angle", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CROTA2 && !gots.CROTA2 ){
+	    t += addCard("CROTA2", header.CROTA2, "rotation angle", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CD1_1 && !gots.CD1_1 ){
+	    t += addCard("CD1_1", header.CD1_1, "wcs matrix value", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CD1_2 && !gots.CD1_2 ){
+	    t += addCard("CD1_2", header.CD1_2, "wcs matrix value", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CD2_1 && !gots.CD2_1 ){
+	    t += addCard("CD2_1", header.CD2_1, "wcs matrix value", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.CD2_2 && !gots.CD2_2 ){
+	    t += addCard("CD2_2", header.CD2_2, "wcs matrix value", "f");
+	    if( opts.addcr ){ t += "\n"; }
+        }
+	if( header.LTV1 && !gots.LTV1 ){
+	    t += addCard("LTV1", header.LTV1, "IRAF ref. point", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.LTV2 && !gots.LTV2 ){
+	    t += addCard("LTV2", header.LTV2, "IRAF ref. point", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.LTM1_1 && !gots.LTM1_1 ){
+	    t += addCard("LTM1_1", header.LTM1_1, "IRAF matrix value", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.LTM1_2 && !gots.LTM1_2 ){
+	    t += addCard("LTM1_2", header.LTM1_2, "IRAF matrix value", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.LTM2_1 && !gots.LTM2_1 ){
+	    t += addCard("LTM2_1", header.LTM2_1, "IRAF matrix value", "f");
+	    if( opts.addcr ){ t += "\n"; }
+	}
+	if( header.LTM2_2 && !gots.LTM2_2 ){
+	    t += addCard("LTM2_2", header.LTM2_2, "IRAF matrix value", "f");
+	    if( opts.addcr ){ t += "\n"; }
+        }
+	return t;
+    };
+    var processCard = function(t, card, raw, opts){
+	var header = raw.header;
+	if( card.match(/^XTENSION/) && i === 0 && opts.simple ){
+	    t += addCard("XTENSION");
+	} else if( card.match(/^BITPIX/) && raw.bitpix ){
+	    t += addCard("BITPIX", raw.bitpix, "bits/pixel", "i");
+	} else if( card.match(/^NAXIS1/) && raw.width ){
+	    t += addCard("NAXIS1", raw.width, "x image dim", "i");
+	} else if( card.match(/^NAXIS2/) && raw.height ){
+	    t += addCard("NAXIS2", raw.height, "y image dim", "i");
+	} else if( opts.twoaxes && card.match(/^NAXIS /) ){
+	    t += addCard("NAXIS", 2, "number of data axes", "i");
+	} else if( card.match(/^CRPIX1/) && header.CRPIX1 ){
+	    t += addCard("CRPIX1", header.CRPIX1, "reference point", "f");
+	} else if( card.match(/^CRPIX2/) && header.CRPIX2 ){
+	    t += addCard("CRPIX2", header.CRPIX2, "reference point", "f");
+	} else if( card.match(/^CRVAL1/) && header.CRVAL1 ){
+	    t += addCard("CRVAL1", header.CRVAL1, "wcs value at ref. point", "f");
+	} else if( card.match(/^CRVAL2/) && header.CRVAL2 ){
+	    t += addCard("CRVAL2", header.CRVAL2, "wcs value at ref. point", "f");
+	} else if( card.match(/^CTYPE1/) && header.CTYPE1 ){
+	    t += addCard("CTYPE1", header.CTYPE1, "type of coord axis", "s");
+	} else if( card.match(/^CTYPE2/) && header.CTYPE2 ){
+	    t += addCard("CTYPE2", header.CTYPE2, "type of coord axis", "s");
+	} else if( card.match(/^CUNIT1/) && header.CUNIT1 ){
+	    t += addCard("CUNIT1", header.CUNIT1, "phys units of CRVAL", "s");
+	} else if( card.match(/^CUNIT2/) && header.CUNIT2 ){
+	    t += addCard("CUNIT2", header.CUNIT2, "phys units of CRVAL", "s");
+	} else if( card.match(/^CDELT1/) && header.CDELT1 ){
+	    t += addCard("CDELT1", header.CDELT1, "degrees/pixel", "f");
+	} else if( card.match(/^CDELT2/) && header.CDELT2 ){
+	    t += addCard("CDELT2", header.CDELT2, "degrees/pixel", "f");
+	} else if( card.match(/^CROTA1/) && header.CROTA1 ){
+	    t += addCard("CROTA1", header.CROTA1, "rotation angle", "f");
+	} else if( card.match(/^CROTA2/) && header.CROTA2 ){
+	    t += addCard("CROTA2", header.CROTA2, "rotation angle", "f");
+	} else if( card.match(/^CD1_1/) && header.CD1_1 ){
+	    t += addCard("CD1_1", header.CD1_1, "wcs matrix value", "f");
+	} else if( card.match(/^CD1_2/) && header.CD1_2 ){
+	    t += addCard("CD1_2", header.CD1_2, "wcs matrix value", "f");
+	} else if( card.match(/^CD2_1/) && header.CD2_1 ){
+	    t += addCard("CD2_1", header.CD2_1, "wcs matrix value", "f");
+	} else if( card.match(/^CD2_2/) && header.CD2_2 ){
+	    t += addCard("CD2_2", header.CD2_2, "wcs matrix value", "f");
+	} else if( card.match(/^LTV1/) && header.LTV1 ){
+	    t += addCard("LTV1", header.LTV1, "IRAF ref. point", "f");
+	} else if( card.match(/^LTV2/) && header.LTV2 ){
+	    t += addCard("LTV2", header.LTV2, "IRAF ref. point", "f");
+	} else if( card.match(/^LTM1_1/) && header.LTM1_1 ){
+	    t += addCard("LTM1_1", header.LTM1_1, "IRAF matrix value", "f");
+	} else if( card.match(/^LTM1_2/) && header.LTM1_2 ){
+	    t += addCard("LTM1_2", header.LTM1_2, "IRAF matrix value", "f");
+	} else if( card.match(/^LTM2_1/) && header.LTM2_1 ){
+	    t += addCard("LTM2_1", header.LTM2_1, "IRAF matrix value", "f");
+	} else if( card.match(/^LTM2_2/) && header.LTM2_2 ){
+	    t += addCard("LTM2_2", header.LTM2_2, "IRAF matrix value", "f");
+	} else if( card.match(/^END/) ){
+	    // add extras before the end
+	    t = addExtras(t, raw, opts);
+	    t += card;
+	    hasend = true;
+	} else {
+	    t += card;
+	}
+	if( opts.addcr ){
+	    t += "\n";
+	}
+	return t;
     };
     // sanity check
     if( !raw ){
@@ -17122,32 +17293,16 @@ JS9.raw2FITS = function(raw, opts){
 	    } else {
 		card = raw.cardstr.slice(i*80, (i+1)*80);
 	    }
+	    // skip these cards
 	    if( opts.notab && card.match(/^TAB(TYP|MIN|MAX|DIM)[1,2]/) ){
 		continue;
-	    }
-	    if( card.match(/^XTENSION/) && i === 0 && opts.simple ){
-		t += fixparam(card, "XTENSION");
-	    } else if( card.match(/^BITPIX/) && raw.bitpix ){
-		t += fixparam(card, "BITPIX", raw.bitpix, "bits/pixel");
-	    } else if( card.match(/^NAXIS1/) && raw.width ){
-		t += fixparam(card, "NAXIS1", raw.width, "x image dim");
-	    } else if( card.match(/^NAXIS2/) && raw.height ){
-		t += fixparam(card, "NAXIS2", raw.height, "y image dim");
-	    } else if( opts.twoaxes && card.match(/^NAXIS /) ){
-		t += fixparam(card, "NAXIS", 2, "number of data axes");
 	    } else if( opts.twoaxes && card.match(/^(NAXIS|CRPIX|CRVAL|CTYPE|CUNIT|CDELT)[34567]/) ){
 		continue;
 	    } else if( opts.twoaxes && card.match(/^(DATASUM|CHECKSUM)/) ){
 		continue;
-	    } else {
-		t += card;
 	    }
-	    if( card.substring(0,4) === "END " ){
-		hasend = true;
-	    }
-	    if( opts.addcr ){
-		t += "\n";
-	    }
+	    // process this card
+	    t = processCard(t, card, raw, opts);
 	}
     } else if( raw.header || raw.BITPIX ){
 	if( raw.header ){
@@ -17169,8 +17324,10 @@ JS9.raw2FITS = function(raw, opts){
 	    } else if( val === false ){
 		val = "F";
 	    }
-	    t += sprintf("%-8s%-2s%-70s", "SIMPLE", "=", val);
-	    if( opts.addcr ){ t += "\n"; }
+	    t += addCard("SIMPLE", val, "conforms to FITS standard", "b");
+	    if( opts.addcr ){
+		t += "\n";
+	    }
 	}
 	if( obj.BITPIX !== undefined || obj.bitpix !== undefined ){
 	    if( obj.BITPIX !== undefined ){
@@ -17178,8 +17335,10 @@ JS9.raw2FITS = function(raw, opts){
 	    } else {
 		val = obj.bitpix;
 	    }
-	    t += sprintf("%-8s%-2s%-70s", "BITPIX", "=", val);
-	    if( opts.addcr ){ t += "\n"; }
+	    t += addCard("BITPIX", val, "bits/pixel", "i");
+	    if( opts.addcr ){
+		t += "\n";
+	    }
 	}
 	for( key in obj ){
 	    if( obj.hasOwnProperty(key) ){
@@ -17203,10 +17362,16 @@ JS9.raw2FITS = function(raw, opts){
 		    val = obj[key];
 		    if( val === true ){
 			val = "T";
+			dtype = "b";
 		    } else if( val === false ){
 			val = "F";
+			dtype = "b";
+		    } else if( JS9.isNumber(val) ){
+			dtype = "f";
+		    } else {
+			dtype = "s";
 		    }
-		    t += sprintf("%-8s%-2s%-70s", key, "=", val);
+		    t += addCard(key, val, "", dtype);
 		}
 		if( opts.addcr ){
 		    t += "\n";
