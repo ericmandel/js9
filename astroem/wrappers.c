@@ -695,15 +695,21 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
     /* make the low-level reprojection call */
     mProjectPP(i, args);
   }
-  // copy temp file to output file:
-  // Emscripten has created the temp file as a huge JS array,
-  // and we are converting it back to a smaller typed array ...
-  EM_ASM({
-      FS.writeFile(UTF8ToString($1), FS.readFile(UTF8ToString($0)));
-      FS.unlink(UTF8ToString($0));
-  }, temp2, file2);
   /* look for a return value */
   if( filecontents(file0, rstr, SZ_LINE) >= 0 ){
+    if( strstr(rstr, "OK") ){
+      // copy temp file to output file:
+      // Emscripten has created the temp file as a huge JS array,
+      // and we are converting it back to a smaller typed array ...
+      EM_ASM({
+	  try{
+	    FS.writeFile(UTF8ToString($1), FS.readFile(UTF8ToString($0)));
+	    FS.unlink(UTF8ToString($0));
+	  } catch(e){
+	    console.log("ERROR: reproject could not finalize output file");
+	  }
+      }, temp2, file2);
+    }
     unlink(file0);
     return rstr;
   } else {
