@@ -2659,7 +2659,7 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 
 // calculate and set offsets into display where image is to be written
 JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
-    var xoff, yoff, sect, wcsim, wcssect;
+    var xoff, yoff, sect, wcsim, wcssect, wpos, tpos;
     // calculate offsets
     this.ix = Math.floor((this.display.canvas.width - this.rgb.img.width)/2);
     this.iy = Math.floor((this.display.canvas.height - this.rgb.img.height)/2);
@@ -2672,6 +2672,12 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
 	wcssect = wcsim.rgb.sect;
 	xoff = 0 - ((wcssect.x0 - sect.x0) * wcssect.zoom);
 	yoff = ((wcsim.raw.height - this.raw.height) - (wcssect.y0 - sect.y0)) * wcssect.zoom;
+	// try to take image sections into account
+	tpos = this.imageToLogicalPos({x: 1, y: 1});
+	wpos = wcsim.imageToLogicalPos({x: 1, y: 1});
+	xoff += ((tpos.x - wpos.x) * wcssect.zoom);
+	yoff += ((wpos.y - tpos.y) * wcssect.zoom);
+	// add to final offsets
 	this.ix = wcsim.ix + xoff;
 	this.iy = wcsim.iy + yoff;
     }
