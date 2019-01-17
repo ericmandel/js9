@@ -17097,10 +17097,10 @@ JS9.raw2FITS = function(raw, opts){
 			    "file does conform to FITS standard");
 
 	} else {
-	    regexp = new RegExp(name +  "*= *(-?[0-9][0-9]*) *");
+	    regexp = new RegExp(name +  " *= *(-?[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) *");
 	    if( card ){
 		s = card.replace(regexp, "$1");
-		oval = parseFloat(s, 10);
+		oval = parseFloat(s);
 	    } else {
 		oval = undefined;
 	    }
