@@ -6896,8 +6896,9 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	wvfile = "wcs_" + JS9.uniqueID() + ".txt";
 	JS9.vfile(wvfile, wcsstr);
 	// keep within the limits of current memory constraints, or die
-	if((wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.globalOpts.image.xdim*JS9.globalOpts.image.ydim)){
-	    JS9.error("the max image size for wcs reprojection is " + JS9.globalOpts.image.xdim  + " * " + JS9.globalOpts.image.ydim);
+	if((wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.globalOpts.image.xdim*JS9.globalOpts.image.ydim) ||
+	   (raw.header.NAXIS1*raw.header.NAXIS2) > (JS9.globalOpts.image.xdim*JS9.globalOpts.image.ydim) ){
+	    JS9.error("the max image size for WCS reprojection is " + JS9.globalOpts.image.xdim  + " * " + JS9.globalOpts.image.ydim + " (though it varies with browser and what is loaded.) You can extract an image section with the Bin/Filter/Section plugin, save it as a FITS file, and reproject the smaller file instead.");
 	}
     } else {
 	wvfile = wcsim;
