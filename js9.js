@@ -17070,7 +17070,7 @@ JS9.cardpars = function(card){
     if( name === "HISTORY" ){ return [name, card.slice(9).trim()]; }
     if( name === "COMMENT" ){ return [name, card.slice(9).trim()]; }
     if( card[8] !== "=" ){ return undefined; }
-    value = card.slice(10).replace(/\'/g, " ").replace(/\/.*/, "").trim();
+    value = card.slice(10).replace(/\'/g, " ").replace(/ \/.*/, "").trim();
     if( value === "T" ){
 	value = true;
     } else if( value === "F" ){
@@ -17276,6 +17276,8 @@ JS9.raw2FITS = function(raw, opts){
 			val = "F";
 		    } else if( val === "" ){
 			val = "' '";
+		    } else if( !JS9.isNumber(val) && val.charAt(0) !== "'" ){
+			val = "'" + val + "'";
 		    }
 		    s = sprintf("%-8s= %20s", key, val);
 		    left = 80 - s.length;
