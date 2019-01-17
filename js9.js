@@ -17097,7 +17097,7 @@ JS9.raw2FITS = function(raw, opts){
 			    "file does conform to FITS standard");
 
 	} else {
-	    regexp = new RegExp(name + " *= *(-?[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) *");
+	    regexp = new RegExp(name + " *= *(-?[-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?) *");
 	    if( card ){
 		s = card.replace(regexp, "$1");
 		oval = parseFloat(s);
@@ -17147,33 +17147,33 @@ JS9.raw2FITS = function(raw, opts){
 		t += fixparam(card, "NAXIS1", raw.width, "x image dim");
 	    } else if( card.match(/^NAXIS2/) && raw.height ){
 		t += fixparam(card, "NAXIS2", raw.height, "y image dim");
-	    } else if( card.match(/^CRPIX1/) && header.CRPIX1 ){
+	    } else if( card.match(/^CRPIX1/) && JS9.notNull(header.CRPIX1) ){
 		t += fixparam(card, "CRPIX1", header.CRPIX1, "ref point");
-	    } else if( card.match(/^CRPIX2/) && header.CRPIX2 ){
+	    } else if( card.match(/^CRPIX2/) && JS9.notNull(header.CRPIX2) ){
 		t += fixparam(card, "CRPIX2", header.CRPIX2, "ref point");
-	    } else if( card.match(/^CDELT1/) && header.CDELT1 ){
+	    } else if( card.match(/^CDELT1/) && JS9.notNull(header.CDELT1) ){
 		t += fixparam(card, "CDELT1", header.CDELT1, "deg/pixel");
-	    } else if( card.match(/^CDELT2/) && header.CDELT2 ){
+	    } else if( card.match(/^CDELT2/) && JS9.notNull(header.CDELT2) ){
 		t += fixparam(card, "CDELT2", header.CDELT2, "deg/pixel");
-	    } else if( card.match(/^CD1_1/) && header.CD1_1 ){
+	    } else if( card.match(/^CD1_1/) && JS9.notNull(header.CD1_1) ){
 		t += fixparam(card, "CD1_1", header.CD1_1, "WCS matrix value");
-	    } else if( card.match(/^CD1_2/) && header.CD1_2 ){
+	    } else if( card.match(/^CD1_2/) && JS9.notNull(header.CD1_2) ){
 		t += fixparam(card, "CD1_2", header.CD1_2, "WCS matrix value");
-	    } else if( card.match(/^CD2_1/) && header.CD2_1 ){
+	    } else if( card.match(/^CD2_1/) && JS9.notNull(header.CD2_1) ){
 		t += fixparam(card, "CD2_1", header.CD2_1, "WCS matrix value");
-	    } else if( card.match(/^CD2_2/) && header.CD2_2 ){
+	    } else if( card.match(/^CD2_2/) && JS9.notNull(header.CD2_2) ){
 		t += fixparam(card, "CD2_2", header.CD2_2, "WCS matrix value");
-	    } else if( card.match(/^LTV1/) && header.LTV1 ){
+	    } else if( card.match(/^LTV1/) && JS9.notNull(header.LTV1) ){
 		t += fixparam(card, "LTV1", header.LTV1, "IRAF ref. point");
-	    } else if( card.match(/^LTV2/) && header.LTV2 ){
+	    } else if( card.match(/^LTV2/) && JS9.notNull(header.LTV2) ){
 		t += fixparam(card, "LTV2", header.LTV2, "IRAF ref. point");
-	    } else if( card.match(/^LTM1_1/) && header.LTM1_1 ){
+	    } else if( card.match(/^LTM1_1/) && JS9.notNull(header.LTM1_1) ){
 		t += fixparam(card, "LTM1_1", header.LTM1_1, "IRAF matrix value");
-	    } else if( card.match(/^LTM1_2/) && header.LTM1_2 ){
+	    } else if( card.match(/^LTM1_2/) && JS9.notNull(header.LTM1_2) ){
 		t += fixparam(card, "LTM1_2", header.LTM1_2, "IRAF matrix value");
-	    } else if( card.match(/^LTM2_1/) && header.LTM2_1 ){
+	    } else if( card.match(/^LTM2_1/) && JS9.notNull(header.LTM2_1) ){
 		t += fixparam(card, "LTM2_1", header.LTM2_1, "IRAF matrix value");
-	    } else if( card.match(/^LTM2_2/) && header.LTM2_2 ){
+	    } else if( card.match(/^LTM2_2/) && JS9.notNull(header.LTM2_2) ){
 		t += fixparam(card, "LTM2_2", header.LTM2_2, "IRAF matrix value");
 	    } else if( opts.twoaxes && card.match(/^NAXIS /) ){
 		t += fixparam(card, "NAXIS", 2, "number of data axes");
