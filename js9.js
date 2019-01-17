@@ -17265,9 +17265,9 @@ JS9.raw2FITS = function(raw, opts){
 		    hasend = true;
 		}
 		if( key.match(/HISTORY__[0-9]+/) ){
-		    t += sprintf("HISTORY %72s", obj[key]);
+		    t += sprintf("HISTORY %-72s", obj[key]);
 		} else if( key.match(/COMMENT__[0-9]+/) ){
-		    t += sprintf("COMMENT %72s", obj[key]);
+		    t += sprintf("COMMENT %-72s", obj[key]);
 		} else {
 		    val = obj[key];
 		    if( val === true ){
