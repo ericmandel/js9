@@ -15,6 +15,14 @@
 <center><h3>JS9 Known Issues</h3></center>
 
 <ol>
+<li><b>Chrome (January 20, 2019 : not resolved)</b>
+<p>
+Chrome's memory restrictions remain more stringent than those of
+Firefox or Safari. On a Macbook Pro, it is possible to reproject a
+4096x4096 32-bit image in Firefox and Safari, whereas Chrome gets the
+"snap" error for 32-bit images larger than approximately 3800x3800.
+We will continue to try to reduce memory usage, while hoping for less
+restrictive limits (or even full support for unlimited memory via mmap()).
 
 <li><b>Linux platforms using Firefox (February 20, 2018 : not resolved)</b>
 <p>
@@ -69,7 +77,7 @@ approximately 1900x1900, depending on the size of the FITS header. So
 a PNG file of size 1024x1024 should be fine, while a file of size
 2048x2048 certainly will be too large.
 
-<li><b>All platforms, especially Chrome (June 21, 2014 : NOT resolved)</b>
+<li><b>All platforms, especially Chrome (June 21, 2014 : resolved)</b>
 <p>
 Available memory can be a problem when loading very large gzip'ed FITS
 files, especially in 32-bit Chrome. JS9 currently reads the entire
@@ -81,6 +89,8 @@ limits on the total space available).  We hope that the 64-bit version
 of Chrome (in early Canary release as of 7/1/2014) will alleviate
 these problems. Otherwise, we will take a more drastic approach to
 memory management within JS9 (at the expense of speed).
+<p>
+The 64-bit Chrome can make use of 2Gb of memory.
 
 <li><b>All platforms (June 13, 2014 : NOT resolved)</b>
 <p>

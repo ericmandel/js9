@@ -482,6 +482,11 @@ if( (JS9.BROWSER[0] === "Chrome") || (JS9.BROWSER[0] === "Safari") ){
 if( (JS9.BROWSER[0] !== "Chrome") ){
     JS9.globalOpts.imageTemplates += ",.gz";
 }
+// chrome has a more stringent memory limit than other browsers
+// 1/20/2019
+if( (JS9.BROWSER[0] === "Chrome") ){
+    JS9.globalOpts.reprojLimit = 3800;
+}
 // wasm broken in ios 11.2.2, 11.2.5 and on, fixed in 11.3beta1 (1/22/2018)
 // see: https://github.com/kripken/emscripten/issues/6042
 if(  /iPad|iPhone|iPod/.test(navigator.platform) &&
@@ -500,6 +505,7 @@ if( JS9.BROWSER[3] ){
     JS9.globalOpts.image.xdim = 2048;
     JS9.globalOpts.image.ydim = 2048;
     JS9.imageOpts.crosshair = false;
+    JS9.globalOpts.reprojLimit = 2048;
 }
 
 // Electron.js app (v3.0.10) SEGVs by clicking colorpicker's exit (11/26/2018)
@@ -6813,7 +6819,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     var arr, ivfile, ovfile, rstr, key;
     var tab, tx1, tx2, ty1, ty2, s;
     var n, raw, avfile, earr, cmdswitches;
-    var i, tid, traw;
+    var i, tid, traw, reprojlim1, reprojlim2;
     var wcsexp = /SIMPLE|BITPIX|NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
     var ptypeexp = /TAN|SIN|ZEA|STG|ARC/;
     var addwcsinfo = function(header, wcsinfo){
@@ -6895,10 +6901,17 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	// create vfile text file containing reprojection WCS
 	wvfile = "wcs_" + JS9.uniqueID() + ".txt";
 	JS9.vfile(wvfile, wcsstr);
+	if( JS9.notNull(JS9.globalOpts.reprojLimit) ){
+	    reprojlim1 = JS9.globalOpts.reprojLimit;
+	    reprojlim2 = JS9.globalOpts.reprojLimit;
+	} else {
+	    reprojlim1 = JS9.globalOpts.image.xdim;
+	    reprojlim2 = JS9.globalOpts.image.ydim;
+	}
 	// keep within the limits of current memory constraints, or die
-	if((wcsheader.NAXIS1*wcsheader.NAXIS2) > (JS9.globalOpts.image.xdim*JS9.globalOpts.image.ydim) ||
-	   (raw.header.NAXIS1*raw.header.NAXIS2) > (JS9.globalOpts.image.xdim*JS9.globalOpts.image.ydim) ){
-	    JS9.error("the max image size for WCS reprojection is " + JS9.globalOpts.image.xdim  + " * " + JS9.globalOpts.image.ydim + " (though it varies with browser and what is loaded.) You can extract an image section with the Bin/Filter/Section plugin, save it as a FITS file, and reproject the smaller file instead.");
+	if((wcsheader.NAXIS1*wcsheader.NAXIS2)   > (reprojlim1*reprojlim2) ||
+	   (raw.header.NAXIS1*raw.header.NAXIS2) > (reprojlim1*reprojlim2) ){
+	    JS9.error("the max image size for wcs reprojection is approx. " + reprojlim1  + " * " + reprojlim2 + ". This limit varies with browser and memory load (Firefox currently seems to be the most generous with memory.) You can extract an image section with the Bin/Filter/Section plugin, save it as a FITS file, and reproject the smaller file instead.");
 	}
     } else {
 	wvfile = wcsim;
