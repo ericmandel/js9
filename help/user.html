@@ -410,11 +410,15 @@ FITS file.  The submenu lists the WCS version (i.e. the letter "A" -
 associated with this WCS.
 
 <p>
-Finally the <b>reproject</b> menu option allows you to reproject the
+The <b>reproject</b> menu option allows you to reproject the
 image using the WCS associated with another displayed image. The
 reprojected data is placed in a new <b>raw data layer</b> called
 "reproject". You can switch between layers using the <b>View->raw data
-layers</b> option.
+layers</b> option. If the <b>display wcs-aligned</b> option is set,
+the reprojected image will be aligned with the wcs reference image. If
+you change the pan/zoom of the latter, the former will be re-aligned.
+(The converse is not true: changing the reprojected image does not
+change the wcs reference image.)
 
 <li><p><b>Analysis:</b>
 JS9 supports both client-side analysis (i.e.,
