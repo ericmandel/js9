@@ -46,6 +46,10 @@ Version  Developer        Date     Change
 
 #include "montage.h"
 
+#if __EMSCRIPTEN__
+#define main mProjectPP
+#endif
+
 #define MAXSTR  256
 #define MAXFILE 256
 #define HDRLEN  800000
@@ -200,7 +204,7 @@ static time_t currtime, start;
 /*                                                                       */
 /*************************************************************************/
 
-int mProjectPP(int argc, char **argv)
+int main(int argc, char **argv)
 {
    int       i, j, l, m, c;
    int       nullcnt, expand;
@@ -1744,13 +1748,28 @@ int mProjectPP(int argc, char **argv)
    fpixel[1] = 1;
    nelements = imax - imin + 1;
 
+   if( bitpix == DOUBLE_IMG ){
+
    for(j=jmin; j<=jmax; ++j)
    {
       if (fits_write_pix(output_area.fptr, dtype, fpixel, nelements,
-                         (void *)(&area[j-jstart][imin-istart]), &status))
+                         (void *)(&((double **)area)[j-jstart][imin-istart]), &status))
          printFitsError(status);
 
       ++fpixel[1];
+   }
+
+   } else {
+
+   for(j=jmin; j<=jmax; ++j)
+   {
+      if (fits_write_pix(output_area.fptr, dtype, fpixel, nelements,
+                         (void *)(&((float **)area)[j-jstart][imin-istart]), &status))
+         printFitsError(status);
+
+      ++fpixel[1];
+   }
+
    }
 #endif
 
