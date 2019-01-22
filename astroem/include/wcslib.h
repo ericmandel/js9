@@ -109,7 +109,7 @@ extern void             poly_addcste(polystruct *poly, double *cste),
 #endif
 
 extern int npcode;
-extern char pcodes[26][4];
+extern char pcodes[29][4];
 
 struct prjprm {
    char   code[4];
@@ -219,6 +219,15 @@ struct prjprm {
    int qscset(struct prjprm *);
    int qscfwd(const double, const double, struct prjprm *, double *, double *);
    int qscrev(const double, const double, struct prjprm *, double *, double *);
+   int hpxset(struct prjprm *);
+   int hpxfwd(const double, const double, struct prjprm *, double *, double *);
+   int hpxrev(const double, const double, struct prjprm *, double *, double *);
+   int xphset(struct prjprm *);
+   int xphfwd(const double, const double, struct prjprm *, double *, double *);
+   int xphrev(const double, const double, struct prjprm *, double *, double *);
+   int toaset(struct prjprm *);
+   int toafwd(const double, const double, struct prjprm *, double *, double *);
+   int toarev(const double, const double, struct prjprm *, double *, double *);
    int raw_to_pv(struct prjprm *prj, double x, double y, double *xo, double *yo);
 #else
    int prjset(), prjfwd(), prjrev();
@@ -327,10 +336,10 @@ struct wcsprm {
 
 #if __STDC__ || defined(__cplusplus)
    int wcsset(const int,
-              const char[][9],
+              const char[][16],
               struct wcsprm *);
 
-   int wcsfwd(const char[][9],
+   int wcsfwd(const char[][16],
               struct wcsprm *,
               const double[],
               const double[],
@@ -342,7 +351,7 @@ struct wcsprm {
               struct linprm *,
               double[]);
 
-   int wcsrev(const char[][9],
+   int wcsrev(const char[][16],
               struct wcsprm *,
               const double[], 
               struct linprm *,
@@ -354,7 +363,7 @@ struct wcsprm {
               struct celprm *, 
               double[]);
 
-   int wcsmix(const char[][9],
+   int wcsmix(const char[][16],
               struct wcsprm *,
               const int,
               const int,

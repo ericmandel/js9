@@ -119,12 +119,12 @@ struct WorldCoor {
   int		linmode;	/* 0=system only, 1=units, 2=system+units */
   int		detector;	/* Instrument detector number */
   char		instrument[32];	/* Instrument name */
-  char		ctype[9][9];	/* Values of CTYPEn keywords */
-  char		c1type[9];	/*  1st coordinate type code:
+  char		ctype[9][16];	/* Values of CTYPEn keywords */
+  char		c1type[16];	/*  1st coordinate type code:
 					RA--, GLON, ELON */
-  char		c2type[9];	/*  2nd coordinate type code:
+  char		c2type[16];	/*  2nd coordinate type code:
 					DEC-, GLAT, ELAT */
-  char		ptype[9];	/*  projection type code:
+  char		ptype[16];	/*  projection type code:
 				    SIN, TAN, ARC, NCP, GLS, MER, AIT, etc */
   char		units[9][32];	/* Units if LINEAR */
   char		radecsys[32];	/* Reference frame: FK4, FK4-NO-E, FK5, GAPPT*/
@@ -161,7 +161,7 @@ struct WorldCoor {
   int		logwcs;		/* 1 if DC-FLAG is set for log wavelength */
 };
 
-/* Projections (1-26 are WCSLIB) (values for wcs->prjcode) */
+/* Projections (1-28 are WCSLIB) (values for wcs->prjcode) */
 #define WCS_PIX -1	/* Pixel WCS */
 #define WCS_LIN  0	/* Linear projection */
 #define WCS_AZP  1	/* Zenithal/Azimuthal Perspective */
@@ -190,14 +190,17 @@ struct WorldCoor {
 #define WCS_CSC 24	/* COBE quadrilateralized Spherical Cube */
 #define WCS_QSC 25	/* Quadrilateralized Spherical Cube */
 #define WCS_TSC 26	/* Tangential Spherical Cube */
-#define WCS_NCP 27	/* Special case of SIN */
-#define WCS_GLS 28	/* Same as SFL */
-#define WCS_DSS 29	/* Digitized Sky Survey plate solution */
-#define WCS_PLT 30	/* Plate fit polynomials (SAO) */
-#define WCS_TNX 31	/* Gnomonic = Tangent Plane (NOAO with corrections) */
-#define WCS_ZPX 32	/* Gnomonic = Tangent Plane (NOAO with corrections) */
-#define WCS_TPV 33	/* Gnomonic = Tangent Plane (NOAO with corrections) */
-#define NWCSTYPE 34	/* Number of WCS types (-1 really means no WCS) */
+#define WCS_HPX 27	/* Tangential Spherical Cube */
+#define WCS_XPH 28	/* Tangential Spherical Cube */
+#define WCS_NCP 29	/* Special case of SIN from AIPS*/
+#define WCS_GLS 30	/* Same as SFL from AIPS*/
+#define WCS_DSS 31	/* Digitized Sky Survey plate solution */
+#define WCS_PLT 32	/* Plate fit polynomials (SAO) */
+#define WCS_TNX 33	/* Tangent Plane (NOAO corrections) */
+#define WCS_ZPX 34	/* Zenithal Azimuthal Polynomial (NOAO corrections) */
+#define WCS_TPV 35	/* Tangent Plane (SCAMP corrections) */
+#define WCS_TOA 36	/* TOAST */
+#define NWCSTYPE 37	/* Number of WCS types (-1 really means no WCS) */
 
 /* Coordinate systems */
 #define WCS_J2000	1	/* J2000(FK5) right ascension and declination */
