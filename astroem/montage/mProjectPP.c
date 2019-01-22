@@ -135,6 +135,7 @@ struct
    int               sys;
    double            epoch;
    int               clockwise;
+   int               bitpix;
 }
    input, weight, output, output_area;
 
@@ -229,8 +230,8 @@ int mProjectPP(int argc, char **argv)
    double    pixel_value  = 0.;
    double    weight_value = 1.;
 
-   double  **data;
-   double  **area;
+   void    **data;
+   void    **area;
 
    double    overlapArea;
    double    drizzle;
@@ -242,6 +243,9 @@ int mProjectPP(int argc, char **argv)
    char      msg          [MAXSTR];
    char     *end;
 
+   int       dtype;
+   unsigned long dsizeof, dsizeofp;
+
    fixedWeight = 1.;
 
 
@@ -251,7 +255,6 @@ int mProjectPP(int argc, char **argv)
 
    int  bitpix = DOUBLE_IMG; 
    long naxis  = 2;  
-
 
    /************************************************/
    /* Make a NaN value to use setting blank pixels */
@@ -564,8 +567,18 @@ int mProjectPP(int argc, char **argv)
       fflush(stdout);
    }
 
-
-
+   /* processing/output sizes depend on input data type */
+   if( input.bitpix == DOUBLE_IMG ){
+     bitpix = DOUBLE_IMG;
+     dtype = TDOUBLE;
+     dsizeof = sizeof(double);
+     dsizeofp = sizeof(double *);
+   } else {
+     bitpix = FLOAT_IMG;
+     dtype = TFLOAT;
+     dsizeof = sizeof(float);
+     dsizeofp = sizeof(float *);
+   }
 
    /*************************************************/ 
    /* Process the output header template to get the */ 
@@ -585,6 +598,7 @@ int mProjectPP(int argc, char **argv)
       printf("output.epoch     =  %-g\n",   output.epoch);
       printf("output.clockwise =  %d\n",    output.clockwise);
       printf("output proj      =  %s\n",    output.wcs->ptype);
+      printf("output bitpix    =  %d\n",    bitpix);
 
       fflush(stdout);
    }
@@ -862,7 +876,7 @@ int mProjectPP(int argc, char **argv)
    /* Allocate memory for the output image pixels */ 
    /***********************************************/ 
 
-   data = (double **)malloc(jlength * sizeof(double *));
+   data = (void **)malloc(jlength * dsizeofp);
 
    if(data == (void *)NULL)
    {
@@ -872,7 +886,7 @@ int mProjectPP(int argc, char **argv)
 
    for(j=0; j<jlength; j++)
    {
-      data[j] = (double *)malloc(ilength * sizeof(double));
+      data[j] = (void *)malloc(ilength * dsizeof);
 
       if(data[j] == (void *)NULL)
       {
@@ -884,7 +898,7 @@ int mProjectPP(int argc, char **argv)
    if(debug >= 1)
    {
       printf("\n%lu bytes allocated for image pixels\n",
-         ilength * jlength * sizeof(double));
+         ilength * jlength * dsizeof);
       fflush(stdout);
    }
 
@@ -893,20 +907,33 @@ int mProjectPP(int argc, char **argv)
    /* Initialize pixels */
    /*********************/
 
+   if( bitpix == DOUBLE_IMG ){
+
    for (j=0; j<jlength; ++j)
    {
       for (i=0; i<ilength; ++i)
       {
-         data[j][i] = NAN;
+         ((double **)data)[j][i] = NAN;
       }
    }
 
+   } else {
+
+   for (j=0; j<jlength; ++j)
+   {
+      for (i=0; i<ilength; ++i)
+      {
+         ((float **)data)[j][i] = NAN;
+      }
+   }
+
+   }
 
    /**********************************************/ 
    /* Allocate memory for the output pixel areas */ 
    /**********************************************/ 
 
-   area = (double **)malloc(jlength * sizeof(double *));
+   area = (void **)malloc(jlength * dsizeofp);
 
    if(area == (void *)NULL)
    {
@@ -916,23 +943,36 @@ int mProjectPP(int argc, char **argv)
 
    for(j=0; j<jlength; j++)
    {
-      area[j] = (double *)malloc(ilength * sizeof(double));
+      area[j] = (void *)malloc(ilength * dsizeof);
 
       if(area[j] == (void *)NULL)
       {
          fprintf(fstatus, "[struct stat=\"ERROR\", msg=\"Not enough memory for output area image array\"]\n");
          fflush(fstatus); fclose(fstatus); exit(1);
       }
+
+      if( bitpix == DOUBLE_IMG ){
+
       for(i=0; i<ilength; ++i)
       {
-         area[j][i] = 0.0;
+         ((double **)area)[j][i] = 0.0;
       }
+
+      } else {
+
+      for(i=0; i<ilength; ++i)
+      {
+         ((float **)area)[j][i] = 0.0;
+      }
+
+      }
+
    }
 
    if(debug >= 1)
    {
       printf("%lu bytes allocated for pixel areas\n",
-         ilength * jlength * sizeof(double));
+         ilength * jlength * dsizeof);
       fflush(stdout);
    }
 
@@ -1315,21 +1355,43 @@ int mProjectPP(int argc, char **argv)
                   }
 
 
-                  /* Update the output data and area arrays */
-                  if (mNaN(data[m-jstart][l-istart]))
-                     data[m-jstart][l-istart] = pixel_value * overlapArea * weight_value;
-                  else
-                     data[m-jstart][l-istart] += pixel_value * overlapArea * weight_value;
+		  if( bitpix == DOUBLE_IMG ){
 
-                  area[m-jstart][l-istart] += overlapArea * weight_value;
+                  /* Update the output data and area arrays */
+                  if (mNaN(((double **)data)[m-jstart][l-istart]))
+                     ((double **)data)[m-jstart][l-istart] = pixel_value * overlapArea * weight_value;
+                  else
+                     ((double **)data)[m-jstart][l-istart] += pixel_value * overlapArea * weight_value;
+
+                  ((double **)area)[m-jstart][l-istart] += overlapArea * weight_value;
 
                   if(debug >= 3)
                   {
                      printf("Compare out(%d,%d) to in(%d,%d) => ", m, l, j, i);
-                     printf("overlapArea = %12.5e (%12.5e / %12.5e)\n", overlapArea, 
-                            data[m-jstart][l-istart], area[m-jstart][l-istart]);
+                     printf("overlapArea = %12.5e (%12.5e / %12.5e)\n", overlapArea,
+                            ((double **)data)[m-jstart][l-istart], ((double **)area)[m-jstart][l-istart]);
                      fflush(stdout);
                   }
+
+		  } else {
+
+                  /* Update the output data and area arrays */
+                  if (mNaN(((float **)data)[m-jstart][l-istart]))
+                     ((float **)data)[m-jstart][l-istart] = pixel_value * overlapArea * weight_value;
+                  else
+                     ((float **)data)[m-jstart][l-istart] += pixel_value * overlapArea * weight_value;
+
+                  ((float **)area)[m-jstart][l-istart] += overlapArea * weight_value;
+
+                  if(debug >= 3)
+                  {
+                     printf("Compare out(%d,%d) to in(%d,%d) => ", m, l, j, i);
+                     printf("overlapArea = %12.5e (%12.5e / %12.5e)\n", overlapArea,
+                            ((float **)data)[m-jstart][l-istart], ((float **)area)[m-jstart][l-istart]);
+                     fflush(stdout);
+                  }
+
+		  }
                }
             }
          }
@@ -1366,36 +1428,38 @@ int mProjectPP(int argc, char **argv)
    jmin = 99999;
    jmax = 0;
 
+   if( bitpix == DOUBLE_IMG ){
+
    for (j=0; j<jlength; ++j)
    {
       for (i=0; i<ilength; ++i)
       {
-         if(area[j][i] > 0.)
+         if(((double **)area)[j][i] > 0.)
          {
-            data[j][i] 
-               = data[j][i] / area[j][i];
+            ((double **)data)[j][i]
+               = ((double **)data)[j][i] / ((double **)area)[j][i];
 
             if(!haveMinMax)
             {
-               datamin = data[j][i];
-               datamax = data[j][i];
-               areamin = area[j][i];
-               areamax = area[j][i];
+               datamin = ((double **)data)[j][i];
+               datamax = ((double **)data)[j][i];
+               areamin = ((double **)area)[j][i];
+               areamax = ((double **)area)[j][i];
 
                haveMinMax = 1;
             }
 
-            if(data[j][i] < datamin) 
-               datamin = data[j][i];
+            if(((double **)data)[j][i] < datamin)
+               datamin = ((double **)data)[j][i];
 
-            if(data[j][i] > datamax) 
-               datamax = data[j][i];
+            if(((double **)data)[j][i] > datamax)
+               datamax = ((double **)data)[j][i];
 
-            if(area[j][i] < areamin) 
-               areamin = area[j][i];
+            if(((double **)area)[j][i] < areamin)
+               areamin = ((double **)area)[j][i];
 
-            if(area[j][i] > areamax) 
-               areamax = area[j][i];
+            if(((double **)area)[j][i] > areamax)
+               areamax = ((double **)area)[j][i];
 
             if(i < imin) imin = i;
             if(i > imax) imax = i;
@@ -1404,12 +1468,59 @@ int mProjectPP(int argc, char **argv)
          }
          else
          {
-            data[j][i] = nan;
-            area[j][i] = 0.;
+            ((double **)data)[j][i] = nan;
+            ((double **)area)[j][i] = 0.;
          }
       }
    }
-   
+
+   } else {
+
+   for (j=0; j<jlength; ++j)
+   {
+      for (i=0; i<ilength; ++i)
+      {
+         if(((float **)area)[j][i] > 0.)
+         {
+            ((float **)data)[j][i]
+               = ((float **)data)[j][i] / ((float **)area)[j][i];
+
+            if(!haveMinMax)
+            {
+               datamin = ((float **)data)[j][i];
+               datamax = ((float **)data)[j][i];
+               areamin = ((float **)area)[j][i];
+               areamax = ((float **)area)[j][i];
+
+               haveMinMax = 1;
+            }
+
+            if(((float **)data)[j][i] < datamin)
+               datamin = ((float **)data)[j][i];
+
+            if(((float **)data)[j][i] > datamax)
+               datamax = ((float **)data)[j][i];
+
+            if(((float **)area)[j][i] < areamin)
+               areamin = ((float **)area)[j][i];
+
+            if(((float **)area)[j][i] > areamax)
+               areamax = ((float **)area)[j][i];
+
+            if(i < imin) imin = i;
+            if(i > imax) imax = i;
+            if(j < jmin) jmin = j;
+            if(j > jmax) jmax = j;
+         }
+         else
+         {
+            ((float **)data)[j][i] = nan;
+            ((float **)area)[j][i] = 0.;
+         }
+      }
+   }
+
+   }
    imin = imin + istart;
    imax = imax + istart;
    jmin = jmin + jstart;
@@ -1496,16 +1607,16 @@ int mProjectPP(int argc, char **argv)
    }
 #endif
 
-   /***************************/
-   /* Modify BITPIX to be -64 */
-   /***************************/
+   /**********************************/
+   /* Modify BITPIX to be -32 or -64 */
+   /**********************************/
 
-   if(fits_update_key_lng(output.fptr, "BITPIX", -64,
+   if(fits_update_key_lng(output.fptr, "BITPIX", bitpix,
                                   (char *)NULL, &status))
       printFitsError(status);           
 
 #ifndef  __EMSCRIPTEN__
-   if(fits_update_key_lng(output_area.fptr, "BITPIX", -64,
+   if(fits_update_key_lng(output_area.fptr, "BITPIX", bitpix,
                                   (char *)NULL, &status))
       printFitsError(status);           
 #endif
@@ -1591,13 +1702,28 @@ int mProjectPP(int argc, char **argv)
    fpixel[1] = 1;
    nelements = imax - imin + 1;
 
+   if( bitpix == DOUBLE_IMG ){
+
    for(j=jmin; j<=jmax; ++j)
    {
-      if (fits_write_pix(output.fptr, TDOUBLE, fpixel, nelements, 
-                         (void *)(&data[j-jstart][imin-istart]), &status))
+      if (fits_write_pix(output.fptr, dtype, fpixel, nelements,
+                         (void *)(&((double **)data)[j-jstart][imin-istart]), &status))
          printFitsError(status);
 
       ++fpixel[1];
+   }
+
+   } else {
+
+   for(j=jmin; j<=jmax; ++j)
+   {
+      if (fits_write_pix(output.fptr, dtype, fpixel, nelements,
+                         (void *)(&((float **)data)[j-jstart][imin-istart]), &status))
+         printFitsError(status);
+
+      ++fpixel[1];
+   }
+
    }
 
    /* free(data[0]); */
@@ -1620,7 +1746,7 @@ int mProjectPP(int argc, char **argv)
 
    for(j=jmin; j<=jmax; ++j)
    {
-      if (fits_write_pix(output_area.fptr, TDOUBLE, fpixel, nelements,
+      if (fits_write_pix(output_area.fptr, dtype, fpixel, nelements,
                          (void *)(&area[j-jstart][imin-istart]), &status))
          printFitsError(status);
 
@@ -2103,6 +2229,9 @@ int readFits(char *filename, char *weightfile)
    }
 
    if(fits_get_image_wcs_keys(input.fptr, &input_header, &status))
+      printFitsError(status);
+
+   if(fits_get_img_type(input.fptr, &(input.bitpix), &status))
       printFitsError(status);
 
 

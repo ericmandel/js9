@@ -131,6 +131,7 @@ JS9.globalOpts = {
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     table: {xdim: 2048, ydim: 2048, bin: 1},// image section size to extract from table
     image: {xdim: 4096, ydim: 4096, bin: 1},// image section size (0 for unlimited)
+    reproj: {xdim: 4096, ydim: 4096}, // max image size that we can reproject
     binMode: "s",             // "s" (sum) or "a" (average) pixels when binning
     clearImageMemory: "never",  // rm vfile: always|never|auto|noExt|noCube|size>x Mb
     helperProtocol: location.protocol, // http: or https:
@@ -484,9 +485,10 @@ if( (JS9.BROWSER[0] !== "Chrome") ){
 }
 // chrome has a more stringent memory limit than other browsers
 // 1/20/2019
-if( (JS9.BROWSER[0] === "Chrome") ){
-    JS9.globalOpts.reprojLimit = 3800;
-}
+// unnecessary with the 32-bit float version of mProjectPP
+// if( (JS9.BROWSER[0] === "Chrome") ){
+//     JS9.globalOpts.reproj = {xdim: 3800, ydim: 3800};
+// }
 // wasm broken in ios 11.2.2, 11.2.5 and on, fixed in 11.3beta1 (1/22/2018)
 // see: https://github.com/kripken/emscripten/issues/6042
 if(  /iPad|iPhone|iPod/.test(navigator.platform) &&
@@ -505,7 +507,7 @@ if( JS9.BROWSER[3] ){
     JS9.globalOpts.image.xdim = 2048;
     JS9.globalOpts.image.ydim = 2048;
     JS9.imageOpts.crosshair = false;
-    JS9.globalOpts.reprojLimit = 2048;
+    JS9.globalOpts.reproj = {xdim: 2048, ydim: 2048};
 }
 
 // Electron.js app (v3.0.10) SEGVs by clicking colorpicker's exit (11/26/2018)
@@ -6830,7 +6832,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     var arr, ivfile, ovfile, rstr, key;
     var tab, tx1, tx2, ty1, ty2, s;
     var n, raw, avfile, earr, cmdswitches;
-    var i, tid, traw, reprojlim1, reprojlim2;
+    var i, tid, traw, maxx, maxy, maxpix;
     var wcsexp = /SIMPLE|BITPIX|NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
     var ptypeexp = /TAN|SIN|ZEA|STG|ARC/;
     var addwcsinfo = function(header, wcsinfo){
@@ -6912,17 +6914,15 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	// create vfile text file containing reprojection WCS
 	wvfile = "wcs_" + JS9.uniqueID() + ".txt";
 	JS9.vfile(wvfile, wcsstr);
-	if( JS9.notNull(JS9.globalOpts.reprojLimit) ){
-	    reprojlim1 = JS9.globalOpts.reprojLimit;
-	    reprojlim2 = JS9.globalOpts.reprojLimit;
-	} else {
-	    reprojlim1 = JS9.globalOpts.image.xdim;
-	    reprojlim2 = JS9.globalOpts.image.ydim;
-	}
+	// reprojection limits (if reproj lims == 0, use image limits)
+	maxx = JS9.globalOpts.reproj.xdim || JS9.globalOpts.image.xdim;
+	maxy = JS9.globalOpts.reproj.ydim || JS9.globalOpts.image.ydim;
+	// check max image dimension (32-bits/pixels)
+	maxpix = maxx * maxy * 32;
 	// keep within the limits of current memory constraints, or die
-	if((wcsheader.NAXIS1*wcsheader.NAXIS2)   > (reprojlim1*reprojlim2) ||
-	   (raw.header.NAXIS1*raw.header.NAXIS2) > (reprojlim1*reprojlim2) ){
-	    JS9.error("the max image size for wcs reprojection is approx. " + reprojlim1  + " * " + reprojlim2 + ". This limit varies with browser and memory load (Firefox currently seems to be the most generous with memory.) You can extract an image section with the Bin/Filter/Section plugin, save it as a FITS file, and reproject the smaller file instead.");
+	if((wcsheader.NAXIS1*wcsheader.NAXIS2*Math.abs(wcsheader.BITPIX))    > maxpix ||
+	   (raw.header.NAXIS1*raw.header.NAXIS2*Math.abs(raw.header.BITPIX)) > maxpix ){
+	    JS9.error("the max reproject size is " + maxx  + " * " + maxy + " * 4 bytes/pixel. You can use the Bin/Filter/Section plugin to extract a section, then save it as FITS and reproject the smaller image.");
 	}
     } else {
 	wvfile = wcsim;
