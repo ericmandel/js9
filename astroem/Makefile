@@ -19,11 +19,11 @@ ASTROEM =	$$HOME/astroem
 # EMFLAGS = 	-g --memory-init-file 0
 # EMFLAGS = 	-DEM -g --memory-init-file 0
 # debugging
-# EMFLAGS	= 	-DEM --memory-init-file 0 -s ASSERTIONS=1
+# EMFLAGS	= -DEM --memory-init-file 0 -s ASSERTIONS=1
 # debugging with symbols
-# EMFLAGS	= 	-DEM -O0 --memory-init-file 0  -s ASSERTIONS=1
+# EMFLAGS	= -DEM -O0 --memory-init-file 0  -s ASSERTIONS=1 -s SAFE_HEAP=1
 # production
-EMFLAGS	= 	-O3 --memory-init-file 0
+EMFLAGS		= -O3 --memory-init-file 0
 
 # support zscale up to 2048 * 2048 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=33554432

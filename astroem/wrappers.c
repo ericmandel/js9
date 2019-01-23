@@ -271,6 +271,9 @@ char *wcsinfo(int n){
   char *c2type=NULL;
   double crval1=0.0, crval2=0.0, crpix1=0.0, crpix2=0.0, cdelt1=0.0, cdelt2=0.0;
   double crot=0.0;
+  if( !info ){
+    return NULL;
+  }
   if( info->wcs ){
     if( !info->wcs->coorflip ){
       cdelt1 = info->wcs->cdelt[0];
@@ -306,7 +309,7 @@ char *wcsinfo(int n){
 char *pix2wcsstr(int n, double xpix, double ypix){
   Info info = getinfo(n);
   char *str = NULL;
-  if( info->wcs ){
+  if( info && info->wcs ){
     str = info->str;
     *str = '\0';
     /* convert image x,y to ra,dec */
@@ -321,7 +324,7 @@ char *wcs2pixstr(int n, double ra, double dec){
   char str[SZ_LINE];
   double xpix, ypix;
   int offscale;
-  if( info->wcs ){
+  if( info && info->wcs ){
     wcs2pix(info->wcs, ra, dec, &xpix, &ypix, &offscale);
     snprintf(str, SZ_LINE-1, "%.6f %.6f", xpix, ypix);
     nowhite(str, info->str);
@@ -335,7 +338,7 @@ char *wcs2pixstr(int n, double ra, double dec){
 char *wcssys(int n, char *s){
   Info info = getinfo(n);
   char *str = NULL;
-  if( info->wcs ){
+  if( info && info->wcs ){
     str = info->str;
     *str = '\0';
     if( s && *s &&
@@ -362,7 +365,7 @@ char *wcssys(int n, char *s){
 char *wcsunits(int n, char *s){
   Info info = getinfo(n);
   char *str = NULL;
-  if( info->wcs ){
+  if( info && info->wcs ){
     str = info->str;
     *str = '\0';
     if( s && *s ){
@@ -406,7 +409,7 @@ char *reg2wcsstr(int n, char *regstr){
   double dval1, dval2, dval3, dval4;
   double rval1, rval2, rval3, rval4;
 
-  if( info->wcs ){
+  if( info && info->wcs ){
     mywcssys = wcssys(n, NULL);
     if( !strcmp(mywcssys, "galactic") ||
 	!strcmp(mywcssys, "ecliptic") ||

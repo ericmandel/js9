@@ -4106,9 +4106,11 @@ JS9.Image.prototype.initWCS = function(header){
 	    s = JS9.raw2FITS(this.raw.altwcs[key].header);
 	    this.raw.altwcs[key].wcs = JS9.initwcs(s);
 	    // get info about the wcs
-	    try{ this.raw.altwcs[key].wcsinfo =
-		 JSON.parse(JS9.wcsinfo(this.raw.altwcs[key].wcs)); }
-	    catch(ignore){}
+	    if( this.raw.altwcs[key].wcs > 0 ){
+		try{ this.raw.altwcs[key].wcsinfo =
+		     JSON.parse(JS9.wcsinfo(this.raw.altwcs[key].wcs)); }
+		catch(ignore){}
+	    }
 	}
     }
     // set current wcs to the default
