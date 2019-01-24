@@ -2671,7 +2671,8 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 
 // calculate and set offsets into display where image is to be written
 JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
-    var xoff, yoff, sect, wcsim, wcssect, wpos, s, ra, dec;
+    var xoff, yoff, sect, wcsim, wcssect, wpos, s, xcen, ycen, ra, dec;
+    var epsilon = 0.5;
     // calculate offsets
     this.ix = Math.floor((this.display.canvas.width - this.rgb.img.width)/2);
     this.iy = Math.floor((this.display.canvas.height - this.rgb.img.height)/2);
@@ -2695,8 +2696,13 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
 	dec = JS9.saostrtod(s[1]);
 	// convert wcs image center ra, dec to image coords in this image
 	s = JS9.wcs2pix(this.raw.wcs, ra, dec).trim().split(/\s+/);
+	xcen = parseFloat(s[0]);
+	ycen = parseFloat(s[1]);
+	// lord, save us from wcs transformation jitter
+	if( Math.abs(xcen - wpos.x) < epsilon ){ xcen = wpos.x; }
+	if( Math.abs(ycen - wpos.y) < epsilon ){ ycen = wpos.y; }
 	// and use those image coords for the center of the section
-	this.mkSection(parseFloat(s[0]), parseFloat(s[1]), wcssect.zoom);
+	this.mkSection(xcen, ycen, wcssect.zoom);
 	// offsets of these images
 	xoff = 0 - ((wcssect.x0 - sect.x0) * wcssect.zoom);
 	yoff = ((wcsim.raw.height - this.raw.height) - (wcssect.y0 - sect.y0)) * wcssect.zoom;
