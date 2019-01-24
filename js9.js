@@ -106,6 +106,7 @@ JS9.globalOpts = {
     allinoneHelper: false,      // allow allinone to use helper?
     requireFits2Fits: false,    // throw error if fits2fits can't be run?
     useWasm: true,		// use WebAssembly if available?
+    allowFileWasm: false,       // allow file:// to use wasm?
     winType: "light",		// plugin window: "light" or "new"
     rgb: {active: false,	// RGB mode
 	  rim: null,
@@ -480,7 +481,7 @@ if( (JS9.BROWSER[0] === "Chrome") || (JS9.BROWSER[0] === "Safari") ){
     JS9.bugs.webkit_resize = true;
 }
 // chrome does not deal with ".gz" file templates, but other browsers do
-if( (JS9.BROWSER[0] !== "Chrome") ){
+if( JS9.BROWSER[0] !== "Chrome" ){
     JS9.globalOpts.imageTemplates += ",.gz";
 }
 // chrome has a more stringent memory limit than other browsers
@@ -495,11 +496,6 @@ if(  /iPad|iPhone|iPod/.test(navigator.platform) &&
      /11_2_(?:[2-9])/.test(navigator.userAgent)    ){
     JS9.globalOpts.useWasm = false;
 }
-// Jupyter doesn't seem to be able to load wasm (7/4/2018)
-if( window.hasOwnProperty("Jupyter") ){
-    JS9.globalOpts.useWasm = false;
-}
-
 // iOS has severe memory limits (05/2017)
 // also force user to turn on crosshair, since it works with one finger
 if( JS9.BROWSER[3] ){
@@ -509,9 +505,17 @@ if( JS9.BROWSER[3] ){
     JS9.imageOpts.crosshair = false;
     JS9.globalOpts.reproj = {xdim: 2048, ydim: 2048};
 }
-
-// Electron.js app (v3.0.10) SEGVs by clicking colorpicker's exit (11/26/2018)
+// Jupyter doesn't seem to be able to load wasm (7/4/2018)
+if( window.hasOwnProperty("Jupyter") ){
+    JS9.globalOpts.useWasm = false;
+}
+// JS9 app using Electron.js
 if( window.isElectron ){
+    // turn on wasm if Electron.js supports a recent version of Chromium
+    if( JS9.BROWSER[0] === "Chrome" && parseFloat(JS9.BROWSER[1]) >= 66 ){
+	JS9.globalOpts.allowFileWasm = true;
+    }
+    // Electron.js (v4.0.2) SEGVs when clicking colorpicker exit (1/26/2019)
     JS9.globalOpts.internalColorPicker = false;
 }
 
@@ -18404,7 +18408,7 @@ JS9.initEmscripten = function(){
     opts = {responseType: "arraybuffer", allowCache: true};
     if( JS9.globalOpts.useWasm          &&
 	typeof WebAssembly === 'object' &&
-	location.protocol !== "file:"   ){
+	(location.protocol !== "file:"  || JS9.globalOpts.allowFileWasm) ){
 	// use site-specified file if available, else default file
 	JS9.globalOpts.astroemWasm =
 	    JS9.InstallDir(Module.wasmBinaryFile || "astroemw.wasm");
