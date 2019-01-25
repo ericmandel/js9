@@ -2881,7 +2881,7 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	    }
 	}
     }
-    // if we explicitly don't display, reuturn here;
+    // if we explicitly don't display, return here;
     if( mode.nodisplay ){
 	return this;
     }
@@ -2898,8 +2898,9 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	    }
 	    for(i=blends.length-1; i>=0; i--){
 		im = blends[i];
-		// display the image
-		bopts = {blend: im.blend.mode, opacity: im.blend.opacity};
+		// display the image using blend characteristics
+		bopts = {wcsim: opts.wcsim,
+			 blend: im.blend.mode, opacity: im.blend.opacity};
 		im.putImage(bopts);
 		if( im === this ){
 		    // display layers for this image
@@ -3651,7 +3652,7 @@ JS9.Image.prototype.getPan = function(){
 
 // set pan location of RGB image (using image coordinates)
 JS9.Image.prototype.setPan = function(panx, pany){
-    var i, key, bpanx, bpany, bw2, bh2, im, pos, owcssys, txeq, arr;
+    var i, key, obj, bpanx, bpany, bw2, bh2, im, pos, owcssys, txeq, arr;
     var w2 = this.raw.width / 2;
     var h2 = this.raw.height / 2;
     // is this core service disabled?
@@ -3670,51 +3671,52 @@ JS9.Image.prototype.setPan = function(panx, pany){
 	catch(e){ JS9.error("can't parse setPan JSON: " + panx, e); }
     }
     if( typeof panx === "object" ){
+	obj = panx;
 	// passing an object supports image, physical, wcs coordinates
-	if( JS9.notNull(panx.x) && JS9.notNull(panx.y) ){
+	if( JS9.notNull(obj.x) && JS9.notNull(obj.y) ){
 	    // image coords
-	    panx = panx.x;
-	    pany = panx.y;
+	    panx = obj.x;
+	    pany = obj.y;
 	}
-	if( JS9.notNull(panx.px) && JS9.notNull(panx.py) ){
+	if( JS9.notNull(obj.px) && JS9.notNull(obj.py) ){
 	    // physical coords
-	    pos = this.logicalToImagePos({x: panx.px, y: panx.py});
+	    pos = this.logicalToImagePos({x: obj.px, y: obj.py});
 	    panx = pos.x;
 	    pany = pos.y;
 	}
-	if( typeof panx.wcs === "string" ){
+	if( typeof obj.wcs === "string" ){
 	    // wcs string: ra dec [wcssys]
-            arr = panx.wcs.trim().split(/ +/);
-            panx.ra  = arr[0];
-            panx.dec = arr[1];
+            arr = obj.wcs.trim().split(/ +/);
+            obj.ra  = arr[0];
+            obj.dec = arr[1];
             if( arr.length >= 3 ){
-		panx.wcssys = arr[2];
+		obj.wcssys = arr[2];
             }
 	}
-	if( JS9.notNull(panx.ra) && JS9.notNull(panx.dec) &&
+	if( JS9.notNull(obj.ra) && JS9.notNull(obj.dec) &&
 	    (this.raw.wcs > 0) ){
 	    // wcs coords
 	    // use supplied wcs, if necessary
-	    if( panx.wcssys ){
+	    if( obj.wcssys ){
 		owcssys = this.getWCSSys();
 		txeq = JS9.globalOpts.xeqPlugins;
 		JS9.globalOpts.xeqPlugins = false;
-		this.setWCSSys(panx.wcssys);
+		this.setWCSSys(obj.wcssys);
 	    }
 	    // convert wcs supplied as strings
-	    if( typeof panx.ra === "string" ){
-		panx.ra = JS9.saostrtod(panx.ra);
+	    if( typeof obj.ra === "string" ){
+		obj.ra = JS9.saostrtod(obj.ra);
 		if( (String.fromCharCode(JS9.saodtype()) === ":") &&
 		    (this.params.wcssys !== "galactic" )          &&
 		    (this.params.wcssys !== "ecliptic" )          ){
-		    panx.ra *= 15.0;
+		    obj.ra *= 15.0;
 		}
 	    }
-	    if( typeof panx.dec === "string" ){
-		panx.dec = JS9.saostrtod(panx.dec);
+	    if( typeof obj.dec === "string" ){
+		obj.dec = JS9.saostrtod(obj.dec);
 	    }
 	    // convert to image coords
-	    arr = JS9.wcs2pix(this.raw.wcs, panx.ra, panx.dec)
+	    arr = JS9.wcs2pix(this.raw.wcs, obj.ra, obj.dec)
 		.trim().split(/ +/);
 	    panx = parseFloat(arr[0]);
 	    pany = parseFloat(arr[1]);
@@ -3734,8 +3736,13 @@ JS9.Image.prototype.setPan = function(panx, pany){
     if( this.display.blendMode ){
 	for(i=0; i<JS9.images.length; i++){
 	    im = JS9.images[i];
-	    if( (im !== this) &&
-		(im.display === this.display) && im.blend.active ){
+	    if( (im !== this)                                &&
+		(im.display === this.display)                &&
+		im.blend.active                              &&
+		(im.wcsim  === this ||
+                 this.wcsim === im  ||
+                 (im.wcsim && (im.wcsim === this.wcsim)))    &&
+		(im.params.wcsalign || this.params.wcsalign) ){
 		bw2 = im.raw.width / 2;
 		bh2 = im.raw.height / 2;
 		if( arguments.length === 0 ){
@@ -3819,7 +3826,7 @@ JS9.Image.prototype.parseZoom = function(zval){
 
 // set zoom of RGB image
 JS9.Image.prototype.setZoom = function(zval){
-    var i, nzoom, key, im;
+    var i, nzoom, key, im, ipos;
     // is this core service disabled?
     if( $.inArray("zoom", this.params.disable) >= 0 ){
 	return;
@@ -3834,9 +3841,15 @@ JS9.Image.prototype.setZoom = function(zval){
     if( this.display.blendMode ){
 	for(i=0; i<JS9.images.length; i++){
 	    im = JS9.images[i];
-	    if( (im !== this) &&
-		(im.display === this.display) && im.blend.active ){
-		JS9.Image.prototype.mkSection.call(im, nzoom);
+	    if( (im !== this)                                &&
+		(im.display === this.display)                &&
+		im.blend.active                              &&
+		(im.wcsim  === this ||
+                 this.wcsim === im  ||
+                 (im.wcsim && (im.wcsim === this.wcsim)))    &&
+		(im.params.wcsalign || this.params.wcsalign) ){
+		ipos = im.getPan();
+		JS9.Image.prototype.mkSection.call(im, ipos.x, ipos.y, nzoom);
 	    }
 	}
     }
