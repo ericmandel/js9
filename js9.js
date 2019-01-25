@@ -236,6 +236,7 @@ JS9.globalOpts = {
     internalColorPicker: true,       // use HTML5 color picker, if available?
     newWindowWidth: 530,	     // width of LoadWindow("new")
     newWindowHeight: 625,	     // height of LoadWindow("new")
+    sessionPath: false,              // how to handle paths in a session file
     debug: 0		             // debug level
 };
 
@@ -515,6 +516,8 @@ if( window.isElectron ){
     if( JS9.BROWSER[0] === "Chrome" && parseFloat(JS9.BROWSER[1]) >= 66 ){
 	JS9.globalOpts.allowFileWasm = true;
     }
+    // Desktop JS9: use session paths relative to the session file
+    JS9.globalOpts.sessionPath = true;
     // Electron.js (v4.0.2) SEGVs when clicking colorpicker exit (1/26/2019)
     JS9.globalOpts.internalColorPicker = false;
 }
@@ -8931,7 +8934,7 @@ JS9.Display.prototype.nextImage = function(inc){
 
 // load session from a json file
 // NB: save is an image method, load is a display method
-JS9.Display.prototype.loadSession = function(file){
+JS9.Display.prototype.loadSession = function(file, opts){
     var that = this;
     var objs = {};
     var obj;
@@ -9009,6 +9012,7 @@ JS9.Display.prototype.loadSession = function(file){
 	}
     };
     var loadit = function(jobj){
+	var pname;
 	// sanity check
 	if( !jobj.file ){
 	    JS9.error("session does not contain a filename");
@@ -9021,10 +9025,26 @@ JS9.Display.prototype.loadSession = function(file){
 	if( obj.params.display ){
 	    delete obj.params.display;
 	}
+	// get pathname of image file
+	pname = obj.file;
+	// should relative (local) paths use the session path?
+	if( JS9.globalOpts.sessionPath  &&
+	    obj.file.charAt(0) !== "/"  &&
+	    !obj.file.match("://")      ){
+	    if( JS9.globalOpts.sessionPath === true ){
+		// sessionPath is true: use the passed-in sessionPath in opts
+		if( opts.sessionPath ){
+		    pname = opts.sessionPath + obj.file;
+		}
+	    } else {
+		// global sessionPath itself is a path to prepend
+		pname = JS9.globalOpts.sessionPath + obj.file;
+	    }
+	}
 	// save for finish
-	objs[obj.file] = obj;
+	objs[pname] = obj;
 	// load the image
-	JS9.Load(obj.file, obj.params, {display: that.id});
+	JS9.Load(pname, obj.params, {display: that.id});
     };
     var loadem = function(jobj){
 	var i, key;
@@ -9056,6 +9076,8 @@ JS9.Display.prototype.loadSession = function(file){
 	    }
 	}
     };
+    // opts is optional
+    opts = opts || {};
     // change the cursor to show the waiting status
     JS9.waiting(true, this);
     if( typeof file === "object" ){
@@ -17740,6 +17762,14 @@ JS9.cleanPath = function(s){
     return s.trim().replace(/\/\.\//, "/").replace(/^\.\//, "");
 };
 
+// get directory name of a file, including trailing "/";
+JS9.dirname = function(f){
+    if( !f || f.indexOf("/") === -1 ){
+	return "";
+    }
+    return f.match(/.*\//)[0];
+};
+
 // ---------------------------------------------------------------------
 // global event handlers
 // ---------------------------------------------------------------------
@@ -21267,6 +21297,7 @@ JS9.mkPublic("LoadSession", function(file, opts){
 	reader = new FileReader();
 	reader.onload = function(ev){
 	    var jobj = JSON.parse(ev.target.result);
+	    opts.sessionPath =  JS9.dirname(file.path || file.name || "");
 	    disp.loadSession(jobj, opts);
 	};
 	reader.readAsText(file);
@@ -21275,6 +21306,7 @@ JS9.mkPublic("LoadSession", function(file, opts){
 	opts.display = disp.id;
 	JS9.fetchURL(null, file, opts, function(jstr, opts){
 	    var jobj = JSON.parse(jstr);
+	    opts.sessionPath =  JS9.dirname(file);
             disp.loadSession(jobj, opts);
 	});
     } else {
