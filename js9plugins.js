@@ -7006,15 +7006,15 @@ JS9.Menubar.createMenus = function(){
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
 			}
-			if( uim ){
-			    switch(key){
-			    case "loadcmap":
-				JS9.OpenColormapMenu({display: udisp});
-				break;
-			    case "savecmap":
-				JS9.SaveColormap({display: udisp});
-				break;
-			    default:
+			switch(key){
+			case "loadcmap":
+			    JS9.OpenColormapMenu({display: udisp});
+			    break;
+			case "savecmap":
+			    JS9.SaveColormap({display: udisp});
+			    break;
+			default:
+			    if( uim ){
 				if( key.match(/^imfilter_/) ){
 				    s1 = key.replace(/^imfilter_/,"");
 				    uim.filterRGBImage(s1);
