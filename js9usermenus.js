@@ -4,11 +4,14 @@
  * An array of four user menus objects (zooms, scales, colormaps, and regions)
  * that gets assigned to the JS9.globalOpts.userMenuBar property.
  *
- * Each user menu should have a name, a title (menu title) and an array of
- * options (menu options).
+ * Each user menu must have the following properties:
+ * "name", "title" (menu title), "options" (array of option, see below).
+ * Optional: "updateTitle" to update the menu title as it is changed:
+ * "text" sets name, "image" sets image, "both" sets both.
  *
- * Each option should have a name, an optional image, a public API command,
- * and an array of arguments to pass to that command.
+ * Each option should have a name, a public API command, and an array of
+ * arguments to pass to that command.
+ * Optional: image path of an image to display as a menu option.
  *
  * Note that, while these examples are subsets of top-level menus, a user menu
  * can contain any set of public API calls, e.g. a menu of most-used commands.
@@ -33,6 +36,7 @@ JS9.globalOpts.userMenuBar = [
     {
 	"name": "zoom",
 	"title": "myZooms",
+	"updateTitle": "text",
 	"options": [
 	    {
 		"name": "in",
@@ -54,6 +58,7 @@ JS9.globalOpts.userMenuBar = [
     {
 	"name": "scale",
 	"title": "myScales",
+	"updateTitle": "text",
 	"options": [
 	    {
 		"name": "linear",
@@ -75,6 +80,7 @@ JS9.globalOpts.userMenuBar = [
     {
 	"name": "colormap",
 	"title": "myColormaps",
+	"updateTitle": "image",
 	"options": [
 	    {
 		"name": "grey",

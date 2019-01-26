@@ -212,9 +212,9 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 		return{
-		    callback: function(key){
+		    callback: function(key, kopt){
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var i, args;
+			var i, args, hstr;
 			var udisp = val;
 			for(i=0; i<menu.options.length; i++){
 			    opt = menu.options[i];
@@ -226,6 +226,18 @@ JS9.Menubar.createMenus = function(){
 				args = JSON.parse(JSON.stringify(opt.args||[]));
 				args.push({display: udisp});
 				JS9.publics[opt.cmd].apply(null, args);
+				// update the menu title
+				if( opt.image &&
+				    menu.updateTitle.match(/(both|image)/) ){
+				    if( menu.updateTitle === "both" ){
+					hstr = "<div style='white-space:nowrap;'><img src='" + opt.image + "' alt='" + opt.name + "' class='JS9MenubarUserImage' >" + "&nbsp;&nbsp;" + opt.name + "</div>";
+				    } else if( menu.updateTitle === "image" ){
+					hstr = "<div style='white-space:nowrap;'><img src='" + opt.image + "' alt='" + opt.name + "' class='JS9MenubarUserImage' ></div>";
+				    }
+				    $(kopt.selector).html(hstr);
+				} else if( menu.updateTitle && opt.name ){
+				    $(kopt.selector).text(opt.name);
+				}
 			    } else {
 				JS9.error("unknown function for user menubar: " + menu.cmd);
 			    }
