@@ -67,6 +67,7 @@ JS9.ADDZOOM = 0.1;		// add/subtract amount per mouse wheel click
 JS9.CHROMEFILEWARNING = true;	// whether to alert chrome users about file URI
 JS9.CLIPBOARDERROR = "the local clipboard (which only holds data copied from within JS9) does not contain any content. Were you trying to paste something copied outside JS9?";
 JS9.CLIPBOARDERROR2 = "the local clipboard (which only holds data copied from within JS9) does not contain any regions";
+JS9.URLEXP = /^(https?|ftp):\/\//; // url to determine a web page
 
 // https://hacks.mozilla.org/2013/04/detecting-touch-its-the-why-not-the-how/
 JS9.TOUCHSUPPORTED = ( window.hasOwnProperty("ontouchstart") ||
@@ -236,8 +237,14 @@ JS9.globalOpts = {
     internalColorPicker: true,       // use HTML5 color picker, if available?
     newWindowWidth: 530,	     // width of LoadWindow("new")
     newWindowHeight: 625,	     // height of LoadWindow("new")
-    sessionPath: false,              // how to handle paths in a session file
     debug: 0		             // debug level
+};
+
+// desktop (i.e. electron.js) defaults
+// always wrap access in if( window.isElectron ){}
+JS9.desktopOpts = {
+    currentPath: true,              // files relative to current dir?
+    sessionPath: true               // session files relative to session file?
 };
 
 // image param defaults
@@ -516,8 +523,6 @@ if( window.isElectron ){
     if( JS9.BROWSER[0] === "Chrome" && parseFloat(JS9.BROWSER[1]) >= 66 ){
 	JS9.globalOpts.allowFileWasm = true;
     }
-    // Desktop JS9: use session paths relative to the session file
-    JS9.globalOpts.sessionPath = true;
     // Electron.js (v4.0.2) SEGVs when clicking colorpicker exit (1/26/2019)
     JS9.globalOpts.internalColorPicker = false;
 }
@@ -9027,19 +9032,13 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	}
 	// get pathname of image file
 	pname = obj.file;
-	// should relative (local) paths use the session path?
-	if( JS9.globalOpts.sessionPath  &&
-	    obj.file.charAt(0) !== "/"  &&
-	    !obj.file.match("://")      ){
-	    if( JS9.globalOpts.sessionPath === true ){
-		// sessionPath is true: use the passed-in sessionPath in opts
-		if( opts.sessionPath ){
-		    pname = opts.sessionPath + obj.file;
-		}
-	    } else {
-		// global sessionPath itself is a path to prepend
-		pname = JS9.globalOpts.sessionPath + obj.file;
-	    }
+	// desktop only: are session file paths relative to the session path?
+	if( window.isElectron               &&
+	    JS9.desktopOpts.sessionPath     &&
+	    opts.sessionPath                &&
+	    obj.file.charAt(0) !== "/"      &&
+	    !obj.file.match(JS9.URLEXP)     ){
+	    pname = JS9.fixPath(opts.sessionPath + obj.file);
 	}
 	// save for finish
 	objs[pname] = obj;
@@ -17762,6 +17761,19 @@ JS9.cleanPath = function(s){
     return s.trim().replace(/\/\.\//, "/").replace(/^\.\//, "");
 };
 
+// convert relative directory into absolute directory using currentDir
+// desktop only, to make pathname relative to where js9 was started
+JS9.fixPath = function(f){
+    if( window.isElectron           &&
+	window.currentDir           &&
+	JS9.desktopOpts.currentPath &&
+	f.charAt(0) !== "/"         &&
+	!f.match(JS9.URLEXP)        ){
+	f = window.currentDir + "/" + f;
+    }
+    return f;
+};
+
 // get directory name of a file, including trailing "/";
 JS9.dirname = function(f){
     if( !f || f.indexOf("/") === -1 ){
@@ -18126,7 +18138,6 @@ JS9.dragexitCB = function(id, evt){
 
 JS9.dragdropCB = function(id, evt){
     var i, s, opts, files, display;
-    var urlexp = /^(https?|ftp):\/\//;
     // convert jquery event to original event, if possible
     if( evt.originalEvent ){
 	evt = evt.originalEvent;
@@ -18143,7 +18154,7 @@ JS9.dragdropCB = function(id, evt){
 	// assume text
 	s = evt.dataTransfer.getData("text");
 	// check whether its a URL and load via proxy, if possible
-	if( s.match(urlexp) && JS9.globalOpts.loadProxy ){
+	if( s.match(JS9.URLEXP) && JS9.globalOpts.loadProxy ){
 	    JS9.LoadProxy(s, {display: opts.display});
 	}
 	return;
@@ -19775,6 +19786,7 @@ JS9.mkPublic("LoadColormap", function(file, opts){
     if( typeof file === "object" ){
 	JS9.AddColormap(file, opts);
     } else if( typeof file === "string" ){
+	file = JS9.fixPath(file);
 	JS9.fetchURL(null, file, null, function(data){
 	    JS9.AddColormap(data, opts);
 	});
@@ -20011,6 +20023,7 @@ JS9.mkPublic("Load", function(file, opts){
 	    // png file: call the constructor and save the result
 	    JS9.checkNew(new JS9.Image(file, opts, func));
 	} else {
+	    file = JS9.fixPath(file);
 	    JS9.fetchURL(null, file, opts, JS9.NewFitsImage);
 	}
     } else {
@@ -20024,6 +20037,7 @@ JS9.mkPublic("Load", function(file, opts){
 	}
 	JS9.waiting(true, disp);
 	// remove extension so we can find the file itself
+	file = JS9.fixPath(file);
 	tfile = file.replace(/\[.*\]/, "");
 	JS9.fetchURL(file, tfile, opts);
     }
@@ -20246,9 +20260,10 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 JS9.mkPublic("Preload", function(arg1){
     var i, j, mode, urlexp, func, emsg="", pobj=null, dobj=null;
     var oalerts = JS9.globalOpts.alerts;
-    var alen=arguments.length;
+    var alen = arguments.length;
     var obj = JS9.parsePublicArgs(arguments);
-    var baseexp = /^(https?|ftp):\/\//;
+    var baseexp = JS9.URLEXP;
+    var sesexp = /\.ses$/;
     arg1 = obj.argv[0];
     // for socketio and loadProxy, support LoadProxy calls
     if( JS9.globalOpts.loadProxy && JS9.helper.baseurl ){
@@ -20330,6 +20345,8 @@ JS9.mkPublic("Preload", function(arg1){
 		arguments[i].match(baseexp) &&
 		!arguments[i].match(urlexp) ){
 		func = JS9.LoadProxy;
+	    } else if( arguments[i].match(sesexp) ){
+		func = JS9.LoadSession;
 	    } else {
 		func = JS9.Load;
 	    }
@@ -20379,6 +20396,8 @@ JS9.mkPublic("Preload", function(arg1){
 		JS9.preloads[i][0].match(baseexp) &&
 		!JS9.preloads[i][0].match(urlexp) ){
 		func = JS9.LoadProxy;
+	    } else if( JS9.preloads[i][0].match(sesexp) ){
+		func = JS9.LoadSession;
 	    } else {
 		func = JS9.Load;
 	    }
@@ -21015,6 +21034,7 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 	reader.readAsText(file);
     } else if( typeof file === "string" ){
 	opts.responseType = "text";
+	file = JS9.fixPath(file);
 	JS9.fetchURL(null, file, opts, addregions);
     } else {
 	// oops!
@@ -21304,6 +21324,7 @@ JS9.mkPublic("LoadSession", function(file, opts){
     } else if( typeof file === "string" ){
 	opts.responseType = "text";
 	opts.display = disp.id;
+	file = JS9.fixPath(file);
 	JS9.fetchURL(null, file, opts, function(jstr, opts){
 	    var jobj = JSON.parse(jstr);
 	    opts.sessionPath =  JS9.dirname(file);
@@ -21380,18 +21401,12 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
 	    if( opts && opts.onload ){ opts.onload(im); }
 	} else {
 	    // its a file: retrieve and load the catalog
-            $.ajax({
-                url: file,
-                cache: false,
-                dataType: "text",
-                success: function(s){
-		    im.loadCatalog(layer, s, opts);
-		    if( opts && opts.onload ){ opts.onload(im); }
-                },
-                error:  function(jqXHR, textStatus, errorThrown){
-                    JS9.error("loading catalog: "+file, errorThrown);
-                }
-            });
+	    opts.responseType = "text";
+	    file = JS9.fixPath(file);
+	    JS9.fetchURL(null, file, opts, function(s){
+		im.loadCatalog(layer, s, opts);
+		if( opts && opts.onload ){ opts.onload(im); }
+	    });
 	}
     } else {
 	// oops!

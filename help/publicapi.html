@@ -2638,35 +2638,23 @@ The pathname of the session file should either be absolute or should be
 relative to the web page.
 <p>
 The session file contains a <b>file</b> property near the top that
-specifies the location of the image. A local file usually will contain
-an absolute path or a path relative to the web page being displayed.
-But session files and the associated data files often are moved around
-or used with different web pages, breaking the connection between the
-web page and the image path.
+specifies the location of the image. For browser-based JS9, a local
+file usually will contain an absolute path or a path relative to the
+web page being displayed.
 
 <p>
-To deal with this problem, the <b>JS9.globalOpts.sessionPath</b> variable
-can be used as follows:
+On the desktop, session files and the associated data files often are
+moved around or used with different web pages, breaking the connection
+between the web page and the image path.  To deal with this problem,
+the <b>JS9.desktoplOpts.sessionPath</b> variable is provided:
 <ul>
-<li> if set to <b>false</b>, the image path is relative to the web page
 <li> if set to <b>true</b>, the image path is relative to the location
-of the session file
-</ul> <li> if set to a string value, the image path is prepended with this
-value
-
-<p>
-By default, browser-based JS9 has the <b>JS9.globalOpts.sessionPath</b>
-variable set to <b>false</b> so that the image path is relative to the
-web page. The rationale is that browsers only have access to the file
-space associated with the web page, so the session and image files
-should be within that space.
-
-<p>
-On the other hand, the Desktop version of JS9 has access to the whole file
-space on the local computer. The <b>JS9.globalOpts.sessionPath</b> variable 
-is therefore set to <b>true</b>. This means that if you store your session
-file relative to the contained image, you can move both files to any location
-on your disk.
+of the session file (this is the default)
+<li> if set to <b>false</b>, the image path is relative to the web page
+value (as with browser-based JS9)
+</ul>
+This means that if you store your session file relative to the
+contained image, you can move both files to any location on your disk.
 
 <p>
 If the image was originally opened using drag-and-drop, no pathname
