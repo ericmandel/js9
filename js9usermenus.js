@@ -40,16 +40,19 @@ JS9.globalOpts.userMenuBar = [
 	"options": [
 	    {
 		"name": "in",
+		"shortcut": "zoom in",
 		"cmd": "SetZoom",
 		"args": ["in"]
 	    },
 	    {
 		"name": "out",
+		"shortcut": "zoom out",
 		"cmd": "SetZoom",
 		"args": ["out"]
 	    },
 	    {
 		"name": "one",
+		"shortcut": "reset zoom",
 		"cmd": "SetZoom",
 		"args": [1]
 	    }

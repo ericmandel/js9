@@ -157,7 +157,7 @@ JS9.Menubar.createMenus = function(){
 	    tdisp.image.displayImage("rgb");
 	}
     };
-    var xname = function(name){
+    var xname = function(name, xact){
 	var key, hstr;
 	var obj = {name: name};
 	var gkeyActions = JS9.globalOpts.keyboardActions;
@@ -171,11 +171,21 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    JS9.Menubar.keyActions = $.extend(true, {}, gkeyActions);
 	}
-	if( !JS9.isNull(act) && JS9.Menubar.rkeyMap ){
+	if( JS9.notNull(act) && JS9.Menubar.rkeyMap ){
 	    key = JS9.Menubar.rkeyMap[act];
 	    if( key ){
 		hstr = "<span>" + name + " <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;" + key + "</span></span>";
 		obj = {name: hstr, isHtmlName: true};
+	    }
+	} else if( xact && JS9.Menubar.rkeyMap ){
+	    for( act in JS9.Menubar.rkeyMap ){
+		if( JS9.Menubar.rkeyMap.hasOwnProperty(act) && act === xact ){
+		    key = JS9.Menubar.rkeyMap[act];
+		    if( key ){
+			hstr = "<span>" + name + " <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;" + key + "</span></span>";
+			obj = {name: hstr, isHtmlName: true};
+		    }
+		}
 	    }
 	}
 	return obj;
@@ -196,15 +206,16 @@ JS9.Menubar.createMenus = function(){
 	    events: { hide: onhide },
 	    position: mypos,
             build: function(){
-		var i, opt, hstr;
+		var i, opt, hstr, obj;
 		var items = {};
 		for(i=0; i<menu.options.length; i++){
 		    opt = menu.options[i];
+		    obj = xname(opt.name, opt.shortcut);
 		    if( opt.image ){
-			hstr = "<div style='white-space:nowrap;'><img src='" + opt.image + "' alt='" + opt.name + "' class='JS9MenubarUserImage' >" + "&nbsp;&nbsp;" + opt.name + "</div>";
+			hstr = "<div style='white-space:nowrap;'><img src='" + opt.image + "' alt='" + opt.name + "' class='JS9MenubarUserImage' >" + "&nbsp;&nbsp;" + obj.name + "</div>";
 			items[opt.name] = {name: hstr, isHtmlName: true};
 		    } else {
-			items[opt.name] = {name: opt.name};
+			items[opt.name] = obj;
 		    }
 		}
 		return{
