@@ -1,6 +1,14 @@
 #!/bin/sh
 # set -x
 
+# in case user has changed the js9 script, try to figure out the right one
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+if [ -r ${DIR}/js9 ]; then
+  JS9=${DIR}/js9
+else
+  JS9=js9
+fi
+
 error() {
   echo "ERROR: $1" 1>&2
   exit 1
@@ -47,7 +55,7 @@ else
 fi
 
 # start the image load
-GOT=`js9 $XARGS Load $PATHNAME $1 `
+GOT=`${JS9} $XARGS Load $PATHNAME $1 `
 if [ x"$GOT" != x ]; then
   error "$GOT"
 fi
@@ -55,7 +63,7 @@ fi
 # wait for completion
 while [ $DONE = false ]; do
   # get status of current image
-  GOT=`js9 $XARGS GetLoadStatus $PATHNAME`
+  GOT=`${JS9} $XARGS GetLoadStatus $PATHNAME`
   case $GOT in
     error)
       error "could not load: $PATHNAME";;
