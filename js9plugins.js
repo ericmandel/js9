@@ -8075,6 +8075,7 @@ JS9.Menubar.init = function(width, height){
     }
     // user-defined menus
     if( this.usermenus && JS9.globalOpts.userMenuBar ){
+	html += JS9.globalOpts.userMenuDivider || "";
 	for(j=0; j<JS9.globalOpts.userMenuBar.length; j++){
 	    menu = JS9.globalOpts.userMenuBar[j];
 	    if( !menu || !menu.name || !menu.title || !menu.options  ){

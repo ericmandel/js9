@@ -221,8 +221,9 @@ JS9.globalOpts = {
     topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "red", "green", "blue"], // toplevel colormaps
     infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos", "impos", "physpos", "value", "regions", "progress"],
     menuBar: ["file", "edit", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
-    menubarStyle: "classic",                              // mac or classic
-    userMenus: false,                                     // add user menus?
+    menubarStyle: "classic",                          // mac or classic
+    userMenus: false,                                 // add user menus?
+    userMenuDivider: "&nbsp;&nbsp;&nbsp;",            // divide before user menu
     toolBar: ["linear", "log", "annulus", "box", "circle", "ellipse", "line", "polygon", "remove", "incexcl", "srcbkgd", "zoomin", "zoomout", "zoom1"],
     syncOps: ["colormap","contrastbias","pan","regions","scale","wcs","zoom"],                                   // which ops are sync'ed?
     syncReciprocate: true,           // default value for reciprocal sync'ing
