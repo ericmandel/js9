@@ -198,10 +198,6 @@ JS9.Menubar.createMenus = function(){
             build: function(){
 		var i, opt, hstr;
 		var items = {};
-		items["my" + menu.title] = {
-		    name: menu.title + ":",
-		    disabled: true
-		};
 		for(i=0; i<menu.options.length; i++){
 		    opt = menu.options[i];
 		    if( opt.image ){
