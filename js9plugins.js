@@ -5561,7 +5561,9 @@ JS9.Menubar.createMenus = function(){
 				args.push({display: udisp});
 				JS9.publics[opt.cmd].apply(null, args);
 				// update the menu title
+				if( opt.updateTitle !== false ){
 				if( opt.image && menu.updateTitle &&
+				    opt.updateTitle !== false     &&
 				    menu.updateTitle.match(/(both|image)/) ){
 				    if( menu.updateTitle === "both" ){
 					hstr = "<div style='white-space:nowrap;'><img src='" + opt.image + "' alt='" + opt.name + "' class='JS9MenubarUserImage' >" + "&nbsp;&nbsp;" + opt.name + "</div>";
@@ -5571,6 +5573,7 @@ JS9.Menubar.createMenus = function(){
 				    $(kopt.selector).html(hstr);
 				} else if( menu.updateTitle && opt.name ){
 				    $(kopt.selector).text(opt.name);
+				}
 				}
 			    } else {
 				JS9.error("unknown function for user menubar: " + menu.cmd);
