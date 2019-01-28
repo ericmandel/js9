@@ -36,7 +36,7 @@ JS9.globalOpts.userMenuBar = [
     {
 	"name": "zoom",
 	"title": "myZooms",
-	"updateTitle": function(im){return im.params.zoom;},
+	"updateTitle": false,
 	"options": [
 	    {
 		"name": "in",
