@@ -227,7 +227,7 @@ JS9.Menubar.createMenus = function(){
 				args.push({display: udisp});
 				JS9.publics[opt.cmd].apply(null, args);
 				// update the menu title
-				if( opt.image &&
+				if( opt.image && menu.updateTitle &&
 				    menu.updateTitle.match(/(both|image)/) ){
 				    if( menu.updateTitle === "both" ){
 					hstr = "<div style='white-space:nowrap;'><img src='" + opt.image + "' alt='" + opt.name + "' class='JS9MenubarUserImage' >" + "&nbsp;&nbsp;" + opt.name + "</div>";
