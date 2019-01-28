@@ -6333,16 +6333,12 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 	// use currently active raw
 	oraw = this.raw;
     } else if( opts.oraw === "current0" ){
-	// use the original current data for this layer, if possible;
-	for(i=0; i<this.raws.length; i++){
-	    raw = this.raws[i];
-	    if( rawid === raw.id ){
-		oraw = raw.current0;
-		break;
-	    }
-	}
-	// else use currently active raw
-	if( !oraw ){
+	// current0: use original current data for this layer
+	// iff this layer is the same as current active layer
+	if( this.raw.id === rawid ){
+	    oraw = this.raw.current0;
+	} else {
+	    // otherwise, use currently active raw layer
 	    oraw = this.raw;
 	}
     } else {
@@ -6476,8 +6472,8 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     } else {
 	opts.bitpix = -32;
     }
-    // use original raw data
-    opts.oraw = JS9.RAWID0;
+    // use origin of current
+    opts.oraw = "current0";
     // nraw should be a floating point copy of oraw
     opts.alwaysCopy = true;
     // new layer
@@ -6801,8 +6797,8 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     opts = opts || {};
     // but make sure we can set the id
     opts.rawid = "rotate";
-    // rotate current (e.g. reprojected data)
-    opts.oraw = "current0";
+    // rotate raw data
+    opts.oraw = JS9.RAWID0;
     // maintain current section, unless specified otherwise
     if( opts.resetSection !== true ){
 	opts.resetSection = false;
