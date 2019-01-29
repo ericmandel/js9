@@ -7984,6 +7984,12 @@ JS9.Image.prototype.wcs2imlen = function(s){
 // ---------------------------------------------------------------------
 
 JS9.Colormap = function(name, a1, a2, a3){
+    var i, got;
+    // sanity check
+    if( !name ){
+	return;
+    }
+    // there are two types of colormap, based on number of args
     this.name = name;
     switch(arguments.length){
     case 2:
@@ -7997,8 +8003,17 @@ JS9.Colormap = function(name, a1, a2, a3){
     default:
 	JS9.error("colormap requires a colormap name and 1 or 3 array args");
     }
-    // add to list of colormaps
-    JS9.colormaps.push(this);
+    // replace or append
+    for(i=0; i<JS9.colormaps.length; i++){
+	if( JS9.colormaps[i].name === this.name ){
+	    JS9.colormaps[i] = this;
+	    got = true;
+	    break;
+	}
+    }
+    if( !got ){
+	JS9.colormaps.push(this);
+    }
     // debugging
     if( JS9.DEBUG > 1 ){
 	JS9.log("JS9 colormap:  %s", this.name);
