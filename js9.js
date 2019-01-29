@@ -7323,7 +7323,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 // save session to a json file
 // NB: save is an image method, load is a display method
 JS9.Image.prototype.saveSession = function(file, opts){
-    var i, obj, str, blob, layer, dlayer, tobj, key, im;
+    var i, obj, str, blob, layer, dlayer, tobj, key, im, lpos;
     var saveim = function(){
 	// object holding session keys
 	var obj = {};
@@ -7334,10 +7334,16 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	obj.dheight = this.display.height;
 	// image params
 	obj.params = $.extend(true, {}, this.params);
-	// section info
-	obj.params.xcen = this.rgb.sect.xcen;
-	obj.params.ycen = this.rgb.sect.ycen;
-	obj.params.zoom = this.rgb.sect.zoom;
+	// get center of displayed image in physical coords
+	lpos = this.imageToLogicalPos({x:this.rgb.sect.xcen,
+				       y:this.rgb.sect.ycen});
+	// save section info
+	obj.sect = {};
+	obj.sect.xcen = lpos.x;
+	obj.sect.ycen = lpos.y;
+	obj.sect.xdim = this.raw.width;
+	obj.sect.ydim = this.raw.height;
+	obj.sect.zoom = this.rgb.sect.zoom;
 	// layers
 	obj.layers = [];
 	for( key in this.layers ){
@@ -9049,14 +9055,21 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	}
 	// save object so finish can find it
 	obj = $.extend(true, {}, jobj);
+	// but some param info needs to be deleted
+	delete obj.params.display;
 	// include an onload callback to load the layers
 	obj.params.onload = finish;
-	// delete old display info
-	if( obj.params.display ){
-	    delete obj.params.display;
-	}
 	// get pathname of image file
 	pname = obj.file;
+	// add section info
+	if( obj.sect ){
+	    obj.params.xcen = obj.sect.xcen;
+	    obj.params.ycen = obj.sect.ycen;
+	    obj.params.xdim = obj.sect.xdim;
+	    obj.params.ydim = obj.sect.ydim;
+	    obj.params.zoom = obj.sect.zoom;
+	    delete obj.sect;
+	}
 	// desktop only: are session file paths relative to the session path?
 	if( window.isElectron               &&
 	    JS9.desktopOpts.sessionPath     &&
