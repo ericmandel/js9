@@ -7416,6 +7416,13 @@ JS9.Image.prototype.saveSession = function(file, opts){
     obj.globals = $.extend(true, {}, JS9.globalOpts);
     // but delete properties that cause circular errors
     delete obj.globals.rgb;
+    // save user-defined colormaps
+    obj.cmaps = [];
+    for(i=0; i<JS9.colormaps.length; i++){
+	if( JS9.colormaps[i].source === "user" ){
+	    obj.cmaps.push(JS9.colormaps[i]);
+	}
+    }
     // make a blob from the stringified session object
     try{ str = JSON.stringify(obj, null, 4); }
     catch(e){ JS9.error("can't create json file for save session", e); }
@@ -8002,6 +8009,12 @@ JS9.Colormap = function(name, a1, a2, a3){
 	break;
     default:
 	JS9.error("colormap requires a colormap name and 1 or 3 array args");
+    }
+    // flag whether this was a core or user-defined colormap
+    if( !JS9.inited ){
+	this.source = "core";
+    } else {
+	this.source = "user";
     }
     // replace or append
     for(i=0; i<JS9.colormaps.length; i++){
@@ -9059,11 +9072,18 @@ JS9.Display.prototype.loadSession = function(file, opts){
     };
     var loadem = function(jobj){
 	var i, key;
-	// save (and remove) globals
+	// restore (and remove) globals
 	if( jobj.globalOpts ){
 	    $.extend(true, JS9.globalOpts, jobj.globalOpts);
 	    delete jobj.globalOpts;
 	}
+	// load colormaps
+	if( jobj.cmaps ){
+	    for(i=0; i<jobj.cmaps.length; i++){
+		JS9.AddColormap(jobj.cmaps[i]);
+	    }
+	}
+	// load images
 	if( jobj.images ){
 	    for(i=0; i<jobj.images.length; i++){
 		loadit(jobj.images[i]);
