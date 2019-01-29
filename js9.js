@@ -5598,6 +5598,11 @@ JS9.Image.prototype.setColormap = function(arg, arg2, arg3){
 	break;
     }
     this.displayImage("colors");
+    // hack: delete filterRGBImage from stash to avoid restore during reproject
+    // also added to "change contrast/bias" routine, can't this be generalized?
+    if( this.xeqstash && this.xeqstash.filterRGBImage ){
+	delete this.xeqstash.filterRGBImage;
+    }
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
 	this.xeqPlugins("image", "onsetcolormap");
@@ -6459,7 +6464,7 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
 	JS9.error("missing sigma value for gaussBlurData");
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStash("gaussBlurData", Array.prototype.slice.call(arguments));
+    this.xeqStashSave("gaussBlurData", Array.prototype.slice.call(arguments));
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
@@ -6531,7 +6536,7 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 	JS9.error("missing arg(s) for image arithmetic");
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStash("imarithData", Array.prototype.slice.call(arguments));
+    this.xeqStashSave("imarithData", Array.prototype.slice.call(arguments));
     // operation: add, sub, mul, div ...
     switch(op){
     case "add":
@@ -6703,7 +6708,7 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 	JS9.error("missing translation value(s) for shiftData");
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStash("shiftData", Array.prototype.slice.call(arguments));
+    this.xeqStashSave("shiftData", Array.prototype.slice.call(arguments));
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
@@ -6788,7 +6793,7 @@ JS9.Image.prototype.rotateData = function(angle, opts){
 	JS9.error("no WCS info available for reprojection");
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStash("rotateData", Array.prototype.slice.call(arguments));
+    this.xeqStashSave("rotateData", Array.prototype.slice.call(arguments));
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
@@ -6796,6 +6801,8 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     }
     // opts is optional
     opts = opts || {};
+    // save stash name
+    opts.stash = "rotateData";
     // but make sure we can set the id
     opts.rawid = "rotate";
     // rotate raw data
@@ -7139,7 +7146,11 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     // save this routine so it can be reconstituted in a restored session
     // (unless another xxxData routine is calling us)
     if( !opts.rawid ){
-	this.xeqStash("reprojectData", Array.prototype.slice.call(arguments));
+	this.xeqStashSave("reprojectData", Array.prototype.slice.call(arguments));
+    }
+    // save stash name
+    if( !opts.stash ){
+	opts.stash = "reprojectData";
     }
     // could take a while ...
     JS9.waiting(true, this.display);
@@ -7155,6 +7166,8 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 		topts.resetSection = true;
 	    }
 	    that.refreshImage(hdu, topts);
+	    // might have to re-execute calls in the stash
+	    that.xeqStashCall(that.xeqstash, [opts.stash, "reprojectData"]);
 	};
 	// opts is optional
 	opts = opts || {};
@@ -7203,7 +7216,7 @@ JS9.Image.prototype.filterRGBImage = function(filter){
 	return this;
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStash("filterRGBImage", Array.prototype.slice.call(arguments));
+    this.xeqStashSave("filterRGBImage", Array.prototype.slice.call(arguments));
     // remove filter name argument
     argv.shift();
     // add display context and RGB img argument
@@ -7443,12 +7456,12 @@ JS9.Image.prototype.saveSession = function(file, opts){
 
 // stash a routine name and arguments
 // the routine will be re-executed when the session is loaded
-JS9.Image.prototype.xeqStash = function(func, args, context){
+JS9.Image.prototype.xeqStashSave = function(func, args, context){
     var i, stash;
     // default context is image
     context = context || "image";
     // stash routine name and args
-    this.xeqstash = this.xeqstash || [];
+    this.xeqstash = this.xeqstash || {};
     // change display or image object to id
     for(i=0; i<args.length; i++){
 	if( typeof args[i] === "object" ){
@@ -7467,10 +7480,41 @@ JS9.Image.prototype.xeqStash = function(func, args, context){
 	    return this;
 	}
     }
-    // add new stash
-    this.xeqstash.push({func: func, args: args, context: context});
+    // add new func to stash
+    this.xeqstash[func] = {args: args, context: context};
     // allow chaining
     return this;
+};
+
+// call a stashed routine name and arguments
+JS9.Image.prototype.xeqStashCall = function(xeqstash, exclArr){
+    var key, xeq;
+    xeqstash = xeqstash || this.xeqstash;
+    for( key in xeqstash ){
+	if( xeqstash.hasOwnProperty(key) ){
+	    if( $.inArray(key, exclArr) >= 0 ){
+		continue;
+	    }
+	    xeq = xeqstash[key];
+	    xeq.context = xeq.context || "image";
+	    try{
+		switch(xeq.context){
+		case "image":
+		    this[key].apply(this, xeq.args);
+		    break;
+		case "display":
+		    this.display[key].apply(this.display, xeq.args);
+		    break;
+		default:
+		    this[key].apply(this, xeq.args);
+		    break;
+		}
+	    }
+	    catch(e){
+		JS9.error("error executing stash: "+ key, e, false);
+	    }
+	}
+    }
 };
 
 // execute plugins of various types (using type-specific values)
@@ -8975,7 +9019,7 @@ JS9.Display.prototype.loadSession = function(file, opts){
     var objs = {};
     var obj;
     var finish = function(im){
-	var i, dlayer, layer, lname, xeq, obj;
+	var i, dlayer, layer, lname, obj;
 	var dorender = function(){
 	    // update layer's shape counter
 	    var objs = this.canvas.getObjects();
@@ -9024,27 +9068,7 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	}
 	// re-execute from the xeq stash
 	if( obj.xeqstash ){
-	    for(i=0; i<obj.xeqstash.length; i++){
-		xeq = obj.xeqstash[i];
-		xeq.context = xeq.context || "image";
-		try{
-		    switch(xeq.context){
-		    case "image":
-			im[xeq.func].apply(im, xeq.args);
-			break;
-		    case "display":
-			im.display[xeq.func].apply(im.display, xeq.args);
-			break;
-		    default:
-			im[xeq.func].apply(im, xeq.args);
-			break;
-		    }
-		}
-		catch(e){
-		    JS9.error("error executing stash: "+ xeq.func, e, false);
-		}
-	    }
-
+	    im.xeqStashCall(obj.xeqstash);
 	}
     };
     var loadit = function(jobj){
@@ -13232,6 +13256,11 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
 	}, 0);
     } else {
 	im.displayImage("scaled", {blendMode: false});
+    }
+    // hack: delete filterRGBImage from stash to avoid restore during reproject
+    // also added to setColormap routine, can't this be generalized?
+    if( im.xeqstash && im.xeqstash.filterRGBImage ){
+	delete im.xeqstash.filterRGBImage;
     }
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
