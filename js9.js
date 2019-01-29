@@ -6463,6 +6463,8 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     if( sigma === undefined ){
 	JS9.error("missing sigma value for gaussBlurData");
     }
+    // save value
+    this.params.sigma = sigma;
     // save this routine so it can be reconstituted in a restored session
     this.xeqStashSave("gaussBlurData", Array.prototype.slice.call(arguments));
     // opts can be an object or json
