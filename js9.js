@@ -5429,9 +5429,9 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	vstr = val3;
 	vstr2 =  tr(c.x, 3) + " " + tr(c.y, 3) + " (" + c.sys + ")";
 	// object containing all information
-	obj = {ix: i.x, iy: i.y, ipos: i.x + sep2 + i.y,
+	obj = {ix: i.x, iy: i.y, ipos: tr(i.x, 2) + sep2 + tr(i.y, 2),
 	       isys: "image",
-	       px: c.x, py: c.y, ppos: c.x + sep2 + c.y,
+	       px: c.x, py: c.y, ppos: tr(c.x, 2) + sep2 + tr(c.y, 2),
 	       psys: c.sys,
 	       ra: "", dec: "", wcspos: "", wcssys: "",
 	       racen: "", deccen: "",
@@ -5484,7 +5484,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 		v1 = ((sect.x1 - sect.x0) * cd1).toFixed(0);
 		v2 = ((sect.y1 - sect.y0) * cd2).toFixed(0);
 		obj.wcsfov = v1 + units + " x " + v2 + units;
-		v1 = cd1.toFixed(2) * bin / sect.zoom;
+		v1 = tf(cd1 * bin / sect.zoom);
 		obj.wcspix = v1 + units + " / pixel";
 		obj.wcsfovpix = obj.wcsfov + "  (" + obj.wcspix + ")";
 		obj.vstr = vstr;
