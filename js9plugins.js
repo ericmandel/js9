@@ -10828,12 +10828,17 @@ JS9.Toolbar.tools = [
     "args": [1]
   },
   {
+    "name": "open",
+    "tip": "open local file dialog box",
+    "cmd": "OpenFileMenu",
+    "args": []
+  },
+  {
     "name": "infobox",
     "tip": "toggle infobox display",
     "cmd": "DisplayPlugin",
     "args": ["JS9Info"]
   },
-
   {
     "name": "magnifier",
     "tip": "toggle magnifier display",
