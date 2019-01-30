@@ -1571,7 +1571,7 @@ select.separateLayoutSelect {
     border-style: solid;
     border-color: black;
     border-width: 0px;
-    margin: 2px;
+    margin: 0px 0px 2px 0px;
     padding: 0px;
 }
 
