@@ -224,7 +224,7 @@ JS9.globalOpts = {
     menubarStyle: "classic",                          // mac or classic
     userMenus: false,                                 // add user menus?
     userMenuDivider: "&nbsp;&nbsp;&nbsp;",            // divide before user menu
-    toolBar: ["linear", "log", "annulus", "box", "circle", "ellipse", "line", "polygon", "remove", "incexcl", "srcbkgd", "zoomin", "zoomout", "zoom1"],
+    toolBar: ["annulus", "box", "circle", "ellipse", "line", "polygon", "text", "linear", "log", "zoom+", "zoom-", "zoom1"],
     syncOps: ["colormap","contrastbias","pan","regions","scale","wcs","zoom"],                                   // which ops are sync'ed?
     syncReciprocate: true,           // default value for reciprocal sync'ing
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden

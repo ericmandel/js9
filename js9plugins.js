@@ -10678,11 +10678,11 @@ JS9.Toolbar = {};
 JS9.Toolbar.CLASS = "JS9";        // class of plugins (1st part of div class)
 JS9.Toolbar.NAME = "Toolbar";    // name of this plugin (2nd part of div class)
 JS9.Toolbar.WIDTH =  512;	 // width of light window
-JS9.Toolbar.HEIGHT = 44;         // height of light window
+JS9.Toolbar.HEIGHT = 36;         // height of light window
 JS9.Toolbar.BASE = JS9.Toolbar.CLASS + JS9.Toolbar.NAME;
 JS9.Toolbar.IMAGEWIDTH  = 24;
 JS9.Toolbar.IMAGEHEIGHT = 24;
-JS9.Toolbar.TOOLBARHEIGHT = 30;
+JS9.Toolbar.TOOLBARHEIGHT = 36;
 // hacky offsets to place tooltips nicely
 // why are lighwins different from static elements?
 JS9.Toolbar.TOOLTIPX = 30;
@@ -10694,14 +10694,12 @@ JS9.Toolbar.tools = [
   {
     "name": "linear",
     "tip": "linear scale",
-    "image": "images/toolbar/dax_images/lin.png",
     "cmd": "SetScale",
     "args": ["linear"]
   },
   {
     "name": "log",
     "tip": "log scale",
-    "image": "images/toolbar/dax_images/log.png",
     "cmd": "SetScale",
     "args": ["log"]
   },
@@ -10738,156 +10736,123 @@ JS9.Toolbar.tools = [
   {
     "name": "squared",
     "tip": "squared scale",
-    "image": "images/toolbar/dax_images/pow.png",
     "cmd": "SetScale",
     "args": ["squared"]
   },
   {
     "name": "annulus",
     "tip": "annulus region",
-    "image": "images/toolbar/dax_images/annulus.png",
+    "image": "images/toolbar/svg/annulus.svg",
     "cmd": "AddRegions",
     "args": ["annulus"]
   },
   {
     "name": "box",
     "tip": "box region",
-    "image": "images/toolbar/dax_images/box.png",
+    "image": "images/toolbar/svg/box.svg",
     "cmd": "AddRegions",
     "args": ["box"]
   },
   {
     "name": "circle",
     "tip": "circle region",
-    "image": "images/toolbar/dax_images/circle.png",
+    "image": "images/toolbar/svg/circle.svg",
     "cmd": "AddRegions",
     "args": ["circle"]
   },
   {
     "name": "ellipse",
     "tip": "ellipse region",
-    "image": "images/toolbar/dax_images/ellipse.png",
+    "image": "images/toolbar/svg/ellipse.svg",
     "cmd": "AddRegions",
     "args": ["ellipse"]
   },
   {
     "name": "line",
     "tip": "line region",
-    "image": "images/toolbar/dax_images/lin.png",
+    "image": "images/toolbar/svg/line.svg",
     "cmd": "AddRegions",
     "args": ["line"]
   },
   {
     "name": "polygon",
     "tip": "polygon region",
-    "image": "images/toolbar/dax_images/poly.png",
+    "image": "images/toolbar/svg/polygon.svg",
     "cmd": "AddRegions",
     "args": ["polygon"]
   },
   {
     "name": "text",
     "tip": "text region",
-    "image": "images/toolbar/dax_images/text.png",
+    "image": "images/toolbar/svg/txt.svg",
     "cmd": "AddRegions",
     "args": ["text"]
   },
   {
-    "name": "remove",
-    "tip": "remove selected region",
-    "image": "images/toolbar/dax_images/erase.png",
-    "cmd": "RemoveRegions",
-    "args": ["selected"]
-  },
-  {
-    "name": "incexcl",
+    "name": "inc/excl",
     "tip": "toggle selected region incl/excl",
-    "image": "images/toolbar/dax_images/incexl.png",
+    // "image": "images/toolbar/dax_images/incexl.png",
     "cmd": "ToggleRegionTags",
     "args": ["selected", "include", "exclude"]
   },
   {
-    "name": "srcbkgd",
-    "tip": "toggle selected region src/bkgd",
-    "image": "images/toolbar/dax_images/srcbkg.png",
+    "name": "src/bkg",
+    "tip": "toggle selected region src/bkg",
+    // "image": "images/toolbar/dax_images/srcbkg.png",
     "cmd": "ToggleRegionTags",
     "args": ["selected", "source", "background"]
   },
   {
-    "name": "zoomin",
+    "name": "remove",
+    "tip": "remove selected region",
+    // "image": "images/toolbar/dax_images/erase.png",
+    "cmd": "RemoveRegions",
+    "args": ["selected"]
+  },
+  {
+    "name": "zoom+",
     "tip": "zoom in",
-    "image": "images/toolbar/dax_images/mag_plus.png",
     "cmd": "SetZoom",
     "args": ["x2"]
   },
   {
-    "name": "zoomout",
+    "name": "zoom-",
     "tip": "zoom out",
-    "image": "images/toolbar/dax_images/mag_minus.png",
     "cmd": "SetZoom",
     "args": ["/2"]
   },
   {
     "name": "zoom1",
     "tip": "zoom 1",
-    "image": "images/toolbar/dax_images/mag_one.png",
     "cmd": "SetZoom",
     "args": [1]
   },
   {
-    "name": "bin*2",
-    "tip": "bin * 2",
-    "image": "images/toolbar/dax_images/bin_plus.png",
-    "cmd": "DisplaySection",
-    "args": [{"bin": "*2"}]
-  },
-  {
-    "name": "bin/2",
-    "tip": "bin / 2",
-    "image": "images/toolbar/dax_images/bin_minus.png",
-    "cmd": "DisplaySection",
-    "args": [{"bin": "/2"}]
-  },
-  {
-    "name": "bin1",
-    "tip": "bin 1",
-    "image": "images/toolbar/dax_images/bin_one.png",
-    "cmd": "DisplaySection",
-    "args": [{"bin": 1}]
-  },
-  {
-    "name": "open",
-    "tip": "open local file dialog box",
-    "image": "images/toolbar/dax_images/open.png",
-    "cmd": "OpenFileMenu",
-    "args": []
-  },
-  {
-    "name": "panner",
-    "tip": "toggle panner display",
-    "image": "images/toolbar/dax_images/pan.png",
+    "name": "infobox",
+    "tip": "toggle infobox display",
     "cmd": "DisplayPlugin",
-    "args": ["JS9Panner"]
+    "args": ["JS9Info"]
   },
+
   {
     "name": "magnifier",
     "tip": "toggle magnifier display",
-    "image": "images/toolbar/dax_images/mag.png",
+    // "image": "images/toolbar/dax_images/mag.png",
     "cmd": "DisplayPlugin",
     "args": ["JS9Magnifier"]
   },
   {
-    "name": "stats",
-    "tip": "toggle imexam statistics display",
-    "image": "images/toolbar/dax_images/stats.png",
+    "name": "panner",
+    "tip": "toggle panner display",
+    // "image": "images/toolbar/dax_images/pan.png",
     "cmd": "DisplayPlugin",
-    "args": ["ImExamRegionStats"]
+    "args": ["JS9Panner"]
   },
   {
-    "name": "smooth",
-    "tip": "gaussian smooth, 1 sigma",
-    "image": "images/toolbar/dax_images/smooth.png",
-    "cmd": "GaussBlurData",
-    "args": [1]
+    "name": "prefs",
+    "tip": "toggle preferences display",
+    "cmd": "DisplayPlugin",
+    "args": ["JS9Preferences"]
   }
 ];
 
@@ -11047,7 +11012,7 @@ JS9.Toolbar.init = function(width, height){
 	}
     }
     // add a break between important tools and the rest
-    JS9.Toolbar.addTool.call(this, "$break");
+    // JS9.Toolbar.addTool.call(this, "$break");
     // add tools not in the globalOpts to the bottom of the list
     for(i=0; i<JS9.Toolbar.tools.length; i++){
 	tool = JS9.Toolbar.tools[i];

@@ -1571,19 +1571,19 @@ select.separateLayoutSelect {
     border-style: solid;
     border-color: black;
     border-width: 0px;
-    margin: 0px;
-    padding: 8px 0px 8px 0px;
+    margin: 2px;
+    padding: 0px;
 }
 
 .JS9ToolbarButtonDiv{
-    margin:  0px 0px 0px 2px;
-    padding: 2px;
+    margin:  2px 2px 0px 0px;
+    padding: 2px 2px 0px 0px;;
     display: inline;
 }
 
 .JS9ToolbarImageButton{
+    margin:  2px 2px 0px 0px;
     padding: 2px;
-    margin: 0px;
     display: inline-block;
     vertical-align: middle;
 }
@@ -1592,18 +1592,26 @@ select.separateLayoutSelect {
     outline: 2px dotted grey;
 }
 
+.JS9ToolbarImageButton:hover {
+    border: 1px solid grey;
+}
+
 .JS9ToolbarButtonButton{
     vertical-align: middle;
-    background-color: white;
-    border: 1px black solid;
+    border: 0px black solid;
+    background-color: transparent;
     color: black;
-    padding: 6px;
+    padding: 3px 6px 3px 6px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 10px;
-    margin: 0px;
+    font-size: 12px;
+    margin: 2px;
     border-radius: 4px;
+}
+
+.JS9ToolbarButtonButton:hover {
+  border: 1px solid grey;
 }
 
 .JS9ToolbarButtonButton:focus {
