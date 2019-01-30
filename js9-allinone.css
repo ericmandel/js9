@@ -1576,7 +1576,7 @@ select.separateLayoutSelect {
 }
 
 .JS9ToolbarButtonDiv{
-    margin:  2px 2px 0px 6px;
+    margin:  2px 0px 0px 4px;
     padding: 2px 2px 0px 0px;;
     display: inline;
 }
@@ -1601,7 +1601,7 @@ select.separateLayoutSelect {
     border: 0px black solid;
     background-color: transparent;
     color: black;
-    padding: 3px 6px 3px 6px;
+    padding: 2px 4px 2px 4px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
