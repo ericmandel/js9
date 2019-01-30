@@ -5739,21 +5739,11 @@ JS9.Menubar.createMenus = function(){
 		};
 		items.sync = {
 		    name: "sync this image ...",
-		    items: {
-			synctitle: {
-			    name: "image(s) to keep in sync:",
-			    disabled: true
-			}
-		    }
+		    items: { }
 		};
 		items.unsync = {
 		    name: "unsync this image ...",
-		    items: {
-			unsynctitle: {
-			    name: "image(s) to keep in sync:",
-			    disabled: true
-			}
-		    }
+		    items: { }
 		};
 		items.separate = xname("separate these images");
 		items.gather = xname("gather all images here");
@@ -5770,14 +5760,6 @@ JS9.Menubar.createMenus = function(){
 		    items.moveto.items.moveto_newdisp = xname("a new display");
 		    // sync target images to this image
 		    items.sync.disabled = false;
-		    for(i=0; i<JS9.images.length; i++){
-			if( tim !== JS9.images[i]    	     ){
-			    s1 = "sync_" + JS9.images[i].id;
-			    items.sync.items[s1] = xname(JS9.images[i].id);
-			}
-		    }
-		    items.sync.items.sync_allimages = xname("all images");
-		    items.sync.items["sep" + n++] = "------";
 		    items.sync.items.sync_opstitle = {
 			name: "op(s) that trigger syncing:",
 			disabled: true
@@ -5791,18 +5773,21 @@ JS9.Menubar.createMenus = function(){
 			selected: JS9.globalOpts.syncReciprocate,
 			type: "checkbox"
 		    };
-		    // unsync target images to this image
-		    items.unsync.disabled = false;
+		    items.sync.items["sep" + n++] = "------";
+		    items.sync.items.title = {name: "image(s) to keep in sync:",
+					      disabled: true};
 		    for(i=0; i<JS9.images.length; i++){
 			if( tim !== JS9.images[i]    	     ){
-			    s1 = "unsync_" + JS9.images[i].id;
-			    items.unsync.items[s1] = xname(JS9.images[i].id);
+			    s1 = "sync_" + JS9.images[i].id;
+			    items.sync.items[s1] = xname(JS9.images[i].id);
 			}
 		    }
-		    items.unsync.items.unsync_allimages = xname("all images");
-		    items.unsync.items["sep" + n++] = "------";
+		    items.sync.items.sync_allimages = xname("all images");
+
+		    // unsync target images to this image
+		    items.unsync.disabled = false;
 		    items.unsync.items.unsync_opstitle = {
-			name: "op(s) that trigger syncing:",
+			name: "op(s) to unsync:",
 			disabled: true
 		    };
 		    items.unsync.items.unsyncops = {
@@ -5810,10 +5795,20 @@ JS9.Menubar.createMenus = function(){
 			type: "textarea"
 		    };
 		    items.unsync.items.unsyncreciprocate = {
-			name: "reciprocal syncing",
+			name: "unsync reciprocals",
 			selected: JS9.globalOpts.syncReciprocate,
 			type: "checkbox"
 		    };
+		    items.unsync.items["sep" + n++] = "------";
+		    items.unsync.items.title = {name: "image(s) to unsync:",
+						disabled: true};
+		    for(i=0; i<JS9.images.length; i++){
+			if( tim !== JS9.images[i]    	     ){
+			    s1 = "unsync_" + JS9.images[i].id;
+			    items.unsync.items[s1] = xname(JS9.images[i].id);
+			}
+		    }
+		    items.unsync.items.unsync_allimages = xname("all images");
 		} else {
 		    items.moveto.disabled = true;
 		    items.sync.disabled = true;
