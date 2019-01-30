@@ -3817,7 +3817,7 @@ JS9.Image.prototype.parseZoom = function(zval){
 	case "t":
 	    nzoom = Math.min(this.display.width/this.raw.width, this.display.height/this.raw.height);
 	    // a little rounding makes the zoom nicer
-	    nzoom = Math.round((nzoom + 0.00001) * 100) / 100;
+	    nzoom = Math.round((nzoom + 0.0000001) * 1000000) / 1000000;
 	    break;
 	default:
 	    nzoom = parseFloat(zval);
