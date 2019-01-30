@@ -2143,7 +2143,7 @@ JS9.Cmaps.xNmap = function(id, target){
 		       rgbtol: 0});
 };
 
-// selectt the colormap to use as a basis for colormap generation
+// select the colormap to use as a basis for colormap generation
 JS9.Cmaps.xCmap = function(id, target){
     var display = JS9.lookupDisplay(id);
     var cname = target.options[target.selectedIndex].value;
@@ -2356,8 +2356,17 @@ JS9.Cmaps.init = function(width, height){
 	    el1.spectrum({showButtons: false,
 			  showInput: true,
 			  preferredFormat: "hex6"});
+	    // when the color is changed via the spectrum
 	    el1.on('move.spectrum', function(evt, tinycolor){
 		var cname = tinycolor.toHex();
+		JS9.Cmaps.mkCmaps(display, cname, display.cmaps.nmap,
+				  {mode: display.cmaps.mode,
+				   assign: display.cmaps.assign});
+		display.cmaps.lastCname = cname;
+	    });
+	    // when the color is changed via the text box
+	    el1.on("change", function(){
+		var cname = tinycolor($(this).val()).toHex();
 		JS9.Cmaps.mkCmaps(display, cname, display.cmaps.nmap,
 				  {mode: display.cmaps.mode,
 				   assign: display.cmaps.assign});
