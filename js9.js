@@ -19769,19 +19769,29 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
     var reader, cobj;
     var obj = JS9.parsePublicArgs(arguments);
     var obj2cmap = function(xobj, opts){
-	if( typeof xobj !== "object" || !xobj.name ){
+	var i, tobj;
+	if( typeof xobj !== "object" ){
 	    JS9.error("invalid colormap object for JS9.AddColormap()");
 	}
-	if( xobj.vertices ){
-	    JS9.AddColormap(xobj.name,
-			    xobj.vertices[0],
-			    xobj.vertices[1],
-			    xobj.vertices[2],
-			    opts);
-	} else if( xobj.colors ){
-	    JS9.AddColormap(xobj.name, xobj.colors, opts);
-	} else {
-	    JS9.error("invalid colormap object for JS9.AddColormap()");
+	if( !$.isArray(xobj) ){
+	    xobj = [xobj];
+	}
+	for(i=0; i<xobj.length; i++){
+	    tobj = xobj[i];
+	    if( !tobj.name ){
+		JS9.error("missing name for colormap in JS9.AddColormap()");
+	    }
+	    if( tobj.vertices ){
+		JS9.AddColormap(tobj.name,
+				tobj.vertices[0],
+				tobj.vertices[1],
+				tobj.vertices[2],
+				opts);
+	    } else if( tobj.colors ){
+		JS9.AddColormap(tobj.name, tobj.colors, opts);
+	    } else {
+		JS9.error("unknown colormap type for JS9.AddColormap()");
+	    }
 	}
     };
     colormap = obj.argv[0];
