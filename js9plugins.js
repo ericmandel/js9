@@ -3712,11 +3712,6 @@ JS9.Info.init = function(){
     infoHTML = '<table name="info" class="js9InfoTable">';
     for(i=0; i<opts.length; i++){
 	key = opts[i];
-	// aesthetic condideration: skip wcs display if we have no wcs
-	if( key.match(/^wcs/)
-	    && this.display.image && !(this.display.image.raw.wcs>0) ){
-	    continue;
-	}
 	// add html for this line of the display
 	if( key in obj ){
 	    infoHTML += obj[key];
