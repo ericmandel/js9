@@ -14741,9 +14741,9 @@ JS9.Regions.parseRegions = function(s, opts){
     var regions = [];
     var i, j, k, lines, obj, robj, txeq;
     var owcssys, owcsunits, wcssys, iswcs, liswcs, pos, alen;
-    var regrexp = /(annulus)|(box)|(circle)|(ellipse)|(line)|(polygon)|(point)|(text)/;
-    var wcsrexp = /(fk4)|(fk5)|(icrs)|(galactic)|(ecliptic)|(image)|(physical)/;
-    var imrexp = /(image)|(physical)/;
+    var regrexp = /^(annulus|box|circle|ellipse|line|polygon|point|text)$/;
+    var wcsrexp = /^(fk4|fk5|icrs|galactic|ecliptic|image|physical|linear)$/;
+    var imrexp = /^(image|physical)$/;
     var unrexp = /[dr:]/;
     var parrexp = /\(\s*([^)]+?)\s*\)/;
     var seprexp = /\n|;/;
