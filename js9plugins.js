@@ -7156,8 +7156,10 @@ JS9.Menubar.createMenus = function(){
 		}
 		items.copyto.items.copyto_all = xname("all images");
 		items.copyto.disabled = false;
+		items.selectops.items.copySelReg.disabled = false;
 	    } else {
 		items.copyto.disabled = true;
+		items.selectops.items.copySelReg.disabled = true;
 	    }
 	    // disable if we don't have info plugin
 	    if( !JS9.hasOwnProperty("Info") ){
