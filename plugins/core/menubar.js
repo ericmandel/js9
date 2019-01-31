@@ -1752,12 +1752,12 @@ JS9.Menubar.createMenus = function(){
 	    items.polygon = xname("polygon");
 	    items.text = xname("text");
 	    items.sep1 = "------";
-	    items.loadRegions  = xname("load new regions");
-	    items.saveRegions  = xname("save all regions");
-	    items.listRegions  = xname("list all regions");
-	    items.removeRegions  = xname("remove all regions");
+	    items.loadRegions  = xname("load");
+	    items.listRegions  = xname("list all");
+	    items.saveRegions  = xname("save all");
+	    items.removeRegions  = xname("remove all");
 	    items.copyto  = {
-		name: "copy all regions to ...",
+		name: "copy all to ...",
 		items: {
 		    copytotitle: {
 			name: "choose image:",
@@ -1781,6 +1781,7 @@ JS9.Menubar.createMenus = function(){
 		    ieSelReg: xname("toggle: incl/excl"),
 		    configSelReg: xname("edit selected"),
 		    listSelReg: xname("list selected"),
+		    saveSelReg: xname("save selected"),
 		    removeSelReg: xname("remove selected"),
 		    copySelReg: {
 			name: "copy selected to ...",
@@ -1877,6 +1878,9 @@ JS9.Menubar.createMenus = function(){
 				    JS9.Regions.displayConfigForm.call(uim,
 								       utarget);
 				}
+				break;
+			    case "saveSelReg":
+				uim.saveRegions("js9.reg", "selected");
 				break;
 			    case "listSelReg":
 				uim.listRegions("selected", {mode: 2});
