@@ -3701,7 +3701,8 @@ JS9.Info.init = function(){
     // only init if we are displaying a new image
     // i.e., avoid re-init when changing contrast/bias
     if( this.display.image ){
-	if( this.lastimage === this.display.image ){
+	if( this.lastimage === this.display.image                 &&
+	    this.display.image.callingPlugin !== "onimagerefresh" ){
 	    return;
 	}
 	this.lastimage = this.display.image;
@@ -3712,6 +3713,12 @@ JS9.Info.init = function(){
     infoHTML = '<table name="info" class="js9InfoTable">';
     for(i=0; i<opts.length; i++){
 	key = opts[i];
+	// aesthetic condideration: skip wcs display if we have no wcs
+	if( key.match(/^wcs/)            &&
+	    JS9.globalOpts.infoBoxResize &&
+	    this.display.image && !(this.display.image.raw.wcs>0) ){
+	    continue;
+	}
 	// add html for this line of the display
 	if( key in obj ){
 	    infoHTML += obj[key];
@@ -3954,6 +3961,7 @@ JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 		    onplugindisplay: JS9.Info.pluginDisplay,
 		    onpluginclose: JS9.Info.pluginClose,
 		    onimagedisplay: JS9.Info.init,
+		    onimagerefresh: JS9.Info.init,
 		    winTitle: "Info",
 		    winResize: true,
 		    winDims: [JS9.Info.WIDTH, JS9.Info.HEIGHT]});

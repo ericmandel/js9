@@ -220,6 +220,7 @@ JS9.globalOpts = {
 		 tooltip: "$xreg.data.ra $xreg.data.dec"}, // tooltip format
     topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "red", "green", "blue"], // toplevel colormaps
     infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos", "impos", "physpos", "value", "regions", "progress"],
+    infoBoxResize: true,                              // is size based on wcs?
     menuBar: ["file", "edit", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
     menubarStyle: "classic",                          // mac or classic
     userMenus: false,                                 // add user menus?
@@ -7538,6 +7539,7 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
 	    pinst = parr[pname];
 	    popts = pinst.plugin.opts;
 	    if( pinst.isActive(xname) && typeof popts[xname] === "function" ){
+		this.callingPlugin = xname;
 		switch(xtype){
 		case "image":
 		    // used for: onimage[load,close,refresh,display]
@@ -7580,6 +7582,7 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
 		    }
 		    break;
 		}
+		delete this.callingPlugin;
 	    }
 	}
     }
