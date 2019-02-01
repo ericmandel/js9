@@ -240,6 +240,7 @@ JS9.globalOpts = {
     catalogTemplates: ".cat,.tab",   // templates for local catalog file input
     controlsMatchRegion: false,      // true, false, "corner" or "border"
     internalColorPicker: true,       // use HTML5 color picker, if available?
+    badChars: /[()]/g,               // cfitsio chokes on these, so remove them
     newWindowWidth: 530,	     // width of LoadWindow("new")
     newWindowHeight: 625,	     // height of LoadWindow("new")
     debug: 0		             // debug level
@@ -20040,6 +20041,20 @@ JS9.mkPublic("Load", function(file, opts){
 	if( file.path || file.name ){
 	    // new file (or, for Electron.js, the path, which is better)
 	    opts.filename = file.path || file.name;
+	    // hack: remove characters on which cfitsio chokes,
+	    // but avoid removing them from the bracketed extension
+	    if( opts.filename.match(JS9.globalOpts.badChars) ){
+		// save extension
+		ext = opts.filename.match(/\[.*\]/);
+		// remove extension to get file root
+		tfile = opts.filename.replace(/\[.*\]/,"");
+		// remove bad chars from root file
+		opts.filename = tfile.replace(JS9.globalOpts.badChars,"");
+		// if there was an extension, add it back
+		if( ext ){
+		    opts.filename += ext;
+		}
+	    }
 	    // does this image already exist?
 	    im = JS9.lookupImage(opts.filename, opts.display);
 	    if( im ){
