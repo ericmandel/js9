@@ -231,6 +231,9 @@ JS9.globalOpts = {
     hiddenPluginDivs: [], 	     // which static plugin divs start hidden
     separate: {layout: "auto", leftMargin: 10, topMargin: 10}, // separate a display
     imageTemplates: ".fits,.fts,.png,.jpg,.jpeg,.fz", // templates for local images
+    wcsUnits: {FK4:"sexagesimal", FK5:"sexagesimal", ICRS:"sexagesimal",
+	       galactic:"degrees", ecliptic:"degrees", linear:"degrees",
+	       physical:"pixels", image:"pixels"}, // def units for wcs sys
     regionTemplates: ".reg",         // templates for local region file input
     sessionTemplates: ".ses,.js9ses",// templates for local session file input
     colormapTemplates: ".cmap",      // templates for local colormap file input
@@ -265,7 +268,6 @@ JS9.imageOpts = {
     zscalesamples: 600,			// default from ds9
     zscaleline: 120,			// default from ds9
     wcssys: "native",			// default WCS sys
-    wcsunits: "sexagesimal",		// default WCS units
     lcs: "physical",			// default logical coordinate system
     valpos: true,			// whether to display value/position
     opacity: 1.0,			// opacity between 0 and 1
@@ -4057,7 +4059,7 @@ JS9.Image.prototype.getWCSSys = function(){
 
 // set the WCS sys for this image
 JS9.Image.prototype.setWCSSys = function(wcssys){
-    var s, wu;
+    var s, u;
     // is this core service disabled?
     if( $.inArray("wcs", this.params.disable) >= 0 ){
 	return;
@@ -4065,22 +4067,25 @@ JS9.Image.prototype.setWCSSys = function(wcssys){
     if( wcssys === "image" ){
 	this.params.wcssys = "image";
 	this.params.wcsunits = "pixels";
+	JS9.wcsunits.image = "pixels";
     } else if( wcssys === "physical" ){
 	this.params.wcssys = "physical";
 	this.params.wcsunits = "pixels";
+	JS9.globalOpts.wcsUnits.physical = "pixels";
     } else if( this.raw.wcs && (this.raw.wcs > 0) ){
+	// native: original wcs from file
 	if( wcssys === "native" ){
 	    wcssys = this.params.wcssys0;
 	}
+	// set wcs system
 	s = JS9.wcssys(this.raw.wcs, wcssys);
 	if( s ){
+	    // store new wcs system param
 	    this.params.wcssys = s.trim();
-	    if( this.params.wcsunits === "pixels" ){
-		wu = JS9.imageOpts.wcsunits;
-	    } else {
-		wu = this.params.wcsunits;
-	    }
-	    this.setWCSUnits(wu);
+	    // get units associated with this wcs system
+	    u = JS9.globalOpts.wcsUnits[this.params.wcssys] || "sexagesimal";
+	    // set the units
+	    this.setWCSUnits(u);
 	}
     }
     // extended plugins
@@ -4213,7 +4218,11 @@ JS9.Image.prototype.setWCS = function(version){
 		if( this.raw.wcsinfo && this.raw.wcsinfo.radecsys ){
 		    wcssys = this.raw.wcsinfo.radecsys;
 		} else {
-		    wcssys = this.params.wcssys.trim();
+		    if( this.params.wcssys !== "native" ){
+			wcssys = this.params.wcssys.trim();
+		    } else {
+			wcssys = this.params.lcs;
+		    }
 		}
 		// set the wcs system
 		this.setWCSSys(wcssys);
@@ -4250,8 +4259,9 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
     if( wcsunits === "pixels" ){
 	this.params.wcssys = "physical";
 	this.params.wcsunits = "pixels";
+	JS9.globalOpts.wcsUnits[this.params.wcssys] = "pixels";
     } else if( this.raw.wcs && (this.raw.wcs > 0) ){
-	if( (this.params.wcssys === "image") ||
+	if( (this.params.wcssys === "image")    ||
 	    (this.params.wcssys === "physical") ){
 	    ws = JS9.imageOpts.wcssys;
 	    this.setWCSSys(this.raw.wcs, ws);
@@ -4259,6 +4269,7 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
 	s = JS9.wcsunits(this.raw.wcs, wcsunits);
 	if( s ){
 	    this.params.wcsunits = s.trim();
+	    JS9.globalOpts.wcsUnits[this.params.wcssys] = this.params.wcsunits;
 	}
     }
     // extended plugins

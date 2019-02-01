@@ -154,7 +154,7 @@ static int filecontents2(char *path, char **obuf, int *osize){
 /* add a new Info record with a valid wcs struct */
 static int newinfo(struct WorldCoor *wcs){
   int i, n, cinfo;
-  // init info array
+  /* init info array */
   if( maxinfo == 0 ){
     maxinfo = maxinc;
     infos = malloc(maxinfo * sizeof(InfoRec));
@@ -162,7 +162,7 @@ static int newinfo(struct WorldCoor *wcs){
       return -4;
     }
   }
-  // increase info array, if necessary
+  /* increase info array, if necessary */
   while( ninfo >= maxinfo ){
     maxinfo += maxinc;
     infos = realloc(infos, maxinfo * sizeof(InfoRec));
@@ -170,16 +170,16 @@ static int newinfo(struct WorldCoor *wcs){
       return -3;
     }
   }
-  // assume we will use next available slot
+  /* assume we will use next available slot */
   cinfo = ninfo;
-  // but look for an empty slot
+  /* but look for an empty slot */
   for(i=1; i<ninfo; i++){
     if( infos[i].wcs == NULL ){
       cinfo = i;
       break;
     }
   }
-  // populate slot with wcs info
+  /* populate slot with wcs info */
   if( wcs ){
     n = cinfo;
     infos[n].wcs = wcs;
@@ -194,7 +194,7 @@ static int newinfo(struct WorldCoor *wcs){
   return n;
 }
 
-// free wcs and info records
+/* free wcs and info records */
 static int freeinfo(int n){
   if( (n < 0) || (n >= ninfo) ){
     return 0;
@@ -354,6 +354,8 @@ char *wcssys(int n, char *s){
       strcpy(str, "galactic");
     } else if( !strcasecmp(str, "ecliptic") ){
       strcpy(str, "ecliptic");
+    } else if( !strcasecmp(str, "linear") ){
+      strcpy(str, "linear");
     } else {
       cluc(str);
     }
@@ -365,9 +367,16 @@ char *wcssys(int n, char *s){
 char *wcsunits(int n, char *s){
   Info info = getinfo(n);
   char *str = NULL;
+  char *mywcssys=NULL;
   if( info && info->wcs ){
     str = info->str;
     *str = '\0';
+    /* linear is always degrees */
+    mywcssys = wcssys(n, NULL);
+    if( !strcasecmp(mywcssys, "linear") ){
+      s = "degrees";
+    }
+    /* set the units */
     if( s && *s ){
       if( !strcasecmp(s, "degrees") ){
 	setwcsdeg(info->wcs, WCS_DEGREES);
@@ -403,6 +412,7 @@ char *reg2wcsstr(int n, char *regstr){
   char *saves1=NULL;
   char *targs=NULL, *targ=NULL;
   char *mywcssys=NULL;
+  int mywcsunits;
   int alwaysdeg = 0;
   int nq = 0;
   double sep = 0.0;
@@ -411,10 +421,12 @@ char *reg2wcsstr(int n, char *regstr){
 
   if( info && info->wcs ){
     mywcssys = wcssys(n, NULL);
-    if( !strcmp(mywcssys, "galactic") ||
-	!strcmp(mywcssys, "ecliptic") ||
-	!strcmp(mywcssys, "linear") ){
+    mywcsunits = info->wcsunits;
+    if( !strcasecmp(mywcssys, "galactic") ||
+	!strcasecmp(mywcssys, "ecliptic") ){
       alwaysdeg = 1;
+    } else if( !strcasecmp(mywcssys, "linear") ){
+      mywcsunits = WCS_DEGREES;
     }
     str = info->str;
     *str = '\0';
@@ -442,7 +454,7 @@ char *reg2wcsstr(int n, char *regstr){
 	  strncat(str, tbuf, SZ_LINE-1);
 	}
 	/* convert to proper units */
-	switch(info->wcsunits){
+	switch(mywcsunits){
 	case WCS_DEGREES:
 	  snprintf(tbuf, SZ_LINE, "%.6f, %.6f", rval1, rval2);
 	  strncat(str, tbuf, SZ_LINE-1);
@@ -481,7 +493,7 @@ char *reg2wcsstr(int n, char *regstr){
 	    /* convert image x,y to ra,dec */
 	    pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);
 	    /* convert to proper units */
-	    switch(info->wcsunits){
+	    switch(mywcsunits){
 	    case WCS_DEGREES:
 	      snprintf(tbuf, SZ_LINE, ", %.6f, %.6f", rval1, rval2);
 	      strncat(str, tbuf, SZ_LINE-1);
@@ -701,9 +713,9 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
   /* look for a return value */
   if( filecontents(file0, rstr, SZ_LINE) >= 0 ){
     if( strstr(rstr, "OK") ){
-      // copy temp file to output file:
-      // Emscripten has created the temp file as a huge JS array,
-      // and we are converting it back to a smaller typed array ...
+      /* copy temp file to output file: */
+      /* Emscripten has created the temp file as a huge JS array, */
+      /* and we are converting it back to a smaller typed array ... */
       EM_ASM({
 	  try{
 	    FS.writeFile(UTF8ToString($1), FS.readFile(UTF8ToString($0)));
@@ -1072,8 +1084,8 @@ int vls(char *dir){
   return got;
 }
 
-// dummy routine to work around missing routine in emscripten 1.37.9
-// signature take from: 1.37.9/system/lib/libc/musl/src/thread/__wait.c
+/* dummy routine to work around missing routine in emscripten 1.37.9 */
+/* signature take from: 1.37.9/system/lib/libc/musl/src/thread/__wait.c */
 void __wait(volatile int *addr, volatile int *waiters, int val, int priv){
   return;
 }

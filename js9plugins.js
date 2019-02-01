@@ -8561,11 +8561,11 @@ JS9.Prefs.imagesSchema = {
 	},
 	"wcssys": {
 	    "type": "string",
-	    "helper": "default WCS sys"
+	    "helper": "current WCS system"
 	},
 	"wcsunits": {
 	    "type": "string",
-	    "helper": "default WCS units"
+	    "helper": "current WCS units"
 	},
 	"lcs": {
 	    "type": "string",
@@ -8951,6 +8951,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "mobject",
 	    "helper": "ops to sync between images"
 	},
+	"wcsUnits": {
+	    "type": "mobject",
+	    "helper": "default units for WCS systems"
+	},
 	"copyWcsPosFormat": {
 	    "type": "string",
 	    "helper": "format string using: $ra $dec $sys"
@@ -9069,6 +9073,7 @@ JS9.Prefs.init = function(){
 			   resizeDivs: JS9.globalOpts.resizeDivs,
 			   plot3d: JS9.globalOpts.plot3d,
 			   syncOps: JS9.globalOpts.syncOps,
+			   wcsUnits: JS9.globalOpts.wcsUnits,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
 			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
