@@ -6251,7 +6251,7 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
 // or:
 //   im.rawDataLayer() -- return name of th current layer
 JS9.Image.prototype.rawDataLayer = function(opts, func){
-    var i, j, id, mode, raw, oraw, nraw, rawid, cur, nlen, carr;
+    var i, j, id, mode, raw, oraw, nraw, rawid, cur, nlen, carr, im, key;
     // no arg => return name of current raw
     if( !arguments.length ){
 	return this.raw.id;
@@ -6293,6 +6293,19 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 				    // found it!
 				    this.raw = this.raws[j];
 				    break;
+				}
+			    }
+			}
+			// remove stash calls for this id from other images
+			for(j=0; j<JS9.images.length; j++){
+			    im = JS9.images[j];
+			    if( im.xeqstash ){
+				for( key in im.xeqstash ){
+				    if( im.xeqstash.hasOwnProperty(key) ){
+					if( im.xeqstash[key].id === id ){
+					    delete im.xeqstash[key];
+					}
+				    }
 				}
 			    }
 			}
@@ -6477,8 +6490,6 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     }
     // save value
     this.params.sigma = sigma;
-    // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("gaussBlurData", Array.prototype.slice.call(arguments));
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
@@ -6500,6 +6511,9 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     opts.rawid = opts.rawid || "gaussBlur";
     // pass the options
     opts.sigma = sigma;
+    // save this routine so it can be reconstituted in a restored session
+    this.xeqStashSave("gaussBlurData", Array.prototype.slice.call(arguments),
+		     opts.rawid);
     // call routine to generate (or modify) the new layer
     this.rawDataLayer(opts, function (oraw, nraw){
 	var tdata;
@@ -6550,7 +6564,8 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 	JS9.error("missing arg(s) for image arithmetic");
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("imarithData", Array.prototype.slice.call(arguments));
+    this.xeqStashSave("imarithData", Array.prototype.slice.call(arguments),
+		     opts.rawid);
     // operation: add, sub, mul, div ...
     switch(op){
     case "add":
@@ -6721,8 +6736,6 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
     if( x === undefined || y === undefined ){
 	JS9.error("missing translation value(s) for shiftData");
     }
-    // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("shiftData", Array.prototype.slice.call(arguments));
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
@@ -6733,6 +6746,9 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
     opts.rawid = opts.rawid || "shift";
     opts.x = x;
     opts.y = y;
+    // save this routine so it can be reconstituted in a restored session
+    this.xeqStashSave("shiftData", Array.prototype.slice.call(arguments),
+		      opts.rawid);
     this.rawDataLayer(opts, function (oraw, nraw, opts){
 	var i, oi, oj, ni, nj, nlen, oU8, nU8, ooff, noff, blankval;
 	var bpp = oraw.data.BYTES_PER_ELEMENT;
@@ -6806,8 +6822,6 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     if( !raw.header || !raw.wcsinfo ){
 	JS9.error("no WCS info available for reprojection");
     }
-    // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("rotateData", Array.prototype.slice.call(arguments));
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
@@ -6867,6 +6881,9 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     if( raw.wcsinfo ){
 	nheader.ptype = raw.wcsinfo.ptype;
     }
+    // save this routine so it can be reconstituted in a restored session
+    this.xeqStashSave("rotateData", Array.prototype.slice.call(arguments),
+		     opts.rawid);
     // rotate by reprojecting the data
     return this.reprojectData(nheader, opts);
 };
@@ -6929,7 +6946,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     opts = opts || {};
     // make copy of input header, removing wcs keywords
     oheader = $.extend(true, {}, raw.header);
-    for(key in oheader){
+    for( key in oheader ){
 	if( oheader.hasOwnProperty(key) ){
 	    if( wcsexp.test(key) ){
 		delete oheader[key];
@@ -6946,7 +6963,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	} else {
 	    JS9.error("invalid wcs object input to reproject()");
 	}
-	for(key in nheader){
+	for( key in nheader ){
 	    if( nheader.hasOwnProperty(key) ){
 		if( wcsexp.test(key) ){
 		    twcs[key] = nheader[key];
@@ -7160,7 +7177,9 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     // save this routine so it can be reconstituted in a restored session
     // (unless another xxxData routine is calling us)
     if( !opts.rawid ){
-	this.xeqStashSave("reprojectData", Array.prototype.slice.call(arguments));
+	this.xeqStashSave("reprojectData",
+			  Array.prototype.slice.call(arguments),
+			  "reproject");
     }
     // save stash name
     if( !opts.stash ){
@@ -7470,7 +7489,7 @@ JS9.Image.prototype.saveSession = function(file, opts){
 
 // stash a routine name and arguments
 // the routine will be re-executed when the session is loaded
-JS9.Image.prototype.xeqStashSave = function(func, args, context){
+JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
     var i, stash;
     // default context is image
     context = context || "image";
@@ -7495,7 +7514,7 @@ JS9.Image.prototype.xeqStashSave = function(func, args, context){
 	}
     }
     // add new func to stash
-    this.xeqstash[func] = {args: args, context: context};
+    this.xeqstash[func] = {args: args, id: id, context: context};
     // allow chaining
     return this;
 };
@@ -8656,7 +8675,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	}
     }
     // change size of shape canvases
-    for(key in this.layers ){
+    for( key in this.layers ){
 	if( this.layers.hasOwnProperty(key) ){
 	    layer = this.layers[key];
 	    if( layer.dtype === "main" ){
@@ -10711,7 +10730,7 @@ JS9.Fabric.activeShapeLayer = function(s){
     var i, j, a, key, layer, tlayer, ozindex, tzindex, rtn;
     if( !s ){
 	// no args: return layer with highest zindex
-	for(key in this.layers){
+	for( key in this.layers ){
 	    if( this.layers.hasOwnProperty(key) ){
 		tlayer = this.layers[key];
 		if( tlayer.dlayer.dtype === "main" ){
@@ -10753,7 +10772,7 @@ JS9.Fabric.activeShapeLayer = function(s){
 	    ozindex = layer.zindex;
 	    layer.zindex = this.zlayer - 1;
 	    layer.dlayer.divjq.css("z-index", layer.zindex);
-	    for(key in this.layers){
+	    for( key in this.layers ){
 		if( this.layers.hasOwnProperty(key) ){
 		    // if another layer has top zindex, switch with original
 		    // zindex of layer we are bringing to the top
@@ -14820,7 +14839,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	    if( ds9opts.hasOwnProperty(key) &&
 		typeof ds9opts[key] === "function" ){
 		nobj = ds9opts[key](val);
-		for(key2 in nobj){
+		for( key2 in nobj ){
 		    if( nobj.hasOwnProperty(key2) ){
 			if( key2 === "tags" && xobj.hasOwnProperty(key2) ){
 			    xobj[key2] += ("," + nobj[key2]);

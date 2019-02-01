@@ -1182,10 +1182,12 @@ JS9.Menubar.createMenus = function(){
 			    if( tim && key.match(/^rawlayer_/) ){
 				s = key.replace(/^rawlayer_/, "");
 				if( s === "remove" ){
-				    for(i=0; i<tim.raws.length; i++){
-					if( tim.raw === tim.raws[i] ){
-					    tim.rawDataLayer(tim.raw.id,
-							     "remove");
+				    if( tim.raw.id !== JS9.RAWID0 ){
+					for(i=0; i<tim.raws.length; i++){
+					    if( tim.raw === tim.raws[i] ){
+						tim.rawDataLayer(tim.raw.id,
+								 "remove");
+					    }
 					}
 				    }
 				} else {
@@ -2092,6 +2094,10 @@ JS9.Menubar.createMenus = function(){
 	    if( !tim || !tim.raw || !tim.raw.header || !tim.raw.wcsinfo ){
 		items.reproject.disabled = true;
 	    }
+	    items.reproject.items["sep" + n++] = "------";
+	    items.reproject.items.reproject_revert = {
+		name: "revert"
+	    };
 	    return {
                 callback: function(key){
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
@@ -2117,6 +2123,15 @@ JS9.Menubar.createMenus = function(){
 				    uim.displayImage("display");
 				} else if( key === "reproject_northup" ){
 				    uim.rotateData("northisup");
+				} else if( key === "reproject_revert" ){
+				    if( uim.raw.id !== JS9.RAWID0 ){
+					for(i=0; i<uim.raws.length; i++){
+					    if( uim.raw === uim.raws[i] ){
+						uim.rawDataLayer(uim.raw.id,
+								 "remove");
+					    }
+					}
+				    }
 				}  else {
 				    file = key.replace(/^reproject_/,"");
 				    uim.reprojectData(file);
