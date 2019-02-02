@@ -3781,6 +3781,11 @@ JS9.Info.display = function(type, message, target, force){
 	} else {
 	    tobj = $("#"+target);
 	}
+	if( !tobj.length ){
+	    // fallback if the target element does not exist
+	    tobj = disp;
+	    target = null;
+	}
 	this.lasttarget = target;
     } else {
 	// use image context
