@@ -3669,7 +3669,7 @@ JS9.RegisterPlugin(JS9.Imarith.CLASS, JS9.Imarith.NAME, JS9.Imarith.init,
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, JS9 */
+/*global $, JS9, jQuery */
 
 // create our namespace, and specify some meta-information and params
 JS9.Info = {};
@@ -3753,7 +3753,7 @@ JS9.Info.init = function(){
 
 // display a message on the image canvas or info plugin
 // call with display as context
-JS9.Info.display = function(type, message, target){
+JS9.Info.display = function(type, message, target, force){
     var tobj, split, area, tokens, rexp, s, color, info, key, el, jel;
     var disp = this;
     // backward compatibility -- allow context to be Image
@@ -3764,17 +3764,28 @@ JS9.Info.display = function(type, message, target){
     if( disp.pluginInstances ){
 	info = disp.pluginInstances.JS9Info;
     }
-    // if specific target was specified use that
-    if( target ){
-	tobj = target;
-    } else {
+    // where are we displaying?
+    if( info && info.status === "active" && (!target || !force) ){
 	// if info plugin is active, use that
-	if( info && (info.status === "active") ){
-	    tobj = info;
-	} else {
-	    // image context
+	tobj = info;
+    } else if( target ){
+	// if specific info target was specified, use that
+	if( target === disp ){
+	    // passed disp in as a target
 	    tobj = disp;
+	    target = null;
+	} else if( target instanceof jQuery ){
+	    tobj = target;
+	} else if( typeof target === "object" ){
+	    tobj = $(target);
+	} else {
+	    tobj = $("#"+target);
 	}
+	this.lasttarget = target;
+    } else {
+	// use image context
+	tobj = disp;
+	this.lasttarget = disp;
     }
     // handle progress specially
     if( type === "progress" ){
@@ -3833,36 +3844,37 @@ JS9.Info.display = function(type, message, target){
 	// allow chaining
 	return disp;
     }
-    // height params for text color assignment
-    tobj.infoheight = tobj.infoArea.height() + 4;
-    tobj.regheight = Math.max(tobj.infoheight * 2 + 10,
-			      tobj.infoheight + tobj.regionsArea.height() + 10);
     // display-based message
     switch(type){
     case "regions":
-	area = tobj.regionsArea;
-	if( !disp.image || (disp.image.iy > tobj.regheight) ){
-	    color = JS9.textColorOpts.inimage;
+	if( target ){
+	    area = tobj;
 	} else {
-	    color = JS9.textColorOpts.regions;
+	    area = tobj.regionsArea;
+	    tobj.infoheight = tobj.infoArea.height() + 4;
+	    tobj.regheight = Math.max(tobj.infoheight * 2 + 10,
+			 tobj.infoheight + tobj.regionsArea.height() + 10);
+	    if( !disp.image || (disp.image.iy > tobj.regheight) ){
+		color = JS9.textColorOpts.inimage;
+	    } else {
+		color = JS9.textColorOpts.regions;
+	    }
 	}
 	split = ";";
 	break;
     case "info":
-	area = tobj.infoArea;
-	if( !disp.image || (disp.image.iy > tobj.infoheight) ){
-	    color = JS9.textColorOpts.inimage;
-	} else {
-	    color = JS9.textColorOpts.info;
-	}
-	split = "";
-	break;
     default:
-	area = tobj.infoArea;
-	if( !disp.image || (disp.image.iy > tobj.infoheight) ){
-	    color = JS9.textColorOpts.inimage;
+	if( target ){
+	    area = tobj;
 	} else {
-	    color = JS9.textColorOpts.info;
+	    area = tobj.infoArea;
+	    tobj.infoheight = tobj.infoArea.height() + 4;
+	    if( !disp.image || (disp.image.iy > tobj.infoheight) ){
+		color = JS9.textColorOpts.inimage;
+	    } else {
+		color = JS9.textColorOpts.info;
+	    }
+	    split = "";
 	}
 	break;
     }
@@ -3872,7 +3884,8 @@ JS9.Info.display = function(type, message, target){
 	s = message;
 	break;
     case "object":
-	s = message.vstr;
+	key = "vstr" + JS9.globalOpts.valposWidth;
+	s = message[key] || message.vstrmedium || message.vstr || "";
 	break;
     }
     if( split !== "" ){
@@ -3882,8 +3895,12 @@ JS9.Info.display = function(type, message, target){
 	    s = s.replace(rexp, "<br>");
 	}
     }
+    // set the color
+    if( color ){
+	area.css("color", color);
+    }
     // display the message
-    area.css("color", color).html(s);
+    area.html(s);
     // allow chaining
     return disp;
 };
@@ -3913,18 +3930,22 @@ JS9.Display.prototype.clearMessage = JS9.Info.clear;
 JS9.Image.prototype.clearMessage = JS9.Info.clear;
 
 // when a plugin window is brought up:
-// clear the display window, savel valpos and set to true
+// save valpos and set to true
 JS9.Info.pluginDisplay = function(im){
     var disp;
     if( im && im.display ){
-	disp = im.display;
-	disp.displayMessage("info", "", disp);
-	disp.displayMessage("regions", "", disp);
-	disp.displayMessage("progress", false, disp);
 	if( im.tmp ){
 	    im.tmp.info_ovalpos = im.params.valpos;
 	}
 	im.params.valpos = true;
+	// clear previous, if necessary
+	if( this.display.lasttarget ){
+	    disp = this.display;
+	    disp.displayMessage("info", "", disp.lasttarget, true);
+	    disp.displayMessage("regions", "", disp.lasttarget, true);
+	    disp.displayMessage("progress", false, disp.lasttarget, true);
+	    delete disp.lasttarget;
+	}
     }
 };
 

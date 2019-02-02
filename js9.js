@@ -120,6 +120,8 @@ JS9.globalOpts = {
     prependJS9Dir: true,        // prepend $JS9_DIR to relative fitsFile paths?
     dataDir: null,              // path to FITS data (def: use incoming path)
     alerts: true,		// set to false to turn off alerts
+    valposTarget: null,         // target element for valpos updates
+    valposWidth: "medium",      // small, medium, large
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
@@ -5367,7 +5369,7 @@ JS9.Image.prototype.saveJPEG = function(fname, quality){
 
 // update (and display) pixel and wcs values (connected to info plugin)
 JS9.Image.prototype.updateValpos = function(ipos, disp){
-    var val, vstr, vstr2, vstr3, val3, i, c, s;
+    var val, vstr, vstr1, vstr2, vstr3, val3, i, c, s;
     var cd1, cd2, v1, v2, units, sect, bin;
     var obj = null;
     var sep1 = "\t ";
@@ -5405,7 +5407,8 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	// this is unset and reset in the mousemove callback
 	if( this.valpos ){
 	    if( disp ){
-		this.display.displayMessage("info", this.valpos);
+		this.display.displayMessage("info", this.valpos,
+					   JS9.globalOpts.valposTarget);
 	    }
 	    return this.valpos;
 	}
@@ -5439,8 +5442,9 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	}
 	// create the valpos string
 	// since we can call this in mousemove, optimize by not using sprintf
-	vstr = val3;
+	vstr1 = val3;
 	vstr2 =  tr(c.x, 3) + " " + tr(c.y, 3) + " (" + c.sys + ")";
+	vstr = vstr1 + sp + vstr2;
 	// object containing all information
 	obj = {ix: i.x, iy: i.y, ipos: tr(i.x, 2) + sep2 + tr(i.y, 2),
 	       isys: "image",
@@ -5450,7 +5454,6 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	       racen: "", deccen: "",
 	       wcsfov: "", wcspix: "",
 	       val: val, val3: val3,
-	       vstr: vstr + sp + vstr2,
 	       id: this.id, file: this.file, object: this.object};
 	if( this.telescope || this.instrument ){
 	    obj.object += "  (";
@@ -5471,7 +5474,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    (this.params.wcssys !== "physical") ){
 	    s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
 	    vstr3 =  s[0] + " " + s[1] + " (" + (s[2]||"wcs") +  ")";
-	    vstr = vstr + sp + vstr3 + sp + vstr2;
+	    vstr = vstr1 + sp + vstr3 + sp + vstr2;
 	    // update object with wcs
 	    obj.ra = s[0];
 	    obj.dec = s[1];
@@ -5500,7 +5503,6 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 		v1 = tf(cd1 * bin / sect.zoom);
 		obj.wcspix = v1 + units + " / pixel";
 		obj.wcsfovpix = obj.wcsfov + "  (" + obj.wcspix + ")";
-		obj.vstr = vstr;
 		s = JS9.pix2wcs(this.raw.wcs,
 				(sect.x1 + sect.x0)/2, (sect.y1 + sect.y0)/2)
 		    .trim().split(/\s+/);
@@ -5509,8 +5511,12 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 		obj.wcscen = s[0] + sep1 + s[1];
 	    }
 	}
+	obj.vstrsmall = vstr1 + sp + vstr2;
+	obj.vstrmedium = vstr;
+	obj.vstrlarge = vstr + sp + this.file;
 	if( disp ){
-	    this.display.displayMessage("info", obj);
+	    this.display.displayMessage("info", obj,
+					JS9.globalOpts.valposTarget);
 	}
     }
     return obj;
