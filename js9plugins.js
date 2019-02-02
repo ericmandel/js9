@@ -9020,6 +9020,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "show tooltips in Toolbar plugin?"
 	},
+	"reloadRefresh": {
+	    "type": "boolean",
+	    "helper": "does a reload refresh the data?"
+	},
 	"syncReciprocate": {
 	    "type": "boolean",
 	    "helper": "reciprocal image sync'ing?"
@@ -9105,6 +9109,7 @@ JS9.Prefs.init = function(){
 			   fits2fits: JS9.globalOpts.fits2fits,
 			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
 			   syncReciprocate: JS9.globalOpts.syncReciprocate,
+			   reloadRefresh: JS9.globalOpts.reloadRefresh,
 			   magnifierRegions: JS9.globalOpts.magnifierRegions,
 			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
