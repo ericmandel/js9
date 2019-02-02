@@ -140,12 +140,29 @@ Finally, you can pass a fits object containing the following properties:
 <li><b>image</b>: typed data array containing image data (native format)
 <li><b>dmin</b>: data min (optional)
 <li><b>dmax</b>: data max (optional)
+<li><b>refresh</b>: refresh data when reloading image?
 </ul>
-The difference between
-<a href="#JS9.RefreshImage"><b>JS9.RefreshImage()</b></a>
-and <a href="#JS9.Load"><b>JS9.Load()</b></a> is
-that the former updates the data into an existing image, while the latter adds
-a completely new image to the display.
+The <a href="#JS9.RefreshImage"><b>JS9.RefreshImage()</b></a>
+and <a href="#JS9.Load"><b>JS9.Load()</b></a> routines differ in that
+the former always updates the data into an existing image, while the
+latter generally adds a completely new image to the display.
+
+<p>
+However, in the case where an image already is loaded,
+<a href="#JS9.Load"><b>JS9.Load()</b></a> does not reload the image into
+a new display: this would initiate another (often time-consuming) download,
+resulting in two identical images. Instead, its behavior is dependent on
+the value of the <b>refresh</b> property passed in opts (or, if not
+set, by the <b>JS9.globalOpts.reloadRefresh</b> property), as follows:
+<ul>
+<li> if <b>refresh</b> is true, the existing image data is refreshed
+<li> if <b>refresh</b> is false, the existing image is simply redisplayed
+</ul>
+Note that the global default for web-based JS9 is to redisplay instead of
+refreshing, since the latter also triggers a download. The global default for
+the desktop app (using Electron.js) is to refresh the image (since the file
+is assumed to be local).
+
 <p>
 To override default image parameters, pass the image opts argument:
 <pre>
@@ -514,7 +531,7 @@ The default step is "primary", which displays the image without recalculating
 color data, scaled data, etc. This generally is what you want, unless you have
 explicitly changed parameter(s) used in a prior step.
 
-<h5 id="JS9.RefreshImage">Re-read the image data and re-display</h5>
+<h5 id="JS9.RefreshImage">Re-read the image data and redisplay</h5>
 <p>
 <code class="api">JS9.RefreshImage(input, opts)</code>
 <p>
@@ -4614,7 +4631,7 @@ callback function will be called. For the "mask" example above, the
 onregionchange property is set to call a JavaScript function (not
 shown here) whenever a region changes. The maskData property is set to
 point to the raw data of the auxfile (i.e., aux.im.raw.data). Finally,
-the image is re-displayed. Setting the maskData property and
+the image is redisplayed. Setting the maskData property and
 redisplaying the image causes the auxfile's data to be displayed as an
 opaque overlay on top of the currently displayed image.
 <p>
@@ -4690,7 +4707,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: June 23, 2018</h5>
+<h5>Last updated: February 2, 2019</h5>
 </div>
 
 </body>

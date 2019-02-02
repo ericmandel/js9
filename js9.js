@@ -139,6 +139,7 @@ JS9.globalOpts = {
     binMode: "s",             // "s" (sum) or "a" (average) pixels when binning
     clearImageMemory: "never",  // rm vfile: always|never|auto|noExt|noCube|size>x Mb
     helperProtocol: location.protocol, // http: or https:
+    reloadRefresh: false,       // reload an image will refresh (or redisplay)?
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",       // location of param html file
     proxyURL: "params/loadproxy.html",     // location of param html file
@@ -524,12 +525,14 @@ if( JS9.BROWSER[3] ){
 if( window.hasOwnProperty("Jupyter") ){
     JS9.globalOpts.useWasm = false;
 }
-// JS9 app using Electron.js
+// JS9 desktop app using Electron.js
 if( window.isElectron ){
     // turn on wasm if Electron.js supports a recent version of Chromium
     if( JS9.BROWSER[0] === "Chrome" && parseFloat(JS9.BROWSER[1]) >= 66 ){
 	JS9.globalOpts.allowFileWasm = true;
     }
+    // on the desktop, re-loading an image should refresh
+    JS9.globalOpts.reloadRefresh = true;
     // Electron.js (v4.0.2) SEGVs when clicking colorpicker exit (1/26/2019)
     JS9.globalOpts.internalColorPicker = false;
 }
@@ -20064,6 +20067,10 @@ JS9.mkPublic("Load", function(file, opts){
 	    // does this image already exist?
 	    im = JS9.lookupImage(opts.filename, opts.display);
 	    if( im ){
+		// do we refresh or redisplay?
+		if( JS9.isNull(opts.refresh) ){
+		    opts.refresh = JS9.globalOpts.reloadRefresh;
+		}
 		// if not refreshing, just re-display and exit
 		if( !opts. refresh ){
 		    // display image, 2D graphics, etc.
@@ -20139,7 +20146,10 @@ JS9.mkPublic("Load", function(file, opts){
 	catch(e){ JS9.error("can't process FITS file", e); }
 	return;
     }
-    // if this file is already loaded, just redisplay
+    // do we refresh or redisplay?
+    if( JS9.isNull(opts.refresh) ){
+	opts.refresh = JS9.globalOpts.reloadRefresh;
+    }
     if( opts.refresh ){
 	// when refreshing, broaden the search for existing file
 	s = file.replace(/\[.*\]$/, "").split("/").reverse()[0];
@@ -20148,6 +20158,7 @@ JS9.mkPublic("Load", function(file, opts){
 	// when not refreshing, use narrow search for existing file
 	im = JS9.lookupImage(file, opts.display);
     }
+    // if already loaded and not refreshing, just redisplay and exit
     if( im && !opts.refresh ){
 	// display image, 2D graphics, etc.
 	im.displayImage("all", opts);
