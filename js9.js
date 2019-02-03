@@ -2646,7 +2646,13 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 	return this.blend;
     }
     // if first argument is true or false, this turns on/off blending
-    if( (mode === true) || (mode === false) ){
+    if( (mode === true)   || (mode === false)   ||
+	(mode === "true") || (mode === "false") ){
+	if( mode === "true" ){
+	    mode = true;
+	} else if( mode === "false" ){
+	    mode = false;
+	}
 	this.blend.active = mode;
 	// trigger option redisplay
 	this.xeqPlugins("image", "onimageblend");
@@ -2674,6 +2680,11 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 	}
 	// set active state, if necessary
 	if( JS9.notNull(active) ){
+	    if( active === "true" ){
+		active = true;
+	    } else if( active === "false" ){
+		active = false;
+	    }
 	    this.blend.active = active;
 	}
 	// trigger option redisplay
