@@ -2968,7 +2968,13 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	    delete opts.onrefresh;
 	}
 	opts.refresh = true;
-	s = obj || this.file;
+	// for file:// uri, we can use the FITS pathname, where possible
+	if( !document.domain ){
+	    s = obj || this.fitsFile || this.file;
+	} else {
+	    // else use the url path relative to the web page
+	    s = obj || this.file;
+	}
 	JS9.Load(s, opts, {display: this.display});
 	return;
     }
