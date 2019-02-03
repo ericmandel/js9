@@ -3210,7 +3210,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	} else {
 	    // this is the default behavior for displaySection:
 	    // refresh the image in the current display
-	    topts.file = iid;
 	    topts.id = iid;
 	    topts.refreshRegions = true;
 	    topts.resetSection = true;
