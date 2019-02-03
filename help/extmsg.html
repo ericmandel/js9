@@ -219,6 +219,14 @@ set the JS9_ELECTRON_APP environment variable to point to the path of
 Electron.app). On Linux, the electron program should be placed in your PATH.
 
 <p>
+NB: if you are going to perform cpu-intensive scripting using the
+Electron-based JS9 app, we recommend that you install Node.js as well
+as Electron.js, so that node is used by the js9 script to send
+messages. Not only is node twice as fast as Electron for this purpose,
+but we also have experienced occasional errors using Electron.js to send
+messages under heavy load.
+
+<p>
 Once this is done, use the <b>-a</b> switch to specify the app startup and
 the <b>-w or --webpage</b> switch to specify a web page (default is a
 nice, basic JS9 web page).
