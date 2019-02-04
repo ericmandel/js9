@@ -1,9 +1,14 @@
 #!/bin/sh
+#set -x
 
 # defaults
 DEFPREFS="js9Prefs.json"
 HELPER="./js9Helper.js"
-LOG="$HOME/logs/js9node.log"
+if [ -d $HOME/logs ]; then
+  LOG="$HOME/logs/js9node.log"
+else
+  LOG="js9node.log"
+fi
 
 # process command line switches
 while [ x"$1" != x ]; do
