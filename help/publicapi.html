@@ -149,19 +149,19 @@ latter generally adds a completely new image to the display.
 
 <p>
 However, in the case where an image already is loaded,
-<a href="#JS9.Load"><b>JS9.Load()</b></a> does not reload the image into
-a new display: this would initiate another (often time-consuming) download,
-resulting in two identical images. Instead, its behavior is dependent on
-the value of the <b>refresh</b> property passed in opts (or, if not
-set, by the <b>JS9.globalOpts.reloadRefresh</b> property), as follows:
+<a href="#JS9.Load"><b>JS9.Load()</b></a> does not reload the image
+into a new display: this would initiate another (often time-consuming)
+download, resulting in two identical images. Instead, behavior is
+dependent on the value of the <b>refresh</b> property passed in opts
+(or, if that is not set, by the <b>JS9.globalOpts.reloadRefresh</b>
+property), as follows:
 <ul>
 <li> if <b>refresh</b> is true, the existing image data is refreshed
-<li> if <b>refresh</b> is false, the existing image is simply redisplayed
+<li> if <b>refresh</b> is false, the existing image is redisplayed
 </ul>
-Note that the global default for web-based JS9 is to redisplay instead of
-refreshing, since the latter also triggers a download. The global default for
-the desktop app (using Electron.js) is to refresh the image (since the file
-is assumed to be local).
+The global default is to redisplay instead of refreshing. Site authors can
+change this in the <b>js9prefs.js</b>, while users can change this via
+the <b>Global</b> tab of the <b>Preferences</b> plugin.
 
 <p>
 To override default image parameters, pass the image opts argument:
