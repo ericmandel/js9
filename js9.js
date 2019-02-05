@@ -956,19 +956,17 @@ JS9.Image.prototype.closeImage = function(opts){
 		break;
 	    }
 	    // cleanup FITS file support, if necessary
-	    if( JS9.fits.cleanupFITSFile ){
-		for(j=0; j<tim.raws.length; j++){
-		    raw = tim.raws[j];
-		    if( raw.hdu && raw.hdu.fits ){
-			carr = JS9.lookupVfile(raw.hdu.fits.vfile);
-			if( carr.length <= 1 ){
-			    JS9.fits.cleanupFITSFile(raw.hdu.fits, true);
-			}
+	    for(j=0; j<tim.raws.length; j++){
+		raw = tim.raws[j];
+		if( raw.hdu && raw.hdu.fits ){
+		    carr = JS9.lookupVfile(raw.hdu.fits.vfile);
+		    if( carr.length <= 1 ){
+			JS9.cleanupFITSFile(raw, true);
 		    }
-		    // free wcs info
-		    if( raw.altwcs ){
-			this.freeWCS(raw);
-		    }
+		}
+		// free wcs info
+		if( raw.altwcs ){
+		    this.freeWCS(raw);
 		}
 	    }
 	    // remove proxy image from server, if necessary
@@ -1949,8 +1947,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     catch(ignore){}
     // can we remove the virtual file?
-    if( JS9.fits.cleanupFITSFile &&
-	this.raw.hdu.fits && this.raw.hdu.fits.vfile  ){
+    if( this.raw.hdu.fits && this.raw.hdu.fits.vfile  ){
 	s = JS9.globalOpts.clearImageMemory;
 	if( s === false ){
 	    s = ["never"];
@@ -2019,7 +2016,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 		JS9.log("removing underlying FITS vfile for %s: %s",
 			this.id, this.raw.hdu.fits.vfile);
 	    }
-	    JS9.fits.cleanupFITSFile(this.raw.hdu.fits, true);
+	    JS9.cleanupFITSFile(this.raw, true);
 	}
     }
     // plugin callbacks
@@ -3480,10 +3477,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		    // cleanup previous FITS file support, if necessary
 		    // do this before we handle the new FITS file, or else
 		    // we end up with a memory leak in the emscripten heap!
-		    if( JS9.fits.cleanupFITSFile &&
-			that.raw.hdu && that.raw.hdu.fits ){
-			JS9.fits.cleanupFITSFile(that.raw.hdu.fits, true);
-		    }
+		    JS9.cleanupFITSFile(that.raw, true);
 		    // start the waiting!
 		    if( opts.waiting !== false ){
 			JS9.waiting(true, that.display);
@@ -3497,10 +3491,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    // cleanup previous FITS file support, if necessary
 	    // do this before we handle the new FITS file, or else
 	    // we end up with a memory leak in the emscripten heap!
-	    if( JS9.fits.cleanupFITSFile &&
-		that.raw.hdu && that.raw.hdu.fits ){
-		JS9.fits.cleanupFITSFile(that.raw.hdu.fits, false);
-	    }
+	    JS9.cleanupFITSFile(that.raw, false);
 	    // extract image section from current virtual file
 	    JS9.getFITSImage(hdu.fits, hdu, opts, function(hdu){
 		disp(hdu, opts);
@@ -3579,9 +3570,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
     // cleanup previous FITS file support, if necessary
     // do this before we handle the new FITS file, or else
     // we end up with a memory leak in the emscripten heap!
-    if( JS9.fits.cleanupFITSFile && this.raw.hdu && this.raw.hdu.fits ){
-	JS9.fits.cleanupFITSFile(this.raw.hdu.fits, false);
-    }
+    JS9.cleanupFITSFile(this.raw, false);
     // process the FITS file by going to the extname/extnum
     this.displaySection(opts, func);
     // allow chaining
@@ -3620,9 +3609,7 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
 	}
 	// cleanup previous FITS file heap before handling the new FITS file,
 	// or we end up with a memory leak in the emscripten heap
-	if( JS9.fits.cleanupFITSFile && this.raw.hdu && this.raw.hdu.fits ){
-	    JS9.fits.cleanupFITSFile(this.raw.hdu.fits, false);
-	}
+	JS9.cleanupFITSFile(this.raw, false);
 	// process the FITS file by going to the slice
 	this.displaySection(opts, func);
     }
@@ -6300,12 +6287,11 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 			if( id === JS9.RAWID0 ){
 			    JS9.error("can't remove primary (raw0) data layer");
 			}
+			// delete vfile associated with this layer?
 			if( raw.hdu && raw.hdu.fits ){
-			    // delete vfile associated with this layer?
 			    carr = JS9.lookupVfile(raw.hdu.fits.vfile);
-			    if( (carr.length <= 1) &&
-				JS9.fits.cleanupFITSFile ){
-				JS9.fits.cleanupFITSFile(raw.hdu.fits, true);
+			    if( carr.length <= 1 ){
+				JS9.cleanupFITSFile(raw, true);
 			    }
 			}
 			// default is to go back to original raw data
@@ -7087,13 +7073,11 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	.replace(/\.gz$/i, "");
     ovfile = "reproj_" + JS9.uniqueID() + "_" + s;
     // remove previous vfile for this reprojection layer, if possible
-    if( JS9.fits.cleanupFITSFile ){
-	tid = opts.rawid || "reproject";
-	for(i=0; i<this.raws.length; i++){
-	    traw = this.raws[i];
-	    if( (traw.id === tid) &&
-		traw.hdu && traw.hdu.fits && traw.hdu.fits.vfile ){
-		JS9.fits.cleanupFITSFile(traw.hdu.fits, true);
+    tid = opts.rawid || "reproject";
+    for(i=0; i<this.raws.length; i++){
+	traw = this.raws[i];
+	if( traw.id === tid ){
+	    if( JS9.cleanupFITSFile(traw, true) ){
 		break;
 	    }
 	}
@@ -16655,13 +16639,13 @@ JS9.handleFITSFile = function(file, opts, handler){
 };
 
 // cleanup FITS file by deleting vfile, etc
-JS9.cleanupFITSFile = function(fits, mode){
-    if( JS9.fits.cleanupFITSFile ){
-	JS9.fits.cleanupFITSFile(fits, mode);
-    } else {
-	// just return if there is no available cleanup routine
-	return;
+JS9.cleanupFITSFile = function(raw, mode){
+    if( JS9.fits.cleanupFITSFile && raw && raw.hdu && raw.hdu.fits ){
+	JS9.fits.cleanupFITSFile(raw.hdu.fits, mode);
+	return true;
     }
+    // just return if no available cleanup routine or no raw data file
+    return false;
 };
 
 // load an image (jpeg, png, etc)
@@ -20178,6 +20162,9 @@ JS9.mkPublic("Load", function(file, opts){
 	    // when refreshing, broaden the search for existing file
 	    s = file.replace(/\[.*\]$/, "").split("/").reverse()[0];
 	    im = JS9.lookupImage(s, opts.display);
+	    if( im ){
+		opts.refresh = im;
+	    }
 	}
     } else {
 	// when not refreshing, use narrow search for existing file
@@ -20212,6 +20199,12 @@ JS9.mkPublic("Load", function(file, opts){
 	    disp = JS9.lookupDisplay(opts.display);
 	}
 	JS9.waiting(true, disp);
+	// cleanup previous FITS file support, if necessary
+	// do this before we handle the new FITS file, or else
+	// we end up with a memory leak in the emscripten heap!
+	if( im && opts.refresh ){
+	    JS9.cleanupFITSFile(im.raw, true);
+	}
 	// remove extension so we can find the file itself
 	file = JS9.fixPath(file);
 	tfile = file.replace(/\[.*\]/, "");
@@ -20613,9 +20606,8 @@ JS9.mkPublic("RefreshImage", function(fits, opts){
 	if( fits instanceof Blob ){
 	    // cleanup previous FITS heap before handling the new FITS file,
 	    // or we end up with a memory leak in the emscripten heap
-	    if( !opts.rawid && JS9.fits.cleanupFITSFile &&
-		im.raw.hdu && im.raw.hdu.fits ){
-		JS9.fits.cleanupFITSFile(im.raw.hdu.fits, true);
+	    if( !opts.rawid ){
+		JS9.cleanupFITSFile(im.raw, true);
 	    }
 	    try{ JS9.handleFITSFile(fits, JS9.fits.options, retry); }
 	    catch(e){ JS9.error("can't refresh FITS file", e); }
