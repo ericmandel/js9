@@ -142,6 +142,7 @@ function createWindow() {
     js9Electron.win.loadURL(js9Electron.page);
     // download to a specfied directory (without using a dialog box)?
     if( js9Electron.savedir ){
+	// eslint-disable-next-line no-unused-vars
 	js9Electron.win.webContents.session.on('will-download', (event, item, webContents) => {
 	    const fname = item.getFilename();
 	    const pname = js9Electron.savedir + "/" +
@@ -150,19 +151,22 @@ function createWindow() {
 	    item.setSavePath(pname);
 	    item.on('updated', (event, state) => {
 		if (state === 'interrupted') {
+		    // eslint-disable-next-line no-console
 		    console.log(`Save interrupted: ${pname}`);
 		} else if (state === 'progressing') {
 		    if (item.isPaused()) {
+			// eslint-disable-next-line no-console
 			console.log(`Save paused: ${pname}`);
 		    }
 		}
-	    })
+	    });
 	    item.once('done', (event, state) => {
 		if (state !== 'completed') {
+		    // eslint-disable-next-line no-console
 		    console.log(`Save failed: ${pname} [${state}]`);
 		}
-	    })
-	})
+	    });
+	});
     }
     // open the DevTools, if necessary
     if( js9Electron.debug ){
