@@ -106,6 +106,7 @@ JS9.globalOpts = {
     requireHelper: false,       // throw error if helper is not available?
     allinoneHelper: false,      // allow allinone to use helper?
     requireFits2Fits: false,    // throw error if fits2fits can't be run?
+    quietReturn: false,         // should API return empty string or "OK"?
     useWasm: true,		// use WebAssembly if available?
     allowFileWasm: false,       // allow file:// to use wasm?
     winType: "light",		// plugin window: "light" or "new"
@@ -16078,6 +16079,7 @@ JS9.msgHandler =  function(msg, cb){
     var cmd = msg.cmd;
     var id = msg.id;
     var oalerts = JS9.globalOpts.alerts;
+    var rstr = JS9.globalOpts.quietReturn ? "" : "OK";
     // turn off alerts
     if( cb ){
 	JS9.globalOpts.alerts = false;
@@ -16147,7 +16149,7 @@ JS9.msgHandler =  function(msg, cb){
 	    break;
 	case "set":
 	    // execute set call
-	    try{ res = obj.set(args) || "OK"; }
+	    try{ res = obj.set(args) || rstr; }
 	    catch(e){ res = "ERROR: " + e.message; }
 	    break;
 	default:
@@ -19722,7 +19724,7 @@ JS9.mkPublic = function(name, s){
 		    got = im[s].apply(im, obj.argv);
 		    // don't return image handle, it can't be serialized
 		    if( (got === im) || (got === im.display) ){
-			return "OK";
+			return JS9.globalOpts.quietReturn ? "" : "OK";
 		    }
 		    return got;
 		}
@@ -21095,7 +21097,7 @@ JS9.mkPublic("RemoveRegions", function(region){
 	region = obj.argv[0];
 	im.removeShapes("regions", region);
 	im.display.clearMessage("regions");
-	return "OK";
+	return JS9.globalOpts.quietReturn ? "" : "OK";
     }
     return null;
 });
@@ -21108,7 +21110,7 @@ JS9.mkPublic("CopyRegions", function(to, region){
 	to = obj.argv[0];
 	region = obj.argv[1];
 	im.copyRegions(to, region);
-	return "OK";
+	return JS9.globalOpts.quietReturn ? "" : "OK";
     }
     return null;
 });
@@ -21311,7 +21313,7 @@ JS9.mkPublic("ResizeDisplay", function(){
     }
     got = JS9.Display.prototype.resize.apply(display, obj.argv);
     if( got === display ){
-	got = "OK";
+	return JS9.globalOpts.quietReturn ? "" : "OK";
     }
     return got;
 });
