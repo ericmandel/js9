@@ -52,6 +52,7 @@ usage(){
   printf "    --eval   [true|false]     # enable eval (def: false, not recommended)\n"
   printf "    --height [h]              # height of app\n"
   printf "    --helper [true|false]     # whether to start up helper app (def: true)\n"
+  printf "    --savedir [path]          # dir for saved files (skip save dialog box)\n"
   printf "    -w|--webpage [url]        # url or full path of web page to open\n"
   printf "    --width [w]               # width of app\n"
   printf " \n"

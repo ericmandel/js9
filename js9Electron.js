@@ -84,6 +84,9 @@ js9Electron.preload = path.join(__dirname, "js9ElectronPreload.js");
 // helper page
 js9Electron.helperpage = path.join(__dirname, "js9Helper.js");
 
+// default name for saved file
+js9Electron.defsave = "js9.save";
+
 // pdf options
 js9Electron.printOpts = {
     silent: false,
@@ -110,6 +113,8 @@ js9Electron.eval = isTrue(js9Electron.argv.eval, false);
 js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || process.env.JS9_WEBPAGE || js9Electron.defpage;
 js9Electron.width = js9Electron.argv.width || 1024;
 js9Electron.height = js9Electron.argv.height  || 768;
+js9Electron.savedir = js9Electron.argv.savedir;
+
 // the list of files to load
 js9Electron.files = js9Electron.argv._;
 // hack: js9 script level switches might contain a file to load
@@ -135,6 +140,30 @@ function createWindow() {
 	js9Electron.page = "file://" + js9Electron.page;
     }
     js9Electron.win.loadURL(js9Electron.page);
+    // download to a specfied directory (without using a dialog box)?
+    if( js9Electron.savedir ){
+	js9Electron.win.webContents.session.on('will-download', (event, item, webContents) => {
+	    const fname = item.getFilename();
+	    const pname = js9Electron.savedir + "/" +
+		          (fname||js9Electron.defsave);
+	    // Set the save path, making Electron not to prompt a save dialog.
+	    item.setSavePath(pname);
+	    item.on('updated', (event, state) => {
+		if (state === 'interrupted') {
+		    console.log(`Save interrupted: ${pname}`);
+		} else if (state === 'progressing') {
+		    if (item.isPaused()) {
+			console.log(`Save paused: ${pname}`);
+		    }
+		}
+	    })
+	    item.once('done', (event, state) => {
+		if (state !== 'completed') {
+		    console.log(`Save failed: ${pname} [${state}]`);
+		}
+	    })
+	})
+    }
     // open the DevTools, if necessary
     if( js9Electron.debug ){
 	js9Electron.win.webContents.openDevTools({mode: 'detach'});
