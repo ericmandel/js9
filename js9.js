@@ -2976,7 +2976,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	    opts.onload = opts.onrefresh;
 	    delete opts.onrefresh;
 	}
-	opts.refresh = true;
+	opts.refresh = this;
 	// for file:// uri, we can use the FITS pathname, where possible
 	if( !document.domain ){
 	    s = obj || this.fitsFile || this.file;
@@ -19088,7 +19088,7 @@ JS9.initCommands = function(){
 	    var im = this.image;
 	    // no args: refresh current image
 	    if( alen === 0 ){
-		obj = {refresh: true};
+		obj = {refresh: im};
 		JS9.Load(im.file, obj, {display: this.display.id});
 		return;
 	    }
@@ -20085,8 +20085,12 @@ JS9.mkPublic("Load", function(file, opts){
 		if( JS9.isNull(opts.refresh) ){
 		    opts.refresh = JS9.globalOpts.reloadRefresh;
 		}
+		if( opts.refresh ){
+		    if( typeof opts.refresh !== "object" ){
+			opts.refresh = im;
+		    }
+		} else {
 		// if not refreshing, just re-display and exit
-		if( !opts. refresh ){
 		    // display image, 2D graphics, etc.
 		    im.displayImage("display", opts);
 		    im.refreshLayers();
@@ -20165,9 +20169,14 @@ JS9.mkPublic("Load", function(file, opts){
 	opts.refresh = JS9.globalOpts.reloadRefresh;
     }
     if( opts.refresh ){
-	// when refreshing, broaden the search for existing file
-	s = file.replace(/\[.*\]$/, "").split("/").reverse()[0];
-	im = JS9.lookupImage(s, opts.display);
+	// use passed im handle, if possible
+	if( typeof opts.refresh === "object" ){
+	    im = opts.refresh;
+	} else {
+	    // when refreshing, broaden the search for existing file
+	    s = file.replace(/\[.*\]$/, "").split("/").reverse()[0];
+	    im = JS9.lookupImage(s, opts.display);
+	}
     } else {
 	// when not refreshing, use narrow search for existing file
 	im = JS9.lookupImage(file, opts.display);
@@ -20781,18 +20790,35 @@ JS9.mkPublic("SaveColormap", function(fname){
 
 // call the image constructor as a function
 JS9.mkPublic("NewFitsImage", function(hdu, opts){
-    var func, disp;
+    var func, disp, im;
     var obj = JS9.parsePublicArgs(arguments);
     hdu = obj.argv[0];
     opts = obj.argv[1] || {};
     disp = JS9.lookupDisplay(obj.display || opts.display || JS9.DEFID);
-    if( opts.refresh && disp && disp.image ){
-	if( opts.onload ){
-	    opts.onrefresh = opts.onload;
-	    delete opts.onload;
+    if( opts.refresh ){
+	if( typeof opts.refresh === "object" ){
+	    // use passed image handle
+	    im = opts.refresh;
+	} else if( disp && disp.image ){
+	    // use current image
+	    im = disp.image;
 	}
-	disp.image.refreshImage(hdu, opts);
+	if( im ){
+	    // refresh the image
+	    if( opts.onload ){
+		opts.onrefresh = opts.onload;
+		delete opts.onload;
+	    }
+	    im.refreshImage(hdu, opts);
+	} else {
+	    // fallback if we have no image: make a new image
+	    if( opts.onload ){
+		func = opts.onload;
+	    }
+	    JS9.checkNew(new JS9.Image(hdu, opts, func));
+	}
     } else {
+	// make a new image
 	if( opts.onload ){
 	    func = opts.onload;
 	}
