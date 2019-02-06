@@ -55,7 +55,7 @@ else
 fi
 
 # start the image load
-GOT=`${JS9} $XARGS Load "$PATHNAME" $1 `
+GOT=`${JS9} $XARGS Load "$PATHNAME" $* `
 if [ x"$GOT" != x ]; then
   error "$GOT"
 fi
