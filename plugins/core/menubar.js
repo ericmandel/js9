@@ -2299,7 +2299,7 @@ JS9.Menubar.createMenus = function(){
 		}
 		items.sigma = {
 		    events: {keyup: keyAnalysis},
-		    name: "Gaussian Blur, Sigma:",
+		    name: "Blur, equivalent sigma:",
 		    type: "text"
 		};
 		items["sep" + n++] = "------";
