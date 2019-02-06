@@ -156,7 +156,7 @@ dependent on the value of the <b>refresh</b> property passed in opts
 (or, if that is not set, by the <b>JS9.globalOpts.reloadRefresh</b>
 property), as follows:
 <ul>
-<li> if <b>refresh</b> is true, the existing image data is refreshed
+<li> if <b>refresh</b> is true, the existing image is refreshed
 <li> if <b>refresh</b> is false, the existing image is redisplayed
 </ul>
 The global default is to redisplay instead of refreshing. Site authors can
@@ -563,11 +563,12 @@ following optional properties:
 </ul>
 A text string passed to the <b>input</b> argument is assumed to be a
 URL (or local file pathname) to retrieve and utilize when refreshing
-the data. This option is used, for example, where an external program
-rewrites the image file, and the new data are then used to refresh the
-display. Note that the specified file becomes the current image file and
-will be used for subsequent server-based analysis request as well as
-refreshImage() calls with a null input argument (see next paragraph).
+the data in the current image. This option is used, for example, where
+an external program rewrites the image file, and the new data are then
+used to refresh the display. Note that the specified file becomes the
+current image file and will be used for subsequent server-based
+analysis request as well as refreshImage() calls with a null input
+argument (see next paragraph).
 <p>
 If the <b>input</b> argument is null, the current image file is
 reloaded, assuming its file path (or URL) is known. For security
@@ -611,7 +612,7 @@ by this argument. In both cases, the image handle is passed to the function:
 <p>
 The main difference between <b>JS9.RefreshImage()</b> and
 <a href="#JS9.Load"><b>JS9.Load()</b></a>
-is that the former updates the data into an existing image,
+is that the former updates the data in the currently displayed image,
 while the latter adds a completely new image to the display.
 
 <h5 id="JS9.DisplaySection">Extract and display a section of a FITS file</h5>
