@@ -44,6 +44,7 @@ JS9.Menubar.keyMap = {
     "copy all": "copy all regions to clipboard",
     "paste to region pos": "paste regions from local clipboard",
     "paste to current pos": "paste regions to current position",
+    "undo remove": "undo remove of region(s)",
     "copy wcs pos": "copy wcs position to clipboard",
     "copy value/pos": "copy value and position to clipboard",
     "zoom 1": "reset zoom",
@@ -847,6 +848,7 @@ JS9.Menubar.createMenus = function(){
 	    items.copyAllReg = xname("copy all");
 	    items.pasteReg = xname("paste to region pos");
 	    items.pastePos = xname("paste to current pos");
+	    items.undoRemove = xname("undo remove");
 	    items["sep" + n++] = "------";
 	    items.edittitle2 = {
 		name: "Position/Value:",
@@ -896,6 +898,11 @@ JS9.Menubar.createMenus = function(){
 			    if( uim ){
 				JS9.Regions.pasteFromClipboard.call(uim,
 								    true);
+			    }
+			    break;
+			case "undoRemove":
+			    if( uim ){
+				uim.unremoveRegions();
 			    }
 			    break;
 			case "copyWCSPos":

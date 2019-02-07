@@ -2998,6 +2998,17 @@ can specify a region selector using any of the following:
 In this context, a regexp is a string enclosed between "/"
 slashes.e.g., "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
 
+<h5 id="JS9.UnremoveRegions">unremove one or more previously removed regions</h5>
+<p>
+<code class="api">JS9.UnremoveRegions()</code>
+<p>
+If you accidentally remove one or more regions, you can use restore
+them using this call. JS9 maintains a stack of removed regions (of
+size JS9.globalOpts.unremoveReg, current default is 100). Each time one
+or more regions is removed, they are stored as a single entry on this
+stack. The <b>UnremoveRegions</b> call pops the last entry off the
+stack and calls <b>AddRegions</b>.
+
 <h5 id="JS9.SaveRegions">Save regions from the current image to a file</h5>
 <p>
 <code class="api">JS9.SaveRegions(filename, which, layer)</code>

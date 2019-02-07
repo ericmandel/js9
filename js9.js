@@ -142,6 +142,7 @@ JS9.globalOpts = {
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
     reloadRefreshReg: true,     // reloading regions file removes previous?
+    unremoveReg: 100,           // how many removed regions to save
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",       // location of param html file
     proxyURL: "params/loadproxy.html",     // location of param html file
@@ -178,6 +179,7 @@ JS9.globalOpts = {
 	"M-o": "open local file",
         P: "paste regions from local clipboard",
         p: "paste regions to current position",
+	u: "undo remove of region(s)",
 	"M-,": "toggle preferences plugin",
 	"M-p": "toggle preferences plugin",
 	r: "copy selected region to clipboard",
@@ -626,6 +628,8 @@ JS9.Image = function(file, params, func){
     this.display = JS9.lookupDisplay(display);
     // initialize image params
     this.params = {};
+    // region stack for saving removed regions
+    this.regstack = [];
     // image-specific scratch space
     this.tmp = {};
     // xeq callback for region changes?
@@ -12185,6 +12189,13 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 	return;
     }
     canvas = layer.canvas;
+    // save regions for unremove?
+    if( layerName === "regions" && JS9.globalOpts.unremoveReg ){
+	this.regstack.push(this.listRegions(shape, {mode: 1}, layerName));
+	if( this.regstack.length > JS9.globalOpts.unremoveReg ){
+	    this.regstack = this.regstack.slice(0,JS9.globalOpts.unremoveReg);
+	}
+    }
     // process the specified shapes
     this.selectShapes(layerName, shape, function(obj, ginfo){
 	var i, child, parent;
@@ -13760,6 +13771,7 @@ JS9.Regions.init = function(layerName){
     JS9.Image.prototype.copyRegions = JS9.Regions.copyRegions;
     JS9.Image.prototype.editRegionTags = JS9.Regions.editRegionTags;
     JS9.Image.prototype.toggleRegionTags = JS9.Regions.toggleRegionTags;
+    JS9.Image.prototype.unremoveRegions = JS9.Regions.unremoveRegions;
     // init the display shape layer
     dlayer = this.display.newShapeLayer(layerName, JS9.Regions.opts);
     // mouse up: list regions, if necessary
@@ -15211,6 +15223,15 @@ JS9.Regions.toggleRegionTags = function(which, x1, x2){
 	    this.changeShapes("regions", which, {tags: tags});
 	}
     }
+};
+
+// unremove previously removed regions
+JS9.Regions.unremoveRegions = function(){
+    var s = this.regstack.pop();
+    if( s ){
+	return this.addShapes("regions", s);
+    }
+    return null;
 };
 
 // ---------------------------------------------------------------------
@@ -21177,6 +21198,18 @@ JS9.mkPublic("ToggleRegionTags", function(which, x1, x2){
 	x1 = obj.argv[1];
 	x2 = obj.argv[2];
 	return im.toggleRegionTags(which, x1, x2);
+    }
+    return null;
+});
+
+// unremove previously removed regions
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("UnremoveRegions", function(){
+    var im;
+    var obj = JS9.parsePublicArgs(arguments);
+    im = JS9.getImage(obj.display);
+    if( im ){
+	return im.unremoveRegions();
     }
     return null;
 });

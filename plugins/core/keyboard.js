@@ -461,6 +461,13 @@ JS9.Keyboard.Actions["paste regions to current position"] = function(im, ipos, e
 };
 
 // eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["undo remove of region(s)"] = function(im, ipos, evt){
+    if( im ){
+	im.unremoveRegions();
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["select region"] = function(im, ipos, evt){
     var i, layer, canvas, obj, objs;
     // sanity check
