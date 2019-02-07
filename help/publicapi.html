@@ -3087,6 +3087,16 @@ The <b>opts</b> object also can include an <b>onload</b> property containing a
 function to be called when the load is complete. The image handle is passed
 as an argument to this function.
 
+<p>
+If the same region file is loaded more than once, behavior is
+determined by the <b>JS9.globalOpts.reloadRefreshReg</b> property.
+If set to <b>true</b> (the default), all previous regions loaded from
+the file are removed (regardless of their current position, size,
+etc.) If set to <b>false</b>, the new regions are added to the
+previous ones.  Site authors can change this in the <b>js9prefs.js</b>,
+while users can change this via the <b>Global</b> tab of the
+<b>Preferences</b> plugin.
+
 <p><hr>
   
 <h4 id="shapes">Working with Shape Layers</h4>

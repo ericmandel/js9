@@ -9024,6 +9024,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "does a reload refresh the data?"
 	},
+	"reloadRefreshReg": {
+	    "type": "boolean",
+	    "helper": "reloading regions file removes prev?"
+	},
 	"syncReciprocate": {
 	    "type": "boolean",
 	    "helper": "reciprocal image sync'ing?"
@@ -9110,6 +9114,7 @@ JS9.Prefs.init = function(){
 			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
 			   syncReciprocate: JS9.globalOpts.syncReciprocate,
 			   reloadRefresh: JS9.globalOpts.reloadRefresh,
+			   reloadRefreshReg: JS9.globalOpts.reloadRefreshReg,
 			   magnifierRegions: JS9.globalOpts.magnifierRegions,
 			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,

@@ -141,6 +141,7 @@ JS9.globalOpts = {
     clearImageMemory: "never",  // rm vfile: always|never|auto|noExt|noCube|size>x Mb
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
+    reloadRefreshReg: true,     // reloading regions file removes previous?
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",       // location of param html file
     proxyURL: "params/loadproxy.html",     // location of param html file
@@ -11823,6 +11824,9 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 		    } else if( id === obj.params.shape ){
 			// shape
 			cb.call(that, obj, ginfo);
+		    } else if( id === obj.params.file ){
+			// origin filename
+			cb.call(that, obj, ginfo);
 		    } else {
 			// tags
 			if( obj.params.tags){
@@ -21179,11 +21183,16 @@ JS9.mkPublic("ToggleRegionTags", function(which, x1, x2){
 
 // load a DS9/funtools regions file
 JS9.mkPublic("LoadRegions", function(file, opts){
+    var s;
     var reader;
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     var addregions = function(reg, ropts){
 	if( ropts && ropts.display !== undefined ){ delete ropts.display; }
+	if( JS9.globalOpts.reloadRefreshReg && ropts.file ){
+	    try{ im.removeShapes("regions", ropts.file); }
+	    catch(e){}
+	}
 	im.addShapes("regions", reg, ropts);
 	if( opts && opts.onload ){ opts.onload(im); }
     };
@@ -21211,15 +21220,20 @@ JS9.mkPublic("LoadRegions", function(file, opts){
     }
     // convert blob to string
     if( typeof file === "object" ){
+	s = file.path || file.name;
+	if( s ){
+	    opts.file = s.split("/").reverse()[0];
+	}
 	// file reader object
 	reader = new FileReader();
 	reader.onload = function(ev){
-	    addregions(ev.target.result);
+	    addregions(ev.target.result, opts);
 	};
 	reader.readAsText(file);
     } else if( typeof file === "string" ){
 	opts.responseType = "text";
 	file = JS9.fixPath(file);
+	opts.file = file.split("/").reverse()[0];
 	JS9.fetchURL(null, file, opts, addregions);
     } else {
 	// oops!
