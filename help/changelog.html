@@ -17,8 +17,30 @@
 
 <h3> Public Release 2.3 (TBD)</h3>
 <ul>
+<li> add ability to unremove previously removed regions
+<li> add ability to select regions based on the file from which they were loaded
+<li> calling LoadRegions() twice removes previous regions loaded from the file
+<li> add globalOpts.quietReturn to silence 'OK' messages
+<li> Desktop (Electron.js) version: add --savedir option to skip save dialog
+<li> JS9.Load(): globalOpts.reloadRefresh property to control reloading an image
+<li> add 'revert' option to wcs reproject submenu
+<li> wcs menu: each wcs system has own current units (based on initial defaults)
+<li> fix region parser to see 'linear' as wcs, not a 'line' region
+<li> cmaps: allow color choice via text input in fallback colorpicker
 <li> fix memory leaks in reproject code
+<li> LoadColormap: support file containing array of colormaps
+<li> Infobox: for long filenames, click to see right hand side
+<li> addColormaps now replaces a cmap with same name
 <li> add 3D plot capabilities for data cubes in Analysis menu
+<li> many improvements to user-defined menus
+<li> turn on wasm in js9's Electron.js Desktop app
+<li> menu: allow load/save of cmaps without a loaded image
+<li> when blending, only sync zoom/pan reprojected images that are wcs aligned
+<li> reproject: use float32 instead of float64 if datatype allows (less memory)
+<li> reproject: correctly align images when wcs ref image is panned or zoomed
+<li> reproject: fix memory leaks, always go back to original image
+<li> js9 helper: increase ping timeout to avoid Chrome disconnects
+<li> improve header generation and FITS card handling
 <li> allow DisplaySection() to display the new section in a different display
 <li> add colormaps plugin to create (complementary) colormaps
 <li> fine-tune positioning: arrow keys display small crosshair cursor
