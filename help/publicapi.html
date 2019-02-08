@@ -63,10 +63,10 @@ on a single web page, you can set the colormap of the second one this way:
 Note that this <b>display object</b> contains only the <b>display</b>
 property and always is specified as the final argument in a call.
 <p>
-The display property can specify an image handle instead of a JS9 div
-id. When the image handle in question points to the currently
-displayed image, this alternate usage is nothing more than a trivial
-optimization.  Thus, to call a routine such as
+The display property can specify an image handle or image id instead
+of a JS9 div id. When the image handle in question points to the
+currently displayed image, this alternate usage is nothing more than a
+trivial optimization.  Thus, to call a routine such as
 <a href="#JS9.WCSToPix">JS9.WCSToPix()</a>
 or
 <a href="#JS9.PixToWCS">JS9.PixtoWCS()</a>:
@@ -540,10 +540,11 @@ where:
 <li><b>input</b>: object, javascript array, typed array, FITS blob, or string
 <li><b>opts</b>: optional options or function to call when refresh is complete
 </ul>
-This routine can be used, for example, in laboratory settings where
-data is being gathered in real-time and the JS9 display needs to be
-refreshed periodically. The first <b>input</b> argument can be one of
-the following:
+The <b>RefreshImage</b> routine re-reads image data and updates the
+the current image. It can be used, for example, in laboratory settings
+where data is being gathered in real-time and the JS9 display needs to
+be refreshed periodically. The first <b>input</b> argument can be one
+of the following:
 <ul>
 <li> a text string specifying a new URL to retrieve
 <li> a javascript array containing raw image data
@@ -608,7 +609,28 @@ by this argument. In both cases, the image handle is passed to the function:
     # both call this function
     function xrefresh(im){ ... };
 </pre>
+<p>
+Advanced use: it is possible to load several images into an instance
+of JS9 and then refresh any of them regardless of which image is
+currently displayed.  To do this, you pass the display property in a
+trailing object, with the id of the image to refresh. For example, if
+foo1.fits and foo2.fits are loaded and foo2.fits is currently displayed:
+<pre>
+    # refresh foo2.fits using foo2.fits as the new image
+    JS9.RefreshImage();
+    # refresh foo2.fits using foo3.fits as the new image
+    JS9.RefreshImage("foo3.fits");
 
+    # refresh foo1.fits (even though its not currently displayed)
+    # it will be currently displayed once this operation is complete
+    JS9.RefreshImage({display:"foo1.fits"});
+    # refresh foo1.fits using foo4.fits as the new image
+    JS9.RefreshImage("foo4.fits", {display:"foo1.fits"});
+
+    # warning: this refreshes foo2.fits using foo1.fits as the new image,
+    # rather than refreshing foo1.fits!!
+    JS9.RefreshImage("foo1.fits");
+</pre>
 <p>
 The main difference between <b>JS9.RefreshImage()</b> and
 <a href="#JS9.Load"><b>JS9.Load()</b></a>

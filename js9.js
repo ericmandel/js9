@@ -16083,7 +16083,7 @@ JS9.progress = function(arg1, arg2){
 
 // msg coming from socket.io or postMessage
 JS9.msgHandler =  function(msg, cb){
-    var obj, tdisp, res;
+    var s, obj, tdisp, res;
     var args = [];
     var cmd = msg.cmd;
     var id = msg.id;
@@ -16101,9 +16101,33 @@ JS9.msgHandler =  function(msg, cb){
 	}
 	// deep copy of arg array
 	args = $.extend(true, [], msg.args);
-	// make up display object
+	// add the display object, unless we already have one
 	if( id ){
-	    args.push({display: id});
+	    // bash send a string, not an object
+	    if( args.length > 0 ){
+		s = args[args.length-1];
+		if( typeof s === "string" ){
+		    try{ obj = JSON.parse(s); }
+		    catch(e){ obj = null; }
+		} else if( typeof s === "object" ){
+		    obj = s;
+		}
+		// is this the display object? see JS9.parsePublicArgs
+		if( obj                             &&
+		    (typeof obj === "object")       &&
+		    obj.hasOwnProperty("display")   &&
+		    (Object.keys(obj).length === 1) ){
+		    if( typeof s === "string" ){
+			// may as well replace string with parsed object
+			args.pop();
+			args.push(obj);
+		    }
+		} else {
+		    args.push({display: id});
+		}
+	    } else {
+		args.push({display: id});
+	    }
 	}
 	// if RunAnalysis has a callback, call it when the helper returns
 	if( (cmd === "RunAnalysis") && cb ){
@@ -16517,6 +16541,8 @@ JS9.fetchURL = function(name, url, opts, handler) {
     } else {
 	nurl = url;
     }
+    // change $JS9_DIR back to install dir
+    nurl = nurl.replace(/^\${JS9_DIR}\//,JS9.INSTALLDIR);
     // set up connection
     xhr.open('GET', nurl, true);
     // and parameters
@@ -20090,18 +20116,18 @@ JS9.mkPublic("Load", function(file, opts){
 		}
 	    }
 	    // does this image already exist?
-	    im = JS9.lookupImage(opts.filename, opts.display);
+	    if( typeof opts.refresh === "object" ){
+		im = opts.refresh;
+	    } else {
+		im = JS9.lookupImage(opts.filename, opts.display);
+	    }
 	    if( im ){
 		// do we refresh or redisplay?
 		if( JS9.isNull(opts.refresh) ){
 		    opts.refresh = JS9.globalOpts.reloadRefresh;
 		}
-		if( opts.refresh ){
-		    if( typeof opts.refresh !== "object" ){
-			opts.refresh = im;
-		    }
-		} else {
 		// if not refreshing, just re-display and exit
+		if( !opts.refresh ){
 		    // display image, 2D graphics, etc.
 		    im.displayImage("display", opts);
 		    im.refreshLayers();
@@ -20184,16 +20210,17 @@ JS9.mkPublic("Load", function(file, opts){
 	if( typeof opts.refresh === "object" ){
 	    im = opts.refresh;
 	} else {
-	    // when refreshing, broaden the search for existing file
-	    s = file.replace(/\[.*\]$/, "").split("/").reverse()[0];
+	    // look for already-loaded image
+	    s = file.split("/").reverse()[0];
 	    im = JS9.lookupImage(s, opts.display);
 	    if( im ){
 		opts.refresh = im;
 	    }
 	}
     } else {
-	// when not refreshing, use narrow search for existing file
-	im = JS9.lookupImage(file, opts.display);
+	// look for already-loaded image
+	s = file.split("/").reverse()[0];
+	im = JS9.lookupImage(s, opts.display);
     }
     // if already loaded and not refreshing, just redisplay and exit
     if( im && !opts.refresh ){
@@ -20623,21 +20650,22 @@ JS9.mkPublic("RefreshImage", function(fits, opts){
     var obj = JS9.parsePublicArgs(arguments);
     var im = JS9.getImage(obj.display);
     var retry = function(hdu){
-	JS9.Image.prototype.refreshImage.call(im, hdu, opts);
+	im.refreshImage(hdu, opts);
     };
     fits = obj.argv[0];
     opts = obj.argv[1] || {};
     if( im ){
+	opts.id = im.id;
 	if( fits instanceof Blob ){
 	    // cleanup previous FITS heap before handling the new FITS file,
 	    // or we end up with a memory leak in the emscripten heap
-	    if( !opts.rawid ){
+	    if( !opts.rawid || opts.rawid === im.raw.id ){
 		JS9.cleanupFITSFile(im.raw, true);
 	    }
 	    try{ JS9.handleFITSFile(fits, JS9.fits.options, retry); }
 	    catch(e){ JS9.error("can't refresh FITS file", e); }
 	} else {
-	    JS9.Image.prototype.refreshImage.apply(im, obj.argv);
+	    im.refreshImage(fits, opts);
 	}
     } else if( fits instanceof Blob ){
 	JS9.Load.apply(null, arguments);
@@ -20659,6 +20687,9 @@ JS9.mkPublic("GetLoadStatus", function(id){
 	}
 	if( im.file0 ){
 	    fname0 = im.file0.split('/').reverse()[0];
+	    if( id0 && !id0.match(/\[.*\]/) ){
+		fname0 = fname0.replace(/\[.*\]/, "");
+	    }
 	}
 	if( !id || (im.id0 === id) || (im.file0 === id) ||
 	    (fname0 && id0 && fname0 === id0) ){
