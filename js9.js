@@ -309,6 +309,13 @@ JS9.gridOpts = {};
 // allows emscripten opts (in Module) to be overridden via js9prefs.js
 JS9.emscriptenOpts = {};
 
+// defaults for blending
+JS9.blendOpts = {
+    active: true,
+    mode: "screen",
+    opacity: 1
+};
+
 // defaults for analysis (macro expansion)
 JS9.analOpts = {
     // if this pattern is matched in stderr, throw a real error
@@ -724,7 +731,7 @@ JS9.Image = function(file, params, func){
     // array to hold raw data as we create it (original raw data at index 0)
     this.raws = [];
     // initial blend mode
-    this.blend = {active: undefined, mode: "normal", opacity: 1};
+    this.blend = $.extend(true, {}, JS9.blendOpts);
     // temp flag determines if we should update shapes at end of this call
     this.updateshapes = false;
     // request for an empty image object ends here
