@@ -173,6 +173,7 @@ JS9.globalOpts = {
 	"M-e": "edit selected region",
 	i: "refresh image",
 	I: "display full image",
+	"M-i": "display selected cutouts",
 	"M-k": "toggle keyboard actions plugin",
 	l: "toggle active shape layers",
 	"M-m": "toggle mouse/touch plugin",
@@ -3112,13 +3113,76 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	}
 	return res || val3;
     };
+    // convert region to section (cen and dim)
+    var reg2sect = function(xreg){
+	var i, xdim, ydim;
+	var xx=0, yy=0, minx=1000000, maxx=0, miny=1000000, maxy=0;
+	var shape = xreg.shape;
+	// use physical coor object, if possible
+	if( xreg.lcs ){ xreg = xreg.lcs; }
+	switch( shape ){
+	case "annulus":
+            xdim  = xreg.radii[xreg.radii.length-1]*2;
+            ydim = xreg.radii[xreg.radii.length-1]*2;
+	    break;
+	case "box":
+            xdim  = xreg.width;
+            ydim = xreg.height;
+	    break;
+	case "circle":
+            xdim  = xreg.radius*2;
+            ydim = xreg.radius*2;
+            break;
+	case "ellipse":
+            xdim  = xreg.r1*2;
+            ydim = xreg.r2*2;
+            break;
+	case "polygon":
+        case "line":
+	    for ( i=0; i < xreg.pts.length; i++ ) {
+		xx += xreg.pts[i].x;
+		yy += xreg.pts[i].y;
+		if ( xreg.pts[i].x > maxx ) { maxx = xreg.pts[i].x; }
+		if ( xreg.pts[i].x < minx ) { minx = xreg.pts[i].x; }
+		if ( xreg.pts[i].y > maxy ) { maxy = xreg.pts[i].y; }
+		if ( xreg.pts[i].y < miny ) { miny = xreg.pts[i].y; }
+	    }
+	    xreg.x = xx/xreg.pts.length;
+	    xreg.y = yy/xreg.pts.length;
+	    if( xreg.shape === "line" && xreg.pts.length === 2 ){
+                xdim = Math.sqrt(((xreg.pts[0].x - xreg.pts[1].x)  *
+                                  (xreg.pts[0].x - xreg.pts[1].x)) +
+                                 ((xreg.pts[0].y - xreg.pts[1].y)  *
+                                  (xreg.pts[0].y - xreg.pts[1].y)));
+                ydim = 1;
+	    } else {
+	        xdim  = maxx - minx;
+		ydim = maxy - miny;
+	    }
+	    break;
+	case "text":
+	    xdim = 10;
+	    ydim = 10;
+	    break;
+	default:
+	    break;
+	}
+	return({xcen:xreg.x, ycen:xreg.y, xdim:xdim, ydim:ydim});
+    };
+    // main display routine
     var disp = function(hdu, opts){
 	var tim, iid, did, arr;
 	var ss = "";
-	opts = opts || {};
-	topts = $.extend(true, {}, opts);
+	// make a copy of opts so we can change it
+	topts = $.extend(true, {}, opts || {});
+	if( JS9.isNull(topts.refreshRegions) ){
+	    topts.refreshRegions = true;
+	}
+	if( JS9.isNull(topts.resetSection) ){
+	    topts.resetSection = true;
+	}
 	// start the waiting!
-	if( opts.waiting !== false ){
+	if( topts.waiting !== false ){
 	    JS9.waiting(true, that.display);
 	}
 	// the id might have changed if we changed extensions
@@ -3134,13 +3198,13 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    }
 	}
 	iid = that.id.replace(/\[.*\]/,"") + ss;
-	if( opts.separate ){
+	if( topts.separate ){
 	    // display section as a separate image in the specified display
 	    delete topts.xcen;
 	    delete topts.ycen;
 	    topts.id = iid;
-	    if( typeof opts.separate === "string" ){
-		arr = opts.separate.split(":");
+	    if( typeof topts.separate === "string" ){
+		arr = topts.separate.split(":");
 		switch(arr.length){
 		case 1:
 		    did = arr[0];
@@ -3173,15 +3237,15 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    // reset obin to be bin, since new images have no previous bin
 	    nim.binning.obin = nim.binning.bin;
 	    // add regions to new image
-	    if( oreg ){
+	    if( oreg && topts.refreshRegions !== false ){
 		nim.addShapes("regions", oreg);
 	    }
-	} else if( typeof opts.refresh === "string" ){
+	} else if( typeof topts.refresh === "string" ){
 	    // refresh the image in the specified display
 	    delete topts.xcen;
 	    delete topts.ycen;
 	    topts.id = iid;
-	    arr = opts.refresh.split(":");
+	    arr = topts.refresh.split(":");
 	    switch(arr.length){
 	    case 1:
 		did = arr[0];
@@ -3194,8 +3258,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    // make sure we can find the display
 	    topts.display = JS9.lookupDisplay(did);
 	    if( topts.display.image ){
-		topts.refreshRegions = true;
-		topts.resetSection = true;
 		topts.rawid = that.raw.id;
 		// function to perform when image is refreshed
 		topts.onrefresh = topts.ondisplaysection || topts.onrefresh || func;
@@ -3229,8 +3291,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    // this is the default behavior for displaySection:
 	    // refresh the image in the current display
 	    topts.id = iid;
-	    topts.refreshRegions = true;
-	    topts.resetSection = true;
 	    topts.rawid = that.raw.id;
 	    // function to perform when image is refreshed
 	    topts.onrefresh = topts.ondisplaysection || topts.onrefresh || func;
@@ -3240,17 +3300,26 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	// done waiting
 	JS9.waiting(false);
     };
+    // sanity check
+    if( !this.raw || !this.raw.hdu || !this.raw.hdu.fits ){
+	JS9.error("invalid image for displaySection");
+    }
     // special case: if opts is "full", display full image
     if( opts === "full" ){
 	fdims = this.fileDimensions();
 	opts = {xdim: fdims.xdim, ydim: fdims.ydim, xcen: 0, ycen: 0};
+    } else if( opts === "selected" ){
+	this.selectShapes("regions", "selected", function(obj){
+	    topts = reg2sect(obj.pub);
+	    topts.separate = true;
+	    topts.refreshRegions = false;
+	    topts.resetSection = true;
+	    this.displaySection(topts, func);
+	});
+	return;
     } else if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error("can't parse section opts: " + opts, e); }
-    }
-    // sanity check
-    if( !this.raw || !this.raw.hdu || !this.raw.hdu.fits ){
-	JS9.error("invalid image for displaySection");
     }
     hdu = this.raw.hdu;
     // opts is optional

@@ -4491,6 +4491,13 @@ JS9.Keyboard.Actions["display full image"] = function(im, ipos, evt){
     im.displaySection("full");
 };
 
+JS9.Keyboard.Actions["display selected cutouts"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){ return; }
+    evt.preventDefault();
+    im.displaySection("selected");
+};
+
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["toggle coordinate grid"] = function(im, ipos, evt){
     JS9.Grid.toggle(im);
@@ -5415,6 +5422,7 @@ JS9.Menubar.keyMap = {
     "display crosshair for this image": "toggle crosshair",
     "toggle: incl/excl": "toggle selected region: include/exclude",
     "display the full image": "display full image",
+    "display selected cutouts": "display selected cutouts",
     "refresh this image": "refresh image",
     "show active shape layers": "toggle active shape layers",
     "hide active shape layers": "toggle active shape layers",
@@ -5862,10 +5870,12 @@ JS9.Menubar.createMenus = function(){
 		}
 		items.refresh = xname("refresh this image");
 		items.full = xname("display the full image");
+		items.cutout = xname("display selected cutouts");
 		items.free = xname("free this image's memory");
 		if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		    items.refresh.disabled = true;
 		    items.full.disabled = true;
+		    items.cutout.disabled = true;
 		    items.free.disabled = true;
 		}
 		items.close = xname("close this image");
@@ -5936,6 +5946,11 @@ JS9.Menubar.createMenus = function(){
 			case "full":
 			    if( uim && uim.raw.hdu && uim.raw.hdu.fits ){
 				uim.displaySection("full");
+			    }
+			    break;
+			case "cutout":
+			    if( uim && uim.raw.hdu && uim.raw.hdu.fits ){
+				uim.displaySection("selected");
 			    }
 			    break;
 			case "free":

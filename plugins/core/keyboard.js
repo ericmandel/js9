@@ -498,6 +498,13 @@ JS9.Keyboard.Actions["display full image"] = function(im, ipos, evt){
     im.displaySection("full");
 };
 
+JS9.Keyboard.Actions["display selected cutouts"] = function(im, ipos, evt){
+    // sanity check
+    if( !im ){ return; }
+    evt.preventDefault();
+    im.displaySection("selected");
+};
+
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["toggle coordinate grid"] = function(im, ipos, evt){
     JS9.Grid.toggle(im);

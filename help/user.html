@@ -132,15 +132,16 @@ uncompressed).  It also contains options to:
 is performed on one image, it also is performed on the other(s)
 <li><b>unsync images ...</b> unsynchronize previously sync'ed images
 <li><b>separate these images</b> move each image in this display to a new display
-<li><b>gather all images here</b>move all images from other displays to this display
-<li><b>refresh this image</b>: an advanced option that will call the
+<li><b>gather all images here</b> move all images from other displays to this display
+<li><b>refresh this image</b> an advanced option that will call the
 internal redisplay routine for the displayed image (useful, for
 example, if you are reprocessing the image on disk and want to view
 the new data)
-<li><b>display the full image</b>: an advanced option that tries to
+<li><b>display the full image</b> an advanced option that tries to
 load and display the entire image (might cause the page to crash if
 the image is too large)
-<li><b>free image memory</b>free up memory used to store the FITS file internally (which is needed for WCS reprojections, viewing FITS extensions and data cubes).
+<li><b>display selected cutouts</b> selected region(s) are used to define the center and size of new image section(s); note that image sections are always rectangles and region angles are ignored
+<li><b>free image memory</b> free up memory used to store the FITS file internally (which is needed for WCS reprojections, viewing FITS extensions and data cubes)
 <li><b>close this image</b> to clear the current image and release browser resources
 <li><b>close all images</b> to clear all images and release browser resources
 <li><b>remove proxy file</b> to clear a server proxy file and release browser resources
@@ -164,26 +165,26 @@ app and other apps will reconnect.
 <li><p><b>Edit:</b> allows you to copy and paste regions, positions,
 and pixel values to/from the clipboard:
 <ul>
-<li><b>edit selected</b>: display selected region's configuration window
-<li><b>copy selected</b>: copy the selected region to the system
+<li><b>edit selected</b> display selected region's configuration window
+<li><b>copy selected</b> copy the selected region to the system
 clipboard, so that you can transfer it to other JS9 displays or to
-programs outside of JS9.
-<li><b>copy all</b>: copy all regions to the system clipboard,
+programs outside of JS9
+<li><b>copy all</b> copy all regions to the system clipboard,
 so that you can transfer them to other JS9 displays or programs
-outside of JS9.
-<li><b>paste to region pos</b>: paste previously copied region(s),
+outside of JS9
+<li><b>paste to region pos</b> paste previously copied region(s),
 usually to another JS9 display. For security reasons, web pages are
 not permitted to read the system clipboard, so the paste command reads
 an internal variable filled from the previous JS9 copy. Thus, you
 cannot paste data copied from outside JS9. Some day ...
-<li><b>paste to current pos</b>: paste previously copied region(s) to
+<li><b>paste to current pos</b> paste previously copied region(s) to
 the current mouse (or arrow key) position in a JS9 display. Usually
 you would use the keyboard shortcut (currently capital 'P') for this
 sort of pasting, but you also can use the meta key to freeze the mouse
-position and then use this menu option.
-<li><b>undo remove</b>: restore the last removed region (or set of removed regions, if more than one was removed in a single operation).
-<li><b>copy wcs pos</b>: copy the current WCS position to the system clipboard
-<li><b>copy value/pos</b>: copy the current pixel value and WCS position to the system clipboard
+position and then use this menu option
+<li><b>undo remove</b> restore the last removed region (or set of removed regions, if more than one was removed in a single operation)
+<li><b>copy wcs pos</b> copy the current WCS position to the system clipboard
+<li><b>copy value/pos</b> copy the current pixel value and WCS position to the system clipboard
 </ul>
 
 <li><p><b>View:</b> displays a list of plugin menu options, including the following core options:
@@ -264,7 +265,7 @@ any floating point zoom factor in the <b>numeric zoom value</b> text
 box. The <b>pan to center</b> option pans to the center of the image, while
 the <b>reset zoom/pan</b> sets the zoom to 1 and centers the display.
 
-<li><p><b>Scale:</b>Each scale option specifies a different scaling
+<li><p><b>Scale:</b> Each scale option specifies a different scaling
 algorithm to use when converting image pixel values to RGB
 values. (The procedure for doing this conversion is detailed in the
 DS9 documentation titled <a href="http://ds9.si.edu/doc/ref/how.html"
