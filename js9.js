@@ -4336,7 +4336,9 @@ JS9.Image.prototype.notifyHelper = function(){
 	    // returns: [file, path, wcs]
 	    // split args, dealing with spaces inside brackets
 	    r = rstr.trim().match(/(?:[^\s\[]+|\[[^\]]*\])+/g);
-	    im = JS9.lookupImage(r[0], that.display.id||JS9.DEFID );
+//	    No! returns the wrong image if current image id has <n> appended!
+//	    im = JS9.lookupImage(r[0], that.display.id||JS9.DEFID );
+	    im = that;
 	    if( im ){
 		s = r[1];
 		if( s !== "?" ){
