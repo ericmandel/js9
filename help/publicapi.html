@@ -4058,6 +4058,32 @@ or:
     JS9.CenterDisplay({display: "myJS9"});
 </pre>
 
+<h5 id="JS9.RenameDisplay">Rename the id of a JS9 display</h5>
+<p>
+<code class="api">JS9.RenameDisplay(oid, nid)</code>
+<p>
+Calling sequences:
+<pre>
+    JS9.RenameDisplay(nid)        # change default id (usually "JS9") to nid
+    JS9.RenameDisplay(oid, nid)   # change oid to nid
+</pre>
+<p>
+where:
+<ul>
+<li><b>oid</b>: old name of JS9 display
+<li><b>nid</b>: new name of JS9 display
+</ul>
+<p>
+This routine is used by the Desktop version of JS9 to implement the
+<b>--title</b> (and <b>--renameid</b>) switch(es), which change the id
+of the JS9 display(s) to the specified id(s). Once an id has been
+renamed, external communication (via the js9 script or pyjs9) should
+target the new id instead of the original id.
+<p>
+The original id is still available internally, so Javascript public
+API calls on the web page itself can target either the original or the
+new id using the {display: "id"} syntax.
+
 <h5 id="JS9.CloseDisplay">Close all images in a display</h5>
 <p>
 <code class="api">JS9.CloseDisplay(dname)</code>

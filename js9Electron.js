@@ -111,6 +111,8 @@ js9Electron.doHelper = isTrue(js9Electron.argv.helper, true);
 js9Electron.debug = isTrue(js9Electron.argv.debug, false);
 js9Electron.eval = isTrue(js9Electron.argv.eval, false);
 js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || process.env.JS9_WEBPAGE || js9Electron.defpage;
+js9Electron.title = js9Electron.argv.title;
+js9Electron.renameid = js9Electron.argv.renameid;
 js9Electron.width = js9Electron.argv.width || 1024;
 js9Electron.height = js9Electron.argv.height  || 768;
 js9Electron.savedir = js9Electron.argv.savedir;
@@ -184,7 +186,30 @@ function createWindow() {
 	cmd += "});";
 	ncmd++;
     }
-    // 2. load data files
+    // 2. rename default id to title
+    if( js9Electron.title ){
+	js9Electron.title = js9Electron.title.replace(/\\/g,"");
+	cmd += `JS9.RenameDisplay('${js9Electron.title}');`;
+    }
+    // 3. rename other ids
+    if( js9Electron.renameid ){
+	js9Electron.renameid = js9Electron.renameid.replace(/\\/g,"");
+	const arr1 = js9Electron.renameid.split(",");
+	for(let i=0; i<arr1.length; i++){
+	    const arr2 = arr1[i].split(":");
+	    switch(arr2.length){
+	    case 0:
+		break;
+	    case 1:
+		cmd += `JS9.RenameDisplay('${arr2[0]}');`;
+		break;
+	    default:
+		cmd += `JS9.RenameDisplay('${arr2[0]}', '${arr2[1]}');`;
+		break;
+	    }
+	}
+    }
+    // 4. load data files
     for(let i=0; i<js9Electron.files.length; i++){
 	let file = js9Electron.files[i].replace(/\\/g,"");
 	const jobj = (js9Electron.files[i+1]||"").replace(/\\/g,"");

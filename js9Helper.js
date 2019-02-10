@@ -920,9 +920,25 @@ var socketioHandler = function(socket) {
     // for other implementations, this is needed if you want to:
     //   support sending external messages to JS9 (i.e., via js9 script)
     socket.on("addDisplay", function(obj, cbfunc) {
-	if( !obj ){return;}
+	if( !obj || !obj.display ){return;}
 	socket.js9.displays = socket.js9.displays || [];
 	socket.js9.displays.push(obj.display);
+	if( cbfunc ){ cbfunc(socket.js9.pageid); }
+    });
+    // on display: rename a display in the display list
+    // returns: unique page id (not currently used)
+    // for other implementations, this is needed if you want to:
+    //   allow renaming of JS9 display id for external communication
+    socket.on("renameDisplay", function(obj, cbfunc) {
+	var i;
+	if( !obj || !obj.odisplay || !obj.ndisplay ){return;}
+	socket.js9.displays = socket.js9.displays || [];
+	for(i=0; i<socket.js9.displays.length; i++){
+	    if( socket.js9.displays[i] === obj.odisplay ){
+		socket.js9.displays[i] = obj.ndisplay;
+		break;
+	    }
+	}
 	if( cbfunc ){ cbfunc(socket.js9.pageid); }
     });
     socket.on("worker", function(obj, cbfunc) {

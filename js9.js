@@ -16511,7 +16511,9 @@ JS9.lookupDisplay = function(id, mustExist){
     if( id && (id !== "*") && (id.toString().search(JS9.SUPERMENU) < 0) ){
 	// look for whole id
 	for(i=0; i<JS9.displays.length; i++){
-	    if( (id === JS9.displays[i]) || (id === JS9.displays[i].id) ){
+	    if( (id === JS9.displays[i])     ||
+		(id === JS9.displays[i].id)  ||
+		(id === JS9.displays[i].oid) ){
 		return JS9.displays[i];
 	    }
 	}
@@ -16519,7 +16521,9 @@ JS9.lookupDisplay = function(id, mustExist){
 	if( typeof id === "string" ){
 	    id = id.replace(regexp,"");
 	    for(i=0; i<JS9.displays.length; i++){
-		if( (id === JS9.displays[i]) || (id === JS9.displays[i].id) ){
+		if( (id === JS9.displays[i])     ||
+		    (id === JS9.displays[i].id)  ||
+		    (id === JS9.displays[i].oid) ){
 		    return JS9.displays[i];
 		}
 	    }
@@ -19919,6 +19923,40 @@ JS9.mkPublic("LookupImage", function(id){
 JS9.mkPublic("LookupDisplay", function(id, mustExist){
     var obj = JS9.parsePublicArgs(arguments);
     return JS9.lookupDisplay(obj.argv[0]||obj.display, obj.argv[1]);
+});
+
+// rename a display:
+// RenameDisplay(nid)                  # change def. id (usually "JS9") to nid
+// RenameDisplay(nid, {display: oid})  # change oid to nid
+// RenameDisplay(oid, nid)             # change oid to nid
+JS9.mkPublic("RenameDisplay", function(nid, oid){
+    var disp;
+    var obj = JS9.parsePublicArgs(arguments);
+    switch( obj.argv.length ){
+    case 0:
+	return;
+    case 1:
+	oid = obj.display;
+	nid = obj.argv[0];
+	break;
+    default:
+	oid = obj.argv[0];
+	nid = obj.argv[1];
+	break;
+    }
+    disp = JS9.lookupDisplay(oid);
+    if( disp && disp.id ){
+	oid = disp.id;
+	// save the oirignal id, since existing plugins use it
+	if( !disp.oid ){
+	    disp.oid = oid;
+	}
+	// set the new id
+	disp.id = nid;
+	// tell the helper to recognize the new instead of the old
+	JS9.helper.send("renameDisplay",
+			{odisplay: oid, ndisplay: disp.id});
+    }
 });
 
 // close all displayed images
