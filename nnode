@@ -1,5 +1,5 @@
 #!/bin/sh
-#set -x
+# set -x
 
 # defaults
 DEFPREFS="js9Prefs.json"
@@ -52,7 +52,12 @@ while [ x"$1" != x ]; do
     esac
 done
 
-killp js9Helper.js >& /dev/null
+# kill previous process, if necessary
+got=`ps wwax | grep -i "js9Helper.js" | grep -v grep | awk '{print $1}'`
+if [ x$got != x ]; then
+    kill -9 $got
+fi
 
+# start new process
 echo "starting node $HELPER $PSTR $*"
 node $HELPER $* 1>$LOG 2>&1 &
