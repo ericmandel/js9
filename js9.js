@@ -20059,7 +20059,7 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
 	    JS9.checkNew(new JS9.Colormap(colormap, a1, a2, a3));
 	    if( obj.argv.length === 4 ){
 		JS9.globalOpts.topColormaps.push(colormap);
-	    } else if( typeof a4 !== "object" || a4.toplevel !== false ){
+	    } else if( !a4 || typeof a4 !== "object" || a4.toplevel !== false ){
 		JS9.globalOpts.topColormaps.push(colormap);
 	    }
 	    break;
@@ -20601,6 +20601,7 @@ JS9.mkPublic("Preload", function(arg1){
     var obj = JS9.parsePublicArgs(arguments);
     var baseexp = JS9.URLEXP;
     var sesexp = /\.ses$/;
+    var cmapexp = /\.cmap$/;
     arg1 = obj.argv[0];
     // for socketio and loadProxy, support LoadProxy calls
     if( JS9.globalOpts.loadProxy && JS9.helper.baseurl ){
@@ -20684,6 +20685,8 @@ JS9.mkPublic("Preload", function(arg1){
 		func = JS9.LoadProxy;
 	    } else if( arguments[i].match(sesexp) ){
 		func = JS9.LoadSession;
+	    } else if( arguments[i].match(cmapexp) ){
+		func = JS9.LoadColormap;
 	    } else {
 		func = JS9.Load;
 	    }
@@ -20735,6 +20738,8 @@ JS9.mkPublic("Preload", function(arg1){
 		func = JS9.LoadProxy;
 	    } else if( JS9.preloads[i][0].match(sesexp) ){
 		func = JS9.LoadSession;
+	    } else if( JS9.preloads[i][0].match(cmapexp) ){
+		func = JS9.LoadColormap;
 	    } else {
 		func = JS9.Load;
 	    }
