@@ -134,6 +134,7 @@ JS9.globalOpts = {
     ehretries: 10,		// connection retries Electron connect
     xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
+    imopts: "IMOPTS",           // basename of FITS param containing json opts
     table: {xdim: 2048, ydim: 2048, bin: 1},// image section size to extract from table
     image: {xdim: 4096, ydim: 4096, bin: 1},// image section size (0 for unlimited)
     reproj: {xdim: 4096, ydim: 4096}, // max image size that we can reproject
@@ -584,6 +585,8 @@ JS9.Image = function(file, params, func){
 	return arr;
     };
     var finishUp = function(func){
+	var i, s, topts, tkey;
+	var imopts = JS9.globalOpts.imopts;
 	// clear previous messages
 	this.display.clearMessage();
 	// add to list of images
@@ -593,6 +596,38 @@ JS9.Image = function(file, params, func){
 	// add regions, if necessary
 	if( localOpts && localOpts.regions ){
 	    this.addShapes("regions", localOpts.regions);
+	}
+	// looks for imopts (json-formatted image param object) in FITS header
+	if( this.raw && this.raw.header && this.raw.header[imopts] ){
+	    // try to convert to object and set as image params
+	    try{ topts = JSON.parse(this.raw.header[imopts]); }
+	    catch(e){ topts = null; }
+	    if( topts ){
+		try{ this.setParam("all", topts); }
+		catch(e){}
+	    }
+	}
+	// looks for multi-line imopts (imopts1, imopts2, ...) in FITS header
+	tkey = imopts + "1";
+	if( this.raw && this.raw.header && this.raw.header[tkey] ){
+	    // gather up the json string
+	    for(i=1, s=""; i<100; i++){
+		tkey = imopts + String(i);
+		if( this.raw.header[tkey] ){
+		    s += this.raw.header[tkey];
+		} else {
+		    break;
+		}
+	    }
+	    // try to convert to object and set as image params
+	    if( s ){
+		try{ topts = JSON.parse(s); }
+		catch(e){ topts = null; }
+		if( topts ){
+		    try{ this.setParam("all", topts); }
+		    catch(e){}
+		}
+	    }
 	}
 	// plugin callbacks
 	this.xeqPlugins("image", "onimageload");
