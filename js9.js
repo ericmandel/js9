@@ -585,7 +585,7 @@ JS9.Image = function(file, params, func){
 	return arr;
     };
     var finishUp = function(func){
-	var i, s, topts, tkey;
+	var i, s, topts, tkey, oalerts;
 	var imopts = JS9.globalOpts.imopts;
 	// clear previous messages
 	this.display.clearMessage();
@@ -597,6 +597,9 @@ JS9.Image = function(file, params, func){
 	if( localOpts && localOpts.regions ){
 	    this.addShapes("regions", localOpts.regions);
 	}
+	// no alerts while processing imopts
+	oalerts = JS9.globalOpts.alerts;
+	JS9.globalOpts.alerts = false;
 	// looks for imopts (json-formatted image param object) in FITS header
 	if( this.raw && this.raw.header && this.raw.header[imopts] ){
 	    // try to convert to object and set as image params
@@ -629,6 +632,8 @@ JS9.Image = function(file, params, func){
 		}
 	    }
 	}
+	// restore alerts
+	JS9.globalOpts.alerts = oalerts;
 	// plugin callbacks
 	this.xeqPlugins("image", "onimageload");
 	// update shapes?
