@@ -135,6 +135,7 @@ JS9.globalOpts = {
     xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     imopts: "IMOPTS",           // basename of FITS param containing json opts
+    imcmap: "IMCMAP",           // basename of FITS param containing cmaps
     table: {xdim: 2048, ydim: 2048, bin: 1},// image section size to extract from table
     image: {xdim: 4096, ydim: 4096, bin: 1},// image section size (0 for unlimited)
     reproj: {xdim: 4096, ydim: 4096}, // max image size that we can reproject
@@ -587,6 +588,7 @@ JS9.Image = function(file, params, func){
     var finishUp = function(func){
 	var i, s, topts, tkey, oalerts;
 	var imopts = JS9.globalOpts.imopts;
+	var imcmap = JS9.globalOpts.imcmap;
 	// clear previous messages
 	this.display.clearMessage();
 	// add to list of images
@@ -597,9 +599,41 @@ JS9.Image = function(file, params, func){
 	if( localOpts && localOpts.regions ){
 	    this.addShapes("regions", localOpts.regions);
 	}
-	// no alerts while processing imopts
+	// no alerts while processing imopts or cmaps
 	oalerts = JS9.globalOpts.alerts;
 	JS9.globalOpts.alerts = false;
+	// looks for imcmap (json-formatted colormap object) in FITS header
+	if( this.raw && this.raw.header && this.raw.header[imcmap] ){
+	    // try to convert to object and set as image params
+	    try{ topts = JSON.parse(this.raw.header[imcmap]); }
+	    catch(e){ topts = null; }
+	    if( topts ){
+		try{ JS9.AddColormap(topts); }
+		catch(e){}
+	    }
+	}
+	// look for multi-line colormap (imcmap1, imcmap2, ...) in FITS header
+	tkey = imcmap + "1";
+	if( this.raw && this.raw.header && this.raw.header[tkey] ){
+	    // gather up the json string
+	    for(i=1, s=""; i<100; i++){
+		tkey = imcmap + String(i);
+		if( this.raw.header[tkey] ){
+		    s += this.raw.header[tkey];
+		} else {
+		    break;
+		}
+	    }
+	    // try to convert to object and set as image params
+	    if( s ){
+		try{ topts = JSON.parse(s); }
+		catch(e){ topts = null; }
+		if( topts ){
+		    try{ JS9.AddColormap(topts); }
+		    catch(e){}
+		}
+	    }
+	}
 	// looks for imopts (json-formatted image param object) in FITS header
 	if( this.raw && this.raw.header && this.raw.header[imopts] ){
 	    // try to convert to object and set as image params
@@ -610,7 +644,7 @@ JS9.Image = function(file, params, func){
 		catch(e){}
 	    }
 	}
-	// looks for multi-line imopts (imopts1, imopts2, ...) in FITS header
+	// look for multi-line imopts (imopts1, imopts2, ...) in FITS header
 	tkey = imopts + "1";
 	if( this.raw && this.raw.header && this.raw.header[tkey] ){
 	    // gather up the json string
