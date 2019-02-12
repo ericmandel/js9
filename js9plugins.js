@@ -1469,6 +1469,13 @@ JS9.Blend.imageclose = function(im){
     JS9.Blend.removeImage.call(this, im);
 };
 
+// callback when a session is loaded
+JS9.Blend.sessionload = function(im){
+    if( im ){
+	JS9.Blend.init.call(this);
+    }
+};
+
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		   {menuItem: "Blending",
@@ -1478,6 +1485,7 @@ JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		    onimageload: JS9.Blend.imageload,
 		    onimagedisplay: JS9.Blend.imagedisplay,
 		    onimageclose: JS9.Blend.imageclose,
+		    onsessionload: JS9.Blend.sessionload,
 		    help: "help/blend.html",
 		    winTitle: "Image Blending",
 		    winResize: true,

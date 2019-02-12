@@ -9217,7 +9217,7 @@ JS9.Display.prototype.nextImage = function(inc){
 JS9.Display.prototype.loadSession = function(file, opts){
     var that = this;
     var objs = {};
-    var obj;
+    var obj, left;
     var finish = function(im){
 	var i, dlayer, layer, lname, obj;
 	var dorender = function(){
@@ -9266,20 +9266,35 @@ JS9.Display.prototype.loadSession = function(file, opts){
 		}
 	    }
 	}
+	// if all images are loaded, sort them to the original load order
+	if( JS9.notNull(left) ){
+	    left = left - 1;
+	    if( left === 0 ){
+		JS9.images.sort(function(a, b){
+		    var ai=0, bi=0;
+		    if( objs[a.file] ){ ai = objs[a.file].i; }
+		    if( objs[b.file] ){ bi = objs[b.file].i; }
+		    return ai - bi;
+		});
+	    }
+	}
 	// re-execute from the xeq stash
 	if( obj.xeqstash ){
 	    im.xeqStashCall(obj.xeqstash);
 	}
+	if( JS9.globalOpts.extendedPlugins ){
+	    JS9.images[0].xeqPlugins("image", "onsessionload");
+	}
     };
-    var loadit = function(jobj){
+    var loadit = function(imobj){
 	var pname;
 	// sanity check
-	if( !jobj.file ){
+	if( !imobj.file ){
 	    JS9.error("session does not contain a filename");
 	}
-	// save object so finish can find it
-	obj = $.extend(true, {}, jobj);
-	// but some param info needs to be deleted
+	// save copy of object we can edit it
+	obj = $.extend(true, {}, imobj);
+	// some param info needs to be deleted
 	delete obj.params.display;
 	// include an onload callback to load the layers
 	obj.params.onload = finish;
@@ -9322,7 +9337,11 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	}
 	// load images
 	if( jobj.images ){
+	    left = jobj.images.length;
 	    for(i=0; i<jobj.images.length; i++){
+		// save the order in which we load images
+		jobj.images[i].i = i;
+		// load the next image (async load)
 		loadit(jobj.images[i]);
 	    }
 	} else {
