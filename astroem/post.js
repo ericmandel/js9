@@ -517,8 +517,11 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 	    // filename or assume gzip'ed: cfitsio will do the right thing ...
 	    if( opts.filename ){
 		// filename with extension to pass to cfitsio
+		// also remove parentheses, since cfitsio reserves them
+		// and spaces while we are at it
 		fitsname = opts.filename
 		    .replace(/^\.\.*/, "X")
+		    .replace(/[\s()]/g,"-")
 		    .replace(/\//g, "__");
 		// virtual file name without extension
 		hdu.vfile = fitsname.replace(/\[.*\]/g, "");
