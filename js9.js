@@ -7534,7 +7534,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 // save session to a json file
 // NB: save is an image method, load is a display method
 JS9.Image.prototype.saveSession = function(file, opts){
-    var i, obj, str, blob, layer, dlayer, tobj, key, im;
+    var i, obj, str, blob, layer, dlayer, tobj, key, im, lpos, ipos;
     var saveim = function(){
 	// object holding session keys
 	var obj = {};
@@ -7545,8 +7545,20 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	obj.dheight = this.display.height;
 	// image params
 	obj.params = $.extend(true, {}, this.params);
+	// get center of displayed image in physical coords
+	lpos = this.imageToLogicalPos({x:this.rgb.sect.xcen,
+				       y:this.rgb.sect.ycen});
+	ipos = this.maybePhysicalToImage(lpos);
+	if( ipos ){
+	    lpos = ipos;
+	}
 	// save section info
-	obj.sect = $.extend(true, {}, this.rgb.sect);
+	obj.sect = {};
+	obj.sect.xcen = lpos.x;
+	obj.sect.ycen = lpos.y;
+	obj.sect.xdim = this.raw.width;
+	obj.sect.ydim = this.raw.height;
+	obj.sect.zoom = this.rgb.sect.zoom;
 	// layers
 	obj.layers = [];
 	for( key in this.layers ){
