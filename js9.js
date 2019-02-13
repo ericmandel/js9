@@ -557,32 +557,56 @@ JS9.Image = function(file, params, func){
     var that = this;
     var localOpts=null;
     var nhist=0, ncomm=0;
-    var mksect = function(that, localOpts){
+    var mksect = function(opts){
 	var zoom;
 	var bin = 1;
 	var arr = [];
+	opts = opts || {};
 	// image xcen and ycen values must take binning into account
-	if( localOpts.bin !== undefined ){
-	    if( typeof localOpts.bin === "string" ){
-		bin = parseInt(localOpts.bin, 10);
+	if( JS9.notNull(opts.bin) ){
+	    if( typeof opts.bin === "string" ){
+		bin = parseInt(opts.bin, 10);
 	    } else {
-		bin = localOpts.bin;
+		bin = opts.bin;
 	    }
 	}
 	// make up section array from default values
-	if( localOpts && (localOpts.xcen !== undefined) ){
-	    arr.push(localOpts.xcen/bin);
+	if( JS9.notNull(opts.xcen) ){
+	    arr.push(opts.xcen/bin);
 	}
-	if( localOpts && (localOpts.ycen !== undefined) ){
-	    arr.push(localOpts.ycen/bin);
+	if( JS9.notNull(opts.ycen) ){
+	    arr.push(opts.ycen/bin);
 	}
-	if( localOpts && (localOpts.zoom !== undefined) ){
-	    zoom = that.parseZoom(localOpts.zoom);
+	if( JS9.notNull(opts.zoom) ){
+	    zoom = this.parseZoom(opts.zoom);
 	    if( zoom ){
 		arr.push(zoom);
 	    }
 	}
 	return arr;
+    };
+    var mkscale = function(opts){
+	// do zscale, if necessary
+	opts = opts || {};
+	if( JS9.isNull(opts.scaleclipping) ){
+	    if( this.params.scaleclipping === "zscale" ){
+		this.zscale(true);
+	    } else if( this.params.scaleclipping === "zmax" ){
+		this.zscale("zmax");
+	    }
+	} else {
+	    if( opts.scaleclipping === "zscale" ){
+		this.zscale(true);
+	    } else if( opts.scaleclipping === "zmax" ){
+		this.zscale("zmax");
+	    }
+	}
+	if( JS9.notNull(opts.scalemin) ){
+	    this.params.scalemin = opts.scalemin;
+	}
+	if( JS9.notNull(opts.scalemax) ){
+	    this.params.scalemax = opts.scalemax;
+	}
     };
     var finishUp = function(func){
 	var i, s, topts, tkey, oalerts;
@@ -822,12 +846,8 @@ JS9.Image = function(file, params, func){
 	// generate the raw data array from the hdu
 	this.mkRawDataFromHDU(file,
 			      $.extend({}, {file: file.filename}, localOpts));
-	// do zscale, if necessary
-	if( this.params.scaleclipping === "zscale" ){
-	    this.zscale(true);
-	} else if( this.params.scaleclipping === "zmax" ){
-	    this.zscale("zmax");
-	}
+	// set scaling params from opts
+	mkscale.call(this, localOpts);
 	// set up initial zoom
 	if( this.params.zoom ){
 	    nzoom = this.parseZoom(this.params.zoom);
@@ -837,10 +857,11 @@ JS9.Image = function(file, params, func){
 	// set up initial section
 	this.mkSection();
 	// change center and zoom if necessary
-	sarr = mksect(this, localOpts);
-	if( sarr.length ){
-	    this.mkSection.apply(this, sarr);
-	}
+	// No! this was already done in astroem/getFITSImage()
+	// sarr = mksect.call(localOpts);
+	// if( sarr.length ){
+	//    this.mkSection.apply(this, sarr);
+	// }
 	// was a static RGB file specified?
 	if( localOpts && localOpts.rgbFile ){
 	    this.rgbFile = localOpts.rgbFile;
@@ -897,22 +918,18 @@ JS9.Image = function(file, params, func){
 	    that.mkOffScreenCanvas();
 	    // populate the raw image data array from RGB values
 	    that.mkRawDataFromPNG();
-	    // do zscale, if necessary
-	    if( that.params.scaleclipping === "zscale" ){
-		that.zscale(true);
-	    } else if( that.params.scaleclipping === "zmax" ){
-		that.zscale("zmax");
-	    }
 	    // set up initial zoom
 	    if( that.params.zoom ){
 		nzoom = that.parseZoom(that.params.zoom);
 		that.rgb.sect.zoom = nzoom;
 		that.rgb.sect.ozoom = nzoom;
 	    }
+	    // set scaling params from opts
+	    mkscale.call(that, localOpts);
 	    // set up initial section
 	    that.mkSection();
 	    // change center and zoom if necessary
-	    sarr = mksect(that, localOpts);
+	    sarr = mksect.call(localOpts);
 	    if( sarr.length ){
 		that.mkSection.apply(that, sarr);
 	    }

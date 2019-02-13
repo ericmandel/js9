@@ -486,6 +486,12 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     // make up the return fits object
     hdu.fits = {fptr: fptr, vfile: hdu.vfile, heap: bufptr,
 		cardstr: hdu.cardstr, extnum: extnum, extname: extname };
+    // having extracted a section, remove these to avoid their reuse
+    delete opts.xcen;
+    delete opts.ycen;
+    delete opts.xdim;
+    delete opts.ydim;
+    delete opts.bin;
     // call the handler
     if( handler ){
 	handler(hdu, opts);
