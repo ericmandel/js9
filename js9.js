@@ -14702,7 +14702,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 // paste a region from clipboard
 // call using image context
 JS9.Regions.pasteFromClipboard = function(curpos){
-    var i, s, nobj, xpos, ypos;
+    var i, s, nobj, xpos, ypos, oval;
     var objs = [];
     var xcen = 0, ycen = 0;
     var rregexp = /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
@@ -14716,28 +14716,30 @@ JS9.Regions.pasteFromClipboard = function(curpos){
     }
     // see if we have region(s)
     if( s.match(rregexp) ){
-	// add regions
+	// we don't update the clipboard for these operations
+	oval = JS9.globalOpts.regionsToClipboard;
+	JS9.globalOpts.regionsToClipboard = false;
+	// add regions (don't update clipboard)
 	objs = this.addShapes("regions", s, {rtn: "objs"});
-	// if we're not placing regions in the position specified by the mouse,
-	// we are done
-	if( !curpos ){
-	    return s;
+	// place regions in the position specified by the mouse, if necessary
+	if( curpos ){
+	    // number of regions
+	    nobj = objs.length;
+	    // get centroid
+	    for(i=0; i<nobj; i++){
+		xcen += objs[i].pub.x;
+		ycen += objs[i].pub.y;
+	    }
+	    xcen /= nobj;
+	    ycen /= nobj;
+	    // move to current position specified by mouse
+	    for(i=0; i<nobj; i++){
+		xpos = objs[i].pub.x - xcen + this.ipos.x;
+		ypos = objs[i].pub.y - ycen + this.ipos.y;
+		this.changeShapes("regions", objs[i].pub.id, {x: xpos, y:ypos});
+	    }
 	}
-	// number of regions
-	nobj = objs.length;
-	// get centroid
-	for(i=0; i<nobj; i++){
-	    xcen += objs[i].pub.x;
-	    ycen += objs[i].pub.y;
-	}
-	xcen /= nobj;
-	ycen /= nobj;
-	// move to current position specified by mouse
-	for(i=0; i<nobj; i++){
-	    xpos = objs[i].pub.x - xcen + this.ipos.x;
-	    ypos = objs[i].pub.y - ycen + this.ipos.y;
-	    this.changeShapes("regions", objs[i].pub.id, {x: xpos, y:ypos});
-	}
+	JS9.globalOpts.regionsToClipboard = oval;
     } else {
 	JS9.error(JS9.CLIPBOARDERROR2);
     }
