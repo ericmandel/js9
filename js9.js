@@ -127,7 +127,7 @@ JS9.globalOpts = {
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
     wcsCrosshair: false,	// enable wcs crosshair matching?
-    regionsToClipboard: true,	// copy region changes to pseudo-clipboard?
+    regionsToClipboard: true,	// copy all region changes to pseudo-clipboard?
     magnifierRegions: true,	// display regions in magnifier?
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect

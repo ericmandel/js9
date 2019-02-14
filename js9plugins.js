@@ -9088,6 +9088,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "reloading regions file removes prev?"
 	},
+	"regionsToClipboard": {
+	    "type": "boolean",
+	    "helper": "copy region mods to pseudo-clipboard?"
+	},
 	"syncReciprocate": {
 	    "type": "boolean",
 	    "helper": "reciprocal image sync'ing?"
@@ -9175,6 +9179,7 @@ JS9.Prefs.init = function(){
 			   syncReciprocate: JS9.globalOpts.syncReciprocate,
 			   reloadRefresh: JS9.globalOpts.reloadRefresh,
 			   reloadRefreshReg: JS9.globalOpts.reloadRefreshReg,
+			   regionsToClipboard:JS9.globalOpts.regionsToClipboard,
 			   magnifierRegions: JS9.globalOpts.magnifierRegions,
 			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
