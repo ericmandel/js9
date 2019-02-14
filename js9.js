@@ -12367,10 +12367,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // copy to clipboard, if necessary
     if( layerName === "regions" && JS9.globalOpts.regionsToClipboard ){
 	switch(mode){
-	case "update":
-	case "select":
 	case "add":
-	case "move":
+	case "select":
+	case "update":
 	    i = pub.parent || pub.id;
 	    break;
 	default:
