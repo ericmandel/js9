@@ -18,9 +18,20 @@ the number of colormaps to create, the algorithm used to create the
 new colormaps, and whether to apply them to existing images.
 
 <p>
+In order to give more control over colormap creation, the plugin
+allows you to specify a number of slices into which the 360
+degree colorwheel will be divided, starting with the base color.
+The n created colormaps are then assigned to the first n slices of
+the colorwheel. For example, if you choose to create three slices and
+three colormaps, each colormap will be separated from the others by
+120 degrees (1/3 of the colorwheel). If you create six slices and three
+colormaps, each colormap will be separated by 60 degrees (1/6 of the
+colorwheel), starting from the base color.
+
+<p>
 The algorithms for generating new colormaps are:
 <ul>
-<li><b>equidistant</b>: colormaps are created so that they are equidistant around the colorwheel. For example, when creating three colormaps starting with a red base, the three colors used for the colormaps will be at 0, 120, and 240 degrees around the colorwheel (i.e. red, green, and blue).
+<li><b>equidistant</b>: colormaps are created so that they are equidistant around the colorwheel. For example, when creating three colormaps from three slices, starting with a red base, the three colors used for the colormaps will be at 0, 120, and 240 degrees around the colorwheel (i.e. red, green, and blue).
 <li><b>analogous</b>: create groups of colors around the colorwheel (i.e., generally closer than equidistant). For example, red, orange, and red-orange are analogous colors. Choose three or more colormaps.
 </ul>
 There are many, many articles on the net describing colors and their

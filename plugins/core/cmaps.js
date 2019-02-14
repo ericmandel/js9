@@ -6,22 +6,22 @@
 JS9.Cmaps = {};
 JS9.Cmaps.CLASS = "JS9";      	// class of plugins (1st part of div class)
 JS9.Cmaps.NAME = "Cmaps";     	// name of this plugin (2nd part of div class)
-JS9.Cmaps.WIDTH =  512;	  	// width of light window
+JS9.Cmaps.WIDTH =  600;	  	// width of light window
 JS9.Cmaps.HEIGHT = 270;	  	// height of light window
 JS9.Cmaps.BASE = JS9.Cmaps.CLASS + JS9.Cmaps.NAME;  // CSS base class name
 
 // defaults
 JS9.Cmaps.DEFMODE = "equidistant";
-JS9.Cmaps.DEFNMAP = 1;
+JS9.Cmaps.DEFNMAP = 3;
 JS9.Cmaps.DEFASSIGN = true;
 JS9.Cmaps.DEFNAME = "cmap";
-JS9.Cmaps.DEFTOL = Math.pow(10,2);
+JS9.Cmaps.DEFTOL = Math.pow(8,2);
 JS9.Cmaps.DEFTIMEOUT = 0;
 JS9.Cmaps.COLORCLASS = "cmapsColorPicker";
 JS9.Cmaps.CMAPCLASS = "cmapsSelect";
 JS9.Cmaps.CHECKCLASS = "cmapsActiveCheck";
 
-JS9.Cmaps.headerHTML = 'Choose a color&nbsp;&nbsp;<input type="color" value="#FF0000" class="'  + JS9.Cmaps.COLORCLASS + '">&nbsp;&nbsp;or a colormap&nbsp;&nbsp;<select class="' + JS9.Cmaps.CMAPCLASS + '" onchange="JS9.Cmaps.xCmap(\'%s\',this)"></select>&nbsp;&nbsp;as a basis<p>for creating&nbsp;&nbsp;<input type="number" onchange="JS9.Cmaps.xNmap(\'%s\',this)" value="' + JS9.Cmaps.DEFNMAP + '" min="1" max="36" size="3" style="width:40px;box-sizing: border-box;">&nbsp;&nbsp;colormap(s),&nbsp;&nbsp;<select class="cmapsMode" onchange="JS9.Cmaps.xMode(\'%s\',this)">&nbsp;&nbsp;<option value="equidistant">equidistant</option><option value="analogous">analogous</option></select>&nbsp;&nbsp;on the <a href="https://en.wikipedia.org/wiki/Color_wheel" target="_blank">colorwheel</a>.<p><input type="checkbox" onchange="JS9.Cmaps.xAssignCmaps(\'%s\',this)" checked> assign new colormaps to these images:';
+JS9.Cmaps.headerHTML = 'Select a color&nbsp;&nbsp;<input type="color" value="#FF0000" class="'  + JS9.Cmaps.COLORCLASS + '">&nbsp;&nbsp;or a &nbsp;&nbsp;<select class="' + JS9.Cmaps.CMAPCLASS + '" onchange="JS9.Cmaps.xCmap(\'%s\',this)"></select>&nbsp;&nbsp;colormap to create&nbsp;&nbsp;<input type="number" onchange="JS9.Cmaps.xNslice(\'%s\',this)" value="' + JS9.Cmaps.DEFNMAP + '" min="1" max="36" size="3" style="width:40px;box-sizing: border-box;">&nbsp;&nbsp;<select class="cmapsMode" onchange="JS9.Cmaps.xMode(\'%s\',this)">&nbsp;&nbsp;<option value="equidistant">equidistant</option><option value="analogous">analogous</option></select><p>slices of the <a href="https://en.wikipedia.org/wiki/Color_wheel" target="_blank">colorwheel</a>,&nbsp;&nbsp;the first&nbsp;&nbsp;<input type="number" onchange="JS9.Cmaps.xNmap(\'%s\',this)" value="' + JS9.Cmaps.DEFNMAP + '" min="1" max="36" size="3" style="width:40px;box-sizing: border-box;">&nbsp;of which will be used to create colormaps.<p><input type="checkbox" onchange="JS9.Cmaps.xAssignCmaps(\'%s\',this)" checked> assign the new colormaps to these images:';
 
 JS9.Cmaps.imageHTML="<span style='float: left'>$active</span>&nbsp;&nbsp; <span style='float: right'>$imfile</span>";
 
@@ -31,27 +31,30 @@ JS9.Cmaps.imfileHTML='<b>%s</b>';
 
 JS9.Cmaps.nofileHTML='<div class="JS9cmapsNoFile">[Colormap generation options will appear here after an image is loaded]</div>';
 
+// equidistant colormaps
+JS9.Cmaps.equidistant = function(color, results, slices) {
+    var i;
+    var hsl = tinycolor(color).toHsl();
+    var hue = hsl.h;
+    var slice = 360 / slices;
+    var ret = [];
+    for(i=0; i<results; i++){
+        hsl.h = (hue + (i * slice)) % 360;
+        ret.push(tinycolor(hsl));
+    }
+    return ret;
+};
+
 // generate colors using one of the complementary algorithms
-JS9.Cmaps.mkColors = function(mode, color, nmap) {
-    // modification of "analogous"
-    var equidistant = function(color, results, slices) {
-	var hsl = tinycolor(color).toHsl();
-	var part = 360 / slices;
-	var ret = [tinycolor(color)];
-	for (hsl.h = ((hsl.h - (part * results)) + 720) % 360; --results; ) {
-            hsl.h = (hsl.h + part) % 360;
-            ret.push(tinycolor(hsl));
-	}
-	return ret;
-    };
+JS9.Cmaps.mkColors = function(mode, color, nmap, nslice) {
     // sanity check
-    if( !color || !nmap ){ return; }
+    if( !color || !nmap || !nslice ){ return; }
     mode = mode || "equidistant";
     switch(mode){
     case "analogous":
-	return tinycolor(color).analogous(nmap, nmap);
+	return tinycolor(color).analogous(nmap, nslice);
     case "equidistant":
-	return equidistant(tinycolor(color), nmap, nmap);
+	return JS9.Cmaps.equidistant(tinycolor(color), nmap, nslice);
     default:
 	return [tinycolor(color)];
     }
@@ -86,7 +89,7 @@ JS9.Cmaps.assignCmaps = function(display){
 };
 
 // give a colormap, generate new complementary colormaps
-JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, opts){
+JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, nslice, opts){
     var i, j, tcolor, tcolors, color, index, rgb, mode, cbase;
     var colors = [];
     var vertices = [];
@@ -99,10 +102,10 @@ JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, opts){
 	return JS9.Colormap.prototype.mkColorCell.call(cmap, index);
     };
     // sanity check
-    if( !cmap || !nmap ){ return; }
+    if( !cmap || !nmap || !nslice ){ return; }
     // opts is optional
     opts = opts || {};
-    // mode ( equidistant, analogous, etc.)
+    // mode (equidistant, analogous, etc.)
    mode = opts.mode || JS9.Cmaps.DEFMODE;
     // base for colormap name
     cbase = cmap.name;
@@ -121,7 +124,7 @@ JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, opts){
 			    Math.floor(cmap.colors[i][0]*255+0.5),
 			    Math.floor(cmap.colors[i][1]*255+0.5),
 			    Math.floor(cmap.colors[i][2]*255+0.5));
-	    tcolors = JS9.Cmaps.mkColors(mode, color, nmap);
+	    tcolors = JS9.Cmaps.mkColors(mode, color, nmap, nslice);
 	    for(j=0; j<nmap; j++){
 		colors[j].push(xrgb3(tcolors[j].toRgb()));
 	    }
@@ -177,7 +180,7 @@ JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, opts){
 			    rgbs[i].rgb[0],
 			    rgbs[i].rgb[1],
 			    rgbs[i].rgb[2]);
-	    tcolors = JS9.Cmaps.mkColors(mode, color, nmap);
+	    tcolors = JS9.Cmaps.mkColors(mode, color, nmap, nslice);
 	    // and add these vertices to each array
 	    for(j=0; j<nmap; j++){
 		tcolor = xrgb3(tcolors[j].toRgb());
@@ -209,10 +212,10 @@ JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, opts){
 };
 
 // give a color, generate new complementary colormaps
-JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, opts){
+JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, nslice, opts){
     var color, rgb, tol, diff, mode, cbase;
     // sanity check
-    if( !cname || !nmap ){ return; }
+    if( !cname || !nmap || !nslice ){ return; }
     // opts is optional
     opts = opts || {};
     // default mode is "equidistant"
@@ -246,7 +249,7 @@ JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, opts){
 	// reset names
 	display.cmaps.names = [];
 	// generate nmap colors
-	tcolors = JS9.Cmaps.mkColors(mode, color, nmap);
+	tcolors = JS9.Cmaps.mkColors(mode, color, nmap, nslice);
 	// save for next iteration
 	display.cmaps.orgb.r = rgb.r;
 	display.cmaps.orgb.g = rgb.g;
@@ -288,19 +291,19 @@ JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, opts){
 };
 
 // give either a color or a colormap, generate new complementary colormaps
-JS9.Cmaps.mkCmaps = function(display, cname, nmap, opts){
+JS9.Cmaps.mkCmaps = function(display, cname, nmap, nslice, opts){
     var cmap;
     // sanity check
-    if( !cname || !nmap ){ return 0; }
+    if( !cname || !nmap || !nslice ){ return 0; }
     // color or colormap?
     cmap = JS9.lookupColormap(cname, false);
     // were we passed a color map?
     if( cmap ){
 	// make colormaps from this colormap
-	JS9.Cmaps.mkCmapsFromCmap(display, cmap, nmap, opts);
+	JS9.Cmaps.mkCmapsFromCmap(display, cmap, nmap, nslice, opts);
     } else {
 	// make colormaps from this color
-	JS9.Cmaps.mkCmapsFromColor(display, cname, nmap, opts);
+	JS9.Cmaps.mkCmapsFromColor(display, cname, nmap, nslice, opts);
     }
 };
 
@@ -318,7 +321,8 @@ JS9.Cmaps.xMode = function(id, target){
     var display = JS9.lookupDisplay(id);
     if( !display ){ return; }
     display.cmaps.mode = target.options[target.selectedIndex].value;
-    JS9.Cmaps.mkCmaps(display, display.cmaps.lastCname, display.cmaps.nmap,
+    JS9.Cmaps.mkCmaps(display, display.cmaps.lastCname,
+		      display.cmaps.nmap, display.cmaps.nslice,
 		      {mode: display.cmaps.mode,
 		       assign: display.cmaps.assign,
 		       rgbtol: 0});
@@ -329,7 +333,20 @@ JS9.Cmaps.xNmap = function(id, target){
     var display = JS9.lookupDisplay(id);
     if( !display ){ return; }
     display.cmaps.nmap = parseInt(target.value, 10) || 1;
-    JS9.Cmaps.mkCmaps(display, display.cmaps.lastCname, display.cmaps.nmap,
+    JS9.Cmaps.mkCmaps(display, display.cmaps.lastCname,
+		      display.cmaps.nmap, display.cmaps.nslice,
+		      {mode: display.cmaps.mode,
+		       assign: display.cmaps.assign,
+		       rgbtol: 0});
+};
+
+// set the number of slices to generate
+JS9.Cmaps.xNslice = function(id, target){
+    var display = JS9.lookupDisplay(id);
+    if( !display ){ return; }
+    display.cmaps.nslice = parseInt(target.value, 10) || 1;
+    JS9.Cmaps.mkCmaps(display, display.cmaps.lastCname,
+		      display.cmaps.nmap, display.cmaps.nslice,
 		      {mode: display.cmaps.mode,
 		       assign: display.cmaps.assign,
 		       rgbtol: 0});
@@ -340,7 +357,8 @@ JS9.Cmaps.xCmap = function(id, target){
     var display = JS9.lookupDisplay(id);
     var cname = target.options[target.selectedIndex].value;
     if( !display ){ return; }
-    JS9.Cmaps.mkCmaps(display, cname, display.cmaps.nmap,
+    JS9.Cmaps.mkCmaps(display, cname,
+		      display.cmaps.nmap, display.cmaps.nslice,
 		      {mode: display.cmaps.mode,
 		       assign: display.cmaps.assign,
 		       rgbtol: 0});
@@ -482,6 +500,7 @@ JS9.Cmaps.init = function(width, height){
 	display.cmaps = {};
 	display.cmaps.mode = JS9.Cmaps.DEFMODE;
 	display.cmaps.nmap = JS9.Cmaps.DEFNMAP;
+	display.cmaps.nslice = JS9.Cmaps.DEFNMAP;
 	display.cmaps.assign = JS9.Cmaps.DEFASSIGN;
 	display.cmaps.tol = JS9.Cmaps.DEFTOL;
 	display.cmaps.lastCname = null;
@@ -499,7 +518,8 @@ JS9.Cmaps.init = function(width, height){
 	.appendTo(this.divjq);
     // add header
     dispid = this.display.id;
-    html = sprintf(JS9.Cmaps.headerHTML, dispid, dispid, dispid, dispid);
+    html = sprintf(JS9.Cmaps.headerHTML,
+		   dispid, dispid, dispid, dispid, dispid);
     this.cmapsHeader = $("<div>")
 	.addClass(JS9.Cmaps.BASE + "Header")
 	.attr("display", this.display.id)
@@ -551,7 +571,8 @@ JS9.Cmaps.init = function(width, height){
 	    // when the color is changed via the spectrum
 	    el1.on('move.spectrum', function(evt, tinycolor){
 		var cname = tinycolor.toHex();
-		JS9.Cmaps.mkCmaps(display, cname, display.cmaps.nmap,
+		JS9.Cmaps.mkCmaps(display, cname,
+				  display.cmaps.nmap, display.cmaps.nslice,
 				  {mode: display.cmaps.mode,
 				   assign: display.cmaps.assign});
 		display.cmaps.lastCname = cname;
@@ -559,7 +580,8 @@ JS9.Cmaps.init = function(width, height){
 	    // when the color is changed via the text box
 	    el1.on("change", function(){
 		var cname = tinycolor($(this).val()).toHex();
-		JS9.Cmaps.mkCmaps(display, cname, display.cmaps.nmap,
+		JS9.Cmaps.mkCmaps(display, cname,
+				  display.cmaps.nmap, display.cmaps.nslice,
 				  {mode: display.cmaps.mode,
 				   assign: display.cmaps.assign});
 		display.cmaps.lastCname = cname;
@@ -571,7 +593,8 @@ JS9.Cmaps.init = function(width, height){
 	    if( pdisplay !== display.id ){
 		return;
 	    }
-            JS9.Cmaps.mkCmaps(display, cname, display.cmaps.nmap,
+            JS9.Cmaps.mkCmaps(display, cname,
+			      display.cmaps.nmap, display.cmaps.nslice,
 			      {mode: display.cmaps.mode,
 			       assign: display.cmaps.assign});
 	    display.cmaps.lastCname = cname;
