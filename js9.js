@@ -127,6 +127,7 @@ JS9.globalOpts = {
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
     wcsCrosshair: false,	// enable wcs crosshair matching?
+    regionsToClipboard: true,	// copy region changes to pseudo-clipboard?
     magnifierRegions: true,	// display regions in magnifier?
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
@@ -12362,6 +12363,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	// e.g. onregionschange
 	xname = "on" + layerName + "change";
 	this.xeqPlugins("shape", xname, pub);
+    }
+    // copy to clipboard, if necessary
+    if( layerName === "regions" && JS9.globalOpts.regionsToClipboard ){
+	JS9.clipboard = this.listRegions(pub.id, {mode: 1});
     }
     // and return it
     return pub;
