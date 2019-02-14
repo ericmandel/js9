@@ -12366,7 +12366,22 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     }
     // copy to clipboard, if necessary
     if( layerName === "regions" && JS9.globalOpts.regionsToClipboard ){
-	JS9.clipboard = this.listRegions(pub.id, {mode: 1});
+	i = null;
+	if( pub.parent ){
+	    // use parent unless we are in the process of adding the child
+	    if( mode !== "child" ){
+		i = pub.parent;
+	    }
+	} else if( pub.i ){
+	    // use self
+	    i = pub.i;
+	}
+	if( JS9.notNull(i) ){
+	    // ignore any problems
+	    try{ s = this.listRegions(i, {mode: 1}); }
+	    catch(e){ s = null; }
+	    if( s ){ JS9.clipboard = s; }
+	}
     }
     // and return it
     return pub;
