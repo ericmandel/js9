@@ -456,6 +456,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "string",
 	    "helper": "format string using: $ra $dec $sys"
 	},
+	"regionDisplay": {
+	    "type": "string",
+	    "helper": "show regions in 'lightwin' or 'display'"
+	},
 	"regionConfigSize": {
 	    "type": "string",
 	    "helper": "size of region dialog: small, medium"
@@ -588,6 +592,7 @@ JS9.Prefs.init = function(){
 			   wcsUnits: JS9.globalOpts.wcsUnits,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
 			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
+			   regionDisplay: JS9.globalOpts.regionDisplay,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
 			   infoBox: JS9.globalOpts.infoBox,
 			   toolBar: JS9.globalOpts.toolBar,

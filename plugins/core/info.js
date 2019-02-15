@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, JS9, jQuery */
+/*global $, JS9, jQuery, sprintf */
 
 // create our namespace, and specify some meta-information and params
 JS9.Info = {};
@@ -88,12 +88,15 @@ JS9.Info.init = function(){
 // display a message on the image canvas or info plugin
 // call with display as context
 JS9.Info.display = function(type, message, target, force){
-    var tobj, split, area, tokens, rexp, s, color, info, key, el, jel;
+    var that = this;
+    var s, t;
+    var tobj, split, area, tokens, rexp, color, info, key, el, jel, rid, im;
     var disp = this;
     // backward compatibility -- allow context to be Image
     if( this.display ){
 	disp = this.display;
     }
+    im = disp.image;
     // if image is context
     if( disp.pluginInstances ){
 	info = disp.pluginInstances.JS9Info;
@@ -186,7 +189,35 @@ JS9.Info.display = function(type, message, target, force){
     // display-based message
     switch(type){
     case "regions":
-	if( target ){
+	// display regions in a light window?
+	if( JS9.globalOpts.regionDisplay === "lightwin" ){
+	    rid = disp.id + "_regions";
+	    el = $("#" + rid);
+	    // does window exist (and is not closed)?
+	    if( el.length && !el[0].isClosed ){
+		// found the window: fill the message area
+		area = el.find(".JS9Message");
+	    } else if( message ) {
+		// start a light window and recurse to display the message
+		$("#dhtmlwindowholder").arrive("#" + rid,
+	        { fireOnAttributesModification: true },
+	        function(){
+		    JS9.Info.display.call(that, type, message, target, force);
+		});
+		t = "Regions";
+		if( im ){
+		    t += ": " + im.id;
+		}
+		t += " ";
+		t += sprintf(JS9.IDFMT, this.id);
+		JS9.lightWin(rid, "inline", "<div class='JS9Message'></div>",
+			     t, JS9.lightOpts[JS9.LIGHTWIN].regWin0);
+		return;
+	    } else {
+		// don't bring up a light window just to clear it!
+		return;
+	    }
+	} else if( target ){
 	    area = tobj;
 	} else {
 	    area = tobj.regionsArea;

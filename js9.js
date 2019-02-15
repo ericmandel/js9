@@ -160,6 +160,7 @@ JS9.globalOpts = {
     resizeHandle: true,		// add resize handle to display?
     resizeRedisplay: true,	// redisplay image while resizing?
     cloneNewDisplay: true,      // clone size of display, when possible?
+    regionDisplay: "lightwin",	// "lightwin" or "display"
     regionConfigSize: "medium", // "small", "medium"
     refreshDragDrop: true,	// refresh on drag/drag and open file?
     reduceMosaic: "js9",        // "js9" or "shrink" ("js9" seems to be faster)
