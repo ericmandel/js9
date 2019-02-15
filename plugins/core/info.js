@@ -10,7 +10,8 @@ JS9.Info = {};
 JS9.Info.CLASS = "JS9";
 JS9.Info.NAME = "Info";
 JS9.Info.WIDTH = 325;	// width of js9Info box
-JS9.Info.HEIGHT = 325;	// height of js9Info box
+JS9.Info.HEIGHT = 250;	// height of js9Info box
+JS9.Info.REGHEIGHT = 75;// extra height for region display
 
 JS9.Info.opts = {
     // info url
@@ -34,9 +35,13 @@ JS9.Info.init = function(){
     var i, key, opts, obj, infoHTML;
     // only init if we are displaying a new image
     // i.e., avoid re-init when changing contrast/bias
-    if( this.display.image ){
-	if( this.lastimage === this.display.image                 &&
-	    this.display.image.callingPlugin !== "onimagerefresh" ){
+    if( this.display.image && this.display.image === this.lastimage ){
+	switch(this.display.image.callingPlugin){
+	case "onplugindisplay":
+	case "onimagerefresh":
+	case "onupdateprefs":
+	    break;
+	default:
 	    return;
 	}
 	this.lastimage = this.display.image;
@@ -51,6 +56,10 @@ JS9.Info.init = function(){
 	if( key.match(/^wcs/)            &&
 	    JS9.globalOpts.infoBoxResize &&
 	    this.display.image && !(this.display.image.raw.wcs>0) ){
+	    continue;
+	}
+	if( key.match(/^regions/)                       &&
+	    JS9.globalOpts.regionDisplay === "lightwin" ){
 	    continue;
 	}
 	// add html for this line of the display
@@ -73,6 +82,9 @@ JS9.Info.init = function(){
     this.height = this.divjq.attr("data-height");
     if( !this.height ){
 	this.height = JS9.Info.HEIGHT;
+	if( JS9.globalOpts.regionDisplay !== "lightwin" ){
+	    this.height += JS9.Info.REGHEIGHT;
+	}
     }
     this.divjq.css("height", this.height);
     this.height = parseInt(this.divjq.css("height"), 10);
@@ -162,7 +174,9 @@ JS9.Info.display = function(type, message, target, force){
 	return;
     }
     // plugin-based display: fill in html form
-    if( tobj === info ){
+    // (except if this is regions info and we are displaying in a lightwin)
+    if( tobj === info &&
+	(type !== "regions" || JS9.globalOpts.regionDisplay !== "lightwin") ){
 	switch( typeof message ){
 	case "string":
 	    jel = info.jq.find("[name='"+type+"']");
@@ -353,6 +367,7 @@ JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 		    onpluginclose: JS9.Info.pluginClose,
 		    onimagedisplay: JS9.Info.init,
 		    onimagerefresh: JS9.Info.init,
+		    onupdateprefs: JS9.Info.init,
 		    winTitle: "Info",
 		    winResize: true,
 		    winDims: [JS9.Info.WIDTH, JS9.Info.HEIGHT]});
