@@ -20545,7 +20545,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    var i, im;
 	    var ims = [];
 	    // remove from display list
-	    i = $.inArray(im.display, JS9.displays);
+	    i = $.inArray(display, JS9.displays);
 	    if( i >= 0 ){
 		JS9.displays.splice(i, 1);
 	    }
