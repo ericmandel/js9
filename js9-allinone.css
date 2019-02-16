@@ -1743,6 +1743,7 @@ div.JS9MenubarContainer-flat, div.JS9MenubarContainer-border {
 
 /* CSS for images loaded as part of the user-defined menubar */
 img.JS9MenubarUserImage{
+    vertical-align: middle;
     padding: 0px;
     margin:  0px;
     width:  50px;
