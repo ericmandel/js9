@@ -11383,7 +11383,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 		       y: (opts.pts[i].y - cpos.y) / zoom};
 		opts.points.push(pos);
 	    }
-	} else if( !obj || !obj.points || !obj.points.length ){
+	} else if( !opts || !opts.points || !opts.points.length ){
 	    if( opts.shape === "polygon" && opts. polypoints ){
 		opts.points = opts.polypoints;
 	    } else if( opts.shape === "line" && opts. linepoints ){
