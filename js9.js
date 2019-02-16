@@ -11597,6 +11597,7 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "parent":
 	case "rtn":
 	case "_wcssys":
+	case "file":
 	    return false;
 	case "text":
 	    if( opts.shape === "text" ){
