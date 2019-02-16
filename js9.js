@@ -12252,7 +12252,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 		}
 	    }
 	}
-        if( pub.shape === "line" ){
+        if( pub.shape === "line" && JS9.notNull(dist) ){
 	    pub.imstr += ') {"size":' + tr(dist) + ',"units":"pixels"}';
 	} else {
 	    pub.imstr += ")";
