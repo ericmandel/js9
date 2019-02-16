@@ -1741,7 +1741,12 @@ div.JS9MenubarContainer-flat, div.JS9MenubarContainer-border {
     background-color: lightblue;
 }
 
+
 /* CSS for images loaded as part of the user-defined menubar */
+div.JS9MenubarUserImage{
+    white-space:nowrap;
+}
+
 img.JS9MenubarUserImage{
     vertical-align: middle;
     padding: 0px;
