@@ -1459,12 +1459,12 @@ JS9.Menubar.createMenus = function(){
 	    items["sep" + n++] = "------";
 	    items.scalemin = {
 		events: {keyup: keyScale},
-		name: "low clipping limit:",
+		name: "low data limit:",
 		type: "text"
 	    };
 	    items.scalemax = {
 		events: {keyup: keyScale},
-		name: "high clipping limit:",
+		name: "high data limit:",
 		type: "text"
 	    };
 	    items["sep" + n++] = "------";
