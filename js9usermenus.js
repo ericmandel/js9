@@ -83,6 +83,7 @@ JS9.globalOpts.userMenuBar = [
     {
 	"name": "colormap",
 	"title": "myColormaps",
+	"imageTitle": "images/toolbar/dax_images/cmap_viridis.png",
 	"updateTitle": "image",
 	"options": [
 	    {

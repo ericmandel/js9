@@ -2678,7 +2678,7 @@ JS9.Menubar.createMenus = function(){
 
 // initialize the menu
 JS9.Menubar.init = function(width, height){
-    var i, j, ss, tt, menu, html;
+    var i, j, m, ss, tt, menu, html;
     this.issuper = this.id.search(JS9.SUPERMENU) >= 0;
     // save object in super array, if necessary
     if( this.issuper ){
@@ -2774,7 +2774,12 @@ JS9.Menubar.init = function(width, height){
 	    if( !menu || !menu.name || !menu.title || !menu.options  ){
 		continue;
 	    }
-	    html += "<button type='button' id='"+menu.name+"UserMenu@@ID@@' class='"+ this.buttonClass +"'>"+menu.title+"</button>";
+	    if( menu.imageTitle ){
+		m = "<div class='JS9MenubarUserImage'><img src='" + menu.imageTitle + "' alt='" + menu.title + "' class='JS9MenubarUserImage' >" + "</div>";
+	    } else {
+		m = menu.title;
+	    }
+	    html += "<button type='button' id='"+menu.name+"UserMenu@@ID@@' class='"+ this.buttonClass +"'>" + m + "</button>";
 
 	}
     }
