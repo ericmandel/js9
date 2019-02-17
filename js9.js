@@ -7045,6 +7045,8 @@ JS9.Image.prototype.rotateData = function(angle, opts){
 	case "northisup":
 	case "northup":
 	    angle = 0;
+	    if( ocdelt1 > 0 ){ ocdelt1 = -ocdelt1; }
+	    if( ocdelt2 < 0 ){ ocdelt2 = -ocdelt2; }
 	    break;
 	}
     }
@@ -7056,8 +7058,10 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     cosrot = Math.cos(nrad);
     // make up new WCS keywords
     // if not using CD matrix, set CROTA2
-    if( oheader.CD1_1 === undefined  ){
+    if( JS9.isNull(oheader.CD1_1)  ){
 	nheader.CROTA2 = ncrot;
+	nheader.CDELT1 = ocdelt1;
+	nheader.CDELT2 = ocdelt2;
     } else {
 	nheader.CD1_1 =  ocdelt1 * cosrot;
 	nheader.CD1_2 = -ocdelt2 * sinrot;
