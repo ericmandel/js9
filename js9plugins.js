@@ -8613,8 +8613,8 @@ JS9.Panner.display = function(im){
 	im.removeShapes("panner", im.panner.eastid);
 	im.removeShapes("panner", im.panner.eastidt);
     }
-    // done if we are not displaying the directions vectors
-    if( !JS9.globalOpts.pannerDirections ){
+    // done if we are not displaying the directions vectors or no wcs
+    if( !JS9.globalOpts.pannerDirections || !im.raw.wcs || im.raw.wcs <= 0 ){
 	return im;
     }
     // this is the line pointing north
