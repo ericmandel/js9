@@ -129,6 +129,7 @@ JS9.globalOpts = {
     wcsCrosshair: false,	// enable wcs crosshair matching?
     regionsToClipboard: true,	// copy all region changes to pseudo-clipboard?
     magnifierRegions: true,	// display regions in magnifier?
+    pannerDirections: true,	// display direction vectors in panner?
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
     ehtimeout: 5000,		// connection timeout for Electron connect
@@ -11163,15 +11164,15 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     if( (opts.top !== undefined) ){
 	nopts.top = opts.top;
     }
-    // last gasp
-    if( nopts.left === undefined ){
+    // last gasp to get left and top (unless explicitly told not to)
+    if( nopts.left === undefined && opts.noLeftTop !== true ){
 	if( obj && (obj.left !== undefined) ){
 	    nopts.left = obj.left;
 	} else {
 	    nopts.left = this.display.canvasjq.attr("width") / 2 - 1;
 	}
     }
-    if( nopts.top === undefined ){
+    if( nopts.top === undefined && opts.noLeftTop !== true ){
 	if( obj && (obj.top !== undefined) ){
 	    nopts.top = obj.top;
 	} else {

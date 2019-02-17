@@ -13,6 +13,15 @@ JS9.Panner.WIDTH =  320;	// width of light window
 JS9.Panner.HEIGHT = 320;	// height of light window
 JS9.Panner.SWIDTH =  250;	// width of div
 JS9.Panner.SHEIGHT = 250;	// height of div
+JS9.Panner.VSIZE = 30;
+JS9.Panner.NORTH = {
+    color: "#00FF00", text: "N", fontSize: 12,
+    strokeWidth: 1, strokeDashArray: [2,1]
+};
+JS9.Panner.EAST  = {
+    color: "#FFFF00",  text: "E", fontSize: 12,
+    strokeWidth: 1, strokeDashArray: [2,1]
+};
 
 // defaults for panner
 JS9.Panner.opts = {
@@ -251,7 +260,9 @@ JS9.Panner.create = function(im){
 // display the image on the panner canvas
 JS9.Panner.display = function(im){
     var panDisp, panner, sect, tblkx, tblky;
-    var obj, nx, ny, nwidth, nheight;
+    var obj, nx, ny, nwidth, nheight, cenx, ceny;
+    var npos1, npos2, nobj, nobjt;
+    var epos1, epos2, eobj, eobjt;
     var FUDGE = 1;
     // sanity check
     // only display if we have a panner present
@@ -265,6 +276,8 @@ JS9.Panner.display = function(im){
     panner = im.panner;
     panDisp = im.display.pluginInstances.JS9Panner;
     sect = im.rgb.sect;
+    cenx = panDisp.width/2;
+    ceny = panDisp.height/2;
     // we're done if there is no panner image
     if( !panner.img ){
 	return;
@@ -310,6 +323,65 @@ JS9.Panner.display = function(im){
     } else {
 	im.changeShapes("panner", im.panner.boxid, obj);
     }
+    // clear direction vectors
+    if( im.panner.northid ){
+	im.removeShapes("panner", im.panner.northid);
+	im.removeShapes("panner", im.panner.northidt);
+    }
+    if( im.panner.eastid ){
+	im.removeShapes("panner", im.panner.eastid);
+	im.removeShapes("panner", im.panner.eastidt);
+    }
+    // done if we are not displaying the directions vectors
+    if( !JS9.globalOpts.pannerDirections ){
+	return im;
+    }
+    // this is the line pointing north
+    npos1 = {x: cenx, y: ceny};
+    if( im.raw.wcsinfo && im.raw.wcsinfo.cdelt2 && im.raw.wcsinfo.cdelt2 >= 0 ){
+	npos2 = {x: cenx, y: ceny - JS9.Panner.VSIZE};
+    } else {
+	npos2 = {x: cenx, y: ceny + JS9.Panner.VSIZE};
+    }
+    if( im.raw.wcsinfo && im.raw.wcsinfo.crot ){
+	npos2 = JS9.rotatePoint(npos2, -im.raw.wcsinfo.crot, npos1);
+    }
+    nobj = {color: JS9.Panner.NORTH.color,
+	    strokeWidth: JS9.Panner.NORTH.strokeWidth,
+	    strokeDashArray: JS9.Panner.NORTH.strokeDashArray,
+	    points: [npos1, npos2],
+	    // hack around fabric.js problems
+	    originX: "left", originY: "top", noLeftTop: true};
+    im.panner.northid = im.addShapes("panner", "line", nobj);
+    // this is the text 'N'
+    nobjt = {color: JS9.Panner.NORTH.color,
+	     text: JS9.Panner.NORTH.text,
+	     fontSize: JS9.Panner.NORTH.fontSize,
+	     left: npos2.x, top: npos2.y};
+    im.panner.northidt = im.addShapes("panner", "text", nobjt);
+    // this is the line pointing east
+    epos1 = {x: cenx, y: ceny};
+    if( im.raw.wcsinfo && im.raw.wcsinfo.cdelt1 && im.raw.wcsinfo.cdelt1 < 0 ){
+	epos2 = {x: cenx - JS9.Panner.VSIZE, y: ceny};
+    } else {
+	epos2 = {x: cenx + JS9.Panner.VSIZE, y: ceny};
+    }
+    if( im.raw.wcsinfo && im.raw.wcsinfo.crot ){
+	epos2 = JS9.rotatePoint(epos2, -im.raw.wcsinfo.crot, epos1);
+    }
+    eobj = {color: JS9.Panner.EAST.color,
+	    strokeWidth: JS9.Panner.EAST.strokeWidth,
+	    strokeDashArray: JS9.Panner.EAST.strokeDashArray,
+	    points: [epos1, epos2],
+	    // hack around fabric.js problems
+	    originX: "left", originY: "top", noLeftTop: true};
+    im.panner.eastid = im.addShapes("panner", "line", eobj);
+    // this is the text 'E'
+    eobjt = {color: JS9.Panner.EAST.color,
+	     text: JS9.Panner.EAST.text,
+	     fontSize: JS9.Panner.EAST.fontSize,
+	     left: epos2.x, top: epos2.y};
+    im.panner.eastidt = im.addShapes("panner", "text", eobjt);
     return im;
 };
 
@@ -369,6 +441,7 @@ JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
 		    onimagedisplay: JS9.Panner.display,
 		    onimageclose: JS9.Panner.clear,
 		    onimageclear: JS9.Panner.clear,
+		    onupdateprefs: JS9.Panner.display,
 		    winTitle: "Panner",
 		    winDims: [JS9.Panner.WIDTH,  JS9.Panner.HEIGHT],
 		    divArgs: [JS9.Panner.SWIDTH, JS9.Panner.SHEIGHT]});

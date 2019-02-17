@@ -496,6 +496,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "reciprocal image sync'ing?"
 	},
+	"pannerDirections": {
+	    "type": "boolean",
+	    "helper": "show direction vectors in panner?"
+	},
 	"magnifierRegions": {
 	    "type": "boolean",
 	    "helper": "show regions in magnifier?"
@@ -580,6 +584,7 @@ JS9.Prefs.init = function(){
 			   reloadRefresh: JS9.globalOpts.reloadRefresh,
 			   reloadRefreshReg: JS9.globalOpts.reloadRefreshReg,
 			   regionsToClipboard:JS9.globalOpts.regionsToClipboard,
+			   pannerDirections: JS9.globalOpts.pannerDirections,
 			   magnifierRegions: JS9.globalOpts.magnifierRegions,
 			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
