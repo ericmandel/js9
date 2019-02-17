@@ -1315,6 +1315,10 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
 	NAXIS2: this.raw.height,
 	BITPIX: this.raw.bitpix
     };
+    // init WCS, if possible
+    this.initWCS();
+    // init the logical coordinate system, if possible
+    this.initLCS();
     // plugin callbacks
     this.xeqPlugins("image", "onrawdata");
     // allow chaining
