@@ -42,6 +42,8 @@ JS9.Menubar.keyMap = {
     "Shape Layers": "toggle shape layers plugin",
     "edit selected": "edit selected region",
     "copy selected": "copy selected region to clipboard",
+    "edit": "edit selected region",
+    "copy": "copy selected region to clipboard",
     "copy all": "copy all regions to clipboard",
     "paste to region pos": "paste regions from local clipboard",
     "paste to current pos": "paste regions to current position",
@@ -1756,6 +1758,78 @@ JS9.Menubar.createMenus = function(){
 	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 	    var tim = tdisp.image;
 	    var items = {};
+	    var getregval = function(key, val){
+		switch(key){
+		case "strokeDashArray":
+		    val = val.split(/\s/);
+		    break;
+		default:
+		    break;
+		}
+		return val;
+	    };
+	    var editRegions = function(im, obj, which){
+		var key, val;
+		var opts = {};
+		if( which ){
+		    key = which.substring(3);
+		    val = obj[which];
+		    if( key && val && im.tmp["editingReg" + which] ){
+			delete im.tmp["editingReg" + which];
+			val = getregval(key, val);
+			if( val ){
+			    opts[key] = val;
+			    im.changeShapes("regions", "selected", opts);
+			}
+		    }
+		} else {
+		    for( which in obj ){
+			if( obj.hasOwnProperty(which) ){
+			    key = which.substring(3);
+			    val = obj[which];
+			    if( key && val && im.tmp["editingReg" + which] ){
+				delete im.tmp["editingReg" + which];
+				val = getregval(key, val);
+				if( val ){
+				    opts[key] = val;
+				}
+			    }
+			}
+		    }
+		    if( Object.keys(opts).length ){
+			im.changeShapes("regions", "selected", opts);
+		    }
+		}
+	    };
+	    var keyRegions = function(e){
+		JS9.Menubar.getDisplays.call(that).forEach(function(val){
+		    var id;
+		    var obj = $.contextMenu.getInputValues(e.data);
+		    var keycode = e.which || e.keyCode;
+		    var vdisp = val;
+		    var vim = vdisp.image;
+		    // make sure display is still valid
+		    if( $.inArray(vdisp, JS9.displays) < 0 ){
+			return;
+		    }
+		    if( e && e.target && e.target.name ){
+			id = e.target.name.split("-").reverse()[0];
+		    }
+		    switch( keycode ){
+		    case 9:
+		    case 13:
+			if( vim && id ){
+			    editRegions(vim, obj, id);
+			}
+			break;
+		    default:
+			if( vim && id ){
+			    vim.tmp["editingReg"+id] = true;
+			}
+			break;
+		    }
+		});
+	    };
 	    items.regiontitle = {
 		name: "Regions:",
 		disabled: true
@@ -1790,25 +1864,41 @@ JS9.Menubar.createMenus = function(){
 			name:"actions on selected:",
 			disabled: true
 		    },
-		    srcSelReg: xname("set tag: source"),
-		    bkgSelReg: xname("set tag: bkgd"),
-		    incSelReg: xname("set tag: include"),
-		    exclSelReg: xname("set tag: exclude"),
-		    sbSelReg: xname("toggle: src/bkgd"),
-		    ieSelReg: xname("toggle: incl/excl"),
-		    configSelReg: xname("edit selected"),
-		    listSelReg: xname("list selected"),
-		    saveSelReg: xname("save selected"),
-		    removeSelReg: xname("remove selected"),
+		    configSelReg: xname("edit"),
+		    listSelReg: xname("list"),
+		    saveSelReg: xname("save"),
+		    removeSelReg: xname("remove"),
 		    copySelReg: {
-			name: "copy selected to ...",
+			name: "copy to ...",
 			items: {
 			    copyseltotitle: {
 				name: "choose image:",
 				disabled: true
 			    }
 			}
-		    }
+		    },
+		    regcolor: {
+			events: {keyup: keyRegions},
+			name: "color:",
+			type: "text"
+		    },
+		    regstrokeWidth: {
+			events: {keyup: keyRegions},
+			name: "width:",
+			type: "text"
+		    },
+		    regstrokeDashArray: {
+			events: {keyup: keyRegions},
+			name: "dash:",
+			type: "text"
+		    },
+		    regtags: {
+			events: {keyup: keyRegions},
+			name: "tag:",
+			type: "text"
+		    },
+		    sbSelReg: xname("toggle: src/bkgd"),
+		    ieSelReg: xname("toggle: incl/excl")
 		} 
 	    };
 	    items.sep3 = "------";
@@ -1932,6 +2022,23 @@ JS9.Menubar.createMenus = function(){
 			    }
 			}
 		    });
+		},
+		events: {
+		    show: function(opt){
+			var obj = {color: ""};
+			$.contextMenu.setInputValues(opt, obj);
+			JS9.jupyterFocus(".context-menu-item");
+		    },
+		    hide: function(opt){
+			var obj;
+			var udisp = that.display;
+			var uim = udisp.image;
+			if( uim ){
+			    // if a key was pressed, do the edit
+			    obj = $.contextMenu.getInputValues(opt);
+			    editRegions(uim, obj);
+			}
+		    }
 		},
 		items: items
 	    };

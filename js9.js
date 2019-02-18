@@ -12004,7 +12004,8 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 		olen = objects.length;
 		while( olen-- ){
 		    obj = objects[olen];
-		    if( obj.params ){
+		    // don't process shapes with parents in a group
+		    if( obj.params && !obj.params.parent ){
 			cb.call(that, obj, ginfo);
 		    }
 		}
