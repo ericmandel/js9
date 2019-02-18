@@ -374,10 +374,21 @@ copied. Otherwise, all regions will be copied.
 
 <p>
 The <b>selected regions ...</b> submenu contains options that apply to
-the selected region, including the ability to set the tag of a
-selected region to "source", "background", "include", "exclude" (used
-heavily in X-ray astronomy data analysis), toggle "source"/"background"
-or "include"/"exclude", or list, save, remove, copy the selected region.
+the selected region(s), including the ability to edit, list, save,
+remove, or copy the selected region(s).  The submenu also allows you
+to change the following properties of selected regions by entering text values:
+<ul>
+<li><b>color</b>: the color of the region, using either a name
+("wheat") or #rrggbb syntax ("#f5deb3").
+<li><b>width</b>: the numeric width of a region
+<li><b>dash</b>: two comma or space-delimited numeric values specifying the
+numeric width of a filled segment, followed by the width of a blank segment
+<li><b>tags</b>: replacement tags for this region
+</ul>
+<p>
+The selected regions submenu also supports the ability to toggle the
+"source"/"background" or "include"/"exclude" tags (which is heavily
+used in X-ray astronomy).
 
 <p>
 The <b>list on change</b> menu option will cause all regions to be
