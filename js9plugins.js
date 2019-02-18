@@ -7227,10 +7227,36 @@ JS9.Menubar.createMenus = function(){
 	    var items = {};
 	    var getregval = function(key, val){
 		switch(key){
+		case "color":
+		    // lookup color
+		    if( val.charAt(0) !== "#" && JS9.colorToHex(val) === val ){
+			return null;
+		    }
+		    break;
+		case "strokeWidth":
+		    // number
+		    if( !JS9.isNumber(val) ){
+			return null;
+		    }
+		    val = parseFloat(val);
+		    break;
 		case "strokeDashArray":
-		    val = val.split(/\s/);
+		    // space or comma-separated list of numbers
+		    val = val.split(/[\s,]+/);
+		    if( !val || !val.length ){
+			return null;
+		    }
+		    if( val.length < 2 ){
+			val[1] = "0";
+		    }
+		    if( !JS9.isNumber(val[0]) || !JS9.isNumber(val[1])  ){
+			return null;
+		    }
+		    val[0] = parseFloat(val[0]);
+		    val[1] = parseFloat(val[1]);
 		    break;
 		default:
+		    // text
 		    break;
 		}
 		return val;
