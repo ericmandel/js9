@@ -11392,6 +11392,8 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 		       y: (opts.pts[i].y - cpos.y) / zoom};
 		opts.points.push(pos);
 	    }
+	// NB: checking obj in the next line is not a typo ...
+	// ... don't even think of changing it to opts (again)!
 	} else if( !obj || !obj.points || !obj.points.length ){
 	    if( opts.shape === "polygon" && opts. polypoints ){
 		opts.points = opts.polypoints;
