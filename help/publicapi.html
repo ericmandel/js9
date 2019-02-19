@@ -1167,19 +1167,41 @@ Set the current colormap, contrast/bias, or both. This call takes one
 (colormap), two (contrast, bias) or three (colormap, contrast, bias)
 arguments.
 
-<h5 id="JS9.SaveColormap">Save current colormap definition</h5>
+<h5 id="JS9.SaveColormap">Save colormap(s)</h5>
 <p>
-<code class="api">JS9.SaveColormap(filename)</code>
+<code class="api">JS9.SaveColormap(fname, cmapArray)</code>
+<p>
+Calling sequences:
+<pre>
+    JS9.SaveColormap()                 # save current colormap to "js9.cmap"
+    JS9.SaveColormap(fname)            # save current colormap to fname
+    JS9.SaveColormap(cmapArray)        # save array of colormaps to "js9.cmap"
+    JS9.SaveColormap(fname, cmapArray) # save array of colormaps to fname
+</pre>
 <p>
 where:
 <ul>
-<li><b>filename</b>: output file name
+<li><b>fname</b>: output file name
+<li><b>cmapArray</b>: optional array of colormap names to save
 </ul>
-Save the current colormap definition for displayed image as a JSON
-file. If filename is not specified, the file will be saved as "js9.cmap".
-This is useful if you want to edit the current definition to make a new
-colormap.
-
+As shown by the calling sequences above, you can use this routine to
+save either the current colormap or a list of colormaps taken from the
+specified array. You also can choose to save to a particular filename
+or the default "js9.cmap":
+<pre>
+  # save the current colormap in js9.cmap
+  JS9.SaveColormap()
+  # save the current colormap in foo.cmap
+  JS9.SaveColormap("foo.cmap")
+  # save the foo1 and foo2 colormaps in js9.cmap
+  JS9.SaveColormap(["foo1", "foo2"])
+  # save the user-defined foo1 and foo2 colormaps in foo.cmap
+  JS9.SaveColormap("foo.cmap", ["foo1", "foo2"])
+</pre>
+<p>
+The colormaps are saved in JSON format. Multiple saved colormaps will
+be stored in a JSON array, while a single saved colormap will be saved
+at the top level.
 <p>
 Don't forget that the file is saved by the browser, in whatever location
 you have set up for downloads.

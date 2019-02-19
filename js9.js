@@ -21071,16 +21071,60 @@ JS9.mkPublic("OpenColormapMenu", function(){
 });
 
 // save a colormap to disk
-JS9.mkPublic("SaveColormap", function(fname){
-    var im, cobj, s, blob;
+JS9.mkPublic("SaveColormap", function(){
+    var fname, im, cobj, s, blob;
     var obj = JS9.parsePublicArgs(arguments);
+    var arg1 = obj.argv[0];
+    var arg2 = obj.argv[1];
+    var convertjson = function(arg1){
+	var s = arg1;
+	if( typeof arg1 === "string" ){
+	    try{ s = JSON.parse(arg1); }
+	    catch(e){ }
+	}
+	return s;
+    };
+    var getarr = function(arr){
+	var i, c;
+	var cobj = [];
+	for(i=0; i<arr.length; i++){
+	    c = JS9.lookupColormap(arr[i]);
+	    if( c ){
+		c = $.extend(true, {}, c);
+		delete c.type;
+		cobj.push(c);
+	    }
+	}
+	if( cobj.length === 1 ){
+	    return cobj[0];
+	}
+	return cobj;
+    };
     if( window.hasOwnProperty("saveAs") ){
+	// check for json strings in arg1 and/or arg2
 	im = JS9.getImage(obj.display);
 	if( im ){
-	    fname = obj.argv[0] || "js9.cmap";
-	    // delete type property before saving
-	    cobj = $.extend(true, {}, im.cmapObj);
-	    delete cobj.type;
+	    // convert json to object
+	    arg1 = convertjson(arg1);
+	    arg2 = convertjson(arg2);
+	    if( !arg1 ){
+		fname = "js9.cmap";
+		cobj = $.extend(true, {}, im.cmapObj);
+		delete cobj.type;
+	    } else if( typeof arg1 === "string" ){
+		fname = arg1;
+		if( typeof arg2 === "string" ){
+		    cobj = getarr([arg2]);
+		} else if( $.isArray(arg2) ){
+		    cobj = getarr(arg2);
+		} else {
+		    cobj = $.extend(true, {}, im.cmapObj);
+		    delete cobj.type;
+		}
+	    } else if( $.isArray(arg1) ){
+		fname = "js9.cmap";
+		cobj = getarr(arg1);
+	    }
 	    // convert to json
 	    s = JSON.stringify(cobj);
 	    // then convert json to blob
