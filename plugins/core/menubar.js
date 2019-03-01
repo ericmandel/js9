@@ -85,7 +85,7 @@ JS9.Menubar.getDisplays = function(mode, key){
 	    }
 	}
     } else if( this.divjq.data("js9id") === "*" ){
-	arr.push(JS9.getDisplay(JS9.displays[0]));
+	arr.push(JS9.getDynamicDisplayOr(JS9.displays[0]));
     }
     if( !arr.length ){
 	arr.push(this.display);

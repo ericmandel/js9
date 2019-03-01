@@ -39,7 +39,7 @@ JS9.Separate.xactive = function(id){
 // change active state
 JS9.Separate.xlayout = function(id){
     var plugin;
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     if( !display ){ return; }
     plugin = display.pluginInstances.JS9Separate;
     if( plugin && this.selectedIndex >= 0 ){
@@ -51,7 +51,7 @@ JS9.Separate.xlayout = function(id){
 JS9.Separate.separate = function(id, which){
     var i, im, plugin, arr;
     var opts = {};
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     if( !display ){ return; }
     plugin = display.pluginInstances.JS9Separate;
     if( plugin && plugin.separateLayout ){
@@ -79,7 +79,7 @@ JS9.Separate.separate = function(id, which){
 JS9.Separate.gather = function(id, which){
     var i, im, arr;
     var opts = {};
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     if( !display ){ return; }
     switch(which){
     case "all":
@@ -234,7 +234,7 @@ JS9.Separate.init = function(){
 	.attr("id", this.id + "SeparateImageContainer")
         .html(JS9.Separate.nofileHTML)
 	.appendTo(this.separateContainer);
-    display = JS9.getDisplay(this.display);
+    display = JS9.getDynamicDisplayOr(this.display);
     // add currently loaded images
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];

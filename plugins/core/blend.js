@@ -80,7 +80,7 @@ JS9.Blend.xopacity = function(did, id, target){
 
 // change global blend mode for this display
 JS9.Blend.xblendmode = function(id, target){
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     var blendMode = target.checked;
     // change global blend mode
     if( display ){
@@ -104,7 +104,7 @@ JS9.Blend.dispclass = function(im){
 JS9.Blend.displayBlend = function(im){
     var disp;
     if( im ){
-	disp = JS9.getDisplay(im.display);
+	disp = JS9.getDynamicDisplayOr(im.display);
 	this.divjq.find(".blendModeCheck").prop("checked", disp.blendMode);
     }
 };
@@ -274,7 +274,7 @@ JS9.Blend.init = function(width, height){
         .html(JS9.Blend.nofileHTML)
 	.appendTo(this.blendContainer);
     // add currently loaded images (but avoid multiple redisplays)
-    display = JS9.getDisplay(this.display);
+    display = JS9.getDynamicDisplayOr(this.display);
     omode = display.blendMode;
     display.blendMode = false;
     for(i=0; i<JS9.images.length; i++){
@@ -311,7 +311,7 @@ JS9.Blend.init = function(width, height){
 // callback when dynamic selection is made
 JS9.Blend.dysel = function(){
     var omode;
-    var odisplay = JS9.getDisplay("previous");
+    var odisplay = JS9.getDynamicDisplayOr("previous");
     // turn off blend for previously selected display
     if( odisplay ){
 	omode = odisplay.blendMode;
@@ -343,7 +343,7 @@ JS9.Blend.imageblend = function(im){
 
 // callback when an image is loaded
 JS9.Blend.imageload = function(im){
-    var display = JS9.getDisplay(im.display);
+    var display = JS9.getDynamicDisplayOr(im.display);
     // im gives access to image object
     if( im && display === this.display ){
 	JS9.Blend.addImage.call(this, im);

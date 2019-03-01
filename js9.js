@@ -16217,6 +16217,9 @@ JS9.Dysel.retrievePlugins = function(){
 
 // return current dynamically selected display
 JS9.Dysel.getDisplay = function(which){
+    if( !JS9.Dysel.retrievePlugins().length ){
+	return null;
+    }
     if( which === "previous" ){
 	return JS9.Dysel.odisplay;
     }
@@ -16225,6 +16228,10 @@ JS9.Dysel.getDisplay = function(which){
 
 // set current dynamically selected display
 JS9.Dysel.select = function(display){
+    // sanity check
+    if( !display || !JS9.Dysel.retrievePlugins().length ){
+	return;
+    }
     // save old display
     JS9.Dysel.odisplay = JS9.Dysel.display;
     // set new display
@@ -16769,7 +16776,7 @@ JS9.lookupDisplay = function(id, mustExist){
     }
     // return display where mouse is located
     if( id === "*" ){
-	return JS9.getDisplay(JS9.displays[0]);
+	return JS9.getDynamicDisplayOr(JS9.displays[0]);
     }
     if( id && (id.toString().search(JS9.SUPERMENU) < 0) ){
 	// look for whole id
@@ -16820,8 +16827,8 @@ JS9.getImage = function(id){
 };
 
 // return the display object associated with the current dynamic selection
-// or a default value
-JS9.getDisplay = function(def){
+// or else a default value
+JS9.getDynamicDisplayOr = function(def){
     return JS9.Dysel.getDisplay() || def;
 };
 
@@ -18416,7 +18423,7 @@ JS9.mouseUpCB = function(evt){
 	    }
 	}
 	if( JS9.globalOpts.dynamicSelect === "click" ){
-	    if( JS9.getDisplay() !== display ){
+	    if( JS9.getDynamicDisplayOr(display) !== display ){
 		// mark this as the current display
 		JS9.Dysel.select(display);
 	    }
@@ -18540,7 +18547,7 @@ JS9.mouseEnterCB = function(evt){
     }
     if( !JS9.specialKey(evt) ){
 	if( JS9.globalOpts.dynamicSelect === "move" ){
-	    if( JS9.getDisplay() !== display ){
+	    if( JS9.getDynamicDisplayOr(display) !== display ){
 		// mark this as the current display
 		JS9.Dysel.select(display);
 	    }

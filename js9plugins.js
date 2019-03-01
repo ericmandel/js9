@@ -1207,7 +1207,7 @@ JS9.Blend.xopacity = function(did, id, target){
 
 // change global blend mode for this display
 JS9.Blend.xblendmode = function(id, target){
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     var blendMode = target.checked;
     // change global blend mode
     if( display ){
@@ -1231,7 +1231,7 @@ JS9.Blend.dispclass = function(im){
 JS9.Blend.displayBlend = function(im){
     var disp;
     if( im ){
-	disp = JS9.getDisplay(im.display);
+	disp = JS9.getDynamicDisplayOr(im.display);
 	this.divjq.find(".blendModeCheck").prop("checked", disp.blendMode);
     }
 };
@@ -1401,7 +1401,7 @@ JS9.Blend.init = function(width, height){
         .html(JS9.Blend.nofileHTML)
 	.appendTo(this.blendContainer);
     // add currently loaded images (but avoid multiple redisplays)
-    display = JS9.getDisplay(this.display);
+    display = JS9.getDynamicDisplayOr(this.display);
     omode = display.blendMode;
     display.blendMode = false;
     for(i=0; i<JS9.images.length; i++){
@@ -1438,7 +1438,7 @@ JS9.Blend.init = function(width, height){
 // callback when dynamic selection is made
 JS9.Blend.dysel = function(){
     var omode;
-    var odisplay = JS9.getDisplay("previous");
+    var odisplay = JS9.getDynamicDisplayOr("previous");
     // turn off blend for previously selected display
     if( odisplay ){
 	omode = odisplay.blendMode;
@@ -1470,7 +1470,7 @@ JS9.Blend.imageblend = function(im){
 
 // callback when an image is loaded
 JS9.Blend.imageload = function(im){
-    var display = JS9.getDisplay(im.display);
+    var display = JS9.getDynamicDisplayOr(im.display);
     // im gives access to image object
     if( im && display === this.display ){
 	JS9.Blend.addImage.call(this, im);
@@ -1592,7 +1592,7 @@ JS9.Blink.xactive = function(did, id, target){
 
 // change global blink mode for this display
 JS9.Blink.xblinkmode = function(id, target){
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     var blinkMode = target.checked;
     // change global blink mode
     if( display ){
@@ -1609,7 +1609,7 @@ JS9.Blink.xblinkmode = function(id, target){
 // change global blink mode for this display
 // eslint-disable-next-line no-unused-vars
 JS9.Blink.xblink1 = function(id, target){
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     var plugin = display.pluginInstances.JS9Blink;
     // blink once
     if( display ){
@@ -1625,7 +1625,7 @@ JS9.Blink.xblink1 = function(id, target){
 // change blink rate
 JS9.Blink.xrate = function(id, target){
     var plugin;
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     var rate = Math.floor(target.options[target.selectedIndex].value * 1000);
     if( display ){
 	plugin = display.pluginInstances.JS9Blink;
@@ -1778,7 +1778,7 @@ JS9.Blink.init = function(){
 	.attr("id", this.id + "BlinkImageContainer")
         .html(JS9.Blink.nofileHTML)
 	.appendTo(this.blinkContainer);
-    display = JS9.getDisplay(this.display);
+    display = JS9.getDynamicDisplayOr(this.display);
     // start with blink mode turned off
     display.blinkMode = false;
     // add currently loaded images
@@ -1807,7 +1807,7 @@ JS9.Blink.init = function(){
 
 // callback when dynamic selection is made
 JS9.Blink.dysel = function(){
-    var odisplay = JS9.getDisplay("previous");
+    var odisplay = JS9.getDynamicDisplayOr("previous");
     // turn off blink for previously selected display
     if( odisplay ){
 	JS9.Blink.stop(odisplay);
@@ -1818,7 +1818,7 @@ JS9.Blink.dysel = function(){
 
 // callback when an image is loaded
 JS9.Blink.imageload = function(im){
-    var display = JS9.getDisplay(im.display);
+    var display = JS9.getDynamicDisplayOr(im.display);
     // im gives access to image object
     if( im && display === this.display ){
 	JS9.Blink.addImage.call(this, im);
@@ -5602,7 +5602,7 @@ JS9.Menubar.getDisplays = function(mode, key){
 	    }
 	}
     } else if( this.divjq.data("js9id") === "*" ){
-	arr.push(JS9.getDisplay(JS9.displays[0]));
+	arr.push(JS9.getDynamicDisplayOr(JS9.displays[0]));
     }
     if( !arr.length ){
 	arr.push(this.display);
@@ -8513,7 +8513,7 @@ JS9.Panner.bcall = function(which, cmd, arg1){
     // the button plugintoolbar div has data containing the id of the display
     dispid = $(which).closest("div[class^=JS9PluginToolbar]").data("displayid");
     if( dispid ){
-	im = JS9.getImage(JS9.getDisplay(dispid));
+	im = JS9.getImage(JS9.getDynamicDisplayOr(dispid));
 	pinst = im.display.pluginInstances.JS9Panner;
     } else {
 	JS9.error("can't find display for cmd: "+cmd);
@@ -8717,9 +8717,8 @@ JS9.Panner.create = function(im){
     // add a callback to pan when the panning rectangle is moved
     dlayer.canvas.on("object:modified", function(opts){
 	var im, disp;
-	disp = JS9.getDisplay();
-	if( that.plugin && that.plugin.opts.dynamicSelect &&
-	    disp && disp.image ){
+	disp = JS9.getDynamicDisplayOr(that.display);
+	if( disp && disp.image ){
 	    im = disp.image;
 	} else {
 	    im = that.display.image;
@@ -10418,7 +10417,7 @@ JS9.Separate.xactive = function(id){
 // change active state
 JS9.Separate.xlayout = function(id){
     var plugin;
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     if( !display ){ return; }
     plugin = display.pluginInstances.JS9Separate;
     if( plugin && this.selectedIndex >= 0 ){
@@ -10430,7 +10429,7 @@ JS9.Separate.xlayout = function(id){
 JS9.Separate.separate = function(id, which){
     var i, im, plugin, arr;
     var opts = {};
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     if( !display ){ return; }
     plugin = display.pluginInstances.JS9Separate;
     if( plugin && plugin.separateLayout ){
@@ -10458,7 +10457,7 @@ JS9.Separate.separate = function(id, which){
 JS9.Separate.gather = function(id, which){
     var i, im, arr;
     var opts = {};
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     if( !display ){ return; }
     switch(which){
     case "all":
@@ -10613,7 +10612,7 @@ JS9.Separate.init = function(){
 	.attr("id", this.id + "SeparateImageContainer")
         .html(JS9.Separate.nofileHTML)
 	.appendTo(this.separateContainer);
-    display = JS9.getDisplay(this.display);
+    display = JS9.getDynamicDisplayOr(this.display);
     // add currently loaded images
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];

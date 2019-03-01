@@ -79,7 +79,7 @@ JS9.Blink.xactive = function(did, id, target){
 
 // change global blink mode for this display
 JS9.Blink.xblinkmode = function(id, target){
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     var blinkMode = target.checked;
     // change global blink mode
     if( display ){
@@ -96,7 +96,7 @@ JS9.Blink.xblinkmode = function(id, target){
 // change global blink mode for this display
 // eslint-disable-next-line no-unused-vars
 JS9.Blink.xblink1 = function(id, target){
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     var plugin = display.pluginInstances.JS9Blink;
     // blink once
     if( display ){
@@ -112,7 +112,7 @@ JS9.Blink.xblink1 = function(id, target){
 // change blink rate
 JS9.Blink.xrate = function(id, target){
     var plugin;
-    var display = JS9.getDisplay(JS9.lookupDisplay(id));
+    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     var rate = Math.floor(target.options[target.selectedIndex].value * 1000);
     if( display ){
 	plugin = display.pluginInstances.JS9Blink;
@@ -265,7 +265,7 @@ JS9.Blink.init = function(){
 	.attr("id", this.id + "BlinkImageContainer")
         .html(JS9.Blink.nofileHTML)
 	.appendTo(this.blinkContainer);
-    display = JS9.getDisplay(this.display);
+    display = JS9.getDynamicDisplayOr(this.display);
     // start with blink mode turned off
     display.blinkMode = false;
     // add currently loaded images
@@ -294,7 +294,7 @@ JS9.Blink.init = function(){
 
 // callback when dynamic selection is made
 JS9.Blink.dysel = function(){
-    var odisplay = JS9.getDisplay("previous");
+    var odisplay = JS9.getDynamicDisplayOr("previous");
     // turn off blink for previously selected display
     if( odisplay ){
 	JS9.Blink.stop(odisplay);
@@ -305,7 +305,7 @@ JS9.Blink.dysel = function(){
 
 // callback when an image is loaded
 JS9.Blink.imageload = function(im){
-    var display = JS9.getDisplay(im.display);
+    var display = JS9.getDynamicDisplayOr(im.display);
     // im gives access to image object
     if( im && display === this.display ){
 	JS9.Blink.addImage.call(this, im);

@@ -48,7 +48,7 @@ JS9.Panner.bcall = function(which, cmd, arg1){
     // the button plugintoolbar div has data containing the id of the display
     dispid = $(which).closest("div[class^=JS9PluginToolbar]").data("displayid");
     if( dispid ){
-	im = JS9.getImage(JS9.getDisplay(dispid));
+	im = JS9.getImage(JS9.getDynamicDisplayOr(dispid));
 	pinst = im.display.pluginInstances.JS9Panner;
     } else {
 	JS9.error("can't find display for cmd: "+cmd);
@@ -252,9 +252,8 @@ JS9.Panner.create = function(im){
     // add a callback to pan when the panning rectangle is moved
     dlayer.canvas.on("object:modified", function(opts){
 	var im, disp;
-	disp = JS9.getDisplay();
-	if( that.plugin && that.plugin.opts.dynamicSelect &&
-	    disp && disp.image ){
+	disp = JS9.getDynamicDisplayOr(that.display);
+	if( disp && disp.image ){
 	    im = disp.image;
 	} else {
 	    im = that.display.image;
