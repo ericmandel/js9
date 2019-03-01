@@ -683,6 +683,10 @@ canvas.surfacePlotCanvas {
     padding: 0;
 }
 
+ul.js9demo {
+    margin-top: 0;
+}
+
 /* to make wait cursor override other element cursors (e.g. fabric.js canvas) */
 body.waiting, body.waiting * { 
     cursor: wait !important;
