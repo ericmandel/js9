@@ -80,7 +80,7 @@ JS9.Blend.xopacity = function(did, id, target){
 
 // change global blend mode for this display
 JS9.Blend.xblendmode = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     var blendMode = target.checked;
     // change global blend mode
     if( display ){
@@ -104,7 +104,7 @@ JS9.Blend.dispclass = function(im){
 JS9.Blend.displayBlend = function(im){
     var disp;
     if( im ){
-	disp = im.display;
+	disp = JS9.getDisplay(im.display);
 	this.divjq.find(".blendModeCheck").prop("checked", disp.blendMode);
     }
 };
@@ -224,7 +224,7 @@ JS9.Blend.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Blend.init = function(width, height){
-    var i, im, omode;
+    var i, im, omode, display;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -274,22 +274,23 @@ JS9.Blend.init = function(width, height){
         .html(JS9.Blend.nofileHTML)
 	.appendTo(this.blendContainer);
     // add currently loaded images (but avoid multiple redisplays)
-    omode = this.display.blendMode;
-    this.display.blendMode = false;
+    display = JS9.getDisplay(this.display);
+    omode = display.blendMode;
+    display.blendMode = false;
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
-	if( im.display === this.display ){
+	if( im.display === display ){
 	    JS9.Blend.addImage.call(this, im);
 	}
     }
     // final redisplay
-    this.display.blendMode = omode;
-    if( this.display.image ){
-	this.display.image.displayImage();
+    display.blendMode = omode;
+    if( display.image ){
+	display.image.displayImage();
     }
     // set global blend mode
     this.divjq.find(".blendModeCheck")
-	.prop("checked", !!this.display.blendMode);
+	.prop("checked", !!display.blendMode);
     // the images within the image container will be sortable
     this.blendImageContainer.sortable({
 	start: function(event, ui) {
@@ -307,6 +308,23 @@ JS9.Blend.init = function(width, height){
     });
 };
 
+// callback when dynamic selection is made
+JS9.Blend.dysel = function(){
+    var omode;
+    var odisplay = JS9.getDisplay("previous");
+    // turn off blend for previously selected display
+    if( odisplay ){
+	omode = odisplay.blendMode;
+	odisplay.blendMode = false;
+    }
+    // re-init the plugin
+    JS9.Blend.init.call(this);
+    // restore blend mode for previous display
+    if( odisplay ){
+	odisplay.blendMode = omode;
+    }
+};
+
 // callback when global blend option is set externally
 JS9.Blend.displayblend = function(im){
     // disp gives access to display object
@@ -314,7 +332,6 @@ JS9.Blend.displayblend = function(im){
 	JS9.Blend.displayBlend.call(this, im);
     }
 };
-
 
 // callback when blend options are set externally
 JS9.Blend.imageblend = function(im){
@@ -326,8 +343,9 @@ JS9.Blend.imageblend = function(im){
 
 // callback when an image is loaded
 JS9.Blend.imageload = function(im){
+    var display = JS9.getDisplay(im.display);
     // im gives access to image object
-    if( im ){
+    if( im && display === this.display ){
 	JS9.Blend.addImage.call(this, im);
     }
 };
@@ -352,7 +370,9 @@ JS9.Blend.sessionload = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		   {menuItem: "Blending",
+		    dynamicSelect: true,
 		    onplugindisplay: JS9.Blend.init,
+		    ondynamicselect: JS9.Blend.dysel,
 		    ondisplayblend: JS9.Blend.displayblend,
 		    onimageblend: JS9.Blend.imageblend,
 		    onimageload: JS9.Blend.imageload,

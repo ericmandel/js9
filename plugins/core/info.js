@@ -363,6 +363,7 @@ JS9.mkPublic("DisplayMessage", function(type, message, target){
 // add this plugin into JS9
 JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 		   {menuItem: "InfoBox",
+		    dynamicSelect: true,
 		    onplugindisplay: JS9.Info.pluginDisplay,
 		    onpluginclose: JS9.Info.pluginClose,
 		    onimagedisplay: JS9.Info.init,

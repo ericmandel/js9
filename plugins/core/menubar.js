@@ -66,7 +66,7 @@ JS9.Menubar.getDisplays = function(mode, key){
     var arr = [];
     mode = mode || "any";
     key = key || "";
-    // handle super menu specially ... but only is its not a "super_" request
+    // handle super menu specially ... but only if its not a "super_" request
     if( this.id.search(JS9.SUPERMENU) >= 0 && !key.match(/^super_/) ){
 	if( mode !== "all" && this.selectedDisplay ){
 	    return [this.selectedDisplay];
@@ -84,6 +84,8 @@ JS9.Menubar.getDisplays = function(mode, key){
 		}
 	    }
 	}
+    } else if( this.divjq.data("js9id") === "*" ){
+	arr.push(JS9.getDisplay(JS9.displays[0]));
     }
     if( !arr.length ){
 	arr.push(this.display);
@@ -2920,8 +2922,6 @@ JS9.Menubar.init = function(width, height){
     html += "<button type='button' id='hiddenRegionMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
     html += "<button type='button' id='hiddenAnchorMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
     html += "</span>";
-    // set the display for this menubar
-    this.display = JS9.lookupDisplay(this.id);
     // link back the menubar in the display
     this.display.menubar = this;
     // define menubar
@@ -2943,5 +2943,6 @@ JS9.Menubar.init = function(width, height){
 
 JS9.RegisterPlugin("JS9", "Menubar", JS9.Menubar.init,
 		   {onupdateprefs: JS9.Menubar.reset,
+		    dynamicSelect: true,
 		    winDims: [JS9.Menubar.WIDTH, JS9.Menubar.HEIGHT]});
 

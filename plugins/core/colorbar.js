@@ -234,9 +234,22 @@ JS9.Colorbar.imageclear = function(im){
     }
 };
 
+// dynamic change
+JS9.Colorbar.dynamic = function(im){
+    var colorbar;
+    if( im ){
+	colorbar = im.display.pluginInstances.JS9Colorbar;
+	if( colorbar && colorbar.isDynamic ){
+	    JS9.Colorbar.imagedisplay.call(this, im);
+	}
+    }
+};
+
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Colorbar.CLASS, JS9.Colorbar.NAME, JS9.Colorbar.init,
 		   {menuItem: "Colorbar",
+		    dynamicSelect: true,
+		    ondynamicselect: JS9.Colorbar.dynamic,
 		    onimagedisplay: JS9.Colorbar.imagedisplay,
 		    onimageclear: JS9.Colorbar.imageclear,
 		    onimageclose: JS9.Colorbar.imageclear,

@@ -99,6 +99,8 @@
             winTitle: "3dPlot",
 	    help:     "imexam/imexam.html#3dplot",
 
+	    dynamicSelect: true,
+
 	    toolbarSeparate: true,
 
             onregionschange: pluginUpdate,

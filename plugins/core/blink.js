@@ -20,7 +20,7 @@ JS9.Blink.blinkModeHTML='When <b>Blink Images</b> is turned on, selected images 
 
 JS9.Blink.modeHTML='<input type="checkbox" id="active" name="blinkImages" value="active" onclick="javascript:JS9.Blink.xblinkmode(\'%s\', this)"><b>Blink Images</b>';
 
-JS9.Blink.rateHTML='<select id="blinkRateSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xrate(\'%s\',this)"><option selected disabled>blink rate</option><option value="0.1">0.1</option><option value="0.25">0.25</option><option value="0.5">0.5</option><option value="1.0">1.0</option><option value="2.0">2.0</option><option value="3.0">3.0</option><option value="4.0">4.0</option><option value="5.0">5.0</option><option value="6.0">6.0</option><option value="7.0">7.0</option><option value="8.0">8.0</option><option value="9.0">9.0</option><option value="10.0">10.0</option><option value="15.0">15.0</option><option value="20.0">20.0</option><option value="30.0">30.0</option></select>';
+JS9.Blink.rateHTML='<select id="blinkRateSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blink.xrate(\'%s\',this)"><option selected disabled>blink rate</option><option value="0.1">0.1</option><option value="0.25">0.25</option><option value="0.5">0.5</option><option value="1.0">1.0</option><option value="2.0">2.0</option><option value="3.0">3.0</option><option value="4.0">4.0</option><option value="5.0">5.0</option><option value="6.0">6.0</option><option value="7.0">7.0</option><option value="8.0">8.0</option><option value="9.0">9.0</option><option value="10.0">10.0</option><option value="15.0">15.0</option><option value="20.0">20.0</option><option value="30.0">30.0</option></select>';
 
 JS9.Blink.manualHTML='<input type="button" id="manual" name="manualBlink" value="blink manually" onclick="javascript:JS9.Blink.xblink1(\'%s\', this)">';
 
@@ -79,7 +79,7 @@ JS9.Blink.xactive = function(did, id, target){
 
 // change global blink mode for this display
 JS9.Blink.xblinkmode = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     var blinkMode = target.checked;
     // change global blink mode
     if( display ){
@@ -96,7 +96,7 @@ JS9.Blink.xblinkmode = function(id, target){
 // change global blink mode for this display
 // eslint-disable-next-line no-unused-vars
 JS9.Blink.xblink1 = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     var plugin = display.pluginInstances.JS9Blink;
     // blink once
     if( display ){
@@ -110,10 +110,10 @@ JS9.Blink.xblink1 = function(id, target){
 };
 
 // change blink rate
-JS9.Blend.xrate = function(id, target){
+JS9.Blink.xrate = function(id, target){
     var plugin;
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     var rate = Math.floor(target.options[target.selectedIndex].value * 1000);
-    var display = JS9.lookupDisplay(id);
     if( display ){
 	plugin = display.pluginInstances.JS9Blink;
 	if( !isNaN(rate) ){
@@ -214,7 +214,7 @@ JS9.Blink.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Blink.init = function(){
-    var i, s, im, dispid;
+    var i, s, im, display, dispid;
     var opts = [];
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -265,12 +265,13 @@ JS9.Blink.init = function(){
 	.attr("id", this.id + "BlinkImageContainer")
         .html(JS9.Blink.nofileHTML)
 	.appendTo(this.blinkContainer);
+    display = JS9.getDisplay(this.display);
     // start with blink mode turned off
-    this.display.blinkMode = false;
+    display.blinkMode = false;
     // add currently loaded images
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
-	if( im.display === this.display ){
+	if( im.display === display ){
 	    JS9.Blink.addImage.call(this, im);
 	}
     }
@@ -291,10 +292,22 @@ JS9.Blink.init = function(){
     });
 };
 
+// callback when dynamic selection is made
+JS9.Blink.dysel = function(){
+    var odisplay = JS9.getDisplay("previous");
+    // turn off blink for previously selected display
+    if( odisplay ){
+	JS9.Blink.stop(odisplay);
+    }
+    // re-init the plugin
+    JS9.Blink.init.call(this);
+};
+
 // callback when an image is loaded
 JS9.Blink.imageload = function(im){
+    var display = JS9.getDisplay(im.display);
     // im gives access to image object
-    if( im ){
+    if( im && display === this.display ){
 	JS9.Blink.addImage.call(this, im);
     }
 };
@@ -312,7 +325,9 @@ JS9.Blink.imageclose = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
 		   {menuItem: "Blinking",
+		    dynamicSelect: true,
 		    onplugindisplay: JS9.Blink.init,
+		    ondynamicselect: JS9.Blink.dysel,
 		    onimageload: JS9.Blink.imageload,
 		    onimagedisplay: JS9.Blink.imagedisplay,
 		    onimageclose: JS9.Blink.imageclose,

@@ -82,6 +82,8 @@
             menuItem: "Region Stats",
 	    help:     "imexam/imexam.html#rgstat",
 
+	    dynamicSelect: true,
+
 	    toolbarSeparate: true,
 
             onregionschange: statUpdate,

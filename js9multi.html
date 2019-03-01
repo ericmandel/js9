@@ -16,12 +16,12 @@
 </head>
 <body>
     <center><font size="+1">
-    <b>JS9 Demo: independent instances of JS9</b>
+    <b>JS9 Demo: multiple instances of JS9</b>
     </font></center>
     <table cellspacing="30">
     <tr valign="top">
     <td>
-    FITS representation files:
+    Load a FITS file into the large display below:
     <ul>
     <li> <a href='javascript:JS9.Load("fits/casa.fits.gz", {scale:"log", parentFile:"fits/casa.fits"});'>CAS-A (Chandra)</a>
     <li> <a href='javascript:JS9.Load("fits/3c273.fits.gz", {scale:"log", colormap:"heat", parentFile:"fits/3c273.fits"});'>3c273 (Chandra)</a>
@@ -29,7 +29,7 @@
     </ul>
     </td>
     <td>
-    FITS images and binary tables:
+    Load a FITS file into the small display below:
     <ul>
     <li> <a href='javascript:JS9.Load("fits/snr.fits", {scale:"log", colormap:"heat"}, {display: "myJS9"});'>CTB 109 (Einstein, small)</a>
     <li> <a href='javascript:JS9.Load("fits/ngc1316.fits", {scale:"linear", colormap:"cool"}, {display: "myJS9"});'>ngc1316 (AIPS, small)</a>
@@ -41,43 +41,68 @@
     <td>
     <div class="JS9Menubar"></div>
     <div class="JS9"></div>
-    <p>
-    You can create a super-menu to control both JS9 displays:<br>
-    <div class="JS9Menubar" id="SUPERMENU_" data-displays="JS9,myJS9"></div>
     </td>
     <td>
     <div class="JS9Menubar" id="myJS9Menubar" data-width="300px"></div>
     <div class="JS9" id="myJS9" data-width="300px" data-height="300px"></div>
     <p>
-    <div class="JS9Console" id="myJS9Console" ></div>
+    A super-menu can control both JS9 displays:<br>
+    <div class="JS9Menubar" id="SUPERMENU_" data-displays="JS9,myJS9"></div>
     </td>
     </tr>
     </table>
 <p>
-JS9 Demos:
+<b>JS9 Demos:</b>
+<p>
+<b>web page configuration:</b>
 <ul>
-<li><a href='js9basics.html'>JS9 Demo: the basics</a>
-<li><a href='js9bespoke.html'>JS9 Demo: web page control of JS9</a>
-<li><a href='js9menustyles.html'>JS9 Demo: JS9 menubar styles</a>
-<li><a href='js9sizes.html'>JS9 Demo: setting the size of the JS9 display</a>
-<li><a href='js9super.html'>JS9 Demo: control multiple JS9 displays</a>
-<li><a href='js9large.html'>JS9 Demo: support for large FITS files</a>
-<li><a href='js9cmaps.html'>JS9 Demo: creating new colormaps</a>
-<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
-<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
-<li><a href='js9blend.html'>JS9 Demo: image blending</a> 
-<li><a href='js9sync.html'>JS9 Demo: sync images</a> 
-<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
-<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
-<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
-<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
-<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
-<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
-<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
-<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
-<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
-<li><a href='js9allinone.html'>JS9 Demo: using the all-in-one files</a> 
-<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+<li><a href='js9basics.html'>the basics</a>
+<li><a href='js9sizes.html'>setting the size of the JS9 display</a>
+<li><a href='js9menustyles.html'>menubar styles</a>
+<li><a href='js9bespoke.html'>web page control</a>
+<li><a href='js9preload.html'>preloading images into JS9</a>
+</ul>
+<p>
+<b>multiple displays:</b>
+<ul>
+<li><a href='js9multi.html'>multiple instances of JS9</a> 
+<li><a href='js9super.html'>control multiple displays with one menu</a>
+<li><a href='js9create.html'>creating a JS9 instance dynamically</a> 
+<li><a href='js9sync.html'>syncing images in multiple displays</a> 
+</ul>
+<p>
+<b>plugins:</b>
+<ul>
+<li><a href='js9plugins.html'>adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>the imexam plugin</a> 
+<li><a href='js9panzoom.html'>pan and zoom</a> 
+<li><a href='js9cat.html'>overlaying catalogs</a>
+<li><a href='js9dysel.html'>dynamic selection of displays</a> 
+</ul>
+<p>
+<b>colors:</b>
+<ul>
+<li><a href='js9blend.html'>image blending</a> 
+<li><a href='js9rgb.html'>RGB composite images</a> 
+<li><a href='js9cmaps.html'>creating new colormaps</a>
+</ul>
+<p>
+<b>data analysis:</b>
+<ul>
+<li><a href='js9analysis.html'>remote data analysis</a> 
+<li><a href='js9onchange.html'>running tasks when a region changes</a>
+</ul>
+<p>
+<b>FITS support:</b>
+<ul>
+<li><a href='js9bitpix.html'>displaying different FITS datatypes</a> 
+<li><a href='js9large.html'>support for large FITS files</a>
+</ul>
+<p>
+<b>not often used:</b>
+<ul>
+<li><a href='js9allinone.html'>using the all-in-one files</a> 
+<li><a href='js9pngvsfits.html'>PNG representation files vs FITS files</a> 
 </ul>
 </body>
 </html>

@@ -44,11 +44,12 @@ JS9.Panner.opts = {
 // call a JS9 routine from a button in the panner plugin toolbar
 // the plugin instantiation saves the display id in the toolbar div
 JS9.Panner.bcall = function(which, cmd, arg1){
-    var dispid, im;
+    var dispid, pinst, im;
     // the button plugintoolbar div has data containing the id of the display
     dispid = $(which).closest("div[class^=JS9PluginToolbar]").data("displayid");
     if( dispid ){
 	im = JS9.getImage(dispid);
+	pinst = im.display.pluginInstances.JS9Panner;
     } else {
 	JS9.error("can't find display for cmd: "+cmd);
     }
@@ -61,7 +62,7 @@ JS9.Panner.bcall = function(which, cmd, arg1){
 	    JS9.error("missing argument(s) for cmd: "+cmd);
 	}
 	try{
-	    JS9.Panner.zoom(im, arg1);
+	    JS9.Panner.zoom.call(pinst, im, arg1);
 	} catch(e){
 	    JS9.error("error calling zoomPanner()", e);
 	}
@@ -89,9 +90,6 @@ JS9.Panner.HTML =
 
 // JS9 Panner constructor
 JS9.Panner.init = function(width, height){
-    var pos, ix, iy;
-    var dlayer;
-    var that = this;
     // set width and height on div
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
@@ -130,32 +128,9 @@ JS9.Panner.init = function(width, height){
 	.addClass("JS9Container")
 	.append(this.canvasjq)
 	.appendTo(this.divjq);
-    // add panner graphics layer to the display
-    // the panner will be appended to the div of the plugin
-    dlayer = this.display.newShapeLayer("panner", JS9.Panner.opts, this.divjq);
-    // add a callback to pan when the panning rectangle is moved
-    dlayer.canvas.on("object:modified", function(opts){
-	var im = that.display.image;
-	if( im ){
-	    pos = opts.target.getCenterPoint();
-	    ix = ((pos.x - im.panner.ix) *
-		      im.panner.xblock / im.panner.zoom) + im.panner.x0;
-	    iy = ((dlayer.canvas.height - (pos.y + im.panner.iy)) *
-		      im.panner.yblock / im.panner.zoom) + im.panner.y0;
-	    // pan the image
-	    try{
-		// avoid triggering a re-pan
-		im.display.pluginInstances.JS9Panner.status = "inactive";
-		// pan image
-		im.setPan(ix, iy);
-	    }
-	    catch(e){JS9.log("couldn't pan image", e);}
-	    finally{im.display.pluginInstances.JS9Panner.status = "active";}
-	}
-    });
     // display current image in panner
     if( this.display.image ){
-	JS9.Panner.display(this.display.image);
+	JS9.Panner.disp.call(this, this.display.image);
     }
 };
 
@@ -163,14 +138,16 @@ JS9.Panner.init = function(width, height){
 // sort of from: tksao1.0/frame/truecolor.c, but not really
 // part of panner plugin
 JS9.Panner.create = function(im){
+    var that = this;
     var panDisp, panner, sect, img;
     var x0, y0, xblock, yblock;
     var i, j, ii, jj, kk;
     var ioff, ooff;
     var width, height;
+    var pos, ix, iy;
+    var dlayer;
     // sanity check
-    if( !im || !im.raw ||
-	!im.display.pluginInstances.JS9Panner ){
+    if( !im || !im.raw || !im.display.pluginInstances.JS9Panner ){
 	return;
     }
     // add panner object to image, if necessary
@@ -254,11 +231,55 @@ JS9.Panner.create = function(im){
 	    }
 	}
     }
+    // add panner shape layer to the display (but only once)
+    if( this.display.layers.panner ){
+	// if this is a dynamic plugin panner (where js9id is "*"),
+	// we might have to fiddle the panner shape layer objs, i.e.
+	// in the display (general obj) and the image (instance obj).
+	// this is because dynamics use one shape layer for all instances,
+	// and (obviously) it starts out in one of the displays.
+	if( this.display.image && this.isDynamic ){
+	    if( this.display.layers.panner && !im.display.layers.panner ){
+		im.display.layers.panner = this.display.layers.panner;
+	    }
+	    if( this.display.image.layers.panner && !im.layers.panner ){
+		im.layers.panner = this.display.image.layers.panner;
+	    }
+	}
+	return im;
+    }
+    dlayer = this.display.newShapeLayer("panner", JS9.Panner.opts, this.divjq);
+    // add a callback to pan when the panning rectangle is moved
+    dlayer.canvas.on("object:modified", function(opts){
+	var im, disp;
+	disp = JS9.getDisplay();
+	if( that.plugin && that.plugin.opts.dynamic && disp && disp.image ){
+	    im = disp.image;
+	} else {
+	    im = that.display.image;
+	}
+	if( im ){
+	    pos = opts.target.getCenterPoint();
+	    ix = ((pos.x - im.panner.ix) *
+		  im.panner.xblock / im.panner.zoom) + im.panner.x0;
+	    iy = ((dlayer.canvas.height - (pos.y + im.panner.iy)) *
+		  im.panner.yblock / im.panner.zoom) + im.panner.y0;
+	    // pan the image
+	    try{
+		// avoid triggering a re-pan
+		im.display.pluginInstances.JS9Panner.status = "inactive";
+		// pan image
+		im.setPan(ix, iy);
+	    }
+	    catch(e){JS9.log("couldn't pan image", e);}
+	    finally{im.display.pluginInstances.JS9Panner.status = "active";}
+	}
+    });
     return im;
 };
 
 // display the image on the panner canvas
-JS9.Panner.display = function(im){
+JS9.Panner.disp = function(im){
     var panDisp, panner, sect, tblkx, tblky;
     var obj, nx, ny, nwidth, nheight, cenx, ceny;
     var npos1, npos2, nobj, nobjt;
@@ -271,7 +292,7 @@ JS9.Panner.display = function(im){
 	return;
     }
     // always remake make panner image (might be zooming, for example)
-    JS9.Panner.create(im);
+    JS9.Panner.create.call(this, im);
     // convenience variables
     panner = im.panner;
     panDisp = im.display.pluginInstances.JS9Panner;
@@ -290,7 +311,8 @@ JS9.Panner.display = function(im){
         panner.iy = Math.floor((panDisp.canvas.height - panner.img.height)/2);
     }
     // clear first
-    panDisp.context.clear();
+    // panDisp.context.clear();
+    JS9.Panner.clear.call(this, im);
     // draw the image into the context
     panDisp.context.putImageData(panner.img, panner.ix, panner.iy);
     // display panner rectangle
@@ -350,6 +372,7 @@ JS9.Panner.display = function(im){
 	    strokeWidth: JS9.Panner.NORTH.strokeWidth,
 	    strokeDashArray: JS9.Panner.NORTH.strokeDashArray,
 	    points: [npos1, npos2],
+	    changeable: false,
 	    // hack around fabric.js problems
 	    originX: "left", originY: "top", noLeftTop: true};
     im.panner.northid = im.addShapes("panner", "line", nobj);
@@ -357,6 +380,7 @@ JS9.Panner.display = function(im){
     nobjt = {color: JS9.Panner.NORTH.color,
 	     text: JS9.Panner.NORTH.text,
 	     fontSize: JS9.Panner.NORTH.fontSize,
+	     changeable: false,
 	     left: npos2.x, top: npos2.y};
     im.panner.northidt = im.addShapes("panner", "text", nobjt);
     // this is the line pointing east
@@ -372,6 +396,7 @@ JS9.Panner.display = function(im){
     eobj = {color: JS9.Panner.EAST.color,
 	    strokeWidth: JS9.Panner.EAST.strokeWidth,
 	    strokeDashArray: JS9.Panner.EAST.strokeDashArray,
+	    changeable: false,
 	    points: [epos1, epos2],
 	    // hack around fabric.js problems
 	    originX: "left", originY: "top", noLeftTop: true};
@@ -380,6 +405,7 @@ JS9.Panner.display = function(im){
     eobjt = {color: JS9.Panner.EAST.color,
 	     text: JS9.Panner.EAST.text,
 	     fontSize: JS9.Panner.EAST.fontSize,
+	     changeable: false,
 	     left: epos2.x, top: epos2.y};
     im.panner.eastidt = im.addShapes("panner", "text", eobjt);
     return im;
@@ -387,13 +413,12 @@ JS9.Panner.display = function(im){
 
 // zoom the rectangle inside the panner (RGB) image
 JS9.Panner.zoom = function(im, zval){
-    var panDisp, panner, ozoom, nzoom;
+    var panner, ozoom, nzoom;
     // sanity check
     if( !im || !im.panner || !im.display.pluginInstances.JS9Panner ){
 	return;
     }
     panner = im.panner;
-    panDisp = im.display.pluginInstances.JS9Panner;
     // get old zoom
     ozoom = panner.zoom;
     // determine new zoom
@@ -401,7 +426,7 @@ JS9.Panner.zoom = function(im, zval){
     case "*":
     case "x":
     case "X":
-	nzoom = Math.min(Math.min(panDisp.width, panDisp.height),
+	nzoom = Math.min(Math.min(this.width, this.height),
 			 ozoom * parseFloat(zval.slice(1)));
 	break;
     case "/":
@@ -417,31 +442,47 @@ JS9.Panner.zoom = function(im, zval){
     }
     panner.zoom = nzoom;
     // redisplay the panner
-    JS9.Panner.display(im);
+    JS9.Panner.disp.call(this, im);
     return im;
+};
+
+// dynamic selection change
+JS9.Panner.dysel = function(im){
+    var panner;
+    if( im ){
+	panner = im.display.pluginInstances.JS9Panner;
+	if( panner && panner.isDynamic ){
+	    JS9.Panner.disp.call(this, im);
+	}
+    }
 };
 
 // clear the panner
 JS9.Panner.clear = function(im){
-    var panner = im.display.pluginInstances.JS9Panner;
-    if( panner && (im === im.display.image) ){
-	panner.context.clear();
-	im.removeShapes("panner", "all");
-	im.panner.boxid = null;
+    var panner;
+    if( im ){
+	panner = im.display.pluginInstances.JS9Panner;
+	if( panner && (im === im.display.image) ){
+	    panner.context.clear();
+	    im.removeShapes("panner", "all");
+	    im.panner.boxid = null;
+	}
+	return im;
     }
-    return im;
 };
 
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
 		   {menuItem: "Panner",
+		    dynamicSelect: true,
 		    toolbarSeparate: false,
 		    toolbarHTML: JS9.Panner.HTML,
-		    onplugindisplay: JS9.Panner.display,
-		    onimagedisplay: JS9.Panner.display,
+		    ondynamicselect: JS9.Panner.dysel,
+		    onplugindisplay: JS9.Panner.disp,
+		    onimagedisplay: JS9.Panner.disp,
 		    onimageclose: JS9.Panner.clear,
 		    onimageclear: JS9.Panner.clear,
-		    onupdateprefs: JS9.Panner.display,
+		    onupdateprefs: JS9.Panner.disp,
 		    winTitle: "Panner",
 		    winDims: [JS9.Panner.WIDTH,  JS9.Panner.HEIGHT],
 		    divArgs: [JS9.Panner.SWIDTH, JS9.Panner.SHEIGHT]});

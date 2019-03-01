@@ -73,6 +73,8 @@
             winTitle: "Radial Proj",
 	    help:     "imexam/imexam.html#r_proj",
 
+	    dynamicSelect: true,
+
 	    toolbarSeparate: true,
 
             onregionschange: rprojUpdate,

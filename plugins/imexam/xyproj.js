@@ -84,6 +84,8 @@
 	    winTitle: "X Projection",
 	    help:     "imexam/imexam.html#xyproj",
 
+	    dynamicSelect: true,
+
 	    toolbarSeparate: true,
 	    toolbarHTML: projToolbar,
 
@@ -100,6 +102,8 @@
             menuItem: "Y Projection",
 	    winTitle: "Y Projection",
 	    help:     "imexam/imexam.html#xyproj",
+
+	    dynamicSelect: true,
 
 	    toolbarSeparate: true,
 	    toolbarHTML: projToolbar,

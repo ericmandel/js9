@@ -81,6 +81,8 @@
             winTitle: "Histogram",
 	    help:     "imexam/imexam.html#rghist",
 
+	    dynamicSelect: true,
+
 	    toolbarSeparate: true,
 	    toolbarHTML: " ",
 

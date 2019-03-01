@@ -508,7 +508,7 @@ ndops.gsfit1d = function(radi, data, x0) {
 
     }, x0, 0.000001);
 
-    console.log(reply.message);
+    // console.log(reply.message);
 
     return reply.solution;
 };

@@ -60,6 +60,8 @@
             winTitle: "Encircled Energy",
 	    help:     "imexam/imexam.html#enener",
 
+	    dynamicSelect: true,
+
 	    toolbarSeparate: true,
 
             onregionschange: energUpdate,

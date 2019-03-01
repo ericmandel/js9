@@ -1207,7 +1207,7 @@ JS9.Blend.xopacity = function(did, id, target){
 
 // change global blend mode for this display
 JS9.Blend.xblendmode = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     var blendMode = target.checked;
     // change global blend mode
     if( display ){
@@ -1231,7 +1231,7 @@ JS9.Blend.dispclass = function(im){
 JS9.Blend.displayBlend = function(im){
     var disp;
     if( im ){
-	disp = im.display;
+	disp = JS9.getDisplay(im.display);
 	this.divjq.find(".blendModeCheck").prop("checked", disp.blendMode);
     }
 };
@@ -1351,7 +1351,7 @@ JS9.Blend.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Blend.init = function(width, height){
-    var i, im, omode;
+    var i, im, omode, display;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -1401,22 +1401,23 @@ JS9.Blend.init = function(width, height){
         .html(JS9.Blend.nofileHTML)
 	.appendTo(this.blendContainer);
     // add currently loaded images (but avoid multiple redisplays)
-    omode = this.display.blendMode;
-    this.display.blendMode = false;
+    display = JS9.getDisplay(this.display);
+    omode = display.blendMode;
+    display.blendMode = false;
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
-	if( im.display === this.display ){
+	if( im.display === display ){
 	    JS9.Blend.addImage.call(this, im);
 	}
     }
     // final redisplay
-    this.display.blendMode = omode;
-    if( this.display.image ){
-	this.display.image.displayImage();
+    display.blendMode = omode;
+    if( display.image ){
+	display.image.displayImage();
     }
     // set global blend mode
     this.divjq.find(".blendModeCheck")
-	.prop("checked", !!this.display.blendMode);
+	.prop("checked", !!display.blendMode);
     // the images within the image container will be sortable
     this.blendImageContainer.sortable({
 	start: function(event, ui) {
@@ -1434,6 +1435,23 @@ JS9.Blend.init = function(width, height){
     });
 };
 
+// callback when dynamic selection is made
+JS9.Blend.dysel = function(){
+    var omode;
+    var odisplay = JS9.getDisplay("previous");
+    // turn off blend for previously selected display
+    if( odisplay ){
+	omode = odisplay.blendMode;
+	odisplay.blendMode = false;
+    }
+    // re-init the plugin
+    JS9.Blend.init.call(this);
+    // restore blend mode for previous display
+    if( odisplay ){
+	odisplay.blendMode = omode;
+    }
+};
+
 // callback when global blend option is set externally
 JS9.Blend.displayblend = function(im){
     // disp gives access to display object
@@ -1441,7 +1459,6 @@ JS9.Blend.displayblend = function(im){
 	JS9.Blend.displayBlend.call(this, im);
     }
 };
-
 
 // callback when blend options are set externally
 JS9.Blend.imageblend = function(im){
@@ -1453,8 +1470,9 @@ JS9.Blend.imageblend = function(im){
 
 // callback when an image is loaded
 JS9.Blend.imageload = function(im){
+    var display = JS9.getDisplay(im.display);
     // im gives access to image object
-    if( im ){
+    if( im && display === this.display ){
 	JS9.Blend.addImage.call(this, im);
     }
 };
@@ -1479,7 +1497,9 @@ JS9.Blend.sessionload = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		   {menuItem: "Blending",
+		    dynamicSelect: true,
 		    onplugindisplay: JS9.Blend.init,
+		    ondynamicselect: JS9.Blend.dysel,
 		    ondisplayblend: JS9.Blend.displayblend,
 		    onimageblend: JS9.Blend.imageblend,
 		    onimageload: JS9.Blend.imageload,
@@ -1513,7 +1533,7 @@ JS9.Blink.blinkModeHTML='When <b>Blink Images</b> is turned on, selected images 
 
 JS9.Blink.modeHTML='<input type="checkbox" id="active" name="blinkImages" value="active" onclick="javascript:JS9.Blink.xblinkmode(\'%s\', this)"><b>Blink Images</b>';
 
-JS9.Blink.rateHTML='<select id="blinkRateSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blend.xrate(\'%s\',this)"><option selected disabled>blink rate</option><option value="0.1">0.1</option><option value="0.25">0.25</option><option value="0.5">0.5</option><option value="1.0">1.0</option><option value="2.0">2.0</option><option value="3.0">3.0</option><option value="4.0">4.0</option><option value="5.0">5.0</option><option value="6.0">6.0</option><option value="7.0">7.0</option><option value="8.0">8.0</option><option value="9.0">9.0</option><option value="10.0">10.0</option><option value="15.0">15.0</option><option value="20.0">20.0</option><option value="30.0">30.0</option></select>';
+JS9.Blink.rateHTML='<select id="blinkRateSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Blink.xrate(\'%s\',this)"><option selected disabled>blink rate</option><option value="0.1">0.1</option><option value="0.25">0.25</option><option value="0.5">0.5</option><option value="1.0">1.0</option><option value="2.0">2.0</option><option value="3.0">3.0</option><option value="4.0">4.0</option><option value="5.0">5.0</option><option value="6.0">6.0</option><option value="7.0">7.0</option><option value="8.0">8.0</option><option value="9.0">9.0</option><option value="10.0">10.0</option><option value="15.0">15.0</option><option value="20.0">20.0</option><option value="30.0">30.0</option></select>';
 
 JS9.Blink.manualHTML='<input type="button" id="manual" name="manualBlink" value="blink manually" onclick="javascript:JS9.Blink.xblink1(\'%s\', this)">';
 
@@ -1572,7 +1592,7 @@ JS9.Blink.xactive = function(did, id, target){
 
 // change global blink mode for this display
 JS9.Blink.xblinkmode = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     var blinkMode = target.checked;
     // change global blink mode
     if( display ){
@@ -1589,7 +1609,7 @@ JS9.Blink.xblinkmode = function(id, target){
 // change global blink mode for this display
 // eslint-disable-next-line no-unused-vars
 JS9.Blink.xblink1 = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     var plugin = display.pluginInstances.JS9Blink;
     // blink once
     if( display ){
@@ -1603,10 +1623,10 @@ JS9.Blink.xblink1 = function(id, target){
 };
 
 // change blink rate
-JS9.Blend.xrate = function(id, target){
+JS9.Blink.xrate = function(id, target){
     var plugin;
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     var rate = Math.floor(target.options[target.selectedIndex].value * 1000);
-    var display = JS9.lookupDisplay(id);
     if( display ){
 	plugin = display.pluginInstances.JS9Blink;
 	if( !isNaN(rate) ){
@@ -1707,7 +1727,7 @@ JS9.Blink.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Blink.init = function(){
-    var i, s, im, dispid;
+    var i, s, im, display, dispid;
     var opts = [];
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -1758,12 +1778,13 @@ JS9.Blink.init = function(){
 	.attr("id", this.id + "BlinkImageContainer")
         .html(JS9.Blink.nofileHTML)
 	.appendTo(this.blinkContainer);
+    display = JS9.getDisplay(this.display);
     // start with blink mode turned off
-    this.display.blinkMode = false;
+    display.blinkMode = false;
     // add currently loaded images
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
-	if( im.display === this.display ){
+	if( im.display === display ){
 	    JS9.Blink.addImage.call(this, im);
 	}
     }
@@ -1784,10 +1805,22 @@ JS9.Blink.init = function(){
     });
 };
 
+// callback when dynamic selection is made
+JS9.Blink.dysel = function(){
+    var odisplay = JS9.getDisplay("previous");
+    // turn off blink for previously selected display
+    if( odisplay ){
+	JS9.Blink.stop(odisplay);
+    }
+    // re-init the plugin
+    JS9.Blink.init.call(this);
+};
+
 // callback when an image is loaded
 JS9.Blink.imageload = function(im){
+    var display = JS9.getDisplay(im.display);
     // im gives access to image object
-    if( im ){
+    if( im && display === this.display ){
 	JS9.Blink.addImage.call(this, im);
     }
 };
@@ -1805,7 +1838,9 @@ JS9.Blink.imageclose = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
 		   {menuItem: "Blinking",
+		    dynamicSelect: true,
 		    onplugindisplay: JS9.Blink.init,
+		    ondynamicselect: JS9.Blink.dysel,
 		    onimageload: JS9.Blink.imageload,
 		    onimagedisplay: JS9.Blink.imagedisplay,
 		    onimageclose: JS9.Blink.imageclose,
@@ -2706,9 +2741,22 @@ JS9.Colorbar.imageclear = function(im){
     }
 };
 
+// dynamic change
+JS9.Colorbar.dynamic = function(im){
+    var colorbar;
+    if( im ){
+	colorbar = im.display.pluginInstances.JS9Colorbar;
+	if( colorbar && colorbar.isDynamic ){
+	    JS9.Colorbar.imagedisplay.call(this, im);
+	}
+    }
+};
+
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Colorbar.CLASS, JS9.Colorbar.NAME, JS9.Colorbar.init,
 		   {menuItem: "Colorbar",
+		    dynamicSelect: true,
+		    ondynamicselect: JS9.Colorbar.dynamic,
 		    onimagedisplay: JS9.Colorbar.imagedisplay,
 		    onimageclear: JS9.Colorbar.imageclear,
 		    onimageclose: JS9.Colorbar.imageclear,
@@ -4060,6 +4108,7 @@ JS9.mkPublic("DisplayMessage", function(type, message, target){
 // add this plugin into JS9
 JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 		   {menuItem: "InfoBox",
+		    dynamicSelect: true,
 		    onplugindisplay: JS9.Info.pluginDisplay,
 		    onpluginclose: JS9.Info.pluginClose,
 		    onimagedisplay: JS9.Info.init,
@@ -5273,6 +5322,7 @@ JS9.Magnifier.clear = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Magnifier.CLASS, JS9.Magnifier.NAME, JS9.Magnifier.init,
 		   {menuItem: "Magnifier",
+		    dynamicSelect: true,
 		    toolbarSeparate: false,
 		    toolbarHTML: JS9.Magnifier.HTML,
 		    onplugindisplay: JS9.Magnifier.display,
@@ -5533,7 +5583,7 @@ JS9.Menubar.getDisplays = function(mode, key){
     var arr = [];
     mode = mode || "any";
     key = key || "";
-    // handle super menu specially ... but only is its not a "super_" request
+    // handle super menu specially ... but only if its not a "super_" request
     if( this.id.search(JS9.SUPERMENU) >= 0 && !key.match(/^super_/) ){
 	if( mode !== "all" && this.selectedDisplay ){
 	    return [this.selectedDisplay];
@@ -5551,6 +5601,8 @@ JS9.Menubar.getDisplays = function(mode, key){
 		}
 	    }
 	}
+    } else if( this.divjq.data("js9id") === "*" ){
+	arr.push(JS9.getDisplay(JS9.displays[0]));
     }
     if( !arr.length ){
 	arr.push(this.display);
@@ -8387,8 +8439,6 @@ JS9.Menubar.init = function(width, height){
     html += "<button type='button' id='hiddenRegionMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
     html += "<button type='button' id='hiddenAnchorMenu@@ID@@'class='JS9Button' style='display:none'>R</button>";
     html += "</span>";
-    // set the display for this menubar
-    this.display = JS9.lookupDisplay(this.id);
     // link back the menubar in the display
     this.display.menubar = this;
     // define menubar
@@ -8410,6 +8460,7 @@ JS9.Menubar.init = function(width, height){
 
 JS9.RegisterPlugin("JS9", "Menubar", JS9.Menubar.init,
 		   {onupdateprefs: JS9.Menubar.reset,
+		    dynamicSelect: true,
 		    winDims: [JS9.Menubar.WIDTH, JS9.Menubar.HEIGHT]});
 
 // ---------------------------------------------------------------------
@@ -8458,11 +8509,12 @@ JS9.Panner.opts = {
 // call a JS9 routine from a button in the panner plugin toolbar
 // the plugin instantiation saves the display id in the toolbar div
 JS9.Panner.bcall = function(which, cmd, arg1){
-    var dispid, im;
+    var dispid, pinst, im;
     // the button plugintoolbar div has data containing the id of the display
     dispid = $(which).closest("div[class^=JS9PluginToolbar]").data("displayid");
     if( dispid ){
 	im = JS9.getImage(dispid);
+	pinst = im.display.pluginInstances.JS9Panner;
     } else {
 	JS9.error("can't find display for cmd: "+cmd);
     }
@@ -8475,7 +8527,7 @@ JS9.Panner.bcall = function(which, cmd, arg1){
 	    JS9.error("missing argument(s) for cmd: "+cmd);
 	}
 	try{
-	    JS9.Panner.zoom(im, arg1);
+	    JS9.Panner.zoom.call(pinst, im, arg1);
 	} catch(e){
 	    JS9.error("error calling zoomPanner()", e);
 	}
@@ -8503,9 +8555,6 @@ JS9.Panner.HTML =
 
 // JS9 Panner constructor
 JS9.Panner.init = function(width, height){
-    var pos, ix, iy;
-    var dlayer;
-    var that = this;
     // set width and height on div
     this.width = this.divjq.attr("data-width");
     if( !this.width  ){
@@ -8544,32 +8593,9 @@ JS9.Panner.init = function(width, height){
 	.addClass("JS9Container")
 	.append(this.canvasjq)
 	.appendTo(this.divjq);
-    // add panner graphics layer to the display
-    // the panner will be appended to the div of the plugin
-    dlayer = this.display.newShapeLayer("panner", JS9.Panner.opts, this.divjq);
-    // add a callback to pan when the panning rectangle is moved
-    dlayer.canvas.on("object:modified", function(opts){
-	var im = that.display.image;
-	if( im ){
-	    pos = opts.target.getCenterPoint();
-	    ix = ((pos.x - im.panner.ix) *
-		      im.panner.xblock / im.panner.zoom) + im.panner.x0;
-	    iy = ((dlayer.canvas.height - (pos.y + im.panner.iy)) *
-		      im.panner.yblock / im.panner.zoom) + im.panner.y0;
-	    // pan the image
-	    try{
-		// avoid triggering a re-pan
-		im.display.pluginInstances.JS9Panner.status = "inactive";
-		// pan image
-		im.setPan(ix, iy);
-	    }
-	    catch(e){JS9.log("couldn't pan image", e);}
-	    finally{im.display.pluginInstances.JS9Panner.status = "active";}
-	}
-    });
     // display current image in panner
     if( this.display.image ){
-	JS9.Panner.display(this.display.image);
+	JS9.Panner.disp.call(this, this.display.image);
     }
 };
 
@@ -8577,14 +8603,16 @@ JS9.Panner.init = function(width, height){
 // sort of from: tksao1.0/frame/truecolor.c, but not really
 // part of panner plugin
 JS9.Panner.create = function(im){
+    var that = this;
     var panDisp, panner, sect, img;
     var x0, y0, xblock, yblock;
     var i, j, ii, jj, kk;
     var ioff, ooff;
     var width, height;
+    var pos, ix, iy;
+    var dlayer;
     // sanity check
-    if( !im || !im.raw ||
-	!im.display.pluginInstances.JS9Panner ){
+    if( !im || !im.raw || !im.display.pluginInstances.JS9Panner ){
 	return;
     }
     // add panner object to image, if necessary
@@ -8668,11 +8696,55 @@ JS9.Panner.create = function(im){
 	    }
 	}
     }
+    // add panner shape layer to the display (but only once)
+    if( this.display.layers.panner ){
+	// if this is a dynamic plugin panner (where js9id is "*"),
+	// we might have to fiddle the panner shape layer objs, i.e.
+	// in the display (general obj) and the image (instance obj).
+	// this is because dynamics use one shape layer for all instances,
+	// and (obviously) it starts out in one of the displays.
+	if( this.display.image && this.isDynamic ){
+	    if( this.display.layers.panner && !im.display.layers.panner ){
+		im.display.layers.panner = this.display.layers.panner;
+	    }
+	    if( this.display.image.layers.panner && !im.layers.panner ){
+		im.layers.panner = this.display.image.layers.panner;
+	    }
+	}
+	return im;
+    }
+    dlayer = this.display.newShapeLayer("panner", JS9.Panner.opts, this.divjq);
+    // add a callback to pan when the panning rectangle is moved
+    dlayer.canvas.on("object:modified", function(opts){
+	var im, disp;
+	disp = JS9.getDisplay();
+	if( that.plugin && that.plugin.opts.dynamic && disp && disp.image ){
+	    im = disp.image;
+	} else {
+	    im = that.display.image;
+	}
+	if( im ){
+	    pos = opts.target.getCenterPoint();
+	    ix = ((pos.x - im.panner.ix) *
+		  im.panner.xblock / im.panner.zoom) + im.panner.x0;
+	    iy = ((dlayer.canvas.height - (pos.y + im.panner.iy)) *
+		  im.panner.yblock / im.panner.zoom) + im.panner.y0;
+	    // pan the image
+	    try{
+		// avoid triggering a re-pan
+		im.display.pluginInstances.JS9Panner.status = "inactive";
+		// pan image
+		im.setPan(ix, iy);
+	    }
+	    catch(e){JS9.log("couldn't pan image", e);}
+	    finally{im.display.pluginInstances.JS9Panner.status = "active";}
+	}
+    });
     return im;
 };
 
 // display the image on the panner canvas
-JS9.Panner.display = function(im){
+JS9.Panner.disp = function(im){
     var panDisp, panner, sect, tblkx, tblky;
     var obj, nx, ny, nwidth, nheight, cenx, ceny;
     var npos1, npos2, nobj, nobjt;
@@ -8685,7 +8757,7 @@ JS9.Panner.display = function(im){
 	return;
     }
     // always remake make panner image (might be zooming, for example)
-    JS9.Panner.create(im);
+    JS9.Panner.create.call(this, im);
     // convenience variables
     panner = im.panner;
     panDisp = im.display.pluginInstances.JS9Panner;
@@ -8704,7 +8776,8 @@ JS9.Panner.display = function(im){
         panner.iy = Math.floor((panDisp.canvas.height - panner.img.height)/2);
     }
     // clear first
-    panDisp.context.clear();
+    // panDisp.context.clear();
+    JS9.Panner.clear.call(this, im);
     // draw the image into the context
     panDisp.context.putImageData(panner.img, panner.ix, panner.iy);
     // display panner rectangle
@@ -8764,6 +8837,7 @@ JS9.Panner.display = function(im){
 	    strokeWidth: JS9.Panner.NORTH.strokeWidth,
 	    strokeDashArray: JS9.Panner.NORTH.strokeDashArray,
 	    points: [npos1, npos2],
+	    changeable: false,
 	    // hack around fabric.js problems
 	    originX: "left", originY: "top", noLeftTop: true};
     im.panner.northid = im.addShapes("panner", "line", nobj);
@@ -8771,6 +8845,7 @@ JS9.Panner.display = function(im){
     nobjt = {color: JS9.Panner.NORTH.color,
 	     text: JS9.Panner.NORTH.text,
 	     fontSize: JS9.Panner.NORTH.fontSize,
+	     changeable: false,
 	     left: npos2.x, top: npos2.y};
     im.panner.northidt = im.addShapes("panner", "text", nobjt);
     // this is the line pointing east
@@ -8786,6 +8861,7 @@ JS9.Panner.display = function(im){
     eobj = {color: JS9.Panner.EAST.color,
 	    strokeWidth: JS9.Panner.EAST.strokeWidth,
 	    strokeDashArray: JS9.Panner.EAST.strokeDashArray,
+	    changeable: false,
 	    points: [epos1, epos2],
 	    // hack around fabric.js problems
 	    originX: "left", originY: "top", noLeftTop: true};
@@ -8794,6 +8870,7 @@ JS9.Panner.display = function(im){
     eobjt = {color: JS9.Panner.EAST.color,
 	     text: JS9.Panner.EAST.text,
 	     fontSize: JS9.Panner.EAST.fontSize,
+	     changeable: false,
 	     left: epos2.x, top: epos2.y};
     im.panner.eastidt = im.addShapes("panner", "text", eobjt);
     return im;
@@ -8801,13 +8878,12 @@ JS9.Panner.display = function(im){
 
 // zoom the rectangle inside the panner (RGB) image
 JS9.Panner.zoom = function(im, zval){
-    var panDisp, panner, ozoom, nzoom;
+    var panner, ozoom, nzoom;
     // sanity check
     if( !im || !im.panner || !im.display.pluginInstances.JS9Panner ){
 	return;
     }
     panner = im.panner;
-    panDisp = im.display.pluginInstances.JS9Panner;
     // get old zoom
     ozoom = panner.zoom;
     // determine new zoom
@@ -8815,7 +8891,7 @@ JS9.Panner.zoom = function(im, zval){
     case "*":
     case "x":
     case "X":
-	nzoom = Math.min(Math.min(panDisp.width, panDisp.height),
+	nzoom = Math.min(Math.min(this.width, this.height),
 			 ozoom * parseFloat(zval.slice(1)));
 	break;
     case "/":
@@ -8831,31 +8907,47 @@ JS9.Panner.zoom = function(im, zval){
     }
     panner.zoom = nzoom;
     // redisplay the panner
-    JS9.Panner.display(im);
+    JS9.Panner.disp.call(this, im);
     return im;
+};
+
+// dynamic selection change
+JS9.Panner.dysel = function(im){
+    var panner;
+    if( im ){
+	panner = im.display.pluginInstances.JS9Panner;
+	if( panner && panner.isDynamic ){
+	    JS9.Panner.disp.call(this, im);
+	}
+    }
 };
 
 // clear the panner
 JS9.Panner.clear = function(im){
-    var panner = im.display.pluginInstances.JS9Panner;
-    if( panner && (im === im.display.image) ){
-	panner.context.clear();
-	im.removeShapes("panner", "all");
-	im.panner.boxid = null;
+    var panner;
+    if( im ){
+	panner = im.display.pluginInstances.JS9Panner;
+	if( panner && (im === im.display.image) ){
+	    panner.context.clear();
+	    im.removeShapes("panner", "all");
+	    im.panner.boxid = null;
+	}
+	return im;
     }
-    return im;
 };
 
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
 		   {menuItem: "Panner",
+		    dynamicSelect: true,
 		    toolbarSeparate: false,
 		    toolbarHTML: JS9.Panner.HTML,
-		    onplugindisplay: JS9.Panner.display,
-		    onimagedisplay: JS9.Panner.display,
+		    ondynamicselect: JS9.Panner.dysel,
+		    onplugindisplay: JS9.Panner.disp,
+		    onimagedisplay: JS9.Panner.disp,
 		    onimageclose: JS9.Panner.clear,
 		    onimageclear: JS9.Panner.clear,
-		    onupdateprefs: JS9.Panner.display,
+		    onupdateprefs: JS9.Panner.disp,
 		    winTitle: "Panner",
 		    winDims: [JS9.Panner.WIDTH,  JS9.Panner.HEIGHT],
 		    divArgs: [JS9.Panner.SWIDTH, JS9.Panner.SHEIGHT]});
@@ -9329,6 +9421,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "string",
 	    "helper": "make rep file?: true,false,size>N"
 	},
+	"dynamicSelect": {
+	    "type": "string",
+	    "helper": "select display: click, move, false"
+	},
 	"fits2png": {
 	    "type": "boolean",
 	    "helper": "convert FITS to PNG rep files?"
@@ -9440,6 +9536,7 @@ JS9.Prefs.init = function(){
 	case "globals":
 	    source.data = {fits2png: JS9.globalOpts.fits2png,
 			   fits2fits: JS9.globalOpts.fits2fits,
+			   dynamicSelect: JS9.globalOpts.dynamicSelect,
 			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
 			   syncReciprocate: JS9.globalOpts.syncReciprocate,
 			   reloadRefresh: JS9.globalOpts.reloadRefresh,
@@ -10320,7 +10417,7 @@ JS9.Separate.xactive = function(id){
 // change active state
 JS9.Separate.xlayout = function(id){
     var plugin;
-    var display = JS9.lookupDisplay(id);
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     if( !display ){ return; }
     plugin = display.pluginInstances.JS9Separate;
     if( plugin && this.selectedIndex >= 0 ){
@@ -10332,7 +10429,7 @@ JS9.Separate.xlayout = function(id){
 JS9.Separate.separate = function(id, which){
     var i, im, plugin, arr;
     var opts = {};
-    var display = JS9.lookupDisplay(id);
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     if( !display ){ return; }
     plugin = display.pluginInstances.JS9Separate;
     if( plugin && plugin.separateLayout ){
@@ -10360,7 +10457,7 @@ JS9.Separate.separate = function(id, which){
 JS9.Separate.gather = function(id, which){
     var i, im, arr;
     var opts = {};
-    var display = JS9.lookupDisplay(id);
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     if( !display ){ return; }
     switch(which){
     case "all":
@@ -10474,7 +10571,7 @@ JS9.Separate.removeImage = function(im){
 // constructor: add HTML elements to the plugin
 JS9.Separate.init = function(){
     var that = this;
-    var i, s, im, dispid;
+    var i, s, im, display, dispid;
     var opts = [];
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -10515,10 +10612,11 @@ JS9.Separate.init = function(){
 	.attr("id", this.id + "SeparateImageContainer")
         .html(JS9.Separate.nofileHTML)
 	.appendTo(this.separateContainer);
+    display = JS9.getDisplay(this.display);
     // add currently loaded images
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
-	if( im.display === this.display ){
+	if( im.display === display ){
 	    JS9.Separate.addImage.call(this, im);
 	}
     }
@@ -10567,7 +10665,9 @@ JS9.Separate.reinit = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Separate.CLASS, JS9.Separate.NAME, JS9.Separate.init,
 		   {menuItem: "Separate/Gather",
+		    dynamicSelect: true,
 		    onplugindisplay: JS9.Separate.init,
+		    ondynamicselect: JS9.Separate.reinit,
 		    ongatherdisplay: JS9.Separate.reinit,
 		    onimageload: JS9.Separate.imageload,
 		    onimagedisplay: JS9.Separate.imagedisplay,
@@ -12008,7 +12108,7 @@ ndops.gsfit1d = function(radi, data, x0) {
 
     }, x0, 0.000001);
 
-    console.log(reply.message);
+    // console.log(reply.message);
 
     return reply.solution;
 };
@@ -14100,6 +14200,8 @@ module.exports = template;
             winTitle: "Encircled Energy",
 	    help:     "imexam/imexam.html#enener",
 
+	    dynamicSelect: true,
+
 	    toolbarSeparate: true,
 
             onregionschange: energUpdate,
@@ -14297,6 +14399,8 @@ module.exports = template;
             winTitle: "Radial Proj",
 	    help:     "imexam/imexam.html#r_proj",
 
+	    dynamicSelect: true,
+
 	    toolbarSeparate: true,
 
             onregionschange: rprojUpdate,
@@ -14386,6 +14490,8 @@ module.exports = template;
             menuItem: "Histogram",
             winTitle: "Histogram",
 	    help:     "imexam/imexam.html#rghist",
+
+	    dynamicSelect: true,
 
 	    toolbarSeparate: true,
 	    toolbarHTML: " ",
@@ -14479,6 +14585,8 @@ module.exports = template;
             menuItem: "Region Stats",
 	    help:     "imexam/imexam.html#rgstat",
 
+	    dynamicSelect: true,
+
 	    toolbarSeparate: true,
 
             onregionschange: statUpdate,
@@ -14571,6 +14679,8 @@ module.exports = template;
 	    winTitle: "X Projection",
 	    help:     "imexam/imexam.html#xyproj",
 
+	    dynamicSelect: true,
+
 	    toolbarSeparate: true,
 	    toolbarHTML: projToolbar,
 
@@ -14587,6 +14697,8 @@ module.exports = template;
             menuItem: "Y Projection",
 	    winTitle: "Y Projection",
 	    help:     "imexam/imexam.html#xyproj",
+
+	    dynamicSelect: true,
 
 	    toolbarSeparate: true,
 	    toolbarHTML: projToolbar,
@@ -14698,6 +14810,8 @@ module.exports = template;
             menuItem: "3dPlot",
             winTitle: "3dPlot",
 	    help:     "imexam/imexam.html#3dplot",
+
+	    dynamicSelect: true,
 
 	    toolbarSeparate: true,
 

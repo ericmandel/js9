@@ -216,6 +216,8 @@ JS9.globalOpts = {
     xeqPlugins: true,		// execute plugin callbacks?
     extendedPlugins: true,	// enable extended plugin support?
     intensivePlugins: false,	// enable intensive plugin support?
+    dynamicSelect: "click",    // dynamic plugins: "click", "move", or false
+    dynamicHighlight: true,     // highlight dynamic selection
     corsProxy:   "https://js9.si.edu/cgi-bin/CORS-proxy.cgi",   // CORS proxy
     simbadProxy: "https://js9.si.edu/cgi-bin/simbad-proxy.cgi", // simbad proxy
     catalogs:   {ras: ["RA", "_RAJ2000", "RAJ2000"],  // cols to search for ..
@@ -8490,6 +8492,9 @@ JS9.Display = function(el){
     // display-based scroll-based zoom initially from global
     this.mousetouchZoom = JS9.globalOpts.mousetouchZoom;
     // add event handlers
+    this.divjq.on("mouseenter", this, function(evt){
+	return JS9.mouseEnterCB(evt);
+    });
     this.divjq.on("mouseover", this, function(evt){
 	return JS9.mouseOverCB(evt);
     });
@@ -16157,6 +16162,111 @@ JS9.Grid.init = function(opts){
 JS9.Image.prototype.displayCoordGrid = JS9.Grid.display;
 
 // ---------------------------------------------------------------------
+// Dynsel: callbacks when a display is selected dynamically
+// ---------------------------------------------------------------------
+
+JS9.Dysel = {};
+JS9.Dysel.CLASS = "JS9";
+JS9.Dysel.NAME = "Dysel";
+
+JS9.Dysel.display = null;
+JS9.Dysel.plugins = [];
+
+// plugin init: no op
+// eslint-disable-next-line no-unused-vars
+JS9.Dysel.init = function(opts){
+    return;
+};
+
+// dynamic plugin: highlight display when dynamic selection is made
+JS9.Dysel.highlightSelection = function(im){
+    var disp;
+    // sanity check
+    if( !im || !JS9.Dysel.retrievePlugins().length ){
+	return;
+    }
+    // optimization: no processing if we only have one display
+    if( JS9.displays.length === 1 ){
+	return;
+    }
+    // unhighlight all
+    if( JS9.bugs.webkit_resize ){
+	$(".JS9").find(".JS9Image").removeClass("JS9Highlight");
+    } else {
+	$(".JS9").removeClass("JS9Highlight");
+    }
+    // the display to highlight
+    disp = im.display;
+    // highlight selected
+    if( JS9.bugs.webkit_resize ){
+	$(disp.divjq).find(".JS9Image").addClass("JS9Highlight");
+    } else {
+	$(disp.divjq).addClass("JS9Highlight");
+    }
+};
+
+// add to dynamic plugin array
+JS9.Dysel.addPlugins = function(plugin){
+    JS9.Dysel.plugins.push(plugin);
+};
+
+// get dynamic plugin array
+JS9.Dysel.retrievePlugins = function(){
+    return JS9.Dysel.plugins;
+};
+
+// return current dynamically selected display
+JS9.Dysel.getDisplay = function(which){
+    if( which === "previous" ){
+	return JS9.Dysel.odisplay;
+    }
+    return JS9.Dysel.display;
+};
+
+// set current dynamically selected display
+JS9.Dysel.select = function(display){
+    // save old display
+    JS9.Dysel.odisplay = JS9.Dysel.display;
+    // set new display
+    JS9.Dysel.display = display;
+    if( display.image ){
+	JS9.Dysel.highlightSelection(display.image);
+	// plugin callbacks for selected display
+	display.image.xeqPlugins("image", "ondynamicselect", null);
+    }
+};
+
+// imageload: select the display
+JS9.Dysel.imageload = function(im){
+    if( im ){
+	JS9.Dysel.select(im.display);
+    }
+};
+
+// imageclose: select another display, if necessary
+JS9.Dysel.imageclose = function(im){
+    var i, got, disp;
+    if( im ){
+	// if this the last image in this display?
+	for(i=0, got=0; i<JS9.images.length; i++){
+	    if( im.display === JS9.images[i].display ){
+		got++;
+	    }
+	}
+	// if so, select another image in another display
+	if( got <= 1 ){
+	    for(i=0; i<JS9.displays.length; i++){
+		disp = JS9.displays[i];
+		if( im.display !== disp && disp.image ){
+		    JS9.Dysel.select(JS9.displays[i]);
+		    break;
+		}
+	    }
+	}
+    }
+};
+
+// ---------------------------------------------------------------------
 // Utilities
 // ---------------------------------------------------------------------
 
@@ -16657,7 +16767,11 @@ JS9.lookupDisplay = function(id, mustExist){
     if( mustExist === undefined ){
 	mustExist = true;
     }
-    if( id && (id !== "*") && (id.toString().search(JS9.SUPERMENU) < 0) ){
+    // return display where mouse is located
+    if( id === "*" ){
+	return JS9.getDisplay(JS9.displays[0]);
+    }
+    if( id && (id.toString().search(JS9.SUPERMENU) < 0) ){
 	// look for whole id
 	for(i=0; i<JS9.displays.length; i++){
 	    if( (id === JS9.displays[i])     ||
@@ -16703,6 +16817,12 @@ JS9.getImage = function(id){
 	}
     }
     return im;
+};
+
+// return the display object associated with the current dynamic selection
+// or a default value
+JS9.getDisplay = function(def){
+    return JS9.Dysel.getDisplay() || def;
 };
 
 // look for specified vfile among raw0 hdus
@@ -18295,6 +18415,12 @@ JS9.mouseUpCB = function(evt){
 		JS9.Menubar.onclick(im.display);
 	    }
 	}
+	if( JS9.globalOpts.dynamicSelect === "click" ){
+	    if( JS9.getDisplay() !== display ){
+		// mark this as the current display
+		JS9.Dysel.select(display);
+	    }
+	}
     }
     // safe to unset clickInRegion now
     im.clickInRegion = false;
@@ -18403,6 +18529,25 @@ JS9.mouseMoveCB = function(evt){
     }
 };
 
+// mouseenter: assumes display obj is passed in evt.data
+JS9.mouseEnterCB = function(evt){
+    var display = evt.data;
+    var im = display.image;
+    evt.preventDefault();
+    // sanity checks
+    if( !im ){
+	return;
+    }
+    if( !JS9.specialKey(evt) ){
+	if( JS9.globalOpts.dynamicSelect === "move" ){
+	    if( JS9.getDisplay() !== display ){
+		// mark this as the current display
+		JS9.Dysel.select(display);
+	    }
+	}
+    }
+};
+
 // mouseover: assumes display obj is passed in evt.data
 JS9.mouseOverCB = function(evt){
     var display = evt.data;
@@ -18431,7 +18576,7 @@ JS9.mouseOverCB = function(evt){
     }
 };
 
-// mouseover: assumes display obj is passed in evt.data
+// mouseout: assumes display obj is passed in evt.data
 JS9.mouseOutCB = function(evt){
     var display = evt.data;
     var im = display.image;
@@ -18624,6 +18769,8 @@ JS9.RegisterPlugin = function(xclass, xname, func, opts){
 	JS9.PLUGINS += "|";
     }
     JS9.PLUGINS += name.replace(/JS9/, "");
+    JS9.PLUGINS += "|";
+    JS9.PLUGINS += xname;
     // save the plug-in
     JS9.plugins.push({xclass: xclass, xname: xname, name: name,
 		opts: opts, func: func, instances: []});
@@ -18651,7 +18798,7 @@ JS9.RegisterPlugin = function(xclass, xname, func, opts){
 
 // create a new plugin instance, attached to the specified element
 JS9.instantiatePlugin = function(el, plugin, winhandle, args){
-    var i, tplugin, instance, divid, divjq, pdivjq, html, ndiv;
+    var i, tplugin, instance, divid, divjq, pdivjq, html, ndiv, did;
     var visible = "visible";
     // if plugin is a string, get plugin object by name
     if( typeof plugin === "string" ){
@@ -18732,7 +18879,6 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	instance.id = divjq.attr("id") || plugin.name;
 	// save type
 	instance.winType = "div";
-	divid = divjq.attr("id") || "JS9Plugin";
 	// should this plugin div be hidden at the start?
 	if( $.inArray(instance.name, JS9.globalOpts.hiddenPluginDivs) >=0 ){
 	    visible = "hidden";
@@ -18752,9 +18898,11 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	// the wrapper plugincontainer is the the outer div
 	instance.outerdivjq = instance.divjq.closest(".JS9PluginContainer");
 	// add the toolbar to the container, if necessary
-	if( plugin.opts.toolbarSeparate || divjq.data("toolbarseparate") ){
-	    ndiv = "<div class='" + JS9.lightOpts[JS9.LIGHTWIN].dragBar + "'>";
-	    $(ndiv).insertBefore(instance.divjq);
+	if( divjq.data("toolbarseparate") !== false ){
+	    if( plugin.opts.toolbarSeparate || divjq.data("toolbarseparate") ){
+		ndiv = "<div class='"+JS9.lightOpts[JS9.LIGHTWIN].dragBar+"'>";
+		$(ndiv).insertBefore(instance.divjq);
+	    }
 	}
     }
     // backlink this instance into the plugin
@@ -18769,7 +18917,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
     // for virtual plugins, instantiate and backlink into all displays
     if( instance.winType === "virtual" ){
 	for(i=0; i<JS9.displays.length; i++){
-	    // look for displays to which we have not yet added this plugin
+	    // look for displays to which we have not added this plugin
 	    if( !JS9.displays[i].pluginInstances[plugin.name] ){
 		// fake this display
 		instance.div = null;
@@ -18795,9 +18943,25 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 		instance.divjq.css("height", plugin.opts.winDims[1]);
 	    }
 	}
-	// find the display for this plugin, using data-tid or instance id
+	// find the display for this plugin, using data-js9id or instance id
 	divid = instance.divjq.data("js9id") || instance.id;
-	instance.display = JS9.lookupDisplay(divid);
+	if( divid === "*" ){
+	    if( plugin.opts.dynamicSelect ){
+		// use first display as the primary for a dynamic plugin
+		instance.display = JS9.displays[0];
+		// this instance is dynamic
+		instance.isDynamic = true;
+		// we have a dynamic plugin
+		JS9.Dysel.addPlugins(plugin.name);
+		did = "*";
+	    } else {
+		JS9.error(plugin.name +
+			  " is not a dynamically selectable plugin");
+	    }
+	} else {
+	    instance.display = JS9.lookupDisplay(divid);
+	    did = instance.display.id;
+	}
 	// add the toolbar content, if necessary
 	html = divjq.data("toolbarhtml") || plugin.opts.toolbarHTML;
 	if( html ){
@@ -18813,22 +18977,34 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	    $("<div class='JS9PluginToolbar-"+instance.winType+"'>")
 		.css("z-index", JS9.BTNZINDEX)
 		.html(html)
-		.data("displayid", instance.display.id)
+		.data("displayid", did)
 		.insertAfter(pdivjq);
 	}
-	// backlink this instance into the display
 	instance.display.pluginInstances[plugin.name] = instance;
 	// call the init routine (usually a constructor)
-	// on entry, these elements have already been defined in the context:
-	// this.div:      the DOM element representing the div for this plugin
-	// this.divjq:    the jquery object representing the div for this plugin
-	// this.id:       the id of the div (or the plugin name as a default)
+	// on entry: elements have already been defined in the context:
+	// this.div: the DOM element representing the div for this plugin
+	// this.divjq: jquery object representing the div for this plugin
+	// this.id: id of the div (or the plugin name as a default)
 	// this.plugin: plugin class object (user opts in opts subobject)
 	// this.winType:  "div" (in-page div) or "light" (from view menu)
 	// this.winHandle: handle returned from light window create routine
 	// this.display:  the display object associated with this plugin
 	// this.status: "active" or "inactive" or undefined
 	plugin.func.apply(instance, args);
+	// for a dynamic plugin, backlink this instance into all displays
+	if( did === "*" ){
+	    for(i=0; i<JS9.displays.length; i++){
+		// look for displays to which we have not added this plugin
+		if( JS9.displays[i].pluginInstances[plugin.name] ){
+		    // primary display
+		    instance.display  = JS9.displays[i];
+		} else {
+		    // backlink to primary
+		    JS9.displays[i].pluginInstances[plugin.name] = instance;
+		}
+	    }
+	}
     }
     // return the instance
     return instance;
@@ -18838,6 +19014,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 JS9.instantiatePlugins = function(){
     var i;
     var newPlugin = function(plugin){
+	var j, k, instance;
 	// instantiate any divs not yet done
 	$('div.' + plugin.name).each(function(){
 	    // new instance of this div-based plugin
@@ -18848,6 +19025,17 @@ JS9.instantiatePlugins = function(){
 	if( !plugin.opts.menuItem && plugin.opts.winDims &&
 	    !plugin.opts.winDims[0] && !plugin.opts.winDims[1] ){
 	        JS9.instantiatePlugin(null, plugin, null, plugin.opts.divArgs);
+	}
+	// backlink new instances of any dynamic plugins
+	for(j=0; j<plugin.instances.length; j++){
+	    instance = plugin.instances[j];
+	    if( instance.isDynamic ){
+		for(k=0; k<JS9.displays.length; k++){
+		    if( !JS9.displays[k].pluginInstances[plugin.name] ){
+			JS9.displays[k].pluginInstances[plugin.name] = instance;
+		    }
+		}
+	    }
 	}
     };
     for(i=0; i<JS9.plugins.length; i++){
@@ -19923,6 +20111,12 @@ JS9.init = function(){
 			onimageload:   JS9.Grid.regrid,
 			onupdateprefs: JS9.Grid.regrid,
 			winDims:       [0, 0]});
+    JS9.RegisterPlugin(JS9.Dysel.CLASS, JS9.Dysel.NAME,
+		       JS9.Dysel.init,
+		       {onimageload:   JS9.Dysel.imageload,
+			onimageclose:  JS9.Dysel.imageclose,
+			winDims:       [0, 0]});
+
     // find divs associated with each plugin and run the constructor
     JS9.instantiatePlugins();
     // sort plugins
@@ -20517,10 +20711,50 @@ JS9.mkPublic("Load", function(file, opts){
 
 // create a new instance of JS9 in a window (light or new)
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
-    var display, id, did, head, body, win, winid, initialURL;
+    var id, display, did, head, body, win, winid, initialURL, obj;
     var lopts = JS9.lightOpts[JS9.LIGHTWIN];
     var idbase = (type || "") + "win";
-    var title;
+    var title, warr, wwidth, wheight;
+    var getHTML = function(id, opts, winopts){
+	var html, display;
+	opts = opts || {};
+	if( opts.clone ){
+	    display = JS9.lookupDisplay(opts.clone, false);
+	}
+	if( winopts ){
+	    warr = winopts.match(/(.*width=)([0-9]+)(px,height=)([0-9]+)(px.*)/, "$1@@H@@$3");
+	    wwidth  = parseInt(warr[2], 10);
+	    wheight = parseInt(warr[4], 10);
+	}
+        // make up the html with the unique id
+        html = html || opts.html || sprintf("<hr class='hline0'>");
+	// menubar
+	if( !display                                        ||
+	    ($("#"+opts.clone+"Menubar").length > 0         &&
+	     !display.pluginInstances.JS9Menubar.isDynamic) ){
+	    html += sprintf("<div class='JS9Menubar' id='%sMenubar'></div>",id);
+	} else if( winopts ){
+	    wheight -= 40;
+	}
+	// display
+	html += sprintf("<div class='JS9' id='%s'></div>", id);
+	// colorbar
+	if( !display                                         ||
+	    ($("#"+opts.clone+"Colorbar").length > 0         &&
+	     !display.pluginInstances.JS9Colorbar.isDynamic) ){
+	    html += sprintf("<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar'></div></div>", id);
+	} else if( winopts ){
+	    wheight -= 44;
+	}
+	if( winopts ){
+	    if( JS9.Dysel.retrievePlugins().length ){
+		wwidth  += 2;
+		wheight += 2;
+	    }
+	    return {html: html, winopts: warr[1] + String(wwidth) + warr[3] + String(wheight) + warr[5]};
+	}
+	return html;
+    };
     type = type || "light";
     // opts can be an object or json
     if( typeof opts === "object" ){
@@ -20545,10 +20779,12 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	}
         // and a second one for controlling the light window
         did = "d" + id;
-        // make up the html with the unique id
-        html = html || opts.html || sprintf("<hr class='hline0'><div class='JS9Menubar' id='%sMenubar'></div><div class='JS9' id='%s'></div><div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar'></div></div>", id, id, id);
+	// get html based on originating display setup
+	obj = getHTML(id, opts, lopts.imageWin);
+	// html
+	html = obj.html;
 	// window opts
-        winopts = winopts || opts.winopts || lopts.imageWin;
+        winopts = winopts || opts.winopts || obj.winopts;
 	// nice title
 	title = sprintf("JS9 Display"+JS9.IDFMT, id);
         // create the light window
@@ -20616,7 +20852,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
                             "script", "script");
 	}
         // make a body containing the JS9 elements and the preload call
-        body = html || sprintf("<div class='JS9Menubar' id='%sMenubar'></div><div class='JS9' id='%s'></div><div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar'></div></div>", id, id, id);
+        body = html || getHTML(id, opts);
         // combine head and body into a full html file
         html = sprintf("<html><head>%s</head><body", head);
 	if( file ){
@@ -21693,7 +21929,7 @@ JS9.mkPublic("SelectDisplay", function(){
     var obj = JS9.parsePublicArgs(arguments);
     var display = JS9.lookupDisplay(obj.argv[0] || obj.display);
     if( !display ){
-	JS9.error("invalid display for separate");
+	JS9.error("invalid display for select");
     }
     if( !JS9.hasOwnProperty("Menubar") ){
 	JS9.error("Menubar is required for display selection");

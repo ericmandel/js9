@@ -468,6 +468,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "string",
 	    "helper": "make rep file?: true,false,size>N"
 	},
+	"dynamicSelect": {
+	    "type": "string",
+	    "helper": "select display: click, move, false"
+	},
 	"fits2png": {
 	    "type": "boolean",
 	    "helper": "convert FITS to PNG rep files?"
@@ -579,6 +583,7 @@ JS9.Prefs.init = function(){
 	case "globals":
 	    source.data = {fits2png: JS9.globalOpts.fits2png,
 			   fits2fits: JS9.globalOpts.fits2fits,
+			   dynamicSelect: JS9.globalOpts.dynamicSelect,
 			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
 			   syncReciprocate: JS9.globalOpts.syncReciprocate,
 			   reloadRefresh: JS9.globalOpts.reloadRefresh,

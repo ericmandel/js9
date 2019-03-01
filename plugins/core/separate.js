@@ -39,7 +39,7 @@ JS9.Separate.xactive = function(id){
 // change active state
 JS9.Separate.xlayout = function(id){
     var plugin;
-    var display = JS9.lookupDisplay(id);
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     if( !display ){ return; }
     plugin = display.pluginInstances.JS9Separate;
     if( plugin && this.selectedIndex >= 0 ){
@@ -51,7 +51,7 @@ JS9.Separate.xlayout = function(id){
 JS9.Separate.separate = function(id, which){
     var i, im, plugin, arr;
     var opts = {};
-    var display = JS9.lookupDisplay(id);
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     if( !display ){ return; }
     plugin = display.pluginInstances.JS9Separate;
     if( plugin && plugin.separateLayout ){
@@ -79,7 +79,7 @@ JS9.Separate.separate = function(id, which){
 JS9.Separate.gather = function(id, which){
     var i, im, arr;
     var opts = {};
-    var display = JS9.lookupDisplay(id);
+    var display = JS9.getDisplay(JS9.lookupDisplay(id));
     if( !display ){ return; }
     switch(which){
     case "all":
@@ -193,7 +193,7 @@ JS9.Separate.removeImage = function(im){
 // constructor: add HTML elements to the plugin
 JS9.Separate.init = function(){
     var that = this;
-    var i, s, im, dispid;
+    var i, s, im, display, dispid;
     var opts = [];
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -234,10 +234,11 @@ JS9.Separate.init = function(){
 	.attr("id", this.id + "SeparateImageContainer")
         .html(JS9.Separate.nofileHTML)
 	.appendTo(this.separateContainer);
+    display = JS9.getDisplay(this.display);
     // add currently loaded images
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
-	if( im.display === this.display ){
+	if( im.display === display ){
 	    JS9.Separate.addImage.call(this, im);
 	}
     }
@@ -286,7 +287,9 @@ JS9.Separate.reinit = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Separate.CLASS, JS9.Separate.NAME, JS9.Separate.init,
 		   {menuItem: "Separate/Gather",
+		    dynamicSelect: true,
 		    onplugindisplay: JS9.Separate.init,
+		    ondynamicselect: JS9.Separate.reinit,
 		    ongatherdisplay: JS9.Separate.reinit,
 		    onimageload: JS9.Separate.imageload,
 		    onimagedisplay: JS9.Separate.imagedisplay,

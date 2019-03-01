@@ -77,44 +77,18 @@ utilize jQuery 1.11.3). In such a case, we still recommend creating a
 single file to hold third-party modules, in order to minimize load latency.
 
 <p>
-JS9 <b>will run</b> without the js9plugins.js file, but with
-restricted functionality.  In particular, the following core plugins
-are loaded from this file:
-<ul>
-<li>blend.js: image blending
-<li>blink.js: image blinking
-<li>colorbar.js: colorbar display
-<li>console.js: a simple command console
-<li>cube.js: display slices of a 3D FITS file
-<li>imarith.js: image arithmetic
-<li>info.js: display of value, position, regions
-<li>magnifier.js: magnifier
-<li>mef.js: display multi-extension FITS
-<li>menubar.js: the main menubar
-<li>panner.js: panner
-<li>prefs.js: save/restore preferences
-</ul>
-Note that the regions and mouse/touch core plugins are always loaded
-from within js9.min.js itself, since they are essential to almost all
-JS9 functionality.
+JS9 <b>will run</b> without the js9plugins.js file, but with much
+restricted functionality.  In particular, core plugins such as
+blending, blinking, colorbar, data cube, magnifier, panner, etc. are
+loaded from this file, as are analysis plugins such as encircled
+energy, radial projection, region statistics, and 3D plot.  Note that
+the regions and mouse/touch core plugins are always loaded from within
+js9.min.js itself, since they are essential to almost all JS9
+functionality.
 
 <p>
-In addition, the following contributed plugins are loaded from this file:
-<ul>
-<li>archive.js: access to archives and catalogs
-<li>binning.js: FITS binary table binning
-<li>encircled.js: encircled energy
-<li>pixtable.js: display of pixel table
-<li>radproj.js: radial projection
-<li>regstat.js: region statistics
-<li>xyproj.js:  projections
-<li>3dplot.js: 3D plot
-<li>contour.js: contours
-</ul>
-
-<p>
-All of these files are contained in the plugins subdirectory, so you can load
-them individually, e.g.:
+All of these Javascript plugin files are contained in the plugins
+subdirectory, so you can load them individually, e.g.:
 <pre>
   &lt;script type="text/javascript" src="js9prefs.js"&gt;&lt;/script&gt;
   &lt;script type="text/javascript" src="js9support.min.js"&gt;&lt;/script&gt;
@@ -132,14 +106,9 @@ and <b>astroemw.wasm</b> files, depending on whether
 <a href="http://webassembly.org/">WebAssembly</a> is supported on your browser.
 
 <p>
-As of version 1.3, the cfitsio library is used to process FITS files
-in JS9. This support is built into js9support.js. If you are upgrading
-to version 1.3 from a previous version, simply remove the load of
-fitsy.js (or fitsy.min.js) from your web page to start using cfitsio.
-
-<p>
-Instances of JS9 are placed on a web page by assigning JS9 classes
-to ordinary "div" elements. The two important JS9 classes are:
+The main JS9 display as well as JS9 plugins are placed on a web page
+by assigning JS9 classes to ordinary "div" elements. The two important
+JS9 classes are:
 <ul>
 <li><b>JS9:</b> this class will display the main JS9 image window
 <li><b>JS9Menubar:</b> this class will display the JS9 menubar
@@ -150,23 +119,42 @@ Thus, for example, to place a menubar on top of a JS9 display, use:
   &lt;div class="JS9"&gt;
 </pre>
 <p>
-You also can use these classes:
+Among the many JS9 plugins that you can add to your webpage are:
 <ul>
-<li><b>JS9Console:</b> this class will display a console window for executing
-typed commands (very retro, but often quite useful!)
-<li><b>JS9Info:</b> this class will display position, value, and
-region information (patterned after DS9's display window). It's nicer
-and more complete than the default display in the upper left of the
-image, but takes up more screen real estate.
-<li><b>JS9Magnifier:</b> this class will display the magnifier window
-<li><b>JS9Panner:</b> this class will display panner window
+<li><b>Archives & Catalogs</b>: access to external archives and catalogs
+<li><b>Bin/Filter/Section</b>: support for extracting sections from images
+<li><b>Blending</b>: blend images using standard composite techniques
+<li><b>Blinking</b>: blink two or more images
+<li><b>Colormaps</b>: create colormaps
+<li><b>Console:</b> display a console window for executing commands
+<li><b>Contours</b>: create contour maps
+<li><b>Data Cube</b>: process 3D FITS data cubes
+<li><b>Extensions</b>: view FITS extensions
+<li><b>Info:</b> display position, value, and other information as mouse moves
+<li><b>Keyboard Actions</b>: configure keyboard actions
+<li><b>Magnifier:</b> display a magnifier window centered on the mouse position
+<li><b>Mouse/Touch</b>: configure mouse/touch actions
+<li><b>Panner:</b> display a panner window of the whole image
+<li><b>Pixel Table</b>: display a pixel value table centered on the mouse position
+<li><b>Preferences</b>: configure JS9 preferences
 </ul>
 <p>
-NB: all of these secondary windows can be displayed as light windows
-using the appropriate <b>View</b> menu options. Light windows can
-moved around on the page. Also note that if a window is declared
-statically in a page, it will not be made available in the <b>View</b>
-menu.
+Any of these can be added to a web page by specifying a div element with the
+appropriate class:
+<pre>
+    &lt;div class="JS9Menubar"&gt;&lt;/div&gt;
+    &lt;div class="JS9Toolbar"&gt;&lt;/div&gt;
+    &lt;div class="JS9"&gt;&lt;/div&gt;
+    &lt;div style="margin-top: 2px;"&gt;
+    &lt;div class="JS9Colorbar"&gt;&lt;/div&gt;
+</pre>
+
+<p>
+NB: all of these plugins can also be displayed at any time as light
+windows, using the appropriate <b>View</b> menu options. Light windows
+can moved around on the page and dismissed when no longer needed. Also
+note that if a plugin is declared statically in a page, it will not be
+made available in the <b>View</b> menu.
 
 <p>
 Placement of JS9 div elements should follow standard web page rules
@@ -193,28 +181,95 @@ also want to shorten the width of the menubar:
 </pre>
 
 <p>
-Multiple instances of JS9 can be added to a single web page. This is done by
-giving each JS9 div element a unique ID. In order to tie otherwise separate
-JS9 components together, the IDs should be specified as follows:
-<ul>
-<li> start with a unique ID name, e.g. "myJS9".
-<li> follow with an optional dash or underscore (not needed for the main window)
-<li> finish with the type of JS9 element:
-"Menubar", "Panner", "Magnifier" "Info", or "Console"
-</ul>
-
-<p> An example of how to define multiple instances of JS9 is found in
-the js9multi.html file. Two DS9 instances are defined, having IDs of
-"JS9" (the default) and "myJS9". When "myJS9" is the display ID,
-"myJS9-Menubar" specifies the associated menubar and "myJS9Console"
-specifies the associated console.  
+Multiple instances of JS9 (including the main JS9 display element
+and secondary plugins elements) can be added to a single web page. This
+is done by specifying multiple sets of JS9 elements. Each main JS9 display
+element should have a unique HTML <b>id</b> associated with it:
+<pre>
+   &lt;div class="JS9" id="JS9"&gt;&lt;/div&gt;
+   &lt;div class="JS9" id="myJS9"&gt;&lt;/div&gt;
+</pre>
 
 <p>
-The ID is not required if there is only one JS9 instance on the page,
-since it defaults to "JS9". However, if your site needs to communicate
-with clients using the <b>js9 script</b> for external communication,
-you can differentiate between clients loading the same JS9-enabled web
-page by supplying a unique ID when the JS9 page is served.
+To connect a JS9 plugin element to a given JS9 display element, you
+can either use an HTML <b>id</b> that obeys certain rules, or you can
+use an HTML data attribute <b>data-js9id</b>, as described below.
+
+<p>
+To connect a JS9 display to one or more JS9 plugins using an
+HTML <b>id</b> attribute, the plugin ids should be specified as follows:
+<ul>
+<li> start with a unique ID name, e.g. "myJS9" that matches the main JS9 id
+<li> follow with an optional dash or underscore
+<li> finish with the type of JS9 plugin, e.g. "Menubar", "Panner", "Magnifier" "Info", "3dPlot", "RegionStats", etc.
+</ul>
+For example:
+<pre>
+    &lt;div class="JS9Menubar" id="myJS9Menubar"&gt;&lt;/div&gt;
+    &lt;div class="JS9" id="myJS9"&gt;&lt;/div&gt;
+    &lt;div class="JS9Colorbar" id="myJS9Colorbar"&gt;&lt;/div&gt;
+    &lt;div class="ImExamRegionStats" id="myJS9RegionStats"&gt;&lt;/div&gt;
+</pre>
+Note that the type of plugin is the simple name of the plugin, without the class prefix, e.g., "RegionStats" instead of "ImExamRegionStats". (Esoteric note: for
+non-JS9 class plugins, you can prefix the class to avoid name collisions.)
+
+<p>
+To connect a JS9 display to one or more JS9 plugins using a
+HTML data attribute <b>js9id</b>, specify the id of the main
+JS9 display element as its value:
+<pre>
+    &lt;div class="JS9Menubar" data-js9id="myJS9"&gt;&lt;/div&gt;
+    &lt;div class="JS9" id="myJS9"&gt;&lt;/div&gt;
+    &lt;div style="margin-top: 2px;"&gt;
+    &lt;div class="JS9Colorbar" data-js9id="myJS9"&gt;&lt;/div&gt;
+</pre>
+These two connection methods are equivalent. However, the <b>js9id</b>
+data attribute method also allows you to specify the single-character
+token <b>*</b> as a target value for many plugins. In this case, the
+display associated with the plugin is dynamically selected by clicking
+the mouse in a JS9 display window. In this way, a single plugin can serve
+several displays.
+
+<p>
+The plugins that support dynamic selection are:
+<ul>
+<li> Blend
+<li> Blink
+<li> Colorbar
+<li> Info
+<li> Magnifier
+<li> Menubar
+<li> Panner
+<li> Separate
+<li> EncEnergy
+<li> RadialProj
+<li> Histogram
+<li> RegionStats
+<li> XProj
+<li> YProj
+<li> 3dPlot
+</ul>
+
+<p>
+Note that ids are not required at all if there is only one JS9 instance on
+the web page:
+<pre>
+    &lt;div class="JS9Menubar"&gt;&lt;/div&gt;
+    &lt;div class="JS9Toolbar"&gt;&lt;/div&gt;
+    &lt;div class="JS9"&gt;&lt;/div&gt;
+    &lt;div style="margin-top: 2px;"&gt;
+    &lt;div class="JS9Colorbar"&gt;&lt;/div&gt;
+</pre>
+However, if your site needs to communicate with clients using
+the <b>js9 script</b> for external communication, you can
+differentiate between clients loading the same JS9-enabled web page by
+supplying a unique ID when the JS9 page is served.
+
+<p> A full example of how to define multiple instances of JS9 with ids
+is found, for example, in the js9multi.html file. Two DS9 instances
+are defined, having IDs of "JS9" (the default) and "myJS9". When
+"myJS9" is the display ID, "myJS9Menubar" specifies the associated
+menubar and "myJS9Console" specifies the associated console.
 
 <p>
 The js9.css file contains CSS directives for various parts of
@@ -356,7 +411,7 @@ See:
 <a href="yourdata.html">Adding Data Files To a Web Page</a> for more
 information.
 
-<h5>Last updated: January 11, 2018</h5>
+<h5>Last updated: March 1, 2019</h5>
 </div>
 
 </body>
