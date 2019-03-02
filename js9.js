@@ -1012,15 +1012,16 @@ JS9.Image.prototype.getImageData = function(dflag){
 
 // undisplay the image, release resources
 JS9.Image.prototype.closeImage = function(opts){
-    var i, j, tim, key, raw, carr;
+    var i, j, tim, key, raw, carr, seldisplay;
     var iscurrent = false;
     var ilen= JS9.images.length;
-    var display = JS9.Dysel.getDisplayOr(this.display);
     opts = opts || {};
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error("can't parse closeImage opts: " + opts, e); }
     }
+    // this is either the dynamcially selected display or the current display
+    seldisplay = JS9.Dysel.getDisplayOr(this.display);
     // look for the image in the image list, and remove it
     for(i=0; i<ilen; i++){
 	if( this === JS9.images[i] ){
@@ -1041,7 +1042,7 @@ JS9.Image.prototype.closeImage = function(opts){
 		    if( tim.layers.hasOwnProperty(key) ){
 			// tim.layers[key].canvas.clear();
 			if( tim.layers[key].dlayer.dtype === "main" ||
-			    display === tim.display ){
+			    tim.display === seldisplay ){
 			    tim.showShapeLayer(key, false, {local: true});
 			}
 		    }
@@ -1102,7 +1103,7 @@ JS9.Image.prototype.closeImage = function(opts){
 	iscurrent -= 2;
 	for(i=iscurrent; i>=0; i--){
 	    tim = JS9.images[i];
-	    if( display === tim.display ){
+	    if( this.display === tim.display ){
 		// display image, 2D graphics, etc.
 		tim.displayImage("all");
 		tim.refreshLayers();
@@ -1113,7 +1114,7 @@ JS9.Image.prototype.closeImage = function(opts){
 	}
 	for(i=JS9.images.length-1; i>iscurrent; i--){
 	    tim = JS9.images[i];
-	    if( display === tim.display ){
+	    if( this.display === tim.display ){
 		// display image, 2D graphics, etc.
 		tim.displayImage("all");
 		tim.refreshLayers();
@@ -16795,10 +16796,7 @@ JS9.lookupDisplay = function(id, mustExist){
     if( mustExist === undefined ){
 	mustExist = true;
     }
-    // return selected display
-    if( id === "*" ){
-	return JS9.Dysel.getDisplayOr(JS9.displays[0]);
-    }
+    // lookup id
     if( id && (id.toString().search(JS9.SUPERMENU) < 0) ){
 	// look for whole id
 	for(i=0; i<JS9.displays.length; i++){

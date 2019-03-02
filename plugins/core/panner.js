@@ -459,10 +459,11 @@ JS9.Panner.dysel = function(im){
 
 // clear the panner
 JS9.Panner.clear = function(im){
-    var panner;
+    var panner, display;
     if( im ){
+	display = JS9.getDynamicDisplayOr(im.display);
 	panner = im.display.pluginInstances.JS9Panner;
-	if( panner && (im === im.display.image) ){
+	if( panner && (im === display.image) ){
 	    panner.context.clear();
 	    im.removeShapes("panner", "all");
 	    im.panner.boxid = null;
