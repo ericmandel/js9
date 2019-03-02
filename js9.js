@@ -16178,7 +16178,16 @@ JS9.Dysel.init = function(opts){
     return;
 };
 
-// dynamic plugin: highlight display when dynamic selection is made
+// unhighlight current selection
+JS9.Dysel.unhighlightSelection = function(){
+    if( JS9.bugs.webkit_resize ){
+	$(".JS9").find(".JS9Image").removeClass("JS9Highlight");
+    } else {
+	$(".JS9").removeClass("JS9Highlight");
+    }
+};
+
+// highlight display when dynamic selection is made
 JS9.Dysel.highlightSelection = function(im){
     var disp;
     // sanity check
@@ -16190,11 +16199,7 @@ JS9.Dysel.highlightSelection = function(im){
 	return;
     }
     // unhighlight all
-    if( JS9.bugs.webkit_resize ){
-	$(".JS9").find(".JS9Image").removeClass("JS9Highlight");
-    } else {
-	$(".JS9").removeClass("JS9Highlight");
-    }
+    JS9.Dysel.unhighlightSelection();
     // the display to highlight
     disp = im.display;
     // highlight selected
@@ -16205,12 +16210,12 @@ JS9.Dysel.highlightSelection = function(im){
     }
 };
 
-// add to dynamic plugin array
+// add to dynamic selection array
 JS9.Dysel.addPlugins = function(plugin){
     JS9.Dysel.plugins.push(plugin);
 };
 
-// get dynamic plugin array
+// get dynamic selection array
 JS9.Dysel.retrievePlugins = function(){
     return JS9.Dysel.plugins;
 };
@@ -16260,6 +16265,10 @@ JS9.Dysel.imageload = function(im){
 JS9.Dysel.imageclose = function(im){
     var i, got, disp;
     if( im ){
+	disp = JS9.Dysel.getDisplay();
+	if( !disp || disp.image !== im ){
+	    return;
+	}
 	// if this the last image in this display?
 	for(i=0, got=0; i<JS9.images.length; i++){
 	    if( im.display === JS9.images[i].display ){
@@ -16268,6 +16277,7 @@ JS9.Dysel.imageclose = function(im){
 	}
 	// if so, select another image in another display
 	if( got <= 1 ){
+	    JS9.Dysel.unhighlightSelection();
 	    for(i=0; i<JS9.displays.length; i++){
 		disp = JS9.displays[i];
 		if( im.display !== disp && disp.image ){
@@ -18961,7 +18971,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 		instance.display = JS9.displays[0];
 		// this instance is dynamic
 		instance.isDynamic = true;
-		// we have a dynamic plugin
+		// we have a dynamically selected plugin
 		JS9.Dysel.addPlugins(plugin.name);
 		did = "*";
 	    } else {
