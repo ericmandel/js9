@@ -1015,7 +1015,7 @@ JS9.Image.prototype.closeImage = function(opts){
     var i, j, tim, key, raw, carr;
     var iscurrent = false;
     var ilen= JS9.images.length;
-    var display = this.display;
+    var display = JS9.Dysel.getDisplayOr(this.display);
     opts = opts || {};
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
@@ -1040,7 +1040,10 @@ JS9.Image.prototype.closeImage = function(opts){
 		for( key in tim.layers ){
 		    if( tim.layers.hasOwnProperty(key) ){
 			// tim.layers[key].canvas.clear();
-			tim.showShapeLayer(key, false, {local: true});
+			if( tim.layers[key].dlayer.dtype === "main" ||
+			    display === tim.display ){
+			    tim.showShapeLayer(key, false, {local: true});
+			}
 		    }
 		}
 	    }
@@ -16277,12 +16280,11 @@ JS9.Dysel.imageclose = function(im){
 	}
 	// if so, select another image in another display
 	if( got <= 1 ){
-	    JS9.Dysel.unhighlightSelection();
 	    for(i=0; i<JS9.displays.length; i++){
 		disp = JS9.displays[i];
 		if( im.display !== disp && disp.image ){
 		    JS9.Dysel.select(JS9.displays[i]);
-		    break;
+		    return;
 		}
 	    }
 	}
@@ -16793,7 +16795,7 @@ JS9.lookupDisplay = function(id, mustExist){
     if( mustExist === undefined ){
 	mustExist = true;
     }
-    // return display where mouse is located
+    // return selected display
     if( id === "*" ){
 	return JS9.Dysel.getDisplayOr(JS9.displays[0]);
     }
