@@ -16785,7 +16785,7 @@ JS9.lookupDisplay = function(id, mustExist){
     }
     // return display where mouse is located
     if( id === "*" ){
-	return JS9.getDynamicDisplayOr(JS9.displays[0]);
+	return JS9.Dysel.getDisplayOr(JS9.displays[0]);
     }
     if( id && (id.toString().search(JS9.SUPERMENU) < 0) ){
 	// look for whole id
@@ -18426,7 +18426,7 @@ JS9.mouseUpCB = function(evt){
 	    }
 	}
 	if( JS9.globalOpts.dynamicSelect === "click" ){
-	    if( JS9.getDynamicDisplayOr(display) !== display ){
+	    if( JS9.Dysel.getDisplayOr(display) !== display ){
 		// mark this as the current display
 		JS9.Dysel.select(display);
 	    }
@@ -18550,7 +18550,7 @@ JS9.mouseEnterCB = function(evt){
     }
     if( !JS9.specialKey(evt) ){
 	if( JS9.globalOpts.dynamicSelect === "move" ){
-	    if( JS9.getDynamicDisplayOr(display) !== display ){
+	    if( JS9.Dysel.getDisplayOr(display) !== display ){
 		// mark this as the current display
 		JS9.Dysel.select(display);
 	    }
