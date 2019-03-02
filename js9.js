@@ -1040,7 +1040,8 @@ JS9.Image.prototype.closeImage = function(opts){
 		// clear all layers
 		for( key in tim.layers ){
 		    if( tim.layers.hasOwnProperty(key) ){
-			// tim.layers[key].canvas.clear();
+			// clear the shape layer if its in the main display,
+			//  and non-main layers if this image is selected
 			if( tim.layers[key].dlayer.dtype === "main" ||
 			    tim.display === seldisplay ){
 			    tim.showShapeLayer(key, false, {local: true});
