@@ -16226,6 +16226,12 @@ JS9.Dysel.getDisplay = function(which){
     return JS9.Dysel.display;
 };
 
+// return the display object associated with the current dynamic selection
+// or else a default value
+JS9.Dysel.getDisplayOr = function(def){
+    return JS9.Dysel.getDisplay() || def;
+};
+
 // set current dynamically selected display
 JS9.Dysel.select = function(display){
     // sanity check
@@ -16272,6 +16278,9 @@ JS9.Dysel.imageclose = function(im){
 	}
     }
 };
+
+// public alias for plugin developers
+JS9.getDynamicDisplayOr = JS9.Dysel.getDisplayOr;
 
 // ---------------------------------------------------------------------
 // Utilities
@@ -16824,12 +16833,6 @@ JS9.getImage = function(id){
 	}
     }
     return im;
-};
-
-// return the display object associated with the current dynamic selection
-// or else a default value
-JS9.getDynamicDisplayOr = function(def){
-    return JS9.Dysel.getDisplay() || def;
 };
 
 // look for specified vfile among raw0 hdus
