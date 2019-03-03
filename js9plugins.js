@@ -1553,6 +1553,10 @@ JS9.Blink.start = function(display){
     var done = false;
     var plugin = display.pluginInstances.JS9Blink;
     var saveidx = plugin.idx;
+    // sanity check
+    if( !plugin ){
+	return;
+    }
     while( !done ){
 	im = JS9.images[plugin.idx];
 	if( (im.display === display) && im.tmp.blinkMode ){
@@ -1575,12 +1579,17 @@ JS9.Blink.start = function(display){
 
 // stop blinking
 JS9.Blink.stop = function(display){
-    if( display.pluginInstances.JS9Blink.tid ){
-	window.clearTimeout(display.pluginInstances.JS9Blink.tid);
-	delete display.pluginInstances.JS9Blink.tid;
+    var plugin = display.pluginInstances.JS9Blink;
+    // sanity check
+    if( !plugin ){
+	return;
+    }
+    if( plugin.tid ){
+	window.clearTimeout(plugin.tid);
+	delete plugin.tid;
     }
     display.blinkMode = false;
-    display.pluginInstances.JS9Blink.idx = 0;
+    plugin.idx = 0;
 };
 
 // change active state
@@ -1612,28 +1621,31 @@ JS9.Blink.xblinkmode = function(id, target){
 // eslint-disable-next-line no-unused-vars
 JS9.Blink.xblink1 = function(id, target){
     var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
-    var plugin = display.pluginInstances.JS9Blink;
-    // blink once
-    if( display ){
-	if( JS9.images[plugin.idx] === display.image ){
-	    if( ++plugin.idx >= JS9.images.length ){
-		plugin.idx = 0;
-	    }
-	}
-	JS9.Blink.start(display);
+    var plugin = display ? display.pluginInstances.JS9Blink : null;
+    // sanity check
+    if( !plugin || !display ){
+	return;
     }
+    // blink once
+    if( JS9.images[plugin.idx] === display.image ){
+	if( ++plugin.idx >= JS9.images.length ){
+	    plugin.idx = 0;
+	}
+    }
+    JS9.Blink.start(display);
 };
 
 // change blink rate
 JS9.Blink.xrate = function(id, target){
-    var plugin;
     var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
+    var plugin = display ? display.pluginInstances.JS9Blink : null;
     var rate = Math.floor(target.options[target.selectedIndex].value * 1000);
-    if( display ){
-	plugin = display.pluginInstances.JS9Blink;
-	if( !isNaN(rate) ){
-	    plugin.rate = rate;
-	}
+    // sanity check
+    if( !plugin || !display ){
+	return;
+    }
+    if( !isNaN(rate) ){
+	plugin.rate = rate;
     }
 };
 

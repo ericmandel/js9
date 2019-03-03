@@ -16244,7 +16244,10 @@ JS9.Dysel.getDisplay = function(which){
 // return the display object associated with the current dynamic selection
 // or else a default value
 JS9.Dysel.getDisplayOr = function(def){
-    return JS9.Dysel.getDisplay(def) || def;
+    if( def === "previous" ){
+	return JS9.Dysel.getDisplay(def);
+    }
+    return JS9.Dysel.getDisplay() || def;
 };
 
 // set current dynamically selected display
