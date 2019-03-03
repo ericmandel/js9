@@ -9025,7 +9025,9 @@ JS9.Display.prototype.gather = function(opts){
 JS9.Display.prototype.separate = function(opts){
     var that = this;
     var arr, d0, d1;
+    var nsep = 0;
     var sep = {};
+    var saveims = {};
     var row = 0, col = 0;
     var myid = 1;
     var rexp = /_sep[0-9][0-9]*/;
@@ -9140,9 +9142,10 @@ JS9.Display.prototype.separate = function(opts){
 	// return info for this  column;
 	return {id: toID, html: html, winopts: winopts};
     };
-    var separateim = function(arr, n){
+    var separateim = function(arr){
 	var im, winopts;
 	var id;
+	var n = nsep++;
 	if( arr.length > n ){
 	    if( typeof arr[n] === "number" ){
 		im = JS9.images[arr[n]];
@@ -9157,7 +9160,7 @@ JS9.Display.prototype.separate = function(opts){
 		if( d0 === undefined ){
 		    d0 = im.display.id;
 		    initopts(d0, opts);
-		    separateim(arr, n+1);
+		    separateim(arr);
 		} else {
 		    // create a new window for this image
 		    if( typeof opts.idbase === "string" ){
@@ -9166,15 +9169,17 @@ JS9.Display.prototype.separate = function(opts){
 		    } else {
 			d1 = d0.replace(rexp, "") + "_sep" + JS9.uniqueID();
 		    }
+		    saveims[d1] = im;
 		    // code to run when new window exists
 		    $("#dhtmlwindowholder").arrive("#"+d1, {onceOnly: true},
 			function(){
+			    id = $(this).attr("id");
 			    // FF (at least) needs this 0ms delay
 			    window.setTimeout(function(){
 				// move this image
-				im.moveToDisplay(d1);
+				saveims[id].moveToDisplay(id);
 				// process next image
-				separateim(arr, n+1);
+				separateim(arr);
 			    }, 0);
 			});
 		    winopts = getopts(d0, d1);
@@ -9187,7 +9192,7 @@ JS9.Display.prototype.separate = function(opts){
 		}
 	    } else {
 		// this image is in a different display, so process next image
-		separateim(arr, n+1);
+		separateim(arr);
 	    }
 	} else {
 	    // extended plugins
@@ -9208,7 +9213,7 @@ JS9.Display.prototype.separate = function(opts){
     // array of images to use
     arr = opts.images || JS9.images;
     //  start separating the images
-    separateim(arr, 0);
+    separateim(arr);
 };
 
 // display the next image from the JS9 images list that is in this display
