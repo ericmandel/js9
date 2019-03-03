@@ -5599,7 +5599,11 @@ JS9.Menubar.getDisplays = function(mode, key){
     // handle super menu specially ... but only if its not a "super_" request
     if( this.id.search(JS9.SUPERMENU) >= 0 && !key.match(/^super_/) ){
 	if( mode !== "all" && this.selectedDisplay ){
-	    return [this.selectedDisplay];
+	    // make sure display still exists
+	    if( $.inArray(this.selectedDisplay, JS9.displays) >= 0 ){
+		return [this.selectedDisplay];
+	    }
+	    this.selectedDislay = null;
 	}
 	s = this.divjq.data("displays").split(",");
 	if( s[0] === "*" ){
