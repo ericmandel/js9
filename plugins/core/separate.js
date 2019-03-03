@@ -261,8 +261,8 @@ JS9.Separate.init = function(){
 
 // callback when an image is loaded
 JS9.Separate.imageload = function(im){
-    // im gives access to image object
-    if( im ){
+    var display = JS9.getDynamicDisplayOr(this.display);
+    if( im && im.display === display ){
 	JS9.Separate.addImage.call(this, im);
     }
 };

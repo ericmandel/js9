@@ -305,9 +305,8 @@ JS9.Blink.dysel = function(){
 
 // callback when an image is loaded
 JS9.Blink.imageload = function(im){
-    var display = JS9.getDynamicDisplayOr(im.display);
-    // im gives access to image object
-    if( im && display === this.display ){
+    var display = JS9.getDynamicDisplayOr(this.display);
+    if( im && im.display === display ){
 	JS9.Blink.addImage.call(this, im);
     }
 };

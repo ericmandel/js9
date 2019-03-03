@@ -1231,7 +1231,7 @@ JS9.Blend.dispclass = function(im){
 JS9.Blend.displayBlend = function(im){
     var disp;
     if( im ){
-	disp = JS9.getDynamicDisplayOr(im.display);
+	disp = im.display;
 	this.divjq.find(".blendModeCheck").prop("checked", disp.blendMode);
     }
 };
@@ -1443,6 +1443,9 @@ JS9.Blend.dysel = function(){
     if( odisplay ){
 	omode = odisplay.blendMode;
 	odisplay.blendMode = false;
+	if( odisplay.image ){
+	    odisplay.image.displayImage();
+	}
     }
     // re-init the plugin
     JS9.Blend.init.call(this);
@@ -1470,9 +1473,8 @@ JS9.Blend.imageblend = function(im){
 
 // callback when an image is loaded
 JS9.Blend.imageload = function(im){
-    var display = JS9.getDynamicDisplayOr(im.display);
-    // im gives access to image object
-    if( im && display === this.display ){
+    var display = JS9.getDynamicDisplayOr(this.display);
+    if( im && im.display === display ){
 	JS9.Blend.addImage.call(this, im);
     }
 };
@@ -1818,9 +1820,8 @@ JS9.Blink.dysel = function(){
 
 // callback when an image is loaded
 JS9.Blink.imageload = function(im){
-    var display = JS9.getDynamicDisplayOr(im.display);
-    // im gives access to image object
-    if( im && display === this.display ){
+    var display = JS9.getDynamicDisplayOr(this.display);
+    if( im && im.display === display ){
 	JS9.Blink.addImage.call(this, im);
     }
 };
@@ -8926,9 +8927,9 @@ JS9.Panner.dysel = function(im){
 JS9.Panner.clear = function(im){
     var panner, display;
     if( im ){
-	display = JS9.getDynamicDisplayOr(im.display);
+	display = JS9.getDynamicDisplayOr(this.display);
 	panner = im.display.pluginInstances.JS9Panner;
-	if( panner && (im === display.image) ){
+	if( panner && (im.display === display) ){
 	    panner.context.clear();
 	    im.removeShapes("panner", "all");
 	    im.panner.boxid = null;
@@ -10640,8 +10641,8 @@ JS9.Separate.init = function(){
 
 // callback when an image is loaded
 JS9.Separate.imageload = function(im){
-    // im gives access to image object
-    if( im ){
+    var display = JS9.getDynamicDisplayOr(this.display);
+    if( im && im.display === display ){
 	JS9.Separate.addImage.call(this, im);
     }
 };
