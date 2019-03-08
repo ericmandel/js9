@@ -5704,6 +5704,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    }
 	}
 	obj.vstrsmall = vstr1 + sp + vstr2;
+	obj.vstr = vstr;
 	obj.vstrmedium = vstr;
 	obj.vstrlarge = vstr + sp + this.file;
 	if( disp ){
