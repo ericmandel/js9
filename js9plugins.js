@@ -4282,7 +4282,7 @@ JS9.Keyboard.Actions["copy pixel value to clipboard"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos, evt){
-    var s, ovalpos;
+    var s, key, ovalpos;
     // sanity check
     if( !im || !ipos ){
 	return;
@@ -4294,9 +4294,10 @@ JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos
     // restore original valpos
     im.setParam("valpos", ovalpos);
     // process valpos string
-    if( s && s.vstr ){
+    key = "vstr"+ JS9.globalOpts.valposWidth;
+    if( s && s[key]){
 	// reformat from html to text
-	s = s.vstr.replace(/&nbsp;/g, " ");
+	s = s[key].replace(/&nbsp;/g, " ");
     } else {
 	// use blank space (otherwise, nothing is copied)
 	s = " ";
