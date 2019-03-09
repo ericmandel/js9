@@ -1680,7 +1680,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	hdu = {image: obj};
     } else if( typeof obj === "object" ){
 	// fits object
-	hdu = obj;
+	hdu = $.extend(true, {}, obj);
     } else {
 	JS9.error("unknown or missing input for HDU creation");
     }
