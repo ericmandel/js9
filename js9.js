@@ -1680,7 +1680,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	hdu = {image: obj};
     } else if( typeof obj === "object" ){
 	// fits object
-	hdu = $.extend(true, {}, obj);
+	hdu = obj;
     } else {
 	JS9.error("unknown or missing input for HDU creation");
     }
@@ -3494,9 +3494,15 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error("can't parse section opts: " + opts, e); }
     }
-    hdu = this.raw.hdu;
     // opts is optional
     opts = opts || {};
+    if( opts.separate ){
+	// if we are generating a separate image, copy the hdu
+	hdu = $.extend(true, {}, this.raw.hdu);
+    } else {
+	// if we are replacing the current image, use the hdu directly
+	hdu = this.raw.hdu;
+    }
     // from where do we extract the section?
     from = opts.from;
     if( !from ){
