@@ -3917,10 +3917,10 @@ JS9.Image.prototype.getPan = function(){
     var x = (sect.x0 + sect.x1) / 2;
     var y = (sect.y0 + sect.y1) / 2;
     if( JS9.notNull(sect.ix) ){
-	x += sect.ix / 2;
+	x += sect.ix / (2 * sect.zoom);
     }
     if( JS9.notNull(sect.iy) ){
-	y += sect.iy / 2;
+	y += sect.iy / (2 * sect.zoom);
     }
     return {x: x, y: y};
 };
