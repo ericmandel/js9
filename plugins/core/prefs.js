@@ -500,6 +500,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "reciprocal image sync'ing?"
 	},
+	"panWithinDisplay": {
+	    "type": "boolean",
+	    "helper": "keep panned image within the display?"
+	},
 	"pannerDirections": {
 	    "type": "boolean",
 	    "helper": "show direction vectors in panner?"
@@ -589,6 +593,7 @@ JS9.Prefs.init = function(){
 			   reloadRefresh: JS9.globalOpts.reloadRefresh,
 			   reloadRefreshReg: JS9.globalOpts.reloadRefreshReg,
 			   regionsToClipboard:JS9.globalOpts.regionsToClipboard,
+			   panWithinDisplay: JS9.globalOpts.panWithinDisplay,
 			   pannerDirections: JS9.globalOpts.pannerDirections,
 			   magnifierRegions: JS9.globalOpts.magnifierRegions,
 			   topColormaps: JS9.globalOpts.topColormaps,

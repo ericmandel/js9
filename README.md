@@ -115,4 +115,5 @@ Who's responsible?
 
 Eric Mandel, Alexey Vikhlinin
 
-Harvard-Smithsonian Center for Astrophysics
+Center for Astrophysics | Harvard & Smithsonian
+

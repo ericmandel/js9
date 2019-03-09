@@ -6,7 +6,7 @@
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
  * Contact: saord@cfa.harvard.edu
  *
- * Copyright (c) 2012 - 2018 Smithsonian Astrophysical Observatory
+ * Copyright (c) 2012 - 2019 Smithsonian Astrophysical Observatory
  *
  */
 
@@ -146,6 +146,7 @@ JS9.globalOpts = {
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
     reloadRefreshReg: true,     // reloading regions file removes previous?
+    panWithinDisplay: false,	// keep panned image within the display?
     unremoveReg: 100,           // how many removed regions to save
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",       // location of param html file
@@ -2144,6 +2145,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 
 // store section information
 JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
+    var xtra;
     var sect = this.rgb.sect;
     // save zoom in case we are about to change it (regions have to be scaled)
     sect.ozoom  = sect.zoom;
@@ -2173,6 +2175,15 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	}
 	sect.xcen   = parseFloat(xcen);
 	sect.ycen   = parseFloat(ycen);
+	// reset width and height if there was a section offset
+	if( JS9.notNull(sect.ix) ){
+	    sect.width  = Math.min(this.raw.width*sect.zoom,
+				   this.display.canvas.width);
+	}
+	if( JS9.notNull(sect.iy) ){
+	    sect.height = Math.min(this.raw.height*sect.zoom,
+				   this.display.canvas.height);
+	}
 	break;
     case 3:
 	// three args: x, y, zoom
@@ -2190,6 +2201,9 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
     default:
 	break;
     }
+    // assume no offset when displaying section
+    delete sect.ix;
+    delete sect.iy;
     // need integer dimensions
     sect.width  = Math.floor(sect.width);
     sect.height  = Math.floor(sect.height);
@@ -2199,20 +2213,61 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
     sect.y1 = Math.floor(sect.ycen + (sect.height/(2*sect.zoom)));
     // make sure we're within bounds while maintaining section dimensions
     if( sect.x0 < 0 ){
-        sect.x1 -= sect.x0;
+	if( JS9.globalOpts.panWithinDisplay ){
+            sect.x1 -= sect.x0;
+	} else {
+	    sect.ix = sect.x0 * sect.zoom;
+	}
         sect.x0 = 0;
     }
     if( sect.y0 < 0 ){
-        sect.y1 -= sect.y0;
+	if( JS9.globalOpts.panWithinDisplay ){
+            sect.y1 -= sect.y0;
+	} else {
+	    sect.iy = sect.y0 * sect.zoom;
+	}
         sect.y0 = 0;
     }
     if( sect.x1 > this.raw.width ){
-        sect.x0 -= (sect.x1 - this.raw.width);
+	if( JS9.globalOpts.panWithinDisplay ){
+            sect.x0 -= (sect.x1 - this.raw.width);
+	} else {
+	    sect.ix = (sect.x1 - this.raw.width) * sect.zoom;
+	}
         sect.x1 = this.raw.width;
     }
     if( sect.y1 > this.raw.height ){
-        sect.y0 -= (sect.y1 - this.raw.height);
+	if( JS9.globalOpts.panWithinDisplay ){
+            sect.y0 -= (sect.y1 - this.raw.height);
+	} else {
+	    sect.iy = (sect.y1 - this.raw.height) * sect.zoom;
+	}
         sect.y1 = this.raw.height;
+    }
+    // for offset image with fractional zoom, maybe display more of the image
+    if( sect.ix && sect.zoom < 1 ){
+	if( sect.x0 > 0 ){
+	    xtra =  sect.x0;
+	    sect.x0 -= xtra;
+	    sect.ix += xtra * sect.zoom;
+	}
+	if( sect.x1 < this.raw.width ){
+	    xtra =  this.raw.height - sect.x1;
+	    sect.x1 += xtra;
+	    sect.ix -= xtra * sect.zoom;
+	}
+    }
+    if( sect.iy && sect.zoom < 1 ){
+	if( sect.y0 > 0 ){
+	    xtra =  sect.y0;
+	    sect.y0 -= xtra;
+	    sect.iy += xtra * sect.zoom;
+	}
+	if( sect.y1 < this.raw.height ){
+	    xtra =  this.raw.height - sect.y1;
+	    sect.y1 += xtra;
+	    sect.iy -= xtra * sect.zoom;
+	}
     }
     // final check: make sure we're within bounds
     sect.x0 = Math.max(0, sect.x0);
@@ -2813,16 +2868,23 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 
 // calculate and set offsets into display where image is to be written
 JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
-    var xoff, yoff, sect, wcsim, wcssect, wpos, s, xcen, ycen, ra, dec;
+    var xoff, yoff, wcsim, wcssect, wpos, s, xcen, ycen, ra, dec;
     var epsilon = 0.5;
+    var sect = this.rgb.sect;
     // calculate offsets
     this.ix = Math.floor((this.display.canvas.width - this.rgb.img.width)/2);
     this.iy = Math.floor((this.display.canvas.height - this.rgb.img.height)/2);
+    // adjust when section is not centered on display
+    if( JS9.notNull(sect.ix) ){
+	this.ix -= sect.ix / 2;
+    }
+    if( JS9.notNull(sect.iy) ){
+	this.iy += sect.iy / 2;
+    }
     // do wcs alignment, if necessary
     if( dowcs && this.wcsim && (this.display === this.wcsim.display) &&
 	this.params.wcsalign ){
 	// calc offsets so as to align with the wcs image
-	sect = this.rgb.sect;
 	wcsim = this.wcsim;
 	wcssect = wcsim.rgb.sect;
 	// we will pan this image to the wcsim's display section
@@ -3851,8 +3913,16 @@ JS9.Image.prototype.toArray = function(opts){
 
 // get pan location
 JS9.Image.prototype.getPan = function(){
-    return {x: (this.rgb.sect.x0 + this.rgb.sect.x1)/2,
-	    y: (this.rgb.sect.y0 + this.rgb.sect.y1)/2};
+    var sect = this.rgb.sect;
+    var x = (sect.x0 + sect.x1) / 2;
+    var y = (sect.y0 + sect.y1) / 2;
+    if( JS9.notNull(sect.ix) ){
+	x += sect.ix / 2;
+    }
+    if( JS9.notNull(sect.iy) ){
+	y += sect.iy / 2;
+    }
+    return {x: x, y: y};
 };
 
 // set pan location of RGB image (using image coordinates)
