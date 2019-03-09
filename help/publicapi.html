@@ -160,7 +160,7 @@ property), as follows:
 <li> if <b>refresh</b> is false, the existing image is redisplayed
 </ul>
 The global default is to redisplay instead of refreshing. Site authors can
-change this in the <b>js9prefs.js</b>, while users can change this via
+change this property in <b>js9prefs.js</b>, while users can change this via
 the <b>Global</b> tab of the <b>Preferences</b> plugin.
 
 <p>
@@ -1523,6 +1523,15 @@ will set the pan position to the specified RA and Dec using the ICRS
 system. Note that the WCS string above is returned by the <b>Edit</b>
 menu's "copy wcs pos" option (i.e., the "/" keystroke).
 
+<p>
+By default, panning is unconstrained: you can pan the image so that
+some (or even all) of the display does not contain image data (e.g.,
+if you pan an image to point 0,0, the image origin will be the
+center of the display and only the upper right quadrant will contain
+data.) If you want to avoid blank areas in the display, set the
+<b>JS9.globalOpts.panWithinDisplay</b> property to true.  Site authors
+can change this property in <b>js9prefs.js</b>, while users can change
+this via the <b>Global</b> tab of the <b>Preferences</b> plugin.
 
 <h5 id="JS9.GetParam">Get an image parameter value</h5>
 <p>
@@ -3148,7 +3157,7 @@ determined by the <b>JS9.globalOpts.reloadRefreshReg</b> property.
 If set to <b>true</b> (the default), all previous regions loaded from
 the file are removed (regardless of their current position, size,
 etc.) If set to <b>false</b>, the new regions are added to the
-previous ones.  Site authors can change this in the <b>js9prefs.js</b>,
+previous ones.  Site authors can change this property in <b>js9prefs.js</b>,
 while users can change this via the <b>Global</b> tab of the
 <b>Preferences</b> plugin.
 
