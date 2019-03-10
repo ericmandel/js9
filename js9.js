@@ -138,7 +138,7 @@ JS9.globalOpts = {
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     imopts: "IMOPTS",           // basename of FITS param containing json opts
     imcmap: "IMCMAP",           // basename of FITS param containing cmaps
-    table: {xdim: 2048, ydim: 2048, bin: 1},// image section size to extract from table
+    table: {xdim: 4096, ydim: 4096, bin: 1},// image section size to extract from table
     image: {xdim: 4096, ydim: 4096, bin: 1},// image section size (0 for unlimited)
     reproj: {xdim: 4096, ydim: 4096}, // max image size that we can reproject
     binMode: "s",             // "s" (sum) or "a" (average) pixels when binning
@@ -535,6 +535,8 @@ if(  /iPad|iPhone|iPod/.test(navigator.platform) &&
 // also force user to turn on crosshair, since it works with one finger
 if( JS9.BROWSER[3] ){
     JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 350000000);
+    JS9.globalOpts.table.xdim = 2048;
+    JS9.globalOpts.table.ydim = 2048;
     JS9.globalOpts.image.xdim = 2048;
     JS9.globalOpts.image.ydim = 2048;
     JS9.imageOpts.crosshair = false;
