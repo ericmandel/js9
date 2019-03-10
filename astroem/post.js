@@ -1,4 +1,4 @@
-/*global Blob, Uint8Array, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue, Pointer_stringify getCFunc assert toC stackSave stackAlloc EmterpreterAsync stackRestore */
+/*global Blob, Uint8Array, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue,  UTF8ToString getCFunc assert toC stackSave stackAlloc EmterpreterAsync stackRestore */
 
 /* eslint-disable dot-notation */
 
@@ -238,7 +238,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     ccall("ffgky", null, ["number", "number", "string", "number", "number", "number"], [fptr, 16, "EXTNAME", hptr, 0, hptr+84]);
     status  = getValue(hptr+84, "i32");
     if( status === 0 ){
-	extname = Pointer_stringify(hptr)
+	extname = UTF8ToString(hptr)
 	    .replace(/^'/,"").replace(/'$/,"").trim();
     } else {
 	extname = "";
@@ -325,7 +325,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	ccall("ffgky", null, ["number", "number", "string", "number", "number", "number"], [ofptr, 16, "CTYPE1", hptr, 0, hptr+84]);
 	status  = getValue(hptr+84, "i32");
 	if( status === 0 ){
-	    ctype1 = Pointer_stringify(hptr)
+	    ctype1 = UTF8ToString(hptr)
 		.replace(/^'/,"").replace(/'$/,"").trim();
 	}
 	_free(hptr);
@@ -787,7 +787,7 @@ Module["ccall_varargs"] = function(ident, returnType, argTypes, args, opts) {
 	assert(!returnType, 'async ccalls cannot return values');
     }
     if (returnType === 'string') {
-	ret = Pointer_stringify(ret);
+	ret = UTF8ToString(ret);
     }
     if (stack !== 0) {
       if (opts && opts.async) {
