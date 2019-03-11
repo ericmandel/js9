@@ -4228,6 +4228,11 @@ JS9.Keyboard.Actions["close image"] = function(im, ipos, evt){
 };
 
 // eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["new JS9 light window"] = function(im, ipos, evt){
+    JS9.LoadWindow(null, {clone: evt.data.id}, "light");
+};
+
+// eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt){
     var s, arr, opts;
     // sanity check
@@ -5565,6 +5570,7 @@ JS9.Menubar.keyMap = {
     "display the full image": "display full image",
     "display selected cutouts": "display selected cutouts",
     "refresh this image": "refresh image",
+    "new JS9 light window": "new JS9 light window",
     "show active shape layers": "toggle active shape layers",
     "hide active shape layers": "toggle active shape layers",
     "Keyboard Actions": "toggle keyboard actions plugin",
@@ -9436,6 +9442,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "string",
 	    "helper": "size of region dialog: small, medium"
 	},
+	"lightWinClose": {
+	    "type": "string",
+	    "helper": "ask, close, move images when closing lightwin"
+	},
 	"fits2fits": {
 	    "type": "string",
 	    "helper": "make rep file?: true,false,size>N"
@@ -9581,6 +9591,7 @@ JS9.Prefs.init = function(){
 			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
 			   regionDisplay: JS9.globalOpts.regionDisplay,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
+			   lightWinClose: JS9.globalOpts.lightWinClose,
 			   infoBox: JS9.globalOpts.infoBox,
 			   toolBar: JS9.globalOpts.toolBar,
 			   separate: JS9.globalOpts.separate};

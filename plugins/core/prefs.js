@@ -464,6 +464,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "string",
 	    "helper": "size of region dialog: small, medium"
 	},
+	"lightWinClose": {
+	    "type": "string",
+	    "helper": "ask, close, move images when closing lightwin"
+	},
 	"fits2fits": {
 	    "type": "string",
 	    "helper": "make rep file?: true,false,size>N"
@@ -609,6 +613,7 @@ JS9.Prefs.init = function(){
 			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
 			   regionDisplay: JS9.globalOpts.regionDisplay,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
+			   lightWinClose: JS9.globalOpts.lightWinClose,
 			   infoBox: JS9.globalOpts.infoBox,
 			   toolBar: JS9.globalOpts.toolBar,
 			   separate: JS9.globalOpts.separate};

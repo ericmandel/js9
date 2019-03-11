@@ -162,6 +162,7 @@ JS9.globalOpts = {
     resizeHandle: true,		// add resize handle to display?
     resizeRedisplay: true,	// redisplay image while resizing?
     cloneNewDisplay: true,      // clone size of display, when possible?
+    lightWinClose: "ask",	// ask, close, move images when closing lightwin
     regionDisplay: "lightwin",	// "lightwin" or "display"
     regionConfigSize: "medium", // "small", "medium"
     refreshDragDrop: true,	// refresh on drag/drag and open file?
@@ -182,6 +183,7 @@ JS9.globalOpts = {
 	"M-i": "display selected cutouts",
 	"M-k": "toggle keyboard actions plugin",
 	l: "toggle active shape layers",
+	"M-l": "new JS9 light window",
 	"M-m": "toggle mouse/touch plugin",
 	"M-o": "open local file",
         P: "paste regions from local clipboard",
@@ -345,12 +347,14 @@ JS9.lightOpts = {
 	// NB: dimensions are tied to .JS9Plot CSS params
 	plotWin:  "width=830px,height=420px,center=1,resize=1,scrolling=1",
 	dpathWin: "width=830px,height=175px,center=1,resize=1,scrolling=1",
+	lcloseWin:"width=690px,height=190px,center=1,resize=1,scrolling=1",
 	paramWin: "width=830px,height=235px,center=1,resize=1,scrolling=1",
 	regWin0:  "width=600px,height=72px,center=1,resize=1,scrolling=1",
 	regWin:   "width=600px,height=235px,center=1,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,center=1,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,center=1,resize=1,scrolling=1"
-    }
+    },
+    dpathURL: "params/lightclose.html"
 };
 
 // colors for text messages
@@ -20820,6 +20824,7 @@ JS9.mkPublic("Load", function(file, opts){
 // create a new instance of JS9 in a window (light or new)
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     var id, display, did, head, body, win, winid, initialURL, obj;
+    var wid, wtype, wurl;
     var lopts = JS9.lightOpts[JS9.LIGHTWIN];
     var idbase = (type || "") + "win";
     var title, warr, wwidth, wheight;
@@ -20916,10 +20921,35 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 		    ims.push(im);
 		}
 	    }
-	    // close them all
-	    for(i=0; i<ims.length; i++){
-		try{ ims[i].closeImage(); }
-		catch(ignore){}
+	    // done if no images
+	    if( !ims.length ){
+		return true;
+	    }
+	    switch(JS9.globalOpts.lightWinClose ){
+	    case "close":
+		// close them all
+		for(i=0; i<ims.length; i++){
+		    try{ ims[i].closeImage(); }
+		    catch(ignore){}
+		}
+		break;
+	    case "move":
+		// move them to the first display
+		did = JS9.displays[0].id;
+		for(i=0; i<ims.length; i++){
+		    try{ ims[i].moveToDisplay(did); }
+		    catch(ignore){}
+		}
+		break;
+	    case "ask":
+	    default:
+		wid = "lightCloseID" + JS9.uniqueID();
+		wtype = JS9.allinone?"inline":"ajax";
+		wurl = JS9.InstallDir(JS9.lightOpts.dpathURL);
+		did = JS9.lightWin(wid, wtype, wurl, "Closing a light window",
+				   lopts.lcloseWin);
+		$(did).data("dispid", id);
+		break;
 	    }
 	    return true;
 	};

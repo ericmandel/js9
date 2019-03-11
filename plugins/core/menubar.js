@@ -34,6 +34,7 @@ JS9.Menubar.keyMap = {
     "display the full image": "display full image",
     "display selected cutouts": "display selected cutouts",
     "refresh this image": "refresh image",
+    "new JS9 light window": "new JS9 light window",
     "show active shape layers": "toggle active shape layers",
     "hide active shape layers": "toggle active shape layers",
     "Keyboard Actions": "toggle keyboard actions plugin",

@@ -96,6 +96,11 @@ JS9.Keyboard.Actions["close image"] = function(im, ipos, evt){
 };
 
 // eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["new JS9 light window"] = function(im, ipos, evt){
+    JS9.LoadWindow(null, {clone: evt.data.id}, "light");
+};
+
+// eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt){
     var s, arr, opts;
     // sanity check

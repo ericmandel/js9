@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<title>When Closing a Light Window</title>
+</head>
+<body>
+<form id="lightWinCloseForm" name="lightWinCloseForm" class="js9AnalysisForm js9Form" action="">
+<b>You are closing a light window that is displaying one or more images. Please choose an option:</b>
+<p>
+<div>
+  <input type="radio" id="move" name="dispose" value="move" checked>
+  <label for="move">move image(s) to an existing display</label>
+</div>
+<div>
+  <input type="radio" id="close" name="dispose" value="close">
+  <label for="move">close image(s)</label>
+</div>
+<p>
+<div>
+  <input type="checkbox" id="default" name="setdef" value="default">
+  <label for="default">don't ask again</label>
+</div>
+<p>
+<input type="button" id="close" name="close" class="button" value="Close" 
+onclick="
+    var i, j, obj, im, defval;
+    var ims = [];
+    var arr = $('#lightWinCloseForm').serializeArray();
+    var form = $(this).closest('form');
+    var dhtml = form.closest('.dhtmlwindow')[0];
+    var dispid = $(dhtml).data('dispid');
+    // get list of images in hsi display
+    for(i=0; i<JS9.images.length; i++){
+	im = JS9.images[i];
+	if( im.display.id === dispid ){
+	    ims.push(im);
+	}
+    }
+    // process form keywords
+    for(i=0; i<arr.length; i++){
+	obj = arr[i];
+	switch(obj.name){
+        // displose: close or move
+	case 'dispose':
+	    defval = obj.value;
+	    switch(obj.value){
+            // move all images to a different display
+	    case 'move':
+		for(j=0; j<ims.length; j++){
+		    try{ ims[j].moveToDisplay(JS9.displays[0].id); }
+		    catch(ignore){}
+		}
+		break;
+            // close all images
+	    case 'close':
+		for(j=0; j<ims.length; j++){
+		    try{ ims[j].closeImage(); }
+		    catch(ignore){}
+		}
+		break;
+	    }
+	    break;
+        // setdef: set the lightWinClose default for next time
+	case 'setdef':
+	    JS9.globalOpts.lightWinClose = defval;
+	    break;
+	}
+    }
+    dhtml.close();
+    return false;
+">
+</form>
+
+</body>
+</html>
