@@ -20850,7 +20850,10 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	if( !display                                         ||
 	    ($("#"+opts.clone+"Colorbar").length > 0         &&
 	     !display.pluginInstances.JS9Colorbar.isDynamic) ){
-	    html += sprintf("<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar'></div></div>", id);
+	    html += sprintf("<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' data-showTicks='%s'></div></div>", id, display.pluginInstances.JS9Colorbar.showTicks);
+	    if( !display.pluginInstances.JS9Colorbar.showTicks ){
+		wheight -= 15;
+	    }
 	} else if( winopts ){
 	    wheight -= 44;
 	}
