@@ -20683,9 +20683,11 @@ JS9.mkPublic("Load", function(file, opts){
 		if( JS9.isNull(opts.refresh) ){
 		    opts.refresh = JS9.globalOpts.reloadRefresh;
 		}
-		// if not refreshing, just re-display and exit
-		if( !opts.refresh ){
-		    // display image, 2D graphics, etc.
+		if( opts.refresh ){
+		    // save the handle of the image we will be refreshing
+		    opts.refresh = im;
+		} else{
+		    // if not refreshing, just re-display and exit
 		    im.displayImage("display", opts);
 		    im.refreshLayers();
 		    im.display.clearMessage();
