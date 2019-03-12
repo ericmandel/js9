@@ -20832,8 +20832,8 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     var title, warr, wwidth, wheight;
     var removeDisplay = function(display){
 	// remove from display list
-	var i = $.inArray(display, JS9.displays);
-	if( i >= 0 ){ JS9.displays.splice(i, 1); }
+	var idx = $.inArray(display, JS9.displays);
+	if( idx >= 0 ){ JS9.displays.splice(idx, 1); }
     };
     var getHTML = function(id, opts, winopts){
 	var html, display;
@@ -20925,6 +20925,8 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    }
 	    // done if no images
 	    if( !ims.length ){
+		// remove display
+		removeDisplay(display);
 		return true;
 	    }
 	    // sanity check: the moveto display must exist

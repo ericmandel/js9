@@ -63,6 +63,9 @@ onclick="
 		}
 		break;
 	    }
+	    // remove display
+	    idx = $.inArray(dispid, JS9.displays);
+	    if( idx >= 0 ){ JS9.displays.splice(idx, 1); }
 	    break;
         // setdef: set the lightWinClose default for next time
 	case 'setdef':
