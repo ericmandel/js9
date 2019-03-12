@@ -7,15 +7,15 @@
 </head>
 <body>
 <form id="lightWinCloseForm" name="lightWinCloseForm" class="js9AnalysisForm js9Form" action="">
-<b>You are closing a light window that is displaying one or more images. Please choose an option:</b>
+<b>You are closing a light window that is displaying one or more images:</b>
 <p>
 <div>
   <input type="radio" id="move" name="dispose" value="move" checked>
-  <label for="move">move image(s) to an existing display</label>
+  <label for="move">move the image(s) to&nbsp;&nbsp;<select id='lightWinCloseSel'></select></label>
 </div>
 <div>
   <input type="radio" id="close" name="dispose" value="close">
-  <label for="move">close image(s)</label>
+  <label for="move">close the image(s)</label>
 </div>
 <p>
 <div>
@@ -32,6 +32,7 @@ onclick="
     var dhtml = form.closest('.dhtmlwindow')[0];
     var dispid = $(dhtml).data('dispid');
     var winid = $(dhtml).data('winid');
+    var todisp = form.find('#lightWinCloseSel').val();
     // get list of images in hsi display
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
@@ -50,7 +51,7 @@ onclick="
             // move all images to a different display
 	    case 'move':
 		for(j=0; j<ims.length; j++){
-		    try{ ims[j].moveToDisplay(JS9.displays[0].id); }
+		    try{ ims[j].moveToDisplay(todisp); }
 		    catch(ignore){}
 		}
 		break;
@@ -66,6 +67,11 @@ onclick="
         // setdef: set the lightWinClose default for next time
 	case 'setdef':
 	    JS9.globalOpts.lightWinClose = defval;
+	    if( defval === 'move' ){
+	        JS9.globalOpts.lightWinMoveTo = todisp;
+	    } else {
+	        delete JS9.globalOpts.lightWinMoveTo;
+            }
 	    break;
 	}
     }

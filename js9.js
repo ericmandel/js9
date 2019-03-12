@@ -347,7 +347,7 @@ JS9.lightOpts = {
 	// NB: dimensions are tied to .JS9Plot CSS params
 	plotWin:  "width=830px,height=420px,center=1,resize=1,scrolling=1",
 	dpathWin: "width=830px,height=175px,center=1,resize=1,scrolling=1",
-	lcloseWin:"width=690px,height=190px,center=1,resize=1,scrolling=1",
+	lcloseWin:"width=512px,height=190px,center=1,resize=1,scrolling=1",
 	paramWin: "width=830px,height=235px,center=1,resize=1,scrolling=1",
 	regWin0:  "width=600px,height=72px,center=1,resize=1,scrolling=1",
 	regWin:   "width=600px,height=235px,center=1,resize=1,scrolling=1",
@@ -20825,7 +20825,7 @@ JS9.mkPublic("Load", function(file, opts){
 
 // create a new instance of JS9 in a window (light or new)
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
-    var id, display, did, head, body, win, winid, initialURL, obj;
+    var id, display, did, head, body, win, winid, initialURL, obj, got;
     var wid, wtype, wurl;
     var lopts = JS9.lightOpts[JS9.LIGHTWIN];
     var idbase = (type || "") + "win";
@@ -20927,6 +20927,26 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    if( !ims.length ){
 		return true;
 	    }
+	    // sanity check: the moveto display must exist
+	    // (and not be the display we are destroying)
+	    if( JS9.globalOpts.lightWinClose === "move" ){
+		if( JS9.isNull(JS9.globalOpts.lightWinMoveTo) ||
+		    JS9.globalOpts.lightWinMoveTo === id      ){
+		    got = 0;
+		} else {
+		    for(i=0, got=0; i<JS9.displays.length; i++){
+			if( JS9.displays[i].id ===
+			    JS9.globalOpts.lightWinMoveTo ){
+			    got++;
+			    break;
+			}
+		    }
+		}
+		if( !got ){
+		    JS9.globalOpts.lightWinClose = "ask";
+		    delete JS9.globalOpts.lightWinMoveTo;
+		}
+	    }
 	    switch(JS9.globalOpts.lightWinClose ){
 	    case "close":
 		// remove display
@@ -20941,9 +20961,8 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 		// remove display
 		removeDisplay(display);
 		// move them to the first display
-		did = JS9.displays[0].id;
 		for(i=0; i<ims.length; i++){
-		    try{ ims[i].moveToDisplay(did); }
+		    try{ ims[i].moveToDisplay(JS9.globalOpts.lightWinMoveTo); }
 		    catch(ignore){}
 		}
 		return true;
@@ -20952,6 +20971,20 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 		wid = "lightCloseID" + JS9.uniqueID();
 		wtype = JS9.allinone?"inline":"ajax";
 		wurl = JS9.InstallDir(JS9.lightOpts.dpathURL);
+		$("#dhtmlwindowholder")
+		    .arrive("#lightWinCloseForm", {onceOnly: true}, function(){
+			var i, el;
+			// on arrival, add JS9 displays to 'move' part of form
+			el = $("#lightWinCloseForm").find("#lightWinCloseSel");
+			for(i=0; i<JS9.displays.length; i++){
+			    if( JS9.displays[i].id !== id ){
+				el.append($('<option>', {
+				    value: JS9.displays[i].id,
+				    text:  JS9.displays[i].id
+				}));
+			    }
+			}
+		    });
 		did = JS9.lightWin(wid, wtype, wurl, "Closing a light window",
 				   lopts.lcloseWin);
 		$(did).data("dispid", id);
