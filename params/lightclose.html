@@ -31,6 +31,7 @@ onclick="
     var form = $(this).closest('form');
     var dhtml = form.closest('.dhtmlwindow')[0];
     var dispid = $(dhtml).data('dispid');
+    var winid = $(dhtml).data('winid');
     // get list of images in hsi display
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
@@ -68,9 +69,15 @@ onclick="
 	    break;
 	}
     }
+    winid.close();
     dhtml.close();
     return false;
 ">
+<input id="cancel" name="Cancel" type="button" class="button" value="Cancel"
+onclick="var form = $(this).closest('form');
+var dhtml = form.closest('.dhtmlwindow')[0];
+dhtml.close();
+return false;" style="float: right;">
 </form>
 
 </body>

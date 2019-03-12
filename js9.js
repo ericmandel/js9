@@ -20828,6 +20828,11 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     var lopts = JS9.lightOpts[JS9.LIGHTWIN];
     var idbase = (type || "") + "win";
     var title, warr, wwidth, wheight;
+    var removeDisplay = function(display){
+	// remove from display list
+	var i = $.inArray(display, JS9.displays);
+	if( i >= 0 ){ JS9.displays.splice(i, 1); }
+    };
     var getHTML = function(id, opts, winopts){
 	var html, display;
 	opts = opts || {};
@@ -20909,11 +20914,6 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	winid.onclose = function(){
 	    var i, im;
 	    var ims = [];
-	    // remove from display list
-	    i = $.inArray(display, JS9.displays);
-	    if( i >= 0 ){
-		JS9.displays.splice(i, 1);
-	    }
 	    // make a list of images in this display
 	    for(i=0; i<JS9.images.length; i++){
 		im = JS9.images[i];
@@ -20927,20 +20927,24 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    }
 	    switch(JS9.globalOpts.lightWinClose ){
 	    case "close":
+		// remove display
+		removeDisplay(display);
 		// close them all
 		for(i=0; i<ims.length; i++){
 		    try{ ims[i].closeImage(); }
 		    catch(ignore){}
 		}
-		break;
+		return true;
 	    case "move":
+		// remove display
+		removeDisplay(display);
 		// move them to the first display
 		did = JS9.displays[0].id;
 		for(i=0; i<ims.length; i++){
 		    try{ ims[i].moveToDisplay(did); }
 		    catch(ignore){}
 		}
-		break;
+		return true;
 	    case "ask":
 	    default:
 		wid = "lightCloseID" + JS9.uniqueID();
@@ -20949,9 +20953,9 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 		did = JS9.lightWin(wid, wtype, wurl, "Closing a light window",
 				   lopts.lcloseWin);
 		$(did).data("dispid", id);
-		break;
+		$(did).data("winid", winid);
+		return false;
 	    }
-	    return true;
 	};
         // create the new JS9 Display
         display = new JS9.Display(id);
