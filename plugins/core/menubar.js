@@ -390,7 +390,7 @@ JS9.Menubar.createMenus = function(){
 		    items.hdus.disabled = true;
 		}
 		items.saveas = {
-		    name: "save this image as ...",
+		    name: "save this image ...",
 		    items: {
 			saveastitle: {
 			    name: "choose output format:",
@@ -1877,11 +1877,20 @@ JS9.Menubar.createMenus = function(){
 	    items.text = xname("text");
 	    items.sep1 = "------";
 	    items.loadRegions  = xname("load");
-	    items.listRegions  = xname("list all");
-	    items.saveRegions  = xname("save all");
-	    items.removeRegions  = xname("remove all");
+	    items.listRegions  = xname("list");
+	    items.saveas  = {
+		name: "save ...",
+		items: {
+		    saveastitle: {
+			name: "choose output format:",
+			disabled: true
+		    },
+		    saveas_reg: xname("regions"),
+		    saveas_svg: xname("SVG")
+		}
+	    };
 	    items.copyto  = {
-		name: "copy all to ...",
+		name: "copy to ...",
 		items: {
 		    copytotitle: {
 			name: "choose image:",
@@ -1889,6 +1898,7 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    };
+	    items.removeRegions  = xname("remove");
 	    items.sep2 = "------";
 	    items.selectops = {
 		name: "selected regions ...",
@@ -1900,7 +1910,6 @@ JS9.Menubar.createMenus = function(){
 		    configSelReg: xname("edit"),
 		    listSelReg: xname("list"),
 		    saveSelReg: xname("save"),
-		    removeSelReg: xname("remove"),
 		    copySelReg: {
 			name: "copy to ...",
 			items: {
@@ -1910,6 +1919,7 @@ JS9.Menubar.createMenus = function(){
 			    }
 			}
 		    },
+		    removeSelReg: xname("remove"),
 		    regcolor: {
 			events: {keyup: keyRegions},
 			name: "color:",
@@ -1967,7 +1977,7 @@ JS9.Menubar.createMenus = function(){
 	    return {
 		callback: function(key){
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var uid, ulayer, utarget;
+			var uid, ulayer, utarget, uname, uopts;
 			var udisp = val;
 			var uim = udisp.image;
 			// make sure display is still valid
@@ -1978,9 +1988,6 @@ JS9.Menubar.createMenus = function(){
 			    switch(key){
 			    case "loadRegions":
 				JS9.OpenRegionsMenu({display: udisp});
-				break;
-			    case "saveRegions":
-				uim.saveRegions("js9.reg", "all");
 				break;
 			    case "listRegions":
 				uim.listRegions("all", {mode: 2});
@@ -2039,6 +2046,13 @@ JS9.Menubar.createMenus = function(){
 				break;
 			    default:
 				// maybe it's a copyto request
+				if( key.match(/^saveas_/) ){
+				    uid = key.replace(/^saveas_/,"");
+				    uname = "js9." + uid;
+				    uopts = {type: uid};
+				    uim.saveRegions(uname, "all", uopts);
+				    return;
+				}
 				if( key.match(/^copyto_/) ){
 				    uid = key.replace(/^copyto_/,"");
 				    uim.copyRegions(uid);

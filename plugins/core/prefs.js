@@ -515,6 +515,10 @@ JS9.Prefs.globalsSchema = {
 	"magnifierRegions": {
 	    "type": "boolean",
 	    "helper": "show regions in magnifier?"
+	},
+	"svgBorder": {
+	    "type": "boolean",
+	    "helper": "add border when exporting SVG?"
 	}
     }
 };
@@ -600,6 +604,7 @@ JS9.Prefs.init = function(){
 			   panWithinDisplay: JS9.globalOpts.panWithinDisplay,
 			   pannerDirections: JS9.globalOpts.pannerDirections,
 			   magnifierRegions: JS9.globalOpts.magnifierRegions,
+			   svgBorder: JS9.globalOpts.svgBorder,
 			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,

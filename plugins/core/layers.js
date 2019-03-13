@@ -21,9 +21,9 @@ JS9.Layers.nolayersHTML='<p><span class="JS9NoLayers">[Layers will appear here a
 
 JS9.Layers.visibleHTML='<input class="JS9LayersVisibleCheck" type="checkbox" id="visible" name="visible" value="visible" onclick="javascript:JS9.Layers.xvisible(\'%s\', \'%s\', \'%s\', this)">visible';
 
-JS9.Layers.saveBothHTML='<select class="JS9LayersSaveBothSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="catalog">catalog</option><option value="regions">regions</option></select>';
+JS9.Layers.saveBothHTML='<select class="JS9LayersSaveBothSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="catalog">catalog</option><option value="regions">regions</option><option value="svg">svg</option></select>';
 
-JS9.Layers.saveRegionsHTML='<input class="JS9LayersSave" type="button" value="save regions" onclick="javascript:JS9.Layers.xsaveRegions(\'%s\', \'%s\', \'%s\', this)">';
+JS9.Layers.saveRegionsHTML='<select class="JS9LayersSaveSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="regions">regions</option><option value="svg">svg</option></select>';
 
 JS9.Layers.layerNameHTML='<b>%s</b>';
 
@@ -91,19 +91,8 @@ JS9.Layers.xsave = function(did, id, layer, target){
 	    im.saveCatalog(null, layer);
 	} else if( save === "regions" ){
 	    im.saveRegions(null, null, layer);
-	}
-    }
-};
-
-// save regions layer
-// eslint-disable-next-line no-unused-vars
-JS9.Layers.xsaveRegions = function(did, id, layer, target){
-    var im = JS9.lookupImage(id, did);
-    if( im ){
-	if( layer === "regions" ){
-	    im.saveRegions();
-	} else {
-	    im.saveRegions(null, null, layer);
+	} else if( save === "svg" ){
+	    im.saveRegions(null, null, {layer: layer, type: "svg"});
 	}
     }
 };

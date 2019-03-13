@@ -3070,7 +3070,7 @@ where:
 <ul>
 <li><b>filename</b>: output file name
 <li><b>which</b>: which regions to save (default is "all")
-<li><b>layer</b>: which layer save (default is "regions")
+<li><b>layer</b>: which layer to save (default is "regions")
 </ul>
 Save the current regions for the displayed image as a JS9 regions file. If
 filename is not specified, the file will be saved as "js9.reg".
@@ -3088,9 +3088,25 @@ a tag value to save regions having that tag.
 If the <b>layer</b> argument is not specified, it defaults to
 "regions", i.e.,  the usual regions layer. You can specify a different
 layer, e.g., if you want to save a catalog layer as a region file
-(since
-<a href="#JS9.SaveCatalog"><b>SaveCatalog()</b></a>
+(since <a href="#JS9.SaveCatalog"><b>SaveCatalog()</b></a>
 will save the data in table format instead of as regions).
+
+<p>
+The <b>layer</b> argument can also be an object or a JSON-formatted string
+containing these properties:
+<ul>
+<li><b>layer</b>: the name of the layer
+<li><b>type</b>: output type: <b>reg</b> or <b>svg</b>
+</ul>
+If the <b>type</b> is <b>svg</b>, an SVG/XML file will be saved
+instead of the standard astronomical regions file. This SVG file can
+be imported into programs such as Photoshop for further processing.
+
+<p>
+Note that if the output type is set to <b>svg</b>, the default
+filename will be "js9.svg" instead of "js9.reg". Similarly, if a
+filename is specified that ends in ".svg", the type will be set
+to <b>svg</b>.
 
 <h5 id="JS9.ToggleRegionTags">Toggle region tags from the current image</h5>
 <p>

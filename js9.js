@@ -147,6 +147,7 @@ JS9.globalOpts = {
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
     reloadRefreshReg: true,     // reloading regions file removes previous?
     panWithinDisplay: false,	// keep panned image within the display?
+    svgBorder: true,		// border around the display when saving to svg?
     unremoveReg: 100,           // how many removed regions to save
     maxMemory: 750000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",       // location of param html file
@@ -15479,17 +15480,87 @@ JS9.Regions.parseRegions = function(s, opts){
 
 // save regions to a file
 JS9.Regions.saveRegions = function(fname, which, layer){
-    var header = sprintf("# Region file format: JS9 version 1.0");
-    var regstr = this.listRegions(which, {mode: 1}, layer);
-    var s = sprintf("%s\n%s\n", header, regstr.replace(/; */g, "\n"));
-    var blob = new Blob([s], {type: "text/plain;charset=utf-8"});
-    if( !fname ){
-	if( layer ){
-	    fname = layer + ".reg";
-	} else {
-	    fname = "js9.reg";
+    var header, regstr, s, type, blob, opts, arr, rid;
+    // see if default type is implicit in the output file
+    if( fname ){
+	arr = fname.match(/\.([^.]*)$/);
+	if( arr && arr.length >= 2 && (arr[1] === "reg" || arr[1] === "svg") ){
+	    type = arr[1];
 	}
     }
+    // layer can be a layer name or an object describing layer, output type
+    if( typeof layer === "object" ){
+	opts = layer;
+	layer = null;
+    } else if( typeof layer === "string" ){
+	try{ opts = JSON.parse(layer); }
+	catch(e){ opts = null; }
+	if( opts ){ layer = null; }
+    }
+    // see if parameters are in the opts object
+    if( opts ){
+	if( JS9.notNull(opts.layer) ){
+	    layer = opts.layer;
+	}
+	if( JS9.notNull(opts.type) ){
+	    type = opts.type ;
+	}
+    }
+    // last chance ... use defaults
+    layer = layer || "regions";
+    type =  type  || "reg";
+    // and make a sanity check
+    if( !this.layers[layer] ){
+	JS9.error("can't find layer for saveRegions: " + layer);
+    }
+    // generate the specified output
+    switch(type){
+    case "svg":
+	// convert layer to svg
+	try{
+	    // add border box, if necessary
+	    if( JS9.globalOpts.svgBorder ){
+		rid = this.addShapes(layer, "box",
+				     {left:   this.rgb.img.width/2,
+				      top:    this.rgb.img.height/2,
+				      width:  this.rgb.img.width,
+				      height: this.rgb.img.height,
+				      color: "black",
+				      strokeWidth: 1,
+				      tags: "SVGBorder"
+				     });
+	    }
+	    // convert canvas to SVG
+	    s = this.layers[layer].dlayer.canvas.toSVG();
+	    // remove border box, if necessary
+	    if( JS9.globalOpts.svgBorder ){
+		this.removeShapes(layer, rid);
+	    }
+	}
+	catch(e){ JS9.error("can't convert layer to SVG: " + layer); }
+	break;
+    case "reg":
+    default:
+	// convert layer to region string
+	try{
+	    header = sprintf("# Region file format: JS9 version 1.0");
+	    regstr = this.listRegions(which, {mode: 1}, layer);
+	    s = sprintf("%s\n%s\n", header, regstr.replace(/; */g, "\n"));
+	}
+	catch(e){ JS9.error("can't convert layer to region: " + layer);	}
+	break;
+    }
+    // create the blob
+    blob = new Blob([s], {type: "text/plain;charset=utf-8"});
+    // construct output file name
+    if( !fname ){
+	if( layer && layer !== "regions" ){
+	    fname = "js9_" + layer + "." + type;
+	} else {
+	    fname = "js9." + type;
+	}
+    }
+    // save blob
     if( window.hasOwnProperty("saveAs") ){
 	saveAs(blob, fname);
     } else {

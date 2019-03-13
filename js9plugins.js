@@ -4813,9 +4813,9 @@ JS9.Layers.nolayersHTML='<p><span class="JS9NoLayers">[Layers will appear here a
 
 JS9.Layers.visibleHTML='<input class="JS9LayersVisibleCheck" type="checkbox" id="visible" name="visible" value="visible" onclick="javascript:JS9.Layers.xvisible(\'%s\', \'%s\', \'%s\', this)">visible';
 
-JS9.Layers.saveBothHTML='<select class="JS9LayersSaveBothSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="catalog">catalog</option><option value="regions">regions</option></select>';
+JS9.Layers.saveBothHTML='<select class="JS9LayersSaveBothSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="catalog">catalog</option><option value="regions">regions</option><option value="svg">svg</option></select>';
 
-JS9.Layers.saveRegionsHTML='<input class="JS9LayersSave" type="button" value="save regions" onclick="javascript:JS9.Layers.xsaveRegions(\'%s\', \'%s\', \'%s\', this)">';
+JS9.Layers.saveRegionsHTML='<select class="JS9LayersSaveSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="regions">regions</option><option value="svg">svg</option></select>';
 
 JS9.Layers.layerNameHTML='<b>%s</b>';
 
@@ -4883,19 +4883,8 @@ JS9.Layers.xsave = function(did, id, layer, target){
 	    im.saveCatalog(null, layer);
 	} else if( save === "regions" ){
 	    im.saveRegions(null, null, layer);
-	}
-    }
-};
-
-// save regions layer
-// eslint-disable-next-line no-unused-vars
-JS9.Layers.xsaveRegions = function(did, id, layer, target){
-    var im = JS9.lookupImage(id, did);
-    if( im ){
-	if( layer === "regions" ){
-	    im.saveRegions();
-	} else {
-	    im.saveRegions(null, null, layer);
+	} else if( save === "svg" ){
+	    im.saveRegions(null, null, {layer: layer, type: "svg"});
 	}
     }
 };
@@ -5926,7 +5915,7 @@ JS9.Menubar.createMenus = function(){
 		    items.hdus.disabled = true;
 		}
 		items.saveas = {
-		    name: "save this image as ...",
+		    name: "save this image ...",
 		    items: {
 			saveastitle: {
 			    name: "choose output format:",
@@ -7413,11 +7402,20 @@ JS9.Menubar.createMenus = function(){
 	    items.text = xname("text");
 	    items.sep1 = "------";
 	    items.loadRegions  = xname("load");
-	    items.listRegions  = xname("list all");
-	    items.saveRegions  = xname("save all");
-	    items.removeRegions  = xname("remove all");
+	    items.listRegions  = xname("list");
+	    items.saveas  = {
+		name: "save ...",
+		items: {
+		    saveastitle: {
+			name: "choose output format:",
+			disabled: true
+		    },
+		    saveas_reg: xname("regions"),
+		    saveas_svg: xname("SVG")
+		}
+	    };
 	    items.copyto  = {
-		name: "copy all to ...",
+		name: "copy to ...",
 		items: {
 		    copytotitle: {
 			name: "choose image:",
@@ -7425,6 +7423,7 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    };
+	    items.removeRegions  = xname("remove");
 	    items.sep2 = "------";
 	    items.selectops = {
 		name: "selected regions ...",
@@ -7436,7 +7435,6 @@ JS9.Menubar.createMenus = function(){
 		    configSelReg: xname("edit"),
 		    listSelReg: xname("list"),
 		    saveSelReg: xname("save"),
-		    removeSelReg: xname("remove"),
 		    copySelReg: {
 			name: "copy to ...",
 			items: {
@@ -7446,6 +7444,7 @@ JS9.Menubar.createMenus = function(){
 			    }
 			}
 		    },
+		    removeSelReg: xname("remove"),
 		    regcolor: {
 			events: {keyup: keyRegions},
 			name: "color:",
@@ -7503,7 +7502,7 @@ JS9.Menubar.createMenus = function(){
 	    return {
 		callback: function(key){
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var uid, ulayer, utarget;
+			var uid, ulayer, utarget, uname, uopts;
 			var udisp = val;
 			var uim = udisp.image;
 			// make sure display is still valid
@@ -7514,9 +7513,6 @@ JS9.Menubar.createMenus = function(){
 			    switch(key){
 			    case "loadRegions":
 				JS9.OpenRegionsMenu({display: udisp});
-				break;
-			    case "saveRegions":
-				uim.saveRegions("js9.reg", "all");
 				break;
 			    case "listRegions":
 				uim.listRegions("all", {mode: 2});
@@ -7575,6 +7571,13 @@ JS9.Menubar.createMenus = function(){
 				break;
 			    default:
 				// maybe it's a copyto request
+				if( key.match(/^saveas_/) ){
+				    uid = key.replace(/^saveas_/,"");
+				    uname = "js9." + uid;
+				    uopts = {type: uid};
+				    uim.saveRegions(uname, "all", uopts);
+				    return;
+				}
 				if( key.match(/^copyto_/) ){
 				    uid = key.replace(/^copyto_/,"");
 				    uim.copyRegions(uid);
@@ -9493,6 +9496,10 @@ JS9.Prefs.globalsSchema = {
 	"magnifierRegions": {
 	    "type": "boolean",
 	    "helper": "show regions in magnifier?"
+	},
+	"svgBorder": {
+	    "type": "boolean",
+	    "helper": "add border when exporting SVG?"
 	}
     }
 };
@@ -9578,6 +9585,7 @@ JS9.Prefs.init = function(){
 			   panWithinDisplay: JS9.globalOpts.panWithinDisplay,
 			   pannerDirections: JS9.globalOpts.pannerDirections,
 			   magnifierRegions: JS9.globalOpts.magnifierRegions,
+			   svgBorder: JS9.globalOpts.svgBorder,
 			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
 			   touchActions: JS9.globalOpts.touchActions,
