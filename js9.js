@@ -20909,6 +20909,9 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     var getHTML = function(id, opts, winopts){
 	var html, display;
 	opts = opts || {};
+	if( opts.html && winopts ){
+	    return {html: opts.html, winopts: winopts};
+	}
 	if( opts.clone ){
 	    display = JS9.lookupDisplay(opts.clone, false);
 	}
@@ -20918,7 +20921,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    wheight = parseInt(warr[4], 10);
 	}
         // make up the html with the unique id
-        html = html || opts.html || sprintf("<hr class='hline0'>");
+        html = sprintf("<hr class='hline0'>");
 	// menubar
 	if( !display                                        ||
 	    ($("#"+opts.clone+"Menubar").length > 0         &&
