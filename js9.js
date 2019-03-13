@@ -20896,7 +20896,7 @@ JS9.mkPublic("Load", function(file, opts){
 
 // create a new instance of JS9 in a window (light or new)
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
-    var id, display, did, head, body, win, winid, initialURL, obj, got;
+    var s, id, display, did, head, body, win, winid, initialURL, obj, got;
     var wid, wtype, wurl;
     var lopts = JS9.lightOpts[JS9.LIGHTWIN];
     var idbase = (type || "") + "win";
@@ -20936,8 +20936,14 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	if( !display                                         ||
 	    ($("#"+opts.clone+"Colorbar").length > 0         &&
 	     !display.pluginInstances.JS9Colorbar.isDynamic) ){
-	    html += sprintf("<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' data-showTicks='%s'></div></div>", id, display.pluginInstances.JS9Colorbar.showTicks);
-	    if( !display.pluginInstances.JS9Colorbar.showTicks ){
+	    if( display && display.pluginInstances.JS9Colorbar ){
+		s = sprintf("data-showTicks='%s'", display.pluginInstances.JS9Colorbar.showTicks);
+	    } else {
+		s = "";
+	    }
+	    html += sprintf("<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' %s></div></div>", id, s);
+	    if( display && display.pluginInstances.JS9Colorbar &&
+		!display.pluginInstances.JS9Colorbar.showTicks ){
 		wheight -= 15;
 	    }
 	} else if( winopts ){
