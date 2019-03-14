@@ -22629,6 +22629,26 @@ JS9.mkPublic("WindowToPDF", function(args){
     }
 });
 
+// set save directory (Desktop JS9 only)
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("SaveDir", function(args){
+    var opts = {cmd: "savedir"};
+    var obj = JS9.parsePublicArgs(arguments);
+    if( obj.argv[0] ){
+	opts.opts = obj.argv[0];
+    } else {
+	JS9.error("SaveDir requires a directory name");
+    }
+    if( window.isElectron && window.electronIPC ){
+	window.setTimeout(function(){
+	    try{ window.electronIPC.send("msg", opts); }
+	    catch(e){ JS9.error("could not set save directory", e); }
+	}, JS9.TIMEOUT);
+    } else {
+	JS9.error("SaveDir is only available for the JS9 desktop app");
+    }
+});
+
 // end of Public Interface
 
 // return namespace

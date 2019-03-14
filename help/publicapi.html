@@ -4205,7 +4205,6 @@ The first argument allows you to specify the following options:
 <li><b>deviceName</b>: set the printer device name to use (def: "")
 </ul>
 
-
 <h5 id="JS9.WindowToPDF">Save the desktop window to a PDF file (<b>desktop app only</b>)</h5>
 <p>
 <code class="api">JS9.WindowToPDF(filename, opts)</code>
@@ -4229,6 +4228,33 @@ The second argument allows you to specify the following options:
 <li><b>printSelectionOnly</b>: whether to print selection only (<b>NB: This seems to crash the application!</b>)
 <li><b>landscape</b>: true for landscape, false for portrait
 </ul>
+
+<h5 id="JS9.SaveDir">Set the save directory for downloads (<b>desktop app only</b>)</h5>
+<p>
+<code class="api">JS9.SaveDir(dirname)</code>
+<p>
+where:
+<ul>
+<li><b>dirname</b>: directory name for downloads
+</ul>
+The JS9 desktop application that utilizes 
+<a href="https://electronjs.org">Electron.js</a> has the ability to
+specify a directory into which files will be saved (e.g. by routines such 
+<a href="#JS9.SavePNG">JS9.SavePNG()</a>)
+without using a dialog box. This is especially useful in scripts.
+
+<p>
+The savedir directory can be specified on the desktop command line using the
+--savedir switch:
+<pre>
+    js9 -a --savedir $HOME/tmp ~/data/casa.fits
+</pre>
+But you can use this routine to set or change the save directory at any time:
+<pre>
+    js9 SaveDir "$HOME/tmp"
+</pre>
+Future downloads for this desktop session will then be saved (without
+use of a dialog box) to the specified directory.
 
 <h5 id="JS9.SaveFITS">Save image as a FITS file</h5>
 <p>

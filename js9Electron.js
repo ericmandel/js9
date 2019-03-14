@@ -128,22 +128,9 @@ if( js9Electron.argv.v && typeof js9Electron.argv.v === "string" ){
     js9Electron.files.unshift(js9Electron.argv.v);
 }
 
-function createWindow() {
-    let cmd;
-    let ncmd=0;
-    // create the browser window
-    js9Electron.win = new BrowserWindow({
-	webPreferences: {nodeIntegration: false, preload: js9Electron.preload},
-	width: js9Electron.width, 
-	height: js9Electron.height
-    });
-    // and load the web page
-    if( !js9Electron.page.includes("://") ){
-	js9Electron.page = "file://" + js9Electron.page;
-    }
-    js9Electron.win.loadURL(js9Electron.page);
-    // download to a specfied directory (without using a dialog box)?
-    if( js9Electron.savedir ){
+// setup on-will-download callbacks to save files without a dialog box
+function initWillDownload() {
+    if( !js9Electron.willDownload && js9Electron.savedir ){
 	// eslint-disable-next-line no-unused-vars
 	js9Electron.win.webContents.session.on('will-download', (event, item, webContents) => {
 	    const fname = item.getFilename();
@@ -165,10 +152,36 @@ function createWindow() {
 	    item.once('done', (event, state) => {
 		if (state !== 'completed') {
 		    // eslint-disable-next-line no-console
-		    console.log(`Save failed: ${pname} [${state}]`);
+		    dialog.showErrorBox("Error saving file",
+					`${pname} [${state}]`);
 		}
 	    });
 	});
+	// only need to do this once
+	js9Electron.willDownload = true;
+    }
+}
+
+// create a new window for a JS9 web page
+function createWindow() {
+    let cmd;
+    let ncmd=0;
+    // create the browser window
+    js9Electron.win = new BrowserWindow({
+	webPreferences: {nodeIntegration: false,
+			 contextIsolation: false,
+			 preload: js9Electron.preload},
+	width: js9Electron.width,
+	height: js9Electron.height
+    });
+    // and load the web page
+    if( !js9Electron.page.includes("://") ){
+	js9Electron.page = "file://" + js9Electron.page;
+    }
+    js9Electron.win.loadURL(js9Electron.page);
+    // download to a specfied directory (without using a dialog box)?
+    if( js9Electron.savedir ){
+	initWillDownload();
     }
     // open the DevTools, if necessary
     if( js9Electron.debug ){
@@ -282,18 +295,25 @@ ipcMain.on('msg', (event, arg) => {
 	}
 	if( typeof obj === "object" ){
 	    switch(obj.cmd){
+	    case "savedir":
+		if( obj.opts ){
+		    js9Electron.savedir = obj.opts;
+		    initWillDownload();
+		}
+		break;
 	    case "print":
 		opts = Object.assign(js9Electron.printOpts, obj.opts);
 		try{
 		    win.webContents.print(opts, function(e){
 			if( !e ){
-			    dialog.showErrorBox("ERROR WindowPrint", e.message);
+			    dialog.showErrorBox("ERROR in WindowPrint",
+						e.message);
 			    return;
 			}
 		    });
 		}
 		catch(e){
-		    dialog.showErrorBox("ERROR WindowPrint", e.message);
+		    dialog.showErrorBox("ERROR in WindowPrint", e.message);
 		}
 		break;
 	    case "pdf":
@@ -302,13 +322,13 @@ ipcMain.on('msg', (event, arg) => {
 		try{
 		    win.webContents.printToPDF(opts, function(e, data){
 			if( e ){
-			    dialog.showErrorBox("ERROR WindowToPDF: ",
+			    dialog.showErrorBox("ERROR in WindowToPDF: ",
 						e.message);
 			    return;
 			}
 			fs.writeFile(file, data, function(e) {
 			    if( e ){
-				dialog.showErrorBox("ERROR WindowToPDF: ",
+				dialog.showErrorBox("ERROR in WindowToPDF: ",
 						    e.message);
 				return;
 			    }
@@ -316,7 +336,7 @@ ipcMain.on('msg', (event, arg) => {
 		    });
 		}
 		catch(e){
-		    dialog.showErrorBox("ERROR WindowToPDF", e.message);
+		    dialog.showErrorBox("ERROR in WindowToPDF", e.message);
 		}
 
 		break;
