@@ -5583,11 +5583,32 @@ JS9.Image.prototype.saveFITS = function(fname){
 };
 
 // save image as an img file of specified type (e.g., image/png, image/jpeg)
-JS9.Image.prototype.saveIMG = function(fname, type, encoderOpts){
+JS9.Image.prototype.saveIMG = function(fname, type, opts){
     var key,img, ctx;
     var canvas, width, height;
+    var encoderOpts;
     if( window.hasOwnProperty("saveAs") ){
+	// opts can be opts object or json string or encoderOpts value
+	if( typeof opts === "number" ){
+	    encoderOpts = opts;
+	    opts = null;
+	} else if( typeof opts === "string" ){
+	    if( JS9.isNumber(opts) ){
+		encoderOpts = parseFloat(opts);
+		opts = null;
+	    } else {
+		try{ opts = JSON.parse(opts); }
+		catch(e){ opts = null; }
+	    }
+	}
+	// filename is optional
 	fname = fname || "js9.png";
+	// save as specified type
+	type = type || "image/png";
+	// opts is optional
+	opts = opts || {};
+	// convenience params
+	encoderOpts = opts.encoderOpts;
 	width = this.display.width;
 	height = this.display.height;
 	// create off-screen canvas, into which we write all canvases
@@ -5597,20 +5618,21 @@ JS9.Image.prototype.saveIMG = function(fname, type, encoderOpts){
 	ctx = img.getContext("2d");
 	// image display canvas
 	ctx.drawImage(this.display.canvas, 0, 0);
-	for( key in this.layers ){
-	    if( this.layers.hasOwnProperty(key) ){
-		// each layer canvas
-		if( this.layers[key].dlayer.dtype === "main" &&
-		    this.layers[key].show ){
-		    canvas = this.layers[key].dlayer.canvasjq[0];
-		    ctx.drawImage(canvas, 0, 0, width, height);
+	// add graphics layers, unless explicitly specified not to
+	if( opts.layers !== false ){
+	    for( key in this.layers ){
+		if( this.layers.hasOwnProperty(key) ){
+		    // each layer canvas
+		    if( this.layers[key].dlayer.dtype === "main" &&
+			this.layers[key].show ){
+			canvas = this.layers[key].dlayer.canvasjq[0];
+			ctx.drawImage(canvas, 0, 0, width, height);
+		    }
 		}
 	    }
 	}
-	// save as specified type
-	type = type || "image/png";
 	// sanity check on quality
-	if( encoderOpts !== undefined ){
+	if( JS9.notNull(encoderOpts) ){
 	    if( encoderOpts < 0 || encoderOpts > 1 ){
 		encoderOpts = 0.95;
 	    }
@@ -5625,21 +5647,21 @@ JS9.Image.prototype.saveIMG = function(fname, type, encoderOpts){
 };
 
 // save image as a PNG file
-JS9.Image.prototype.savePNG = function(fname){
+JS9.Image.prototype.savePNG = function(fname, opts){
     fname = fname || "js9.png";
     if( !fname.match(/\.png$/) ){
 	fname += ".png";
     }
-    return this.saveIMG(fname, "image/png");
+    return this.saveIMG(fname, "image/png", opts);
 };
 
 // save image as a JPEG file
-JS9.Image.prototype.saveJPEG = function(fname, quality){
+JS9.Image.prototype.saveJPEG = function(fname, opts){
     fname = fname || "js9.jpg";
     if( !fname.match(/\.jpg$/) && !fname.match(/\.jpeg$/)  ){
 	fname += ".jpg";
     }
-    return this.saveIMG(fname, "image/jpeg", quality);
+    return this.saveIMG(fname, "image/jpeg", opts);
 };
 
 // update (and display) pixel and wcs values (connected to info plugin)
