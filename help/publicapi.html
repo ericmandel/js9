@@ -215,7 +215,6 @@ If no id is specified, a unique id is generated.
 the menubar and colorbar will be created if and only if they are
 present in the cloned display (for light window creation only).
 </ul>
-The id is returned by the call.
 <p>
 The <b>type</b> argument determines whether to create a light-weight
 window ("light", which is the default) or a new, separate window ("new").
@@ -227,6 +226,7 @@ Display area and a Colorbar below:
     &lt;div class='JS9' id='[id]'&gt;&lt;/div&gt;
     &lt;div style="margin-top: 2px;"&gt;
     &lt;div class='JS9Colorbar' id='[id]Colorbar'&gt;&lt;/div&gt;
+    &lt;div&gt;
 </pre>
 You can use the <b>html</b> argument to supply different web page elements
 for the window. Furthermore, if you create a light window, a default
