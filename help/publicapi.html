@@ -197,7 +197,7 @@ where:
 <li><b>url</b>: url to load
 <li><b>opts</b>: optional object or JSON string containing image parameters and/or the div id
 <li><b>type</b>: "light" or "new" 
-<li><b>html</b>: html for the new page (default is to display a menubar above the image)
+<li><b>html</b>: html for the new page (default is to display a menubar above the image and a colorbar below)
 <li><b>winopts</b>: for "light", optional dhtml window options
 </ul>
 returns:
@@ -206,18 +206,27 @@ returns:
 </ul>
 This routine will load an image into a light-weight window or an entirely new
 window. The <b>url</b> and <b>opts</b> arguments are identical to the standard
-<a href="#JS9.Load"><b>JS9.Load()</b></a>
-call, except that <b>opts</b> can contain an <b>id</b>
-string to specify the id of the JS9 div being created. If no id is specified,
-a unique id is generated. In either case, the id is returned by the call.
+<a href="#JS9.Load"><b>JS9.Load()</b></a> call,
+except that <b>opts</b> can contain:
+<ul>
+<li><b>id</b>: string specifying the id of the JS9 div being created.
+If no id is specified, a unique id is generated.
+<li><b>clone</b>: the id of a display to clone:
+the menubar and colorbar will be created if and only if they are
+present in the cloned display (for light window creation only).
+</ul>
+The id is returned by the call.
 <p>
-The <b>type</b> argument determines whether to create
-a light-weight window or a new (separate) window.
+The <b>type</b> argument determines whether to create a light-weight
+window ("light", which is the default) or a new, separate window ("new").
 <p>
-By default, the new window will contain a Menubar above an image display area:
+By default, the created window will contain a Menubar above a JS9
+Display area and a Colorbar below:
 <pre>
     &lt;div class='JS9Menubar' id='[id]Menubar'&gt;&lt;/div&gt;
     &lt;div class='JS9' id='[id]'&gt;&lt;/div&gt;
+    &lt;div style="margin-top: 2px;"&gt;
+    &lt;div class='JS9Colorbar' id='[id]Colorbar'&gt;&lt;/div&gt;
 </pre>
 You can use the <b>html</b> argument to supply different web page elements
 for the window. Furthermore, if you create a light window, a default

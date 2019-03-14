@@ -9227,8 +9227,7 @@ JS9.Display.prototype.separate = function(opts){
 	return {id: toID, html: html, winopts: winopts};
     };
     var separateim = function(arr){
-	var im, winopts;
-	var id;
+	var im, xopts, id;
 	var n = nsep++;
 	if( arr.length > n ){
 	    if( typeof arr[n] === "number" ){
@@ -9266,13 +9265,14 @@ JS9.Display.prototype.separate = function(opts){
 				separateim(arr);
 			    }, 0);
 			});
-		    winopts = getopts(d0, d1);
-		    // add id, if idbase was supplied in opts
+		    xopts = getopts(d0, d1);
+		    // replace id, if idbase was supplied in opts
 		    if( id ){
-			winopts.id = id;
+			xopts.id = id;
 		    }
 		    // load new window, code above gets run when window exists
-		    JS9.LoadWindow(null, winopts);
+		    JS9.LoadWindow(null, {id: xopts.id}, "light",
+				   xopts.html, xopts.winopts);
 		}
 	    } else {
 		// this image is in a different display, so process next image
@@ -20896,11 +20896,11 @@ JS9.mkPublic("Load", function(file, opts){
 
 // create a new instance of JS9 in a window (light or new)
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
-    var s, id, display, did, head, body, win, winid, initialURL, obj, got;
-    var wid, wtype, wurl;
+    var s, id, display, did, head, body, win, winid, initialURL, xobj, got;
+    var wid, wtype, wurl, idbase;
     var lopts = JS9.lightOpts[JS9.LIGHTWIN];
-    var idbase = (type || "") + "win";
     var title, warr, wwidth, wheight;
+    var obj = JS9.parsePublicArgs(arguments);
     var removeDisplay = function(display){
 	// remove from display list
 	var idx = $.inArray(display, JS9.displays);
@@ -20909,9 +20909,6 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     var getHTML = function(id, opts, winopts){
 	var html, display;
 	opts = opts || {};
-	if( opts.html && winopts ){
-	    return {html: opts.html, winopts: winopts};
-	}
 	if( opts.clone ){
 	    display = JS9.lookupDisplay(opts.clone, false);
 	}
@@ -20958,7 +20955,12 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	}
 	return html;
     };
-    type = type || "light";
+    // input args
+    file = obj.argv[0];
+    opts = obj.argv[1];
+    type = obj.argv[2];
+    html = obj.argv[3];
+    winopts = obj.argv[4];
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
@@ -20971,6 +20973,11 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	// init as an empty object
 	opts = {};
     }
+    // default window type
+    type = type || "light";
+    //  default base id
+    idbase = (type || "") + "win";
+    // create the specified type of window
     switch(type){
     case "light":
         // use supplied id or make a reasonably unique id for the JS9 elements
@@ -20982,17 +20989,24 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	}
         // and a second one for controlling the light window
         did = "d" + id;
-	// get html based on originating display setup
-	obj = getHTML(id, opts, lopts.imageWin);
-	// html
-	html = obj.html;
-	// window opts
-        winopts = winopts || opts.winopts || obj.winopts;
+	// inner html housing JS9 display, etc.
+	if( html ){
+	    // html specified: def window opts is standard light image window
+	    winopts = winopts || lopts.imageWin;
+	} else {
+	    // no html specified: use originating display setup, if possible,
+	    // otherwise use defaults, and always use default window opts
+	    xobj = getHTML(id, opts, lopts.imageWin);
+	    // always use returned html (there being no other option)
+	    html = xobj.html;
+	    // but only use the new winopts if no winopts was specified
+            winopts = winopts || xobj.winopts;
+	}
 	// nice title
 	title = sprintf("JS9 Display"+JS9.IDFMT, id);
         // create the light window
         winid = JS9.lightWin(did, "inline", html, title, winopts);
-	// when this window closes, close all of its displayed images
+	// when this window closes, we need to deal with the displayed images
 	winid.onclose = function(){
 	    var i, im;
 	    var ims = [];
@@ -21139,7 +21153,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
             // must close!
             win.document.close();
 	} else if( win.postMessage ){
-	    JS9.error("LoadWindow(..., 'new') disabled on Desktop for security reasons");
+	    JS9.error("LoadWindow('new') is disabled on the Desktop for security reasons");
 	} else {
 	    JS9.error("no method available for drawing image into window");
 	}
