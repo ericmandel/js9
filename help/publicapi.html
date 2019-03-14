@@ -4247,15 +4247,39 @@ you have set up for downloads.
 
 <h5 id="JS9.SavePNG">Save image as a PNG file</h5>
 <p>
-<code class="api">JS9.SavePNG(filename)</code>
+<code class="api">JS9.SavePNG(filename, opts)</code>
 <p>
 where:
 <ul>
 <li><b>filename</b>: output file name
+<li><b>opts</b>: optional save parameters
 </ul>
 Save the currently displayed image as a PNG file. If filename is not
 specified, the file will be saved as "js9.png". The image is saved
 along with the graphical overlays (regions, etc.).
+
+<p>
+The opts object can specify the following properties:
+<ul>
+<li><b>layers</b>: save graphical layers (e.g. regions) (default is true)
+<li><b>source</b>: "image" or "display" (default is "display")
+</ul>
+By default, <b>SavePNG()</b> will save all of the 2D graphics in the
+shape layers (regions, catalogs, etc.) as well as the image. Set
+the <b>layers</b> property to false to save only the image.
+
+<p>
+Also by default, <b>SavePNG()</b> will save the RGB pixels from the
+display. This means, for example, that a blended set of images will
+save the blended pixels. If you want to save the RGB pixels from one
+of the images in a blended image, you can specify the <b>source</b>
+property to the <b>image</b>. For example, in the js9blend.html demo,
+you can save the RGB pixels of the Chandra image by specifying use of
+the "image" source and specifying the image's id in the <b>display</b>
+parameter:
+<pre>
+    JS9.SavePNG("chandra.png", {source:"image"}, {display:"chandra.fits"});
+</pre>
 
 <p>
 Don't forget that the file is saved by the browser, in whatever location
@@ -4263,24 +4287,50 @@ you have set up for downloads.
 
 <h5 id="JS9.SaveJPEG">Save image as a JPEG file</h5>
 <p>
-<code class="api">JS9.SaveJPEG(filename, quality)</code>
+<code class="api">JS9.SaveJPEG(filename, opts)</code>
 <p>
 where:
 <ul>
 <li><b>filename</b>: output file name
-<li><b>quality</b>: a number between 0 and 1 indicating image quality
+<li><b>opts</b>: optional save parameters or a number between 0 and 1 indicating image quality
 </ul>
 Save the currently displayed image as a JPEG file. If filename is not
 specified, the file will be saved as "js9.jpeg". The image is saved
-along with the graphical overlays (regions, etc.). If quality
-parameter is not specified, a suitable default is used. On FireFox (at
-least), this default values is 0.95 (I think).
+along with the graphical overlays (regions, etc.).
+
+<p>
+The opts object can specify the following properties:
+<ul>
+<li><b>layers</b>: save graphical layers (e.g. regions) (default is true)
+<li><b>source</b>: "image" or "display" (default is "display")
+<li><b>quality</b>: JPEG encoder quality
+</ul>
+By default, <b>SaveJPEG()</b> will save all of the 2D graphics in the
+shape layers (regions, catalogs, etc.) as well as the image. Set
+the <b>layers</b> property to false to save only the image.
+
+<p>
+Also by default, <b>SaveJPEG()</b> will save the RGB pixels from the
+display. This means, for example, that a blended set of images will
+save the blended pixels. If you want to save the RGB pixels from one
+of the images in a blended image, you can specify the <b>source</b>
+property to the <b>image</b>. For example, in the js9blend.html demo,
+you can save the RGB pixels of the Chandra image by specifying use of
+the "image" source and specifying the image's id in the <b>display</b>
+parameter:
+<pre>
+    JS9.SaveJPEG("chandra.png", {source:"image"}, {display:"chandra.fits"});
+</pre>
+
+<p>
+If encoder quality parameter is not specified, a suitable default is
+used. On FireFox (at least), this default values is 0.95 (I think).
 
 <p>
 Don't forget that the file is saved by the browser, in whatever location
 you have set up for downloads.
 
-<h5 id="JS9.UploadFITSFile">upload currently displayed FITS file to proxy server</h5>
+<h5 id="JS9.UploadFITSFile">Upload currently displayed FITS file to proxy server</h5>
 <p>
 <code class="api">JS9.UploadFITSFile()</code>
 <p>

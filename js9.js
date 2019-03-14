@@ -5586,19 +5586,22 @@ JS9.Image.prototype.saveFITS = function(fname){
 JS9.Image.prototype.saveIMG = function(fname, type, opts){
     var key,img, ctx;
     var canvas, width, height;
-    var encoderOpts;
+    var quality;
     if( window.hasOwnProperty("saveAs") ){
-	// opts can be opts object or json string or encoderOpts value
+	// opts can be opts object or json string or quality value
 	if( typeof opts === "number" ){
-	    encoderOpts = opts;
+	    quality = opts;
 	    opts = null;
 	} else if( typeof opts === "string" ){
 	    if( JS9.isNumber(opts) ){
-		encoderOpts = parseFloat(opts);
+		quality = parseFloat(opts);
 		opts = null;
 	    } else {
 		try{ opts = JSON.parse(opts); }
 		catch(e){ opts = null; }
+	    }
+	    if( opts ){
+		quality = opts.quality;
 	    }
 	}
 	// filename is optional
@@ -5608,7 +5611,6 @@ JS9.Image.prototype.saveIMG = function(fname, type, opts){
 	// opts is optional
 	opts = opts || {};
 	// convenience params
-	encoderOpts = opts.encoderOpts;
 	width = this.display.width;
 	height = this.display.height;
 	// create off-screen canvas, into which we write all canvases
@@ -5616,8 +5618,16 @@ JS9.Image.prototype.saveIMG = function(fname, type, opts){
 	img.setAttribute("width", width);
 	img.setAttribute("height", height);
 	ctx = img.getContext("2d");
-	// image display canvas
-	ctx.drawImage(this.display.canvas, 0, 0);
+	// source can be image or display
+	if( opts.source === "image" ){
+	    // image: save RGB image for this image, which will be different
+	    // from the display, e.g., when blend mode is turned on
+	    ctx.putImageData(this.rgb.img, 0, 0);
+	} else {
+	    // display: save RGB image as seen on the display,
+	    // e.g. a composite blended image
+	    ctx.drawImage(this.display.canvas, 0, 0);
+	}
 	// add graphics layers, unless explicitly specified not to
 	if( opts.layers !== false ){
 	    for( key in this.layers ){
@@ -5632,14 +5642,14 @@ JS9.Image.prototype.saveIMG = function(fname, type, opts){
 	    }
 	}
 	// sanity check on quality
-	if( JS9.notNull(encoderOpts) ){
-	    if( encoderOpts < 0 || encoderOpts > 1 ){
-		encoderOpts = 0.95;
+	if( JS9.notNull(quality) ){
+	    if( quality < 0 || quality > 1 ){
+		quality = 0.95;
 	    }
 	}
 	img.toBlob(function(blob){
 	    saveAs(blob, fname);
-	}, type, encoderOpts);
+	}, type, quality);
     } else {
 	JS9.error("no saveAs function available for saving image");
     }
