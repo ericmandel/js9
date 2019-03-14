@@ -4256,6 +4256,12 @@ But you can use this routine to set or change the save directory at any time:
 Future downloads for this desktop session will then be saved (without
 use of a dialog box) to the specified directory.
 
+<p>
+It's worth remembering that relative paths are taken relative to the
+directory in which the JS9 app was started, not the current directory in which
+you are running the js9 SaveDir command. To avoid confusion, it is recommended
+that you supply a full path.
+
 <h5 id="JS9.SaveFITS">Save image as a FITS file</h5>
 <p>
 <code class="api">JS9.SaveFITS(filename)</code>
