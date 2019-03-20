@@ -177,6 +177,7 @@ JS9.globalOpts = {
     keyboardActions: {
 	b: "toggle selected region: source/background",
 	c: "toggle crosshair",
+	d: "send selected region to back",
 	e: "toggle selected region: include/exclude",
 	"M-e": "edit selected region",
 	i: "refresh image",
@@ -195,6 +196,7 @@ JS9.globalOpts = {
 	r: "copy selected region to clipboard",
 	R: "copy all regions to clipboard",
 	s: "select region",
+	S: "select all regions",
 	"M-s": "toggle shape layers plugin",
         "/": "copy wcs position to clipboard",
         "?": "copy value and position to clipboard",
@@ -10358,6 +10360,10 @@ JS9.WebWorker.prototype.terminate = function(){
 // Fabric object defines graphical primitives
 // ---------------------------------------------------------------------
 
+// quick way to separate fabric versions
+fabric.major_version = parseFloat(fabric.version.split(".")[0]);
+fabric.minor_version = parseFloat(fabric.version.split(".")[1]);
+
 // fabric sub-object to hold fabric routines
 JS9.Fabric = {};
 
@@ -10448,7 +10454,7 @@ fabric.Object.prototype.rescaleEvenly = JS9.Fabric.rescaleEvenly;
 // create a new shape layer in the display
 // call using display context
 JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
-    var id, dlayer;
+    var s, id, dlayer;
     var display = this;
     // sanity check
     if( !display || !layerName ){
@@ -10679,34 +10685,33 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	});
     }
     // fire events when groups are created
-    if( dlayer.opts.ongroupcreate ){
+    if( typeof dlayer.opts.ongroupcreate === "function" ){
 	dlayer.opts.canvas.selection = true;
 	dlayer.opts.selectable = true;
-	if( dlayer.opts.ongroupcreate ){
-	    dlayer.canvas.on("selection:created", function(opts){
-		var pubs = [];
-		var targets = [];
-		if( dlayer.display.image ){
-		    if( opts.target && opts.target.type === "group" ){
-			opts.target.forEachObject(function(shape){
-			    if( shape.pub ){
-				targets.push(shape);
-				pubs.push(shape.pub);
-			    }
-			});
-			dlayer.opts.ongroupcreate.call(this,
-						    dlayer.display.image,
-						    pubs,
-						    opts.e, targets);
-		    }
+	dlayer.canvas.on("selection:created", function(opts){
+	    var pubs = [];
+	    var targets = [];
+	    if( dlayer.display.image ){
+		if( opts.target && opts.target.type === "group" ){
+		    opts.target.forEachObject(function(shape){
+			if( shape.pub ){
+			    targets.push(shape);
+			    pubs.push(shape.pub);
+			}
+		    });
+		    dlayer.opts.ongroupcreate.call(this,
+						   dlayer.display.image,
+						   pubs,
+						   opts.e, targets);
 		}
-	    });
-	}
+	    }
+	});
     }
     // object modified
     dlayer.canvas.on('object:modified', function (opts){
 	var o, i, olen;
 	var objs = [];
+	var myWidth, myHeight;
 	// sanity check
 	if( !opts.target ){
 	    return;
@@ -10723,15 +10728,29 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 		    return;
 		}
 		if( o.intersectsWithObject(obj) ){
-		    objs.push({obj: obj, siz: obj.getWidth()*obj.getHeight()});
+		    if( fabric.major_version === 1 ){
+			myWidth = obj.getWidth();
+			myHeight = obj.getHeight();
+		    } else {
+			myWidth = obj.getScaledWidth();
+			myHeight = obj.getScaledHeight();
+		    }
+		    objs.push({obj: obj, siz: myWidth * myHeight});
 		}
 	    });
 	    // any intersecting shapes?
 	    if( !objs.length ){
 		return;
 	    }
+	    if( fabric.major_version === 1 ){
+		myWidth = o.getWidth();
+		myHeight = o.getHeight();
+	    } else {
+		myWidth = o.getScaledWidth();
+		myHeight = o.getScaledHeight();
+	    }
 	    // add current shape to array
-	    objs.push({obj: o, siz: o.getWidth() * o.getHeight()});
+	    objs.push({obj: o, siz: myWidth * myHeight});
 	    // sort in order of increasing size
 	    objs.sort(function(a, b){
 		if( a.siz < b.siz ){
@@ -10780,7 +10799,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	JS9.Fabric.updateChildren(dlayer, o, "rotating");
     });
     // object selected: add anchors to polygon
-    dlayer.canvas.on('object:selected', function (opts){
+    s = fabric.major_version === 1 ? 'object:selected' : 'selection:created';
+    dlayer.canvas.on(s, function (opts){
 	var o;
 	// sanity check
 	if( !opts.target ){
@@ -10814,6 +10834,53 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    dlayer.display.image.layer = layerName;
 	}
     });
+    if( fabric.major_version > 1 ){
+	// updating generally means adding a region to the current selection,
+	// which causes polygon anchors to get lost, so just remove them
+	dlayer.canvas.on("selection:updated", function(opts){
+	    var i, j, o, obj, activeObjects, activeObject;
+	    activeObject = dlayer.canvas.getActiveObject();
+	    if( activeObject.type === 'activeSelection' ){
+		activeObjects = dlayer.canvas.getActiveObjects(opts);
+		for(i=0; i<activeObjects.length; i++){
+		    o = activeObjects[i];
+		    if( !o.params ){ continue; }
+		    // add parent, if not already added
+		    if( o.params.parent ){
+			obj = o.params.parent.obj;
+			if( $.inArray(obj, activeObjects) < 0 ){
+			    activeObject.addWithUpdate(obj);
+			}
+		    }
+		    // add children, if not already added
+		    if( o.params.children ){
+			for(j=0; j<o.params.children.length; j++){
+			    obj = o.params.children[j].obj;
+			    if( $.inArray(obj, activeObjects) < 0 ){
+				activeObject.addWithUpdate(obj);
+			    }
+			}
+		    }
+		    switch(o.type){
+		    case "polyline":
+		    case "polygon":
+			JS9.Fabric.removePolygonAnchors(dlayer, o);
+			break;
+		    }
+		}
+		dlayer.canvas.renderAll();
+	    } else {
+		o = activeObject;
+		switch(o.type){
+		case "polyline":
+		case "polygon":
+		    JS9.Fabric.removePolygonAnchors(dlayer, o);
+		    break;
+		}
+		dlayer.canvas.renderAll();
+	    }
+	});
+    }
     // object selection cleared: remove anchors from polygon
     dlayer.canvas.on('before:selection:cleared', function (opts){
 	var o;
@@ -11614,6 +11681,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    case "lockScalingX":
 	    case "lockScalingY":
 	    case "lockUniScaling":
+	    case "send":
 	    case "radius":
 	    case "rx":
 	    case "ry":
@@ -12087,8 +12155,13 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
     // convenience variable(s)
     canvas = this.layers[layerName].canvas;
     // see if we have an active group
-    group = canvas.getActiveGroup();
-    ginfo = {group: null};
+    if( fabric.major_version === 1 ){
+	group = canvas.getActiveGroup();
+	ginfo = {group: null};
+    } else {
+	group = null;
+	ginfo = {group: null};
+    }
     // select on the id
     switch( typeof id ){
     case "object":
@@ -12121,17 +12194,29 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 	// string id can be a region tag, color, shape, or tag
 	// look for id in various ways
         if( id === "selected" ){
-	    if( canvas.getActiveObject() ){
-		// make sure its a region
-		sobj = canvas.getActiveObject();
-		if( sobj.params ){
-		    ginfo.group = null;
-		    // selected object
-		    cb.call(that, sobj, ginfo);
+	    if( fabric.major_version === 1 ){
+		if( canvas.getActiveObject() ){
+		    // make sure its a region
+		    sobj = canvas.getActiveObject();
+		    if( sobj.params ){
+			ginfo.group = null;
+			// selected object
+			cb.call(that, sobj, ginfo);
+		    }
+		} else if( group ){
+		    ginfo.group = group;
+		    objects = group.getObjects();
+		    olen = objects.length;
+		    while( olen-- ){
+			obj = objects[olen];
+			// don't process shapes with parents in a group
+			if( obj.params && !obj.params.parent ){
+			    cb.call(that, obj, ginfo);
+			}
+		    }
 		}
-	    } else if( group ){
-		ginfo.group = group;
-		objects = group.getObjects();
+	    } else {
+		objects = canvas.getActiveObjects();
 		olen = objects.length;
 		while( olen-- ){
 		    obj = objects[olen];
@@ -12586,8 +12671,12 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 	canvas.remove(arr[i]);
     }
     // handle changed selected group specially (fabric.js nuance)
-    if( canvas.getActiveGroup() ){
-	canvas.discardActiveGroup();
+    if( fabric.major_version === 1 ){
+	if( canvas.getActiveGroup() ){
+	    canvas.discardActiveGroup();
+	}
+    } else {
+	canvas.discardActiveObject();
     }
     canvas.renderAll();
     return this;
@@ -12674,6 +12763,21 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    if( sobj.remove !== false && sobj.remove !== "false" ){
 		this.removeShapes(layerName, sobj.remove || "all");
 		return;
+	    }
+	}
+	// send region to front or back of set of overlapping regions
+	if( sobj.opts.send ){
+	    switch(sobj.opts.send){
+	    case "front":
+		canvas.sendToFront(ao);
+		canvas.discardActiveObject();
+		break;
+	    case "back":
+		canvas.sendToBack(ao);
+		canvas.discardActiveObject();
+		break;
+	    default:
+		break;
 	    }
 	}
 	// get new option names to export when saving regions
@@ -12850,8 +12954,12 @@ JS9.Fabric.refreshShapes = function(layerName){
     }
     canvas = layer.canvas;
     // have to discard active groups before changing position of shapes
-    if( canvas.getActiveGroup() ){
-	canvas.discardActiveGroup();
+    if( fabric.major_version === 1 ){
+	if( canvas.getActiveGroup() ){
+	    canvas.discardActiveGroup();
+	}
+    } else {
+	canvas.discardActiveObject();
     }
     ao = canvas.getActiveObject();
     // process the specified shapes
@@ -13060,8 +13168,25 @@ JS9.Fabric.addPolygonPoint = function(layerName, obj, evt){
     JS9.Fabric.removePolygonAnchors(layer.dlayer, obj);
     // add the new point into the points array
     points.splice(newpt.i+1, 0, {x: newpt.x, y: newpt.y});
+
     // making this the active object will recreate the anchors
-    layer.canvas.setActiveObject(obj);
+    if( fabric.major_version === 1 ){
+	layer.canvas.setActiveObject(obj);
+    } else {
+	switch(obj.type){
+	case "polyline":
+	case "polygon":
+	    JS9.Fabric.addPolygonAnchors(layer.dlayer, obj);
+	    layer.dlayer.canvas.renderAll();
+	    break;
+	}
+	// set currently selected shape
+	if( obj.polyparams ){
+	    layer.dlayer.params.sel = obj.polyparams.polygon;
+	} else if( obj.params ){
+	    layer.dlayer.params.sel = obj;
+	}
+    }
 };
 
 // remove the specified point
@@ -13332,14 +13457,21 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 // reset center of a polygon
 // don't need to call using image context
 JS9.resetPolygonCenter = function(poly){
-    var i, ndx, ndy;
+    var i, ndx, ndy, dobj, calcDim;
     var tpos = {};
     var dx, dy;
-    // recalculate bounding box
-    poly._calcDimensions();
-    // get deltas
-    dx = (poly.minX + (poly.width  / 2)) * poly.scaleX;
-    dy = (poly.minY + (poly.height / 2)) * poly.scaleY;
+    // deltas to center
+    if( fabric.major_version === 1 ){
+	// fabric v1.x: results are stored in poly itself
+	poly._calcDimensions();
+	dx = (poly.minX + (poly.width  / 2)) * poly.scaleX;
+	dy = (poly.minY + (poly.height / 2)) * poly.scaleY;
+    } else {
+	// fabric 2.x: results returned in a separate object
+	dobj = poly._calcDimensions();
+	dx = (dobj.left + (dobj.width  / 2)) * poly.scaleX;
+	dy = (dobj.top  + (dobj.height / 2)) * poly.scaleY;
+    }
     // new center
     if( poly.angle ){
 	tpos = JS9.rotatePoint(
@@ -13351,9 +13483,10 @@ JS9.resetPolygonCenter = function(poly){
 	tpos.x = poly.left + dx;
 	tpos.y = poly.top + dy;
     }
+
     // move points relative to new center
     // required by polygon changes starting in fabric 1.5.x
-    if( fabric.version.split(".")[1] >= 5 ){
+    if( fabric.major_version > 1 || fabric.minor_version >= 5 ){
 	ndx = dx / poly.scaleX;
 	ndy = dy / poly.scaleY;
 	for(i=0; i<poly.points.length; i++){
@@ -13364,6 +13497,17 @@ JS9.resetPolygonCenter = function(poly){
     // set new center
     poly.left = tpos.x;
     poly.top = tpos.y;
+    // reset control box
+    if( fabric.major_version > 1 ){
+	// https://stackoverflow.com/questions/55025481/fabric-js-adjusting-the-size-of-the-controls-of-a-modified-polygon-v1-7-22-vs
+	calcDim = poly._calcDimensions();
+	poly.width = calcDim.width;
+	poly.height = calcDim.height;
+	poly.pathOffset = {
+            x: calcDim.left + poly.width / 2,
+            y: calcDim.top + poly.height / 2
+	};
+    }
     // new coordinates
     poly.setCoords();
 };
@@ -14100,9 +14244,13 @@ JS9.Regions.opts = {
 	if( this.getActiveObject() ){
 	    objs.push(this.getActiveObject());
 	}
-	// group of active objects
-	if( this.getActiveGroup() ){
-	    objs = this.getActiveGroup().getObjects();
+	if( fabric.major_version === 1 ){
+	    // group of active objects
+	    if( this.getActiveGroup() ){
+		objs = this.getActiveGroup().getObjects();
+	    }
+	} else {
+	    objs.push(this.getActiveObjects());
 	}
 	// re-select polygon that was just processed
 	for(i=0; i<objs.length; i++){
@@ -14137,12 +14285,16 @@ JS9.Regions.init = function(layerName){
 	if( dlayer.display.image ){
 	    tim = dlayer.display.image;
 	    // one active object
-	    if( this.getActiveObject() ){
-		objs.push(this.getActiveObject());
-	    }
 	    // group of active objects
-	    if( this.getActiveGroup() ){
-		objs = this.getActiveGroup().getObjects();
+	    if( fabric.major_version === 1 ){
+		if( this.getActiveObject() ){
+		    objs.push(this.getActiveObject());
+		}
+		if( this.getActiveGroup() ){
+		    objs = this.getActiveGroup().getObjects();
+		}
+	    } else {
+		objs.push(this.getActiveObjects());
 	    }
 	    // process all active objects
 	    for(i=0; i<objs.length; i++){

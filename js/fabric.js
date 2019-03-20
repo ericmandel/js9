@@ -1,1 +1,1 @@
-fabric-v1.7.22.js
+fabric-v2.7.0.js

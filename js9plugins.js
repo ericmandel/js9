@@ -4135,7 +4135,7 @@ JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, JS9, sprintf */
+/*global $, JS9, sprintf, fabric */
 
 // create our namespace, and specify some meta-information and params
 JS9.Keyboard = {};
@@ -4473,13 +4473,19 @@ JS9.Keyboard.Actions["save regions as a text file"] = function(im, ipos, evt){
 JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
     var canvas, layerName, active;
     var inc = 1;
-    evt.preventDefault();
+    if( evt ){
+	evt.preventDefault();
+    }
     // sanity check
     if( !im ){ return; }
     if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
-    active = canvas.getActiveObject() || canvas.getActiveGroup();
+    if( fabric.major_version === 1 ){
+	active = canvas.getActiveObject() || canvas.getActiveGroup();
+    } else {
+	active = canvas.getActiveObject();
+    }
     if( active ){
 	im.changeShapes(layerName, "selected", {dy: inc});
     }
@@ -4490,13 +4496,19 @@ JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
 JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
     var canvas, layerName, active;
     var inc = -1;
-    evt.preventDefault();
+    if( evt ){
+	evt.preventDefault();
+    }
     // sanity check
     if( !im ){ return; }
     if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
-    active = canvas.getActiveObject() || canvas.getActiveGroup();
+    if( fabric.major_version === 1 ){
+	active = canvas.getActiveObject() || canvas.getActiveGroup();
+    } else {
+	active = canvas.getActiveObject();
+    }
     if( active ){
 	im.changeShapes(layerName, "selected", {dy: inc});
     }
@@ -4507,14 +4519,20 @@ JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
 JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
     var canvas, layerName, active;
     var inc = -1;
-    evt.preventDefault();
+    if( evt ){
+	evt.preventDefault();
+    }
     // sanity check
     if( !im ){ return; }
     if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
-    active = canvas.getActiveObject() || canvas.getActiveGroup();
-    if( canvas.getActiveObject() || canvas.getActiveGroup() ){
+    if( fabric.major_version === 1 ){
+	active = canvas.getActiveObject() || canvas.getActiveGroup();
+    } else {
+	active = canvas.getActiveObject();
+    }
+    if( active ){
 	im.changeShapes(layerName, "selected", {dx: inc});
     }
     JS9.Keyboard.arrowKey(im, evt, {x: inc, y: 0}, active);
@@ -4524,14 +4542,20 @@ JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
 JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
     var canvas, layerName, active;
     var inc = 1;
-    evt.preventDefault();
+    if( evt ){
+	evt.preventDefault();
+    }
     // sanity check
     if( !im ){ return; }
     if( JS9.specialKey(evt) ){ inc *= 5; }
     layerName = im.layer || "regions";
     canvas = im.display.layers[layerName].canvas;
-    active = canvas.getActiveObject() || canvas.getActiveGroup();
-    if( canvas.getActiveObject() || canvas.getActiveGroup() ){
+    if( fabric.major_version === 1 ){
+	active = canvas.getActiveObject() || canvas.getActiveGroup();
+    } else {
+	active = canvas.getActiveObject();
+    }
+    if( active ){
 	im.changeShapes(layerName, "selected", {dx: inc});
     }
     JS9.Keyboard.arrowKey(im, evt, {x: inc, y: 0}, active);
@@ -4540,7 +4564,9 @@ JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["remove selected region"] = function(im, ipos, evt){
     var canvas, layerName;
-    evt.preventDefault();
+    if( evt ){
+	evt.preventDefault();
+    }
     // sanity check
     if( !im ){ return; }
     layerName = im.layer || "regions";
@@ -4551,17 +4577,30 @@ JS9.Keyboard.Actions["remove selected region"] = function(im, ipos, evt){
 };
 
 JS9.Keyboard.Actions["raise region layer to top"] = function(im, ipos, evt){
-    evt.preventDefault();
+    if( evt ){
+	evt.preventDefault();
+    }
     // sanity check
     if( !im ){ return; }
     im.activeShapeLayer("regions");
 };
 
 JS9.Keyboard.Actions["toggle active shape layers"] = function(im, ipos, evt){
-    evt.preventDefault();
+    if( evt ){
+	evt.preventDefault();
+    }
     // sanity check
     if( !im ){ return; }
     im.toggleShapeLayers();
+};
+
+JS9.Keyboard.Actions["send selected region to back"] = function(im, ipos, evt){
+    if( evt ){
+	evt.preventDefault();
+    }
+    // sanity check
+    if( !im ){ return; }
+    im.changeShapes("regions", "selected", {send: "back"});
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -4622,24 +4661,44 @@ JS9.Keyboard.Actions["select region"] = function(im, ipos, evt){
     }
 };
 
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["select all regions"] = function(im, ipos, evt){
+    var layer, canvas, selection;
+    // sanity check
+    if( !im || fabric.major_version === 1 ){ return; }
+    layer = im.layer || "regions";
+    canvas = im.layers[layer].canvas;
+    selection = new fabric.ActiveSelection(canvas.getObjects(), {
+	canvas: canvas
+    });
+    canvas.setActiveObject(selection);
+    canvas.renderAll();
+};
+
 JS9.Keyboard.Actions["refresh image"] = function(im, ipos, evt){
     // sanity check
     if( !im ){ return; }
-    evt.preventDefault();
+    if( evt ){
+	evt.preventDefault();
+    }
     im.refreshImage();
 };
 
 JS9.Keyboard.Actions["display full image"] = function(im, ipos, evt){
     // sanity check
     if( !im ){ return; }
-    evt.preventDefault();
+    if( evt ){
+	evt.preventDefault();
+    }
     im.displaySection("full");
 };
 
 JS9.Keyboard.Actions["display selected cutouts"] = function(im, ipos, evt){
     // sanity check
     if( !im ){ return; }
-    evt.preventDefault();
+    if( evt ){
+	evt.preventDefault();
+    }
     im.displaySection("selected");
 };
 
@@ -4652,7 +4711,9 @@ JS9.Keyboard.Actions["toggle coordinate grid"] = function(im, ipos, evt){
 JS9.Keyboard.Actions["toggle crosshair"] = function(im, ipos, evt){
     // sanity check
     if( !im ){ return; }
-    evt.preventDefault();
+    if( evt ){
+	evt.preventDefault();
+    }
     im.params.crosshair = !im.params.crosshair;
     if( !im.params.crosshair ){
 	JS9.Crosshair.hide(im);
@@ -5528,7 +5589,7 @@ JS9.RegisterPlugin(JS9.Mef.CLASS, JS9.Mef.NAME, JS9.Mef.init,
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, JS9, sprintf */
+/*global $, JS9, sprintf, fabric */
 
 // create our namespace, and specify some meta-information and params
 JS9.Menubar = {};
@@ -5569,6 +5630,7 @@ JS9.Menubar.keyMap = {
     "edit selected": "edit selected region",
     "copy selected": "copy selected region to clipboard",
     "edit": "edit selected region",
+    "to back": "send selected region to back",
     "copy": "copy selected region to clipboard",
     "copy all": "copy all regions to clipboard",
     "paste to region pos": "paste regions from local clipboard",
@@ -7403,6 +7465,9 @@ JS9.Menubar.createMenus = function(){
 	    items.sep1 = "------";
 	    items.loadRegions  = xname("load");
 	    items.listRegions  = xname("list");
+	    if( fabric.major_version > 1 ){
+		items.selectRegions = xname("select");
+	    }
 	    items.saveas  = {
 		name: "save ...",
 		items: {
@@ -7434,6 +7499,7 @@ JS9.Menubar.createMenus = function(){
 		    },
 		    configSelReg: xname("edit"),
 		    listSelReg: xname("list"),
+		    backSelReg: xname("to back"),
 		    saveSelReg: xname("save"),
 		    copySelReg: {
 			name: "copy to ...",
@@ -7517,6 +7583,11 @@ JS9.Menubar.createMenus = function(){
 			    case "listRegions":
 				uim.listRegions("all", {mode: 2});
 				break;
+			    case "selectRegions":
+				if( JS9.hasOwnProperty("Keyboard") ){
+				    JS9.Keyboard.Actions["select all regions"](uim, uim.ipos);
+				}
+				break;
 			    case "removeRegions":
 				uim.removeShapes("regions", "all");
 				udisp.clearMessage("regions");
@@ -7558,6 +7629,11 @@ JS9.Menubar.createMenus = function(){
 				break;
 			    case "listSelReg":
 				uim.listRegions("selected", {mode: 2});
+				break;
+			    case "backSelReg":
+				if( JS9.hasOwnProperty("Keyboard") ){
+				    JS9.Keyboard.Actions["send selected region to back"](uim, uim.ipos);
+				}
 				break;
 			    case "removeSelReg":
 				uim.removeShapes("regions", "selected");
