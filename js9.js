@@ -10464,6 +10464,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    dlayer.display.image.layer = null;
 	}
 	// selection cleared processing
+	// remove anchors from previously selected polygon
 	if( obj ){
 	    switch(obj.type){
 	    case "polyline":
@@ -10481,6 +10482,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	}
 	// new selection processing
 	if( obj ){
+	    // add anchors to selected polygon
 	    switch(obj.type){
 	    case "polyline":
 	    case "polygon":
@@ -10890,7 +10892,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    }
 	});
     }
-    // object selection cleared: remove anchors from polygon
+    // selection cleared
     dlayer.canvas.on('before:selection:cleared', function (opts){
 	// sanity check
 	if( !opts.target ){ return; }
