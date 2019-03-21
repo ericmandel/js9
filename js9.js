@@ -10874,7 +10874,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    if( !opts.target ){ return; }
 	    selon(dlayer, opts.target);
 	});
-    } else if( fabric.major_version > 1 ){
+    } else {
 	// selection created: add anchors to polygon
 	dlayer.canvas.on("selection:created", function (opts){
 	    // sanity check
