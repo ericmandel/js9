@@ -12131,7 +12131,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 // select a one of more shapes by id or tag and execute a callback
 // call using image context
 JS9.Fabric.selectShapes = function(layerName, id, cb){
-    var i, group, ginfo, sobj, canvas, objects, olen, obj, ocolor, tag;
+    var i, group, ginfo, sobj, canvas, objects, olen, obj, ocolor, tag, ao;
     var that = this;
     // sanity check
     if( !this.layers || !layerName || !this.layers[layerName] ){
@@ -12149,19 +12149,22 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
     // see if we have an active group
     if( fabric.major_version === 1 ){
 	group = canvas.getActiveGroup();
-	ginfo = {group: null};
     } else {
-	group = null;
-	ginfo = {group: null};
+	ao = canvas.getActiveObject();
+	if( ao && ao.type === 'activeSelection' ){
+	    group = ao;
+	} else {
+	    group = null;
+	}
     }
+    // but an active group does not mean selected regions are inside it
+    ginfo = {group: null};
     // select on the id
     switch( typeof id ){
     case "object":
 	if( id.params ){
             if( group && group.contains(id) ){
 	        ginfo.group = group;
-	    } else {
-		ginfo.group = null;
 	    }
 	    // specific shape
 	    cb.call(that, id, ginfo);
@@ -12208,6 +12211,7 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 		    }
 		}
 	    } else {
+		ginfo.group = group;
 		objects = canvas.getActiveObjects();
 		olen = objects.length;
 		while( olen-- ){
