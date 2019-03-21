@@ -10454,8 +10454,83 @@ fabric.Object.prototype.rescaleEvenly = JS9.Fabric.rescaleEvenly;
 // create a new shape layer in the display
 // call using display context
 JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
-    var s, id, dlayer;
+    var id, dlayer;
     var display = this;
+    var seloff = function(dlayer, obj){
+	// reset currently selected
+	dlayer.params.sel = null;
+	// also reset current layer in the image
+	if( dlayer.display.image ){
+	    dlayer.display.image.layer = null;
+	}
+	// selection cleared processing
+	if( obj ){
+	    switch(obj.type){
+	    case "polyline":
+	    case "polygon":
+		JS9.Fabric.removePolygonAnchors(dlayer, obj);
+		dlayer.canvas.renderAll();
+		break;
+	    }
+	}
+    };
+    var selon = function(dlayer, obj){
+	// turn off previous selection, if necessary
+	if( dlayer.params.sel && obj.params && (dlayer.params.sel !== obj) ){
+	    seloff(dlayer, dlayer.params.sel);
+	}
+	// new selection processing
+	if( obj ){
+	    switch(obj.type){
+	    case "polyline":
+	    case "polygon":
+		JS9.Fabric.addPolygonAnchors(dlayer, obj);
+		dlayer.canvas.renderAll();
+		break;
+	    }
+	    // set currently selected shape
+	    if( obj.polyparams ){
+		dlayer.params.sel = obj.polyparams.polygon;
+	    } else if( obj.params ){
+		dlayer.params.sel = obj;
+	    }
+	}
+	// and currently selected layer
+	if( dlayer.display.image ){
+	    dlayer.display.image.layer = layerName;
+	}
+    };
+    var selmulti = function(dlayer, activeObject, s){
+	var i, j, obj, parent, child;
+	var activeObjects = dlayer.canvas.getActiveObjects(s);
+	for(i=0; i<activeObjects.length; i++){
+	    obj = activeObjects[i];
+	    if( !obj.params ){ continue; }
+	    // add parent, if not already added
+	    if( obj.params.parent && obj.params.parent.obj ){
+		parent = obj.params.parent.obj;
+		if( $.inArray(parent, activeObjects) < 0 ){
+		    activeObject.addWithUpdate(parent);
+		}
+	    }
+	    // add children, if not already added
+	    if( obj.params.children ){
+		for(j=0; j<obj.params.children.length; j++){
+		    child = obj.params.children[j].obj;
+		    if( $.inArray(child, activeObjects) < 0 ){
+			activeObject.addWithUpdate(child);
+		    }
+		}
+	    }
+	    switch(obj.type){
+	    case "polyline":
+	    case "polygon":
+		JS9.Fabric.removePolygonAnchors(dlayer, obj);
+		break;
+	    }
+	}
+	dlayer.canvas.renderAll();
+    };
     // sanity check
     if( !display || !layerName ){
 	return;
@@ -10713,9 +10788,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	var objs = [];
 	var myWidth, myHeight;
 	// sanity check
-	if( !opts.target ){
-	    return;
-	}
+	if( !opts.target ){ return; }
 	o = opts.target;
 	// update deltas to connected parents
 	JS9.Fabric.updateChildren(dlayer, o, "deltas");
@@ -10772,9 +10845,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     dlayer.canvas.on('object:scaling', function (opts){
 	var o;
 	// sanity check
-	if( !opts.target ){
-	    return;
-	}
+	if( !opts.target ){ return; }
 	o = opts.target;
 	o.rescaleEvenly();
 	o.rescaleBorder();
@@ -10783,128 +10854,47 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     dlayer.canvas.on('object:moving', function (opts){
 	var o;
 	// sanity check
-	if( !opts.target ){
-	    return;
-	}
+	if( !opts.target ){ return; }
 	o = opts.target;
 	JS9.Fabric.updateChildren(dlayer, o, "moving");
     });
     dlayer.canvas.on('object:rotating', function (opts){
 	var o;
 	// sanity check
-	if( !opts.target ){
-	    return;
-	}
+	if( !opts.target ){ return; }
 	o = opts.target;
 	JS9.Fabric.updateChildren(dlayer, o, "rotating");
     });
-    // object selected: add anchors to polygon
-    s = fabric.major_version === 1 ? 'object:selected' : 'selection:created';
-    dlayer.canvas.on(s, function (opts){
-	var o;
-	// sanity check
-	if( !opts.target ){
-	    return;
-	}
-	o = opts.target;
-	// fire the selection cleared event, if necessary
-	if( dlayer.params.sel && o.params &&
-	    (dlayer.params.sel !== o) ){
-	    dlayer.canvas.fire('before:selection:cleared',
-			       {target: dlayer.params.sel});
-	}
-	// selection processing
-	if( o ){
-	    switch(o.type){
-	    case "polyline":
-	    case "polygon":
-		JS9.Fabric.addPolygonAnchors(dlayer, o);
-		dlayer.canvas.renderAll();
-		break;
-	    }
-	    // set currently selected shape
-	    if( o.polyparams ){
-		dlayer.params.sel = o.polyparams.polygon;
-	    } else if( o.params ){
-		dlayer.params.sel = o;
-	    }
-	}
-	// and currently selected layer
-	if( dlayer.display.image ){
-	    dlayer.display.image.layer = layerName;
-	}
-    });
-    if( fabric.major_version > 1 ){
-	// updating generally means adding a region to the current selection,
-	// which causes polygon anchors to get lost, so just remove them
+    if( fabric.major_version === 1 ){
+	// object selected: add anchors to polygon
+	dlayer.canvas.on("object:selected", function (opts){
+	    // sanity check
+	    if( !opts.target ){ return; }
+	    selon(dlayer, opts.target);
+	});
+    } else if( fabric.major_version > 1 ){
+	// selection created: add anchors to polygon
+	dlayer.canvas.on("selection:created", function (opts){
+	    // sanity check
+	    if( !opts.target ){	return; }
+	    selon(dlayer, opts.target);
+	});
+	// selection updated (adding a region to the current selection):
+	// add anchors to polygon
 	dlayer.canvas.on("selection:updated", function(opts){
-	    var i, j, o, obj, activeObjects, activeObject;
-	    activeObject = dlayer.canvas.getActiveObject();
+	    var activeObject = dlayer.canvas.getActiveObject();
 	    if( activeObject.type === 'activeSelection' ){
-		activeObjects = dlayer.canvas.getActiveObjects(opts);
-		for(i=0; i<activeObjects.length; i++){
-		    o = activeObjects[i];
-		    if( !o.params ){ continue; }
-		    // add parent, if not already added
-		    if( o.params.parent ){
-			obj = o.params.parent.obj;
-			if( $.inArray(obj, activeObjects) < 0 ){
-			    activeObject.addWithUpdate(obj);
-			}
-		    }
-		    // add children, if not already added
-		    if( o.params.children ){
-			for(j=0; j<o.params.children.length; j++){
-			    obj = o.params.children[j].obj;
-			    if( $.inArray(obj, activeObjects) < 0 ){
-				activeObject.addWithUpdate(obj);
-			    }
-			}
-		    }
-		    switch(o.type){
-		    case "polyline":
-		    case "polygon":
-			JS9.Fabric.removePolygonAnchors(dlayer, o);
-			break;
-		    }
-		}
-		dlayer.canvas.renderAll();
+		selmulti(dlayer, activeObject, opts);
 	    } else {
-		o = activeObject;
-		switch(o.type){
-		case "polyline":
-		case "polygon":
-		    JS9.Fabric.removePolygonAnchors(dlayer, o);
-		    break;
-		}
-		dlayer.canvas.renderAll();
+		selon(dlayer, activeObject);
 	    }
 	});
     }
     // object selection cleared: remove anchors from polygon
     dlayer.canvas.on('before:selection:cleared', function (opts){
-	var o;
 	// sanity check
-	if( !opts.target ){
-	    return;
-	}
-	o = opts.target;
-	// reset currently selected
-	dlayer.params.sel = null;
-	// also reset current layer in the image
-	if( dlayer.display.image ){
-	    dlayer.display.image.layer = null;
-	}
-	// selection cleared processing
-	if( o ){
-	    switch(o.type){
-	    case "polyline":
-	    case "polygon":
-		JS9.Fabric.removePolygonAnchors(dlayer, o);
-		dlayer.canvas.renderAll();
-		break;
-	    }
-	}
+	if( !opts.target ){ return; }
+	seloff(dlayer, opts.target);
     });
     // if canvas moves (e.g. light window), calcOffset must be called ...
     // there is no good cross-browser way to track an element changing,
