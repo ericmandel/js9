@@ -11816,7 +11816,7 @@ JS9.Fabric._exportShapeOptions = function(opts){
 // make a text shape as a child of this shape
 // call using image context
 JS9.Fabric._handleChildText = function(layerName, s, opts){
-    var t, dpos, npos, topts, yoff;
+    var i, t, dpos, npos, topts, yoff, child;
     var textht = 12;
     // region layer only, for now
     if( layerName !== "regions" ){
@@ -11824,7 +11824,8 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
     }
     // opts are optional
     opts = opts || {};
-    if( (s.params.shape !== "text") && opts.text ){
+    if( (s.params.shape !== "text") && opts.text          &&
+	(!s.params.children || !s.params.children.length) ){
 	yoff = (s.height * s.scaleX / 2) - textht;
 	// default position for text (might be overridden by textOpts)
 	if( Math.abs(s.angle) < 0.000001 ){
@@ -11872,6 +11873,16 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 	}
 	// parent has another child
 	s.params.children.push({id: t.params.id, obj: t});
+    } else if( s.params.children && (opts.text || opts.textOpts) ){
+	// process parameters passed to existing text children
+	for(i=0; i<s.params.children.length; i++){
+	    child = s.params.children[i].obj;
+	    topts = $.extend(true, {}, opts.textOpts || {});
+	    if( opts.text ){
+		topts.text = opts.text;
+	    }
+	    this.changeShapes(layerName, child.params.id, topts);
+	}
     }
 };
 
@@ -12885,6 +12896,11 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    }
 	    // reset the center point
 	    JS9.resetPolygonCenter(obj);
+	    break;
+	case "text":
+	    if( opts.text ){
+		obj.params.text = opts.text;
+	    }
 	    break;
 	}
 	// make sure border width is correct
