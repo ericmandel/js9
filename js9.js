@@ -12236,11 +12236,12 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 	} else {
 	    // can't use forEachObject, which loops in ascending order,
 	    // because a "remove" cb changes the array destructively!
+	    // don't process shapes with parents (i.e. text children)
 	    objects = canvas.getObjects();
             olen = objects.length;
 	    while( olen-- ){
 		obj = objects[olen];
-		if( obj.params ){
+		if( obj.params && !obj.params.parent ){
 		    ocolor = obj.stroke.toLowerCase();
 		    if( group && group.contains(obj) ){
 			ginfo.group = group;
