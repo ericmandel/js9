@@ -12241,37 +12241,46 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
             olen = objects.length;
 	    while( olen-- ){
 		obj = objects[olen];
-		if( obj.params && !obj.params.parent ){
-		    ocolor = obj.stroke.toLowerCase();
-		    if( group && group.contains(obj) ){
-			ginfo.group = group;
-		    } else {
-			ginfo.group = null;
-		    }
-		    if( id === "all" ){
-			// all
-			cb.call(that, obj, ginfo);
-		    } else if( (id.toLowerCase() === ocolor) ||
-			       (JS9.colorToHex(id).toLowerCase() === ocolor) ){
-			// color
-			cb.call(that, obj, ginfo);
-		    } else if( id === obj.params.shape ){
-			// shape
-			cb.call(that, obj, ginfo);
-		    } else if( id === obj.params.file ){
-			// origin filename
-			cb.call(that, obj, ginfo);
-		    } else {
-			// tags
-			if( obj.params.tags){
-			    for(i=0; i<obj.params.tags.length; i++){
-				tag = obj.params.tags[i];
-				if( id.match(/^\/.*\/$/) &&
-				    tag.match(new RegExp(id.slice(1,-1)))){
-				    cb.call(that, obj, ginfo);
-				} else if( id === tag ){
-				    cb.call(that, obj, ginfo);
-				}
+		if( !obj.params ){ continue; }
+		if( id !== "child" && obj.params.parent ){ continue; }
+		if( id === "child" && !obj.params.parent ){ continue; }
+		ocolor = obj.stroke.toLowerCase();
+		if( group && group.contains(obj) ){
+		    ginfo.group = group;
+		} else {
+		    ginfo.group = null;
+		}
+		if( id === "all" ){
+		    // all
+		    cb.call(that, obj, ginfo);
+		} else if( (id.toLowerCase() === ocolor) ||
+			   (JS9.colorToHex(id).toLowerCase() === ocolor) ){
+		    // color
+		    cb.call(that, obj, ginfo);
+		} else if( id === obj.params.shape ){
+		    // shape
+		    cb.call(that, obj, ginfo);
+		} else if( id === obj.params.file ){
+		    // origin filename
+		    cb.call(that, obj, ginfo);
+		} else if( id === "child" && obj.params.parent ){
+		    // all
+		    cb.call(that, obj, ginfo);
+		} else if( id === "parent"            &&
+			   obj.params.children        &&
+			   obj.params.children.length ){
+		    // all
+		    cb.call(that, obj, ginfo);
+		} else {
+		    // tags
+		    if( obj.params.tags){
+			for(i=0; i<obj.params.tags.length; i++){
+			    tag = obj.params.tags[i];
+			    if( id.match(/^\/.*\/$/) &&
+				tag.match(new RegExp(id.slice(1,-1)))){
+				cb.call(that, obj, ginfo);
+			    } else if( id === tag ){
+				cb.call(that, obj, ginfo);
 			    }
 			}
 		    }
