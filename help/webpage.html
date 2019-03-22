@@ -66,15 +66,16 @@ in js9support.css, js9support.js, js9support.min,js, and js9plugins.js.
 
 <p>
 The js9support.min.js file contains a number of required third-party
-software modules, including jQuery, flot (for plotting), dhtmlwindow
-(for light windows), etc. It is separated from js9.min.js to optimize
-file caching. Although JS9 <b>will not run</b> properly without these
-third-party modules, you are free to load them manually, i.e., without
-loading js9support.min.js itself. A manual load is useful in cases
-where you want a different version of one of the third-party modules
-(e.g., js9support.min.js loads jQuery 1.12.2, but you need to
-utilize jQuery 1.11.3). In such a case, we still recommend creating a
-single file to hold third-party modules, in order to minimize load latency.
+software modules, including jQuery, fabric.js (2D graphics), flot (for
+plotting), dhtmlwindow (for light windows), etc. It is separated from
+js9.min.js to optimize file caching. Although JS9 <b>will not run</b>
+properly without these third-party modules, you are free to load them
+manually, i.e., without loading js9support.min.js itself. A manual
+load is useful in cases where you want a different version of one of
+the third-party modules (e.g., js9support.min.js loads jQuery 1.12.2,
+but you need to utilize jQuery 1.11.3). In such a case, we still
+recommend creating a single file to hold third-party modules, in order
+to minimize load latency.
 
 <p>
 JS9 <b>will run</b> without the js9plugins.js file, but with much

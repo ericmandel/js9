@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, JS9, sprintf */
+/*global $, JS9, sprintf, fabric */
 
 // create our namespace, and specify some meta-information and params
 JS9.Menubar = {};
@@ -44,6 +44,7 @@ JS9.Menubar.keyMap = {
     "edit selected": "edit selected region",
     "copy selected": "copy selected region to clipboard",
     "edit": "edit selected region",
+    "to back": "send selected region to back",
     "copy": "copy selected region to clipboard",
     "copy all": "copy all regions to clipboard",
     "paste to region pos": "paste regions from local clipboard",
@@ -1878,6 +1879,9 @@ JS9.Menubar.createMenus = function(){
 	    items.sep1 = "------";
 	    items.loadRegions  = xname("load");
 	    items.listRegions  = xname("list");
+	    if( fabric.major_version > 1 ){
+		items.selectRegions = xname("select");
+	    }
 	    items.saveas  = {
 		name: "save ...",
 		items: {
@@ -1909,6 +1913,7 @@ JS9.Menubar.createMenus = function(){
 		    },
 		    configSelReg: xname("edit"),
 		    listSelReg: xname("list"),
+		    backSelReg: xname("to back"),
 		    saveSelReg: xname("save"),
 		    copySelReg: {
 			name: "copy to ...",
@@ -1992,6 +1997,11 @@ JS9.Menubar.createMenus = function(){
 			    case "listRegions":
 				uim.listRegions("all", {mode: 2});
 				break;
+			    case "selectRegions":
+				if( JS9.hasOwnProperty("Keyboard") ){
+				    JS9.Keyboard.Actions["select all regions"](uim, uim.ipos);
+				}
+				break;
 			    case "removeRegions":
 				uim.removeShapes("regions", "all");
 				udisp.clearMessage("regions");
@@ -2033,6 +2043,11 @@ JS9.Menubar.createMenus = function(){
 				break;
 			    case "listSelReg":
 				uim.listRegions("selected", {mode: 2});
+				break;
+			    case "backSelReg":
+				if( JS9.hasOwnProperty("Keyboard") ){
+				    JS9.Keyboard.Actions["send selected region to back"](uim, uim.ipos);
+				}
 				break;
 			    case "removeSelReg":
 				uim.removeShapes("regions", "selected");
