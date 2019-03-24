@@ -451,15 +451,15 @@ JS9.helpOpts = {
 	type: "help", url:"memory.html",
 	title: "Dealing with Memory Limitations"
     },
-    regions: {
-	heading: "JS9Help",
-	type: "help", url:"regions.html",
-	title: "Regions Format"
-    },
     extmsg: {
 	heading: "JS9Help",
 	type: "help", url:"extmsg.html",
 	title: "External Messaging"
+    },
+    desktop: {
+	heading: "JS9Help",
+	type: "help", url:"desktop.html",
+	title: "JS9 on the Desktop"
     },
     python: {
 	heading: "JS9Help",
@@ -470,6 +470,11 @@ JS9.helpOpts = {
 	heading: "JS9Help",
 	type: "help", url:"preferences.html",
 	title: "Setting Site Preferences"
+    },
+    regions: {
+	heading: "JS9Help",
+	type: "help", url:"regions.html",
+	title: "Regions Format"
     },
     changelog: {
 	heading: "JS9Help",

@@ -19,7 +19,7 @@ fi
 IMSGSCR="js9.in"
 OMSGSCR="js9"
 
-echo "Generating $OMSGSCR script for JS9 messaging and Desktop use ..."
+echo "Generating $OMSGSCR script for JS9 messaging and desktop use ..."
 X="s#^ *JS9_SRCDIR=\".*\"#export JS9_SRCDIR=\"$JS9_SRCDIR\"#"
 X="$X;s#^ *JS9_INSTALLDIR=\".*\"#export JS9_INSTALLDIR=\"$JS9_INSTALLDIR\"#"
 sed "$X" < $IMSGSCR > $OMSGSCR

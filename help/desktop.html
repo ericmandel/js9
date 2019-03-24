@@ -1,0 +1,292 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<style type="text/css">
+  .container{
+    padding: 10px;
+  }
+</style>
+<title>JS9 on the Desktop</title>
+</head>
+<body>
+<div class="container">
+<center><h3>JS9 on the Desktop</h3></center>
+
+<p>
+JS9 can be used as a desktop replacement for SAOimage DS9: you can
+load images into the app's web page (or your own custom web page) and
+use the full power of JS9, including external messaging.
+
+<p>
+Advantages of using JS9 include:
+<ul>
+<li> fully configurable user interface using standard web pages
+<li> support for adding your own analysis plugins
+<li> complete programming interface via a rich public API
+<li> external messaging with full access to the public API (python and shell)
+<li> flexibility of having multiple images associated with separate displays
+<li> support for image blending
+<li> support for image reprojection
+</ul>
+
+<p>
+Advantages of using DS9 include:
+<ul>
+<li> full access to virtual memory via mmap() system call (no memory limits)
+<li> full support for a wide range of esoteric WCS systems using AST libraries
+<li> support for 3D rendering
+<li> XPA-based messaging integrated with CIAO and ftools analysis systems
+<li> advanced access to external catalogs and archives
+<li> full support for VO/SAMP
+</ul>
+
+<h3>Installing for Desktop Use</h3>
+
+<p>
+Desktop JS9 is based on <a href="http://electron.atom.io">Electron.js</a>,
+a widely-used framework for creating native applications with web
+technologies like JavaScript, HTML, and CSS. Install Electron.js by
+visiting the release page: <a href="http://electron.atom.io/releases/">
+http://electron.atom.io/releases</a> and downloading the latest available
+stable release for your platform. On a Mac, the Electron.app should be
+installed in the /Applications or ~/Applications folder. On Linux, the
+electron program should be placed in your PATH. Note that Electron.js
+for Linux requires a relatively recent version of Linux: Ubuntu 12.04,
+Fedora 21, Debian 8, CentOS 7 (not CentOS 6). Note that Electron.js also
+is available for Windows, so desktop JS9 should also run on that OS,
+although we have not done any work in this direction. If you get desktop JS9
+running under Windows, please let us know!
+
+<p>
+Once the Electron.js is installed, you can build JS9 as usual, taking
+care to configure use of the Node.js helper. Note that there is no need
+to actually install Node.js: desktop JS9 has its helper integrated into
+Electron.js already.
+
+<p>
+Moreover, if you are not planning to utilize server-side analysis tasks
+or large file support, you can skip the standard build and simply generate
+the JS9 quick-start files:
+<pre>
+  ./mkjs9 -q
+  Editing js9Prefs.json for Node.js helper ...
+  Editing js9prefs.js for Node.js helper ...
+  Generating js9 script for JS9 messaging and desktop use ...
+
+  If you plan to use Electron.app with JS9, consider codesign'ing it:
+
+  sudo codesign --force --deep --sign - /Applications/Electron.app/Contents/MacOS/Electron/
+
+  This will avoid repeated requests to allow incoming connections.
+</pre>
+The mkjs9 script will create a js9prefs.js file (for the browser) and
+a js9Prefs.json file (for the JS9 helper), which you can edit to add
+preferred JS9 properties, as well as a js9 script to start the JS9
+app. On a Mac, you probably will want to codesign the Electron.app
+application to avoid repeated requests about incoming connections (see
+example above).
+
+<h3>Running JS9 on the Desktop</h3>
+
+<p>
+The js9 script is normally made accessible by adding the JS9 install
+directory (when fully building JS9) or the source directory (for quick
+install) to your user PATH.
+
+<p>
+Run the js9 script with the -a switch to start the desktop app, display
+the default JS9 web page, and load one or more FITS files:
+<pre>
+  # the -a switch tells the script to bring up the desktop js9 app
+  js9 -a ~/data/casa.fits &
+</pre>
+
+<p>
+The same js9 script (without the -a switch) can now be used to interact
+with the JS9 page (or any other JS9-enabled web page):
+<pre>
+  # without -a, the script sends commands to the JS9 display
+  js9 SetColormap cool
+  js9 AddRegions 'ICRS;ellipse(23:23:18.76, +58:47:27.252, 31.8", 15.9", 40)'
+</pre>
+See: <a href="./extmsg.html">External Messaging</a> for more details.
+
+<p>
+A number of desktop-specific switches are available in the js9 script. Perhaps
+the most important is the <b>--webpage</b> switch, which allows you to
+specify a custom web page to display, so that you can tailor the desktop app
+to your specific needs:
+<pre>
+  js9 -a --webpage ~/myjs9/myjs9.html ~/data/casa.fits
+</pre>
+When configuring your own web page, one simple possibility is to create a
+separate directory, parallel to the JS9 source (or install) directory,
+in which you can maintain your custom web page(s) and your customized
+js9prefs.js file. You might also create a myjs9 script that runs the
+js9 script. For example, this myjs9.html file might be stored in a myjs9
+directory parallel to the js9 directory:
+<pre>
+  &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+     "http://www.w3.org/TR/html4/loose.dtd"&gt;
+  &lt;html&gt;
+  &lt;head&gt;
+    &lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8"&gt;
+    &lt;meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" &gt; 
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+    &lt;link type="image/x-icon" rel="shortcut icon" href="../js9/favicon.ico"&gt;
+    &lt;link type="text/css" rel="stylesheet" href="../js9/js9support.css"&gt;
+    &lt;link type="text/css" rel="stylesheet" href="../js9/js9.css"&gt;
+    &lt;script type="text/javascript" src="js9prefs.js"&gt;&lt;/script&gt;
+    &lt;script type="text/javascript" src="../js9/js9support.min.js"&gt;&lt;/script&gt;
+    &lt;script type="text/javascript" src="../js9/js9.min.js"&gt;&lt;/script&gt;
+    &lt;script type="text/javascript" src="../js9/js9plugins.js"&gt;&lt;/script&gt;
+    &lt;title&gt;my JS9 app&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+      &lt;div class="JS9Menubar" data-width="100%"&gt;&lt;/div&gt;
+      &lt;p style="margin-top: -14px;"&gt;
+      &lt;table cellspacing="0" style="width:100%;"&gt;
+      &lt;tr valign="top"&gt;
+      &lt;td align="left"&gt;
+      &lt;div class="JS9" data-width="768px" data-height="768px"&gt;&lt;/div&gt;
+      &lt;div style="margin-top: 2px;"&gt;
+      &lt;div class="JS9Colorbar" data-width="768px" id="JS9Colorbar" data-showTicks="false" data-height="10px"&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;/td&gt;
+      &lt;td align="right"&gt;
+      &lt;table cellspacing="0"&gt;
+      &lt;tr valign="top"&gt;
+      &lt;td&gt;
+      &lt;div class="JS9Magnifier" data-width="250px" data-height="250px"&gt;&lt;/div&gt;
+      &lt;/td&gt;
+      &lt;/tr&gt;   
+      &lt;tr valign="top"&gt;
+      &lt;td&gt;
+      &lt;div class="JS9Panner" data-width="250px" data-height="250px"&gt;&lt;/div&gt;
+      &lt;/td&gt;
+      &lt;/tr&gt;   
+      &lt;tr valign="top"&gt;
+      &lt;td&gt;
+      &lt;div class="JS9Info" data-height="250px" style="margin-top: 2px;"&gt;&lt;/div&gt;
+      &lt;/td&gt;
+      &lt;/tr&gt;   
+      &lt;/table&gt;    
+      &lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;/table&gt;
+  &lt;/body&gt;
+  &lt;/html&gt;
+</pre>
+Note that the JavaScript and CSS files are loaded from the js9
+source (or install) directory, but the js9prefs.js is loaded from the
+myjs9 directory. This separation allows you to configure site-wide js9
+parameters without changing the any of the files in the source
+directory, and allows you to update the source directory very easily
+by executing "git pull".
+
+<p>
+A script such as the following can then be used to use this web page
+in the JS9 desktop:
+<pre>
+  #!/bin/bash
+
+  WEBPAGE="$HOME/myjs9/myjs9.html";
+
+  WIDTH=1130;
+  HEIGHT=860;
+
+  if [ x${JS9_WEBPAGE} != x ]; then
+    WEBPAGE=${JS9_WEBPAGE}
+  fi
+
+  if [ x${JS9_WEBPAGE_WIDTH} != x ]; then
+    WIDTH=${JS9_WEBPAGE_WIDTH}
+  fi
+
+  if [ x${JS9_WEBPAGE_HEIGHT} != x ]; then
+    HEIGHT=${JS9_WEBPAGE_HEIGHT}
+  fi
+
+  exec $HOME/js9/js9 -a --width $WIDTH --height $HEIGHT --webpage $WEBPAGE $*
+</pre>
+As shown above, the <b>--width</b> and <b>--height</b> switches are available
+to set the width and height of the Electron.js window which will contain the
+web page.
+
+<p>
+Another important switch is <b>--title</b> (and its generalized
+cousin, <b>--renameid</b>). This switch will rename the main JS9
+display id in the web page (whose default is "JS9") to the specified
+id. It is useful in cases where you want to start up multiple desktops
+using the same web page, and communicate with each one separately. In
+such cases, the <b>--title</b> switch will change the id of the JS9
+display element and its auxiliary elements (e.g. menubar, colorbar,
+etc) to the specified title:
+<pre>
+  js9 -a --title foo1 ~/data/casa.fits
+</pre>
+You will then be able to communicate with this web page using the specified id:
+<pre>
+  js9 --id foo1 GetColormap
+  {"colormap":"heat","contrast":1,"bias":0.5}
+</pre>
+The <b>--renameid</b> switch allows you to specify multiple JS9
+displays to rename, in cases where more than one JS9 display is part of a 
+web page:
+<pre>
+  js9 -a --renameid "JS9:foo1,myJS9:foo2" ~/data/casa.fits
+</pre>
+will rename the default "JS9" element to "foo1" and the "myJS9"
+element to "foo2".
+
+<p>
+The <b>--savedir</b> switch will set the directory into which files
+are saved, avoiding the display of an interactive dialog box when
+saving images:
+<pre>
+  js9 -a --savedir /Users/eric/Desktop ~/data/casa.fits
+  ...
+  js9 --id foo1 SavePNG casa.png
+</pre>
+will save the casa.png file on the desktop without a dialog box. This is
+especially useful in automatic scripting.
+<p>
+For a list of all js9 script switches, use the <b>--help</b> switch:
+<pre>
+  js9 --help
+</pre>
+
+<p>
+The JS9 <b>File</b> menu contains two options only available for Desktop use:
+<ul>
+<li><b>print window ...</b> print the entire Electron.js window
+<li><b>save window to pdf</b> save the entire Electron.js windows to a PDF file
+called js9.pdf in the current directory
+</ul>
+The print command always brings up a dialog box. The save command will save the
+window as a PDF in the current directory, without bringing up a dialog box.
+
+<h3>Security Notes</h3>
+
+<p>
+It is important to note that Electron.js is not a web
+browser, and web pages you load are not sandboxed. Our JS9 desktop
+application code takes additional precautions to enhance security by
+disabling Node.js integration and Javascript eval in web
+pages. However, these precautions are likely to be insufficient to
+guard against malicious web pages. Therefore, <b>it is important that
+you load only local or trusted remote web pages into the JS9 desktop app.</b>
+See: <a href="http://electron.atom.io/docs/tutorial/security/">
+Electron.js security</a> for more information.
+
+<p>
+You should update your copy of Electron.js periodically to ensure that you
+have the latest security fixes in place.
+
+<h5>Last updated: March 24, 2019</h5>
+</div>
+
+</body>
+</html>

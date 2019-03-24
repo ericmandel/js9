@@ -83,33 +83,24 @@ for colormaps, scaling, etc. See:
 <a href="./preferences.html">JS9 Site Preferences</a> for a
 description of the available parameters.
 
-<h3>Do You Want to Run JS9 as a Desktop Program from the Command Line?</h3>  
-JS9 can be used as a Desktop app: you can load images into the app's
-(Chrome) web page instead of using a browser.  The JS9 Desktop app
-simply requires that you install Electron.js, which is described here:
-<pre>
-  http://electron.atom.io
-</pre>
-To install Electron, go to the release page:
-<a href="http://electron.atom.io/releases/">
-http://electron.atom.io/releases</a>, choose the latest available
-release, and download the zip file for your platform.  On a Mac,
-Electron.app should be installed in the /Applications folder; you will
-have to run it manually (from the Finder) the first time.  On Linux,
-the electron program should be placed in your PATH. (Note that
-Electron requires a recent version of Linux: Ubuntu 12.04, Fedora 21,
-Debian 8. Thus, for example, it runs on CentOS 7 but not CentOS 6).
+<h3>Do You Want to Run JS9 as a Desktop Program from the Command Line?</h3>
+JS9 can be used as a desktop replacement for SAOimage DS9: you can
+load images into the app's (Chrome) web page (or your own custom web
+page) instead of a browser, and use the full power of JS9, including
+external messaging.
 
 <p>
-NB: It is important to note that Electron.js is not a web browser: the
-web pages you load are not sandboxed. Our JS9 Desktop application code
-takes additional precautions to enhance security by disabling node.js
-integration and Javascript eval in web pages. However, these
-precautions are likely to be insufficient to guard against malicious
-web pages. Therefore, <b>it is critically important that you load only
-local or trusted remote web pages into the JS9 Desktop app.</b> See:
-<a href="http://electron.atom.io/docs/tutorial/security/">
-Electron.js security</a> for more information.
+Running JS9 on the desktop simply requires that you install
+<a href="http://electron.atom.io">Electron.js</a>, an app building
+platform that combines Node.js and the Chrome libraries.  To install
+Electron, go to the release page:
+<a href="http://electron.atom.io/releases/">
+http://electron.atom.io/releases</a>, choose the latest available
+stable release, and download the zip file for your platform.  On a
+Mac, Electron.app should be installed in the /Applications or
+~/Applications folder. On Linux, the electron program should be placed
+in your PATH. Note that Electron requires a relatively recent version
+of Linux: Ubuntu 12.04, Fedora 21, Debian 8, CentOS 7 (not CentOS 6).
 
 <p>
 Once the Electron app is installed, generate the JS9 quick-start files:
@@ -117,7 +108,7 @@ Once the Electron app is installed, generate the JS9 quick-start files:
   ./mkjs9 -q
   Editing js9Prefs.json for Node.js helper ...
   Editing js9prefs.js for Node.js helper ...
-  Generating js9 script for JS9 messaging and Desktop use ...
+  Generating js9 script for JS9 messaging and desktop use ...
 
   If you plan to use Electron.app with JS9, consider codesign'ing it:
 
@@ -135,7 +126,7 @@ example above).
 <p>
 Run the js9 script to start the app and load data files:
 <pre>
-  # the -a switch tells the script to bring up the Desktop js9 app
+  # the -a switch tells the script to bring up the desktop js9 app
   js9 -a ~/data/casa.fits &
 </pre>
 and then use the same script to interact with the JS9 page (or any
@@ -145,7 +136,9 @@ other JS9-enabled web page):
   js9 cmap cool
   js9 regions circle
 </pre>
-See: <a href="./extmsg.html">External Messaging</a> for more details.
+
+<p>
+For more details, see: <a href="Desktop.html">Desktop JS9</a>.
 
 <h3>Do You Want to Install JS9 in a Web Server?</h3>  
 If you want to run JS9 in a "real" web server, build and install
