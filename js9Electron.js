@@ -305,7 +305,7 @@ ipcMain.on('msg', (event, arg) => {
 		opts = Object.assign(js9Electron.printOpts, obj.opts);
 		try{
 		    win.webContents.print(opts, function(e){
-			if( !e ){
+			if( e ){
 			    dialog.showErrorBox("ERROR in WindowPrint",
 						e.message);
 			    return;
