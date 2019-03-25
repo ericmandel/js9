@@ -176,6 +176,13 @@ function createWindow() {
     });
     // and load the web page
     if( !js9Electron.page.includes("://") ){
+	if( !path.isAbsolute(js9Electron.page) ){
+	    if( process.env.PWD ){
+		js9Electron.page = process.env.PWD + "/" + js9Electron.page;
+	    } else {
+		js9Electron.page = path.relative(__dirname, js9Electron.page);
+	    }
+	}
 	js9Electron.page = "file://" + js9Electron.page;
     }
     js9Electron.win.loadURL(js9Electron.page);
