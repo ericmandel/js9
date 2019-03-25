@@ -18678,10 +18678,12 @@ JS9.cleanPath = function(s){
 
 // convert relative directory into absolute directory using currentDir
 // desktop only, to make pathname relative to where js9 was started
-JS9.fixPath = function(f){
+JS9.fixPath = function(f, opts){
+    opts = opts || {};
     if( window.isElectron           &&
 	window.currentDir           &&
 	JS9.desktopOpts.currentPath &&
+	opts.fixpath !== false      &&
 	f.charAt(0) !== "/"         &&
 	!f.match(JS9.URLEXP)        ){
 	f = window.currentDir + "/" + f;
@@ -21079,7 +21081,7 @@ JS9.mkPublic("Load", function(file, opts){
 	    // png file: call the constructor and save the result
 	    JS9.checkNew(new JS9.Image(file, opts, func));
 	} else {
-	    file = JS9.fixPath(file);
+	    file = JS9.fixPath(file, opts);
 	    JS9.fetchURL(null, file, opts, JS9.NewFitsImage);
 	}
     } else {
@@ -21099,7 +21101,7 @@ JS9.mkPublic("Load", function(file, opts){
 	    JS9.cleanupFITSFile(im.raw, true);
 	}
 	// remove extension so we can find the file itself
-	file = JS9.fixPath(file);
+	file = JS9.fixPath(file, opts);
 	tfile = file.replace(/\[.*\]/, "");
 	JS9.fetchURL(file, tfile, opts);
     }
@@ -21442,6 +21444,8 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 	    if( f.charAt(0) !== "/" ){
 		f = JS9.InstallDir(f);
 	    }
+	    // desktop app: don't make path relative to current directory
+	    opts.fixpath = false;
 	    // load new file
 	    JS9.Load(f, opts, {display: obj.display});
 	} else {
