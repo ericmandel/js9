@@ -501,6 +501,7 @@ JS9.publics = {};		// object containing defined public API calls
 JS9.helper = {};		// only one helper per page, please
 JS9.fits = {};			// object holding FITS access routines
 JS9.userOpts = {};		// object to hold localStorage opts
+JS9.preloadwaiting = {};	// object of images currently being preloaded
 
 // misc params
 // list of scales in mkScaledCells
@@ -629,7 +630,7 @@ JS9.Image = function(file, params, func){
 	}
     };
     var finishUp = function(func){
-	var i, s, topts, tkey, oalerts;
+	var i, s, t, topts, tkey, oalerts;
 	var imopts = JS9.globalOpts.imopts;
 	var imcmap = JS9.globalOpts.imcmap;
 	// clear previous messages
@@ -726,6 +727,23 @@ JS9.Image = function(file, params, func){
 	    try{ JS9.xeqByName(func, window, this); }
 	    catch(e){ JS9.error("in image onload callback", e, false); }
 	}
+	// might also have to call JS9.globalOpts.onpreload func
+	s = this.proxyURL||this.file;
+	t = s.replace(/\[.*\]/, "");
+	if( JS9.preloadwaiting[s] || JS9.preloadwaiting[t]){
+	    delete JS9.preloadwaiting[s];
+	    delete JS9.preloadwaiting[t];
+	    if( !Object.keys(JS9.preloadwaiting).length ){
+		if( JS9.notNull(JS9.globalOpts.onpreload) ){
+		    try{
+			JS9.xeqByName(JS9.globalOpts.onpreload, window, this);
+		    }
+		    catch(e){
+			JS9.error("in onpreload callback", e, false);
+		    }
+		}
+	    }
+	}
     };
     // params can be an object containing local params, or the display string
     if( params ){
@@ -788,6 +806,9 @@ JS9.Image = function(file, params, func){
     // is this a proxy image?
     if( localOpts && localOpts.proxyFile ){
 	this.proxyFile = localOpts.proxyFile;
+    }
+    if( localOpts && localOpts.proxyURL ){
+	this.proxyURL = localOpts.proxyURL;
     }
     // was a "parent" FITS file specified?
     if( localOpts && localOpts.parentFile ){
@@ -21446,6 +21467,8 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 	    }
 	    // desktop app: don't make path relative to current directory
 	    opts.fixpath = false;
+	    // save original url
+	    opts.proxyURL = url;
 	    // load new file
 	    JS9.Load(f, opts, {display: obj.display});
 	} else {
@@ -21554,6 +21577,9 @@ JS9.mkPublic("Preload", function(arg1){
 	    }
 	    j = i + 1;
 	    if( (j < alen) && (typeof arguments[j] === "object") ){
+		if( func === JS9.Load || func === JS9.LoadProxy ){
+		    JS9.preloadwaiting[JS9.cleanPath(arguments[i])] = true;
+		}
 		try{
 		    if( dobj ){
 			func(arguments[i], arguments[j], dobj);
@@ -21567,6 +21593,9 @@ JS9.mkPublic("Preload", function(arg1){
 	    } else if( (j < alen) && (arguments[j].indexOf('{') === 0) ){
 		try{ pobj = JSON.parse(arguments[j]); }
 		catch(e){ pobj = null; }
+		if( func === JS9.Load || func === JS9.LoadProxy ){
+		    JS9.preloadwaiting[JS9.cleanPath(arguments[i])] = true;
+		}
 		try{
 		    if( dobj ){
 			func(arguments[i], pobj, dobj);
@@ -21577,6 +21606,9 @@ JS9.mkPublic("Preload", function(arg1){
 		catch(e){ emsg = emsg + " " + arguments[i]; }
 		i++;
 	    } else {
+		if( func === JS9.Load || func === JS9.LoadProxy ){
+		    JS9.preloadwaiting[JS9.cleanPath(arguments[i])] = true;
+		}
 		try{
 		    if( dobj ){
 			func(arguments[i], null, dobj);
@@ -21604,6 +21636,9 @@ JS9.mkPublic("Preload", function(arg1){
 		func = JS9.LoadColormap;
 	    } else {
 		func = JS9.Load;
+	    }
+	    if( func === JS9.Load || func === JS9.LoadProxy ){
+		JS9.preloadwaiting[JS9.cleanPath(JS9.preloads[i][0])] = true;
 	    }
 	    try{
 		if( JS9.preloads[i][2] ){

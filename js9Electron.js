@@ -107,9 +107,12 @@ js9Electron.pdfOpts = {
 js9Electron.argv = require('minimist')(process.argv.slice(2));
 // command line switch options
 js9Electron.id = js9Electron.argv.i || js9Electron.argv.id || "JS9";
+js9Electron.cmds = js9Electron.argv.cmds;
+js9Electron.cmdfile = js9Electron.argv.cmdfile;
 js9Electron.doHelper = isTrue(js9Electron.argv.helper, true);
 js9Electron.debug = isTrue(js9Electron.argv.debug, false);
 js9Electron.eval = isTrue(js9Electron.argv.eval, false);
+js9Electron.node = isTrue(js9Electron.argv.node, false);
 js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || process.env.JS9_WEBPAGE || js9Electron.defpage;
 js9Electron.title = js9Electron.argv.title;
 js9Electron.renameid = js9Electron.argv.renameid;
@@ -166,9 +169,10 @@ function initWillDownload() {
 function createWindow() {
     let cmd;
     let ncmd=0;
+    let xcmds = "";
     // create the browser window
     js9Electron.win = new BrowserWindow({
-	webPreferences: {nodeIntegration: false,
+	webPreferences: {nodeIntegration: js9Electron.node,
 			 contextIsolation: false,
 			 preload: js9Electron.preload},
 	width: js9Electron.width,
@@ -246,6 +250,30 @@ function createWindow() {
 	    cmd += `JS9.Preload('${file}', '${jobj}');`;
 	}  else {
 	    cmd += `JS9.Preload('${file}');`;
+	}
+	ncmd++;
+    }
+    // 5. add cmds to execute
+    if( fs.existsSync(js9Electron.cmdfile) ){
+	xcmds = fs.readFileSync(js9Electron.cmdfile, "utf-8");
+    }
+    if( js9Electron.cmds ){
+	if( xcmds ){
+	    xcmds += ";";
+	}
+	xcmds += js9Electron.cmds.replace(/\\/g,"");
+    }
+    if( xcmds ){
+	if( js9Electron.files.length ){
+	    // execute after preloads are loaded
+	    cmd += "JS9.globalOpts.onpreload = function(){";
+	    cmd += xcmds;
+	    cmd += "};";
+	} else {
+	    // execute as soon as JS9 is ready
+	    cmd += "$(document).on('JS9:ready', function(){";
+	    cmd += xcmds;
+	    cmd += "});";
 	}
 	ncmd++;
     }

@@ -48,10 +48,13 @@ usage(){
   printf " \n"
   printf "  app (-a) specific switches:\n"
   printf "    -a                        # start JS9 app (requires Electron.js)\n"
+  printf "    --cmds [js9 commands]     # JS9 commands to execute after loading images\n"
+  printf "    --cmdfile [file]          # file of commands to execute after loading images\n"
   printf "    --debug  [true|false]     # bring up Chrome debugger\n"
   printf "    --eval   [true|false]     # enable eval (def: false, not recommended)\n"
   printf "    --height [h]              # height of app\n"
   printf "    --helper [true|false]     # whether to start up helper app (def: true)\n"
+  printf "    --node   [true|false]     # enable node (def: false, not recommended)\n"
   printf "    --renameid [oid1:nid1,..] # rename ids of the JS9 display\n"
   printf "    --savedir [path]          # dir for saved files (skip save dialog box)\n"
   printf "    --title [id]              # rename the id of the JS9 display\n"
@@ -80,14 +83,17 @@ usage(){
   printf "    %s -s                    # read commands from stdin\n" $XEQ
   printf " \n"
   printf "  start app or browser, and load an image:\n"
-  printf "    # start the js9 app and load foo.fits into myjs9.html page\n"
+  printf "    # start the js9 app and load foo.fits\n"
   printf "    # (requires Electron.js app to be installed)\n"
   printf "    %s -a foo.fits\n" $XEQ
+  printf "    # start the js9 app, load foo.fits, execute the js9 commands\n"
+  printf "    # contained in the foo.js script file\n"
+  printf "    %s -a --cmdfile foo.js foo.fits\n" $XEQ
   printf "    # start the js9 app and load foo.fits into myjs9.html page\n"
-  printf "    %s -a -w ~/myjs9.html foo.fits\n" $XEQ
+  printf "    %s -a --webpage ~/myjs9.html foo.fits\n" $XEQ
   printf "    # start chrome and load foo.fits into the myjs9.html page\n"
   printf "    %s -b chrome -w ~/myjs9.html foo.fits\n" $XEQ
-  printf "    # display js9.html web page (or $JS9_WEBPAGE) in $JS9_BROWSER\n"
+  printf "    # display js9.html web page (or \$JS9_WEBPAGE) in \$JS9_BROWSER\n"
   printf "    %s -b foo.fits\n" $XEQ
   printf "    # ... then carry on as usual\n"
   printf "    %s cmap heat\n" $XEQ

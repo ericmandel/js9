@@ -252,6 +252,102 @@ saving images:
 </pre>
 will save the casa.png file on the desktop without a dialog box. This is
 especially useful in automatic scripting.
+
+<p>
+You can use the <b>--cmds [cmds]</b> and/or <b>--cmdfile [file]</b> switches
+to pass Javascript commands that will be executed when JS9 is ready
+and all files have been loaded. The former takes a string of commands
+as an argument:
+<pre>
+  # load a file and set the colormap and scale
+  js9 -a --cmds 'JS9.SetColormap("cool");JS9.SetScale("log")' ~/data/casa.fits
+</pre>
+The latter takes a file containing commands, allowing you to perform
+more sophisticated processing. For example, the following script
+will load the Chandra image of the Kes 75 supernova remnant, display
+three energy cuts as separate images, assign red, green, and blue
+colormaps to the three energy cuts, and then blend them into a single display:
+<pre>
+  # run the script in the command file 
+  js9 -a --cmdfile eband.js
+
+  // where eband.js contains the following Javascript:
+  JS9.Load("kes75/kes75_evt2.fits.gz", {onload: function(im){
+      var i;
+      // colormaps
+      var c = ["red", "green", "blue"];
+      // energy filters
+      var f = ["energy=500:1500", "energy=1500:2500", "energy=2500:8000"];
+      // set final configuration after each image is loaded
+      var mkdo = function(i){
+  	return function(xim){
+  	    JS9.SetScale("log",   {display: xim});
+  	    if( c[i] ){ JS9.SetColormap(c[i], {display: xim}); }
+  	};
+      };
+      // turn blending off on the main image
+      JS9.BlendImage(false);
+      // process each of the event filters to make a separate image
+      for(i=0; i&lt;f.length; i++){
+  	// display filtered image in a separate displayed
+  	JS9.DisplaySection({filter:f[i], separate:true,
+  			    ondisplaysection: mkdo(i)}, {display: im});
+      }
+      //  blend the filtered images
+      JS9.BlendDisplay(true);
+  }});
+</pre>
+<p>
+Finally, the <b>--node</b> switch allows you to enable Node.js
+capabilities in the web page environment. Normally this is turned off as a
+security precaution, but you might want to turn it to run scripts that
+require access to system resources.
+
+<p>
+For example, the following script will load the Chandra image of the
+Kes 75 supernova remnant, display three energy cuts as separate
+images, find the total number of counts in each image, and write the
+results to a log file, using the Node.js 'fs' module.
+<pre>
+  # enable node support and run the script in the command file 
+  js9 -a --node true --cmdfile ecnts.js
+
+  // where ecnts.js contains the following Javascript:
+  var fs;
+  try{
+      fs = require("fs");
+  }
+  catch(e){
+      JS9.error("Node.js 'fs' module is unavailable. Did you enable node?");
+  }
+  JS9.Load("kes75/kes75_evt2.fits.gz", {onload: function(im){
+      var i;
+      var s = "";
+      var got = 0;
+      // energy filters
+      var f = ["energy=500:1500", "energy=1500:2500", "energy=2500:8000"];
+      // get counts in regions as each image is displayed
+      var getcnts = function(i){
+    	return function(xim){
+  	    s += xim.countsInRegions();
+  	    got++;
+  	    if( got === 3 ){
+                // write the results to a log file
+  		fs.writeFile("countsInRegions.log", s, function(err) {
+		    if( err ) { JS9.error(err); }
+  		}); 
+  	    }
+    	};
+      };
+      // process each of the event filters to make a separate image
+      for(i=0; i&lt;f.length; i++){
+    	// display filtered image in a separate displayed
+    	JS9.DisplaySection({filter:f[i], separate:true,
+    			    ondisplaysection: getcnts(i)}, {display: im});
+      }
+  }});
+</pre>
+
 <p>
 For a list of all js9 script switches, use the <b>--help</b> switch:
 <pre>
@@ -285,7 +381,7 @@ Electron.js security</a> for more information.
 You should update your copy of Electron.js periodically to ensure that you
 have the latest security fixes in place.
 
-<h5>Last updated: March 24, 2019</h5>
+<h5>Last updated: March 28, 2019</h5>
 </div>
 
 </body>
