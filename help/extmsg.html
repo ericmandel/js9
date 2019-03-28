@@ -160,6 +160,56 @@ Note that the opts object is passed as a JSON string, and returned objects
 are also in JSON format.
 
 <p>
+A slightly more interesting example is given in the script below,
+where we load the Chandra image of the Kes 75 supernova remnant,
+display three energy cuts as separate images, assign red, green, and
+blue colormaps to the three energy cuts, and then blend them into a
+single display:
+<pre>
+  #!/bin/bash
+
+  # Chandra event file of Kes75 SNR
+  file="kes75/kes75_evt2.fits.gz"
+
+  # Chandra energy filters
+  filter[1]="energy=500:1500"
+  filter[2]="energy=1500:2500"
+  filter[3]="energy=2500:8000"
+
+  # colormaps
+  cmap[1]="red"
+  cmap[2]="green"
+  cmap[3]="blue"
+
+  # load event file
+  echo "loading event file: $file"
+  js9load $file
+
+  # process each of the event filters
+  for i in {1..3}; do
+    echo "filter: ${filter[$i]}"
+    # generate section using event filter into a separately displayed image
+    js9 DisplaySection '{"filter":"'${filter[$i]}'","separate":true}'
+    # it actually takes a bit of time
+    sleep 3
+    j=`expr $i + 1`
+    # the new file with have a &lt;n&gt; string appended to its id
+    id="kes75_evt2.fits.gz[EVENTS]&lt;$j&gt;"
+    # set image parameters and assign one of the RGB colormaps
+    js9 BlendImage true           '{"display":"'$id'"}'
+    js9 SetScale "log"            '{"display":"'$id'"}'
+    js9 SetColormap "${cmap[$i]}" '{"display":"'$id'"}'
+  done
+
+  # blend all the images
+  js9 BlendDisplay true
+  echo "all done!"
+</pre>
+Note the use of the <b>js9load</b> script to load an image. This
+script will wait for the image to be loaded before returning. The default
+wait time is 10 seconds, but is configurable on the command line.
+
+<p>
 The <b>js9 script</b> can talk to a JS9 instance if the script is run from:
 <ul>
 <li> the local host running the web service and back-end helper
