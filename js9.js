@@ -16728,7 +16728,7 @@ JS9.getImageID = function(imid, dispid, myim){
     for(i=0; i<imlen; i++){
 	im = JS9.images[i];
 	if( im.display.id === dispid ){
-	    if( (im !== myim) && (imid === im.id0) ){
+	    if( (im !== myim) && (imid === im.id0.replace(rexp2, "")) ){
 		if( im.id && im.id.search(rexp) >= 0 ){
 		    s = im.id.replace(rexp, "$1");
 		    idmax = Math.max(idmax, parseInt(s, 10));
