@@ -1126,11 +1126,12 @@ module.exports = xhr;
     });
 }());
 /*
- * image blend module (February 25, 2016)
+ * image blend plugin (February 25, 2016)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Blend = {};
@@ -1514,11 +1515,12 @@ JS9.RegisterPlugin(JS9.Blend.CLASS, JS9.Blend.NAME, JS9.Blend.init,
 		    winDims: [JS9.Blend.WIDTH, JS9.Blend.HEIGHT]});
 
 /*
- * image blink module (March 10, 2016)
+ * image blink plugin (March 10, 2016)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Blink = {};
@@ -1862,9 +1864,13 @@ JS9.RegisterPlugin(JS9.Blink.CLASS, JS9.Blink.NAME, JS9.Blink.init,
 		    winResize: true,
 		    winDims: [JS9.Blink.WIDTH, JS9.Blink.HEIGHT]});
 
-/*js lint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
+/*
+ * colormap generation plugin (Feb 13, 2019)
+ */
 
 /*global JS9, $, sprintf, tinycolor */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Cmaps = {};
@@ -2519,11 +2525,12 @@ JS9.RegisterPlugin(JS9.Cmaps.CLASS, JS9.Cmaps.NAME, JS9.Cmaps.init,
 		    winResize: true,
 		    winDims: [JS9.Cmaps.WIDTH, JS9.Cmaps.HEIGHT]});
 /*
- * colorbar module (March 8, 2016)
+ * colorbar plugin (March 8, 2016)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, Uint8Array */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Colorbar = {};
@@ -2776,13 +2783,14 @@ JS9.RegisterPlugin(JS9.Colorbar.CLASS, JS9.Colorbar.NAME, JS9.Colorbar.init,
 		    help: "help/colorbar.html",
 		    winTitle: "Colorbar",
 		    winDims: [JS9.Colorbar.WIDTH, JS9.Colorbar.HEIGHT]});
-// ---------------------------------------------------------------------
-// JS9 console: a window into which commands can be entered
-// basic idea borrowed from goosh.org, to whom grateful acknowledgement is made
-// ---------------------------------------------------------------------
+/*
+ * JS9 console: a window into which commands can be entered
+ * basic idea borrowed from goosh.org, to whom grateful acknowledgement is made
+ */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Console = {};
@@ -3024,8 +3032,9 @@ JS9.RegisterPlugin("JS9", "Console", JS9.Console.init,
  * FITS 3D cube plugin (April 29, 2016)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Cube = {};
@@ -3420,8 +3429,9 @@ JS9.RegisterPlugin(JS9.Cube.CLASS, JS9.Cube.NAME, JS9.Cube.init,
  * visibility of JS9 in-page plugin divs (January 13, 2017)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Divs = {};
@@ -3552,11 +3562,12 @@ JS9.RegisterPlugin(JS9.Divs.CLASS, JS9.Divs.NAME, JS9.Divs.init,
 		    winResize: true,
 		    winDims: [JS9.Divs.WIDTH, JS9.Divs.HEIGHT]});
 /*
- * imarith module (March 8, 2016)
+ * imarith plugin (March 8, 2016)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Imarith = {};
@@ -3756,12 +3767,13 @@ JS9.RegisterPlugin(JS9.Imarith.CLASS, JS9.Imarith.NAME, JS9.Imarith.init,
 		    help: "help/imarith.html",
 		    winTitle: "Image Arithmetic",
 		    winDims: [JS9.Imarith.WIDTH, JS9.Imarith.HEIGHT]});
-// ---------------------------------------------------------------------
-// Info plugin
-// ---------------------------------------------------------------------
+/*
+ * Info plugin
+ */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, jQuery, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Info = {};
@@ -4131,11 +4143,12 @@ JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 		    winResize: true,
 		    winDims: [JS9.Info.WIDTH, JS9.Info.HEIGHT]});
 /*
- * keyboard module (September 21, 2016)
+ * keyboard plugin (September 21, 2016)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf, fabric */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Keyboard = {};
@@ -4852,11 +4865,12 @@ JS9.RegisterPlugin(JS9.Keyboard.CLASS, JS9.Keyboard.NAME,
 		    winResize: true,
 		    winDims: [JS9.Keyboard.WIDTH,JS9.Keyboard.HEIGHT]});
 /*
- * shape layer module (October 7, 2016)
+ * shape layer plugin (October 7, 2016)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Layers = {};
@@ -5128,12 +5142,13 @@ JS9.RegisterPlugin(JS9.Layers.CLASS, JS9.Layers.NAME, JS9.Layers.init,
 		    winTitle: "Shape Layers",
 		    winResize: true,
 		    winDims: [JS9.Layers.WIDTH, JS9.Layers.HEIGHT]});
-// ---------------------------------------------------------------------
-// Magnifier plugin
-// ---------------------------------------------------------------------
+/*
+ * Magnifier plugin
+ */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, fabric */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Magnifier = {};
@@ -5406,8 +5421,9 @@ JS9.RegisterPlugin(JS9.Magnifier.CLASS, JS9.Magnifier.NAME, JS9.Magnifier.init,
  * Multi-Extension FITS module (March 31, 2016)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Mef = {};
@@ -5584,12 +5600,13 @@ JS9.RegisterPlugin(JS9.Mef.CLASS, JS9.Mef.NAME, JS9.Mef.init,
 		    winResize: true,
 		    winDims: [JS9.Mef.WIDTH, JS9.Mef.HEIGHT]});
 
-// ---------------------------------------------------------------------
-// JS9 menubar to manage menubar and its menus
-// ---------------------------------------------------------------------
+/*
+ * JS9 menubar to manage menubar and its menus
+ */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf, fabric */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Menubar = {};
@@ -8566,12 +8583,13 @@ JS9.RegisterPlugin("JS9", "Menubar", JS9.Menubar.init,
 		    dynamicSelect: true,
 		    winDims: [JS9.Menubar.WIDTH, JS9.Menubar.HEIGHT]});
 
-// ---------------------------------------------------------------------
-// Panner plugin
-// ---------------------------------------------------------------------
+/*
+ * Panner plugin
+ */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9 */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Panner = {};
@@ -9056,11 +9074,12 @@ JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
 		    winDims: [JS9.Panner.WIDTH,  JS9.Panner.HEIGHT],
 		    divArgs: [JS9.Panner.SWIDTH, JS9.Panner.SHEIGHT]});
 /*
- * JS9 preferences module (14 April 2015)
+ * preferences plugin (14 April 2015)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf, ddtabcontent */
+
+"use strict";
 
 // To specify the JS9 display instance to link to a given PREFS div,
 // use the HTML5 dataset syntax: 
@@ -9983,8 +10002,9 @@ JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME, JS9.Prefs.init,
  * scale clipping limits plugin (August 17, 2018)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.ScaleLimits = {};
@@ -10496,11 +10516,12 @@ JS9.RegisterPlugin(JS9.ScaleLimits.CLASS, JS9.ScaleLimits.NAME,
 		    winTitle: "Scale Controls",
 		    winDims: [JS9.ScaleLimits.WIDTH, JS9.ScaleLimits.HEIGHT]});
 /*
- * image separate/gather images module (July 26, 2018)
+ * image separate/gather plugin (July 26, 2018)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Separate = {};
@@ -10802,6 +10823,8 @@ JS9.RegisterPlugin(JS9.Separate.CLASS, JS9.Separate.NAME, JS9.Separate.init,
  */
 
 /*global JS9, $ */
+
+"use strict";
 
 JS9.Sync = {};
 JS9.Sync.CLASS = "JS9";
@@ -11283,11 +11306,12 @@ JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
 		    onimageclose:    JS9.Sync.closeimage,
 		    winDims: [0, 0]});
 /*
- * toolbar module (February 6, 2018)
+ * toolbar plugin (February 6, 2018)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9 */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Toolbar = {};

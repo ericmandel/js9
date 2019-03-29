@@ -2,8 +2,9 @@
  * scale clipping limits plugin (August 17, 2018)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.ScaleLimits = {};

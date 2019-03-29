@@ -1,9 +1,10 @@
 /*
- * imarith module (March 8, 2016)
+ * imarith plugin (March 8, 2016)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Imarith = {};

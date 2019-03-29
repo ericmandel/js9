@@ -1,9 +1,10 @@
 /*
- * JS9 preferences module (14 April 2015)
+ * preferences plugin (14 April 2015)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf, ddtabcontent */
+
+"use strict";
 
 // To specify the JS9 display instance to link to a given PREFS div,
 // use the HTML5 dataset syntax: 

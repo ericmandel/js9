@@ -5,6 +5,8 @@
 
 /*global JS9, $ */
 
+"use strict";
+
 JS9.Sync = {};
 JS9.Sync.CLASS = "JS9";
 JS9.Sync.NAME = "Sync";

@@ -1,9 +1,10 @@
-// ---------------------------------------------------------------------
-// Panner plugin
-// ---------------------------------------------------------------------
+/*
+ * Panner plugin
+ */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9 */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Panner = {};

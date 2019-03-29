@@ -1,9 +1,10 @@
-// ---------------------------------------------------------------------
-// JS9 menubar to manage menubar and its menus
-// ---------------------------------------------------------------------
+/*
+ * JS9 menubar to manage menubar and its menus
+ */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf, fabric */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Menubar = {};

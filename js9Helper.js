@@ -11,8 +11,6 @@
  *
  */
 
-/*jslint bitwise: true, plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, node: true, stupid: true */
-
 /* global require process module __dirname Buffer */
 
 "use strict";

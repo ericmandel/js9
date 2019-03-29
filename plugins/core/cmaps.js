@@ -1,6 +1,10 @@
-/*js lint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
+/*
+ * colormap generation plugin (Feb 13, 2019)
+ */
 
 /*global JS9, $, sprintf, tinycolor */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Cmaps = {};

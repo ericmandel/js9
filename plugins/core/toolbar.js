@@ -1,9 +1,10 @@
 /*
- * toolbar module (February 6, 2018)
+ * toolbar plugin (February 6, 2018)
  */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9 */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Toolbar = {};

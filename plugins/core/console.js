@@ -1,10 +1,11 @@
-// ---------------------------------------------------------------------
-// JS9 console: a window into which commands can be entered
-// basic idea borrowed from goosh.org, to whom grateful acknowledgement is made
-// ---------------------------------------------------------------------
+/*
+ * JS9 console: a window into which commands can be entered
+ * basic idea borrowed from goosh.org, to whom grateful acknowledgement is made
+ */
 
-/*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
 /*global $, JS9, sprintf */
+
+"use strict";
 
 // create our namespace, and specify some meta-information and params
 JS9.Console = {};

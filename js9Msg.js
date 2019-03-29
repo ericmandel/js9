@@ -12,10 +12,10 @@
  *
  */
 
-/*jslint plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, node: true */
-
 /* global require process */
 /* eslint no-console: "off" */
+
+"use strict";
 
 // load required modules
 var sockio = require("socket.io-client"),
