@@ -3972,7 +3972,7 @@ JS9.Image.prototype.getPan = function(){
 
 // set pan location of RGB image (using image coordinates)
 JS9.Image.prototype.setPan = function(panx, pany){
-    var i, key, obj, bpanx, bpany, bw2, bh2, im, pos, owcssys, txeq, arr;
+    var i, key, obj, bpanx, bpany, bw2, bh2, im, pos, owcssys, txeq, arr, oval;
     var w2 = this.raw.width / 2;
     var h2 = this.raw.height / 2;
     // is this core service disabled?
@@ -4051,6 +4051,10 @@ JS9.Image.prototype.setPan = function(panx, pany){
     if( !JS9.isNumber(panx) || !JS9.isNumber(pany) ){
 	JS9.error("invalid input for setPan: " + panx + " " + pany);
     }
+    if( this.display.blendMode ){
+	oval = JS9.globalOpts.panWithinDisplay;
+	JS9.globalOpts.panWithinDisplay = true;
+    }
     this.mkSection(panx, pany);
     // set pan for blended images, if necessary
     if( this.display.blendMode ){
@@ -4072,9 +4076,10 @@ JS9.Image.prototype.setPan = function(panx, pany){
 		    bpanx = bw2 - (w2 - panx);
 		    bpany = bh2 - (h2 - pany);
 		}
-		JS9.Image.prototype.mkSection.call(im, bpanx, bpany);
+		im.mkSection(bpanx, bpany);
 	    }
 	}
+	JS9.globalOpts.panWithinDisplay = oval;
     }
     this.displayImage("rgb");
     // pan/zoom the shape layers
@@ -4146,7 +4151,7 @@ JS9.Image.prototype.parseZoom = function(zval){
 
 // set zoom of RGB image
 JS9.Image.prototype.setZoom = function(zval){
-    var i, nzoom, key, im, ipos;
+    var i, nzoom, key, im, ipos, oval;
     // is this core service disabled?
     if( $.inArray("zoom", this.params.disable) >= 0 ){
 	return;
@@ -4154,6 +4159,10 @@ JS9.Image.prototype.setZoom = function(zval){
     nzoom = this.parseZoom(zval);
     if( !nzoom ){
 	JS9.error("invalid input for setZoom: " + zval);
+    }
+    if( this.display.blendMode ){
+	oval = JS9.globalOpts.panWithinDisplay;
+	JS9.globalOpts.panWithinDisplay = true;
     }
     // remake section
     this.mkSection(nzoom);
@@ -4169,9 +4178,10 @@ JS9.Image.prototype.setZoom = function(zval){
                  (im.wcsim && (im.wcsim === this.wcsim)))    &&
 		(im.params.wcsalign || this.params.wcsalign) ){
 		ipos = im.getPan();
-		JS9.Image.prototype.mkSection.call(im, ipos.x, ipos.y, nzoom);
+		im.mkSection(ipos.x, ipos.y, nzoom);
 	    }
 	}
+	JS9.globalOpts.panWithinDisplay = oval;
     }
     // redisplay the image
     this.displayImage("rgb");
