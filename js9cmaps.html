@@ -62,10 +62,13 @@
       var cmaps =  ["red", "green", "blue", "heat"];
 
       function rp(i){
-	  var im = JS9.images[i];
+	  var im = JS9.lookupImage(images[i]);
 	  var cmap = cmaps[i];
 	  var contrast = contrasts[i];
 	  var bias = biases[i];
+	  if( !im ){
+	      return;
+	  }
 	  if( i === JS9.images.length ){
 	      return;
 	  }
