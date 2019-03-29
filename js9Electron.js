@@ -238,7 +238,7 @@ function createWindow() {
 	let file = js9Electron.files[i].replace(/\\/g,"");
 	const jobj = (js9Electron.files[i+1]||"").replace(/\\/g,"");
 	// relative data paths must be relative to js9Electron.js script
-	if( !file.match(/^https?:\/\//) && !path.isAbsolute(file) ){
+	if( !file.match(/^(https?|ftp):\/\//) && !path.isAbsolute(file) ){
 	    if( process.env.PWD ){
 		file = process.env.PWD + "/" + file;
 	    } else {
