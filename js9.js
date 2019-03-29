@@ -2903,7 +2903,7 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 
 // calculate and set offsets into display where image is to be written
 JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
-    var xoff, yoff, wcsim, wcssect, wpos, s, xcen, ycen, ra, dec;
+    var xoff, yoff, wcsim, wcssect, wpos, s, xcen, ycen, ra, dec, oval;
     var epsilon = 0.5;
     var sect = this.rgb.sect;
     // calculate offsets
@@ -2941,7 +2941,11 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
 	if( Math.abs(xcen - wpos.x) < epsilon ){ xcen = wpos.x; }
 	if( Math.abs(ycen - wpos.y) < epsilon ){ ycen = wpos.y; }
 	// and use those image coords for the center of the section
+	// (but don't allow image to pan off the display)
+	oval = JS9.globalOpts.panWithinDisplay;
+	JS9.globalOpts.panWithinDisplay = true;
 	this.mkSection(xcen, ycen, wcssect.zoom);
+	JS9.globalOpts.panWithinDisplay = oval;
 	// offsets of these images
 	xoff = 0 - ((wcssect.x0 - sect.x0) * wcssect.zoom);
 	yoff = ((wcsim.raw.height - this.raw.height) - (wcssect.y0 - sect.y0)) * wcssect.zoom;
