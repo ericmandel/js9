@@ -24,11 +24,20 @@
 <ul>
 <li> visit a data archive web page in your browser
 <li> execute a search for the desired observation
+<li> once the link to a FITS file has been created:
+<ul>
+<li> drag and drop the FITS link onto your JS9 display
+</ul>
+<li> or:
+<ul>
 <li> copy the resulting FITS file link
 <li> in JS9, select the <b>File:open link via proxy ...</b> menu option
 <li> paste the FITS URL link into the dialog box
 <li> click the <b>Load</b> button
 </ul>
+</ul>
+Accessing archives in this ways assumes that JS9 has been configured
+to support proxy loads.
 
 <center><h3>Details: Using a Proxy Server to Access FITS Data</h3></center>
 <p>
@@ -57,14 +66,21 @@ load the file from this directory. Note that since the file resides on
 the back-end server, all back-end analysis defined on that server is
 available.
 <p>
-This technique can also be used FITS links from other sources. For
-example, if you have a FITS file on Google Drive, Dropbox or even a
-static web page, you can generate/copy the link and paste it into the
-proxy dialog box for display. (Dropbox files also can utilize
-the <b>open link via CORS ...</b> option, which downloads the data
-directly to JS9, bypassing the proxy server.)
+You also can drag and drop the link directly onto the JS9 display.
+The <b>open link via proxy ...</b> menu option is mentioned first,
+because it can sometimes require less dexterity (e.g. the archive web
+page is displayed on a different desktop from JS9) and also because it
+contains a visual cue regarding proxy loads: the option will be greyed
+out if JS9 has not been configured to allow proxy loads.
+<p>
+This proxy load technique can also be used FITS links from other
+sources. For example, if you have a FITS file on Google Drive, iCloud,
+Dropbox or even a static web page, you can generate/copy the link and
+paste it into the proxy dialog box for display. (Dropbox files also
+can utilize the <b>open link via CORS ...</b> option, which downloads
+the data directly to JS9, bypassing the proxy server.)
 
-<h5>Last updated: September 25, 2016</h5>
+<h5>Last updated: March 29, 2019</h5>
 </div>
 
 </body>
