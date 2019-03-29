@@ -88,6 +88,13 @@ app. On a Mac, you probably will want to codesign the Electron.app
 application to avoid repeated requests about incoming connections (see
 example above).
 
+<p>
+NB: if you are running cpu-intensive scripts that communicate with the
+Electron-based JS9 app, we recommend that you install Node.js as well
+as Electron.js, and start up the JS9 helper instead of using the built-in
+helper support in the Electron-based app. The startup will be considerably
+faster when using the Node helper.
+
 <h3>Running JS9 on the Desktop</h3>
 
 <p>
@@ -100,7 +107,7 @@ Run the js9 script with the -a switch to start the desktop app, display
 the default JS9 web page, and load one or more FITS files:
 <pre>
   # the -a switch tells the script to bring up the desktop js9 app
-  js9 -a ~/data/casa.fits &
+  js9 -a ~/data/casa.fits
 </pre>
 
 <p>
@@ -112,6 +119,13 @@ with the JS9 page (or any other JS9-enabled web page):
   js9 AddRegions 'ICRS;ellipse(23:23:18.76, +58:47:27.252, 31.8", 15.9", 40)'
 </pre>
 See: <a href="./extmsg.html">External Messaging</a> for more details.
+
+<p>
+You can also load remote images, as the script will call <b>LoadProxy</b> as
+needed:
+<pre>
+  js9 -a http://hea-www.cfa.harvard.edu/~eric/coma.fits.gz
+</pre>
 
 <p>
 A number of desktop-specific switches are available in the js9 script. Perhaps
