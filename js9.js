@@ -3973,17 +3973,15 @@ JS9.Image.prototype.getPan = function(){
 
 // set pan location of RGB image (using image coordinates)
 JS9.Image.prototype.setPan = function(panx, pany){
-    var i, key, obj, bpanx, bpany, bw2, bh2, im, pos, owcssys, txeq, arr, oval;
-    var w2 = this.raw.width / 2;
-    var h2 = this.raw.height / 2;
+    var i, key, obj, im, pos, owcssys, txeq, arr, oval;
     // is this core service disabled?
     if( $.inArray("pan", this.params.disable) >= 0 ){
 	return;
     }
     // default is to pan to center
     if( arguments.length === 0 ){
-	panx = w2;
-	pany = h2;
+	panx = this.raw.width / 2;
+	pany = this.raw.height / 2;
     }
     // one string argument is a json specification
     // (two string args is panx, pany in string format)
@@ -4068,16 +4066,7 @@ JS9.Image.prototype.setPan = function(panx, pany){
                  this.wcsim === im  ||
                  (im.wcsim && (im.wcsim === this.wcsim)))    &&
 		(im.params.wcsalign || this.params.wcsalign) ){
-		bw2 = im.raw.width / 2;
-		bh2 = im.raw.height / 2;
-		if( arguments.length === 0 ){
-		    bpanx = bw2;
-		    bpany = bh2;
-		} else {
-		    bpanx = bw2 - (w2 - panx);
-		    bpany = bh2 - (h2 - pany);
-		}
-		im.mkSection(bpanx, bpany);
+		im.mkSection(panx, pany);
 	    }
 	}
 	JS9.globalOpts.panWithinDisplay = oval;
