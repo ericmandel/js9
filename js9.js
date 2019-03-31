@@ -2280,8 +2280,8 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	}
         sect.y1 = this.raw.height;
     }
-    // for offset image with fractional zoom, maybe display more of the image
-    if( sect.ix && sect.zoom < 1 ){
+    // maybe display more of the image?
+    if( sect.ix ){
 	if( sect.x0 > 0 ){
 	    xtra =  sect.x0;
 	    sect.x0 -= xtra;
@@ -2293,7 +2293,7 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	    sect.ix -= xtra * sect.zoom;
 	}
     }
-    if( sect.iy && sect.zoom < 1 ){
+    if( sect.iy ){
 	if( sect.y0 > 0 ){
 	    xtra =  sect.y0;
 	    sect.y0 -= xtra;
@@ -2904,7 +2904,7 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 
 // calculate and set offsets into display where image is to be written
 JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
-    var xoff, yoff, wcsim, wcssect, wpos, s, xcen, ycen, ra, dec, oval;
+    var xoff, yoff, wcsim, wcssect, wpos, s, xcen, ycen, ra, dec;
     var epsilon = 0.5;
     var sect = this.rgb.sect;
     // calculate offsets
@@ -2942,11 +2942,7 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
 	if( Math.abs(xcen - wpos.x) < epsilon ){ xcen = wpos.x; }
 	if( Math.abs(ycen - wpos.y) < epsilon ){ ycen = wpos.y; }
 	// and use those image coords for the center of the section
-	// (but don't allow image to pan off the display)
-	oval = JS9.globalOpts.panWithinDisplay;
-	JS9.globalOpts.panWithinDisplay = true;
 	this.mkSection(xcen, ycen, wcssect.zoom);
-	JS9.globalOpts.panWithinDisplay = oval;
 	// offsets of these images
 	xoff = 0 - ((wcssect.x0 - sect.x0) * wcssect.zoom);
 	yoff = ((wcsim.raw.height - this.raw.height) - (wcssect.y0 - sect.y0)) * wcssect.zoom;
@@ -3973,7 +3969,7 @@ JS9.Image.prototype.getPan = function(){
 
 // set pan location of RGB image (using image coordinates)
 JS9.Image.prototype.setPan = function(panx, pany){
-    var i, key, obj, im, pos, owcssys, txeq, arr, oval;
+    var i, key, obj, im, pos, owcssys, txeq, arr;
     // is this core service disabled?
     if( $.inArray("pan", this.params.disable) >= 0 ){
 	return;
@@ -4050,10 +4046,6 @@ JS9.Image.prototype.setPan = function(panx, pany){
     if( !JS9.isNumber(panx) || !JS9.isNumber(pany) ){
 	JS9.error("invalid input for setPan: " + panx + " " + pany);
     }
-    if( this.display.blendMode ){
-	oval = JS9.globalOpts.panWithinDisplay;
-	JS9.globalOpts.panWithinDisplay = true;
-    }
     this.mkSection(panx, pany);
     // set pan for blended images, if necessary
     if( this.display.blendMode ){
@@ -4069,7 +4061,6 @@ JS9.Image.prototype.setPan = function(panx, pany){
 		im.mkSection(panx, pany);
 	    }
 	}
-	JS9.globalOpts.panWithinDisplay = oval;
     }
     this.displayImage("rgb");
     // pan/zoom the shape layers
@@ -4141,7 +4132,7 @@ JS9.Image.prototype.parseZoom = function(zval){
 
 // set zoom of RGB image
 JS9.Image.prototype.setZoom = function(zval){
-    var i, nzoom, key, im, ipos, oval;
+    var i, nzoom, key, im, ipos;
     // is this core service disabled?
     if( $.inArray("zoom", this.params.disable) >= 0 ){
 	return;
@@ -4149,10 +4140,6 @@ JS9.Image.prototype.setZoom = function(zval){
     nzoom = this.parseZoom(zval);
     if( !nzoom ){
 	JS9.error("invalid input for setZoom: " + zval);
-    }
-    if( this.display.blendMode ){
-	oval = JS9.globalOpts.panWithinDisplay;
-	JS9.globalOpts.panWithinDisplay = true;
     }
     // remake section
     this.mkSection(nzoom);
@@ -4171,7 +4158,6 @@ JS9.Image.prototype.setZoom = function(zval){
 		im.mkSection(ipos.x, ipos.y, nzoom);
 	    }
 	}
-	JS9.globalOpts.panWithinDisplay = oval;
     }
     // redisplay the image
     this.displayImage("rgb");
