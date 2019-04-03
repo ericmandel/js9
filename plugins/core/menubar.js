@@ -78,7 +78,8 @@ JS9.Menubar.getDisplays = function(mode, key){
 	    }
 	    this.selectedDislay = null;
 	}
-	s = this.divjq.data("displays").split(",");
+	s = this.divjq.data("displays") || "*";
+	s.split(",");
 	if( s[0] === "*" ){
 	    for(i=0; i<JS9.displays.length; i++){
 		arr.push(JS9.displays[i]);
