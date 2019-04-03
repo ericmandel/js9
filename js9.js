@@ -2904,8 +2904,7 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 
 // calculate and set offsets into display where image is to be written
 JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
-    var wcsim, wcssect, wpos, s, xcen, ycen, ra, dec, oval;
-    var epsilon = 0.5;
+    var wcsim, wcssect, npos, oval;
     var sect = this.rgb.sect;
     // calculate offsets
     this.ix = Math.floor((this.display.canvas.width - this.rgb.img.width)/2);
@@ -2924,28 +2923,11 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
 	wcsim = this.wcsim;
 	wcssect = wcsim.rgb.sect;
 	// we will pan this image to the wcsim's display section
-	wpos = wcsim.getPan();
-	// based, of course, on wcs coords of the center of the wcs image
-	s = JS9.pix2wcs(wcsim.raw.wcs, wpos.x, wpos.y).trim().split(/\s+/);
-	ra = JS9.saostrtod(s[0]);
-	if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-	    (wcsim.params.wcssys !== "galactic" )         &&
-	    (wcsim.params.wcssys !== "ecliptic" )         ){
-	    ra *= 15.0;
-	}
-	dec = JS9.saostrtod(s[1]);
-	// convert wcs image center ra, dec to image coords in this image
-	s = JS9.wcs2pix(this.raw.wcs, ra, dec).trim().split(/\s+/);
-	xcen = parseFloat(s[0]);
-	ycen = parseFloat(s[1]);
-	// lord, save us from wcs transformation jitter
-	if( Math.abs(xcen - wpos.x) < epsilon ){ xcen = wpos.x; }
-	if( Math.abs(ycen - wpos.y) < epsilon ){ ycen = wpos.y; }
+	npos = JS9.pix2pix(wcsim, this, wcsim.getPan());
 	// and use those image coords for the center of the section
-	// (but don't allow image to pan off the display)
 	oval = JS9.globalOpts.panWithinDisplay;
 	JS9.globalOpts.panWithinDisplay = true;
-	this.mkSection(xcen, ycen, wcssect.zoom);
+	this.mkSection(npos.x, npos.y, wcssect.zoom);
 	JS9.globalOpts.panWithinDisplay = oval;
 	// offsets of these images
 	this.ix -= (sect.xcen - ((sect.x0 + sect.x1)/2)) * wcssect.zoom;
@@ -3970,7 +3952,7 @@ JS9.Image.prototype.getPan = function(){
 
 // set pan location of RGB image (using image coordinates)
 JS9.Image.prototype.setPan = function(panx, pany){
-    var i, key, obj, im, pos, owcssys, txeq, arr, oval;
+    var i, key, obj, im, pos, owcssys, txeq, arr, oval, npan;
     // is this core service disabled?
     if( $.inArray("pan", this.params.disable) >= 0 ){
 	return;
@@ -4063,7 +4045,8 @@ JS9.Image.prototype.setPan = function(panx, pany){
                  this.wcsim === im  ||
                  (im.wcsim && (im.wcsim === this.wcsim)))    &&
 		(im.params.wcsalign || this.params.wcsalign) ){
-		im.mkSection(panx, pany);
+		npan = JS9.pix2pix(this, im, {x: panx, y: pany});
+		im.mkSection(npan.x, npan.y);
 	    }
 	}
 	JS9.globalOpts.panWithinDisplay = oval;
@@ -4164,7 +4147,7 @@ JS9.Image.prototype.setZoom = function(zval){
                  this.wcsim === im  ||
                  (im.wcsim && (im.wcsim === this.wcsim)))    &&
 		(im.params.wcsalign || this.params.wcsalign) ){
-		ipos = im.getPan();
+		ipos = JS9.pix2pix(this, im, this.getPan());
 		im.mkSection(ipos.x, ipos.y, nzoom);
 	    }
 	}
@@ -17979,6 +17962,38 @@ JS9.eventToDisplayPos = function(evt, offset){
 	}
     }
     return pos;
+};
+
+// convert image pixels in one image to image pixels in another image
+// NB: assumes both images have wcs available
+JS9.pix2pix = function(im1, im2, obj){
+    var s, ra, dec, x, y, nx, ny;
+    var epsilon = 0.5;
+    // sanity check
+    if( !im1 || !im2 || !im1.raw.wcs || !im2.raw.wcs ){
+	return obj;
+    }
+    // convenience variables
+    x = obj.x;
+    y = obj.y;
+    // convert image pixels to ra, dec in source image
+    s = JS9.pix2wcs(im1.raw.wcs, x, y).trim().split(/\s+/);
+    ra = JS9.saostrtod(s[0]);
+    if( (String.fromCharCode(JS9.saodtype()) === ":") &&
+	(im1.params.wcssys !== "galactic" )           &&
+	(im1.params.wcssys !== "ecliptic" )           ){
+	ra *= 15.0;
+    }
+    dec = JS9.saostrtod(s[1]);
+    // convert ra, dec to image coords in dest image
+    s = JS9.wcs2pix(im2.raw.wcs, ra, dec).trim().split(/\s+/);
+    nx = parseFloat(s[0]);
+    ny = parseFloat(s[1]);
+    // lord, save us from wcs transformation jitter
+    if( Math.abs(nx - x) < epsilon ){ nx = x; }
+    if( Math.abs(ny - y) < epsilon ){ ny = y; }
+    // return image pixels
+    return {x: nx, y: ny};
 };
 
 // http://stackoverflow.com/questions/13695317/rotate-a-point-around-another-point
