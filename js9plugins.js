@@ -5914,14 +5914,14 @@ JS9.Menubar.createMenus = function(){
 		for(i=0; i<arr.length; i++){
 		    cdisp = arr[i];
 		    name = cdisp.id;
-		    items["super_"+name] = xname(name);
+		    items["super_"+name] = name;
 		    if( that.selectedDisplay === cdisp ){
 			items["super_"+name].icon = "sun";
 			n++;
 		    }
 		}
 		name = "all displays";
-		items.super_all = xname(name);
+		items.super_all = name;
 		if( !n ){
 		    items.super_all.icon = "sun";
 		}
@@ -5947,7 +5947,7 @@ JS9.Menubar.createMenus = function(){
 			    name += " (blue)";
 			}
 		    }
-		    items[name] = xname(name);
+		    items[name] = name;
 		    if( tdisp.image && (tdisp.image.id === im.id) ){
 			items[name].icon = "sun";
 		    }
@@ -6032,7 +6032,7 @@ JS9.Menubar.createMenus = function(){
 			if( $("#"+JS9.displays[i].id).length > 0 &&
 			    tdisp !== JS9.displays[i]    	     ){
 			    s1 = "moveto_" + JS9.displays[i].id;
-			    items.moveto.items[s1] = xname(JS9.displays[i].id);
+			    items.moveto.items[s1] = JS9.displays[i].id;
 			}
 		    }
 		    items.moveto.items.moveto_newdisp = xname("a new display");
@@ -6057,7 +6057,7 @@ JS9.Menubar.createMenus = function(){
 		    for(i=0; i<JS9.images.length; i++){
 			if( tim !== JS9.images[i]    	     ){
 			    s1 = "sync_" + JS9.images[i].id;
-			    items.sync.items[s1] = xname(JS9.images[i].id);
+			    items.sync.items[s1] = JS9.images[i].id;
 			}
 		    }
 		    items.sync.items.sync_allimages = xname("all images");
@@ -6083,7 +6083,7 @@ JS9.Menubar.createMenus = function(){
 		    for(i=0; i<JS9.images.length; i++){
 			if( tim !== JS9.images[i]    	     ){
 			    s1 = "unsync_" + JS9.images[i].id;
-			    items.unsync.items[s1] = xname(JS9.images[i].id);
+			    items.unsync.items[s1] = JS9.images[i].id;
 			}
 		    }
 		    items.unsync.items.unsync_allimages = xname("all images");
@@ -7560,10 +7560,10 @@ JS9.Menubar.createMenus = function(){
 		for(i=0; i<JS9.images.length; i++){
 		    if( tim !== JS9.images[i] ){
 			s1 = "copyto_" + JS9.images[i].id;
-			items.copyto.items[s1] = xname(JS9.images[i].id);
+			items.copyto.items[s1] = JS9.images[i].id;
 			s1 = "copyselto_" + JS9.images[i].id;
 			items.selectops.items.copySelReg.items[s1] =
-			    xname(JS9.images[i].id);
+			    JS9.images[i].id;
 		    }
 		}
 		items.copyto.items.copyto_all = xname("all images");
