@@ -16,7 +16,7 @@
 <h3>JS9: astronomical image display everywhere</h3>
 Eric Mandel, Alexey Vikhlinin
 <br>
-Harvard-Smithsonian Center for Astrophysics
+Center for Astrophysics | Harvard & Smithsonian
 <br>
 Cambridge, MA 02138
 </center>
@@ -24,9 +24,15 @@ Cambridge, MA 02138
 <p>
 <h3>Introduction to JS9</h3>
 <p>
-JS9 is a JavaScript version of the de facto standard DS9 image display
-program. It allows you to view and manipulate astronomical image data
-in your browser.
+
+JS9 is the latest in the SAOimage line of astronomical image display
+programs developed at
+the <a href="https://www.cfa.harvard.edu/">Center for Astrophysics |
+Harvard & Smithsonian (CfA).</a> Our previous effort,
+<a href="http://ds9.si.edu" target="_blank">SAOimage DS9</a>, has been
+the de facto standard desktop image display for more than 30
+years. Now, with JS9, you can view and manipulate astronomical image
+data in your browser as well as on the desktop.
 <p>
 Please choose from the following topics:
 <ul> 
@@ -43,21 +49,24 @@ Please choose from the following topics:
 <a name="start"></a> 
 <h3>Getting Started with JS9</h3>
 <p>
-JS9 provides astronomical image display capabilities right in your browser. 
-JS9 takes both its name and its core functionality from the de facto standard
-DS9 image display program for desktop use, which is available at:
-<pre>
-    http://ds9.si.edu
-</pre>
-The JS9 display consists of one or more components that can be added
-to a web page by the web page designer.  At a minimum, the JS9 display
-will contain an image display canvas. It usually also will display a
-menu strip containing several pull-down menus. Traditionally, this
-menu strip is placed on top of the image canvas, but web designers
-have complete control over its placement. JS9 also can display an info
-box, a command-line window, a pan window, a zoom window, as well as
-other plugins. All of these windows can be brought up dynamically from
-the View menu.
+JS9 provides astronomical image display capabilities both on the
+desktop and in your browser.  JS9 takes its name as well as its core
+functionality from the de facto standard
+<a href="http://ds9.si.edu" target="_blank">DS9</a> image display
+program for desktop use.  JS9, on the other hand, can be run either on
+the desktop or in a browser. It also can be used without any
+installation at all by dragging/dropping a FITS file onto the
+<a href="https://js9.si.edu" target="_blank">JS9 website</a>. In all
+three cases, the JS9 display consists of one or more HTML components
+that are added to a web page.  At a minimum, the JS9 display will
+contain an image display canvas. It usually also will display a
+menubar containing several pull-down menus and a
+colorbar. Traditionally, the menubar is placed on top of the image
+canvas and the colorbar below, but web page designers (as well as
+individual users) have complete control over component placement. JS9
+also can display an info box, a command-line window, a pan window, a
+zoom window, as well as other plugins. All of these plugin windows can
+be brought up dynamically from the View menu.
 
 <p>
 Astronomical image data usually is offered on a JS9 web page as one or more
@@ -94,72 +103,106 @@ the menu bar itself is displayed). Thus, not all of the menus listed below
 will be found on all JS9-enabled web pages.
 
 <p>
+Some menu options have keystroke accelerators and these are shown on
+the right-hand side of the menu option. Thus, for example, to open a
+local file, you can select the <b>File:open...:local file</b> menu
+option, or press the <b>Meta-o</b> key combination when the mouse is
+inside the JS9 display.
+
+<p>
 Note that the default menubar has a style in which all of the
 major menus are shown at the top-level of the menubar. This is
 the <b>classic</b> style. JS9 also supports a <b>mac</b> style
 menubar, in which the <b>File</b>, <b>Edit</b> and <b>View</b> menus
 are placed on the left side of the menubar and the <b>Help</b> menu on the
-right. The other main menus are displayed as sub-menus within
+right. The other main menus are displayed as submenus within
 the <b>View</b> menu.
 
 <p>
 The default top-level JS9 menus are:
 <ul>
-<li><p><b>File:</b> The File menu displays a list of all images
-currently loaded into this instance of JS9. The displayed image is
-marked with a star burst.  To display a different image, simply choose
-it in the menu.  The menu contains an <b>open ...</b> options which
-displays a file browser for loading FITS files (compressed or
-uncompressed).  It also contains options to:
+<li><p><b>File:</b> The File menu displays an <b>images</b> submenu
+listing all images currently loaded into this instance of JS9. The
+displayed image is marked with a starburst.  To display a different
+image, simply choose it in the submenu. It also contains the following
+submenus and options:
 <ul>
-<li><b>open local file ...</b> bring up a file browser dialog box to choose a FITS,PNG, or JPEG file for display
-<li><b>accessing data archives ...</b>a help page containing links to archives that are known to work with JS9
-<li><b>open link via proxy ...</b> enter a link to a FITS, PNG, or JPG file that will be downloaded onto the web-page server host and displayed (if configured)
-<li><b>open link via CORS ...</b> enter a shared Dropbox link to display a FITS file
-<li><b>extract image section ...</b> if this image has a parent file, you can extract a section from that parent for display (if configured)
-<li><b>print ...</b> print the current image display window (including 2D graphics)
-<li><b>display FITS header</b> display FITS header of the current image
-<li><b>display FITS HDUs</b> display a list of HDUs in a multi-extension FITS file
-<li><b>save this image ...</b> save the current image data in one of these formats:
+<li><b>open ...</b>: images and urls:
+<ul>
+<li><b>local file ...</b> bring up a file browser dialog box to choose a FITS,PNG, or JPEG file for display
+<li><b>url via proxy ...</b> enter a link to a FITS, PNG, or JPG file that will be downloaded onto the web-page server host and displayed (if configured)
+<li><b>url via CORS ...</b> enter a shared Dropbox link to display a FITS file
+</ul>
+
+<li><b>display ...</b>: components and sections:
+<ul>
+<li><b>FITS header</b> display FITS header of the current image
+<li><b>FITS HDUs</b> display a list of HDUs in a multi-extension FITS file
+<li><b>refreshed image</b> an advanced option that will call the
+internal redisplay routine for the displayed image (useful, for
+example, if you are reprocessing the image on disk and want to view
+the new data)
+<li><b>full image</b> an advanced option that tries to
+load and display the entire image (might cause the page to crash if
+the image is too large)
+<li><b>selected region cutouts</b> selected region(s) are used to define the center and size of new image section(s); note that image sections are always rectangles and region angles are ignored
+<li><b>display pageid</b>, a unique ID for this page that can be used to communicate externally with a JS9 instance when multiple JS9 instances are running (js9 --pageid [pageid])
+</ul>
+<li><b>move ...</b> move the current image to a new display
+(choose from a list of existing displays or a new light window)
+<li><b>save ...</b>the current image data in one of these formats:
 <ul>
 <li><b>FITS</b> (standard astronomical image file, without 2D graphics)
 <li><b>JPEG</b> (also includes 2D graphics, such as regions)
 <li><b>PNG</b>  (also includes 2D graphics, such as regions)
 </ul>
-<li><b>move this image to ...</b> to move the current image to a new display
-(either an existing display or a new light window)
+
+<li><b>separate ...</b> separate/gather two or more images
+<ul>
+<li><b>separate these images</b> move each image in this display to a new display
+<li><b>gather all images here</b> move all images from other displays to this display
+</ul>
+
+<li><b>sync ...</b> synchronize/unsynchronize two or more images
+<ul>
 <li><b>sync images ...</b> synchronize two or more images, so that when an operation (change of colormap, contrast/bias, pan, regions, scale, wcs, zoom)
 is performed on one image, it also is performed on the other(s)
 <li><b>unsync images ...</b> unsynchronize previously sync'ed images
-<li><b>separate these images</b> move each image in this display to a new display
-<li><b>gather all images here</b> move all images from other displays to this display
-<li><b>refresh this image</b> an advanced option that will call the
-internal redisplay routine for the displayed image (useful, for
-example, if you are reprocessing the image on disk and want to view
-the new data)
-<li><b>display the full image</b> an advanced option that tries to
-load and display the entire image (might cause the page to crash if
-the image is too large)
-<li><b>display selected cutouts</b> selected region(s) are used to define the center and size of new image section(s); note that image sections are always rectangles and region angles are ignored
-<li><b>free image memory</b> free up memory used to store the FITS file internally (which is needed for WCS reprojections, viewing FITS extensions and data cubes)
-<li><b>close this image</b> to clear the current image and release browser resources
-<li><b>close all images</b> to clear all images and release browser resources
-<li><b>remove proxy file</b> to clear a server proxy file and release browser resources
-<li><b>load catalog ...</b> load a tab-delimited catalog file into the display
-<li><b>save active catalog</b> save the currently active catalog (Shape Layers plugin has more general support)
-<li><b>load session ...</b> load a previously saved session into the display
-<li><b>save session ...</b> save information about the current image or all images loaded into this display: filename, scaling, colormap, contrast/bias, zoom, regions, catalogs, etc. are stored in a json file
-<li><b>create mosaic ...</b> create a mosaic image from the current image or all images in this display
-<li><b>new JS9 light window</b> create a light window containing a JS9 instance
-<li><b>new JS9 separate window</b> create a separate window containing a JS9 instance
-<li><b>connect to JS9 helper (Electron-based apps only)</b> if a
-Node.js-based helper is not running, an Electron-based JS9 app will
-run the helper internally at start-up. Subsequent Electron-based apps
-will use the first app's helper. If the first app is terminated, other
-apps no longer have access to that helper.  Within five minutes of the
-termination, use this option to start the helper in one remaining
-app and other apps will reconnect.
-<li><b>display pageID</b>, a unique ID for this page that can be used to communicate externally with a JS9 instance when multiple JS9 instances are running (js9 --pageid [pageid])
+</ul>
+
+<li><b>close ...</b> one or more images (or internal image memory)
+<ul>
+<li><b>this image</b> to clear the current image and release browser resources
+<li><b>all images</b> to clear all images and release browser resources
+<li><b>free image's memory</b> free up memory used to store the FITS file internally (which is needed for WCS reprojections, viewing FITS extensions and data cubes)
+<li><b>proxy file</b> to clear a server proxy file and release browser resources
+</ul>
+
+<li><b>catalog ...</b> load or save catalogs
+<ul>
+<li><b>load ...</b> load a tab-delimited catalog file into the display
+<li><b>save active</b> save the currently active catalog (Shape Layers plugin has more general support)
+</ul>
+
+<li><b>mosaic ...</b> create a mosaic image using:
+<ul>
+<li><b>images in the current file</b>
+<li><b>images in this display</b>
+</ul>
+
+<li><b>session ...</b> load or save sessions
+<ul>
+<li><b>load ...</b> load a previously saved local session file into the display
+<li><b>save ...</b> save information about the current image or all images loaded into this display: filename, scaling, colormap, contrast/bias, zoom, regions, catalogs, etc. are stored in a json file
+</ul>
+
+<li><b>window ...</b> create a new JS9 display window:
+<ul>
+<li><b>light window</b> create a light window containing a JS9 instance
+<li><b>separate window</b> create a separate window containing a JS9 instance
+</ul>
+
+<li><b>print ...</b> print the current image display window (including 2D graphics)
 </ul>
 
 <li><p><b>Edit:</b> allows you to copy and paste regions, positions,
@@ -187,25 +230,32 @@ position and then use this menu option
 <li><b>copy value/pos</b> copy the current pixel value and WCS position to the system clipboard
 </ul>
 
-<li><p><b>View:</b> displays a list of plugin menu options, including the following core options:
+<li><p><b>View:</b> displays a list of available plugin, including the following core options:
 <ul>
-<li> The <b>Console</b> menu option will bring up a movable, light-weight
+<li><b>Archive and Catalogs</b>: allows you to display image data retrieved from various archives and overlay catalog information.
+<li><b>Bin/Filter/Section</b>: supports binning and column filtering on FITS binary tables.
+<li><b>Blending</b>: combine selected images using a specified blend
+mode and optional opacity.
+<li><b>Colormaps</b>: create compatible colormaps from a specified color
+<li><b>Console</b>: will bring up a movable, light-weight
 console window into which JS9 commands can be entered.
-<li> The <b>Extension</b> menu option allows you to display images from a FITS
-multi-extension file.
-<li> The <b>Data Cube</b> menu option allows you to display slices of a 3D FITS
+<li><b>Contours</b>: generate contour maps
+<li><b>Data Cube</b>: display slices of a 3D FITS
 data cube.
-<li> The <b>InfoBox</b> menu option allows you to display value and position
+<li><b>Extensions</b>: display images from a FITS multi-extension file.
+<li><b>Imarith</b>: simple image arithmetic between images
+<li><b>InfoBox</b>: allows you to display value and position
 information in a separate light-weight window.
-<li> The <b>Magnifier</b> menu option will bring up a movable,
+<li><b>Keyboard Actions</b>: view the current mapping between keys and actions
+<li><b>Magnifier</b>: will bring up a movable,
 light-weight window showing a blocked image of the data in an area
 surrounding the mouse as it moves. The default magnification of four
 can be changed using command buttons on the magnifier window.
-<li> The <b>Mouse/Touch</b> menu option allows you to change the
+<li><b>Mouse/Touch</b>: allows you to change the
 actions performed when you move the mouse over an image with zero,
 one, or two buttons pressed.  It also configures touch actions using
 one, two, or three fingers.
-<li> The <b>Panner</b> menu option will bring up a movable,
+<li><b>Panner</b>: will bring up a movable,
 light-weight panner window that displays the full image along with a
 viewport rectangle showing the currently displayed image section in
 the primary image window. The viewport can be moved around in order to pan
@@ -214,54 +264,59 @@ command button options to zoom the viewport itself. (This makes
 the viewport rectangle larger at the expense of displaying only a
 section of the full image. It is useful for panning in a very large
 image.) 
+<li><b>Pixel Table</b>: displays an array of pixel values around the current mouse position.
+<li><b>Preferences</b>: set preferences for this session (and/or save for future sessions)
+<li><b>Separate/Gather</b>: separate images in this display or gather images into this display
+<li><b>Shape Layers</b>: displays the layers defined for the current
+image and allows you to turn on and off the display of any layer.
+<li><b>Show/Hide Plugins</b>: displays the currently active plugins and allows
+you to hide plugins defined statically on the web page.
 </ul>
+
 <p>
-In addition to these core options, the <b>View</b> menu also lists the
-currently-loaded <b>View plugins</b>. JS9 itself supplies the following plugins:
+The <b>View</b> menu also contains the following <b>Display
+Options</b> submenus:
 <ul>
-<li>The <b>Archive and Catalogs</b> menu option allows you to display image data retrieved from various archives and overlay catalog information.
-<li>The <b>Binning</b> menu option supports binning and column filtering on FITS binary tables.
-<li>The <b>Pixel Table</b> menu option displays an array of pixel values around the current mouse position.
-</ul>
-<p>
-Web developers can develop and register other plugins (which generally are
-loaded into either the <b>View</b> or <b>Analysis</b> menus).
-<p>
-The <b>display value/position</b> option specifies whether
+<li><b>show ...</b>: various options on the display:
+<ul>
+<li><b>display value/position</b>: specifies whether
 image position and image pixel value is displayed as the mouse (or
 finger) moves over the image. By default, this information is
 displayed in the upper left of the image. You can redirect the display
 to a movable, light-weight window by choosing the <b>InfoBox</b> menu
 option.
-<p>
-The <b>display crosshair for this image</b> option will display a
+<li><b>active shape layers</b>: toggles display of shape layers
+<li><b>crosshair for this image</b>: displays a
 crosshair at the mouse position when the Shift key is held down
 (without the Shift key on iOS devices). It is turned off by default.
-
-<p>
-The <b>match wcs with other crosshairs</b> option will display a crosshair in
+<li><b>match wcs crosshairs</b>: displays a crosshair in
 other JS9 displays, matching the WCS position of the mouse in this display
 (assuming the other image has its own crosshair enabled).
-<p>
-The <b>display toolbar tooltips</b> option specifies whether tooltips
+<li><b>toolbar tooltips</b>: specifies whether tooltips
 are displayed as the mouse hovers over an icon in the <b>Toolbar</b>
 plugin. (For mobile devices, a single tap will display the tooltip,
 requiring a second tap to execute the toolbar action.)
-<p>
-The <b>new image inherits current params</b> option specifies whether
+<li><b>new image inherits current params</b>: specifies whether
 a new image grabs the image params (e.g., colormap, scale, zoom, etc.)
 from the currently displayed image. If false, these params are taken
 from the default JS9.imageOpts object.
-<p>
-Finally, the <b>change width/height</b> menu option allows you to
-specify a new width and height for the JS9 display.
+</ul>
+<li><b>resize</b>: the display:
+<ul>
+<li><b>change width/height</b> specify a new width and height for the
+JS9 display.
+<li><b>set to image size</b>: set display to current image size
+<li><b>set size to full window</b>: set display to browser window size
+<li><b>reset to original size</b>: set display to its original size
+</ul>
+</ul>
 
 <li><p><b>Zoom:</b> The <b>zoomIn</b> and <b>zoomOut</b> menu options
 zoom the primary image in or out by a factor of
 two. The <b>zoomToFit</b> options calculates a zoom factor that fits
 the entire image into the JS9 display.  You also can set the zoom
-factor to a pre-specified value using menu options.  You can specify
-any floating point zoom factor in the <b>numeric zoom value</b> text
+factor to a pre-specified value using menu options or you can specify
+a floating point zoom factor in the <b>other zoom</b> text
 box. The <b>pan to center</b> option pans to the center of the image, while
 the <b>reset zoom/pan</b> sets the zoom to 1 and centers the display.
 
@@ -273,17 +328,17 @@ target="_blank">"How It Works"</a>.) The log scale, for example, is
 especially useful with X-ray data. Histogram equalization (histeq)
 tries to maximize contrast across the range of data values and is
 useful in a wide variety of cases. The current scale is marked with a
-star burst.
+starburst.
 
 <p>
 You also can change the low and high values used to clip the image
-data before scaling by changing the <b>low clipping value</b>
-and/or <b>high clipping value</b> numbers. These values are set
-initially with the data's min and max values or the z1,z2 values
+data before scaling by changing the <b>low</b> and/or <b>high</b>
+values in the text boxes of the <b>Data Limits</b> section. These values are
+set initially with the data's min and max values or the z1,z2 values
 calculated by the <b>IRAF zscale</b> algorithm (depending on the value
 of the web site's <b>JS9.imageOpts.scaleclipping</b> parameter. The
 default usually is "dataminmax".). Finally, you can use the
-<b>Clipping Limits</b> plugin to set the clipping values
+<b>Scale Controls</b> plugin to set the clipping values
 to data min/max, zscale z1/z2 or zscale z1/max, or set the clipping
 values using the pixel distribution plot.
 
@@ -307,8 +362,8 @@ the <a href="publicapi.html">JS9 Public API</a> for more information about
 the individual functions.
 
 <p>
-You can enter a floating point value into the <b>contrast value</b> and 
-<b>bias value</b> text boxes to set the contrast/bias. Note that the
+You can enter a floating point value into the <b>contrast</b> and 
+<b>bias</b> text boxes to set the contrast/bias. Note that the
 contrast value ranges from 0 to 10 and the bias ranges from 0 to 1
 (following DS9 conventions).
 
@@ -318,23 +373,23 @@ contrast/bias value (which is especially useful if you changed the
 contrast/bias or scale and now can't see any features at all!)
 
 <p>
-The <b>load colormap</b> option brings up a File menu from which you
+The <b>load</b> option brings up a File menu from which you
 can choose a user-defined colormap to load.
 
 <p>
-The <b>save colormap</b> option saves the active colormap definition
+The <b>save</b> option saves the active colormap definition
 for the currently displayed image to a file (useful for editing to
 make a new colormap).
 
 <p>
-The <b>invert colormap</b> option inverts the colormap (e.g. in the gray map,
+The <b>invert</b> option inverts the colormap (e.g. in the gray map,
 this will change white to black and vice versa). 
 
 <p>
 If you have three images of the same size, scale, and pointing
 direction (e.g. three energy cuts of a Chandra data set), you can
 display each one separately and assign to them one of the <b>red,
-green, or blue</b> colormaps. If you then select the <b>RGB mode</b>
+green, or blue</b> colormaps. If you then select the <b>rgb mode</b>
 menu option, they will be displayed as one RGB composite image. The
 current image (as shown in the <b>File</b> menu) determines which of
 the three independent colormaps is changed by the contrast/bias
@@ -343,7 +398,7 @@ different colormap. Re-join (or add a new image) by assigning one of
 the RGB colormaps. Simply turn off RGB mode to display the images
 separately.
 
-<li><p><b>Region:</b> Astronomical regions format is described
+<li><p><b>Regions:</b> Astronomical regions format is described
 <a href="https://js9.si.edu/regions/regions.html" target="_blank">here</a>.
 Choose the appropriate menu option to create a
 region of type <b>annulus</b>, <b>box</b>, <b>circle</b>, <b>ellipse</b>,
@@ -398,8 +453,11 @@ The selected regions submenu also supports the ability to toggle the
 used in X-ray astronomy).
 
 <p>
-The <b>list on change</b> menu option will cause all regions to be
-listed whenever one changes.
+The <b>onchange</b> submenu contains the following options:
+<ul>
+<li><b>list on change</b>: all regions are listed whenever one changes
+<li><b>xeq on change</b>: toggle whether region onchange callbacks are called
+</ul>
 
 <li><p><b>WCS:</b> Use this menu option to select a world coordinate
 system when displaying pixel positions and regions (assuming
@@ -557,22 +615,23 @@ make tasks available</b>. Select this option and your FITS file will
 be sent to the server so that server-side analysis can be performed.
 
 <p>
-The <b>set data analysis path ...</b> option allows you to specify a
-colon-separated list of directories for JS9 to search when looking for
-FITS data files that have been dropped onto the display. This is used
-by JS9 when performing server-side data analysis on local
-drag-and-drop FITS files. It is necessary to specify data paths
-explicitly since web pages are not allowed to determine the pathname
-of such files automatically (for obvious security reasons).
-
-<p>
-For local servers, the <b>set this image file's path</b> option allows
-you to specify the path (absolute or relative to the displayed web
-page) of an image file loaded via <i>Drag and Drop</i> or <i>Open
-Local File</i>.  For security reasons, browsers do not expose the path
-of files loaded in these two ways. However, for a local web page, you can
-safely specify the image path in order to refresh the image or run
-server-based analysis.
+The <b>server-side params</b> submenu contains the following options:
+<ul>
+<li><b>set data analysis path ...</b>: specify a colon-separated list
+of directories for JS9 to search when looking for FITS data files that
+have been dropped onto the display. This is used by JS9 when
+performing server-side data analysis on local drag-and-drop FITS
+files. It is necessary to specify data paths explicitly since web
+pages are not allowed to determine the pathname of such files
+automatically (for obvious security reasons).
+<li><b>set this image file's path</b>: for local servers only, set the
+path (absolute or relative to the displayed web page) of an image file
+loaded via <i>Drag and Drop</i> or <i>Open Local File</i>.  For
+security reasons, browsers do not expose the path of files loaded in
+these two ways. However, for a local web page, you can safely specify
+the image path in order to refresh the image or run server-based
+analysis.
+</ul>
 
 <li><p><b>Help:</b> Show this and other JS9 help pages. The <b>Help</b> menu
 also contains help for <b>Plugins</b>, including the <b>Imexam</b> plugins
@@ -723,21 +782,21 @@ Analysis menu to help JS9 locate the original data file.
 <a name="resize"></a> 
 <h3>Resizing the JS9 Display</h3>
 <p>
-The JS9 Display can be resized using the the <b>View:change
-width/height</b>menu option (or the JS9.ResizeDisplay() JavaScript
+The JS9 Display can be resized using the the <b>View:resize:change
+width/height</b> menu option (or the JS9.ResizeDisplay() JavaScript
 routine).  The View menu's resize parameter can be two values (width
 and height) or a single value representing both.  In addition, if an
 image containing wcs info is being displayed, you can append a single
 quote to specify a size in arc minutes (e.g. 5') or a double quote to
 specify a size in arc seconds (e.g. 300&#34;).
 <p>
-The <b>View: set to image size</b> option will set the display size to
-the size of the current image. The <b>View: set size to full
+The <b>View:resize:set to image size</b> option will set the display size to
+the size of the current image. The <b>View:resize:set size to full
 window</b> option will resize the JS9 display to the size of the
 browser window's window.innerWidth and window.innerHeight properties,
 and will scroll the display to the center of the window.  (Note that
 the rest of the web page is still available via scrolling, including
-the menubar.)  The <b>View: reset to original size</b> option will set
+the menubar.)  The <b>View:resize:reset to original size</b> option will set
 the display size back to the original size.  Display resize can be
 turned off by setting the JS9.globalOpts.resize variable
 to <b>false</b> in the js9Prefs.json file.
@@ -751,7 +810,7 @@ See <a href="knownissues.html">Known Issues</a>
 for a discussion of limitations imposed on resize by Webkit
 browsers such as Chrome and Safari.
 
-<h5>Last updated: March 24, 2019</h5>
+<h5>Last updated: April 4, 2019</h5>
 </div>
 
 </body>

@@ -5630,16 +5630,15 @@ JS9.Menubar.buttonOptsArr = [{name: "file", label: "File"},
 
 // map correspondance between menu items and keyboard actions
 JS9.Menubar.keyMap = {
-    "open local file ...": "open local file",
+    "local file ...": "open local file",
     "toggle: src/bkgd": "toggle selected region: source/background",
     "display crosshair for this image": "toggle crosshair",
     "toggle: incl/excl": "toggle selected region: include/exclude",
-    "display the full image": "display full image",
-    "display selected cutouts": "display selected cutouts",
-    "refresh this image": "refresh image",
+    "full image": "display full image",
+    "selected cutouts": "display selected cutouts",
+    "refreshed image": "refresh image",
     "new JS9 light window": "new JS9 light window",
-    "show active shape layers": "toggle active shape layers",
-    "hide active shape layers": "toggle active shape layers",
+    "active shape layers": "toggle active shape layers",
     "Keyboard Actions": "toggle keyboard actions plugin",
     "Mouse/Touch": "toggle mouse/touch plugin",
     "Preferences": "toggle preferences plugin",
@@ -5905,31 +5904,44 @@ JS9.Menubar.createMenus = function(){
 	    var items = {};
 	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 	    var tim = tdisp.image;
+	    items.filetitle = {
+		name: "Files and Displays:",
+		disabled: true
+	    };
 	    if( that.issuper ){
 		arr = JS9.Menubar.getDisplays.call(that, "all");
-		items.supertitle = {
-		    name: "Supermenu Controls:",
-		    disabled: true
+		items.supermenu = {
+		    name: "supermenu ...",
+		    items: {
+			supertitle: {
+			    name: "target this display:",
+			    disabled: true
+			}
+		    }
 		};
 		for(i=0; i<arr.length; i++){
 		    cdisp = arr[i];
 		    name = cdisp.id;
-		    items["super_"+name] = xname(name);
+		    items.supermenu.items["super_"+name] = xname(name);
 		    if( that.selectedDisplay === cdisp ){
-			items["super_"+name].icon = "sun";
+			items.supermenu.items["super_"+name].icon = "sun";
 			n++;
 		    }
 		}
 		name = "all displays";
-		items.super_all = xname(name);
+		items.supermenu.items.super_all = xname(name);
 		if( !n ){
-		    items.super_all.icon = "sun";
+		    items.supermenu.items.super_all.icon = "sun";
 		}
-		items["sep" + n++] = "------";
 	    }
-	    items.filetitle = {
-		name: "Images:",
-		disabled: true
+	    items.images = {
+		name: "images ...",
+		items: {
+		    imagestitle: {
+			name: "display this image:",
+			disabled: true
+		    }
+		}
 	    };
 	    imlen = JS9.images.length;
 	    for(i=0; i<imlen; i++){
@@ -5947,213 +5959,263 @@ JS9.Menubar.createMenus = function(){
 			    name += " (blue)";
 			}
 		    }
-		    items[name] = xname(name);
+		    items.images.items[name] = xname(name);
 		    if( tdisp.image && (tdisp.image.id === im.id) ){
-			items[name].icon = "sun";
+			items.images.items[name].icon = "sun";
 		    }
 		    n++;
 		}
 	    }
 	    if( !n ){
-		items.noimg = {
+		items.images.items.noimg = {
 		    name: "[no images]",
 		    events: {keyup: function(){return;}}
 		};
 	    }
-	    items["sep" + n++] = "------";
-	    items.open = xname("open local file ...");
-	    items.archives = xname(" accessing data archives ...");
-	    if( !JS9.allinone ){
-		    items.archives.disabled = false;
-		} else {
-		    items.archives.disabled = true;
-		}
-		items.loadproxy = xname("open link via proxy ...");
-		if( !JS9.allinone			 &&
-		    JS9.globalOpts.helperType !== "none" &&
-		    JS9.globalOpts.workDir      	 &&
-		    JS9.globalOpts.loadProxy    	 ){
-		    items.loadproxy.disabled = false;
-		} else {
-		    items.loadproxy.disabled = true;
-		}
-		items.loadcors = xname("open link via CORS ...");
-		if( !window.hasOwnProperty("Jupyter") ){
-		    items.loadcors.disabled = false;
-		} else {
-		    items.loadcors.disabled = true;
-		}
-		items["sep" + n++] = "------";
-		items.print = xname("print ...");
-		if( window.isElectron && window.electronIPC ){
-		    items.windowPrint = xname("print window ...");
-		    items.windowPDF = xname("save window to pdf");
-		}
-		items.header = xname("display FITS header");
-		items.hdus = xname("display FITS HDUs");
-		if( !tim || !tim.hdus ){
-		    items.hdus.disabled = true;
-		}
-		items.saveas = {
-		    name: "save this image ...",
-		    items: {
-			saveastitle: {
-			    name: "choose output format:",
-			    disabled: true
-			},
-			savefits: xname("FITS"),
-			savejpeg: xname("JPEG"),
-			savepng: xname("PNG")
-		    }
-		};
-		items.moveto = {
-		    name: "move this image to ...",
-		    items: {
-			movetotitle: {
-			    name: "choose display:",
-			    disabled: true
-			}
-		    }
-		};
-		items.sync = {
-		    name: "sync this image ...",
-		    items: { }
-		};
-		items.unsync = {
-		    name: "unsync this image ...",
-		    items: { }
-		};
-		items.separate = xname("separate these images");
-		items.gather = xname("gather all images here");
-		if( tim ){
-		    // move image to
-		    items.moveto.disabled = false;
-		    for(i=0; i<JS9.displays.length; i++){
-			if( $("#"+JS9.displays[i].id).length > 0 &&
-			    tdisp !== JS9.displays[i]    	     ){
-			    s1 = "moveto_" + JS9.displays[i].id;
-			    items.moveto.items[s1] = xname(JS9.displays[i].id);
-			}
-		    }
-		    items.moveto.items.moveto_newdisp = xname("a new display");
-		    // sync target images to this image
-		    items.sync.disabled = false;
-		    items.sync.items.sync_opstitle = {
-			name: "op(s) that trigger syncing:",
+	    items.opens = {
+		name: "open ...",
+		items: {
+		    openstitle: {
+			name: "open:",
 			disabled: true
-		    };
-		    items.sync.items.syncops = {
-			value: JS9.globalOpts.syncOps,
-			type: "textarea"
-		    };
-		    items.sync.items.syncreciprocate = {
-			name: "reciprocal syncing",
-			selected: JS9.globalOpts.syncReciprocate,
-			type: "checkbox"
-		    };
-		    items.sync.items["sep" + n++] = "------";
-		    items.sync.items.title = {name: "image(s) to keep in sync:",
-					      disabled: true};
-		    for(i=0; i<JS9.images.length; i++){
-			if( tim !== JS9.images[i]    	     ){
-			    s1 = "sync_" + JS9.images[i].id;
-			    items.sync.items[s1] = xname(JS9.images[i].id);
-			}
 		    }
-		    items.sync.items.sync_allimages = xname("all images");
-
-		    // unsync target images to this image
-		    items.unsync.disabled = false;
-		    items.unsync.items.unsync_opstitle = {
-			name: "op(s) to unsync:",
+		}
+	    };
+	    items.opens.items.open = xname("local file ...");
+	    items.opens.items.loadproxy = xname("url via proxy ...");
+	    if( !JS9.allinone			 &&
+		JS9.globalOpts.helperType !== "none" &&
+		JS9.globalOpts.workDir      	 &&
+		JS9.globalOpts.loadProxy    	 ){
+		items.opens.items.loadproxy.disabled = false;
+	    } else {
+		items.opens.items.loadproxy.disabled = true;
+	    }
+	    items.opens.items.loadcors = xname("url via CORS ...");
+	    if( !window.hasOwnProperty("Jupyter") ){
+		items.opens.items.loadcors.disabled = false;
+	    } else {
+		items.opens.items.loadcors.disabled = true;
+	    }
+	    items.disps = {
+		name: "display ...",
+		items: {
+		    dispstitle: {
+			name: "display:",
 			disabled: true
-		    };
-		    items.unsync.items.unsyncops = {
-			value: JS9.globalOpts.syncOps,
-			type: "textarea"
-		    };
-		    items.unsync.items.unsyncreciprocate = {
-			name: "unsync reciprocals",
-			selected: JS9.globalOpts.syncReciprocate,
-			type: "checkbox"
-		    };
-		    items.unsync.items["sep" + n++] = "------";
-		    items.unsync.items.title = {name: "image(s) to unsync:",
-						disabled: true};
-		    for(i=0; i<JS9.images.length; i++){
-			if( tim !== JS9.images[i]    	     ){
-			    s1 = "unsync_" + JS9.images[i].id;
-			    items.unsync.items[s1] = xname(JS9.images[i].id);
-			}
 		    }
-		    items.unsync.items.unsync_allimages = xname("all images");
-		} else {
-		    items.moveto.disabled = true;
-		    items.sync.disabled = true;
-		    items.unsync.disabled = true;
 		}
-		items.refresh = xname("refresh this image");
-		items.full = xname("display the full image");
-		items.cutout = xname("display selected cutouts");
-		items.free = xname("free this image's memory");
-		if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
-		    items.refresh.disabled = true;
-		    items.full.disabled = true;
-		    items.cutout.disabled = true;
-		    items.free.disabled = true;
-		}
-		items.close = xname("close this image");
-		items.closeall = xname("close all images");
-		items.removeproxy = xname("remove proxy file from server");
-		if( !tim || !tim.proxyFile ){
-		    items.removeproxy.disabled = true;
-		}
-		items["sep" + n++] = "------";
-		items.loadcatalog = xname("load catalog ...");
-		items.savecatalog = xname("save active catalog");
-		items["sep" + n++] = "------";
-		items.loadsession = xname("load session ...");
-		items.savesession = {
-		    name: "save session ...",
-		    items: {
-			savesessiontitle: {
-			    name: "include these images:",
-			    disabled: true
-			},
-			savecurrent: xname("the current image"),
-			savedisplay: xname("all images in this display")
+	    };
+	    items.disps.items.header = xname("FITS header");
+	    items.disps.items.hdus = xname("FITS HDUs");
+	    if( !tim || !tim.hdus ){
+		items.disps.items.hdus.disabled = true;
+	    }
+	    items.disps.items.refresh = xname("refreshed image");
+	    items.disps.items.full = xname("full image");
+	    items.disps.items.cutout = xname("selected region cutouts");
+	    items.disps.items.pageid = xname("page id");
+	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
+		items.disps.items.refresh.disabled = true;
+		items.disps.items.full.disabled = true;
+		items.disps.items.cutout.disabled = true;
+	    }
+	    items.moveto = {
+		name: "move ...",
+		items: {
+		    movetotitle: {
+			name: "move to this display:",
+			disabled: true
 		    }
+		}
+	    };
+	    if( tim ){
+		items.moveto.disabled = false;
+		for(i=0; i<JS9.displays.length; i++){
+		    if( $("#"+JS9.displays[i].id).length > 0 &&
+			tdisp !== JS9.displays[i]    	     ){
+			s1 = "moveto_" + JS9.displays[i].id;
+			items.moveto.items[s1] = xname(JS9.displays[i].id);
+		    }
+		}
+		items.moveto.items.moveto_newdisp = xname("a new display");
+	    } else {
+		items.moveto.disabled = true;
+	    }
+	    items.saveas = {
+		name: "save ...",
+		items: {
+		    saveastitle: {
+			name: "choose output format:",
+			disabled: true
+		    },
+		    savefits: xname("FITS"),
+		    savejpeg: xname("JPEG"),
+		    savepng: xname("PNG")
+		}
+	    };
+	    items.separates = {
+		name: "separate ...",
+		items: {
+		}
+	    };
+	    items.separates.items.separate = xname("separate these images");
+	    items.separates.items.gather = xname("gather all images here");
+	    items.syncs = {
+		name: "sync ...",
+		items: {
+		    syncstitle: {
+			name: "sync/unsync images:",
+			disabled: true
+		    }
+		}
+	    };
+	    items.syncs.items.sync = {
+		name: "sync images ...",
+		items: { }
+	    };
+	    items.syncs.items.unsync = {
+		name: "unsync images ...",
+		items: { }
+	    };
+	    if( tim ){
+		// sync target images to this image
+		items.syncs.items.sync.disabled = false;
+		items.syncs.items.sync.items.sync_opstitle = {
+		    name: "op(s) that trigger syncing:",
+		    disabled: true
 		};
-		items["sep" + n++] = "------";
-		items.createmosaic = {
-		    name: "create mosaic ...",
-		    items: {
-			createmosaictitle: {
-			    name: "include these images:",
-			    disabled: true
-			},
-			mosaiccurrent: xname("the current image"),
-			mosaicdisplay: xname("all images in this display")
-		    }
+		items.syncs.items.sync.items.syncops = {
+		    value: JS9.globalOpts.syncOps,
+		    type: "textarea"
 		};
-		items["sep" + n++] = "------";
-		items.lite = xname("new JS9 light window");
-		items.xnew = xname("new JS9 separate window");
-		if( window.isElectron ){
-		    items.xnew.disabled = true;
-		}
-		items["sep" + n++] = "------";
-		if( window.isElectron && window.electronIPC ){
-		    items.electronHelper = xname("connect to JS9 helper");
-		    if(  JS9.helper.connected ){
-			items.electronHelper.disabled = true;
+		items.syncs.items.sync.items.syncreciprocate = {
+		    name: "reciprocal syncing",
+		    selected: JS9.globalOpts.syncReciprocate,
+		    type: "checkbox"
+		};
+		items.syncs.items.sync.items["sep" + n++] = "------";
+		items.syncs.items.sync.items.title = {name: "image(s) to keep in sync:",
+					  disabled: true};
+		for(i=0; i<JS9.images.length; i++){
+		    if( tim !== JS9.images[i]    	     ){
+			s1 = "sync_" + JS9.images[i].id;
+			items.syncs.items.sync.items[s1] = xname(JS9.images[i].id);
 		    }
 		}
-		items.pageid = xname("display page id");
-		return {
-                    callback: function(key, opt){
+		items.syncs.items.sync.items.sync_allimages = xname("all images");
+		// unsync target images to this image
+		items.syncs.items.unsync.disabled = false;
+		items.syncs.items.unsync.items.unsync_opstitle = {
+		    name: "op(s) to unsync:",
+		    disabled: true
+		};
+		items.syncs.items.unsync.items.unsyncops = {
+		    value: JS9.globalOpts.syncOps,
+		    type: "textarea"
+		};
+		items.syncs.items.unsync.items.unsyncreciprocate = {
+		    name: "unsync reciprocals",
+		    selected: JS9.globalOpts.syncReciprocate,
+		    type: "checkbox"
+		};
+		items.syncs.items.unsync.items["sep" + n++] = "------";
+		items.syncs.items.unsync.items.title = {name: "image(s) to unsync:",
+					    disabled: true};
+		for(i=0; i<JS9.images.length; i++){
+		    if( tim !== JS9.images[i]    	     ){
+			s1 = "unsync_" + JS9.images[i].id;
+			items.syncs.items.unsync.items[s1] = xname(JS9.images[i].id);
+		    }
+		}
+		items.syncs.items.unsync.items.unsync_allimages = xname("all images");
+	    } else {
+		items.syncs.items.sync.disabled = true;
+		items.syncs.items.unsync.disabled = true;
+	    }
+	    items.closes = {
+		name: "close ...",
+		items: {
+		    closestitle: {
+			name: "close:",
+			disabled: true
+		    }
+		}
+	    };
+	    items.closes.items.close = xname("this image");
+	    items.closes.items.closeall = xname("all images");
+	    items.closes.items.free = xname("this image's memory");
+	    items.closes.items.removeproxy = xname("proxy file");
+	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
+		items.closes.items.free.disabled = true;
+	    }
+	    if( !tim || !tim.proxyFile ){
+		items.closes.items.removeproxy.disabled = true;
+	    }
+	    items.catalogs = {
+		name: "catalog ...",
+		items: {
+		}
+	    };
+	    items.catalogs.items.loadcatalog = xname("load ...");
+	    items.catalogs.items.savecatalog = xname("save active");
+	    items.createmosaic = {
+		name: "mosaic ...",
+		items: {
+		    createmosaictitle: {
+			name: "create a mosaic using:",
+			disabled: true
+		    },
+		    mosaiccurrent: xname("images in the current file"),
+		    mosaicdisplay: xname("images in this display")
+		}
+	    };
+	    items.sessions = {
+		name: "session ...",
+		items: {
+		}
+	    };
+	    items.sessions.items.loadsession = xname("load ...");
+	    items.sessions.items.savesession = {
+		name: "save ...",
+		items: {
+		    savesessiontitle: {
+			name: "include these images:",
+			disabled: true
+		    },
+		    savecurrent: xname("the current image"),
+		    savedisplay: xname("all images in this display")
+		}
+	    };
+	    items.windows = {
+		name: "window ...",
+		items: {
+		    windowstitle: {
+			name: "create a new:",
+			disabled: true
+		    }
+		}
+	    };
+	    items.windows.items.lite = xname("light window");
+	    items.windows.items.xnew = xname("separate window");
+	    if( window.isElectron ){
+		items.windows.items.xnew.disabled = true;
+	    }
+	    if( window.isElectron && window.electronIPC ){
+		items.electronHelper = xname("connect to JS9 helper");
+		if(  JS9.helper.connected ){
+		    items.electronHelper.disabled = true;
+		}
+	    }
+	    items.print = xname("print ...");
+	    if( window.isElectron && window.electronIPC ){
+		items.windowPrint = xname("print window ...");
+		items.windowPDF = xname("save window to pdf");
+	    }
+	    return {
+                callback: function(key, opt){
 		    JS9.Menubar.getDisplays.call(that, "any", key)
-			    .forEach(function(val){
+			.forEach(function(val){
 			var j, s, t, did, kid, unew, uwin, uobj, uarr, uopts;
 			var udisp = val;
 			var uim = udisp.image;
@@ -6302,9 +6364,6 @@ JS9.Menubar.createMenus = function(){
 			    // save display id
 			    $(did).data("dispid", udisp.id);
 			    break;
-			case "archives":
-			    JS9.DisplayHelp(JS9.InstallDir(JS9.globalOpts.archivesURL));
-			    break;
 			case "loadproxy":
 			    // load param url to run analysis task
 			    // param url is relative to js9 install dir
@@ -6440,7 +6499,7 @@ JS9.Menubar.createMenus = function(){
 			    }
 			    break;
 			}
-		    });
+			});
                     },
 		    items: items
 		};
@@ -6675,79 +6734,101 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    items["sep" + n++] = "------";
-	    items.valpos = xname("display value/position");
+	    items.vdispstitle = {
+		name: "Display Options:",
+		disabled: true
+	    };
+	    items.vdisps = {
+		name: "show ...",
+		items: {
+		    vdispstitle: {
+			name: "show options:",
+			disabled: true
+		    }
+		}
+	    };
+	    items.vdisps.items.valpos = xname("value/position");
 	    // disable if we don't have info plugin
 	    if( !JS9.hasOwnProperty("Info") ){
-		items.valpos.disabled = true;
+		items.vdisps.items.valpos.disabled = true;
 	    } else if( tdisp.image && tdisp.image.params.valpos ){
-		items.valpos.icon = "sun";
+		items.vdisps.items.valpos.icon = "sun";
 	    }
-	    items.xhair = xname("display crosshair for this image");
+	    items.vdisps.items.toggleLayers = xname("active shape layers");
+	    if( tim && !tim.toggleLayers ){
+		items.vdisps.items.toggleLayers.icon = "sun";
+	    }
+	    items.vdisps.items.xhair = xname("crosshair for this image");
 	    // disable if we don't have info plugin
 	    if( !JS9.hasOwnProperty("Crosshair") || !tim ){
-		items.xhair.disabled = true;
+		items.vdisps.items.xhair.disabled = true;
 	    } else if( tim && tim.params.crosshair ){
-		items.xhair.icon = "sun";
+		items.vdisps.items.xhair.icon = "sun";
 	    }
-	    items.xhairwcs = xname("match wcs with other crosshairs");
+	    items.vdisps.items.xhairwcs = xname("match wcs crosshairs");
 	    // disable if we don't have info plugin
 	    if( !JS9.hasOwnProperty("Crosshair") ){
-		items.xhairwcs.disabled = true;
+		items.vdisps.items.xhairwcs.disabled = true;
 	    } else if( JS9.globalOpts.wcsCrosshair ){
-		items.xhairwcs.icon = "sun";
+		items.vdisps.items.xhairwcs.icon = "sun";
 	    }
-	    items.toolbar = xname("display toolbar tooltips");
+	    items.vdisps.items.toolbar = xname("toolbar tooltips");
 	    // disable if we don't have toolbar plugin
 	    if( !JS9.hasOwnProperty("Toolbar") ){
-		items.toolbar.disabled = true;
+		items.vdisps.items.toolbar.disabled = true;
 	    } else if( JS9.GetToolbar("showTooltips") ){
-		items.toolbar.icon = "sun";
+		items.vdisps.items.toolbar.icon = "sun";
 	    }
-	    if( tim && tim.toggleLayers ){
-		items.toggleLayers = xname("show active shape layers");
-	    } else {
-		items.toggleLayers = xname("hide active shape layers");
-	    }
-	    items.inherit = xname("new image inherits current params");
+	    items.vdisps.items.inherit = xname("new images inherit current params");
 	    if( tdisp.image && tdisp.image.params.inherit ){
-		items.inherit.icon = "sun";
+		items.vdisps.items.inherit.icon = "sun";
 	    }
-	    items["sep" + n++] = "------";
-	    items.rawlayer = {
-		name: "raw data layers",
+	    items.vdisps.items.rawlayer = {
+		name: "raw data sources ...",
 		items: {}
 	    };
 	    if( tim && tim.raws.length > 1 ){
+		items.vdisps.items.rawlayer.items.whichrawtitle = {
+		    name: "current raw data:"
+		};
 		for(i=0; i<tim.raws.length; i++){
 		    key = "rawlayer_" + tim.raws[i].id;
-		    items.rawlayer.items[key] = {
+		    items.vdisps.items.rawlayer.items[key] = {
 			name: tim.raws[i].id
 		    };
 		    if( tim.raw === tim.raws[i] ){
-			items.rawlayer.items[key].icon = "sun";
+			items.vdisps.items.rawlayer.items[key].icon = "sun";
 		    }
 		}
-		items.rawlayer.items["sep" + n++] = "------";
-		items.rawlayer.items.rawlayer_remove = xname("remove");
+		items.vdisps.items.rawlayer.items["sep" + n++] = "------";
+		items.vdisps.items.rawlayer.items.rawlayer_remove = xname("remove");
 	    } else {
-		items.rawlayer.disabled = true;
+		items.vdisps.items.rawlayer.disabled = true;
 	    }
-	    items["sep" + n++] = "------";
-	    items.resize = {
+	    items.resizes = {
+		name: "resize ...",
+		items: {
+		    resizestitle: {
+			name: "resize the display:",
+			disabled: true
+		    }
+		}
+	    };
+	    items.resizes.items.resize = {
 		events: {keyup: keyResize},
 		name: "change width/height:",
 		type: "text"
 	    };
-	    items.imagesize = xname("set to image size");
-	    items.fullsize = xname("set size to full window");
-	    items.resetsize = xname("reset to original size");
+	    items.resizes.items.imagesize = xname("set to image size");
+	    items.resizes.items.fullsize = xname("set size to full window");
+	    items.resizes.items.resetsize = xname("reset to original size");
 	    if( !JS9.globalOpts.resize ){
-		items.resize.disabled = true;
-		items.fullsize.disabled = true;
-		items.imagesize.disabled = true;
-		items.resetsize.disabled = true;
+		items.resizes.items.resize.disabled = true;
+		items.resizes.items.fullsize.disabled = true;
+		items.resizes.items.imagesize.disabled = true;
+		items.resizes.items.resetsize.disabled = true;
 	    } else if( !tim ){
-		items.imagesize.disabled = true;
+		items.resizes.items.imagesize.disabled = true;
 	    }
 	    return {
 		callback: function(key){
@@ -6923,6 +7004,11 @@ JS9.Menubar.createMenus = function(){
 		    items[name].icon = "sun";
 		}
 	    }
+	    items.zoom = {
+		events: {keyup: keyZoom},
+		name: "other zoom:",
+		type: "text"
+	    };
 	    items["sep" + n++] = "------";
 	    items.zoomiotitle = {
 		name: "Zoom In/Out:",
@@ -6931,12 +7017,6 @@ JS9.Menubar.createMenus = function(){
 	    items.zoomIn = xname("zoom in");
 	    items.zoomOut = xname("zoom out");
 	    items.zoomToFit = xname("zoom to fit");
-	    items["sep" + n++] = "------";
-	    items.zoom = {
-		events: {keyup: keyZoom},
-		name: "numeric zoom value:",
-		type: "text"
-	    };
 	    items["sep" + n++] = "------";
 	    items.center = xname("pan to center");
 	    items.reset = xname("reset zoom/pan");
@@ -7071,14 +7151,18 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    items["sep" + n++] = "------";
+	    items.scalelims = {
+		name: "Data Limits:",
+		disabled: true
+	    };
 	    items.scalemin = {
 		events: {keyup: keyScale},
-		name: "low data limit:",
+		name: "low:",
 		type: "text"
 	    };
 	    items.scalemax = {
 		events: {keyup: keyScale},
-		name: "high data limit:",
+		name: "high:",
 		type: "text"
 	    };
 	    items["sep" + n++] = "------";
@@ -7268,30 +7352,29 @@ JS9.Menubar.createMenus = function(){
 	    items["sep" + n++] = "------";
 	    items.contrast = {
 		events: {keyup: keyColor},
-		name: "contrast value:",
+		name: "contrast:",
 		type: "text"
 	    };
 	    items.bias = {
 		events: {keyup: keyColor},
-		name: "bias value:",
+		name: "bias:",
 		type: "text"
 	    };
 	    items.opacity = {
 		events: {keyup: keyColor},
-		name: "opacity value:",
+		name: "opacity:",
 		type: "text"
 	    };
-	    items["sep" + n++] = "------";
 	    items.reset = xname("reset contrast/bias");
 	    items["sep" + n++] = "------";
-	    items.loadcmap = xname("load colormap");
-	    items.savecmap = xname("save colormap");
-	    items.invert = xname("invert colormap");
+	    items.loadcmap = xname("load ...");
+	    items.savecmap = xname("save");
+	    items["sep" + n++] = "------";
+	    items.invert = xname("invert");
 	    if( tdisp.image && tdisp.image.params.invert ){
 		items.invert.icon = "sun";
 	    }
-	    items["sep" + n++] = "------";
-	    items.rgb = xname("RGB mode");
+	    items.rgb = xname("rgb mode");
 	    if( JS9.globalOpts.rgb.active ){
 		items.rgb.icon = "sun";
 	    }
@@ -7506,6 +7589,7 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    };
+
 	    items.removeRegions  = xname("remove");
 	    items.sep2 = "------";
 	    items.selectops = {
@@ -7554,8 +7638,19 @@ JS9.Menubar.createMenus = function(){
 		} 
 	    };
 	    items.sep3 = "------";
-	    items.listonchange  = xname("list on change");
-	    items.xeqonchange  = xname("xeq on change");
+	    items.onchange = {
+		name: "onchange ...",
+		items: {
+		    listonchange: xname("list on change"),
+		    xeqonchange: xname("xeq on change")
+		}
+	    };
+	    if( tim && tim.params.listonchange ){
+		items.onchange.items.listonchange.icon = "sun";
+	    }
+	    if( tim && tim.params.xeqonchange ){
+		items.onchange.items.xeqonchange.icon = "sun";
+	    }
 	    if( tim && (JS9.images.length > 1) ){
 		for(i=0; i<JS9.images.length; i++){
 		    if( tim !== JS9.images[i] ){
@@ -7576,12 +7671,6 @@ JS9.Menubar.createMenus = function(){
 	    // disable if we don't have info plugin
 	    if( !JS9.hasOwnProperty("Info") ){
 		items.listRegions.disabled = true;
-	    }
-	    if( tim && tim.params.listonchange ){
-		items.listonchange.icon = "sun";
-	    }
-	    if( tim && tim.params.xeqonchange ){
-		items.xeqonchange.icon = "sun";
 	    }
 	    return {
 		callback: function(key){
@@ -8203,18 +8292,19 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 		items["sep" + n++] = "------";
-	        items.serverconfig = {
-		    name: "Server-side Configuration:",
-		    disabled: true
-	        };
-		items.dpath = xname("set data analysis path ...");
+		items.sconfig = {
+		    name: "server-side params ...",
+		    items: {
+		    }
+		};
+		items.sconfig.items.dpath = xname("set data analysis path ...");
 		if( JS9.globalOpts.dataPathModify === false ){
-		    items.dpath.disabled = true;
+		    items.sconfig.items.dpath.disabled = true;
 		}
-		items.fpath = xname("set this image file's path ...");
+		items.sconfig.items.fpath = xname("set this image file's path ...");
 		if( !im ||
 		    (document.domain && document.domain !== "localhost") ){
-		    items.fpath.disabled = true;
+		    items.sconfig.items.fpath.disabled = true;
 		}
 	    }
 	    return {

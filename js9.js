@@ -154,7 +154,6 @@ JS9.globalOpts = {
     corsURL: "params/loadcors.html",       // location of param html file
     proxyURL: "params/loadproxy.html",     // location of param html file
     loadProxy: false,           // do we allow proxy load requests to server?
-    archivesURL: "help/archives.html",     // location of archives help file
     imsectionURL: "params/imsection.html", // location of param html file
     postMessage: false,         // allow communication through iframes?
     waitType: "spinner",        // "spinner" or "mouse"
@@ -442,16 +441,6 @@ JS9.helpOpts = {
 	type: "help", url:"publicapi.html",
 	title: "The JS9 Public API"
     },
-    repfile: {
-	heading: "JS9Help",
-	type: "help", url:"repfile.html",
-	title: "Dealing with Large Files"
-    },
-    memory: {
-	heading: "JS9Help",
-	type: "help", url:"memory.html",
-	title: "Dealing with Memory Limitations"
-    },
     extmsg: {
 	heading: "JS9Help",
 	type: "help", url:"extmsg.html",
@@ -467,6 +456,11 @@ JS9.helpOpts = {
 	type: "help", url:"python.html",
 	title: "JS9 with Python and Jupyter"
     },
+    archives: {
+	heading: "JS9Help",
+	type: "help", url:"archives.html",
+	title: "Accessing Data Archives"
+    },
     preferences: {
 	heading: "JS9Help",
 	type: "help", url:"preferences.html",
@@ -481,6 +475,16 @@ JS9.helpOpts = {
 	heading: "JS9Help",
 	type: "help", url:"changelog.html",
 	title: "ChangeLog"
+    },
+    repfile: {
+	heading: "JS9Help",
+	type: "help", url:"repfile.html",
+	title: "Dealing with Large Files"
+    },
+    memory: {
+	heading: "JS9Help",
+	type: "help", url:"memory.html",
+	title: "Dealing with Memory Limitations"
     },
     issues: {
 	heading: "JS9Help",
