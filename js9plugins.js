@@ -5899,51 +5899,46 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: function(){
-	    var i, im, name, imlen, s1, arr, cdisp;
+	    var i, m, im, name, s1, arr, cdisp, got, iobj;
 	    var n = 0;
 	    var items = {};
 	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 	    var tim = tdisp.image;
-	    items.filetitle = {
-		name: "Files and Displays:",
-		disabled: true
-	    };
-	    if( that.issuper ){
-		arr = JS9.Menubar.getDisplays.call(that, "all");
-		items.supermenu = {
-		    name: "supermenu ...",
+	    var imlen = JS9.images.length;
+	    // the number of images in this display ...
+	    for(i=0, got=0; i<imlen; i++){
+		im = JS9.images[i];
+		if( im.display === tdisp ){
+		    got++;
+		}
+	    }
+	    // affects the position of menu title ...
+	    if( !got || got >= JS9.globalOpts.imagesFileSubmenu ){
+		items.filetitle = {
+		    name: "Files and Displays:",
+		    disabled: true
+		};
+	    }
+	    // .. because images can be in top-level menu or a submenu
+	    if( got && got < JS9.globalOpts.imagesFileSubmenu ){
+		items.imagestitle = {
+		    name: "Images:",
+		    disabled: true
+		};
+		iobj = items;
+	    } else if( got ){
+		items.images = {
+		    name: "images ...",
 		    items: {
-			supertitle: {
-			    name: "target this display:",
+			imagestitle: {
+			    name: "display this image:",
 			    disabled: true
 			}
 		    }
 		};
-		for(i=0; i<arr.length; i++){
-		    cdisp = arr[i];
-		    name = cdisp.id;
-		    items.supermenu.items["super_"+name] = xname(name);
-		    if( that.selectedDisplay === cdisp ){
-			items.supermenu.items["super_"+name].icon = "sun";
-			n++;
-		    }
-		}
-		name = "all displays";
-		items.supermenu.items.super_all = xname(name);
-		if( !n ){
-		    items.supermenu.items.super_all.icon = "sun";
-		}
+		iobj = items.images.items;
 	    }
-	    items.images = {
-		name: "images ...",
-		items: {
-		    imagestitle: {
-			name: "display this image:",
-			disabled: true
-		    }
-		}
-	    };
-	    imlen = JS9.images.length;
+	    // add images from this display
 	    for(i=0; i<imlen; i++){
 		im = JS9.images[i];
 		if( im.display === tdisp ){
@@ -5959,17 +5954,18 @@ JS9.Menubar.createMenus = function(){
 			    name += " (blue)";
 			}
 		    }
-		    items.images.items[name] = xname(name);
+		    iobj[name] = xname(name);
 		    if( tdisp.image && (tdisp.image.id === im.id) ){
-			items.images.items[name].icon = "sun";
+			iobj[name].icon = "sun";
 		    }
-		    n++;
 		}
 	    }
-	    if( !n ){
-		items.images.items.noimg = {
-		    name: "[no images]",
-		    events: {keyup: function(){return;}}
+	    // add the rest of the menu
+	    if( got && got < JS9.globalOpts.imagesFileSubmenu ){
+		items["sep" + n++] = "------";
+		items.filetitle = {
+		    name: "Files and Displays:",
+		    disabled: true
 		};
 	    }
 	    items.opens = {
@@ -6008,6 +6004,9 @@ JS9.Menubar.createMenus = function(){
 	    };
 	    items.disps.items.header = xname("FITS header");
 	    items.disps.items.hdus = xname("FITS HDUs");
+	    if( !tim ){
+		items.disps.items.header.disabled = true;
+	    }
 	    if( !tim || !tim.hdus ){
 		items.disps.items.hdus.disabled = true;
 	    }
@@ -6054,6 +6053,9 @@ JS9.Menubar.createMenus = function(){
 		    savepng: xname("PNG")
 		}
 	    };
+	    if( !tim ){
+		items.saveas.disabled = true;
+	    }
 	    items.separates = {
 		name: "separate ...",
 		items: {
@@ -6061,6 +6063,9 @@ JS9.Menubar.createMenus = function(){
 	    };
 	    items.separates.items.separate = xname("separate these images");
 	    items.separates.items.gather = xname("gather all images here");
+	    if( !tim ){
+		items.separates.disabled = true;
+	    }
 	    items.syncs = {
 		name: "sync ...",
 		items: {
@@ -6130,6 +6135,7 @@ JS9.Menubar.createMenus = function(){
 		}
 		items.syncs.items.unsync.items.unsync_allimages = xname("all images");
 	    } else {
+		items.syncs.disabled = true;
 		items.syncs.items.sync.disabled = true;
 		items.syncs.items.unsync.disabled = true;
 	    }
@@ -6142,6 +6148,9 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    };
+	    if( !tim ){
+		items.closes.disabled = true;
+	    }
 	    items.closes.items.close = xname("this image");
 	    items.closes.items.closeall = xname("all images");
 	    items.closes.items.free = xname("this image's memory");
@@ -6157,6 +6166,9 @@ JS9.Menubar.createMenus = function(){
 		items: {
 		}
 	    };
+	    if( !tim ){
+		items.catalogs.disabled = true;
+	    }
 	    items.catalogs.items.loadcatalog = xname("load ...");
 	    items.catalogs.items.savecatalog = xname("save active");
 	    items.createmosaic = {
@@ -6170,6 +6182,9 @@ JS9.Menubar.createMenus = function(){
 		    mosaicdisplay: xname("images in this display")
 		}
 	    };
+	    if( !tim ){
+		items.createmosaic.disabled = true;
+	    }
 	    items.sessions = {
 		name: "session ...",
 		items: {
@@ -6207,7 +6222,38 @@ JS9.Menubar.createMenus = function(){
 		    items.electronHelper.disabled = true;
 		}
 	    }
+	    // super menu
+	    if( that.issuper ){
+		arr = JS9.Menubar.getDisplays.call(that, "all");
+		items.supermenu = {
+		    name: "supermenu ...",
+		    items: {
+			supertitle: {
+			    name: "target this display:",
+			    disabled: true
+			}
+		    }
+		};
+		for(i=0, m=0; i<arr.length; i++){
+		    cdisp = arr[i];
+		    name = cdisp.id;
+		    items.supermenu.items["super_"+name] = xname(name);
+		    if( that.selectedDisplay === cdisp ){
+			items.supermenu.items["super_"+name].icon = "sun";
+			m++;
+		    }
+		}
+		name = "all displays";
+		items.supermenu.items.super_all = xname(name);
+		if( !m ){
+		    items.supermenu.items.super_all.icon = "sun";
+		}
+	    }
+	    items["sep" + n++] = "------";
 	    items.print = xname("print ...");
+	    if( !tim ){
+		items.print.disabled = true;
+	    }
 	    if( window.isElectron && window.electronIPC ){
 		items.windowPrint = xname("print window ...");
 		items.windowPDF = xname("save window to pdf");
