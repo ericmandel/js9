@@ -5632,12 +5632,12 @@ JS9.Menubar.buttonOptsArr = [{name: "file", label: "File"},
 JS9.Menubar.keyMap = {
     "local file ...": "open local file",
     "toggle: src/bkgd": "toggle selected region: source/background",
-    "display crosshair for this image": "toggle crosshair",
+    "crosshair for this image": "toggle crosshair",
     "toggle: incl/excl": "toggle selected region: include/exclude",
     "full image": "display full image",
     "selected cutouts": "display selected cutouts",
     "refreshed image": "refresh image",
-    "new JS9 light window": "new JS9 light window",
+    "light window": "new JS9 light window",
     "active shape layers": "toggle active shape layers",
     "Keyboard Actions": "toggle keyboard actions plugin",
     "Mouse/Touch": "toggle mouse/touch plugin",
@@ -6013,7 +6013,7 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    items.disps.items.refresh = xname("refreshed image");
 	    items.disps.items.full = xname("full image");
-	    items.disps.items.cutout = xname("selected region cutouts");
+	    items.disps.items.cutout = xname("selected cutouts");
 	    items.disps.items.pageid = xname("page id");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.disps.items.refresh.disabled = true;
