@@ -418,24 +418,26 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     }
     // save pointer to section data
     datalen = hdu.naxis1 * hdu.naxis2;
+    // for the need to wrap the subarray() call in new Uint8Array(), see:
+    // https://github.com/emscripten-core/emscripten/issues/6747
     switch(hdu.bitpix){
     case 8:
-	hdu.image = HEAPU8.subarray(bufptr, bufptr + datalen);
+	hdu.image = new Uint8Array(HEAPU8.subarray(bufptr, bufptr+datalen));
 	break;
     case 16:
-	hdu.image = HEAP16.subarray(bufptr/2, bufptr/2 + datalen);
+	hdu.image = new Int16Array(HEAP16.subarray(bufptr/2, bufptr/2+datalen));
 	break;
     case -16:
-	hdu.image = HEAPU16.subarray(bufptr/2, bufptr/2 + datalen);
+	hdu.image = new Uint16Array(HEAPU16.subarray(bufptr/2, bufptr/2+datalen));
 	break;
     case 32:
-	hdu.image = HEAP32.subarray(bufptr/4, bufptr/4 + datalen);
+	hdu.image = new Int32Array(HEAP32.subarray(bufptr/4, bufptr/4+datalen));
 	break;
     case -32:
-	hdu.image = HEAPF32.subarray(bufptr/4, bufptr/4 + datalen);
+	hdu.image = new Float32Array(HEAPF32.subarray(bufptr/4, bufptr/4+datalen));
 	break;
     case -64:
-	hdu.image = HEAPF64.subarray(bufptr/8, bufptr/8 + datalen);
+	hdu.image = new Float64Array(HEAPF64.subarray(bufptr/8, bufptr/8+datalen));
 	break;
     }
     // for a binned table, we might have to average the pixel values now,
@@ -453,7 +455,9 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	  [ofptr, hptr, hptr+8, hptr+12]);
     hdu.ncard  = getValue(hptr+8, "i32");
     bufptr2 = getValue(hptr, "*");
-    buf = HEAPU8.subarray(bufptr2, bufptr2+(hdu.ncard*80));
+    // for the need to wrap the subarray() call in new Uint8Array(), see:
+    // https://github.com/emscripten-core/emscripten/issues/6747
+    buf = new Uint8Array(HEAPU8.subarray(bufptr2, bufptr2+(hdu.ncard*80)));
     buflen = buf.byteLength;
     hdu.cardstr = "";
     for(i=0; i<buflen; i++){
