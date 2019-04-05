@@ -713,17 +713,36 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
   /* look for a return value */
   if( filecontents(file0, rstr, SZ_LINE) >= 0 ){
     if( strstr(rstr, "OK") ){
-      /* copy temp file to output file: */
+      /* copy temp file(s) to output file(s): */
       /* Emscripten has created the temp file as a huge JS array, */
       /* and we are converting it back to a smaller typed array ... */
-      EM_ASM({
+      EM_ASM(({
+	  var tafile, oafile, n;
+	  var tfile = UTF8ToString($0);
+	  var ofile = UTF8ToString($1);
+	  // reprojected file must exist
 	  try{
-	    FS.writeFile(UTF8ToString($1), FS.readFile(UTF8ToString($0)));
-	    FS.unlink(UTF8ToString($0));
+	    FS.writeFile(ofile, FS.readFile(tfile));
+	    FS.unlink(tfile);
 	  } catch(e){
 	    console.log("ERROR: reproject could not finalize output file");
 	  }
-      }, temp2, file2);
+	  // area file might exist
+	  n = tfile.lastIndexOf(".");
+	  if( n >= 0 ) {
+	    tafile = tfile.substring(0, n) + "_area" + tfile.substring(n);
+	  }
+	  n = ofile.lastIndexOf(".");
+	  if( n >= 0 ) {
+	    oafile = ofile.substring(0, n) + "_area" + ofile.substring(n);
+	  }
+	  if( tafile && oafile ){
+	    try{
+	      FS.writeFile(oafile, FS.readFile(tafile));
+	      FS.unlink(tafile);
+	    } catch(e){}
+	  }
+      }), temp2, file2);
     }
     unlink(file0);
     return rstr;

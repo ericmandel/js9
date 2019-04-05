@@ -80,6 +80,8 @@ int readFits   (char *filename, char *weightfile);
 int    hdu;
 int    haveWeights;
 
+int    doarea = 1;
+
 double offset;
 
 char   input_file   [MAXSTR];
@@ -293,6 +295,7 @@ int main(int argc, char **argv)
    nan = (*((double *)nanc));
 
 #else
+
    union
    {
       double d;
@@ -334,10 +337,14 @@ int main(int argc, char **argv)
 
    fstatus = stdout;optind = 1;
 
-   while ((c = getopt(argc, argv, "z:d:s:b:o:i:h:w:W:t:x:X")) != EOF) 
+   while ((c = getopt(argc, argv, "a:z:d:s:b:o:i:h:w:W:t:x:X")) != EOF)
    {
       switch (c) 
       {
+         case 'a':
+            doarea = atoi(optarg);
+            break;
+
          case 'z':
             drizzle = strtod(optarg, &end);
 
@@ -1557,10 +1564,10 @@ int main(int argc, char **argv)
    if(fits_create_file(&output.fptr, output_file, &status)) 
       printFitsError(status);           
 
-#ifndef  __EMSCRIPTEN__
+   if( doarea ){
    if(fits_create_file(&output_area.fptr, area_file, &status)) 
       printFitsError(status);           
-#endif
+   }
 
    /*********************************************************/
    /* Create the FITS image.  All the required keywords are */
@@ -1576,7 +1583,7 @@ int main(int argc, char **argv)
       fflush(stdout);
    }
 
-#ifndef  __EMSCRIPTEN__
+   if( doarea ){
    if (fits_create_img(output_area.fptr, bitpix, naxis, output_area.naxes, &status))
       printFitsError(status);          
 
@@ -1585,7 +1592,7 @@ int main(int argc, char **argv)
       printf("FITS area image created (not yet populated)\n"); 
       fflush(stdout);
    }
-#endif
+   }
 
    /****************************************/
    /* Set FITS header from a template file */
@@ -1600,7 +1607,7 @@ int main(int argc, char **argv)
       fflush(stdout);
    }
 
-#ifndef  __EMSCRIPTEN__
+   if( doarea ){
    if(fits_write_key_template(output_area.fptr, template_file, &status))
       printFitsError(status);           
 
@@ -1609,7 +1616,7 @@ int main(int argc, char **argv)
       printf("Template keywords written to FITS area image\n\n"); 
       fflush(stdout);
    }
-#endif
+   }
 
    /**********************************/
    /* Modify BITPIX to be -32 or -64 */
@@ -1619,11 +1626,11 @@ int main(int argc, char **argv)
                                   (char *)NULL, &status))
       printFitsError(status);           
 
-#ifndef  __EMSCRIPTEN__
+   if( doarea ){
    if(fits_update_key_lng(output_area.fptr, "BITPIX", bitpix,
                                   (char *)NULL, &status))
       printFitsError(status);           
-#endif
+   }
 
    /***************************************************/
    /* Update NAXIS, NAXIS1, NAXIS2, CRPIX1 and CRPIX2 */
@@ -1661,7 +1668,7 @@ int main(int argc, char **argv)
 
 
 
-#ifndef  __EMSCRIPTEN__
+   if( doarea ){
    if(fits_update_key_lng(output_area.fptr, "NAXIS", 2,
                                   (char *)NULL, &status))
       printFitsError(status);           
@@ -1696,7 +1703,7 @@ int main(int argc, char **argv)
       printf("Template keywords BITPIX, CRPIX, and NAXIS updated\n");
       fflush(stdout);
    }
-#endif
+   }
 
    /************************/
    /* Write the image data */
@@ -1743,7 +1750,7 @@ int main(int argc, char **argv)
    /* Write the area data */
    /***********************/
 
-#ifndef  __EMSCRIPTEN__
+   if( doarea ){
    fpixel[0] = 1;
    fpixel[1] = 1;
    nelements = imax - imin + 1;
@@ -1771,7 +1778,7 @@ int main(int argc, char **argv)
    }
 
    }
-#endif
+   }
 
    /* free(area[0]); */
 
@@ -1794,7 +1801,7 @@ int main(int argc, char **argv)
       fflush(stdout);
    }
 
-#ifndef  __EMSCRIPTEN__
+   if( doarea ){
    if(fits_close_file(output_area.fptr, &status))
       printFitsError(status);           
 
@@ -1803,7 +1810,7 @@ int main(int argc, char **argv)
       printf("FITS area image finalized\n\n"); 
       fflush(stdout);
    }
-#endif
+   }
 
    /* free up allocated space */
    for(j=0; j<jlength; j++){

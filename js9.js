@@ -140,9 +140,10 @@ JS9.globalOpts = {
     imopts: "IMOPTS",           // basename of FITS param containing json opts
     imcmap: "IMCMAP",           // basename of FITS param containing cmaps
     table: {xdim: 4096, ydim: 4096, bin: 1},// image section size to extract from table
-    image: {xdim: 4096, ydim: 4096, bin: 1},// image section size (0 for unlimited)
+    image: {xdim: 4096, ydim: 4096, bin: 1},// image section size (unlimited=0)
     reproj: {xdim: 4096, ydim: 4096}, // max image size that we can reproject
-    binMode: "s",             // "s" (sum) or "a" (average) pixels when binning
+    reprojSwitches: "",         // Montage reproject switches
+    binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
     clearImageMemory: "never",  // rm vfile: always|never|auto|noExt|noCube|size>x Mb
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
@@ -7429,6 +7430,8 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	}
 	// optional command line args
 	cmdswitches = opts.cmdswitches || "";
+	// no area file, but add global switches for reproject processing
+	cmdswitches += " -a 0 " + JS9.globalOpts.reprojSwitches;
 	// call reproject
 	rstr = JS9.reproject(ivfile, ovfile, wvfile, cmdswitches);
 	if( JS9.DEBUG > 1 ){
@@ -9828,12 +9831,14 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	    ext  = t[t.length-2];
 	    vfile = t[t.length-1];
 	    if( ext && vfile ){
+		// we need the area file
+		sw = "-a 1";
 		if( opts.reduce === "shrink" ){
 		    // pass extension number in switches
-		    sw = sprintf("-h %s", ext);
-		} else {
-		    sw = "";
+		    sw += sprintf(" -h %s", ext);
 		}
+		// add global switches for reproject processing
+		sw += " " + JS9.globalOpts.reprojSwitches;
 		// output filename
 		ovfile = sprintf("reproj_%s_%s", ext, 
 				 vfile.replace(/\.(g|f)z$/, ""));
@@ -9844,7 +9849,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 		// make sure associated area file eventually gets deleted
 		carr.push(ovfile.replace(/\.fits$/i, "_area.fits"));
 		// call Montage/reproject
-		log("reproject: %s [%s]", vfile, ext);
+		log("reproject: %s [%s] -> %s", vfile, ext, ovfile);
 		rstr = JS9.reproject(vfile, ovfile, outhdr, sw);
 		// check for errors
 		chkerr("mProjectPP", rstr);
