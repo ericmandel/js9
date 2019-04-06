@@ -2176,13 +2176,13 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	}
 	// remove virtual file and/or heap space
 	if( rmvfile ){
-	    if( JS9.DEBUG > 1 ){
+	    if( JS9.DEBUG > 2 ){
 		JS9.log("removing underlying FITS vfile for %s: %s",
 			this.id, this.raw.hdu.fits.vfile);
 	    }
 	    JS9.cleanupFITSFile(this.raw, true);
 	} else if( frheap && this.raw.hdu.fits.heap ){
-	    if( JS9.DEBUG > 1 ){
+	    if( JS9.DEBUG > 2 ){
 		JS9.log("freeing heap space for %s: %s",
 			this.id, this.raw.hdu.fits.vfile);
 	    }
