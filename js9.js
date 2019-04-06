@@ -144,7 +144,7 @@ JS9.globalOpts = {
     reproj: {xdim: 4096, ydim: 4096}, // max image size that we can reproject
     reprojSwitches: "",         // Montage reproject switches
     binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
-    clearImageMemory: "never",  // rm vfile: always|never|auto|noExt|noCube|size>x Mb
+    clearImageMemory: "never",   // rm vfile: always|never|auto|noExt|noCube|size>x Mb heap=>free heap
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
     reloadRefreshReg: true,     // reloading regions file removes previous?
@@ -1708,7 +1708,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 // read input object and convert to image data
 JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     var that = this;
-    var i, s, ui, clen, hdu, pars, card, got, rlen, rmvfile, done;
+    var i, s, ui, clen, hdu, pars, card, got, rlen, rmvfile, done, frheap;
     var header, x1, y1, bin;
     var oraw, owidth, oheight, obitpix, oltm1_1, owcssys, owcsunits;
     var nhist=0, ncomm=0;
@@ -2117,6 +2117,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    s = s.toLowerCase().split(/[,>]/);
 	}
 	rmvfile = false;
+	frheap = false;
 	// all conditions must be met ...
 	for(i=0, done=false; i<s.length && !done; i++){
 	    switch(s[i]){
@@ -2127,6 +2128,9 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    case "always":
 		rmvfile = true;
 		done = true;
+		break;
+	    case "heap":
+		frheap = true;
 		break;
 	    case "auto":
 		if( (this.raw.header.NAXIS <= 2)  &&
@@ -2170,13 +2174,20 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 		break;
 	    }
 	}
-	// remove virtual file
+	// remove virtual file and/or heap space
 	if( rmvfile ){
 	    if( JS9.DEBUG > 1 ){
 		JS9.log("removing underlying FITS vfile for %s: %s",
 			this.id, this.raw.hdu.fits.vfile);
 	    }
 	    JS9.cleanupFITSFile(this.raw, true);
+	} else if( frheap && this.raw.hdu.fits.heap ){
+	    if( JS9.DEBUG > 1 ){
+		JS9.log("freeing heap space for %s: %s",
+			this.id, this.raw.hdu.fits.vfile);
+	    }
+	    JS9.vfree(this.raw.hdu.fits.heap);
+	    this.raw.hdu.fits.heap = null;
 	}
     }
     // plugin callbacks

@@ -1,4 +1,4 @@
-/*global Blob, Uint8Array, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue,  UTF8ToString getCFunc assert toC stackSave stackAlloc EmterpreterAsync stackRestore */
+/*global Blob, Uint8Array, Int16Array, Uint16Array, Int32Array, Float32Array, Float64Array, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue,  UTF8ToString getCFunc assert toC stackSave stackAlloc EmterpreterAsync stackRestore */
 
 /* eslint-disable dot-notation */
 
