@@ -1818,6 +1818,11 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     if( $.isArray(hdu.image[0]) ){
 	hdu.image = hdu.image.reduce(function(a, b){return a.concat(b);});
     }
+    // make the raw data: note that in the case of a typed array coming from
+    // the Emscripten heap, this is a copy, so we can free the heap immediately
+    // (done below iff clearImageMemory contains the "heap" directive).
+    // I didn't realize that new XXXArray(typedArray) makes a copy, but see:
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray
     switch(this.raw.bitpix){
     case 8:
 	this.raw.data = new Uint8Array(hdu.image);
