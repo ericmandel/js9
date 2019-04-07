@@ -1493,9 +1493,23 @@ returns:
 </ul>
 The returned ipos object will contain the following properties:
 <ul>
-<li><b>x</b>: x image coordinate of center
-<li><b>y</b>: y image coordinate of center
+<li><b>x</b>: calculated (from section) x image coordinate of center
+<li><b>y</b>: calculated (from section) y image coordinate of center
+<li><b>ox</b>: original (input) x image coordinate of center
+<li><b>oy</b>: original (input) y image coordinate of center
+<li><b>x0</b>: x start of image section
+<li><b>y0</b>: y start of image section
+<li><b>x1</b>: x end of image section
+<li><b>y1</b>: y end of image section
+<li><b>ix</b>: x offset of center from center of display
+<li><b>iy</b>: y offset of center from center of display
 </ul>
+Note that the x and y values are the center of the image section, which might
+be different from the input x and y values passed
+<a href="#JS9.SetPan">JS9.SetPan()</a>. The latter are returned as ox
+and oy. The image section parameters are also returned. Finally, the
+ix and iy values will be non-zero in cases of unconstrained,
+off-centered panning.
 
 <h5 id="JS9.SetPan">Set the image pan position</h5>
 <p>

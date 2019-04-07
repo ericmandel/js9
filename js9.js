@@ -3969,7 +3969,9 @@ JS9.Image.prototype.getPan = function(){
     if( JS9.notNull(sect.iy) ){
 	y += sect.iy / (2 * sect.zoom);
     }
-    return {x: x, y: y};
+    return {x: x, y: y, ox: sect.xcen, oy: sect.ycen,
+	    x0: sect.x0, y0: sect.y0, x1: sect.x1, y1: sect.y1,
+	    ix: sect.ix||0, iy: sect.iy||0};
 };
 
 // set pan location of RGB image (using image coordinates)
