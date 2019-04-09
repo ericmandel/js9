@@ -12016,16 +12016,21 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     }
     // once a shape has been added, we can set the zindex to process events
     if( !canvas.size() ){
-	switch(layerName){
-	case JS9.Crosshair.LAYERNAME:
-	case JS9.Grid.LAYERNAME:
-	    // these should never cover any other interactive layer
-	    layer.zindex = 1;
-	    break;
-	default:
-	    // otherwise this layer goes to the top
-            layer.zindex = this.zlayer++;
-	    break;
+	if( this.display.layers[layerName].dtype === "main" ){
+	    switch(layerName){
+	    case JS9.Crosshair.LAYERNAME:
+	    case JS9.Grid.LAYERNAME:
+		// these should never cover any other interactive layer
+		layer.zindex = 1;
+		break;
+	    default:
+		// otherwise this layer goes to the top
+		layer.zindex = this.zlayer++;
+		break;
+	    }
+	} else {
+	    // layer is not in main display
+	    layer.zindex = JS9.SHAPEZINDEX;
 	}
 	dlayer = this.display.layers[layerName];
         dlayer.divjq.css("z-index", layer.zindex);
