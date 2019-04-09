@@ -1391,7 +1391,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: function(){
-	    var i, zoom, zoomp, name, name2;
+	    var i, zoom, zoomp, name, name2, nim, s1;
 	    var n = 0;
 	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 	    var tim = tdisp.image;
@@ -1462,8 +1462,43 @@ JS9.Menubar.createMenus = function(){
 	    items.zoomOut = xname("zoom out");
 	    items.zoomToFit = xname("zoom to fit");
 	    items["sep" + n++] = "------";
+	    items.panzoomtitle = {
+		name: "Pand and Zoom:",
+		disabled: true
+	    };
 	    items.center = xname("pan to center");
-	    items.reset = xname("reset zoom/pan");
+	    items.alignpanzoom = {
+		name: "align pan/zoom ...",
+		items: {
+		    alignpanzoomtitle: {
+			name: "to this image:",
+			disabled: true
+		    }
+		}
+	    };
+	    for(i=0, nim=0; i<JS9.images.length; i++){
+		if( JS9.images[i].raw.wcs ){
+		    if( (tim === JS9.images[i]) &&
+			(that.id.search(JS9.SUPERMENU) < 0) ){
+			continue;
+		    }
+		    s1 = "alignpanzoom_" + JS9.images[i].id;
+		    items.alignpanzoom.items[s1] = {
+			name: JS9.images[i].id
+		    };
+		    nim++;
+		}
+	    }
+	    if( nim === 0 ){
+		items.alignpanzoom.items.notasks = {
+		    name: "[none]",
+		    disabled: true,
+		    events: {keyup: function(){return;}}
+		};
+	    } else {
+		items.alignpanzoom.disabled = false;
+	    }
+	    items.reset = xname("reset pan/zoom");
 	    return {
 		callback: function(key){
 		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
@@ -1495,6 +1530,8 @@ JS9.Menubar.createMenus = function(){
 				// look for a numeric zoom
 				if( key.match(/^zoom/) ){
 				    uim.setZoom(key.slice(4));
+				} else if( key.match(/^alignpanzoom_/) ){
+				    uim.alignPanZoom(key.slice(13));
 				}
 				break;
 			    }

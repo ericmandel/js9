@@ -4196,6 +4196,40 @@ JS9.Image.prototype.setZoom = function(zval){
     return this;
 };
 
+// align an image to a target image in terms of pan and zoom values,
+// also taking into account relative cdelt1 pixel sizes
+// not taken into account: flips and rotations
+// eslint-disable-next-line no-unused-vars
+JS9.Image.prototype.alignPanZoom = function(im, opts){
+    var tim, icen, iwcsinfo, izoom, wcsinfo;
+    // sanity check
+    if( !im ){ return; }
+    // is im a string containing an image name?
+    if( typeof im === "string" ){
+	tim = JS9.getImage(im);
+	if( tim ){
+	    // it was an image name, so change im to the image handle
+	    im = tim;
+	} else {
+	    JS9.error("unknown image for alignPanZoom: " + im);
+	}
+    }
+    // opts is optional (not used ... yet)
+    opts = opts || {};
+    wcsinfo  = this.raw.wcsinfo || {cdelt1: 1};
+    iwcsinfo = im.raw.wcsinfo   || {cdelt1: 1};
+    // get center of target image
+    icen = im.getPan();
+    // pan this image to center of target
+    this.setPan(JS9.pix2pix(im, this, {x: icen.ox, y: icen.oy}));
+    // get zoom of target image
+    izoom = im.rgb.sect.zoom || 1;
+    // adjust zoom of this image taking, into account pixel size, target zoom
+    this.setZoom(izoom * wcsinfo.cdelt1 / iwcsinfo.cdelt1);
+    // allow chaining
+    return this;
+};
+
 // refresh all layers
 JS9.Image.prototype.refreshLayers = function(){
     this.setZoom(this.getZoom());
@@ -20674,6 +20708,7 @@ JS9.mkPublic("GetZoom", "getZoom");
 JS9.mkPublic("SetZoom", "setZoom");
 JS9.mkPublic("GetPan", "getPan");
 JS9.mkPublic("SetPan", "setPan");
+JS9.mkPublic("AlignPanZoom", "alignPanZoom");
 JS9.mkPublic("GetScale", "getScale");
 JS9.mkPublic("SetScale", "setScale");
 JS9.mkPublic("GetParam", "getParam");

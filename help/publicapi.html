@@ -1556,6 +1556,29 @@ data.) If you want to avoid blank areas in the display, set the
 can change this property in <b>js9prefs.js</b>, while users can change
 this via the <b>Global</b> tab of the <b>Preferences</b> plugin.
 
+<h5 id="JS9.AlignPanZoom">Align pan and zoom of the current image to a target image</h5>
+<p>
+<code class="api">JS9.AlignPanZoom(im)</code>
+<p>
+where:
+<ul>
+<li><b>im</b>: target image containing the WCS used to perform the alignment
+</ul>
+<p>
+This routine changes the pan and zoom of the current image to match a
+target image, assuming both have WCS info available. The image is
+panned to the RA, Dec at the center of the target image's display. The
+zoom is also matched. The pixel size (as specified by the FITS CDELT1
+parameter) will be taken into account when zooming, but not the image
+rotation or flip. This routine is faster than
+<b><a href="#JS9.ReprojectData">ReprojectData()</a></b>
+for aligning reasonably similar images.
+
+<p>
+No attempt is make to keep the images aligned after the call. This
+allows you to make adjustments to the current and/or target images and
+then re-align as needed.
+
 <h5 id="JS9.GetParam">Get an image parameter value</h5>
 <p>
 <code class="api">val = JS9.GetParam(param)</code>
@@ -1886,7 +1909,7 @@ returns:
 </ul>
 Get the current WCS units.
 
-<h5 id="JS9>SetWCSUnits">Set the current WCS units</h5>
+<h5 id="JS9.SetWCSUnits">Set the current WCS units</h5>
 <p>
 <code class="api">JS9.SetWCSUnits(unitsstr)</code>
 <p>
