@@ -8602,7 +8602,7 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    items["sep" + n++] = "------";
-	    items.about = xname("About JS9");
+	    items.about = xname("about JS9");
 	    return{
 		callback: function(key){
 		    switch(key){

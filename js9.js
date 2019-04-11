@@ -28,7 +28,7 @@ JS9 = (function(){
 var JS9 = {};
 JS9.NAME = "JS9";		// The name of this namespace
 JS9.VERSION = "2.2";		// The version of this namespace
-JS9.COPYRIGHT = "Copyright (c) 2012-2018 Smithsonian Institution";
+JS9.COPYRIGHT = "Copyright (c) 2012-2019 Smithsonian Institution";
 
 // internal defaults (not usually changed by users)
 JS9.DEFID = "JS9";		// default JS9 display id
