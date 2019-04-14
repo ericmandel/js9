@@ -1135,7 +1135,7 @@ var httpHandler = function(req, res){
     var body = "";
     // return error into to browser
     var htmlerr = function(s){
-	res.writeHead(400, s, {"Content-Type": "text/plain"});
+	res.writeHead(400, String(s), {"Content-Type": "text/plain"});
 	res.end();
     };
     // call-back function returning info to the client
@@ -1147,7 +1147,7 @@ var httpHandler = function(req, res){
 	    s = JSON.stringify(s);
 	    break;
 	default:
-	    s = s.toString();
+	    s = String(s);
 	    break;
 	}
 	res.writeHead(200, {"Content-Type": "text/plain"});
@@ -1156,7 +1156,8 @@ var httpHandler = function(req, res){
     };
     // generate object and run the cmd
     var docmd = function(cmd, jstr){
-	var i, j, obj;
+	var i, j;
+	var obj = {};
 	// the constructed string is stringified json, if it exists
 	// try to parse it into an object
 	if( jstr && jstr !== "null" ){
@@ -1165,8 +1166,10 @@ var httpHandler = function(req, res){
 		htmlerr("can't parse JSON object in http request: " + jstr); 
 		return;
 	    }
-	} else {
-	    obj = {};
+	    if( typeof obj !== "object" ){
+		htmlerr("invalid JSON object in http request: " + jstr);
+		return;
+	    }
 	}
 	// check for id and set default
 	obj.id = obj.id || "JS9";
@@ -1229,7 +1232,7 @@ var httpHandler = function(req, res){
 	    body += chunk;
 	});
 	req.on('end', function(){
-	    jstr = body.toString();
+	    jstr = String(body);
 	    docmd(cmd, jstr);
 	});
 	break;
