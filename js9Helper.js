@@ -599,9 +599,9 @@ var execCmd = function(io, socket, obj, cbfunc) {
     var res = {stdout: null, stderr: null, errcode: 0,
 	       encoding: globalOpts.textEncoding};
     // sanity check
-    if( !obj.cmd || !socket.js9 ){
+    if( !obj || !obj.cmd || !socket.js9 ){
 	if( cbfunc ){
-	    res.stderr = "js9 helper is unavailable";
+	    res.stderr = "JS9 helper is unavailable";
 	    cbfunc(res);
 	}
 	return;
