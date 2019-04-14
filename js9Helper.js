@@ -1119,17 +1119,18 @@ var socketioHandler = function(socket) {
 // httpd handler: field pseudo-socket.io http requests
 // GET:
 // public api:
-// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}'
-// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "GetColormap"}'
+// wget -q -O- $MYHOST'/msg?{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}'
+// wget -q -O- $MYHOST'/msg?{"id": "'$ID'", "cmd": "GetColormap"}'
+// wget -q -O- $MYHOST'/msg?{"id": "'$ID'", "cmd": "RunAnalysis", "args": ["counts"]}'
 // js9 command line:
-// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom", "args": [2]}'
-// wget $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom"}'
-// analysis commands:
-// wget $MYHOST'/counts?{"id": "'$ID'", "cmd": "counts", "args": ["counts"]}'
+// wget -q -O- $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom", "args": [2]}'
+// wget -q -O- $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom"}'
+// wget -q -O- $MYHOST'/msg?{"id": "'$ID'", "cmd": "analysis", "args": ["counts"]}'
 //
 // POST:
 // wget -q -O- --post-data='{"id": "'$ID'", "cmd": "GetColormap"}' $MYHOST/msg
 // wget -q -O- --post-data='{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}' $MYHOST/msg
+// wget -q -O- --post-data='{"id": "'$ID'", "cmd": "RunAnalysis", "args": ["counts"]}' $MYHOST/msg
 var httpHandler = function(req, res){
     var cmd, gobj, s, jstr;
     var body = "";
