@@ -8017,6 +8017,7 @@ JS9.Image.prototype.uploadFITSFile = function(){
     var vfile, vdata;
     var that = this;
     var uploadCB = function(r){
+	delete that.tmp.upload;
 	window.setTimeout(function(){ JS9.progress(false); }, 1000);
 	if( r.stderr ){
 	    JS9.error(r.stderr);
@@ -8045,6 +8046,10 @@ JS9.Image.prototype.uploadFITSFile = function(){
     if( !this.raw.hdu || !this.raw.hdu.fits || !this.raw.hdu.fits.vfile ){
 	return;
     }
+    // only one upload at a time
+    if( this.tmp.upload ){
+	JS9.error("only one upload allowed at a time");
+    }
     // this is the file to upload
     vfile = this.raw.hdu.fits.vfile;
     // ask the remote server if we can upload
@@ -8055,6 +8060,7 @@ JS9.Image.prototype.uploadFITSFile = function(){
 	}
 	vdata = JS9.vread(vfile, "binary");
 	JS9.worker.socketio(function(){
+	    that.tmp.upload = true;
 	    JS9.progress(true, that.display);
 	    JS9.worker.postMessage("uploadFITS",
 				   [vfile, vdata], uploadCB, [vdata.buffer]);
