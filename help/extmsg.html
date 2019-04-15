@@ -333,7 +333,34 @@ Mac OSX Safari occasionally experiences delayed data transfers when
 the js9 messaging script is located in a different Space (desktop)
 from the browser window, so keep these in the same Space.
 
-<h5>Last updated: March 29, 2019</h5>
+<p>
+If you do not have access to the js9 script, you can still send
+messages to a JS9 web page using wget or curl. This is possible
+because the JS9 helper also listens for HTTP connections. The syntax
+for HTTP-based commands is analogous to the scripting syntax, if
+somewhat more primitive: you pass a JSON-formatted string to the
+helper in a GET or POST request, as show below. (Note that accessing a
+secure web page using wget requires the --no-check-certificate flag, a
+problem not restricted to JS9):
+<pre>
+  export MYHOST="https://js9.si.edu:2718"
+  export ID="JS9"
+  export WARGS="-q -O- --no-check-certificate"
+  # GET request, using public api:
+  wget $WARGS $MYHOST'/msg?{"id": "'$ID'", "cmd": "GetColormap"}'
+  wget $WARGS $MYHOST'/msg?{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}'
+  wget $WARGS $MYHOST'/msg?{"id": "'$ID'", "cmd": "RunAnalysis", "args": ["counts"]}'
+  # GET request, using command line api:
+  wget $WARGS $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom"}'
+  wget $WARGS $MYHOST'/msg?{"id": "'$ID'", "cmd": "zoom", "args": [2]}'
+  wget $WARGS $MYHOST'/msg?{"id": "'$ID'", "cmd": "analysis", "args": ["counts"]}'
+  # POST request, using public api:
+  wget $WARGS --post-data='{"id": "'$ID'", "cmd": "GetColormap"}' $MYHOST/msg
+  wget $WARGS --post-data='{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}' $MYHOST/msg
+   wget $WARGS --post-data='{"id": "'$ID'", "cmd": "RunAnalysis", "args": ["counts"]}' $MYHOST/msg
+</pre>
+
+<h5>Last updated: April 15, 2019</h5>
 </div>
 
 </body>
