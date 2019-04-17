@@ -109,6 +109,17 @@ div.JS9MenubarContainer-flat, div.JS9MenubarContainer-border {
     background-color: lightblue;
 }
 
+div.JS9Logo {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+}
+
+img.JS9Logo {
+    width: 80;
+    height: 40;
+    border: 0px solid #d5d5d5;
+}
 
 /* CSS for images loaded as part of the user-defined menubar */
 div.JS9MenubarUserImage{
@@ -685,6 +696,16 @@ canvas.surfacePlotCanvas {
 
 ul.js9demo {
     margin-top: 0;
+}
+
+.helpLogo{
+  position: absolute;
+  top:   15px;
+  right: 15px;
+}
+
+.helpContainer{
+  padding: 10px;
 }
 
 /* to make wait cursor override other element cursors (e.g. fabric.js canvas) */

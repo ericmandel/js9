@@ -1223,6 +1223,10 @@ JS9.Menubar.createMenus = function(){
 	    } else if( JS9.GetToolbar("showTooltips") ){
 		items.vdisps.items.toolbar.icon = "sun";
 	    }
+	    items.vdisps.items.logo = xname("js9 logo");
+	    if( JS9.globalOpts.logoDisplay ){
+		items.vdisps.items.logo.icon = "sun";
+	    }
 	    items.vdisps.items.inherit = xname("new images inherit current params");
 	    if( tdisp.image && tdisp.image.params.inherit ){
 		items.vdisps.items.inherit.icon = "sun";
@@ -1303,6 +1307,14 @@ JS9.Menubar.createMenus = function(){
 			case "toolbar":
 			    s = !JS9.GetToolbar("showTooltips");
 			    JS9.SetToolbar("showTooltips", s);
+			    break;
+			case "logo":
+			    JS9.globalOpts.logoDisplay =
+				!JS9.globalOpts.logoDisplay;
+			    s = JS9.globalOpts.logoDisplay ? "block" : "none";
+			    for(ii=0; ii<JS9.displays.length; ii++){
+				JS9.displays[ii].iconjq.css("display", s);
+			    }
 			    break;
 			case "toggleLayers":
 			    if( uim ){

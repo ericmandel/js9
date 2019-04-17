@@ -164,6 +164,7 @@ JS9.globalOpts = {
     resizeHandle: true,		// add resize handle to display?
     resizeRedisplay: true,	// redisplay image while resizing?
     cloneNewDisplay: true,      // clone size of display, when possible?
+    logoDisplay: false,          // show JS9 logo on each display?
     lightWinClose: "ask",	// ask, close, move images when closing lightwin
     regionDisplay: "lightwin",	// "lightwin" or "display"
     regionConfigSize: "medium", // "small", "medium"
@@ -8640,6 +8641,18 @@ JS9.Display = function(el){
 	.attr("tabindex", "0")
 	.append(this.canvasjq)
 	.appendTo(this.divjq);
+    this.iconjq = $("<div>")
+	.addClass("JS9Logo")
+	.css("display", "none")
+	.css("z-index", JS9.ZINDEX+1)
+	.appendTo(this.divjq);
+    this.iconimgjs = $("<img>")
+	.addClass("JS9Logo")
+	.attr("src", JS9.InstallDir("images/js9logo.png"))
+	    .appendTo(this.iconjq);
+    if( JS9.globalOpts.logoDisplay ){
+	this.iconjq.css("display", "block");
+    }
     // add resize capability, if necessary
     if( JS9.globalOpts.resizeHandle && window.hasOwnProperty("ResizeSensor") ){
 	this.divjq
@@ -20477,6 +20490,15 @@ JS9.init = function(){
     }
     // replace with global opts with user opts, if necessary
     if( window.hasOwnProperty("localStorage") ){
+	try{ uopts = localStorage.getItem("globals"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.displays = JSON.parse(uopts); }
+	    catch(ignore){}
+	    if( JS9.userOpts.displays ){
+		$.extend(true, JS9.globalOpts, JS9.userOpts.displays);
+	    }
+	}
 	try{ uopts = localStorage.getItem("images"); }
 	catch(e){ uopts = null; }
 	if( uopts ){
@@ -20485,6 +20507,13 @@ JS9.init = function(){
 	    if( JS9.userOpts.images ){
 		$.extend(true, JS9.imageOpts, JS9.userOpts.images);
 	    }
+	}
+	// this gets replaced below
+	try{ uopts = localStorage.getItem("fits"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.fits = JSON.parse(uopts); }
+	    catch(ignore){}
 	}
 	try{ uopts = localStorage.getItem("regions"); }
 	catch(e){ uopts = null; }
@@ -20495,20 +20524,22 @@ JS9.init = function(){
 		$.extend(true, JS9.Regions.opts, JS9.userOpts.regions);
 	    }
 	}
-	// this gets replaced below
-	try{ uopts = localStorage.getItem("fits"); }
+	try{ uopts = localStorage.getItem("grid"); }
 	catch(e){ uopts = null; }
 	if( uopts ){
-	    try{ JS9.userOpts.fits = JSON.parse(uopts); }
+	    try{ JS9.userOpts.images = JSON.parse(uopts); }
 	    catch(ignore){}
+	    if( JS9.userOpts.images ){
+		$.extend(true, JS9.Grid.opts, JS9.userOpts.images);
+	    }
 	}
-	try{ uopts = localStorage.getItem("displays"); }
+	try{ uopts = localStorage.getItem("catalog"); }
 	catch(e){ uopts = null; }
 	if( uopts ){
-	    try{ JS9.userOpts.displays = JSON.parse(uopts); }
+	    try{ JS9.userOpts.images = JSON.parse(uopts); }
 	    catch(ignore){}
-	    if( JS9.userOpts.displays ){
-		$.extend(true, JS9.globalOpts, JS9.userOpts.displays);
+	    if( JS9.userOpts.images ){
+		$.extend(true, JS9.Catalogs.Opts, JS9.userOpts.images);
 	    }
 	}
     }

@@ -489,6 +489,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "show tooltips in Toolbar plugin?"
 	},
+	"logoDisplay": {
+	    "type": "boolean",
+	    "helper": "show JS9 logo?"
+	},
 	"reloadRefresh": {
 	    "type": "boolean",
 	    "helper": "does a reload refresh the data?"
@@ -598,6 +602,7 @@ JS9.Prefs.init = function(){
 			   fits2fits: JS9.globalOpts.fits2fits,
 			   dynamicSelect: JS9.globalOpts.dynamicSelect,
 			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
+			   logoDisplay: JS9.globalOpts.logoDisplay,
 			   syncReciprocate: JS9.globalOpts.syncReciprocate,
 			   reloadRefresh: JS9.globalOpts.reloadRefresh,
 			   reloadRefreshReg: JS9.globalOpts.reloadRefreshReg,
@@ -755,7 +760,7 @@ JS9.Prefs.deleteForm = function(){
 // process new preferences in the preference form
 // eslint-disable-next-line no-unused-vars
 JS9.Prefs.processForm = function(source, arr, display, winid){
-    var i, j, key , val, obj, rlayer;
+    var i, j, s, key , val, obj, rlayer;
     var len = arr.length;
     // source-specific pre-processing
     switch( source.name ){
@@ -883,9 +888,18 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
  	        case "toolbarTooltips":
 	            // set new option value
 	            obj[key] = val;
+		    source.data[key] = val;
+		    break;
+ 	        case "logoDisplay":
+	            // set new option value
+	            obj[key] = val;
 		    // re-init toolbar
 		    JS9.SetToolbar("init");
 		    source.data[key] = val;
+		    s = val ? "block" : "none";
+		    for(j=0; j<JS9.displays.length; j++){
+			JS9.displays[j].iconjq.css("display", s);
+		    }
 		    break;
 		case "separate":
 	            // set new option value
