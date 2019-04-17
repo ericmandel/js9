@@ -110,10 +110,32 @@ What's the license?
 
 JS9 is distributed under the terms of The MIT License.
 
+What's the release history?
+---------------------------
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1453307.svg)](https://doi.org/10.5281/zenodo.1453307) __v2.2.0__ &nbsp; (10/9/2018)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1244660.svg)](https://doi.org/10.5281/zenodo.1244660) __v2.1.0__ &nbsp; (05/10/2018)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1116902.svg)](https://doi.org/10.5281/zenodo.1116902) __v2.0.2__ &nbsp; (12/15/2017)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.999343.svg)](https://doi.org/10.5281/zenodo.999343)&nbsp; __v2.0.1__ &nbsp; &nbsp;(09/29/2017)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.998178.svg)](https://doi.org/10.5281/zenodo.998178)&nbsp; __v2.0.0__ &nbsp; (09/27/2017)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.834742.svg)](https://doi.org/10.5281/zenodo.834742)&nbsp; __v1.12.0__ &nbsp; (07/25/2017)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.235865.svg)](https://doi.org/10.5281/zenodo.235865)&nbsp; __v1.11.0__ &nbsp; (1/9/2017)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.160117.svg)](https://doi.org/10.5281/zenodo.160117)&nbsp; __v1.10.0__&nbsp; (10/11/2016)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.158950.svg)](https://doi.org/10.5281/zenodo.158950)&nbsp; __v1.9.0__ &nbsp; (6/8/2016)
+
+
+
 Who's responsible?
--------------------
+------------------
 
 Eric Mandel, Alexey Vikhlinin
 
 Center for Astrophysics | Harvard & Smithsonian
-
