@@ -360,7 +360,7 @@ JS9.lightOpts = {
 	imageWin: "width=512px,height=598px,center=1,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,center=1,resize=1,scrolling=1"
     },
-    dpathURL: "params/lightclose.html"
+    lcloseURL: "params/lightclose.html"
 };
 
 // colors for text messages
@@ -8641,17 +8641,19 @@ JS9.Display = function(el){
 	.attr("tabindex", "0")
 	.append(this.canvasjq)
 	.appendTo(this.divjq);
-    this.iconjq = $("<div>")
-	.addClass("JS9Logo")
-	.css("display", "none")
-	.css("z-index", JS9.ZINDEX+1)
-	.appendTo(this.divjq);
-    this.iconimgjs = $("<img>")
-	.addClass("JS9Logo")
-	.attr("src", JS9.InstallDir("images/js9logo.png"))
+    if( !JS9.allinone ){
+	this.iconjq = $("<div>")
+	    .addClass("JS9Logo")
+	    .css("display", "none")
+	    .css("z-index", JS9.ZINDEX+1)
+	    .appendTo(this.divjq);
+	this.iconimgjs = $("<img>")
+	    .addClass("JS9Logo")
+	    .attr("src", JS9.InstallDir("images/js9logo.png"))
 	    .appendTo(this.iconjq);
-    if( JS9.globalOpts.logoDisplay ){
-	this.iconjq.css("display", "block");
+	if( JS9.globalOpts.logoDisplay ){
+	    this.iconjq.css("display", "block");
+	}
     }
     // add resize capability, if necessary
     if( JS9.globalOpts.resizeHandle && window.hasOwnProperty("ResizeSensor") ){
@@ -21420,8 +21422,13 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    case "ask":
 	    default:
 		wid = "lightCloseID" + JS9.uniqueID();
-		wtype = JS9.allinone?"inline":"ajax";
-		wurl = JS9.InstallDir(JS9.lightOpts.dpathURL);
+		if( JS9.allinone ){
+		    wtype = "inline";
+		    wurl = JS9.allinone.lightCloseHTML;
+		} else {
+		    wtype = "ajax";
+		    wurl = JS9.InstallDir(JS9.lightOpts.lcloseURL);
+		}
 		$("#dhtmlwindowholder")
 		    .arrive("#lightWinCloseForm", {onceOnly: true}, function(){
 			var i, el;

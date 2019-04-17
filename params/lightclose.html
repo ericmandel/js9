@@ -33,29 +33,29 @@ onclick="
     var dispid = $(dhtml).data('dispid');
     var winid = $(dhtml).data('winid');
     var todisp = form.find('#lightWinCloseSel').val();
-    // get list of images in hsi display
+    if( !arr || !arr.length ){
+        winid.close();
+        dhtml.close();
+        return false;
+    }
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
 	if( im.display.id === dispid ){
 	    ims.push(im);
 	}
     }
-    // process form keywords
     for(i=0; i<arr.length; i++){
 	obj = arr[i];
 	switch(obj.name){
-        // displose: close or move
 	case 'dispose':
 	    defval = obj.value;
 	    switch(obj.value){
-            // move all images to a different display
 	    case 'move':
 		for(j=0; j<ims.length; j++){
 		    try{ ims[j].moveToDisplay(todisp); }
 		    catch(ignore){}
 		}
 		break;
-            // close all images
 	    case 'close':
 		for(j=0; j<ims.length; j++){
 		    try{ ims[j].closeImage(); }
@@ -63,11 +63,9 @@ onclick="
 		}
 		break;
 	    }
-	    // remove display
 	    idx = $.inArray(dispid, JS9.displays);
 	    if( idx >= 0 ){ JS9.displays.splice(idx, 1); }
 	    break;
-        // setdef: set the lightWinClose default for next time
 	case 'setdef':
 	    JS9.globalOpts.lightWinClose = defval;
 	    if( defval === 'move' ){

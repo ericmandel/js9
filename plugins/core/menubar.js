@@ -1223,9 +1223,11 @@ JS9.Menubar.createMenus = function(){
 	    } else if( JS9.GetToolbar("showTooltips") ){
 		items.vdisps.items.toolbar.icon = "sun";
 	    }
-	    items.vdisps.items.logo = xname("js9 logo");
-	    if( JS9.globalOpts.logoDisplay ){
-		items.vdisps.items.logo.icon = "sun";
+	    if( !JS9.allinone ){
+		items.vdisps.items.logo = xname("js9 logo");
+		if( JS9.globalOpts.logoDisplay ){
+		    items.vdisps.items.logo.icon = "sun";
+		}
 	    }
 	    items.vdisps.items.inherit = xname("new images inherit current params");
 	    if( tdisp.image && tdisp.image.params.inherit ){
@@ -2639,7 +2641,7 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    }
-	    // no server side analysis for CDN all-in-one configuration
+	    // no server side analysis for all-in-one configuration
 	    if( !JS9.allinone ){
 		if( n > 0 ){
 		    items["sep" + n++] = "------";
