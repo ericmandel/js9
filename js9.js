@@ -8650,6 +8650,8 @@ JS9.Display = function(el){
 	this.iconimgjs = $("<img>")
 	    .addClass("JS9Logo")
 	    .attr("src", JS9.InstallDir("images/js9logo.png"))
+	    .attr("alt", "js9")
+	    .attr("title", "js9")
 	    .appendTo(this.iconjq);
 	if( JS9.globalOpts.logoDisplay ){
 	    this.iconjq.css("display", "block");
