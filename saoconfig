@@ -29,18 +29,6 @@ CF="--config-cache"
 echo "configure for: " $name
 
 case $name in
-  js9*)
-  BASE=/proj/web-js9
-  ./configure 	$CF							\
-		--with-helper="nodejs"					\
-		--prefix=$BASE						\
-		--with-webdir=$BASE/www/js9				\
-		--with-cfitsio=$BASE					\
-		--with-png=$BASE					\
-		--with-saodir=$BASE/www					\
-		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
-  ;;
-
   baba|baba.local|baba-nodejs)
   ./configure 	$CF							\
 		--with-helper="socket.io"				\
@@ -71,7 +59,7 @@ case $name in
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
- baba-funtools)
+  baba-funtools)
   ./configure 	$CF							\
 		--with-helper="socket.io"				\
 		--prefix=$HOME						\
@@ -82,8 +70,18 @@ case $name in
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
-  bokhara*)
-  BASE=/home/mred/public_html
+  bokhara|bokhara.cfa*|bokhara-nodejs)
+  ./configure 	$CF							\
+		--with-helper="socket.io"				\
+		--prefix=$HOME						\
+		--with-webdir=$HOME/Sites/js9				\
+		--with-cfitsio=$HOME					\
+		--with-saodir=$HOME/Sites				\
+		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
+  ;;
+
+  bokhara-cgi)
+  BASE=/home/eric/Sites
   ./configure 	$CF							\
 		--with-helper="post"					\
 		--prefix=$HOME						\
@@ -96,19 +94,7 @@ case $name in
 		$*
   ;;
 
-  lynx*)
-  BASE=/smartx
-  ./configure 	$CF							\
-		--with-helper="nodejs"					\
-		--prefix=$BASE						\
-		--with-webdir=$BASE/www/html/js9			\
-		--with-cfitsio=$BASE/cfitsio				\
-		--with-png=$BASE					\
-  		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS"			\
- 		$*
-  ;;
-
-  smartx*)
+  smartx*|js9*)
   BASE=/smartx
   ./configure 	$CF							\
 		--with-helper="nodejs"					\
