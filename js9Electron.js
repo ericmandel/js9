@@ -286,6 +286,11 @@ function createWindow() {
 	cmd += '});';
 	js9Electron.win.webContents.executeJavaScript(cmd);
     }
+
+    // set up main menu
+    try{ require('./js9ElectronMainMenu'); }
+    catch(e){}
+
     // emitted when the window is closed
     js9Electron.win.on('closed', function () {
 	// Dereference the window object, usually you would store windows
