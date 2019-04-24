@@ -14,13 +14,16 @@ error() {
 case $PLATFORM in
     Darwin)
     EXE="Electron.app"
-
     # generate a local, clean app directory
     echo "generate local copy of $EXE ..."
-    SBASE="/Applications"
+    SBASE="$HOME/Applications"
     SDIR="$SBASE/$EXE"
     if [ ! -d $SDIR ]; then
-      error "can't find Electron directory: $SDIR"
+        SBASE="/Applications"
+        SDIR="$SBASE/$EXE"
+        if [ ! -d $SDIR ]; then
+          error "can't find Electron directory: $SDIR"
+        fi
     fi
     DBASE="`pwd`/.."
     DDIR="$DBASE/$EXE"
@@ -28,14 +31,17 @@ case $PLATFORM in
       rm -rf $DDIR
     fi
     cd $SBASE  && tar cf - $EXE | (cd $DBASE && tar xf -)
-
     # install js9 into Electron.app
     echo "install JS9 files ..."
+    RESDIR="$DDIR/Contents/Resources"
     APPDIR="$DDIR/Contents/Resources/app"
+    BINDIR="$DDIR/Contents/Resources/app/bin"
+    mkdir -p $BINDIR
     cd $CDIR 
+    cp -p images/js9logo/mac/js9logo.icns $RESDIR/js9.icns
     make WEBDIR="$APPDIR" install-webdirs install-webfiles
+    make BIN_INSTALL_DIR="$BINDIR" install-scripts
     sed  's/"main":.*/"main": "js9Electron.js",/' < $PKG > $APPDIR/$PKG
-
     # rename application
     if [ $DORENAME = true ]; then
         JEXE="js9.app"
@@ -43,11 +49,8 @@ case $PLATFORM in
         # rename the app contents to js9
         cd $DDIR || error "can't cd to dest Electron app directory"
         PFILE="./Contents/Info.plist"
-        sed 's/Electron/js9/g' < "$PFILE" > "$PFILE"-new
+        sed 's/[eE]lectron/js9/g' < "$PFILE" > "$PFILE"-new
         mv "$PFILE"{,-orig} && mv "$PFILE"{-new,}
-        # PFILE="./Contents/Frameworks/Electron Helper.app/Contents/Info.plist"
-        # sed 's/Electron/js9/g' < "$PFILE" > "$PFILE"-new
-        # mv "$PFILE"{,-orig} && mv "$PFILE"{-new,}
 	cd ./Contents/MacOS && cp -p Electron js9
         # rename the app to js9
         cd $DDIR/..
@@ -62,6 +65,10 @@ case $PLATFORM in
 	echo "code sign $EXE ..."
         sudo codesign --force --deep --sign - $EXE/
     fi
+    # change the icon manually
+    open $CDIR/images/js9logo/mac/js9logo.icns
+    echo "copy the Preview image using Cmd-A Cmd-C"
+    echo "then Cmd-I the new js9.app, click the icon in the UL, and Cmd-V"
     ;;
 
     *)

@@ -170,6 +170,11 @@ function createWindow() {
     let cmd;
     let ncmd=0;
     let xcmds = "";
+    // set dock icon for Mac
+    if( process.platform === "darwin" ){
+	app.dock.setIcon(path.join(__dirname,
+				   "/images/js9logo/png/js9logo_64.png"));
+    }
     // create the browser window
     js9Electron.win = new BrowserWindow({
 	webPreferences: {nodeIntegration: js9Electron.node,
