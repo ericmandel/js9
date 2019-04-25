@@ -3,7 +3,7 @@
 
 WEBPAGE=$HOME/js9/threeways/threeways_app.html
 WIDTH=660
-HEIGHT=860
+HEIGHT=880
 ID=myJS9
 
 js9 -a --width $WIDTH --height $HEIGHT --webpage $WEBPAGE $* &

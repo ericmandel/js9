@@ -24,11 +24,14 @@
           width: 512px;
           height: 700px;
       }
-      #message {
+      #title {
+	  color: blue;
+      }
+      .message {
 	  height: 60px;
           width: 512px;
           font-weight: bold;
-          font-size: 32px;
+          font-size: 28px;
           padding: 6px;
           margin: 0px;
           outline: none;
@@ -39,7 +42,10 @@
 </head>
 <body>
     <div id="centerdiv">
-    <div id="message"></div>
+    <div id="title" class="message">
+    <center>Colliding Galaxies NGC 2207 and IC 2163</center>
+    </div>
+    <div id="message" class="message"></div>
     <p>
     <div class="JS9Menubar" id="myJS9Menubar"></div>
     <div class="JS9" id="myJS9"></div>
@@ -57,6 +63,7 @@
 		  s = "<span style='color:green'>" + s + "</span>";
 		  break;
 	      default:
+		  s = "<span style='color:grey'>" + s + "</span>";
 		  break;
 	      }
 	      s = "<center>" + s + "</center>";
