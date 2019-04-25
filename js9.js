@@ -7593,12 +7593,15 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	var topts;
 	var reprojHandler;
 	var defaultReprojHandler = function(hdu){
+	    // plugin callbacks
+	    that.xeqPlugins("image", "onreprojectdata");
 	    topts = topts || {};
 	    topts.refreshRegions = true;
 	    // reset section, unless specified otherwise
 	    if( opts.resetSection !== false ){
 		topts.resetSection = true;
 	    }
+	    // refresh the image
 	    that.refreshImage(hdu, topts);
 	    // might have to re-execute calls in the stash
 	    that.xeqStashCall(that.xeqstash, [opts.stash, "reprojectData"]);
