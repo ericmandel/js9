@@ -573,8 +573,10 @@ if( window.isElectron ){
     if( JS9.BROWSER[0] === "Chrome" && parseFloat(JS9.BROWSER[1]) >= 66 ){
 	JS9.globalOpts.allowFileWasm = true;
     }
-    // Electron.js (v4.0.2) SEGVs when clicking colorpicker exit (1/26/2019)
-    JS9.globalOpts.internalColorPicker = false;
+    // Electron.js < v5.0.0 SEGVs when clicking colorpicker exit (1/26/2019)
+    if( !window.electronVersion || parseInt(window.electronVersion, 10) < 5 ){
+	JS9.globalOpts.internalColorPicker = false;
+    }
 }
 
 // ---------------------------------------------------------------------
