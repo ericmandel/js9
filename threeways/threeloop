@@ -4,12 +4,12 @@
 WEBPAGE=$HOME/js9/threeways/threeways_app.html
 WIDTH=660
 HEIGHT=880
-ID=myJS9
+ID=threeJS9
 
 js9 -a --width $WIDTH --height $HEIGHT --webpage $WEBPAGE $* &
 sleep 2
 
-METHOD="python"
+METHOD="shell"
 while true; do
     echo "using $METHOD ..."
     if [ x$METHOD = "xshell" ]; then

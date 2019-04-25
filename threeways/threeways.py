@@ -1,10 +1,14 @@
 import pyjs9
 import time
+import sys
 
 timeout = 2
 loadTimeout = 1
 maxIter = 10
-id = "myJS9"
+id = "threeJS9"
+
+if len(sys.argv) > 1:
+    id = sys.argv[1]
 
 def waitLoad():
     iter = 0
