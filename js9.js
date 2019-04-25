@@ -2942,8 +2942,7 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
 	this.iy += sect.iy / 2;
     }
     // do wcs alignment, if necessary
-    if( dowcs && this.wcsim && (this.display === this.wcsim.display) &&
-	this.params.wcsalign ){
+    if( dowcs && this.wcsAlign() ){
 	// calc offsets so as to align with the wcs image
 	wcsim = this.wcsim;
 	wcssect = wcsim.rgb.sect;
@@ -3961,6 +3960,13 @@ JS9.Image.prototype.toArray = function(opts){
     return buf;
 };
 
+// convenience routine: should we align by WCS?
+JS9.Image.prototype.wcsAlign = function(){
+    return this.wcsim                          &&
+	   this.params.wcsalign                &&
+	   (this.display === this.wcsim.display);
+};
+
 // get pan location
 JS9.Image.prototype.getPan = function(){
     var sect = this.rgb.sect;
@@ -4056,7 +4062,7 @@ JS9.Image.prototype.setPan = function(panx, pany){
     if( !JS9.isNumber(panx) || !JS9.isNumber(pany) ){
 	JS9.error("invalid input for setPan: " + panx + " " + pany);
     }
-    if( this.display.blendMode ){
+    if( this.wcsAlign() ){
 	oval = JS9.globalOpts.panWithinDisplay;
 	JS9.globalOpts.panWithinDisplay = true;
     }
@@ -4076,6 +4082,8 @@ JS9.Image.prototype.setPan = function(panx, pany){
 		im.mkSection(npan.x, npan.y);
 	    }
 	}
+    }
+    if( this.wcsAlign() ){
 	JS9.globalOpts.panWithinDisplay = oval;
     }
     this.displayImage("rgb");
@@ -4157,7 +4165,7 @@ JS9.Image.prototype.setZoom = function(zval){
     if( !nzoom ){
 	JS9.error("invalid input for setZoom: " + zval);
     }
-    if( this.display.blendMode ){
+    if( this.wcsAlign() ){
 	oval = JS9.globalOpts.panWithinDisplay;
 	JS9.globalOpts.panWithinDisplay = true;
     }
@@ -4178,6 +4186,8 @@ JS9.Image.prototype.setZoom = function(zval){
 		im.mkSection(ipos.x, ipos.y, nzoom);
 	    }
 	}
+    }
+    if( this.wcsAlign() ){
 	JS9.globalOpts.panWithinDisplay = oval;
     }
     // redisplay the image
