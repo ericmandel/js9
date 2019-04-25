@@ -13,7 +13,7 @@ METHOD="python"
 while true; do
     echo "using $METHOD ..."
     if [ x$METHOD = "xshell" ]; then
-        threeways.sh -a -b ../blend -i $ID -t 3 -z 2 $*
+        threeways.sh -a -b ../blend -i $ID -t 2 -z 2 $*
         METHOD="python"
     else
         python threeways.py

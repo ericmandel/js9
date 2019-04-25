@@ -1,7 +1,7 @@
 import pyjs9
 import time
 
-timeout = 3
+timeout = 2
 loadTimeout = 1
 maxIter = 10
 id = "myJS9"
@@ -22,6 +22,7 @@ def waitLoad():
 print 'pyjs9.JS9(id=' + id + ')'
 j = pyjs9.JS9(id=id)
 j.BlendDisplay(False)
+j.CloseDisplay()
 
 print 'load chandra.fits ...'
 print '    j.Load("../blend/chandra.fits", \'{"scale":"log","colormap":"red","contrast":5.78,"bias":0.15}\')'

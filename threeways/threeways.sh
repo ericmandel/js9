@@ -67,11 +67,8 @@ xjs9load (){
 
 # js9 $XARGS ResizeDisplay 1024 > /dev/null
 echo "Merging multi-wavelength data for colliding galaxies NGC 2207 and IC 2163"
-js9 $XARGS BlendDisplay false > /dev/null
-js9 $XARGS CloseImage chandra.fits > /dev/null
-js9 $XARGS CloseImage galex.fits > /dev/null
-js9 $XARGS CloseImage spitzer.fits > /dev/null
-js9 $XARGS CloseImage hubble.fits > /dev/null
+xjs9 $XARGS BlendDisplay false > /dev/null
+xjs9 $XARGS CloseDisplay > /dev/null
 
 dowait "load chandra.fits"
 xjs9load $XARGS "${BLDIR}/chandra.fits" '{"scale":"log","colormap":"red","contrast":5.78,"bias":0.15}'
@@ -83,6 +80,7 @@ xjs9load $XARGS "${BLDIR}/galex.fits" '{"scale":"log","colormap":"green","contra
 
 dowait "reproject galex using the chandra wcs"
 xjs9 $XARGS ReprojectData "chandra.fits" > /dev/null
+dowait "set params galex.fits"
 xjs9 $XARGS SetColormap "green" 5.6 0.74 > /dev/null
 xjs9 $XARGS SetZoom $ZOOM > /dev/null
 xjs9 $XARGS BlendImage "screen" 1 true > /dev/null
@@ -92,6 +90,7 @@ xjs9load $XARGS "${BLDIR}/spitzer.fits" '{"scale":"log","colormap":"blue","contr
 
 dowait "reproject spitzer using the chandra wcs"
 xjs9 $XARGS ReprojectData "chandra.fits" > /dev/null
+dowait "set params spitzer.fits"
 xjs9 $XARGS SetColormap "blue" 6.3 0.54 > /dev/null
 xjs9 $XARGS SetZoom $ZOOM > /dev/null
 xjs9 $XARGS BlendImage "screen" 1 true > /dev/null
@@ -101,6 +100,7 @@ if [ x$DOADDON = xtrue ]; then
     xjs9load $XARGS "${BLDIR}/hst.fits" '{"scale":"log","scaleclipping":"user","scalemin":0,"scalemax":5,"colormap":"heat","contrast":4.0,"bias":0.67}'
     dowait "reproject hst using the chandra wcs"
     xjs9 $XARGS ReprojectData chandra.fits > /dev/null
+    dowait "set params hst.fits"
     xjs9 $XARGS SetColormap 3.0 0.535 > /dev/null
     xjs9 $XARGS SetZoom $ZOOM > /dev/null
     xjs9 $XARGS BlendImage "screen" 1 true > /dev/null

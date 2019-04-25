@@ -22,13 +22,25 @@
           bottom: 0;
           left: 0;
           width: 512px;
-          height: 512px;
+          height: 612px;
+      }
+      #message {
+	  height: 100px;
+          width: 512px;
+          font-weight: bold;
+          font-size: 32px;
+          padding: 6px;
+          margin: 0px;
+          outline: none;
+          overflow-y:auto;
       }
   </style>
   <title>JS9</title>
 </head>
 <body>
     <div id="centerdiv">
+    <div id="message"></div>
+    <p>
     <div class="JS9Menubar" id="myJS9Menubar"></div>
     <div class="JS9" id="myJS9"></div>
     <div style="margin-top: 2px;">
@@ -36,6 +48,33 @@
     </div>
     </div>
     <script type="text/javascript">
+      function pluginmess(im){
+	  if( im ){
+	      var s = sprintf("%s: %s", im.id, im.callingPlugin);
+	      switch(im.callingPlugin){
+	      case "onimageload":
+	      case "onreprojectdata":
+		  s = "<span style='color:green'>" + s + "</span>";
+		  break;
+	      default:
+		  break;
+	      }
+	      s = "<center>" + s + "</center>";
+	      $("#message").html(s);
+	  }
+      }
+      JS9.RegisterPlugin("Plugin", "Mess", function(){;},
+		   {onimageload: pluginmess,
+		    onimageclose: pluginmess,
+		    onimagedisplay: pluginmess,
+		    onsetpan: pluginmess,
+		    onsetzoom: pluginmess,
+		    onsetcolormap: pluginmess,
+		    onsetscale: pluginmess,
+		    ondisplayblend: pluginmess,
+		    onimageblend: pluginmess,
+		    onreprojectdata: pluginmess,
+		    winDims: [0, 0]});
       $(document).ready(function(){
           $("#centerdiv").draggable({
             handle: "#myJS9Menubar",
