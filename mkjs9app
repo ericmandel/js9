@@ -5,6 +5,7 @@ PLATFORM=`uname -s`
 PKG="package.json"
 CDIR=`pwd`
 DORENAME=true
+DOICON=false
 
 error() {
     echo "ERROR: $1"
@@ -30,18 +31,25 @@ case $PLATFORM in
     if [ -d $DDIR ]; then
       rm -rf $DDIR
     fi
+    rm -f "$DBASE/js9.app.zip"
     cd $SBASE  && tar cf - $EXE | (cd $DBASE && tar xf -)
     # install js9 into Electron.app
     echo "install JS9 files ..."
     RESDIR="$DDIR/Contents/Resources"
     APPDIR="$DDIR/Contents/Resources/app"
     BINDIR="$DDIR/Contents/Resources/app/bin"
+    NDIR="/Applications/js9.app/Contents/Resources/app"
     mkdir -p $BINDIR
     cd $CDIR 
     cp -p images/js9logo/mac/js9logo.icns $RESDIR/js9.icns
     make WEBDIR="$APPDIR" install-webdirs install-webfiles
     make BIN_INSTALL_DIR="$BINDIR" install-scripts
     sed  's/"main":.*/"main": "js9Electron.js",/' < $PKG > $APPDIR/$PKG
+    sed '3a\
+test -d /Applications/js9.app/Contents/Resources/app && APPDIR=/Applications/js9.app/Contents/Resources/app; test -d $HOME/Applications/js9.app/Contents/Resources/app && APPDIR=$HOME/Applications/js9.app/Contents/Resources/app;
+
+' < $BINDIR/js9 | sed 's#"/Users/eric/.*"#"$APPDIR"#g' > $BINDIR/njs9
+    mv $BINDIR/njs9 $BINDIR/js9 && chmod +x  $BINDIR/js9
     # rename application
     if [ $DORENAME = true ]; then
         JEXE="js9.app"
@@ -65,10 +73,14 @@ case $PLATFORM in
 	echo "code sign $EXE ..."
         sudo codesign --force --deep --sign - $EXE/
     fi
-    # change the icon manually
-    open $CDIR/images/js9logo/mac/js9logo.icns
-    echo "copy the Preview image using Cmd-A Cmd-C"
-    echo "then Cmd-I the new js9.app, click the icon in the UL, and Cmd-V"
+    # change the icon manually, if necessary
+    if [ $DOICON = true ]; then
+      open $CDIR/images/js9logo/mac/js9logo.icns
+      echo "copy the Preview image using Cmd-A Cmd-C"
+      echo "then Cmd-I the new js9.app, click the icon in the UL, and Cmd-V"
+      echo " "
+    fi
+    echo "Generate zip file using 'Compress' option in Finder"
     ;;
 
     *)
