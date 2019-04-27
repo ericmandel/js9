@@ -81,6 +81,7 @@ test -d /Applications/js9.app/Contents/Resources/app && APPDIR=/Applications/js9
       echo " "
     fi
     echo "Generate zip file using 'Compress' option in Finder"
+    echo 'Then: zip -d js9.app.zip "__MACOSX/*" to clean up'
     ;;
 
     *)
