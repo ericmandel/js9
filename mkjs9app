@@ -56,10 +56,14 @@ test -d /Applications/js9.app/Contents/Resources/app && APPDIR=/Applications/js9
 	echo "rename app from $EXE to $JEXE ..."
         # rename the app contents to js9
         cd $DDIR || error "can't cd to dest Electron app directory"
+	# https://electronjs.org/docs/tutorial/application-distribution
         PFILE="./Contents/Info.plist"
         sed 's/[eE]lectron/js9/g' < "$PFILE" > "$PFILE"-new
         mv "$PFILE"{,-orig} && mv "$PFILE"{-new,}
-	cd ./Contents/MacOS && cp -p Electron js9
+	cp -p ./Contents/MacOS/{Electron,js9}
+        PFILE="./Contents/Frameworks/Electron Helper.app/Contents/Info.plist"
+        sed 's/[eE]lectron/js9/g' < "$PFILE" > "$PFILE"-new
+        mv "$PFILE"{,-orig} && mv "$PFILE"{-new,}
         # rename the app to js9
         cd $DDIR/..
         if [ -d $JEXE ]; then
