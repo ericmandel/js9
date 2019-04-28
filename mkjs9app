@@ -60,7 +60,8 @@ test -d /Applications/js9.app/Contents/Resources/app && APPDIR=/Applications/js9
         PFILE="./Contents/Info.plist"
         sed 's/[eE]lectron/js9/g' < "$PFILE" > "$PFILE"-new
         mv "$PFILE"{,-orig} && mv "$PFILE"{-new,}
-	cp -p ./Contents/MacOS/{Electron,js9}
+	cp -p $CDIR/js9AppWrapper.sh ./Contents/MacOS/js9
+	chmod +x ./Contents/MacOS/js9
         PFILE="./Contents/Frameworks/Electron Helper.app/Contents/Info.plist"
         sed 's/[eE]lectron/js9/g' < "$PFILE" > "$PFILE"-new
         mv "$PFILE"{,-orig} && mv "$PFILE"{-new,}
