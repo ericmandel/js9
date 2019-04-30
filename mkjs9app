@@ -38,7 +38,6 @@ case $PLATFORM in
     RESDIR="$DDIR/Contents/Resources"
     APPDIR="$DDIR/Contents/Resources/app"
     BINDIR="$DDIR/Contents/Resources/app/bin"
-    NDIR="/Applications/js9.app/Contents/Resources/app"
     mkdir -p $BINDIR
     cd $CDIR 
     cp -p images/js9logo/mac/js9logo.icns $RESDIR/js9.icns
