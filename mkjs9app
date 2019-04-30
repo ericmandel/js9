@@ -88,6 +88,64 @@ test -d /Applications/js9.app/Contents/Resources/app && APPDIR=/Applications/js9
     echo 'Then: zip -d js9.app.zip "__MACOSX/*" to clean up'
     ;;
 
+    Linux|Microsoft)
+    # we use Microsoft's Windows Subsystem for Linux to create the Win10 app
+    # (currently, there is no Linux app)
+    uname -a | egrep Microsoft >/dev/null 2>&1
+    if [ $? != 0 ]; then
+      error "mkjs9app on Linux platform currently targets Windows 10 only"
+    fi
+    EXE="electron"
+    # generate a local, clean app directory
+    echo "generate local copy of $EXE ..."
+    SBASE="$HOME"
+    SDIR="$SBASE/$EXE"
+    if [ ! -d $SDIR ]; then
+        error "can't find electron directory: $SDIR"
+    fi
+    DBASE="`pwd`/.."
+    DDIR="$DBASE/$EXE"
+    if [ -d $DDIR ]; then
+      rm -rf $DDIR
+    fi
+    cd $SBASE  && tar cf - $EXE | (cd $DBASE && tar xf -)
+    # install js9 into Electron.app
+    echo "install JS9 files ..."
+    RESDIR="$DDIR/resources"
+    APPDIR="$DDIR/resources/app"
+    BINDIR="$DDIR/resources/app/bin"
+    mkdir -p $BINDIR
+    cd $CDIR
+    cp -p images/js9logo/mac/js9logo.icns $RESDIR/js9.icns
+    make WEBDIR="$APPDIR" install-webdirs install-webfiles
+    make BIN_INSTALL_DIR="$BINDIR" install-scripts
+    sed  's/"main":.*/"main": "js9Electron.js",/' < $PKG > $APPDIR/$PKG
+    # install wget executable
+    if [ -d "/mnt/c/Program Files (x86)/GnuWin32/bin" ]; then
+      GNUDIR="$DDIR/resources/app/GnuWin32/bin"
+      mkdir -p $GNUDIR
+      echo "install wget.exe ..."
+      cp -p "/mnt/c/Program Files (x86)/GnuWin32/bin"/* $GNUDIR/.
+    fi
+    # rename application
+    if [ $DORENAME = true ]; then
+        JEXE="js9.app"
+	echo "rename app from $EXE to $JEXE ..."
+        # rename the app contents to js9
+        cd $DDIR || error "can't cd to dest Electron app directory"
+	# https://electronjs.org/docs/tutorial/application-distribution
+	mv electron.exe js9app.exe
+        # rename the app to js9
+        cd $DDIR/..
+        if [ -d $JEXE ]; then
+          rm -rf $JEXE
+        fi
+        mv $EXE $JEXE
+	echo "create zip file for $JEXE ..."
+	zip -r js9.app.zip $JEXE
+    fi
+    ;;
+
     *)
     error "support for $PLATFORM not yet implemented"
     exit
