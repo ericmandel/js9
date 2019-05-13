@@ -8816,6 +8816,9 @@ JS9.Display.prototype.addFileDialog = function(funcName, template){
     // add callback for when input changes
     jinput.on("change", function(){
 	var i;
+	if( this.files.length ){
+	    JS9.waiting(true, that);
+	}
 	for(i=0; i<this.files.length; i++){
 	    // execute a JS9 public access routine
 	    JS9.publics[funcName](this.files[i], {display: that.id});
