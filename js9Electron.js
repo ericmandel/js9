@@ -131,6 +131,13 @@ if( js9Electron.argv.v && typeof js9Electron.argv.v === "string" ){
     js9Electron.files.unshift(js9Electron.argv.v);
 }
 
+// security check: disallow node integration with non-local web pages
+if( js9Electron.page.includes("://") && js9Electron.node ){
+    dialog.showErrorBox("Security Error",
+			"don't enable node with a non-local web page");
+    process.exit();
+}
+
 // setup on-will-download callbacks to save files without a dialog box
 function initWillDownload() {
     if( !js9Electron.willDownload && js9Electron.savedir ){
