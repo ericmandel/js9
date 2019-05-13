@@ -9758,8 +9758,8 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	    // use all images in this display
 	    ims = [];
 	    for(i=0; i<JS9.images.length; i++){
-		if( ims[i].display.id === that.id ){
-		    ims.push(ims[i]);
+		if( JS9.images[i].display.id === that.id ){
+		    ims.push(JS9.images[i]);
 		}
 	    }
 	} else {
