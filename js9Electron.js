@@ -25,6 +25,8 @@ const BrowserWindow = electron.BrowserWindow;
 const ipcMain = electron.ipcMain;
 // dialog support
 const dialog = electron.dialog;
+// shell support
+const shell = electron.shell;
 
 const path = require('path');
 const fs = require('fs');
@@ -334,6 +336,15 @@ app.on('activate', () => {
     if( js9Electron.win === null ){
 	createWindow();
     }
+});
+
+// https://electronjs.org/docs/tutorial/security
+// urls inside a web page are opened in the default browser
+app.on('web-contents-created', (event, contents) => {
+  contents.on('new-window', (event, navigationUrl) => {
+    event.preventDefault();
+    shell.openExternal(navigationUrl);
+  });
 });
 
 // process messages from js9
