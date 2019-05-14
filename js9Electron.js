@@ -131,6 +131,13 @@ if( js9Electron.argv.v && typeof js9Electron.argv.v === "string" ){
     js9Electron.files.unshift(js9Electron.argv.v);
 }
 
+// security checks: https://electronjs.org/docs/tutorial/security
+// security check: disallow http
+if( js9Electron.page.match(/^http:\/\//) ){
+    dialog.showErrorBox("Security Error",
+			"http protocol is disabled: use https");
+    process.exit();
+}
 // security check: disallow node integration with non-local web pages
 if( js9Electron.page.match(/^(https?|ftp):\/\//) && js9Electron.node ){
     dialog.showErrorBox("Security Error",
