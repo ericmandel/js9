@@ -132,7 +132,7 @@ if( js9Electron.argv.v && typeof js9Electron.argv.v === "string" ){
 }
 
 // security check: disallow node integration with non-local web pages
-if( js9Electron.page.includes("://") && js9Electron.node ){
+if( js9Electron.page.match(/^(https?|ftp):\/\//) && js9Electron.node ){
     dialog.showErrorBox("Security Error",
 			"don't enable node with a non-local web page");
     process.exit();
