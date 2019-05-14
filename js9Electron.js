@@ -330,21 +330,28 @@ app.on('window-all-closed', () => {
     app.quit();
 });
 
+// https://electronjs.org/docs/tutorial/security
+// don't allow navigation away from this web page
+// new windows inside a web page are opened in the default browser
+app.on('web-contents-created', (event, contents) => {
+    // eslint-disable-next-line no-unused-vars
+    contents.on('will-navigate', (event, navigationUrl) => {
+	event.preventDefault();
+	dialog.showErrorBox("Security Error",
+			    "navigation away from this web site is not permitted");
+    });
+    contents.on('new-window', (event, navigationUrl) => {
+	event.preventDefault();
+	shell.openExternal(navigationUrl);
+    });
+});
+
+// On OS X it's common to re-create a window in the app when the
+// dock icon is clicked and there are no other windows open.
 app.on('activate', () => {
-    // On OS X it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if( js9Electron.win === null ){
 	createWindow();
     }
-});
-
-// https://electronjs.org/docs/tutorial/security
-// urls inside a web page are opened in the default browser
-app.on('web-contents-created', (event, contents) => {
-  contents.on('new-window', (event, navigationUrl) => {
-    event.preventDefault();
-    shell.openExternal(navigationUrl);
-  });
 });
 
 // process messages from js9
