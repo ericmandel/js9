@@ -77,7 +77,7 @@ function startHelper(mode){
     }
 }
 
-// defaults passed to the tests
+// default web page
 js9Electron.defpage = "file://" + path.join(__dirname, 'js9.html');
 
 // preload page contains initialization values needed before loading JS9
@@ -104,6 +104,10 @@ js9Electron.pdfOpts = {
     printSelectionOnly: false,
     landscape: false
 };
+
+// browser window defaults
+js9Electron.contextIsolation = false;    // false: we set window properties
+js9Electron.enableRemoteModule = false;  // see security recommendations
 
 // command line arguments
 js9Electron.argv = require('minimist')(process.argv.slice(2));
@@ -194,8 +198,8 @@ function createWindow() {
     // create the browser window
     js9Electron.win = new BrowserWindow({
 	webPreferences: {nodeIntegration: js9Electron.node,
-			 contextIsolation: false,
-			 enableRemoteModule: false,
+			 contextIsolation: js9Electron.contextIsolation,
+			 enableRemoteModule: js9Electron.enableRemoteModule,
 			 preload: js9Electron.preload},
 	width: js9Electron.width,
 	height: js9Electron.height
