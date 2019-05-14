@@ -195,6 +195,7 @@ function createWindow() {
     js9Electron.win = new BrowserWindow({
 	webPreferences: {nodeIntegration: js9Electron.node,
 			 contextIsolation: false,
+			 enableRemoteModule: false,
 			 preload: js9Electron.preload},
 	width: js9Electron.width,
 	height: js9Electron.height
