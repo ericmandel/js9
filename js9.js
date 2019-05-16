@@ -172,6 +172,7 @@ JS9.globalOpts = {
     reduceMosaic: "js9",        // "js9" or "shrink" ("js9" seems to be faster)
     reduceRegcnts: true,        // reduce image when doing counts in regions?
     plot3d: {cube:"*:*:all", mode:"avg", areaunits:"pixels", color: "green"}, // plot3d options: avg/sum, pixels/arcsecs
+    imexamLineHeight: 1,        // "height" of line region section
     copyWcsPosFormat: "$ra $dec $sys", // format for copy wcs pos to clipboard
     floatPrecision: 6,          // precision for floatToString()
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress

@@ -557,7 +557,10 @@ function reg2section(xreg) {
                                         (xreg.pts[0].x - xreg.pts[1].x)) +
                                        ((xreg.pts[0].y - xreg.pts[1].y)  *
                                         (xreg.pts[0].y - xreg.pts[1].y)));
-                xreg.height = 1;
+                xreg.height = JS9.globalOpts.imexamLineHeight || 1;
+		xreg.angle = Math.atan2(xreg.pts[1].y - xreg.pts[0].y,
+					xreg.pts[1].x - xreg.pts[0].x);
+		xreg.angle = xreg.angle * 180 / Math.PI;
 	    } else {
 	        xreg.width  = maxx - minx;
 		xreg.height = maxy - miny;
@@ -582,7 +585,7 @@ exports.getRegionData = function (im, xreg) {
     var imag;
 
     if ( xreg.angle && xreg.angle !== 0 ) {
-	imag = ndops.zeros([xreg.width, xreg.height]);
+	imag = ndops.zeros([xreg.height, xreg.width]);
 
 	ndops.rotate(imag, im_2d, xreg.angle/57.29577951, xreg.y, xreg.x);
     } else {
