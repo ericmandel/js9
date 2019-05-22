@@ -7785,6 +7785,11 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	obj.dheight = this.display.height;
 	// image params
 	obj.params = $.extend(true, {}, this.params);
+	// temp values: explicitly save some of them
+	obj.tmp = {};
+	if( this.tmp.gridStatus === "active" ){
+	    obj.tmp.gridStatus = "active";
+	}
 	// get center of displayed image in physical coords
 	lpos = this.imageToLogicalPos({x:this.rgb.sect.xcen,
 				       y:this.rgb.sect.ycen});
@@ -7807,8 +7812,10 @@ JS9.Image.prototype.saveSession = function(file, opts){
 		layer = this.layers[key];
 		dlayer = layer.dlayer;
 		// only save layers on main display
-		// don't save crosshair
-		if( dlayer.dtype === "main" && key !== "crosshair"  ){
+		// don't save crosshair or grid
+		if( dlayer.dtype === "main" &&
+		    key !== "crosshair"     &&
+		    key !== "grid"          ){
 		    tobj = {};
 		    tobj.name = key;
 		    tobj.json = dlayer.canvas.toJSON(dlayer.el);
@@ -9516,6 +9523,10 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	if( obj.blend ){
 	    im.blend = $.extend(true, {}, obj.blend);
 	}
+	// reconstitute tmp values
+	if( obj.tmp ){
+	    im.tmp = $.extend(true, {}, obj.tmp);
+	}
 	// reconstitute wcsim state
 	if( obj.wcsim ){
 	    im.wcsim = JS9.lookupImage(obj.wcsim);
@@ -9530,8 +9541,8 @@ JS9.Display.prototype.loadSession = function(file, opts){
 		    lname === "regions" ){
 		    continue;
 		}
-		// skip crosshair
-		if( lname === "crosshair" ){
+		// skip crosshair and grid
+		if( lname === "crosshair" || lname === "grid" ){
 		    continue;
 		}
 		// make sure layer exists in the display
@@ -9549,6 +9560,10 @@ JS9.Display.prototype.loadSession = function(file, opts){
 		    catch(ignore){}
 		}
 	    }
+	}
+	// if coordinate grid was active, display it
+	if( im.tmp && im.tmp.gridStatus === "active" ){
+	    im.displayCoordGrid(true);
 	}
 	// if all images are loaded, sort them to the original load order
 	if( JS9.notNull(left) ){
@@ -9576,7 +9591,7 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	if( !imobj.file ){
 	    JS9.error("session does not contain a filename");
 	}
-	// save copy of object we can edit it
+	// save copy of object so we can edit it
 	obj = $.extend(true, {}, imobj);
 	// some param info needs to be deleted
 	delete obj.params.display;
