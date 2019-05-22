@@ -7807,7 +7807,8 @@ JS9.Image.prototype.saveSession = function(file, opts){
 		layer = this.layers[key];
 		dlayer = layer.dlayer;
 		// only save layers on main display
-		if( dlayer.dtype === "main" ){
+		// don't save crosshair
+		if( dlayer.dtype === "main" && key !== "crosshair"  ){
 		    tobj = {};
 		    tobj.name = key;
 		    tobj.json = dlayer.canvas.toJSON(dlayer.el);
@@ -7834,6 +7835,8 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	if( obj.params.display ){
 	    delete obj.params.display;
 	}
+	// we didn't save the crosshair
+	obj.params.crosshair = false;
 	return obj;
     };
     if( !window.hasOwnProperty("saveAs") ){
@@ -9527,6 +9530,10 @@ JS9.Display.prototype.loadSession = function(file, opts){
 		    lname === "regions" ){
 		    continue;
 		}
+		// skip crosshair
+		if( lname === "crosshair" ){
+		    continue;
+		}
 		// make sure layer exists in the display
 		dlayer = that.newShapeLayer(lname, layer.dopts);
 		// add a layer instance to this image (no objects yet)
@@ -9573,6 +9580,8 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	obj = $.extend(true, {}, imobj);
 	// some param info needs to be deleted
 	delete obj.params.display;
+	// unset crosshair (we don't save it or load it)
+	obj.params.crosshair = false;
 	// include an onload callback to load the layers
 	obj.params.onload = finish;
 	// get pathname of image file
