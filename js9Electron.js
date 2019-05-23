@@ -187,13 +187,15 @@ function initWillDownload() {
 
 // create a new window for a JS9 web page
 function createWindow() {
-    let cmd;
+    let cmd, icon;
     let ncmd=0;
     let xcmds = "";
     // set dock icon for Mac
     if( process.platform === "darwin" ){
-	app.dock.setIcon(path.join(__dirname,
-				   "/images/js9logo/png/js9logo_64.png"));
+	icon = path.join(__dirname, "/images/js9logo/png/js9logo_64.png");
+	if( fs.existsSync(icon) ){
+	    app.dock.setIcon(icon);
+	}
     }
     // create the browser window
     js9Electron.win = new BrowserWindow({
