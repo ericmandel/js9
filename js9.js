@@ -10238,12 +10238,15 @@ JS9.Helper.prototype.connect = function(type){
 	    }
 	});
     };
+    // make an "alive" request of the helper (jsonp to avoid CORS rejection)
     var waitForHelper = function(eurl, hurl, tries){
-	$.ajax(eurl)
-	    .done(function(){
+	$.ajax({
+	    url: eurl,
+	    dataType: "jsonp",
+	    success: function(){
 		connectHelper(hurl);
-	    })
-	    .fail(function(){
+	    },
+	    error: function(){
 		if( --tries > 0 ){
 		    window.setTimeout(function(){
 			waitForHelper(eurl, hurl, tries);
@@ -10251,7 +10254,8 @@ JS9.Helper.prototype.connect = function(type){
 		} else {
 		    failedHelper();
 		}
-	    });
+	    }
+	});
     };
     // might be establishing a new type
     if( type ){

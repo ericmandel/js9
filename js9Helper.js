@@ -1157,11 +1157,11 @@ var httpHandler = function(req, res){
     };
     // generate object and run the cmd
     var docmd = function(cmd, jstr){
-	var i, j;
+	var i, j, s;
 	var obj = {};
 	// the constructed string is stringified json, if it exists
 	// try to parse it into an object
-	if( jstr && jstr !== "null" ){
+	if( cmd !== "alive" && jstr && jstr !== "null" ){
 	    try{ obj = JSON.parse(jstr); }
 	    catch(e){
 		htmlerr("can't parse JSON object in http request: " + jstr); 
@@ -1177,7 +1177,18 @@ var httpHandler = function(req, res){
 	// process the command
 	switch(cmd){
 	case "alive":
-	    if( cbfunc ){ cbfunc("OK"); }
+	    if( cbfunc ){
+		// if this is a jsonp request, wrap the return string
+		// (this is done by the desktop app)
+		if( jstr.match(/^callback=/) ){
+		    s = jstr.replace(/^callback=/, "") + '("OK")';
+		} else {
+		    // ordinary request with ordinary return
+		    s = "OK";
+		}
+		// return callback
+		cbfunc(s);
+	    }
 	    break;
 	case "msg":
 	    // send a command from an external source to a JS9 browser
