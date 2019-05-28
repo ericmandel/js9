@@ -17590,7 +17590,15 @@ JS9.handleFITSFile = function(file, opts, handler){
 
 // cleanup FITS file by deleting vfile, etc
 JS9.cleanupFITSFile = function(raw, mode){
+    var rexp;
+    if( JS9.localMount ){
+	rexp = new RegExp("^"+JS9.localMount);
+    }
     if( JS9.fits.cleanupFITSFile && raw && raw.hdu && raw.hdu.fits ){
+	// don't delete real local file
+	if( rexp && raw.hdu.fits.vfile && raw.hdu.fits.vfile.match(rexp) ){
+	    mode = false;
+	}
 	JS9.fits.cleanupFITSFile(raw.hdu.fits, mode);
 	return true;
     }
