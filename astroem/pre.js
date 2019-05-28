@@ -1,3 +1,4 @@
+/*global $ */
 var Module;
 if( typeof Module !== "object" ){ Module = {}; }
 Module["noExitRuntime"] = true;
@@ -9,4 +10,4 @@ Module["onRuntimeInitialized"] = function(){
 	    Module["astroemReady"] = true;
 	}
     }
-}
+};

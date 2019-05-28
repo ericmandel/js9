@@ -1,4 +1,4 @@
-/*global Blob, Uint8Array, Int16Array, Uint16Array, Int32Array, Float32Array, Float64Array, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue,  UTF8ToString getCFunc assert toC stackSave stackAlloc EmterpreterAsync stackRestore */
+/*global Blob, Uint8Array, Int16Array, Uint16Array, Int32Array, Float32Array, Float64Array, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue,  UTF8ToString getCFunc assert toC stackSave stackAlloc EmterpreterAsync stackRestore, NODEFS */
 
 /* eslint-disable dot-notation */
 
@@ -45,6 +45,13 @@ Module["vsize"] = function(filename) {
 Module["vunlink"] = function(filename) {
   try{ FS.unlink(Module["rootdir"] + filename); }
   catch(ignore){ }
+};
+
+Module["vmount"] = function(root, mntpnt) {
+    var got = 1;
+    try{ FS.mkdir(mntpnt); FS.mount(NODEFS, {root: root}, mntpnt); }
+    catch(e){ got = 0; FS.rmdir(mntpnt); }
+    return got;
 };
 
 // legacy routine used by fitsy
@@ -611,16 +618,16 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 	// this starts it all!
 	fileReader.readAsArrayBuffer(fits);
     } else if( typeof fits === "string" ){
-	// open existing virtual file as a FITS file
+	// open existing virtual or local file as a FITS file
 	if( !fits ){
 	    Module["error"]("FITS file name not specified");
 	}
-	hdu.vfile = fits;
+	hdu.vfile = opts.vfile || fits;
 	hptr = _malloc(8);
 	setValue(hptr+4, 0, "i32");
 	fptr = ccall("openFITSFile", "number",
 		     ["string", "number", "string", "number", "number"],
-		     [fits, 0, opts.extlist, hptr, hptr+4]);
+		     [hdu.vfile, 0, opts.extlist, hptr, hptr+4]);
 	hdu.type = getValue(hptr,   "i32");
 	status  = getValue(hptr+4, "i32");
 	_free(hptr);

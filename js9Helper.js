@@ -953,9 +953,9 @@ var socketioHandler = function(socket) {
 	    if( cbfunc ){ cbfunc("ERROR"); }
 	}
     });
-    // on alive: return "OK" to signal a valid connection
+    // on alive: return json-formatted "OK" to signal a valid connection
     socket.on("alive", function(obj, cbfunc) {
-	    if( cbfunc ){ cbfunc("OK"); }
+	    if( cbfunc ){ cbfunc('{"alive":"OK"}'); }
     });
     // on image: signal from JS9 that a new or redisplayed image is active
     // returns: [input file path, fits file path, fits + extension]

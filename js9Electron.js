@@ -138,14 +138,17 @@ if( js9Electron.argv.v && typeof js9Electron.argv.v === "string" ){
 }
 
 // security checks: https://electronjs.org/docs/tutorial/security
-// security check: disallow http
-if( js9Electron.page.match(/^http:\/\//) ){
+// security check: disallow http except locally
+if( js9Electron.page.match(/^http:\/\//) &&
+    !js9Electron.page.match(/localhost/) ){
     dialog.showErrorBox("Security Error",
 			"http protocol is disabled: use https");
     process.exit();
 }
 // security check: disallow node integration with non-local web pages
-if( js9Electron.page.match(/^(https?|ftp):\/\//) && js9Electron.node ){
+if( js9Electron.node                             &&
+    js9Electron.page.match(/^(https?|ftp):\/\//) &&
+    !js9Electron.page.match(/localhost/)         ){
     dialog.showErrorBox("Security Error",
 			"don't enable node with a non-local web page");
     process.exit();
@@ -187,13 +190,16 @@ function initWillDownload() {
 
 // create a new window for a JS9 web page
 function createWindow() {
-    let cmd;
+    let cmd, icon;
     let ncmd=0;
     let xcmds = "";
     // set dock icon for Mac
     if( process.platform === "darwin" ){
-	app.dock.setIcon(path.join(__dirname,
-				   "/images/js9logo/png/js9logo_64.png"));
+	icon = path.join(__dirname, "/images/js9logo/png/js9logo_64.png");
+	if( fs.existsSync(icon) ){
+	    try{ app.dock.setIcon(icon); }
+	    catch(e){}
+	}
     }
     // create the browser window
     js9Electron.win = new BrowserWindow({
@@ -322,7 +328,10 @@ function createWindow() {
 }
 
 // start helper, if necessary
-startHelper();
+if( !js9Electron.page.match(/^(https?|ftp):\/\//) ||
+    js9Electron.page.match(/localhost/)           ){
+    startHelper();
+}
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

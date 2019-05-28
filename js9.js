@@ -10,7 +10,7 @@
  *
  */
 
-/*global JS9Prefs, JS9Inline, $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly */
+/*global JS9Prefs, JS9Inline, $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, require */
 
 "use strict";
 
@@ -263,6 +263,7 @@ JS9.globalOpts = {
     sessionTemplates: ".ses,.js9ses",// templates for local session file input
     colormapTemplates: ".cmap",      // templates for local colormap file input
     catalogTemplates: ".cat,.tab",   // templates for local catalog file input
+    localTemplates: ".fits,.fts",    // templates for local file access
     controlsMatchRegion: false,      // true, false, "corner" or "border"
     internalColorPicker: true,       // use HTML5 color picker, if available?
     newWindowWidth:  530,	     // width of LoadWindow("new")
@@ -577,6 +578,12 @@ if( window.isElectron ){
     // Electron.js < v5.0.0 SEGVs when clicking colorpicker exit (1/26/2019)
     if( !window.electronVersion || parseInt(window.electronVersion, 10) < 5 ){
 	JS9.globalOpts.internalColorPicker = false;
+    }
+    // do we have Node integrated? (same check as in Emscripten/src/shell.js)
+    JS9.hasNode = typeof process === "object" && typeof require === "function";
+    // mount point for local file system, based on hostname
+    if( JS9.hasNode ){
+	JS9.localMount = require("os").hostname();
     }
 }
 
@@ -6453,8 +6460,9 @@ JS9.Image.prototype.countsInRegions = function(args){
 		// for tables, regcnts has a -b switch
 		cmdswitches += sprintf(" -b %s", bin);
 	    } else {
-		// for images, make a new binned file
-		bvfile = sprintf("bin%s_%s", bin, vfile);
+		// for images, make a temporary binned file
+		bvfile = sprintf("bin%s_%s", bin,
+				 vfile.split("/").reverse()[0]);
 		sect = sprintf("0@0,0@0,%s", bin);
 		JS9.imsection(vfile, bvfile, sect, "");
 		vfile = bvfile;
@@ -6469,7 +6477,7 @@ JS9.Image.prototype.countsInRegions = function(args){
     JS9.waiting(false);
     // remove binned file, if necessary
     if( bvfile ){
-	Astroem.vunlink(bvfile);
+	JS9.vunlink(bvfile);
     }
     // check for regions or cfitio errors
     if( s.match(/^ERROR/) || s.match(/FITSIO status/) ){
@@ -9904,7 +9912,9 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 		    ivfile = sprintf("%s[%s]", vfile, ext);
 		    // binned file name
 		    bvfile = sprintf("bin_%s_%s", ext, 
-				     vfile.replace(/\.(g|f)z$/, ""));
+				     vfile
+				     .split("/").reverse()[0]
+				     .replace(/\.(g|f)z$/, ""));
 		    // make sure binned file eventually gets deleted
 		    carr.push(bvfile);
 		    // section specification consists of bin factor
@@ -9960,7 +9970,9 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 		sw += " " + JS9.globalOpts.reprojSwitches;
 		// output filename
 		ovfile = sprintf("reproj_%s_%s", ext, 
-				 vfile.replace(/\.(g|f)z$/, ""));
+				 vfile
+				 .split("/").reverse()[0]
+				 .replace(/\.(g|f)z$/, ""));
 		// add to the output file list
 		s += sprintf("%s\n", ovfile);
 		// make sure it eventually gets deleted
@@ -19665,6 +19677,7 @@ JS9.initFITS = function(){
 	JS9.vread = Astroem.vread;
 	JS9.vunlink = Astroem.vunlink;
 	JS9.vsize = Astroem.vsize;
+	JS9.vmount = Astroem.vmount;
 	JS9.arrfile = Astroem.arrfile;
 	JS9.listhdu = Astroem.listhdu;
 	JS9.initwcs = Astroem.initwcs;
@@ -21292,7 +21305,25 @@ JS9.mkPublic("Load", function(file, opts){
 	// remove extension so we can find the file itself
 	file = JS9.fixPath(file, opts);
 	tfile = file.replace(/\[.*\]/, "");
-	JS9.fetchURL(file, tfile, opts);
+	// are we able to access a local file directly, without fetching?
+	// note to myself: cfitsio uncompresses .gz files into memory, so
+	// there is no benefit to having ".gz" in the localTemplates list.
+	if( JS9.localMount                              &&
+	    JS9.vsize(JS9.localMount + "/" + file) >= 0 &&
+	    $.inArray("."+ext, JS9.globalOpts.localTemplates.split(",")) >= 0){
+	    // access local file directly
+	    topts = $.extend(true, {}, JS9.fits.options, opts);
+	    topts.file = file;
+	    topts.vfile = JS9.localMount + "/" + file;
+	    // give spinner a chance to start up
+	    window.setTimeout(function(){
+		try{ JS9.handleFITSFile(file, topts, JS9.NewFitsImage); }
+		catch(e){ JS9.error("can't process FITS file", e); }
+	    }, 0);
+	} else {
+	    // fetch file
+	    JS9.fetchURL(file, tfile, opts);
+	}
     }
 });
 
@@ -23065,6 +23096,20 @@ $(document).ready(function(){
     $(document).on("astroem:ready", function(){
 	// astroem is loaded: we can now initialize FITS support
 	JS9.initFITS();
+	// if Node.js is available (i.e., if enabled in the Electron app),
+	// try to mount the local file system
+	if( window.isElectron && JS9.hasNode ){
+	    try{
+		// mount local file system or clear mount point
+		if( !JS9.vmount("/", JS9.localMount) ){
+		    delete JS9.localMount;
+		}
+	    }
+	    catch(e){
+		// no mount point for local file system
+		delete JS9.localMount;
+	    }
+	}
 	if( JS9.helper.ready && JS9.inited ){
 	    // ... signal that we are completely ready
 	    $(document).trigger("JS9:ready", {status: "OK"});
