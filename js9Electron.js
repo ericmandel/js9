@@ -228,7 +228,11 @@ function createWindow() {
     }
     // open the DevTools, if necessary
     if( js9Electron.debug ){
-	js9Electron.win.webContents.openDevTools({mode: 'detach'});
+	// hack to avoid console spam:
+	// https://github.com/electron/electron/issues/12438
+	js9Electron.win.webContents.once('dom-ready', () => {
+	    js9Electron.win.webContents.openDevTools({mode: 'detach'});
+	});
     }
     cmd = "if( typeof JS9 !== 'object' || typeof JS9.Image !== 'function'  ){alert('JS9 was not loaded properly. Please check the paths to the JS9 css and js files in your web page header and try again.');}";
     js9Electron.win.webContents.executeJavaScript(cmd);
