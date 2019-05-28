@@ -313,15 +313,38 @@ colormaps to the three energy cuts, and then blend them into a single display:
 </pre>
 <p>
 Finally, the <b>--node</b> switch allows you to enable Node.js
-capabilities in the web page environment. Normally this is turned off as a
-security precaution, but you might want to turn it to run scripts that
-require access to system resources.
+capabilities in a local (but not remote) web page environment. By
+default, this feature is turned off because, in principle, node
+integration provides a greater attack surface for hackers. But since node
+integration is permitted only for local web pages, an attacker would have
+to be on your system ... so you're probably in big trouble anyway.
 
 <p>
-For example, the following script will load the Chandra image of the
-Kes 75 supernova remnant, display three energy cuts as separate
-images, find the total number of counts in each image, and write the
-results to a log file, using the Node.js 'fs' module.
+That said, there are two good reasons for turning on node integration:
+<ul>
+<li> to enable direct access to data files in the local file system
+<li> to run scripts that require access to system resources
+</ul>
+
+<p>
+When node integration is enabled, the JS9 app will mount the local
+file system inside the web page and access FITS files directly, instead
+of fetching and storing them in browser memory. This can speed up the
+load/display time considerably, while minimizing the use of a browser
+memory. The list of file extensions which are accessed directly in this way
+is specified by the global property <b>JS9.globalOpts.localTemplates</b>,
+which defaults to <b>.fits</b> and <b>.fts</b>. Note that bzip'ed
+(.bz2) and gzip'ed (.gz) files are not accessed directly: the former are
+not supported by the CFITSIO FITS access library, while the latter are
+supported by uncompressing the file in memory, which is done more efficiently
+by JS9 itself.
+
+<p>
+With node integration, you can also run scripts that access local
+system resources. For example, the following script will load the
+Chandra image of the Kes 75 supernova remnant, display three energy
+cuts as separate images, find the total number of counts in each
+image, and write the results to a log file, using the Node.js 'fs' module.
 <pre>
   # enable node support and run the script in the command file 
   js9 -a --node true --cmdfile ecnts.js
@@ -383,11 +406,19 @@ window as a PDF in the current directory, without bringing up a dialog box.
 <p>
 It is important to note that Electron.js is not a web
 browser, and web pages you load are not sandboxed. Our JS9 desktop
-application code takes additional precautions to enhance security by
-disabling Node.js integration and Javascript eval in web
-pages. However, these precautions are likely to be insufficient to
-guard against malicious web pages. Therefore, <b>it is important that
-you load only local or trusted remote web pages into the JS9 desktop app.</b>
+application code takes additional precautions to enhance security:
+<ul>
+<li> http protocol is disabled (use file:// for local pages or https: for
+remote pages)
+<li> Javascript eval is always disabled in web pages
+<li> Node.js integration must be turned on explicitly in web pages
+<li> the ability to click a link to navigate to a new web page is disabled
+<li> the ability to click a link to display to a new web page in a different tab or window is enabled, but the new web page is displayed in your default browser
+</ul>
+
+<p>
+Even with these safeguards in place, <b>it is important that you load
+only local or trusted remote web pages into the JS9 desktop app.</b>
 See: <a href="http://electron.atom.io/docs/tutorial/security/">
 Electron.js security</a> for more information.
 
@@ -395,7 +426,7 @@ Electron.js security</a> for more information.
 You should update your copy of Electron.js periodically to ensure that you
 have the latest security fixes in place.
 
-<h5>Last updated: March 28, 2019</h5>
+<h5>Last updated: May 24, 2019</h5>
 </div>
 
 </body>
