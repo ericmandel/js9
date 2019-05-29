@@ -547,7 +547,10 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 		hdu.vfile = fitsname;
 	    }
 	    // delete old version, ignoring errors
-	    Module["vunlink"](hdu.vfile);
+	    // safety check: leave files in subdirs (they're real, local files)
+	    if( hdu.vfile && hdu.vfile.indexOf("/") < 0 ){
+		Module["vunlink"](hdu.vfile);
+	    }
 	    // create a file in the emscripten virtual file system from the blob
 	    arr = new Uint8Array(fileReader.result);
 	    // make a virtual file
@@ -669,7 +672,8 @@ Module["cleanupFITSFile"] = function(fits, all) {
 	    fits.fptr = null;
 	}
 	// delete virtual FITS file
-	if( fits.vfile ){
+	// safety check: leave files in subdirs (they're real, local files)
+	if( fits.vfile && fits.vfile.indexOf("/") < 0 ){
 	    Module["vunlink"](fits.vfile);
 	}
     }
