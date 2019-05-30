@@ -2134,7 +2134,8 @@ specified, the source (background) regions are taken from the
 currently displayed image. You also can specify a region selector
 using any of the following:
 <ul>
-<li><b>all</b>: all regions
+<li><b>all</b>: all regions not including child text regions
+<li><b>All</b>: all regions including child text regions
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
@@ -2809,11 +2810,12 @@ any of the following (in order of precedence):
 <li><b>"selected"</b>: the selected region (or all regions in selected group)
 <li><b>"all"</b>: all regions, but not including child text regions (default)
 <li><b>"All"</b>: all regions, including child text regions
-<li><b>"child"</b>: only child text regions
 <li><b>[id]</b>: a specific region id returned by
   <a href="#JS9.AddRegions"><b>JS9.AddRegions()</b></a>
 <li><b>[color]</b>: all regions having the specified color (e.g., "red")
 <li><b>[shape]</b>: all regions having the specified shape (e.g., "circle")
+<li><b>"child"</b>: a child region (i.e. text child of another region)
+<li><b>"parent"</b>: a region that has a child (i.e. has a text child)
 <li><b>[tag]</b>: all regions containing the specified tag (e.g., "source")
 </ul>
 Thus, it is possible to act on multiple regions at the same time.
@@ -2956,7 +2958,8 @@ returns:
 If the <b>regions</b> argument is not specified, it defaults to "all". You
 can specify regions using any of the following:
 <ul>
-<li><b>all</b>: all regions
+<li><b>all</b>: all regions not including child text regions
+<li><b>All</b>: all regions including child text regions
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
@@ -2994,6 +2997,8 @@ Each returned region object contains the following properties:
 <li><b>imstr</b>: region string in image or physical coordinates
 <li><b>imsys</b>: image system ("image" or "physical")
 <li><b>lcs</b>: object containing logical x, y and sys (e.g., "physical")
+<li><b>parent</b>: the id of the parent region, if this is a text child region
+<li><b>child</b>: the id of the child text region, if any
 <li><b>data</b>: data property passed in options object when this shape was created.
 </ul>
 The x, y, radii, pts, radius, width, height, r1, r2 values are all
@@ -3035,7 +3040,8 @@ Change one or more regions.
 If the <b>regions</b> argument is not specified, it defaults to "all". You
 can specify a region selector using any of the following:
 <ul>
-<li><b>all</b>: all regions
+<li><b>all</b>: all regions not including child text regions
+<li><b>All</b>: all regions including child text regions
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
@@ -3070,7 +3076,8 @@ copied to all images.
 If the <b>regions</b> argument is not specified, it defaults to "all". You
 can specify a region selector using any of the following:
 <ul>
-<li><b>all</b>: all regions
+<li><b>all</b>: all regions not including child text regions
+<li><b>All</b>: all regions including child text regions
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
@@ -3093,7 +3100,8 @@ where:
 If the <b>regions</b> argument is not specified, it defaults to "all". You
 can specify a region selector using any of the following:
 <ul>
-<li><b>all</b>: all regions
+<li><b>all</b>: all regions not including child text regions
+<li><b>All</b>: all regions including child text regions
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape

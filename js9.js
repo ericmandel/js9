@@ -12027,6 +12027,9 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 	}
 	// parent has another child
 	s.params.children.push({id: t.params.id, obj: t});
+	// update the parent
+	JS9.Fabric._updateShape.call(this,
+				     layerName, s, null, "addchild", s.params);
     } else if( s.params.children && (opts.text || opts.textOpts) ){
 	// process parameters passed to existing text children
 	for(i=0; i<s.params.children.length; i++){
@@ -12498,6 +12501,12 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.parent = obj.params.parent.obj.params.id;
     } else {
 	pub.parent = null;
+    }
+    if( obj.params.children && obj.params.children.length ){
+	// for now, just output the first one (cf. listRegions)
+	pub.child = obj.params.children[0].id;
+    } else {
+	pub.child = null;
     }
     dpos = obj.getCenterPoint();
     if( ginfo.group ){
@@ -13633,7 +13642,8 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 	}
 	child.setCoords();
 	if( dlayer.display.image ){
-	    dlayer.display.image.updateShapes(dlayer.layerName, child, "child");
+	    dlayer.display.image.updateShapes(dlayer.layerName, child,
+					      "updatechild");
 	}
     }
 };
@@ -15297,7 +15307,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    }
 	}
 	// handle text child properties specially
-	// for now, just output the first one
+	// for now, just output the first one (cf. updateShape)
 	if( (children.length > 0) && (children[0].obj.text) ){
 	    child = children[0].obj;
 	    // create a text child
