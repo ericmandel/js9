@@ -12395,21 +12395,27 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 	} else {
 	    // can't use forEachObject, which loops in ascending order,
 	    // because a "remove" cb changes the array destructively!
-	    // don't process shapes with parents (i.e. text children)
 	    objects = canvas.getObjects();
             olen = objects.length;
 	    while( olen-- ){
 		obj = objects[olen];
+		// make sure its a valid region
 		if( !obj.params ){ continue; }
-		if( id !== "child" && obj.params.parent ){ continue; }
-		if( id === "child" && !obj.params.parent ){ continue; }
+		// no text children unless explicity specified
+		if( obj.params.parent && id !== "child" && id !== "All" ){
+		    continue;
+		}
+		// children should always have a parent
+		if( id === "child" && !obj.params.parent ){
+		    continue;
+		}
 		ocolor = obj.stroke.toLowerCase();
 		if( group && group.contains(obj) ){
 		    ginfo.group = group;
 		} else {
 		    ginfo.group = null;
 		}
-		if( id === "all" ){
+		if( id.toLowerCase() === "all" ){
 		    // all
 		    cb.call(that, obj, ginfo);
 		} else if( (id.toLowerCase() === ocolor) ||
@@ -12878,15 +12884,12 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
     this.selectShapes(layerName, shape, function(obj){
 	// public part of the shape
 	myshape = obj.pub || {};
-	// skip child shapes unless explicitly asked for
-	if( !obj.params.parent || opts.includeChildren ){
-	    // might need shape object itself
-	    if( opts.includeObj ){
-		myshape.obj = obj;
-	    }
-	    // add this region to the output array
-	    shapes.push(myshape);
+	// might need shape object itself
+	if( opts.includeObj ){
+	    myshape.obj = obj;
 	}
+	// add this region to the output array
+	shapes.push(myshape);
     });
     return shapes;
 };
@@ -22460,7 +22463,7 @@ JS9.mkPublic("ChangeRegions", function(region, opts){
     if( im ){
 	region = obj.argv[0];
 	if( !region ){
-	    JS9.error("no region specified for GetRegions");
+	    JS9.error("no regions specified for ChangeRegions");
 	}
 	opts = obj.argv[1];
 	im.changeShapes("regions", region, opts);

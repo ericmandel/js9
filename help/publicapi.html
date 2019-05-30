@@ -2806,7 +2806,8 @@ Note that the
 all take a regions specification as the second argument, which can be
 any of the following (in order of precedence):
 <ul>
-<li><b>"all"</b>: all regions
+<li><b>"all"</b>: all regions, but not including child text regions (this is the default)
+<li><b>"All"</b>: all regions, including child text regions
 <li><b>[id]</b>: a specific region id returned by
   <a href="#JS9.AddRegions"><b>JS9.AddRegions()</b></a>
 <li><b>"selected"</b>: the selected region (or all regions in the selected group)
