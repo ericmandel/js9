@@ -54,13 +54,16 @@ PLUGIN.init = function(){
 // write a row of text in message area associated with a given plugin
 PLUGIN.init.prototype.message = function(message, row) {
     this.divjq.children("#message" + row).html(message);
+    if( JS9.DEBUG > 1 && (!message.match(/mouse/) || JS9.DEBUG >= 3) ){
+	console.log(message);
+    }
 };
 
 // callback when mouse is clicked (down,up)
 PLUGIN.click = function(im, ipos, evt){
     var t = sprintf("click: ipos=%s,%s",
 		    ipos.x.toFixed(2), ipos.y.toFixed(2));
-    this.message(t, 1);
+    this.message(t, 2);
 };
 
 // callback when mouse is pressed

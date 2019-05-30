@@ -10628,6 +10628,18 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 		break;
 	    }
 	}
+	// plugin callbacks
+	if( obj && dlayer.display.image ){
+	    dlayer.display.image.updateShapes(layerName, obj, "unselect");
+	}
+    };
+    var selmultioff = function(dlayer, activeObject, s){
+	var i, obj;
+	var activeObjects = dlayer.canvas.getActiveObjects(s);
+	for(i=0; i<activeObjects.length; i++){
+	    obj = activeObjects[i];
+	    seloff(dlayer, obj);
+	}
     };
     var selon = function(dlayer, obj){
 	// turn off previous selection, if necessary
@@ -10655,8 +10667,12 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	if( dlayer.display.image ){
 	    dlayer.display.image.layer = layerName;
 	}
+	// plugin callbacks
+	if( obj && dlayer.display.image ){
+	    dlayer.display.image.updateShapes(layerName, obj, "select");
+	}
     };
-    var selmulti = function(dlayer, activeObject, s){
+    var selmultion = function(dlayer, activeObject, s){
 	var i, j, obj, parent, child;
 	var activeObjects = dlayer.canvas.getActiveObjects(s);
 	for(i=0; i<activeObjects.length; i++){
@@ -10683,6 +10699,10 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    case "polygon":
 		JS9.Fabric.removePolygonAnchors(dlayer, obj);
 		break;
+	    }
+	    // plugin callbacks
+	    if( obj && dlayer.display.image ){
+		dlayer.display.image.updateShapes(layerName, obj, "select");
 	    }
 	}
 	dlayer.canvas.renderAll();
@@ -11028,6 +11048,12 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    if( !opts.target ){ return; }
 	    selon(dlayer, opts.target);
 	});
+	// selection cleared
+	dlayer.canvas.on('before:selection:cleared', function (opts){
+	    // sanity check
+	    if( !opts.target ){ return; }
+	    seloff(dlayer, opts.target);
+	});
     } else {
 	// selection created: add anchors to polygon
 	dlayer.canvas.on("selection:created", function (opts){
@@ -11040,18 +11066,21 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	dlayer.canvas.on("selection:updated", function(opts){
 	    var activeObject = dlayer.canvas.getActiveObject();
 	    if( activeObject.type === 'activeSelection' ){
-		selmulti(dlayer, activeObject, opts);
+		selmultion(dlayer, activeObject, opts);
 	    } else {
 		selon(dlayer, activeObject);
 	    }
 	});
+	// selection cleared
+	dlayer.canvas.on('before:selection:cleared', function (opts){
+	    var activeObject = dlayer.canvas.getActiveObject();
+	    if( activeObject.type === 'activeSelection' ){
+		selmultioff(dlayer, activeObject, opts);
+	    } else {
+		seloff(dlayer, activeObject);
+	    }
+	});
     }
-    // selection cleared
-    dlayer.canvas.on('before:selection:cleared', function (opts){
-	// sanity check
-	if( !opts.target ){ return; }
-	seloff(dlayer, opts.target);
-    });
     // if canvas moves (e.g. light window), calcOffset must be called ...
     // there is no good cross-browser way to track an element changing,
     // (advice is to set a timer!) so we just check when the mouse enters the
@@ -19003,7 +19032,10 @@ JS9.mouseUpCB = function(evt){
     // inside a region, update region string
     if( im.clickInRegion && im.clickInLayer ){
 	if( isclick ){
-	    im.updateShapes(im.clickInLayer, "selected", "select");
+	    if( fabric.major_version === 1 ){
+		// for fabric v2+, done in selection:created callback
+		im.updateShapes(im.clickInLayer, "selected", "select");
+	    }
 	} else {
 	    im.updateShapes(im.clickInLayer, "selected", "update");
 	}
