@@ -15544,7 +15544,7 @@ JS9.Regions.parseRegions = function(s, opts){
     var comrexp  = /#(?![a-zA-Z0-9]{6}['"])/;
     // convert "0" to false and "1" to true
     var tf = function(s){
-	if( s === "0" || s === "false" ){return false;}
+	if( s === "0" || s.toLowerCase() === "false" ){return false;}
 	return true;
     };
     // ds9 compatibility: get properties from comment string
@@ -15592,7 +15592,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	opts = opts || {};
 	// loop through DS9 region properties, converting to js9 props
 	while( (xarr = rexp.exec(s)) !== null ){
-	    key = xarr[1];
+	    key = xarr[1].toLowerCase();
 	    val = xarr[2].replace(/^['"{]|['"}]$/g, "");
 	    if( ds9opts.hasOwnProperty(key) &&
 		typeof ds9opts[key] === "function" ){
@@ -15651,7 +15651,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	// look for comments
 	tobj.comment = t[1];
 	if( tobj.comment ){
-	    ds9props = ds9properties(tobj.comment.trim().toLowerCase());
+	    ds9props = ds9properties(tobj.comment.trim());
 	    if( ds9props._comment !== undefined ){
 		tobj.comment = ds9props._comment;
 		delete ds9props._comment;
