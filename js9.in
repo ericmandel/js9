@@ -121,23 +121,14 @@ case $OS in
 	      ELECTRON_EXE="$TRY"
 	  fi
   ;;
-  Darwin) TRY="${JS9_ELECTRON_APP}"
+  Darwin) TRIES="${JS9_ELECTRON_APP} ${HOME}/Applications/Electron.app/Contents/MacOS/Electron /Applications/Electron.app/Contents/MacOS/Electron /usr/local/lib/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+	  for TRY in $TRIES; do
 	  command -v "$TRY" 1>/dev/null 2>&1
 	  if [ $? = 0 ]; then
 	      ELECTRON_EXE="$TRY"
-	  else
-	      TRY="${HOME}/Applications/Electron.app/Contents/MacOS/Electron"
-	      command -v "$TRY" 1>/dev/null 2>&1
-	      if [ $? = 0 ]; then
-		  ELECTRON_EXE="$TRY"
-	      else
-		  TRY="/Applications/Electron.app/Contents/MacOS/Electron"
-		  command -v "$TRY" 1>/dev/null 2>&1
-		  if [ $? = 0 ]; then
-		      ELECTRON_EXE="$TRY"
-		  fi
-	      fi
+              break;
 	  fi
+	  done
   ;;
 esac
 
