@@ -151,7 +151,7 @@ JS9.globalOpts = {
     panWithinDisplay: false,	// keep panned image within the display?
     svgBorder: true,		// border around the display when saving to svg?
     unremoveReg: 100,           // how many removed regions to save
-    maxMemory: 750000000,	// max heap memory to allocate for a fits image
+    maxMemory: 1000000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",       // location of param html file
     proxyURL: "params/loadproxy.html",     // location of param html file
     loadProxy: false,           // do we allow proxy load requests to server?
@@ -2366,8 +2366,10 @@ JS9.Image.prototype.mkColorData = function(){
     var diff = dmax - dmin;
     var dval = length / diff;
     // allocate array
-    if( !this.colorData ){
-	this.colorData = [];
+    if( !this.colorData || this.colorData.length < dlen ){
+//	this.colorData = [];
+	if( this.colorData ){ this.colorData = null; }
+	this.colorData = new Int32Array(dlen);
     }
     // for each raw value, calculate lookup offset into scaled array
     for(i=0; i<dlen; i++){
@@ -18920,9 +18922,13 @@ JS9.fixPath = function(f, opts){
 	window.currentDir           &&
 	JS9.desktopOpts.currentPath &&
 	opts.fixpath !== false      &&
-	f.charAt(0) !== "/"         &&
 	!f.match(JS9.URLEXP)        ){
-	f = window.currentDir + "/" + f;
+	if( f.match(/^\${JS9_DIR}/) ){
+	    f = f.replace(/^\${JS9_DIR}\//,JS9.INSTALLDIR);
+	}
+	if( f.charAt(0) !== "/" ){
+	    f = window.currentDir + "/" + f;
+	}
     }
     return f;
 };
@@ -21169,7 +21175,7 @@ JS9.mkPublic("GetImageInherit", function(){
 
 // display in-page FITS images and png files
 JS9.mkPublic("Load", function(file, opts){
-    var i, s, im, ext, disp, display, func, blob, bytes, topts, tfile;
+    var i, s, im, ext, disp, display, func, blob, bytes, topts, tfile, text;
     var obj = JS9.parsePublicArgs(arguments);
     var ptype = "fits";
     file = obj.argv[0];
@@ -21362,16 +21368,17 @@ JS9.mkPublic("Load", function(file, opts){
 	// remove extension so we can find the file itself
 	file = JS9.fixPath(file, opts);
 	tfile = file.replace(/\[.*\]/, "");
+	text = ext.replace(/\[.*\]/, "");
 	// are we able to access a local file directly, without fetching?
 	// note to myself: cfitsio uncompresses .gz files into memory, so
 	// there is no benefit to having ".gz" in the localTemplates list.
 	if( JS9.localMount                              &&
-	    JS9.vsize(JS9.localMount + "/" + file) >= 0 &&
-	    $.inArray("."+ext, JS9.globalOpts.localTemplates.split(",")) >= 0){
+	    JS9.vsize(JS9.localMount + "/" + tfile) >= 0 &&
+	    $.inArray("."+text, JS9.globalOpts.localTemplates.split(",")) >= 0){
 	    // access local file directly
 	    topts = $.extend(true, {}, JS9.fits.options, opts);
 	    topts.file = file;
-	    topts.vfile = JS9.localMount + "/" + file;
+	    topts.vfile = JS9.localMount + "/" + tfile;
 	    // give spinner a chance to start up
 	    window.setTimeout(function(){
 		try{ JS9.handleFITSFile(file, topts, JS9.NewFitsImage); }
