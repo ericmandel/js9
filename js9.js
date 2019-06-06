@@ -119,6 +119,7 @@ JS9.globalOpts = {
     pngisfits: true,		// are PNGs really PNG representation files?
     fits2fits: "never",		// convert to repfile? always|never|size>x Mb
     fits2png: false,		// convert FITS to PNG rep files? true|false
+    localAccess: true,		// access files locally, when available?
     prependJS9Dir: true,        // prepend $JS9_DIR to relative fitsFile paths?
     dataDir: null,              // path to FITS data (def: use incoming path)
     alerts: true,		// set to false to turn off alerts
@@ -271,7 +272,7 @@ JS9.globalOpts = {
     debug: 0		             // debug level
 };
 
-// desktop (i.e. electron.js) defaults
+// desktop (i.e. Electron.js) defaults
 // always wrap access in if( window.isElectron ){}
 JS9.desktopOpts = {
     currentPath: true,              // files relative to current dir?
@@ -1013,7 +1014,7 @@ JS9.Image = function(file, params, func){
 	this.png.image.src = file;
 	break;
     default:
-	JS9.log("unknown specification type for Load: "+ typeof file);
+	JS9.error("unknown specification type for Load: "+ typeof file);
     }
 };
 
@@ -2367,8 +2368,6 @@ JS9.Image.prototype.mkColorData = function(){
     var dval = length / diff;
     // allocate array
     if( !this.colorData || this.colorData.length < dlen ){
-//	this.colorData = [];
-	if( this.colorData ){ this.colorData = null; }
 	this.colorData = new Int32Array(dlen);
     }
     // for each raw value, calculate lookup offset into scaled array
@@ -2379,7 +2378,6 @@ JS9.Image.prototype.mkColorData = function(){
 	} else if( dd >= dmax ){
 	    this.colorData[i] = ss - 1;
 	} else {
-//	    this.colorData[i] = Math.floor(((dd - dmin) / diff * length) + 0.5);
 	    this.colorData[i] = Math.floor(((dd - dmin) * dval) + 0.5);
 	}
     }
@@ -2659,7 +2657,7 @@ JS9.Image.prototype.mkScaledCells = function(){
 	}
 	break;
     default:
-	JS9.log("unknown scale '" + this.params.scale + "'");
+	JS9.error("unknown scale '" + this.params.scale + "'");
     }
     // allow chaining
     return this;
@@ -5523,7 +5521,6 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
 	    catch(e){ JS9.error("in aux text onload callback", e); }
 	}
     };
-    // define error function here to make JSLint happy
     // eslint-disable-next-line no-unused-vars
     var errFunc = function(jqXHR, textStatus, errorThrown){
 	JS9.log(sprintf("could not load auxiliary file: %s [%s]",
@@ -8837,12 +8834,13 @@ JS9.Display.prototype.addFileDialog = function(funcName, template){
     // add callback for when input changes
     jinput.on("change", function(){
 	var i;
+	var opts = {localAccess: true};
 	if( this.files.length ){
 	    JS9.waiting(true, that);
 	}
 	for(i=0; i<this.files.length; i++){
 	    // execute a JS9 public access routine
-	    JS9.publics[funcName](this.files[i], {display: that.id});
+	    JS9.publics[funcName](this.files[i], opts, {display: that.id});
 	}
 	this.value = null;
 	return false;
@@ -18933,6 +18931,33 @@ JS9.fixPath = function(f, opts){
     return f;
 };
 
+// return virtual path of a local access file, if warranted
+JS9.localAccess = function(file){
+    var tfile, text;
+    // only if local access is turned on and we have a local disk mounted
+    if( !file || !JS9.globalOpts.localAccess || !JS9.localMount ){
+	return null;
+    }
+    // get file without bracket extension
+    tfile = file.replace(/\[.*\]/, "");
+    // and file extension
+    text = "." + tfile.split(".").pop().toLowerCase();
+    // this is the candidate virtual file
+    tfile = JS9.localMount + "/" + tfile;
+    // check for existence
+    // note to myself: cfitsio uncompresses .gz files into memory, so
+    // there is no benefit to having ".gz" in the localTemplates list.
+    if( JS9.vsize(tfile) >= 0 &&
+	$.inArray(text, JS9.globalOpts.localTemplates.split(",")) >= 0){
+	if( JS9.DEBUG > 2 ){
+	    JS9.log("local access file: %s", tfile);
+	}
+	return tfile;
+    }
+    // no local access file
+    return null;
+};
+
 // get directory name of a file, including trailing "/";
 JS9.dirname = function(f){
     if( !f || f.indexOf("/") === -1 ){
@@ -19366,6 +19391,7 @@ JS9.dragdropCB = function(id, evt){
 	    } else {
 		JS9.waiting(true, display);
 		opts.refresh = JS9.globalOpts.refreshDragDrop;
+		opts.localAccess = true;
 		JS9.Load(file, opts, {display: opts.display});
 	    }
 	}
@@ -21175,7 +21201,7 @@ JS9.mkPublic("GetImageInherit", function(){
 
 // display in-page FITS images and png files
 JS9.mkPublic("Load", function(file, opts){
-    var i, s, im, ext, disp, display, func, blob, bytes, topts, tfile, text;
+    var i, s, im, ext, disp, display, func, blob, bytes, topts, tfile, vfile;
     var obj = JS9.parsePublicArgs(arguments);
     var ptype = "fits";
     file = obj.argv[0];
@@ -21219,7 +21245,7 @@ JS9.mkPublic("Load", function(file, opts){
     // handle blob containing FITS
     if( file instanceof Blob ){
 	if( file.path || file.name ){
-	    // new file (or, for Electron.js, the path, which is better)
+	    // new file (or, for Electron.js desktop, the path, which is better)
 	    opts.filename = file.path || file.name;
 	    // does this image already exist?
 	    if( typeof opts.refresh === "object" ){
@@ -21270,6 +21296,17 @@ JS9.mkPublic("Load", function(file, opts){
 	switch(ptype){
 	case "fits":
 	    topts = $.extend(true, {}, JS9.fits.options, opts);
+	    // for Electron.js desktop, see if we can access the path locally
+	    // (for blobs coming from drag/drop and openLocal)
+	    if( file.path && opts.localAccess ){
+		vfile = JS9.localAccess(file.path);
+		// if so, use the local file instead of storing a vfile
+		if( vfile ){
+		    file = file.path;
+		    topts.file = file;
+		    topts.vfile = vfile;
+		}
+	    }
 	    try{ JS9.handleFITSFile(file, topts, JS9.NewFitsImage); }
 	    catch(e){ JS9.error("can't process FITS file", e); }
 	    break;
@@ -21365,20 +21402,19 @@ JS9.mkPublic("Load", function(file, opts){
 	if( im && opts.refresh ){
 	    JS9.cleanupFITSFile(im.raw, true);
 	}
-	// remove extension so we can find the file itself
+	// file with possible Electron path fixes
 	file = JS9.fixPath(file, opts);
+	// remove extension so we can find the file itself
 	tfile = file.replace(/\[.*\]/, "");
-	text = ext.replace(/\[.*\]/, "");
 	// are we able to access a local file directly, without fetching?
 	// note to myself: cfitsio uncompresses .gz files into memory, so
 	// there is no benefit to having ".gz" in the localTemplates list.
-	if( JS9.localMount                              &&
-	    JS9.vsize(JS9.localMount + "/" + tfile) >= 0 &&
-	    $.inArray("."+text, JS9.globalOpts.localTemplates.split(",")) >= 0){
+	vfile = JS9.localAccess(file);
+	if( vfile ){
 	    // access local file directly
 	    topts = $.extend(true, {}, JS9.fits.options, opts);
 	    topts.file = file;
-	    topts.vfile = JS9.localMount + "/" + tfile;
+	    topts.vfile = vfile;
 	    // give spinner a chance to start up
 	    window.setTimeout(function(){
 		try{ JS9.handleFITSFile(file, topts, JS9.NewFitsImage); }

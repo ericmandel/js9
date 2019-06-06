@@ -314,7 +314,7 @@ colormaps to the three energy cuts, and then blend them into a single display:
 <p>
 Finally, the <b>--node</b> switch allows you to enable Node.js
 capabilities in a local (but not remote) web page environment. By
-default, this feature is turned off because, in principle, node
+default, this feature is turned off because, in principle, Node
 integration provides a greater attack surface for hackers. But since node
 integration is permitted only for local web pages, an attacker would have
 to be on your system ... so you're probably in big trouble anyway.
@@ -327,17 +327,20 @@ That said, there are two good reasons for turning on node integration:
 </ul>
 
 <p>
-When node integration is enabled, the JS9 app will mount the local
-file system inside the web page and access FITS files directly, instead
-of fetching and storing them in browser memory. This can speed up the
-load/display time considerably, while minimizing the use of a browser
-memory. The list of file extensions which are accessed directly in this way
-is specified by the global property <b>JS9.globalOpts.localTemplates</b>,
-which defaults to <b>.fits</b> and <b>.fts</b>. Note that bzip'ed
-(.bz2) and gzip'ed (.gz) files are not accessed directly: the former are
-not supported by the CFITSIO FITS access library, while the latter are
-supported by uncompressing the file in memory, which is done more efficiently
-by JS9 itself.
+When node integration is enabled, the JS9 app will (subject to the
+boolean value of the <b>JS9.globalOpts.localAccess</b> property) mount
+the local file system inside the web page and access FITS files
+directly, instead of fetching and storing them in browser memory. This
+can speed up the load/display time considerably, while minimizing the
+use of a browser memory. The list of file extensions which are
+accessed directly in this way is specified by the
+<b>JS9.globalOpts.localTemplates</b> property, which defaults
+to <b>.fits</b> and <b>.fts</b>. Note that bzip'ed (.bz2) and gzip'ed
+(.gz) files are not accessed directly: the former are not supported by
+the CFITSIO FITS access library, while the latter are supported by
+uncompressing the file in memory, which is done more efficiently by
+JS9 itself. Also, symbolic links currently are not accessed directly.
+We expect to remove this restriction in the near future.
 
 <p>
 With node integration, you can also run scripts that access local
@@ -426,7 +429,7 @@ Electron.js security</a> for more information.
 You should update your copy of Electron.js periodically to ensure that you
 have the latest security fixes in place.
 
-<h5>Last updated: May 24, 2019</h5>
+<h5>Last updated: June 5, 2019</h5>
 </div>
 
 </body>
