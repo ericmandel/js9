@@ -364,7 +364,7 @@ include:
 <li> other: another image is loaded into this display
 <li> none: no image is loaded into this display
 </ul>
-Thus, to check for image load, one can do this in python:
+Thus, to check for image load, one can do this in Python:
 <pre>
     tfits = "foo.fits"
     hdul = fits.open(tfits)
@@ -474,10 +474,10 @@ This is not a reference to the real data and will utilize
 additional memory, but the values can be manipulated safely.
 <p>
 If <b>dflag</b> is the string "base64", a base64-encoded string is
-returned.  Oddly, this seems to be the fastest method of transferring
-data to via socket.io an external process such as Python, and, in fact, 
-is the method used by the pyjs9.py interface. (The "array" method also can 
-be used, but seems to be slower.)
+returned.  Early on, this seems to be the fastest method of
+transferring data via socket.io an external process such as
+Python. Currently, the "array" method should generally be used (this
+is now the default for the pyjs9 interface to Python).
 
 <p>
 The <b>file</b> value can be a FITS file or a representation PNG file. The
@@ -4970,7 +4970,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: April 17, 2019</h5>
+<h5>Last updated: June 5, 2019</h5>
 </div>
 
 </body>
