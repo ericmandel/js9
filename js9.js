@@ -584,7 +584,7 @@ if( window.isElectron ){
     JS9.hasNode = typeof process === "object" && typeof require === "function";
     // mount point for local file system, based on hostname
     if( JS9.hasNode ){
-	JS9.localMount = require("os").hostname();
+	JS9.localMount = require("os").hostname() || "localAccess";
     }
 }
 
