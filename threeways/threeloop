@@ -5,7 +5,7 @@ WEBPAGE=$HOME/js9/threeways/threeways_app.html
 WIDTH=660
 HEIGHT=880
 ID=threeJS9
-PYTHON=python
+PYTHON=python3
 
 js9 -a --width $WIDTH --height $HEIGHT --webpage $WEBPAGE $* &
 sleep 2

@@ -89,3 +89,5 @@ time.sleep(timeout)
 print('blend the images')
 print('    j.BlendDisplay(True)')
 j.BlendDisplay(True)
+
+j.close()
