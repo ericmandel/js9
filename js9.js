@@ -4971,7 +4971,7 @@ JS9.Image.prototype.lookupAnalysis = function(name){
 
 // execute analysis task
 JS9.Image.prototype.runAnalysis = function(name, opts, func){
-    var i, a, m;
+    var i, a, m, ropts;
     var that = this;
     var obj = {};
     var analError = function(s, t){
@@ -5134,15 +5134,36 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		}
 		break;
 	    case "regions":
-		// output is region file
+		// output is region file (or region string), optional opts
 		files = robj.stdout.split(/\s+/);
 		if( files && files[0] ){
-		    f = JS9.cleanPath(files[0]);
-		    // load new region file
-		    obj = {responseType: "text"};
-		    JS9.fetchURL(null, f, obj, function(regions, opts){
-			that.addShapes("regions", regions, opts);
-		    });
+		    // see if a json opts was returned
+		    if( files.length > 1 ){
+			try{ ropts = JSON.parse(files[1]); }
+			catch(e){ ropts = null; }
+		    }
+		    ropts = ropts || {};
+		    if( typeof ropts.remove === "boolean" ){
+			ropts.remove = "all";
+		    }
+		    if( ropts.type === "string" ){
+			// region string was passed directly
+			if( ropts.remove ){
+			    that.removeShapes("regions", ropts.remove);
+			}
+			that.addShapes("regions", files[0], opts);
+		    } else {
+			// region file was passed, we have to fetch it
+			f = JS9.cleanPath(files[0]);
+			// load new region file
+			obj = {responseType: "text"};
+			JS9.fetchURL(null, f, obj, function(regions, opts){
+			    if( ropts.remove ){
+				that.removeShapes("regions", ropts.remove);
+			    }
+			    that.addShapes("regions", regions, opts);
+			});
+		    }
 		}
 		break;
 	    case "catalog":
