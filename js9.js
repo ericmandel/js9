@@ -5129,6 +5129,8 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    }
 		    // don't convert this FITS file into another FITS file!
 		    xobj.fits2fits = false;
+		    // don't fix the path for desktop
+		    xobj.fixpath = false;
 		    // load new file
 	            JS9.Load(f, xobj, {display: that.display});
 		}
