@@ -1,4 +1,4 @@
-/*global Blob, Uint8Array, Int16Array, Uint16Array, Int32Array, Float32Array, Float64Array, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue,  UTF8ToString getCFunc assert toC stackSave stackAlloc EmterpreterAsync stackRestore, NODEFS */
+/*global Blob, Uint8Array, Int16Array, Uint16Array, Int32Array, Float32Array, Float64Array, FileReader, Module, FS, ccall, _malloc, _free, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPF32, HEAPF64, setValue, getValue,  UTF8ToString getCFunc assert stackSave stackAlloc EmterpreterAsync stackRestore, stringToUTF8, writeArrayToMemory, NODEFS */
 
 /* eslint-disable dot-notation */
 
@@ -700,6 +700,27 @@ Module["ccall_varargs"] = function(ident, returnType, argTypes, args, opts) {
     var vSpecifiers=[[], []], vSpecifiersLen;
     var vArgs=[], vArgsLen;
     var vStack, vStackCur;
+    // taken from emscripten/src/preamble.js
+    var toC = {
+	'string': function(str) {
+	    var len;
+	    var ret = 0;
+	    if (str !== null && str !== undefined && str !== 0) {
+		// null string
+	        // at most 4 bytes per UTF-8 code point,+1 for the trailing '\0'
+		// eslint-disable-next-line no-bitwise
+		len = (str.length << 2) + 1;
+		ret = stackAlloc(len);
+		stringToUTF8(str, ret, len);
+	    }
+	    return ret;
+	},
+	'array': function(arr) {
+	    var ret = stackAlloc(arr.length);
+	    writeArrayToMemory(arr, ret);
+	    return ret;
+	}
+    };
     var vToStack = function(item, offset, type) {
       var vrem;
       switch (type) {
