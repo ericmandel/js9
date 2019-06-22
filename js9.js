@@ -4969,6 +4969,22 @@ JS9.Image.prototype.lookupAnalysis = function(name){
     return a;
 };
 
+// return object containing analysis task definitions
+JS9.Image.prototype.getAnalysis = function(){
+    var i, j, t, tasks;
+    var obj = [];
+    for(j=0; j<this.analysisPackages.length; j++){
+	tasks = this.analysisPackages[j];
+	for(i=0; i<tasks.length; i++){
+	    t = tasks[i];
+	    if( !t.hidden ){
+		obj.push(t);
+	    }
+	}
+    }
+    return obj;
+};
+
 // execute analysis task
 JS9.Image.prototype.runAnalysis = function(name, opts, func){
     var i, a, m, ropts;
@@ -20955,6 +20971,7 @@ JS9.mkPublic("CountsInRegions", "countsInRegions");
 JS9.mkPublic("RadialProfile", "radialProfile");
 JS9.mkPublic("Plot3D", "plot3d");
 JS9.mkPublic("RunAnalysis", "runAnalysis");
+JS9.mkPublic("GetAnalysis", "getAnalysis");
 JS9.mkPublic("RawDataLayer", "rawDataLayer");
 JS9.mkPublic("GaussBlurData", "gaussBlurData");
 JS9.mkPublic("ImarithData", "imarithData");

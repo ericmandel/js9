@@ -3829,7 +3829,27 @@ new action.
   
 <h4 id="server">Server-side Analysis</h4>
 
-<h5 id="JS9.RunAnalysis">Run a simple server-side analysis task</h5>
+<h5 id="JS9.GetAnalysis">Get server-side analysis task definitions</h5>
+<p>
+<code class="api">JS9.GetAnalysis()</code>
+<p>
+The <b>JS9.GetAnalysis()</b> routine returns an array of analysis task
+definitions, each containing the following information:
+<ul>
+<li><b>name:</b> a short identifier string (typically one word)
+<li><b>title:</b> a longer string that will be displayed in the Analysis menu
+<li><b>files:</b> a rule that will be matched against to determine
+whether this task is available for the current image
+<li><b>purl:</b> a URL pointing to a web page containing a user parameter form
+<li><b>action:</b> the command to execute on the server side
+<li><b>rtype:</b> a return type, which can be <b>text</b>, <b>plot</b>, <b>fits</b>, <b>png</b>, <b>regions</b>, <b>catalog</b>, <b>alert</b>, or <b>none</b>
+<li><b>hidden:</b> if true, the analysis task is not shown in the Analysis menu
+</ul>
+Not every property listed above will be present in every task definition
+(e.g., <b>purl</b> is only present when there is a parameter form).
+Also note that hidden tasks are not returned by this call.
+
+<h5 id="JS9.RunAnalysis">Run a server-side analysis task</h5>
 <p>
 <code class="api">JS9.RunAnalysis(name, parr, func)</code>
 <p>
@@ -4970,7 +4990,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: June 5, 2019</h5>
+<h5>Last updated: June 21, 2019</h5>
 </div>
 
 </body>
