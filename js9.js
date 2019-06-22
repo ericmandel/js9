@@ -4969,6 +4969,83 @@ JS9.Image.prototype.lookupAnalysis = function(name){
     return a;
 };
 
+// validate a task against rules contained in the files parameter
+JS9.Image.prototype.validateAnalysis = function(atask){
+    var s, parr;
+    var imexp = /imVar\((.*),(.*)\)/;
+    var js9exp = /js9Var\((.*),(.*)\)/;
+    var parexp = /fitsHeader\(([A-Za-z0-9_]+),(.*)\)/;
+    var winexp = /winVar\((.*),(.*)\)/;
+    var seq = function(s1, s2){
+	if( !s1 || !s2 ){
+	    return false;
+	}
+	return String(s1).toUpperCase() === String(s2).toUpperCase();
+    };
+    // sanity check
+    if( !atask.title || !atask.name ){
+	return false;
+    }
+    // is this task hidden?
+    if( atask.hidden ){
+	return false;
+    }
+    // file validators
+    if( atask.files ){
+	if( atask.files.match(/^fits$/) &&
+	    !this.fitsFile ){
+	    return false;
+	}
+	if( atask.files.match(/^png$/) &&
+	    (this.source !== "fits2png") ){
+	    return false;
+	}
+	if( atask.files.match(/^table$/) ){
+	    if( this.imtab !== "table" ){
+		return false;
+	    }
+	}
+	if( atask.files.match(/^image$/) ){
+	    if( this.imtab !== "image" ){
+		return false;
+	    }
+	}
+	// header params: fitsHeader(pname,pvalue)
+	parr = atask.files.match(parexp);
+	if( parr ){
+	    s = this.raw.header[parr[1].toUpperCase()];
+	    if( !seq(s, parr[2]) ){
+		return false;
+	    }
+	}
+	// win vars: winVar(name,value)
+	parr = atask.files.match(winexp);
+	if( parr ){
+	    s = JS9.varByName(parr[1], window);
+	    if( !seq(s, parr[2]) ){
+		return false;
+	    }
+	}
+	// js9 vars: js9Var(name,value)
+	parr = atask.files.match(js9exp);
+	if( parr ){
+	    s = JS9.varByName(parr[1], JS9);
+	    if( !seq(s, parr[2]) ){
+		return false;
+	    }
+	}
+	// im vars: imVar(name,value)
+	parr = atask.files.match(imexp);
+	if( parr ){
+	    s = JS9.varByName(parr[1], this);
+	    if( !seq(s, parr[2]) ){
+		return false;
+	    }
+	}
+    } // end of file validators
+    return true;
+};
+
 // return object containing analysis task definitions
 JS9.Image.prototype.getAnalysis = function(){
     var i, j, t, tasks;
@@ -4977,7 +5054,7 @@ JS9.Image.prototype.getAnalysis = function(){
 	tasks = this.analysisPackages[j];
 	for(i=0; i<tasks.length; i++){
 	    t = tasks[i];
-	    if( !t.hidden ){
+	    if( this.validateAnalysis(t) ){
 		obj.push(t);
 	    }
 	}

@@ -2565,11 +2565,6 @@ JS9.Menubar.createMenus = function(){
         build: function(){
 	    var i, j, s, apackages, atasks;
 	    var plugin, pinst, pname;
-	    var parr;
-	    var parexp = /fitsHeader\(([A-Za-z0-9_]+),(.*)\)/;
-	    var winexp = /winVar\((.*),(.*)\)/;
-	    var js9exp = /js9Var\((.*),(.*)\)/;
-	    var imexp = /imVar\((.*),(.*)\)/;
 	    var ntask = 0;
 	    var n = 0;
 	    // var m = 0;
@@ -2577,13 +2572,6 @@ JS9.Menubar.createMenus = function(){
 	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
 	    var im = tdisp.image;
 	    var lastxclass="";
-	    var seq = function(s1, s2){
-		if( !s1 || !s2 ){
-		    return false;
-		}
-		return String(s1).toUpperCase() === 
-		    String(s2).toUpperCase();
-	    };
 	    var editAnalysis = function(im, obj){
 		delete tdisp.tmp.editingMenu;
 		obj.sigma = obj.sigma || "0";
@@ -2685,67 +2673,9 @@ JS9.Menubar.createMenus = function(){
 		    for(j=0; j<apackages.length; j++){
 			atasks = apackages[j];
 			for(i=0; i<atasks.length; i++){
-			    // sanity check
-			    if( !atasks[i].title || !atasks[i].name ){
+			    if( !im.validateAnalysis(atasks[i]) ){
 				continue;
 			    }
-			    // is this task hidden?
-			    if( atasks[i].hidden ){
-				continue;
-			    }
-			    // file validators
-			    if( atasks[i].files ){
-			    if( atasks[i].files.match(/^fits$/) &&
-				!im.fitsFile ){
-				continue;
-			    }
-			    if( atasks[i].files.match(/^png$/) &&
-				(im.source !== "fits2png") ){
-				continue;
-			    }
-			    if( atasks[i].files.match(/^table$/) ){
-				if( im.imtab !== "table" ){
-				    continue;
-				}
-			    }
-			    if( atasks[i].files.match(/^image$/) ){
-				if( im.imtab !== "image" ){
-				    continue;
-				}
-			    }
-			    // header params: fitsHeader(pname,pvalue)
-			    parr = atasks[i].files.match(parexp);
-			    if( parr ){
-				s = im.raw.header[parr[1].toUpperCase()];
-				if( !seq(s, parr[2]) ){
-				    continue;
-				}
-			    }
-			    // win vars: winVar(name,value)
-			    parr = atasks[i].files.match(winexp);
-			    if( parr ){
-				s = JS9.varByName(parr[1], window);
-				if( !seq(s, parr[2]) ){
-				    continue;
-				}
-			    }
-			    // js9 vars: js9Var(name,value)
-			    parr = atasks[i].files.match(js9exp);
-			    if( parr ){
-				s = JS9.varByName(parr[1], JS9);
-				if( !seq(s, parr[2]) ){
-				    continue;
-				}
-			    }
-			    // im vars: imVar(name,value)
-			    parr = atasks[i].files.match(imexp);
-			    if( parr ){
-				s = JS9.varByName(parr[1], im);
-				if( !seq(s, parr[2]) ){
-				    continue;
-				}
-			    }
-			    } // end of file validators
 			    // separator
 			    if( atasks[i].rtype &&
 				atasks[i].rtype.match(/^---/) ){
