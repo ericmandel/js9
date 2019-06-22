@@ -42,6 +42,7 @@ var analysis = {str:[], pkgs:[]};
 var plugins = [];
 var js9Queue = {};
 var rmQueue = {};
+var merges = {};
 
 // secure options ... change as necessary in securefile
 var secureOpts = {
@@ -439,6 +440,9 @@ var loadHelperPlugins = function(dir){
 // merge a directory containing analysis tasks, etc.
 var mergeDirectory = function(dir){
     var s, stat, mergeTo;
+    // only merge once
+    if( merges[dir] ){ return; }
+    // look for directory info
     try{ stat = fs.statSync(dir); } catch(e){ stat = null; }
     if( !stat || !stat.isDirectory() ){
 	s = "invalid merge directory: " + (dir || "<none>");
@@ -466,6 +470,8 @@ var mergeDirectory = function(dir){
 	    }
 	}
     });
+    // we have merged this dir
+    merges[dir] = true;
     clog("merge: %s", dir);
     return "OK";
 };
