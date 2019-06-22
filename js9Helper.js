@@ -760,7 +760,8 @@ var execCmd = function(io, socket, obj, cbfunc) {
     clog("exec: %s [%s]", cmd, args.slice(1));
     // execute the analysis script with cmd arguments
     // NB: can't use exec because the shell breaks, e.g. region command lines
-    child = cproc.execFile(cmd, args.slice(1),
+    try{
+	child = cproc.execFile(cmd, args.slice(1),
 		   { encoding: "utf8",
 		     timeout: 0,
 		     maxBuffer: maxbuf,
@@ -793,12 +794,18 @@ var execCmd = function(io, socket, obj, cbfunc) {
 		       // send results back to browser
 		       if( cbfunc ){ cbfunc(res); }
 		   });
-    // first time through: save child for uploading data
-    if( obj.stdin === true ){
-	// save child so we can process future chunks of data
-	socket.js9.child = child;
-	// set up to send raw data
-	socket.js9.child.stdin.setEncoding = 'binary';
+	// first time through: save child for uploading data
+	if( obj.stdin === true ){
+	    // save child so we can process future chunks of data
+	    socket.js9.child = child;
+	    // set up to send raw data
+	    socket.js9.child.stdin.setEncoding = 'binary';
+	}
+    } catch(e){
+	// send exec error back to browser
+	res.stderr = `ERROR: could not exec ${cmd}: ${e.message}`;
+	res.stdout = null;
+	if( cbfunc ){ cbfunc(res); }
     }
 };
 
