@@ -5050,6 +5050,11 @@ JS9.Image.prototype.validateAnalysis = function(atask){
 JS9.Image.prototype.getAnalysis = function(){
     var i, j, t, tasks;
     var obj = [];
+    // sanity check
+    if( !this.analysisPackages ){
+	return obj;
+    }
+    // return validated tasks
     for(j=0; j<this.analysisPackages.length; j++){
 	tasks = this.analysisPackages[j];
 	for(i=0; i<tasks.length; i++){
