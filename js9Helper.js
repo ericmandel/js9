@@ -339,14 +339,18 @@ var loadPreferences = function(prefs){
 		globalOpts[s] = path.join(installDir, file);
 	    }
 	});
+	// initialize the wrapper path, if necessary
+	if( !globalOpts.analysisWrapPath){
+	    globalOpts.analysisWrapPath = globalOpts.analysisWrappers;
+	}
     }
 };
 
 // load analysis plugin files, if available
-var loadAnalysisTasks = function(dir){
+var loadAnalysisTasks = function(dir, todir){
     if( fs.existsSync(dir) ){
 	fs.readdir(dir, function(err, files){
-	    var i, jstr, pathname;
+	    var i, j, a, arr, jstr, pathname;
 	    for(i=0; i<files.length; i++){
 		pathname = dir + "/" + files[i];
 		if( fs.existsSync(pathname) ){
@@ -372,8 +376,21 @@ var loadAnalysisTasks = function(dir){
 			    break;
 			default:
 			    try{
-				analysis.pkgs.push(JSON.parse(jstr));
-				analysis.str.push(jstr);
+				arr = JSON.parse(jstr);
+				// todir defined => prepend it to paths
+				if( todir && arr ){
+				    for(j=0; j<arr.length; j++){
+					a = arr[j];
+					if( a.purl ){
+					    a.purl = todir + "/" + a.purl;
+					}
+				    }
+				    analysis.pkgs.push(arr);
+				    analysis.str.push(JSON.stringify(arr));
+				} else {
+				    analysis.pkgs.push(arr);
+				    analysis.str.push(jstr);
+				}
 			    }
 			    catch(e2){cerr("can't parse: ", pathname, e2);}
 			    break;
@@ -417,6 +434,40 @@ var loadHelperPlugins = function(dir){
 	    }
 	});
     }
+};
+
+// merge a directory containing analysis tasks, etc.
+var mergeDirectory = function(dir){
+    var s, stat, mergeTo;
+    try{ stat = fs.statSync(dir); } catch(e){ stat = null; }
+    if( !stat || !stat.isDirectory() ){
+	s = "invalid merge directory: " + (dir || "<none>");
+	clog(s);
+	return s;
+    }
+    // how to get from merge dir to install dir
+    mergeTo = path.relative(__dirname, dir);
+    // process entries in the merge directory
+    fs.readdir(dir, function(err, files){
+	let i, file;
+	for(i=0; i<files.length; i++){
+	    file = files[i];
+	    switch(file){
+	    case "analysis-wrappers":
+		globalOpts.analysisWrapPath += ":" + dir + "/analysis-wrappers";
+		break;
+	    case "analysis-plugins":
+		loadAnalysisTasks(dir + "/analysis-plugins", mergeTo);
+		break;
+	    case "params":
+		break;
+	    default:
+		break;
+	    }
+	}
+    });
+    clog("merge: %s", dir);
+    return "OK";
 };
 
 // parse an argument string into an array of arguments, where
@@ -509,7 +560,7 @@ var getDataPath = function(s){
 };
 
 // see if a file exists in the dataPath
-var getFilePath = function(file, dataPath, myenv){
+var getFilePath = function(file, dataPath, myenv, dohide){
     var i, s, s1, froot1, fext, parr;
     var from, to;
     // eslint-disable-next-line no-unused-vars
@@ -563,6 +614,9 @@ var getFilePath = function(file, dataPath, myenv){
 	    }
 	    // found the file add extension to full path
 	    s1 += fext;
+	    if( dohide === false ){
+		return s1;
+	    }
 	    return hide(s1);
 	}
     }
@@ -680,8 +734,17 @@ var execCmd = function(io, socket, obj, cbfunc) {
 	    myenv.JS9_WORKDIR = socket.js9.rworkDir;
 	    myenv.JS9_WORKDIR_QUOTA = globalOpts.workDirQuota;
 	}
-	// construct wrapper
-	cmd = globalOpts.analysisWrappers + "/" + args[0];
+	// construct wrapper path
+	// cmd = globalOpts.analysisWrappers + "/" + args[0];
+	// get path of wrapper script
+	cmd = getFilePath(args[0], globalOpts.analysisWrapPath, myenv, false);
+	if( !cmd ){
+	    if( cbfunc ){
+		res.stderr = "can't find JS9 wrapper script: " + args[0];
+		cbfunc(res);
+	    }
+	    return;
+	}
 	// make path absolute in case we change directories
 	if( cmd.charAt(0) !== "/" ){
 	    cmd = installDir + "/" + cmd;
@@ -795,9 +858,29 @@ var sendMsg = function(io, socket, obj, cbfunc) {
     };
     // get list of targets to send to
     targets = getTargets(io, socket, obj);
-    // was that all that's wanted?
-    if( obj.cmd === "targets" ){
+    // commands not going to a browser
+    switch(obj.cmd){
+    case "alive":
+	myfunc("OK");
+	return;
+    case "merge":
+	myfunc(mergeDirectory(obj.args[0]));
+	return;
+    case "targets":
 	myfunc(targets.length);
+	return;
+    case "getAnalysis":
+	sendAnalysisTasks(io, socket, obj, cbfunc);
+	return;
+    case "addDisplay":
+    case "renameDisplay":
+    case "worker":
+    case "image":
+    case "runAnalysis":
+    case "fits2fits":
+    case "fits2png":
+    case "quotacheck":
+	myfunc("ERROR: " + obj.cmd + " not available via js9 messaging script");
 	return;
     }
     // look for one target (or else that multi is allowed)
@@ -956,6 +1039,15 @@ var socketioHandler = function(socket) {
     // on alive: return "OK" to signal a valid connection
     socket.on("alive", function(obj, cbfunc) {
 	    if( cbfunc ){ cbfunc("OK"); }
+    });
+    // on merge: merge analysis tasks from specified directory
+    // for other implementations, this is needed if you want to:
+    // add new analysis tasks from sources external to the installed code
+    socket.on("merge", function(obj, cbfunc) {
+	var s;
+	if( !obj || !obj.directory ){return;}
+	s = mergeDirectory(obj.directory);
+	if( cbfunc ){ cbfunc(s); }
     });
     // on image: signal from JS9 that a new or redisplayed image is active
     // returns: [input file path, fits file path, fits + extension]
@@ -1331,10 +1423,15 @@ loadPreferences(prefsfile);
 
 // override preferences with json on the command line
 // but only if we are in a basic node program (i.e not Electron)
-if( (myProg === "node" || myProg === "nodejs") &&
-    myArgs && myArgs.length > 0                ){
-    for(i=0; i<myArgs.length; i++){
-	loadPreferences(myArgs[i]);
+if( myProg === "node" || myProg === "nodejs" ){
+    if( myArgs && myArgs.length > 0 ){
+	for(i=0; i<myArgs.length; i++){
+	    loadPreferences(myArgs[i]);
+	}
+    }
+} else {
+    if( process.env.JS9_HELPER_PREFS ){
+	loadPreferences(process.env.JS9_HELPER_PREFS);
     }
 }
 
@@ -1343,6 +1440,11 @@ loadAnalysisTasks(globalOpts.analysisPlugins);
 
 // load user-defined plugins
 loadHelperPlugins(globalOpts.helperPlugins);
+
+// merge, if necessary
+if( globalOpts.merge ){
+    mergeDirectory(globalOpts.merge);
+}
 
 // start up http server
 if( secure ){
