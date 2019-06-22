@@ -31,5 +31,5 @@
    "purl"   : "./params/evfilter.html",
    "action" : "js9Xeq evfilter $filename $filter $imcenter $dims",
    "pwin"   : "width=830px,height=218px,center=1,resize=1,scrolling=1",
-   "rtype"  : "png"}
+   "rtype"  : "fits"}
 ]
