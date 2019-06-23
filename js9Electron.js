@@ -205,7 +205,7 @@ function initWillDownload() {
 
 // create a new window for a JS9 web page
 function createWindow() {
-    let f, s, cmd, icon;
+    let f, s, cmd, icon, todir;
     let ncmd=0;
     let xcmds = "";
     // set dock icon for Mac
@@ -248,21 +248,13 @@ function createWindow() {
 	// read new html file and convert possibly bogus path from js9 files
 	// we will specify a base URL instead
 	if( js9Electron.mergePage ){
+	    todir = path.relative(__dirname, js9Electron.merge);
 	    s = fs.readFileSync(js9Electron.mergePage, "utf-8")
+		.replace(/((href|src)=['"])([^/]*)(['"])/g, `$1${todir}/$3$4`)
+		.replace(/((href|src)=['"])\.\//g, `$1${todir}/`)
+		.replace(/((href|src)=['"]).*\/js9\//g, `$1`)
 	        .replace(/<base.*>/, "")
-	        .replace(/(<head>)/, `$1\n  <base href="file://${__dirname}/">`)
-		.replace(/(href=['"])(.*)\/(js9support\.css['"])/,
-			 `$1$3`)
-		.replace(/(href=['"])(.*)\/(js9\.css['"])/,
-			 `$1$3`)
-		.replace(/(src=['"])(.*)\/(js9prefs\.js['"])/,
-			 `$1$3`)
-		.replace(/(src=['"])(.*)\/(js9support(\.min)?\.js['"])/,
-			 `$1$3`)
-		.replace(/(src=['"])(.*)\/(js9(\.min)?\.js['"])/,
-			 `$1$3`)
-		.replace(/(src=['"])(.*)\/(js9plugins(\.min)?\.js['"])/,
-			 `$1$3`);
+	        .replace(/(<head>)/, `$1\n<base href="file://${__dirname}/">`);
 	    f = js9Electron.tmp + "/" + path.basename(js9Electron.mergePage);
 	    fs.writeFileSync(f, s);
 	    // save name of the merged webpage for deletion
