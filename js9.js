@@ -5173,6 +5173,10 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    } else {
 			// region file was passed, we have to fetch it
 			f = JS9.cleanPath(files[0]);
+			// relative path: add install dir prefix
+			if( f.charAt(0) !== "/" ){
+			    f = JS9.InstallDir(f);
+			}
 			// load new region file
 			obj = {responseType: "text"};
 			JS9.fetchURL(null, f, obj, function(regions, opts){
