@@ -441,18 +441,18 @@ var loadHelperPlugins = function(dir){
 var mergeDirectory = function(dir){
     var s, stat, mergeTo;
     // only merge once
-    if( merges[dir] ){ return; }
+    if( merges[dir] ){ return "OK"; }
     // look for directory info
     try{ stat = fs.statSync(dir); } catch(e){ stat = null; }
     if( !stat || !stat.isDirectory() ){
-	s = "invalid merge directory: " + (dir || "<none>");
+	s = "ERROR: invalid merge directory: " + (dir || "<none>");
 	clog(s);
 	return s;
     }
     // how to get from merge dir to install dir
     mergeTo = path.relative(__dirname, dir);
     // process entries in the merge directory
-    fs.readdir(dir, function(err, files){
+    try{ fs.readdir(dir, function(err, files){
 	let i, file;
 	for(i=0; i<files.length; i++){
 	    file = files[i];
@@ -469,7 +469,12 @@ var mergeDirectory = function(dir){
 		break;
 	    }
 	}
-    });
+    }); }
+    catch(e){
+	s = "ERROR: can't read files from merge directory: " + dir;
+	clog(s);
+	return s;
+    }
     // we have merged this dir
     merges[dir] = true;
     clog("merge: %s", dir);
