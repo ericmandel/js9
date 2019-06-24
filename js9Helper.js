@@ -28,7 +28,7 @@ var http = require('http'),
     rmdir = require('rimraf');
 
 // internal variables
-var i, app, io, secure, envs;
+var i, app, io, secure;
 var myProg = process.argv[0].split("/").reverse()[0];
 var myArgs = process.argv.slice(2);
 var installDir = __dirname;
@@ -453,15 +453,28 @@ var mergeDirectory = function(dir){
     mergeTo = path.relative(__dirname, dir);
     // process entries in the merge directory
     try{ fs.readdir(dir, function(err, files){
-	let i, file;
+	let d, i, file, stat;
 	for(i=0; i<files.length; i++){
 	    file = files[i];
+	    d = dir + "/" + file;
 	    switch(file){
 	    case "analysis-wrappers":
-		globalOpts.analysisWrapPath += ":" + dir + "/analysis-wrappers";
+		try{ stat = fs.statSync(d); } catch(e){ stat = null; }
+		if( stat && stat.isDirectory() ){
+		    globalOpts.analysisWrapPath += ":" + d;
+		}
 		break;
 	    case "analysis-plugins":
-		loadAnalysisTasks(dir + "/analysis-plugins", mergeTo);
+		try{ stat = fs.statSync(d); } catch(e){ stat = null; }
+		if( stat && stat.isDirectory() ){
+		    loadAnalysisTasks(d, mergeTo);
+		}
+		break;
+	    case "bin":
+		try{ stat = fs.statSync(d); } catch(e){ stat = null; }
+		if( stat && stat.isDirectory() ){
+		    process.env.PATH += ":" + d;
+		}
 		break;
 	    case "params":
 		break;
@@ -660,7 +673,7 @@ var execCmd = function(io, socket, obj, cbfunc) {
     var myip = getHost(io, socket);
     var myid = obj.id;
     var myrtype = obj.rtype || "binary";
-    var myenv = JSON.parse(envs);
+    var myenv = process.env;
     var res = {stdout: null, stderr: null, errcode: 0,
 	       encoding: globalOpts.textEncoding};
     // sanity check
@@ -869,7 +882,7 @@ var pageReady = function(io, socket, obj, cbfunc, tries){
 // sendMsg: send a message to the browser
 // this is the default callback for external communication with JS9
 var sendMsg = function(io, socket, obj, cbfunc) {
-    var i, targets;
+    var i, myip, targets;
     // callback function
     var myfunc = function(s){
 	if( cbfunc ){ cbfunc(s); }
@@ -882,7 +895,11 @@ var sendMsg = function(io, socket, obj, cbfunc) {
 	myfunc("OK");
 	return;
     case "merge":
-	myfunc(mergeDirectory(obj.args[0]));
+	// local connections only
+	myip = getHost(io, socket);
+	if( (myip === "127.0.0.1") || (myip === "::ffff:127.0.0.1") ){
+	    myfunc(mergeDirectory(obj.args[0]));
+	}
 	return;
     case "targets":
 	myfunc(targets.length);
@@ -1063,9 +1080,13 @@ var socketioHandler = function(socket) {
     // add new analysis tasks from sources external to the installed code
     socket.on("merge", function(obj, cbfunc) {
 	var s;
-	if( !obj || !obj.directory ){return;}
-	s = mergeDirectory(obj.directory);
-	if( cbfunc ){ cbfunc(s); }
+	var myip = getHost(io, socket);
+	// local connections only
+	if( (myip === "127.0.0.1") || (myip === "::ffff:127.0.0.1") ){
+	    if( !obj || !obj.directory ){return;}
+	    s = mergeDirectory(obj.directory);
+	    if( cbfunc ){ cbfunc(s); }
+	}
     });
     // on image: signal from JS9 that a new or redisplayed image is active
     // returns: [input file path, fits file path, fits + extension]
@@ -1134,7 +1155,7 @@ var socketioHandler = function(socket) {
 	    return;
 	}
 	// environment, and datapath (for finding data files)
-	myenv = JSON.parse(envs);
+	myenv = process.env;
 	myenv.JS9_DATAPATH = getDataPath(obj.dataPath);
 	s = getFilePath(obj.fits, myenv.JS9_DATAPATH, myenv);
 	if( !s ){
@@ -1430,8 +1451,6 @@ if (!Array.prototype.includes) {
 if( process.env.PATH ){
     process.env.PATH += (":" + installDir);
 }
-// save as json
-envs = JSON.stringify(process.env);
 
 // load secure preferences
 secure = loadSecurePreferences(securefile);
