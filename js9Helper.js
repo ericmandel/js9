@@ -737,8 +737,13 @@ var execCmd = function(io, socket, obj, cbfunc) {
     if( args[0] === globalOpts.cmd ){
 	// if FITS, handle this request internally instead of exec'ing
 	// (makes external analysis possible without building js9 programs)
-	if( obj.image && (path.extname(obj.image ) !== ".png") ){
+	if( obj.image && (path.extname(obj.image) !== ".png") ){
+	    // check primary file
 	    s = getFilePath(obj.image, myenv.JS9_DATAPATH, myenv);
+	    if( !s && obj.image2 && obj.image !== obj.image2 ){
+		// check alternate (usually with path to installdir removed)
+		s = getFilePath(obj.image2, myenv.JS9_DATAPATH, myenv);
+	    }
 	    if( s ){
 		res.stdout = obj.image + " " + s;
 	    }
