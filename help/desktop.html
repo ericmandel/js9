@@ -312,6 +312,62 @@ colormaps to the three energy cuts, and then blend them into a single display:
   }});
 </pre>
 <p>
+The <b>--merge</b> switch allows you to utilize another user's setup,
+including their JS9 web page and analysis routines. Say, for example,
+a colleague has used Dropbox to share her JS9-enabled zhjs9 directory,
+containing the following files and sub-directories:
+<pre>
+  zhjs9.html js9prefs.js js9addons.js
+
+  analysis-plugins:
+  zhtools.json
+
+  analysis-wrappers:
+  zhjs9
+
+  params:
+  adapt.html	imexam.html	mexhat.html
+  atrous.html	imsmo.html	refinepos.html
+</pre>
+where zhjs9.html has a header in which the paths to JS9's files are matched to
+your colleague's setup but not your own:
+<pre>
+  &lt;head&gt;
+  &lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8"&gt;
+  &lt;meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" &gt; 
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;link type="image/x-icon" rel="shortcut icon" href="../../js9/favicon.ico"&gt;
+  &lt;link type="text/css" rel="stylesheet" href="../../js9/js9support.css"&gt;
+  &lt;link type="text/css" rel="stylesheet" href="../../js9/js9.css"&gt;
+  &lt;link rel="apple-touch-icon" href="../../js9/images/js9-apple-touch-icon.png"&gt;
+  &lt;script type="text/javascript" src="js9prefs.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="../../js9/js9support.min.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="../../js9/js9.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="../../js9/js9plugins.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="./js9addons.js"&gt;&lt;/script&gt;
+  &lt;/head&gt;
+</pre>
+Also note the presence of analysis tool definitions and scripts in the
+sub-directories. Normally, in order to use the zhjs9 web page and
+associated analysis tools, you would need to edit the former and
+change the JS9 paths, and move the contents of the analysis tools
+sub-directories into the equivalent sub-directories in the main JS9
+install directory.
+
+<p>
+Instead, you can simply merge this directory into your desktop app, e.g.
+<pre>
+  js9 -a --merge ~/Dropbox/zhjs9/zhjs9.html
+</pre>
+This will generate and load a temporary webpage using correct paths to
+the JS9 install directory and load the analysis tools into the JS9
+helper. You can also merge the analysis tools without loading the web
+page by specifying only the directory:
+<pre>
+  js9 -a --merge ~/Dropbox/zhjs9
+</pre>
+
+<p>
 Finally, the <b>--node</b> switch allows you to enable Node.js
 capabilities in a local (but not remote) web page environment. By
 default, this feature is turned off because, in principle, Node
