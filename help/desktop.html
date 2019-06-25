@@ -109,6 +109,23 @@ the default JS9 web page, and load one or more FITS files:
   # the -a switch tells the script to bring up the desktop js9 app
   js9 -a ~/data/casa.fits
 </pre>
+In the desktop app, all relative paths are relative to current working
+directory, as would be expected with files passed to any desktop
+program.  For consistency, this behavior extends to the case of files
+specified in web pages: relative files are still relative to the
+current directory, not the web page (as would be the case with browsers).
+It is controlled globally by the <b>JS9.globalOpts.currentPath</b>
+property and locally by the <b>fixpath</b> property. For example, if
+the desktop app loads a webpage, then the default call to <b>JS9.Load()</b>:
+<pre>
+&lt;a href='javascript:JS9.Load("fits/casa.fits", {scale:"log", colormap: "cool"});'&gt;CAS-A&lt;/a&gt;
+</pre>
+specifies that the FITS file is relative to the current working directory,
+while use of <b>fixpath:false</b>:
+<pre>
+&lt;a href='javascript:JS9.Load("fits/casa.fits", {scale:"log", colormap: "cool", fixpath:false});'&gt;CAS-A&lt;/a&gt;
+</pre>
+specifies that the FITS file is relative to the web page.
 
 <p>
 The same js9 script (without the -a switch) can now be used to interact
@@ -344,7 +361,7 @@ your colleague's setup but not your own:
   &lt;script type="text/javascript" src="../../js9/js9support.min.js"&gt;&lt;/script&gt;
   &lt;script type="text/javascript" src="../../js9/js9.js"&gt;&lt;/script&gt;
   &lt;script type="text/javascript" src="../../js9/js9plugins.js"&gt;&lt;/script&gt;
-  &lt;script type="text/javascript" src="./js9addons.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="js9addons.js"&gt;&lt;/script&gt;
   &lt;/head&gt;
 </pre>
 Also note the presence of analysis tool definitions and scripts in the
@@ -365,6 +382,16 @@ helper. You can also merge the analysis tools without loading the web
 page by specifying only the directory:
 <pre>
   js9 -a --merge ~/Dropbox/zhjs9
+</pre>
+A merged web page can, of course, include its own javascript and css
+files, as shown in the example above. It can also
+include <b>JS9.Load()</b> commands, for example, to load files from a
+subdirectory. In this case, you should set the <b>fixpath</b> property
+to <b>false</b> so that the paths of the data files are not changed
+into paths relative to the current working directory (which is the
+default behavior for desktop JS9.Load() calls):
+<pre>
+&lt;a href='javascript:JS9.Load("fits/casa.fits", {scale:"log", colormap: "cool", fixpath:false});'&gt;CAS-A&lt;/a&gt;
 </pre>
 
 <p>
