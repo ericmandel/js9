@@ -420,12 +420,12 @@ JS9.helpOpts = {
     webpage: {
 	heading: "JS9Help",
 	type: "help", url:"webpage.html",
-	title: "Adding JS9 To A Web Page"
+	title: "Adding JS9 to a Web Page"
     },
     yourdata: {
 	heading: "JS9Help",
 	type: "help", url:"yourdata.html",
-	title: "Adding Data To A Web Page"
+	title: "Adding Data to a Web Page"
     },
     localtasks: {
 	heading: "JS9Help",
