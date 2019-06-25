@@ -28,7 +28,7 @@ var http = require('http'),
     rmdir = require('rimraf');
 
 // internal variables
-var i, app, io, secure, envs;
+var i, app, io, secure;
 var myProg = process.argv[0].split("/").reverse()[0];
 var myArgs = process.argv.slice(2);
 var installDir = __dirname;
@@ -42,6 +42,7 @@ var analysis = {str:[], pkgs:[]};
 var plugins = [];
 var js9Queue = {};
 var rmQueue = {};
+var merges = {};
 
 // secure options ... change as necessary in securefile
 var secureOpts = {
@@ -339,14 +340,18 @@ var loadPreferences = function(prefs){
 		globalOpts[s] = path.join(installDir, file);
 	    }
 	});
+	// initialize the wrapper path, if necessary
+	if( !globalOpts.analysisWrapPath){
+	    globalOpts.analysisWrapPath = globalOpts.analysisWrappers;
+	}
     }
 };
 
 // load analysis plugin files, if available
-var loadAnalysisTasks = function(dir){
+var loadAnalysisTasks = function(dir, todir){
     if( fs.existsSync(dir) ){
 	fs.readdir(dir, function(err, files){
-	    var i, jstr, pathname;
+	    var i, j, a, arr, jstr, pathname;
 	    for(i=0; i<files.length; i++){
 		pathname = dir + "/" + files[i];
 		if( fs.existsSync(pathname) ){
@@ -372,8 +377,21 @@ var loadAnalysisTasks = function(dir){
 			    break;
 			default:
 			    try{
-				analysis.pkgs.push(JSON.parse(jstr));
-				analysis.str.push(jstr);
+				arr = JSON.parse(jstr);
+				// todir defined => prepend it to paths
+				if( todir && arr ){
+				    for(j=0; j<arr.length; j++){
+					a = arr[j];
+					if( a.purl ){
+					    a.purl = todir + "/" + a.purl;
+					}
+				    }
+				    analysis.pkgs.push(arr);
+				    analysis.str.push(JSON.stringify(arr));
+				} else {
+				    analysis.pkgs.push(arr);
+				    analysis.str.push(jstr);
+				}
 			    }
 			    catch(e2){cerr("can't parse: ", pathname, e2);}
 			    break;
@@ -417,6 +435,63 @@ var loadHelperPlugins = function(dir){
 	    }
 	});
     }
+};
+
+// merge a directory containing analysis tasks, etc.
+var mergeDirectory = function(dir){
+    var s, stat, mergeTo;
+    // only merge once
+    if( merges[dir] ){ return "OK"; }
+    // look for directory info
+    try{ stat = fs.statSync(dir); } catch(e){ stat = null; }
+    if( !stat || !stat.isDirectory() ){
+	s = "ERROR: invalid merge directory: " + (dir || "<none>");
+	clog(s);
+	return s;
+    }
+    // how to get from merge dir to install dir
+    mergeTo = path.relative(__dirname, dir);
+    // process entries in the merge directory
+    try{ fs.readdir(dir, function(err, files){
+	let d, i, file, stat;
+	for(i=0; i<files.length; i++){
+	    file = files[i];
+	    d = dir + "/" + file;
+	    switch(file){
+	    case "analysis-wrappers":
+		try{ stat = fs.statSync(d); } catch(e){ stat = null; }
+		if( stat && stat.isDirectory() ){
+		    globalOpts.analysisWrapPath += ":" + d;
+		}
+		break;
+	    case "analysis-plugins":
+		try{ stat = fs.statSync(d); } catch(e){ stat = null; }
+		if( stat && stat.isDirectory() ){
+		    loadAnalysisTasks(d, mergeTo);
+		}
+		break;
+	    case "bin":
+		try{ stat = fs.statSync(d); } catch(e){ stat = null; }
+		if( stat && stat.isDirectory() ){
+		    process.env.PATH += ":" + d;
+		}
+		break;
+	    case "params":
+		break;
+	    default:
+		break;
+	    }
+	}
+    }); }
+    catch(e){
+	s = "ERROR: can't read files from merge directory: " + dir;
+	clog(s);
+	return s;
+    }
+    // we have merged this dir
+    merges[dir] = true;
+    clog("merge: %s", dir);
+    return "OK";
 };
 
 // parse an argument string into an array of arguments, where
@@ -509,7 +584,7 @@ var getDataPath = function(s){
 };
 
 // see if a file exists in the dataPath
-var getFilePath = function(file, dataPath, myenv){
+var getFilePath = function(file, dataPath, myenv, dohide){
     var i, s, s1, froot1, fext, parr;
     var from, to;
     // eslint-disable-next-line no-unused-vars
@@ -563,6 +638,9 @@ var getFilePath = function(file, dataPath, myenv){
 	    }
 	    // found the file add extension to full path
 	    s1 += fext;
+	    if( dohide === false ){
+		return s1;
+	    }
 	    return hide(s1);
 	}
     }
@@ -595,7 +673,7 @@ var execCmd = function(io, socket, obj, cbfunc) {
     var myip = getHost(io, socket);
     var myid = obj.id;
     var myrtype = obj.rtype || "binary";
-    var myenv = JSON.parse(envs);
+    var myenv = process.env;
     var res = {stdout: null, stderr: null, errcode: 0,
 	       encoding: globalOpts.textEncoding};
     // sanity check
@@ -659,8 +737,13 @@ var execCmd = function(io, socket, obj, cbfunc) {
     if( args[0] === globalOpts.cmd ){
 	// if FITS, handle this request internally instead of exec'ing
 	// (makes external analysis possible without building js9 programs)
-	if( obj.image && (path.extname(obj.image ) !== ".png") ){
+	if( obj.image && (path.extname(obj.image) !== ".png") ){
+	    // check primary file
 	    s = getFilePath(obj.image, myenv.JS9_DATAPATH, myenv);
+	    if( !s && obj.image2 && obj.image !== obj.image2 ){
+		// check alternate (usually with path to installdir removed)
+		s = getFilePath(obj.image2, myenv.JS9_DATAPATH, myenv);
+	    }
 	    if( s ){
 		res.stdout = obj.image + " " + s;
 	    }
@@ -680,8 +763,17 @@ var execCmd = function(io, socket, obj, cbfunc) {
 	    myenv.JS9_WORKDIR = socket.js9.rworkDir;
 	    myenv.JS9_WORKDIR_QUOTA = globalOpts.workDirQuota;
 	}
-	// construct wrapper
-	cmd = globalOpts.analysisWrappers + "/" + args[0];
+	// construct wrapper path
+	// cmd = globalOpts.analysisWrappers + "/" + args[0];
+	// get path of wrapper script
+	cmd = getFilePath(args[0], globalOpts.analysisWrapPath, myenv, false);
+	if( !cmd ){
+	    if( cbfunc ){
+		res.stderr = "can't find JS9 wrapper script: " + args[0];
+		cbfunc(res);
+	    }
+	    return;
+	}
 	// make path absolute in case we change directories
 	if( cmd.charAt(0) !== "/" ){
 	    cmd = installDir + "/" + cmd;
@@ -691,7 +783,8 @@ var execCmd = function(io, socket, obj, cbfunc) {
     clog("exec: %s [%s]", cmd, args.slice(1));
     // execute the analysis script with cmd arguments
     // NB: can't use exec because the shell breaks, e.g. region command lines
-    child = cproc.execFile(cmd, args.slice(1),
+    try{
+	child = cproc.execFile(cmd, args.slice(1),
 		   { encoding: "utf8",
 		     timeout: 0,
 		     maxBuffer: maxbuf,
@@ -724,12 +817,18 @@ var execCmd = function(io, socket, obj, cbfunc) {
 		       // send results back to browser
 		       if( cbfunc ){ cbfunc(res); }
 		   });
-    // first time through: save child for uploading data
-    if( obj.stdin === true ){
-	// save child so we can process future chunks of data
-	socket.js9.child = child;
-	// set up to send raw data
-	socket.js9.child.stdin.setEncoding = 'binary';
+	// first time through: save child for uploading data
+	if( obj.stdin === true ){
+	    // save child so we can process future chunks of data
+	    socket.js9.child = child;
+	    // set up to send raw data
+	    socket.js9.child.stdin.setEncoding = 'binary';
+	}
+    } catch(e){
+	// send exec error back to browser
+	res.stderr = `ERROR: could not exec ${cmd}: ${e.message}`;
+	res.stdout = null;
+	if( cbfunc ){ cbfunc(res); }
     }
 };
 
@@ -788,16 +887,40 @@ var pageReady = function(io, socket, obj, cbfunc, tries){
 // sendMsg: send a message to the browser
 // this is the default callback for external communication with JS9
 var sendMsg = function(io, socket, obj, cbfunc) {
-    var i, targets;
+    var i, myip, targets;
     // callback function
     var myfunc = function(s){
 	if( cbfunc ){ cbfunc(s); }
     };
     // get list of targets to send to
     targets = getTargets(io, socket, obj);
-    // was that all that's wanted?
-    if( obj.cmd === "targets" ){
+    // commands not going to a browser
+    switch(obj.cmd){
+    case "alive":
+	myfunc("OK");
+	return;
+    case "merge":
+	// local connections only
+	myip = getHost(io, socket);
+	if( (myip === "127.0.0.1") || (myip === "::ffff:127.0.0.1") ){
+	    myfunc(mergeDirectory(obj.args[0]));
+	}
+	return;
+    case "targets":
 	myfunc(targets.length);
+	return;
+    case "getAnalysis":
+	sendAnalysisTasks(io, socket, obj, cbfunc);
+	return;
+    case "addDisplay":
+    case "renameDisplay":
+    case "worker":
+    case "image":
+    case "runAnalysis":
+    case "fits2fits":
+    case "fits2png":
+    case "quotacheck":
+	myfunc("ERROR: " + obj.cmd + " not available via js9 messaging script");
 	return;
     }
     // look for one target (or else that multi is allowed)
@@ -957,6 +1080,19 @@ var socketioHandler = function(socket) {
     socket.on("alive", function(obj, cbfunc) {
 	    if( cbfunc ){ cbfunc("OK"); }
     });
+    // on merge: merge analysis tasks from specified directory
+    // for other implementations, this is needed if you want to:
+    // add new analysis tasks from sources external to the installed code
+    socket.on("merge", function(obj, cbfunc) {
+	var s;
+	var myip = getHost(io, socket);
+	// local connections only
+	if( (myip === "127.0.0.1") || (myip === "::ffff:127.0.0.1") ){
+	    if( !obj || !obj.directory ){return;}
+	    s = mergeDirectory(obj.directory);
+	    if( cbfunc ){ cbfunc(s); }
+	}
+    });
     // on image: signal from JS9 that a new or redisplayed image is active
     // returns: [input file path, fits file path, fits + extension]
     // for other implementations, this is needed if you want to:
@@ -1024,7 +1160,7 @@ var socketioHandler = function(socket) {
 	    return;
 	}
 	// environment, and datapath (for finding data files)
-	myenv = JSON.parse(envs);
+	myenv = process.env;
 	myenv.JS9_DATAPATH = getDataPath(obj.dataPath);
 	s = getFilePath(obj.fits, myenv.JS9_DATAPATH, myenv);
 	if( !s ){
@@ -1320,8 +1456,6 @@ if (!Array.prototype.includes) {
 if( process.env.PATH ){
     process.env.PATH += (":" + installDir);
 }
-// save as json
-envs = JSON.stringify(process.env);
 
 // load secure preferences
 secure = loadSecurePreferences(securefile);
@@ -1331,10 +1465,15 @@ loadPreferences(prefsfile);
 
 // override preferences with json on the command line
 // but only if we are in a basic node program (i.e not Electron)
-if( (myProg === "node" || myProg === "nodejs") &&
-    myArgs && myArgs.length > 0                ){
-    for(i=0; i<myArgs.length; i++){
-	loadPreferences(myArgs[i]);
+if( myProg === "node" || myProg === "nodejs" ){
+    if( myArgs && myArgs.length > 0 ){
+	for(i=0; i<myArgs.length; i++){
+	    loadPreferences(myArgs[i]);
+	}
+    }
+} else {
+    if( process.env.JS9_HELPER_PREFS ){
+	loadPreferences(process.env.JS9_HELPER_PREFS);
     }
 }
 
@@ -1343,6 +1482,11 @@ loadAnalysisTasks(globalOpts.analysisPlugins);
 
 // load user-defined plugins
 loadHelperPlugins(globalOpts.helperPlugins);
+
+// merge, if necessary
+if( globalOpts.merge ){
+    mergeDirectory(globalOpts.merge);
+}
 
 // start up http server
 if( secure ){

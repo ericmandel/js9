@@ -4649,9 +4649,10 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
 
 // notify the helper that a new image was displayed
 JS9.Image.prototype.notifyHelper = function(){
-    var basedir;
+    var basedir, image1, image2;
     var that = this;
     var imexp = new RegExp("^"+JS9.ANON+"[0-9]*");
+    var installexp = JS9.INSTALLDIR ? new RegExp("^"+JS9.INSTALLDIR) : null;
     // notify the helper
     if( JS9.helper.connected && !this.file.match(imexp) ){
 	switch(JS9.helper.type){
@@ -4669,7 +4670,12 @@ JS9.Image.prototype.notifyHelper = function(){
 	    }
 	}
 	// get helper info about this image
-	JS9.helper.send("image", {"image": this.file},
+	// but also try removing part of path that gets to install dir
+	image1 = this.file;
+	if( image1.charAt(0) !== "/" && installexp ){
+	    image2 = this.file.replace(installexp, "");
+	}
+	JS9.helper.send("image", {"image": image1, "image2": image2},
         function(res){
 	    var rstr, r, s, cc, im, regexp;
 	    if( typeof res === "object" ){
@@ -5255,6 +5261,10 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    } else {
 			// region file was passed, we have to fetch it
 			f = JS9.cleanPath(files[0]);
+			// relative path: add install dir prefix
+			if( f.charAt(0) !== "/" ){
+			    f = JS9.InstallDir(f);
+			}
 			// load new region file
 			obj = {responseType: "text"};
 			JS9.fetchURL(null, f, obj, function(regions, opts){

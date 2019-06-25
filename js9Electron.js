@@ -30,7 +30,7 @@ const shell = electron.shell;
 
 const path = require('path');
 const fs = require('fs');
-// const proc = require('child_process');
+const proc = require('child_process');
 const ps = require('ps-node');
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -49,6 +49,15 @@ function isTrue(s, d){
 
 // start up a JS9 helper, if possible and necessary
 function startHelper(mode){
+    var domerge = function(){
+	try{
+	    proc.exec("js9 merge " + js9Electron.merge);
+	}
+	catch(e){ 
+	    dialog.showErrorBox("Error",
+	    "can't merge: " + js9Electron.merge, e.message);
+	}
+    };
     // start up the helper first, if necessary
     if( js9Electron.doHelper ){
 	// if mode is true, just try to start the helper and return
@@ -70,8 +79,12 @@ function startHelper(mode){
 		}, function(err2, rlist2 ) {
 		    if( (rlist2.length <= 1) ){
 			js9Electron.helper = require(js9Electron.helperpage);
+		    } else if( js9Electron.merge ){
+			domerge();
 		    }
 		});
+	    } else if( js9Electron.merge ){
+		domerge();
 	    }
 	});
     }
@@ -118,9 +131,11 @@ js9Electron.cmdfile = js9Electron.argv.cmdfile;
 js9Electron.doHelper = isTrue(js9Electron.argv.helper, true);
 js9Electron.debug = isTrue(js9Electron.argv.debug, false);
 js9Electron.eval = isTrue(js9Electron.argv.eval, false);
+js9Electron.merge = js9Electron.argv.merge;
 js9Electron.node = isTrue(js9Electron.argv.node, false);
 js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || process.env.JS9_WEBPAGE || js9Electron.defpage;
 js9Electron.title = js9Electron.argv.title;
+js9Electron.tmp = js9Electron.argv.tmp || process.env.JS9_TMPDIR || "/tmp";
 js9Electron.renameid = js9Electron.argv.renameid;
 js9Electron.width = js9Electron.argv.width || 1024;
 js9Electron.height = js9Electron.argv.height  || 768;
@@ -190,7 +205,7 @@ function initWillDownload() {
 
 // create a new window for a JS9 web page
 function createWindow() {
-    let cmd, icon;
+    let f, s, cmd, icon, todir;
     let ncmd=0;
     let xcmds = "";
     // set dock icon for Mac
@@ -210,7 +225,57 @@ function createWindow() {
 	width: js9Electron.width,
 	height: js9Electron.height
     });
-    // and load the web page
+    // set up merging, if necessary
+    if( js9Electron.merge ){
+	try{ js9Electron.mergeStat = fs.statSync(js9Electron.merge); }
+	catch(e){
+	    dialog.showErrorBox("Error",
+	    "can't find merge file or directory: " + js9Electron.merge);
+	    process.exit();
+	}
+	if( !js9Electron.mergeStat.isDirectory() ){
+	    // not a directory => web page
+	    js9Electron.mergePage = js9Electron.merge;
+	    // get the merge directory
+	    js9Electron.merge = path.dirname(js9Electron.merge);
+	    try{ js9Electron.mergeStat = fs.statSync(js9Electron.merge); }
+	    catch(e){
+		dialog.showErrorBox("Error",
+		"can't find merge directory: " + js9Electron.merge);
+		process.exit();
+	    }
+	}
+	// read new html file and convert possibly bogus path from js9 files
+	// we will specify a base URL instead
+	if( js9Electron.mergePage ){
+	    todir = path.relative(js9Electron.merge, __dirname);
+            s = fs.readFileSync(js9Electron.mergePage, "utf-8")
+		.replace(/<base.*>/, "")
+		.replace(/(<head>)/,
+			 `$1\n  <base href="file://${js9Electron.merge}/">`)
+		.replace(/(href=['"])(.*)\/(js9support\.css['"])/,
+                         `$1${todir}/$3`)
+		.replace(/(href=['"])(.*)\/(js9\.css['"])/,
+                         `$1${todir}/$3`)
+		.replace(/(src=['"])(\/.*|\.\.\/.*)\/(js9prefs\.js['"])/,
+                         `$1${todir}/$3`)
+		.replace(/(src=['"])(.*)\/(js9support(\.min)?\.js['"])/,
+                         `$1${todir}/$3`)
+		.replace(/(src=['"])(.*)\/(js9(\.min)?\.js['"])/,
+                         `$1${todir}/$3`)
+		.replace(/(src=['"])(.*)\/(js9plugins(\.min)?\.js['"])/,
+                         `$1${todir}/$3`);
+	    f = js9Electron.tmp + "/" + path.basename(js9Electron.mergePage);
+	    fs.writeFileSync(f, s);
+	    // save name of the merged webpage for deletion
+	    js9Electron.mergePage = f;
+	    // new page containing js9 files from our install
+	    js9Electron.page = "file://" + f;
+	}
+	// pass the merge dir to the helper in a prefs environment variable
+	process.env.JS9_HELPER_PREFS = 	`{"merge":"${js9Electron.merge}"}`;
+    }
+    // final checks on the web page
     if( !js9Electron.page.includes("://") ){
 	if( !path.isAbsolute(js9Electron.page) ){
 	    if( process.env.PWD ){
@@ -221,6 +286,7 @@ function createWindow() {
 	}
 	js9Electron.page = "file://" + js9Electron.page;
     }
+    // load the web page
     js9Electron.win.loadURL(js9Electron.page);
     // download to a specfied directory (without using a dialog box)?
     if( js9Electron.savedir ){
@@ -344,6 +410,11 @@ app.on('ready', createWindow);
 
 // quit when all windows are closed
 app.on('window-all-closed', () => {
+    // remove generated page if we merged
+    if( typeof js9Electron.mergePage === "string" ){
+	try{ fs.unlinkSync(js9Electron.mergePage); }
+	catch(e){}
+    }
     // quit the app
     app.quit();
 });
