@@ -887,7 +887,7 @@ var pageReady = function(io, socket, obj, cbfunc, tries){
 // sendMsg: send a message to the browser
 // this is the default callback for external communication with JS9
 var sendMsg = function(io, socket, obj, cbfunc) {
-    var i, myip, targets;
+    var s, i, myip, targets;
     // callback function
     var myfunc = function(s){
 	if( cbfunc ){ cbfunc(s); }
@@ -904,6 +904,10 @@ var sendMsg = function(io, socket, obj, cbfunc) {
 	myip = getHost(io, socket);
 	if( (myip === "127.0.0.1") || (myip === "::ffff:127.0.0.1") ){
 	    myfunc(mergeDirectory(obj.args[0]));
+	} else {
+            s = `ERROR: rejecting remote merge request from: ${myip}`;
+	    clog(s);
+	    myfunc(s);
 	}
 	return;
     case "targets":
@@ -1090,6 +1094,10 @@ var socketioHandler = function(socket) {
 	if( (myip === "127.0.0.1") || (myip === "::ffff:127.0.0.1") ){
 	    if( !obj || !obj.directory ){return;}
 	    s = mergeDirectory(obj.directory);
+	    if( cbfunc ){ cbfunc(s); }
+	} else {
+            s = `ERROR: rejecting remote merge request from: ${myip}`;
+	    clog(s);
 	    if( cbfunc ){ cbfunc(s); }
 	}
     });
