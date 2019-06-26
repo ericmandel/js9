@@ -347,7 +347,7 @@ containing the following files and sub-directories:
   atrous.html	imsmo.html	refinepos.html
 </pre>
 where zhjs9.html has a header in which the paths to JS9's files are matched to
-your colleague's setup but not your own:
+your colleague's setup, but not your own:
 <pre>
   &lt;head&gt;
   &lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8"&gt;
@@ -365,11 +365,11 @@ your colleague's setup but not your own:
   &lt;/head&gt;
 </pre>
 Also note the presence of analysis tool definitions and scripts in the
-sub-directories. Normally, in order to use the zhjs9 web page and
-associated analysis tools, you would need to edit the former and
-change the JS9 paths, and move the contents of the analysis tools
-sub-directories into the equivalent sub-directories in the main JS9
-install directory.
+analysis-plugins, analysis-wrappers, and params sub-directories. Normally,
+in order to use the zhjs9 web page and associated analysis tools, you
+would need to edit the former and change the JS9 paths, and move the
+contents of the three analysis tools sub-directories into the appropriate
+sub-directories in the main JS9 install directory.
 
 <p>
 Instead, you can simply merge this directory into your desktop app, e.g.
@@ -383,6 +383,10 @@ page by specifying only the directory:
 <pre>
   js9 -a --merge ~/Dropbox/zhjs9
 </pre>
+In addition, if a bin directory is present, it will be added to the PATH
+used when processing analysis commands.
+
+<p>
 A merged web page can, of course, include its own javascript and css
 files, as shown in the example above. It can also
 include <b>JS9.Load()</b> commands, for example, to load files from a
