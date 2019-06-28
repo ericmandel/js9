@@ -169,7 +169,9 @@ typedef struct gregrec {
 #endif
 #define SMALL_NUMBER	1.0E-24
 #define LARGE_NUMBER	65535
-#define PSTOP		-142857.285714
+/* must match reg.l */
+/* 2**53 can be represented exactly in IEEE */
+#define PSTOP		9007199254740992.0
 
 #ifndef SZ_LINE
 #define SZ_LINE 	4096

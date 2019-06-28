@@ -566,7 +566,6 @@ if( JS9.BROWSER[3] ){
     JS9.globalOpts.image.ydim = 2048;
     JS9.imageOpts.crosshair = false;
     JS9.globalOpts.reproj = {xdim: 2048, ydim: 2048};
-    JS9.globalOpts.internalRegcnts = false;
 }
 // Jupyter doesn't seem to be able to load wasm (7/4/2018)
 if( window.hasOwnProperty("Jupyter") ){
