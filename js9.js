@@ -171,6 +171,7 @@ JS9.globalOpts = {
     regionConfigSize: "medium", // "small", "medium"
     refreshDragDrop: true,	// refresh on drag/drag and open file?
     reduceMosaic: "js9",        // "js9" or "shrink" ("js9" seems to be faster)
+    internalRegcnts: true,      // make internal regcnts analysis available?
     reduceRegcnts: true,        // reduce image when doing counts in regions?
     plot3d: {cube:"*:*:all", mode:"avg", areaunits:"pixels", color: "green"}, // plot3d options: avg/sum, pixels/arcsecs
     imexamLineHeight: 1,        // "height" of line region section
@@ -565,6 +566,7 @@ if( JS9.BROWSER[3] ){
     JS9.globalOpts.image.ydim = 2048;
     JS9.imageOpts.crosshair = false;
     JS9.globalOpts.reproj = {xdim: 2048, ydim: 2048};
+    JS9.globalOpts.internalRegcnts = false;
 }
 // Jupyter doesn't seem to be able to load wasm (7/4/2018)
 if( window.hasOwnProperty("Jupyter") ){

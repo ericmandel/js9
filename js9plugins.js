@@ -8250,7 +8250,8 @@ JS9.Menubar.createMenus = function(){
 		items.radprof = xname("Radial Profile");
 		items.cnts3d = xname("3D Counts in Regions");
 		items.plot3d = xname("3D Plot using Regions");
-		if( !im || !im.raw || !im.raw.hdu || !im.raw.hdu.vfile ){
+		if( !JS9.globalOpts.internalRegcnts ||
+		    !im || !im.raw || !im.raw.hdu || !im.raw.hdu.vfile ){
 		    items.regcnts.disabled = true;
 		    items.radprof.disabled = true;
 		    items.cnts3d.disabled = true;
