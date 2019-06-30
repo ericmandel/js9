@@ -21562,10 +21562,10 @@ JS9.mkPublic("Load", function(file, opts){
 
 // create a new instance of JS9 in a window (light or new)
 JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
-    var s, id, display, did, head, body, win, winid, initialURL, xobj, got;
+    var s, id, display, did, head, body, win, winid, initialURL, xobj;
     var wid, wtype, wurl, idbase;
-    var lopts = JS9.lightOpts[JS9.LIGHTWIN];
     var title, warr, wwidth, wheight;
+    var lopts = JS9.lightOpts[JS9.LIGHTWIN];
     var obj = JS9.parsePublicArgs(arguments);
     var removeDisplay = function(display){
 	// remove from display list
@@ -21621,6 +21621,113 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	}
 	return html;
     };
+    // create display and load image into a light window
+    var lightLoad = function(file, opts){
+	var display;
+        // create the new JS9 Display
+        display = new JS9.Display(id);
+	// save the light window id;
+	display.winid = winid;
+	// add to list of displays
+	JS9.helper.send("addDisplay", {"display": id});
+        // instantiate new plugins
+        JS9.instantiatePlugins();
+        // load the image into this display
+        opts.display = id;
+        // just becomes a standard load
+	if( file ){
+	    JS9.Load(file, opts);
+	}
+	return display;
+    };
+    // close a light window, moving images if necessary
+    var lightClose = function(display){
+	var i, im;
+	var got = 0;
+	var ims = [];
+	// make a list of images in this display
+	for(i=0; i<JS9.images.length; i++){
+	    im = JS9.images[i];
+	    if( im.display.id === id ){
+		ims.push(im);
+	    }
+	}
+	// done if no images
+	if( !ims.length ){
+	    // remove display
+	    removeDisplay(display);
+	    return true;
+	}
+	// sanity check: the moveto display must exist
+	// (and not be the display we are destroying)
+	if( JS9.globalOpts.lightWinClose === "move" ){
+	    if( JS9.isNull(JS9.globalOpts.lightWinMoveTo) ||
+		JS9.globalOpts.lightWinMoveTo === id      ){
+		got = 0;
+	    } else {
+		for(i=0, got=0; i<JS9.displays.length; i++){
+		    if( JS9.displays[i].id ===
+			JS9.globalOpts.lightWinMoveTo ){
+			got++;
+			break;
+		    }
+		}
+	    }
+	    if( !got ){
+		JS9.globalOpts.lightWinClose = "ask";
+		delete JS9.globalOpts.lightWinMoveTo;
+	    }
+	}
+	switch(JS9.globalOpts.lightWinClose ){
+	case "close":
+	    // remove display
+	    removeDisplay(display);
+	    // close them all
+	    for(i=0; i<ims.length; i++){
+		try{ ims[i].closeImage(); }
+		catch(ignore){}
+	    }
+	    return true;
+	case "move":
+	    // remove display
+	    removeDisplay(display);
+	    // move them to the first display
+	    for(i=0; i<ims.length; i++){
+		try{ ims[i].moveToDisplay(JS9.globalOpts.lightWinMoveTo); }
+		catch(ignore){}
+	    }
+	    return true;
+	case "ask":
+	default:
+	    wid = "lightCloseID" + JS9.uniqueID();
+	    if( JS9.allinone ){
+		wtype = "inline";
+		wurl = JS9.allinone.lightCloseHTML;
+	    } else {
+		wtype = "ajax";
+		wurl = JS9.InstallDir(JS9.lightOpts.lcloseURL);
+	    }
+	    $("#dhtmlwindowholder")
+		.arrive("#lightWinCloseForm", {onceOnly: true}, function(){
+		    var i, el;
+		    // on arrival, add JS9 displays to 'move' part of form
+		    el = $("#lightWinCloseForm").find("#lightWinCloseSel");
+		    for(i=0; i<JS9.displays.length; i++){
+			if( JS9.displays[i].id !== id ){
+			    el.append($('<option>', {
+				value: JS9.displays[i].id,
+				text:  JS9.displays[i].id
+			    }));
+			}
+		    }
+		});
+	    did = JS9.lightWin(wid, wtype, wurl, "Closing a light window",
+			       lopts.lcloseWin);
+	    $(did).data("dispid", id);
+	    $(did).data("winid", winid);
+	    return false;
+	}
+    };
     // input args
     file = obj.argv[0];
     opts = obj.argv[1];
@@ -21670,109 +21777,16 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	}
 	// nice title
 	title = sprintf("JS9 Display"+JS9.IDFMT, id);
+	// once the window exists, we can create the display & load the image
+	$("#dhtmlwindowholder").arrive("#"+id, {onceOnly: true}, function(){
+	    display = lightLoad(file, opts);
+	});
         // create the light window
         winid = JS9.lightWin(did, "inline", html, title, winopts);
-	// when this window closes, we need to deal with the displayed images
+	// on window close, we need to deal with the displayed images
 	winid.onclose = function(){
-	    var i, im;
-	    var ims = [];
-	    // make a list of images in this display
-	    for(i=0; i<JS9.images.length; i++){
-		im = JS9.images[i];
-		if( im.display.id === id ){
-		    ims.push(im);
-		}
-	    }
-	    // done if no images
-	    if( !ims.length ){
-		// remove display
-		removeDisplay(display);
-		return true;
-	    }
-	    // sanity check: the moveto display must exist
-	    // (and not be the display we are destroying)
-	    if( JS9.globalOpts.lightWinClose === "move" ){
-		if( JS9.isNull(JS9.globalOpts.lightWinMoveTo) ||
-		    JS9.globalOpts.lightWinMoveTo === id      ){
-		    got = 0;
-		} else {
-		    for(i=0, got=0; i<JS9.displays.length; i++){
-			if( JS9.displays[i].id ===
-			    JS9.globalOpts.lightWinMoveTo ){
-			    got++;
-			    break;
-			}
-		    }
-		}
-		if( !got ){
-		    JS9.globalOpts.lightWinClose = "ask";
-		    delete JS9.globalOpts.lightWinMoveTo;
-		}
-	    }
-	    switch(JS9.globalOpts.lightWinClose ){
-	    case "close":
-		// remove display
-		removeDisplay(display);
-		// close them all
-		for(i=0; i<ims.length; i++){
-		    try{ ims[i].closeImage(); }
-		    catch(ignore){}
-		}
-		return true;
-	    case "move":
-		// remove display
-		removeDisplay(display);
-		// move them to the first display
-		for(i=0; i<ims.length; i++){
-		    try{ ims[i].moveToDisplay(JS9.globalOpts.lightWinMoveTo); }
-		    catch(ignore){}
-		}
-		return true;
-	    case "ask":
-	    default:
-		wid = "lightCloseID" + JS9.uniqueID();
-		if( JS9.allinone ){
-		    wtype = "inline";
-		    wurl = JS9.allinone.lightCloseHTML;
-		} else {
-		    wtype = "ajax";
-		    wurl = JS9.InstallDir(JS9.lightOpts.lcloseURL);
-		}
-		$("#dhtmlwindowholder")
-		    .arrive("#lightWinCloseForm", {onceOnly: true}, function(){
-			var i, el;
-			// on arrival, add JS9 displays to 'move' part of form
-			el = $("#lightWinCloseForm").find("#lightWinCloseSel");
-			for(i=0; i<JS9.displays.length; i++){
-			    if( JS9.displays[i].id !== id ){
-				el.append($('<option>', {
-				    value: JS9.displays[i].id,
-				    text:  JS9.displays[i].id
-				}));
-			    }
-			}
-		    });
-		did = JS9.lightWin(wid, wtype, wurl, "Closing a light window",
-				   lopts.lcloseWin);
-		$(did).data("dispid", id);
-		$(did).data("winid", winid);
-		return false;
-	    }
+	    return lightClose(display);
 	};
-        // create the new JS9 Display
-        display = new JS9.Display(id);
-	// save the light window id;
-	display.winid = winid;
-	// add to list of displays
-	JS9.helper.send("addDisplay", {"display": id});
-        // instantiate new plugins
-        JS9.instantiatePlugins();
-        // load the image into this display
-        opts.display = id;
-        // just becomes a standard load
-	if( file ){
-            JS9.Load(file, opts);
-	}
 	// return the id
 	return id;
     case "new":
