@@ -17292,7 +17292,14 @@ JS9.lightWin = function(id, type, s, title, opts){
 	// allow double-click or double-tap to close ...
 	// ... the close button is unresponsive on the ipad/iphone
         $("#" + id + " ." + JS9.lightOpts.dhtml.dragBar)
-	    .doubletap(function(){ rval.close(); }, null, 400);
+	    .on("mouseup touchend", this, function(){
+		var curtime = (new Date()).getTime();
+		var lasttime = $(this).data("lasttime");
+		if( lasttime && (curtime - lasttime) < JS9.DBLCLICK ){
+		    rval.close();
+		}
+		$(this).data("lasttime", curtime);
+	    });
 	// if ios user failed to close the window via the close button,
 	// give a hint (once per session only!)
         $("#" + id + " ." + JS9.lightOpts.dhtml.dragBar)
