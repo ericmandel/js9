@@ -2646,17 +2646,19 @@ JS9.Menubar.createMenus = function(){
 		}
 		items.regcnts = xname("Counts in Regions");
 		items.radprof = xname("Radial Profile");
-		items.cnts3d = xname("3D Counts in Regions");
-		items.plot3d = xname("3D Plot using Regions");
 		if( !JS9.globalOpts.internalRegcnts ||
 		    !im || !im.raw || !im.raw.hdu || !im.raw.hdu.vfile ){
 		    items.regcnts.disabled = true;
 		    items.radprof.disabled = true;
-		    items.cnts3d.disabled = true;
-		    items.plot3d.disabled = true;
-		} else if( im.raw.header.NAXIS !== 3 ){
-		    items.cnts3d.disabled = true;
-		    items.plot3d.disabled = true;
+		}
+		if( im.raw.header.NAXIS === 3 ){
+		    items.cnts3d = xname("3D Counts in Regions");
+		    items.plot3d = xname("3D Plot using Regions");
+		    if( !JS9.globalOpts.internalRegcnts ||
+			!im || !im.raw || !im.raw.hdu || !im.raw.hdu.vfile ){
+			items.cnts3d.disabled = true;
+			items.plot3d.disabled = true;
+		    }
 		}
 		items.sigma = {
 		    events: {keyup: keyAnalysis},
