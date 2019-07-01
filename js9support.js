@@ -26399,19 +26399,19 @@ var widgetsTooltip = $.ui.tooltip;
 
 
 }));/**
- * jQuery contextMenu v2.6.3 - Plugin for simple contextMenu handling
+ * jQuery contextMenu v2.8.0 - Plugin for simple contextMenu handling
  *
- * Version: v2.6.3
+ * Version: v2.8.0
  *
  * Authors: Björn Brala (SWIS.nl), Rodney Rehm, Addy Osmani (patches for FF)
  * Web: http://swisnl.github.io/jQuery-contextMenu/
  *
- * Copyright (c) 2011-2017 SWIS BV and contributors
+ * Copyright (c) 2011-2019 SWIS BV and contributors
  *
  * Licensed under
  *   MIT License http://www.opensource.org/licenses/mit-license
  *
- * Date: 2017-10-30T19:03:13.804Z
+ * Date: 2019-01-16T15:45:48.370Z
  */
 
 // jscs:disable
@@ -26419,17 +26419,17 @@ var widgetsTooltip = $.ui.tooltip;
 // this method of calling the factory function breaks when loaded into Jupyter,
 // so we had to go back to the old-style ... egm 9/22/16
 // (function (factory) {
-//    if (typeof define === 'function' && define.amd) {
-//        // AMD. Register as anonymous module.
-//        define(['jquery'], factory);
-//    } else if (typeof exports === 'object') {
-//        // Node / CommonJS
-//        factory(require('jquery'));
-//    } else {
-//        // Browser globals.
-//        factory(jQuery);
-//    }
-//})(function ($) {
+//     if (typeof define === 'function' && define.amd) {
+//         // AMD. Register as anonymous module.
+//         define(['jquery'], factory);
+//     } else if (typeof exports === 'object') {
+//         // Node / CommonJS
+//         factory(require('jquery'));
+//     } else {
+//         // Browser globals.
+//         factory(jQuery);
+//     }
+// })(function ($) {
 
 (function($, undefined){
 
@@ -26520,7 +26520,7 @@ var widgetsTooltip = $.ui.tooltip;
             // flag denoting if a second trigger should simply move (true) or rebuild (false) an open menu
             // as long as the trigger happened on one of the trigger-element's child nodes
             reposition: true,
-            // Flag denoting if a second trigger should close the menu, as long as 
+            // Flag denoting if a second trigger should close the menu, as long as
             // the trigger happened on one of the trigger-element's child nodes.
             // This overrides the reposition option.
             hideOnSecondTrigger: false,
@@ -26643,6 +26643,7 @@ var widgetsTooltip = $.ui.tooltip;
             },
             // events
             events: {
+                preShow: $.noop,
                 show: $.noop,
                 hide: $.noop,
                 activated: $.noop
@@ -26682,6 +26683,11 @@ var widgetsTooltip = $.ui.tooltip;
             // contextmenu show dispatcher
             contextmenu: function (e) {
                 var $this = $(this);
+                
+                //Show browser context-menu when preShow returns false
+                if (e.data.events.preShow($this,e) === false) {
+                    return;
+                }
 
                 // disable actual context-menu if we are using the right mouse button as the trigger
                 if (e.data.trigger === 'right') {
@@ -26739,26 +26745,7 @@ var widgetsTooltip = $.ui.tooltip;
 
                         op.create(e.data);
                     }
-                    var showMenu = false;
-                    for (var item in e.data.items) {
-                        if (e.data.items.hasOwnProperty(item)) {
-                            var visible;
-                            if ($.isFunction(e.data.items[item].visible)) {
-                                visible = e.data.items[item].visible.call($(e.currentTarget), item, e.data);
-                            } else if (typeof e.data.items[item] !== 'undefined' && e.data.items[item].visible) {
-                                visible = e.data.items[item].visible === true;
-                            } else {
-                                visible = true;
-                            }
-                            if (visible) {
-                                showMenu = true;
-                            }
-                        }
-                    }
-                    if (showMenu) {
-                        // show menu
-                        op.show.call($this, e.data, e.pageX, e.pageY);
-                    }
+                    op.show.call($this, e.data, e.pageX, e.pageY);
                 }
             },
             // contextMenu left-click trigger
@@ -26853,12 +26840,21 @@ var widgetsTooltip = $.ui.tooltip;
                     button = e.button,
                     x = e.pageX,
                     y = e.pageY,
+                    fakeClick = x === undefined,
                     target,
                     offset;
 
                 e.preventDefault();
 
                 setTimeout(function () {
+                    // If the click is not real, things break: https://github.com/swisnl/jQuery-contextMenu/issues/132
+                    if(fakeClick){
+                        if (root !== null && typeof root !== 'undefined' && root.$menu !== null  && typeof root.$menu !== 'undefined') {
+                            root.$menu.trigger('contextmenu:hide');
+                        }
+                        return;
+                    }
+
                     var $window;
                     var triggerAction = ((root.trigger === 'left' && button === 0) || (root.trigger === 'right' && button === 2));
 
@@ -26880,12 +26876,12 @@ var widgetsTooltip = $.ui.tooltip;
                         $(target).trigger(e);
                         root.$layer.show();
                     }
-                    
+
                     if (root.hideOnSecondTrigger && triggerAction && root.$menu !== null && typeof root.$menu !== 'undefined') {
                       root.$menu.trigger('contextmenu:hide');
                       return;
                     }
-                    
+
                     if (root.reposition && triggerAction) {
                         if (document.elementFromPoint) {
                             if (root.$trigger.is(target)) {
@@ -27387,7 +27383,11 @@ var widgetsTooltip = $.ui.tooltip;
                 }
 
                 // create or update context menu
-                op.update.call($trigger, opt);
+                var hasVisibleItems = op.update.call($trigger, opt);
+                if (hasVisibleItems === false) {
+                    $currentTrigger = null;
+                    return;
+                }
 
                 // position menu
                 opt.position.call($trigger, opt, x, y);
@@ -27411,9 +27411,9 @@ var widgetsTooltip = $.ui.tooltip;
                 // position and show context menu
                 opt.$menu.css(css)[opt.animation.show](opt.animation.duration, function () {
                     $trigger.trigger('contextmenu:visible');
-                    
+
                     op.activated(opt);
-                    opt.events.activated();
+                    opt.events.activated(opt);
                 });
                 // make options available and set state
                 $trigger
@@ -27623,9 +27623,7 @@ var widgetsTooltip = $.ui.tooltip;
                             $t.addClass('context-menu-separator ' + root.classNames.notSelectable);
                         } else if (item.type === 'html') {
                             $t.addClass('context-menu-html ' + root.classNames.notSelectable);
-                        } else if (item.type === 'sub') {
-                            // We don't want to execute the next else-if if it is a sub.
-                        } else if (item.type) {
+                        } else if (item.type !== 'sub' && item.type) {
                             $label = $('<label></label>').appendTo($t);
                             createNameNode(item).appendTo($label);
 
@@ -27740,14 +27738,27 @@ var widgetsTooltip = $.ui.tooltip;
                             if ($.isFunction(item.icon)) {
                                 item._icon = item.icon.call(this, this, $t, key, item);
                             } else {
-                                if (typeof(item.icon) === 'string' && item.icon.substring(0, 3) === 'fa-') {
+                                if (typeof(item.icon) === 'string' && (
+                                    item.icon.substring(0, 4) === 'fab '
+                                    || item.icon.substring(0, 4) === 'fas '
+                                    || item.icon.substring(0, 4) === 'far '
+                                    || item.icon.substring(0, 4) === 'fal ')
+                                ) {
                                     // to enable font awesome
+                                    $t.addClass(root.classNames.icon + ' ' + root.classNames.icon + '--fa5');
+                                    item._icon = $('<i class="' + item.icon + '"></i>');
+                                } else if (typeof(item.icon) === 'string' && item.icon.substring(0, 3) === 'fa-') {
                                     item._icon = root.classNames.icon + ' ' + root.classNames.icon + '--fa fa ' + item.icon;
                                 } else {
                                     item._icon = root.classNames.icon + ' ' + root.classNames.icon + '-' + item.icon;
                                 }
                             }
-                            $t.addClass(item._icon);
+
+                            if(typeof(item._icon) === "string"){
+                                $t.addClass(item._icon);
+                            } else {
+                                $t.prepend(item._icon);
+                            }
                         }
                     }
 
@@ -27814,6 +27825,9 @@ var widgetsTooltip = $.ui.tooltip;
                     root = opt;
                     op.resize(opt.$menu);
                 }
+
+                var hasVisibleItems = false;
+
                 // re-check disabled for each item
                 opt.$menu.children().each(function () {
                     var $item = $(this),
@@ -27828,6 +27842,11 @@ var widgetsTooltip = $.ui.tooltip;
                     } else {
                         visible = true;
                     }
+
+                    if (visible) {
+                        hasVisibleItems = true;
+                    }
+
                     $item[visible ? 'show' : 'hide']();
 
                     // dis- / enable item
@@ -27835,8 +27854,12 @@ var widgetsTooltip = $.ui.tooltip;
 
                     if ($.isFunction(item.icon)) {
                         $item.removeClass(item._icon);
-                        item._icon = item.icon.call(this, $trigger, $item, key, item);
-                        $item.addClass(item._icon);
+                        var iconResult = item.icon.call(this, $trigger, $item, key, item);
+                        if(typeof(iconResult) === "string"){
+                            $item.addClass(iconResult);
+                        } else {
+                            $item.prepend(iconResult);
+                        }
                     }
 
                     if (item.type) {
@@ -27863,9 +27886,13 @@ var widgetsTooltip = $.ui.tooltip;
 
                     if (item.$menu) {
                         // update sub-menu
-                        op.update.call($trigger, item, root);
+                        var subMenuHasVisibleItems = op.update.call($trigger, item, root);
+                        if (subMenuHasVisibleItems) {
+                            hasVisibleItems = true;
+                        }
                     }
                 });
+                return hasVisibleItems;
             },
             layer: function (opt, zIndex) {
                 // add transparent layer for click area
@@ -27961,9 +27988,9 @@ var widgetsTooltip = $.ui.tooltip;
                     });
                 } else if(($menuOffset.top < winScrollTop) || ($menuOffset.top + menuHeight > winScrollTop + winHeight)){
                     $menu.css({
-                        'top': '0px'
+                        'top': winScrollTop + 'px'
                     });
-                } 
+                }
             }
         };
 
@@ -28502,7 +28529,6 @@ var widgetsTooltip = $.ui.tooltip;
     $.contextMenu.handle = handle;
     $.contextMenu.op = op;
     $.contextMenu.menus = menus;
-
 // });
 })(jQuery);
 /* Javascript plotting library for jQuery, version 0.8.3.
