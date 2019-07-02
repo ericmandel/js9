@@ -235,7 +235,7 @@ window the correct size for the default html:
 </pre>
 You can supply your own parameters for the new dhtmlwindow using the
 <b>winOpts</b> argument. See:
-<a href="http://www.dynamicdrive.com/dynamicindex8/dhtmlwindow/index.htm">
+<a href="http://www.dynamicdrive.com/dynamicindex8/dhtmlwindow/index.htm" target="_blank">
 DynamicDrive</a> for more information about their light-weight window.
 <p>
 To create a new light window without loading an image, use:
@@ -262,13 +262,13 @@ For security reasons, JavaScript contained in one web page can
 access data in another web page only if both web pages have the
 same origin (i.e., basically coming from the same host).  This
 policy is called the 
-<a href="https://en.wikipedia.org/wiki/Same-origin_policy">
+<a href="https://en.wikipedia.org/wiki/Same-origin_policy" target="_blank">
 Same Origin Policy</a>. This means that JS9 cannot load a image files
 (i.e., FITS, PNG, or JPG) from an arbitrary URL without using special
 techniques.
 <p>
 One such technique is
-<a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing">
+<a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing" target="_blank">
 Cross-Origin Resource Sharing</a>, by which the second server grants
 permission to access its image data. Dropbox is CORS-enabled, so that
 image files can be loaded directly into JS9. But obviously this requires
@@ -316,7 +316,7 @@ To load an image into a specified display, pass the <b>display object</b> as the
 <p>
 Note again that not all back-end servers support the proxy functionality.
 The main 
-<a href="https://js9.si.edu">JS9 web site</a> does support proxy service, and
+<a href="https://js9.si.edu" target="_blank">JS9 web site</a> does support proxy service, and
 can be used to view images from arbitrary URLs.
 
 <h5 id="JS9.Preload">Load one or more images when the web page is ready</h5>
@@ -802,7 +802,7 @@ following are valid expressions:
 NB: JS9 uses cfitsio by default (you can, but should not, use the
 deprecated fitsy.js), and therefore follows cfitsio filtering
 conventions, which are documented
-<a href="https://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/node97.html">here</a>.
+<a href="https://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/node97.html" target="_blank">here</a>.
 
 <h5 id="JS9.DisplayExtension">Display an extension from a multi-extension FITS file</h5>
 <p>
@@ -921,8 +921,8 @@ In addition, the following Porter-Duff compositing modes are available
 <li>xor
 <li>lighter
 </ul>
-Blending and compositing modes are described in detail in this <a href="https://www.w3.org/TR/compositing-1/">W3C candidate recommendation</a>
-and in this <a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Compositing">Mozilla document</a>.
+Blending and compositing modes are described in detail in this <a href="https://www.w3.org/TR/compositing-1/" target="_blank">W3C candidate recommendation</a>
+and in this <a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Compositing" target="_blank">Mozilla document</a>.
 
 <p>
 JS9 allows you to use these modes to blend images together. If you load two
@@ -2109,18 +2109,18 @@ where:
 <li><b>bregion</b>: any background region, or "$bregions" for displayed background regions
 <li><b>opts</b>:  optional object or JSON string containing region parameters
 </ul>
-The <a href="https://js9.si.edu/regions/regcnts.html">regcnts</a>
+The <a href="https://js9.si.edu/regions/regcnts.html" target="_blank">regcnts</a>
 program (and its predecessor, funcnts) counts photons in specified
 source regions and optionally, in specified background regions.
 Displayed results include the bkgd-subtracted counts in each region,
 as well as the error on the counts, the area in each region, and the
 surface brightness (cnts/area**2) calculated for each region. Regcnts
 for desktop use is available on
-<a href="https://github.com/ericmandel/regions">GitHub</a>.
+<a href="https://github.com/ericmandel/regions" target="_blank">GitHub</a>.
 
 <p>
 The regcnts program has been compiled into JS9 using
-<a href="https://kripken.github.io/emscripten-site/">Emscripten</a>.
+<a href="https://emscripten.org/" target="_blank">Emscripten</a>.
 Using this routine, it can be run on the FITS file stored in memory
 for the currently displayed image.  The first two arguments specify
 the <b>source region(s)</b> and <b>background region(s)</b>,
@@ -2203,7 +2203,7 @@ The third argument allows you to specify options to regcnts:
 </ul>
 The command line switches that can be specified in <b>cmdswitches</b> are
 detailed in the
-<a href="https://js9.si.edu/regions/regcnts.html">regcnts help
+<a href="https://js9.si.edu/regions/regcnts.html" target="_blank">regcnts help
 page</a>.  Aside from switches which control important aspects of the
 analysis, the "-j" switch (which returns the output in JSON format)
 might be useful in the browser environment. Some examples:
@@ -2237,7 +2237,7 @@ Analysis</b> menu runs regcnts on the source and background regions of
 the currently displayed image. The results are displayed in a light window.
 
 <p>
-Finally, note that the main <a href="https://js9.si.edu">JS9 web
+Finally, note that the main <a href="https://js9.si.edu" target="_blank">JS9 web
 site</a> also offers regcnts as a server-based analysis program in the
 Analysis menu. The displayed source and background regions are passed
 to the server for processing. Because this version runs the desktop
@@ -2410,7 +2410,7 @@ This routine creates a new raw data layer called "gaussBlur" in which
 the image pixel values are blurred using a Gaussian function with the
 specified sigma. The routine uses the fast Gaussian blur algorithm
 (approximating a full Gaussian blur with three passes of a box blur)
-described <a href="http://blog.ivank.net/fastest-gaussian-blur.html">
+described <a href="http://blog.ivank.net/fastest-gaussian-blur.html" target="_blank">
 here</a>.
 
 <h5 id="JS9.ImarithData">Perform image arithmetic on raw data</h5>
@@ -2511,7 +2511,7 @@ underlying raw data, using this routine. The web has an overwhelming
 amount of information about image processing.  A good technical
 article concerning the use of image filters with Javascript and the
 HTML5 canvas is available at:
-<a href="http://www.html5rocks.com/en/tutorials/canvas/imagefilters/">
+<a href="http://www.html5rocks.com/en/tutorials/canvas/imagefilters/" target="_blank">
 http://www.html5rocks.com/en/tutorials/canvas/imagefilters/
 </a>
 
@@ -2621,9 +2621,9 @@ where:
 <b>JS9.ReprojectData()</b> creates a new raw data layer (with default id
 of "reproject") in which the pixels are reprojected using the WCS from
 another image. The
-<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html">mProjectPP</a>
+<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html" target="_blank">mProjectPP</a>
 program from the 
-<a href="http://montage.ipac.caltech.edu/">Montage</a> software suite
+<a href="http://montage.ipac.caltech.edu/" target="_blank">Montage</a> software suite
 is used to perform the reprojection.  Please read the documentation on
 mProjectPP from the Montage web site, which includes this explanation:
 <p>
@@ -2640,7 +2640,7 @@ mProjectPP from the Montage web site, which includes this explanation:
     use of an alternate header.
 </pre>
 These Montage programs have been compiled into JS9 using
-<a href="https://kripken.github.io/emscripten-site/">Emscripten</a>.
+<a href="https://emscripten.org/" target="_blank">Emscripten</a>.
 
 <p>
 The <b>wcsim</b> argument is an image id, image filename, or image
@@ -2662,7 +2662,7 @@ command line that looks like this:
   mProjectPP -d 1 -z .75 -s statusfile in.fits out.fits template.hdr
 </pre>
 See the 
-<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html">mProjectPP</a>
+<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html" target="_blank">mProjectPP</a>
 documentation for more information about command switches.
 
 <p>
@@ -3620,7 +3620,7 @@ Notice that both files have a tab-delimited header, followed by a
 tab-delimited line of dashes, followed by tab-delimited data rows. This file 
 format is sometimes called "tsv"  or "tab-separated values". A very useful
 astronomical package for manipulating tables is
-<a href="http://hopper.si.edu/wiki/mmti/Starbase">Starbase</a>,
+<a href="http://hopper.si.edu/wiki/mmti/Starbase" target="_blank">Starbase</a>,
 written by John Roll.
 
 <p>
@@ -3949,13 +3949,13 @@ where:
 
 The <b>JS9.CreateMosaic()</b> creates a mosaic image from the
 specified (previously-loaded) FITS images using the
-<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html">mProjectPP</a>
+<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html" target="_blank">mProjectPP</a>
 and
-<a href="http://montage.ipac.caltech.edu/docs/mAdd.html">mAdd</a>
+<a href="http://montage.ipac.caltech.edu/docs/mAdd.html" target="_blank">mAdd</a>
 programs from the
-<a href="http://montage.ipac.caltech.edu/">Montage</a> software suite.
+<a href="http://montage.ipac.caltech.edu/" target="_blank">Montage</a> software suite.
 These Montage programs have been compiled into JS9 using
-<a href="https://kripken.github.io/emscripten-site/">Emscripten</a>.
+<a href="https://emscripten.org/" target="_blank">Emscripten</a>.
 
 <p>
 Because the browser environment is memory-limited, there are some
@@ -4268,7 +4268,7 @@ where:
 </ul>
 <p>
 The JS9 desktop application that utilizes 
-<a href="https://electronjs.org">Electron.js</a> has the ability to
+<a href="https://electronjs.org" target="_blank">Electron.js</a> has the ability to
 print the whole application window. When executed, the system print
 dialog box is displayed (unless the <b>silent</b> the option is passed in
 opts) and the window will be printed according to your print configuration.
@@ -4291,7 +4291,7 @@ where:
 </ul>
 <p>
 The JS9 desktop application that utilizes 
-<a href="https://electronjs.org">Electron.js</a> has the ability to
+<a href="https://electronjs.org" target="_blank">Electron.js</a> has the ability to
 save the whole application window to a PDF file. The first argument specifies
 the name of the PDF file.
 <p>
@@ -4313,7 +4313,7 @@ where:
 <li><b>dirname</b>: directory name for downloads
 </ul>
 The JS9 desktop application that utilizes 
-<a href="https://electronjs.org">Electron.js</a> has the ability to
+<a href="https://electronjs.org" target="_blank">Electron.js</a> has the ability to
 specify a directory into which files will be saved (e.g. by routines such 
 <a href="#JS9.SavePNG">JS9.SavePNG()</a>)
 without using a dialog box. This is especially useful in scripts.
@@ -4533,7 +4533,7 @@ Display arbitrary content inside a light window. There are any number
 of light window routines available on the Net. JS9 uses light window
 routines developed by Dynamic Drive (http://www.dynamicdrive.com).
 Their extensive documentation can be found
-<a href="http://www.dynamicdrive.com/dynamicindex8/dhtmlwindow/">here</a>.
+<a href="http://www.dynamicdrive.com/dynamicindex8/dhtmlwindow/" target="_blank">here</a>.
 
 <p>
 The content shown inside the window depends on the <b>content</b> parameter:
@@ -4808,10 +4808,24 @@ page and load an image into that display:
     // just a standard load to that display
     JS9.Load("foo.fits", {scale: "log"}, {display: "myJS9"});
 </pre>
-See also
-<a href="#JS9.LoadWindow"><b>JS9.LoadWindow()</b></a>
-for a nice way to load images into a
-light-weight or completely new window.
+You can use <a href="#JS9.LoadWindow"><b>JS9.LoadWindow()</b></a> to
+load images into a light-weight or completely new window, but to do
+this yourself, you should call JS9.AddDivs() after the window has been
+created. You can use the jQuery
+<a href="https://github.com/uzairfarooq/arrive" target="_blank">arrive</a>
+wrapper that implements support for the
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver" target="_blank">
+MutationObserver</a>. Here is the relevant code fragment from
+<a href="#JS9.LoadWindow"><b>JS9.LoadWindow()</b></a>:
+<pre>
+    // once the window exists, we can create/add the display & load the image
+    $("#dhtmlwindowholder").arrive("#"+id, {onceOnly: true}, function(){
+        display = lightLoad(file, opts);
+    });
+    // create the light window: the html contains a new display with id
+    winid = JS9.lightWin(did, "inline", html, title, winopts);
+</pre>
+
 
 <h5 id="JS9.InstantiatePlugins">Instantiate plugins on this web page</h5>
 <p>
@@ -4819,7 +4833,7 @@ light-weight or completely new window.
 <p>
 Normally, JS9 will instantiate all of its plugins automatically once the page
 is loaded and ready: internally, jQuery $(document).ready() calls JS9.init().
-However, module loaders such as <a href="http://requirejs.org">Require.js</a>
+However, module loaders such as <a href="http://requirejs.org" target="_blank">Require.js</a>
 can load scripts asynchronously and cause jQuery $(document).ready() to fire
 before all JS9 scripts are available. The
 <a href="#JS9.RegisterPlugin"><b>RegisterPlugin()</b></a>
