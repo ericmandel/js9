@@ -16599,8 +16599,8 @@ JS9.Grid.display = function(mode, myopts){
 		y: this.iy - opts.margin};
 	ipos = this.displayToImagePos(dpos);
 	corners[0] = {x: ipos.x, y: ipos.y};
-	dpos = {x: display.width  - this.ix - opts.margin,
-		y: display.height - this.iy - opts.margin};
+	dpos = {x: display.width - 1 - this.ix - opts.margin,
+		y: display.height - 1 - this.iy - opts.margin};
 	ipos = this.displayToImagePos(dpos);
 	corners[1] = {x: ipos.x, y: ipos.y};
     }
