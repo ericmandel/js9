@@ -424,10 +424,10 @@
     }
     // heap and refresh test blobs
     var fileBlobs;
-    var nTries = 10;
-    var refreshTimeout=2000;
-    var loadTimeout=1000;
+    var nTries = 50;
     var heapTimeout=100;
+    var refreshTimeout=100;
+    var loadTimeout=1000;
     var heapAlloc = 1024000;
     var heapBuf, heapStart, heapCur, heapIter;
     var doingheaptest = false;
@@ -473,9 +473,10 @@
 		    Astroem.vfree(buf);
 		    setTimeout(function(){heapTest(nn, ii);}, heapTimeout);
 		} else {
-		    console.log("bytes added to heap in %s iter: %s = %s - %s",
+		    console.log("bytes added to heap in %s iterations: %s = %s - %s",
 				heapIter, heapCur - heapStart,
 				heapCur, heapStart);
+		    doingheaptest = false;
 		}
 	    }});
     }
@@ -505,6 +506,7 @@
 		    setTimeout(function(){refreshTest(nn,ii);},refreshTimeout);
 		} else {
 		    console.log("all done!");
+		    doingrefreshtest = false;
 		};
 	    }});
     }
