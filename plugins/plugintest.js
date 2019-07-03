@@ -3,7 +3,7 @@
  */
 
 /*jslint bitwise: true, plusplus: true, sloppy: true, vars: true, white: true, browser: true, devel: true, continue: true, unparam: true, regexp: true */
-/*global $, jQuery, JS9, sprintf */
+/*global $, JS9, sprintf */
 
 // To specify the JS9 display instance to link to a given PLUGIN div,
 // use the HTML5 dataset syntax: 
@@ -54,12 +54,14 @@ PLUGIN.init = function(){
 // write a row of text in message area associated with a given plugin
 PLUGIN.init.prototype.message = function(message, row) {
     this.divjq.children("#message" + row).html(message);
-    if( JS9.DEBUG > 1 && (!message.match(/mouse/) || JS9.DEBUG >= 3) ){
+    if( JS9.DEBUG === 4 && (!message.match(/mouse/) || JS9.DEBUG >= 5) ){
+	// eslint-disable-next-line no-console
 	console.log(message);
     }
 };
 
 // callback when mouse is clicked (down,up)
+// eslint-disable-next-line no-unused-vars
 PLUGIN.click = function(im, ipos, evt){
     var t = sprintf("click: ipos=%s,%s",
 		    ipos.x.toFixed(2), ipos.y.toFixed(2));
@@ -70,6 +72,7 @@ PLUGIN.click = function(im, ipos, evt){
 // im:   image handle
 // ipos: image position; origin at 1,1 (FITS convention)
 // evt:  the event passed to the callback
+// eslint-disable-next-line no-unused-vars
 PLUGIN.mousedown = function(im, ipos, evt){
     var t = sprintf("mouseDown: ipos=%s,%s",
 		    ipos.x.toFixed(2), ipos.y.toFixed(2));
@@ -77,6 +80,7 @@ PLUGIN.mousedown = function(im, ipos, evt){
 };
 
 // callback when mouse is released
+// eslint-disable-next-line no-unused-vars
 PLUGIN.mouseup = function(im, ipos, evt){
     var t = sprintf("mouseUp: ipos=%s,%s",
 		    ipos.x.toFixed(2), ipos.y.toFixed(2));
@@ -86,6 +90,7 @@ PLUGIN.mouseup = function(im, ipos, evt){
 // callback when mouse (or one-finger touch) moves (without a mouse press)
 // image value: we need 0-indexed positions, so subtract 1
 // but add 0.5 before rounding since x.0 is in the middle of the pixel
+// eslint-disable-next-line no-unused-vars
 PLUGIN.mousemove = function(im, ipos, evt){
     var v, t;
     v = im.raw.data[Math.floor(ipos.y-0.5) * im.raw.width + 
@@ -96,6 +101,7 @@ PLUGIN.mousemove = function(im, ipos, evt){
 };
 
 // callback when mouse moves over the image
+// eslint-disable-next-line no-unused-vars
 PLUGIN.mouseover = function(im, ipos, evt){
     var t = sprintf("mouseOver: ipos=%s,%s",
 		    ipos.x.toFixed(2), ipos.y.toFixed(2));
@@ -103,6 +109,7 @@ PLUGIN.mouseover = function(im, ipos, evt){
 };
 
 // callback when mouse moves out of the image
+// eslint-disable-next-line no-unused-vars
 PLUGIN.mouseout = function(im, ipos, evt){
     var t = sprintf("mouseOut: ipos=%s,%s",
 		    ipos.x.toFixed(2), ipos.y.toFixed(2));
@@ -110,6 +117,7 @@ PLUGIN.mouseout = function(im, ipos, evt){
 };
 
 // callback when key is pressed
+// eslint-disable-next-line no-unused-vars
 PLUGIN.keypress = function(im, ipos, evt){
     var charCode = evt.which || evt.keyCode;
     var charStr = String.fromCharCode(charCode);
