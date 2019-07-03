@@ -3,7 +3,7 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" >
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
   <link type="text/css" rel="stylesheet" href="js9support.css">
@@ -193,19 +193,19 @@
       <option value="box">Box Catalog (with tooltips)</option>
       <option value="circle">Circle Catalog (event handlers, movable)</option>
       <option value="both">Both Catalogs (non-interactive)</option>
-    </select> 
+    </select>
     <select id="hide">
       <option value="" selected="selected" style="display:none">Hide</option>
       <option value="box">Box Catalog</option>
       <option value="circle">Circle Catalog</option>
       <option value="both">Both Catalogs</option>
-    </select> 
+    </select>
     <select id="show">
       <option value="" selected="selected" style="display:none">Show</option>
       <option value="box">Box Catalog</option>
       <option value="circle">Circle Catalog</option>
       <option value="both">Both Catalogs</option>
-    </select> 
+    </select>
     <p>
     <b>Move circle catalog: </b>
     <button id="up">Up</button>
@@ -261,10 +261,10 @@
                      contrast: 5.625, bias: 0.1,
                      scaleclipping: "user", scalemin: 1, scalemax: 15,
 	             onload: function(im){
-		       JS9.SetZoom(2,{display: "myJS9"}); 
+		       JS9.SetZoom(2,{display: "myJS9"});
 		       JS9.LoadSession("casa/casa.png.ses",
                                        {display:"myJS9"});}
-                    }, 
+                    },
                     {display: "myJS9"});
         $("#display").on("change", function(evt){
           try{doit("display", this.value);}
@@ -307,11 +307,11 @@
             x = Math.random() * xdim;
             y = Math.random() * ydim;
 	    if( i % 2 === 0 ){
-                arr[i] = {x: x, y: y, shape: shape, color: color, 
+                arr[i] = {x: x, y: y, shape: shape, color: color,
 		          width: 5, height: 2,
 		          data: {tag: sprintf("ebox: %s,%s,%s", x, y, color)}};
             } else {
-                arr[i] = {x: x, y: y, 
+                arr[i] = {x: x, y: y,
 		          data: {tag: sprintf("obox: %s,%s", x, y)}};
             }
         }
@@ -424,10 +424,11 @@
     }
     // heap and refresh test blobs
     var fileBlobs;
-    var timeTotal=60;
+    var nTries = 10;
     var refreshTimeout=2000;
     var loadTimeout=1000;
-    var heapTimeout=100, heapAlloc = 1024000;
+    var heapTimeout=100;
+    var heapAlloc = 1024000;
     var heapBuf, heapStart, heapCur, heapIter;
     var doingheaptest = false;
     var doingrefreshtest = false;
@@ -436,13 +437,15 @@
       fileBlobs = files;
     }
     function HeapTest(){
+        var im = JS9.GetImage();
       if( doingheaptest ){
         doingheaptest = false;
       } else {
+	console.log("initial image: %s", im.file);
         doingheaptest = true;
         heapStart = 0;
         heapBuf = new ArrayBuffer(heapAlloc);
-        heapTest(timeTotal*1000/heapTimeout);
+        heapTest(nTries);
       }
     }
     function heapTest(nn, ii){
@@ -452,25 +455,29 @@
             ii = 0;
             heapIter = nn;
         }
-        if( fileBlobs ){
-            JS9.RefreshImage(fileBlobs[ii%fileBlobs.length]);
-        } else {
+        if( !fileBlobs ){
             JS9.error("please choose an image to refresh");
-        }
-        if( (ii++ < nn) && doingheaptest ){
-            buf = Astroem.vmalloc(heapAlloc);
-            if( !heapStart ){
-                heapStart = buf;
-            }
-            heapCur = buf;
-    	console.log("buf[%s]: %s", ii, buf);
-            Astroem.vheap.set(new Uint8Array(heapBuf), buf);
-    	Astroem.vfree(buf);
-            setTimeout(function(){heapTest(nn, ii);}, heapTimeout);
-        } else {
-            console.log("bytes added to heap in %s iterations: %s = %s - %s", 
-                        heapIter, heapCur - heapStart, heapCur, heapStart);
-        }
+	}
+	console.log("refresh #%s with: %s",
+		    ii, fileBlobs[ii%fileBlobs.length].name);
+        JS9.RefreshImage(fileBlobs[ii%fileBlobs.length],
+            {onrefresh: function(){
+		if( (ii++ < nn) && doingheaptest ){
+		    buf = Astroem.vmalloc(heapAlloc);
+		    if( !heapStart ){
+			heapStart = buf;
+		    }
+		    heapCur = buf;
+		    console.log("buf[%s]: %s", ii, buf);
+		    Astroem.vmemcpy(new Uint8Array(heapBuf), buf);
+		    Astroem.vfree(buf);
+		    setTimeout(function(){heapTest(nn, ii);}, heapTimeout);
+		} else {
+		    console.log("bytes added to heap in %s iter: %s = %s - %s",
+				heapIter, heapCur - heapStart,
+				heapCur, heapStart);
+		}
+	    }});
     }
     // refresh test
     function RefreshTest(files){
@@ -478,7 +485,7 @@
         doingrefreshtest = false;
       } else {
         doingrefreshtest = true;
-        refreshTest(timeTotal*1000/refreshTimeout);
+        refreshTest(nTries);
       }
     }
     function refreshTest(nn, ii){
@@ -487,17 +494,19 @@
         if( ii === undefined ){
             ii = 0;
         }
-        if( fileBlobs ){
-            JS9.RefreshImage(fileBlobs[ii%fileBlobs.length]);
-        } else {
+        if( !fileBlobs ){
             JS9.error("please choose an image to refresh");
-        }
-        if( (ii++ < nn) && doingrefreshtest ){
-            console.log("refresh: %s", ii);
-            setTimeout(function(){refreshTest(nn, ii);}, refreshTimeout);
-        } else {
-            console.log("all done!");
-        };
+	}
+	console.log("refresh #%s with: %s",
+		    ii, fileBlobs[ii%fileBlobs.length].name);
+        JS9.RefreshImage(fileBlobs[ii%fileBlobs.length],
+	    {onrefresh: function(){
+		if( (ii++ < nn) && doingrefreshtest ){
+		    setTimeout(function(){refreshTest(nn,ii);},refreshTimeout);
+		} else {
+		    console.log("all done!");
+		};
+	    }});
     }
     // load test
     function LoadTest(){
@@ -505,7 +514,7 @@
         doingloadtest = false;
       } else {
         doingloadtest = true;
-        loadTest(timeTotal*1000/loadTimeout);
+        loadTest(nTries);
       }
     }
     function loadTest(nn, ii){
@@ -575,39 +584,39 @@
 </ul>
 <b>multiple displays:</b>
 <ul class="js9demo">
-<li><a href='js9multi.html'>multiple instances of JS9</a> 
+<li><a href='js9multi.html'>multiple instances of JS9</a>
 <li><a href='js9super.html'>control multiple displays with one menu</a>
-<li><a href='js9create.html'>creating a JS9 instance dynamically</a> 
-<li><a href='js9sync.html'>syncing images in multiple displays</a> 
+<li><a href='js9create.html'>creating a JS9 instance dynamically</a>
+<li><a href='js9sync.html'>syncing images in multiple displays</a>
 </ul>
 <b>plugins:</b>
 <ul class="js9demo">
-<li><a href='js9plugins.html'>adding plugins to JS9</a> 
-<li><a href='js9imexam.html'>the imexam plugin</a> 
-<li><a href='js9panzoom.html'>pan and zoom</a> 
+<li><a href='js9plugins.html'>adding plugins to JS9</a>
+<li><a href='js9imexam.html'>the imexam plugin</a>
+<li><a href='js9panzoom.html'>pan and zoom</a>
 <li><a href='js9cat.html'>overlaying catalogs</a>
-<li><a href='js9dysel.html'>dynamic selection of displays</a> 
+<li><a href='js9dysel.html'>dynamic selection of displays</a>
 </ul>
 <b>colors:</b>
 <ul class="js9demo">
-<li><a href='js9blend.html'>image blending</a> 
-<li><a href='js9rgb.html'>RGB composite images</a> 
+<li><a href='js9blend.html'>image blending</a>
+<li><a href='js9rgb.html'>RGB composite images</a>
 <li><a href='js9cmaps.html'>creating new colormaps</a>
 </ul>
 <b>data analysis:</b>
 <ul class="js9demo">
-<li><a href='js9analysis.html'>remote data analysis</a> 
+<li><a href='js9analysis.html'>remote data analysis</a>
 <li><a href='js9onchange.html'>running tasks when a region changes</a>
 </ul>
 <b>FITS support:</b>
 <ul class="js9demo">
-<li><a href='js9bitpix.html'>displaying different FITS datatypes</a> 
+<li><a href='js9bitpix.html'>displaying different FITS datatypes</a>
 <li><a href='js9large.html'>support for large FITS files</a>
 </ul>
 <b>not often needed:</b>
 <ul class="js9demo">
-<li><a href='js9allinone.html'>using the all-in-one files</a> 
-<li><a href='js9pngvsfits.html'>PNG representation files vs FITS files</a> 
+<li><a href='js9allinone.html'>using the all-in-one files</a>
+<li><a href='js9pngvsfits.html'>PNG representation files vs FITS files</a>
 </ul>
 </body>
 </html>
