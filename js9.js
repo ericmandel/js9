@@ -2216,7 +2216,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 
 // store section information
 JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
-    var xtra;
+    var s, xtra;
     var sect = this.rgb.sect;
     // save zoom in case we are about to change it (regions have to be scaled)
     sect.ozoom  = sect.zoom;
@@ -2348,6 +2348,14 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
     // we have final section limits: derive new width and height
     sect.width   = Math.ceil((sect.x1 - sect.x0) * sect.zoom);
     sect.height  = Math.ceil((sect.y1 - sect.y0) * sect.zoom);
+    // sanity check
+    if( sect.width <= 0 || sect.height <= 0 ){
+	s = sprintf("invalid image section: %s,%s [%s,%s, %s,%s, %s]",
+		    sect.width, sect.height,
+		    sect.x0, sect.y0, sect.x1, sect.y1,
+		    sect.zoom);
+	JS9.error(s);
+    }
     // we changed section, so the offscreen RGB image is invalid
     this.offscreenRGB = null;
     // put zoom back into params
@@ -3190,7 +3198,7 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 // refresh data for an existing image
 // input obj is a fits object, array, typed array, etc.
 JS9.Image.prototype.refreshImage = function(obj, opts){
-    var s, ozoom, olpos, ipos;
+    var s, arr, ozoom, ora, odec, olpos, ipos;
     var func;
     // opts can be an object or json
     if( typeof opts === "string" ){
@@ -3227,9 +3235,25 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	// use global onrefresh, if possible
 	opts.onrefresh = JS9.imageOpts.onrefresh;
     }
-    // save section params (in physical coords) in case it gets reset
-    olpos = this.imageToLogicalPos({x: this.rgb.sect.xcen,
-				    y: this.rgb.sect.ycen});
+    // save section center if it's not to be reset
+    if( !opts.resetSection ){
+	// always save logical coords
+	olpos = this.imageToLogicalPos({x: this.rgb.sect.xcen,
+					y: this.rgb.sect.ycen});
+	// save wcs pos, if available
+	if( this.raw.wcs && this.raw.wcs > 0 ){
+	    s = JS9.pix2wcs(this.raw.wcs,
+			    this.rgb.sect.xcen, this.rgb.sect.ycen);
+	    arr = s.trim().split(/\s+/);
+	    ora = JS9.saostrtod(arr[0]);
+	    if( (String.fromCharCode(JS9.saodtype()) === ":") &&
+		(this.params.wcssys !== "galactic" )          &&
+		(this.params.wcssys !== "ecliptic" )          ){
+		ora *= 15.0;
+	    }
+	    odec = JS9.saostrtod(arr[1]);
+	}
+    }
     ozoom = this.rgb.sect.zoom;
     // save old binning
     this.binning.obin = this.binning.bin;
@@ -3241,9 +3265,23 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	this.mkSection();
 	this.mkSection(ozoom);
     } else {
-	// restore section using saved coords
-	ipos = this.logicalToImagePos({x: olpos.x, y: olpos.y});
-	this.mkSection(ipos.x, ipos.y, ozoom);
+	// try to restore section using saved coords
+	if( this.raw.wcs && this.raw.wcs > 0      &&
+	    JS9.notNull(ora) && JS9.notNull(odec) ){
+	    arr = JS9.wcs2pix(this.raw.wcs, ora, odec).trim().split(/ +/);
+	    ipos = {x: parseFloat(arr[0]), y: parseFloat(arr[1])};
+	} else {
+	    ipos = this.logicalToImagePos({x: olpos.x, y: olpos.y});
+	}
+	// but if the image position off the new image ...
+	if( ipos.x > 0 && ipos.x < this.raw.width  &&
+	    ipos.y > 0 && ipos.y < this.raw.height ){
+	    this.mkSection(ipos.x, ipos.y, ozoom);
+	} else {
+	    // ... just reset the section
+	    this.mkSection();
+	    this.mkSection(ozoom);
+	}
     }
     // display new image data with old section
     this.displayImage("colors", opts);
@@ -18420,6 +18458,7 @@ JS9.notNull = function(s) {
     return s !== undefined && s !== null;
 };
 
+// check if a variable is either undefined or null
 JS9.isNull = function(s) {
     return s === undefined || s === null;
 };
