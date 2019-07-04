@@ -8557,8 +8557,6 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
 	this.layers[layer].starbase = starbase;
 	// add them to the catalog layer
 	this.addShapes(layer, shapes, opts);
-	// done waiting
-	JS9.waiting(false);
     } else {
 	JS9.error("no catalog objects found");
     }
@@ -9008,7 +9006,14 @@ JS9.Display.prototype.addFileDialog = function(funcName, template){
 	var i;
 	var opts = {localAccess: true};
 	if( this.files.length ){
-	    JS9.waiting(true, that);
+	    switch(funcName){
+	    case "Load":
+	    case "RefreshImage":
+		JS9.waiting(true, that);
+		break;
+	    default:
+		break;
+	    }
 	}
 	for(i=0; i<this.files.length; i++){
 	    // execute a JS9 public access routine
@@ -21296,12 +21301,10 @@ JS9.mkPublic("LoadColormap", function(file, opts){
     // convert blob to string
     if( typeof file === "object" ){
 	JS9.AddColormap(file, opts);
-	JS9.waiting(false);
     } else if( typeof file === "string" ){
 	file = JS9.fixPath(file);
 	JS9.fetchURL(null, file, null, function(data){
 	    JS9.AddColormap(data, opts);
-	    JS9.waiting(false);
 	});
     } else {
 	// oops!
@@ -22826,7 +22829,6 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 	}
 	im.addShapes("regions", reg, ropts);
 	if( opts && opts.onload ){ opts.onload(im); }
-	JS9.waiting(false);
     };
     file = obj.argv[0];
     opts = obj.argv[1];
@@ -23150,7 +23152,6 @@ JS9.mkPublic("LoadSession", function(file, opts){
 	    var jobj = JSON.parse(ev.target.result);
 	    opts.sessionPath =  JS9.dirname(file.path || file.name || "");
 	    disp.loadSession(jobj, opts);
-	    JS9.waiting(false);
 	};
 	reader.readAsText(file);
     } else if( typeof file === "string" ){
@@ -23161,7 +23162,6 @@ JS9.mkPublic("LoadSession", function(file, opts){
 	    var jobj = JSON.parse(jstr);
 	    opts.sessionPath =  JS9.dirname(file);
             disp.loadSession(jobj, opts);
-	    JS9.waiting(false);
 	});
     } else {
 	// oops!
@@ -23225,7 +23225,6 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
 	    }
 	    im.loadCatalog(layer, ev.target.result, opts);
 	    if( opts && opts.onload ){ opts.onload(im); }
-	    JS9.waiting(false);
 	};
 	reader.readAsText(file);
     } else if( typeof file === "string" ){
@@ -23233,7 +23232,6 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
 	    // it's a table (contains a tab)
 	    im.loadCatalog(layer, file, opts);
 	    if( opts && opts.onload ){ opts.onload(im); }
-	    JS9.waiting(false);
 	} else {
 	    // its a file: retrieve and load the catalog
 	    opts.responseType = "text";
@@ -23241,7 +23239,6 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
 	    JS9.fetchURL(null, file, opts, function(s){
 		im.loadCatalog(layer, s, opts);
 		if( opts && opts.onload ){ opts.onload(im); }
-		JS9.waiting(false);
 	    });
 	}
     } else {
