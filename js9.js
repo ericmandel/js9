@@ -9003,12 +9003,12 @@ JS9.Display.prototype.addFileDialog = function(funcName, template){
     }
     // add callback for when input changes
     jinput.on("change", function(){
-	var i;
-	var opts = {localAccess: true};
+	var i, opts;
 	if( this.files.length ){
 	    switch(funcName){
 	    case "Load":
 	    case "RefreshImage":
+		opts = {localAccess: true};
 		JS9.waiting(true, that);
 		break;
 	    default:
@@ -23190,7 +23190,9 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
     file = obj.argv[1];
     opts = obj.argv[2];
     // special case: 1 arg is the catalog, not the layer
-    if( layer && !file ){
+    // i.e., file reader object from openLocalLoadCotalog
+    if( layer instanceof Blob ){
+	opts = file;
 	file = layer;
 	layer = null;
     }
@@ -23216,7 +23218,7 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
 	opts = {};
     }
     // convert blob to string
-    if( typeof file === "object" ){
+    if( file instanceof Blob ){
 	// file reader object
 	reader = new FileReader();
 	reader.onload = function(ev){
