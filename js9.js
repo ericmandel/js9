@@ -15648,6 +15648,10 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	}
 	// odd modes output the exports
 	if( ((mode % 2) === 1) && (Object.keys(exports).length > 0) ){
+	    // line region: remove size/distance info
+	    if( region.shape === "line" ){
+		regstr = regstr.replace(/ *{[^{}]*}$/,"");
+	    }
 	    regstr += " " + JSON.stringify(exports);
 	}
 	if( tagstr ){
