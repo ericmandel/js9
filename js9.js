@@ -21839,12 +21839,10 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	}
 	// nice title
 	title = sprintf("JS9 Display"+JS9.IDFMT, id);
-	// once the window exists, we can create the display & load the image
-	$("#dhtmlwindowholder").arrive("#"+id, {onceOnly: true}, function(){
-	    display = lightLoad(file, opts);
-	});
         // create the light window
         winid = JS9.lightWin(did, "inline", html, title, winopts);
+	// set up display and load image
+	display = lightLoad(file, opts);
 	// on window close, we need to deal with the displayed images
 	winid.onclose = function(){
 	    return lightClose(display);

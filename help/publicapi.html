@@ -4809,23 +4809,20 @@ page and load an image into that display:
     JS9.Load("foo.fits", {scale: "log"}, {display: "myJS9"});
 </pre>
 You can use <a href="#JS9.LoadWindow"><b>JS9.LoadWindow()</b></a> to
-load images into a light-weight or completely new window, but to do
-this yourself, you should call JS9.AddDivs() after the window has been
-created. You can use the jQuery
+load images into a light-weight or completely new window. To do this
+with your own routine, you should call JS9.AddDivs() after the window
+has been created. You can use the jQuery
 <a href="https://github.com/uzairfarooq/arrive" target="_blank">arrive</a>
 wrapper that implements support for the
-<a href="https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver" target="_blank">
-MutationObserver</a>. Here is the relevant code fragment from
-<a href="#JS9.LoadWindow"><b>JS9.LoadWindow()</b></a>:
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver" target="_blank"> MutationObserver</a>:
 <pre>
-    // once the window exists, we can create/add the display & load the image
-    $("#dhtmlwindowholder").arrive("#"+id, {onceOnly: true}, function(){
-        display = lightLoad(file, opts);
+    // once the window exists containing the div id, we can finish the set up
+    $("#window").arrive("#"+id, {onceOnly: true}, function(){
+        finishUp();
     });
-    // create the light window: the html contains a new display with id
-    winid = JS9.lightWin(did, "inline", html, title, winopts);
+    // (make-believe) create light win routine, where id is the window div id
+    myCreateLightWindow(id, html, title, opts);
 </pre>
-
 
 <h5 id="JS9.InstantiatePlugins">Instantiate plugins on this web page</h5>
 <p>
