@@ -659,6 +659,8 @@ JS9.Image = function(file, params, func){
 	JS9.images.push(this);
 	// notify the helper
 	this.notifyHelper();
+	// show regions layer
+	this.showShapeLayer("regions", true, {local: true});
 	// add regions, if necessary
 	if( localOpts && localOpts.regions ){
 	    this.addShapes("regions", localOpts.regions);
@@ -11300,6 +11302,10 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 	if( !opts.local ){
 	    layer.show = true;
 	}
+	// restore selection property
+	if( layer.show ){
+	    canvas.selection = layer.opts.canvas.selection;
+	}
 	if( layer.json && layer.show ){
 	    canvas.loadFromJSON(layer.json, function(){
 		var key, tdlayer, obj;
@@ -11322,7 +11328,6 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 		} else {
 		    canvas.renderAll();
 		}
-		canvas.selection = layer.opts.canvas.selection;
 		layer.zindex = Math.abs(layer.zindex);
 		dlayer.divjq.css("z-index", layer.zindex);
 		// unselect selected objects in lower-zindex groups
