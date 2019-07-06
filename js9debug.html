@@ -249,12 +249,16 @@
                        JS9.SetZoom(2);
                        JS9.LoadRegions("casa/casa.reg");
                        JS9.Load("fits/ngc1316.fits",
-                                {colormap: "viridis", scale: "linear",
-                                 onload: function(im){
-                                   JS9.SetScale("zscale", {display: im});
-                                   JS9.Load("fits/casa.fits");
-                                 }});
-
+                           {colormap: "viridis", scale: "linear",
+                           onload: function(im2){
+                               JS9.SetScale("zscale", {display: im2});
+			       var win = "JS9_light" + JS9.uniqueID();
+			       $("#dhtmlwindowholder").arrive("#" + win,
+                               {onceOnly: true}, function(){
+				   im2.moveToDisplay(win);
+			       });
+			       JS9.LoadWindow(null,
+                                   {id:win, clone:im2.display.id}, "light");}});
                     }});
         JS9.Preload("fits/snr.fits[events][pi==pha]",
                     {colormap: "heat", scale: "linear",
