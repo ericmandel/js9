@@ -11,8 +11,25 @@
 <div class="helpContainer">
 <center><h3>JS9 Known Issues</h3></center>
 
+<b>Unresolved Issues:</b>
+
 <ol>
-<li><b>Chrome (January 20, 2019 : not resolved)</b>
+
+<li><b>Desktop app (July 8, 2019 : unresolved)</b>
+<p>
+The <a href="https://electronjs.org/" target="_blank">Electron.js</a>-based JS9
+desktop app has some limitations and bugs when a second instance is started up.
+It unexpectedly takes four seconds to retrieve and compile the
+<a href="https://socket.io/" target="_blank">socket.io</a> client
+messaging code. The cause for this delay appears to be rooted in the
+JavaScript compilation time. In addition, the <b>Preferences</b> plugin uses
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage"
+target="_blank">localStorage</a> to save parameters between sessions.
+The Electron.js-based JS9 app does not properly return localStorage values
+for the second running instance. These problems hopefully will be resolved
+by the Electron developers ... at some point.
+
+<li><b>Chrome (January 20, 2019 : unresolved)</b>
 <p>
 Chrome's memory restrictions remain more stringent than those of
 Firefox or Safari. On a Macbook Pro, it is possible to reproject a
@@ -21,7 +38,7 @@ Firefox or Safari. On a Macbook Pro, it is possible to reproject a
 We will continue to try to reduce memory usage, while hoping for less
 restrictive limits (or even full support for unlimited memory via mmap()).
 
-<li><b>Linux platforms using Firefox (February 20, 2018 : not resolved)</b>
+<li><b>Linux platforms using Firefox (February 20, 2018 : unresolved)</b>
 <p>
 One of the simplest ways to use JS9 locally is by means of the file://
 URL scheme, e.g., point your browser to file:///home/me/js9/js9basics.html.
@@ -33,25 +50,10 @@ domain, it does not work for files outside the domain:
     JS9.Load("fits/foo.fits")    # works
     JS9.Load("../foo.fits")      # does not work
 </pre>
-Firefox does load files outside the web domain properly on a Mac (at
-least for today!).
+Firefox does appear to load files outside the web domain properly on a Mac.
 <p>
 
-<li><b>Safari (October 4, 2016 : resolved)</b>
-<p>
-On Mac OSX, if the Terminal running the js9 messaging script is
-located in a different Space (i.e. desktop) from the Safari browser
-with which it is communicating, the transfer of results from the
-browser to the script can be delayed up to several seconds. It does
-not happen all the time and it does not happen if the two applications
-share the same Space. The data transfer also will resume immediately
-if you switch to the Space containing the browser. The obvious
-work-around is to make sure that the Terminal and browser share the
-same Space.
-<p>
-The problems appears to have gone away with MacOS 10.14 (Mojave).
-
-<li><b>Webkit (Safari and Chrome) (December 3, 2015 : NOT resolved)</b>
+<li><b>Webkit (Safari and Chrome) (December 3, 2015 : unresolved)</b>
 <p>
 Webkit browsers such as Safari and Chrome implement resizeable divs in
 an unintuitive way, which required several hacks in order to allow us
@@ -66,7 +68,16 @@ not changed to a resize cursor. I couldn't figure out how to work
 around this in a fool-proof way.  We hope Webkit will implement more
 intuitive behavior in the near future.
 
-<li><b>Safari Mobile platforms (April 9, 2015 : NOT resolved)</b>
+<li><b>All platforms (June 13, 2014 : unresolved)</b>
+<p>
+When resizing a box region in one direction only (i.e., width or
+height), the width of the region's border will be different in each
+direction.  This is due to the underlying graphics algorithm used to
+resize the region, which changes the scale factor in each direction
+individually and ties the border width to that scale factor. We will
+fix this in a future release.
+
+<li><b>Safari Mobile platforms (April 9, 2015 : unresolved)</b>
 <p>
 A maximum image size is enforced by Apple on Safari mobile devices.
 (See https://discussions.apple.com/thread/4975106 for a discussion.)
@@ -75,6 +86,26 @@ and iPads, they should be restricted to a size of less than
 approximately 1900x1900, depending on the size of the FITS header. So
 a PNG file of size 1024x1024 should be fine, while a file of size
 2048x2048 certainly will be too large.
+
+</ol>
+
+<p>
+<b>Resolved Issues:</b>
+
+<ol>
+<li><b>Safari (October 4, 2016 : resolved)</b>
+<p>
+On Mac OSX, if the Terminal running the js9 messaging script is
+located in a different Space (i.e. desktop) from the Safari browser
+with which it is communicating, the transfer of results from the
+browser to the script can be delayed up to several seconds. It does
+not happen all the time and it does not happen if the two applications
+share the same Space. The data transfer also will resume immediately
+if you switch to the Space containing the browser. The obvious
+work-around is to make sure that the Terminal and browser share the
+same Space.
+<p>
+The problems appears to have gone away with MacOS 10.14 (Mojave).
 
 <li><b>All platforms, especially Chrome (June 21, 2014 : resolved)</b>
 <p>
@@ -90,15 +121,6 @@ these problems. Otherwise, we will take a more drastic approach to
 memory management within JS9 (at the expense of speed).
 <p>
 The 64-bit Chrome can make use of 2Gb of memory.
-
-<li><b>All platforms (June 13, 2014 : NOT resolved)</b>
-<p>
-When resizing a box region in one direction only (i.e., width or
-height), the width of the region's border will be different in each
-direction.  This is due to the underlying graphics algorithm used to
-resize the region, which changes the scale factor in each direction
-individually and ties the border width to that scale factor. We will
-fix this in a future release.
 
 <li><b>All platforms using Chrome (March 27, 2014 : resolved)</b>
 <p>
@@ -139,7 +161,7 @@ further processing commands).
 
 </ol>
 
-<h5>Last updated: March 31, 2019</h5>
+<h5>Last updated: July 8, 2019</h5>
 </div>
 
 </body>
