@@ -406,7 +406,17 @@ if( !js9Electron.page.match(/^(https?|ftp):\/\//) ||
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+    ps.lookup({
+	psargs: 'ux',
+	arguments: 'js9Electron.js'
+    }, function(err, rlist) {
+	if( rlist.length >= 2 ){
+	    process.env.JS9_MULTIELECTRON = "true";
+	}
+	createWindow();
+    });
+});
 
 // quit when all windows are closed
 app.on('window-all-closed', () => {

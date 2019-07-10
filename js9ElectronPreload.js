@@ -7,4 +7,7 @@ window.currentDir = process.cwd();
 window.electronVersion = process.versions.electron;
 // allow communication back to the renderer
 window.electronIPC = require('electron').ipcRenderer;
-
+// pass flag specifying whether multiple instances of the app are running
+if( process.env.JS9_MULTIELECTRON === "true" ){
+    window.multiElectron = true;
+}

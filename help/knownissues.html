@@ -15,19 +15,18 @@
 
 <ol>
 
-<li><b>Desktop app (July 8, 2019 : unresolved)</b>
+<li><b>Desktop app (July 9, 2019 : unresolved)</b>
 <p>
-The <a href="https://electronjs.org/" target="_blank">Electron.js</a>-based JS9
-desktop app has some limitations and bugs when a second instance is started up.
-It unexpectedly takes four seconds to retrieve and compile the
-<a href="https://socket.io/" target="_blank">socket.io</a> client
-messaging code. The cause for this delay appears to be rooted in the
-JavaScript compilation time. In addition, the <b>Preferences</b> plugin uses
+The <a href="https://electronjs.org/" target="_blank">Electron.js</a>-based
+JS9 desktop app has some limitations when a second instance is started up.
+The most obvious concerns the <b>Preferences</b> plugin, which uses
 <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage"
 target="_blank">localStorage</a> to save parameters between sessions.
-The Electron.js-based JS9 app does not properly return localStorage values
-for the second running instance. These problems hopefully will be resolved
-by the Electron developers ... at some point.
+Unfortunately, <a href="https://electronjs.org/" target="_blank">
+Electron.js</a> apps do not properly return localStorage values for
+the second (and subsequent) instance. We therefore have disabled the ability
+to load and store preferences via localStorage in all but the first
+running instance of the JS9 app.
 
 <li><b>Chrome (January 20, 2019 : unresolved)</b>
 <p>
@@ -161,7 +160,7 @@ further processing commands).
 
 </ol>
 
-<h5>Last updated: July 8, 2019</h5>
+<h5>Last updated: July 9, 2019</h5>
 </div>
 
 </body>

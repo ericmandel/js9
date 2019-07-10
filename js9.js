@@ -134,8 +134,8 @@ JS9.globalOpts = {
     pannerDirections: true,	// display direction vectors in panner?
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
-    ehtimeout: 5000,		// connection timeout for Electron connect
-    ehretries: 10,		// connection retries Electron connect
+    ehtimeout: 500,		// connection timeout for Electron connect
+    ehretries: 20,		// connection retries Electron connect
     xtimeout: 180000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     imopts: "IMOPTS",           // basename of FITS param containing json opts
@@ -158,6 +158,7 @@ JS9.globalOpts = {
     loadProxy: false,           // do we allow proxy load requests to server?
     imsectionURL: "params/imsection.html", // location of param html file
     postMessage: false,         // allow communication through iframes?
+    localStorage: true,        // use localStorage for session params?
     waitType: "spinner",        // "spinner" or "mouse"
     spinColor: "#FF0000",       // color of spinner
     spinOpacity: 0.35,          // opacity of spinner
@@ -586,6 +587,10 @@ if( window.isElectron ){
     // mount point for local file system, based on hostname
     if( JS9.hasNode ){
 	JS9.localMount = require("os").hostname() || "localAccess";
+    }
+    // if multiple instances are running, turn off localStorage
+    if( window.multiElectron ){
+	JS9.globalOpts.localStorage = false;
     }
 }
 
@@ -10496,7 +10501,14 @@ JS9.Helper.prototype.connect = function(type){
 	this.url = this.url.replace(/:[0-9][0-9]*$/, "")
 	    + ":" +  JS9.globalOpts.helperPort;
 	// this is the url of the socket.io.js file
-	this.sockurl  = this.url + "/socket.io/socket.io.js";
+	if( window.multiElectron ){
+	    // the slim version avoids the 4-second delay compiling the code
+	    // see help/knownissues.html
+	    this.sockurl  = this.url + "/socket.io/socket.io.slim.js";
+	} else {
+	    // use the canonical version
+	    this.sockurl  = this.url + "/socket.io/socket.io.js";
+	}
 	// make sure helper is running and then connect
 	if( window.isElectron ){
 	    this.aliveurl = this.url + "/alive";
@@ -20832,7 +20844,7 @@ JS9.init = function(){
 	JS9.globalOpts.resizeHandle = false;
     }
     // replace with global opts with user opts, if necessary
-    if( window.hasOwnProperty("localStorage") ){
+    if( window.hasOwnProperty("localStorage") && JS9.globalOpts.localStorage ){
 	try{ uopts = localStorage.getItem("globals"); }
 	catch(e){ uopts = null; }
 	if( uopts ){
