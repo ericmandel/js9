@@ -158,7 +158,7 @@ JS9.globalOpts = {
     loadProxy: false,           // do we allow proxy load requests to server?
     imsectionURL: "params/imsection.html", // location of param html file
     postMessage: false,         // allow communication through iframes?
-    localStorage: true,        // use localStorage for session params?
+    localStorage: true,         // use localStorage for session params?
     waitType: "spinner",        // "spinner" or "mouse"
     spinColor: "#FF0000",       // color of spinner
     spinOpacity: 0.35,          // opacity of spinner
@@ -166,7 +166,7 @@ JS9.globalOpts = {
     resizeHandle: true,		// add resize handle to display?
     resizeRedisplay: true,	// redisplay image while resizing?
     cloneNewDisplay: true,      // clone size of display, when possible?
-    logoDisplay: false,          // show JS9 logo on each display?
+    logoDisplay: false,         // show JS9 logo on each display?
     lightWinClose: "ask",	// ask, close, move images when closing lightwin
     regionDisplay: "lightwin",	// "lightwin" or "display"
     regionConfigSize: "medium", // "small", "medium"
@@ -228,7 +228,7 @@ JS9.globalOpts = {
     xeqPlugins: true,		// execute plugin callbacks?
     extendedPlugins: true,	// enable extended plugin support?
     intensivePlugins: false,	// enable intensive plugin support?
-    dynamicSelect: "click",    // dynamic plugins: "click", "move", or false
+    dynamicSelect: "click",     // dynamic plugins: "click", "move", or false
     dynamicHighlight: true,     // highlight dynamic selection
     corsProxy:   "https://js9.si.edu/cgi-bin/CORS-proxy.cgi",   // CORS proxy
     simbadProxy: "https://js9.si.edu/cgi-bin/simbad-proxy.cgi", // simbad proxy
