@@ -3,10 +3,10 @@
   Modified version of HPXcvt.c to allow it to be called as a subroutine:
     1. input existing fitsfile pointer (instead of reading an existing file)
     2. return a new fitsfile pointer (instead of generating a new file)
-  E. Mandel, 12/5/2016
+  E. Mandel, 12/5/2016, updated to 6.3 7/12/2019
 
-  WCSLIB 5.15 - an implementation of the FITS WCS standard.
-  Copyright (C) 1995-2016, Mark Calabretta
+  WCSLIB 6.3 - an implementation of the FITS WCS standard.
+  Copyright (C) 1995-2019, Mark Calabretta
 
   This file is part of WCSLIB.
 
@@ -27,7 +27,7 @@
 
   Author: Mark Calabretta, Australia Telescope National Facility, CSIRO.
   http://www.atnf.csiro.au/people/Mark.Calabretta
-  $Id: HPXcvt.c,v 5.15 2016/04/05 12:55:13 mcalabre Exp $
+  $Id: HPXcvt.c,v 6.3 2019/07/12 07:33:40 mcalabre Exp $
 *=============================================================================
 *
 * HPXcvt reorganises HEALPix data into a 2-D FITS image.  Refer to the usage
@@ -60,7 +60,7 @@ char usage[] =
 "  -q<quad>     Recentre longitude at quad(mod 4) x 90 degrees, where\n"
 "               quad(rant) is an integer.\n"
 "\n"
-"  -x<n|s>      Use a north-polar or south-polar layout.\n";
+"  -x<n|s>      Use a north-polar or south-polar layout (XPH).\n";
 
 #include <ctype.h>
 #include <errno.h>
@@ -90,6 +90,7 @@ struct healpix {
                         /*   2: south.                                */
   char  quad;		/* Recentre longitude on quadrant (modulo 4). */
   int   nside;		/* Dimension of a base-resolution pixel.      */
+  int   padding;	/* (Dummy inserted for alignment purposes.)   */
   long  npix;		/* Total number of pixels in the data array.  */
   float *data;		/* Pointer to memory allocated to hold data.  */
 };
@@ -326,9 +327,9 @@ int HEALPixIn(struct healpix *hpxdat)
     if (lastpix >= 0) {
       /* If LASTPIX is present without NSIDE we can only assume it's npix. */
       nside = (int)(sqrt((double)((lastpix+1) / 12)) + 0.5);
-    } else if (npix) {
+    } else if (hdutype == IMAGE_HDU) {
       nside = (int)(sqrt((double)(npix / 12)) + 0.5);
-    } else if (nrow) {
+    } else if (hdutype == BINARY_TBL) {
       nside = (int)(sqrt((double)((nrow * nelem) / 12)) + 0.5);
     }
   }
