@@ -771,6 +771,11 @@ JS9.Image = function(file, params, func){
 		}
 	    }
 	}
+	// also load all of the image extensions?
+	if( localOpts && localOpts.allext &&
+	    this.hdus && this.hdus.length > 0 ){
+	    this.displayExtension("all");
+	}
     };
     // params can be an object containing local params, or the display string
     if( params ){
@@ -3858,7 +3863,30 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 
 // display the specified extension of a multi-extension FITS file
 JS9.Image.prototype.displayExtension = function(extid, opts, func){
+    var that = this;
     var i, s, got, extname, im, id;
+    var dispnext = function(i){
+	var hdu;
+	var topts = $.extend(true, {}, opts);
+	// hdus are loaded as separate images
+	topts.separate = true;
+	// all done, call the supplied function, if any
+	if( i === that.hdus.length ){
+	    if( func ){
+		try{ JS9.xeqByName(func, window, that); }
+		catch(e){ JS9.error("in displayExtension callback", e, false); }
+	    }
+	    return;
+	}
+	// next hdu
+	hdu = that.hdus[i];
+	if( hdu.type === "image" && hdu.naxis >= 2 ){
+	    // load next hdu and recurse when done
+	    that.displayExtension(hdu.hdu, topts, function(){ dispnext(i+1); });
+	} else {
+	    dispnext(i+1);
+	}
+    };
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
@@ -3872,8 +3900,15 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 	JS9.error("no FITS HDUs found for displayExtension()");
     }
     // sanity check
-    if( extid === undefined ){
+    if( JS9.isNull(extid) ){
 	JS9.error("missing extname/extnum for displayExtension()");
+    }
+    // display all extensions?
+    if( extid === "all" ){
+	// load all image extensions, in order, as separate images
+	// we start with the first and let the call recurse
+	dispnext(0);
+	return;
     }
     // extname specified?
     if( typeof extid === "string" ){
@@ -3916,6 +3951,10 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 	if( got ){
 	    im.displayImage("display", opts);
 	    im.display.clearMessage();
+	    if( func ){
+		try{ JS9.xeqByName(func, window, that); }
+		catch(e){ JS9.error("in displayExtension callback", e, false); }
+	    }
 	    return;
 	}
     }

@@ -24,6 +24,16 @@ JS9.Mef.xseparate = function(id, target){
     }
 };
 
+// load all images
+// eslint-disable-next-line no-unused-vars
+JS9.Mef.xall = function(id, target){
+    var display = JS9.lookupDisplay(id);
+    // display all image extensions
+    if( display && display.image ){
+	display.image.displayExtension("all");
+    }
+};
+
 // get an MefExtension id based on the file image id
 JS9.Mef.imid = function(im, i, noext){
     var id = im.display.id + "_" + im.id;
@@ -154,7 +164,7 @@ JS9.Mef.init = function(opts){
     s = sprintf("<div class='%s'><span><b>Click on a FITS HDU extension to display it:</b></span>", JS9.Mef.BASE + "Header");
     // add the checkbox for displaying each extension separately
     sid = JS9.Mef.imid(im, "Separate");
-    s += sprintf('<span style="float: right"><input type="checkbox" id="%s" name="separate" value="separate" onclick="javascript:JS9.Mef.xseparate(\'%s\', this)"><b>Display each extension as a separate image</b></span></div>', sid, this.display.id);
+    s += sprintf('&nbsp;&nbsp;<span><input type="checkbox" id="%s" name="separate" value="separate" onclick="javascript:JS9.Mef.xseparate(\'%s\', this)"><b>&nbsp;as a separate image</b></span><span style="float: right"><input type="button" id="%s" name="all" value="Display all images" onclick="javascript:JS9.Mef.xall(\'%s\', this)"></span></div>', sid, this.display.id, sid, this.display.id);
     this.mefContainer.html(s);
     // add a formatted string for each extension
     for(i=0; i<im.hdus.length; i++){

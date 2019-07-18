@@ -139,6 +139,7 @@ Finally, you can pass a fits object containing the following properties:
 <li><b>dmin</b>: data min (optional)
 <li><b>dmax</b>: data max (optional)
 <li><b>refresh</b>: refresh data when reloading image?
+<li><b>allext</b>: load all image extensions?
 </ul>
 The <a href="#JS9.RefreshImage"><b>JS9.RefreshImage()</b></a>
 and <a href="#JS9.Load"><b>JS9.Load()</b></a> routines differ in that
@@ -810,13 +811,24 @@ conventions, which are documented
 <p>
 where:
 <ul>
-<li><b>extid</b>: HDU extension number or the HDU's EXTNAME value
+<li><b>extid</b>: HDU extension number or the HDU's EXTNAME string or "all"
 <li><b>opts</b>: object containing options
 </ul>
-This routine allows you to display images and even binary tables from
-a multi-extension FITS file. (See, for example,
-<a href=" http://fits.gsfc.nasa.gov/fits_primer.html">the FITS Primer</a>
-for information about HDUs and multi-extension FITS).
+This routine allows you to display images and binary tables from
+a multi-extension FITS file. The first argument is the 0-indexed HDU
+number or the EXTNAME name value of the HDU extension to display. If "all"
+is specified, then all 2D image extensions are loaded in order and displayed
+as  separate images.
+<p>
+The optional opts object can contain:
+<ul>
+<li><b>separate</b>: boolean determining whether images are loaded separately
+</ul>
+If <b>separate</b> is true, the new extension is displayed as a separate image.
+Otherwise, the new extension replaces the current display.
+<p>
+See <a href=" http://fits.gsfc.nasa.gov/fits_primer.html">the FITS
+Primer</a> for more information about HDUs and multi-extension FITS.
 
 <h5 id="JS9.DisplaySlice">Display a slice of a FITS data cube</h5>
 <p>
