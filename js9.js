@@ -3441,7 +3441,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     };
     // main display routine
     var disp = function(hdu, opts){
-	var tim, iid, did, arr;
+	var tim, did, arr;
 	var ss = "";
 	// make a copy of opts so we can change it
 	topts = $.extend(true, {}, opts || {});
@@ -3467,12 +3467,16 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		ss = sprintf("[%s]", that.parent.extnum);
 	    }
 	}
-	iid = that.id.replace(/\[.*\]/,"") + ss;
+	// change id and file if extension changed
+	if( ss ){
+	    topts.id = that.id.replace(/\[.*\]/,"") + ss;
+	    // NB: this was removed in v2.3 ... why? ... added back in v2.5
+	    topts.file = that.file.replace(/\[.*\]/,"") + ss;
+	}
 	if( topts.separate ){
 	    // display section as a separate image in the specified display
 	    delete topts.xcen;
 	    delete topts.ycen;
-	    topts.id = iid;
 	    if( typeof topts.separate === "string" ){
 		arr = topts.separate.split(":");
 		switch(arr.length){
@@ -3514,7 +3518,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    // refresh the image in the specified display
 	    delete topts.xcen;
 	    delete topts.ycen;
-	    topts.id = iid;
 	    arr = topts.refresh.split(":");
 	    switch(arr.length){
 	    case 1:
@@ -3560,7 +3563,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	} else {
 	    // this is the default behavior for displaySection:
 	    // refresh the image in the current display
-	    topts.id = iid;
 	    topts.rawid = that.raw.id;
 	    // function to perform when image is refreshed
 	    topts.onrefresh = topts.ondisplaysection || topts.onrefresh || func;
