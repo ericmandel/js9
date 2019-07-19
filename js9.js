@@ -2211,13 +2211,12 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 			this.id, this.raw.hdu.fits.vfile);
 	    }
 	    JS9.cleanupFITSFile(this.raw, true);
-	} else if( frheap && this.raw.hdu.fits.heap ){
+	} else if( frheap ){
 	    if( JS9.DEBUG > 2 ){
 		JS9.log("freeing heap space for %s: %s",
 			this.id, this.raw.hdu.fits.vfile);
 	    }
-	    JS9.vfree(this.raw.hdu.fits.heap);
-	    this.raw.hdu.fits.heap = null;
+	    JS9.cleanupFITSFile(this.raw, false);
 	}
     }
     // plugin callbacks
@@ -3961,7 +3960,9 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
     // cleanup previous FITS file support, if necessary
     // do this before we handle the new FITS file, or else
     // we end up with a memory leak in the emscripten heap!
-    JS9.cleanupFITSFile(this.raw, false);
+    if( !opts.separate ){
+	JS9.cleanupFITSFile(this.raw, false);
+    }
     // process the FITS file by going to the extname/extnum
     this.displaySection(opts, func);
     // allow chaining

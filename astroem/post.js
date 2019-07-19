@@ -654,11 +654,6 @@ Module["cleanupFITSFile"] = function(fits, all) {
 	_free(fits.heap);
 	fits.heap = null;
     }
-    // free up header card string
-    if( fits.cardstr ){
-	_free(fits.cardstr);
-	fits.cardstr = null;
-    }
     if( all ){
 	// close FITS file
 	if( fits.fptr ){
