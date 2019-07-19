@@ -5449,6 +5449,7 @@ JS9.Mef.xall = function(id, target){
     var display = JS9.lookupDisplay(id);
     // display all image extensions
     if( display && display.image ){
+	display.pluginInstances[JS9.Mef.BASE].separate = true;
 	display.image.displayExtension("all");
     }
 };
