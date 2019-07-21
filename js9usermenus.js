@@ -77,6 +77,12 @@ JS9.globalOpts.userMenuBar = [
 		"name": "histeq",
 		"cmd": "SetScale",
 		"args": ["histeq"]
+	    },
+	    {
+		"name": "Scales...",
+		"cmd": "DisplayPlugin",
+		"updateTitle": false,
+		"args": ["JS9Scale"]
 	    }
 	]
     },
