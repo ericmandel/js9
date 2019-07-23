@@ -83,10 +83,10 @@
 
     <td>
     <ul>
-    <li> <a href='javascript:JS9.Load("fits/b10.fits", {fits2png: false, colormap: "grey"}, {display: "myJS9"});'>b10.fits</a>
     <li> <a href='javascript:JS9.Load("m13/m13_gzip.fits", {fits2png: false, colormap: "red"}, {display: "myJS9"});'>M13 (gzip tile compress)</a>
     <li> <a href='javascript:JS9.Load("fits/dot.fits", {fits2png: false, colormap: "grey"}, {display: "myJS9"});'>dot.fits (256,256 has value 2)</a>
     <li> <a href='javascript:JS9.LoadProxy("http://hea-www.cfa.harvard.edu/~eric/coma.fits", {scale: "linear"}, {display: "myJS9"});'>coma.fits (proxy)</a>
+    <li> <a href='javascript:JS9.LoadProxy("http://nxsa.esac.esa.int/nxsa-sl/servlet/data-action-aio?obsno=0791580701&name=3COLIM&level=PPS&extension=FTZ", {colormap: "red", scale: "log", contrast: 6.32, bias: 0.09, onload: function(im){ nextSlice(im, 2); }});'>XMM (proxy/rgb)</a>
     <li> <a href='javascript:JS9.Load("smartx/casa_smartx_regions.fits.gz", {fits2png: false, rgbFile: "smartx/casa_smartx.png", parentFile: "smartx/casa_obs4637_img.fits"}, {display: "myJS9"});'>CAS-A (with RGB overlay)</a>
     </ul>
     </td>
@@ -258,7 +258,7 @@
 				   im2.moveToDisplay(win);
 				   setTimeout(function(){
 				       im2.moveToDisplay("JS9");
-				   }, 2000);
+				   }, 1000);
 			       });
 			       JS9.LoadWindow(null,
                                    {id:win, clone:im2.display.id}, "light");}});
@@ -575,6 +575,25 @@
     function ims(){
       im0 = JS9.GetImage();
       im1 = JS9.GetImage({display: "myJS9"});
+    }
+    function nextSlice(im, i){
+	var cmaps =  ["red", "green", "blue"];
+	var scales = ["log", "log", "log"];
+	var contrasts = [6.32, 6.625, 7.025]
+	var biases = [0.09, 0.15, 0.195]
+	// i is the slice number, starting from 1
+	JS9.DisplaySlice(i,
+            {colormap:cmaps[i-1], scale:scales[i-1],
+	     contrast: contrasts[i-1], bias: biases[i-1],
+            separate: true},
+            function(im){
+		i = i + 1;
+	        if( i <= 3 ){
+		    nextSlice(im, i);
+	        } else {
+		    JS9.SetRGBMode(true);
+	        }
+	    });
     }
     $(document).ready(function(){
       JS9.globalOpts.onpreload = function(){console.log("preload complete!");}
