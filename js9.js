@@ -77,8 +77,9 @@ JS9.TOUCHSUPPORTED = ( window.hasOwnProperty("ontouchstart") ||
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 JS9.BROWSER = (function(){
+  var tem;
   var P= navigator.platform;
-  var N= navigator.appName, ua= navigator.userAgent, tem;
+  var N= navigator.appName, ua= navigator.userAgent;
   var M= ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
   tem= ua.match(/version\/([\.\d]+)/i);
   if(M && tem !== null){ M[2]= tem[1]; }
@@ -1404,7 +1405,8 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
 JS9.Image.prototype.mkRawDataFromPNG = function(){
     var i, s, idx, offscreen, dlen, mode, tval,  getfunc, littleEndian;
     var card, pars, clen;
-    var realpng, hstr, hstrs = [];
+    var realpng, hstr;
+    var hstrs = [];
     var nhist=0, ncomm=0;
     // memory array of 8 bytes
     var abuf = new ArrayBuffer(8);
@@ -5392,7 +5394,8 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 JS9.Image.prototype.displayAnalysis = function(type, s, opts){
     var i, r, id, did, hstr, pobj, divjq, title, titlefile, winFormat, divid;
     var plot, pdata, popts;
-    var scaleFunc, scaleCur = {x: "linear", y: "linear"};
+    var scaleFunc;
+    var scaleCur = {x: "linear", y: "linear"};
     var a = JS9.lightOpts[JS9.LIGHTWIN];
     var lfunc = function(v){
 	return v === 0 ? v : Math.log(v);
@@ -7859,7 +7862,8 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 
 // apply image processing filters to the current RGB image
 JS9.Image.prototype.filterRGBImage = function(filter){
-    var key, filters = [];
+    var key;
+    var filters = [];
     var argv = Array.prototype.slice.call(arguments);
     // no arg: return list of filters
     if( !filter ){
@@ -12313,7 +12317,8 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 JS9.Fabric.addShapes = function(layerName, shape, myopts){
     var i, sobj, sarr, ns, s, bopts, opts;
     var layer, canvas, dlayer, zoom;
-    var ttop, tleft, rarr = [];
+    var ttop, tleft;
+    var rarr = [];
     var objs = [];
     var params = {};
     // is this core service disabled?
@@ -13538,8 +13543,11 @@ JS9.Fabric.refreshShapes = function(layerName){
 JS9.Fabric.addPolygonPoint = function(layerName, obj, evt){
     var i, points, p1, p2, minX, minY, maxX, maxY, dir, m, dot, d, angle;
     var layer;
-    var mpos={}, canv={}, local={}, newpt={}, pos = {}, pVec = {}, p = {};
-    var diff = Number.MAX_VALUE;   // a bloated diff, for minimum comparison
+    var mpos = {};
+    var canv = {}, local = {};
+    var newpt = {}, pos = {};
+    var pVec = {}, p = {};
+    var diff  =  Number.MAX_VALUE;   // a bloated diff, for minimum comparison
     // sanity check
     if( !obj || !obj.points){
         return;
@@ -13975,7 +13983,8 @@ JS9.resetPolygonCenter = function(poly){
 // call using image context
 JS9.Fabric.print = function(opts){
     var html, key, win, dataURL, divstr, pinst, layer, initialURL;
-    var xoff = 0, yoff = 0;
+    var xoff = 0;
+    var yoff = 0;
     var divtmpl = "<div style='position:absolute; left:%spx; top:%spx'>";
     var winopts = sprintf("width=%s,height=%s,menubar=1,toolbar=1,status=0,scrollbars=1,resizable=1", this.display.canvasjq.attr("width"), this.display.canvasjq.attr("height"));
     // opts can be an object or json
@@ -15525,8 +15534,10 @@ JS9.Regions.pasteFromClipboard = function(curpos){
 JS9.Regions.listRegions = function(which, opts, layer){
     var i, region, rlen, key, obj;
     var tagjoin, tagstr, iestr, mode;
-    var regstr="", sepstr="; ";
-    var lasttype="none", dotags = false;
+    var regstr="";
+    var sepstr="; ";
+    var lasttype="none";
+    var dotags = false;
     var tagcolors = [];
     var pubs = [];
     var exports = {};
