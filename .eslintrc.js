@@ -179,7 +179,7 @@ module.exports = {
         "operator-linebreak": "off",
         "padded-blocks": "off",
         "prefer-arrow-callback": "off",
-        "prefer-const": "error",
+        "prefer-const": "off",
         "prefer-reflect": "off",
         "prefer-rest-params": "off",
         "prefer-spread": "off",
