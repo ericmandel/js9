@@ -6388,7 +6388,7 @@ JS9.Menubar.createMenus = function(){
 			    if( window.isElectron && window.electronIPC ){
 				try{ window.electronIPC.send("msg",
 							     "startHelper"); }
-				catch(ignore){}
+				catch(e){ /* empty */ }
 			    }
 			    break;
 			case "pageid":
@@ -6721,7 +6721,7 @@ JS9.Menubar.createMenus = function(){
 		var v1, v2, arr;
 		delete tdisp.tmp.editingMenu;
 		if( obj.resize ){
-		    arr = obj.resize.split(/[\s,\/]+/);
+		    arr = obj.resize.split(/[\s,/]+/);
 		    switch(arr.length){
 		    case 0:
 			break;
@@ -9943,7 +9943,7 @@ JS9.Prefs.showForm = function(){
     var form = $(this).closest("form");
     var source = form.data("source");
     try{ s = localStorage.getItem(source.name); }
-    catch(ignore){}
+    catch(e){ /* empty */ }
     if( s && (s !== "null") ){
 	t = "<pre>" + s + "</pre>";
     } else {
@@ -9961,7 +9961,7 @@ JS9.Prefs.deleteForm = function(){
     var source = form.data("source");
     try{ localStorage.removeItem(source.name);
 	delete JS9.userOpts[source.name]; }
-    catch(ignore){}
+    catch(e){ /* empty */ }
     return false;
 };
 
@@ -11331,7 +11331,7 @@ JS9.Sync.xeqSync = function(arr){
 		    break;
 		}
 	    }
-	    catch(e){}
+	    catch(e){ /* empty */ }
 	    finally{
 		// done sync'ing
 		if( xim.syncs ){
@@ -11340,7 +11340,7 @@ JS9.Sync.xeqSync = function(arr){
 	    }
 	}
     }
-    catch(e){}
+    catch(e){ /* empty */ }
     finally{
 	delete this.syncs.running;
     }
