@@ -2530,7 +2530,7 @@ JS9.Image.prototype.mkScaledCells = function(){
 	}
 	// inverse
 	for(ii=0; ii<tt; ii++){
-	    aa = (Math.pow(exp,ii/tt)-1) / exp;
+	    aa = (exp ** (ii / tt)-1) / exp;
 	    this.psInverse[ii] =  aa * dd + low;
 	}
 	break;
@@ -2538,7 +2538,7 @@ JS9.Image.prototype.mkScaledCells = function(){
 	exp = this.params.exp;
 	// scaled cells
 	for(ii=0; ii<ss; ii++){
-	    aa = (Math.pow(exp, ii/ss)-1) / exp;
+	    aa = (exp ** (ii / ss)-1) / exp;
 	    ll = Math.floor(aa * cs);
 	    if( ll >= cs ){
 		ll = cs - 1;
@@ -20110,7 +20110,7 @@ JS9.initColormaps = function(){
 	    frac = 1.0 - (i / (size - 1.0));
 	    h = frac * 360.0 + 270.0;
 	    s = Math.abs(Math.sin(frac * 3.1416));
-	    v = Math.pow((1.0 - frac), (1.0 / 3.0));
+	    v = (1.0 - frac) ** (1.0 / 3.0);
 	    // convert to RGB
 	    while( h >= 360.0 ){
 		h -= 360.0;
