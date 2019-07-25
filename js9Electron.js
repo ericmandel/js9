@@ -213,7 +213,7 @@ function createWindow() {
 	icon = path.join(__dirname, "/images/js9logo/png/js9logo_64.png");
 	if( fs.existsSync(icon) ){
 	    try{ app.dock.setIcon(icon); }
-	    catch(e){}
+	    catch(e){ /* empty */ }
 	}
     }
     // create the browser window
@@ -386,7 +386,7 @@ function createWindow() {
 
     // set up main menu
     try{ require('./js9ElectronMainMenu'); }
-    catch(e){}
+    catch(e){ /* empty */ }
 
     // emitted when the window is closed
     js9Electron.win.on('closed', function () {
@@ -423,7 +423,7 @@ app.on('window-all-closed', () => {
     // remove generated page if we merged
     if( typeof js9Electron.mergePage === "string" ){
 	try{ fs.unlinkSync(js9Electron.mergePage); }
-	catch(e){}
+	catch(e){ /* empty */ }
     }
     // quit the app
     app.quit();

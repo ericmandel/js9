@@ -45,7 +45,7 @@ function initSocketIO(sockurl, pageid, id){
 	// close off previous socket connection, if necessary
 	if( socket ){
 	    try{socket.disconnect();}
-	    catch(e){}
+	    catch(e){ /* empty */ }
 	    socket = null;
 	}
     }

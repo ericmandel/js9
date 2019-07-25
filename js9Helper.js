@@ -1017,7 +1017,7 @@ var socketioHandler = function(socket) {
 	catch(e){ aworkdir = basedir; }
 	if( !fs.existsSync(aworkdir) ){
 	    try{ fs.mkdirSync(aworkdir, parseInt('0755',8)); }
-	    catch(e){}
+	    catch(e){ /* empty */ }
 	}
 	// create workDir for this connection, if possible
 	if( fs.existsSync(aworkdir) ){

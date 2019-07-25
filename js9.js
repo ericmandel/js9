@@ -10,7 +10,7 @@
  *
  */
 
-/*global JS9Prefs, JS9Inline, $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, require */
+/*global JS9Prefs, JS9Inline, $, jQuery, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, require */
 
 "use strict";
 
@@ -79,7 +79,7 @@ JS9.TOUCHSUPPORTED = ( window.hasOwnProperty("ontouchstart") ||
 JS9.BROWSER = (function(){
   const P= navigator.platform;
   const N= navigator.appName, ua= navigator.userAgent;
-  const tem= ua.match(/version\/([\.\d]+)/i);
+  const tem= ua.match(/version\/([.\d]+)/i);
   let M = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
   if(M && tem !== null){ M[2]= tem[1]; }
   M= M? [M[1], M[2], P]: [N, navigator.appVersion,'-?', P];
@@ -681,7 +681,7 @@ JS9.Image = function(file, params, func){
 	    catch(e){ topts = null; }
 	    if( topts ){
 		try{ JS9.AddColormap(topts); }
-		catch(e){}
+		catch(e){ /* empty */ }
 	    }
 	}
 	// look for multi-line colormap (imcmap1, imcmap2, ...) in FITS header
@@ -702,7 +702,7 @@ JS9.Image = function(file, params, func){
 		catch(e){ topts = null; }
 		if( topts ){
 		    try{ JS9.AddColormap(topts); }
-		    catch(e){}
+		    catch(e){ /* empty */ }
 		}
 	    }
 	}
@@ -713,7 +713,7 @@ JS9.Image = function(file, params, func){
 	    catch(e){ topts = null; }
 	    if( topts ){
 		try{ this.setParam("all", topts); }
-		catch(e){}
+		catch(e){ /* empty */ }
 	    }
 	}
 	// look for multi-line imopts (imopts1, imopts2, ...) in FITS header
@@ -734,7 +734,7 @@ JS9.Image = function(file, params, func){
 		catch(e){ topts = null; }
 		if( topts ){
 		    try{ this.setParam("all", topts); }
-		    catch(e){}
+		    catch(e){ /* empty */ }
 		}
 	    }
 	}
@@ -2138,7 +2138,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    this.hdus = JSON.parse(s);
 	}
     }
-    catch(ignore){}
+    catch(ignore){ /* empty */ }
     // can we remove the virtual file?
     if( this.raw.hdu.fits && this.raw.hdu.fits.vfile  ){
 	s = JS9.globalOpts.clearImageMemory;
@@ -3348,7 +3348,7 @@ JS9.Image.prototype.fileDimensions = function() {
 	    ydim = this.raw.header.NAXIS2;
 	}
     }
-    return {xdim: xdim, ydim: ydim};
+    return {xdim, ydim};
 };
 
 /*
@@ -4487,7 +4487,7 @@ JS9.Image.prototype.displayToImagePos = function(dpos){
     // see funtools/funcopy.c/_FunCopy2ImageHeader
     x = (dpos.x - this.ix + 0.5) / sect.zoom + sect.x0 + 0.5;
     y = (iheight - (dpos.y - this.iy + 0.5)) / sect.zoom + sect.y0 + 0.5;
-    return {x: x, y: y};
+    return {x, y};
 };
 
 // return 0-indexed display coords for specified 1-indexed image position
@@ -4498,7 +4498,7 @@ JS9.Image.prototype.imageToDisplayPos = function(ipos){
     // see funtools/funcopy.c/_FunCopy2ImageHeader
     x = (((ipos.x - 0.5) - sect.x0) * sect.zoom) + this.ix - 0.5;
     y = (sect.y0 - (ipos.y - 0.5)) * sect.zoom + iheight + this.iy - 0.5;
-    return {x: x, y: y};
+    return {x, y};
 };
 
 // return 0-indexed display pos from 1-indexed logical pos
@@ -4607,7 +4607,7 @@ JS9.Image.prototype.initWCS = function(header){
 	    if( this.raw.altwcs[key].wcs > 0 ){
 		try{ this.raw.altwcs[key].wcsinfo =
 		     JSON.parse(JS9.wcsinfo(this.raw.altwcs[key].wcs)); }
-		catch(ignore){}
+		catch(ignore){ /* empty */ }
 	    }
 	}
     }
@@ -4788,7 +4788,7 @@ JS9.Image.prototype.notifyHelper = function(){
 	    }
 	    // returns: [file, path, wcs]
 	    // split args, dealing with spaces inside brackets
-	    r = rstr.trim().match(/(?:[^\s\[]+|\[[^\]]*\])+/g);
+	    r = rstr.trim().match(/(?:[^\s[]+|\[[^\]]*\])+/g);
 //	    No! returns the wrong image if current image id has <n> appended!
 //	    im = JS9.lookupImage(r[0], that.display.id||JS9.DEFID );
 	    im = that;
@@ -5421,7 +5421,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	} else {
 	    y = ann.y;
 	}
-	return {x: x, y: y};
+	return {x, y};
     };
     // eslint-disable-next-line no-unused-vars
     const flotScale = function(divjq, plot, axis, scale){
@@ -6859,7 +6859,7 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
     // which div?
     divid = opts.divid || JS9.globalOpts.analysisDiv;
     // display results
-    return this.displayAnalysis("plot", pobj, {divid: divid});
+    return this.displayAnalysis("plot", pobj, {divid});
 };
 
 // make (or select) a raw data layer
@@ -7666,7 +7666,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	    }
 	}
     }
-    catch(ignore){}
+    catch(ignore){ /* empty */ }
     // get reference to existing raw data file (or create one)
     if( raw.hdu && raw.hdu.fits.vfile ){
 	// input file name
@@ -8161,7 +8161,7 @@ JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
 	}
     }
     // add new func to stash
-    this.xeqstash[func] = {args: args, id: id, context: context};
+    this.xeqstash[func] = {args, id, context};
     // allow chaining
     return this;
 };
@@ -8509,7 +8509,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 		   radius: siz.radius,
 		   r1: siz.r1, r2: siz.r2,
 		   angle: 0,
-		   data: {ra: ra, dec: dec}};
+		   data: {ra, dec}};
 	    // save catalog columns for this row
 	    if( (opts.save !== false) &&
 		(JS9.globalOpts.catalogs.save !== false) ){
@@ -9108,7 +9108,7 @@ JS9.Display.prototype.initMessages = function(){
 	    }
 	});
     }
-    catch(ignore){}
+    catch(ignore){ /* empty */ }
     // allow chaining
     return this;
 };
@@ -9789,7 +9789,7 @@ JS9.Display.prototype.loadSession = function(file, opts){
 		}
 		if( layer.starbase ){
 		    try{im.layers[lname].starbase = JSON.parse(layer.starbase);}
-		    catch(ignore){}
+		    catch(ignore){ /* empty */ }
 		}
 	    }
 	}
@@ -10698,11 +10698,11 @@ JS9.WebWorker.prototype.msgHandler = function(msg){
 // send a message to a web worker
 JS9.WebWorker.prototype.postMessage = function(cmd, args, func, xfer){
     const id = cmd + JS9.uniqueID();
-    const obj = {id: id, cmd: cmd, args: args};
+    const obj = {id, cmd, args};
     // push context
     if( func ){
 	args = args || [];
-	this.handlers.push({id: id, cmd: cmd, args: args, func: func});
+	this.handlers.push({id, cmd, args, func});
     }
     // send message, possible with transferred data
     if( xfer ){
@@ -11241,7 +11241,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    olen = objs.length;
 	    for(i=0; i<olen; i++){
 		try{ objs[i].obj.sendToBack(); }
-		catch(e){}
+		catch(e){ /* empty */ }
 	    }
 	}
     });
@@ -14790,10 +14790,10 @@ JS9.Regions.displayConfigForm = function(shape){
 	});
     if( JS9.allinone ){
 	s = JS9.allinone.regionsConfigHTML;
-	shape.params.winid = im.displayAnalysis("regions", s, {title: title});
+	shape.params.winid = im.displayAnalysis("regions", s, {title});
     } else {
 	s = JS9.InstallDir(JS9.Regions.opts.configURL);
-	shape.params.winid = im.displayAnalysis("regions", s, {title: title});
+	shape.params.winid = im.displayAnalysis("regions", s, {title});
     }
 };
 
@@ -16261,7 +16261,7 @@ JS9.Regions.toggleRegionTags = function(which, x1, x2){
 	    }
 	}
 	if( xnew ){
-	    this.changeShapes("regions", which, {tags: tags});
+	    this.changeShapes("regions", which, {tags});
 	}
     }
 };
@@ -16847,7 +16847,7 @@ JS9.Grid.display = function(mode, myopts){
 	    if( arr && arr.length ){
 		x = parseFloat(arr[0]);
 		y = parseFloat(arr[1]);
-		dpos = this.imageToDisplayPos({x: x, y: y});
+		dpos = this.imageToDisplayPos({x, y});
 		if( dpos.x > (this.ix+opts.labelMargin) && dpos.x < (this.rgb.img.width+this.ix-opts.labelMargin) &&
 		    dpos.y > (this.iy+opts.labelMargin) && dpos.y < (this.rgb.img.height+this.iy-opts.labelMargin)){
 		    if( decskip >= opts.decSkip ){
@@ -16885,7 +16885,7 @@ JS9.Grid.display = function(mode, myopts){
 	    if( arr && arr.length ){
 		x = parseFloat(arr[0]);
 		y = parseFloat(arr[1]);
-		dpos = this.imageToDisplayPos({x: x, y: y});
+		dpos = this.imageToDisplayPos({x, y});
 		if( dpos.x > (this.ix+opts.labelMargin) && dpos.x < (this.rgb.img.width+this.ix-opts.labelMargin) &&
 		    dpos.y > (this.iy+opts.labelMargin) && dpos.y < (this.rgb.img.height+this.iy-opts.labelMargin)){
 		    if( raskip >= opts.raSkip ){
@@ -17718,10 +17718,10 @@ JS9.fetchURL = function(name, url, opts, handler) {
     // either url or name can be blank
     if( !url ){
 	url = name;
-	name = /([^\\\/]+)$/.exec(url)[1];
+	name = /([^\\/]+)$/.exec(url)[1];
     }
     if( !name ){
-	name = /([^\\\/]+)$/.exec(url)[1];
+	name = /([^\\/]+)$/.exec(url)[1];
     }
     // avoid the cache (Safari is especially aggressive) for FITS files
     if( !opts.allowCache && !url.match(/\?/) ){
@@ -18128,7 +18128,7 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 		    // json fits info
 		    if( rarr[1] ){
 			try{ obj = JSON.parse(rarr[1]); }
-			catch(ignore){}
+			catch(ignore){ /* empty */ }
 			if( obj ){
 			    nopts.extname = obj.extname;
 			    nopts.extnum = obj.extnum;
@@ -18162,7 +18162,7 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 		// no recursion!
 		nopts.fits2fits = false;
 		// load new file
-		JS9.Load(f, nopts, {display: display});
+		JS9.Load(f, nopts, {display});
 		break;
 	    default:
 		break;
@@ -18537,7 +18537,7 @@ JS9.cardpars = function(card){
     if( name === "HISTORY" ){ return [name, card.slice(9).trim()]; }
     if( name === "COMMENT" ){ return [name, card.slice(9).trim()]; }
     if( card[8] !== "=" ){ return undefined; }
-    value = card.slice(10).replace(/\'/g, " ").replace(/ \/.*/, "").trim();
+    value = card.slice(10).replace(/'/g, " ").replace(/ \/.*/, "").trim();
     if( value === "T" ){
 	value = true;
     } else if( value === "F" ){
@@ -18564,6 +18564,7 @@ JS9.raw2FITS = function(raw, opts){
 			    "file does conform to FITS standard");
 
 	} else {
+	    // eslint-disable-next-line no-useless-escape
 	    regexp = new RegExp(name + " *= *(-?[-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?) *");
 	    if( card ){
 		s = card.replace(regexp, "$1");
@@ -19146,7 +19147,7 @@ JS9.strtoscaled = function(s){
     default:
 	break;
     }
-    return {dval: dval, dtype: dtype};
+    return {dval, dtype};
 };
 
 // clean file path
@@ -19654,6 +19655,7 @@ JS9.dragdropCB = function(id, evt){
 // add a plugin definition. Plugins will initialized after document is loaded
 JS9.RegisterPlugin = function(xclass, xname, func, opts){
     let name, m, type, url, title;
+    const heading = xclass;
     // sanity check
     if( !xclass || !xname || !func ){
 	return;
@@ -19683,22 +19685,20 @@ JS9.RegisterPlugin = function(xclass, xname, func, opts){
     JS9.PLUGINS += "|";
     JS9.PLUGINS += xname;
     // save the plug-in
-    JS9.plugins.push({xclass: xclass, xname: xname, name: name,
-		opts: opts, func: func, instances: []});
+    JS9.plugins.push({xclass, xname, name, opts, func, instances: []});
     // save help, if necessary
     if( opts.help ){
-	m = opts.help.match(/^.*[\\\/]/);
+	m = opts.help.match(/^.*[\\/]/);
 	if( m[0] ){
-	    type = "plugins/" + m[0].replace(/[\\\/]+$/, "");
+	    type = "plugins/" + m[0].replace(/[\\/]+$/, "");
 	}
-	url = opts.help.replace(/^.*[\\\/]/, "");
+	url = opts.help.replace(/^.*[\\/]/, "");
 	if( opts.menuItem ){
 	    title = opts.menuItem;
 	} else {
 	    title = name;
 	}
-	JS9.helpOpts[xname] = {type: type, url: url,
-			       heading: xclass, title: title};
+	JS9.helpOpts[xname] = {type, url, heading, title};
     }
     // if JS9 already is inited, we need to instantiate this plugin
     // this can happen when using Require.js, for example
@@ -20780,7 +20780,7 @@ JS9.init = function(){
 	// make sure there is a trailing slash
 	JS9.INSTALLDIR += "/";
     }
-    JS9.TOROOT = JS9.INSTALLDIR.replace(/([^\/.])+/g, "..");
+    JS9.TOROOT = JS9.INSTALLDIR.replace(/([^/.])+/g, "..");
     // if the js9 inline object exists, add it the JS9 object
     if( window.hasOwnProperty("JS9Inline") && typeof JS9Inline === "object" ){
 	JS9.inline = $.extend(true, {}, JS9Inline);
@@ -20887,7 +20887,7 @@ JS9.init = function(){
 	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.displays = JSON.parse(uopts); }
-	    catch(ignore){}
+	    catch(ignore){ /* empty */ }
 	    if( JS9.userOpts.displays ){
 		$.extend(true, JS9.globalOpts, JS9.userOpts.displays);
 	    }
@@ -20896,7 +20896,7 @@ JS9.init = function(){
 	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.images = JSON.parse(uopts); }
-	    catch(ignore){}
+	    catch(ignore){ /* empty */ }
 	    if( JS9.userOpts.images ){
 		$.extend(true, JS9.imageOpts, JS9.userOpts.images);
 	    }
@@ -20906,13 +20906,13 @@ JS9.init = function(){
 	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.fits = JSON.parse(uopts); }
-	    catch(ignore){}
+	    catch(ignore){ /* empty */ }
 	}
 	try{ uopts = localStorage.getItem("regions"); }
 	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.regions = JSON.parse(uopts); }
-	    catch(ignore){}
+	    catch(ignore){ /* empty */ }
 	    if( JS9.userOpts.regions ){
 		$.extend(true, JS9.Regions.opts, JS9.userOpts.regions);
 	    }
@@ -20921,7 +20921,7 @@ JS9.init = function(){
 	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.images = JSON.parse(uopts); }
-	    catch(ignore){}
+	    catch(ignore){ /* empty */ }
 	    if( JS9.userOpts.images ){
 		$.extend(true, JS9.Grid.opts, JS9.userOpts.images);
 	    }
@@ -20930,7 +20930,7 @@ JS9.init = function(){
 	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.images = JSON.parse(uopts); }
-	    catch(ignore){}
+	    catch(ignore){ /* empty */ }
 	    if( JS9.userOpts.images ){
 		$.extend(true, JS9.Catalogs.Opts, JS9.userOpts.images);
 	    }
@@ -20945,7 +20945,7 @@ JS9.init = function(){
     // load web worker
     if( window.Worker && !JS9.allinone){
 	try{ JS9.worker = new JS9.WebWorker(JS9.InstallDir(JS9.WORKERFILE)); }
-	catch(e){}
+	catch(e){ /* empty */ }
     }
     // for allinone files, emscripten is already loaded so init FITS now
     if( JS9.allinone ){
@@ -21096,7 +21096,7 @@ JS9.parsePublicArgs = function(args){
 	argv.pop();
     }
     // return results
-    return {argv: argv, display: display};
+    return {argv, display};
 };
 
 // some public routines are just a wrapper around the underlying image call
@@ -21472,7 +21472,7 @@ JS9.mkPublic("Load", function(file, opts){
     } else if( typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
-	catch(e){ opts = {}; }
+	catch(e){ opts = { /* empty */ }; }
     } else {
 	// init as an empty object
 	opts = {};
@@ -21795,7 +21795,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    // close them all
 	    for(i=0; i<ims.length; i++){
 		try{ ims[i].closeImage(); }
-		catch(ignore){}
+		catch(ignore){ /* empty */ }
 	    }
 	    return true;
 	case "move":
@@ -21804,7 +21804,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    // move them to the first display
 	    for(i=0; i<ims.length; i++){
 		try{ ims[i].moveToDisplay(JS9.globalOpts.lightWinMoveTo); }
-		catch(ignore){}
+		catch(ignore){ /* empty */ }
 	    }
 	    return true;
 	case "ask":
@@ -22404,7 +22404,7 @@ JS9.mkPublic("SaveColormap", function(){
 	let s = arg1;
 	if( typeof arg1 === "string" ){
 	    try{ s = JSON.parse(arg1); }
-	    catch(e){ }
+	    catch(e){ /* empty */ }
 	}
 	return s;
     };
@@ -22702,7 +22702,7 @@ JS9.Pix2WCS = JS9.PixToWCS;
 // convert wcs to image position
 // NB: returned image coordinates are 1-indexed
 JS9.mkPublic("WCSToPix", function(ra, dec){
-    let s, x, y, arr, arg0;
+    let str, x, y, arr, arg0;
     const obj = JS9.parsePublicArgs(arguments);
     const im = JS9.getImage(obj.display);
     if( im ){
@@ -22722,8 +22722,8 @@ JS9.mkPublic("WCSToPix", function(ra, dec){
 	    arr = JS9.wcs2pix(im.raw.wcs, ra, dec).trim().split(/ +/);
 	    x = parseFloat(arr[0]);
 	    y = parseFloat(arr[1]);
-	    s = sprintf("%f %f", x, y);
-	    return {x: x, y: y, str: s};
+	    str = sprintf("%f %f", x, y);
+	    return {x, y, str};
 	}
     }
     return null;
@@ -22878,7 +22878,7 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 	if( ropts && ropts.display !== undefined ){ delete ropts.display; }
 	if( JS9.globalOpts.reloadRefreshReg && ropts.file ){
 	    try{ im.removeShapes("regions", ropts.file); }
-	    catch(e){}
+	    catch(e){ /* empty */ }
 	}
 	im.addShapes("regions", reg, ropts);
 	if( opts && opts.onload ){ opts.onload(im); }

@@ -264,7 +264,7 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
 	    s = s.replace(/<table><tr>/g, "")
 		 .replace(/<tr>/g, "\n")
 		 .replace(/<\/td><td>/g,"     \t")
-		 .replace(/<[a-z\/]*>/g,"");
+		 .replace(/<[a-z/]*>/g,"");
 	    break;
 	default:
 	    break;
