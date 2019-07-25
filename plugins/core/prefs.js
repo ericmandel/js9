@@ -736,7 +736,7 @@ JS9.Prefs.showForm = function(){
     var form = $(this).closest("form");
     var source = form.data("source");
     try{ s = localStorage.getItem(source.name); }
-    catch(ignore){}
+    catch(e){ /* empty */ }
     if( s && (s !== "null") ){
 	t = "<pre>" + s + "</pre>";
     } else {
@@ -754,7 +754,7 @@ JS9.Prefs.deleteForm = function(){
     var source = form.data("source");
     try{ localStorage.removeItem(source.name);
 	delete JS9.userOpts[source.name]; }
-    catch(ignore){}
+    catch(e){ /* empty */ }
     return false;
 };
 

@@ -365,7 +365,7 @@ JS9.Sync.xeqSync = function(arr){
 		    break;
 		}
 	    }
-	    catch(e){}
+	    catch(e){ /* empty */ }
 	    finally{
 		// done sync'ing
 		if( xim.syncs ){
@@ -374,7 +374,7 @@ JS9.Sync.xeqSync = function(arr){
 	    }
 	}
     }
-    catch(e){}
+    catch(e){ /* empty */ }
     finally{
 	delete this.syncs.running;
     }
