@@ -16,12 +16,12 @@
 
 // ensure Emscripten's Module object is available, so we can pass properties,
 // (e.g. wasmBinary) in js9prefs.js and during JS9.init()
-// (use var to add to global scope: because that's how its done in Emscripten)
+// (use var to add to global scope because that's how its done in Emscripten)
 var Module;
 if( typeof Module !== "object" ){ Module = {}; }
 
 // generate and expose JS9 module
-// (use var to add to global scope: for backward compatibility)
+// (use var to add to global scope for backward compatibility with previous ES5)
 var JS9 = (function(){
 
 // module header
@@ -599,39 +599,12 @@ if( window.isElectron ){
 // ---------------------------------------------------------------------
 
 JS9.Image = function(file, params, func){
-    let i, card, pars, sarr, nzoom, display, txeq;
+    let i, card, pars, nzoom, display, txeq;
     let localOpts = null;
     let nhist = 0;
     let ncomm = 0;
     const that = this;
-    const mksect = function(opts){
-	let zoom;
-	let bin = 1;
-	const arr = [];
-	opts = opts || {};
-	// image xcen and ycen values must take binning into account
-	if( JS9.notNull(opts.bin) ){
-	    if( typeof opts.bin === "string" ){
-		bin = parseInt(opts.bin, 10);
-	    } else {
-		bin = opts.bin;
-	    }
-	}
-	// make up section array from default values
-	if( JS9.notNull(opts.xcen) ){
-	    arr.push(opts.xcen/bin);
-	}
-	if( JS9.notNull(opts.ycen) ){
-	    arr.push(opts.ycen/bin);
-	}
-	if( JS9.notNull(opts.zoom) ){
-	    zoom = this.parseZoom(opts.zoom);
-	    if( zoom ){
-		arr.push(zoom);
-	    }
-	}
-	return arr;
-    };
+    // called with current image context
     const mkscale = function(opts){
 	// do zscale, if necessary
 	opts = opts || {};
@@ -655,6 +628,7 @@ JS9.Image = function(file, params, func){
 	    this.params.scalemax = opts.scalemax;
 	}
     };
+    // called with current image context
     const finishUp = function(func){
 	let i, s, t, topts, tkey;
 	const imopts = JS9.globalOpts.imopts;
@@ -911,7 +885,7 @@ JS9.Image = function(file, params, func){
     }
     // change the cursor to show the waiting status
     JS9.waiting(true, this.display);
-    // file argument can be an object containing raw data or
+    // file arg can be an object containing raw data or
     // a string containing a URL of a PNG image
     switch( typeof file ){
     case "object":
@@ -930,12 +904,6 @@ JS9.Image = function(file, params, func){
 	}
 	// set up initial section
 	this.mkSection();
-	// change center and zoom if necessary
-	// No! this was already done in astroem/getFITSImage()
-	// sarr = mksect.call(localOpts);
-	// if( sarr.length ){
-	//    this.mkSection.apply(this, sarr);
-	// }
 	// was a static RGB file specified?
 	if( localOpts && localOpts.rgbFile ){
 	    this.rgbFile = localOpts.rgbFile;
@@ -1002,11 +970,6 @@ JS9.Image = function(file, params, func){
 	    mkscale.call(that, localOpts);
 	    // set up initial section
 	    that.mkSection();
-	    // change center and zoom if necessary
-	    sarr = mksect.call(localOpts);
-	    if( sarr.length ){
-		that.mkSection.apply(that, sarr);
-	    }
 	    // display image, 2D graphics, etc.
 	    that.displayImage("all", localOpts);
 	    // finish up
@@ -1380,7 +1343,7 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
     this.raw.height = h;
     this.raw.bitpix = -32;
     // set data min and max
-    JS9.Image.prototype.dataminmax.call(this);
+    this.dataminmax();
     // change data source
     this.source = "png";
     // fake header
@@ -1446,7 +1409,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     // see if we have a real PNG file instead of a representation file
     if( (i < 15) || realpng ){
 	// holy moly, its a real png file!
-	JS9.Image.prototype.mkRawDataFromIMG.call(this, this.offscreen.img);
+	this.mkRawDataFromIMG(this.offscreen.img);
 	// save the off-screen image and return;
 	return;
     }
@@ -2229,13 +2192,13 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 };
 
 // store section information
-JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
+JS9.Image.prototype.mkSection = function(...args){
     let s, xtra;
     const sect = this.rgb.sect;
     // save zoom in case we are about to change it (regions have to be scaled)
     sect.ozoom  = sect.zoom;
-    // process arguments
-    switch(arguments.length){
+    // process args
+    switch(args.length){
     case 0:
 	// no args: init to display central part of image
 	sect.xcen   = Math.floor(this.raw.width/2);
@@ -2244,10 +2207,10 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	sect.height = Math.min(this.raw.height,this.display.canvas.height);
 	break;
     case 1:
-	if( !JS9.isNumber(xcen) ){
+	if( !JS9.isNumber(args[0]) ){
 	    JS9.error("invalid input for generating section");
 	}
-	sect.zoom   = parseFloat(xcen);
+	sect.zoom   = parseFloat(args[0]);
 	sect.width  = Math.min(this.raw.width*sect.zoom,
 			       this.display.canvas.width);
 	sect.height = Math.min(this.raw.height*sect.zoom,
@@ -2255,11 +2218,11 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	break;
     case 2:
 	// two args: x, y
-	if( !JS9.isNumber(xcen) || !JS9.isNumber(ycen) ){
+	if( !JS9.isNumber(args[0]) || !JS9.isNumber(args[1]) ){
 	    JS9.error("invalid input for generating section");
 	}
-	sect.xcen   = parseFloat(xcen);
-	sect.ycen   = parseFloat(ycen);
+	sect.xcen   = parseFloat(args[0]);
+	sect.ycen   = parseFloat(args[1]);
 	// reset width and height if there was a section offset
 	if( JS9.notNull(sect.ix) ){
 	    sect.width  = Math.min(this.raw.width*sect.zoom,
@@ -2272,12 +2235,14 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	break;
     case 3:
 	// three args: x, y, zoom
-	if( !JS9.isNumber(xcen) || !JS9.isNumber(ycen) || !JS9.isNumber(zoom) ){
+	if( !JS9.isNumber(args[0]) ||
+	    !JS9.isNumber(args[1]) ||
+	    !JS9.isNumber(args[2]) ){
 	    JS9.error("invalid input for generating section");
 	}
-	sect.xcen   = parseFloat(xcen);
-	sect.ycen   = parseFloat(ycen);
-	sect.zoom   = parseFloat(zoom);
+	sect.xcen   = parseFloat(args[0]);
+	sect.ycen   = parseFloat(args[1]);
+	sect.zoom   = parseFloat(args[2]);
 	sect.width  = Math.min(this.raw.width*sect.zoom,
 			       this.display.canvas.width);
 	sect.height = Math.min(this.raw.height*sect.zoom,
@@ -2839,7 +2804,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 		    (bidx === undefined) ){
 		    JS9.globalOpts.rgb.active = false;
 		    JS9.error("RGB images are incompatible. Turning off RGB mode.", "", false);
-		    JS9.Image.prototype.mkRGBImage.call(this);
+		    this.mkRGBImage();
 		    return this;
 		}
 	    } else {
@@ -2898,13 +2863,14 @@ JS9.Image.prototype.mkRGBImage = function(){
 //  blendImage()                   # return current blend params
 //  blendImage(true||false)        # turn on/off blending
 //  blendImage(mode, opacity)      # set blend mode and opacity
-JS9.Image.prototype.blendImage = function(mode, opacity, active){
+JS9.Image.prototype.blendImage = function(...args){
+    let [mode, opacity, active] = args;
     // see composite and blend operations: https://www.w3.org/TR/compositing-1/
     const blendexp = /normal|multiply|screen|overlay|darken|lighten|color-dodge|color-burn|hard-light|soft-light|difference|exclusion|hue|saturation|color|luminosity|clear|copy|source-over|destination-over|source-in|destination-in|source-out|destination-out|source-atop|destination-atop|xor|lighter/i;
-    if( arguments.length === 0 ){
+    if( args.length === 0 ){
 	return this.blend;
     }
-    // if first argument is true or false, this turns on/off blending
+    // if first arg is true or false, this turns on/off blending
     if( (mode === true)   || (mode === false)   ||
 	(mode === "true") || (mode === "false") ){
 	if( mode === "true" ){
@@ -4085,20 +4051,21 @@ JS9.Image.prototype.getPan = function(){
 };
 
 // set pan location of RGB image (using image coordinates)
-JS9.Image.prototype.setPan = function(panx, pany){
+JS9.Image.prototype.setPan = function(...args){
     let i, key, obj, im, pos, owcssys, txeq, arr, oval, npan;
+    let [panx, pany] = args;
     // is this core service disabled?
     if( $.inArray("pan", this.params.disable) >= 0 ){
 	return;
     }
     // default is to pan to center
-    if( arguments.length === 0 ){
+    if( args.length === 0 ){
 	panx = this.raw.width / 2;
 	pany = this.raw.height / 2;
     }
-    // one string argument is a json specification
+    // one string arg is a json specification
     // (two string args is panx, pany in string format)
-    if( arguments.length === 1 && typeof panx === "string" ){
+    if( args.length === 1 && typeof panx === "string" ){
 	try{ panx = JSON.parse(panx); }
 	catch(e){ JS9.error("can't parse setPan JSON: " + panx, e); }
     }
@@ -6160,13 +6127,14 @@ JS9.Image.prototype.getColormap = function(){
 };
 
 // set color map
-JS9.Image.prototype.setColormap = function(arg, arg2, arg3){
+JS9.Image.prototype.setColormap = function(...args){
+    let [arg, arg2, arg3] = args;
     // is this core service disabled?
     // (only if the colormap has been set at least once!)
     if( $.inArray("colormap", this.params.disable) >= 0 && this.cmapObj ){
 	return;
     }
-    switch(arguments.length){
+    switch(args.length){
     case 1:
     case 3:
 	switch(arg){
@@ -6216,7 +6184,7 @@ JS9.Image.prototype.setColormap = function(arg, arg2, arg3){
 	    }
 	    break;
 	}
-        if( arguments.length === 3 ){
+        if( args.length === 3 ){
 	    if( !isNaN(arg2) ){
 	        this.params.contrast = arg2;
 	    }
@@ -6260,7 +6228,8 @@ JS9.Image.prototype.getScale = function(){
 };
 
 // set scale factor
-JS9.Image.prototype.setScale = function(s0, s1, s2){
+JS9.Image.prototype.setScale = function(...args){
+    let [s0, s1, s2] = args;
     const that = this;
     const newscale = function(s){
 	if( JS9.scales.indexOf(s) >= 0 ){
@@ -6294,8 +6263,8 @@ JS9.Image.prototype.setScale = function(s0, s1, s2){
     if( $.inArray("scale", this.params.disable) >= 0 ){
 	return;
     }
-    if( arguments.length ){
-	switch(arguments.length){
+    if( args.length ){
+	switch(args.length){
 	case 1:
 	    newscale(s0);
 	    break;
@@ -6556,7 +6525,7 @@ JS9.Image.prototype.zscale = function(setvals){
 
 // background-subtracted counts in regions
 // eslint-disable-next-line no-unused-vars
-JS9.Image.prototype.countsInRegions = function(args){
+JS9.Image.prototype.countsInRegions = function(...args){
     let i, s, vfile, bvfile, sect, ext, filter, dims, bin, opts, cmdswitches;
     let sregions = "field";
     let bregions = "";
@@ -6612,36 +6581,36 @@ JS9.Image.prototype.countsInRegions = function(args){
 	JS9.error("no virtual file available for regcnts: " + this.id);
     }
     // convert json to an object
-    for(i=0; i<arguments.length; i++){
-	s = arguments[i];
+    for(i=0; i<args.length; i++){
+	s = args[i];
 	if( typeof s === "string" && s.charAt(0) === '{' ){
-	    try{ arguments[i] = JSON.parse(s); }
+	    try{ args[i] = JSON.parse(s); }
 	    catch(e){ JS9.error("can't parse json arg in regcnts: "+s, e); }
 	}
     }
-    // analyze arguments
-    switch(arguments.length){
+    // analyze args
+    switch(args.length){
     case 0:
 	break;
     case 1:
-	if( typeof arguments[0] === "object" ){
-	    opts = arguments[0];
+	if( typeof args[0] === "object" ){
+	    opts = args[0];
 	} else {
-	    sregions = getreg(arguments[0], "$sregions", "field");
+	    sregions = getreg(args[0], "$sregions", "field");
 	}
 	break;
     case 2:
-	sregions = getreg(arguments[0], "$sregions", "field");
-	if( typeof arguments[1] === "object" ){
-	    opts = arguments[1];
+	sregions = getreg(args[0], "$sregions", "field");
+	if( typeof args[1] === "object" ){
+	    opts = args[1];
 	} else {
-	    bregions = getreg(arguments[1], "$bregions", "");
+	    bregions = getreg(args[1], "$bregions", "");
 	}
 	break;
     default:
-	sregions = getreg(arguments[0], "$sregions", "field");
-	bregions = getreg(arguments[1], "$bregions", "");
-	opts = arguments[2];
+	sregions = getreg(args[0], "$sregions", "field");
+	bregions = getreg(args[1], "$bregions", "");
+	opts = args[2];
 	break;
     }
     // opts is optional
@@ -6715,20 +6684,20 @@ JS9.Image.prototype.countsInRegions = function(args){
 
 // radial profile plot
 // eslint-disable-next-line no-unused-vars
-JS9.Image.prototype.radialProfile = function(args){
+JS9.Image.prototype.radialProfile = function(...args){
     let i, s, xlabel, ylabel, obj, cobj, pobj, res, el, opts;
     let color, errorbars, errorcolor;
     const carr = [];
     const swobj = {cmdswitches: "-j -r"};
-    // make up argument list, add required radial profile switches to opts
-    for(i=0; i<arguments.length; i++){
-	if( typeof arguments[i] === "object" ){
+    // make up arg list, add required radial profile switches to opts
+    for(i=0; i<args.length; i++){
+	if( typeof args[i] === "object" ){
 	    // integrate our switches into passed opts
-	    cobj = $.extend(true, {}, arguments[i], swobj);
+	    cobj = $.extend(true, {}, args[i], swobj);
 	    carr.push(cobj);
 	    opts = cobj;
 	} else {
-	    carr.push(arguments[i]);
+	    carr.push(args[i]);
 	}
     }
     // if no opts supplied, add the switches manually
@@ -6877,10 +6846,11 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
 //   im.rawDataLayer(id, "remove") -- remove raw data later with specified id
 // or:
 //   im.rawDataLayer() -- return name of th current layer
-JS9.Image.prototype.rawDataLayer = function(opts, func){
+JS9.Image.prototype.rawDataLayer = function(...args){
     let i, j, id, mode, raw, oraw, nraw, rawid, cur, nlen, carr, im, key;
+    let [opts, func] = args;
     // no arg => return name of current raw
-    if( !arguments.length ){
+    if( !args.length ){
 	return this.raw.id;
     }
     // opts is a string with second arg a function: generate opts object
@@ -7138,8 +7108,7 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     // pass the options
     opts.sigma = sigma;
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("gaussBlurData", Array.prototype.slice.call(arguments),
-		     opts.rawid);
+    this.xeqStashSave("gaussBlurData", [sigma], opts.rawid);
     // call routine to generate (or modify) the new layer
     this.rawDataLayer(opts, function (oraw, nraw){
 	let tdata;
@@ -7166,10 +7135,11 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
 
 // perform arithmetic operations on the raw data
 // creates a new raw data layer ("imarith")
-JS9.Image.prototype.imarithData = function(op, arg1, opts){
+JS9.Image.prototype.imarithData = function(...args){
     let im;
+    let [op, arg1, opts] = args;
     // no args means return the available ops
-    if( !arguments.length ){
+    if( !args.length ){
 	return ["add", "sub", "mul", "div", "min", "max", "reset"];
     }
     // opts can be an object or json
@@ -7190,8 +7160,7 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 	JS9.error("missing arg(s) for image arithmetic");
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("imarithData", Array.prototype.slice.call(arguments),
-		     opts.rawid);
+    this.xeqStashSave("imarithData", args, opts.rawid);
     // operation: add, sub, mul, div ...
     switch(op){
     case "add":
@@ -7347,7 +7316,7 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 	    }
 	    break;
 	default:
-	    JS9.error("unknown argument type for imarith: " + opts.argtype);
+	    JS9.error("unknown arg type for imarith: " + opts.argtype);
 	    break;
 	}
 	return true;
@@ -7358,7 +7327,8 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 
 // linear shift of raw data (cheap alignment for CFA MicroObservatory)
 // creates a new raw data layer ("shift")
-JS9.Image.prototype.shiftData = function(x, y, opts){
+JS9.Image.prototype.shiftData = function(...args){
+    let [x, y, opts] = args;
     if( x === undefined || y === undefined ){
 	JS9.error("missing translation value(s) for shiftData");
     }
@@ -7373,8 +7343,7 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
     opts.x = x;
     opts.y = y;
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("shiftData", Array.prototype.slice.call(arguments),
-		      opts.rawid);
+    this.xeqStashSave("shiftData", args, opts.rawid);
     this.rawDataLayer(opts, function (oraw, nraw, opts){
 	let i, oi, oj, ni, nj, nlen, oU8, nU8, ooff, noff, blankval;
 	const bpp = oraw.data.BYTES_PER_ELEMENT;
@@ -7435,10 +7404,11 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 // rotate image by changing WCS info and calling reprojectData
 // creates a new raw data layer ("rotate")
 // angle is in degrees (since CROTA2 is in degrees)
-JS9.Image.prototype.rotateData = function(angle, opts){
+JS9.Image.prototype.rotateData = function(...args){
     let raw, oheader, nheader, ncrot, nrad, sinrot, cosrot;
     let ocdelt1 = 0.0;
     let ocdelt2 = 0.0;
+    let [angle, opts] = args;
     // sanity checks
     if( !this.raws || !this.raws[0] ){
 	JS9.error("no raw data for reprojection");
@@ -7512,8 +7482,7 @@ JS9.Image.prototype.rotateData = function(angle, opts){
 	nheader.ptype = raw.wcsinfo.ptype;
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("rotateData", Array.prototype.slice.call(arguments),
-		     opts.rawid);
+    this.xeqStashSave("rotateData", args, opts.rawid);
     // rotate by reprojecting the data
     return this.reprojectData(nheader, opts);
 };
@@ -7776,8 +7745,9 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 
 // high-level routine to reproject image using WCS info
 // creates a new raw data layer ("reproject")
-JS9.Image.prototype.reprojectData = function(wcsim, opts){
+JS9.Image.prototype.reprojectData = function(...args){
     let im, ovfile;
+    let [wcsim, opts] = args;
     const that = this;
     // sanity checks
     if( !wcsim || !JS9.reproject ){
@@ -7807,9 +7777,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     // save this routine so it can be reconstituted in a restored session
     // (unless another xxxData routine is calling us)
     if( !opts.rawid ){
-	this.xeqStashSave("reprojectData",
-			  Array.prototype.slice.call(arguments),
-			  "reproject");
+	this.xeqStashSave("reprojectData", args, "reproject");
     }
     // save stash name
     if( !opts.stash ){
@@ -7859,10 +7827,10 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 };
 
 // apply image processing filters to the current RGB image
-JS9.Image.prototype.filterRGBImage = function(filter){
+JS9.Image.prototype.filterRGBImage = function(...args){
     let key;
+    let [filter] = args;
     const filters = [];
-    const argv = Array.prototype.slice.call(arguments);
     // no arg: return list of filters
     if( !filter ){
 	for( key in JS9.ImageFilters ){
@@ -7882,13 +7850,13 @@ JS9.Image.prototype.filterRGBImage = function(filter){
 	return this;
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("filterRGBImage", Array.prototype.slice.call(arguments));
-    // remove filter name argument
-    argv.shift();
-    // add display context and RGB img argument
-    argv.unshift(this.display.context, this.rgb.img);
+    this.xeqStashSave("filterRGBImage", args);
+    // remove filter name arg
+    args.shift();
+    // add display context and RGB img arg
+    args.unshift(this.display.context, this.rgb.img);
     // try to run the filter to generate a new RGB image
-    try{ JS9.ImageFilters[filter].apply(null, argv); }
+    try{ JS9.ImageFilters[filter].apply(null, args); }
     catch(e){ JS9.error("JS9 image filter '" + filter + "' failed", e); }
     // display new RGB image
     this.displayImage("display");
@@ -8134,7 +8102,7 @@ JS9.Image.prototype.saveSession = function(file, opts){
     return file;
 };
 
-// stash a routine name and arguments
+// stash a routine name and args
 // the routine will be re-executed when the session is loaded
 JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
     let i, stash;
@@ -8166,7 +8134,7 @@ JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
     return this;
 };
 
-// call a stashed routine name and arguments
+// call a stashed routine name and args
 JS9.Image.prototype.xeqStashCall = function(xeqstash, exclArr){
     let key, xeq;
     xeqstash = xeqstash || this.xeqstash;
@@ -8531,7 +8499,8 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 };
 
 // read a tab-delimited, #-commented table (starbase table), create a catalog
-JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
+JS9.Image.prototype.loadCatalog = function(...args){
+    let [layer, catalog, opts] = args;
     let shapes, topts, starbase;
     const lopts = $.extend(true, {}, JS9.Catalogs.opts);
     const global = JS9.globalOpts.catalogs;
@@ -8552,12 +8521,12 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
 	return obj;
     };
     // special case: 1 non-string arg is the catalog, not the layer
-    if( arguments.length === 1 && typeof layer !== "string" ){
+    if( args.length === 1 && typeof layer !== "string" ){
 	catalog = layer;
 	layer = null;
     }
     // special case: 2 non-string args: file and obj, not the layer
-    if( arguments.length === 2 && typeof layer !== "string" ){
+    if( args.length === 2 && typeof layer !== "string" ){
 	opts = catalog;
 	catalog = layer;
 	layer = null;
@@ -8727,7 +8696,8 @@ JS9.Image.prototype.wcs2imlen = function(s){
 // JS9 Colormap support
 // ---------------------------------------------------------------------
 
-JS9.Colormap = function(name, a1, a2, a3){
+JS9.Colormap = function(...args){
+    let [name, a1, a2, a3] = args;
     let i, got;
     // sanity check
     if( !name ){
@@ -8735,7 +8705,7 @@ JS9.Colormap = function(name, a1, a2, a3){
     }
     // there are two types of colormap, based on number of args
     this.name = name;
-    switch(arguments.length){
+    switch(args.length){
     case 2:
 	this.type = "lut";
 	this.colors = a1;
@@ -9979,10 +9949,10 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	JS9.waiting(false);
     };
     // write comforting messages to the console while we wait and wait
-    const log = function(){
+    const log = function(...args) {
 	let s;
 	if( opts.verbose || JS9.DEBUG > 1 ){
-	    s = sprintf.apply(null, arguments);
+	    s = sprintf.apply(null, args);
 	    // eslint-disable-next-line no-console
 	    JS9.log(s);
 	}
@@ -12341,7 +12311,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     } else {
 	zoom = 1;
     }
-    // figure out the first argument
+    // figure out the first arg
     if( typeof shape === "string" ){
 	// look for a region string
 	s = this.parseRegions(shape, myopts);
@@ -15855,7 +15825,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	}
 	return xobj;
     };
-    // parse region line into cmd (shape or wcs), arguments, opts, comment
+    // parse region line into cmd (shape or wcs), args, opts, comment
     const regparse1 = function(s){
 	let t, tarr, ds9props;
 	const tobj = {};
@@ -15879,7 +15849,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	}
 	// split on comment (ignore color specifications starting with "#")
 	t = s.trim().split(comrexp);
-	// look for json opts after the argument list
+	// look for json opts after the arg list
 	tarr = optsrexp.exec(t[0]);
 	if( tarr && tarr[0] ){
 	    // convert to object
@@ -15899,10 +15869,10 @@ JS9.Regions.parseRegions = function(s, opts){
 	if( ds9props ){
 	    tobj.opts = $.extend({}, ds9props, tobj.opts);
 	}
-	// separate the region arguments into an array
+	// separate the region args into an array
 	tarr = parrexp.exec(s);
 	if( tarr && tarr[1] ){
-	    // arguments without json opts
+	    // arg without json opts
 	    tobj.args = tarr[1].split(argsrexp);
 	}
 	// look for - sign signifying an exclude region
@@ -16017,7 +15987,7 @@ JS9.Regions.parseRegions = function(s, opts){
 		obj = $.extend(true, {}, robj.opts);
 		// save the shape
 		obj.shape = robj.cmd;
-		// arguments are not required!
+		// args are not required!
 		if( alen >= 2 ){
 		    // get image position
 		    pos = getipos.call(this, robj.args[0], robj.args[1]);
@@ -16031,7 +16001,7 @@ JS9.Regions.parseRegions = function(s, opts){
 		    obj.textOpts.dec !== undefined  ){
 		    obj.textOpts._wcssys = wcssys;
 		}
-		// region arguments are optional
+		// region args are optional
 		switch(robj.cmd){
 		case 'annulus':
 		    obj.radii = [];
@@ -17269,7 +17239,7 @@ JS9.msgHandler =  function(msg, cb){
     }
     // look for a public API call
     if( JS9.publics[cmd] ){
-	// check for non-array first argument
+	// check for non-array first arg
 	if( !$.isArray(msg.args) ){
 	    msg.args = [msg.args];
 	}
@@ -18212,7 +18182,8 @@ JS9.lookupCommand = function(name){
 };
 
 // error message handler
-JS9.error = function(emsg, epattern, dothrow){
+JS9.error = function(...args){
+    let [emsg, epattern, dothrow] = args;
     let e, earr, s;
     let emessage = "";
     let stack = "";
@@ -18235,7 +18206,7 @@ JS9.error = function(emsg, epattern, dothrow){
 	e = epattern;
     }
     // default is to throw the error
-    if( arguments.length < 3 ){
+    if( args.length < 3 ){
 	dothrow = true;
     }
     // maybe throw error and send message to user
@@ -18501,16 +18472,16 @@ JS9.invertMatrix3 = function(xin){
 
 // logging: IE9 does not expose console.log by default
 // from: http://stackoverflow.com/questions/5472938/does-ie9-support-console-log-and-is-it-a-real-function (but modified for JSLint)
-JS9.log = function(){
+JS9.log = function(...args) {
     let log;
     if( (window.console !== undefined) && (window.console.log !== undefined) ){
         try {
 	    // eslint-disable-next-line no-console
-            console.log.apply(console, arguments);
+            console.log.apply(console, args);
         } catch(e){
 	    // eslint-disable-next-line no-console
             log = Function.prototype.bind.call(console.log, console);
-            log.apply(console, arguments);
+            log.apply(console, args);
         }
     }
 };
@@ -18895,27 +18866,28 @@ JS9.tooltip = function(x, y, fmt, im, xreg, evt){
 
 // http://stackoverflow.com/questions/359788/how-to-execute-a-javascript-function-when-i-have-its-name-as-a-string
 // our modification will execute a real function or a functionName
-JS9.xeqByName = function(functionName, context /*, args */) {
-    let i, args, namespaces, func, type;
-    args = Array.prototype.slice.call(arguments, 2);
-    type = typeof functionName;
+JS9.xeqByName = function(...args) {
+    let i, namespaces, func;
+    let [functionName, context] = args;
+    let xargs = args.slice(2);
+    let type = typeof functionName;
     switch( type ){
     case "function":
-	return functionName.apply(context, args);
+	return functionName.apply(context, xargs);
     case "string":
 	namespaces = functionName.split(".");
 	func = namespaces.pop();
 	for(i = 0; i < namespaces.length; i++) {
             context = context[namespaces[i]];
 	}
-	return context[func].apply(context, args);
+	return context[func].apply(context, xargs);
     default:
 	JS9.error("unknown function type: "+type);
 	break;
     }
 };
 
-// return value of a var passed as a string (based on above)
+// return value of a variable passed as a string (based on above)
 JS9.varByName = function(functionName, context){
     let i, namespaces, vname;
     context = context || JS9;
@@ -19537,7 +19509,6 @@ JS9.wheelCB = function(evt){
 JS9.keyPressCB = function(evt){
     const display = evt.data;
     const im = display.image;
-    // var keycode = evt.which || evt.keyCode;
     evt.preventDefault();
     // plugin callbacks
     if( im ){
@@ -19553,7 +19524,6 @@ JS9.keyDownCB = function(evt){
     const display = evt.data;
     const im = display.image;
     evt.preventDefault();
-    // var keycode = evt.which || evt.keyCode;
     // actions for key press
     if( JS9.hasOwnProperty("Keyboard") ){
 	ipos = im ? im.ipos : {x: null, y: null};
@@ -20980,8 +20950,6 @@ JS9.init = function(){
 	    }
 	    return;
 	}
-	// var origin = ev.origin;
-	// var source = ev.source;
 	if( typeof data === "string" ){
 	    // json string passed (we hope)
 	    try{ msg = JSON.parse(data); }
@@ -21082,12 +21050,12 @@ JS9.init = function(){
 //
 // ---------------------------------------------------------------------
 
-// parse function arguments, checking for object containing display property
-// return new argument list and display id
-// used in public api routines to retrieve optional {display: id} argument
+// parse function args, checking for object containing display property
+// return new arg list and display id
+// used in public api routines to retrieve optional {display: id} arg
 JS9.parsePublicArgs = function(args){
     let display = null;
-    const argv = Array.prototype.slice.call(args);
+    const argv = args.slice();
     const obj = argv[argv.length-1];
     // look for object containing display property as last arg
     if( obj && (typeof obj === "object") &&
@@ -21104,9 +21072,9 @@ JS9.parsePublicArgs = function(args){
 JS9.mkPublic = function(name, s){
     if( typeof s === "string" ){
 	if( JS9.Image.prototype[s] ){
-	    JS9[name] = function(){
+	    JS9[name] = function(...args) {
 		let got;
-		const obj = JS9.parsePublicArgs(arguments);
+		const obj = JS9.parsePublicArgs(args);
 		const im = JS9.getImage(obj.display);
 		if( im ){
 		    // call the image method
@@ -21187,15 +21155,15 @@ JS9.mkPublic("MoveToDisplay", "moveToDisplay");
 
 // lookup an image
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("LookupImage", function(id){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LookupImage", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     return JS9.lookupImage(obj.argv[0], obj.display);
 });
 
 // lookup a display
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("LookupDisplay", function(id, mustExist){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LookupDisplay", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     return JS9.lookupDisplay(obj.argv[0]||obj.display, obj.argv[1]);
 });
 
@@ -21203,9 +21171,9 @@ JS9.mkPublic("LookupDisplay", function(id, mustExist){
 // RenameDisplay(nid)                  # change def. id (usually "JS9") to nid
 // RenameDisplay(nid, {display: oid})  # change oid to nid
 // RenameDisplay(oid, nid)             # change oid to nid
-JS9.mkPublic("RenameDisplay", function(nid, oid){
-    let disp;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("RenameDisplay", function(...args){
+    let nid, oid, disp;
+    const obj = JS9.parsePublicArgs(args);
     switch( obj.argv.length ){
     case 0:
 	return;
@@ -21221,23 +21189,22 @@ JS9.mkPublic("RenameDisplay", function(nid, oid){
     disp = JS9.lookupDisplay(oid);
     if( disp && disp.id ){
 	oid = disp.id;
-	// save the oirignal id, since existing plugins use it
+	// save the orignal id, since existing plugins use it
 	if( !disp.oid ){
 	    disp.oid = oid;
 	}
 	// set the new id
 	disp.id = nid;
 	// tell the helper to recognize the new instead of the old
-	JS9.helper.send("renameDisplay",
-			{odisplay: oid, ndisplay: disp.id});
+	JS9.helper.send("renameDisplay", {odisplay: oid, ndisplay: disp.id});
     }
 });
 
 // close all displayed images
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("CloseDisplay", function(disp){
-    let i, im;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("CloseDisplay", function(...args){
+    let i, im, disp;
+    const obj = JS9.parsePublicArgs(...args);
     disp = JS9.lookupDisplay(obj.argv[0] || obj.display);
     // reverse loop because we slice JS9.images
     for(i=JS9.images.length-1; i>=0; i--){
@@ -21249,9 +21216,9 @@ JS9.mkPublic("CloseDisplay", function(disp){
 });
 
 // add a colormap to JS9
-JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
-    let reader, cobj;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("AddColormap", function(...args){
+    let colormap, a1, a2, a3, a4, reader, cobj;
+    const obj = JS9.parsePublicArgs(args);
     const obj2cmap = function(xobj, opts){
 	let i, tobj;
 	if( typeof xobj !== "object" ){
@@ -21345,9 +21312,11 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
 });
 
 // load a colormap file
-JS9.mkPublic("LoadColormap", function(file, opts){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LoadColormap", function(...args){
+    let file, opts;
+    const obj = JS9.parsePublicArgs(args);
     file = obj.argv[0];
+    opts = obj.argv[1];
     // sanity check
     if( !file ){
 	JS9.error("JS9.LoadColormap: no file specified for colormap load");
@@ -21367,11 +21336,11 @@ JS9.mkPublic("LoadColormap", function(file, opts){
 });
 
 // set RGB mode (and maybe the images themselves)
-JS9.mkPublic("SetRGBMode", function(mode, imobj){
-    let i, im;
+JS9.mkPublic("SetRGBMode", function(...args){
+    let i, im, mode, imobj;
+    const obj = JS9.parsePublicArgs(args);
     const colors = ["red", "green", "blue"];
     const ids = ["rid", "gid", "bid"];
-    const obj = JS9.parsePublicArgs(arguments);
     mode = obj.argv[0];
     imobj = obj.argv[1];
     if( mode === undefined ){
@@ -21408,12 +21377,13 @@ JS9.mkPublic("GetRGBMode", function(){
 });
 
 // set/clear valpos flag
-JS9.mkPublic("SetValPos", function(mode){
+JS9.mkPublic("SetValPos", function(...args){
+    let mode;
     let got = null;
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    mode = obj.argv[0];
     if( im ){
-	mode = obj.argv[0];
 	got = im.params.valpos;
 	im.params.valpos = mode;
     }
@@ -21421,21 +21391,22 @@ JS9.mkPublic("SetValPos", function(mode){
 });
 
 // set/clear image inherit flag
-JS9.mkPublic("SetImageInherit", function(mode){
+JS9.mkPublic("SetImageInherit", function(...args){
+    let mode;
     let got = null;
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    mode = obj.argv[0];
     if( im ){
-	mode = obj.argv[0];
 	got = im.params.inherit;
 	im.params.inherit = mode;
     }
     return got;
 });
 
-JS9.mkPublic("GetImageInherit", function(){
+JS9.mkPublic("GetImageInherit", function(...args) {
     let got = null;
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
     if( im ){
 	got = im.params.inherit;
@@ -21444,10 +21415,11 @@ JS9.mkPublic("GetImageInherit", function(){
 });
 
 // display in-page FITS images and png files
-JS9.mkPublic("Load", function(file, opts){
+JS9.mkPublic("Load", function(...args){
     let i, s, im, ext, disp, display, func, blob, bytes, topts, tfile, vfile;
+    let file, opts;
     let ptype = "fits";
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     file = obj.argv[0];
     opts = obj.argv[1];
     // sanity check
@@ -21672,11 +21644,12 @@ JS9.mkPublic("Load", function(file, opts){
 });
 
 // create a new instance of JS9 in a window (light or new)
-JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
+JS9.mkPublic("LoadWindow", function(...args){
     let s, id, display, did, head, body, win, winid, initialURL, xobj;
     let wid, wtype, wurl, idbase, title, warr, wwidth, wheight;
+    let file, opts, type, html, winopts;
     const lopts = JS9.lightOpts[JS9.LIGHTWIN];
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     const removeDisplay = function(display){
 	// remove from display list
 	const idx = $.inArray(display, JS9.displays);
@@ -21956,9 +21929,9 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 });
 
 // load a link using back-end server as a proxy
-JS9.mkPublic("LoadProxy", function(url, opts){
-    let f, disp;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LoadProxy", function(...args){
+    let f, disp, url, opts;
+    const obj = JS9.parsePublicArgs(args);
     url = obj.argv[0];
     opts = obj.argv[1];
     if( !JS9.globalOpts.loadProxy ){
@@ -22038,14 +22011,14 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 
 // save array of files to preload or preload immediately,
 // depending on the state of processing
-JS9.mkPublic("Preload", function(arg1){
-    let i, j, mode, urlexp, func;
+JS9.mkPublic("Preload", function(...args){
+    let i, j, mode, urlexp, func, arg1;
     let emsg = "";
     let pobj = null;
     let dobj = null;
-    let alen = arguments.length;
+    let alen = args.length;
     const oalerts = JS9.globalOpts.alerts;
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     const baseexp = JS9.URLEXP;
     const sesexp = /\.ses$/;
     const cmapexp = /\.cmap$/;
@@ -22108,84 +22081,84 @@ JS9.mkPublic("Preload", function(arg1){
 	// save preload image(s) for later
 	for(i=0; i<alen; i++){
 	    j = i + 1;
-	    if( (j < alen) && (typeof arguments[j] === "object") ){
-		pobj = $.extend(true, {}, arguments[j]);
-		JS9.preloads.push([arguments[i], pobj, dobj]);
+	    if( (j < alen) && (typeof args[j] === "object") ){
+		pobj = $.extend(true, {}, args[j]);
+		JS9.preloads.push([args[i], pobj, dobj]);
 		i++;
-	    } else if( (j < alen) && (arguments[j].indexOf('{') === 0) ){
-		try{ pobj = JSON.parse(arguments[j]); }
+	    } else if( (j < alen) && (args[j].indexOf('{') === 0) ){
+		try{ pobj = JSON.parse(args[j]); }
 		catch(e){ pobj = null; }
-		JS9.preloads.push([arguments[i], pobj, dobj]);
+		JS9.preloads.push([args[i], pobj, dobj]);
 		i++;
 	    } else {
-		JS9.preloads.push([arguments[i], null, dobj]);
+		JS9.preloads.push([args[i], null, dobj]);
 	    }
 	}
 	break;
     case 1:
-	// preload the image(s) now from arguments
+	// preload the image(s) now from args
 	JS9.globalOpts.alerts = false;
 	for(i=0; i<alen; i++){
 	    if( urlexp                      &&
-		arguments[i].match(baseexp) &&
-		!arguments[i].match(urlexp) ){
+		args[i].match(baseexp) &&
+		!args[i].match(urlexp) ){
 		func = JS9.LoadProxy;
-	    } else if( arguments[i].match(sesexp) ){
+	    } else if( args[i].match(sesexp) ){
 		func = JS9.LoadSession;
-	    } else if( arguments[i].match(cmapexp) ){
+	    } else if( args[i].match(cmapexp) ){
 		func = JS9.LoadColormap;
 	    } else {
 		func = JS9.Load;
 	    }
 	    j = i + 1;
-	    if( (j < alen) && (typeof arguments[j] === "object") ){
+	    if( (j < alen) && (typeof args[j] === "object") ){
 		if( func === JS9.Load || func === JS9.LoadProxy ){
-		    JS9.preloadwaiting[JS9.cleanPath(arguments[i])] = true;
+		    JS9.preloadwaiting[JS9.cleanPath(args[i])] = true;
 		}
 		try{
 		    if( dobj ){
-			func(arguments[i], arguments[j], dobj);
+			func(args[i], args[j], dobj);
 		    } else {
-			func(arguments[i], arguments[j]);
+			func(args[i], args[j]);
 		    }
 		}
-		catch(e){ emsg = emsg + " " + arguments[i]; }
+		catch(e){ emsg = emsg + " " + args[i]; }
 		i++;
 
-	    } else if( (j < alen) && (arguments[j].indexOf('{') === 0) ){
-		try{ pobj = JSON.parse(arguments[j]); }
+	    } else if( (j < alen) && (args[j].indexOf('{') === 0) ){
+		try{ pobj = JSON.parse(args[j]); }
 		catch(e){ pobj = null; }
 		if( func === JS9.Load || func === JS9.LoadProxy ){
-		    JS9.preloadwaiting[JS9.cleanPath(arguments[i])] = true;
+		    JS9.preloadwaiting[JS9.cleanPath(args[i])] = true;
 		}
 		try{
 		    if( dobj ){
-			func(arguments[i], pobj, dobj);
+			func(args[i], pobj, dobj);
 		    } else {
-			func(arguments[i], pobj);
+			func(args[i], pobj);
 		    }
 		}
-		catch(e){ emsg = emsg + " " + arguments[i]; }
+		catch(e){ emsg = emsg + " " + args[i]; }
 		i++;
 	    } else {
 		if( func === JS9.Load || func === JS9.LoadProxy ){
-		    JS9.preloadwaiting[JS9.cleanPath(arguments[i])] = true;
+		    JS9.preloadwaiting[JS9.cleanPath(args[i])] = true;
 		}
 		try{
 		    if( dobj ){
-			func(arguments[i], null, dobj);
+			func(args[i], null, dobj);
 		    } else {
-			func(arguments[i], null);
+			func(args[i], null);
 		    }
 		}
-		catch(e){ emsg = emsg + " " + arguments[i]; }
+		catch(e){ emsg = emsg + " " + args[i]; }
 	    }
 	}
 	JS9.globalOpts.alerts = oalerts;
 	if( emsg ){ JS9.error("could not preload image(s): " + emsg); }
 	break;
     case 2:
-	// preload the image(s) now from saved arguments
+	// preload the image(s) now from saved args
 	JS9.globalOpts.alerts = false;
 	for(i=0; i<JS9.preloads.length; i++){
 	    if( urlexp                            &&
@@ -22214,7 +22187,7 @@ JS9.mkPublic("Preload", function(arg1){
 	}
 	JS9.globalOpts.alerts = oalerts;
 	if( emsg ){ JS9.error("could not preload image(s): " + emsg); }
-	// remove saved arguments so we don't reload them on reconnect
+	// remove saved args so we don't reload them on reconnect
 	JS9.preloads = [];
 	break;
     case 3:
@@ -22226,8 +22199,9 @@ JS9.mkPublic("Preload", function(arg1){
 });
 
 // refresh existing image
-JS9.mkPublic("RefreshImage", function(fits, opts){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("RefreshImage", function(...args){
+    let fits, opts;
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
     const retry = function(hdu){
 	im.refreshImage(hdu, opts);
@@ -22248,17 +22222,17 @@ JS9.mkPublic("RefreshImage", function(fits, opts){
 	    im.refreshImage(fits, opts);
 	}
     } else if( fits instanceof Blob ){
-	JS9.Load.apply(null, arguments);
+	JS9.Load.apply(null, args);
     }
 });
 
 // get status of a Load ("complete" means ... complete)
-JS9.mkPublic("GetLoadStatus", function(id){
-    let fname0, id0;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("GetLoadStatus", function(...args){
+    let fname0, id, id0;
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    id = obj.argv[0];
     if( im ){
-	id = obj.argv[0];
 	if( id && typeof id === "object" && id.hasOwnProperty("id")  ){
 	    id = id.id;
 	}
@@ -22350,8 +22324,8 @@ JS9.mkPublic("CopyFromClipboard", function(){
 });
 
 // bring up the file dialog box and open selected FITS file(s)
-JS9.mkPublic("OpenFileMenu", function(){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("OpenFileMenu", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
     if( display ){
 	$("#openLocalLoad-" + display.id).click();
@@ -22359,8 +22333,8 @@ JS9.mkPublic("OpenFileMenu", function(){
 });
 
 // bring up the file dialog box and open selected region files(s)
-JS9.mkPublic("OpenRegionsMenu", function(){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("OpenRegionsMenu", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
     if( display ){
 	$("#openLocalLoadRegions-" + display.id).click();
@@ -22368,8 +22342,8 @@ JS9.mkPublic("OpenRegionsMenu", function(){
 });
 
 // bring up the file dialog box and load selected session files(s)
-JS9.mkPublic("OpenSessionMenu", function(){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("OpenSessionMenu", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
     if( display ){
 	$("#openLocalLoadSession-" + display.id).click();
@@ -22377,8 +22351,8 @@ JS9.mkPublic("OpenSessionMenu", function(){
 });
 
 // bring up the file dialog box and open selected catalog file
-JS9.mkPublic("OpenCatalogsMenu", function(){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("OpenCatalogsMenu", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
     if( display ){
 	$("#openLocalLoadCatalog-" + display.id).click();
@@ -22386,8 +22360,8 @@ JS9.mkPublic("OpenCatalogsMenu", function(){
 });
 
 // bring up the file dialog box and load selected colormap file(s)
-JS9.mkPublic("OpenColormapMenu", function(){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("OpenColormapMenu", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
     if( display ){
 	$("#openLocalLoadColormap-" + display.id).click();
@@ -22395,9 +22369,9 @@ JS9.mkPublic("OpenColormapMenu", function(){
 });
 
 // save a colormap to disk
-JS9.mkPublic("SaveColormap", function(){
+JS9.mkPublic("SaveColormap", function(...args) {
     let fname, im, cobj, s, blob, arg1, arg2;
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     arg1 = obj.argv[0];
     arg2 = obj.argv[1];
     const convertjson = function(arg1){
@@ -22463,9 +22437,9 @@ JS9.mkPublic("SaveColormap", function(){
 });
 
 // call the image constructor as a function
-JS9.mkPublic("NewFitsImage", function(hdu, opts){
-    let func, disp, im;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("NewFitsImage", function(...args){
+    let func, disp, im, hdu, opts;
+    const obj = JS9.parsePublicArgs(args);
     hdu = obj.argv[0];
     opts = obj.argv[1] || {};
     disp = JS9.lookupDisplay(obj.display || opts.display || JS9.DEFID);
@@ -22501,32 +22475,32 @@ JS9.mkPublic("NewFitsImage", function(hdu, opts){
 });
 
 // return the image object for the specified image name or the display id
-JS9.mkPublic("GetImage", function(id){
-    let obj;
+JS9.mkPublic("GetImage", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    let id = obj.argv[0];
     if( id && (typeof id !== "string") ){
-	obj = JS9.parsePublicArgs(arguments);
 	id = obj.display;
     }
     return JS9.getImage(id);
 });
 
 // return the image data and auxiliary info for the current image
-JS9.mkPublic("GetImageData", function(dflag){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("GetImageData", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    let dflag = obj.argv[0];
     // return data and auxiliary info
     if( im ){
-	dflag = obj.argv[0];
 	return im.getImageData(dflag);
     }
     return null;
 });
 
 // return the image data and aux info for all images loaded into this display
-JS9.mkPublic("GetDisplayData", function(dflag){
-    let i, id, im;
+JS9.mkPublic("GetDisplayData", function(...args){
+    let i, id, im, dflag;
     const imarr = [];
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     id = obj.display || JS9.displays[0].id;
     dflag = obj.argv[0];
     for(i=0; i<JS9.images.length; i++){
@@ -22539,22 +22513,23 @@ JS9.mkPublic("GetDisplayData", function(dflag){
 });
 
 // return the FITS header as a string
-JS9.mkPublic("GetFITSHeader", function(flag){
+JS9.mkPublic("GetFITSHeader", function(...args){
+    let flag;
     let s = "";
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    flag = obj.argv[0];
     if( im && im.raw ){
-	flag = obj.argv[0];
 	s = JS9.raw2FITS(im.raw, {addcr: flag});
     }
     return s;
 });
 
 // turn on and off blending, redisplaying image
-JS9.mkPublic("BlendDisplay", function(mode){
-    let i, im;
+JS9.mkPublic("BlendDisplay", function(...args){
+    let i, im, mode;
     const imarr = [];
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     const id = obj.display || JS9.DEFID;
     const disp = JS9.lookupDisplay(id);
     mode = obj.argv[0];
@@ -22591,12 +22566,13 @@ JS9.mkPublic("BlendDisplay", function(mode){
 
 // load auxiliary file, if available
 // s is the aux file type
-JS9.mkPublic("LoadAuxFile", function(file, func){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LoadAuxFile", function(...args){
+    let file, func;
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    file = obj.argv[0];
+    func = obj.argv[1];
     if( im ){
-	file = obj.argv[0];
-	func = obj.argv[1];
 	im.loadAuxFile(file, func);
     } else {
 	JS9.error("could not find image for aux file: " + file);
@@ -22604,13 +22580,13 @@ JS9.mkPublic("LoadAuxFile", function(file, func){
 });
 
 // run analysis from a Web page form
-JS9.mkPublic("SubmitAnalysis", function(el, aname, func){
+JS9.mkPublic("SubmitAnalysis", function(...args){
     let topjq, formjq, dispid, im, errstr;
-    let obj = JS9.parsePublicArgs(arguments);
+    let obj = JS9.parsePublicArgs(args);
+    let el = obj.argv[0];
+    let aname = obj.argv[1];
+    let func = obj.argv[2];
     const a = JS9.lightOpts[JS9.LIGHTWIN];
-    el = obj.argv[0];
-    aname = obj.argv[1];
-    func = obj.argv[2];
     // if analysis name was not passed, it was saved in the light window div
     if( aname ){
 	dispid =  JS9.lookupDisplay(obj.display).id;
@@ -22663,10 +22639,10 @@ JS9.mkPublic("EventToDisplayPos", function(evt){
 
 // convert image position to wcs (in degrees)
 // NB: input image coordinates are 1-indexed
-JS9.mkPublic("PixToWCS", function(ix, iy){
-    let s, arr, arg0;
+JS9.mkPublic("PixToWCS", function(...args){
+    let s, arr, arg0, ix, iy;
     let x = 1.0;
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
     if( im ){
 	arg0 = obj.argv[0];
@@ -22701,9 +22677,9 @@ JS9.Pix2WCS = JS9.PixToWCS;
 
 // convert wcs to image position
 // NB: returned image coordinates are 1-indexed
-JS9.mkPublic("WCSToPix", function(ra, dec){
-    let str, x, y, arr, arg0;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("WCSToPix", function(...args){
+    let str, x, y, arr, arg0, ra, dec;
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
     if( im ){
 	arg0 = obj.argv[0];
@@ -22732,14 +22708,13 @@ JS9.mkPublic("WCSToPix", function(ra, dec){
 JS9.WCS2Pix = JS9.WCSToPix;
 
 // initialize a new shape layer
-// NB: don't be fooled, this is not a standard image routine
-// it's a Display routine, so we can't use mkPublic
-JS9.mkPublic("NewShapeLayer", function(layer, opts){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("NewShapeLayer", function(...args){
+    let layer, opts;
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    layer = obj.argv[0];
+    opts = obj.argv[1];
     if( im ){
-	layer = obj.argv[0];
-	opts = obj.argv[1];
 	return im.display.newShapeLayer(layer, opts);
     }
     return null;
@@ -22747,12 +22722,13 @@ JS9.mkPublic("NewShapeLayer", function(layer, opts){
 
 // add a region
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("AddRegions", function(region, opts){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("AddRegions", function(...args){
+    let region, opts;
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    region = obj.argv[0];
+    opts = obj.argv[1];
     if( im ){
-	region = obj.argv[0];
-	opts = obj.argv[1];
 	if( !region ){
 	    JS9.error("no region specified for AddRegions");
 	}
@@ -22762,11 +22738,11 @@ JS9.mkPublic("AddRegions", function(region, opts){
 });
 
 // remove one or more regions
-JS9.mkPublic("RemoveRegions", function(region){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("RemoveRegions", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    let region = obj.argv[0];
     if( im ){
-	region = obj.argv[0];
 	im.removeShapes("regions", region);
 	im.display.clearMessage("regions");
 	return JS9.globalOpts.quietReturn ? "" : "OK";
@@ -22775,12 +22751,12 @@ JS9.mkPublic("RemoveRegions", function(region){
 });
 
 // copy one or more regions
-JS9.mkPublic("CopyRegions", function(to, region){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("CopyRegions", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    let to = obj.argv[0];
+    let region = obj.argv[1];
     if( im ){
-	to = obj.argv[0];
-	region = obj.argv[1];
 	im.copyRegions(to, region);
 	return JS9.globalOpts.quietReturn ? "" : "OK";
     }
@@ -22789,8 +22765,8 @@ JS9.mkPublic("CopyRegions", function(to, region){
 
 // get one or more regions
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("GetRegions", function(region){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("GetRegions", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
     if( im ){
 	obj.argv.unshift("regions");
@@ -22800,15 +22776,15 @@ JS9.mkPublic("GetRegions", function(region){
 });
 
 // change one or more regions
-JS9.mkPublic("ChangeRegions", function(region, opts){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("ChangeRegions", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    let region = obj.argv[0];
+    let opts = obj.argv[1];
     if( im ){
-	region = obj.argv[0];
 	if( !region ){
 	    JS9.error("no regions specified for ChangeRegions");
 	}
-	opts = obj.argv[1];
 	im.changeShapes("regions", region, opts);
     }
     return null;
@@ -22816,28 +22792,27 @@ JS9.mkPublic("ChangeRegions", function(region, opts){
 
 // save regions to disk
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("SaveRegions", function(fname, which, layer){
-    let file, wh, la, im;
-    const obj = JS9.parsePublicArgs(arguments);
-    file = obj.argv[0];
-    wh = obj.argv[1];
-    la = obj.argv[2];
-    im = JS9.getImage(obj.display);
+JS9.mkPublic("SaveRegions", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    let file = obj.argv[0];
+    let which = obj.argv[1];
+    let layer = obj.argv[2];
     if( im ){
-	return im.saveRegions(file, wh, la);
+	return im.saveRegions(file, which, layer);
     }
     return null;
 });
 
 // edit region tags, e.g. add source, remove background
 // e.g. JS9.EditRegionTags("selected", "source", "background");
-JS9.mkPublic("EditRegionTags", function(which, add1, rem1){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("EditRegionTags", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    let which = obj.argv[0];
+    let add1  = obj.argv[1];
+    let rem1  = obj.argv[2];
     if( im ){
-	which = obj.argv[0];
-	add1 = obj.argv[1];
-	rem1 = obj.argv[2];
 	return im.editRegionTags(which, add1, rem1);
     }
     return null;
@@ -22845,13 +22820,13 @@ JS9.mkPublic("EditRegionTags", function(which, add1, rem1){
 
 // toggle region tags, e.g. source <-> background, include <-> exclude
 // e.g. JS9.ToggleRegionTags("selected", "source", "background");
-JS9.mkPublic("ToggleRegionTags", function(which, x1, x2){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("ToggleRegionTags", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
+    let which = obj.argv[0];
+    let x1 = obj.argv[1];
+    let x2 = obj.argv[2];
     if( im ){
-	which = obj.argv[0];
-	x1 = obj.argv[1];
-	x2 = obj.argv[2];
 	return im.toggleRegionTags(which, x1, x2);
     }
     return null;
@@ -22859,10 +22834,9 @@ JS9.mkPublic("ToggleRegionTags", function(which, x1, x2){
 
 // unremove previously removed regions
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("UnremoveRegions", function(){
-    let im;
-    const obj = JS9.parsePublicArgs(arguments);
-    im = JS9.getImage(obj.display);
+JS9.mkPublic("UnremoveRegions", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
     if( im ){
 	return im.unremoveRegions();
     }
@@ -22870,9 +22844,9 @@ JS9.mkPublic("UnremoveRegions", function(){
 });
 
 // load a DS9/funtools regions file
-JS9.mkPublic("LoadRegions", function(file, opts){
-    let s, reader;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LoadRegions", function(...args){
+    let s, reader, file, opts;
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
     const addregions = function(reg, ropts){
 	if( ropts && ropts.display !== undefined ){ delete ropts.display; }
@@ -22939,9 +22913,9 @@ JS9.mkPublic("InstallDir", function(dir){
 });
 
 // add new display divs and/or new plugins
-JS9.mkPublic("AddDivs", function(){
+JS9.mkPublic("AddDivs", function(...args) {
     let i, j, div, dexist, id;
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     // process all divs
     for(i=0; i< obj.argv.length; i++){
 	// get next id
@@ -22986,10 +22960,10 @@ JS9.mkPublic("InstantiatePlugins", function(){
 });
 
 // change the size of a display
-JS9.mkPublic("ResizeDisplay", function(){
+JS9.mkPublic("ResizeDisplay", function(...args) {
     let got, display;
-    const obj = JS9.parsePublicArgs(arguments);
-    // special handling of first string argument:
+    const obj = JS9.parsePublicArgs(args);
+    // special handling of first string arg:
     // might be display name or might be resize params
     if( typeof obj.argv[0] === "string" &&
 	!JS9.isNumber(obj.argv[0])      &&
@@ -23012,8 +22986,8 @@ JS9.mkPublic("ResizeDisplay", function(){
 });
 
 // select (or de-select) a display as the current display
-JS9.mkPublic("SelectDisplay", function(){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("SelectDisplay", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.argv[0] || obj.display);
     if( !display ){
 	JS9.error("invalid display for select");
@@ -23026,9 +23000,9 @@ JS9.mkPublic("SelectDisplay", function(){
 });
 
 // gather images from other displays into this display
-JS9.mkPublic("GatherDisplay", function(did, opts){
-    let display;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("GatherDisplay", function(...args){
+    let display, did, opts;
+    const obj = JS9.parsePublicArgs(args);
     switch(obj.argv.length){
     case 0:
 	did = obj.display;
@@ -23052,14 +23026,14 @@ JS9.mkPublic("GatherDisplay", function(did, opts){
     if( !display ){
 	JS9.error("invalid display for gather");
     }
-    JS9.Display.prototype.gather.call(display, opts);
+    display.gather(opts);
     return;
 });
 
 // separate images in a display into new displays
-JS9.mkPublic("SeparateDisplay", function(did, opts){
-    let display;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("SeparateDisplay", function(...args){
+    let display, did, opts;
+    const obj = JS9.parsePublicArgs(args);
     switch(obj.argv.length){
     case 0:
 	did = obj.display;
@@ -23083,26 +23057,26 @@ JS9.mkPublic("SeparateDisplay", function(did, opts){
     if( !display ){
 	JS9.error("invalid display for separate");
     }
-    JS9.Display.prototype.separate.call(display, opts);
+    display.separate(display, opts);
     return;
 });
 
 // center the image in a display
-JS9.mkPublic("CenterDisplay", function(){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("CenterDisplay", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.argv[0] || obj.display);
     if( !display ){
 	JS9.error("invalid display for center");
     }
-    JS9.Display.prototype.center.call(display);
+    display.center();
     return;
 });
 
 // save a session (current image, images in current display, or all images)
-JS9.mkPublic("SaveSession", function(arg1, arg2){
-    let fname, display, disp;
+JS9.mkPublic("SaveSession", function(...args){
+    let fname, display, disp, arg1, arg2;
     let opts = {};
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     arg1 = obj.argv[0];
     arg2 = obj.argv[1];
     // opts can be an object or json or a filename
@@ -23114,7 +23088,7 @@ JS9.mkPublic("SaveSession", function(arg1, arg2){
 	try{ opts = JSON.parse(arg1); }
 	catch(e){
 	    fname = arg1;
-	    // but is there a second opts argument?
+	    // but is there a second opts arg?
 	    if( arg2 ){
 		if( typeof arg2 === "object" ){
 		    opts = $.extend(true, {}, arg2);
@@ -23162,9 +23136,9 @@ JS9.mkPublic("SaveSession", function(arg1, arg2){
 });
 
 // load a session file
-JS9.mkPublic("LoadSession", function(file, opts){
-    let display, reader, disp;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LoadSession", function(...args){
+    let display, reader, disp, file, opts;
+    const obj = JS9.parsePublicArgs(args);
     file = obj.argv[0];
     opts = obj.argv[1];
     // sanity check
@@ -23224,11 +23198,11 @@ JS9.mkPublic("LoadSession", function(file, opts){
 
 // save regions to disk
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("SaveCatalog", function(fname, which){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("SaveCatalog", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
-    fname = obj.argv[0];
-    which = obj.argv[1];
+    let fname = obj.argv[0];
+    let which = obj.argv[1];
     if( im ){
 	return im.saveCatalog(fname, which);
     }
@@ -23236,9 +23210,9 @@ JS9.mkPublic("SaveCatalog", function(fname, which){
 });
 
 // load a starbase catalog file
-JS9.mkPublic("LoadCatalog", function(layer, file, opts){
-    let reader, im;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LoadCatalog", function(...args){
+    let reader, im, layer, file, opts;
+    const obj = JS9.parsePublicArgs(args);
     layer = obj.argv[0];
     file = obj.argv[1];
     opts = obj.argv[2];
@@ -23303,23 +23277,23 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
 });
 
 // create an image mosaic
-JS9.mkPublic("CreateMosaic", function(){
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("CreateMosaic", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
-    const ims = obj.argv[0];
-    const opts = obj.argv[1];
+    let ims = obj.argv[0];
+    let opts = obj.argv[1];
     if( display ){
 	return display.createMosaic(ims, opts);
     }
 });
 
 // display the named plugin
-JS9.mkPublic("DisplayPlugin", function(name){
-    let i, plugin, pname, lcname;
-    const obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("DisplayPlugin", function(...args){
+    let i, plugin, pname, lcname, name;
+    const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
+    name = obj.argv[0];
     if( display && obj.argv[0] ){
-	name = obj.argv[0];
 	lcname = name.toLowerCase();
 	for(i=0; i<JS9.plugins.length; i++){
 	    plugin = JS9.plugins[i];
@@ -23340,9 +23314,7 @@ JS9.mkPublic("DisplayHelp", function(hname){
     const opts = JS9.lightOpts.dhtml.textWin;
     const type = "iframe";
     // sanity check
-    if( !hname ){
-	return;
-    }
+    if( !hname ){ return; }
     title = hname.split("/").reverse()[0];
     id = "help_" + JS9.uniqueID();
     // look for known help file
@@ -23359,24 +23331,24 @@ JS9.mkPublic("DisplayHelp", function(hname){
 
 // display a light window
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("LightWindow", function(id, type, content, title, opts){
-    const obj = JS9.parsePublicArgs(arguments);
-    id      = obj.argv[0] || "lightWindow" + JS9.uniqueID();
-    type    = obj.argv[1] || "inline";
-    content = obj.argv[2];
+JS9.mkPublic("LightWindow", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    let id      = obj.argv[0] || "lightWindow" + JS9.uniqueID();
+    let type    = obj.argv[1] || "inline";
+    let content = obj.argv[2];
+    let title   = obj.argv[3] || "JS9 light window";
+    let opts    = obj.argv[4] || JS9.lightOpts.dhtml.textWin;
     if( !content ){
 	JS9.error("no content specified for LightWindow");
     }
-    title   = obj.argv[3] || "JS9 light window";
-    opts    = obj.argv[4] || JS9.lightOpts.dhtml.textWin;
     return JS9.lightWin(id, type, content, title, opts);
 });
 
 // print window (Desktop JS9 only)
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("WindowPrint", function(args){
+JS9.mkPublic("WindowPrint", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     const opts = {cmd: "print"};
-    const obj = JS9.parsePublicArgs(arguments);
     if( obj.argv[0] ){
 	opts.opts = obj.argv[0];
     }
@@ -23393,7 +23365,7 @@ JS9.mkPublic("WindowPrint", function(args){
 // save PDF of window (Desktop JS9 only)
 // eslint-disable-next-line no-unused-vars
 JS9.mkPublic("WindowToPDF", function(args){
-    const obj = JS9.parsePublicArgs(arguments);
+    const obj = JS9.parsePublicArgs(args);
     const opts = {cmd: "pdf"};
     opts.filename = obj.argv[0] || "js9.pdf";
     if( obj.argv[1] ){
@@ -23411,9 +23383,9 @@ JS9.mkPublic("WindowToPDF", function(args){
 
 // set save directory (Desktop JS9 only)
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("SaveDir", function(args){
+JS9.mkPublic("SaveDir", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     const opts = {cmd: "savedir"};
-    const obj = JS9.parsePublicArgs(arguments);
     if( obj.argv[0] ){
 	opts.opts = obj.argv[0];
     } else {
