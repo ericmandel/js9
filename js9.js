@@ -6707,7 +6707,7 @@ JS9.Image.prototype.radialProfile = function(...args){
     // opts is optional
     opts = opts || {};
     // call regcnts routine
-    s = JS9.Image.prototype.countsInRegions.apply(this, carr);
+    s = this.countsInRegions(...carr);
     // need a json string in return
     try{ obj = JSON.parse(s); }
     catch(e){ JS9.error("can't parse regcnts JSON", e); }
@@ -7856,7 +7856,7 @@ JS9.Image.prototype.filterRGBImage = function(...args){
     // add display context and RGB img arg
     args.unshift(this.display.context, this.rgb.img);
     // try to run the filter to generate a new RGB image
-    try{ JS9.ImageFilters[filter].apply(null, args); }
+    try{ JS9.ImageFilters[filter](...args); }
     catch(e){ JS9.error("JS9 image filter '" + filter + "' failed", e); }
     // display new RGB image
     this.displayImage("display");
@@ -8148,13 +8148,13 @@ JS9.Image.prototype.xeqStashCall = function(xeqstash, exclArr){
 	    try{
 		switch(xeq.context){
 		case "image":
-		    this[key].apply(this, xeq.args);
+		    this[key](...xeq.args);
 		    break;
 		case "display":
-		    this.display[key].apply(this.display, xeq.args);
+		    this.display[key](...xeq.args);
 		    break;
 		default:
-		    this[key].apply(this, xeq.args);
+		    this[key](...xeq.args);
 		    break;
 		}
 	    }
@@ -9952,7 +9952,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
     const log = function(...args) {
 	let s;
 	if( opts.verbose || JS9.DEBUG > 1 ){
-	    s = sprintf.apply(null, args);
+	    s = sprintf(...args);
 	    // eslint-disable-next-line no-console
 	    JS9.log(s);
 	}
@@ -17285,7 +17285,7 @@ JS9.msgHandler =  function(msg, cb){
 	    cb = null;
 	}
 	// call public API
-	try{ res = JS9.publics[cmd].apply(null, args); }
+	try{ res = JS9.publics[cmd](...args); }
 	catch(e){ res = sprintf("ERROR: %s", e.message); }
 	if( cb ){
 	    JS9.globalOpts.alerts = oalerts;
@@ -18477,7 +18477,7 @@ JS9.log = function(...args) {
     if( (window.console !== undefined) && (window.console.log !== undefined) ){
         try {
 	    // eslint-disable-next-line no-console
-            console.log.apply(console, args);
+            console.log(...args);
         } catch(e){
 	    // eslint-disable-next-line no-console
             log = Function.prototype.bind.call(console.log, console);
@@ -18880,7 +18880,7 @@ JS9.xeqByName = function(...args) {
 	for(i = 0; i < namespaces.length; i++) {
             context = context[namespaces[i]];
 	}
-	return context[func].apply(context, xargs);
+	return context[func](...xargs);
     default:
 	JS9.error("unknown function type: "+type);
 	break;
@@ -20239,7 +20239,7 @@ JS9.initCommands = function(){
 	set(args) {
 	    const im = this.image;
 	    if( im ){
-		im.setColormap.apply(im, args);
+		im.setColormap(...args);
 	    }
 	}
     }));
@@ -20391,7 +20391,7 @@ JS9.initCommands = function(){
 	set(args) {
 	    const im = this.image;
 	    if( im ){
-		im.setPan.apply(im, args);
+		im.setPan(...args);
 	    }
 	}
     }));
@@ -20462,7 +20462,7 @@ JS9.initCommands = function(){
 	set(args) {
 	    const im = this.image;
 	    if( im ){
-		return im.countsInRegions.apply(im, args);
+		return im.countsInRegions(...args);
 	    }
 	}
     }));
@@ -20532,7 +20532,7 @@ JS9.initCommands = function(){
 	set(args) {
 	    const im = this.image;
 	    if( im ){
-		im.setScale.apply(im, args);
+		im.setScale(...args);
 	    }
 	}
     }));
@@ -21078,7 +21078,7 @@ JS9.mkPublic = function(name, s){
 		const im = JS9.getImage(obj.display);
 		if( im ){
 		    // call the image method
-		    got = im[s].apply(im, obj.argv);
+		    got = im[s](...obj.argv);
 		    // don't return image handle, it can't be serialized
 		    if( (got === im) || (got === im.display) ){
 			return JS9.globalOpts.quietReturn ? "" : "OK";
@@ -22222,7 +22222,7 @@ JS9.mkPublic("RefreshImage", function(...args){
 	    im.refreshImage(fits, opts);
 	}
     } else if( fits instanceof Blob ){
-	JS9.Load.apply(null, args);
+	JS9.Load(...args);
     }
 });
 
@@ -22770,7 +22770,7 @@ JS9.mkPublic("GetRegions", function(...args){
     const im = JS9.getImage(obj.display);
     if( im ){
 	obj.argv.unshift("regions");
-	return im.getShapes.apply(im, obj.argv);
+	return im.getShapes(...obj.argv);
     }
     return null;
 });
@@ -22978,7 +22978,7 @@ JS9.mkPublic("ResizeDisplay", function(...args) {
     if( !display ){
 	JS9.error("invalid display for resize");
     }
-    got = JS9.Display.prototype.resize.apply(display, obj.argv);
+    got = display.resize(...obj.argv);
     if( got === display ){
 	return JS9.globalOpts.quietReturn ? "" : "OK";
     }
