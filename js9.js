@@ -21056,7 +21056,7 @@ JS9.init = function(){
 // used in public api routines to retrieve optional {display: id} arg
 JS9.parsePublicArgs = function(args){
     let display = null;
-    const argv = args.slice();
+    const argv = Array.prototype.slice.call(args);
     const obj = argv[argv.length-1];
     // look for object containing display property as last arg
     if( obj && (typeof obj === "object") &&
