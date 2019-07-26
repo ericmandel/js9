@@ -9782,8 +9782,14 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	if( obj.xeqstash ){
 	    im.xeqStashCall(obj.xeqstash);
 	}
+	// plugin callbacks
 	if( JS9.globalOpts.extendedPlugins ){
-	    JS9.images[0].xeqPlugins("image", "onsessionload");
+	    im.xeqPlugins("image", "onsessionload");
+	}
+	// execute onsessionload callback, if necessary
+	if( typeof opts.onsessionload === "function" ){
+	    try{ JS9.xeqByName(opts.onsessionload, window, im); }
+	    catch(e){ JS9.error("in onsessionload callback", e, false); }
 	}
     };
     const loadit = function(imobj){

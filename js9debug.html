@@ -271,6 +271,11 @@
 	             onload: function(im){
 		       JS9.SetZoom(2,{display: "myJS9"});
 		       JS9.LoadSession("casa/casa.png.ses",
+				       {onsessionload: function(im2){
+					   setTimeout(function(){
+					       im2.displayCoordGrid(false);
+					   }, 2000);
+				       }},
                                        {display:"myJS9"});}
                     },
                     {display: "myJS9"});
