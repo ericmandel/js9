@@ -15605,11 +15605,11 @@ JS9.Regions.listRegions = function(which, opts, layer){
     opts = opts || {};
     // default is to display, including non-source tags
     mode = opts.mode;
-    if( mode === undefined ){
+    if( JS9.isNull(mode) ){
 	mode = 3;
     }
     // default is to list the regions layer
-    if( layer === undefined ){
+    if( JS9.isNull(layer) ){
 	layer = "regions";
     }
     // get specified regions into an array
