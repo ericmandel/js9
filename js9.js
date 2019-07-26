@@ -6185,19 +6185,19 @@ JS9.Image.prototype.setColormap = function(...args){
 	    break;
 	}
         if( args.length === 3 ){
-	    if( !isNaN(arg2) ){
+	    if( !Number.isNaN(arg2) ){
 	        this.params.contrast = arg2;
 	    }
-	    if( !isNaN(arg3) ){
+	    if( !Number.isNaN(arg3) ){
 	       this.params.bias = arg3;
 	    }
         }
 	break;
     case 2:
-	if( !isNaN(arg) ){
+	if( !Number.isNaN(arg) ){
 	    this.params.contrast = arg;
 	}
-	if( !isNaN(arg2) ){
+	if( !Number.isNaN(arg2) ){
 	    this.params.bias = arg2;
 	}
 	break;
@@ -6419,9 +6419,9 @@ JS9.Image.prototype.setParam = function(param, value){
 // re-calculate data min and max (and set scale params, if necessary)
 JS9.Image.prototype.dataminmax = function(dmin, dmax){
     let i, blankval;
-    let reminscale = isNaN(this.params.scalemin) ||
+    let reminscale = Number.isNaN(this.params.scalemin) ||
                      (this.params.scalemin === undefined);
-    let remaxscale = isNaN(this.params.scalemax) ||
+    let remaxscale = Number.isNaN(this.params.scalemax) ||
                      (this.params.scalemax === undefined);
     // might have to redo scaling if it's tied to current data min or max
     if( this.params.scaleclipping === "dataminmax" ){
@@ -6462,7 +6462,7 @@ JS9.Image.prototype.dataminmax = function(dmin, dmax){
 	} else {
 	    // float data: ignore NaN
 	    for(i=0; i<this.raw.data.length; i++) {
-		if( !isNaN(this.raw.data[i]) ){
+		if( !Number.isNaN(this.raw.data[i]) ){
 		    this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
 		    this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
 		}
@@ -17907,7 +17907,7 @@ JS9.handleImageFile = function(file, options, handler){
 	    hdu.dmin = Number.MAX_VALUE;
 	    hdu.dmax = Number.MIN_VALUE;
 	    for(i=0; i< h*w; i++){
-		if( !isNaN(hdu.data[i]) ){
+		if( !Number.isNaN(hdu.data[i]) ){
 		    hdu.dmin = Math.min(hdu.dmin, hdu.data[i]);
 		    hdu.dmax = Math.max(hdu.dmax, hdu.data[i]);
 		}
@@ -18444,7 +18444,7 @@ JS9.invertMatrix3 = function(xin){
     // sanity check for NaN
     for(i=0; i<3; i++){
 	for(j=0; j<2; j++){
-	    if( (xin[i][j] === undefined) || isNaN(xin[i][j]) ){
+	    if( (xin[i][j] === undefined) || Number.isNaN(xin[i][j]) ){
 		return null;
 	    }
 	}
@@ -18488,7 +18488,8 @@ JS9.log = function(...args) {
 
 // is this a string representation of a number?
 JS9.isNumber = function(s) {
-    return !isNaN(parseFloat(s)) && isFinite(s);
+    const d = Number.parseFloat(s);
+    return !Number.isNaN(d) && Number.isFinite(d);
 };
 
 // check if a variable is neither undefined nor null
