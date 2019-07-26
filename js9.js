@@ -14,7 +14,7 @@
 
 "use strict";
 
-// ensure Emscripten's Module object is available, so we can pass properties,
+// ensure Emscripten's Module object is available so we can pass properties
 // (e.g. wasmBinary) in js9prefs.js and during JS9.init()
 // (use var to add to global scope because that's how its done in Emscripten)
 var Module;
@@ -21205,7 +21205,7 @@ JS9.mkPublic("RenameDisplay", function(...args){
 // eslint-disable-next-line no-unused-vars
 JS9.mkPublic("CloseDisplay", function(...args){
     let i, im, disp;
-    const obj = JS9.parsePublicArgs(...args);
+    const obj = JS9.parsePublicArgs(args);
     disp = JS9.lookupDisplay(obj.argv[0] || obj.display);
     // reverse loop because we slice JS9.images
     for(i=JS9.images.length-1; i>=0; i--){
