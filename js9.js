@@ -22475,7 +22475,7 @@ JS9.mkPublic("NewFitsImage", function(...args){
 JS9.mkPublic("GetImage", function(...args){
     const obj = JS9.parsePublicArgs(args);
     let id = obj.argv[0];
-    if( id && (typeof id !== "string") ){
+    if( typeof id !== "string" ){
 	id = obj.display;
     }
     return JS9.getImage(id);
