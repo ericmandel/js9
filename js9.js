@@ -1985,10 +1985,10 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	if( opts.extname || opts.extnum ){
 	    if( opts.extname ){
 		this.file = this.file.replace(/\[.*\]/, "");
-		this.file += sprintf("[%s]", opts.extname);
+		this.file += `[${opts.extname}]`;
 	    } else if( opts.extnum && (opts.extnum > 0) ){
 		this.file = this.file.replace(/\[.*\]/, "");
-		this.file += sprintf("[%s]", opts.extnum);
+		this.file += `[${opts.extnum}]`;
 	    }
 	    if( hdu && hdu.fits ){
 		if( opts.extname ){
@@ -2001,15 +2001,15 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	} else if( hdu.fits ){
 	    if( hdu.fits.extname ){
 		this.file = this.file.replace(/\[.*\]/, "");
-		this.file += sprintf("[%s]", hdu.fits.extname);
+		this.file += `[${hdu.fits.extname}]`;
 	    } else if( hdu.fits.extnum && (hdu.fits.extnum > 0) ){
 		this.file = this.file.replace(/\[.*\]/, "");
-		this.file += sprintf("[%s]", hdu.fits.extnum);
+		this.file += `[${hdu.fits.extnum}]`;
 	    }
 	} else if( this.raw.header ){
 	    if( this.raw.header.EXTNAME ){
 		this.file = this.file.replace(/\[.*\]/, "");
-		this.file += sprintf("[%s]", this.raw.header.EXTNAME);
+		this.file += `[${this.raw.header.EXTNAME}]`;
 	    }
 	}
     }
@@ -3433,14 +3433,14 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	}
 	// the id might have changed if we changed extensions
 	if( hdu.fits.extname ){
-	    ss = sprintf("[%s]", hdu.fits.extname);
+	    ss = `[${hdu.fits.extname}]`;
 	} else if( hdu.fits.extnum && hdu.fits.extnum > 0 ){
-	    ss = sprintf("[%s]", hdu.fits.extnum);
+	    ss = `[${hdu.fits.extnum}]`;
 	} else if( that.parent ){
 	    if( that.parent.extname ){
-		ss = sprintf("[%s]", that.parent.extname);
+		ss = `[${that.parent.extname}]`;
 	    } else if( that.parent.extnum && that.parent.extnum > 0 ){
-		ss = sprintf("[%s]", that.parent.extnum);
+		ss = `[${that.parent.extnum}]`;
 	    }
 	}
 	// change id and file if extension changed
@@ -3893,7 +3893,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 	    }
 	}
 	if( !got ){
-	    JS9.error(sprintf("no FITS HDU %s for displayExtension()", extid));
+	    JS9.error(`no FITS HDU ${extid} for displayExtension()`);
 	}
 	// extnum specified?
     } else if( typeof extid === "number" ){
@@ -3901,12 +3901,12 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 	if( this.hdus[extid] ){
 	    extname = this.hdus[extid].name || extid.toString();
 	} else {
-	    JS9.error(sprintf("no FITS HDU %s for displayExtension()", extid));
+	    JS9.error(`no FITS HDU ${extid} for displayExtension()`);
 	}
     }
     // if we are creating a separate file, see if we already have it
     if( opts.separate ){
-	s = sprintf("[%s]", extname);
+	s = `[${extname}]`;
 	id = this.id.replace(/\[.*\]/,"") + s;
 	for(i=0, got=0; i<JS9.images.length; i++){
 	    im = JS9.images[i];
@@ -3967,7 +3967,7 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
     } else {
 	// slicename or slicenum specified?
 	if( JS9.isNumber(slice) ){
-	    opts.slice = sprintf("*:*:%s", slice);
+	    opts.slice = `*:*:${slice}`;
 	} else {
 	    opts.slice = slice;
 	}
@@ -6563,14 +6563,14 @@ JS9.Image.prototype.countsInRegions = function(...args){
 		    narg = reg.wcssys || "";
 		}
 		// add wcs region string
-		narg += sprintf("; %s", reg.wcsstr);
+		narg += `; ${reg.wcsstr}`;
 	    } else {
 		// put image sys at the start
 		if( !narg ){
 		    narg = reg.imsys || "";
 		}
 		// add image region string
-		narg += sprintf("; %s", reg.imstr);
+		narg += `; ${reg.imstr}`;
 	    }
 	}
 	return narg || def;
@@ -6638,7 +6638,7 @@ JS9.Image.prototype.countsInRegions = function(...args){
 	}
     } else if( this.raw.header.NAXIS === 3 &&
 	       cmdswitches.search(/(^| )-c/) < 0 ){
-	cmdswitches += sprintf(" -c %s", this.raw.hdu.slice || 1);
+	cmdswitches += ` -c ${this.raw.hdu.slice || 1}`;
     }
     // reduce file size, if necessary
     if( opts.reduce && !this.parentFile ){
@@ -6647,12 +6647,12 @@ JS9.Image.prototype.countsInRegions = function(...args){
 	if( bin > 1 ){
 	    if( this.imtab === "table" ){
 		// for tables, regcnts has a -b switch
-		cmdswitches += sprintf(" -b %s", bin);
+		cmdswitches += ` -b ${bin}`;
 	    } else {
 		// for images, make a temporary binned file
 		bvfile = sprintf("bin%s_%s", bin,
 				 vfile.split("/").reverse()[0]);
-		sect = sprintf("0@0,0@0,%s", bin);
+		sect = `0@0,0@0,${bin}`;
 		JS9.imsection(vfile, bvfile, sect, "");
 		vfile = bvfile;
 	    }
@@ -6767,7 +6767,7 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
 	JS9.error("plot3d requires specification of cube's third index");
     }
     // but these regcnts command switches are not
-    opts.cmdswitches = sprintf("-j -c %s", opts.cube);
+    opts.cmdswitches = `-j -c ${opts.cube}`;
     // average or sum?
     mode =  opts.mode || "avg";
     // for avg: what sort of area (pixels or arcsec)?
@@ -6793,7 +6793,7 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
     // init plot object
     s = this.raw.header[`CTYPE${String(index3)}`];
     if( s ){
-	xlabel = sprintf("%s", s.toLowerCase());
+	xlabel = s.toLowerCase();
     } else {
 	xlabel = "slice";
     }
@@ -6804,7 +6804,7 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
 	    ylabel = "counts/arcsec**2";
 	}
     } else {
-	ylabel = sprintf("summed counts");
+	ylabel = "summed counts";
     }
     pobj = {color: sprintf("%s", color), label : sprintf("%s vs %s ", ylabel, xlabel), data: []};
     // offset for 3rd dimension
@@ -7641,10 +7641,10 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	ivfile = raw.hdu.fits.vfile;
 	// add extension name or number
 	if( raw.hdu.fits.extname ){
-	    ivfile += sprintf("[%s]", raw.hdu.fits.extname);
+	    ivfile += `[${raw.hdu.fits.extname}]`;
 	} else if( raw.hdu.fits.extnum &&
 		   (raw.hdu.fits.extnum > 0) ){
-	    ivfile += sprintf("[%s]", raw.hdu.fits.extnum);
+	    ivfile += `[${raw.hdu.fits.extnum}]`;
 	}
     } else {
 	// input file name
@@ -10050,7 +10050,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	// generate input list from array of ims
 	s = sprintf("%s\n%s\n", line1, line2);
 	for(i=0; i<ims.length; i++){
-	    s += sprintf("%s\n", ims[i].raw.hdu.fits.vfile);
+	    s += `${ims[i].raw.hdu.fits.vfile}\n`;
 	}
 	// save in list file
 	JS9.vfile(inlst, s);
@@ -10109,12 +10109,12 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 		    // make sure binned file eventually gets deleted
 		    carr.push(bvfile);
 		    // section specification consists of bin factor
-		    sect = sprintf("0@0,0@0,%s", bin);
+		    sect = `0@0,0@0,${bin}`;
 		    log("bin %s [%s]", ivfile, bin);
 		    // extract a section at the specified bin factor
 		    JS9.imsection(ivfile, bvfile, sect, "");
 		    // add file to new input list
-		    s += sprintf("%s\n", bvfile);
+		    s += `${bvfile}\n`;
 		}
 	    }
 	    // save in new image list file
@@ -10155,7 +10155,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 		sw = "-a 1";
 		if( opts.reduce === "shrink" ){
 		    // pass extension number in switches
-		    sw += sprintf(" -h %s", ext);
+		    sw += ` -h ${ext}`;
 		}
 		// add global switches for reproject processing
 		sw += ` ${JS9.globalOpts.reprojSwitches}`;
@@ -10165,7 +10165,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 				 .split("/").reverse()[0]
 				 .replace(/\.(g|f)z$/, ""));
 		// add to the output file list
-		s += sprintf("%s\n", ovfile);
+		s += `${ovfile}\n`;
 		// make sure it eventually gets deleted
 		carr.push(ovfile);
 		// make sure associated area file eventually gets deleted
@@ -10306,7 +10306,7 @@ JS9.Helper.prototype.connectinfo = function(){
 	return s;
     }
     // connection configured but not established
-    return sprintf("notConnected %s", JS9.helper.type);
+    return `notConnected ${JS9.helper.type}`;
 };
 
 // connect to back-end helper
@@ -16155,7 +16155,7 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     default:
 	// convert layer to region string
 	try{
-	    header = sprintf("# Region file format: JS9 version 1.0");
+	    header = "# Region file format: JS9 version 1.0";
 	    regstr = this.listRegions(which, {mode: 1}, layer);
 	    s = sprintf("%s\n%s\n", header, regstr.replace(/; */g, "\n"));
 	}
@@ -17283,7 +17283,7 @@ JS9.msgHandler =  function(msg, cb){
 	}
 	// call public API
 	try{ res = JS9.publics[cmd](...args); }
-	catch(e){ res = sprintf("ERROR: %s", e.message); }
+	catch(e){ res = `ERROR: ${e.message}`; }
 	if( cb ){
 	    JS9.globalOpts.alerts = oalerts;
 	    // last ditch effort to avoid passing back image or display objects
@@ -17327,14 +17327,14 @@ JS9.msgHandler =  function(msg, cb){
 	    catch(e){ res = `ERROR: ${e.message}`;}
 	    break;
 	default:
-	    res = sprintf("ERROR: unknown cmd type for '%s'", cmd);
+	    res = `ERROR: unknown cmd type for '${cmd}'`;
 	}
     } else {
 	if( !obj ){
-	    res = sprintf("ERROR: unknown cmd '%s'", cmd);
+	    res = `ERROR: unknown cmd '${cmd}'`;
 	}
 	if( !tdisp ){
-	    res = sprintf("ERROR: unknown display (%s)", id);
+	    res = `ERROR: unknown display (${id})`;
 	}
     }
     // turn on alerts, do message callback, if necessary
@@ -18111,13 +18111,11 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 			if( nopts.extname ){
 			    nopts.parentFile = nopts.parentFile
 				.replace(/\[.*\]/, "");
-			    nopts.parentFile += sprintf("[%s]",
-							nopts.extname);
+			    nopts.parentFile += `[${nopts.extname}]`;
 			} else if( nopts.extnum && (nopts.extnum > 0) ){
 			    nopts.parentFile = nopts.parentFile
 				.replace(/\[.*\]/, "");
-			    nopts.parentFile.file += sprintf("[%s]",
-							     nopts.extnum);
+			    nopts.parentFile.file += `[${nopts.extnum}]`;
 			}
 
 		    }
@@ -18210,7 +18208,7 @@ JS9.error = function(...args){
     if( doerr ){
 	// add error object message to emsg, if possible
 	if( e && e.message ){
-	    emsg += sprintf(" (%s)", e.message);
+	    emsg += ` (${e.message})`;
 	} else if( emsg ){
 	    e = new Error(emsg);
 	}
@@ -18782,7 +18780,7 @@ JS9.hdus2Str = function(hdus){
 	    }
 	    t += sprintf("&#09;<b>rows</b>: %d%s<b>cols</b>: [", obj.rows, s);
 	    for(j=0; j<obj.cols.length; j++){
-		t += sprintf("%s", obj.cols[j].name);
+		t += `${obj.cols[j].name}`;
 		if( j !== obj.cols.length-1 ){
 		    t += ", ";
 		}
@@ -20935,13 +20933,13 @@ JS9.init = function(){
 	// if postMessage handling is disabled, just (log and) return
 	if( !JS9.globalOpts.postMessage ){
 	    if( JS9.DEBUG ){
-		s = sprintf("JS9 ignoring postMessage, origin: %s", origin);
+		s = `JS9 ignoring postMessage, origin: ${origin}`;
 		if( typeof data === "string" ){
-		    s += sprintf(" data: %s", data);
+		    s += ` data: ${data}`;
 		} else if( typeof data === "object" ){
-		    s += sprintf(" obj: %s", JSON.stringify(Object.keys(data)));
+		    s += ` obj: ${JSON.stringify(Object.keys(data))}`;
 		} else {
-		    s += sprintf(" typeof: %s", typeof data);
+		    s += ` typeof: ${typeof data}`;
 		}
 		JS9.log(s);
 	    }
@@ -21664,23 +21662,23 @@ JS9.mkPublic("LoadWindow", function(...args){
 	    wheight = parseInt(warr[4], 10);
 	}
         // make up the html with the unique id
-        html = sprintf("<hr class='hline0'>");
+        html = "<hr class='hline0'>";
 	// menubar
 	if( !display                                        ||
 	    ($(`#${opts.clone}Menubar`).length > 0         &&
 	     !display.pluginInstances.JS9Menubar.isDynamic) ){
-	    html += sprintf("<div class='JS9Menubar' id='%sMenubar'></div>",id);
+	    html += `<div class='JS9Menubar' id='${id}Menubar'></div>`;
 	} else if( winopts ){
 	    wheight -= 40;
 	}
 	// display
-	html += sprintf("<div class='JS9' id='%s'></div>", id);
+	html += `<div class='JS9' id='${id}'></div>`;
 	// colorbar
 	if( !display                                         ||
 	    ($(`#${opts.clone}Colorbar`).length > 0         &&
 	     !display.pluginInstances.JS9Colorbar.isDynamic) ){
 	    if( display && display.pluginInstances.JS9Colorbar ){
-		s = sprintf("data-showTicks='%s'", display.pluginInstances.JS9Colorbar.showTicks);
+		s = `data-showTicks='${display.pluginInstances.JS9Colorbar.showTicks}'`;
 	    } else {
 		s = "";
 	    }
@@ -21893,12 +21891,12 @@ JS9.mkPublic("LoadWindow", function(...args){
         // make a body containing the JS9 elements and the preload call
         body = html || getHTML(id, opts);
         // combine head and body into a full html file
-        html = sprintf("<html><head>%s</head><body", head);
+        html = `<html><head>${head}</head><body`;
 	if( file ){
             html += sprintf(" onload='JS9.Preload(\"%s\",%s);'",
 			    file, JSON.stringify(opts));
 	}
-        html += sprintf(">%s</body></html>\n", body);
+        html += `>${body}</body></html>\n`;
         // open the new window
 	if( window.isElectron ){
 	    initialURL = "data:text/html,<html><body><script>window.addEventListener('message', function(ev){document.documentElement.innerHTML=ev.data</script><p></body></html>";
@@ -22369,8 +22367,6 @@ JS9.mkPublic("OpenColormapMenu", function(...args) {
 JS9.mkPublic("SaveColormap", function(...args) {
     let fname, im, cobj, s, blob, arg1, arg2;
     const obj = JS9.parsePublicArgs(args);
-    arg1 = obj.argv[0];
-    arg2 = obj.argv[1];
     const convertjson = function(arg1){
 	let s = arg1;
 	if( typeof arg1 === "string" ){
@@ -22395,6 +22391,8 @@ JS9.mkPublic("SaveColormap", function(...args) {
 	}
 	return cobj;
     };
+    arg1 = obj.argv[0];
+    arg2 = obj.argv[1];
     if( window.hasOwnProperty("saveAs") ){
 	// check for json strings in arg1 and/or arg2
 	im = JS9.getImage(obj.display);
@@ -22578,12 +22576,12 @@ JS9.mkPublic("LoadAuxFile", function(...args){
 
 // run analysis from a Web page form
 JS9.mkPublic("SubmitAnalysis", function(...args){
-    let topjq, formjq, dispid, im, errstr;
-    let obj = JS9.parsePublicArgs(args);
-    let el = obj.argv[0];
-    let aname = obj.argv[1];
-    let func = obj.argv[2];
+    let topjq, formjq, dispid, im, errstr, el, aname, func, tobj;
     const a = JS9.lightOpts[JS9.LIGHTWIN];
+    const obj = JS9.parsePublicArgs(args);
+    el = obj.argv[0];
+    aname = obj.argv[1];
+    func = obj.argv[2];
     // if analysis name was not passed, it was saved in the light window div
     if( aname ){
 	dispid =  JS9.lookupDisplay(obj.display).id;
@@ -22603,12 +22601,12 @@ JS9.mkPublic("SubmitAnalysis", function(...args){
 	formjq = $(el).closest("form");
 	// make sure unchecked elements are in the array
 	try{
-	    // obj = $(':input:visible', formjq).serializeArray();
-	    obj = formjq.serializeArray();
-	    obj = obj.concat($(`#${formjq.attr('id')} input[type=checkbox]:not(:checked)`).map(function(){return {'name': this.name, 'value': 'false'};}).get());
+	    // tobj = $(':input:visible', formjq).serializeArray();
+	    tobj = formjq.serializeArray();
+	    tobj = tobj.concat($(`#${formjq.attr('id')} input[type=checkbox]:not(:checked)`).map(function(){return {'name': this.name, 'value': 'false'};}).get());
 	}
-	catch(e){ obj = null; }
-	im.runAnalysis(aname, obj, func);
+	catch(e){ tobj = null; }
+	im.runAnalysis(aname, tobj, func);
     } else {
 	errstr = "internal error: could not find image";
     }
