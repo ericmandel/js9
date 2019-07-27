@@ -3718,7 +3718,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    if( opts.ydim !== undefined ){ opts.ydim = 0; }
 	    // recombine bin and binMode, if necessary
 	    if( opts.binMode ){
-		opts.bin = sprintf("%s%s", opts.bin, opts.binMode);
+		opts.bin = `${opts.bin}${opts.binMode}`;
 		delete opts.binMode;
 	    }
 	    arr.push({name: "bin", value: opts.bin});
@@ -4953,7 +4953,7 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	case "imcenter":
 	    pos = that.displayToLogicalPos({x: that.display.width/2,
 					    y: that.display.height/2});
-	    r = sprintf("%s,%s", pos.x, pos.y);
+	    r = `${pos.x},${pos.y}`;
 	    break;
 	case "wcscenter":
 	    pos = that.displayToImagePos({x: that.display.width/2,
@@ -5246,7 +5246,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    return;
 		}
 	    } else if( robj.errcode ){
-		s = sprintf("ERROR: running %s [%s]", a.name, robj.errcode);
+		s = `ERROR: running ${a.name} [${robj.errcode}]`;
 		// not sure what this means, so just log it if stdout exists
 		if( robj.stdout ){
 		    JS9.log(s);
@@ -5517,7 +5517,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    return;
 	}
 	// create an outer div and an inner plot for the light window open call
-	hstr = sprintf("<div id='%s' class='JS9Analysis'><div id='%sPlot' class='JS9Plot' ></div></div>", id, id);
+	hstr = `<div id='${id}' class='JS9Analysis'><div id='${id}Plot' class='JS9Plot' ></div></div>`;
 	// populate div or create the light window to hold the plot
         if( divid ){
 	    divid.html(hstr);
@@ -5713,8 +5713,7 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
     };
     // eslint-disable-next-line no-unused-vars
     const errFunc = function(jqXHR, textStatus, errorThrown){
-	JS9.log(sprintf("could not load auxiliary file: %s [%s]",
-			aux.url, textStatus));
+	JS9.log(`could not load auxiliary file: ${aux.url} [${textStatus}]`);
     };
     // sanity checks
     if( !type || !alen ){
@@ -6026,7 +6025,6 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    break;
 	}
 	// create the valpos string
-	// since we can call this in mousemove, optimize by not using sprintf
 	vstr1 = val3;
 	vstr2 =  `${tr(c.x, 3)} ${tr(c.y, 3)} (${c.sys})`;
 	vstr = vstr1 + sp + vstr2;
@@ -6650,8 +6648,7 @@ JS9.Image.prototype.countsInRegions = function(...args){
 		cmdswitches += ` -b ${bin}`;
 	    } else {
 		// for images, make a temporary binned file
-		bvfile = sprintf("bin%s_%s", bin,
-				 vfile.split("/").reverse()[0]);
+		bvfile = `bin${bin}_${vfile.split("/").reverse()[0]}`;
 		sect = `0@0,0@0,${bin}`;
 		JS9.imsection(vfile, bvfile, sect, "");
 		vfile = bvfile;
@@ -7681,7 +7678,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	    tx2 = Math.floor(tab.xcen + (tab.xdim/2));
 	    ty1 = Math.floor(tab.ycen - (tab.ydim/2) + 1);
 	    ty2 = Math.floor(tab.ycen + (tab.ydim/2));
-	    ivfile += sprintf("[bin X=%s:%s,Y=%s:%s]", tx1, tx2, ty1, ty2);
+	    ivfile += `[bin X=${tx1}:${tx2},Y=${ty1}:${ty2}]`;
 	}
     }
     // call the reproject routine
@@ -10024,7 +10021,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
     // could take a while ...
     JS9.waiting(true, that);
     window.setTimeout(function(){
-	let s, t, sw, naxis, rstr, inbuf, ext;
+	let s, t, v, sw, naxis, rstr, inbuf, ext;
 	let vfile, ivfile, ovfile, bvfile, sect, topts;
 	let inlst, intbl, inhdr, inarr, binlst, bintbl;
 	let outlst, outtbl, outhdr, areafile, outfile;
@@ -10054,7 +10051,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	carr = [inlst, intbl, inhdr, binlst, bintbl,
 		outlst, outtbl, outhdr, areafile];
 	// generate input list from array of ims
-	s = sprintf("%s\n%s\n", line1, line2);
+	s = `${line1}\n${line2}\n`;
 	for(i=0; i<ims.length; i++){
 	    s += `${ims[i].raw.hdu.fits.vfile}\n`;
 	}
@@ -10093,7 +10090,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	    // bin based on image dims and desired mosaic dim
 	    bin = Math.max(1, Math.floor((naxis / opts.dim) + 0.5));
 	    // generate binned files, which become the input for reprojection
-	    s = sprintf("%s\n%s\n", line1, line2);
+	    s = `${line1}\n${line2}\n`;
 	    // get array of input images
 	    inbuf = JS9.vread(intbl);
 	    // ignore the first 3 header lines
@@ -10106,12 +10103,10 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 		vfile = t[t.length-1];
 		if( ext && vfile ){
 		    // section input file + extension
-		    ivfile = sprintf("%s[%s]", vfile, ext);
+		    ivfile = `${vfile}[${ext}]`;
+		    v = vfile.split("/").reverse()[0].replace(/\.(g|f)z$/, "");
 		    // binned file name
-		    bvfile = sprintf("bin_%s_%s", ext, 
-				     vfile
-				     .split("/").reverse()[0]
-				     .replace(/\.(g|f)z$/, ""));
+		    bvfile = `bin_${ext}_${v}`;
 		    // make sure binned file eventually gets deleted
 		    carr.push(bvfile);
 		    // section specification consists of bin factor
@@ -10151,7 +10146,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	inarr = inbuf.trim().split("\n");
 	inarr.splice(0,3);
 	// reproject and generate output list from reprojected files
-	s = sprintf("%s\n%s\n", line1, line2);
+	s = `${line1}\n${line2}\n`;
 	for(i=0; i<inarr.length; i++){
 	    t = inarr[i].trim().split(/\s+/);
 	    ext  = t[t.length-2];
@@ -10166,10 +10161,8 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 		// add global switches for reproject processing
 		sw += ` ${JS9.globalOpts.reprojSwitches}`;
 		// output filename
-		ovfile = sprintf("reproj_%s_%s", ext, 
-				 vfile
-				 .split("/").reverse()[0]
-				 .replace(/\.(g|f)z$/, ""));
+		v = vfile.split("/").reverse()[0].replace(/\.(g|f)z$/, "");
+		ovfile = `reproj_${ext}_${v}`;
 		// add to the output file list
 		s += `${ovfile}\n`;
 		// make sure it eventually gets deleted
@@ -10305,7 +10298,7 @@ JS9.Helper.prototype.connectinfo = function(){
     }
     // connection configured and established
     if( JS9.helper.connected ){
-	s = sprintf("connected %s %s", JS9.helper.type, JS9.helper.url);
+	s = `connected ${JS9.helper.type} ${JS9.helper.url}`;
 	if( JS9.helper.pageid ){
 	    s += `<p>${JS9.helper.pageid}`;
 	}
@@ -10338,10 +10331,9 @@ JS9.Helper.prototype.connect = function(type){
 	}
 	// throw error if needed
 	if( JS9.globalOpts.requireHelper ){
-	    JS9.error(`helper connect error: ${textStatus} ${errorThrown}`);
+	    JS9.error(`helper connect error: ${textStatus} (${errorThrown})`);
 	} else if( JS9.DEBUG ){
-	    JS9.log(sprintf("JS9 helper connect error: %s (%s)",
-			    textStatus, errorThrown));
+	    JS9.log(`JS9 helper connect error: ${textStatus} (${errorThrown})`);
 	}
     };
     const connectHelper = function(url){
@@ -12793,7 +12785,6 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	scalex *= ginfo.group.scaleX;
 	scaley *= ginfo.group.scaleY;
     }
-    // since we can call this in mousemove, optimize by not using sprintf
     switch(pub.shape){
     case "annulus":
 	pub.shape = "annulus";
@@ -13962,14 +13953,14 @@ JS9.Fabric.print = function(opts){
     // initial div to hold image
     divstr = sprintf(divtmpl, xoff, yoff);
     // add the image
-    html += sprintf("%s<img src='%s'></div>", divstr, dataURL);
+    html += `${divstr}<img src='${dataURL}'></div>`;
     // add layers
     for( key in this.layers ){
 	if( this.layers.hasOwnProperty(key) ){
 	    layer = this.layers[key];
 	    // output (showing) layers attached to the main display
 	    if( layer.dlayer.dtype === "main" && layer.show ){
-		html += sprintf("%s%s</div>", divstr, layer.dlayer.canvas.toSVG());
+		html += `${divstr}${layer.dlayer.canvas.toSVG()}</div>`;
 	    }
 	}
     }
@@ -13983,15 +13974,14 @@ JS9.Fabric.print = function(opts){
 	    dataURL = pinst.colorbarjq[0].toDataURL("image/png");
 	    yoff += this.display.height;
 	    divstr = sprintf(divtmpl, xoff, yoff);
-	    html += sprintf("%s<img src='%s'></div>", divstr, dataURL);
+	    html += `${divstr}<img src='${dataURL}'></div>`;
 	    if( pinst.textjq && pinst.textjq[0] ){
 		// colorbar text/tickmarks canvas
 		dataURL = pinst.textjq[0].toDataURL("image/png");
 		yoff += pinst.colorbarjq.height() + 1;
 		divstr = sprintf(divtmpl, xoff, yoff);
 		// need to rescale the text ... argh!!!
-		html += sprintf("%s<img style='width:%spx;'src='%s'></div>",
-			     divstr, this.display.width, dataURL);
+		html += `${divstr}<img style='width:${this.display.width}px;'src='${dataURL}'></div>`;
 	    }
 	}
     }
@@ -14836,7 +14826,7 @@ JS9.Regions.initConfigForm = function(obj){
 		    if( val ){
 			val += ", ";
 		    }
-		    val += sprintf("%s, %s", p.x.toFixed(2), p.y.toFixed(2));
+		    val += `${p.x.toFixed(2)}, ${p.y.toFixed(2)}`;
 		});
 	    } else {
 		// use the flat points list instead of the pts object array
@@ -16163,7 +16153,7 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	try{
 	    header = "# Region file format: JS9 version 1.0";
 	    regstr = this.listRegions(which, {mode: 1}, layer);
-	    s = sprintf("%s\n%s\n", header, regstr.replace(/; */g, "\n"));
+	    s = `${header}\n${regstr.replace(/; */g, "\n")}\n`;
 	}
 	catch(e){ JS9.error(`can't convert layer to region: ${layer}`);	}
 	break;
@@ -16766,7 +16756,7 @@ JS9.Grid.display = function(mode, myopts){
 	}
 	if( n > 1 ){
 	    s += t.replace(/,\s+$/, ") ");
-	    s += sprintf(' {"color": "%s"};', opts.lineColor);
+	    s += ` {"color": "${opts.lineColor}"};`;
 	}
     }
     // lines of constant Dec
@@ -16806,7 +16796,7 @@ JS9.Grid.display = function(mode, myopts){
 	}
 	if( n > 1 ){
 	    s += t.replace(/,\s+$/, ") ");
-	    s += sprintf(' {"color": "%s"};', opts.lineColor);
+	    s += ` {"color": "${opts.lineColor}"};`;
 	}
     }
     // dec labels along constant ra line
@@ -17580,7 +17570,7 @@ JS9.lookupImage = function(id, display){
 // id can be a display object or an id from a display object
 JS9.lookupDisplay = function(id, mustExist){
     let i;
-    const regexp = new RegExp(sprintf("[-_]?(%s)$", JS9.PLUGINS));
+    const regexp = new RegExp(`[-_]?(${JS9.PLUGINS})$`);
     // default is that the id must exist
     if( mustExist === undefined ){
 	mustExist = true;
@@ -17748,14 +17738,12 @@ JS9.fetchURL = function(name, url, opts, handler) {
 	    } else if( this.status === 404 ) {
 		JS9.error(`could not find ${url}`);
 	    } else {
-		JS9.error(sprintf("can't load: %s %s (%s)  ",
-				  url, xhr.statusText,  xhr.status));
+		JS9.error(`can't load: ${url} ${xhr.statusText} ${xhr.status}`);
 	    }
 	}
     };
     xhr.onerror = function() {
-	JS9.error(sprintf("cannot load: %s %s .. please check the url/pathname",
-	    url, xhr.statusText));
+	JS9.error(`cannot load: ${url} ... please check the url/pathname`);
     };
     xhr.ontimeout = function() {
 	JS9.error(`timeout awaiting response from server: ${url}`);
@@ -18000,12 +17988,9 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	}
 	bin = Math.max(1, bin || 1);
 	if( opts.xcen !== undefined && opts.ycen !== undefined ){
-	    xopts.sect = sprintf("%s@%s,%s@%s,%s%s",
-				 xdim, opts.xcen,
-				 ydim, opts.ycen,
-				 bin, binMode);
+	    xopts.sect = `${xdim}@${opts.xcen},${ydim}@${opts.ycen},${bin}${binMode}`;
 	} else {
-	    xopts.sect = sprintf("%s,%s,%s%s", xdim, ydim, bin, binMode);
+	    xopts.sect = `${xdim},${ydim},${bin}${binMode}`;
 	}
 	s = xcond.toLowerCase().split(/[>,]/);
 	for(i=0; i<s.length; i++){
@@ -19767,7 +19752,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	    visible = "hidden";
 	}
 	// wrap the target div in a container div
-	divjq.wrap(sprintf("<div class='JS9PluginContainer' style='visibility: %s'>", visible));
+	divjq.wrap(`<div class='JS9PluginContainer' style='visibility: ${visible}'>`);
 	// this is the original div
 	instance.odivjq = divjq;
 	// this is the div that the instance sees
@@ -20191,7 +20176,7 @@ JS9.initCommands = function(){
 			    result += ", ";
 			}
 			n = t.xclass ? (`${t.xclass}:${t.name}`) : t.name;
-			result += sprintf("%s (%s)", t.title, n);
+			result += `${t.title} (${n})`;
 		    }
 		    if( j < (im.analysisPackages.length-1) ){
 			result += "\n";
@@ -20233,8 +20218,7 @@ JS9.initCommands = function(){
 	    const im = this.image;
 	    if( im ){
 		res = im.getColormap();
-		return sprintf("%s %s %s",
-			       res.colormap, res.contrast, res.bias);
+		return `${res.colormap} ${res.contrast} ${res.bias}`;
 	    }
 	},
 	set(args) {
@@ -20386,7 +20370,7 @@ JS9.initCommands = function(){
 	    const im = this.image;
 	    if( im ){
 		res = im.getPan();
-		return sprintf("%s %s", res.x, res.y);
+		return `${res.x} ${res.x}`;
 	    }
 	},
 	set(args) {
@@ -20500,7 +20484,7 @@ JS9.initCommands = function(){
 	    const im = this.image;
 	    if( im ){
 		display = im.display;
-		return sprintf("%s %s", display.width, display.height);
+		return `${display.width} ${display.height}`;
 	    }
 	},
 	set(args) {
@@ -20526,8 +20510,7 @@ JS9.initCommands = function(){
 	    const im = this.image;
 	    if( im ){
 		res = im.getScale();
-		return sprintf("%s %s %s",
-			       res.scale, res.scalemin, res.scalemax);
+		return `${res.scale} ${res.scalemin} ${res.scalemax}`;
 	    }
 	},
 	set(args) {
@@ -21688,7 +21671,7 @@ JS9.mkPublic("LoadWindow", function(...args){
 	    } else {
 		s = "";
 	    }
-	    html += sprintf("<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' %s></div></div>", id, s);
+	    html += `<div style='margin-top: 2px;'><div class='JS9Colorbar' id='${id}Colorbar' ${s}></div></div>`;
 	    if( display && display.pluginInstances.JS9Colorbar &&
 		!display.pluginInstances.JS9Colorbar.showTicks ){
 		wheight -= 15;
@@ -21880,7 +21863,7 @@ JS9.mkPublic("LoadWindow", function(...args){
             id = idbase + JS9.uniqueID();
 	}
 	// window opts
-	winopts = winopts || sprintf("width=%s, height=%s", JS9.globalOpts.newWindowWidth, JS9.globalOpts.newWindowHeight);
+	winopts = winopts || `width=${JS9.globalOpts.newWindowWidth}, height=${ JS9.globalOpts.newWindowHeight}`;
         // get our own file's header for css and js files
         // if this page is generated on the server side, hardwire this ...
         // if JS9 is not installed, hardwire this ...
@@ -21891,8 +21874,7 @@ JS9.mkPublic("LoadWindow", function(...args){
 	// umm... it seems to have it, at least FF does as of 8/25/15 ...
 	if( !head.match(/src=["'].*js9\.js/)      &&
 	    !head.match(/src=["'].*js9\.min\.js/) ){
-            head += sprintf('<%s type="text/javascript" src="js9.min.js"></%s>',
-                            "script", "script");
+            head += '<script type="text/javascript" src="js9.min.js"></script>';
 	}
         // make a body containing the JS9 elements and the preload call
         body = html || getHTML(id, opts);
