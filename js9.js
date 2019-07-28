@@ -10,7 +10,7 @@
  *
  */
 
-/*global JS9Prefs, JS9Inline, $, jQuery, Event, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, require */
+/*global JS9Prefs, JS9Inline, $, jQuery, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, require */
 
 "use strict";
 
@@ -136,7 +136,7 @@ JS9.globalOpts = {
     lhtimeout: 10000,		// connection timeout for local helper connect
     ehtimeout: 500,		// connection timeout for Electron connect
     ehretries: 20,		// connection retries Electron connect
-    xtimeout: 180000,		// connection timeout for fetch data requests
+    xtimeout: 600000,		// connection timeout for fetch data requests
     extlist: "EVENTS STDEVT",	// list of binary table extensions
     imopts: "IMOPTS",           // basename of FITS param containing json opts
     imcmap: "IMCMAP",           // basename of FITS param containing cmaps
@@ -12438,12 +12438,14 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    // individual radii in the group are at 0,0
 	    opts.top = 0;
 	    opts.left = 0;
+	    rarr = [];
 	    if( params.radii ){
 		for(i=0; i<params.radii.length; i++){
 		    opts.radius = params.radii[i];
 		    rarr.push(new fabric.Circle(opts));
 		}
 	    }
+	    // an annulus is a group of circles at the specified position
 	    opts.top = ttop;
 	    opts.left = tleft;
 	    opts.width = opts.radius * 2;
