@@ -35,36 +35,41 @@ stable and well-documented for users and web designers. It also will
 provide the basis for planned language bindings (python, perhaps C/Fortran).
 <p>
 In general, the public API routines act on the current image being
-displayed in the default JS9 div element. Since most web pages will
-have only a single JS9 div element, this behavior is usually what you
-want. It parallels DS9's behavior in which XPA commands act on the
-currently displayed image. For example, to change the colormap of the
-current image, use:
+displayed in the default JS9 display (i.e., the HTML div element that
+defines the JS9 display). Since most web pages will have only a single
+JS9 display, this behavior is usually what you want. It parallels
+DS9's behavior in which XPA commands act on the currently displayed
+image. For example, to change the colormap of the current image, use:
 <pre>
     JS9.SetColormap("cool");
 </pre>
 
 <p>
-However, for cases where multiple JS9 div elements are defined on a
-single page, you can specify the specific div element to process by
+However, for cases where multiple JS9 displays are defined on a
+single page, you can specify the specific display to process by
 adding an <b> display object</b> argument to the calling sequence with
 a single <b>display</b> property:
 <pre>
-    {display: [div_id]}
+    {display: [display_id]}
 </pre>
-where [div_id] is the id of the target JS9 div element. For example,
-if two JS9 divs with ids "JS9" and "myJS9", respectively, are present
-on a single web page, you can set the colormap of the second one this way:
+where [display_id] is the id of the target JS9 display (i.e. the id of
+the HTML div element). For example, if two JS9 displays with ids "JS9"
+and "myJS9", respectively, are present on a single web page, you can
+set the colormap of the second one this way:
 <pre>
     JS9.SetColormap("cool", {display: "myJS9"})
 </pre>
 Note that this <b>display object</b> contains only the <b>display</b>
 property and always is specified as the final argument in a call.
 <p>
-The display property can specify an image handle or image id instead
-of a JS9 div id. When the image handle in question points to the
-currently displayed image, this alternate usage is nothing more than a
-trivial optimization.  Thus, to call a routine such as
+For image-based API routines (not display-based routines with names ending in
+<b>Display</b>, e.g.,
+<a href="#JS9.ResizeDisplay">JS9.ResizeDisplay</a> or
+<a href="#JS9.BlendDisplay">JS9.BlendDisplay</a>), the
+display property can specify an image handle or image id instead of a
+JS9 display id. When the image handle in question points to the currently
+displayed image, this alternate usage is nothing more than a trivial
+optimization.  Thus, to call a routine such as
 <a href="#JS9.WCSToPix">JS9.WCSToPix()</a>
 or
 <a href="#JS9.PixToWCS">JS9.PixtoWCS()</a>:
@@ -194,7 +199,7 @@ how to use this routine.
 where:
 <ul>
 <li><b>url</b>: url to load
-<li><b>opts</b>: optional object or JSON string containing image parameters and/or the div id
+<li><b>opts</b>: optional object or JSON string containing image parameters and/or the display id
 <li><b>type</b>: "light" or "new" 
 <li><b>html</b>: html for the new page (default is to display a menubar above the image and a colorbar below)
 <li><b>winopts</b>: for "light", optional dhtml window options
@@ -208,7 +213,7 @@ window. The <b>url</b> and <b>opts</b> arguments are identical to the standard
 <a href="#JS9.Load"><b>JS9.Load()</b></a> call,
 except that <b>opts</b> can contain:
 <ul>
-<li><b>id</b>: string specifying the id of the JS9 div being created.
+<li><b>id</b>: string specifying the id of the JS9 display being created.
 If no id is specified, a unique id is generated.
 <li><b>clone</b>: the id of a display to clone:
 the menubar and colorbar will be created if and only if they are
@@ -454,8 +459,8 @@ The image data object contains the following information:
 <li><b>height</b>: y dimension of image
 <li><b>fwidth</b>: x dimension of image or fully binned table in original file
 <li><b>fheight</b>: y dimension of image or fully binned table in original file
-<li><b>dwidth</b>: width of JS9 display element
-<li><b>dheight</b>: height of JS9 display element
+<li><b>dwidth</b>: width of JS9 display (div element)
+<li><b>dheight</b>: height of JS9 display (div element)
 <li><b>bitpix</b>: FITS bits/pixel of each image element (8 for unsigned char, 16, 32 for signed integer, -32 or -64 for float)
 <li><b>bin</b>: current binning factor
 <li><b>header</b>: JavaScript object containing FITS header values
@@ -4052,7 +4057,7 @@ where:
 <li><b>height</b>: new height of the display in HTML pixels
 <li><b>opts</b>: optional object containing resize parameters
 </ul>
-You can resize the JS9 display element by supplying new width and
+You can resize the JS9 display by supplying new width and
 height parameters. The div on the web page will be resized and the
 image will be re-centered in the new display. If the display size has
 been increased, more of the image will be displayed as needed (up to
@@ -5013,7 +5018,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: July 2, 2019</h5>
+<h5>Last updated: July 29, 2019</h5>
 </div>
 
 </body>
