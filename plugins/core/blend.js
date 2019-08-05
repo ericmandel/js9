@@ -30,9 +30,9 @@ JS9.Blend.nofileHTML='<p><span id="blendNoFile">[Images will appear here as they
 
 // change active state
 JS9.Blend.xactive = function(did, id, target){
-    var bl;
-    var im = JS9.lookupImage(id, did);
-    var active = target.checked;
+    let bl;
+    const im = JS9.lookupImage(id, did);
+    const active = target.checked;
     if( im ){
 	// change active mode
 	bl = im.blendImage();
@@ -44,8 +44,8 @@ JS9.Blend.xactive = function(did, id, target){
 
 // change blend mode
 JS9.Blend.xblend = function(did, id, target){
-    var bl, mode;
-    var im = JS9.lookupImage(id, did);
+    let bl, mode;
+    const im = JS9.lookupImage(id, did);
     if( target.selectedIndex >= 0 ){
 	mode = target.options[target.selectedIndex].value;
     }
@@ -62,8 +62,8 @@ JS9.Blend.xblend = function(did, id, target){
 
 // change opacity
 JS9.Blend.xopacity = function(did, id, target){
-    var bl, opacity;
-    var im = JS9.lookupImage(id, did);
+    let bl, opacity;
+    const im = JS9.lookupImage(id, did);
     if( target.selectedIndex >= 0 ){
 	opacity = target.options[target.selectedIndex].value;
     }
@@ -81,8 +81,8 @@ JS9.Blend.xopacity = function(did, id, target){
 
 // change global blend mode for this display
 JS9.Blend.xblendmode = function(id, target){
-    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
-    var blendMode = target.checked;
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
+    const blendMode = target.checked;
     // change global blend mode
     if( display ){
         JS9.BlendDisplay(blendMode, {display: display});
@@ -91,19 +91,19 @@ JS9.Blend.xblendmode = function(id, target){
 
 // get a BlendImage id based on the file image id
 JS9.Blend.imid = function(im){
-    var id = im.display.id + "_" + im.id;
-    return id.replace(/[^A-Za-z0-9_]/g, "_") + "BlendImage";
+    const id = `${im.display.id}_${im.id}`;
+    return `${id.replace(/[^A-Za-z0-9_]/g, "_")}BlendImage`;
 };
 
 // get a class unique between displays
 JS9.Blend.dispclass = function(im){
-    var id = JS9.Blend.BASE + "_" + im.display.id;
+    const id = `${JS9.Blend.BASE}_${im.display.id}`;
     return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // set global blend option in the GUI
 JS9.Blend.displayBlend = function(im){
-    var disp;
+    let disp;
     if( im ){
 	disp = im.display;
 	this.divjq.find(".blendModeCheck").prop("checked", disp.blendMode);
@@ -112,13 +112,13 @@ JS9.Blend.displayBlend = function(im){
 
 // set image blend options in the GUI
 JS9.Blend.imageBlend = function(im, dochange){
-    var s, bl, id, el, el2;
+    let s, bl, id, el, el2;
     // get the current options
     bl = im.blendImage();
     // get id associated with this image
     id = JS9.Blend.imid(im);
     if( bl ){
-	el = this.divjq.find("#"+id);
+	el = this.divjq.find(`#${id}`);
 	el.find(".blendActiveCheck").prop("checked", bl.active);
 	if( bl.mode !== undefined ){
 	    el2 = el.find(".blendModeSelect").val(bl.mode);
@@ -142,24 +142,24 @@ JS9.Blend.imageBlend = function(im, dochange){
 
 // change the active image
 JS9.Blend.activeImage = function(im){
-    var id, dcls;
+    let id, dcls;
     if( im ){
 	id = JS9.Blend.imid(im);
-	dcls = JS9.Blend.dispclass(im) + "_Image";
-	$("." + dcls)
-	    .removeClass(JS9.Blend.BASE + "ImageActive")
-	    .addClass(JS9.Blend.BASE + "ImageInactive");
-	$("#" + id)
-	    .removeClass(JS9.Blend.BASE + "ImageInactive")
-	    .addClass(JS9.Blend.BASE + "ImageActive");
+	dcls = `${JS9.Blend.dispclass(im)}_Image`;
+	$(`.${dcls}`)
+	    .removeClass(`${JS9.Blend.BASE}ImageActive`)
+	    .addClass(`${JS9.Blend.BASE}ImageInactive`);
+	$(`#${id}`)
+	    .removeClass(`${JS9.Blend.BASE}ImageInactive`)
+	    .addClass(`${JS9.Blend.BASE}ImageActive`);
     }
 };
 
 // add an image to the list of available images
 JS9.Blend.addImage = function(im){
-    var s, id, divjq, dcls, dispid, imid;
-    var opts = [];
-    var cls = JS9.Blend.BASE + "Image";
+    let s, id, divjq, dcls, dispid, imid;
+    const opts = [];
+    const cls = `${JS9.Blend.BASE}Image`;
     if( !im ){
 	return;
     }
@@ -169,7 +169,7 @@ JS9.Blend.addImage = function(im){
     // unique id
     id = JS9.Blend.imid(im);
     // get class for this layer 
-    dcls = JS9.Blend.dispclass(im) + "_Image";
+    dcls = `${JS9.Blend.dispclass(im)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: imid});
     opts.push({name: "active", value: sprintf(JS9.Blend.activeHTML, 
@@ -194,7 +194,7 @@ JS9.Blend.addImage = function(im){
 	.prop("imid", imid)
 	.html(s)
 	.appendTo(this.blendImageContainer);
-    divjq.on("mousedown touchstart", function(){
+    divjq.on("mousedown touchstart", () => {
 	    im.displayImage();
 	    JS9.Blend.activeImage.call(this, im);
     });
@@ -210,10 +210,10 @@ JS9.Blend.addImage = function(im){
 
 // remove an image to the list of available images
 JS9.Blend.removeImage = function(im){
-    var id;
+    let id;
     if( im ){
 	id = JS9.Blend.imid(im);
-	$("#" + id).remove();
+	$(`#${id}`).remove();
 	this.blendDivs--;
 	if( this.blendDivs === 0 ){
 	    this.blendImageContainer.html(JS9.Blend.nofileHTML);
@@ -225,7 +225,7 @@ JS9.Blend.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Blend.init = function(width, height){
-    var i, im, omode, display;
+    let i, im, omode, display;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -234,7 +234,7 @@ JS9.Blend.init = function(width, height){
     // this.dispMode: display mode (for internal use)
     //
     // create container to hold image container and header
-    var that = this;
+    const _this = this;
     // allow size specification for divs
     if( this.winType === "div" ){
 	// set width and height on div
@@ -259,19 +259,19 @@ JS9.Blend.init = function(width, height){
     this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.blendContainer = $("<div>")
-	.addClass(JS9.Blend.BASE + "Container")
-	.attr("id", this.id + "BlendContainer")
+	.addClass(`${JS9.Blend.BASE}Container`)
+	.attr("id", `${this.id}BlendContainer`)
 	.appendTo(this.divjq);
     // header
     this.blendHeader = $("<div>")
-	.addClass(JS9.Blend.BASE + "Header")
-	.attr("id", this.display.id + "Header")
+	.addClass(`${JS9.Blend.BASE}Header`)
+	.attr("id", `${this.display.id}Header`)
 	.html(sprintf(JS9.Blend.blendModeHTML, this.display.id))
 	.appendTo(this.blendContainer);
     // container to hold images
     this.blendImageContainer = $("<div>")
-	.addClass(JS9.Blend.BASE + "ImageContainer")
-	.attr("id", this.id + "BlendImageContainer")
+	.addClass(`${JS9.Blend.BASE}ImageContainer`)
+	.attr("id", `${this.id}BlendImageContainer`)
         .html(JS9.Blend.nofileHTML)
 	.appendTo(this.blendContainer);
     // add currently loaded images (but avoid multiple redisplays)
@@ -294,16 +294,18 @@ JS9.Blend.init = function(width, height){
 	.prop("checked", !!display.blendMode);
     // the images within the image container will be sortable
     this.blendImageContainer.sortable({
-	start: function(event, ui) {
+	// NB: 'this' is not lexical, so no arrow function here
+	start(event, ui){
 	    this.oidx = ui.item.index();
 	},
-	stop: function(event, ui) {
-	    var nidx = ui.item.index();
+	// NB: 'this' is not lexical, so no arrow function here
+	stop(event, ui) {
+	    const nidx = ui.item.index();
 	    // JS9 image list reflects the sort
 	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
 	    // redisplay in case something changed
-	    if( that.display.image ){
-		that.display.image.displayImage();
+	    if( _this.display.image ){
+		_this.display.image.displayImage();
 	    }
 	}
     });
@@ -311,8 +313,8 @@ JS9.Blend.init = function(width, height){
 
 // callback when dynamic selection is made
 JS9.Blend.dysel = function(){
-    var omode;
-    var odisplay = JS9.getDynamicDisplayOr("previous");
+    let omode;
+    const odisplay = JS9.getDynamicDisplayOr("previous");
     // turn off blend for previously selected display
     if( odisplay ){
 	omode = odisplay.blendMode;
@@ -347,7 +349,7 @@ JS9.Blend.imageblend = function(im){
 
 // callback when an image is loaded
 JS9.Blend.imageload = function(im){
-    var display = JS9.getDynamicDisplayOr(this.display);
+    const display = JS9.getDynamicDisplayOr(this.display);
     if( im && im.display === display ){
 	JS9.Blend.addImage.call(this, im);
     }

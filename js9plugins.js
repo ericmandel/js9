@@ -1157,9 +1157,9 @@ JS9.Blend.nofileHTML='<p><span id="blendNoFile">[Images will appear here as they
 
 // change active state
 JS9.Blend.xactive = function(did, id, target){
-    var bl;
-    var im = JS9.lookupImage(id, did);
-    var active = target.checked;
+    let bl;
+    const im = JS9.lookupImage(id, did);
+    const active = target.checked;
     if( im ){
 	// change active mode
 	bl = im.blendImage();
@@ -1171,8 +1171,8 @@ JS9.Blend.xactive = function(did, id, target){
 
 // change blend mode
 JS9.Blend.xblend = function(did, id, target){
-    var bl, mode;
-    var im = JS9.lookupImage(id, did);
+    let bl, mode;
+    const im = JS9.lookupImage(id, did);
     if( target.selectedIndex >= 0 ){
 	mode = target.options[target.selectedIndex].value;
     }
@@ -1189,8 +1189,8 @@ JS9.Blend.xblend = function(did, id, target){
 
 // change opacity
 JS9.Blend.xopacity = function(did, id, target){
-    var bl, opacity;
-    var im = JS9.lookupImage(id, did);
+    let bl, opacity;
+    const im = JS9.lookupImage(id, did);
     if( target.selectedIndex >= 0 ){
 	opacity = target.options[target.selectedIndex].value;
     }
@@ -1208,8 +1208,8 @@ JS9.Blend.xopacity = function(did, id, target){
 
 // change global blend mode for this display
 JS9.Blend.xblendmode = function(id, target){
-    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
-    var blendMode = target.checked;
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
+    const blendMode = target.checked;
     // change global blend mode
     if( display ){
         JS9.BlendDisplay(blendMode, {display: display});
@@ -1218,19 +1218,19 @@ JS9.Blend.xblendmode = function(id, target){
 
 // get a BlendImage id based on the file image id
 JS9.Blend.imid = function(im){
-    var id = im.display.id + "_" + im.id;
-    return id.replace(/[^A-Za-z0-9_]/g, "_") + "BlendImage";
+    const id = `${im.display.id}_${im.id}`;
+    return `${id.replace(/[^A-Za-z0-9_]/g, "_")}BlendImage`;
 };
 
 // get a class unique between displays
 JS9.Blend.dispclass = function(im){
-    var id = JS9.Blend.BASE + "_" + im.display.id;
+    const id = `${JS9.Blend.BASE}_${im.display.id}`;
     return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // set global blend option in the GUI
 JS9.Blend.displayBlend = function(im){
-    var disp;
+    let disp;
     if( im ){
 	disp = im.display;
 	this.divjq.find(".blendModeCheck").prop("checked", disp.blendMode);
@@ -1239,13 +1239,13 @@ JS9.Blend.displayBlend = function(im){
 
 // set image blend options in the GUI
 JS9.Blend.imageBlend = function(im, dochange){
-    var s, bl, id, el, el2;
+    let s, bl, id, el, el2;
     // get the current options
     bl = im.blendImage();
     // get id associated with this image
     id = JS9.Blend.imid(im);
     if( bl ){
-	el = this.divjq.find("#"+id);
+	el = this.divjq.find(`#${id}`);
 	el.find(".blendActiveCheck").prop("checked", bl.active);
 	if( bl.mode !== undefined ){
 	    el2 = el.find(".blendModeSelect").val(bl.mode);
@@ -1269,24 +1269,24 @@ JS9.Blend.imageBlend = function(im, dochange){
 
 // change the active image
 JS9.Blend.activeImage = function(im){
-    var id, dcls;
+    let id, dcls;
     if( im ){
 	id = JS9.Blend.imid(im);
-	dcls = JS9.Blend.dispclass(im) + "_Image";
-	$("." + dcls)
-	    .removeClass(JS9.Blend.BASE + "ImageActive")
-	    .addClass(JS9.Blend.BASE + "ImageInactive");
-	$("#" + id)
-	    .removeClass(JS9.Blend.BASE + "ImageInactive")
-	    .addClass(JS9.Blend.BASE + "ImageActive");
+	dcls = `${JS9.Blend.dispclass(im)}_Image`;
+	$(`.${dcls}`)
+	    .removeClass(`${JS9.Blend.BASE}ImageActive`)
+	    .addClass(`${JS9.Blend.BASE}ImageInactive`);
+	$(`#${id}`)
+	    .removeClass(`${JS9.Blend.BASE}ImageInactive`)
+	    .addClass(`${JS9.Blend.BASE}ImageActive`);
     }
 };
 
 // add an image to the list of available images
 JS9.Blend.addImage = function(im){
-    var s, id, divjq, dcls, dispid, imid;
-    var opts = [];
-    var cls = JS9.Blend.BASE + "Image";
+    let s, id, divjq, dcls, dispid, imid;
+    const opts = [];
+    const cls = `${JS9.Blend.BASE}Image`;
     if( !im ){
 	return;
     }
@@ -1296,7 +1296,7 @@ JS9.Blend.addImage = function(im){
     // unique id
     id = JS9.Blend.imid(im);
     // get class for this layer 
-    dcls = JS9.Blend.dispclass(im) + "_Image";
+    dcls = `${JS9.Blend.dispclass(im)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: imid});
     opts.push({name: "active", value: sprintf(JS9.Blend.activeHTML, 
@@ -1321,7 +1321,7 @@ JS9.Blend.addImage = function(im){
 	.prop("imid", imid)
 	.html(s)
 	.appendTo(this.blendImageContainer);
-    divjq.on("mousedown touchstart", function(){
+    divjq.on("mousedown touchstart", () => {
 	    im.displayImage();
 	    JS9.Blend.activeImage.call(this, im);
     });
@@ -1337,10 +1337,10 @@ JS9.Blend.addImage = function(im){
 
 // remove an image to the list of available images
 JS9.Blend.removeImage = function(im){
-    var id;
+    let id;
     if( im ){
 	id = JS9.Blend.imid(im);
-	$("#" + id).remove();
+	$(`#${id}`).remove();
 	this.blendDivs--;
 	if( this.blendDivs === 0 ){
 	    this.blendImageContainer.html(JS9.Blend.nofileHTML);
@@ -1352,7 +1352,7 @@ JS9.Blend.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Blend.init = function(width, height){
-    var i, im, omode, display;
+    let i, im, omode, display;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -1361,7 +1361,7 @@ JS9.Blend.init = function(width, height){
     // this.dispMode: display mode (for internal use)
     //
     // create container to hold image container and header
-    var that = this;
+    const _this = this;
     // allow size specification for divs
     if( this.winType === "div" ){
 	// set width and height on div
@@ -1386,19 +1386,19 @@ JS9.Blend.init = function(width, height){
     this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.blendContainer = $("<div>")
-	.addClass(JS9.Blend.BASE + "Container")
-	.attr("id", this.id + "BlendContainer")
+	.addClass(`${JS9.Blend.BASE}Container`)
+	.attr("id", `${this.id}BlendContainer`)
 	.appendTo(this.divjq);
     // header
     this.blendHeader = $("<div>")
-	.addClass(JS9.Blend.BASE + "Header")
-	.attr("id", this.display.id + "Header")
+	.addClass(`${JS9.Blend.BASE}Header`)
+	.attr("id", `${this.display.id}Header`)
 	.html(sprintf(JS9.Blend.blendModeHTML, this.display.id))
 	.appendTo(this.blendContainer);
     // container to hold images
     this.blendImageContainer = $("<div>")
-	.addClass(JS9.Blend.BASE + "ImageContainer")
-	.attr("id", this.id + "BlendImageContainer")
+	.addClass(`${JS9.Blend.BASE}ImageContainer`)
+	.attr("id", `${this.id}BlendImageContainer`)
         .html(JS9.Blend.nofileHTML)
 	.appendTo(this.blendContainer);
     // add currently loaded images (but avoid multiple redisplays)
@@ -1421,16 +1421,18 @@ JS9.Blend.init = function(width, height){
 	.prop("checked", !!display.blendMode);
     // the images within the image container will be sortable
     this.blendImageContainer.sortable({
-	start: function(event, ui) {
+	// NB: 'this' is not lexical, so no arrow function here
+	start(event, ui){
 	    this.oidx = ui.item.index();
 	},
-	stop: function(event, ui) {
-	    var nidx = ui.item.index();
+	// NB: 'this' is not lexical, so no arrow function here
+	stop(event, ui) {
+	    const nidx = ui.item.index();
 	    // JS9 image list reflects the sort
 	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
 	    // redisplay in case something changed
-	    if( that.display.image ){
-		that.display.image.displayImage();
+	    if( _this.display.image ){
+		_this.display.image.displayImage();
 	    }
 	}
     });
@@ -1438,8 +1440,8 @@ JS9.Blend.init = function(width, height){
 
 // callback when dynamic selection is made
 JS9.Blend.dysel = function(){
-    var omode;
-    var odisplay = JS9.getDynamicDisplayOr("previous");
+    let omode;
+    const odisplay = JS9.getDynamicDisplayOr("previous");
     // turn off blend for previously selected display
     if( odisplay ){
 	omode = odisplay.blendMode;
@@ -1474,7 +1476,7 @@ JS9.Blend.imageblend = function(im){
 
 // callback when an image is loaded
 JS9.Blend.imageload = function(im){
-    var display = JS9.getDynamicDisplayOr(this.display);
+    const display = JS9.getDynamicDisplayOr(this.display);
     if( im && im.display === display ){
 	JS9.Blend.addImage.call(this, im);
     }
@@ -1551,10 +1553,10 @@ JS9.Blink.nofileHTML='<p><span id="blinkNoFile">[Images will appear here as they
 
 // start blinking
 JS9.Blink.start = function(display){
-    var im;
-    var done = false;
-    var plugin = display.pluginInstances.JS9Blink;
-    var saveidx = plugin.idx;
+    let im;
+    let done = false;
+    const plugin = display.pluginInstances.JS9Blink;
+    const saveidx = plugin.idx;
     // sanity check
     if( !plugin ){
 	return;
@@ -1573,7 +1575,7 @@ JS9.Blink.start = function(display){
 	}
     }
     if( display.blinkMode ){
-	display.pluginInstances.JS9Blink.tid = window.setTimeout(function(){
+	display.pluginInstances.JS9Blink.tid = window.setTimeout(() => {
 	    JS9.Blink.start(display);
 	}, plugin.rate);
     }
@@ -1581,7 +1583,7 @@ JS9.Blink.start = function(display){
 
 // stop blinking
 JS9.Blink.stop = function(display){
-    var plugin = display.pluginInstances.JS9Blink;
+    const plugin = display.pluginInstances.JS9Blink;
     // sanity check
     if( !plugin ){
 	return;
@@ -1596,8 +1598,8 @@ JS9.Blink.stop = function(display){
 
 // change active state
 JS9.Blink.xactive = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
-    var active = target.checked;
+    const im = JS9.lookupImage(id, did);
+    const active = target.checked;
     if( im ){
 	im.tmp.blinkMode = active;
     }
@@ -1605,8 +1607,8 @@ JS9.Blink.xactive = function(did, id, target){
 
 // change global blink mode for this display
 JS9.Blink.xblinkmode = function(id, target){
-    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
-    var blinkMode = target.checked;
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
+    const blinkMode = target.checked;
     // change global blink mode
     if( display ){
 	$(".blinkActive").prop("disabled", !blinkMode);
@@ -1622,8 +1624,8 @@ JS9.Blink.xblinkmode = function(id, target){
 // change global blink mode for this display
 // eslint-disable-next-line no-unused-vars
 JS9.Blink.xblink1 = function(id, target){
-    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
-    var plugin = display ? display.pluginInstances.JS9Blink : null;
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
+    const plugin = display ? display.pluginInstances.JS9Blink : null;
     // sanity check
     if( !plugin || !display ){
 	return;
@@ -1639,50 +1641,50 @@ JS9.Blink.xblink1 = function(id, target){
 
 // change blink rate
 JS9.Blink.xrate = function(id, target){
-    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
-    var plugin = display ? display.pluginInstances.JS9Blink : null;
-    var rate = Math.floor(target.options[target.selectedIndex].value * 1000);
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
+    const plugin = display ? display.pluginInstances.JS9Blink : null;
+    const rate = Math.floor(target.options[target.selectedIndex].value * 1000);
     // sanity check
     if( !plugin || !display ){
 	return;
     }
-    if( !isNaN(rate) ){
+    if( !Number.isNaN(rate) ){
 	plugin.rate = rate;
     }
 };
 
 // get a BlinkImage id based on the file image id
 JS9.Blink.imid = function(im){
-    var id = im.display.id + "_" + im.id;
-    return id.replace(/[^A-Za-z0-9_]/g, "_") + "BlinkImage";
+    const id = `${im.display.id}_${im.id}`;
+    return `${id.replace(/[^A-Za-z0-9_]/g, "_")}BlinkImage`;
 };
 
 // get a class unique between displays
 JS9.Blink.dispclass = function(im){
-    var id = JS9.Blink.BASE + "_" + im.display.id;
+    const id = `${JS9.Blink.BASE}_${im.display.id}`;
     return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Blink.activeImage = function(im){
-    var id, dcls;
+    let id, dcls;
     if( im ){
 	id = JS9.Blink.imid(im);
-	dcls = JS9.Blink.dispclass(im) + "_Image";
-	$("." + dcls)
-	    .removeClass(JS9.Blink.BASE + "ImageActive")
-	    .addClass(JS9.Blink.BASE + "ImageInactive");
-	$("#" + id)
-	    .removeClass(JS9.Blink.BASE + "ImageInactive")
-	    .addClass(JS9.Blink.BASE + "ImageActive");
+	dcls = `${JS9.Blink.dispclass(im)}_Image`;
+	$(`.${dcls}`)
+	    .removeClass(`${JS9.Blink.BASE}ImageActive`)
+	    .addClass(`${JS9.Blink.BASE}ImageInactive`);
+	$(`#${id}`)
+	    .removeClass(`${JS9.Blink.BASE}ImageInactive`)
+	    .addClass(`${JS9.Blink.BASE}ImageActive`);
     }
 };
 
 // add an image to the list of available images
 JS9.Blink.addImage = function(im){
-    var s, id, divjq, dcls, dispid, imid;
-    var opts = [];
-    var cls = JS9.Blink.BASE + "Image";
+    let s, id, divjq, dcls, dispid, imid;
+    const opts = [];
+    const cls = `${JS9.Blink.BASE}Image`;
     if( !im ){
 	return;
     }
@@ -1692,7 +1694,7 @@ JS9.Blink.addImage = function(im){
     // unique id
     id = JS9.Blink.imid(im);
     // get class for this layer 
-    dcls = JS9.Blink.dispclass(im) + "_Image";
+    dcls = `${JS9.Blink.dispclass(im)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: im.id});
     opts.push({name: "active", value: sprintf(JS9.Blink.activeHTML, 
@@ -1704,7 +1706,7 @@ JS9.Blink.addImage = function(im){
 	this.blinkImageContainer.html("");
     }
     // create the html for this image
-    s = JS9.Image.prototype.expandMacro.call(im, JS9.Blink.imageHTML, opts);
+    s = im.expandMacro(JS9.Blink.imageHTML, opts);
     // add image html to the image container
     divjq = $("<div>")
 	.addClass(cls)
@@ -1713,9 +1715,9 @@ JS9.Blink.addImage = function(im){
 	.prop("imid", imid)
 	.html(s)
 	.appendTo(this.blinkImageContainer);
-    divjq.on("mousedown touchstart", function(){
-	    im.displayImage();
-	    JS9.Blink.activeImage.call(this, im);
+    divjq.on("mousedown touchstart", () => {
+	im.displayImage();
+	JS9.Blink.activeImage.call(this, im);
     });
     // one more div in the stack
     this.blinkDivs++;
@@ -1727,10 +1729,10 @@ JS9.Blink.addImage = function(im){
 
 // remove an image from the list of available images
 JS9.Blink.removeImage = function(im){
-    var id;
+    let id;
     if( im ){
 	id = JS9.Blink.imid(im);
-	$("#" + id).remove();
+	$(`#${id}`).remove();
 	this.blinkDivs--;
 	if( this.blinkDivs === 0 ){
 	    this.blinkImageContainer.html(JS9.Blink.nofileHTML);
@@ -1743,8 +1745,8 @@ JS9.Blink.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Blink.init = function(){
-    var i, s, im, display, dispid;
-    var opts = [];
+    let i, s, im, display, dispid;
+    const opts = [];
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -1753,7 +1755,7 @@ JS9.Blink.init = function(){
     // this.dispMode: display mode (for internal use)
     //
     // create container to hold image container and header
-    var that = this;
+    const _this = this;
     // initialize params
     if( this.idx === undefined ){
 	this.idx = 0;
@@ -1769,8 +1771,8 @@ JS9.Blink.init = function(){
     this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.blinkContainer = $("<div>")
-	.addClass(JS9.Blink.BASE + "Container")
-	.attr("id", this.id + "BlinkContainer")
+	.addClass(`${JS9.Blink.BASE}Container`)
+	.attr("id", `${this.id}BlinkContainer`)
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     dispid = this.display.id;
@@ -1784,14 +1786,14 @@ JS9.Blink.init = function(){
 					     opts);
     // header
     this.blinkHeader = $("<div>")
-	.addClass(JS9.Blink.BASE + "Header")
-	.attr("id", dispid + "Header")
+	.addClass(`${JS9.Blink.BASE}Header`)
+	.attr("id", `${dispid}Header`)
 	.html(s)
 	.appendTo(this.blinkContainer);
     // container to hold images
     this.blinkImageContainer = $("<div>")
-	.addClass(JS9.Blink.BASE + "ImageContainer")
-	.attr("id", this.id + "BlinkImageContainer")
+	.addClass(`${JS9.Blink.BASE}ImageContainer`)
+	.attr("id", `${this.id}BlinkImageContainer`)
         .html(JS9.Blink.nofileHTML)
 	.appendTo(this.blinkContainer);
     display = JS9.getDynamicDisplayOr(this.display);
@@ -1806,16 +1808,16 @@ JS9.Blink.init = function(){
     }
     // the images within the image container will be sortable
     this.blinkImageContainer.sortable({
-	start: function(event, ui) {
+	start(event, ui) {
 	    this.oidx = ui.item.index();
 	},
-	stop: function(event, ui) {
-	    var nidx = ui.item.index();
+	stop(event, ui) {
+	    const nidx = ui.item.index();
 	    // JS9 image list reflects the sort
 	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
 	    // redisplay in case something changed
-	    if( that.display.image ){
-		that.display.image.displayImage();
+	    if( _this.display.image ){
+		_this.display.image.displayImage();
 	    }
 	}
     });
@@ -1823,7 +1825,7 @@ JS9.Blink.init = function(){
 
 // callback when dynamic selection is made
 JS9.Blink.dysel = function(){
-    var odisplay = JS9.getDynamicDisplayOr("previous");
+    const odisplay = JS9.getDynamicDisplayOr("previous");
     // turn off blink for previously selected display
     if( odisplay ){
 	JS9.Blink.stop(odisplay);
@@ -1834,7 +1836,7 @@ JS9.Blink.dysel = function(){
 
 // callback when an image is loaded
 JS9.Blink.imageload = function(im){
-    var display = JS9.getDynamicDisplayOr(this.display);
+    const display = JS9.getDynamicDisplayOr(this.display);
     if( im && im.display === display ){
 	JS9.Blink.addImage.call(this, im);
     }
@@ -1891,11 +1893,11 @@ JS9.Cmaps.COLORCLASS = "cmapsColorPicker";
 JS9.Cmaps.CMAPCLASS = "cmapsSelect";
 JS9.Cmaps.CHECKCLASS = "cmapsActiveCheck";
 
-JS9.Cmaps.headerHTML = 'Select a color&nbsp;&nbsp;<input type="color" value="#FF0000" class="'  + JS9.Cmaps.COLORCLASS + '">&nbsp;&nbsp;or a &nbsp;&nbsp;<select class="' + JS9.Cmaps.CMAPCLASS + '" onchange="JS9.Cmaps.xCmap(\'%s\',this)"></select>&nbsp;&nbsp;colormap to create&nbsp;&nbsp;<input type="number" onchange="JS9.Cmaps.xNslice(\'%s\',this)" value="' + JS9.Cmaps.DEFNMAP + '" min="1" max="36" size="3" style="width:40px;box-sizing: border-box;">&nbsp;&nbsp;<select class="cmapsMode" onchange="JS9.Cmaps.xMode(\'%s\',this)">&nbsp;&nbsp;<option value="equidistant">equidistant</option><option value="analogous">analogous</option></select><p>slices of the <a href="https://en.wikipedia.org/wiki/Color_wheel" target="_blank">colorwheel</a>,&nbsp;&nbsp;the first&nbsp;&nbsp;<input type="number" onchange="JS9.Cmaps.xNmap(\'%s\',this)" value="' + JS9.Cmaps.DEFNMAP + '" min="1" max="36" size="3" style="width:40px;box-sizing: border-box;">&nbsp;of which will be used to create colormaps.<p><input type="checkbox" onchange="JS9.Cmaps.xAssignCmaps(\'%s\',this)" checked> assign the new colormaps to these images:';
+JS9.Cmaps.headerHTML = `Select a color&nbsp;&nbsp;<input type="color" value="#FF0000" class="${JS9.Cmaps.COLORCLASS}">&nbsp;&nbsp;or a &nbsp;&nbsp;<select class="${JS9.Cmaps.CMAPCLASS}" onchange="JS9.Cmaps.xCmap('%s',this)"></select>&nbsp;&nbsp;colormap to create&nbsp;&nbsp;<input type="number" onchange="JS9.Cmaps.xNslice('%s',this)" value="${JS9.Cmaps.DEFNMAP}" min="1" max="36" size="3" style="width:40px;box-sizing: border-box;">&nbsp;&nbsp;<select class="cmapsMode" onchange="JS9.Cmaps.xMode('%s',this)">&nbsp;&nbsp;<option value="equidistant">equidistant</option><option value="analogous">analogous</option></select><p>slices of the <a href="https://en.wikipedia.org/wiki/Color_wheel" target="_blank">colorwheel</a>,&nbsp;&nbsp;the first&nbsp;&nbsp;<input type="number" onchange="JS9.Cmaps.xNmap('%s',this)" value="${JS9.Cmaps.DEFNMAP}" min="1" max="36" size="3" style="width:40px;box-sizing: border-box;">&nbsp;of which will be used to create colormaps.<p><input type="checkbox" onchange="JS9.Cmaps.xAssignCmaps('%s',this)" checked> assign the new colormaps to these images:`;
 
 JS9.Cmaps.imageHTML="<span style='float: left'>$active</span>&nbsp;&nbsp; <span style='float: right'>$imfile</span>";
 
-JS9.Cmaps.activeHTML='<input class="' + JS9.Cmaps.CHECKCLASS + '" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Cmaps.xActive(\'%s\', \'%s\', this)">&nbsp;';
+JS9.Cmaps.activeHTML=`<input class="${JS9.Cmaps.CHECKCLASS}" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Cmaps.xActive('%s', '%s', this)">&nbsp;`;
 
 JS9.Cmaps.imfileHTML='<b>%s</b>';
 
@@ -1903,11 +1905,11 @@ JS9.Cmaps.nofileHTML='<div class="JS9cmapsNoFile">[Colormap generation options w
 
 // equidistant colormaps
 JS9.Cmaps.equidistant = function(color, results, slices) {
-    var i;
-    var hsl = tinycolor(color).toHsl();
-    var hue = hsl.h;
-    var slice = 360 / slices;
-    var ret = [];
+    let i;
+    const hsl = tinycolor(color).toHsl();
+    const hue = hsl.h;
+    const slice = 360 / slices;
+    const ret = [];
     for(i=0; i<results; i++){
         hsl.h = (hue + (i * slice)) % 360;
         ret.push(tinycolor(hsl));
@@ -1932,10 +1934,10 @@ JS9.Cmaps.mkColors = function(mode, color, nmap, nslice) {
 
 // assign generated colormaps to the active images
 JS9.Cmaps.assignCmaps = function(display){
-    var clen, container;
-    var cur = 0;
-    var cid = "." + JS9.Cmaps.BASE + "Image";
-    var elid2 = "." + JS9.Cmaps.CHECKCLASS;
+    let clen, container;
+    let cur = 0;
+    const cid = `.${JS9.Cmaps.BASE}Image`;
+    const elid2 = `.${JS9.Cmaps.CHECKCLASS}`;
     // sanity checks
     if( !display.cmaps.names || !display.cmaps.names.length ){ return; }
     // container element from plugin for this display
@@ -1944,12 +1946,12 @@ JS9.Cmaps.assignCmaps = function(display){
 	// number of colormaps to assign
 	clen = display.cmaps.names.length;
 	// look for image inside this container
-	container.find(cid).each(function(idx, el){
-	    var qel = $(el);
-	    var imid = qel.prop("imid");
-	    var im = JS9.lookupImage(imid);
-	    var qel2 = qel.find(elid2);
-	    // if this image exists and is active
+	container.find(cid).each((idx, el) => {
+	    const qel = $(el);
+	    const imid = qel.prop("imid");
+	    const im = JS9.lookupImage(imid);
+	    const qel2 = qel.find(elid2);
+	    // if the image exists and is active
 	    if( im && (cur < clen) && qel2.prop("checked") ){
 		im.setColormap(display.cmaps.names[cur++]);
 		im.displayImage();
@@ -1960,15 +1962,15 @@ JS9.Cmaps.assignCmaps = function(display){
 
 // give a colormap, generate new complementary colormaps
 JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, nslice, opts){
-    var i, j, tcolor, tcolors, color, index, rgb, mode, cbase;
-    var colors = [];
-    var vertices = [];
-    var rgbs = [];
-    var fmt = "rgb (%s,%s,%s)";
-    var xrgb3 = function(rgb){
+    let i, j, tcolor, tcolors, color, index, rgb, mode, cbase;
+    const colors = [];
+    const vertices = [];
+    const rgbs = [];
+    const fmt = "rgb (%s,%s,%s)";
+    const xrgb3 = (rgb) => {
 	return [rgb.r/255, rgb.g/255, rgb.b/255];
     };
-    var mkColorCell = function(cmap, index){
+    const mkColorCell = (cmap, index) => {
 	return JS9.Colormap.prototype.mkColorCell.call(cmap, index);
     };
     // sanity check
@@ -1986,7 +1988,7 @@ JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, nslice, opts){
     case "lut":
 	// create n new colormaps
 	for(i=0; i<nmap; i++){
-	    display.cmaps.names[i] = cbase + "_" + String(i+1);
+	    display.cmaps.names[i] = `${cbase}_${String(i+1)}`;
 	    colors[i] = [];
 	}
 	for(i=0; i<cmap.colors.length; i++){
@@ -2016,7 +2018,7 @@ JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, nslice, opts){
     case "sao":
 	// create n new colormaps
 	for(i=0; i<nmap; i++){
-	    display.cmaps.names[i] = cmap.name + "_" + String(i+1);
+	    display.cmaps.names[i] = `${cmap.name}_${String(i+1)}`;
 	    vertices[i] = [[], [], []];
 	}
 	// for each color (red, green, blue)
@@ -2030,7 +2032,7 @@ JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, nslice, opts){
 	    }
 	}
 	// sort array in ascending order
-	rgbs.sort(function(a,b){
+	rgbs.sort( (a,b) => {
 	    if( a.index > b.index ){
 		return 1;
 	    } else if( a.index < b.index ){
@@ -2083,7 +2085,7 @@ JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, nslice, opts){
 
 // give a color, generate new complementary colormaps
 JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, nslice, opts){
-    var color, rgb, tol, diff, mode, cbase;
+    let color, rgb, tol, diff, mode, cbase;
     // sanity check
     if( !cname || !nmap || !nslice ){ return; }
     // opts is optional
@@ -2113,9 +2115,9 @@ JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, nslice, opts){
     if( display.cmaps.timeOutID ){ 
 	return 0;
     }
-    // use timeout to ensure that redisplay gets into the event loop
-    display.cmaps.timeOutID = window.setTimeout(function(){
-	var i, tcolors, cmap;
+    // use timeout to ensure redisplay gets into the event loop
+    display.cmaps.timeOutID = window.setTimeout(() => {
+	let i, tcolors, cmap;
 	// reset names
 	display.cmaps.names = [];
 	// generate nmap colors
@@ -2127,7 +2129,7 @@ JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, nslice, opts){
 	// process each colormap
 	for(i=0; i<nmap; i++){
             rgb = tcolors[i].toRgb();
-            display.cmaps.names[i] = cbase + "_" + String(i+1);
+            display.cmaps.names[i] = `${cbase}_${String(i+1)}`;
 	    cmap = JS9.lookupColormap(display.cmaps.names[i], false);
 	    // add new colormaps or edit existing
 	    if( cmap ){
@@ -2162,7 +2164,7 @@ JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, nslice, opts){
 
 // give either a color or a colormap, generate new complementary colormaps
 JS9.Cmaps.mkCmaps = function(display, cname, nmap, nslice, opts){
-    var cmap;
+    let cmap;
     // sanity check
     if( !cname || !nmap || !nslice ){ return 0; }
     // color or colormap?
@@ -2179,7 +2181,7 @@ JS9.Cmaps.mkCmaps = function(display, cname, nmap, nslice, opts){
 
 // set the active flag for an image
 JS9.Cmaps.xActive = function(id){
-    var display = JS9.lookupDisplay(id);
+    const display = JS9.lookupDisplay(id);
     if( !display ){ return; }
     if( display.cmaps.assign ){
 	JS9.Cmaps.assignCmaps(display);
@@ -2188,7 +2190,7 @@ JS9.Cmaps.xActive = function(id){
 
 // set the algorithm for generating colormaps
 JS9.Cmaps.xMode = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    const display = JS9.lookupDisplay(id);
     if( !display ){ return; }
     display.cmaps.mode = target.options[target.selectedIndex].value;
     JS9.Cmaps.mkCmaps(display, display.cmaps.lastCname,
@@ -2200,7 +2202,7 @@ JS9.Cmaps.xMode = function(id, target){
 
 // set the number of colormaps to generate
 JS9.Cmaps.xNmap = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    const display = JS9.lookupDisplay(id);
     if( !display ){ return; }
     display.cmaps.nmap = parseInt(target.value, 10) || 1;
     JS9.Cmaps.mkCmaps(display, display.cmaps.lastCname,
@@ -2212,7 +2214,7 @@ JS9.Cmaps.xNmap = function(id, target){
 
 // set the number of slices to generate
 JS9.Cmaps.xNslice = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    const display = JS9.lookupDisplay(id);
     if( !display ){ return; }
     display.cmaps.nslice = parseInt(target.value, 10) || 1;
     JS9.Cmaps.mkCmaps(display, display.cmaps.lastCname,
@@ -2224,8 +2226,8 @@ JS9.Cmaps.xNslice = function(id, target){
 
 // select the colormap to use as a basis for colormap generation
 JS9.Cmaps.xCmap = function(id, target){
-    var display = JS9.lookupDisplay(id);
-    var cname = target.options[target.selectedIndex].value;
+    const display = JS9.lookupDisplay(id);
+    const cname = target.options[target.selectedIndex].value;
     if( !display ){ return; }
     JS9.Cmaps.mkCmaps(display, cname,
 		      display.cmaps.nmap, display.cmaps.nslice,
@@ -2237,7 +2239,7 @@ JS9.Cmaps.xCmap = function(id, target){
 
 // set the global flag to assign new colormaps to images
 JS9.Cmaps.xAssignCmaps = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    const display = JS9.lookupDisplay(id);
     if( !display ){ return; }
     display.cmaps.assign = $(target).prop("checked");
     if( display.cmaps.assign ){
@@ -2247,37 +2249,36 @@ JS9.Cmaps.xAssignCmaps = function(id, target){
 
 // get an id based on the file image id
 JS9.Cmaps.imid = function(im){
-    var id = im.display.id + "_" + im.id;
-    return id.replace(/[^A-Za-z0-9_]/g, "_") + "CmapsImage";
+    const id = `${im.display.id}_${im.id}`;
+    return `${id.replace(/[^A-Za-z0-9_]/g, "_")}CmapsImage`;
 };
 
 // get a class unique between displays
 JS9.Cmaps.dispclass = function(){
-    var id = JS9.Cmaps.BASE + "_" + this.display.id;
+    const id = `${JS9.Cmaps.BASE}_${this.display.id}`;
     return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Cmaps.activeImage = function(im){
-    var id, dcls;
+    let id, dcls;
     if( im ){
 	id = JS9.Cmaps.imid.call(this, im);
-	dcls = JS9.Cmaps.dispclass.call(this) + "_Image";
-	$("." + dcls)
-	    .removeClass(JS9.Cmaps.BASE + "ImageActive")
-	    .addClass(JS9.Cmaps.BASE + "ImageInactive");
-	$("#" + id)
-	    .removeClass(JS9.Cmaps.BASE + "ImageInactive")
-	    .addClass(JS9.Cmaps.BASE + "ImageActive");
+	dcls = `${JS9.Cmaps.dispclass.call(this)}_Image`;
+	$(`.${dcls}`)
+	    .removeClass(`${JS9.Cmaps.BASE}ImageActive`)
+	    .addClass(`${JS9.Cmaps.BASE}ImageInactive`);
+	$(`#${id}`)
+	    .removeClass(`${JS9.Cmaps.BASE}ImageInactive`)
+	    .addClass(`${JS9.Cmaps.BASE}ImageActive`);
     }
 };
 
 // add an image to the list of available images
 JS9.Cmaps.addImage = function(im){
-    var that = this;
-    var s, id, divjq, dcls, dispid, imid;
-    var opts = [];
-    var cls = JS9.Cmaps.BASE + "Image";
+    let s, id, divjq, dcls, dispid, imid;
+    const opts = [];
+    const cls = `${JS9.Cmaps.BASE}Image`;
     if( !im ){
 	return;
     }
@@ -2287,7 +2288,7 @@ JS9.Cmaps.addImage = function(im){
     // unique id
     id = JS9.Cmaps.imid.call(this, im);
     // get class for this layer 
-    dcls = JS9.Cmaps.dispclass.call(this) + "_Image";
+    dcls = `${JS9.Cmaps.dispclass.call(this)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: imid});
     opts.push({name: "active", value: sprintf(JS9.Cmaps.activeHTML, 
@@ -2300,15 +2301,15 @@ JS9.Cmaps.addImage = function(im){
     divjq = $("<div>")
 	.addClass(cls)
 	.addClass(dcls)
-	.addClass(JS9.Cmaps.BASE + "ImageInactive")
+	.addClass(`${JS9.Cmaps.BASE}ImageInactive`)
 	.prop("id", id)
 	.prop("imid", imid)
 	.html(s)
 	.appendTo(this.cmapsImageContainer);
-    divjq.on("mousedown touchstart", function(){
+    divjq.on("mousedown touchstart", () => {
 	if( dispid === im.display.id ){
 	    im.displayImage();
-	    JS9.Cmaps.activeImage.call(that, im);
+	    JS9.Cmaps.activeImage.call(this, im);
 	}
     });
     // make it the current one (if its display in this display)
@@ -2319,10 +2320,10 @@ JS9.Cmaps.addImage = function(im){
 
 // remove an image to the list of available images
 JS9.Cmaps.removeImage = function(im){
-    var id;
+    let id;
     if( im ){
 	id = JS9.Cmaps.imid.call(this, im);
-	$("#" + id).remove();
+	$(`#${id}`).remove();
 	return true;
     }
     return false;
@@ -2330,11 +2331,11 @@ JS9.Cmaps.removeImage = function(im){
 
 // plugin initialization
 JS9.Cmaps.init = function(width, height){
-    var that = this;
-    var i, dispid, html, el1, el2;
-    var elid1 = "." + JS9.Cmaps.COLORCLASS;
-    var elid2 = "." + JS9.Cmaps.CMAPCLASS;
-    var display = this.display;
+    const _this = this;
+    let i, dispid, html, el1, el2;
+    const elid1 = `.${JS9.Cmaps.COLORCLASS}`;
+    const elid2 = `.${JS9.Cmaps.CMAPCLASS}`;
+    const display = this.display;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -2377,45 +2378,45 @@ JS9.Cmaps.init = function(width, height){
 	display.cmaps.names = [];
 	display.cmaps.ims = [];
 	display.cmaps.orgb = {r: 0, g: 0, b: 0};
-	display.cmaps.that = that;
+	display.cmaps.that = this;
     }
     // clear main div
     this.divjq.html("");
     // add main container
     this.cmapsContainer = $("<div>")
-	.addClass(JS9.Cmaps.BASE + "Container")
-	.attr("id", this.id + "CMapsContainer")
+	.addClass(`${JS9.Cmaps.BASE}Container`)
+	.attr("id", `${this.id}CMapsContainer`)
 	.appendTo(this.divjq);
     // add header
     dispid = this.display.id;
     html = sprintf(JS9.Cmaps.headerHTML,
 		   dispid, dispid, dispid, dispid, dispid);
     this.cmapsHeader = $("<div>")
-	.addClass(JS9.Cmaps.BASE + "Header")
+	.addClass(`${JS9.Cmaps.BASE}Header`)
 	.attr("display", this.display.id)
-	.attr("id", this.display.id + "CMapsHeader")
+	.attr("id", `${this.display.id}CMapsHeader`)
 	.html(html)
 	.appendTo(this.cmapsContainer);
     // container to hold images
     this.cmapsImageContainer = $("<div>")
-	.addClass(JS9.Cmaps.BASE + "ImageContainer")
-	.attr("id", this.id + "CmapsImageContainer")
+	.addClass(`${JS9.Cmaps.BASE}ImageContainer`)
+	.attr("id", `${this.id}CmapsImageContainer`)
 	.appendTo(this.cmapsContainer);
     for(i=0; i<JS9.images.length; i++){
 	JS9.Cmaps.addImage.call(this, JS9.images[i]);
     }
     // the images within the image container will be sortable
     this.cmapsImageContainer.sortable({
-	start: function(event, ui) {
+	start(event, ui) {
 	    this.oidx = ui.item.index();
 	},
-	stop: function(event, ui) {
-	    var nidx = ui.item.index();
+	stop(event, ui) {
+	    const nidx = ui.item.index();
 	    // JS9 image list reflects the sort
 	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
 	    // redisplay in case something changed
-	    if( that.display.image ){
-		that.display.image.displayImage();
+	    if( _this.display.image ){
+		_this.display.image.displayImage();
 	    }
 	}
     });
@@ -2423,14 +2424,14 @@ JS9.Cmaps.init = function(width, height){
     el1 = this.cmapsContainer.find(elid1);
     el2 = this.cmapsContainer.find(elid2);
     // set up colormap select menu
-    el2.each(function(){
-	var i, cmap;
+    el2.each( () => {
+	let i, cmap;
 	for(i=0; i<JS9.colormaps.length; i++){
 	    cmap = JS9.colormaps[i].name;
 	    $(elid2).append($('<option>', {value: cmap, text: cmap}));
 	}
     });
-    // only do this once
+    // only do once
     if( !display.cmaps.inited ){
 	// set up event callbacks
 	if( !JS9.globalOpts.internalColorPicker ||
@@ -2439,8 +2440,8 @@ JS9.Cmaps.init = function(width, height){
 			  showInput: true,
 			  preferredFormat: "hex6"});
 	    // when the color is changed via the spectrum
-	    el1.on('move.spectrum', function(evt, tinycolor){
-		var cname = tinycolor.toHex();
+	    el1.on('move.spectrum', (evt, tinycolor) => {
+		const cname = tinycolor.toHex();
 		JS9.Cmaps.mkCmaps(display, cname,
 				  display.cmaps.nmap, display.cmaps.nslice,
 				  {mode: display.cmaps.mode,
@@ -2448,8 +2449,9 @@ JS9.Cmaps.init = function(width, height){
 		display.cmaps.lastCname = cname;
 	    });
 	    // when the color is changed via the text box
+	    // NB: 'this' is not lexical, so no arrow function here
 	    el1.on("change", function(){
-		var cname = tinycolor($(this).val()).toHex();
+		const cname = tinycolor($(this).val()).toHex();
 		JS9.Cmaps.mkCmaps(display, cname,
 				  display.cmaps.nmap, display.cmaps.nslice,
 				  {mode: display.cmaps.mode,
@@ -2457,9 +2459,9 @@ JS9.Cmaps.init = function(width, height){
 		display.cmaps.lastCname = cname;
 	    });
 	}
-	el1.on("input", function(evt){
-	    var cname = evt.target.value;
-	    var pdisplay = $(evt.target).parent().attr("display");
+	el1.on("input", (evt) => {
+	    const cname = evt.target.value;
+	    const pdisplay = $(evt.target).parent().attr("display");
 	    if( pdisplay !== display.id ){
 		return;
 	    }
@@ -2475,7 +2477,7 @@ JS9.Cmaps.init = function(width, height){
 
 // callback when an image is loaded
 JS9.Cmaps.imageload = function(im){
-    var i, display, pinst;
+    let i, display, pinst;
     if( !this.display.cmaps ){
 	JS9.Cmaps.init.call(this);
     } else {
@@ -2500,7 +2502,7 @@ JS9.Cmaps.imagedisplay = function(im){
 
 // callback when image is displayed
 JS9.Cmaps.imageclose = function(im){
-    var i, display, pinst;
+    let i, display, pinst;
     JS9.Cmaps.removeImage.call(this, im);
     // remove image from other displays as well
     for(i=0; i<JS9.displays.length; i++){
@@ -2551,14 +2553,14 @@ JS9.Colorbar.MAXLABELSIZE = 10;
 
 // redraw colorbar on display
 JS9.Colorbar.display = function(im){
-    var i, j, prec, idx, idx0, colorBuf, tval, ix, iy, done;
-    var tlabels = [];
-    var canvasWidth = this.colorbarWidth;
-    var canvasHeight = this.colorbarHeight;
-    var colorImg = this.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-    var colorData = colorImg.data;
-    var colorWidth = canvasWidth * 4;
-    var colorBuf0 = new Uint8Array(colorData.buffer, 0, colorWidth);
+    let i, j, prec, idx, idx0, colorBuf, tval, ix, iy, done;
+    const tlabels = [];
+    const canvasWidth = this.colorbarWidth;
+    const canvasHeight = this.colorbarHeight;
+    const colorImg = this.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+    const colorData = colorImg.data;
+    const colorWidth = canvasWidth * 4;
+    const colorBuf0 = new Uint8Array(colorData.buffer, 0, colorWidth);
     // scaled or unscaled display?
     if( this.scaled ){
 	colorBuf = im.psColors;
@@ -2639,7 +2641,7 @@ JS9.Colorbar.display = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Colorbar.init = function(width, height){
-    var ratio = JS9.PIXEL_RATIO || 1;
+    const ratio = JS9.PIXEL_RATIO || 1;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -2700,15 +2702,15 @@ JS9.Colorbar.init = function(width, height){
     this.divjq.html("");
     // colorbar container
     this.colorbarContainer = $("<div>")
-	.addClass(JS9.Colorbar.BASE + "Container")
-	.attr("id", this.id + "Container")
+	.addClass(`${JS9.Colorbar.BASE}Container`)
+	.attr("id", `${this.id}Container`)
         .attr("width", this.width)
         .attr("height", this.height)
 	.appendTo(this.divjq);
     // main canvas
     this.colorbarjq = $("<canvas>")
-	.addClass(JS9.Colorbar.BASE + "Canvas")
-	.attr("id", this.id + "Canvas")
+	.addClass(`${JS9.Colorbar.BASE}Canvas`)
+	.attr("id", `${this.id}Canvas`)
         .attr("width", this.width-1)
         .attr("height", this.colorbarHeight)
 	.appendTo(this.colorbarContainer);
@@ -2718,12 +2720,12 @@ JS9.Colorbar.init = function(width, height){
 	// numeric text and tick marks
 	// (height and width changes deal with HiDPI text blur problems!)
 	this.textjq = $("<canvas>")
-	    .addClass(JS9.Colorbar.BASE + "TextCanvas")
-	    .attr("id", this.id + "TextCanvas")
+	    .addClass(`${JS9.Colorbar.BASE}TextCanvas`)
+	    .attr("id", `${this.id}TextCanvas`)
             .attr("width", this.width * ratio)
             .attr("height", (this.height - this.colorbarHeight) * ratio)
-            .css("width", this.width + "px")
-            .css("height", (this.height - this.colorbarHeight) + "px")
+            .css("width", `${this.width}px`)
+            .css("height", `${this.height - this.colorbarHeight}px`)
 	    .appendTo(this.colorbarContainer);
 	this.textctx = this.textjq[0].getContext("2d");
 	// font specified in data property of div element?
@@ -2763,7 +2765,7 @@ JS9.Colorbar.imageclear = function(im){
 
 // dynamic change
 JS9.Colorbar.dynamic = function(im){
-    var colorbar;
+    let colorbar;
     if( im ){
 	colorbar = im.display.pluginInstances.JS9Colorbar;
 	if( colorbar && colorbar.isDynamic ){
@@ -2788,7 +2790,7 @@ JS9.RegisterPlugin(JS9.Colorbar.CLASS, JS9.Colorbar.NAME, JS9.Colorbar.init,
  * basic idea borrowed from goosh.org, to whom grateful acknowledgement is made
  */
 
-/*global $, JS9, sprintf */
+/*global $, JS9 */
 
 "use strict";
 
@@ -2848,7 +2850,7 @@ JS9.Console.init = function(width, height){
     this.consoleConjq.attr("tabindex", "0");
     // event handlers:
     // history processing
-    this.consoleConjq.on("keydown", this, function(evt){
+    this.consoleConjq.on("keydown", this, (evt) => {
 	return JS9.Console.keyDownCB(evt);
     });
     // welcome message
@@ -2860,8 +2862,8 @@ JS9.Console.init = function(width, height){
 // prepare for new input
 // called with plugin as this
 JS9.Console.inp = function(){
-    var el;
-    var prompt = "js9>";
+    let el;
+    const prompt = "js9>";
     // make previous command input read-only
     this.consoleConjq.find(".JS9CmdIn:last").attr("readonly", "readonly");
     // add new input element
@@ -2884,7 +2886,7 @@ JS9.Console.out = function(s,c){
     // message type
     switch(c.toLowerCase()){
     case "error":
-	s = "ERROR: " + s;
+	s = `ERROR: ${s}`;
 	c = "Error";
 	break;
     case "info":
@@ -2898,7 +2900,7 @@ JS9.Console.out = function(s,c){
 	break;
     }
     // create a new output element
-    $("<div>").addClass("JS9Cmd" + c).html(s).appendTo(this.consoleConjq);
+    $("<div>").addClass(`JS9Cmd${c}`).html(s).appendTo(this.consoleConjq);
     // allow chaining
     return this;
 };
@@ -2906,10 +2908,10 @@ JS9.Console.out = function(s,c){
 // execute a command
 // called with plugin object as this
 JS9.Console.xeq = function(){
-    var i, cmd, obj, msg;
-    var cmdstring = this.consoleConjq.find(".JS9CmdIn:last").val();
-    var tokens = cmdstring.replace(/ {2,}/g, " ").split(" ");
-    var args = [];
+    let i, cmd, obj, msg;
+    const cmdstring = this.consoleConjq.find(".JS9CmdIn:last").val();
+    const tokens = cmdstring.replace(/ {2,}/g, " ").split(" ");
+    const args = [];
     // skip blank lines
     if( !tokens[0] ){
 	return this;
@@ -2942,14 +2944,14 @@ JS9.Console.xeq = function(){
 		}
 		break;
 	    default:
-		msg = sprintf("unknown cmd type for '%s'", cmd);
+		msg = `unknown cmd type for '${cmd}'`;
 		JS9.error(msg);
 		break;
 	    }
 	} else {
-	    msg = sprintf("unknown command '%s'", cmd);
+	    msg = `unknown command '${cmd}'`;
 	    if( args.length > 0 ){
-		msg = msg + " " + args;
+		msg = `${msg} ${args}`;
 	    }
 	    JS9.error(msg);
 	}
@@ -2963,9 +2965,9 @@ JS9.Console.xeq = function(){
 
 // console keydown: assumes console obj is passed in evt.data
 JS9.Console.keyDownCB = function(evt){
-    var v;
-    var obj = evt.data;
-    var keycode = evt.which || evt.keyCode;
+    let v;
+    const obj = evt.data;
+    const keycode = evt.which || evt.keyCode;
     // history idea and basic algorithm from goosh.org,
     // to whom grateful acknowledgement is made
     // this prevents keypress on FF (and others)
@@ -3075,9 +3077,9 @@ JS9.Cube.header2HTML='Or load each slice separately into JS9:';
 JS9.Cube.loadHTML='<input type="button" class=JS9CubeBtn" value="Load All" onclick="JS9.Cube.loadall(\'%s\',\'%s\', this)">';
 
 JS9.Cube.doSlice = function(im, slice, elarr){
-    var i, s;
-    var opts={};
-    var plugin = im.display.pluginInstances[JS9.Cube.BASE];
+    let i, s;
+    const opts={};
+    const plugin = im.display.pluginInstances[JS9.Cube.BASE];
     // are we still working on the previous slice?
     if( im.parentFile && plugin.inProcess ){
 	// if so, return
@@ -3090,13 +3092,13 @@ JS9.Cube.doSlice = function(im, slice, elarr){
     plugin.sval = slice;
     plugin.inProcess = true;
     // display slice and signal process complete
-    im.displaySlice(s, opts, function(){plugin.inProcess = false;});
+    im.displaySlice(s, opts, () => {plugin.inProcess = false;});
 };
 
 // change range
 JS9.Cube.xrange = function(did, id, target){
-    var slice;
-    var im = JS9.lookupImage(id, did);
+    let slice;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	slice = parseInt(target.value, 10);
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue"]);
@@ -3105,8 +3107,8 @@ JS9.Cube.xrange = function(did, id, target){
 
 // change slice value
 JS9.Cube.xvalue = function(did, id, target){
-    var slice;
-    var im = JS9.lookupImage(id, did);
+    let slice;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	slice = parseInt(target.value, 10);
 	JS9.Cube.doSlice(im, slice, [".JS9CubeRange"]);
@@ -3116,8 +3118,8 @@ JS9.Cube.xvalue = function(did, id, target){
 // first cube
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xfirst = function(did, id, target){
-    var slice;
-    var im = JS9.lookupImage(id, did);
+    let slice;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	slice = 1;
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
@@ -3127,8 +3129,8 @@ JS9.Cube.xfirst = function(did, id, target){
 // next cube
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xnext = function(did, id, target){
-    var s, slice, plugin, header;
-    var im = JS9.lookupImage(id, did);
+    let s, slice, plugin, header;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
@@ -3137,7 +3139,7 @@ JS9.Cube.xnext = function(did, id, target){
 	}
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval + 1;
-	s = "NAXIS" + plugin.sidx;
+	s = `NAXIS${plugin.sidx}`;
 	if( slice > header[s] ){
 	    slice = 1;
 	}
@@ -3148,8 +3150,8 @@ JS9.Cube.xnext = function(did, id, target){
 // prev cube
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xprev = function(did, id, target){
-    var s, slice, plugin, header;
-    var im = JS9.lookupImage(id, did);
+    let s, slice, plugin, header;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
@@ -3159,7 +3161,7 @@ JS9.Cube.xprev = function(did, id, target){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval - 1;
 	if( slice < 1 ){
-	    s = "NAXIS" + plugin.sidx;
+	    s = `NAXIS${plugin.sidx}`;
 	    slice = header[s];
 	}
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
@@ -3169,8 +3171,8 @@ JS9.Cube.xprev = function(did, id, target){
 // last cube
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xlast = function(did, id, target){
-    var s, slice, plugin, header;
-    var im = JS9.lookupImage(id, did);
+    let s, slice, plugin, header;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
@@ -3178,7 +3180,7 @@ JS9.Cube.xlast = function(did, id, target){
 	    header = im.raw.header;
 	}
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
-	s = "NAXIS" + plugin.sidx;
+	s = `NAXIS${plugin.sidx}`;
 	slice = header[s];
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
     }
@@ -3186,8 +3188,8 @@ JS9.Cube.xlast = function(did, id, target){
 
 // cube arrangement
 JS9.Cube.xorder = function(did, id, target){
-    var i, arr, plugin, header;
-    var im = JS9.lookupImage(id, did);
+    let i, arr, plugin, header;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
@@ -3201,7 +3203,7 @@ JS9.Cube.xorder = function(did, id, target){
 	    if( arr[i] !== "*" ){
 		plugin.sidx = i+1;
 		plugin.sval = 1;
-		plugin.smax = header["NAXIS"+plugin.sidx];
+		plugin.smax = header[`NAXIS${plugin.sidx}`];
 	    }
 	}
 	$(".JS9CubeRange").prop("max", plugin.smax);
@@ -3211,8 +3213,8 @@ JS9.Cube.xorder = function(did, id, target){
 
 // blink
 JS9.Cube.blink = function(did, id, target){
-    var plugin;
-    var im = JS9.lookupImage(id, did);
+    let plugin;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	if( plugin.blinkMode === false ){
@@ -3223,7 +3225,7 @@ JS9.Cube.blink = function(did, id, target){
 	if( plugin.blinkMode === undefined ){
 	    plugin.blinkMode = true;
 	} 
-	JS9.Cube.tid = window.setTimeout(function(){
+	JS9.Cube.tid = window.setTimeout(() => {
 	    JS9.Cube.blink(did, id, target);
 	}, plugin.rate);
     }
@@ -3231,8 +3233,8 @@ JS9.Cube.blink = function(did, id, target){
 
 // start blink
 JS9.Cube.xstart = function(did, id, target){
-    var plugin;
-    var im = JS9.lookupImage(id, did);
+    let plugin;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	if( !plugin.blinkMode ){
@@ -3244,8 +3246,8 @@ JS9.Cube.xstart = function(did, id, target){
 // stop blink
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xstop = function(did, id, target){
-    var plugin;
-    var im = JS9.lookupImage(id, did);
+    let plugin;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	plugin.inProcess = false;
@@ -3261,8 +3263,8 @@ JS9.Cube.xstop = function(did, id, target){
 
 // blink rate
 JS9.Cube.xrate = function(did, id, target){
-    var plugin;
-    var im = JS9.lookupImage(id, did);
+    let plugin;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	plugin.rate = Math.floor(parseFloat(target.value) * 1000);
@@ -3272,7 +3274,7 @@ JS9.Cube.xrate = function(did, id, target){
 // load all slices separately
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.loadall = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	im.displaySlice("all");
     }
@@ -3288,13 +3290,13 @@ JS9.Cube.display = function(){
 
 // clear when an image closes
 JS9.Cube.close = function(){
-    // ensure that plugin display is reset
+    // ensure plugin display is reset
     JS9.Cube.init.call(this, {mode: "clear"});
 };
 
 // constructor: add HTML elements to the plugin
 JS9.Cube.init = function(opts){
-    var i, s, im, arr, mopts, imid, dispid, header;
+    let i, s, im, arr, mopts, imid, dispid, header;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -3340,7 +3342,7 @@ JS9.Cube.init = function(opts){
 	    for(i=0; i<arr.length; i++){
 		if( arr[i] !== "*" ){
 		    this.sidx = i+1;
-		    this.smax = header["NAXIS"+this.sidx];
+		    this.smax = header[`NAXIS${this.sidx}`];
 		    this.sval = parseInt(arr[i], 10);
 		}
 	    }
@@ -3403,8 +3405,8 @@ JS9.Cube.init = function(opts){
     this.divjq.html("");
     // set up new html
     this.cubeContainer = $("<div>")
-	.addClass(JS9.Cube.BASE + "Container")
-	.attr("id", this.id + "Container")
+	.addClass(`${JS9.Cube.BASE}Container`)
+	.attr("id", `${this.id}Container`)
         .attr("width", this.width)
         .attr("height", this.height)
 	.appendTo(this.divjq);
@@ -3453,8 +3455,8 @@ JS9.Divs.divNameHTML='<b>%s</b>';
 
 // make shape div visible/invisible
 JS9.Divs.xvisible = function(display, plugin, target){
-    var mode, instance;
-    var div = JS9.lookupDisplay(display);
+    let mode, instance;
+    const div = JS9.lookupDisplay(display);
     if( div ){
 	instance = div.pluginInstances[plugin];
 	if( instance ){
@@ -3471,9 +3473,9 @@ JS9.Divs.xvisible = function(display, plugin, target){
 
 // add a div to the list
 JS9.Divs.addDiv = function(plugin){
-    var s, divjq;
-    var cls = JS9.Divs.BASE + "Div";
-    var opts = [];
+    let s, divjq;
+    const cls = `${JS9.Divs.BASE}Div`;
+    const opts = [];
     // sanity checks
     if( !plugin || !this.display.pluginInstances[plugin] ){
 	return;
@@ -3503,7 +3505,7 @@ JS9.Divs.addDiv = function(plugin){
 
 // constructor: add HTML elements to the plugin
 JS9.Divs.init = function(opts){
-    var key, instances;
+    let key, instances;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -3522,20 +3524,20 @@ JS9.Divs.init = function(opts){
     this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.divsContainer = $("<div>")
-	.addClass(JS9.Divs.BASE + "Container")
-	.attr("id", this.id + "DivsContainer")
+	.addClass(`${JS9.Divs.BASE}Container`)
+	.attr("id", `${this.id}DivsContainer`)
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     // header
     this.divsHeader = $("<div>")
-	.addClass(JS9.Divs.BASE + "Header")
-	.attr("id", this.display.id + "Header")
+	.addClass(`${JS9.Divs.BASE}Header`)
+	.attr("id", `${this.display.id}Header`)
 	.html(JS9.Divs.headerHTML)
 	.appendTo(this.divsContainer);
     // container to hold divs
     this.divsDivContainer = $("<div>")
-	.addClass(JS9.Divs.BASE + "DivContainer")
-	.attr("id", this.id + "DivsDivContainer")
+	.addClass(`${JS9.Divs.BASE}DivContainer`)
+	.attr("id", `${this.id}DivsDivContainer`)
         .html(JS9.Divs.nodivsHTML)
 	.appendTo(this.divsContainer);
     // done if we are only clearing
@@ -3591,8 +3593,8 @@ JS9.Imarith.resetHTML='<input type="button" class=JS9ImarithBtn" value="Reset" o
 
 // change op
 JS9.Imarith.xop = function(did, id, target){
-    var op = target.options[target.selectedIndex].value;
-    var im = JS9.lookupImage(id, did);
+    const op = target.options[target.selectedIndex].value;
+    const im = JS9.lookupImage(id, did);
     // save new op in instance record
     if( im && op ){
 	im.display.pluginInstances.JS9Imarith.op = op;
@@ -3601,8 +3603,8 @@ JS9.Imarith.xop = function(did, id, target){
 
 // change arg1
 JS9.Imarith.xarg1 = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
-    var arg1 = target.options[target.selectedIndex].value;
+    const im = JS9.lookupImage(id, did);
+    const arg1 = target.options[target.selectedIndex].value;
     // save new arg1 in instance record
     if( im && arg1 ){
 	im.display.pluginInstances.JS9Imarith.arg1 = arg1;
@@ -3616,14 +3618,14 @@ JS9.Imarith.xarg1 = function(did, id, target){
 
 // change num
 JS9.Imarith.xnum = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
-    var num = target.value;
+    const im = JS9.lookupImage(id, did);
+    const num = target.value;
     // save new num in instance record
     if( JS9.isNumber(num) ){
 	im.display.pluginInstances.JS9Imarith.num = parseFloat(num);
     } else {
 	if( num ){
-	    JS9.error("please enter a real number: " + num);
+	    JS9.error(`please enter a real number: ${num}`);
 	}
     }
 };
@@ -3631,8 +3633,8 @@ JS9.Imarith.xnum = function(did, id, target){
 // run image arithmetic
 // eslint-disable-next-line no-unused-vars
 JS9.Imarith.xrun = function(did, id, target){
-    var arg1, plugin;
-    var im = JS9.lookupImage(id, did);
+    let arg1, plugin;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances.JS9Imarith;
 	if( !plugin.op || !plugin.arg1 ){
@@ -3653,7 +3655,7 @@ JS9.Imarith.xrun = function(did, id, target){
 // reset to original data
 // eslint-disable-next-line no-unused-vars
 JS9.Imarith.xreset = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	im.imarithData("reset");
     }
@@ -3668,14 +3670,14 @@ JS9.Imarith.display = function(){
 
 // clear when an image closes
 JS9.Imarith.close = function(){
-    // ensure that plugin display is reset
+    // ensure plugin display is reset
     JS9.Imarith.init.call(this, {mode: "clear"});
 };
 
 // constructor: add HTML elements to the plugin
 JS9.Imarith.init = function(opts){
-    var i, s, im, tim, mopts, imid, dispid;
-    var images = "";
+    let i, s, im, tim, mopts, imid, dispid;
+    let images = "";
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -3716,12 +3718,11 @@ JS9.Imarith.init = function(opts){
 	dispid = im.display.id;
 	// make the last one
 	this.lastim = im.id;
-	// get list of images that can be operands (other than this one)
+	// get list of images which can be operands (other than this one)
 	for(i=0; i<JS9.images.length; i++){
 	    tim = JS9.images[i];
 	    if( tim !== im ){
-		images += sprintf('<option value="%s">%s</option>', 
-				  tim.id, tim.id);
+		images += `<option value="${tim.id}">${tim.id}</option>`;
 	    }
 	}
 	// create the html for this image
@@ -3748,8 +3749,8 @@ JS9.Imarith.init = function(opts){
     this.divjq.html("");
     // set up new html
     this.imarithContainer = $("<div>")
-	.addClass(JS9.Imarith.BASE + "Container")
-	.attr("id", this.id + "Container")
+	.addClass(`${JS9.Imarith.BASE}Container`)
+	.attr("id", `${this.id}Container`)
         .attr("width", this.width)
         .attr("height", this.height)
 	.appendTo(this.divjq);
@@ -3802,7 +3803,7 @@ JS9.Info.opts = {
 
 // init plugin
 JS9.Info.init = function(){
-    var i, key, opts, obj, infoHTML;
+    let i, key, opts, obj, infoHTML;
     // only init if we are displaying a new image
     // i.e., avoid re-init when changing contrast/bias
     if( this.display.image && this.display.image === this.lastimage ){
@@ -3870,10 +3871,9 @@ JS9.Info.init = function(){
 // display a message on the image canvas or info plugin
 // call with display as context
 JS9.Info.display = function(type, message, target, force){
-    var that = this;
-    var s, t;
-    var tobj, split, area, tokens, rexp, color, info, key, el, jel, rid, im;
-    var disp = this;
+    let s, t;
+    let tobj, split, area, tokens, rexp, color, info, key, el, jel, rid, im;
+    let disp = this;
     // backward compatibility -- allow context to be Image
     if( this.display ){
 	disp = this.display;
@@ -3885,10 +3885,10 @@ JS9.Info.display = function(type, message, target, force){
     }
     // where are we displaying?
     if( info && info.status === "active" && (!target || !force) ){
-	// if info plugin is active, use that
+	// if info plugin is active, use it
 	tobj = info;
     } else if( target ){
-	// if specific info target was specified, use that
+	// if specific info target was specified, use it
 	if( target === disp ){
 	    // passed disp in as a target
 	    tobj = disp;
@@ -3898,7 +3898,7 @@ JS9.Info.display = function(type, message, target, force){
 	} else if( typeof target === "object" ){
 	    tobj = $(target);
 	} else {
-	    tobj = $("#"+target);
+	    tobj = $(`#${target}`);
 	}
 	if( !tobj.length ){
 	    // fallback if the target element does not exist
@@ -3949,7 +3949,7 @@ JS9.Info.display = function(type, message, target, force){
 	(type !== "regions" || JS9.globalOpts.regionDisplay !== "lightwin") ){
 	switch( typeof message ){
 	case "string":
-	    jel = info.jq.find("[name='"+type+"']");
+	    jel = info.jq.find(`[name='${type}']`);
 	    if( jel.length > 0 ){
 		jel.val(message);
 	    }
@@ -3959,7 +3959,7 @@ JS9.Info.display = function(type, message, target, force){
 	    for( key in message ){
 		if( message.hasOwnProperty(key) ){
 		    // set value, if possible
-		    jel = info.jq.find("[name='"+key+"']");
+		    jel = info.jq.find(`[name='${key}']`);
 		    if( jel.length > 0 ){
 			jel.val(message[key]);
 		    }
@@ -3975,22 +3975,22 @@ JS9.Info.display = function(type, message, target, force){
     case "regions":
 	// display regions in a light window?
 	if( JS9.globalOpts.regionDisplay === "lightwin" ){
-	    rid = disp.id + "_regions";
-	    el = $("#" + rid);
+	    rid = `${disp.id}_regions`;
+	    el = $(`#${rid}`);
 	    // does window exist (and is not closed)?
 	    if( el.length && !el[0].isClosed ){
 		// found the window: fill the message area
 		area = el.find(".JS9Message");
 	    } else if( message ) {
 		// start a light window and recurse to display the message
-		$("#dhtmlwindowholder").arrive("#" + rid,
+		$("#dhtmlwindowholder").arrive(`#${rid}`,
 	        { fireOnAttributesModification: true },
-	        function(){
-		    JS9.Info.display.call(that, type, message, target, force);
+	        () => {
+		    JS9.Info.display.call(this, type, message, target, force);
 		});
 		t = "Regions";
 		if( im ){
-		    t += ": " + im.id;
+		    t += `: ${im.id}`;
 		}
 		t += " ";
 		t += sprintf(JS9.IDFMT, this.id);
@@ -4038,7 +4038,7 @@ JS9.Info.display = function(type, message, target, force){
 	s = message;
 	break;
     case "object":
-	key = "vstr" + JS9.globalOpts.valposWidth;
+	key = `vstr${JS9.globalOpts.valposWidth}`;
 	s = message[key] || message.vstrmedium || message.vstr || "";
 	break;
     }
@@ -4064,7 +4064,7 @@ JS9.Image.prototype.displayMessage = JS9.Info.display;
 
 // clear an info message
 JS9.Info.clear = function(which){
-    var disp = this;
+    let disp = this;
     // backward compatibility -- allow context to be Image
     if( this.display ){
 	disp = this.display;
@@ -4086,7 +4086,7 @@ JS9.Image.prototype.clearMessage = JS9.Info.clear;
 // when a plugin window is brought up:
 // save valpos and set to true
 JS9.Info.pluginDisplay = function(im){
-    var disp;
+    let disp;
     if( im && im.display ){
 	if( im.tmp ){
 	    im.tmp.info_ovalpos = im.params.valpos;
@@ -4113,10 +4113,10 @@ JS9.Info.pluginClose = function(im){
 };
 
 // having added the prototype displayMessage, we can define a public routine
-JS9.mkPublic("DisplayMessage", function(type, message, target){
-    var got;
-    var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
+JS9.mkPublic("DisplayMessage", function(...args){
+    let got, type, message, target;
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.display);
     if( !display ){
 	JS9.error("invalid display for display message");
     }
@@ -4162,13 +4162,13 @@ JS9.Keyboard.actionHTML="<div class='JS9KeyboardText'><button class='JS9Button J
 
 // get an id based on the action
 JS9.Keyboard.actionid = function(cname, aname){
-    return (cname + "_" + aname).replace(/[^A-Za-z0-9_]/g, "_");
+    return (`${cname}_${aname}`).replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // add to the action list
 JS9.Keyboard.addAction = function(container, cname, aname){
-    var that = this;
-    var s, id, divjq;
+    const _this = this;
+    let s, id, divjq;
     id = JS9.Keyboard.actionid(cname, aname);
     // create the html for this action
     s = sprintf(JS9.Keyboard.actionHTML, aname, cname, aname);
@@ -4177,9 +4177,10 @@ JS9.Keyboard.addAction = function(container, cname, aname){
 	.attr("id", id)
 	.html(s)
 	.appendTo(container);
+    // NB: 'this' is not lexical, so no arrow function here
     divjq.find('.JS9KeyboardButton').on("click", function(evt){
-	var action = this.value;
-	var im = that.display.image;
+	const action = this.value;
+	const im = _this.display.image;
 	if( im && action && JS9.Keyboard.Actions[action] ){
 	    JS9.Keyboard.Actions[action](im, im.ipos, evt);
 	}
@@ -4247,7 +4248,7 @@ JS9.Keyboard.Actions["new JS9 light window"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt){
-    var s, arr, opts;
+    let s, arr, opts;
     // sanity check
     if( !im || !im.raw.wcs || !ipos ){
 	return;
@@ -4268,7 +4269,7 @@ JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt)
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy physical position to clipboard"] = function(im, ipos, evt){
-    var phys, s;
+    let phys, s;
     // sanity check
     if( !im || !ipos ){
 	return;
@@ -4283,7 +4284,7 @@ JS9.Keyboard.Actions["copy physical position to clipboard"] = function(im, ipos,
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy pixel value to clipboard"] = function(im, ipos, evt){
-    var s, val, prec;
+    let s, val, prec;
     // sanity check
     if( !im || !ipos ){
 	return;
@@ -4300,7 +4301,7 @@ JS9.Keyboard.Actions["copy pixel value to clipboard"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos, evt){
-    var s, key, ovalpos;
+    let s, key, ovalpos;
     // sanity check
     if( !im || !ipos ){
 	return;
@@ -4312,7 +4313,7 @@ JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos
     // restore original valpos
     im.setParam("valpos", ovalpos);
     // process valpos string
-    key = "vstr"+ JS9.globalOpts.valposWidth;
+    key = `vstr${ JS9.globalOpts.valposWidth}`;
     if( s && s[key]){
 	// reformat from html to text
 	s = s[key].replace(/&nbsp;/g, " ");
@@ -4327,7 +4328,7 @@ JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["edit selected region"] = function(im, ipos, evt){
-    var layer, target;
+    let layer, target;
     // sanity check
     if( !im ){
 	return;
@@ -4395,7 +4396,7 @@ JS9.Keyboard.Actions["tag selected region as 'exclude'"] = function(im, ipos, ev
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["toggle full screen mode"] = function(im, ipos, evt){
-    var display = evt.data;
+    const display = evt.data;
     if( (display.width  === display.width0)  &&
 	(display.height === display.height0) ){
 	display.resize("full", {center: true});
@@ -4484,8 +4485,8 @@ JS9.Keyboard.Actions["save regions as a text file"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
-    var canvas, layerName, active;
-    var inc = 1;
+    let canvas, layerName, active;
+    let inc = 1;
     if( evt ){
 	evt.preventDefault();
     }
@@ -4507,8 +4508,8 @@ JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
 };
 
 JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
-    var canvas, layerName, active;
-    var inc = -1;
+    let canvas, layerName, active;
+    let inc = -1;
     if( evt ){
 	evt.preventDefault();
     }
@@ -4530,8 +4531,8 @@ JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
 };
 
 JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
-    var canvas, layerName, active;
-    var inc = -1;
+    let canvas, layerName, active;
+    let inc = -1;
     if( evt ){
 	evt.preventDefault();
     }
@@ -4553,8 +4554,8 @@ JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
 };
 
 JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
-    var canvas, layerName, active;
-    var inc = 1;
+    let canvas, layerName, active;
+    let inc = 1;
     if( evt ){
 	evt.preventDefault();
     }
@@ -4576,7 +4577,7 @@ JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
 };
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["remove selected region"] = function(im, ipos, evt){
-    var canvas, layerName;
+    let canvas, layerName;
     if( evt ){
 	evt.preventDefault();
     }
@@ -4618,7 +4619,7 @@ JS9.Keyboard.Actions["send selected region to back"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy selected region to clipboard"] = function(im, ipos, evt){
-    var s;
+    let s;
     // sanity check
     if( !im ){ return; }
     // get selected region(s)
@@ -4630,7 +4631,7 @@ JS9.Keyboard.Actions["copy selected region to clipboard"] = function(im, ipos, e
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy all regions to clipboard"] = function(im, ipos, evt){
-    var s;
+    let s;
     // sanity check
     if( !im ){ return; }
     // get all regions
@@ -4659,7 +4660,7 @@ JS9.Keyboard.Actions["undo remove of region(s)"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["select region"] = function(im, ipos, evt){
-    var i, layer, canvas, obj, objs;
+    let i, layer, canvas, obj, objs;
     // sanity check
     if( !im ){ return; }
     layer = im.layer || "regions";
@@ -4676,7 +4677,7 @@ JS9.Keyboard.Actions["select region"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["select all regions"] = function(im, ipos, evt){
-    var layer, canvas, selection;
+    let layer, canvas, selection;
     // sanity check
     if( !im || fabric.major_version === 1 ){ return; }
     layer = im.layer || "regions";
@@ -4763,8 +4764,8 @@ JS9.Keyboard.Actions["toggle shape layers plugin"] = function(im, ipos, evt){
 
 // get action associated with the current keyboard
 JS9.Keyboard.getAction = function(im, evt){
-    var action;
-    var s = JS9.eventToCharStr(evt);
+    let action;
+    const s = JS9.eventToCharStr(evt);
     // look for an action associated with this key
     if( s ){
 	action = JS9.globalOpts.keyboardActions[s];
@@ -4786,7 +4787,7 @@ JS9.Keyboard.action = function(im, ipos, evt, action){
 };
 
 JS9.Keyboard.editregion= function(im, xnew, xold){
-    var i, j, s, tags;
+    let i, j, s, tags;
     // get selected region
     s = im.getShapes("regions", "selected");
     if( s.length ){
@@ -4816,7 +4817,7 @@ JS9.Keyboard.editregion= function(im, xnew, xold){
 
 // constructor: add HTML elements to the plugin
 JS9.Keyboard.init = function(){
-    var s, key;
+    let s, key;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -4831,19 +4832,19 @@ JS9.Keyboard.init = function(){
     this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.keyboardContainer = $("<div>")
-	.addClass(JS9.Keyboard.BASE + "Container")
-	.attr("id", this.id + "KeyboardContainer")
+	.addClass(`${JS9.Keyboard.BASE}Container`)
+	.attr("id", `${this.id}KeyboardContainer`)
 	.appendTo(this.divjq);
-    s = sprintf("<div class='%s'><b>Keys and their actions (or click the buttons):</b></div><p>", JS9.Keyboard.BASE + "Header");
+    s = `<div class='${JS9.Keyboard.BASE}Header'><b>Keys and their actions (or click the buttons):</b></div><p>`;
     this.keyboardHeadContainer = $("<div>")
-	.addClass(JS9.Keyboard.BASE + "Container")
-	.attr("id", this.id + "KeyboardHeadContainer")
+	.addClass(`${JS9.Keyboard.BASE}Container`)
+	.attr("id", `${this.id}KeyboardHeadContainer`)
         .html(s)
 	.appendTo(this.keyboardContainer);
     // container to hold keyboard actions
     this.keyboardActionContainer = $("<div>")
-	.addClass(JS9.Keyboard.BASE + "ActionContainer")
-	.attr("id", this.id + "ActionContainer")
+	.addClass(`${JS9.Keyboard.BASE}ActionContainer`)
+	.attr("id", `${this.id}ActionContainer`)
         .html("")
 	.appendTo(this.keyboardContainer);
     // add actions
@@ -4896,43 +4897,43 @@ JS9.Layers.layerNameHTML='<b>%s</b>';
 
 // get an id based on the file image id and layer
 JS9.Layers.imid = function(im, layer){
-    var id = im.display.id + "_" + im.id + "_" + layer + "_";
-    return id.replace(/[^A-Za-z0-9_]/g, "_") + "Layer";
+    const id = `${im.display.id}_${im.id}_${layer}_`;
+    return `${id.replace(/[^A-Za-z0-9_]/g, "_")}Layer`;
 };
 
 // get a class unique between displays
 JS9.Layers.dispclass = function(im){
-    var id = JS9.Layers.BASE + "_" + im.display.id;
+    const id = `${JS9.Layers.BASE}_${im.display.id}`;
     return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Layers.activeLayer = function(im, pinst){
-    var i, s, id, dcls, order;
+    let i, s, id, dcls, order;
     if( im ){
 	order = pinst.layersLayerContainer.sortable("toArray");
 	if( (order.length === 1) && !order[0] ){
 	    return;
 	}
 	for(i=0; i<order.length; i++){
-	    order[i] = $("#" + order[i]).attr("layer");
+	    order[i] = $(`#${order[i]}`).attr("layer");
 	}
 	s = im.activeShapeLayer(order);
 	id = JS9.Layers.imid(im, s);
-	dcls = JS9.Layers.dispclass(im) + "_Layer";
-	$("." + dcls)
-	    .removeClass(JS9.Layers.BASE + "LayerActive")
-	    .addClass(JS9.Layers.BASE + "LayerInactive");
-	$("#" + id)
-	    .removeClass(JS9.Layers.BASE + "LayerInactive")
-	    .addClass(JS9.Layers.BASE + "LayerActive");
+	dcls = `${JS9.Layers.dispclass(im)}_Layer`;
+	$(`.${dcls}`)
+	    .removeClass(`${JS9.Layers.BASE}LayerActive`)
+	    .addClass(`${JS9.Layers.BASE}LayerInactive`);
+	$(`#${id}`)
+	    .removeClass(`${JS9.Layers.BASE}LayerInactive`)
+	    .addClass(`${JS9.Layers.BASE}LayerActive`);
     }
 };
 
 // make shape layer visible/invisible
 JS9.Layers.xvisible = function(did, id, layer, target){
-    var pinst, mode;
-    var im = JS9.lookupImage(id, did);
+    let pinst, mode;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	if( target.checked ){
 	    mode = true;
@@ -4951,8 +4952,8 @@ JS9.Layers.xvisible = function(did, id, layer, target){
 // save layer (catalog or regions)
 // eslint-disable-next-line no-unused-vars
 JS9.Layers.xsave = function(did, id, layer, target){
-    var im = JS9.lookupImage(id, did);
-    var save = target.options[target.selectedIndex].value;
+    const im = JS9.lookupImage(id, did);
+    const save = target.options[target.selectedIndex].value;
     if( im ){
 	if( save === "catalog" ){
 	    im.saveCatalog(null, layer);
@@ -4966,9 +4967,9 @@ JS9.Layers.xsave = function(did, id, layer, target){
 
 // add a layer to the list
 JS9.Layers.addLayer = function(im, layer){
-    var l, s, id, divjq, zindex, added, dcls, imid, dispid;
-    var cls = JS9.Layers.BASE + "Layer";
-    var opts = [];
+    let l, s, id, divjq, zindex, added, dcls, imid, dispid;
+    const cls = `${JS9.Layers.BASE}Layer`;
+    const opts = [];
     // sanity checks
     if( !im || !layer || !im.layers[layer] ||
 	(im.layers[layer].dlayer.dtype !== "main") ){
@@ -4986,7 +4987,7 @@ JS9.Layers.addLayer = function(im, layer){
     // get unique id for this layer
     id = JS9.Layers.imid(im, layer);
     // get class for this layer 
-    dcls = JS9.Layers.dispclass(im) + "_Layer";
+    dcls = `${JS9.Layers.dispclass(im)}_Layer`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: imid});
     opts.push({name: "visible", value: sprintf(JS9.Layers.visibleHTML, 
@@ -4999,9 +5000,9 @@ JS9.Layers.addLayer = function(im, layer){
 						dispid, imid, layer)});
     }
     if( JS9.DEBUG > 1 ){
-	l = sprintf("%s layer [zindex: %s]", layer, zindex);
+	l = `${layer} layer [zindex: ${zindex}]`;
     } else {
-	l = sprintf("%s layer", layer);
+	l = `${layer} layer`;
     }
     opts.push({name: "layer", value: sprintf(JS9.Layers.layerNameHTML, l)});
     // create the html for this layer
@@ -5017,9 +5018,9 @@ JS9.Layers.addLayer = function(im, layer){
     if( !this.nlayer ){
 	divjq.appendTo(this.layersLayerContainer);
     } else {
-	this.layersLayerContainer.find("." + cls).each(function(idx, item){
-		var tlayer, tzindex;
-		var jqitem = $(item);
+	this.layersLayerContainer.find(`.${cls}`).each((idx, item) => {
+		let tlayer, tzindex;
+		const jqitem = $(item);
 		if( !added ){
 		    tlayer = jqitem.attr("layer");
 		    if( tlayer ){
@@ -5051,14 +5052,14 @@ JS9.Layers.display = function(){
 
 // clear when an image closes
 JS9.Layers.close = function(){
-    // ensure that plugin display is reset
+    // ensure plugin display is reset
     JS9.Layers.init.call(this, {mode: "clear"});
 };
 
 // constructor: add HTML elements to the plugin
 JS9.Layers.init = function(opts){
-    var key, im;
-    var that = this;
+    let key, im;
+    const _this = this;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -5077,20 +5078,20 @@ JS9.Layers.init = function(opts){
     this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.layersContainer = $("<div>")
-	.addClass(JS9.Layers.BASE + "Container")
-	.attr("id", this.id + "LayersContainer")
+	.addClass(`${JS9.Layers.BASE}Container`)
+	.attr("id", `${this.id}LayersContainer`)
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     // header
     this.layersHeader = $("<div>")
-	.addClass(JS9.Layers.BASE + "Header")
-	.attr("id", this.display.id + "Header")
+	.addClass(`${JS9.Layers.BASE}Header`)
+	.attr("id", `${this.display.id}Header`)
 	.html(JS9.Layers.headerHTML)
 	.appendTo(this.layersContainer);
     // container to hold layers
     this.layersLayerContainer = $("<div>")
-	.addClass(JS9.Layers.BASE + "LayerContainer")
-	.attr("id", this.id + "LayersLayerContainer")
+	.addClass(`${JS9.Layers.BASE}LayerContainer`)
+	.attr("id", `${this.id}LayersLayerContainer`)
         .html(JS9.Layers.nolayersHTML)
 	.appendTo(this.layersContainer);
     // done if we are only clearing
@@ -5114,12 +5115,12 @@ JS9.Layers.init = function(opts){
     // the top one responds to events
     this.layersLayerContainer.sortable({
 	// eslint-disable-next-line no-unused-vars
-	start: function(event, ui) {
+	start(event, ui) {
 	    return;
 	},
 	// eslint-disable-next-line no-unused-vars
-	stop: function(event, ui) {
-	    JS9.Layers.activeLayer(im, that);
+	stop(event, ui) {
+	    JS9.Layers.activeLayer(im, _this);
 	    return;
 	}
     });
@@ -5182,22 +5183,23 @@ JS9.Magnifier.opts = {
 
 // call a JS9 routine from a button in the magnifier plugin toolbar
 // the plugin instantiation saves the display id in the toolbar div
-JS9.Magnifier.bcall = function(which, cmd, arg1){
-    var dispid, im;
+JS9.Magnifier.bcall = function(...args){
+    let dispid, im;
+    let [which, cmd, arg1] = args;
     // the button plugintoolbar div has data containing the id of the display
     dispid = $(which).closest("div[class^=JS9PluginToolbar]").data("displayid");
     if( dispid ){
 	im = JS9.getImage(dispid);
     } else {
-	JS9.error("can't find display for cmd: "+cmd);
+	JS9.error(`can't find display for cmd: ${cmd}`);
     }
     if( !im ){
-	JS9.error("can't find image for cmd: "+cmd);
+	JS9.error(`can't find image for cmd: ${cmd}`);
     }
     switch(cmd){
     case "zoomMagnifier":
-	if( arguments.length < 3 ){
-	    JS9.error("missing argument(s) for cmd: "+cmd);
+	if( args.length < 3 ){
+	    JS9.error(`missing arg(s) for cmd: ${cmd}`);
 	}
 	try{
 	    JS9.Magnifier.zoom(im, arg1);
@@ -5212,11 +5214,11 @@ JS9.Magnifier.bcall = function(which, cmd, arg1){
 
 // html used by the magnifier plugin
 JS9.Magnifier.HTML =
-"<span>" +
+`${"<span>" +
 "<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \"x2\"); return false'>x2</button>" +
 "<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \"/2\"); return false'>/2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \""+JS9.Magnifier.opts.zoom+"\"); return false'>"+JS9.Magnifier.opts.zoom+"</button>" +
-"</span>";
+"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \""}${JS9.Magnifier.opts.zoom}"); return false'>${JS9.Magnifier.opts.zoom}</button>` +
+`</span>`;
 
 // JS9 Magnifier constructor
 JS9.Magnifier.init = function(width, height){
@@ -5265,8 +5267,8 @@ JS9.Magnifier.init = function(width, height){
 
 // display the magnified image on the magnifier canvas
 JS9.Magnifier.display = function(im, ipos){
-    var pos, tval, magDisp, zoom;
-    var canvas, sx, sy, sw, sh, dx, dy, dw, dh;
+    let pos, tval, magDisp, zoom;
+    let canvas, sx, sy, sw, sh, dx, dy, dw, dh;
     // sanity check
     // only display if we have a magnifier present
     if(!im || !im.display.pluginInstances.JS9Magnifier ||
@@ -5357,7 +5359,7 @@ JS9.Magnifier.display = function(im, ipos){
 // zoom the rectangle inside the magnifier (RGB) image
 // part of magnifier plugin
 JS9.Magnifier.zoom = function(im, zval){
-    var magnifier, ozoom, nzoom;
+    let magnifier, ozoom, nzoom;
     // sanity check
     if( !im || !im.magnifier ){
 	return;
@@ -5391,7 +5393,7 @@ JS9.Magnifier.zoom = function(im, zval){
 
 // clear the magnifier
 JS9.Magnifier.clear = function(im){
-    var magnifier = im.display.pluginInstances.JS9Magnifier;
+    const magnifier = im.display.pluginInstances.JS9Magnifier;
     if( magnifier && (im === im.display.image) ){
 	magnifier.context.clear();
 	im.removeShapes("magnifier", "all");
@@ -5421,7 +5423,7 @@ JS9.RegisterPlugin(JS9.Magnifier.CLASS, JS9.Magnifier.NAME, JS9.Magnifier.init,
  * Multi-Extension FITS module (March 31, 2016)
  */
 
-/*global $, JS9, sprintf */
+/*global $, JS9 */
 
 "use strict";
 
@@ -5435,8 +5437,8 @@ JS9.Mef.BASE = JS9.Mef.CLASS + JS9.Mef.NAME;  // CSS base class name
 
 // change global separate mode for this display
 JS9.Mef.xseparate = function(id, target){
-    var display = JS9.lookupDisplay(id);
-    var separate = target.checked;
+    const display = JS9.lookupDisplay(id);
+    const separate = target.checked;
     // change separate mode for this instance
     if( display ){
 	display.pluginInstances[JS9.Mef.BASE].separate = separate;
@@ -5446,7 +5448,7 @@ JS9.Mef.xseparate = function(id, target){
 // load all images
 // eslint-disable-next-line no-unused-vars
 JS9.Mef.xall = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    const display = JS9.lookupDisplay(id);
     // display all image extensions
     if( display && display.image ){
 	display.pluginInstances[JS9.Mef.BASE].separate = true;
@@ -5456,27 +5458,25 @@ JS9.Mef.xall = function(id, target){
 
 // get an MefExtension id based on the file image id
 JS9.Mef.imid = function(im, i, noext){
-    var id = im.display.id + "_" + im.id;
+    let id = `${im.display.id}_${im.id}`;
     if( noext ){
 	id = id.replace(/\[[a-zA-Z0-9][a-zA-Z0-9_]*\]/g,"");
     }
-    return id
-	.replace(/[^A-Za-z0-9_]/g, "_")
-	+ "_MefExtension_" + i;
+    return `${id.replace(/[^A-Za-z0-9_]/g, "_")}_MefExtension_${i}`;
 };
 
 // change the active extension
 JS9.Mef.activeExtension = function(im, i){
-    var clas, classbase;
+    let clas, classbase;
     if( im ){
-	classbase = im.display.id + "_" + JS9.Mef.BASE;
-	$("." + classbase + "Extension")
-	    .removeClass(JS9.Mef.BASE + "ExtensionActive")
-	    .addClass(JS9.Mef.BASE + "ExtensionInactive");
+	classbase = `${im.display.id}_${JS9.Mef.BASE}`;
+	$(`.${classbase  }Extension`)
+	    .removeClass(`${JS9.Mef.BASE}ExtensionActive`)
+	    .addClass(`${JS9.Mef.BASE}ExtensionInactive`);
 	clas = JS9.Mef.imid(im, i, true);
-	$("." + clas )
-	    .removeClass(JS9.Mef.BASE + "ExtensionInactive")
-	    .addClass(JS9.Mef.BASE + "ExtensionActive");
+	$(`.${clas}` )
+	    .removeClass(`${JS9.Mef.BASE}ExtensionInactive`)
+	    .addClass(`${JS9.Mef.BASE}ExtensionActive`);
     }
 };
 
@@ -5489,18 +5489,17 @@ JS9.Mef.display = function(){
 
 // clear when an image closes
 JS9.Mef.close = function(){
-    // ensure that plugin display is reset
+    // ensure plugin display is reset
     JS9.Mef.init.call(this, {mode: "clear"});
 };
 
 // constructor: add HTML elements to the plugin
 JS9.Mef.init = function(opts){
-    var i, im, id, clas, obj, s, sid, div, htmlString, classbase;
-    var that = this;
-    var addExt = function(o, s, k){
-	var c, j;
-	var got = "";
-	var doit = true;
+    let i, im, id, clas, obj, s, sid, div, htmlString, classbase;
+    const addExt = (o, s, k) => {
+	let c, j;
+	let got = "";
+	let doit = true;
 	switch(o.type){
 	case "image":
 	    // look for 2D image
@@ -5526,24 +5525,24 @@ JS9.Mef.init = function(opts){
 	    break;
 	}
 	if( doit ){
-	    htmlString = "<pre>&nbsp;&nbsp;"+s+"</pre>";
+	    htmlString = `<pre>&nbsp;&nbsp;${s}</pre>`;
 	} else {
-	    htmlString = "<pre>&nbsp;&nbsp;<span class='JS9MefStrike'><span>"+s+"</span></span></pre>";
+	    htmlString = `<pre>&nbsp;&nbsp;<span class='JS9MefStrike'><span>${s}</span></span></pre>`;
 	}
 	id = JS9.Mef.imid(im, k);
 	clas = JS9.Mef.imid(im, k, true);
-	classbase = im.display.id + "_" + JS9.Mef.BASE;
+	classbase = `${im.display.id}_${JS9.Mef.BASE}`;
 	div = $("<div>")
 	    .addClass(clas)
-	    .addClass(classbase  + "Extension")
-	    .addClass(JS9.Mef.BASE  + "Extension")
-	    .addClass(JS9.Mef.BASE + "ExtensionInactive")
+	    .addClass(`${classbase   }Extension`)
+	    .addClass(`${JS9.Mef.BASE   }Extension`)
+	    .addClass(`${JS9.Mef.BASE}ExtensionInactive`)
 	    .attr("id", id)
 	    .html(htmlString)
-	    .appendTo(that.mefContainer);
+	    .appendTo(this.mefContainer);
 	if( doit ){
-	    div.on("mousedown touchstart", function(){
-		im.displayExtension(o.hdu, {separate: that.separate});
+	    div.on("mousedown touchstart", () => {
+		im.displayExtension(o.hdu, {separate: this.separate});
 		JS9.Mef.activeExtension(im, o.hdu);
 	    });
 	}
@@ -5563,8 +5562,8 @@ JS9.Mef.init = function(opts){
     this.divjq.html("");
     // add mef container to main
     this.mefContainer = $("<div>")
-	.addClass(JS9.Mef.BASE + "Container")
-	.attr("id", this.id + "MefContainer")
+	.addClass(`${JS9.Mef.BASE}Container`)
+	.attr("id", `${this.id}MefContainer`)
 	.appendTo(this.divjq);
     // separate mode
     if( this.separate === undefined ){
@@ -5581,10 +5580,10 @@ JS9.Mef.init = function(opts){
     }
     this.lastimage = im;
     // reset main container
-    s = sprintf("<div class='%s'><span><b>Click on a FITS HDU extension to display it:</b></span>", JS9.Mef.BASE + "Header");
+    s = `<div class='${JS9.Mef.BASE}Header'><span><b>Click on a FITS HDU extension to display it:</b></span>`;
     // add the checkbox for displaying each extension separately
     sid = JS9.Mef.imid(im, "Separate");
-    s += sprintf('&nbsp;&nbsp;<span><input type="checkbox" id="%s" name="separate" value="separate" onclick="javascript:JS9.Mef.xseparate(\'%s\', this)"><b>&nbsp;as a separate image</b></span><span style="float: right"><input type="button" id="%s" name="all" value="Display all images" onclick="javascript:JS9.Mef.xall(\'%s\', this)"></span></div>', sid, this.display.id, sid, this.display.id);
+    s += `&nbsp;&nbsp;<span><input type="checkbox" id="${sid}" name="separate" value="separate" onclick="javascript:JS9.Mef.xseparate('${this.display.id}', this)"><b>&nbsp;as a separate image</b></span><span style="float: right"><input type="button" id="${sid}" name="all" value="Display all images" onclick="javascript:JS9.Mef.xall('${this.display.id}', this)"></span></div>`;
     this.mefContainer.html(s);
     // add a formatted string for each extension
     for(i=0; i<im.hdus.length; i++){
@@ -5592,7 +5591,7 @@ JS9.Mef.init = function(opts){
 	s = JS9.hdus2Str([obj]).trim();
 	addExt(obj, s, i);
     }
-    $("#" + sid).prop("checked", this.separate);
+    $(`#${sid}`).prop("checked", this.separate);
     // make the currently displayed extension active
     if( im.raw.hdu.fits.extnum !== undefined ){
 	JS9.Mef.activeExtension(im, im.raw.hdu.fits.extnum);
@@ -5677,8 +5676,8 @@ if( JS9.menuButtonOptsArr ){
 
 // get displays associated with this menubar, taking supermenus into account
 JS9.Menubar.getDisplays = function(mode, key){
-    var i, d, s, disp;
-    var arr = [];
+    let i, d, s, disp;
+    const arr = [];
     mode = mode || "any";
     key = key || "";
     // handle super menu specially ... but only if its not a "super_" request
@@ -5715,13 +5714,13 @@ JS9.Menubar.getDisplays = function(mode, key){
 
 // this callback happens when a click is registered on a display
 // we then go through the supermenus, and if one of them contains this display,
-// we set its selectedDisplay value so that use of that supermenu is then aimed
+// we set its selectedDisplay value so use of the supermenu is then aimed
 // only at the selected display
 // also used to unset previously set selectedDisplay
 //
 // called by JS9.mouseupCB with no context, passing current image object
 JS9.Menubar.onclick = function(disp){
-    var i, arr, supermenu;
+    let i, arr, supermenu;
     if( (typeof disp === "string") && (disp !== "all") ){
 	disp = JS9.lookupDisplay(disp);
     }
@@ -5758,12 +5757,11 @@ JS9.Menubar.reset = function(im){
 
 // create the standard menus and user-defined menus
 // each consists of a contextMenu() call and a "mousedown" callback
-// to display that menu
+// to display the menu
 JS9.Menubar.createMenus = function(){
-    var that = this;
     // eslint-disable-next-line no-unused-vars
-    var mypos = function(opt,  x,  y)  {
-	var pos;
+    const mypos = (opt,  x,  y) => {
+	let pos;
 	if( !window.hasOwnProperty("Jupyter") ){
 	    opt.$menu.position({
 		my:  'left top',
@@ -5777,17 +5775,17 @@ JS9.Menubar.createMenus = function(){
 	    opt.$menu.css({"left": pos.left+20, "top": pos.top+10});
 	}
     };
-    var onhide = function() {
-	var tdisp = that.display;
+    const onhide = () => {
+	const tdisp = this.display;
 	if( JS9.bugs.hide_menu && tdisp.image ){
 	    tdisp.image.displayImage("rgb");
 	}
     };
-    var xname = function(name, xact){
-	var key, hstr;
-	var obj = {name: name};
-	var gkeyActions = JS9.globalOpts.keyboardActions;
-	var act = JS9.Menubar.keyMap[name];
+    const xname = (name, xact) => {
+	let key, hstr, tact;
+	let obj = {name: name};
+	const gkeyActions = JS9.globalOpts.keyboardActions;
+	const act = JS9.Menubar.keyMap[name];
 	if( !JS9.Menubar.rkeyMap ){
 	    JS9.Menubar.rkeyMap = {};
 	    for( key in gkeyActions ){
@@ -5800,15 +5798,15 @@ JS9.Menubar.createMenus = function(){
 	if( JS9.notNull(act) && JS9.Menubar.rkeyMap ){
 	    key = JS9.Menubar.rkeyMap[act];
 	    if( key ){
-		hstr = "<span>" + name + " <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;" + key + "</span></span>";
+		hstr = `<span>${name} <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;${key}</span></span>`;
 		obj = {name: hstr, isHtmlName: true};
 	    }
 	} else if( xact && JS9.Menubar.rkeyMap ){
-	    for( act in JS9.Menubar.rkeyMap ){
-		if( JS9.Menubar.rkeyMap.hasOwnProperty(act) && act === xact ){
-		    key = JS9.Menubar.rkeyMap[act];
+	    for( tact in JS9.Menubar.rkeyMap ){
+		if( JS9.Menubar.rkeyMap.hasOwnProperty(tact) && tact === xact ){
+		    key = JS9.Menubar.rkeyMap[tact];
 		    if( key ){
-			hstr = "<span>" + name + " <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;" + key + "</span></span>";
+			hstr = `<span>${name} <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;${key}</span></span>`;
 			obj = {name: hstr, isHtmlName: true};
 		    }
 		}
@@ -5816,39 +5814,39 @@ JS9.Menubar.createMenus = function(){
 	}
 	return obj;
     };
-    var xeqUserMenu = function(evt){
-	var menu = evt.data;
+    const xeqUserMenu = (evt) => {
+	const menu = evt.data;
 	evt.preventDefault();
-	$("#"+menu.name+"UserMenu" + that.id).contextMenu();
+	$(`#${menu.name}UserMenu${this.id}`).contextMenu();
     };
-    var addUserMenu = function(menu){
+    const addUserMenu = (menu) => {
 	if( !menu || !menu.name || !menu.title || !menu.options  ){
 	    return;
 	}
 	// define contextMenu actions
 	$.contextMenu({
-            selector: "#" + menu.name +"UserMenu" + that.id,
+            selector: `#${menu.name }UserMenu${this.id}`,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
 	    position: mypos,
-            build: function(){
-		var i, opt, hstr, obj;
-		var items = {};
+            build: () => {
+		let i, opt, hstr, obj;
+		const items = {};
 		for(i=0; i<menu.options.length; i++){
 		    opt = menu.options[i];
 		    obj = xname(opt.name, opt.shortcut);
 		    if( opt.image ){
-			hstr = "<div class='JS9MenubarUserImage'><img src='" + opt.image + "' alt='" + opt.name + "' class='JS9MenubarUserImage' >" + "&nbsp;&nbsp;" + obj.name + "</div>";
+			hstr = `<div class='JS9MenubarUserImage'><img src='${opt.image}' alt='${opt.name}' class='JS9MenubarUserImage' >` + `&nbsp;&nbsp;${obj.name}</div>`;
 			items[opt.name] = {name: hstr, isHtmlName: true};
 		    } else {
 			items[opt.name] = obj;
 		    }
 		}
-		return{
-		    callback: function(key, kopt){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var i, args, hstr;
-			var udisp = val;
+		return {
+		    callback: (key, kopt) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			let i, args, hstr;
+			const udisp = val;
 			for(i=0; i<menu.options.length; i++){
 			    opt = menu.options[i];
 			    if( key !== opt.name ){
@@ -5865,9 +5863,9 @@ JS9.Menubar.createMenus = function(){
 				    opt.updateTitle !== false     &&
 				    menu.updateTitle.match(/(both|image)/) ){
 				    if( menu.updateTitle === "both" ){
-					hstr = "<div style='white-space:nowrap;'><img src='" + opt.image + "' alt='" + opt.name + "' class='JS9MenubarUserImage' >" + "&nbsp;&nbsp;" + opt.name + "</div>";
+					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' alt='${opt.name}' class='JS9MenubarUserImage' >` + `&nbsp;&nbsp;${opt.name}</div>`;
 				    } else if( menu.updateTitle === "image" ){
-					hstr = "<div style='white-space:nowrap;'><img src='" + opt.image + "' alt='" + opt.name + "' class='JS9MenubarUserImage' ></div>";
+					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' alt='${opt.name}' class='JS9MenubarUserImage' ></div>`;
 				    }
 				    $(kopt.selector).html(hstr);
 				} else if( menu.updateTitle && opt.name ){
@@ -5875,7 +5873,7 @@ JS9.Menubar.createMenus = function(){
 				}
 				}
 			    } else {
-				JS9.error("unknown function for user menubar: " + menu.cmd);
+				JS9.error(`unknown func for user menubar: ${menu.cmd}`);
 			    }
 			}
 		    });
@@ -5885,37 +5883,37 @@ JS9.Menubar.createMenus = function(){
 	    }
 	});
     };
-    var addUserMenus = function(){
-	var i, menu;
+    const addUserMenus = () => {
+	let i, menu;
 	if( JS9.globalOpts.userMenuBar ){
 	    for(i=0; i<JS9.globalOpts.userMenuBar.length; i++){
 		menu = JS9.globalOpts.userMenuBar[i];
 		if( !menu || !menu.name || !menu.title  ){
 		    continue;
 		}
-		$("#"+menu.name+"UserMenu" + that.id).on("mousedown",
+		$(`#${menu.name}UserMenu${this.id}`).on("mousedown",
 							 menu, xeqUserMenu);
 		addUserMenu(menu);
 	    }
 	}
     };
     // file: make button open the contextMenu
-    $("#fileMenu" + that.id).on("mousedown", function(evt){
+    $(`#fileMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#fileMenu" + that.id).contextMenu();
+        $(`#fileMenu${this.id}`).contextMenu();
     });
     $.contextMenu({
-        selector: "#fileMenu" + that.id,
+        selector: `#fileMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, m, im, name, s1, arr, cdisp, got, iobj;
-	    var n = 0;
-	    var items = {};
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var tim = tdisp.image;
-	    var imlen = JS9.images.length;
+        build: () => {
+	    let i, m, im, name, s1, arr, cdisp, got, iobj;
+	    let n = 0;
+	    const items = {};
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const tim = tdisp.image;
+	    const imlen = JS9.images.length;
 	    // the number of images in this display ...
 	    for(i=0, got=0; i<imlen; i++){
 		im = JS9.images[i];
@@ -5973,7 +5971,7 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    // add the rest of the menu
 	    if( got && got < JS9.globalOpts.imagesFileSubmenu ){
-		items["sep" + n++] = "------";
+		items[`sep${n++}`] = "------";
 		items.filetitle = {
 		    name: "Files and Displays:",
 		    disabled: true
@@ -6042,9 +6040,9 @@ JS9.Menubar.createMenus = function(){
 	    if( tim ){
 		items.moveto.disabled = false;
 		for(i=0; i<JS9.displays.length; i++){
-		    if( $("#"+JS9.displays[i].id).length > 0 &&
+		    if( $(`#${JS9.displays[i].id}`).length > 0 &&
 			tdisp !== JS9.displays[i]    	     ){
-			s1 = "moveto_" + JS9.displays[i].id;
+			s1 = `moveto_${JS9.displays[i].id}`;
 			items.moveto.items[s1] = xname(JS9.displays[i].id);
 		    }
 		}
@@ -6098,7 +6096,7 @@ JS9.Menubar.createMenus = function(){
 		// sync target images to this image
 		items.syncs.items.sync.disabled = false;
 		items.syncs.items.sync.items.sync_opstitle = {
-		    name: "op(s) that trigger syncing:",
+		    name: "op(s) which trigger syncing:",
 		    disabled: true
 		};
 		items.syncs.items.sync.items.syncops = {
@@ -6110,12 +6108,12 @@ JS9.Menubar.createMenus = function(){
 		    selected: JS9.globalOpts.syncReciprocate,
 		    type: "checkbox"
 		};
-		items.syncs.items.sync.items["sep" + n++] = "------";
+		items.syncs.items.sync.items[`sep${n++}`] = "------";
 		items.syncs.items.sync.items.title = {name: "image(s) to keep in sync:",
 					  disabled: true};
 		for(i=0; i<JS9.images.length; i++){
 		    if( tim !== JS9.images[i]    	     ){
-			s1 = "sync_" + JS9.images[i].id;
+			s1 = `sync_${JS9.images[i].id}`;
 			items.syncs.items.sync.items[s1] = xname(JS9.images[i].id);
 		    }
 		}
@@ -6135,12 +6133,12 @@ JS9.Menubar.createMenus = function(){
 		    selected: JS9.globalOpts.syncReciprocate,
 		    type: "checkbox"
 		};
-		items.syncs.items.unsync.items["sep" + n++] = "------";
+		items.syncs.items.unsync.items[`sep${n++}`] = "------";
 		items.syncs.items.unsync.items.title = {name: "image(s) to unsync:",
 					    disabled: true};
 		for(i=0; i<JS9.images.length; i++){
 		    if( tim !== JS9.images[i]    	     ){
-			s1 = "unsync_" + JS9.images[i].id;
+			s1 = `unsync_${JS9.images[i].id}`;
 			items.syncs.items.unsync.items[s1] = xname(JS9.images[i].id);
 		    }
 		}
@@ -6234,8 +6232,8 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    // super menu
-	    if( that.issuper ){
-		arr = JS9.Menubar.getDisplays.call(that, "all");
+	    if( this.issuper ){
+		arr = JS9.Menubar.getDisplays.call(this, "all");
 		items.supermenu = {
 		    name: "supermenu ...",
 		    items: {
@@ -6248,9 +6246,9 @@ JS9.Menubar.createMenus = function(){
 		for(i=0, m=0; i<arr.length; i++){
 		    cdisp = arr[i];
 		    name = cdisp.id;
-		    items.supermenu.items["super_"+name] = xname(name);
-		    if( that.selectedDisplay === cdisp ){
-			items.supermenu.items["super_"+name].icon = "sun";
+		    items.supermenu.items[`super_${name}`] = xname(name);
+		    if( this.selectedDisplay === cdisp ){
+			items.supermenu.items[`super_${name}`].icon = "sun";
 			m++;
 		    }
 		}
@@ -6260,7 +6258,7 @@ JS9.Menubar.createMenus = function(){
 		    items.supermenu.items.super_all.icon = "sun";
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.print = xname("print ...");
 	    if( !tim ){
 		items.print.disabled = true;
@@ -6270,12 +6268,12 @@ JS9.Menubar.createMenus = function(){
 		items.windowPDF = xname("save window to pdf");
 	    }
 	    return {
-                callback: function(key, opt){
-		    JS9.Menubar.getDisplays.call(that, "any", key)
-			.forEach(function(val){
-			var j, s, t, did, kid, unew, uwin, uobj, uarr, uopts;
-			var udisp = val;
-			var uim = udisp.image;
+                callback: (key, opt) => {
+		    JS9.Menubar.getDisplays.call(this, "any", key)
+			.forEach((val) => {
+			let j, s, t, did, kid, unew, uwin, uobj, uarr, uopts;
+			const udisp = val;
+			let uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -6359,9 +6357,9 @@ JS9.Menubar.createMenus = function(){
 				if( uim.raw.header ){
 				    uim.displayAnalysis("text",
 					JS9.raw2FITS(uim.raw, {addcr: true}),
-					{title: "FITS Header: "+uim.id});
+					{title: `FITS Header: ${uim.id}`});
 				} else {
-				    JS9.error("no FITS header for " + uim.id);
+				    JS9.error(`no FITS header for ${uim.id}`);
 				}
 			    }
 			    break;
@@ -6370,10 +6368,10 @@ JS9.Menubar.createMenus = function(){
 				if( uim.hdus ){
 				    uim.displayAnalysis("text",
 						   JS9.hdus2Str(uim.hdus),
-						   {title: "FITS HDUs: "+uim.id,
+						   {title: `FITS HDUs: ${uim.id}`,
 						    winformat: "width=800px,height=200px,center=1,resize=1,scrolling=1"});
 				} else {
-				    JS9.error("no FITS header for " + uim.id);
+				    JS9.error(`no FITS header for ${uim.id}`);
 				}
 			    }
 			    break;
@@ -6392,12 +6390,12 @@ JS9.Menubar.createMenus = function(){
 			    }
 			    break;
 			case "pageid":
-			    s = sprintf("<center><p>pageid: %s</center>",
-					JS9.helper.pageid || "none");
+			    s = `<center><p>pageid: ${JS9.helper.pageid||"none"}</center>`;
+					
 			    t = "JS9 page id";
 			    // add display to title
 			    t += sprintf(JS9.IDFMT, udisp.id);
-			    JS9.lightWin("fileid" + JS9.uniqueID(),
+			    JS9.lightWin(`fileid${JS9.uniqueID()}`,
 					 "inline", s, t,
 					 JS9.lightOpts[JS9.LIGHTWIN].lineWin);
 			    break;
@@ -6479,8 +6477,8 @@ JS9.Menubar.createMenus = function(){
 			    break;
 			case "gather":
 			    if( udisp ){
-				if( (that.id.search(JS9.SUPERMENU) >= 0) &&
-				    !that.selectedDisplay 		 ){
+				if( (this.id.search(JS9.SUPERMENU) >= 0) &&
+				    !this.selectedDisplay 		 ){
 				    JS9.error("gather requires a selected display");
 				}
 				udisp.gather();
@@ -6490,16 +6488,16 @@ JS9.Menubar.createMenus = function(){
 			    // maybe its a supermenu request
 			    if( key.match(/^super_/) ){
 				unew = key.replace(/^super_/,"");
-				JS9.Menubar.onclick.call(that, unew);
+				JS9.Menubar.onclick.call(this, unew);
 				return;
 			    }
 			    // maybe it's a moveto request
 			    if( key.match(/^moveto_/) ){
 				unew = key.replace(/^moveto_/,"");
 				if( unew === "newdisp" ){
-				    uwin = "JS9_light" + JS9.uniqueID();
-			            $("#dhtmlwindowholder").arrive("#" + uwin,
-                                    {onceOnly: true}, function(){
+				    uwin = `JS9_light${JS9.uniqueID()}`;
+			            $("#dhtmlwindowholder").arrive(`#${uwin}`,
+                                    {onceOnly: true}, () => {
 					uim.moveToDisplay(uwin);
 				    });
 				    JS9.LoadWindow(null,
@@ -6563,19 +6561,19 @@ JS9.Menubar.createMenus = function(){
             }
 	});
 	// Edit: make button open the contextMenu
-	$("#editMenu" + that.id).on("mousedown", function(evt){
+	$(`#editMenu${this.id}`).on("mousedown", (evt) => {
             evt.preventDefault();
-            $("#editMenu" + that.id).contextMenu();
+            $(`#editMenu${this.id}`).contextMenu();
 	});
     // define contextMenu actions
     $.contextMenu({
-        selector: "#editMenu" + that.id,
+        selector: `#editMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var n=0;
-	    var items = {};
+        build: () => {
+	    let n=0;
+	    const items = {};
 	    // plugins
 	    items.edittitle1 = {
 		name: "Regions:",
@@ -6587,7 +6585,7 @@ JS9.Menubar.createMenus = function(){
 	    items.pasteReg = xname("paste to region pos");
 	    items.pastePos = xname("paste to current pos");
 	    items.undoRemove = xname("undo remove");
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.edittitle2 = {
 		name: "Position/Value:",
 		disabled: true
@@ -6595,11 +6593,11 @@ JS9.Menubar.createMenus = function(){
 	    items.copyWCSPos = xname("copy wcs pos");
 	    items.copyValPos = xname("copy value/pos");
 	    return {
-		callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		        var s, ulayer, utarget;
-			var udisp = val;
-			var uim = udisp.image;
+		callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		        let s, ulayer, utarget;
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -6663,34 +6661,34 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // viewMac: make button open the contextMenu
-    $("#viewMacMenu" + that.id).on("mousedown", function(evt){
+    $(`#viewMacMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#viewMacMenu" + that.id).contextMenu();
+        $(`#viewMacMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#viewMacMenu" + that.id,
+        selector: `#viewMacMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, menu;
-	    var items = {};
+        build: () => {
+	    let i, menu;
+	    const items = {};
 	    items.edittitle1 = {
 		name: "View:",
 		disabled: true
 	    };
-	    for(i=0; i<that.macmenus.length; i++){
-		menu = that.macmenus[i];
+	    for(i=0; i<this.macmenus.length; i++){
+		menu = this.macmenus[i];
 		items[menu.name] = {
-		    name: menu.title + " ..."
+		    name: `${menu.title  } ...`
 		};
 	    }
-	    return{
-		callback: function(key){
+	    return {
+		callback: (key) => {
 		    switch(key){
 		    default:
-			$("#" + key + "Menu" + that.id).contextMenu();
+			$(`#${key}Menu${this.id}`).contextMenu();
 			break;
 		    }
 		},
@@ -6700,25 +6698,25 @@ JS9.Menubar.createMenus = function(){
     });
     
     // View: make button open the contextMenu
-    $("#viewMenu" + that.id).on("mousedown", function(evt){
+    $(`#viewMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#viewMenu" + that.id).contextMenu();
+        $(`#viewMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#viewMenu" + that.id,
+        selector: `#viewMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, plugin, pname, pinst, key;
-	    var lastxclass="";
-	    var n = 0;
-	    var items = {};
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var tim = tdisp.image;
-	    var editResize = function(disp, obj){
-		var v1, v2, arr;
+        build: () => {
+	    let i, plugin, pname, pinst, key;
+	    let lastxclass="";
+	    let n = 0;
+	    const items = {};
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const tim = tdisp.image;
+	    const editResize = (disp, obj) => {
+		let v1, v2, arr;
 		delete tdisp.tmp.editingMenu;
 		if( obj.resize ){
 		    arr = obj.resize.split(/[\s,/]+/);
@@ -6749,11 +6747,11 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    };
-	    var keyResize = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
+	    const keyResize = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -6770,8 +6768,8 @@ JS9.Menubar.createMenus = function(){
 		});
 	    };
 	    // plugins
-	    items["sep" + n++] = {name: "Plugins:"};
-	    items["sep" + (n-1)].disabled = true;
+	    items[`sep${n++}`] = {name: "Plugins:"};
+	    items[`sep${n-1}`].disabled = true;
 	    for(i=0; i<JS9.plugins.length; i++){
 		plugin = JS9.plugins[i];
 		pname = plugin.name;
@@ -6790,7 +6788,7 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.vdispstitle = {
 		name: "Display Options:",
 		disabled: true
@@ -6855,7 +6853,7 @@ JS9.Menubar.createMenus = function(){
 		    name: "current raw data:"
 		};
 		for(i=0; i<tim.raws.length; i++){
-		    key = "rawlayer_" + tim.raws[i].id;
+		    key = `rawlayer_${tim.raws[i].id}`;
 		    items.vdisps.items.rawlayer.items[key] = {
 			name: tim.raws[i].id
 		    };
@@ -6863,7 +6861,7 @@ JS9.Menubar.createMenus = function(){
 			items.vdisps.items.rawlayer.items[key].icon = "sun";
 		    }
 		}
-		items.vdisps.items.rawlayer.items["sep" + n++] = "------";
+		items.vdisps.items.rawlayer.items[`sep${n++}`] = "------";
 		items.vdisps.items.rawlayer.items.rawlayer_remove = xname("remove");
 	    } else {
 		items.vdisps.items.rawlayer.disabled = true;
@@ -6894,11 +6892,11 @@ JS9.Menubar.createMenus = function(){
 		items.resizes.items.imagesize.disabled = true;
 	    }
 	    return {
-		callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		        var ii, uplugin, s;
-			var udisp = val;
-			var uim = udisp.image;
+		callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		        let ii, uplugin, s;
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -6980,9 +6978,9 @@ JS9.Menubar.createMenus = function(){
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var udisp = that.display;
-			var obj = {};
+		    show: (opt) => {
+			const udisp = this.display;
+			const obj = {};
 			if( udisp  ){
 			    obj.resize = sprintf("%d %d",
 						 udisp.width, udisp.height);
@@ -6990,9 +6988,9 @@ JS9.Menubar.createMenus = function(){
 			    JS9.jupyterFocus(".context-menu-item");
 			}
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
 			if( udisp ){
 			    // if a key was pressed, do the edit
 			    if( udisp.tmp.editingMenu ){
@@ -7007,33 +7005,33 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // Zoom: make button open the contextMenu
-    $("#zoomMenu" + that.id).on("mousedown", function(evt){
+    $(`#zoomMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#zoomMenu" + that.id).contextMenu();
+        $(`#zoomMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#zoomMenu" + that.id,
+        selector: `#zoomMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, zoom, zoomp, name, name2, nim, s1;
-	    var n = 0;
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var tim = tdisp.image;
-	    var editZoom = function(im, obj){
+        build: () => {
+	    let i, zoom, zoomp, name, name2, nim, s1;
+	    let n = 0;
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const tim = tdisp.image;
+	    const editZoom = (im, obj) => {
 		delete tdisp.tmp.editingMenu;
-		if( !isNaN(obj.zoom) ){
+		if( !Number.isNaN(obj.zoom) ){
 		    im.setZoom(obj.zoom);
 		}
 	    };
-	    var keyZoom = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
-		    var vim = vdisp.image;
+	    const keyZoom = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -7051,7 +7049,7 @@ JS9.Menubar.createMenus = function(){
 		    }
 		});
 	    };
-	    var items = {};
+	    const items = {};
 	    items.zoomtitle = {
 		name: "Zoom Factors:",
 		disabled: true
@@ -7059,8 +7057,8 @@ JS9.Menubar.createMenus = function(){
 	    for(i=JS9.imageOpts.zooms; i>=1; i--){
 		zoom = Math.pow(2,-i);
 		zoomp = Math.pow(2,i);
-		name = sprintf("zoom%s", zoom);
-		name2 = sprintf("zoom 1/%s", zoomp);
+		name = `zoom${zoom}`;
+		name2 = `zoom 1/${zoomp}`;
 		items[name] = xname(name2);
 		if( tim && (tim.rgb.sect.zoom === zoom) ){
 		    items[name].icon = "sun";
@@ -7068,8 +7066,8 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    for(i=0; i<=JS9.imageOpts.zooms; i++){
 		zoom = Math.pow(2,i);
-		name = sprintf("zoom%s", zoom);
-		name2 = sprintf("zoom %s", zoom);
+		name = `zoom${zoom}`;
+		name2 = `zoom ${zoom}`;
 		items[name] = xname(name2);
 		if( tim && (tim.rgb.sect.zoom === zoom) ){
 		    items[name].icon = "sun";
@@ -7080,7 +7078,7 @@ JS9.Menubar.createMenus = function(){
 		name: "other zoom:",
 		type: "text"
 	    };
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.zoomiotitle = {
 		name: "Zoom In/Out:",
 		disabled: true
@@ -7088,7 +7086,7 @@ JS9.Menubar.createMenus = function(){
 	    items.zoomIn = xname("zoom in");
 	    items.zoomOut = xname("zoom out");
 	    items.zoomToFit = xname("zoom to fit");
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.panzoomtitle = {
 		name: "Pand and Zoom:",
 		disabled: true
@@ -7106,10 +7104,10 @@ JS9.Menubar.createMenus = function(){
 	    for(i=0, nim=0; i<JS9.images.length; i++){
 		if( JS9.images[i].raw.wcs ){
 		    if( (tim === JS9.images[i]) &&
-			(that.id.search(JS9.SUPERMENU) < 0) ){
+			(this.id.search(JS9.SUPERMENU) < 0) ){
 			continue;
 		    }
-		    s1 = "alignpanzoom_" + JS9.images[i].id;
+		    s1 = `alignpanzoom_${JS9.images[i].id}`;
 		    items.alignpanzoom.items[s1] = {
 			name: JS9.images[i].id
 		    };
@@ -7120,17 +7118,17 @@ JS9.Menubar.createMenus = function(){
 		items.alignpanzoom.items.notasks = {
 		    name: "[none]",
 		    disabled: true,
-		    events: {keyup: function(){return;}}
+		    events: {keyup() {return;}}
 		};
 	    } else {
 		items.alignpanzoom.disabled = false;
 	    }
 	    items.reset = xname("reset pan/zoom");
 	    return {
-		callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var udisp = val;
-			var uim = udisp.image;
+		callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -7166,10 +7164,10 @@ JS9.Menubar.createMenus = function(){
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var udisp = that.display;
-			var uim = udisp.image;
-			var obj = {};
+		    show: (opt) => {
+			const udisp = this.display;
+			const uim = udisp.image;
+			const obj = {};
 			if( uim  ){
 			    obj.zoom =
 				String(uim.rgb.sect.zoom);
@@ -7177,10 +7175,10 @@ JS9.Menubar.createMenus = function(){
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
-			var uim = udisp.image;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
+			const uim = udisp.image;
 			if( uim ){
 			    // if a key was pressed, do the edit
 			    if( udisp.tmp.editingMenu ){
@@ -7195,26 +7193,26 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // Scale: make button open the contextMenu
-    $("#scaleMenu" + that.id).on("mousedown", function(evt){
+    $(`#scaleMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#scaleMenu" + that.id).contextMenu();
+        $(`#scaleMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#scaleMenu" + that.id,
+        selector: `#scaleMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, s1, s2;
-	    var plugin, pname, pinst;
-	    var lastxclass="";
-	    var n = 0;
-	    var items = {};
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var editScale = function(im, obj){
-		var dval1 = im.params.scalemin;
-		var dval2 = im.params.scalemax;
+        build: () => {
+	    let i, s1, s2;
+	    let plugin, pname, pinst;
+	    let lastxclass="";
+	    let n = 0;
+	    const items = {};
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const editScale = (im, obj) => {
+		let dval1 = im.params.scalemin;
+		let dval2 = im.params.scalemax;
 		delete tdisp.tmp.editingMenu;
 		if( JS9.isNumber(obj.scalemin) ){
 		    dval1 = parseFloat(obj.scalemin);
@@ -7225,12 +7223,12 @@ JS9.Menubar.createMenus = function(){
 		im.setScale(dval1, dval2);
 		im.displayImage("colors");
 	    };
-	    var keyScale = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
-		    var vim = vdisp.image;
+	    const keyScale = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -7258,7 +7256,7 @@ JS9.Menubar.createMenus = function(){
 		    items[s1].icon = "sun";
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.scalelims = {
 		name: "Data Limits:",
 		disabled: true
@@ -7273,7 +7271,7 @@ JS9.Menubar.createMenus = function(){
 		name: "high:",
 		type: "text"
 	    };
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    // plugins
 	    for(i=0; i<JS9.plugins.length; i++){
 		plugin = JS9.plugins[i];
@@ -7294,11 +7292,11 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    return {
-                callback: function(key){
-		    var ii, uplugin;
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var udisp = val;
-			var uim = udisp.image;
+                callback: (key) => {
+		    let ii, uplugin;
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -7321,10 +7319,10 @@ JS9.Menubar.createMenus = function(){
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var udisp = that.display;
-			var uim = udisp.image;
-			var obj = {};
+		    show: (opt) => {
+			const udisp = this.display;
+			const uim = udisp.image;
+			const obj = {};
 			if( uim  ){
 			    obj.scalemin =
 				JS9.floatToString(uim.params.scalemin);
@@ -7334,10 +7332,10 @@ JS9.Menubar.createMenus = function(){
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
-			var uim = udisp.image;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
+			const uim = udisp.image;
 			if( uim ){
 			    // if a key was pressed, do the edit
 			    if( udisp.tmp.editingMenu ){
@@ -7352,30 +7350,30 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // Color: make button open the contextMenu
-    $("#colorMenu" + that.id).on("mousedown", function(evt){
+    $(`#colorMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#colorMenu" + that.id).contextMenu();
+        $(`#colorMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#colorMenu" + that.id,
+        selector: `#colorMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, s1, s2, arr;
-	    var n = 0;
-	    var items = {};
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var editColor = function(im, obj){
+        build: () => {
+	    let i, s1, s2, arr;
+	    let n = 0;
+	    const items = {};
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const editColor = (im, obj) => {
 		delete tdisp.tmp.editingMenu;
-		if( obj.contrast && !isNaN(obj.contrast) ){
+		if( obj.contrast && !Number.isNaN(obj.contrast) ){
 		    im.params.contrast = parseFloat(obj.contrast);
 		}
-		if( obj.bias && !isNaN(obj.bias) ){
+		if( obj.bias && !Number.isNaN(obj.bias) ){
 		    im.params.bias = parseFloat(obj.bias);
 		}
-		if( !isNaN(obj.opacity) ){
+		if( !Number.isNaN(obj.opacity) ){
 		    if( obj.opacity !== "" ){
 			im.params.opacity = parseFloat(obj.opacity);
 		    } else {
@@ -7384,12 +7382,12 @@ JS9.Menubar.createMenus = function(){
 		}
 		im.displayImage("colors");
 	    };
-	    var keyColor = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
-		    var vim = vdisp.image;
+	    const keyColor = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -7436,7 +7434,7 @@ JS9.Menubar.createMenus = function(){
 		    }
                 }
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.imfilter = {
 		name: "image filters",
 		items: {
@@ -7452,12 +7450,12 @@ JS9.Menubar.createMenus = function(){
 		if( arr[i] === "convolve" ){
 		    continue;
 		}
-		s1 = "imfilter_" + arr[i];
+		s1 = `imfilter_${arr[i]}`;
 		items.imfilter.items[s1] = {
 		    name: arr[i]
 		};
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.contrast = {
 		events: {keyup: keyColor},
 		name: "contrast:",
@@ -7474,10 +7472,10 @@ JS9.Menubar.createMenus = function(){
 		type: "text"
 	    };
 	    items.reset = xname("reset contrast/bias");
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.loadcmap = xname("load ...");
 	    items.savecmap = xname("save");
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.invert = xname("invert");
 	    if( tdisp.image && tdisp.image.params.invert ){
 		items.invert.icon = "sun";
@@ -7487,10 +7485,10 @@ JS9.Menubar.createMenus = function(){
 		items.rgb.icon = "sun";
 	    }
 	    return {
-		callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var udisp = val;
-			var uim = udisp.image;
+		callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -7515,10 +7513,10 @@ JS9.Menubar.createMenus = function(){
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var udisp = that.display;
-			var uim = udisp.image;
-			var obj = {};
+		    show: (opt) => {
+			const udisp = this.display;
+			const uim = udisp.image;
+			const obj = {};
 			if( uim  ){
 			    obj.contrast = String(uim.params.contrast);
 			    obj.bias = String(uim.params.bias);
@@ -7528,10 +7526,10 @@ JS9.Menubar.createMenus = function(){
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
-			var uim = udisp.image;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
+			const uim = udisp.image;
 			if( uim ){
 			    // if a key was pressed, do the edit
 			    if( udisp.tmp.editingMenu ){
@@ -7546,22 +7544,22 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // Region: make button open the contextMenu
-    $("#regionMenu" + that.id).on("mousedown", function(evt){
+    $(`#regionMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#regionMenu" + that.id).contextMenu();
+        $(`#regionMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#regionMenu" + that.id,
+        selector: `#regionMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, s1;
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var tim = tdisp.image;
-	    var items = {};
-	    var getregval = function(key, val){
+        build: () => {
+	    let i, s1;
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const tim = tdisp.image;
+	    const items = {};
+	    const getregval = (key, val) => {
 		switch(key){
 		case "color":
 		    // lookup color
@@ -7597,14 +7595,14 @@ JS9.Menubar.createMenus = function(){
 		}
 		return val;
 	    };
-	    var editRegions = function(im, obj, which){
-		var key, val;
-		var opts = {};
+	    const editRegions = (im, obj, which) => {
+		let key, val;
+		const opts = {};
 		if( which ){
 		    key = which.substring(3);
 		    val = obj[which];
-		    if( key && val && im.tmp["editingReg" + which] ){
-			delete im.tmp["editingReg" + which];
+		    if( key && val && im.tmp[`editingReg${which}`] ){
+			delete im.tmp[`editingReg${which}`];
 			val = getregval(key, val);
 			if( val ){
 			    opts[key] = val;
@@ -7616,8 +7614,8 @@ JS9.Menubar.createMenus = function(){
 			if( obj.hasOwnProperty(which) ){
 			    key = which.substring(3);
 			    val = obj[which];
-			    if( key && val && im.tmp["editingReg" + which] ){
-				delete im.tmp["editingReg" + which];
+			    if( key && val && im.tmp[`editingReg${which}`] ){
+				delete im.tmp[`editingReg${which}`];
 				val = getregval(key, val);
 				if( val ){
 				    opts[key] = val;
@@ -7630,13 +7628,13 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    };
-	    var keyRegions = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var id;
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
-		    var vim = vdisp.image;
+	    const keyRegions = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    let id;
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -7653,7 +7651,7 @@ JS9.Menubar.createMenus = function(){
 			break;
 		    default:
 			if( vim && id ){
-			    vim.tmp["editingReg"+id] = true;
+			    vim.tmp[`editingReg${id}`] = true;
 			}
 			break;
 		    }
@@ -7762,9 +7760,9 @@ JS9.Menubar.createMenus = function(){
 	    if( tim && (JS9.images.length > 1) ){
 		for(i=0; i<JS9.images.length; i++){
 		    if( tim !== JS9.images[i] ){
-			s1 = "copyto_" + JS9.images[i].id;
+			s1 = `copyto_${JS9.images[i].id}`;
 			items.copyto.items[s1] = xname(JS9.images[i].id);
-			s1 = "copyselto_" + JS9.images[i].id;
+			s1 = `copyselto_${JS9.images[i].id}`;
 			items.selectops.items.copySelReg.items[s1] =
 			    xname(JS9.images[i].id);
 		    }
@@ -7781,11 +7779,11 @@ JS9.Menubar.createMenus = function(){
 		items.listRegions.disabled = true;
 	    }
 	    return {
-		callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var uid, ulayer, utarget, uname, uopts;
-			var udisp = val;
-			var uim = udisp.image;
+		callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			let uid, ulayer, utarget, uname, uopts;
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -7864,7 +7862,7 @@ JS9.Menubar.createMenus = function(){
 				// maybe it's a copyto request
 				if( key.match(/^saveas_/) ){
 				    uid = key.replace(/^saveas_/,"");
-				    uname = "js9." + uid;
+				    uname = `js9.${uid}`;
 				    uopts = {type: uid};
 				    uim.saveRegions(uname, "all", uopts);
 				    return;
@@ -7887,15 +7885,15 @@ JS9.Menubar.createMenus = function(){
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var obj = {color: ""};
+		    show: (opt) => {
+			const obj = {color: ""};
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
-			var uim = udisp.image;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
+			const uim = udisp.image;
 			if( uim ){
 			    // if a key was pressed, do the edit
 			    obj = $.contextMenu.getInputValues(opt);
@@ -7908,34 +7906,34 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // WCS: make button open the contextMenu
-    $("#wcsMenu" + that.id).on("mousedown", function(evt){
+    $(`#wcsMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#wcsMenu" + that.id).contextMenu();
+        $(`#wcsMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#wcsMenu" + that.id,
+        selector: `#wcsMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, s1, s2, key, altwcs;
-	    var n=0, nwcs=0, got=0;
-	    var items = {};
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var tim = tdisp.image;
-	    var editRotate = function(im, obj){
+        build: () => {
+	    let i, s1, s2, key, altwcs;
+	    let n=0, nwcs=0, got=0;
+	    const items = {};
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const tim = tdisp.image;
+	    const editRotate = (im, obj) => {
 		delete tdisp.tmp.editingMenu;
 		if( JS9.isNumber(obj.rot) ){
 		    im.rotateData(parseFloat(obj.rot));
 		}
 	    };
-	    var keyRotate = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
-		    var vim = vdisp.image;
+	    const keyRotate = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -7971,7 +7969,7 @@ JS9.Menubar.createMenus = function(){
 		s1 = "native";
 		items[s1].icon = "sun";
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.wcsutitle = {
 		name: "WCS Units:",
 		disabled: true
@@ -7984,7 +7982,7 @@ JS9.Menubar.createMenus = function(){
 		    items[s1].icon = "sun";
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.altwcs = {
 		name: "alternate wcs",
 		items: {
@@ -8000,10 +7998,10 @@ JS9.Menubar.createMenus = function(){
 		altwcs = tim.raw.altwcs;
 		for(key in altwcs ){
 		    if( altwcs.hasOwnProperty(key) ){
-			s1 = "altwcs_" + key;
+			s1 = `altwcs_${key}`;
 			if( altwcs[key].header.WCSNAME ){
-			    s2 = altwcs[key].header.WCSNAME + 
-				"    (" + key + ")";
+			    s2 = `${altwcs[key].header.WCSNAME  
+				}    (${key})`;
 			} else {
 			    s2 = key;
 			}
@@ -8020,11 +8018,11 @@ JS9.Menubar.createMenus = function(){
 		    items.altwcs.items.notasks = {
 			name: "[none]",
 			disabled: true,
-			events: {keyup: function(){return;}}
+			events: {keyup() {return;}}
 		    };
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.reproject = {
 		name: "wcs reproject ...",
 		items: {
@@ -8037,10 +8035,10 @@ JS9.Menubar.createMenus = function(){
 	    for(i=0, nwcs=0; i<JS9.images.length; i++){
 		if( JS9.images[i].raw.wcs ){
 		    if( (tim === JS9.images[i]) &&
-			(that.id.search(JS9.SUPERMENU) < 0) ){
+			(this.id.search(JS9.SUPERMENU) < 0) ){
 			continue;
 		    }
-		    s1 = "reproject_" + JS9.images[i].id;
+		    s1 = `reproject_${JS9.images[i].id}`;
 		    items.reproject.items[s1] = {
 			name: JS9.images[i].id
 		    };
@@ -8051,11 +8049,11 @@ JS9.Menubar.createMenus = function(){
 		items.reproject.items.notasks = {
 		    name: "[none]",
 		    disabled: true,
-		    events: {keyup: function(){return;}}
+		    events: {keyup() {return;}}
 		};
 	    } else {
 		items.reproject.disabled = false;
-		items.reproject.items["sep" + n++] = "------";
+		items.reproject.items[`sep${n++}`] = "------";
 		items.reproject.items.reproject_wcsalign = {
 		    name: "display wcs-aligned"
 		};
@@ -8063,13 +8061,13 @@ JS9.Menubar.createMenus = function(){
 		    items.reproject.items.reproject_wcsalign.icon = "sun";
 		}
 	    }
-	    items.reproject.items["sep" + n++] = "------";
+	    items.reproject.items[`sep${n++}`] = "------";
 	    items.reproject.items.rotatetitle = {
 		name: "by rotating the image:",
 		disabled: true
 	    };
 	    items.reproject.items.reproject_northup = {
-		name: "so that north is up"
+		name: "so north is up"
 	    };
 	    items.reproject.items.rot = {
 		events: {keyup: keyRotate},
@@ -8079,17 +8077,17 @@ JS9.Menubar.createMenus = function(){
 	    if( !tim || !tim.raw || !tim.raw.header || !tim.raw.wcsinfo ){
 		items.reproject.disabled = true;
 	    }
-	    items.reproject.items["sep" + n++] = "------";
+	    items.reproject.items[`sep${n++}`] = "------";
 	    items.reproject.items.reproject_revert = {
 		name: "revert"
 	    };
 	    return {
-                callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var file, s;
-			var rexp = new RegExp(key);
-			var udisp = val;
-			var uim = udisp.image;
+                callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			let file, s;
+			const rexp = new RegExp(key);
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -8131,26 +8129,26 @@ JS9.Menubar.createMenus = function(){
 				uim.setWCSUnits(key);
 				uim.updateShapes("regions", "all", "wcs");
 			    } else {
-				JS9.error("unknown wcs sys/units: " + key);
+				JS9.error(`unknown wcs sys/units: ${key}`);
 			    }
 			}
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var udisp = that.display;
-			var uim = udisp.image;
-			var obj = {};
+		    show: (opt) => {
+			const udisp = this.display;
+			const uim = udisp.image;
+			const obj = {};
 			if( uim ){
 			    obj.rot = "";
 			    $.contextMenu.setInputValues(opt, obj);
 			    JS9.jupyterFocus(".context-menu-item");
 			}
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
-			var uim = udisp.image;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
+			const uim = udisp.image;
 			if( uim ){
 			    obj = $.contextMenu.getInputValues(opt);
 			    // if a key was pressed, do the edit
@@ -8165,27 +8163,27 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // ANALYSIS: make button open the contextMenu
-    $("#analysisMenu" + that.id).on("mousedown", function(evt){
+    $(`#analysisMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#analysisMenu" + that.id).contextMenu();
+        $(`#analysisMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#analysisMenu" + that.id,
+        selector: `#analysisMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, j, s, apackages, atasks;
-	    var plugin, pinst, pname;
-	    var ntask = 0;
-	    var n = 0;
+        build: () => {
+	    let i, j, s, apackages, atasks;
+	    let plugin, pinst, pname;
+	    let ntask = 0;
+	    let n = 0;
 	    // var m = 0;
-	    var items = {};
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var im = tdisp.image;
-	    var lastxclass="";
-	    var editAnalysis = function(im, obj){
+	    const items = {};
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const im = tdisp.image;
+	    let lastxclass="";
+	    const editAnalysis = (im, obj) => {
 		delete tdisp.tmp.editingMenu;
 		obj.sigma = obj.sigma || "0";
 		if( obj.sigma === "none" ){
@@ -8195,12 +8193,12 @@ JS9.Menubar.createMenus = function(){
 		catch(e){ im.params.sigma = 0; }
 		im.gaussBlurData(im.params.sigma);
 	    };
-	    var keyAnalysis = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
-		    var vim = vdisp.image;
+	    const keyAnalysis = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -8225,11 +8223,11 @@ JS9.Menubar.createMenus = function(){
 		    if( !pinst || pinst.winHandle ){
 			if( plugin.xclass !== lastxclass ){
 			    if( n > 0 ){
-				items["sep" + n++] = "------";
+				items[`sep${n++}`] = "------";
 			    }
-			    items["sep" + n++] =
-				{name: plugin.xclass + " Plugins:"};
-			    items["sep" + (n-1)].disabled = true;
+			    items[`sep${n++}`] =
+				{name: `${plugin.xclass} Plugins:`};
+			    items[`sep${n-1}`].disabled = true;
 			}
 			lastxclass = plugin.xclass;
 			items[pname] = {
@@ -8245,7 +8243,7 @@ JS9.Menubar.createMenus = function(){
 	    // no server side analysis for all-in-one configuration
 	    if( !JS9.allinone ){
 		if( n > 0 ){
-		    items["sep" + n++] = "------";
+		    items[`sep${n++}`] = "------";
 		}
 	        items.localtitle = {
 		    name: "Client-side Analysis:",
@@ -8278,7 +8276,7 @@ JS9.Menubar.createMenus = function(){
 		    name: "Blur, equivalent sigma:",
 		    type: "text"
 		};
-		items["sep" + n++] = "------";
+		items[`sep${n++}`] = "------";
 	        items.remotetitle = {
 		    name: "Server-side Analysis:",
 		    disabled: true
@@ -8295,9 +8293,9 @@ JS9.Menubar.createMenus = function(){
 			    // separator
 			    if( atasks[i].rtype &&
 				atasks[i].rtype.match(/^---/) ){
-				items["sep" + n++] = "------";
+				items[`sep${n++}`] = "------";
 				items[atasks[i].name] = {
-				    name: atasks[i].title + ":",
+				    name: `${atasks[i].title}:`,
 				    disabled: true
 				};
 				continue;
@@ -8318,7 +8316,7 @@ JS9.Menubar.createMenus = function(){
 		    items.notasks = {
 			name: "[none]",
 			disabled: true,
-			events: {keyup: function(){return;}}
+			events: {keyup() {return;}}
 		    };
 		    if( JS9.globalOpts.loadProxy &&
 			im && im.raw && im.raw.hdu && im.raw.hdu.vfile ){
@@ -8332,7 +8330,7 @@ JS9.Menubar.createMenus = function(){
 			}
 		    }
 		}
-		items["sep" + n++] = "------";
+		items[`sep${n++}`] = "------";
 		items.sconfig = {
 		    name: "server-side params ...",
 		    items: {
@@ -8349,11 +8347,11 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    return {
-                callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var a, s, did, ii, tplugin;
-			var udisp = val;
-			var uim = udisp.image;
+                callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			let a, s, did, ii, tplugin;
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -8382,7 +8380,7 @@ JS9.Menubar.createMenus = function(){
 				s = JS9.globalOpts.plot3d.cube;
 				JS9.CountsInRegions("$sregions", "$bregions",
 						    {lightwin: true,
-						    cmdswitches: "-c " + s},
+						    cmdswitches: `-c ${s}`},
 						    {display: udisp.id});
 				break;
 			    case "plot3d":
@@ -8392,7 +8390,7 @@ JS9.Menubar.createMenus = function(){
 			    case "dpath":
 				// call this once window is loaded
 			        $("#dhtmlwindowholder").arrive("#dataPathForm",
-							       {onceOnly: true}, function(){
+							       {onceOnly: true}, () => {
 								   $('#dataPath').val(JS9.globalOpts.dataPath);
 							       });
 				did = uim.displayAnalysis("textline",
@@ -8405,7 +8403,7 @@ JS9.Menubar.createMenus = function(){
 			    case "fpath":
 				// call this once window is loaded
 			        $("#dhtmlwindowholder").arrive("#filePathForm",
-							       {onceOnly: true}, function(){
+							       {onceOnly: true}, () => {
 								   $('#filePath').val(uim.file);
 							       });
 				did = uim.displayAnalysis("textline",
@@ -8430,7 +8428,7 @@ JS9.Menubar.createMenus = function(){
 				    if( a.purl ){
 					did = uim.displayAnalysis("params",
 								  JS9.InstallDir(a.purl),
-								  {title: a.title+": "+uim.fitsFile,
+								  {title: `${a.title}: ${uim.fitsFile}`,
 								   winformat: a.pwin});
 					// save info for running the task
 					$(did).data("dispid", udisp.id)
@@ -8446,20 +8444,20 @@ JS9.Menubar.createMenus = function(){
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var udisp = that.display;
-			var uim = udisp.image;
-			var obj = {};
+		    show:(opt) => {
+			const udisp = this.display;
+			const uim = udisp.image;
+			const obj = {};
 			if( uim  ){
 			    obj.sigma = String(uim.params.sigma);
 			}
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
-			var uim = udisp.image;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
+			const uim = udisp.image;
 			if( uim ){
 			    // if a key was pressed, do the edit
 			    if( udisp.tmp.editingMenu ){
@@ -8474,21 +8472,21 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // HELP: make button open the contextMenu
-    $("#helpMenu" + that.id).on("mousedown", function(evt){
+    $(`#helpMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#helpMenu" + that.id).contextMenu();
+        $(`#helpMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#helpMenu" + that.id,
+        selector: `#helpMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var t, key, val;
-	    var n = 1;
-	    var last = "";
-	    var items = {};
+        build: () => {
+	    let t, key, val;
+	    let n = 1;
+	    let last = "";
+	    const items = {};
 	    items.js9help = {
 		name: "General help ...", 
 		items: {
@@ -8510,7 +8508,7 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.pluginhelp = {
 		name: "JS9 plugins ...", 
 		items: {
@@ -8541,14 +8539,14 @@ JS9.Menubar.createMenus = function(){
 			continue;
 		    }
 		    if( (last !== "") && (val.type !== last) ){
-			items["sep" + n++] = "------";
+			items[`sep${n++}`] = "------";
 			if( val.heading ){
-			    t = val.heading + " plugins";
-			    items["sep" + n++] = {
-				name: t + " ...",
+			    t = `${val.heading  } plugins`;
+			    items[`sep${n++}`] = {
+				name: `${t} ...`,
 				items: {
 				    title: {
-					name: t + ":",
+					name: `${t}:`,
 					disabled: true
 				    }
 				}
@@ -8556,16 +8554,16 @@ JS9.Menubar.createMenus = function(){
 			}
 		    }
 		    last = val.type;
-		    items["sep" + (n-1)].items[key] = {name: val.title};
+		    items[`sep${n-1}`].items[key] = {name: val.title};
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.about = xname("about JS9");
-	    return{
-		callback: function(key){
+	    return {
+		callback: (key) => {
 		    switch(key){
 		    case "about":
-			alert(sprintf("JS9: astronomical image display everywhere\nversion: %s\nEric Mandel, Alexey Vikhlinin\ncontact: eric@cfa.harvard.edu\n%s", JS9.VERSION, JS9.COPYRIGHT));
+			alert(`JS9: astronomical image display everywhere\nversion: ${JS9.VERSION}\nEric Mandel, Alexey Vikhlinin\ncontact: eric@cfa.harvard.edu\n${JS9.COPYRIGHT}`);
 			break;
 		    default:
 			JS9.DisplayHelp(key);
@@ -8582,7 +8580,7 @@ JS9.Menubar.createMenus = function(){
 
 // initialize the menu
 JS9.Menubar.init = function(width, height){
-    var i, j, m, ss, tt, menu, html;
+    let i, j, m, ss, tt, menu, html;
     this.issuper = this.id.search(JS9.SUPERMENU) >= 0;
     // save object in super array, if necessary
     if( this.issuper ){
@@ -8633,30 +8631,30 @@ JS9.Menubar.init = function(width, height){
 		    if( this.syle === "classic" ){
 			ss = ss.slice(1);
 			if( ss[1] !== "#" ){
-			    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"' disabled='disabled'>"+tt+" </button>";
+			    html += `<button type='button' id='${ss}Menu@@ID@@' class='${this.buttonClass}' disabled='disabled'>${tt} </button>`;
 			}
 		    }
 		} else {
 		    if( this.style === "classic" ){
-			html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button>";
+			html += `<button type='button' id='${ss}Menu@@ID@@' class='${this.buttonClass}'>${tt}</button>`;
 		    } else {
 			switch(ss){
 			case "file":
 			case "edit":
-			    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button>";
+			    html += `<button type='button' id='${ss}Menu@@ID@@' class='${this.buttonClass}'>${tt}</button>`;
 			    break;
 			case "help":
-			    html += "<span style='float:right'><button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button></span>";
+			    html += `<span style='float:right'><button type='button' id='${ss}Menu@@ID@@' class='${this.buttonClass}'>${tt}</button></span>`;
 			    break;
 			default:
 			    if( !this.macmenus ){
-				html += "<span style='position:relative;'><button type='button' id='"+"viewMacMenu@@ID@@' class='"+ this.buttonClass +"'>"+"View"+"</button>";
+				html += `${"<span style='position:relative;'><button type='button' id='"+"viewMacMenu@@ID@@' class='"}${this.buttonClass}'>`+`View`+`</button>`;
 				this.macmenus = [];
 			    }
 			    if( tt === "View" ){
 				tt = "Plugins";
 			    }
-			    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"' style='position:absolute;top:0px;left:0px;visibility:hidden;zindex:-1'>"+""+"</button>";
+			    html += `<button type='button' id='${ss}Menu@@ID@@' class='${this.buttonClass}' style='position:absolute;top:0px;left:0px;visibility:hidden;zindex:-1'>`+``+`</button>`;
 			    this.macmenus.push({name: ss, title: tt});
 			    break;
 			}
@@ -8679,11 +8677,11 @@ JS9.Menubar.init = function(width, height){
 		continue;
 	    }
 	    if( menu.imageTitle ){
-		m = "<div class='JS9MenubarUserImage'><img src='" + menu.imageTitle + "' alt='" + menu.title + "' class='JS9MenubarUserImage' >" + "</div>";
+		m = `<div class='JS9MenubarUserImage'><img src='${menu.imageTitle  }' alt='${menu.title  }' class='JS9MenubarUserImage' >` + `</div>`;
 	    } else {
 		m = menu.title;
 	    }
-	    html += "<button type='button' id='"+menu.name+"UserMenu@@ID@@' class='"+ this.buttonClass +"'>" + m + "</button>";
+	    html += `<button type='button' id='${menu.name}UserMenu@@ID@@' class='${this.buttonClass}'>${m}</button>`;
 
 	}
     }
@@ -8761,23 +8759,24 @@ JS9.Panner.opts = {
 
 // call a JS9 routine from a button in the panner plugin toolbar
 // the plugin instantiation saves the display id in the toolbar div
-JS9.Panner.bcall = function(which, cmd, arg1){
-    var dispid, pinst, im;
+JS9.Panner.bcall = function(...args){
+    let dispid, pinst, im;
+    let [which, cmd, arg1] = args;
     // the button plugintoolbar div has data containing the id of the display
     dispid = $(which).closest("div[class^=JS9PluginToolbar]").data("displayid");
     if( dispid ){
 	im = JS9.getImage(JS9.getDynamicDisplayOr(dispid));
 	pinst = im.display.pluginInstances.JS9Panner;
     } else {
-	JS9.error("can't find display for cmd: "+cmd);
+	JS9.error(`can't find display for cmd: ${cmd}`);
     }
     if( !im ){
-	JS9.error("can't find image for cmd: "+cmd);
+	JS9.error(`can't find image for cmd: ${cmd}`);
     }
     switch(cmd){
     case "zoomPanner":
-	if( arguments.length < 3 ){
-	    JS9.error("missing argument(s) for cmd: "+cmd);
+	if( args.length < 3 ){
+	    JS9.error(`missing arg(s) for cmd: ${cmd}`);
 	}
 	try{
 	    JS9.Panner.zoom.call(pinst, im, arg1);
@@ -8856,14 +8855,13 @@ JS9.Panner.init = function(width, height){
 // sort of from: tksao1.0/frame/truecolor.c, but not really
 // part of panner plugin
 JS9.Panner.create = function(im){
-    var that = this;
-    var panDisp, panner, sect, img;
-    var x0, y0, xblock, yblock;
-    var i, j, ii, jj, kk;
-    var ioff, ooff;
-    var width, height;
-    var pos, ix, iy;
-    var dlayer;
+    let panDisp, panner, sect, img;
+    let x0, y0, xblock, yblock;
+    let i, j, ii, jj, kk;
+    let ioff, ooff;
+    let width, height;
+    let pos, ix, iy;
+    let dlayer;
     // sanity check
     if( !im || !im.raw || !im.display.pluginInstances.JS9Panner ){
 	return;
@@ -8968,13 +8966,13 @@ JS9.Panner.create = function(im){
     }
     dlayer = this.display.newShapeLayer("panner", JS9.Panner.opts, this.divjq);
     // add a callback to pan when the panning rectangle is moved
-    dlayer.canvas.on("object:modified", function(opts){
-	var im, disp;
-	disp = JS9.getDynamicDisplayOr(that.display);
+    dlayer.canvas.on("object:modified", (opts) => {
+	let im, disp;
+	disp = JS9.getDynamicDisplayOr(this.display);
 	if( disp && disp.image ){
 	    im = disp.image;
 	} else {
-	    im = that.display.image;
+	    im = this.display.image;
 	}
 	if( im ){
 	    pos = opts.target.getCenterPoint();
@@ -8998,11 +8996,11 @@ JS9.Panner.create = function(im){
 
 // display the image on the panner canvas
 JS9.Panner.disp = function(im){
-    var panDisp, panner, sect, tblkx, tblky;
-    var obj, nx, ny, nwidth, nheight, cenx, ceny;
-    var npos1, npos2, nobj, nobjt;
-    var epos1, epos2, eobj, eobjt;
-    var FUDGE = 1;
+    let panDisp, panner, sect, tblkx, tblky;
+    let obj, nx, ny, nwidth, nheight, cenx, ceny;
+    let npos1, npos2, nobj, nobjt;
+    let epos1, epos2, eobj, eobjt;
+    const FUDGE = 1;
     // sanity check
     // only display if we have a panner present
     if( !im || !im.display.pluginInstances.JS9Panner ||
@@ -9131,7 +9129,7 @@ JS9.Panner.disp = function(im){
 
 // zoom the rectangle inside the panner (RGB) image
 JS9.Panner.zoom = function(im, zval){
-    var panner, ozoom, nzoom;
+    let panner, ozoom, nzoom;
     // sanity check
     if( !im || !im.panner || !im.display.pluginInstances.JS9Panner ){
 	return;
@@ -9166,7 +9164,7 @@ JS9.Panner.zoom = function(im, zval){
 
 // dynamic selection change
 JS9.Panner.dysel = function(im){
-    var panner;
+    let panner;
     if( im ){
 	panner = im.display.pluginInstances.JS9Panner;
 	if( panner && panner.isDynamic ){
@@ -9177,7 +9175,7 @@ JS9.Panner.dysel = function(im){
 
 // clear the panner
 JS9.Panner.clear = function(im){
-    var panner, display;
+    let panner, display;
     if( im ){
 	display = JS9.getDynamicDisplayOr(this.display);
 	panner = im.display.pluginInstances.JS9Panner;
@@ -9209,7 +9207,7 @@ JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
  * preferences plugin (14 April 2015)
  */
 
-/*global $, JS9, sprintf, ddtabcontent */
+/*global $, JS9, ddtabcontent */
 
 "use strict";
 
@@ -9314,7 +9312,7 @@ JS9.Prefs.imagesSchema = {
 	},
 	"disable": {
 	    "type": "mobject",
-	    "helper": "array of core functions to disable"
+	    "helper": "array of core funcs to disable"
 	}
     }
 };
@@ -9747,19 +9745,18 @@ JS9.Prefs.sources = [
 
 // init preference plugin
 JS9.Prefs.init = function(){
-    var i, s, obj, key, props, sources, source, id, pid, html, prompt;
+    let i, s, obj, key, props, sources, source, id, pid, html, prompt;
     // create the div containing one tab for each of the sources
     sources = JS9.Prefs.sources;
-    pid = this.id + 'prefsTabs';
+    pid = `${this.id}prefsTabs`;
     html = "<div style='padding: 8px'>";
-    html += sprintf("<div id='%s' class='indentmenu'>\n", pid);
+    html += `<div id='${pid}' class='indentmenu'>\n`;
     html += "<ul>";
     // create a tab for each source
     for(i=0; i<sources.length; i++){
 	source = sources[i];
 	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
-	html += sprintf("  <li><a href='#' rel='%s'>%s</a></li>\n", 
-			id + "Div", source.name);
+	html += `  <li><a href='#' rel='${id}Div'>${source.name}</a></li>\n`;
     }
     html += "</ul>";
     html += "<br style='clear:left'></div></div><p>\n";
@@ -9839,15 +9836,14 @@ JS9.Prefs.init = function(){
 	default:
 	    break;
 	}
-	html += sprintf("<div id='%s' class='tabcontent'>", id + "Div");
-	html += sprintf("<form id='%s' class='js9AnalysisForm' style='max-height: %spx; overflow: hidden'>", id + "Form", this.height-90);
-	html += sprintf("<center><b>%s</b></center><p>",
-			source.schema.description);
+	html += `<div id='${id}Div' class='tabcontent'>`;
+	html += `<form id='${id}Form' class='js9AnalysisForm' style='max-height: ${this.height-90}px; overflow: hidden'>`;
+	html += `<center><b>${source.schema.description}</b></center><p>`;
 	props = source.schema.properties;
 	for( key in props ){
 	    if( props.hasOwnProperty(key) ){
 		obj = props[key];
-		prompt = obj.prompt || key + ":";
+		prompt = obj.prompt || `${key}:`;
 		switch(obj.type){
 		case "boolean":
 		    if( source.data[key] ){
@@ -9855,7 +9851,7 @@ JS9.Prefs.init = function(){
 		    } else {
 			s = "";
 		    }
-		    html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2'><input type='checkbox' name='%s' value='true' %s></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
+		    html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2'><input type='checkbox' name='${key}' value='true' ${s}></span><span class='column_R4l'>${obj.helper}</span></div>`;
 		    break;
 		default:
 		    if( typeof source.data[key] === "object" ){
@@ -9868,25 +9864,25 @@ JS9.Prefs.init = function(){
 			s = source.data[key];
 		    }
 		    if( obj.type === "mobject" ){
-			html += sprintf("<div class='linegroup' style='height:64px'><span class='column_R1'><b>%s</b></span><span class='column_R2l'><textarea name='%s' class='text_R' rows='5' style='overflow-x: hidden; resize: none'>%s</textarea></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
+			html += `<div class='linegroup' style='height:64px'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><textarea name='${key}' class='text_R' rows='5' style='overflow-x: hidden; resize: none'>${s}</textarea></span><span class='column_R4l'>${obj.helper}</span></div>`;
 		    } else {
-			html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2l'><input type='text' name='%s' class='text_R' value='%s'></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
+			html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><input type='text' name='${key}' class='text_R' value='${s}'></span><span class='column_R4l'>${obj.helper}</span></div>`;
 		    }
 		    break;
 		}
 	    }
 	}
-	html += "<input id='" + this.id + "_applyPrefs' name='Apply' type='button' class='button' value='Apply' onclick='JS9.Prefs.applyForm.call(this);' style='margin: 8px'>";
+	html += `<input id='${this.id}_applyPrefs' name='Apply' type='button' class='button' value='Apply' onclick='JS9.Prefs.applyForm.call(this);' style='margin: 8px'>`;
 	// manage stored preferences
 	if( window.hasOwnProperty("localStorage") &&
 	    JS9.globalOpts.localStorage           ){
-	    html += "<input id='" + this.id + "_savePrefs' name='Save' type='button' class='button' value='Save' onclick='JS9.Prefs.saveForm.call(this)' style='margin: 8px'>";
-	    html += "<input id='" + this.id + "_showPrefs' name='Show' type='button' class='button' value='Show Saved' onclick='JS9.Prefs.showForm.call(this)' style='margin: 8px'>";
+	    html += `<input id='${this.id}_savePrefs' name='Save' type='button' class='button' value='Save' onclick='JS9.Prefs.saveForm.call(this)' style='margin: 8px'>`;
+	    html += `<input id='${this.id}_showPrefs' name='Show' type='button' class='button' value='Show Saved' onclick='JS9.Prefs.showForm.call(this)' style='margin: 8px'>`;
 	    html += "<input id='delete' name='Delete' type='button' class='button' value='Delete Saved' onclick='JS9.Prefs.deleteForm.call(this)' style='margin: 8px'>";
 	}
 	// light windows get a close button
 	if( this.winType === "light" ){
-	    html += "<input id='" + this.id + "_closePrefs' name='Close' type='button' class='button' value='Close' onclick='var form = $(this).closest(\"form\"); var winid = form.data(\"winid\"); winid.close(); return false;' style='float: right; margin: 8px'>";
+	    html += `<input id='${this.id}_closePrefs' name='Close' type='button' class='button' value='Close' onclick='var form = $(this).closest("form"); var winid = form.data("winid"); winid.close(); return false;' style='float: right; margin: 8px'>`;
 	}
 	html += "</form>";
 	html += "</div>";
@@ -9895,14 +9891,14 @@ JS9.Prefs.init = function(){
     this.divjq.addClass("JS9PluginScrolling");
     // set the html for this div
     this.divjq.html(html);
-    // for each source, set data values that we will need in button callbacks
+    // for each source, set data values which we will need in button callbacks
     for(i=0; i<sources.length; i++){
 	source = sources[i];
 	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
-	$( "#" + id + "Form").data("display", this.display);
-	$( "#" + id + "Form").data("source", source);
+	$( `#${id}Form`).data("display", this.display);
+	$( `#${id}Form`).data("source", source);
 	if( this.winType === "light" ){
-	    $( "#" + id + "Form").data("winid", this.winHandle);
+	    $( `#${id}Form`).data("winid", this.winHandle);
 	}
     }
     // now init the tab content
@@ -9914,12 +9910,13 @@ JS9.Prefs.init = function(){
 
 // action for Apply in Form
 JS9.Prefs.applyForm = function(){
-    var form = $(this).closest("form");
-    var arr = form.serializeArray();
-    var display = form.data("display");
-    var source = form.data("source");
-    var winid = form.data("winid");
-    arr = arr.concat($("#" + form.attr("id") + " input[type=checkbox]:not(:checked)").map(function(){
+    let arr = form.serializeArray();
+    const form = $(this).closest("form");
+    const display = form.data("display");
+    const source = form.data("source");
+    const winid = form.data("winid");
+    // NB: 'this' is not lexical, so no arrow function here
+    arr = arr.concat($(`#${form.attr("id")} input[type=checkbox]:not(:checked)`).map(function(){
 	return {"name": this.name, "value": "false"};
     }).get());
     JS9.Prefs.processForm(source, arr, display, winid);
@@ -9928,37 +9925,37 @@ JS9.Prefs.applyForm = function(){
 
 // action for Save in Form
 JS9.Prefs.saveForm = function(){
-    var form = $(this).closest("form");
-    var source = form.data("source");
+    const form = $(this).closest("form");
+    const source = form.data("source");
     JS9.Prefs.applyForm.call(this);
     try{ localStorage.setItem(source.name, JSON.stringify(source.data,null,2));
 	 JS9.userOpts[source.name] = localStorage.getItem(source.name); }
-    catch(e){ JS9.error("could not save prefs: " + source.name); }
+    catch(e){ JS9.error(`could not save prefs: ${source.name}`); }
     return false;
 };
 
 // action for Show in Form
 JS9.Prefs.showForm = function(){
-    var s, t;
-    var form = $(this).closest("form");
-    var source = form.data("source");
+    let s, t;
+    const form = $(this).closest("form");
+    const source = form.data("source");
     try{ s = localStorage.getItem(source.name); }
     catch(e){ /* empty */ }
     if( s && (s !== "null") ){
-	t = "<pre>" + s + "</pre>";
+	t = `<pre>${s}</pre>`;
     } else {
-	t = sprintf("<p><center>No saved prefs: %s</center>", source.name);
+	t = `<p><center>No saved prefs: %{source.name}</center>`;
     }
-    JS9.lightWin("savedPrefs" + JS9.uniqueID(), "inline", t, 
-		 "Saved prefs: "+source.name, 
+    JS9.lightWin(`savedPrefs${JS9.uniqueID()}`, "inline", t, 
+		 `Saved prefs: ${source.name}`, 
 		 JS9.lightOpts[JS9.LIGHTWIN].textWin);
     return false;
 };
 
 // action for Delete in Form
 JS9.Prefs.deleteForm = function(){
-    var form = $(this).closest("form");
-    var source = form.data("source");
+    const form = $(this).closest("form");
+    const source = form.data("source");
     try{ localStorage.removeItem(source.name);
 	delete JS9.userOpts[source.name]; }
     catch(e){ /* empty */ }
@@ -9968,8 +9965,8 @@ JS9.Prefs.deleteForm = function(){
 // process new preferences in the preference form
 // eslint-disable-next-line no-unused-vars
 JS9.Prefs.processForm = function(source, arr, display, winid){
-    var i, j, s, key , val, obj, rlayer;
-    var len = arr.length;
+    let i, j, s, key, val, obj, rlayer;
+    const len = arr.length;
     // source-specific pre-processing
     switch( source.name ){
     case "images":
@@ -10008,7 +10005,7 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	    break;
 	case "object":
 	    try{ val = JSON.parse(val); }
-	    catch(e){ JS9.error("invalid JSON (see jsonlint.com): "+val, e); }
+	    catch(e){ JS9.error(`invalid JSON (see jsonlint.com): ${val}`, e); }
 	    break;
 	default:
 	    break;
@@ -10041,7 +10038,7 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 		break;
 	    case "fits":
 	        // put our "nicer" option values back into raw object
-	        // note that the values are still strings
+	        // note the values are still strings
 	        switch(key){
  	        case "xdim":
 		    obj.table.xdim = Math.floor(parseFloat(val));
@@ -10077,7 +10074,7 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	        switch(key){
  	        case "skip":
 		    // add back blank lines
-		    obj[key] = val + "\n";
+		    obj[key] = `${val}\n`;
 		    break;
 		default:
 	            obj[key] = val;
@@ -10223,7 +10220,7 @@ JS9.ScaleLimits.hiHTML='High:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue
 
 // change scale
 JS9.ScaleLimits.xsetscale = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	im.setScale(target.value);
     }
@@ -10231,8 +10228,8 @@ JS9.ScaleLimits.xsetscale = function(did, id, target){
 
 // change low clipping limit
 JS9.ScaleLimits.xsetlo = function(did, id, target){
-    var val;
-    var im = JS9.lookupImage(id, did);
+    let val;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	val = parseFloat(target.value);
 	im.setScale(val, im.params.scalemax);
@@ -10241,8 +10238,8 @@ JS9.ScaleLimits.xsetlo = function(did, id, target){
 
 // change high clipping limit
 JS9.ScaleLimits.xsethi = function(did, id, target){
-    var val;
-    var im = JS9.lookupImage(id, did);
+    let val;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	val = parseFloat(target.value);
 	im.setScale(im.params.scalemin, val);
@@ -10251,7 +10248,7 @@ JS9.ScaleLimits.xsethi = function(did, id, target){
 
 // other ways to determine limits
 JS9.ScaleLimits.xsetlims = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	switch(target.value){
 	case "dataminmax":
@@ -10276,8 +10273,8 @@ JS9.ScaleLimits.log10 = function(v){
 
 // other ways to determine limits
 JS9.ScaleLimits.xaxes = function(did, id, target){
-    var plugin;
-    var im = JS9.lookupImage(id, did);
+    let plugin;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	// get current plugin instance
 	plugin = im.display.pluginInstances[JS9.ScaleLimits.BASE];
@@ -10312,11 +10309,11 @@ JS9.ScaleLimits.xaxes = function(did, id, target){
 };
 
 JS9.ScaleLimits.getPixelDist = function(im, ndist){
-    var i, idx;
-    var dist = [];
-    var dmin = im.raw.dmin;
-    var drange = im.raw.dmax - im.raw.dmin;
-    var imlen = im.raw.width * im.raw.height;
+    let i, idx;
+    const dist = [];
+    const dmin = im.raw.dmin;
+    const drange = im.raw.dmax - im.raw.dmin;
+    const imlen = im.raw.width * im.raw.height;
     for(i=0; i<ndist; i++){
         dist[i] = 0;
     }
@@ -10331,23 +10328,22 @@ JS9.ScaleLimits.getPixelDist = function(im, ndist){
 };
 
 JS9.ScaleLimits.to10E = function(i){
-    var superscripts = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
+    const superscripts = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
     if( JS9.ScaleLimits.AXISFANCY && i >= 0 && i <= 9 ){
-	return "10" + superscripts[i];
+	return `10${superscripts[i]}`;
     }
-    return "10E" + String(i);
+    return `10E${String(i)}`;
 };
 
 JS9.ScaleLimits.doplot = function(im){
-    var that = this;
-    var i, j, s, el, xmin, xmax;
-    var dist, distmin, distmax, ntick, tickinc;
-    var dmin = im.raw.dmin;
-    var drange = im.raw.dmax - im.raw.dmin;
-    var pobj =  $.extend(true, {}, JS9.ScaleLimits.dataOpts);
-    var popts = $.extend(true, {}, JS9.ScaleLimits.plotOpts);
-    var gettickinc = function(datarange){
-	var tickinc;
+    let i, j, s, el, xmin, xmax;
+    let dist, distmin, distmax, ntick, tickinc;
+    const dmin = im.raw.dmin;
+    const drange = im.raw.dmax - im.raw.dmin;
+    const pobj =  $.extend(true, {}, JS9.ScaleLimits.dataOpts);
+    const popts = $.extend(true, {}, JS9.ScaleLimits.plotOpts);
+    const gettickinc = (datarange) => {
+	let tickinc;
 	if( datarange < 10 ){
             tickinc = 1;
 	} else if( datarange < 50 ){
@@ -10379,10 +10375,10 @@ JS9.ScaleLimits.doplot = function(im){
 	}
 	return tickinc;
     };
-    var annotate = function(plot, x, color){
-	var ctx = plot.getCanvas().getContext("2d");
-	var size = JS9.ScaleLimits.CARET;
-	var o = plot.pointOffset({x: x, y: 0});
+    const annotate = (plot, x, color) => {
+	const ctx = plot.getCanvas().getContext("2d");
+	const size = JS9.ScaleLimits.CARET;
+	const o = plot.pointOffset({x: x, y: 0});
 	ctx.beginPath();
 	ctx.moveTo(o.left, o.top);
 	ctx.lineTo(o.left - size, o.top - (size*2));
@@ -10462,56 +10458,55 @@ JS9.ScaleLimits.doplot = function(im){
     }
     // select limits
     el.off("plotselected");
-    el.on("plotselected", function(event, ranges){
-	var start = ranges.xaxis.from;
-	var end   = ranges.xaxis.to;
-	if( that.xscale === "log" ){
+    el.on("plotselected", (event, ranges) => {
+	let start = ranges.xaxis.from;
+	let end   = ranges.xaxis.to;
+	if( this.xscale === "log" ){
 	    start = Math.pow(10, start);
 	    end = Math.pow(10, end);
 	}
-	start = start * drange / that.ndist + dmin;
-	end   = end   * drange / that.ndist + dmin;
+	start = start * drange / this.ndist + dmin;
+	end   = end   * drange / this.ndist + dmin;
 	im.setScale("user", start, end);
     });
     el.off("plothover");
-    el.on("plothover", function(event, pos) {
-	var ctx, text, s, x, y, w, h, xval;
-	var px = pos.x;
+    el.on("plothover", (event, pos) => {
+	let ctx, text, s, x, y, w, h, xval;
+	let px = pos.x;
 	// sanity checks
-	if( !that.plot || !that.plotComplete ){ 
+	if( !this.plot || !this.plotComplete ){ 
 	    return;
 	}
-	if( that.xscale === "log" ){
+	if( this.xscale === "log" ){
 	    px = Math.pow(10, px);
 	}
-	xval = px * drange / that.ndist + dmin;
-	if( !isFinite(xval) ){
+	xval = px * drange / this.ndist + dmin;
+	if( !Number.isFinite(xval) ){
 	    return;
 	}
 	s = JS9.floatToString(xval);
 	// display x value in upper right corner of plot
-	ctx = that.plot.getCanvas().getContext("2d");
+	ctx = this.plot.getCanvas().getContext("2d");
 	ctx.save();
 	ctx.textBaseline = 'top';
-	ctx.font = JS9.ScaleLimits.XTEXTHEIGHT + "px " +
-	    JS9.ScaleLimits.XTEXTFONT;
+	ctx.font = `${JS9.ScaleLimits.XTEXTHEIGHT  }px ${JS9.ScaleLimits.XTEXTFONT}`;
 	ctx.fillStyle = JS9.ScaleLimits.XTEXTCOLOR || "black";
 	text = ctx.measureText(s);
-	w = Math.max(that.lastTextWidth, text.width + 2);
+	w = Math.max(this.lastTextWidth, text.width + 2);
 	h = JS9.ScaleLimits.XTEXTHEIGHT + 2;
-	x = that.plotWidth  * JS9.ScaleLimits.XTEXTFRAC;
-	y = that.plotHeight * JS9.ScaleLimits.YTEXTFRAC;
+	x = this.plotWidth  * JS9.ScaleLimits.XTEXTFRAC;
+	y = this.plotHeight * JS9.ScaleLimits.YTEXTFRAC;
 	ctx.clearRect(x, y, w, h);
 	ctx.fillText(s, x, y); 
 	ctx.restore();
-	that.lastTextWidth = w;
+	this.lastTextWidth = w;
     });
-    this.timeout = window.setTimeout(function(){
-	that.plot = $.plot(el, [pobj], popts);
-	that.timeout = null;
-	annotate(that.plot, xmin, that.xlocolor);
-	annotate(that.plot, xmax, that.xhicolor);
-	that.plotComplete = true;
+    this.timeout = window.setTimeout( () => {
+	this.plot = $.plot(el, [pobj], popts);
+	this.timeout = null;
+	annotate(this.plot, xmin, this.xlocolor);
+	annotate(this.plot, xmax, this.xhicolor);
+	this.plotComplete = true;
     }, JS9.ScaleLimits.TIMEOUT);
 };
 
@@ -10524,18 +10519,18 @@ JS9.ScaleLimits.display = function(){
 
 // clear when an image closes
 JS9.ScaleLimits.close = function(){
-    // ensure that plugin display is reset
+    // ensure plugin display is reset
     JS9.ScaleLimits.init.call(this, {mode: "clear"});
 };
 
 // constructor: add HTML elements to the plugin
 JS9.ScaleLimits.init = function(opts){
-    var s, im, mopts, imid, dispid;
-    var getScales = function(){
-	var i;
-	var res = "<option selected disabled>Scales</option>";
+    let s, im, mopts, imid, dispid;
+    const getScales = () => {
+	let i;
+	let res = "<option selected disabled>Scales</option>";
 	for(i=0; i<JS9.scales.length; i++){
-	    res += "<option>" + JS9.scales[i] + "</option>";
+	    res += `<option>${JS9.scales[i]}</option>`;
 	}
 	return res;
     };
@@ -10604,8 +10599,8 @@ JS9.ScaleLimits.init = function(opts){
     this.lastTextWidth = 0;
     // set up new html
     this.scalelimsContainer = $("<div>")
-	.addClass(JS9.ScaleLimits.BASE + "Container")
-	.attr("id", this.id + "Container")
+	.addClass(`${JS9.ScaleLimits.BASE}Container`)
+	.attr("id", `${this.id}Container`)
         .attr("width", this.width)
         .attr("height", this.height)
 	.appendTo(this.divjq);
@@ -10694,8 +10689,8 @@ JS9.Separate.nofileHTML='<p><span id="NoFile">[Images will appear here as they a
 
 // change active state
 JS9.Separate.xactive = function(id){
-    var im = JS9.lookupImage(id);
-    var active = this.checked;
+    const im = JS9.lookupImage(id);
+    const active = this.checked;
     if( im ){
 	im.tmp.separateMode = active;
     }
@@ -10703,8 +10698,8 @@ JS9.Separate.xactive = function(id){
 
 // change active state
 JS9.Separate.xlayout = function(id){
-    var plugin;
-    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
+    let plugin;
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     if( !display ){ return; }
     plugin = display.pluginInstances.JS9Separate;
     if( plugin && this.selectedIndex >= 0 ){
@@ -10714,9 +10709,9 @@ JS9.Separate.xlayout = function(id){
 
 // separate images
 JS9.Separate.separate = function(id, which){
-    var i, im, plugin, arr;
-    var opts = {};
-    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
+    let i, im, plugin, arr;
+    const opts = {};
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     if( !display ){ return; }
     plugin = display.pluginInstances.JS9Separate;
     if( plugin && plugin.separateLayout ){
@@ -10742,9 +10737,9 @@ JS9.Separate.separate = function(id, which){
 
 // gather images
 JS9.Separate.gather = function(id, which){
-    var i, im, arr;
-    var opts = {};
-    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
+    let i, im, arr;
+    const opts = {};
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     if( !display ){ return; }
     switch(which){
     case "all":
@@ -10767,36 +10762,36 @@ JS9.Separate.gather = function(id, which){
 
 // get a SeparateImage id based on the file image id
 JS9.Separate.imid = function(im){
-    var id = im.display.id + "_" + im.id;
-    return id.replace(/[^A-Za-z0-9_]/g, "_") + "SeparateImage";
+    const id = `${im.display.id}_${im.id}`;
+    return `${id.replace(/[^A-Za-z0-9_]/g, "_")}SeparateImage`;
 };
 
 // get a class unique between displays
 JS9.Separate.dispclass = function(im){
-    var id = JS9.Separate.BASE + "_" + im.display.id;
+    const id = `${JS9.Separate.BASE}_${im.display.id}`;
     return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Separate.activeImage = function(im){
-    var id, dcls;
+    let id, dcls;
     if( im ){
 	id = JS9.Separate.imid(im);
-	dcls = JS9.Separate.dispclass(im) + "_Image";
-	$("." + dcls)
-	    .removeClass(JS9.Separate.BASE + "ImageActive")
-	    .addClass(JS9.Separate.BASE + "ImageInactive");
-	$("#" + id)
-	    .removeClass(JS9.Separate.BASE + "ImageInactive")
-	    .addClass(JS9.Separate.BASE + "ImageActive");
+	dcls = `${JS9.Separate.dispclass(im)}_Image`;
+	$(`.${dcls}`)
+	    .removeClass(`${JS9.Separate.BASE}ImageActive`)
+	    .addClass(`${JS9.Separate.BASE}ImageInactive`);
+	$(`#${id}`)
+	    .removeClass(`${JS9.Separate.BASE}ImageInactive`)
+	    .addClass(`${JS9.Separate.BASE}ImageActive`);
     }
 };
 
 // add an image to the list of available images
 JS9.Separate.addImage = function(im){
-    var s, id, divjq, dcls, imid;
-    var opts = [];
-    var cls = JS9.Separate.BASE + "Image";
+    let s, id, divjq, dcls, imid;
+    const opts = [];
+    const cls = `${JS9.Separate.BASE}Image`;
     if( !im ){
 	return;
     }
@@ -10805,7 +10800,7 @@ JS9.Separate.addImage = function(im){
     // unique id
     id = JS9.Separate.imid(im);
     // get class for this layer 
-    dcls = JS9.Separate.dispclass(im) + "_Image";
+    dcls = `${JS9.Separate.dispclass(im)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid",   value: im.id});
     opts.push({name: "active", value: sprintf(JS9.Separate.activeHTML, 
@@ -10826,9 +10821,9 @@ JS9.Separate.addImage = function(im){
 	.prop("imid", imid)
 	.html(s)
 	.appendTo(this.separateImageContainer);
-    divjq.on("mousedown touchstart", function(){
+    divjq.on("mousedown touchstart", () => {
 	    im.displayImage();
-	    JS9.Separate.activeImage.call(this, im);
+	    JS9.Separate.activeImage(im);
     });
     // one more div in the stack
     this.separateDivs++;
@@ -10841,10 +10836,10 @@ JS9.Separate.addImage = function(im){
 
 // remove an image from the list of available images
 JS9.Separate.removeImage = function(im){
-    var id;
+    let id;
     if( im ){
 	id = JS9.Separate.imid(im);
-	$("#" + id).remove();
+	$(`#${id}`).remove();
 	this.separateDivs--;
 	if( this.separateDivs === 0 ){
 	    this.separateImageContainer.html(JS9.Separate.nofileHTML);
@@ -10857,9 +10852,9 @@ JS9.Separate.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Separate.init = function(){
-    var that = this;
-    var i, s, im, display, dispid;
-    var opts = [];
+    const _this = this;
+    let i, s, im, display, dispid;
+    const opts = [];
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -10876,8 +10871,8 @@ JS9.Separate.init = function(){
     this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.separateContainer = $("<div>")
-	.addClass(JS9.Separate.BASE + "Container")
-	.attr("id", this.id + "SeparateContainer")
+	.addClass(`${JS9.Separate.BASE}Container`)
+	.attr("id", `${this.id}SeparateContainer`)
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     dispid = this.display.id;
@@ -10889,14 +10884,14 @@ JS9.Separate.init = function(){
 					     opts);
     // header
     this.separateHeader = $("<div>")
-	.addClass(JS9.Separate.BASE + "Header")
-	.attr("id", dispid + "Header")
+	.addClass(`${JS9.Separate.BASE}Header`)
+	.attr("id", `${dispid}Header`)
 	.html(s)
 	.appendTo(this.separateContainer);
     // container to hold images
     this.separateImageContainer = $("<div>")
-	.addClass(JS9.Separate.BASE + "ImageContainer")
-	.attr("id", this.id + "SeparateImageContainer")
+	.addClass(`${JS9.Separate.BASE}ImageContainer`)
+	.attr("id", `${this.id}SeparateImageContainer`)
         .html(JS9.Separate.nofileHTML)
 	.appendTo(this.separateContainer);
     display = JS9.getDynamicDisplayOr(this.display);
@@ -10909,16 +10904,16 @@ JS9.Separate.init = function(){
     }
     // the images within the image container will be sortable
     this.separateImageContainer.sortable({
-	start: function(event, ui) {
+	start(event, ui) {
 	    this.oidx = ui.item.index();
 	},
-	stop: function(event, ui) {
-	    var nidx = ui.item.index();
+	stop(event, ui) {
+	    const nidx = ui.item.index();
 	    // JS9 image list reflects the sort
 	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
 	    // redisplay in case something changed
-	    if( that.display.image ){
-		that.display.image.displayImage();
+	    if( _this.display.image ){
+		_this.display.image.displayImage();
 	    }
 	}
     });
@@ -10926,7 +10921,7 @@ JS9.Separate.init = function(){
 
 // callback when an image is loaded
 JS9.Separate.imageload = function(im){
-    var display = JS9.getDynamicDisplayOr(this.display);
+    const display = JS9.getDynamicDisplayOr(this.display);
     if( im && im.display === display ){
 	JS9.Separate.addImage.call(this, im);
     }
@@ -10980,8 +10975,8 @@ JS9.Sync.NAME = "Sync";
 // process ops input to [un]sync
 // called in image context
 JS9.Sync.getOps = function(ops){
-    var i, j, op;
-    var xops = [];
+    let i, j, op;
+    const xops = [];
     //  default from above ...
     ops = ops || JS9.globalOpts.syncOps;
     if( !$.isArray(ops) ){ ops = [ops]; }
@@ -11004,8 +10999,8 @@ JS9.Sync.getOps = function(ops){
 // process ims input to [un]sync
 // called in image context
 JS9.Sync.getIms = function(ims){
-    var i, j, xim;
-    var xims = [];
+    let i, j, xim;
+    const xims = [];
     ims = ims || JS9.images;
     if( !$.isArray(ims) ){ ims = [ims]; }
     for(i=0, j=0; i<ims.length; i++){
@@ -11026,19 +11021,20 @@ JS9.Sync.getIms = function(ims){
 
 // sync image(s) when operations are performed on an originating image
 // called in the image context
-JS9.Sync.sync = function(ops, ims, opts){
-    var i, j, xop, xim, xops, xims, xlen;
-    var arr = [];
+JS9.Sync.sync = function(...args){
+    let i, j, xop, xim, xops, xims, xlen;
+    let [ops, ims, opts] = args;
+    const arr = [];
     // make sure sink object exists
     this.syncs = this.syncs || {active: true};
     // opts is optional
     opts = opts || {reciprocate: JS9.globalOpts.syncReciprocate};
     // 1 boolean arg: turn on/off sync'ing
-    if( arguments.length === 1 && typeof ops === "boolean" ){
+    if( args.length === 1 && typeof ops === "boolean" ){
 	this.syncs.active = ops;
 	return;
     }
-    // get regularized arguments
+    // get regularized args
     xops = JS9.Sync.getOps.call(this, ops);
     xims = JS9.Sync.getIms.call(this, ims);
     xlen = xims.length;
@@ -11082,7 +11078,7 @@ JS9.Sync.sync = function(ops, ims, opts){
     if( !JS9.Sync.reciprocating ){
 	// sync the target images
 	JS9.Sync.xeqSync.call(this, arr);
-	// flag that we are ready to sync on user events
+	// flag we are ready to sync on user events
 	JS9.Sync.ready = true;
     }
 };
@@ -11090,14 +11086,14 @@ JS9.Sync.sync = function(ops, ims, opts){
 // unsync one or more images
 // called in the image context
 JS9.Sync.unsync = function(ops, ims, opts){
-    var i, op, tims, xops, xims, xlen, xim;
+    let i, op, tims, xops, xims, xlen, xim;
     // sanity check
     if( !this.syncs ){
 	return;
     }
     // opts is optional
     opts = opts || {reciprocate: JS9.globalOpts.syncReciprocate};
-    // get regularized arguments
+    // get regularized args
     xops = JS9.Sync.getOps.call(this, ops);
     xims = JS9.Sync.getIms.call(this, ims);
     xlen = xims.length;
@@ -11157,11 +11153,11 @@ JS9.Sync.unsync = function(ops, ims, opts){
 // perform a sync action on target images using params from originating image
 // called in image context
 JS9.Sync.xeqSync = function(arr){
-    var i, j, k, obj, pos, wcscen, xim, xarr, xobj, xdata;
-    var mydata, myobj, myid, rarr, rstr, args;
-    var oval = JS9.globalOpts.xeqPlugins;
-    var thisid = this.id + "_" + this.display.id;
-    var regmatch = function(r1, r2){
+    let i, j, k, obj, pos, wcscen, xim, xarr, xobj, xdata;
+    let mydata, myobj, myid, rarr, rstr, args;
+    const oval = JS9.globalOpts.xeqPlugins;
+    const thisid = `${this.id}_${this.display.id}`;
+    const regmatch = (r1, r2) => {
 	// check for a target region with the same syncid as the current region
 	if( !r1.data || !r1.data.syncid ){ return false; }
 	if( !r2.data || !r2.data.syncid ){ return false; }
@@ -11209,7 +11205,7 @@ JS9.Sync.xeqSync = function(arr){
 		    } else {
 			// Try to sync all regions in the current image to
 			// regions in the target. We will add regions which do
-			// not exist in the target, and update those that do.
+			// not exist in the target, and update those which do.
 			if( !rarr ){
 			    // get current regions, if necessary
 			    rarr = this.getShapes("regions");
@@ -11244,7 +11240,7 @@ JS9.Sync.xeqSync = function(arr){
 			    myid = myobj.data.syncid;
 			} else {
 			    // otherwise, make up our own syncid
-			    myid = thisid + "_" + myobj.id;
+			    myid = `${thisid}_${myobj.id}`;
 			}
 			// process the action for this region ...
 			switch(myobj.mode){
@@ -11350,8 +11346,8 @@ JS9.Sync.xeqSync = function(arr){
 // inner routine called by JS9.xeqPlugins callbacks
 // called in image context
 JS9.Sync.maybeSync = function(op, arg){
-    var i, ims;
-    var arr = [];
+    let i, ims;
+    const arr = [];
     // sanity check
     if( !JS9.Sync.ready || !this.syncs || this.syncs.running ){
 	return;
@@ -11425,7 +11421,7 @@ JS9.Sync.setzoom = function(im){
 
 // clean up an image when its closed
 JS9.Sync.closeimage = function(im){
-    var i;
+    let i;
     if( !im ){ return; }
     // remove this image from all other image sync lists
     for(i=0; i<JS9.images.length; i++){
@@ -11463,7 +11459,7 @@ JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
 // create our namespace, and specify some meta-information and params
 JS9.Toolbar = {};
 JS9.Toolbar.CLASS = "JS9";        // class of plugins (1st part of div class)
-JS9.Toolbar.NAME = "Toolbar";    // name of this plugin (2nd part of div class)
+JS9.Toolbar.NAME = "Toolbar";    // name of plugin (2nd part of div class)
 JS9.Toolbar.WIDTH =  512;	 // width of light window
 JS9.Toolbar.HEIGHT = 36;         // height of light window
 JS9.Toolbar.BASE = JS9.Toolbar.CLASS + JS9.Toolbar.NAME;
@@ -11649,7 +11645,7 @@ JS9.Toolbar.tools = [
 ];
 
 JS9.Toolbar.tooltip = function(tool, tooltip, e){
-    var x, y, w, offset;
+    let x, y, w, offset;
     if( tooltip ){
 	offset = $(e.currentTarget).position();
 	this.tooltip.html(tooltip);
@@ -11674,8 +11670,7 @@ JS9.Toolbar.tooltip = function(tool, tooltip, e){
 
 // add a tool to the toolbar
 JS9.Toolbar.addTool = function(tool){
-    var that = this;
-    var div, btn, img;
+    let div, btn, img;
     // special processing: no args means return current list of tools
     if( !tool ){
 	return JS9.Toolbar.tools;
@@ -11687,11 +11682,11 @@ JS9.Toolbar.addTool = function(tool){
     }
     // sanity check on a real tool
     if( !tool.name || !tool.cmd ){
-	JS9.error("invalid input to JS9.toolbar: " + JSON.stringify(tool));
+	JS9.error(`invalid input to JS9.toolbar: ${JSON.stringify(tool)}`);
     }
     // enclosing div
     div = $("<div>")
-	.addClass(JS9.Toolbar.BASE + "ButtonDiv")
+	.addClass(`${JS9.Toolbar.BASE}ButtonDiv`)
 	.appendTo(this.activeToolbar);
     // create the button
     if( tool.image ){
@@ -11705,7 +11700,7 @@ JS9.Toolbar.addTool = function(tool){
 	    img = JS9.InstallDir(img);
 	}
 	btn = $("<input>")
-	    .addClass(JS9.Toolbar.BASE + "ImageButton")
+	    .addClass(`${JS9.Toolbar.BASE}ImageButton`)
 	    .attr("type", "image")
 	    .attr("src", img)
 	    .attr("width", JS9.Toolbar.IMAGEWIDTH)
@@ -11714,15 +11709,15 @@ JS9.Toolbar.addTool = function(tool){
 	    .appendTo(div);
     } else {
 	btn = $("<input>")
-	    .addClass(JS9.Toolbar.BASE + "ButtonButton")
+	    .addClass(`${JS9.Toolbar.BASE}ButtonButton`)
 	    .attr("type", "button")
 	    .attr("value", tool.name)
 	    .appendTo(div);
     }
     // set up the callback to the JS9 public access routine
-    btn.on("click", function(){
-	var args;
-	var display = that.display;
+    btn.on("click", () => {
+	let args;
+	const display = this.display;
 	// special processing for commands
 	switch(tool.cmd){
         default:
@@ -11732,18 +11727,18 @@ JS9.Toolbar.addTool = function(tool){
                 args.push({display: display});
                 JS9.publics[tool.cmd].apply(null, args);
             } else {
-		JS9.error("unknown JS9 function for toolbar: " + tool.cmd);
+		JS9.error(`unknown JS9 func for toolbar: ${tool.cmd}`);
 	    }
             break;
         }
     });
     // tool tip is optional
     if( JS9.globalOpts.toolbarTooltips ){
-	btn.on("mouseover", function(e){
-	    JS9.Toolbar.tooltip.call(that, tool, tool.tip||tool.name, e);
+	btn.on("mouseover", (e) => {
+	    JS9.Toolbar.tooltip.call(this, tool, tool.tip||tool.name, e);
 	});
-	btn.on("mouseout", function(e){
-	    JS9.Toolbar.tooltip.call(that, tool, null, e);
+	btn.on("mouseout", (e) => {
+	    JS9.Toolbar.tooltip.call(this, tool, null, e);
 	});
     }
     // return something possible useful
@@ -11753,7 +11748,7 @@ JS9.Toolbar.addTool = function(tool){
 
 // constructor: add HTML elements to the plugin
 JS9.Toolbar.init = function(width, height){
-    var i, j, tool, name;
+    let i, j, tool, name;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -11777,20 +11772,20 @@ JS9.Toolbar.init = function(width, height){
     this.divjq.html("");
     // toolbar container
     this.toolbarContainer = $("<div>")
-	.addClass(JS9.Toolbar.BASE + "Container")
-	.attr("id", this.id + "Container")
+	.addClass(`${JS9.Toolbar.BASE}Container`)
+	.attr("id", `${this.id}Container`)
 	.appendTo(this.divjq);
     // toolbar
     this.activeToolbar = $("<div>")
-	.addClass(JS9.Toolbar.BASE + "Div")
-	.attr("id", this.id + "Toolbar")
+	.addClass(`${JS9.Toolbar.BASE}Div`)
+	.attr("id", `${this.id}Toolbar`)
         .css("width", this.width)
         .css("height", this.height)
         .css("min-height", JS9.Toolbar.TOOLBARHEIGHT)
 	.appendTo(this.toolbarContainer);
     // add a tooltip
     this.tooltip = $("<div>")
-	.attr("id", "tooltip_" + this.id)
+	.attr("id", `tooltip_${this.id}`)
 	.addClass("JS9ToolbarTooltip")
 	.appendTo(this.divjq);
     // add tools from globalOpts to the list
@@ -11818,8 +11813,9 @@ JS9.Toolbar.init = function(width, height){
 // public access routines
 
 // GetToolbar: get current tools
-JS9.mkPublic("GetToolbar", function(arg1){
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("GetToolbar", function(...args){
+    let arg1;
+    const obj = JS9.parsePublicArgs(args);
     arg1 = obj.argv[0];
     if( arg1 === "showTooltips" ){
 	return JS9.globalOpts.toolbarTooltips;
@@ -11828,11 +11824,11 @@ JS9.mkPublic("GetToolbar", function(arg1){
 });
 
 // SetToolbar: add new tools to the toolbar
-JS9.mkPublic("SetToolbar", function(arg1, arg2){
-    var i;
-    var obj = JS9.parsePublicArgs(arguments);
-    var reinit = function(){
-	var i, display, pinst;
+JS9.mkPublic("SetToolbar", function(...args){
+    let i, arg1, arg2;
+    const obj = JS9.parsePublicArgs(args);
+    const reinit = () => {
+	let i, display, pinst;
 	for(i=0; i<JS9.displays.length; i++){
 	    display = JS9.displays[i];
 	    pinst = display.pluginInstances.JS9Toolbar;
@@ -11861,7 +11857,7 @@ JS9.mkPublic("SetToolbar", function(arg1, arg2){
     } else if( typeof arg1 === "string" ){
 	// arg1 can be an object or json
 	try{ arg1 = JSON.parse(arg1); }
-	catch(e){ JS9.error("can't parse json for SetToolBar: " + arg1, e); }
+	catch(e){ JS9.error(`can't parse json for SetToolBar: ${arg1}`, e); }
 	// add one new tool
 	JS9.Toolbar.tools.push(arg1);
 	// reinit toolbar
@@ -11882,7 +11878,7 @@ JS9.mkPublic("SetToolbar", function(arg1, arg2){
     return null;
 });
 
-// add this plugin into JS9
+// add plugin into JS9
 JS9.RegisterPlugin(JS9.Toolbar.CLASS, JS9.Toolbar.NAME, JS9.Toolbar.init,
 		   {menuItem: "Toolbar",
 		    help: "help/toolbar.html",

@@ -44,23 +44,24 @@ JS9.Panner.opts = {
 
 // call a JS9 routine from a button in the panner plugin toolbar
 // the plugin instantiation saves the display id in the toolbar div
-JS9.Panner.bcall = function(which, cmd, arg1){
-    var dispid, pinst, im;
+JS9.Panner.bcall = function(...args){
+    let dispid, pinst, im;
+    let [which, cmd, arg1] = args;
     // the button plugintoolbar div has data containing the id of the display
     dispid = $(which).closest("div[class^=JS9PluginToolbar]").data("displayid");
     if( dispid ){
 	im = JS9.getImage(JS9.getDynamicDisplayOr(dispid));
 	pinst = im.display.pluginInstances.JS9Panner;
     } else {
-	JS9.error("can't find display for cmd: "+cmd);
+	JS9.error(`can't find display for cmd: ${cmd}`);
     }
     if( !im ){
-	JS9.error("can't find image for cmd: "+cmd);
+	JS9.error(`can't find image for cmd: ${cmd}`);
     }
     switch(cmd){
     case "zoomPanner":
-	if( arguments.length < 3 ){
-	    JS9.error("missing argument(s) for cmd: "+cmd);
+	if( args.length < 3 ){
+	    JS9.error(`missing arg(s) for cmd: ${cmd}`);
 	}
 	try{
 	    JS9.Panner.zoom.call(pinst, im, arg1);
@@ -139,14 +140,13 @@ JS9.Panner.init = function(width, height){
 // sort of from: tksao1.0/frame/truecolor.c, but not really
 // part of panner plugin
 JS9.Panner.create = function(im){
-    var that = this;
-    var panDisp, panner, sect, img;
-    var x0, y0, xblock, yblock;
-    var i, j, ii, jj, kk;
-    var ioff, ooff;
-    var width, height;
-    var pos, ix, iy;
-    var dlayer;
+    let panDisp, panner, sect, img;
+    let x0, y0, xblock, yblock;
+    let i, j, ii, jj, kk;
+    let ioff, ooff;
+    let width, height;
+    let pos, ix, iy;
+    let dlayer;
     // sanity check
     if( !im || !im.raw || !im.display.pluginInstances.JS9Panner ){
 	return;
@@ -251,13 +251,13 @@ JS9.Panner.create = function(im){
     }
     dlayer = this.display.newShapeLayer("panner", JS9.Panner.opts, this.divjq);
     // add a callback to pan when the panning rectangle is moved
-    dlayer.canvas.on("object:modified", function(opts){
-	var im, disp;
-	disp = JS9.getDynamicDisplayOr(that.display);
+    dlayer.canvas.on("object:modified", (opts) => {
+	let im, disp;
+	disp = JS9.getDynamicDisplayOr(this.display);
 	if( disp && disp.image ){
 	    im = disp.image;
 	} else {
-	    im = that.display.image;
+	    im = this.display.image;
 	}
 	if( im ){
 	    pos = opts.target.getCenterPoint();
@@ -281,11 +281,11 @@ JS9.Panner.create = function(im){
 
 // display the image on the panner canvas
 JS9.Panner.disp = function(im){
-    var panDisp, panner, sect, tblkx, tblky;
-    var obj, nx, ny, nwidth, nheight, cenx, ceny;
-    var npos1, npos2, nobj, nobjt;
-    var epos1, epos2, eobj, eobjt;
-    var FUDGE = 1;
+    let panDisp, panner, sect, tblkx, tblky;
+    let obj, nx, ny, nwidth, nheight, cenx, ceny;
+    let npos1, npos2, nobj, nobjt;
+    let epos1, epos2, eobj, eobjt;
+    const FUDGE = 1;
     // sanity check
     // only display if we have a panner present
     if( !im || !im.display.pluginInstances.JS9Panner ||
@@ -414,7 +414,7 @@ JS9.Panner.disp = function(im){
 
 // zoom the rectangle inside the panner (RGB) image
 JS9.Panner.zoom = function(im, zval){
-    var panner, ozoom, nzoom;
+    let panner, ozoom, nzoom;
     // sanity check
     if( !im || !im.panner || !im.display.pluginInstances.JS9Panner ){
 	return;
@@ -449,7 +449,7 @@ JS9.Panner.zoom = function(im, zval){
 
 // dynamic selection change
 JS9.Panner.dysel = function(im){
-    var panner;
+    let panner;
     if( im ){
 	panner = im.display.pluginInstances.JS9Panner;
 	if( panner && panner.isDynamic ){
@@ -460,7 +460,7 @@ JS9.Panner.dysel = function(im){
 
 // clear the panner
 JS9.Panner.clear = function(im){
-    var panner, display;
+    let panner, display;
     if( im ){
 	display = JS9.getDynamicDisplayOr(this.display);
 	panner = im.display.pluginInstances.JS9Panner;

@@ -33,7 +33,7 @@ JS9.Info.opts = {
 
 // init plugin
 JS9.Info.init = function(){
-    var i, key, opts, obj, infoHTML;
+    let i, key, opts, obj, infoHTML;
     // only init if we are displaying a new image
     // i.e., avoid re-init when changing contrast/bias
     if( this.display.image && this.display.image === this.lastimage ){
@@ -101,10 +101,9 @@ JS9.Info.init = function(){
 // display a message on the image canvas or info plugin
 // call with display as context
 JS9.Info.display = function(type, message, target, force){
-    var that = this;
-    var s, t;
-    var tobj, split, area, tokens, rexp, color, info, key, el, jel, rid, im;
-    var disp = this;
+    let s, t;
+    let tobj, split, area, tokens, rexp, color, info, key, el, jel, rid, im;
+    let disp = this;
     // backward compatibility -- allow context to be Image
     if( this.display ){
 	disp = this.display;
@@ -116,10 +115,10 @@ JS9.Info.display = function(type, message, target, force){
     }
     // where are we displaying?
     if( info && info.status === "active" && (!target || !force) ){
-	// if info plugin is active, use that
+	// if info plugin is active, use it
 	tobj = info;
     } else if( target ){
-	// if specific info target was specified, use that
+	// if specific info target was specified, use it
 	if( target === disp ){
 	    // passed disp in as a target
 	    tobj = disp;
@@ -129,7 +128,7 @@ JS9.Info.display = function(type, message, target, force){
 	} else if( typeof target === "object" ){
 	    tobj = $(target);
 	} else {
-	    tobj = $("#"+target);
+	    tobj = $(`#${target}`);
 	}
 	if( !tobj.length ){
 	    // fallback if the target element does not exist
@@ -180,7 +179,7 @@ JS9.Info.display = function(type, message, target, force){
 	(type !== "regions" || JS9.globalOpts.regionDisplay !== "lightwin") ){
 	switch( typeof message ){
 	case "string":
-	    jel = info.jq.find("[name='"+type+"']");
+	    jel = info.jq.find(`[name='${type}']`);
 	    if( jel.length > 0 ){
 		jel.val(message);
 	    }
@@ -190,7 +189,7 @@ JS9.Info.display = function(type, message, target, force){
 	    for( key in message ){
 		if( message.hasOwnProperty(key) ){
 		    // set value, if possible
-		    jel = info.jq.find("[name='"+key+"']");
+		    jel = info.jq.find(`[name='${key}']`);
 		    if( jel.length > 0 ){
 			jel.val(message[key]);
 		    }
@@ -206,22 +205,22 @@ JS9.Info.display = function(type, message, target, force){
     case "regions":
 	// display regions in a light window?
 	if( JS9.globalOpts.regionDisplay === "lightwin" ){
-	    rid = disp.id + "_regions";
-	    el = $("#" + rid);
+	    rid = `${disp.id}_regions`;
+	    el = $(`#${rid}`);
 	    // does window exist (and is not closed)?
 	    if( el.length && !el[0].isClosed ){
 		// found the window: fill the message area
 		area = el.find(".JS9Message");
 	    } else if( message ) {
 		// start a light window and recurse to display the message
-		$("#dhtmlwindowholder").arrive("#" + rid,
+		$("#dhtmlwindowholder").arrive(`#${rid}`,
 	        { fireOnAttributesModification: true },
-	        function(){
-		    JS9.Info.display.call(that, type, message, target, force);
+	        () => {
+		    JS9.Info.display.call(this, type, message, target, force);
 		});
 		t = "Regions";
 		if( im ){
-		    t += ": " + im.id;
+		    t += `: ${im.id}`;
 		}
 		t += " ";
 		t += sprintf(JS9.IDFMT, this.id);
@@ -269,7 +268,7 @@ JS9.Info.display = function(type, message, target, force){
 	s = message;
 	break;
     case "object":
-	key = "vstr" + JS9.globalOpts.valposWidth;
+	key = `vstr${JS9.globalOpts.valposWidth}`;
 	s = message[key] || message.vstrmedium || message.vstr || "";
 	break;
     }
@@ -295,7 +294,7 @@ JS9.Image.prototype.displayMessage = JS9.Info.display;
 
 // clear an info message
 JS9.Info.clear = function(which){
-    var disp = this;
+    let disp = this;
     // backward compatibility -- allow context to be Image
     if( this.display ){
 	disp = this.display;
@@ -317,7 +316,7 @@ JS9.Image.prototype.clearMessage = JS9.Info.clear;
 // when a plugin window is brought up:
 // save valpos and set to true
 JS9.Info.pluginDisplay = function(im){
-    var disp;
+    let disp;
     if( im && im.display ){
 	if( im.tmp ){
 	    im.tmp.info_ovalpos = im.params.valpos;
@@ -344,10 +343,10 @@ JS9.Info.pluginClose = function(im){
 };
 
 // having added the prototype displayMessage, we can define a public routine
-JS9.mkPublic("DisplayMessage", function(type, message, target){
-    var got;
-    var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
+JS9.mkPublic("DisplayMessage", function(...args){
+    let got, type, message, target;
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.display);
     if( !display ){
 	JS9.error("invalid display for display message");
     }

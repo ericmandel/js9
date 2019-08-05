@@ -2,7 +2,7 @@
  * Multi-Extension FITS module (March 31, 2016)
  */
 
-/*global $, JS9, sprintf */
+/*global $, JS9 */
 
 "use strict";
 
@@ -16,8 +16,8 @@ JS9.Mef.BASE = JS9.Mef.CLASS + JS9.Mef.NAME;  // CSS base class name
 
 // change global separate mode for this display
 JS9.Mef.xseparate = function(id, target){
-    var display = JS9.lookupDisplay(id);
-    var separate = target.checked;
+    const display = JS9.lookupDisplay(id);
+    const separate = target.checked;
     // change separate mode for this instance
     if( display ){
 	display.pluginInstances[JS9.Mef.BASE].separate = separate;
@@ -27,7 +27,7 @@ JS9.Mef.xseparate = function(id, target){
 // load all images
 // eslint-disable-next-line no-unused-vars
 JS9.Mef.xall = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    const display = JS9.lookupDisplay(id);
     // display all image extensions
     if( display && display.image ){
 	display.pluginInstances[JS9.Mef.BASE].separate = true;
@@ -37,27 +37,25 @@ JS9.Mef.xall = function(id, target){
 
 // get an MefExtension id based on the file image id
 JS9.Mef.imid = function(im, i, noext){
-    var id = im.display.id + "_" + im.id;
+    let id = `${im.display.id}_${im.id}`;
     if( noext ){
 	id = id.replace(/\[[a-zA-Z0-9][a-zA-Z0-9_]*\]/g,"");
     }
-    return id
-	.replace(/[^A-Za-z0-9_]/g, "_")
-	+ "_MefExtension_" + i;
+    return `${id.replace(/[^A-Za-z0-9_]/g, "_")}_MefExtension_${i}`;
 };
 
 // change the active extension
 JS9.Mef.activeExtension = function(im, i){
-    var clas, classbase;
+    let clas, classbase;
     if( im ){
-	classbase = im.display.id + "_" + JS9.Mef.BASE;
-	$("." + classbase + "Extension")
-	    .removeClass(JS9.Mef.BASE + "ExtensionActive")
-	    .addClass(JS9.Mef.BASE + "ExtensionInactive");
+	classbase = `${im.display.id}_${JS9.Mef.BASE}`;
+	$(`.${classbase  }Extension`)
+	    .removeClass(`${JS9.Mef.BASE}ExtensionActive`)
+	    .addClass(`${JS9.Mef.BASE}ExtensionInactive`);
 	clas = JS9.Mef.imid(im, i, true);
-	$("." + clas )
-	    .removeClass(JS9.Mef.BASE + "ExtensionInactive")
-	    .addClass(JS9.Mef.BASE + "ExtensionActive");
+	$(`.${clas}` )
+	    .removeClass(`${JS9.Mef.BASE}ExtensionInactive`)
+	    .addClass(`${JS9.Mef.BASE}ExtensionActive`);
     }
 };
 
@@ -70,18 +68,17 @@ JS9.Mef.display = function(){
 
 // clear when an image closes
 JS9.Mef.close = function(){
-    // ensure that plugin display is reset
+    // ensure plugin display is reset
     JS9.Mef.init.call(this, {mode: "clear"});
 };
 
 // constructor: add HTML elements to the plugin
 JS9.Mef.init = function(opts){
-    var i, im, id, clas, obj, s, sid, div, htmlString, classbase;
-    var that = this;
-    var addExt = function(o, s, k){
-	var c, j;
-	var got = "";
-	var doit = true;
+    let i, im, id, clas, obj, s, sid, div, htmlString, classbase;
+    const addExt = (o, s, k) => {
+	let c, j;
+	let got = "";
+	let doit = true;
 	switch(o.type){
 	case "image":
 	    // look for 2D image
@@ -107,24 +104,24 @@ JS9.Mef.init = function(opts){
 	    break;
 	}
 	if( doit ){
-	    htmlString = "<pre>&nbsp;&nbsp;"+s+"</pre>";
+	    htmlString = `<pre>&nbsp;&nbsp;${s}</pre>`;
 	} else {
-	    htmlString = "<pre>&nbsp;&nbsp;<span class='JS9MefStrike'><span>"+s+"</span></span></pre>";
+	    htmlString = `<pre>&nbsp;&nbsp;<span class='JS9MefStrike'><span>${s}</span></span></pre>`;
 	}
 	id = JS9.Mef.imid(im, k);
 	clas = JS9.Mef.imid(im, k, true);
-	classbase = im.display.id + "_" + JS9.Mef.BASE;
+	classbase = `${im.display.id}_${JS9.Mef.BASE}`;
 	div = $("<div>")
 	    .addClass(clas)
-	    .addClass(classbase  + "Extension")
-	    .addClass(JS9.Mef.BASE  + "Extension")
-	    .addClass(JS9.Mef.BASE + "ExtensionInactive")
+	    .addClass(`${classbase   }Extension`)
+	    .addClass(`${JS9.Mef.BASE   }Extension`)
+	    .addClass(`${JS9.Mef.BASE}ExtensionInactive`)
 	    .attr("id", id)
 	    .html(htmlString)
-	    .appendTo(that.mefContainer);
+	    .appendTo(this.mefContainer);
 	if( doit ){
-	    div.on("mousedown touchstart", function(){
-		im.displayExtension(o.hdu, {separate: that.separate});
+	    div.on("mousedown touchstart", () => {
+		im.displayExtension(o.hdu, {separate: this.separate});
 		JS9.Mef.activeExtension(im, o.hdu);
 	    });
 	}
@@ -144,8 +141,8 @@ JS9.Mef.init = function(opts){
     this.divjq.html("");
     // add mef container to main
     this.mefContainer = $("<div>")
-	.addClass(JS9.Mef.BASE + "Container")
-	.attr("id", this.id + "MefContainer")
+	.addClass(`${JS9.Mef.BASE}Container`)
+	.attr("id", `${this.id}MefContainer`)
 	.appendTo(this.divjq);
     // separate mode
     if( this.separate === undefined ){
@@ -162,10 +159,10 @@ JS9.Mef.init = function(opts){
     }
     this.lastimage = im;
     // reset main container
-    s = sprintf("<div class='%s'><span><b>Click on a FITS HDU extension to display it:</b></span>", JS9.Mef.BASE + "Header");
+    s = `<div class='${JS9.Mef.BASE}Header'><span><b>Click on a FITS HDU extension to display it:</b></span>`;
     // add the checkbox for displaying each extension separately
     sid = JS9.Mef.imid(im, "Separate");
-    s += sprintf('&nbsp;&nbsp;<span><input type="checkbox" id="%s" name="separate" value="separate" onclick="javascript:JS9.Mef.xseparate(\'%s\', this)"><b>&nbsp;as a separate image</b></span><span style="float: right"><input type="button" id="%s" name="all" value="Display all images" onclick="javascript:JS9.Mef.xall(\'%s\', this)"></span></div>', sid, this.display.id, sid, this.display.id);
+    s += `&nbsp;&nbsp;<span><input type="checkbox" id="${sid}" name="separate" value="separate" onclick="javascript:JS9.Mef.xseparate('${this.display.id}', this)"><b>&nbsp;as a separate image</b></span><span style="float: right"><input type="button" id="${sid}" name="all" value="Display all images" onclick="javascript:JS9.Mef.xall('${this.display.id}', this)"></span></div>`;
     this.mefContainer.html(s);
     // add a formatted string for each extension
     for(i=0; i<im.hdus.length; i++){
@@ -173,7 +170,7 @@ JS9.Mef.init = function(opts){
 	s = JS9.hdus2Str([obj]).trim();
 	addExt(obj, s, i);
     }
-    $("#" + sid).prop("checked", this.separate);
+    $(`#${sid}`).prop("checked", this.separate);
     // make the currently displayed extension active
     if( im.raw.hdu.fits.extnum !== undefined ){
 	JS9.Mef.activeExtension(im, im.raw.hdu.fits.extnum);

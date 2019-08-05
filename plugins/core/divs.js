@@ -26,8 +26,8 @@ JS9.Divs.divNameHTML='<b>%s</b>';
 
 // make shape div visible/invisible
 JS9.Divs.xvisible = function(display, plugin, target){
-    var mode, instance;
-    var div = JS9.lookupDisplay(display);
+    let mode, instance;
+    const div = JS9.lookupDisplay(display);
     if( div ){
 	instance = div.pluginInstances[plugin];
 	if( instance ){
@@ -44,9 +44,9 @@ JS9.Divs.xvisible = function(display, plugin, target){
 
 // add a div to the list
 JS9.Divs.addDiv = function(plugin){
-    var s, divjq;
-    var cls = JS9.Divs.BASE + "Div";
-    var opts = [];
+    let s, divjq;
+    const cls = `${JS9.Divs.BASE}Div`;
+    const opts = [];
     // sanity checks
     if( !plugin || !this.display.pluginInstances[plugin] ){
 	return;
@@ -76,7 +76,7 @@ JS9.Divs.addDiv = function(plugin){
 
 // constructor: add HTML elements to the plugin
 JS9.Divs.init = function(opts){
-    var key, instances;
+    let key, instances;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -95,20 +95,20 @@ JS9.Divs.init = function(opts){
     this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.divsContainer = $("<div>")
-	.addClass(JS9.Divs.BASE + "Container")
-	.attr("id", this.id + "DivsContainer")
+	.addClass(`${JS9.Divs.BASE}Container`)
+	.attr("id", `${this.id}DivsContainer`)
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     // header
     this.divsHeader = $("<div>")
-	.addClass(JS9.Divs.BASE + "Header")
-	.attr("id", this.display.id + "Header")
+	.addClass(`${JS9.Divs.BASE}Header`)
+	.attr("id", `${this.display.id}Header`)
 	.html(JS9.Divs.headerHTML)
 	.appendTo(this.divsContainer);
     // container to hold divs
     this.divsDivContainer = $("<div>")
-	.addClass(JS9.Divs.BASE + "DivContainer")
-	.attr("id", this.id + "DivsDivContainer")
+	.addClass(`${JS9.Divs.BASE}DivContainer`)
+	.attr("id", `${this.id}DivsDivContainer`)
         .html(JS9.Divs.nodivsHTML)
 	.appendTo(this.divsContainer);
     // done if we are only clearing

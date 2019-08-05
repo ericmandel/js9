@@ -14,8 +14,8 @@ JS9.Sync.NAME = "Sync";
 // process ops input to [un]sync
 // called in image context
 JS9.Sync.getOps = function(ops){
-    var i, j, op;
-    var xops = [];
+    let i, j, op;
+    const xops = [];
     //  default from above ...
     ops = ops || JS9.globalOpts.syncOps;
     if( !$.isArray(ops) ){ ops = [ops]; }
@@ -38,8 +38,8 @@ JS9.Sync.getOps = function(ops){
 // process ims input to [un]sync
 // called in image context
 JS9.Sync.getIms = function(ims){
-    var i, j, xim;
-    var xims = [];
+    let i, j, xim;
+    const xims = [];
     ims = ims || JS9.images;
     if( !$.isArray(ims) ){ ims = [ims]; }
     for(i=0, j=0; i<ims.length; i++){
@@ -60,19 +60,20 @@ JS9.Sync.getIms = function(ims){
 
 // sync image(s) when operations are performed on an originating image
 // called in the image context
-JS9.Sync.sync = function(ops, ims, opts){
-    var i, j, xop, xim, xops, xims, xlen;
-    var arr = [];
+JS9.Sync.sync = function(...args){
+    let i, j, xop, xim, xops, xims, xlen;
+    let [ops, ims, opts] = args;
+    const arr = [];
     // make sure sink object exists
     this.syncs = this.syncs || {active: true};
     // opts is optional
     opts = opts || {reciprocate: JS9.globalOpts.syncReciprocate};
     // 1 boolean arg: turn on/off sync'ing
-    if( arguments.length === 1 && typeof ops === "boolean" ){
+    if( args.length === 1 && typeof ops === "boolean" ){
 	this.syncs.active = ops;
 	return;
     }
-    // get regularized arguments
+    // get regularized args
     xops = JS9.Sync.getOps.call(this, ops);
     xims = JS9.Sync.getIms.call(this, ims);
     xlen = xims.length;
@@ -116,7 +117,7 @@ JS9.Sync.sync = function(ops, ims, opts){
     if( !JS9.Sync.reciprocating ){
 	// sync the target images
 	JS9.Sync.xeqSync.call(this, arr);
-	// flag that we are ready to sync on user events
+	// flag we are ready to sync on user events
 	JS9.Sync.ready = true;
     }
 };
@@ -124,14 +125,14 @@ JS9.Sync.sync = function(ops, ims, opts){
 // unsync one or more images
 // called in the image context
 JS9.Sync.unsync = function(ops, ims, opts){
-    var i, op, tims, xops, xims, xlen, xim;
+    let i, op, tims, xops, xims, xlen, xim;
     // sanity check
     if( !this.syncs ){
 	return;
     }
     // opts is optional
     opts = opts || {reciprocate: JS9.globalOpts.syncReciprocate};
-    // get regularized arguments
+    // get regularized args
     xops = JS9.Sync.getOps.call(this, ops);
     xims = JS9.Sync.getIms.call(this, ims);
     xlen = xims.length;
@@ -191,11 +192,11 @@ JS9.Sync.unsync = function(ops, ims, opts){
 // perform a sync action on target images using params from originating image
 // called in image context
 JS9.Sync.xeqSync = function(arr){
-    var i, j, k, obj, pos, wcscen, xim, xarr, xobj, xdata;
-    var mydata, myobj, myid, rarr, rstr, args;
-    var oval = JS9.globalOpts.xeqPlugins;
-    var thisid = this.id + "_" + this.display.id;
-    var regmatch = function(r1, r2){
+    let i, j, k, obj, pos, wcscen, xim, xarr, xobj, xdata;
+    let mydata, myobj, myid, rarr, rstr, args;
+    const oval = JS9.globalOpts.xeqPlugins;
+    const thisid = `${this.id}_${this.display.id}`;
+    const regmatch = (r1, r2) => {
 	// check for a target region with the same syncid as the current region
 	if( !r1.data || !r1.data.syncid ){ return false; }
 	if( !r2.data || !r2.data.syncid ){ return false; }
@@ -243,7 +244,7 @@ JS9.Sync.xeqSync = function(arr){
 		    } else {
 			// Try to sync all regions in the current image to
 			// regions in the target. We will add regions which do
-			// not exist in the target, and update those that do.
+			// not exist in the target, and update those which do.
 			if( !rarr ){
 			    // get current regions, if necessary
 			    rarr = this.getShapes("regions");
@@ -278,7 +279,7 @@ JS9.Sync.xeqSync = function(arr){
 			    myid = myobj.data.syncid;
 			} else {
 			    // otherwise, make up our own syncid
-			    myid = thisid + "_" + myobj.id;
+			    myid = `${thisid}_${myobj.id}`;
 			}
 			// process the action for this region ...
 			switch(myobj.mode){
@@ -384,8 +385,8 @@ JS9.Sync.xeqSync = function(arr){
 // inner routine called by JS9.xeqPlugins callbacks
 // called in image context
 JS9.Sync.maybeSync = function(op, arg){
-    var i, ims;
-    var arr = [];
+    let i, ims;
+    const arr = [];
     // sanity check
     if( !JS9.Sync.ready || !this.syncs || this.syncs.running ){
 	return;
@@ -459,7 +460,7 @@ JS9.Sync.setzoom = function(im){
 
 // clean up an image when its closed
 JS9.Sync.closeimage = function(im){
-    var i;
+    let i;
     if( !im ){ return; }
     // remove this image from all other image sync lists
     for(i=0; i<JS9.images.length; i++){
