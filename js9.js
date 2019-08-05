@@ -13419,7 +13419,9 @@ JS9.Fabric.refreshShapes = function(layerName){
 	    canvas.discardActiveGroup();
 	}
     } else {
-	canvas.discardActiveObject();
+	if( canvas.getActiveObjects().length > 1 ){
+	    canvas.discardActiveObject();
+	}
     }
     ao = canvas.getActiveObject();
     // process the specified shapes
