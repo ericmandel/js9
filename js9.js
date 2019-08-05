@@ -13615,7 +13615,8 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
     let i, a;
     let pos = {};
     const canvas = dlayer.canvas;
-    const movePoint = () => {
+    // NB: 'this' is not lexical, so no arrow function here
+    const movePoint = function() {
 	const anchor = this;
 	const poly = anchor.polyparams.polygon;
 	const pt = anchor.polyparams.point;
