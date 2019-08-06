@@ -2979,7 +2979,9 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
 	// and use those image coords for the center of the section
 	oval = JS9.globalOpts.panWithinDisplay;
 	JS9.globalOpts.panWithinDisplay = true;
+	this.tmp.ozoom = this.rgb.sect.ozoom;
 	this.mkSection(npos.x, npos.y, wcssect.zoom);
+	this.rgb.sect.ozoom = this.tmp.ozoom; delete this.tmp.ozoom;
 	JS9.globalOpts.panWithinDisplay = oval;
 	// offsets of these images
 	this.ix -= (sect.xcen - ((sect.x0 + sect.x1)/2)) * wcssect.zoom;
@@ -3018,6 +3020,7 @@ JS9.Image.prototype.putImage = function(opts){
     // reproject: if reproj wcs header exists, save it for alignment
     if( this.rawDataLayer() === "reproject" && opts.wcsim ){
 	this.wcsim = opts.wcsim;
+	this.wcsim.isawcsim = true;
     }
     // get display offsets
     this.calcDisplayOffsets(true);
@@ -4158,18 +4161,17 @@ JS9.Image.prototype.setPan = function(panx, pany){
     if( !JS9.isNumber(panx) || !JS9.isNumber(pany) ){
 	JS9.error("invalid input for setPan: " + panx + " " + pany);
     }
-    if( this.wcsAlign() ){
+    if( this.wcsAlign() || this.isawcsim ){
 	oval = JS9.globalOpts.panWithinDisplay;
 	JS9.globalOpts.panWithinDisplay = true;
     }
     this.mkSection(panx, pany);
-    // set pan for blended images, if necessary
-    if( this.display.blendMode ){
+    // set pan for aligned images, if necessary
+    if( this.wcsAlign() || this.isawcsim ){
 	for(i=0; i<JS9.images.length; i++){
 	    im = JS9.images[i];
 	    if( (im !== this)                                &&
 		(im.display === this.display)                &&
-		im.blend.active                              &&
 		(im.wcsim  === this ||
                  this.wcsim === im  ||
                  (im.wcsim && (im.wcsim === this.wcsim)))    &&
@@ -4178,8 +4180,6 @@ JS9.Image.prototype.setPan = function(panx, pany){
 		im.mkSection(npan.x, npan.y);
 	    }
 	}
-    }
-    if( this.wcsAlign() ){
 	JS9.globalOpts.panWithinDisplay = oval;
     }
     this.displayImage("rgb");
@@ -4261,19 +4261,18 @@ JS9.Image.prototype.setZoom = function(zval){
     if( !nzoom ){
 	JS9.error("invalid input for setZoom: " + zval);
     }
-    if( this.wcsAlign() ){
+    if( this.wcsAlign() || this.isawcsim ){
 	oval = JS9.globalOpts.panWithinDisplay;
 	JS9.globalOpts.panWithinDisplay = true;
     }
     // remake section
     this.mkSection(nzoom);
-    // set zoom for blended images, if necessary
-    if( this.display.blendMode ){
+    // set zoom for aligned images, if necessary
+    if( this.wcsAlign() || this.isawcsim ){
 	for(i=0; i<JS9.images.length; i++){
 	    im = JS9.images[i];
 	    if( (im !== this)                                &&
 		(im.display === this.display)                &&
-		im.blend.active                              &&
 		(im.wcsim  === this ||
                  this.wcsim === im  ||
                  (im.wcsim && (im.wcsim === this.wcsim)))    &&
@@ -4282,8 +4281,6 @@ JS9.Image.prototype.setZoom = function(zval){
 		im.mkSection(ipos.x, ipos.y, nzoom);
 	    }
 	}
-    }
-    if( this.wcsAlign() ){
 	JS9.globalOpts.panWithinDisplay = oval;
     }
     // redisplay the image
