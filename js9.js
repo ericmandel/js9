@@ -11205,7 +11205,6 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	o = opts.target;
 	JS9.Fabric.updateChildren(dlayer, o, "moving");
     });
-    // NB: 'this' is not lexical: use function, not arrow
     dlayer.canvas.on('object:rotating', (opts) => {
 	let o;
 	// sanity check
@@ -11215,7 +11214,6 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     });
     if( fabric.major_version === 1 ){
 	// object selected: add anchors to polygon
-	// NB: 'this' is not lexical: use function, not arrow
 	dlayer.canvas.on("object:selected", (opts) => {
 	    // sanity check
 	    if( !opts.target ){ return; }
