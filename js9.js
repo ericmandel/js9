@@ -2945,7 +2945,9 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
 	// and use those image coords for the center of the section
 	oval = JS9.globalOpts.panWithinDisplay;
 	JS9.globalOpts.panWithinDisplay = true;
+	this.tmp.ozoom = this.rgb.sect.ozoom;
 	this.mkSection(npos.x, npos.y, wcssect.zoom);
+	this.rgb.sect.ozoom = this.tmp.ozoom; delete this.tmp.ozoom;
 	JS9.globalOpts.panWithinDisplay = oval;
 	// offsets of these images
 	this.ix -= (sect.xcen - ((sect.x0 + sect.x1)/2)) * wcssect.zoom;
@@ -2985,6 +2987,7 @@ JS9.Image.prototype.putImage = function(opts){
     // reproject: if reproj wcs header exists, save it for alignment
     if( this.rawDataLayer() === "reproject" && opts.wcsim ){
 	this.wcsim = opts.wcsim;
+	this.wcsim.isawcsim = true;
     }
     // get display offsets
     this.calcDisplayOffsets(true);
@@ -4127,18 +4130,17 @@ JS9.Image.prototype.setPan = function(...args){
     if( !JS9.isNumber(panx) || !JS9.isNumber(pany) ){
 	JS9.error(`invalid input for setPan: ${panx} ${pany}`);
     }
-    if( this.wcsAlign() ){
+    if( this.wcsAlign() || this.isawcsim ){
 	oval = JS9.globalOpts.panWithinDisplay;
 	JS9.globalOpts.panWithinDisplay = true;
     }
     this.mkSection(panx, pany);
-    // set pan for blended images, if necessary
-    if( this.display.blendMode ){
+    // set pan for aligned images, if necessary
+    if( this.wcsAlign() || this.isawcsim ){
 	for(i=0; i<JS9.images.length; i++){
 	    im = JS9.images[i];
 	    if( (im !== this)                                &&
 		(im.display === this.display)                &&
-		im.blend.active                              &&
 		(im.wcsim  === this ||
                  this.wcsim === im  ||
                  (im.wcsim && (im.wcsim === this.wcsim)))    &&
@@ -4147,8 +4149,6 @@ JS9.Image.prototype.setPan = function(...args){
 		im.mkSection(npan.x, npan.y);
 	    }
 	}
-    }
-    if( this.wcsAlign() ){
 	JS9.globalOpts.panWithinDisplay = oval;
     }
     this.displayImage("rgb");
@@ -4230,19 +4230,18 @@ JS9.Image.prototype.setZoom = function(zval){
     if( !nzoom ){
 	JS9.error(`invalid input for setZoom: ${zval}`);
     }
-    if( this.wcsAlign() ){
+    if( this.wcsAlign() || this.isawcsim ){
 	oval = JS9.globalOpts.panWithinDisplay;
 	JS9.globalOpts.panWithinDisplay = true;
     }
     // remake section
     this.mkSection(nzoom);
-    // set zoom for blended images, if necessary
-    if( this.display.blendMode ){
+    // set zoom for aligned images, if necessary
+    if( this.wcsAlign() || this.isawcsim ){
 	for(i=0; i<JS9.images.length; i++){
 	    im = JS9.images[i];
 	    if( (im !== this)                                &&
 		(im.display === this.display)                &&
-		im.blend.active                              &&
 		(im.wcsim  === this ||
                  this.wcsim === im  ||
                  (im.wcsim && (im.wcsim === this.wcsim)))    &&
@@ -4251,8 +4250,6 @@ JS9.Image.prototype.setZoom = function(zval){
 		im.mkSection(ipos.x, ipos.y, nzoom);
 	    }
 	}
-    }
-    if( this.wcsAlign() ){
 	JS9.globalOpts.panWithinDisplay = oval;
     }
     // redisplay the image
@@ -12305,7 +12302,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	return;
     }
     // once a shape has been added, we can set the zindex to process events
-    if( !canvas.size() ){
+    if( JS9.isNull(layer.zindex) || Number.isNaN(layer.zindex)  ){
 	if( this.display.layers[layerName].dtype === "main" ){
 	    switch(layerName){
 	    case JS9.Crosshair.LAYERNAME:
@@ -13308,154 +13305,34 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 };
 
 // update shape layer after a change in panning, zooming, binning
-// This routine is more complicated than one would want because fabric.js mixes
-// regions resize, zoom, and binning all in the same scale factor. So when
-// we want to adjust a region for pan, zoom, or bin, we first have to untangle
-// the old zoom and bin values from the scale before applying new ones.
-// Current approach is to save the old bin and zoom factors when changing them,
-// use the old ones here, and then reset the old ones to the new ones. Hmmm ...
 // call using image context
 JS9.Fabric.refreshShapes = function(layerName){
-    let ao, bin, zoom, scaleX, scaleY, tscaleX, tscaleY, layer, canvas;
-    let ismain = false;
-    const wcs = this.raw.wcs;
-    layer = this.getShapeLayer(layerName);
+    let regstr, owcssys, txeq;
     // sanity check
-    if( !layer ){
+    if( !layerName ){
 	return;
     }
-    if( this.display.layers[layerName].dtype === "main" ){
-	ismain = true;
-    }
-    if( ismain ){
-	bin = this.binning.bin;
-	zoom = this.rgb.sect.zoom;
-	// scale factor removes the old values and applies the new ones
-	scaleX = (this.binning.obin / this.rgb.sect.ozoom) * zoom / bin;
-	scaleY = (this.binning.obin / this.rgb.sect.ozoom) * zoom / bin;
+    // temporarily turn off plugin execution
+    txeq = JS9.globalOpts.xeqPlugins;
+    JS9.globalOpts.xeqPlugins = false;
+    // temporarily change wcs system to be independent of image coords
+    owcssys = this.getWCSSys();
+    if( this.raw.wcs && (this.raw.wcs > 0) ){
+	this.setWCSSys("native");
     } else {
-	bin = 1;
-	zoom = this.rgb.sect.zoom;
-	scaleX = zoom;
-	scaleY = zoom;
+	this.setWCSSys("physical");
     }
-    canvas = layer.canvas;
-    // have to discard active groups before changing position of shapes
-    if( fabric.major_version === 1 ){
-	if( canvas.getActiveGroup() ){
-	    canvas.discardActiveGroup();
-	}
-    } else {
-	canvas.discardActiveObject();
+    // get current regions (i.e., before update to current configuration)
+    regstr = this.listRegions("all", {mode: 1}, layerName);
+    if( regstr ){
+	// remove current regions
+	this.removeShapes(layerName, "all");
+	// add back regions in current configuration
+	this.addShapes(layerName, regstr);
     }
-    ao = canvas.getActiveObject();
-    // process the specified shapes
-    this.selectShapes(layerName, "all", (obj) => {
-	let i, s, pos, cen, pts;
-	// convert current logical position to new display position
-	// this takes binning, etc. into consideration
-	if( wcs > 0 && obj.pub.ra && obj.pub.dec ){
-	    if( typeof obj.pub.ra === "string" ){
-		obj.pub.ra = JS9.saostrtod(obj.pub.ra);
-		if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-		    (this.params.wcssys !== "galactic" )          &&
-		    (this.params.wcssys !== "ecliptic" )          ){
-		    obj.pub.ra *= 15.0;
-		}
-	    }
-	    if( typeof obj.pub.dec === "string" ){
-		obj.pub.dec = JS9.saostrtod(obj.pub.dec);
-	    }
-	    s = JS9.wcs2pix(wcs, obj.pub.ra, obj.pub.dec).trim().split(/ +/);
-	    pos = this.imageToDisplayPos({x: parseFloat(s[0]),
-					  y: parseFloat(s[1])});
-	} else {
-	    pos = this.logicalToDisplayPos(obj.pub.lcs);
-	}
-	// change region position
-	obj.set("left", pos.x);
-	obj.set("top", pos.y);
-	// change angle for shapes accepting angles
-	if( obj.params.shape === "box"                           ||
-	    obj.params.shape === "ellipse"                       ||
-	    (obj.params.shape === "text"  && !obj.params.parent) ){
-	    if( this.raw.wcsinfo && this.raw.wcsinfo.crot ){
-		obj.set("angle", -(obj.pub.angle + this.raw.wcsinfo.crot));
-	    } else {
-		obj.set("angle", -obj.pub.angle);
-	    }
-	}
-	// set scaling based on zoom factor, if necessary
-	if( obj.params.zoomable !== false ){
-	    switch(obj.params.shape){
-	    case "point":
-	    case "text":
-		break;
-	    default:
-		// rescale the region
-		tscaleX = scaleX;
-		tscaleY = scaleY;
-		if( ismain ){
-		    // tscale is the resize part of old scale * new bin & zoom
-		    tscaleX *= obj.scaleX;
-		    tscaleY *= obj.scaleY;
-		}
-		obj.scaleX = tscaleX;
-		obj.scaleY = tscaleY;
-		// rescale the width of the stroke lines
-		obj.rescaleBorder();
-		//  refresh polygon and line coordinates from wcs or physical
-		if( obj.points ){
-		    cen = obj.getCenterPoint();
-		    if( wcs > 0 && obj.pub.wcspts ){
-			pts = obj.pub.wcspts;
-			for(i=0; i<pts.length; i++){
-			    s = JS9.wcs2pix(wcs, pts[i].ra, pts[i].dec)
-				.trim().split(/ +/);
-			    pos = this.imageToDisplayPos({x: parseFloat(s[0]),
-							  y: parseFloat(s[1])});
-			    if( obj.angle ){
-				pos = JS9.rotatePoint(pos, -obj.angle, cen);
-			    }
-			    obj.points[i] = {x: (pos.x - cen.x)/obj.scaleX,
-					     y: (pos.y - cen.y)/obj.scaleY};
-			}
-		    } else if( obj.pub.lcs.pts ){
-			pts = obj.pub.lcs.pts;
-			for(i=0; i<pts.length; i++){
-			    pos = this.logicalToDisplayPos(obj.pub.lcs.pts[i]);
-			    if( obj.angle ){
-				pos = JS9.rotatePoint(pos, -obj.angle, cen);
-			    }
-			    obj.points[i] = {x: (pos.x - cen.x)/obj.scaleX,
-					     y: (pos.y - cen.y)/obj.scaleY};
-			}
-		    }
-		}
-		break;
-	    }
-	}
-	// recalculate fabric coords
-	obj.setCoords();
-	// shape-specific processing
-	switch(obj.type){
-	    case "polyline":
-	    case "polygon":
-	    if( ao === obj ){
-		JS9.Fabric.removePolygonAnchors(layer.dlayer, obj);
-		JS9.Fabric.addPolygonAnchors(layer.dlayer, obj);
-	    }
-	    break;
-	}
-	// update children
-	JS9.Fabric.updateChildren(layer.dlayer, obj, "moving");
-	JS9.Fabric.updateChildren(layer.dlayer, obj, "scaling");
-	JS9.Fabric.updateChildren(layer.dlayer, obj, "rotating");
-    });
-    // redraw regions
-    if( canvas ){
-	canvas.renderAll();
-    }
+    // restore changes
+    this.setWCSSys(owcssys);
+    JS9.globalOpts.xeqPlugins = txeq;
     return this;
 };
 
