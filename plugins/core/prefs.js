@@ -705,16 +705,14 @@ JS9.Prefs.init = function(){
 
 // action for Apply in Form
 JS9.Prefs.applyForm = function(){
-    let arr = form.serializeArray();
+    let arr, arr2;
     const form = $(this).closest("form");
     const display = form.data("display");
     const source = form.data("source");
     const winid = form.data("winid");
-    // NB: 'this' is not lexical, so no arrow function here
-    arr = arr.concat($(`#${form.attr("id")} input[type=checkbox]:not(:checked)`).map(function(){
-	return {"name": this.name, "value": "false"};
-    }).get());
-    JS9.Prefs.processForm(source, arr, display, winid);
+    arr = form.serializeArray();
+    arr2 = arr.concat($(`#${form.attr("id")} input[type=checkbox]:not(:checked)`).map((i, e) => {return {"name": e.name, "value": "false"};}).get());
+    JS9.Prefs.processForm(source, arr2, display, winid);
     return false;
 };
 
