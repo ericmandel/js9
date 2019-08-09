@@ -8312,12 +8312,12 @@ JS9.Image.prototype.removeProxyFile = function(s){
 JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     let i, j, k, shape, pos, siz, reg, data, header, delims, sizefunc;
     let xcol, ycol, ra, dec, owcssys, wcssys, tcol, tregexp;
+    const global = JS9.globalOpts.catalogs;
     const xcols = JS9.globalOpts.catalogs.ras;
     const ycols = JS9.globalOpts.catalogs.decs;
     const regs = [];
     const wcol = 1;
     const hcol = 1;
-    const global = JS9.globalOpts.catalogs;
     const getpos = (ra, dec) => {
 	let arr;
 	arr = JS9.wcs2pix(this.raw.wcs, ra, dec).trim().split(/ +/);
