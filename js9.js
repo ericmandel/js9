@@ -8963,7 +8963,6 @@ JS9.Display = function(el){
 // add support for file dialog box which executes JS9 routine on file blobs
 JS9.Display.prototype.addFileDialog = function(funcName, template){
     let jdiv, jinput, id;
-    const _this = this;
     // sanity check
     if( !funcName || !JS9.publics[funcName] ){
 	return;
@@ -8989,25 +8988,25 @@ JS9.Display.prototype.addFileDialog = function(funcName, template){
 	jinput.attr("accept", template);
     }
     // add callback for when input changes
-    // NB: 'this' is not lexical: use function, not arrow
-    jinput.on("change", function(){
+    jinput.on("change", (e) => {
 	let i, opts;
-	if( this.files.length ){
+	const el = e.currentTarget;
+	if( el.files.length ){
 	    switch(funcName){
 	    case "Load":
 	    case "RefreshImage":
 		opts = {localAccess: true};
-		JS9.waiting(true, _this);
+		JS9.waiting(true, this);
 		break;
 	    default:
 		break;
 	    }
 	}
-	for(i=0; i<this.files.length; i++){
+	for(i=0; i<el.files.length; i++){
 	    // execute a JS9 public access routine
-	    JS9.publics[funcName](this.files[i], opts, {display: _this.id});
+	    JS9.publics[funcName](el.files[i], opts, {display: this.id});
 	}
-	this.value = null;
+	el.value = null;
 	return false;
     });
 };
@@ -9580,9 +9579,8 @@ JS9.Display.prototype.separate = function(opts){
 		    saveims[d1] = im;
 		    // code to run when new window exists
 		    $("#dhtmlwindowholder").arrive(`#${d1}`, {onceOnly: true},
-		        // NB: 'this' is not lexical: use function, not arrow
-			function(){
-			    id = $(this).attr("id");
+			(el) => {
+			    id = $(el).attr("id");
 			    // FF (at least) needs this 0ms delay
 			    window.setTimeout(() => {
 				// move this image
@@ -10988,60 +10986,57 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	dlayer.opts.onmouseover || dlayer.opts.onmouseout ){
 	dlayer.opts.evented = true;
 	if( dlayer.opts.onmousedown ){
-	    // NB: 'this' is not lexical: use function, not arrow
-	    dlayer.canvas.on("mouse:down", function(opts){
+	    dlayer.canvas.on("mouse:down", (opts) => {
 		if( dlayer.display.image && opts.target ){
 		    // on main window, set region click
 		    if( dlayer.dtype === "main" ){
 			dlayer.display.image.clickInRegion = true;
 			dlayer.display.image.clickInLayer = layerName;
 		    }
-		    dlayer.opts.onmousedown.call(this,
+		    dlayer.opts.onmousedown.call(dlayer.canvas,
 						 dlayer.display.image,
 						 opts.target.pub,
 						 opts.e, opts.target);
 		} else {
 		    // only allow fabric selection if we have special key down
-		    this._selection = this.selection;
-		    if( this.selection ){
-			this.selection = JS9.specialKey(opts.e);
+		    dlayer.canvas._selection = dlayer.canvas.selection;
+		    if( dlayer.canvas.selection ){
+			dlayer.canvas.selection = JS9.specialKey(opts.e);
 		    }
 		}
 	    });
 	} else {
-	    // NB: 'this' is not lexical: use function, not arrow
-	    dlayer.canvas.on("mouse:down", function(opts){
+	    dlayer.canvas.on("mouse:down", (opts) => {
 		// only allow fabric selection if we have special key down
-		this._selection = this.selection;
-		if( this.selection ){
-		    this.selection = JS9.specialKey(opts.e);
+		dlayer.canvas._selection = dlayer.canvas.selection;
+		if( dlayer.canvas.selection ){
+		    dlayer.canvas.selection = JS9.specialKey(opts.e);
 		}
 	    });
 	}
 	if( dlayer.opts.onmouseup ){
-	    // NB: 'this' is not lexical: use function, not arrow
-	    dlayer.canvas.on("mouse:up", function(opts){
+	    dlayer.canvas.on("mouse:up", (opts) => {
 		if( dlayer.display.image && opts.target ){
-		    dlayer.opts.onmouseup.call(this,
+		    dlayer.opts.onmouseup.call(dlayer.canvas,
 					       dlayer.display.image,
 					       opts.target.pub,
 					       opts.e, opts.target);
 		}
 		// restore original selection state
-		this.selection = this._selection || this.selection;
+		dlayer.canvas.selection = dlayer.canvas._selection ||
+		                          dlayer.canvas.selection;
 	    });
 	} else {
-	    // NB: 'this' is not lexical: use function, not arrow
-	    dlayer.canvas.on("mouse:up", function(){
+	    dlayer.canvas.on("mouse:up", () => {
 		// restore original selection state
-		this.selection = this._selection || this.selection;
+		dlayer.canvas.selection = dlayer.canvas._selection ||
+                                          dlayer.canvas.selection;
 	    });
 	}
 	if( dlayer.opts.onmousemove ){
-	    // NB: 'this' is not lexical: use function, not arrow
-	    dlayer.canvas.on("mouse:move", function(opts){
+	    dlayer.canvas.on("mouse:move", (opts) => {
 		if( dlayer.display.image && opts.target ){
-		    dlayer.opts.onmousemove.call(this,
+		    dlayer.opts.onmousemove.call(dlayer.canvas,
 						 dlayer.display.image,
 						 opts.target.pub,
 						 opts.e, opts.target);
@@ -11049,10 +11044,9 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    });
 	}
 	if( dlayer.opts.onmouseover ){
-	    // NB: 'this' is not lexical: use function, not arrow
-	    dlayer.canvas.on("mouse:over", function(opts){
+	    dlayer.canvas.on("mouse:over", (opts) => {
 		if( dlayer.display.image && opts.target ){
-		    dlayer.opts.onmouseover.call(this,
+		    dlayer.opts.onmouseover.call(dlayer.canvas,
 						 dlayer.display.image,
 						 opts.target.pub,
 						 opts.e, opts.target);
@@ -11060,10 +11054,9 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    });
 	}
 	if( dlayer.opts.onmouseout ){
-	    // NB: 'this' is not lexical: use function, not arrow
-	    dlayer.canvas.on("mouse:out", function(opts){
+	    dlayer.canvas.on("mouse:out", (opts) => {
 		if( dlayer.display.image && opts.target ){
-		    dlayer.opts.onmouseout.call(this,
+		    dlayer.opts.onmouseout.call(dlayer.canvas,
 						dlayer.display.image,
 						opts.target.pub,
 						opts.e, opts.target);
@@ -11092,26 +11085,24 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    });
 	}
     } else {
-	// NB: 'this' is not lexical: use function, not arrow
-	dlayer.canvas.on("mouse:down", function(opts){
+	dlayer.canvas.on("mouse:down", (opts) => {
 	    // only allow fabric selection if we have special key down
-	    this._selection = this.selection;
-	    if( this.selection ){
-		this.selection = JS9.specialKey(opts.e);
+	    dlayer.canvas._selection = dlayer.canvas.selection;
+	    if( dlayer.canvas.selection ){
+		dlayer.canvas.selection = JS9.specialKey(opts.e);
 	    }
 	});
-	// NB: 'this' is not lexical: use function, not arrow
-	dlayer.canvas.on("mouse:up", function(){
+	dlayer.canvas.on("mouse:up", () => {
 	    // restore original selection state
-	    this.selection = this._selection || this.selection;
+	    dlayer.canvas.selection = dlayer.canvas._selection ||
+                                      dlayer.canvas.selection;
 	});
     }
     // fire events when groups are created
     if( typeof dlayer.opts.ongroupcreate === "function" ){
 	dlayer.opts.canvas.selection = true;
 	dlayer.opts.selectable = true;
-	// NB: 'this' is not lexical: use function, not arrow
-	dlayer.canvas.on("selection:created", function(opts){
+	dlayer.canvas.on("selection:created", (opts) => {
 	    const pubs = [];
 	    const targets = [];
 	    if( dlayer.display.image ){
@@ -11122,7 +11113,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 			    pubs.push(shape.pub);
 			}
 		    });
-		    dlayer.opts.ongroupcreate.call(this,
+		    dlayer.opts.ongroupcreate.call(dlayer.canvas,
 						   dlayer.display.image,
 						   pubs,
 						   opts.e, targets);
@@ -13490,9 +13481,8 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
     let i, a;
     let pos = {};
     const canvas = dlayer.canvas;
-    // NB: 'this' is not lexical, so no arrow function here
-    const movePoint = function() {
-	const anchor = this;
+    const movePoint = (obj) => {
+	const anchor = obj.target;
 	const poly = anchor.polyparams.polygon;
 	const pt = anchor.polyparams.point;
 	const points = poly.get('points');
@@ -13602,8 +13592,6 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	moveAnchors(obj);
     });
     obj.setCoords();
-    // let the caller do this
-    // canvas.renderAll();
 };
 
 // remove anchors from a polygon
@@ -14268,7 +14256,6 @@ JS9.MouseTouch.mousetouchzoom = function(id, target){
 // constructor: add HTML elements to the plugin
 JS9.MouseTouch.init = function(){
     let i, s;
-    const _this = this;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -14332,15 +14319,15 @@ JS9.MouseTouch.init = function(){
 	}
 	// the actions within the action container will be sortable
 	this.mousetouchTouchContainer.sortable({
-	    // NB: 'this' is not lexical: use function, not arrow
-	    start(event, ui) {
+	    start: (event, ui) => {
 		this.oidx = ui.item.index();
 	    },
-	    stop(event, ui) {
+	    stop: (event, ui) => {
 		const nidx = ui.item.index();
-		const oarr = _this.display.touchActions.splice(this.oidx, 1)[0];
+		const oarr = this.display.touchActions.splice(this.oidx, 1)[0];
 		// JS9 action list reflects the sort
-		_this.display.touchActions.splice(nidx, 0, oarr);
+		this.display.touchActions.splice(nidx, 0, oarr);
+		delete this.oidx;
 	    }
 	});
     }
@@ -14374,15 +14361,15 @@ JS9.MouseTouch.init = function(){
 	}
 	// the actions within the action container will be sortable
 	this.mousetouchMouseContainer.sortable({
-	    // NB: 'this' is not lexical: use function, not arrow
-	    start(event, ui) {
+	    start: (event, ui) => {
 		this.oidx = ui.item.index();
 	    },
-	    stop(event, ui) {
+	    stop: (event, ui) => {
 		const nidx = ui.item.index();
-		const oarr = _this.display.mouseActions.splice(this.oidx, 1)[0];
+		const oarr = this.display.mouseActions.splice(this.oidx, 1)[0];
 		// JS9 action list reflects the sort
-		_this.display.mouseActions.splice(nidx, 0, oarr);
+		this.display.mouseActions.splice(nidx, 0, oarr);
+		delete this.oidx;
 	    }
 	});
     }
@@ -14547,8 +14534,7 @@ JS9.Regions.init = function(layerName){
     // init the display shape layer
     dlayer = this.display.newShapeLayer(layerName, JS9.Regions.opts);
     // mouse up: list regions, if necessary
-    // NB: 'this' is not lexical: use function, not arrow
-    dlayer.canvas.on("mouse:up", function(){
+    dlayer.canvas.on("mouse:up", () => {
 	let i, tim;
 	let objs = [];
 	if( dlayer.display.image ){
@@ -14556,14 +14542,14 @@ JS9.Regions.init = function(layerName){
 	    // one active object
 	    // group of active objects
 	    if( fabric.major_version === 1 ){
-		if( this.getActiveObject() ){
-		    objs.push(this.getActiveObject());
+		if( dlayer.canvas.getActiveObject() ){
+		    objs.push(dlayer.canvas.getActiveObject());
 		}
-		if( this.getActiveGroup() ){
-		    objs = this.getActiveGroup().getObjects();
+		if( dlayer.canvas.getActiveGroup() ){
+		    objs = dlayer.canvas.getActiveGroup().getObjects();
 		}
 	    } else {
-		objs.push(this.getActiveObjects());
+		objs.push(dlayer.canvas.getActiveObjects());
 	    }
 	    // process all active objects
 	    for(i=0; i<objs.length; i++){
@@ -14618,7 +14604,6 @@ JS9.Regions.initConfigForm = function(obj){
     const winid = params.winid;
     const wid = $(winid).attr("id");
     const form = `#${wid} #regionsConfigForm `;
-    const _this = this;
     const fmt= (val) => {
 	if( val === undefined ){
 	    return undefined;
@@ -14636,16 +14621,14 @@ JS9.Regions.initConfigForm = function(obj){
     };
     // get alternate wcssys, if necessary
     altwcssys = $(form).data("wcssys");
-    // remove the nodisplay class from this shape's div
-    // NB: 'this' is not lexical: use function, not arrow
-    $(`${form}.${obj.pub.shape}`).each(function(){
-	$(this).removeClass("nodisplay");
+    // remove the nodisplay class from shape's div
+    $(`${form}.${obj.pub.shape}`).each((index, element) => {
+	$(element).removeClass("nodisplay");
     });
     // fill in the values from the shape object
-    // NB: 'this' is not lexical, so no arrow function here
-    $(`${form}.val`).each(function(){
+    $(`${form}.val`).each((index, element) => {
 	val = "";
-	key = $(this).attr("name");
+	key = $(element).attr("name");
 	// key-specific pre-processing
 	switch(key){
 	case "x":
@@ -14659,8 +14642,8 @@ JS9.Regions.initConfigForm = function(obj){
 	    break;
 	case "radii":
 	    if( obj.pub.radii ){
-		if( _this.params.wcssys === "image"    ||
-		    _this.params.wcssys === "physical" ||
+		if( this.params.wcssys === "image"    ||
+		    this.params.wcssys === "physical" ||
 		    !obj.pub.wcsstr                   ){
 		    val = obj.pub.imstr
 			.replace(/^annulus\(/,"").replace(/\)$/,"")
@@ -14721,8 +14704,8 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "regstr":
-	    if( _this.params.wcssys === "image"    ||
-		_this.params.wcssys === "physical" ||
+	    if( this.params.wcssys === "image"    ||
+		this.params.wcssys === "physical" ||
 		!obj.pub.wcsstr                    ){
 		val = `${obj.pub.imsys}; ${obj.pub.imstr}`;
 	    } else {
@@ -14730,7 +14713,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "xpos":
-	    switch(_this.params.wcssys){
+	    switch(this.params.wcssys){
 	    case 'image':
 		val = sprintf('%.1f', obj.pub.x);
 		break;
@@ -14753,7 +14736,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    ra = val;
 	    break;
 	case "ypos":
-	    switch(_this.params.wcssys){
+	    switch(this.params.wcssys){
 	    case 'image':
 		val = sprintf('%.1f', obj.pub.y);
 		break;
@@ -14780,7 +14763,7 @@ JS9.Regions.initConfigForm = function(obj){
 	case "length":
 	case "width":
 	case "r1":
-	    switch(_this.params.wcssys){
+	    switch(this.params.wcssys){
 	    case 'image':
 		if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
@@ -14802,7 +14785,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    break;
 	case "height":
 	case "r2":
-	    switch(_this.params.wcssys){
+	    switch(this.params.wcssys){
 	    case 'image':
 		if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
@@ -14831,8 +14814,8 @@ JS9.Regions.initConfigForm = function(obj){
 		    el.append(`<option>${wcssys}</option>`);
 		}
 	    }
-	    el.find('option').each( (index, element) => {
-		if( _this.params.wcssys === element.value ){
+	    el.find('option').each((index, element) => {
+		if( this.params.wcssys === element.value ){
 		    val = element.value;
 		}
 	    });
@@ -14851,8 +14834,8 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    val = $(form).data("wcssys");
 	    if( !val ){
-		el.find('option').each( (index, element) => {
-		    if( _this.params.wcssys === element.value ){
+		el.find('option').each((index, element) => {
+		    if( this.params.wcssys === element.value ){
 			val = element.value;
 		    }
 		});
@@ -14882,7 +14865,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	}
-	$(this).val(val);
+	$(element).val(val);
     });
     if( !this.raw.wcs || this.raw.wcs < 0 ){
 	$(form).find("[name='wcssys']").hide();
@@ -14959,20 +14942,20 @@ JS9.Regions.initConfigForm = function(obj){
 	    mover = "mouseover";
 	    mout = "mouseout";
 	}
-	// NB: 'this' is not lexical: use function, not arrow
-	$(".col_R").on(mover, function() {
+	$(".col_R").on(mover, (e) => {
 	    let title;
-	    const tooltip = $(this).find("input").data("tooltip");
-	    const el = $(this).closest(".dhtmlwindow").find(".drag-handle");
+	    const target = e.currentTarget;
+	    const tooltip = $(target).find("input").data("tooltip");
+	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
 	    if( tooltip && el.length ){
 		// change title: see dhtmlwindow.js load() @line 130
 		title = `${JS9.Regions.opts.title}: ${tooltip}`;
 		$(el)[0].childNodes[0].nodeValue = title;
 	    }
 	});
-	// NB: 'this' is not lexical: use function, not arrow
-	$(".col_R").on(mout, function() {
-	    const el = $(this).closest(".dhtmlwindow").find(".drag-handle");
+	$(".col_R").on(mout, (e) => {
+	    const target = e.currentTarget;
+	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
 	    if( el.length ){
 		$(el)[0].childNodes[0].nodeValue = JS9.Regions.opts.title;
 	    }
@@ -16959,9 +16942,8 @@ JS9.jupyterFocus = function(el, el2){
 	    eljq = $(el);
 	}
 	el2 = el2 || "input, textarea";
-	// NB: 'this' is not lexical: use function, not arrow
-	eljq.find(el2).each(function(){
-	    Jupyter.keyboard_manager.register_events($(this));
+	eljq.find(el2).each((index, element) => {
+	    Jupyter.keyboard_manager.register_events($(element));
 	});
     }
 };
@@ -17213,21 +17195,19 @@ JS9.lightWin = function(id, type, s, title, opts){
 	}
 	// allow double-click or double-tap to close ...
 	// ... the close button is unresponsive on the ipad/iphone
-	// NB: 'this' is not lexical: use function, not arrow
         $(`#${id} .${JS9.lightOpts.dhtml.dragBar}`)
-	    .on("mouseup touchend", this, function(){
+	    .on("mouseup touchend", (e) => {
 		const curtime = (new Date()).getTime();
-		const lasttime = $(this).data("lasttime");
+		const lasttime = $(e.currentTarget).data("lasttime");
 		if( lasttime && (curtime - lasttime) < JS9.DBLCLICK ){
 		    rval.close();
 		}
-		$(this).data("lasttime", curtime);
+		$(e.currentTarget).data("lasttime", curtime);
 	    });
 	// if ios user failed to close the window via the close button,
 	// give a hint (once per session only!)
-	// NB: 'this' is not lexical: use function, not arrow
         $(`#${id} .${JS9.lightOpts.dhtml.dragBar}`)
-	    .on("touchend", this, function(){
+	    .on("touchend", () => {
 		// skip check if we are dragging
 		if( !dhtmlwindow.distancex  && !dhtmlwindow.distancey ){
 		    if( JS9.lightOpts.nclick >= 2 ){
@@ -17560,13 +17540,12 @@ JS9.fetchURL = function(name, url, opts, handler) {
     if( JS9.globalOpts.xtimeout ){
 	xhr.timeout = JS9.globalOpts.xtimeout;
     }
-    // NB: 'this' is not lexical: use function, not arrow
-    xhr.onload = function() {
+    xhr.onload = () => {
 	let blob;
-        if( this.readyState === 4 ){
-	    if( this.status === 200 || this.status === 0 ){
+        if( xhr.readyState === 4 ){
+	    if( xhr.status === 200 || xhr.status === 0 ){
 		if( xhr.responseType === "blob" ){
-	            blob = new Blob([this.response]);
+	            blob = new Blob([xhr.response]);
 		    // discard path (or scheme) up to slashes
 		    // remove trailing ? params
 		    if( name.match("://") ){
@@ -17586,24 +17565,22 @@ JS9.fetchURL = function(name, url, opts, handler) {
 		    }
 		} else {
 		    if( opts.display ){
-			handler(this.response, opts, {display: opts.display});
+			handler(xhr.response, opts, {display: opts.display});
 		    } else {
-			handler(this.response, opts);
+			handler(xhr.response, opts);
 		    }
 		}
-	    } else if( this.status === 404 ) {
+	    } else if( xhr.status === 404 ) {
 		JS9.error(`could not find ${url}`);
 	    } else {
 		JS9.error(`can't load: ${url} ${xhr.statusText} ${xhr.status}`);
 	    }
 	}
     };
-    // NB: 'this' is not lexical: use function, not arrow
-    xhr.onerror = function() {
+    xhr.onerror = () => {
 	JS9.error(`cannot load: ${url} ... please check the url/pathname`);
     };
-    // NB: 'this' is not lexical: use function, not arrow
-    xhr.ontimeout = function() {
+    xhr.ontimeout = () => {
 	JS9.error(`timeout awaiting response from server: ${url}`);
     };
     // fetch the data!
@@ -19535,7 +19512,6 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
     // save full name
     instance.name = plugin.name;
     // routine to tell if this instance active
-    // NB: 'this' is not lexical: use function, not arrow
     instance.isActive = function(cbname){
 	if( this.status !== "active" ){
 	    return false;
@@ -19551,7 +19527,6 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	}
     };
     // routine to log error
-    // NB: 'this' is not lexical: use function, not arrow
     instance.errLog = function(cbname, e){
 	JS9.log("error in %s: %s [%s]\n%s",
 		cbname, this.name, e.message, JS9.strace(e));
@@ -19733,10 +19708,10 @@ JS9.instantiatePlugins = function(){
     const newPlugin = (plugin) => {
 	let j, k, instance;
 	// instantiate any divs not yet done
-	// NB: 'this' is not lexical: use function, not arrow
-	$(`div.${plugin.name}`).each(function(){
+	$(`div.${plugin.name}`).each((index, element) => {
 	    // new instance of this div-based plugin
-	    JS9.instantiatePlugin($(this), plugin, null, plugin.opts.divArgs);
+	    JS9.instantiatePlugin($(element),
+				  plugin, null, plugin.opts.divArgs);
 	});
 	// if we have a non-visible plugin (no menu and no window dims)
 	// which is not instantiated, instantiate it now (e.g. regions)
@@ -20525,15 +20500,14 @@ JS9.initCommands = function(){
 JS9.initAnalysis = function(){
     // for analysis forms, Enter should not Submit, but allow specification
     // of the name of an element to click
-    // NB: 'this' is not lexical: use function, not arrow
-    $(document).on("keyup keypress", ".js9AnalysisForm", function(e){
+    $(document).on("keyup keypress", ".js9AnalysisForm", (e) => {
 	const code = e.which || e.keyCode;
 	let id;
 	if( code === 13 ){
 	    e.preventDefault();
-	    id = $(this).data("enterfunc");
+	    id = $(e.currentTarget).data("enterfunc");
 	    if( id ){
-		$(this).find(`[name='${id}']`).click();
+		$(e.currentTarget).find(`[name='${id}']`).click();
 	    }
 	    return false;
 	}
@@ -20564,9 +20538,8 @@ JS9.init = function(){
     if( !JS9.INSTALLDIR ){
 	try{
 	    // process all links which end in 'js9.css'
-	    // NB: 'this' is not lexical: use function, not arrow
-	    $('link[href$="js9.css"]').each(function(){
-		const h = $(this).attr("href");
+	    $('link[href$="js9.css"]').each((index, element) => {
+		const h = $(element).attr("href");
 		if( h ){
 		    // must really end in 'js9.css'
 		    if( h.split("/").reverse()[0] === "js9.css" ){
@@ -20620,9 +20593,8 @@ JS9.init = function(){
 	}
 	// once a window is loaded, set jupyter focus, if necessary
 	if( window.hasOwnProperty("Jupyter") ){
-	    // NB: 'this' is not lexical: use function, not arrow
-	   $("#dhtmlwindowholder").arrive("input", function(){
-	       JS9.jupyterFocus($(this).parent());
+	   $("#dhtmlwindowholder").arrive("input", (el) => {
+	       JS9.jupyterFocus($(el).parent());
 	   });
 	}
     }
@@ -20746,9 +20718,8 @@ JS9.init = function(){
     // set debug flag
     JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
     // init main display(s)
-    // NB: 'this' is not lexical: use function, not arrow
-    $("div.JS9").each(function(){
-	JS9.checkNew(new JS9.Display($(this)));
+    $("div.JS9").each((index, element) => {
+	JS9.checkNew(new JS9.Display($(element)));
     });
     // load web worker
     if( window.Worker && !JS9.allinone){

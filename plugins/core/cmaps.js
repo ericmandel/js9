@@ -581,9 +581,8 @@ JS9.Cmaps.init = function(width, height){
 		display.cmaps.lastCname = cname;
 	    });
 	    // when the color is changed via the text box
-	    // NB: 'this' is not lexical, so no arrow function here
-	    el1.on("change", function(){
-		const cname = tinycolor($(this).val()).toHex();
+	    el1.on("change", (evt) => {
+		const cname = tinycolor($(evt.currentTarget).val()).toHex();
 		JS9.Cmaps.mkCmaps(display, cname,
 				  display.cmaps.nmap, display.cmaps.nslice,
 				  {mode: display.cmaps.mode,

@@ -23,7 +23,6 @@ JS9.Keyboard.actionid = function(cname, aname){
 
 // add to the action list
 JS9.Keyboard.addAction = function(container, cname, aname){
-    const _this = this;
     let s, id, divjq;
     id = JS9.Keyboard.actionid(cname, aname);
     // create the html for this action
@@ -33,10 +32,9 @@ JS9.Keyboard.addAction = function(container, cname, aname){
 	.attr("id", id)
 	.html(s)
 	.appendTo(container);
-    // NB: 'this' is not lexical, so no arrow function here
-    divjq.find('.JS9KeyboardButton').on("click", function(evt){
-	const action = this.value;
-	const im = _this.display.image;
+    divjq.find('.JS9KeyboardButton').on("click", (evt) => {
+	const action = evt.currentTarget.value;
+	const im = this.display.image;
 	if( im && action && JS9.Keyboard.Actions[action] ){
 	    JS9.Keyboard.Actions[action](im, im.ipos, evt);
 	}
@@ -99,7 +97,11 @@ JS9.Keyboard.Actions["close image"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["new JS9 light window"] = function(im, ipos, evt){
-    JS9.LoadWindow(null, {clone: evt.data.id}, "light");
+    let opts;
+    if( evt && evt.data && evt.data.id ){
+	opts = {clone: evt.data.id};
+    }
+    JS9.LoadWindow(null, opts, "light");
 };
 
 // eslint-disable-next-line no-unused-vars

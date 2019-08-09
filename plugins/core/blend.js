@@ -234,7 +234,6 @@ JS9.Blend.init = function(width, height){
     // this.dispMode: display mode (for internal use)
     //
     // create container to hold image container and header
-    const _this = this;
     // allow size specification for divs
     if( this.winType === "div" ){
 	// set width and height on div
@@ -294,19 +293,18 @@ JS9.Blend.init = function(width, height){
 	.prop("checked", !!display.blendMode);
     // the images within the image container will be sortable
     this.blendImageContainer.sortable({
-	// NB: 'this' is not lexical, so no arrow function here
-	start(event, ui){
+	start: (event, ui) => {
 	    this.oidx = ui.item.index();
 	},
-	// NB: 'this' is not lexical, so no arrow function here
-	stop(event, ui) {
+	stop: (event, ui) => {
 	    const nidx = ui.item.index();
 	    // JS9 image list reflects the sort
 	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
 	    // redisplay in case something changed
-	    if( _this.display.image ){
-		_this.display.image.displayImage();
+	    if( this.display.image ){
+		this.display.image.displayImage();
 	    }
+	    delete this.oidx;
 	}
     });
 };
