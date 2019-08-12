@@ -13,14 +13,14 @@
 /*global importScripts, io, Uint8Array */
 
 // socket.io support
-var socket = null;
-var socketActive = false;
-var socketImported = false;
-var connected = false;
-var timeout = 10000;
-var socksuffix = "/socket.io/socket.io.js";
+let socket = null;
+let socketActive = false;
+let socketImported = false;
+let connected = false;
+const timeout = 10000;
+const socksuffix = "/socket.io/socket.io.js";
 // this uploads large data sets on my slow (70kb/sec) DSL line without a hang
-var emitMax = 409600;
+const emitMax = 409600;
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/slice
 // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.slice
@@ -32,8 +32,8 @@ if (!Uint8Array.prototype.slice) {
 }
 
 function initSocketIO(sockurl, pageid, id){
-    var sockscript = sockurl + socksuffix;
-    var sockopts = {
+    const sockscript = sockurl + socksuffix;
+    const sockopts = {
 	reconnection: false,
 	timeout
     };
@@ -52,30 +52,30 @@ function initSocketIO(sockurl, pageid, id){
     // connect to the helper
     socket = io.connect(sockurl, sockopts);
     // on-event processing
-    socket.on("connect", function(){
-	socket.emit("worker", {pageid: pageid}, function(s){
-	    var res;
+    socket.on("connect", () => {
+	socket.emit("worker", {pageid: pageid}, (s) => {
+	    let res;
 	    if( s === "OK" ){
 		connected = true;
 		self.postMessage({id: id, cmd: "initsocketio", result: "OK"});
 	    } else {
-		res = "couldn't connect worker to server with pageid: "+pageid;
+		res = `couldn't connect worker to server with pageid: ${pageid}`;
 		self.postMessage({id: id, cmd: "error", result: res});
 	    }
 	});
     });
-    socket.on("connect_error", function(){
+    socket.on("connect_error", () => {
 	self.postMessage({id: id, cmd: "connect_error", result: ""});
 	connected = false;
     });
-    socket.on("connect_timeout", function(){
+    socket.on("connect_timeout", () => {
 	self.postMessage({id: id, cmd: "connect_timeout", result: ""});
 	connected = false;
     });
-    socket.on("disconnect", function(){
-	var res = "";
+    socket.on("disconnect", () => {
+	let res = "";
 	if( socketActive ){
-	    res = "JS9 was disconnected from the remote server while " + socketActive + ". This likely is due to the server timing out, indicating either that too much data is being sent, or that your connection speed is too slow.";
+	    res = `JS9 was disconnected from the remote server while ${socketActive}. This likely is due to the server timing out, indicating either that too much data is being sent, or that your connection speed is too slow.`;
 	    socketActive = false;
 	}
 	self.postMessage({id: id, cmd: "disconnect", result: res});
@@ -85,12 +85,12 @@ function initSocketIO(sockurl, pageid, id){
 
 // message handler
 self.onmessage = function(e){
-    var fname, data, slice, len, res;
-    var obj = e.data || {};
-    var args = obj.args;
-    var uploadFITS = function(fname, data, total, cur, left){
-	var len;
-	var stdin = {};
+    let fname, data, slice, len, res;
+    const obj = e.data || {};
+    const args = obj.args;
+    const uploadFITS = (fname, data, total, cur, left) => {
+	let len;
+	let stdin = {};
 	if( left > 0 ){
 	    // how much to grab in this slice
 	    len = Math.min(left, emitMax);
@@ -100,8 +100,8 @@ self.onmessage = function(e){
 	    stdin = {data: slice, total: total, cur: cur, len: len};
 	    // send data
 	    socket.emit('uploadfits',
-	    {'cmd': 'js9Xeq uploadfits ' + fname, 'stdin': stdin},
-	    function(r){
+	    {'cmd': `js9Xeq uploadfits ${fname}`, 'stdin': stdin},
+	    (r) => {
 		if( r.stdout === "OK" ){
 		    // update progress bar
 		    r = {value: Math.floor(((cur+len)/total)*100), max: 100};
@@ -129,8 +129,8 @@ self.onmessage = function(e){
 	    fname = args[0];
 	    socketActive = "uploading the FITS file";
 	    socket.emit('uploadfits',
-            {'cmd': 'js9Xeq uploadfits ' + fname, 'stdin': true},
-            function(r){
+            {'cmd': `js9Xeq uploadfits ${fname}`, 'stdin': true},
+            (r) => {
 		self.postMessage({id: obj.id, cmd: obj.cmd, result: r});
 		socketActive = false;
 	    });
@@ -145,7 +145,7 @@ self.onmessage = function(e){
 	}
 	break;
     default:
-	res = "unknown web worker command: " + obj.cmd;
+	res = `unknown web worker command: ${obj.cmd}`;
 	self.postMessage({id: obj.id, cmd: "error", result: res});
 	break;
     }
@@ -153,7 +153,7 @@ self.onmessage = function(e){
 
 // error handler
 self.onerror = function(e){
-    var s = "in worker";
+    let s = "in worker";
     if( typeof e === "string" ){
 	s = e;
     } else if( typeof e === "object" ){
