@@ -25,14 +25,14 @@
 <p>
 <input type="button" id="OK" name="OK" class="button" value="OK"
 onclick="
-    var i, j, obj, im, defval;
-    var ims = [];
-    var arr = $('#lightWinCloseForm').serializeArray();
-    var form = $(this).closest('form');
-    var dhtml = form.closest('.dhtmlwindow')[0];
-    var dispid = $(dhtml).data('dispid');
-    var winid = $(dhtml).data('winid');
-    var todisp = form.find('#lightWinCloseSel').val();
+    let i, j, obj, im, defval;
+    const ims = [];
+    const arr = $('#lightWinCloseForm').serializeArray();
+    const form = $(this).closest('form');
+    const dhtml = form.closest('.dhtmlwindow')[0];
+    const dispid = $(dhtml).data('dispid');
+    const winid = $(dhtml).data('winid');
+    const todisp = form.find('#lightWinCloseSel').val();
     if( !arr || !arr.length ){
         winid.close();
         dhtml.close();
@@ -81,8 +81,9 @@ onclick="
     return false;
 ">
 <input id="cancel" name="Cancel" type="button" class="button" value="Cancel"
-onclick="var form = $(this).closest('form');
-var dhtml = form.closest('.dhtmlwindow')[0];
+onclick="
+const form = $(this).closest('form');
+const dhtml = form.closest('.dhtmlwindow')[0];
 dhtml.close();
 return false;" style="float: right;">
 </form>

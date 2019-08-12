@@ -12,20 +12,22 @@
 <textarea id="dataPath" name="dataPath" class="js9LargeInputText" rows="1" cols="100" style="width:90%;"></textarea>
 <p>
 <input id="run" name="run" type="button" class="button" value="Submit" 
-onclick="var arr = $('#dataPathForm').serializeArray();
-var form = $(this).closest('form');
-var dhtml = form.closest('.dhtmlwindow')[0];
-var dispid = $(dhtml).data('dispid');
-var imid = $(dhtml).data('imid');
+onclick="
+const arr = $('#dataPathForm').serializeArray();
+const form = $(this).closest('form');
+const dhtml = form.closest('.dhtmlwindow')[0];
+const dispid = $(dhtml).data('dispid');
+const imid = $(dhtml).data('imid');
+const im = JS9.GetImage(imid);
 JS9.globalOpts.dataPath = arr[0].value;
-var im = JS9.GetImage(imid);
 if( im ){ im.notifyHelper(); }
 dhtml.close();
 return false;">
 
 <input id="close" name="Close" type="button" class="button" value="Close" 
-onclick="var form = $(this).closest('form');
-var dhtml = form.closest('.dhtmlwindow')[0];
+onclick="
+const form = $(this).closest('form');
+const dhtml = form.closest('.dhtmlwindow')[0];
 dhtml.close();
 return false;" style="float: right;">
 </form>

@@ -159,9 +159,10 @@ Reg:&nbsp;<input type="text" class="val text_R0" name="id" value="" readonly="re
 
 <span class="col_R col_R6">
 <input name="copy" type="button" class="button" value="Copy"
-onclick="var form = $(this).closest('form');
-var im = form.data('im');
-var s, reg;
+onclick="
+const form = $(this).closest('form');
+const im = form.data('im');
+let s, reg;
 if( im ){
   reg = im.getShapes('regions', 'selected')[0];
   if( reg ){
@@ -192,9 +193,9 @@ return false;">
 
 <span class="col_R col_R7">
 <select name="wcssys" class="val select_R" onchange="
-var form = $(this).closest('form');
-var wcs =  $(this).val();
-var im = form.data('im');
+const form = $(this).closest('form');
+const wcs =  $(this).val();
+const im = form.data('im');
 if( im && wcs ){
   im.setWCSSys(wcs);
   im.updateShapes('regions', 'all', 'wcs');
@@ -261,9 +262,9 @@ Edit:
 
 <span class="col_R col_R7">
 <select name="altwcssys" class="val select_R" onchange="
-var form = $(this).closest('form');
-var wcssys =  $(this).val();
-var im = form.data('im');
+const form = $(this).closest('form');
+const wcssys =  $(this).val();
+const im = form.data('im');
 if( im && wcssys ){
     if( wcssys === im.params.wcssys ){
         form.removeData('wcssys');
@@ -356,16 +357,14 @@ Misc:
 <div class="rlinegroup">
 <span class="col_R col_R1">
 <input name="Apply" type="button" class="button" value="Apply"
-onclick="var form = $(this).closest('form');
-var arr = $(':input:visible', form).serializeArray();
-var im = form.data('im');
-var shape = form.data('shape');
-var winid = form.data('winid');
-arr = arr.concat(
-  $('#' + form.attr('id') + ' input[type=checkbox]:not(:checked)').map(
-    function(){return {'name': this.name, 'value': 'false'};}
-  ).get());
-JS9.Regions.processConfigForm.call(im, form, shape, winid, arr);
+onclick="
+const form = $(this).closest('form');
+const arr = $(':input:visible', form).serializeArray();
+const im = form.data('im');
+const shape = form.data('shape');
+const winid = form.data('winid');
+let arr2 = arr.concat($(`#${form.attr('id')} input[type=checkbox]:not(:checked)`).map((i, e) => {return {'name': e.name, 'value': 'false'};}).get());
+JS9.Regions.processConfigForm.call(im, form, shape, winid, arr2);
 return false;">
 </span>
 <span class="col_R col_R2l">
@@ -379,9 +378,10 @@ return false;">
 </span>
 <span class="col_R col_R6">
 <input name="Close" type="button" class="button" value="Close"
-onclick="var form = $(this).closest('form');
-var shape = form.data('shape');
-var winid = form.data('winid');
+onclick="
+const form = $(this).closest('form');
+const shape = form.data('shape');
+const winid = form.data('winid');
 shape.params.winid = null;
 winid.close();
 return false;">

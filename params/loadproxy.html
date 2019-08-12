@@ -20,18 +20,20 @@ FITS file below:
 <input type="text" class="js9LargeInputText" id="proxyURL" name="proxyURL" size="80" autocapitalize="off" autocorrect="off">
 <p>
 <input id="run" name="run" type="button" class="button" value="Load"
-onclick="var arr = $('#proxyURLForm').serializeArray();
-var form = $(this).closest('form');
-var dhtml = form.closest('.dhtmlwindow')[0];
-var dispid = $(dhtml).data('dispid');
-var url = arr[0].value;
+onclick="
+const arr = $('#proxyURLForm').serializeArray();
+const form = $(this).closest('form');
+const dhtml = form.closest('.dhtmlwindow')[0];
+const dispid = $(dhtml).data('dispid');
+const url = arr[0].value;
 JS9.LoadProxy(url, null, {display: dispid});
 dhtml.close();
 return false;
 ">
 <input id="close" name="Close" type="button" class="button" value="Close" 
-onclick="var form = $(this).closest('form');
-var dhtml = form.closest('.dhtmlwindow')[0];
+onclick="
+const form = $(this).closest('form');
+const dhtml = form.closest('.dhtmlwindow')[0];
 dhtml.close();
 return false;" style="float: right;">
 </form>
