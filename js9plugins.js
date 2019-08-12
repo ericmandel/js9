@@ -8177,7 +8177,6 @@ JS9.Menubar.createMenus = function(){
 	    let plugin, pinst, pname;
 	    let ntask = 0;
 	    let n = 0;
-	    // var m = 0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
 	    const im = tdisp.image;
@@ -9881,7 +9880,7 @@ JS9.Prefs.init = function(){
 	}
 	// light windows get a close button
 	if( this.winType === "light" ){
-	    html += `<input id='${this.id}_closePrefs' name='Close' type='button' class='button' value='Close' onclick='var form = $(this).closest("form"); var winid = form.data("winid"); winid.close(); return false;' style='float: right; margin: 8px'>`;
+	    html += `<input id='${this.id}_closePrefs' name='Close' type='button' class='button' value='Close' onclick='const form = $(this).closest("form"); const winid = form.data("winid"); winid.close(); return false;' style='float: right; margin: 8px'>`;
 	}
 	html += "</form>";
 	html += "</div>";

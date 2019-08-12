@@ -2566,7 +2566,6 @@ JS9.Menubar.createMenus = function(){
 	    let plugin, pinst, pname;
 	    let ntask = 0;
 	    let n = 0;
-	    // var m = 0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
 	    const im = tdisp.image;
