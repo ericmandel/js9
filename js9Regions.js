@@ -32,9 +32,9 @@ const addComment = function(comment, key, val){
     }
     if( key ){
 	if( key !== "dashlist" && typeof val === "string" ){
-	    val = "{" + val + "}";
+	    val = `{${val}}`;
 	}
-	comment += key + "=" + val;
+	comment += `${key}=${val}`;
     } else {
 	comment += val;
     }
@@ -148,7 +148,7 @@ const parseRegion = function(s){
 	    comment = addComment(comment, "highlite", highlite);
 	}
 	if( comment !== "" ){
-	    ostr += " # " + comment;
+	    ostr += ` # ${comment}`;
 	}
 	console.log(ostr);
     }
@@ -175,7 +175,7 @@ if( !argv.r || (typeof argv.r !== "string") ){
 }
 fs.readFile(argv.r, 'ascii', (err, data) => {
     if( err ){
-	const s = "ERROR: reading " + argv.r + ": " + err.message;
+	const s = `ERROR: reading ${argv.r}: ${err.message}`;
 	console.error(s);
 	process.exit(2);
     }
