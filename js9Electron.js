@@ -439,8 +439,11 @@ app.on('web-contents-created', (event, contents) => {
 			    "navigation away from this web site is not permitted");
     });
     contents.on('new-window', (event, navigationUrl) => {
-	event.preventDefault();
-	shell.openExternal(navigationUrl);
+	// inline windows sent to us from js9 are ok, others go to the browser
+	if( !navigationUrl.match(/^data:text\/html/) ){
+	    event.preventDefault();
+	    shell.openExternal(navigationUrl);
+	}
     });
 });
 
@@ -479,10 +482,10 @@ ipcMain.on('msg', (event, arg) => {
 	    case "print":
 		opts = Object.assign(js9Electron.printOpts, obj.opts);
 		try{
-		    win.webContents.print(opts, (e) => {
-			if( e ){
+		    win.webContents.print(opts, (success) => {
+			if( !success ){
 			    dialog.showErrorBox("ERROR in WindowPrint",
-						e.message);
+						"could not print JS9 window");
 			    return;
 			}
 		    });
