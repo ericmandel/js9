@@ -8,7 +8,7 @@
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
  * Contact: saord@cfa.harvard.edu
  *
- * Copyright (c) 2013 - 2016 Smithsonian Astrophysical Observatory
+ * Copyright (c) 2013 - 2019 Smithsonian Astrophysical Observatory
  *
  */
 
@@ -18,50 +18,50 @@
 "use strict";
 
 // load required modules
-var sockio = require("socket.io-client"),
-    os = require('os'),
-    fs = require('fs'),
-    path = require('path'),
-    dns = require('dns'),
-    opn = require('opn'),
-    timers = require('timers'),
-    readline = require("readline");
+const sockio = require("socket.io-client"),
+      os = require('os'),
+      fs = require('fs'),
+      path = require('path'),
+      dns = require('dns'),
+      opn = require('opn'),
+      timers = require('timers'),
+      readline = require("readline");
 
 // internal variables
-var s, msg;
-var args = process.argv.slice(2);
-var browser = "";
-var content = "";
-var defpage = "/js9.html";
-var debug = false;
-var done = false;
-var doserver = false;
-var dopipe = false;
-var helperScheme = "http://";
-var helperHost = "localhost";
-var helperPort = 2718;
-var helperURL=""; // will be composed after getting user options
-var host = "";
-var istty = process.stdin.isTTY  || false;
-var nsendexit = false;
-var nsend = 0;
-var rl = null;
-var socket = null;
-var sockopts = {
+let s, msg;
+let host = "";
+let browser = "";
+let content = "";
+let webpage = "";
+let debug = false;
+let done = false;
+let doserver = false;
+let dopipe = false;
+let nsendexit = false;
+let verify = false;
+let rl = null;
+let socket = null;
+let helperScheme = "http://";
+let helperHost = "localhost";
+let helperPort = 2718;
+let helperURL=""; // will be composed after getting user options
+let nsend = 0;
+let timeout = 5000;
+let tries = 20;
+let timeout0 = Math.floor(timeout / tries);
+const args = process.argv.slice(2);
+const istty = process.stdin.isTTY  || false;
+const srcdir = process.env.JS9_SRCDIR;
+const installdir = process.env.JS9_INSTALLDIR;
+const defpage = "/js9.html";
+const prog = "js9";
+const sockopts = {
     reconnection: false,
     timeout: 10000
 };
-var tries = 20;
-var timeout = 5000;
-var timeout0 = Math.floor(timeout / tries);
-var verify = false;
-var webpage = "";
-var srcdir = process.env.JS9_SRCDIR;
-var installdir = process.env.JS9_INSTALLDIR;
 
 // ever-present
-var usage = function() {
-  var prog = "js9";
+const usage = function() {
   console.log("usage: %s [switches] [cmd] [args]", prog);
   console.log("usage: %s -b [bname] -w [url] [switches] [image]", prog);
   console.log("  switches:");
@@ -106,7 +106,7 @@ var usage = function() {
 };
 
 // error message and exit
-var error = function(s){
+const error = function(s){
     console.log("ERROR: " + s);
     process.exit(1);
 };
@@ -141,7 +141,7 @@ JS9Msg.prototype.setArgs = function(args) {
 
 // waitSend: wait a bit, send message, display results (and maybe exit)
 JS9Msg.prototype.waitSend = function(tries){
-    var that = this;
+    const that = this;
     if( !tries ){
 	error("no targets found for: " + browser);
 	return;
@@ -150,7 +150,7 @@ JS9Msg.prototype.waitSend = function(tries){
     timers.setTimeout(function(){
 	msg.setArgs(["targets"]);
 	socket.emit("msg", msg, function(targets){
-	    var i;
+	    let i;
 	    if( targets ){
 		// all args are files to be loaded
 		for(i=0; i<args.length; i++){
@@ -216,8 +216,8 @@ JS9Msg.prototype.findWebpage = function(){
 // start up browser and load web page
 // changes globals: browser
 JS9Msg.prototype.startBrowser = function(){
-    var switches;
-    var opts = {wait: false};
+    let switches;
+    const opts = {wait: false};
     switch(browser){
     case "chrome":
 	switch(os.type()){
@@ -245,9 +245,9 @@ JS9Msg.prototype.startBrowser = function(){
 
 // send: send message, display results (and maybe exit)
 JS9Msg.prototype.send = function(socket, rl, postproc) {
-    var that = this;
+    const that = this;
     // copy to a temp msg
-    var msg = JSON.parse(JSON.stringify(this));
+    const msg = JSON.parse(JSON.stringify(this));
     // now reset cmd parameters for next time
     this.reset();
     // send msg to js9
@@ -256,7 +256,7 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
     }
     nsend++;
     socket.emit("msg", msg, function(s){
-	var t;
+	let t;
 	nsend--;
 	// post-processing of results
 	switch(msg.cmd){
@@ -302,8 +302,8 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
 
 // server mode
 JS9Msg.prototype.server = function(socket, rl) {
-    var that = this;
-    var args;
+    let args;
+    const that = this;
     rl.resume();
     if( istty ){
 	rl.setPrompt('JS9> ');
@@ -337,7 +337,7 @@ JS9Msg.prototype.server = function(socket, rl) {
 
 // clean exit
 JS9Msg.prototype.exit = function(socket, rl, errno) {
-    var res = errno || 0;
+    const res = errno || 0;
     if( nsend > 0 ){
 	nsendexit = true;
 	return;
@@ -482,7 +482,7 @@ if( !browser && ((args.length === 0) || (args[0] === "")) ){
 // dns.lookup call is asynchronous, so we have to wrap all of the important
 // code in its return function. wish we had a synchronous call!
 dns.lookup(host, 4, function (err, address, family) {
-    var i;
+    let i;
     if( err ){
 	throw err;
     }
