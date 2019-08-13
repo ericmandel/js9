@@ -49,13 +49,13 @@ function isTrue(s, d){
 
 // start up a JS9 helper, if possible and necessary
 function startHelper(mode){
-    var domerge = function(){
+    var domerge = () => {
 	try{
-	    proc.exec("js9 merge " + js9Electron.merge);
+	    proc.exec(`js9 merge ${js9Electron.merge}`);
 	}
 	catch(e){ 
 	    dialog.showErrorBox("Error",
-	    "can't merge: " + js9Electron.merge, e.message);
+	    `can't merge: ${js9Electron.merge}`, e.message);
 	}
     };
     // start up the helper first, if necessary
@@ -70,13 +70,13 @@ function startHelper(mode){
 	    command: 'node',
 	    psargs: 'ux',
 	    arguments: 'js9Helper.js'
-	}, function(err, rlist ) {
+	}, (err, rlist) => {
 	    if( rlist.length === 0 ){
 		// if node helper not running, look for an Electron helper
 		ps.lookup({
 		    psargs: 'ux',
 		    arguments: 'js9Electron.js'
-		}, function(err2, rlist2 ) {
+		}, (err2, rlist2) => {
 		    if( (rlist2.length <= 1) ){
 			js9Electron.helper = require(js9Electron.helperpage);
 		    } else if( js9Electron.merge ){
@@ -91,7 +91,7 @@ function startHelper(mode){
 }
 
 // default web page
-js9Electron.defpage = "file://" + path.join(__dirname, 'js9.html');
+js9Electron.defpage = `file://${path.join(__dirname, 'js9.html')}`;
 
 // preload page contains initialization values needed before loading JS9
 js9Electron.preload = path.join(__dirname, "js9ElectronPreload.js");
@@ -175,8 +175,7 @@ function initWillDownload() {
 	// eslint-disable-next-line no-unused-vars
 	js9Electron.win.webContents.session.on('will-download', (event, item, webContents) => {
 	    const fname = item.getFilename();
-	    const pname = js9Electron.savedir + "/" +
-		          (fname||js9Electron.defsave);
+	    const pname = `${js9Electron.savedir}/${fname||js9Electron.defsave}`;
 	    // Set the save path, making Electron not to prompt a save dialog.
 	    item.setSavePath(pname);
 	    item.on('updated', (event, state) => {
@@ -198,7 +197,7 @@ function initWillDownload() {
 		}
 	    });
 	});
-	// only need to do this once
+	// only need to do once
 	js9Electron.willDownload = true;
     }
 }
@@ -206,7 +205,7 @@ function initWillDownload() {
 // create a new window for a JS9 web page
 function createWindow() {
     let f, s, cmd, icon, todir;
-    let ncmd=0;
+    let ncmd = 0;
     let xcmds = "";
     // set dock icon for Mac
     if( process.platform === "darwin" ){
@@ -230,7 +229,7 @@ function createWindow() {
 	try{ js9Electron.mergeStat = fs.statSync(js9Electron.merge); }
 	catch(e){
 	    dialog.showErrorBox("Error",
-	    "can't find merge file or directory: " + js9Electron.merge);
+	    `can't find merge file or directory: ${js9Electron.merge}`);
 	    process.exit();
 	}
 	if( !js9Electron.mergeStat.isDirectory() ){
@@ -241,7 +240,7 @@ function createWindow() {
 	    try{ js9Electron.mergeStat = fs.statSync(js9Electron.merge); }
 	    catch(e){
 		dialog.showErrorBox("Error",
-		"can't find merge directory: " + js9Electron.merge);
+		`can't find merge directory: ${js9Electron.merge}`);
 		process.exit();
 	    }
 	}
@@ -265,12 +264,12 @@ function createWindow() {
                          `$1${todir}/$3`)
 		.replace(/(src=['"])(.*)\/(js9plugins(\.min)?\.js['"])/,
                          `$1${todir}/$3`);
-	    f = js9Electron.tmp + "/" + path.basename(js9Electron.mergePage);
+	    f = `${js9Electron.tmp}/${path.basename(js9Electron.mergePage)}`;
 	    fs.writeFileSync(f, s);
 	    // save name of the merged webpage for deletion
 	    js9Electron.mergePage = f;
 	    // new page containing js9 files from our install
-	    js9Electron.page = "file://" + f;
+	    js9Electron.page = `file://${f}`;
 	}
 	// pass the merge dir to the helper in a prefs environment variable
 	process.env.JS9_HELPER_PREFS = 	`{"merge":"${js9Electron.merge}"}`;
@@ -279,12 +278,12 @@ function createWindow() {
     if( !js9Electron.page.includes("://") ){
 	if( !path.isAbsolute(js9Electron.page) ){
 	    if( process.env.PWD ){
-		js9Electron.page = process.env.PWD + "/" + js9Electron.page;
+		js9Electron.page = `${process.env.PWD}/${js9Electron.page}`;
 	    } else {
 		js9Electron.page = path.relative(__dirname, js9Electron.page);
 	    }
 	}
-	js9Electron.page = "file://" + js9Electron.page;
+	js9Electron.page = `file://${js9Electron.page}`;
     }
     // load the web page
     js9Electron.win.loadURL(js9Electron.page);
@@ -303,11 +302,11 @@ function createWindow() {
     cmd = "if( typeof JS9 !== 'object' || typeof JS9.Image !== 'function'  ){alert('JS9 was not loaded properly. Please check the paths to the JS9 css and js files in your web page header and try again.');}";
     js9Electron.win.webContents.executeJavaScript(cmd);
     // processing when document is ready
-    cmd = "$(document).ready(function(){";
+    cmd = "$(document).ready(() => {";
     if( !js9Electron.eval ){
 	// disable eval in renderer window after JS9 is ready
 	// http://electron.atom.io/docs/tutorial/security/
-	cmd +="$(document).on('JS9:ready', function(){";
+	cmd +="$(document).on('JS9:ready', () => {";
 	cmd += "window.eval = function(){throw new Error('For security reasons, Desktop JS9 does not support window.eval()');}";
 	cmd += "});";
 	ncmd++;
@@ -342,7 +341,7 @@ function createWindow() {
 	// relative data paths must be relative to js9Electron.js script
 	if( !file.match(/^(https?|ftp):\/\//) && !path.isAbsolute(file) ){
 	    if( process.env.PWD ){
-		file = process.env.PWD + "/" + file;
+		file = `${process.env.PWD}/${file}`;
 	    } else {
 		file = path.relative(__dirname, file);
 	    }
@@ -373,7 +372,7 @@ function createWindow() {
 	    cmd += "};";
 	} else {
 	    // execute as soon as JS9 is ready
-	    cmd += "$(document).on('JS9:ready', function(){";
+	    cmd += "$(document).on('JS9:ready', () => {";
 	    cmd += xcmds;
 	    cmd += "});";
 	}
@@ -389,7 +388,7 @@ function createWindow() {
     catch(e){ /* empty */ }
 
     // emitted when the window is closed
-    js9Electron.win.on('closed', function () {
+    js9Electron.win.on('closed', () => {
 	// Dereference the window object, usually you would store windows
 	// in an array if your app supports multi windows, this is the time
 	// when you should delete the corresponding element.
@@ -410,7 +409,7 @@ app.on('ready', () => {
     ps.lookup({
 	psargs: 'ux',
 	arguments: 'js9Electron.js'
-    }, function(err, rlist) {
+    }, (err, rlist) => {
 	if( rlist.length >= 2 ){
 	    process.env.JS9_MULTIELECTRON = "true";
 	}
@@ -480,7 +479,7 @@ ipcMain.on('msg', (event, arg) => {
 	    case "print":
 		opts = Object.assign(js9Electron.printOpts, obj.opts);
 		try{
-		    win.webContents.print(opts, function(e){
+		    win.webContents.print(opts, (e) => {
 			if( e ){
 			    dialog.showErrorBox("ERROR in WindowPrint",
 						e.message);
@@ -496,13 +495,13 @@ ipcMain.on('msg', (event, arg) => {
 		file = obj.filename || "js9.pdf";
 		opts = Object.assign(js9Electron.pdfOpts, obj.opts);
 		try{
-		    win.webContents.printToPDF(opts, function(e, data){
+		    win.webContents.printToPDF(opts, (e, data) => {
 			if( e ){
 			    dialog.showErrorBox("ERROR in WindowToPDF: ",
 						e.message);
 			    return;
 			}
-			fs.writeFile(file, data, function(e) {
+			fs.writeFile(file, data, (e) => {
 			    if( e ){
 				dialog.showErrorBox("ERROR in WindowToPDF: ",
 						    e.message);
