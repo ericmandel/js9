@@ -23172,7 +23172,7 @@ JS9.mkPublic("WindowPrint", function(...args){
 
 // save PDF of window (Desktop JS9 only)
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("WindowToPDF", function(args){
+JS9.mkPublic("WindowToPDF", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const opts = {cmd: "pdf"};
     opts.filename = obj.argv[0] || "js9.pdf";
