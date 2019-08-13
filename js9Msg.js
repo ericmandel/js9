@@ -107,7 +107,7 @@ const usage = function() {
 
 // error message and exit
 const error = function(s){
-    console.log("ERROR: " + s);
+    console.log(`ERROR: ${s}`);
     process.exit(1);
 };
 
@@ -135,21 +135,20 @@ JS9Msg.prototype.setArgs = function(args) {
     if( this.args.length ){
 	// js9 script quoted the strings (to deal with pathnames with spaces),
 	// all of which can now be removed
-	this.args = this.args.map(function(x){return x.replace(/\\/g,"");});
+	this.args = this.args.map((x) => {return x.replace(/\\/g,"");});
     }
 };
 
 // waitSend: wait a bit, send message, display results (and maybe exit)
 JS9Msg.prototype.waitSend = function(tries){
-    const that = this;
     if( !tries ){
-	error("no targets found for: " + browser);
+	error(`no targets found for: ${browser}`);
 	return;
     }
     // wait a bit for js9 page to load
-    timers.setTimeout(function(){
+    timers.setTimeout(() => {
 	msg.setArgs(["targets"]);
-	socket.emit("msg", msg, function(targets){
+	socket.emit("msg", msg, (targets) => {
 	    let i;
 	    if( targets ){
 		// all args are files to be loaded
@@ -164,7 +163,7 @@ JS9Msg.prototype.waitSend = function(tries){
 		// send message and display results
 		msg.send(socket, null, "exit");
 	    } else {
-		that.waitSend(--tries);
+		this.waitSend(--tries);
 	    }
 	});
     }, timeout0);
@@ -182,7 +181,7 @@ JS9Msg.prototype.findWebpage = function(){
 	}
 	if( !webpage && installdir ){
 	    webpage = installdir + defpage;
-	    fs.access(webpage, fs.R_OK, function(err) {
+	    fs.access(webpage, fs.R_OK, (err) => {
 		if( err ){
 		    webpage = null;
 		}
@@ -190,7 +189,7 @@ JS9Msg.prototype.findWebpage = function(){
 	}
 	if( !webpage && srcdir ){
 	    webpage = srcdir + defpage;
-	    fs.access(webpage, fs.R_OK, function(err) {
+	    fs.access(webpage, fs.R_OK, (err) => {
 		if( err ){
 		    webpage = null;
 		}
@@ -205,9 +204,9 @@ JS9Msg.prototype.findWebpage = function(){
 	error("browser request needs a web page");
     }
     if( browser && webpage ){
-	fs.access(webpage, fs.R_OK, function(err) {
+	fs.access(webpage, fs.R_OK, (err) => {
 	    if( err ){
-		error("can't find web page: " + webpage);
+		error(`can't find web page: ${webpage}`);
 	    }
 	});
     }
@@ -245,17 +244,16 @@ JS9Msg.prototype.startBrowser = function(){
 
 // send: send message, display results (and maybe exit)
 JS9Msg.prototype.send = function(socket, rl, postproc) {
-    const that = this;
     // copy to a temp msg
     const msg = JSON.parse(JSON.stringify(this));
     // now reset cmd parameters for next time
     this.reset();
     // send msg to js9
     if( debug ){
-	console.log("msg: " + JSON.stringify(msg));
+	console.log(`msg: ${JSON.stringify(msg)}`);
     }
     nsend++;
-    socket.emit("msg", msg, function(s){
+    socket.emit("msg", msg, (s) => {
 	let t;
 	nsend--;
 	// post-processing of results
@@ -284,7 +282,7 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
 	switch(postproc){
 	case 'exit':
 	    // exit
-	    that.exit(socket, rl, 0);
+	    this.exit(socket, rl, 0);
 	    break;
 	case 'prompt':
 	    if( rl ){
@@ -295,7 +293,7 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
 	    break;
 	}
 	if( nsendexit && !nsend ){
-	    that.exit(socket, rl, 0);
+	    this.exit(socket, rl, 0);
 	}
     });
 };
@@ -303,35 +301,34 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
 // server mode
 JS9Msg.prototype.server = function(socket, rl) {
     let args;
-    const that = this;
     rl.resume();
     if( istty ){
 	rl.setPrompt('JS9> ');
 	rl.prompt();
     }
-    rl.on('line', function(line) {
+    rl.on('line', (line) => {
 	rl.pause();
 	line = line.trim();
 	if( debug ){
-	    console.log("new line: " + line);
+	    console.log(`new line: ${line}`);
 	}
 	switch(line) {
 	case 'exit':
 	case 'quit':
 	case 'q':
 	    // exit
-	    that.exit(socket, rl, 0);
+	    this.exit(socket, rl, 0);
 	    break;
 	default:
 	    args = line.split(" ");
 	    // package msg (cmd and args)
-	    that.setArgs(args);
+	    this.setArgs(args);
 	    // send message and display results
-	    that.send(socket, rl, "prompt");
+	    this.send(socket, rl, "prompt");
 	    break;
 	}	    
-    }).on('close', function() {
-	that.exit(socket, rl, 0);
+    }).on('close', () => {
+	this.exit(socket, rl, 0);
     });
 };
 
@@ -458,7 +455,7 @@ if( !helperURL ){
     }
     s += helperHost;
     if( !helperHost.match(/:[0-9][0-9]*$/) ){
-	s += ":" + helperPort;
+	s += `:${helperPort}`;
     }
     helperURL = s;
 }
@@ -480,8 +477,8 @@ if( !browser && ((args.length === 0) || (args[0] === "")) ){
 
 // kind of dumb: we want to convert the host name to an ip address, but the
 // dns.lookup call is asynchronous, so we have to wrap all of the important
-// code in its return function. wish we had a synchronous call!
-dns.lookup(host, 4, function (err, address, family) {
+// code in its return func. wish we had a synchronous call!
+dns.lookup(host, 4, (err, address, family) => {
     let i;
     if( err ){
 	throw err;
@@ -499,14 +496,14 @@ dns.lookup(host, 4, function (err, address, family) {
     // finally! connect to helper
     socket = sockio.connect(helperURL, sockopts);
     // check for connect errors
-    socket.on("connect_failed", function(){
-	error("connect failed: " + helperURL);
+    socket.on("connect_failed", () => {
+	error(`connect failed: ${helperURL}`);
     });
-    socket.on("connect_error", function(){
-	error("connect failed: " + helperURL);
+    socket.on("connect_error", () => {
+	error(`connect failed: ${helperURL}`);
     });
     // and send the message
-    socket.on("connect", function(){
+    socket.on("connect", () => {
 	if( doserver ){
 	    if( verify ){
 		console.log("entering server mode ...");
@@ -519,16 +516,16 @@ dns.lookup(host, 4, function (err, address, family) {
 	    if( webpage ){
 		// see if we already have a connection we can use
 		msg.setArgs(["targets"]);
-		socket.emit("msg", msg, function(targets){
+		socket.emit("msg", msg, (targets) => {
 		    // no connection: start up webpage in browser
 		    if( !targets ){
 			// eslint-disable-next-line no-unused-vars
-			msg.startBrowser().then(function(result) {
+			msg.startBrowser().then((result) => {
 			    // wait for page to load and then send
 			    msg.waitSend(tries);
 			    // eslint-disable-next-line no-unused-vars
-			}, function(err) {
-			    error("can't start up browser: " + browser);
+			}, (err) => {
+			    error(`can't start up browser: ${browser}`);
 			});
 		    } else {
 			// browser is ready: all args are files to be loaded
@@ -552,14 +549,14 @@ dns.lookup(host, 4, function (err, address, family) {
 		}
 		if( dopipe ){
 		    process.stdin.resume();
-		    process.stdin.on("data", function(buf) {
+		    process.stdin.on("data", (buf) => {
 			content += buf.toString();
 		    });
-		    process.stdin.on("end", function() {
+		    process.stdin.on("end", () => {
 			// push the contents of stdin onto the arg array
 			// msg.args.push(content);
 			if( msg.args.length > 0 ){
-			    msg.args[msg.args.length-1] += "\n" + content;
+			    msg.args[msg.args.length-1] += `\n${content}`;
 			} else {
 			    msg.args[0] = content;
 			}
