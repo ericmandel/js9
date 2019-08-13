@@ -16,43 +16,43 @@
 "use strict";
 
 // load required modules
-var http = require('http'),
-    path = require('path'),
-    https = require('https'),
-    Server = require('socket.io'),
-    url = require('url'),
-    qs = require('querystring'),
-    cproc  = require("child_process"),
-    fs     = require("fs"),
-    uuidv4   = require('uuid/v4'),
-    rmdir = require('rimraf');
+const http = require('http'),
+      path = require('path'),
+      https = require('https'),
+      Server = require('socket.io'),
+      url = require('url'),
+      qs = require('querystring'),
+      cproc = require("child_process"),
+      fs = require("fs"),
+      uuidv4 = require('uuid/v4'),
+      rmdir = require('rimraf');
 
 // internal variables
-var i, app, io, secure;
-var myProg = process.argv[0].split("/").reverse()[0];
-var myArgs = process.argv.slice(2);
-var installDir = __dirname;
-var currentDir = process.cwd();
-var prefsfile  = path.join(installDir, "js9Prefs.json");
-var securefile = path.join(installDir, "js9Secure.json");
-var fits2png = {};
-var fits2fits = {};
-var quotacheck = {};
-var analysis = {str:[], pkgs:[]};
-var plugins = [];
-var js9Queue = {};
-var rmQueue = {};
-var merges = {};
+let i, app, io, secure;
+let fits2png = {};
+let fits2fits = {};
+let quotacheck = {};
+let analysis = {str:[], pkgs:[]};
+let plugins = [];
+const installDir = __dirname;
+const currentDir = process.cwd();
+const myProg = process.argv[0].split("/").reverse()[0];
+const myArgs = process.argv.slice(2);
+const prefsfile  = path.join(installDir, "js9Prefs.json");
+const securefile = path.join(installDir, "js9Secure.json");
+const js9Queue = {};
+const rmQueue = {};
+const merges = {};
 
 // secure options ... change as necessary in securefile
-var secureOpts = {
+const secureOpts = {
     // key: "path_to_private.key",          // openssl genrsa -out file 2014
     // cert: "path_to_certificate_file",    // from the certificate authority
     // ca: "path_to_certificate_authority"  // can be a chain file
 };
 
 // default options ... change as necessary in prefsfile
-var globalOpts = {
+const globalOpts = {
     helperPort:       2718,
     // listen on all interfaces
     helperHost:       "0.0.0.0",
@@ -73,16 +73,16 @@ var globalOpts = {
     remoteMsgs:       1 // 0 => none, 1 => samehost, 2 => all
 };
 // globalOpts that might need to have paths relative to __dirname
-var globalRelatives = ["analysisPlugins",
+const globalRelatives = ["analysisPlugins",
 		       "analysisWrappers",
 		       "helperPlugins"];
 
 //
-// functions that might depend on specific implementations of socket.io
+// routines that might depend on specific implementations of socket.io
 //
 
 // get ip address and port of the current socket or http connection
-var getHost = function(io, req){
+const getHost = function(io, req){
     // socket.io
     if( req.handshake ){
 	return req.client.conn.remoteAddress;
@@ -94,10 +94,10 @@ var getHost = function(io, req){
 };
 
 // http://stackoverflow.com/questions/6563885/socket-io-how-do-i-get-a-list-of-connected-sockets-clients
-var findClientsSocket = function(io, namespace, roomId){
-    var id, index;
-    var res = [];
-    var ns = io.of(namespace ||"/");    // the default namespace is "/"
+const findClientsSocket = function(io, namespace, roomId){
+    let id, index;
+    const res = [];
+    const ns = io.of(namespace ||"/");    // the default namespace is "/"
     if(ns){
         for(id in ns.connected){
 	    if( ns.connected.hasOwnProperty(id) ){
@@ -117,61 +117,58 @@ var findClientsSocket = function(io, namespace, roomId){
 
 // get list of all clients currently connected
 // eslint-disable-next-line no-unused-vars
-var getClients = function(io, socket){
+const getClients = function(io, socket){
     return findClientsSocket(io);
 };
 
-// utility functions
+// utilities
 
 // create a nice date/time string for logging
-var datestr = function(){
+const datestr = function(){
     return new Date().toLocaleString(undefined, {hour12: false});
 };
 
 // output a log message on the console
-var clog = function(){
-    var args = Array.prototype.slice.call(arguments, 0);
-    args.push(" [" + datestr() + "]");
+const clog = function(){
+    const args = Array.prototype.slice.call(arguments, 0);
+    args.push(` [${datestr()}]`);
     // eslint-disable-next-line no-console
     console.log.apply(null, args);
 };
 
 // output string to log file
 // eslint-disable-next-line no-unused-vars
-var flog = function(s){
-    var buffer = new Buffer(s + "\n");
-    fs.open('tmp/js9node.log', 'a', function(err, fd){
+const flog = function(s){
+    const buffer = new Buffer(`${s}\n`);
+    fs.open('tmp/js9node.log', 'a', (err, fd) => {
 	if( fd ){
 	    fs.write(fd, buffer, 0, buffer.length, null,
 		     // eslint-disable-next-line no-unused-vars
-		     function(err, written, bytes){
-			 fs.closeSync(fd);
-		     });
+		     (err, written, bytes) => { fs.closeSync(fd); });
 	}
     });
 };
 
 // output an error message on the console
-var cerr = function(){
-    var args = Array.prototype.slice.call(arguments, 0);
+const cerr = function(){
+    const args = Array.prototype.slice.call(arguments, 0);
     args.unshift("ERROR: ");
-    args.push(" [" + datestr() + "]");
+    args.push(` [${datestr()}]`);
     // eslint-disable-next-line no-console
     console.log.apply(null, args);
 };
 
 // getTargets: identify target(s) for an external msg for a given ip
-var getTargets = function(io, socket, msg){
-    var i, j, c, clip;
-    var displays;
-    var browserip = msg.browserip || "*";
-    var targets = [];
+const getTargets = function(io, socket, msg){
+    let i, j, c, clip, displays;
+    const browserip = msg.browserip || "*";
+    const targets = [];
     // ip associated with this socket
-    var myip = getHost(io, socket);
+    const myip = getHost(io, socket);
     // list of all clients connected on this socket
-    var clients = getClients(io, socket);
-    // authentication function
-    var authenticate = function(myip, clip){
+    const clients = getClients(io, socket);
+    // authentication func
+    const authenticate = (myip, clip) => {
 	// if I'm localhost, I can send to anyone
 	if( (myip === "127.0.0.1") || (myip === "::ffff:127.0.0.1") ){
 	    return true;
@@ -221,12 +218,12 @@ var getTargets = function(io, socket, msg){
 };
 
 // connectWorker: identify main socket for this worker
-var connectWorker = function(io, socket, pageid){
-    var i, c, clip;
+const connectWorker = function(io, socket, pageid){
+    let i, c, clip;
     // ip associated with this socket
-    var myip = getHost(io, socket);
+    const myip = getHost(io, socket);
     // list of all clients connected on this socket
-    var clients = getClients(io, socket);
+    const clients = getClients(io, socket);
     // sanity check
     if( !pageid ){
 	return null;
@@ -250,16 +247,16 @@ var connectWorker = function(io, socket, pageid){
 
 // envClean: clean incoming environment variables
 // this should match cleaning in js9Helper.cgi
-var envClean = function(s) {
+const envClean = function(s) {
     if( typeof s === "string" ){
 	return s.replace(/[`&]/g, "").replace(/\(\)\s*\{.*/g, "");
     }
     return s;
 };
 
-var loadSecurePreferences = function(securefile){
-    var s, obj, opt;
-    var secure = false;
+const loadSecurePreferences = function(securefile){
+    let s, obj, opt;
+    let secure = false;
     if( fs.existsSync(securefile) ){
 	s = fs.readFileSync(securefile, "utf-8");
 	if( s ){
@@ -296,12 +293,12 @@ var loadSecurePreferences = function(securefile){
 };
 
 // load preference file, if possible
-var loadPreferences = function(prefs){
-    var s, obj, opt, otype, jtype;
+const loadPreferences = function(prefs){
+    let s, obj, opt, otype, jtype;
     if( fs.existsSync(prefs) ){
 	s = fs.readFileSync(prefs, "utf-8");
     } else if( typeof prefs === "string" ){
-	s = '{"globalOpts": ' + prefs + "}";
+	s = `{"globalOpts": ${prefs}}`;
     }
     if( s ){
 	try{ obj = JSON.parse(s.toString()); }
@@ -334,8 +331,8 @@ var loadPreferences = function(prefs){
 	    }
 	}
 	// some directories should be relative to __dirname
-	globalRelatives.forEach( function(s){
-	    var file = globalOpts[s];
+	globalRelatives.forEach((s) => {
+	    const file = globalOpts[s];
 	    if( file && !path.isAbsolute(file) ){
 		globalOpts[s] = path.join(installDir, file);
 	    }
@@ -348,12 +345,12 @@ var loadPreferences = function(prefs){
 };
 
 // load analysis plugin files, if available
-var loadAnalysisTasks = function(dir, todir){
+const loadAnalysisTasks = function(dir, todir){
     if( fs.existsSync(dir) ){
-	fs.readdir(dir, function(err, files){
-	    var i, j, a, arr, jstr, pathname;
+	fs.readdir(dir, (err, files) => {
+	    let i, j, a, arr, jstr, pathname;
 	    for(i=0; i<files.length; i++){
-		pathname = dir + "/" + files[i];
+		pathname = `${dir}/${files[i]}`;
 		if( fs.existsSync(pathname) ){
 		    // only json files ... also avoid Mac OSX xattr files
 		    if( !pathname.match(/.json$/) || files[i].match(/\._/) ){
@@ -383,7 +380,7 @@ var loadAnalysisTasks = function(dir, todir){
 				    for(j=0; j<arr.length; j++){
 					a = arr[j];
 					if( a.purl ){
-					    a.purl = todir + "/" + a.purl;
+					    a.purl = `${todir}/${a.purl}`;
 					}
 				    }
 				    analysis.pkgs.push(arr);
@@ -404,18 +401,18 @@ var loadAnalysisTasks = function(dir, todir){
 };
 
 // addAnalysisTask: add to the list of analysis tasks sent to browser
-var addAnalysisTask = function(obj) {
+const addAnalysisTask = function(obj) {
     analysis.pkgs.push(obj);
-    analysis.str.push("[" + JSON.stringify(obj) + "]");
+    analysis.str.push(`[${JSON.stringify(obj)}]`);
 };
 
 // load user-defined plugins, if possible
-var loadHelperPlugins = function(dir){
+const loadHelperPlugins = function(dir){
     if( fs.existsSync(dir) ){
-	fs.readdir(dir, function(err, files){
-	    var i, x, pathname, name;
+	fs.readdir(dir, (err, files) => {
+	    let i, x, pathname, name;
 	    for(i=0; i<files.length; i++){
-		pathname = dir + "/" + files[i];
+		pathname = `${dir}/${files[i]}`;
 		if( fs.existsSync(pathname) ){
 		    // only js files, please
 		    if( !pathname.match(/.js$/) ){
@@ -438,30 +435,30 @@ var loadHelperPlugins = function(dir){
 };
 
 // merge a directory containing analysis tasks, etc.
-var mergeDirectory = function(dir){
-    var s, stat, mergeTo;
+const mergeDirectory = function(dir){
+    let s, stat, mergeTo;
     // only merge once
     if( merges[dir] ){ return "OK"; }
     // look for directory info
     try{ stat = fs.statSync(dir); } catch(e){ stat = null; }
     if( !stat || !stat.isDirectory() ){
-	s = "ERROR: invalid merge directory: " + (dir || "<none>");
+	s = `ERROR: invalid merge directory: ${dir||"<none>"}`;
 	clog(s);
 	return s;
     }
     // how to get from merge dir to install dir
     mergeTo = path.relative(__dirname, dir);
     // process entries in the merge directory
-    try{ fs.readdir(dir, function(err, files){
+    try{ fs.readdir(dir, (err, files) => {
 	let d, i, file, stat;
 	for(i=0; i<files.length; i++){
 	    file = files[i];
-	    d = dir + "/" + file;
+	    d = `${dir}/${file}`;
 	    switch(file){
 	    case "analysis-wrappers":
 		try{ stat = fs.statSync(d); } catch(e){ stat = null; }
 		if( stat && stat.isDirectory() ){
-		    globalOpts.analysisWrapPath += ":" + d;
+		    globalOpts.analysisWrapPath += `:${d}`;
 		}
 		break;
 	    case "analysis-plugins":
@@ -473,7 +470,7 @@ var mergeDirectory = function(dir){
 	    case "bin":
 		try{ stat = fs.statSync(d); } catch(e){ stat = null; }
 		if( stat && stat.isDirectory() ){
-		    process.env.PATH += ":" + d;
+		    process.env.PATH += `:${d}`;
 		}
 		break;
 	    case "params":
@@ -484,7 +481,7 @@ var mergeDirectory = function(dir){
 	}
     }); }
     catch(e){
-	s = "ERROR: can't read files from merge directory: " + dir;
+	s = `ERROR: can't read files from merge directory: ${dir}`;
 	clog(s);
 	return s;
     }
@@ -496,12 +493,12 @@ var mergeDirectory = function(dir){
 
 // parse an argument string into an array of arguments, where
 // spaces and quotes are delimiters
-var parseArgs = function(argstr){
-    var targs, i, j, ci, c1, c2, s;
-    var args = [];
+const parseArgs = function(argstr){
+    let targs, i, j, ci, c1, c2, s;
+    const args = [];
     // temporarily replace spaces inside file extension brackets
     // https://stackoverflow.com/questions/16644159/regex-to-remove-spaces-between-and
-    var nargstr = argstr.replace(/\s+(?=[^[\]]*\])/g, "__sp__");
+    const nargstr = argstr.replace(/\s+(?=[^[\]]*\])/g, "__sp__");
     // split arguments on spaces
     targs = nargstr.split(" ");
     // now re-combine quoted args into one arg
@@ -511,7 +508,7 @@ var parseArgs = function(argstr){
 	// are we re-combining?
 	if( ci >= 0 ){
 	    // yes, add to current arg
-	    args[ci] = args[ci] + " " + s;
+	    args[ci] = `${args[ci]} ${s}`;
 	} else {
 	    // no, add another arg
 	    args[j] = s;
@@ -553,10 +550,10 @@ var parseArgs = function(argstr){
 };
 
 // get data path
-var getDataPath = function(s){
-    var i, t, narr;
-    var arr = [];
-    var dataPath="";
+const getDataPath = function(s){
+    let i, t, narr;
+    let arr = [];
+    let dataPath="";
     // always use the global dataPath set by the site
     if( globalOpts.dataPath ){
 	dataPath = envClean(globalOpts.dataPath);
@@ -584,18 +581,17 @@ var getDataPath = function(s){
 };
 
 // see if a file exists in the dataPath
-var getFilePath = function(file, dataPath, myenv, dohide){
-    var i, s, s1, froot1, fext, parr;
-    var from, to;
+const getFilePath = function(file, dataPath, myenv, dohide){
+    let i, s, s1, froot1, fext, parr, from, to;
     // eslint-disable-next-line no-unused-vars
-    var repl = function(m, t, o){
+    const repl = (m, t, o) => {
 	if( myenv && myenv[t] ){
 	    return myenv[t];
 	}
 	return m;
     };
-    var hide = function(s){
-	var rexp = new RegExp("^" + installDir);
+    const hide = (s) => {
+	const rexp = new RegExp(`^${installDir}`);
 	return s.replace(rexp, "${JS9_DIR}");
     };
     // sanity check
@@ -634,7 +630,7 @@ var getFilePath = function(file, dataPath, myenv, dohide){
 	s1 = path.join(s, froot1);
 	if( fs.existsSync(s1) ){
 	    if( !s1.match(/\//) ){
-		s1 = currentDir + "/" + s1;
+		s1 = `${currentDir}/${s1}`;
 	    }
 	    // found the file add extension to full path
 	    s1 += fext;
@@ -648,10 +644,10 @@ var getFilePath = function(file, dataPath, myenv, dohide){
 };
 
 // get size of a file
-var getFileSize = function(file){
-    var stats;
-    var size = 0;
-    var froot = file.replace(/\[.*]$/,"");
+const getFileSize = function(file){
+    let stats;
+    let size = 0;
+    const froot = file.replace(/\[.*]$/,"");
     if( fs.existsSync(froot) ){
 	stats = fs.statSync(froot);
 	if( stats ){
@@ -665,16 +661,16 @@ var getFileSize = function(file){
 // message callbacks
 //
 
-// execCmd: exec a analysis wrapper function to run a command
+// execCmd: exec a analysis wrapper routine to run a command
 // this is the default callback for server-side analysis tasks
-var execCmd = function(io, socket, obj, cbfunc) {
-    var cmd, argstr, args, maxbuf, child, s;
-    var myworkdir = null;
-    var myip = getHost(io, socket);
-    var myid = obj.id;
-    var myrtype = obj.rtype || "binary";
-    var myenv = process.env;
-    var res = {stdout: null, stderr: null, errcode: 0,
+const execCmd = function(io, socket, obj, cbfunc) {
+    let cmd, argstr, args, maxbuf, child, s;
+    let myworkdir = null;
+    const myip = getHost(io, socket);
+    const myid = obj.id;
+    const myrtype = obj.rtype || "binary";
+    const myenv = process.env;
+    const res = {stdout: null, stderr: null, errcode: 0,
 	       encoding: globalOpts.textEncoding};
     // sanity check
     if( !obj || !obj.cmd || !socket.js9 ){
@@ -745,7 +741,7 @@ var execCmd = function(io, socket, obj, cbfunc) {
 		s = getFilePath(obj.image2, myenv.JS9_DATAPATH, myenv);
 	    }
 	    if( s ){
-		res.stdout = obj.image + " " + s;
+		res.stdout = `${obj.image} ${s}`;
 	    }
 	    if( cbfunc ){
 		cbfunc(res);
@@ -769,14 +765,14 @@ var execCmd = function(io, socket, obj, cbfunc) {
 	cmd = getFilePath(args[0], globalOpts.analysisWrapPath, myenv, false);
 	if( !cmd ){
 	    if( cbfunc ){
-		res.stderr = "can't find JS9 wrapper script: " + args[0];
+		res.stderr = `can't find JS9 wrapper script: ${args[0]}`;
 		cbfunc(res);
 	    }
 	    return;
 	}
 	// make path absolute in case we change directories
 	if( cmd.charAt(0) !== "/" ){
-	    cmd = installDir + "/" + cmd;
+	    cmd = `${installDir}/${cmd}`;
 	}
     }
     // log what we are about to do
@@ -793,7 +789,7 @@ var execCmd = function(io, socket, obj, cbfunc) {
 		     env: myenv
 		   },
 		   // return from exec
-		   function(errcode, stdout, stderr) {
+		   (errcode, stdout, stderr) => {
 		       if( errcode ){
 			   res.errcode = errcode.errno || errcode.code;
 		       }
@@ -833,25 +829,25 @@ var execCmd = function(io, socket, obj, cbfunc) {
 };
 
 // sendAnalysis: send list of analysis routines to browser
-var sendAnalysisTasks = function(io, socket, obj, cbfunc) {
-    var s;
+const sendAnalysisTasks = function(io, socket, obj, cbfunc) {
+    let s;
     if( analysis && analysis.str.length ){
-	s = "[" + analysis.str.join(",") + "]";
+	s = `[${analysis.str.join(",")}]`;
 	if( cbfunc ){ cbfunc(s); }
     }
 };
 
 // pageReady: wait for a Web browser to load a JS9 page and connect
 // used by js9Msg.js to start up a Web browser before executing commands
-var pageReady = function(io, socket, obj, cbfunc, tries){
-    var i, targets;
-    var timeout = obj.timeout || 500;
-    var maxtries = obj.tries || 10;
-    // callback function
-    var myfunc = function(s){
+const pageReady = function(io, socket, obj, cbfunc, tries){
+    let i, targets;
+    const timeout = obj.timeout || 500;
+    const maxtries = obj.tries || 10;
+    // callback func
+    const myfunc = (s) => {
 	if( cbfunc ){ cbfunc(s); }
     };
-    setTimeout(function(){
+    setTimeout(() => {
 	// look for targets
 	targets = getTargets(io, socket, obj);
 	// if we have at least one ...
@@ -875,9 +871,7 @@ var pageReady = function(io, socket, obj, cbfunc, tries){
 	    } else {
 		// it's an error
 		if( cbfunc ){
-		    cbfunc("ERROR: "+ targets.length +
-			   " JS9 instance(s) found with" +
-			   " id " + obj.id + " (" + obj.cmd+")");
+		    cbfunc(`ERROR: ${targets.length} JS9 instance(s) found with id ${obj.id} (${obj.cmd})`);
 		}
 	    }
 	}
@@ -886,10 +880,10 @@ var pageReady = function(io, socket, obj, cbfunc, tries){
 
 // sendMsg: send a message to the browser
 // this is the default callback for external communication with JS9
-var sendMsg = function(io, socket, obj, cbfunc) {
-    var s, i, myip, targets;
-    // callback function
-    var myfunc = function(s){
+const sendMsg = function(io, socket, obj, cbfunc) {
+    let s, i, myip, targets;
+    // callback func
+    const myfunc = (s) => {
 	if( cbfunc ){ cbfunc(s); }
     };
     // get list of targets to send to
@@ -924,7 +918,7 @@ var sendMsg = function(io, socket, obj, cbfunc) {
     case "fits2fits":
     case "fits2png":
     case "quotacheck":
-	myfunc("ERROR: " + obj.cmd + " not available via js9 messaging script");
+	myfunc(`ERROR: ${obj.cmd} not available via js9 messaging script`);
 	return;
     }
     // look for one target (or else that multi is allowed)
@@ -941,8 +935,7 @@ var sendMsg = function(io, socket, obj, cbfunc) {
 	}
 	// it's an error
 	if( cbfunc ){
-            cbfunc("ERROR: "+targets.length+" JS9 instance(s) found with" +
-		   " id " + obj.id + " (" + obj.cmd+")");
+            cbfunc(`ERROR: ${targets.length} JS9 instance(s) found with id ${obj.id} (${obj.cmd})`);
 	}
     }
 };
@@ -952,20 +945,20 @@ var sendMsg = function(io, socket, obj, cbfunc) {
 //
 
 // socketio handler: field socket.io requests
-var socketioHandler = function(socket) {
-    var i, j, m, a;
-    // function outside loop needed to make jslint happy
-    var xfunc = function(obj, cbfunc) {
+const socketioHandler = function(socket) {
+    let i, j, m, a;
+    // func outside loop needed to make jslint happy
+    const xfunc = (obj, cbfunc) => {
 	if( !obj ){return;}
-	// exec the analysis task (via a wrapper function)
+	// exec the analysis task (via a wrapper func)
 	execCmd(io, socket, obj, cbfunc);
     };
     // on disconnect: display a console message
     // returns: N/A
     // for other implementations, this is needed if you want to:
     //   show disconnects in the log
-    socket.on("disconnect", function(reason) {
-	var myhost = getHost(io, socket);
+    socket.on("disconnect", (reason) => {
+	const myhost = getHost(io, socket);
 	// only process disconnect for displays (not js9 msgs or workers)
 	if( socket.js9 && socket.js9.displays && !socket.js9worker ){
             clog("disconnect: %s (%s) [%s]",
@@ -975,7 +968,7 @@ var socketioHandler = function(socket) {
 	    if( socket.js9.aworkDir && globalOpts.rmWorkDir ){
 		// timeout allows page to reconnect before we delete
 		rmQueue[socket.js9.pageid] = socket.js9.aworkDir;
-		setTimeout(function(){
+		setTimeout(() => {
 		    if( rmQueue[socket.js9.pageid] ){
 			rmdir.sync(socket.js9.aworkDir);
 			delete rmQueue[socket.js9.pageid];
@@ -988,9 +981,9 @@ var socketioHandler = function(socket) {
     // returns: unique page id (not currently used)
     // for other implementations, this is needed if you want to:
     //   support sending external messages to JS9 (i.e., via js9 script)
-    socket.on("initialize", function(obj, cbfunc) {
-	var myhost = getHost(io, socket);
-	var basedir, aworkdir, jpath;
+    socket.on("initialize", (obj, cbfunc) => {
+	let basedir, aworkdir, jpath;
+	const myhost = getHost(io, socket);
 	if( !obj ){return;}
 	socket.js9 = {};
 	socket.js9.displays = obj.displays;
@@ -1022,9 +1015,9 @@ var socketioHandler = function(socket) {
 	// create workDir for this connection, if possible
 	if( fs.existsSync(aworkdir) ){
 	    // absolute path of workdir
-	    socket.js9.aworkDir = aworkdir + "/" + socket.js9.pageid;
+	    socket.js9.aworkDir = `${aworkdir}/${socket.js9.pageid}`;
 	    // relative path of workdir
-	    socket.js9.rworkDir = globalOpts.workDir + "/" + socket.js9.pageid;
+	    socket.js9.rworkDir = `${globalOpts.workDir}/${socket.js9.pageid}`;
 	    if( !fs.existsSync(socket.js9.aworkDir) ){
 		try{ fs.mkdirSync(socket.js9.aworkDir, parseInt('0755',8)); }
 		catch(e){
@@ -1044,7 +1037,7 @@ var socketioHandler = function(socket) {
     // returns: unique page id (not currently used)
     // for other implementations, this is needed if you want to:
     //   support sending external messages to JS9 (i.e., via js9 script)
-    socket.on("addDisplay", function(obj, cbfunc) {
+    socket.on("addDisplay", (obj, cbfunc) => {
 	if( !obj || !obj.display ){return;}
 	socket.js9.displays = socket.js9.displays || [];
 	socket.js9.displays.push(obj.display);
@@ -1054,8 +1047,8 @@ var socketioHandler = function(socket) {
     // returns: unique page id (not currently used)
     // for other implementations, this is needed if you want to:
     //   allow renaming of JS9 display id for external communication
-    socket.on("renameDisplay", function(obj, cbfunc) {
-	var i;
+    socket.on("renameDisplay", (obj, cbfunc) => {
+	let i;
 	if( !obj || !obj.odisplay || !obj.ndisplay ){return;}
 	socket.js9.displays = socket.js9.displays || [];
 	for(i=0; i<socket.js9.displays.length; i++){
@@ -1066,8 +1059,8 @@ var socketioHandler = function(socket) {
 	}
 	if( cbfunc ){ cbfunc(socket.js9.pageid); }
     });
-    socket.on("worker", function(obj, cbfunc) {
-	var main;
+    socket.on("worker", (obj, cbfunc) => {
+	let main;
 	obj = obj || {};
 	main = connectWorker(io, socket, obj.pageid);
 	if( main ){
@@ -1081,15 +1074,15 @@ var socketioHandler = function(socket) {
 	}
     });
     // on alive: return "OK" to signal a valid connection
-    socket.on("alive", function(obj, cbfunc) {
+    socket.on("alive", (obj, cbfunc) => {
 	    if( cbfunc ){ cbfunc("OK"); }
     });
     // on merge: merge analysis tasks from specified directory
     // for other implementations, this is needed if you want to:
     // add new analysis tasks from sources external to the installed code
-    socket.on("merge", function(obj, cbfunc) {
-	var s;
-	var myip = getHost(io, socket);
+    socket.on("merge", (obj, cbfunc) => {
+	let s;
+	const myip = getHost(io, socket);
 	// local connections only
 	if( (myip === "127.0.0.1") || (myip === "::ffff:127.0.0.1") ){
 	    if( !obj || !obj.directory ){return;}
@@ -1106,11 +1099,11 @@ var socketioHandler = function(socket) {
     // for other implementations, this is needed if you want to:
     //   get FITS filename associated with PNG representation files
     //   (args 1 and 2 will be identical when imaging FITS files)
-    socket.on("image", function(obj, cbfunc) {
+    socket.on("image", (obj, cbfunc) => {
 	if( !obj ){return;}
 	if( globalOpts.cmd ){
 	    // make up js9helper command
-	    obj.cmd = globalOpts.cmd + " -i " + obj.image;
+	    obj.cmd = `${globalOpts.cmd} -i ${obj.image}`;
 	    // exec the command
 	    execCmd(io, socket, obj, cbfunc);
 	}
@@ -1119,7 +1112,7 @@ var socketioHandler = function(socket) {
     // returns: json string containing analysis task definitions
     // for other implementations, this is needed if you want to:
     //   support default server-side analysis (i.e. exec a wrapper script)
-    socket.on("getAnalysis", function(obj, cbfunc) {
+    socket.on("getAnalysis", (obj, cbfunc) => {
 	if( !obj ){return;}
 	sendAnalysisTasks(io, socket, obj, cbfunc);
     });
@@ -1128,9 +1121,9 @@ var socketioHandler = function(socket) {
     // for other implementations, this is needed if you want to:
     //   support default server-side analysis (i.e. exec a wrapper script)
     // NB: retained for backward compatibility with old (cached) versions of JS9
-    socket.on("runAnalysis", function(obj, cbfunc){
+    socket.on("runAnalysis", (obj, cbfunc) => {
 	if( !obj ){return;}
-	// exec the analysis task (via a wrapper function)
+	// exec the analysis task (via a wrapper func)
 	execCmd(io, socket, obj, cbfunc);
     });
     // NB: instead of runAnalysis, now we use a handler for each separate task
@@ -1148,7 +1141,7 @@ var socketioHandler = function(socket) {
 	    if( a.name === "loadproxy" && !globalOpts.loadProxy ){
 		continue;
 	    }
-	    m = a.xclass ? (a.xclass + ":" + a.name) : a.name;
+	    m = a.xclass ? (`${a.xclass}:${a.name}`) : a.name;
 	    socket.on(m, xfunc);
 	}
     }
@@ -1156,13 +1149,13 @@ var socketioHandler = function(socket) {
     // returns: object w/ errcode, stderr (error string), stdout (results)
     // for other implementations, this is needed if you want to:
     //   support conversion of fits to fits representation
-    socket.on("fits2fits", function(obj, cbfunc) {
-	var myenv, s, size;
-	var res = {stdout: null, stderr: null, errcode: 0,
+    socket.on("fits2fits", (obj, cbfunc) => {
+	let myenv, s, size;
+	const res = {stdout: null, stderr: null, errcode: 0,
 		   encoding: globalOpts.textEncoding};
 	// sanity checks
 	if( !fits2fits[0] || !fits2fits[0].action || !obj ){
-	    // let client decide whether to use default file or throw error
+	    // client decides whether to use default file or throw error
 	    res.stdout = "ERROR: no fits2fits action defined";
 	    cbfunc(res);
 	    return;
@@ -1172,9 +1165,9 @@ var socketioHandler = function(socket) {
 	myenv.JS9_DATAPATH = getDataPath(obj.dataPath);
 	s = getFilePath(obj.fits, myenv.JS9_DATAPATH, myenv);
 	if( !s ){
-	    // did not find file, let js9 take care of it
+	    // did not find file, allow js9 to take care of it
 	    if( cbfunc ){
-		// let client decide whether to use default file or throw error
+		// client decides whether to use default file or throw error
 		res.stdout = "ERROR: could not find FITS file in data path";
 		cbfunc(res);
 	    }
@@ -1195,24 +1188,24 @@ var socketioHandler = function(socket) {
 	// make up fits2fits command string from defined fits2fits action
 	obj.cmd = fits2fits[0].action;
         if( obj.parent ){
- 	    obj.cmd = obj.cmd + " -parent";
+ 	    obj.cmd = `${obj.cmd} -parent`;
         }
-	obj.cmd = obj.cmd + " " + obj.fits + " " + obj.sect;
-	// exec the conversion task (via a wrapper function)
+	obj.cmd = `${obj.cmd} ${obj.fits} ${obj.sect}`;
+	// exec the conversion task (via a wrapper func)
 	execCmd(io, socket, obj, cbfunc);
     });
     // on fits2png: convert raw fits to png
     // returns: object w/ errcode, stderr (error string), stdout (results)
     // for other implementations, this is needed if you want to:
     //   support conversion of fits to png representation
-    socket.on("fits2png", function(obj, cbfunc) {
+    socket.on("fits2png", (obj, cbfunc) => {
 	if( !obj ){return;}
 	if( fits2png[0] && fits2png[0].action ){
 	    // make up fits2png command string from defined fits2png action
-	    obj.cmd = fits2png[0].action + " " + obj.fits;
+	    obj.cmd = `${fits2png[0].action} ${obj.fits}`;
 	    // don't use a workdir
 	    obj.useWorkDir = false;
-	    // exec the conversion task (via a wrapper function)
+	    // exec the conversion task (via a wrapper func)
 	    execCmd(io, socket, obj, cbfunc);
 	}
     });
@@ -1221,13 +1214,13 @@ var socketioHandler = function(socket) {
     // for other implementations, this is needed if you want to:
     //   allow JS9 to check quota before executing a file-generating task
     //   (e.g. upload a fits file)
-    socket.on("quotacheck", function(obj, cbfunc) {
+    socket.on("quotacheck", (obj, cbfunc) => {
 	if( !obj ){return;}
 	if( quotacheck[0] && quotacheck[0].action ){
 	    // make up quotacheck command string from defined quotacheck action
 	    obj.cmd = quotacheck[0].action;
 	    obj.rtype = quotacheck[0].rtype;
-	    // exec the task (via a wrapper function)
+	    // exec the task (via a wrapper func)
 	    execCmd(io, socket, obj, cbfunc);
 	}
     });
@@ -1236,21 +1229,21 @@ var socketioHandler = function(socket) {
     // returns: results from JS9
     // for other implementations, this is needed if you want to:
     //   support sending external messages to JS9 (i.e., via js9 script)
-    socket.on("msg", function(obj, cbfunc) {
+    socket.on("msg", (obj, cbfunc) => {
 	if( !obj ){return;}
 	sendMsg(io, socket, obj, cbfunc);
     });
-    // an example of site-specific in-line messsages
-    if( process.env.NODEJS_FOO ){
-	// After defining a foo message, you can do this in javascript:
-	// JS9.Send("FOO:foo",{keys:{"x":1,"y":2}},function(r){dofunc(r)});
-	socket.on("FOO:foo", function(obj, cbfunc) {
-	    var s = "foo: " + JSON.stringify(obj.keys);
-	    // analysis tasks should return an object containing one or more:
-	    // error (error code), stdout (string result), stderr (error msg)
-	    if( cbfunc ){ cbfunc({stdout: s}); }
-	});
-    }
+//    // an example of site-specific in-line messsages
+//    if( process.env.NODEJS_FOO ){
+//	// After defining a foo message, you can do this in javascript:
+//	// JS9.Send("FOO:foo",{keys:{"x":1,"y":2}}, (r) => {dofunc(r)});
+//	socket.on("FOO:foo", (obj, cbfunc) => {
+//	    const s = `foo: ${JSON.stringify(obj.keys)}`;
+//	    // analysis tasks should return an object containing one or more:
+//	    // error (error code), stdout (string result), stderr (error msg)
+//	    if( cbfunc ){ cbfunc({stdout: s}); }
+//	});
+//    }
     // add plugins
     for(i=0; i<plugins.length; i++){
 	if( plugins[i].sockio ){
@@ -1275,16 +1268,16 @@ var socketioHandler = function(socket) {
 // wget -q -O- --post-data='{"id": "'$ID'", "cmd": "GetColormap"}' $MYHOST/msg
 // wget -q -O- --post-data='{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}' $MYHOST/msg
 // wget -q -O- --post-data='{"id": "'$ID'", "cmd": "RunAnalysis", "args": ["counts"]}' $MYHOST/msg
-var httpHandler = function(req, res){
-    var cmd, gobj, s, jstr;
-    var body = "";
+const httpHandler = function(req, res){
+    let cmd, gobj, s, jstr;
+    let body = "";
     // return error into to browser
-    var htmlerr = function(s){
+    const htmlerr = (s) => {
 	res.writeHead(400, String(s), {"Content-Type": "text/plain"});
 	res.end();
     };
-    // call-back function returning info to the client
-    var cbfunc = function(s){
+    // call-back func returning info to the client
+    const cbfunc = (s) => {
 	switch(typeof s){
 	case "string":
 	    break;
@@ -1300,19 +1293,19 @@ var httpHandler = function(req, res){
 	res.end();
     };
     // generate object and run the cmd
-    var docmd = function(cmd, jstr){
-	var i, j, s;
-	var obj = {};
+    const docmd = (cmd, jstr) => {
+	let i, j, s;
+	let obj = {};
 	// the constructed string is stringified json, if it exists
 	// try to parse it into an object
 	if( cmd !== "alive" && jstr && jstr !== "null" ){
 	    try{ obj = JSON.parse(jstr); }
 	    catch(e){
-		htmlerr("can't parse JSON object in http request: " + jstr); 
+		htmlerr(`can't parse JSON object in http request: ${jstr}`);
 		return;
 	    }
 	    if( typeof obj !== "object" ){
-		htmlerr("invalid JSON object in http request: " + jstr);
+		htmlerr(`invalid JSON object in http request: ${jstr}`);
 		return;
 	    }
 	}
@@ -1325,7 +1318,7 @@ var httpHandler = function(req, res){
 		// if this is a jsonp request, wrap the return string
 		// (this is done by the desktop app)
 		if( jstr.match(/^callback=/) ){
-		    s = jstr.replace(/^callback=/, "") + '("OK")';
+		    s = `${jstr.replace(/^callback=/, "")}("OK")`;
 		} else {
 		    // ordinary request with ordinary return
 		    s = "OK";
@@ -1356,7 +1349,7 @@ var httpHandler = function(req, res){
 		    }
 		}
 	    }
-	    htmlerr("unknown command in " + req.method + " request: " + cmd);
+	    htmlerr(`unknown command in ${req.method} request: ${cmd}`);
 	    break;
 	}
     };
@@ -1375,25 +1368,25 @@ var httpHandler = function(req, res){
 	}
 	// we pass the stringified json data directly command type,
 	// so prepend an obj so we can parse it
-	s = "obj=" + gobj.query;
+	s = `obj=${gobj.query}`;
 	try{ jstr = qs.parse(s).obj; }
 	catch(e){
-	    htmlerr("can't parse JSON object in http GET request: " + s); 
+	    htmlerr(`can't parse JSON object in http GET request: ${s}`); 
 	    return;
 	}
 	docmd(cmd, jstr);
 	break;
     case "POST":
-	req.on('data', function(chunk){
+	req.on('data', (chunk) => {
 	    body += chunk;
 	});
-	req.on('end', function(){
+	req.on('end', () => {
 	    jstr = String(body);
 	    docmd(cmd, jstr);
 	});
 	break;
     default:
-	htmlerr("unsupported method: " + req.method);
+	htmlerr(`unsupported method: ${req.method}`);
 	return;
     }
 };
@@ -1401,11 +1394,12 @@ var httpHandler = function(req, res){
 // polyfill for Array.includes (for Ubuntu using node 4.x)
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes
 // https://tc39.github.io/ecma262/#sec-array.prototype.includes
+// (es6 conversion: leave this routine as retrieved from mozilla.org)
 if (!Array.prototype.includes) {
   // eslint-disable-next-line no-extend-native
   Object.defineProperty(Array.prototype, 'includes', {
     value: function(valueToFind, fromIndex) {
-      var o, len, n, k;
+      let o, len, n, k;
 
       if (this === null) {
         throw new TypeError('"this" is null or not defined');
@@ -1462,7 +1456,7 @@ if (!Array.prototype.includes) {
 
 // add runtime directory to PATH
 if( process.env.PATH ){
-    process.env.PATH += (":" + installDir);
+    process.env.PATH += (`:${installDir}`);
 }
 
 // load secure preferences
@@ -1530,7 +1524,7 @@ if( process.env.NODEJS_FOO === "analysis" ){
 
 // re-init analysis tasks and plugins on USR2
 // eslint-disable-next-line no-unused-vars
-process.on('SIGUSR2', function(signal){
+process.on('SIGUSR2', (signal) => {
     analysis = {str:[], pkgs:[]};
     loadAnalysisTasks(globalOpts.analysisPlugins);
     plugins = [];
@@ -1538,14 +1532,14 @@ process.on('SIGUSR2', function(signal){
 });
 
 // last ditch attempt to keep the server up
-process.on("uncaughtException", function(e){
+process.on("uncaughtException", (e) => {
     cerr("uncaughtException: %s [%s]", e, e.stack || e.stacktrace || "");
 });
 
 // clean up on exit
-process.on("exit", function(){
-    var i, client;
-    var clients = getClients(io);
+process.on("exit", () => {
+    let i, client;
+    const clients = getClients(io);
     // remove client work dirs, if necessary
     if( globalOpts.rmWorkDir ){
 	for(i=0; i<clients.length; i++){
