@@ -4754,7 +4754,7 @@ JS9.Image.prototype.notifyHelper = function(){
 		    this.fitsFile = s;
 		    // prepend base of png path if fits file has no path
 		    // is this a bad "feature" in tpos?? probably ...
-		    if( this.fitsFile.indexOf("/") < 0 ){
+		    if( !this.fitsFile.includes("/") ){
 			basedir = this.file.match( /.*\// );
 			// but don't add installdir as part of prefix
 			// (fitsFile path is relative to the js9 directory)
@@ -6207,7 +6207,7 @@ JS9.Image.prototype.getScale = function(){
 JS9.Image.prototype.setScale = function(...args){
     let [s0, s1, s2] = args;
     const newscale = (s) => {
-	if( JS9.scales.indexOf(s) >= 0 ){
+	if( JS9.scales.includes(s) ){
 	    this.params.scale = s;
 	} else if( s === "dataminmax" ){
 	    this.params.scaleclipping = "dataminmax";
@@ -8434,8 +8434,8 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 	ra = data[i][xcol];
 	dec = data[i][ycol];
 	// various ways we might specify hms
-	if( (delims[xcol]!== "\0")  && (":h ".indexOf(delims[xcol]) >= 0) &&
-	    (wcssys !== "galactic") && (wcssys !== "ecliptic") ){
+	if( (delims[xcol] !== "\0")  && (":h ".includes(delims[xcol])) &&
+	    (wcssys !== "galactic")  && (wcssys !== "ecliptic")        ){
 	    ra *= 15.0;
 	}
 	pos = getpos(ra, dec);
@@ -8479,7 +8479,7 @@ JS9.Image.prototype.loadCatalog = function(...args){
 	const obj = {};
 	obj.val = JS9.saostrtod(s);
 	obj.delim = String.fromCharCode(JS9.saodtype());
-	if( (obj.delim !== "\0") && (delims.indexOf(obj.delim) >= 0) ){
+	if( (obj.delim !== "\0") && (delims.includes(obj.delim)) ){
 	    // valid delim means we converted to a float
 	    return obj;
 	} else if( JS9.isNumber(s) ){
@@ -15468,7 +15468,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	region = pubs[i];
 	obj = region.obj;
 	tagjoin = region.tags.join(",");
-	if( tagjoin.indexOf("exclude") >= 0 ){
+	if( tagjoin.includes("exclude") ){
 	    iestr = "-";
 	} else {
 	    iestr = "";
@@ -15476,7 +15476,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	// add exported properties
 	exports = getExports(obj, region);
 	// add color, if necessary
-	if( region.color && tagcolors.indexOf(region.color) === -1 ){
+	if( region.color && !tagcolors.includes(region.color) ){
 	    exports.color = region.color;
 	}
 	// display tags?
@@ -15662,11 +15662,11 @@ JS9.Regions.parseRegions = function(s, opts){
 	tobj.args = [];
 	tobj.isregion = 0;
 	// look for a command
-	if( s.indexOf("(") >=0 ){
+	if( s.includes("(") ){
 	    tobj.cmd = s.split("(")[0].trim().toLowerCase();
-	} else if( s.indexOf("{") >=0 ){
+	} else if( s.includes("{") ){
 	    tobj.cmd = s.split("{")[0].trim().toLowerCase();
-	} else if( s.indexOf("#") >=0 ){
+	} else if( s.includes("#") ){
 	    tobj.cmd = s.split("#")[0].trim().toLowerCase();
 	} else {
 	    tobj.cmd = s.trim().toLowerCase();
@@ -18990,7 +18990,7 @@ JS9.localAccess = function(file){
 
 // get directory name of a file, including trailing "/";
 JS9.dirname = function(f){
-    if( !f || f.indexOf("/") === -1 ){
+    if( !f || !f.includes("/") ){
 	return "";
     }
     return f.match(/.*\//)[0];
@@ -21306,7 +21306,7 @@ JS9.mkPublic("Load", function(...args){
 	    opts.filename = JS9.ANON + JS9.uniqueID();
 	}
 	// look for a mime type to tell us how to process this blob
-	if( file.type && file.type.indexOf("image/") !== -1 ){
+	if( file.type && file.type.includes("image/") ){
 	    switch(file.type){
 	    case "image/fits":
 		break;

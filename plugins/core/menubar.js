@@ -1814,7 +1814,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	    for(i=0; i<JS9.colormaps.length; i++){
 		s1 = JS9.colormaps[i].name;
-		if( JS9.globalOpts.topColormaps.indexOf(s1) === -1 ){
+		if( !JS9.globalOpts.topColormaps.includes(s1) ){
 		    s2 = s1;
 		    items.morecmaps.items[s1] = xname(s2);
 		    if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
