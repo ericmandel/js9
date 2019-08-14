@@ -15704,7 +15704,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	    tobj.args = tarr[1].split(argsrexp);
 	}
 	// look for - sign signifying an exclude region
-	if( tobj.isregion && tobj.cmd.indexOf("-") === 0 ){
+	if( tobj.isregion && tobj.cmd.startsWith("-") ){
 	    tobj.cmd = tobj.cmd.slice(1);
 	    if( tobj.comment ){
 		tobj.comment += ",exclude";
@@ -20175,7 +20175,7 @@ JS9.initCommands = function(){
 	    for(i=0; i<alen; i++){
 		obj = null;
 		j = i + 1;
-		if( (j < alen) && (args[j].indexOf('{') === 0) ){
+		if( (j < alen) && args[j].startsWith('{') ){
 		    try{ obj = JSON.parse(args[j]); }
 		    catch(e){ obj = null; }
 		}
@@ -20245,7 +20245,7 @@ JS9.initCommands = function(){
 	    for(i=0; i<alen; i++){
 		obj = null;
 		j = i + 1;
-		if( (j < alen) && (args[j].indexOf('{') === 0) ){
+		if( (j < alen) && args[j].startsWith('{') ){
 		    try{ obj = JSON.parse(args[j]); }
 		    catch(e){ obj = null; }
 		}
@@ -21893,7 +21893,7 @@ JS9.mkPublic("Preload", function(...args){
 		pobj = $.extend(true, {}, args[j]);
 		JS9.preloads.push([args[i], pobj, dobj]);
 		i++;
-	    } else if( (j < alen) && (args[j].indexOf('{') === 0) ){
+	    } else if( (j < alen) && args[j].startsWith('{') ){
 		try{ pobj = JSON.parse(args[j]); }
 		catch(e){ pobj = null; }
 		JS9.preloads.push([args[i], pobj, dobj]);
@@ -21932,8 +21932,7 @@ JS9.mkPublic("Preload", function(...args){
 		}
 		catch(e){ emsg = `${emsg} ${args[i]}`;}
 		i++;
-
-	    } else if( (j < alen) && (args[j].indexOf('{') === 0) ){
+	    } else if( (j < alen) && args[j].startsWith('{') ){
 		try{ pobj = JSON.parse(args[j]); }
 		catch(e){ pobj = null; }
 		if( func === JS9.Load || func === JS9.LoadProxy ){
