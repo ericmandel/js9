@@ -1012,7 +1012,7 @@ JS9.Image.prototype.getImageData = function(dflag){
     if( dflag ){
 	// return an array for IPC, since python mangles the typed array
 	if( dflag === "array" ){
-	    data = Array.prototype.slice.call(this.raw.data);
+	    data = Array.from(this.raw.data);
 	} else if( dflag === "base64" ){
 	    // NB: this seems to be the fastest method for IPC!
 	    data = atob64(this.raw.data);
@@ -20864,7 +20864,7 @@ JS9.init = function(){
 // used in public api routines to retrieve optional {display: id} arg
 JS9.parsePublicArgs = function(args){
     let display = null;
-    const argv = Array.prototype.slice.call(args);
+    const argv = Array.from(args);
     const obj = argv[argv.length-1];
     // look for object containing display property as last arg
     if( obj && (typeof obj === "object") &&
