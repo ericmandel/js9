@@ -2334,7 +2334,7 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	    sect.ix += xtra * sect.zoom;
 	}
 	if( sect.x1 < this.raw.width ){
-	    xtra =  this.raw.height - sect.x1;
+	    xtra =  this.raw.width - sect.x1;
 	    sect.x1 += xtra;
 	    sect.ix -= xtra * sect.zoom;
 	}
