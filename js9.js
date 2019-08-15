@@ -12663,7 +12663,7 @@ JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
 // primitive to update one shape
 // call using image context
 JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
-    let i, xname, s, scalex, scaley, px, py, lcs, v0, v1, tval1, tval2;
+    let i, xname, s, scalex, scaley, px, py, v0, v1, tval1, tval2;
     let bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius, oangle;
     let opos, dist;
     const pub ={};
@@ -12844,9 +12844,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    if( this.params.wcssys === "image" ){
 		pub.imstr += `${tr(npos.x)}, ${tr(npos.y)}`;
 	    } else {
-		lcs = this.imageToLogicalPos(npos);
-		pub.imstr += `${tr(lcs.x)}, ${tr(lcs.y)}`;
-		pub.lcs.pts.push({x: lcs.x, y: lcs.y});
+		const {x, y} = this.imageToLogicalPos(npos);
+		pub.imstr += `${tr(x)}, ${tr(y)}`;
+		pub.lcs.pts.push({x, y});
 	    }
 	    tstr += `${npos.x} ${npos.y}`;
 	    pub.pts.push(npos);
