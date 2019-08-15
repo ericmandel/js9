@@ -20883,11 +20883,11 @@ JS9.mkPublic = function(name, s){
 	if( JS9.Image.prototype[s] ){
 	    JS9[name] = function(...args) {
 		let got;
-		const obj = JS9.parsePublicArgs(args);
-		const im = JS9.getImage(obj.display);
+		const {display, argv} = JS9.parsePublicArgs(args);
+		const im = JS9.getImage(display);
 		if( im ){
 		    // call the image method
-		    got = im[s](...obj.argv);
+		    got = im[s](...argv);
 		    // don't return image handle, it can't be serialized
 		    if( (got === im) || (got === im.display) ){
 			return JS9.globalOpts.quietReturn ? "" : "OK";
