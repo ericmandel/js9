@@ -997,7 +997,7 @@ JS9.Image = function(file, params, func){
 // return the image data in a relatively standard format
 JS9.Image.prototype.getImageData = function(dflag){
     let data = null;
-    const fdims = this.fileDimensions();
+    const {xdim, ydim} = this.fileDimensions();
     const atob64 = (a) => {
 	let i;
 	let s = '';
@@ -1032,10 +1032,10 @@ JS9.Image.prototype.getImageData = function(dflag){
 	    bin: this.binning.bin,
 	    header: this.raw.header,
 	    hdus: this.hdus,
-	    fwidth: fdims.xdim,
-	    fheight: fdims.ydim,
 	    dwidth: this.display.width,
 	    dheight: this.display.height,
+	    fwidth: xdim,
+	    fheight: ydim,
 	    data: data
 	   };
 };
@@ -3344,7 +3344,7 @@ JS9.Image.prototype.maybePhysicalToImage = function(pos){
 
 // extract and display a section of an image, with table filtering
 JS9.Image.prototype.displaySection = function(opts, func) {
-    let oproxy, hdu, from, obj, oreg, nim, topts, fdims;
+    let oproxy, hdu, from, obj, oreg, nim, topts;
     let ipos, lpos, npos, binval1, binval2, tbin, arr, sect;
     const getval3 = (val1, val2, val3) => {
 	let res;
@@ -3555,8 +3555,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     }
     // special case: if opts is "full", display full image
     if( opts === "full" ){
-	fdims = this.fileDimensions();
-	opts = {xdim: fdims.xdim, ydim: fdims.ydim, xcen: 0, ycen: 0};
+	const {xdim, ydim} = this.fileDimensions();
+	opts = {xdim: xdim, ydim: ydim, xcen: 0, ycen: 0};
     } else if( opts === "selected" ){
 	this.selectShapes("regions", "selected", (obj) => {
 	    topts = reg2sect(obj.pub);
@@ -6501,7 +6501,7 @@ JS9.Image.prototype.zscale = function(setvals){
 // background-subtracted counts in regions
 // eslint-disable-next-line no-unused-vars
 JS9.Image.prototype.countsInRegions = function(...args){
-    let i, s, vfile, bvfile, sect, ext, filter, dims, bin, opts, cmdswitches;
+    let i, s, vfile, bvfile, sect, ext, filter, bin, opts, cmdswitches;
     let sregions = "field";
     let bregions = "";
     const getreg = (arg, macro, def) => {
@@ -6617,8 +6617,8 @@ JS9.Image.prototype.countsInRegions = function(...args){
     }
     // reduce file size, if necessary
     if( opts.reduce && !this.parentFile ){
-	dims = this.fileDimensions();
-	bin = Math.floor((Math.max(dims.xdim, dims.ydim) / opts.dim) + 0.5);
+	const {xdim, ydim} = this.fileDimensions();
+	bin = Math.floor((Math.max(xdim, ydim) / opts.dim) + 0.5);
 	if( bin > 1 ){
 	    if( this.imtab === "table" ){
 		// for tables, regcnts has a -b switch
