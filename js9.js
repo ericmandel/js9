@@ -152,6 +152,7 @@ JS9.globalOpts = {
     panWithinDisplay: false,	// keep panned image within the display?
     svgBorder: true,		// border around the display when saving to svg?
     unremoveReg: 100,           // how many removed regions to save
+    resetEmptyShapeId: false,	// reset nshape counter if all shapes removed?
     maxMemory: 1000000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",       // location of param html file
     proxyURL: "params/loadproxy.html",     // location of param html file
@@ -13134,6 +13135,10 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 	canvas.discardActiveObject();
     }
     canvas.renderAll();
+    // reset the counter if all shapes were removed?
+    if( !canvas.getObjects().length && JS9.globalOpts.resetEmptyShapeId ){
+	layer.nshape = 0;
+    }
     return this;
 };
 
