@@ -22582,6 +22582,15 @@ JS9.mkPublic("BlendDisplay", function(mode){
 	}
 	return imarr;
     }
+    if( mode === "reset" ){
+	for(i=0; i<JS9.images.length; i++){
+	    im = JS9.images[i];
+	    if( (im.display.id === id) && im.blend.active ){
+		im.blendImage(false);
+	    }
+	}
+	mode = false;
+    }
     if( mode === "true" ){
 	mode = true;
     } else if( mode === "false" ){

@@ -1001,6 +1001,15 @@ returns:
 </ul>
 This routine will turn on/off the global image blend mode for the specified
 display. If no argument is specified, it returns the current blend mode.
+<p>
+If the first argument is "reset", the blend mode for all images in
+this display will be set to false, along with the display's blend
+mode. This is useful if you have loaded/blended a number of images, and
+want to load/blend another set of images.
+<p>
+If the first argument is "list", an array is returned containing the image
+id's of all images that have blend mode turned on for this display. This is
+useful for changing the blend modes of all active images at once.
 
 <h5 id="JS9.SyncImages">Synchronize operations between two or more images</h5>
 <p>
