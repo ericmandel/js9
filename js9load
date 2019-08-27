@@ -67,11 +67,17 @@ while [ $DONE = false ]; do
   case $GOT in
     error)
       error "could not load: $PATHNAME";;
+    none)
+      error "could not find: $PATHNAME";;
     loading|please|other)
-      if [ x$VERBOSE = xtrue ] ; then
-        echo "loading ..."
+      TRIES=`echo "$TRIES - 1" | bc`
+      if [ $TRIES -le 0 ]; then
+          error "timeout while loading: $PATHNAME"
       fi
       sleep $SLEEP
+      if [ x$VERBOSE = xtrue ] ; then
+        echo "loading [$TRIES] ..."
+      fi
       continue;;
     complete)
       if [ x$VERBOSE = xtrue ] ; then
@@ -80,10 +86,6 @@ while [ $DONE = false ]; do
       DONE=true
       continue;;
   esac
-  TRIES=`echo "$TRIES - 1" | bc`
-  if [ $TRIES -le 0 ]; then
-      error "timeout while loading: $PATHNAME"
-  fi
 done
 
 # signal success
