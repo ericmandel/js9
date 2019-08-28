@@ -1,0 +1,87 @@
+#!/bin/sh
+# set -x
+
+# in case user has changed the js9 script, try to figure out the right one
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+if [ -r ${DIR}/js9 ]; then
+  JS9=${DIR}/js9
+else
+  JS9=js9
+fi
+
+error() {
+  echo "ERROR: $1" 1>&2
+  exit 1
+}
+
+# local variables
+DONE=false
+VERBOSE=false
+TRIES=10
+SLEEP=1
+
+while [ x"$1" != x ]; do
+    case $1 in
+    -h) shift
+	XARGS="$XARGS -h $1"
+        shift;;
+
+    -id|--id) shift
+        XARGS="$XARGS --id $1"
+	shift;;
+
+    -s) shift
+        SLEEP=$1
+        shift;;
+
+    -t) shift
+        TRIES=$1
+        shift;;
+
+    -v) VERBOSE=true
+	shift;;
+
+     *) break;;
+    esac
+done
+
+# check for required args
+if [ $# -lt 2 ]; then
+  echo "usage:  $0 status filename"
+  exit 1
+else
+  ID="$1"
+  PATHNAME="$2"
+  shift
+fi
+
+# wait for completion
+while [ $DONE = false ]; do
+  # get status of specified image
+  GOT=`${JS9} $XARGS GetStatus "$ID" "$PATHNAME"`
+  case $GOT in
+    error)
+      error "processing $ID: $PATHNAME";;
+    none)
+      error "could not find: $PATHNAME";;
+    loading|other)
+      TRIES=`echo "$TRIES - 1" | bc`
+      if [ $TRIES -le 0 ]; then
+          error "timeout waiting for $ID: $PATHNAME"
+      fi
+      sleep $SLEEP
+      if [ x$VERBOSE = xtrue ] ; then
+        echo "waiting [$TRIES] ..."
+      fi
+      continue;;
+    complete)
+      if [ x$VERBOSE = xtrue ] ; then
+        echo "success!"
+      fi
+      DONE=true
+      continue;;
+  esac
+done
+
+# signal success
+exit 0

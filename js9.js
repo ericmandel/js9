@@ -720,7 +720,7 @@ JS9.Image = function(file, params, func){
 	    this.updateShapes("regions", "all", "update");
 	}
 	// load is complete
-	this.status.load = "complete";
+	this.setStatus("load","complete");
 	// done loading, reset wait cursor
 	JS9.waiting(false);
 	// everything else is done so call onload func, if necessary
@@ -927,8 +927,6 @@ JS9.Image = function(file, params, func){
 	    }).on("error", () => {
 		// done loading, reset wait cursor
 		JS9.waiting(false);
-		// error on load
-		this.status.load = "error";
 		JS9.error(`could not load image: ${this.id}`);
 	    });
 	    // set src to download the display file
@@ -952,7 +950,7 @@ JS9.Image = function(file, params, func){
 	// save id in case we have to change it for uniqueness
 	this.id = JS9.getImageID(this.id0, this.display.id);
 	// load status
-	this.status.load = "loading";
+	this.setStatus("load","loading");
 	// callback to fire when image is loaded (do this before setting src)
 	$(this.png.image).on("load", () => {
 	    // populate the image data array from RGB values
@@ -982,8 +980,6 @@ JS9.Image = function(file, params, func){
 	}).on("error", () => {
 	    // done loading, reset wait cursor
 	    JS9.waiting(false);
-	    // error on load
-	    this.status.load = "error";
 	    JS9.error(`could not load image: ${this.id}`);
 	});
 	// set src to download the png and eventually display the image data
@@ -3546,6 +3542,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    // refresh the current image with the new hdu
 	    this.refreshImage(hdu, topts);
 	}
+	// set status
+	this.setStatus("displaySection", "complete");
 	// done waiting
 	JS9.waiting(false);
     };
@@ -3699,6 +3697,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     if( opts.waiting !== false ){
 	JS9.waiting(true, this.display);
     }
+    // set status
+    this.setStatus("displaySection", "processing");
     // ... start a timeout to allow the wait spinner to get started
     window.setTimeout(() => {
 	// get image section
@@ -5198,9 +5198,10 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     // ask the helper to run the command
     // change the cursor to show the waiting status
     JS9.waiting(true, this.display);
+    // set status
+    this.setStatus("runAnalysis", "processing");
     JS9.helper.send(m, obj, (r) => {
 	let s, robj, f, pf, xobj, files;
-	JS9.waiting(false);
 	// return type can be string or object
 	if( typeof r === "object" ){
 	    // object from node.js
@@ -5338,6 +5339,10 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	    break;
 	    }
 	}
+	// set status
+	this.setStatus("runAnalysis", "complete");
+	// done waiting
+	JS9.waiting(false);
     });
     // allow chaining
     return this;
@@ -6389,6 +6394,65 @@ JS9.Image.prototype.setParam = function(param, value){
     }
     // return old value
     return ovalue;
+};
+
+// get status
+JS9.Image.prototype.getStatus = function(status){
+    if( JS9.isNull(status) || typeof status !== "string" ){
+	return undefined;
+    }
+    switch(status.toLowerCase()){
+    case "displaysection":
+	return this.status.displaySection;
+    case "createmosaic":
+	return this.status.createMosaic;
+    case "load":
+    case "preload":
+	// if the fetch is still running or failed, return the status
+	if( JS9.fetchURL.status ){
+	    return JS9.fetchURL.status;
+	}
+	return this.status.load;
+    case "loadcatalog":
+	return this.status.loadCatalog;
+    case "loadcolormap":
+	return this.status.loadColormap;
+    case "loadproxy":
+	return this.status.loadProxy;
+    case "loadregions":
+	return this.status.loadRegions;
+    case "loadsession":
+	return this.status.loadSession;
+    case "reproject":
+    case "reprojectdata":
+    case "rotate":
+    case "rotatedata":
+	return this.status.reprojectData;
+    case "runanalysis":
+	return this.status.runAnalysis;
+    case "separate":
+	return this.status.separate;
+    case "uploadfitsfile":
+	return this.status.uploadFITSFile;
+    default:
+	return undefined;
+    }
+};
+
+// set status
+JS9.Image.prototype.setStatus = function(id, status){
+    if( JS9.notNull(id) && JS9.notNull(status) ){
+	switch(status){
+	case "error":
+	case "complete":
+	    delete this.status.cur;
+	    break;
+	default:
+	    this.status.cur = id;
+	    break;
+	}
+    }
+    this.status[id] = status;
 };
 
 // re-calculate data min and max (and set scale params, if necessary)
@@ -7757,6 +7821,8 @@ JS9.Image.prototype.reprojectData = function(...args){
     }
     // could take a while ...
     JS9.waiting(true, this.display);
+    // set status
+    this.setStatus("reprojectData", "processing");
     // ... start a timeout to allow the wait spinner to get started
     window.setTimeout(() => {
 	let topts, reprojHandler;
@@ -7771,6 +7837,8 @@ JS9.Image.prototype.reprojectData = function(...args){
 	    }
 	    // refresh the image
 	    this.refreshImage(hdu, topts);
+	    // set status
+	    this.setStatus("reprojectData", "complete");
 	    // might have to re-execute calls in the stash
 	    this.xeqStashCall(this.xeqstash, [opts.stash, "reprojectData"]);
 	};
@@ -9875,6 +9943,7 @@ JS9.Display.prototype.clearMessage = function(which){
 // create a mosaic from a multi-extension FITS file or a number of images
 JS9.Display.prototype.createMosaic = function(ims, opts){
     let i, im, bin, carr;
+    const im0 = this.image;
     const line1 = '|                                                    fname|';
     const line2 = '|                                                     char|';
     // remove temp files
@@ -9915,6 +9984,8 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	topts.display = this.id;
 	// set up new and display new image
 	JS9.checkNew(new JS9.Image(hdu, topts));
+	// set status
+	im0.setStatus("createMosaic", "complete");
 	// done waiting
 	JS9.waiting(false);
     };
@@ -9988,6 +10059,8 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
     }
     // could take a while ...
     JS9.waiting(true, this);
+    // set status
+    im0.setStatus("createMosaic", "processing");
     window.setTimeout(() => {
 	let s, t, v, sw, naxis, rstr, inbuf, ext;
 	let vfile, ivfile, ovfile, bvfile, sect, topts;
@@ -17598,6 +17671,8 @@ JS9.fetchURL = function(name, url, opts, handler) {
 	let blob;
         if( xhr.readyState === 4 ){
 	    if( xhr.status === 200 || xhr.status === 0 ){
+		// delete fetch status so JS9.error() does not process it
+		delete JS9.fetchURL.status;
 		if( xhr.responseType === "blob" ){
 	            blob = new Blob([xhr.response]);
 		    // discard path (or scheme) up to slashes
@@ -17637,6 +17712,9 @@ JS9.fetchURL = function(name, url, opts, handler) {
     xhr.ontimeout = () => {
 	JS9.error(`timeout awaiting response from server: ${url}`);
     };
+    // hack: set fetch status for JS9.error() to sense and pass on
+    // this will be picked up by getStatus("load")
+    JS9.fetchURL.status = "processing";
     // fetch the data!
     try{ xhr.send(); }
     catch(e){ JS9.error(`request to load ${url} failed`, e); }
@@ -18059,12 +18137,24 @@ JS9.lookupCommand = function(name){
 // error message handler
 JS9.error = function(...args){
     let [emsg, epattern, dothrow] = args;
-    let e, earr, s;
+    let e, earr, i, s, im, cur;
     let emessage = "";
     let stack = "";
     let doerr = true;
     // reset wait cursor
     JS9.waiting(false);
+    // set fetch error status, if coming from a fetch
+    if( JS9.fetchURL.status === "processing" ){
+	JS9.fetchURL.status = "error";
+    }
+    // set current error status, if we find it
+    for(i=0; i<JS9.images.length; i++){
+	im = JS9.images[i];
+	cur = im.status.cur;
+	if( cur && im.status[cur] ){
+	    im.setStatus(cur, "error");
+	}
+    }
     // second args can be error pattern to look for, or else an error object
     if( typeof epattern === "string" ){
 	earr = emsg.match(epattern);
@@ -21321,6 +21411,8 @@ JS9.mkPublic("Load", function(...args){
 	func = JS9.imageOpts.onload;
 	opts.onload = func;
     }
+    // unset previous fetch status before new load
+    delete JS9.fetchURL.status;
     // handle blob containing FITS
     if( file instanceof Blob ){
 	if( file.path || file.name ){
@@ -22087,32 +22179,28 @@ JS9.mkPublic("RefreshImage", function(...args){
     }
 });
 
-// get status of a Load ("complete" means ... complete)
-JS9.mkPublic("GetLoadStatus", function(...args){
-    let fname0, id, id0;
+// get specified status
+JS9.mkPublic("GetStatus", function(...args){
     const obj = JS9.parsePublicArgs(args);
-    const im = JS9.getImage(obj.display);
-    id = obj.argv[0];
+    const im = JS9.getImage(obj.argv[1] || obj.display);
+    const stat = obj.argv[0] || "load";
+    if( !obj.argv.length ){
+	return ["Load", "CreateMosaic", "DisplaySection", "LoadCatalog", "LoadRegions", "ReprojectData", "RotateData", "RunAnalysis"];
+    }
+    // if the fetch is still running or failed, return the status
+    if( JS9.fetchURL.status && stat.match(/^(pre)?load$/i) ){
+	return JS9.fetchURL.status;
+    }
+    // return status for specified image
     if( im ){
-	if( id && typeof id === "object" && id.hasOwnProperty("id")  ){
-	    id = id.id;
-	}
-	if( typeof id === "string" ){
-	    id0 = id.split('/').reverse()[0];
-	}
-	if( im.file0 ){
-	    fname0 = im.file0.split('/').reverse()[0];
-	    if( id0 && !id0.match(/\[.*\]/) ){
-		fname0 = fname0.replace(/\[.*\]/, "");
-	    }
-	}
-	if( !id || (im.id0 === id) || (im.file0 === id) ||
-	    (fname0 && id0 && fname0 === id0) ){
-	    return im.status.load;
-	}
-	return "other";
+	return im.getStatus(stat);
     }
     return "none";
+});
+
+// get status of a Load ("complete" means ... complete)
+JS9.mkPublic("GetLoadStatus", function(...args){
+    return JS9.GetStatus("load", ...args);
 });
 
 // http://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript
@@ -22711,11 +22799,16 @@ JS9.mkPublic("LoadRegions", function(...args){
     const im = JS9.getImage(obj.display);
     const addregions = (reg, ropts) => {
 	if( ropts && ropts.display !== undefined ){ delete ropts.display; }
+	// remove old regions, if necessary
 	if( JS9.globalOpts.reloadRefreshReg && ropts.file ){
 	    try{ im.removeShapes("regions", ropts.file); }
 	    catch(e){ /* empty */ }
 	}
+	// add the regions
 	im.addShapes("regions", reg, ropts);
+	// set status
+	im.setStatus("loadRegions", "complete");
+	// onload callback, if necessary
 	if( opts && opts.onload ){ opts.onload(im); }
     };
     file = obj.argv[0];
@@ -22728,6 +22821,8 @@ JS9.mkPublic("LoadRegions", function(...args){
     if( !im ){
 	return;
     }
+    // set status
+    im.setStatus("loadRegions", "processing");
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
@@ -23093,6 +23188,8 @@ JS9.mkPublic("LoadCatalog", function(...args){
     if( !im ){
 	return;
     }
+    // set status
+    im.setStatus("loadCatalog", "processing");
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
@@ -23110,10 +23207,15 @@ JS9.mkPublic("LoadCatalog", function(...args){
 	// file reader object
 	reader = new FileReader();
 	reader.onload = (ev) => {
+	    // improve the filename, if possible
 	    if( !layer && file.name ){
 		layer = file.name.replace(/\.[^.]*$/, "");
 	    }
+	    // load the catalog
 	    im.loadCatalog(layer, ev.target.result, opts);
+	    // set status
+	    im.setStatus("loadCatalog", "complete");
+	    // onload callback
 	    if( opts && opts.onload ){ opts.onload(im); }
 	};
 	reader.readAsText(file);
@@ -23121,13 +23223,20 @@ JS9.mkPublic("LoadCatalog", function(...args){
 	if( file.match(/\t/) ){
 	    // it's a table (contains a tab)
 	    im.loadCatalog(layer, file, opts);
+	    // set status
+	    im.setStatus("loadCatalog", "complete");
+	    // onload callback
 	    if( opts && opts.onload ){ opts.onload(im); }
 	} else {
 	    // its a file: retrieve and load the catalog
 	    opts.responseType = "text";
 	    file = JS9.fixPath(file);
 	    JS9.fetchURL(null, file, opts, (s) => {
+		// load the catalog
 		im.loadCatalog(layer, s, opts);
+		// set status
+		im.setStatus("loadCatalog", "complete");
+		// onload callback
 		if( opts && opts.onload ){ opts.onload(im); }
 	    });
 	}
