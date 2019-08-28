@@ -21521,6 +21521,11 @@ JS9.mkPublic("Load", function(file, opts){
 		    im.displayImage("display", opts);
 		    im.refreshLayers();
 		    im.display.clearMessage();
+		    if( opts.onload ){
+			try{ JS9.xeqByName(opts.onload, window, im); }
+			catch(e){ JS9.error("in image onload callback", e,
+					    false); }
+		    }
 		    JS9.waiting(false);
 		    return;
 		}
@@ -21627,6 +21632,10 @@ JS9.mkPublic("Load", function(file, opts){
 	// display image, 2D graphics, etc.
 	im.displayImage("all", opts);
 	im.display.clearMessage();
+	if( opts.onload ){
+	    try{ JS9.xeqByName(opts.onload, window, im); }
+	    catch(e){ JS9.error("in image onload callback", e, false); }
+	}
 	JS9.waiting(false);
 	return;
     }
