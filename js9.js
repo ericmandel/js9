@@ -7775,12 +7775,22 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 JS9.Image.prototype.reprojectData = function(wcsim, opts){
     var that = this;
     var im, ovfile;
+    var i;
     // sanity checks
     if( !wcsim || !JS9.reproject ){
 	return;
     }
     // is this a string containing an image name or WCS values?
     if( typeof wcsim === "string" ){
+	if( wcsim === "all" ){
+	    for(i=0; i<JS9.images.length; i++){
+		im = JS9.images[i];
+		if( this.display.id === im.display.id ){
+		    im.reprojectData(this);
+		}
+	    }
+	    return;
+	}
 	im = JS9.getImage(wcsim);
 	if( im ){
 	    // it was an image name, so change wcsim to the image handle
@@ -7789,7 +7799,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    JS9.error("unknown WCS for reproject: " + wcsim);
 	}
     }
-    // don't reproject myself (useful in supermenu support)
+    // don't reproject myself (useful in supermenu support, "all" reprojections)
     if( this === wcsim ){
 	return;
     }

@@ -2416,10 +2416,11 @@ JS9.Menubar.createMenus = function(){
 		name: "wcs reproject ...",
 		items: {
 		    reprojtitle: {
-			name: "using the wcs from:",
+			name: "this image using the wcs from:",
 			disabled: true
 		    }
 		}
+
 	    };
 	    for(i=0, nwcs=0; i<JS9.images.length; i++){
 		if( JS9.images[i].raw.wcs ){
@@ -2443,6 +2444,11 @@ JS9.Menubar.createMenus = function(){
 	    } else {
 		items.reproject.disabled = false;
 		items.reproject.items["sep" + n++] = "------";
+		items.reproject.items.reproject_all = {
+		    name: "other images using this wcs"
+		};
+
+		items.reproject.items["sep" + n++] = "------";
 		items.reproject.items.reproject_wcsalign = {
 		    name: "display wcs-aligned"
 		};
@@ -2452,7 +2458,7 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    items.reproject.items["sep" + n++] = "------";
 	    items.reproject.items.rotatetitle = {
-		name: "by rotating the image:",
+		name: "by rotating this image:",
 		disabled: true
 	    };
 	    items.reproject.items.reproject_northup = {
@@ -2504,6 +2510,8 @@ JS9.Menubar.createMenus = function(){
 					    }
 					}
 				    }
+				} else if( key === "reproject_all" ){
+				    uim.reprojectData("all");
 				}  else {
 				    file = key.replace(/^reproject_/,"");
 				    uim.reprojectData(file);

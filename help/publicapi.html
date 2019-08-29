@@ -2670,7 +2670,10 @@ These Montage programs have been compiled into JS9 using
 
 <p>
 The <b>wcsim</b> argument is an image id, image filename, or image
-object pointing to the WCS image.
+object pointing to the WCS image. This is the image whose WCS will be used
+for the reprojection. Alternatively, if the <b>wcsim</b> argument is set to
+"all", the WCS from the currently displayed image will be used to reproject
+all other images in the display.
 
 <p>
 The <b>opts</b> object can contain the following reproject-specific properties:
