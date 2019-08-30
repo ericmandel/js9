@@ -27,7 +27,7 @@ JS9 = (function(){
 // module header
 var JS9 = {};
 JS9.NAME = "JS9";		// The name of this namespace
-JS9.VERSION = "2.4";		// The version of this namespace
+JS9.VERSION = "2.5";		// The version of this namespace
 JS9.COPYRIGHT = "Copyright (c) 2012-2019 Smithsonian Institution";
 
 // internal defaults (not usually changed by users)
