@@ -2416,7 +2416,7 @@ JS9.Menubar.createMenus = function(){
 		name: "wcs reproject ...",
 		items: {
 		    reprojtitle: {
-			name: "this image using the wcs from:",
+			name: "this image, using the wcs from:",
 			disabled: true
 		    }
 		}
@@ -2445,7 +2445,7 @@ JS9.Menubar.createMenus = function(){
 		items.reproject.disabled = false;
 		items.reproject.items["sep" + n++] = "------";
 		items.reproject.items.reproject_all = {
-		    name: "other images using this wcs"
+		    name: "all images in this display, using this wcs"
 		};
 
 		items.reproject.items["sep" + n++] = "------";
