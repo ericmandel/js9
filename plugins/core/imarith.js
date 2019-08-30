@@ -28,8 +28,8 @@ JS9.Imarith.resetHTML='<input type="button" class=JS9ImarithBtn" value="Reset" o
 
 // change op
 JS9.Imarith.xop = function(did, id, target){
-    var op = target.options[target.selectedIndex].value;
-    var im = JS9.lookupImage(id, did);
+    const op = target.options[target.selectedIndex].value;
+    const im = JS9.lookupImage(id, did);
     // save new op in instance record
     if( im && op ){
 	im.display.pluginInstances.JS9Imarith.op = op;
@@ -38,8 +38,8 @@ JS9.Imarith.xop = function(did, id, target){
 
 // change arg1
 JS9.Imarith.xarg1 = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
-    var arg1 = target.options[target.selectedIndex].value;
+    const im = JS9.lookupImage(id, did);
+    const arg1 = target.options[target.selectedIndex].value;
     // save new arg1 in instance record
     if( im && arg1 ){
 	im.display.pluginInstances.JS9Imarith.arg1 = arg1;
@@ -53,14 +53,14 @@ JS9.Imarith.xarg1 = function(did, id, target){
 
 // change num
 JS9.Imarith.xnum = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
-    var num = target.value;
+    const im = JS9.lookupImage(id, did);
+    const num = target.value;
     // save new num in instance record
     if( JS9.isNumber(num) ){
 	im.display.pluginInstances.JS9Imarith.num = parseFloat(num);
     } else {
 	if( num ){
-	    JS9.error("please enter a real number: " + num);
+	    JS9.error(`please enter a real number: ${num}`);
 	}
     }
 };
@@ -68,8 +68,8 @@ JS9.Imarith.xnum = function(did, id, target){
 // run image arithmetic
 // eslint-disable-next-line no-unused-vars
 JS9.Imarith.xrun = function(did, id, target){
-    var arg1, plugin;
-    var im = JS9.lookupImage(id, did);
+    let arg1, plugin;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances.JS9Imarith;
 	if( !plugin.op || !plugin.arg1 ){
@@ -90,7 +90,7 @@ JS9.Imarith.xrun = function(did, id, target){
 // reset to original data
 // eslint-disable-next-line no-unused-vars
 JS9.Imarith.xreset = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	im.imarithData("reset");
     }
@@ -105,14 +105,14 @@ JS9.Imarith.display = function(){
 
 // clear when an image closes
 JS9.Imarith.close = function(){
-    // ensure that plugin display is reset
+    // ensure plugin display is reset
     JS9.Imarith.init.call(this, {mode: "clear"});
 };
 
 // constructor: add HTML elements to the plugin
 JS9.Imarith.init = function(opts){
-    var i, s, im, tim, mopts, imid, dispid;
-    var images = "";
+    let i, s, im, tim, mopts, imid, dispid;
+    let images = "";
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -153,12 +153,11 @@ JS9.Imarith.init = function(opts){
 	dispid = im.display.id;
 	// make the last one
 	this.lastim = im.id;
-	// get list of images that can be operands (other than this one)
+	// get list of images which can be operands (other than this one)
 	for(i=0; i<JS9.images.length; i++){
 	    tim = JS9.images[i];
 	    if( tim !== im ){
-		images += sprintf('<option value="%s">%s</option>', 
-				  tim.id, tim.id);
+		images += `<option value="${tim.id}">${tim.id}</option>`;
 	    }
 	}
 	// create the html for this image
@@ -185,8 +184,8 @@ JS9.Imarith.init = function(opts){
     this.divjq.html("");
     // set up new html
     this.imarithContainer = $("<div>")
-	.addClass(JS9.Imarith.BASE + "Container")
-	.attr("id", this.id + "Container")
+	.addClass(`${JS9.Imarith.BASE}Container`)
+	.attr("id", `${this.id}Container`)
         .attr("width", this.width)
         .attr("height", this.height)
 	.appendTo(this.divjq);

@@ -3,7 +3,7 @@
  * basic idea borrowed from goosh.org, to whom grateful acknowledgement is made
  */
 
-/*global $, JS9, sprintf */
+/*global $, JS9 */
 
 "use strict";
 
@@ -63,7 +63,7 @@ JS9.Console.init = function(width, height){
     this.consoleConjq.attr("tabindex", "0");
     // event handlers:
     // history processing
-    this.consoleConjq.on("keydown", this, function(evt){
+    this.consoleConjq.on("keydown", this, (evt) => {
 	return JS9.Console.keyDownCB(evt);
     });
     // welcome message
@@ -75,8 +75,8 @@ JS9.Console.init = function(width, height){
 // prepare for new input
 // called with plugin as this
 JS9.Console.inp = function(){
-    var el;
-    var prompt = "js9>";
+    let el;
+    const prompt = "js9>";
     // make previous command input read-only
     this.consoleConjq.find(".JS9CmdIn:last").attr("readonly", "readonly");
     // add new input element
@@ -99,7 +99,7 @@ JS9.Console.out = function(s,c){
     // message type
     switch(c.toLowerCase()){
     case "error":
-	s = "ERROR: " + s;
+	s = `ERROR: ${s}`;
 	c = "Error";
 	break;
     case "info":
@@ -113,7 +113,7 @@ JS9.Console.out = function(s,c){
 	break;
     }
     // create a new output element
-    $("<div>").addClass("JS9Cmd" + c).html(s).appendTo(this.consoleConjq);
+    $("<div>").addClass(`JS9Cmd${c}`).html(s).appendTo(this.consoleConjq);
     // allow chaining
     return this;
 };
@@ -121,10 +121,10 @@ JS9.Console.out = function(s,c){
 // execute a command
 // called with plugin object as this
 JS9.Console.xeq = function(){
-    var i, cmd, obj, msg;
-    var cmdstring = this.consoleConjq.find(".JS9CmdIn:last").val();
-    var tokens = cmdstring.replace(/ {2,}/g, " ").split(" ");
-    var args = [];
+    let i, cmd, obj, msg;
+    const cmdstring = this.consoleConjq.find(".JS9CmdIn:last").val();
+    const tokens = cmdstring.replace(/ {2,}/g, " ").split(" ");
+    const args = [];
     // skip blank lines
     if( !tokens[0] ){
 	return this;
@@ -157,14 +157,14 @@ JS9.Console.xeq = function(){
 		}
 		break;
 	    default:
-		msg = sprintf("unknown cmd type for '%s'", cmd);
+		msg = `unknown cmd type for '${cmd}'`;
 		JS9.error(msg);
 		break;
 	    }
 	} else {
-	    msg = sprintf("unknown command '%s'", cmd);
+	    msg = `unknown command '${cmd}'`;
 	    if( args.length > 0 ){
-		msg = msg + " " + args;
+		msg = `${msg} ${args}`;
 	    }
 	    JS9.error(msg);
 	}
@@ -178,9 +178,9 @@ JS9.Console.xeq = function(){
 
 // console keydown: assumes console obj is passed in evt.data
 JS9.Console.keyDownCB = function(evt){
-    var v;
-    var obj = evt.data;
-    var keycode = evt.which || evt.keyCode;
+    let v;
+    const obj = evt.data;
+    const keycode = evt.which || evt.keyCode;
     // history idea and basic algorithm from goosh.org,
     // to whom grateful acknowledgement is made
     // this prevents keypress on FF (and others)

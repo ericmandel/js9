@@ -18,13 +18,12 @@ JS9.Keyboard.actionHTML="<div class='JS9KeyboardText'><button class='JS9Button J
 
 // get an id based on the action
 JS9.Keyboard.actionid = function(cname, aname){
-    return (cname + "_" + aname).replace(/[^A-Za-z0-9_]/g, "_");
+    return (`${cname}_${aname}`).replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // add to the action list
 JS9.Keyboard.addAction = function(container, cname, aname){
-    var that = this;
-    var s, id, divjq;
+    let s, id, divjq;
     id = JS9.Keyboard.actionid(cname, aname);
     // create the html for this action
     s = sprintf(JS9.Keyboard.actionHTML, aname, cname, aname);
@@ -33,9 +32,9 @@ JS9.Keyboard.addAction = function(container, cname, aname){
 	.attr("id", id)
 	.html(s)
 	.appendTo(container);
-    divjq.find('.JS9KeyboardButton').on("click", function(evt){
-	var action = this.value;
-	var im = that.display.image;
+    divjq.find('.JS9KeyboardButton').on("click", (evt) => {
+	const action = evt.currentTarget.value;
+	const im = this.display.image;
 	if( im && action && JS9.Keyboard.Actions[action] ){
 	    JS9.Keyboard.Actions[action](im, im.ipos, evt);
 	}
@@ -98,12 +97,16 @@ JS9.Keyboard.Actions["close image"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["new JS9 light window"] = function(im, ipos, evt){
-    JS9.LoadWindow(null, {clone: evt.data.id}, "light");
+    let opts;
+    if( evt && evt.data && evt.data.id ){
+	opts = {clone: evt.data.id};
+    }
+    JS9.LoadWindow(null, opts, "light");
 };
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt){
-    var s, arr, opts;
+    let s, arr, opts;
     // sanity check
     if( !im || !im.raw.wcs || !ipos ){
 	return;
@@ -124,7 +127,7 @@ JS9.Keyboard.Actions["copy wcs position to clipboard"] = function(im, ipos, evt)
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy physical position to clipboard"] = function(im, ipos, evt){
-    var phys, s;
+    let phys, s;
     // sanity check
     if( !im || !ipos ){
 	return;
@@ -139,7 +142,7 @@ JS9.Keyboard.Actions["copy physical position to clipboard"] = function(im, ipos,
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy pixel value to clipboard"] = function(im, ipos, evt){
-    var s, val, prec;
+    let s, val, prec;
     // sanity check
     if( !im || !ipos ){
 	return;
@@ -156,7 +159,7 @@ JS9.Keyboard.Actions["copy pixel value to clipboard"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos, evt){
-    var s, key, ovalpos;
+    let s, key, ovalpos;
     // sanity check
     if( !im || !ipos ){
 	return;
@@ -168,7 +171,7 @@ JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos
     // restore original valpos
     im.setParam("valpos", ovalpos);
     // process valpos string
-    key = "vstr"+ JS9.globalOpts.valposWidth;
+    key = `vstr${ JS9.globalOpts.valposWidth}`;
     if( s && s[key]){
 	// reformat from html to text
 	s = s[key].replace(/&nbsp;/g, " ");
@@ -183,7 +186,7 @@ JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["edit selected region"] = function(im, ipos, evt){
-    var layer, target;
+    let layer, target;
     // sanity check
     if( !im ){
 	return;
@@ -251,7 +254,7 @@ JS9.Keyboard.Actions["tag selected region as 'exclude'"] = function(im, ipos, ev
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["toggle full screen mode"] = function(im, ipos, evt){
-    var display = evt.data;
+    const display = evt.data;
     if( (display.width  === display.width0)  &&
 	(display.height === display.height0) ){
 	display.resize("full", {center: true});
@@ -340,8 +343,8 @@ JS9.Keyboard.Actions["save regions as a text file"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
-    var canvas, layerName, active;
-    var inc = 1;
+    let canvas, layerName, active;
+    let inc = 1;
     if( evt ){
 	evt.preventDefault();
     }
@@ -363,8 +366,8 @@ JS9.Keyboard.Actions["move region/position up"] = function(im, ipos, evt){
 };
 
 JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
-    var canvas, layerName, active;
-    var inc = -1;
+    let canvas, layerName, active;
+    let inc = -1;
     if( evt ){
 	evt.preventDefault();
     }
@@ -386,8 +389,8 @@ JS9.Keyboard.Actions["move region/position down"] = function(im, ipos, evt){
 };
 
 JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
-    var canvas, layerName, active;
-    var inc = -1;
+    let canvas, layerName, active;
+    let inc = -1;
     if( evt ){
 	evt.preventDefault();
     }
@@ -409,8 +412,8 @@ JS9.Keyboard.Actions["move region/position left"] = function(im, ipos, evt){
 };
 
 JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
-    var canvas, layerName, active;
-    var inc = 1;
+    let canvas, layerName, active;
+    let inc = 1;
     if( evt ){
 	evt.preventDefault();
     }
@@ -432,7 +435,7 @@ JS9.Keyboard.Actions["move region/position right"] = function(im, ipos, evt){
 };
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["remove selected region"] = function(im, ipos, evt){
-    var canvas, layerName;
+    let canvas, layerName;
     if( evt ){
 	evt.preventDefault();
     }
@@ -474,7 +477,7 @@ JS9.Keyboard.Actions["send selected region to back"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy selected region to clipboard"] = function(im, ipos, evt){
-    var s;
+    let s;
     // sanity check
     if( !im ){ return; }
     // get selected region(s)
@@ -486,7 +489,7 @@ JS9.Keyboard.Actions["copy selected region to clipboard"] = function(im, ipos, e
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["copy all regions to clipboard"] = function(im, ipos, evt){
-    var s;
+    let s;
     // sanity check
     if( !im ){ return; }
     // get all regions
@@ -515,7 +518,7 @@ JS9.Keyboard.Actions["undo remove of region(s)"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["select region"] = function(im, ipos, evt){
-    var i, layer, canvas, obj, objs;
+    let i, layer, canvas, obj, objs;
     // sanity check
     if( !im ){ return; }
     layer = im.layer || "regions";
@@ -532,7 +535,7 @@ JS9.Keyboard.Actions["select region"] = function(im, ipos, evt){
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["select all regions"] = function(im, ipos, evt){
-    var layer, canvas, selection;
+    let layer, canvas, selection;
     // sanity check
     if( !im || fabric.major_version === 1 ){ return; }
     layer = im.layer || "regions";
@@ -619,8 +622,8 @@ JS9.Keyboard.Actions["toggle shape layers plugin"] = function(im, ipos, evt){
 
 // get action associated with the current keyboard
 JS9.Keyboard.getAction = function(im, evt){
-    var action;
-    var s = JS9.eventToCharStr(evt);
+    let action;
+    const s = JS9.eventToCharStr(evt);
     // look for an action associated with this key
     if( s ){
 	action = JS9.globalOpts.keyboardActions[s];
@@ -642,7 +645,7 @@ JS9.Keyboard.action = function(im, ipos, evt, action){
 };
 
 JS9.Keyboard.editregion= function(im, xnew, xold){
-    var i, j, s, tags;
+    let i, j, s, tags;
     // get selected region
     s = im.getShapes("regions", "selected");
     if( s.length ){
@@ -672,7 +675,7 @@ JS9.Keyboard.editregion= function(im, xnew, xold){
 
 // constructor: add HTML elements to the plugin
 JS9.Keyboard.init = function(){
-    var s, key;
+    let s, key;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -687,19 +690,19 @@ JS9.Keyboard.init = function(){
     this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.keyboardContainer = $("<div>")
-	.addClass(JS9.Keyboard.BASE + "Container")
-	.attr("id", this.id + "KeyboardContainer")
+	.addClass(`${JS9.Keyboard.BASE}Container`)
+	.attr("id", `${this.id}KeyboardContainer`)
 	.appendTo(this.divjq);
-    s = sprintf("<div class='%s'><b>Keys and their actions (or click the buttons):</b></div><p>", JS9.Keyboard.BASE + "Header");
+    s = `<div class='${JS9.Keyboard.BASE}Header'><b>Keys and their actions (or click the buttons):</b></div><p>`;
     this.keyboardHeadContainer = $("<div>")
-	.addClass(JS9.Keyboard.BASE + "Container")
-	.attr("id", this.id + "KeyboardHeadContainer")
+	.addClass(`${JS9.Keyboard.BASE}Container`)
+	.attr("id", `${this.id}KeyboardHeadContainer`)
         .html(s)
 	.appendTo(this.keyboardContainer);
     // container to hold keyboard actions
     this.keyboardActionContainer = $("<div>")
-	.addClass(JS9.Keyboard.BASE + "ActionContainer")
-	.attr("id", this.id + "ActionContainer")
+	.addClass(`${JS9.Keyboard.BASE}ActionContainer`)
+	.attr("id", `${this.id}ActionContainer`)
         .html("")
 	.appendTo(this.keyboardContainer);
     // add actions

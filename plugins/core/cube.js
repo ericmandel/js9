@@ -45,9 +45,9 @@ JS9.Cube.header2HTML='Or load each slice separately into JS9:';
 JS9.Cube.loadHTML='<input type="button" class=JS9CubeBtn" value="Load All" onclick="JS9.Cube.loadall(\'%s\',\'%s\', this)">';
 
 JS9.Cube.doSlice = function(im, slice, elarr){
-    var i, s;
-    var opts={};
-    var plugin = im.display.pluginInstances[JS9.Cube.BASE];
+    let i, s;
+    const opts={};
+    const plugin = im.display.pluginInstances[JS9.Cube.BASE];
     // are we still working on the previous slice?
     if( im.parentFile && plugin.inProcess ){
 	// if so, return
@@ -60,13 +60,13 @@ JS9.Cube.doSlice = function(im, slice, elarr){
     plugin.sval = slice;
     plugin.inProcess = true;
     // display slice and signal process complete
-    im.displaySlice(s, opts, function(){plugin.inProcess = false;});
+    im.displaySlice(s, opts, () => {plugin.inProcess = false;});
 };
 
 // change range
 JS9.Cube.xrange = function(did, id, target){
-    var slice;
-    var im = JS9.lookupImage(id, did);
+    let slice;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	slice = parseInt(target.value, 10);
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue"]);
@@ -75,8 +75,8 @@ JS9.Cube.xrange = function(did, id, target){
 
 // change slice value
 JS9.Cube.xvalue = function(did, id, target){
-    var slice;
-    var im = JS9.lookupImage(id, did);
+    let slice;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	slice = parseInt(target.value, 10);
 	JS9.Cube.doSlice(im, slice, [".JS9CubeRange"]);
@@ -86,8 +86,8 @@ JS9.Cube.xvalue = function(did, id, target){
 // first cube
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xfirst = function(did, id, target){
-    var slice;
-    var im = JS9.lookupImage(id, did);
+    let slice;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	slice = 1;
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
@@ -97,8 +97,8 @@ JS9.Cube.xfirst = function(did, id, target){
 // next cube
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xnext = function(did, id, target){
-    var s, slice, plugin, header;
-    var im = JS9.lookupImage(id, did);
+    let s, slice, plugin, header;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
@@ -107,7 +107,7 @@ JS9.Cube.xnext = function(did, id, target){
 	}
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval + 1;
-	s = "NAXIS" + plugin.sidx;
+	s = `NAXIS${plugin.sidx}`;
 	if( slice > header[s] ){
 	    slice = 1;
 	}
@@ -118,8 +118,8 @@ JS9.Cube.xnext = function(did, id, target){
 // prev cube
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xprev = function(did, id, target){
-    var s, slice, plugin, header;
-    var im = JS9.lookupImage(id, did);
+    let s, slice, plugin, header;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
@@ -129,7 +129,7 @@ JS9.Cube.xprev = function(did, id, target){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	slice = plugin.sval - 1;
 	if( slice < 1 ){
-	    s = "NAXIS" + plugin.sidx;
+	    s = `NAXIS${plugin.sidx}`;
 	    slice = header[s];
 	}
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
@@ -139,8 +139,8 @@ JS9.Cube.xprev = function(did, id, target){
 // last cube
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xlast = function(did, id, target){
-    var s, slice, plugin, header;
-    var im = JS9.lookupImage(id, did);
+    let s, slice, plugin, header;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
@@ -148,7 +148,7 @@ JS9.Cube.xlast = function(did, id, target){
 	    header = im.raw.header;
 	}
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
-	s = "NAXIS" + plugin.sidx;
+	s = `NAXIS${plugin.sidx}`;
 	slice = header[s];
 	JS9.Cube.doSlice(im, slice, [".JS9CubeValue", ".JS9CubeRange"]);
     }
@@ -156,8 +156,8 @@ JS9.Cube.xlast = function(did, id, target){
 
 // cube arrangement
 JS9.Cube.xorder = function(did, id, target){
-    var i, arr, plugin, header;
-    var im = JS9.lookupImage(id, did);
+    let i, arr, plugin, header;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	if( im.parent && im.parent.raw && im.parent.raw.header ){
 	    header = im.parent.raw.header;
@@ -171,7 +171,7 @@ JS9.Cube.xorder = function(did, id, target){
 	    if( arr[i] !== "*" ){
 		plugin.sidx = i+1;
 		plugin.sval = 1;
-		plugin.smax = header["NAXIS"+plugin.sidx];
+		plugin.smax = header[`NAXIS${plugin.sidx}`];
 	    }
 	}
 	$(".JS9CubeRange").prop("max", plugin.smax);
@@ -181,8 +181,8 @@ JS9.Cube.xorder = function(did, id, target){
 
 // blink
 JS9.Cube.blink = function(did, id, target){
-    var plugin;
-    var im = JS9.lookupImage(id, did);
+    let plugin;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	if( plugin.blinkMode === false ){
@@ -193,7 +193,7 @@ JS9.Cube.blink = function(did, id, target){
 	if( plugin.blinkMode === undefined ){
 	    plugin.blinkMode = true;
 	} 
-	JS9.Cube.tid = window.setTimeout(function(){
+	JS9.Cube.tid = window.setTimeout(() => {
 	    JS9.Cube.blink(did, id, target);
 	}, plugin.rate);
     }
@@ -201,8 +201,8 @@ JS9.Cube.blink = function(did, id, target){
 
 // start blink
 JS9.Cube.xstart = function(did, id, target){
-    var plugin;
-    var im = JS9.lookupImage(id, did);
+    let plugin;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	if( !plugin.blinkMode ){
@@ -214,8 +214,8 @@ JS9.Cube.xstart = function(did, id, target){
 // stop blink
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.xstop = function(did, id, target){
-    var plugin;
-    var im = JS9.lookupImage(id, did);
+    let plugin;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	plugin.inProcess = false;
@@ -231,8 +231,8 @@ JS9.Cube.xstop = function(did, id, target){
 
 // blink rate
 JS9.Cube.xrate = function(did, id, target){
-    var plugin;
-    var im = JS9.lookupImage(id, did);
+    let plugin;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances[JS9.Cube.BASE];
 	plugin.rate = Math.floor(parseFloat(target.value) * 1000);
@@ -242,7 +242,7 @@ JS9.Cube.xrate = function(did, id, target){
 // load all slices separately
 // eslint-disable-next-line no-unused-vars
 JS9.Cube.loadall = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	im.displaySlice("all");
     }
@@ -258,13 +258,13 @@ JS9.Cube.display = function(){
 
 // clear when an image closes
 JS9.Cube.close = function(){
-    // ensure that plugin display is reset
+    // ensure plugin display is reset
     JS9.Cube.init.call(this, {mode: "clear"});
 };
 
 // constructor: add HTML elements to the plugin
 JS9.Cube.init = function(opts){
-    var i, s, im, arr, mopts, imid, dispid, header;
+    let i, s, im, arr, mopts, imid, dispid, header;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -310,7 +310,7 @@ JS9.Cube.init = function(opts){
 	    for(i=0; i<arr.length; i++){
 		if( arr[i] !== "*" ){
 		    this.sidx = i+1;
-		    this.smax = header["NAXIS"+this.sidx];
+		    this.smax = header[`NAXIS${this.sidx}`];
 		    this.sval = parseInt(arr[i], 10);
 		}
 	    }
@@ -373,8 +373,8 @@ JS9.Cube.init = function(opts){
     this.divjq.html("");
     // set up new html
     this.cubeContainer = $("<div>")
-	.addClass(JS9.Cube.BASE + "Container")
-	.attr("id", this.id + "Container")
+	.addClass(`${JS9.Cube.BASE}Container`)
+	.attr("id", `${this.id}Container`)
         .attr("width", this.width)
         .attr("height", this.height)
 	.appendTo(this.divjq);

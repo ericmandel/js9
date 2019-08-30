@@ -2,7 +2,7 @@
  * preferences plugin (14 April 2015)
  */
 
-/*global $, JS9, sprintf, ddtabcontent */
+/*global $, JS9, ddtabcontent */
 
 "use strict";
 
@@ -107,7 +107,7 @@ JS9.Prefs.imagesSchema = {
 	},
 	"disable": {
 	    "type": "mobject",
-	    "helper": "array of core functions to disable"
+	    "helper": "array of core funcs to disable"
 	}
     }
 };
@@ -540,19 +540,18 @@ JS9.Prefs.sources = [
 
 // init preference plugin
 JS9.Prefs.init = function(){
-    var i, s, obj, key, props, sources, source, id, pid, html, prompt;
+    let i, s, obj, key, props, sources, source, id, pid, html, prompt;
     // create the div containing one tab for each of the sources
     sources = JS9.Prefs.sources;
-    pid = this.id + 'prefsTabs';
+    pid = `${this.id}prefsTabs`;
     html = "<div style='padding: 8px'>";
-    html += sprintf("<div id='%s' class='indentmenu'>\n", pid);
+    html += `<div id='${pid}' class='indentmenu'>\n`;
     html += "<ul>";
     // create a tab for each source
     for(i=0; i<sources.length; i++){
 	source = sources[i];
 	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
-	html += sprintf("  <li><a href='#' rel='%s'>%s</a></li>\n", 
-			id + "Div", source.name);
+	html += `  <li><a href='#' rel='${id}Div'>${source.name}</a></li>\n`;
     }
     html += "</ul>";
     html += "<br style='clear:left'></div></div><p>\n";
@@ -632,15 +631,14 @@ JS9.Prefs.init = function(){
 	default:
 	    break;
 	}
-	html += sprintf("<div id='%s' class='tabcontent'>", id + "Div");
-	html += sprintf("<form id='%s' class='js9AnalysisForm' style='max-height: %spx; overflow: hidden'>", id + "Form", this.height-90);
-	html += sprintf("<center><b>%s</b></center><p>",
-			source.schema.description);
+	html += `<div id='${id}Div' class='tabcontent'>`;
+	html += `<form id='${id}Form' class='js9AnalysisForm' style='max-height: ${this.height-90}px; overflow: hidden'>`;
+	html += `<center><b>${source.schema.description}</b></center><p>`;
 	props = source.schema.properties;
 	for( key in props ){
 	    if( props.hasOwnProperty(key) ){
 		obj = props[key];
-		prompt = obj.prompt || key + ":";
+		prompt = obj.prompt || `${key}:`;
 		switch(obj.type){
 		case "boolean":
 		    if( source.data[key] ){
@@ -648,7 +646,7 @@ JS9.Prefs.init = function(){
 		    } else {
 			s = "";
 		    }
-		    html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2'><input type='checkbox' name='%s' value='true' %s></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
+		    html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2'><input type='checkbox' name='${key}' value='true' ${s}></span><span class='column_R4l'>${obj.helper}</span></div>`;
 		    break;
 		default:
 		    if( typeof source.data[key] === "object" ){
@@ -661,25 +659,25 @@ JS9.Prefs.init = function(){
 			s = source.data[key];
 		    }
 		    if( obj.type === "mobject" ){
-			html += sprintf("<div class='linegroup' style='height:64px'><span class='column_R1'><b>%s</b></span><span class='column_R2l'><textarea name='%s' class='text_R' rows='5' style='overflow-x: hidden; resize: none'>%s</textarea></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
+			html += `<div class='linegroup' style='height:64px'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><textarea name='${key}' class='text_R' rows='5' style='overflow-x: hidden; resize: none'>${s}</textarea></span><span class='column_R4l'>${obj.helper}</span></div>`;
 		    } else {
-			html += sprintf("<div class='linegroup'><span class='column_R1'><b>%s</b></span><span class='column_R2l'><input type='text' name='%s' class='text_R' value='%s'></span><span class='column_R4l'>%s</span></div>", prompt, key, s, obj.helper);
+			html += `<div class='linegroup'><span class='column_R1'><b>${prompt}</b></span><span class='column_R2l'><input type='text' name='${key}' class='text_R' value='${s}'></span><span class='column_R4l'>${obj.helper}</span></div>`;
 		    }
 		    break;
 		}
 	    }
 	}
-	html += "<input id='" + this.id + "_applyPrefs' name='Apply' type='button' class='button' value='Apply' onclick='JS9.Prefs.applyForm.call(this);' style='margin: 8px'>";
+	html += `<input id='${this.id}_applyPrefs' name='Apply' type='button' class='button' value='Apply' onclick='JS9.Prefs.applyForm.call(this);' style='margin: 8px'>`;
 	// manage stored preferences
 	if( window.hasOwnProperty("localStorage") &&
 	    JS9.globalOpts.localStorage           ){
-	    html += "<input id='" + this.id + "_savePrefs' name='Save' type='button' class='button' value='Save' onclick='JS9.Prefs.saveForm.call(this)' style='margin: 8px'>";
-	    html += "<input id='" + this.id + "_showPrefs' name='Show' type='button' class='button' value='Show Saved' onclick='JS9.Prefs.showForm.call(this)' style='margin: 8px'>";
+	    html += `<input id='${this.id}_savePrefs' name='Save' type='button' class='button' value='Save' onclick='JS9.Prefs.saveForm.call(this)' style='margin: 8px'>`;
+	    html += `<input id='${this.id}_showPrefs' name='Show' type='button' class='button' value='Show Saved' onclick='JS9.Prefs.showForm.call(this)' style='margin: 8px'>`;
 	    html += "<input id='delete' name='Delete' type='button' class='button' value='Delete Saved' onclick='JS9.Prefs.deleteForm.call(this)' style='margin: 8px'>";
 	}
 	// light windows get a close button
 	if( this.winType === "light" ){
-	    html += "<input id='" + this.id + "_closePrefs' name='Close' type='button' class='button' value='Close' onclick='var form = $(this).closest(\"form\"); var winid = form.data(\"winid\"); winid.close(); return false;' style='float: right; margin: 8px'>";
+	    html += `<input id='${this.id}_closePrefs' name='Close' type='button' class='button' value='Close' onclick='const form = $(this).closest("form"); const winid = form.data("winid"); winid.close(); return false;' style='float: right; margin: 8px'>`;
 	}
 	html += "</form>";
 	html += "</div>";
@@ -688,14 +686,14 @@ JS9.Prefs.init = function(){
     this.divjq.addClass("JS9PluginScrolling");
     // set the html for this div
     this.divjq.html(html);
-    // for each source, set data values that we will need in button callbacks
+    // for each source, set data values which we will need in button callbacks
     for(i=0; i<sources.length; i++){
 	source = sources[i];
 	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
-	$( "#" + id + "Form").data("display", this.display);
-	$( "#" + id + "Form").data("source", source);
+	$( `#${id}Form`).data("display", this.display);
+	$( `#${id}Form`).data("source", source);
 	if( this.winType === "light" ){
-	    $( "#" + id + "Form").data("winid", this.winHandle);
+	    $( `#${id}Form`).data("winid", this.winHandle);
 	}
     }
     // now init the tab content
@@ -707,62 +705,61 @@ JS9.Prefs.init = function(){
 
 // action for Apply in Form
 JS9.Prefs.applyForm = function(){
-    var form = $(this).closest("form");
-    var arr = form.serializeArray();
-    var display = form.data("display");
-    var source = form.data("source");
-    var winid = form.data("winid");
-    arr = arr.concat($("#" + form.attr("id") + " input[type=checkbox]:not(:checked)").map(function(){
-	return {"name": this.name, "value": "false"};
-    }).get());
-    JS9.Prefs.processForm(source, arr, display, winid);
+    let arr, arr2;
+    const form = $(this).closest("form");
+    const display = form.data("display");
+    const source = form.data("source");
+    const winid = form.data("winid");
+    arr = form.serializeArray();
+    arr2 = arr.concat($(`#${form.attr("id")} input[type=checkbox]:not(:checked)`).map((i, e) => {return {"name": e.name, "value": "false"};}).get());
+    JS9.Prefs.processForm(source, arr2, display, winid);
     return false;
 };
 
 // action for Save in Form
 JS9.Prefs.saveForm = function(){
-    var form = $(this).closest("form");
-    var source = form.data("source");
+    const form = $(this).closest("form");
+    const source = form.data("source");
     JS9.Prefs.applyForm.call(this);
     try{ localStorage.setItem(source.name, JSON.stringify(source.data,null,2));
 	 JS9.userOpts[source.name] = localStorage.getItem(source.name); }
-    catch(e){ JS9.error("could not save prefs: " + source.name); }
+    catch(e){ JS9.error(`could not save prefs: ${source.name}`); }
     return false;
 };
 
 // action for Show in Form
 JS9.Prefs.showForm = function(){
-    var s, t;
-    var form = $(this).closest("form");
-    var source = form.data("source");
+    let s, t;
+    const form = $(this).closest("form");
+    const source = form.data("source");
     try{ s = localStorage.getItem(source.name); }
-    catch(ignore){}
+    catch(e){ /* empty */ }
     if( s && (s !== "null") ){
-	t = "<pre>" + s + "</pre>";
+	t = `<pre>${s}</pre>`;
     } else {
-	t = sprintf("<p><center>No saved prefs: %s</center>", source.name);
+	t = `<p><center>No saved prefs: %{source.name}</center>`;
     }
-    JS9.lightWin("savedPrefs" + JS9.uniqueID(), "inline", t, 
-		 "Saved prefs: "+source.name, 
+    JS9.lightWin(`savedPrefs${JS9.uniqueID()}`, "inline", t, 
+		 `Saved prefs: ${source.name}`, 
 		 JS9.lightOpts[JS9.LIGHTWIN].textWin);
     return false;
 };
 
 // action for Delete in Form
 JS9.Prefs.deleteForm = function(){
-    var form = $(this).closest("form");
-    var source = form.data("source");
+    const form = $(this).closest("form");
+    const source = form.data("source");
     try{ localStorage.removeItem(source.name);
 	delete JS9.userOpts[source.name]; }
-    catch(ignore){}
+    catch(e){ /* empty */ }
     return false;
 };
 
 // process new preferences in the preference form
 // eslint-disable-next-line no-unused-vars
 JS9.Prefs.processForm = function(source, arr, display, winid){
-    var i, j, s, key , val, obj, rlayer;
-    var len = arr.length;
+    let i, j, s, key, val, obj, rlayer;
+    const len = arr.length;
     // source-specific pre-processing
     switch( source.name ){
     case "images":
@@ -801,7 +798,7 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	    break;
 	case "object":
 	    try{ val = JSON.parse(val); }
-	    catch(e){ JS9.error("invalid JSON (see jsonlint.com): "+val, e); }
+	    catch(e){ JS9.error(`invalid JSON (see jsonlint.com): ${val}`, e); }
 	    break;
 	default:
 	    break;
@@ -834,7 +831,7 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 		break;
 	    case "fits":
 	        // put our "nicer" option values back into raw object
-	        // note that the values are still strings
+	        // note the values are still strings
 	        switch(key){
  	        case "xdim":
 		    obj.table.xdim = Math.floor(parseFloat(val));
@@ -870,7 +867,7 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	        switch(key){
  	        case "skip":
 		    // add back blank lines
-		    obj[key] = val + "\n";
+		    obj[key] = `${val}\n`;
 		    break;
 		default:
 	            obj[key] = val;

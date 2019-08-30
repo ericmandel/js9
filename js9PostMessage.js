@@ -17,19 +17,19 @@
 /*jslint plusplus: true, vars: true, white: true, continue: true, unparam: true, regexp: true, browser: true, devel: true, nomen: true */
 
 // eslint-disable-next-line no-unused-vars
-var JS9PM = (function(){
+const JS9PM = (function(){
 "use strict";
 
 /* return module */
-var JS9PM = {};
+const JS9PM = {};
 JS9PM.error = function(s){
-    alert("JS9PM ERROR: " + s);
+    alert(`JS9PM ERROR: ${s}`);
     throw s;
 };
 
 // initialize post message processing (for iframes)
 JS9PM.init = function (id, target){
-    var pm = {cb: []};
+    const pm = {cb: []};
     if( !id ){
         JS9PM.error("missing postMessage id for JS9");
     }
@@ -38,13 +38,13 @@ JS9PM.init = function (id, target){
         JS9PM.error("invalid postMessage id for JS9");
     }
     pm.target = target || "*";
-    window.addEventListener("message", function(ev){
-	var msg;
-	var data = ev.data;
+    window.addEventListener("message", (ev) => {
+	let msg;
+	const data = ev.data;
 	if( typeof data === "string" ){
 	    // json string passed (we hope)
 	    try{ msg = JSON.parse(data); }
-	    catch(e){ JS9PM.error("can't parse msg: "+data, e); }
+	    catch(e){ JS9PM.error(`can't parse msg: ${data}`, e); }
 	} else if( typeof data === "object" ){
 	    // object was passed directly
 	    msg = data;
@@ -61,7 +61,7 @@ JS9PM.init = function (id, target){
 
 // send a postMessage to a JS9PM iframe
 JS9PM.send = function(pm, cmd, args, cb){
-    var obj;
+    let obj;
     if( !pm || !pm.id || !cmd ){
         JS9PM.error("invalid postMessage send for JS9");
     }

@@ -12,7 +12,7 @@ Module["vfile"] = function(filename, buf, canOwn) {
   // two args: create a virtual file
   if( buf ){
     try{ FS.unlink(Module["rootdir"] + filename); }
-    catch(ignore){ }
+    catch(e){ /* empty */ }
     FS.createDataFile(Module["rootdir"], filename, buf, true, true, canOwn);
     if( buf.length !== undefined ){
       size = buf.length;
@@ -38,13 +38,13 @@ Module["vread"] = function(filename, mode) {
 Module["vsize"] = function(filename) {
   var buf = {size: -1};
   try{ buf = FS.stat(Module["rootdir"] + filename); }
-  catch(ignore){ }
+  catch(e){ /* empty */ }
   return buf.size;
 };
 
 Module["vunlink"] = function(filename) {
   try{ FS.unlink(Module["rootdir"] + filename); }
-  catch(ignore){ }
+  catch(e){ /* empty */ }
 };
 
 Module["vmount"] = function(root, mntpnt) {
@@ -336,7 +336,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 		.replace(/^'/,"").replace(/'$/,"").trim();
 	}
 	_free(hptr);
-	if( !ctype1 || !ctype1.match(/\-\-HPX/i) ){
+	if( !ctype1 || !ctype1.match(/--HPX/i) ){
 	    // see if we have to average the pixels later on
 	    if( binMode > 0 && opts.bin > 1 ){
 		binFactor = opts.bin * opts.bin;

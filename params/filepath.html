@@ -12,19 +12,21 @@
 <textarea id="filePath" name="filePath" class="js9LargeInputText" rows="1" cols="100" style="width:90%;"></textarea>
 <p>
 <input id="run" name="run" type="button" class="button" value="Submit" 
-onclick="var arr = $('#filePathForm').serializeArray();
-var form = $(this).closest('form');
-var dhtml = form.closest('.dhtmlwindow')[0];
-var dispid = $(dhtml).data('dispid');
-var imid = $(dhtml).data('imid');
-var im = JS9.GetImage(imid);
+onclick="
+const arr = $('#filePathForm').serializeArray();
+const form = $(this).closest('form');
+const dhtml = form.closest('.dhtmlwindow')[0];
+const dispid = $(dhtml).data('dispid');
+const imid = $(dhtml).data('imid');
+const im = JS9.GetImage(imid);
 if( im ){ im.file = arr[0].value; im.notifyHelper(); }
 dhtml.close();
 return false;">
 
 <input id="close" name="Close" type="button" class="button" value="Close" 
-onclick="var form = $(this).closest('form');
-var dhtml = form.closest('.dhtmlwindow')[0];
+onclick="
+const form = $(this).closest('form');
+const dhtml = form.closest('.dhtmlwindow')[0];
 dhtml.close();
 return false;" style="float: right;">
 </form>

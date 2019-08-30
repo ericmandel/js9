@@ -44,8 +44,9 @@ event filtering.
 <input id="run" name="run" type="button" class="button" value="Run" onclick="return JS9.SubmitAnalysis(this);">
 
 <input id="close" name="Close" type="button" class="button" value="Close" 
-onclick="var form = $(this).closest('form');
-var dhtml = form.closest('.dhtmlwindow')[0];
+onclick="
+const form = $(this).closest('form');
+const dhtml = form.closest('.dhtmlwindow')[0];
 dhtml.close();
 return false;" style="float: right;">
 

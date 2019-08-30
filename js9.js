@@ -14,18 +14,18 @@
 
 "use strict";
 
-// these are the objects created in this module
-var JS9, Module;
-
-// create Emscripten Module object, if necessary
-// (so we can pass properties, e.g. wasmBinary, in js9prefs.js and during init)
+// ensure Emscripten's Module object is available so we can pass properties
+// (e.g. wasmBinary) in js9prefs.js and during JS9.init()
+// (use var to add to global scope because it's how Emscripten does it)
+var Module;
 if( typeof Module !== "object" ){ Module = {}; }
 
-// generate JS9 module
-JS9 = (function(){
+// generate and expose JS9 module
+// (use var to add to global scope for backward compatibility with previous ES5)
+var JS9 = (function(){
 
 // module header
-var JS9 = {};
+const JS9 = {};
 JS9.NAME = "JS9";		// The name of this namespace
 JS9.VERSION = "2.5";		// The version of this namespace
 JS9.COPYRIGHT = "Copyright (c) 2012-2019 Smithsonian Institution";
@@ -77,10 +77,10 @@ JS9.TOUCHSUPPORTED = ( window.hasOwnProperty("ontouchstart") ||
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 JS9.BROWSER = (function(){
-  var P= navigator.platform;
-  var N= navigator.appName, ua= navigator.userAgent, tem;
-  var M= ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
-  tem= ua.match(/version\/([\.\d]+)/i);
+  const P= navigator.platform;
+  const N= navigator.appName, ua= navigator.userAgent;
+  const tem= ua.match(/version\/([.\d]+)/i);
+  let M = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
   if(M && tem !== null){ M[2]= tem[1]; }
   M= M? [M[1], M[2], P]: [N, navigator.appVersion,'-?', P];
   M.push(/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(ua));
@@ -89,13 +89,13 @@ JS9.BROWSER = (function(){
 // convenience to allow plugins to deal with HiDPI ratio blurring
 // http://stackoverflow.com/questions/15661339/how-do-i-fix-blurry-text-in-my-html5-canvas
 JS9.PIXEL_RATIO = (function(){
-    var ctx = document.createElement("canvas").getContext("2d"),
-        dpr = window.devicePixelRatio || 1,
-        bsr = ctx.webkitBackingStorePixelRatio ||
-              ctx.mozBackingStorePixelRatio ||
-              ctx.msBackingStorePixelRatio ||
-              ctx.oBackingStorePixelRatio ||
-              ctx.backingStorePixelRatio || 1;
+    const ctx = document.createElement("canvas").getContext("2d"),
+          dpr = window.devicePixelRatio || 1,
+          bsr = ctx.webkitBackingStorePixelRatio ||
+                ctx.mozBackingStorePixelRatio ||
+                ctx.msBackingStorePixelRatio ||
+                ctx.oBackingStorePixelRatio ||
+                ctx.backingStorePixelRatio || 1;
 
     return dpr / bsr;
 }());
@@ -142,7 +142,7 @@ JS9.globalOpts = {
     imcmap: "IMCMAP",           // basename of FITS param containing cmaps
     table: {xdim: 4096, ydim: 4096, bin: 1},// image section size to extract from table
     image: {xdim: 4096, ydim: 4096, bin: 1},// image section size (unlimited=0)
-    reproj: {xdim: 4096, ydim: 4096}, // max image size that we can reproject
+    reproj: {xdim: 4096, ydim: 4096}, // max image size we can reproject
     reprojSwitches: "",         // Montage reproject switches
     binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
     clearImageMemory: "heap",   // rm vfile: always|never|auto|noExt|noCube|size>x Mb heap=>free heap
@@ -222,8 +222,8 @@ JS9.globalOpts = {
     }, // keyboard actions
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     toolbarTooltips: false,     // display tooltips on toolbar?
-    centerDivs: ["JS9Menubar"], // divs that take part in JS9.Display.center()
-    resizeDivs: ["JS9Menubar", "JS9Colorbar", "JS9Toolbar"], // divs that take part in JS9.Display.resize()
+    centerDivs: ["JS9Menubar"], // divs which take part in JS9.Display.center()
+    resizeDivs: ["JS9Menubar", "JS9Colorbar", "JS9Toolbar"], // divs which take part in JS9.Display.resize()
     pinchWait: 8,		// number of events to wait before testing pinch
     pinchThresh: 6,		// threshold for pinch test
     xeqPlugins: true,		// execute plugin callbacks?
@@ -259,7 +259,7 @@ JS9.globalOpts = {
     syncReciprocate: true,       // default value for reciprocal sync'ing
     hiddenPluginDivs: [],        // which static plugin divs start hidden
     separate: {layout: "auto", leftMargin: 10, topMargin: 10}, // separate a display
-    imageTemplates: ".fits,.fts,.png,.jpg,.jpeg,.fz", // templates for local images
+    imageTemplates: ".fits,.fts,.png,.jpg,.jpeg,.fz,.ftz", // templates for local images
     wcsUnits: {FK4:"sexagesimal", FK5:"sexagesimal", ICRS:"sexagesimal",
 	       galactic:"degrees", ecliptic:"degrees", linear:"degrees",
 	       physical:"pixels", image:"pixels"}, // def units for wcs sys
@@ -600,39 +600,12 @@ if( window.isElectron ){
 // ---------------------------------------------------------------------
 
 JS9.Image = function(file, params, func){
-    var i, card, pars, sarr, nzoom, display, txeq;
-    var that = this;
-    var localOpts=null;
-    var nhist=0, ncomm=0;
-    var mksect = function(opts){
-	var zoom;
-	var bin = 1;
-	var arr = [];
-	opts = opts || {};
-	// image xcen and ycen values must take binning into account
-	if( JS9.notNull(opts.bin) ){
-	    if( typeof opts.bin === "string" ){
-		bin = parseInt(opts.bin, 10);
-	    } else {
-		bin = opts.bin;
-	    }
-	}
-	// make up section array from default values
-	if( JS9.notNull(opts.xcen) ){
-	    arr.push(opts.xcen/bin);
-	}
-	if( JS9.notNull(opts.ycen) ){
-	    arr.push(opts.ycen/bin);
-	}
-	if( JS9.notNull(opts.zoom) ){
-	    zoom = this.parseZoom(opts.zoom);
-	    if( zoom ){
-		arr.push(zoom);
-	    }
-	}
-	return arr;
-    };
-    var mkscale = function(opts){
+    let i, card, pars, nzoom, display, txeq;
+    let localOpts = null;
+    let nhist = 0;
+    let ncomm = 0;
+    // called with current image context
+    const mkscale = (opts) => {
 	// do zscale, if necessary
 	opts = opts || {};
 	if( JS9.isNull(opts.scaleclipping) ){
@@ -655,10 +628,12 @@ JS9.Image = function(file, params, func){
 	    this.params.scalemax = opts.scalemax;
 	}
     };
-    var finishUp = function(func){
-	var i, s, t, topts, tkey, oalerts;
-	var imopts = JS9.globalOpts.imopts;
-	var imcmap = JS9.globalOpts.imcmap;
+    // called with current image context
+    const finishUp = (func) => {
+	let i, s, t, topts, tkey;
+	const imopts = JS9.globalOpts.imopts;
+	const imcmap = JS9.globalOpts.imcmap;
+	const oalerts = JS9.globalOpts.alerts;
 	// clear previous messages
 	this.display.clearMessage();
 	// add to list of images
@@ -672,7 +647,6 @@ JS9.Image = function(file, params, func){
 	    this.addShapes("regions", localOpts.regions);
 	}
 	// no alerts while processing imopts or cmaps
-	oalerts = JS9.globalOpts.alerts;
 	JS9.globalOpts.alerts = false;
 	// looks for imcmap (json-formatted colormap object) in FITS header
 	if( this.raw && this.raw.header && this.raw.header[imcmap] ){
@@ -681,11 +655,11 @@ JS9.Image = function(file, params, func){
 	    catch(e){ topts = null; }
 	    if( topts ){
 		try{ JS9.AddColormap(topts); }
-		catch(e){}
+		catch(e){ /* empty */ }
 	    }
 	}
 	// look for multi-line colormap (imcmap1, imcmap2, ...) in FITS header
-	tkey = imcmap + "1";
+	tkey = `${imcmap}1`;
 	if( this.raw && this.raw.header && this.raw.header[tkey] ){
 	    // gather up the json string
 	    for(i=1, s=""; i<100; i++){
@@ -702,7 +676,7 @@ JS9.Image = function(file, params, func){
 		catch(e){ topts = null; }
 		if( topts ){
 		    try{ JS9.AddColormap(topts); }
-		    catch(e){}
+		    catch(e){ /* empty */ }
 		}
 	    }
 	}
@@ -713,11 +687,11 @@ JS9.Image = function(file, params, func){
 	    catch(e){ topts = null; }
 	    if( topts ){
 		try{ this.setParam("all", topts); }
-		catch(e){}
+		catch(e){ /* empty */ }
 	    }
 	}
 	// look for multi-line imopts (imopts1, imopts2, ...) in FITS header
-	tkey = imopts + "1";
+	tkey = `${imopts}1`;
 	if( this.raw && this.raw.header && this.raw.header[tkey] ){
 	    // gather up the json string
 	    for(i=1, s=""; i<100; i++){
@@ -734,7 +708,7 @@ JS9.Image = function(file, params, func){
 		catch(e){ topts = null; }
 		if( topts ){
 		    try{ this.setParam("all", topts); }
-		    catch(e){}
+		    catch(e){ /* empty */ }
 		}
 	    }
 	}
@@ -747,7 +721,7 @@ JS9.Image = function(file, params, func){
 	    this.updateShapes("regions", "all", "update");
 	}
 	// load is complete
-	this.status.load = "complete";
+	this.setStatus("load","complete");
 	// done loading, reset wait cursor
 	JS9.waiting(false);
 	// everything else is done so call onload func, if necessary
@@ -858,9 +832,9 @@ JS9.Image = function(file, params, func){
 		pars = JS9.cardpars(card);
 		if( pars !== undefined ){
 		    if( pars[0] === "HISTORY" ){
-			this.parent.raw.header[pars[0]+'__'+nhist++] = pars[1];
+			this.parent.raw.header[`${pars[0]}__${nhist++}`] = pars[1];
 		    } else if( pars[0] === "COMMENT" ){
-			this.parent.raw.header[pars[0]+'__'+ncomm++] = pars[1];
+			this.parent.raw.header[`${pars[0]}__${ncomm++}`] = pars[1];
 		    } else {
 			this.parent.raw.header[pars[0]] = pars[1];
 		    }
@@ -911,7 +885,7 @@ JS9.Image = function(file, params, func){
     }
     // change the cursor to show the waiting status
     JS9.waiting(true, this.display);
-    // file argument can be an object containing raw data or
+    // file arg can be an object containing raw data or
     // a string containing a URL of a PNG image
     switch( typeof file ){
     case "object":
@@ -930,39 +904,31 @@ JS9.Image = function(file, params, func){
 	}
 	// set up initial section
 	this.mkSection();
-	// change center and zoom if necessary
-	// No! this was already done in astroem/getFITSImage()
-	// sarr = mksect.call(localOpts);
-	// if( sarr.length ){
-	//    this.mkSection.apply(this, sarr);
-	// }
 	// was a static RGB file specified?
 	if( localOpts && localOpts.rgbFile ){
 	    this.rgbFile = localOpts.rgbFile;
 	    // callback to fire when static RGB image is loaded
-	    $(this.png.image).on("load", function(){
-		var ss;
-		if( (that.png.image.width !== that.raw.width)   ||
-		    (that.png.image.height !== that.raw.height) ){
+	    $(this.png.image).on("load", () => {
+		let ss;
+		if( (this.png.image.width !== this.raw.width)   ||
+		    (this.png.image.height !== this.raw.height) ){
 		    ss = sprintf("rgb dims [%s,%s] don't match image [%s,%s]",
-				that.png.image.width,
-				that.png.image.height,
-				that.raw.width,
-				that.raw.height);
+				this.png.image.width,
+				this.png.image.height,
+				this.raw.width,
+				this.raw.height);
 		    JS9.error(ss);
 		}
 		// store png data in an offscreen canvas
-		that.mkOffScreenCanvas();
+		this.mkOffScreenCanvas();
 		// display image, 2D graphics, etc.
-		that.displayImage("all", localOpts);
+		this.displayImage("all", localOpts);
 		// finish up
-		finishUp.call(that, func);
-	    }).on("error", function(){
+		finishUp.call(this, func);
+	    }).on("error", () => {
 		// done loading, reset wait cursor
 		JS9.waiting(false);
-		// error on load
-		that.status.load = "error";
-		JS9.error("could not load image: "+that.id);
+		JS9.error(`could not load image: ${this.id}`);
 	    });
 	    // set src to download the display file
 	    this.png.image.src = this.rgbFile;
@@ -985,62 +951,55 @@ JS9.Image = function(file, params, func){
 	// save id in case we have to change it for uniqueness
 	this.id = JS9.getImageID(this.id0, this.display.id);
 	// load status
-	this.status.load = "loading";
+	this.setStatus("load","loading");
 	// callback to fire when image is loaded (do this before setting src)
-	$(this.png.image).on("load", function(){
+	$(this.png.image).on("load", () => {
 	    // populate the image data array from RGB values
-	    that.mkOffScreenCanvas();
+	    this.mkOffScreenCanvas();
 	    // populate the raw image data array from RGB values
-	    that.mkRawDataFromPNG();
+	    this.mkRawDataFromPNG();
 	    // set up initial zoom
-	    if( that.params.zoom ){
-		nzoom = that.parseZoom(that.params.zoom);
-		that.rgb.sect.zoom = nzoom;
-		that.rgb.sect.ozoom = nzoom;
+	    if( this.params.zoom ){
+		nzoom = this.parseZoom(this.params.zoom);
+		this.rgb.sect.zoom = nzoom;
+		this.rgb.sect.ozoom = nzoom;
 	    }
 	    // set scaling params from opts
-	    mkscale.call(that, localOpts);
+	    mkscale.call(this, localOpts);
 	    // set up initial section
-	    that.mkSection();
-	    // change center and zoom if necessary
-	    sarr = mksect.call(localOpts);
-	    if( sarr.length ){
-		that.mkSection.apply(that, sarr);
-	    }
+	    this.mkSection();
 	    // display image, 2D graphics, etc.
-	    that.displayImage("all", localOpts);
+	    this.displayImage("all", localOpts);
 	    // finish up
-	    finishUp.call(that, func);
+	    finishUp.call(this, func);
 	    // debugging
 	    if( JS9.DEBUG ){
 		JS9.log("JS9 image: %s dims(%d,%d) min/max(%d,%d)",
-			that.file, that.raw.width, that.raw.height,
-			that.raw.dmin, that.raw.dmax);
+			this.file, this.raw.width, this.raw.height,
+			this.raw.dmin, this.raw.dmax);
 	    }
-	}).on("error", function(){
+	}).on("error", () => {
 	    // done loading, reset wait cursor
 	    JS9.waiting(false);
-	    // error on load
-	    that.status.load = "error";
-	    JS9.error("could not load image: "+that.id);
+	    JS9.error(`could not load image: ${this.id}`);
 	});
 	// set src to download the png and eventually display the image data
 	this.png.image.src = file;
 	break;
     default:
-	JS9.error("unknown specification type for Load: "+ typeof file);
+	JS9.error(`unknown specification type for Load: ${typeof file}`);
     }
 };
 
 // return the image data in a relatively standard format
 JS9.Image.prototype.getImageData = function(dflag){
-    var fdims;
-    var data = null;
-    var atob64 = function(a){
-	var i;
-	var s = '';
-	var bytes = new Uint8Array(a.buffer);
-	var len = bytes.byteLength;
+    let data = null;
+    const {xdim, ydim} = this.fileDimensions();
+    const atob64 = (a) => {
+	let i;
+	let s = '';
+	const bytes = new Uint8Array(a.buffer);
+	const len = bytes.byteLength;
 	for(i=0; i<len; i++){
             s += String.fromCharCode(bytes[i]);
 	}
@@ -1050,7 +1009,7 @@ JS9.Image.prototype.getImageData = function(dflag){
     if( dflag ){
 	// return an array for IPC, since python mangles the typed array
 	if( dflag === "array" ){
-	    data = Array.prototype.slice.call(this.raw.data);
+	    data = Array.from(this.raw.data);
 	} else if( dflag === "base64" ){
 	    // NB: this seems to be the fastest method for IPC!
 	    data = atob64(this.raw.data);
@@ -1059,7 +1018,6 @@ JS9.Image.prototype.getImageData = function(dflag){
 	    data = this.raw.data;
 	}
     }
-    fdims = this.fileDimensions();
     return {id: this.id,
 	    file: this.file,
 	    fits: this.fitsFile || "",
@@ -1071,26 +1029,27 @@ JS9.Image.prototype.getImageData = function(dflag){
 	    bin: this.binning.bin,
 	    header: this.raw.header,
 	    hdus: this.hdus,
-	    fwidth: fdims.xdim,
-	    fheight: fdims.ydim,
 	    dwidth: this.display.width,
 	    dheight: this.display.height,
+	    fwidth: xdim,
+	    fheight: ydim,
 	    data: data
 	   };
 };
 
 // undisplay the image, release resources
 JS9.Image.prototype.closeImage = function(opts){
-    var i, j, tim, key, raw, carr, seldisplay;
-    var iscurrent = false;
-    var ilen= JS9.images.length;
+    let i, j, tim, key, raw, carr;
+    let iscurrent = false;
+    const ilen= JS9.images.length;
+    // this is either the dynamcially selected display or the current display
+    const seldisplay = JS9.Dysel.getDisplayOr(this.display);
+    // opts is optional
     opts = opts || {};
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse closeImage opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse closeImage opts: ${opts}`, e); }
     }
-    // this is either the dynamcially selected display or the current display
-    seldisplay = JS9.Dysel.getDisplayOr(this.display);
     // look for the image in the image list, and remove it
     for(i=0; i<ilen; i++){
 	if( this === JS9.images[i] ){
@@ -1177,7 +1136,7 @@ JS9.Image.prototype.closeImage = function(opts){
 		// display image, 2D graphics, etc.
 		tim.displayImage("all");
 		tim.refreshLayers();
-		// signal that we're done
+		// signal we're done
 		iscurrent = JS9.images.length;
 		break;
 	    }
@@ -1234,16 +1193,16 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
 
 // initialize keywords for various logical coordinate systems
 JS9.Image.prototype.initLCS = function(iheader){
-    var rrot, frot;
-    var arr = [[0,0,0], [0,0,0], [0,0,0]];
+    let rrot, frot;
+    const arr = [[0,0,0], [0,0,0], [0,0,0]];
     // header usually is raw header
-    var header = iheader || this.raw.header;
-    var cx = header.CRPIX1 || 1;
-    var cy = header.CRPIX2 || 1;
+    const header = iheader || this.raw.header;
+    const cx = header.CRPIX1 || 1;
+    const cy = header.CRPIX2 || 1;
     // screen rotation angle is reversed from FITS convention
-    var a = -(header.CROTA2||0) * Math.PI / 180.0;
-    var sina = Math.sin(a);
-    var cosa = Math.cos(a);
+    const a = -(header.CROTA2||0) * Math.PI / 180.0;
+    const sina = Math.sin(a);
+    const cosa = Math.cos(a);
     // seed rotation matrix and its inverse, if necessary
     if( a ){
 	frot = [[0,0,0], [0,0,0], [0,0,0]];
@@ -1347,7 +1306,7 @@ JS9.Image.prototype.initLCS = function(iheader){
 
 // unpack IMG data and convert to JS9 image data
 JS9.Image.prototype.mkRawDataFromIMG = function(img){
-    var i, h, w, ibuf, x, y, v;
+    let i, h, w, ibuf, x, y, v;
     // sanity check
     if( !img ){
 	return;
@@ -1380,7 +1339,7 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
     this.raw.height = h;
     this.raw.bitpix = -32;
     // set data min and max
-    JS9.Image.prototype.dataminmax.call(this);
+    this.dataminmax();
     // change data source
     this.source = "png";
     // fake header
@@ -1403,17 +1362,18 @@ JS9.Image.prototype.mkRawDataFromIMG = function(img){
 
 // unpack PNG data and convert to image data
 JS9.Image.prototype.mkRawDataFromPNG = function(){
-    var i, s, idx, offscreen, dlen, mode, tval,  getfunc, littleEndian;
-    var card, pars, clen;
-    var realpng, hstr, hstrs = [];
-    var nhist=0, ncomm=0;
+    let i, s, idx, offscreen, dlen, mode, tval, getfunc, littleEndian;
+    let card, pars, clen, realpng, hstr;
+    let nhist = 0;
+    let ncomm = 0;
+    const hstrs = [];
     // memory array of 8 bytes
-    var abuf = new ArrayBuffer(8);
+    const abuf = new ArrayBuffer(8);
     // we will transfer unsigned bytes from the png file into the mem array
-    var u = new Uint8Array(abuf);
+    const u = new Uint8Array(abuf);
     // we will use the DataView api to access these bytes as typed data
     // (including possible endian conversion)
-    var dv = new DataView(abuf);
+    const dv = new DataView(abuf);
     // sanity check (we will null out the png image when we are done with it)
     if( !this.offscreen.img  ){
 	return this;
@@ -1445,7 +1405,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     // see if we have a real PNG file instead of a representation file
     if( (i < 15) || realpng ){
 	// holy moly, its a real png file!
-	JS9.Image.prototype.mkRawDataFromIMG.call(this, this.offscreen.img);
+	this.mkRawDataFromIMG(this.offscreen.img);
 	// save the off-screen image and return;
 	return;
     }
@@ -1456,7 +1416,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 	JS9.log("jsonHeader: %s", hstr);
     }
     try{ s = JSON.parse(hstr); }
-    catch(e){ JS9.error("can't read FITS header from PNG file: "+hstr, e); }
+    catch(e){ JS9.error(`can't read FITS header from PNG file: ${hstr}`, e); }
     if( s.js9Protocol === 1.0 ){
 	this.raw.header = s;
 	this.raw.endian = this.raw.header.js9Endian;
@@ -1474,9 +1434,9 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 	    pars = JS9.cardpars(card);
 	    if( pars !== undefined ){
 		if( pars[0] === "HISTORY" ){
-		    this.raw.header[pars[0]+'__'+nhist++] = pars[1];
+		    this.raw.header[`${pars[0]}__${nhist++}`] = pars[1];
 		} else if( pars[0] === "COMMENT" ){
-		    this.raw.header[pars[0]+'__'+ncomm++] = pars[1];
+		    this.raw.header[`${pars[0]}__${ncomm++}`] = pars[1];
 		} else {
 		    this.raw.header[pars[0]] = pars[1];
 		}
@@ -1715,7 +1675,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 	}
 	break;
     default:
-	JS9.error("unsupported bitpix in PNG file: "+this.raw.bitpix);
+	JS9.error(`unsupported bitpix in PNG file: ${this.raw.bitpix}`);
     }
     // set data min and max
     this.dataminmax();
@@ -1733,16 +1693,16 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 
 // read input object and convert to image data
 JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
-    var that = this;
-    var i, s, ui, clen, hdu, pars, card, got, rlen, rmvfile, done, frheap;
-    var header, x1, y1, bin;
-    var oraw, owidth, oheight, obitpix, oltm1_1, owcssys, owcsunits;
-    var nhist=0, ncomm=0;
+    let i, s, ui, clen, hdu, pars, card, got, rlen, rmvfile, done, frheap;
+    let oraw, owidth, oheight, obitpix, oltm1_1, owcssys, owcsunits;
+    let header, x1, y1, bin;
+    let nhist = 0;
+    let ncomm = 0;
     opts = opts || {};
     if( $.isArray(obj) || JS9.isTypedArray(obj) || obj instanceof ArrayBuffer ){
 	// flatten if necessary
 	if( $.isArray(obj[0]) ){
-	    obj = obj.reduce(function(a, b){return a.concat(b);});
+	    obj = obj.reduce( (a, b) => { return a.concat(b); });
 	}
 	// javascript array or typed array
 	hdu = {image: obj};
@@ -1758,7 +1718,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     }
     // better have the image ...
     if( !hdu.image ){
-	JS9.error("data missing from JS9 FITS object" + JSON.stringify(hdu));
+	JS9.error(`data missing from JS9 FITS object: ${JSON.stringify(hdu)}`);
     }
     // quick check for 1D images (in case naxis is defined)
     if( hdu.naxis < 2 ){
@@ -1842,12 +1802,12 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     // make sure we have a typed array
     // flatten if necessary
     if( $.isArray(hdu.image[0]) ){
-	hdu.image = hdu.image.reduce(function(a, b){return a.concat(b);});
+	hdu.image = hdu.image.reduce( (a, b) => { return a.concat(b); });
     }
-    // make the raw data: note that in the case of a typed array coming from
+    // make the raw data: note in the case of a typed array coming from
     // the Emscripten heap, this is a copy, so we can free the heap immediately
     // (done below iff clearImageMemory contains the "heap" directive).
-    // I didn't realize that new XXXArray(typedArray) makes a copy, but see:
+    // I didn't realize new XXXArray(typedArray) makes a copy, but see:
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray
     switch(this.raw.bitpix){
     case 8:
@@ -1885,9 +1845,9 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    pars = JS9.cardpars(this.raw.card[i]);
 	    if( pars !== undefined ){
 		if( pars[0] === "HISTORY" ){
-		    this.raw.header[pars[0]+'__'+nhist++] = pars[1];
+		    this.raw.header[`${pars[0]}__${nhist++}`] = pars[1];
 		} else if( pars[0] === "COMMENT" ){
-		    this.raw.header[pars[0]+'__'+ncomm++] = pars[1];
+		    this.raw.header[`${pars[0]}__${ncomm++}`] = pars[1];
 		} else {
 		    this.raw.header[pars[0]] = pars[1];
 		}
@@ -1902,9 +1862,9 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    pars = JS9.cardpars(card);
 	    if( pars !== undefined ){
 		if( pars[0] === "HISTORY" ){
-		    this.raw.header[pars[0]+'__'+nhist++] = pars[1];
+		    this.raw.header[`${pars[0]}__${nhist++}`] = pars[1];
 		} else if( pars[0] === "COMMENT" ){
-		    this.raw.header[pars[0]+'__'+ncomm++] = pars[1];
+		    this.raw.header[`${pars[0]}__${ncomm++}`] = pars[1];
 		} else {
 		    this.raw.header[pars[0]] = pars[1];
 		}
@@ -1923,7 +1883,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     header = this.raw.header;
     // hack for binning.js:
     // if an original file header has LTM/LTV keywords, save them now,
-    // so that we can go back to file coords at any time
+    // so we can go back to file coords at any time
     if( !oraw && !this.parentFile && !this.parent ){
 	if( header.LTV1 !== undefined   ||
 	    header.LTV2 !== undefined   ||
@@ -2020,10 +1980,10 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	if( opts.extname || opts.extnum ){
 	    if( opts.extname ){
 		this.file = this.file.replace(/\[.*\]/, "");
-		this.file += sprintf("[%s]", opts.extname);
+		this.file += `[${opts.extname}]`;
 	    } else if( opts.extnum && (opts.extnum > 0) ){
 		this.file = this.file.replace(/\[.*\]/, "");
-		this.file += sprintf("[%s]", opts.extnum);
+		this.file += `[${opts.extnum}]`;
 	    }
 	    if( hdu && hdu.fits ){
 		if( opts.extname ){
@@ -2036,15 +1996,15 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	} else if( hdu.fits ){
 	    if( hdu.fits.extname ){
 		this.file = this.file.replace(/\[.*\]/, "");
-		this.file += sprintf("[%s]", hdu.fits.extname);
+		this.file += `[${hdu.fits.extname}]`;
 	    } else if( hdu.fits.extnum && (hdu.fits.extnum > 0) ){
 		this.file = this.file.replace(/\[.*\]/, "");
-		this.file += sprintf("[%s]", hdu.fits.extnum);
+		this.file += `[${hdu.fits.extnum}]`;
 	    }
 	} else if( this.raw.header ){
 	    if( this.raw.header.EXTNAME ){
 		this.file = this.file.replace(/\[.*\]/, "");
-		this.file += sprintf("[%s]", this.raw.header.EXTNAME);
+		this.file += `[${this.raw.header.EXTNAME}]`;
 	    }
 	}
     }
@@ -2110,7 +2070,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     // get hdu info, if possible
     try{
 	if( opts.hdus ){
-	    that.hdus = opts.hdus;
+	    this.hdus = opts.hdus;
 	} else if( this.parentFile &&
 		   JS9.helper.connected && JS9.helper.js9helper ){
 	    obj = {
@@ -2120,7 +2080,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 		fits: this.parentFile,
 		rtype: "text"
 	    };
-	    JS9.helper.send("listhdus", obj, function(obj){
+	    JS9.helper.send("listhdus", obj, (obj) => {
 		if( obj.stderr ){
 		    return;
 		}
@@ -2128,7 +2088,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 		    return;
 		}
 		if( obj.stdout ){
-		    that.hdus = JSON.parse(obj.stdout);
+		    this.hdus = JSON.parse(obj.stdout);
 		}
 	    });
 	} else if( this.raw && this.raw.hdu && this.raw.hdu.fits ){
@@ -2136,7 +2096,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	    this.hdus = JSON.parse(s);
 	}
     }
-    catch(ignore){}
+    catch(ignore){ /* empty */ }
     // can we remove the virtual file?
     if( this.raw.hdu.fits && this.raw.hdu.fits.vfile  ){
 	s = JS9.globalOpts.clearImageMemory;
@@ -2227,13 +2187,13 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 };
 
 // store section information
-JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
-    var s, xtra;
-    var sect = this.rgb.sect;
+JS9.Image.prototype.mkSection = function(...args){
+    let s, xtra;
+    const sect = this.rgb.sect;
     // save zoom in case we are about to change it (regions have to be scaled)
     sect.ozoom  = sect.zoom;
-    // process arguments
-    switch(arguments.length){
+    // process args
+    switch(args.length){
     case 0:
 	// no args: init to display central part of image
 	sect.xcen   = Math.floor(this.raw.width/2);
@@ -2242,10 +2202,10 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	sect.height = Math.min(this.raw.height,this.display.canvas.height);
 	break;
     case 1:
-	if( !JS9.isNumber(xcen) ){
+	if( !JS9.isNumber(args[0]) ){
 	    JS9.error("invalid input for generating section");
 	}
-	sect.zoom   = parseFloat(xcen);
+	sect.zoom   = parseFloat(args[0]);
 	sect.width  = Math.min(this.raw.width*sect.zoom,
 			       this.display.canvas.width);
 	sect.height = Math.min(this.raw.height*sect.zoom,
@@ -2253,11 +2213,11 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	break;
     case 2:
 	// two args: x, y
-	if( !JS9.isNumber(xcen) || !JS9.isNumber(ycen) ){
+	if( !JS9.isNumber(args[0]) || !JS9.isNumber(args[1]) ){
 	    JS9.error("invalid input for generating section");
 	}
-	sect.xcen   = parseFloat(xcen);
-	sect.ycen   = parseFloat(ycen);
+	sect.xcen   = parseFloat(args[0]);
+	sect.ycen   = parseFloat(args[1]);
 	// reset width and height if there was a section offset
 	if( JS9.notNull(sect.ix) ){
 	    sect.width  = Math.min(this.raw.width*sect.zoom,
@@ -2270,12 +2230,14 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 	break;
     case 3:
 	// three args: x, y, zoom
-	if( !JS9.isNumber(xcen) || !JS9.isNumber(ycen) || !JS9.isNumber(zoom) ){
+	if( !JS9.isNumber(args[0]) ||
+	    !JS9.isNumber(args[1]) ||
+	    !JS9.isNumber(args[2]) ){
 	    JS9.error("invalid input for generating section");
 	}
-	sect.xcen   = parseFloat(xcen);
-	sect.ycen   = parseFloat(ycen);
-	sect.zoom   = parseFloat(zoom);
+	sect.xcen   = parseFloat(args[0]);
+	sect.ycen   = parseFloat(args[1]);
+	sect.zoom   = parseFloat(args[2]);
 	sect.width  = Math.min(this.raw.width*sect.zoom,
 			       this.display.canvas.width);
 	sect.height = Math.min(this.raw.height*sect.zoom,
@@ -2379,14 +2341,14 @@ JS9.Image.prototype.mkSection = function(xcen, ycen, zoom){
 // create colormap index array from data values and specified data min/max
 // from: tksao1.0/frame/frametruecolor.C
 JS9.Image.prototype.mkColorData = function(){
-    var i, dd;
-    var ss = JS9.SCALESIZE;
-    var length = ss - 1;
-    var dmin = this.params.scalemin;
-    var dmax = this.params.scalemax;
-    var dlen = this.raw.width * this.raw.height;
-    var diff = dmax - dmin;
-    var dval = length / diff;
+    let i, dd;
+    const ss = JS9.SCALESIZE;
+    const length = ss - 1;
+    const dmin = this.params.scalemin;
+    const dmax = this.params.scalemax;
+    const dlen = this.raw.width * this.raw.height;
+    const diff = dmax - dmin;
+    const dval = length / diff;
     // allocate array
     if( !this.colorData || this.colorData.length < dlen ){
 	this.colorData = new Int32Array(dlen);
@@ -2409,10 +2371,10 @@ JS9.Image.prototype.mkColorData = function(){
 // generate colorcells array from current colormap
 // from: tksao1.0/colorbar/colorbar.C
 JS9.Image.prototype.calcContrastBias = function(i){
-    var r, result;
-    var cs = JS9.COLORSIZE;
-    var bias = this.params.bias;
-    var contrast = this.params.contrast;
+    let r, result;
+    let bias = this.params.bias;
+    const cs = JS9.COLORSIZE;
+    const contrast = this.params.contrast;
     // check for (close to) default
     if( ((bias - 0.5) < 0.0001) && ((contrast - 1.0) < 0.0001) ){
 	return i;
@@ -2439,8 +2401,8 @@ JS9.Image.prototype.calcContrastBias = function(i){
 // generate colorcells array from current colormap
 // from: tksao1.0/colorbar/colorbartruecolor.C
 JS9.Image.prototype.mkColorCells = function(){
-    var i, j, idx;
-    var cs = JS9.COLORSIZE;
+    let i, j, idx;
+    const cs = JS9.COLORSIZE;
     // allocate array for color cells
     if( !this.colorCells ){
 	this.colorCells = [];
@@ -2459,16 +2421,16 @@ JS9.Image.prototype.mkColorCells = function(){
 // from: tksao1.0/frame/colorscale.C
 // inverse code from: tksao1.0/frame/inversescale.C
 JS9.Image.prototype.mkScaledCells = function(){
-    var aa, dd, ii, jj, ll, exp, low;
-    var vv, avg, color, data, dlen, diff, bin, total, dval, dmin, dmax, pdf;
-    var cs = JS9.COLORSIZE;
-    var ss = JS9.SCALESIZE;
-    var tt = JS9.INVSIZE;
-    var hh = JS9.HISTSIZE;
-    var hex2num = function(hex){
-	var i, k, int1, int2;
-	var hex_alphabets = "0123456789ABCDEF";
-	var value = [];
+    let aa, dd, ii, jj, ll, exp, low, vv, avg, color;
+    let data, dlen, diff, bin, total, dval, dmin, dmax, pdf;
+    const cs = JS9.COLORSIZE;
+    const ss = JS9.SCALESIZE;
+    const tt = JS9.INVSIZE;
+    const hh = JS9.HISTSIZE;
+    const hex2num = (hex) => {
+	let i, k, int1, int2;
+	const hex_alphabets = "0123456789ABCDEF";
+	const value = [];
 	//Remove the "#" char - if there is one.
 	if(hex.charAt(0) === "#"){
 	    hex = hex.slice(1);
@@ -2678,7 +2640,7 @@ JS9.Image.prototype.mkScaledCells = function(){
 	}
 	break;
     default:
-	JS9.error("unknown scale '" + this.params.scale + "'");
+	JS9.error(`unknown scale '${this.params.scale}'`);
     }
     // allow chaining
     return this;
@@ -2687,14 +2649,13 @@ JS9.Image.prototype.mkScaledCells = function(){
 // create RGB image from scaled colorCells
 // sort of from: tksao1.0/frame/truecolor.c, but not really
 JS9.Image.prototype.mkRGBImage = function(){
-    var rgb, sect, img;
-    var xrgb, yrgb, wrgb, hrgb, rgbimg, ctx;
-    var inc, zinc, xIn, yIn, xOut, yOut, xOutIdx, yOutIdx;
-    var yZoom, xZoom, idx, odx, yLen, zx, zy, zyLen;
-    var alpha, alpha1, alpha2;
-    var ridx, gidx, bidx;
-    var rthis=null, gthis=null, bthis=null;
-    var dorgb = false;
+    let rgb, sect, img, xrgb, yrgb, wrgb, hrgb, rgbimg, ctx;
+    let inc, zinc, xIn, yIn, xOut, yOut, xOutIdx, yOutIdx, yZoom, xZoom;
+    let idx, odx, yLen, zx, zy, zyLen, alpha, alpha1, alpha2, ridx, gidx, bidx;
+    let rthis = null;
+    let gthis = null;
+    let bthis = null;
+    let dorgb = false;
     // sanity check
     if( !this.rgb ){
 	return this;
@@ -2838,7 +2799,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 		    (bidx === undefined) ){
 		    JS9.globalOpts.rgb.active = false;
 		    JS9.error("RGB images are incompatible. Turning off RGB mode.", "", false);
-		    JS9.Image.prototype.mkRGBImage.call(this);
+		    this.mkRGBImage();
 		    return this;
 		}
 	    } else {
@@ -2897,13 +2858,14 @@ JS9.Image.prototype.mkRGBImage = function(){
 //  blendImage()                   # return current blend params
 //  blendImage(true||false)        # turn on/off blending
 //  blendImage(mode, opacity)      # set blend mode and opacity
-JS9.Image.prototype.blendImage = function(mode, opacity, active){
+JS9.Image.prototype.blendImage = function(...args){
+    let [mode, opacity, active] = args;
     // see composite and blend operations: https://www.w3.org/TR/compositing-1/
-    var blendexp = /normal|multiply|screen|overlay|darken|lighten|color-dodge|color-burn|hard-light|soft-light|difference|exclusion|hue|saturation|color|luminosity|clear|copy|source-over|destination-over|source-in|destination-in|source-out|destination-out|source-atop|destination-atop|xor|lighter/i;
-    if( arguments.length === 0 ){
+    const blendexp = /normal|multiply|screen|overlay|darken|lighten|color-dodge|color-burn|hard-light|soft-light|difference|exclusion|hue|saturation|color|luminosity|clear|copy|source-over|destination-over|source-in|destination-in|source-out|destination-out|source-atop|destination-atop|xor|lighter/i;
+    if( args.length === 0 ){
 	return this.blend;
     }
-    // if first argument is true or false, this turns on/off blending
+    // if first arg is true or false, this turns on/off blending
     if( (mode === true)   || (mode === false)   ||
 	(mode === "true") || (mode === "false") ){
 	if( mode === "true" ){
@@ -2923,7 +2885,7 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 	// set blend mode, if necessary
 	if( JS9.notNull(mode) ){
 	    if( !blendexp.test(mode) ){
-		JS9.error("invalid composite/blend operation: "+mode);
+		JS9.error(`invalid composite/blend operation: ${mode}`);
 	    }
 	    this.blend.mode = mode;
 	}
@@ -2932,7 +2894,7 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 	    if( typeof opacity === "string" ){
 		opacity = parseFloat(opacity);
 	    } else if( typeof opacity !== "number" ){
-		JS9.error("invalid opacity: " + opacity);
+		JS9.error(`invalid opacity: ${opacity}`);
 	    }
 	    this.blend.opacity = Math.min(Math.max(opacity, 0), 1);
 	}
@@ -2958,8 +2920,8 @@ JS9.Image.prototype.blendImage = function(mode, opacity, active){
 
 // calculate and set offsets into display where image is to be written
 JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
-    var wcsim, wcssect, npos, oval;
-    var sect = this.rgb.sect;
+    let wcsim, wcssect, npos, oval;
+    const sect = this.rgb.sect;
     // calculate offsets
     this.ix = Math.floor((this.display.canvas.width - this.rgb.img.width)/2);
     this.iy = Math.floor((this.display.canvas.height - this.rgb.img.height)/2);
@@ -2994,12 +2956,13 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
 
 // primitive to put image data on screen
 JS9.Image.prototype.putImage = function(opts){
-    var rgb = this.rgb;
-    var display = this.display;
-    var ctx = display.context;
-    var img2canvas = function(that, img) {
-	var octx, ocanvas;
-	if( !that.offscreenRGB ){
+    const rgb = this.rgb;
+    const display = this.display;
+    const ctx = display.context;
+    // called in image context
+    const img2canvas = (img) => {
+	let octx, ocanvas;
+	if( !this.offscreenRGB ){
 	    ocanvas = document.createElement("canvas");
 	    octx = ocanvas.getContext("2d");
 	    ocanvas.width= img.width;
@@ -3012,9 +2975,9 @@ JS9.Image.prototype.putImage = function(opts){
 		octx.msImageSmoothingEnabled = false;
 	    }
 	    octx.putImageData(img, 0, 0);
-	    that.offscreenRGB = {canvas: ocanvas, context: octx};
+	    this.offscreenRGB = {canvas: ocanvas, context: octx};
 	}
-	return that.offscreenRGB.canvas;
+	return this.offscreenRGB.canvas;
     };
     // opts is optional
     opts = opts || {};
@@ -3035,7 +2998,7 @@ JS9.Image.prototype.putImage = function(opts){
 	if( opts.blend !== undefined ){
 	    ctx.globalCompositeOperation = opts.blend;
 	}
-	ctx.drawImage(img2canvas(this, rgb.img), this.ix, this.iy);
+	ctx.drawImage(img2canvas.call(this, rgb.img), this.ix, this.iy);
 	ctx.restore();
     } else {
 	ctx.putImageData(rgb.img, this.ix, this.iy);
@@ -3053,14 +3016,14 @@ JS9.Image.prototype.putImage = function(opts){
 // plugins: execute plugin callbacks
 // all: colors,scaled,rgb,display,plugins
 JS9.Image.prototype.displayImage = function(imode, opts){
-    var i, im, bopts, obj;
-    var allmode = "colors,scaled,rgb,display,plugins";
-    var nblend = 0;
-    var blends = [];
-    var mode = {};
+    let i, im, bopts, obj;
+    let nblend = 0;
+    const allmode = "colors,scaled,rgb,display,plugins";
+    const blends = [];
+    const mode = {};
     // eslint-disable-next-line no-unused-vars
-    var modeFunc = function(element, index, array){
-	var el = element.trim();
+    const modeFunc = (element, index, array) => {
+	const el = element.trim();
 	mode[el] = true;
 	// each step implies the next ones
 	switch(el){
@@ -3116,7 +3079,7 @@ JS9.Image.prototype.displayImage = function(imode, opts){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse displayImage opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse displayImage opts: ${opts}`, e); }
     }
     // opts are optional
     opts = opts || {};
@@ -3194,7 +3157,7 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	}
 	// mark this image as being in this display
 	this.display.image = this;
-	// now that this is the displayed image, we can add delayed shapes
+	// now this is the displayed image, we can add delayed shapes
 	if( this.delayedShapes && this.delayedShapes.length ){
 	    while( this.delayedShapes.length ){
 		obj = this.delayedShapes.shift();
@@ -3213,12 +3176,11 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 // refresh data for an existing image
 // input obj is a fits object, array, typed array, etc.
 JS9.Image.prototype.refreshImage = function(obj, opts){
-    var s, arr, ozoom, ora, odec, olpos, ipos;
-    var func;
+    let s, arr, ozoom, ora, odec, olpos, ipos, func;
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse refresh opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse refresh opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -3239,9 +3201,9 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 	JS9.Load(s, opts, {display: this.display});
 	return;
     }
-    // check for refresh function
+    // check for refresh func
     opts.rawid = opts.rawid || JS9.RAWID0;
-    // allow explicit specification of a function, for backward-compatibility
+    // allow explicit specification of a func, for backward-compatibility
     if( typeof opts === "function" ){
 	func = opts;
 	opts = {onrefresh: func};
@@ -3327,7 +3289,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 // this is the hackiest routine in the JS9 module
 // why is it so hard???
 JS9.Image.prototype.fileDimensions = function() {
-    var xdim, ydim;
+    let xdim, ydim;
     if( this.parent && this.parent.raw.header.XTENSION !== "BINTABLE" ){
 	if( this.parent.raw.header.TABDIM1 ){
 	    xdim = this.parent.raw.header.TABDIM1;
@@ -3351,7 +3313,7 @@ JS9.Image.prototype.fileDimensions = function() {
 	    ydim = this.raw.header.NAXIS2;
 	}
     }
-    return {xdim: xdim, ydim: ydim};
+    return {xdim, ydim};
 };
 
 /*
@@ -3366,7 +3328,7 @@ JS9.Image.prototype.fileDimensions = function() {
    This routine is used to display sections and the fitsy binning.js plugin.
 */
 JS9.Image.prototype.maybePhysicalToImage = function(pos){
-    var lpos, ipos, npos;
+    let lpos, ipos, npos;
     if( this.imtab === "image" &&
 	this.parent && this.parent.lcs && pos.x && pos.y ){
 	lpos = {x: pos.x, y: pos.y};
@@ -3379,11 +3341,10 @@ JS9.Image.prototype.maybePhysicalToImage = function(pos){
 
 // extract and display a section of an image, with table filtering
 JS9.Image.prototype.displaySection = function(opts, func) {
-    var that = this;
-    var oproxy, hdu, from, obj, oreg, nim, topts, fdims;
-    var ipos, lpos, npos, binval1, binval2, tbin, arr, sect;
-    var getval3 = function(val1, val2, val3){
-	var res;
+    let oproxy, hdu, from, obj, oreg, nim, topts;
+    let ipos, lpos, npos, binval1, binval2, tbin, arr, sect;
+    const getval3 = (val1, val2, val3) => {
+	let res;
 	if( !JS9.isNull(val1) ){
 	    res = val1;
 	} else if( !JS9.isNull(val2) ){
@@ -3392,10 +3353,15 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	return res || val3;
     };
     // convert region to section (cen and dim)
-    var reg2sect = function(xreg){
-	var i, xdim, ydim;
-	var xx=0, yy=0, minx=1000000, maxx=0, miny=1000000, maxy=0;
-	var shape = xreg.shape;
+    const reg2sect = (xreg) => {
+	let i, xdim, ydim;
+	let xx = 0;
+	let yy = 0;
+	let minx = 1000000;
+	let maxx = 0;
+	let miny = 1000000;
+	let maxy = 0;
+	const shape = xreg.shape;
 	// use physical coor object, if possible
 	if( xreg.lcs ){ xreg = xreg.lcs; }
 	switch( shape ){
@@ -3448,9 +3414,9 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	return({xcen:xreg.x, ycen:xreg.y, xdim:xdim, ydim:ydim});
     };
     // main display routine
-    var disp = function(hdu, opts){
-	var tim, did, arr;
-	var ss = "";
+    const disp = (hdu, opts) => {
+	let tim, did, arr;
+	let ss = "";
 	// make a copy of opts so we can change it
 	topts = $.extend(true, {}, opts || {});
 	if( JS9.isNull(topts.refreshRegions) ){
@@ -3461,25 +3427,25 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	}
 	// start the waiting!
 	if( topts.waiting !== false ){
-	    JS9.waiting(true, that.display);
+	    JS9.waiting(true, this.display);
 	}
 	// the id might have changed if we changed extensions
 	if( hdu.fits.extname ){
-	    ss = sprintf("[%s]", hdu.fits.extname);
+	    ss = `[${hdu.fits.extname}]`;
 	} else if( hdu.fits.extnum && hdu.fits.extnum > 0 ){
-	    ss = sprintf("[%s]", hdu.fits.extnum);
-	} else if( that.parent ){
-	    if( that.parent.extname ){
-		ss = sprintf("[%s]", that.parent.extname);
-	    } else if( that.parent.extnum && that.parent.extnum > 0 ){
-		ss = sprintf("[%s]", that.parent.extnum);
+	    ss = `[${hdu.fits.extnum}]`;
+	} else if( this.parent ){
+	    if( this.parent.extname ){
+		ss = `[${this.parent.extname}]`;
+	    } else if( this.parent.extnum && this.parent.extnum > 0 ){
+		ss = `[${this.parent.extnum}]`;
 	    }
 	}
 	// change id and file if extension changed
 	if( ss ){
-	    topts.id = that.id.replace(/\[.*\]/,"") + ss;
+	    topts.id = this.id.replace(/\[.*\]/,"") + ss;
 	    // NB: this was removed in v2.3 ... why? ... added back in v2.5
-	    topts.file = that.file.replace(/\[.*\]/,"") + ss;
+	    topts.file = this.file.replace(/\[.*\]/,"") + ss;
 	}
 	if( topts.separate ){
 	    // display section as a separate image in the specified display
@@ -3499,20 +3465,20 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		// make sure we can find the display
 		topts.display = JS9.lookupDisplay(did);
 	    } else {
-		topts.display = that.display;
+		topts.display = this.display;
 	    }
 	    // lame attempt to get to original parentFile
-	    if( from === "parentFile" && that.fitsFile ){
-		tim = JS9.lookupImage(that.fitsFile);
+	    if( from === "parentFile" && this.fitsFile ){
+		tim = JS9.lookupImage(this.fitsFile);
 		if( tim && tim.parentFile ){
 		    topts.parentFile = tim.parentFile;
 		} else {
-		    topts.parentFile = that.fitsFile;
+		    topts.parentFile = this.fitsFile;
 		}
 	    }
 	    // save current regions (before displaying new image)
-	    oreg = that.listRegions("all", {mode: 1});
-	    // function to perform when image is loaded
+	    oreg = this.listRegions("all", {mode: 1});
+	    // func to perform when image is loaded
 	    func = topts.ondisplaysection || topts.onrefresh || func;
 	    // set up new and display new image
 	    nim = new JS9.Image(hdu, topts, func);
@@ -3539,25 +3505,25 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    // make sure we can find the display
 	    topts.display = JS9.lookupDisplay(did);
 	    if( topts.display.image ){
-		topts.rawid = that.raw.id;
-		// function to perform when image is refreshed
+		topts.rawid = this.raw.id;
+		// func to perform when image is refreshed
 		topts.onrefresh = topts.ondisplaysection || topts.onrefresh || func;
 		// refresh the image with the new hdu
 		topts.display.image.refreshImage(hdu, topts);
 	    } else {
 		// no image in the specified display, so make a new one
 		// lame attempt to get to original parentFile
-		if( from === "parentFile" && that.fitsFile ){
-		    tim = JS9.lookupImage(that.fitsFile);
+		if( from === "parentFile" && this.fitsFile ){
+		    tim = JS9.lookupImage(this.fitsFile);
 		    if( tim && tim.parentFile ){
 			topts.parentFile = tim.parentFile;
 		    } else {
-			topts.parentFile = that.fitsFile;
+			topts.parentFile = this.fitsFile;
 		    }
 		}
 		// save current regions (before displaying new image)
-		oreg = that.listRegions("all", {mode: 1});
-		// function to perform when image is loaded
+		oreg = this.listRegions("all", {mode: 1});
+		// func to perform when image is loaded
 		func = topts.ondisplaysection || topts.onrefresh || func;
 		// set up new and display new image
 		nim = new JS9.Image(hdu, topts, func);
@@ -3571,12 +3537,14 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	} else {
 	    // this is the default behavior for displaySection:
 	    // refresh the image in the current display
-	    topts.rawid = that.raw.id;
-	    // function to perform when image is refreshed
+	    topts.rawid = this.raw.id;
+	    // func to perform when image is refreshed
 	    topts.onrefresh = topts.ondisplaysection || topts.onrefresh || func;
 	    // refresh the current image with the new hdu
-	    that.refreshImage(hdu, topts);
+	    this.refreshImage(hdu, topts);
 	}
+	// set status
+	this.setStatus("displaySection", "complete");
 	// done waiting
 	JS9.waiting(false);
     };
@@ -3586,10 +3554,10 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     }
     // special case: if opts is "full", display full image
     if( opts === "full" ){
-	fdims = this.fileDimensions();
-	opts = {xdim: fdims.xdim, ydim: fdims.ydim, xcen: 0, ycen: 0};
+	const {xdim, ydim} = this.fileDimensions();
+	opts = {xdim: xdim, ydim: ydim, xcen: 0, ycen: 0};
     } else if( opts === "selected" ){
-	this.selectShapes("regions", "selected", function(obj){
+	this.selectShapes("regions", "selected", (obj) => {
 	    topts = reg2sect(obj.pub);
 	    topts.separate = true;
 	    topts.refreshRegions = false;
@@ -3599,7 +3567,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	return;
     } else if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse section opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse section opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -3692,7 +3660,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    if( JS9.isNumber(opts.bin) ){
 		opts.bin = parseInt(opts.bin, 10);
 	    } else {
-		JS9.error("invalid bin for displaySection: " + opts.bin);
+		JS9.error(`invalid bin for displaySection: ${opts.bin}`);
 	    }
 	    break;
 	}
@@ -3728,14 +3696,16 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     this.raw.filter = opts.filter || "";
     // start the waiting!
     if( opts.waiting !== false ){
-	JS9.waiting(true, that.display);
+	JS9.waiting(true, this.display);
     }
+    // set status
+    this.setStatus("displaySection", "processing");
     // ... start a timeout to allow the wait spinner to get started
-    window.setTimeout(function(){
+    window.setTimeout(() => {
 	// get image section
 	switch(from){
 	case "parentFile":
-	    oproxy = that.proxyFile;
+	    oproxy = this.proxyFile;
 	    // parentFile: image sect. from external parent file of cur file
 	    // arr is for runAnalysis, remove opts for later processing
 	    arr = [];
@@ -3750,32 +3720,32 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    if( opts.ydim !== undefined ){ opts.ydim = 0; }
 	    // recombine bin and binMode, if necessary
 	    if( opts.binMode ){
-		opts.bin = sprintf("%s%s", opts.bin, opts.binMode);
+		opts.bin = `${opts.bin}${opts.binMode}`;
 		delete opts.binMode;
 	    }
 	    arr.push({name: "bin", value: opts.bin});
 	    delete opts.bin;
 	    arr.push({name: "filter", value: opts.filter || ""});
-	    // hack: pass filter along so that it can reach binning plugin
+	    // hack: pass filter along so it can reach binning plugin
 	    // delete opts.filter;
 	    // get image section from external file
 	    arr.push({name: "slice", value: opts.slice||""});
 	    delete opts.slice;
-	    obj = {id: that.expandMacro("$id"),
-		   image: that.file,
-		   fits: that.parentFile,
+	    obj = {id: this.expandMacro("$id"),
+		   image: this.file,
+		   fits: this.parentFile,
 		   rtype: "text"};
-	    obj.cmd = "js9Xeq imsection " + that.parentFile;
+	    obj.cmd = `js9Xeq imsection ${this.parentFile}`;
 	    // if we are changing the extension, replace the old extension
 	    // with the new one
 	    if( opts.extension ){
 		obj.cmd = obj.cmd.replace(/\[.*\]/,"");
-		obj.cmd += "[" + opts.extension + "]";
+		obj.cmd += `[${opts.extension}]`;
 		delete opts.extension;
 	    }
-	    obj.cmd += that.expandMacro(" $xdim@$xcen,$ydim@$ycen,$bin $filter $slice", arr);
-	    JS9.helper.send("imsection", obj, function(r){
-		var obj, jobj, rarr, f, pf;
+	    obj.cmd += this.expandMacro(" $xdim@$xcen,$ydim@$ycen,$bin $filter $slice", arr);
+	    JS9.helper.send("imsection", obj, (r) => {
+		let obj, jobj, rarr, f, pf;
 		if( typeof r === "object" ){
 		    // with socketio, we get an object
 		    obj = r;
@@ -3792,7 +3762,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		    return;
 		}
 		if( obj.errcode ){
-		    JS9.error("in displaySection: " + obj.errcode);
+		    JS9.error(`in displaySection: ${obj.errcode}`);
 		    return;
 		}
 		// output is file and possibly parentFile
@@ -3807,7 +3777,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		opts.proxyFile = f;
 		// remove oproxy file if not the same as the current file
 		if( oproxy && (oproxy !== opts.proxyFile) ){
-		    that.removeProxyFile(oproxy);
+		    this.removeProxyFile(oproxy);
 		}
 		// json fits info
 		if( rarr[1] ){
@@ -3833,14 +3803,14 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		// hack: use LTM to determine bin/obin, since both will be 1
 		opts.ltm2obin = true;
 		// retrieve and display newly created image section file
-		JS9.fetchURL(f, f, opts, function(result){
+		JS9.fetchURL(f, f, opts, (result) => {
 		    // cleanup previous FITS file support, if necessary
 		    // do this before we handle the new FITS file, or else
 		    // we end up with a memory leak in the emscripten heap!
-		    JS9.cleanupFITSFile(that.raw, true);
+		    JS9.cleanupFITSFile(this.raw, true);
 		    // start the waiting!
 		    if( opts.waiting !== false ){
-			JS9.waiting(true, that.display);
+			JS9.waiting(true, this.display);
 		    }
 		    // process the newly retrieved data as FITS
 		    JS9.fits.handleFITSFile(result, opts, disp);
@@ -3851,9 +3821,9 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    // cleanup previous FITS file support, if necessary
 	    // do this before we handle the new FITS file, or else
 	    // we end up with a memory leak in the emscripten heap!
-	    JS9.cleanupFITSFile(that.raw, false);
+	    JS9.cleanupFITSFile(this.raw, false);
 	    // extract image section from current virtual file
-	    JS9.getFITSImage(hdu.fits, hdu, opts, function(hdu){
+	    JS9.getFITSImage(hdu.fits, hdu, opts, (hdu) => {
 		disp(hdu, opts);
 	    });
 	    break;
@@ -3866,26 +3836,25 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 
 // display the specified extension of a multi-extension FITS file
 JS9.Image.prototype.displayExtension = function(extid, opts, func){
-    var that = this;
-    var i, s, got, extname, im, id;
-    var dispnext = function(i){
-	var hdu;
-	var topts = $.extend(true, {}, opts);
+    let i, s, got, extname, im, id;
+    const dispnext = (i) => {
+	let hdu;
+	const topts = $.extend(true, {}, opts);
 	// hdus are loaded as separate images
 	topts.separate = true;
-	// all done, call the supplied function, if any
-	if( i === that.hdus.length ){
+	// all done, call the supplied func, if any
+	if( i === this.hdus.length ){
 	    if( func ){
-		try{ JS9.xeqByName(func, window, that); }
+		try{ JS9.xeqByName(func, window, this); }
 		catch(e){ JS9.error("in displayExtension callback", e, false); }
 	    }
 	    return;
 	}
 	// next hdu
-	hdu = that.hdus[i];
+	hdu = this.hdus[i];
 	if( hdu.type === "image" && hdu.naxis >= 2 ){
 	    // load next hdu and recurse when done
-	    that.displayExtension(hdu.hdu, topts, function(){ dispnext(i+1); });
+	    this.displayExtension(hdu.hdu, topts, () => { dispnext(i+1); });
 	} else {
 	    dispnext(i+1);
 	}
@@ -3893,7 +3862,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse extension opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse extension opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -3925,7 +3894,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 	    }
 	}
 	if( !got ){
-	    JS9.error(sprintf("no FITS HDU %s for displayExtension()", extid));
+	    JS9.error(`no FITS HDU ${extid} for displayExtension()`);
 	}
 	// extnum specified?
     } else if( typeof extid === "number" ){
@@ -3933,17 +3902,17 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 	if( this.hdus[extid] ){
 	    extname = this.hdus[extid].name || extid.toString();
 	} else {
-	    JS9.error(sprintf("no FITS HDU %s for displayExtension()", extid));
+	    JS9.error(`no FITS HDU ${extid} for displayExtension()`);
 	}
     }
     // if we are creating a separate file, see if we already have it
     if( opts.separate ){
-	s = sprintf("[%s]", extname);
+	s = `[${extname}]`;
 	id = this.id.replace(/\[.*\]/,"") + s;
 	for(i=0, got=0; i<JS9.images.length; i++){
 	    im = JS9.images[i];
 	    if( id === im.id ){
-		if( $("#"+im.display.id).length > 0 ){
+		if( $(`#${im.display.id}`).length > 0 ){
 		    if( this.display.id === im.display.id ){
 			got++;
 			break;
@@ -3955,7 +3924,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 	    im.displayImage("display", opts);
 	    im.display.clearMessage();
 	    if( func ){
-		try{ JS9.xeqByName(func, window, that); }
+		try{ JS9.xeqByName(func, window, this); }
 		catch(e){ JS9.error("in displayExtension callback", e, false); }
 	    }
 	    return;
@@ -3975,11 +3944,11 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 
 // display the specified slice of a 3D or 4d FITS cube
 JS9.Image.prototype.displaySlice = function(slice, opts, func){
-    var i, topts;
+    let i, topts;
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse slice opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse slice opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -3999,7 +3968,7 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
     } else {
 	// slicename or slicenum specified?
 	if( JS9.isNumber(slice) ){
-	    opts.slice = sprintf("*:*:%s", slice);
+	    opts.slice = `*:*:${slice}`;
 	} else {
 	    opts.slice = slice;
 	}
@@ -4015,9 +3984,8 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
 
 // convert current image to array
 JS9.Image.prototype.toArray = function(opts){
-    var i, j, k, bpe, idx, le;
-    var header, npad, arr, buf, _dbuf;
-    var dbuf = this.raw.data.buffer;
+    let i, j, k, bpe, idx, le, header, npad, arr, buf, _dbuf;
+    const dbuf = this.raw.data.buffer;
     // opts is optional
     opts = opts || {};
     // always perform the header keyword fix
@@ -4033,7 +4001,7 @@ JS9.Image.prototype.toArray = function(opts){
     if( npad === 2880 ){ npad = 0; }
     // make an array buffer to hold the whole FITS file
     arr = new ArrayBuffer(header.length + dbuf.byteLength + npad);
-    // and a view of that array to manipulate
+    // and a view of the array to manipulate
     buf = new Uint8Array(arr);
     // copy the header
     for(i=0; i<header.length; i++){ buf[i] = header.charCodeAt(i); }
@@ -4069,9 +4037,9 @@ JS9.Image.prototype.wcsAlign = function(){
 
 // get pan location
 JS9.Image.prototype.getPan = function(){
-    var sect = this.rgb.sect;
-    var x = (sect.x0 + sect.x1) / 2;
-    var y = (sect.y0 + sect.y1) / 2;
+    const sect = this.rgb.sect;
+    let x = (sect.x0 + sect.x1) / 2;
+    let y = (sect.y0 + sect.y1) / 2;
     if( JS9.notNull(sect.ix) ){
 	x += sect.ix / (2 * sect.zoom);
     }
@@ -4084,22 +4052,23 @@ JS9.Image.prototype.getPan = function(){
 };
 
 // set pan location of RGB image (using image coordinates)
-JS9.Image.prototype.setPan = function(panx, pany){
-    var i, key, obj, im, pos, owcssys, txeq, arr, oval, npan;
+JS9.Image.prototype.setPan = function(...args){
+    let i, key, obj, im, pos, owcssys, txeq, arr, oval, npan;
+    let [panx, pany] = args;
     // is this core service disabled?
     if( $.inArray("pan", this.params.disable) >= 0 ){
 	return;
     }
     // default is to pan to center
-    if( arguments.length === 0 ){
+    if( args.length === 0 ){
 	panx = this.raw.width / 2;
 	pany = this.raw.height / 2;
     }
-    // one string argument is a json specification
+    // one string arg is a json specification
     // (two string args is panx, pany in string format)
-    if( arguments.length === 1 && typeof panx === "string" ){
+    if( args.length === 1 && typeof panx === "string" ){
 	try{ panx = JSON.parse(panx); }
-	catch(e){ JS9.error("can't parse setPan JSON: " + panx, e); }
+	catch(e){ JS9.error(`can't parse setPan JSON: ${panx}`, e); }
     }
     if( typeof panx === "object" ){
 	obj = panx;
@@ -4160,7 +4129,7 @@ JS9.Image.prototype.setPan = function(panx, pany){
     }
     // generate section from new image coords
     if( !JS9.isNumber(panx) || !JS9.isNumber(pany) ){
-	JS9.error("invalid input for setPan: " + panx + " " + pany);
+	JS9.error(`invalid input for setPan: ${panx} ${pany}`);
     }
     if( this.wcsAlign() || this.isawcsim ){
 	oval = JS9.globalOpts.panWithinDisplay;
@@ -4208,7 +4177,7 @@ JS9.Image.prototype.getZoom = function(){
 
 // return zoom from zoom string
 JS9.Image.prototype.parseZoom = function(zval){
-    var ozoom, nzoom;
+    let ozoom, nzoom;
     // get old zoom
     ozoom = this.rgb.sect.zoom;
     // determine new zoom
@@ -4253,14 +4222,14 @@ JS9.Image.prototype.parseZoom = function(zval){
 
 // set zoom of RGB image
 JS9.Image.prototype.setZoom = function(zval){
-    var i, nzoom, key, im, ipos, oval;
+    let i, nzoom, key, im, ipos, oval;
     // is this core service disabled?
     if( $.inArray("zoom", this.params.disable) >= 0 ){
 	return;
     }
     nzoom = this.parseZoom(zval);
     if( !nzoom ){
-	JS9.error("invalid input for setZoom: " + zval);
+	JS9.error(`invalid input for setZoom: ${zval}`);
     }
     if( this.wcsAlign() || this.isawcsim ){
 	oval = JS9.globalOpts.panWithinDisplay;
@@ -4308,7 +4277,7 @@ JS9.Image.prototype.setZoom = function(zval){
 // not taken into account: flips and rotations
 // eslint-disable-next-line no-unused-vars
 JS9.Image.prototype.alignPanZoom = function(im, opts){
-    var tim, icen, iwcsinfo, izoom, wcsinfo;
+    let tim, icen, iwcsinfo, izoom, wcsinfo;
     // sanity check
     if( !im ){ return; }
     // is im a string containing an image name?
@@ -4318,7 +4287,7 @@ JS9.Image.prototype.alignPanZoom = function(im, opts){
 	    // it was an image name, so change im to the image handle
 	    im = tim;
 	} else {
-	    JS9.error("unknown image for alignPanZoom: " + im);
+	    JS9.error(`unknown image for alignPanZoom: ${im}`);
 	}
     }
     // opts is optional (not used ... yet)
@@ -4347,9 +4316,9 @@ JS9.Image.prototype.refreshLayers = function(){
 
 // return current file-related position for specified image position
 JS9.Image.prototype.imageToLogicalPos = function(ipos, lcs){
-    var arr, rot, tx, ty, cx, cy, dval;
-    var opos = {x: ipos.x, y: ipos.y};
-    var osys = "image";
+    let arr, rot, tx, ty, cx, cy, dval;
+    let osys = "image";
+    const opos = {x: ipos.x, y: ipos.y};
     lcs = lcs || this.params.lcs || "image";
     switch(lcs){
     case "image":
@@ -4410,8 +4379,8 @@ JS9.Image.prototype.imageToLogicalPos = function(ipos, lcs){
 
 // return current image position from file-related position
 JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
-    var arr, rot, tx, ty, cx, cy, dval;
-    var opos = {x: lpos.x, y: lpos.y};
+    let arr, rot, tx, ty, cx, cy, dval;
+    const opos = {x: lpos.x, y: lpos.y};
     cx = this.raw.header.CRPIX1 || 1;
     cy = this.raw.header.CRPIX2 || 1;
     lcs = lcs || this.params.lcs || "image";
@@ -4474,24 +4443,24 @@ JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
 
 // return 1-indexed image coords for specified 0-indexed display position
 JS9.Image.prototype.displayToImagePos = function(dpos){
-    var x, y;
-    var sect = this.rgb.sect;
-    var iheight = this.rgb.img.height;
+    let x, y;
+    const sect = this.rgb.sect;
+    const iheight = this.rgb.img.height;
     // see funtools/funcopy.c/_FunCopy2ImageHeader
     x = (dpos.x - this.ix + 0.5) / sect.zoom + sect.x0 + 0.5;
     y = (iheight - (dpos.y - this.iy + 0.5)) / sect.zoom + sect.y0 + 0.5;
-    return {x: x, y: y};
+    return {x, y};
 };
 
 // return 0-indexed display coords for specified 1-indexed image position
 JS9.Image.prototype.imageToDisplayPos = function(ipos){
-    var x, y;
-    var sect = this.rgb.sect;
-    var iheight = this.rgb.img.height;
+    let x, y;
+    const sect = this.rgb.sect;
+    const iheight = this.rgb.img.height;
     // see funtools/funcopy.c/_FunCopy2ImageHeader
     x = (((ipos.x - 0.5) - sect.x0) * sect.zoom) + this.ix - 0.5;
     y = (sect.y0 - (ipos.y - 0.5)) * sect.zoom + iheight + this.iy - 0.5;
-    return {x: x, y: y};
+    return {x, y};
 };
 
 // return 0-indexed display pos from 1-indexed logical pos
@@ -4512,7 +4481,7 @@ JS9.Image.prototype.getWCSSys = function(){
 
 // set the WCS sys for this image
 JS9.Image.prototype.setWCSSys = function(wcssys){
-    var s, u;
+    let s, u;
     // is this core service disabled?
     if( $.inArray("wcs", this.params.disable) >= 0 ){
 	return;
@@ -4551,8 +4520,8 @@ JS9.Image.prototype.setWCSSys = function(wcssys){
 
 // init wcs
 JS9.Image.prototype.initWCS = function(header){
-    var alt, key, varr, s;
-    var awcs = /(WCSNAME|WCSAXES|CRVAL[0-9]|CRPIX[0-9]|PC[0-9]_[0-9]|CDELT[0-9]|CD[0-9]_[0-9]|CTYPE[0-9]|CUNIT[0-9]|CRVAL[0-9]|PV[0-9]_[0-9]|PS[0-9]_[0-9]|RADESYS|LONPOLE|LATPOLE)([A-Z])/;
+    let alt, key, varr, s;
+    const awcs = /(WCSNAME|WCSAXES|CRVAL[0-9]|CRPIX[0-9]|PC[0-9]_[0-9]|CDELT[0-9]|CD[0-9]_[0-9]|CTYPE[0-9]|CUNIT[0-9]|CRVAL[0-9]|PV[0-9]_[0-9]|PS[0-9]_[0-9]|RADESYS|LONPOLE|LATPOLE)([A-Z])/;
     if( !this.raw.header ){
 	return this;
     }
@@ -4590,7 +4559,7 @@ JS9.Image.prototype.initWCS = function(header){
 	    }
 	}
     }
-    // init all of the wcs's that we found
+    // init all of the wcs's we found
     for( key in this.raw.altwcs ){
 	// loop through alt wcs objects
 	if( this.raw.altwcs.hasOwnProperty(key) ){
@@ -4600,7 +4569,7 @@ JS9.Image.prototype.initWCS = function(header){
 	    if( this.raw.altwcs[key].wcs > 0 ){
 		try{ this.raw.altwcs[key].wcsinfo =
 		     JSON.parse(JS9.wcsinfo(this.raw.altwcs[key].wcs)); }
-		catch(ignore){}
+		catch(ignore){ /* empty */ }
 	    }
 	}
     }
@@ -4612,7 +4581,7 @@ JS9.Image.prototype.initWCS = function(header){
 
 // close and free wcs resources
 JS9.Image.prototype.freeWCS = function(raw){
-    var key;
+    let key;
     // raw defaults to ... default raw
     raw = raw || this.raw;
     if( raw.altwcs ){
@@ -4631,7 +4600,7 @@ JS9.Image.prototype.freeWCS = function(raw){
 
 // get name of current wcs (from among the alternates)
 JS9.Image.prototype.getWCS = function(){
-    var key, obj;
+    let key, obj;
     // loop through wcs objects, looking for a match
     for( key in this.raw.altwcs ){
 	if( this.raw.altwcs.hasOwnProperty(key) ){
@@ -4648,7 +4617,7 @@ JS9.Image.prototype.getWCS = function(){
 
 // set wcs to default or one of the alternative versions
 JS9.Image.prototype.setWCS = function(version){
-    var key, wcsname, wcssys;
+    let key, wcsname, wcssys;
     version = version || "default";
     // sanity check
     if( !this.raw || !this.raw.altwcs ){
@@ -4691,7 +4660,7 @@ JS9.Image.prototype.setWCS = function(version){
 	}
     }
     // didn't find it
-    JS9.error("could not find WCS version: " + version);
+    JS9.error(`could not find WCS version: ${version}`);
 };
 
 // get the WCS units for this image
@@ -4704,7 +4673,7 @@ JS9.Image.prototype.getWCSUnits = function(){
 
 // set the WCS units for this image
 JS9.Image.prototype.setWCSUnits = function(wcsunits){
-    var s, ws;
+    let s, ws;
     // is this core service disabled?
     if( $.inArray("wcs", this.params.disable) >= 0 ){
 	return;
@@ -4733,12 +4702,11 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
     return this;
 };
 
-// notify the helper that a new image was displayed
+// notify the helper a new image was displayed
 JS9.Image.prototype.notifyHelper = function(){
-    var basedir, image1, image2;
-    var that = this;
-    var imexp = new RegExp("^"+JS9.ANON+"[0-9]*");
-    var installexp = JS9.INSTALLDIR ? new RegExp("^"+JS9.INSTALLDIR) : null;
+    let basedir, image1, image2;
+    const imexp = new RegExp(`^${JS9.ANON}[0-9]*`);
+    const installexp = JS9.INSTALLDIR ? new RegExp(`^${JS9.INSTALLDIR}`) : null;
     // notify the helper
     if( JS9.helper.connected && !this.file.match(imexp) ){
 	switch(JS9.helper.type){
@@ -4746,7 +4714,7 @@ JS9.Image.prototype.notifyHelper = function(){
 	case "post":
 	    // get pageid from CGI helper (socket.io does this when connecting)
 	    if( !JS9.helper.pageid ){
-		JS9.helper.send("pageid", null, function(s){
+		JS9.helper.send("pageid", null, (s) => {
 		    if( s && s.trim().match(/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/) ){
 			JS9.helper.pageid = s;
 			JS9.helper.js9helper = "js9helper";
@@ -4756,14 +4724,13 @@ JS9.Image.prototype.notifyHelper = function(){
 	    }
 	}
 	// get helper info about this image
-	// but also try removing part of path that gets to install dir
+	// but also try removing part of path which gets to install dir
 	image1 = this.file;
 	if( image1.charAt(0) !== "/" && installexp ){
 	    image2 = this.file.replace(installexp, "");
 	}
-	JS9.helper.send("image", {"image": image1, "image2": image2},
-        function(res){
-	    var rstr, r, s, cc, im, regexp;
+	JS9.helper.send("image", {"image": image1, "image2": image2}, (res) => {
+	    let rstr, r, s, cc, regexp;
 	    if( typeof res === "object" ){
 		// from node.js, we get an object with stdout and stderr
 		rstr = res.stdout;
@@ -4781,59 +4748,54 @@ JS9.Image.prototype.notifyHelper = function(){
 	    }
 	    // returns: [file, path, wcs]
 	    // split args, dealing with spaces inside brackets
-	    r = rstr.trim().match(/(?:[^\s\[]+|\[[^\]]*\])+/g);
-//	    No! returns the wrong image if current image id has <n> appended!
-//	    im = JS9.lookupImage(r[0], that.display.id||JS9.DEFID );
-	    im = that;
-	    if( im ){
-		s = r[1];
-		if( s !== "?" ){
-		    if( !JS9.globalOpts.dataDir ){
-			im.fitsFile = s;
-			// prepend base of png path if fits file has no path
-			// is this a bad "feature" in tpos?? probably ...
-			if( im.fitsFile.indexOf("/") < 0 ){
-			    basedir = im.file.match( /.*\// );
-			    // but don't add installdir as part of prefix
-			    // (fitsFile path is relative to the js9 directory)
-			    if( basedir && basedir.length ){
-				regexp = new RegExp("^"+JS9.INSTALLDIR);
-				basedir = basedir[0].replace(regexp, "");
-				im.fitsFile =  basedir + im.fitsFile;
-			    }
+	    r = rstr.trim().match(/(?:[^\s[]+|\[[^\]]*\])+/g);
+	    s = r[1];
+	    if( s !== "?" ){
+		if( !JS9.globalOpts.dataDir ){
+		    this.fitsFile = s;
+		    // prepend base of png path if fits file has no path
+		    // is this a bad "feature" in tpos?? probably ...
+		    if( !this.fitsFile.includes("/") ){
+			basedir = this.file.match( /.*\// );
+			// but don't add installdir as part of prefix
+			// (fitsFile path is relative to the js9 directory)
+			if( basedir && basedir.length ){
+			    regexp = new RegExp(`^${JS9.INSTALLDIR}`);
+			    basedir = basedir[0].replace(regexp, "");
+			    this.fitsFile =  basedir + this.fitsFile;
 			}
-			// prepend JS9_DIR on files if fits is not absolute
-			if( JS9.globalOpts.prependJS9Dir ){
-			    if( im.fitsFile &&
-				!im.fitsFile.match(/^\${JS9_DIR}/) &&
-				im.fitsFile.charAt(0) !== "/" ){
-				im.fitsFile = "${JS9_DIR}/" + im.fitsFile;
-			    }
-			    if( im.parentFile &&
-				!im.parentFile.match(/^\${JS9_DIR}/) &&
-				im.parentFile.charAt(0) !== "/" ){
-				im.parentFile = "${JS9_DIR}/" + im.parentFile;
-			    }
+		    }
+		    // prepend JS9_DIR on files if fits is not absolute
+		    if( JS9.globalOpts.prependJS9Dir ){
+			if( this.fitsFile &&
+			    !this.fitsFile.match(/^\${JS9_DIR}/) &&
+			    this.fitsFile.charAt(0) !== "/" ){
+			    this.fitsFile = `\${JS9_DIR}/${this.fitsFile}`;
 			}
-		    } else {
-			cc = s.lastIndexOf("/") + 1;
-			im.fitsFile = JS9.globalOpts.dataDir+"/"+ s.slice(cc);
+			if( this.parentFile &&
+			    !this.parentFile.match(/^\${JS9_DIR}/) &&
+			    this.parentFile.charAt(0) !== "/" ){
+			    this.parentFile = `\${JS9_DIR}/${this.parentFile}`;
+			}
 		    }
-		    if( JS9.DEBUG > 1 ){
-			JS9.log("JS9 fitsFile: %s %s", im.file, im.fitsFile);
-		    }
+		} else {
+		    cc = s.lastIndexOf("/") + 1;
+		    this.fitsFile = `${JS9.globalOpts.dataDir}/${s.slice(cc)}`;
+		}
+		if( JS9.DEBUG > 1 ){
+		    JS9.log("JS9 fitsFile: %s %s", this.file, this.fitsFile);
 		}
 	    }
-	    if( im && im.fitsFile ){
-		im.fitsFile = JS9.cleanPath(im.fitsFile);
+	    if( this.fitsFile ){
+		this.fitsFile = JS9.cleanPath(this.fitsFile);
 	    }
-	    if( im && im.parentFile ){
-		im.parentFile = JS9.cleanPath(im.parentFile);
+	    if( this.parentFile ){
+		this.parentFile = JS9.cleanPath(this.parentFile);
 	    }
 	    // first time through, query the helper for info
-	    if( !that.queried ){
-		that.queryHelper("all");
-		that.queried = true;
+	    if( !this.queried ){
+		this.queryHelper("all");
+		this.queried = true;
 	    }
 	});
     }
@@ -4843,17 +4805,15 @@ JS9.Image.prototype.notifyHelper = function(){
 
 // ask helper for various types of information
 JS9.Image.prototype.queryHelper = function(which){
-    var that = this;
-    var what = which || "all";
+    const what = which || "all";
     // query the helper
     if( JS9.helper.connected ){
 	if( (what === "all") || (what === "getAnalysis") ){
 	    // only retrieve analysis tasks once per image
 	    if( !this.analysisPackages ){
-		JS9.helper.send("getAnalysis", {"fits": this.fitsFile},
-	        function(s){
+		JS9.helper.send("getAnalysis", {"fits": this.fitsFile}, (s) => {
 		    if( s ){
-			try{ that.analysisPackages = JSON.parse(s); }
+			try{ this.analysisPackages = JSON.parse(s); }
 			catch(e){ JS9.log("can't get analysis", e); }
 		    }
 		});
@@ -4866,28 +4826,28 @@ JS9.Image.prototype.queryHelper = function(which){
 
 // expand macros for this image
 JS9.Image.prototype.expandMacro = function(s, opts){
-    var cmd, olen;
-    var that = this;
+    let cmd, olen;
     // sanity check
     if( !s ){
 	return;
     }
     // process each $ token
     // eslint-disable-next-line no-unused-vars
-    cmd = s.replace(/\${?([a-zA-Z][a-zA-Z0-9_()]+)}?/g, function(m, t, o){
-	var i, r, owcssys, pos;
-	var savewcs = function(im, wcssys){
-	    var owcs = im.params.wcssys;
+    cmd = s.replace(/\${?([a-zA-Z][a-zA-Z0-9_()]+)}?/g, (m, t, o) => {
+	let i, r, owcssys, pos;
+	// called in image context
+	const savewcs = (wcssys) => {
+	    const owcs = this.params.wcssys;
 	    if( wcssys ){
 		switch(wcssys){
 		case "wcs":
 		    if( (owcs === "physical") || (owcs === "image") ){
-			im.params.wcssys = im.params.wcssys0;
+			this.params.wcssys = this.params.wcssys0;
 		    }
 		    break;
 		case "physical":
 		case "image":
-		    im.params.wcssys = wcssys;
+		    this.params.wcssys = wcssys;
 		    break;
 		default:
 		    break;
@@ -4895,27 +4855,26 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    }
 	    return owcs;
 	};
-	var restorewcs = function(im, wcssys){
+	const restorewcs = (wcssys) => {
 	    if( wcssys ){
-		im.params.wcssys = wcssys;
+		this.params.wcssys = wcssys;
 	    }
 	};
-	var withext = function(im, r){
-	    var e;
+	const withext = (r) => {
+	    let e;
 	    // for tables, we might need to add the binning filter
-	    if( im.imtab === "table" ){
-		if( im.raw.hdu.table.filter &&
-		    !r.match(im.raw.hdu.table.filter) ){
+	    if( this.imtab === "table" ){
+		if( this.raw.hdu.table.filter &&
+		    !r.match(this.raw.hdu.table.filter) ){
 		    if( r.match(/\]\[/) ){
-			r = r.slice(0, -1) +
-			    '&&' + im.raw.hdu.table.filter + ']';
+			r = `${r.slice(0,-1)}&&${this.raw.hdu.table.filter}]`;
 		    } else {
-			r += '[' + im.raw.hdu.table.filter + ']';
+			r += `[${this.raw.hdu.table.filter}]`;
 		    }
 		}
-	    } else if( im.imtab === "image" ){
+	    } else if( this.imtab === "image" ){
 		// for images, we might need to add/replace extension info
-		e = im.file.match(/\[.*\]/);
+		e = this.file.match(/\[.*\]/);
 		if( e ){
 		    if( r.match(/\[.*\]/) ){
 			r = r.replace(/\[.*\]/, e);
@@ -4926,81 +4885,81 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    }
 	    return r;
 	};
-	var u = t.split("(");
+	const u = t.split("(");
 	if( u[1] ){
 	    u[1] = u[1].replace(/\)$/, "");
 	}
 	switch(u[0]){
 	case "id":
-	    r = that.display.divjq.attr("id");
+	    r = this.display.divjq.attr("id");
 	    break;
 	case "image":
 	case "png":
-	    r = that.id;
+	    r = this.id;
 	    break;
 	case "filename":
-	    if( that.parentFile && (u[1] !== "this") ){
+	    if( this.parentFile && (u[1] !== "this") ){
 		// if a filter is defined, add it
-		if( that.raw && that.raw.filter ){
-		    r = that.parentFile;
+		if( this.raw && this.raw.filter ){
+		    r = this.parentFile;
 		    // assume parent is a table with EVENTS
 		    if( !r.match(/\[.*\]/) ){ r += '[EVENTS]'; }
-		    r += '[' + that.raw.filter + ']';
+		    r += `[${this.raw.filter}]`;
 		} else {
-		    r = withext(that, that.parentFile);
+		    r = withext(this.parentFile);
 		}
-	    } else if( that.fitsFile ){
-		r = withext(that, that.fitsFile);
+	    } else if( this.fitsFile ){
+		r = withext(this.fitsFile);
 	    } else {
-		JS9.error("no FITS file for " + that.id);
+		JS9.error(`no FITS file for ${this.id}`);
 	    }
 	    break;
 	case "fits":
-	    if( !that.fitsFile ){
-		JS9.error("no FITS file for " + that.id);
+	    if( !this.fitsFile ){
+		JS9.error(`no FITS file for ${this.id}`);
 	    }
-	    r = withext(that, that.fitsFile);
+	    r = withext(this.fitsFile);
 	    break;
 	case "parent":
-	    if( !that.parentFile ){
-		JS9.error("no parent FITS file for " + that.id);
+	    if( !this.parentFile ){
+		JS9.error(`no parent FITS file for ${this.id}`);
 	    }
-	    r = that.parentFile;
+	    r = this.parentFile;
 	    break;
 	case "ext":
-	    if( that.fitsFile ){
-		r = that.fitsFile.match(/\[.*\]/);
+	    if( this.fitsFile ){
+		r = this.fitsFile.match(/\[.*\]/);
 		if( r === null ){
 		    r = "";
 		}
 	    } else {
-		JS9.error("no FITS file for " + that.id);
+		JS9.error(`no FITS file for ${this.id}`);
 	    }
 	    break;
 	case "imcenter":
-	    pos = that.displayToLogicalPos({x: that.display.width/2,
-					    y: that.display.height/2});
-	    r = sprintf("%s,%s", pos.x, pos.y);
+	    pos = this.displayToLogicalPos({x: this.display.width/2,
+					    y: this.display.height/2});
+	    r = `${pos.x},${pos.y}`;
 	    break;
 	case "wcscenter":
-	    pos = that.displayToImagePos({x: that.display.width/2,
-					  y: that.display.height/2});
-	    r = JS9.pix2wcs(that.raw.wcs, pos.x, pos.y).replace(/\s+/g, ",");
+	    pos = this.displayToImagePos({x: this.display.width/2,
+					  y: this.display.height/2});
+	    r = JS9.pix2wcs(this.raw.wcs, pos.x, pos.y).replace(/\s+/g, ",");
 	    break;
 	case "sregions":
-	    owcssys = savewcs(that, u[1]);
-	    r = that.listRegions("source", {mode: 0}).replace(/\s+/g,"");
-	    restorewcs(that, owcssys);
+	    owcssys = savewcs(u[1]);
+	    r = this.listRegions("source", {mode: 0}).replace(/\s+/g,"");
+	    restorewcs(owcssys);
 	    break;
 	case "bregions":
-	    owcssys = savewcs(that, u[1]);
-	    r = that.listRegions("background", {mode: 0}).replace(/\s+/g,"");
-	    restorewcs(that, owcssys);
+	    owcssys = savewcs(u[1]);
+	    r = this.listRegions("background", {mode: 0}).replace(/\s+/g,"");
+	    restorewcs(owcssys);
 	    break;
 	case "regions":
-	    owcssys = savewcs(that, u[1]);
-	    r = that.listRegions("all", {mode: 0}).replace(/\s+/g,"");
-	    restorewcs(that, owcssys);
+	    owcssys = savewcs(u[1]);
+	    r = this.listRegions("all", {mode: 0}).replace(/\s+/g,"");
+	    restorewcs(owcssys);
 	    break;
 	default:
 	    // look for keyword in the serialized opts array
@@ -5026,8 +4985,8 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 
 // lookup an analysis command by name
 JS9.Image.prototype.lookupAnalysis = function(name){
-    var i, j, tasks;
-    var a = null;
+    let i, j, tasks;
+    let a = null;
     // look for the named analysis task
     if( this.analysisPackages ){
 	// look for xclass:name
@@ -5036,7 +4995,7 @@ JS9.Image.prototype.lookupAnalysis = function(name){
 	    for(i=0; i<tasks.length; i++){
 		// the analysis command we are using
 		a = tasks[i];
-		if( a.xclass && ((a.xclass + ":" + a.name) === name) ){
+		if( a.xclass && ((`${a.xclass}:${a.name}`) === name) ){
 		    break;
 		}
 		a = null;
@@ -5063,12 +5022,12 @@ JS9.Image.prototype.lookupAnalysis = function(name){
 
 // validate a task against rules contained in the files parameter
 JS9.Image.prototype.validateAnalysis = function(atask){
-    var s, parr;
-    var imexp = /imVar\((.*),(.*)\)/;
-    var js9exp = /js9Var\((.*),(.*)\)/;
-    var parexp = /fitsHeader\(([A-Za-z0-9_]+),(.*)\)/;
-    var winexp = /winVar\((.*),(.*)\)/;
-    var seq = function(s1, s2){
+    let s, parr;
+    const imexp = /imVar\((.*),(.*)\)/;
+    const js9exp = /js9Var\((.*),(.*)\)/;
+    const parexp = /fitsHeader\(([A-Za-z0-9_]+),(.*)\)/;
+    const winexp = /winVar\((.*),(.*)\)/;
+    const seq = (s1, s2) => {
 	if( !s1 || !s2 ){
 	    return false;
 	}
@@ -5140,8 +5099,8 @@ JS9.Image.prototype.validateAnalysis = function(atask){
 
 // return object containing analysis task definitions
 JS9.Image.prototype.getAnalysis = function(){
-    var i, j, t, tasks;
-    var obj = [];
+    let i, j, t, tasks;
+    const obj = [];
     // sanity check
     if( !this.analysisPackages ){
 	return obj;
@@ -5161,10 +5120,9 @@ JS9.Image.prototype.getAnalysis = function(){
 
 // execute analysis task
 JS9.Image.prototype.runAnalysis = function(name, opts, func){
-    var i, a, m, ropts;
-    var that = this;
-    var obj = {};
-    var analError = function(s, t){
+    let i, a, m, ropts;
+    let obj = {};
+    const analError = (s, t) => {
 	// shouldn't happen
 	if( !JS9.helper ){
 	    JS9.error(s, t);
@@ -5177,7 +5135,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	    // to allow the polling to complete, throw the error after a delay
 	    if( JS9.helper.socket &&
 		JS9.helper.socket.io.engine.transport.name === "polling"){
-		window.setTimeout(function(){
+		window.setTimeout(() => {
 		    JS9.error(s, t);
 		}, 0);
 	    } else {
@@ -5192,7 +5150,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse analysis opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse analysis opts: ${opts}`, e); }
     }
     // func can be passed, or it can be global
     func = func || JS9.globalOpts.analysisFunc;
@@ -5206,7 +5164,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     // get analysis task
     a = this.lookupAnalysis(name);
     if( !a ){
-	JS9.error("could not find analysis task: "+name);
+	JS9.error(`could not find analysis task: ${name}`);
 	return;
     }
     // get command line using macro expansion
@@ -5217,7 +5175,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     if( a.keys ){
 	obj.keys = {};
 	for(i=0; i<a.keys.length; i++){
-	    obj.keys[a.keys[i]] = this.expandMacro("$"+a.keys[i], opts);
+	    obj.keys[a.keys[i]] = this.expandMacro(`$${a.keys[i]}`, opts);
 	}
     }
     // add some needed parameters
@@ -5225,14 +5183,14 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     obj.image = this.file;
     obj.fits = this.fitsFile;
     obj.rtype = a.rtype;
-    // For socket.io communication, we have flattened the message space so that
+    // For socket.io communication, we have flattened the message space so
     // each analysis tool utilizes its own message. This allows easier addition
     // of non-exec'ed, in-line analysis. The cgi support utilizes the
     // 'runAnalysis' message to exec a task (there are no in-line additions)
     switch(JS9.helper.type){
     case 'nodejs':
     case 'socket.io':
-	m = a.xclass ? (a.xclass + ":" + a.name) : a.name;
+	m = a.xclass ? (`${a.xclass}:${a.name}`) : a.name;
 	break;
     default:
 	m = "runAnalysis";
@@ -5241,9 +5199,10 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
     // ask the helper to run the command
     // change the cursor to show the waiting status
     JS9.waiting(true, this.display);
-    JS9.helper.send(m, obj, function(r){
-	var s, robj, f, pf, xobj, files;
-	JS9.waiting(false);
+    // set status
+    this.setStatus("runAnalysis", "processing");
+    JS9.helper.send(m, obj, (r) => {
+	let s, robj, f, pf, xobj, files;
 	// return type can be string or object
 	if( typeof r === "object" ){
 	    // object from node.js
@@ -5257,9 +5216,9 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	    }
 	}
 	robj.errcode = robj.errcode || 0;
-	// if a processing function was supplied, call it and don't display
+	// if a processing func was supplied, call it and don't display
 	if( func ){
-	    func.call(that, robj.stdout, robj.stderr, robj.errcode, a);
+	    func.call(this, robj.stdout, robj.stderr, robj.errcode, a);
 	} else {
 	    // handle errors before we start
 	    if( robj.stderr ){
@@ -5273,7 +5232,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    return;
 		}
 	    } else if( robj.errcode ){
-		s = sprintf("ERROR: running %s [%s]", a.name, robj.errcode);
+		s = `ERROR: running ${a.name} [${robj.errcode}]`;
 		// not sure what this means, so just log it if stdout exists
 		if( robj.stdout ){
 		    JS9.log(s);
@@ -5287,11 +5246,11 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	    switch(a.rtype){
 	    case "text":
 	    case undefined:
-		that.displayAnalysis("text", robj.stdout,
+		this.displayAnalysis("text", robj.stdout,
 				     {divid: JS9.globalOpts.analysisDiv});
 		break;
 	    case "plot":
-		that.displayAnalysis("plot", robj.stdout,
+		this.displayAnalysis("plot", robj.stdout,
 				     {divid: JS9.globalOpts.analysisDiv});
 		break;
 	    case "alert":
@@ -5322,7 +5281,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    // don't fix the path for desktop
 		    xobj.fixpath = false;
 		    // load new file
-	            JS9.Load(f, xobj, {display: that.display});
+	            JS9.Load(f, xobj, {display: this.display});
 		}
 		break;
 	    case "regions":
@@ -5341,9 +5300,9 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    if( ropts.type === "string" ){
 			// region string was passed directly
 			if( ropts.remove ){
-			    that.removeShapes("regions", ropts.remove);
+			    this.removeShapes("regions", ropts.remove);
 			}
-			that.addShapes("regions", files[0], opts);
+			this.addShapes("regions", files[0], opts);
 		    } else {
 			// region file was passed, we have to fetch it
 			f = JS9.cleanPath(files[0]);
@@ -5353,11 +5312,11 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 			}
 			// load new region file
 			obj = {responseType: "text"};
-			JS9.fetchURL(null, f, obj, function(regions, opts){
+			JS9.fetchURL(null, f, obj, (regions, opts) => {
 			    if( ropts.remove ){
-				that.removeShapes("regions", ropts.remove);
+				this.removeShapes("regions", ropts.remove);
 			    }
-			    that.addShapes("regions", regions, opts);
+			    this.addShapes("regions", regions, opts);
 			});
 		    }
 		}
@@ -5369,18 +5328,22 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		    f = JS9.cleanPath(files[0]);
 		    // load new catalog file
 		    obj = {responseType: "text"};
-		    JS9.fetchURL(null, f, obj, function(catalog, opts){
-			that.loadCatalog(null, catalog, opts);
+		    JS9.fetchURL(null, f, obj, (catalog, opts) => {
+			this.loadCatalog(null, catalog, opts);
 		    });
 		}
 		break;
 	    case "none":
 		break;
 	    default:
-		JS9.error("unknown analysis result type: " + a.rtype);
+		JS9.error(`unknown analysis result type: ${a.rtype}`);
 	    break;
 	    }
 	}
+	// set status
+	this.setStatus("runAnalysis", "complete");
+	// done waiting
+	JS9.waiting(false);
     });
     // allow chaining
     return this;
@@ -5388,18 +5351,14 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 
 // display analysis results (text or plot)
 JS9.Image.prototype.displayAnalysis = function(type, s, opts){
-    var i, r, id, did, hstr, pobj, divjq, title, titlefile, winFormat, divid;
-    var plot, pdata, popts;
-    var scaleFunc, scaleCur = {x: "linear", y: "linear"};
-    var a = JS9.lightOpts[JS9.LIGHTWIN];
-    var lfunc = function(v){
-	return v === 0 ? v : Math.log(v);
-    };
-    var efunc = function(v){
-	return v === 0 ? v : Math.exp(v);
-    };
-    var getPos = function(ann, data){
-	var i, x, y;
+    let i, r, id, did, hstr, pobj, divjq, title, titlefile, winFormat;
+    let divid, plot, pdata, popts, scaleFunc;
+    const scaleCur = {x: "linear", y: "linear"};
+    const a = JS9.lightOpts[JS9.LIGHTWIN];
+    const lfunc = (v) => { return v === 0 ? v : Math.log(v); };
+    const efunc = (v) => { return v === 0 ? v : Math.exp(v); };
+    const getPos = (ann, data) => {
+	let i, x, y;
 	if( !ann.text ){
 	    return null;
 	}
@@ -5414,10 +5373,10 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	} else {
 	    y = ann.y;
 	}
-	return {x: x, y: y};
+	return {x, y};
     };
     // eslint-disable-next-line no-unused-vars
-    var flotScale = function(divjq, plot, axis, scale){
+    const flotScale = (divjq, plot, axis, scale) => {
 	switch(axis){
 	case "x":
 	    axis = plot.getAxes().xaxis;
@@ -5441,11 +5400,11 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	plot.draw();
     };
     // eslint-disable-next-line no-unused-vars
-    var flotAnnotate = function(divjq, plot, pobj){
-	var i, ann, ao, pos, ahtml;
-	var yTextOffset = -25;
-	var data = pobj.data;
-	var ac = pobj.annotations.color || JS9.plotOpts.annotateColor;
+    const flotAnnotate = (divjq, plot, pobj) => {
+	let i, ann, ao, pos, ahtml;
+	const yTextOffset = -25;
+	const data = pobj.data;
+	const ac = pobj.annotations.color || JS9.plotOpts.annotateColor;
 	divjq.find(".plotAnnotation").remove();
 	for(i=0; i<pobj.annotations.data.length; i++){
 	    ann = pobj.annotations.data[i];
@@ -5456,13 +5415,13 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    }
 	    ahtml = sprintf("<div class='plotAnnotation' style='position: absolute; left: %spx; top:%spx; color: %s; font-size: small'>%s</div>",
 			    ao.left, ao.top+yTextOffset,
-			    ac, "&darr;" + ann.text);
+			    ac, `&darr;${ann.text}`);
 	    divjq.append(ahtml);
 	}
     };
     // eslint-disable-next-line no-unused-vars
-    var plotlyScale = function(divjq, plot, axis, scale){
-	var opts;
+    const plotlyScale = (divjq, plot, axis, scale) => {
+	let opts;
 	switch(axis){
 	case "x":
 	    opts = {xaxis: {type: scale, autorange: true}};
@@ -5473,12 +5432,12 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	}
 	Plotly.restyle(divjq.attr("id"), opts);
     };
-    var plotlyAnnotate = function(pobj){
-	var i, ann, aobj, pos;
-	var yTextOffset = -30;
-	var data = pobj.data;
-	var ac = pobj.annotations.color || JS9.plotOpts.annotateColor;
-	var annotations = [];
+    const plotlyAnnotate = (pobj) => {
+	let i, ann, aobj, pos;
+	const yTextOffset = -30;
+	const data = pobj.data;
+	const ac = pobj.annotations.color || JS9.plotOpts.annotateColor;
+	const annotations = [];
 	for(i=0; i<pobj.annotations.data.length; i++){
 	    ann = pobj.annotations.data[i];
 	    pos = getPos(ann, data);
@@ -5495,33 +5454,33 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse display opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse display opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
     // window format ...
     winFormat = opts.winformat;
     // ... or target div
-    if( opts.divid && $("#" + opts.divid).length > 0 ){
-	divid = $("#" + opts.divid);
+    if( opts.divid && $(`#${opts.divid}`).length > 0 ){
+	divid = $(`#${opts.divid}`);
     }
     // make up title, if necessary
     title = opts.title || "";
     if( this && !title ){
 	titlefile = (this.fitsFile || this.id || "");
 	titlefile = titlefile.split("/").reverse()[0];
-	title = "AnalysisResults: " + titlefile;
+	title = `AnalysisResults: ${titlefile}`;
 	// add display to title
 	title += sprintf(JS9.IDFMT, this.display.id);
     }
     // unique id for light window
-    id = "Analysis_" + JS9.uniqueID();
+    id = `Analysis_${JS9.uniqueID()}`;
     // process the type of analysis results
     switch(type){
     case "text":
 	s = s || "";
 	hstr = "<div class='JS9Analysis'></div>";
-	hstr += "<pre class='JS9AnalysisText'>"+s+"</pre>";
+	hstr += `<pre class='JS9AnalysisText'>${s}</pre>`;
 	hstr += "</div>";
 	// populate div or create the light window to hold the text
         if( divid ){
@@ -5535,7 +5494,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	// convert results to js object
 	if( typeof s === "string" ){
 	    try{ pobj = JSON.parse(s); }
-	    catch(e){ JS9.error("can't plot return data: " + s, e);	}
+	    catch(e){ JS9.error(`can't plot return data: ${s}`, e);	}
 	} else if( typeof s === "object" ){
 	    pobj = s;
 	}
@@ -5544,7 +5503,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    return;
 	}
 	// create an outer div and an inner plot for the light window open call
-	hstr = sprintf("<div id='%s' class='JS9Analysis'><div id='%sPlot' class='JS9Plot' ></div></div>", id, id);
+	hstr = `<div id='${id}' class='JS9Analysis'><div id='${id}Plot' class='JS9Plot' ></div></div>`;
 	// populate div or create the light window to hold the plot
         if( divid ){
 	    divid.html(hstr);
@@ -5552,8 +5511,8 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    winFormat = winFormat || a.plotWin;
 	    did = JS9.lightWin(id, "inline", hstr, title, winFormat);
 	}
-	// find the inner plot div that now is inside the light window
-	divjq = $("#" + id + " #" + id + "Plot");
+	// find the inner plot div which now is inside the light window
+	divjq = $(`#${id} #${id}Plot`);
 	// when using a div (instead of a lightwin), set the div size
         if( divid ){
 	    divjq.css("width", divid.css("width"));
@@ -5613,7 +5572,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 		// add re-annotate callback, if necessary
 		if( JS9.plotOpts.annotate && pobj.annotations ){
 		    // eslint-disable-next-line no-unused-vars
-		    popts.zoomStack.func = function(plt, r){
+		    popts.zoomStack.func = (plt, r) => {
 			flotAnnotate(divjq, plt, pobj);
 		    };
 		}
@@ -5642,9 +5601,9 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    // add keypress handlers
 	    divjq.css("outline", "none");
 	    divjq.attr("tabindex", 0);
-	    divjq.on("keypress", function(evt){
-		var charCode = evt.which || evt.keyCode;
-		var c = String.fromCharCode(charCode);
+	    divjq.on("keypress", (evt) => {
+		const charCode = evt.which || evt.keyCode;
+		const c = String.fromCharCode(charCode);
 		if( scaleCur[c] === "linear" ){
 		    scaleCur[c] = "log";
 		} else if( scaleCur[c] === "log" ){
@@ -5667,7 +5626,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 		    url: s,
 		    cache: false,
 		    dataType: "text",
-		    success: function(data){divid.html(data);}
+		    success: (data) => { divid.html(data); }
 		});
 	    }
 	} else {
@@ -5694,21 +5653,20 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 
 // load an auxiliary file of the specified type
 JS9.Image.prototype.loadAuxFile = function(type, func){
-    var that = this;
-    var i, aux, tokens, aim, url;
-    var alen = JS9.auxFiles.length;
-    var auxarr = [];
-    // sigh ... define load function outside the loop to make JSLint happy
-    var loadMaskFunc = function(){
+    let i, aux, tokens, aim, url;
+    const alen = JS9.auxFiles.length;
+    const auxarr = [];
+    // sigh ... define load func outside the loop to make JSLint happy
+    const loadMaskFunc = () => {
 	// got the aux file -- backlink the aux object in image's aux array
-	that.aux[aux.name] = aux;
+	this.aux[aux.name] = aux;
 	// populate the image data array from RGB values
 	JS9.Image.prototype.mkOffScreenCanvas.call(aim);
 	// populate the raw image data array from RGB values
 	JS9.Image.prototype.mkRawDataFromPNG.call(aim);
-	// call function, if necessary (im is required)
+	// call func, if necessary (im is required)
 	if( func ){
-	    try{ JS9.xeqByName(func, window, that, aux); }
+	    try{ JS9.xeqByName(func, window, this, aux); }
 	    catch(e){ JS9.error("in aux mask onload callback", e); }
 	}
 	// debugging
@@ -5718,30 +5676,29 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
 		    aim.raw.dmin, aim.raw.dmax);
 	}
     };
-    // sigh ... define load function outside the loop to make JSLint happy
-    var loadRegionFunc = function(data){
+    // sigh ... define load func outside the loop to make JSLint happy
+    const loadRegionFunc = (data) => {
 	// got the aux file -- backlink the aux object in image's aux array
-	that.aux[aux.name] = aux;
+	this.aux[aux.name] = aux;
 	aux.regions = data;
 	if( func ){
-	    try{ JS9.xeqByName(func, window, that, aux); }
+	    try{ JS9.xeqByName(func, window, this, aux); }
 	    catch(e){ JS9.error("in aux region onload callback", e); }
 	}
     };
-    // sigh ... define load function outside the loop to make JSLint happy
-    var loadTextFunc = function(data){
+    // sigh ... define load func outside the loop to make JSLint happy
+    const loadTextFunc = (data) => {
 	// got the aux file -- backlink the aux object in image's aux array
-	that.aux[aux.name] = aux;
+	this.aux[aux.name] = aux;
 	aux.text = data;
 	if( func ){
-	    try{ JS9.xeqByName(func, window, that, aux); }
+	    try{ JS9.xeqByName(func, window, this, aux); }
 	    catch(e){ JS9.error("in aux text onload callback", e); }
 	}
     };
     // eslint-disable-next-line no-unused-vars
-    var errFunc = function(jqXHR, textStatus, errorThrown){
-	JS9.log(sprintf("could not load auxiliary file: %s [%s]",
-			aux.url, textStatus));
+    const errFunc = (jqXHR, textStatus, errorThrown) => {
+	JS9.log(`could not load auxiliary file: ${aux.url} [${textStatus}]`);
     };
     // sanity checks
     if( !type || !alen ){
@@ -5762,7 +5719,7 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
 	    if( (tokens.length === 1) || (tokens[1] === aux.type) ){
 		switch(aux.type){
 		case "mask":
-		    // if image already loaded, make backlink and  call function
+		    // if image already loaded, make backlink and call func
 		    if( aux.im ){
 			this.aux[aux.name] = aux;
 			if( func ){
@@ -5775,7 +5732,7 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
 		    }
 		    break;
 		case "regions":
-		    // if region already loaded, backlink and  call function
+		    // if region already loaded, backlink and call func
 		    if( aux.layer ){
 			this.aux[aux.name] = aux;
 			if( func ){
@@ -5788,7 +5745,7 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
 		    }
 		    break;
 		case "text":
-		    // if text already loaded, backlink and  call function
+		    // if text already loaded, backlink and call func
 		    if( aux.text ){
 			this.aux[aux.name] = aux;
 			if( func ){
@@ -5868,7 +5825,7 @@ JS9.Image.prototype.loadAuxFile = function(type, func){
 
 // save image as a FITS file
 JS9.Image.prototype.saveFITS = function(fname){
-    var arr, blob;
+    let arr, blob;
     if( window.hasOwnProperty("saveAs") ){
 	if( fname ){
 	    fname = fname
@@ -5884,16 +5841,14 @@ JS9.Image.prototype.saveFITS = function(fname){
 	// save to disk
 	saveAs(blob, fname);
     } else {
-	JS9.error("no saveAs function available to save FITS file");
+	JS9.error("no saveAs() available to save FITS file");
     }
     return fname;
 };
 
 // save image as an img file of specified type (e.g., image/png, image/jpeg)
 JS9.Image.prototype.saveIMG = function(fname, type, opts){
-    var key,img, ctx;
-    var canvas, width, height;
-    var quality;
+    let key, img, ctx, canvas, width, height, quality;
     if( window.hasOwnProperty("saveAs") ){
 	// opts can be opts object or json string or quality value
 	if( typeof opts === "number" ){
@@ -5954,11 +5909,11 @@ JS9.Image.prototype.saveIMG = function(fname, type, opts){
 		quality = 0.95;
 	    }
 	}
-	img.toBlob(function(blob){
+	img.toBlob( (blob) => {
 	    saveAs(blob, fname);
 	}, type, quality);
     } else {
-	JS9.error("no saveAs function available for saving image");
+	JS9.error("no saveAs() available for saving image");
     }
     return fname;
 };
@@ -5983,23 +5938,23 @@ JS9.Image.prototype.saveJPEG = function(fname, opts){
 
 // update (and display) pixel and wcs values (connected to info plugin)
 JS9.Image.prototype.updateValpos = function(ipos, disp){
-    var val, vstr, vstr1, vstr2, vstr3, val3, i, c, s;
-    var cd1, cd2, v1, v2, units, sect, bin;
-    var obj = null;
-    var sep1 = "\t ";
-    var sep2 = "\t\t ";
-    var sp = "&nbsp;&nbsp;&nbsp;&nbsp;";
-    var prec = JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
-    var tf = function(fval){
+    let val, vstr, vstr1, vstr2, vstr3, val3, i, c, s;
+    let cd1, cd2, v1, v2, units, sect, bin;
+    let obj = null;
+    const sep1 = "\t ";
+    const sep2 = "\t\t ";
+    const sp = "&nbsp;&nbsp;&nbsp;&nbsp;";
+    const prec = JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
+    const tf = (fval) => {
 	return JS9.floatFormattedString(fval, prec, 3);
     };
-    var tr = function(fval, length){
+    const tr = (fval, length) => {
 	length = length || 3;
 	return fval.toFixed(length);
     };
-    var ti = function(ival, length) {
-        var r = "";
-	var prefix = "";
+    const ti = (ival, length) => {
+        let r = "";
+	let prefix = "";
 	length = length || 3;
 	if( ival < 0 ){
 	    ival = Math.abs(ival);
@@ -6007,7 +5962,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	}
 	r = r + ival;
 	while (r.length < length) {
-            r = "0" + r;
+            r = `0${r}`;
 	}
 	return prefix + r;
     };
@@ -6055,9 +6010,8 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    break;
 	}
 	// create the valpos string
-	// since we can call this in mousemove, optimize by not using sprintf
 	vstr1 = val3;
-	vstr2 =  tr(c.x, 3) + " " + tr(c.y, 3) + " (" + c.sys + ")";
+	vstr2 =  `${tr(c.x, 3)} ${tr(c.y, 3)} (${c.sys})`;
 	vstr = vstr1 + sp + vstr2;
 	// object containing all information
 	obj = {ix: i.x, iy: i.y, ipos: tr(i.x, 2) + sep2 + tr(i.y, 2),
@@ -6087,7 +6041,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    (this.params.wcssys !== "image") &&
 	    (this.params.wcssys !== "physical") ){
 	    s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
-	    vstr3 =  s[0] + " " + s[1] + " (" + (s[2]||"wcs") +  ")";
+	    vstr3 =  `${s[0]} ${s[1]} (${s[2]||"wcs"})`;
 	    vstr = vstr1 + sp + vstr3 + sp + vstr2;
 	    // update object with wcs
 	    obj.ra = s[0];
@@ -6113,10 +6067,10 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 		bin = this.binning.bin;
 		v1 = ((sect.x1 - sect.x0) * cd1).toFixed(0);
 		v2 = ((sect.y1 - sect.y0) * cd2).toFixed(0);
-		obj.wcsfov = v1 + units + " x " + v2 + units;
+		obj.wcsfov = `${v1 + units} x ${v2}${units}`;
 		v1 = tf(cd1 * bin / sect.zoom);
-		obj.wcspix = v1 + units + " / pixel";
-		obj.wcsfovpix = obj.wcsfov + "  (" + obj.wcspix + ")";
+		obj.wcspix = `${v1 + units} / pixel`;
+		obj.wcsfovpix = `${obj.wcsfov}  (${obj.wcspix})`;
 		s = JS9.pix2wcs(this.raw.wcs,
 				(sect.x1 + sect.x0)/2, (sect.y1 + sect.y0)/2)
 		    .trim().split(/\s+/);
@@ -6155,13 +6109,14 @@ JS9.Image.prototype.getColormap = function(){
 };
 
 // set color map
-JS9.Image.prototype.setColormap = function(arg, arg2, arg3){
+JS9.Image.prototype.setColormap = function(...args){
+    let [arg, arg2, arg3] = args;
     // is this core service disabled?
     // (only if the colormap has been set at least once!)
     if( $.inArray("colormap", this.params.disable) >= 0 && this.cmapObj ){
 	return;
     }
-    switch(arguments.length){
+    switch(args.length){
     case 1:
     case 3:
 	switch(arg){
@@ -6211,20 +6166,20 @@ JS9.Image.prototype.setColormap = function(arg, arg2, arg3){
 	    }
 	    break;
 	}
-        if( arguments.length === 3 ){
-	    if( !isNaN(arg2) ){
+        if( args.length === 3 ){
+	    if( !Number.isNaN(arg2) ){
 	        this.params.contrast = arg2;
 	    }
-	    if( !isNaN(arg3) ){
+	    if( !Number.isNaN(arg3) ){
 	       this.params.bias = arg3;
 	    }
         }
 	break;
     case 2:
-	if( !isNaN(arg) ){
+	if( !Number.isNaN(arg) ){
 	    this.params.contrast = arg;
 	}
-	if( !isNaN(arg2) ){
+	if( !Number.isNaN(arg2) ){
 	    this.params.bias = arg2;
 	}
 	break;
@@ -6255,42 +6210,42 @@ JS9.Image.prototype.getScale = function(){
 };
 
 // set scale factor
-JS9.Image.prototype.setScale = function(s0, s1, s2){
-    var that = this;
-    var newscale = function(s){
-	if( JS9.scales.indexOf(s) >= 0 ){
-	    that.params.scale = s;
+JS9.Image.prototype.setScale = function(...args){
+    let [s0, s1, s2] = args;
+    const newscale = (s) => {
+	if( JS9.scales.includes(s) ){
+	    this.params.scale = s;
 	} else if( s === "dataminmax" ){
-	    that.params.scaleclipping = "dataminmax";
-	    that.params.scalemin = that.raw.dmin;
-	    that.params.scalemax = that.raw.dmax;
+	    this.params.scaleclipping = "dataminmax";
+	    this.params.scalemin = this.raw.dmin;
+	    this.params.scalemax = this.raw.dmax;
 	} else if( s === "zscale" ){
-	    if( (that.params.z1 === undefined) ||
-		(that.params.z2 === undefined) ){
-		that.zscale(false);
+	    if( (this.params.z1 === undefined) ||
+		(this.params.z2 === undefined) ){
+		this.zscale(false);
 	    }
-	    that.params.scaleclipping = "zscale";
-	    that.params.scalemin = that.params.z1;
-	    that.params.scalemax = that.params.z2;
+	    this.params.scaleclipping = "zscale";
+	    this.params.scalemin = this.params.z1;
+	    this.params.scalemax = this.params.z2;
 	} else if( s === "zmax" ){
-	    if( (that.params.z1 === undefined) ){
-		that.zscale(false);
+	    if( (this.params.z1 === undefined) ){
+		this.zscale(false);
 	    }
-	    that.params.scaleclipping = "zmax";
-	    that.params.scalemin = that.params.z1;
-	    that.params.scalemax = that.raw.dmax;
+	    this.params.scaleclipping = "zmax";
+	    this.params.scalemin = this.params.z1;
+	    this.params.scalemax = this.raw.dmax;
 	} else if( s === "user" ){
-	    that.params.scaleclipping = "user";
+	    this.params.scaleclipping = "user";
 	} else {
-	    JS9.error("unknown scale: " + s);
+	    JS9.error(`unknown scale: ${s}`);
 	}
     };
     // is this core service disabled?
     if( $.inArray("scale", this.params.disable) >= 0 ){
 	return;
     }
-    if( arguments.length ){
-	switch(arguments.length){
+    if( args.length ){
+	switch(args.length){
 	case 1:
 	    newscale(s0);
 	    break;
@@ -6333,7 +6288,7 @@ JS9.Image.prototype.getParam = function(param){
 
 // set an image param value
 JS9.Image.prototype.setParam = function(param, value){
-    var i, idx, ovalue, obj;
+    let i, idx, ovalue, obj;
     // sanity check
     if( !param ){
 	return null;
@@ -6442,12 +6397,71 @@ JS9.Image.prototype.setParam = function(param, value){
     return ovalue;
 };
 
+// get status
+JS9.Image.prototype.getStatus = function(status){
+    if( JS9.isNull(status) || typeof status !== "string" ){
+	return undefined;
+    }
+    switch(status.toLowerCase()){
+    case "displaysection":
+	return this.status.displaySection;
+    case "createmosaic":
+	return this.status.createMosaic;
+    case "load":
+    case "preload":
+	// if the fetch is still running or failed, return the status
+	if( JS9.fetchURL.status ){
+	    return JS9.fetchURL.status;
+	}
+	return this.status.load;
+    case "loadcatalog":
+	return this.status.loadCatalog;
+    case "loadcolormap":
+	return this.status.loadColormap;
+    case "loadproxy":
+	return this.status.loadProxy;
+    case "loadregions":
+	return this.status.loadRegions;
+    case "loadsession":
+	return this.status.loadSession;
+    case "reproject":
+    case "reprojectdata":
+    case "rotate":
+    case "rotatedata":
+	return this.status.reprojectData;
+    case "runanalysis":
+	return this.status.runAnalysis;
+    case "separate":
+	return this.status.separate;
+    case "uploadfitsfile":
+	return this.status.uploadFITSFile;
+    default:
+	return undefined;
+    }
+};
+
+// set status
+JS9.Image.prototype.setStatus = function(id, status){
+    if( JS9.notNull(id) && JS9.notNull(status) ){
+	switch(status){
+	case "error":
+	case "complete":
+	    delete this.status.cur;
+	    break;
+	default:
+	    this.status.cur = id;
+	    break;
+	}
+    }
+    this.status[id] = status;
+};
+
 // re-calculate data min and max (and set scale params, if necessary)
 JS9.Image.prototype.dataminmax = function(dmin, dmax){
-    var i, blankval;
-    var reminscale = isNaN(this.params.scalemin) ||
+    let i, blankval;
+    let reminscale = Number.isNaN(this.params.scalemin) ||
                      (this.params.scalemin === undefined);
-    var remaxscale = isNaN(this.params.scalemax) ||
+    let remaxscale = Number.isNaN(this.params.scalemax) ||
                      (this.params.scalemax === undefined);
     // might have to redo scaling if it's tied to current data min or max
     if( this.params.scaleclipping === "dataminmax" ){
@@ -6488,7 +6502,7 @@ JS9.Image.prototype.dataminmax = function(dmin, dmax){
 	} else {
 	    // float data: ignore NaN
 	    for(i=0; i<this.raw.data.length; i++) {
-		if( !isNaN(this.raw.data[i]) ){
+		if( !Number.isNaN(this.raw.data[i]) ){
 		    this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
 		    this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
 		}
@@ -6508,7 +6522,7 @@ JS9.Image.prototype.dataminmax = function(dmin, dmax){
 
 // the zscale calculation
 JS9.Image.prototype.zscale = function(setvals){
-    var s, rawdata, bufsize, buf, vals;
+    let s, rawdata, bufsize, buf, vals;
     // sanity check
     if( !JS9.zscale || !this.raw || !this.raw.data ){
 	return this;
@@ -6517,11 +6531,11 @@ JS9.Image.prototype.zscale = function(setvals){
     // allocate space for the image in the emscripten heap
     bufsize = rawdata.length * rawdata.BYTES_PER_ELEMENT;
     try{ buf = JS9.vmalloc(bufsize); }
-    catch(e){ JS9.error("image too large for zscale malloc: " + bufsize, e); }
+    catch(e){ JS9.error(`image too large for zscale malloc: ${bufsize}`, e); }
     // copy the raw image data to the heap
     // try{ JS9.vheap.set(new Uint8Array(rawdata.buffer), buf); }
     try{ JS9.vmemcpy(new Uint8Array(rawdata.buffer), buf); }
-    catch(e){ JS9.error("can't copy image to zscale heap: " + bufsize, e); }
+    catch(e){ JS9.error(`can't copy image to zscale heap: ${bufsize}`, e); }
     // call the zscale routine
     s = JS9.zscale(buf,
 		   this.raw.width,
@@ -6551,20 +6565,19 @@ JS9.Image.prototype.zscale = function(setvals){
 
 // background-subtracted counts in regions
 // eslint-disable-next-line no-unused-vars
-JS9.Image.prototype.countsInRegions = function(args){
-    var that = this;
-    var i, s, vfile, bvfile, sect, ext, filter, dims, bin, opts, cmdswitches;
-    var sregions="field";
-    var bregions="";
-    var getreg = function(arg, macro, def){
-	var ii, rarr, reg, narg;
-	var regrexp= /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
+JS9.Image.prototype.countsInRegions = function(...args){
+    let i, s, vfile, bvfile, sect, ext, filter, bin, opts, cmdswitches;
+    let sregions = "field";
+    let bregions = "";
+    const getreg = (arg, macro, def) => {
+	let ii, rarr, reg, narg;
+	const regrexp= /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
 	// if we have no region, we're done
 	if( !arg ){
 	    return def;
 	}
 	if( typeof arg === "string" ){
-	    narg = that.expandMacro(arg);
+	    narg = this.expandMacro(arg);
 	    // if we have no region, we're done
 	    if( !narg ){
 		return def;
@@ -6575,68 +6588,68 @@ JS9.Image.prototype.countsInRegions = function(args){
 	    }
 	}
 	// look for a region specifier
-	rarr = that.getShapes("regions", arg);
+	rarr = this.getShapes("regions", arg);
 	// no region are returned: this is an error
 	if( !rarr || !rarr.length ){
-	    JS9.error("no regions found: " + arg);
+	    JS9.error(`no regions found: ${arg}`);
 	}
 	// compose a region string from the returned regions
 	narg = "";
 	for(ii=0; ii<rarr.length; ii++){
 	    reg = rarr[ii];
-	    if( that.params.wcssys ){
+	    if( this.params.wcssys ){
 		// put wcs sys at the start
 		if( !narg ){
 		    narg = reg.wcssys || "";
 		}
 		// add wcs region string
-		narg += sprintf("; %s", reg.wcsstr);
+		narg += `; ${reg.wcsstr}`;
 	    } else {
 		// put image sys at the start
 		if( !narg ){
 		    narg = reg.imsys || "";
 		}
 		// add image region string
-		narg += sprintf("; %s", reg.imstr);
+		narg += `; ${reg.imstr}`;
 	    }
 	}
 	return narg || def;
     };
     // sanity check
     if( !this.raw.hdu || !this.raw.hdu.fits || !this.raw.hdu.fits.vfile ){
-	JS9.error("no virtual file available for regcnts: " + this.id);
+	JS9.error(`no virtual file available for regcnts: ${this.id}`);
     }
     // convert json to an object
-    for(i=0; i<arguments.length; i++){
-	s = arguments[i];
+    for(i=0; i<args.length; i++){
+	s = args[i];
 	if( typeof s === "string" && s.charAt(0) === '{' ){
-	    try{ arguments[i] = JSON.parse(s); }
-	    catch(e){ JS9.error("can't parse json arg in regcnts: "+s, e); }
+	    try{ args[i] = JSON.parse(s); }
+	    catch(e){ JS9.error(`can't parse json arg in regcnts: ${s}`, e); }
 	}
     }
-    // analyze arguments
-    switch(arguments.length){
+    // analyze args
+    switch(args.length){
     case 0:
 	break;
     case 1:
-	if( typeof arguments[0] === "object" ){
-	    opts = arguments[0];
+	if( typeof args[0] === "object" ){
+	    opts = args[0];
 	} else {
-	    sregions = getreg(arguments[0], "$sregions", "field");
+	    sregions = getreg(args[0], "$sregions", "field");
 	}
 	break;
     case 2:
-	sregions = getreg(arguments[0], "$sregions", "field");
-	if( typeof arguments[1] === "object" ){
-	    opts = arguments[1];
+	sregions = getreg(args[0], "$sregions", "field");
+	if( typeof args[1] === "object" ){
+	    opts = args[1];
 	} else {
-	    bregions = getreg(arguments[1], "$bregions", "");
+	    bregions = getreg(args[1], "$bregions", "");
 	}
 	break;
     default:
-	sregions = getreg(arguments[0], "$sregions", "field");
-	bregions = getreg(arguments[1], "$bregions", "");
-	opts = arguments[2];
+	sregions = getreg(args[0], "$sregions", "field");
+	bregions = getreg(args[1], "$bregions", "");
+	opts = args[2];
 	break;
     }
     // opts is optional
@@ -6658,28 +6671,27 @@ JS9.Image.prototype.countsInRegions = function(args){
 	filter = this.raw.hdu.table.filter;
 	if( filter && !vfile.match(filter) ){
 	    if( vfile.match(/\]\[/) ){
-		vfile = vfile.slice(0, -1) + '&&' + filter + ']';
+		vfile = `${vfile.slice(0, -1)}&&${filter}]`;
 	    } else {
-		vfile += '[' + filter + ']';
+		vfile += `[${filter}]`;
 	    }
 	}
     } else if( this.raw.header.NAXIS === 3 &&
 	       cmdswitches.search(/(^| )-c/) < 0 ){
-	cmdswitches += sprintf(" -c %s", this.raw.hdu.slice || 1);
+	cmdswitches += ` -c ${this.raw.hdu.slice || 1}`;
     }
     // reduce file size, if necessary
     if( opts.reduce && !this.parentFile ){
-	dims = this.fileDimensions();
-	bin = Math.floor((Math.max(dims.xdim, dims.ydim) / opts.dim) + 0.5);
+	const {xdim, ydim} = this.fileDimensions();
+	bin = Math.floor((Math.max(xdim, ydim) / opts.dim) + 0.5);
 	if( bin > 1 ){
 	    if( this.imtab === "table" ){
 		// for tables, regcnts has a -b switch
-		cmdswitches += sprintf(" -b %s", bin);
+		cmdswitches += ` -b ${bin}`;
 	    } else {
 		// for images, make a temporary binned file
-		bvfile = sprintf("bin%s_%s", bin,
-				 vfile.split("/").reverse()[0]);
-		sect = sprintf("0@0,0@0,%s", bin);
+		bvfile = `bin${bin}_${vfile.split("/").reverse()[0]}`;
+		sect = `0@0,0@0,${bin}`;
 		JS9.imsection(vfile, bvfile, sect, "");
 		vfile = bvfile;
 	    }
@@ -6710,20 +6722,20 @@ JS9.Image.prototype.countsInRegions = function(args){
 
 // radial profile plot
 // eslint-disable-next-line no-unused-vars
-JS9.Image.prototype.radialProfile = function(args){
-    var i, s, xlabel, ylabel, obj, cobj, pobj, res, el, opts;
-    var color, errorbars, errorcolor;
-    var carr = [];
-    var swobj = {cmdswitches: "-j -r"};
-    // make up argument list, add required radial profile switches to opts
-    for(i=0; i<arguments.length; i++){
-	if( typeof arguments[i] === "object" ){
+JS9.Image.prototype.radialProfile = function(...args){
+    let i, s, xlabel, ylabel, obj, cobj, pobj, res, el, opts;
+    let color, errorbars, errorcolor;
+    const carr = [];
+    const swobj = {cmdswitches: "-j -r"};
+    // make up arg list, add required radial profile switches to opts
+    for(i=0; i<args.length; i++){
+	if( typeof args[i] === "object" ){
 	    // integrate our switches into passed opts
-	    cobj = $.extend(true, {}, arguments[i], swobj);
+	    cobj = $.extend(true, {}, args[i], swobj);
 	    carr.push(cobj);
 	    opts = cobj;
 	} else {
-	    carr.push(arguments[i]);
+	    carr.push(args[i]);
 	}
     }
     // if no opts supplied, add the switches manually
@@ -6733,7 +6745,7 @@ JS9.Image.prototype.radialProfile = function(args){
     // opts is optional
     opts = opts || {};
     // call regcnts routine
-    s = JS9.Image.prototype.countsInRegions.apply(this, carr);
+    s = this.countsInRegions(...carr);
     // need a json string in return
     try{ obj = JSON.parse(s); }
     catch(e){ JS9.error("can't parse regcnts JSON", e); }
@@ -6772,10 +6784,9 @@ JS9.Image.prototype.radialProfile = function(args){
 // plot of a 3D cube a region
 // eslint-disable-next-line no-unused-vars
 JS9.Image.prototype.plot3d = function(src, bkg, opts){
-    var i, j, s, arr;
-    var jobj, el, pobj, color, mode, divid, xlabel, ylabel;
-    var index3, xoff, xdelt;
-    var counts=[];
+    let i, j, s, arr, jobj, el, pobj, color, mode, divid, xlabel, ylabel;
+    let index3, xoff, xdelt;
+    const counts=[];
     if( !this.raw.header || this.raw.header.NAXIS !== 3 ){
 	JS9.error("plot3d requires a data cube with 3 dimensions");
     }
@@ -6795,7 +6806,7 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
 	JS9.error("plot3d requires specification of cube's third index");
     }
     // but these regcnts command switches are not
-    opts.cmdswitches = sprintf("-j -c %s", opts.cube);
+    opts.cmdswitches = `-j -c ${opts.cube}`;
     // average or sum?
     mode =  opts.mode || "avg";
     // for avg: what sort of area (pixels or arcsec)?
@@ -6817,11 +6828,11 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
     s = this.countsInRegions(src, bkg, opts);
     // convert to json format
     try{ jobj = JSON.parse(s); }
-    catch(e){ JS9.error("can't parse regcnts results: " + s, e); }
+    catch(e){ JS9.error(`can't parse regcnts results: ${s}`, e); }
     // init plot object
-    s = this.raw.header["CTYPE"+String(index3)];
+    s = this.raw.header[`CTYPE${String(index3)}`];
     if( s ){
-	xlabel = sprintf("%s", s.toLowerCase());
+	xlabel = s.toLowerCase();
     } else {
 	xlabel = "slice";
     }
@@ -6832,15 +6843,15 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
 	    ylabel = "counts/arcsec**2";
 	}
     } else {
-	ylabel = sprintf("summed counts");
+	ylabel = "summed counts";
     }
     pobj = {color: sprintf("%s", color), label : sprintf("%s vs %s ", ylabel, xlabel), data: []};
     // offset for 3rd dimension
-    xoff = this.raw.header["CRVAL"+String(index3)]  || 0;
-    xdelt = this.raw.header["CDELT"+String(index3)] || 1;
+    xoff = this.raw.header[`CRVAL${String(index3)}`]  || 0;
+    xdelt = this.raw.header[`CDELT${String(index3)}`] || 1;
     // get bkgd-subtracted counts in each slice
     for(i=0; i<jobj.source.cubeSlices; i++){
-        s = "backgroundSubtractedResults" + String(i+1);
+        s = `backgroundSubtractedResults${String(i+1)}`;
 	counts[i] = 0;
 	for(j=0; j<jobj[s].length; j++){
 	    if( mode === "avg" ){
@@ -6855,7 +6866,7 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
     // which div?
     divid = opts.divid || JS9.globalOpts.analysisDiv;
     // display results
-    return this.displayAnalysis("plot", pobj, {divid: divid});
+    return this.displayAnalysis("plot", pobj, {divid});
 };
 
 // make (or select) a raw data layer
@@ -6873,14 +6884,15 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
 //   im.rawDataLayer(id, "remove") -- remove raw data later with specified id
 // or:
 //   im.rawDataLayer() -- return name of th current layer
-JS9.Image.prototype.rawDataLayer = function(opts, func){
-    var i, j, id, mode, raw, oraw, nraw, rawid, cur, nlen, carr, im, key;
+JS9.Image.prototype.rawDataLayer = function(...args){
+    let i, j, id, mode, raw, oraw, nraw, rawid, cur, nlen, carr, im, key;
+    let [opts, func] = args;
     // no arg => return name of current raw
-    if( !arguments.length ){
+    if( !args.length ){
 	return this.raw.id;
     }
-    // opts is a string with second arg a function: generate opts object
-    // opts is a string, no function: switch to a different raw data layer
+    // opts is a string with second arg a func: generate opts object
+    // opts is a string, no func: switch to a different raw data layer
     // opts is a string + "remove": remove specified layer
     if( typeof opts === "string" ){
 	if( typeof func === "function" ){
@@ -6972,7 +6984,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse rawData opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse rawData opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -7023,7 +7035,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 	nraw = $.extend(true, {}, oraw);
 	// save current for next time
 	nraw.current0 = oraw;
-	// but ensure that data is a copy, not a pointer to the original!
+	// but ensure data is a copy, not a pointer to the original!
 	if( opts.bitpix ){
 	    // different bitpix from oraw specified?
 	    switch(opts.bitpix){
@@ -7079,7 +7091,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 	// where did this raw data come from?
 	nraw.from = opts.from || nraw.from || "func";
     }
-    // call the function to fill in the nraw data
+    // call the func to fill in the nraw data
     if( func.call(this, oraw, nraw, opts) ){
 	// replace existing nraw with new version
 	if( cur >= 0 ){
@@ -7106,7 +7118,7 @@ JS9.Image.prototype.rawDataLayer = function(opts, func){
 // perform a gaussian blur on the raw data
 // creates a new raw data layer ("gaussBlur")
 JS9.Image.prototype.gaussBlurData = function(sigma){
-    var opts = {};
+    let opts = {};
     if( sigma === undefined ){
 	JS9.error("missing sigma value for gaussBlurData");
     }
@@ -7115,7 +7127,7 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse gaussBlur opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse gaussBlur opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -7134,11 +7146,10 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     // pass the options
     opts.sigma = sigma;
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("gaussBlurData", Array.prototype.slice.call(arguments),
-		     opts.rawid);
+    this.xeqStashSave("gaussBlurData", [sigma], opts.rawid);
     // call routine to generate (or modify) the new layer
-    this.rawDataLayer(opts, function (oraw, nraw){
-	var tdata;
+    this.rawDataLayer(opts, (oraw, nraw) => {
+	let tdata;
 	// nraw contains a floating point copy of oraw
 	// make a temporary copy of nraw data for calculations
 	switch(nraw.bitpix){
@@ -7149,7 +7160,7 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
 	    tdata = new Float64Array(nraw.data);
 	    break;
 	default:
-	    JS9.error("invalid temp bitpix for gaussBlur: " + nraw.bitpix);
+	    JS9.error(`invalid temp bitpix for gaussBlur: ${nraw.bitpix}`);
 	    break;
 	}
 	// the heart of the matter!
@@ -7162,16 +7173,17 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
 
 // perform arithmetic operations on the raw data
 // creates a new raw data layer ("imarith")
-JS9.Image.prototype.imarithData = function(op, arg1, opts){
-    var im;
+JS9.Image.prototype.imarithData = function(...args){
+    let im;
+    let [op, arg1, opts] = args;
     // no args means return the available ops
-    if( !arguments.length ){
+    if( !args.length ){
 	return ["add", "sub", "mul", "div", "min", "max", "reset"];
     }
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse imarith opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse imarith opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -7186,8 +7198,7 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 	JS9.error("missing arg(s) for image arithmetic");
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("imarithData", Array.prototype.slice.call(arguments),
-		     opts.rawid);
+    this.xeqStashSave("imarithData", args, opts.rawid);
     // operation: add, sub, mul, div ...
     switch(op){
     case "add":
@@ -7199,7 +7210,7 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 	opts.op = op;
 	break;
     default:
-	JS9.error("invalid operator for image arithmetic: " + op);
+	JS9.error(`invalid operator for image arithmetic: ${op}`);
 	break;
     }
     // arg1: can be an image object or a numeric value
@@ -7217,7 +7228,7 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 	// lookup the image by name
 	im = JS9.lookupImage(arg1);
 	if( !im ){
-	    JS9.error("imarith arg1 must be an image or a constant: "+arg1);
+	    JS9.error(`imarith arg1 must be an image or a constant: ${arg1}`);
 	}
 	opts.argval = im;
 	opts.argtype = "image";
@@ -7255,8 +7266,8 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
     // use current
     opts.oraw = "current";
     // call routine to generate (or modify) the new layer
-    this.rawDataLayer(opts, function (oraw, nraw, opts){
-	var i, val;
+    this.rawDataLayer(opts, (oraw, nraw, opts) => {
+	let i, val;
 	switch(opts.argtype){
 	case "image":
 	    val = opts.argval.raw.data;
@@ -7296,7 +7307,7 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 		}
 		break;
 	    default:
-		JS9.error("unknown operation for imarith: " + opts.op);
+		JS9.error(`unknown operation for imarith: ${opts.op}`);
 		break;
 	    }
 	    break;
@@ -7338,12 +7349,12 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 		}
 		break;
 	    default:
-		JS9.error("unknown op for imarith: " + opts.op);
+		JS9.error(`unknown op for imarith: ${opts.op}`);
 		break;
 	    }
 	    break;
 	default:
-	    JS9.error("unknown argument type for imarith: " + opts.argtype);
+	    JS9.error(`unknown arg type for imarith: ${opts.argtype}`);
 	    break;
 	}
 	return true;
@@ -7354,14 +7365,15 @@ JS9.Image.prototype.imarithData = function(op, arg1, opts){
 
 // linear shift of raw data (cheap alignment for CFA MicroObservatory)
 // creates a new raw data layer ("shift")
-JS9.Image.prototype.shiftData = function(x, y, opts){
+JS9.Image.prototype.shiftData = function(...args){
+    let [x, y, opts] = args;
     if( x === undefined || y === undefined ){
 	JS9.error("missing translation value(s) for shiftData");
     }
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse shift opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse shift opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -7369,11 +7381,10 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
     opts.x = x;
     opts.y = y;
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("shiftData", Array.prototype.slice.call(arguments),
-		      opts.rawid);
-    this.rawDataLayer(opts, function (oraw, nraw, opts){
-	var i, oi, oj, ni, nj, nlen, oU8, nU8, ooff, noff, blankval;
-	var bpp = oraw.data.BYTES_PER_ELEMENT;
+    this.xeqStashSave("shiftData", args, opts.rawid);
+    this.rawDataLayer(opts, (oraw, nraw, opts) => {
+	let i, oi, oj, ni, nj, nlen, oU8, nU8, ooff, noff, blankval;
+	const bpp = oraw.data.BYTES_PER_ELEMENT;
 	if( nraw.xoff === undefined ){
 	    nraw.xoff = 0;
 	}
@@ -7431,10 +7442,11 @@ JS9.Image.prototype.shiftData = function(x, y, opts){
 // rotate image by changing WCS info and calling reprojectData
 // creates a new raw data layer ("rotate")
 // angle is in degrees (since CROTA2 is in degrees)
-JS9.Image.prototype.rotateData = function(angle, opts){
-    var raw, oheader, nheader;
-    var ocdelt1=0, ocdelt2=0;
-    var ncrot, nrad, sinrot, cosrot;
+JS9.Image.prototype.rotateData = function(...args){
+    let raw, oheader, nheader, ncrot, nrad, sinrot, cosrot;
+    let ocdelt1 = 0.0;
+    let ocdelt2 = 0.0;
+    let [angle, opts] = args;
     // sanity checks
     if( !this.raws || !this.raws[0] ){
 	JS9.error("no raw data for reprojection");
@@ -7447,7 +7459,7 @@ JS9.Image.prototype.rotateData = function(angle, opts){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse rotate opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse rotate opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -7508,29 +7520,28 @@ JS9.Image.prototype.rotateData = function(angle, opts){
 	nheader.ptype = raw.wcsinfo.ptype;
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("rotateData", Array.prototype.slice.call(arguments),
-		     opts.rawid);
+    this.xeqStashSave("rotateData", args, opts.rawid);
     // rotate by reprojecting the data
     return this.reprojectData(nheader, opts);
 };
 
 // low-level reprojection: creates reprojected file, but does not display it
 // instead, it returns the name of the reprojected FITS file (emscripten vfile)
-// this is the basis for reprojectData, but can be used in other routines that
+// this is the basis for reprojectData, but can be used in other routines which
 // require a reprojection
 JS9.Image.prototype.reproject = function(wcsim, opts){
-    var twcs = {};
-    var rcomplete = false;
-    var awvfile, awvfile2, wvfile, owvfile;
-    var wcsheader, wcsstr, oheader, nheader, theader;
-    var arr, ivfile, ovfile, rstr, key;
-    var tab, tx1, tx2, ty1, ty2, s;
-    var n, raw, avfile, earr, cmdswitches;
-    var i, tid, traw, maxx, maxy, maxpix;
-    var wcsexp = /SIMPLE|BITPIX|NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
-    var ptypeexp = /TAN|SIN|ZEA|STG|ARC/;
-    var addwcsinfo = function(header, wcsinfo){
-	var theader;
+    let awvfile, awvfile2, wvfile, owvfile;
+    let wcsheader, wcsstr, oheader, nheader, theader;
+    let arr, ivfile, ovfile, rstr, key;
+    let tab, tx1, tx2, ty1, ty2, s;
+    let n, raw, avfile, earr, cmdswitches;
+    let i, tid, traw, maxx, maxy, maxpix;
+    let rcomplete = false;
+    const twcs = {};
+    const wcsexp = /SIMPLE|BITPIX|NAXIS|NAXIS[1-4]|AMDX|AMDY|CD[1-2]_[1-2]|CDELT[1-4]|CNPIX[1-4]|CO1_[1-9][0-9]|CO2_[1-9][0-9]|CROTA[1-4]|CRPIX[1-4]|CRVAL[1-4]|CTYPE[1-4]|CUNIT[1-4]|DATE|DATE_OBS|DC-FLAG|DEC|DETSEC|DETSIZE|EPOCH|EQUINOX|EQUINOX[a-z]|IMAGEH|IMAGEW|LATPOLE|LONGPOLE|MJD-OBS|PC00[1-4]00[1-4]|PC[1-4]_[1-4]|PIXSCALE|PIXSCAL[1-2]|PLTDECH|PLTDECM|PLTDECS|PLTDECSN|PLTRAH|PLTRAM|PLTRAS|PPO|PROJP[1-9]|PROJR0|PV[1-3]_[1-3]|PV[1-4]_[1-4]|RA|RADECSYS|SECPIX|SECPIX|SECPIX[1-2]|UT|UTMID|VELOCITY|VSOURCE|WCSAXES|WCSDEP|WCSDIM|WCSNAME|XPIXSIZE|YPIXSIZE|ZSOURCE|LTM|LTV/;
+    const ptypeexp = /TAN|SIN|ZEA|STG|ARC/;
+    const addwcsinfo = (header, wcsinfo) => {
+	let theader;
 	if( !wcsinfo ){ return header; }
 	theader = $.extend(true, {}, header);
 	if( JS9.isNull(theader.CRVAL1) && !JS9.isNull(wcsinfo.crval1) ){
@@ -7606,7 +7617,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	// convert reprojection header to a string
 	wcsstr = JS9.raw2FITS(wcsheader, {addcr: true});
 	// create vfile text file containing reprojection WCS
-	wvfile = "wcs_" + JS9.uniqueID() + ".txt";
+	wvfile = `wcs_${JS9.uniqueID()}.txt`;
 	JS9.vfile(wvfile, wcsstr);
 	// reprojection limits (if reproj lims == 0, use image limits)
 	maxx = JS9.globalOpts.reproj.xdim || JS9.globalOpts.image.xdim;
@@ -7616,7 +7627,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	// keep within the limits of current memory constraints, or die
 	if((wcsheader.NAXIS1*wcsheader.NAXIS2*Math.abs(wcsheader.BITPIX))    > maxpix ||
 	   (raw.header.NAXIS1*raw.header.NAXIS2*Math.abs(raw.header.BITPIX)) > maxpix ){
-	    JS9.error("the max reproject size is " + maxx  + " * " + maxy + " * 4 bytes/pixel. You can use the Bin/Filter/Section plugin to extract a section, then save it as FITS and reproject the smaller image.");
+	    JS9.error(`the max reproject size is ${maxx} * ${maxy} * 4 bytes/pixel. You can use the Bin/Filter/Section plugin to extract a section, then save it as FITS and reproject the smaller image.`);
 	}
     } else {
 	wvfile = wcsim;
@@ -7627,9 +7638,9 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	// try to change input WCS to a sys usable by mProjectPP
 	if( !ptypeexp.test(raw.wcsinfo.ptype) ){
 	    theader = addwcsinfo(raw.header, raw.wcsinfo);
-	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
+	    owvfile = `owcs_${JS9.uniqueID()}.txt`;
 	    JS9.vfile(owvfile, JS9.raw2FITS(theader, {addcr: true}));
-	    awvfile = "awcs_" + JS9.uniqueID() + ".txt";
+	    awvfile = `awcs_${JS9.uniqueID()}.txt`;
 	    rstr = JS9.tanhdr(owvfile, awvfile, "");
 	    if( JS9.DEBUG > 1 ){
 		JS9.log("tanhdr (input): %s %s -> %s",
@@ -7639,16 +7650,16 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	    if( rstr.search(/\[struct stat="OK"/) >= 0 ){
 		// add command switch to use this alternate wcs
 		opts.cmdswitches = opts.cmdswitches || "";
-		opts.cmdswitches += (" -i " + awvfile);
+		opts.cmdswitches += ` -i ${awvfile}`;
 	    }
 	}
 	// try to change reproject WCS to a sys usable by mProjectPP
 	if( (wcsim.raw && !ptypeexp.test(wcsim.raw.wcsinfo.ptype)) ||
 	    (wcsim.ptype && !ptypeexp.test(wcsim.ptype))           ){
 	    theader = addwcsinfo(nheader, wcsim.raw.wcsinfo);
-	    owvfile = "owcs_" + JS9.uniqueID() + ".txt";
+	    owvfile = `owcs_${JS9.uniqueID()}.txt`;
 	    JS9.vfile(owvfile, JS9.raw2FITS(theader, {addcr: true}));
-	    awvfile2 = "awcs_" + JS9.uniqueID() + ".txt";
+	    awvfile2 = `awcs_${JS9.uniqueID()}.txt`;
 	    rstr = JS9.tanhdr(owvfile, awvfile2, "");
 	    if( JS9.DEBUG > 1 ){
 		JS9.log("tanhdr (reproj): %s %s -> %s",
@@ -7662,17 +7673,17 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	    }
 	}
     }
-    catch(ignore){}
+    catch(ignore){ /* empty */ }
     // get reference to existing raw data file (or create one)
     if( raw.hdu && raw.hdu.fits.vfile ){
 	// input file name
 	ivfile = raw.hdu.fits.vfile;
 	// add extension name or number
 	if( raw.hdu.fits.extname ){
-	    ivfile += sprintf("[%s]", raw.hdu.fits.extname);
+	    ivfile += `[${raw.hdu.fits.extname}]`;
 	} else if( raw.hdu.fits.extnum &&
 		   (raw.hdu.fits.extnum > 0) ){
-	    ivfile += sprintf("[%s]", raw.hdu.fits.extnum);
+	    ivfile += `[${raw.hdu.fits.extnum}]`;
 	}
     } else {
 	// input file name
@@ -7686,7 +7697,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	.replace(/\.png$/i, ".fits")
 	.replace(/\.fz$/i, "")
 	.replace(/\.gz$/i, "");
-    ovfile = "reproj_" + JS9.uniqueID() + "_" + s;
+    ovfile = `reproj_${JS9.uniqueID()}_${s}`;
     // remove previous vfile for this reprojection layer, if possible
     tid = opts.rawid || "reproject";
     for(i=0; i<this.raws.length; i++){
@@ -7709,7 +7720,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	    tx2 = Math.floor(tab.xcen + (tab.xdim/2));
 	    ty1 = Math.floor(tab.ycen - (tab.ydim/2) + 1);
 	    ty2 = Math.floor(tab.ycen + (tab.ydim/2));
-	    ivfile += sprintf("[bin X=%s:%s,Y=%s:%s]", tx1, tx2, ty1, ty2);
+	    ivfile += `[bin X=${tx1}:${tx2},Y=${ty1}:${ty2}]`;
 	}
     }
     // call the reproject routine
@@ -7717,12 +7728,12 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	// name of (unneeded) area file
 	n = ovfile.lastIndexOf(".");
 	if( n >= 0 ) {
-	    avfile = ovfile.substring(0, n) + "_area" + ovfile.substring(n);
+	    avfile = `${ovfile.substring(0, n)}_area${ovfile.substring(n)}`;
 	}
 	// optional command line args
 	cmdswitches = opts.cmdswitches || "";
 	// no area file, but add global switches for reproject processing
-	cmdswitches += " -a 0 " + JS9.globalOpts.reprojSwitches;
+	cmdswitches += ` -a 0 ${JS9.globalOpts.reprojSwitches}`;
 	// call reproject
 	rstr = JS9.reproject(ivfile, ovfile, wvfile, cmdswitches);
 	if( JS9.DEBUG > 1 ){
@@ -7744,7 +7755,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	    rcomplete = true;
 	    earr = rstr.match(/msg="(.*)"/);
 	    if( earr && earr[1] ){
-		JS9.error(earr[1] + " (from mProjectPP)");
+		JS9.error(`${earr[1]} (from mProjectPP)`);
 	    } else {
 		JS9.error(rstr);
 	    }
@@ -7772,10 +7783,9 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 
 // high-level routine to reproject image using WCS info
 // creates a new raw data layer ("reproject")
-JS9.Image.prototype.reprojectData = function(wcsim, opts){
-    var that = this;
-    var im, ovfile;
-    var i;
+JS9.Image.prototype.reprojectData = function(...args){
+    let i, im, ovfile;
+    let [wcsim, opts] = args;
     // sanity checks
     if( !wcsim || !JS9.reproject ){
 	return;
@@ -7796,7 +7806,7 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 	    // it was an image name, so change wcsim to the image handle
 	    wcsim = im;
 	} else {
-	    JS9.error("unknown WCS for reproject: " + wcsim);
+	    JS9.error(`unknown WCS for reproject: ${wcsim}`);
 	}
     }
     // don't reproject myself (useful in supermenu support, "all" reprojections)
@@ -7808,14 +7818,12 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse reproject opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse reproject opts: ${opts}`, e); }
     }
     // save this routine so it can be reconstituted in a restored session
     // (unless another xxxData routine is calling us)
     if( !opts.rawid ){
-	this.xeqStashSave("reprojectData",
-			  Array.prototype.slice.call(arguments),
-			  "reproject");
+	this.xeqStashSave("reprojectData", args, "reproject");
     }
     // save stash name
     if( !opts.stash ){
@@ -7823,13 +7831,14 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
     }
     // could take a while ...
     JS9.waiting(true, this.display);
+    // set status
+    this.setStatus("reprojectData", "processing");
     // ... start a timeout to allow the wait spinner to get started
-    window.setTimeout(function(){
-	var topts;
-	var reprojHandler;
-	var defaultReprojHandler = function(hdu){
+    window.setTimeout(() => {
+	let topts, reprojHandler;
+	const defaultReprojHandler = (hdu) => {
 	    // plugin callbacks
-	    that.xeqPlugins("image", "onreprojectdata");
+	    this.xeqPlugins("image", "onreprojectdata");
 	    topts = topts || {};
 	    topts.refreshRegions = true;
 	    // reset section, unless specified otherwise
@@ -7837,16 +7846,18 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 		topts.resetSection = true;
 	    }
 	    // refresh the image
-	    that.refreshImage(hdu, topts);
+	    this.refreshImage(hdu, topts);
+	    // set status
+	    this.setStatus("reprojectData", "complete");
 	    // might have to re-execute calls in the stash
-	    that.xeqStashCall(that.xeqstash, [opts.stash, "reprojectData"]);
+	    this.xeqStashCall(this.xeqstash, [opts.stash, "reprojectData"]);
 	};
 	// opts is optional
 	opts = opts || {};
 	// handler
 	reprojHandler = opts.reprojHandler || defaultReprojHandler;
 	// call the low-level reproject routine, returning reprojected file
-	ovfile = that.reproject(wcsim, opts);
+	ovfile = this.reproject(wcsim, opts);
 	if( ovfile ){
 	    // refresh image using the reprojected file ...
 	    topts = $.extend(true, {}, JS9.fits.options, opts);
@@ -7866,9 +7877,10 @@ JS9.Image.prototype.reprojectData = function(wcsim, opts){
 };
 
 // apply image processing filters to the current RGB image
-JS9.Image.prototype.filterRGBImage = function(filter){
-    var key, filters = [];
-    var argv = Array.prototype.slice.call(arguments);
+JS9.Image.prototype.filterRGBImage = function(...args){
+    let key;
+    let [filter] = args;
+    const filters = [];
     // no arg: return list of filters
     if( !filter ){
 	for( key in JS9.ImageFilters ){
@@ -7880,7 +7892,7 @@ JS9.Image.prototype.filterRGBImage = function(filter){
     }
     // sanity checks
     if( filter !== "reset" && !JS9.ImageFilters[filter] ){
-	JS9.error("JS9 image filter '" + filter + "' not available");
+	JS9.error(`JS9 image filter '${filter}' not available`);
     }
     // special case: reset to original RGB data, contrast/bias
     if( filter === "reset" ){
@@ -7888,14 +7900,14 @@ JS9.Image.prototype.filterRGBImage = function(filter){
 	return this;
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("filterRGBImage", Array.prototype.slice.call(arguments));
-    // remove filter name argument
-    argv.shift();
-    // add display context and RGB img argument
-    argv.unshift(this.display.context, this.rgb.img);
+    this.xeqStashSave("filterRGBImage", args);
+    // remove filter name arg
+    args.shift();
+    // add display context and RGB img arg
+    args.unshift(this.display.context, this.rgb.img);
     // try to run the filter to generate a new RGB image
-    try{ JS9.ImageFilters[filter].apply(null, argv); }
-    catch(e){ JS9.error("JS9 image filter '" + filter + "' failed", e); }
+    try{ JS9.ImageFilters[filter](...args); }
+    catch(e){ JS9.error(`JS9 image filter '${filter}' failed`, e); }
     // display new RGB image
     this.displayImage("display");
     // extended plugins
@@ -7910,13 +7922,13 @@ JS9.Image.prototype.filterRGBImage = function(filter){
 // maybe this should be refactored using more useful routines ...
 // ... and should (some of) this code be in the Fabric section??
 JS9.Image.prototype.moveToDisplay = function(dname){
-    var i, im, key, layer, dlayer;
-    var got = 0;
-    var odisplay = this.display;
-    var ndisplay = JS9.lookupDisplay(dname);
+    let i, im, key, layer, dlayer;
+    let got = 0;
+    const odisplay = this.display;
+    const ndisplay = JS9.lookupDisplay(dname);
     // sanity check
     if( !dname || !ndisplay ){
-	JS9.error("could not find display: " + dname);
+	JS9.error(`could not find display: ${dname}`);
 	return null;
     }
     // clear old display first
@@ -7988,7 +8000,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 	    im.displayImage("all");
 	    // ensure proper positions for graphics
 	    im.refreshLayers();
-	    // flag that we found an image
+	    // flag we found an image
 	    got++;
 	    break;
 	}
@@ -8008,10 +8020,10 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 // save session to a json file
 // NB: save is an image method, load is a display method
 JS9.Image.prototype.saveSession = function(file, opts){
-    var i, obj, str, blob, layer, dlayer, tobj, key, im, lpos, ipos;
-    var saveim = function(){
+    let i, obj, str, blob, layer, dlayer, tobj, key, im, lpos, ipos;
+    const saveim = () => {
 	// object holding session keys
-	var obj = {};
+	const obj = {};
 	// filename
 	obj.file = this.file;
 	// display size info
@@ -8066,7 +8078,7 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	}
 	// save blend state
 	obj.blend = this.blend;
-	// save routines that must be executed when restoring session
+	// save routines which must be executed when restoring session
 	obj.xeqstash = this.xeqstash;
 	// save wcsim reference, if necessary
 	if( this.wcsim && this.wcsim.id ){
@@ -8081,7 +8093,7 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	return obj;
     };
     if( !window.hasOwnProperty("saveAs") ){
-	JS9.error("no saveAs function available to save session");
+	JS9.error("no saveAs() available to save session");
     }
     // filename for saving
     file = file || "js9.ses";
@@ -8092,7 +8104,7 @@ JS9.Image.prototype.saveSession = function(file, opts){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse session opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse session opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -8108,18 +8120,18 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	for(i=0; i<JS9.images.length; i++){
 	    im = JS9.images[i];
 	    if( im.display.id === this.display.id ){
-		obj.images.push(saveim.call(im));
+		obj.images.push(saveim());
 	    }
 	}
     } else {
 	// save current image
-	obj.images.push(saveim.call(this));
+	obj.images.push(saveim());
     }
     // save display parameters
     obj.display = {blendMode: this.display.blendMode};
     // save global params
     obj.globals = $.extend(true, {}, JS9.globalOpts);
-    // but delete properties that cause circular errors
+    // but delete properties which cause circular errors
     delete obj.globals.rgb;
     // save user-defined colormaps
     obj.cmaps = [];
@@ -8140,10 +8152,10 @@ JS9.Image.prototype.saveSession = function(file, opts){
     return file;
 };
 
-// stash a routine name and arguments
+// stash a routine name and args
 // the routine will be re-executed when the session is loaded
 JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
-    var i, stash;
+    let i, stash;
     // default context is image
     context = context || "image";
     // stash routine name and args
@@ -8167,14 +8179,14 @@ JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
 	}
     }
     // add new func to stash
-    this.xeqstash[func] = {args: args, id: id, context: context};
+    this.xeqstash[func] = {args, id, context};
     // allow chaining
     return this;
 };
 
-// call a stashed routine name and arguments
+// call a stashed routine name and args
 JS9.Image.prototype.xeqStashCall = function(xeqstash, exclArr){
-    var key, xeq;
+    let key, xeq;
     xeqstash = xeqstash || this.xeqstash;
     for( key in xeqstash ){
 	if( xeqstash.hasOwnProperty(key) ){
@@ -8186,18 +8198,18 @@ JS9.Image.prototype.xeqStashCall = function(xeqstash, exclArr){
 	    try{
 		switch(xeq.context){
 		case "image":
-		    this[key].apply(this, xeq.args);
+		    this[key](...xeq.args);
 		    break;
 		case "display":
-		    this.display[key].apply(this.display, xeq.args);
+		    this.display[key](...xeq.args);
 		    break;
 		default:
-		    this[key].apply(this, xeq.args);
+		    this[key](...xeq.args);
 		    break;
 		}
 	    }
 	    catch(e){
-		JS9.error("error executing stash: "+ key, e, false);
+		JS9.error(`error executing stash: ${key}`, e, false);
 	    }
 	}
     }
@@ -8205,9 +8217,9 @@ JS9.Image.prototype.xeqStashCall = function(xeqstash, exclArr){
 
 // execute plugins of various types (using type-specific values)
 JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
-    var pname, pinst, popts, parr, evt;
-    var xtrig = function(name, obj){
-        var s = "JS9:" + name;
+    let pname, pinst, popts, parr, evt;
+    const xtrig = (name, obj) => {
+        const s = `JS9:${name}`;
         $(document).trigger(s, obj);
     };
     // sanity checks
@@ -8255,7 +8267,7 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
 		case "mouse":
 		    // used for: onmouse[down,move,over,out]
 		    // xval: evt
-		    if( !this.clickInRegion || popts[xname+"_inRegion"] ){
+		    if( !this.clickInRegion || popts[`${xname}_inRegion`] ){
 			evt = xval.originalEvent || xval;
 			try{
 			    popts[xname].call(pinst, this, this.ipos, evt);
@@ -8275,24 +8287,23 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
 
 // upload virtual file to proxy server
 JS9.Image.prototype.uploadFITSFile = function(){
-    var vfile, vdata;
-    var that = this;
-    var uploadCB = function(r){
-	delete that.tmp.upload;
-	window.setTimeout(function(){ JS9.progress(false); }, 1000);
+    let vfile, vdata;
+    const uploadCB = (r) => {
+	delete this.tmp.upload;
+	window.setTimeout(() => { JS9.progress(false); }, 1000);
 	if( r.stderr ){
 	    JS9.error(r.stderr);
 	} else if( r.stdout ){
 	    // set FITS filename and proxy filename
-	    that.fitsFile = r.stdout.trim();
-	    that.proxyFile = that.fitsFile;
+	    this.fitsFile = r.stdout.trim();
+	    this.proxyFile = this.fitsFile;
 	    if( JS9.globalOpts.prependJS9Dir         &&
-		!that.fitsFile.match(/^\${JS9_DIR}/) &&
-		that.fitsFile.charAt(0) !== "/"      ){
-		that.fitsFile = "${JS9_DIR}/" + that.fitsFile;
+		!this.fitsFile.match(/^\${JS9_DIR}/) &&
+		this.fitsFile.charAt(0) !== "/"      ){
+		this.fitsFile = `\${JS9_DIR}/${this.fitsFile}`;
 	    }
 	    // re-query for analysis
-	    that.queryHelper("all");
+	    this.queryHelper("all");
 	}
     };
     // sanity check
@@ -8314,15 +8325,15 @@ JS9.Image.prototype.uploadFITSFile = function(){
     // this is the file to upload
     vfile = this.raw.hdu.fits.vfile;
     // ask the remote server if we can upload
-    JS9.helper.send("quotacheck", null, function(robj){
+    JS9.helper.send("quotacheck", null, (robj) => {
 	// check quota, only errors matter
 	if( robj.stderr || robj.errcode ){
-	    JS9.error(robj.stderr || "from quotacheck: " + robj.errcode);
+	    JS9.error(robj.stderr || `from quotacheck: ${robj.errcode}`);
 	}
 	vdata = JS9.vread(vfile, "binary");
-	JS9.worker.socketio(function(){
-	    that.tmp.upload = true;
-	    JS9.progress(true, that.display);
+	JS9.worker.socketio(() => {
+	    this.tmp.upload = true;
+	    JS9.progress(true, this.display);
 	    JS9.worker.postMessage("uploadFITS",
 				   [vfile, vdata], uploadCB, [vdata.buffer]);
 	});
@@ -8332,15 +8343,14 @@ JS9.Image.prototype.uploadFITSFile = function(){
 
 // remove proxy file from a remote server
 JS9.Image.prototype.removeProxyFile = function(s){
-    var t, reset, file, regexp;
-    var that = this;
-    var func = function(r){
+    let t, reset, file, regexp;
+    const func = (r) => {
 	if( reset ){
 	    if( r && r.stdout.trim() === "OK" ){
-		that.proxyFile = null;
-		that.fitsFile = null;
-		that.analysisPackages = null;
-		that.queryHelper("all");
+		this.proxyFile = null;
+		this.fitsFile = null;
+		this.analysisPackages = null;
+		this.queryHelper("all");
 	    }
 	}
     };
@@ -8355,7 +8365,7 @@ JS9.Image.prototype.removeProxyFile = function(s){
 	}
 	// remove possible install dir prefix and then ...
 	// check attempt to break out of the working dir using ".."
-	regexp = new RegExp("^"+JS9.INSTALLDIR);
+	regexp = new RegExp(`^${JS9.INSTALLDIR}`);
 	t = s.replace(regexp, "");
 	if( t.match(/\.\./) ){
 	    return;
@@ -8373,30 +8383,29 @@ JS9.Image.prototype.removeProxyFile = function(s){
 	return;
     }
     // ask to remove proxy file, and process result
-    JS9.Send('removeproxy', {'cmd': 'js9Xeq removeproxy ' + file}, func);
+    JS9.Send('removeproxy', {'cmd': `js9Xeq removeproxy ${file}`}, func);
 };
 
 // convert table to a shape array for the given image
 JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
-    var i, j, k, shape, pos, siz, reg, data, header, delims, sizefunc;
-    var xcol, ycol, ra, dec;
-    var owcssys, wcssys, tcol, tregexp;
-    var xcols = JS9.globalOpts.catalogs.ras;
-    var ycols = JS9.globalOpts.catalogs.decs;
-    var regs = [];
-    var wcol = 1;
-    var hcol = 1;
-    var global = JS9.globalOpts.catalogs;
-    var pos_func = function(im, ra, dec) {
-	var arr;
-	arr = JS9.wcs2pix(im.raw.wcs, ra, dec).trim().split(/ +/);
+    let i, j, k, shape, pos, siz, reg, data, header, delims, sizefunc;
+    let xcol, ycol, ra, dec, owcssys, wcssys, tcol, tregexp;
+    const global = JS9.globalOpts.catalogs;
+    const xcols = JS9.globalOpts.catalogs.ras;
+    const ycols = JS9.globalOpts.catalogs.decs;
+    const regs = [];
+    const wcol = 1;
+    const hcol = 1;
+    const getpos = (ra, dec) => {
+	let arr;
+	arr = JS9.wcs2pix(this.raw.wcs, ra, dec).trim().split(/ +/);
 	if( arr && arr.length ){
 	    return {x: parseFloat(arr[0]), y: parseFloat(arr[1])};
 	}
 	return null;
     };
-    var getcol = function(starbase, header, cols, defcol){
-	var i, j, col;
+    const getcol = (starbase, header, cols, defcol) => {
+	let i, j, col;
 	if( defcol !== undefined ){
 	    col = defcol;
 	} else {
@@ -8416,7 +8425,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 	    // no exact match, look for an approx match
 	    if( col < 0 ){
 		tcol = cols[0];
-		tregexp = new RegExp("^"+tcol, "i");
+		tregexp = new RegExp(`^${tcol}`, "i");
 		for(i=0; i<header.length; i++){
 		    if( header[i].match(tregexp) ){
 			col = starbase[header[i]];
@@ -8427,7 +8436,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 	    // no approx match, look for a less restrictive approx match
 	    if( col < 0 ){
 		tcol = cols[0];
-		tregexp = new RegExp(".*"+tcol+".*", "i");
+		tregexp = new RegExp(`.*${tcol}.*`, "i");
 		for(i=0; i<header.length; i++){
 		    if( header[i].match(tregexp) ){
 			col = starbase[header[i]];
@@ -8460,27 +8469,27 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     switch(shape){
     case "box":
 	// eslint-disable-next-line no-unused-vars
-	sizefunc = function(row, width, height) {
+	sizefunc = (row, width, height) => {
 	    return { width: opts.width   || global.width  || 7,
 		     height: opts.height || global.height || 7 };
 	};
 	break;
     case "circle":
 	// eslint-disable-next-line no-unused-vars
-	sizefunc = function(row, width, height) {
+	sizefunc = (row, width, height) => {
 	    return { radius: opts.radius || global.radius || 3.5};
 	};
 	break;
     case "ellipse":
 	// eslint-disable-next-line no-unused-vars
-	sizefunc = function(row, width, height) {
+	sizefunc = (row, width, height) => {
 	    return { r1: opts.r1  || global.r1  || 3.5,
 		     r2: opts.r2  || global.r2  || 3.5 };
 	};
 	break;
     default:
 	// eslint-disable-next-line no-unused-vars
-	sizefunc = function(row, width, height) {
+	sizefunc = (row, width, height) => {
 	    return { width: opts.width || 7, height: opts.height || 7 };
 	};
 	break;
@@ -8503,11 +8512,11 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 	ra = data[i][xcol];
 	dec = data[i][ycol];
 	// various ways we might specify hms
-	if( (delims[xcol]!== "\0")  && (":h ".indexOf(delims[xcol]) >= 0) &&
-	    (wcssys !== "galactic") && (wcssys !== "ecliptic") ){
+	if( (delims[xcol] !== "\0")  && (":h ".includes(delims[xcol])) &&
+	    (wcssys !== "galactic")  && (wcssys !== "ecliptic")        ){
 	    ra *= 15.0;
 	}
-	pos = pos_func(this, ra, dec);
+	pos = getpos(ra, dec);
 	if( pos ){
 	    siz = sizefunc.call(this, data[i][wcol], data[i][hcol]);
 	    reg = {id: i.toString(), shape: shape,
@@ -8516,7 +8525,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 		   radius: siz.radius,
 		   r1: siz.r1, r2: siz.r2,
 		   angle: 0,
-		   data: {ra: ra, dec: dec}};
+		   data: {ra, dec}};
 	    // save catalog columns for this row
 	    if( (opts.save !== false) &&
 		(JS9.globalOpts.catalogs.save !== false) ){
@@ -8538,16 +8547,17 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 };
 
 // read a tab-delimited, #-commented table (starbase table), create a catalog
-JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
-    var shapes, topts, starbase;
-    var lopts = $.extend(true, {}, JS9.Catalogs.opts);
-    var global = JS9.globalOpts.catalogs;
-    var defconv = function(s){
-	var delims = " \t-.:hdmsr'\"";
-	var obj = {};
+JS9.Image.prototype.loadCatalog = function(...args){
+    let [layer, catalog, opts] = args;
+    let shapes, topts, starbase;
+    const lopts = $.extend(true, {}, JS9.Catalogs.opts);
+    const global = JS9.globalOpts.catalogs;
+    const defconv = (s) => {
+	const delims = " \t-.:hdmsr'\"";
+	const obj = {};
 	obj.val = JS9.saostrtod(s);
 	obj.delim = String.fromCharCode(JS9.saodtype());
-	if( (obj.delim !== "\0") && (delims.indexOf(obj.delim) >= 0) ){
+	if( (obj.delim !== "\0") && (delims.includes(obj.delim)) ){
 	    // valid delim means we converted to a float
 	    return obj;
 	} else if( JS9.isNumber(s) ){
@@ -8559,12 +8569,12 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
 	return obj;
     };
     // special case: 1 non-string arg is the catalog, not the layer
-    if( arguments.length === 1 && typeof layer !== "string" ){
+    if( args.length === 1 && typeof layer !== "string" ){
 	catalog = layer;
 	layer = null;
     }
     // special case: 2 non-string args: file and obj, not the layer
-    if( arguments.length === 2 && typeof layer !== "string" ){
+    if( args.length === 2 && typeof layer !== "string" ){
 	opts = catalog;
 	catalog = layer;
 	layer = null;
@@ -8579,7 +8589,7 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse catalog opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse catalog opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -8604,7 +8614,7 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
     shapes = this.starbaseToShapes(starbase, opts);
     if( shapes.length ){
 	// layer name
-	layer = layer || "catalog_" + JS9.uniqueID() ;
+	layer = layer || `catalog_${JS9.uniqueID()}` ;
 	// create a new layer, if necessary
 	this.display.newShapeLayer(layer, lopts);
 	// delete any old shapes
@@ -8623,32 +8633,32 @@ JS9.Image.prototype.loadCatalog = function(layer, catalog, opts){
 
 // save catalog as a file
 JS9.Image.prototype.saveCatalog = function(fname, which){
-    var layer, cat, blob;
+    let layer, cat, blob;
     layer = which || this.activeShapeLayer();
     if( !this.layers[layer] || !this.layers[layer].catalog ){
 	if( layer && layer !== "undefined" ){
-	    JS9.error("no catalog available: " + layer);
+	    JS9.error(`no catalog available: ${layer}`);
 	} else {
 	    JS9.error("no active catalog available");
 	}
     }
     cat = this.layers[layer].catalog;
     blob = new Blob([cat], {type: "text/plain;charset=utf-8"});
-    fname = fname || layer + ".cat";
+    fname = fname || `${layer}.cat`;
     if( !fname.match(/\.cat$/) ){
 	fname += ".cat";
     }
     if( window.hasOwnProperty("saveAs") ){
 	saveAs(blob, fname);
     } else {
-	JS9.error("no saveAs function available to save catalog");
+	JS9.error("no saveAs() available to save catalog");
     }
     return fname;
 };
 
 // convert ra, dec from one wcs to another
 JS9.Image.prototype.wcs2wcs = function(from, to, ra, dec){
-    var owcssys, ounits, nwcs, arr, x, y, s, v0;
+    let owcssys, ounits, nwcs, arr, x, y, s, v0;
     // save current wcs and units
     owcssys = this.getWCSSys();
     ounits = this.getWCSUnits();
@@ -8673,7 +8683,7 @@ JS9.Image.prototype.wcs2wcs = function(from, to, ra, dec){
     // make sure change was successful
     if( from !== "native" ){
 	if( nwcs !== from ){
-	    JS9.error("unknown or invalid wcs: " + from);
+	    JS9.error(`unknown or invalid wcs: ${from}`);
 	}
     }
     // convert input ra, dec into image pixels in this wcs
@@ -8697,8 +8707,8 @@ JS9.Image.prototype.wcs2wcs = function(from, to, ra, dec){
 // convert wcs, physical or image image length to image length,
 // using current wcs and string delimiters to determine what input type
 JS9.Image.prototype.wcs2imlen = function(s){
-    var v, wcsinfo;
-    var dpp = 1;
+    let v, wcsinfo;
+    let dpp = 1;
     // sanity check
     if( !s ){
 	return;
@@ -8734,15 +8744,16 @@ JS9.Image.prototype.wcs2imlen = function(s){
 // JS9 Colormap support
 // ---------------------------------------------------------------------
 
-JS9.Colormap = function(name, a1, a2, a3){
-    var i, got;
+JS9.Colormap = function(...args){
+    let [name, a1, a2, a3] = args;
+    let i, got;
     // sanity check
     if( !name ){
 	return;
     }
     // there are two types of colormap, based on number of args
     this.name = name;
-    switch(arguments.length){
+    switch(args.length){
     case 2:
 	this.type = "lut";
 	this.colors = a1;
@@ -8778,12 +8789,10 @@ JS9.Colormap = function(name, a1, a2, a3){
 };
 
 JS9.Colormap.prototype.mkColorCell = function(ii){
-    var m;
-    var count = JS9.COLORSIZE;
-    var umax = 255;
-    var rgb = [0, 0, 0];
-    var x, i, j, val, vertex, len;
-    var size, index;
+    let m, x, i, j, val, vertex, len, size, index;
+    const count = JS9.COLORSIZE;
+    const umax = 255;
+    const rgb = [0, 0, 0];
     switch(this.type){
     // from: tksao1.0/colormap/sao.C
     case "sao":
@@ -8850,14 +8859,13 @@ JS9.Colormap.prototype.mkColorCell = function(ii){
 // ---------------------------------------------------------------------
 
 JS9.Display = function(el){
-    var that = this;
     // pass jQuery element, DOM element, or id
     if( el instanceof jQuery ){
 	this.divjq = el;
     } else if( typeof el === "object" ){
 	this.divjq = $(el);
     } else {
-	this.divjq = $("#"+el);
+	this.divjq = $(`#${el}`);
     }
     // make sure div has some id
     if( !this.divjq.attr("id") ){
@@ -8890,7 +8898,7 @@ JS9.Display = function(el){
     // jquery version for event handling and DOM manipulation
     this.canvasjq = $(this.canvas)
 	.addClass("JS9Image")
-	.attr("id", this.id+"Image")
+	.attr("id", `${this.id}Image`)
 	.attr("width", this.width)
 	.attr("height", this.height)
 	.css("z-index", JS9.ZINDEX);
@@ -8929,14 +8937,14 @@ JS9.Display = function(el){
 		.css("width",  this.width + JS9.RESIZEFUDGE)
 		.css("height", this.height + JS9.RESIZEFUDGE);
 	}
-	this.resizeSensor = new ResizeSensor(this.divjq, function(){
-	    var nwidth = that.divjq.width();
-	    var nheight = that.divjq.height();
+	this.resizeSensor = new ResizeSensor(this.divjq, () => {
+	    let nwidth = this.divjq.width();
+	    let nheight = this.divjq.height();
 	    if( JS9.bugs.webkit_resize ){
 		nwidth  -= JS9.RESIZEFUDGE;
 		nheight -= JS9.RESIZEFUDGE;
 	    }
-	    that.resize(nwidth, nheight);
+	    this.resize(nwidth, nheight);
 	});
     }
     // drawing context
@@ -8949,7 +8957,7 @@ JS9.Display = function(el){
     }
     // add the display tooltip
     this.tooltip = $("<div>")
-	.attr("id", "tooltip_" + this.id)
+	.attr("id", `tooltip_${this.id}`)
 	.addClass("JS9Tooltip")
 	.appendTo(this.divjq);
     // no image loaded into this canvas
@@ -8968,51 +8976,51 @@ JS9.Display = function(el){
     // display-based scroll-based zoom initially from global
     this.mousetouchZoom = JS9.globalOpts.mousetouchZoom;
     // add event handlers
-    this.divjq.on("mouseenter", this, function(evt){
+    this.divjq.on("mouseenter", this, (evt) => {
 	return JS9.mouseEnterCB(evt);
     });
-    this.divjq.on("mouseover", this, function(evt){
+    this.divjq.on("mouseover", this, (evt) => {
 	return JS9.mouseOverCB(evt);
     });
-    this.divjq.on("mousedown touchstart", this, function(evt){
+    this.divjq.on("mousedown touchstart", this, (evt) => {
 	return JS9.mouseDownCB(evt);
     });
-    this.divjq.on("mousemove touchmove", this, function(evt){
+    this.divjq.on("mousemove touchmove", this, (evt) => {
 	return JS9.mouseMoveCB(evt);
     });
-    this.divjq.on("mouseup touchend", this, function(evt){
+    this.divjq.on("mouseup touchend", this, (evt) => {
 	return JS9.mouseUpCB(evt);
     });
-    this.divjq.on("mouseout", this, function(evt){
+    this.divjq.on("mouseout", this, (evt) => {
 	return JS9.mouseOutCB(evt);
     });
-    this.divjq.on("keypress", this, function(evt){
+    this.divjq.on("keypress", this, (evt) => {
 	return JS9.keyPressCB(evt);
     });
-    this.divjq.on("keydown", this, function(evt){
+    this.divjq.on("keydown", this, (evt) => {
 	return JS9.keyDownCB(evt);
     });
-    this.divjq.on("keyup", this, function(evt){
+    this.divjq.on("keyup", this, (evt) => {
 	return JS9.keyUpCB(evt);
     });
-    this.divjq.on("wheel", this, function(evt){
+    this.divjq.on("wheel", this, (evt) => {
 	return JS9.wheelCB(evt);
     });
     // set up drag and drop, if available
-    this.divjq.on("dragenter", this, function(evt){
+    this.divjq.on("dragenter", this, (evt) => {
 	return JS9.dragenterCB(this.id, evt);
     });
-    this.divjq.on("dragover", this, function(evt){
+    this.divjq.on("dragover", this, (evt) => {
 	return JS9.dragoverCB(this.id, evt);
     });
-    this.divjq.on("dragexit", this, function(evt){
+    this.divjq.on("dragexit", this, (evt) => {
 	return JS9.dragexitCB(this.id, evt);
     });
-    this.divjq.on("drop", this, function(evt){
+    this.divjq.on("drop", this, (evt) => {
 	return JS9.dragdropCB(this.id, evt);
     });
     // no context menus on the display
-    this.divjq.on("contextmenu", this, function(){
+    this.divjq.on("contextmenu", this, () => {
 	return false;
     });
     // add local file open support
@@ -9030,15 +9038,14 @@ JS9.Display = function(el){
     }
 };
 
-// add support for file dialog box that executes JS9 routine on file blobs
+// add support for file dialog box which executes JS9 routine on file blobs
 JS9.Display.prototype.addFileDialog = function(funcName, template){
-    var that = this;
-    var jdiv, jinput, id;
+    let jdiv, jinput, id;
     // sanity check
     if( !funcName || !JS9.publics[funcName] ){
 	return;
     }
-    id = "openLocal" + funcName + "-" + that.id;
+    id = `openLocal${funcName}-${this.id}`;
     // outer div
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
     // recommends opacity over visibility, but it breaks the menubar in ios
@@ -9047,7 +9054,7 @@ JS9.Display.prototype.addFileDialog = function(funcName, template){
 	.css("position", "relative")
 	.css("top", -50)
 	.css("left", -50)
-	.appendTo(that.divjq);
+	.appendTo(this.divjq);
     // inner file input element
     jinput = $("<input>")
 	.attr("type", "file")
@@ -9059,24 +9066,25 @@ JS9.Display.prototype.addFileDialog = function(funcName, template){
 	jinput.attr("accept", template);
     }
     // add callback for when input changes
-    jinput.on("change", function(){
-	var i, opts;
-	if( this.files.length ){
+    jinput.on("change", (e) => {
+	let i, opts;
+	const el = e.currentTarget;
+	if( el.files.length ){
 	    switch(funcName){
 	    case "Load":
 	    case "RefreshImage":
 		opts = {localAccess: true};
-		JS9.waiting(true, that);
+		JS9.waiting(true, this);
 		break;
 	    default:
 		break;
 	    }
 	}
-	for(i=0; i<this.files.length; i++){
+	for(i=0; i<el.files.length; i++){
 	    // execute a JS9 public access routine
-	    JS9.publics[funcName](this.files[i], opts, {display: that.id});
+	    JS9.publics[funcName](el.files[i], opts, {display: this.id});
 	}
-	this.value = null;
+	el.value = null;
 	return false;
     });
 };
@@ -9107,26 +9115,24 @@ JS9.Display.prototype.initMessages = function(){
     try{
 	this.messageContainer.draggable({
 	    // eslint-disable-next-line no-unused-vars
-	    start: function(event, ui){
+	    start(event, ui) {
 		this.oicb = JS9.globalOpts.internalContrastBias;
 		JS9.globalOpts.internalContrastBias = false;
 	    },
 	    // eslint-disable-next-line no-unused-vars
-	    stop: function(event, ui){
+	    stop(event, ui) {
 		JS9.globalOpts.internalContrastBias = this.oicb;
 	    }
 	});
     }
-    catch(ignore){}
+    catch(ignore){ /* empty */ }
     // allow chaining
     return this;
 };
 
 //  display a plugin in a light window or a new window
 JS9.Display.prototype.displayPlugin = function(plugin){
-    var that = this;
-    var i, a, w, h, p, r, s, title;
-    var name, did, oid, iid, odiv, pdiv, pinst, win;
+    let i, a, w, h, p, r, s, title, name, did, oid, iid, odiv, pdiv, pinst, win;
     if( typeof plugin === "string" ){
 	for(i=0; i<JS9.plugins.length; i++){
 	    p = JS9.plugins[i];
@@ -9148,9 +9154,9 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 	    // no spaces in an id
 	    name = plugin.name.replace(/\s/g, "_");
 	    // convenience ids
-	    did = this.id + "_" + name + "_lightDiv";
-	    oid = this.id + "_" + name + "_outerDiv";
-	    iid = this.id + "_" + name + "_innerDiv";
+	    did = `${this.id}_${name}_lightDiv`;
+	    oid = `${this.id}_${name}_outerDiv`;
+	    iid = `${this.id}_${name}_innerDiv`;
 	    // set up a new light instance, if necessary
 	    if( !pinst ){
 		odiv = $("<div>")
@@ -9188,16 +9194,16 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 	    // create the light window
 	    win = JS9.lightWin(did, "div", oid, title, s);
 	    // find inner div in the light window
-	    pdiv = $("#" + did + " #" + iid);
+	    pdiv = $(`#${did} #${iid}`);
 	    // create the plugin inside the inner div
 	    pinst = JS9.instantiatePlugin(pdiv, plugin, win);
-	    pinst.winHandle.onclose = function(){
+	    pinst.winHandle.onclose = () => {
 		// just hide the window
 		pinst.winHandle.hide();
 		pinst.status = "inactive";
 		if( plugin.opts.onpluginclose ){
 		    try{
-			plugin.opts.onpluginclose.call(pinst, that.image);
+			plugin.opts.onpluginclose.call(pinst, this.image);
 		    }
 		    catch(e){
 			JS9.log("onplugincloseCB: %s [%s]\n%s",
@@ -9238,7 +9244,7 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 		pinst.status = "inactive";
 		if( plugin.opts.onpluginclose ){
 		    try{
-			plugin.opts.onpluginclose.call(pinst, that.image);
+			plugin.opts.onpluginclose.call(pinst, this.image);
 		    }
 		    catch(e){
 			JS9.log("onplugincloseCB: %s [%s]\n%s",
@@ -9256,8 +9262,8 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 
 //  resize a display
 JS9.Display.prototype.resize = function(width, height, opts){
-    var i, div, im, key, layer, nwidth, nheight, nleft, ntop, pinst;
-    var repos = function(o){
+    let i, div, im, key, layer, nwidth, nheight, nleft, ntop, pinst;
+    const repos = (o) => {
 	o.left += nleft;
 	o.top  += ntop;
 	o.setCoords();
@@ -9338,7 +9344,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	(JS9.isNull(opts.resizeMenubar) || opts.resizeMenubar) ){
 	pinst = this.pluginInstances.JS9Menubar;
 	if( pinst ){
-	    $("#" + this.id + "Menubar").css("width", nwidth);
+	    $(`#${this.id}Menubar`).css("width", nwidth);
 	}
     }
     // change the toolbar width, unless explicitly told not to
@@ -9347,7 +9353,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	pinst = this.pluginInstances.JS9Toolbar;
 	if( pinst ){
 	    // set new value for width
-	    pinst.divjq.attr("data-width", String(nwidth)+"px");
+	    pinst.divjq.attr("data-width", `${String(nwidth)}px`);
 	    // re-init toolbar for this size
 	    JS9.Toolbar.init.call(pinst);
 	}
@@ -9358,7 +9364,7 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	pinst = this.pluginInstances.JS9Colorbar;
 	if( pinst ){
 	    // set new value for width
-	    pinst.divjq.attr("data-width", String(nwidth)+"px");
+	    pinst.divjq.attr("data-width", `${String(nwidth)}px`);
 	    // re-init colorbar for this size
 	    JS9.Colorbar.init.call(pinst);
 	}
@@ -9436,16 +9442,15 @@ JS9.Display.prototype.inResize = function(pos){
 // scroll the display to the center of the viewport
 // http://stackoverflow.com/questions/18150090/jquery-scroll-element-to-the-middle-of-the-screen-instead-of-to-the-top-with-a
 JS9.Display.prototype.center = function(){
-    var i, div, tel;
-    var el = this.divjq;
-    var voffset, hoffset;
-    var elVOffset = el.offset().top;
-    var elHeight = el.height();
-    var windowHeight = $(window).height();
-    var elHOffset = el.offset().left;
-    var elWidth = el.width();
-    var windowWidth = $(window).width();
-    var speed = 250;
+    const el = this.divjq;
+    let i, div, tel, voffset, hoffset;
+    let elVOffset = el.offset().top;
+    let elHeight = el.height();
+    const windowHeight = $(window).height();
+    const elHOffset = el.offset().left;
+    const elWidth = el.width();
+    const windowWidth = $(window).width();
+    const speed = 250;
     // divs we take into account when getting total height
     for(i=0; i<JS9.globalOpts.centerDivs.length; i++){
 	div = JS9.globalOpts.centerDivs[i];
@@ -9474,12 +9479,11 @@ JS9.Display.prototype.center = function(){
 
 // gather images from other displays into this display
 JS9.Display.prototype.gather = function(opts){
-    var that = this;
-    var i, arr, uim;
+    let i, arr, uim;
     // allow json opts
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse gather opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse gather opts: ${opts}`, e); }
     }
     // opts are optional
     opts = opts || {};
@@ -9497,32 +9501,32 @@ JS9.Display.prototype.gather = function(opts){
     }
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
-	if( that.image ){
-	    that.image.xeqPlugins("image", "ongatherdisplay");
+	if( this.image ){
+	    this.image.xeqPlugins("image", "ongatherdisplay");
 	}
     }
 };
 
 // separate images in this display into new displays
 JS9.Display.prototype.separate = function(opts){
-    var that = this;
-    var arr, d0, d1;
-    var nsep = 0;
-    var sep = {};
-    var saveims = {};
-    var row = 0, col = 0;
-    var myid = 1;
-    var rexp = /_sep[0-9][0-9]*/;
-    var sepopts = JS9.globalOpts.separate;
-    var menuStr = "<div class='JS9Menubar' id='%sMenubar' data-width=%s></div>";
-    var toolStr = "<div class='JS9Toolbar' id='%sToolbar' data-width=%s></div>";
-    var js9Str = "<div class='JS9' id='%s' data-width=%s data-height=%s></div>";
-    var colorStr = "<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' data-width=%s></div></div>";
-    var winoptsStr = "width=%s,height=%s,top=%s,left=%s,resize=1,scolling=1";
-    var SIZE_FUDGE = JS9.bugs.webkit_resize ? JS9.RESIZEFUDGE : 0;
-    var COLORBAR_FUDGE = 7;
-    var DHTML_HEIGHT = 30 + 13; // height of dhtml lightwin extras;
-    var initopts = function(fromID, opts){
+    let arr, d0, d1;
+    let nsep = 0;
+    let row = 0;
+    let col = 0;
+    let myid = 1;
+    const sep = {};
+    const saveims = {};
+    const rexp = /_sep[0-9][0-9]*/;
+    const sepopts = JS9.globalOpts.separate;
+    const menuStr = "<div class='JS9Menubar' id='%sMenubar' data-width=%s></div>";
+    const toolStr = "<div class='JS9Toolbar' id='%sToolbar' data-width=%s></div>";
+    const js9Str = "<div class='JS9' id='%s' data-width=%s data-height=%s></div>";
+    const colorStr = "<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' data-width=%s></div></div>";
+    const winoptsStr = "width=%s,height=%s,top=%s,left=%s,resize=1,scolling=1";
+    const SIZE_FUDGE = JS9.bugs.webkit_resize ? JS9.RESIZEFUDGE : 0;
+    const COLORBAR_FUDGE = 7;
+    const DHTML_HEIGHT = 30 + 13; // height of dhtml lightwin extras;
+    const initopts = (fromID, opts) => {
 	// sanity check
 	if( !fromID ){
 	    JS9.error("can't init seapration ops: no from id");
@@ -9550,16 +9554,16 @@ JS9.Display.prototype.separate = function(opts){
 	}
 	sep.topExtra = DHTML_HEIGHT;
 	sep.leftExtra = 0;
-	sep.js9 = $("#"+fromID);
-	sep.menubar = $("#"+fromID+"Menubar");
+	sep.js9 = $(`#${fromID}`);
+	sep.menubar = $(`#${fromID}Menubar`);
 	if( sep.menubar.length > 0 ){
 	    sep.menubar.isactive = sep.menubar.closest(".JS9PluginContainer").css("visibility") === "visible";
 	}
-	sep.toolbar = $("#"+fromID+"Toolbar");
+	sep.toolbar = $(`#${fromID}Toolbar`);
 	if( sep.toolbar.length > 0 ){
 	    sep.toolbar.isactive = sep.toolbar.closest(".JS9PluginContainer").css("visibility") === "visible";
 	}
-	sep.colorbar = $("#"+fromID+"Colorbar");
+	sep.colorbar = $(`#${fromID}Colorbar`);
 	if( sep.colorbar.length > 0 ){
 	    sep.colorbar.isactive = sep.colorbar.closest(".JS9PluginContainer").css("visibility") === "visible";
 	}
@@ -9584,8 +9588,8 @@ JS9.Display.prototype.separate = function(opts){
 	    }
 	}
     };
-    var getopts = function(fromID, toID){
-	var html, winopts;
+    const getopts = (fromID, toID) => {
+	let html, winopts;
 	if( fromID ){
 	    if( sep.js9.length > 0 ){
 		html = "";
@@ -9624,9 +9628,9 @@ JS9.Display.prototype.separate = function(opts){
 	// return info for this  column;
 	return {id: toID, html: html, winopts: winopts};
     };
-    var separateim = function(arr){
-	var im, xopts, id;
-	var n = nsep++;
+    const separateim = (arr) => {
+	let im, xopts, id;
+	const n = nsep++;
 	if( arr.length > n ){
 	    if( typeof arr[n] === "number" ){
 		im = JS9.images[arr[n]];
@@ -9634,7 +9638,7 @@ JS9.Display.prototype.separate = function(opts){
 		im = arr[n];
 	    }
 	    // look for images in this display
-	    if( im && im.display === that ){
+	    if( im && im.display === this ){
 		// display this image so it's the current one we move
 		im.displayImage("all");
 		// leave the first one in place
@@ -9648,15 +9652,15 @@ JS9.Display.prototype.separate = function(opts){
 			id = opts.idbase + myid++;
 			d1 = id;
 		    } else {
-			d1 = d0.replace(rexp, "") + "_sep" + JS9.uniqueID();
+			d1 = `${d0.replace(rexp, "")}_sep${JS9.uniqueID()}`;
 		    }
 		    saveims[d1] = im;
 		    // code to run when new window exists
-		    $("#dhtmlwindowholder").arrive("#"+d1, {onceOnly: true},
-			function(){
-			    id = $(this).attr("id");
+		    $("#dhtmlwindowholder").arrive(`#${d1}`, {onceOnly: true},
+			(el) => {
+			    id = $(el).attr("id");
 			    // FF (at least) needs this 0ms delay
-			    window.setTimeout(function(){
+			    window.setTimeout(() => {
 				// move this image
 				saveims[id].moveToDisplay(id);
 				// process next image
@@ -9679,8 +9683,8 @@ JS9.Display.prototype.separate = function(opts){
 	} else {
 	    // extended plugins
 	    if( JS9.globalOpts.extendedPlugins ){
-		if( that.image ){
-		    that.image.xeqPlugins("image", "onseparatedisplay");
+		if( this.image ){
+		    this.image.xeqPlugins("image", "onseparatedisplay");
 		}
 	    }
 	}
@@ -9688,7 +9692,7 @@ JS9.Display.prototype.separate = function(opts){
     // allow json opts
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse separate opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse separate opts: ${opts}`, e); }
     }
     // opts are optional
     opts = opts || {};
@@ -9698,9 +9702,9 @@ JS9.Display.prototype.separate = function(opts){
     separateim(arr);
 };
 
-// display the next image from the JS9 images list that is in this display
+// display the next image from the JS9 images list which is in this display
 JS9.Display.prototype.nextImage = function(inc){
-    var idx, curidx, im, dpos, npos;
+    let idx, curidx, im, dpos, npos;
     inc = inc || 1;
     if( !this.image ){
 	return;
@@ -9744,19 +9748,18 @@ JS9.Display.prototype.nextImage = function(inc){
 // load session from a json file
 // NB: save is an image method, load is a display method
 JS9.Display.prototype.loadSession = function(file, opts){
-    var that = this;
-    var objs = {};
-    var obj, left;
-    var finish = function(im){
-	var i, dlayer, layer, lname, obj;
-	var dorender = function(){
+    let obj, left;
+    const objs = {};
+    const finish = (im) => {
+	let i, dlayer, layer, lname, obj;
+	const dorender = () => {
 	    // update layer's shape counter
-	    var objs = this.canvas.getObjects();
+	    const objs = dlayer.canvas.getObjects();
 	    if( objs && typeof objs.length !== "undefined" ){
-		im.layers[this.layerName].nshape = objs.length + 1;
+		im.layers[dlayer.layerName].nshape = objs.length + 1;
 	    }
 	    // update objects for parents and children
-	    JS9.Fabric.updateChildren(this, null, "objects");
+	    JS9.Fabric.updateChildren(dlayer, null, "objects");
 	    // change shape positions if the displays sizes differ
 	    im.refreshLayers();
 	};
@@ -9788,18 +9791,18 @@ JS9.Display.prototype.loadSession = function(file, opts){
 		    continue;
 		}
 		// make sure layer exists in the display
-		dlayer = that.newShapeLayer(lname, layer.dopts);
+		dlayer = this.newShapeLayer(lname, layer.dopts);
 		// add a layer instance to this image (no objects yet)
 		im.addShapes(lname, []);
 		// load the session objects into the layer and render
-		dlayer.canvas.loadFromJSON(layer.json, dorender.bind(dlayer));
+		dlayer.canvas.loadFromJSON(layer.json, dorender);
 		// restore catalog and starbase, if necessary
 		if( layer.catalog ){
 		    im.layers[lname].catalog = layer.catalog;
 		}
 		if( layer.starbase ){
 		    try{im.layers[lname].starbase = JSON.parse(layer.starbase);}
-		    catch(ignore){}
+		    catch(ignore){ /* empty */ }
 		}
 	    }
 	}
@@ -9811,8 +9814,8 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	if( JS9.notNull(left) ){
 	    left = left - 1;
 	    if( left === 0 ){
-		JS9.images.sort(function(a, b){
-		    var ai=0, bi=0;
+		JS9.images.sort( (a, b) => {
+		    let ai = 0, bi = 0;
 		    if( objs[a.file] ){ ai = objs[a.file].i; }
 		    if( objs[b.file] ){ bi = objs[b.file].i; }
 		    return ai - bi;
@@ -9823,12 +9826,18 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	if( obj.xeqstash ){
 	    im.xeqStashCall(obj.xeqstash);
 	}
+	// plugin callbacks
 	if( JS9.globalOpts.extendedPlugins ){
-	    JS9.images[0].xeqPlugins("image", "onsessionload");
+	    im.xeqPlugins("image", "onsessionload");
+	}
+	// execute onsessionload callback, if necessary
+	if( typeof opts.onsessionload === "function" ){
+	    try{ JS9.xeqByName(opts.onsessionload, window, im); }
+	    catch(e){ JS9.error("in onsessionload callback", e, false); }
 	}
     };
-    var loadit = function(imobj){
-	var pname;
+    const loadit = (imobj) => {
+	let pname;
 	// sanity check
 	if( !imobj.file ){
 	    JS9.error("session does not contain a filename");
@@ -9863,10 +9872,10 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	// save for finish
 	objs[pname] = obj;
 	// load the image
-	JS9.Load(pname, obj.params, {display: that.id});
+	JS9.Load(pname, obj.params, {display: this.id});
     };
-    var loadem = function(jobj){
-	var i, key;
+    const loadem = (jobj) => {
+	let i, key;
 	// restore (and remove) globals
 	if( jobj.globalOpts ){
 	    $.extend(true, JS9.globalOpts, jobj.globalOpts);
@@ -9896,10 +9905,10 @@ JS9.Display.prototype.loadSession = function(file, opts){
 		if( jobj.display.hasOwnProperty(key) ){
 		    switch(key){
 		    case "blendMode":
-			JS9.BlendDisplay(jobj.display[key], {display: that});
+			JS9.BlendDisplay(jobj.display[key], {display: this});
 			break;
 		    default:
-			that[key] = jobj.display[key];
+			this[key] = jobj.display[key];
 			break;
 		    }
 		}
@@ -9919,11 +9928,11 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	    dataType: "json",
 	    mimeType: "application/json",
 	    async: false,
-	    success: function(jobj){
+	    success: (jobj) => {
 		loadem(jobj);
 	    },
-	    error:  function(jqXHR, textStatus, errorThrown){
-		JS9.error("could not load session: " + file, errorThrown);
+	    error: (jqXHR, textStatus, errorThrown) => {
+		JS9.error(`could not load session: ${file}`, errorThrown);
 	    }
 	});
     }
@@ -9943,20 +9952,20 @@ JS9.Display.prototype.clearMessage = function(which){
 
 // create a mosaic from a multi-extension FITS file or a number of images
 JS9.Display.prototype.createMosaic = function(ims, opts){
-    var i, im, bin, carr;
-    var that = this;
-    var line1 = '|                                                    fname|';
-    var line2 = '|                                                     char|';
+    let i, im, bin, carr;
+    const im0 = this.image;
+    const line1 = '|                                                    fname|';
+    const line2 = '|                                                     char|';
     // remove temp files
-    var cleanup = function(){
-	var i;
+    const cleanup = () => {
+	let i;
 	for(i=0; i<carr.length; i++){
 	    JS9.vunlink(carr[i]);
 	}
     };
     // check for Montage error and cleanup as needed
-    var chkerr = function(prog, rstr){
-	var earr;
+    const chkerr = (prog, rstr) => {
+	let earr;
 	// check for Montage error
 	if( rstr.search(/\[struct stat="OK"/) < 0 ){
 	    // no longer waiting
@@ -9966,33 +9975,35 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	    // signal this we completed the reproject attempt
 	    earr = rstr.match(/msg="(.*)"/);
 	    if( earr && earr[1] ){
-		JS9.error(earr[1] + " (from " + prog + ")");
+		JS9.error(`${earr[1]} (from ${prog})`);
 	    } else {
-		JS9.error(rstr || "unknown " + prog + " failure");
+		JS9.error(rstr || `unknown ${prog} failure`);
 	    }
 	}
     };
     // display mosaic as a new image
-    var disp = function(hdu, opts){
-	var topts;
+    const disp = (hdu, opts) => {
+	let topts;
 	opts = opts || {};
 	topts = $.extend(true, {}, opts);
 	// start the waiting!
 	if( opts.waiting !== false ){
-	    JS9.waiting(true, that);
+	    JS9.waiting(true, this);
 	}
 	// make sure we use the current display
-	topts.display = that.id;
+	topts.display = this.id;
 	// set up new and display new image
 	JS9.checkNew(new JS9.Image(hdu, topts));
+	// set status
+	im0.setStatus("createMosaic", "complete");
 	// done waiting
 	JS9.waiting(false);
     };
     // write comforting messages to the console while we wait and wait
-    var log = function(){
-	var s;
+    const log = (...args) => {
+	let s;
 	if( opts.verbose || JS9.DEBUG > 1 ){
-	    s = sprintf.apply(null, arguments);
+	    s = sprintf(...args);
 	    // eslint-disable-next-line no-console
 	    JS9.log(s);
 	}
@@ -10025,7 +10036,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	    // use all images in this display
 	    ims = [];
 	    for(i=0; i<JS9.images.length; i++){
-		if( JS9.images[i].display.id === that.id ){
+		if( JS9.images[i].display.id === this.id ){
 		    ims.push(JS9.images[i]);
 		}
 	    }
@@ -10047,28 +10058,28 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	    if( im ){
 		ims[i] = im;
 	    } else {
-		JS9.error("unknown image for mosaic: " + ims[i]);
+		JS9.error(`unknown image for mosaic: ${ims[i]}`);
 	    }
 	}
 	im = ims[i];
 	// sanity check: they all require a virtual file
 	if( !im.raw.hdu || !im.raw.hdu.fits || !im.raw.hdu.fits.vfile ){
-	    JS9.error("no virtual file available for mosaic: " + im.id);
+	    JS9.error(`no virtual file available for mosaic: ${im.id}`);
 	}
     }
     // could take a while ...
-    JS9.waiting(true, that);
-    window.setTimeout(function(){
-	var s, t;
-	var sw, naxis, rstr, inbuf, ext;
-	var vfile, ivfile, ovfile, bvfile, sect, topts;
-	var inlst, intbl, inhdr, inarr;
-	var binlst, bintbl;
-	var outlst, outtbl, outhdr, areafile, outfile;
-	var id = JS9.uniqueID();
-	var imsw = "-C"; // skip naxis[3,4]: they write garbage into the table
-	var mktmp = function(suffix){
-	    return "mosaic_" + id + "_" + suffix;
+    JS9.waiting(true, this);
+    // set status
+    im0.setStatus("createMosaic", "processing");
+    window.setTimeout(() => {
+	let s, t, v, sw, naxis, rstr, inbuf, ext;
+	let vfile, ivfile, ovfile, bvfile, sect, topts;
+	let inlst, intbl, inhdr, inarr, binlst, bintbl;
+	let outlst, outtbl, outhdr, areafile, outfile;
+	const id = JS9.uniqueID();
+	const imsw = "-C"; // skip naxis[3,4]: they write garbage into the table
+	const mktmp = (suffix) => {
+	    return `mosaic_${id}_${suffix}`;
 	};
 	// temps files get unique names
 	inlst = mktmp("in.lst");
@@ -10091,9 +10102,9 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	carr = [inlst, intbl, inhdr, binlst, bintbl,
 		outlst, outtbl, outhdr, areafile];
 	// generate input list from array of ims
-	s = sprintf("%s\n%s\n", line1, line2);
+	s = `${line1}\n${line2}\n`;
 	for(i=0; i<ims.length; i++){
-	    s += sprintf("%s\n", ims[i].raw.hdu.fits.vfile);
+	    s += `${ims[i].raw.hdu.fits.vfile}\n`;
 	}
 	// save in list file
 	JS9.vfile(inlst, s);
@@ -10130,7 +10141,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	    // bin based on image dims and desired mosaic dim
 	    bin = Math.max(1, Math.floor((naxis / opts.dim) + 0.5));
 	    // generate binned files, which become the input for reprojection
-	    s = sprintf("%s\n%s\n", line1, line2);
+	    s = `${line1}\n${line2}\n`;
 	    // get array of input images
 	    inbuf = JS9.vread(intbl);
 	    // ignore the first 3 header lines
@@ -10143,21 +10154,19 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 		vfile = t[t.length-1];
 		if( ext && vfile ){
 		    // section input file + extension
-		    ivfile = sprintf("%s[%s]", vfile, ext);
+		    ivfile = `${vfile}[${ext}]`;
+		    v = vfile.split("/").reverse()[0].replace(/\.(g|f)z$/, "");
 		    // binned file name
-		    bvfile = sprintf("bin_%s_%s", ext, 
-				     vfile
-				     .split("/").reverse()[0]
-				     .replace(/\.(g|f)z$/, ""));
+		    bvfile = `bin_${ext}_${v}`;
 		    // make sure binned file eventually gets deleted
 		    carr.push(bvfile);
 		    // section specification consists of bin factor
-		    sect = sprintf("0@0,0@0,%s", bin);
+		    sect = `0@0,0@0,${bin}`;
 		    log("bin %s [%s]", ivfile, bin);
 		    // extract a section at the specified bin factor
 		    JS9.imsection(ivfile, bvfile, sect, "");
 		    // add file to new input list
-		    s += sprintf("%s\n", bvfile);
+		    s += `${bvfile}\n`;
 		}
 	    }
 	    // save in new image list file
@@ -10188,7 +10197,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	inarr = inbuf.trim().split("\n");
 	inarr.splice(0,3);
 	// reproject and generate output list from reprojected files
-	s = sprintf("%s\n%s\n", line1, line2);
+	s = `${line1}\n${line2}\n`;
 	for(i=0; i<inarr.length; i++){
 	    t = inarr[i].trim().split(/\s+/);
 	    ext  = t[t.length-2];
@@ -10198,17 +10207,15 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 		sw = "-a 1";
 		if( opts.reduce === "shrink" ){
 		    // pass extension number in switches
-		    sw += sprintf(" -h %s", ext);
+		    sw += ` -h ${ext}`;
 		}
 		// add global switches for reproject processing
-		sw += " " + JS9.globalOpts.reprojSwitches;
+		sw += ` ${JS9.globalOpts.reprojSwitches}`;
 		// output filename
-		ovfile = sprintf("reproj_%s_%s", ext, 
-				 vfile
-				 .split("/").reverse()[0]
-				 .replace(/\.(g|f)z$/, ""));
+		v = vfile.split("/").reverse()[0].replace(/\.(g|f)z$/, "");
+		ovfile = `reproj_${ext}_${v}`;
 		// add to the output file list
-		s += sprintf("%s\n", ovfile);
+		s += `${ovfile}\n`;
 		// make sure it eventually gets deleted
 		carr.push(ovfile);
 		// make sure associated area file eventually gets deleted
@@ -10254,7 +10261,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 // ---------------------------------------------------------------------
 
 JS9.Command = function(obj){
-    var p;
+    let p;
     // copy properties to new object
     for( p in obj ){
 	if( obj.hasOwnProperty(p) ){
@@ -10288,7 +10295,7 @@ JS9.Command.prototype.getDisplayInfo = function(display){
 
 // return "get" or "set" to specify which command to run
 JS9.Command.prototype.getWhich = function(args){
-    var which;
+    let which;
     if( this.get && !this.set ){
 	which = "get";
     } else if( this.set && !this.get ){
@@ -10335,32 +10342,31 @@ JS9.Helper = function(){
 
 // get back-end helper connection info
 JS9.Helper.prototype.connectinfo = function(){
-    var s;
+    let s;
     // no connection configured
     if( JS9.helper.connected === null ){
 	return "notConfigured";
     }
     // connection configured and established
     if( JS9.helper.connected ){
-	s = sprintf("connected %s %s", JS9.helper.type, JS9.helper.url);
+	s = `connected ${JS9.helper.type} ${JS9.helper.url}`;
 	if( JS9.helper.pageid ){
-	    s += "<p>" + JS9.helper.pageid;
+	    s += `<p>${JS9.helper.pageid}`;
 	}
 	return s;
     }
     // connection configured but not established
-    return sprintf("notConnected %s", JS9.helper.type);
+    return `notConnected ${JS9.helper.type}`;
 };
 
 // connect to back-end helper
 JS9.Helper.prototype.connect = function(type){
-    var tries = JS9.globalOpts.ehretries;
-    var delay = JS9.globalOpts.ehtimeout;
-    var that = this;
-    var failedHelper = function(jqXHR, textStatus, errorThrown){
-	that.connected = false;
-	that.helper = false;
-	that.ready = true;
+    const tries = JS9.globalOpts.ehretries;
+    const delay = JS9.globalOpts.ehtimeout;
+    const failedHelper = (jqXHR, textStatus, errorThrown) => {
+	this.connected = false;
+	this.helper = false;
+	this.ready = true;
 	$(document).trigger("JS9:helperReady",
 			    {type: "socket.io", status: "error"});
 	textStatus = textStatus || "timeout";
@@ -10375,20 +10381,19 @@ JS9.Helper.prototype.connect = function(type){
 	}
 	// throw error if needed
 	if( JS9.globalOpts.requireHelper ){
-	    JS9.error("helper connect error: " + textStatus + " " + errorThrown);
+	    JS9.error(`helper connect error: ${textStatus} (${errorThrown})`);
 	} else if( JS9.DEBUG ){
-	    JS9.log(sprintf("JS9 helper connect error: %s (%s)",
-			    textStatus, errorThrown));
+	    JS9.log(`JS9 helper connect error: ${textStatus} (${errorThrown})`);
 	}
     };
-    var connectHelper = function(url){
+    const connectHelper = (url) => {
 	// connect to helper
 	$.ajax({
 	    url: url,
 	    dataType: "script",
 	    timeout: JS9.globalOpts.htimeout,
-	    success:  function(){
-		var sockopts = {
+	    success: () => {
+		const sockopts = {
 		    reconnection: true,
 		    reconnectionDelay: 1000,
 		    reconnectionDelayMax : 10000,
@@ -10396,56 +10401,57 @@ JS9.Helper.prototype.connect = function(type){
 		    timeout: JS9.globalOpts.htimeout
 		};
 		// if there is no io object, we didn't really succeed
-		// this can happen, for example, in the Jupyter environment
+		// can happen, for example, in the Jupyter environment
 		if( typeof io === "undefined" ){
 		    failedHelper(null, "socket io object is undefined", null);
 		    return;
 		}
 		// connect to the helper
-		that.socket = io.connect(that.url, sockopts);
+		this.socket = io.connect(this.url, sockopts);
 		// on-event processing
-		that.socket.on("connect", function(){
-		    var ii, d, p;
-		    that.connected = true;
-		    that.helper = true;
+		this.socket.on("connect", () => {
+		    let ii, d, p;
+		    this.connected = true;
+		    this.helper = true;
 		    d = [];
 		    for(ii=0; ii<JS9.displays.length; ii++){
 			d.push(JS9.displays[ii].id);
 		    }
-		    p = that.pageid;
-		    that.socket.emit("initialize", {displays: d, pageid: p}, function(obj){
-			that.pageid = obj.pageid;
-			that.js9helper = obj.js9helper;
+		    p = this.pageid;
+		    this.socket.emit("initialize", {displays: d, pageid: p},
+                    (obj) => {
+			this.pageid = obj.pageid;
+			this.js9helper = obj.js9helper;
 			JS9.globalOpts.dataPathModify = obj.dataPathModify;
-			that.ready = true;
+			this.ready = true;
 			$(document).trigger("JS9:helperReady",
 					    {type: "socket.io", status: "OK"});
 			if( JS9.DEBUG ){
-			    JS9.log("JS9 helper: connect: " + that.type);
+			    JS9.log(`JS9 helper: connect: ${this.type}`);
 			}
 		    });
 		    $(document).trigger("JS9:connected",
 					{type: "socket.io", status: "OK"});
 		});
-		that.socket.on("connect_error", function(){
-		    that.connected = false;
-		    that.helper = false;
+		this.socket.on("connect_error", () => {
+		    this.connected = false;
+		    this.helper = false;
 		    if( JS9.DEBUG > 1 ){
 			JS9.log("JS9 helper: connect error");
 		    }
 		});
-		that.socket.on("connect_timeout", function(){
-		    that.connected = false;
-		    that.helper = false;
+		this.socket.on("connect_timeout", () => {
+		    this.connected = false;
+		    this.helper = false;
 		    if( JS9.DEBUG > 1 ){
 			JS9.log("JS9 helper: connect timeout");
 		    }
 		});
-		that.socket.on("disconnect", function(reason){
-		    that.connected = false;
-		    that.helper = false;
+		this.socket.on("disconnect", (reason) => {
+		    this.connected = false;
+		    this.helper = false;
 		    if( JS9.DEBUG > 1 ){
-			JS9.log("JS9 helper: disconnect: " + reason);
+			JS9.log(`JS9 helper: disconnect: ${reason}`);
 		    }
 		    // https://github.com/socketio/socket.io-client/blob/master/docs/API.md#event-disconnect
 		    if( reason === 'io server disconnect' ){
@@ -10454,35 +10460,35 @@ JS9.Helper.prototype.connect = function(type){
 			if( JS9.DEBUG > 1 ){
 			    JS9.log("JS9 helper: manual reconnect");
 			}
-			that.socket.connect();
+			this.socket.connect();
 		    }
 		    // else the socket will automatically try to reconnect
 		});
-		that.socket.on("reconnect", function(){
-		    that.connected = true;
-		    that.helper = true;
+		this.socket.on("reconnect", () => {
+		    this.connected = true;
+		    this.helper = true;
 		    if( JS9.DEBUG > 1 ){
 			JS9.log("JS9 helper: reconnect");
 		    }
 		});
-		that.socket.on("msg", JS9.msgHandler);
+		this.socket.on("msg", JS9.msgHandler);
 	    },
-	    error:  function(jqXHR, textStatus, errorThrown){
+	    error: (jqXHR, textStatus, errorThrown) => {
 		failedHelper(jqXHR, textStatus, errorThrown);
 	    }
 	});
     };
     // make an "alive" request of the helper (jsonp to avoid CORS rejection)
-    var waitForHelper = function(eurl, hurl, tries){
+    const waitForHelper = (eurl, hurl, tries) => {
 	$.ajax({
 	    url: eurl,
 	    dataType: "jsonp",
-	    success: function(){
+	    success: () => {
 		connectHelper(hurl);
 	    },
-	    error: function(){
+	    error: () => {
 		if( --tries > 0 ){
-		    window.setTimeout(function(){
+		    window.setTimeout(() => {
 			waitForHelper(eurl, hurl, tries);
 		    }, delay);
 		} else {
@@ -10515,7 +10521,7 @@ JS9.Helper.prototype.connect = function(type){
 	    this.url = JS9.globalOpts.helperProtocol + document.domain;
 	}
     } else {
-	this.url = JS9.globalOpts.helperProtocol + "localhost";
+	this.url = `${JS9.globalOpts.helperProtocol}localhost`;
     }
     // save base of url
     this.baseurl = this.url;
@@ -10524,7 +10530,7 @@ JS9.Helper.prototype.connect = function(type){
     case "none":
         this.connected = null;
 	this.ready = true;
-        // signal that JS9 helper is ready
+        // signal JS9 helper is ready
         $(document).trigger("JS9:helperReady", {type: "none", status: "OK"});
         break;
     case "get":
@@ -10533,11 +10539,11 @@ JS9.Helper.prototype.connect = function(type){
 	if( !JS9.globalOpts.helperCGI ){
 	    JS9.error("cgi script name missing for helper");
 	}
-	this.url += "/" + JS9.globalOpts.helperCGI;
+	this.url += `/${JS9.globalOpts.helperCGI}`;
 	this.connected = true;
 	this.helper = true;
         if( JS9.DEBUG ){
-	    JS9.log("JS9 helper: connect: " + this.type);
+	    JS9.log(`JS9 helper: connect: ${this.type}`);
         }
 	this.ready = true;
         $(document).trigger("JS9:helperReady", {type: "get", status: "OK"});
@@ -10548,27 +10554,26 @@ JS9.Helper.prototype.connect = function(type){
 	    JS9.error("port missing for helper");
 	}
 	// ignore port on url, add our own
-	this.url = this.url.replace(/:[0-9][0-9]*$/, "")
-	    + ":" +  JS9.globalOpts.helperPort;
-	// this is the url of the socket.io.js file
+	this.url = `${this.url.replace(/:[0-9][0-9]*$/, "")}:${JS9.globalOpts.helperPort}`;
+	// the url of the socket.io.js file
 	if( window.multiElectron ){
 	    // the slim version avoids the 4-second delay compiling the code
 	    // see help/knownissues.html
-	    this.sockurl  = this.url + "/socket.io/socket.io.slim.js";
+	    this.sockurl  = `${this.url}/socket.io/socket.io.slim.js`;
 	} else {
 	    // use the canonical version
-	    this.sockurl  = this.url + "/socket.io/socket.io.js";
+	    this.sockurl  = `${this.url}/socket.io/socket.io.js`;
 	}
 	// make sure helper is running and then connect
 	if( window.isElectron ){
-	    this.aliveurl = this.url + "/alive";
+	    this.aliveurl = `${this.url}/alive`;
 	    waitForHelper(this.aliveurl, this.sockurl, tries);
 	} else {
 	    connectHelper(this.sockurl);
 	}
 	break;
     default:
-	JS9.error("unknown helper type: "+this.type);
+	JS9.error(`unknown helper type: ${this.type}`);
 	break;
     }
 };
@@ -10586,14 +10591,14 @@ JS9.Helper.prototype.send = function(key, obj, cb){
         try{ obj.cookie = document.cookie; }
 	catch(e){ delete obj.cookie; }
 	if( JS9.globalOpts.dataPath && !obj.dataPath ){
-	    obj.dataPath = JS9.globalOpts.dataPath + ":.";
+	    obj.dataPath = `${JS9.globalOpts.dataPath}:.`;
 	}
     } else {
 	obj = {dataPath: "."};
     }
-    // add path that gets us to the js9 root
+    // add path which gets us to the js9 root
     if( JS9.TOROOT ){
-	obj.dataPath += (":" + JS9.TOROOT);
+	obj.dataPath += `:${JS9.TOROOT}`;
     }
     // tell server how to get to root (for datapath)
     // send message, based on connection type
@@ -10613,7 +10618,7 @@ JS9.Helper.prototype.send = function(key, obj, cb){
 	    type: this.type.toUpperCase(),
 	    data: obj,
 	    dataType: "text",
-	    success:  function(data){
+	    success: (data) => {
 		if( typeof data === "string" &&
 		    data.search(JS9.analOpts.epattern) >=0 ){
 		    JS9.log(data);
@@ -10622,10 +10627,9 @@ JS9.Helper.prototype.send = function(key, obj, cb){
 		    cb(data);
 		}
 	    },
-	    error:  function(jqXHR, textStatus, errorThrown){
+	    error: (jqXHR, textStatus, errorThrown) => {
 		if( JS9.DEBUG ){
-	            JS9.log("JS9 helper: "+this.type+" failure: " +
-			    textStatus + " " + errorThrown);
+	            JS9.log(`JS9 helper: ${this.type} failure: ${textStatus} ${errorThrown}`);
 		}
 	    }
 	});
@@ -10652,8 +10656,8 @@ JS9.WebWorker = function(url){
 
 // handle (known) messages from web worker
 JS9.WebWorker.prototype.msgHandler = function(msg){
-    var i, handler;
-    var obj = msg.data;
+    let i, handler;
+    const obj = msg.data;
     switch(obj.cmd){
     case "progress":
 	JS9.progress(obj.result.value, obj.result.max);
@@ -10682,7 +10686,7 @@ JS9.WebWorker.prototype.msgHandler = function(msg){
     case "connect_error":
     case "connect_timeout":
 	if( JS9.DEBUG > 1 ){
-	    JS9.log("JS9 worker socketio: "+obj.cmd);
+	    JS9.log(`JS9 worker socketio: ${obj.cmd}`);
 	}
 	break;
     case "disconnect":
@@ -10690,9 +10694,7 @@ JS9.WebWorker.prototype.msgHandler = function(msg){
 	if( obj.result ){
 	    JS9.worker.postMessage("initsocketio",
 				   [JS9.helper.url, JS9.helper.pageid],
-				   function(){
-				       JS9.error(obj.result);
-				   });
+				   () => { JS9.error(obj.result); });
 	} else {
 	    if( JS9.DEBUG > 1 ){
 		JS9.log("JS9 worker socketio: disconnect");
@@ -10709,12 +10711,12 @@ JS9.WebWorker.prototype.msgHandler = function(msg){
 
 // send a message to a web worker
 JS9.WebWorker.prototype.postMessage = function(cmd, args, func, xfer){
-    var id = cmd + JS9.uniqueID();
-    var obj = {id: id, cmd: cmd, args: args};
+    const id = cmd + JS9.uniqueID();
+    const obj = {id, cmd, args};
     // push context
     if( func ){
 	args = args || [];
-	this.handlers.push({id: id, cmd: cmd, args: args, func: func});
+	this.handlers.push({id, cmd, args, func});
     }
     // send message, possible with transferred data
     if( xfer ){
@@ -10726,15 +10728,15 @@ JS9.WebWorker.prototype.postMessage = function(cmd, args, func, xfer){
 
 // initialize worker socketio connection, then call handler
 JS9.WebWorker.prototype.socketio = function(handler){
-    var h = JS9.helper;
+    const h = JS9.helper;
     if( !JS9.worker.sockinit ){
-	JS9.worker.postMessage("initsocketio", [h.url, h.pageid], function(s){
+	JS9.worker.postMessage("initsocketio", [h.url, h.pageid], (s) => {
 	    if( s === "OK" ){
 		if( handler ){
 		    handler();
 		}
 	    } else {
-		JS9.error("can't init  socket.io for JS9 worker: " + s);
+		JS9.error(`can't init  socket.io for JS9 worker: ${s}`);
 	    }
 	});
     } else {
@@ -10800,7 +10802,7 @@ JS9.Fabric.opts = {
 
 // rescale the width of shapes in the shape layers
 JS9.Fabric.rescaleStrokeWidth = function(scale, sw1){
-    var tscale = ((this.scaleX + this.scaleY) / 2);
+    const tscale = ((this.scaleX + this.scaleY) / 2);
     scale = scale || 1;
     scale *= tscale;
     if( !sw1 && this.params ){
@@ -10810,7 +10812,7 @@ JS9.Fabric.rescaleStrokeWidth = function(scale, sw1){
 	return;
     }
     if( this.type === "group" ){
-	this.forEachObject(function(obj){
+	this.forEachObject( (obj) => {
 	    JS9.Fabric.rescaleStrokeWidth.call(obj, scale, sw1);
 	});
     } else {
@@ -10818,9 +10820,9 @@ JS9.Fabric.rescaleStrokeWidth = function(scale, sw1){
     }
 };
 
-// ensure that the circle scales the same in X and Y
+// ensure the circle scales the same in X and Y
 JS9.Fabric.rescaleEvenly = function(){
-    var lastscale;
+    let lastscale;
     if( !this.params || (this.scaleX === this.scaleY) ){
 	return;
     }
@@ -10849,9 +10851,9 @@ fabric.Object.prototype.rescaleEvenly = JS9.Fabric.rescaleEvenly;
 // create a new shape layer in the display
 // call using display context
 JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
-    var id, dlayer;
-    var display = this;
-    var seloff = function(dlayer, obj){
+    let id, dlayer;
+    const display = this;
+    const seloff = (dlayer, obj) => {
 	// reset currently selected
 	dlayer.params.sel = null;
 	// also reset current layer in the image
@@ -10874,15 +10876,15 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    dlayer.display.image.updateShapes(layerName, obj, "unselect");
 	}
     };
-    var selmultioff = function(dlayer, activeObject, s){
-	var i, obj;
-	var activeObjects = dlayer.canvas.getActiveObjects(s);
+    const selmultioff = (dlayer, activeObject, s) => {
+	let i, obj;
+	const activeObjects = dlayer.canvas.getActiveObjects(s);
 	for(i=0; i<activeObjects.length; i++){
 	    obj = activeObjects[i];
 	    seloff(dlayer, obj);
 	}
     };
-    var selon = function(dlayer, obj){
+    const selon = (dlayer, obj) => {
 	// turn off previous selection, if necessary
 	if( dlayer.params.sel && obj.params && (dlayer.params.sel !== obj) ){
 	    seloff(dlayer, dlayer.params.sel);
@@ -10913,9 +10915,9 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    dlayer.display.image.updateShapes(layerName, obj, "select");
 	}
     };
-    var selmultion = function(dlayer, activeObject, s){
-	var i, j, obj, parent, child;
-	var activeObjects = dlayer.canvas.getActiveObjects(s);
+    const selmultion = (dlayer, activeObject, s) => {
+	let i, j, obj, parent, child;
+	const activeObjects = dlayer.canvas.getActiveObjects(s);
 	for(i=0; i<activeObjects.length; i++){
 	    obj = activeObjects[i];
 	    if( !obj.params ){ continue; }
@@ -10976,7 +10978,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	divjq = display.divjq;
     }
     // id
-    id = divjq.attr("id") + "-" + layerName.replace(/\s+/,"_") + "-shapeLayer";
+    id = `${divjq.attr("id")}-${layerName.replace(/\s+/,"_")}-shapeLayer`;
     // backlink
     dlayer.display = display;
     // default options for this layer (deep copy)
@@ -11067,55 +11069,57 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	dlayer.opts.onmouseover || dlayer.opts.onmouseout ){
 	dlayer.opts.evented = true;
 	if( dlayer.opts.onmousedown ){
-	    dlayer.canvas.on("mouse:down", function(opts){
+	    dlayer.canvas.on("mouse:down", (opts) => {
 		if( dlayer.display.image && opts.target ){
 		    // on main window, set region click
 		    if( dlayer.dtype === "main" ){
 			dlayer.display.image.clickInRegion = true;
 			dlayer.display.image.clickInLayer = layerName;
 		    }
-		    dlayer.opts.onmousedown.call(this,
+		    dlayer.opts.onmousedown.call(dlayer.canvas,
 						 dlayer.display.image,
 						 opts.target.pub,
 						 opts.e, opts.target);
 		} else {
 		    // only allow fabric selection if we have special key down
-		    this._selection = this.selection;
-		    if( this.selection ){
-			this.selection = JS9.specialKey(opts.e);
+		    dlayer.canvas._selection = dlayer.canvas.selection;
+		    if( dlayer.canvas.selection ){
+			dlayer.canvas.selection = JS9.specialKey(opts.e);
 		    }
 		}
 	    });
 	} else {
-	    dlayer.canvas.on("mouse:down", function(opts){
+	    dlayer.canvas.on("mouse:down", (opts) => {
 		// only allow fabric selection if we have special key down
-		this._selection = this.selection;
-		if( this.selection ){
-		    this.selection = JS9.specialKey(opts.e);
+		dlayer.canvas._selection = dlayer.canvas.selection;
+		if( dlayer.canvas.selection ){
+		    dlayer.canvas.selection = JS9.specialKey(opts.e);
 		}
 	    });
 	}
 	if( dlayer.opts.onmouseup ){
-	    dlayer.canvas.on("mouse:up", function(opts){
+	    dlayer.canvas.on("mouse:up", (opts) => {
 		if( dlayer.display.image && opts.target ){
-		    dlayer.opts.onmouseup.call(this,
+		    dlayer.opts.onmouseup.call(dlayer.canvas,
 					       dlayer.display.image,
 					       opts.target.pub,
 					       opts.e, opts.target);
 		}
 		// restore original selection state
-		this.selection = this._selection || this.selection;
+		dlayer.canvas.selection = dlayer.canvas._selection ||
+		                          dlayer.canvas.selection;
 	    });
 	} else {
-	    dlayer.canvas.on("mouse:up", function(){
+	    dlayer.canvas.on("mouse:up", () => {
 		// restore original selection state
-		this.selection = this._selection || this.selection;
+		dlayer.canvas.selection = dlayer.canvas._selection ||
+                                          dlayer.canvas.selection;
 	    });
 	}
 	if( dlayer.opts.onmousemove ){
-	    dlayer.canvas.on("mouse:move", function(opts){
+	    dlayer.canvas.on("mouse:move", (opts) => {
 		if( dlayer.display.image && opts.target ){
-		    dlayer.opts.onmousemove.call(this,
+		    dlayer.opts.onmousemove.call(dlayer.canvas,
 						 dlayer.display.image,
 						 opts.target.pub,
 						 opts.e, opts.target);
@@ -11123,9 +11127,9 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    });
 	}
 	if( dlayer.opts.onmouseover ){
-	    dlayer.canvas.on("mouse:over", function(opts){
+	    dlayer.canvas.on("mouse:over", (opts) => {
 		if( dlayer.display.image && opts.target ){
-		    dlayer.opts.onmouseover.call(this,
+		    dlayer.opts.onmouseover.call(dlayer.canvas,
 						 dlayer.display.image,
 						 opts.target.pub,
 						 opts.e, opts.target);
@@ -11133,9 +11137,9 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    });
 	}
 	if( dlayer.opts.onmouseout ){
-	    dlayer.canvas.on("mouse:out", function(opts){
+	    dlayer.canvas.on("mouse:out", (opts) => {
 		if( dlayer.display.image && opts.target ){
-		    dlayer.opts.onmouseout.call(this,
+		    dlayer.opts.onmouseout.call(dlayer.canvas,
 						dlayer.display.image,
 						opts.target.pub,
 						opts.e, opts.target);
@@ -11143,7 +11147,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    });
 	}
 	if( dlayer.opts.tooltip ){
-	    dlayer.canvas.on("mouse:over", function(opts){
+	    dlayer.canvas.on("mouse:over", (opts) => {
 		if( dlayer.display.image && opts.target ){
 		    JS9.tooltip(opts.target.left+opts.target.width+2,
 				opts.target.top+opts.target.height+2,
@@ -11153,7 +11157,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 				opts.e, opts.target);
 		}
 	    });
-	    dlayer.canvas.on("mouse:out", function(opts){
+	    dlayer.canvas.on("mouse:out", (opts) => {
 		if( dlayer.display.image && opts.target ){
 		    JS9.tooltip(opts.target.left, opts.target.top,
 				null,
@@ -11164,25 +11168,26 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    });
 	}
     } else {
-	dlayer.canvas.on("mouse:down", function(opts){
+	dlayer.canvas.on("mouse:down", (opts) => {
 	    // only allow fabric selection if we have special key down
-	    this._selection = this.selection;
-	    if( this.selection ){
-		this.selection = JS9.specialKey(opts.e);
+	    dlayer.canvas._selection = dlayer.canvas.selection;
+	    if( dlayer.canvas.selection ){
+		dlayer.canvas.selection = JS9.specialKey(opts.e);
 	    }
 	});
-	dlayer.canvas.on("mouse:up", function(){
+	dlayer.canvas.on("mouse:up", () => {
 	    // restore original selection state
-	    this.selection = this._selection || this.selection;
+	    dlayer.canvas.selection = dlayer.canvas._selection ||
+                                      dlayer.canvas.selection;
 	});
     }
     // fire events when groups are created
     if( typeof dlayer.opts.ongroupcreate === "function" ){
 	dlayer.opts.canvas.selection = true;
 	dlayer.opts.selectable = true;
-	dlayer.canvas.on("selection:created", function(opts){
-	    var pubs = [];
-	    var targets = [];
+	dlayer.canvas.on("selection:created", (opts) => {
+	    const pubs = [];
+	    const targets = [];
 	    if( dlayer.display.image ){
 		if( opts.target && opts.target.type === "group" ){
 		    opts.target.forEachObject(function(shape){
@@ -11191,7 +11196,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 			    pubs.push(shape.pub);
 			}
 		    });
-		    dlayer.opts.ongroupcreate.call(this,
+		    dlayer.opts.ongroupcreate.call(dlayer.canvas,
 						   dlayer.display.image,
 						   pubs,
 						   opts.e, targets);
@@ -11200,10 +11205,9 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	});
     }
     // object modified
-    dlayer.canvas.on('object:modified', function (opts){
-	var o, i, olen;
-	var objs = [];
-	var myWidth, myHeight;
+    dlayer.canvas.on('object:modified', (opts) => {
+	let o, i, olen, myWidth, myHeight;
+	const objs = [];
 	// sanity check
 	if( !opts.target ){ return; }
 	o = opts.target;
@@ -11212,8 +11216,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	// might have to sort overlapping shapes by size
 	if( dlayer.opts.sortOverlapping ){
 	    o.setCoords();
-	    // find objects that intersect with this one
-	    dlayer.canvas.forEachObject(function(obj) {
+	    // find objects which intersect with this one
+	    dlayer.canvas.forEachObject( (obj) => {
 		if( obj === o ){
 		    return;
 		}
@@ -11242,7 +11246,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    // add current shape to array
 	    objs.push({obj: o, siz: myWidth * myHeight});
 	    // sort in order of increasing size
-	    objs.sort(function(a, b){
+	    objs.sort( (a, b) => {
 		if( a.siz < b.siz ){
 		    return -1;
 		} else if( a.siz > b.siz ){
@@ -11254,13 +11258,13 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    olen = objs.length;
 	    for(i=0; i<olen; i++){
 		try{ objs[i].obj.sendToBack(); }
-		catch(e){}
+		catch(e){ /* empty */ }
 	    }
 	}
     });
     // object scaled: reset stroke width
-    dlayer.canvas.on('object:scaling', function (opts){
-	var o;
+    dlayer.canvas.on('object:scaling', (opts) => {
+	let o;
 	// sanity check
 	if( !opts.target ){ return; }
 	o = opts.target;
@@ -11268,15 +11272,15 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	o.rescaleBorder();
 	JS9.Fabric.updateChildren(dlayer, o, "scaling");
     });
-    dlayer.canvas.on('object:moving', function (opts){
-	var o;
+    dlayer.canvas.on('object:moving', (opts) => {
+	let o;
 	// sanity check
 	if( !opts.target ){ return; }
 	o = opts.target;
 	JS9.Fabric.updateChildren(dlayer, o, "moving");
     });
-    dlayer.canvas.on('object:rotating', function (opts){
-	var o;
+    dlayer.canvas.on('object:rotating', (opts) => {
+	let o;
 	// sanity check
 	if( !opts.target ){ return; }
 	o = opts.target;
@@ -11284,28 +11288,28 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     });
     if( fabric.major_version === 1 ){
 	// object selected: add anchors to polygon
-	dlayer.canvas.on("object:selected", function (opts){
+	dlayer.canvas.on("object:selected", (opts) => {
 	    // sanity check
 	    if( !opts.target ){ return; }
 	    selon(dlayer, opts.target);
 	});
 	// selection cleared
-	dlayer.canvas.on('before:selection:cleared', function (opts){
+	dlayer.canvas.on('before:selection:cleared', (opts) => {
 	    // sanity check
 	    if( !opts.target ){ return; }
 	    seloff(dlayer, opts.target);
 	});
     } else {
 	// selection created: add anchors to polygon
-	dlayer.canvas.on("selection:created", function (opts){
+	dlayer.canvas.on("selection:created", (opts) => {
 	    // sanity check
 	    if( !opts.target ){	return; }
 	    selon(dlayer, opts.target);
 	});
 	// selection updated (adding a region to the current selection):
 	// add anchors to polygon
-	dlayer.canvas.on("selection:updated", function(opts){
-	    var activeObject = dlayer.canvas.getActiveObject();
+	dlayer.canvas.on("selection:updated", (opts) => {
+	    const activeObject = dlayer.canvas.getActiveObject();
 	    if( activeObject.type === 'activeSelection' ){
 		selmultion(dlayer, activeObject, opts);
 	    } else {
@@ -11313,8 +11317,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    }
 	});
 	// selection cleared
-	dlayer.canvas.on('before:selection:cleared', function (opts){
-	    var activeObject = dlayer.canvas.getActiveObject();
+	dlayer.canvas.on('before:selection:cleared', (opts) => {
+	    const activeObject = dlayer.canvas.getActiveObject();
 	    if( activeObject.type === 'activeSelection' ){
 		selmultioff(dlayer, activeObject, opts);
 	    } else {
@@ -11325,15 +11329,13 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     // if canvas moves (e.g. light window), calcOffset must be called ...
     // there is no good cross-browser way to track an element changing,
     // (advice is to set a timer!) so we just check when the mouse enters the
-    // div, because that is when the user will interact with some shape
+    // div, because this is when the user will interact with some shape
     // only do this if we are in a light window
     if( dlayer.divjq.closest(JS9.lightOpts[JS9.LIGHTWIN].drag).length ){
 	if( fabric.isTouchSupported ){
-	    dlayer.divjq.on("touchstart",
-			    function(){dlayer.canvas.calcOffset();});
+	    dlayer.divjq.on("touchstart", () => {dlayer.canvas.calcOffset();});
 	} else {
-	    dlayer.divjq.on("mouseenter",
-			    function(){dlayer.canvas.calcOffset();});
+	    dlayer.divjq.on("mouseenter", () => {dlayer.canvas.calcOffset();});
 	}
     }
     return dlayer;
@@ -11344,12 +11346,11 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 // ---------------------------------------------------------------------------
 
 // showShapeLayer: if mode is true, layer is displayed, otherwise hidden
-// also an internal call that uses {local: true} to maybe hide/show layers
+// also an internal call which uses {local: true} to maybe hide/show layers
 // call using image context
 JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
-    var that = this;
-    var left = 0;
-    var jobj, xkey, layer, dlayer, canvas, objects, olen, obj;
+    let jobj, xkey, layer, dlayer, canvas, objects, olen, obj;
+    let left = 0;
     layer = this.getShapeLayer(layerName);
     // sanity check
     if( !layer ){
@@ -11369,34 +11370,34 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 	    canvas.selection = layer.opts.canvas.selection;
 	}
 	if( layer.json && layer.show ){
-	    canvas.loadFromJSON(layer.json, function(){
-		var key, tdlayer, obj;
+	    canvas.loadFromJSON(layer.json, () => {
+		let key, tdlayer, obj;
 		// update objects for parents and children
 		JS9.Fabric.updateChildren(layer.dlayer, null, "objects");
 		// translate these shapes if we resized while hidden
-		if( that.resize ){
-		    canvas.getObjects().forEach(function(o) {
-			o.left += that.resize.left;
-			o.top  += that.resize.top;
+		if( this.resize ){
+		    canvas.getObjects().forEach( (o) => {
+			o.left += this.resize.left;
+			o.top  += this.resize.top;
 			o.setCoords();
 		    });
 		    canvas.calcOffset();
 		}
 		// refresh and redisplay this layer
-		if( that.layers[layerName].opts.panzoom ){
-		    that.binning.obin = that.binning.bin;
-		    that.rgb.sect.ozoom = that.rgb.sect.zoom;
-		    that.refreshShapes(layerName);
+		if( this.layers[layerName].opts.panzoom ){
+		    this.binning.obin = this.binning.bin;
+		    this.rgb.sect.ozoom = this.rgb.sect.zoom;
+		    this.refreshShapes(layerName);
 		} else {
 		    canvas.renderAll();
 		}
 		layer.zindex = Math.abs(layer.zindex);
 		dlayer.divjq.css("z-index", layer.zindex);
 		// unselect selected objects in lower-zindex groups
-		for( key in that.layers ){
-		    if( that.layers.hasOwnProperty(key) ){
-			if( (layerName !== key) && that.layers[key].show ){
-			    tdlayer = that.display.layers[key];
+		for( key in this.layers ){
+		    if( this.layers.hasOwnProperty(key) ){
+			if( (layerName !== key) && this.layers[key].show ){
+			    tdlayer = this.display.layers[key];
 			    if( tdlayer.divjq.css("z-index") < layer.zindex ){
 				obj = tdlayer.canvas.getActiveObject();
 				if( obj ){
@@ -11462,7 +11463,7 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 // display all layers for the current image (save previous)
 // call using image context
 JS9.Fabric.displayShapeLayers = function(){
-    var key;
+    let key;
     // if prev and cur are the same, just exit
     if( this === this.display.image ){
 	return;
@@ -11489,7 +11490,7 @@ JS9.Fabric.displayShapeLayers = function(){
 // toggle display of active layers for the current image (save previous)
 // call using image context
 JS9.Fabric.toggleShapeLayers = function(){
-    var key, layer;
+    let key, layer;
     if( this.toggleLayers ){
 	// toggleLayers => we are currently hidden, so display them
 	for( key in this.layers ){
@@ -11523,7 +11524,7 @@ JS9.Fabric.toggleShapeLayers = function(){
 // call using image context
 // eslint-disable-next-line no-unused-vars
 JS9.Fabric.getShapeLayer = function(layerName, opts){
-    var dlayer, layer;
+    let dlayer, layer;
     // sanity check
     if( !layerName ){
 	return null;
@@ -11540,7 +11541,7 @@ JS9.Fabric.getShapeLayer = function(layerName, opts){
 	this.layers[layerName] = {};
 	// create new layer for this image
 	layer = this.layers[layerName];
-	// assume that we show this layer
+	// assume we show this layer
 	layer.show = true;
 	// no shapes yet
 	layer.nshape = 0;
@@ -11560,7 +11561,7 @@ JS9.Fabric.getShapeLayer = function(layerName, opts){
 // use zindex to make specified shape layer the active layer
 // call using image context
 JS9.Fabric.activeShapeLayer = function(s){
-    var i, j, a, key, layer, tlayer, ozindex, tzindex, rtn;
+    let i, j, a, key, layer, tlayer, ozindex, tzindex, rtn;
     if( !s ){
 	// no args: return layer with highest zindex
 	for( key in this.layers ){
@@ -11632,13 +11633,13 @@ JS9.Fabric.activeShapeLayer = function(s){
 // process options, separating into fabric opts and params
 // call using image context
 JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
-    var i, j, tags, pos, cpos, len, zoom, owcssys, txeq;
-    var key, shape, radinc, nrad, radius, tf, arr;
-    var nopts = {}, nparams = {};
-    var YFUDGE = 1;
+    let i, j, tags, pos, cpos, len, zoom, owcssys, txeq;
+    let key, shape, radinc, nrad, radius, tf, arr;
+    const nopts = {}, nparams = {};
+    const YFUDGE = 1;
     // get color for a given shape tag
-    var tagColor = function(tags, tagcolors, obj){
-	var tkey, ctags, color;
+    const tagColor = (tags, tagcolors, obj) => {
+	let tkey, ctags, color;
 	tagcolors = tagcolors || {};
 	// look through the color keys for exact match
 	for( tkey in tagcolors ){
@@ -12187,7 +12188,7 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	return [];
     }
     // array of export keys, with many stripped out
-    return Object.keys(opts).filter(function(item){
+    return Object.keys(opts).filter( (item) => {
 	switch(item){
 	case "top":
 	case "left":
@@ -12243,8 +12244,8 @@ JS9.Fabric._exportShapeOptions = function(opts){
 // make a text shape as a child of this shape
 // call using image context
 JS9.Fabric._handleChildText = function(layerName, s, opts){
-    var i, t, dpos, npos, topts, yoff, child;
-    var textht = 12;
+    let i, t, dpos, npos, topts, yoff, child;
+    const textht = 12;
     // region layer only, for now
     if( layerName !== "regions" ){
 	return;
@@ -12319,11 +12320,11 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 // add shapes to a layer
 // call using image context
 JS9.Fabric.addShapes = function(layerName, shape, myopts){
-    var i, sobj, sarr, ns, s, bopts, opts;
-    var layer, canvas, dlayer, zoom;
-    var ttop, tleft, rarr = [];
-    var objs = [];
-    var params = {};
+    let i, sobj, sarr, ns, s, bopts, opts, layer, canvas, dlayer;
+    let zoom, ttop, tleft;
+    let params = {};
+    const rarr = [];
+    const objs = [];
     // is this core service disabled?
     if( $.inArray("regions", this.params.disable) >= 0 &&
 	layerName === "regions" ){
@@ -12332,7 +12333,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     // opts can be an object or json
     if( typeof myopts === "string" ){
 	try{ myopts = JSON.parse(myopts); }
-	catch(e){ JS9.error("can't parse shape opts: " + myopts, e); }
+	catch(e){ JS9.error(`can't parse shape opts: ${myopts}`, e); }
     }
     // optional myopts can be an object or a string
     myopts = myopts || {};
@@ -12354,7 +12355,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     } else {
 	zoom = 1;
     }
-    // figure out the first argument
+    // figure out the first arg
     if( typeof shape === "string" ){
 	// look for a region string
 	s = this.parseRegions(shape, myopts);
@@ -12373,7 +12374,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	return;
     }
     // once a shape has been added, we can set the zindex to process events
-    if( !canvas.size() ){
+    if( JS9.isNull(layer.zindex) || Number.isNaN(layer.zindex)  ){
 	if( this.display.layers[layerName].dtype === "main" ){
 	    switch(layerName){
 	    case JS9.Crosshair.LAYERNAME:
@@ -12510,14 +12511,14 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    // save shape
 	    params.shape = "text";
 	    params.text = opts.text || "Double-click to add text here";
-	    // FF svg to pdf is broken, so use fill instead of stroke
+	    // FF svg to pdf is broken: use fill instead of stroke
 	    // https://github.com/kangax/fabric.js/issues/2675
 	    opts.fill = opts.stroke;
 	    opts.strokeWidth = 0;
 	    s = new fabric.Text(params.text, opts);
 	    break;
 	default:
-	    JS9.error("unknown shape: "+sobj.shape);
+	    JS9.error(`unknown shape: ${sobj.shape}`);
 	    break;
 	}
 	// add new shape to canvas
@@ -12579,8 +12580,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 // select a one of more shapes by id or tag and execute a callback
 // call using image context
 JS9.Fabric.selectShapes = function(layerName, id, cb){
-    var i, group, ginfo, sobj, canvas, objects, olen, obj, ocolor, tag, ao;
-    var that = this;
+    let i, group, ginfo, sobj, canvas, objects, olen, obj, ocolor, tag, ao;
     // sanity check
     if( !this.layers || !layerName || !this.layers[layerName] ){
 	return null;
@@ -12615,7 +12615,7 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 	        ginfo.group = group;
 	    }
 	    // specific shape
-	    cb.call(that, id, ginfo);
+	    cb.call(this, id, ginfo);
 	}
 	break;
     case "number":
@@ -12629,7 +12629,7 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 		} else {
 		    ginfo.group = null;
 		}
-		cb.call(that, obj, ginfo);
+		cb.call(this, obj, ginfo);
 	    }
 	}
 	break;
@@ -12644,7 +12644,7 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 		    if( sobj.params ){
 			ginfo.group = null;
 			// selected object
-			cb.call(that, sobj, ginfo);
+			cb.call(this, sobj, ginfo);
 		    }
 		} else if( group ){
 		    ginfo.group = group;
@@ -12654,7 +12654,7 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 			obj = objects[olen];
 			// don't process shapes with parents in a group
 			if( obj.params && !obj.params.parent ){
-			    cb.call(that, obj, ginfo);
+			    cb.call(this, obj, ginfo);
 			}
 		    }
 		}
@@ -12666,7 +12666,7 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 		    obj = objects[olen];
 		    // don't process shapes with parents in a group
 		    if( obj.params && !obj.params.parent ){
-			cb.call(that, obj, ginfo);
+			cb.call(this, obj, ginfo);
 		    }
 		}
 	    }
@@ -12695,25 +12695,25 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 		}
 		if( id.toLowerCase() === "all" ){
 		    // all
-		    cb.call(that, obj, ginfo);
+		    cb.call(this, obj, ginfo);
 		} else if( (id.toLowerCase() === ocolor) ||
 			   (JS9.colorToHex(id).toLowerCase() === ocolor) ){
 		    // color
-		    cb.call(that, obj, ginfo);
+		    cb.call(this, obj, ginfo);
 		} else if( id === obj.params.shape ){
 		    // shape
-		    cb.call(that, obj, ginfo);
+		    cb.call(this, obj, ginfo);
 		} else if( id === obj.params.file ){
 		    // origin filename
-		    cb.call(that, obj, ginfo);
+		    cb.call(this, obj, ginfo);
 		} else if( id === "child" && obj.params.parent ){
 		    // all
-		    cb.call(that, obj, ginfo);
+		    cb.call(this, obj, ginfo);
 		} else if( id === "parent"            &&
 			   obj.params.children        &&
 			   obj.params.children.length ){
 		    // all
-		    cb.call(that, obj, ginfo);
+		    cb.call(this, obj, ginfo);
 		} else {
 		    // tags
 		    if( obj.params.tags){
@@ -12721,9 +12721,9 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 			    tag = obj.params.tags[i];
 			    if( id.match(/^\/.*\/$/) &&
 				tag.match(new RegExp(id.slice(1,-1)))){
-				cb.call(that, obj, ginfo);
+				cb.call(this, obj, ginfo);
 			    } else if( id === tag ){
-				cb.call(that, obj, ginfo);
+				cb.call(this, obj, ginfo);
 			    }
 			}
 		    }
@@ -12738,10 +12738,9 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 // update public object in shapes
 // call using image context
 JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
-    var that = this;
     // process the specified shapes
-    this.selectShapes(layerName, shape, function(obj, ginfo){
-	JS9.Fabric._updateShape.call(that, layerName, obj, ginfo, mode, opts);
+    this.selectShapes(layerName, shape, (obj, ginfo) => {
+	JS9.Fabric._updateShape.call(this, layerName, obj, ginfo, mode, opts);
     });
     return this;
 };
@@ -12749,13 +12748,13 @@ JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
 // primitive to update one shape
 // call using image context
 JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
-    var i, xname, s, scalex, scaley, px, py, lcs, v0, v1, tval1, tval2;
-    var bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius, oangle;
-    var opos, dist;
-    var pub ={};
-    var layer = this.layers[layerName];
-    var tr  = function(x){return x.toFixed(2);};
-    var tr4 = function(x){return x.toFixed(4);};
+    let i, xname, s, scalex, scaley, px, py, v0, v1, tval1, tval2;
+    let bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius, oangle;
+    let opos, dist;
+    const pub ={};
+    const layer = this.layers[layerName];
+    const tr  = (x) => { return x.toFixed(2); };
+    const tr4 = (x) => { return x.toFixed(4); };
     ginfo = ginfo || {};
     opts = opts || {};
     mode = mode || "update";
@@ -12835,7 +12834,6 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	scalex *= ginfo.group.scaleX;
 	scaley *= ginfo.group.scaleY;
     }
-    // since we can call this in mousemove, optimize by not using sprintf
     switch(pub.shape){
     case "annulus":
 	pub.shape = "annulus";
@@ -12843,15 +12841,15 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	if( pub.imsys !== "image" ){
 	    pub.lcs.radii = [];
 	}
-	pub.imstr = "annulus(" + tr(px) + ", " + tr(py) + ", ";
-	tstr = "annulus " + pub.x + " " + pub.y + " ";
+	pub.imstr = `annulus(${tr(px)}, ${tr(py)}, `;
+	tstr = `annulus ${pub.x} ${pub.y} `;
 	objs = obj.getObjects();
 	olen = objs.length;
 	for(i=0; i<olen; i++){
 	    radius = objs[i].radius * scalex;
 	    tval1 = radius * bin;
 	    pub.imstr += tr(tval1);
-	    tstr += (pub.x + " " +  pub.y + " " + (pub.x + radius) + " " + pub.y + " ");
+	    tstr += `${pub.x} ${pub.y} ${pub.x + radius} ${pub.y} `;
 	    if( i === (olen - 1) ){
 		pub.imstr += ")";
 	    } else {
@@ -12873,8 +12871,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.width = tval1;
 	    pub.lcs.height = tval2;
 	}
-	pub.imstr = "box(" + tr(px) + ", " + tr(py) + ", " + tr(tval1) + ", " + tr(tval2) + ", " + tr4(pub.angle) + ")";
-	tstr = "box " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + pub.width) + " " + pub.y + " " + pub.x + " " + pub.y + " " + pub.x + " " + (pub.y + pub.height) + " " + (pub.angle * Math.PI / 180.0);
+	pub.imstr = `box(${tr(px)}, ${tr(py)}, ${tr(tval1)}, ${tr(tval2)}, ${tr4(pub.angle)})`;
+	tstr = `box ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.width} ${pub.y} ${pub.x} ${pub.y} ${pub.x} ${pub.y + pub.height} ${pub.angle * Math.PI / 180.0}`;
 	break;
     case "circle":
 	pub.radius = obj.radius * scalex;
@@ -12882,8 +12880,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	if( pub.imsys !== "image" ){
 	    pub.lcs.radius = tval1;
 	}
-	pub.imstr = "circle(" + tr(px) + ", " + tr(py) + ", " + tr(tval1) + ")";
-	tstr = "circle " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + pub.radius) + " " + pub.y;
+	pub.imstr = `circle(${tr(px)}, ${tr(py)}, ${tr(tval1)})`;
+	tstr = `circle ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.radius} ${pub.y}`;
 	break;
     case "ellipse":
 	pub.r1 = obj.width * scalex / 2;
@@ -12894,8 +12892,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.r1 = tval1;
 	    pub.lcs.r2 = tval2;
 	}
-	pub.imstr = "ellipse(" + tr(px) + ", " + tr(py) + ", " + tr(tval1) + ", " + tr(tval2) + ", " + tr4(pub.angle) + ")";
-	tstr = "ellipse " + pub.x + " " + pub.y + " " + pub.x + " " + pub.y + " " + (pub.x + pub.r1) + " " + pub.y + " " + pub.x + " " + pub.y + " " + pub.x + " " + (pub.y + pub.r2) + " " + (pub.angle * Math.PI / 180.0);
+	pub.imstr = `ellipse(${tr(px)}, ${tr(py)}, ${tr(tval1)}, ${tr(tval2)}, ${tr4(pub.angle)})`;
+	tstr = `ellipse ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.r1} ${pub.y} ${pub.x} ${pub.y} ${pub.x} ${pub.y + pub.r2} ${pub.angle * Math.PI / 180.0}`;
 	break;
     case "point":
 	pub.width =  obj.width * scalex;
@@ -12906,13 +12904,13 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.width = tval1;
 	    pub.lcs.height = tval2;
 	}
-	pub.imstr = "point(" + tr(px) + ", " + tr(py) + ")";
-	tstr = "point " + pub.x + " " + pub.y;
+	pub.imstr = `point(${tr(px)}, ${tr(py)})`;
+	tstr = `point ${pub.x} ${pub.y}`;
 	break;
     case "line":
     case "polygon":
-	pub.imstr = pub.shape + "(";
-	tstr = pub.shape + " ";
+	pub.imstr = `${pub.shape}(`;
+	tstr = `${pub.shape} `;
 	pub.pts = [];
 	if( pub.imsys !== "image" ){
 	    pub.lcs.pts = [];
@@ -12929,13 +12927,13 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    npos = JS9.rotatePoint(npos, oangle,
 				   {x: pub.x, y: pub.y});
 	    if( this.params.wcssys === "image" ){
-		pub.imstr += (tr(npos.x) + ", " + tr(npos.y));
+		pub.imstr += `${tr(npos.x)}, ${tr(npos.y)}`;
 	    } else {
-		lcs = this.imageToLogicalPos(npos);
-		pub.imstr += (tr(lcs.x) + ", " + tr(lcs.y));
-		pub.lcs.pts.push({x: lcs.x, y: lcs.y});
+		const {x, y} = this.imageToLogicalPos(npos);
+		pub.imstr += `${tr(x)}, ${tr(y)}`;
+		pub.lcs.pts.push({x, y});
 	    }
-	    tstr += (npos.x + " " + npos.y);
+	    tstr += `${npos.x} ${npos.y}`;
 	    pub.pts.push(npos);
 	    if( pub.shape === "line" ){
 		if( i === 0 ){
@@ -12948,7 +12946,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    }
 	}
         if( pub.shape === "line" && JS9.notNull(dist) ){
-	    pub.imstr += ') {"size":' + tr(dist) + ',"units":"pixels"}';
+	    pub.imstr += `) {"size":${tr(dist)},"units":"pixels"}`;
 	} else {
 	    pub.imstr += ")";
 	}
@@ -12956,8 +12954,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.angle = 0;
         break;
     case "text":
-	pub.imstr = "text(" + tr(px) + ", " + tr(py) + ', "' + obj.text + '", ' + tr4(pub.angle) + ')';
-	tstr = "text " + pub.x + " " + pub.y + ' "' + obj.text + '"' + " " + (pub.angle * Math.PI / 180.0);
+	pub.imstr = `text(${tr(px)}, ${tr(py)}, "${obj.text}", ${tr4(pub.angle)})`;
+	tstr = `text ${pub.x} ${pub.y} "${obj.text}"` + ` ${pub.angle * Math.PI / 180.0}`;
 	pub.text = obj.text;
 	break;
     default:
@@ -13057,7 +13055,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	}
 	// plugin callbacks: these have the form on[layer]change,
 	// e.g. onregionschange
-	xname = "on" + layerName + "change";
+	xname = `on${layerName}change`;
 	this.xeqPlugins("shape", xname, pub);
     }
     // copy to clipboard, if necessary
@@ -13086,10 +13084,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 // remove the active shape
 // eslint-disable-next-line no-unused-vars
 JS9.Fabric.removeShapes = function(layerName, shape, opts){
-    var i;
-    var arr = [];
-    var that = this;
-    var layer, canvas;
+    let i, layer, canvas;
+    const arr = [];
     layer = this.getShapeLayer(layerName);
     // sanity check
     if( !layer ){
@@ -13104,10 +13100,10 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 	}
     }
     // process the specified shapes
-    this.selectShapes(layerName, shape, function(obj, ginfo){
-	var i, child, parent;
+    this.selectShapes(layerName, shape, (obj, ginfo) => {
+	let i, child, parent;
 	if( obj.params.removable !== false ){
-	    JS9.Fabric._updateShape.call(that, layerName, obj, ginfo, "remove");
+	    JS9.Fabric._updateShape.call(this, layerName, obj, ginfo, "remove");
 	    // clear any dialog box
 	    if( obj.params.winid ){
 		obj.params.winid.close();
@@ -13155,12 +13151,12 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 // return one or more regions
 // call using image context
 JS9.Fabric.getShapes = function(layerName, shape, opts){
-    var shapes = [];
-    var myshape = {};
+    let myshape = {};
+    const shapes = [];
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse getShapes opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse getShapes opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -13169,7 +13165,7 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 	return this.listRegions(shape, {mode: opts.mode || 1});
     }
     // process the specified shapes
-    this.selectShapes(layerName, shape, function(obj){
+    this.selectShapes(layerName, shape, (obj) => {
 	// public part of the shape
 	myshape = obj.pub || {};
 	// might need shape object itself
@@ -13185,10 +13181,8 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 // change the specified shape(s)
 // call using image context
 JS9.Fabric.changeShapes = function(layerName, shape, opts){
-    var i, s, sobj, bopts, layer, canvas, ao, rlen, color, maxr, zoom;
-    var exports;
-    var orad = [];
-    var that = this;
+    let i, s, sobj, bopts, layer, canvas, ao, rlen, color, maxr, zoom, exports;
+    const orad = [];
     layer = this.getShapeLayer(layerName);
     // sanity check
     if( !layer ){
@@ -13201,7 +13195,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     // allow opts to be a JSON string
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse shape opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse shape opts: ${opts}`, e); }
     }
     canvas = layer.canvas;
     // is image zoom part of scale?
@@ -13213,7 +13207,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     // active object
     ao = canvas.getActiveObject();
     // process the specified shapes
-    this.selectShapes(layerName, shape, function(obj, ginfo){
+    this.selectShapes(layerName, shape, (obj, ginfo) => {
 	// combine the objects parameters with the new options
 	// clearing some of the old ones first
 	if( opts.radii ){
@@ -13249,9 +13243,9 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	}
 	// get new option names to export when saving regions
 	exports = JS9.Fabric._exportShapeOptions.call(this, opts)
-	    .filter(function(item) {
+	    .filter( (item) => {
 		return !obj.params.exports.hasOwnProperty(item);
-	});
+	    });
 	sobj.params.exports = obj.params.exports.concat(exports);
 	// if stroke (color) is defined, we probably need to convert it to hex
 	if( sobj.opts.stroke ){
@@ -13285,9 +13279,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 		color = obj.get("stroke");
 		// remove existing annuli
 		// can't remove inside the forEachObject loop
-		obj.forEachObject(function(tobj){
-		    orad.push(tobj);
-		});
+		obj.forEachObject( (tobj) => { orad.push(tobj); });
 		// so do it outside the loop
 		rlen = orad.length;
 		for(i=0; i<rlen; i++){
@@ -13374,9 +13366,9 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	// and reset coords
 	obj.setCoords();
 	// might need to make a text shape as a child of this shape
-	JS9.Fabric._handleChildText.call(that, layerName, obj, opts);
+	JS9.Fabric._handleChildText.call(this, layerName, obj, opts);
 	// update the shape info and make callbacks
-	JS9.Fabric._updateShape.call(that, layerName, obj, ginfo, "update");
+	JS9.Fabric._updateShape.call(this, layerName, obj, ginfo, "update");
 	// callback if necessary
 	if( opts.onchangeshapes && obj.pub ){
 	    try{ JS9.xeqByName(opts.onchangeshapes, this, this, obj.pub); }
@@ -13391,160 +13383,34 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 };
 
 // update shape layer after a change in panning, zooming, binning
-// This routine is more complicated that one would want because fabric.js mixes
-// regions resize, zoom, and binning all in the same scale factor. So when
-// we want to adjust a region for pan, zoom, or bin, we first have to untangle
-// the old zoom and bin values from the scale before applying new ones.
-// Current approach is to save the old bin and zoom factors when changing them,
-// use the old ones here, and then reset the old ones to the new ones. Hmmm ...
 // call using image context
 JS9.Fabric.refreshShapes = function(layerName){
-    var ao, bin, zoom, scaleX, scaleY, tscaleX, tscaleY;
-    var layer, canvas;
-    var ismain = false;
-    var that = this;
-    var wcs = this.raw.wcs;
-    layer = this.getShapeLayer(layerName);
+    let regstr, owcssys, txeq;
     // sanity check
-    if( !layer ){
+    if( !layerName ){
 	return;
     }
-    if( this.display.layers[layerName].dtype === "main" ){
-	ismain = true;
-    }
-    if( ismain ){
-	bin = this.binning.bin;
-	zoom = this.rgb.sect.zoom;
-	// scale factor removes the old values and applies the new ones
-	scaleX = (this.binning.obin / this.rgb.sect.ozoom) * zoom / bin;
-	scaleY = (this.binning.obin / this.rgb.sect.ozoom) * zoom / bin;
+    // temporarily turn off plugin execution
+    txeq = JS9.globalOpts.xeqPlugins;
+    JS9.globalOpts.xeqPlugins = false;
+    // temporarily change wcs system to be independent of image coords
+    owcssys = this.getWCSSys();
+    if( this.raw.wcs && (this.raw.wcs > 0) ){
+	this.setWCSSys("native");
     } else {
-	bin = 1;
-	zoom = this.rgb.sect.zoom;
-	scaleX = zoom;
-	scaleY = zoom;
+	this.setWCSSys("physical");
     }
-    canvas = layer.canvas;
-    // have to discard active groups before changing position of shapes
-    if( fabric.major_version === 1 ){
-	if( canvas.getActiveGroup() ){
-	    canvas.discardActiveGroup();
-	}
-    } else {
-	if( canvas.getActiveObjects().length > 1 ){
-	    canvas.discardActiveObject();
-	}
+    // get current regions (i.e., before update to current configuration)
+    regstr = this.listRegions("all", {mode: 1}, layerName);
+    if( regstr ){
+	// remove current regions
+	this.removeShapes(layerName, "all");
+	// add back regions in current configuration
+	this.addShapes(layerName, regstr);
     }
-    ao = canvas.getActiveObject();
-    // process the specified shapes
-    this.selectShapes(layerName, "all", function(obj){
-	var i, s, pos, cen, pts;
-	// convert current image pos to new display pos
-	// pos = that.imageToDisplayPos(obj.pub);
-	// convert current logical position to new display position
-	// this takes binning, etc. into consideration
-	if( wcs > 0 && obj.pub.ra && obj.pub.dec ){
-	    if( typeof obj.pub.ra === "string" ){
-		obj.pub.ra = JS9.saostrtod(obj.pub.ra);
-		if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-		    (this.params.wcssys !== "galactic" )          &&
-		    (this.params.wcssys !== "ecliptic" )          ){
-		    obj.pub.ra *= 15.0;
-		}
-	    }
-	    if( typeof obj.pub.dec === "string" ){
-		obj.pub.dec = JS9.saostrtod(obj.pub.dec);
-	    }
-	    s = JS9.wcs2pix(wcs, obj.pub.ra, obj.pub.dec).trim().split(/ +/);
-	    pos = this.imageToDisplayPos({x: parseFloat(s[0]),
-					  y: parseFloat(s[1])});
-	} else {
-	    pos = that.logicalToDisplayPos(obj.pub.lcs);
-	}
-	// change region position
-	obj.set("left", pos.x);
-	obj.set("top", pos.y);
-	// change angle for shapes accepting angles
-	if( obj.params.shape === "box"                           ||
-	    obj.params.shape === "ellipse"                       ||
-	    (obj.params.shape === "text"  && !obj.params.parent) ){
-	    if( that.raw.wcsinfo && that.raw.wcsinfo.crot ){
-		obj.set("angle", -(obj.pub.angle + that.raw.wcsinfo.crot));
-	    } else {
-		obj.set("angle", -obj.pub.angle);
-	    }
-	}
-	// set scaling based on zoom factor, if necessary
-	if( obj.params.zoomable !== false ){
-	    switch(obj.params.shape){
-	    case "point":
-	    case "text":
-		break;
-	    default:
-		// rescale the region
-		tscaleX = scaleX;
-		tscaleY = scaleY;
-		if( ismain ){
-		    // tscale is the resize part of old scale * new bin & zoom
-		    tscaleX *= obj.scaleX;
-		    tscaleY *= obj.scaleY;
-		}
-		obj.scaleX = tscaleX;
-		obj.scaleY = tscaleY;
-		// rescale the width of the stroke lines
-		obj.rescaleBorder();
-		//  refresh polygon and line coordinates from wcs or physical
-		if( obj.points ){
-		    cen = obj.getCenterPoint();
-		    if( wcs > 0 && obj.pub.wcspts ){
-			pts = obj.pub.wcspts;
-			for(i=0; i<pts.length; i++){
-			    s = JS9.wcs2pix(wcs, pts[i].ra, pts[i].dec)
-				.trim().split(/ +/);
-			    pos = this.imageToDisplayPos({x: parseFloat(s[0]),
-							  y: parseFloat(s[1])});
-			    if( obj.angle ){
-				pos = JS9.rotatePoint(pos, -obj.angle, cen);
-			    }
-			    obj.points[i] = {x: (pos.x - cen.x)/obj.scaleX,
-					     y: (pos.y - cen.y)/obj.scaleY};
-			}
-		    } else if( obj.pub.lcs.pts ){
-			pts = obj.pub.lcs.pts;
-			for(i=0; i<pts.length; i++){
-			    pos = that.logicalToDisplayPos(obj.pub.lcs.pts[i]);
-			    if( obj.angle ){
-				pos = JS9.rotatePoint(pos, -obj.angle, cen);
-			    }
-			    obj.points[i] = {x: (pos.x - cen.x)/obj.scaleX,
-					     y: (pos.y - cen.y)/obj.scaleY};
-			}
-		    }
-		}
-		break;
-	    }
-	}
-	// recalculate fabric coords
-	obj.setCoords();
-	// shape-specific processing
-	switch(obj.type){
-	    case "polyline":
-	    case "polygon":
-	    if( ao === obj ){
-		JS9.Fabric.removePolygonAnchors(layer.dlayer, obj);
-		JS9.Fabric.addPolygonAnchors(layer.dlayer, obj);
-	    }
-	    break;
-	}
-	// update children
-	JS9.Fabric.updateChildren(layer.dlayer, obj, "moving");
-	JS9.Fabric.updateChildren(layer.dlayer, obj, "scaling");
-	JS9.Fabric.updateChildren(layer.dlayer, obj, "rotating");
-    });
-    // redraw regions
-    if( canvas ){
-	canvas.renderAll();
-    }
+    // restore changes
+    this.setWCSSys(owcssys);
+    JS9.globalOpts.xeqPlugins = txeq;
     return this;
 };
 
@@ -13552,10 +13418,13 @@ JS9.Fabric.refreshShapes = function(layerName){
 // http://stackoverflow.com/questions/14014861/constrain-image-to-a-path-in-kineticjs
 // call using image context
 JS9.Fabric.addPolygonPoint = function(layerName, obj, evt){
-    var i, points, p1, p2, minX, minY, maxX, maxY, dir, m, dot, d, angle;
-    var layer;
-    var mpos={}, canv={}, local={}, newpt={}, pos = {}, pVec = {}, p = {};
-    var diff = Number.MAX_VALUE;   // a bloated diff, for minimum comparison
+    let i, points, p1, p2, minX, minY, maxX, maxY, dir, m, dot, d, angle, layer;
+    let mpos = {};
+    let pVec = {};
+    let p = {};
+    let diff  =  Number.MAX_VALUE;   // a bloated diff, for minimum comparison
+    const canv = {}, local = {};
+    const newpt = {}, pos = {};
     // sanity check
     if( !obj || !obj.points){
         return;
@@ -13583,7 +13452,7 @@ JS9.Fabric.addPolygonPoint = function(layerName, obj, evt){
     //from this main point to the drag position.
     //Dot product of position vector and direction vector give us
     //the projection of the point on the current side.
-    //A simple bounds checking to ensure that the projection is on
+    //A simple bounds checking to ensure the projection is on
     //the side, then a distance calculation.
     //If the distance found is less than the current minimum difference
     //update diff, newX and newY.
@@ -13666,7 +13535,7 @@ JS9.Fabric.addPolygonPoint = function(layerName, obj, evt){
 // remove the specified point
 // call using image context
 JS9.Fabric.removePolygonPoint = function(layerName, obj){
-    var layer, polygon, points, pt;
+    let layer, polygon, points, pt;
     // sanity check
     if( !obj || !obj.polyparams ){
 	return;
@@ -13698,14 +13567,15 @@ JS9.Fabric.removePolygonPoint = function(layerName, obj){
 // add anchors to a polygon
 // don't need to call using image context
 JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
-    var i, a, pos={};
-    var canvas = dlayer.canvas;
-    var movePoint = function(){
-	var anchor = this;
-	var poly = anchor.polyparams.polygon;
-	var pt = anchor.polyparams.point;
-	var points = poly.get('points');
-	var im = dlayer.display.image;
+    let i, a;
+    let pos = {};
+    const canvas = dlayer.canvas;
+    const movePoint = (obj) => {
+	const anchor = obj.target;
+	const poly = anchor.polyparams.polygon;
+	const pt = anchor.polyparams.point;
+	const points = poly.get('points');
+	const im = dlayer.display.image;
 	// if pt was deleted, stop the callback
 	if( pt === undefined ){
 	    return;
@@ -13737,8 +13607,9 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	// redraw
 	canvas.renderAll();
     };
-    var moveAnchors = function(obj){
-	var ii, tpos={};
+    const moveAnchors = (obj) => {
+	let ii;
+	let tpos = {};
 	// change anchor positions
 	for(ii=0; ii<obj.params.anchors.length; ii++){
 	    tpos.x = obj.left + obj.points[ii].x * obj.scaleX;
@@ -13788,7 +13659,7 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	    height: JS9.Fabric.opts.cornerSize + 2,
 	    padding: 2
 	});
-	// add resize function on move
+	// add resize func on move
 	a.on("moving", movePoint);
 	// save point in the polygon for move
 	a.polyparams = {};
@@ -13800,25 +13671,23 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	canvas.add(a);
     }
     // reposition anchors on move
-    obj.on("moving", function(){
+    obj.on("moving", () => {
 	moveAnchors(obj);
     });
-    obj.on("rotating", function(){
+    obj.on("rotating", () => {
 	moveAnchors(obj);
     });
-    obj.on("scaling", function(){
+    obj.on("scaling", () => {
 	moveAnchors(obj);
     });
     obj.setCoords();
-    // let the caller do this
-    // canvas.renderAll();
 };
 
 // remove anchors from a polygon
 // don't need to call using image context
 JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
-    var i;
-    var canvas = dlayer.canvas;
+    let i;
+    const canvas = dlayer.canvas;
     if( shape && shape.params && shape.params.anchors ){
 	if( shape.params.changeable === false ){
 	    return;
@@ -13834,7 +13703,7 @@ JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
 // update child regions
 // don't need to call using image context
 JS9.Fabric.updateChildren = function(dlayer, shape, type){
-    var i, p, x, child, nangle, npos;
+    let i, p, x, child, nangle, npos;
     // region layer only, for now
     if( dlayer.layerName !== "regions" ){
 	return;
@@ -13843,7 +13712,7 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
     if( type === "objects" ){
 	x = {};
 	// first get a list of parents and children
-	dlayer.canvas.getObjects().forEach(function(o) {
+	dlayer.canvas.getObjects().forEach( (o) => {
 	    if( o.params ){
 		if( o.params.parent || o.params.children.length ){
 		    x[o.params.id] = o;
@@ -13851,7 +13720,7 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 	    }
 	});
 	// then re-assign obj pointers to parents and children
-	dlayer.canvas.getObjects().forEach(function(o) {
+	dlayer.canvas.getObjects().forEach( (o) => {
 	    if( o.params ){
 		if( o.params.parent ){
 		    o.params.parent.obj = x[o.params.parent.id];
@@ -13932,9 +13801,8 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 // reset center of a polygon
 // don't need to call using image context
 JS9.resetPolygonCenter = function(poly){
-    var i, ndx, ndy, dobj, calcDim;
-    var tpos = {};
-    var dx, dy;
+    let i, ndx, ndy, dobj, calcDim, dx, dy;
+    let tpos = {};
     // deltas to center
     if( fabric.major_version === 1 ){
 	// fabric v1.x: results are stored in poly itself
@@ -13990,14 +13858,15 @@ JS9.resetPolygonCenter = function(poly){
 // Print support
 // call using image context
 JS9.Fabric.print = function(opts){
-    var html, key, win, dataURL, divstr, pinst, layer, initialURL;
-    var xoff = 0, yoff = 0;
-    var divtmpl = "<div style='position:absolute; left:%spx; top:%spx'>";
-    var winopts = sprintf("width=%s,height=%s,menubar=1,toolbar=1,status=0,scrollbars=1,resizable=1", this.display.canvasjq.attr("width"), this.display.canvasjq.attr("height"));
+    let html, key, win, dataURL, divstr, pinst, layer, initialURL;
+    let yoff = 0;
+    let xoff = 0;
+    const divtmpl = "<div style='position:absolute; left:%spx; top:%spx'>";
+    const winopts = sprintf("width=%s,height=%s,menubar=1,toolbar=1,status=0,scrollbars=1,resizable=1", this.display.canvasjq.attr("width"), this.display.canvasjq.attr("height"));
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse print opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse print opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
@@ -14008,14 +13877,14 @@ JS9.Fabric.print = function(opts){
     // initial div to hold image
     divstr = sprintf(divtmpl, xoff, yoff);
     // add the image
-    html += sprintf("%s<img src='%s'></div>", divstr, dataURL);
+    html += `${divstr}<img src='${dataURL}'></div>`;
     // add layers
     for( key in this.layers ){
 	if( this.layers.hasOwnProperty(key) ){
 	    layer = this.layers[key];
 	    // output (showing) layers attached to the main display
 	    if( layer.dlayer.dtype === "main" && layer.show ){
-		html += sprintf("%s%s</div>", divstr, layer.dlayer.canvas.toSVG());
+		html += `${divstr}${layer.dlayer.canvas.toSVG()}</div>`;
 	    }
 	}
     }
@@ -14029,15 +13898,14 @@ JS9.Fabric.print = function(opts){
 	    dataURL = pinst.colorbarjq[0].toDataURL("image/png");
 	    yoff += this.display.height;
 	    divstr = sprintf(divtmpl, xoff, yoff);
-	    html += sprintf("%s<img src='%s'></div>", divstr, dataURL);
+	    html += `${divstr}<img src='${dataURL}'></div>`;
 	    if( pinst.textjq && pinst.textjq[0] ){
 		// colorbar text/tickmarks canvas
 		dataURL = pinst.textjq[0].toDataURL("image/png");
 		yoff += pinst.colorbarjq.height() + 1;
 		divstr = sprintf(divtmpl, xoff, yoff);
 		// need to rescale the text ... argh!!!
-		html += sprintf("%s<img style='width:%spx;'src='%s'></div>",
-			     divstr, this.display.width, dataURL);
+		html += `${divstr}<img style='width:${this.display.width}px;'src='${dataURL}'></div>`;
 	    }
 	}
     }
@@ -14046,7 +13914,7 @@ JS9.Fabric.print = function(opts){
     // are we in Electron?
     // https://github.com/electron/electron/issues/2288
     if( window.isElectron ){
-	initialURL = "data:text/html,<html><body><script>window.addEventListener('message', function(ev){document.documentElement.innerHTML=ev.data; window.setTimeout(function(){window.print()}, 250);},false)</script><p>waiting for image ...</body></html>";
+	initialURL = "data:text/html,<html><body><script>window.addEventListener('message', (ev) => {document.documentElement.innerHTML=ev.data; window.setTimeout(() => {window.print()}, 250);},false)</script><p>waiting for image ...</body></html>";
     }
     // make a new window containing the initial URL
     win = window.open(initialURL, this.id, winopts);
@@ -14064,9 +13932,9 @@ JS9.Fabric.print = function(opts){
 	win.document.close();
     } else if( win.postMessage ){
 	// send html to the window with which to reconfigure itself
-	window.setTimeout(function(){
+	window.setTimeout(() => {
 	    win.postMessage(html, "*");
-	}, 250);
+	}, JS9.TIMEOUT);
     } else {
 	JS9.error("no method available for drawing image into print window");
     }
@@ -14074,7 +13942,7 @@ JS9.Fabric.print = function(opts){
 
 // incorporate these graphics routines into JS9
 JS9.Fabric.initGraphics = function(){
-    var key;
+    let key;
     // display methods
     JS9.Display.prototype.newShapeLayer = JS9.Fabric.newShapeLayer;
     // image shape methods
@@ -14133,17 +14001,17 @@ JS9.MouseTouch.actionHTML="<div style='float: left'><b>%s</b></div>";
 
 // get an id based on the action
 JS9.MouseTouch.actionid = function(cname, aname){
-    return (cname + "_" + aname).replace(/[^A-Za-z0-9_]/g, "_");
+    return (`${cname}_${aname}`).replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // add to the text descriptions
 JS9.MouseTouch.addText = function(container, text){
-    var s, divjq;
+    let s, divjq;
     // create the html for this action
     s = sprintf(JS9.MouseTouch.textHTML, text);
     // add text html to the text container
     divjq = $("<div>")
-	.addClass(JS9.MouseTouch.BASE + "Text")
+	.addClass(`${JS9.MouseTouch.BASE}Text`)
 	.html(s)
 	.appendTo(container);
     return divjq;
@@ -14151,13 +14019,13 @@ JS9.MouseTouch.addText = function(container, text){
 
 // add to the sortable action list
 JS9.MouseTouch.addAction = function(container, cname, aname){
-    var s, id, divjq;
+    let s, id, divjq;
     id = JS9.MouseTouch.actionid(cname, aname);
     // create the html for this action
     s = sprintf(JS9.MouseTouch.actionHTML, aname);
     // add action html to the action container
     divjq = $("<div>")
-	.addClass(JS9.MouseTouch.BASE + "Action")
+	.addClass(`${JS9.MouseTouch.BASE}Action`)
 	.attr("id", id)
 	.html(s)
 	.appendTo(container);
@@ -14167,9 +14035,9 @@ JS9.MouseTouch.addAction = function(container, cname, aname){
 // display value/position
 // eslint-disable-next-line no-unused-vars
 JS9.MouseTouch.isPinch = function(im, evt){
-    var npinch = JS9.globalOpts.pinchWait;
-    var pthresh = JS9.globalOpts.pinchThresh;
-    var i, display, dist, pinc, pdec;
+    let i, display, dist, pinc, pdec;
+    const npinch = JS9.globalOpts.pinchWait;
+    const pthresh = JS9.globalOpts.pinchThresh;
     // sanity check
     if( !im ){
 	return -1;
@@ -14247,8 +14115,8 @@ JS9.MouseTouch.Actions["display value/position"] = function(im, ipos, evt){
 
 // change contrast/bias
 JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
-    var x, y, pos;
-    var display = im.display;
+    let x, y, pos;
+    const display = im.display;
     // skip contrast/bias change?
     if( !JS9.globalOpts.internalContrastBias || !im || !ipos ){
 	return;
@@ -14285,7 +14153,7 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
     // work-around for FF bug, not fixed as of 8/8/2012
     // https://bugzilla.mozilla.org/show_bug.cgi?id=732621
     if( JS9.bugs.firefox_linux ){
-	window.setTimeout(function(){
+	window.setTimeout(() => {
 	    im.displayImage("scaled", {blendMode: false});
 	}, 0);
     } else {
@@ -14313,8 +14181,8 @@ JS9.MouseTouch.Actions["change contrast/bias"].stop = function(im, ipos, evt){
 
 // zoom the image
 JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
-    var nzoom, display;
-    var delta = evt.originalEvent.deltaY;
+    let nzoom, display;
+    const delta = evt.originalEvent.deltaY;
     // sanity checks
     if( !im ){
 	return;
@@ -14339,7 +14207,7 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
 // pan the image
 // eslint-disable-next-line no-unused-vars
 JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
-    var dx, dy, sect;
+    let dx, dy, sect;
     // sanity check
     if( !im ){
 	return;
@@ -14359,7 +14227,7 @@ JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
 // pinch zoom
 // eslint-disable-next-line no-unused-vars
 JS9.MouseTouch.Actions.pinch = function(im, ipos, evt){
-    var display, dist, nzoom;
+    let display, dist, nzoom;
     // sanity checks
     if( !im ){
 	return;
@@ -14383,7 +14251,7 @@ JS9.MouseTouch.Actions.pinch = function(im, ipos, evt){
 
 // start of mouse/touch action processing
 JS9.MouseTouch.Actions.start = function(im, ipos, evt){
-    var display, action;
+    let display, action;
     if( im ){
 	display = im.display;
 	display.ispinch = 0;
@@ -14401,7 +14269,7 @@ JS9.MouseTouch.Actions.start = function(im, ipos, evt){
 
 // end of mouse/touch action processing
 JS9.MouseTouch.Actions.stop = function(im, ipos, evt){
-    var action = JS9.MouseTouch.getAction(im, evt);
+    const action = JS9.MouseTouch.getAction(im, evt);
     // call the stop mouse/touch action, if necessary
     if( JS9.MouseTouch.Actions[action] &&
 	JS9.MouseTouch.Actions[action].stop ){
@@ -14412,7 +14280,7 @@ JS9.MouseTouch.Actions.stop = function(im, ipos, evt){
 
 // get action associated with the current clickState
 JS9.MouseTouch.getAction = function(im, evt){
-    var action, display;
+    let action, display;
     // sanity check
     if( !im ){
 	return action;
@@ -14466,8 +14334,8 @@ JS9.MouseTouch.action = function(im, evt, action){
 
 // change zoom mode for this display
 JS9.MouseTouch.mousetouchzoom = function(id, target){
-    var display = JS9.lookupDisplay(id);
-    var mode = target.checked;
+    const display = JS9.lookupDisplay(id);
+    const mode = target.checked;
     // change global blink mode
     if( display ){
 	display.mousetouchZoom = mode;
@@ -14476,8 +14344,7 @@ JS9.MouseTouch.mousetouchzoom = function(id, target){
 
 // constructor: add HTML elements to the plugin
 JS9.MouseTouch.init = function(){
-    var i, s;
-    var that = this;
+    let i, s;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -14492,28 +14359,28 @@ JS9.MouseTouch.init = function(){
     this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.mousetouchContainer = $("<div>")
-	.addClass(JS9.MouseTouch.BASE + "Container")
-	.attr("id", this.id + "MouseTouchContainer")
+	.addClass(`${JS9.MouseTouch.BASE}Container`)
+	.attr("id", `${this.id}MouseTouchContainer`)
 	.appendTo(this.divjq);
-    s = sprintf("<div class='%s'><span><b>Drag an action to reconfigure JS9 mouse/touch events:</b></span><p>", JS9.MouseTouch.BASE + "Header");
+    s = sprintf("<div class='%s'><span><b>Drag an action to reconfigure JS9 mouse/touch events:</b></span><p>", `${JS9.MouseTouch.BASE}Header`);
     this.mousetouchHeadContainer = $("<span style='float: left'>")
-	.addClass(JS9.MouseTouch.BASE + "Container")
-	.attr("id", this.id + "MouseTouchHeadContainer")
+	.addClass(`${JS9.MouseTouch.BASE}Container`)
+	.attr("id", `${this.id}MouseTouchHeadContainer`)
         .html(s)
 	.appendTo(this.mousetouchContainer);
     this.mousetouchTextContainer = $("<span style='float: left'>")
-	.addClass(JS9.MouseTouch.BASE + "Container")
-	.attr("id", this.id + "MouseTouchTextContainer")
+	.addClass(`${JS9.MouseTouch.BASE}Container`)
+	.attr("id", `${this.id}MouseTouchTextContainer`)
 	.appendTo(this.mousetouchContainer);
     this.mousetouchActionContainer = $("<span style='float: left'>")
-	.addClass(JS9.MouseTouch.BASE + "Container")
-	.attr("id", this.id + "MouseTouchActionContainer")
+	.addClass(`${JS9.MouseTouch.BASE}Container`)
+	.attr("id", `${this.id}MouseTouchActionContainer`)
 	.appendTo(this.mousetouchContainer);
     if( JS9.TOUCHSUPPORTED ){
 	// container to hold text descriptions
 	this.mousetouchTouchTextContainer = $("<div>")
-	    .addClass(JS9.MouseTouch.BASE + "TextContainer")
-	    .attr("id", this.id + "TouchTextContainer")
+	    .addClass(`${JS9.MouseTouch.BASE}TextContainer`)
+	    .attr("id", `${this.id}TouchTextContainer`)
             .html("")
 	    .appendTo(this.mousetouchTextContainer);
 	for(i=0; i<JS9.MouseTouch.touchText.length; i++){
@@ -14529,8 +14396,8 @@ JS9.MouseTouch.init = function(){
 	}
 	// container to hold touch actions
 	this.mousetouchTouchContainer = $("<div>")
-	    .addClass(JS9.MouseTouch.BASE + "ActionContainer")
-	    .attr("id", this.id + "TouchContainer")
+	    .addClass(`${JS9.MouseTouch.BASE}ActionContainer`)
+	    .attr("id", `${this.id}TouchContainer`)
             .html("")
 	    .appendTo(this.mousetouchActionContainer);
 	// add touch actions, if necessary
@@ -14541,22 +14408,23 @@ JS9.MouseTouch.init = function(){
 	}
 	// the actions within the action container will be sortable
 	this.mousetouchTouchContainer.sortable({
-	    start: function(event, ui) {
+	    start: (event, ui) => {
 		this.oidx = ui.item.index();
 	    },
-	    stop: function(event, ui) {
-		var nidx = ui.item.index();
-		var oarr = that.display.touchActions.splice(this.oidx, 1)[0];
+	    stop: (event, ui) => {
+		const nidx = ui.item.index();
+		const oarr = this.display.touchActions.splice(this.oidx, 1)[0];
 		// JS9 action list reflects the sort
-		that.display.touchActions.splice(nidx, 0, oarr);
+		this.display.touchActions.splice(nidx, 0, oarr);
+		delete this.oidx;
 	    }
 	});
     }
     if(  !/iPad|iPhone|iPod/.test(navigator.platform) ){
 	// container to hold text descriptions
 	this.mousetouchMouseTextContainer = $("<div>")
-	    .addClass(JS9.MouseTouch.BASE + "TextContainer")
-	    .attr("id", this.id + "MouseTextContainer")
+	    .addClass(`${JS9.MouseTouch.BASE}TextContainer`)
+	    .attr("id", `${this.id}MouseTextContainer`)
 	    .appendTo(this.mousetouchTextContainer);
 	for(i=0; i< 3; i++){
             JS9.MouseTouch.addText.call(this,
@@ -14570,8 +14438,8 @@ JS9.MouseTouch.init = function(){
 	}
 	// container to hold mouse actions
 	this.mousetouchMouseContainer = $("<div>")
-	    .addClass(JS9.MouseTouch.BASE + "ActionContainer")
-	    .attr("id", this.id + "MouseContainer")
+	    .addClass(`${JS9.MouseTouch.BASE}ActionContainer`)
+	    .attr("id", `${this.id}MouseContainer`)
             .html("")
 	    .appendTo(this.mousetouchActionContainer);
 	// add mouse actions, if necessary
@@ -14582,22 +14450,23 @@ JS9.MouseTouch.init = function(){
 	}
 	// the actions within the action container will be sortable
 	this.mousetouchMouseContainer.sortable({
-	    start: function(event, ui) {
+	    start: (event, ui) => {
 		this.oidx = ui.item.index();
 	    },
-	    stop: function(event, ui) {
-		var nidx = ui.item.index();
-		var oarr = that.display.mouseActions.splice(this.oidx, 1)[0];
+	    stop: (event, ui) => {
+		const nidx = ui.item.index();
+		const oarr = this.display.mouseActions.splice(this.oidx, 1)[0];
 		// JS9 action list reflects the sort
-		that.display.mouseActions.splice(nidx, 0, oarr);
+		this.display.mouseActions.splice(nidx, 0, oarr);
+		delete this.oidx;
 	    }
 	});
     }
     // add the footer, containing buttons
-    s = sprintf("<p><div class='%s'>use mouse wheel or pinch to zoom:&nbsp;&nbsp;<input type='checkbox' value='1' onclick='javascript:JS9.MouseTouch.mousetouchzoom(\"%s\", this);'></div>", JS9.MouseTouch.BASE + "Footer", this.display.id);
+    s = sprintf("<p><div class='%s'>use mouse wheel or pinch to zoom:&nbsp;&nbsp;<input type='checkbox' value='1' onclick='javascript:JS9.MouseTouch.mousetouchzoom(\"%s\", this);'></div>", `${JS9.MouseTouch.BASE}Footer`, this.display.id);
     this.mousetouchFootContainer = $("<span style='float: left'>")
-	.addClass(JS9.MouseTouch.BASE + "Container")
-	.attr("id", this.id + "MouseTouchFootContainer")
+	.addClass(`${JS9.MouseTouch.BASE}Container`)
+	.attr("id", `${this.id}MouseTouchFootContainer`)
         .html(s)
 	.appendTo(this.mousetouchContainer);
     // set initial value of scroll
@@ -14674,8 +14543,8 @@ JS9.Regions.opts = {
 	defcolor:           "#00FF00"
     },
     // mouse down processing
-    onmousedown: function(im, xreg, evt, target){
-	var curtime, dblclick, poly;
+    onmousedown(im, xreg, evt, target) {
+	let curtime, dblclick, poly;
 	// look for double click
 	// fabric dblclick support is broken (loses position during scroll)
 	if( !JS9.specialKey(evt) ){
@@ -14712,9 +14581,9 @@ JS9.Regions.opts = {
 	}
     },
     // mouse up processing
-    onmouseup: function(){
-	var i;
-	var objs = [];
+    onmouseup() {
+	let i;
+	let objs = [];
 	// one active object
 	if( this.getActiveObject() ){
 	    objs.push(this.getActiveObject());
@@ -14727,7 +14596,7 @@ JS9.Regions.opts = {
 	} else {
 	    objs.push(this.getActiveObjects());
 	}
-	// re-select polygon that was just processed
+	// re-select polygon which was just processed
 	for(i=0; i<objs.length; i++){
 	    if( objs[i].polyparams ){
 		this.setActiveObject(objs[i].polyparams.polygon);
@@ -14740,7 +14609,7 @@ JS9.Regions.opts = {
 
 // plugin init: load our regions methods
 JS9.Regions.init = function(layerName){
-    var dlayer;
+    let dlayer;
     // get layer name
     layerName = layerName || "regions";
     // add to image prototypes
@@ -14754,22 +14623,22 @@ JS9.Regions.init = function(layerName){
     // init the display shape layer
     dlayer = this.display.newShapeLayer(layerName, JS9.Regions.opts);
     // mouse up: list regions, if necessary
-    dlayer.canvas.on("mouse:up", function(){
-	var i, tim;
-	var objs = [];
+    dlayer.canvas.on("mouse:up", () => {
+	let i, tim;
+	let objs = [];
 	if( dlayer.display.image ){
 	    tim = dlayer.display.image;
 	    // one active object
 	    // group of active objects
 	    if( fabric.major_version === 1 ){
-		if( this.getActiveObject() ){
-		    objs.push(this.getActiveObject());
+		if( dlayer.canvas.getActiveObject() ){
+		    objs.push(dlayer.canvas.getActiveObject());
 		}
-		if( this.getActiveGroup() ){
-		    objs = this.getActiveGroup().getObjects();
+		if( dlayer.canvas.getActiveGroup() ){
+		    objs = dlayer.canvas.getActiveGroup().getObjects();
 		}
 	    } else {
-		objs.push(this.getActiveObjects());
+		objs.push(dlayer.canvas.getActiveObjects());
 	    }
 	    // process all active objects
 	    for(i=0; i<objs.length; i++){
@@ -14793,39 +14662,38 @@ JS9.Regions.init = function(layerName){
 
 // display the region config form
 JS9.Regions.displayConfigForm = function(shape){
-    var s;
-    var im = this;
-    var title = JS9.Regions.opts.title;
+    let s;
+    const im = this;
+    const title = JS9.Regions.opts.title;
     // sanity check
     if( !shape ){
 	return;
     }
     // call this once window is loaded
     $("#dhtmlwindowholder")
-	.arrive("#regionsConfigForm", {onceOnly: true}, function(){
+	.arrive("#regionsConfigForm", {onceOnly: true}, () => {
 	    if( shape.pub ){
 		JS9.Regions.initConfigForm.call(im, shape);
 	    }
 	});
     if( JS9.allinone ){
 	s = JS9.allinone.regionsConfigHTML;
-	shape.params.winid = im.displayAnalysis("regions", s, {title: title});
+	shape.params.winid = im.displayAnalysis("regions", s, {title});
     } else {
 	s = JS9.InstallDir(JS9.Regions.opts.configURL);
-	shape.params.winid = im.displayAnalysis("regions", s, {title: title});
+	shape.params.winid = im.displayAnalysis("regions", s, {title});
     }
 };
 
 // initialize the region config form
 // call using image context
 JS9.Regions.initConfigForm = function(obj){
-    var i, s, key, val, el, wcssys, altwcssys, ra, dec, mover, mout;
-    var that = this;
-    var params = obj.params;
-    var winid = params.winid;
-    var wid = $(winid).attr("id");
-    var form = "#" + wid + " #regionsConfigForm ";
-    var fmt= function(val){
+    let i, s, key, val, el, wcssys, altwcssys, ra, dec, mover, mout;
+    const params = obj.params;
+    const winid = params.winid;
+    const wid = $(winid).attr("id");
+    const form = `#${wid} #regionsConfigForm `;
+    const fmt= (val) => {
 	if( val === undefined ){
 	    return undefined;
 	}
@@ -14834,22 +14702,22 @@ JS9.Regions.initConfigForm = function(obj){
 	}
 	return(String(val));
     };
-    var replaceNewline = function(s){
-	var t;
+    const replaceNewline = (s) => {
+	let t;
 	s = s || "";
 	t = s.replace(/\n/g, "\\n");
 	return t;
     };
     // get alternate wcssys, if necessary
     altwcssys = $(form).data("wcssys");
-    // remove the nodisplay class from this shape's div
-    $(form + "." + obj.pub.shape).each(function(){
-	$(this).removeClass("nodisplay");
+    // remove the nodisplay class from shape's div
+    $(`${form}.${obj.pub.shape}`).each((index, element) => {
+	$(element).removeClass("nodisplay");
     });
     // fill in the values from the shape object
-    $(form + ".val").each(function(){
+    $(`${form}.val`).each((index, element) => {
 	val = "";
-	key = $(this).attr("name");
+	key = $(element).attr("name");
 	// key-specific pre-processing
 	switch(key){
 	case "x":
@@ -14863,8 +14731,8 @@ JS9.Regions.initConfigForm = function(obj){
 	    break;
 	case "radii":
 	    if( obj.pub.radii ){
-		if( that.params.wcssys === "image"    ||
-		    that.params.wcssys === "physical" ||
+		if( this.params.wcssys === "image"    ||
+		    this.params.wcssys === "physical" ||
 		    !obj.pub.wcsstr                   ){
 		    val = obj.pub.imstr
 			.replace(/^annulus\(/,"").replace(/\)$/,"")
@@ -14878,11 +14746,11 @@ JS9.Regions.initConfigForm = function(obj){
 	    break;
 	case "pts":
 	    if( obj.pub.pts ){
-		obj.pub.pts.forEach(function(p){
+		obj.pub.pts.forEach( (p) => {
 		    if( val ){
 			val += ", ";
 		    }
-		    val += sprintf("%s, %s", p.x.toFixed(2), p.y.toFixed(2));
+		    val += `${p.x.toFixed(2)}, ${p.y.toFixed(2)}`;
 		});
 	    } else {
 		// use the flat points list instead of the pts object array
@@ -14925,16 +14793,16 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "regstr":
-	    if( that.params.wcssys === "image"    ||
-		that.params.wcssys === "physical" ||
+	    if( this.params.wcssys === "image"    ||
+		this.params.wcssys === "physical" ||
 		!obj.pub.wcsstr                    ){
-		val = obj.pub.imsys + "; " + obj.pub.imstr;
+		val = `${obj.pub.imsys}; ${obj.pub.imstr}`;
 	    } else {
-		val = obj.pub.wcssys + "; " + obj.pub.wcsstr;
+		val = `${obj.pub.wcssys}; ${obj.pub.wcsstr}`;
 	    }
 	    break;
 	case "xpos":
-	    switch(that.params.wcssys){
+	    switch(this.params.wcssys){
 	    case 'image':
 		val = sprintf('%.1f', obj.pub.x);
 		break;
@@ -14957,7 +14825,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    ra = val;
 	    break;
 	case "ypos":
-	    switch(that.params.wcssys){
+	    switch(this.params.wcssys){
 	    case 'image':
 		val = sprintf('%.1f', obj.pub.y);
 		break;
@@ -14984,7 +14852,7 @@ JS9.Regions.initConfigForm = function(obj){
 	case "length":
 	case "width":
 	case "r1":
-	    switch(that.params.wcssys){
+	    switch(this.params.wcssys){
 	    case 'image':
 		if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
@@ -15006,7 +14874,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    break;
 	case "height":
 	case "r2":
-	    switch(that.params.wcssys){
+	    switch(this.params.wcssys){
 	    case 'image':
 		if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
@@ -15028,35 +14896,35 @@ JS9.Regions.initConfigForm = function(obj){
 	    break;
 	case "wcssys":
 	    // add all wcs sys options
-	    el = $(form).find("[name='" + key + "']");
+	    el = $(form).find(`[name='${key}']`);
 	    if( !el.find('option').length ){
 		for(i=0; i<JS9.wcssyss.length; i++){
 		    wcssys = JS9.wcssyss[i];
-		    el.append("<option>" + wcssys + "</option>");
+		    el.append(`<option>${wcssys}</option>`);
 		}
 	    }
-	    el.find('option').each(function(index, element){
-		if( that.params.wcssys === element.value ){
+	    el.find('option').each((index, element) => {
+		if( this.params.wcssys === element.value ){
 		    val = element.value;
 		}
 	    });
 	    break;
 	case "altwcssys":
 	    // add all wcs sys options
-	    el = $(form).find("[name='" + key + "']");
+	    el = $(form).find(`[name='${key}']`);
 	    if( !el.find('option').length ){
 		for(i=0; i<JS9.wcssyss.length; i++){
 		    wcssys = JS9.wcssyss[i];
 		    if( (wcssys === "image") || (wcssys === "physical") ){
 			continue;
 		    }
-		    el.append("<option>" + wcssys + "</option>");
+		    el.append(`<option>${wcssys}</option>`);
 		}
 	    }
 	    val = $(form).data("wcssys");
 	    if( !val ){
-		el.find('option').each(function(index, element){
-		    if( that.params.wcssys === element.value ){
+		el.find('option').each((index, element) => {
+		    if( this.params.wcssys === element.value ){
 			val = element.value;
 		    }
 		});
@@ -15086,7 +14954,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	}
-	$(this).val(val);
+	$(element).val(val);
     });
     if( !this.raw.wcs || this.raw.wcs < 0 ){
 	$(form).find("[name='wcssys']").hide();
@@ -15098,8 +14966,8 @@ JS9.Regions.initConfigForm = function(obj){
     } else {
 	$(form).find("[name='altwcssys']").show();
 	// process altwcs, if necessary
-	if( altwcssys && (that.params.wcssys !== altwcssys) ){
-	    s = that.wcs2wcs(null, altwcssys, ra, dec).split(/\s+/);
+	if( altwcssys && (this.params.wcssys !== altwcssys) ){
+	    s = this.wcs2wcs(null, altwcssys, ra, dec).split(/\s+/);
 	    $(form).find("[name='xpos']").val(s[0]);
 	    $(form).find("[name='ypos']").val(s[1]);
 	}
@@ -15108,8 +14976,8 @@ JS9.Regions.initConfigForm = function(obj){
     // $(form + ".edit").removeClass("nodisplay");
     // child text display for shapes, editable if no existing children yet
     if( obj.type !== "text" ){
-	$(form + ".childtext").removeClass("nodisplay");
-	$(form + "[name='childtext']")
+	$(`${form}.childtext`).removeClass("nodisplay");
+	$(`${form}[name='childtext']`)
 	    .prop("readonly", params.children.length > 0);
     }
     // checkboxes
@@ -15117,9 +14985,9 @@ JS9.Regions.initConfigForm = function(obj){
 	params.listonchange = false;
     }
     if( params.listonchange ){
-	$(form + "[name='listonchange']").prop("checked", true);
+	$(`${form}[name='listonchange']`).prop("checked", true);
     } else {
-	$(form + "[name='listonchange']").prop("checked", false);
+	$(`${form}[name='listonchange']`).prop("checked", false);
     }
     if( (params.changeable === undefined)  &&
 	(params.fixinplace !== undefined)  ){
@@ -15129,9 +14997,9 @@ JS9.Regions.initConfigForm = function(obj){
 	params.changeable = true;
     }
     if( params.changeable ){
-	$(form + "[name='changeable']").prop("checked", true);
+	$(`${form}[name='changeable']`).prop("checked", true);
     } else {
-	$(form + "[name='changeable']").prop("checked", false);
+	$(`${form}[name='changeable']`).prop("checked", false);
     }
     // grey-out read-only text
     $(form).find('input:text[readonly]')
@@ -15141,10 +15009,10 @@ JS9.Regions.initConfigForm = function(obj){
     switch(obj.pub.shape){
     case "box":
     case "ellipse":
-	$(form + ".angle").removeClass("nodisplay");
+	$(`${form}.angle`).removeClass("nodisplay");
 	break;
     case "text":
-	$(form + ".textangle").removeClass("nodisplay");
+	$(`${form}.textangle`).removeClass("nodisplay");
 	break;
     }
     // save the image for later processing
@@ -15163,18 +15031,20 @@ JS9.Regions.initConfigForm = function(obj){
 	    mover = "mouseover";
 	    mout = "mouseout";
 	}
-	$(".col_R").on(mover, function() {
-	    var title;
-	    var tooltip = $(this).find("input").data("tooltip");
-	    var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
+	$(".col_R").on(mover, (e) => {
+	    let title;
+	    const target = e.currentTarget;
+	    const tooltip = $(target).find("input").data("tooltip");
+	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
 	    if( tooltip && el.length ){
 		// change title: see dhtmlwindow.js load() @line 130
-		title = JS9.Regions.opts.title + ": " + tooltip;
+		title = `${JS9.Regions.opts.title}: ${tooltip}`;
 		$(el)[0].childNodes[0].nodeValue = title;
 	    }
 	});
-	$(".col_R").on(mout, function() {
-	    var el = $(this).closest(".dhtmlwindow").find(".drag-handle");
+	$(".col_R").on(mout, (e) => {
+	    const target = e.currentTarget;
+	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
 	    if( el.length ){
 		$(el)[0].childNodes[0].nodeValue = JS9.Regions.opts.title;
 	    }
@@ -15185,12 +15055,12 @@ JS9.Regions.initConfigForm = function(obj){
 // process the config form to change the specified shape
 // call using image context
 JS9.Regions.processConfigForm = function(form, obj, winid, arr){
-    var i, s, key, nkey, val, nval, nopts, altwcssys;
-    var alen = arr.length;
-    var bin = 1;
-    var opts = {};
-    var wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
-    var fmt= function(val){
+    let i, s, key, nkey, val, nval, nopts, altwcssys;
+    let bin = 1;
+    const alen = arr.length;
+    const opts = {};
+    const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
+    const fmt= (val) => {
 	if( val === undefined ){
 	    return undefined;
 	}
@@ -15199,14 +15069,14 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	}
 	return(String(val));
     };
-    var fmtcheck= function(val1, val2){
+    const fmtcheck= (val1, val2) => {
 	if( val1 === undefined ){
 	    return false;
 	}
 	return fmt(val1) !== fmt(val2);
     };
-    var newval = function(obj, key, val){
-	// special keys that have no public or param equivalents
+    const newval = (obj, key, val) => {
+	// special keys having no public or param equivalents
 	if( key === "remove" ){
 	    return val === "selected";
 	}
@@ -15266,7 +15136,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	}
 	return false;
     };
-    var getval = function(s){
+    const getval = (s) => {
 	if( s === "true" ){
 	    return true;
 	}
@@ -15278,9 +15148,9 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	}
 	return parseFloat(s);
     };
-    var replaceNewline = function(s){
-	var t;
-	var nl = String.fromCharCode(13, 10);
+    const replaceNewline = (s) => {
+	let t;
+	const nl = String.fromCharCode(13, 10);
 	s = s || "";
 	t = s.replace(/\\n/g, nl);
 	return t;
@@ -15297,10 +15167,10 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	if( key === "xpos" || key === "ypos" ){
 	    switch(this.params.wcssys){
 	    case 'image':
-		key = "i" + key.charAt(0);
+		key = `i${key.charAt(0)}`;
 		break;
 	    case 'physical':
-		key = "p" + key.charAt(0);
+		key = `p${key.charAt(0)}`;
 		break;
 	    default:
 		if( this.raw.wcs && this.raw.wcs > 0 ){
@@ -15333,9 +15203,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 		if( nval.length === 0 ){
 		    opts.strokeDashArray = [];
 		} else {
-		    opts.strokeDashArray = nval.map(function(s){
-			return parseInt(s, 10);
-		    });
+		    opts.strokeDashArray = nval.map( s => parseInt(s, 10) );
 		}
 	    }
 	    break;
@@ -15460,7 +15328,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "misc":
 	    if( val.trim() ){
 		try{ nopts = JSON.parse(val); $.extend(opts, nopts); }
-		catch(e){ JS9.error("invalid json: " + val); }
+		catch(e){ JS9.error(`invalid json: ${val}`);}
 	    }
 	    break;
 	default:
@@ -15489,10 +15357,10 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 // paste a region from clipboard
 // call using image context
 JS9.Regions.pasteFromClipboard = function(curpos){
-    var i, s, nobj, xpos, ypos, oval;
-    var objs = [];
-    var xcen = 0, ycen = 0;
-    var rregexp = /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
+    let i, s, nobj, xpos, ypos, oval;
+    let objs = [];
+    let xcen = 0, ycen = 0;
+    const rregexp = /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
     // sanity check
     if( !this ){ return; }
     // get string from clipboard
@@ -15539,19 +15407,20 @@ JS9.Regions.pasteFromClipboard = function(curpos){
 
 // list one or more regions
 JS9.Regions.listRegions = function(which, opts, layer){
-    var i, region, rlen, key, obj;
-    var tagjoin, tagstr, iestr, mode;
-    var regstr="", sepstr="; ";
-    var lasttype="none", dotags = false;
-    var tagcolors = [];
-    var pubs = [];
-    var exports = {};
-    var getExports = function(obj, region){
-	var i, s, key, child;
-	var nexports = {};
-	var params = obj.params;
-	var children = params.children;
-	var exports = params.exports;
+    let i, region, rlen, key, obj, tagjoin, tagstr, iestr, mode;
+    let regstr="";
+    let lasttype="none";
+    let dotags = false;
+    let pubs = [];
+    let exports = {};
+    const sepstr="; ";
+    const tagcolors = [];
+    const getExports = (obj, region) => {
+	let i, s, key, child;
+	const nexports = {};
+	const params = obj.params;
+	const children = params.children;
+	const exports = params.exports;
 	for(i=0; i<exports.length; i++){
 	    // property name
 	    key = exports[i];
@@ -15647,17 +15516,17 @@ JS9.Regions.listRegions = function(which, opts, layer){
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error("can't parse listRegions opts: " + opts, e); }
+	catch(e){ JS9.error(`can't parse listRegions opts: ${opts}`, e); }
     }
     // opts is optional
     opts = opts || {};
     // default is to display, including non-source tags
     mode = opts.mode;
-    if( mode === undefined ){
+    if( JS9.isNull(mode) ){
 	mode = 3;
     }
     // default is to list the regions layer
-    if( layer === undefined ){
+    if( JS9.isNull(layer) ){
 	layer = "regions";
     }
     // get specified regions into an array
@@ -15688,7 +15557,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	region = pubs[i];
 	obj = region.obj;
 	tagjoin = region.tags.join(",");
-	if( tagjoin.indexOf("exclude") >= 0 ){
+	if( tagjoin.includes("exclude") ){
 	    iestr = "-";
 	} else {
 	    iestr = "";
@@ -15696,12 +15565,12 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	// add exported properties
 	exports = getExports(obj, region);
 	// add color, if necessary
-	if( region.color && tagcolors.indexOf(region.color) === -1 ){
+	if( region.color && !tagcolors.includes(region.color) ){
 	    exports.color = region.color;
 	}
 	// display tags?
 	if( dotags ){
-	    tagstr = " # " + tagjoin;
+	    tagstr = ` # ${tagjoin}`;
 	}
 	// use wcs string, if available
 	if( region.wcsstr &&
@@ -15732,7 +15601,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    if( region.shape === "line" ){
 		regstr = regstr.replace(/ *{[^{}]*}$/,"");
 	    }
-	    regstr += " " + JSON.stringify(exports);
+	    regstr += ` ${JSON.stringify(exports)}`;
 	}
 	if( tagstr ){
 	    regstr += tagstr;
@@ -15749,8 +15618,8 @@ JS9.Regions.listRegions = function(which, opts, layer){
 // copy one or more regions
 // call using image context
 JS9.Regions.copyRegions = function(to, which){
-    var i, im, s;
-    var ims = [];
+    let i, im, s;
+    const ims = [];
     if( typeof to === "object" ){
 	ims.push(to);
     } else if( to === "all" ){
@@ -15785,34 +15654,34 @@ JS9.Regions.copyRegions = function(to, which){
 // parse a string containing a subset of DS9/Funtools regions
 // call using image context
 JS9.Regions.parseRegions = function(s, opts){
-    var regions = [];
-    var i, j, k, lines, obj, robj, txeq;
-    var owcssys, owcsunits, wcssys, iswcs, liswcs, pos, alen;
-    var regrexp = /^(annulus|box|circle|ellipse|line|polygon|point|text)$/;
-    var wcsrexp = /^(fk4|fk5|icrs|galactic|ecliptic|image|physical|linear)$/;
-    var imrexp = /^(image|physical)$/;
-    var unrexp = /[dr:]/;
-    var parrexp = /\(\s*([^)]+?)\s*\)/;
-    var seprexp = /\n|;/;
-    var optsrexp = /(\{.*\})/;
-    var argsrexp = /\s*,\s*/;
-    var charrexp = /(\(|\{|#|;|\n)/;
-    var comrexp  = /#(?![a-zA-Z0-9]{6}['"])/;
+    let i, j, k, lines, obj, robj, txeq;
+    let owcssys, owcsunits, wcssys, iswcs, liswcs, pos, alen;
+    const regions = [];
+    const regrexp = /^(annulus|box|circle|ellipse|line|polygon|point|text)$/;
+    const wcsrexp = /^(fk4|fk5|icrs|galactic|ecliptic|image|physical|linear)$/;
+    const imrexp = /^(image|physical)$/;
+    const unrexp = /[dr:]/;
+    const parrexp = /\(\s*([^)]+?)\s*\)/;
+    const seprexp = /\n|;/;
+    const optsrexp = /(\{.*\})/;
+    const argsrexp = /\s*,\s*/;
+    const charrexp = /(\(|\{|#|;|\n)/;
+    const comrexp  = /#(?![a-zA-Z0-9]{6}['"])/;
     // convert "0" to false and "1" to true
-    var tf = function(s){
+    const tf = (s) => {
 	if( s === "0" || s.toLowerCase() === "false" ){return false;}
 	return true;
     };
     // ds9 compatibility: get properties from comment string
-    var ds9properties = function(s){
-	var xarr, key, key2, val, nobj;
-	var xobj = {};
-	var rexp = /([a-zA-Z][a-zA-Z0-9_]*)\s*=\s*(\d+(\s*\d+)*|[^ '"{]+|['"{][^'"}]*['"}])/g;
-	var ds9opts = {
-	    color: function(v){return {color: v};},
-	    dash: function(v){if(v){return {strokeDashArray: [3,1]};}},
-	    dashlist: function(v){
-		var i, arr;
+    const ds9properties = (s) => {
+	let xarr, key, key2, val, nobj;
+	const xobj = {};
+	const rexp = /([a-zA-Z][a-zA-Z0-9_]*)\s*=\s*(\d+(\s*\d+)*|[^ '"{]+|['"{][^'"}]*['"}])/g;
+	const ds9opts = {
+	    color(v) {return {color: v};},
+	    dash(v) {if(v){return {strokeDashArray: [3,1]};}},
+	    dashlist(v) {
+		let i, arr;
 		if( v ){
 		    arr = v.split(" ");
 		    for(i=0; i<arr.length; i++){
@@ -15821,28 +15690,28 @@ JS9.Regions.parseRegions = function(s, opts){
 		    return {strokeDashArray: arr};
 		}
 	    },
-	    delete: function(v){return {removable: tf(v)};},
-	    edit: function(v){return {selectable: tf(v)};},
-	    fixed: function(v){return {zoomable: !tf(v)};},
-	    font: function(v){
-		var obj = {};
-		var arr = v.split(" ");
-		var len = arr.length;
+	    delete(v) {return {removable: tf(v)};},
+	    edit(v) {return {selectable: tf(v)};},
+	    fixed(v) {return {zoomable: !tf(v)};},
+	    font(v) {
+		const obj = {};
+		const arr = v.split(" ");
+		const len = arr.length;
 		if( len >= 1 ){ obj.fontFamily = arr[0]; }
 		if( len >= 2 ){ obj.fontSize = parseFloat(arr[1]); }
 		if( len >= 3 ){ obj.fontStyle  = arr[2]; }
 		if( len >= 4 ){ obj.fontWeight = arr[3]; }
 		return obj;
 	    },
-	    highlite: function(v){return {hasControls: tf(v), hasBorders: tf(v), hasRotatingPoint: tf(v)};},
-	    move: function(v){return {movable: tf(v)};},
-	    rotate: function(v){return {rotatable: tf(v)};},
-	    resize: function(v){return {resizable: tf(v)};},
-	    changeable: function(v){return {changeable: tf(v)};},
-	    select: function(v){return {selectable: tf(v)};},
-	    text: function(v){return {text: v};},
-	    tag: function(v){return {tags: v};},
-	    width: function(v){return {strokeWidth: parseFloat(v)};}
+	    highlite(v) {return {hasControls: tf(v), hasBorders: tf(v), hasRotatingPoint: tf(v)};},
+	    move(v) {return {movable: tf(v)};},
+	    rotate(v) {return {rotatable: tf(v)};},
+	    resize(v) {return {resizable: tf(v)};},
+	    changeable(v) {return {changeable: tf(v)};},
+	    select(v) {return {selectable: tf(v)};},
+	    text(v) {return {text: v};},
+	    tag(v) {return {tags: v};},
+	    width(v) {return {strokeWidth: parseFloat(v)};}
 	};
 	// opts is optional
 	opts = opts || {};
@@ -15856,7 +15725,7 @@ JS9.Regions.parseRegions = function(s, opts){
 		for( key2 in nobj ){
 		    if( nobj.hasOwnProperty(key2) ){
 			if( key2 === "tags" && xobj.hasOwnProperty(key2) ){
-			    xobj[key2] += ("," + nobj[key2]);
+			    xobj[key2] += `,${nobj[key2]}`;
 			} else {
 			    xobj[key2] = nobj[key2];
 			}
@@ -15873,20 +15742,20 @@ JS9.Regions.parseRegions = function(s, opts){
 	}
 	return xobj;
     };
-    // parse region line into cmd (shape or wcs), arguments, opts, comment
-    var regparse1 = function(s){
-	var t, tarr, ds9props;
-	var tobj = {};
+    // parse region line into cmd (shape or wcs), args, opts, comment
+    const regparse1 = (s) => {
+	let t, tarr, ds9props;
+	const tobj = {};
 	// initialize the return object
 	tobj.opts = {};
 	tobj.args = [];
 	tobj.isregion = 0;
 	// look for a command
-	if( s.indexOf("(") >=0 ){
+	if( s.includes("(") ){
 	    tobj.cmd = s.split("(")[0].trim().toLowerCase();
-	} else if( s.indexOf("{") >=0 ){
+	} else if( s.includes("{") ){
 	    tobj.cmd = s.split("{")[0].trim().toLowerCase();
-	} else if( s.indexOf("#") >=0 ){
+	} else if( s.includes("#") ){
 	    tobj.cmd = s.split("#")[0].trim().toLowerCase();
 	} else {
 	    tobj.cmd = s.trim().toLowerCase();
@@ -15897,7 +15766,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	}
 	// split on comment (ignore color specifications starting with "#")
 	t = s.trim().split(comrexp);
-	// look for json opts after the argument list
+	// look for json opts after the arg list
 	tarr = optsrexp.exec(t[0]);
 	if( tarr && tarr[0] ){
 	    // convert to object
@@ -15917,14 +15786,14 @@ JS9.Regions.parseRegions = function(s, opts){
 	if( ds9props ){
 	    tobj.opts = $.extend({}, ds9props, tobj.opts);
 	}
-	// separate the region arguments into an array
+	// separate the region args into an array
 	tarr = parrexp.exec(s);
 	if( tarr && tarr[1] ){
-	    // arguments without json opts
+	    // arg without json opts
 	    tobj.args = tarr[1].split(argsrexp);
 	}
 	// look for - sign signifying an exclude region
-	if( tobj.isregion && tobj.cmd.indexOf("-") === 0 ){
+	if( tobj.isregion && tobj.cmd.startsWith("-") ){
 	    tobj.cmd = tobj.cmd.slice(1);
 	    if( tobj.comment ){
 		tobj.comment += ",exclude";
@@ -15935,10 +15804,10 @@ JS9.Regions.parseRegions = function(s, opts){
 	return tobj;
     };
     // get image position using delim type to ascertain input units
-    var getipos = function(ix, iy){
-	var vt, sarr, ox, oy;
-	var v1 = JS9.strtoscaled(ix);
-	var v2 = JS9.strtoscaled(iy);
+    const getipos = (ix, iy) => {
+	let vt, sarr, ox, oy;
+	const v1 = JS9.strtoscaled(ix);
+	const v2 = JS9.strtoscaled(iy);
 	// local override of wcs if we used sexagesimal units or appended d,r
 	if( ((v1.dtype.match(unrexp)) || (v2.dtype.match(unrexp))) &&
 	    !owcssys.match(imrexp) ){
@@ -15969,10 +15838,10 @@ JS9.Regions.parseRegions = function(s, opts){
 	return [ox, oy];
     };
     // get image length
-    var getilen = function(len, which){
-	var cstr;
-	var v = JS9.strtoscaled(len);
-	var wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
+    const getilen = (len, which) => {
+	let cstr;
+	const v = JS9.strtoscaled(len);
+	const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
 	// local override of wcs if we used sexagesimal units or appended d,r
 	if( v.dtype.match(unrexp) && !owcssys.match(imrexp) ){
 	    liswcs = true;
@@ -15982,7 +15851,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	    // convert to degrees, if necessary
 	    if( v.dtype === "r" ){ v.dval = v.dval * 180 / Math.PI; }
 	    // wcs-based size
-	    cstr = "cdelt" + which;
+	    cstr = `cdelt${which}`;
 	    v.dval = Math.abs(v.dval / wcsinfo[cstr]);
 	} else if( wcssys === "physical" ){
 	    // use the LTM1_1 value stored for logical to image transforms
@@ -15993,17 +15862,17 @@ JS9.Regions.parseRegions = function(s, opts){
 	return v.dval;
     };
     // get image angle
-    var getang = function(a){
-	var v = JS9.strtoscaled(a);
-	var wcsinfo = this.raw.wcsinfo || {crot: 0};
+    const getang = (a) => {
+	const v = JS9.strtoscaled(a);
+	const wcsinfo = this.raw.wcsinfo || {crot: 0};
 	if( wcsinfo.crot ){
             v.dval += wcsinfo.crot;
 	}
 	return v.dval;
     };
     // get cleaned-up string
-    var getstr = function(s){
-	var t = s.replace(/^['"]/, "").replace(/["']$/, "");
+    const getstr = (s) => {
+	const t = s.replace(/^['"]/, "").replace(/["']$/, "");
 	return t;
     };
     // sanity check
@@ -16035,10 +15904,10 @@ JS9.Regions.parseRegions = function(s, opts){
 		obj = $.extend(true, {}, robj.opts);
 		// save the shape
 		obj.shape = robj.cmd;
-		// arguments are not required!
+		// args are not required!
 		if( alen >= 2 ){
 		    // get image position
-		    pos = getipos.call(this, robj.args[0], robj.args[1]);
+		    pos = getipos(robj.args[0], robj.args[1]);
 		    obj.x = pos[0];
 		    obj.y = pos[1];
 		}
@@ -16049,46 +15918,46 @@ JS9.Regions.parseRegions = function(s, opts){
 		    obj.textOpts.dec !== undefined  ){
 		    obj.textOpts._wcssys = wcssys;
 		}
-		// region arguments are optional
+		// region args are optional
 		switch(robj.cmd){
 		case 'annulus':
 		    obj.radii = [];
 		    for(j=2; j<alen; j++){
-			obj.radii.push(getilen.call(this, robj.args[j], 1));
+			obj.radii.push(getilen(robj.args[j], 1));
 		    }
 		    break;
 		case 'box':
 		    if( alen >= 3 ){
-			obj.width = getilen.call(this, robj.args[2], 1);
+			obj.width = getilen(robj.args[2], 1);
 		    }
 		    if( alen >= 4 ){
-			obj.height = getilen.call(this, robj.args[3], 2);
+			obj.height = getilen(robj.args[3], 2);
 		    }
 		    if( alen >= 5 ){
-			obj.angle = getang.call(this, robj.args[4]);
+			obj.angle = getang(robj.args[4]);
 		    }
 		    break;
 		case 'circle':
 		    if( alen >= 3 ){
-			obj.radius = getilen.call(this, robj.args[2], 1);
+			obj.radius = getilen(robj.args[2], 1);
 		    }
 		    break;
 		case 'ellipse':
 		    if( alen >= 3 ){
-			obj.r1 = getilen.call(this, robj.args[2], 1);
+			obj.r1 = getilen(robj.args[2], 1);
 		    }
 		    if( alen >= 4 ){
-			obj.r2 = getilen.call(this, robj.args[3], 2);
+			obj.r2 = getilen(robj.args[3], 2);
 		    }
 		    if( alen >= 5 ){
-			obj.angle = getang.call(this, robj.args[4]);
+			obj.angle = getang(robj.args[4]);
 		    }
 		    break;
 		case 'line':
 		case 'polygon':
 		    obj.pts = [];
 		    for(j=0, k=0; j<alen; j+=2, k++){
-			pos = getipos.call(this, robj.args[j], robj.args[j+1]);
+			pos = getipos(robj.args[j], robj.args[j+1]);
 			obj.pts[k] = {x: pos[0], y: pos[1]};
 		    }
 		    delete obj.x;
@@ -16098,10 +15967,10 @@ JS9.Regions.parseRegions = function(s, opts){
 		    break;
 		case 'text':
 		    if( alen >= 3 ){
-			obj.text = getstr.call(this, robj.args[2]);
+			obj.text = getstr(robj.args[2]);
 		    }
 		    if( alen >= 4 ){
-			obj.angle = getang.call(this, robj.args[3]);
+			obj.angle = getang(robj.args[3]);
 		    }
 		    break;
 		default:
@@ -16143,7 +16012,7 @@ JS9.Regions.parseRegions = function(s, opts){
 
 // save regions to a file
 JS9.Regions.saveRegions = function(fname, which, layer){
-    var header, regstr, s, type, blob, opts, arr, rid;
+    let header, regstr, s, type, blob, opts, arr, rid;
     // see if default type is implicit in the output file
     if( fname ){
 	arr = fname.match(/\.([^.]*)$/);
@@ -16174,7 +16043,7 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     type =  type  || "reg";
     // and make a sanity check
     if( !this.layers[layer] ){
-	JS9.error("can't find layer for saveRegions: " + layer);
+	JS9.error(`can't find layer for saveRegions: ${layer}`);
     }
     // generate the specified output
     switch(type){
@@ -16200,17 +16069,17 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 		this.removeShapes(layer, rid);
 	    }
 	}
-	catch(e){ JS9.error("can't convert layer to SVG: " + layer); }
+	catch(e){ JS9.error(`can't convert layer to SVG: ${layer}`);}
 	break;
     case "reg":
     default:
 	// convert layer to region string
 	try{
-	    header = sprintf("# Region file format: JS9 version 1.0");
+	    header = "# Region file format: JS9 version 1.0";
 	    regstr = this.listRegions(which, {mode: 1}, layer);
-	    s = sprintf("%s\n%s\n", header, regstr.replace(/; */g, "\n"));
+	    s = `${header}\n${regstr.replace(/; */g, "\n")}\n`;
 	}
-	catch(e){ JS9.error("can't convert layer to region: " + layer);	}
+	catch(e){ JS9.error(`can't convert layer to region: ${layer}`);	}
 	break;
     }
     // create the blob
@@ -16218,16 +16087,16 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     // construct output file name
     if( !fname ){
 	if( layer && layer !== "regions" ){
-	    fname = "js9_" + layer + "." + type;
+	    fname = `js9_${layer}.${type}`;
 	} else {
-	    fname = "js9." + type;
+	    fname = `js9.${type}`;
 	}
     }
     // save blob
     if( window.hasOwnProperty("saveAs") ){
 	saveAs(blob, fname);
     } else {
-	JS9.error("no saveAs function available to save region file");
+	JS9.error("no saveAs() available to save region file");
     }
     return fname;
 };
@@ -16236,8 +16105,8 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 // e.g. im.changeRegionTags("selected", "source", "background");
 // call using image context
 JS9.Regions.editRegionTags = function(which, add1, rem1){
-    var i, j, s, tags;
-    var ntags = [];
+    let i, j, s, tags;
+    const ntags = [];
     s = this.getShapes("regions", which);
     if( s.length ){
 	for(i=0; i<s.length; i++){
@@ -16259,7 +16128,7 @@ JS9.Regions.editRegionTags = function(which, add1, rem1){
 // e.g. im.toggleRegionTags("selected", "source", "background");
 // call using image context
 JS9.Regions.toggleRegionTags = function(which, x1, x2){
-    var i, j, s, tags, xnew;
+    let i, j, s, tags, xnew;
     s = this.getShapes("regions", which);
     if( s.length ){
 	for(i=0; i<s.length; i++){
@@ -16279,14 +16148,14 @@ JS9.Regions.toggleRegionTags = function(which, x1, x2){
 	    }
 	}
 	if( xnew ){
-	    this.changeShapes("regions", which, {tags: tags});
+	    this.changeShapes("regions", which, {tags});
 	}
     }
 };
 
 // unremove previously removed regions
 JS9.Regions.unremoveRegions = function(){
-    var s = this.regstack.pop();
+    const s = this.regstack.pop();
     if( s ){
 	return this.addShapes("regions", s);
     }
@@ -16395,8 +16264,8 @@ JS9.Crosshair.opts = {
 // display: display crosshair as the mouse moves
 // eslint-disable-next-line no-unused-vars
 JS9.Crosshair.display = function(im, ipos, evt){
-    var i, s, arr, cim, ra, dec, w, h, x, y, hopts, vopts, shift, size;
-    var layername = JS9.Crosshair.LAYERNAME;
+    let i, s, arr, cim, ra, dec, w, h, x, y, hopts, vopts, shift, size;
+    const layername = JS9.Crosshair.LAYERNAME;
     // for computers, shift key must be down
     // for ipad, assume always true
     if( /iPad|iPhone|iPod/.test(navigator.platform) ){
@@ -16479,8 +16348,8 @@ JS9.Crosshair.display = function(im, ipos, evt){
 // hide: move the crosshair out of the display
 // eslint-disable-next-line no-unused-vars
 JS9.Crosshair.hide = function(im, ipos, evt){
-    var layername = JS9.Crosshair.LAYERNAME;
-    var opts = JS9.Crosshair.opts.hiddenPts;
+    const layername = JS9.Crosshair.LAYERNAME;
+    const opts = JS9.Crosshair.opts.hiddenPts;
     // if the crosshair is visible ...
     if( im &&
 	(im.crosshair && im.crosshair.visible) ||
@@ -16495,8 +16364,8 @@ JS9.Crosshair.hide = function(im, ipos, evt){
 
 // image load: create the cross hair for this image
 JS9.Crosshair.create = function(im){
-    var opts = JS9.Crosshair.opts.hiddenPts;
-    var layername = JS9.Crosshair.LAYERNAME;
+    const opts = JS9.Crosshair.opts.hiddenPts;
+    const layername = JS9.Crosshair.LAYERNAME;
     if( im && !im.crosshair ){
 	// create the crosshair object for this image
 	im.crosshair = {};
@@ -16507,7 +16376,7 @@ JS9.Crosshair.create = function(im){
     }
 };
 
-// mark key actions that use the shift key
+// mark key actions which use the shift key
 JS9.Crosshair.keyaction = function(im, ipos, evt){
     if( im && evt && evt.shiftKey ){
 	im.tmp.shiftKey = true;
@@ -16524,8 +16393,8 @@ JS9.Crosshair.keyup = function(im, ipos, evt){
 
 // init: create the shape layer for this display
 JS9.Crosshair.init = function(){
-    var i;
-    var layername = JS9.Crosshair.LAYERNAME;
+    let i;
+    const layername = JS9.Crosshair.LAYERNAME;
     // init the crosshair shape layer, but only once per display
     for(i=0; i<JS9.displays.length; i++){
 	if( !JS9.displays[i].layers.crosshair ){
@@ -16587,11 +16456,11 @@ JS9.Grid.opts = {
     labelDecOffy: 6
 };
 
-// this is the problem routine: hard to get a heuristic that will:
+// this is the problem routine: hard to get a heuristic which will:
 // 1. pick a "natural" number of lines (depends on size of image)
 // 2. put the lines on "natural" wcs boundaries (.1 degree or every 10 arcsec)
 JS9.Grid.limits = function(opts, in0, in1, n){
-    var trange, tscale, out0, out1, outinc;
+    let trange, tscale, out0, out1, outinc;
     trange = in1 - in0;
     if( trange > 1 ){
 	tscale = 10;
@@ -16614,8 +16483,8 @@ JS9.Grid.limits = function(opts, in0, in1, n){
 
 // generate label value
 JS9.Grid.getLabel = function(opts, v, which){
-    var i, t, idx, arr;
-    var doall = false;
+    let i, t, idx, arr;
+    let doall = false;
     switch(opts.wcsunits){
     case "sexagesimal":
 	if( (which === "ra") &&
@@ -16654,15 +16523,15 @@ JS9.Grid.getLabel = function(opts, v, which){
 // generate and display a coordinate grid of Line shapes
 // call with image context
 JS9.Grid.display = function(mode, myopts){
-    var i, n, s, t, x, y, lineloc, arr, inc, got;
-    var ra, dec, ra0, ra1, dec0, dec1, rainc, decinc;
-    var raoffx, raoffy, decoffx, decoffy, raskip, decskip, lastra, lastdec;
-    var ratios, corners, opts;
-    var xrainc0, xrainc, xralim, xdecinc0, xdecinc, xdeclim, ipos, dpos;
-    var out = {};
-    var display = this.display;
-    var raw = this.raw;
-    var lims = [{ra:0, dec:0}, {ra:0, dec:0}, {ra:0, dec:0}, {ra:0, dec:0}];
+    let i, n, s, t, x, y, lineloc, arr, inc, got;
+    let ra, dec, ra0, ra1, dec0, dec1, rainc, decinc;
+    let raoffx, raoffy, decoffx, decoffy, raskip, decskip, lastra, lastdec;
+    let xrainc0, xrainc, xralim, xdecinc0, xdecinc, xdeclim, ipos, dpos;
+    let ratios, corners, opts;
+    let out = {};
+    const display = this.display;
+    const raw = this.raw;
+    const lims = [{ra:0, dec:0}, {ra:0, dec:0}, {ra:0, dec:0}, {ra:0, dec:0}];
     // no arg: return current grid display status
     if( JS9.isNull(mode) ){
 	// toggle display
@@ -16787,7 +16656,7 @@ JS9.Grid.display = function(mode, myopts){
 		y = parseFloat(arr[1]);
 		if( x >= -opts.margin && x <= raw.width + opts.margin  && 
 		    y >= -opts.margin && y <= raw.height + opts.margin ){
-		    t += String(x + 1 + "," + y + 1 + ", ");
+		    t += String(`${x + 1},${y}${1}, `);
 		    n++;
 		    if( lineloc === 0 ){
 			lineloc = 1;
@@ -16811,7 +16680,7 @@ JS9.Grid.display = function(mode, myopts){
 	}
 	if( n > 1 ){
 	    s += t.replace(/,\s+$/, ") ");
-	    s += sprintf(' {"color": "%s"};', opts.lineColor);
+	    s += ` {"color": "${opts.lineColor}"};`;
 	}
     }
     // lines of constant Dec
@@ -16827,7 +16696,7 @@ JS9.Grid.display = function(mode, myopts){
 		y = parseFloat(arr[1]);
 		if( x >= -opts.margin && x <= raw.width + opts.margin  && 
 		    y >= -opts.margin && y <= raw.height + opts.margin ){
-		    t += String(x + 1 + "," + y + 1 + ", ");
+		    t += String(`${x + 1},${y}${1}, `);
 		    n++;
 		    if( lineloc === 0 ){
 			lineloc = 1;
@@ -16851,7 +16720,7 @@ JS9.Grid.display = function(mode, myopts){
 	}
 	if( n > 1 ){
 	    s += t.replace(/,\s+$/, ") ");
-	    s += sprintf(' {"color": "%s"};', opts.lineColor);
+	    s += ` {"color": "${opts.lineColor}"};`;
 	}
     }
     // dec labels along constant ra line
@@ -16865,7 +16734,7 @@ JS9.Grid.display = function(mode, myopts){
 	    if( arr && arr.length ){
 		x = parseFloat(arr[0]);
 		y = parseFloat(arr[1]);
-		dpos = this.imageToDisplayPos({x: x, y: y});
+		dpos = this.imageToDisplayPos({x, y});
 		if( dpos.x > (this.ix+opts.labelMargin) && dpos.x < (this.rgb.img.width+this.ix-opts.labelMargin) &&
 		    dpos.y > (this.iy+opts.labelMargin) && dpos.y < (this.rgb.img.height+this.iy-opts.labelMargin)){
 		    if( decskip >= opts.decSkip ){
@@ -16903,7 +16772,7 @@ JS9.Grid.display = function(mode, myopts){
 	    if( arr && arr.length ){
 		x = parseFloat(arr[0]);
 		y = parseFloat(arr[1]);
-		dpos = this.imageToDisplayPos({x: x, y: y});
+		dpos = this.imageToDisplayPos({x, y});
 		if( dpos.x > (this.ix+opts.labelMargin) && dpos.x < (this.rgb.img.width+this.ix-opts.labelMargin) &&
 		    dpos.y > (this.iy+opts.labelMargin) && dpos.y < (this.rgb.img.height+this.iy-opts.labelMargin)){
 		    if( raskip >= opts.raSkip ){
@@ -16975,12 +16844,12 @@ JS9.Grid.regrid = function(im){
 // plugin init: load our grid methods
 // eslint-disable-next-line no-unused-vars
 JS9.Grid.init = function(opts){
-    var dlayer;
+    let dlayer;
     opts = $.extend(true, {}, JS9.Catalogs.opts, JS9.Grid.opts, opts);
     // init the display shape layer
     dlayer = this.display.newShapeLayer(JS9.Grid.LAYERNAME, opts);
     // mouse up: no-op
-    dlayer.canvas.on("mouse:up", function(){
+    dlayer.canvas.on("mouse:up", () => {
 	    return false;
     });
 };
@@ -17016,7 +16885,7 @@ JS9.Dysel.unhighlightSelection = function(){
 
 // highlight display when dynamic selection is made
 JS9.Dysel.highlightSelection = function(im){
-    var disp;
+    let disp;
     // sanity check
     if( !im || !JS9.Dysel.retrievePlugins().length ){
 	return;
@@ -17093,7 +16962,7 @@ JS9.Dysel.imageload = function(im){
 
 // imageclose: select another display, if necessary
 JS9.Dysel.imageclose = function(im){
-    var i, got, disp;
+    let i, got, disp;
     if( im ){
 	disp = JS9.Dysel.getDisplay();
 	if( !disp || disp.image !== im ){
@@ -17133,7 +17002,7 @@ Math.log10 = Math.log10 || function(x) {
 // javascript: the good parts p. 22
 if( typeof Object.create !== "function" ){
     Object.create = function(o){
-	var F = function(){return;};
+	const F = function(){return;};
 	F.prototype = o;
 	return new F();
     };
@@ -17152,9 +17021,63 @@ Math.sinh = Math.sinh || function(x) {
   return (Math.exp(x) - Math.exp(-x)) / 2;
 };
 
+// polyfill for ES2017 Array.prototype.includes from:
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes
+// From https://github.com/kevlatus/polyfill-array-includes/blob/master/array-includes.js
+if (!Array.prototype.includes) {
+  Object.defineProperty(Array.prototype, 'includes', {
+    value: function (searchElement, fromIndex) {
+
+      // 1. Let O be ? ToObject(this value).
+      if (this == null) {
+        throw new TypeError('"this" is null or not defined');
+      }
+
+      var o = Object(this);
+
+      // 2. Let len be ? ToLength(? Get(O, "length")).
+      var len = o.length >>> 0;
+
+      // 3. If len is 0, return false.
+      if (len === 0) {
+        return false;
+      }
+
+      // 4. Let n be ? ToInteger(fromIndex).
+      //    (If fromIndex is undefined, this step produces the value 0.)
+      var n = fromIndex | 0;
+
+      // 5. If n ≥ 0, then
+      //  a. Let k be n.
+      // 6. Else n < 0,
+      //  a. Let k be len + n.
+      //  b. If k < 0, let k be 0.
+      var k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+
+      function sameValueZero(x, y) {
+        return x === y || (typeof x === 'number' && typeof y === 'number' && isNaN(x) && isNaN(y));
+      }
+
+      // 7. Repeat, while k < len
+      while (k < len) {
+        // a. Let elementK be the result of ? Get(O, ! ToString(k)).
+        // b. If SameValueZero(searchElement, elementK) is true, return true.
+        // c. Increase k by 1.
+        if (sameValueZero(o[k], searchElement)) {
+          return true;
+        }
+        k++;
+      }
+
+      // 8. Return false
+      return false;
+    }
+  });
+}
+
 // set explicit focus for IPython/Jupyter support
 JS9.jupyterFocus = function(el, el2){
-    var eljq;
+    let eljq;
     if( window.hasOwnProperty("Jupyter") ){
 	if( el instanceof jQuery ){
 	    eljq = el;
@@ -17162,20 +17085,20 @@ JS9.jupyterFocus = function(el, el2){
 	    eljq = $(el);
 	}
 	el2 = el2 || "input, textarea";
-	eljq.find(el2).each(function(){
-	    Jupyter.keyboard_manager.register_events($(this));
+	eljq.find(el2).each((index, element) => {
+	    Jupyter.keyboard_manager.register_events($(element));
 	});
     }
 };
 
 // return a unique value for a given image id by appending <n> to the id
 JS9.getImageID = function(imid, dispid, myim){
-    var i, im, s;
-    var ids = 0;
-    var idmax = 1;
-    var imlen = JS9.images.length;
-    var rexp = /.*<([0-9][0-9]*)>$/;
-    var rexp2 = /<[0-9][0-9]*>/;
+    let i, im, s;
+    let ids = 0;
+    let idmax = 1;
+    const imlen = JS9.images.length;
+    const rexp = /.*<([0-9][0-9]*)>$/;
+    const rexp2 = /<[0-9][0-9]*>/;
     imid = imid.replace(rexp2, "");
     for(i=0; i<imlen; i++){
 	im = JS9.images[i];
@@ -17190,14 +17113,14 @@ JS9.getImageID = function(imid, dispid, myim){
 	}
     }
     if( ids ){
-	return imid + "<" + String(idmax+1) + ">";
+	return `${imid}<${String(idmax+1)}>`;
     }
     return imid;
 };
 
 // return a unique value for ids
 JS9.uniqueID = (function(){
-    var id = 1; // initial value
+    let id = 1; // initial value
     return function() {
         return id++;
     };
@@ -17205,7 +17128,7 @@ JS9.uniqueID = (function(){
 
 // change cursor to waiting/not waiting
 JS9.waiting = function(mode, display){
-    var el, opts, tdisp;
+    let el, opts, tdisp;
     switch(mode){
     case true:
 	if( window.hasOwnProperty("Spinner") &&
@@ -17275,19 +17198,19 @@ JS9.progress = function(arg1, arg2){
 
 // msg coming from socket.io or postMessage
 JS9.msgHandler =  function(msg, cb){
-    var s, obj, tdisp, res;
-    var args = [];
-    var cmd = msg.cmd;
-    var id = msg.id;
-    var oalerts = JS9.globalOpts.alerts;
-    var rstr = JS9.globalOpts.quietReturn ? "" : "OK";
+    let s, obj, tdisp, res;
+    let args = [];
+    const cmd = msg.cmd;
+    const id = msg.id;
+    const oalerts = JS9.globalOpts.alerts;
+    const rstr = JS9.globalOpts.quietReturn ? "" : "OK";
     // turn off alerts
     if( cb ){
 	JS9.globalOpts.alerts = false;
     }
     // look for a public API call
     if( JS9.publics[cmd] ){
-	// check for non-array first argument
+	// check for non-array first arg
 	if( !$.isArray(msg.args) ){
 	    msg.args = [msg.args];
 	}
@@ -17333,8 +17256,8 @@ JS9.msgHandler =  function(msg, cb){
 	    cb = null;
 	}
 	// call public API
-	try{ res = JS9.publics[cmd].apply(null, args); }
-	catch(e){ res = sprintf("ERROR: %s", e.message); }
+	try{ res = JS9.publics[cmd](...args); }
+	catch(e){ res = `ERROR: ${e.message}`; }
 	if( cb ){
 	    JS9.globalOpts.alerts = oalerts;
 	    // last ditch effort to avoid passing back image or display objects
@@ -17370,22 +17293,22 @@ JS9.msgHandler =  function(msg, cb){
 	case "get":
 	    // execute get call
 	    try{ res = obj.get(args) || ""; }
-	    catch(e){ res = "ERROR: " + e.message; }
+	    catch(e){ res = `ERROR: ${e.message}`;}
 	    break;
 	case "set":
 	    // execute set call
 	    try{ res = obj.set(args) || rstr; }
-	    catch(e){ res = "ERROR: " + e.message; }
+	    catch(e){ res = `ERROR: ${e.message}`;}
 	    break;
 	default:
-	    res = sprintf("ERROR: unknown cmd type for '%s'", cmd);
+	    res = `ERROR: unknown cmd type for '${cmd}'`;
 	}
     } else {
 	if( !obj ){
-	    res = sprintf("ERROR: unknown cmd '%s'", cmd);
+	    res = `ERROR: unknown cmd '${cmd}'`;
 	}
 	if( !tdisp ){
-	    res = sprintf("ERROR: unknown display (%s)", id);
+	    res = `ERROR: unknown display (${id})`;
 	}
     }
     // turn on alerts, do message callback, if necessary
@@ -17403,31 +17326,31 @@ JS9.msgHandler =  function(msg, cb){
 // create a light window
 // someday we might want other options ...
 JS9.lightWin = function(id, type, s, title, opts){
-    var rval;
+    let rval;
     switch(JS9.LIGHTWIN){
     case "dhtml":
 	rval = dhtmlwindow.open(id, type, s, title, opts);
 	// override dhtml to add ios scroll capability
 	if(  /iPad|iPhone|iPod/.test(navigator.platform) ){
-	    $("#" + id + " " + JS9.lightOpts.dhtml.drag)
+	    $(`#${id} ${JS9.lightOpts.dhtml.drag}`)
 		.css("-webkit-overflow-scrolling", "touch")
 		.css("overflow-y", "scroll");
 	}
 	// allow double-click or double-tap to close ...
 	// ... the close button is unresponsive on the ipad/iphone
-        $("#" + id + " ." + JS9.lightOpts.dhtml.dragBar)
-	    .on("mouseup touchend", this, function(){
-		var curtime = (new Date()).getTime();
-		var lasttime = $(this).data("lasttime");
+        $(`#${id} .${JS9.lightOpts.dhtml.dragBar}`)
+	    .on("mouseup touchend", (e) => {
+		const curtime = (new Date()).getTime();
+		const lasttime = $(e.currentTarget).data("lasttime");
 		if( lasttime && (curtime - lasttime) < JS9.DBLCLICK ){
 		    rval.close();
 		}
-		$(this).data("lasttime", curtime);
+		$(e.currentTarget).data("lasttime", curtime);
 	    });
 	// if ios user failed to close the window via the close button,
 	// give a hint (once per session only!)
-        $("#" + id + " ." + JS9.lightOpts.dhtml.dragBar)
-	    .on("touchend", this, function(){
+        $(`#${id} .${JS9.lightOpts.dhtml.dragBar}`)
+	    .on("touchend", () => {
 		// skip check if we are dragging
 		if( !dhtmlwindow.distancex  && !dhtmlwindow.distancey ){
 		    if( JS9.lightOpts.nclick >= 2 ){
@@ -17451,7 +17374,7 @@ JS9.lightWin = function(id, type, s, title, opts){
     return rval;
 };
 
-// wrapper for new function to avoid jslint errors
+// wrapper for new func to avoid jslint errors
 JS9.checkNew = function(obj){
     if( !obj ){
 	JS9.error("internal failure in a JS9 constructor");
@@ -17465,7 +17388,7 @@ JS9.specialKey = function(e){
 
 // desperate attempt to regularize the stracktrace message
 JS9.strace = function(e){
-    var s = "";
+    let s = "";
     if( JS9.DEBUG > 1 ){
 	s = e.stack || e.stacktrace || "";
     }
@@ -17482,9 +17405,9 @@ JS9.floatToString = function(fval){
 // figure out precision from range of values
 // from: /tksao1.0/colorbar/colorbarbase.C
 JS9.floatPrecision = function(fval1, fval2){
-    var aa, bb, prec;
-    aa = Math.floor(Math.log10(Math.abs(fval1)));
-    bb = Math.floor(Math.log10(Math.abs(fval2)));
+    let prec;
+    let aa = Math.floor(Math.log10(Math.abs(fval1)));
+    let bb = Math.floor(Math.log10(Math.abs(fval2)));
     if( aa !== bb ){
       prec = aa > bb ? aa : bb;
     } else {
@@ -17496,23 +17419,23 @@ JS9.floatPrecision = function(fval1, fval2){
 // convert float value to a string with decent precision
 // from: /tksao1.0/colorbar/colorbarbase.C
 JS9.floatFormattedString = function(fval, prec, jj){
-    var fmt;
-    var s = "";
+    let fmt;
+    let s = "";
     if( fval === undefined ){
 	return s;
     }
     if( prec < -2 ){
-	fmt = "%." + String(2+jj) + "e";
+	fmt = `%.${String(2+jj)}e`;
 	s = sprintf(fmt, fval);
     } else if( prec < 0 ){
 	s = fval.toFixed(Math.abs(prec)+3+jj);
     } else if( prec < 2 ){
-	fmt = "%." + String(prec+jj) + "f";
+	fmt = `%.${String(prec+jj)}f`;
 	s = sprintf(fmt, fval);
     } else if( prec < 5 ){
 	s = fval.toFixed(0+jj);
     } else {
-	fmt = "%." + String(2+jj) + "e";
+	fmt = `%.${String(2+jj)}e`;
 	s = sprintf(fmt, fval);
     }
     return s;
@@ -17520,8 +17443,7 @@ JS9.floatFormattedString = function(fval, prec, jj){
 
 // get center of bounding box surrounding a polygon
 JS9.centerPolygon = function(points){
-    var i, plen;
-    var minx, maxx, miny, maxy;
+    let i, plen, minx, maxx, miny, maxy;
     // sanity check
     if( !points || !points.length ){
 	return;
@@ -17545,15 +17467,17 @@ JS9.centerPolygon = function(points){
 };
 
 // calculate centroid for a polygon
-// wont work for self-intersecting polygons but that's all I do right now!
+// wont work for self-intersecting polygons but it's all I do right now!
 // adapted from: http://en.wikipedia.org/wiki/Centroid
 JS9.centroidPolygon = function(points){
-    var i, plen, factor, area;
-    var cx, cy;
-    var parta=0, partx=0, party=0;
-    var totx=0, toty=0;
-    var doaverage=true;
-    var pts = [];
+    let i, plen, factor, area, cx, cy;
+    let parta = 0;
+    let partx = 0;
+    let party = 0;
+    let totx = 0;
+    let toty = 0;
+    const doaverage=true;
+    const pts = [];
     // sanity check
     if( !points || !points.length ){
 	return;
@@ -17593,8 +17517,8 @@ JS9.centroidPolygon = function(points){
 
 // return the image object for the specified image object, name, or filename
 JS9.lookupImage = function(id, display){
-    var i, im, did;
-    var ilen= JS9.images.length;
+    let i, im, did;
+    const ilen= JS9.images.length;
     // sanity check
     if( !id ){
 	return null;
@@ -17607,7 +17531,7 @@ JS9.lookupImage = function(id, display){
 	    (id === im.file0) || (id === (JS9.TOROOT + im.file))         ||
 	    (im.fitsFile      && (id === im.fitsFile)) ){
 	    // make sure the display still exists (light windows disappear)
-	    if( $("#"+im.display.id).length > 0 ){
+	    if( $(`#${im.display.id}`).length > 0 ){
 		did = im.display.id;
 		if( !display                                            ||
 		    (typeof display === "string" && display === did)    ||
@@ -17623,9 +17547,9 @@ JS9.lookupImage = function(id, display){
 // return the display for the specified id
 // id can be a display object or an id from a display object
 JS9.lookupDisplay = function(id, mustExist){
-    var i;
-    var regexp = new RegExp(sprintf("[-_]?(%s)$", JS9.PLUGINS));
-    // default is that the id must exist
+    let i;
+    const regexp = new RegExp(`[-_]?(${JS9.PLUGINS})$`);
+    // default is the id must exist
     if( mustExist === undefined ){
 	mustExist = true;
     }
@@ -17652,7 +17576,7 @@ JS9.lookupDisplay = function(id, mustExist){
 	}
         // an id was specified but not found
         if( mustExist ){
-	    JS9.error("can't find JS9 display with id: " + id);
+	    JS9.error(`can't find JS9 display with id: ${id}`);
         }
         else {
             return null;
@@ -17664,7 +17588,8 @@ JS9.lookupDisplay = function(id, mustExist){
 
 // return the image object for the specified image id or display id
 JS9.getImage = function(id){
-    var im=null, display=null;
+    let im = null;
+    let display = null;
     // first look for an image file
     im = JS9.lookupImage(id);
     // then look for a display id
@@ -17681,8 +17606,8 @@ JS9.getImage = function(id){
 // look for specified vfile among raw0 hdus
 // used to determine if its safe to delete a vfile
 JS9.lookupVfile = function(vfile){
-    var i, j, im, raw;
-    var arr = [];
+    let i, j, im, raw;
+    const arr = [];
     // sanity check
     if( !vfile ){
 	return arr;
@@ -17704,8 +17629,8 @@ JS9.lookupVfile = function(vfile){
 // https://stackoverflow.com/questions/21294/dynamically-load-a-javascript-file
 JS9.loadScript = function(url, func, error){
     // adding the script tag to the head as suggested before
-    var head = document.getElementsByTagName('head')[0];
-    var script = document.createElement('script');
+    const head = document.getElementsByTagName('head')[0];
+    const script = document.createElement('script');
     script.type = 'text/javascript';
     // callback
     if( func ){
@@ -17721,10 +17646,10 @@ JS9.loadScript = function(url, func, error){
 };
 
 // fetch a file URL (as a blob) and process it
-// (as of 2/2015: can't use $.ajax to retrieve a blob, so use low-level xhr)
+// (as of 2/2015: can't use $.ajax to retrieve a blob: use low-level xhr)
 JS9.fetchURL = function(name, url, opts, handler) {
-    var nurl;
-    var xhr = new XMLHttpRequest();
+    let nurl;
+    const xhr = new XMLHttpRequest();
     // opts is optional
     opts = opts || {};
     // sanity check
@@ -17734,14 +17659,14 @@ JS9.fetchURL = function(name, url, opts, handler) {
     // either url or name can be blank
     if( !url ){
 	url = name;
-	name = /([^\\\/]+)$/.exec(url)[1];
+	name = /([^\\/]+)$/.exec(url)[1];
     }
     if( !name ){
-	name = /([^\\\/]+)$/.exec(url)[1];
+	name = /([^\\/]+)$/.exec(url)[1];
     }
     // avoid the cache (Safari is especially aggressive) for FITS files
     if( !opts.allowCache && !url.match(/\?/) ){
-	nurl = url + "?r=" + Math.random();
+	nurl = `${url}?r=${Math.random()}`;
     } else {
 	nurl = url;
     }
@@ -17758,12 +17683,14 @@ JS9.fetchURL = function(name, url, opts, handler) {
     if( JS9.globalOpts.xtimeout ){
 	xhr.timeout = JS9.globalOpts.xtimeout;
     }
-    xhr.onload = function() {
-	var blob;
-        if( this.readyState === 4 ){
-	    if( this.status === 200 || this.status === 0 ){
+    xhr.onload = () => {
+	let blob;
+        if( xhr.readyState === 4 ){
+	    if( xhr.status === 200 || xhr.status === 0 ){
+		// delete fetch status so JS9.error() does not process it
+		delete JS9.fetchURL.status;
 		if( xhr.responseType === "blob" ){
-	            blob = new Blob([this.response]);
+	            blob = new Blob([xhr.response]);
 		    // discard path (or scheme) up to slashes
 		    // remove trailing ? params
 		    if( name.match("://") ){
@@ -17774,7 +17701,7 @@ JS9.fetchURL = function(name, url, opts, handler) {
 		    }
 		    // hack for Google Drive's lack of a filename
 		    if( blob.name === "uc" ){
-			blob.name = "google_" + JS9.uniqueID() + ".fits";
+			blob.name = `google_${JS9.uniqueID()}.fits`;
 		    }
 		    if( handler ){
 			handler(blob, opts);
@@ -17783,34 +17710,35 @@ JS9.fetchURL = function(name, url, opts, handler) {
 		    }
 		} else {
 		    if( opts.display ){
-			handler(this.response, opts, {display: opts.display});
+			handler(xhr.response, opts, {display: opts.display});
 		    } else {
-			handler(this.response, opts);
+			handler(xhr.response, opts);
 		    }
 		}
-	    } else if( this.status === 404 ) {
-		JS9.error("could not find " + url);
+	    } else if( xhr.status === 404 ) {
+		JS9.error(`could not find ${url}`);
 	    } else {
-		JS9.error(sprintf("can't load: %s %s (%s)  ",
-				  url, xhr.statusText,  xhr.status));
+		JS9.error(`can't load: ${url} ${xhr.statusText} ${xhr.status}`);
 	    }
 	}
     };
-    xhr.onerror = function() {
-	JS9.error(sprintf("cannot load: %s %s .. please check the url/pathname",
-	    url, xhr.statusText));
+    xhr.onerror = () => {
+	JS9.error(`cannot load: ${url} ... please check the url/pathname`);
     };
-    xhr.ontimeout = function() {
-	JS9.error("timeout awaiting response from server: " + url);
+    xhr.ontimeout = () => {
+	JS9.error(`timeout awaiting response from server: ${url}`);
     };
+    // hack: set fetch status for JS9.error() to sense and pass on
+    // this will be picked up by getStatus("load")
+    JS9.fetchURL.status = "processing";
     // fetch the data!
     try{ xhr.send(); }
-    catch(e){ JS9.error("request to load " + url + " failed", e); }
+    catch(e){ JS9.error(`request to load ${url} failed`, e); }
 };
 
 // configure or return the fits library
 JS9.fitsLibrary = function(s){
-    var t;
+    let t;
     if( !s ){
 	return JS9.fits.name;
     }
@@ -17871,7 +17799,7 @@ JS9.fitsLibrary = function(s){
 	}
 	break;
     default:
-	JS9.error("unknown fits library: " + s);
+	JS9.error(`unknown fits library: ${s}`);
 	break;
     }
     // common code
@@ -17895,9 +17823,9 @@ JS9.handleFITSFile = function(file, opts, handler){
 
 // cleanup FITS file by deleting vfile, etc
 JS9.cleanupFITSFile = function(raw, mode){
-    var rexp;
+    let rexp;
     if( JS9.localMount ){
-	rexp = new RegExp("^"+JS9.localMount);
+	rexp = new RegExp(`^${JS9.localMount}`);
     }
     if( JS9.fits.cleanupFITSFile && raw && raw.hdu && raw.hdu.fits ){
 	// don't delete real local file
@@ -17914,19 +17842,19 @@ JS9.cleanupFITSFile = function(raw, mode){
 // load an image (jpeg, png, etc)
 // taken from fitsy.js
 JS9.handleImageFile = function(file, options, handler){
-    var reader = new FileReader();
+    const reader = new FileReader();
     options = $.extend(true, {}, JS9.fits.options, options);
     handler = handler || JS9.Load;
-    reader.onload = function(ev){
-	var img = new Image();
-	var data, grey, hdu;
-	img.onload = function(){
-	    var x, y, brightness, header;
-	    var i = 0;
-	    var canvas = document.createElement('canvas');
-	    var ctx    = canvas.getContext('2d');
-	    var h      = img.height;
-	    var w      = img.width;
+    reader.onload = (ev) => {
+	let data, grey, hdu;
+	const img = new Image();
+	img.onload = () => {
+	    let x, y, brightness, header;
+	    let i = 0;
+	    const canvas = document.createElement('canvas');
+	    const ctx    = canvas.getContext('2d');
+	    const h      = img.height;
+	    const w      = img.width;
 	    canvas.width  = w;
 	    canvas.height = h;
 	    ctx.drawImage(img, 0, 0);
@@ -17953,7 +17881,7 @@ JS9.handleImageFile = function(file, options, handler){
 	    hdu.dmin = Number.MAX_VALUE;
 	    hdu.dmax = Number.MIN_VALUE;
 	    for(i=0; i< h*w; i++){
-		if( !isNaN(hdu.data[i]) ){
+		if( !Number.isNaN(hdu.data[i]) ){
 		    hdu.dmin = Math.min(hdu.dmin, hdu.data[i]);
 		    hdu.dmax = Math.max(hdu.dmax, hdu.data[i]);
 		}
@@ -17978,11 +17906,10 @@ JS9.getFITSImage = function(fits, hdu, options, handler){
 // JS9.fits2repFile(display, file, opts, "png", "fits2png", func)
 // JS9.fits2repFile(display, file, opts, "fits", "imsection")
 JS9.fits2RepFile = function(display, file, opts, xtype, func){
-    var i, s, xdim, ydim, bin, binMode, obj;
-    var xopts = {};
-    var xmsg = "fits2" + xtype;
-    var xcond = opts[xmsg] ||
-	((opts[xmsg] === undefined) && JS9.globalOpts[xmsg]);
+    let i, s, xdim, ydim, bin, binMode, obj, xcond;
+    const xopts = {};
+    const xmsg = `fits2${xtype}`;
+    xcond = opts[xmsg] || ((opts[xmsg] === undefined) && JS9.globalOpts[xmsg]);
     if( xcond === true ){
 	xcond = "always";
     } else if(  xcond === false ){
@@ -18044,12 +17971,9 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	}
 	bin = Math.max(1, bin || 1);
 	if( opts.xcen !== undefined && opts.ycen !== undefined ){
-	    xopts.sect = sprintf("%s@%s,%s@%s,%s%s",
-				 xdim, opts.xcen,
-				 ydim, opts.ycen,
-				 bin, binMode);
+	    xopts.sect = `${xdim}@${opts.xcen},${ydim}@${opts.ycen},${bin}${binMode}`;
 	} else {
-	    xopts.sect = sprintf("%s,%s,%s%s", xdim, ydim, bin, binMode);
+	    xopts.sect = `${xdim},${ydim},${bin}${binMode}`;
 	}
 	s = xcond.toLowerCase().split(/[>,]/);
 	for(i=0; i<s.length; i++){
@@ -18066,7 +17990,7 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	}
 	break;
     default:
-	JS9.error("unknown FITS representation type: " + xtype);
+	JS9.error(`unknown FITS representation type: ${xtype}`);
 	break;
     }
     xopts.fits = JS9.cleanPath(file);
@@ -18074,8 +17998,8 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
     // start the waiting!
     JS9.waiting(true, display);
     // send message to helper to do conversion
-    JS9.helper.send(xmsg, xopts, function(r){
-	var nfile, next, robj, rarr, f, pf, nopts;
+    JS9.helper.send(xmsg, xopts, (r) => {
+	let nfile, next, robj, rarr, f, pf, nopts;
 	// return type can be string or object
 	if( typeof r === "object" ){
 	    // object from node.js
@@ -18105,7 +18029,7 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 		    JS9.checkNew(new JS9.Image(nfile, opts, func));
 		} else {
 		    // not a png file ... give up
-		    JS9.error("fits2png conversion failed: " + nfile);
+		    JS9.error(`fits2png conversion failed: ${nfile}`);
 		}
 		break;
 	    case "fits2fits":
@@ -18145,7 +18069,7 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 		    // json fits info
 		    if( rarr[1] ){
 			try{ obj = JSON.parse(rarr[1]); }
-			catch(ignore){}
+			catch(ignore){ /* empty */ }
 			if( obj ){
 			    nopts.extname = obj.extname;
 			    nopts.extnum = obj.extnum;
@@ -18161,13 +18085,11 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 			if( nopts.extname ){
 			    nopts.parentFile = nopts.parentFile
 				.replace(/\[.*\]/, "");
-			    nopts.parentFile += sprintf("[%s]",
-							nopts.extname);
+			    nopts.parentFile += `[${nopts.extname}]`;
 			} else if( nopts.extnum && (nopts.extnum > 0) ){
 			    nopts.parentFile = nopts.parentFile
 				.replace(/\[.*\]/, "");
-			    nopts.parentFile.file += sprintf("[%s]",
-							     nopts.extnum);
+			    nopts.parentFile.file += `[${nopts.extnum}]`;
 			}
 
 		    }
@@ -18179,7 +18101,7 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 		// no recursion!
 		nopts.fits2fits = false;
 		// load new file
-		JS9.Load(f, nopts, {display: display});
+		JS9.Load(f, nopts, {display});
 		break;
 	    default:
 		break;
@@ -18191,8 +18113,8 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 
 // return the specified colormap object (or default)
 JS9.lookupColormap = function(name, mustExist){
-    var i;
-    // default is that the id must exist
+    let i;
+    // default is the id must exist
     if( mustExist === undefined ){
 	mustExist = true;
     }
@@ -18207,7 +18129,7 @@ JS9.lookupColormap = function(name, mustExist){
 	}
     }
     if( mustExist ){
-        JS9.error("unknown colormap '" + name + "'");
+        JS9.error(`unknown colormap '${name}'`);
     } else {
 	return null;
     }
@@ -18215,7 +18137,7 @@ JS9.lookupColormap = function(name, mustExist){
 
 // lookup command
 JS9.lookupCommand = function(name){
-    var cmd, i, n;
+    let cmd, i, n;
     if( name ){
 	n = name.toLowerCase();
 	for(i=0; i<JS9.commands.length; i++){
@@ -18229,14 +18151,26 @@ JS9.lookupCommand = function(name){
 };
 
 // error message handler
-JS9.error = function(emsg, epattern, dothrow){
-    var e, earr, s;
-    var emessage="";
-    var stack = "";
-    var doerr = true;
-
+JS9.error = function(...args){
+    let [emsg, epattern, dothrow] = args;
+    let e, earr, i, s, im, cur;
+    let emessage = "";
+    let stack = "";
+    let doerr = true;
     // reset wait cursor
     JS9.waiting(false);
+    // set fetch error status, if coming from a fetch
+    if( JS9.fetchURL.status === "processing" ){
+	JS9.fetchURL.status = "error";
+    }
+    // set current error status, if we find it
+    for(i=0; i<JS9.images.length; i++){
+	im = JS9.images[i];
+	cur = im.status.cur;
+	if( cur && im.status[cur] ){
+	    im.setStatus(cur, "error");
+	}
+    }
     // second args can be error pattern to look for, or else an error object
     if( typeof epattern === "string" ){
 	earr = emsg.match(epattern);
@@ -18253,23 +18187,23 @@ JS9.error = function(emsg, epattern, dothrow){
 	e = epattern;
     }
     // default is to throw the error
-    if( arguments.length < 3 ){
+    if( args.length < 3 ){
 	dothrow = true;
     }
     // maybe throw error and send message to user
     if( doerr ){
 	// add error object message to emsg, if possible
 	if( e && e.message ){
-	    emsg += sprintf(" (%s)", e.message);
+	    emsg += ` (${e.message})`;
 	} else if( emsg ){
 	    e = new Error(emsg);
 	}
 	// try to add stacktrace
 	s = JS9.strace(e);
 	if( s ){
-	    stack = "\n\nStacktrace:\n" + s;
+	    stack = `\n\nStacktrace:\n${s}`;
 	}
-	// this can be set "outside" to prevent the alert message
+	// can be set "outside" to prevent the alert message
 	// (for example, in the console window)
 	if( JS9.globalOpts.alerts ){
 	    if( emsg && typeof emsg === "string" && emsg.search(/ERROR/) < 0 ){
@@ -18285,12 +18219,20 @@ JS9.error = function(emsg, epattern, dothrow){
     }
 };
 
+// log to console
+JS9.log = function(...args) {
+    if( (window.console !== undefined) && (window.console.log !== undefined) ){
+	// eslint-disable-next-line no-console
+        console.log(...args);
+    }
+};
+
 // we use keydown instead of keypress, so we need ...
 // http://stackoverflow.com/questions/2220196/how-to-decode-character-pressed-from-jquerys-keydowns-event-handler
 // ... for conversion of keydown into char string
 JS9.eventToCharStr = function(evt){
-    var c, s;
-    var _specialKeys = {
+    let c, s;
+    const _specialKeys = {
 	'37': 'leftArrow',
 	'38': 'upArrow',
 	'39': 'rightArrow',
@@ -18298,7 +18240,7 @@ JS9.eventToCharStr = function(evt){
 	 '8': 'delete',
 	'46': 'delete'
     };
-    var _to_ascii = {
+    const _to_ascii = {
         '188': '44',
         '109': '45',
         '190': '46',
@@ -18313,7 +18255,7 @@ JS9.eventToCharStr = function(evt){
         '186': '59', //IE Key codes
         '189': '45'  //IE Key codes
     };
-    var _shiftUps = {
+    const _shiftUps = {
         "96": "~",
         "49": "!",
         "50": "@",
@@ -18360,7 +18302,7 @@ JS9.eventToCharStr = function(evt){
     }
     // check for special key
     if( JS9.specialKey(evt) ){
-	c = "M-" + c;
+	c = `M-${c}`;
     }
     return c;
 };
@@ -18368,10 +18310,10 @@ JS9.eventToCharStr = function(evt){
 // get position of mouse in a canvas
 // http://stackoverflow.com/questions/1114465/getting-mouse-location-in-canvas
 JS9.eventToDisplayPos = function(evt, offset){
-    //this section is from http://www.quirksmode.org/js/events_properties.html
-    var i, targ, pageX, pageY, leftOff, upOff, touches, pos;
-    var XFUDGE = 1;
-    var YFUDGE = 1;
+    // from http://www.quirksmode.org/js/events_properties.html
+    let i, targ, pageX, pageY, leftOff, upOff, touches, pos;
+    const XFUDGE = 1;
+    const YFUDGE = 1;
     if( !evt ){
 	evt = window.event;
     }
@@ -18429,8 +18371,8 @@ JS9.eventToDisplayPos = function(evt, offset){
 // convert image pixels in one image to image pixels in another image
 // NB: assumes both images have wcs available
 JS9.pix2pix = function(im1, im2, obj){
-    var s, ra, dec, x, y, nx, ny;
-    var epsilon = 0.5;
+    let s, ra, dec, x, y, nx, ny;
+    const epsilon = 0.5;
     // sanity check
     if( !im1 || !im2 || !im1.raw.wcs || !im2.raw.wcs ){
 	return obj;
@@ -18462,7 +18404,7 @@ JS9.pix2pix = function(im1, im2, obj){
 // angle is input in degrees
 JS9.rotatePoint = function(point, angle, cen)
 {
-    var cosA, sinA;
+    let cosA, sinA;
     cen = cen || {x: 0.0, y: 0.0};
     angle = Math.PI * angle / 180.0;
     cosA = Math.cos(angle);
@@ -18475,14 +18417,13 @@ JS9.rotatePoint = function(point, angle, cen)
 
 // invert a 3x3 matrix
 JS9.invertMatrix3 = function(xin){
-    var i, j;
-    var det_1;
-    var prec = 1.0e-15;
-    var pos = 0.0;
-    var neg = 0.0;
-    var xout = [[0,0,0], [0,0,0], [0,0,0]];
-    var temp =  xin[0][0] * xin[1][1];
-    var accum = function(){
+    let i, j, det_1;
+    let pos = 0.0;
+    let neg = 0.0;
+    let temp =  xin[0][0] * xin[1][1];
+    const prec = 1.0e-15;
+    const xout = [[0,0,0], [0,0,0], [0,0,0]];
+    const accum = () => {
 	if( temp >= 0.0 ){
 	    pos += temp;
 	} else {
@@ -18492,7 +18433,7 @@ JS9.invertMatrix3 = function(xin){
     // sanity check for NaN
     for(i=0; i<3; i++){
 	for(j=0; j<2; j++){
-	    if( (xin[i][j] === undefined) || isNaN(xin[i][j]) ){
+	    if( (xin[i][j] === undefined) || Number.isNaN(xin[i][j]) ){
 		return null;
 	    }
 	}
@@ -18518,25 +18459,10 @@ JS9.invertMatrix3 = function(xin){
     return xout;
 };
 
-// logging: IE9 does not expose console.log by default
-// from: http://stackoverflow.com/questions/5472938/does-ie9-support-console-log-and-is-it-a-real-function (but modified for JSLint)
-JS9.log = function(){
-    var log;
-    if( (window.console !== undefined) && (window.console.log !== undefined) ){
-        try {
-	    // eslint-disable-next-line no-console
-            console.log.apply(console, arguments);
-        } catch(e){
-	    // eslint-disable-next-line no-console
-            log = Function.prototype.bind.call(console.log, console);
-            log.apply(console, arguments);
-        }
-    }
-};
-
 // is this a string representation of a number?
 JS9.isNumber = function(s) {
-    return !isNaN(parseFloat(s)) && isFinite(s);
+    const d = Number.parseFloat(s);
+    return !Number.isNaN(d) && Number.isFinite(d);
 };
 
 // check if a variable is neither undefined nor null
@@ -18551,12 +18477,12 @@ JS9.isNull = function(s) {
 
 // parse a FITS card and return name and value
 JS9.cardpars = function(card){
-    var name, value;
-    name = card.slice(0, 8).trim();
+    let value;
+    let name = card.slice(0, 8).trim();
     if( name === "HISTORY" ){ return [name, card.slice(9).trim()]; }
     if( name === "COMMENT" ){ return [name, card.slice(9).trim()]; }
     if( card[8] !== "=" ){ return undefined; }
-    value = card.slice(10).replace(/\'/g, " ").replace(/ \/.*/, "").trim();
+    value = card.slice(10).replace(/'/g, " ").replace(/ \/.*/, "").trim();
     if( value === "T" ){
 	value = true;
     } else if( value === "F" ){
@@ -18569,13 +18495,13 @@ JS9.cardpars = function(card){
 
 // convert obj to FITS-style string
 JS9.raw2FITS = function(raw, opts){
-    var i, s, obj, key, val, card, ncard, header, left;
-    var hasend=false;
-    var t="";
-    var gots = {};
-    var fixparam = function(card, name, val, comm){
-	var s, oval, regexp;
-	var ncard = card;
+    let i, s, obj, key, val, card, ncard, header, left;
+    let hasend = false;
+    let t = "";
+    const gots = {};
+    const fixparam = (card, name, val, comm) => {
+	let s, oval, regexp;
+	let ncard = card;
 	if( name === "XTENSION" && !val ){
 	    ncard = sprintf("%s  = %20s / %-47s",
 			    "SIMPLE",
@@ -18583,7 +18509,8 @@ JS9.raw2FITS = function(raw, opts){
 			    "file does conform to FITS standard");
 
 	} else {
-	    regexp = new RegExp(name + " *= *(-?[-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?) *");
+	    // eslint-disable-next-line no-useless-escape
+	    regexp = new RegExp(`${name} *= *(-?[-+]?[0-9]*\.?[0-9]*([eE][-+]?[0-9]+)?) *`);
 	    if( card ){
 		s = card.replace(regexp, "$1");
 		oval = parseFloat(s);
@@ -18607,7 +18534,7 @@ JS9.raw2FITS = function(raw, opts){
     if( typeof opts === "boolean" ){
 	opts = {addcr: opts};
     }
-    // raw.card and raw.cardstr contain comments, so use them if possible
+    // raw.card and raw.cardstr contain comments: use them if possible
     if( raw.card || raw.cardstr ){
 	header = raw.header || {};
 	if( raw.card ){
@@ -18624,7 +18551,7 @@ JS9.raw2FITS = function(raw, opts){
 	    if( opts.notab && card.match(/^TAB(TYP|MIN|MAX|DIM)[1,2]/) ){
 		continue;
 	    }
-	    // change values that get set in mkRawDataFromHDU()
+	    // change values which get set in mkRawDataFromHDU()
 	    if( card.match(/^XTENSION/) && i === 0 && opts.simple ){
 		t += fixparam(card, "XTENSION");
 	    } else if( card.match(/^BITPIX /) && raw.bitpix ){
@@ -18695,7 +18622,7 @@ JS9.raw2FITS = function(raw, opts){
 		}
 		// add the end card
 		t += card;
-		// mark that we did so
+		// mark we did so
 		hasend = true;
 	    } else {
 		t += card;
@@ -18763,7 +18690,7 @@ JS9.raw2FITS = function(raw, opts){
 		    } else if( val === "" ){
 			val = "' '";
 		    } else if( !JS9.isNumber(val) && val.charAt(0) !== "'" ){
-			val = "'" + val + "'";
+			val = `'${val}'`;
 		    }
 		    s = sprintf("%-8s= %20s", key, val);
 		    left = 80 - s.length;
@@ -18792,8 +18719,8 @@ JS9.raw2FITS = function(raw, opts){
 
 // convert an array of hdu objects into a nice string
 JS9.hdus2Str = function(hdus){
-    var i, j, s, obj;
-    var t="";
+    let i, j, s, obj;
+    let t = "";
     // sanity check
     if( !hdus ){
 	return t;
@@ -18831,7 +18758,7 @@ JS9.hdus2Str = function(hdus){
 	    }
 	    t += sprintf("&#09;<b>rows</b>: %d%s<b>cols</b>: [", obj.rows, s);
 	    for(j=0; j<obj.cols.length; j++){
-		t += sprintf("%s", obj.cols[j].name);
+		t += `${obj.cols[j].name}`;
 		if( j !== obj.cols.length-1 ){
 		    t += ", ";
 		}
@@ -18861,12 +18788,12 @@ CanvasRenderingContext2D.prototype.clear =
 // create a tooltip, with the tip formatted from a string containing
 // variables in the current context, e.g. "$im.id\n$xreg.imstr\n$xreg.data.tag"
 JS9.tooltip = function(x, y, fmt, im, xreg, evt){
-    var tipstr, tx, ty, w, h;
-    var fmt2str = function(str){
+    let tipstr, tx, ty, w, h;
+    const fmt2str = (str) => {
 	// eslint-disable-next-line no-unused-vars
-	var cmd = str.replace(/\$([a-zA-Z0-9_./]+)/g, function(m, t, o){
-            var i, v, val;
-	    var arr = t.split(".");
+	const cmd = str.replace(/\$([a-zA-Z0-9_./]+)/g, function(m, t, o){
+            let i, v, val;
+	    const arr = t.split(".");
 	    switch(arr[0]){
 	    case "im":
 		val = im;
@@ -18912,32 +18839,33 @@ JS9.tooltip = function(x, y, fmt, im, xreg, evt){
 };
 
 // http://stackoverflow.com/questions/359788/how-to-execute-a-javascript-function-when-i-have-its-name-as-a-string
-// our modification will execute a real function or a functionName
-JS9.xeqByName = function(functionName, context /*, args */) {
-    var i, args, namespaces, func, type;
-    args = Array.prototype.slice.call(arguments, 2);
-    type = typeof functionName;
+// our modification will execute a real func or a funcName
+JS9.xeqByName = function(...args) {
+    let i, namespaces, func;
+    let [funcName, context] = args;
+    let xargs = args.slice(2);
+    let type = typeof funcName;
     switch( type ){
     case "function":
-	return functionName.apply(context, args);
+	return funcName.apply(context, xargs);
     case "string":
-	namespaces = functionName.split(".");
+	namespaces = funcName.split(".");
 	func = namespaces.pop();
 	for(i = 0; i < namespaces.length; i++) {
             context = context[namespaces[i]];
 	}
-	return context[func].apply(context, args);
+	return context[func](...xargs);
     default:
-	JS9.error("unknown function type: "+type);
+	JS9.error(`unknown func type: ${type}`);
 	break;
     }
 };
 
-// return value of a var passed as a string (based on above)
-JS9.varByName = function(functionName, context){
-    var i, namespaces, vname;
+// return value of a variable passed as a string (based on above)
+JS9.varByName = function(funcName, context){
+    let i, namespaces, vname;
     context = context || JS9;
-    namespaces = functionName.split(".");
+    namespaces = funcName.split(".");
     vname = namespaces.pop();
     for(i=0; i<namespaces.length; i++) {
 	context = context[namespaces[i]];
@@ -18950,7 +18878,7 @@ JS9.varByName = function(functionName, context){
 
 // merge preferences into global JS9 object
 JS9.mergePrefs = function(obj){
-    var otype, jtype, name;
+    let otype, jtype, name;
     // merge preferences with js9 objects and data
     for( name in obj ){
 	if( obj.hasOwnProperty(name) && JS9.hasOwnProperty(name) ){
@@ -18988,10 +18916,10 @@ JS9.loadPrefs = function(url, doerr) {
       dataType: "json",
       mimeType: "application/json",
       async: false,
-      success: function(obj){
+      success: (obj) => {
 	  JS9.mergePrefs(obj);
       },
-      error:  function(jqXHR, textStatus, errorThrown){
+      error: (jqXHR, textStatus, errorThrown) => {
 	  if( doerr ){
 	      if( JS9.CHROMEFILEWARNING &&
 		  (JS9.BROWSER[0] === "Chrome") && (document.domain === "") &&
@@ -19008,8 +18936,8 @@ JS9.loadPrefs = function(url, doerr) {
 
 // is this object a typed array?
 JS9.isTypedArray = function(obj) {
-    var type;
-    var types = {
+    let type;
+    const types = {
         "[object Int8Array]": true,
         "[object Uint8Array]": true,
         "[object Uint8ClampedArray]": true,
@@ -19027,10 +18955,10 @@ JS9.isTypedArray = function(obj) {
 // starbase table support
 // tab-delimited ascii tables, # in first line is a comment
 JS9.Starbase = function(s, opts){
-    var i, j, skips, dashes, data, cobj;
-    var line = 0;
-    var checkDashline = function(dash){
-	var i;
+    let i, j, skips, dashes, data, cobj;
+    let line = 0;
+    const checkDashline = (dash) => {
+	let i;
 	for(i=0; i<dash.length; i++){
 	    if( dash[i].match(/^-+$/) === null ){
 		return 0;
@@ -19038,9 +18966,7 @@ JS9.Starbase = function(s, opts){
 	}
 	return i;
     };
-    var I = function(x){
-	return x;
-    };
+    const I = (x) => { return x; };
     // init returned object
     this.head = {};
     this.convFuncs = [];
@@ -19090,7 +19016,7 @@ JS9.Starbase = function(s, opts){
     }
     // process header:
     // replace "." with "_" in header names
-    // create a vector of type converter functions
+    // create a vector of type converter funcs
     for(i=0; i<this.headline.length; i++ ){
 	this.headline[i] = this.headline[i].replace(/\./g, "_");
 	if( opts.convFuncs && opts.convFuncs[this.headline[i]] ){
@@ -19128,11 +19054,11 @@ JS9.Starbase = function(s, opts){
 // http://stackoverflow.com/questions/1573053/javascript-function-to-convert-color-names-to-hex-codes
 // NB: colors are augmented by /opt/X11//share/X11/rgb.txt
 JS9.colorToHex = function(color){
-    var arr;
-    var colors = {
+    let arr;
+    const colors = {
 "aliceblue":"#f0f8ff","antiquewhite":"#faebd7","aqua":"#00ffff","aquamarine":"#7fffd4","azure":"#f0ffff","beige":"#f5f5dc","bisque":"#ffe4c4","black":"#000000","blanchedalmond":"#ffebcd","blue":"#0000ff","blueviolet":"#8a2be2","brown":"#a52a2a","burlywood":"#deb887","cadetblue":"#5f9ea0","chartreuse":"#7fff00","chocolate":"#d2691e","coral":"#ff7f50","cornflowerblue":"#6495ed","cornsilk":"#fff8dc","crimson":"#dc143c","cyan":"#00ffff","darkblue":"#00008b","darkcyan":"#008b8b","darkgoldenrod":"#b8860b","darkgray":"#a9a9a9","darkgreen":"#006400","darkkhaki":"#bdb76b","darkmagenta":"#8b008b","darkolivegreen":"#556b2f","darkorange":"#ff8c00","darkorchid":"#9932cc","darkred":"#8b0000","darksalmon":"#e9967a","darkseagreen":"#8fbc8f","darkslateblue":"#483d8b","darkslategray":"#2f4f4f","darkturquoise":"#00ced1","darkviolet":"#9400d3","deeppink":"#ff1493","deepskyblue":"#00bfff","dimgray":"#696969","dodgerblue":"#1e90ff","firebrick":"#b22222","floralwhite":"#fffaf0","forestgreen":"#228b22","fuchsia":"#ff00ff","gainsboro":"#dcdcdc","ghostwhite":"#f8f8ff","gold":"#ffd700","goldenrod":"#daa520","gray":"#808080","green":"#008000","greenyellow":"#adff2f","honeydew":"#f0fff0","hotpink":"#ff69b4","indianred ":"#cd5c5c","indigo":"#4b0082","ivory":"#fffff0","khaki":"#f0e68c","lavender":"#e6e6fa","lavenderblush":"#fff0f5","lawngreen":"#7cfc00","lemonchiffon":"#fffacd","lightblue":"#add8e6","lightcoral":"#f08080","lightcyan":"#e0ffff","lightgoldenrodyellow":"#fafad2","lightgrey":"#d3d3d3","lightgreen":"#90ee90","lightpink":"#ffb6c1","lightsalmon":"#ffa07a","lightseagreen":"#20b2aa","lightskyblue":"#87cefa","lightslategray":"#778899","lightsteelblue":"#b0c4de","lightyellow":"#ffffe0","lime":"#00ff00","limegreen":"#32cd32","linen":"#faf0e6","magenta":"#ff00ff","maroon":"#800000","mediumaquamarine":"#66cdaa","mediumblue":"#0000cd","mediumorchid":"#ba55d3","mediumpurple":"#9370d8","mediumseagreen":"#3cb371","mediumslateblue":"#7b68ee","mediumspringgreen":"#00fa9a","mediumturquoise":"#48d1cc","mediumvioletred":"#c71585","midnightblue":"#191970","mintcream":"#f5fffa","mistyrose":"#ffe4e1","moccasin":"#ffe4b5","navajowhite":"#ffdead","navy":"#000080","oldlace":"#fdf5e6","olive":"#808000","olivedrab":"#6b8e23","orange":"#ffa500","orangered":"#ff4500","orchid":"#da70d6","palegoldenrod":"#eee8aa","palegreen":"#98fb98","paleturquoise":"#afeeee","palevioletred":"#d87093","papayawhip":"#ffefd5","peachpuff":"#ffdab9","peru":"#cd853f","pink":"#ffc0cb","plum":"#dda0dd","powderblue":"#b0e0e6","purple":"#800080","rebeccapurple":"#663399","red":"#ff0000","rosybrown":"#bc8f8f","royalblue":"#4169e1","saddlebrown":"#8b4513","salmon":"#fa8072","sandybrown":"#f4a460","seagreen":"#2e8b57","seashell":"#fff5ee","sienna":"#a0522d","silver":"#c0c0c0","skyblue":"#87ceeb","slateblue":"#6a5acd","slategray":"#708090","snow":"#fffafa","springgreen":"#00ff7f","steelblue":"#4682b4","tan":"#d2b48c","teal":"#008080","thistle":"#d8bfd8","tomato":"#ff6347","turquoise":"#40e0d0","violet":"#ee82ee","wheat":"#f5deb3","white":"#ffffff","whitesmoke":"#f5f5f5","yellow":"#ffff00","yellowgreen":"#9acd3","antiquewhite1":"#ffefdb","antiquewhite2":"#eedfcc","antiquewhite3":"#cdc0b0","antiquewhite4":"#8b8378","cadetblue1":"#98f5ff","cadetblue2":"#8ee5ee","cadetblue3":"#7ac5cd","cadetblue4":"#53868b","darkgoldenrod1":"#ffb90f","darkgoldenrod2":"#eead0e","darkgoldenrod3":"#cd950c","darkgoldenrod4":"#8b6508","darkgrey":"#a9a9a9","darkolivegreen1":"#caff70","darkolivegreen2":"#bcee68","darkolivegreen3":"#a2cd5a","darkolivegreen4":"#6e8b3d","darkorange1":"#ff7f00","darkorange2":"#ee7600","darkorange3":"#cd6600","darkorange4":"#8b4500","darkorchid1":"#bf3eff","darkorchid2":"#b23aee","darkorchid3":"#9a32cd","darkorchid4":"#68228b","darkseagreen1":"#c1ffc1","darkseagreen2":"#b4eeb4","darkseagreen3":"#9bcd9b","darkseagreen4":"#698b69","darkslategray1":"#97ffff","darkslategray2":"#8deeee","darkslategray3":"#79cdcd","darkslategray4":"#528b8b","darkslategrey":"#2f4f4f","deeppink1":"#ff1493","deeppink2":"#ee1289","deeppink3":"#cd1076","deeppink4":"#8b0a50","deepskyblue1":"#00bfff","deepskyblue2":"#00b2ee","deepskyblue3":"#009acd","deepskyblue4":"#00688b","dimgrey":"#696969","dodgerblue1":"#1e90ff","dodgerblue2":"#1c86ee","dodgerblue3":"#1874cd","dodgerblue4":"#104e8b","hotpink1":"#ff6eb4","hotpink2":"#ee6aa7","hotpink3":"#cd6090","hotpink4":"#8b3a62","indianred":"#cd5c5c","indianred1":"#ff6a6a","indianred2":"#ee6363","indianred3":"#cd5555","indianred4":"#8b3a3a","lavenderblush1":"#fff0f5","lavenderblush2":"#eee0e5","lavenderblush3":"#cdc1c5","lavenderblush4":"#8b8386","lemonchiffon1":"#fffacd","lemonchiffon2":"#eee9bf","lemonchiffon3":"#cdc9a5","lemonchiffon4":"#8b8970","lightblue1":"#bfefff","lightblue2":"#b2dfee","lightblue3":"#9ac0cd","lightblue4":"#68838b","lightcyan1":"#e0ffff","lightcyan2":"#d1eeee","lightcyan3":"#b4cdcd","lightcyan4":"#7a8b8b","lightgoldenrod":"#eedd82","lightgoldenrod1":"#ffec8b","lightgoldenrod2":"#eedc82","lightgoldenrod3":"#cdbe70","lightgoldenrod4":"#8b814c","lightgray":"#d3d3d3","lightpink1":"#ffaeb9","lightpink2":"#eea2ad","lightpink3":"#cd8c95","lightpink4":"#8b5f65","lightsalmon1":"#ffa07a","lightsalmon2":"#ee9572","lightsalmon3":"#cd8162","lightsalmon4":"#8b5742","lightskyblue1":"#b0e2ff","lightskyblue2":"#a4d3ee","lightskyblue3":"#8db6cd","lightskyblue4":"#607b8b","lightslateblue":"#8470ff","lightslategrey":"#778899","lightsteelblue1":"#cae1ff","lightsteelblue2":"#bcd2ee","lightsteelblue3":"#a2b5cd","lightsteelblue4":"#6e7b8b","lightyellow1":"#ffffe0","lightyellow2":"#eeeed1","lightyellow3":"#cdcdb4","lightyellow4":"#8b8b7a","mediumorchid1":"#e066ff","mediumorchid2":"#d15fee","mediumorchid3":"#b452cd","mediumorchid4":"#7a378b","mediumpurple1":"#ab82ff","mediumpurple2":"#9f79ee","mediumpurple3":"#8968cd","mediumpurple4":"#5d478b","mistyrose1":"#ffe4e1","mistyrose2":"#eed5d2","mistyrose3":"#cdb7b5","mistyrose4":"#8b7d7b","navajowhite1":"#ffdead","navajowhite2":"#eecfa1","navajowhite3":"#cdb38b","navajowhite4":"#8b795e","navyblue":"#000080","olivedrab1":"#c0ff3e","olivedrab2":"#b3ee3a","olivedrab3":"#9acd32","olivedrab4":"#698b22","orangered1":"#ff4500","orangered2":"#ee4000","orangered3":"#cd3700","orangered4":"#8b2500","palegreen1":"#9aff9a","palegreen2":"#90ee90","palegreen3":"#7ccd7c","palegreen4":"#548b54","paleturquoise1":"#bbffff","paleturquoise2":"#aeeeee","paleturquoise3":"#96cdcd","paleturquoise4":"#668b8b","palevioletred1":"#ff82ab","palevioletred2":"#ee799f","palevioletred3":"#cd6889","palevioletred4":"#8b475d","peachpuff1":"#ffdab9","peachpuff2":"#eecbad","peachpuff3":"#cdaf95","peachpuff4":"#8b7765","rosybrown1":"#ffc1c1","rosybrown2":"#eeb4b4","rosybrown3":"#cd9b9b","rosybrown4":"#8b6969","royalblue1":"#4876ff","royalblue2":"#436eee","royalblue3":"#3a5fcd","royalblue4":"#27408b","seagreen1":"#54ff9f","seagreen2":"#4eee94","seagreen3":"#43cd80","seagreen4":"#2e8b57","skyblue1":"#87ceff","skyblue2":"#7ec0ee","skyblue3":"#6ca6cd","skyblue4":"#4a708b","slateblue1":"#836fff","slateblue2":"#7a67ee","slateblue3":"#6959cd","slateblue4":"#473c8b","slategray1":"#c6e2ff","slategray2":"#b9d3ee","slategray3":"#9fb6cd","slategray4":"#6c7b8b","slategrey":"#708090","springgreen1":"#00ff7f","springgreen2":"#00ee76","springgreen3":"#00cd66","springgreen4":"#008b45","steelblue1":"#63b8ff","steelblue2":"#5cacee","steelblue3":"#4f94cd","steelblue4":"#36648b","violetred":"#d02090","violetred1":"#ff3e96","violetred2":"#ee3a8c","violetred3":"#cd3278","violetred4":"#8b2252","webgray":"#808080","webgreen":"#008000","webgrey":"#808080","webmaroon":"#800000","webpurple":"#800080","x11gray":"#bebebe","x11green":"#00ff00","x11grey":"#bebebe","x11maroon":"#b03060","x11purple":"#a020f0","aquamarine1":"#7fffd4","aquamarine2":"#76eec6","aquamarine3":"#66cdaa","aquamarine4":"#458b74","azure1":"#f0ffff","azure2":"#e0eeee","azure3":"#c1cdcd","azure4":"#838b8b","bisque1":"#ffe4c4","bisque2":"#eed5b7","bisque3":"#cdb79e","bisque4":"#8b7d6b","blue1":"#0000ff","blue2":"#0000ee","blue3":"#0000cd","blue4":"#00008b","brown1":"#ff4040","brown2":"#ee3b3b","brown3":"#cd3333","brown4":"#8b2323","burlywood1":"#ffd39b","burlywood2":"#eec591","burlywood3":"#cdaa7d","burlywood4":"#8b7355","chartreuse1":"#7fff00","chartreuse2":"#76ee00","chartreuse3":"#66cd00","chartreuse4":"#458b00","chocolate1":"#ff7f24","chocolate2":"#ee7621","chocolate3":"#cd661d","chocolate4":"#8b4513","coral1":"#ff7256","coral2":"#ee6a50","coral3":"#cd5b45","coral4":"#8b3e2f","cornsilk1":"#fff8dc","cornsilk2":"#eee8cd","cornsilk3":"#cdc8b1","cornsilk4":"#8b8878","cyan1":"#00ffff","cyan2":"#00eeee","cyan3":"#00cdcd","cyan4":"#008b8b","firebrick1":"#ff3030","firebrick2":"#ee2c2c","firebrick3":"#cd2626","firebrick4":"#8b1a1a","gold1":"#ffd700","gold2":"#eec900","gold3":"#cdad00","gold4":"#8b7500","goldenrod1":"#ffc125","goldenrod2":"#eeb422","goldenrod3":"#cd9b1d","goldenrod4":"#8b6914","gray0":"#000000","gray1":"#030303","gray10":"#1a1a1a","gray100":"#ffffff","gray11":"#1c1c1c","gray12":"#1f1f1f","gray13":"#212121","gray14":"#242424","gray15":"#262626","gray16":"#292929","gray17":"#2b2b2b","gray18":"#2e2e2e","gray19":"#303030","gray2":"#050505","gray20":"#333333","gray21":"#363636","gray22":"#383838","gray23":"#3b3b3b","gray24":"#3d3d3d","gray25":"#404040","gray26":"#424242","gray27":"#454545","gray28":"#474747","gray29":"#4a4a4a","gray3":"#080808","gray30":"#4d4d4d","gray31":"#4f4f4f","gray32":"#525252","gray33":"#545454","gray34":"#575757","gray35":"#595959","gray36":"#5c5c5c","gray37":"#5e5e5e","gray38":"#616161","gray39":"#636363","gray4":"#0a0a0a","gray40":"#666666","gray41":"#696969","gray42":"#6b6b6b","gray43":"#6e6e6e","gray44":"#707070","gray45":"#737373","gray46":"#757575","gray47":"#787878","gray48":"#7a7a7a","gray49":"#7d7d7d","gray5":"#0d0d0d","gray50":"#7f7f7f","gray51":"#828282","gray52":"#858585","gray53":"#878787","gray54":"#8a8a8a","gray55":"#8c8c8c","gray56":"#8f8f8f","gray57":"#919191","gray58":"#949494","gray59":"#969696","gray6":"#0f0f0f","gray60":"#999999","gray61":"#9c9c9c","gray62":"#9e9e9e","gray63":"#a1a1a1","gray64":"#a3a3a3","gray65":"#a6a6a6","gray66":"#a8a8a8","gray67":"#ababab","gray68":"#adadad","gray69":"#b0b0b0","gray7":"#121212","gray70":"#b3b3b3","gray71":"#b5b5b5","gray72":"#b8b8b8","gray73":"#bababa","gray74":"#bdbdbd","gray75":"#bfbfbf","gray76":"#c2c2c2","gray77":"#c4c4c4","gray78":"#c7c7c7","gray79":"#c9c9c9","gray8":"#141414","gray80":"#cccccc","gray81":"#cfcfcf","gray82":"#d1d1d1","gray83":"#d4d4d4","gray84":"#d6d6d6","gray85":"#d9d9d9","gray86":"#dbdbdb","gray87":"#dedede","gray88":"#e0e0e0","gray89":"#e3e3e3","gray9":"#171717","gray90":"#e5e5e5","gray91":"#e8e8e8","gray92":"#ebebeb","gray93":"#ededed","gray94":"#f0f0f0","gray95":"#f2f2f2","gray96":"#f5f5f5","gray97":"#f7f7f7","gray98":"#fafafa","gray99":"#fcfcfc","green1":"#00ff00","green2":"#00ee00","green3":"#00cd00","green4":"#008b00","grey":"#bebebe","grey0":"#000000","grey1":"#030303","grey10":"#1a1a1a","grey100":"#ffffff","grey11":"#1c1c1c","grey12":"#1f1f1f","grey13":"#212121","grey14":"#242424","grey15":"#262626","grey16":"#292929","grey17":"#2b2b2b","grey18":"#2e2e2e","grey19":"#303030","grey2":"#050505","grey20":"#333333","grey21":"#363636","grey22":"#383838","grey23":"#3b3b3b","grey24":"#3d3d3d","grey25":"#404040","grey26":"#424242","grey27":"#454545","grey28":"#474747","grey29":"#4a4a4a","grey3":"#080808","grey30":"#4d4d4d","grey31":"#4f4f4f","grey32":"#525252","grey33":"#545454","grey34":"#575757","grey35":"#595959","grey36":"#5c5c5c","grey37":"#5e5e5e","grey38":"#616161","grey39":"#636363","grey4":"#0a0a0a","grey40":"#666666","grey41":"#696969","grey42":"#6b6b6b","grey43":"#6e6e6e","grey44":"#707070","grey45":"#737373","grey46":"#757575","grey47":"#787878","grey48":"#7a7a7a","grey49":"#7d7d7d","grey5":"#0d0d0d","grey50":"#7f7f7f","grey51":"#828282","grey52":"#858585","grey53":"#878787","grey54":"#8a8a8a","grey55":"#8c8c8c","grey56":"#8f8f8f","grey57":"#919191","grey58":"#949494","grey59":"#969696","grey6":"#0f0f0f","grey60":"#999999","grey61":"#9c9c9c","grey62":"#9e9e9e","grey63":"#a1a1a1","grey64":"#a3a3a3","grey65":"#a6a6a6","grey66":"#a8a8a8","grey67":"#ababab","grey68":"#adadad","grey69":"#b0b0b0","grey7":"#121212","grey70":"#b3b3b3","grey71":"#b5b5b5","grey72":"#b8b8b8","grey73":"#bababa","grey74":"#bdbdbd","grey75":"#bfbfbf","grey76":"#c2c2c2","grey77":"#c4c4c4","grey78":"#c7c7c7","grey79":"#c9c9c9","grey8":"#141414","grey80":"#cccccc","grey81":"#cfcfcf","grey82":"#d1d1d1","grey83":"#d4d4d4","grey84":"#d6d6d6","grey85":"#d9d9d9","grey86":"#dbdbdb","grey87":"#dedede","grey88":"#e0e0e0","grey89":"#e3e3e3","grey9":"#171717","grey90":"#e5e5e5","grey91":"#e8e8e8","grey92":"#ebebeb","grey93":"#ededed","grey94":"#f0f0f0","grey95":"#f2f2f2","grey96":"#f5f5f5","grey97":"#f7f7f7","grey98":"#fafafa","grey99":"#fcfcfc","honeydew1":"#f0fff0","honeydew2":"#e0eee0","honeydew3":"#c1cdc1","honeydew4":"#838b83","ivory1":"#fffff0","ivory2":"#eeeee0","ivory3":"#cdcdc1","ivory4":"#8b8b83","khaki1":"#fff68f","khaki2":"#eee685","khaki3":"#cdc673","khaki4":"#8b864e","magenta1":"#ff00ff","magenta2":"#ee00ee","magenta3":"#cd00cd","magenta4":"#8b008b","maroon1":"#ff34b3","maroon2":"#ee30a7","maroon3":"#cd2990","maroon4":"#8b1c62","orange1":"#ffa500","orange2":"#ee9a00","orange3":"#cd8500","orange4":"#8b5a00","orchid1":"#ff83fa","orchid2":"#ee7ae9","orchid3":"#cd69c9","orchid4":"#8b4789","pink1":"#ffb5c5","pink2":"#eea9b8","pink3":"#cd919e","pink4":"#8b636c","plum1":"#ffbbff","plum2":"#eeaeee","plum3":"#cd96cd","plum4":"#8b668b","purple1":"#9b30ff","purple2":"#912cee","purple3":"#7d26cd","purple4":"#551a8b","red1":"#ff0000","red2":"#ee0000","red3":"#cd0000","red4":"#8b0000","salmon1":"#ff8c69","salmon2":"#ee8262","salmon3":"#cd7054","salmon4":"#8b4c39","seashell1":"#fff5ee","seashell2":"#eee5de","seashell3":"#cdc5bf","seashell4":"#8b8682","sienna1":"#ff8247","sienna2":"#ee7942","sienna3":"#cd6839","sienna4":"#8b4726","snow1":"#fffafa","snow2":"#eee9e9","snow3":"#cdc9c9","snow4":"#8b8989","tan1":"#ffa54f","tan2":"#ee9a49","tan3":"#cd853f","tan4":"#8b5a2b","thistle1":"#ffe1ff","thistle2":"#eed2ee","thistle3":"#cdb5cd","thistle4":"#8b7b8b","tomato1":"#ff6347","tomato2":"#ee5c42","tomato3":"#cd4f39","tomato4":"#8b3626","turquoise1":"#00f5ff","turquoise2":"#00e5ee","turquoise3":"#00c5cd","turquoise4":"#00868b","wheat1":"#ffe7ba","wheat2":"#eed8ae","wheat3":"#cdba96","wheat4":"#8b7e66","yellow1":"#ffff00","yellow2":"#eeee00","yellow3":"#cdcd00","yellow4":"#8b8b00"
     };
-    var c;
+    let c;
     if( !color ){
 	return "";
     }
@@ -19149,8 +19075,8 @@ JS9.colorToHex = function(color){
 
 // convert string to double, returning (possibly scaled) value and delim
 JS9.strtoscaled = function(s){
-    var dval = JS9.saostrtod(s);
-    var dtype = String.fromCharCode(JS9.saodtype());
+    let dval = JS9.saostrtod(s);
+    const dtype = String.fromCharCode(JS9.saodtype());
     // scale for certain units
     switch(dtype){
     case '"':
@@ -19165,7 +19091,7 @@ JS9.strtoscaled = function(s){
     default:
 	break;
     }
-    return {dval: dval, dtype: dtype};
+    return {dval, dtype};
 };
 
 // clean file path
@@ -19189,7 +19115,7 @@ JS9.fixPath = function(f, opts){
 	    f = f.replace(/^\${JS9_DIR}\//,JS9.INSTALLDIR);
 	}
 	if( f.charAt(0) !== "/" ){
-	    f = window.currentDir + "/" + f;
+	    f = `${window.currentDir}/${f}`;
 	}
     }
     return f;
@@ -19197,7 +19123,7 @@ JS9.fixPath = function(f, opts){
 
 // return virtual path of a local access file, if warranted
 JS9.localAccess = function(file){
-    var tfile, text;
+    let tfile, text;
     // only if local access is turned on and we have a local disk mounted
     if( !file || !JS9.globalOpts.localAccess || !JS9.localMount ){
 	return null;
@@ -19205,9 +19131,9 @@ JS9.localAccess = function(file){
     // get file without bracket extension
     tfile = file.replace(/\[.*\]/, "");
     // and file extension
-    text = "." + tfile.split(".").pop().toLowerCase();
+    text = `.${tfile.split(".").pop().toLowerCase()}`;
     // this is the candidate virtual file
-    tfile = JS9.localMount + "/" + tfile;
+    tfile = `${JS9.localMount}/${tfile}`;
     // check for existence
     // note to myself: cfitsio uncompresses .gz files into memory, so
     // there is no benefit to having ".gz" in the localTemplates list.
@@ -19224,7 +19150,7 @@ JS9.localAccess = function(file){
 
 // get directory name of a file, including trailing "/";
 JS9.dirname = function(f){
-    if( !f || f.indexOf("/") === -1 ){
+    if( !f || !f.includes("/") ){
 	return "";
     }
     return f.match(/.*\//)[0];
@@ -19236,8 +19162,8 @@ JS9.dirname = function(f){
 
 // mousedown: assumes display obj is passed in evt.data
 JS9.mouseDownCB = function(evt){
-    var display = evt.data;
-    var im = display.image;
+    const display = evt.data;
+    const im = display.image;
     // sanity checks
     if( !im ){
 	return;
@@ -19291,17 +19217,17 @@ JS9.mouseDownCB = function(evt){
 	im.clickState = -evt.originalEvent.touches.length;
     }
     // add this display's callbacks on the whole document
-    $(document).on("mousemove." + display.id, display,
-		 function(evt){return JS9.mouseMoveCB(evt);});
-    $(document).on("mouseup." + display.id, display,
-		 function(evt){return JS9.mouseUpCB(evt);});
+    $(document).on(`mousemove.${display.id}`, display,
+		 (evt) => { return JS9.mouseMoveCB(evt); });
+    $(document).on(`mouseup.${display.id}`, display,
+		 (evt) => { return JS9.mouseUpCB(evt); });
 };
 
 // mouseup: assumes display obj is passed in evt.data
 JS9.mouseUpCB = function(evt){
-    var i, dwidth, dheight, tdisp, isclick;
-    var display = evt.data;
-    var im = display.image;
+    let i, dwidth, dheight, tdisp, isclick;
+    const display = evt.data;
+    const im = display.image;
     // sanity checks
     if( !im ){
 	// handle supermenu clicks specially (even if no image is loaded)
@@ -19377,8 +19303,8 @@ JS9.mouseUpCB = function(evt){
 	}
     }
     // remove this display's callbacks on the whole document
-    $(document).off("mouseup." + display.id);
-    $(document).off("mousemove." + display.id);
+    $(document).off(`mouseup.${display.id}`);
+    $(document).off(`mousemove.${display.id}`);
     // look for active mousedown from a different display and fire mouse up
     for(i=0; i<JS9.displays.length; i++){
 	tdisp = JS9.displays[i];
@@ -19390,9 +19316,9 @@ JS9.mouseUpCB = function(evt){
 
 // mousemove: assumes display obj is passed in evt.data
 JS9.mouseMoveCB = function(evt){
-    var sel;
-    var display = evt.data;
-    var im = display.image;
+    let sel;
+    const display = evt.data;
+    const im = display.image;
     // evt.preventDefault();
     // sanity checks
     if( !im ){
@@ -19461,8 +19387,8 @@ JS9.mouseMoveCB = function(evt){
 
 // mouseenter: assumes display obj is passed in evt.data
 JS9.mouseEnterCB = function(evt){
-    var display = evt.data;
-    var im = display.image;
+    const display = evt.data;
+    const im = display.image;
     evt.preventDefault();
     // sanity checks
     if( !im ){
@@ -19471,7 +19397,7 @@ JS9.mouseEnterCB = function(evt){
     if( !JS9.specialKey(evt) ){
 	if( JS9.globalOpts.dynamicSelect === "move" ){
 	    if( JS9.Dysel.getDisplayOr(display) !== display ){
-		// mark this as the current display
+		// mark as the current display
 		JS9.Dysel.select(display);
 	    }
 	}
@@ -19480,9 +19406,9 @@ JS9.mouseEnterCB = function(evt){
 
 // mouseover: assumes display obj is passed in evt.data
 JS9.mouseOverCB = function(evt){
-    var display = evt.data;
-    var im = display.image;
-    var x = $(document).scrollLeft(), y = $(document).scrollTop();
+    const display = evt.data;
+    const im = display.image;
+    const x = $(document).scrollLeft(), y = $(document).scrollTop();
     evt.preventDefault();
     // sanity checks
     if( !im ){
@@ -19508,8 +19434,8 @@ JS9.mouseOverCB = function(evt){
 
 // mouseout: assumes display obj is passed in evt.data
 JS9.mouseOutCB = function(evt){
-    var display = evt.data;
-    var im = display.image;
+    const display = evt.data;
+    const im = display.image;
     evt.preventDefault();
     // sanity checks
     if( !im ){
@@ -19537,8 +19463,8 @@ JS9.mouseOutCB = function(evt){
 
 // scrollwheel: assumes display obj is passed in evt.data
 JS9.wheelCB = function(evt){
-    var display = evt.data;
-    var im = display.image;
+    const display = evt.data;
+    const im = display.image;
     if( display.mousetouchZoom && im         &&
 	JS9.hasOwnProperty("MouseTouch")     &&
 	JS9.MouseTouch.Actions["wheel zoom"] ){
@@ -19553,9 +19479,8 @@ JS9.wheelCB = function(evt){
 // in case you are wondering: you can't move the mouse via javascript!
 // http://stackoverflow.com/questions/4752501/move-the-mouse-pointer-to-a-specific-position
 JS9.keyPressCB = function(evt){
-    var display = evt.data;
-    var im = display.image;
-    // var keycode = evt.which || evt.keyCode;
+    const display = evt.data;
+    const im = display.image;
     evt.preventDefault();
     // plugin callbacks
     if( im ){
@@ -19567,11 +19492,10 @@ JS9.keyPressCB = function(evt){
 // in case you are wondering: you can't move the mouse via javascript!
 // http://stackoverflow.com/questions/4752501/move-the-mouse-pointer-to-a-specific-position
 JS9.keyDownCB = function(evt){
-    var ipos;
-    var display = evt.data;
-    var im = display.image;
+    let ipos;
+    const display = evt.data;
+    const im = display.image;
     evt.preventDefault();
-    // var keycode = evt.which || evt.keyCode;
     // actions for key press
     if( JS9.hasOwnProperty("Keyboard") ){
 	ipos = im ? im.ipos : {x: null, y: null};
@@ -19585,8 +19509,8 @@ JS9.keyDownCB = function(evt){
 
 // keyup: assumes display obj is passed in evt.data
 JS9.keyUpCB = function(evt){
-    var display = evt.data;
-    var im = display.image;
+    const display = evt.data;
+    const im = display.image;
     if( im ){
 	// plugin callbacks
 	im.xeqPlugins("keypress", "onkeyup", evt);
@@ -19613,7 +19537,7 @@ JS9.dragexitCB = function(id, evt){
 };
 
 JS9.dragdropCB = function(id, evt){
-    var i, s, opts, files, display;
+    let i, s, opts, files, display;
     // convert jquery event to original event, if possible
     if( evt.originalEvent ){
 	evt = evt.originalEvent;
@@ -19636,8 +19560,8 @@ JS9.dragdropCB = function(id, evt){
 	return;
     }
     // got files: wait for spinner to start ...
-    window.setTimeout(function(){
-	var file, fname;
+    window.setTimeout(() => {
+	let file, fname;
 	// ... and load each file in turn
 	for(i=0; i<files.length; i++){
 	    file = files[i];
@@ -19672,8 +19596,8 @@ JS9.dragdropCB = function(id, evt){
 
 // add a plugin definition. Plugins will initialized after document is loaded
 JS9.RegisterPlugin = function(xclass, xname, func, opts){
-    var name;
-    var m, type, url, title;
+    let name, m, type, url, title;
+    const heading = xclass;
     // sanity check
     if( !xclass || !xname || !func ){
 	return;
@@ -19703,22 +19627,20 @@ JS9.RegisterPlugin = function(xclass, xname, func, opts){
     JS9.PLUGINS += "|";
     JS9.PLUGINS += xname;
     // save the plug-in
-    JS9.plugins.push({xclass: xclass, xname: xname, name: name,
-		opts: opts, func: func, instances: []});
+    JS9.plugins.push({xclass, xname, name, opts, func, instances: []});
     // save help, if necessary
     if( opts.help ){
-	m = opts.help.match(/^.*[\\\/]/);
+	m = opts.help.match(/^.*[\\/]/);
 	if( m[0] ){
-	    type = "plugins/" + m[0].replace(/[\\\/]+$/, "");
+	    type = `plugins/${m[0].replace(/[\\/]+$/, "")}`;
 	}
-	url = opts.help.replace(/^.*[\\\/]/, "");
+	url = opts.help.replace(/^.*[\\/]/, "");
 	if( opts.menuItem ){
 	    title = opts.menuItem;
 	} else {
 	    title = name;
 	}
-	JS9.helpOpts[xname] = {type: type, url: url,
-			       heading: xclass, title: title};
+	JS9.helpOpts[xname] = {type, url, heading, title};
     }
     // if JS9 already is inited, we need to instantiate this plugin
     // this can happen when using Require.js, for example
@@ -19729,8 +19651,8 @@ JS9.RegisterPlugin = function(xclass, xname, func, opts){
 
 // create a new plugin instance, attached to the specified element
 JS9.instantiatePlugin = function(el, plugin, winhandle, args){
-    var i, tplugin, instance, divid, divjq, pdivjq, html, ndiv, did;
-    var visible = "visible";
+    let i, tplugin, instance, divid, divjq, pdivjq, html, ndiv, did;
+    let visible = "visible";
     // if plugin is a string, get plugin object by name
     if( typeof plugin === "string" ){
 	for(i=0; i<JS9.plugins.length; i++){
@@ -19742,7 +19664,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	}
 	// did we find it?
 	if( typeof plugin === "string" ){
-	    JS9.error("unknown plugin: " + plugin);
+	    JS9.error(`unknown plugin: ${plugin}`);
 	}
     }
     // create an object inheriting the constructor prototype
@@ -19776,7 +19698,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	} else if( typeof el === "object" ){
 	    divjq = $(el);
 	} else {
-	    divjq = $("#"+el);
+	    divjq = $(`#${el}`);
 	}
 	// if we already have created this instance, we are done
 	for(i=0; i<plugin.instances.length; i++){
@@ -19801,7 +19723,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	instance.winHandle = winhandle;
 	// this is the original div
 	instance.odivjq = divjq;
-	// this is the div that the instance sees
+	// this is the div which the instance sees
 	instance.divjq = divjq;
 	// the light window is the the outer div
 	instance.outerdivjq = instance.divjq.closest(JS9.lightOpts[JS9.LIGHTWIN].top);
@@ -19815,13 +19737,13 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	    visible = "hidden";
 	}
 	// wrap the target div in a container div
-	divjq.wrap(sprintf("<div class='JS9PluginContainer' style='visibility: %s'>", visible));
+	divjq.wrap(`<div class='JS9PluginContainer' style='visibility: ${visible}'>`);
 	// this is the original div
 	instance.odivjq = divjq;
-	// this is the div that the instance sees
+	// this is the div which the instance sees
 	instance.divjq = divjq;
 	// add classes for easier CSS specification
-	instance.divjq.addClass(plugin.xclass+"Plugin").addClass("JS9Plugin");
+	instance.divjq.addClass(`${plugin.xclass}Plugin`).addClass("JS9Plugin");
 	// add id
 	if( !instance.odivjq.attr("id") ){
 	    instance.odivjq.attr("id", instance.id);
@@ -19831,7 +19753,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	// add the toolbar to the container, if necessary
 	if( divjq.data("toolbarseparate") !== false ){
 	    if( plugin.opts.toolbarSeparate || divjq.data("toolbarseparate") ){
-		ndiv = "<div class='"+JS9.lightOpts[JS9.LIGHTWIN].dragBar+"'>";
+		ndiv = `<div class='${JS9.lightOpts[JS9.LIGHTWIN].dragBar}'>`;
 		$(ndiv).insertBefore(instance.divjq);
 	    }
 	}
@@ -19864,7 +19786,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	// div the old-fashioned way
 	instance.div = instance.divjq[0];
 	instance.outerdiv = instance.outerdivjq[0];
-	// set width and height on div that instance sees
+	// set width and height on div which instance sees
 	if( plugin.opts.winDims ){
 	    // if either of these is not set, set size to defaults
 	    // as it turns out, sometimes one of them can be a tiny value (2)
@@ -19886,8 +19808,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 		JS9.Dysel.addPlugins(plugin.name);
 		did = "*";
 	    } else {
-		JS9.error(plugin.name +
-			  " is not a dynamically selectable plugin");
+		JS9.error(`${plugin.name} is not dynamically selectable`);
 	    }
 	} else {
 	    instance.display = JS9.lookupDisplay(divid);
@@ -19905,7 +19826,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	    }
 	    // add html to toolbar
 	    // add the display id to the toolbar, so buttons can find it
-	    $("<div class='JS9PluginToolbar-"+instance.winType+"'>")
+	    $(`<div class='JS9PluginToolbar-${instance.winType}'>`)
 		.css("z-index", JS9.BTNZINDEX)
 		.html(html)
 		.data("displayid", did)
@@ -19943,16 +19864,17 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 
 // instantiate all plugins -- can be called repeatedly if new divs are added
 JS9.instantiatePlugins = function(){
-    var i;
-    var newPlugin = function(plugin){
-	var j, k, instance;
+    let i;
+    const newPlugin = (plugin) => {
+	let j, k, instance;
 	// instantiate any divs not yet done
-	$('div.' + plugin.name).each(function(){
+	$(`div.${plugin.name}`).each((index, element) => {
 	    // new instance of this div-based plugin
-	    JS9.instantiatePlugin($(this), plugin, null, plugin.opts.divArgs);
+	    JS9.instantiatePlugin($(element),
+				  plugin, null, plugin.opts.divArgs);
 	});
 	// if we have a non-visible plugin (no menu and no window dims)
-	// that is not instantiated, instantiate it now (e.g. regions)
+	// which is not instantiated, instantiate it now (e.g. regions)
 	if( !plugin.opts.menuItem && plugin.opts.winDims &&
 	    !plugin.opts.winDims[0] && !plugin.opts.winDims[1] ){
 	        JS9.instantiatePlugin(null, plugin, null, plugin.opts.divArgs);
@@ -19979,7 +19901,7 @@ JS9.instantiatePlugins = function(){
 // ---------------------------------------------------------------------
 
 JS9.initEmscripten = function(){
-    var opts;
+    let opts;
     // sanity check
     if( window.hasOwnProperty("Astroem") ){
 	return;
@@ -19993,7 +19915,7 @@ JS9.initEmscripten = function(){
 	JS9.globalOpts.astroemWasm =
 	    JS9.InstallDir(Module.wasmBinaryFile || "astroemw.wasm");
 	// load astroem wasm file
-	JS9.fetchURL(JS9.globalOpts.astroemWasm, null, opts, function(data){
+	JS9.fetchURL(JS9.globalOpts.astroemWasm, null, opts, (data) => {
 	    // tell Emscripten we already have wasm binary
 	    // eslint-disable-next-line no-unused-vars
 	    Module.wasmBinary = data;
@@ -20003,7 +19925,7 @@ JS9.initEmscripten = function(){
 		JS9.loadScript(JS9.globalOpts.astroemURL);
 	    }
 	    catch(e){
-		JS9.error("can't find "+JS9.globalOpts.astroemURL);
+		JS9.error(`can't find ${JS9.globalOpts.astroemURL}`);
 	    }
 	});
     } else {
@@ -20013,7 +19935,7 @@ JS9.initEmscripten = function(){
 	    JS9.loadScript(JS9.globalOpts.astroemURL);
 	}
 	catch(e){
-	    JS9.error("can't find "+JS9.globalOpts.astroemURL);
+	    JS9.error(`can't find ${JS9.globalOpts.astroemURL}`);
 	}
     }
 };
@@ -20120,11 +20042,11 @@ JS9.initColormaps = function(){
     [[0,0], [0.015,0.5], [0.25,0.5], [0.5,0.75], [1,1]],
     [[0,0], [0.065,0], [0.125,0.5], [0.25,0.75], [0.5,0.81], [1,1]],
     [[0,0], [0.015,0.125], [0.03,0.375], [0.065,0.625], [0.25,0.25], [1,1]]));
-    JS9.checkNew(new JS9.Colormap("hsv", (function(){
-	var i, frac, h, s, v, f, p, q, t, ii;
-	var a = [];
-	var cur = 0;
-	var size = 200;
+    JS9.checkNew(new JS9.Colormap("hsv", (() => {
+	let i, frac, h, s, v, f, p, q, t, ii;
+	let cur = 0;
+	const size = 200;
+	const a = [];
 	for(i=0; i<size; i++, cur++){
 	    // generate in hsv
 	    frac = 1.0 - (i / (size - 1.0));
@@ -20177,7 +20099,7 @@ JS9.initColormaps = function(){
 		break;
 	    }
 	}
-	return a;}())));
+	return a;})()));
     JS9.checkNew(new JS9.Colormap("rainbow",
 	[[0,1], [0.2,0], [0.6,0], [0.8,1], [1,1]],
 	[[0,0], [0.2,0], [0.4,1], [0.8,1], [1,0]],
@@ -20186,10 +20108,10 @@ JS9.initColormaps = function(){
 	[[0,0], [0.333,0.3], [0.333,0], [0.666,0.3], [0.666,0.3], [1,1]],
 	[[0,0], [0.333,0.3], [0.333,0.3], [0.666,1], [0.666,0], [1,0.3]],
 	[[0,0], [0.333,1], [0.333,0], [0.666,0.3], [0.666,0], [1,0.3]]));
-    JS9.checkNew(new JS9.Colormap("staircase", (function(){
-	var ii, kk;
-	var a = [];
-	var cur = 0;
+    JS9.checkNew(new JS9.Colormap("staircase", (() => {
+	let ii, kk;
+	let cur = 0;
+	const a = [];
 	for(ii=1; ii<=5; ii++, cur++){
             kk = ii/5.0;
 	    a[cur] = [];
@@ -20211,7 +20133,7 @@ JS9.initColormaps = function(){
 	    a[cur].push(kk * 0.3);
 	    a[cur].push(kk * 0.3);
 	}
-	return a;}())));
+	return a;})()));
     JS9.checkNew(new JS9.Colormap("color",
 [[0,0,0], [0.18431, 0.18431, 0.18431], [0.37255, 0.37255, 0.37255], [0.56078, 0.56078, 0.56078], [0.74902, 0.74902, 0.74902], [0.93725, 0.93725, 0.93725], [0, 0.18431, 0.93725], [0, 0.37255, 0.74902], [0, 0.49804, 0.49804], [0, 0.74902, 0.30980], [0, 0.93725, 0], [0.30980, 0.62353, 0], [0.49804, 0.49804, 0], [0.62353, 0.30980, 0], [0.93725, 0, 0], [0.74902, 0, 0.30980]]));
 };
@@ -20227,10 +20149,10 @@ JS9.initCommands = function(){
 	name: "analysis",
 	alias: "run",
 	help: "list/run analysis for current image",
-	get: function(){
-	    var i, j, n, t, tasks;
-	    var result="";
-	    var im = this.image;
+	get() {
+	    let i, j, n, t, tasks;
+	    let result = "";
+	    const im = this.image;
 	    if( im && im.analysisPackages ){
 		for(j=0; j<im.analysisPackages.length; j++){
 		    tasks = im.analysisPackages[j];
@@ -20239,8 +20161,8 @@ JS9.initCommands = function(){
 			if( result ){
 			    result += ", ";
 			}
-			n = t.xclass ? (t.xclass + ":" + t.name) : t.name;
-			result += sprintf("%s (%s)", t.title, n);
+			n = t.xclass ? (`${t.xclass}:${t.name}`) : t.name;
+			result += `${t.title} (${n})`;
 		    }
 		    if( j < (im.analysisPackages.length-1) ){
 			result += "\n";
@@ -20249,9 +20171,9 @@ JS9.initCommands = function(){
 	    }
 	    return result;
 	},
-	set: function(args){
-	    var a, did;
-	    var im = this.image;
+	set(args) {
+	    let a, did;
+	    const im = this.image;
 	    if( !im ){
 		return;
 	    }
@@ -20260,7 +20182,7 @@ JS9.initCommands = function(){
 		if( a.purl ){
 		    did = im.displayAnalysis("params",
 					     JS9.InstallDir(a.purl),
-					     {title: a.title+": "+im.fitsFile});
+					     {title: `${a.title}: ${im.fitsFile}`});
 		    // save info for running the task
 		    $(did).data("dispid", im.display.id)
 			.data("aname", a.name);
@@ -20269,7 +20191,7 @@ JS9.initCommands = function(){
 		    im.runAnalysis(a.name);
 		}
 	    } else {
-		JS9.error("unknown analysis command '" + args[0] + "'");
+		JS9.error(`unknown analysis command '${args[0]}'`);
 	    }
 	}
     }));
@@ -20277,19 +20199,18 @@ JS9.initCommands = function(){
 	name: "colormap",
 	alias: "cmap",
 	help: "set/get colormap for current image",
-	get: function(){
-	    var res;
-	    var im = this.image;
+	get() {
+	    let res;
+	    const im = this.image;
 	    if( im ){
 		res = im.getColormap();
-		return sprintf("%s %s %s",
-			       res.colormap, res.contrast, res.bias);
+		return `${res.colormap} ${res.contrast} ${res.bias}`;
 	    }
 	},
-	set: function(args){
-	    var im = this.image;
+	set(args) {
+	    const im = this.image;
 	    if( im ){
-		im.setColormap.apply(im, args);
+		im.setColormap(...args);
 	    }
 	}
     }));
@@ -20297,9 +20218,9 @@ JS9.initCommands = function(){
 	name: "colormaps",
 	alias: "cmaps",
 	help: "get list of available colormaps",
-	get: function(){
-	    var i;
-	    var msg="";
+	get() {
+	    let i;
+	    let msg = "";
 	    for(i=0; i<JS9.colormaps.length; i++){
 		if( msg ){
 		    msg += ", ";
@@ -20312,17 +20233,17 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "grid",
 	help: "set/get coordinate grid for current image",
-	get: function(){
-	    var msg;
-	    var im = this.image;
+	get() {
+	    let msg;
+	    const im = this.image;
 	    if( im ){
 		msg = im.displayCoordGrid();
 	    }
 	    return msg ? "true" : "false";
 	},
-	set: function(args){
-	    var im = this.image;
-	    var mode;
+	set(args) {
+	    let mode;
+	    const im = this.image;
 	    if( im ){
 		if( args[0].match(/true/i) ){
 		    mode = true;
@@ -20336,16 +20257,16 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "help",
 	help: "get list of available commmands",
-	get: function(){
-	    var i, cmd, msg;
-	    msg = "<table>";
+	get() {
+	    let i, cmd;
+	    let msg = "<table>";
 	    for(i=0; i<JS9.commands.length; i++){
 		cmd = JS9.commands[i];
-		msg += "<tr><td>" + cmd.name + "</td><td>" + cmd.help;
+		msg += `<tr><td>${cmd.name}</td><td>${cmd.help}`;
 		if( cmd.alias ){
-		    msg += " (" + cmd.alias;
+		    msg += ` (${cmd.alias}`;
 		    if( cmd.alias2 ){
-		      msg += ", " + cmd.alias2;
+		      msg += `, ${cmd.alias2}`;
 		    }
 		    msg += ")";
 		}
@@ -20358,24 +20279,24 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "helper",
 	help: "get/set helper connection",
-	get: function(){
+	get() {
 	    return JS9.helper.connectinfo();
 	},
-	set: function(args){
+	set(args) {
 	    JS9.helper.connect(args[0].trim());
 	}
     }));
     JS9.checkNew(new JS9.Command({
 	name: "image",
 	help: "get name of currently loaded image or display specified image",
-	get: function(){
-	    var im = this.image;
+	get() {
+	    const im = this.image;
 	    if( im ){
 		return im.file;
 	    }
 	},
-	set: function(args){
-	    var i, im;
+	set(args) {
+	    let i, im;
 	    for(i=0; i<JS9.images.length; i++){
 		im = JS9.images[i];
 		if( im.file.search(args[0]) >=0 ){
@@ -20390,8 +20311,9 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "images",
 	help: "get list of currently loaded images",
-	get: function(){
-	    var i, im, msg="";
+	get() {
+	    let i, im;
+	    let msg = "";
 	    for(i=0; i<JS9.images.length; i++){
 		im = JS9.images[i];
 		if( im.display === this.display ){
@@ -20407,13 +20329,13 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "load",
 	help: "load image(s)",
-	set: function(args){
-	    var i, j, obj;
-	    var alen = args.length;
+	set(args) {
+	    let i, j, obj;
+	    const alen = args.length;
 	    for(i=0; i<alen; i++){
 		obj = null;
 		j = i + 1;
-		if( (j < alen) && (args[j].indexOf('{') === 0) ){
+		if( (j < alen) && args[j].startsWith('{') ){
 		    try{ obj = JSON.parse(args[j]); }
 		    catch(e){ obj = null; }
 		}
@@ -20429,27 +20351,27 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "pan",
 	help: "set/get pan location for current image",
-	get: function(){
-	    var res;
-	    var im = this.image;
+	get() {
+	    let res;
+	    const im = this.image;
 	    if( im ){
 		res = im.getPan();
-		return sprintf("%s %s", res.x, res.y);
+		return `${res.x} ${res.x}`;
 	    }
 	},
-	set: function(args){
-	    var im = this.image;
+	set(args) {
+	    const im = this.image;
 	    if( im ){
-		im.setPan.apply(im, args);
+		im.setPan(...args);
 	    }
 	}
     }));
     JS9.checkNew(new JS9.Command({
 	name: "pix2wcs",
         help: "get image pixel value for specified wcs position",
-	set: function(args){
-	    var res;
-	    var im = this.image;
+	set(args) {
+	    let res;
+	    const im = this.image;
 	    if( im ){
 		res = JS9.Pix2WCS(parseFloat(args[0]), parseFloat(args[1]),
 				 {display: im});
@@ -20460,8 +20382,8 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "print",
 	help: "print image window",
-	get: function(){
-	    var im = this.image;
+	get() {
+	    const im = this.image;
 	    if( im ){
 		im.print();
 	    }
@@ -20470,10 +20392,10 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "refresh",
 	help: "refresh current image using specified file (def: use last file)",
-	set: function(args){
-	    var i, j, obj;
-	    var alen = args.length;
-	    var im = this.image;
+	set(args) {
+	    let i, j, obj;
+	    const alen = args.length;
+	    const im = this.image;
 	    // no args: refresh current image
 	    if( alen === 0 ){
 		obj = {refresh: im};
@@ -20483,7 +20405,7 @@ JS9.initCommands = function(){
 	    for(i=0; i<alen; i++){
 		obj = null;
 		j = i + 1;
-		if( (j < alen) && (args[j].indexOf('{') === 0) ){
+		if( (j < alen) && args[j].startsWith('{') ){
 		    try{ obj = JSON.parse(args[j]); }
 		    catch(e){ obj = null; }
 		}
@@ -20501,17 +20423,17 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "regcnts",
 	help: "counts in regions for current image",
-	get: function(){
-	    var im = this.image;
+	get() {
+	    const im = this.image;
 	    if( im ){
 		im.countsInRegions("$sregions", "$bregions",
 				   {lightwin: true});
 	    }
 	},
-	set: function(args){
-	    var im = this.image;
+	set(args) {
+	    const im = this.image;
 	    if( im ){
-		return im.countsInRegions.apply(im, args);
+		return im.countsInRegions(...args);
 	    }
 	}
     }));
@@ -20520,15 +20442,15 @@ JS9.initCommands = function(){
 	alias:  "reg",
 	alias2: "region",
 	help: "add region to current image or list all regions",
-	get: function(){
-	    var im = this.image;
+	get() {
+	    const im = this.image;
 	    if( im ){
 		return im.listRegions("all", {mode: 0}) || "";
 	    }
 	},
-	set: function(args){
-	    var s;
-	    var im = this.image;
+	set(args) {
+	    let s;
+	    const im = this.image;
 	    if( im ){
 		if( args[0] === "delete" || args[0] === "remove" ){
 		    s = args.slice(1).join(" ");
@@ -20543,18 +20465,17 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "resize",
 	help: "get/set display size for current image",
-	get: function(){
-	    var display;
-	    var im = this.image;
+	get() {
+	    let display;
+	    const im = this.image;
 	    if( im ){
 		display = im.display;
-		return sprintf("%s %s", display.width, display.height);
+		return `${display.width} ${display.height}`;
 	    }
 	},
-	set: function(args){
-	    var display;
-	    var im = this.image;
-	    var width, height;
+	set(args) {
+	    let display, width, height;
+	    const im = this.image;
 	    if( im && args.length ){
 		display = im.display;
 		width = parseInt(args[0], 10);
@@ -20570,36 +20491,35 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "scale",
 	help: "set/get scaling for current image",
-	get: function(){
-	    var res;
-	    var im = this.image;
+	get() {
+	    let res;
+	    const im = this.image;
 	    if( im ){
 		res = im.getScale();
-		return sprintf("%s %s %s",
-			       res.scale, res.scalemin, res.scalemax);
+		return `${res.scale} ${res.scalemin} ${res.scalemax}`;
 	    }
 	},
-	set: function(args){
-	    var im = this.image;
+	set(args) {
+	    const im = this.image;
 	    if( im ){
-		im.setScale.apply(im, args);
+		im.setScale(...args);
 	    }
 	}
     }));
     JS9.checkNew(new JS9.Command({
 	name: "scales",
 	help: "get list of available scales",
-	get: function(){
+	get() {
 	    return JS9.scales.join(", ");
 	}
     }));
     JS9.checkNew(new JS9.Command({
 	name: "section",
 	help: "display section of current image",
-	set: function(args){
-	    var s, obj;
-	    var alen = args.length;
-	    var im = this.image;
+	set(args) {
+	    let s, obj;
+	    const alen = args.length;
+	    const im = this.image;
 	    if( alen === 1 && args[0] === "full" ){
 		im.displaySection("full");
 	    } else {
@@ -20613,9 +20533,9 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "status",
 	help: "get status for specified (or current) image",
-	get: function(args){
-	    var i, first, tim, im, cmd;
-	    var result="";
+	get(args) {
+	    let i, first, tim, im, cmd;
+	    let result = "";
 	    for(i=0; i<JS9.images.length; i++){
 		tim = JS9.images[i];
 		if( tim.file.search(args[0]) >=0 ){
@@ -20655,21 +20575,21 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "url",
 	help: "display a url",
-	set: function(args){
+	set(args) {
 	    JS9.DisplayHelp(args[0]);
 	}
     }));
     JS9.checkNew(new JS9.Command({
 	name: "wcssys",
 	help: "set/get wcs system for current image",
-	get: function(){
-	    var im = this.image;
+	get() {
+	    const im = this.image;
 	    if( im ){
 		return im.getWCSSys();
 	    }
 	},
-	set: function(args){
-	    var im = this.image;
+	set(args) {
+	    const im = this.image;
 	    if( im ){
 		im.setWCSSys(args[0]);
 	    }
@@ -20678,14 +20598,14 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "wcsu",
 	help: "set/get wcs units used for current image",
-	get: function(){
-	    var im = this.image;
+	get() {
+	    const im = this.image;
 	    if( im ){
 		return im.getWCSUnits();
 	    }
 	},
-	set: function(args){
-	    var im = this.image;
+	set(args) {
+	    const im = this.image;
 	    if( im ){
 		im.setWCSUnits(args[0]);
 	    }
@@ -20694,23 +20614,23 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "wcssystems",
 	help: "get list of available wcs systems",
-	get: function(){
+	get() {
 	    return JS9.wcssyss.join(", ");
 	}
     }));
     JS9.checkNew(new JS9.Command({
 	name: "wcsunits",
 	help: "get list of available wcs units",
-	get: function(){
+	get() {
 	    return JS9.wcsunitss.join(", ");
 	}
     }));
     JS9.checkNew(new JS9.Command({
 	name: "wcs2pix",
         help: "get wcs position for specified image pixel",
-	set: function(args){
-	    var res;
-	    var im = this.image;
+	set(args) {
+	    let res;
+	    const im = this.image;
 	    if( im ){
 		res = JS9.WCS2Pix(parseFloat(args[0]), parseFloat(args[1]),
 				 {display: im});
@@ -20721,14 +20641,14 @@ JS9.initCommands = function(){
     JS9.checkNew(new JS9.Command({
 	name: "zoom",
 	help: "set/get zoom for current image",
-	get: function(){
-	    var im = this.image;
+	get() {
+	    const im = this.image;
 	    if( im ){
 		return im.getZoom();
 	    }
 	},
-	set: function(args){
-	    var im = this.image;
+	set(args) {
+	    const im = this.image;
 	    if( im ){
 		im.setZoom(args[0]);
 	    }
@@ -20740,15 +20660,14 @@ JS9.initCommands = function(){
 JS9.initAnalysis = function(){
     // for analysis forms, Enter should not Submit, but allow specification
     // of the name of an element to click
-    $(document).on("keyup keypress", ".js9AnalysisForm", function(e){
-	var that = $(this);
-	var code = e.which || e.keyCode;
-	var id;
+    $(document).on("keyup keypress", ".js9AnalysisForm", (e) => {
+	const code = e.which || e.keyCode;
+	let id;
 	if( code === 13 ){
 	    e.preventDefault();
-	    id = $(this).data("enterfunc");
+	    id = $(e.currentTarget).data("enterfunc");
 	    if( id ){
-		that.find("[name='" + id + "']").click();
+		$(e.currentTarget).find(`[name='${id}']`).click();
 	    }
 	    return false;
 	}
@@ -20761,7 +20680,7 @@ JS9.initAnalysis = function(){
 // ---------------------------------------------------------------------
 
 JS9.init = function(){
-    var uopts;
+    let uopts;
     // sanity check: need HTML5 canvas and JSON
     if( !window.HTMLCanvasElement || !JSON ){
 	JS9.error("your browser does not support JS9 (no HTML5 canvas and/or JSON). Please try a modern version of Firefox, Chrome, Safari, Opera, or Edge.");
@@ -20778,11 +20697,11 @@ JS9.init = function(){
     }
     if( !JS9.INSTALLDIR ){
 	try{
-	    // process all links that end in 'js9.css'
-	    $('link[href$="js9.css"]').each(function(){
-		var h = $(this).attr("href");
+	    // process all links which end in 'js9.css'
+	    $('link[href$="js9.css"]').each((index, element) => {
+		const h = $(element).attr("href");
 		if( h ){
-		    // look for 'js9.css' (not one that simply ends that way)
+		    // must really end in 'js9.css'
 		    if( h.split("/").reverse()[0] === "js9.css" ){
 			// set install dir to its directory
 			JS9.INSTALLDIR = h.replace(/js9\.css$/, "");
@@ -20800,7 +20719,7 @@ JS9.init = function(){
 	// make sure there is a trailing slash
 	JS9.INSTALLDIR += "/";
     }
-    JS9.TOROOT = JS9.INSTALLDIR.replace(/([^\/.])+/g, "..");
+    JS9.TOROOT = JS9.INSTALLDIR.replace(/([^/.])+/g, "..");
     // if the js9 inline object exists, add it the JS9 object
     if( window.hasOwnProperty("JS9Inline") && typeof JS9Inline === "object" ){
 	JS9.inline = $.extend(true, {}, JS9Inline);
@@ -20834,8 +20753,8 @@ JS9.init = function(){
 	}
 	// once a window is loaded, set jupyter focus, if necessary
 	if( window.hasOwnProperty("Jupyter") ){
-	   $("#dhtmlwindowholder").arrive("input", function(){
-	       JS9.jupyterFocus($(this).parent());
+	   $("#dhtmlwindowholder").arrive("input", (el) => {
+	       JS9.jupyterFocus($(el).parent());
 	   });
 	}
     }
@@ -20907,7 +20826,7 @@ JS9.init = function(){
 	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.displays = JSON.parse(uopts); }
-	    catch(ignore){}
+	    catch(ignore){ /* empty */ }
 	    if( JS9.userOpts.displays ){
 		$.extend(true, JS9.globalOpts, JS9.userOpts.displays);
 	    }
@@ -20916,7 +20835,7 @@ JS9.init = function(){
 	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.images = JSON.parse(uopts); }
-	    catch(ignore){}
+	    catch(ignore){ /* empty */ }
 	    if( JS9.userOpts.images ){
 		$.extend(true, JS9.imageOpts, JS9.userOpts.images);
 	    }
@@ -20926,13 +20845,13 @@ JS9.init = function(){
 	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.fits = JSON.parse(uopts); }
-	    catch(ignore){}
+	    catch(ignore){ /* empty */ }
 	}
 	try{ uopts = localStorage.getItem("regions"); }
 	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.regions = JSON.parse(uopts); }
-	    catch(ignore){}
+	    catch(ignore){ /* empty */ }
 	    if( JS9.userOpts.regions ){
 		$.extend(true, JS9.Regions.opts, JS9.userOpts.regions);
 	    }
@@ -20941,7 +20860,7 @@ JS9.init = function(){
 	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.images = JSON.parse(uopts); }
-	    catch(ignore){}
+	    catch(ignore){ /* empty */ }
 	    if( JS9.userOpts.images ){
 		$.extend(true, JS9.Grid.opts, JS9.userOpts.images);
 	    }
@@ -20950,7 +20869,7 @@ JS9.init = function(){
 	catch(e){ uopts = null; }
 	if( uopts ){
 	    try{ JS9.userOpts.images = JSON.parse(uopts); }
-	    catch(ignore){}
+	    catch(ignore){ /* empty */ }
 	    if( JS9.userOpts.images ){
 		$.extend(true, JS9.Catalogs.Opts, JS9.userOpts.images);
 	    }
@@ -20959,13 +20878,13 @@ JS9.init = function(){
     // set debug flag
     JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
     // init main display(s)
-    $("div.JS9").each(function(){
-	JS9.checkNew(new JS9.Display($(this)));
+    $("div.JS9").each((index, element) => {
+	JS9.checkNew(new JS9.Display($(element)));
     });
     // load web worker
     if( window.Worker && !JS9.allinone){
 	try{ JS9.worker = new JS9.WebWorker(JS9.InstallDir(JS9.WORKERFILE)); }
-	catch(e){}
+	catch(e){ /* empty */ }
     }
     // for allinone files, emscripten is already loaded so init FITS now
     if( JS9.allinone ){
@@ -20977,36 +20896,33 @@ JS9.init = function(){
     // initialize helper support
     JS9.helper = new JS9.Helper();
     // add handler for postMessage events
-    window.addEventListener("message", function(ev){
-	var s;
-	var msg;
-	var data = ev.data;
+    window.addEventListener("message", (ev) => {
+	let s, msg;
 	// For Chrome, origin property is in the ev.originalEvent object
-	var origin = ev.origin || ev.originalEvent.origin;
+	let origin = ev.origin || ev.originalEvent.origin;
+	const data = ev.data;
 	if( origin === "null" ){
 	    origin = "unknown";
 	}
 	// if postMessage handling is disabled, just (log and) return
 	if( !JS9.globalOpts.postMessage ){
 	    if( JS9.DEBUG ){
-		s = sprintf("JS9 ignoring postMessage, origin: %s", origin);
+		s = `JS9 ignoring postMessage, origin: ${origin}`;
 		if( typeof data === "string" ){
-		    s += sprintf(" data: %s", data);
+		    s += ` data: ${data}`;
 		} else if( typeof data === "object" ){
-		    s += sprintf(" obj: %s", JSON.stringify(Object.keys(data)));
+		    s += ` obj: ${JSON.stringify(Object.keys(data))}`;
 		} else {
-		    s += sprintf(" typeof: %s", typeof data);
+		    s += ` typeof: ${typeof data}`;
 		}
 		JS9.log(s);
 	    }
 	    return;
 	}
-	// var origin = ev.origin;
-	// var source = ev.source;
 	if( typeof data === "string" ){
 	    // json string passed (we hope)
 	    try{ msg = JSON.parse(data); }
-	    catch(e){ JS9.error("can't parse msg: "+data, e); }
+	    catch(e){ JS9.error(`can't parse msg: ${data}`, e); }
 	} else if( typeof data === "object" ){
 	    // object was passed directly
 	    msg = data;
@@ -21014,8 +20930,8 @@ JS9.init = function(){
 	    JS9.error("invalid msg from postMessage");
 	}
 	// call the msg handler for JS9 API calls
-	JS9.msgHandler(msg, function(stdout, stderr, errcode, a){
-	    var res;
+	JS9.msgHandler(msg, (stdout, stderr, errcode, a) => {
+	    let res;
             a = a || {};
 	    res = {name: a.name, rtype: a.rtype, rdata: stdout,
 		   stdout: stdout, stderr: stderr, errcode: errcode};
@@ -21070,9 +20986,9 @@ JS9.init = function(){
     // find divs associated with each plugin and run the constructor
     JS9.instantiatePlugins();
     // sort plugins
-    JS9.plugins.sort(function(a,b){
-	var t1 = a.opts.menuItem;
-	var t2 = b.opts.menuItem;
+    JS9.plugins.sort( (a,b) => {
+	const t1 = a.opts.menuItem;
+	const t2 = b.opts.menuItem;
 	if( !t1 ){
 	    return 1;
 	}
@@ -21089,7 +21005,7 @@ JS9.init = function(){
     });
     // scroll to top
     $(document).scrollTop(0);
-    // signal that JS9 init is complete
+    // signal JS9 init is complete
     JS9.inited = true;
     $(document).trigger("JS9:init");
 };
@@ -21103,13 +21019,13 @@ JS9.init = function(){
 //
 // ---------------------------------------------------------------------
 
-// parse function arguments, checking for object containing display property
-// return new argument list and display id
-// used in public api routines to retrieve optional {display: id} argument
+// parse func args, checking for object containing display property
+// return new arg list and display id
+// used in public api routines to retrieve optional {display: id} arg
 JS9.parsePublicArgs = function(args){
-    var display = null;
-    var argv = Array.prototype.slice.call(args);
-    var obj = argv[argv.length-1];
+    let display = null;
+    const argv = Array.from(args);
+    const obj = argv[argv.length-1];
     // look for object containing display property as last arg
     if( obj && (typeof obj === "object") &&
 	obj.hasOwnProperty("display") && (Object.keys(obj).length === 1) ){
@@ -21117,21 +21033,21 @@ JS9.parsePublicArgs = function(args){
 	argv.pop();
     }
     // return results
-    return {argv: argv, display: display};
+    return {argv, display};
 };
 
 // some public routines are just a wrapper around the underlying image call
-// others require a new function
+// others require a new func
 JS9.mkPublic = function(name, s){
     if( typeof s === "string" ){
 	if( JS9.Image.prototype[s] ){
-	    JS9[name] = function(){
-		var got;
-		var obj = JS9.parsePublicArgs(arguments);
-		var im = JS9.getImage(obj.display);
+	    JS9[name] = function(...args) {
+		let got;
+		const {display, argv} = JS9.parsePublicArgs(args);
+		const im = JS9.getImage(display);
 		if( im ){
 		    // call the image method
-		    got = im[s].apply(im, obj.argv);
+		    got = im[s](...argv);
 		    // don't return image handle, it can't be serialized
 		    if( (got === im) || (got === im.display) ){
 			return JS9.globalOpts.quietReturn ? "" : "OK";
@@ -21141,13 +21057,13 @@ JS9.mkPublic = function(name, s){
 	    };
 	    JS9.publics[name] = JS9[name];
 	} else {
-	    JS9.error("unknown image function for mkPublic: " + s);
+	    JS9.error(`unknown image func for mkPublic: ${s}`);
 	}
     } else if( typeof s === "function" ){
 	JS9[name] = s;
 	JS9.publics[name] = JS9[name];
     } else {
-	JS9.error("unsupported type for mkPublic: " + typeof s);
+	JS9.error(`unsupported type for mkPublic: ${typeof s}`);
     }
 };
 
@@ -21208,15 +21124,15 @@ JS9.mkPublic("MoveToDisplay", "moveToDisplay");
 
 // lookup an image
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("LookupImage", function(id){
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LookupImage", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     return JS9.lookupImage(obj.argv[0], obj.display);
 });
 
 // lookup a display
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("LookupDisplay", function(id, mustExist){
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LookupDisplay", function(...args){
+    const obj = JS9.parsePublicArgs(args);
     return JS9.lookupDisplay(obj.argv[0]||obj.display, obj.argv[1]);
 });
 
@@ -21224,9 +21140,9 @@ JS9.mkPublic("LookupDisplay", function(id, mustExist){
 // RenameDisplay(nid)                  # change def. id (usually "JS9") to nid
 // RenameDisplay(nid, {display: oid})  # change oid to nid
 // RenameDisplay(oid, nid)             # change oid to nid
-JS9.mkPublic("RenameDisplay", function(nid, oid){
-    var disp;
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("RenameDisplay", function(...args){
+    let nid, oid, disp;
+    const obj = JS9.parsePublicArgs(args);
     switch( obj.argv.length ){
     case 0:
 	return;
@@ -21242,23 +21158,22 @@ JS9.mkPublic("RenameDisplay", function(nid, oid){
     disp = JS9.lookupDisplay(oid);
     if( disp && disp.id ){
 	oid = disp.id;
-	// save the oirignal id, since existing plugins use it
+	// save the orignal id, since existing plugins use it
 	if( !disp.oid ){
 	    disp.oid = oid;
 	}
 	// set the new id
 	disp.id = nid;
 	// tell the helper to recognize the new instead of the old
-	JS9.helper.send("renameDisplay",
-			{odisplay: oid, ndisplay: disp.id});
+	JS9.helper.send("renameDisplay", {odisplay: oid, ndisplay: disp.id});
     }
 });
 
 // close all displayed images
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("CloseDisplay", function(disp){
-    var i, im;
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("CloseDisplay", function(...args){
+    let i, im, disp;
+    const obj = JS9.parsePublicArgs(args);
     disp = JS9.lookupDisplay(obj.argv[0] || obj.display);
     // reverse loop because we slice JS9.images
     for(i=JS9.images.length-1; i>=0; i--){
@@ -21270,11 +21185,11 @@ JS9.mkPublic("CloseDisplay", function(disp){
 });
 
 // add a colormap to JS9
-JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
-    var reader, cobj;
-    var obj = JS9.parsePublicArgs(arguments);
-    var obj2cmap = function(xobj, opts){
-	var i, tobj;
+JS9.mkPublic("AddColormap", function(...args){
+    let colormap, a1, a2, a3, a4, reader, cobj;
+    const obj = JS9.parsePublicArgs(args);
+    const obj2cmap = (xobj, opts) => {
+	let i, tobj;
 	if( typeof xobj !== "object" ){
 	    JS9.error("invalid colormap object for JS9.AddColormap()");
 	}
@@ -21307,7 +21222,7 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
     if( colormap instanceof Blob ){
 	// file reader object from openLocalLoadColormap
 	reader = new FileReader();
-	reader.onload = function(ev){
+	reader.onload = (ev) => {
 	    try{ cobj = JSON.parse(ev.target.result); }
 	    catch(e){ JS9.error("can't parse json colormap", e); }
 	    obj2cmap(cobj, a1);
@@ -21366,9 +21281,11 @@ JS9.mkPublic("AddColormap", function(colormap, a1, a2, a3, a4){
 });
 
 // load a colormap file
-JS9.mkPublic("LoadColormap", function(file, opts){
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LoadColormap", function(...args){
+    let file, opts;
+    const obj = JS9.parsePublicArgs(args);
     file = obj.argv[0];
+    opts = obj.argv[1];
     // sanity check
     if( !file ){
 	JS9.error("JS9.LoadColormap: no file specified for colormap load");
@@ -21378,21 +21295,21 @@ JS9.mkPublic("LoadColormap", function(file, opts){
 	JS9.AddColormap(file, opts);
     } else if( typeof file === "string" ){
 	file = JS9.fixPath(file);
-	JS9.fetchURL(null, file, null, function(data){
+	JS9.fetchURL(null, file, null, (data) => {
 	    JS9.AddColormap(data, opts);
 	});
     } else {
 	// oops!
-	JS9.error("unknown file type for LoadColormap: " + typeof file);
+	JS9.error(`unknown file type for LoadColormap: ${typeof file}`);
     }
 });
 
 // set RGB mode (and maybe the images themselves)
-JS9.mkPublic("SetRGBMode", function(mode, imobj){
-    var i, im;
-    var colors = ["red", "green", "blue"];
-    var ids = ["rid", "gid", "bid"];
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("SetRGBMode", function(...args){
+    let i, im, mode, imobj;
+    const obj = JS9.parsePublicArgs(args);
+    const colors = ["red", "green", "blue"];
+    const ids = ["rid", "gid", "bid"];
     mode = obj.argv[0];
     imobj = obj.argv[1];
     if( mode === undefined ){
@@ -21429,12 +21346,13 @@ JS9.mkPublic("GetRGBMode", function(){
 });
 
 // set/clear valpos flag
-JS9.mkPublic("SetValPos", function(mode){
-    var got = null;
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("SetValPos", function(...args){
+    let mode;
+    let got = null;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    mode = obj.argv[0];
     if( im ){
-	mode = obj.argv[0];
 	got = im.params.valpos;
 	im.params.valpos = mode;
     }
@@ -21442,22 +21360,23 @@ JS9.mkPublic("SetValPos", function(mode){
 });
 
 // set/clear image inherit flag
-JS9.mkPublic("SetImageInherit", function(mode){
-    var got = null;
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("SetImageInherit", function(...args){
+    let mode;
+    let got = null;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    mode = obj.argv[0];
     if( im ){
-	mode = obj.argv[0];
 	got = im.params.inherit;
 	im.params.inherit = mode;
     }
     return got;
 });
 
-JS9.mkPublic("GetImageInherit", function(){
-    var got = null;
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("GetImageInherit", function(...args) {
+    let got = null;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
     if( im ){
 	got = im.params.inherit;
     }
@@ -21465,10 +21384,11 @@ JS9.mkPublic("GetImageInherit", function(){
 });
 
 // display in-page FITS images and png files
-JS9.mkPublic("Load", function(file, opts){
-    var i, s, im, ext, disp, display, func, blob, bytes, topts, tfile, vfile;
-    var obj = JS9.parsePublicArgs(arguments);
-    var ptype = "fits";
+JS9.mkPublic("Load", function(...args){
+    let i, s, im, ext, disp, display, func, blob, bytes, topts, tfile, vfile;
+    let file, opts;
+    let ptype = "fits";
+    const obj = JS9.parsePublicArgs(args);
     file = obj.argv[0];
     opts = obj.argv[1];
     // sanity check
@@ -21493,20 +21413,22 @@ JS9.mkPublic("Load", function(file, opts){
     } else if( typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
-	catch(e){ opts = {}; }
+	catch(e){ opts = { /* empty */ }; }
     } else {
 	// init as an empty object
 	opts = {};
     }
     // if display was implicit, add it to opts
     opts.display = opts.display || display;
-    // check for onload function
+    // check for onload func
     if( opts.onload ){
 	func = opts.onload;
     } else if( JS9.imageOpts.onload ){
 	func = JS9.imageOpts.onload;
 	opts.onload = func;
     }
+    // unset previous fetch status before new load
+    delete JS9.fetchURL.status;
     // handle blob containing FITS
     if( file instanceof Blob ){
 	if( file.path || file.name ){
@@ -21551,7 +21473,7 @@ JS9.mkPublic("Load", function(file, opts){
 	    opts.filename = JS9.ANON + JS9.uniqueID();
 	}
 	// look for a mime type to tell us how to process this blob
-	if( file.type && file.type.indexOf("image/") !== -1 ){
+	if( file.type && file.type.includes("image/") ){
 	    switch(file.type){
 	    case "image/fits":
 		break;
@@ -21594,7 +21516,7 @@ JS9.mkPublic("Load", function(file, opts){
     }
     // it's gotta be a string: in-memory FITS, url, or filename
     if( typeof file !== "string" ){
-	JS9.error("unknown file type for Load: " + typeof file);
+	JS9.error(`unknown file type for Load: ${typeof file}`);
     }
     // convert in-memory base64-encoded FITS to a binary string
     if( file.slice(0,12) === "U0lNUExFICA9" ){
@@ -21690,7 +21612,7 @@ JS9.mkPublic("Load", function(file, opts){
 	    topts.file = file;
 	    topts.vfile = vfile;
 	    // give spinner a chance to start up
-	    window.setTimeout(function(){
+	    window.setTimeout(() => {
 		try{ JS9.handleFITSFile(file, topts, JS9.NewFitsImage); }
 		catch(e){ JS9.error("can't process FITS file", e); }
 	    }, 0);
@@ -21702,19 +21624,19 @@ JS9.mkPublic("Load", function(file, opts){
 });
 
 // create a new instance of JS9 in a window (light or new)
-JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
-    var s, id, display, did, head, body, win, winid, initialURL, xobj;
-    var wid, wtype, wurl, idbase;
-    var title, warr, wwidth, wheight;
-    var lopts = JS9.lightOpts[JS9.LIGHTWIN];
-    var obj = JS9.parsePublicArgs(arguments);
-    var removeDisplay = function(display){
+JS9.mkPublic("LoadWindow", function(...args){
+    let s, id, display, did, head, body, win, winid, initialURL, xobj;
+    let wid, wtype, wurl, idbase, title, warr, wwidth, wheight;
+    let file, opts, type, html, winopts;
+    const lopts = JS9.lightOpts[JS9.LIGHTWIN];
+    const obj = JS9.parsePublicArgs(args);
+    const removeDisplay = (display) => {
 	// remove from display list
-	var idx = $.inArray(display, JS9.displays);
+	const idx = $.inArray(display, JS9.displays);
 	if( idx >= 0 ){ JS9.displays.splice(idx, 1); }
     };
-    var getHTML = function(id, opts, winopts){
-	var html, display;
+    const getHTML = (id, opts, winopts) => {
+	let html, display;
 	opts = opts || {};
 	if( opts.clone ){
 	    display = JS9.lookupDisplay(opts.clone, false);
@@ -21725,27 +21647,27 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    wheight = parseInt(warr[4], 10);
 	}
         // make up the html with the unique id
-        html = sprintf("<hr class='hline0'>");
+        html = "<hr class='hline0'>";
 	// menubar
 	if( !display                                        ||
-	    ($("#"+opts.clone+"Menubar").length > 0         &&
+	    ($(`#${opts.clone}Menubar`).length > 0         &&
 	     !display.pluginInstances.JS9Menubar.isDynamic) ){
-	    html += sprintf("<div class='JS9Menubar' id='%sMenubar'></div>",id);
+	    html += `<div class='JS9Menubar' id='${id}Menubar'></div>`;
 	} else if( winopts ){
 	    wheight -= 40;
 	}
 	// display
-	html += sprintf("<div class='JS9' id='%s'></div>", id);
+	html += `<div class='JS9' id='${id}'></div>`;
 	// colorbar
 	if( !display                                         ||
-	    ($("#"+opts.clone+"Colorbar").length > 0         &&
+	    ($(`#${opts.clone}Colorbar`).length > 0         &&
 	     !display.pluginInstances.JS9Colorbar.isDynamic) ){
 	    if( display && display.pluginInstances.JS9Colorbar ){
-		s = sprintf("data-showTicks='%s'", display.pluginInstances.JS9Colorbar.showTicks);
+		s = `data-showTicks='${display.pluginInstances.JS9Colorbar.showTicks}'`;
 	    } else {
 		s = "";
 	    }
-	    html += sprintf("<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' %s></div></div>", id, s);
+	    html += `<div style='margin-top: 2px;'><div class='JS9Colorbar' id='${id}Colorbar' ${s}></div></div>`;
 	    if( display && display.pluginInstances.JS9Colorbar &&
 		!display.pluginInstances.JS9Colorbar.showTicks ){
 		wheight -= 15;
@@ -21763,8 +21685,8 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	return html;
     };
     // create display and load image into a light window
-    var lightLoad = function(file, opts){
-	var display;
+    const lightLoad = (file, opts) => {
+	let display;
         // create the new JS9 Display
         display = new JS9.Display(id);
 	// save the light window id;
@@ -21782,11 +21704,11 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	return display;
     };
     // close a light window, moving images if necessary
-    var lightClose = function(display){
-	var i, im;
-	var got = 0;
-	var ims = [];
-	// make a list of images in this display
+    const lightClose = (display) => {
+	let i, im;
+	let got = 0;
+	const ims = [];
+	// make a list of images in his display
 	for(i=0; i<JS9.images.length; i++){
 	    im = JS9.images[i];
 	    if( im.display.id === id ){
@@ -21826,7 +21748,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    // close them all
 	    for(i=0; i<ims.length; i++){
 		try{ ims[i].closeImage(); }
-		catch(ignore){}
+		catch(ignore){ /* empty */ }
 	    }
 	    return true;
 	case "move":
@@ -21835,12 +21757,12 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	    // move them to the first display
 	    for(i=0; i<ims.length; i++){
 		try{ ims[i].moveToDisplay(JS9.globalOpts.lightWinMoveTo); }
-		catch(ignore){}
+		catch(ignore){ /* empty */ }
 	    }
 	    return true;
 	case "ask":
 	default:
-	    wid = "lightCloseID" + JS9.uniqueID();
+	    wid = `lightCloseID${JS9.uniqueID()}`;
 	    if( JS9.allinone ){
 		wtype = "inline";
 		wurl = JS9.allinone.lightCloseHTML;
@@ -21849,8 +21771,8 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 		wurl = JS9.InstallDir(JS9.lightOpts.lcloseURL);
 	    }
 	    $("#dhtmlwindowholder")
-		.arrive("#lightWinCloseForm", {onceOnly: true}, function(){
-		    var i, el;
+		.arrive("#lightWinCloseForm", {onceOnly: true}, () => {
+		    let i, el;
 		    // on arrival, add JS9 displays to 'move' part of form
 		    el = $("#lightWinCloseForm").find("#lightWinCloseSel");
 		    for(i=0; i<JS9.displays.length; i++){
@@ -21890,7 +21812,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
     // default window type
     type = type || "light";
     //  default base id
-    idbase = (type || "") + "win";
+    idbase = `${type || ""}win`;
     // create the specified type of window
     switch(type){
     case "light":
@@ -21902,7 +21824,7 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
             id = idbase + JS9.uniqueID();
 	}
         // and a second one for controlling the light window
-        did = "d" + id;
+        did = `d${id}`;
 	// inner html housing JS9 display, etc.
 	if( html ){
 	    // html specified: def window opts is standard light image window
@@ -21917,13 +21839,13 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
             winopts = winopts || xobj.winopts;
 	}
 	// nice title
-	title = sprintf("JS9 Display"+JS9.IDFMT, id);
+	title = sprintf(`JS9 Display${JS9.IDFMT}`, id);
         // create the light window
         winid = JS9.lightWin(did, "inline", html, title, winopts);
 	// set up display and load image
 	display = lightLoad(file, opts);
 	// on window close, we need to deal with the displayed images
-	winid.onclose = function(){
+	winid.onclose = () => {
 	    return lightClose(display);
 	};
 	// return the id
@@ -21937,10 +21859,10 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
             id = idbase + JS9.uniqueID();
 	}
 	// window opts
-	winopts = winopts || sprintf("width=%s, height=%s", JS9.globalOpts.newWindowWidth, JS9.globalOpts.newWindowHeight);
+	winopts = winopts || `width=${JS9.globalOpts.newWindowWidth}, height=${ JS9.globalOpts.newWindowHeight}`;
         // get our own file's header for css and js files
-        // if this page is generated on the server side, hardwire this ...
-        // if JS9 is not installed, hardwire this ...
+        // if page is generated on the server side, hardwire ...
+        // if JS9 is not installed, hardwire ...
         head = document.getElementsByTagName('head')[0].innerHTML;
 	// remove load of astroem[w].js, so it will be loaded during init
 	head = head.replace(/src=['"].*astroemw?\.js['"]/, "");
@@ -21948,21 +21870,20 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 	// umm... it seems to have it, at least FF does as of 8/25/15 ...
 	if( !head.match(/src=["'].*js9\.js/)      &&
 	    !head.match(/src=["'].*js9\.min\.js/) ){
-            head += sprintf('<%s type="text/javascript" src="js9.min.js"></%s>',
-                            "script", "script");
+            head += '<script type="text/javascript" src="js9.min.js"></script>';
 	}
         // make a body containing the JS9 elements and the preload call
         body = html || getHTML(id, opts);
         // combine head and body into a full html file
-        html = sprintf("<html><head>%s</head><body", head);
+        html = `<html><head>${head}</head><body`;
 	if( file ){
             html += sprintf(" onload='JS9.Preload(\"%s\",%s);'",
 			    file, JSON.stringify(opts));
 	}
-        html += sprintf(">%s</body></html>\n", body);
+        html += `>${body}</body></html>\n`;
         // open the new window
 	if( window.isElectron ){
-	    initialURL = "data:text/html,<html><body><script>window.addEventListener('message', function(ev){document.documentElement.innerHTML=ev.data</script><p></body></html>";
+	    initialURL = "data:text/html,<html><body><script>window.addEventListener('message', (ev) => {document.documentElement.innerHTML=ev.data</script><p></body></html>";
 	}
         win = window.open(initialURL, id, winopts);
 	if( !win ){
@@ -21987,16 +21908,16 @@ JS9.mkPublic("LoadWindow", function(file, opts, type, html, winopts){
 });
 
 // load a link using back-end server as a proxy
-JS9.mkPublic("LoadProxy", function(url, opts){
-    var f, disp;
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LoadProxy", function(...args){
+    let f, disp, url, opts;
+    const obj = JS9.parsePublicArgs(args);
     url = obj.argv[0];
     opts = obj.argv[1];
     if( !JS9.globalOpts.loadProxy ){
-	JS9.error("proxy load not available for this server");
+	JS9.error("proxy load not available for server");
     }
     if( !JS9.globalOpts.workDir ){
-	JS9.error("proxy load requires a temp workDir this server");
+	JS9.error("proxy load requires a temp workDir for server");
     }
     if( !url ){
 	JS9.error("no url specified for proxy load");
@@ -22006,7 +21927,7 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 	// http://stackoverflow.com/questions/20757891/cross-origin-image-load-from-cross-enabled-site-is-denied
 	url = url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
 	// https://blogs.dropbox.com/developers/2013/08/programmatically-download-content-from-share-links/
-	url = url.replace('?dl=0', '') + '?raw=1';
+	url = `${url.replace('?dl=0', '')}?raw=1`;
     } else if( url.match(/drive\.google\.com/) ){
 	url=url.replace(/\/file\/d\/(\w+)\/\w+\?usp=sharing/,
 			'/uc?export=download&id=$1');
@@ -22027,8 +21948,8 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 	opts = {};
     }
     JS9.waiting(true, disp);
-    JS9.Send('loadproxy', {'cmd': 'js9Xeq loadproxy ' + url}, function(r){
-        var robj;
+    JS9.Send('loadproxy', {'cmd': `js9Xeq loadproxy ${url}`}, (r) => {
+        let robj;
 	// return type can be string or object
 	if( typeof r === "object" ){
 	    // object from node.js
@@ -22069,18 +21990,21 @@ JS9.mkPublic("LoadProxy", function(url, opts){
 
 // save array of files to preload or preload immediately,
 // depending on the state of processing
-JS9.mkPublic("Preload", function(arg1){
-    var i, j, mode, urlexp, func, emsg="", pobj=null, dobj=null;
-    var oalerts = JS9.globalOpts.alerts;
-    var alen = arguments.length;
-    var obj = JS9.parsePublicArgs(arguments);
-    var baseexp = JS9.URLEXP;
-    var sesexp = /\.ses$/;
-    var cmapexp = /\.cmap$/;
+JS9.mkPublic("Preload", function(...args){
+    let i, j, mode, urlexp, func, arg1;
+    let emsg = "";
+    let pobj = null;
+    let dobj = null;
+    let alen = args.length;
+    const oalerts = JS9.globalOpts.alerts;
+    const obj = JS9.parsePublicArgs(args);
+    const baseexp = JS9.URLEXP;
+    const sesexp = /\.ses$/;
+    const cmapexp = /\.cmap$/;
     arg1 = obj.argv[0];
     // for socketio and loadProxy, support LoadProxy calls
     if( JS9.globalOpts.loadProxy && JS9.helper.baseurl ){
-	urlexp = new RegExp("^" + JS9.helper.baseurl);
+	urlexp = new RegExp(`^${JS9.helper.baseurl}`);
     }
     if( obj.display ){
 	dobj = {display: obj.display};
@@ -22136,84 +22060,83 @@ JS9.mkPublic("Preload", function(arg1){
 	// save preload image(s) for later
 	for(i=0; i<alen; i++){
 	    j = i + 1;
-	    if( (j < alen) && (typeof arguments[j] === "object") ){
-		pobj = $.extend(true, {}, arguments[j]);
-		JS9.preloads.push([arguments[i], pobj, dobj]);
+	    if( (j < alen) && (typeof args[j] === "object") ){
+		pobj = $.extend(true, {}, args[j]);
+		JS9.preloads.push([args[i], pobj, dobj]);
 		i++;
-	    } else if( (j < alen) && (arguments[j].indexOf('{') === 0) ){
-		try{ pobj = JSON.parse(arguments[j]); }
+	    } else if( (j < alen) && args[j].startsWith('{') ){
+		try{ pobj = JSON.parse(args[j]); }
 		catch(e){ pobj = null; }
-		JS9.preloads.push([arguments[i], pobj, dobj]);
+		JS9.preloads.push([args[i], pobj, dobj]);
 		i++;
 	    } else {
-		JS9.preloads.push([arguments[i], null, dobj]);
+		JS9.preloads.push([args[i], null, dobj]);
 	    }
 	}
 	break;
     case 1:
-	// preload the image(s) now from arguments
+	// preload the image(s) now from args
 	JS9.globalOpts.alerts = false;
 	for(i=0; i<alen; i++){
 	    if( urlexp                      &&
-		arguments[i].match(baseexp) &&
-		!arguments[i].match(urlexp) ){
+		args[i].match(baseexp) &&
+		!args[i].match(urlexp) ){
 		func = JS9.LoadProxy;
-	    } else if( arguments[i].match(sesexp) ){
+	    } else if( args[i].match(sesexp) ){
 		func = JS9.LoadSession;
-	    } else if( arguments[i].match(cmapexp) ){
+	    } else if( args[i].match(cmapexp) ){
 		func = JS9.LoadColormap;
 	    } else {
 		func = JS9.Load;
 	    }
 	    j = i + 1;
-	    if( (j < alen) && (typeof arguments[j] === "object") ){
+	    if( (j < alen) && (typeof args[j] === "object") ){
 		if( func === JS9.Load || func === JS9.LoadProxy ){
-		    JS9.preloadwaiting[JS9.cleanPath(arguments[i])] = true;
+		    JS9.preloadwaiting[JS9.cleanPath(args[i])] = true;
 		}
 		try{
 		    if( dobj ){
-			func(arguments[i], arguments[j], dobj);
+			func(args[i], args[j], dobj);
 		    } else {
-			func(arguments[i], arguments[j]);
+			func(args[i], args[j]);
 		    }
 		}
-		catch(e){ emsg = emsg + " " + arguments[i]; }
+		catch(e){ emsg = `${emsg} ${args[i]}`;}
 		i++;
-
-	    } else if( (j < alen) && (arguments[j].indexOf('{') === 0) ){
-		try{ pobj = JSON.parse(arguments[j]); }
+	    } else if( (j < alen) && args[j].startsWith('{') ){
+		try{ pobj = JSON.parse(args[j]); }
 		catch(e){ pobj = null; }
 		if( func === JS9.Load || func === JS9.LoadProxy ){
-		    JS9.preloadwaiting[JS9.cleanPath(arguments[i])] = true;
+		    JS9.preloadwaiting[JS9.cleanPath(args[i])] = true;
 		}
 		try{
 		    if( dobj ){
-			func(arguments[i], pobj, dobj);
+			func(args[i], pobj, dobj);
 		    } else {
-			func(arguments[i], pobj);
+			func(args[i], pobj);
 		    }
 		}
-		catch(e){ emsg = emsg + " " + arguments[i]; }
+		catch(e){ emsg = `${emsg} ${args[i]}`;}
 		i++;
 	    } else {
 		if( func === JS9.Load || func === JS9.LoadProxy ){
-		    JS9.preloadwaiting[JS9.cleanPath(arguments[i])] = true;
+		    JS9.preloadwaiting[JS9.cleanPath(args[i])] = true;
 		}
 		try{
 		    if( dobj ){
-			func(arguments[i], null, dobj);
+			func(args[i], null, dobj);
 		    } else {
-			func(arguments[i], null);
+			func(args[i], null);
 		    }
 		}
-		catch(e){ emsg = emsg + " " + arguments[i]; }
+		catch(e){ emsg = `${emsg} ${args[i]}`;}
 	    }
 	}
 	JS9.globalOpts.alerts = oalerts;
-	if( emsg ){ JS9.error("could not preload image(s): " + emsg); }
+	if( emsg ){ JS9.error(`could not preload image(s): ${emsg}`);}
 	break;
     case 2:
-	// preload the image(s) now from saved arguments
+	// preload the image(s) now from saved args
 	JS9.globalOpts.alerts = false;
 	for(i=0; i<JS9.preloads.length; i++){
 	    if( urlexp                            &&
@@ -22238,11 +22161,11 @@ JS9.mkPublic("Preload", function(arg1){
 		    func(JS9.preloads[i][0], JS9.preloads[i][1]);
 		}
 	    }
-	    catch(e){ emsg = emsg + " " + JS9.preloads[i][0]; }
+	    catch(e){ emsg = `${emsg} ${JS9.preloads[i][0]}`;}
 	}
 	JS9.globalOpts.alerts = oalerts;
-	if( emsg ){ JS9.error("could not preload image(s): " + emsg); }
-	// remove saved arguments so we don't reload them on reconnect
+	if( emsg ){ JS9.error(`could not preload image(s): ${emsg}`);}
+	// remove saved args so we don't reload them on reconnect
 	JS9.preloads = [];
 	break;
     case 3:
@@ -22254,10 +22177,11 @@ JS9.mkPublic("Preload", function(arg1){
 });
 
 // refresh existing image
-JS9.mkPublic("RefreshImage", function(fits, opts){
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
-    var retry = function(hdu){
+JS9.mkPublic("RefreshImage", function(...args){
+    let fits, opts;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    const retry = (hdu) => {
 	im.refreshImage(hdu, opts);
     };
     fits = obj.argv[0];
@@ -22276,47 +22200,43 @@ JS9.mkPublic("RefreshImage", function(fits, opts){
 	    im.refreshImage(fits, opts);
 	}
     } else if( fits instanceof Blob ){
-	JS9.Load.apply(null, arguments);
+	JS9.Load(...args);
     }
 });
 
-// get status of a Load ("complete" means ... complete)
-JS9.mkPublic("GetLoadStatus", function(id){
-    var fname0, id0;
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+// get specified status
+JS9.mkPublic("GetStatus", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.argv[1] || obj.display);
+    const stat = obj.argv[0] || "load";
+    if( !obj.argv.length ){
+	return ["Load", "CreateMosaic", "DisplaySection", "LoadCatalog", "LoadRegions", "ReprojectData", "RotateData", "RunAnalysis"];
+    }
+    // if the fetch is still running or failed, return the status
+    if( JS9.fetchURL.status && stat.match(/^(pre)?load$/i) ){
+	return JS9.fetchURL.status;
+    }
+    // return status for specified image
     if( im ){
-	id = obj.argv[0];
-	if( id && typeof id === "object" && id.hasOwnProperty("id")  ){
-	    id = id.id;
-	}
-	if( typeof id === "string" ){
-	    id0 = id.split('/').reverse()[0];
-	}
-	if( im.file0 ){
-	    fname0 = im.file0.split('/').reverse()[0];
-	    if( id0 && !id0.match(/\[.*\]/) ){
-		fname0 = fname0.replace(/\[.*\]/, "");
-	    }
-	}
-	if( !id || (im.id0 === id) || (im.file0 === id) ||
-	    (fname0 && id0 && fname0 === id0) ){
-	    return im.status.load;
-	}
-	return "other";
+	return im.getStatus(stat);
     }
     return "none";
 });
 
+// get status of a Load ("complete" means ... complete)
+JS9.mkPublic("GetLoadStatus", function(...args){
+    return JS9.GetStatus("load", ...args);
+});
+
 // http://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript
 JS9.mkPublic("CopyToClipboard", function(text, im){
-    var msg, successful, textArea;
+    let msg, successful, textArea;
     // save text for pseudo-pasting
     JS9.clipboard = text;
     // tmp textarea which from which the selection will be copied
     textArea = document.createElement("textarea");
     //
-    // *** This styling is an extra step which is likely not required. ***
+    // *** styling is an extra step which is likely not required. ***
     //
     // Why is it here? To ensure:
     // 1. the element is able to have focus and selection.
@@ -22334,7 +22254,7 @@ JS9.mkPublic("CopyToClipboard", function(text, im){
     textArea.style.top = 0;
     textArea.style.left = 0;
     // Ensure it has a small width and height. Setting to 1px / 1em
-    // doesn't work as this gives a negative w/h on some browsers.
+    // doesn't work as it gives a negative w/h on some browsers.
     textArea.style.width = "2em";
     textArea.style.height = "2em";
     // We don't need padding, reducing the size if it does flash render.
@@ -22364,7 +22284,7 @@ JS9.mkPublic("CopyToClipboard", function(text, im){
 	msg = "ERROR";
     }
     document.body.removeChild(textArea);
-    // this is required to detatch keydown from textArea
+    // required to detatch keydown from textArea
     // otherwise, the next keydown has no effect
     if( im && im.display ){
 	im.display.divjq.trigger("mouseout");
@@ -22378,67 +22298,65 @@ JS9.mkPublic("CopyFromClipboard", function(){
 });
 
 // bring up the file dialog box and open selected FITS file(s)
-JS9.mkPublic("OpenFileMenu", function(){
-    var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
+JS9.mkPublic("OpenFileMenu", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$("#openLocalLoad-" + display.id).click();
+	$(`#openLocalLoad-${display.id}`).click();
     }
 });
 
 // bring up the file dialog box and open selected region files(s)
-JS9.mkPublic("OpenRegionsMenu", function(){
-    var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
+JS9.mkPublic("OpenRegionsMenu", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$("#openLocalLoadRegions-" + display.id).click();
+	$(`#openLocalLoadRegions-${display.id}`).click();
     }
 });
 
 // bring up the file dialog box and load selected session files(s)
-JS9.mkPublic("OpenSessionMenu", function(){
-    var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
+JS9.mkPublic("OpenSessionMenu", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$("#openLocalLoadSession-" + display.id).click();
+	$(`#openLocalLoadSession-${display.id}`).click();
     }
 });
 
 // bring up the file dialog box and open selected catalog file
-JS9.mkPublic("OpenCatalogsMenu", function(){
-    var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
+JS9.mkPublic("OpenCatalogsMenu", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$("#openLocalLoadCatalog-" + display.id).click();
+	$(`#openLocalLoadCatalog-${display.id}`).click();
     }
 });
 
 // bring up the file dialog box and load selected colormap file(s)
-JS9.mkPublic("OpenColormapMenu", function(){
-    var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
+JS9.mkPublic("OpenColormapMenu", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.display);
     if( display ){
-	$("#openLocalLoadColormap-" + display.id).click();
+	$(`#openLocalLoadColormap-${display.id}`).click();
     }
 });
 
 // save a colormap to disk
-JS9.mkPublic("SaveColormap", function(){
-    var fname, im, cobj, s, blob;
-    var obj = JS9.parsePublicArgs(arguments);
-    var arg1 = obj.argv[0];
-    var arg2 = obj.argv[1];
-    var convertjson = function(arg1){
-	var s = arg1;
+JS9.mkPublic("SaveColormap", function(...args) {
+    let fname, im, cobj, s, blob, arg1, arg2;
+    const obj = JS9.parsePublicArgs(args);
+    const convertjson = (arg1) => {
+	let s = arg1;
 	if( typeof arg1 === "string" ){
 	    try{ s = JSON.parse(arg1); }
-	    catch(e){ }
+	    catch(e){ /* empty */ }
 	}
 	return s;
     };
-    var getarr = function(arr){
-	var i, c;
-	var cobj = [];
+    const getarr = (arr) => {
+	let i, c;
+	const cobj = [];
 	for(i=0; i<arr.length; i++){
 	    c = JS9.lookupColormap(arr[i]);
 	    if( c ){
@@ -22452,6 +22370,8 @@ JS9.mkPublic("SaveColormap", function(){
 	}
 	return cobj;
     };
+    arg1 = obj.argv[0];
+    arg2 = obj.argv[1];
     if( window.hasOwnProperty("saveAs") ){
 	// check for json strings in arg1 and/or arg2
 	im = JS9.getImage(obj.display);
@@ -22485,15 +22405,15 @@ JS9.mkPublic("SaveColormap", function(){
 	    saveAs(blob, fname);
 	}
     } else {
-	JS9.error("no saveAs function available to save colormap");
+	JS9.error("no saveAs() available to save colormap");
     }
     return fname;
 });
 
-// call the image constructor as a function
-JS9.mkPublic("NewFitsImage", function(hdu, opts){
-    var func, disp, im;
-    var obj = JS9.parsePublicArgs(arguments);
+// call the image constructor as a func
+JS9.mkPublic("NewFitsImage", function(...args){
+    let func, disp, im, hdu, opts;
+    const obj = JS9.parsePublicArgs(args);
     hdu = obj.argv[0];
     opts = obj.argv[1] || {};
     disp = JS9.lookupDisplay(obj.display || opts.display || JS9.DEFID);
@@ -22529,32 +22449,32 @@ JS9.mkPublic("NewFitsImage", function(hdu, opts){
 });
 
 // return the image object for the specified image name or the display id
-JS9.mkPublic("GetImage", function(id){
-    var obj;
-    if( id && (typeof id !== "string") ){
-	obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("GetImage", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    let id = obj.argv[0];
+    if( typeof id !== "string" ){
 	id = obj.display;
     }
     return JS9.getImage(id);
 });
 
 // return the image data and auxiliary info for the current image
-JS9.mkPublic("GetImageData", function(dflag){
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("GetImageData", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    let dflag = obj.argv[0];
     // return data and auxiliary info
     if( im ){
-	dflag = obj.argv[0];
 	return im.getImageData(dflag);
     }
     return null;
 });
 
 // return the image data and aux info for all images loaded into this display
-JS9.mkPublic("GetDisplayData", function(dflag){
-    var i, id, im;
-    var imarr = [];
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("GetDisplayData", function(...args){
+    let i, id, im, dflag;
+    const imarr = [];
+    const obj = JS9.parsePublicArgs(args);
     id = obj.display || JS9.displays[0].id;
     dflag = obj.argv[0];
     for(i=0; i<JS9.images.length; i++){
@@ -22567,27 +22487,28 @@ JS9.mkPublic("GetDisplayData", function(dflag){
 });
 
 // return the FITS header as a string
-JS9.mkPublic("GetFITSHeader", function(flag){
-    var s = "";
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("GetFITSHeader", function(...args){
+    let flag;
+    let s = "";
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    flag = obj.argv[0];
     if( im && im.raw ){
-	flag = obj.argv[0];
 	s = JS9.raw2FITS(im.raw, {addcr: flag});
     }
     return s;
 });
 
 // turn on and off blending, redisplaying image
-JS9.mkPublic("BlendDisplay", function(mode){
-    var i, im;
-    var imarr = [];
-    var obj = JS9.parsePublicArgs(arguments);
-    var id = obj.display || JS9.DEFID;
-    var disp = JS9.lookupDisplay(id);
+JS9.mkPublic("BlendDisplay", function(...args){
+    let i, im, mode;
+    const imarr = [];
+    const obj = JS9.parsePublicArgs(args);
+    const id = obj.display || JS9.DEFID;
+    const disp = JS9.lookupDisplay(id);
     mode = obj.argv[0];
     if( !disp ){
-	JS9.error("no JS9 display found: " + id);
+	JS9.error(`no JS9 display found: ${id}`);
     }
     if( (mode === undefined) || (mode === "mode") ){
 	return disp.blendMode;
@@ -22628,23 +22549,24 @@ JS9.mkPublic("BlendDisplay", function(mode){
 
 // load auxiliary file, if available
 // s is the aux file type
-JS9.mkPublic("LoadAuxFile", function(file, func){
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("LoadAuxFile", function(...args){
+    let file, func;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    file = obj.argv[0];
+    func = obj.argv[1];
     if( im ){
-	file = obj.argv[0];
-	func = obj.argv[1];
 	im.loadAuxFile(file, func);
     } else {
-	JS9.error("could not find image for aux file: " + file);
+	JS9.error(`could not find image for aux file: ${file}`);
     }
 });
 
 // run analysis from a Web page form
-JS9.mkPublic("SubmitAnalysis", function(el, aname, func){
-    var topjq, formjq, dispid, im, errstr;
-    var a = JS9.lightOpts[JS9.LIGHTWIN];
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("SubmitAnalysis", function(...args){
+    let topjq, formjq, dispid, im, errstr, el, aname, func, tobj;
+    const a = JS9.lightOpts[JS9.LIGHTWIN];
+    const obj = JS9.parsePublicArgs(args);
     el = obj.argv[0];
     aname = obj.argv[1];
     func = obj.argv[2];
@@ -22667,12 +22589,12 @@ JS9.mkPublic("SubmitAnalysis", function(el, aname, func){
 	formjq = $(el).closest("form");
 	// make sure unchecked elements are in the array
 	try{
-	    // obj = $(':input:visible', formjq).serializeArray();
-	    obj = formjq.serializeArray();
-	    obj = obj.concat($('#' + formjq.attr('id') + ' input[type=checkbox]:not(:checked)').map(function(){return {'name': this.name, 'value': 'false'};}).get());
+	    // tobj = $(':input:visible', formjq).serializeArray();
+	    tobj = formjq.serializeArray();
+	    tobj = tobj.concat($(`#${formjq.attr('id')} input[type=checkbox]:not(:checked)`).map(function() {return {'name': this.name, 'value': 'false'};}).get());
 	}
-	catch(e){ obj = null; }
-	im.runAnalysis(aname, obj, func);
+	catch(e){ tobj = null; }
+	im.runAnalysis(aname, tobj, func);
     } else {
 	errstr = "internal error: could not find image";
     }
@@ -22700,11 +22622,11 @@ JS9.mkPublic("EventToDisplayPos", function(evt){
 
 // convert image position to wcs (in degrees)
 // NB: input image coordinates are 1-indexed
-JS9.mkPublic("PixToWCS", function(ix, iy){
-    var s, arr, arg0;
-    var x = 1.0;
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("PixToWCS", function(...args){
+    let s, arr, arg0, ix, iy;
+    let x = 1.0;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
     if( im ){
 	arg0 = obj.argv[0];
 	if( typeof arg0 === "object" &&
@@ -22738,10 +22660,10 @@ JS9.Pix2WCS = JS9.PixToWCS;
 
 // convert wcs to image position
 // NB: returned image coordinates are 1-indexed
-JS9.mkPublic("WCSToPix", function(ra, dec){
-    var s, x, y, arr, arg0;
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("WCSToPix", function(...args){
+    let str, x, y, arr, arg0, ra, dec;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
     if( im ){
 	arg0 = obj.argv[0];
 	if( typeof arg0 === "object" &&
@@ -22759,8 +22681,8 @@ JS9.mkPublic("WCSToPix", function(ra, dec){
 	    arr = JS9.wcs2pix(im.raw.wcs, ra, dec).trim().split(/ +/);
 	    x = parseFloat(arr[0]);
 	    y = parseFloat(arr[1]);
-	    s = sprintf("%f %f", x, y);
-	    return {x: x, y: y, str: s};
+	    str = sprintf("%f %f", x, y);
+	    return {x, y, str};
 	}
     }
     return null;
@@ -22769,14 +22691,13 @@ JS9.mkPublic("WCSToPix", function(ra, dec){
 JS9.WCS2Pix = JS9.WCSToPix;
 
 // initialize a new shape layer
-// NB: don't be fooled, this is not a standard image routine
-// it's a Display routine, so we can't use mkPublic
-JS9.mkPublic("NewShapeLayer", function(layer, opts){
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("NewShapeLayer", function(...args){
+    let layer, opts;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    layer = obj.argv[0];
+    opts = obj.argv[1];
     if( im ){
-	layer = obj.argv[0];
-	opts = obj.argv[1];
 	return im.display.newShapeLayer(layer, opts);
     }
     return null;
@@ -22784,12 +22705,13 @@ JS9.mkPublic("NewShapeLayer", function(layer, opts){
 
 // add a region
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("AddRegions", function(region, opts){
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("AddRegions", function(...args){
+    let region, opts;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    region = obj.argv[0];
+    opts = obj.argv[1];
     if( im ){
-	region = obj.argv[0];
-	opts = obj.argv[1];
 	if( !region ){
 	    JS9.error("no region specified for AddRegions");
 	}
@@ -22799,11 +22721,11 @@ JS9.mkPublic("AddRegions", function(region, opts){
 });
 
 // remove one or more regions
-JS9.mkPublic("RemoveRegions", function(region){
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("RemoveRegions", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    let region = obj.argv[0];
     if( im ){
-	region = obj.argv[0];
 	im.removeShapes("regions", region);
 	im.display.clearMessage("regions");
 	return JS9.globalOpts.quietReturn ? "" : "OK";
@@ -22812,12 +22734,12 @@ JS9.mkPublic("RemoveRegions", function(region){
 });
 
 // copy one or more regions
-JS9.mkPublic("CopyRegions", function(to, region){
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("CopyRegions", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    let to = obj.argv[0];
+    let region = obj.argv[1];
     if( im ){
-	to = obj.argv[0];
-	region = obj.argv[1];
 	im.copyRegions(to, region);
 	return JS9.globalOpts.quietReturn ? "" : "OK";
     }
@@ -22826,26 +22748,26 @@ JS9.mkPublic("CopyRegions", function(to, region){
 
 // get one or more regions
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("GetRegions", function(region){
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("GetRegions", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
     if( im ){
 	obj.argv.unshift("regions");
-	return im.getShapes.apply(im, obj.argv);
+	return im.getShapes(...obj.argv);
     }
     return null;
 });
 
 // change one or more regions
-JS9.mkPublic("ChangeRegions", function(region, opts){
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("ChangeRegions", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    let region = obj.argv[0];
+    let opts = obj.argv[1];
     if( im ){
-	region = obj.argv[0];
 	if( !region ){
 	    JS9.error("no regions specified for ChangeRegions");
 	}
-	opts = obj.argv[1];
 	im.changeShapes("regions", region, opts);
     }
     return null;
@@ -22853,28 +22775,27 @@ JS9.mkPublic("ChangeRegions", function(region, opts){
 
 // save regions to disk
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("SaveRegions", function(fname, which, layer){
-    var file, wh, la, im;
-    var obj = JS9.parsePublicArgs(arguments);
-    file = obj.argv[0];
-    wh = obj.argv[1];
-    la = obj.argv[2];
-    im = JS9.getImage(obj.display);
+JS9.mkPublic("SaveRegions", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    let file = obj.argv[0];
+    let which = obj.argv[1];
+    let layer = obj.argv[2];
     if( im ){
-	return im.saveRegions(file, wh, la);
+	return im.saveRegions(file, which, layer);
     }
     return null;
 });
 
 // edit region tags, e.g. add source, remove background
 // e.g. JS9.EditRegionTags("selected", "source", "background");
-JS9.mkPublic("EditRegionTags", function(which, add1, rem1){
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("EditRegionTags", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    let which = obj.argv[0];
+    let add1  = obj.argv[1];
+    let rem1  = obj.argv[2];
     if( im ){
-	which = obj.argv[0];
-	add1 = obj.argv[1];
-	rem1 = obj.argv[2];
 	return im.editRegionTags(which, add1, rem1);
     }
     return null;
@@ -22882,13 +22803,13 @@ JS9.mkPublic("EditRegionTags", function(which, add1, rem1){
 
 // toggle region tags, e.g. source <-> background, include <-> exclude
 // e.g. JS9.ToggleRegionTags("selected", "source", "background");
-JS9.mkPublic("ToggleRegionTags", function(which, x1, x2){
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
+JS9.mkPublic("ToggleRegionTags", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    let which = obj.argv[0];
+    let x1 = obj.argv[1];
+    let x2 = obj.argv[2];
     if( im ){
-	which = obj.argv[0];
-	x1 = obj.argv[1];
-	x2 = obj.argv[2];
 	return im.toggleRegionTags(which, x1, x2);
     }
     return null;
@@ -22896,10 +22817,9 @@ JS9.mkPublic("ToggleRegionTags", function(which, x1, x2){
 
 // unremove previously removed regions
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("UnremoveRegions", function(){
-    var im;
-    var obj = JS9.parsePublicArgs(arguments);
-    im = JS9.getImage(obj.display);
+JS9.mkPublic("UnremoveRegions", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
     if( im ){
 	return im.unremoveRegions();
     }
@@ -22907,18 +22827,22 @@ JS9.mkPublic("UnremoveRegions", function(){
 });
 
 // load a DS9/funtools regions file
-JS9.mkPublic("LoadRegions", function(file, opts){
-    var s;
-    var reader;
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
-    var addregions = function(reg, ropts){
+JS9.mkPublic("LoadRegions", function(...args){
+    let s, reader, file, opts;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    const addregions = (reg, ropts) => {
 	if( ropts && ropts.display !== undefined ){ delete ropts.display; }
+	// remove old regions, if necessary
 	if( JS9.globalOpts.reloadRefreshReg && ropts.file ){
 	    try{ im.removeShapes("regions", ropts.file); }
-	    catch(e){}
+	    catch(e){ /* empty */ }
 	}
+	// add the regions
 	im.addShapes("regions", reg, ropts);
+	// set status
+	im.setStatus("loadRegions", "complete");
+	// onload callback, if necessary
 	if( opts && opts.onload ){ opts.onload(im); }
     };
     file = obj.argv[0];
@@ -22931,6 +22855,8 @@ JS9.mkPublic("LoadRegions", function(file, opts){
     if( !im ){
 	return;
     }
+    // set status
+    im.setStatus("loadRegions", "processing");
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
@@ -22951,7 +22877,7 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 	}
 	// file reader object
 	reader = new FileReader();
-	reader.onload = function(ev){
+	reader.onload = (ev) => {
 	    addregions(ev.target.result, opts);
 	};
 	reader.readAsText(file);
@@ -22962,7 +22888,7 @@ JS9.mkPublic("LoadRegions", function(file, opts){
 	JS9.fetchURL(null, file, opts, addregions);
     } else {
 	// oops!
-	JS9.error("unknown file type for LoadRegions: " + typeof file);
+	JS9.error(`unknown file type for LoadRegions: ${typeof file}`);
     }
 });
 
@@ -22977,9 +22903,9 @@ JS9.mkPublic("InstallDir", function(dir){
 });
 
 // add new display divs and/or new plugins
-JS9.mkPublic("AddDivs", function(){
-    var i, j, div, dexist, id;
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("AddDivs", function(...args) {
+    let i, j, div, dexist, id;
+    const obj = JS9.parsePublicArgs(args);
     // process all divs
     for(i=0; i< obj.argv.length; i++){
 	// get next id
@@ -22988,8 +22914,8 @@ JS9.mkPublic("AddDivs", function(){
 	if( !id ){
 	    continue;
 	}
-	// make sure this div exists ...
-	if( $("#" + id).length === 0 ){
+	// make sure div exists ...
+	if( $(`#${id}`).length === 0 ){
 	    if( JS9.DEBUG ){
 		JS9.log("warning: can't find div, skipping AddDivs(): %s", id);
 	    }
@@ -23007,7 +22933,7 @@ JS9.mkPublic("AddDivs", function(){
 	if( !dexist ){
 	    // add this display to array of displays
 	    JS9.checkNew(new JS9.Display(id));
-	    // tell helper about this display
+	    // tell helper about display
 	    JS9.helper.send("addDisplay", {"display": id});
 	} else if( JS9.DEBUG ){
 	    JS9.log("warning: div already added, skipping AddDivs(): %s", id);
@@ -23024,10 +22950,10 @@ JS9.mkPublic("InstantiatePlugins", function(){
 });
 
 // change the size of a display
-JS9.mkPublic("ResizeDisplay", function(){
-    var got, display;
-    var obj = JS9.parsePublicArgs(arguments);
-    // special handling of first string argument:
+JS9.mkPublic("ResizeDisplay", function(...args) {
+    let got, display;
+    const obj = JS9.parsePublicArgs(args);
+    // special handling of first string arg:
     // might be display name or might be resize params
     if( typeof obj.argv[0] === "string" &&
 	!JS9.isNumber(obj.argv[0])      &&
@@ -23042,7 +22968,7 @@ JS9.mkPublic("ResizeDisplay", function(){
     if( !display ){
 	JS9.error("invalid display for resize");
     }
-    got = JS9.Display.prototype.resize.apply(display, obj.argv);
+    got = display.resize(...obj.argv);
     if( got === display ){
 	return JS9.globalOpts.quietReturn ? "" : "OK";
     }
@@ -23050,9 +22976,9 @@ JS9.mkPublic("ResizeDisplay", function(){
 });
 
 // select (or de-select) a display as the current display
-JS9.mkPublic("SelectDisplay", function(){
-    var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.argv[0] || obj.display);
+JS9.mkPublic("SelectDisplay", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.argv[0] || obj.display);
     if( !display ){
 	JS9.error("invalid display for select");
     }
@@ -23063,10 +22989,10 @@ JS9.mkPublic("SelectDisplay", function(){
     return;
 });
 
-// gather images from other displays into this display
-JS9.mkPublic("GatherDisplay", function(did, opts){
-    var display;
-    var obj = JS9.parsePublicArgs(arguments);
+// gather images from other displays into display
+JS9.mkPublic("GatherDisplay", function(...args){
+    let display, did, opts;
+    const obj = JS9.parsePublicArgs(args);
     switch(obj.argv.length){
     case 0:
 	did = obj.display;
@@ -23090,14 +23016,14 @@ JS9.mkPublic("GatherDisplay", function(did, opts){
     if( !display ){
 	JS9.error("invalid display for gather");
     }
-    JS9.Display.prototype.gather.call(display, opts);
+    display.gather(opts);
     return;
 });
 
 // separate images in a display into new displays
-JS9.mkPublic("SeparateDisplay", function(did, opts){
-    var display;
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("SeparateDisplay", function(...args){
+    let display, did, opts;
+    const obj = JS9.parsePublicArgs(args);
     switch(obj.argv.length){
     case 0:
 	did = obj.display;
@@ -23121,26 +23047,26 @@ JS9.mkPublic("SeparateDisplay", function(did, opts){
     if( !display ){
 	JS9.error("invalid display for separate");
     }
-    JS9.Display.prototype.separate.call(display, opts);
+    display.separate(display, opts);
     return;
 });
 
 // center the image in a display
-JS9.mkPublic("CenterDisplay", function(){
-    var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.argv[0] || obj.display);
+JS9.mkPublic("CenterDisplay", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.argv[0] || obj.display);
     if( !display ){
 	JS9.error("invalid display for center");
     }
-    JS9.Display.prototype.center.call(display);
+    display.center();
     return;
 });
 
 // save a session (current image, images in current display, or all images)
-JS9.mkPublic("SaveSession", function(arg1, arg2){
-    var fname, display, disp;
-    var opts = {};
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("SaveSession", function(...args){
+    let fname, display, disp, arg1, arg2;
+    let opts = {};
+    const obj = JS9.parsePublicArgs(args);
     arg1 = obj.argv[0];
     arg2 = obj.argv[1];
     // opts can be an object or json or a filename
@@ -23152,7 +23078,7 @@ JS9.mkPublic("SaveSession", function(arg1, arg2){
 	try{ opts = JSON.parse(arg1); }
 	catch(e){
 	    fname = arg1;
-	    // but is there a second opts argument?
+	    // but is there a second opts arg?
 	    if( arg2 ){
 		if( typeof arg2 === "object" ){
 		    opts = $.extend(true, {}, arg2);
@@ -23189,10 +23115,10 @@ JS9.mkPublic("SaveSession", function(arg1, arg2){
     if( !fname ){
 	if( opts.mode === "display" ){
 	    // generic file name for saving multiple images
-	    fname = "js9-" + new Date().toISOString().slice(0,10) + ".ses";
+	    fname = `js9-${new Date().toISOString().slice(0,10)}.ses`;
 	} else {
 	    // file name tied to image being saved
-	    fname = disp.image.id + ".ses";
+	    fname = `${disp.image.id}.ses`;
 	}
     }
     // save the session
@@ -23200,9 +23126,9 @@ JS9.mkPublic("SaveSession", function(arg1, arg2){
 });
 
 // load a session file
-JS9.mkPublic("LoadSession", function(file, opts){
-    var display, reader, disp;
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LoadSession", function(...args){
+    let display, reader, disp, file, opts;
+    const obj = JS9.parsePublicArgs(args);
     file = obj.argv[0];
     opts = obj.argv[1];
     // sanity check
@@ -23239,8 +23165,8 @@ JS9.mkPublic("LoadSession", function(file, opts){
     if( typeof file === "object" ){
 	// file reader object
 	reader = new FileReader();
-	reader.onload = function(ev){
-	    var jobj = JSON.parse(ev.target.result);
+	reader.onload = (ev) => {
+	    const jobj = JSON.parse(ev.target.result);
 	    opts.sessionPath =  JS9.dirname(file.path || file.name || "");
 	    disp.loadSession(jobj, opts);
 	};
@@ -23249,24 +23175,24 @@ JS9.mkPublic("LoadSession", function(file, opts){
 	opts.responseType = "text";
 	opts.display = disp.id;
 	file = JS9.fixPath(file);
-	JS9.fetchURL(null, file, opts, function(jstr, opts){
-	    var jobj = JSON.parse(jstr);
+	JS9.fetchURL(null, file, opts, (jstr, opts) => {
+	    const jobj = JSON.parse(jstr);
 	    opts.sessionPath =  JS9.dirname(file);
             disp.loadSession(jobj, opts);
 	});
     } else {
 	// oops!
-	JS9.error("unknown file type for LoadSession: " + typeof file);
+	JS9.error(`unknown file type for LoadSession: ${typeof file}`);
     }
 });
 
 // save regions to disk
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("SaveCatalog", function(fname, which){
-    var obj = JS9.parsePublicArgs(arguments);
-    var im = JS9.getImage(obj.display);
-    fname = obj.argv[0];
-    which = obj.argv[1];
+JS9.mkPublic("SaveCatalog", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    let fname = obj.argv[0];
+    let which = obj.argv[1];
     if( im ){
 	return im.saveCatalog(fname, which);
     }
@@ -23274,9 +23200,9 @@ JS9.mkPublic("SaveCatalog", function(fname, which){
 });
 
 // load a starbase catalog file
-JS9.mkPublic("LoadCatalog", function(layer, file, opts){
-    var reader, im;
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("LoadCatalog", function(...args){
+    let reader, im, layer, file, opts;
+    const obj = JS9.parsePublicArgs(args);
     layer = obj.argv[0];
     file = obj.argv[1];
     opts = obj.argv[2];
@@ -23296,6 +23222,8 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
     if( !im ){
 	return;
     }
+    // set status
+    im.setStatus("loadCatalog", "processing");
     // opts can be an object or json
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
@@ -23312,11 +23240,16 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
     if( file instanceof Blob ){
 	// file reader object
 	reader = new FileReader();
-	reader.onload = function(ev){
+	reader.onload = (ev) => {
+	    // improve the filename, if possible
 	    if( !layer && file.name ){
 		layer = file.name.replace(/\.[^.]*$/, "");
 	    }
+	    // load the catalog
 	    im.loadCatalog(layer, ev.target.result, opts);
+	    // set status
+	    im.setStatus("loadCatalog", "complete");
+	    // onload callback
 	    if( opts && opts.onload ){ opts.onload(im); }
 	};
 	reader.readAsText(file);
@@ -23324,40 +23257,47 @@ JS9.mkPublic("LoadCatalog", function(layer, file, opts){
 	if( file.match(/\t/) ){
 	    // it's a table (contains a tab)
 	    im.loadCatalog(layer, file, opts);
+	    // set status
+	    im.setStatus("loadCatalog", "complete");
+	    // onload callback
 	    if( opts && opts.onload ){ opts.onload(im); }
 	} else {
 	    // its a file: retrieve and load the catalog
 	    opts.responseType = "text";
 	    file = JS9.fixPath(file);
-	    JS9.fetchURL(null, file, opts, function(s){
+	    JS9.fetchURL(null, file, opts, (s) => {
+		// load the catalog
 		im.loadCatalog(layer, s, opts);
+		// set status
+		im.setStatus("loadCatalog", "complete");
+		// onload callback
 		if( opts && opts.onload ){ opts.onload(im); }
 	    });
 	}
     } else {
 	// oops!
-	JS9.error("unknown file type for LoadCatalog: " + typeof file);
+	JS9.error(`unknown file type for LoadCatalog: ${typeof file}`);
     }
 });
 
 // create an image mosaic
-JS9.mkPublic("CreateMosaic", function(){
-    var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
-    var ims = obj.argv[0];
-    var opts = obj.argv[1];
+JS9.mkPublic("CreateMosaic", function(...args) {
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.display);
+    let ims = obj.argv[0];
+    let opts = obj.argv[1];
     if( display ){
 	return display.createMosaic(ims, opts);
     }
 });
 
 // display the named plugin
-JS9.mkPublic("DisplayPlugin", function(name){
-    var i, plugin, pname, lcname;
-    var obj = JS9.parsePublicArgs(arguments);
-    var display = JS9.lookupDisplay(obj.display);
+JS9.mkPublic("DisplayPlugin", function(...args){
+    let i, plugin, pname, lcname, name;
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.display);
+    name = obj.argv[0];
     if( display && obj.argv[0] ){
-	name = obj.argv[0];
 	lcname = name.toLowerCase();
 	for(i=0; i<JS9.plugins.length; i++){
 	    plugin = JS9.plugins[i];
@@ -23368,27 +23308,24 @@ JS9.mkPublic("DisplayPlugin", function(name){
 		return;
 	    }
 	}
-	JS9.error("can't find plugin: " + name);
+	JS9.error(`can't find plugin: ${name}`);
     }
 });
 
 //  display a help page (or a general url, actually)
 JS9.mkPublic("DisplayHelp", function(hname){
-    var id, title, url;
-    var opts = JS9.lightOpts.dhtml.textWin;
-    var type = "iframe";
-    var help;
+    let id, title, url, help;
+    const opts = JS9.lightOpts.dhtml.textWin;
+    const type = "iframe";
     // sanity check
-    if( !hname ){
-	return;
-    }
+    if( !hname ){ return; }
     title = hname.split("/").reverse()[0];
-    id = "help_" + JS9.uniqueID();
+    id = `help_${JS9.uniqueID()}`;
     // look for known help file
     help = JS9.helpOpts[hname];
     if( help ){
 	// help file
-	url = JS9.InstallDir(help.type + "/" + help.url);
+	url = JS9.InstallDir(`${help.type}/${help.url}`);
 	JS9.lightWin(id, type, url, help.title || title, opts);
     } else {
 	// its a random url
@@ -23398,29 +23335,29 @@ JS9.mkPublic("DisplayHelp", function(hname){
 
 // display a light window
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("LightWindow", function(id, type, content, title, opts){
-    var obj = JS9.parsePublicArgs(arguments);
-    id      = obj.argv[0] || "lightWindow" + JS9.uniqueID();
-    type    = obj.argv[1] || "inline";
-    content = obj.argv[2];
+JS9.mkPublic("LightWindow", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    let id      = obj.argv[0] || `lightWindow${JS9.uniqueID()}`;
+    let type    = obj.argv[1] || "inline";
+    let content = obj.argv[2];
+    let title   = obj.argv[3] || "JS9 light window";
+    let opts    = obj.argv[4] || JS9.lightOpts.dhtml.textWin;
     if( !content ){
 	JS9.error("no content specified for LightWindow");
     }
-    title   = obj.argv[3] || "JS9 light window";
-    opts    = obj.argv[4] || JS9.lightOpts.dhtml.textWin;
     return JS9.lightWin(id, type, content, title, opts);
 });
 
 // print window (Desktop JS9 only)
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("WindowPrint", function(args){
-    var opts = {cmd: "print"};
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("WindowPrint", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const opts = {cmd: "print"};
     if( obj.argv[0] ){
 	opts.opts = obj.argv[0];
     }
     if( window.isElectron && window.electronIPC ){
-	window.setTimeout(function(){
+	window.setTimeout(() => {
 	    try{ window.electronIPC.send("msg", opts); }
 	    catch(e){ JS9.error("could not print window", e); }
 	}, JS9.TIMEOUT);
@@ -23431,15 +23368,15 @@ JS9.mkPublic("WindowPrint", function(args){
 
 // save PDF of window (Desktop JS9 only)
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("WindowToPDF", function(args){
-    var obj = JS9.parsePublicArgs(arguments);
-    var opts = {cmd: "pdf"};
+JS9.mkPublic("WindowToPDF", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const opts = {cmd: "pdf"};
     opts.filename = obj.argv[0] || "js9.pdf";
     if( obj.argv[1] ){
 	opts.opts = obj.argv[1];
     }
     if( window.isElectron && window.electronIPC ){
-	window.setTimeout(function(){
+	window.setTimeout(() => {
 	    try{ window.electronIPC.send("msg", opts); }
 	    catch(e){ JS9.error("could not create window pdf", e); }
 	}, JS9.TIMEOUT);
@@ -23450,16 +23387,16 @@ JS9.mkPublic("WindowToPDF", function(args){
 
 // set save directory (Desktop JS9 only)
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("SaveDir", function(args){
-    var opts = {cmd: "savedir"};
-    var obj = JS9.parsePublicArgs(arguments);
+JS9.mkPublic("SaveDir", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const opts = {cmd: "savedir"};
     if( obj.argv[0] ){
 	opts.opts = obj.argv[0];
     } else {
 	JS9.error("SaveDir requires a directory name");
     }
     if( window.isElectron && window.electronIPC ){
-	window.setTimeout(function(){
+	window.setTimeout(() => {
 	    try{ window.electronIPC.send("msg", opts); }
 	    catch(e){ JS9.error("could not set save directory", e); }
 	}, JS9.TIMEOUT);
@@ -23467,30 +23404,29 @@ JS9.mkPublic("SaveDir", function(args){
 	JS9.error("SaveDir is only available for the JS9 desktop app");
     }
 });
-
 // end of Public Interface
 
 // return namespace
 return JS9;
 }());
 
-// INIT: after document is loaded, perform js9 initialization
-$(document).ready(function(){
+// INIT: after document is loaded, perform JS9 initialization
+$(document).ready(() => {
     // when all is ready, we can preload images
-    $(document).on("JS9:ready", function(){
+    $(document).on("JS9:ready", () => {
 	if( !JS9.readied ){
 	    JS9.readied = true;
 	    JS9.Preload(true);
 	}
     });
-    $(document).on("JS9:init", function(){
+    $(document).on("JS9:init", () => {
 	if( JS9.helper.ready && JS9.fits.ready ){
-	    // ... signal that we are completely ready
+	    // ... signal we are completely ready
 	    $(document).trigger("JS9:ready", {status: "OK"});
 	}
     });
     // ... might need to wait for astroem (via emscripten) to finish ...
-    $(document).on("astroem:ready", function(){
+    $(document).on("astroem:ready", () => {
 	// astroem is loaded: we can now initialize FITS support
 	JS9.initFITS();
 	// if Node.js is available (i.e., if enabled in the Electron app),
@@ -23508,14 +23444,14 @@ $(document).ready(function(){
 	    }
 	}
 	if( JS9.helper.ready && JS9.inited ){
-	    // ... signal that we are completely ready
+	    // ... signal we are completely ready
 	    $(document).trigger("JS9:ready", {status: "OK"});
 	}
     });
     // wait for helper
-    $(document).on("JS9:helperReady", function(){
+    $(document).on("JS9:helperReady", () => {
 	if( JS9.fits.ready && JS9.inited && !JS9.readied ){
-	    // ... signal that we are completely ready (but only once)
+	    // ... signal we are completely ready (but only once)
 	    $(document).trigger("JS9:ready", {status: "OK"});
 	}
     });

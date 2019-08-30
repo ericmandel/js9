@@ -25,11 +25,11 @@ JS9.Cmaps.COLORCLASS = "cmapsColorPicker";
 JS9.Cmaps.CMAPCLASS = "cmapsSelect";
 JS9.Cmaps.CHECKCLASS = "cmapsActiveCheck";
 
-JS9.Cmaps.headerHTML = 'Select a color&nbsp;&nbsp;<input type="color" value="#FF0000" class="'  + JS9.Cmaps.COLORCLASS + '">&nbsp;&nbsp;or a &nbsp;&nbsp;<select class="' + JS9.Cmaps.CMAPCLASS + '" onchange="JS9.Cmaps.xCmap(\'%s\',this)"></select>&nbsp;&nbsp;colormap to create&nbsp;&nbsp;<input type="number" onchange="JS9.Cmaps.xNslice(\'%s\',this)" value="' + JS9.Cmaps.DEFNMAP + '" min="1" max="36" size="3" style="width:40px;box-sizing: border-box;">&nbsp;&nbsp;<select class="cmapsMode" onchange="JS9.Cmaps.xMode(\'%s\',this)">&nbsp;&nbsp;<option value="equidistant">equidistant</option><option value="analogous">analogous</option></select><p>slices of the <a href="https://en.wikipedia.org/wiki/Color_wheel" target="_blank">colorwheel</a>,&nbsp;&nbsp;the first&nbsp;&nbsp;<input type="number" onchange="JS9.Cmaps.xNmap(\'%s\',this)" value="' + JS9.Cmaps.DEFNMAP + '" min="1" max="36" size="3" style="width:40px;box-sizing: border-box;">&nbsp;of which will be used to create colormaps.<p><input type="checkbox" onchange="JS9.Cmaps.xAssignCmaps(\'%s\',this)" checked> assign the new colormaps to these images:';
+JS9.Cmaps.headerHTML = `Select a color&nbsp;&nbsp;<input type="color" value="#FF0000" class="${JS9.Cmaps.COLORCLASS}">&nbsp;&nbsp;or a &nbsp;&nbsp;<select class="${JS9.Cmaps.CMAPCLASS}" onchange="JS9.Cmaps.xCmap('%s',this)"></select>&nbsp;&nbsp;colormap to create&nbsp;&nbsp;<input type="number" onchange="JS9.Cmaps.xNslice('%s',this)" value="${JS9.Cmaps.DEFNMAP}" min="1" max="36" size="3" style="width:40px;box-sizing: border-box;">&nbsp;&nbsp;<select class="cmapsMode" onchange="JS9.Cmaps.xMode('%s',this)">&nbsp;&nbsp;<option value="equidistant">equidistant</option><option value="analogous">analogous</option></select><p>slices of the <a href="https://en.wikipedia.org/wiki/Color_wheel" target="_blank">colorwheel</a>,&nbsp;&nbsp;the first&nbsp;&nbsp;<input type="number" onchange="JS9.Cmaps.xNmap('%s',this)" value="${JS9.Cmaps.DEFNMAP}" min="1" max="36" size="3" style="width:40px;box-sizing: border-box;">&nbsp;of which will be used to create colormaps.<p><input type="checkbox" onchange="JS9.Cmaps.xAssignCmaps('%s',this)" checked> assign the new colormaps to these images:`;
 
 JS9.Cmaps.imageHTML="<span style='float: left'>$active</span>&nbsp;&nbsp; <span style='float: right'>$imfile</span>";
 
-JS9.Cmaps.activeHTML='<input class="' + JS9.Cmaps.CHECKCLASS + '" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Cmaps.xActive(\'%s\', \'%s\', this)">&nbsp;';
+JS9.Cmaps.activeHTML=`<input class="${JS9.Cmaps.CHECKCLASS}" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Cmaps.xActive('%s', '%s', this)">&nbsp;`;
 
 JS9.Cmaps.imfileHTML='<b>%s</b>';
 
@@ -37,11 +37,11 @@ JS9.Cmaps.nofileHTML='<div class="JS9cmapsNoFile">[Colormap generation options w
 
 // equidistant colormaps
 JS9.Cmaps.equidistant = function(color, results, slices) {
-    var i;
-    var hsl = tinycolor(color).toHsl();
-    var hue = hsl.h;
-    var slice = 360 / slices;
-    var ret = [];
+    let i;
+    const hsl = tinycolor(color).toHsl();
+    const hue = hsl.h;
+    const slice = 360 / slices;
+    const ret = [];
     for(i=0; i<results; i++){
         hsl.h = (hue + (i * slice)) % 360;
         ret.push(tinycolor(hsl));
@@ -66,10 +66,10 @@ JS9.Cmaps.mkColors = function(mode, color, nmap, nslice) {
 
 // assign generated colormaps to the active images
 JS9.Cmaps.assignCmaps = function(display){
-    var clen, container;
-    var cur = 0;
-    var cid = "." + JS9.Cmaps.BASE + "Image";
-    var elid2 = "." + JS9.Cmaps.CHECKCLASS;
+    let clen, container;
+    let cur = 0;
+    const cid = `.${JS9.Cmaps.BASE}Image`;
+    const elid2 = `.${JS9.Cmaps.CHECKCLASS}`;
     // sanity checks
     if( !display.cmaps.names || !display.cmaps.names.length ){ return; }
     // container element from plugin for this display
@@ -78,12 +78,12 @@ JS9.Cmaps.assignCmaps = function(display){
 	// number of colormaps to assign
 	clen = display.cmaps.names.length;
 	// look for image inside this container
-	container.find(cid).each(function(idx, el){
-	    var qel = $(el);
-	    var imid = qel.prop("imid");
-	    var im = JS9.lookupImage(imid);
-	    var qel2 = qel.find(elid2);
-	    // if this image exists and is active
+	container.find(cid).each((idx, el) => {
+	    const qel = $(el);
+	    const imid = qel.prop("imid");
+	    const im = JS9.lookupImage(imid);
+	    const qel2 = qel.find(elid2);
+	    // if the image exists and is active
 	    if( im && (cur < clen) && qel2.prop("checked") ){
 		im.setColormap(display.cmaps.names[cur++]);
 		im.displayImage();
@@ -94,15 +94,15 @@ JS9.Cmaps.assignCmaps = function(display){
 
 // give a colormap, generate new complementary colormaps
 JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, nslice, opts){
-    var i, j, tcolor, tcolors, color, index, rgb, mode, cbase;
-    var colors = [];
-    var vertices = [];
-    var rgbs = [];
-    var fmt = "rgb (%s,%s,%s)";
-    var xrgb3 = function(rgb){
+    let i, j, tcolor, tcolors, color, index, rgb, mode, cbase;
+    const colors = [];
+    const vertices = [];
+    const rgbs = [];
+    const fmt = "rgb (%s,%s,%s)";
+    const xrgb3 = (rgb) => {
 	return [rgb.r/255, rgb.g/255, rgb.b/255];
     };
-    var mkColorCell = function(cmap, index){
+    const mkColorCell = (cmap, index) => {
 	return JS9.Colormap.prototype.mkColorCell.call(cmap, index);
     };
     // sanity check
@@ -120,7 +120,7 @@ JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, nslice, opts){
     case "lut":
 	// create n new colormaps
 	for(i=0; i<nmap; i++){
-	    display.cmaps.names[i] = cbase + "_" + String(i+1);
+	    display.cmaps.names[i] = `${cbase}_${String(i+1)}`;
 	    colors[i] = [];
 	}
 	for(i=0; i<cmap.colors.length; i++){
@@ -150,7 +150,7 @@ JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, nslice, opts){
     case "sao":
 	// create n new colormaps
 	for(i=0; i<nmap; i++){
-	    display.cmaps.names[i] = cmap.name + "_" + String(i+1);
+	    display.cmaps.names[i] = `${cmap.name}_${String(i+1)}`;
 	    vertices[i] = [[], [], []];
 	}
 	// for each color (red, green, blue)
@@ -164,7 +164,7 @@ JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, nslice, opts){
 	    }
 	}
 	// sort array in ascending order
-	rgbs.sort(function(a,b){
+	rgbs.sort( (a,b) => {
 	    if( a.index > b.index ){
 		return 1;
 	    } else if( a.index < b.index ){
@@ -217,7 +217,7 @@ JS9.Cmaps.mkCmapsFromCmap = function(display, cmap, nmap, nslice, opts){
 
 // give a color, generate new complementary colormaps
 JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, nslice, opts){
-    var color, rgb, tol, diff, mode, cbase;
+    let color, rgb, tol, diff, mode, cbase;
     // sanity check
     if( !cname || !nmap || !nslice ){ return; }
     // opts is optional
@@ -247,9 +247,9 @@ JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, nslice, opts){
     if( display.cmaps.timeOutID ){ 
 	return 0;
     }
-    // use timeout to ensure that redisplay gets into the event loop
-    display.cmaps.timeOutID = window.setTimeout(function(){
-	var i, tcolors, cmap;
+    // use timeout to ensure redisplay gets into the event loop
+    display.cmaps.timeOutID = window.setTimeout(() => {
+	let i, tcolors, cmap;
 	// reset names
 	display.cmaps.names = [];
 	// generate nmap colors
@@ -261,7 +261,7 @@ JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, nslice, opts){
 	// process each colormap
 	for(i=0; i<nmap; i++){
             rgb = tcolors[i].toRgb();
-            display.cmaps.names[i] = cbase + "_" + String(i+1);
+            display.cmaps.names[i] = `${cbase}_${String(i+1)}`;
 	    cmap = JS9.lookupColormap(display.cmaps.names[i], false);
 	    // add new colormaps or edit existing
 	    if( cmap ){
@@ -296,7 +296,7 @@ JS9.Cmaps.mkCmapsFromColor = function(display, cname, nmap, nslice, opts){
 
 // give either a color or a colormap, generate new complementary colormaps
 JS9.Cmaps.mkCmaps = function(display, cname, nmap, nslice, opts){
-    var cmap;
+    let cmap;
     // sanity check
     if( !cname || !nmap || !nslice ){ return 0; }
     // color or colormap?
@@ -313,7 +313,7 @@ JS9.Cmaps.mkCmaps = function(display, cname, nmap, nslice, opts){
 
 // set the active flag for an image
 JS9.Cmaps.xActive = function(id){
-    var display = JS9.lookupDisplay(id);
+    const display = JS9.lookupDisplay(id);
     if( !display ){ return; }
     if( display.cmaps.assign ){
 	JS9.Cmaps.assignCmaps(display);
@@ -322,7 +322,7 @@ JS9.Cmaps.xActive = function(id){
 
 // set the algorithm for generating colormaps
 JS9.Cmaps.xMode = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    const display = JS9.lookupDisplay(id);
     if( !display ){ return; }
     display.cmaps.mode = target.options[target.selectedIndex].value;
     JS9.Cmaps.mkCmaps(display, display.cmaps.lastCname,
@@ -334,7 +334,7 @@ JS9.Cmaps.xMode = function(id, target){
 
 // set the number of colormaps to generate
 JS9.Cmaps.xNmap = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    const display = JS9.lookupDisplay(id);
     if( !display ){ return; }
     display.cmaps.nmap = parseInt(target.value, 10) || 1;
     JS9.Cmaps.mkCmaps(display, display.cmaps.lastCname,
@@ -346,7 +346,7 @@ JS9.Cmaps.xNmap = function(id, target){
 
 // set the number of slices to generate
 JS9.Cmaps.xNslice = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    const display = JS9.lookupDisplay(id);
     if( !display ){ return; }
     display.cmaps.nslice = parseInt(target.value, 10) || 1;
     JS9.Cmaps.mkCmaps(display, display.cmaps.lastCname,
@@ -358,8 +358,8 @@ JS9.Cmaps.xNslice = function(id, target){
 
 // select the colormap to use as a basis for colormap generation
 JS9.Cmaps.xCmap = function(id, target){
-    var display = JS9.lookupDisplay(id);
-    var cname = target.options[target.selectedIndex].value;
+    const display = JS9.lookupDisplay(id);
+    const cname = target.options[target.selectedIndex].value;
     if( !display ){ return; }
     JS9.Cmaps.mkCmaps(display, cname,
 		      display.cmaps.nmap, display.cmaps.nslice,
@@ -371,7 +371,7 @@ JS9.Cmaps.xCmap = function(id, target){
 
 // set the global flag to assign new colormaps to images
 JS9.Cmaps.xAssignCmaps = function(id, target){
-    var display = JS9.lookupDisplay(id);
+    const display = JS9.lookupDisplay(id);
     if( !display ){ return; }
     display.cmaps.assign = $(target).prop("checked");
     if( display.cmaps.assign ){
@@ -381,37 +381,36 @@ JS9.Cmaps.xAssignCmaps = function(id, target){
 
 // get an id based on the file image id
 JS9.Cmaps.imid = function(im){
-    var id = im.display.id + "_" + im.id;
-    return id.replace(/[^A-Za-z0-9_]/g, "_") + "CmapsImage";
+    const id = `${im.display.id}_${im.id}`;
+    return `${id.replace(/[^A-Za-z0-9_]/g, "_")}CmapsImage`;
 };
 
 // get a class unique between displays
 JS9.Cmaps.dispclass = function(){
-    var id = JS9.Cmaps.BASE + "_" + this.display.id;
+    const id = `${JS9.Cmaps.BASE}_${this.display.id}`;
     return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Cmaps.activeImage = function(im){
-    var id, dcls;
+    let id, dcls;
     if( im ){
 	id = JS9.Cmaps.imid.call(this, im);
-	dcls = JS9.Cmaps.dispclass.call(this) + "_Image";
-	$("." + dcls)
-	    .removeClass(JS9.Cmaps.BASE + "ImageActive")
-	    .addClass(JS9.Cmaps.BASE + "ImageInactive");
-	$("#" + id)
-	    .removeClass(JS9.Cmaps.BASE + "ImageInactive")
-	    .addClass(JS9.Cmaps.BASE + "ImageActive");
+	dcls = `${JS9.Cmaps.dispclass.call(this)}_Image`;
+	$(`.${dcls}`)
+	    .removeClass(`${JS9.Cmaps.BASE}ImageActive`)
+	    .addClass(`${JS9.Cmaps.BASE}ImageInactive`);
+	$(`#${id}`)
+	    .removeClass(`${JS9.Cmaps.BASE}ImageInactive`)
+	    .addClass(`${JS9.Cmaps.BASE}ImageActive`);
     }
 };
 
 // add an image to the list of available images
 JS9.Cmaps.addImage = function(im){
-    var that = this;
-    var s, id, divjq, dcls, dispid, imid;
-    var opts = [];
-    var cls = JS9.Cmaps.BASE + "Image";
+    let s, id, divjq, dcls, dispid, imid;
+    const opts = [];
+    const cls = `${JS9.Cmaps.BASE}Image`;
     if( !im ){
 	return;
     }
@@ -421,7 +420,7 @@ JS9.Cmaps.addImage = function(im){
     // unique id
     id = JS9.Cmaps.imid.call(this, im);
     // get class for this layer 
-    dcls = JS9.Cmaps.dispclass.call(this) + "_Image";
+    dcls = `${JS9.Cmaps.dispclass.call(this)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: imid});
     opts.push({name: "active", value: sprintf(JS9.Cmaps.activeHTML, 
@@ -434,15 +433,15 @@ JS9.Cmaps.addImage = function(im){
     divjq = $("<div>")
 	.addClass(cls)
 	.addClass(dcls)
-	.addClass(JS9.Cmaps.BASE + "ImageInactive")
+	.addClass(`${JS9.Cmaps.BASE}ImageInactive`)
 	.prop("id", id)
 	.prop("imid", imid)
 	.html(s)
 	.appendTo(this.cmapsImageContainer);
-    divjq.on("mousedown touchstart", function(){
+    divjq.on("mousedown touchstart", () => {
 	if( dispid === im.display.id ){
 	    im.displayImage();
-	    JS9.Cmaps.activeImage.call(that, im);
+	    JS9.Cmaps.activeImage.call(this, im);
 	}
     });
     // make it the current one (if its display in this display)
@@ -453,10 +452,10 @@ JS9.Cmaps.addImage = function(im){
 
 // remove an image to the list of available images
 JS9.Cmaps.removeImage = function(im){
-    var id;
+    let id;
     if( im ){
 	id = JS9.Cmaps.imid.call(this, im);
-	$("#" + id).remove();
+	$(`#${id}`).remove();
 	return true;
     }
     return false;
@@ -464,11 +463,11 @@ JS9.Cmaps.removeImage = function(im){
 
 // plugin initialization
 JS9.Cmaps.init = function(width, height){
-    var that = this;
-    var i, dispid, html, el1, el2;
-    var elid1 = "." + JS9.Cmaps.COLORCLASS;
-    var elid2 = "." + JS9.Cmaps.CMAPCLASS;
-    var display = this.display;
+    const _this = this;
+    let i, dispid, html, el1, el2;
+    const elid1 = `.${JS9.Cmaps.COLORCLASS}`;
+    const elid2 = `.${JS9.Cmaps.CMAPCLASS}`;
+    const display = this.display;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -511,45 +510,45 @@ JS9.Cmaps.init = function(width, height){
 	display.cmaps.names = [];
 	display.cmaps.ims = [];
 	display.cmaps.orgb = {r: 0, g: 0, b: 0};
-	display.cmaps.that = that;
+	display.cmaps.that = this;
     }
     // clear main div
     this.divjq.html("");
     // add main container
     this.cmapsContainer = $("<div>")
-	.addClass(JS9.Cmaps.BASE + "Container")
-	.attr("id", this.id + "CMapsContainer")
+	.addClass(`${JS9.Cmaps.BASE}Container`)
+	.attr("id", `${this.id}CMapsContainer`)
 	.appendTo(this.divjq);
     // add header
     dispid = this.display.id;
     html = sprintf(JS9.Cmaps.headerHTML,
 		   dispid, dispid, dispid, dispid, dispid);
     this.cmapsHeader = $("<div>")
-	.addClass(JS9.Cmaps.BASE + "Header")
+	.addClass(`${JS9.Cmaps.BASE}Header`)
 	.attr("display", this.display.id)
-	.attr("id", this.display.id + "CMapsHeader")
+	.attr("id", `${this.display.id}CMapsHeader`)
 	.html(html)
 	.appendTo(this.cmapsContainer);
     // container to hold images
     this.cmapsImageContainer = $("<div>")
-	.addClass(JS9.Cmaps.BASE + "ImageContainer")
-	.attr("id", this.id + "CmapsImageContainer")
+	.addClass(`${JS9.Cmaps.BASE}ImageContainer`)
+	.attr("id", `${this.id}CmapsImageContainer`)
 	.appendTo(this.cmapsContainer);
     for(i=0; i<JS9.images.length; i++){
 	JS9.Cmaps.addImage.call(this, JS9.images[i]);
     }
     // the images within the image container will be sortable
     this.cmapsImageContainer.sortable({
-	start: function(event, ui) {
+	start(event, ui) {
 	    this.oidx = ui.item.index();
 	},
-	stop: function(event, ui) {
-	    var nidx = ui.item.index();
+	stop(event, ui) {
+	    const nidx = ui.item.index();
 	    // JS9 image list reflects the sort
 	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
 	    // redisplay in case something changed
-	    if( that.display.image ){
-		that.display.image.displayImage();
+	    if( _this.display.image ){
+		_this.display.image.displayImage();
 	    }
 	}
     });
@@ -557,14 +556,14 @@ JS9.Cmaps.init = function(width, height){
     el1 = this.cmapsContainer.find(elid1);
     el2 = this.cmapsContainer.find(elid2);
     // set up colormap select menu
-    el2.each(function(){
-	var i, cmap;
+    el2.each( () => {
+	let i, cmap;
 	for(i=0; i<JS9.colormaps.length; i++){
 	    cmap = JS9.colormaps[i].name;
 	    $(elid2).append($('<option>', {value: cmap, text: cmap}));
 	}
     });
-    // only do this once
+    // only do once
     if( !display.cmaps.inited ){
 	// set up event callbacks
 	if( !JS9.globalOpts.internalColorPicker ||
@@ -573,8 +572,8 @@ JS9.Cmaps.init = function(width, height){
 			  showInput: true,
 			  preferredFormat: "hex6"});
 	    // when the color is changed via the spectrum
-	    el1.on('move.spectrum', function(evt, tinycolor){
-		var cname = tinycolor.toHex();
+	    el1.on('move.spectrum', (evt, tinycolor) => {
+		const cname = tinycolor.toHex();
 		JS9.Cmaps.mkCmaps(display, cname,
 				  display.cmaps.nmap, display.cmaps.nslice,
 				  {mode: display.cmaps.mode,
@@ -582,8 +581,8 @@ JS9.Cmaps.init = function(width, height){
 		display.cmaps.lastCname = cname;
 	    });
 	    // when the color is changed via the text box
-	    el1.on("change", function(){
-		var cname = tinycolor($(this).val()).toHex();
+	    el1.on("change", (evt) => {
+		const cname = tinycolor($(evt.currentTarget).val()).toHex();
 		JS9.Cmaps.mkCmaps(display, cname,
 				  display.cmaps.nmap, display.cmaps.nslice,
 				  {mode: display.cmaps.mode,
@@ -591,9 +590,9 @@ JS9.Cmaps.init = function(width, height){
 		display.cmaps.lastCname = cname;
 	    });
 	}
-	el1.on("input", function(evt){
-	    var cname = evt.target.value;
-	    var pdisplay = $(evt.target).parent().attr("display");
+	el1.on("input", (evt) => {
+	    const cname = evt.target.value;
+	    const pdisplay = $(evt.target).parent().attr("display");
 	    if( pdisplay !== display.id ){
 		return;
 	    }
@@ -609,7 +608,7 @@ JS9.Cmaps.init = function(width, height){
 
 // callback when an image is loaded
 JS9.Cmaps.imageload = function(im){
-    var i, display, pinst;
+    let i, display, pinst;
     if( !this.display.cmaps ){
 	JS9.Cmaps.init.call(this);
     } else {
@@ -634,7 +633,7 @@ JS9.Cmaps.imagedisplay = function(im){
 
 // callback when image is displayed
 JS9.Cmaps.imageclose = function(im){
-    var i, display, pinst;
+    let i, display, pinst;
     JS9.Cmaps.removeImage.call(this, im);
     // remove image from other displays as well
     for(i=0; i<JS9.displays.length; i++){

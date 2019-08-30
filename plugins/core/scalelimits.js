@@ -76,7 +76,7 @@ JS9.ScaleLimits.hiHTML='High:&nbsp;&nbsp;<input type="text" class="JS9ScaleValue
 
 // change scale
 JS9.ScaleLimits.xsetscale = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	im.setScale(target.value);
     }
@@ -84,8 +84,8 @@ JS9.ScaleLimits.xsetscale = function(did, id, target){
 
 // change low clipping limit
 JS9.ScaleLimits.xsetlo = function(did, id, target){
-    var val;
-    var im = JS9.lookupImage(id, did);
+    let val;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	val = parseFloat(target.value);
 	im.setScale(val, im.params.scalemax);
@@ -94,8 +94,8 @@ JS9.ScaleLimits.xsetlo = function(did, id, target){
 
 // change high clipping limit
 JS9.ScaleLimits.xsethi = function(did, id, target){
-    var val;
-    var im = JS9.lookupImage(id, did);
+    let val;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	val = parseFloat(target.value);
 	im.setScale(im.params.scalemin, val);
@@ -104,7 +104,7 @@ JS9.ScaleLimits.xsethi = function(did, id, target){
 
 // other ways to determine limits
 JS9.ScaleLimits.xsetlims = function(did, id, target){
-    var im = JS9.lookupImage(id, did);
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	switch(target.value){
 	case "dataminmax":
@@ -129,8 +129,8 @@ JS9.ScaleLimits.log10 = function(v){
 
 // other ways to determine limits
 JS9.ScaleLimits.xaxes = function(did, id, target){
-    var plugin;
-    var im = JS9.lookupImage(id, did);
+    let plugin;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	// get current plugin instance
 	plugin = im.display.pluginInstances[JS9.ScaleLimits.BASE];
@@ -165,11 +165,11 @@ JS9.ScaleLimits.xaxes = function(did, id, target){
 };
 
 JS9.ScaleLimits.getPixelDist = function(im, ndist){
-    var i, idx;
-    var dist = [];
-    var dmin = im.raw.dmin;
-    var drange = im.raw.dmax - im.raw.dmin;
-    var imlen = im.raw.width * im.raw.height;
+    let i, idx;
+    const dist = [];
+    const dmin = im.raw.dmin;
+    const drange = im.raw.dmax - im.raw.dmin;
+    const imlen = im.raw.width * im.raw.height;
     for(i=0; i<ndist; i++){
         dist[i] = 0;
     }
@@ -184,23 +184,22 @@ JS9.ScaleLimits.getPixelDist = function(im, ndist){
 };
 
 JS9.ScaleLimits.to10E = function(i){
-    var superscripts = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
+    const superscripts = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
     if( JS9.ScaleLimits.AXISFANCY && i >= 0 && i <= 9 ){
-	return "10" + superscripts[i];
+	return `10${superscripts[i]}`;
     }
-    return "10E" + String(i);
+    return `10E${String(i)}`;
 };
 
 JS9.ScaleLimits.doplot = function(im){
-    var that = this;
-    var i, j, s, el, xmin, xmax;
-    var dist, distmin, distmax, ntick, tickinc;
-    var dmin = im.raw.dmin;
-    var drange = im.raw.dmax - im.raw.dmin;
-    var pobj =  $.extend(true, {}, JS9.ScaleLimits.dataOpts);
-    var popts = $.extend(true, {}, JS9.ScaleLimits.plotOpts);
-    var gettickinc = function(datarange){
-	var tickinc;
+    let i, j, s, el, xmin, xmax;
+    let dist, distmin, distmax, ntick, tickinc;
+    const dmin = im.raw.dmin;
+    const drange = im.raw.dmax - im.raw.dmin;
+    const pobj =  $.extend(true, {}, JS9.ScaleLimits.dataOpts);
+    const popts = $.extend(true, {}, JS9.ScaleLimits.plotOpts);
+    const gettickinc = (datarange) => {
+	let tickinc;
 	if( datarange < 10 ){
             tickinc = 1;
 	} else if( datarange < 50 ){
@@ -232,10 +231,10 @@ JS9.ScaleLimits.doplot = function(im){
 	}
 	return tickinc;
     };
-    var annotate = function(plot, x, color){
-	var ctx = plot.getCanvas().getContext("2d");
-	var size = JS9.ScaleLimits.CARET;
-	var o = plot.pointOffset({x: x, y: 0});
+    const annotate = (plot, x, color) => {
+	const ctx = plot.getCanvas().getContext("2d");
+	const size = JS9.ScaleLimits.CARET;
+	const o = plot.pointOffset({x: x, y: 0});
 	ctx.beginPath();
 	ctx.moveTo(o.left, o.top);
 	ctx.lineTo(o.left - size, o.top - (size*2));
@@ -315,56 +314,55 @@ JS9.ScaleLimits.doplot = function(im){
     }
     // select limits
     el.off("plotselected");
-    el.on("plotselected", function(event, ranges){
-	var start = ranges.xaxis.from;
-	var end   = ranges.xaxis.to;
-	if( that.xscale === "log" ){
+    el.on("plotselected", (event, ranges) => {
+	let start = ranges.xaxis.from;
+	let end   = ranges.xaxis.to;
+	if( this.xscale === "log" ){
 	    start = Math.pow(10, start);
 	    end = Math.pow(10, end);
 	}
-	start = start * drange / that.ndist + dmin;
-	end   = end   * drange / that.ndist + dmin;
+	start = start * drange / this.ndist + dmin;
+	end   = end   * drange / this.ndist + dmin;
 	im.setScale("user", start, end);
     });
     el.off("plothover");
-    el.on("plothover", function(event, pos) {
-	var ctx, text, s, x, y, w, h, xval;
-	var px = pos.x;
+    el.on("plothover", (event, pos) => {
+	let ctx, text, s, x, y, w, h, xval;
+	let px = pos.x;
 	// sanity checks
-	if( !that.plot || !that.plotComplete ){ 
+	if( !this.plot || !this.plotComplete ){ 
 	    return;
 	}
-	if( that.xscale === "log" ){
+	if( this.xscale === "log" ){
 	    px = Math.pow(10, px);
 	}
-	xval = px * drange / that.ndist + dmin;
-	if( !isFinite(xval) ){
+	xval = px * drange / this.ndist + dmin;
+	if( !Number.isFinite(xval) ){
 	    return;
 	}
 	s = JS9.floatToString(xval);
 	// display x value in upper right corner of plot
-	ctx = that.plot.getCanvas().getContext("2d");
+	ctx = this.plot.getCanvas().getContext("2d");
 	ctx.save();
 	ctx.textBaseline = 'top';
-	ctx.font = JS9.ScaleLimits.XTEXTHEIGHT + "px " +
-	    JS9.ScaleLimits.XTEXTFONT;
+	ctx.font = `${JS9.ScaleLimits.XTEXTHEIGHT  }px ${JS9.ScaleLimits.XTEXTFONT}`;
 	ctx.fillStyle = JS9.ScaleLimits.XTEXTCOLOR || "black";
 	text = ctx.measureText(s);
-	w = Math.max(that.lastTextWidth, text.width + 2);
+	w = Math.max(this.lastTextWidth, text.width + 2);
 	h = JS9.ScaleLimits.XTEXTHEIGHT + 2;
-	x = that.plotWidth  * JS9.ScaleLimits.XTEXTFRAC;
-	y = that.plotHeight * JS9.ScaleLimits.YTEXTFRAC;
+	x = this.plotWidth  * JS9.ScaleLimits.XTEXTFRAC;
+	y = this.plotHeight * JS9.ScaleLimits.YTEXTFRAC;
 	ctx.clearRect(x, y, w, h);
 	ctx.fillText(s, x, y); 
 	ctx.restore();
-	that.lastTextWidth = w;
+	this.lastTextWidth = w;
     });
-    this.timeout = window.setTimeout(function(){
-	that.plot = $.plot(el, [pobj], popts);
-	that.timeout = null;
-	annotate(that.plot, xmin, that.xlocolor);
-	annotate(that.plot, xmax, that.xhicolor);
-	that.plotComplete = true;
+    this.timeout = window.setTimeout( () => {
+	this.plot = $.plot(el, [pobj], popts);
+	this.timeout = null;
+	annotate(this.plot, xmin, this.xlocolor);
+	annotate(this.plot, xmax, this.xhicolor);
+	this.plotComplete = true;
     }, JS9.ScaleLimits.TIMEOUT);
 };
 
@@ -377,18 +375,18 @@ JS9.ScaleLimits.display = function(){
 
 // clear when an image closes
 JS9.ScaleLimits.close = function(){
-    // ensure that plugin display is reset
+    // ensure plugin display is reset
     JS9.ScaleLimits.init.call(this, {mode: "clear"});
 };
 
 // constructor: add HTML elements to the plugin
 JS9.ScaleLimits.init = function(opts){
-    var s, im, mopts, imid, dispid;
-    var getScales = function(){
-	var i;
-	var res = "<option selected disabled>Scales</option>";
+    let s, im, mopts, imid, dispid;
+    const getScales = () => {
+	let i;
+	let res = "<option selected disabled>Scales</option>";
 	for(i=0; i<JS9.scales.length; i++){
-	    res += "<option>" + JS9.scales[i] + "</option>";
+	    res += `<option>${JS9.scales[i]}</option>`;
 	}
 	return res;
     };
@@ -457,8 +455,8 @@ JS9.ScaleLimits.init = function(opts){
     this.lastTextWidth = 0;
     // set up new html
     this.scalelimsContainer = $("<div>")
-	.addClass(JS9.ScaleLimits.BASE + "Container")
-	.attr("id", this.id + "Container")
+	.addClass(`${JS9.ScaleLimits.BASE}Container`)
+	.attr("id", `${this.id}Container`)
         .attr("width", this.width)
         .attr("height", this.height)
 	.appendTo(this.divjq);

@@ -30,8 +30,8 @@ JS9.Separate.nofileHTML='<p><span id="NoFile">[Images will appear here as they a
 
 // change active state
 JS9.Separate.xactive = function(id){
-    var im = JS9.lookupImage(id);
-    var active = this.checked;
+    const im = JS9.lookupImage(id);
+    const active = this.checked;
     if( im ){
 	im.tmp.separateMode = active;
     }
@@ -39,8 +39,8 @@ JS9.Separate.xactive = function(id){
 
 // change active state
 JS9.Separate.xlayout = function(id){
-    var plugin;
-    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
+    let plugin;
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     if( !display ){ return; }
     plugin = display.pluginInstances.JS9Separate;
     if( plugin && this.selectedIndex >= 0 ){
@@ -50,9 +50,9 @@ JS9.Separate.xlayout = function(id){
 
 // separate images
 JS9.Separate.separate = function(id, which){
-    var i, im, plugin, arr;
-    var opts = {};
-    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
+    let i, im, plugin, arr;
+    const opts = {};
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     if( !display ){ return; }
     plugin = display.pluginInstances.JS9Separate;
     if( plugin && plugin.separateLayout ){
@@ -78,9 +78,9 @@ JS9.Separate.separate = function(id, which){
 
 // gather images
 JS9.Separate.gather = function(id, which){
-    var i, im, arr;
-    var opts = {};
-    var display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
+    let i, im, arr;
+    const opts = {};
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(id));
     if( !display ){ return; }
     switch(which){
     case "all":
@@ -103,36 +103,36 @@ JS9.Separate.gather = function(id, which){
 
 // get a SeparateImage id based on the file image id
 JS9.Separate.imid = function(im){
-    var id = im.display.id + "_" + im.id;
-    return id.replace(/[^A-Za-z0-9_]/g, "_") + "SeparateImage";
+    const id = `${im.display.id}_${im.id}`;
+    return `${id.replace(/[^A-Za-z0-9_]/g, "_")}SeparateImage`;
 };
 
 // get a class unique between displays
 JS9.Separate.dispclass = function(im){
-    var id = JS9.Separate.BASE + "_" + im.display.id;
+    const id = `${JS9.Separate.BASE}_${im.display.id}`;
     return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Separate.activeImage = function(im){
-    var id, dcls;
+    let id, dcls;
     if( im ){
 	id = JS9.Separate.imid(im);
-	dcls = JS9.Separate.dispclass(im) + "_Image";
-	$("." + dcls)
-	    .removeClass(JS9.Separate.BASE + "ImageActive")
-	    .addClass(JS9.Separate.BASE + "ImageInactive");
-	$("#" + id)
-	    .removeClass(JS9.Separate.BASE + "ImageInactive")
-	    .addClass(JS9.Separate.BASE + "ImageActive");
+	dcls = `${JS9.Separate.dispclass(im)}_Image`;
+	$(`.${dcls}`)
+	    .removeClass(`${JS9.Separate.BASE}ImageActive`)
+	    .addClass(`${JS9.Separate.BASE}ImageInactive`);
+	$(`#${id}`)
+	    .removeClass(`${JS9.Separate.BASE}ImageInactive`)
+	    .addClass(`${JS9.Separate.BASE}ImageActive`);
     }
 };
 
 // add an image to the list of available images
 JS9.Separate.addImage = function(im){
-    var s, id, divjq, dcls, imid;
-    var opts = [];
-    var cls = JS9.Separate.BASE + "Image";
+    let s, id, divjq, dcls, imid;
+    const opts = [];
+    const cls = `${JS9.Separate.BASE}Image`;
     if( !im ){
 	return;
     }
@@ -141,7 +141,7 @@ JS9.Separate.addImage = function(im){
     // unique id
     id = JS9.Separate.imid(im);
     // get class for this layer 
-    dcls = JS9.Separate.dispclass(im) + "_Image";
+    dcls = `${JS9.Separate.dispclass(im)}_Image`;
     // value to pass to the macro expander
     opts.push({name: "imid",   value: im.id});
     opts.push({name: "active", value: sprintf(JS9.Separate.activeHTML, 
@@ -162,9 +162,9 @@ JS9.Separate.addImage = function(im){
 	.prop("imid", imid)
 	.html(s)
 	.appendTo(this.separateImageContainer);
-    divjq.on("mousedown touchstart", function(){
+    divjq.on("mousedown touchstart", () => {
 	    im.displayImage();
-	    JS9.Separate.activeImage.call(this, im);
+	    JS9.Separate.activeImage(im);
     });
     // one more div in the stack
     this.separateDivs++;
@@ -177,10 +177,10 @@ JS9.Separate.addImage = function(im){
 
 // remove an image from the list of available images
 JS9.Separate.removeImage = function(im){
-    var id;
+    let id;
     if( im ){
 	id = JS9.Separate.imid(im);
-	$("#" + id).remove();
+	$(`#${id}`).remove();
 	this.separateDivs--;
 	if( this.separateDivs === 0 ){
 	    this.separateImageContainer.html(JS9.Separate.nofileHTML);
@@ -193,9 +193,9 @@ JS9.Separate.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Separate.init = function(){
-    var that = this;
-    var i, s, im, display, dispid;
-    var opts = [];
+    const _this = this;
+    let i, s, im, display, dispid;
+    const opts = [];
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -212,8 +212,8 @@ JS9.Separate.init = function(){
     this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.separateContainer = $("<div>")
-	.addClass(JS9.Separate.BASE + "Container")
-	.attr("id", this.id + "SeparateContainer")
+	.addClass(`${JS9.Separate.BASE}Container`)
+	.attr("id", `${this.id}SeparateContainer`)
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     dispid = this.display.id;
@@ -225,14 +225,14 @@ JS9.Separate.init = function(){
 					     opts);
     // header
     this.separateHeader = $("<div>")
-	.addClass(JS9.Separate.BASE + "Header")
-	.attr("id", dispid + "Header")
+	.addClass(`${JS9.Separate.BASE}Header`)
+	.attr("id", `${dispid}Header`)
 	.html(s)
 	.appendTo(this.separateContainer);
     // container to hold images
     this.separateImageContainer = $("<div>")
-	.addClass(JS9.Separate.BASE + "ImageContainer")
-	.attr("id", this.id + "SeparateImageContainer")
+	.addClass(`${JS9.Separate.BASE}ImageContainer`)
+	.attr("id", `${this.id}SeparateImageContainer`)
         .html(JS9.Separate.nofileHTML)
 	.appendTo(this.separateContainer);
     display = JS9.getDynamicDisplayOr(this.display);
@@ -245,16 +245,16 @@ JS9.Separate.init = function(){
     }
     // the images within the image container will be sortable
     this.separateImageContainer.sortable({
-	start: function(event, ui) {
+	start(event, ui) {
 	    this.oidx = ui.item.index();
 	},
-	stop: function(event, ui) {
-	    var nidx = ui.item.index();
+	stop(event, ui) {
+	    const nidx = ui.item.index();
 	    // JS9 image list reflects the sort
 	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
 	    // redisplay in case something changed
-	    if( that.display.image ){
-		that.display.image.displayImage();
+	    if( _this.display.image ){
+		_this.display.image.displayImage();
 	    }
 	}
     });
@@ -262,7 +262,7 @@ JS9.Separate.init = function(){
 
 // callback when an image is loaded
 JS9.Separate.imageload = function(im){
-    var display = JS9.getDynamicDisplayOr(this.display);
+    const display = JS9.getDynamicDisplayOr(this.display);
     if( im && im.display === display ){
 	JS9.Separate.addImage.call(this, im);
     }

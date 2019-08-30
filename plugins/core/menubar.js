@@ -64,8 +64,8 @@ if( JS9.menuButtonOptsArr ){
 
 // get displays associated with this menubar, taking supermenus into account
 JS9.Menubar.getDisplays = function(mode, key){
-    var i, d, s, disp;
-    var arr = [];
+    let i, d, s, disp;
+    const arr = [];
     mode = mode || "any";
     key = key || "";
     // handle super menu specially ... but only if its not a "super_" request
@@ -102,13 +102,13 @@ JS9.Menubar.getDisplays = function(mode, key){
 
 // this callback happens when a click is registered on a display
 // we then go through the supermenus, and if one of them contains this display,
-// we set its selectedDisplay value so that use of that supermenu is then aimed
+// we set its selectedDisplay value so use of the supermenu is then aimed
 // only at the selected display
 // also used to unset previously set selectedDisplay
 //
 // called by JS9.mouseupCB with no context, passing current image object
 JS9.Menubar.onclick = function(disp){
-    var i, arr, supermenu;
+    let i, arr, supermenu;
     if( (typeof disp === "string") && (disp !== "all") ){
 	disp = JS9.lookupDisplay(disp);
     }
@@ -145,12 +145,11 @@ JS9.Menubar.reset = function(im){
 
 // create the standard menus and user-defined menus
 // each consists of a contextMenu() call and a "mousedown" callback
-// to display that menu
+// to display the menu
 JS9.Menubar.createMenus = function(){
-    var that = this;
     // eslint-disable-next-line no-unused-vars
-    var mypos = function(opt,  x,  y)  {
-	var pos;
+    const mypos = (opt,  x,  y) => {
+	let pos;
 	if( !window.hasOwnProperty("Jupyter") ){
 	    opt.$menu.position({
 		my:  'left top',
@@ -164,17 +163,17 @@ JS9.Menubar.createMenus = function(){
 	    opt.$menu.css({"left": pos.left+20, "top": pos.top+10});
 	}
     };
-    var onhide = function() {
-	var tdisp = that.display;
+    const onhide = () => {
+	const tdisp = this.display;
 	if( JS9.bugs.hide_menu && tdisp.image ){
 	    tdisp.image.displayImage("rgb");
 	}
     };
-    var xname = function(name, xact){
-	var key, hstr;
-	var obj = {name: name};
-	var gkeyActions = JS9.globalOpts.keyboardActions;
-	var act = JS9.Menubar.keyMap[name];
+    const xname = (name, xact) => {
+	let key, hstr, tact;
+	let obj = {name: name};
+	const gkeyActions = JS9.globalOpts.keyboardActions;
+	const act = JS9.Menubar.keyMap[name];
 	if( !JS9.Menubar.rkeyMap ){
 	    JS9.Menubar.rkeyMap = {};
 	    for( key in gkeyActions ){
@@ -187,15 +186,15 @@ JS9.Menubar.createMenus = function(){
 	if( JS9.notNull(act) && JS9.Menubar.rkeyMap ){
 	    key = JS9.Menubar.rkeyMap[act];
 	    if( key ){
-		hstr = "<span>" + name + " <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;" + key + "</span></span>";
+		hstr = `<span>${name} <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;${key}</span></span>`;
 		obj = {name: hstr, isHtmlName: true};
 	    }
 	} else if( xact && JS9.Menubar.rkeyMap ){
-	    for( act in JS9.Menubar.rkeyMap ){
-		if( JS9.Menubar.rkeyMap.hasOwnProperty(act) && act === xact ){
-		    key = JS9.Menubar.rkeyMap[act];
+	    for( tact in JS9.Menubar.rkeyMap ){
+		if( JS9.Menubar.rkeyMap.hasOwnProperty(tact) && tact === xact ){
+		    key = JS9.Menubar.rkeyMap[tact];
 		    if( key ){
-			hstr = "<span>" + name + " <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;" + key + "</span></span>";
+			hstr = `<span>${name} <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;${key}</span></span>`;
 			obj = {name: hstr, isHtmlName: true};
 		    }
 		}
@@ -203,39 +202,39 @@ JS9.Menubar.createMenus = function(){
 	}
 	return obj;
     };
-    var xeqUserMenu = function(evt){
-	var menu = evt.data;
+    const xeqUserMenu = (evt) => {
+	const menu = evt.data;
 	evt.preventDefault();
-	$("#"+menu.name+"UserMenu" + that.id).contextMenu();
+	$(`#${menu.name}UserMenu${this.id}`).contextMenu();
     };
-    var addUserMenu = function(menu){
+    const addUserMenu = (menu) => {
 	if( !menu || !menu.name || !menu.title || !menu.options  ){
 	    return;
 	}
 	// define contextMenu actions
 	$.contextMenu({
-            selector: "#" + menu.name +"UserMenu" + that.id,
+            selector: `#${menu.name }UserMenu${this.id}`,
 	    zIndex: JS9.MENUZINDEX,
 	    events: { hide: onhide },
 	    position: mypos,
-            build: function(){
-		var i, opt, hstr, obj;
-		var items = {};
+            build: () => {
+		let i, opt, hstr, obj;
+		const items = {};
 		for(i=0; i<menu.options.length; i++){
 		    opt = menu.options[i];
 		    obj = xname(opt.name, opt.shortcut);
 		    if( opt.image ){
-			hstr = "<div class='JS9MenubarUserImage'><img src='" + opt.image + "' alt='" + opt.name + "' class='JS9MenubarUserImage' >" + "&nbsp;&nbsp;" + obj.name + "</div>";
+			hstr = `<div class='JS9MenubarUserImage'><img src='${opt.image}' alt='${opt.name}' class='JS9MenubarUserImage' >` + `&nbsp;&nbsp;${obj.name}</div>`;
 			items[opt.name] = {name: hstr, isHtmlName: true};
 		    } else {
 			items[opt.name] = obj;
 		    }
 		}
-		return{
-		    callback: function(key, kopt){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var i, args, hstr;
-			var udisp = val;
+		return {
+		    callback: (key, kopt) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			let i, args, hstr;
+			const udisp = val;
 			for(i=0; i<menu.options.length; i++){
 			    opt = menu.options[i];
 			    if( key !== opt.name ){
@@ -252,9 +251,9 @@ JS9.Menubar.createMenus = function(){
 				    opt.updateTitle !== false     &&
 				    menu.updateTitle.match(/(both|image)/) ){
 				    if( menu.updateTitle === "both" ){
-					hstr = "<div style='white-space:nowrap;'><img src='" + opt.image + "' alt='" + opt.name + "' class='JS9MenubarUserImage' >" + "&nbsp;&nbsp;" + opt.name + "</div>";
+					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' alt='${opt.name}' class='JS9MenubarUserImage' >` + `&nbsp;&nbsp;${opt.name}</div>`;
 				    } else if( menu.updateTitle === "image" ){
-					hstr = "<div style='white-space:nowrap;'><img src='" + opt.image + "' alt='" + opt.name + "' class='JS9MenubarUserImage' ></div>";
+					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' alt='${opt.name}' class='JS9MenubarUserImage' ></div>`;
 				    }
 				    $(kopt.selector).html(hstr);
 				} else if( menu.updateTitle && opt.name ){
@@ -262,7 +261,7 @@ JS9.Menubar.createMenus = function(){
 				}
 				}
 			    } else {
-				JS9.error("unknown function for user menubar: " + menu.cmd);
+				JS9.error(`unknown func for user menubar: ${menu.cmd}`);
 			    }
 			}
 		    });
@@ -272,37 +271,37 @@ JS9.Menubar.createMenus = function(){
 	    }
 	});
     };
-    var addUserMenus = function(){
-	var i, menu;
+    const addUserMenus = () => {
+	let i, menu;
 	if( JS9.globalOpts.userMenuBar ){
 	    for(i=0; i<JS9.globalOpts.userMenuBar.length; i++){
 		menu = JS9.globalOpts.userMenuBar[i];
 		if( !menu || !menu.name || !menu.title  ){
 		    continue;
 		}
-		$("#"+menu.name+"UserMenu" + that.id).on("mousedown",
+		$(`#${menu.name}UserMenu${this.id}`).on("mousedown",
 							 menu, xeqUserMenu);
 		addUserMenu(menu);
 	    }
 	}
     };
     // file: make button open the contextMenu
-    $("#fileMenu" + that.id).on("mousedown", function(evt){
+    $(`#fileMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#fileMenu" + that.id).contextMenu();
+        $(`#fileMenu${this.id}`).contextMenu();
     });
     $.contextMenu({
-        selector: "#fileMenu" + that.id,
+        selector: `#fileMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, m, im, name, s1, arr, cdisp, got, iobj;
-	    var n = 0;
-	    var items = {};
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var tim = tdisp.image;
-	    var imlen = JS9.images.length;
+        build: () => {
+	    let i, m, im, name, s1, arr, cdisp, got, iobj;
+	    let n = 0;
+	    const items = {};
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const tim = tdisp.image;
+	    const imlen = JS9.images.length;
 	    // the number of images in this display ...
 	    for(i=0, got=0; i<imlen; i++){
 		im = JS9.images[i];
@@ -360,7 +359,7 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    // add the rest of the menu
 	    if( got && got < JS9.globalOpts.imagesFileSubmenu ){
-		items["sep" + n++] = "------";
+		items[`sep${n++}`] = "------";
 		items.filetitle = {
 		    name: "Files and Displays:",
 		    disabled: true
@@ -429,9 +428,9 @@ JS9.Menubar.createMenus = function(){
 	    if( tim ){
 		items.moveto.disabled = false;
 		for(i=0; i<JS9.displays.length; i++){
-		    if( $("#"+JS9.displays[i].id).length > 0 &&
+		    if( $(`#${JS9.displays[i].id}`).length > 0 &&
 			tdisp !== JS9.displays[i]    	     ){
-			s1 = "moveto_" + JS9.displays[i].id;
+			s1 = `moveto_${JS9.displays[i].id}`;
 			items.moveto.items[s1] = xname(JS9.displays[i].id);
 		    }
 		}
@@ -485,7 +484,7 @@ JS9.Menubar.createMenus = function(){
 		// sync target images to this image
 		items.syncs.items.sync.disabled = false;
 		items.syncs.items.sync.items.sync_opstitle = {
-		    name: "op(s) that trigger syncing:",
+		    name: "op(s) which trigger syncing:",
 		    disabled: true
 		};
 		items.syncs.items.sync.items.syncops = {
@@ -497,12 +496,12 @@ JS9.Menubar.createMenus = function(){
 		    selected: JS9.globalOpts.syncReciprocate,
 		    type: "checkbox"
 		};
-		items.syncs.items.sync.items["sep" + n++] = "------";
+		items.syncs.items.sync.items[`sep${n++}`] = "------";
 		items.syncs.items.sync.items.title = {name: "image(s) to keep in sync:",
 					  disabled: true};
 		for(i=0; i<JS9.images.length; i++){
 		    if( tim !== JS9.images[i]    	     ){
-			s1 = "sync_" + JS9.images[i].id;
+			s1 = `sync_${JS9.images[i].id}`;
 			items.syncs.items.sync.items[s1] = xname(JS9.images[i].id);
 		    }
 		}
@@ -522,12 +521,12 @@ JS9.Menubar.createMenus = function(){
 		    selected: JS9.globalOpts.syncReciprocate,
 		    type: "checkbox"
 		};
-		items.syncs.items.unsync.items["sep" + n++] = "------";
+		items.syncs.items.unsync.items[`sep${n++}`] = "------";
 		items.syncs.items.unsync.items.title = {name: "image(s) to unsync:",
 					    disabled: true};
 		for(i=0; i<JS9.images.length; i++){
 		    if( tim !== JS9.images[i]    	     ){
-			s1 = "unsync_" + JS9.images[i].id;
+			s1 = `unsync_${JS9.images[i].id}`;
 			items.syncs.items.unsync.items[s1] = xname(JS9.images[i].id);
 		    }
 		}
@@ -621,8 +620,8 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    // super menu
-	    if( that.issuper ){
-		arr = JS9.Menubar.getDisplays.call(that, "all");
+	    if( this.issuper ){
+		arr = JS9.Menubar.getDisplays.call(this, "all");
 		items.supermenu = {
 		    name: "supermenu ...",
 		    items: {
@@ -635,9 +634,9 @@ JS9.Menubar.createMenus = function(){
 		for(i=0, m=0; i<arr.length; i++){
 		    cdisp = arr[i];
 		    name = cdisp.id;
-		    items.supermenu.items["super_"+name] = xname(name);
-		    if( that.selectedDisplay === cdisp ){
-			items.supermenu.items["super_"+name].icon = "sun";
+		    items.supermenu.items[`super_${name}`] = xname(name);
+		    if( this.selectedDisplay === cdisp ){
+			items.supermenu.items[`super_${name}`].icon = "sun";
 			m++;
 		    }
 		}
@@ -647,7 +646,7 @@ JS9.Menubar.createMenus = function(){
 		    items.supermenu.items.super_all.icon = "sun";
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.print = xname("print ...");
 	    if( !tim ){
 		items.print.disabled = true;
@@ -657,12 +656,12 @@ JS9.Menubar.createMenus = function(){
 		items.windowPDF = xname("save window to pdf");
 	    }
 	    return {
-                callback: function(key, opt){
-		    JS9.Menubar.getDisplays.call(that, "any", key)
-			.forEach(function(val){
-			var j, s, t, did, kid, unew, uwin, uobj, uarr, uopts;
-			var udisp = val;
-			var uim = udisp.image;
+                callback: (key, opt) => {
+		    JS9.Menubar.getDisplays.call(this, "any", key)
+			.forEach((val) => {
+			let j, s, t, did, kid, unew, uwin, uobj, uarr, uopts;
+			const udisp = val;
+			let uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -746,9 +745,9 @@ JS9.Menubar.createMenus = function(){
 				if( uim.raw.header ){
 				    uim.displayAnalysis("text",
 					JS9.raw2FITS(uim.raw, {addcr: true}),
-					{title: "FITS Header: "+uim.id});
+					{title: `FITS Header: ${uim.id}`});
 				} else {
-				    JS9.error("no FITS header for " + uim.id);
+				    JS9.error(`no FITS header for ${uim.id}`);
 				}
 			    }
 			    break;
@@ -757,10 +756,10 @@ JS9.Menubar.createMenus = function(){
 				if( uim.hdus ){
 				    uim.displayAnalysis("text",
 						   JS9.hdus2Str(uim.hdus),
-						   {title: "FITS HDUs: "+uim.id,
+						   {title: `FITS HDUs: ${uim.id}`,
 						    winformat: "width=800px,height=200px,center=1,resize=1,scrolling=1"});
 				} else {
-				    JS9.error("no FITS header for " + uim.id);
+				    JS9.error(`no FITS header for ${uim.id}`);
 				}
 			    }
 			    break;
@@ -775,16 +774,16 @@ JS9.Menubar.createMenus = function(){
 			    if( window.isElectron && window.electronIPC ){
 				try{ window.electronIPC.send("msg",
 							     "startHelper"); }
-				catch(ignore){}
+				catch(e){ /* empty */ }
 			    }
 			    break;
 			case "pageid":
-			    s = sprintf("<center><p>pageid: %s</center>",
-					JS9.helper.pageid || "none");
+			    s = `<center><p>pageid: ${JS9.helper.pageid||"none"}</center>`;
+					
 			    t = "JS9 page id";
 			    // add display to title
 			    t += sprintf(JS9.IDFMT, udisp.id);
-			    JS9.lightWin("fileid" + JS9.uniqueID(),
+			    JS9.lightWin(`fileid${JS9.uniqueID()}`,
 					 "inline", s, t,
 					 JS9.lightOpts[JS9.LIGHTWIN].lineWin);
 			    break;
@@ -866,8 +865,8 @@ JS9.Menubar.createMenus = function(){
 			    break;
 			case "gather":
 			    if( udisp ){
-				if( (that.id.search(JS9.SUPERMENU) >= 0) &&
-				    !that.selectedDisplay 		 ){
+				if( (this.id.search(JS9.SUPERMENU) >= 0) &&
+				    !this.selectedDisplay 		 ){
 				    JS9.error("gather requires a selected display");
 				}
 				udisp.gather();
@@ -877,16 +876,16 @@ JS9.Menubar.createMenus = function(){
 			    // maybe its a supermenu request
 			    if( key.match(/^super_/) ){
 				unew = key.replace(/^super_/,"");
-				JS9.Menubar.onclick.call(that, unew);
+				JS9.Menubar.onclick.call(this, unew);
 				return;
 			    }
 			    // maybe it's a moveto request
 			    if( key.match(/^moveto_/) ){
 				unew = key.replace(/^moveto_/,"");
 				if( unew === "newdisp" ){
-				    uwin = "JS9_light" + JS9.uniqueID();
-			            $("#dhtmlwindowholder").arrive("#" + uwin,
-                                    {onceOnly: true}, function(){
+				    uwin = `JS9_light${JS9.uniqueID()}`;
+			            $("#dhtmlwindowholder").arrive(`#${uwin}`,
+                                    {onceOnly: true}, () => {
 					uim.moveToDisplay(uwin);
 				    });
 				    JS9.LoadWindow(null,
@@ -950,19 +949,19 @@ JS9.Menubar.createMenus = function(){
             }
 	});
 	// Edit: make button open the contextMenu
-	$("#editMenu" + that.id).on("mousedown", function(evt){
+	$(`#editMenu${this.id}`).on("mousedown", (evt) => {
             evt.preventDefault();
-            $("#editMenu" + that.id).contextMenu();
+            $(`#editMenu${this.id}`).contextMenu();
 	});
     // define contextMenu actions
     $.contextMenu({
-        selector: "#editMenu" + that.id,
+        selector: `#editMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var n=0;
-	    var items = {};
+        build: () => {
+	    let n=0;
+	    const items = {};
 	    // plugins
 	    items.edittitle1 = {
 		name: "Regions:",
@@ -974,7 +973,7 @@ JS9.Menubar.createMenus = function(){
 	    items.pasteReg = xname("paste to region pos");
 	    items.pastePos = xname("paste to current pos");
 	    items.undoRemove = xname("undo remove");
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.edittitle2 = {
 		name: "Position/Value:",
 		disabled: true
@@ -982,11 +981,11 @@ JS9.Menubar.createMenus = function(){
 	    items.copyWCSPos = xname("copy wcs pos");
 	    items.copyValPos = xname("copy value/pos");
 	    return {
-		callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		        var s, ulayer, utarget;
-			var udisp = val;
-			var uim = udisp.image;
+		callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		        let s, ulayer, utarget;
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -1050,34 +1049,34 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // viewMac: make button open the contextMenu
-    $("#viewMacMenu" + that.id).on("mousedown", function(evt){
+    $(`#viewMacMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#viewMacMenu" + that.id).contextMenu();
+        $(`#viewMacMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#viewMacMenu" + that.id,
+        selector: `#viewMacMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, menu;
-	    var items = {};
+        build: () => {
+	    let i, menu;
+	    const items = {};
 	    items.edittitle1 = {
 		name: "View:",
 		disabled: true
 	    };
-	    for(i=0; i<that.macmenus.length; i++){
-		menu = that.macmenus[i];
+	    for(i=0; i<this.macmenus.length; i++){
+		menu = this.macmenus[i];
 		items[menu.name] = {
-		    name: menu.title + " ..."
+		    name: `${menu.title  } ...`
 		};
 	    }
-	    return{
-		callback: function(key){
+	    return {
+		callback: (key) => {
 		    switch(key){
 		    default:
-			$("#" + key + "Menu" + that.id).contextMenu();
+			$(`#${key}Menu${this.id}`).contextMenu();
 			break;
 		    }
 		},
@@ -1087,28 +1086,28 @@ JS9.Menubar.createMenus = function(){
     });
     
     // View: make button open the contextMenu
-    $("#viewMenu" + that.id).on("mousedown", function(evt){
+    $(`#viewMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#viewMenu" + that.id).contextMenu();
+        $(`#viewMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#viewMenu" + that.id,
+        selector: `#viewMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, plugin, pname, pinst, key;
-	    var lastxclass="";
-	    var n = 0;
-	    var items = {};
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var tim = tdisp.image;
-	    var editResize = function(disp, obj){
-		var v1, v2, arr;
+        build: () => {
+	    let i, plugin, pname, pinst, key;
+	    let lastxclass="";
+	    let n = 0;
+	    const items = {};
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const tim = tdisp.image;
+	    const editResize = (disp, obj) => {
+		let v1, v2, arr;
 		delete tdisp.tmp.editingMenu;
 		if( obj.resize ){
-		    arr = obj.resize.split(/[\s,\/]+/);
+		    arr = obj.resize.split(/[\s,/]+/);
 		    switch(arr.length){
 		    case 0:
 			break;
@@ -1136,11 +1135,11 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    };
-	    var keyResize = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
+	    const keyResize = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -1157,8 +1156,8 @@ JS9.Menubar.createMenus = function(){
 		});
 	    };
 	    // plugins
-	    items["sep" + n++] = {name: "Plugins:"};
-	    items["sep" + (n-1)].disabled = true;
+	    items[`sep${n++}`] = {name: "Plugins:"};
+	    items[`sep${n-1}`].disabled = true;
 	    for(i=0; i<JS9.plugins.length; i++){
 		plugin = JS9.plugins[i];
 		pname = plugin.name;
@@ -1177,7 +1176,7 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.vdispstitle = {
 		name: "Display Options:",
 		disabled: true
@@ -1242,7 +1241,7 @@ JS9.Menubar.createMenus = function(){
 		    name: "current raw data:"
 		};
 		for(i=0; i<tim.raws.length; i++){
-		    key = "rawlayer_" + tim.raws[i].id;
+		    key = `rawlayer_${tim.raws[i].id}`;
 		    items.vdisps.items.rawlayer.items[key] = {
 			name: tim.raws[i].id
 		    };
@@ -1250,7 +1249,7 @@ JS9.Menubar.createMenus = function(){
 			items.vdisps.items.rawlayer.items[key].icon = "sun";
 		    }
 		}
-		items.vdisps.items.rawlayer.items["sep" + n++] = "------";
+		items.vdisps.items.rawlayer.items[`sep${n++}`] = "------";
 		items.vdisps.items.rawlayer.items.rawlayer_remove = xname("remove");
 	    } else {
 		items.vdisps.items.rawlayer.disabled = true;
@@ -1281,11 +1280,11 @@ JS9.Menubar.createMenus = function(){
 		items.resizes.items.imagesize.disabled = true;
 	    }
 	    return {
-		callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		        var ii, uplugin, s;
-			var udisp = val;
-			var uim = udisp.image;
+		callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		        let ii, uplugin, s;
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -1367,9 +1366,9 @@ JS9.Menubar.createMenus = function(){
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var udisp = that.display;
-			var obj = {};
+		    show: (opt) => {
+			const udisp = this.display;
+			const obj = {};
 			if( udisp  ){
 			    obj.resize = sprintf("%d %d",
 						 udisp.width, udisp.height);
@@ -1377,9 +1376,9 @@ JS9.Menubar.createMenus = function(){
 			    JS9.jupyterFocus(".context-menu-item");
 			}
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
 			if( udisp ){
 			    // if a key was pressed, do the edit
 			    if( udisp.tmp.editingMenu ){
@@ -1394,33 +1393,33 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // Zoom: make button open the contextMenu
-    $("#zoomMenu" + that.id).on("mousedown", function(evt){
+    $(`#zoomMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#zoomMenu" + that.id).contextMenu();
+        $(`#zoomMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#zoomMenu" + that.id,
+        selector: `#zoomMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, zoom, zoomp, name, name2, nim, s1;
-	    var n = 0;
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var tim = tdisp.image;
-	    var editZoom = function(im, obj){
+        build: () => {
+	    let i, zoom, zoomp, name, name2, nim, s1;
+	    let n = 0;
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const tim = tdisp.image;
+	    const editZoom = (im, obj) => {
 		delete tdisp.tmp.editingMenu;
-		if( !isNaN(obj.zoom) ){
+		if( !Number.isNaN(obj.zoom) ){
 		    im.setZoom(obj.zoom);
 		}
 	    };
-	    var keyZoom = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
-		    var vim = vdisp.image;
+	    const keyZoom = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -1438,7 +1437,7 @@ JS9.Menubar.createMenus = function(){
 		    }
 		});
 	    };
-	    var items = {};
+	    const items = {};
 	    items.zoomtitle = {
 		name: "Zoom Factors:",
 		disabled: true
@@ -1446,8 +1445,8 @@ JS9.Menubar.createMenus = function(){
 	    for(i=JS9.imageOpts.zooms; i>=1; i--){
 		zoom = Math.pow(2,-i);
 		zoomp = Math.pow(2,i);
-		name = sprintf("zoom%s", zoom);
-		name2 = sprintf("zoom 1/%s", zoomp);
+		name = `zoom${zoom}`;
+		name2 = `zoom 1/${zoomp}`;
 		items[name] = xname(name2);
 		if( tim && (tim.rgb.sect.zoom === zoom) ){
 		    items[name].icon = "sun";
@@ -1455,8 +1454,8 @@ JS9.Menubar.createMenus = function(){
 	    }
 	    for(i=0; i<=JS9.imageOpts.zooms; i++){
 		zoom = Math.pow(2,i);
-		name = sprintf("zoom%s", zoom);
-		name2 = sprintf("zoom %s", zoom);
+		name = `zoom${zoom}`;
+		name2 = `zoom ${zoom}`;
 		items[name] = xname(name2);
 		if( tim && (tim.rgb.sect.zoom === zoom) ){
 		    items[name].icon = "sun";
@@ -1467,7 +1466,7 @@ JS9.Menubar.createMenus = function(){
 		name: "other zoom:",
 		type: "text"
 	    };
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.zoomiotitle = {
 		name: "Zoom In/Out:",
 		disabled: true
@@ -1475,7 +1474,7 @@ JS9.Menubar.createMenus = function(){
 	    items.zoomIn = xname("zoom in");
 	    items.zoomOut = xname("zoom out");
 	    items.zoomToFit = xname("zoom to fit");
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.panzoomtitle = {
 		name: "Pand and Zoom:",
 		disabled: true
@@ -1493,10 +1492,10 @@ JS9.Menubar.createMenus = function(){
 	    for(i=0, nim=0; i<JS9.images.length; i++){
 		if( JS9.images[i].raw.wcs ){
 		    if( (tim === JS9.images[i]) &&
-			(that.id.search(JS9.SUPERMENU) < 0) ){
+			(this.id.search(JS9.SUPERMENU) < 0) ){
 			continue;
 		    }
-		    s1 = "alignpanzoom_" + JS9.images[i].id;
+		    s1 = `alignpanzoom_${JS9.images[i].id}`;
 		    items.alignpanzoom.items[s1] = {
 			name: JS9.images[i].id
 		    };
@@ -1507,17 +1506,17 @@ JS9.Menubar.createMenus = function(){
 		items.alignpanzoom.items.notasks = {
 		    name: "[none]",
 		    disabled: true,
-		    events: {keyup: function(){return;}}
+		    events: {keyup() {return;}}
 		};
 	    } else {
 		items.alignpanzoom.disabled = false;
 	    }
 	    items.reset = xname("reset pan/zoom");
 	    return {
-		callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var udisp = val;
-			var uim = udisp.image;
+		callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -1553,10 +1552,10 @@ JS9.Menubar.createMenus = function(){
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var udisp = that.display;
-			var uim = udisp.image;
-			var obj = {};
+		    show: (opt) => {
+			const udisp = this.display;
+			const uim = udisp.image;
+			const obj = {};
 			if( uim  ){
 			    obj.zoom =
 				String(uim.rgb.sect.zoom);
@@ -1564,10 +1563,10 @@ JS9.Menubar.createMenus = function(){
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
-			var uim = udisp.image;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
+			const uim = udisp.image;
 			if( uim ){
 			    // if a key was pressed, do the edit
 			    if( udisp.tmp.editingMenu ){
@@ -1582,26 +1581,26 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // Scale: make button open the contextMenu
-    $("#scaleMenu" + that.id).on("mousedown", function(evt){
+    $(`#scaleMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#scaleMenu" + that.id).contextMenu();
+        $(`#scaleMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#scaleMenu" + that.id,
+        selector: `#scaleMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, s1, s2;
-	    var plugin, pname, pinst;
-	    var lastxclass="";
-	    var n = 0;
-	    var items = {};
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var editScale = function(im, obj){
-		var dval1 = im.params.scalemin;
-		var dval2 = im.params.scalemax;
+        build: () => {
+	    let i, s1, s2;
+	    let plugin, pname, pinst;
+	    let lastxclass="";
+	    let n = 0;
+	    const items = {};
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const editScale = (im, obj) => {
+		let dval1 = im.params.scalemin;
+		let dval2 = im.params.scalemax;
 		delete tdisp.tmp.editingMenu;
 		if( JS9.isNumber(obj.scalemin) ){
 		    dval1 = parseFloat(obj.scalemin);
@@ -1612,12 +1611,12 @@ JS9.Menubar.createMenus = function(){
 		im.setScale(dval1, dval2);
 		im.displayImage("colors");
 	    };
-	    var keyScale = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
-		    var vim = vdisp.image;
+	    const keyScale = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -1645,7 +1644,7 @@ JS9.Menubar.createMenus = function(){
 		    items[s1].icon = "sun";
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.scalelims = {
 		name: "Data Limits:",
 		disabled: true
@@ -1660,7 +1659,7 @@ JS9.Menubar.createMenus = function(){
 		name: "high:",
 		type: "text"
 	    };
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    // plugins
 	    for(i=0; i<JS9.plugins.length; i++){
 		plugin = JS9.plugins[i];
@@ -1681,11 +1680,11 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    return {
-                callback: function(key){
-		    var ii, uplugin;
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var udisp = val;
-			var uim = udisp.image;
+                callback: (key) => {
+		    let ii, uplugin;
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -1708,10 +1707,10 @@ JS9.Menubar.createMenus = function(){
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var udisp = that.display;
-			var uim = udisp.image;
-			var obj = {};
+		    show: (opt) => {
+			const udisp = this.display;
+			const uim = udisp.image;
+			const obj = {};
 			if( uim  ){
 			    obj.scalemin =
 				JS9.floatToString(uim.params.scalemin);
@@ -1721,10 +1720,10 @@ JS9.Menubar.createMenus = function(){
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
-			var uim = udisp.image;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
+			const uim = udisp.image;
 			if( uim ){
 			    // if a key was pressed, do the edit
 			    if( udisp.tmp.editingMenu ){
@@ -1739,30 +1738,30 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // Color: make button open the contextMenu
-    $("#colorMenu" + that.id).on("mousedown", function(evt){
+    $(`#colorMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#colorMenu" + that.id).contextMenu();
+        $(`#colorMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#colorMenu" + that.id,
+        selector: `#colorMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, s1, s2, arr;
-	    var n = 0;
-	    var items = {};
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var editColor = function(im, obj){
+        build: () => {
+	    let i, s1, s2, arr;
+	    let n = 0;
+	    const items = {};
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const editColor = (im, obj) => {
 		delete tdisp.tmp.editingMenu;
-		if( obj.contrast && !isNaN(obj.contrast) ){
+		if( obj.contrast && !Number.isNaN(obj.contrast) ){
 		    im.params.contrast = parseFloat(obj.contrast);
 		}
-		if( obj.bias && !isNaN(obj.bias) ){
+		if( obj.bias && !Number.isNaN(obj.bias) ){
 		    im.params.bias = parseFloat(obj.bias);
 		}
-		if( !isNaN(obj.opacity) ){
+		if( !Number.isNaN(obj.opacity) ){
 		    if( obj.opacity !== "" ){
 			im.params.opacity = parseFloat(obj.opacity);
 		    } else {
@@ -1771,12 +1770,12 @@ JS9.Menubar.createMenus = function(){
 		}
 		im.displayImage("colors");
 	    };
-	    var keyColor = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
-		    var vim = vdisp.image;
+	    const keyColor = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -1815,7 +1814,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	    for(i=0; i<JS9.colormaps.length; i++){
 		s1 = JS9.colormaps[i].name;
-		if( JS9.globalOpts.topColormaps.indexOf(s1) === -1 ){
+		if( !JS9.globalOpts.topColormaps.includes(s1) ){
 		    s2 = s1;
 		    items.morecmaps.items[s1] = xname(s2);
 		    if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
@@ -1823,7 +1822,7 @@ JS9.Menubar.createMenus = function(){
 		    }
                 }
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.imfilter = {
 		name: "image filters",
 		items: {
@@ -1839,12 +1838,12 @@ JS9.Menubar.createMenus = function(){
 		if( arr[i] === "convolve" ){
 		    continue;
 		}
-		s1 = "imfilter_" + arr[i];
+		s1 = `imfilter_${arr[i]}`;
 		items.imfilter.items[s1] = {
 		    name: arr[i]
 		};
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.contrast = {
 		events: {keyup: keyColor},
 		name: "contrast:",
@@ -1861,10 +1860,10 @@ JS9.Menubar.createMenus = function(){
 		type: "text"
 	    };
 	    items.reset = xname("reset contrast/bias");
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.loadcmap = xname("load ...");
 	    items.savecmap = xname("save");
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.invert = xname("invert");
 	    if( tdisp.image && tdisp.image.params.invert ){
 		items.invert.icon = "sun";
@@ -1874,10 +1873,10 @@ JS9.Menubar.createMenus = function(){
 		items.rgb.icon = "sun";
 	    }
 	    return {
-		callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var udisp = val;
-			var uim = udisp.image;
+		callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -1902,10 +1901,10 @@ JS9.Menubar.createMenus = function(){
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var udisp = that.display;
-			var uim = udisp.image;
-			var obj = {};
+		    show: (opt) => {
+			const udisp = this.display;
+			const uim = udisp.image;
+			const obj = {};
 			if( uim  ){
 			    obj.contrast = String(uim.params.contrast);
 			    obj.bias = String(uim.params.bias);
@@ -1915,10 +1914,10 @@ JS9.Menubar.createMenus = function(){
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
-			var uim = udisp.image;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
+			const uim = udisp.image;
 			if( uim ){
 			    // if a key was pressed, do the edit
 			    if( udisp.tmp.editingMenu ){
@@ -1933,22 +1932,22 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // Region: make button open the contextMenu
-    $("#regionMenu" + that.id).on("mousedown", function(evt){
+    $(`#regionMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#regionMenu" + that.id).contextMenu();
+        $(`#regionMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#regionMenu" + that.id,
+        selector: `#regionMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, s1;
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var tim = tdisp.image;
-	    var items = {};
-	    var getregval = function(key, val){
+        build: () => {
+	    let i, s1;
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const tim = tdisp.image;
+	    const items = {};
+	    const getregval = (key, val) => {
 		switch(key){
 		case "color":
 		    // lookup color
@@ -1984,14 +1983,14 @@ JS9.Menubar.createMenus = function(){
 		}
 		return val;
 	    };
-	    var editRegions = function(im, obj, which){
-		var key, val;
-		var opts = {};
+	    const editRegions = (im, obj, which) => {
+		let key, val;
+		const opts = {};
 		if( which ){
 		    key = which.substring(3);
 		    val = obj[which];
-		    if( key && val && im.tmp["editingReg" + which] ){
-			delete im.tmp["editingReg" + which];
+		    if( key && val && im.tmp[`editingReg${which}`] ){
+			delete im.tmp[`editingReg${which}`];
 			val = getregval(key, val);
 			if( val ){
 			    opts[key] = val;
@@ -2003,8 +2002,8 @@ JS9.Menubar.createMenus = function(){
 			if( obj.hasOwnProperty(which) ){
 			    key = which.substring(3);
 			    val = obj[which];
-			    if( key && val && im.tmp["editingReg" + which] ){
-				delete im.tmp["editingReg" + which];
+			    if( key && val && im.tmp[`editingReg${which}`] ){
+				delete im.tmp[`editingReg${which}`];
 				val = getregval(key, val);
 				if( val ){
 				    opts[key] = val;
@@ -2017,13 +2016,13 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    };
-	    var keyRegions = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var id;
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
-		    var vim = vdisp.image;
+	    const keyRegions = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    let id;
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -2040,7 +2039,7 @@ JS9.Menubar.createMenus = function(){
 			break;
 		    default:
 			if( vim && id ){
-			    vim.tmp["editingReg"+id] = true;
+			    vim.tmp[`editingReg${id}`] = true;
 			}
 			break;
 		    }
@@ -2149,9 +2148,9 @@ JS9.Menubar.createMenus = function(){
 	    if( tim && (JS9.images.length > 1) ){
 		for(i=0; i<JS9.images.length; i++){
 		    if( tim !== JS9.images[i] ){
-			s1 = "copyto_" + JS9.images[i].id;
+			s1 = `copyto_${JS9.images[i].id}`;
 			items.copyto.items[s1] = xname(JS9.images[i].id);
-			s1 = "copyselto_" + JS9.images[i].id;
+			s1 = `copyselto_${JS9.images[i].id}`;
 			items.selectops.items.copySelReg.items[s1] =
 			    xname(JS9.images[i].id);
 		    }
@@ -2168,11 +2167,11 @@ JS9.Menubar.createMenus = function(){
 		items.listRegions.disabled = true;
 	    }
 	    return {
-		callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var uid, ulayer, utarget, uname, uopts;
-			var udisp = val;
-			var uim = udisp.image;
+		callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			let uid, ulayer, utarget, uname, uopts;
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -2251,7 +2250,7 @@ JS9.Menubar.createMenus = function(){
 				// maybe it's a copyto request
 				if( key.match(/^saveas_/) ){
 				    uid = key.replace(/^saveas_/,"");
-				    uname = "js9." + uid;
+				    uname = `js9.${uid}`;
 				    uopts = {type: uid};
 				    uim.saveRegions(uname, "all", uopts);
 				    return;
@@ -2274,15 +2273,15 @@ JS9.Menubar.createMenus = function(){
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var obj = {color: ""};
+		    show: (opt) => {
+			const obj = {color: ""};
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
-			var uim = udisp.image;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
+			const uim = udisp.image;
 			if( uim ){
 			    // if a key was pressed, do the edit
 			    obj = $.contextMenu.getInputValues(opt);
@@ -2295,34 +2294,34 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // WCS: make button open the contextMenu
-    $("#wcsMenu" + that.id).on("mousedown", function(evt){
+    $(`#wcsMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#wcsMenu" + that.id).contextMenu();
+        $(`#wcsMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#wcsMenu" + that.id,
+        selector: `#wcsMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, s1, s2, key, altwcs;
-	    var n=0, nwcs=0, got=0;
-	    var items = {};
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var tim = tdisp.image;
-	    var editRotate = function(im, obj){
+        build: () => {
+	    let i, s1, s2, key, altwcs;
+	    let n=0, nwcs=0, got=0;
+	    const items = {};
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const tim = tdisp.image;
+	    const editRotate = (im, obj) => {
 		delete tdisp.tmp.editingMenu;
 		if( JS9.isNumber(obj.rot) ){
 		    im.rotateData(parseFloat(obj.rot));
 		}
 	    };
-	    var keyRotate = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
-		    var vim = vdisp.image;
+	    const keyRotate = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -2358,7 +2357,7 @@ JS9.Menubar.createMenus = function(){
 		s1 = "native";
 		items[s1].icon = "sun";
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.wcsutitle = {
 		name: "WCS Units:",
 		disabled: true
@@ -2371,7 +2370,7 @@ JS9.Menubar.createMenus = function(){
 		    items[s1].icon = "sun";
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.altwcs = {
 		name: "alternate wcs",
 		items: {
@@ -2387,10 +2386,10 @@ JS9.Menubar.createMenus = function(){
 		altwcs = tim.raw.altwcs;
 		for(key in altwcs ){
 		    if( altwcs.hasOwnProperty(key) ){
-			s1 = "altwcs_" + key;
+			s1 = `altwcs_${key}`;
 			if( altwcs[key].header.WCSNAME ){
-			    s2 = altwcs[key].header.WCSNAME + 
-				"    (" + key + ")";
+			    s2 = `${altwcs[key].header.WCSNAME  
+				}    (${key})`;
 			} else {
 			    s2 = key;
 			}
@@ -2407,11 +2406,11 @@ JS9.Menubar.createMenus = function(){
 		    items.altwcs.items.notasks = {
 			name: "[none]",
 			disabled: true,
-			events: {keyup: function(){return;}}
+			events: {keyup() {return;}}
 		    };
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.reproject = {
 		name: "wcs reproject ...",
 		items: {
@@ -2425,10 +2424,10 @@ JS9.Menubar.createMenus = function(){
 	    for(i=0, nwcs=0; i<JS9.images.length; i++){
 		if( JS9.images[i].raw.wcs ){
 		    if( (tim === JS9.images[i]) &&
-			(that.id.search(JS9.SUPERMENU) < 0) ){
+			(this.id.search(JS9.SUPERMENU) < 0) ){
 			continue;
 		    }
-		    s1 = "reproject_" + JS9.images[i].id;
+		    s1 = `reproject_${JS9.images[i].id}`;
 		    items.reproject.items[s1] = {
 			name: JS9.images[i].id
 		    };
@@ -2439,16 +2438,15 @@ JS9.Menubar.createMenus = function(){
 		items.reproject.items.notasks = {
 		    name: "[none]",
 		    disabled: true,
-		    events: {keyup: function(){return;}}
+		    events: {keyup() {return;}}
 		};
 	    } else {
 		items.reproject.disabled = false;
-		items.reproject.items["sep" + n++] = "------";
+		items.reproject.items[`sep${n++}`] = "------";
 		items.reproject.items.reproject_all = {
 		    name: "all images in this display, using this wcs"
 		};
-
-		items.reproject.items["sep" + n++] = "------";
+		items.reproject.items[`sep${n++}`] = "------";
 		items.reproject.items.reproject_wcsalign = {
 		    name: "display wcs-aligned"
 		};
@@ -2456,13 +2454,13 @@ JS9.Menubar.createMenus = function(){
 		    items.reproject.items.reproject_wcsalign.icon = "sun";
 		}
 	    }
-	    items.reproject.items["sep" + n++] = "------";
+	    items.reproject.items[`sep${n++}`] = "------";
 	    items.reproject.items.rotatetitle = {
 		name: "by rotating this image:",
 		disabled: true
 	    };
 	    items.reproject.items.reproject_northup = {
-		name: "so that north is up"
+		name: "so north is up"
 	    };
 	    items.reproject.items.rot = {
 		events: {keyup: keyRotate},
@@ -2472,17 +2470,17 @@ JS9.Menubar.createMenus = function(){
 	    if( !tim || !tim.raw || !tim.raw.header || !tim.raw.wcsinfo ){
 		items.reproject.disabled = true;
 	    }
-	    items.reproject.items["sep" + n++] = "------";
+	    items.reproject.items[`sep${n++}`] = "------";
 	    items.reproject.items.reproject_revert = {
 		name: "revert"
 	    };
 	    return {
-                callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var file, s;
-			var rexp = new RegExp(key);
-			var udisp = val;
-			var uim = udisp.image;
+                callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			let file, s;
+			const rexp = new RegExp(key);
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -2526,26 +2524,26 @@ JS9.Menubar.createMenus = function(){
 				uim.setWCSUnits(key);
 				uim.updateShapes("regions", "all", "wcs");
 			    } else {
-				JS9.error("unknown wcs sys/units: " + key);
+				JS9.error(`unknown wcs sys/units: ${key}`);
 			    }
 			}
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var udisp = that.display;
-			var uim = udisp.image;
-			var obj = {};
+		    show: (opt) => {
+			const udisp = this.display;
+			const uim = udisp.image;
+			const obj = {};
 			if( uim ){
 			    obj.rot = "";
 			    $.contextMenu.setInputValues(opt, obj);
 			    JS9.jupyterFocus(".context-menu-item");
 			}
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
-			var uim = udisp.image;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
+			const uim = udisp.image;
 			if( uim ){
 			    obj = $.contextMenu.getInputValues(opt);
 			    // if a key was pressed, do the edit
@@ -2560,27 +2558,26 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // ANALYSIS: make button open the contextMenu
-    $("#analysisMenu" + that.id).on("mousedown", function(evt){
+    $(`#analysisMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#analysisMenu" + that.id).contextMenu();
+        $(`#analysisMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#analysisMenu" + that.id,
+        selector: `#analysisMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var i, j, s, apackages, atasks;
-	    var plugin, pinst, pname;
-	    var ntask = 0;
-	    var n = 0;
-	    // var m = 0;
-	    var items = {};
-	    var tdisp = JS9.Menubar.getDisplays.call(that)[0];
-	    var im = tdisp.image;
-	    var lastxclass="";
-	    var editAnalysis = function(im, obj){
+        build: () => {
+	    let i, j, s, apackages, atasks;
+	    let plugin, pinst, pname;
+	    let ntask = 0;
+	    let n = 0;
+	    const items = {};
+	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
+	    const im = tdisp.image;
+	    let lastxclass="";
+	    const editAnalysis = (im, obj) => {
 		delete tdisp.tmp.editingMenu;
 		obj.sigma = obj.sigma || "0";
 		if( obj.sigma === "none" ){
@@ -2590,12 +2587,12 @@ JS9.Menubar.createMenus = function(){
 		catch(e){ im.params.sigma = 0; }
 		im.gaussBlurData(im.params.sigma);
 	    };
-	    var keyAnalysis = function(e){
-		JS9.Menubar.getDisplays.call(that).forEach(function(val){
-		    var obj = $.contextMenu.getInputValues(e.data);
-		    var keycode = e.which || e.keyCode;
-		    var vdisp = val;
-		    var vim = vdisp.image;
+	    const keyAnalysis = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
 		    // make sure display is still valid
 		    if( $.inArray(vdisp, JS9.displays) < 0 ){
 			return;
@@ -2620,11 +2617,11 @@ JS9.Menubar.createMenus = function(){
 		    if( !pinst || pinst.winHandle ){
 			if( plugin.xclass !== lastxclass ){
 			    if( n > 0 ){
-				items["sep" + n++] = "------";
+				items[`sep${n++}`] = "------";
 			    }
-			    items["sep" + n++] =
-				{name: plugin.xclass + " Plugins:"};
-			    items["sep" + (n-1)].disabled = true;
+			    items[`sep${n++}`] =
+				{name: `${plugin.xclass} Plugins:`};
+			    items[`sep${n-1}`].disabled = true;
 			}
 			lastxclass = plugin.xclass;
 			items[pname] = {
@@ -2640,7 +2637,7 @@ JS9.Menubar.createMenus = function(){
 	    // no server side analysis for all-in-one configuration
 	    if( !JS9.allinone ){
 		if( n > 0 ){
-		    items["sep" + n++] = "------";
+		    items[`sep${n++}`] = "------";
 		}
 	        items.localtitle = {
 		    name: "Client-side Analysis:",
@@ -2673,7 +2670,7 @@ JS9.Menubar.createMenus = function(){
 		    name: "Blur, equivalent sigma:",
 		    type: "text"
 		};
-		items["sep" + n++] = "------";
+		items[`sep${n++}`] = "------";
 	        items.remotetitle = {
 		    name: "Server-side Analysis:",
 		    disabled: true
@@ -2690,9 +2687,9 @@ JS9.Menubar.createMenus = function(){
 			    // separator
 			    if( atasks[i].rtype &&
 				atasks[i].rtype.match(/^---/) ){
-				items["sep" + n++] = "------";
+				items[`sep${n++}`] = "------";
 				items[atasks[i].name] = {
-				    name: atasks[i].title + ":",
+				    name: `${atasks[i].title}:`,
 				    disabled: true
 				};
 				continue;
@@ -2713,7 +2710,7 @@ JS9.Menubar.createMenus = function(){
 		    items.notasks = {
 			name: "[none]",
 			disabled: true,
-			events: {keyup: function(){return;}}
+			events: {keyup() {return;}}
 		    };
 		    if( JS9.globalOpts.loadProxy &&
 			im && im.raw && im.raw.hdu && im.raw.hdu.vfile ){
@@ -2727,7 +2724,7 @@ JS9.Menubar.createMenus = function(){
 			}
 		    }
 		}
-		items["sep" + n++] = "------";
+		items[`sep${n++}`] = "------";
 		items.sconfig = {
 		    name: "server-side params ...",
 		    items: {
@@ -2744,11 +2741,11 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    return {
-                callback: function(key){
-		    JS9.Menubar.getDisplays.call(that).forEach(function(val){
-			var a, s, did, ii, tplugin;
-			var udisp = val;
-			var uim = udisp.image;
+                callback: (key) => {
+		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
+			let a, s, did, ii, tplugin;
+			const udisp = val;
+			const uim = udisp.image;
 			// make sure display is still valid
 			if( $.inArray(udisp, JS9.displays) < 0 ){
 			    return;
@@ -2777,7 +2774,7 @@ JS9.Menubar.createMenus = function(){
 				s = JS9.globalOpts.plot3d.cube;
 				JS9.CountsInRegions("$sregions", "$bregions",
 						    {lightwin: true,
-						    cmdswitches: "-c " + s},
+						    cmdswitches: `-c ${s}`},
 						    {display: udisp.id});
 				break;
 			    case "plot3d":
@@ -2787,7 +2784,7 @@ JS9.Menubar.createMenus = function(){
 			    case "dpath":
 				// call this once window is loaded
 			        $("#dhtmlwindowholder").arrive("#dataPathForm",
-							       {onceOnly: true}, function(){
+							       {onceOnly: true}, () => {
 								   $('#dataPath').val(JS9.globalOpts.dataPath);
 							       });
 				did = uim.displayAnalysis("textline",
@@ -2800,7 +2797,7 @@ JS9.Menubar.createMenus = function(){
 			    case "fpath":
 				// call this once window is loaded
 			        $("#dhtmlwindowholder").arrive("#filePathForm",
-							       {onceOnly: true}, function(){
+							       {onceOnly: true}, () => {
 								   $('#filePath').val(uim.file);
 							       });
 				did = uim.displayAnalysis("textline",
@@ -2825,7 +2822,7 @@ JS9.Menubar.createMenus = function(){
 				    if( a.purl ){
 					did = uim.displayAnalysis("params",
 								  JS9.InstallDir(a.purl),
-								  {title: a.title+": "+uim.fitsFile,
+								  {title: `${a.title}: ${uim.fitsFile}`,
 								   winformat: a.pwin});
 					// save info for running the task
 					$(did).data("dispid", udisp.id)
@@ -2841,20 +2838,20 @@ JS9.Menubar.createMenus = function(){
 		    });
 		},
 		events: {
-		    show: function(opt){
-			var udisp = that.display;
-			var uim = udisp.image;
-			var obj = {};
+		    show:(opt) => {
+			const udisp = this.display;
+			const uim = udisp.image;
+			const obj = {};
 			if( uim  ){
 			    obj.sigma = String(uim.params.sigma);
 			}
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
 		    },
-		    hide: function(opt){
-			var obj;
-			var udisp = that.display;
-			var uim = udisp.image;
+		    hide: (opt) => {
+			let obj;
+			const udisp = this.display;
+			const uim = udisp.image;
 			if( uim ){
 			    // if a key was pressed, do the edit
 			    if( udisp.tmp.editingMenu ){
@@ -2869,21 +2866,21 @@ JS9.Menubar.createMenus = function(){
 	}
     });
     // HELP: make button open the contextMenu
-    $("#helpMenu" + that.id).on("mousedown", function(evt){
+    $(`#helpMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
-        $("#helpMenu" + that.id).contextMenu();
+        $(`#helpMenu${this.id}`).contextMenu();
     });
     // define contextMenu actions
     $.contextMenu({
-        selector: "#helpMenu" + that.id,
+        selector: `#helpMenu${this.id}`,
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
-        build: function(){
-	    var t, key, val;
-	    var n = 1;
-	    var last = "";
-	    var items = {};
+        build: () => {
+	    let t, key, val;
+	    let n = 1;
+	    let last = "";
+	    const items = {};
 	    items.js9help = {
 		name: "General help ...", 
 		items: {
@@ -2905,7 +2902,7 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.pluginhelp = {
 		name: "JS9 plugins ...", 
 		items: {
@@ -2936,14 +2933,14 @@ JS9.Menubar.createMenus = function(){
 			continue;
 		    }
 		    if( (last !== "") && (val.type !== last) ){
-			items["sep" + n++] = "------";
+			items[`sep${n++}`] = "------";
 			if( val.heading ){
-			    t = val.heading + " plugins";
-			    items["sep" + n++] = {
-				name: t + " ...",
+			    t = `${val.heading  } plugins`;
+			    items[`sep${n++}`] = {
+				name: `${t} ...`,
 				items: {
 				    title: {
-					name: t + ":",
+					name: `${t}:`,
 					disabled: true
 				    }
 				}
@@ -2951,16 +2948,16 @@ JS9.Menubar.createMenus = function(){
 			}
 		    }
 		    last = val.type;
-		    items["sep" + (n-1)].items[key] = {name: val.title};
+		    items[`sep${n-1}`].items[key] = {name: val.title};
 		}
 	    }
-	    items["sep" + n++] = "------";
+	    items[`sep${n++}`] = "------";
 	    items.about = xname("about JS9");
-	    return{
-		callback: function(key){
+	    return {
+		callback: (key) => {
 		    switch(key){
 		    case "about":
-			alert(sprintf("JS9: astronomical image display everywhere\nversion: %s\nEric Mandel, Alexey Vikhlinin\ncontact: eric@cfa.harvard.edu\n%s", JS9.VERSION, JS9.COPYRIGHT));
+			alert(`JS9: astronomical image display everywhere\nversion: ${JS9.VERSION}\nEric Mandel, Alexey Vikhlinin\ncontact: eric@cfa.harvard.edu\n${JS9.COPYRIGHT}`);
 			break;
 		    default:
 			JS9.DisplayHelp(key);
@@ -2977,7 +2974,7 @@ JS9.Menubar.createMenus = function(){
 
 // initialize the menu
 JS9.Menubar.init = function(width, height){
-    var i, j, m, ss, tt, menu, html;
+    let i, j, m, ss, tt, menu, html;
     this.issuper = this.id.search(JS9.SUPERMENU) >= 0;
     // save object in super array, if necessary
     if( this.issuper ){
@@ -3028,30 +3025,30 @@ JS9.Menubar.init = function(width, height){
 		    if( this.syle === "classic" ){
 			ss = ss.slice(1);
 			if( ss[1] !== "#" ){
-			    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"' disabled='disabled'>"+tt+" </button>";
+			    html += `<button type='button' id='${ss}Menu@@ID@@' class='${this.buttonClass}' disabled='disabled'>${tt} </button>`;
 			}
 		    }
 		} else {
 		    if( this.style === "classic" ){
-			html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button>";
+			html += `<button type='button' id='${ss}Menu@@ID@@' class='${this.buttonClass}'>${tt}</button>`;
 		    } else {
 			switch(ss){
 			case "file":
 			case "edit":
-			    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button>";
+			    html += `<button type='button' id='${ss}Menu@@ID@@' class='${this.buttonClass}'>${tt}</button>`;
 			    break;
 			case "help":
-			    html += "<span style='float:right'><button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"'>"+tt+"</button></span>";
+			    html += `<span style='float:right'><button type='button' id='${ss}Menu@@ID@@' class='${this.buttonClass}'>${tt}</button></span>`;
 			    break;
 			default:
 			    if( !this.macmenus ){
-				html += "<span style='position:relative;'><button type='button' id='"+"viewMacMenu@@ID@@' class='"+ this.buttonClass +"'>"+"View"+"</button>";
+				html += `${"<span style='position:relative;'><button type='button' id='"+"viewMacMenu@@ID@@' class='"}${this.buttonClass}'>`+`View`+`</button>`;
 				this.macmenus = [];
 			    }
 			    if( tt === "View" ){
 				tt = "Plugins";
 			    }
-			    html += "<button type='button' id='"+ss+"Menu@@ID@@' class='"+ this.buttonClass +"' style='position:absolute;top:0px;left:0px;visibility:hidden;zindex:-1'>"+""+"</button>";
+			    html += `<button type='button' id='${ss}Menu@@ID@@' class='${this.buttonClass}' style='position:absolute;top:0px;left:0px;visibility:hidden;zindex:-1'>`+``+`</button>`;
 			    this.macmenus.push({name: ss, title: tt});
 			    break;
 			}
@@ -3074,11 +3071,11 @@ JS9.Menubar.init = function(width, height){
 		continue;
 	    }
 	    if( menu.imageTitle ){
-		m = "<div class='JS9MenubarUserImage'><img src='" + menu.imageTitle + "' alt='" + menu.title + "' class='JS9MenubarUserImage' >" + "</div>";
+		m = `<div class='JS9MenubarUserImage'><img src='${menu.imageTitle  }' alt='${menu.title  }' class='JS9MenubarUserImage' >` + `</div>`;
 	    } else {
 		m = menu.title;
 	    }
-	    html += "<button type='button' id='"+menu.name+"UserMenu@@ID@@' class='"+ this.buttonClass +"'>" + m + "</button>";
+	    html += `<button type='button' id='${menu.name}UserMenu@@ID@@' class='${this.buttonClass}'>${m}</button>`;
 
 	}
     }

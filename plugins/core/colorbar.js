@@ -25,14 +25,14 @@ JS9.Colorbar.MAXLABELSIZE = 10;
 
 // redraw colorbar on display
 JS9.Colorbar.display = function(im){
-    var i, j, prec, idx, idx0, colorBuf, tval, ix, iy, done;
-    var tlabels = [];
-    var canvasWidth = this.colorbarWidth;
-    var canvasHeight = this.colorbarHeight;
-    var colorImg = this.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-    var colorData = colorImg.data;
-    var colorWidth = canvasWidth * 4;
-    var colorBuf0 = new Uint8Array(colorData.buffer, 0, colorWidth);
+    let i, j, prec, idx, idx0, colorBuf, tval, ix, iy, done;
+    const tlabels = [];
+    const canvasWidth = this.colorbarWidth;
+    const canvasHeight = this.colorbarHeight;
+    const colorImg = this.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+    const colorData = colorImg.data;
+    const colorWidth = canvasWidth * 4;
+    const colorBuf0 = new Uint8Array(colorData.buffer, 0, colorWidth);
     // scaled or unscaled display?
     if( this.scaled ){
 	colorBuf = im.psColors;
@@ -113,7 +113,7 @@ JS9.Colorbar.display = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Colorbar.init = function(width, height){
-    var ratio = JS9.PIXEL_RATIO || 1;
+    const ratio = JS9.PIXEL_RATIO || 1;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -174,15 +174,15 @@ JS9.Colorbar.init = function(width, height){
     this.divjq.html("");
     // colorbar container
     this.colorbarContainer = $("<div>")
-	.addClass(JS9.Colorbar.BASE + "Container")
-	.attr("id", this.id + "Container")
+	.addClass(`${JS9.Colorbar.BASE}Container`)
+	.attr("id", `${this.id}Container`)
         .attr("width", this.width)
         .attr("height", this.height)
 	.appendTo(this.divjq);
     // main canvas
     this.colorbarjq = $("<canvas>")
-	.addClass(JS9.Colorbar.BASE + "Canvas")
-	.attr("id", this.id + "Canvas")
+	.addClass(`${JS9.Colorbar.BASE}Canvas`)
+	.attr("id", `${this.id}Canvas`)
         .attr("width", this.width-1)
         .attr("height", this.colorbarHeight)
 	.appendTo(this.colorbarContainer);
@@ -192,12 +192,12 @@ JS9.Colorbar.init = function(width, height){
 	// numeric text and tick marks
 	// (height and width changes deal with HiDPI text blur problems!)
 	this.textjq = $("<canvas>")
-	    .addClass(JS9.Colorbar.BASE + "TextCanvas")
-	    .attr("id", this.id + "TextCanvas")
+	    .addClass(`${JS9.Colorbar.BASE}TextCanvas`)
+	    .attr("id", `${this.id}TextCanvas`)
             .attr("width", this.width * ratio)
             .attr("height", (this.height - this.colorbarHeight) * ratio)
-            .css("width", this.width + "px")
-            .css("height", (this.height - this.colorbarHeight) + "px")
+            .css("width", `${this.width}px`)
+            .css("height", `${this.height - this.colorbarHeight}px`)
 	    .appendTo(this.colorbarContainer);
 	this.textctx = this.textjq[0].getContext("2d");
 	// font specified in data property of div element?
@@ -237,7 +237,7 @@ JS9.Colorbar.imageclear = function(im){
 
 // dynamic change
 JS9.Colorbar.dynamic = function(im){
-    var colorbar;
+    let colorbar;
     if( im ){
 	colorbar = im.display.pluginInstances.JS9Colorbar;
 	if( colorbar && colorbar.isDynamic ){

@@ -38,22 +38,23 @@ JS9.Magnifier.opts = {
 
 // call a JS9 routine from a button in the magnifier plugin toolbar
 // the plugin instantiation saves the display id in the toolbar div
-JS9.Magnifier.bcall = function(which, cmd, arg1){
-    var dispid, im;
+JS9.Magnifier.bcall = function(...args){
+    let dispid, im;
+    let [which, cmd, arg1] = args;
     // the button plugintoolbar div has data containing the id of the display
     dispid = $(which).closest("div[class^=JS9PluginToolbar]").data("displayid");
     if( dispid ){
 	im = JS9.getImage(dispid);
     } else {
-	JS9.error("can't find display for cmd: "+cmd);
+	JS9.error(`can't find display for cmd: ${cmd}`);
     }
     if( !im ){
-	JS9.error("can't find image for cmd: "+cmd);
+	JS9.error(`can't find image for cmd: ${cmd}`);
     }
     switch(cmd){
     case "zoomMagnifier":
-	if( arguments.length < 3 ){
-	    JS9.error("missing argument(s) for cmd: "+cmd);
+	if( args.length < 3 ){
+	    JS9.error(`missing arg(s) for cmd: ${cmd}`);
 	}
 	try{
 	    JS9.Magnifier.zoom(im, arg1);
@@ -68,11 +69,11 @@ JS9.Magnifier.bcall = function(which, cmd, arg1){
 
 // html used by the magnifier plugin
 JS9.Magnifier.HTML =
-"<span>" +
+`${"<span>" +
 "<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \"x2\"); return false'>x2</button>" +
 "<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \"/2\"); return false'>/2</button>" +
-"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \""+JS9.Magnifier.opts.zoom+"\"); return false'>"+JS9.Magnifier.opts.zoom+"</button>" +
-"</span>";
+"<button type='button' class='JS9Button' onClick='JS9.Magnifier.bcall(this, \"zoomMagnifier\", \""}${JS9.Magnifier.opts.zoom}"); return false'>${JS9.Magnifier.opts.zoom}</button>` +
+`</span>`;
 
 // JS9 Magnifier constructor
 JS9.Magnifier.init = function(width, height){
@@ -121,8 +122,8 @@ JS9.Magnifier.init = function(width, height){
 
 // display the magnified image on the magnifier canvas
 JS9.Magnifier.display = function(im, ipos){
-    var pos, tval, magDisp, zoom;
-    var canvas, sx, sy, sw, sh, dx, dy, dw, dh;
+    let pos, tval, magDisp, zoom;
+    let canvas, sx, sy, sw, sh, dx, dy, dw, dh;
     // sanity check
     // only display if we have a magnifier present
     if(!im || !im.display.pluginInstances.JS9Magnifier ||
@@ -213,7 +214,7 @@ JS9.Magnifier.display = function(im, ipos){
 // zoom the rectangle inside the magnifier (RGB) image
 // part of magnifier plugin
 JS9.Magnifier.zoom = function(im, zval){
-    var magnifier, ozoom, nzoom;
+    let magnifier, ozoom, nzoom;
     // sanity check
     if( !im || !im.magnifier ){
 	return;
@@ -247,7 +248,7 @@ JS9.Magnifier.zoom = function(im, zval){
 
 // clear the magnifier
 JS9.Magnifier.clear = function(im){
-    var magnifier = im.display.pluginInstances.JS9Magnifier;
+    const magnifier = im.display.pluginInstances.JS9Magnifier;
     if( magnifier && (im === im.display.image) ){
 	magnifier.context.clear();
 	im.removeShapes("magnifier", "all");

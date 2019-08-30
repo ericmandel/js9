@@ -30,43 +30,43 @@ JS9.Layers.layerNameHTML='<b>%s</b>';
 
 // get an id based on the file image id and layer
 JS9.Layers.imid = function(im, layer){
-    var id = im.display.id + "_" + im.id + "_" + layer + "_";
-    return id.replace(/[^A-Za-z0-9_]/g, "_") + "Layer";
+    const id = `${im.display.id}_${im.id}_${layer}_`;
+    return `${id.replace(/[^A-Za-z0-9_]/g, "_")}Layer`;
 };
 
 // get a class unique between displays
 JS9.Layers.dispclass = function(im){
-    var id = JS9.Layers.BASE + "_" + im.display.id;
+    const id = `${JS9.Layers.BASE}_${im.display.id}`;
     return id.replace(/[^A-Za-z0-9_]/g, "_");
 };
 
 // change the active image
 JS9.Layers.activeLayer = function(im, pinst){
-    var i, s, id, dcls, order;
+    let i, s, id, dcls, order;
     if( im ){
 	order = pinst.layersLayerContainer.sortable("toArray");
 	if( (order.length === 1) && !order[0] ){
 	    return;
 	}
 	for(i=0; i<order.length; i++){
-	    order[i] = $("#" + order[i]).attr("layer");
+	    order[i] = $(`#${order[i]}`).attr("layer");
 	}
 	s = im.activeShapeLayer(order);
 	id = JS9.Layers.imid(im, s);
-	dcls = JS9.Layers.dispclass(im) + "_Layer";
-	$("." + dcls)
-	    .removeClass(JS9.Layers.BASE + "LayerActive")
-	    .addClass(JS9.Layers.BASE + "LayerInactive");
-	$("#" + id)
-	    .removeClass(JS9.Layers.BASE + "LayerInactive")
-	    .addClass(JS9.Layers.BASE + "LayerActive");
+	dcls = `${JS9.Layers.dispclass(im)}_Layer`;
+	$(`.${dcls}`)
+	    .removeClass(`${JS9.Layers.BASE}LayerActive`)
+	    .addClass(`${JS9.Layers.BASE}LayerInactive`);
+	$(`#${id}`)
+	    .removeClass(`${JS9.Layers.BASE}LayerInactive`)
+	    .addClass(`${JS9.Layers.BASE}LayerActive`);
     }
 };
 
 // make shape layer visible/invisible
 JS9.Layers.xvisible = function(did, id, layer, target){
-    var pinst, mode;
-    var im = JS9.lookupImage(id, did);
+    let pinst, mode;
+    const im = JS9.lookupImage(id, did);
     if( im ){
 	if( target.checked ){
 	    mode = true;
@@ -85,8 +85,8 @@ JS9.Layers.xvisible = function(did, id, layer, target){
 // save layer (catalog or regions)
 // eslint-disable-next-line no-unused-vars
 JS9.Layers.xsave = function(did, id, layer, target){
-    var im = JS9.lookupImage(id, did);
-    var save = target.options[target.selectedIndex].value;
+    const im = JS9.lookupImage(id, did);
+    const save = target.options[target.selectedIndex].value;
     if( im ){
 	if( save === "catalog" ){
 	    im.saveCatalog(null, layer);
@@ -100,9 +100,9 @@ JS9.Layers.xsave = function(did, id, layer, target){
 
 // add a layer to the list
 JS9.Layers.addLayer = function(im, layer){
-    var l, s, id, divjq, zindex, added, dcls, imid, dispid;
-    var cls = JS9.Layers.BASE + "Layer";
-    var opts = [];
+    let l, s, id, divjq, zindex, added, dcls, imid, dispid;
+    const cls = `${JS9.Layers.BASE}Layer`;
+    const opts = [];
     // sanity checks
     if( !im || !layer || !im.layers[layer] ||
 	(im.layers[layer].dlayer.dtype !== "main") ){
@@ -120,7 +120,7 @@ JS9.Layers.addLayer = function(im, layer){
     // get unique id for this layer
     id = JS9.Layers.imid(im, layer);
     // get class for this layer 
-    dcls = JS9.Layers.dispclass(im) + "_Layer";
+    dcls = `${JS9.Layers.dispclass(im)}_Layer`;
     // value to pass to the macro expander
     opts.push({name: "imid", value: imid});
     opts.push({name: "visible", value: sprintf(JS9.Layers.visibleHTML, 
@@ -133,9 +133,9 @@ JS9.Layers.addLayer = function(im, layer){
 						dispid, imid, layer)});
     }
     if( JS9.DEBUG > 1 ){
-	l = sprintf("%s layer [zindex: %s]", layer, zindex);
+	l = `${layer} layer [zindex: ${zindex}]`;
     } else {
-	l = sprintf("%s layer", layer);
+	l = `${layer} layer`;
     }
     opts.push({name: "layer", value: sprintf(JS9.Layers.layerNameHTML, l)});
     // create the html for this layer
@@ -151,9 +151,9 @@ JS9.Layers.addLayer = function(im, layer){
     if( !this.nlayer ){
 	divjq.appendTo(this.layersLayerContainer);
     } else {
-	this.layersLayerContainer.find("." + cls).each(function(idx, item){
-		var tlayer, tzindex;
-		var jqitem = $(item);
+	this.layersLayerContainer.find(`.${cls}`).each((idx, item) => {
+		let tlayer, tzindex;
+		const jqitem = $(item);
 		if( !added ){
 		    tlayer = jqitem.attr("layer");
 		    if( tlayer ){
@@ -185,14 +185,14 @@ JS9.Layers.display = function(){
 
 // clear when an image closes
 JS9.Layers.close = function(){
-    // ensure that plugin display is reset
+    // ensure plugin display is reset
     JS9.Layers.init.call(this, {mode: "clear"});
 };
 
 // constructor: add HTML elements to the plugin
 JS9.Layers.init = function(opts){
-    var key, im;
-    var that = this;
+    let key, im;
+    const _this = this;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -211,20 +211,20 @@ JS9.Layers.init = function(opts){
     this.divjq.addClass("JS9PluginScrolling");
     // main container
     this.layersContainer = $("<div>")
-	.addClass(JS9.Layers.BASE + "Container")
-	.attr("id", this.id + "LayersContainer")
+	.addClass(`${JS9.Layers.BASE}Container`)
+	.attr("id", `${this.id}LayersContainer`)
         .css("overflow", "auto")
 	.appendTo(this.divjq);
     // header
     this.layersHeader = $("<div>")
-	.addClass(JS9.Layers.BASE + "Header")
-	.attr("id", this.display.id + "Header")
+	.addClass(`${JS9.Layers.BASE}Header`)
+	.attr("id", `${this.display.id}Header`)
 	.html(JS9.Layers.headerHTML)
 	.appendTo(this.layersContainer);
     // container to hold layers
     this.layersLayerContainer = $("<div>")
-	.addClass(JS9.Layers.BASE + "LayerContainer")
-	.attr("id", this.id + "LayersLayerContainer")
+	.addClass(`${JS9.Layers.BASE}LayerContainer`)
+	.attr("id", `${this.id}LayersLayerContainer`)
         .html(JS9.Layers.nolayersHTML)
 	.appendTo(this.layersContainer);
     // done if we are only clearing
@@ -248,12 +248,12 @@ JS9.Layers.init = function(opts){
     // the top one responds to events
     this.layersLayerContainer.sortable({
 	// eslint-disable-next-line no-unused-vars
-	start: function(event, ui) {
+	start(event, ui) {
 	    return;
 	},
 	// eslint-disable-next-line no-unused-vars
-	stop: function(event, ui) {
-	    JS9.Layers.activeLayer(im, that);
+	stop(event, ui) {
+	    JS9.Layers.activeLayer(im, _this);
 	    return;
 	}
     });
