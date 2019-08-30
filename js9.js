@@ -12323,7 +12323,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     let i, sobj, sarr, ns, s, bopts, opts, layer, canvas, dlayer;
     let zoom, ttop, tleft;
     let params = {};
-    const rarr = [];
+    let rarr = [];
     const objs = [];
     // is this core service disabled?
     if( $.inArray("regions", this.params.disable) >= 0 &&
