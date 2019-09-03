@@ -125,15 +125,14 @@ Choose from the following sections:
 <p>
 where:
 <ul>
-<li><b>url</b>: url, fitsy object, in-memory FITS, or FITS blob
+<li><b>url</b>: url, in-memory FITS, FITS blob, data object
 <li><b>opts</b>: optional object or JSON string containing image parameters
 </ul>
 <p>
-Load a FITS file or a PNG <b>representation file</b> into JS9.
-You also can pass an in-memory buffer containing a FITS file, or a string
-containing a base64-encoded FITS file.
-<p>
-Finally, you can pass a fits object containing the following properties:
+Load a FITS file (or even a PNG/JPEG file) into JS9. You also can pass
+an in-memory buffer containing a FITS file, a blob containing a FITS
+file, or a string containing a base64-encoded FITS file. Finally, you
+can pass a generic <b>data object</b> containing the following properties:
 <ul>
 <li><b>naxis</b>: number of axes in the image
 <li><b>axis</b>: array of image dimensions for each axis or ...
