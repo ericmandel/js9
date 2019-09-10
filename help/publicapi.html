@@ -1600,6 +1600,31 @@ No attempt is make to keep the images aligned after the call. This
 allows you to make adjustments to the current and/or target images and
 then re-align as needed.
 
+<h5 id="JS9.SetFlip">Flip an image around an axis</h5>
+<p>
+<code class="api">JS9.SetFlip(flip)</code>
+<p>
+where:
+<ul>
+<li><b>flip</b>: "x", "y", "xy", "none"
+</ul>
+Flip an image around the specified axis. The WCS header parameters will be
+updated appropriately. Note that you might have to reset the pan position
+after flipping.
+<p>
+The image is flipped using the CFITSIO fits_copy_image_section()
+routine, so this function is available only for FITS files (not PNG/JPEG).
+
+<h5 id="JS9.GetFlip">Get flip state of an image</h5>
+<p>
+<code class="api">flip = JS9.GetFlip()</code>
+<p>
+returns:
+<ul>
+<li><b>flip</b>: the current flip state
+</ul>
+Possible returned flip states are: "x", "y", "xy", or "none".
+
 <h5 id="JS9.GetParam">Get an image parameter value</h5>
 <p>
 <code class="api">val = JS9.GetParam(param)</code>
@@ -1664,6 +1689,7 @@ set in this way are:
 <li><b>colormap</b>: calls JS9.SetColormap()
 <li><b>contrast</b>: calls JS9.SetColormap()
 <li><b>bias</b>: calls JS9.SetColormap()
+<li><b>flip</b>: calls JS9.SetFlip()
 <li><b>scale</b>: calls JS9.SetScale()
 <li><b>scalemin</b>: calls JS9.SetScale()
 <li><b>scalemax</b>: calls JS9.SetScale()

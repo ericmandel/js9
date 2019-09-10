@@ -294,6 +294,7 @@ JS9.imageOpts = {
     scaleclipping: "dataminmax",	// "dataminmax", "zscale", or "user" (when scalemin, scalemax is supplied)
     scalemin: Number.NaN,               // default scale min is undefined
     scalemax: Number.NaN,               // default scale max is undefined
+    flip: "none",                       // default flip state
     zscalecontrast: 0.25,		// default from ds9
     zscalesamples: 600,			// default from ds9
     zscaleline: 120,			// default from ds9
@@ -308,7 +309,8 @@ JS9.imageOpts = {
     // xcen: 0,                         // default x center pos to pan to
     // ycen: 0,                         // default y center pos to pan to
     zoom: 1,				// default zoom factor
-    zooms: 5,				// how many zooms in each direction?
+    zooms: 6,				// how many zooms in each direction?
+    topZooms: 2,			// how many zooms are at top level?
     nancolor: "#000000",		// 6-digit #hex color for NaN values
     wcsalign: true,			// align image using wcs after reproj?
     rotationMode: "relative",		// default: relative or absolute?
@@ -4306,6 +4308,42 @@ JS9.Image.prototype.alignPanZoom = function(im, opts){
     return this;
 };
 
+// get flip state
+JS9.Image.prototype.getFlip = function(){
+    return this.params.flip;
+};
+
+// flip image along an axis
+JS9.Image.prototype.setFlip = function(flip){
+    // sanity check
+    if( !this || !this.raw || !this.raw.hdu || !this.raw.hdu.fits ){
+	JS9.error("no FITS image available for SetFlip()");
+    }
+    // null argument resets the flip state
+    flip = flip || "none";
+    // so conversion to lowercase does not fail
+    if( typeof flip !== "string" ){
+	JS9.error("invalid flip specification for SetFlip()");
+    }
+    // set flip state
+    switch(flip.toLowerCase()){
+    case "x":
+    case "y":
+    case "xy":
+	this.params.flip = flip;
+	break;
+    case "none":
+    case "reset":
+	this.params.flip = "none";
+	break;
+    default:
+	JS9.error(`unknown flip specification for SetFlip(): ${flip}`);
+	break;
+    }
+    // flip is actually a call to display a section
+    return this.displaySection({flip: this.params.flip});
+};
+
 // refresh all layers
 JS9.Image.prototype.refreshLayers = function(){
     this.setZoom(this.getZoom());
@@ -6311,6 +6349,9 @@ JS9.Image.prototype.setParam = function(param, value){
 	    value.scalemax = value.scalemax || obj.scalemax;
 	    this.setScale(value.scale, value.scalemin, value.scalemax);
 	}
+	if( value.flip ){
+	    this.setFlip(value.flip);
+	}
 	if( value.invert ){
 	    this.params.invert = value.invert;
 	    this.displayImage("colors");
@@ -6367,6 +6408,9 @@ JS9.Image.prototype.setParam = function(param, value){
     case "bias":
 	obj = this.getColormap();
 	this.setColormap(obj.colormap, obj.contrast, value);
+	break;
+    case "flip":
+	this.setFlip(value);
 	break;
     case "scale":
 	this.setScale(value);
@@ -21082,6 +21126,8 @@ JS9.mkPublic("SetPan", "setPan");
 JS9.mkPublic("AlignPanZoom", "alignPanZoom");
 JS9.mkPublic("GetScale", "getScale");
 JS9.mkPublic("SetScale", "setScale");
+JS9.mkPublic("SetFlip", "setFlip");
+JS9.mkPublic("GetFlip", "getFlip");
 JS9.mkPublic("GetParam", "getParam");
 JS9.mkPublic("SetParam", "setParam");
 JS9.mkPublic("GetValPos", "updateValpos");

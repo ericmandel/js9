@@ -171,7 +171,7 @@ Module["error"] = function(s, e) {
 // get immage from an already-opened virtual FITS file
 // fits object contains fptr
 Module["getFITSImage"] = function(fits, hdu, opts, handler) {
-    var i, ofptr, hptr, status, datalen, extnum, extname;
+    var i, ofptr, ofptr2, hptr, status, datalen, extnum, extname;
     var buf, bufptr, buflen, bufptr2, slice, doerr, ctype1;
     var filter = null;
     var fptr = fits.fptr;
@@ -357,6 +357,27 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	    bin = 1;
 	}
 	break;
+    }
+    // are we flipping the image?
+    if( opts.flip ){
+	// make a new file with the specified flip?
+	hptr = _malloc(4);
+	setValue(hptr, 0, "i32");
+	ofptr2 = ccall("flipImage", "number", ["number", "string", "number"], [ofptr, opts.flip, hptr]);
+	status  = getValue(hptr, "i32");
+	_free(hptr);
+	Module["errchk"](status);
+	// close the original image section "file", if necessary
+	if( ofptr && (ofptr !== fptr) && (ofptr !== ofptr2) ){
+            hptr = _malloc(4);
+	    setValue(hptr, 0, "i32");
+	    ccall("closeFITSFile", null, ["number", "number"], [ofptr, hptr]);
+	    status  = getValue(hptr, "i32");
+	    _free(hptr);
+	    Module["errchk"](status);
+	}
+	// use the new file's fits pointer
+	ofptr = ofptr2;
     }
     if( opts.image ){
 	// backward-compatibility with pre-v1.12

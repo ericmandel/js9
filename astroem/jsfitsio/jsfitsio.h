@@ -4,6 +4,8 @@ fitsfile *openFITSFile(char *ifile, int iomode, char *extlist, int *hdutype,
 fitsfile *openFITSMem(void **buf, size_t *buflen, char *extlist, 
 		      int *hdutype, int *status);
 
+fitsfile *flipImage(fitsfile *fptr, char *flip, int *status);
+
 fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
 			     int *dims, double *cens, int bin, int *status);
 

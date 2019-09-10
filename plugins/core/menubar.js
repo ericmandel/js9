@@ -1442,7 +1442,7 @@ JS9.Menubar.createMenus = function(){
 		name: "Zoom Factors:",
 		disabled: true
 	    };
-	    for(i=JS9.imageOpts.zooms; i>=1; i--){
+	    for(i=JS9.imageOpts.topZooms; i>=1; i--){
 		zoom = Math.pow(2,-i);
 		zoomp = Math.pow(2,i);
 		name = `zoom${zoom}`;
@@ -1452,7 +1452,7 @@ JS9.Menubar.createMenus = function(){
 		    items[name].icon = "sun";
 		}
 	    }
-	    for(i=0; i<=JS9.imageOpts.zooms; i++){
+	    for(i=0; i<=JS9.imageOpts.topZooms; i++){
 		zoom = Math.pow(2,i);
 		name = `zoom${zoom}`;
 		name2 = `zoom ${zoom}`;
@@ -1461,9 +1461,37 @@ JS9.Menubar.createMenus = function(){
 		    items[name].icon = "sun";
 		}
 	    }
+	    items.morezooms = {
+		name: "more zooms ...",
+		items: {
+		    morezoomstitle: {
+			name: "Zoom Factors:",
+			disabled: true
+		    }
+		}
+	    };
+	    for(i=JS9.imageOpts.zooms; i>JS9.imageOpts.topZooms; i--){
+		zoom = Math.pow(2,-i);
+		zoomp = Math.pow(2,i);
+		name = `zoom${zoom}`;
+		name2 = `zoom 1/${zoomp}`;
+		items.morezooms.items[name] = xname(name2);
+		if( tim && (tim.rgb.sect.zoom === zoom) ){
+		    items.morezooms.items[name].icon = "sun";
+		}
+	    }
+	    for(i=JS9.imageOpts.topZooms+1; i<=JS9.imageOpts.zooms; i++){
+		zoom = Math.pow(2,i);
+		name = `zoom${zoom}`;
+		name2 = `zoom ${zoom}`;
+		items.morezooms.items[name] = xname(name2);
+		if( tim && (tim.rgb.sect.zoom === zoom) ){
+		    items.morezooms.items[name].icon = "sun";
+		}
+	    }
 	    items.zoom = {
 		events: {keyup: keyZoom},
-		name: "other zoom:",
+		name: "numeric zoom:",
 		type: "text"
 	    };
 	    items[`sep${n++}`] = "------";
@@ -1512,6 +1540,35 @@ JS9.Menubar.createMenus = function(){
 		items.alignpanzoom.disabled = false;
 	    }
 	    items.reset = xname("reset pan/zoom");
+	    items[`sep${n++}`] = "------";
+	    items.fliptitle = {
+		name: "Flip:",
+		disabled: true
+	    };
+	    items.flipNone = xname("none");
+	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
+		items.flipNone.disabled = true;
+	    } else if( tim && tim.params.flip === "none" ){
+		items.flipNone.icon = "sun";
+	    }
+	    items.flipX = xname("around x axis");
+	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
+		items.flipX.disabled = true;
+	    } else if( tim && tim.params.flip === "x" ){
+		items.flipX.icon = "sun";
+	    }
+	    items.flipY = xname("around y axis");
+	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
+		items.flipY.disabled = true;
+	    } else if( tim && tim.params.flip === "y" ){
+		items.flipY.icon = "sun";
+	    }
+	    items.flipXY = xname("around x and y axis");
+	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
+		items.flipXY.disabled = true;
+	    } else if( tim && tim.params.flip === "xy" ){
+		items.flipXY.icon = "sun";
+	    }
 	    return {
 		callback: (key) => {
 		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
@@ -1538,6 +1595,18 @@ JS9.Menubar.createMenus = function(){
 			    case "reset":
 				uim.setZoom("1");
 				uim.setPan();
+				break;
+			    case "flipX":
+				uim.setFlip("x");
+				break;
+			    case "flipY":
+				uim.setFlip("y");
+				break;
+			    case "flipXY":
+				uim.setFlip("xy");
+				break;
+			    case "flipNone":
+				uim.setFlip("none");
 				break;
 			    default:
 				// look for a numeric zoom
