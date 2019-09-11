@@ -11762,12 +11762,10 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     if( (opts.angle !== undefined) ){
 	nopts.angle = -opts.angle;
 	// adjust angle due to image flip
-	if( opts.shape !== "polygon" ){
-	    if( this.raw.wcsinfo.cdelt1 > 0 && this.raw.wcsinfo.cdelt2 > 0 ){
-		nopts.angle = opts.angle - 180;
-	    }
-	    if( this.raw.wcsinfo.cdelt1 < 0 && this.raw.wcsinfo.cdelt2 < 0 ){
-		nopts.angle = opts.angle - 180;
+	if( opts.shape !== "polygon" && opts.shape !== "text" ){
+	    if( (this.raw.wcsinfo.cdelt1 > 0 && this.raw.wcsinfo.cdelt2 > 0) ||
+		(this.raw.wcsinfo.cdelt1 < 0 && this.raw.wcsinfo.cdelt2 < 0) ){
+		nopts.angle = opts.angle - 360;
 	    }
 	}
     }
@@ -12867,12 +12865,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // fabric angle is in opposite direction
     pub.angle = -obj.angle;
     // remove angle due to image flip
-    if( pub.shape !== "polygon" ){
-	if( this.raw.wcsinfo.cdelt1 < 0 && this.raw.wcsinfo.cdelt2 < 0 ){
-	    pub.angle = obj.angle - 180;
-	}
-	if( this.raw.wcsinfo.cdelt1 > 0 && this.raw.wcsinfo.cdelt2 > 0 ){
-	    pub.angle = obj.angle - 180;
+    if( pub.shape !== "polygon" && pub.shape !== "text" ){
+	if( (this.raw.wcsinfo.cdelt1 < 0 && this.raw.wcsinfo.cdelt2 < 0) ||
+	    (this.raw.wcsinfo.cdelt1 > 0 && this.raw.wcsinfo.cdelt2 > 0) ){
+	    pub.angle = obj.angle - 360;
 	}
     }
     if( ginfo.group ){
