@@ -1551,19 +1551,19 @@ JS9.Menubar.createMenus = function(){
 	    } else if( tim && tim.params.flip === "none" ){
 		items.flipNone.icon = "sun";
 	    }
-	    items.flipX = xname("around x axis");
+	    items.flipX = xname("invert x");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.flipX.disabled = true;
 	    } else if( tim && tim.params.flip === "x" ){
 		items.flipX.icon = "sun";
 	    }
-	    items.flipY = xname("around y axis");
+	    items.flipY = xname("invert y");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.flipY.disabled = true;
 	    } else if( tim && tim.params.flip === "y" ){
 		items.flipY.icon = "sun";
 	    }
-	    items.flipXY = xname("around x and y axis");
+	    items.flipXY = xname("invert x and y");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.flipXY.disabled = true;
 	    } else if( tim && tim.params.flip === "xy" ){
