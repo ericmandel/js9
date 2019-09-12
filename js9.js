@@ -4315,6 +4315,7 @@ JS9.Image.prototype.getFlip = function(){
 
 // flip image along an axis
 JS9.Image.prototype.setFlip = function(flip){
+    const opts = {};
     // sanity check
     if( !this || !this.raw || !this.raw.hdu || !this.raw.hdu.fits ){
 	JS9.error("no FITS image available for SetFlip()");
@@ -4340,8 +4341,14 @@ JS9.Image.prototype.setFlip = function(flip){
 	JS9.error(`unknown flip specification for SetFlip(): ${flip}`);
 	break;
     }
-    // flip is actually a call to display a section
-    return this.displaySection({flip: this.params.flip});
+    // flip is actually a call to display a section, using the virtual file
+    opts.flip = this.params.flip;
+    opts.from =  "virtualFile";
+    opts.xcen = 0;
+    opts.ycen = 0;
+    opts.xdim = this.raw.width;
+    opts.xdim = this.raw.width;
+    return this.displaySection(opts);
 };
 
 // refresh all layers
