@@ -387,11 +387,12 @@ fitsfile *flipImage(fitsfile *fptr, char *flip, int *status){
         return(NULL);
     }
     // cfitio updates basic wcs keywords; we update the LTM/LTV keywords
+    // the fudge factor of 1.0 added to dval is emperical
     fits_get_img_size(fptr, 2, naxes, &tstatus); tstatus = 0;
     if( dox ){
       dval = 0.0; *comment = '\0'; tstatus = 0;
       fits_read_key(fptr, TDOUBLE, "LTV1", &dval, comment, &tstatus);
-      dval = naxes[0] - dval + 1; tstatus = 0;
+      dval = naxes[0] - dval + 1.0; tstatus = 0;
       fits_update_key(ofptr, TDOUBLE, "LTV1", &dval, comment, &tstatus);
       dval = 1.0; *comment = '\0'; tstatus = 0;
       fits_read_key(fptr, TDOUBLE, "LTM1_1", &dval, comment, &tstatus);
@@ -401,7 +402,7 @@ fitsfile *flipImage(fitsfile *fptr, char *flip, int *status){
     if( doy ){
       dval = 0.0; *comment = '\0'; tstatus = 0;
       fits_read_key(fptr, TDOUBLE, "LTV2", &dval, comment, &tstatus);
-      dval = naxes[1] - dval + 1; tstatus = 0;
+      dval = naxes[1] - dval + 1.0; tstatus = 0;
       fits_update_key(ofptr, TDOUBLE, "LTV2", &dval, comment, &tstatus);
       dval = 1.0; *comment = '\0'; tstatus = 0;
       fits_read_key(fptr, TDOUBLE, "LTM2_2", &dval, comment, &tstatus);
