@@ -11678,7 +11678,7 @@ JS9.Fabric.activeShapeLayer = function(s){
 // call using image context
 JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     let i, j, tags, pos, cpos, len, zoom, owcssys, txeq;
-    let key, shape, radinc, nrad, radius, tf, arr;
+    let key, shape, radinc, nrad, radius, tf, arr, parent;
     const nopts = {}, nparams = {};
     const YFUDGE = 1;
     // get color for a given shape tag
@@ -11742,6 +11742,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     // initialize
     nparams.tags = [];
     // remove dangerous options (e.g., passed in JS9.GetRegions() object)
+    parent = opts.parent || (obj && obj.params && obj.params.parent);
     delete opts.parent;
     delete opts.id;
     // pre-processing special keys
@@ -11759,13 +11760,30 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	}
     }
     // fabric angle is in opposite direction
-    if( (opts.angle !== undefined) ){
+    if( JS9.notNull(opts.angle) ){
+	// for non-children, add in file rotation as needed
+	// (moved from JS9.Regions.parseRegions.getang() 9/11/2019)
+	if( !parent ){
+	    switch(opts.shape){
+	    case "box":
+	    case "ellipse":
+	    case "text":
+		if( this.raw.wcsinfo && this.raw.wcsinfo.crot ){
+		    opts.angle += this.raw.wcsinfo.crot;
+		}
+		break;
+	    default:
+		break;
+	    }
+	}
 	nopts.angle = -opts.angle;
 	// adjust angle due to image flip
 	if( opts.shape !== "polygon" && opts.shape !== "text" ){
 	    if( this.raw.wcsinfo &&
-		(this.raw.wcsinfo.cdelt1 > 0 && this.raw.wcsinfo.cdelt2 > 0) ||
-		(this.raw.wcsinfo.cdelt1 < 0 && this.raw.wcsinfo.cdelt2 < 0) ){
+		((this.raw.wcsinfo.cdelt1 > 0 && this.raw.wcsinfo.cdelt2 > 0) ||
+	        (this.raw.wcsinfo.cdelt1 < 0 && this.raw.wcsinfo.cdelt2 < 0)) ){
+		nopts.angle = opts.angle - 360;
+	    } else if( this.getFlip() === "x" || this.getFlip() === "y" ){
 		nopts.angle = opts.angle - 360;
 	    }
 	}
@@ -12232,7 +12250,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     return {shape: shape, opts: nopts, params: nparams};
 };
 
-// give an object full of keys, return an array of key names for export
+// given an object full of keys, return an array of key names for export
 // call using image context
 JS9.Fabric._exportShapeOptions = function(opts){
     // sanity check
@@ -12868,8 +12886,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // remove angle due to image flip
     if( pub.shape !== "polygon" && pub.shape !== "text" ){
 	if( this.raw.wcsinfo &&
-	    (this.raw.wcsinfo.cdelt1 < 0 && this.raw.wcsinfo.cdelt2 < 0) ||
-	    (this.raw.wcsinfo.cdelt1 > 0 && this.raw.wcsinfo.cdelt2 > 0) ){
+	    ((this.raw.wcsinfo.cdelt1 < 0 && this.raw.wcsinfo.cdelt2 < 0) ||
+	    (this.raw.wcsinfo.cdelt1 > 0 && this.raw.wcsinfo.cdelt2 > 0)) ){
+	    pub.angle = obj.angle - 360;
+	} else if( this.getFlip() === "x" || this.getFlip() === "y" ){
 	    pub.angle = obj.angle - 360;
 	}
     }
@@ -12878,13 +12898,13 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     }
     // remove file rotation?
     oangle = pub.angle;
-    if( this.raw.wcsinfo && this.raw.wcsinfo.crot ){
+    if( !pub.parent && this.raw.wcsinfo && this.raw.wcsinfo.crot ){
 	pub.angle -= this.raw.wcsinfo.crot;
     }
     while( pub.angle < 0 ){
 	pub.angle += 360;
     }
-    while( pub.angle > 360 ){
+    while( pub.angle >= 360 ){
 	pub.angle -= 360;
     }
     // the parts of the obj.scale[XY] values related to size (not zoom, binning)
@@ -13763,7 +13783,7 @@ JS9.Fabric.removePolygonAnchors = function(dlayer, shape){
 // update child regions
 // don't need to call using image context
 JS9.Fabric.updateChildren = function(dlayer, shape, type){
-    let i, p, x, child, nangle, npos;
+    let i, p, x, child, nangle, npos, pangle;
     // region layer only, for now
     if( dlayer.layerName !== "regions" ){
 	return;
@@ -13816,13 +13836,14 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 	    child.top   = shape.top - p.dtop;
 	    break;
 	case "rotating":
-	    while( shape.angle < 0 ){
-		shape.angle += 360;
+	    pangle = shape.angle;
+	    while( pangle < 0 ){
+		pangle += 360;
 	    }
-	    while( shape.angle > 360 ){
-		shape.angle -= 360;
+	    while( pangle >= 360 ){
+		pangle -= 360;
 	    }
-	    nangle = shape.angle - p.lastangle;
+	    nangle = pangle - p.lastangle;
 	    npos = JS9.rotatePoint({x: child.left,y: child.top},
 				   nangle,
 				   {x: shape.left, y: shape.top});
@@ -13834,10 +13855,10 @@ JS9.Fabric.updateChildren = function(dlayer, shape, type){
 	    while( child.angle < 0 ){
 		child.angle += 360;
 	    }
-	    while( child.angle > 360 ){
+	    while( child.angle >= 360 ){
 		child.angle -= 360;
 	    }
-	    p.lastangle = shape.angle;
+	    p.lastangle = pangle;
 	    break;
 	case "scaling":
 	    p.dleft = p.dleft * (shape.scaleX / p.lastscalex);
@@ -15539,13 +15560,6 @@ JS9.Regions.listRegions = function(which, opts, layer){
 		    nexports.textOpts.angle = -child.angle;
 		    child.params.hasTextOpts = true;
 		}
-	    } else if( obj.angle === 0 && obj.pub.angle !== 0 ){
-		// parent is circle/annulus and group has an angle
-		if( (obj.params.shape === "circle")  ||
-		    (obj.params.shape === "annulus") ){
-		    nexports.textOpts.angle = obj.pub.angle;
-		    child.params.hasTextOpts = true;
-		}
 	    }
 	    if( child.params.parent.moved || child.params.hasTextOpts ){
 		// wcs, then physical coords are preferred ...
@@ -15916,7 +15930,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	} else if( wcssys === "physical" ){
 	    // use the LTM1_1 value stored for logical to image transforms
 	    if( this.lcs && this.lcs.physical ){
-		v.dval = v.dval * this.lcs.physical.forward[0][0];
+		v.dval = Math.abs(v.dval * this.lcs.physical.forward[0][0]);
 	    }
 	}
 	return v.dval;
@@ -15924,10 +15938,6 @@ JS9.Regions.parseRegions = function(s, opts){
     // get image angle
     const getang = (a) => {
 	const v = JS9.strtoscaled(a);
-	const wcsinfo = this.raw.wcsinfo || {crot: 0};
-	if( wcsinfo.crot ){
-            v.dval += wcsinfo.crot;
-	}
 	return v.dval;
     };
     // get cleaned-up string
