@@ -391,21 +391,21 @@ fitsfile *flipImage(fitsfile *fptr, char *flip, int *status){
     if( dox ){
       dval = 0.0; *comment = '\0'; tstatus = 0;
       fits_read_key(fptr, TDOUBLE, "LTV1", &dval, comment, &tstatus);
-      dval = -dval + naxes[0];
+      dval = naxes[0] - dval + 1; tstatus = 0;
       fits_update_key(ofptr, TDOUBLE, "LTV1", &dval, comment, &tstatus);
       dval = 1.0; *comment = '\0'; tstatus = 0;
       fits_read_key(fptr, TDOUBLE, "LTM1_1", &dval, comment, &tstatus);
-      dval = -dval;
+      dval = -dval; tstatus = 0;
       fits_update_key(ofptr, TDOUBLE, "LTM1_1", &dval, comment, &tstatus);
     }
     if( doy ){
       dval = 0.0; *comment = '\0'; tstatus = 0;
       fits_read_key(fptr, TDOUBLE, "LTV2", &dval, comment, &tstatus);
-      dval = -dval + naxes[1];
+      dval = naxes[1] - dval + 1; tstatus = 0;
       fits_update_key(ofptr, TDOUBLE, "LTV2", &dval, comment, &tstatus);
       dval = 1.0; *comment = '\0'; tstatus = 0;
       fits_read_key(fptr, TDOUBLE, "LTM2_2", &dval, comment, &tstatus);
-      dval = -dval;
+      dval = -dval; tstatus = 0;
       fits_update_key(ofptr, TDOUBLE, "LTM2_2", &dval, comment, &tstatus);
     }
     /* return the file pointer */
