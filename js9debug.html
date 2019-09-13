@@ -259,7 +259,7 @@
 				   im2.moveToDisplay(win);
 				   setTimeout(function(){
 				       im2.moveToDisplay("JS9");
-				   }, 500);
+				   }, 400);
 			       });
 			       JS9.LoadWindow(null,
                                    {id:win, clone:im2.display.id}, "light");}});
@@ -410,15 +410,25 @@
             }
             break;
           case "show":
+            switch(who){
+            case "both":
+                JS9.ShowShapeLayer("box", true);
+                JS9.ShowShapeLayer("circle", true);
+                break;
+	    default:
+		JS9.ShowShapeLayer(who, true);
+	        break;
+            }
+	    break;
           case "hide":
             switch(who){
-                case "both":
-                    JS9.ShowShapeLayer("box", what);
-                    JS9.ShowShapeLayer("circle", what);
-                    break;
-	        default:
-                    JS9.ShowShapeLayer(who, what);
-	            break;
+            case "both":
+                JS9.ShowShapeLayer("box", false);
+                JS9.ShowShapeLayer("circle", false);
+                break;
+	    default:
+                JS9.ShowShapeLayer(who, false);
+	        break;
             }
             break;
           case "up":
