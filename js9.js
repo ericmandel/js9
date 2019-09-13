@@ -897,7 +897,7 @@ JS9.Image = function(file, params, func){
 	this.mkRawDataFromHDU(file,
 			      $.extend({}, {file: file.filename}, localOpts));
 	// set scaling params from opts
-	mkscale.call(this, localOpts);
+	mkscale(localOpts);
 	// set up initial zoom
 	if( this.params.zoom ){
 	    nzoom = this.parseZoom(this.params.zoom);
@@ -926,7 +926,7 @@ JS9.Image = function(file, params, func){
 		// display image, 2D graphics, etc.
 		this.displayImage("all", localOpts);
 		// finish up
-		finishUp.call(this, func);
+		finishUp(func);
 	    }).on("error", () => {
 		// done loading, reset wait cursor
 		JS9.waiting(false);
@@ -938,7 +938,7 @@ JS9.Image = function(file, params, func){
 	    // display image, 2D graphics, etc.
 	    this.displayImage("all", localOpts);
 	    // finish up
-	    finishUp.call(this, func);
+	    finishUp(func);
 	}
 	break;
     case "string":
@@ -967,13 +967,13 @@ JS9.Image = function(file, params, func){
 		this.rgb.sect.ozoom = nzoom;
 	    }
 	    // set scaling params from opts
-	    mkscale.call(this, localOpts);
+	    mkscale(localOpts);
 	    // set up initial section
 	    this.mkSection();
 	    // display image, 2D graphics, etc.
 	    this.displayImage("all", localOpts);
 	    // finish up
-	    finishUp.call(this, func);
+	    finishUp(func);
 	    // debugging
 	    if( JS9.DEBUG ){
 		JS9.log("JS9 image: %s dims(%d,%d) min/max(%d,%d)",
@@ -3000,7 +3000,7 @@ JS9.Image.prototype.putImage = function(opts){
 	if( opts.blend !== undefined ){
 	    ctx.globalCompositeOperation = opts.blend;
 	}
-	ctx.drawImage(img2canvas.call(this, rgb.img), this.ix, this.iy);
+	ctx.drawImage(img2canvas(rgb.img), this.ix, this.iy);
 	ctx.restore();
     } else {
 	ctx.putImageData(rgb.img, this.ix, this.iy);
@@ -8473,8 +8473,6 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     const xcols = JS9.globalOpts.catalogs.ras;
     const ycols = JS9.globalOpts.catalogs.decs;
     const regs = [];
-    const wcol = 1;
-    const hcol = 1;
     const getpos = (ra, dec) => {
 	let arr;
 	arr = JS9.wcs2pix(this.raw.wcs, ra, dec).trim().split(/ +/);
@@ -8548,27 +8546,27 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
     switch(shape){
     case "box":
 	// eslint-disable-next-line no-unused-vars
-	sizefunc = (row, width, height) => {
+	sizefunc = () => {
 	    return { width: opts.width   || global.width  || 7,
 		     height: opts.height || global.height || 7 };
 	};
 	break;
     case "circle":
 	// eslint-disable-next-line no-unused-vars
-	sizefunc = (row, width, height) => {
+	sizefunc = () => {
 	    return { radius: opts.radius || global.radius || 3.5};
 	};
 	break;
     case "ellipse":
 	// eslint-disable-next-line no-unused-vars
-	sizefunc = (row, width, height) => {
+	sizefunc = () => {
 	    return { r1: opts.r1  || global.r1  || 3.5,
 		     r2: opts.r2  || global.r2  || 3.5 };
 	};
 	break;
     default:
 	// eslint-disable-next-line no-unused-vars
-	sizefunc = (row, width, height) => {
+	sizefunc = () => {
 	    return { width: opts.width || 7, height: opts.height || 7 };
 	};
 	break;
@@ -8597,7 +8595,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 	}
 	pos = getpos(ra, dec);
 	if( pos ){
-	    siz = sizefunc.call(this, data[i][wcol], data[i][hcol]);
+	    siz = sizefunc();
 	    reg = {id: i.toString(), shape: shape,
 		   x: pos.x, y: pos.y,
 		   width: siz.width, height: siz.height,
