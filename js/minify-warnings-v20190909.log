@@ -1,0 +1,76 @@
+js/FileSaver.js:159: WARNING - [JSC_CONSTANT_REASSIGNED_VALUE_ERROR] constant location assigned a value more than once.
+Original definition at externs.zip//window.js:52
+        if (popup) popup.location.href = url;else location = url;
+                                                  ^^^^^^^^^^^^^^
+
+0 error(s), 1 warning(s)
+js/fabric-v1.7.22.js:2371: WARNING - [JSC_MISPLACED_ANNOTATION] Misplaced function annotation. This JSDoc is not attached to a function node. Are you missing parentheses?
+      toArray = function(arrayLike) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+0 error(s), 1 warning(s)
+js/fabric-v2.7.0.js:1927: WARNING - [JSC_USELESS_CODE] Suspicious code. This code lacks side-effects. Is there a bug?
+    for (i = 0, chr; i < textstring.length; i++) {
+                ^^^
+
+js/fabric-v2.7.0.js:2439: WARNING - [JSC_MISPLACED_ANNOTATION] Misplaced function annotation. This JSDoc is not attached to a function node. Are you missing parentheses?
+      toArray = function(arrayLike) {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+0 error(s), 2 warning(s)
+js/flot-zoom.js:67: WARNING - [JSC_STRING_CONTINUATION] String continuations are not recommended. See https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations
+	    $(div).append("<div style='position:relative'><div style='z-index:100;position:absolute;right:12;top:12;z-index:2'>		\
+	                  ^
+
+0 error(s), 1 warning(s)
+js/jquery-3.2.1.js:733: WARNING - [JSC_USELESS_CODE] Suspicious code. The result of the 'getprop' operator is not being used.
+	arr[ preferredDoc.childNodes.length ].nodeType;
+	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+js/jquery-3.2.1.js:1761: WARNING - [JSC_SUSPICIOUS_LEFT_OPERAND_OF_LOGICAL_OPERATOR] Left operand of && operator is always truthy.
+				(pattern = new RegExp( "(^|" + whitespace + ")" + className + "(" + whitespace + "|$)" )) &&
+				^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+js/jquery-3.2.1.js:2059: WARNING - [JSC_USELESS_CODE] Suspicious code. This code lacks side-effects. Is there a bug?
+			if ( elem.parentNode ) {
+			^^^^^^^^^^^^^^^^^^^^^^^^
+
+js/jquery-3.2.1.js:2060: WARNING - [JSC_USELESS_CODE] Suspicious code. The result of the 'getprop' operator is not being used.
+				elem.parentNode.selectedIndex;
+				^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+js/jquery-3.2.1.js:7712: WARNING - [JSC_USELESS_CODE] Suspicious code. This code lacks side-effects. Is there a bug?
+			if ( parent && parent.parentNode ) {
+			^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+js/jquery-3.2.1.js:7713: WARNING - [JSC_USELESS_CODE] Suspicious code. The result of the 'getprop' operator is not being used.
+				parent.parentNode.selectedIndex;
+				^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+js/jquery-3.2.1.js:7722: WARNING - [JSC_USELESS_CODE] Suspicious code. This code lacks side-effects. Is there a bug?
+			if ( parent ) {
+			^^^^^^^^^^^^^^^
+
+js/jquery-3.2.1.js:7723: WARNING - [JSC_USELESS_CODE] Suspicious code. The result of the 'getprop' operator is not being used.
+				parent.selectedIndex;
+				^^^^^^^^^^^^^^^^^^^^
+
+js/jquery-3.2.1.js:7725: WARNING - [JSC_USELESS_CODE] Suspicious code. This code lacks side-effects. Is there a bug?
+				if ( parent.parentNode ) {
+				^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+js/jquery-3.2.1.js:7726: WARNING - [JSC_USELESS_CODE] Suspicious code. The result of the 'getprop' operator is not being used.
+					parent.parentNode.selectedIndex;
+					^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+0 error(s), 10 warning(s)
+js/jquery.flot.resize.js:22: WARNING - [JSC_USELESS_CODE] Suspicious code. Is there a missing '+' on the previous line?
+(function($,e,t){"$:nomunge";var i=[],n=$.resize=$.extend($.resize,{}),a,r=false,s="setTimeout",u="resize",m=u+"-special-event",o="pendingDelay",l="activeDelay",f="throttleWindow";n[o]=200;n[l]=20;n[f]=true;$.event.special[u]={setup:function(){if(!n[f]&&this[s]){return false}var e=$(this);i.push(this);e.data(m,{w:e.width(),h:e.height()});if(i.length===1){a=t;h()}},teardown:function(){if(!n[f]&&this[s]){return false}var e=$(this);for(var t=i.length-1;t>=0;t--){if(i[t]==this){i.splice(t,1);break}}e.removeData(m);if(!i.length){if(r){cancelAnimationFrame(a)}else{clearTimeout(a)}a=null}},add:function(e){if(!n[f]&&this[s]){return false}var i;function a(e,n,a){var r=$(this),s=r.data(m)||{};s.w=n!==t?n:r.width();s.h=a!==t?a:r.height();i.apply(this,arguments)}if($.isFunction(e)){i=e;return a}else{i=e.handler;e.handler=a}}};function h(t){if(r===true){r=t||1}for(var s=i.length-1;s>=0;s--){var l=$(i[s]);if(l[0]==e||l.is(":visible")){var f=l.width(),c=l.height(),d=l.data(m);if(d&&(f!==d.w||c!==d.h)){l.trigger(u,[d.w=f,d.h=c]);r=t||true}}else{d=l.data(m);d.w=0;d.h=0}}if(a!==null){if(r&&(t==null||t-r<1e3)){a=e.requestAnimationFrame(h)}else{a=setTimeout(h,n[o]);r=false}}}if(!e.requestAnimationFrame){e.requestAnimationFrame=function(){return e.webkitRequestAnimationFrame||e.mozRequestAnimationFrame||e.oRequestAnimationFrame||e.msRequestAnimationFrame||function(t,i){return e.setTimeout(function(){t((new Date).getTime())},n[l])}}()}if(!e.cancelAnimationFrame){e.cancelAnimationFrame=function(){return e.webkitCancelRequestAnimationFrame||e.mozCancelRequestAnimationFrame||e.oCancelRequestAnimationFrame||e.msCancelRequestAnimationFrame||clearTimeout}()}})(jQuery,this);
+                 ^^^^^^^^^^^
+
+0 error(s), 1 warning(s)
+js/pako_inflate.js:1: WARNING - [JSC_USELESS_CODE] Suspicious code. The result of the 'not' operator is not being used.
+/* pako 0.2.3 nodeca/pako */!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.pako=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+0 error(s), 1 warning(s)
