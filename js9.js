@@ -3364,8 +3364,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	let miny = 1000000;
 	let maxy = 0;
 	const shape = xreg.shape;
-	// use physical coor object, if possible
-	if( xreg.lcs ){ xreg = xreg.lcs; }
+	// use physical coords object, if possible
+	if( !this.parentFile && xreg.lcs ){ xreg = xreg.lcs; }
 	switch( shape ){
 	case "annulus":
             xdim  = xreg.radii[xreg.radii.length-1]*2;
@@ -3560,7 +3560,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	opts = {xdim: xdim, ydim: ydim, xcen: 0, ycen: 0};
     } else if( opts === "selected" ){
 	this.selectShapes("regions", "selected", (obj) => {
-	    topts = reg2sect(obj.pub);
+	    topts = reg2sect.call(this, obj.pub);
+	    topts.from = "virtualFile";
 	    topts.separate = true;
 	    topts.refreshRegions = false;
 	    topts.resetSection = true;
@@ -4315,16 +4316,17 @@ JS9.Image.prototype.getFlip = function(){
 
 // flip image along an axis
 JS9.Image.prototype.setFlip = function(flip){
+    let hdu, table;
     const opts = {};
     // sanity check
     if( !this || !this.raw || !this.raw.hdu || !this.raw.hdu.fits ){
-	JS9.error("no FITS image available for SetFlip()");
+	JS9.error("invalid image for setFlip");
     }
     // null argument resets the flip state
     flip = flip || "none";
     // so conversion to lowercase does not fail
     if( typeof flip !== "string" ){
-	JS9.error("invalid flip specification for SetFlip()");
+	JS9.error("invalid flip type for setFlip");
     }
     // set flip state
     switch(flip.toLowerCase()){
@@ -4338,16 +4340,42 @@ JS9.Image.prototype.setFlip = function(flip){
 	this.params.flip = "none";
 	break;
     default:
-	JS9.error(`unknown flip specification for SetFlip(): ${flip}`);
+	JS9.error(`unknown flip type for setFlip: ${flip}`);
 	break;
     }
-    // flip is actually a call to display a section, using the virtual file
+    // set flip state
     opts.flip = this.params.flip;
+    // get virual dimensions, since we will use the virtual file only
     opts.from =  "virtualFile";
-    opts.xcen = 0;
-    opts.ycen = 0;
+    // default is to take all we can get
+    opts.xcen = this.raw.width/2;
+    opts.ycen = this.raw.height/2;
     opts.xdim = this.raw.width;
-    opts.xdim = this.raw.width;
+    opts.ydim = this.raw.height;
+    // but we might be able to do better for tables
+    if( !this.parentFile && this.raw.hdu ){
+	hdu = this.raw.hdu;
+	if( this.imtab === "table" && hdu.table ){
+	    table = hdu.table;
+	    if( table.xcen && table.ycen && table.xdim && table.ydim ){
+		opts.bin =  Math.floor(table.bin||1);
+		opts.xcen = Math.floor(table.xcen);
+		opts.ycen = Math.floor(table.ycen);
+		opts.xdim = Math.floor(table.xdim);
+		opts.ydim = Math.floor(table.ydim);
+		opts.filter = table.filter || "";
+	    }
+	} else if( this.imtab === "image" ){
+	    if( hdu.x1 && hdu.x2 && hdu.y1 && hdu.y2 ){
+		opts.xdim = Math.floor(hdu.naxis1);
+		opts.ydim = Math.floor(hdu.naxis2);
+		opts.xcen = Math.floor((hdu.x1 + hdu.x2) / 2);
+		opts.ycen = Math.floor((hdu.y1 + hdu.y2) / 2);
+		opts.bin = 1;
+	    }
+	}
+    }
+    // flip is actually a call to display a section, using the virtual file
     return this.displaySection(opts);
 };
 
@@ -18768,6 +18796,8 @@ JS9.raw2FITS = function(raw, opts){
 			val = "F";
 		    } else if( val === "" ){
 			val = "' '";
+		    } else if( Number.isNaN(val) ){
+			val = "NaN";
 		    } else if( !JS9.isNumber(val) && val.charAt(0) !== "'" ){
 			val = `'${val}'`;
 		    }
