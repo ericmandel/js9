@@ -3560,7 +3560,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	opts = {xdim: xdim, ydim: ydim, xcen: 0, ycen: 0};
     } else if( opts === "selected" ){
 	this.selectShapes("regions", "selected", (obj) => {
-	    topts = reg2sect.call(this, obj.pub);
+	    topts = reg2sect(obj.pub);
 	    topts.from = "virtualFile";
 	    topts.separate = true;
 	    topts.refreshRegions = false;
