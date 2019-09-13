@@ -160,11 +160,25 @@
             }
             break;
           case "show":
+            switch(who){
+            case "both":
+                JS9.ShowShapeLayer("box", true);
+                JS9.ShowShapeLayer("circle", true);
+                break;
+	    default:
+		JS9.ShowShapeLayer(who, true);
+	        break;
+            }
+	    break;
           case "hide":
             switch(who){
-	        default:
-                    JS9.ShowShapeLayer(who, what);
-	            break;
+            case "both":
+                JS9.ShowShapeLayer("box", false);
+                JS9.ShowShapeLayer("circle", false);
+                break;
+	    default:
+                JS9.ShowShapeLayer(who, false);
+	        break;
             }
             break;
           case "up":
