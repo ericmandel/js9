@@ -252,6 +252,7 @@
                        JS9.Load("fits/ngc1316.fits",
                            {colormap: "viridis", scale: "linear",
                            onload: function(im2){
+                               JS9.AddRegions("FK4; circle(03:22:05.276, -37:20:53.615, 3.500028')", {display: im2});
                                JS9.SetScale("zscale", {display: im2});
 			       var win = "JS9_light" + JS9.uniqueID();
 			       $("#dhtmlwindowholder").arrive("#" + win,
