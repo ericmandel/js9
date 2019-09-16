@@ -348,6 +348,45 @@ You can load URLs outside the current web page domain if you are running a
 JS9 helper which has enabled the server side <b>Proxy Load</b> capability.
 See <a href="serverside.js">Server-side Analysis Tasks</a> for more information.
   
+<h5 id="JS9.GetStatus">Get Processing Status</h5>
+<p>
+<code class="api">status = JS9.GetStatus(id, type)</code>
+<p>
+where:
+<ul>
+<li><b>id</b>: the id or image handle of the image
+<li><b>type</b>: the type of status
+</ul>
+returns:
+<ul>
+<li><b>status</b>: status of processing
+</ul>
+This routine returns the status of one of the following specified
+asynchronous processing types: "Load", "CreateMosaic",
+"DisplaySection", "LoadCatalog", "LoadRegions", "ReprojectData",
+"RotateData", "RunAnalysis".
+<p>
+A status of "complete" means that the image is fully processed. Other
+statuses include:
+<ul>
+<li> processing: the image is being processed
+<li> loading: the image is in process of loading ("Load" only, for backward compatibility)
+<li> error: processing did not complete, due to an error
+<li> other: another image is loaded into this display
+<li> none: no image is loaded into this display
+</ul>
+Thus, to check for image load, one can do this in Python:
+<pre>
+    tfits = "foo.fits"
+    hdul = fits.open(tfits)
+    ...
+    j = JS9()
+    j.Load(hdul, tfits)
+    while j.GetStatus(tfits, "load") != "complete":
+        time.sleep(0.1)
+    j.SetZoom(2)
+</pre>
+
 <h5 id="JS9.GetLoadStatus">Get Load Status</h5>
 <p> 
 <code class="api">status = JS9.GetLoadStatus(id)</code>
@@ -360,9 +399,13 @@ returns:
 <ul>
 <li><b>status</b>: status of the load
 </ul>
-This routine returns the status of the load process for this image. A
-status of "complete" means that the image is fully loaded. Other statuses
-include:
+This routine returns the status of the load of this image.
+Provided for backward compatibility, it simply calls the more general
+<a href="#JS9.GetStatus"><b>JS9.GetStatus()</b></a> routine with
+"Load" as the second argument.
+<p>
+A status of "complete" means that the image is fully loaded. Other
+statuses include:
 <ul>
 <li> loading: the image is in process of loading
 <li> error: image did not load due to an error
@@ -375,7 +418,7 @@ Thus, to check for image load, one can do this in Python:
     hdul = fits.open(tfits)
     ...
     j = JS9()
-    j.SetFITS(hdul, tfits)
+    j.Load(hdul, tfits)
     while j.GetLoadStatus(tfits) != "complete":
         time.sleep(0.1)
     j.SetZoom(2)
@@ -2187,6 +2230,7 @@ using any of the following:
 <ul>
 <li><b>all</b>: all regions not including child text regions
 <li><b>All</b>: all regions including child text regions
+<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
@@ -3015,6 +3059,7 @@ can specify regions using any of the following:
 <ul>
 <li><b>all</b>: all regions not including child text regions
 <li><b>All</b>: all regions including child text regions
+<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
@@ -3097,6 +3142,7 @@ can specify a region selector using any of the following:
 <ul>
 <li><b>all</b>: all regions not including child text regions
 <li><b>All</b>: all regions including child text regions
+<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
@@ -3133,6 +3179,7 @@ can specify a region selector using any of the following:
 <ul>
 <li><b>all</b>: all regions not including child text regions
 <li><b>All</b>: all regions including child text regions
+<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
@@ -3158,6 +3205,7 @@ using any of the following:
 <ul>
 <li><b>all</b>: all regions not including child text regions
 <li><b>All</b>: all regions including child text regions
+<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
@@ -3317,13 +3365,17 @@ Note that the
 calls all take a shape specification as the second argument, which can
 be any of the following (in order of precedence):
 <ul>
-<li><b>"all"</b>: all regions
-<li><b>[id]</b>: a specific region id returned by
-  <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
-<li><b>"selected"</b>: the selected region (or all regions in the selected group)
-<li><b>[color]</b>: all regions having the specified color (e.g., "red")
-<li><b>[shape]</b>: all regions having the specified shape (e.g., "circle")
-<li><b>[tag]</b>: all regions containing the specified tag (e.g., "source")
+<li><b>all</b>: all shapes not including child text shapes
+<li><b>All</b>: all shapes including child text shapes
+<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
+<li><b>selected</b>: the selected shape (or shapes in a selected group)
+<li><b>[color]</b>: shapes of the specified color
+<li><b>[shape]</b>: shapes of the specified shape
+<li><b>[tag]</b>:  shapes having the specified tag
+<li><b>/[regexp]/</b>: shapes with a tag matching the specified regexp
+<li><b>child</b>: a child shape (i.e. text child of another shape)
+<li><b>parent</b>: a shape that has a child (i.e. has a text child)
+
 </ul>
 Thus, it is possible to act on multiple shapes at the same time.
 
@@ -3583,15 +3635,16 @@ The selected shapes are removed from this layer. If the <b>shapes</b>
 argument is not specified, it defaults to "all". You can specify a
 selector using any of the following:
 <ul>
-<li><b>all</b>: all regions not including child text regions
-<li><b>All</b>: all regions including child text regions
-<li><b>selected</b>: the selected region (or regions in a selected group)
-<li><b>[color]</b>: regions of the specified color
-<li><b>[shape]</b>: regions of the specified shape
-<li><b>[tag]</b>:  regions having the specified tag
-<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
-<li><b>child</b>: a child region (i.e. text child of another region)
-<li><b>parent</b>: a region that has a child (i.e. has a text child)
+<li><b>all</b>: all shapes not including child text shapes
+<li><b>All</b>: all shapes including child text shapes
+<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
+<li><b>selected</b>: the selected shape (or shapes in a selected group)
+<li><b>[color]</b>: shapes of the specified color
+<li><b>[shape]</b>: shapes of the specified shape
+<li><b>[tag]</b>:  shapes having the specified tag
+<li><b>/[regexp]/</b>: shapes with a tag matching the specified regexp
+<li><b>child</b>: a child shape (i.e. text child of another shape)
+<li><b>parent</b>: a shape that has a child (i.e. has a text child)
 </ul>
 In this context, a regexp is a string enclosed between "/"
 slashes.e.g., "/foo[1-4]/" will match "foo1", "foo2", "foo3", "foo4";
@@ -3647,6 +3700,22 @@ described in the
 <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
 section. However, you cannot (yet)
 change the shape itself (e.g., from "box" to "circle").
+
+<p>
+If the <b>shapes</b> argument is not specified, it defaults to
+"all". You can specify a selector using any of the following:
+<ul>
+<li><b>all</b>: all shapes not including child text shapes
+<li><b>All</b>: all shapes including child text shapes
+<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
+<li><b>selected</b>: the selected shape (or shapes in a selected group)
+<li><b>[color]</b>: shapes of the specified color
+<li><b>[shape]</b>: shapes of the specified shape
+<li><b>[tag]</b>:  shapes having the specified tag
+<li><b>/[regexp]/</b>: shapes with a tag matching the specified regexp
+<li><b>child</b>: a child shape (i.e. text child of another shape)
+<li><b>parent</b>: a shape that has a child (i.e. has a text child)
+</ul>
 
 <h5 id="JS9.LoadCatalog">Load an astronomical catalog</h5>
 <p>
