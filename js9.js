@@ -1052,6 +1052,12 @@ JS9.Image.prototype.closeImage = function(opts){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse closeImage opts: ${opts}`, e); }
     }
+    // if this image is the wcs reference image for another image, clear it
+    for(i=0; i<ilen; i++){
+	if( this === JS9.images[i].wcsim ){
+	    JS9.images[i].wcsim = null;
+	}
+    }
     // look for the image in the image list, and remove it
     for(i=0; i<ilen; i++){
 	if( this === JS9.images[i] ){
