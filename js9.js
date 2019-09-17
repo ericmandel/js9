@@ -1054,7 +1054,7 @@ JS9.Image.prototype.closeImage = function(opts){
     }
     // if this image is the wcs reference image for another image, clear it
     for(i=0; i<ilen; i++){
-	if( this === JS9.images[i].wcsim ){
+	if( JS9.images[i].wcsim === this ){
 	    JS9.images[i].wcsim = null;
 	}
     }
@@ -2211,7 +2211,7 @@ JS9.Image.prototype.mkSection = function(...args){
 	break;
     case 1:
 	if( !JS9.isNumber(args[0]) ){
-	    JS9.error("invalid input for generating section");
+	    JS9.error(`invalid input for generating section: ${args[0]}`);
 	}
 	sect.zoom   = parseFloat(args[0]);
 	sect.width  = Math.min(this.raw.width*sect.zoom,
@@ -2222,7 +2222,7 @@ JS9.Image.prototype.mkSection = function(...args){
     case 2:
 	// two args: x, y
 	if( !JS9.isNumber(args[0]) || !JS9.isNumber(args[1]) ){
-	    JS9.error("invalid input for generating section");
+	    JS9.error(`invalid input for generating section: ${args[0]} ${args[1]}`);
 	}
 	sect.xcen   = parseFloat(args[0]);
 	sect.ycen   = parseFloat(args[1]);
@@ -2241,7 +2241,7 @@ JS9.Image.prototype.mkSection = function(...args){
 	if( !JS9.isNumber(args[0]) ||
 	    !JS9.isNumber(args[1]) ||
 	    !JS9.isNumber(args[2]) ){
-	    JS9.error("invalid input for generating section");
+	    JS9.error(`invalid input for generating section: ${args[0]} ${args[1]} ${args[2]}`);
 	}
 	sect.xcen   = parseFloat(args[0]);
 	sect.ycen   = parseFloat(args[1]);
