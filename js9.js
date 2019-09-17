@@ -3490,6 +3490,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    if( oreg && topts.refreshRegions !== false ){
 		nim.addShapes("regions", oreg);
 	    }
+	    // set status of new image
+	    nim.setStatus("displaySection", "complete");
 	} else if( typeof topts.refresh === "string" ){
 	    // refresh the image in the specified display
 	    delete topts.xcen;
@@ -3535,6 +3537,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		if( oreg ){
 		    nim.addShapes("regions", oreg);
 		}
+		// set status of new image
+		nim.setStatus("displaySection", "complete");
 	    }
 	} else {
 	    // this is the default behavior for displaySection:
@@ -3545,7 +3549,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    // refresh the current image with the new hdu
 	    this.refreshImage(hdu, topts);
 	}
-	// set status
+	// set status of old image
 	this.setStatus("displaySection", "complete");
 	// done waiting
 	JS9.waiting(false);
@@ -10060,7 +10064,7 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
     };
     // display mosaic as a new image
     const disp = (hdu, opts) => {
-	let topts;
+	let topts, nim;
 	opts = opts || {};
 	topts = $.extend(true, {}, opts);
 	// start the waiting!
@@ -10070,9 +10074,10 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
 	// make sure we use the current display
 	topts.display = this.id;
 	// set up new and display new image
-	JS9.checkNew(new JS9.Image(hdu, topts));
-	// set status
+	nim = new JS9.Image(hdu, topts);
+	// set status of both old and new image
 	im0.setStatus("createMosaic", "complete");
+	nim.setStatus("createMosaic", "complete");
 	// done waiting
 	JS9.waiting(false);
     };
