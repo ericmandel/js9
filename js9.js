@@ -17374,6 +17374,15 @@ JS9.msgHandler =  function(msg, cb){
 	    if( res instanceof JS9.Display || res instanceof JS9.Image ){
 		res = res.id;
 	    }
+	    switch(cmd){
+	    case "NewShapeLayer":
+		if( res && res.layerName ){
+		    res = res.layerName;
+		}
+		break;
+	    default:
+		break;
+	    }
 	    cb(res);
 	}
 	return res;
