@@ -253,8 +253,6 @@ int initwcs(char *s, int n){
   }
   if( wcs ){
     wcsoutinit(wcs, getradecsys(wcs));
-  } else {
-    wcserr();
   }
   return newinfo(wcs);
 }
