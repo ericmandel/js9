@@ -245,10 +245,10 @@ static Info getinfo(int n){
 /* init the wcs struct and create a new info record */
 int initwcs(char *s, int n){
   struct WorldCoor *wcs;
-  hlength(s, 0);
   if( n > 0 ){
     wcs = wcsninit(s, n);
   } else {
+    hlength(s, 0);
     wcs = wcsinit(s);
   }
   if( wcs ){
