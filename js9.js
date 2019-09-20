@@ -17389,8 +17389,6 @@ JS9.msgHandler =  function(msg, cb){
 		}
 		// add callback arg
 		args.push(cb);
-		// and clear the callback
-		cb = null;
 	    }
 	    break;
 	default:
@@ -17409,16 +17407,25 @@ JS9.msgHandler =  function(msg, cb){
 	    if( res instanceof JS9.Display || res instanceof JS9.Image ){
 		res = res.id;
 	    }
+	    // post-processing
 	    switch(cmd){
 	    case "NewShapeLayer":
 		if( res && res.layerName ){
 		    res = res.layerName;
 		}
 		break;
+	    case "RunAnalysis":
+		// only callback on error, runAnalysis did non-error case
+		if( !res.match(/^ERROR:/) ){
+		    cb = null;
+		}
+		break;
 	    default:
 		break;
 	    }
-	    cb(res);
+	    if( cb ){
+		cb(res);
+	    }
 	}
 	return res;
     }
