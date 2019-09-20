@@ -17329,25 +17329,13 @@ JS9.progress = function(arg1, arg2){
 
 // msg coming from socket.io or postMessage
 JS9.msgHandler =  function(msg, cb){
-    let s, obj, tdisp, res;
+    let s, obj, tdisp, res, dobj;
     let args = [];
     const cmd = msg.cmd;
     const id = msg.id;
     const oalerts = JS9.globalOpts.alerts;
     const rstr = JS9.globalOpts.quietReturn ? "" : "OK";
-    // turn off alerts
-    if( cb ){
-	JS9.globalOpts.alerts = false;
-    }
-    // look for a public API call
-    if( JS9.publics[cmd] ){
-	// check for non-array first arg
-	if( !$.isArray(msg.args) ){
-	    msg.args = [msg.args];
-	}
-	// deep copy of arg array
-	args = $.extend(true, [], msg.args);
-	// add the display object, unless we already have one
+    const getDisplayObject = (id, args) => {
 	if( id ){
 	    // bash send a string, not an object
 	    if( args.length > 0 ){
@@ -17363,28 +17351,54 @@ JS9.msgHandler =  function(msg, cb){
 		    (typeof obj === "object")       &&
 		    obj.hasOwnProperty("display")   &&
 		    (Object.keys(obj).length === 1) ){
-		    if( typeof s === "string" ){
-			// may as well replace string with parsed object
-			args.pop();
-			args.push(obj);
-		    }
+		    // remove the current display object
+		    args.pop();
+		    // return the new one
+		    return obj;
 		} else {
-		    args.push({display: id});
+		    return {display: id};
 		}
 	    } else {
-		args.push({display: id});
+		return {display: id};
 	    }
 	}
-	// if RunAnalysis has a callback, call it when the helper returns
-	if( (cmd === "RunAnalysis") && cb ){
-	    // add opts arg if not already present
-	    if( args.length === 1 ){
-		args.push(null);
+	return null;
+    };
+    // turn off alerts
+    if( cb ){
+	JS9.globalOpts.alerts = false;
+    }
+    // look for a public API call
+    if( JS9.publics[cmd] ){
+	// check for non-array first arg
+	if( !$.isArray(msg.args) ){
+	    msg.args = [msg.args];
+	}
+	// deep copy of arg array
+	args = $.extend(true, [], msg.args);
+	// get display object (temporarily remove it, if necessary)
+	dobj = getDisplayObject(id, args);
+	// pre-processing
+	switch(cmd){
+	case "RunAnalysis":
+	    // if RunAnalysis has a callback, call it when the helper returns
+	    if( cb ){
+		// add opts arg if not already present
+		if( args.length === 1 ){
+		    args.push(null);
+		}
+		// add callback arg
+		args.push(cb);
+		// and clear the callback
+		cb = null;
 	    }
-	    // add callback arg
-	    args.push(cb);
-	    // and clear the callback
-	    cb = null;
+	    break;
+	default:
+	    break;
+	}
+	// add (back) the display object
+	if( dobj ){
+	    args.push(dobj);
 	}
 	// call public API
 	try{ res = JS9.publics[cmd](...args); }
