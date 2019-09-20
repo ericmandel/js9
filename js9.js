@@ -1048,6 +1048,7 @@ JS9.Image.prototype.closeImage = function(opts){
     const seldisplay = JS9.Dysel.getDisplayOr(this.display);
     // opts is optional
     opts = opts || {};
+    // opts can be json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse closeImage opts: ${opts}`, e); }
@@ -2096,12 +2097,16 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 		    return;
 		}
 		if( obj.stdout ){
-		    this.hdus = JSON.parse(obj.stdout);
+		    try{ this.hdus = JSON.parse(obj.stdout); }
+		    catch(e) { this.hdus = null; }
 		}
 	    });
 	} else if( this.raw && this.raw.hdu && this.raw.hdu.fits ){
 	    s = JS9.listhdu(this.raw.hdu.fits.vfile);
-	    this.hdus = JSON.parse(s);
+	    if( s ){
+		try{ this.hdus = JSON.parse(s); }
+		catch(e) { this.hdus = null; }
+	    }
 	}
     }
     catch(ignore){ /* empty */ }
@@ -3084,13 +3089,13 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	mode.colors = false;
 	mode.scaled = false;
     }
+    // opts are optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse displayImage opts: ${opts}`, e); }
     }
-    // opts are optional
-    opts = opts || {};
     // do we need to blend?
     if( this.display.blendMode && (opts.blendMode !== false) ){
 	for(i=0; i<JS9.images.length; i++){
@@ -3185,13 +3190,13 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 // input obj is a fits object, array, typed array, etc.
 JS9.Image.prototype.refreshImage = function(obj, opts){
     let s, arr, ozoom, ora, odec, olpos, ipos, func;
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse refresh opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     // no obj or obj is a string, this is a load with refresh turned on
     if( !obj || typeof obj === "string" ){
 	if( opts.onrefresh ){
@@ -3564,6 +3569,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     if( !this.raw || !this.raw.hdu || !this.raw.hdu.fits ){
 	JS9.error("invalid image for displaySection");
     }
+    // opts is optional
+    opts = opts || {};
     // special case: if opts is "full", display full image
     if( opts === "full" ){
 	const {xdim, ydim} = this.fileDimensions();
@@ -3582,8 +3589,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse section opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     if( opts.separate ){
 	// if we are generating a separate image, copy the hdu
 	hdu = $.extend(true, {}, this.raw.hdu);
@@ -3872,13 +3877,13 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 	    dispnext(i+1);
 	}
     };
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse extension opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     opts.waiting = false;
     // only makes sense if we have hdus
     if( !this.hdus ){
@@ -3958,13 +3963,13 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 // display the specified slice of a 3D or 4d FITS cube
 JS9.Image.prototype.displaySlice = function(slice, opts, func){
     let i, topts;
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse slice opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     opts.waiting = false;
     // sanity check
     if( slice === undefined ){
@@ -5230,6 +5235,8 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 	    break;
 	}
     };
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
@@ -5534,13 +5541,13 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	}
 	return annotations;
     };
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse display opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     // window format ...
     winFormat = opts.winformat;
     // ... or target div
@@ -5575,7 +5582,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	break;
     case "plot":
 	// convert results to js object
-	if( typeof s === "string" ){
+	if( s && typeof s === "string" ){
 	    try{ pobj = JSON.parse(s); }
 	    catch(e){ JS9.error(`can't plot return data: ${s}`, e);	}
 	} else if( typeof s === "object" ){
@@ -5933,6 +5940,8 @@ JS9.Image.prototype.saveFITS = function(fname){
 JS9.Image.prototype.saveIMG = function(fname, type, opts){
     let key, img, ctx, canvas, width, height, quality;
     if( window.hasOwnProperty("saveAs") ){
+	// opts is optional
+	opts = opts || {};
 	// opts can be opts object or json string or quality value
 	if( typeof opts === "number" ){
 	    quality = opts;
@@ -5953,8 +5962,6 @@ JS9.Image.prototype.saveIMG = function(fname, type, opts){
 	fname = fname || "js9.png";
 	// save as specified type
 	type = type || "image/png";
-	// opts is optional
-	opts = opts || {};
 	// convenience params
 	width = this.display.width;
 	height = this.display.height;
@@ -6836,9 +6843,11 @@ JS9.Image.prototype.radialProfile = function(...args){
     // call regcnts routine
     s = this.countsInRegions(...carr);
     // need a json string in return
-    try{ obj = JSON.parse(s); }
-    catch(e){ JS9.error("can't parse regcnts JSON", e); }
-    if( !obj.columnUnits.radii ){
+    if( s ){
+	try{ obj = JSON.parse(s); }
+	catch(e){ JS9.error("can't parse regcnts JSON", e); }
+    }
+    if( !obj || !obj.columnUnits || !obj.columnUnits.radii ){
 	JS9.error("no radii available for radial profile");
     }
     // get plot labels
@@ -6916,8 +6925,13 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
     // get counts in regions for all slices in the cube
     s = this.countsInRegions(src, bkg, opts);
     // convert to json format
-    try{ jobj = JSON.parse(s); }
-    catch(e){ JS9.error(`can't parse regcnts results: ${s}`, e); }
+    if( s ){
+	try{ jobj = JSON.parse(s); }
+	catch(e){ JS9.error(`can't parse regcnts results: ${s}`, e); }
+    }
+    if( !jobj ){
+	JS9.error("no regcnts info available for plot3d");
+    }
     // init plot object
     s = this.raw.header[`CTYPE${String(index3)}`];
     if( s ){
@@ -6980,6 +6994,8 @@ JS9.Image.prototype.rawDataLayer = function(...args){
     if( !args.length ){
 	return this.raw.id;
     }
+    // opts is optional
+    opts = opts || {};
     // opts is a string with second arg a func: generate opts object
     // opts is a string, no func: switch to a different raw data layer
     // opts is a string + "remove": remove specified layer
@@ -7075,8 +7091,6 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse rawData opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     // but the id is not
     rawid = opts.rawid || JS9.RAWIDX;
     // which of the "old" raws do we pass to func?
@@ -7213,13 +7227,13 @@ JS9.Image.prototype.gaussBlurData = function(sigma){
     }
     // save value
     this.params.sigma = sigma;
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse gaussBlur opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     // the blurred image will be floating point
     if( this.raw.bitpix === -64 ){
 	opts.bitpix = -64;
@@ -7269,13 +7283,13 @@ JS9.Image.prototype.imarithData = function(...args){
     if( !args.length ){
 	return ["add", "sub", "mul", "div", "min", "max", "reset"];
     }
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse imarith opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     opts.rawid = opts.rawid || "imarith";
     // special case: reset by deleting the layer
     if( (op === "reset") || (op === "remove") ){
@@ -7459,13 +7473,13 @@ JS9.Image.prototype.shiftData = function(...args){
     if( x === undefined || y === undefined ){
 	JS9.error("missing translation value(s) for shiftData");
     }
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse shift opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     opts.rawid = opts.rawid || "shift";
     opts.x = x;
     opts.y = y;
@@ -7545,13 +7559,13 @@ JS9.Image.prototype.rotateData = function(...args){
     if( !raw.header || !raw.wcsinfo ){
 	JS9.error("no WCS info available for reprojection");
     }
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse rotate opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     // save stash name
     opts.stash = "rotateData";
     // but make sure we can set the id
@@ -8190,13 +8204,13 @@ JS9.Image.prototype.saveSession = function(file, opts){
     if( !file.match(/\.ses$/) ){
 	file += ".ses";
     }
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse session opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     // change the cursor to show the waiting status
     JS9.waiting(true, this.display);
     // object we will save
@@ -8673,13 +8687,13 @@ JS9.Image.prototype.loadCatalog = function(...args){
     if( global.tooltip ){
 	lopts.tooltip = global.tooltip;
     }
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse catalog opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     // default color, if none specified
     opts.color = opts.color || global.color || "#00FF00";
     // wcs system
@@ -9567,13 +9581,13 @@ JS9.Display.prototype.center = function(){
 // gather images from other displays into this display
 JS9.Display.prototype.gather = function(opts){
     let i, arr, uim;
-    // allow json opts
+    // opts are optional
+    opts = opts || {};
+    // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse gather opts: ${opts}`, e); }
     }
-    // opts are optional
-    opts = opts || {};
     // array of images to use or all of them
     arr = opts.images || JS9.images;
     for(i=0; i<arr.length; i++){
@@ -9776,13 +9790,13 @@ JS9.Display.prototype.separate = function(opts){
 	    }
 	}
     };
-    // allow json opts
+    // opts are optional
+    opts = opts || {};
+    // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse separate opts: ${opts}`, e); }
     }
-    // opts are optional
-    opts = opts || {};
     // array of images to use
     arr = opts.images || JS9.images;
     //  start separating the images
@@ -12445,13 +12459,13 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	layerName === "regions" ){
 	return;
     }
+    // optional myopts can be an object or a string
+    myopts = myopts || {};
     // opts can be an object or json
     if( typeof myopts === "string" ){
 	try{ myopts = JSON.parse(myopts); }
 	catch(e){ JS9.error(`can't parse shape opts: ${myopts}`, e); }
     }
-    // optional myopts can be an object or a string
-    myopts = myopts || {};
     // delay adding the region, if this image is not the one being displayed
     if( this.display.image !== this ){
 	this.delayedShapes = this.delayedShapes || [];
@@ -13279,13 +13293,13 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 JS9.Fabric.getShapes = function(layerName, shape, opts){
     let myshape = {};
     const shapes = [];
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse getShapes opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     // return regions in text format, if necessary
     if( layerName === "regions" && opts.format === "text" ){
 	return this.listRegions(shape, {mode: opts.mode || 1});
@@ -13318,7 +13332,7 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     if( !opts ){
 	return;
     }
-    // allow opts to be a JSON string
+    // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse shape opts: ${opts}`, e); }
@@ -13990,13 +14004,13 @@ JS9.Fabric.print = function(opts){
     let xoff = 0;
     const divtmpl = "<div style='position:absolute; left:%spx; top:%spx'>";
     const winopts = sprintf("width=%s,height=%s,menubar=1,toolbar=1,status=0,scrollbars=1,resizable=1", this.display.canvasjq.attr("width"), this.display.canvasjq.attr("height"));
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse print opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     // get the main image as a dataURL
     dataURL = this.display.canvas.toDataURL("image/png");
     // start the web page string
@@ -15633,13 +15647,13 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	}
 	return nexports;
     };
+    // opts is optional
+    opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse listRegions opts: ${opts}`, e); }
     }
-    // opts is optional
-    opts = opts || {};
     // default is to display, including non-source tags
     mode = opts.mode;
     if( JS9.isNull(mode) ){
@@ -16140,7 +16154,7 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     if( typeof layer === "object" ){
 	opts = layer;
 	layer = null;
-    } else if( typeof layer === "string" ){
+    } else if( layer && typeof layer === "string" ){
 	try{ opts = JSON.parse(layer); }
 	catch(e){ opts = null; }
 	if( opts ){ layer = null; }
@@ -16671,6 +16685,7 @@ JS9.Grid.display = function(mode, myopts){
     }
     // local opts are optional
     myopts = myopts || {};
+    // myopts can be an object or json
     if( typeof myopts === "string" ){
 	try{ myopts = JSON.parse(myopts); }
 	catch(e){ JS9.error("can't parse displayCoordGrid JSON", e); }
@@ -20651,9 +20666,11 @@ JS9.initCommands = function(){
 		im.displaySection("full");
 	    } else {
 		s = args.join(" ");
-		try{ obj = JSON.parse(s); }
-		catch(e){ JS9.error("invalid JSON section"); }
-		im.displaySection(obj);
+		if( s ){
+		    try{ obj = JSON.parse(s); }
+		    catch(e){ JS9.error("invalid JSON section"); }
+		    im.displaySection(obj);
+		}
 	    }
 	}
     }));
@@ -21539,7 +21556,7 @@ JS9.mkPublic("Load", function(...args){
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
 	opts = $.extend(true, {}, opts);
-    } else if( typeof opts === "string" ){
+    } else if( opts && typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = { /* empty */ }; }
@@ -21930,7 +21947,7 @@ JS9.mkPublic("LoadWindow", function(...args){
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
 	opts = $.extend(true, {}, opts);
-    } else if( typeof opts === "string" ){
+    } else if( opts && typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = {}; }
@@ -22068,7 +22085,7 @@ JS9.mkPublic("LoadProxy", function(...args){
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
 	opts = $.extend(true, {}, opts);
-    } else if( typeof opts === "string" ){
+    } else if( opts && typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = {}; }
@@ -22990,7 +23007,7 @@ JS9.mkPublic("LoadRegions", function(...args){
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
 	opts = $.extend(true, {}, opts);
-    } else if( typeof opts === "string" ){
+    } else if( opts && typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = {}; }
@@ -23268,7 +23285,7 @@ JS9.mkPublic("LoadSession", function(...args){
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
 	opts = $.extend(true, {}, opts);
-    } else if( typeof opts === "string" ){
+    } else if( opts && typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = {}; }
@@ -23357,7 +23374,7 @@ JS9.mkPublic("LoadCatalog", function(...args){
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
 	opts = $.extend(true, {}, opts);
-    } else if( typeof opts === "string" ){
+    } else if( opts && typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = {}; }
