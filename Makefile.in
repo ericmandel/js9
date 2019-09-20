@@ -589,6 +589,15 @@ spell:		FORCE
 			aspell -c $$f; \
 		  done)
 
+smoke:		FORCE
+		@(X=`js9 cmap`; 					\
+	          echo "$$X" | egrep "^ERROR:" 1>/dev/null 2>&1;	\
+		  if [ $$? = 0 ]; then					\
+			js9 -a & 					\
+			sleep 3;					\
+		  fi;							\
+		  python3 smoke.py)
+
 js9tests:	FORCE
 		@(node js9Test.js --all)
 
@@ -656,7 +665,7 @@ jsfitsio.o:	$(JSFITSIO)/jsfitsio.c
 listhdu.o:	$(JSFITSIO)/listhdu.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
-healpix.o:	$(JSFITSIO)/healpix.c
+vhealpix.o:	$(JSFITSIO)/healpix.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
 js9helper.o:	js9helper.c
