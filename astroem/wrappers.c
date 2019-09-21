@@ -248,7 +248,10 @@ int initwcs(char *s, int n){
   if( n > 0 ){
     wcs = wcsninit(s, n);
   } else {
-    hlength(s, 0);
+    // setting to 0 breaks Montage's checkWCS call
+    // hlength(s, 0);
+    // wcslib's hget.c uses 256000 as the default max, so we will too
+    hlength(s, 256000);
     wcs = wcsinit(s);
   }
   if( wcs ){
