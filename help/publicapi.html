@@ -1611,6 +1611,12 @@ system. Note that the WCS string above is returned by the <b>Edit</b>
 menu's "copy wcs pos" option (i.e., the "/" keystroke).
 
 <p>
+Finally, if you pass the string "mouse" as the sole argument, the
+image is panned to the current mouse position. This is especially useful
+in conjunction with keyboard shortcuts (where currently the "m" key uses this
+routine to pan to the current mouse position.)
+
+<p>
 By default, panning is unconstrained: you can pan the image so that
 some (or even all) of the display does not contain image data (e.g.,
 if you pan an image to point 0,0, the image origin will be the

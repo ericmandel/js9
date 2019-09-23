@@ -4761,6 +4761,13 @@ JS9.Keyboard.Actions["toggle shape layers plugin"] = function(im, ipos, evt){
     }
 };
 
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["pan to mouse position"] = function(im, ipos, evt){
+    if( im ){
+	im.setPan("mouse");
+    }
+};
+
 // get action associated with the current keyboard
 JS9.Keyboard.getAction = function(im, evt){
     let action;

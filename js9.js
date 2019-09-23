@@ -193,6 +193,7 @@ JS9.globalOpts = {
 	"M-k": "toggle keyboard actions plugin",
 	l: "toggle active shape layers",
 	"M-l": "new JS9 light window",
+        m: "pan to mouse position",
 	"M-m": "toggle mouse/touch plugin",
 	"M-o": "open local file",
         P: "paste regions from local clipboard",
@@ -4085,8 +4086,13 @@ JS9.Image.prototype.setPan = function(...args){
     // one string arg is a json specification
     // (two string args is panx, pany in string format)
     if( args.length === 1 && typeof panx === "string" ){
-	try{ panx = JSON.parse(panx); }
-	catch(e){ JS9.error(`can't parse setPan JSON: ${panx}`, e); }
+	if( panx === "mouse" && this.ipos ){
+	    panx = this.ipos.x;
+	    pany = this.ipos.y;
+	} else {
+	    try{ panx = JSON.parse(panx); }
+	    catch(e){ JS9.error(`can't parse setPan JSON: ${panx}`, e); }
+	}
     }
     if( typeof panx === "object" ){
 	obj = panx;
