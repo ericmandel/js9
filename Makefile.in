@@ -665,7 +665,7 @@ jsfitsio.o:	$(JSFITSIO)/jsfitsio.c
 listhdu.o:	$(JSFITSIO)/listhdu.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
-vhealpix.o:	$(JSFITSIO)/healpix.c
+healpix.o:	$(JSFITSIO)/healpix.c
 		$(CC) -c $(CC_SW) -o $@ $+
 
 js9helper.o:	js9helper.c
