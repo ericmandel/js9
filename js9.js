@@ -222,6 +222,7 @@ JS9.globalOpts = {
 	"downArrow": "move region/position down"
     }, // keyboard actions
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
+    metaClickPan: true,         // metaKey + click pans to mouse position?
     toolbarTooltips: false,     // display tooltips on toolbar?
     centerDivs: ["JS9Menubar"], // divs which take part in JS9.Display.center()
     resizeDivs: ["JS9Menubar", "JS9Colorbar", "JS9Toolbar"], // divs which take part in JS9.Display.resize()
@@ -19445,6 +19446,11 @@ JS9.mouseUpCB = function(evt){
 		// mark this as the current display
 		JS9.Dysel.select(display);
 	    }
+	}
+    } else {
+	// shift-click: pan to mouse position, if necessary
+	if( isclick && !im.clickInRegion && JS9.globalOpts.metaClickPan ){
+	    im.setPan(im.ipos.x,im.ipos.y);
 	}
     }
     // safe to unset clickInRegion now

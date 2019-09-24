@@ -9767,6 +9767,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "convert FITS to PNG rep files?"
 	},
+	"metaClickPan": {
+	    "type": "boolean",
+	    "helper": "meta-click pans to mouse position?"
+	},
 	"mousetouchZoom": {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
@@ -9905,6 +9909,7 @@ JS9.Prefs.init = function(){
 			   plot3d: JS9.globalOpts.plot3d,
 			   syncOps: JS9.globalOpts.syncOps,
 			   wcsUnits: JS9.globalOpts.wcsUnits,
+			   metaClickPan: JS9.globalOpts.metaClickPan,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
 			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
 			   regionDisplay: JS9.globalOpts.regionDisplay,
