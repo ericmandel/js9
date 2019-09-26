@@ -4539,8 +4539,9 @@ JS9.Image.prototype.flipData = function(...args){
     // no args essentially means reset
     flip = flip || "none";
     rot  = rot  || 0;
-    while( rot < 0 ){ rot += 360.0; }
-    while( rot > 360 ){ rot -= 360.0; }
+    rot  = Math.floor(rot);
+    while( rot < 0 ){ rot += 360; }
+    while( rot > 360 ){ rot -= 360; }
     if( rot % 90 !== 0 ){
 	JS9.error(`invalid rot90 value: ${rot} (use: 0, 90, 180, 270)`);
     }
