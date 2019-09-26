@@ -145,6 +145,7 @@ JS9.globalOpts = {
     reproj: {xdim: 4096, ydim: 4096}, // max image size we can reproject
     reprojSwitches: "",         // Montage reproject switches
     binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
+    flipUsing: "data",		// "data" or "file"
     clearImageMemory: "heap",   // rm vfile: always|never|auto|noExt|noCube|size>x Mb heap=>free heap
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
@@ -4336,8 +4337,190 @@ JS9.Image.prototype.getFlip = function(){
     return this.params.flip;
 };
 
+
 // flip image along an axis
 JS9.Image.prototype.setFlip = function(flip){
+    if( JS9.globalOpts.flipUsing === "file" ){
+	return this.flipFile(flip);
+    }
+    return this.flipData(flip);
+};
+
+// creates a new raw data layer ("flip")
+JS9.Image.prototype.flipData = function(...args){
+    let [flip, opts] = args;
+    const getBuf = (oraw, ooff, nraw, noff) => {
+	let obuf, nbuf;
+	switch(oraw.bitpix){
+	case 8:
+	    obuf = new Uint8Array(oraw.data.buffer, ooff, oraw.width);
+	    nbuf = new Uint8Array(nraw.data.buffer, noff, oraw.width);
+	    break;
+	case 16:
+	case -16:
+	    obuf = new Uint16Array(oraw.data.buffer, ooff, oraw.width);
+	    nbuf = new Uint16Array(nraw.data.buffer, noff, oraw.width);
+	    break;
+	case 32:
+	    obuf = new Uint32Array(oraw.data.buffer, ooff, oraw.width);
+	    nbuf = new Uint32Array(nraw.data.buffer, noff, oraw.width);
+	    break;
+	case -32:
+	    obuf = new Float32Array(oraw.data.buffer, ooff, oraw.width);
+	    nbuf = new Float32Array(nraw.data.buffer, noff, oraw.width);
+	    break;
+	case -64:
+	    obuf = new Float64Array(oraw.data.buffer, ooff, oraw.width);
+	    nbuf = new Float64Array(nraw.data.buffer, noff, oraw.width);
+	    break;
+	default:
+	    JS9.error(`unknown bitpix value for flip: ${oraw.bitpix}`);
+	}
+	return [obuf, nbuf];
+    };
+    const flipX = (oraw, nraw) => {
+	let oj, nj, ooff, noff, obuf, nbuf;
+	const bpp = oraw.data.BYTES_PER_ELEMENT;
+	for(oj=0; oj<oraw.height; oj++){
+	    nj = oj;
+	    ooff = oj * oraw.width * bpp;
+	    noff = nj * oraw.width * bpp;
+	    [obuf, nbuf] = getBuf(oraw, ooff, nraw, noff);
+	    nbuf.set(obuf);
+	    nbuf.reverse();
+	}
+    };
+    const flipY = (oraw, nraw) => {
+	let oj, nj, ooff, noff, obuf, nbuf;
+	const bpp = oraw.data.BYTES_PER_ELEMENT;
+	for(oj=0; oj<oraw.height; oj++){
+	    nj = oraw.height - oj - 1;
+	    ooff = oj * oraw.width * bpp;
+	    noff = nj * oraw.width * bpp;
+	    [obuf, nbuf] = getBuf(oraw, ooff, nraw, noff);
+	    nbuf.set(obuf);
+	}
+    };
+    const flipXY = (oraw, nraw) => {
+	let oj, nj, ooff, noff, obuf, nbuf;
+	const bpp = oraw.data.BYTES_PER_ELEMENT;
+	for(oj=0; oj<oraw.height; oj++){
+	    nj = oraw.height - oj - 1;
+	    ooff = oj * oraw.width * bpp;
+	    noff = nj * oraw.width * bpp;
+	    [obuf, nbuf] = getBuf(oraw, ooff, nraw, noff);
+	    nbuf.set(obuf);
+	    nbuf.reverse();
+	}
+    };
+    const updateHeader = (raw, opts) => {
+	const header = raw.header;
+	opts = opts || {};
+	opts.updatewcs = true;
+	switch(this.params.flip){
+	case "x":
+	    if( JS9.notNull(header.CRPIX1) ){
+		header.CRPIX1 = header.NAXIS1 - header.CRPIX1 + 1;
+	    }
+	    if( JS9.notNull(header.CDELT1) ){
+		header.CDELT1 = - header.CDELT1;
+	    }
+	    header.LTV1 = header.LTV1 || 0.0;
+	    header.LTV1 = header.NAXIS1 - header.LTV1 + 1;
+	    header.LTM1_1 = header.LTM1_1 || 1.0;
+	    header.LTM1_1 = - header.LTM1_1;
+	    break;
+	case "y":
+	    if( JS9.notNull(header.CRPIX2) ){
+		header.CRPIX2 = header.NAXIS2 - header.CRPIX2 + 1;
+	    }
+	    if( JS9.notNull(header.CDELT2) ){
+		header.CDELT2 = - header.CDELT2;
+	    }
+	    header.LTV2 = header.LTV2 || 0.0;
+	    header.LTV2 = header.NAXIS2 - header.LTV2 + 1;
+	    header.LTM2_2 = header.LTM2_2 || 1.0;
+	    header.LTM2_2 = - header.LTM2_2;
+	    break;
+	case "xy":
+	    if( JS9.notNull(header.CRPIX1) ){
+		header.CRPIX1 = header.NAXIS1 - header.CRPIX1 + 1;
+	    }
+	    if( JS9.notNull(header.CDELT1) ){
+		header.CDELT1 = - header.CDELT1;
+	    }
+	    if( JS9.notNull(header.CRPIX2) ){
+		header.CRPIX2 = header.NAXIS2 - header.CRPIX2 + 1;
+	    }
+	    if( JS9.notNull(header.CDELT2) ){
+		header.CDELT2 = - header.CDELT2;
+	    }
+	    header.LTV1 = header.LTV1 || 0.0;
+	    header.LTV1 = header.NAXIS1 - header.LTV1 + 1;
+	    header.LTM1_1 = header.LTM1_1 || 1.0;
+	    header.LTM1_1 = - header.LTM1_1;
+	    header.LTV2 = header.LTV2 || 0.0;
+	    header.LTV2 = header.NAXIS2 - header.LTV2 + 1;
+	    header.LTM2_2 = header.LTM2_2 || 1.0;
+	    header.LTM2_2 = - header.LTM2_2;
+	    break;
+	case "none":
+	    break;
+	}
+    };
+    // sanity check
+    if( JS9.isNull(flip) ){
+	JS9.error("missing flip parametera for flipData");
+    }
+    // opts is optional
+    opts = opts || {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error(`can't parse flip opts: ${opts}`, e); }
+    }
+    // start from original data
+    opts.oraw = "raw0";
+    // nraw should be a floating point copy of oraw
+    opts.alwaysCopy = true;
+    // new layer
+    opts.rawid = opts.rawid || "flip";
+    // save this routine so it can be reconstituted in a restored session
+    this.xeqStashSave("flipData", args, opts.rawid);
+    this.rawDataLayer(opts, (oraw, nraw) => {
+	// set flip state
+	switch(flip.toLowerCase()){
+	case "x":
+	    flipX(oraw, nraw);
+	    this.params.flip = flip;
+	    break;
+	case "y":
+	    flipY(oraw, nraw);
+	    this.params.flip = flip;
+	    break;
+	case "xy":
+	    flipXY(oraw, nraw);
+	    this.params.flip = flip;
+	    break;
+	case "":
+	case "none":
+	case "reset":
+	    this.params.flip = "none";
+	    break;
+	default:
+	    JS9.error(`unknown flip type for setFlip: ${flip}`);
+	    break;
+	}
+	// update the header params
+	updateHeader(nraw, opts);
+	return true;
+    });
+    // allow chaining
+    return this;
+};
+
+// flip image along an axis
+JS9.Image.prototype.flipFile = function(flip){
     let hdu, table;
     const opts = {};
     // sanity check
@@ -7219,6 +7402,15 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 	if( opts.dataminmax !== false ){
 	    this.dataminmax();
 	}
+	// re-init coordinate systems, if necessary
+	if( opts.updatewcs ){
+	    // init WCS, if possible
+	    this.initWCS();
+	    // init the logical coordinate system, if possible
+	    this.initLCS();
+	}
+	// refresh shape layers
+	this.refreshLayers();
 	// redisplay using these data
 	this.displayImage("all", opts);
     }
