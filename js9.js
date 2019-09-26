@@ -3492,7 +3492,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		}
 	    }
 	    // save current regions (before displaying new image)
-	    oreg = this.listRegions("all", {mode: 1});
+	    oreg = this.listRegions("all", {mode: 1, saveid: true});
 	    // func to perform when image is loaded
 	    func = topts.ondisplaysection || topts.onrefresh || func;
 	    // set up new and display new image
@@ -3501,7 +3501,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    nim.binning.obin = nim.binning.bin;
 	    // add regions to new image
 	    if( oreg && topts.refreshRegions !== false ){
-		nim.addShapes("regions", oreg);
+		nim.addShapes("regions", oreg, {restoreid: true});
 	    }
 	    // set status of new image
 	    nim.setStatus("displaySection", "complete");
@@ -3539,7 +3539,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		    }
 		}
 		// save current regions (before displaying new image)
-		oreg = this.listRegions("all", {mode: 1});
+		oreg = this.listRegions("all", {mode: 1, saveid: true});
 		// func to perform when image is loaded
 		func = topts.ondisplaysection || topts.onrefresh || func;
 		// set up new and display new image
@@ -3548,7 +3548,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		nim.binning.obin = nim.binning.bin;
 		// add regions to new image
 		if( oreg ){
-		    nim.addShapes("regions", oreg);
+		    nim.addShapes("regions", oreg, {restoreid: true});
 		}
 		// set status of new image
 		nim.setStatus("displaySection", "complete");
@@ -11809,7 +11809,9 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     // remove dangerous options (e.g., passed in JS9.GetRegions() object)
     parent = opts.parent || (obj && obj.params && obj.params.parent);
     delete opts.parent;
-    delete opts.id;
+    if( !opts.restoreid ){
+	delete opts.id;
+    }
     // pre-processing special keys
     if( opts.tags ){
 	if( typeof opts.tags === "string" ){
@@ -13548,12 +13550,12 @@ JS9.Fabric.refreshShapes = function(layerName){
 	this.setWCSSys("physical");
     }
     // get current regions (i.e., before update to current configuration)
-    regstr = this.listRegions("all", {mode: 1}, layerName);
+    regstr = this.listRegions("all", {mode: 1, saveid: true}, layerName);
     if( regstr ){
 	// remove current regions
 	this.removeShapes(layerName, "all");
 	// add back regions in current configuration
-	this.addShapes(layerName, regstr);
+	this.addShapes(layerName, regstr, {restoreid: true});
     }
     // restore changes
     this.setWCSSys(owcssys);
@@ -15705,6 +15707,10 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	}
 	// add exported properties
 	exports = getExports(obj, region);
+	// add id, if necessary
+	if( opts.saveid ){
+	    exports.id = region.id;
+	}
 	// add color, if necessary
 	if( region.color && !tagcolors.includes(region.color) ){
 	    exports.color = region.color;
