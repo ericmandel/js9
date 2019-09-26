@@ -298,6 +298,7 @@ JS9.imageOpts = {
     scalemin: Number.NaN,               // default scale min is undefined
     scalemax: Number.NaN,               // default scale max is undefined
     flip: "none",                       // default flip state
+    rot90: 0,	                        // default 90 deg rotation state
     zscalecontrast: 0.25,		// default from ds9
     zscalesamples: 600,			// default from ds9
     zscaleline: 120,			// default from ds9
@@ -4337,19 +4338,56 @@ JS9.Image.prototype.getFlip = function(){
     return this.params.flip;
 };
 
-
 // flip image along an axis
 JS9.Image.prototype.setFlip = function(flip){
     if( JS9.globalOpts.flipUsing === "file" ){
 	return this.flipFile(flip);
     }
-    return this.flipData(flip);
+    return this.flipData(flip, this.params.rot90);
+};
+
+// get 90-degree rotatation state
+JS9.Image.prototype.getRot90 = function(){
+    return this.params.rot90;
+};
+
+// rotate image by multiples of 90 degrees
+JS9.Image.prototype.setRot90 = function(rot90){
+    if( JS9.globalOpts.flipUsing === "file" ){
+	JS9.error("no setRot90 capability when flip is using 'file'");
+    }
+    return this.flipData(this.params.flip, rot90);
 };
 
 // creates a new raw data layer ("flip")
 JS9.Image.prototype.flipData = function(...args){
-    let [flip, opts] = args;
-    const getBuf = (oraw, ooff, nraw, noff) => {
+    let [flip, rot, opts] = args;
+    const getCopy = (oraw) => {
+	// make copy
+	let nraw = $.extend(true, {}, oraw);
+	switch(oraw.bitpix){
+	case 8:
+	    nraw.data = new Uint8Array(oraw.data);
+	    break;
+	case 16:
+	    nraw.data = new Int16Array(oraw.data);
+	    break;
+	case -16:
+	    nraw.data = new Uint16Array(oraw.data);
+	    break;
+	case 32:
+	    nraw.data = new Int32Array(oraw.data);
+	    break;
+	case -32:
+	    nraw.data = new Float32Array(oraw.data);
+	    break;
+	case -64:
+	    nraw.data = new Float64Array(oraw.data);
+	    break;
+	}
+	return nraw;
+    }
+    const getLine = (oraw, ooff, nraw, noff) => {
 	let obuf, nbuf;
 	switch(oraw.bitpix){
 	case 8:
@@ -4385,7 +4423,7 @@ JS9.Image.prototype.flipData = function(...args){
 	    nj = oj;
 	    ooff = oj * oraw.width * bpp;
 	    noff = nj * oraw.width * bpp;
-	    [obuf, nbuf] = getBuf(oraw, ooff, nraw, noff);
+	    [obuf, nbuf] = getLine(oraw, ooff, nraw, noff);
 	    nbuf.set(obuf);
 	    nbuf.reverse();
 	}
@@ -4397,7 +4435,7 @@ JS9.Image.prototype.flipData = function(...args){
 	    nj = oraw.height - oj - 1;
 	    ooff = oj * oraw.width * bpp;
 	    noff = nj * oraw.width * bpp;
-	    [obuf, nbuf] = getBuf(oraw, ooff, nraw, noff);
+	    [obuf, nbuf] = getLine(oraw, ooff, nraw, noff);
 	    nbuf.set(obuf);
 	}
     };
@@ -4408,9 +4446,39 @@ JS9.Image.prototype.flipData = function(...args){
 	    nj = oraw.height - oj - 1;
 	    ooff = oj * oraw.width * bpp;
 	    noff = nj * oraw.width * bpp;
-	    [obuf, nbuf] = getBuf(oraw, ooff, nraw, noff);
+	    [obuf, nbuf] = getLine(oraw, ooff, nraw, noff);
 	    nbuf.set(obuf);
 	    nbuf.reverse();
+	}
+    };
+    // rotation is counter-clock wise from the positive x axis
+    const rot90 = (oraw, nraw) => {
+	let oi, oj, ooff, noff;
+	const obuf = oraw.data;
+	const nbuf = nraw.data;
+	for(oj=0; oj<oraw.height; oj++){
+	    ooff = oj * oraw.width;
+	    noff = oraw.height - oj;
+	    for(oi=0; oi<oraw.width; oi++){
+		nbuf[oi * oraw.width + noff] = obuf[ooff + oi];
+	    }
+	}
+    };
+    // rotation is counter-clock wise from the positive x axis
+    const rot180 = (oraw, nraw) => {
+	flipXY(oraw, nraw);
+    }
+    // rotation is counter-clock wise from the positive x axis
+    const rot270 = (oraw, nraw) => {
+	let oi, oj, ooff;
+	const obuf = oraw.data;
+	const nbuf = nraw.data;
+	const oh = oraw.height - 1;
+	for(oj=0; oj<oraw.height; oj++){
+	    ooff = oj * oraw.width;
+	    for(oi=0; oi<oraw.width; oi++){
+		nbuf[(oh - oi) * oraw.width + oj] = obuf[ooff + oi];
+	    }
 	}
     };
     const updateHeader = (raw, opts) => {
@@ -4468,9 +4536,13 @@ JS9.Image.prototype.flipData = function(...args){
 	    break;
 	}
     };
-    // sanity check
-    if( JS9.isNull(flip) ){
-	JS9.error("missing flip parametera for flipData");
+    // no args essentially means reset
+    flip = flip || "none";
+    rot  = rot  || 0;
+    while( rot < 0 ){ rot += 360.0; }
+    while( rot > 360 ){ rot -= 360.0; }
+    if( rot % 90 !== 0 ){
+	JS9.error(`invalid rot90 value: ${rot} (use: 0, 90, 180, 270)`);
     }
     // opts is optional
     opts = opts || {};
@@ -4481,25 +4553,26 @@ JS9.Image.prototype.flipData = function(...args){
     }
     // start from original data
     opts.oraw = "raw0";
-    // nraw should be a floating point copy of oraw
+    // nraw should be a copy of oraw
     opts.alwaysCopy = true;
     // new layer
     opts.rawid = opts.rawid || "flip";
     // save this routine so it can be reconstituted in a restored session
     this.xeqStashSave("flipData", args, opts.rawid);
     this.rawDataLayer(opts, (oraw, nraw) => {
+	let traw = getCopy(oraw);
 	// set flip state
 	switch(flip.toLowerCase()){
 	case "x":
-	    flipX(oraw, nraw);
+	    flipX(oraw, traw);
 	    this.params.flip = flip;
 	    break;
 	case "y":
-	    flipY(oraw, nraw);
+	    flipY(oraw, traw);
 	    this.params.flip = flip;
 	    break;
 	case "xy":
-	    flipXY(oraw, nraw);
+	    flipXY(oraw, traw);
 	    this.params.flip = flip;
 	    break;
 	case "":
@@ -4508,7 +4581,35 @@ JS9.Image.prototype.flipData = function(...args){
 	    this.params.flip = "none";
 	    break;
 	default:
-	    JS9.error(`unknown flip type for setFlip: ${flip}`);
+	    JS9.error(`unknown flip type: ${flip}`);
+	    break;
+	}
+	// set rot state
+	switch(rot){
+	case "":
+	case "none":
+	case "reset":
+	case 0:
+	    nraw.data = traw.data;
+	    this.params.rot90 = 0;
+	    break;
+	case 90:
+	case -270:
+	    rot90(traw, nraw);
+	    this.params.rot90 = 90;
+	    break;
+	case 180:
+	case -180:
+	    rot180(traw, nraw);
+	    this.params.rot90 = 180;
+	    break;
+	case 270:
+	case -90:
+	    rot270(traw, nraw);
+	    this.params.rot90 = 270;
+	    break;
+	default:
+	    JS9.error(`unknown rot90 type: ${flip}`);
 	    break;
 	}
 	// update the header params
@@ -21453,6 +21554,8 @@ JS9.mkPublic("GetScale", "getScale");
 JS9.mkPublic("SetScale", "setScale");
 JS9.mkPublic("SetFlip", "setFlip");
 JS9.mkPublic("GetFlip", "getFlip");
+JS9.mkPublic("SetRot90", "setRot90");
+JS9.mkPublic("GetRot90", "getRot90");
 JS9.mkPublic("GetParam", "getParam");
 JS9.mkPublic("SetParam", "setParam");
 JS9.mkPublic("GetValPos", "updateValpos");
