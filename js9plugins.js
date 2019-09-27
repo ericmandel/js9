@@ -7187,6 +7187,36 @@ JS9.Menubar.createMenus = function(){
 	    } else if( tim && tim.params.flip === "xy" ){
 		items.flipXY.icon = "sun";
 	    }
+
+	    items[`sep${n++}`] = "------";
+	    items.rot90title = {
+		name: "Rotate:",
+		disabled: true
+	    };
+	    items.rot90_0 = xname("0 degrees");
+	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
+		items.rot90_0.disabled = true;
+	    } else if( tim && tim.params.rot90 === 0 ){
+		items.rot90_0.icon = "sun";
+	    }
+	    items.rot90_90 = xname("90 degrees");
+	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
+		items.rot90_90.disabled = true;
+	    } else if( tim && tim.params.rot90 === 90 ){
+		items.rot90_90.icon = "sun";
+	    }
+	    items.rot90_180 = xname("180 degrees");
+	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
+		items.rot90_180.disabled = true;
+	    } else if( tim && tim.params.rot90 === 180 ){
+		items.rot90_180.icon = "sun";
+	    }
+	    items.rot90_270 = xname("270 degrees");
+	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
+		items.rot90_270.disabled = true;
+	    } else if( tim && tim.params.rot90 === 270 ){
+		items.rot90_270.icon = "sun";
+	    }
 	    return {
 		callback: (key) => {
 		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
@@ -7225,6 +7255,18 @@ JS9.Menubar.createMenus = function(){
 				break;
 			    case "flipNone":
 				uim.setFlip("none");
+				break;
+			    case "rot90_0":
+				uim.setRot90(0);
+				break;
+			    case "rot90_90":
+				uim.setRot90(90);
+				break;
+			    case "rot90_180":
+				uim.setRot90(180);
+				break;
+			    case "rot90_270":
+				uim.setRot90(270);
 				break;
 			    default:
 				// look for a numeric zoom
