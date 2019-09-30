@@ -4451,37 +4451,35 @@ JS9.Image.prototype.flipData = function(...args){
 	    nbuf.reverse();
 	}
     };
-    // rotation is counter-clock wise from the positive x axis
     const rot90 = (oraw, nraw) => {
-	let oi, oj, ooff, noff;
+	let oi, oj, olptr, noff;
 	const obuf = oraw.data;
 	const nbuf = nraw.data;
 	for(oj=0; oj<oraw.height; oj++){
-	    ooff = oj * oraw.width;
+	    olptr = oj * oraw.width;
 	    noff = oraw.height - oj;
 	    for(oi=0; oi<oraw.width; oi++){
-		nbuf[oi * oraw.width + noff] = obuf[ooff + oi];
+		nbuf[oi * oraw.height + noff] = obuf[olptr + oi];
 	    }
 	}
     };
-    // rotation is counter-clock wise from the positive x axis
     const rot180 = (oraw, nraw) => {
 	flipXY(oraw, nraw);
     }
-    // rotation is counter-clock wise from the positive x axis
     const rot270 = (oraw, nraw) => {
-	let oi, oj, ooff;
+	let oi, oj, olptr;
 	const obuf = oraw.data;
 	const nbuf = nraw.data;
-	const oh = oraw.height - 1;
+	const oh = oraw.width - 1;
 	for(oj=0; oj<oraw.height; oj++){
-	    ooff = oj * oraw.width;
+	    olptr = oj * oraw.width;
 	    for(oi=0; oi<oraw.width; oi++){
-		nbuf[(oh - oi) * oraw.width + oj] = obuf[ooff + oi];
+		nbuf[(oh - oi) * oraw.height + oj] = obuf[olptr + oi];
 	    }
 	}
     };
     const updateHeader = (raw, opts) => {
+	let tmp;
 	const header = raw.header;
 	opts = opts || {};
 	opts.updatewcs = true;
@@ -4534,6 +4532,28 @@ JS9.Image.prototype.flipData = function(...args){
 	    break;
 	case "none":
 	    break;
+	}
+	switch(this.params.rot90){
+	case 0:
+	    break;
+	case 90:
+	    tmp = header.NAXIS1;
+	    raw.width = header.NAXIS2;
+	    raw.height = tmp;
+	    header.NAXIS1 = header.NAXIS2;
+	    header.NAXIS2 = tmp;
+	    break;
+	case 180:
+	    break;
+	case 270:
+	    tmp = header.NAXIS1;
+	    raw.width = header.NAXIS2;
+	    raw.height = tmp;
+	    header.NAXIS1 = header.NAXIS2;
+	    header.NAXIS2 = tmp;
+	    break;
+	default:
+	   break;
 	}
     };
     // no args essentially means reset
