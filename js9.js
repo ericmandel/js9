@@ -4455,11 +4455,13 @@ JS9.Image.prototype.flipData = function(...args){
 	let oi, oj, olptr, noff;
 	const obuf = oraw.data;
 	const nbuf = nraw.data;
+	nraw.width = oraw.height;
+	nraw.height = oraw.width;
 	for(oj=0; oj<oraw.height; oj++){
 	    olptr = oj * oraw.width;
-	    noff = oraw.height - oj;
+	    noff = nraw.width - 1 - oj;
 	    for(oi=0; oi<oraw.width; oi++){
-		nbuf[oi * oraw.height + noff] = obuf[olptr + oi];
+		nbuf[oi * nraw.width + noff] = obuf[olptr + oi];
 	    }
 	}
     };
@@ -4467,68 +4469,62 @@ JS9.Image.prototype.flipData = function(...args){
 	flipXY(oraw, nraw);
     }
     const rot270 = (oraw, nraw) => {
-	let oi, oj, olptr;
+	let oi, oj, olptr, oh;
 	const obuf = oraw.data;
 	const nbuf = nraw.data;
-	const oh = oraw.width - 1;
+	nraw.width = oraw.height;
+	nraw.height = oraw.width;
+	oh = nraw.height - 1;
 	for(oj=0; oj<oraw.height; oj++){
 	    olptr = oj * oraw.width;
 	    for(oi=0; oi<oraw.width; oi++){
-		nbuf[(oh - oi) * oraw.height + oj] = obuf[olptr + oi];
+		nbuf[(oh - oi) * nraw.width + oj] = obuf[olptr + oi];
 	    }
 	}
     };
-    const updateHeader = (raw, opts) => {
-	let tmp;
-	const header = raw.header;
+    const updateHeader = (oraw, nraw, opts) => {
+	const oheader = oraw.header;
+	const nheader = nraw.header;
 	opts = opts || {};
 	opts.updatewcs = true;
 	switch(this.params.flip){
 	case "x":
-	    if( JS9.notNull(header.CRPIX1) ){
-		header.CRPIX1 = header.NAXIS1 - header.CRPIX1 + 1;
+	    if( JS9.notNull(oheader.CRPIX1) ){
+		nheader.CRPIX1 = oheader.NAXIS1 - oheader.CRPIX1 + 1;
 	    }
-	    if( JS9.notNull(header.CDELT1) ){
-		header.CDELT1 = - header.CDELT1;
+	    if( JS9.notNull(oheader.CDELT1) ){
+		nheader.CDELT1 = - oheader.CDELT1;
 	    }
-	    header.LTV1 = header.LTV1 || 0.0;
-	    header.LTV1 = header.NAXIS1 - header.LTV1 + 1;
-	    header.LTM1_1 = header.LTM1_1 || 1.0;
-	    header.LTM1_1 = - header.LTM1_1;
+	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0);
+	    nheader.LTM1_1 = - (oheader.LTM1_1||1);
 	    break;
 	case "y":
-	    if( JS9.notNull(header.CRPIX2) ){
-		header.CRPIX2 = header.NAXIS2 - header.CRPIX2 + 1;
+	    if( JS9.notNull(oheader.CRPIX2) ){
+		nheader.CRPIX2 = oheader.NAXIS2 - oheader.CRPIX2 + 1;
 	    }
-	    if( JS9.notNull(header.CDELT2) ){
-		header.CDELT2 = - header.CDELT2;
+	    if( JS9.notNull(oheader.CDELT2) ){
+		nheader.CDELT2 = - oheader.CDELT2;
 	    }
-	    header.LTV2 = header.LTV2 || 0.0;
-	    header.LTV2 = header.NAXIS2 - header.LTV2 + 1;
-	    header.LTM2_2 = header.LTM2_2 || 1.0;
-	    header.LTM2_2 = - header.LTM2_2;
+	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0);
+	    nheader.LTM2_2 = - (oheader.LTM2_2||1);
 	    break;
 	case "xy":
-	    if( JS9.notNull(header.CRPIX1) ){
-		header.CRPIX1 = header.NAXIS1 - header.CRPIX1 + 1;
+	    if( JS9.notNull(oheader.CRPIX1) ){
+		nheader.CRPIX1 = oheader.NAXIS1 - oheader.CRPIX1 + 1;
 	    }
-	    if( JS9.notNull(header.CDELT1) ){
-		header.CDELT1 = - header.CDELT1;
+	    if( JS9.notNull(oheader.CDELT1) ){
+		nheader.CDELT1 = - oheader.CDELT1;
 	    }
-	    if( JS9.notNull(header.CRPIX2) ){
-		header.CRPIX2 = header.NAXIS2 - header.CRPIX2 + 1;
+	    if( JS9.notNull(oheader.CRPIX2) ){
+		nheader.CRPIX2 = oheader.NAXIS2 - oheader.CRPIX2 + 1;
 	    }
-	    if( JS9.notNull(header.CDELT2) ){
-		header.CDELT2 = - header.CDELT2;
+	    if( JS9.notNull(oheader.CDELT2) ){
+		nheader.CDELT2 = - oheader.CDELT2;
 	    }
-	    header.LTV1 = header.LTV1 || 0.0;
-	    header.LTV1 = header.NAXIS1 - header.LTV1 + 1;
-	    header.LTM1_1 = header.LTM1_1 || 1.0;
-	    header.LTM1_1 = - header.LTM1_1;
-	    header.LTV2 = header.LTV2 || 0.0;
-	    header.LTV2 = header.NAXIS2 - header.LTV2 + 1;
-	    header.LTM2_2 = header.LTM2_2 || 1.0;
-	    header.LTM2_2 = - header.LTM2_2;
+	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0);
+	    nheader.LTM1_1 = - (oheader.LTM1_1||1);
+	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0);
+	    nheader.LTM2_2 = - (oheader.LTM2_2||1);
 	    break;
 	case "none":
 	    break;
@@ -4537,20 +4533,45 @@ JS9.Image.prototype.flipData = function(...args){
 	case 0:
 	    break;
 	case 90:
-	    tmp = header.NAXIS1;
-	    raw.width = header.NAXIS2;
-	    raw.height = tmp;
-	    header.NAXIS1 = header.NAXIS2;
-	    header.NAXIS2 = tmp;
-	    break;
-	case 180:
+	    nheader.NAXIS1 = nraw.width;
+	    nheader.NAXIS2 = nraw.height;
+	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
+		nheader.CRPIX2 = oheader.CRPIX1;
+		nheader.CRPIX1 = nheader.NAXIS1 - oheader.CRPIX2 + 1;
+	    }
+	    JS9.rotateFITSHeader(oraw, nheader, 90);
 	    break;
 	case 270:
-	    tmp = header.NAXIS1;
-	    raw.width = header.NAXIS2;
-	    raw.height = tmp;
-	    header.NAXIS1 = header.NAXIS2;
-	    header.NAXIS2 = tmp;
+	    nheader.NAXIS1 = nraw.width;
+	    nheader.NAXIS2 = nraw.height;
+	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
+		nheader.CRPIX1 = oheader.CRPIX2;
+		nheader.CRPIX2 = nheader.NAXIS2 - oheader.CRPIX1 + 1;
+	    }
+	    JS9.rotateFITSHeader(oraw, nheader, -90);
+	    break;
+	case 180:
+	    // same as xy flip
+	    if( JS9.notNull(oheader.CRPIX1) ){
+		nheader.CRPIX1 = oheader.NAXIS1 - oheader.CRPIX1 + 1;
+	    }
+	    if( JS9.notNull(oheader.CDELT1) ){
+		nheader.CDELT1 = - oheader.CDELT1;
+	    }
+	    if( JS9.notNull(oheader.CRPIX2) ){
+		nheader.CRPIX2 = oheader.NAXIS2 - oheader.CRPIX2 + 1;
+	    }
+	    if( JS9.notNull(oheader.CDELT2) ){
+		nheader.CDELT2 = - oheader.CDELT2;
+	    }
+	    nheader.LTV1 = oheader.LTV1 || 0.0;
+	    nheader.LTV1 = oheader.NAXIS1 - oheader.LTV1;
+	    nheader.LTM1_1 = oheader.LTM1_1 || 1.0;
+	    nheader.LTM1_1 = - oheader.LTM1_1;
+	    nheader.LTV2 = oheader.LTV2 || 0.0;
+	    nheader.LTV2 = oheader.NAXIS2 - oheader.LTV2;
+	    nheader.LTM2_2 = oheader.LTM2_2 || 1.0;
+	    nheader.LTM2_2 = - oheader.LTM2_2;
 	    break;
 	default:
 	   break;
@@ -4634,7 +4655,7 @@ JS9.Image.prototype.flipData = function(...args){
 	    break;
 	}
 	// update the header params
-	updateHeader(nraw, opts);
+	updateHeader(oraw, nraw, opts);
 	return true;
     });
     // allow chaining
@@ -7867,7 +7888,7 @@ JS9.Image.prototype.shiftData = function(...args){
 // creates a new raw data layer ("rotate")
 // angle is in degrees (since CROTA2 is in degrees)
 JS9.Image.prototype.rotateData = function(...args){
-    let raw, oheader, nheader, ncrot, nrad, sinrot, cosrot;
+    let raw, oheader, nheader;
     let ocdelt1 = 0.0;
     let ocdelt2 = 0.0;
     let [angle, opts] = args;
@@ -7922,23 +7943,7 @@ JS9.Image.prototype.rotateData = function(...args){
 	}
     }
     // new header same as old, but with a changed angle
-    ncrot = angle;
-    // rotation in radians
-    nrad = -(ncrot * Math.PI / 180.0);
-    sinrot = Math.sin(nrad);
-    cosrot = Math.cos(nrad);
-    // make up new WCS keywords
-    // if not using CD matrix, set CROTA2
-    if( JS9.isNull(oheader.CD1_1)  ){
-	nheader.CROTA2 = ncrot;
-	nheader.CDELT1 = ocdelt1;
-	nheader.CDELT2 = ocdelt2;
-    } else {
-	nheader.CD1_1 =  ocdelt1 * cosrot;
-	nheader.CD1_2 = -ocdelt2 * sinrot;
-	nheader.CD2_1 =  ocdelt1 * sinrot;
-	nheader.CD2_2 =  ocdelt2 * cosrot;
-    }
+    JS9.rotateFITSHeader(raw, nheader, angle, ocdelt1, ocdelt2);
     // save ptype if possible
     if( raw.wcsinfo ){
 	nheader.ptype = raw.wcsinfo.ptype;
@@ -18955,6 +18960,40 @@ JS9.notNull = function(s) {
 // check if a variable is either undefined or null
 JS9.isNull = function(s) {
     return s === undefined || s === null;
+};
+
+// add rotation to FITS header
+// used in rotateData, flipData
+JS9.rotateFITSHeader = function(oraw, nheader, angle, ocdelt1, ocdelt2){
+    let nrad, sinrot, cosrot;
+    const oheader = oraw.header;
+    // rotation in radians
+    nrad = -(angle * Math.PI / 180.0);
+    sinrot = Math.sin(nrad);
+    cosrot = Math.cos(nrad);
+    // ocdelts can be specified, otherwise use wcs defaults
+    if( JS9.isNull(ocdelt1) || JS9.isNull(ocdelt2) ){
+	if( oraw.wcsinfo ){
+	    ocdelt1 = oraw.wcsinfo.cdelt1 || 0;
+	    ocdelt2 = oraw.wcsinfo.cdelt2 || 0;
+	} else {
+	    ocdelt1 = oheader.CDELT1 || 0;
+	    ocdelt2 = oheader.CDELT2 || 0;
+	}
+    }
+    // if not using CD matrix, set CROTAs
+    if( JS9.isNull(oheader.CD1_1)  ){
+	// I dunno, when does should this unused param get set?
+	if( JS9.notNull(nheader.CROTA1) ){ nheader.CROTA1 = angle; }
+	nheader.CROTA2 = angle;
+	nheader.CDELT1 = ocdelt1;
+	nheader.CDELT2 = ocdelt2;
+    } else {
+	nheader.CD1_1 =  ocdelt1 * cosrot;
+	nheader.CD1_2 = -ocdelt2 * sinrot;
+	nheader.CD2_1 =  ocdelt1 * sinrot;
+	nheader.CD2_2 =  ocdelt2 * cosrot;
+    }
 };
 
 // parse a FITS card and return name and value
