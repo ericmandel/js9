@@ -4482,12 +4482,9 @@ JS9.Image.prototype.flipData = function(...args){
 	    }
 	}
     };
-    const updateHeader = (oraw, nraw, opts) => {
+    const updateFlipHeader = (oraw, nraw) => {
 	const oheader = oraw.header;
 	const nheader = nraw.header;
-	const FUDGE = 2;
-	opts = opts || {};
-	opts.updatewcs = true;
 	switch(this.params.flip){
 	case "x":
 	    if( JS9.notNull(oheader.CRPIX1) ){
@@ -4530,30 +4527,49 @@ JS9.Image.prototype.flipData = function(...args){
 	case "none":
 	    break;
 	}
+    };
+    const updateRot90Header = (oraw, nraw) => {
+	let angle;
+	const oheader = oraw.header;
+	const nheader = nraw.header;
+	const FUDGE = 2;
 	switch(this.params.rot90){
 	case 0:
+	    nraw.header = oraw.header;
 	    break;
 	case 90:
+	    angle = 90;
+	    if( this.params.flip == "x" ){
+		angle = -90;
+	    } else if( this.params.flip == "y" ){
+		angle = -90;
+	    }
 	    nheader.NAXIS1 = nraw.width;
 	    nheader.NAXIS2 = nraw.height;
 	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
 		nheader.CRPIX1 = nheader.NAXIS1 - oheader.CRPIX2 + 1;
 		nheader.CRPIX2 = oheader.CRPIX1;
 	    }
-	    JS9.rotateFITSHeader(oraw, nheader, 90);
+	    JS9.rotateFITSHeader(oraw, nheader, angle, false);
 	    nheader.LTV1 = (nheader.LTV1||0) - (oheader.CRPIX1-nheader.CRPIX1);
 	    nheader.LTV2 = (nheader.LTV2||0) - (oheader.CRPIX2-nheader.CRPIX2);
 	    // why is this needed?
 	    nheader.LTV2 -= FUDGE;
 	    break;
 	case 270:
+	    angle = -90;
+	    if( this.params.flip == "x" ){
+		angle = 90;
+	    } else if( this.params.flip == "y" ){
+		angle = 90;
+	    }
 	    nheader.NAXIS1 = nraw.width;
 	    nheader.NAXIS2 = nraw.height;
 	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
 		nheader.CRPIX1 = oheader.CRPIX2;
 		nheader.CRPIX2 = nheader.NAXIS2 - oheader.CRPIX1 + 1;
 	    }
-	    JS9.rotateFITSHeader(oraw, nheader, -90);
+	    JS9.rotateFITSHeader(oraw, nheader, angle, false);
 	    nheader.LTV1 = (nheader.LTV1||0) - (oheader.CRPIX1-nheader.CRPIX1);
 	    nheader.LTV2 = (nheader.LTV2||0) - (oheader.CRPIX2-nheader.CRPIX2);
 	    // why is this needed?
@@ -4583,7 +4599,8 @@ JS9.Image.prototype.flipData = function(...args){
 	    nheader.LTM2_2 = - oheader.LTM2_2;
 	    break;
 	default:
-	   break;
+	    JS9.error(`unknown rot90 type: ${this.params.rot90}`);
+	    break;
 	}
     };
     // no args essentially means reset
@@ -4606,6 +4623,8 @@ JS9.Image.prototype.flipData = function(...args){
     opts.oraw = "raw0";
     // nraw should be a copy of oraw
     opts.alwaysCopy = true;
+    // always update wcs
+    opts.updatewcs = true;
     // new layer
     opts.rawid = opts.rawid || "flip";
     // save this routine so it can be reconstituted in a restored session
@@ -4635,6 +4654,8 @@ JS9.Image.prototype.flipData = function(...args){
 	    JS9.error(`unknown flip type: ${flip}`);
 	    break;
 	}
+	// update the header params
+	updateFlipHeader(oraw, traw);
 	// set rot state
 	switch(rot){
 	case "":
@@ -4660,11 +4681,11 @@ JS9.Image.prototype.flipData = function(...args){
 	    this.params.rot90 = 270;
 	    break;
 	default:
-	    JS9.error(`unknown rot90 type: ${flip}`);
+	    JS9.error(`unknown rot90 type: ${rot}`);
 	    break;
 	}
 	// update the header params
-	updateHeader(oraw, nraw, opts);
+	updateRot90Header(traw, nraw);
 	return true;
     });
     // allow chaining
@@ -18982,7 +19003,7 @@ JS9.rotateFITSHeader = function(oraw, nheader, angle, ocdelt1, ocdelt2){
     cosrot = Math.cos(nrad);
     // ocdelts can be specified, otherwise use wcs defaults
     if( JS9.isNull(ocdelt1) || JS9.isNull(ocdelt2) ){
-	if( oraw.wcsinfo ){
+	if( oraw.wcsinfo && ocdelt1 !== false ){
 	    ocdelt1 = oraw.wcsinfo.cdelt1 || 0;
 	    ocdelt2 = oraw.wcsinfo.cdelt2 || 0;
 	} else {
