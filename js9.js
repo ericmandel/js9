@@ -4485,6 +4485,7 @@ JS9.Image.prototype.flipData = function(...args){
     const updateHeader = (oraw, nraw, opts) => {
 	const oheader = oraw.header;
 	const nheader = nraw.header;
+	const FUDGE = 2;
 	opts = opts || {};
 	opts.updatewcs = true;
 	switch(this.params.flip){
@@ -4536,10 +4537,14 @@ JS9.Image.prototype.flipData = function(...args){
 	    nheader.NAXIS1 = nraw.width;
 	    nheader.NAXIS2 = nraw.height;
 	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
-		nheader.CRPIX2 = oheader.CRPIX1;
 		nheader.CRPIX1 = nheader.NAXIS1 - oheader.CRPIX2 + 1;
+		nheader.CRPIX2 = oheader.CRPIX1;
 	    }
 	    JS9.rotateFITSHeader(oraw, nheader, 90);
+	    nheader.LTV1 = (nheader.LTV1||0) - (oheader.CRPIX1-nheader.CRPIX1);
+	    nheader.LTV2 = (nheader.LTV2||0) - (oheader.CRPIX2-nheader.CRPIX2);
+	    // why is this needed?
+	    nheader.LTV2 -= FUDGE;
 	    break;
 	case 270:
 	    nheader.NAXIS1 = nraw.width;
@@ -4549,6 +4554,10 @@ JS9.Image.prototype.flipData = function(...args){
 		nheader.CRPIX2 = nheader.NAXIS2 - oheader.CRPIX1 + 1;
 	    }
 	    JS9.rotateFITSHeader(oraw, nheader, -90);
+	    nheader.LTV1 = (nheader.LTV1||0) - (oheader.CRPIX1-nheader.CRPIX1);
+	    nheader.LTV2 = (nheader.LTV2||0) - (oheader.CRPIX2-nheader.CRPIX2);
+	    // why is this needed?
+	    nheader.LTV1 -= FUDGE;
 	    break;
 	case 180:
 	    // same as xy flip
