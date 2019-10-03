@@ -4663,6 +4663,14 @@ JS9.Image.prototype.flipData = function(...args){
 	    break;
 	}
     };
+    // sanity check
+    if( !this || !this.raw || !this.raw.header ){
+	JS9.error("invalid image for flipData");
+    }
+    // no support for updating WCS in HEALPix images ...
+    if( this.raw.header.CTYPE1 && this.raw.header.CTYPE1.match(/HPX/) ){
+	JS9.error("support for flipping/rotating HEALPix is not yet available");
+    }
     // no args essentially means reset
     flip = flip || "none";
     rot  = rot  || 0;
