@@ -4578,7 +4578,6 @@ JS9.Image.prototype.flipData = function(...args){
 	    nheader.CDELT2 = oheader.CDELT2 || 0;
 	}
     };
-
     const updateRot90Header = (oraw, nraw) => {
 	let angle;
 	const oheader = oraw.header;
@@ -4686,6 +4685,8 @@ JS9.Image.prototype.flipData = function(...args){
     opts.alwaysCopy = true;
     // always update wcs
     opts.updatewcs = true;
+    // reset pan
+    opts.resetpan = true;
     // new layer
     opts.rawid = opts.rawid || "flip";
     // save this routine so it can be reconstituted in a restored session
@@ -7642,6 +7643,9 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 	    this.initWCS();
 	    // init the logical coordinate system, if possible
 	    this.initLCS();
+	}
+	if( opts.resetpan ){
+	    this.setPan();
 	}
 	// refresh shape layers
 	this.refreshLayers();
