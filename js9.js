@@ -4493,6 +4493,12 @@ JS9.Image.prototype.flipData = function(...args){
 	    if( JS9.notNull(oheader.CDELT1) ){
 		nheader.CDELT1 = - oheader.CDELT1;
 	    }
+	    if( JS9.notNull(oheader.CD1_1) ){
+		nheader.CD1_1 = - oheader.CD1_1;
+	    }
+	    if( JS9.notNull(oheader.CD2_1) ){
+		nheader.CD2_1 = - oheader.CD2_1;
+	    }
 	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0);
 	    nheader.LTM1_1 = - (oheader.LTM1_1||1);
 	    break;
@@ -4502,6 +4508,12 @@ JS9.Image.prototype.flipData = function(...args){
 	    }
 	    if( JS9.notNull(oheader.CDELT2) ){
 		nheader.CDELT2 = - oheader.CDELT2;
+	    }
+	    if( JS9.notNull(oheader.CD1_2) ){
+		nheader.CD1_2 = - oheader.CD1_2;
+	    }
+	    if( JS9.notNull(oheader.CD2_2) ){
+		nheader.CD2_2 = - oheader.CD2_2;
 	    }
 	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0);
 	    nheader.LTM2_2 = - (oheader.LTM2_2||1);
@@ -4519,6 +4531,18 @@ JS9.Image.prototype.flipData = function(...args){
 	    if( JS9.notNull(oheader.CDELT2) ){
 		nheader.CDELT2 = - oheader.CDELT2;
 	    }
+	    if( JS9.notNull(oheader.CD1_1) ){
+		nheader.CD1_1 = - oheader.CD1_1;
+	    }
+	    if( JS9.notNull(oheader.CD2_1) ){
+		nheader.CD2_1 = - oheader.CD2_1;
+	    }
+	    if( JS9.notNull(oheader.CD1_2) ){
+		nheader.CD1_2 = - oheader.CD1_2;
+	    }
+	    if( JS9.notNull(oheader.CD2_2) ){
+		nheader.CD2_2 = - oheader.CD2_2;
+	    }
 	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0);
 	    nheader.LTM1_1 = - (oheader.LTM1_1||1);
 	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0);
@@ -4528,6 +4552,33 @@ JS9.Image.prototype.flipData = function(...args){
 	    break;
 	}
     };
+    const rotateFITSHeader = (oraw, nraw, angle) => {
+	let arad, sinrot, cosrot;
+	const oheader = oraw.header;
+	const nheader = nraw.header;
+	// use CD matrix if present, otherwise use CROTA2
+	if( JS9.notNull(oheader.CD1_1)  ){
+	    arad = -(angle * Math.PI / 180.0);
+	    sinrot = Math.sin(arad);
+	    cosrot = Math.cos(arad);
+	    nheader.CD1_1 =  oheader.CD1_1 * cosrot  + oheader.CD1_2 * sinrot;
+	    nheader.CD1_2 =  oheader.CD1_1 * -sinrot + oheader.CD1_2 * cosrot;
+	    nheader.CD2_1 =  oheader.CD2_1 * cosrot  + oheader.CD2_2 * sinrot;
+	    nheader.CD2_2 =  oheader.CD2_1 * -sinrot + oheader.CD2_2 * cosrot;
+	} else {
+	    // add file rotation into angle
+	    if( oraw.wcsinfo ){
+		angle += (oraw.wcsinfo.crot || 0);
+	    } else {
+		angle += (oheader.CROTA2 || 0);
+	    }
+	    nheader.CROTA2 = angle;
+	    // use old cdelts
+	    nheader.CDELT1 = oheader.CDELT1 || 0;
+	    nheader.CDELT2 = oheader.CDELT2 || 0;
+	}
+    };
+
     const updateRot90Header = (oraw, nraw) => {
 	let angle;
 	const oheader = oraw.header;
@@ -4539,10 +4590,13 @@ JS9.Image.prototype.flipData = function(...args){
 	    break;
 	case 90:
 	    angle = 90;
-	    if( this.params.flip == "x" ){
-		angle = -90;
-	    } else if( this.params.flip == "y" ){
-		angle = -90;
+	    // if using CROTA2, we negate the angle after flipping, the
+	    // the end result of a long conversation with J Mink, in which
+	    // she verified the confused state of affairs for WCS when
+	    // flipping images, including sign problems ... 10/2/2019
+	    if( JS9.isNull(oheader.CD1_1)                              &&
+		(this.params.flip === "x" || this.params.flip === "y") ){
+		angle = -angle;
 	    }
 	    nheader.NAXIS1 = nraw.width;
 	    nheader.NAXIS2 = nraw.height;
@@ -4550,7 +4604,7 @@ JS9.Image.prototype.flipData = function(...args){
 		nheader.CRPIX1 = nheader.NAXIS1 - oheader.CRPIX2 + 1;
 		nheader.CRPIX2 = oheader.CRPIX1;
 	    }
-	    JS9.rotateFITSHeader(oraw, nheader, angle, false);
+	    rotateFITSHeader(oraw, nraw, angle);
 	    nheader.LTV1 = (nheader.LTV1||0) - (oheader.CRPIX1-nheader.CRPIX1);
 	    nheader.LTV2 = (nheader.LTV2||0) - (oheader.CRPIX2-nheader.CRPIX2);
 	    // why is this needed?
@@ -4558,10 +4612,10 @@ JS9.Image.prototype.flipData = function(...args){
 	    break;
 	case 270:
 	    angle = -90;
-	    if( this.params.flip == "x" ){
-		angle = 90;
-	    } else if( this.params.flip == "y" ){
-		angle = 90;
+	    // if using CROTA2, we need to negate the angle after flipping
+	    if( JS9.isNull(oheader.CD1_1)                              &&
+		(this.params.flip === "x" || this.params.flip === "y") ){
+		angle = -angle;
 	    }
 	    nheader.NAXIS1 = nraw.width;
 	    nheader.NAXIS2 = nraw.height;
@@ -4569,14 +4623,13 @@ JS9.Image.prototype.flipData = function(...args){
 		nheader.CRPIX1 = oheader.CRPIX2;
 		nheader.CRPIX2 = nheader.NAXIS2 - oheader.CRPIX1 + 1;
 	    }
-	    JS9.rotateFITSHeader(oraw, nheader, angle, false);
+	    rotateFITSHeader(oraw, nraw, angle);
 	    nheader.LTV1 = (nheader.LTV1||0) - (oheader.CRPIX1-nheader.CRPIX1);
 	    nheader.LTV2 = (nheader.LTV2||0) - (oheader.CRPIX2-nheader.CRPIX2);
 	    // why is this needed?
 	    nheader.LTV1 -= FUDGE;
 	    break;
 	case 180:
-	    // same as xy flip
 	    if( JS9.notNull(oheader.CRPIX1) ){
 		nheader.CRPIX1 = oheader.NAXIS1 - oheader.CRPIX1 + 1;
 	    }
@@ -4589,14 +4642,22 @@ JS9.Image.prototype.flipData = function(...args){
 	    if( JS9.notNull(oheader.CDELT2) ){
 		nheader.CDELT2 = - oheader.CDELT2;
 	    }
-	    nheader.LTV1 = oheader.LTV1 || 0.0;
-	    nheader.LTV1 = oheader.NAXIS1 - oheader.LTV1;
-	    nheader.LTM1_1 = oheader.LTM1_1 || 1.0;
-	    nheader.LTM1_1 = - oheader.LTM1_1;
-	    nheader.LTV2 = oheader.LTV2 || 0.0;
-	    nheader.LTV2 = oheader.NAXIS2 - oheader.LTV2;
-	    nheader.LTM2_2 = oheader.LTM2_2 || 1.0;
-	    nheader.LTM2_2 = - oheader.LTM2_2;
+	    if( JS9.notNull(oheader.CD1_1) ){
+		nheader.CD1_1 = - oheader.CD1_1;
+	    }
+	    if( JS9.notNull(oheader.CD2_1) ){
+		nheader.CD2_1 = - oheader.CD2_1;
+	    }
+	    if( JS9.notNull(oheader.CD1_2) ){
+		nheader.CD1_2 = - oheader.CD1_2;
+	    }
+	    if( JS9.notNull(oheader.CD2_2) ){
+		nheader.CD2_2 = - oheader.CD2_2;
+	    }
+	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0);
+	    nheader.LTM1_1 = - (oheader.LTM1_1||1);
+	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0);
+	    nheader.LTM2_2 = - (oheader.LTM2_2||1);
 	    break;
 	default:
 	    JS9.error(`unknown rot90 type: ${this.params.rot90}`);
@@ -7918,7 +7979,7 @@ JS9.Image.prototype.shiftData = function(...args){
 // creates a new raw data layer ("rotate")
 // angle is in degrees (since CROTA2 is in degrees)
 JS9.Image.prototype.rotateData = function(...args){
-    let raw, oheader, nheader;
+    let raw, oheader, nheader, arad, sinrot, cosrot;
     let ocdelt1 = 0.0;
     let ocdelt2 = 0.0;
     let [angle, opts] = args;
@@ -7970,10 +8031,27 @@ JS9.Image.prototype.rotateData = function(...args){
 	    if( ocdelt1 > 0 ){ ocdelt1 = -ocdelt1; }
 	    if( ocdelt2 < 0 ){ ocdelt2 = -ocdelt2; }
 	    break;
+	default:
+	    angle = parseInt(angle, 10);
+	    break;
 	}
     }
     // new header same as old, but with a changed angle
-    JS9.rotateFITSHeader(raw, nheader, angle, ocdelt1, ocdelt2);
+    // make up new WCS keywords
+    // use CD matrix if possible, else set CROTA2
+    if( JS9.notNull(oheader.CD1_1)  ){
+	arad = -(angle * Math.PI / 180.0);
+	sinrot = Math.sin(arad);
+	cosrot = Math.cos(arad);
+	nheader.CD1_1 =  oheader.CD1_1 * cosrot  + oheader.CD1_2 * sinrot;
+	nheader.CD1_2 =  oheader.CD1_1 * -sinrot + oheader.CD1_2 * cosrot;
+	nheader.CD2_1 =  oheader.CD2_1 * cosrot  + oheader.CD2_2 * sinrot;
+	nheader.CD2_2 =  oheader.CD2_1 * -sinrot + oheader.CD2_2 * cosrot;
+    } else {
+	nheader.CROTA2 = angle;
+	nheader.CDELT1 = ocdelt1;
+	nheader.CDELT2 = ocdelt2;
+    }
     // save ptype if possible
     if( raw.wcsinfo ){
 	nheader.ptype = raw.wcsinfo.ptype;
@@ -18992,40 +19070,6 @@ JS9.isNull = function(s) {
     return s === undefined || s === null;
 };
 
-// add rotation to FITS header
-// used in rotateData, flipData
-JS9.rotateFITSHeader = function(oraw, nheader, angle, ocdelt1, ocdelt2){
-    let nrad, sinrot, cosrot;
-    const oheader = oraw.header;
-    // rotation in radians
-    nrad = -(angle * Math.PI / 180.0);
-    sinrot = Math.sin(nrad);
-    cosrot = Math.cos(nrad);
-    // ocdelts can be specified, otherwise use wcs defaults
-    if( JS9.isNull(ocdelt1) || JS9.isNull(ocdelt2) ){
-	if( oraw.wcsinfo && ocdelt1 !== false ){
-	    ocdelt1 = oraw.wcsinfo.cdelt1 || 0;
-	    ocdelt2 = oraw.wcsinfo.cdelt2 || 0;
-	} else {
-	    ocdelt1 = oheader.CDELT1 || 0;
-	    ocdelt2 = oheader.CDELT2 || 0;
-	}
-    }
-    // if not using CD matrix, set CROTAs
-    if( JS9.isNull(oheader.CD1_1)  ){
-	// I dunno, when does should this unused param get set?
-	if( JS9.notNull(nheader.CROTA1) ){ nheader.CROTA1 = angle; }
-	nheader.CROTA2 = angle;
-	nheader.CDELT1 = ocdelt1;
-	nheader.CDELT2 = ocdelt2;
-    } else {
-	nheader.CD1_1 =  ocdelt1 * cosrot;
-	nheader.CD1_2 = -ocdelt2 * sinrot;
-	nheader.CD2_1 =  ocdelt1 * sinrot;
-	nheader.CD2_2 =  ocdelt2 * cosrot;
-    }
-};
-
 // parse a FITS card and return name and value
 JS9.cardpars = function(card){
     let value;
@@ -21644,6 +21688,7 @@ JS9.mkPublic("GetScale", "getScale");
 JS9.mkPublic("SetScale", "setScale");
 JS9.mkPublic("SetFlip", "setFlip");
 JS9.mkPublic("GetFlip", "getFlip");
+JS9.mkPublic("FlipData", "flipData");
 JS9.mkPublic("SetRot90", "setRot90");
 JS9.mkPublic("GetRot90", "getRot90");
 JS9.mkPublic("GetParam", "getParam");
