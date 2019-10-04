@@ -1231,10 +1231,10 @@ JS9.Image.prototype.initLCS = function(iheader){
 	}
     }
     // physical coords
-    arr[0][0] = header.LTM1_1 || 1.0;
+    arr[0][0] = JS9.defNull(header.LTM1_1, 1.0);
     arr[1][0] = header.LTM2_1 || 0.0;
     arr[0][1] = header.LTM1_2 || 0.0;
-    arr[1][1] = header.LTM2_2 || 1.0;
+    arr[1][1] = JS9.defNull(header.LTM2_2, 1.0);
     arr[2][0] = header.LTV1   || 0.0;
     arr[2][1] = header.LTV2   || 0.0;
     if( this.imtab === "image" && this.params.ltvbug ){
@@ -1261,10 +1261,10 @@ JS9.Image.prototype.initLCS = function(iheader){
 	delete this.lcs.physical;
     }
     // detector coordinates
-    arr[0][0] = header.DTM1_1 || 1.0;
+    arr[0][0] = JS9.defNull(header.DTM1_1, 1.0);
     arr[1][0] = header.DTM2_1 || 0.0;
     arr[0][1] = header.DTM1_2 || 0.0;
-    arr[1][1] = header.DTM2_2 || 1.0;
+    arr[1][1] = JS9.defNull(header.DTM2_2, 1.0);
     arr[2][0] = header.DTV1   || 0.0;
     arr[2][1] = header.DTV2   || 0.0;
     this.lcs.detector = {forward: $.extend(true, [], arr),
@@ -1281,10 +1281,10 @@ JS9.Image.prototype.initLCS = function(iheader){
 	delete this.lcs.detector;
     }
     // amplifier coordinates
-    arr[0][0] = header.ATM1_1 || 1.0;
+    arr[0][0] = JS9.defNull(header.ATM1_1, 1.0);
     arr[1][0] = header.ATM2_1 || 0.0;
     arr[0][1] = header.ATM1_2 || 0.0;
-    arr[1][1] = header.ATM2_2 || 1.0;
+    arr[1][1] = JS9.defNull(header.ATM2_2, 1.0);
     arr[2][0] = header.ATV1   || 0.0;
     arr[2][1] = header.ATV2   || 0.0;
     this.lcs.amplifier = {forward: $.extend(true, [], arr),
@@ -1744,7 +1744,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	owidth = this.raw.width;
 	oheight = this.raw.height;
 	obitpix = this.raw.bitpix;
-	oltm1_1 = this.raw.header.LTM1_1 || 1;
+	oltm1_1 = JS9.defNull(this.raw.header.LTM1_1, 1);
 	owcssys = this.params.wcssys;
 	owcsunits = this.params.wcsunits;
 	this.freeWCS();
@@ -1955,13 +1955,13 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	if( header.CD2_2 !== undefined ){
 	    header.CD2_2 = header.CD2_2 * bin;
 	}
-	header.LTM1_1 = header.LTM1_1 || 1.0;
+	header.LTM1_1 = JS9.defNull(header.LTM1_1, 1.0);
 	header.LTM1_1 = header.LTM1_1 / bin;
 	header.LTM2_1 = header.LTM2_1 || 0.0;
 	header.LTM2_1 = header.LTM2_1 / bin;
 	header.LTM1_2 = header.LTM1_2 || 0.0;
 	header.LTM1_2 = header.LTM1_2 / bin;
-	header.LTM2_2 = header.LTM2_2 || 1.0;
+	header.LTM2_2 = JS9.defNull(header.LTM2_2, 1.0);
 	header.LTM2_2 = header.LTM2_2 / bin;
 	header.LTV1 = header.LTV1 || 0;
 	header.LTV1 = (header.LTV1 - x1) / bin + 0.5;
@@ -4500,7 +4500,7 @@ JS9.Image.prototype.flipData = function(...args){
 		nheader.CD2_1 = - oheader.CD2_1;
 	    }
 	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0);
-	    nheader.LTM1_1 = - (oheader.LTM1_1||1);
+	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
 	    break;
 	case "y":
 	    if( JS9.notNull(oheader.CRPIX2) ){
@@ -4516,7 +4516,7 @@ JS9.Image.prototype.flipData = function(...args){
 		nheader.CD2_2 = - oheader.CD2_2;
 	    }
 	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0);
-	    nheader.LTM2_2 = - (oheader.LTM2_2||1);
+	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
 	    break;
 	case "xy":
 	    if( JS9.notNull(oheader.CRPIX1) ){
@@ -4544,9 +4544,9 @@ JS9.Image.prototype.flipData = function(...args){
 		nheader.CD2_2 = - oheader.CD2_2;
 	    }
 	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0);
-	    nheader.LTM1_1 = - (oheader.LTM1_1||1);
+	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
 	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0);
-	    nheader.LTM2_2 = - (oheader.LTM2_2||1);
+	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
 	    break;
 	case "none":
 	    break;
@@ -4654,9 +4654,9 @@ JS9.Image.prototype.flipData = function(...args){
 		nheader.CD2_2 = - oheader.CD2_2;
 	    }
 	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0);
-	    nheader.LTM1_1 = - (oheader.LTM1_1||1);
+	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
 	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0);
-	    nheader.LTM2_2 = - (oheader.LTM2_2||1);
+	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
 	    break;
 	default:
 	    JS9.error(`unknown rot90 type: ${this.params.rot90}`);
@@ -19080,6 +19080,11 @@ JS9.notNull = function(s) {
 // check if a variable is either undefined or null
 JS9.isNull = function(s) {
     return s === undefined || s === null;
+};
+
+// use a default if a variable is either undefined or null
+JS9.defNull = function(s, def) {
+    return JS9.notNull(s) ? s : def;
 };
 
 // parse a FITS card and return name and value
