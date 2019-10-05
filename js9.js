@@ -4602,12 +4602,17 @@ JS9.Image.prototype.flipData = function(...args){
 	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
 		nheader.CRPIX1 = nheader.NAXIS1 - oheader.CRPIX2 + 1;
 		nheader.CRPIX2 = oheader.CRPIX1;
+		nheader.LTV1 = (nheader.LTV1||0) -
+		               (oheader.CRPIX1 - nheader.CRPIX1);
+		nheader.LTV2 = (nheader.LTV2||0) -
+		               (oheader.CRPIX2 - nheader.CRPIX2);
+		// why is this needed?
+		nheader.LTV2 -= FUDGE;
+	    } else {
+		nheader.LTV1 = (oheader.LTV2||0);
+		nheader.LTV2 = (oheader.LTV1||0) - nheader.NAXIS1;
 	    }
 	    rotateFITSHeader(oraw, nraw, angle);
-	    nheader.LTV1 = (nheader.LTV1||0) - (oheader.CRPIX1-nheader.CRPIX1);
-	    nheader.LTV2 = (nheader.LTV2||0) - (oheader.CRPIX2-nheader.CRPIX2);
-	    // why is this needed?
-	    nheader.LTV2 -= FUDGE;
 	    break;
 	case 270:
 	    angle = -90;
@@ -4621,12 +4626,17 @@ JS9.Image.prototype.flipData = function(...args){
 	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
 		nheader.CRPIX1 = oheader.CRPIX2;
 		nheader.CRPIX2 = nheader.NAXIS2 - oheader.CRPIX1 + 1;
+		nheader.LTV1 = (nheader.LTV1||0) -
+		               (oheader.CRPIX1 - nheader.CRPIX1);
+		nheader.LTV2 = (nheader.LTV2||0) -
+                               (oheader.CRPIX2 - nheader.CRPIX2);
+		// why is this needed?
+		nheader.LTV1 -= FUDGE;
+	    } else {
+		nheader.LTV2 = (nheader.LTV1||0);
+		nheader.LTV1 = (nheader.LTV2||0) - nheader.NAXIS2;
 	    }
 	    rotateFITSHeader(oraw, nraw, angle);
-	    nheader.LTV1 = (nheader.LTV1||0) - (oheader.CRPIX1-nheader.CRPIX1);
-	    nheader.LTV2 = (nheader.LTV2||0) - (oheader.CRPIX2-nheader.CRPIX2);
-	    // why is this needed?
-	    nheader.LTV1 -= FUDGE;
 	    break;
 	case 180:
 	    if( JS9.notNull(oheader.CRPIX1) ){
