@@ -1213,7 +1213,7 @@ JS9.Image.prototype.initLCS = function(iheader){
     const cx = header.CRPIX1 || 1;
     const cy = header.CRPIX2 || 1;
     // seed rotation matrix and its inverse, if necessary
-    if( header.CROTA2 ){
+    if( header.LCSROTA2 && header.CROTA2 ){
 	// screen rotation angle is reversed from FITS convention
 	a = -header.CROTA2 * Math.PI / 180.0;
 	sina = Math.sin(a);
@@ -1967,6 +1967,11 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	header.LTV1 = (header.LTV1 - x1) / bin + 0.5;
 	header.LTV2 = header.LTV2 || 0;
 	header.LTV2 = (header.LTV2 - y1) / bin + 0.5;
+    }
+    // add header param to tell LCS system to use CROTA2 to modify LTM
+    // needed because Montage does not know about LTM
+    if( opts.lcsUseRota2 ){
+	header.LCSROTA2 = true;
     }
     // look for a file/url (we'll also get a new id, see below)
     if( opts.file && opts.file !== this.file ){
@@ -4610,14 +4615,13 @@ JS9.Image.prototype.flipData = function(...args){
 		    angle = -angle;
 		}
 		rotateFITSHeader(oraw, nraw, angle);
-	    } else {
-		nheader.LTV1 = nheader.NAXIS1 - (oheader.LTV2||0);
-		nheader.LTV2 = (oheader.LTV1||0);
-		nheader.LTM1_2 = JS9.defNull(oheader.LTM1_1, 1);
-		nheader.LTM2_1 = - JS9.defNull(oheader.LTM2_2, 1)
-		nheader.LTM1_1 = JS9.defNull(oheader.LTM1_2, 0);
-		nheader.LTM2_2 = JS9.defNull(oheader.LTM2_1, 0);
 	    }
+	    nheader.LTV1 = nheader.NAXIS1 - (oheader.LTV2||0);
+	    nheader.LTV2 = (oheader.LTV1||0);
+	    nheader.LTM1_2 = JS9.defNull(oheader.LTM1_1, 1);
+	    nheader.LTM2_1 = - JS9.defNull(oheader.LTM2_2, 1)
+	    nheader.LTM1_1 = JS9.defNull(oheader.LTM1_2, 0);
+	    nheader.LTM2_2 = JS9.defNull(oheader.LTM2_1, 0);
 	    break;
 	case 270:
 	    nheader.NAXIS1 = nraw.width;
@@ -4639,14 +4643,13 @@ JS9.Image.prototype.flipData = function(...args){
 		    angle = -angle;
 		}
 		rotateFITSHeader(oraw, nraw, angle);
-	    } else {
-		nheader.LTV1 = (oheader.LTV2||0);
-		nheader.LTV2 = nheader.NAXIS2 - (oheader.LTV1||0);
-		nheader.LTM1_2 = - JS9.defNull(oheader.LTM1_1, 1);
-		nheader.LTM2_1 = JS9.defNull(oheader.LTM2_2, 1)
-		nheader.LTM1_1 = JS9.defNull(oheader.LTM1_2, 0);
-		nheader.LTM2_2 = JS9.defNull(oheader.LTM2_1, 0);
 	    }
+	    nheader.LTV1 = (oheader.LTV2||0);
+	    nheader.LTV2 = nheader.NAXIS2 - (oheader.LTV1||0);
+	    nheader.LTM1_2 = - JS9.defNull(oheader.LTM1_1, 1);
+	    nheader.LTM2_1 = JS9.defNull(oheader.LTM2_2, 1)
+	    nheader.LTM1_1 = JS9.defNull(oheader.LTM1_2, 0);
+	    nheader.LTM2_2 = JS9.defNull(oheader.LTM2_1, 0);
 	    break;
 	case 180:
 	    if( JS9.notNull(oheader.CRPIX1) ){
@@ -8084,6 +8087,9 @@ JS9.Image.prototype.rotateData = function(...args){
 	nheader.CDELT1 = ocdelt1;
 	nheader.CDELT2 = ocdelt2;
     }
+    // flag that we will use CROTA2 to modify LTM matrix
+    // needed because Montage does not know about LTM
+    opts.lcsUseRota2 = true;
     // save ptype if possible
     if( raw.wcsinfo ){
 	nheader.ptype = raw.wcsinfo.ptype;
@@ -8413,6 +8419,10 @@ JS9.Image.prototype.reprojectData = function(...args){
 	    // reset section, unless specified otherwise
 	    if( opts.resetSection !== false ){
 		topts.resetSection = true;
+	    }
+	    // pass on the lcs flag
+	    if( opts.lcsUseRota2 ){
+		topts.lcsUseRota2 = true;
 	    }
 	    // refresh the image
 	    this.refreshImage(hdu, topts);
