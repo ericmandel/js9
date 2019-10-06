@@ -145,6 +145,7 @@ JS9.globalOpts = {
     reproj: {xdim: 4096, ydim: 4096}, // max image size we can reproject
     reprojSwitches: "",         // Montage reproject switches
     binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
+    flipUsing: "data",		// "data" or "file"
     clearImageMemory: "heap",   // rm vfile: always|never|auto|noExt|noCube|size>x Mb heap=>free heap
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
@@ -297,6 +298,7 @@ JS9.imageOpts = {
     scalemin: Number.NaN,               // default scale min is undefined
     scalemax: Number.NaN,               // default scale max is undefined
     flip: "none",                       // default flip state
+    rot90: 0,	                        // default 90 deg rotation state
     zscalecontrast: 0.25,		// default from ds9
     zscalesamples: 600,			// default from ds9
     zscaleline: 120,			// default from ds9
@@ -318,7 +320,7 @@ JS9.imageOpts = {
     rotationMode: "relative",		// default: relative or absolute?
     crosshair: false,			// enable crosshair?
     disable: [],			// list of disabled core services
-    ltvbug:  true,			// add 0.5/ltm to image LTV values?
+    ltvbug:  false,			// add 0.5/ltm to image LTV values?
     listonchange: false,		// whether to list after a reg change
     whichonchange: "selected"		// which to list ("all" or "selected")
 };
@@ -1204,18 +1206,18 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
 
 // initialize keywords for various logical coordinate systems
 JS9.Image.prototype.initLCS = function(iheader){
-    let rrot, frot;
+    let rrot, frot, a, sina, cosa;
     const arr = [[0,0,0], [0,0,0], [0,0,0]];
     // header usually is raw header
     const header = iheader || this.raw.header;
     const cx = header.CRPIX1 || 1;
     const cy = header.CRPIX2 || 1;
-    // screen rotation angle is reversed from FITS convention
-    const a = -(header.CROTA2||0) * Math.PI / 180.0;
-    const sina = Math.sin(a);
-    const cosa = Math.cos(a);
     // seed rotation matrix and its inverse, if necessary
-    if( a ){
+    if( header.LCSROTA2 && header.CROTA2 ){
+	// screen rotation angle is reversed from FITS convention
+	a = -header.CROTA2 * Math.PI / 180.0;
+	sina = Math.sin(a);
+	cosa = Math.cos(a);
 	frot = [[0,0,0], [0,0,0], [0,0,0]];
 	frot[0][0] = cosa;
 	frot[0][1] = -sina;
@@ -1229,15 +1231,16 @@ JS9.Image.prototype.initLCS = function(iheader){
 	}
     }
     // physical coords
-    arr[0][0] = header.LTM1_1 || 1.0;
+    arr[0][0] = JS9.defNull(header.LTM1_1, 1.0);
     arr[1][0] = header.LTM2_1 || 0.0;
     arr[0][1] = header.LTM1_2 || 0.0;
-    arr[1][1] = header.LTM2_2 || 1.0;
+    arr[1][1] = JS9.defNull(header.LTM2_2, 1.0);
     arr[2][0] = header.LTV1   || 0.0;
     arr[2][1] = header.LTV2   || 0.0;
     if( this.imtab === "image" && this.params.ltvbug ){
 	// There seems to be a tiny misalignment between wcs->image and
 	// physical->image when ltv is involved. No idea why, but the fix is:
+	// (set default to false after implementing rot90/flip 10/6/2019)
 	if( header.LTV1 !== undefined && arr[0][0] < 1 ){
 	    arr[2][0] += arr[0][0] * 0.5;
 	}
@@ -1259,10 +1262,10 @@ JS9.Image.prototype.initLCS = function(iheader){
 	delete this.lcs.physical;
     }
     // detector coordinates
-    arr[0][0] = header.DTM1_1 || 1.0;
+    arr[0][0] = JS9.defNull(header.DTM1_1, 1.0);
     arr[1][0] = header.DTM2_1 || 0.0;
     arr[0][1] = header.DTM1_2 || 0.0;
-    arr[1][1] = header.DTM2_2 || 1.0;
+    arr[1][1] = JS9.defNull(header.DTM2_2, 1.0);
     arr[2][0] = header.DTV1   || 0.0;
     arr[2][1] = header.DTV2   || 0.0;
     this.lcs.detector = {forward: $.extend(true, [], arr),
@@ -1279,10 +1282,10 @@ JS9.Image.prototype.initLCS = function(iheader){
 	delete this.lcs.detector;
     }
     // amplifier coordinates
-    arr[0][0] = header.ATM1_1 || 1.0;
+    arr[0][0] = JS9.defNull(header.ATM1_1, 1.0);
     arr[1][0] = header.ATM2_1 || 0.0;
     arr[0][1] = header.ATM1_2 || 0.0;
-    arr[1][1] = header.ATM2_2 || 1.0;
+    arr[1][1] = JS9.defNull(header.ATM2_2, 1.0);
     arr[2][0] = header.ATV1   || 0.0;
     arr[2][1] = header.ATV2   || 0.0;
     this.lcs.amplifier = {forward: $.extend(true, [], arr),
@@ -1742,7 +1745,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	owidth = this.raw.width;
 	oheight = this.raw.height;
 	obitpix = this.raw.bitpix;
-	oltm1_1 = this.raw.header.LTM1_1 || 1;
+	oltm1_1 = JS9.defNull(this.raw.header.LTM1_1, 1);
 	owcssys = this.params.wcssys;
 	owcsunits = this.params.wcsunits;
 	this.freeWCS();
@@ -1953,18 +1956,23 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	if( header.CD2_2 !== undefined ){
 	    header.CD2_2 = header.CD2_2 * bin;
 	}
-	header.LTM1_1 = header.LTM1_1 || 1.0;
+	header.LTM1_1 = JS9.defNull(header.LTM1_1, 1.0);
 	header.LTM1_1 = header.LTM1_1 / bin;
 	header.LTM2_1 = header.LTM2_1 || 0.0;
 	header.LTM2_1 = header.LTM2_1 / bin;
 	header.LTM1_2 = header.LTM1_2 || 0.0;
 	header.LTM1_2 = header.LTM1_2 / bin;
-	header.LTM2_2 = header.LTM2_2 || 1.0;
+	header.LTM2_2 = JS9.defNull(header.LTM2_2, 1.0);
 	header.LTM2_2 = header.LTM2_2 / bin;
 	header.LTV1 = header.LTV1 || 0;
 	header.LTV1 = (header.LTV1 - x1) / bin + 0.5;
 	header.LTV2 = header.LTV2 || 0;
 	header.LTV2 = (header.LTV2 - y1) / bin + 0.5;
+    }
+    // add header param to tell LCS system to use CROTA2 to modify LTM
+    // needed because Montage does not know about LTM
+    if( opts.lcsUseRota2 ){
+	header.LCSROTA2 = true;
     }
     // look for a file/url (we'll also get a new id, see below)
     if( opts.file && opts.file !== this.file ){
@@ -4338,6 +4346,448 @@ JS9.Image.prototype.getFlip = function(){
 
 // flip image along an axis
 JS9.Image.prototype.setFlip = function(flip){
+    if( JS9.globalOpts.flipUsing === "file" ){
+	return this.flipFile(flip);
+    }
+    return this.flipData(flip, this.params.rot90);
+};
+
+// get 90-degree rotatation state
+JS9.Image.prototype.getRot90 = function(){
+    return this.params.rot90;
+};
+
+// rotate image by multiples of 90 degrees
+JS9.Image.prototype.setRot90 = function(rot90){
+    if( JS9.globalOpts.flipUsing === "file" ){
+	JS9.error("no setRot90 capability when flip is using 'file'");
+    }
+    return this.flipData(this.params.flip, rot90);
+};
+
+// creates a new raw data layer ("flip")
+JS9.Image.prototype.flipData = function(...args){
+    let [flip, rot, opts] = args;
+    const getCopy = (oraw) => {
+	// make copy
+	let nraw = $.extend(true, {}, oraw);
+	switch(oraw.bitpix){
+	case 8:
+	    nraw.data = new Uint8Array(oraw.data);
+	    break;
+	case 16:
+	    nraw.data = new Int16Array(oraw.data);
+	    break;
+	case -16:
+	    nraw.data = new Uint16Array(oraw.data);
+	    break;
+	case 32:
+	    nraw.data = new Int32Array(oraw.data);
+	    break;
+	case -32:
+	    nraw.data = new Float32Array(oraw.data);
+	    break;
+	case -64:
+	    nraw.data = new Float64Array(oraw.data);
+	    break;
+	}
+	return nraw;
+    }
+    const getLine = (oraw, ooff, nraw, noff) => {
+	let obuf, nbuf;
+	switch(oraw.bitpix){
+	case 8:
+	    obuf = new Uint8Array(oraw.data.buffer, ooff, oraw.width);
+	    nbuf = new Uint8Array(nraw.data.buffer, noff, oraw.width);
+	    break;
+	case 16:
+	case -16:
+	    obuf = new Uint16Array(oraw.data.buffer, ooff, oraw.width);
+	    nbuf = new Uint16Array(nraw.data.buffer, noff, oraw.width);
+	    break;
+	case 32:
+	    obuf = new Uint32Array(oraw.data.buffer, ooff, oraw.width);
+	    nbuf = new Uint32Array(nraw.data.buffer, noff, oraw.width);
+	    break;
+	case -32:
+	    obuf = new Float32Array(oraw.data.buffer, ooff, oraw.width);
+	    nbuf = new Float32Array(nraw.data.buffer, noff, oraw.width);
+	    break;
+	case -64:
+	    obuf = new Float64Array(oraw.data.buffer, ooff, oraw.width);
+	    nbuf = new Float64Array(nraw.data.buffer, noff, oraw.width);
+	    break;
+	default:
+	    JS9.error(`unknown bitpix value for flip: ${oraw.bitpix}`);
+	}
+	return [obuf, nbuf];
+    };
+    const flipX = (oraw, nraw) => {
+	let oj, nj, ooff, noff, obuf, nbuf;
+	const bpp = oraw.data.BYTES_PER_ELEMENT;
+	for(oj=0; oj<oraw.height; oj++){
+	    nj = oj;
+	    ooff = oj * oraw.width * bpp;
+	    noff = nj * oraw.width * bpp;
+	    [obuf, nbuf] = getLine(oraw, ooff, nraw, noff);
+	    nbuf.set(obuf);
+	    nbuf.reverse();
+	}
+    };
+    const flipY = (oraw, nraw) => {
+	let oj, nj, ooff, noff, obuf, nbuf;
+	const bpp = oraw.data.BYTES_PER_ELEMENT;
+	for(oj=0; oj<oraw.height; oj++){
+	    nj = oraw.height - oj - 1;
+	    ooff = oj * oraw.width * bpp;
+	    noff = nj * oraw.width * bpp;
+	    [obuf, nbuf] = getLine(oraw, ooff, nraw, noff);
+	    nbuf.set(obuf);
+	}
+    };
+    const flipXY = (oraw, nraw) => {
+	let oj, nj, ooff, noff, obuf, nbuf;
+	const bpp = oraw.data.BYTES_PER_ELEMENT;
+	for(oj=0; oj<oraw.height; oj++){
+	    nj = oraw.height - oj - 1;
+	    ooff = oj * oraw.width * bpp;
+	    noff = nj * oraw.width * bpp;
+	    [obuf, nbuf] = getLine(oraw, ooff, nraw, noff);
+	    nbuf.set(obuf);
+	    nbuf.reverse();
+	}
+    };
+    const rot90 = (oraw, nraw) => {
+	let oi, oj, olptr, noff;
+	const obuf = oraw.data;
+	const nbuf = nraw.data;
+	nraw.width = oraw.height;
+	nraw.height = oraw.width;
+	for(oj=0; oj<oraw.height; oj++){
+	    olptr = oj * oraw.width;
+	    noff = nraw.width - 1 - oj;
+	    for(oi=0; oi<oraw.width; oi++){
+		nbuf[oi * nraw.width + noff] = obuf[olptr + oi];
+	    }
+	}
+    };
+    const rot180 = (oraw, nraw) => {
+	flipXY(oraw, nraw);
+    }
+    const rot270 = (oraw, nraw) => {
+	let oi, oj, olptr, oh;
+	const obuf = oraw.data;
+	const nbuf = nraw.data;
+	nraw.width = oraw.height;
+	nraw.height = oraw.width;
+	oh = nraw.height - 1;
+	for(oj=0; oj<oraw.height; oj++){
+	    olptr = oj * oraw.width;
+	    for(oi=0; oi<oraw.width; oi++){
+		nbuf[(oh - oi) * nraw.width + oj] = obuf[olptr + oi];
+	    }
+	}
+    };
+    const updateFlipHeader = (oraw, nraw) => {
+	const oheader = oraw.header;
+	const nheader = nraw.header;
+	switch(this.params.flip){
+	case "x":
+	    if( JS9.notNull(oheader.CRPIX1) ){
+		nheader.CRPIX1 = oheader.NAXIS1 - oheader.CRPIX1 + 1;
+	    }
+	    if( JS9.notNull(oheader.CDELT1) ){
+		nheader.CDELT1 = - oheader.CDELT1;
+	    }
+	    if( JS9.notNull(oheader.CD1_1) ){
+		nheader.CD1_1 = - oheader.CD1_1;
+	    }
+	    if( JS9.notNull(oheader.CD2_1) ){
+		nheader.CD2_1 = - oheader.CD2_1;
+	    }
+	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0);
+	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
+	    break;
+	case "y":
+	    if( JS9.notNull(oheader.CRPIX2) ){
+		nheader.CRPIX2 = oheader.NAXIS2 - oheader.CRPIX2 + 1;
+	    }
+	    if( JS9.notNull(oheader.CDELT2) ){
+		nheader.CDELT2 = - oheader.CDELT2;
+	    }
+	    if( JS9.notNull(oheader.CD1_2) ){
+		nheader.CD1_2 = - oheader.CD1_2;
+	    }
+	    if( JS9.notNull(oheader.CD2_2) ){
+		nheader.CD2_2 = - oheader.CD2_2;
+	    }
+	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0);
+	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
+	    break;
+	case "xy":
+	    if( JS9.notNull(oheader.CRPIX1) ){
+		nheader.CRPIX1 = oheader.NAXIS1 - oheader.CRPIX1 + 1;
+	    }
+	    if( JS9.notNull(oheader.CDELT1) ){
+		nheader.CDELT1 = - oheader.CDELT1;
+	    }
+	    if( JS9.notNull(oheader.CRPIX2) ){
+		nheader.CRPIX2 = oheader.NAXIS2 - oheader.CRPIX2 + 1;
+	    }
+	    if( JS9.notNull(oheader.CDELT2) ){
+		nheader.CDELT2 = - oheader.CDELT2;
+	    }
+	    if( JS9.notNull(oheader.CD1_1) ){
+		nheader.CD1_1 = - oheader.CD1_1;
+	    }
+	    if( JS9.notNull(oheader.CD2_1) ){
+		nheader.CD2_1 = - oheader.CD2_1;
+	    }
+	    if( JS9.notNull(oheader.CD1_2) ){
+		nheader.CD1_2 = - oheader.CD1_2;
+	    }
+	    if( JS9.notNull(oheader.CD2_2) ){
+		nheader.CD2_2 = - oheader.CD2_2;
+	    }
+	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0);
+	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
+	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0);
+	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
+	    break;
+	case "none":
+	    break;
+	}
+    };
+    const rotateFITSHeader = (oraw, nraw, angle) => {
+	let arad, sinrot, cosrot;
+	const oheader = oraw.header;
+	const nheader = nraw.header;
+	// use CD matrix if present, otherwise use CROTA2
+	if( JS9.notNull(oheader.CD1_1)  ){
+	    arad = -(angle * Math.PI / 180.0);
+	    sinrot = Math.sin(arad);
+	    cosrot = Math.cos(arad);
+	    nheader.CD1_1 =  oheader.CD1_1 * cosrot  + oheader.CD1_2 * sinrot;
+	    nheader.CD1_2 =  oheader.CD1_1 * -sinrot + oheader.CD1_2 * cosrot;
+	    nheader.CD2_1 =  oheader.CD2_1 * cosrot  + oheader.CD2_2 * sinrot;
+	    nheader.CD2_2 =  oheader.CD2_1 * -sinrot + oheader.CD2_2 * cosrot;
+	} else if( JS9.notNull(oheader.CRPIX1) ){
+	    // add file rotation into angle
+	    if( oraw.wcsinfo ){
+		angle += (oraw.wcsinfo.crot || 0);
+	    } else {
+		angle += (oheader.CROTA2 || 0);
+	    }
+	    nheader.CROTA2 = angle;
+	    // use old cdelts
+	    nheader.CDELT1 = oheader.CDELT1 || 0;
+	    nheader.CDELT2 = oheader.CDELT2 || 0;
+	}
+    };
+    const updateRot90Header = (oraw, nraw) => {
+	let angle;
+	const oheader = oraw.header;
+	const nheader = nraw.header;
+	const FUDGE = 2;
+	switch(this.params.rot90){
+	case 0:
+	    nraw.header = oraw.header;
+	    break;
+	case 90:
+	    nheader.NAXIS1 = nraw.width;
+	    nheader.NAXIS2 = nraw.height;
+	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
+		nheader.CRPIX1 = nheader.NAXIS1 - oheader.CRPIX2 + 1;
+		nheader.CRPIX2 = oheader.CRPIX1;
+		nheader.LTV1 = (nheader.LTV1||0) -
+		               (oheader.CRPIX1 - nheader.CRPIX1);
+		nheader.LTV2 = (nheader.LTV2||0) -
+		               (oheader.CRPIX2 - nheader.CRPIX2);
+		// why is this needed?
+		nheader.LTV2 -= FUDGE;
+		// normalize angle
+		angle = 90;
+		// if using CROTA2, we negate the angle after flipping, the
+		// the end result of a long conversation with J Mink, in which
+		// she verified the confused state of affairs for WCS when
+		// flipping images, including sign problems ... 10/2/2019
+		if( JS9.isNull(oheader.CD1_1)                              &&
+		    (this.params.flip === "x" || this.params.flip === "y") ){
+		    angle = -angle;
+		}
+		rotateFITSHeader(oraw, nraw, angle);
+	    }
+	    nheader.LTV1 = nheader.NAXIS1 - (oheader.LTV2||0) + 1;
+	    nheader.LTV2 = (oheader.LTV1||0);
+	    nheader.LTM1_2 = JS9.defNull(oheader.LTM1_1, 1);
+	    nheader.LTM2_1 = - JS9.defNull(oheader.LTM2_2, 1);
+	    nheader.LTM1_1 = JS9.defNull(oheader.LTM1_2, 0);
+	    nheader.LTM2_2 = JS9.defNull(oheader.LTM2_1, 0);
+	    break;
+	case 270:
+	    nheader.NAXIS1 = nraw.width;
+	    nheader.NAXIS2 = nraw.height;
+	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
+		nheader.CRPIX1 = oheader.CRPIX2;
+		nheader.CRPIX2 = nheader.NAXIS2 - oheader.CRPIX1 + 1;
+		nheader.LTV1 = (nheader.LTV1||0) -
+		               (oheader.CRPIX1 - nheader.CRPIX1);
+		nheader.LTV2 = (nheader.LTV2||0) -
+                               (oheader.CRPIX2 - nheader.CRPIX2);
+		// why is this needed?
+		nheader.LTV1 -= FUDGE;
+		// normalize angle
+		angle = -90;
+		// if using CROTA2, we need to negate the angle after flipping
+		if( JS9.isNull(oheader.CD1_1)                              &&
+		    (this.params.flip === "x" || this.params.flip === "y") ){
+		    angle = -angle;
+		}
+		rotateFITSHeader(oraw, nraw, angle);
+	    }
+	    nheader.LTV1 = (oheader.LTV2||0);
+	    nheader.LTV2 = nheader.NAXIS2 - (oheader.LTV1||0) + 1;
+	    nheader.LTM1_2 = - JS9.defNull(oheader.LTM1_1, 1);
+	    nheader.LTM2_1 = JS9.defNull(oheader.LTM2_2, 1)
+	    nheader.LTM1_1 = JS9.defNull(oheader.LTM1_2, 0);
+	    nheader.LTM2_2 = JS9.defNull(oheader.LTM2_1, 0);
+	    break;
+	case 180:
+	    if( JS9.notNull(oheader.CRPIX1) ){
+		nheader.CRPIX1 = oheader.NAXIS1 - oheader.CRPIX1 + 1;
+	    }
+	    if( JS9.notNull(oheader.CDELT1) ){
+		nheader.CDELT1 = - oheader.CDELT1;
+	    }
+	    if( JS9.notNull(oheader.CRPIX2) ){
+		nheader.CRPIX2 = oheader.NAXIS2 - oheader.CRPIX2 + 1;
+	    }
+	    if( JS9.notNull(oheader.CDELT2) ){
+		nheader.CDELT2 = - oheader.CDELT2;
+	    }
+	    if( JS9.notNull(oheader.CD1_1) ){
+		nheader.CD1_1 = - oheader.CD1_1;
+	    }
+	    if( JS9.notNull(oheader.CD2_1) ){
+		nheader.CD2_1 = - oheader.CD2_1;
+	    }
+	    if( JS9.notNull(oheader.CD1_2) ){
+		nheader.CD1_2 = - oheader.CD1_2;
+	    }
+	    if( JS9.notNull(oheader.CD2_2) ){
+		nheader.CD2_2 = - oheader.CD2_2;
+	    }
+	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0) + 1;
+	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
+	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0) + 1;
+	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
+	    break;
+	default:
+	    JS9.error(`unknown rot90 type: ${this.params.rot90}`);
+	    break;
+	}
+    };
+    // sanity check
+    if( !this || !this.raw || !this.raw.header ){
+	JS9.error("invalid image for flipData");
+    }
+    // no support for updating WCS in HEALPix images ...
+    if( this.raw.header.CTYPE1 && this.raw.header.CTYPE1.match(/HPX/) ){
+	JS9.error("support for flipping/rotating HEALPix is not yet available");
+    }
+    // no args essentially means reset
+    flip = flip || "none";
+    rot  = rot  || 0;
+    rot  = Math.floor(rot);
+    while( rot < 0 ){ rot += 360; }
+    while( rot > 360 ){ rot -= 360; }
+    if( rot % 90 !== 0 ){
+	JS9.error(`invalid rot90 value: ${rot} (use: 0, 90, 180, 270)`);
+    }
+    // opts is optional
+    opts = opts || {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error(`can't parse flip opts: ${opts}`, e); }
+    }
+    // start from original data
+    opts.oraw = "raw0";
+    // nraw should be a copy of oraw
+    opts.alwaysCopy = true;
+    // always update wcs
+    opts.updatewcs = true;
+    // reset pan
+    opts.resetpan = true;
+    // new layer
+    opts.rawid = opts.rawid || "flip";
+    // save this routine so it can be reconstituted in a restored session
+    this.xeqStashSave("flipData", args, opts.rawid);
+    this.rawDataLayer(opts, (oraw, nraw) => {
+	let traw = getCopy(oraw);
+	// set flip state
+	switch(flip.toLowerCase()){
+	case "x":
+	    flipX(oraw, traw);
+	    this.params.flip = flip;
+	    break;
+	case "y":
+	    flipY(oraw, traw);
+	    this.params.flip = flip;
+	    break;
+	case "xy":
+	    flipXY(oraw, traw);
+	    this.params.flip = flip;
+	    break;
+	case "":
+	case "none":
+	case "reset":
+	    this.params.flip = "none";
+	    break;
+	default:
+	    JS9.error(`unknown flip type: ${flip}`);
+	    break;
+	}
+	// update the header params
+	updateFlipHeader(oraw, traw);
+	// set rot state
+	switch(rot){
+	case "":
+	case "none":
+	case "reset":
+	case 0:
+	    nraw.data = traw.data;
+	    this.params.rot90 = 0;
+	    break;
+	case 90:
+	case -270:
+	    rot90(traw, nraw);
+	    this.params.rot90 = 90;
+	    break;
+	case 180:
+	case -180:
+	    rot180(traw, nraw);
+	    this.params.rot90 = 180;
+	    break;
+	case 270:
+	case -90:
+	    rot270(traw, nraw);
+	    this.params.rot90 = 270;
+	    break;
+	default:
+	    JS9.error(`unknown rot90 type: ${rot}`);
+	    break;
+	}
+	// update the header params
+	updateRot90Header(traw, nraw);
+	return true;
+    });
+    // allow chaining
+    return this;
+};
+
+// flip image along an axis
+JS9.Image.prototype.flipFile = function(flip){
     let hdu, table;
     const opts = {};
     // sanity check
@@ -7219,6 +7669,18 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 	if( opts.dataminmax !== false ){
 	    this.dataminmax();
 	}
+	// re-init coordinate systems, if necessary
+	if( opts.updatewcs ){
+	    // init WCS, if possible
+	    this.initWCS();
+	    // init the logical coordinate system, if possible
+	    this.initLCS();
+	}
+	if( opts.resetpan ){
+	    this.setPan();
+	}
+	// refresh shape layers
+	this.refreshLayers();
 	// redisplay using these data
 	this.displayImage("all", opts);
     }
@@ -7553,7 +8015,7 @@ JS9.Image.prototype.shiftData = function(...args){
 // creates a new raw data layer ("rotate")
 // angle is in degrees (since CROTA2 is in degrees)
 JS9.Image.prototype.rotateData = function(...args){
-    let raw, oheader, nheader, ncrot, nrad, sinrot, cosrot;
+    let raw, oheader, nheader, arad, sinrot, cosrot;
     let ocdelt1 = 0.0;
     let ocdelt2 = 0.0;
     let [angle, opts] = args;
@@ -7605,26 +8067,30 @@ JS9.Image.prototype.rotateData = function(...args){
 	    if( ocdelt1 > 0 ){ ocdelt1 = -ocdelt1; }
 	    if( ocdelt2 < 0 ){ ocdelt2 = -ocdelt2; }
 	    break;
+	default:
+	    angle = parseInt(angle, 10);
+	    break;
 	}
     }
     // new header same as old, but with a changed angle
-    ncrot = angle;
-    // rotation in radians
-    nrad = -(ncrot * Math.PI / 180.0);
-    sinrot = Math.sin(nrad);
-    cosrot = Math.cos(nrad);
     // make up new WCS keywords
-    // if not using CD matrix, set CROTA2
-    if( JS9.isNull(oheader.CD1_1)  ){
-	nheader.CROTA2 = ncrot;
+    // use CD matrix if possible, else set CROTA2
+    if( JS9.notNull(oheader.CD1_1)  ){
+	arad = -(angle * Math.PI / 180.0);
+	sinrot = Math.sin(arad);
+	cosrot = Math.cos(arad);
+	nheader.CD1_1 =  oheader.CD1_1 * cosrot  + oheader.CD1_2 * sinrot;
+	nheader.CD1_2 =  oheader.CD1_1 * -sinrot + oheader.CD1_2 * cosrot;
+	nheader.CD2_1 =  oheader.CD2_1 * cosrot  + oheader.CD2_2 * sinrot;
+	nheader.CD2_2 =  oheader.CD2_1 * -sinrot + oheader.CD2_2 * cosrot;
+    } else {
+	nheader.CROTA2 = angle;
 	nheader.CDELT1 = ocdelt1;
 	nheader.CDELT2 = ocdelt2;
-    } else {
-	nheader.CD1_1 =  ocdelt1 * cosrot;
-	nheader.CD1_2 = -ocdelt2 * sinrot;
-	nheader.CD2_1 =  ocdelt1 * sinrot;
-	nheader.CD2_2 =  ocdelt2 * cosrot;
     }
+    // flag that we will use CROTA2 to modify LTM matrix
+    // needed because Montage does not know about LTM
+    opts.lcsUseRota2 = true;
     // save ptype if possible
     if( raw.wcsinfo ){
 	nheader.ptype = raw.wcsinfo.ptype;
@@ -7954,6 +8420,10 @@ JS9.Image.prototype.reprojectData = function(...args){
 	    // reset section, unless specified otherwise
 	    if( opts.resetSection !== false ){
 		topts.resetSection = true;
+	    }
+	    // pass on the lcs flag
+	    if( opts.lcsUseRota2 ){
+		topts.lcsUseRota2 = true;
 	    }
 	    // refresh the image
 	    this.refreshImage(hdu, topts);
@@ -8815,7 +9285,7 @@ JS9.Image.prototype.wcs2wcs = function(from, to, ra, dec){
 // convert wcs, physical or image image length to image length,
 // using current wcs and string delimiters to determine what input type
 JS9.Image.prototype.wcs2imlen = function(s){
-    let v, wcsinfo;
+    let v, wcsinfo, iscale;
     let dpp = 1;
     // sanity check
     if( !s ){
@@ -8833,9 +9303,11 @@ JS9.Image.prototype.wcs2imlen = function(s){
     case "image":
 	break;
     case "physical":
-	// use the LTM1_1 value stored for logical to image transforms
+	// use LTM1_1 or LTM1_2 value stored for logical to image transforms
 	if( this.lcs && this.lcs.physical ){
-	    v.dval = v.dval * this.lcs.physical.forward[0][0];
+	    iscale = Math.sqrt(Math.pow(this.lcs.physical.forward[0][0],2) +
+		               Math.pow(this.lcs.physical.forward[0][1],2));
+	    v.dval = Math.abs(v.dval * iscale);
 	}
 	break;
     default:
@@ -12947,7 +13419,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.imsys = pub.lcs.sys;
 	px = pub.lcs.x;
 	py = pub.lcs.y;
-	bin = this.lcs.physical.reverse[0][0];
+	bin = Math.sqrt(Math.pow(this.lcs.physical.reverse[0][0],2) +
+		        Math.pow(this.lcs.physical.reverse[0][1],2));
     }
     // fabric angle is in opposite direction
     pub.angle = -obj.angle;
@@ -15307,7 +15780,8 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
     };
     // set physical to image conversion, if possible
     if( this.lcs && this.lcs.physical ){
-	bin = this.lcs.physical.forward[0][0] || 1;
+	bin = Math.sqrt(Math.pow(this.lcs.physical.forward[0][0],2) +
+		        Math.pow(this.lcs.physical.forward[0][1],2));
     }
     // process array of keyword/values
     for(i=0; i<alen; i++){
@@ -15986,7 +16460,7 @@ JS9.Regions.parseRegions = function(s, opts){
     };
     // get image length
     const getilen = (len, which) => {
-	let cstr;
+	let cstr, iscale;
 	const v = JS9.strtoscaled(len);
 	const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
 	// local override of wcs if we used sexagesimal units or appended d,r
@@ -16003,7 +16477,9 @@ JS9.Regions.parseRegions = function(s, opts){
 	} else if( wcssys === "physical" ){
 	    // use the LTM1_1 value stored for logical to image transforms
 	    if( this.lcs && this.lcs.physical ){
-		v.dval = Math.abs(v.dval * this.lcs.physical.forward[0][0]);
+		iscale = Math.sqrt(Math.pow(this.lcs.physical.forward[0][0],2)+
+				   Math.pow(this.lcs.physical.forward[0][1],2));
+		v.dval = Math.abs(v.dval * iscale);
 	    }
 	}
 	return v.dval;
@@ -18649,6 +19125,11 @@ JS9.isNull = function(s) {
     return s === undefined || s === null;
 };
 
+// use a default if a variable is either undefined or null
+JS9.defNull = function(s, def) {
+    return JS9.notNull(s) ? s : def;
+};
+
 // parse a FITS card and return name and value
 JS9.cardpars = function(card){
     let value;
@@ -21267,6 +21748,9 @@ JS9.mkPublic("GetScale", "getScale");
 JS9.mkPublic("SetScale", "setScale");
 JS9.mkPublic("SetFlip", "setFlip");
 JS9.mkPublic("GetFlip", "getFlip");
+JS9.mkPublic("FlipData", "flipData");
+JS9.mkPublic("SetRot90", "setRot90");
+JS9.mkPublic("GetRot90", "getRot90");
 JS9.mkPublic("GetParam", "getParam");
 JS9.mkPublic("SetParam", "setParam");
 JS9.mkPublic("GetValPos", "updateValpos");

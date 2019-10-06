@@ -1641,7 +1641,7 @@ panned to the RA, Dec at the center of the target image's display. The
 zoom is also matched. The pixel size (as specified by the FITS CDELT1
 parameter) will be taken into account when zooming, but not the image
 rotation or flip. This routine is faster than
-<b><a href="#JS9.ReprojectData">ReprojectData()</a></b>
+<b><a href="#JS9.ReprojectData">JS9.ReprojectData()</a></b>
 for aligning reasonably similar images.
 
 <p>
@@ -1661,8 +1661,23 @@ Flip an image around the specified axis. The WCS header parameters will be
 updated appropriately. Note that you might have to reset the pan position
 after flipping.
 <p>
-The image is flipped using the CFITSIO fits_copy_image_section()
-routine, so this function is available only for FITS files (not PNG/JPEG).
+This routine calls the low-level
+<a href="#JS9.FlipData"><b>JS9.FlipData()</b></a> routine
+using the current value of the image's rot90 state as the second argument,
+and is equivalent to:
+<pre>
+    JS9.FlipData(flip, im.param.rot90)
+</pre>
+where im.param.rot90 is the current rotation state set by
+<a href="#JS9.SetRot90"><b>JS9.SetRot90()</b></a>.
+<p>
+A previous implementation used the CFITSIO fits_copy_image_section()
+routine (and processed the original data file instead of the
+current image buffer). It was slower, did not have integrated
+support for 90 degree rotations, and only worked on FITS files.
+To flip images using the CFITSIO implementation, set the global
+property <b>JS9.globalOpts.flipUsing</b> to <b>"file"</b> instead
+of <b>"data"</b>.
 
 <h5 id="JS9.GetFlip">Get flip state of an image</h5>
 <p>
@@ -1673,6 +1688,38 @@ returns:
 <li><b>flip</b>: the current flip state
 </ul>
 Possible returned flip states are: "x", "y", "xy", or "none".
+
+<h5 id="JS9.SetRot90">Rotate an image in multiples of 90 degrees</h5>
+<p>
+<code class="api">JS9.SetRot90(flip)</code>
+<p>
+where:
+<ul>
+<li><b>rot</b>: a multiple of 90 degrees (0, +/-90, +/-180, +/-270)
+</ul>
+Rotate an image by a multiple of 90 degrees. The WCS header
+parameters will be updated appropriately. Note that you might
+have to reset the pan position after rotating.
+<p>
+The routine calls the low-level
+<a href="#JS9.FlipData"><b>JS9.FlipData()</b></a> routine
+using the current value of the flip state as the first argument, and is
+equivalent to:
+<pre>
+    JS9.FlipData(im.param.flip, rot)
+</pre>
+where im.param.flip is the current flip state set by
+<a href="#JS9.SetFlip"><b>JS9.SetFlip()</b></a>.
+
+<h5 id="JS9.GetRot90">Get rotate state of an image</h5>
+<p>
+<code class="api">rot = JS9.GetRot90()</code>
+<p>
+returns:
+<ul>
+<li><b>rot</b>: current rotation value for this image
+</ul>
+The returned rotation value will be a multiple of 90.
 
 <h5 id="JS9.GetParam">Get an image parameter value</h5>
 <p>
@@ -1691,7 +1738,7 @@ returns:
 <p>
 Return the value of an image parameter. The available parameters are listed
 below in the
-<a href="#JS9.SetParam"><b>SetParam()</b></a>
+<a href="#JS9.SetParam"><b>JS9.SetParam()</b></a>
 section.
 </p>
 In the value of param is "all", the entire param object is returned.
@@ -2513,6 +2560,9 @@ specified sigma. The routine uses the fast Gaussian blur algorithm
 (approximating a full Gaussian blur with three passes of a box blur)
 described <a href="http://blog.ivank.net/fastest-gaussian-blur.html" target="_blank">
 here</a>.
+<p>
+See <a href="#JS9.RawDataLayer"><b>JS9.RawDataLayer()</b></a> for more
+information about raw data layers.
 
 <h5 id="JS9.ImarithData">Perform image arithmetic on raw data</h5>
 <p>
@@ -2574,6 +2624,9 @@ in the optional opts object.
 Finally, note that the two images must have the same dimensions. We
 might be able to remove this restriction in the future, although
 it is unclear how one lines up images of different dimensions.
+<p>
+See <a href="#JS9.RawDataLayer"><b>JS9.RawDataLayer()</b></a> for more
+information about raw data layers.
 
 <h5 id="JS9.ShiftData">Shift raw data</h5>
 <p>
@@ -2591,6 +2644,128 @@ amount in x and/or y. The results of successive shifts are
 cumulative. The routine is used by the Harvard-Smithsonian Center for
 Astrophysics MicroObservatory project interactively to align images
 that are only slightly offset from one another.
+<p>
+See <a href="#JS9.RawDataLayer"><b>JS9.RawDataLayer()</b></a> for more
+information about raw data layers.
+
+<h5 id="JS9.ReprojectData">Reproject an image using a specified WCS</h5>
+<p>
+<code class="api">JS9.ReprojectData(wcsim, opts)</code>
+<p>
+where:
+<ul>
+<li><b>wcsim</b>: image containing the WCS used to perform the reprojection
+<li><b>opts</b>: options object for raw data layer
+</ul>
+<b>JS9.ReprojectData()</b> creates a new raw data layer (with default id
+of "reproject") in which the pixels are reprojected using the WCS from
+another image. The
+<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html" target="_blank">mProjectPP</a>
+program from the 
+<a href="http://montage.ipac.caltech.edu/" target="_blank">Montage</a> software suite
+is used to perform the reprojection.  Please read the documentation on
+mProjectPP from the Montage web site, which includes this explanation:
+<p>
+<pre>
+    mProjectPP performs a plane-to-plane transform on the input image, and
+    is an adaptation of the Mopex algorithm and developed in collaboration
+    with the Spitzer Space Telescope. It provides a speed increase of
+    approximately a factor of 30 over the general-purpose mProject. However,
+    mProjectPP is only suitable for projections which can be approximated
+    by tangent-plane projections (TAN, SIN, ZEA, STG, ARC), and is therefore
+    not suited for images covering large portions of the sky. Also note that
+    it does not directly support changes in coordinate system (i.e., equatorial
+    to galactic coordinates), though these changes can be facilitated by the
+    use of an alternate header.
+</pre>
+These Montage programs have been compiled into JS9 using
+<a href="https://emscripten.org/" target="_blank">Emscripten</a>.
+
+<p>
+The <b>wcsim</b> argument is an image id, image filename, or image
+object pointing to the WCS image. This is the image whose WCS will be used
+for the reprojection. Alternatively, if the <b>wcsim</b> argument is set to
+"all", the WCS from the currently displayed image will be used to reproject
+all other images in the display.
+
+<p>
+The <b>opts</b> object can contain the following reproject-specific properties:
+<ul>
+<li><b>rawid</b>: the id of the raw data layer to create (default: "reproject")
+<li><b>cmdswitches</b>: a string containing mProjectPP command line switches
+</ul>
+The cmdswitches will be prepended to the mProjectPP command line. For example:
+<pre>
+ {cmdswitches: "-d 1 -z .75"}
+</pre>
+will set the mProjectPP debugging and the drizzle factor, resulting in a
+command line that looks like this:
+<pre>
+  mProjectPP -d 1 -z .75 -s statusfile in.fits out.fits template.hdr
+</pre>
+See the 
+<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html" target="_blank">mProjectPP</a>
+documentation for more information about command switches.
+
+<p>
+Reprojection is an intensive process which can take a considerable
+amount of memory and processing time. It also (at least currently)
+requires that the full reprojected image be displayed (so that the
+reprojected image can be properly aligned with the WCS image used in
+making the reprojection).  We therefore restrict the WCS image size to
+be less than or equal to JS9.globalOpts.image.xdim by
+JS9.globalOpts.image.ydim. If the WCS image exceeds this size, an
+error is thrown.
+<p>
+See <a href="#JS9.RawDataLayer"><b>JS9.RawDataLayer()</b></a> for more
+information about raw data layers.
+
+<h5 id="JS9.RotateData">Rotate an image around the WCS CRPIX point</h5>
+<p>
+<code class="api">JS9.RotateData(angle, opts)</code>
+<p>
+where:
+<ul>
+<li><b>angle</b>: rotation angle in degrees
+<li><b>opts</b>: options object
+</ul>
+The <b>JS9.RotateData()</b> routine uses
+<a href="#JS9.ReprojectData"><b>JS9.ReprojectData()</b></a>
+to rotate image data by the specified angle (in degrees). If the string
+"northup" or "northisup" is specified, the rotation angle is set to 0.
+The rotation is performed about the WCS CRPIX1, CRPIX2 point.
+<p>
+The optional opts object is passed directly to the <b>JS9.ReprojectData()</b>
+routine. See <b>JS9.ReprojectData()</b> above for more information.
+
+<h5 id="JS9.FlipData">Flip and rotate (multiples of 90 degrees) an image</h5>
+<p>
+<code class="api">JS9.FlipData(flip, rot, opts)</code>
+<p>
+where:
+<ul>
+<li><b>flip</b>: "x", "y", "xy", "none"
+<li><b>rot</b>: a multiple o 90 degrees (0, +/-90, +/-180, +/-270)
+<li><b>opts</b>: options object for raw data layer
+</ul>
+The <b>JS9.FlipData()</b> routine creates a new raw data
+layer (with default id "flip") in which the image is flipped and
+rotated (90 degree multiples).  The WCS header parameters will be
+updated appropriately. Note that you might have to reset the pan
+position after rotating.
+<p>
+The routine provides the low-level support for
+<a href="#JS9.SetFlip"><b>SetFlip()</b></a>
+and 
+<a href="#JS9.SetRot90"><b>SetRot90()</b></a>,
+and is equivalent to:
+<pre>
+    JS9.SetFlip(flip)
+    JS9.SetRot90(rot)
+</pre>
+<p>
+See <a href="#JS9.RawDataLayer"><b>JS9.RawDataLayer()</b></a> for more
+information about raw data layers.
 
 <h5 id="JS9.FilterRGBImage">Apply a filter to the RGB image</h5>
 <p>
@@ -2710,93 +2885,6 @@ With no arguments, the routine returns an array of available filters:
     ["convolve", "luminance", ..., "blur", "emboss", "lighten", "darken"]
 </pre>
 
-<h5 id="JS9.ReprojectData">Reproject an image using a specified WCS</h5>
-<p>
-<code class="api">JS9.ReprojectData(wcsim, opts)</code>
-<p>
-where:
-<ul>
-<li><b>wcsim</b>: image containing the WCS used to perform the reprojection
-<li><b>opts</b>: options object
-</ul>
-<b>JS9.ReprojectData()</b> creates a new raw data layer (with default id
-of "reproject") in which the pixels are reprojected using the WCS from
-another image. The
-<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html" target="_blank">mProjectPP</a>
-program from the 
-<a href="http://montage.ipac.caltech.edu/" target="_blank">Montage</a> software suite
-is used to perform the reprojection.  Please read the documentation on
-mProjectPP from the Montage web site, which includes this explanation:
-<p>
-<pre>
-    mProjectPP performs a plane-to-plane transform on the input image, and
-    is an adaptation of the Mopex algorithm and developed in collaboration
-    with the Spitzer Space Telescope. It provides a speed increase of
-    approximately a factor of 30 over the general-purpose mProject. However,
-    mProjectPP is only suitable for projections which can be approximated
-    by tangent-plane projections (TAN, SIN, ZEA, STG, ARC), and is therefore
-    not suited for images covering large portions of the sky. Also note that
-    it does not directly support changes in coordinate system (i.e., equatorial
-    to galactic coordinates), though these changes can be facilitated by the
-    use of an alternate header.
-</pre>
-These Montage programs have been compiled into JS9 using
-<a href="https://emscripten.org/" target="_blank">Emscripten</a>.
-
-<p>
-The <b>wcsim</b> argument is an image id, image filename, or image
-object pointing to the WCS image. This is the image whose WCS will be used
-for the reprojection. Alternatively, if the <b>wcsim</b> argument is set to
-"all", the WCS from the currently displayed image will be used to reproject
-all other images in the display.
-
-<p>
-The <b>opts</b> object can contain the following reproject-specific properties:
-<ul>
-<li><b>rawid</b>: the id of the raw data layer to create (default: "reproject")
-<li><b>cmdswitches</b>: a string containing mProjectPP command line switches
-</ul>
-The cmdswitches will be prepended to the mProjectPP command line. For example:
-<pre>
- {cmdswitches: "-d 1 -z .75"}
-</pre>
-will set the mProjectPP debugging and the drizzle factor, resulting in a
-command line that looks like this:
-<pre>
-  mProjectPP -d 1 -z .75 -s statusfile in.fits out.fits template.hdr
-</pre>
-See the 
-<a href="http://montage.ipac.caltech.edu/docs/mProjectPP.html" target="_blank">mProjectPP</a>
-documentation for more information about command switches.
-
-<p>
-Reprojection is an intensive process which can take a considerable
-amount of memory and processing time. It also (at least currently)
-requires that the full reprojected image be displayed (so that the
-reprojected image can be properly aligned with the WCS image used in
-making the reprojection).  We therefore restrict the WCS image size to
-be less than or equal to JS9.globalOpts.image.xdim by
-JS9.globalOpts.image.ydim. If the WCS image exceeds this size, an
-error is thrown.
-
-<h5 id="JS9.RotateData">Rotate an image around the WCS CRPIX point</h5>
-<p>
-<code class="api">JS9.RotateData(angle, opts)</code>
-<p>
-where:
-<ul>
-<li><b>angle</b>: rotation angle in degrees
-<li><b>opts</b>: options object
-</ul>
-The <b>JS9.RotateData()</b> routine uses
-<a href="#JS9.ReprojectData"><b>JS9.ReprojectData()</b></a>
-to rotate image data by the specified angle (in degrees). If the string
-"northup" or "northisup" is specified, the rotation angle is set to 0.
-The rotation is performed about the WCS CRPIX1, CRPIX2 point.
-<p>
-The optional opts object is passed directly to the <b>JS9.ReprojectData()</b>
-routine. See <b>JS9.ReprojectData()</b> above for more information.
-
 <h5 id="JS9.SaveSession">Save an image session to a file</h5>
 <p>
 <code class="api">JS9.SaveSession(session, opts)</code>
@@ -2905,9 +2993,9 @@ calling the equivalent Shape routine with "region" as the first argument.
 
 <p>
 Note that the
-<b><a href="#JS9.GetRegions">GetRegions()</a>,
-<a href="#JS9.ChangeRegions">ChangeRegions()</a>,
-<a href="#JS9.RemoveRegions">RemoveRegions()</a></b> calls
+<b><a href="#JS9.GetRegions">JS9.GetRegions()</a>,
+<a href="#JS9.ChangeRegions">JS9.ChangeRegions()</a>,
+<a href="#JS9.RemoveRegions">JS9.RemoveRegions()</a></b> calls
 all take a regions specification as the second argument, which can be
 any of the following (in order of precedence):
 <ul>
@@ -3264,7 +3352,7 @@ a tag value to save regions having that tag.
 If the <b>layer</b> argument is not specified, it defaults to
 "regions", i.e.,  the usual regions layer. You can specify a different
 layer, e.g., if you want to save a catalog layer as a region file
-(since <a href="#JS9.SaveCatalog"><b>SaveCatalog()</b></a>
+(since <a href="#JS9.SaveCatalog"><b>JS9.SaveCatalog()</b></a>
 will save the data in table format instead of as regions).
 
 <p>
@@ -3295,7 +3383,7 @@ where:
 <li><b>t2</b>: tag#2
 </ul>
 While region tags can be changed using the
-<a href="#JS9.ChangeRegions"><b>ChangeRegions()</b></a> routine, a
+<a href="#JS9.ChangeRegions"><b>JS9.ChangeRegions()</b></a> routine, a
 bespoke user interface might want to toggle between a <b>source</b>
 region and <b>background</b> region, or between <b>include</b> and
 <b>exclude</b>. This convenience routine will do that. For example:
@@ -3521,11 +3609,11 @@ want to view one at a time.
 <p>
 <code class="api">JS9.ToggleShapeLayers()</code>
 <p>
-While <a href="#JS9.ShowShapeLayer">ShowShapeLayer()</a> allows you to
+While <a href="#JS9.ShowShapeLayer">JS9.ShowShapeLayer()</a> allows you to
 display or hide a single shape layer, this routine will toggle display
 of all active layers in the current image. An active layer is one that
 has not been turned off using the <b>Shape Layers</b> plugin or
-<a href="#JS9.ShowShapeLayer">ShowShapeLayer()</a>.
+<a href="#JS9.ShowShapeLayer">JS9.ShowShapeLayer()</a>.
 
 <p>
 The routine remembers which layers were active at the moment when
@@ -4987,7 +5075,7 @@ is loaded and ready: internally, jQuery $(document).ready() calls JS9.init().
 However, module loaders such as <a href="http://requirejs.org" target="_blank">Require.js</a>
 can load scripts asynchronously and cause jQuery $(document).ready() to fire
 before all JS9 scripts are available. The
-<a href="#JS9.RegisterPlugin"><b>RegisterPlugin()</b></a>
+<a href="#JS9.RegisterPlugin"><b>JS9.RegisterPlugin()</b></a>
 routine should deal properly with this situation. But just in case ...
 the <b>JS9.InstantiatePlugins()</b> will perform the plugin instantiation 
 explicitly.
@@ -5102,7 +5190,7 @@ forced to make an incompatible change to the API, it will be documented here.
 
 <p>
 Prior to JS9 version 2.1,
-<a href="#JS9.DisplaySection"><b>DisplaySection()</b></a> always used
+<a href="#JS9.DisplaySection"><b>JS9.DisplaySection()</b></a> always used
 the center of the file, along with dimensions and binning specified by
 the JS9.globalOpts.table and JS9.globalOpts.image objects, if these
 properties were not explicitly specified. This was just wrong: it
@@ -5117,9 +5205,9 @@ for dimensions and binning.
 
 <p>
 The routines
-<a href="#JS9.OpenFileMenu"><b>OpenFileMenu()</b></a>
+<a href="#JS9.OpenFileMenu"><b>JS9.OpenFileMenu()</b></a>
 and
-<a href="#JS9.OpenRegionsMenu"><b>OpenRegionsMenu()</b></a>
+<a href="#JS9.OpenRegionsMenu"><b>JS9.OpenRegionsMenu()</b></a>
 required a display argument, instead of utilizing the standard
 optional display object. This mistake has been corrected, with the
 result that both routines now target the default display, as expected,
@@ -5129,8 +5217,8 @@ if no display is passed.
 
 <p>
 The public Set routines
-(<a href="#JS9.SetZoom"><b>SetZoom()</b></a>,
-<a href="#JS9.SetColormap"><b>SetColormap()</b></a>, etc)
+(<a href="#JS9.SetZoom"><b>JS9.SetZoom()</b></a>,
+<a href="#JS9.SetColormap"><b>JS9.SetColormap()</b></a>, etc)
 were returning a boolean true when successful. This has been changed
 to "OK", to make it clear that the return value is a status value,
 not a boolean data value.
@@ -5139,9 +5227,9 @@ not a boolean data value.
 
 <p>
 Due to an oversight, the signature of the callback function supplied to
-<a href="#JS9.RunAnalysis"><b>RunAnalysis()</b></a>
+<a href="#JS9.RunAnalysis"><b>JS9.RunAnalysis()</b></a>
 (and its derivative function, 
-<a href="#JS9.SubmitAnalysis"><b>SubmitAnalysis()</b></a>)
+<a href="#JS9.SubmitAnalysis"><b>JS9.SubmitAnalysis()</b></a>)
 was missing the errcode argument. 
 To correct this mistake, the signature was changed from:
 <pre>

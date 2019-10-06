@@ -349,24 +349,6 @@ def catalogTest(j, file=None):
     waitStatus(j, "LoadRegions")
     sleep()
 
-def flipTest(j, file=None):
-    """
-    flip an image
-    """
-    if file:
-        closeImage(j)
-        loadImage(j, file, '{"scale":"linear","colormap":"cool"}')
-    displayMessage(j, 'j.SetFlip(y)')
-    j.SetFlip("y")
-    displayMessage(j, 'j.GetFlip()')
-    obj = j.GetFlip()
-    if obj == "y":
-        displayMessage(j, '    flip: y')
-    else:
-        raise ValueError("incorrect flip")
-    waitStatus(j, "DisplaySection")
-    sleep()
-
 def blurTest(j, file=None):
     """
     gause blur
@@ -495,10 +477,50 @@ def mosaicTest(j, file=None):
     displayMessage(j, 'j.SetColormap("magma", 5.13, 0.04)')
     j.SetColormap("magma", 5.13, 0.04)
     displayMessage(j, 'j.DisplayPlugin("JS9Panner")')
-    j.DisplayPlugin("JS9Panner");
+    j.DisplayPlugin("JS9Panner")
     sleep(2)
     displayMessage(j, 'j.DisplayPlugin("panner")')
-    j.DisplayPlugin("panner");
+    j.DisplayPlugin("panner")
+    closeDisplay(j)
+
+def flipAll(j, timeout=1):
+    """
+    flip and rotate in all combinations
+    """
+    for flip in ["none", "x", "y", "xy"]:
+        for rot in [0, 90, 180, 270]:
+            displayMessage(j, 'j.FlipData(j, %s,  %d)' % (flip, rot))
+            j.FlipData(flip, rot)
+            sleep(timeout)
+
+def flipRotateTest(j):
+    """
+    flip and rotate image (the regions show wcs/physical update)
+    """
+    # pylint: disable=line-too-long
+    loadImage(j, 'fits/sipsample.fits', '{"scale":"log", "colormap": "heat", "contrast": 4.84, "bias": 0.48}')
+    displayMessage(j, 'j.AddRegions("ellipse; circle")')
+    # pylint: disable=line-too-long
+    j.AddRegions('FK5; ellipse(13:29:44.577, +47:10:11.644, 36.686718", 24.417932", 81.620827); circle(13:29:52.660, +47:11:42.560, 36.545208")')
+    # pylint: disable=line-too-long
+    j.AddRegions('physical; circle(149.00, 67.00, 33) {"color":"red"}; ellipse(49.00, 76.00, 33, 23, 81.6208) {"color":"red"}')
+    flipAll(j)
+    # pylint: disable=line-too-long
+    loadImage(j, 'fits/ngc1316.fits', '{"scale":"linear", "contrast":2.93, "bias":0.643}')
+    displayMessage(j, 'j.AddRegions("circle; box")')
+    # pylint: disable=line-too-long
+    j.AddRegions("FK4; circle(50.605768, -37.238105, 1.051183'); box(50.196666, -37.385617, 1.166667', 1.166667', 0.000000)")
+    j.AddRegions('physical; circle(58.50, 222.50, 12) {"color":"red"}; box(226.00, 147.00, 15.00, 15.00, 0.0000) {"color":"red"}')
+    flipAll(j)
+    loadImage(j, 'fits/casa.fits.gz', '{"scale":"log", "colormap": "cool"}')
+    displayMessage(j, 'j.LoadRegions("casa/casa.reg")')
+    j.LoadRegions("casa/casa.reg")
+    flipAll(j)
+    loadImage(j, 'fits/squares.fits', {"colormap":"grey"})
+    # pylint: disable=line-too-long
+    j.AddRegions('physical; polygon(438.00, 24.00, 498.00, 24.00, 468.00, 84.00) {"text":"white","textOpts":{"px":466,"py":97}}; box(52.00, 452.00, 60.00, 60.00, 0.0000) {"text":"black","textOpts":{"px":52,"py":470}}; circle(459.00, 462.00, 30.00) {"text":"darkgrey","textOpts":{"px":459,"py":421}}; ellipse(57.00, 43.00, 30.00, 20.00, 0.0000) {"text":"lightgrey","textOpts":{"px":57,"py":77}}')
+    flipAll(j)
+    sleep()
     closeDisplay(j)
 
 # pylint: disable=too-many-statements
@@ -510,6 +532,7 @@ def blendTest(j):
     j.BlendDisplay(False)
     loadImage(j, 'blend/chandra.fits',
               '{"scale":"linear","colormap":"sls","contrast":5.78,"bias":0.15}')
+    sleep()
     displayMessage(j, 'j.SetScale(log)')
     j.SetScale("log")
     displayMessage(j, 'j.GetScale()')
@@ -622,13 +645,13 @@ def smokeTests():
     rotateTest(j)
     filterRGBTest(j)
     loadWindowTest(j, "JS9", "myJS9")
+    flipRotateTest(j)
     wcsTest(j, "fits/casa.fits")
     countsTest(j)
     colormapTest(j)
     regionsTest(j)
     shapesTest(j)
     catalogTest(j)
-    flipTest(j)
     blurTest(j)
     panTest(j)
     gridTest(j)
