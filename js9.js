@@ -4565,7 +4565,7 @@ JS9.Image.prototype.flipData = function(...args){
 	    nheader.CD1_2 =  oheader.CD1_1 * -sinrot + oheader.CD1_2 * cosrot;
 	    nheader.CD2_1 =  oheader.CD2_1 * cosrot  + oheader.CD2_2 * sinrot;
 	    nheader.CD2_2 =  oheader.CD2_1 * -sinrot + oheader.CD2_2 * cosrot;
-	} else {
+	} else if( JS9.notNull(oheader.CRPIX1) ){
 	    // add file rotation into angle
 	    if( oraw.wcsinfo ){
 		angle += (oraw.wcsinfo.crot || 0);
@@ -4588,15 +4588,6 @@ JS9.Image.prototype.flipData = function(...args){
 	    nraw.header = oraw.header;
 	    break;
 	case 90:
-	    angle = 90;
-	    // if using CROTA2, we negate the angle after flipping, the
-	    // the end result of a long conversation with J Mink, in which
-	    // she verified the confused state of affairs for WCS when
-	    // flipping images, including sign problems ... 10/2/2019
-	    if( JS9.isNull(oheader.CD1_1)                              &&
-		(this.params.flip === "x" || this.params.flip === "y") ){
-		angle = -angle;
-	    }
 	    nheader.NAXIS1 = nraw.width;
 	    nheader.NAXIS2 = nraw.height;
 	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
@@ -4608,19 +4599,27 @@ JS9.Image.prototype.flipData = function(...args){
 		               (oheader.CRPIX2 - nheader.CRPIX2);
 		// why is this needed?
 		nheader.LTV2 -= FUDGE;
+		// normalize angle
+		angle = 90;
+		// if using CROTA2, we negate the angle after flipping, the
+		// the end result of a long conversation with J Mink, in which
+		// she verified the confused state of affairs for WCS when
+		// flipping images, including sign problems ... 10/2/2019
+		if( JS9.isNull(oheader.CD1_1)                              &&
+		    (this.params.flip === "x" || this.params.flip === "y") ){
+		    angle = -angle;
+		}
+		rotateFITSHeader(oraw, nraw, angle);
 	    } else {
-		nheader.LTV1 = (oheader.LTV2||0);
-		nheader.LTV2 = (oheader.LTV1||0) - nheader.NAXIS1;
+		nheader.LTV1 = nheader.NAXIS1 - (oheader.LTV2||0);
+		nheader.LTV2 = (oheader.LTV1||0);
+		nheader.LTM1_2 = JS9.defNull(oheader.LTM1_1, 1);
+		nheader.LTM2_1 = - JS9.defNull(oheader.LTM2_2, 1)
+		nheader.LTM1_1 = JS9.defNull(oheader.LTM1_2, 0);
+		nheader.LTM2_2 = JS9.defNull(oheader.LTM2_1, 0);
 	    }
-	    rotateFITSHeader(oraw, nraw, angle);
 	    break;
 	case 270:
-	    angle = -90;
-	    // if using CROTA2, we need to negate the angle after flipping
-	    if( JS9.isNull(oheader.CD1_1)                              &&
-		(this.params.flip === "x" || this.params.flip === "y") ){
-		angle = -angle;
-	    }
 	    nheader.NAXIS1 = nraw.width;
 	    nheader.NAXIS2 = nraw.height;
 	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
@@ -4632,11 +4631,22 @@ JS9.Image.prototype.flipData = function(...args){
                                (oheader.CRPIX2 - nheader.CRPIX2);
 		// why is this needed?
 		nheader.LTV1 -= FUDGE;
+		// normalize angle
+		angle = -90;
+		// if using CROTA2, we need to negate the angle after flipping
+		if( JS9.isNull(oheader.CD1_1)                              &&
+		    (this.params.flip === "x" || this.params.flip === "y") ){
+		    angle = -angle;
+		}
+		rotateFITSHeader(oraw, nraw, angle);
 	    } else {
-		nheader.LTV2 = (nheader.LTV1||0);
-		nheader.LTV1 = (nheader.LTV2||0) - nheader.NAXIS2;
+		nheader.LTV1 = (oheader.LTV2||0);
+		nheader.LTV2 = nheader.NAXIS2 - (oheader.LTV1||0);
+		nheader.LTM1_2 = - JS9.defNull(oheader.LTM1_1, 1);
+		nheader.LTM2_1 = JS9.defNull(oheader.LTM2_2, 1)
+		nheader.LTM1_1 = JS9.defNull(oheader.LTM1_2, 0);
+		nheader.LTM2_2 = JS9.defNull(oheader.LTM2_1, 0);
 	    }
-	    rotateFITSHeader(oraw, nraw, angle);
 	    break;
 	case 180:
 	    if( JS9.notNull(oheader.CRPIX1) ){
@@ -9264,7 +9274,7 @@ JS9.Image.prototype.wcs2wcs = function(from, to, ra, dec){
 // convert wcs, physical or image image length to image length,
 // using current wcs and string delimiters to determine what input type
 JS9.Image.prototype.wcs2imlen = function(s){
-    let v, wcsinfo;
+    let v, wcsinfo, iscale;
     let dpp = 1;
     // sanity check
     if( !s ){
@@ -9282,9 +9292,11 @@ JS9.Image.prototype.wcs2imlen = function(s){
     case "image":
 	break;
     case "physical":
-	// use the LTM1_1 value stored for logical to image transforms
+	// use LTM1_1 or LTM1_2 value stored for logical to image transforms
 	if( this.lcs && this.lcs.physical ){
-	    v.dval = v.dval * this.lcs.physical.forward[0][0];
+	    iscale = this.lcs.physical.forward[0][0] ||
+		     this.lcs.physical.forward[0][1] || 1;
+	    v.dval = Math.abs(v.dval * iscale);
 	}
 	break;
     default:
@@ -13394,7 +13406,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.imsys = pub.lcs.sys;
 	px = pub.lcs.x;
 	py = pub.lcs.y;
-	bin = this.lcs.physical.reverse[0][0];
+	bin = this.lcs.physical.reverse[0][0] ||
+	      this.lcs.physical.reverse[0][1] || 1;
     }
     // fabric angle is in opposite direction
     pub.angle = -obj.angle;
@@ -15754,7 +15767,8 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
     };
     // set physical to image conversion, if possible
     if( this.lcs && this.lcs.physical ){
-	bin = this.lcs.physical.forward[0][0] || 1;
+	bin = this.lcs.physical.forward[0][0] ||
+	      this.lcs.physical.forward[0][1] || 1;
     }
     // process array of keyword/values
     for(i=0; i<alen; i++){
@@ -16429,7 +16443,7 @@ JS9.Regions.parseRegions = function(s, opts){
     };
     // get image length
     const getilen = (len, which) => {
-	let cstr;
+	let cstr, iscale;
 	const v = JS9.strtoscaled(len);
 	const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
 	// local override of wcs if we used sexagesimal units or appended d,r
@@ -16446,7 +16460,9 @@ JS9.Regions.parseRegions = function(s, opts){
 	} else if( wcssys === "physical" ){
 	    // use the LTM1_1 value stored for logical to image transforms
 	    if( this.lcs && this.lcs.physical ){
-		v.dval = Math.abs(v.dval * this.lcs.physical.forward[0][0]);
+		iscale = this.lcs.physical.forward[0][0] ||
+		         this.lcs.physical.forward[0][1] || 1;
+		v.dval = Math.abs(v.dval * iscale);
 	    }
 	}
 	return v.dval;
