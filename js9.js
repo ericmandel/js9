@@ -9304,8 +9304,8 @@ JS9.Image.prototype.wcs2imlen = function(s){
     case "physical":
 	// use LTM1_1 or LTM1_2 value stored for logical to image transforms
 	if( this.lcs && this.lcs.physical ){
-	    iscale = this.lcs.physical.forward[0][0] ||
-		     this.lcs.physical.forward[0][1] || 1;
+	    iscale = Math.sqrt(Math.pow(this.lcs.physical.forward[0][0],2) +
+		               Math.pow(this.lcs.physical.forward[0][1],2));
 	    v.dval = Math.abs(v.dval * iscale);
 	}
 	break;
@@ -13416,8 +13416,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.imsys = pub.lcs.sys;
 	px = pub.lcs.x;
 	py = pub.lcs.y;
-	bin = this.lcs.physical.reverse[0][0] ||
-	      this.lcs.physical.reverse[0][1] || 1;
+	bin = Math.sqrt(Math.pow(this.lcs.physical.reverse[0][0],2) +
+		        Math.pow(this.lcs.physical.reverse[0][1],2));
     }
     // fabric angle is in opposite direction
     pub.angle = -obj.angle;
@@ -15777,8 +15777,8 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
     };
     // set physical to image conversion, if possible
     if( this.lcs && this.lcs.physical ){
-	bin = this.lcs.physical.forward[0][0] ||
-	      this.lcs.physical.forward[0][1] || 1;
+	bin = Math.sqrt(Math.pow(this.lcs.physical.forward[0][0],2) +
+		        Math.pow(this.lcs.physical.forward[0][1],2));
     }
     // process array of keyword/values
     for(i=0; i<alen; i++){
@@ -16470,8 +16470,8 @@ JS9.Regions.parseRegions = function(s, opts){
 	} else if( wcssys === "physical" ){
 	    // use the LTM1_1 value stored for logical to image transforms
 	    if( this.lcs && this.lcs.physical ){
-		iscale = this.lcs.physical.forward[0][0] ||
-		         this.lcs.physical.forward[0][1] || 1;
+		iscale = Math.sqrt(Math.pow(this.lcs.physical.forward[0][0],2)+
+				   Math.pow(this.lcs.physical.forward[0][1],2));
 		v.dval = Math.abs(v.dval * iscale);
 	    }
 	}
