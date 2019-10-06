@@ -320,7 +320,7 @@ JS9.imageOpts = {
     rotationMode: "relative",		// default: relative or absolute?
     crosshair: false,			// enable crosshair?
     disable: [],			// list of disabled core services
-    ltvbug:  true,			// add 0.5/ltm to image LTV values?
+    ltvbug:  false,			// add 0.5/ltm to image LTV values?
     listonchange: false,		// whether to list after a reg change
     whichonchange: "selected"		// which to list ("all" or "selected")
 };
@@ -1240,6 +1240,7 @@ JS9.Image.prototype.initLCS = function(iheader){
     if( this.imtab === "image" && this.params.ltvbug ){
 	// There seems to be a tiny misalignment between wcs->image and
 	// physical->image when ltv is involved. No idea why, but the fix is:
+	// (set default to false after implementing rot90/flip 10/6/2019)
 	if( header.LTV1 !== undefined && arr[0][0] < 1 ){
 	    arr[2][0] += arr[0][0] * 0.5;
 	}
