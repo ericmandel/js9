@@ -317,12 +317,23 @@ factor to a pre-specified value using menu options or you can specify
 a floating point zoom factor in the <b>other zoom</b> text
 box. The <b>pan to center</b> option pans to the center of the image,
 while the <b>reset pan/zoom</b> sets the zoom to 1 and centers the
-display. Finally, the <b>align pan/zoom ...</b> submenu allows you to
-change the pan and zoom of the current image to match a target image,
-assuming both have WCS info available. Pixel size (i.e. as specified
-by the FITS CDELT1 parameter) will be taken into account when zooming,
-but not image rotation or flip (from the WCS params). This is quicker
-than the <b>wcs reproject</b> algorithm for aligning images that are similar.
+display.
+
+<p>
+The <b>align pan/zoom ...</b> submenu allows you to change the pan and
+zoom of the current image to match a target image, assuming both have
+WCS info available. Pixel size (i.e. as specified by the FITS CDELT1
+parameter) will be taken into account when zooming, but not image
+rotation or flip (from the WCS params). This is quicker than
+the <b>wcs reproject</b> algorithm for aligning images that are
+similar.
+
+<p>
+The Zoom menu also supports <b>image flip</b> (around x, y, and x/y
+axes) and <b>image rotation</b> in 90 degree increments. Flipping and
+rotation is performed on the in-memory image, with WCS information
+updated as needed. The rotation is faster than the more general
+WCS-based rotation/reprojection in the <b>WCS</b> menu.
 
 <li><p><b>Scale:</b> Each scale option specifies a different scaling
 algorithm to use when converting image pixel values to RGB
