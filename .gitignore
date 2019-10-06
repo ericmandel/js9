@@ -32,12 +32,14 @@ node_modules/selenium-webdriver*/
 /blend
 /kes75
 /lagoon
+/large
 /m13
 /nan
 /net
 /notes
 /orion
 /old
+/regions
 /reproj
 /talks
 /tmp
@@ -48,7 +50,6 @@ node_modules/selenium-webdriver*/
 /rites
 /sfs
 /svc
-/large
 /smartx
 /smartxNode
 /test/
