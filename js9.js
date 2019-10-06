@@ -1206,18 +1206,18 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
 
 // initialize keywords for various logical coordinate systems
 JS9.Image.prototype.initLCS = function(iheader){
-    let rrot, frot;
+    let rrot, frot, a, sina, cosa;
     const arr = [[0,0,0], [0,0,0], [0,0,0]];
     // header usually is raw header
     const header = iheader || this.raw.header;
     const cx = header.CRPIX1 || 1;
     const cy = header.CRPIX2 || 1;
-    // screen rotation angle is reversed from FITS convention
-    const a = -(header.CROTA2||0) * Math.PI / 180.0;
-    const sina = Math.sin(a);
-    const cosa = Math.cos(a);
     // seed rotation matrix and its inverse, if necessary
-    if( a ){
+    if( header.CROTA2 ){
+	// screen rotation angle is reversed from FITS convention
+	a = -header.CROTA2 * Math.PI / 180.0;
+	sina = Math.sin(a);
+	cosa = Math.cos(a);
 	frot = [[0,0,0], [0,0,0], [0,0,0]];
 	frot[0][0] = cosa;
 	frot[0][1] = -sina;
