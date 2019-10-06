@@ -4505,7 +4505,7 @@ JS9.Image.prototype.flipData = function(...args){
 	    if( JS9.notNull(oheader.CD2_1) ){
 		nheader.CD2_1 = - oheader.CD2_1;
 	    }
-	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0);
+	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0) + 1;
 	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
 	    break;
 	case "y":
@@ -4521,7 +4521,7 @@ JS9.Image.prototype.flipData = function(...args){
 	    if( JS9.notNull(oheader.CD2_2) ){
 		nheader.CD2_2 = - oheader.CD2_2;
 	    }
-	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0);
+	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0) + 1;
 	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
 	    break;
 	case "xy":
@@ -4549,9 +4549,9 @@ JS9.Image.prototype.flipData = function(...args){
 	    if( JS9.notNull(oheader.CD2_2) ){
 		nheader.CD2_2 = - oheader.CD2_2;
 	    }
-	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0);
+	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0) + 1;
 	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
-	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0);
+	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0) + 1;
 	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
 	    break;
 	case "none":
