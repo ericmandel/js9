@@ -12323,8 +12323,9 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 		} else if( JS9.notNull(this.raw.header.LTM1_1) ||
 			   JS9.notNull(this.raw.header.LTM1_2) ){
 		    try {
-			tval1 = Math.atan2(this.raw.header.LTM1_2||0,
-					  this.raw.header.LTM1_1||0);
+			// use atan instead of atan2 to divide out scale factor
+			tval1 = Math.atan((this.raw.header.LTM1_2||0) / 
+					  (this.raw.header.LTM1_1||0));
 		    } catch(e){ tval1 = 0; }
 		    if( tval1 ){
 			tval1 = -tval1 * 180.0 / Math.PI;
@@ -13462,8 +13463,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    } else if( JS9.notNull(this.raw.header.LTM1_1) ||
 		       JS9.notNull(this.raw.header.LTM1_2) ){
 		try {
-		    tval1 = Math.atan2(this.raw.header.LTM1_2||0,
-				       this.raw.header.LTM1_1||0);
+		    // use atan instead of atan2 to divide out scale factor
+		    tval1 = Math.atan((this.raw.header.LTM1_2||0) / 
+				      (this.raw.header.LTM1_1||0));
 		} catch(e){ tval1 = 0; }
 		if( tval1 ){
 		    tval1 = -tval1 * 180.0 / Math.PI;
