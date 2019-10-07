@@ -182,6 +182,11 @@ JS9.Info.display = function(type, message, target, force){
 	    jel = info.jq.find(`[name='${type}']`);
 	    if( jel.length > 0 ){
 		jel.val(message);
+	    } else {
+		// fallback to image display, if necessary
+		if( JS9.globalOpts.fallbackDisplay ){
+		    tobj = disp;
+		}
 	    }
 	    break;
 	case "object":
@@ -197,8 +202,10 @@ JS9.Info.display = function(type, message, target, force){
 	    }
 	    break;
 	}
-	// allow chaining
-	return disp;
+	// return if we did not change the target object
+	if( tobj !== disp ){
+	    return disp;
+	}
     }
     // display-based message
     switch(type){

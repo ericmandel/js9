@@ -170,6 +170,7 @@ JS9.globalOpts = {
     cloneNewDisplay: true,      // clone size of display, when possible?
     logoDisplay: false,         // show JS9 logo on each display?
     lightWinClose: "ask",	// ask, close, move images when closing lightwin
+    fallbackDisplay: true,	// displayMessage fallback to display window?
     regionDisplay: "lightwin",	// "lightwin" or "display"
     regionConfigSize: "medium", // "small", "medium"
     refreshDragDrop: true,	// refresh on drag/drag and open file?

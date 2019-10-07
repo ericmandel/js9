@@ -457,6 +457,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "string",
 	    "helper": "format string using: $ra $dec $sys"
 	},
+	"fallbackDisplay": {
+	    "type": "string",
+	    "helper": "can messages fallback to display win?"
+	},
 	"regionDisplay": {
 	    "type": "string",
 	    "helper": "show regions in 'lightwin' or 'display'"
@@ -626,6 +630,7 @@ JS9.Prefs.init = function(){
 			   metaClickPan: JS9.globalOpts.metaClickPan,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
 			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
+			   fallbackDisplay: JS9.globalOpts.fallbackDisplay,
 			   regionDisplay: JS9.globalOpts.regionDisplay,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
 			   lightWinClose: JS9.globalOpts.lightWinClose,

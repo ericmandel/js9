@@ -3949,6 +3949,11 @@ JS9.Info.display = function(type, message, target, force){
 	    jel = info.jq.find(`[name='${type}']`);
 	    if( jel.length > 0 ){
 		jel.val(message);
+	    } else {
+		// fallback to image display, if necessary
+		if( JS9.globalOpts.fallbackDisplay ){
+		    tobj = disp;
+		}
 	    }
 	    break;
 	case "object":
@@ -3964,8 +3969,10 @@ JS9.Info.display = function(type, message, target, force){
 	    }
 	    break;
 	}
-	// allow chaining
-	return disp;
+	// return if we did not change the target object
+	if( tobj !== disp ){
+	    return disp;
+	}
     }
     // display-based message
     switch(type){
@@ -9785,6 +9792,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "string",
 	    "helper": "format string using: $ra $dec $sys"
 	},
+	"fallbackDisplay": {
+	    "type": "string",
+	    "helper": "can messages fallback to display win?"
+	},
 	"regionDisplay": {
 	    "type": "string",
 	    "helper": "show regions in 'lightwin' or 'display'"
@@ -9954,6 +9965,7 @@ JS9.Prefs.init = function(){
 			   metaClickPan: JS9.globalOpts.metaClickPan,
 			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
 			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
+			   fallbackDisplay: JS9.globalOpts.fallbackDisplay,
 			   regionDisplay: JS9.globalOpts.regionDisplay,
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
 			   lightWinClose: JS9.globalOpts.lightWinClose,
