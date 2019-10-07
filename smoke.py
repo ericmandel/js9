@@ -242,6 +242,7 @@ def countsTest(j, file=None):
     displayMessage(j, "    counts: %f" % c)
     if c != 16703.0:
         raise ValueError("wrong counts")
+    sleep()
     displayMessage(j, 'j.RemoveRegions()')
     j.RemoveRegions()
 
@@ -536,7 +537,6 @@ def blendTest(j):
     j.BlendDisplay(False)
     loadImage(j, 'blend/chandra.fits',
               '{"scale":"linear","colormap":"sls","contrast":5.78,"bias":0.15}')
-    sleep()
     displayMessage(j, 'j.SetScale(log)')
     j.SetScale("log")
     displayMessage(j, 'j.GetScale()')
@@ -549,6 +549,7 @@ def blendTest(j):
     val = j.GetZoom()
     if val != 2:
         raise ValueError("incorrect zoom")
+    sleep()
     displayMessage(j, 'j.SetColormap("red")')
     j.SetColormap("red")
     displayMessage(j, 'j.GetColormap()')
