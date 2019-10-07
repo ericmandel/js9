@@ -1206,7 +1206,7 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
 
 // initialize keywords for various logical coordinate systems
 JS9.Image.prototype.initLCS = function(iheader){
-    let rrot, frot, a, sina, cosa;
+    let i, tval, rrot, frot, a, sina, cosa;
     const arr = [[0,0,0], [0,0,0], [0,0,0]];
     // header usually is raw header
     const header = iheader || this.raw.header;
@@ -1240,12 +1240,19 @@ JS9.Image.prototype.initLCS = function(iheader){
     if( this.imtab === "image" && this.params.ltvbug ){
 	// There seems to be a tiny misalignment between wcs->image and
 	// physical->image when ltv is involved. No idea why, but the fix is:
-	// (set default to false after implementing rot90/flip 10/6/2019)
-	if( header.LTV1 !== undefined && arr[0][0] < 1 ){
-	    arr[2][0] += arr[0][0] * 0.5;
+	// (set default to false after implementing rot90/flip 10/6/2019 ...
+	//  on the fear this is doing more harm than good)
+	if( JS9.notNull(header.LTV1) ){
+	    for(i=0; i<2; i++){
+		tval = Math.abs(arr[0][i]);
+		if( tval > 0 && tval < 1 ){ arr[2][0] += tval * 0.5; }
+	    }
 	}
-	if( header.LTV2 !== undefined && arr[1][1] < 1 ){
-	    arr[2][1] += arr[1][1] * 0.5;
+	if( JS9.notNull(header.LTV2) ){
+	    for(i=0; i<2; i++){
+		tval = Math.abs(arr[1][i]);
+		if( tval > 0 && tval < 1 ){ arr[2][1] += tval * 0.5; }
+	    }
 	}
     }
     this.lcs.physical = {forward: $.extend(true, [], arr),
