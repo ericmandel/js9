@@ -12221,7 +12221,7 @@ JS9.Fabric.activeShapeLayer = function(s){
 // process options, separating into fabric opts and params
 // call using image context
 JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
-    let i, j, tags, pos, cpos, len, zoom, owcssys, txeq;
+    let i, j, tval1, tags, pos, cpos, len, zoom, owcssys, txeq;
     let key, shape, radinc, nrad, radius, tf, arr, parent;
     const nopts = {}, nparams = {};
     const YFUDGE = 1;
@@ -12314,8 +12314,25 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    case "box":
 	    case "ellipse":
 	    case "text":
-		if( this.raw.wcsinfo && this.raw.wcsinfo.crot ){
-		    opts.angle += this.raw.wcsinfo.crot;
+		// add file rotation
+		if( this.raw.wcsinfo ){
+		    if( this.raw.wcsinfo.crot ){
+			opts.angle += this.raw.wcsinfo.crot;
+		    }
+		} else if( JS9.notNull(this.raw.header.LTM1_1) ||
+			   JS9.notNull(this.raw.header.LTM1_2) ){
+		    try {
+			tval1 = Math.atan2(this.raw.header.LTM1_2||0,
+					  this.raw.header.LTM1_1||0);
+		    } catch(e){ tval1 = 0; }
+		    if( tval1 ){
+			tval1 = -tval1 * 180.0 / Math.PI;
+			opts.angle += tval1;
+		    }
+		}
+		// add file flip
+		if( this.getFlip() === "x" || this.getFlip() === "y" ){
+		    opts.angle = -opts.angle;
 		}
 		break;
 	    default:
@@ -12323,17 +12340,6 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    }
 	}
 	nopts.angle = -opts.angle;
-	// adjust angle due to image flip
-	if( opts.shape !== "polygon" && opts.shape !== "text" ){
-	    if( this.raw.wcsinfo &&
-		((this.raw.wcsinfo.cdelt1 < 0 && this.raw.wcsinfo.cdelt2 < 0) ||
-		(this.raw.wcsinfo.cdelt1 > 0 && this.raw.wcsinfo.cdelt2 > 0)) ){
-		nopts.angle = opts.angle - 360;
-	    } else if( !this.raw.wcsinfo &&
-		       (this.getFlip() === "x" || this.getFlip() === "y") ){
-		nopts.angle = opts.angle - 360;
-	    }
-	}
     }
     //  x and y are image coords, convert to display coords
     if( (opts.x !== undefined) && (opts.y !== undefined) ){
@@ -13431,25 +13437,44 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     }
     // fabric angle is in opposite direction
     pub.angle = -obj.angle;
-    // remove angle due to image flip
-    if( pub.shape !== "polygon" && pub.shape !== "text" ){
-	if( this.raw.wcsinfo &&
-	    ((this.raw.wcsinfo.cdelt1 < 0 && this.raw.wcsinfo.cdelt2 < 0) ||
-	    (this.raw.wcsinfo.cdelt1 > 0 && this.raw.wcsinfo.cdelt2 > 0)) ){
-	    pub.angle = obj.angle - 360;
-	} else if( !this.raw.wcsinfo &&
-		   (this.getFlip() === "x" || this.getFlip() === "y") ){
-	    pub.angle = obj.angle - 360;
-	}
-    }
+    // remove group angle
     if( ginfo.group ){
 	pub.angle -= ginfo.group.angle;
     }
-    // remove file rotation?
+    // save pure fabric angle angle
     oangle = pub.angle;
-    if( !pub.parent && this.raw.wcsinfo && this.raw.wcsinfo.crot ){
-	pub.angle -= this.raw.wcsinfo.crot;
+    // remove file rotation and flip
+    if( !pub.parent ){
+	switch(pub.shape){
+	case "box":
+	case "ellipse":
+	case "text":
+	    // remove file flip
+	    if( this.getFlip() === "x" || this.getFlip() === "y" ){
+		pub.angle = -pub.angle;
+	    }
+	    // remove file rotation
+	    if( this.raw.wcsinfo ){
+		if( this.raw.wcsinfo.crot ){
+		    pub.angle -= this.raw.wcsinfo.crot;
+		}
+	    } else if( JS9.notNull(this.raw.header.LTM1_1) ||
+		       JS9.notNull(this.raw.header.LTM1_2) ){
+		try {
+		    tval1 = Math.atan2(this.raw.header.LTM1_2||0,
+				       this.raw.header.LTM1_1||0);
+		} catch(e){ tval1 = 0; }
+		if( tval1 ){
+		    tval1 = -tval1 * 180.0 / Math.PI;
+		    pub.angle -= tval1;
+		}
+	    }
+	    break;
+	default:
+	    break;
+	}
     }
+    // normalize the angle
     while( pub.angle < 0 ){
 	pub.angle += 360;
     }
