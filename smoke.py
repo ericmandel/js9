@@ -501,16 +501,20 @@ def flipRotateTest(j):
     loadImage(j, 'fits/sipsample.fits', '{"scale":"log", "colormap": "heat", "contrast": 4.84, "bias": 0.48}')
     displayMessage(j, 'j.AddRegions("ellipse; circle")')
     # pylint: disable=line-too-long
-    j.AddRegions('FK5; ellipse(13:29:44.577, +47:10:11.644, 36.686718", 24.417932", 81.620827); circle(13:29:52.660, +47:11:42.560, 36.545208")')
+    j.AddRegions('FK5; ellipse(13:29:44.577, +47:10:11.644, 36.686718", 21.417932", 81.620827); circle(13:29:52.660, +47:11:42.560, 36.545208")')
     # pylint: disable=line-too-long
-    j.AddRegions('physical; circle(149.00, 67.00, 33) {"color":"red"}; ellipse(49.00, 76.00, 33, 23, 81.6208) {"color":"red"}')
+    j.AddRegions('physical; circle(149.00, 67.00, 33) {"color":"red"}; ellipse(49.00, 76.00, 33, 20, 81.6208) {"color":"red"}')
     flipAll(j)
     # pylint: disable=line-too-long
     loadImage(j, 'fits/ngc1316.fits', '{"scale":"linear", "contrast":2.93, "bias":0.643}')
-    displayMessage(j, 'j.AddRegions("circle; box")')
+    displayMessage(j, 'j.AddRegions("circle; ellipse")')
     # pylint: disable=line-too-long
-    j.AddRegions("FK4; circle(50.605768, -37.238105, 1.051183'); box(50.196666, -37.385617, 1.166667', 1.166667', 0.000000)")
-    j.AddRegions('physical; circle(58.50, 222.50, 12) {"color":"red"}; box(226.00, 147.00, 15.00, 15.00, 0.0000) {"color":"red"}')
+    j.AddRegions("FK4; ellipse(03:20:47.200, -37:23:08.221, 2.916667', 1.750000', 322.431400); circle(03:22:25.384, -37:14:17.178, 1.051199')")
+    j.AddRegions('physical; ellipse(226.00, 147.00, 28.00, 18.00, 322.4314) {"color":"red"}; circle(58.50, 222.50, 12) {"color":"red"}')
+    flipAll(j)
+    loadImage(j, 'orion/orion_1.fits', {"colormap":"grey"})
+    # pylint: disable=line-too-long
+    j.AddRegions('physical; ellipse(414.00, 109.00, 53.75, 20.00, 328.8843); box(500.00, 344.00, 22.00, 22.00, 0.0000); circle(245.00, 392.00, 14.00)')
     flipAll(j)
     loadImage(j, 'fits/casa.fits.gz', '{"scale":"log", "colormap": "cool"}')
     displayMessage(j, 'j.LoadRegions("casa/casa.reg")')
