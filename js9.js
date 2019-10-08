@@ -4596,7 +4596,6 @@ JS9.Image.prototype.flipData = function(...args){
 	let angle;
 	const oheader = oraw.header;
 	const nheader = nraw.header;
-	const FUDGE = 2;
 	switch(this.params.rot90){
 	case 0:
 	    nraw.header = oraw.header;
@@ -4607,12 +4606,6 @@ JS9.Image.prototype.flipData = function(...args){
 	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
 		nheader.CRPIX1 = nheader.NAXIS1 - oheader.CRPIX2 + 1;
 		nheader.CRPIX2 = oheader.CRPIX1;
-		nheader.LTV1 = (nheader.LTV1||0) -
-		               (oheader.CRPIX1 - nheader.CRPIX1);
-		nheader.LTV2 = (nheader.LTV2||0) -
-		               (oheader.CRPIX2 - nheader.CRPIX2);
-		// why is this needed?
-		nheader.LTV2 -= FUDGE;
 		// normalize angle
 		angle = 90;
 		// if using CROTA2, we negate the angle after flipping, the
@@ -4638,12 +4631,6 @@ JS9.Image.prototype.flipData = function(...args){
 	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
 		nheader.CRPIX1 = oheader.CRPIX2;
 		nheader.CRPIX2 = nheader.NAXIS2 - oheader.CRPIX1 + 1;
-		nheader.LTV1 = (nheader.LTV1||0) -
-		               (oheader.CRPIX1 - nheader.CRPIX1);
-		nheader.LTV2 = (nheader.LTV2||0) -
-                               (oheader.CRPIX2 - nheader.CRPIX2);
-		// why is this needed?
-		nheader.LTV1 -= FUDGE;
 		// normalize angle
 		angle = -90;
 		// if using CROTA2, we need to negate the angle after flipping
