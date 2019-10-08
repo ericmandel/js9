@@ -6869,6 +6869,9 @@ JS9.Image.prototype.setParam = function(param, value){
 	if( value.flip ){
 	    this.setFlip(value.flip);
 	}
+	if( value.rot90 ){
+	    this.setRot90(value.rot90);
+	}
 	if( value.invert ){
 	    this.params.invert = value.invert;
 	    this.displayImage("colors");
@@ -6928,6 +6931,9 @@ JS9.Image.prototype.setParam = function(param, value){
 	break;
     case "flip":
 	this.setFlip(value);
+	break;
+    case "rot90":
+	this.setRot90(value);
 	break;
     case "scale":
 	this.setScale(value);
