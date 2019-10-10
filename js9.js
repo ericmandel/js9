@@ -9151,7 +9151,7 @@ JS9.Display.prototype.addFileDialog = function(funcName, template){
     let jdiv, jinput, id;
     // sanity check
     if( !funcName || !JS9.publics[funcName] ){
-	return;
+	    return;
     }
     id = `openLocal${funcName}-${this.id}`;
     // outer div
@@ -9175,25 +9175,18 @@ JS9.Display.prototype.addFileDialog = function(funcName, template){
     }
     // add callback for when input changes
     jinput.on("change", (e) => {
-	let i, opts;
-	const el = e.currentTarget;
-	if( el.files.length ){
-	    switch(funcName){
-	    case "Load":
-	    case "RefreshImage":
-		opts = {localAccess: true};
-		JS9.waiting(true, this);
-		break;
-	    default:
-		break;
-	    }
-	}
-	for(i=0; i<el.files.length; i++){
-	    // execute a JS9 public access routine
-	    JS9.publics[funcName](el.files[i], opts, {display: this.id});
-	}
-	el.value = null;
-	return false;
+        let i, opts;
+        const el = e.currentTarget;
+        if (el.files.length  && (funcName === "Load" || funcName === "RefreshImage")) {
+            opts = {localAccess: true};
+            JS9.waiting(true, this);
+        }
+        for(i=0; i<el.files.length; i++){
+            // execute a JS9 public access routine
+            JS9.publics[funcName](el.files[i], opts, {display: this.id});
+        }
+        el.value = null;
+        return false;
     });
 };
 
