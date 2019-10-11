@@ -171,8 +171,8 @@ Module["error"] = function(s, e) {
 // get immage from an already-opened virtual FITS file
 // fits object contains fptr
 Module["getFITSImage"] = function(fits, hdu, opts, handler) {
-    var i, ofptr, ofptr2, hptr, status, datalen, extnum, extname;
-    var buf, bufptr, buflen, bufptr2, slice, doerr, ctype1, txdim, tydim, tval;
+    var i, ofptr, hptr, status, datalen, extnum, extname;
+    var buf, bufptr, buflen, bufptr2, slice, doerr, ctype1;
     var filter = null;
     var fptr = fits.fptr;
     var cens = [0, 0];
@@ -358,27 +358,6 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	}
 	break;
     }
-    // are we flipping the image?
-    if( opts.flip ){
-	// make a new file with the specified flip?
-	hptr = _malloc(4);
-	setValue(hptr, 0, "i32");
-	ofptr2 = ccall("flipImage", "number", ["number", "string", "number"], [ofptr, opts.flip, hptr]);
-	status  = getValue(hptr, "i32");
-	_free(hptr);
-	Module["errchk"](status);
-	// close the original image section "file", if necessary
-	if( ofptr && (ofptr !== fptr) && (ofptr !== ofptr2) ){
-            hptr = _malloc(4);
-	    setValue(hptr, 0, "i32");
-	    ccall("closeFITSFile", null, ["number", "number"], [ofptr, hptr]);
-	    status  = getValue(hptr, "i32");
-	    _free(hptr);
-	    Module["errchk"](status);
-	}
-	// use the new file's fits pointer
-	ofptr = ofptr2;
-    }
     if( opts.image ){
 	// backward-compatibility with pre-v1.12
 	if( opts.image.xmax ){ dims[0] = opts.image.xmax; }
@@ -394,34 +373,6 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     if( opts.ydim !== undefined ){ dims[1] = opts.ydim; }
     if( opts.xcen ){ cens[0] = opts.xcen; }
     if( opts.ycen ){ cens[1] = opts.ycen; }
-    // if we flipped the image, we might have to adjust the centers
-    if( hdu.type === 0                    &&
-	opts.flip && opts.flip !== "none" &&
-	(cens[0] || cens[1])              ){
-	hptr = _malloc(12);
-	setValue(hptr+8, 0, "i32");
-	// get image dimensions
-	ccall("ffgisz", null, ["number", "number", "number", "number"],
-	      [ofptr, 2, hptr, hptr+8]);
-	status  = getValue(hptr+8, "i32");
-	Module["errchk"](status);
-	txdim  = getValue(hptr, "i32");
-	tydim  = getValue(hptr+4, "i32");
-	_free(hptr);
-	// flip centers 
-	switch(opts.flip){
-	case "x":
-	    if( cens[0] !== 0 ){ cens[0] = txdim - cens[0]; }
-	    break;
-	case "y":
-	    if( cens[1] !== 0 ){ cens[1] = tydim - cens[1]; }
-	    break;
-	case "xy":
-	    if( cens[0] !== 0 ){ cens[0] = txdim - cens[0]; }
-	    if( cens[1] !== 0 ){ cens[1] = tydim - cens[1]; }
-	    break;
-	}
-    }
     // limits on image section
     hptr = _malloc(64);
     setValue(hptr,    dims[0], "i32");
@@ -459,31 +410,6 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     hdu.y1  = getValue(hptr+28, "i32");
     hdu.x2  = getValue(hptr+40, "i32");
     hdu.y2  = getValue(hptr+44, "i32");
-    // if we flipped the image, we might have to adjust section
-    if( hdu.type === 0 && opts.flip ){
-	switch(opts.flip){
-	case "x":
-	    tval = hdu.x1;
-	    hdu.x1 = txdim - hdu.x2;
-	    hdu.x2 = txdim - tval;
-	    break;
-	case "y":
-	    tval = hdu.y1;
-	    hdu.y1 = tydim - hdu.y2;
-	    hdu.y2 = tydim - tval;
-	    break;
-	case "xy":
-	    tval = hdu.x1;
-	    hdu.x1 = txdim - hdu.x2;
-	    hdu.x2 = txdim - tval;
-	    tval = hdu.y1;
-	    hdu.y1 = tydim - hdu.y2;
-	    hdu.y2 = tydim - tval;
-	    break;
-	default:
-	    break;
-	}
-    }
     hdu.naxis1  = Math.floor((hdu.x2 - hdu.x1) / bin + 1);
     hdu.naxis2  = Math.floor((hdu.y2 - hdu.y1) / bin + 1);
     hdu.bitpix  = getValue(hptr+56, "i32");

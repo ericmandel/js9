@@ -352,67 +352,6 @@ void updateWCS(fitsfile *fptr, fitsfile *ofptr,
   }
 }
 
-// use cfitio image section specification to flip an image
-fitsfile *flipImage(fitsfile *fptr, char *flip, int *status){
-    int dox = 0;
-    int doy = 0;
-    int tstatus = 0;
-    long naxes[2] = {0, 0};
-    double dval;
-    char comment[FLEN_CARD];
-    char *section;
-    char *outfile=IFILE;
-    fitsfile *ofptr;
-    if( !strcasecmp(flip, "x") ){
-      section = "-*,*";
-      dox = 1;
-    } else if( !strcasecmp(flip, "y") ){
-      section = "*,-*";
-      doy = 1;
-    } else if( !strcasecmp(flip, "xy") ){
-      section = "-*,-*";
-      dox = 1;
-      doy = 1;
-    } else {
-      return fptr;
-    }
-    /* create temp output file */
-    if( fits_create_file(&ofptr, outfile, status) > 0 ){
-        ffpmsg("failed to create temp file for image section");
-        return(NULL);
-    }
-    /* copy the image section using the specified image transform */
-    if( fits_copy_image_section(fptr, ofptr, section, status) > 0 ){
-        ffpmsg("failed to create image section");
-        return(NULL);
-    }
-    // cfitio updates basic wcs keywords; we update the LTM/LTV keywords
-    // the fudge factor of 1.0 added to dval is emperical
-    fits_get_img_size(fptr, 2, naxes, &tstatus); tstatus = 0;
-    if( dox ){
-      dval = 0.0; *comment = '\0'; tstatus = 0;
-      fits_read_key(fptr, TDOUBLE, "LTV1", &dval, comment, &tstatus);
-      dval = naxes[0] - dval + 1.0; tstatus = 0;
-      fits_update_key(ofptr, TDOUBLE, "LTV1", &dval, comment, &tstatus);
-      dval = 1.0; *comment = '\0'; tstatus = 0;
-      fits_read_key(fptr, TDOUBLE, "LTM1_1", &dval, comment, &tstatus);
-      dval = -dval; tstatus = 0;
-      fits_update_key(ofptr, TDOUBLE, "LTM1_1", &dval, comment, &tstatus);
-    }
-    if( doy ){
-      dval = 0.0; *comment = '\0'; tstatus = 0;
-      fits_read_key(fptr, TDOUBLE, "LTV2", &dval, comment, &tstatus);
-      dval = naxes[1] - dval + 1.0; tstatus = 0;
-      fits_update_key(ofptr, TDOUBLE, "LTV2", &dval, comment, &tstatus);
-      dval = 1.0; *comment = '\0'; tstatus = 0;
-      fits_read_key(fptr, TDOUBLE, "LTM2_2", &dval, comment, &tstatus);
-      dval = -dval; tstatus = 0;
-      fits_update_key(ofptr, TDOUBLE, "LTM2_2", &dval, comment, &tstatus);
-    }
-    /* return the file pointer */
-    return(ofptr);
-}
-
 // getImageToArray: extract a sub-section from an image HDU, return array
 void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
 		      int bin, int binMode, char *slice,
