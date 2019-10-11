@@ -488,11 +488,19 @@ def flipAll(j, timeout=1):
     """
     flip and rotate in all combinations
     """
-    for flip in ["none", "x", "y", "xy"]:
-        for rot in [0, 90, 180, 270]:
-            displayMessage(j, 'j.FlipData(j, %s,  %d)' % (flip, rot))
-            j.FlipData(flip, rot)
-            sleep(timeout)
+    flips = ["x", "y"]
+    rots = [90, 180, 270]
+    for ix in range(len(flips)):
+        flip = flips[ix]
+        displayMessage(j, 'j.SetFlip(j, %s)' % flip)
+        j.SetFlip(flip)
+        sleep(timeout)
+        for iy in range(len(rots)):
+            rot = rots[iy]
+            for iz in range(4):
+                displayMessage(j, 'j.SetRot90(j, %d)' % rot)
+                j.SetRot90(rot)
+                sleep(timeout)
 
 def flipRotateTest(j):
     """
