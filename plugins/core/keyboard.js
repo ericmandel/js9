@@ -627,6 +627,34 @@ JS9.Keyboard.Actions["pan to mouse position"] = function(im, ipos, evt){
     }
 };
 
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["flip image around x axis"] = function(im){
+    if( im ){
+	im.setFlip("x");
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["flip image around y axis"] = function(im){
+    if( im ){
+	im.setFlip("y");
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["rotate image by 90 degrees"] = function(im){
+    if( im ){
+	im.setRot90(90);
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["rotate image by -90 degrees"] = function(im){
+    if( im ){
+	im.setRot90(-90);
+    }
+};
+
 // get action associated with the current keyboard
 JS9.Keyboard.getAction = function(im, evt){
     let action;

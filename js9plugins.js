@@ -4775,6 +4775,34 @@ JS9.Keyboard.Actions["pan to mouse position"] = function(im, ipos, evt){
     }
 };
 
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["flip image around x axis"] = function(im){
+    if( im ){
+	im.setFlip("x");
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["flip image around y axis"] = function(im){
+    if( im ){
+	im.setFlip("y");
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["rotate image by 90 degrees"] = function(im){
+    if( im ){
+	im.setRot90(90);
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["rotate image by -90 degrees"] = function(im){
+    if( im ){
+	im.setRot90(-90);
+    }
+};
+
 // get action associated with the current keyboard
 JS9.Keyboard.getAction = function(im, evt){
     let action;
@@ -5622,6 +5650,7 @@ JS9.RegisterPlugin(JS9.Mef.CLASS, JS9.Mef.NAME, JS9.Mef.init,
 		    winTitle: "Multi-Extension FITS",
 		    winResize: true,
 		    winDims: [JS9.Mef.WIDTH, JS9.Mef.HEIGHT]});
+
 
 /*
  * JS9 menubar to manage menubar and its menus
@@ -7170,59 +7199,26 @@ JS9.Menubar.createMenus = function(){
 		name: "Flip:",
 		disabled: true
 	    };
-	    items.flipNone = xname("none");
-	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
-		items.flipNone.disabled = true;
-	    } else if( tim && tim.params.flip === "none" ){
-		items.flipNone.icon = "sun";
-	    }
 	    items.flipX = xname("invert x");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.flipX.disabled = true;
-	    } else if( tim && tim.params.flip === "x" ){
-		items.flipX.icon = "sun";
 	    }
 	    items.flipY = xname("invert y");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.flipY.disabled = true;
-	    } else if( tim && tim.params.flip === "y" ){
-		items.flipY.icon = "sun";
 	    }
-	    items.flipXY = xname("invert x and y");
-	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
-		items.flipXY.disabled = true;
-	    } else if( tim && tim.params.flip === "xy" ){
-		items.flipXY.icon = "sun";
-	    }
-
 	    items[`sep${n++}`] = "------";
 	    items.rot90title = {
 		name: "Rotate:",
 		disabled: true
 	    };
-	    items.rot90_0 = xname("0 degrees");
-	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
-		items.rot90_0.disabled = true;
-	    } else if( tim && tim.params.rot90 === 0 ){
-		items.rot90_0.icon = "sun";
-	    }
 	    items.rot90_90 = xname("90 degrees");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.rot90_90.disabled = true;
-	    } else if( tim && tim.params.rot90 === 90 ){
-		items.rot90_90.icon = "sun";
 	    }
-	    items.rot90_180 = xname("180 degrees");
-	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
-		items.rot90_180.disabled = true;
-	    } else if( tim && tim.params.rot90 === 180 ){
-		items.rot90_180.icon = "sun";
-	    }
-	    items.rot90_270 = xname("270 degrees");
+	    items.rot90_270 = xname("-90 degrees");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.rot90_270.disabled = true;
-	    } else if( tim && tim.params.rot90 === 270 ){
-		items.rot90_270.icon = "sun";
 	    }
 	    return {
 		callback: (key) => {
@@ -7257,23 +7253,11 @@ JS9.Menubar.createMenus = function(){
 			    case "flipY":
 				uim.setFlip("y");
 				break;
-			    case "flipXY":
-				uim.setFlip("xy");
-				break;
-			    case "flipNone":
-				uim.setFlip("none");
-				break;
-			    case "rot90_0":
-				uim.setRot90(0);
-				break;
 			    case "rot90_90":
 				uim.setRot90(90);
 				break;
-			    case "rot90_180":
-				uim.setRot90(180);
-				break;
 			    case "rot90_270":
-				uim.setRot90(270);
+				uim.setRot90(-90);
 				break;
 			    default:
 				// look for a numeric zoom
