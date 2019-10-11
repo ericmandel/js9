@@ -4748,21 +4748,25 @@ JS9.Image.prototype.setRot90 = function(...args){
 // redo the current flip and rot90 in cases where the underyling data changed
 // (e.g. displaySection, refreshImage)
 JS9.Image.prototype.reFlipRot90 = function(){
-    let i, arr;
+    let i, flips, nrot;
     let flip = this.params.flip;
     let rot = this.params.rot90;
     if( flip !== "none" ){
 	this.params.flip = "none";
-	arr = flip.split("");
-	for(i=0; i<arr.length; i++){
-	    if( arr[i] === "x" || arr[i] === "y" ){
-		this.setFlip(arr[i]);
+	flips = flip.split("");
+	for(i=0; i<flips.length; i++){
+	    if( flips[i] === "x" || flips[i] === "y" ){
+		this.setFlip(flips[i]);
 	    }
 	}
     }
     if( rot ){
 	this.params.rot90 = 0;
-	this.setRot90(rot);
+	nrot = rot % 90;
+	rot = rot / 90;
+	for(i=0; i<nrot; i++){
+	    this.setRot90(rot);
+	}
     }
     // allow chaining
     return this;
