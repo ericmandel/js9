@@ -488,38 +488,39 @@ def flipAll(j, timeout=1):
     """
     flip and rotate in all combinations
     """
-    flips = ["x", "y"]
-    rots = [90, 180, 270]
+    flips = ["x", "y", "x", "y"]
+    rots = [90, 90, 90, 90, -90, -90, -90, -90]
     for ix in range(len(flips)):
         flip = flips[ix]
         displayMessage(j, 'j.SetFlip(j, %s)' % flip)
         j.SetFlip(flip)
+        xflip = j.GetFlip();
         sleep(timeout)
         for iy in range(len(rots)):
             rot = rots[iy]
-            for iz in range(4):
-                displayMessage(j, 'j.SetRot90(j, %d)' % rot)
-                j.SetRot90(rot)
-                sleep(timeout)
+            j.SetRot90(rot)
+            xrot = j.GetRot90();
+            displayMessage(j, 'j.SetRot90(j,%s %d)' % (xflip, xrot))
+            sleep(timeout)
 
 def flipRotateTest(j):
     """
     flip and rotate image (the regions show wcs/physical update)
     """
     # pylint: disable=line-too-long
+    loadImage(j, 'fits/ngc1316.fits', '{"scale":"linear", "contrast":2.93, "bias":0.643}')
+    displayMessage(j, 'j.AddRegions("circle; ellipse")')
+    # pylint: disable=line-too-long
+    j.AddRegions("FK4; ellipse(03:20:47.200, -37:23:08.221, 2.916667', 1.750000', 322.431400); circle(03:22:25.384, -37:14:17.178, 1.051199')")
+    # pylint: disable=line-too-long
+    j.AddRegions('physical; ellipse(226.00, 147.00, 28.00, 18.00, 322.4314) {"color":"red"}; circle(58.50, 222.50, 12) {"color":"red"}')
+    flipAll(j)
     loadImage(j, 'fits/sipsample.fits', '{"scale":"log", "colormap": "heat", "contrast": 4.84, "bias": 0.48}')
     displayMessage(j, 'j.AddRegions("ellipse; circle")')
     # pylint: disable=line-too-long
     j.AddRegions('FK5; ellipse(13:29:44.577, +47:10:11.644, 36.686718", 21.417932", 81.620827); circle(13:29:52.660, +47:11:42.560, 36.545208")')
     # pylint: disable=line-too-long
     j.AddRegions('physical; circle(149.00, 67.00, 33) {"color":"red"}; ellipse(49.00, 76.00, 33, 20, 81.6208) {"color":"red"}')
-    flipAll(j)
-    # pylint: disable=line-too-long
-    loadImage(j, 'fits/ngc1316.fits', '{"scale":"linear", "contrast":2.93, "bias":0.643}')
-    displayMessage(j, 'j.AddRegions("circle; ellipse")')
-    # pylint: disable=line-too-long
-    j.AddRegions("FK4; ellipse(03:20:47.200, -37:23:08.221, 2.916667', 1.750000', 322.431400); circle(03:22:25.384, -37:14:17.178, 1.051199')")
-    j.AddRegions('physical; ellipse(226.00, 147.00, 28.00, 18.00, 322.4314) {"color":"red"}; circle(58.50, 222.50, 12) {"color":"red"}')
     flipAll(j)
     loadImage(j, 'orion/orion_1.fits', {"colormap":"grey"})
     # pylint: disable=line-too-long
@@ -656,9 +657,9 @@ def smokeTests():
     headerTest(j)
     binTest(j)
     rotateTest(j)
+    flipRotateTest(j)
     filterRGBTest(j)
     loadWindowTest(j, "JS9", "myJS9")
-    flipRotateTest(j)
     wcsTest(j, "fits/casa.fits")
     countsTest(j)
     colormapTest(j)
