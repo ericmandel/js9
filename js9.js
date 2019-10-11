@@ -145,7 +145,6 @@ JS9.globalOpts = {
     reproj: {xdim: 4096, ydim: 4096}, // max image size we can reproject
     reprojSwitches: "",         // Montage reproject switches
     binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
-    flipUsing: "data",		// "data" or "file"
     clearImageMemory: "heap",   // rm vfile: always|never|auto|noExt|noCube|size>x Mb heap=>free heap
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
@@ -206,12 +205,11 @@ JS9.globalOpts = {
 	r: "copy selected region to clipboard",
 	R: "copy all regions to clipboard",
 	s: "select region",
-	"M-s": "toggle shape layers plugin",
 	S: "select all regions",
+	"M-s": "toggle shape layers plugin",
 	x: "flip image around x axis",
 	y: "flip image around y axis",
         "9": "rotate image by 90 degrees",
-        "M-9": "rotate image by -90 degrees",
         "/": "copy wcs position to clipboard",
         "?": "copy value and position to clipboard",
 	"0": "reset zoom",
@@ -1942,6 +1940,12 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	} else {
 	    y1 = 0;
 	}
+	if( header.NAXIS1 !== undefined ){
+	    header.NAXIS1 /= bin;
+	}
+	if( header.NAXIS2 !== undefined ){
+	    header.NAXIS2 /= bin;
+	}
 	if( header.CRPIX1 !== undefined ){
 	    // cfitsio-style: see cfitsio/histo.c
 	    header.CRPIX1 = (header.CRPIX1 - x1) / bin + 0.5;
@@ -3581,6 +3585,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    topts.onrefresh = topts.ondisplaysection || topts.onrefresh || func;
 	    // refresh the current image with the new hdu
 	    this.refreshImage(hdu, topts);
+	    // redo flip and rot90
+	    this.flipRot90();
 	}
 	// set status of old image
 	this.setStatus("displaySection", "complete");
@@ -4357,83 +4363,30 @@ JS9.Image.prototype.getFlip = function(){
 };
 
 // flip image along an axis
-JS9.Image.prototype.setFlip = function(flip){
-    if( JS9.globalOpts.flipUsing === "file" ){
-	return this.flipFile(flip);
-    }
-    return this.flipData(flip, this.params.rot90);
-};
-
-// get 90-degree rotatation state
-JS9.Image.prototype.getRot90 = function(){
-    return this.params.rot90;
-};
-
-// rotate image by multiples of 90 degrees
-JS9.Image.prototype.setRot90 = function(rot90){
-    if( JS9.globalOpts.flipUsing === "file" ){
-	JS9.error("no setRot90 capability when flip is using 'file'");
-    }
-    return this.flipData(this.params.flip, rot90);
-};
-
-// creates a new raw data layer ("flip")
-JS9.Image.prototype.flipData = function(...args){
-    let [flip, rot, opts] = args;
-    const getCopy = (oraw) => {
-	// make copy
-	let nraw = $.extend(true, {}, oraw);
-	switch(oraw.bitpix){
-	case 8:
-	    nraw.data = new Uint8Array(oraw.data);
-	    break;
-	case 16:
-	    nraw.data = new Int16Array(oraw.data);
-	    break;
-	case -16:
-	    nraw.data = new Uint16Array(oraw.data);
-	    break;
-	case 32:
-	    nraw.data = new Int32Array(oraw.data);
-	    break;
-	case -32:
-	    nraw.data = new Float32Array(oraw.data);
-	    break;
-	case -64:
-	    nraw.data = new Float64Array(oraw.data);
-	    break;
+JS9.Image.prototype.setFlip = function(...args){
+    let nraw;
+    let [flip, opts] = args;
+    const oraw = this.raw;
+    const calcFlip = (flip) => {
+	let i, arr;
+	let nx = 0;
+	let ny = 0;
+	let nflip = "";
+	arr = (flip + (this.params.flip||"")).split("");
+	for(i=0; i<arr.length; i++){
+	    switch(arr[i]){
+	    case "x":
+		nx++;
+		break;
+	    case "y":
+		ny++;
+		break;
+	    }
 	}
-	return nraw;
+	if( nx % 2 === 1 ){ nflip += "x"; }
+	if( ny % 2 === 1 ){ nflip += "y"; }
+	return nflip || "none";
     }
-    const getLine = (oraw, ooff, nraw, noff) => {
-	let obuf, nbuf;
-	switch(oraw.bitpix){
-	case 8:
-	    obuf = new Uint8Array(oraw.data.buffer, ooff, oraw.width);
-	    nbuf = new Uint8Array(nraw.data.buffer, noff, oraw.width);
-	    break;
-	case 16:
-	case -16:
-	    obuf = new Uint16Array(oraw.data.buffer, ooff, oraw.width);
-	    nbuf = new Uint16Array(nraw.data.buffer, noff, oraw.width);
-	    break;
-	case 32:
-	    obuf = new Uint32Array(oraw.data.buffer, ooff, oraw.width);
-	    nbuf = new Uint32Array(nraw.data.buffer, noff, oraw.width);
-	    break;
-	case -32:
-	    obuf = new Float32Array(oraw.data.buffer, ooff, oraw.width);
-	    nbuf = new Float32Array(nraw.data.buffer, noff, oraw.width);
-	    break;
-	case -64:
-	    obuf = new Float64Array(oraw.data.buffer, ooff, oraw.width);
-	    nbuf = new Float64Array(nraw.data.buffer, noff, oraw.width);
-	    break;
-	default:
-	    JS9.error(`unknown bitpix value for flip: ${oraw.bitpix}`);
-	}
-	return [obuf, nbuf];
-    };
     const flipX = (oraw, nraw) => {
 	let oj, nj, ooff, noff, obuf, nbuf;
 	const bpp = oraw.data.BYTES_PER_ELEMENT;
@@ -4441,7 +4394,7 @@ JS9.Image.prototype.flipData = function(...args){
 	    nj = oj;
 	    ooff = oj * oraw.width * bpp;
 	    noff = nj * oraw.width * bpp;
-	    [obuf, nbuf] = getLine(oraw, ooff, nraw, noff);
+	    [obuf, nbuf] = JS9.getRawLine(oraw, ooff, nraw, noff);
 	    nbuf.set(obuf);
 	    nbuf.reverse();
 	}
@@ -4453,22 +4406,128 @@ JS9.Image.prototype.flipData = function(...args){
 	    nj = oraw.height - oj - 1;
 	    ooff = oj * oraw.width * bpp;
 	    noff = nj * oraw.width * bpp;
-	    [obuf, nbuf] = getLine(oraw, ooff, nraw, noff);
+	    [obuf, nbuf] = JS9.getRawLine(oraw, ooff, nraw, noff);
 	    nbuf.set(obuf);
 	}
     };
-    const flipXY = (oraw, nraw) => {
-	let oj, nj, ooff, noff, obuf, nbuf;
-	const bpp = oraw.data.BYTES_PER_ELEMENT;
-	for(oj=0; oj<oraw.height; oj++){
-	    nj = oraw.height - oj - 1;
-	    ooff = oj * oraw.width * bpp;
-	    noff = nj * oraw.width * bpp;
-	    [obuf, nbuf] = getLine(oraw, ooff, nraw, noff);
-	    nbuf.set(obuf);
-	    nbuf.reverse();
+    const updateFlipHeader = (oraw, nraw, flip) => {
+	const oheader = oraw.header;
+	const nheader = nraw.header;
+	switch(flip){
+	case "x":
+	    if( JS9.notNull(oheader.CRPIX1) ){
+		nheader.CRPIX1 = oheader.NAXIS1 - oheader.CRPIX1 + 1;
+	    }
+	    if( JS9.notNull(oheader.CDELT1) ){
+		nheader.CDELT1 = - oheader.CDELT1;
+	    }
+	    if( JS9.notNull(oheader.CD1_1) ){
+		nheader.CD1_1 = - oheader.CD1_1;
+	    }
+	    if( JS9.notNull(oheader.CD2_1) ){
+		nheader.CD2_1 = - oheader.CD2_1;
+	    }
+	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0) + 1;
+	    nheader.LTV2 = (oheader.LTV2||0);
+	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
+	    nheader.LTM1_2 = JS9.defNull(oheader.LTM1_2, 0);
+	    nheader.LTM2_1 = JS9.defNull(oheader.LTM2_1, 0);
+	    nheader.LTM2_2 = JS9.defNull(oheader.LTM2_2, 1);
+	    break;
+	case "y":
+	    if( JS9.notNull(oheader.CRPIX2) ){
+		nheader.CRPIX2 = oheader.NAXIS2 - oheader.CRPIX2 + 1;
+	    }
+	    if( JS9.notNull(oheader.CDELT2) ){
+		nheader.CDELT2 = - oheader.CDELT2;
+	    }
+	    if( JS9.notNull(oheader.CD1_2) ){
+		nheader.CD1_2 = - oheader.CD1_2;
+	    }
+	    if( JS9.notNull(oheader.CD2_2) ){
+		nheader.CD2_2 = - oheader.CD2_2;
+	    }
+	    nheader.LTV1 = (oheader.LTV1||0);
+	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0) + 1;
+	    nheader.LTM1_1 = JS9.defNull(oheader.LTM1_1, 1);
+	    nheader.LTM1_2 = JS9.defNull(oheader.LTM1_2, 0);
+	    nheader.LTM2_1 = JS9.defNull(oheader.LTM2_1, 0);
+	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
+	    break;
+	default:
+	    break;
 	}
     };
+    // sanity checks
+    if( flip === "none" ){
+	return this;
+    }
+    if( !this || !this.raw || !this.raw.header ){
+	JS9.error("invalid image for flip");
+    }
+    // no support for updating WCS in HEALPix images ...
+    if( this.raw.header.CTYPE1 && this.raw.header.CTYPE1.match(/HPX/) ){
+	JS9.error("support for flipping HEALPix is not yet available");
+    }
+    // opts is optional
+    opts = opts || {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error(`can't parse flip opts: ${opts}`, e); }
+    }
+    // copy of input data
+    nraw = JS9.getRawCopy(oraw);
+    // set flip state
+    switch(flip.toLowerCase()){
+    case "x":
+	flipX(oraw, nraw);
+	updateFlipHeader(oraw, nraw, flip);
+	this.params.flip = calcFlip(flip);
+	break;
+    case "y":
+	flipY(oraw, nraw);
+	updateFlipHeader(oraw, nraw, flip);
+	this.params.flip = calcFlip(flip);
+	break;
+    default:
+	break;
+    }
+    // assign this nraw to the high-level raw data object
+    this.raw = nraw;
+    // re-init WCS
+    this.initWCS();
+    // re-init the logical coordinate system
+    this.initLCS();
+    // reset pan
+    this.setPan();
+    // redisplay using these data
+    this.displayImage("all", opts);
+    // refresh shape layers
+    this.refreshLayers();
+    // allow chaining
+    return this;
+};
+
+// get 90-degree rotatation state
+JS9.Image.prototype.getRot90 = function(){
+    return this.params.rot90;
+};
+
+// rotate image by multiples of 90 degrees
+JS9.Image.prototype.setRot90 = function(...args){
+    let nraw;
+    let [rot, opts] = args;
+    const oraw = this.raw;
+    const calcRot = (rot) => {
+	rot += this.params.rot90||0;
+	while( rot < 0 ){ rot += 360; }
+	while( rot >= 360 ){ rot -= 360; }
+	if( rot === 270 ){
+	    rot = -90;
+	}
+	return rot;
+    }
     const rot90 = (oraw, nraw) => {
 	let oi, oj, olptr, noff;
 	const obuf = oraw.data;
@@ -4483,8 +4542,18 @@ JS9.Image.prototype.flipData = function(...args){
 	    }
 	}
     };
+    // eslint-disable-next-line no-unused-vars
     const rot180 = (oraw, nraw) => {
-	flipXY(oraw, nraw);
+	let oj, nj, ooff, noff, obuf, nbuf;
+	const bpp = oraw.data.BYTES_PER_ELEMENT;
+	for(oj=0; oj<oraw.height; oj++){
+	    nj = oraw.height - oj - 1;
+	    ooff = oj * oraw.width * bpp;
+	    noff = nj * oraw.width * bpp;
+	    [obuf, nbuf] = JS9.getRawLine(oraw, ooff, nraw, noff);
+	    nbuf.set(obuf);
+	    nbuf.reverse();
+	}
     }
     const rot270 = (oraw, nraw) => {
 	let oi, oj, olptr, oh;
@@ -4500,78 +4569,9 @@ JS9.Image.prototype.flipData = function(...args){
 	    }
 	}
     };
-    const updateFlipHeader = (oraw, nraw) => {
-	const oheader = oraw.header;
-	const nheader = nraw.header;
-	switch(this.params.flip){
-	case "x":
-	    if( JS9.notNull(oheader.CRPIX1) ){
-		nheader.CRPIX1 = oheader.NAXIS1 - oheader.CRPIX1 + 1;
-	    }
-	    if( JS9.notNull(oheader.CDELT1) ){
-		nheader.CDELT1 = - oheader.CDELT1;
-	    }
-	    if( JS9.notNull(oheader.CD1_1) ){
-		nheader.CD1_1 = - oheader.CD1_1;
-	    }
-	    if( JS9.notNull(oheader.CD2_1) ){
-		nheader.CD2_1 = - oheader.CD2_1;
-	    }
-	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0) + 1;
-	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
-	    break;
-	case "y":
-	    if( JS9.notNull(oheader.CRPIX2) ){
-		nheader.CRPIX2 = oheader.NAXIS2 - oheader.CRPIX2 + 1;
-	    }
-	    if( JS9.notNull(oheader.CDELT2) ){
-		nheader.CDELT2 = - oheader.CDELT2;
-	    }
-	    if( JS9.notNull(oheader.CD1_2) ){
-		nheader.CD1_2 = - oheader.CD1_2;
-	    }
-	    if( JS9.notNull(oheader.CD2_2) ){
-		nheader.CD2_2 = - oheader.CD2_2;
-	    }
-	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0) + 1;
-	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
-	    break;
-	case "xy":
-	    if( JS9.notNull(oheader.CRPIX1) ){
-		nheader.CRPIX1 = oheader.NAXIS1 - oheader.CRPIX1 + 1;
-	    }
-	    if( JS9.notNull(oheader.CDELT1) ){
-		nheader.CDELT1 = - oheader.CDELT1;
-	    }
-	    if( JS9.notNull(oheader.CRPIX2) ){
-		nheader.CRPIX2 = oheader.NAXIS2 - oheader.CRPIX2 + 1;
-	    }
-	    if( JS9.notNull(oheader.CDELT2) ){
-		nheader.CDELT2 = - oheader.CDELT2;
-	    }
-	    if( JS9.notNull(oheader.CD1_1) ){
-		nheader.CD1_1 = - oheader.CD1_1;
-	    }
-	    if( JS9.notNull(oheader.CD2_1) ){
-		nheader.CD2_1 = - oheader.CD2_1;
-	    }
-	    if( JS9.notNull(oheader.CD1_2) ){
-		nheader.CD1_2 = - oheader.CD1_2;
-	    }
-	    if( JS9.notNull(oheader.CD2_2) ){
-		nheader.CD2_2 = - oheader.CD2_2;
-	    }
-	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0) + 1;
-	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
-	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0) + 1;
-	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
-	    break;
-	case "none":
-	    break;
-	}
-    };
     const rotateFITSHeader = (oraw, nraw, angle) => {
 	let arad, sinrot, cosrot;
+	let cd1_1, cd1_2, cd2_1, cd2_2;
 	const oheader = oraw.header;
 	const nheader = nraw.header;
 	// use CD matrix if present, otherwise use CROTA2
@@ -4579,11 +4579,25 @@ JS9.Image.prototype.flipData = function(...args){
 	    arad = -(angle * Math.PI / 180.0);
 	    sinrot = Math.sin(arad);
 	    cosrot = Math.cos(arad);
-	    nheader.CD1_1 =  oheader.CD1_1 * cosrot  + oheader.CD1_2 * sinrot;
-	    nheader.CD1_2 =  oheader.CD1_1 * -sinrot + oheader.CD1_2 * cosrot;
-	    nheader.CD2_1 =  oheader.CD2_1 * cosrot  + oheader.CD2_2 * sinrot;
-	    nheader.CD2_2 =  oheader.CD2_1 * -sinrot + oheader.CD2_2 * cosrot;
+	    cd1_1 = JS9.defNull(oheader.CD1_1, 1);
+	    cd1_2 = JS9.defNull(oheader.CD1_2, 0);
+	    cd2_1 = JS9.defNull(oheader.CD2_1, 0);
+	    cd2_2 = JS9.defNull(oheader.CD2_2, 1);
+	    nheader.CD1_1 =  cd1_1 * cosrot  + cd1_2 * sinrot;
+	    nheader.CD1_2 =  cd1_1 * -sinrot + cd1_2 * cosrot;
+	    nheader.CD2_1 =  cd2_1 * cosrot  + cd2_2 * sinrot;
+	    nheader.CD2_2 =  cd2_1 * -sinrot + cd2_2 * cosrot;
+	    if( Math.abs(nheader.CD1_1) < 1e-15 ){ nheader.CD1_1 = 0; }
+	    if( Math.abs(nheader.CD1_2) < 1e-15 ){ nheader.CD1_2 = 0; }
+	    if( Math.abs(nheader.CD2_1) < 1e-15 ){ nheader.CD2_1 = 0; }
+	    if( Math.abs(nheader.CD2_2) < 1e-15 ){ nheader.CD2_2 = 0; }
 	} else if( JS9.notNull(oheader.CRPIX1) ){
+	    // this hack inversion is the result of a long conversation with
+	    // J Mink, in which she verified the confused state of WCS when
+	    // flipping images, including sign problems ... 10/2/2019
+	    if( (this.params.flip === "x" || this.params.flip === "y") ){
+		if( calcRot(angle) % 180 ){ angle = -angle; }
+	    }
 	    // add file rotation into angle
 	    if( oraw.wcsinfo ){
 		angle += (oraw.wcsinfo.crot || 0);
@@ -4591,263 +4605,153 @@ JS9.Image.prototype.flipData = function(...args){
 		angle += (oheader.CROTA2 || 0);
 	    }
 	    nheader.CROTA2 = angle;
-	    // use old cdelts
-	    nheader.CDELT1 = oheader.CDELT1 || 0;
-	    nheader.CDELT2 = oheader.CDELT2 || 0;
+	    if( JS9.notNull(oheader.CDELT1) ){
+		nheader.CDELT1 = oheader.CDELT1
+	    }
+	    if( JS9.notNull(oheader.CDELT2) ){
+		nheader.CDELT2 = oheader.CDELT2;
+	    }
 	}
     };
-    const updateRot90Header = (oraw, nraw) => {
-	let angle;
+    const rotateLCSHeader = (oraw, nraw, angle) => {
+	let arad, sinrot, cosrot;
+	let ltm1_1, ltm1_2, ltm2_1, ltm2_2;
 	const oheader = oraw.header;
 	const nheader = nraw.header;
-	switch(this.params.rot90){
+	arad = -(angle * Math.PI / 180.0);
+	sinrot = Math.sin(arad);
+	cosrot = Math.cos(arad);
+	ltm1_1 = JS9.defNull(oheader.LTM1_1, 1);
+	ltm1_2 = JS9.defNull(oheader.LTM1_2, 0);
+	ltm2_1 = JS9.defNull(oheader.LTM2_1, 0);
+	ltm2_2 = JS9.defNull(oheader.LTM2_2, 1);
+	nheader.LTM1_1 =  ltm1_1 * cosrot  + ltm1_2 * sinrot;
+	nheader.LTM1_2 =  ltm1_1 * -sinrot + ltm1_2 * cosrot;
+	nheader.LTM2_1 =  ltm2_1 * cosrot  + ltm2_2 * sinrot;
+	nheader.LTM2_2 =  ltm2_1 * -sinrot + ltm2_2 * cosrot;
+	if( Math.abs(nheader.LTM1_1) < 1e-15 ){ nheader.LTM1_1 = 0; }
+	if( Math.abs(nheader.LTM1_2) < 1e-15 ){ nheader.LTM1_2 = 0; }
+	if( Math.abs(nheader.LTM2_1) < 1e-15 ){ nheader.LTM2_1 = 0; }
+	if( Math.abs(nheader.LTM2_2) < 1e-15 ){ nheader.LTM2_2 = 0; }
+    };
+    const updateRotHeader = (oraw, nraw, rot) => {
+	const oheader = oraw.header;
+	const nheader = nraw.header;
+	let angle = rot;
+	switch(rot){
 	case 0:
 	    nraw.header = oraw.header;
 	    break;
 	case 90:
-	    nheader.NAXIS1 = nraw.width;
-	    nheader.NAXIS2 = nraw.height;
+	case -270:
+	    nheader.NAXIS1 = oheader.NAXIS2;
+	    nheader.NAXIS2 = oheader.NAXIS1;
 	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
 		nheader.CRPIX1 = nheader.NAXIS1 - oheader.CRPIX2 + 1;
 		nheader.CRPIX2 = oheader.CRPIX1;
-		// normalize angle
-		angle = 90;
-		// if using CROTA2, we negate the angle after flipping, the
-		// the end result of a long conversation with J Mink, in which
-		// she verified the confused state of affairs for WCS when
-		// flipping images, including sign problems ... 10/2/2019
-		if( JS9.isNull(oheader.CD1_1)                              &&
-		    (this.params.flip === "x" || this.params.flip === "y") ){
-		    angle = -angle;
-		}
 		rotateFITSHeader(oraw, nraw, angle);
 	    }
 	    nheader.LTV1 = nheader.NAXIS1 - (oheader.LTV2||0) + 1;
 	    nheader.LTV2 = (oheader.LTV1||0);
-	    nheader.LTM1_2 = JS9.defNull(oheader.LTM1_1, 1);
-	    nheader.LTM2_1 = - JS9.defNull(oheader.LTM2_2, 1);
-	    nheader.LTM1_1 = JS9.defNull(oheader.LTM1_2, 0);
-	    nheader.LTM2_2 = JS9.defNull(oheader.LTM2_1, 0);
+	    rotateLCSHeader(oraw, nraw, angle);
 	    break;
 	case 270:
-	    nheader.NAXIS1 = nraw.width;
-	    nheader.NAXIS2 = nraw.height;
+	case -90:
+	    nheader.NAXIS1 = oheader.NAXIS2;
+	    nheader.NAXIS2 = oheader.NAXIS1;
 	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
 		nheader.CRPIX1 = oheader.CRPIX2;
 		nheader.CRPIX2 = nheader.NAXIS2 - oheader.CRPIX1 + 1;
-		// normalize angle
-		angle = -90;
-		// if using CROTA2, we need to negate the angle after flipping
-		if( JS9.isNull(oheader.CD1_1)                              &&
-		    (this.params.flip === "x" || this.params.flip === "y") ){
-		    angle = -angle;
-		}
 		rotateFITSHeader(oraw, nraw, angle);
 	    }
 	    nheader.LTV1 = (oheader.LTV2||0);
-	    nheader.LTV2 = nheader.NAXIS2 - (oheader.LTV1||0) + 1;
-	    nheader.LTM1_2 = - JS9.defNull(oheader.LTM1_1, 1);
-	    nheader.LTM2_1 = JS9.defNull(oheader.LTM2_2, 1)
-	    nheader.LTM1_1 = JS9.defNull(oheader.LTM1_2, 0);
-	    nheader.LTM2_2 = JS9.defNull(oheader.LTM2_1, 0);
-	    break;
-	case 180:
-	    if( JS9.notNull(oheader.CRPIX1) ){
-		nheader.CRPIX1 = oheader.NAXIS1 - oheader.CRPIX1 + 1;
-	    }
-	    if( JS9.notNull(oheader.CDELT1) ){
-		nheader.CDELT1 = - oheader.CDELT1;
-	    }
-	    if( JS9.notNull(oheader.CRPIX2) ){
-		nheader.CRPIX2 = oheader.NAXIS2 - oheader.CRPIX2 + 1;
-	    }
-	    if( JS9.notNull(oheader.CDELT2) ){
-		nheader.CDELT2 = - oheader.CDELT2;
-	    }
-	    if( JS9.notNull(oheader.CD1_1) ){
-		nheader.CD1_1 = - oheader.CD1_1;
-	    }
-	    if( JS9.notNull(oheader.CD2_1) ){
-		nheader.CD2_1 = - oheader.CD2_1;
-	    }
-	    if( JS9.notNull(oheader.CD1_2) ){
-		nheader.CD1_2 = - oheader.CD1_2;
-	    }
-	    if( JS9.notNull(oheader.CD2_2) ){
-		nheader.CD2_2 = - oheader.CD2_2;
-	    }
-	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0) + 1;
-	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
-	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0) + 1;
-	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
+	    nheader.LTV2 = oheader.NAXIS1 - (oheader.LTV1||0) + 1;
+	    rotateLCSHeader(oraw, nraw, angle);
 	    break;
 	default:
 	    JS9.error(`unknown rot90 type: ${this.params.rot90}`);
 	    break;
 	}
     };
-    // sanity check
+    // sanity checks
+    if( !rot ){
+	return this;
+    }
     if( !this || !this.raw || !this.raw.header ){
-	JS9.error("invalid image for flipData");
+	JS9.error("invalid image for rot90");
     }
     // no support for updating WCS in HEALPix images ...
     if( this.raw.header.CTYPE1 && this.raw.header.CTYPE1.match(/HPX/) ){
-	JS9.error("support for flipping/rotating HEALPix is not yet available");
-    }
-    // no args essentially means reset
-    flip = flip || "none";
-    rot  = rot  || 0;
-    rot  = Math.floor(rot);
-    while( rot < 0 ){ rot += 360; }
-    while( rot > 360 ){ rot -= 360; }
-    if( rot % 90 !== 0 ){
-	JS9.error(`invalid rot90 value: ${rot} (use: 0, 90, 180, 270)`);
+	JS9.error("support for rotating HEALPix is not yet available");
     }
     // opts is optional
     opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error(`can't parse flip opts: ${opts}`, e); }
+	catch(e){ JS9.error(`can't parse rot90 opts: ${opts}`, e); }
     }
-    // start from original data
-    opts.oraw = "raw0";
-    // nraw should be a copy of oraw
-    opts.alwaysCopy = true;
-    // always update wcs
-    opts.updatewcs = true;
+    // only 90 degree rotations
+    switch(rot){
+    case 1:
+	rot = 90;
+	break;
+    case -1:
+	rot = -90;
+	break;
+    case 90:
+	break;
+    case -90:
+	break;
+    default:
+	JS9.error(`invalid rot90 value: ${rot} (use: +/1, +/90)`);
+	break;
+    }
+    // copy of input data
+    nraw = JS9.getRawCopy(oraw);
+    // set rot state
+    switch(rot){
+    case 0:
+	break;
+    case 90:
+	rot90(oraw, nraw);
+	updateRotHeader(oraw, nraw, 90);
+	this.params.rot90 = calcRot(90);
+	break;
+    case -90:
+	rot270(oraw, nraw);
+	updateRotHeader(oraw, nraw, -90);
+	this.params.rot90 = calcRot(-90);
+	break;
+    default:
+	break;
+    }
+    // assign this nraw to the high-level raw data object
+    this.raw = nraw;
+    // re-init WCS
+    this.initWCS();
+    // re-init the logical coordinate system
+    this.initLCS();
     // reset pan
-    opts.resetpan = true;
-    // new layer
-    opts.rawid = opts.rawid || "flip";
-    // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("flipData", args, opts.rawid);
-    this.rawDataLayer(opts, (oraw, nraw) => {
-	let traw = getCopy(oraw);
-	// set flip state
-	switch(flip.toLowerCase()){
-	case "x":
-	    flipX(oraw, traw);
-	    this.params.flip = flip;
-	    break;
-	case "y":
-	    flipY(oraw, traw);
-	    this.params.flip = flip;
-	    break;
-	case "xy":
-	    flipXY(oraw, traw);
-	    this.params.flip = flip;
-	    break;
-	case "":
-	case "none":
-	case "reset":
-	    this.params.flip = "none";
-	    break;
-	default:
-	    JS9.error(`unknown flip type: ${flip}`);
-	    break;
-	}
-	// update the header params
-	updateFlipHeader(oraw, traw);
-	// set rot state
-	switch(rot){
-	case "":
-	case "none":
-	case "reset":
-	case 0:
-	    nraw.data = traw.data;
-	    this.params.rot90 = 0;
-	    break;
-	case 90:
-	case -270:
-	    rot90(traw, nraw);
-	    this.params.rot90 = 90;
-	    break;
-	case 180:
-	case -180:
-	    rot180(traw, nraw);
-	    this.params.rot90 = 180;
-	    break;
-	case 270:
-	case -90:
-	    rot270(traw, nraw);
-	    this.params.rot90 = 270;
-	    break;
-	default:
-	    JS9.error(`unknown rot90 type: ${rot}`);
-	    break;
-	}
-	// update the header params
-	updateRot90Header(traw, nraw);
-	return true;
-    });
+    this.setPan();
+    // redisplay using these data
+    this.displayImage("all", opts);
+    // refresh shape layers
+    this.refreshLayers();
     // allow chaining
     return this;
 };
 
-// flip image along an axis
-JS9.Image.prototype.flipFile = function(flip){
-    let hdu, table;
-    const opts = {};
-    // sanity check
-    if( !this || !this.raw || !this.raw.hdu || !this.raw.hdu.fits ){
-	JS9.error("invalid image for setFlip");
+// convenience routine
+JS9.Image.prototype.flipRot90 = function(){
+    if( this.params.flip !== "none" ){
+	this.setFlip(this.params.flip);
     }
-    // null argument resets the flip state
-    flip = flip || "none";
-    // so conversion to lowercase does not fail
-    if( typeof flip !== "string" ){
-	JS9.error("invalid flip type for setFlip");
+    if( this.params.rot90 ){
+	this.setRot90(this.params.rot90);
     }
-    // set flip state
-    switch(flip.toLowerCase()){
-    case "x":
-    case "y":
-    case "xy":
-	this.params.flip = flip;
-	break;
-    case "none":
-    case "reset":
-	this.params.flip = "none";
-	break;
-    default:
-	JS9.error(`unknown flip type for setFlip: ${flip}`);
-	break;
-    }
-    // set flip state
-    opts.flip = this.params.flip;
-    // get virual dimensions, since we will use the virtual file only
-    opts.from =  "virtualFile";
-    // default is to take all we can get
-    opts.xcen = this.raw.width/2;
-    opts.ycen = this.raw.height/2;
-    opts.xdim = this.raw.width;
-    opts.ydim = this.raw.height;
-    // but we might be able to do better for tables
-    if( !this.parentFile && this.raw.hdu ){
-	hdu = this.raw.hdu;
-	if( this.imtab === "table" && hdu.table ){
-	    table = hdu.table;
-	    if( table.xcen && table.ycen && table.xdim && table.ydim ){
-		opts.bin =  Math.floor(table.bin||1);
-		opts.xcen = Math.floor(table.xcen);
-		opts.ycen = Math.floor(table.ycen);
-		opts.xdim = Math.floor(table.xdim);
-		opts.ydim = Math.floor(table.ydim);
-		opts.filter = table.filter || "";
-	    }
-	} else if( this.imtab === "image" ){
-	    if( hdu.x1 && hdu.x2 && hdu.y1 && hdu.y2 ){
-		opts.xdim = Math.floor(hdu.naxis1);
-		opts.ydim = Math.floor(hdu.naxis2);
-		opts.xcen = Math.floor((hdu.x1 + hdu.x2) / 2);
-		opts.ycen = Math.floor((hdu.y1 + hdu.y2) / 2);
-		opts.bin = 1;
-	    }
-	}
-    }
-    // flip is actually a call to display a section, using the virtual file
-    return this.displaySection(opts);
+    // allow chaining
+    return this;
 };
 
 // refresh all layers
@@ -17639,6 +17543,66 @@ JS9.Dysel.imageclose = function(im){
     }
 };
 
+// make a copy of the raw data
+// used by setFlip and setRot90
+JS9.getRawCopy = function(oraw) {
+    // make copy
+    let nraw = $.extend(true, {}, oraw);
+    switch(oraw.bitpix){
+    case 8:
+	nraw.data = new Uint8Array(oraw.data);
+	break;
+    case 16:
+	nraw.data = new Int16Array(oraw.data);
+	break;
+    case -16:
+	nraw.data = new Uint16Array(oraw.data);
+	break;
+    case 32:
+	nraw.data = new Int32Array(oraw.data);
+	break;
+    case -32:
+	nraw.data = new Float32Array(oraw.data);
+	break;
+    case -64:
+	nraw.data = new Float64Array(oraw.data);
+	break;
+    }
+    return nraw;
+};
+
+// extract line from raw data
+// used by setFlip and setRot90
+JS9.getRawLine = function(oraw, ooff, nraw, noff) {
+    let obuf, nbuf;
+    switch(oraw.bitpix){
+    case 8:
+	obuf = new Uint8Array(oraw.data.buffer, ooff, oraw.width);
+	nbuf = new Uint8Array(nraw.data.buffer, noff, oraw.width);
+	break;
+    case 16:
+    case -16:
+	obuf = new Uint16Array(oraw.data.buffer, ooff, oraw.width);
+	nbuf = new Uint16Array(nraw.data.buffer, noff, oraw.width);
+	break;
+    case 32:
+	obuf = new Uint32Array(oraw.data.buffer, ooff, oraw.width);
+	nbuf = new Uint32Array(nraw.data.buffer, noff, oraw.width);
+	break;
+    case -32:
+	obuf = new Float32Array(oraw.data.buffer, ooff, oraw.width);
+	nbuf = new Float32Array(nraw.data.buffer, noff, oraw.width);
+	break;
+    case -64:
+	obuf = new Float64Array(oraw.data.buffer, ooff, oraw.width);
+	nbuf = new Float64Array(nraw.data.buffer, noff, oraw.width);
+	break;
+    default:
+	JS9.error(`unknown bitpix value for flip: ${oraw.bitpix}`);
+    }
+    return [obuf, nbuf];
+};
+
 // public alias for plugin developers
 JS9.getDynamicDisplayOr = JS9.Dysel.getDisplayOr;
 
@@ -21780,7 +21744,6 @@ JS9.mkPublic("GetScale", "getScale");
 JS9.mkPublic("SetScale", "setScale");
 JS9.mkPublic("SetFlip", "setFlip");
 JS9.mkPublic("GetFlip", "getFlip");
-JS9.mkPublic("FlipData", "flipData");
 JS9.mkPublic("SetRot90", "setRot90");
 JS9.mkPublic("GetRot90", "getRot90");
 JS9.mkPublic("GetParam", "getParam");
