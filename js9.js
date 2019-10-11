@@ -3301,6 +3301,8 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     }
     // display new image data with old section
     this.displayImage("colors", opts);
+    // redo flip and rot90
+    this.reFlipRot90();
     // notify the helper
     this.notifyHelper();
     // update shape layers if necessary
@@ -3527,6 +3529,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    if( oreg && topts.refreshRegions !== false ){
 		nim.addShapes("regions", oreg, {restoreid: true});
 	    }
+	    // redo flip and rot90
+	    this.reFlipRot90();
 	    // set status of new image
 	    nim.setStatus("displaySection", "complete");
 	} else if( typeof topts.refresh === "string" ){
@@ -3548,7 +3552,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    if( topts.display.image ){
 		topts.rawid = this.raw.id;
 		// func to perform when image is refreshed
-		topts.onrefresh = topts.ondisplaysection || topts.onrefresh || func;
+		topts.onrefresh = topts.ondisplaysection ||
+		                  topts.onrefresh || func;
 		// refresh the image with the new hdu
 		topts.display.image.refreshImage(hdu, topts);
 	    } else {
@@ -3574,8 +3579,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		if( oreg ){
 		    nim.addShapes("regions", oreg, {restoreid: true});
 		}
-		// set status of new image
-		nim.setStatus("displaySection", "complete");
+		// redo flip and rot90
+		this.reFlipRot90();
 	    }
 	} else {
 	    // this is the default behavior for displaySection:
@@ -3585,8 +3590,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    topts.onrefresh = topts.ondisplaysection || topts.onrefresh || func;
 	    // refresh the current image with the new hdu
 	    this.refreshImage(hdu, topts);
-	    // redo flip and rot90
-	    this.flipRot90();
 	}
 	// set status of old image
 	this.setStatus("displaySection", "complete");
@@ -4742,13 +4745,24 @@ JS9.Image.prototype.setRot90 = function(...args){
     return this;
 };
 
-// convenience routine
-JS9.Image.prototype.flipRot90 = function(){
-    if( this.params.flip !== "none" ){
-	this.setFlip(this.params.flip);
+// redo the current flip and rot90 in cases where the underyling data changed
+// (e.g. displaySection, refreshImage)
+JS9.Image.prototype.reFlipRot90 = function(){
+    let i, arr;
+    let flip = this.params.flip;
+    let rot = this.params.rot90;
+    if( flip !== "none" ){
+	this.params.flip = "none";
+	arr = flip.split("");
+	for(i=0; i<arr.length; i++){
+	    if( arr[i] === "x" || arr[i] === "y" ){
+		this.setFlip(arr[i]);
+	    }
+	}
     }
-    if( this.params.rot90 ){
-	this.setRot90(this.params.rot90);
+    if( rot ){
+	this.params.rot90 = 0;
+	this.setRot90(rot);
     }
     // allow chaining
     return this;
@@ -7585,6 +7599,7 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 	    // init the logical coordinate system, if possible
 	    this.initLCS();
 	}
+	// reset pan, if necessary
 	if( opts.resetpan ){
 	    this.setPan();
 	}
@@ -7592,6 +7607,8 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 	this.refreshLayers();
 	// redisplay using these data
 	this.displayImage("all", opts);
+	// redo flip and rot90
+	this.reFlipRot90();
     }
     return true;
 };
