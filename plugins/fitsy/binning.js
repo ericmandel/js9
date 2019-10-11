@@ -135,7 +135,7 @@
 		    if( im.parentFile && im.raw.header && 
 			im.raw.header.LTM1_1 !== undefined ){
 			binval1 = 1;
-			binval2 = im.raw.header.LTM1_1;
+			binval2 = Math.abs(im.raw.header.LTM1_1);
 		    } else {
 			binval1 = hdu.bin || 1;
 			binval2 = 1;
