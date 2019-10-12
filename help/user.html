@@ -329,11 +329,17 @@ the <b>wcs reproject</b> algorithm for aligning images that are
 similar.
 
 <p>
-The Zoom menu also supports <b>image flip</b> (around x, y, and x/y
-axes) and <b>image rotation</b> in 90 degree increments. Flipping and
-rotation is performed on the in-memory image, with WCS information
-updated as needed. The rotation is faster than the more general
-WCS-based rotation/reprojection in the <b>WCS</b> menu.
+The Zoom menu also supports <b>image flip</b> around the x or y axes
+and <b>image rotation</b> by +/- 90 degrees. Flipping and rotation are
+performed on the in-memory image, with WCS information updated as
+needed. The rotation is faster than the more general WCS-based
+rotation/reprojection in the <b>WCS</b> menu. NB: flipping and
+rotation behave differently from DS9: their action is relative to the
+current state of the display, whereas DS9's actions are linked to the
+x and y axes. Thus, flipping by x twice will return you to the
+original orientation (whereas flipping a second time does nothing in
+DS9), as will four consecutive 90 degree rotations. We find this
+behavior to be more intuitive than the interface offered by DS9.
 
 <li><p><b>Scale:</b> Each scale option specifies a different scaling
 algorithm to use when converting image pixel values to RGB
