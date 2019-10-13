@@ -3395,7 +3395,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     };
     // convert region to section (cen and dim)
     const reg2sect = (xreg) => {
-	let i, xdim, ydim;
+	let i, xdim, ydim, xcen, ycen, npos;
 	let xx = 0;
 	let yy = 0;
 	let minx = 1000000;
@@ -3404,7 +3404,20 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	let maxy = 0;
 	const shape = xreg.shape;
 	// use physical coords object, if possible
-	if( !this.parentFile && xreg.lcs ){ xreg = xreg.lcs; }
+	if( !this.parentFile && xreg.lcs ){
+	    xreg = xreg.lcs
+	    xcen = xreg.x;
+	    ycen = xreg.y;
+	    // beware of problems with physical coords not tied to the file
+	    npos = this.maybePhysicalToImage({x: xcen, y: ycen});
+	    if( npos ){
+		xcen = npos.x;
+		ycen = npos.y;
+	    }
+	} else {
+	    xcen = xreg.x;
+	    ycen = xreg.y;
+	}
 	switch( shape ){
 	case "annulus":
             xdim  = xreg.radii[xreg.radii.length-1]*2;
@@ -3452,7 +3465,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	default:
 	    break;
 	}
-	return({xcen:xreg.x, ycen:xreg.y, xdim:xdim, ydim:ydim});
+	return({xcen: xcen, ycen: ycen, xdim: xdim, ydim: ydim});
     };
     // main display routine
     const disp = (hdu, opts) => {
@@ -3668,7 +3681,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    sect.xcen = npos.x;
 	    sect.ycen = npos.y;
 	}
-
 	sect.xdim = Math.floor(hdu.naxis1 * sect.bin);
 	sect.ydim = Math.floor(hdu.naxis2 * sect.bin);
 	sect.filter = this.raw.filter || "";
