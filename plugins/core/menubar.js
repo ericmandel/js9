@@ -1546,11 +1546,11 @@ JS9.Menubar.createMenus = function(){
 		name: "Flip:",
 		disabled: true
 	    };
-	    items.flipX = xname("invert x");
+	    items.flipX = xname("around x axis");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.flipX.disabled = true;
 	    }
-	    items.flipY = xname("invert y");
+	    items.flipY = xname("around y axis");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.flipY.disabled = true;
 	    }
@@ -1559,11 +1559,11 @@ JS9.Menubar.createMenus = function(){
 		name: "Rotate:",
 		disabled: true
 	    };
-	    items.rot90_90 = xname("90 degrees");
+	    items.rot90_90 = xname("90 left");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.rot90_90.disabled = true;
 	    }
-	    items.rot90_270 = xname("-90 degrees");
+	    items.rot90_270 = xname("90 right");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.rot90_270.disabled = true;
 	    }
