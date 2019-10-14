@@ -4534,7 +4534,7 @@ JS9.Image.prototype.setRot90 = function(...args){
     let nraw;
     let [rot, opts] = args;
     const oraw = this.raw;
-    const calcRot = (rot) => {
+    const normRot = (rot) => {
 	rot += this.params.rot90||0;
 	while( rot < 0 ){ rot += 360; }
 	while( rot >= 360 ){ rot -= 360; }
@@ -4611,7 +4611,7 @@ JS9.Image.prototype.setRot90 = function(...args){
 	    // J Mink, in which she verified the confused state of WCS when
 	    // flipping images, including sign problems ... 10/2/2019
 	    if( (this.params.flip === "x" || this.params.flip === "y") ){
-		if( calcRot(angle) % 180 ){ angle = -angle; }
+		if( normRot(angle) % 180 ){ angle = -angle; }
 	    }
 	    // add file rotation into angle
 	    if( oraw.wcsinfo ){
@@ -4731,12 +4731,12 @@ JS9.Image.prototype.setRot90 = function(...args){
     case 90:
 	rot90(oraw, nraw);
 	updateRotHeader(oraw, nraw, 90);
-	this.params.rot90 = calcRot(90);
+	this.params.rot90 = normRot(90);
 	break;
     case -90:
 	rot270(oraw, nraw);
 	updateRotHeader(oraw, nraw, -90);
-	this.params.rot90 = calcRot(-90);
+	this.params.rot90 = normRot(-90);
 	break;
     default:
 	break;
