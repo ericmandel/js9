@@ -4610,7 +4610,14 @@ JS9.Image.prototype.setRot90 = function(...args){
 	    // this hack inversion is the result of a long conversation with
 	    // J Mink, in which she verified the confused state of WCS when
 	    // flipping images, including sign problems ... 10/2/2019
-	    if( (this.params.flip === "x" || this.params.flip === "y") ){
+	    if( this.raw.wcsinfo ){
+		if( (this.raw.wcsinfo.cdelt1 < 0  &&
+		     this.raw.wcsinfo.cdelt2 < 0) ||
+		    (this.raw.wcsinfo.cdelt1 > 0  &&
+		     this.raw.wcsinfo.cdelt2 > 0) ){
+		    if( normRot(angle) % 180 ){ angle = -angle; }
+		}
+	    } else if( (this.params.flip === "x" || this.params.flip === "y") ){
 		if( normRot(angle) % 180 ){ angle = -angle; }
 	    }
 	    // add file rotation into angle
@@ -12268,7 +12275,9 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 		    }
 		}
 		// add file flip
-		// wcsinfo accounts for flips in the file itself + current
+		// this hack inversion is the result of a long conversation with
+		// J Mink, in which she verified the confused state of WCS when
+		// flipping images, including sign problems ... 10/2/2019
 		if( this.raw.wcsinfo ){
 		    if( (this.raw.wcsinfo.cdelt1 < 0  &&
 			 this.raw.wcsinfo.cdelt2 < 0) ||
@@ -13396,7 +13405,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	case "ellipse":
 	case "text":
 	    // remove file flip
-	    // wcsinfo accounts for flips in the file itself + current
+	    // this hack inversion is the result of a long conversation with
+	    // J Mink, in which she verified the confused state of WCS when
+	    // flipping images, including sign problems ... 10/2/2019
 	    if( this.raw.wcsinfo ){
 		if( (this.raw.wcsinfo.cdelt1 < 0  &&
 		     this.raw.wcsinfo.cdelt2 < 0) ||
