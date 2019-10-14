@@ -492,7 +492,7 @@ def flipAll(j, bins=[]):
     timeout = 1;
     flips = ["x", "y"]
     rots = [90, -90]
-    for tries in range(10):
+    for tries in range(16):
         rot = j.GetRot90();
         flip = random.choice(flips);
         displayMessage(j, 'j.SetFlip(%s [%d])' % (flip, rot))
@@ -536,7 +536,7 @@ def flipRotateTest(j):
     loadImage(j, 'fits/casa.fits.gz', '{"scale":"log", "colormap": "cool"}')
     displayMessage(j, 'j.LoadRegions("casa/casa.reg")')
     j.LoadRegions("casa/casa.reg")
-    flipAll(j, [1,2,4,2,1,2,4,2,1])
+    flipAll(j, [1,2,4])
     loadImage(j, 'fits/squares.fits', {"colormap":"grey"})
     # pylint: disable=line-too-long
     j.AddRegions('physical; polygon(438.00, 24.00, 498.00, 24.00, 468.00, 84.00) {"text":"white","textOpts":{"px":466,"py":97}}; box(52.00, 452.00, 60.00, 60.00, 0.0000) {"text":"black","textOpts":{"px":52,"py":470}}; circle(459.00, 462.00, 30.00) {"text":"darkgrey","textOpts":{"px":459,"py":421}}; ellipse(57.00, 43.00, 30.00, 20.00, 0.0000) {"text":"lightgrey","textOpts":{"px":57,"py":77}}')
