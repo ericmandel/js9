@@ -4446,7 +4446,7 @@ JS9.Image.prototype.setFlip = function(...args){
 	    nheader.LTV2 = (oheader.LTV2||0);
 	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
 	    nheader.LTM1_2 = JS9.defNull(oheader.LTM1_2, 0);
-	    nheader.LTM2_1 = JS9.defNull(oheader.LTM2_1, 0);
+	    nheader.LTM2_1 = - JS9.defNull(oheader.LTM2_1, 0);
 	    nheader.LTM2_2 = JS9.defNull(oheader.LTM2_2, 1);
 	    break;
 	case "y":
@@ -4465,7 +4465,7 @@ JS9.Image.prototype.setFlip = function(...args){
 	    nheader.LTV1 = (oheader.LTV1||0);
 	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0) + 1;
 	    nheader.LTM1_1 = JS9.defNull(oheader.LTM1_1, 1);
-	    nheader.LTM1_2 = JS9.defNull(oheader.LTM1_2, 0);
+	    nheader.LTM1_2 = - JS9.defNull(oheader.LTM1_2, 0);
 	    nheader.LTM2_1 = JS9.defNull(oheader.LTM2_1, 0);
 	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
 	    break;
@@ -12251,6 +12251,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    case "text":
 		// add file rotation
 		if( this.raw.wcsinfo ){
+		    // rotated file
 		    if( this.raw.wcsinfo.crot ){
 			opts.angle += this.raw.wcsinfo.crot;
 		    }
@@ -12267,7 +12268,16 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 		    }
 		}
 		// add file flip
-		if( this.getFlip() === "x" || this.getFlip() === "y" ){
+		// wcsinfo accounts for flips in the file itself + current
+		if( this.raw.wcsinfo ){
+		    if( (this.raw.wcsinfo.cdelt1 < 0  &&
+			 this.raw.wcsinfo.cdelt2 < 0) ||
+			(this.raw.wcsinfo.cdelt1 > 0  &&
+			 this.raw.wcsinfo.cdelt2 > 0) ){
+			opts.angle = - opts.angle;
+		    }
+		} else if( this.getFlip() === "x" || this.getFlip() === "y" ){
+		    // check for current flip
 		    opts.angle = -opts.angle;
 		}
 		break;
@@ -13386,11 +13396,21 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	case "ellipse":
 	case "text":
 	    // remove file flip
-	    if( this.getFlip() === "x" || this.getFlip() === "y" ){
-		pub.angle = -pub.angle;
+	    // wcsinfo accounts for flips in the file itself + current
+	    if( this.raw.wcsinfo ){
+		if( (this.raw.wcsinfo.cdelt1 < 0  &&
+		     this.raw.wcsinfo.cdelt2 < 0) ||
+		    (this.raw.wcsinfo.cdelt1 > 0  &&
+		     this.raw.wcsinfo.cdelt2 > 0) ){
+		    pub.angle = - pub.angle;
+		}
+	    } else if( this.getFlip() === "x" || this.getFlip() === "y" ){
+		// check for current flip
+		pub.angle = - pub.angle;
 	    }
 	    // remove file rotation
 	    if( this.raw.wcsinfo ){
+		// rotated file
 		if( this.raw.wcsinfo.crot ){
 		    pub.angle -= this.raw.wcsinfo.crot;
 		}

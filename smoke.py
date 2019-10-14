@@ -1,6 +1,7 @@
 """ smoke.py: smoke tests for JS9, calling much of the public API """
 import time
 import sys
+import random
 import json
 import pyjs9
 
@@ -489,24 +490,24 @@ def flipAll(j, bins=[]):
     flip and rotate in all combinations
     """
     timeout = 1;
-    flips = ["x", "y", "x", "y"]
-    rots = [90, 90, 90, 90, -90, -90, -90, -90]
-    for ix in range(len(flips)):
-        flip = flips[ix]
-        displayMessage(j, 'j.SetFlip(j, %s)' % flip)
+    flips = ["x", "y"]
+    rots = [90, -90]
+    for tries in range(10):
+        rot = j.GetRot90();
+        flip = random.choice(flips);
+        displayMessage(j, 'j.SetFlip(%s [%d])' % (flip, rot))
         j.SetFlip(flip)
-        xflip = j.GetFlip();
         sleep(timeout)
-        for iy in range(len(rots)):
-            rot = rots[iy]
-            j.SetRot90(rot)
-            xrot = j.GetRot90();
-            displayMessage(j, 'j.SetRot90(j,%s[%d])' % (xflip, xrot))
-            if iy < len(bins):
-                bin = bins[iy]
-                displayMessage(j, 'j.DisplaySection(bin: %d)' % bin);
-                j.DisplaySection({"bin":bin, "xcen":0, "ycen":0})
-                waitStatus(j, "DisplaySection")
+        flip = j.GetFlip();
+        rot = random.choice(rots);
+        displayMessage(j, 'j.SetRot90(%d [%s])' % (rot, flip))
+        j.SetRot90(rot)
+        sleep(timeout)
+        if len(bins) > 0:
+            bin = random.choice(bins)
+            displayMessage(j, 'j.DisplaySection(bin: %d)' % bin);
+            j.DisplaySection({"bin":bin, "xcen":0, "ycen":0})
+            waitStatus(j, "DisplaySection")
             sleep(timeout)
 
 def flipRotateTest(j):
