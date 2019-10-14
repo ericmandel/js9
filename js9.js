@@ -4607,9 +4607,13 @@ JS9.Image.prototype.setRot90 = function(...args){
 	    if( Math.abs(nheader.CD2_1) < 1e-15 ){ nheader.CD2_1 = 0; }
 	    if( Math.abs(nheader.CD2_2) < 1e-15 ){ nheader.CD2_2 = 0; }
 	} else if( JS9.notNull(oheader.CRPIX1) ){
-	    // this hack inversion is the result of a long conversation with
+	    // this sign reversal is the result of a long conversation with
 	    // J Mink, in which she verified the confused state of WCS when
 	    // flipping images, including sign problems ... 10/2/2019
+	    // (I think there might be a bug in her code, since the reversal
+	    // only is needed if no CD matrix is present, while she believes
+	    // this is due to an ambiguity in the spec.)
+	    // NB: astroem/wrappers/wcsinfo also messes with the sign!
 	    if( this.raw.wcsinfo ){
 		if( (this.raw.wcsinfo.cdelt1 < 0  &&
 		     this.raw.wcsinfo.cdelt2 < 0) ||
@@ -12275,9 +12279,13 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 		    }
 		}
 		// add file flip
-		// this hack inversion is the result of a long conversation with
+		// this sign reversal is the result of a long conversation with
 		// J Mink, in which she verified the confused state of WCS when
 		// flipping images, including sign problems ... 10/2/2019
+		// (I think there might be a bug in her code, since the reversal
+		// only is needed if no CD matrix is present, while she believes
+		// this is due to an ambiguity in the spec.)
+		// NB: astroem/wrappers/wcsinfo also messes with the sign!
 		if( this.raw.wcsinfo ){
 		    if( (this.raw.wcsinfo.cdelt1 < 0  &&
 			 this.raw.wcsinfo.cdelt2 < 0) ||
@@ -13405,9 +13413,13 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	case "ellipse":
 	case "text":
 	    // remove file flip
-	    // this hack inversion is the result of a long conversation with
+	    // this sign reversal is the result of a long conversation with
 	    // J Mink, in which she verified the confused state of WCS when
 	    // flipping images, including sign problems ... 10/2/2019
+	    // (I think there might be a bug in her code, since the reversal
+	    // only is needed if no CD matrix is present, while she believes
+	    // this is due to an ambiguity in the spec.)
+	    // NB: astroem/wrappers/wcsinfo also messes with the sign!
 	    if( this.raw.wcsinfo ){
 		if( (this.raw.wcsinfo.cdelt1 < 0  &&
 		     this.raw.wcsinfo.cdelt2 < 0) ||
