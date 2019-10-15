@@ -1649,35 +1649,17 @@ No attempt is make to keep the images aligned after the call. This
 allows you to make adjustments to the current and/or target images and
 then re-align as needed.
 
-<h5 id="JS9.SetFlip">Flip an image around an axis</h5>
+<h5 id="JS9.SetFlip">Flip an image around the x or y axis</h5>
 <p>
 <code class="api">JS9.SetFlip(flip)</code>
 <p>
 where:
 <ul>
-<li><b>flip</b>: "x", "y", "xy", "none"
+<li><b>flip</b>: "x", "y"
 </ul>
 Flip an image around the specified axis. The WCS header parameters will be
 updated appropriately. Note that you might have to reset the pan position
 after flipping.
-<p>
-This routine calls the low-level
-<a href="#JS9.FlipData"><b>JS9.FlipData()</b></a> routine
-using the current value of the image's rot90 state as the second argument,
-and is equivalent to:
-<pre>
-    JS9.FlipData(flip, im.param.rot90)
-</pre>
-where im.param.rot90 is the current rotation state set by
-<a href="#JS9.SetRot90"><b>JS9.SetRot90()</b></a>.
-<p>
-A previous implementation used the CFITSIO fits_copy_image_section()
-routine (and processed the original data file instead of the
-current image buffer). It was slower, did not have integrated
-support for 90 degree rotations, and only worked on FITS files.
-To flip images using the CFITSIO implementation, set the global
-property <b>JS9.globalOpts.flipUsing</b> to <b>"file"</b> instead
-of <b>"data"</b>.
 
 <h5 id="JS9.GetFlip">Get flip state of an image</h5>
 <p>
@@ -1689,27 +1671,17 @@ returns:
 </ul>
 Possible returned flip states are: "x", "y", "xy", or "none".
 
-<h5 id="JS9.SetRot90">Rotate an image in multiples of 90 degrees</h5>
+<h5 id="JS9.SetRot90">Rotate an image by +/- 90 degrees</h5>
 <p>
 <code class="api">JS9.SetRot90(flip)</code>
 <p>
 where:
 <ul>
-<li><b>rot</b>: a multiple of 90 degrees (0, +/-90, +/-180, +/-270)
+<li><b>rot</b>: a multiple of 90 degrees +/-90)
 </ul>
 Rotate an image by a multiple of 90 degrees. The WCS header
 parameters will be updated appropriately. Note that you might
 have to reset the pan position after rotating.
-<p>
-The routine calls the low-level
-<a href="#JS9.FlipData"><b>JS9.FlipData()</b></a> routine
-using the current value of the flip state as the first argument, and is
-equivalent to:
-<pre>
-    JS9.FlipData(im.param.flip, rot)
-</pre>
-where im.param.flip is the current flip state set by
-<a href="#JS9.SetFlip"><b>JS9.SetFlip()</b></a>.
 
 <h5 id="JS9.GetRot90">Get rotate state of an image</h5>
 <p>
@@ -1719,7 +1691,8 @@ returns:
 <ul>
 <li><b>rot</b>: current rotation value for this image
 </ul>
-The returned rotation value will be a multiple of 90.
+The returned rotation value will be a multiple of 90, depending on how
+many rotations have been executed and in which direction.
 
 <h5 id="JS9.GetParam">Get an image parameter value</h5>
 <p>
@@ -2738,35 +2711,6 @@ The rotation is performed about the WCS CRPIX1, CRPIX2 point.
 <p>
 The optional opts object is passed directly to the <b>JS9.ReprojectData()</b>
 routine. See <b>JS9.ReprojectData()</b> above for more information.
-
-<h5 id="JS9.FlipData">Flip and rotate (multiples of 90 degrees) an image</h5>
-<p>
-<code class="api">JS9.FlipData(flip, rot, opts)</code>
-<p>
-where:
-<ul>
-<li><b>flip</b>: "x", "y", "xy", "none"
-<li><b>rot</b>: a multiple o 90 degrees (0, +/-90, +/-180, +/-270)
-<li><b>opts</b>: options object for raw data layer
-</ul>
-The <b>JS9.FlipData()</b> routine creates a new raw data
-layer (with default id "flip") in which the image is flipped and
-rotated (90 degree multiples).  The WCS header parameters will be
-updated appropriately. Note that you might have to reset the pan
-position after rotating.
-<p>
-The routine provides the low-level support for
-<a href="#JS9.SetFlip"><b>SetFlip()</b></a>
-and 
-<a href="#JS9.SetRot90"><b>SetRot90()</b></a>,
-and is equivalent to:
-<pre>
-    JS9.SetFlip(flip)
-    JS9.SetRot90(rot)
-</pre>
-<p>
-See <a href="#JS9.RawDataLayer"><b>JS9.RawDataLayer()</b></a> for more
-information about raw data layers.
 
 <h5 id="JS9.FilterRGBImage">Apply a filter to the RGB image</h5>
 <p>
