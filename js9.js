@@ -11183,9 +11183,23 @@ JS9.Helper.prototype.send = function(key, obj, cb){
 
 // create new web worker
 JS9.WebWorker = function(url){
-    this.worker = new Worker(url);
-    this.worker.onmessage = JS9.WebWorker.prototype.msgHandler.bind(this);
-    this.handlers = [];
+    const finishup = () => {
+	this.worker.onmessage = JS9.WebWorker.prototype.msgHandler.bind(this);
+	this.handlers = [];
+    };
+    if( url.match(JS9.URLEXP) ){
+	// avoid cross-origin problems if the webworker is being retrieved
+	// from somewhere other than the local host
+	// this leaks a small bit of memory (no revokeObjectURL call)
+	JS9.fetchURL(null, url, null, (blob) => {
+	    this.worker = new Worker(URL.createObjectURL(blob));
+	    finishup();
+	});
+    } else {
+	// ordinary retrieval of a local file
+	this.worker = new Worker(url);
+	finishup();
+    }
 };
 
 // handle (known) messages from web worker
