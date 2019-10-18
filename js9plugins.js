@@ -9152,11 +9152,18 @@ JS9.Panner.disp = function(im){
     // size of rectangle
     // nwidth = sect.width * tblkx / sect.zoom * bin;
     // nheight = sect.height * tblky / sect.zoom * bin;
-    nwidth = sect.width * tblkx / sect.zoom;
-    nheight = sect.height * tblky / sect.zoom;
+    nwidth = im.display.width * tblkx / sect.zoom;
+    nheight = im.display.height * tblky / sect.zoom;
     // position of the rectangle
     nx = (sect.x0 - panner.x0) * tblkx + panner.ix;
     ny = (panDisp.height - 1) - ((sect.y1 - panner.y0) * tblky + panner.iy);
+    // adjust if section is entirely inside the display
+    if( im.display.width > sect.width ){
+	nx -= (im.display.width - sect.width) * tblkx / sect.zoom / 2;
+    }
+    if( im.display.height > sect.height ){
+	ny -= (im.display.height - sect.height) * tblky / sect.zoom / 2;
+    }
     // why is the fudge needed???
     nx  += FUDGE;
     ny  += FUDGE;
@@ -9168,6 +9175,13 @@ JS9.Panner.disp = function(im){
     ny = Math.floor(ny);
     nwidth = Math.floor(nwidth);
     nheight = Math.floor(nheight);
+    // hide rectangle if it covers the full panner
+    if( nwidth >= panDisp.width && nheight >= panDisp.height ){
+	nx = panDisp.width / 2;
+	ny = panDisp.height / 2;
+	nwidth = panDisp.width + 10;
+	nheight = panDisp.height + 10;
+    }
     obj = {left: nx, top: ny, width: nwidth, height: nheight};
     // create the box
     if( !im.panner.boxid ){

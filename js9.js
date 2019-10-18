@@ -2288,13 +2288,11 @@ JS9.Image.prototype.mkSection = function(...args){
     // assume no offset when displaying section
     delete sect.ix;
     delete sect.iy;
-    // need integer dimensions
-    sect.width  = Math.floor(sect.width);
-    sect.height  = Math.floor(sect.height);
-    sect.x0 = Math.floor(sect.xcen - (sect.width/(2*sect.zoom)));
-    sect.y0 = Math.floor(sect.ycen - (sect.height/(2*sect.zoom)));
-    sect.x1 = Math.floor(sect.xcen + (sect.width/(2*sect.zoom)));
-    sect.y1 = Math.floor(sect.ycen + (sect.height/(2*sect.zoom)));
+    // calculate section limits from center and dimensions
+    sect.x0 = sect.xcen - (sect.width/(2*sect.zoom));
+    sect.y0 = sect.ycen - (sect.height/(2*sect.zoom));
+    sect.x1 = sect.xcen + (sect.width/(2*sect.zoom));
+    sect.y1 = sect.ycen + (sect.height/(2*sect.zoom));
     // make sure we're within bounds while maintaining section dimensions
     if( sect.x0 < 0 ){
 	if( JS9.globalOpts.panWithinDisplay ){
@@ -2328,37 +2326,38 @@ JS9.Image.prototype.mkSection = function(...args){
 	}
         sect.y1 = this.raw.height;
     }
-    // for offset image with fractional zoom, maybe display more of the image
-    if( sect.ix && sect.zoom < 1 ){
-	if( sect.x0 > 0 ){
-	    xtra =  sect.x0;
-	    sect.x0 -= xtra;
-	    sect.ix += xtra * sect.zoom;
-	}
-	if( sect.x1 < this.raw.width ){
-	    xtra =  this.raw.width - sect.x1;
-	    sect.x1 += xtra;
-	    sect.ix -= xtra * sect.zoom;
-	}
+    // for offset images, maybe display more of the image
+    if( sect.ix > 0 && sect.x0 > 0 ){
+	xtra =  Math.min(sect.ix, sect.x0);
+	sect.x0 -= xtra;
+	sect.ix += xtra * sect.zoom;
     }
-    if( sect.iy && sect.zoom < 1 ){
-	if( sect.y0 > 0 ){
-	    xtra =  sect.y0;
-	    sect.y0 -= xtra;
-	    sect.iy += xtra * sect.zoom;
-	}
-	if( sect.y1 < this.raw.height ){
-	    xtra =  this.raw.height - sect.y1;
-	    sect.y1 += xtra;
-	    sect.iy -= xtra * sect.zoom;
-	}
+    if( sect.ix < 0 && sect.x1 < this.raw.width ){
+	xtra =  Math.min(this.raw.width - sect.x1, Math.abs(sect.ix));
+	sect.x1 += xtra;
+	sect.ix -= xtra * sect.zoom;
+    }
+    if( sect.iy > 0 && sect.y0 > 0 ){
+	xtra =  Math.min(sect.iy, sect.y0);
+	sect.y0 -= xtra;
+	sect.iy += xtra * sect.zoom;
+    }
+    if( sect.iy < 0 && sect.y1 < this.raw.height ){
+	xtra =  Math.min(this.raw.height - sect.y1, Math.abs(sect.iy));
+	sect.y1 += xtra;
+	sect.iy -= xtra * sect.zoom;
     }
     // final check: make sure we're within bounds
     sect.x0 = Math.max(0, sect.x0);
     sect.x1 = Math.min(this.raw.width, sect.x1);
     sect.y0 = Math.max(0, sect.y0);
     sect.y1 = Math.min(this.raw.height, sect.y1);
-    // we have final section limits: derive new width and height
+    // final integer dimensions
+    sect.x0 = Math.floor(sect.x0);
+    sect.y0 = Math.floor(sect.y0);
+    sect.x1 = Math.floor(sect.x1);
+    sect.y1 = Math.floor(sect.y1);
+    // final section limits: derive new width and height
     sect.width   = Math.ceil((sect.x1 - sect.x0) * sect.zoom);
     sect.height  = Math.ceil((sect.y1 - sect.y0) * sect.zoom);
     // sanity check
@@ -2688,7 +2687,7 @@ JS9.Image.prototype.mkScaledCells = function(){
 // create RGB image from scaled colorCells
 // sort of from: tksao1.0/frame/truecolor.c, but not really
 JS9.Image.prototype.mkRGBImage = function(){
-    let rgb, sect, img, xrgb, yrgb, wrgb, hrgb, rgbimg, ctx;
+    let s, rgb, sect, img, xrgb, yrgb, wrgb, hrgb, rgbimg, ctx;
     let inc, zinc, xIn, yIn, xOut, yOut, xOutIdx, yOutIdx, yZoom, xZoom;
     let idx, odx, yLen, zx, zy, zyLen, alpha, alpha1, alpha2, ridx, gidx, bidx;
     let rthis = null;
@@ -2879,6 +2878,11 @@ JS9.Image.prototype.mkRGBImage = function(){
 			    }
 			} else {
 			    // ordinary case
+			    if( this.psColors[idx] === undefined ){
+				s = sprintf("bad image access: %s,%s [%s,%s]",
+					    xIn, yIn, xZoom, yZoom);
+				JS9.error(s);
+			    }
 			    img.data[odx]   = this.psColors[idx][0];
 			    img.data[odx+1] = this.psColors[idx][1];
 			    img.data[odx+2] = this.psColors[idx][2];
