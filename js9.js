@@ -2823,10 +2823,10 @@ JS9.Image.prototype.mkRGBImage = function(){
     odx = 0;
     inc = Math.max(1, Math.floor(1/sect.zoom));
     zinc = sect.zoom * inc;
-    for(yIn=sect.y1-1, yOut=0; yIn>=sect.y0; yIn -= inc, yOut++){
+    for(yIn=Math.floor(sect.y1-1), yOut=0; yIn>=sect.y0; yIn -= inc, yOut++){
 	yLen = yIn * this.raw.width;
 	yOutIdx = yOut * zinc;
-	for(xIn=sect.x0, xOut=0; xIn<sect.x1; xIn += inc, xOut++){
+	for(xIn=Math.floor(sect.x0), xOut=0; xIn<sect.x1; xIn += inc, xOut++){
 	    if( dorgb ){
 		// rgb mode: special case
 		ridx = rthis ? rthis.colorData[yLen + xIn] : 0;
@@ -2879,8 +2879,8 @@ JS9.Image.prototype.mkRGBImage = function(){
 			} else {
 			    // ordinary case
 			    if( this.psColors[idx] === undefined ){
-				s = sprintf("bad image access: %s,%s [%s,%s]",
-					    xIn, yIn, xZoom, yZoom);
+				s = sprintf("invalid image access: %s,%s",
+					    xIn, yIn);
 				JS9.error(s);
 			    }
 			    img.data[odx]   = this.psColors[idx][0];
