@@ -2966,8 +2966,8 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
     let wcsim, wcssect, npos, oval;
     const sect = this.rgb.sect;
     // calculate offsets
-    this.ix = Math.floor((this.display.canvas.width - this.rgb.img.width)/2);
-    this.iy = Math.floor((this.display.canvas.height - this.rgb.img.height)/2);
+    this.ix = (this.display.canvas.width - this.rgb.img.width) / 2;
+    this.iy = (this.display.canvas.height - this.rgb.img.height) / 2;
     // adjust when section is not centered on display
     if( JS9.notNull(sect.ix) ){
 	this.ix -= sect.ix / 2;
@@ -2975,6 +2975,9 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
     if( JS9.notNull(sect.iy) ){
 	this.iy += sect.iy / 2;
     }
+    // ensure integer offsets
+    this.ix = Math.floor(this.ix);
+    this.iy = Math.floor(this.iy);
     // do wcs alignment, if necessary
     if( dowcs && this.wcsAlign() ){
 	// calc offsets so as to align with the wcs image
