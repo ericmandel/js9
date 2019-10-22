@@ -7194,6 +7194,10 @@ JS9.Menubar.createMenus = function(){
 		items.alignpanzoom.disabled = false;
 	    }
 	    items.reset = xname("reset pan/zoom");
+	    items.pantoclick = {
+		name: "(pan to mouse: Meta-click)",
+		disabled: true,
+	    };
 	    items[`sep${n++}`] = "------";
 	    items.fliptitle = {
 		name: "Flip:",
