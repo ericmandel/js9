@@ -3492,24 +3492,24 @@ function that will fire when two or more objects are selected into a
 group (which is done using the <b>Command</b> key on a Mac,
 or <b>Control</b> key everywhere else):
 <ul>
-<li><b>ongroupcreate</b>: function(im, xregs, evt);
+<li><b>ongroupcreate</b>: function(im, xreg, evt);
 </ul>
 The function will be called with the following arguments:
 <ul>
 <li> <b>im</b>: the image handle for the currently displayed image
-<li> <b>xregs</b>: an array of shape objects within the group
+<li> <b>xreg</b>: an array of shape objects within the group
 <li> <b>evt</b>: the original event object
 </ul>
 Note that an array of xreg objects is passed in this case instead of
 the single "current" object passed in the other event callbacks.
 For example:
 <pre>
-    opts.ongroupcreate = function(im, xregs, evt){
+    opts.ongroupcreate = function(im, xreg, evt){
         var i, nshape, xcen, ycen;
         var xtot=0, ytot=0;
-        nshape = xregs.length;
+        nshape = xreg.length;
         for(i=0; i&lt;nshape; i++){
-          xtot += xregs[i].x; ytot += xregs[i].y;
+          xtot += xreg[i].x; ytot += xreg[i].y;
         }
         xcen = xtot / nshape; ycen = ytot / nshape;
         console.log("average pos for %s objects: %s,%s", nshape, xcen, ycen);
@@ -3536,6 +3536,7 @@ specified with a "$" prefix. When the mouse hovers over an object, the
 generated tooltip will display current image id in bold, followed by
 that object's x,y pixel position, followed by a user <b>tag</b>
 property passed in the <b>data</b> object when the shape was added.
+As a convenience, <b>$data</b> can be used as a shorthand for <b>$xreg.data</b>.
 
 <h5 id="JS9.ShowShapeLayer">Show or hide the specified shape layer</h5>
 <p>

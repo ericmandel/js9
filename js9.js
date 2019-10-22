@@ -251,7 +251,7 @@ JS9.globalOpts = {
 		 wcssys: "ICRS",                      // wcs system
 		 skip: "#\n",                         // skip # and blank lines
 		 save: true,                          // save cat cols in shapes
-		 tooltip: "$xreg.data.ra $xreg.data.dec"}, // tooltip format
+		 tooltip: "$data.ra $data.dec"}, // tooltip format
     topColormaps: ["grey", "heat", "cool", "viridis", "magma", "sls", "red", "green", "blue"], // toplevel colormaps
     infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos", "impos", "physpos", "value", "regions", "progress"],
     infoBoxResize: true,                              // is size based on wcs?
@@ -19553,6 +19553,9 @@ JS9.tooltip = function(x, y, fmt, im, xreg, evt){
 		break;
 	    case "evt":
 		val = evt;
+		break;
+	    case "data":
+		val = xreg.data;
 		break;
 	    default:
 		return m;
