@@ -17000,6 +17000,7 @@ JS9.Plot.processConfigForm = function(form, plot, pobj, arr){
 	// key-specific processing
 	switch(key){
 	case "xscale":
+	    if( val === "" ){ val = "linear"; }
 	    JS9.Plot.rescale(null, plot, pobj, "x", val);
 	    break;
 	case "xmin":
@@ -17009,6 +17010,7 @@ JS9.Plot.processConfigForm = function(form, plot, pobj, arr){
 	    JS9.Plot.rescale(null, plot, pobj, "x", null, null, val);
 	    break;
 	case "yscale":
+	    if( val === "" ){ val = "linear"; }
 	    JS9.Plot.rescale(null, plot, pobj, "y", val);
 	    break;
 	case "ymin":
