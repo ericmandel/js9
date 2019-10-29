@@ -16893,7 +16893,7 @@ JS9.Plot.initConfigForm = function(plot, pobj){
 	    return undefined;
 	}
 	if( (typeof val === "number") && (val % 1 !== 0) ){
-	    val = Math.round((val + 0.00001) * 10000) / 10000;
+	    val = Math.round((val + 0.001) * 100) / 100;
 	}
 	return(String(val));
     };
@@ -16914,12 +16914,12 @@ JS9.Plot.initConfigForm = function(plot, pobj){
 	    break;
 	case "xmin":
 	    if( JS9.notNull(plot.getAxes().xaxis.options.min) ){
-		val = plot.getAxes().xaxis.options.min;
+		val = fmt(plot.getAxes().xaxis.options.min);
 	    }
 	    break;
 	case "xmax":
 	    if( JS9.notNull(plot.getAxes().xaxis.options.max) ){
-		val = plot.getAxes().xaxis.options.max;
+		val = fmt(plot.getAxes().xaxis.options.max);
 	    }
 	    break;
 	case "yscale":
@@ -16929,12 +16929,12 @@ JS9.Plot.initConfigForm = function(plot, pobj){
 	    break;
 	case "ymin":
 	    if( JS9.notNull(plot.getAxes().yaxis.options.min) ){
-		val = plot.getAxes().yaxis.options.min;
+		val = fmt(plot.getAxes().yaxis.options.min);
 	    }
 	    break;
 	case "ymax":
 	    if( JS9.notNull(plot.getAxes().yaxis.options.max) ){
-		val = plot.getAxes().yaxis.options.max;
+		val = fmt(plot.getAxes().yaxis.options.max);
 	    }
 	    break;
 	default:
