@@ -385,38 +385,6 @@ JS9.textColorOpts = {
     inimage: "#000000"
 };
 
-// defaults for plot creation
-JS9.plotOpts = {
-    // generic options
-    annotate: false,
-    annotateColor: "#FF0000",
-    color: "blue",
-    // flot options
-    zoomStack: {
-	enabled: true
-    },
-    selection: {
-	mode: "xy"
-    },
-    series: {
-	clickable: true,
-	hoverable: true,
-        lines: { show: true },
-        points: { show: false }
-    },
-    legend: {
-	backgroundColor: null,
-	backgroundOpacity: 0
-    },
-    // plotly options
-    xaxis: {
-	autorange: true
-    },
-    yaxis: {
-	autorange: true
-    }
-};
-
 // help pages
 JS9.helpOpts = {
     user: {
@@ -5850,104 +5818,28 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 // display analysis results (text or plot)
 JS9.Image.prototype.displayAnalysis = function(type, s, opts){
     let i, r, id, did, hstr, pobj, divjq, title, titlefile, winFormat;
-    let divid, plot, pdata, popts, scaleFunc;
-    const scaleCur = {x: "linear", y: "linear"};
+    let divid, plot, pdata, popts, gim, gdiv, nscale;
     const a = JS9.lightOpts[JS9.LIGHTWIN];
-    const lfunc = (v) => { return v === 0 ? v : Math.log(v); };
-    const efunc = (v) => { return v === 0 ? v : Math.exp(v); };
-    const getPos = (ann, data) => {
-	let i, x, y;
-	if( !ann.text ){
-	    return null;
+    const flotConfig = () => {
+	let s;
+	let winformat = "width=368px,height=110px,center=1,resize=1,scrolling=1";
+	const title = JS9.Plot.opts.title;
+	// sanity check
+	if( !divjq || !plot ){
+	    return;
 	}
-	x = ann.x || 0;
-	if( ann.y.toUpperCase() === "%Y" ){
-	    for(i=1; i<data.length-1; i++){
-		if( data[i][0] > x ){
-		    y = Math.max(data[i-1][1], data[i][1], data[i+1][1]);
-		    break;
-		}
-	    }
+	// call this once window is loaded
+	$("#dhtmlwindowholder")
+	    .arrive("#plotConfigForm", {onceOnly: true}, () => {
+		JS9.Plot.initConfigForm.call(this, plot, pobj);
+	    });
+	if( JS9.allinone ){
+	    s = JS9.allinone.plotConfigHTML;
+	    plot.winid = this.displayAnalysis("params", s, {title, winformat});
 	} else {
-	    y = ann.y;
+	    s = JS9.InstallDir(JS9.Plot.opts.configURL);
+	    plot.winid = this.displayAnalysis("params", s, {title, winformat});
 	}
-	return {x, y};
-    };
-    // eslint-disable-next-line no-unused-vars
-    const flotScale = (divjq, plot, axis, scale) => {
-	switch(axis){
-	case "x":
-	    axis = plot.getAxes().xaxis;
-	    break;
-	case "y":
-	    axis = plot.getAxes().yaxis;
-	    break;
-	}
-	switch(scale){
-	case "linear":
-	    axis.options.transform = null;
-	    axis.options.inverseTransform = null;
-	    break;
-	case "log":
-	    axis.options.transform = lfunc;
-	    axis.options.inverseTransform = efunc;
-	    break;
-	}
-	scaleCur[axis] = scale;
-	plot.setupGrid();
-	plot.draw();
-    };
-    // eslint-disable-next-line no-unused-vars
-    const flotAnnotate = (divjq, plot, pobj) => {
-	let i, ann, ao, pos, ahtml;
-	const yTextOffset = -25;
-	const data = pobj.data;
-	const ac = pobj.annotations.color || JS9.plotOpts.annotateColor;
-	divjq.find(".plotAnnotation").remove();
-	for(i=0; i<pobj.annotations.data.length; i++){
-	    ann = pobj.annotations.data[i];
-	    pos = getPos(ann, data);
-	    ao = plot.pointOffset({ x: pos.x, y: pos.y });
-	    if( (ao.left < 0) || (ao.left > divjq.width()) ){
-		continue;
-	    }
-	    ahtml = sprintf("<div class='plotAnnotation' style='position: absolute; left: %spx; top:%spx; color: %s; font-size: small'>%s</div>",
-			    ao.left, ao.top+yTextOffset,
-			    ac, `&darr;${ann.text}`);
-	    divjq.append(ahtml);
-	}
-    };
-    // eslint-disable-next-line no-unused-vars
-    const plotlyScale = (divjq, plot, axis, scale) => {
-	let opts;
-	switch(axis){
-	case "x":
-	    opts = {xaxis: {type: scale, autorange: true}};
-	    break;
-	case "y":
-	    opts = {yaxis: {type: scale, autorange: true}};
-	    break;
-	}
-	Plotly.restyle(divjq.attr("id"), opts);
-    };
-    const plotlyAnnotate = (pobj) => {
-	let i, ann, aobj, pos;
-	const yTextOffset = -30;
-	const data = pobj.data;
-	const ac = pobj.annotations.color || JS9.plotOpts.annotateColor;
-	const annotations = [];
-	for(i=0; i<pobj.annotations.data.length; i++){
-	    ann = pobj.annotations.data[i];
-	    pos = getPos(ann, data);
-	    if( !pos ){
-		continue;
-	    }
-	    aobj = {x: pos.x, y: pos.y, xref: "x", yref: "y",
-		    text: ann.text, arrowcolor: ac, font: {color: ac},
-		    showarrow: true, arrowhead: 2, ax: 0, ay: yTextOffset};
-	    annotations.push(aobj);
-	}
-	return annotations;
     };
     // opts is optional
     opts = opts || {};
@@ -6000,6 +5892,8 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	if( !pobj ){
 	    return;
 	}
+	// initialize scale
+	pobj.curscale = {x: "linear", y: "linear"};
 	// create an outer div and an inner plot for the light window open call
 	hstr = `<div id='${id}' class='JS9Analysis'><div id='${id}Plot' class='JS9Plot' ></div></div>`;
 	// populate div or create the light window to hold the plot
@@ -6021,8 +5915,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	if( pobj.data ){
 	    switch( JS9.globalOpts.plotLibrary ){
 	    case "plotly":
-		scaleFunc = plotlyScale;
-		popts = $.extend(true, {}, JS9.plotOpts, pobj.opts);
+		popts = $.extend(true, {}, JS9.Plot.opts, pobj.opts);
 		if( pobj.label ){
 		    popts.title = pobj.label;
 		}
@@ -6045,54 +5938,53 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 			pdata.error_y.array.push(pobj.data[i][2]);
 		    }
 		}
-		if( JS9.plotOpts.annotate && pobj.annotations ){
-		    popts.annotations = plotlyAnnotate(pobj);
+		if( JS9.Plot.opts.annotate && pobj.annotations ){
+		    popts.annotations = JS9.Plot.annotate(pobj);
 		}
 		if( popts.xscale === "log" ){
 		    popts.xaxis = popts.xaxis || {};
 		    popts.xaxis.type = "log";
 		    popts.xaxis.autorange = true;
-		    scaleCur.x = "log";
+		    pobj.curscale.x = "log";
 		}
 		if( popts.yscale === "log" ){
 		    popts.yaxis = popts.yaxis || {};
 		    popts.yaxis.type = "log";
 		    popts.yaxis.autorange = true;
-		    scaleCur.y = "log";
+		    pobj.curscale.y = "log";
 		}
 		try{  Plotly.newPlot(divjq.attr("id"), [pdata], popts); }
 		catch(e){ JS9.error("can't plot data (plotly)", e); }
 		break;
 	    case "flot":
 	    default:
-		scaleFunc = flotScale;
-		popts = $.extend(true, {}, JS9.plotOpts, pobj.opts);
+		popts = $.extend(true, {}, JS9.Plot.opts, pobj.opts);
 		// add re-annotate callback, if necessary
-		if( JS9.plotOpts.annotate && pobj.annotations ){
+		if( JS9.Plot.opts.annotate && pobj.annotations ){
 		    // eslint-disable-next-line no-unused-vars
 		    popts.zoomStack.func = (plt, r) => {
-			flotAnnotate(divjq, plt, pobj);
+			JS9.Plot.annotate(divjq, plt, pobj);
 		    };
 		}
 		pobj.color = pobj.color || popts.color;
 		// log scale?
 		if( pobj.xscale === "log" ){
 		    popts.xaxis = popts.xaxis || {};
-		    popts.xaxis.transform = lfunc;
-		    popts.xaxis.inverseTransform = efunc;
-		    scaleCur.x = "log";
+		    popts.xaxis.transform = JS9.Plot.logfunc;
+		    popts.xaxis.inverseTransform = JS9.Plot.expfunc;
+		    pobj.curscale.x = "log";
 		}
 		if( pobj.yscale === "log" ){
 		    popts.yaxis = popts.yaxis || {};
-		    popts.yaxis.transform = lfunc;
-		    popts.yaxis.inverseTransform = efunc;
-		    scaleCur.y = "log";
+		    popts.yaxis.transform = JS9.Plot.logfunc;
+		    popts.yaxis.inverseTransform = JS9.Plot.expfunc;
+		    pobj.curscale.y = "log";
 		}
 		try{ plot = $.plot(divjq, [pobj], popts); }
 		catch(e){ JS9.error("can't plot data (flot)", e); }
 		// annotate, if necessary
-		if( JS9.plotOpts.annotate && pobj.annotations ){
-		    flotAnnotate(divjq, plot, pobj);
+		if( JS9.Plot.opts.annotate && pobj.annotations ){
+		    JS9.Plot.annotate(divjq, plot, pobj);
 		}
 		break;
 	    }
@@ -6102,15 +5994,25 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    divjq.on("keypress", (evt) => {
 		const charCode = evt.which || evt.keyCode;
 		const c = String.fromCharCode(charCode);
-		if( scaleCur[c] === "linear" ){
-		    scaleCur[c] = "log";
-		} else if( scaleCur[c] === "log" ){
-		    scaleCur[c] = "linear";
-		} else {
-		    return;
+		switch(c){
+		case "c":
+		    flotConfig();
+		    break;
+		case "x":
+		case "y":
+		    nscale = pobj.curscale[c] !== "linear" ? "linear" : "log";
+		    JS9.Plot.rescale(divjq, plot, pobj, c, nscale);
+		    break;
+		default:
+		    break;
 		}
-		scaleFunc(divjq, plot, c, scaleCur[c]);
 	    });
+	    // add the plot config gear
+	    gim = $(`<img src='${JS9.InstallDir("images/gears.png")}'>`);
+	    gim.on("click", flotConfig);
+	    gdiv = $("<div class='JS9PlotGear'>");
+	    gdiv.append(gim);
+	    divjq.append(gdiv);
 	}
 	break;
     case "params":
@@ -16813,6 +16715,317 @@ JS9.Regions.unremoveRegions = function(){
     }
     return null;
 };
+// 
+
+// ---------------------------------------------------------------------
+// plotting utilities
+// ---------------------------------------------------------------------
+
+JS9.Plot = {};
+
+JS9.Plot.CLASS = "JS9";
+JS9.Plot.NAME = "Plot";
+
+// defaults for plot creation
+JS9.Plot.opts = {
+    // generic options
+    annotate: false,
+    annotateColor: "#FF0000",
+    color: "blue",
+    // flot options
+    zoomStack: {
+	enabled: true
+    },
+    selection: {
+	mode: "xy"
+    },
+    series: {
+	clickable: true,
+	hoverable: true,
+        lines: { show: true },
+        points: { show: false }
+    },
+    legend: {
+	backgroundColor: null,
+	backgroundOpacity: 0
+    },
+    // plotly options
+    xaxis: {
+	autorange: true
+    },
+    yaxis: {
+	autorange: true
+    },
+    // title for plot config dialog box
+    title: "Plot Configuration",
+    // plot configuration url
+    configURL: "./params/plotconfig.html"
+};
+
+// log function. exponential function for plot
+JS9.Plot.logfunc = function(v) { return v === 0 ? 0 : Math.log(v); };
+JS9.Plot.expfunc = function(v) { return v === 0 ? 0 : Math.exp(v); };
+
+// rescale a plot
+JS9.Plot.rescale = function (divjq, plot, pobj, axis, scale, smin, smax){
+    let opts, curaxis;
+    // change the scale
+    switch( JS9.globalOpts.plotLibrary ){
+    case "flot":
+	switch(axis){
+	case "x":
+	    curaxis = plot.getAxes().xaxis;
+	    break;
+	case "y":
+	    curaxis = plot.getAxes().yaxis;
+	    break;
+	}
+	switch(scale){
+	case "linear":
+	    curaxis.options.transform = null;
+	    curaxis.options.inverseTransform = null;
+	    pobj.curscale[axis] = scale;
+	    break;
+	case "log":
+	    curaxis.options.transform = JS9.Plot.logfunc;
+	    curaxis.options.inverseTransform = JS9.Plot.expfunc;
+	    pobj.curscale[axis] = scale;
+	    break;
+	}
+	if( JS9.isNumber(smin) ){
+	    curaxis.options.min = Number.parseFloat(smin);
+	} else if( smin == "" ){
+	    curaxis.options.min = null;
+	}
+	if( JS9.isNumber(smax) ){
+	    curaxis.options.max = Number.parseFloat(smax);
+	} else if( smax == "" ){
+	    curaxis.options.max = null;
+	}
+	plot.setupGrid();
+	plot.draw();
+	break;
+    case "plotly":
+	switch(axis){
+	case "x":
+	    opts = {xaxis: {type: scale, autorange: true}};
+	    pobj.curscale[axis] = scale;
+	    break;
+	case "y":
+	    opts = {yaxis: {type: scale, autorange: true}};
+	    pobj.curscale[axis] = scale;
+	    break;
+	}
+	Plotly.restyle(divjq.attr("id"), opts);
+	break;
+    default:
+	break;
+    }
+};
+
+// anotate a plot
+JS9.Plot.annotate = function (divjq, plot, pobj){
+    let i, ann, ao, aobj, pos, ahtml, yTextOffset;
+    const annotations = [];
+    const data = pobj.data;
+    const ac = pobj.annotations.color || JS9.Plot.opts.annotateColor;
+    const getPos = (ann, data) => {
+	let i, x, y;
+	if( !ann.text ){
+	    return null;
+	}
+	x = ann.x || 0;
+	if( ann.y.toUpperCase() === "%Y" ){
+	    for(i=1; i<data.length-1; i++){
+		if( data[i][0] > x ){
+		    y = Math.max(data[i-1][1], data[i][1], data[i+1][1]);
+		    break;
+		}
+	    }
+	} else {
+	    y = ann.y;
+	}
+	return {x, y};
+    };
+    switch( JS9.globalOpts.plotLibrary ){
+    case "flot":
+	yTextOffset = -25;
+	divjq.find(".plotAnnotation").remove();
+	for(i=0; i<pobj.annotations.data.length; i++){
+	    ann = pobj.annotations.data[i];
+	    pos = getPos(ann, data);
+	    ao = plot.pointOffset({ x: pos.x, y: pos.y });
+	    if( (ao.left < 0) || (ao.left > divjq.width()) ){
+		continue;
+	    }
+	    ahtml = sprintf("<div class='plotAnnotation' style='position: absolute; left: %spx; top:%spx; color: %s; font-size: small'>%s</div>",
+			    ao.left, ao.top+yTextOffset,
+			    ac, `&darr;${ann.text}`);
+	    divjq.append(ahtml);
+	}
+	break;
+    case "plotly":
+	yTextOffset = -30;
+	for(i=0; i<pobj.annotations.data.length; i++){
+	    ann = pobj.annotations.data[i];
+	    pos = getPos(ann, data);
+	    if( !pos ){
+		continue;
+	    }
+	    aobj = {x: pos.x, y: pos.y, xref: "x", yref: "y",
+		    text: ann.text, arrowcolor: ac, font: {color: ac},
+		    showarrow: true, arrowhead: 2, ax: 0, ay: yTextOffset};
+	    annotations.push(aobj);
+	}
+	return annotations;
+    }
+};
+
+// init the plot config form: called with the image context
+// eslint-disable-next-line no-unused-vars
+JS9.Plot.initConfigForm = function(plot, pobj){
+    let val, key, mover, mout;
+    const winid = plot.winid;
+    const wid = $(winid).attr("id");
+    const form = `#${wid} #plotConfigForm `;
+    const fmt= (val) => {
+	if( val === undefined ){
+	    return undefined;
+	}
+	if( (typeof val === "number") && (val % 1 !== 0) ){
+	    val = Math.round((val + 0.00001) * 10000) / 10000;
+	}
+	return(String(val));
+    };
+    // sanity checks
+    if( !plot || !pobj ){ return; }
+    // flot support only for now ...
+    if( JS9.globalOpts.plotLibrary !== "flot" ){ return; }
+    // fill in the values from the plot
+    $(`${form}.val`).each((index, element) => {
+	val = "";
+	key = $(element).attr("name");
+	// key-specific pre-processing
+	switch(key){
+	case "xscale":
+	    if( JS9.notNull(pobj.curscale.x) ){
+		val = fmt(pobj.curscale.x);
+	    }
+	    break;
+	case "xmin":
+	    if( JS9.notNull(plot.getAxes().xaxis.options.min) ){
+		val = plot.getAxes().xaxis.options.min;
+	    }
+	    break;
+	case "xmax":
+	    if( JS9.notNull(plot.getAxes().xaxis.options.max) ){
+		val = plot.getAxes().xaxis.options.max;
+	    }
+	    break;
+	case "yscale":
+	    if( JS9.notNull(pobj.curscale.y) ){
+		val = fmt(pobj.curscale.y);
+	    }
+	    break;
+	case "ymin":
+	    if( JS9.notNull(plot.getAxes().yaxis.options.min) ){
+		val = plot.getAxes().yaxis.options.min;
+	    }
+	    break;
+	case "ymax":
+	    if( JS9.notNull(plot.getAxes().yaxis.options.max) ){
+		val = plot.getAxes().yaxis.options.max;
+	    }
+	    break;
+	default:
+	    break;
+	}
+	$(element).val(val);
+    });
+    // save the image for later processing
+    $(form).data("im", this);
+    // save the plot object for later processing
+    $(form).data("plot", plot);
+    // save the plot opts object for later processing
+    $(form).data("pobj", pobj);
+    // save the window id for later processing
+    $(form).data("winid", winid);
+    // add tooltip callbacks (not mobile: ios buttons stop working!)
+    if( !$(form).data("tooltipInit") ){
+	$(form).data("tooltipInit", true);
+	if( JS9.BROWSER[3] ){
+	    mover = "touchstart";
+	    mout = "touchend";
+	} else {
+	    mover = "mouseover";
+	    mout = "mouseout";
+	}
+	$(".col_P").on(mover, (e) => {
+	    let title;
+	    const target = e.currentTarget;
+	    const tooltip = $(target).find("input").data("tooltip");
+	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
+	    if( tooltip && el.length ){
+		// change title: see dhtmlwindow.js load() @line 130
+		title = `${JS9.Plot.opts.title}: ${tooltip}`;
+		$(el)[0].childNodes[0].nodeValue = title;
+	    }
+	});
+	$(".col_P").on(mout, (e) => {
+	    const target = e.currentTarget;
+	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
+	    if( el.length ){
+		$(el)[0].childNodes[0].nodeValue = JS9.Plot.opts.title;
+	    }
+	});
+    }
+};
+
+// process the plot config form: called with the image context
+// eslint-disable-next-line no-unused-vars
+JS9.Plot.processConfigForm = function(form, plot, pobj, arr){
+    let i, key, val;
+    const alen = arr.length;
+    // sanity check
+    switch( JS9.globalOpts.plotLibrary ){
+    case "flot":
+	break;
+    case "plotly":
+	return;
+    }
+    // process array of keyword/values
+    for(i=0; i<alen; i++){
+	key = arr[i].name;
+	val = arr[i].value;
+	// key-specific processing
+	switch(key){
+	case "xscale":
+	    JS9.Plot.rescale(null, plot, pobj, "x", val);
+	    break;
+	case "xmin":
+	    JS9.Plot.rescale(null, plot, pobj, "x", null, val, null);
+	    break;
+	case "xmax":
+	    JS9.Plot.rescale(null, plot, pobj, "x", null, null, val);
+	    break;
+	case "yscale":
+	    JS9.Plot.rescale(null, plot, pobj, "y", val);
+	    break;
+	case "ymin":
+	    JS9.Plot.rescale(null, plot, pobj, "y", null, val, null);
+	    break;
+	case "ymax":
+	    JS9.Plot.rescale(null, plot, pobj, "y", null, null, val);
+	    break;
+	default:
+	    break;
+	}
+    }
+    JS9.Plot.initConfigForm.call(this, plot, pobj);
+};
+
+// backward compatibility pre-2.6 (and needed for assigning preferences)
+JS9.plotOpts = JS9.Plot.opts;
 
 // ---------------------------------------------------------------------
 // Catalogs object defines high level calls for catalog plugin

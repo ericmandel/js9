@@ -1997,6 +1997,13 @@ input:focus.JS9CmdIn {
     margin: 10px;
 }
 
+/* placement of the gear image relative to the plot */
+.JS9PlotGear {
+    position:absolute;
+    bottom: -10px;
+    right:  -20px;
+}
+
 .JS9Tooltip{
     position: relative;
     z-index: 999;
