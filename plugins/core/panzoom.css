@@ -1,0 +1,48 @@
+.JS9PanZoomContainer {
+    padding: 5px;
+}
+
+.JS9PanZoomCol1 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80px;
+}
+
+.JS9PanZoomCol2 {
+    position: absolute;
+    top: 0;
+    left:  100px;
+    width: 80px;
+}
+
+.JS9PanZoomCol3 {
+    position: absolute;
+    top: 0;
+    left:  200px;
+    width: 80px;
+}
+
+.JS9PanZoomCol4 {
+    position: absolute;
+    top: 0;
+    left:  300px;
+    width: 80px;
+}
+
+.JS9PanZoomCol5 {
+    position: absolute;
+    top: 0;
+    left:  400px;
+    width: 100px;
+}
+
+.JS9PanZoomLinegroup {
+    float: left;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 95%;
+    padding: 5px;
+    margin: 5px;
+}
