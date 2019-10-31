@@ -5143,7 +5143,9 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits){
 	return;
     }
     if( wcsunits === "pixels" ){
-	this.params.wcssys = "physical";
+	if( this.params.wcssys !== "image" ){
+	    this.params.wcssys = "physical";
+	}
 	this.params.wcsunits = "pixels";
 	JS9.globalOpts.wcsUnits[this.params.wcssys] = "pixels";
     } else if( this.raw.wcs && (this.raw.wcs > 0) ){
