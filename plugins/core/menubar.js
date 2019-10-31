@@ -1098,7 +1098,8 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, plugin, pname, pinst, key;
+	    let i, key;
+	    let plugin, pname, pinst;
 	    let lastxclass="";
 	    let n = 0;
 	    const items = {};
@@ -1406,6 +1407,8 @@ JS9.Menubar.createMenus = function(){
 	position: mypos,
         build: () => {
 	    let i, zoom, zoomp, name, name2, nim, s1;
+	    let plugin, pname, pinst;
+	    let lastxclass="";
 	    let n = 0;
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
 	    const tim = tdisp.image;
@@ -1571,8 +1574,29 @@ JS9.Menubar.createMenus = function(){
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.rot90_270.disabled = true;
 	    }
+	    items[`sep${n++}`] = "------";
+	    // plugins
+	    for(i=0; i<JS9.plugins.length; i++){
+		plugin = JS9.plugins[i];
+		pname = plugin.name;
+		if( plugin.opts.menuItem && (plugin.opts.menu === "zoom") ){
+		    pinst = tdisp.pluginInstances[pname];
+		    if( !pinst || pinst.winHandle ){
+			if( plugin.xclass !== lastxclass ){
+			    // items["sep" + n] = "------";
+			    n = n + 1;
+			}
+			lastxclass = plugin.xclass;
+			items[pname] = xname(plugin.opts.menuItem);
+			if( pinst && (pinst.status === "active") ){
+			    items[pname].icon = "sun";
+			}
+		    }
+		}
+	    }
 	    return {
 		callback: (key) => {
+		    let ii, uplugin;
 		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
 			const udisp = val;
 			const uim = udisp.image;
@@ -1611,6 +1635,14 @@ JS9.Menubar.createMenus = function(){
 				uim.setRot90(-90);
 				break;
 			    default:
+				// maybe it's a plugin
+				for(ii=0; ii<JS9.plugins.length; ii++){
+				    uplugin = JS9.plugins[ii];
+				    if( uplugin.name === key ){
+					udisp.displayPlugin(uplugin);
+					return;
+				    }
+				}
 				// look for a numeric zoom
 				if( key.match(/^zoom/) ){
 				    uim.setZoom(key.slice(4));
@@ -2642,12 +2674,12 @@ JS9.Menubar.createMenus = function(){
         build: () => {
 	    let i, j, s, apackages, atasks;
 	    let plugin, pinst, pname;
-	    let ntask = 0;
+	    let lastxclass="";
 	    let n = 0;
+	    let ntask = 0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
 	    const im = tdisp.image;
-	    let lastxclass="";
 	    const editAnalysis = (im, obj) => {
 		delete tdisp.tmp.editingMenu;
 		obj.sigma = obj.sigma || "0";
