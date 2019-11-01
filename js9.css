@@ -680,7 +680,16 @@ canvas.surfacePlotCanvas {
   display: none;
 }
 
-.control {
+.hline0 {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid black;
+    margin: 0;
+    padding: 0;
+}
+
+.js9archive-control {
     border: transparent 1px;
     padding: 2px;
 } 
@@ -690,15 +699,6 @@ canvas.surfacePlotCanvas {
     margin: 8px;
     padding: 8px;
     background: #E9E9E9;
-}
-
-.hline0 {
-    display: block;
-    height: 1px;
-    border: 0;
-    border-top: 1px solid black;
-    margin: 0;
-    padding: 0;
 }
 
 ul.js9demo {
