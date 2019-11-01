@@ -3980,7 +3980,7 @@ JS9.Image.prototype.displayExtension = function(extid, opts, func){
 
 // display the specified slice of a 3D or 4d FITS cube
 JS9.Image.prototype.displaySlice = function(slice, opts, func){
-    let i, topts;
+    let i, topts, tim;
     // opts is optional
     opts = opts || {};
     // opts can be an object or json
@@ -3994,10 +3994,10 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
 	JS9.error("missing slice for displaySlice()");
     }
     if( slice === "all" && this.raw.header.NAXIS === 3 ){
-	// start with slice 1, already loaded
-	this.displaySlice(1, topts, func);
-	// load and display the other slices separately
-	for(i=2; i<=this.raw.header.NAXIS3; i++){
+	// load and display the slices separately
+	// ignore the fact that we already are displaying a slice of the image,
+	// since we don't actually know which slice is being displayed ...
+	for(i=1; i<=this.raw.header.NAXIS3; i++){
 	    topts = $.extend(true, {}, opts, {separate: true});
 	    this.displaySlice(i, topts, func);
 	}
@@ -4007,6 +4007,26 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
 	    opts.slice = `*:*:${slice}`;
 	} else {
 	    opts.slice = slice;
+	}
+	// processing for separate images
+	if( opts.separate ){
+	    // make new id based on slice
+	    opts.id = sprintf("%s_%s",
+			      this.id
+			      .replace(/_?([0-9])+:x:x/, "")
+			      .replace(/_?x:([0-9])+:x/, "")
+			      .replace(/_?x:x:([0-9])+/, ""),
+			      opts.slice.replace(/\*/g, "x"));
+	    // look for existing id and just redisplay, if possible
+	    for(i=0; i<JS9.images.length; i++){
+		tim = JS9.images[i];
+		if( opts.id === tim.id ){
+		    if( $(`#${tim.display.id}`).length > 0 ){
+			tim.displayImage("display", {display: tim});
+			return this;
+		    }
+		}
+	    }
 	}
 	// cleanup previous FITS file heap before handling the new FITS file,
 	// or we end up with a memory leak in the emscripten heap
