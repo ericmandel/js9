@@ -157,7 +157,7 @@
 		<td> Height: </td><td>	<input type=text name=height	size=12 value=15> </td>	\
 	    </tr>										\
 	    </table>										\
-	    <div class=js9archive-controls></div>								\
+	    <div class="js9archive-controls"></div>								\
 	    <p><span class=status></span>							\
 	    </form>';
 
