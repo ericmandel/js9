@@ -6340,7 +6340,7 @@ JS9.Image.prototype.saveJPEG = function(fname, opts){
 
 // update (and display) pixel and wcs values (connected to info plugin)
 JS9.Image.prototype.updateValpos = function(ipos, disp){
-    let val, vstr, vstr1, vstr2, vstr3, val3, i, c, s;
+    let val, vstr, vstr1, vstr2, vstr3, val3, i, c, p, s;
     let cd1, cd2, v1, v2, units, sect, bin;
     let obj = null;
     const sep1 = "\t ";
@@ -6385,11 +6385,13 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	}
 	// get image coordinates
 	i = {x: ipos.x, y: ipos.y, sys: "image"};
+	// get logical coordinates
+	p = this.imageToLogicalPos(ipos);
 	// get pixel coordinates in current logical coordinate system;
 	if( this.params.wcssys === "image" ){
 	    c = i;
 	} else {
-	    c = this.imageToLogicalPos(ipos);
+	    c = p;
 	}
 	// get image value: here we need 0-indexed display positions,
 	// so subtract the 0.5 of the image pixel
@@ -6418,8 +6420,10 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	// object containing all information
 	obj = {ix: i.x, iy: i.y, ipos: tr(i.x, 2) + sep2 + tr(i.y, 2),
 	       isys: "image",
-	       px: c.x, py: c.y, ppos: tr(c.x, 2) + sep2 + tr(c.y, 2),
-	       psys: c.sys,
+	       px: p.x, py: p.y, ppos: tr(p.x, 2) + sep2 + tr(p.y, 2),
+	       psys: "physical",
+	       cx: c.x, cy: c.y, cpos: tr(c.x, 2) + sep2 + tr(c.y, 2),
+	       csys: c.sys,
 	       ra: "", dec: "", wcspos: "", wcssys: "",
 	       racen: "", deccen: "",
 	       wcsfov: "", wcspix: "",
