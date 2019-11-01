@@ -8061,7 +8061,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1, s2, key, altwcs;
+	    let i, s1, s2, key, altwcs, sys, units;
 	    let n=0, nwcs=0, got=0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
@@ -8099,8 +8099,13 @@ JS9.Menubar.createMenus = function(){
 		name: "WCS Systems:",
 		disabled: true
 	    };
-	    for(i=0; i<JS9.wcssyss.length; i++){
-		s1 = JS9.wcssyss[i];
+	    if( tim && tim.raw.wcs && tim.raw.wcs > 0 ){
+		sys = JS9.wcssyss;
+	    } else {
+		sys = ["image", "physical"];
+	    }
+	    for(i=0; i<sys.length; i++){
+		s1 = sys[i];
 		s2 = s1;
 		items[s1] = xname(s2);
 		if( tim && (tim.params.wcssys === s1) ){
@@ -8108,9 +8113,13 @@ JS9.Menubar.createMenus = function(){
 		    got++;
 		}
 	    }
-	    // if we don't know which wcssys is current, assume "native"
+	    // if we don't know which wcssys is current, assume native or image
 	    if( !got ){
-		s1 = "native";
+		if( tim && tim.raw.wcs && tim.raw.wcs > 0 ){
+		    s1 = "native";
+		} else {
+		    s1 = "image";
+		}
 		items[s1].icon = "sun";
 	    }
 	    items[`sep${n++}`] = "------";
@@ -8118,8 +8127,13 @@ JS9.Menubar.createMenus = function(){
 		name: "WCS Units:",
 		disabled: true
 	    };
-	    for(i=0; i<JS9.wcsunitss.length; i++){
-		s1 = JS9.wcsunitss[i];
+	    if( tim && tim.raw.wcs && tim.raw.wcs > 0 ){
+		units = JS9.wcsunitss;
+	    } else {
+		units = ["pixels"];
+	    }
+	    for(i=0; i<units.length; i++){
+		s1 = units[i];
 		s2 = s1;
 		items[s1] = xname(s2);
 		if( tim && (tim.params.wcsunits === s1) ){
@@ -9380,12 +9394,10 @@ JS9.PanZoom = {};
 JS9.PanZoom.CLASS = "JS9";      // class of plugins
 JS9.PanZoom.NAME = "PanZoom";   // name of this plugin
 JS9.PanZoom.WIDTH = 530;        // width of light window
-JS9.PanZoom.HEIGHT = 125;       // height of light window
+JS9.PanZoom.HEIGHT = 110;       // height of light window
 JS9.PanZoom.BASE = JS9.PanZoom.CLASS + JS9.PanZoom.NAME;
 
-JS9.PanZoom.panzoomHTML="<div class='JS9PanZoomLinegroup'>$header</div><div class='JS9PanZoomLinegroup'>$pan&nbsp;&nbsp;$zoom&nbsp;&nbsp;$flip&nbsp;&nbsp;$rotate</div><p><div class='JS9PanZoomLinegroup'>$panto $pos1 $pos2 $wcssys $wcsunits</div>";
-
-JS9.PanZoom.headerHTML = '';
+JS9.PanZoom.panzoomHTML="<p><div class='JS9PanZoomLinegroup'>$pan&nbsp;&nbsp;$zoom&nbsp;&nbsp;$flip&nbsp;&nbsp;$rotate</div><p><div class='JS9PanZoomLinegroup'>$panto $pos1 $pos2 $wcssys $wcsunits</div>";
 
 JS9.PanZoom.panHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol1" name="pan" onchange="JS9.PanZoom.xsetpan(\'%s\', \'%s\', this)">%s</select>';
 
@@ -9401,9 +9413,9 @@ JS9.PanZoom.pos1HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol2
 
 JS9.PanZoom.pos2HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol3" name="pos2" value="%s" autocapitalize="off" autocorrect="off">';
 
-JS9.PanZoom.wcssysHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol4" name="wcssys" onchange="JS9.PanZoom.xsetwcssys(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.sysHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol4" name="wcssys" onchange="JS9.PanZoom.xsetwcssys(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.wcsunitsHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol5" name="wcsunits" onchange="JS9.PanZoom.xsetwcsunits(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.unitsHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol5" name="wcsunits" onchange="JS9.PanZoom.xsetwcsunits(\'%s\', \'%s\', this)">%s</select>';
 
 // change pan via menu
 JS9.PanZoom.xsetpan = function(did, id, target){
@@ -9434,16 +9446,17 @@ JS9.PanZoom.xsetzoom = function(did, id, target){
 	    }
 	    break;
 	default:
-	    arr = target.value.split(" ");
+	    // format: "zoom" zoom
+	    arr = target.value.split(/\s+/);
 	    if( arr.length === 2 ){
+		// format zoom or 1/zoom
 		arr2 = arr[1].split("/");
 		if( arr2.length === 1 ){
 		    zval = parseFloat(arr2[0]);
-		    im.setZoom(zval);
 		} else {
 		    zval = 1 / parseFloat(arr2[1]);
-		    im.setZoom(zval);
 		}
+		im.setZoom(zval);
 	    }
 	    break;
 	}
@@ -9484,16 +9497,16 @@ JS9.PanZoom.xsetrotate = function(did, id, target){
     }
 };
 
-// change the pan to the position specified in the pos1,pos2 inputs
+// pan to the position specified in the pos1,pos2 input elements
 JS9.PanZoom.xpanto = function(did, id, target){
-    let owcssys, arr, p1, p2, s1, s2, wcssys, pel, ppos;
+    let owcssys, arr, p1, p2, s1, s2, wcssys, pel, phys;
     const im = JS9.lookupImage(id, did);
     if( im ){
 	pel = $(target).parent();
 	wcssys = pel.find("[name='wcssys']").val();
 	s1 = pel.find("[name='pos1']").val();
 	s2 = pel.find("[name='pos2']").val();
-	if( JS9.isNumber(s1) && JS9.isNumber(s2) ){
+	if( JS9.isNumber(s1) && JS9.isNumber(s2) && wcssys ){
 	    owcssys = im.getWCSSys();
 	    im.setWCSSys(wcssys);
 	    p1 = JS9.saostrtod(s1);
@@ -9507,9 +9520,9 @@ JS9.PanZoom.xpanto = function(did, id, target){
 	    case "image":
 		break;
 	    case "physical":
-		ppos =  im.logicalToImagePos({x: p1, y: p2});
-		p1 = ppos.x;
-		p2 = ppos.y;
+		phys =  im.logicalToImagePos({x: p1, y: p2});
+		p1 = phys.x;
+		p2 = phys.y;
 		break;
 	    default:
 		if( im.raw.wcs && im.raw.wcs > 0 ){
@@ -9527,23 +9540,13 @@ JS9.PanZoom.xpanto = function(did, id, target){
 // change the wcs system
 JS9.PanZoom.xsetwcssys = function(did, id, target){
     let owcssys, owcsunits, pel, pos1, pos2;
-    let nwcssys = target.value;
+    const nwcssys = target.value;
     const im = JS9.lookupImage(id, did);
     if( im ){
 	owcssys = im.getWCSSys();
 	owcsunits = im.getWCSUnits();
-	switch(nwcssys){
-	case "degrees":
-	case "sexagesimal":
-	case "pixels":
-	    im.setWCSUnits(nwcssys);
-	    im.tmp.wcsunitsPanZoom = nwcssys;
-	    break
-	default:
-	    im.setWCSSys(nwcssys);
-	    im.tmp.wcssysPanZoom = nwcssys;
-	    break;
-	}
+	im.setWCSSys(nwcssys);
+	im.tmp.wcssysPanZoom = nwcssys;
 	pos1 = JS9.PanZoom.getPos(im, "x");
 	pos2 = JS9.PanZoom.getPos(im, "y");
 	pel = $(target).parent();
@@ -9560,7 +9563,7 @@ JS9.PanZoom.xsetwcssys = function(did, id, target){
 // change the wcs units
 JS9.PanZoom.xsetwcsunits = function(did, id, target){
     let owcssys, owcsunits, pel, pos1, pos2;
-    let nwcsunits = target.value;
+    const nwcsunits = target.value;
     const im = JS9.lookupImage(id, did);
     if( im ){
 	owcsunits = im.getWCSUnits();
@@ -9582,41 +9585,42 @@ JS9.PanZoom.xsetwcsunits = function(did, id, target){
 
 // get position string based on wcssys
 JS9.PanZoom.getPos = function(im, which){
-    let s, res, ppos;
-    const panobj = im.getPan();
-    const ipos = {x: panobj.x, y: panobj.y};
-    const owcssys = im.getWCSSys();
-    const owcsunits = im.getWCSUnits();
-    const wcssys = im.tmp.wcssysPanZoom || owcssys;
-    const wcsunits = im.tmp.wcsunitsPanZoom || owcsunits;
-    if( owcssys !== wcssys ){
-	im.setWCSSys(wcssys);
-    }
-    if( owcsunits !== wcsunits ){
-	im.setWCSUnits(wcsunits);
-    }
-    switch(wcssys){
-    case "image":
-	res = String(ipos[which]);
-	break;
-    case "physical":
-	ppos =  im.imageToLogicalPos(ipos);
-	res = String(ppos[which]);
-	break;
-    default:
-	if( im.raw.wcs && im.raw.wcs > 0 ){
-	    s = JS9.pix2wcs(im.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
-	    res = which === "x" ? s[0] : s[1];
-	} else {
-	    res = String(ipos[which]);
+    let s, res, phys, ipos, owcssys, owcsunits, wcssys, wcsunits;
+    if( im ){
+	ipos = im.getPan();
+	owcssys = im.getWCSSys();
+	owcsunits = im.getWCSUnits();
+	wcssys = im.tmp.wcssysPanZoom || owcssys;
+	wcsunits = im.tmp.wcsunitsPanZoom || owcsunits;
+	if( owcssys !== wcssys ){
+	    im.setWCSSys(wcssys);
 	}
-	break;
-    }
-    if( owcssys !== wcssys ){
-	im.setWCSSys(owcssys);
-    }
-    if( owcsunits !== wcsunits ){
-	im.setWCSUnits(owcsunits);
+	if( owcsunits !== wcsunits ){
+	    im.setWCSUnits(wcsunits);
+	}
+	switch(wcssys){
+	case "image":
+	    res = String(ipos[which]);
+	    break;
+	case "physical":
+	    phys =  im.imageToLogicalPos(ipos);
+	    res = String(phys[which]);
+	    break;
+	default:
+	    if( im.raw.wcs && im.raw.wcs > 0 ){
+		s = JS9.pix2wcs(im.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
+		res = which === "x" ? s[0] : s[1];
+	    } else {
+		res = String(ipos[which]);
+	    }
+	    break;
+	}
+	if( owcssys !== wcssys ){
+	    im.setWCSSys(owcssys);
+	}
+	if( owcsunits !== wcsunits ){
+	    im.setWCSUnits(owcsunits);
+	}
     }
     return res;
 };
@@ -9648,12 +9652,12 @@ JS9.PanZoom.close = function(){
 // constructor: add HTML elements to the plugin
 JS9.PanZoom.init = function(opts){
     let s, t, im, mopts, imid, dispid;
-    const getPans = () => {
+    const getPanOptions = () => {
 	let res = "<option selected disabled>Pan</option>";
 	res += `<option>center</option>`;
 	return res;
     };
-    const getZooms = () => {
+    const getZoomOptions = () => {
 	let i, zoom, name;
 	let res = "<option selected disabled>Zoom</option>";
 	res += `<option>in</option>`;
@@ -9672,47 +9676,60 @@ JS9.PanZoom.init = function(opts){
 	}
 	return res;
     };
-    const getFlips = () => {
+    const getFlipOptions = () => {
 	let res = "<option selected disabled>Flip</option>";
 	res += `<option>around x axis</option>`;
 	res += `<option>around y axis</option>`;
 	return res;
     };
-    const getRotates = () => {
+    const getRotateOptions = () => {
 	let res = "<option selected disabled>Rotate</option>";
 	res += `<option>90 left</option>`;
 	res += `<option>90 right</option>`;
 	return res;
     };
-    const getPos = (im, which) => {
-	return JS9.PanZoom.getPos(im, which);
-    };
-    const getWCSSys = (im) => {
-	let i;
+    const getSysOptions = (im) => {
+	let i, sys;
 	let res = "<option selected disabled>WCS Systems:</option>";
 	const wcssys = im.tmp.wcssysPanZoom || im.getWCSSys();
-	for(i=0; i<JS9.wcssyss.length; i++){
-	    if( wcssys === JS9.wcssyss[i] ){
-		res += `<option selected>${JS9.wcssyss[i]}</option>`;
+	if( im ){
+	    if( im.raw.wcs && im.raw.wcs > 0 ){
+		sys = JS9.wcssyss;
 	    } else {
-		res += `<option>${JS9.wcssyss[i]}</option>`;
+		sys = ["image", "physical"];
+	    }
+	    for(i=0; i<sys.length; i++){
+		if( wcssys === sys[i] ){
+		    res += `<option selected>${sys[i]}</option>`;
+		} else {
+		    res += `<option>${sys[i]}</option>`;
+		}
 	    }
 	}
 	return res;
     };
-    const getWCSUnits = (im) => {
-	let i;
+    const getUnitsOptions = (im) => {
+	let i, units;
 	let res = "<option selected disabled>WCS Units:</option>";
 	const wcsunits = im.tmp.wcsunitsPanZoom || im.getWCSUnits();
-	const units = ["degrees", "sexagesimal", "pixels"];
-	for(i=0; i<units.length; i++){
-	    if( wcsunits === units[i] ){
-		res += `<option selected>${units[i]}</option>`;
+	if( im ){
+	    if( im.raw.wcs && im.raw.wcs > 0 ){
+		units = ["degrees", "sexagesimal", "pixels"];
 	    } else {
-		res += `<option>${units[i]}</option>`;
+		units = ["pixels"];
+	    }
+	    for(i=0; i<units.length; i++){
+		if( wcsunits === units[i] ){
+		    res += `<option selected>${units[i]}</option>`;
+		} else {
+		    res += `<option>${units[i]}</option>`;
+		}
 	    }
 	}
 	return res;
+    };
+    const getPos = (im, which) => {
+	return JS9.PanZoom.getPos(im, which);
     };
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
@@ -9753,14 +9770,13 @@ JS9.PanZoom.init = function(opts){
 	imid = im.id;
 	dispid = im.display.id;
 	mopts = [];
-	mopts.push({name: "header", value: JS9.PanZoom.headerHTML});
-	t = sprintf(JS9.PanZoom.panHTML, dispid, imid, getPans());
+	t = sprintf(JS9.PanZoom.panHTML, dispid, imid, getPanOptions());
 	mopts.push({name: "pan", value: t});
-	t = sprintf(JS9.PanZoom.zoomHTML, dispid, imid, getZooms());
+	t = sprintf(JS9.PanZoom.zoomHTML, dispid, imid, getZoomOptions());
 	mopts.push({name: "zoom", value: t});
-	t = sprintf(JS9.PanZoom.flipHTML, dispid, imid, getFlips());
+	t = sprintf(JS9.PanZoom.flipHTML, dispid, imid, getFlipOptions());
 	mopts.push({name: "flip", value: t});
-	t = sprintf(JS9.PanZoom.rotateHTML, dispid, imid, getRotates());
+	t = sprintf(JS9.PanZoom.rotateHTML, dispid, imid, getRotateOptions());
 	mopts.push({name: "rotate", value: t});
 	t = sprintf(JS9.PanZoom.pantoHTML, dispid, imid);
 	mopts.push({name: "panto", value: t});
@@ -9768,10 +9784,9 @@ JS9.PanZoom.init = function(opts){
 	mopts.push({name: "pos1", value: t});
 	t = sprintf(JS9.PanZoom.pos2HTML, getPos(im, "y"));
 	mopts.push({name: "pos2", value: t});
-	t = sprintf(JS9.PanZoom.wcssysHTML, dispid, imid, getWCSSys(im));
+	t = sprintf(JS9.PanZoom.sysHTML, dispid, imid, getSysOptions(im));
 	mopts.push({name: "wcssys", value: t});
-
-	t = sprintf(JS9.PanZoom.wcsunitsHTML, dispid, imid, getWCSUnits(im));
+	t = sprintf(JS9.PanZoom.unitsHTML, dispid, imid, getUnitsOptions(im));
 	mopts.push({name: "wcsunits", value: t});
 	s = im.expandMacro(JS9.PanZoom.panzoomHTML, mopts);
 	this.lastimage = im;

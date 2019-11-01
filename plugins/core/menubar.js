@@ -2408,7 +2408,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1, s2, key, altwcs;
+	    let i, s1, s2, key, altwcs, sys, units;
 	    let n=0, nwcs=0, got=0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
@@ -2446,8 +2446,13 @@ JS9.Menubar.createMenus = function(){
 		name: "WCS Systems:",
 		disabled: true
 	    };
-	    for(i=0; i<JS9.wcssyss.length; i++){
-		s1 = JS9.wcssyss[i];
+	    if( tim && tim.raw.wcs && tim.raw.wcs > 0 ){
+		sys = JS9.wcssyss;
+	    } else {
+		sys = ["image", "physical"];
+	    }
+	    for(i=0; i<sys.length; i++){
+		s1 = sys[i];
 		s2 = s1;
 		items[s1] = xname(s2);
 		if( tim && (tim.params.wcssys === s1) ){
@@ -2455,9 +2460,13 @@ JS9.Menubar.createMenus = function(){
 		    got++;
 		}
 	    }
-	    // if we don't know which wcssys is current, assume "native"
+	    // if we don't know which wcssys is current, assume native or image
 	    if( !got ){
-		s1 = "native";
+		if( tim && tim.raw.wcs && tim.raw.wcs > 0 ){
+		    s1 = "native";
+		} else {
+		    s1 = "image";
+		}
 		items[s1].icon = "sun";
 	    }
 	    items[`sep${n++}`] = "------";
@@ -2465,8 +2474,13 @@ JS9.Menubar.createMenus = function(){
 		name: "WCS Units:",
 		disabled: true
 	    };
-	    for(i=0; i<JS9.wcsunitss.length; i++){
-		s1 = JS9.wcsunitss[i];
+	    if( tim && tim.raw.wcs && tim.raw.wcs > 0 ){
+		units = JS9.wcsunitss;
+	    } else {
+		units = ["pixels"];
+	    }
+	    for(i=0; i<units.length; i++){
+		s1 = units[i];
 		s2 = s1;
 		items[s1] = xname(s2);
 		if( tim && (tim.params.wcsunits === s1) ){
