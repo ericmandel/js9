@@ -3993,7 +3993,10 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
     if( slice === undefined ){
 	JS9.error("missing slice for displaySlice()");
     }
-    if( slice === "all" && this.raw.header.NAXIS === 3 ){
+    if( this.raw.header.NAXIS !== 3 ){
+	JS9.error("3D image required for displaySlice()");
+    }
+    if( slice === "all" ){
 	// load and display the slices separately
 	// ignore the fact that we already are displaying a slice of the image,
 	// since we don't actually know which slice is being displayed ...
