@@ -472,7 +472,7 @@ ImageFilters = (function(){
 	    amount = 20;
 	}
 	return convolve(ctx, imageData,
-			[ 0, -3,  0, -3, amount, -3, 0, -3, 0 ], 
+			[ 0, -1,  0, -1, amount, -1, 0, -1, 0 ], 
 			true, true);
     }
 	
