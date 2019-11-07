@@ -68372,7 +68372,7 @@ ImageFilters = (function(){
 	var i, r, g, b;
 	var data = imageData.data;
 	if( adjust === undefined ){
-	    adjust = 30;
+	    adjust = 100;
 	}
 	adjust /= 100;
 	for(i = 0; i < data.length; i += 4){
@@ -68719,7 +68719,7 @@ ImageFilters = (function(){
 	invert : invert,
 	pixelate : pixelate,
 	sobel : sobel,
-	medianFilter : medianFilter,
+	median : medianFilter,
 	sepia : sepia,
 	contrast : contrast,
 	threshold : threshold,
@@ -68729,7 +68729,7 @@ ImageFilters = (function(){
 	scatter : scatter,
 	solarize : solarize,
 	sharpen : sharpen,
-	edgeDetect : edgeDetect,
+	edge : edgeDetect,
 	blur : blur,
 	emboss : emboss,
 	lighten : lighten,
