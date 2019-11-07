@@ -3577,10 +3577,29 @@ JS9.Filters.HEIGHT = 440;        // height of light window
 JS9.Filters.BASE = JS9.Filters.CLASS + JS9.Filters.NAME;
 
 // image filters with no args
-JS9.Filters.noargfilters = ["edge", "luminance", "median", "sobel"]
+JS9.Filters.noargfilters = {
+    edge: {defval: null},
+    luminance: {defval: null},
+    median: {defval: null},
+    sobel: {defval: null}
+};
 
 // image filters accepting args
-JS9.Filters.argfilters = ["blur", "brighten", "darken", "duotone", "emboss", "gamma", "lighten", "noise", "pixelate", "scatter", "sepia", "sharpen", "solarize"];
+JS9.Filters.argfilters = {
+    blur: {defval: 30},
+    brighten: {defval: 10},
+    darken: {defval: 66},
+    duotone: {defval: 0},
+    emboss: {defval: 95},
+    gamma: {defval: 80},
+    lighten: {defval: 33},
+    noise: {defval: 30},
+    pixelate: {defval: 20},
+    scatter: {defval: 50},
+    sepia: {defval: 100},
+    sharpen: {defval: 20},
+    solarize: {defval: 50}
+};
 
 JS9.Filters.headerHTML=`
 <center>
@@ -3596,14 +3615,14 @@ click for default filters or use the sliders
 JS9.Filters.noargfilterHTML=`
 <div class="JS9FiltersFilterLine">
 <span class="JS9FiltersName JS9FiltersFilterCol1">
-<input type="button" name="%sbutton" value="%s" class="JS9FiltersButton" onclick="JS9.Filters.xfilter('%s', '%s', {value: '%s'})"></span>
+<input type="button" name="%sbutton" value="%s" class="JS9FiltersButton" onclick="JS9.Filters.xfilter(this, '%s', '%s', '%s', %s)"></span>
 </div>
 `;
 
 JS9.Filters.argfilterHTML=`
 <div class="JS9FiltersFilterLine">
 <span class="JS9FiltersName JS9FiltersFilterCol1">
-<input type="button" name="%sbutton" value="%s" class="JS9FiltersButton" onclick="JS9.Filters.xfilter('%s', '%s', {value: '%s'})"></span>
+<input type="button" name="%sbutton" value="%s" class="JS9FiltersButton" onclick="JS9.Filters.xfilter(this, '%s', '%s', '%s', %s)"></span>
 <span class="JS9FiltersRange JS9FiltersFilterCol2"><input type="range" min="0" max="100" value="0" name="%s" class="JS9FiltersRange" onchange="JS9.Filters.xgenfilter('%s', '%s', '%s', this)"></span>
 <span class="JS9FiltersRangeVal">
 <input type="text" name="%sval" class="JS9FiltersValue JS9FiltersFilterCol3" min="0" max="100" value="0" onchange="JS9.Filters.xgenval('%s', '%s', '%s', this)" size="4"></span>
@@ -3616,19 +3635,10 @@ JS9.Filters.undoHTML=`
 <input type="button" id="undo" name="undo" value="undo" class="JS9FiltersButton" onclick="JS9.Filters.xundo('%s', '%s', this)"></span>
 </div>`;
 
-// change the colormap
-JS9.Filters.xsetcmap = function(did, id, target){
-    const im = JS9.lookupImage(id, did);
-    if( im ){
-	im.setColormap(target.value);
-    }
-    $(target).val("Filters");
-};
-
 // execute default filter
-JS9.Filters.xfilter = function(did, id, target, val){
+JS9.Filters.xfilter = function(target, did, id, filter, val){
     let pinst;
-    const filter = target.value;
+    let oval = val;
     const im = JS9.lookupImage(id, did);
     if( im ){
 	pinst = im.display.pluginInstances[JS9.Filters.BASE];
@@ -3642,9 +3652,6 @@ JS9.Filters.xfilter = function(did, id, target, val){
 	}
 	if( JS9.notNull(val) ){
 	    switch(filter){
-	    case "brighten":
-		val = val * 2.55;
-		break;
 	    case "duotone":
 		if( val < 33 ){
 		    val = "r";
@@ -3660,9 +3667,6 @@ JS9.Filters.xfilter = function(did, id, target, val){
 	    case "darken":
 		val = (100 - val) / 100.0;
 		break;
-	    case "emboss":
-		val = (val / 2) + 50;
-		break;
 	    case "gamma":
 		val = (100 - val) / 100;
 		break;
@@ -3676,7 +3680,7 @@ JS9.Filters.xfilter = function(did, id, target, val){
 		val = Math.max(1, Math.floor(val / 4.0));
 		break;
 	    case "scatter":
-		val = Math.max(1, Math.floor(val / 20.0));
+		val = Math.max(1, Math.floor(val / 10.0));
 		break;
 	    case "solarize":
 		val = val * 2.55;
@@ -3686,9 +3690,18 @@ JS9.Filters.xfilter = function(did, id, target, val){
 	} else {
 	    im.filterRGBImage(filter);
 	}
+	// save last filter
 	pinst.lastfilter.push(filter);
+	// update GUI values
+	$(target)
+	    .closest(`.${JS9.Filters.BASE}Container`)
+	    .find(`[name='${filter}']`)
+	    .prop("value", oval);
+	$(target)
+	    .closest(`.${JS9.Filters.BASE}Container`)
+	    .find(`[name='${filter}val']`)
+	    .prop("value", oval);
     }
-    $(target).val("Filters");
 };
 
 // undo the last filter
@@ -3724,7 +3737,7 @@ JS9.Filters.xgenfilter = function(did, id, filter, target){
     const im = JS9.lookupImage(id, did);
     if( im ){
 	val = parseFloat(target.value)
-	JS9.Filters.xfilter(did, id, {value: filter}, val);
+	JS9.Filters.xfilter(target, did, id, filter, val);
 	$(target)
 	    .closest(`.${JS9.Filters.BASE}Container`)
 	    .find(`[name='${filter}val']`)
@@ -3737,7 +3750,7 @@ JS9.Filters.xgenval = function(did, id, filter, target){
     const im = JS9.lookupImage(id, did);
     if( im ){
 	val = parseFloat(target.value)
-	JS9.Filters.xfilter(did, id, {value: filter}, val);
+	JS9.Filters.xfilter(target, did, id, filter, val);
 	$(target)
 	    .closest(`.${JS9.Filters.BASE}Container`)
 	    .find(`[name='${filter}']`)
@@ -3778,7 +3791,7 @@ JS9.Filters.close = function(){
 
 // constructor: add HTML elements to the plugin
 JS9.Filters.init = function(opts){
-    let i, s, t, im, mopts, imid, dispid, html, key;
+    let s, t, im, mopts, imid, dispid, html, key, obj;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -3821,34 +3834,37 @@ JS9.Filters.init = function(opts){
 	dispid = im.display.id;
 	mopts = [];
 	// add the arg filters
-	for(i=0; i<JS9.Filters.argfilters.length; i++){
-	    key = JS9.Filters.argfilters[i];
-	    mopts.push({name: key, 
-			value: sprintf(JS9.Filters.argfilterHTML,
-				       key,
-				       key,
-				       dispid, imid, key,
-				       key,
-				       dispid, imid, key,
-				       key, 
-				       dispid, imid, key)});
-	    // add this line to the main html spec
-	    html += `<p><div class='JS9FiltersLinegroup'>$${key}</div>`;
+	for( key in JS9.Filters.argfilters ){
+	    if( JS9.Filters.argfilters.hasOwnProperty(key) ){
+		obj = JS9.Filters.argfilters[key];
+		mopts.push({name: key, 
+			    value: sprintf(JS9.Filters.argfilterHTML,
+					   key,
+					   key,
+					   dispid, imid, key, obj.defval,
+					   key,
+					   dispid, imid, key,
+					   key, 
+					   dispid, imid, key)});
+		// add this line to the main html spec
+		html += `<p><div class='JS9FiltersLinegroup'>$${key}</div>`;
+	    }
 	}
-	// add the noarg filters
-	for(i=0; i<JS9.Filters.noargfilters.length; i++){
-	    key = JS9.Filters.noargfilters[i];
-	    mopts.push({name: key, 
-			value: sprintf(JS9.Filters.noargfilterHTML,
-				       key,
-				       key,
-				       dispid, imid, key,
-				       key,
-				       dispid, imid, key,
-				       key, 
-				       dispid, imid, key)});
-	    // add this line to the main html spec
-	    html += `<p><div class='JS9FiltersLinegroup'>$${key}</div>`;
+	// add the noarg filterfs
+	for( key in JS9.Filters.noargfilters ){
+	    if( JS9.Filters.noargfilters.hasOwnProperty(key) ){
+		mopts.push({name: key, 
+			    value: sprintf(JS9.Filters.noargfilterHTML,
+					   key,
+					   key,
+					   dispid, imid, key, null,
+					   key,
+					   dispid, imid, key,
+					   key, 
+					   dispid, imid, key)});
+		// add this line to the main html spec
+		html += `<p><div class='JS9FiltersLinegroup'>$${key}</div>`;
+	    }
 	}
 	// add undo to the main html spec
 	html += `<p><div class='JS9FiltersLinegroup'>$undo</div>`;
