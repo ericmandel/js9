@@ -3635,6 +3635,21 @@ JS9.Filters.undoHTML=`
 <input type="button" id="undo" name="undo" value="undo" class="JS9FiltersButton" onclick="JS9.Filters.xundo('%s', '%s', this)"></span>
 </div>`;
 
+// update gui filter param value
+JS9.Filters.updateval = function(target, filter, val){
+    if( target && $(target).length > 0 ){
+	$(target)
+	    .closest(`.${JS9.Filters.BASE}Container`)
+	    .find(`[name='${filter}']`)
+	    .prop("value", val);
+	$(target)
+	    .closest(`.${JS9.Filters.BASE}Container`)
+	    .find(`[name='${filter}val']`)
+	    .prop("value", val);
+    }
+}
+
+
 // execute default filter
 JS9.Filters.xfilter = function(target, did, id, filter, val){
     let pinst;
@@ -3693,14 +3708,7 @@ JS9.Filters.xfilter = function(target, did, id, filter, val){
 	// save last filter
 	pinst.lastfilter.push(filter);
 	// update GUI values
-	$(target)
-	    .closest(`.${JS9.Filters.BASE}Container`)
-	    .find(`[name='${filter}']`)
-	    .prop("value", oval);
-	$(target)
-	    .closest(`.${JS9.Filters.BASE}Container`)
-	    .find(`[name='${filter}val']`)
-	    .prop("value", oval);
+	JS9.Filters.updateval(target, filter, oval);
     }
 };
 
@@ -3716,16 +3724,11 @@ JS9.Filters.xundo = function(did, id, target){
 	    im.displayImage("display");
 	}
 	if( pinst.lastfilter && pinst.lastfilter.length ){
+	    // get previous filter
 	    filter = pinst.lastfilter.pop();
+	    // update GUI values, if possible
 	    if( filter ){
-		$(target)
-		    .closest(`.${JS9.Filters.BASE}Container`)
-		    .find(`[name='${filter}']`)
-		    .prop("value", 0);
-		$(target)
-		    .closest(`.${JS9.Filters.BASE}Container`)
-		    .find(`[name='${filter}val']`)
-		    .prop("value", 0);
+		JS9.Filters.updateval(target, filter, 0);
 	    }
 	}
     }
