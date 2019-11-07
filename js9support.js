@@ -68096,6 +68096,9 @@ return gaussBlur;
 //   https://github.com/kig/canvasfilters
 // which look to be adapted from:
 //   http://www.html5rocks.com/en/tutorials/canvas/imagefilters/
+// some improved algorithms taken from good, dead projects:
+//   https://github.com/bennyschudel/JSManipulate
+//   https://github.com/meltingice/CamanJS/
 
 /*jslint plusplus: true, vars: true, white: true  */
 
@@ -68282,6 +68285,9 @@ ImageFilters = (function(){
 	if(arguments.length < 3){
 	    lower = -30;
 	    upper = 30;
+	} else if( arguments.length === 3 ){
+	    upper = lower;
+	    lower = -lower;
 	}
 	radius = upper - lower;
 	for(i = 0; i < data.length; i += 4){
@@ -68351,7 +68357,9 @@ ImageFilters = (function(){
     function brighten(ctx, imageData, a){
 	var i;
 	var data = imageData.data;
-	a = a || 10;
+	if(arguments.length < 3){
+	    a = 10;
+	}
 	for(i = 0; i < data.length; i += 4){
 	    data[i] += a;
 	    data[i+1] += a;
@@ -68360,16 +68368,27 @@ ImageFilters = (function(){
 	return imageData;
     }
     
-    function sepia(ctx, imageData){
+    function sepia(ctx, imageData, adjust){
 	var i, r, g, b;
 	var data = imageData.data;
+	if( adjust === undefined ){
+	    adjust = 30;
+	}
+	adjust /= 100;
 	for(i = 0; i < data.length; i += 4){
 	    r = data[i];
 	    g = data[i+1];
 	    b = data[i+2];
-	    data[i] = (r * 0.393) + (g * 0.769) + (b * 0.189);
-	    data[i+1] = (r * 0.349) + (g * 0.686) + (b * 0.168);
-	    data[i+2] = (r * 0.272) + (g * 0.534) + (b * 0.131);
+//	    data[i] = (r * 0.393) + (g * 0.769) + (b * 0.189);
+//	    data[i+1] = (r * 0.349) + (g * 0.686) + (b * 0.168);
+//	    data[i+2] = (r * 0.272) + (g * 0.534) + (b * 0.131);
+	    // Caman.js
+	    // All three color channels have special conversion factors that
+	    // define what sepia is. Here we adjust each channel individually,
+	    // with the twist that you can partially apply the sepia filter.
+	    data[i] = Math.min(255, (r * (1 - (0.607 * adjust))) + (g * (0.769 * adjust)) + (b * (0.189 * adjust)));
+	    data[i+1] = Math.min(255, (r * (0.349 * adjust)) + (g * (1 - (0.314 * adjust))) + (b * (0.168 * adjust)));
+	    data[i+2] = Math.min(255, (r * (0.272 * adjust)) + (g * (0.534 * adjust)) + (b * (1- (0.869 * adjust))));
 	}
 	return imageData;
     }
@@ -68554,6 +68573,104 @@ ImageFilters = (function(){
 	return imageData;
     }
 	
+//    function blur(ctx, imageData){
+//	return convolve(ctx, imageData,
+//			[ 1, 2, 1, 2, 1, 2, 1, 2, 1 ],
+//			true, true);
+//    }
+    // JSManipulate.js
+    function blur(ctx, imageData, amount){
+	var width = imageData.width;
+	var width4 = width << 2;
+	var height = imageData.height;
+	var data = imageData.data;
+	var q, qq, qqq, b0, b1, b2, b3, bigB, index, indexLast;
+	var pixel, ppixel, pppixel, ppppixel;
+	var c = 0;
+	if( amount === undefined ){
+	    amount = 30;
+	}
+	amount /= 10;
+	if (amount < 0.0) {
+	    amount = 0.0;
+	}
+	if (amount >= 2.5) {
+	    q = 0.98711 * amount - 0.96330;
+	} else if (amount >= 0.5) {
+	    q = 3.97156 - 4.14554 * Math.sqrt(1.0 - 0.26891 * amount);
+	} else {
+	    q = 2 * amount * (3.97156 - 4.14554 * Math.sqrt(1.0 - 0.26891 * 0.5));
+	}
+	qq = q * q;
+	qqq = qq * q;
+	b0 = 1.57825 + (2.44413 * q) + (1.4281 * qq ) + (0.422205 * qqq);
+	b1 = ((2.44413 * q) + (2.85619 * qq) + (1.26661 * qqq)) / b0;
+	b2 = (-((1.4281 * qq) + (1.26661 * qqq))) / b0;
+	b3 = (0.422205 * qqq) / b0;
+	bigB = 1.0 - (b1 + b2 + b3);
+	for (c = 0; c < 3; c++) {
+	    for (var y = 0; y < height; y++) {
+		index = y * width4 + c;
+		indexLast = y * width4 + ((width - 1) << 2) + c;
+		pixel = data[index];
+		ppixel = pixel;
+		pppixel = ppixel;
+		ppppixel = pppixel;
+		for (; index <= indexLast; index += 4) {
+		    pixel = bigB * data[index] + b1 * ppixel + b2 * pppixel + b3 * ppppixel;
+		    data[index] = pixel;
+		    ppppixel = pppixel;
+		    pppixel = ppixel;
+		    ppixel = pixel;
+		}
+		index = y * width4 + ((width - 1) << 2) + c;
+		indexLast = y * width4 + c;
+		pixel = data[index];
+		ppixel = pixel;
+		pppixel = ppixel;
+		ppppixel = pppixel;
+		for (; index >= indexLast; index -= 4) {
+		    pixel = bigB * data[index] + b1 * ppixel + b2 * pppixel + b3 * ppppixel;
+		    data[index] = pixel;
+		    ppppixel = pppixel;
+		    pppixel = ppixel;
+		    ppixel = pixel;
+		}
+	    }
+	}
+	for (c = 0; c < 3; c++) {
+	    for (var x = 0; x < width; x++) {
+		index = (x << 2) + c;
+		indexLast = (height - 1) * width4 + (x << 2) + c;
+		pixel = data[index];
+		ppixel = pixel;
+		pppixel = ppixel;
+		ppppixel = pppixel;
+		for (; index <= indexLast; index += width4) {
+		    pixel = bigB * data[index] + b1 * ppixel + b2 * pppixel + b3 * ppppixel;
+		    data[index] = pixel;
+		    ppppixel = pppixel;
+		    pppixel = ppixel;
+		    ppixel = pixel;
+		}
+		index = (height - 1) * width4 + (x << 2) + c;
+		indexLast = (x << 2) + c;
+		pixel = data[index];
+		ppixel = pixel;
+		pppixel = ppixel;
+		ppppixel = pppixel;
+		for (; index >= indexLast; index -= width4) {
+		    pixel = bigB * data[index] + b1 * ppixel + b2 * pppixel + b3 * ppppixel;
+		    data[index] = pixel;
+		    ppppixel = pppixel;
+		    pppixel = ppixel;
+		    ppixel = pixel;
+		}
+	    }
+	}
+    }
+
+
     function edgeDetect(ctx, imageData){
 	return convolve(ctx, imageData, 
 			 [ -1, -1, -1, -1, 8, -1, -1, -1, -1 ]);
@@ -68568,19 +68685,13 @@ ImageFilters = (function(){
 			true, true);
     }
 	
-    function blur(ctx, imageData){
-	return convolve(ctx, imageData,
-			[ 1, 2, 1, 2, 1, 2, 1, 2, 1 ], 
-			true, true);
-    }
-	
     function emboss(ctx, imageData, amount){
 	if(arguments.length < 3){
 	    amount = 95;
 	}
 	return convolve(ctx, imageData,
-			 [ -18, -9, 9, -9, 100 - amount, 9, 0, 9, 18 ], 
-			 true, true);
+			[ -18, -9, 9, -9, 100 - amount, 9, 0, 9, 18 ],
+			true, true);
     }
 	
     function lighten(ctx, imageData, amount){
