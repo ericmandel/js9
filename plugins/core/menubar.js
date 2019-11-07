@@ -1852,7 +1852,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1, s2, arr;
+	    let i, s1, s2;
 	    let n = 0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
@@ -1926,26 +1926,7 @@ JS9.Menubar.createMenus = function(){
                 }
 	    }
 	    items[`sep${n++}`] = "------";
-	    items.imfilter = {
-		name: "image filters",
-		items: {
-		    imfiltertitle: {
-			name: "adjust colors using:",
-			disabled: true
-		    }
-		    
-		}
-	    };
-	    arr = JS9.Image.prototype.filterRGBImage.call(null).sort();
-	    for(i=0; i<arr.length; i++){
-		if( arr[i] === "convolve" ){
-		    continue;
-		}
-		s1 = `imfilter_${arr[i]}`;
-		items.imfilter.items[s1] = {
-		    name: arr[i]
-		};
-	    }
+	    items.imfilter = xname("image filters ...");
 	    items[`sep${n++}`] = "------";
 	    items.contrast = {
 		events: {keyup: keyColor},
@@ -1991,13 +1972,11 @@ JS9.Menubar.createMenus = function(){
 			case "savecmap":
 			    JS9.SaveColormap({display: udisp});
 			    break;
+			case "imfilter":
+			    JS9.DisplayPlugin("JS9Filters", {display: udisp});
+			    break;
 			default:
 			    if( uim ){
-				if( key.match(/^imfilter_/) ){
-				    s1 = key.replace(/^imfilter_/,"");
-				    uim.filterRGBImage(s1);
-				    return;
-				}
 				uim.setColormap(key);
 			    }
 			}

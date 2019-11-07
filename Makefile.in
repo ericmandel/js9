@@ -156,7 +156,7 @@ CSSFILES =	css/jquery.contextMenu.css css/dhtmlwindow.css  \
 PLCSSFILES =	plugins/core/blend.css plugins/core/blink.css \
 		plugins/core/cmaps.css \
 		plugins/core/colorbar.css plugins/core/cube.css \
-		plugins/core/divs.css \
+		plugins/core/divs.css plugins/core/filters.css \
 		plugins/core/imarith.css plugins/core/keyboard.css \
 		plugins/core/layers.css plugins/core/mef.css \
 		plugins/core/mousetouch.css plugins/core/panzoom.css \
@@ -178,6 +178,7 @@ PLUGINFILES =	plugins/archive/archive.js \
 		plugins/core/console.js \
 		plugins/core/cube.js \
 		plugins/core/divs.js \
+		plugins/core/filters.js \
 		plugins/core/imarith.js \
 		plugins/core/info.js \
 		plugins/core/keyboard.js \
