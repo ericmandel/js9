@@ -68312,12 +68312,15 @@ ImageFilters = (function(){
     
     function pixelate(ctx, imageData, radius){
 	var r, g, b, idx, odx, ody;
-	var x, y, nx, ny, delta;
+	var x, y, nx, ny, delta, ioff;
 	var width = imageData.width;
 	var height = imageData.height;
 	var data = imageData.data;
 	if(arguments.length < 3){
 	    radius = 2;
+	}
+	if( radius <= 0 ){
+	    return imageData;
 	}
 	delta = (2 * radius);
 	for(y = radius; y < height - radius; y += delta){
@@ -68335,6 +68338,26 @@ ImageFilters = (function(){
 			data[odx+2] = b; 
 		    }
 		}
+	    }
+	}
+	ioff = height % delta ? height % delta : delta;
+	for(y = height - ioff; y < height; y++){
+	    ody = width * y;
+	    for(x = 0; x < width; x++){
+		odx = (x + ody) * 4;
+		data[odx] = 0; 
+		data[odx+1] = 0;
+		data[odx+2] = 0; 
+	    }
+	}
+	ioff = width % delta ? width % delta : delta;
+	for(y = 0; y < height; y++){
+	    ody = width * y;
+	    for(x = width - ioff; x < width; x++){
+		odx = (x + ody) * 4;
+		data[odx] = 0; 
+		data[odx+1] = 0;
+		data[odx+2] = 0; 
 	    }
 	}
 	return imageData;
@@ -68530,6 +68553,9 @@ ImageFilters = (function(){
 	};
 	if(arguments.length < 3){
 	    radius = 5;
+	}
+	if( radius <= 0 ){
+	    return imageData;
 	}
 	delta = 2 * radius;
 	total = (radius - 1) * radius;

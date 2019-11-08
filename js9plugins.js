@@ -3572,33 +3572,33 @@ JS9.RegisterPlugin(JS9.Divs.CLASS, JS9.Divs.NAME, JS9.Divs.init,
 JS9.Filters = {};
 JS9.Filters.CLASS = "JS9";       // class of plugins
 JS9.Filters.NAME = "Filters";  // name of this plugin
-JS9.Filters.WIDTH = 370;         // width of light window
+JS9.Filters.WIDTH = 380;         // width of light window
 JS9.Filters.HEIGHT = 440;        // height of light window
 JS9.Filters.BASE = JS9.Filters.CLASS + JS9.Filters.NAME;
 
 // image filters with no args
 JS9.Filters.noargfilters = {
-    edge: {defval: null},
-    luminance: {defval: null},
-    median: {defval: null},
-    sobel: {defval: null}
+    edge: {def: null},
+    luminance: {def: null},
+    median: {def: null},
+    sobel: {def: null}
 };
 
 // image filters accepting args
 JS9.Filters.argfilters = {
-    blur: {defval: 30},
-    brighten: {defval: 10},
-    darken: {defval: 66},
-    duotone: {defval: 0},
-    emboss: {defval: 95},
-    gamma: {defval: 80},
-    lighten: {defval: 33},
-    noise: {defval: 30},
-    pixelate: {defval: 20},
-    scatter: {defval: 50},
-    sepia: {defval: 100},
-    sharpen: {defval: 20},
-    solarize: {defval: 50}
+    blur: {min: 0, max: 100, step: 1, init: 0, def: 30},
+    brighten: {min: 1, max: 100, step: 1, init: 0, def: 10},
+    darken: {min: 0, max: 1, step: 0.01, init: 0, def: .66},
+    duotone: {min: 0, max: 2, step: 1, init: 0, def: 0},
+    emboss: {min: 0, max: 100, step: 1, init: 0, def: 100},
+    gamma: {min: 0, max: 2, step: 0.01, init: 0, def: 0.2},
+    lighten: {min: 1, max: 2, step: 0.01, init: 0, def: 1.33},
+    noise: {min: 0, max: 100, step: 1, init: 0, def: 30},
+    pixelate: {min: 0, max: 20, step: 1, init: 0, def: 2},
+    scatter: {min: 0, max: 10, step: 1, init: 0, def: 5},
+    sepia: {min: 0, max: 100, step: 1, init: 0, def: 100},
+    sharpen: {min: 0, max: 100, step: 1, init: 0, def: 20},
+    solarize: {min: 0, max: 100, step: 1, init: 0, def: 50}
 };
 
 JS9.Filters.headerHTML=`
@@ -3623,9 +3623,9 @@ JS9.Filters.argfilterHTML=`
 <div class="JS9FiltersFilterLine">
 <span class="JS9FiltersName JS9FiltersFilterCol1">
 <input type="button" name="%sbutton" value="%s" class="JS9FiltersButton" onclick="JS9.Filters.xfilter(this, '%s', '%s', '%s', %s)"></span>
-<span class="JS9FiltersRange JS9FiltersFilterCol2"><input type="range" min="0" max="100" value="0" name="%s" class="JS9FiltersRange" onchange="JS9.Filters.xgenfilter('%s', '%s', '%s', this)"></span>
+<span class="JS9FiltersRange JS9FiltersFilterCol2"><input type="range" min="%s" max="%s" step="%s" value="%s" name="%s" class="JS9FiltersRange" onchange="JS9.Filters.xgenfilter('%s', '%s', '%s', this)"></span>
 <span class="JS9FiltersRangeVal">
-<input type="text" name="%sval" class="JS9FiltersValue JS9FiltersFilterCol3" min="0" max="100" value="0" onchange="JS9.Filters.xgenval('%s', '%s', '%s', this)" size="4"></span>
+<input type="text" name="%sval" class="JS9FiltersValue JS9FiltersFilterCol3" min="0" max="100" value="0" onchange="JS9.Filters.xgenval('%s', '%s', '%s', this)"></span>
 </div>
 `;
 
@@ -3651,7 +3651,7 @@ JS9.Filters.updateval = function(target, filter, val){
 		.closest(`.${JS9.Filters.BASE}Container`)
 		.find(`[name='undo']`)
 		.prop("value", `undo ${filter}`)
-	        .css("width", "90px");
+	        .css("width", "100px");
 	} else {
 	    $(target)
 		.closest(`.${JS9.Filters.BASE}Container`)
@@ -3682,37 +3682,16 @@ JS9.Filters.xfilter = function(target, did, id, filter, val){
 	if( JS9.notNull(val) ){
 	    switch(filter){
 	    case "duotone":
-		if( val < 33 ){
+		if( val === 0 ){
 		    val = "r";
-		} else if( val < 66 ){
+		} else if( val === 1 ){
 		    val = "g";
 		} else {
 		    val = "b";
 		}
 		break;
-	    case "contrast":
-		val = (val - 50) / 10;
-		break;
 	    case "darken":
-		val = (100 - val) / 100.0;
-		break;
-	    case "gamma":
-		val = (100 - val) / 100;
-		break;
-	    case "lighten":
-		val = val / 100.0 + 1;
-		break;
-	    case "pixelate":
-		val = Math.max(1, Math.floor(val / 10.0));
-		break;
-	    case "posterize":
-		val = Math.max(1, Math.floor(val / 4.0));
-		break;
-	    case "scatter":
-		val = Math.max(1, Math.floor(val / 10.0));
-		break;
-	    case "solarize":
-		val = val * 2.55;
+		val = 1 - val;
 		break;
 	    }
 	    im.filterRGBImage(filter, val);
@@ -3856,7 +3835,8 @@ JS9.Filters.init = function(opts){
 			    value: sprintf(JS9.Filters.argfilterHTML,
 					   key,
 					   key,
-					   dispid, imid, key, obj.defval,
+					   dispid, imid, key, obj.def,
+					   obj.min, obj.max, obj.step, obj.init,
 					   key,
 					   dispid, imid, key,
 					   key, 
