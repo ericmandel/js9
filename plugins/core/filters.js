@@ -70,38 +70,52 @@ JS9.Filters.argfilterHTML=`
 JS9.Filters.undoHTML=`
 <div class="JS9FiltersFilterLine">
 <span class="JS9FiltersUndo JS9FiltersMenuCol1">
-<input type="button" id="undo" name="undo" value="undo" class="JS9FiltersButton" onclick="JS9.Filters.xundo('%s', '%s', this)"></span>
+<input type="button" id="undo" name="undo" value="undo" class="JS9FiltersUndoButton" onclick="JS9.Filters.xundo(this, '%s', '%s')"></span>
 </div>`;
 
 // update gui filter param value
 JS9.Filters.updateval = function(target, filter, val){
     if( target && $(target).length > 0 ){
-	$(target)
-	    .closest(`.${JS9.Filters.BASE}Container`)
-	    .find(`[name='${filter}']`)
-	    .prop("value", val);
-	$(target)
-	    .closest(`.${JS9.Filters.BASE}Container`)
-	    .find(`[name='${filter}val']`)
-	    .prop("value", val);
+	if( filter ){
+	    $(target)
+		.closest(`.${JS9.Filters.BASE}Container`)
+		.find(`[name='${filter}']`)
+		.prop("value", val);
+	    $(target)
+		.closest(`.${JS9.Filters.BASE}Container`)
+		.find(`[name='${filter}val']`)
+		.prop("value", val);
+	    $(target)
+		.closest(`.${JS9.Filters.BASE}Container`)
+		.find(`[name='undo']`)
+		.prop("value", `undo ${filter}`)
+	        .css("width", "90px");
+	} else {
+	    $(target)
+		.closest(`.${JS9.Filters.BASE}Container`)
+		.find(`[name='undo']`)
+		.prop("value", `undo`)
+	        .css("width", "70px");
+	}
     }
 }
 
 
 // execute default filter
 JS9.Filters.xfilter = function(target, did, id, filter, val){
-    let pinst;
+    let pinst, data;
     let oval = val;
     const im = JS9.lookupImage(id, did);
     if( im ){
 	pinst = im.display.pluginInstances[JS9.Filters.BASE];
-	pinst.lastimg = pinst.lastimg || [];
-	pinst.lastfilter = pinst.lastfilter || [];
-	if( pinst.lastimg.length &&
-	    pinst.lastfilter[pinst.lastfilter.length - 1] === filter ){
-	    im.rgb.img.data.set(pinst.lastimg[pinst.lastimg.length - 1]);
+	pinst.stack = pinst.stack || [];
+	if( pinst.stack.length &&
+	    pinst.stack[pinst.stack.length - 1].filter === filter ){
+	    im.rgb.img.data.set(pinst.stack[pinst.stack.length - 1].data);
+	    pinst.stack[pinst.stack.length - 1].val = val;
 	} else {
-	    pinst.lastimg.push(new Uint8ClampedArray(im.rgb.img.data));
+	    data = new Uint8ClampedArray(im.rgb.img.data);
+	    pinst.stack.push({filter, val, data});
 	}
 	if( JS9.notNull(val) ){
 	    switch(filter){
@@ -143,31 +157,31 @@ JS9.Filters.xfilter = function(target, did, id, filter, val){
 	} else {
 	    im.filterRGBImage(filter);
 	}
-	// save last filter
-	pinst.lastfilter.push(filter);
 	// update GUI values
 	JS9.Filters.updateval(target, filter, oval);
     }
 };
 
 // undo the last filter
-JS9.Filters.xundo = function(did, id, target){
-    let pinst, data, filter;
+JS9.Filters.xundo = function(target, did, id){
+    let i, pinst, obj, filter, val;
     const im = JS9.lookupImage(id, did);
     if( im ){
 	pinst = im.display.pluginInstances[JS9.Filters.BASE];
-	if( pinst.lastimg && pinst.lastimg.length ){
-	    data = pinst.lastimg.pop();
-	    im.rgb.img.data.set(data);
+	if( pinst.stack && pinst.stack.length ){
+	    obj = pinst.stack.pop();
+	    im.rgb.img.data.set(obj.data);
 	    im.displayImage("display");
+	    JS9.Filters.updateval(target, obj.filter, 0);
 	}
-	if( pinst.lastfilter && pinst.lastfilter.length ){
-	    // get previous filter
-	    filter = pinst.lastfilter.pop();
-	    // update GUI values, if possible
-	    if( filter ){
-		JS9.Filters.updateval(target, filter, 0);
+	if( pinst.stack && pinst.stack.length ){
+	    for(i=0; i<pinst.stack.length; i++){
+		filter = pinst.stack[i].filter;
+		val = pinst.stack[i].val;
+		JS9.Filters.updateval(target, filter, val);
 	    }
+	} else {
+	    JS9.Filters.updateval(target, null, null);
 	}
     }
 };
@@ -202,10 +216,9 @@ JS9.Filters.xgenval = function(did, id, filter, target){
 // re-init (avoiding recursion)
 JS9.Filters.reinit = function(){
     const pinst = this.display.pluginInstances[JS9.Filters.BASE];
-    if( !this.inProcess && pinst.lastfilter && pinst.lastfilter.length ){
+    if( !this.inProcess && pinst.stack && pinst.stack.length ){
 	this.inProcess = true;
-	delete pinst.lastfilter;
-	delete pinst.lastimg;
+	delete pinst.stack;
 	JS9.Filters.init.call(this);
 	this.inProcess = false;
     }
@@ -217,8 +230,7 @@ JS9.Filters.display = function(){
     if( this.lastimage !== this.display.image ){
 	pinst = this.display.pluginInstances[JS9.Filters.BASE];
 	this.inProcess = true;
-	delete pinst.lastfilter;
-	delete pinst.lastimg;
+	delete pinst.stack;
 	JS9.Filters.init.call(this);
 	this.inProcess = false;
     }
@@ -259,7 +271,7 @@ JS9.Filters.init = function(opts){
     this.divjq.html("");
     html = JS9.Filters.headerHTML;
     // param values for image processing
-    delete this.lastimg;
+    delete this.stack;
     // set up new html
     this.colormapsContainer = $("<div>")
 	.addClass(`${JS9.Filters.BASE}Container`)

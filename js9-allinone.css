@@ -1361,6 +1361,11 @@ span.JS9NoDivs {
     float: right;
 }
 
+.JS9FiltersUndoButton {
+    width: 70px;
+    float: right;
+}
+
 .JS9FiltersValue {
     padding: 2px;
     text-align: right; 
