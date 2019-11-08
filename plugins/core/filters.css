@@ -6,7 +6,10 @@
 }
 
 .JS9FiltersHeader {
-    padding: 5px;
+    padding-left: 12px;
+    padding-top: 5px;
+    padding-bottom: 0px;
+    padding-right: 5px;
 }
 
 .JS9FiltersText {
@@ -39,20 +42,20 @@
     position: absolute;
     float: right;
     top: 0;
-    left: 0;
+    left: 5;
     width: 80px;
 }
 
 .JS9FiltersCol2 {
     position: absolute;
     top: 0;
-    left: 95px;
+    left: 100px;
 }
 
 .JS9FiltersCol3 {
     position: absolute;
     top: 0;
-    left:  245px;
+    left:  250px;
     width: 40px;
 }
 
