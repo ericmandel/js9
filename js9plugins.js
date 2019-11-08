@@ -3573,12 +3573,13 @@ JS9.Filters = {};
 JS9.Filters.CLASS = "JS9";       // class of plugins
 JS9.Filters.NAME = "Filters";    // name of this plugin
 JS9.Filters.WIDTH = 325;         // width of light window
-JS9.Filters.HEIGHT = 450;        // height of light window
+JS9.Filters.HEIGHT = 470;        // height of light window
 JS9.Filters.BASE = JS9.Filters.CLASS + JS9.Filters.NAME;
 
 // image filters with no args
 JS9.Filters.noargfilters = {
     edge: {def: null},
+    invert: {def: null},
     luminance: {def: null},
     median: {def: null},
     sobel: {def: null}
