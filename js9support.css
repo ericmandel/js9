@@ -1348,15 +1348,19 @@ span.JS9NoDivs {
 }
 
 .JS9FiltersButton {
-    margin-left: 5px;
-    width: 70px;
+    padding: 0px;
+    margin: 2px;
+    width: 80px;
     float: left;
 }
 
 .JS9FiltersUndoButton {
-    margin-left: 5px;
+    padding: 0px;
     margin-top: 15px;
-    width: 70px;
+    margin-right: 2px;
+    margin-bottom: 2px;
+    margin-left: 2px;
+    width: 80px;
     float: left;
 }
 
@@ -1376,13 +1380,13 @@ span.JS9NoDivs {
 .JS9FiltersCol2 {
     position: absolute;
     top: 0;
-    left: 90px;
+    left: 95px;
 }
 
 .JS9FiltersCol3 {
     position: absolute;
     top: 0;
-    left:  240px;
+    left:  245px;
     width: 40px;
 }
 

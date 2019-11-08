@@ -3573,7 +3573,7 @@ JS9.Filters = {};
 JS9.Filters.CLASS = "JS9";       // class of plugins
 JS9.Filters.NAME = "Filters";    // name of this plugin
 JS9.Filters.WIDTH = 315;         // width of light window
-JS9.Filters.HEIGHT = 445;        // height of light window
+JS9.Filters.HEIGHT = 450;        // height of light window
 JS9.Filters.BASE = JS9.Filters.CLASS + JS9.Filters.NAME;
 
 // image filters with no args
