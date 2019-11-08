@@ -1,5 +1,5 @@
 /*
- * colormap controls plugin (November 2, 2019)
+ * image filters plugin (November 2, 2019)
  */
 
 /*global $, JS9, sprintf */
@@ -9,9 +9,9 @@
 // create our namespace, and specify some meta-information and params
 JS9.Filters = {};
 JS9.Filters.CLASS = "JS9";       // class of plugins
-JS9.Filters.NAME = "Filters";  // name of this plugin
-JS9.Filters.WIDTH = 380;         // width of light window
-JS9.Filters.HEIGHT = 440;        // height of light window
+JS9.Filters.NAME = "Filters";    // name of this plugin
+JS9.Filters.WIDTH = 315;         // width of light window
+JS9.Filters.HEIGHT = 445;        // height of light window
 JS9.Filters.BASE = JS9.Filters.CLASS + JS9.Filters.NAME;
 
 // image filters with no args
@@ -41,7 +41,7 @@ JS9.Filters.argfilters = {
 
 JS9.Filters.headerHTML=`
 <center>
-<div class="JS9FiltersFilterLine">
+<div class="JS9FiltersLine">
 <span class="JS9FiltersHeader">
 Image Filters:<br>
 click for default settings or use the sliders
@@ -51,25 +51,25 @@ click for default settings or use the sliders
 `;
 
 JS9.Filters.noargfilterHTML=`
-<div class="JS9FiltersFilterLine">
-<span class="JS9FiltersName JS9FiltersFilterCol1">
+<div class="JS9FiltersLine">
+<span class="JS9FiltersName JS9FiltersCol1">
 <input type="button" name="%sbutton" value="%s" class="JS9FiltersButton" onclick="JS9.Filters.xfilter(this, '%s', '%s', '%s', %s)"></span>
 </div>
 `;
 
 JS9.Filters.argfilterHTML=`
-<div class="JS9FiltersFilterLine">
-<span class="JS9FiltersName JS9FiltersFilterCol1">
+<div class="JS9FiltersLine">
+<span class="JS9FiltersName JS9FiltersCol1">
 <input type="button" name="%sbutton" value="%s" class="JS9FiltersButton" onclick="JS9.Filters.xfilter(this, '%s', '%s', '%s', %s)"></span>
-<span class="JS9FiltersRange JS9FiltersFilterCol2"><input type="range" min="%s" max="%s" step="%s" value="%s" name="%s" class="JS9FiltersRange" onchange="JS9.Filters.xgenfilter('%s', '%s', '%s', this)"></span>
+<span class="JS9FiltersRange JS9FiltersCol2"><input type="range" min="%s" max="%s" step="%s" value="%s" name="%s" class="JS9FiltersRange" onchange="JS9.Filters.xgenfilter('%s', '%s', '%s', this)"></span>
 <span class="JS9FiltersRangeVal">
-<input type="text" name="%sval" class="JS9FiltersValue JS9FiltersFilterCol3" min="0" max="100" value="0" onchange="JS9.Filters.xgenval('%s', '%s', '%s', this)"></span>
+<input type="text" name="%sval" class="JS9FiltersValue JS9FiltersCol3" min="0" max="100" value="0" onchange="JS9.Filters.xgenval('%s', '%s', '%s', this)"></span>
 </div>
 `;
 
 JS9.Filters.undoHTML=`
-<div class="JS9FiltersFilterLine">
-<span class="JS9FiltersUndo JS9FiltersMenuCol1">
+<div class="JS9FiltersLine">
+<span class="JS9FiltersUndo JS9FiltersCol1">
 <input type="button" id="undo" name="undo" value="undo" class="JS9FiltersUndoButton" onclick="JS9.Filters.xundo(this, '%s', '%s')"></span>
 </div>`;
 
@@ -252,7 +252,7 @@ JS9.Filters.init = function(opts){
     // param values for image processing
     delete this.stack;
     // set up new html
-    this.colormapsContainer = $("<div>")
+    this.filtersContainer = $("<div>")
 	.addClass(`${JS9.Filters.BASE}Container`)
 	.attr("id", `${this.id}Container`)
         .attr("width", this.width)
@@ -307,9 +307,9 @@ JS9.Filters.init = function(opts){
 	s = im.expandMacro(html, mopts);
 	this.lastimage = im;
     } else {
-	s = "<p><center>Colormap parameters will appear here.</center>";
+	s = "<p><center>Image filters will appear here.</center>";
     }
-    this.colormapsContainer.html(s);
+    this.filtersContainer.html(s);
 };
 
 // add this plugin into JS9
