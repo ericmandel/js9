@@ -27,7 +27,7 @@ JS9.Filters.argfilters = {
     blur: {min: 0, max: 100, step: 1, init: 0, def: 30},
     brighten: {min: 1, max: 100, step: 1, init: 0, def: 10},
     darken: {min: 0, max: 1, step: 0.01, init: 0, def: .66},
-    duotone: {min: 0, max: 2, step: 1, init: 0, def: 0},
+    duotone: {min: 0, max: 2, step: 1, init: 0, def: 2},
     emboss: {min: 0, max: 100, step: 1, init: 0, def: 100},
     gamma: {min: 0, max: 2, step: 0.01, init: 0, def: 0.2},
     lighten: {min: 1, max: 2, step: 0.01, init: 0, def: 1.33},
@@ -43,8 +43,8 @@ JS9.Filters.headerHTML=`
 <center>
 <div class="JS9FiltersFilterLine">
 <span class="JS9FiltersHeader">
-JS9 Image Filters:<br>
-click for default filters or use the sliders
+Image Filters:<br>
+click for default settings or use the sliders
 </span>
 </center>
 </div>
