@@ -371,16 +371,19 @@ or try different ones to see how data features can be brought to the fore
 by color and contrast/bias.
 
 <p>
-The <b>image filters</b> menu option provides a number of well-known
-image processing functions that act directly on the displayed RGB
-image data (not the underlying raw astronomical data, as with the
-<b>Gaussian blur</b> in the <b>Analysis</b> menu).  Thus, when you can
-run one of these routines on an image, its effect will be undone if
-you redraw the image by changing the contrast/bias, colormap,
-etc. Also, since these functions act on the current RGB image, their
-effect is cumulative.  See the <b>JS9.FilterRGBImage()</b> section in
-the <a href="publicapi.html">JS9 Public API</a> for more information about
-the individual functions.
+The <b>image filters</b> menu option displays the <b>JS9Filters</b>
+plugin, which offers a number of well-known image processing functions
+that act directly on the displayed RGB image data (not the underlying
+raw astronomical data, as with the <b>Gaussian blur</b> in the <b>Analysis</b>
+menu). Thus, when you can run one of these routines on an image, its
+effect will be undone if you redraw the image by changing the
+contrast/bias, colormap, etc. Also, since these functions act on the
+current RGB image, their effect is cumulative.  See the
+<b>JS9.FilterRGBImage()</b> section in
+the <a href="publicapi.html">JS9 Public API</a> for more information
+about the individual functions. Note that not all functions in the
+public API call are implemented here: some of them seemed pretty
+useless for our data (they can be added easily.)
 
 <p>
 You can enter a floating point value into the <b>contrast</b> and 
