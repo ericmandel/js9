@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head> 
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<link type="text/css" rel="stylesheet" href="../../js9.css">
+<title>JS9 Image Filters Plugin</title>
+</head>
+<body>
+<div class="helpLogo"><img src="../../images/js9logo.png" alt="js9"></div>
+<div class="helpContainer">
+<h3>JS9 Image Filters</h3>
+
+The <b>Image Filter</b> plugin allows you to apply image processing
+techniques directly to the displayed image without changing the
+underlying raw data. The web has an overwhelming
+amount of information about image processing.  A good technical
+article concerning the use of image filters with Javascript and the
+HTML5 canvas is available at:
+<a href="http://www.html5rocks.com/en/tutorials/canvas/imagefilters/" target="_blank">
+http://www.html5rocks.com/en/tutorials/canvas/imagefilters/
+</a>
+
+<p>
+Note that the standard JS9 colormaps, scale, contrast and bias
+selections are applied to the raw data to regenerate the RGB
+image. Thus, if you use an image processing technique and then change
+colormap, contrast, bias, or scale, you will undo the applied image
+processing. This is a good way to reset the displayed image.
+
+<p>
+Several image processing filters and convolutions are available, many of
+which allow you to adjust a parameter using either a slider or by
+typing a value into the text box:
+<ul>
+<li><b>blur(val):</b> blur the image using a pseudo-Gaussian convolution
+<li><b>brighten(val):</b> add constant value to each pixel to change the brightness
+<li><b>darken(val):</b> darken by applying the kernel
+[ 0, 0, 0, 0, val, 0, 0, 0, 0],
+<li><b>duotone(0|1|2):</b> remove a color by setting it to
+the average of the other two, e.g. red=(green+blue)/2, where the input
+values are: 0 = red, 1 = green, 2 = blue
+<li><b>edge():</b> detect edges using the kernel
+[ -1, -1, -1, -1, 8, -1, -1, -1, -1 ]
+<li><b>emboss(val):</b> produce embossing effect using the kernel
+[-18, -9, 9, -9, 100 - val, 9, 0, 9, 18 ]
+<li><b>gamma(val):</b> apply the nonlinear gamma operation, used to code and 
+decode luminance values in video or still image systems: 
+out = pow(in, val)
+<li><b>invert():</b> the RGB channels of the image are inverted
+<li><b>lighten(val):</b> lighten the image by applying the kernel
+[ 0, 0, 0, 0, val, 0, 0, 0, 0 ],
+<li><b>luminance():</b>convert to greyscale using the CIE luminance:
+0.2126*r + 0.7152*g + 0.0722*b
+[255-r, 255-g, 255-b, a]
+<li><b>median():</b> noise reduction technique that replaces each pixel with
+the median of neighboring pixels
+<li><b>noise(val):</b> add random noise: 
+pixel =  pixel + Math.floor((Math.random()*(val)
+<li><b>pixelate(val):</b>make image look coarser by creating a square tiling
+effect of the specified size
+<li><b>scatter(val):</b> scatters the colors of a pixel in its
+neighborhood, akin to viewing through brittle cracked glass
+<li><b>sepia(val):</b> image takes on shades of brown, like an antique
+photograph
+<li><b>sharpen(val):</b> sharpen the image using the kernel
+[ 0, -3, 0, -3, val, -3, 0, -3, 0 ]
+<li><b>sobel():</b> use the Sobel operator to create an image that
+emphasizes the edges
+<li><b>solarize(val):</b> which image is wholly or partially reversed in
+tone. Dark areas appear light or light areas appear dark.
+</ul>
+
+<p>
+Filters are cumulative: if you apply a filter and then apply a second filter,
+the latter changes the current RGB color values that were  modified by the
+first filter.
+
+<p>
+You can undo the effects of the current filter by clicking the
+<b>undo [filter]</b> button. This reverts the image to the colors used
+in the previous filter. The <b>undo</b> operation is applied to the
+current filter, allowing you to unwind the filters back to the
+original image colors. You can, of course, unset all filters at once
+by changing the colormap, contrast, bias, or scale.
+</div>
+</body>
+</html>
