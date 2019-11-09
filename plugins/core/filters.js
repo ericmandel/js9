@@ -316,7 +316,8 @@ JS9.Filters.init = function(opts){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Filters.CLASS, JS9.Filters.NAME,
 		   JS9.Filters.init,
-		   {onplugindisplay: JS9.Filters.init,
+		   {menuItem: "Image Filters",
+		    onplugindisplay: JS9.Filters.init,
 		    onchangecontrastbias: JS9.Filters.reinit,
 		    onsetpan: JS9.Filters.reinit,
 		    onsetcolormap: JS9.Filters.reinit,
