@@ -8361,14 +8361,26 @@ JS9.Image.prototype.filterRGBImage = function(...args){
 	}
 	return filters;
     }
-    // sanity checks
-    if( filter !== "reset" && !JS9.ImageFilters[filter] ){
-	JS9.error(`JS9 image filter '${filter}' not available`);
-    }
-    // special case: reset to original RGB data, contrast/bias
-    if( filter === "reset" ){
+    // pre-processing and special processing
+    switch(filter){
+    case "reset":
+	// special case: reset to original RGB data, contrast/bias
 	this.setColormap("reset");
 	return this;
+    case "median":
+	// alias used in filters plugin
+	filter = "medianFilter";
+	break;
+    case "edge":
+	// alias used in filters plugin
+	filter = "edgeDetect";
+	break;
+    default:
+	break;
+    }
+    // sanity checks
+    if( !JS9.ImageFilters[filter] ){
+	JS9.error(`JS9 image filter '${filter}' not available`);
     }
     // save this routine so it can be reconstituted in a restored session
     this.xeqStashSave("filterRGBImage", args);
