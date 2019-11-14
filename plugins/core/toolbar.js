@@ -275,7 +275,7 @@ JS9.Toolbar.addTool = function(tool){
                 // clone the array and any objects it contains
                 args = JSON.parse(JSON.stringify(tool.args||[]));
                 args.push({display: display});
-                JS9.publics[tool.cmd].apply(null, args);
+                JS9.publics[tool.cmd](...args);
             } else {
 		JS9.error(`unknown JS9 func for toolbar: ${tool.cmd}`);
 	    }

@@ -245,7 +245,7 @@ JS9.Menubar.createMenus = function(){
 				// clone the array and any objects it contains
 				args = JSON.parse(JSON.stringify(opt.args||[]));
 				args.push({display: udisp});
-				JS9.publics[opt.cmd].apply(null, args);
+				JS9.publics[opt.cmd](...args);
 				// update the menu title
 				if( opt.updateTitle !== false ){
 				if( opt.image && menu.updateTitle &&
@@ -286,7 +286,7 @@ JS9.Menubar.createMenus = function(){
 	    }
 	}
     };
-    // file: make button open the contextMenu
+    // File menu: make button open the contextMenu
     $(`#fileMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
         $(`#fileMenu${this.id}`).contextMenu();
@@ -948,12 +948,12 @@ JS9.Menubar.createMenus = function(){
 		    items: items
 		};
             }
-	});
-	// Edit: make button open the contextMenu
-	$(`#editMenu${this.id}`).on("mousedown", (evt) => {
-            evt.preventDefault();
-            $(`#editMenu${this.id}`).contextMenu();
-	});
+    });
+    // Edit menu: make button open the contextMenu
+    $(`#editMenu${this.id}`).on("mousedown", (evt) => {
+        evt.preventDefault();
+        $(`#editMenu${this.id}`).contextMenu();
+    });
     // define contextMenu actions
     $.contextMenu({
         selector: `#editMenu${this.id}`,
@@ -1049,7 +1049,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	}
     });
-    // viewMac: make button open the contextMenu
+    // ViewMac menu: make button open the contextMenu
     $(`#viewMacMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
         $(`#viewMacMenu${this.id}`).contextMenu();
@@ -1085,8 +1085,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	}
     });
-    
-    // View: make button open the contextMenu
+    // View menu: make button open the contextMenu
     $(`#viewMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
         $(`#viewMenu${this.id}`).contextMenu();
@@ -1394,7 +1393,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	}
     });
-    // Zoom: make button open the contextMenu
+    // Zoom menu: make button open the contextMenu
     $(`#zoomMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
         $(`#zoomMenu${this.id}`).contextMenu();
@@ -1683,7 +1682,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	}
     });
-    // Scale: make button open the contextMenu
+    // Scale menu: make button open the contextMenu
     $(`#scaleMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
         $(`#scaleMenu${this.id}`).contextMenu();
@@ -1840,7 +1839,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	}
     });
-    // Color: make button open the contextMenu
+    // Color menu: make button open the contextMenu
     $(`#colorMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
         $(`#colorMenu${this.id}`).contextMenu();
@@ -2013,7 +2012,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	}
     });
-    // Region: make button open the contextMenu
+    // Region menu: make button open the contextMenu
     $(`#regionMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
         $(`#regionMenu${this.id}`).contextMenu();
@@ -2375,7 +2374,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	}
     });
-    // WCS: make button open the contextMenu
+    // WCS menu: make button open the contextMenu
     $(`#wcsMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
         $(`#wcsMenu${this.id}`).contextMenu();
@@ -2653,7 +2652,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	}
     });
-    // ANALYSIS: make button open the contextMenu
+    // Analysis menu: make button open the contextMenu
     $(`#analysisMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
         $(`#analysisMenu${this.id}`).contextMenu();
@@ -2961,7 +2960,7 @@ JS9.Menubar.createMenus = function(){
 	    };
 	}
     });
-    // HELP: make button open the contextMenu
+    // Help menu: make button open the contextMenu
     $(`#helpMenu${this.id}`).on("mousedown", (evt) => {
         evt.preventDefault();
         $(`#helpMenu${this.id}`).contextMenu();
