@@ -324,6 +324,17 @@ the js9Prefs.json file:
 <li><b>workDir</b>: set to the relative path of a directory which
 will hold temporary working directories for each loaded web page (default: ./tmp)
 </ul>
+The <b>workDir</b> directory should be relative to the directory in
+which the JS9 helper is run. This will ensure that you have access
+permission to temporary retrieve files via the web server (e.g.,
+loading a remote file via the <b>LoadProxy()</b> command into a
+temporary directory, so that JS9 can subsequently load it via the web
+server). This restriction can be relaxed when using the file:// URI,
+although some browsers on some operating systems (e.g. Firefox on
+Linux) prevent you from loading files outside the web page domain even
+with the file:// URI.
+
+<p>
 You also can set the following globalOpts configuration parameters in
 js9Prefs.json:
 <ul>
