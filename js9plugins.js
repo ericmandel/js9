@@ -6141,7 +6141,7 @@ JS9.Menubar.createMenus = function(){
 	    });
 	} else {
 	    // Jupyter gets the wrong position when using $trigger ...
-	    pos = this.offset();
+	    pos = opt.$trigger.offset();
 	    opt.$menu.css({"left": pos.left+20, "top": pos.top+10});
 	}
     };
