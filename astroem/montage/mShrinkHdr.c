@@ -15,6 +15,8 @@ Version  Developer        Date     Change
 #include "coord.h"
 #include "wcs.h"
 
+#include "montage.h"
+
 #define MAXSTR  256
 
 static int stradd      (char *header, char *card);
@@ -23,7 +25,7 @@ static int printHeader (char *header);
 
 static struct WorldCoor *wcs;
 
-FILE    *fstatus;
+/* FILE    *fstatus; */
 
 extern char *optarg;
 extern int optind, opterr;

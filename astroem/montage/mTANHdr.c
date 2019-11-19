@@ -43,6 +43,8 @@ Version  Developer        Date     Change
 #include "coord.h"
 #include "wcs.h"
 
+#include "montage.h"
+
 #define MAXSTR  256
 
 static struct WorldCoor *wcs;
@@ -62,8 +64,8 @@ double **b ;
 double **ap;
 double **bp;
 
-FILE    *fout;
-FILE    *fstatus;
+static FILE    *fout;
+/* FILE    *fstatus; */
 
 extern char *optarg;
 extern int optind, opterr;
@@ -115,7 +117,7 @@ double ycorrection;
 double pcdelt1, pcdelt2;
 double dtr;
 
-int debug;
+static int debug;
 
 
 /*************************************************************************/

@@ -536,10 +536,12 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 		// filename with extension to pass to cfitsio
 		// also remove parentheses, since cfitsio reserves them
 		// and spaces while we are at it
+		// and, finally, change the "/" directory symbol
 		fitsname = opts.filename
-		    .replace(/^\.\.*/, "X")
+		    .replace(/^\.\./, "xx")
+		    .replace(/^\./, "x")
 		    .replace(/[\s()]/g,"-")
-		    .replace(/\//g, "__");
+		    .replace(/\//g, ":");
 		// virtual file name without extension
 		hdu.vfile = fitsname.replace(/\[.*\]/g, "");
 	    } else {
@@ -556,8 +558,8 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 	    // make a virtual file
 	    if( (arr[0] === 0x1f) && (arr[1] === 0x8B) ){
 		// if original is gzip'ed, unzip to virtual file
-		hdu.vfile = hdu.vfile.replace(/\.gz$/,"");
-		fitsname = fitsname.replace(/\.gz/,"");
+		hdu.vfile = "gz::" + hdu.vfile.replace(/\.gz$/,"");
+		fitsname =  "gz::" + fitsname.replace(/\.gz/,"");
 		try{
 		    narr = Module["gzdecompress"](arr, hdu.vfile, false);
 		}
@@ -566,8 +568,8 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 		}
 	    } else if((arr[0] === 0x42) && (arr[1] === 0x5A) && (arr[2] === 0x68)){
 		// if original is bzip2'ed, bunzip2 to virtual file
-		hdu.vfile = hdu.vfile.replace(/\.bz2$/,"");
-		fitsname = fitsname.replace(/\.bz2/,"");
+		hdu.vfile = "bz::" + hdu.vfile.replace(/\.bz2$/,"");
+		fitsname =  "bz::" + fitsname.replace(/\.bz2/,"");
 		try{
 		    narr = Module["bz2decompress"](arr, hdu.vfile, false);
 		}

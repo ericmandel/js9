@@ -1,7 +1,7 @@
 #ifndef ISIS_COORD_LIB
 
 
-int coord_debug;
+extern int coord_debug;
 
 
 struct COORD                /* Definition of coordinate structure            */

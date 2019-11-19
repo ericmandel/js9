@@ -30,11 +30,21 @@ EMFLAGS		= -O3 --memory-init-file 0
 # support zscale up to 4096 * 4096 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=67108864
 # cfitsio requires memory growth
-# but disable asm.js validation to avoid chrome slowdown with memory growth:
-# https://github.com/kripken/emscripten/wiki/Chrome-Perf-Issues
 EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1
-# asm.js instead of wasm:
-NOWASMOPTS =	-s WASM=0 -s ASM_JS=2
+# javascript instead of wasm:
+# for unknown reasons, -O3 results in a runtime error, so we use -O2
+# Uncaught TypeError: Ba is not a function
+#     at eC (astroem.js:64)
+#     at iC (astroem.js:64)
+#     at Wn (astroem.js:60)
+#     at Gf (astroem.js:40)
+#     at Wg (astroem.js:40)
+#     at Fc (astroem.js:12)
+#     at dk (astroem.js:20)
+#     at Module._openFITSFile (astroem.js:86)
+#     at ccall (astroem.js:86)
+#     at FileReader.fileReader.onload (astroem.js:86)
+NOWASMOPTS =	-s WASM=0 -O2
 # wasm support:
 WASMOPTS =	-s WASM=1
 # debugging
@@ -60,7 +70,8 @@ JOBJS = 	$(JSRCS:%.c=%.o)
 
 # montage (re-project)
 MONTAGE =	./montage
-MSRCS =		$(MONTAGE)/mProjectPP.c \
+MSRCS =		$(MONTAGE)/mGlobals.c \
+		$(MONTAGE)/mProjectPP.c \
 		$(MONTAGE)/mTANHdr.c \
 		$(MONTAGE)/mAdd.c \
 		$(MONTAGE)/mImgtbl.c \

@@ -200,17 +200,18 @@ static void printError            (char *);
 /* Define global variables */
 /***************************/
 
-char ctype[MAXSTR];
+static char ctype[MAXSTR];
 
 static int maxfile = MAXFILE;
 
-char output_file      [MAXSTR];
-char output_area_file [MAXSTR];
+static char output_file      [MAXSTR];
+static char output_area_file [MAXSTR];
 
 struct WorldCoor *imgWCS;
 struct WorldCoor *hdrWCS;
 
-int  debug;
+static int  debug;
+
 int  haveAreas = 0;
 int  status    = 0;
 
@@ -254,7 +255,7 @@ static int listMax;
 /* structure to hold file information and pointers */
 /***************************************************/
 
-struct fileinfo
+static struct fileinfo
 {
    int       isopen;
    fitsfile *fptr;
@@ -265,7 +266,7 @@ struct fileinfo
 *input, *input_area;
    
 
-struct outfile
+static struct outfile
 {
   fitsfile *fptr;
   long      naxes[2];

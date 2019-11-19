@@ -683,7 +683,6 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
   char file0[SZ_LINE];
   char file1[SZ_LINE];
   char file2[SZ_LINE];
-  char temp2[SZ_LINE];
   char file3[SZ_LINE];
   args[i++] = "mProjectPP";
   if( cmdswitches && *cmdswitches ){
@@ -704,9 +703,8 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
   args[i++] = file0;
   snprintf(file1, SZ_LINE-1, "%s%s", ROOTDIR, iname);
   args[i++] = file1;
-  snprintf(temp2, SZ_LINE-1, "%sreproj_%d.fits", ROOTDIR, nstatus++);
-  args[i++] = temp2;
   snprintf(file2, SZ_LINE-1, "%s%s", ROOTDIR, oname);
+  args[i++] = file2;
   snprintf(file3, SZ_LINE-1, "%s%s", ROOTDIR, wname);
   args[i++] = file3;
   /* call the low-level routine, guarding against exit() calls */
@@ -716,38 +714,6 @@ char *reproject(char *iname, char *oname, char *wname, char *cmdswitches){
   }
   /* look for a return value */
   if( filecontents(file0, rstr, SZ_LINE) >= 0 ){
-    if( strstr(rstr, "OK") ){
-      /* copy temp file(s) to output file(s): */
-      /* Emscripten has created the temp file as a huge JS array, */
-      /* and we are converting it back to a smaller typed array ... */
-      EM_ASM(({
-	  var tafile, oafile, n;
-	  var tfile = UTF8ToString($0);
-	  var ofile = UTF8ToString($1);
-	  // reprojected file must exist
-	  try{
-	    FS.writeFile(ofile, FS.readFile(tfile));
-	    FS.unlink(tfile);
-	  } catch(e){
-	    console.log("ERROR: reproject could not finalize output file");
-	  }
-	  // area file might exist
-	  n = tfile.lastIndexOf(".");
-	  if( n >= 0 ) {
-	    tafile = tfile.substring(0, n) + "_area" + tfile.substring(n);
-	  }
-	  n = ofile.lastIndexOf(".");
-	  if( n >= 0 ) {
-	    oafile = ofile.substring(0, n) + "_area" + ofile.substring(n);
-	  }
-	  if( tafile && oafile ){
-	    try{
-	      FS.writeFile(oafile, FS.readFile(tafile));
-	      FS.unlink(tafile);
-	    } catch(e){}
-	  }
-      }), temp2, file2);
-    }
     unlink(file0);
     return rstr;
   } else {
@@ -1105,10 +1071,4 @@ int vls(char *dir){
   }
   closedir(dfd);
   return got;
-}
-
-/* dummy routine to work around missing routine in emscripten 1.37.9 */
-/* signature take from: 1.37.9/system/lib/libc/musl/src/thread/__wait.c */
-void __wait(volatile int *addr, volatile int *waiters, int val, int priv){
-  return;
 }

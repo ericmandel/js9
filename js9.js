@@ -109,7 +109,7 @@ JS9.globalOpts = {
     requireFits2Fits: false,    // throw error if fits2fits can't be run?
     quietReturn: false,         // should API return empty string or "OK"?
     useWasm: true,		// use WebAssembly if available?
-    allowFileWasm: false,       // allow file:// to use wasm?
+    allowFileWasm: true,        // allow file:// to use wasm?
     winType: "light",		// plugin window: "light" or "new"
     rgb: {active: false,	// RGB mode
 	  rim: null,

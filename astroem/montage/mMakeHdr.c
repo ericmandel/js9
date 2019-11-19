@@ -75,7 +75,7 @@ int checkWCS    (struct WorldCoor *wcs, int action);
 static int stradd      (char *header, char *card);
 static int readTemplate(char *filename);
 
-int    debugLevel;
+static int    debugLevel;
 
 
 /* Basic image WCS information    */

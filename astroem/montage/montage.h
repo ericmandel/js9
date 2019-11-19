@@ -1,4 +1,4 @@
 #ifndef MONTAGE
-FILE *fstatus;
+extern FILE *fstatus;
 #define MONTAGE
 #endif

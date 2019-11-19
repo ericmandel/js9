@@ -127,13 +127,13 @@ BorderPoint polygon[256];
 
 
 
-int  debug;
+static int  debug;
 
 
 /* Structure used to store relevant */
 /* information about a FITS file    */
 
-struct
+static struct
 {
    fitsfile         *fptr;
    long              naxes[2];

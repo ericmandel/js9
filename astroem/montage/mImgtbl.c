@@ -48,7 +48,8 @@ extern int getopt(int argc, char *const *argv, const char *options);
 
 char *mktemp(char *template);
 
-int   debug;
+static int   debug;
+
 int   showbad;
 int   recursiveMode;
 int   processAreaFiles;
@@ -77,9 +78,9 @@ int     nfields;
 
 int  ncube = 9;
 
-char cname [9][32] = {"NAXIS", "NAXIS3", "CRVAL3", "CDELT3", "CRPIX3", "NAXIS4", "CRVAL4", "CDELT4", "CRPIX4"};
-char ctype [9][32] = {"int",   "int",    "double", "double", "double", "int",    "double", "double", "double"};
-int  cwidth[9]     = { 6,       6,        16,       16,       16,       6,        16,       16,       16};
+static char cname [9][32] = {"NAXIS", "NAXIS3", "CRVAL3", "CDELT3", "CRPIX3", "NAXIS4", "CRVAL4", "CDELT4", "CRPIX4"};
+static char ctype [9][32] = {"int",   "int",    "double", "double", "double", "int",    "double", "double", "double"};
+static int  cwidth[9]     = { 6,       6,        16,       16,       16,       6,        16,       16,       16};
 
 int     badwcs = 0;
 
@@ -91,7 +92,7 @@ void print_rec   (struct Hdr_rec*);
 
 int  update_table(char *tblname);
 
-struct Hdr_rec hdr_rec;
+static struct Hdr_rec hdr_rec;
 
 
 /*************************************************************************/
