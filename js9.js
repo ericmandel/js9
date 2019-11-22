@@ -6451,9 +6451,10 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	       racen: "", deccen: "",
 	       wcsfov: "", wcspix: "",
 	       val: val, val3: val3,
-	       id: this.id, file: this.file, object: this.object};
+	       id: this.id, file: this.file, object: this.object||""};
 	if( this.telescope || this.instrument ){
-	    obj.object += "  (";
+	    if( obj.object ){ obj.object += "  "; }
+	    obj.object += "(";
 	    if( this.telescope ){
 		obj.object += this.telescope;
 		if( this.instrument ){
@@ -6481,24 +6482,29 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 		cd1 = Math.abs(this.raw.wcsinfo.cdelt1);
 		cd2 = Math.abs(this.raw.wcsinfo.cdelt2);
 		v1 = 1/60;
-		if( (cd1 >= 1) || (cd2 >= 1) ){
-		    units = "deg";
-		} else if( (cd1 >= v1) || (cd2 >= v1) ){
-		    units = "'";
-		    cd1 *= 60;
-		    cd2 *= 60;
-		} else {
-		    units = '"';
-		    cd1 *= 3600;
-		    cd2 *= 3600;
+		if( this.raw.header.CUNIT1 ){
+		    units = this.raw.header.CUNIT1;
+		}
+		if( !units || units.match(/^deg/i) ){
+		    if( (cd1 >= 1) || (cd2 >= 1) ){
+			units = "deg";
+		    } else if( (cd1 >= v1) || (cd2 >= v1) ){
+			units = "'";
+			cd1 *= 60;
+			cd2 *= 60;
+		    } else {
+			units = '"';
+			cd1 *= 3600;
+			cd2 *= 3600;
+		    }
 		}
 		sect = this.rgb.sect;
 		bin = this.binning.bin;
 		v1 = ((sect.x1 - sect.x0) * cd1).toFixed(0);
 		v2 = ((sect.y1 - sect.y0) * cd2).toFixed(0);
-		obj.wcsfov = `${v1 + units} x ${v2}${units}`;
-		v1 = tf(cd1 * bin / sect.zoom);
-		obj.wcspix = `${v1 + units} / pixel`;
+		obj.wcsfov = `${v1}${units} * ${v2}${units}`;
+		v1 = tr(cd1 * bin / sect.zoom, 3);
+		obj.wcspix = `${v1}${units}/pix`;
 		obj.wcsfovpix = `${obj.wcsfov}  (${obj.wcspix})`;
 		s = JS9.pix2wcs(this.raw.wcs,
 				(sect.x1 + sect.x0)/2, (sect.y1 + sect.y0)/2)
