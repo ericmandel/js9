@@ -445,17 +445,18 @@ def xmmProxyTest(j):
     closeImage(j)
     displayMessage(j, "load xmm archive via proxy ...")
     j.LoadProxy(xmmurl,
-                {"colormap":"red", "scale":"log", "contrast":6.3, "bias": 0.1})
+                {"colormap":"red", "scale":"log",
+                 "scalemin": 0, "contrast": 9.2, "bias": 0.047});
     waitStatus(j)
     displayMessage(j, 'j.DisplaySlice(2)')
     j.DisplaySlice(2,
                    {"separate": True, "colormap":"green", "scale":"log",
-                    "contrast":6.625, "bias":0.15})
+                    "scalemin": 0, "contrast": 9.2, "bias": 0.047});
     sleep()
     displayMessage(j, 'j.DisplaySlice(3)')
     j.DisplaySlice(3,
                    {"separate": True, "colormap":"blue", "scale":"log",
-                    "contrast":7.025, "bias":0.195})
+                    "scalemin": 0, "contrast": 9.2, "bias": 0.047});
     sleep()
     displayMessage(j, 'j.SetRGBMode(True)')
     j.SetRGBMode(True)
