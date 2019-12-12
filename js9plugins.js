@@ -6243,7 +6243,7 @@ JS9.Menubar.createMenus = function(){
 				}
 				}
 			    } else {
-				JS9.error(`unknown func for user menubar: ${menu.cmd}`);
+				JS9.error(`unknown func for user menubar: ${opt.cmd}`);
 			    }
 			}
 		    });
