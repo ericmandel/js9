@@ -10356,7 +10356,7 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	    opts.sessionPath                &&
 	    obj.file.charAt(0) !== "/"      &&
 	    !obj.file.match(JS9.URLEXP)     ){
-	    pname = JS9.fixPath(opts.sessionPath + obj.file);
+	    pname = JS9.fixPath(opts.sessionPath + obj.file, opts);
 	}
 	// save for finish
 	objs[pname] = obj;
@@ -22324,7 +22324,7 @@ JS9.mkPublic("LoadColormap", function(...args){
     if( typeof file === "object" ){
 	JS9.AddColormap(file, opts);
     } else if( typeof file === "string" ){
-	file = JS9.fixPath(file);
+	file = JS9.fixPath(file, opts);
 	JS9.fetchURL(null, file, null, (data) => {
 	    JS9.AddColormap(data, opts);
 	});
@@ -23913,7 +23913,7 @@ JS9.mkPublic("LoadRegions", function(...args){
 	reader.readAsText(file);
     } else if( typeof file === "string" ){
 	opts.responseType = "text";
-	file = JS9.fixPath(file);
+	file = JS9.fixPath(file, opts);
 	opts.file = file.split("/").reverse()[0];
 	JS9.fetchURL(null, file, opts, addregions);
     } else {
@@ -24204,7 +24204,7 @@ JS9.mkPublic("LoadSession", function(...args){
     } else if( typeof file === "string" ){
 	opts.responseType = "text";
 	opts.display = disp.id;
-	file = JS9.fixPath(file);
+	file = JS9.fixPath(file, opts);
 	JS9.fetchURL(null, file, opts, (jstr, opts) => {
 	    const jobj = JSON.parse(jstr);
 	    opts.sessionPath =  JS9.dirname(file);
@@ -24294,7 +24294,7 @@ JS9.mkPublic("LoadCatalog", function(...args){
 	} else {
 	    // its a file: retrieve and load the catalog
 	    opts.responseType = "text";
-	    file = JS9.fixPath(file);
+	    file = JS9.fixPath(file, opts);
 	    JS9.fetchURL(null, file, opts, (s) => {
 		// load the catalog
 		im.loadCatalog(layer, s, opts);
