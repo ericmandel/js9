@@ -168,6 +168,7 @@ if( js9Electron.node                             &&
 			"don't enable node with a non-local web page");
     process.exit();
 }
+js9Electron.page = js9Electron.page.replace(/\\/g,"");
 
 // setup on-will-download callbacks to save files without a dialog box
 function initWillDownload() {
