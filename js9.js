@@ -20126,10 +20126,13 @@ JS9.fixPath = function(f, opts){
 	JS9.desktopOpts.currentPath &&
 	opts.fixpath !== false      &&
 	!f.match(JS9.URLEXP)        ){
-	if( f.match(/^\${JS9_DIR}/) ){
-	    f = f.replace(/^\${JS9_DIR}\//,JS9.INSTALLDIR);
-	}
-	if( f.charAt(0) !== "/" ){
+	if( f.match(/^\${JS9_DIR}\//) ){
+	    f = f.replace(/^\${JS9_DIR}\//, JS9.INSTALLDIR);
+	} else if( f.match(/^\${JS9_INSTALLDIR}\//) ){
+	    f = f.replace(/^\${JS9_INSTALLDIR}\//, JS9.INSTALLDIR);
+	} else if( f.match(/^\${JS9_PAGEDIR}\//) ){
+	    f = f.replace(/^\${JS9_PAGEDIR}\//, "");
+	} else if( f.charAt(0) !== "/" ){
 	    f = `${window.currentDir}/${f}`;
 	}
     }

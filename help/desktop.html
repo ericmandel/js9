@@ -126,6 +126,28 @@ while use of <b>fixpath:false</b>:
 &lt;a href='javascript:JS9.Load("fits/casa.fits", {scale:"log", colormap: "cool", fixpath:false});'&gt;CAS-A&lt;/a&gt;
 </pre>
 specifies that the FITS file is relative to the web page.
+<p>
+You also can use the <b>${JS9_INSTALLDIR}</b> and <b>${JS9_PAGEDIR}</b> "macros"
+to specify that the path of the FITS file is relative to the JS9 install
+directory or the web page directory, respectively. For example:
+<pre>
+&lt;a href='javascript:JS9.Load("${JS9_PAGEDIR}/fits/casa.fits", {scale:"log", colormap: "cool"});'&gt;CAS-A&lt;/a&gt;
+</pre>
+specifies that the FITS file is relative to the web page (just
+like <b>fixpath</b>), while:
+<pre>
+&lt;a href='javascript:JS9.Load("${JS9_INSTALLDIR}/fits/casa.fits", {scale:"log", colormap: "cool"});'&gt;CAS-A&lt;/a&gt;
+</pre>
+specifies that the FITS file is relative to the JS9 install directory.
+<p>
+Note that path specification using <b>fixpath</b>, <b>${JS9_INSTALLDIR}</b>, or <b>${JS9_PAGEDIR}</b> applies to the "Load" routines:
+<ul>
+<li> JS9.Load()
+<li> JS9.LoadCatalog()
+<li> JS9.LoadColormap()
+<li> JS9.LoadRegions()
+<li> JS9.LoadSession()
+</ul>
 
 <p>
 The same js9 script (without the -a switch) can now be used to interact
