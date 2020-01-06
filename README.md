@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3382228.svg)](https://doi.org/10.5281/zenodo.3382228)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3598590.svg)](https://doi.org/10.5281/zenodo.3598590)
 
 [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/espadrine.svg?style=social&label=Follow%20%40astrosoftware)](https://twitter.com/astrosoftware)
 
@@ -112,6 +112,7 @@ JS9 is distributed under the terms of The MIT License.
 
 What's the release history?
 ---------------------------
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3598590.svg)](https://doi.org/10.5281/zenodo.3598590) __v3.0.0__ &nbsp; (01/06/2020)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3382228.svg)](https://doi.org/10.5281/zenodo.3382228) __v2.5.0__ &nbsp; (08/30/2019)
 
