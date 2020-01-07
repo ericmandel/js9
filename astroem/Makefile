@@ -32,9 +32,7 @@ EMFLAGS		= -O3 --memory-init-file 0
 # cfitsio requires memory growth
 EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1
 # javascript instead of wasm:
-# a bug in llvm backend 1.39.3 causes a runtime error with -O3, so use -O2
-# this is fixed in a subsequent release (not installed yet)
-NOWASMOPTS =	-s WASM=0 -O2
+NOWASMOPTS =	-s WASM=0
 # wasm support:
 WASMOPTS =	-s WASM=1
 # debugging
