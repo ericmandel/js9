@@ -1185,6 +1185,56 @@ Examples:
     JS9.UnsyncImages(null, ["foo1.fits", "foo2.fits"], {reverse: true, reciprocal: false})
 </pre>
 
+<h5 id="JS9.MaskImage">Mask an image using values in another image</h5>
+<p>
+<code class="api">JS9.MaskImage(image, opts)</code>
+<p>
+Calling sequences:
+<pre>
+    JS9.MaskImage()                   # return current mask params
+    JS9.MaskImage(true||false)        # turn on/off masking
+    JS9.MaskImage(image, opts)        # set mask and optionally, its params
+    JS9.MaskImage(opts)               # set mask params
+</pre>
+<p>
+where:
+<ul>
+<li><b>image</b>: image handle or image id to use as a mask
+<li><b>opts</b>: optional mask properties
+</ul>
+where the mask properties are:
+<ul>
+<li><b>value</b>: mask value that triggers masking (def: 0)
+<li><b>opacity</b>: opacity to use when masking (def: 0, range 0 to 1)
+<li><b>invert</b>: whether to invert the mask (def: false)
+</ul>
+<p>
+The pixel values in one image can be used to mask the pixels in
+another image <i>if the two images have the same image dimensions</i>. If
+the value of a pixel in the mask is less than or equal to the
+<b>value</b> property, the opacity of the displayed pixel is set
+to the <b>opacity</b> property. You can also invert the mask using
+the <b>invert</b> property.
+<p>
+To set up a mask initially, call the routine with an already-loaded
+mask image as the first parameter, and an optional opts object as the
+second parameter:
+<pre>
+    JS9.ImageMask("casa_mask.fits");
+
+    JS9.ImageMask("casa_mask.fits", {value: 5, opacity: 0.2});
+</pre>
+You can change the mask parameters at any time:
+<pre>
+    JS9.ImageMask({value: 2, opacity: 0});
+</pre>
+or temporarily turn off and on the mask:
+<pre>
+    JS9.ImageMask(false);
+    ...
+    JS9.ImageMask(true);
+</pre>
+
 <h5 id="JS9.CloseImage">Clear the image from the display and mark resources for release</h5>
 <p>
 <code class="api">JS9.CloseImage(opts)</code>
@@ -4405,14 +4455,15 @@ new id using the {display: "id"} syntax.
 
 <h5 id="JS9.CloseDisplay">Close all images in a display</h5>
 <p>
-<code class="api">JS9.CloseDisplay(dname)</code>
+<code class="api">JS9.CloseDisplay(dname, regexp)</code>
 <p>
 where:
 <ul>
 <li><b>dname</b>: name of JS9 display whose images will be closed
+<li><b>regexp</b>: optional regular expression to specify which images to close
 </ul>
 <p>
-This routine closes all images in the specified display.
+By default, his routine closes all images in the specified display.
 You can supply a display name as the first argument or the display object:
 <pre>
     JS9.CloseDisplay("myJS9");
@@ -4420,6 +4471,16 @@ You can supply a display name as the first argument or the display object:
 or:
 <pre>
     JS9.CloseDisplay({display: "myJS9"});
+</pre>
+If a regular expression is specified as second argument, only images matching
+that regular expression will be closed. For example:
+<pre>
+  JS9.CloseDisplay("JS9", ".*mask.fits.gz");
+</pre>
+will close all mask files. As a convenience, you can omit the display argument
+and specify the template as the first argument:
+<pre>
+  JS9.CloseDisplay(".*mask.fits.gz");
 </pre>
 
 <p><hr>
@@ -5038,92 +5099,6 @@ NB: The routines in this section are prototypes and therefore are
 subject to change. Feel free to contact us to discuss your needs so
 that we can gain a better understanding of what is required in these cases.
 
-<h5 id="JS9.LoadAuxFile">Load an auxiliary file</h5>
-<p>
-<code class="api">JS9.LoadAuxFile(name, func)</code>
-<p>
-where:
-<ul>
-<li><b>name</b>: class name of auxiliary file to load
-<li><b>func</b>: function to call once the file is loaded
-</ul>
-<p> It sometimes is desirable to process auxiliary files when an image
-is first loaded.  Examples include overlaying an image mask on an
-image, and pre-loading regions from a region file.
-The <b>JS9.LoadAuxFile</b> prototypes this sort of functionality.
-<p>
-Auxiliary files are defined in the js9Prefs.json file by means of the
-JS9.auxfiles array containing one or more auxfile objects.  Each
-auxfile specification has the following properties:
-<ul>
-<li><b>type</b>: type of auxiliary file: currently "mask" or "region"
-<li><b>name</b>: the class name of the auxiliary file
-<li><b>image</b>: image (or template) for which this auxfile is valid
-<li><b>url</b>: URL of the auxfile
-</ul>
-For example, the following defines two auxfiles:
-<pre>
-    "auxFiles":   [{"type":	     "mask",
-  		    "name":	     "sciencemasks",
-		    "image": 	     "casa.*.png",
-		    "url":	     "../myauxfiles/casa-mask.png"},
-		   {"type":	     "regions",
-		    "name":	     "scienceregions",
-		    "image": 	     "casa.*.png",
-		    "url":	     "../myauxfiles/casa.reg"}],
-</pre>
-Here, a mask auxfile and a regions auxfile are defined for Cas-A
-dataset(s). These auxfiles are brought into play as follows:
-<pre>
-    // run this routine after loading each image
-    function onImageLoad(im){
-      JS9.LoadAuxFile("sciencemasks", function(im, aux){
-        // if we succeed in loading the mask, set up the onchange callback
-        im.onregionschange = regionOnChange;
-        // view the image through the mask data
-        im.maskData = aux.im.raw.data;
-        // I mean now!
-	im.displayImage("all");
-      });
-    JS9.LoadAuxFile("scienceregions");
-  }
-
-  // tell JS9 about the onload callback
-  JS9.imageOpts.onload = onImageLoad;
-</pre>
-An onImageLoad function is defined that will try to load auxfiles of
-types "sciencemasks" and "scienceregions". This routine is set to
-be called whenever a new image is loaded.
-<p>
-On image load, when <b>JS9.LoadAuxFile()</b> is called, it looks in
-the list of known auxfiles for an entry that matches both
-the class name and the image name.  If found (in the example above,
-for Cas-A datasets), the associated auxfile URL is loaded and
-type-specific processing is performed:
-<ul>
-<li><b>masks</b>: the mask file is loaded into the web page as an
-off-screen image and an aux object is created as a property of the
-image object. This aux object can be used for subsequent processing
-(see below).
-<li><b>regions</b>: the regions in the region file are created and
-displayed on the image.
-</ul>
-Once the initial auxfile processing has been performed, the optional
-callback function will be called. For the "mask" example above, the
-onregionchange property is set to call a JavaScript function (not
-shown here) whenever a region changes. The maskData property is set to
-point to the raw data of the auxfile (i.e., aux.im.raw.data). Finally,
-the image is redisplayed. Setting the maskData property and
-redisplaying the image causes the auxfile's data to be displayed as an
-opaque overlay on top of the currently displayed image.
-<p>
-As should be clear from the description above, considerable "black
-magic" currently is involved when processing auxiliary files.
-Visibility is required into the inner properties of the image
-object. Please contact us if you want to work with auxiliary files, so
-that we can continue to think about what is required for their support.
-
-
 <p><hr>
   
 <h4 id="history">API Change History</h4>
@@ -5131,6 +5106,13 @@ that we can continue to think about what is required for their support.
 <p>
 The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.
+
+<h5>20200114: Remove experimental LoadAuxFile routine</h5>
+
+<p>
+Regions can be loaded using <a href="#JS9.LoadRegions">JS9.LoadRegions</a>.
+Masks are now supported by loading a mask image and calling
+<a href="#JS9.MaskImage">JS9.MaskImage</a>. 
 
 <h5>20180322: DisplaySection now uses current values for unspecified properties</h5>
 
@@ -5189,7 +5171,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: July 29, 2019</h5>
+<h5>Last updated: January 15, 2020</h5>
 </div>
 
 </body>

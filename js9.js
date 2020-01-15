@@ -308,11 +308,9 @@ JS9.imageOpts = {
     wcssys: "native",			// default WCS sys
     lcs: "physical",			// default logical coordinate system
     valpos: true,			// whether to display value/position
-    opacity: 1.0,			// opacity between 0 and 1
     sigma: "none",			// gauss blur sigma or none
-    maskOpacity: 0.4,			// opacity for masked pixels
+    opacity: 1.0,			// opacity between 0 and 1
     alpha:  255,                        // alpha for image (but use opacity!)
-    alpha1: 100,                        // alpha for masked pixels
     // xcen: 0,                         // default x center pos to pan to
     // ycen: 0,                         // default y center pos to pan to
     zoom: 1,				// default zoom factor
@@ -343,7 +341,16 @@ JS9.emscriptenOpts = {};
 JS9.blendOpts = {
     active: true,
     mode: "screen",
-    opacity: 1
+    opacity: 1.0
+};
+
+// defaults for masking
+JS9.maskOpts = {
+    active: false,
+    im: null,
+    value: 0,
+    opacity: 0.0,
+    invert: false
 };
 
 // defaults for analysis (macro expansion)
@@ -854,6 +861,8 @@ JS9.Image = function(file, params, func){
     this.raws = [];
     // initial blend mode
     this.blend = $.extend(true, {}, JS9.blendOpts);
+    // initial mask mode
+    this.mask = $.extend(true, {}, JS9.maskOpts);
     // temp flag determines if we should update shapes at end of this call
     this.updateshapes = false;
     // request for an empty image object ends here
@@ -1019,7 +1028,7 @@ JS9.Image.prototype.closeImage = function(opts){
     let i, j, tim, key, raw, carr;
     let iscurrent = false;
     const ilen= JS9.images.length;
-    // this is either the dynamcially selected display or the current display
+    // this is either the dynamically selected display or the current display
     const seldisplay = JS9.Dysel.getDisplayOr(this.display);
     // opts is optional
     opts = opts || {};
@@ -1032,6 +1041,13 @@ JS9.Image.prototype.closeImage = function(opts){
     for(i=0; i<ilen; i++){
 	if( JS9.images[i].wcsim === this ){
 	    JS9.images[i].wcsim = null;
+	}
+    }
+    // if this image is the image mask for another image, clear it
+    for(i=0; i<ilen; i++){
+	if( JS9.images[i].mask.im === this ){
+	    JS9.images[i].mask.im = null;
+	    JS9.images[i].mask.active = false;
 	}
     }
     // look for the image in the image list, and remove it
@@ -2756,34 +2772,22 @@ JS9.Image.prototype.mkRGBImage = function(){
     } else {
 	alpha = 255;
     }
-    // reverse maskData alphas, if necessary
-    if( this.maskData ){
-	if( this.params.maskInvert ){
-	    if( (this.params.opacity !== undefined)     &&
-		(this.params.maskOpacity !== undefined) ){
-		alpha1 = this.params.opacity * 255;
-		alpha2 = this.params.maskOpacity * 255;
-	    } else if( (this.params.alpha1 !== undefined) &&
-		       (this.params.alpha2 !== undefined) ){
-		alpha1 = this.params.alpha2;
-		alpha2 = this.params.alpha1;
-	    } else {
-		alpha1 = 0;
-		alpha2 = 255;
-	    }
+    // mask: a raw array with same dimensions as the raw data array
+    // whose values are used to set alpha in the raw image
+    if( this.mask.active && this.mask.im ){
+	if( JS9.notNull(this.mask.opacity)   &&
+	    JS9.notNull(this.params.opacity) ){
+	    alpha1 = this.mask.opacity * 255;
+	    alpha2 = this.params.opacity * 255;
 	} else {
-	    if( (this.params.opacity !== undefined)     &&
-		(this.params.maskOpacity !== undefined) ){
-		alpha1 = this.params.maskOpacity * 255;
-		alpha2 = this.params.opacity * 255;
-	    } else if( (this.params.alpha1 !== undefined) &&
-		       (this.params.alpha2 !== undefined) ){
-		alpha1 = this.params.alpha1;
-		alpha2 = this.params.alpha2;
-	    } else {
-		alpha1 = 255;
-		alpha2 = 0;
-	    }
+	    alpha1 = 0;
+	    alpha2 = 255;
+	}
+	// reverse mask alphas, if necessary
+	if( this.mask.invert ){
+	    alpha = alpha1;
+	    alpha1 = alpha2;
+	    alpha2 = alpha;
 	}
     }
     // index into scaled data using previously calc'ed data value to get RGB
@@ -2795,25 +2799,28 @@ JS9.Image.prototype.mkRGBImage = function(){
 	yLen = yIn * this.raw.width;
 	yOutIdx = yOut * zinc;
 	for(xIn=Math.floor(sect.x0), xOut=0; xIn<sect.x1; xIn += inc, xOut++){
+	    // mask: use alpha1 if pixel value is to be masked
+	    if( this.mask.active && this.mask.im ){
+		if( this.mask.im.raw.data[yLen +xIn] <= this.mask.value ){
+		    alpha = alpha1;
+		} else {
+		    alpha = alpha2;
+		}
+	    }
 	    if( dorgb ){
-		// rgb mode: special case
+		// rgb mode: up to three indexes
 		ridx = rthis ? rthis.colorData[yLen + xIn] : 0;
 		gidx = gthis ? gthis.colorData[yLen + xIn] : 0;
 		bidx = bthis ? bthis.colorData[yLen + xIn] : 0;
-		if( (ridx === undefined) ||
-		    (gidx === undefined) ||
-		    (bidx === undefined) ){
+		if( JS9.isNull(ridx) || JS9.isNull(gidx) || JS9.isNull(bidx) ){
 		    JS9.globalOpts.rgb.active = false;
 		    JS9.error("RGB images are incompatible. Turning off RGB mode.", "", false);
 		    this.mkRGBImage();
 		    return this;
 		}
 	    } else {
-		// ordinary case
+		// ordinary case: one index
 		idx = this.colorData[yLen + xIn];
-	    }
-	    if( this.maskData ){
-		alpha = this.maskData[yLen +xIn] > 0 ? alpha1 : alpha2;
 	    }
 	    xOutIdx = xOut * zinc;
 	    for(yZoom=0; yZoom<sect.zoom; yZoom++) {
@@ -2844,6 +2851,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 			    } else {
 				img.data[odx+2] = 0;
 			    }
+			    img.data[odx+3] = alpha;
 			} else {
 			    // ordinary case
 			    if( this.psColors[idx] === undefined ){
@@ -2854,8 +2862,8 @@ JS9.Image.prototype.mkRGBImage = function(){
 			    img.data[odx]   = this.psColors[idx][0];
 			    img.data[odx+1] = this.psColors[idx][1];
 			    img.data[odx+2] = this.psColors[idx][2];
+			    img.data[odx+3] = alpha;
 			}
-			img.data[odx+3] = alpha;
 		    }
 		}
 	    }
@@ -2927,6 +2935,66 @@ JS9.Image.prototype.blendImage = function(...args){
     }
     // allow chaining
     return this;
+};
+
+// apply an image mask to an image
+JS9.Image.prototype.maskImage = function(...args){
+    let [s, opts] = args;
+    let im;
+    // return mask info
+    if( !args.length ){
+	return this.mask;
+    }
+    // if first arg is true or false, this turns on/off masking
+    if( (s === true)   || (s === false) || (s === "true") || (s === "false") ){
+	if( s === "true" ){
+	    s = true;
+	} else if( s === "false" ){
+	    s = false;
+	}
+	this.mask.active = s;
+	// trigger option redisplay
+	this.xeqPlugins("image", "onimagemask");
+	this.displayImage();
+	return this;
+    }
+    if( typeof s === "string" && im.charAt(0) === '{' ){
+	try{ s = JSON.parse(s); }
+	catch(e){ JS9.error(`can't parse json arg1 in maskImage`, e); }
+    }
+    // is this the image object or the opts object?
+    if( !JS9.isImage(s) && !opts ){
+	opts = s;
+	s = null;
+    }
+    // ok, we think we have an image
+    if( s ){
+	// get image handle
+	im = JS9.lookupImage(s);
+	// sanity checks
+	if( !im ){
+	    JS9.error(`unknown image for maskImage: ${s}`);
+	}
+	if( this.raw.width  !== im.raw.width  ||
+	    this.raw.height !== im.raw.height ){
+	    JS9.error(`maskImage: mask dims (${im.raw.width},${im.raw.height}) don't match image dims (${this.raw.width},${this.raw.height})`);
+	}
+	// set up the image mask and turn on masking
+	this.mask.im = im;
+	this.mask.active = true;
+    }
+    // handle opts
+    if( opts ){
+	if( typeof opts === "string" ){
+	    try{ opts = JSON.parse(opts); }
+	    catch(e){ JS9.error(`can't parse json arg2 in maskImage`, e); }
+	}
+	this.mask = $.extend(true, {}, this.mask, opts);
+    }
+    // redisplay with the new mask
+    if( im || opts ){
+	this.displayImage();
+    }
 };
 
 // calculate and set offsets into display where image is to be written
@@ -6074,178 +6142,6 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	break;
     }
     return did;
-};
-
-// load an auxiliary file of the specified type
-JS9.Image.prototype.loadAuxFile = function(type, func){
-    let i, aux, tokens, aim, url;
-    const alen = JS9.auxFiles.length;
-    const auxarr = [];
-    // sigh ... define load func outside the loop to make JSLint happy
-    const loadMaskFunc = () => {
-	// got the aux file -- backlink the aux object in image's aux array
-	this.aux[aux.name] = aux;
-	// populate the image data array from RGB values
-	JS9.Image.prototype.mkOffScreenCanvas.call(aim);
-	// populate the raw image data array from RGB values
-	JS9.Image.prototype.mkRawDataFromPNG.call(aim);
-	// call func, if necessary (im is required)
-	if( func ){
-	    try{ JS9.xeqByName(func, window, this, aux); }
-	    catch(e){ JS9.error("in aux mask onload callback", e); }
-	}
-	// debugging
-	if( JS9.DEBUG ){
-	    JS9.log("JS9 %s: %s dims(%d,%d) min/max(%d,%d)",
-		    aim.type, aim.file, aim.raw.width, aim.raw.height,
-		    aim.raw.dmin, aim.raw.dmax);
-	}
-    };
-    // sigh ... define load func outside the loop to make JSLint happy
-    const loadRegionFunc = (data) => {
-	// got the aux file -- backlink the aux object in image's aux array
-	this.aux[aux.name] = aux;
-	aux.regions = data;
-	if( func ){
-	    try{ JS9.xeqByName(func, window, this, aux); }
-	    catch(e){ JS9.error("in aux region onload callback", e); }
-	}
-    };
-    // sigh ... define load func outside the loop to make JSLint happy
-    const loadTextFunc = (data) => {
-	// got the aux file -- backlink the aux object in image's aux array
-	this.aux[aux.name] = aux;
-	aux.text = data;
-	if( func ){
-	    try{ JS9.xeqByName(func, window, this, aux); }
-	    catch(e){ JS9.error("in aux text onload callback", e); }
-	}
-    };
-    // eslint-disable-next-line no-unused-vars
-    const errFunc = (jqXHR, textStatus, errorThrown) => {
-	JS9.log(`could not load auxiliary file: ${aux.url} [${textStatus}]`);
-    };
-    // sanity checks
-    if( !type || !alen ){
-	return;
-    }
-    // create regex from names (only once)
-    for(i=0; i<alen; i++){
-	aux = JS9.auxFiles[i];
-	if( aux.image && !aux.regex ){
-	    aux.regex = new RegExp(aux.image);
-	}
-    }
-    // look for a match
-    tokens = type.split(":");
-    for(i=0; i<alen; i++){
-	aux = JS9.auxFiles[i];
-	if( (tokens[0] === aux.name)  && this.id.match(aux.regex) ){
-	    if( (tokens.length === 1) || (tokens[1] === aux.type) ){
-		switch(aux.type){
-		case "mask":
-		    // if image already loaded, make backlink and call func
-		    if( aux.im ){
-			this.aux[aux.name] = aux;
-			if( func ){
-			    try{ JS9.xeqByName(func, window, this, aux); }
-			    catch(e){ JS9.error("in aux mask callback", e); }
-			}
-		    } else {
-			// save to later loading
-			auxarr.push(aux);
-		    }
-		    break;
-		case "regions":
-		    // if region already loaded, backlink and call func
-		    if( aux.layer ){
-			this.aux[aux.name] = aux;
-			if( func ){
-			    try{ JS9.xeqByName(func, window, this, aux); }
-			    catch(e){ JS9.error("in aux regions callback", e); }
-			}
-		    } else {
-			// save to later loading
-			auxarr.push(aux);
-		    }
-		    break;
-		case "text":
-		    // if text already loaded, backlink and call func
-		    if( aux.text ){
-			this.aux[aux.name] = aux;
-			if( func ){
-			    try{ JS9.xeqByName(func, window, this, aux); }
-			    catch(e){ JS9.error("in aux text callback", e); }
-			}
-		    } else {
-			// save to later loading
-			auxarr.push(aux);
-		    }
-		    break;
-		default:
-		    break;
-		}
-	    }
-	}
-    }
-    // load the new auxiliary files
-    for(i=0; i<auxarr.length; i++){
-	// current aux object
-	aux = auxarr[i];
-	switch(aux.type){
-	case "mask":
-	    // create an image-like object
-	    aux.im = Object.create(JS9.Image);
-	    // dereference
-	    aim = aux.im;
-	    // its an aux file
-	    aim.type = "aux";
-	    // aux file url
-	    aim.file = aux.url;
-	    // take file but discard path (or scheme) up to slashes
-	    aim.id = aim.file.split("/").reverse()[0];
-	    // init some parameters
-	    aim.params = {};
-	    aim.params.scalemin = Number.NaN;
-	    aim.params.scalemax = Number.NaN;
-	    // array to hold raw data as we create it
-	    aim.raws = [];
-	    // create the png object
-	    aim.png = {};
-	    // image element holds png file, from which array data is generated
-	    aim.png.image = new Image();
-	    // callback when image is loaded (do aim before setting src)
-	    $(aim.png.image).on("load", loadMaskFunc).on("error", errFunc);
-	    // set src to download the png and eventually generate the mask data
-	    // (url is relative to js9 install directory)
-	    aim.png.image.src = JS9.InstallDir(aux.url);
-	    break;
-	case "regions":
-	    aux.layer = this.display.newShapeLayer(type, JS9.Regions.opts);
-	    url = JS9.InstallDir(aux.url);
-	    $.ajax({
-		url: url,
-		cache: false,
-		dataType: "json",
-		mimeType: "application/json",
-		success: loadRegionFunc,
-		error:  errFunc
-	    });
-	    break;
-	case "text":
-	    url = JS9.InstallDir(aux.url);
-	    $.ajax({
-		url: url,
-		cache: false,
-		dataType: "text",
-		success: loadTextFunc,
-		error:  errFunc
-	    });
-	    break;
-	default:
-	    break;
-	}
-    }
 };
 
 // save image as a FITS file
@@ -17772,6 +17668,19 @@ JS9.Grid.init = function(opts){
 // add to image prototypes
 JS9.Image.prototype.displayCoordGrid = JS9.Grid.display;
 
+// check if an object is an image handle
+JS9.isImage = function(obj) {
+    if( typeof obj === "object"   &&
+	JS9.notNull(obj.id)       &&
+	JS9.notNull(obj.raw)      &&
+	JS9.notNull(obj.rgb)      &&
+	JS9.notNull(obj.params)   &&
+	JS9.notNull(obj.display)  ){
+	return true;
+    }
+    return false;
+};
+
 // ---------------------------------------------------------------------
 // Dynsel: callbacks when a display is selected dynamically
 // ---------------------------------------------------------------------
@@ -22205,14 +22114,31 @@ JS9.mkPublic("RenameDisplay", function(...args){
 // close all displayed images
 // eslint-disable-next-line no-unused-vars
 JS9.mkPublic("CloseDisplay", function(...args){
-    let i, im, disp;
+    let i, s, im, disp, template, regexp;
     const obj = JS9.parsePublicArgs(args);
-    disp = JS9.lookupDisplay(obj.argv[0] || obj.display);
+    disp = JS9.lookupDisplay(obj.argv[0], false);
+    if( !disp ){
+	disp = JS9.lookupDisplay(obj.display);
+	s = obj.argv[0];
+    }
+    template = obj.argv[1] || s;
+    if( template ){
+	try{ regexp = new RegExp(template); }
+	catch(e){ JS9.error(`invalid regexp for CloseDisplay: ${template}`); }
+    }
     // reverse loop because we slice JS9.images
     for(i=JS9.images.length-1; i>=0; i--){
 	im = JS9.images[i];
 	if( im.display === disp ){
-	    im.closeImage();
+	    if( regexp ){
+		if( im.id.match(regexp)       ||
+		    im.file.match(regexp)     ||
+		    im.fitsFile.match(regexp) ){
+		    im.closeImage();
+		}
+	    } else {
+		im.closeImage();
+	    }
 	}
     }
 });

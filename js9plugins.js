@@ -12075,8 +12075,9 @@ JS9.Sync.unsync = function(ops, ims, opts){
 // perform a sync action on target images using params from originating image
 // called in image context
 JS9.Sync.xeqSync = function(arr){
-    let i, j, k, obj, pos, wcscen, xim, xarr, xobj, xdata;
+    let i, j, k, obj, pos, wcscen, xim, xarr, xobj, xdata, dim;
     let mydata, myobj, myid, rarr, rstr, args;
+    let dorevert = false;
     const oval = JS9.globalOpts.xeqPlugins;
     const thisid = `${this.id}_${this.display.id}`;
     const regmatch = (r1, r2) => {
@@ -12093,12 +12094,21 @@ JS9.Sync.xeqSync = function(arr){
 	for(i=0; i<arr.length; i++){
 	    obj = arr[i];
 	    xim = obj.xim;
+	    dim = xim.display.image;
 	    // only sync if this target image is being displayed
-	    if( xim.display.image !== xim ){
-		continue;
+	    // (could be blended images)
+	    if( dim !== xim ){
+		if( !dim.blend.active || !xim.blend.active ){
+		    continue;
+		} else {
+		    dorevert = true;
+		}
 	    }
 	    // don't recurse on target image
 	    if( xim.syncs ){
+		if( xim.syncs.running ){
+		    continue;
+		}
 		xim.syncs.running = true;
 	    }
 	    try{
@@ -12261,6 +12271,10 @@ JS9.Sync.xeqSync = function(arr){
     catch(e){ /* empty */ }
     finally{
 	delete this.syncs.running;
+    }
+    // when sync'ing blended images, we have to revert to the original image
+    if( dorevert ){
+	this.displayImage();
     }
 };
 
