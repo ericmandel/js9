@@ -193,7 +193,7 @@ JS9.Sync.unsync = function(ops, ims, opts){
 // called in image context
 JS9.Sync.xeqSync = function(arr){
     let i, j, k, obj, pos, wcscen, xim, xarr, xobj, xdata, dim;
-    let mydata, myobj, myid, rarr, rstr, args;
+    let mydata, myobj, myid, rarr, rstr, args, nflip;
     let dorevert = false;
     const oval = JS9.globalOpts.xeqPlugins;
     const thisid = `${this.id}_${this.display.id}`;
@@ -203,6 +203,26 @@ JS9.Sync.xeqSync = function(arr){
 	if( !r2.data || !r2.data.syncid ){ return false; }
 	return r1.data.syncid === r2.data.syncid;
     };
+    const calcFlip = (flip) => {
+	let i, arr;
+	let nx = 0;
+	let ny = 0;
+	let nflip = "";
+	arr = flip.split("");
+	for(i=0; i<arr.length; i++){
+	    switch(arr[i]){
+	    case "x":
+		nx++;
+		break;
+	    case "y":
+		ny++;
+		break;
+	    }
+	}
+	if( nx % 2 === 1 ){ nflip += "x"; }
+	if( ny % 2 === 1 ){ nflip += "y"; }
+	return nflip || "";
+    }
     // don't recurse!
     if( this.syncs.running ){ return; }
     this.syncs.running = true;
@@ -235,6 +255,12 @@ JS9.Sync.xeqSync = function(arr){
 		    break;
 		case "contrastbias":
 		    xim.setColormap(this.params.contrast, this.params.bias);
+		    break;
+		case "flip":
+		    if( this.params.flip != xim.params.flip ){
+			nflip = calcFlip(this.params.flip + xim.params.flip);
+			xim.setFlip(nflip);
+		    }
 		    break;
 		case "pan":
 		    if( this.raw.wcs > 0 ){
@@ -362,6 +388,22 @@ JS9.Sync.xeqSync = function(arr){
 			}
 		    }
 		    break;
+		case "rot90":
+		    if( this.params.rot90 != xim.params.rot90 ){
+			switch( this.params.rot90 - xim.params.rot90 ){
+			case   90:
+			case -270:
+			    xim.setRot90(90);
+			    break;
+			case  -90:
+			case  270:
+			    xim.setRot90(-90);
+			    break;
+			default:
+			    break;
+			}
+		    }
+		    break;
 		case "scale":
 		    xim.setScale(this.params.scale);
 		    break;
@@ -436,10 +478,22 @@ JS9.Sync.changecontrastbias = function(im){
     JS9.Sync.maybeSync.call(im, "contrastbias");
 };
 
+// onsetflip
+JS9.Sync.setflip = function(im){
+    if( !im ){ return; }
+    JS9.Sync.maybeSync.call(im, "flip");
+};
+
 // onsetpan
 JS9.Sync.setpan = function(im){
     if( !im ){ return; }
     JS9.Sync.maybeSync.call(im, "pan");
+};
+
+// onsetrot90
+JS9.Sync.setrot90 = function(im){
+    if( !im ){ return; }
+    JS9.Sync.maybeSync.call(im, "rot90");
 };
 
 // onregionschange
@@ -491,8 +545,10 @@ JS9.mkPublic("UnsyncImages", "unsyncImages");
 // register the plugin
 JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
 		   {onsetcolormap:   JS9.Sync.setcolormap,
+		    onsetflip:       JS9.Sync.setflip,
 		    onsetpan:        JS9.Sync.setpan,
 		    onregionschange: JS9.Sync.regionschange,
+		    onsetrot90:      JS9.Sync.setrot90,
 		    onsetscale:      JS9.Sync.setscale,
 		    onsetwcssys:     JS9.Sync.setwcssys,
 		    onsetwcsunits:   JS9.Sync.setwcsunits,

@@ -261,7 +261,7 @@ JS9.globalOpts = {
     userMenuDivider: "&nbsp;&nbsp;&nbsp;",            // divide before user menu
     imagesFileSubmenu: 5,        // how many images trigger a submenu?
     toolBar: ["annulus", "box", "circle", "ellipse", "line", "polygon", "text", "linear", "log", "zoom+", "zoom-", "zoom1"],
-    syncOps: ["colormap","contrastbias","pan","regions","scale","wcs","zoom"],                                   // which ops are sync'ed?
+    syncOps: ["colormap","contrastbias","flip","pan","regions","rot90","scale","wcs","zoom"],                                   // which ops are sync'ed?
     syncReciprocate: true,       // default value for reciprocal sync'ing
     hiddenPluginDivs: [],        // which static plugin divs start hidden
     separate: {layout: "auto", leftMargin: 10, topMargin: 10}, // separate a display
@@ -4586,6 +4586,10 @@ JS9.Image.prototype.setFlip = function(...args){
     this.displayImage("all", opts);
     // refresh shape layers
     this.refreshLayers();
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	this.xeqPlugins("image", "onsetflip");
+    }
     // allow chaining
     return this;
 };
@@ -4830,6 +4834,10 @@ JS9.Image.prototype.setRot90 = function(...args){
     this.displayImage("all", opts);
     // refresh shape layers
     this.refreshLayers();
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	this.xeqPlugins("image", "onsetrot90");
+    }
     // allow chaining
     return this;
 };
