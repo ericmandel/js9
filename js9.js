@@ -16303,7 +16303,9 @@ JS9.Regions.parseRegions = function(s, opts){
 	if( tobj.isregion && tobj.cmd.startsWith("-") ){
 	    tobj.cmd = tobj.cmd.slice(1);
 	    if( tobj.comment ){
-		tobj.comment += ",exclude";
+		if( !tobj.comment.match(/exclude/) ){
+		    tobj.comment += ",exclude";
+		}
 	    } else {
 		tobj.comment = "exclude";
 	    }
