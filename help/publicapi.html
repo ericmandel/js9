@@ -1204,25 +1204,41 @@ where:
 </ul>
 where the mask properties are:
 <ul>
-<li><b>value</b>: mask value that triggers masking (def: 0)
-<li><b>opacity</b>: opacity to use when masking (def: 0, range 0 to 1)
-<li><b>invert</b>: whether to invert the mask (def: false)
+<li><b>mode</b>: "mask" or "overlay"
+<li><b>value</b>: mask value that triggers masking (def: 0) for "mask" mode
+<li><b>invert</b>: whether to invert the mask (def: false) for "mask" mode
+<li><b>def</b>: object containing default RGBA values for "overlay" mode
+<li><b>opacity</b>: opacity to use when masking (def: 0, range 0 to 1) for "mask" and "overlay" mode
 </ul>
 <p>
 The pixel values in one image can be used to mask the pixels in
-another image <i>if the two images have the same image dimensions</i>. If
-the value of a pixel in the mask is less than or equal to the
-<b>value</b> property, the opacity of the displayed pixel is set
-to the <b>opacity</b> property. You can also invert the mask using
-the <b>invert</b> property.
+another image <i>if the two images have the same image dimensions</i>.
+The type of masking depends on the mode: "overlay" (default) or "mask".
+<p>
+For "mask" mode, if the value of a pixel in the mask is less than or
+equal to the <b>value</b> property, the opacity of the displayed pixel
+is set to the <b>opacity</b> property. You can also invert the mask
+using the <b>invert</b> property. In effect, this mode displays only
+the image pixels "covered" by a mask.
+<p>
+For "overlay" mode, if the mask pixel has a non-zero alpha, its color
+is blended with the image pixel using <b>source-atop</b>
+composition. Otherwise, the image pixel color alone is used in the
+display. In effect, you can display a mask overlay on top of an image.
+Note that, when blending a mask and image pixel, the global mask
+opacity and the individual pixel opacity are multiplied to get the final
+pixel opacity.
 <p>
 To set up a mask initially, call the routine with an already-loaded
 mask image as the first parameter, and an optional opts object as the
 second parameter:
 <pre>
+    # default is "overlay"
     JS9.ImageMask("casa_mask.fits");
+    JS9.ImageMask("casa_mask.fits", {mode: "overlay"});
 
-    JS9.ImageMask("casa_mask.fits", {value: 5, opacity: 0.2});
+    # "mask" mode: set lower threshold for masking and masked opacity
+    JS9.ImageMask("casa_mask.fits", {mode: "mask", value: 5, opacity: 0.2});
 </pre>
 You can change the mask parameters at any time:
 <pre>
@@ -1339,18 +1355,19 @@ you have set up for downloads.
 
 <h5 id="JS9.AddColormap">Add a colormap to JS9</h5>
 <p>
-<code class="api">JS9.AddColormap(name, aa|rr,gg,bb|obj|json, opts)</code>
+<code class="api">JS9.AddColormap(name, aa|rr,gg,bb|ss|obj|json, opts)</code>
 <p>
 where:
 <ul>
 <li><b>name</b>: colormap name
 <li><b>aa</b>: an array containing RGB color triplets
 <li><b>rr,gg,bb</b>: 3 arrays of vertices specifying color changes
-<li><b>obj</b>: object containing one of the two colormap definition formats
+<li><b>ss</b>: an array static color assignments
+<li><b>obj</b>: object containing one of the three colormap definition formats
 <li><b>json</b>: JSON string containing one of the colormap definition formats
 <li><b>opts</b>: optional object to set toplevel property to false
 </ul>
-You can add new colormaps to JS9 using one of two formats. The first
+You can add new colormaps to JS9 using one of three formats. The first
 is an array of RGB triplets (i.e., an array of 3-D arrays), where each
 triplet defines a color. The elements of the colormap are divided
 evenly between these 3-D triplets.  For example, the <b>i8</b>
@@ -1380,6 +1397,30 @@ vertices, whose color ranges from no intensity (0) to full intensity
 (1) over the whole range of the colormap (0 to 1). The same holds true
 for the purple colormap, except that both red and blue change from zero
 to full intensity.
+<p>
+The third colormap format consists of an array of color and pixel range
+specifications: color, min, max. This defines a static colormap in which
+colors are assigned based on whether an image pixel is within a range.
+For example:
+<pre>
+  JS9.AddColormap("mask",
+                  [["#ff000080", 1, 31],
+		   ["cyan", 32, 32],
+		   ["rgba(0,255,0,0.5)", 37, 99],
+		   ["blue", 100, Infinity]]);
+</pre>
+Here, image pixel values between 1 and 31 (inclusive) are assigned a
+red color (#ff0000) with an opacity of approximately 0.5. The image
+pixel value 32 is assigned the color cyan. Image pixel values between
+37 and 99 are assigned the color green with opacity 0.5. All image
+pixel values greater than or equal to 100 are blue. If an image pixel
+value is not within any range, it is assigned the color specified
+by <b>JS9.imageOpts.nocolor</b>. By default, this is black with an
+opacity of 0, so nothing is displayed at all (you'll probably see the
+default grey background of the JS9 display element). Static colormaps
+are mostly used as image masks. See
+<a href="#JS9.MaskImage"><b>JS9.MaskImage()</b></a> for more information.
+
 <p>
 For a more complicated example, consider the <b>a</b> colormap, which is
 defined as:

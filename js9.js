@@ -10,7 +10,7 @@
  *
  */
 
-/*global JS9Prefs, JS9Inline, $, jQuery, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, require */
+/*global JS9Prefs, JS9Inline, $, jQuery, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, require, tinycolor */
 
 "use strict";
 
@@ -311,12 +311,13 @@ JS9.imageOpts = {
     sigma: "none",			// gauss blur sigma or none
     opacity: 1.0,			// opacity between 0 and 1
     alpha:  255,                        // alpha for image (but use opacity!)
+    nancolor: "#000000",		// 6-digit #hex color for NaN values
+    nocolor: {red:0,green:0,blue:0,alpha:0} , // static color map no color
     // xcen: 0,                         // default x center pos to pan to
     // ycen: 0,                         // default y center pos to pan to
     zoom: 1,				// default zoom factor
     zooms: 6,				// how many zooms in each direction?
     topZooms: 2,			// how many zooms are at top level?
-    nancolor: "#000000",		// 6-digit #hex color for NaN values
     wcsalign: true,			// align image using wcs after reproj?
     rotationMode: "relative",		// default: relative or absolute?
     crosshair: false,			// enable crosshair?
@@ -348,8 +349,9 @@ JS9.blendOpts = {
 JS9.maskOpts = {
     active: false,
     im: null,
+    mode: "overlay",
+    opacity: 1,
     value: 0,
-    opacity: 0.0,
     invert: false
 };
 
@@ -778,8 +780,6 @@ JS9.Image = function(file, params, func){
 				   this.params, this.display.image.params);
 	}
     }
-    // set the colormap object from colormap name (text string)
-    // this.cmapObj = JS9.lookupColormap(this.params.colormap);
     // (turn off plugin call, since we are not fully loaded)
     txeq = JS9.globalOpts.xeqPlugins;
     JS9.globalOpts.xeqPlugins = false;
@@ -2429,6 +2429,10 @@ JS9.Image.prototype.mkColorCells = function(){
     if( !this.colorCells ){
 	this.colorCells = [];
     }
+    // but skip if mask is static
+    if( this.cmapObj.type === "static" ){
+	return this;
+    }
     // fill in colorcells
     for(i=0; i<cs; i++){
 	j = this.params.invert ? cs - i - 1 : i;
@@ -2467,6 +2471,10 @@ JS9.Image.prototype.mkScaledCells = function(){
     };
     // sanity check
     if( !this.colorCells ){
+	return this;
+    }
+    // but skip if mask is static
+    if( this.cmapObj.type === "static" ){
 	return this;
     }
     // allocate array for scaled cells
@@ -2671,13 +2679,35 @@ JS9.Image.prototype.mkScaledCells = function(){
 // create RGB image from scaled colorCells
 // sort of from: tksao1.0/frame/truecolor.c, but not really
 JS9.Image.prototype.mkRGBImage = function(){
-    let s, rgb, sect, img, xrgb, yrgb, wrgb, hrgb, rgbimg, ctx;
-    let inc, zinc, xIn, yIn, xOut, yOut, xOutIdx, yOutIdx, yZoom, xZoom;
-    let idx, odx, yLen, zx, zy, zyLen, alpha, alpha1, alpha2, ridx, gidx, bidx;
+    let rgb, sect, img, xrgb, yrgb, wrgb, hrgb, rgbimg, ctx;
+    let inc, zinc, xIn, yIn, xOut, yOut, xOutIdx, yOutIdx, yZoom, xZoom, cobj;
+    let idx, odx, odxmax, ridx, gidx, bidx, mim, mimg;
+    let yLen, zx, zy, zyLen, alpha, alpha1, alpha2, mopacity, cmopacity;
+    let cached = [];
     let rthis = null;
     let gthis = null;
     let bthis = null;
     let dorgb = false;
+    let mimoverlay = false;
+    let mimmask = false;
+    const lookupStaticColor = (idx) => {
+	let i, color, val;
+	const nocolor = this.params.nocolor || {red:0,green:0,blue:0,alpha:0};
+	val = this.raw.data[idx];
+	if( val < this.staticObj.colors[0].min ){ return nocolor; }
+	if( cached[val] ){ return cached[val]; }
+	for(i=0; i<this.staticObj.colors.length; i++){
+	    color = this.staticObj.colors[i];
+	    if( val >= color.min && val <= color.max ){
+		if( !color.active ){
+		    color = nocolor;
+		}
+		cached[val] = color;
+		return color;
+	    }
+	}
+	return nocolor;
+    };
     // sanity check
     if( !this.rgb ){
 	return this;
@@ -2758,6 +2788,8 @@ JS9.Image.prototype.mkRGBImage = function(){
 	rgb.img = ctx.createImageData(sect.width, sect.height);
     }
     img = rgb.img;
+    // max starting index into the data
+    odxmax = img.data.length - 4;
     // converting raw data, we need psColors
     if( !this.psColors ){
 	return this;
@@ -2775,6 +2807,17 @@ JS9.Image.prototype.mkRGBImage = function(){
     // mask: a raw array with same dimensions as the raw data array
     // whose values are used to set alpha in the raw image
     if( this.mask.active && this.mask.im ){
+	mim = this.mask.im;
+	if( this.mask.mode === "overlay" ){
+	    mimoverlay = true;
+	} else if( this.mask.mode === "mask" ){
+	    mimmask = true;
+	}
+
+	if( JS9.isNull(this.mask.opacity) ){
+	    this.mask.opacity = 1;
+	}
+	mimg = mim.rgb.img;
 	if( JS9.notNull(this.mask.opacity)   &&
 	    JS9.notNull(this.params.opacity) ){
 	    alpha1 = this.mask.opacity * 255;
@@ -2799,12 +2842,12 @@ JS9.Image.prototype.mkRGBImage = function(){
 	yLen = yIn * this.raw.width;
 	yOutIdx = yOut * zinc;
 	for(xIn=Math.floor(sect.x0), xOut=0; xIn<sect.x1; xIn += inc, xOut++){
-	    // mask: use alpha1 if pixel value is to be masked
-	    if( this.mask.active && this.mask.im ){
-		if( this.mask.im.raw.data[yLen +xIn] <= this.mask.value ){
-		    alpha = alpha1;
-		} else {
+	    // mask mode: use alpha1 if pixel value is to be masked
+	    if( mimmask ){
+		if( mim.raw.data[yLen +xIn] > this.mask.value ){
 		    alpha = alpha2;
+		} else {
+		    alpha = alpha1;
 		}
 	    }
 	    if( dorgb ){
@@ -2833,9 +2876,9 @@ JS9.Image.prototype.mkRGBImage = function(){
 		    // final index into output buffer
 		    odx = (zyLen + zx) * 4;
 		    // check for odx out-of-bounds
-		    if( odx < img.data.length ){
+		    if( odx <= odxmax ){
+			// special case: rgb mode
 			if( dorgb ){
-			    // rgb mode: special case
 			    if( rthis ){
 				img.data[odx]   = rthis.psColors[ridx][0];
 			    } else {
@@ -2853,16 +2896,33 @@ JS9.Image.prototype.mkRGBImage = function(){
 			    }
 			    img.data[odx+3] = alpha;
 			} else {
-			    // ordinary case
-			    if( this.psColors[idx] === undefined ){
-				s = sprintf("invalid image access: %s,%s",
-					    xIn, yIn);
-				JS9.error(s);
+			    if( this.staticObj ){
+				// special case: static colors
+				cobj = lookupStaticColor(yLen + xIn);
+				img.data[odx]   = cobj.red;
+				img.data[odx+1] = cobj.green;
+				img.data[odx+2] = cobj.blue;
+				img.data[odx+3] = cobj.alpha;
+			    } else if( this.psColors[idx] !== undefined ){
+				// mask overlay: the mask color values
+				// using source-atop composition
+				if( mimoverlay && mimg.data[odx+3] ){
+				    // average the global mask opacity with the
+				    // local pixel opacity (is this OK??)
+				    mopacity =  this.mask.opacity * (mimg.data[odx+3]/255);
+				    cmopacity = 1 - mopacity;
+				    img.data[odx]   = mimg.data[odx] * mopacity + this.psColors[idx][0] * cmopacity;
+				    img.data[odx+1] = mimg.data[odx+1] * mopacity + this.psColors[idx][1] * cmopacity;
+				    img.data[odx+2] = mimg.data[odx+2] * mopacity + this.psColors[idx][2] * cmopacity;
+				    img.data[odx+3] = 255;
+				} else {
+				    // ordinary case
+				    img.data[odx]   = this.psColors[idx][0];
+				    img.data[odx+1] = this.psColors[idx][1];
+				    img.data[odx+2] = this.psColors[idx][2];
+				    img.data[odx+3] = alpha;
+				}
 			    }
-			    img.data[odx]   = this.psColors[idx][0];
-			    img.data[odx+1] = this.psColors[idx][1];
-			    img.data[odx+2] = this.psColors[idx][2];
-			    img.data[odx+3] = alpha;
 			}
 		    }
 		}
@@ -2958,7 +3018,7 @@ JS9.Image.prototype.maskImage = function(...args){
 	this.displayImage();
 	return this;
     }
-    if( typeof s === "string" && im.charAt(0) === '{' ){
+    if( typeof s === "string" && s.charAt(0) === '{' ){
 	try{ s = JSON.parse(s); }
 	catch(e){ JS9.error(`can't parse json arg1 in maskImage`, e); }
     }
@@ -6448,8 +6508,100 @@ JS9.Image.prototype.getColormap = function(){
 };
 
 // set color map
+// calling sequences:
+//   setColormap(name);
+//   setColormap(name, contrast, bias);
+//   setColormap(name, contrast, bias, static);
+//   setColormap(name, static);
+//   setColormap(contrast, bias);
+//   setColormap(static);
+//   setColormap("rgb");
+//   setColormap("invert");
+//   setColormap("reset");
 JS9.Image.prototype.setColormap = function(...args){
     let [arg, arg2, arg3] = args;
+    const setCmap = (arg) => {
+	if( this.cmapObj ){
+	    // unset rgb mode, if necessary
+	    switch(this.cmapObj.name){
+	    case "red":
+		if( JS9.globalOpts.rgb.rim === this ){
+		    JS9.globalOpts.rgb.rim = null;
+		}
+		break;
+	    case "green":
+		if( JS9.globalOpts.rgb.gim === this ){
+		    JS9.globalOpts.rgb.gim = null;
+		}
+		break;
+	    case "blue":
+		if( JS9.globalOpts.rgb.bim === this ){
+		    JS9.globalOpts.rgb.bim = null;
+		}
+		break;
+	    }
+	}
+	// remove previous static colormap
+	delete this.staticObj;
+	// add the new colormap
+	this.cmapObj = JS9.lookupColormap(arg);
+	this.params.colormap = this.cmapObj.name;
+	// set the static colormap, if necessary
+	if( this.cmapObj.type === "static" ){
+	    this.staticObj = this.cmapObj;
+	}
+	// set rgb mode, if necessary
+	switch(arg){
+	case "red":
+	    JS9.globalOpts.rgb.rim = this;
+	    break;
+	case "green":
+	    JS9.globalOpts.rgb.gim = this;
+	    break;
+	case "blue":
+	    JS9.globalOpts.rgb.bim = this;
+	    break;
+	default:
+	    break;
+	}
+    };
+    const setContrastBias = (arg1, arg2) => {
+	arg1 = parseFloat(arg1);
+	if( !Number.isNaN(arg1) ){
+	    this.params.contrast = arg1;
+	}
+	arg2 = parseFloat(arg2);
+	if( !Number.isNaN(arg2) ){
+	    this.params.bias = arg2;
+	}
+    };
+    const setStatic = (a) => {
+	let i, j, color;
+	for(i=0; i<a.length; i++){
+	    if( !$.isArray(a[i]) || typeof a[i][0] !== "string" ){ continue; }
+	    for(j=0; j<this.staticObj.colors.length; j++){
+		color = this.staticObj.colors[j];
+		if( a[i][0] === color.name ){
+		    switch(a[i].length){
+		    case 2:
+			if( a[i][1] === false || a[i][1] === "false" ){
+			    color.active = false;
+			} else if( a[i][1] === true || a[i][1] === "true" ){
+			    color.active = true;
+			}
+			break;
+		    case 3:
+			color.min = parseFloat(a[i][1]);
+			color.max = parseFloat(a[i][2]);
+			break;
+		    default:
+			break;
+		    }
+		    break;
+		}
+	    }
+	}
+    }
     // is this core service disabled?
     // (only if the colormap has been set at least once!)
     if( $.inArray("colormap", this.params.disable) >= 0 && this.cmapObj ){
@@ -6457,7 +6609,6 @@ JS9.Image.prototype.setColormap = function(...args){
     }
     switch(args.length){
     case 1:
-    case 3:
 	switch(arg){
 	case "rgb":
 	    JS9.globalOpts.rgb.active = !JS9.globalOpts.rgb.active;
@@ -6471,56 +6622,22 @@ JS9.Image.prototype.setColormap = function(...args){
 	    this.params.bias = JS9.imageOpts.bias;
 	    break;
 	default:
-	    if( this.cmapObj ){
-		switch(this.cmapObj.name){
-		case "red":
-		    if( this === JS9.globalOpts.rgb.rim ){
-			JS9.globalOpts.rgb.rim = null;
-		    }
-		    break;
-		case "green":
-		    if( this === JS9.globalOpts.rgb.gim ){
-			JS9.globalOpts.rgb.gim = null;
-		    }
-		    break;
-		case "blue":
-		    if( this === JS9.globalOpts.rgb.bim ){
-			JS9.globalOpts.rgb.bim = null;
-		    }
-		    break;
-		}
-	    }
-	    this.cmapObj = JS9.lookupColormap(arg);
-	    this.params.colormap = this.cmapObj.name;
-	    switch(arg){
-	    case "red":
-		JS9.globalOpts.rgb.rim = this;
-		break;
-	    case "green":
-		JS9.globalOpts.rgb.gim = this;
-		break;
-	    case "blue":
-		JS9.globalOpts.rgb.bim = this;
-		break;
+	    if( typeof arg === "string" ){
+		setCmap(arg);
+	    } else if( $.isArray(arg) &&
+		       this.cmapObj   &&
+		       this.cmapObj.type === "static" ){
+		setStatic(arg);
 	    }
 	    break;
 	}
-        if( args.length === 3 ){
-	    if( !Number.isNaN(arg2) ){
-	        this.params.contrast = arg2;
-	    }
-	    if( !Number.isNaN(arg3) ){
-	       this.params.bias = arg3;
-	    }
-        }
 	break;
     case 2:
-	if( !Number.isNaN(arg) ){
-	    this.params.contrast = arg;
-	}
-	if( !Number.isNaN(arg2) ){
-	    this.params.bias = arg2;
-	}
+	setContrastBias(arg, arg2);
+	break;
+    case 3:
+	setCmap(arg);
+	setContrastBias(arg2, arg3);
 	break;
     default:
 	break;
@@ -6755,6 +6872,7 @@ JS9.Image.prototype.getStatus = function(status){
     }
     switch(status.toLowerCase()){
     case "displaysection":
+    case "displayextension":
 	return this.status.displaySection;
     case "createmosaic":
 	return this.status.createMosaic;
@@ -9144,14 +9262,25 @@ JS9.Colormap = function(...args){
     if( !name ){
 	return;
     }
-    // there are two types of colormap, based on number of args
+    // type of colormap is based on number and type of args
     this.name = name;
     switch(args.length){
     case 2:
-	this.type = "lut";
-	this.colors = a1;
+	if( $.isArray(a1[0]) && typeof a1[0][0] === "number" ){
+	    // array of rgb values
+	    // JS9.Colormap("sls", [[0, 0, 0], [0.043442, 0, 0.052883], ...]);
+	    this.type = "lut";
+	    this.colors = a1;
+	} else {
+	    // array of static colors and min, max values
+	    // JS9.Colormap("s1", [["red",1,1], ["cyan",2,3], ["blue",4,99]]);
+	    this.type = "static";
+	    this.colors = JS9.parseStaticColors(a1);
+	}
 	break;
     case 4:
+	// three arrays of vertices
+	// JS9.Colormap("grey", [[0,0],[1,1]], [[0,0],[1,1]], [[0,0],[1,1]]));
 	this.type = "sao";
 	this.vertices = [a1, a2, a3];
 	break;
@@ -9239,6 +9368,8 @@ JS9.Colormap.prototype.mkColorCell = function(ii){
 	    rgb[1] = this.colors[size-1][1] * umax;
 	    rgb[2] = this.colors[size-1][2] * umax;
 	}
+	break;
+    case "static":
 	break;
     default:
 	JS9.error("unknown colormap type");
@@ -17692,7 +17823,7 @@ JS9.isImage = function(obj) {
 };
 
 // ---------------------------------------------------------------------
-// Dynsel: callbacks when a display is selected dynamically
+// Dysel: callbacks when a display is selected dynamically
 // ---------------------------------------------------------------------
 
 JS9.Dysel = {};
@@ -17821,6 +17952,9 @@ JS9.Dysel.imageclose = function(im){
     }
 };
 
+// public alias for plugin developers
+JS9.getDynamicDisplayOr = JS9.Dysel.getDisplayOr;
+
 // make a copy of the raw data
 // used by setFlip and setRot90
 JS9.getRawCopy = function(oraw) {
@@ -17880,9 +18014,6 @@ JS9.getRawLine = function(oraw, ooff, nraw, noff) {
     }
     return [obuf, nbuf];
 };
-
-// public alias for plugin developers
-JS9.getDynamicDisplayOr = JS9.Dysel.getDisplayOr;
 
 // ---------------------------------------------------------------------
 // Utilities
@@ -20005,6 +20136,61 @@ JS9.colorToHex = function(color){
 	return sprintf("#%02x%02x%02x", arr[1], arr[2], arr[3]);
     }
     return color;
+};
+
+// parse array of static colors
+JS9.parseStaticColors = function(arr){
+    let i, sobj, t, a;
+    let staticColors = [];
+    // can be json
+    if( typeof arr === "string" ){
+	try{ arr = JSON.parse(arr); }
+	catch(e){ /* empty */ }
+    }
+    // sanity check
+    if( !$.isArray(arr) ){
+	JS9.error("invalid input for static colors");
+    }
+    // for each array object
+    for(i=0; i<arr.length; i++){
+	if( typeof arr[i] === "string" ){
+	    // format: "color:min:max"
+	    a = arr[i].split(":");
+	} else {
+	    // format: ["color", min, max]
+	    a = arr[i];
+	}
+	// sanity check for color name
+	if( !a[0] ){ JS9.error(`no color specified: ${arr[i]}`); }
+	// color name can be any valid tiny color format
+	try{ t = tinycolor(a[0]); }
+	catch(e){ JS9.error(`invalid color: ${a[0]}`); }
+	// process min:max variations
+	if( JS9.isNull(a[1]) ){
+	    a[1] = 1;
+	    a[2] = Infinity;
+	} else if( a[1] === "" ){
+	    a[1] = -Infinity;
+	} else {
+	    a[1] = parseFloat(a[1]);
+	}
+	if( JS9.isNull(a[2]) ){
+	    a[2] = a[1];
+	} else 	if( a[2] === "" ){
+	    a[2] = Infinity;
+	} else {
+	    a[2] = parseFloat(a[2]);
+	}
+	// save this color object
+	sobj = {name: a[0], active: true,
+		red: t._r, green: t._g, blue: t._b, alpha: t._a * 255,
+		min: a[1], max: a[2]};
+	staticColors.push(sobj);
+    }
+    // optimize lookup: sort so that first min is global min
+    staticColors.sort(function(a, b){ return a.min - b.min; });
+    // return array of color objects
+    return staticColors;
 };
 
 // convert string to double, returning (possibly scaled) value and delim
