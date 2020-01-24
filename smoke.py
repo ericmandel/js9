@@ -65,7 +65,7 @@ def closeImage(j):
     displayMessage(j, 'j.CloseImage()')
     j.CloseImage()
 
-def loadImage(j, im, opts):
+def loadImage(j, im, opts={}):
     """
     load an image and wait for completion
     """
@@ -658,6 +658,73 @@ def resizeSeparateTest(j):
     displayMessage(j, 'j.ResizeDisplay("reset")')
     j.ResizeDisplay("reset")
 
+def staticColormapTest(j):
+    """
+    add colormaps
+    """
+    if j:
+        j.AddColormap("mask", [["#ff000080", 1, 31], ["cyan", 32, 32], ["rgba(0,255,0,0.5)", 37, 99], ["blue", 100, "Infinity"]]);
+
+def maskBlendTest(j):
+    """
+    load masks
+    """
+    imageFile = 'fits/lsst1.fits'
+    imageId = 'lsst1.fits[1]'
+    maskId = 'lsst1.fits[2]'
+    # load the mask first, so it can blend into the image
+    loadImage(j, imageFile + '[2]')
+    # use the lsst mask
+    displayMessage(j, 'j.SetColormap("mask")')
+    j.SetColormap("mask")
+    # the mask will be blended using source-atop composition
+    displayMessage(j, 'j.BlendImage()')
+    j.BlendImage("source-atop")
+    # load extension #1: the image data itself
+    displayMessage(j, 'j.Displayextension(1)')
+    j.DisplayExtension(1, {"separate": True})
+    displayMessage(j, "waiting for DisplayExtension ...")
+    waitStatus(j, "DisplayExtension")
+    # set some nice image params
+    displayMessage(j, 'j.SetScale("log")')
+    j.SetScale("log");
+    displayMessage(j, 'j.SetColormap("grey")')
+    j.SetColormap("grey", 6.37, 0.3)
+    # blend the two images
+    j.BlendDisplay(True)
+    # and sync them
+    displayMessage(j, 'j.SyncImages()')
+    j.SyncImages(["flip", "pan", "rot90", "zoom"], [maskId])
+    displayMessage(j, 'j.DisplayPlugin(JS9Blend)')
+    j.DisplayPlugin("JS9Blend")
+    sleep(5)
+
+def maskOverlayTest(j):
+    """
+    load masks
+    """
+    imageFile = 'fits/lsst1.fits'
+    imageId = 'lsst1.fits[1]'
+    maskId = 'lsst1.fits[2]'
+    # turn off blending, just in case we were just runing maskblend ...
+    j.BlendDisplay(False)
+    loadImage(j, imageFile, '{"scale":"log"}')
+    displayMessage(j, 'j.SetColormap("grey")')
+    j.SetColormap("grey", 5.57, 0.28);
+    displayMessage(j, 'j.Displayextension(2)')
+    j.DisplayExtension(2, {"separate": True});
+    displayMessage(j, "waiting for DisplayExtension ...")
+    waitStatus(j, "DisplayExtension");
+    displayMessage(j, 'j.SetColormap("mask")')
+    j.SetColormap("mask");
+    displayMessage(j, 'j.DisplayImage()')
+    j.DisplayImage({"display": imageId});
+    displayMessage(j, 'j.MaskImage()')
+    j.MaskImage(maskId, '{"mode":"overlay"}');
+    displayMessage(j, 'j.SyncImages()')
+    j.SyncImages(["flip", "pan", "rot90", "zoom"], [maskId]);
+    sleep(5)
+
 def smokeTests():
     """
     all the tests
@@ -684,6 +751,9 @@ def smokeTests():
     analysisTest(j)
     extTest(j, "fits/nicmos.fits")
     mosaicTest(j, "fits/mosaicimage.fits")
+    staticColormapTest(j)
+    maskBlendTest(j);
+    maskOverlayTest(j);
     blendTest(j)
     resizeSeparateTest(j)
     j.close()
