@@ -6534,9 +6534,9 @@ JS9.Image.prototype.setColormap = function(...args){
 	// add the new colormap
 	this.cmapObj = JS9.lookupColormap(arg);
 	this.params.colormap = this.cmapObj.name;
-	// set the static colormap, if necessary
+	// get copy of static colormap object (we might edit it)
 	if( this.cmapObj.type === "static" ){
-	    this.staticObj = this.cmapObj;
+	    this.staticObj = $.extend(true, {}, this.cmapObj);
 	}
 	// set rgb mode, if necessary
 	switch(arg){
