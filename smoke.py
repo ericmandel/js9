@@ -55,8 +55,8 @@ def closeDisplay(j):
     """
     close display (all images in a given display)
     """
-    displayMessage(j, 'j.CloseDisplay()')
-    j.CloseDisplay()
+    displayMessage(j, "j.CloseDisplay(%s)" % j.id)
+    j.CloseDisplay(j.id)
 
 def closeImage(j):
     """
