@@ -1224,10 +1224,12 @@ the image pixels "covered" by a mask.
 For "overlay" mode, if the mask pixel has a non-zero alpha, its color
 is blended with the image pixel using <b>source-atop</b>
 composition. Otherwise, the image pixel color alone is used in the
-display. In effect, you can display a mask overlay on top of an image.
-Note that, when blending a mask and image pixel, the global mask
-opacity and the individual pixel opacity are multiplied to get the final
-pixel opacity.
+display. This is one way you can display a mask overlay on top of an
+image.  A static colormap is usually used in conjunction with an
+overlay mask, since pixel values not explicitly assigned a color are
+transparent.  Note that, when blending a mask and image pixel, the
+global mask opacity and the individual pixel opacity are multiplied to
+get the final pixel opacity.
 <p>
 To set up a mask initially, call the routine with an already-loaded
 mask image as the first parameter, and an optional opts object as the
@@ -1297,12 +1299,21 @@ The returned cmap object will contain the following properties:
 <h5 id="JS9.SetColormap">Set the image colormap</h5>
 <p>
 <code class="api">JS9.SetColormap(colormap, [contrast, bias])</code>
+Calling sequences:
+<pre>
+    JS9.SetColormap(colormap)
+    JS9.SetColormap(colormap, contrast, bias)
+    JS9.SetColormap(colormap, staticOpts)
+    JS9.SetColormap(contrast, bias)
+    JS9.SetColormap(staticOpts)
+</pre>
 <p>
 where:
 <ul>
 <li><b>colormap</b>: colormap name
 <li><b>contrast</b>: contrast value (range: 0 to 10)
 <li><b>bias</b>: bias value (range 0 to 1)
+<li><b>staticOpts</b>: static colormap opts
 </ul>
 Set the current colormap, contrast/bias, or both. This call takes one
 (colormap), two (contrast, bias) or three (colormap, contrast, bias)
@@ -1311,7 +1322,28 @@ arguments. It also takes the following single arguments:
 <li><b>rgb</b>: toggle RGB mode
 <li><b>invert</b>: toggle inversion of the colormap
 <li><b>reset</b>: reset contrast, bias, and invert values
+<li><b>staticOpts</b>: opts for a static colormap
 </ul>
+The <b>staticOpts</b> argument is an array of parameters to change in a static
+colormap. Each parameter can take one of two forms:
+<ul>
+<li>[color, min, max]
+<li>[color, opacity|alpha]
+<li>[color, true|false]
+</ul>
+The <b>color</b> parameter must match one of the colors specified when the
+static colormap was created. The <b>min</b> and <b>max</b> properties replace
+the originally specified min and max values. Specifying a number between 0
+and 1 (inclusive) will change the opacity, while specifying a number greater
+than 1 will change the alpha (i.e., opacity * 255). Specifying <b>true</b> or
+<b>false</b> will set or unset the <b>active</b> flag for that color, i.e.
+it will turn on or off use of that color. When turned off, the pixels in that
+range will be transparent. For example:
+<pre>
+  SetColormap(["red", 0.5], ["green", true]], ["blue", false]);
+</pre>
+sets the opacity of red pixels to 0.5, turns on the green pixels, and turns
+off the blue pixels in the currently active static colormap.
 
 <h5 id="JS9.SaveColormap">Save colormap(s)</h5>
 <p>
@@ -1413,8 +1445,9 @@ Here, image pixel values between 1 and 31 (inclusive) are assigned a
 red color (#ff0000) with an opacity of approximately 0.5. The image
 pixel value 32 is assigned the color cyan. Image pixel values between
 37 and 99 are assigned the color green with opacity 0.5. All image
-pixel values greater than or equal to 100 are blue. If an image pixel
-value is not within any range, it is assigned the color specified
+pixel values greater than or equal to 100 are blue. (You can also specify
+the string "Infinity".) If an image pixel value is not within any
+range, it is assigned the color specified
 by <b>JS9.imageOpts.nocolor</b>. By default, this is black with an
 opacity of 0, so nothing is displayed at all (you'll probably see the
 default grey background of the JS9 display element). Static colormaps

@@ -2371,6 +2371,10 @@ JS9.Image.prototype.mkColorData = function(){
     const dlen = this.raw.width * this.raw.height;
     const diff = dmax - dmin;
     const dval = length / diff;
+    // skip if colormap is static
+    if( this.cmapObj.type === "static" ){
+	return this;
+    }
     // allocate array
     if( !this.colorData || this.colorData.length < dlen ){
 	this.colorData = new Int32Array(dlen);
@@ -2425,13 +2429,13 @@ JS9.Image.prototype.calcContrastBias = function(i){
 JS9.Image.prototype.mkColorCells = function(){
     let i, j, idx;
     const cs = JS9.COLORSIZE;
+    // skip if colormap is static
+    if( this.cmapObj.type === "static" ){
+	return this;
+    }
     // allocate array for color cells
     if( !this.colorCells ){
 	this.colorCells = [];
-    }
-    // but skip if mask is static
-    if( this.cmapObj.type === "static" ){
-	return this;
     }
     // fill in colorcells
     for(i=0; i<cs; i++){
@@ -2473,7 +2477,7 @@ JS9.Image.prototype.mkScaledCells = function(){
     if( !this.colorCells ){
 	return this;
     }
-    // but skip if mask is static
+    // skip if colormap is static
     if( this.cmapObj.type === "static" ){
 	return this;
     }
@@ -2682,36 +2686,19 @@ JS9.Image.prototype.mkRGBImage = function(){
     let rgb, sect, img, xrgb, yrgb, wrgb, hrgb, rgbimg, ctx;
     let inc, zinc, xIn, yIn, xOut, yOut, xOutIdx, yOutIdx, yZoom, xZoom, cobj;
     let idx, odx, odxmax, ridx, gidx, bidx, mim, mimg;
-    let yLen, zx, zy, zyLen, alpha, alpha1, alpha2, mopacity, cmopacity;
-    let cached = [];
+    let yLen, zx, zy, zyLen, alpha, alpha1, alpha2, mopacity, cmopacity, val;
     let rthis = null;
     let gthis = null;
     let bthis = null;
     let dorgb = false;
     let mimoverlay = false;
     let mimmask = false;
-    const lookupStaticColor = (idx) => {
-	let i, color, val;
-	const nocolor = this.params.nocolor || {red:0,green:0,blue:0,alpha:0};
-	val = this.raw.data[idx];
-	if( val < this.staticObj.colors[0].min ){ return nocolor; }
-	if( cached[val] ){ return cached[val]; }
-	for(i=0; i<this.staticObj.colors.length; i++){
-	    color = this.staticObj.colors[i];
-	    if( val >= color.min && val <= color.max ){
-		if( !color.active ){
-		    color = nocolor;
-		}
-		cached[val] = color;
-		return color;
-	    }
-	}
-	return nocolor;
-    };
+    let cached = [];
     // sanity check
     if( !this.rgb ){
 	return this;
     }
+    // image handles for RGB mode
     if( JS9.globalOpts.rgb.active &&
 	((this === JS9.globalOpts.rgb.rim) ||
 	 (this === JS9.globalOpts.rgb.gim) ||
@@ -2790,8 +2777,8 @@ JS9.Image.prototype.mkRGBImage = function(){
     img = rgb.img;
     // max starting index into the data
     odxmax = img.data.length - 4;
-    // converting raw data, we need psColors
-    if( !this.psColors ){
+    // converting raw data, we need psColors or a static colormap
+    if( !this.psColors && !this.staticObj ){
 	return this;
     }
     // opacity is preferred, but alpha is acceptable
@@ -2861,7 +2848,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 		    this.mkRGBImage();
 		    return this;
 		}
-	    } else {
+	    } else if( !this.staticObj ){
 		// ordinary case: one index
 		idx = this.colorData[yLen + xIn];
 	    }
@@ -2897,8 +2884,9 @@ JS9.Image.prototype.mkRGBImage = function(){
 			    img.data[odx+3] = alpha;
 			} else {
 			    if( this.staticObj ){
-				// special case: static colors
-				cobj = lookupStaticColor(yLen + xIn);
+				// special case: static colormap
+				val = this.raw.data[yLen+xIn];
+				cobj = JS9.lookupStaticColor(this, val, cached);
 				img.data[odx]   = cobj.red;
 				img.data[odx+1] = cobj.green;
 				img.data[odx+2] = cobj.blue;
@@ -3020,7 +3008,7 @@ JS9.Image.prototype.maskImage = function(...args){
     }
     if( typeof s === "string" && s.charAt(0) === '{' ){
 	try{ s = JSON.parse(s); }
-	catch(e){ JS9.error(`can't parse json arg1 in maskImage`, e); }
+	catch(e){ JS9.error(`can't parse JSON arg1 in maskImage`, e); }
     }
     // is this the image object or the opts object?
     if( !JS9.isImage(s) && !opts ){
@@ -3047,7 +3035,7 @@ JS9.Image.prototype.maskImage = function(...args){
     if( opts ){
 	if( typeof opts === "string" ){
 	    try{ opts = JSON.parse(opts); }
-	    catch(e){ JS9.error(`can't parse json arg2 in maskImage`, e); }
+	    catch(e){ JS9.error(`can't parse JSON arg2 in maskImage`, e); }
 	}
 	this.mask = $.extend(true, {}, this.mask, opts);
     }
@@ -6511,15 +6499,15 @@ JS9.Image.prototype.getColormap = function(){
 // calling sequences:
 //   setColormap(name);
 //   setColormap(name, contrast, bias);
-//   setColormap(name, contrast, bias, static);
-//   setColormap(name, static);
+//   setColormap(name, staticOpts);
 //   setColormap(contrast, bias);
-//   setColormap(static);
+//   setColormap(staticOpts);
 //   setColormap("rgb");
 //   setColormap("invert");
 //   setColormap("reset");
 JS9.Image.prototype.setColormap = function(...args){
     let [arg, arg2, arg3] = args;
+    let arr;
     const setCmap = (arg) => {
 	if( this.cmapObj ){
 	    // unset rgb mode, if necessary
@@ -6576,7 +6564,7 @@ JS9.Image.prototype.setColormap = function(...args){
 	}
     };
     const setStatic = (a) => {
-	let i, j, color;
+	let i, j, color, dval;
 	for(i=0; i<a.length; i++){
 	    if( !$.isArray(a[i]) || typeof a[i][0] !== "string" ){ continue; }
 	    for(j=0; j<this.staticObj.colors.length; j++){
@@ -6585,14 +6573,30 @@ JS9.Image.prototype.setColormap = function(...args){
 		    switch(a[i].length){
 		    case 2:
 			if( a[i][1] === false || a[i][1] === "false" ){
+			    // active
 			    color.active = false;
 			} else if( a[i][1] === true || a[i][1] === "true" ){
+			    // active
 			    color.active = true;
+			} else {
+			    // alpha
+			    dval = parseFloat(a[i][1]);
+			    if( dval > 0 && dval <= 1 ){
+				dval = dval * 255;
+			    }
+			    color.alpha = dval;
 			}
 			break;
 		    case 3:
+			// min and max
 			color.min = parseFloat(a[i][1]);
+			if( Number.isNaN(color.min) ){
+			    color.min = -Infinity;
+			}
 			color.max = parseFloat(a[i][2]);
+			if( Number.isNaN(color.max) ){
+			    color.max = Infinity;
+			}
 			break;
 		    default:
 			break;
@@ -6622,18 +6626,33 @@ JS9.Image.prototype.setColormap = function(...args){
 	    this.params.bias = JS9.imageOpts.bias;
 	    break;
 	default:
-	    if( typeof arg === "string" ){
+	    if( this.cmapObj && this.cmapObj.type === "static" ){
+		if( $.isArray(arg) ){
+		    setStatic(arg);
+		} else if( typeof arg === "string" && arg.charAt(0) === '[' ){
+		    try{
+			arr = JSON.parse(arg);
+			setStatic(arr);
+		    }
+		    catch(e){
+			JS9.error(`can't parse JSON in setColormap: ${arg}`, e);
+		    }
+		} else {
+		    setCmap(arg);
+		}
+	    } else if( typeof arg === "string" ){
 		setCmap(arg);
-	    } else if( $.isArray(arg) &&
-		       this.cmapObj   &&
-		       this.cmapObj.type === "static" ){
-		setStatic(arg);
 	    }
 	    break;
 	}
 	break;
     case 2:
-	setContrastBias(arg, arg2);
+	if( JS9.isNumber(arg) && JS9.isNumber(arg2) ){
+	    setContrastBias(arg, arg2);
+	} else if( this.cmapObj && this.cmapObj.type === "static" ){
+	    setCmap(arg);
+	    setStatic(arg2);
+	}
 	break;
     case 3:
 	setCmap(arg);
@@ -7093,7 +7112,7 @@ JS9.Image.prototype.countsInRegions = function(...args){
 	s = args[i];
 	if( typeof s === "string" && s.charAt(0) === '{' ){
 	    try{ args[i] = JSON.parse(s); }
-	    catch(e){ JS9.error(`can't parse json arg in regcnts: ${s}`, e); }
+	    catch(e){ JS9.error(`can't parse JSON arg in regcnts: ${s}`, e); }
 	}
     }
     // analyze args
@@ -14761,6 +14780,10 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
     if( !JS9.globalOpts.internalContrastBias || !im || !ipos ){
 	return;
     }
+    // skip if colormap is static
+    if( im.cmapObj.type === "static" ){
+	return;
+    }
     // make sure we moved the mouse a bit
     if( im.pos0 && im.pos ){
 	if( ((Math.abs(im.pos0.x-im.pos.x) < JS9.NOMOVE)  &&
@@ -20193,6 +20216,36 @@ JS9.parseStaticColors = function(arr){
     return staticColors;
 };
 
+// look up a static color
+JS9.lookupStaticColor = (im, val, cache) => {
+    let i, color;
+    const maxcache = 10000000;
+    const nocolor = im.params.nocolor || {red:0,green:0,blue:0,alpha:0};
+    if( im && im.staticObj ){
+	// colors are sorted, so we can skip values less than the first min
+	if( val < im.staticObj.colors[0].min ){ return nocolor; }
+	// return cached color, if possible
+	if( cache && cache[val] ){ return cache[val]; }
+	for(i=0; i<im.staticObj.colors.length; i++){
+	    color = im.staticObj.colors[i];
+	    if( val >= color.min && val <= color.max ){
+		// in range but not active?
+		if( !color.active ){
+		    color = nocolor;
+		}
+		// save in cache, if possible
+		if( cache && val <= maxcache ){
+		    cache[val] = color;
+		}
+		// this is the color
+		return color;
+	    }
+	}
+    }
+    // nothing found
+    return nocolor;
+};
+
 // convert string to double, returning (possibly scaled) value and delim
 JS9.strtoscaled = function(s){
     let dval = JS9.saostrtod(s);
@@ -22380,7 +22433,7 @@ JS9.mkPublic("AddColormap", function(...args){
 	reader = new FileReader();
 	reader.onload = (ev) => {
 	    try{ cobj = JSON.parse(ev.target.result); }
-	    catch(e){ JS9.error("can't parse json colormap", e); }
+	    catch(e){ JS9.error("can't parse JSON colormap", e); }
 	    obj2cmap(cobj, a1);
 	};
 	reader.readAsText(colormap);

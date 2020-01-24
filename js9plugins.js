@@ -2547,10 +2547,13 @@ JS9.Colorbar.COLORBARHEIGHT = 16;
 // JS9.Colorbar.COLORBARFONT = "11pt Arial";
 // max label length before we start skipping some labels
 JS9.Colorbar.MAXLABELSIZE = 10;
+// how much to add for Infinity
+JS9.Colorbar.INFINITY = 10;
 
 // redraw colorbar on display
 JS9.Colorbar.display = function(im){
     let i, j, prec, idx, idx0, colorBuf, tval, ix, iy, done;
+    let dmin, dmax, dval, color, label, dolabel;
     const tlabels = [];
     const canvasWidth = this.colorbarWidth;
     const canvasHeight = this.colorbarHeight;
@@ -2558,25 +2561,69 @@ JS9.Colorbar.display = function(im){
     const colorData = colorImg.data;
     const colorWidth = canvasWidth * 4;
     const colorBuf0 = new Uint8Array(colorData.buffer, 0, colorWidth);
-    // scaled or unscaled display?
-    if( this.scaled ){
-	colorBuf = im.psColors;
+    const drawLabel = (ix, iy, label, dolabel) => {
+	this.textctx.textAlign = "center";
+	this.textctx.beginPath();
+	this.textctx.moveTo(ix, iy);
+	this.textctx.lineWidth = 1;
+	this.textctx.lineTo(ix, iy+5);
+	this.textctx.stroke();
+	if( dolabel ){
+	    this.textctx.fillText(label, ix, iy+15);
+	}
+    };
+    if( im.staticObj ){
+	// find min and max in the static range
+	dmin = 0
+	dmax = 0;
+	for(i=0; i<im.staticObj.colors.length; i++){
+	    color = im.staticObj.colors[i];
+	    if( color.min < dmin ){
+		if( color.max === -Infinity ){
+		    dmin = dmin - JS9.Colorbar.INFINITY;
+		} else {
+		    dmin = color.min;
+		}
+	    }
+	    if( color.max > dmax ){
+		if( color.max === Infinity ){
+		    dmax = dmax + JS9.Colorbar.INFINITY ;
+		} else {
+		    dmax = color.max;
+		}
+	    }
+	}
+	// first line gets colors from static lookup
+	idx0 = (dmax - dmin) / canvasWidth;
+	for(i=0, j=0; i<canvasWidth; i++, j+=4){
+	    dval = Math.floor(i * idx0);
+	    color = JS9.lookupStaticColor(im, dval);
+	    colorData[j]   = color.red;
+	    colorData[j+1] = color.green;
+	    colorData[j+2] = color.blue;
+	    colorData[j+3] = color.alpha;
+	}
     } else {
-	colorBuf = im.colorCells;
-    }
-    // sanity check
-    if( !colorBuf ){
-	JS9.Colorbar.imageclear(im);
-	return;
-    }
-    // first line gets colors from main display's rgb array
-    idx0 = colorBuf.length / canvasWidth;
-    for(i=0, j=0; i<canvasWidth; i++, j+=4){
-	idx = Math.floor(i * idx0);
-	colorData[j]   = colorBuf[idx][0];
-	colorData[j+1] = colorBuf[idx][1];
-	colorData[j+2] = colorBuf[idx][2];
-	colorData[j+3] = 255;
+	// scaled or unscaled display?
+	if( this.scaled ){
+	    colorBuf = im.psColors;
+	} else {
+	    colorBuf = im.colorCells;
+	}
+	// sanity check
+	if( !colorBuf ){
+	    JS9.Colorbar.imageclear(im);
+	    return;
+	}
+	// first line gets colors from main display's rgb array
+	idx0 = colorBuf.length / canvasWidth;
+	for(i=0, j=0; i<canvasWidth; i++, j+=4){
+	    idx = Math.floor(i * idx0);
+	    colorData[j]   = colorBuf[idx][0];
+	    colorData[j+1] = colorBuf[idx][1];
+	    colorData[j+2] = colorBuf[idx][2];
+	    colorData[j+3] = 255;
+	}
     }
     // other lines get a copy of the first line
     for(i=1; i<canvasHeight; i++){
@@ -2588,51 +2635,59 @@ JS9.Colorbar.display = function(im){
     if( !this.showTicks ){
 	return;
     }
-    // display tick marks
-    idx0 = im.psInverse.length / this.ticks;
     // clear tick display
     this.textctx.clear();
-    // get precision estimate
-    prec = JS9.floatPrecision(Math.min(im.params.scalemin, im.psInverse[0]), 
-			      Math.max(im.params.scalemax, im.psInverse[im.psInverse.length-1]));
-    // make labels, with a feeble attempt to avoid duplicates
-    for(j=0; j<3; j++){
-	done = true;
-	// gather array of labels
-	for(i=0; i<this.ticks; i++){
-	    tval = im.psInverse[Math.floor(i*idx0)];
-	    tlabels[i] = JS9.floatFormattedString(tval, prec, j);
+    if( im.staticObj ){
+	prec = JS9.floatPrecision(dmin, dmax);
+	for(i=0; i<im.staticObj.colors.length; i++){
+	    color = im.staticObj.colors[i];
+	    label = JS9.floatFormattedString(color.min, prec, 0);
+	    ix = Math.ceil(color.min / idx0) + 1;
+	    iy = 0;
+	    drawLabel(ix, iy, label, true);
 	}
-	// look for dups
-	for(i=1; i<this.ticks; i++){
-	    if( tlabels[i-1] === tlabels[i] ){
-		done = false;
+    } else {
+	// display tick marks
+	idx0 = im.psInverse.length / this.ticks;
+	// get precision estimate
+	prec = JS9.floatPrecision(Math.min(im.params.scalemin,im.psInverse[0]),
+	     Math.max(im.params.scalemax, im.psInverse[im.psInverse.length-1]));
+	// make labels, with a feeble attempt to avoid duplicates
+	for(j=0; j<3; j++){
+	    done = true;
+	    // gather array of labels
+	    for(i=0; i<this.ticks; i++){
+		tval = im.psInverse[Math.floor(i*idx0)];
+		tlabels[i] = JS9.floatFormattedString(tval, prec, j);
+	    }
+	    // look for dups
+	    for(i=1; i<this.ticks; i++){
+		if( tlabels[i-1] === tlabels[i] ){
+		    done = false;
+		}
+	    }
+	    // done if no dups
+	    if( done ){
+		break;
 	    }
 	}
-	// done if no dups
-	if( done ){
-	    break;
+	// draw tick marks and labels
+	for(i=1; i<this.ticks; i++){
+	    // skip repeats
+	    if( (i > 1) && (tlabels[i] === tlabels[i-1]) ){
+		continue;
+	    }
+	    ix = (i/this.ticks)*this.width;
+	    iy = 0;
+	    // if the label is going to be wide, skip even ones
+	    if( (tlabels[i].length >= JS9.Colorbar.MAXLABELSIZE) &&
+		(i % 2 === 0) ){
+		dolabel = false;
+	    } else {
+		dolabel = true;
+	    }
+	    drawLabel(ix, iy, tlabels[i], dolabel);
 	}
-    }
-    // draw tick marks and labels
-    for(i=1; i<this.ticks; i++){
-	// skip repeats
-	if( (i > 1) && (tlabels[i] === tlabels[i-1]) ){
-	    continue;
-	}
-	ix = (i/this.ticks)*this.width;
-	iy = 0;
-	this.textctx.textAlign = "center";
-	this.textctx.beginPath();
-	this.textctx.moveTo(ix, iy);
-	this.textctx.lineWidth = 1;
-	this.textctx.lineTo(ix, iy+5);
-	this.textctx.stroke();
-	// if the label is going to be wide, skip even ones
-	if( (tlabels[i].length >= JS9.Colorbar.MAXLABELSIZE) && (i % 2 === 0) ){
-	    continue;
-	}
-	this.textctx.fillText(tlabels[i], ix, iy+15);
     }
 };
 
