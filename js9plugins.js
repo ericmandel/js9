@@ -2546,13 +2546,15 @@ JS9.Colorbar.TICKS = 10;
 JS9.Colorbar.COLORBARHEIGHT = 16;
 // JS9.Colorbar.COLORBARFONT = "11pt Arial";
 // max label length before we start skipping some labels
-JS9.Colorbar.MAXLABELSIZE = 10;
+JS9.Colorbar.MAXLABELSIZE  = 10;
+JS9.Colorbar.STATICSIZE    =  4;
+JS9.Colorbar.STATICPADDING =  3;
 // how much to add for Infinity
 JS9.Colorbar.INFINITY = 10;
 
 // redraw colorbar on display
 JS9.Colorbar.display = function(im){
-    let i, j, prec, idx, idx0, colorBuf, tval, ix, iy, done;
+    let i, j, prec, idx, idx0, colorBuf, tval, ix, iy, lastix, done;
     let dmin, dmax, dval, color, label, dolabel;
     const tlabels = [];
     const canvasWidth = this.colorbarWidth;
@@ -2639,12 +2641,21 @@ JS9.Colorbar.display = function(im){
     this.textctx.clear();
     if( im.staticObj ){
 	prec = JS9.floatPrecision(dmin, dmax);
+	lastix = -99999;
 	for(i=0; i<im.staticObj.colors.length; i++){
 	    color = im.staticObj.colors[i];
 	    label = JS9.floatFormattedString(color.min, prec, 0);
 	    ix = Math.ceil(color.min / idx0) + 1;
 	    iy = 0;
-	    drawLabel(ix, iy, label, true);
+	    // if the label is going to be wide, skip even ones
+	    if( (Math.abs(ix - lastix) <= JS9.Colorbar.STATICPADDING)        ||
+		((label.length >= JS9.Colorbar.STATICSIZE) && (i % 2 === 0)) ){
+		dolabel = false;
+	    } else {
+		lastix = ix;
+		dolabel = true;
+	    }
+	    drawLabel(ix, iy, label, dolabel);
 	}
     } else {
 	// display tick marks
