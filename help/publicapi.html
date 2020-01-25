@@ -1202,17 +1202,18 @@ where:
 <li><b>image</b>: image handle or image id to use as a mask
 <li><b>opts</b>: optional mask properties
 </ul>
-where the mask properties are:
+and where the mask properties are:
 <ul>
 <li><b>mode</b>: "mask" or "overlay"
 <li><b>value</b>: mask value that triggers masking (def: 0) for "mask" mode
 <li><b>invert</b>: whether to invert the mask (def: false) for "mask" mode
 <li><b>def</b>: object containing default RGBA values for "overlay" mode
-<li><b>opacity</b>: opacity to use when masking (def: 0, range 0 to 1) for "mask" and "overlay" mode
+<li><b>opacity</b>: opacity to use when masking (def: 0, range 0 to 1)
+for "mask" and "overlay" mode
 </ul>
 <p>
 The pixel values in one image can be used to mask the pixels in
-another image <i>if the two images have the same image dimensions</i>.
+another image <b>if the two images have the same image dimensions</b>.
 The type of masking depends on the mode: "overlay" (default) or "mask".
 <p>
 For "mask" mode, if the value of a pixel in the mask is less than or
@@ -1340,7 +1341,7 @@ than 1 will change the alpha (i.e., opacity * 255). Specifying <b>true</b> or
 it will turn on or off use of that color. When turned off, the pixels in that
 range will be transparent. For example:
 <pre>
-  SetColormap(["red", 0.5], ["green", true]], ["blue", false]);
+  SetColormap([["red", 0.5], ["green", true], ["blue", false]]);
 </pre>
 sets the opacity of red pixels to 0.5, turns on the green pixels, and turns
 off the blue pixels in the currently active static colormap.
