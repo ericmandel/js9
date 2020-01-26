@@ -3006,9 +3006,10 @@ JS9.Image.prototype.maskImage = function(...args){
 	this.displayImage();
 	return this;
     }
+    // json string
     if( typeof s === "string" && s.charAt(0) === '{' ){
 	try{ s = JSON.parse(s); }
-	catch(e){ JS9.error(`can't parse JSON arg1 in maskImage`, e); }
+	catch(e){ JS9.error(`can't parse JSON in maskImage: ${s}`, e); }
     }
     // is this the image object or the opts object?
     if( !JS9.isImage(s) && !opts ){
@@ -3035,7 +3036,7 @@ JS9.Image.prototype.maskImage = function(...args){
     if( opts ){
 	if( typeof opts === "string" ){
 	    try{ opts = JSON.parse(opts); }
-	    catch(e){ JS9.error(`can't parse JSON arg2 in maskImage`, e); }
+	    catch(e){ JS9.error(`can't parse JSON in maskImage: ${opts}`, e); }
 	}
 	this.mask = $.extend(true, {}, this.mask, opts);
     }
@@ -17856,13 +17857,15 @@ JS9.Grid.init = function(opts){
 JS9.Image.prototype.displayCoordGrid = JS9.Grid.display;
 
 // check if an object is an image handle
-JS9.isImage = function(obj) {
-    if( typeof obj === "object"   &&
-	JS9.notNull(obj.id)       &&
-	JS9.notNull(obj.raw)      &&
-	JS9.notNull(obj.rgb)      &&
-	JS9.notNull(obj.params)   &&
-	JS9.notNull(obj.display)  ){
+JS9.isImage = function(s) {
+    if( typeof s === "object"   &&
+	JS9.notNull(s.id)       &&
+	JS9.notNull(s.raw)      &&
+	JS9.notNull(s.rgb)      &&
+	JS9.notNull(s.params)   &&
+	JS9.notNull(s.display)  ){
+	return true;
+    } if( typeof s === "string" && JS9.lookupImage(s) ){
 	return true;
     }
     return false;
