@@ -1442,7 +1442,7 @@ For example:
 		   ["rgba(0,255,0,0.5)", 37, 99],
 		   ["blue", 100, Infinity]]);
 </pre>
-Here, image pixel values between 1 and 31 (inclusive) are assigned a
+Image pixel values between 1 and 31 (inclusive) are assigned a
 red color (#ff0000) with an opacity of approximately 0.5. The image
 pixel value 32 is assigned the color cyan. Image pixel values between
 37 and 99 are assigned the color green with opacity 0.5. All image
@@ -1454,6 +1454,13 @@ opacity of 0, so nothing is displayed at all (you'll probably see the
 default grey background of the JS9 display element). Static colormaps
 are mostly used as image masks. See
 <a href="#JS9.MaskImage"><b>JS9.MaskImage()</b></a> for more information.
+
+<p>
+Note the different ways in which colors can be specified: more information
+about accepted color formats is available on the
+<a href="https://github.com/bgrins/TinyColor" target="_blank">TinyColor</a>
+website.
+
 
 <p>
 For a more complicated example, consider the <b>a</b> colormap, which is
