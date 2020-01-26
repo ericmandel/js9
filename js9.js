@@ -10800,6 +10800,29 @@ JS9.Display.prototype.createMosaic = function(ims, opts){
     return this;
 };
 
+// swap images in the images stack for this display
+// used by the sortable routine to switch images in a stack
+// for moving an element of an array:
+// https://stackoverflow.com/questions/5306680/move-an-array-element-from-one-array-position-to-another
+JS9.Display.prototype.moveImageInStack = function(from, to){
+    let i, j, nfrom, nto;
+    for(i=0, j=0; i<JS9.images.length; i++){
+	if( JS9.images[i].display.id === this.id ){
+	    if( from === j ){
+		nfrom = i;
+	    }
+	    if( to === j ){
+		nto = i;
+	    }
+	    j++;
+	}
+	if( JS9.notNull(nfrom) && JS9.notNull(nto) ){
+	    JS9.images.splice(nto, 0, JS9.images.splice(nfrom, 1)[0]);
+	    return;
+	}
+    }
+};
+
 // ---------------------------------------------------------------------
 // JS9 Command, commands for console window
 // ---------------------------------------------------------------------

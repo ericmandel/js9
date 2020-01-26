@@ -237,7 +237,6 @@ JS9.Blink.init = function(){
     // this.dispMode: display mode (for internal use)
     //
     // create container to hold image container and header
-    const _this = this;
     // initialize params
     if( this.idx === undefined ){
 	this.idx = 0;
@@ -290,17 +289,18 @@ JS9.Blink.init = function(){
     }
     // the images within the image container will be sortable
     this.blinkImageContainer.sortable({
-	start(event, ui) {
+	start: (event, ui) => {
 	    this.oidx = ui.item.index();
 	},
-	stop(event, ui) {
+	stop: (event, ui) => {
 	    const nidx = ui.item.index();
-	    // JS9 image list reflects the sort
-	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
+	    // change JS9 image array to reflect the change
+	    this.display.moveImageInStack(this.oidx, nidx);
 	    // redisplay in case something changed
-	    if( _this.display.image ){
-		_this.display.image.displayImage();
+	    if( this.display.image ){
+		this.display.image.displayImage();
 	    }
+	    delete this.oidx;
 	}
     });
 };

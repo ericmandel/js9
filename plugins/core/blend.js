@@ -298,8 +298,8 @@ JS9.Blend.init = function(width, height){
 	},
 	stop: (event, ui) => {
 	    const nidx = ui.item.index();
-	    // JS9 image list reflects the sort
-	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
+	    // change JS9 image array to reflect the change
+	    this.display.moveImageInStack(this.oidx, nidx);
 	    // redisplay in case something changed
 	    if( this.display.image ){
 		this.display.image.displayImage();

@@ -1425,8 +1425,8 @@ JS9.Blend.init = function(width, height){
 	},
 	stop: (event, ui) => {
 	    const nidx = ui.item.index();
-	    // JS9 image list reflects the sort
-	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
+	    // change JS9 image array to reflect the change
+	    this.display.moveImageInStack(this.oidx, nidx);
 	    // redisplay in case something changed
 	    if( this.display.image ){
 		this.display.image.displayImage();
@@ -1753,7 +1753,6 @@ JS9.Blink.init = function(){
     // this.dispMode: display mode (for internal use)
     //
     // create container to hold image container and header
-    const _this = this;
     // initialize params
     if( this.idx === undefined ){
 	this.idx = 0;
@@ -1806,17 +1805,18 @@ JS9.Blink.init = function(){
     }
     // the images within the image container will be sortable
     this.blinkImageContainer.sortable({
-	start(event, ui) {
+	start: (event, ui) => {
 	    this.oidx = ui.item.index();
 	},
-	stop(event, ui) {
+	stop: (event, ui) => {
 	    const nidx = ui.item.index();
-	    // JS9 image list reflects the sort
-	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
+	    // change JS9 image array to reflect the change
+	    this.display.moveImageInStack(this.oidx, nidx);
 	    // redisplay in case something changed
-	    if( _this.display.image ){
-		_this.display.image.displayImage();
+	    if( this.display.image ){
+		this.display.image.displayImage();
 	    }
+	    delete this.oidx;
 	}
     });
 };
@@ -2329,7 +2329,6 @@ JS9.Cmaps.removeImage = function(im){
 
 // plugin initialization
 JS9.Cmaps.init = function(width, height){
-    const _this = this;
     let i, dispid, html, el1, el2;
     const elid1 = `.${JS9.Cmaps.COLORCLASS}`;
     const elid2 = `.${JS9.Cmaps.CMAPCLASS}`;
@@ -2405,17 +2404,18 @@ JS9.Cmaps.init = function(width, height){
     }
     // the images within the image container will be sortable
     this.cmapsImageContainer.sortable({
-	start(event, ui) {
+	start: (event, ui) => {
 	    this.oidx = ui.item.index();
 	},
-	stop(event, ui) {
+	stop: (event, ui) => {
 	    const nidx = ui.item.index();
-	    // JS9 image list reflects the sort
-	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
+	    // change JS9 image array to reflect the change
+	    this.display.moveImageInStack(this.oidx, nidx);
 	    // redisplay in case something changed
-	    if( _this.display.image ){
-		_this.display.image.displayImage();
+	    if( this.display.image ){
+		this.display.image.displayImage();
 	    }
+	    delete this.oidx;
 	}
     });
     // convenience variables
@@ -5494,7 +5494,6 @@ JS9.Layers.close = function(){
 // constructor: add HTML elements to the plugin
 JS9.Layers.init = function(opts){
     let key, im;
-    const _this = this;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -5550,12 +5549,12 @@ JS9.Layers.init = function(opts){
     // the top one responds to events
     this.layersLayerContainer.sortable({
 	// eslint-disable-next-line no-unused-vars
-	start(event, ui) {
+	start: (event, ui) => {
 	    return;
 	},
 	// eslint-disable-next-line no-unused-vars
-	stop(event, ui) {
-	    JS9.Layers.activeLayer(im, _this);
+	stop: (event, ui) => {
+	    JS9.Layers.activeLayer(im, this);
 	    return;
 	}
     });
@@ -11840,7 +11839,6 @@ JS9.Separate.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.Separate.init = function(){
-    const _this = this;
     let i, s, im, display, dispid;
     const opts = [];
     // on entry, these elements have already been defined:
@@ -11892,17 +11890,18 @@ JS9.Separate.init = function(){
     }
     // the images within the image container will be sortable
     this.separateImageContainer.sortable({
-	start(event, ui) {
+	start: (event, ui) => {
 	    this.oidx = ui.item.index();
 	},
-	stop(event, ui) {
+	stop: (event, ui) => {
 	    const nidx = ui.item.index();
-	    // JS9 image list reflects the sort
-	    JS9.images.splice(nidx, 0, JS9.images.splice(this.oidx, 1)[0]);
+	    // change JS9 image array to reflect the change
+	    this.display.moveImageInStack(this.oidx, nidx);
 	    // redisplay in case something changed
-	    if( _this.display.image ){
-		_this.display.image.displayImage();
+	    if( this.display.image ){
+		this.display.image.displayImage();
 	    }
+	    delete this.oidx;
 	}
     });
 };

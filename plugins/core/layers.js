@@ -192,7 +192,6 @@ JS9.Layers.close = function(){
 // constructor: add HTML elements to the plugin
 JS9.Layers.init = function(opts){
     let key, im;
-    const _this = this;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -248,12 +247,12 @@ JS9.Layers.init = function(opts){
     // the top one responds to events
     this.layersLayerContainer.sortable({
 	// eslint-disable-next-line no-unused-vars
-	start(event, ui) {
+	start: (event, ui) => {
 	    return;
 	},
 	// eslint-disable-next-line no-unused-vars
-	stop(event, ui) {
-	    JS9.Layers.activeLayer(im, _this);
+	stop: (event, ui) => {
+	    JS9.Layers.activeLayer(im, this);
 	    return;
 	}
     });
