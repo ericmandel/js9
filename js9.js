@@ -16013,6 +16013,11 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 		break;
 	    }
 	    break;
+	case "radii":
+	    if( newval(obj, key, val) ){
+		opts[key] = val;
+	    }
+	    break;
 	case "remove":
 	    if( newval(obj, key, val) ){
 		opts[key] = obj.pub.id;
