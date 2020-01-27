@@ -348,10 +348,10 @@ JS9.blendOpts = {
 // defaults for masking
 JS9.maskOpts = {
     active: false,
-    im: null,
     mode: "overlay",
     opacity: 1,
     value: 0,
+    syncops: ["flip", "pan", "rot90", "zoom"],
     invert: false
 };
 
@@ -3038,7 +3038,12 @@ JS9.Image.prototype.maskImage = function(...args){
 	    try{ opts = JSON.parse(opts); }
 	    catch(e){ JS9.error(`can't parse JSON in maskImage: ${opts}`, e); }
 	}
+	// add opts to mask object
 	this.mask = $.extend(true, {}, this.mask, opts);
+    }
+    // keep images in sync, if necessary
+    if( im && (!opts || opts.sync !== false) ){
+	this.syncImages(this.mask.syncops, [im]);
     }
     // redisplay with the new mask
     if( im || opts ){

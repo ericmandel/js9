@@ -1207,7 +1207,7 @@ and where the mask properties are:
 <li><b>mode</b>: "mask" or "overlay"
 <li><b>value</b>: mask value that triggers masking (def: 0) for "mask" mode
 <li><b>invert</b>: whether to invert the mask (def: false) for "mask" mode
-<li><b>def</b>: object containing default RGBA values for "overlay" mode
+<li><b>sync</b>: true or false for "overlay" mode
 <li><b>opacity</b>: opacity to use when masking (def: 0, range 0 to 1)
 for "mask" and "overlay" mode
 </ul>
@@ -1230,7 +1230,10 @@ image.  A static colormap is usually used in conjunction with an
 overlay mask, since pixel values not explicitly assigned a color are
 transparent.  Note that, when blending a mask and image pixel, the
 global mask opacity and the individual pixel opacity are multiplied to
-get the final pixel opacity.
+get the final pixel opacity. If "sync" is not explicitly false, this
+mode will call <a href="#JS9.SyncImages"><b>JS9.SyncImages()</b></a>
+to keep the mask and image file in sync. The maskOpts property <b>sync</b>
+contains the array of operations to sync.
 <p>
 To set up a mask initially, call the routine with an already-loaded
 mask image as the first parameter, and an optional opts object as the
