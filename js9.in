@@ -35,8 +35,12 @@ usage(){
   printf "  # send a command to an existing JS9 app or web page\n"
   printf "  %s [switches] [cmd] [args]\n" $XEQ
   printf "  # start the JS9 Desktop app and load images\n"
-  printf "  %s [-a] [switches] [image1, image2, ...]\n" $XEQ
-  printf "  # or (NB: no switches specified:)\n"
+  printf "  %s -a [switches] [image1 image2 ...]\n" $XEQ
+  printf "  # start the JS9 Desktop app and load images with json opts\n"
+  printf "  %s -a [switches] [image1 opts1 image2 ...]\n" $XEQ
+  printf "  # start the JS9 Desktop app and load images with switch opts\n"
+  printf "  %s -a [switches] [image1 --opt1 val1 --opt2 val2 image2 ...]\n" $XEQ
+  printf "  # or without -a if no switches specified:\n"
   printf "  %s [image1, image2, ...]\n" $XEQ
   printf "  # start a JS9 web page in a browser and load images\n"
   printf "  %s -b [bname] [switches] [image1, image2, ...]\n" $XEQ
@@ -87,6 +91,10 @@ usage(){
   printf "    # start the js9 app and load foo.fits\n"
   printf "    # (requires Electron.js app to be installed)\n"
   printf "    %s -a foo.fits\n" $XEQ
+  printf "    # start the js9 app, load foo.fits, with switch opts\n"
+  printf "    %s -a foo.fits --colormap heat --scale log\n" $XEQ
+  printf "    # start the js9 app, load foo.fits, with json opt\n"
+  printf "    %s -a foo.fits '{\"colormap\":\"heat\", \"scale\":\"log\"}'\n" $XEQ
   printf "    # start the js9 app, load foo.fits, execute the js9 commands\n"
   printf "    # contained in the foo.js script file\n"
   printf "    %s -a --cmdfile foo.js foo.fits\n" $XEQ
@@ -244,4 +252,4 @@ do
 done
 
 # eval properly handles the quoted args
-eval "$JS9_XEQ" "$JS9_MSGSCRIPT" $ARGS ${XARGS[*]} 2> >(grep -v "Electron Helper" 1>&2)
+eval "$JS9_XEQ" "$JS9_MSGSCRIPT" $ARGS ${XARGS[*]} 2> >(grep -v "Electron Helper|GL_INVALID" 1>&2)
