@@ -628,9 +628,18 @@ JS9.Image = function(file, params, func){
 	this.notifyHelper();
 	// show regions layer
 	this.showShapeLayer("regions", true, {local: true});
-	// add regions, if necessary
-	if( localOpts && localOpts.regions ){
-	    this.addShapes("regions", localOpts.regions);
+	if( localOpts ){
+	    // pan, if necessary
+	    if( (JS9.notNull(localOpts.x)  && JS9.notNull(localOpts.y))   ||
+		(JS9.notNull(localOpts.px) && JS9.notNull(localOpts.py))  ||
+		(JS9.notNull(localOpts.ra) && JS9.notNull(localOpts.dec)) ||
+		(JS9.notNull(localOpts.wcs))                              ){
+		this.setPan(localOpts);
+	    }
+	    // add regions, if necessary
+	    if( localOpts.regions ){
+		this.addShapes("regions", localOpts.regions);
+	    }
 	}
 	// no alerts while processing imopts or cmaps
 	JS9.globalOpts.alerts = false;

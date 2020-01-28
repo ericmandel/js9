@@ -165,15 +165,23 @@ property), as follows:
 The global default is to redisplay instead of refreshing. Site authors can
 change this property in <b>js9prefs.js</b>, while users can change this via
 the <b>Global</b> tab of the <b>Preferences</b> plugin.
-
 <p>
 To override default image parameters, pass the image opts argument:
 <pre>
-    JS9.Load("png/m13.png", {scale:"linear", colormap:"sls"});
+    JS9.Load("fits/casa.fits", {scale:"linear", colormap:"sls"});
 </pre>
 You can also pass a regions property to add regions:
 <pre>
-    JS9.Load("./fits/casa.fits", {regions:'ICRS; box(23:23:40.340, +58:47:04.059, 29.5", 29.5", 0)'});
+    JS9.Load("fits/casa.fits", {regions:'ICRS; box(23:23:40.340, +58:47:04.059, 29.5", 29.5", 0)'});
+</pre>
+or a pan position:
+<pre>
+    # pan to physical coords (usually file coords)
+    JS9.Load("fits/casa.fits", {px: 4009, py: 3926});
+    # pan to ra, dec using file's wcs
+    JS9.Load("fits/casa.fits", {ra: 350.866689, dec: 58.811671)};
+    # pan to ra, dec using specified wcs
+    JS9.Load("fits/casa.fits", {wcs: "23:23:27.942 +58:48:42.02 ICRS"});
 </pre>
 <p>
 If an onload callback function is specified in opts, it will be called
