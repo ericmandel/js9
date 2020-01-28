@@ -170,9 +170,12 @@ To override default image parameters, pass the image opts argument:
 <pre>
     JS9.Load("fits/casa.fits", {scale:"linear", colormap:"sls"});
 </pre>
-You can also pass a regions property to add regions:
+You can also pass a regions property to add regions or load a region file:
 <pre>
+    # but oh my, its dicey mixing quotes and wcs arcsec/arcmin delims
     JS9.Load("fits/casa.fits", {regions:'ICRS; box(23:23:40.340, +58:47:04.059, 29.5", 29.5", 0)'});
+    # much easier to pass a filename, if possible
+    JS9.Load("fits/casa.fits", {regions:"casa/casa.reg"});
 </pre>
 or a pan position:
 <pre>

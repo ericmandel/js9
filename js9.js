@@ -620,6 +620,7 @@ JS9.Image = function(file, params, func){
 	const imopts = JS9.globalOpts.imopts;
 	const imcmap = JS9.globalOpts.imcmap;
 	const oalerts = JS9.globalOpts.alerts;
+	const rregexp = /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
 	// clear previous messages
 	this.display.clearMessage();
 	// add to list of images
@@ -638,7 +639,11 @@ JS9.Image = function(file, params, func){
 	    }
 	    // add regions, if necessary
 	    if( localOpts.regions ){
-		this.addShapes("regions", localOpts.regions);
+		if( localOpts.regions.match(rregexp) ){
+		    this.addShapes("regions", localOpts.regions);
+		} else {
+		    JS9.LoadRegions(localOpts.regions, {display:this.display});
+		}
 	    }
 	}
 	// no alerts while processing imopts or cmaps
