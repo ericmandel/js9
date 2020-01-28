@@ -108,6 +108,18 @@ the default JS9 web page, and load one or more FITS files:
 <pre>
   # the -a switch tells the script to bring up the desktop js9 app
   js9 -a ~/data/casa.fits
+
+  # opts can be passed via json format
+  js9 -a fits/casa.fits '{"scale":"log","scalemin":3,"colormap":"cool"}'
+
+  # opts can be passed via switch format
+  js9 -a fits/casa.fits --scale log --scalemin 3 --colormap cool
+
+  # opts can be passed via mixed format
+  js9 -a fits/casa.fits --colormap cool '{"scale":"log","scalemin":3}'
+
+  # multiple files can have different opts
+  js9 -a fits/casa.fits.gz --colormap heat --scale log fits/casa.fits --colormap cool --ra 350.8667 --dec 58.812
 </pre>
 In the desktop app, all relative paths are relative to current working
 directory, as would be expected with files passed to any desktop

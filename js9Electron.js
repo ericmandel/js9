@@ -122,8 +122,16 @@ js9Electron.pdfOpts = {
 js9Electron.contextIsolation = false;    // false: we set window properties
 js9Electron.enableRemoteModule = false;  // see security recommendations
 
-// command line arguments
-js9Electron.argv = require('minimist')(process.argv.slice(2));
+// command line arguments: skip -a and -v
+js9Electron.args = [];
+for(let i=2; i< process.argv.length; i++){
+    if( process.argv[i] !== "-a" && process.argv[i] !== "-v" ){
+	js9Electron.args = process.argv.slice(i);
+	break;
+    }
+}
+js9Electron.argv = require('minimist')(js9Electron.args, {stopEarly:true});
+
 // command line switch options
 js9Electron.id = js9Electron.argv.i || js9Electron.argv.id || "JS9";
 js9Electron.cmds = js9Electron.argv.cmds;
@@ -143,14 +151,6 @@ js9Electron.savedir = js9Electron.argv.savedir;
 
 // the list of files to load
 js9Electron.files = js9Electron.argv._;
-// hack: js9 script level switches might contain a file to load
-// due to how minimist processes arguments
-if( js9Electron.argv.a && typeof js9Electron.argv.a === "string" ){
-    js9Electron.files.unshift(js9Electron.argv.a);
-}
-if( js9Electron.argv.v && typeof js9Electron.argv.v === "string" ){
-    js9Electron.files.unshift(js9Electron.argv.v);
-}
 
 // security checks: https://electronjs.org/docs/tutorial/security
 // security check: disallow http except locally
@@ -208,6 +208,20 @@ function createWindow() {
     let f, s, cmd, icon, todir;
     let ncmd = 0;
     let xcmds = "";
+    const getval = (s) => {
+	let d;
+	if( s === "true" ){
+	    return true;
+	}
+	if( s === "false" ){
+	    return false;
+	}
+	d = Number.parseFloat(s);
+	if( Number.isNaN(d) || !Number.isFinite(d) ){
+	    return s;
+	}
+	return d;
+    }
     // set dock icon for Mac
     if( process.platform === "darwin" ){
 	icon = path.join(__dirname, "/images/js9logo/png/js9logo_64.png");
@@ -335,10 +349,12 @@ function createWindow() {
 	    }
 	}
     }
-    // 4. load data files
+    // 4. load data files (and opts)
     for(let i=0; i<js9Electron.files.length; i++){
 	let file = js9Electron.files[i].replace(/\\/g,"");
-	const jobj = (js9Electron.files[i+1]||"").replace(/\\/g,"");
+	let obj = {};
+	let done = false;
+	let s, jobj;
 	// relative data paths must be relative to js9Electron.js script
 	if( !file.match(/^(https?|ftp):\/\//) && !path.isAbsolute(file) ){
 	    if( process.env.PWD ){
@@ -347,9 +363,40 @@ function createWindow() {
 		file = path.relative(__dirname, file);
 	    }
 	}
-	if( jobj && jobj.startsWith('{') ){
-	    i++;
-	    cmd += `JS9.Preload('${file}', '${jobj}');`;
+	// gather up args that go with this file
+	while( !done ){
+	    if( js9Electron.files[i+1] !== undefined ){
+		s = (js9Electron.files[i+1]).replace(/\\/g,"");
+		if( s && s.startsWith('{') ){
+		    i++;
+		    try{ jobj = JSON.parse(s); }
+		    catch(e){
+			dialog.showErrorBox("ERROR parsing JSON opts: ",
+					    e.message);
+		    }
+		} else if( s.charAt(0) === "-" ){
+		    i++;
+		    if( js9Electron.files[i+1] !== undefined ){
+			s = s.replace(/--?/, "");
+			obj[s] = getval(js9Electron.files[i+1]);
+			i++;
+		    } else {
+			dialog.showErrorBox(`ERROR missing arg after ${s}`);
+		    }
+		} else {
+		    done = true;
+		}
+	    } else{
+		done = true;
+	    }
+	}
+	// merge json obj into other properties
+	if( jobj ){
+	    obj = Object.assign(jobj, obj);
+	}
+	s = JSON.stringify(obj);
+	if( s !== "{}" ){
+	    cmd += `JS9.Preload('${file}', '${s}');`;
 	}  else {
 	    cmd += `JS9.Preload('${file}');`;
 	}
