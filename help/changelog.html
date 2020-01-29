@@ -13,11 +13,20 @@
 
 <h3> Public Release 3.1 (TBD)</h3>
 <ul>
+<li> desktop: options can now be passed via --switches (e.g. --scale log)
+<li> Load: add ra,dec, px,py, wcs properties to support panning
+<li> Load: regions property can load a region file or add a region
 <li> syncImages: add rot90, flip, and sync blended images
-<li> update emscripten to v1.39.5 (remove work-around for 1.39.3 js bug)
 <li> CloseDisplay now takes an optional regexp of images to close
+<li> add source, destination in/out/over/atop methods to blend plugin
+<li> static colormaps: specify color/opacity and pixel range
+<li> expand MaskImage to support "overlay" as well as "mask" of image data
 <li> add MaskImage() routine to allow one image to mask another
 <li> remove experimental LoadAuxFile() (too fragile, subsumed elsewhere)
+<li> fix region parser to check for exclude regions
+<li> fix bug when sortable GUI changed the image stack with multiple displays
+<li> fix annulus radii text box in regions config
+<li> update emscripten to v1.39.5 (remove work-around for 1.39.3 js bug)
 </ul>
 
 <h3> Public Release 3.0 (January 6, 2020)</h3>
