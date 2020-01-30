@@ -1109,12 +1109,15 @@ are sync'ed.
 <p>
 The optional opts object can contain:
 <ul>
-<li><b>reciprocate</b>: boolean determining whether images sync one another
 <li><b>reverse</b>: boolean to reverse this image and target images (def: false)
+<li><b>reciprocate</b>: boolean determining whether images sync one another
+<li><b>syncwcs</b>: use WCS header parameters to sync, where available
+
 </ul>
-If the opts object is not specified, the default value of
-<b>reciprocate</b> is the value of the JS9.globalOpts.syncReciprocate
-property.
+If the opts object is not specified, the default values of
+<b>reciprocate</b> and <b>syncwcs</b> are the values of the
+JS9.globalOpts.syncReciprocate and JS9.globalOpts.syncWCS,
+respectively.
 
 <p>
 Examples:
