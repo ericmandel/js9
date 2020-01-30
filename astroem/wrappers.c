@@ -528,7 +528,7 @@ char *reg2wcsstr(int n, char *regstr){
 		pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);
 		pix2wcs(info->wcs, dval3, dval4, &rval3, &rval4);
 		/* calculate and output separation between the two points */
-		sep += wcsdist(rval1, rval2, rval3, rval4)*3600.0;
+		sep += wcsdist(rval1, rval2, rval3, rval4);
 		/* set up for next separation */
 		dval1 = dval3;
 		dval2 = dval4;
@@ -543,16 +543,26 @@ char *reg2wcsstr(int n, char *regstr){
 	    pix2wcs(info->wcs, dval1, dval2, &rval1, &rval2);
 	    pix2wcs(info->wcs, dval3, dval4, &rval3, &rval4);
 	    /* calculate and output separation between the two points */
-	    sep = wcsdist(rval1, rval2, rval3, rval4)*3600.0;
-	    if( sep <= 60 ){
-	      snprintf(tbuf, SZ_LINE, ", %.6f\"", sep);
+	    sep = wcsdist(rval1, rval2, rval3, rval4);
+	    /* convert to proper units */
+	    switch(mywcsunits){
+	    case WCS_DEGREES:
+	      snprintf(tbuf, SZ_LINE, ", %.6f", sep);
 	      strncat(str, tbuf, SZ_LINE-1);
-	    } else if( sep <= 3600 ){
-	      snprintf(tbuf, SZ_LINE, ", %.6f'", sep/60.0);
+	      break;
+	    case WCS_SEXAGESIMAL:
+	      if( sep < 1 ){
+		snprintf(tbuf, SZ_LINE, ", %.6f\"", sep * 3600.0);
+		strncat(str, tbuf, SZ_LINE-1);
+	      } else {
+		snprintf(tbuf, SZ_LINE, ", %.6fd", sep);
+		strncat(str, tbuf, SZ_LINE-1);
+	      }
+	      break;
+	    default:
+	      snprintf(tbuf, SZ_LINE, ", %.6f", sep);
 	      strncat(str, tbuf, SZ_LINE-1);
-	    } else {
-	      snprintf(tbuf, SZ_LINE, ", %.6fd", sep/3600.0);
-	      strncat(str, tbuf, SZ_LINE-1);
+	      break;
 	    }
 	  }
 	}
@@ -569,18 +579,28 @@ char *reg2wcsstr(int n, char *regstr){
 	}
 	/* for lines, add total line segment distance */
 	if( !strcmp(s, "line") ){
-	  if( sep <= 60 ){
-	    snprintf(tbuf, SZ_LINE, " {\"size\":%.2f,\"units\":\"arcsec\"}",
-		     sep);
+	  switch(mywcsunits){
+	  case WCS_DEGREES:
+	    snprintf(tbuf, SZ_LINE,
+		     " {\"size\":%.6f,\"units\":\"degrees\"}", sep);
 	    strncat(str, tbuf, SZ_LINE-1);
-	  } else if( sep <= 3600 ){
-	    snprintf(tbuf, SZ_LINE, " {\"size\":%.6f,\"units\":\"arcmin\"}",
-		     sep/60.0);
+	    break;
+	  case WCS_SEXAGESIMAL:
+	    if( sep < 1 ){
+	      snprintf(tbuf, SZ_LINE,
+		       " {\"size\":%.2f,\"units\":\"arcsec\"}", sep * 3600);
+	      strncat(str, tbuf, SZ_LINE-1);
+	    } else {
+	      snprintf(tbuf, SZ_LINE,
+		       " {\"size\":%.6f,\"units\":\"degrees\"}", sep);
+	      strncat(str, tbuf, SZ_LINE-1);
+	    }
+	    break;
+	  default:
+	    snprintf(tbuf, SZ_LINE,
+		     " {\"size\":%.6f,\"units\":\"degrees\"}", sep);
 	    strncat(str, tbuf, SZ_LINE-1);
-	  } else {
-	    snprintf(tbuf, SZ_LINE, " {\"size\":%.6f,\"units\":\"degrees\"}",
-		     sep/3600.0);
-	    strncat(str, tbuf, SZ_LINE-1);
+	    break;
 	  }
 	}
 	snprintf(tbuf, SZ_LINE, ";");
