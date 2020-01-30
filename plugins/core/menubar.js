@@ -497,6 +497,11 @@ JS9.Menubar.createMenus = function(){
 		    selected: JS9.globalOpts.syncReciprocate,
 		    type: "checkbox"
 		};
+		items.syncs.items.sync.items.syncwcs = {
+		    name: "sync using wcs",
+		    selected: JS9.globalOpts.syncWCS,
+		    type: "checkbox"
+		};
 		items.syncs.items.sync.items[`sep${n++}`] = "------";
 		items.syncs.items.sync.items.title = {name: "image(s) to keep in sync:",
 					  disabled: true};
@@ -904,7 +909,8 @@ JS9.Menubar.createMenus = function(){
 				} else {
 				    uarr = null;
 				}
-				uopts = {reciprocate: uobj.syncreciprocate};
+				uopts = {reciprocate: uobj.syncreciprocate,
+					 syncwcs: uobj.syncwcs};
 				unew = key.replace(/^sync_/,"");
 				if( unew === "allimages" ){
 				    uim.syncImages(uarr, null, uopts);

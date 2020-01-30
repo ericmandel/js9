@@ -6543,6 +6543,11 @@ JS9.Menubar.createMenus = function(){
 		    selected: JS9.globalOpts.syncReciprocate,
 		    type: "checkbox"
 		};
+		items.syncs.items.sync.items.syncwcs = {
+		    name: "sync using wcs",
+		    selected: JS9.globalOpts.syncWCS,
+		    type: "checkbox"
+		};
 		items.syncs.items.sync.items[`sep${n++}`] = "------";
 		items.syncs.items.sync.items.title = {name: "image(s) to keep in sync:",
 					  disabled: true};
@@ -6950,7 +6955,8 @@ JS9.Menubar.createMenus = function(){
 				} else {
 				    uarr = null;
 				}
-				uopts = {reciprocate: uobj.syncreciprocate};
+				uopts = {reciprocate: uobj.syncreciprocate,
+					 syncwcs: uobj.syncwcs};
 				unew = key.replace(/^sync_/,"");
 				if( unew === "allimages" ){
 				    uim.syncImages(uarr, null, uopts);
@@ -12061,6 +12067,12 @@ JS9.Sync.sync = function(...args){
 	}
 	delete JS9.Sync.reciprocating;
     }
+    // use wcs for syncing
+    if( JS9.notNull(opts.syncwcs) ){
+	this.params.syncwcs = opts.syncwcs;
+    } else {
+	this.params.syncwcs = JS9.globalOpts.syncWCS;
+    }
     // sync target image, if necessary
     if( !JS9.Sync.reciprocating ){
 	// sync the target images
@@ -12140,9 +12152,9 @@ JS9.Sync.unsync = function(ops, ims, opts){
 // perform a sync action on target images using params from originating image
 // called in image context
 JS9.Sync.xeqSync = function(arr){
-    let i, j, k, obj, pos, wcscen, xim, xarr, xobj, xdata, dim;
+    let i, j, k, obj, pos, wcscen, xim, xarr, xobj, xdata, key;
     let mydata, myobj, myid, rarr, rstr, args, nflip;
-    let dorevert = false;
+    let displays = {};
     const oval = JS9.globalOpts.xeqPlugins;
     const thisid = `${this.id}_${this.display.id}`;
     const regmatch = (r1, r2) => {
@@ -12172,29 +12184,23 @@ JS9.Sync.xeqSync = function(arr){
 	return nflip || "";
     }
     // don't recurse!
-    if( this.syncs.running ){ return; }
-    this.syncs.running = true;
+    if( this.tmp.syncRunning ){ return; }
+    this.tmp.syncRunning = true;
     // sync all target images with this operation (but swallow errors)
     try{
 	for(i=0; i<arr.length; i++){
 	    obj = arr[i];
 	    xim = obj.xim;
-	    dim = xim.display.image;
-	    // only sync if this target image is being displayed
-	    // (could be blended images)
-	    if( dim !== xim ){
-		if( !dim.blend.active || !xim.blend.active ){
-		    continue;
-		} else {
-		    dorevert = true;
-		}
-	    }
 	    // don't recurse on target image
 	    if( xim.syncs ){
-		if( xim.syncs.running ){
-		    continue;
+		if( xim.tmp.syncRunning ){ continue; }
+		xim.tmp.syncRunning = true;
+		// if image is not displayed, we'll need to redisplay original
+		if( xim !== xim.display.image ){
+		    if( !displays[xim.display.id] ){
+			displays[xim.display.id] = xim.display.image;
+		    }
 		}
-		xim.syncs.running = true;
 	    }
 	    try{
 		switch(obj.xop){
@@ -12211,11 +12217,12 @@ JS9.Sync.xeqSync = function(arr){
 		    }
 		    break;
 		case "pan":
-		    if( this.raw.wcs > 0 ){
-			pos = this.displayToImagePos({x:this.display.width/2,
-						      y:this.display.height/2});
-			wcscen = JS9.pix2wcs(this.raw.wcs, pos.x, pos.y);
+		    pos = this.getPan();
+		    if( this.params.syncwcs && this.raw.wcs > 0 ){
+			wcscen = JS9.pix2wcs(this.raw.wcs, pos.ox, pos.oy);
 			xim.setPan({wcs: wcscen});
+		    } else {
+			xim.setPan(pos.ox, pos.oy);
 		    }
 		    break;
 		case "regions":
@@ -12369,20 +12376,18 @@ JS9.Sync.xeqSync = function(arr){
 	    catch(e){ /* empty */ }
 	    finally{
 		// done sync'ing
-		if( xim.syncs ){
-		    delete xim.syncs.running;
-		}
+		delete xim.tmp.syncRunning;
+	    }
+	}
+	// revert to display of orginal image where necessary
+	for( key in displays ){
+	    if( displays.hasOwnProperty(key) ){
+		displays[key].displayImage();
 	    }
 	}
     }
     catch(e){ /* empty */ }
-    finally{
-	delete this.syncs.running;
-    }
-    // when sync'ing blended images, we have to revert to the original image
-    if( dorevert ){
-	this.displayImage();
-    }
+    finally{ delete this.tmp.syncRunning; }
 };
 
 // sync images, if necessary
@@ -12392,7 +12397,7 @@ JS9.Sync.maybeSync = function(op, arg){
     let i, ims;
     const arr = [];
     // sanity check
-    if( !JS9.Sync.ready || !this.syncs || this.syncs.running ){
+    if( !JS9.Sync.ready || !this.syncs || this.tmp.syncRunning ){
 	return;
     }
     // do we need to sync images for this operation?

@@ -263,6 +263,7 @@ JS9.globalOpts = {
     toolBar: ["annulus", "box", "circle", "ellipse", "line", "polygon", "text", "linear", "log", "zoom+", "zoom-", "zoom1"],
     syncOps: ["colormap","contrastbias","flip","pan","regions","rot90","scale","wcs","zoom"],                                   // which ops are sync'ed?
     syncReciprocate: true,       // default value for reciprocal sync'ing
+    syncWCS: true,               // default value for using WCS to sync
     hiddenPluginDivs: [],        // which static plugin divs start hidden
     separate: {layout: "auto", leftMargin: 10, topMargin: 10}, // separate a display
     imageTemplates: ".fits,.fts,.png,.jpg,.jpeg,.fz,.ftz", // templates for local images
