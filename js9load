@@ -1,8 +1,25 @@
 #!/bin/sh
 # set -x
 
-# in case user has changed the js9 script, try to figure out the right one
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# in case the user has changed the js9 script, try to figure out the right one
+# is this file a link?
+BFILE="${BASH_SOURCE[0]}"
+LFILE="$( readlink $BFILE )"
+if [ x"$LFILE" != x ]; then
+  XFILE="$LFILE"
+else
+  XFILE="$BFILE"
+fi
+# is the containing directory a link?
+BDIR="$( dirname ${XFILE} )"
+LDIR="$( readlink $BDIR )"
+if [ x"$LDIR" != x ]; then
+  XDIR="$LDIR"
+else
+  XDIR="$BDIR"
+fi
+# any more links we need to know about?
+DIR="$( cd "${XDIR}" >/dev/null 2>&1 && pwd )"
 if [ -r ${DIR}/js9 ]; then
   JS9=${DIR}/js9
 else
