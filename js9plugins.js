@@ -8072,9 +8072,9 @@ JS9.Menubar.createMenus = function(){
 			    obj.contrast = String(uim.params.contrast);
 			    obj.bias = String(uim.params.bias);
 			    obj.opacity = String(uim.params.opacity);
-			    if( JS9.notNull(uim.params.flooropacity)    &&
-				JS9.notNull(uim.params.floorvalue) ){
-				obj.flooropacity = `${uim.params.flooropacity} ${uim.params.floorvalue}`;
+			    if( JS9.notNull(uim.params.floorvalue)    &&
+				JS9.notNull(uim.params.flooropacity) ){
+				obj.flooropacity = `${uim.params.floorvalue} ${uim.params.flooropacity}`;
 			    } else {
 				obj.flooropacity = "none";
 			    }
