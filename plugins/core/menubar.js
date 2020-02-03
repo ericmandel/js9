@@ -1876,10 +1876,10 @@ JS9.Menubar.createMenus = function(){
 			im.setOpacity(parseFloat(obj.opacity));
 		    }
 		}
-		if( obj.opacityfloor === "" ){
+		if( obj.flooropacity === "" ){
 		    im.setOpacity("resetfloor");
 		} else {
-		    arr = obj.opacityfloor.split(/\s+/);
+		    arr = obj.flooropacity.split(/\s+/);
 		    if( arr.length === 1 ){
 			if( arr[0].match(/reset|none/i) ){
 			    im.setOpacity("resetfloor");
@@ -1968,9 +1968,9 @@ JS9.Menubar.createMenus = function(){
 		name: "opacity:",
 		type: "text"
 	    };
-	    items.opacityfloor = {
+	    items.flooropacity = {
 		events: {keyup: keyColor},
-		name: "floor opacity & value:",
+		name: "floor value & opacity:",
 		type: "text"
 	    };
 	    items.resetall = xname("reset opacity & floor");
@@ -2026,11 +2026,11 @@ JS9.Menubar.createMenus = function(){
 			    obj.contrast = String(uim.params.contrast);
 			    obj.bias = String(uim.params.bias);
 			    obj.opacity = String(uim.params.opacity);
-			    if( JS9.notNull(uim.params.opacityfloor)    &&
-				JS9.notNull(uim.params.opacityfloorvalue) ){
-				obj.opacityfloor = `${uim.params.opacityfloor} ${uim.params.opacityfloorvalue}`;
+			    if( JS9.notNull(uim.params.flooropacity)    &&
+				JS9.notNull(uim.params.floorvalue) ){
+				obj.flooropacity = `${uim.params.flooropacity} ${uim.params.floorvalue}`;
 			    } else {
-				obj.opacityfloor = "none";
+				obj.flooropacity = "none";
 			    }
 			    obj.sigma = String(uim.params.sigma);
 			}

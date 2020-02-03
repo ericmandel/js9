@@ -2808,11 +2808,11 @@ JS9.Image.prototype.mkRGBImage = function(){
     } else {
 	alpha = 255;
     }
-    // opacityfloor: image pixels <= floor value use floor opacity
+    // flooropacity: image pixels <= floor value use floor opacity
     // can't do this with rgb mode because we have 3 different data values
-    if( !dorgb && JS9.notNull(this.params.opacityfloor) ){
-	alphafloor = this.params.opacityfloor * 255;
-	alphafloorvalue = this.params.opacityfloorvalue;
+    if( !dorgb && JS9.notNull(this.params.flooropacity) ){
+	alphafloor = this.params.flooropacity * 255;
+	alphafloorvalue = this.params.floorvalue;
 	doalphafloor = true;
     }
     // mask: a raw array with same dimensions as the raw data array
@@ -6787,9 +6787,9 @@ JS9.Image.prototype.setScale = function(...args){
 JS9.Image.prototype.getOpacity = function(){
     let obj = {};
     obj.opacity = this.params.opacity || 1;
-    if( JS9.notNull(this.params.opacityfloor) ){
-	obj.opacityfloor = this.params.opacityfloor;
-	obj.opacityfloorvalue = this.params.opacityfloorvalue;
+    if( JS9.notNull(this.params.flooropacity) ){
+	obj.flooropacity = this.params.flooropacity;
+	obj.floorvalue = this.params.floorvalue;
     }
     return obj;
 };
@@ -6797,10 +6797,10 @@ JS9.Image.prototype.getOpacity = function(){
 // set opacity factor:
 // set default opacity for all pixels
 //   setOpacity(0.9)
-// set opacity floor: pixel values <= 2nd arg get 1st arg as opacity
-//   setOpacity(0.2, 5)
-// set default opacity, 2nd arg opacity floor for pixel values <= 3nd arg
-//   setOpacity(0.9, 0.2, 5)
+// set opacity floor: for pixel values <= 1st arg assign 2nd arg as opacity
+//   setOpacity(5, 0.2)
+// set default opacity, for pixel values <= 2nd arg, assign 3rd arg as opacity
+//   setOpacity(0.9, 5, 0.2)
 // reset default opacity to 1
 //   setOpacity("reset")
 // remove opacity floor
@@ -6820,12 +6820,12 @@ JS9.Image.prototype.setOpacity = function(...args){
 		if( a1.toLowerCase() === "reset" ){
 		    this.params.opacity = 1;
 		} else if( a1.toLowerCase() === "resetfloor" ){
-		    delete this.params.opacityfloor;
-		    delete this.params.opacityfloorvalue;
+		    delete this.params.floorvalue;
+		    delete this.params.flooropacity;
 		} else if( a1.toLowerCase() === "resetall" ){
 		    this.params.opacity = 1;
-		    delete this.params.opacityfloor;
-		    delete this.params.opacityfloorvalue;
+		    delete this.params.floorvalue;
+		    delete this.params.flooropacity;
 		}
 	    } else if( JS9.isNumber(a1) ){
 		this.params.opacity = parseFloat(a1);
@@ -6833,8 +6833,8 @@ JS9.Image.prototype.setOpacity = function(...args){
 	    break;
 	case 2:
 	    if( JS9.isNumber(a1) && JS9.isNumber(a2) ){
-		this.params.opacityfloor = parseFloat(a1);
-		this.params.opacityfloorvalue = parseFloat(a2);
+		this.params.floorvalue = parseFloat(a1);
+		this.params.flooropacity = parseFloat(a2);
 	    }
 	    break;
 	case 3:
@@ -6842,8 +6842,8 @@ JS9.Image.prototype.setOpacity = function(...args){
 		this.params.opacity = parseFloat(a1);
 	    }
 	    if( JS9.isNumber(a2) && JS9.isNumber(a3) ){
-		this.params.opacityfloor = parseFloat(a2);
-		this.params.opacityfloorvalue = parseFloat(a3);
+		this.params.floorvalue = parseFloat(a2);
+		this.params.flooropacity = parseFloat(a3);
 	    }
 	    break;
         default:
