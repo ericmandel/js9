@@ -1681,12 +1681,12 @@ The returned opacity object will contain the following properties:
 <p>
 calling sequences:
 <pre>
-    setOpacity(opacity)      # set default opacity for all image pixels
-    setOpacity(floorvalue, flooropacity) # pixels <= floorvalue get flooropacity
-    setOpacity(opacity, floorvalue, flooropacity)  # set default opacity and floor opacity
-    setOpacity("reset")      # reset default opacity to 1
-    setOpacity("resetfloor") # remove opacity floor
-    setOpacity("resetall")   # reset default opacity to 1, remove floor opacity
+    JS9.SetOpacity(opacity)      # set def opacity for all image pixels
+    JS9.SetOpacity(floorvalue, flooropacity) # pixels <= floorvalue get flooropacity
+    JS9.SetOpacity(opacity, floorvalue, flooropacity)  # set def and floor opacity
+    JS9.SetOpacity("reset")      # reset def opacity to 1
+    JS9.SetOpacity("resetfloor") # remove opacity floor
+    JS9.SetOpacity("resetall")   # reset def opacity to 1, remove floor opacity
 </pre>
 <p>
 where:
