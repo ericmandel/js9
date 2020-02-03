@@ -1677,11 +1677,11 @@ The returned opacity object will contain the following properties:
 
 <h5 id="JS9.SetOpacity">Set the image opacity</h5>
 <p>
-<code class="api">JS9.SetOpacity(opacity, floor, value)</code>
+<code class="api">JS9.SetOpacity(opacity, floorvalue, flooropacity)</code>
 <p>
 calling sequences:
 <pre>
-    setOpacityopacity)       # set default opacity for all image pixels
+    setOpacity(opacity)      # set default opacity for all image pixels
     setOpacity(floorvalue, flooropacity) # pixels <= floorvalue get flooropacity
     setOpacity(opacity, floorvalue, flooropacity)  # set default opacity and floor opacity
     setOpacity("reset")      # reset default opacity to 1
@@ -1705,7 +1705,7 @@ and the floor opacity to apply. For example, when both arguments are 0,
 pixels whose image values are less than or equal to 0
 will be transparent. Specifying 5 and 0.5, respectively, means that
 pixels whose image values less than or equal to 5 will have an opacity
-of 0.5. A most useful case is to make the pixels transparent at a
+of 0.5. A useful case is to make the pixels transparent at a
 given value, allowing features of one image to be blended into
 another, without blending extraneous pixels.
 <p>
