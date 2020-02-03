@@ -2701,7 +2701,9 @@ JS9.Image.prototype.mkRGBImage = function(){
     let rgb, sect, img, xrgb, yrgb, wrgb, hrgb, rgbimg, ctx;
     let inc, zinc, xIn, yIn, xOut, yOut, xOutIdx, yOutIdx, yZoom, xZoom, cobj;
     let idx, odx, odxmax, ridx, gidx, bidx, mim, mimg;
-    let yLen, zx, zy, zyLen, alpha, alpha1, alpha2, mopacity, cmopacity, val;
+    let yLen, zx, zy, zyLen, mopacity, cmopacity, val;
+    let alpha, alpha1, alpha2, alphafloor, alphafloorvalue, curalpha;
+    let doalphafloor = false;
     let rthis = null;
     let gthis = null;
     let bthis = null;
@@ -2806,6 +2808,13 @@ JS9.Image.prototype.mkRGBImage = function(){
     } else {
 	alpha = 255;
     }
+    // opacityfloor: image pixels <= floor value use floor opacity
+    // can't do this with rgb mode because we have 3 different data values
+    if( !dorgb && JS9.notNull(this.params.opacityfloor) ){
+	alphafloor = this.params.opacityfloor * 255;
+	alphafloorvalue = this.params.opacityfloorvalue;
+	doalphafloor = true;
+    }
     // mask: a raw array with same dimensions as the raw data array
     // whose values are used to set alpha in the raw image
     if( this.mask.active && this.mask.im ){
@@ -2867,6 +2876,12 @@ JS9.Image.prototype.mkRGBImage = function(){
 		// ordinary case: one index
 		idx = this.colorData[yLen + xIn];
 	    }
+	    // current alpha to use in most cases
+	    curalpha = alpha;
+	    // use alpha min when data val is below threshold?
+	    if( doalphafloor && this.raw.data[yLen + xIn] <= alphafloorvalue ){
+		curalpha = alphafloor;
+	    }
 	    xOutIdx = xOut * zinc;
 	    for(yZoom=0; yZoom<sect.zoom; yZoom++) {
 		// ceil avoids non-integer zoom cross-hair artifacts ...
@@ -2923,7 +2938,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 				    img.data[odx]   = this.psColors[idx][0];
 				    img.data[odx+1] = this.psColors[idx][1];
 				    img.data[odx+2] = this.psColors[idx][2];
-				    img.data[odx+3] = alpha;
+				    img.data[odx+3] = curalpha;
 				}
 			    }
 			}
@@ -6764,6 +6779,81 @@ JS9.Image.prototype.setScale = function(...args){
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
 	this.xeqPlugins("image", "onsetscale");
+    }
+    return this;
+};
+
+// get opacity factor
+JS9.Image.prototype.getOpacity = function(){
+    let obj = {};
+    obj.opacity = this.params.opacity || 1;
+    if( JS9.notNull(this.params.opacityfloor) ){
+	obj.opacityfloor = this.params.opacityfloor;
+	obj.opacityfloorvalue = this.params.opacityfloorvalue;
+    }
+    return obj;
+};
+
+// set opacity factor:
+// set default opacity for all pixels
+//   setOpacity(0.9)
+// set opacity floor: pixel values <= 2nd arg get 1st arg as opacity
+//   setOpacity(0.2, 5)
+// set default opacity, 2nd arg opacity floor for pixel values <= 3nd arg
+//   setOpacity(0.9, 0.2, 5)
+// reset default opacity to 1
+//   setOpacity("reset")
+// remove opacity floor
+//   setOpacity("resetfloor")
+// reset default opacity to 1, remove opacity floor
+//   setOpacity("resetall")
+JS9.Image.prototype.setOpacity = function(...args){
+    let [a1, a2, a3] = args;
+    // is this core service disabled?
+    if( $.inArray("opacity", this.params.disable) >= 0 ){
+	return;
+    }
+    if( args.length ){
+	switch(args.length){
+	case 1:
+	    if( typeof a1 === "string" ){
+		if( a1.toLowerCase() === "reset" ){
+		    this.params.opacity = 1;
+		} else if( a1.toLowerCase() === "resetfloor" ){
+		    delete this.params.opacityfloor;
+		    delete this.params.opacityfloorvalue;
+		} else if( a1.toLowerCase() === "resetall" ){
+		    this.params.opacity = 1;
+		    delete this.params.opacityfloor;
+		    delete this.params.opacityfloorvalue;
+		}
+	    } else if( JS9.isNumber(a1) ){
+		this.params.opacity = parseFloat(a1);
+	    }
+	    break;
+	case 2:
+	    if( JS9.isNumber(a1) && JS9.isNumber(a2) ){
+		this.params.opacityfloor = parseFloat(a1);
+		this.params.opacityfloorvalue = parseFloat(a2);
+	    }
+	    break;
+	case 3:
+	    if( JS9.isNumber(a1) ){
+		this.params.opacity = parseFloat(a1);
+	    }
+	    if( JS9.isNumber(a2) && JS9.isNumber(a3) ){
+		this.params.opacityfloor = parseFloat(a2);
+		this.params.opacityfloorvalue = parseFloat(a3);
+	    }
+	    break;
+        default:
+	    break;
+	}
+	this.displayImage("colors");
+    }
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	this.xeqPlugins("image", "onsetopacity");
     }
     return this;
 };
@@ -22321,6 +22411,8 @@ JS9.mkPublic("SetPan", "setPan");
 JS9.mkPublic("AlignPanZoom", "alignPanZoom");
 JS9.mkPublic("GetScale", "getScale");
 JS9.mkPublic("SetScale", "setScale");
+JS9.mkPublic("GetOpacity", "getOpacity");
+JS9.mkPublic("SetOpacity", "setOpacity");
 JS9.mkPublic("SetFlip", "setFlip");
 JS9.mkPublic("GetFlip", "getFlip");
 JS9.mkPublic("SetRot90", "setRot90");

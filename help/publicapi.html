@@ -1660,6 +1660,58 @@ The returned scale object will contain the following properties:
 <li><b>scalemax</b>: max value for scaling
 </ul>
 
+<h5 id="JS9.GetOpacity">Get the image opacity</h5>
+<p>
+<code class="api">opacity = JS9.GetOpacity()</code>
+<p>
+returns:
+<ul>
+<li><b>opacity</b>: object containing opacity information
+</ul>
+The returned opacity object will contain the following properties:
+<ul>
+<li><b>opacity</b>: opacity value assigned to image pixels
+<li><b>opacityfloor</b>: opacity assigned when the image pixel value is less than or equal to the floor value (if defined)
+<li><b>opacityfloorvalue</b>: floor value to test image pixel values against (if defined)
+</ul>
+
+<h5 id="JS9.SetOpacity">Set the image opacity</h5>
+<p>
+<code class="api">JS9.SetOpacity(opacity, floor, value)</code>
+<p>
+calling sequences:
+<pre>
+    setOpacityopacity)       # set default opacity for all image pixels
+    setOpacity(floor, value) # floor opacity: pixels <= value get floor opacity
+    setOpacity(opacity, floor, value)  # set default opacity and floor opacity
+    setOpacity("reset")      # reset default opacity to 1
+    setOpacity("resetfloor") # remove opacity floor
+    setOpacity("resetall")   # reset default opacity to 1, remove floor opacity
+</pre>
+<p>
+where:
+<ul>
+<li><b>opacity</b>: opacity value for image pixels
+<li><b>floor</b>: floor opacity value to set if image pixel value is less than or equal to the floor opacity value
+<li><b>value</b>: floor value to test image pixel values against
+</ul>
+Set the current opacity, floor opacity, or both. This call takes one
+(opacity), two (floor, value) or three (opacity, floor, value) arguments.
+<p>
+The <b>floor opacity & value</b> option allows you to set the opacity
+for pixels whose image value is less then or equal to a specified
+floor value. It takes two arguments: the floor opacity to apply, and
+the floor pixel value. For example, when floor and value are both 0,
+then pixels whose image values are less than or equal to 0 will
+be transparent. Specifying 0.5 and 5 means that pixels whose image values
+less than or equal to 5 will have an opacity of 0.5. A most useful
+case is to make the pixels transparent at a given value, allowing
+features of one image to be blended into another, without blending
+extraneous pixels.
+<p>
+The various <b>reset</b> options allow you to reset the default value,
+floor values, or both.
+
 <h5 id="JS9.SetScale">Set the image scale</h5>
 <p>
 <code class="api">JS9.SetScale(scale, smin, smax)</code>
