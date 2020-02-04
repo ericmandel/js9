@@ -1884,7 +1884,8 @@ JS9.Menubar.createMenus = function(){
 			if( arr[0].match(/reset|none/i) ){
 			    im.setOpacity("resetfloor");
 			} else if( !Number.isNaN(arr[0]) ){
-			    im.setOpacity(0, parseFloat(arr[0]));
+			    arr[0] = parseFloat(arr[0]);
+			    im.setOpacity(arr[0], 0);
 			}
 		    } else if( arr.length === 2 ){
 			if( !Number.isNaN(arr[0]) && !Number.isNaN(arr[1]) ){
