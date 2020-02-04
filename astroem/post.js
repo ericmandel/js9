@@ -514,7 +514,8 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 // read a blob as a FITS file
 // open an existing virtual FITS file (e.g. created by Montage reprojection)
 Module["handleFITSFile"] = function(fits, opts, handler) {
-    var fptr, hptr, status, fileReader;
+    var fptr, hptr, status, fileReader, filename, earr;
+    var extn = "";
     var hdu = {};
     // opts is optional
     opts = opts || {};
@@ -533,17 +534,20 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 	    }
 	    // filename or assume gzip'ed: cfitsio will do the right thing ...
 	    if( opts.filename ){
-		// filename with extension to pass to cfitsio
-		// also remove parentheses, since cfitsio reserves them
-		// and spaces while we are at it
-		// and, finally, change the "/" directory symbol
-		fitsname = opts.filename
-		    .replace(/^\.\./, "xx")
-		    .replace(/^\./, "x")
-		    .replace(/[\s()]/g,"-")
-		    .replace(/\//g, ":");
-		// virtual file name without extension
-		hdu.vfile = fitsname.replace(/\[.*\]/g, "");
+		// filename without slashes (don'twant to make subdirs)
+		filename = opts.filename
+		    .replace(/^\.\./, "")
+		    .replace(/^\./, "")
+		    .replace(/\//g, "_");
+		// cfitsio extension
+		earr = filename.match(/\[.*\]/);
+		if( earr && earr[0] ){ extn = earr[0]; }
+		//  we create as a virtual file without the extension
+		hdu.vfile = filename
+		    .replace(/\[.*\]/g, "")
+		    .replace(/[\s()]/g,"");
+		//  fitsname with extension is what cfitio opens
+		fitsname = hdu.vfile + extn;
 	    } else {
 		fitsname = "myblob.gz";
 		hdu.vfile = fitsname;
@@ -558,7 +562,7 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 	    // make a virtual file
 	    if( (arr[0] === 0x1f) && (arr[1] === 0x8B) ){
 		// if original is gzip'ed, unzip to virtual file
-		hdu.vfile = "gz::" + hdu.vfile.replace(/\.gz$/,"");
+		hdu.vfile = "gz::" + hdu.vfile.replace(/\.gz/,"");
 		fitsname =  "gz::" + fitsname.replace(/\.gz/,"");
 		try{
 		    narr = Module["gzdecompress"](arr, hdu.vfile, false);
@@ -568,7 +572,7 @@ Module["handleFITSFile"] = function(fits, opts, handler) {
 		}
 	    } else if((arr[0] === 0x42) && (arr[1] === 0x5A) && (arr[2] === 0x68)){
 		// if original is bzip2'ed, bunzip2 to virtual file
-		hdu.vfile = "bz::" + hdu.vfile.replace(/\.bz2$/,"");
+		hdu.vfile = "bz::" + hdu.vfile.replace(/\.bz2/,"");
 		fitsname =  "bz::" + fitsname.replace(/\.bz2/,"");
 		try{
 		    narr = Module["bz2decompress"](arr, hdu.vfile, false);

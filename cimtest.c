@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
   // filename is required, filter is optional
   args = argc - optind;
   if( args < 1 ){
-    ifile = strdup("test/snr.ev.gz");
+    ifile = strdup("fits/casa.fits");
   } else {
     // emscripten: if path is relative, make it relative to the virtual dir
 #if NODEJS
@@ -249,6 +249,7 @@ int main(int argc, char *argv[])
   // process based on hdu type
   switch(hdutype){
   case IMAGE_HDU:
+    fprintf(stdout, "HDU: image\n");
     // get image array
     buf = getImageToArray(fptr, NULL, NULL, bin, binMode, cube,
 			   start, stop, &bitpix, &status);
@@ -270,6 +271,7 @@ int main(int argc, char *argv[])
     free(buf);
     break;
   default:
+    fprintf(stdout, "HDU: binary table\n");
     // image statistics through a filter
     if( ifilter && *ifilter ){
       tfilter = (char *)strdup(ifilter);
