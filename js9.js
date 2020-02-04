@@ -13891,6 +13891,8 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 	return;
     }
     canvas = layer.canvas;
+    // opts is optional
+    opts = opts || {};
     // save regions for unremove?
     if( layerName === "regions" && JS9.globalOpts.unremoveReg ){
 	this.regstack.push(this.listRegions(shape, {mode: 1}, layerName));
@@ -13901,7 +13903,7 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
     // process the specified shapes
     this.selectShapes(layerName, shape, (obj, ginfo) => {
 	let i, child, parent;
-	if( obj.params.removable !== false ){
+	if( obj.params.removable !== false || opts.overrideRemovable ){
 	    JS9.Fabric._updateShape.call(this, layerName, obj, ginfo, "remove");
 	    // clear any dialog box
 	    if( obj.params.winid ){
@@ -14202,8 +14204,8 @@ JS9.Fabric.refreshShapes = function(layerName){
     // get current regions (i.e., before update to current configuration)
     regstr = this.listRegions("all", {mode: 1, saveid: true}, layerName);
     if( regstr ){
-	// remove current regions
-	this.removeShapes(layerName, "all");
+	// remove current regions (including unremovable ones)
+	this.removeShapes(layerName, "all", {overrideRemovable: true});
 	// add back regions in current configuration
 	this.addShapes(layerName, regstr, {restoreid: true});
     }
