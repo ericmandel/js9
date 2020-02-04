@@ -5782,9 +5782,10 @@ JS9.Magnifier.display = function(im, ipos){
 	$(magDisp.canvas).css("background-color", "black");
     }
     // center point size and position, based on zoom
+    // (subtract 1 to center the box on the pixel 2/4/2020)
     if( im.magnifier.ozoom !== zoom ){
 	im.changeShapes("magnifier", im.magnifier.boxid,
-			{left: magDisp.width/2, top:  magDisp.height/2, 
+			{left: magDisp.width/2-1, top:  magDisp.height/2-1, 
 			 width: zoom, height: zoom});
 	im.magnifier.ozoom = im.magnifier.zoom;
     }
