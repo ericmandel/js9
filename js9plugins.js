@@ -7903,7 +7903,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1, s2;
+	    let i, s1, s2, arr;
 	    let n = 0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
@@ -7916,10 +7916,28 @@ JS9.Menubar.createMenus = function(){
 		    im.params.bias = parseFloat(obj.bias);
 		}
 		if( !Number.isNaN(obj.opacity) ){
-		    if( obj.opacity !== "" ){
-			im.params.opacity = parseFloat(obj.opacity);
+		    if( obj.opacity === "" ){
+			im.setOpacity("reset");
 		    } else {
-			im.params.opacity = 1.0;
+			im.setOpacity(parseFloat(obj.opacity));
+		    }
+		}
+		if( obj.flooropacity === "" ){
+		    im.setOpacity("resetfloor");
+		} else {
+		    arr = obj.flooropacity.split(/\s+/);
+		    if( arr.length === 1 ){
+			if( arr[0].match(/reset|none/i) ){
+			    im.setOpacity("resetfloor");
+			} else if( !Number.isNaN(arr[0]) ){
+			    im.setOpacity(0, parseFloat(arr[0]));
+			}
+		    } else if( arr.length === 2 ){
+			if( !Number.isNaN(arr[0]) && !Number.isNaN(arr[1]) ){
+			    arr[0] = parseFloat(arr[0]);
+			    arr[1] = parseFloat(arr[1]);
+			    im.setOpacity(...arr);
+			}
 		    }
 		}
 		im.displayImage("colors");
@@ -7989,12 +8007,19 @@ JS9.Menubar.createMenus = function(){
 		name: "bias:",
 		type: "text"
 	    };
+	    items.reset = xname("reset contrast & bias");
+	    items[`sep${n++}`] = "------";
 	    items.opacity = {
 		events: {keyup: keyColor},
 		name: "opacity:",
 		type: "text"
 	    };
-	    items.reset = xname("reset contrast/bias");
+	    items.flooropacity = {
+		events: {keyup: keyColor},
+		name: "floor value & opacity:",
+		type: "text"
+	    };
+	    items.resetall = xname("reset opacity & floor");
 	    items[`sep${n++}`] = "------";
 	    items.loadcmap = xname("load ...");
 	    items.savecmap = xname("save");
@@ -8026,6 +8051,11 @@ JS9.Menubar.createMenus = function(){
 			case "imfilter":
 			    JS9.DisplayPlugin("JS9Filters", {display: udisp});
 			    break;
+			case "resetall":
+			    if( uim ){
+				uim.setOpacity("resetall");
+			    }
+			    break;
 			default:
 			    if( uim ){
 				uim.setColormap(key);
@@ -8042,6 +8072,12 @@ JS9.Menubar.createMenus = function(){
 			    obj.contrast = String(uim.params.contrast);
 			    obj.bias = String(uim.params.bias);
 			    obj.opacity = String(uim.params.opacity);
+			    if( JS9.notNull(uim.params.floorvalue)    &&
+				JS9.notNull(uim.params.flooropacity) ){
+				obj.flooropacity = `${uim.params.floorvalue} ${uim.params.flooropacity}`;
+			    } else {
+				obj.flooropacity = "none";
+			    }
 			    obj.sigma = String(uim.params.sigma);
 			}
 			$.contextMenu.setInputValues(opt, obj);

@@ -397,6 +397,27 @@ contrast/bias value (which is especially useful if you changed the
 contrast/bias or scale and now can't see any features at all!)
 
 <p>
+The <b>opacity</b> option allows you to set the overall opacity for all
+pixels in the image. Values range from 0 (transparent) to 1 (opaque).
+
+<p>
+The <b>floor opacity & value</b> option allows you to set the opacity
+for pixels whose image value is less then or equal to a specified
+floor value. It takes two arguments: the opacity to apply, and the
+floor pixel value. For example, values of 0, 0 mean that pixels whose
+image values are less than or equal to 0 will be
+transparent. Specifying 0.5 5 means that pixels whose image values
+less than or equal to 5 will have an opacity of 0.5. The most useful
+case is to make the pixels transparent at a given value, so entering a
+single value sets the floor value, with the opacity set to 0.  To turn
+off use of the floor opacity, either make the text box blank or specify
+the string "reset".
+
+<p>
+The <b>reset opacity & floor</b> option will reset the main opacity for the
+whole image to 1 and turn off the floor opacity.
+
+<p>
 The <b>load</b> option brings up a File menu from which you
 can choose a user-defined colormap to load.
 
@@ -841,7 +862,7 @@ See <a href="knownissues.html">Known Issues</a>
 for a discussion of limitations imposed on resize by Webkit
 browsers such as Chrome and Safari.
 
-<h5>Last updated: April 17, 2019</h5>
+<h5>Last updated: February 3, 2020</h5>
 </div>
 
 </body>
