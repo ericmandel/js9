@@ -1218,7 +1218,7 @@ where:
 </ul>
 and where the mask properties are:
 <ul>
-<li><b>mode</b>: "mask" or "overlay"
+<li><b>mode</b>: "mask", "opacity", or "overlay"
 <li><b>value</b>: mask value that triggers masking (def: 0) for "mask" mode
 <li><b>invert</b>: whether to invert the mask (def: false) for "mask" mode
 <li><b>sync</b>: true or false for "overlay" mode
@@ -1235,6 +1235,9 @@ equal to the <b>value</b> property, the opacity of the displayed pixel
 is set to the <b>opacity</b> property. You can also invert the mask
 using the <b>invert</b> property. In effect, this mode displays only
 the image pixels "covered" by a mask.
+<p>
+For "opacity" mode, each image pixel is assigned an opacity equal to the
+value of the mask pixel (whose values are assumed to range from 0 to 1.)
 <p>
 For "overlay" mode, if the mask pixel has a non-zero alpha, its color
 is blended with the image pixel using <b>source-atop</b>

@@ -2708,8 +2708,9 @@ JS9.Image.prototype.mkRGBImage = function(){
     let gthis = null;
     let bthis = null;
     let dorgb = false;
-    let mimoverlay = false;
     let mimmask = false;
+    let mimopacity = false;
+    let mimoverlay = false;
     let cached = [];
     // sanity check
     if( !this.rgb ){
@@ -2801,7 +2802,7 @@ JS9.Image.prototype.mkRGBImage = function(){
     // opacity is preferred, but alpha is acceptable
     if( this.params.opacity !== undefined ){
 	// opacity is 0.0 to 1.0
-	alpha = this.params.opacity * 255;
+	alpha = Math.floor(this.params.opacity * 255);
     } else if( this.params.alpha !== undefined ){
 	// alpha is 0 to 255
 	alpha = this.params.alpha;
@@ -2810,7 +2811,7 @@ JS9.Image.prototype.mkRGBImage = function(){
     }
     // flooropacity: image pixels <= floor value use floor opacity
     // can't do this with rgb mode because we have 3 different data values
-    if( !dorgb && JS9.notNull(this.params.flooropacity) ){
+    if( JS9.notNull(this.params.flooropacity) && !dorgb ){
 	alphafloor = this.params.flooropacity * 255;
 	alphafloorvalue = this.params.floorvalue;
 	doalphafloor = true;
@@ -2819,29 +2820,33 @@ JS9.Image.prototype.mkRGBImage = function(){
     // whose values are used to set alpha in the raw image
     if( this.mask.active && this.mask.im ){
 	mim = this.mask.im;
-	if( this.mask.mode === "overlay" ){
-	    mimoverlay = true;
-	} else if( this.mask.mode === "mask" ){
+	if( this.mask.mode === "mask" ){
+	    // mask mode: alpha = mask pixel == 0 ? alpha1 : alpha2
 	    mimmask = true;
-	}
-
-	if( JS9.isNull(this.mask.opacity) ){
-	    this.mask.opacity = 1;
-	}
-	mimg = mim.rgb.img;
-	if( JS9.notNull(this.mask.opacity)   &&
-	    JS9.notNull(this.params.opacity) ){
-	    alpha1 = this.mask.opacity * 255;
-	    alpha2 = this.params.opacity * 255;
-	} else {
-	    alpha1 = 0;
-	    alpha2 = 255;
-	}
-	// reverse mask alphas, if necessary
-	if( this.mask.invert ){
-	    alpha = alpha1;
-	    alpha1 = alpha2;
-	    alpha2 = alpha;
+	    if( JS9.notNull(this.mask.opacity)   &&
+		JS9.notNull(this.params.opacity) ){
+		alpha1 = this.mask.opacity * 255;
+		alpha2 = this.params.opacity * 255;
+	    } else {
+		alpha1 = 0;
+		alpha2 = 255;
+	    }
+	    // reverse mask alphas, if necessary
+	    if( this.mask.invert ){
+		alpha = alpha1;
+		alpha1 = alpha2;
+		alpha2 = alpha;
+	    }
+	} else if( this.mask.mode === "opacity" ){
+	    // opacity mode: alpha = mask value 0 to 1 * 255
+	    mimopacity = true;
+	} else if( this.mask.mode === "overlay" ){
+	    // overlay mode: non-zero mask value is blended with image value
+	    mimoverlay = true;
+	    mimg = mim.rgb.img;
+	    if( JS9.isNull(this.mask.opacity) ){
+		this.mask.opacity = 1;
+	    }
 	}
     }
     // index into scaled data using previously calc'ed data value to get RGB
@@ -2860,6 +2865,8 @@ JS9.Image.prototype.mkRGBImage = function(){
 		} else {
 		    alpha = alpha1;
 		}
+	    } else if( mimopacity ){
+		alpha = mim.raw.data[yLen +xIn] * 255;
 	    }
 	    if( dorgb ){
 		// rgb mode: up to three indexes
