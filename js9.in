@@ -252,4 +252,5 @@ do
 done
 
 # eval properly handles the quoted args
-eval "$JS9_XEQ" "$JS9_MSGSCRIPT" $ARGS ${XARGS[*]} 2> >(grep -v "Electron Helper|GL_INVALID" 1>&2)
+# there are too many electron warnings, so we just trash them all
+eval "$JS9_XEQ" "$JS9_MSGSCRIPT" $ARGS ${XARGS[*]} >/dev/null 2>&1
