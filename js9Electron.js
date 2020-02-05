@@ -138,7 +138,6 @@ js9Electron.cmds = js9Electron.argv.cmds;
 js9Electron.cmdfile = js9Electron.argv.cmdfile;
 js9Electron.doHelper = isTrue(js9Electron.argv.helper, true);
 js9Electron.debug = isTrue(js9Electron.argv.debug, false);
-js9Electron.eval = isTrue(js9Electron.argv.eval, false);
 js9Electron.merge = js9Electron.argv.merge;
 js9Electron.node = isTrue(js9Electron.argv.node, false);
 js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || process.env.JS9_WEBPAGE || js9Electron.defpage;
@@ -222,6 +221,8 @@ function createWindow() {
 	}
 	return d;
     }
+    // avoid v8.0 deprecation warning
+    app.allowRendererProcessReuse = false;
     // set dock icon for Mac
     if( process.platform === "darwin" ){
 	icon = path.join(__dirname, "/images/js9logo/png/js9logo_64.png");
@@ -318,20 +319,12 @@ function createWindow() {
     js9Electron.win.webContents.executeJavaScript(cmd);
     // processing when document is ready
     cmd = "$(document).ready(() => {";
-    if( !js9Electron.eval ){
-	// disable eval in renderer window after JS9 is ready
-	// http://electron.atom.io/docs/tutorial/security/
-	cmd +="$(document).on('JS9:ready', () => {";
-	cmd += "window.eval = function(){throw new Error('For security reasons, Desktop JS9 does not support window.eval()');}";
-	cmd += "});";
-	ncmd++;
-    }
-    // 2. rename default id to title
+    // rename default id to title
     if( js9Electron.title ){
 	js9Electron.title = js9Electron.title.replace(/\\/g,"");
 	cmd += `JS9.RenameDisplay('${js9Electron.title}');`;
     }
-    // 3. rename other ids
+    // rename other ids
     if( js9Electron.renameid ){
 	js9Electron.renameid = js9Electron.renameid.replace(/\\/g,"");
 	const arr1 = js9Electron.renameid.split(",");
@@ -349,7 +342,7 @@ function createWindow() {
 	    }
 	}
     }
-    // 4. load data files (and opts)
+    // load data files (and opts)
     for(let i=0; i<js9Electron.files.length; i++){
 	let file = js9Electron.files[i].replace(/\\/g,"");
 	let obj = {};
