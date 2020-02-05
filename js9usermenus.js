@@ -61,7 +61,19 @@ JS9.globalOpts.userMenuBar = [
     {
 	"name": "scale",
 	"title": "myScales",
-	"updateTitle": "text",
+	"updateTitle": (im, menuName, optionName) => {
+	    let obj;
+	    // if no image is loaded, just return main name
+	    if( !im ){ return menuName; }
+	    // get scale parameters for this image into an object
+	    obj = JS9.GetScale({display: im});
+	    // shorten the clipping string, if necessary
+	    if( obj.scaleclipping === "dataminmax" ){
+		obj.scaleclipping = "data";
+	    }
+	    // return title using backquotes to expand the variables
+	    return `${obj.scale}(${obj.scaleclipping})`;
+	},
 	"options": [
 	    {
 		"name": "linear",
@@ -77,6 +89,16 @@ JS9.globalOpts.userMenuBar = [
 		"name": "histeq",
 		"cmd": "SetScale",
 		"args": ["histeq"]
+	    },
+	    {
+		"name": "zscale",
+		"cmd": "SetScale",
+		"args": ["zscale"]
+	    },
+	    {
+		"name": "dataminmax",
+		"cmd": "SetScale",
+		"args": ["dataminmax"]
 	    },
 	    {
 		"name": "Scales...",

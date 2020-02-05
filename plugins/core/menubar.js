@@ -234,7 +234,7 @@ JS9.Menubar.createMenus = function(){
 		return {
 		    callback: (key, kopt) => {
 		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
-			let i, args, hstr;
+			let i, s, args, hstr;
 			const udisp = val;
 			for(i=0; i<menu.options.length; i++){
 			    opt = menu.options[i];
@@ -257,6 +257,14 @@ JS9.Menubar.createMenus = function(){
 					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' alt='${opt.name}' class='JS9MenubarUserImage' ></div>`;
 				    }
 				    $(kopt.selector).html(hstr);
+				} else if( typeof menu.updateTitle === "function" ){
+				    try{
+					s = menu.updateTitle(udisp.image,
+							     menu.name,
+							     opt.name);
+				    }
+				    catch(e){ s = (opt.name || menu.name); }
+				    $(kopt.selector).text(s);
 				} else if( menu.updateTitle && opt.name ){
 				    $(kopt.selector).text(opt.name);
 				}
