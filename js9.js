@@ -580,8 +580,8 @@ if( window.isElectron ){
     if( window.multiElectron ){
 	JS9.globalOpts.localStorage = false;
     }
-    // once recommended by Electron at one point, but they removed it 3/2/20
-    // still seems worthwhile but it had to be removed from js9Electron.js
+    // once recommended by Electron, they removed this by 8.0.0
+    // still seems worthwhile, but let's put it here instead of passing it in
     if( window && typeof window.eval === "function" ){
 	window.eval = function(){
 	    throw new Error('For security reasons, Desktop JS9 does not support window.eval()');
