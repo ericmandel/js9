@@ -253,4 +253,8 @@ done
 
 # eval properly handles the quoted args
 # there are too many electron warnings, so we just trash them all
-eval "$JS9_XEQ" "$JS9_MSGSCRIPT" $ARGS ${XARGS[*]} >/dev/null 2>&1
+if [ x$DOVERIFY = xtrue ]; then
+  eval "$JS9_XEQ" "$JS9_MSGSCRIPT" $ARGS ${XARGS[*]}
+else
+  eval "$JS9_XEQ" "$JS9_MSGSCRIPT" $ARGS ${XARGS[*]} >/dev/null 2>&1
+fi
