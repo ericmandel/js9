@@ -177,41 +177,49 @@ JS9.globalOpts.userMenuBar = [
 	    {
 		"name": "annulus",
 		"cmd": "AddRegions",
+		"image": "images/toolbar/svg/annulus.svg",
 		"args": ["annulus"]
 	    },
 	    {
 		"name": "box",
 		"cmd": "AddRegions",
+		"image": "images/toolbar/svg/box.svg",
 		"args": ["box"]
 	    },
 	    {
 		"name": "circle",
 		"cmd": "AddRegions",
+		"image": "images/toolbar/svg/circle.svg",
 		"args": ["circle"]
 	    },
 	    {
 		"name": "ellipse",
 		"cmd": "AddRegions",
+		"image": "images/toolbar/svg/ellipse.svg",
 		"args": ["ellipse"]
 	    },
 	    {
 		"name": "line",
 		"cmd": "AddRegions",
+		"image": "images/toolbar/svg/line.svg",
 		"args": ["line"]
 	    },
 	    {
 		"name": "point",
 		"cmd": "AddRegions",
+		"image": "images/toolbar/svg/dot.svg",
 		"args": ["point"]
 	    },
 	    {
 		"name": "polygon",
 		"cmd": "AddRegions",
+		"image": "images/toolbar/svg/polygon.svg",
 		"args": ["polygon"]
 	    },
 	    {
 		"name": "text",
 		"cmd": "AddRegions",
+		"image": "images/toolbar/svg/txt.svg",
 		"args": ["text"]
 	    }
 	]

@@ -6284,7 +6284,7 @@ JS9.Menubar.createMenus = function(){
 		    opt = menu.options[i];
 		    obj = xname(opt.name, opt.shortcut);
 		    if( opt.image ){
-			hstr = `<div class='JS9MenubarUserImage'><img src='${opt.image}' alt='${opt.name}' class='JS9MenubarUserImage' >` + `&nbsp;&nbsp;${obj.name}</div>`;
+			hstr = `<div class='JS9MenubarUserImage JS9MenubarUserImage_${menu.name}'><img src='${opt.image}' alt='${opt.name}' class='JS9MenubarUserImage JS9MenubarUserImage_${menu.name}' >` + `&nbsp;&nbsp;${obj.name}</div>`;
 			items[opt.name] = {name: hstr, isHtmlName: true};
 		    } else {
 			items[opt.name] = obj;
