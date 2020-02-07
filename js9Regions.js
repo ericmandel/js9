@@ -78,12 +78,15 @@ const parseRegion = function(s){
 	    }
 	}
     }
-    // convert js9 json t ds9 comments
+    // convert js9 json to ds9 comments
     for(const key in json){
 	if( json.hasOwnProperty(key) ){
 	    switch(key){
 	    case "color":
-		comment = addComment(comment, "color", json[key]);
+		if( json[key]
+		    .match(/black|white|red|green|blue|cyan|magenta|yellow/) ){
+		    comment = addComment(comment, "color", json[key]);
+		}
 		break;
 	    case "strokeDashArray":
 		comment = addComment(comment, "dash", 1);
