@@ -154,7 +154,7 @@ JS9.Menubar.createMenus = function(){
 	if( !window.hasOwnProperty("Jupyter") ){
 	    opt.$menu.position({
 		my:  'left top',
-		at:  'right-5 bottom-5',
+		at:  JS9.globalOpts.menuPosition || "left bottom",
 		of:  opt.$trigger,
 		collision: "fit"
 	    });

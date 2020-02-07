@@ -257,6 +257,7 @@ JS9.globalOpts = {
     infoBoxResize: true,                              // is size based on wcs?
     menuBar: ["file", "edit", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
     menubarStyle: "classic",                          // mac or classic
+    menuPosition: "left bottom",                      // where menus pop up
     userMenus: false,                                 // add user menus?
     userMenuDivider: "&nbsp;&nbsp;&nbsp;",            // divide before user menu
     imagesFileSubmenu: 5,        // how many images trigger a submenu?
