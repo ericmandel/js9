@@ -45,16 +45,14 @@ following options:
 <ul>
 <li><b>center:</b> the file (physical) coordinates around which to
 perform the section extraction (0,0 can be used to specify the file center).
-<li><b>size:</b> the size of the image to extract (before binning is
+<li><b>size:</b> the size of the image to extract (before binning (or blocking) is
 performed).
-<li><b>bin:</b> determines how many physical pixels are combined into
-a single image pixel after the section is extracted.
-<li><b>filter:</b>for tables, row/event filter to apply when extracting the section.
+<li><b>bin (tables) or block (images):</b> determines how table events are binned or how physical pixels are combined into
+a single image pixel, after the section is extracted.
+<li><b>mode:</b>summing or averging of the binned (blocked) pixels
+<li><b>filter:</b>for tables only: row/event filter to apply when extracting the section.
 <li><b>separate:</b> if true, display as a separate image (default is to update the current image).
 </ul>
-In addtion, the <b>JS9.globalOpts.binMode</b> property determines
-whether the binned pixels are summed together (if binMode is "s") or
-averaged (if binMode is "a").
 <p>
 For example, if a table has FITS (tlmin, tlmax) dimensions 4096 x 4096, then:
 <ul>
@@ -65,7 +63,7 @@ Specifying 0,0 for the center will cause the section to be extracted from the
 center of the image.
 
 <p>
-Although the binning parameter is usually input as an integer value, there are
+Although the binning parameter is usually input as an real value, there are
 other options available:
 <ul>
 <li><b>x[n]|X[n]|*[n]</b>: multiply the current bin by n (e.g., "x2")
@@ -80,7 +78,7 @@ other options available:
 Note that the <b>JS9.globalOpts.binMode</b> property specifies the
 default action for whether the binned pixels are summed together (if
 binMode is "s") or averaged (if binMode is "a"). This action is overridden
-by the last two bin directives listed above.
+by the last two bin directives listed above or by the <b>mode<b> input option.
 
 <p>
 Table filtering allows you to select rows from an FITS binary table

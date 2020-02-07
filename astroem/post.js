@@ -186,6 +186,12 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	}
 	return 0;
     };
+    var unbmode = function(x){
+	if( x && (x === 1 || x === 'a') ){
+	    return 'a';
+	}
+	return 's';
+    };
     // opts is optional
     opts = opts || {};
     // make sure we have valid vfile, opened by cfitsio
@@ -415,6 +421,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     // return the section values so caller can update LTM/LTV
     // we don't want to update the FITS file itself, since it hasn't changed
     hdu.bin = bin;
+    hdu.binMode = unbmode(binMode);
     // nb: return start, end arrays are 4 ints wide, we only use the first two
     hdu.x1  = getValue(hptr+24, "i32");
     hdu.y1  = getValue(hptr+28, "i32");

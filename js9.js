@@ -3837,16 +3837,16 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	case "*":
 	case "x":
 	case "X":
-	    opts.bin = tbin * parseInt(opts.bin.slice(1), 10);
+	    opts.bin = tbin * parseFloat(opts.bin.slice(1));
 	    break;
 	case "/":
-	    opts.bin = tbin / parseInt(opts.bin.slice(1), 10);
+	    opts.bin = tbin / parseFloat(opts.bin.slice(1));
 	    break;
 	case "+":
-	    opts.bin = tbin + parseInt(opts.bin.slice(1), 10);
+	    opts.bin = tbin + parseFloat(opts.bin.slice(1));
 	    break;
 	case "-":
-	    opts.bin = tbin - parseInt(opts.bin.slice(1), 10);
+	    opts.bin = tbin - parseFloat(opts.bin.slice(1));
 	    break;
 	case "i":
 	case "I":
