@@ -301,9 +301,14 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	    if( bin.match(/[as]$/) ){
 		binMode = bmode(bin.slice(-1));
 	    }
-	    bin = parseInt(bin, 10);
+	    bin = parseFloat(bin);
 	}
-	bin = Math.max(1, bin || 1);
+	if( !bin ){
+	    bin = 1;
+	} else if( bin < 0 ){
+	    // negative bin => 1 / bin
+	    bin = 1 / Math.abs(bin);
+	}
 	try{
 	    ofptr = ccall("filterTableToImage", "number",
             ["number", "string", "number", "number", "number", "number",
@@ -390,9 +395,14 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	if( bin.match(/[as]$/) ){
 	    binMode = bmode(bin.slice(-1));
 	}
-	bin = parseInt(bin, 10);
+	bin = parseFloat(bin);
     }
-    bin = Math.max(1, bin || 1);
+    if( !bin ){
+	bin = 1;
+    } else if( bin < 0 ){
+	// negative bin => 1 / bin
+	bin = 1 / Math.abs(bin);
+    }
     try{
 	bufptr = ccall("getImageToArray", "number",
 	["number", "number", "number", "number", "number", "string", "number",
@@ -410,8 +420,8 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     hdu.y1  = getValue(hptr+28, "i32");
     hdu.x2  = getValue(hptr+40, "i32");
     hdu.y2  = getValue(hptr+44, "i32");
-    hdu.naxis1  = Math.floor((hdu.x2 - hdu.x1) / bin + 1);
-    hdu.naxis2  = Math.floor((hdu.y2 - hdu.y1) / bin + 1);
+    hdu.naxis1  = Math.floor((hdu.x2 - hdu.x1 + 1) / bin);
+    hdu.naxis2  = Math.floor((hdu.y2 - hdu.y1 + 1) / bin);
     hdu.bitpix  = getValue(hptr+56, "i32");
     // pass along filter, even if we did not use it
     if( opts.filter ){ hdu.filter = opts.filter; }

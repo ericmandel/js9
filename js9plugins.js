@@ -936,7 +936,7 @@ module.exports = xhr;
 	    }
 	    if( !form.bin.value.match(/^[+-]/) &&
 		JS9.isNumber(form.bin.value) ){
-		opts.bin = Math.floor(parseFloat(form.bin.value));
+		opts.bin = parseFloat(form.bin.value);
 	    } else {
 		opts.bin = form.bin.value;
 	    }
@@ -968,7 +968,6 @@ module.exports = xhr;
 
     function getBinParams(div, display) {
 	let im, ipos, lpos, form, hdu, bin;
-	let binval1, binval2;
 	if ( display === undefined ) {
 	    div     = this.div;
 	    display = this.display;
@@ -983,7 +982,7 @@ module.exports = xhr;
 		hdu.bin = hdu.bin || 1;
 		form.rebin.disabled = false;
 	        if ( hdu.table !== undefined ) {
-		    form.bin.value = String(Math.floor(hdu.table.bin));
+		    form.bin.value = String(hdu.table.bin);
 		    form.xcen.value = String(Math.floor(hdu.table.xcen));
 		    form.ycen.value = String(Math.floor(hdu.table.ycen));
 		    form.xdim.value = String(Math.floor(hdu.table.xdim));
@@ -1000,13 +999,11 @@ module.exports = xhr;
 		    // hack: looking for binning value ...
 		    if( im.parentFile && im.raw.header && 
 			im.raw.header.LTM1_1 !== undefined ){
-			binval1 = 1;
-			binval2 = Math.abs(im.raw.header.LTM1_1);
+			bin = Math.floor((1.0 / Math.abs(im.raw.header.LTM1_1))
+					 + 0.5);
 		    } else {
-			binval1 = hdu.bin || 1;
-			binval2 = 1;
+			bin = hdu.bin || 1;
 		    }
-		    bin = Math.floor((binval1 / binval2) + 0.5);
 		    // get image center from raw data
 		    ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
 		    // convert to physial (file) coords

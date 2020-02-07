@@ -247,8 +247,8 @@ fitsfile *openFITSMem(void **buf, size_t *buflen, char *extlist,
 // update/add LTM and LTV header params
 // ftp://iraf.noao.edu/iraf/web/projects/fitswcs/specwcs.html
 void updateWCS(fitsfile *fptr, fitsfile *ofptr,
-	       int xcen, int ycen, int dim1, int dim2, int bin,
-	       float *amin){
+	       int xcen, int ycen, int dim1, int dim2, double bin,
+	       double *amin){
   int status;
   double x1, y1;
   double dval;
@@ -354,7 +354,7 @@ void updateWCS(fitsfile *fptr, fitsfile *ofptr,
 
 // getImageToArray: extract a sub-section from an image HDU, return array
 void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
-		      int bin, int binMode, char *slice,
+		      double bin, int binMode, char *slice,
 		      int *start, int *end, int *bitpix, int *status){
   int i, j, k, naxis;
   int dim1, dim2, maxdim1, maxdim2, odim1, odim2, odim3, hidim1, hidim2, hidim3;
@@ -363,10 +363,10 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   int ojoff = 0;
   int tstatus = 0;
   int doscale = 0;
-  int bin2;
   void *obuf, *rbuf;
   long totim, totpix, totbytes;
   long naxes[IDIM], fpixel[IDIM], lpixel[IDIM], myfpixel[IDIM], inc[IDIM];
+  double bin2;
   double xcen, ycen;
   double bscale = 1.0;
   double bzero = 0.0;
@@ -398,10 +398,12 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
     *status = BAD_DIMEN;
     return NULL;
   }
-  // get binning parameter, integer only (for now)
-  bin = (int)bin;
-  if( bin <= 0 ){
+  // get binning parameter
+  // negative bin => 1/abs(bin)
+  if( bin == 0 ){
     bin = 1;
+  } else if( bin < 0 ){
+    bin = 1/fabs(bin);
   }
   // parse slice string into primary axes and slice axes
   if( slice && *slice ){
@@ -443,8 +445,13 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   iaxis0 = iaxes[0];
   iaxis1 = iaxes[1];
   // max dimension if each axis for integral binning
-  maxdim1 = (int)(naxes[iaxis0] / bin) * bin;
-  maxdim2 = (int)(naxes[iaxis1] / bin) * bin;
+  if( bin >= 1 ){
+    maxdim1 = (int)(naxes[iaxis0] / bin) * bin;
+    maxdim2 = (int)(naxes[iaxis1] / bin) * bin;
+  } else {
+    maxdim1 = naxes[iaxis0];
+    maxdim2 = naxes[iaxis1];
+  }
   // get limits of extracted section taking binning into account
   if( dims && dims[0] && dims[1] ){
     dim1 = min(dims[0], maxdim1);
@@ -479,19 +486,24 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   lpixel[iaxis1] = max(lpixel[iaxis1], 1);
   lpixel[iaxis1] = min(lpixel[iaxis1], naxes[iaxis1]);
   /* get final dimensions, ensuring that bin divides dimensions evenly */
-  for(i=0; i<bin; i++){
-    odim1 = (lpixel[iaxis0] - fpixel[iaxis0] + 1);
-    if( (odim1 <= 0 ) || fmod(((float)odim1/(float)bin), 1) == 0.0 ){
-      break;
+  if( fmod(bin,1) == 0.0 ){
+    for(i=0; i<bin; i++){
+      odim1 = (lpixel[iaxis0] - fpixel[iaxis0] + 1);
+      if( (odim1 <= 0 ) || fmod(((float)odim1/(float)bin), 1) == 0.0 ){
+	break;
+      }
+      lpixel[iaxis0] -= 1;
     }
-    lpixel[iaxis0] -= 1;
-  }
-  for(i=0; i<bin; i++){
-    odim2 = (lpixel[iaxis1] - fpixel[iaxis1] + 1);
-    if( (odim2 <= 0 ) || fmod(((float)odim2/(float)bin), 1) == 0.0 ){
-      break;
+    for(i=0; i<bin; i++){
+      odim2 = (lpixel[iaxis1] - fpixel[iaxis1] + 1);
+      if( (odim2 <= 0 ) || fmod(((float)odim2/(float)bin), 1) == 0.0 ){
+	break;
+      }
+      lpixel[iaxis1] -= 1;
     }
-    lpixel[iaxis1] -= 1;
+  } else {
+      odim1 = (lpixel[iaxis0] - fpixel[iaxis0] + 1);
+      odim2 = (lpixel[iaxis1] - fpixel[iaxis1] + 1);
   }
   // for sliced dimensions, set first and last pixel to the specified slice
   odim3 = 1;
@@ -678,9 +690,15 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       myfpixel[i] = fpixel[i];
     }
     // loop limits
-    hidim1 = (int)(odim1/bin)*bin;
-    hidim2 = (int)(odim2/bin)*bin;
-    hidim3 = odim3;
+    if( bin >= 1 ){
+      hidim1 = (int)(odim1/bin)*bin;
+      hidim2 = (int)(odim2/bin)*bin;
+      hidim3 = odim3;
+    } else {
+      hidim1 = odim1;
+      hidim2 = odim2;
+      hidim3 = odim3;
+    }
     for(k=0; k<hidim3; k++){
       /* read next line slice */
       myfpixel[2] = fpixel[2] + k;
@@ -764,7 +782,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
 
 // filterTableToImage: filter a binary table, create a temp image
 fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
-			     int *dims, double *cens, int bin, int *status){
+			     int *dims, double *cens, double bin, int *status){
   int i, dim1, dim2, hpx, tstatus;
   int imagetype=TINT, naxis=2, recip=0;
   long nirow, norow;
@@ -839,7 +857,7 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
   for(i=0; i<IDIM; i++){
     minin[i] = DOUBLENULLVALUE;
     maxin[i] = DOUBLENULLVALUE;
-    binsizein[i] = (double)bin;
+    binsizein[i] = bin;
     minname[i][0] = '\0';
     maxname[i][0] = '\0';
     binname[i][0] = '\0';
@@ -868,8 +886,8 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
     return(NULL);
   }
   // add bin factor back into haxes to get table dimensions
-  haxes[0] = haxes[0] * bin;
-  haxes[1] = haxes[1] * bin;
+  haxes[0] = (int)(haxes[0] * bin);
+  haxes[1] = (int)(haxes[1] * bin);
   // why truncate to int? otherwise, cfitsio is 0.5 pixels off from js9 ...
   xcen = (int)((amax[0] + amin[0])/2.0);
   ycen = (int)((amax[1] + amin[1])/2.0);

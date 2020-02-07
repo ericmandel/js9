@@ -3860,7 +3860,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    break;
 	default:
 	    if( JS9.isNumber(opts.bin) ){
-		opts.bin = parseInt(opts.bin, 10);
+		opts.bin = parseFloat(opts.bin);
 	    } else {
 		JS9.error(`invalid bin for displaySection: ${opts.bin}`);
 	    }
@@ -3889,9 +3889,13 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	if( opts.bin.match(/[as]$/) ){
 	    opts.binMode = opts.bin.slice(-1);
 	}
-	opts.bin = parseInt(opts.bin, 10);
+	opts.bin = parseFloat(opts.bin);
     }
-    opts.bin  = Math.max(1, opts.bin || 1);
+    if( !opts.bin ){
+	opts.bin = 1;
+    } else if( opts.bin < 0 ){
+	opts.bin = 1 / Math.abs(opts.bin);
+    }
     // filter
     opts.filter = getval3(opts.filter, sect.filter, "");
     // save the filter, if necessary

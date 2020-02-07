@@ -487,7 +487,7 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
   long nelements;
   long naxes[2];
   long fpixel[2] = {1,1};
-  float amin[2];
+  double amin[2];
   buf = getImageToArray(ifptr, dims, cens, bin, binMode, slice, start, end,
 			&bitpix, status);
   if( !buf || *status ){
