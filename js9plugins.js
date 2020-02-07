@@ -6284,7 +6284,7 @@ JS9.Menubar.createMenus = function(){
 		    opt = menu.options[i];
 		    obj = xname(opt.name, opt.shortcut);
 		    if( opt.image ){
-			hstr = `<div class='JS9MenubarUserImage JS9MenubarUserImage_${menu.name}'><img src='${opt.image}' alt='${opt.name}' class='JS9MenubarUserImage JS9MenubarUserImage_${menu.name}' >` + `&nbsp;&nbsp;${obj.name}</div>`;
+			hstr = `<div class='JS9MenubarUserImage' name='${opt.name}'><img src='${opt.image}' name='${menu.name}_${opt.name}' alt='${opt.name}' class='JS9MenubarUserImage JS9MenubarUserImageOption' >` + `&nbsp;&nbsp;${obj.name}</div>`;
 			items[opt.name] = {name: hstr, isHtmlName: true};
 		    } else {
 			items[opt.name] = obj;
@@ -6311,9 +6311,9 @@ JS9.Menubar.createMenus = function(){
 				    opt.updateTitle !== false     &&
 				    menu.updateTitle.match(/(both|image)/) ){
 				    if( menu.updateTitle === "both" ){
-					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' alt='${opt.name}' class='JS9MenubarUserImage' >` + `&nbsp;&nbsp;${opt.name}</div>`;
+					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' name='${opt.name}' alt='${opt.name}' class='JS9MenubarUserImage JS9MenubarUserImageTitle' >` + `&nbsp;&nbsp;${opt.name}</div>`;
 				    } else if( menu.updateTitle === "image" ){
-					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' alt='${opt.name}' class='JS9MenubarUserImage' ></div>`;
+					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' name='${opt.name}' alt='${opt.name}' class='JS9MenubarUserImage JS9MenubarUserImageTitle' ></div>`;
 				    }
 				    $(kopt.selector).html(hstr);
 				} else if( typeof menu.updateTitle === "function" ){
@@ -9263,7 +9263,7 @@ JS9.Menubar.init = function(width, height){
 	    }
 	}
     }
-    // close mac-style span on View menux
+    // close mac-style span on View menu
     if( this.macmenus ){
 	html += "</span>";
     }
@@ -9276,12 +9276,11 @@ JS9.Menubar.init = function(width, height){
 		continue;
 	    }
 	    if( menu.imageTitle ){
-		m = `<div class='JS9MenubarUserImage'><img src='${menu.imageTitle  }' alt='${menu.title  }' class='JS9MenubarUserImage' >` + `</div>`;
+		m = `<div class='JS9MenubarUserImage'><img src='${menu.imageTitle  }' name='${menu.name}' alt='${menu.title}' class='JS9MenubarUserImage JS9MenubarUserImageTitle' >` + `</div>`;
 	    } else {
 		m = menu.title;
 	    }
 	    html += `<button type='button' id='${menu.name}UserMenu@@ID@@' class='${this.buttonClass}'>${m}</button>`;
-
 	}
     }
     // hidden menus

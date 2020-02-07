@@ -173,6 +173,8 @@ JS9.globalOpts.userMenuBar = [
     {
 	"name": "regions",
 	"title": "myRegions",
+	"imageTitle": "images/toolbar/svg/circle.svg",
+	"updateTitle": "image",
 	"options": [
 	    {
 		"name": "annulus",
