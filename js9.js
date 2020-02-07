@@ -153,7 +153,7 @@ JS9.globalOpts = {
     svgBorder: true,		// border around the display when saving to svg?
     unremoveReg: 100,           // how many removed regions to save
     resetEmptyShapeId: false,	// reset nshape counter if all shapes removed?
-    maxMemory: 1000000000,	// max heap memory to allocate for a fits image
+    maxMemory: 2000000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",       // location of param html file
     proxyURL: "params/loadproxy.html",     // location of param html file
     loadProxy: false,           // do we allow proxy load requests to server?

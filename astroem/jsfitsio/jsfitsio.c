@@ -28,10 +28,9 @@ https://groups.google.com/forum/#!topic/emscripten-discuss/JDaNHIRQ_G4
 #define max(a,b) (a>=b?a:b)
 #define min(a,b) (a<=b?a:b)
 
-// the emscripten heap is about 1Gb, so we have to place limits on memory
-// somewhat arbitrarily, this size allows for a 10600 x 10600 4-byte image
-#define MAX_MEMORY 450000000
-static int max_memory = MAX_MEMORY;
+// emscripten does not have access to unlimited memory, unfortunately
+#define MAX_MEMORY 2000000000
+static long max_memory = MAX_MEMORY;
 
 // this routine was added to cfitsio v3.39
 #if (CFITSIO_MAJOR < 3) || ((CFITSIO_MAJOR == 3) && (CFITSIO_MINOR < 39))
