@@ -2,8 +2,8 @@
 ICRS
 ellipse(23:23:18.761, +58:47:27.252, 31.825410", 15.912686", 26.280000) {"color":"violet","text":"json ellipse test","textOpts":{"color":"yellow","fontSize":16,"fontStyle":"italic","fontWeight":"bold","ra":350.8204125,"dec":58.78489166666667}} # source,include
 box(23:23:35.486, +58:50:03.146, 40.001284", 20.000646", 20.000000) {"strokeWidth":4,"strokeDashArray":[8,3],"color":"red","zoomable":false,"rotatable":false,"text":"ds9 box test","textOpts":{"color":"cyan","fontSize":12,"ra":350.9013416666666,"dec":58.838166666666666}} # ds9 test tag
-circle(23:23:28.004, +58:48:41.527, 14.756982") {"strokeWidth":1,"strokeDashArray":[3,1],"transparentCorners":true,"text":"hybrid circle test","textOpts":{"ra":350.86668749999995,"dec":58.817275}} # ds9 test tag,json test tag
--circle(23:23:28.004, +58:48:41.527, 3")
+circle(23:23:27.909, +58:48:42.88, 14.756982") {"strokeWidth":1,"strokeDashArray":[3,1],"transparentCorners":true,"text":"hybrid circle test","textOpts":{"ra":350.86668749999995,"dec":58.817275}} # ds9 test tag,json test tag
+-circle(23:23:27.909, +58:48:42.88, 3")
 polygon(23:23:40.707, +58:47:56.172, 23:23:36.114, +58:47:40.255, 23:23:36.692, +58:48:06.970, 23:23:38.901, +58:48:34.952) {"strokeWidth":2.0121505036619665} # background,include
 text(23:23:08.809, +58:49:57.244, "this is a test")
 text(23:23:15.716, +58:49:54.809, "this is an angled test", 312.248556) {"color":"wheat2"}
