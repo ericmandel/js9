@@ -142,7 +142,7 @@ Module["bz2decompress"] = function(data, filename, canOwn) {
 Module["errchk"] = function(status) {
     var i, c, hptr, bytes;
     var hlen = 82;  // ffgerr returns 80-byte string + null
-    var s="ERROR from cfitsio.js: ";
+    var s="ERROR from astroem/cfitsio: ";
     if( status ){
 	hptr = _malloc(hlen);
 	ccall("ffgerr", null, ["number", "number"], [status, hptr]);
