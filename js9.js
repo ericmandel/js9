@@ -3524,7 +3524,7 @@ JS9.Image.prototype.maybePhysicalToImage = function(pos){
 // extract and display a section of an image, with table filtering
 JS9.Image.prototype.displaySection = function(opts, func) {
     let oproxy, hdu, from, obj, oreg, nim, topts;
-    let ipos, lpos, npos, binval1, binval2, tbin, arr, sect;
+    let ipos, lpos, npos, tbin, arr, sect;
     const getval3 = (val1, val2, val3) => {
 	let res;
 	if( !JS9.isNull(val1) ){
@@ -3797,22 +3797,20 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	// tables are easy: all the previous values should be present
 	sect = hdu.table;
     } else {
+	sect = {};
+	// start with bin from hdu
+	sect.bin = hdu.bin || 1;
 	// images are a bit more difficult
-	// when using a parent, look for bin value relative to the parent ...
+	// hack: if a parent file was used to make this image,
+	// calculate binning from its LTM/TLV parameters
 	if( from === "parentFile" &&
 	    this.raw.header && JS9.notNull(this.raw.header.LTM1_1) ){
-		binval1 = 1;
-		binval2 = this.raw.header.LTM1_1;
-	} else {
-	    binval1 = hdu.bin || 1;
-	    binval2 = 1;
+	    sect.bin  = 1 / Math.abs(this.raw.header.LTM1_1);
 	}
 	// get image center from raw data
 	ipos = {x: this.raw.width / 2, y: this.raw.height / 2};
 	// convert to physical (file) coords
 	lpos = this.imageToLogicalPos(ipos);
-	sect = {};
-	sect.bin  = Math.floor((binval1 / binval2) + 0.5);
 	// sect.xcen = Math.floor(lpos.x + 0.5);
 	// sect.ycen = Math.floor(lpos.y + 0.5);
 	sect.xcen = Math.floor(lpos.x + 0.5*(sect.bin-1));

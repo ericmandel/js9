@@ -129,13 +129,12 @@
 		    form.ydim.disabled = false;
 		    form.filter.disabled = false;
 		} else {
-		    // hack: looking for binning value ...
-		    if( im.parentFile && im.raw.header && 
+		    bin = hdu.bin || 1;
+		    // hack: if a parent file was used to make this image,
+		    // calculate binning from its LTM/TLV parameters
+		    if( im.parentFile && im.raw.header     && 
 			im.raw.header.LTM1_1 !== undefined ){
-			bin = Math.floor((1.0 / Math.abs(im.raw.header.LTM1_1))
-					 + 0.5);
-		    } else {
-			bin = hdu.bin || 1;
+			bin = 1.0 / Math.abs(im.raw.header.LTM1_1);
 		    }
 		    // get image center from raw data
 		    ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
