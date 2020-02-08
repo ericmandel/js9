@@ -355,9 +355,11 @@ void updateWCS(fitsfile *fptr, fitsfile *ofptr,
 void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
 		      double bin, int binMode, char *slice,
 		      int *start, int *end, int *bitpix, int *status){
-  int i, j, k, naxis;
-  int dim1, dim2, maxdim1, maxdim2, odim1, odim2, odim3, hidim1, hidim2, hidim3;
+  int b, i, j, k, naxis;
+  int idim1, idim2, idim3, sdim1, sdim2, hidim1, hidim2, hidim3;
   int ttype, tsize;
+  int bsize = 0;
+  int biter = 1;
   int ooff = 0;
   int ojoff = 0;
   int tstatus = 0;
@@ -372,6 +374,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   char comment[FLEN_CARD];
   char tbuf[SZ_LINE];
   char *s, *tslice;
+  char *bptr = NULL;
   int nslice, idx, iaxis0=0, iaxis1=0, iaxis2=0;
   int iaxes[3] = {0, 1, 2};
   int saxes[IDIM] = {0, 0, 0, 0};
@@ -443,37 +446,37 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   // convenience variables for the primary axis indexes
   iaxis0 = iaxes[0];
   iaxis1 = iaxes[1];
-  // max dimension if each axis for integral binning
+  // max dimension of each input axis for integral binning
   if( bin >= 1 ){
-    maxdim1 = (int)(naxes[iaxis0] / bin) * bin;
-    maxdim2 = (int)(naxes[iaxis1] / bin) * bin;
+    idim1 = (int)(naxes[iaxis0] / bin) * bin;
+    idim2 = (int)(naxes[iaxis1] / bin) * bin;
   } else {
-    maxdim1 = naxes[iaxis0];
-    maxdim2 = naxes[iaxis1];
+    idim1 = naxes[iaxis0];
+    idim2 = naxes[iaxis1];
   }
   // get limits of extracted section taking binning into account
   if( dims && dims[0] && dims[1] ){
-    dim1 = min(dims[0], maxdim1);
-    dim2 = min(dims[1], maxdim2);
+    sdim1 = min(dims[0], idim1);
+    sdim2 = min(dims[1], idim2);
     // read image section
     if( cens && cens[0] && cens[1] ){
       xcen = cens[0];
       ycen = cens[1];
     } else {
-      xcen = maxdim1/2.0;
-      ycen = maxdim2/2.0;
+      xcen = idim1/2.0;
+      ycen = idim2/2.0;
     }
-    // min and max, indexed from 1
-    fpixel[iaxis0] = (int)(xcen - (dim1/2.0) + 1);
-    fpixel[iaxis1] = (int)(ycen - (dim2/2.0) + 1);
-    lpixel[iaxis0] = (int)(xcen + (dim1/2.0));
-    lpixel[iaxis1] = (int)(ycen + (dim2/2.0));
+    // min and max of input section, indexed from 1
+    fpixel[iaxis0] = (int)(xcen - (sdim1/2.0) + 1);
+    fpixel[iaxis1] = (int)(ycen - (sdim2/2.0) + 1);
+    lpixel[iaxis0] = (int)(xcen + (sdim1/2.0));
+    lpixel[iaxis1] = (int)(ycen + (sdim2/2.0));
   } else {
-    // read entire image
+    // read entire input image
     fpixel[iaxis0] = 1;
     fpixel[iaxis1] = 1;
-    lpixel[iaxis0] = maxdim1;
-    lpixel[iaxis1] = maxdim2;
+    lpixel[iaxis0] = idim1;
+    lpixel[iaxis1] = idim2;
   }
   // stay within image limits
   fpixel[iaxis0] = max(fpixel[iaxis0], 1);
@@ -484,35 +487,35 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   fpixel[iaxis1] = min(fpixel[iaxis1], naxes[iaxis1]);
   lpixel[iaxis1] = max(lpixel[iaxis1], 1);
   lpixel[iaxis1] = min(lpixel[iaxis1], naxes[iaxis1]);
-  /* get final dimensions, ensuring that bin divides dimensions evenly */
+  /* get output dimensions, ensuring that bin divides dimensions evenly */
   if( fmod(bin,1) == 0.0 ){
     for(i=0; i<bin; i++){
-      odim1 = (lpixel[iaxis0] - fpixel[iaxis0] + 1);
-      if( (odim1 <= 0 ) || fmod(((float)odim1/(float)bin), 1) == 0.0 ){
+      idim1 = (lpixel[iaxis0] - fpixel[iaxis0] + 1);
+      if( (idim1 <= 0 ) || fmod(((float)idim1/(float)bin), 1) == 0.0 ){
 	break;
       }
       lpixel[iaxis0] -= 1;
     }
     for(i=0; i<bin; i++){
-      odim2 = (lpixel[iaxis1] - fpixel[iaxis1] + 1);
-      if( (odim2 <= 0 ) || fmod(((float)odim2/(float)bin), 1) == 0.0 ){
+      idim2 = (lpixel[iaxis1] - fpixel[iaxis1] + 1);
+      if( (idim2 <= 0 ) || fmod(((float)idim2/(float)bin), 1) == 0.0 ){
 	break;
       }
       lpixel[iaxis1] -= 1;
     }
   } else {
-      odim1 = (lpixel[iaxis0] - fpixel[iaxis0] + 1);
-      odim2 = (lpixel[iaxis1] - fpixel[iaxis1] + 1);
+      idim1 = (lpixel[iaxis0] - fpixel[iaxis0] + 1);
+      idim2 = (lpixel[iaxis1] - fpixel[iaxis1] + 1);
   }
   // for sliced dimensions, set first and last pixel to the specified slice
-  odim3 = 1;
+  idim3 = 1;
   for(i=0; i<min(IDIM,naxis); i++){
     if( saxes[i] ){
       if( saxes[i] < 0 ){
 	// entire slice dimension
 	fpixel[i] = 1;
 	lpixel[i] = naxes[i];
-	odim3 = naxes[i];
+	idim3 = naxes[i];
       } else {
 	// 1 pixel slice in this dimension
 	fpixel[i] = saxes[i];
@@ -541,9 +544,9 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
     }
   }
   // total pixels in one slice of the image
-  totim = odim1 * odim2;
+  totim = idim1 * idim2;
   // total pixels in the image
-  totpix = odim1 * odim2 * odim3;
+  totpix = idim1 * idim2 * idim3;
   // make sure we have an image with valid dimensions size
   if( totpix <= 1 ){
     *status = NEG_AXIS;
@@ -643,12 +646,12 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
     fits_read_subset(fptr, ttype, fpixel, lpixel, inc, 0, obuf, 0, status);
   } else {
     // allocate memory for one full row of input data
-    if(!(rbuf = (void *)calloc(odim1 * tsize, sizeof(char)))){
+    if(!(rbuf = (void *)calloc(idim1 * tsize, sizeof(char)))){
       *status = MEMORY_ALLOCATION;
       return NULL;
     }
     // get total bytes
-    totbytes = (int)(odim3 * (int)(odim1 / bin) * (int)(odim2 / bin) * tsize);
+    totbytes = (int)((int)(idim1 / bin) * (int)(idim2 / bin) * idim3 * tsize);
     /* allocate memory for the output binned image section */
     if( !(obuf = (void *)calloc(totbytes, sizeof(char))) ){
       *status = MEMORY_ALLOCATION;
@@ -690,54 +693,78 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
     }
     // loop limits
     if( bin >= 1 ){
-      hidim1 = (int)(odim1/bin)*bin;
-      hidim2 = (int)(odim2/bin)*bin;
-      hidim3 = odim3;
+      hidim1 = (int)(idim1 / bin) * bin;
+      hidim2 = (int)(idim2 / bin) * bin;
+      hidim3 = idim3;
     } else {
-      hidim1 = odim1;
-      hidim2 = odim2;
-      hidim3 = odim3;
+      hidim1 = idim1;
+      hidim2 = idim2;
+      hidim3 = idim3;
+      biter = (int)(1.0 / bin);
+      bsize = (int)(idim1 / bin) * tsize;
     }
+    /* for each input slice */
     for(k=0; k<hidim3; k++){
-      /* read next line slice */
+      /* read thus slice slice */
       myfpixel[2] = fpixel[2] + k;
-      /* for each row */
+      /* for each input row */
       for(j=0; j<hidim2; j++){
-	/* read next line of the section */
+	/* read next line of the input section */
 	myfpixel[1] = fpixel[1] + j;
 	tstatus = 0;
-	/* read next line */
-	fits_read_pix(fptr, ttype, myfpixel, odim1, NULL, rbuf, NULL, &tstatus);
+	fits_read_pix(fptr, ttype, myfpixel, idim1, NULL, rbuf, NULL, &tstatus);
 	/* exit on error, perhaps we still have something to show */
 	if( tstatus ){
 	  break;
 	}
-	ojoff = (int)(k * totim) + (int)(j / bin) * (int)(odim1 / bin);
-	/* for each column */
+	// offset into output image for this line
+	ojoff = (int)(k * totim) + (int)(j / bin) * (int)(idim1 / bin);
+	/* for each pixel in the input line */
 	for(i=0; i<hidim1; i++){
+	  /* index of output image pixel */
 	  ooff = ojoff + (int)(i / bin);
 	  switch(*bitpix){
 	  case 8:
-	    cobuf[ooff] += crbuf[i];
+	    for(b=0; b<biter; b++){
+	      cobuf[ooff+b] += crbuf[i];
+	    }
 	    break;
 	  case 16:
-	    sobuf[ooff] += srbuf[i];
+	    for(b=0; b<biter; b++){
+	      sobuf[ooff+b] += srbuf[i];
+	    }
 	    break;
 	  case -16:
-	    usobuf[ooff] += usrbuf[i];
+	    for(b=0; b<biter; b++){
+	      usobuf[ooff+b] += usrbuf[i];
+	    }
 	    break;
 	  case 32:
-	    iobuf[ooff] += irbuf[i];
+	    for(b=0; b<biter; b++){
+	      iobuf[ooff+b] += irbuf[i];
+	    }
 	    break;
 	  case 64:
-	    lobuf[ooff] += lrbuf[i];
+	    for(b=0; b<biter; b++){
+	      lobuf[ooff+b] += lrbuf[i];
+	    }
 	    break;
 	  case -32:
-	    fobuf[ooff] += frbuf[i];
+	    for(b=0; b<biter; b++){
+	      fobuf[ooff+b] += frbuf[i];
+	    }
 	    break;
 	  case -64:
-	    dobuf[ooff] += drbuf[i];
+	    for(b=0; b<biter; b++){
+	      dobuf[ooff+b] += drbuf[i];
+	    }
 	    break;
+	  }
+	}
+	if( bin < 1 ){
+	  bptr = obuf + (ojoff * tsize);
+	  for(b=1; b<biter; b++){
+	    memcpy(bptr + b * bsize, bptr, bsize);
 	  }
 	}
       }
@@ -748,7 +775,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   // average, if necessary
   if( (bin > 1) && ((binMode == 1) || (binMode == 'a')) ){
     bin2 = bin * bin;
-    totpix = (odim1 * odim2 * odim3) / bin2;
+    totpix = (idim1 * idim2 * idim3) / bin2;
     for(i=0; i<totpix; i++){
       switch(*bitpix){
       case 8:
