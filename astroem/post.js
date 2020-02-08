@@ -172,7 +172,7 @@ Module["error"] = function(s, e) {
 // fits object contains fptr
 Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     var i, ofptr, hptr, status, datalen, extnum, extname;
-    var buf, bufptr, buflen, bufptr2, slice, doerr, ctype1;
+    var buf, bufptr, buflen, bufptr2, slice, doerr, ctype1, xbin;
     var filter = null;
     var fptr = fits.fptr;
     var cens = [0, 0];
@@ -311,9 +311,6 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	}
 	if( !bin ){
 	    bin = 1;
-	} else if( bin < 0 ){
-	    // negative bin => 1 / bin
-	    bin = 1 / Math.abs(bin);
 	}
 	try{
 	    ofptr = ccall("filterTableToImage", "number",
@@ -349,8 +346,12 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	_free(hptr);
 	if( !ctype1 || !ctype1.match(/--HPX/i) ){
 	    // see if we have to average the pixels later on
-	    if( binMode > 0 && opts.bin > 1 ){
-		binFactor = opts.bin * opts.bin;
+	    if( binMode > 0 && opts.bin ){
+		if( opts.bin > 0 ){
+		    binFactor = opts.bin * opts.bin;
+		} else {
+		    binFactor = 1.0 / (opts.bin * opts.bin);
+		}
 	    }
 	    // if we don't have a HEALPix image, we clear cens and dims
 	    // to extract at center of resulting image (below)
@@ -403,11 +404,9 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	}
 	bin = parseFloat(bin);
     }
+    // final check on a valid bin
     if( !bin ){
 	bin = 1;
-    } else if( bin < 0 ){
-	// negative bin => 1 / bin
-	bin = 1 / Math.abs(bin);
     }
     try{
 	bufptr = ccall("getImageToArray", "number",
@@ -422,13 +421,14 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     // we don't want to update the FITS file itself, since it hasn't changed
     hdu.bin = bin;
     hdu.binMode = unbmode(binMode);
+    xbin = bin > 0 ? bin : 1 / Math.abs(bin);
     // nb: return start, end arrays are 4 ints wide, we only use the first two
     hdu.x1  = getValue(hptr+24, "i32");
     hdu.y1  = getValue(hptr+28, "i32");
     hdu.x2  = getValue(hptr+40, "i32");
     hdu.y2  = getValue(hptr+44, "i32");
-    hdu.naxis1  = Math.floor((hdu.x2 - hdu.x1 + 1) / bin);
-    hdu.naxis2  = Math.floor((hdu.y2 - hdu.y1 + 1) / bin);
+    hdu.naxis1  = Math.floor((hdu.x2 - hdu.x1 + 1) / xbin);
+    hdu.naxis2  = Math.floor((hdu.y2 - hdu.y1 + 1) / xbin);
     hdu.bitpix  = getValue(hptr+56, "i32");
     // pass along filter, even if we did not use it
     if( opts.filter ){ hdu.filter = opts.filter; }

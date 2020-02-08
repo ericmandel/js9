@@ -934,8 +934,7 @@ module.exports = xhr;
 	    if( JS9.isNumber(form.ydim.value) ){
 		opts.ydim = Math.floor(parseFloat(form.ydim.value));
 	    }
-	    if( !form.bin.value.match(/^[+-]/) &&
-		JS9.isNumber(form.bin.value) ){
+	    if( JS9.isNumber(form.bin.value) ){
 		opts.bin = parseFloat(form.bin.value);
 	    } else {
 		opts.bin = form.bin.value;
@@ -999,7 +998,8 @@ module.exports = xhr;
 		    form.binmode.disabled = false;
 		    form.filter.disabled = false;
 		} else {
-		    bin = hdu.bin || 1;
+		    hdu.bin = hdu.bin || 1;
+		    bin = hdu.bin > 0 ? hdu.bin : 1 / Math.abs(hdu.bin);
 		    // hack: if a parent file was used to make this image,
 		    // calculate binning from its LTM/TLV parameters
 		    if( im.parentFile && im.raw.header     && 
@@ -1014,7 +1014,7 @@ module.exports = xhr;
 //		    form.ycen.value = String(Math.floor(lpos.y + 0.5));
 		    form.xcen.value = String(Math.floor(lpos.x + 0.5*(bin-1)));
 		    form.ycen.value = String(Math.floor(lpos.y + 0.5*(bin-1)));
-		    form.bin.value = String(bin);
+		    form.bin.value = String(hdu.bin);
 		    form.xdim.value = String(Math.floor(hdu.naxis1 * bin));
 		    form.ydim.value = String(Math.floor(hdu.naxis2 * bin));
 		    if( JS9.globalOpts.enableImageFilter ){

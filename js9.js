@@ -1936,7 +1936,11 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	(hdu.y1 !== undefined  && hdu.y1 !== 1)  ||
 	(hdu.bin === undefined || hdu.bin !== 1) ){
 	// bin factor is optional
-	bin = hdu.bin || 1;
+	if( hdu.bin ){
+	    bin = hdu.bin > 0 ? hdu.bin : 1 / Math.abs(hdu.bin);
+	} else {
+	    bin = 1;
+	}
 	if( hdu.x1 !== undefined ){
 	    x1 = hdu.x1;
 	} else {
@@ -2087,7 +2091,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     if( (this.imtab === "table") && hdu.table ){
 	this.binning.bin = hdu.table.bin || 1;
     } else if( hdu.bin ){
-	this.binning.bin = hdu.bin;
+	this.binning.bin = hdu.bin > 0 ? hdu.bin : 1 / Math.abs(hdu.bin);
     } else {
 	this.binning.bin = 1;
     }
@@ -3843,12 +3847,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	case "/":
 	    opts.bin = tbin / parseFloat(opts.bin.slice(1));
 	    break;
-	case "+":
-	    opts.bin = tbin + parseFloat(opts.bin.slice(1));
-	    break;
-	case "-":
-	    opts.bin = tbin - parseFloat(opts.bin.slice(1));
-	    break;
 	case "i":
 	case "I":
 	    opts.bin = tbin * 2;
@@ -3892,8 +3890,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     }
     if( !opts.bin ){
 	opts.bin = 1;
-    } else if( opts.bin < 0 ){
-	opts.bin = 1 / Math.abs(opts.bin);
     }
     // filter
     opts.filter = getval3(opts.filter, sect.filter, "");

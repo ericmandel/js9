@@ -400,9 +400,9 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   // get binning parameter
   // negative bin => 1/abs(bin)
   if( bin == 0 ){
-    bin = 1;
+    bin = 1.0;
   } else if( bin < 0 ){
-    bin = 1/fabs(bin);
+    bin = 1.0 / fabs(bin);
   }
   // parse slice string into primary axes and slice axes
   if( slice && *slice ){
@@ -842,9 +842,14 @@ fitsfile *filterTableToImage(fitsfile *fptr, char *filter, char **cols,
     }
     return ofptr;
   }
-  // otherwise, it's an ordinary binary table
-  // set up defaults
-  if( !bin ) bin = 1;
+  // otherwise, it's an ordinary binary table, set up defaults
+  // get binning parameter
+  // negative bin => 1/abs(bin)
+  if( bin == 0 ){
+    bin = 1.0;
+  } else if( bin < 0 ){
+    bin = 1.0 / fabs(bin);
+  }
   wtcol[0] = '\0';
   if( cols && cols[0] && cols[1] ){
     strcpy(colname[0], cols[0]);
