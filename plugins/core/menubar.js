@@ -2802,7 +2802,7 @@ JS9.Menubar.createMenus = function(){
 		    items.regcnts.disabled = true;
 		    items.radprof.disabled = true;
 		}
-		if( im.raw.header.NAXIS === 3 ){
+		if( im && im.raw.header.NAXIS === 3 ){
 		    items.cnts3d = xname("3D Counts in Regions");
 		    items.plot3d = xname("3D Plot using Regions");
 		    if( !JS9.globalOpts.internalRegcnts ||
