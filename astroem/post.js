@@ -346,12 +346,8 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	_free(hptr);
 	if( !ctype1 || !ctype1.match(/--HPX/i) ){
 	    // see if we have to average the pixels later on
-	    if( binMode > 0 && opts.bin ){
-		if( opts.bin > 0 ){
-		    binFactor = opts.bin * opts.bin;
-		} else {
-		    binFactor = 1.0 / (opts.bin * opts.bin);
-		}
+	    if( binMode > 0 && opts.bin && opts.bin > 0 ){
+		binFactor = opts.bin * opts.bin;
 	    }
 	    // if we don't have a HEALPix image, we clear cens and dims
 	    // to extract at center of resulting image (below)
@@ -466,6 +462,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     }
     // for a binned table, we might have to average the pixel values now,
     // since this was not done in getImageToArray()
+    // (only for bin factors > 1, which summed pixels)
     if( binFactor ){
 	for(i=0; i<datalen; i++){
 	    hdu.image[i] /= binFactor;
