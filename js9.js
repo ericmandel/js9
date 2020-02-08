@@ -3888,8 +3888,13 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	}
 	opts.bin = parseFloat(opts.bin);
     }
+    // sanity check: we need a bin
     if( !opts.bin ){
 	opts.bin = 1;
+    }
+    // sanity check: fractional bin must be 1/n
+    if( opts.bin > 0 && opts.bin < 1 ){
+	opts.bin = 1.0 / Math.floor((1.0 / opts.bin) + 0.5);
     }
     // filter
     opts.filter = getval3(opts.filter, sect.filter, "");
