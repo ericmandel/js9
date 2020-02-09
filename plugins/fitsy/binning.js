@@ -140,11 +140,13 @@
 			bin = 1.0 / Math.abs(im.raw.header.LTM1_1);
 		    }
 		    // get image center from raw data
-		    ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
+		    // ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
+		    // get current center
+		    ipos = im.getPan();
 		    // convert to physial (file) coords
-		    lpos = im.imageToLogicalPos(ipos);
-//		    form.xcen.value = String(Math.floor(lpos.x + 0.5));
-//		    form.ycen.value = String(Math.floor(lpos.y + 0.5));
+		    lpos = im.imageToLogicalPos({x: ipos.ox, y: ipos.oy});
+		    // form.xcen.value = String(Math.floor(lpos.x + 0.5));
+		    // form.ycen.value = String(Math.floor(lpos.y + 0.5));
 		    form.xcen.value = String(Math.floor(lpos.x + 0.5*(bin-1)));
 		    form.ycen.value = String(Math.floor(lpos.y + 0.5*(bin-1)));
 		    form.bin.value = String(hdu.bin);
@@ -276,6 +278,8 @@
 	    onplugindisplay:  binningInit,
 	    onimageload:      binningInit,
 	    onimagedisplay:   binningInit,
+	    onsetpan:         binningInit,
+	    onsetzoom:        binningInit,
 
 	    help:     "fitsy/binning.html",
 
