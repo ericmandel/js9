@@ -306,15 +306,15 @@ static int FinfoFree(char *fname)
 
 int parseSection(fitsfile *fptr, int hdutype, char *s,
 		 int *xlims, int *ylims, int *dims, double *cens, double *block,
-		 int *binMode){
+		 int *mode){
   int got=0;
   int status=0;
   long naxes[2];
   double tx0=0, tx1=0, ty0=0, ty1=0;
   char s1[SLEN], s2[SLEN], s3[SLEN], s4[SLEN], s5[SLEN];
   char *t;
-  // init binMode to "sum"
-  *binMode = 0;
+  // init mode to "sum"
+  *mode = 0;
   /* look for different ways of specifying the section -- order counts! */
   /* specify limits, with and without blocking factor */
   if(sscanf(s,
@@ -326,7 +326,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     ty1 = atof(s4);
     *block = strtod(s5, &t);
     if( t && *t && (tolower(*t) == 'a') ){
-      *binMode = 1;
+      *mode = 1;
     }
     got = 1;
   } else if(sscanf(s,
@@ -347,7 +347,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     ty1 = tx1;
     *block = strtod(s3, &t);
     if( t && *t && (tolower(*t) == 'a') ){
-      *binMode = 1;
+      *mode = 1;
     }
     got = 1;
   } else if(sscanf(s,
@@ -369,7 +369,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     cens[1] = atof(s4);
     *block = strtod(s5, &t);
     if( t && *t && (tolower(*t) == 'a') ){
-      *binMode = 1;
+      *mode = 1;
     }
     got = 2;
 
@@ -391,7 +391,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     cens[1] = cens[0];
     *block = strtod(s3, &t);
     if( t && *t && (tolower(*t) == 'a') ){
-      *binMode = 1;
+      *mode = 1;
     }
     got = 2;
   } else if(sscanf(s,
@@ -413,7 +413,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     cens[1] = 0;
     *block = strtod(s3, &t);
     if( t && *t && (tolower(*t) == 'a') ){
-      *binMode = 1;
+      *mode = 1;
     }
     got = 3;
   } else if(sscanf(s,
@@ -764,6 +764,7 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
       if( !tstatus ){
 	fprintf(stdout, ",\"extname\":\"%s\"", extname);
       }
+      fprintf(stdout, ",\"binstr\":\"%g %c\"", bin, binMode == 0 ? 's' : 'a');
       fprintf(stdout, ",\"hdus\":");
       _listhdu(finfo->fitsfile, NULL);
       tstatus=0;

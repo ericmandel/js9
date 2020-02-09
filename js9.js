@@ -1725,7 +1725,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 // read input object and convert to image data
 JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     let i, s, ui, clen, hdu, pars, card, got, rlen, rmvfile, done, frheap;
-    let oraw, owidth, oheight, obitpix, oltm1_1, owcssys, owcsunits;
+    let oraw, owidth, oheight, obitpix, owcssys, owcsunits;
     let header, x1, y1, bin;
     let nhist = 0;
     let ncomm = 0;
@@ -1762,7 +1762,6 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	owidth = this.raw.width;
 	oheight = this.raw.height;
 	obitpix = this.raw.bitpix;
-	oltm1_1 = JS9.defNull(this.raw.header.LTM1_1, 1);
 	owcssys = this.params.wcssys;
 	owcsunits = this.params.wcsunits;
 	this.freeWCS();
@@ -2087,6 +2086,22 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     this.object = this.raw.header.OBJECT;
     this.telescope = this.raw.header.TELESCOP;
     this.instrument = this.raw.header.INSTRUME;
+    // see if binning was passed to us in opts, e.g. from external imsection
+    // (internally, it's ordinarily in hdu or hdu.table)
+    if( opts.binstr ){
+	try{ s =  opts.binstr.split(/\s+/);
+	     if( s && s.length === 2 ){
+		 if( (this.imtab === "table") && hdu.table ){
+		     hdu.table.bin = parseFloat(s[0]);
+		     hdu.table.binMode = s[1];
+		 } else {
+		     hdu.bin = parseFloat(s[0]);
+		     hdu.binMode = s[1];
+		 }
+	     }
+	   }
+	catch(ignore){ /* empty */ }
+    }
     // reset binning properties, as necessary
     if( (this.imtab === "table") && hdu.table ){
 	this.binning.bin = hdu.table.bin || 1;
@@ -2095,11 +2110,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     } else {
 	this.binning.bin = 1;
     }
-    // hack: try to figure out obin vs bin for sections
-    if( opts.ltm2obin && header.LTM1_1 ){
-	this.binning.obin = header.LTM1_1 / oltm1_1;
-    } else if( !oraw ){
-	// otherwise make sure obin matches bin for first load of data
+    // make sure obin matches bin for previous load of data
+    if( !oraw ){
 	this.binning.obin = this.binning.bin;
     }
     // init WCS, if possible
@@ -3998,6 +4010,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 			opts.extname = jobj.extname;
 			opts.extnum = jobj.extnum;
 			opts.hdus = jobj.hdus;
+			opts.binstr = jobj.binstr;
 			opts.parent = jobj;
 		    }
 		}
@@ -4006,8 +4019,6 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		    pf = JS9.cleanPath(rarr[2]);
 		    opts.parentFile = pf;
 		}
-		// hack: use LTM to determine bin/obin, since both will be 1
-		opts.ltm2obin = true;
 		// retrieve and display newly created image section file
 		JS9.fetchURL(f, f, opts, (result) => {
 		    // cleanup previous FITS file support, if necessary
