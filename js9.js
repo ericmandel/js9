@@ -153,7 +153,7 @@ JS9.globalOpts = {
     svgBorder: true,		// border around the display when saving to svg?
     unremoveReg: 100,           // how many removed regions to save
     resetEmptyShapeId: false,	// reset nshape counter if all shapes removed?
-    maxMemory: 1000000000,	// max heap memory to allocate for a fits image
+    maxMemory: 2000000000,	// max heap memory to allocate for a fits image
     corsURL: "params/loadcors.html",       // location of param html file
     proxyURL: "params/loadproxy.html",     // location of param html file
     loadProxy: false,           // do we allow proxy load requests to server?
@@ -257,6 +257,7 @@ JS9.globalOpts = {
     infoBoxResize: true,                              // is size based on wcs?
     menuBar: ["file", "edit", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
     menubarStyle: "classic",                          // mac or classic
+    menuPosition: "left bottom",                      // where menus pop up
     userMenus: false,                                 // add user menus?
     userMenuDivider: "&nbsp;&nbsp;&nbsp;",            // divide before user menu
     imagesFileSubmenu: 5,        // how many images trigger a submenu?
@@ -1935,7 +1936,11 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	(hdu.y1 !== undefined  && hdu.y1 !== 1)  ||
 	(hdu.bin === undefined || hdu.bin !== 1) ){
 	// bin factor is optional
-	bin = hdu.bin || 1;
+	if( hdu.bin ){
+	    bin = hdu.bin > 0 ? hdu.bin : 1 / Math.abs(hdu.bin);
+	} else {
+	    bin = 1;
+	}
 	if( hdu.x1 !== undefined ){
 	    x1 = hdu.x1;
 	} else {
@@ -2086,7 +2091,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     if( (this.imtab === "table") && hdu.table ){
 	this.binning.bin = hdu.table.bin || 1;
     } else if( hdu.bin ){
-	this.binning.bin = hdu.bin;
+	this.binning.bin = hdu.bin > 0 ? hdu.bin : 1 / Math.abs(hdu.bin);
     } else {
 	this.binning.bin = 1;
     }
@@ -3524,7 +3529,7 @@ JS9.Image.prototype.maybePhysicalToImage = function(pos){
 // extract and display a section of an image, with table filtering
 JS9.Image.prototype.displaySection = function(opts, func) {
     let oproxy, hdu, from, obj, oreg, nim, topts;
-    let ipos, lpos, npos, binval1, binval2, tbin, arr, sect;
+    let ipos, lpos, npos, tbin, arr, sect;
     const getval3 = (val1, val2, val3) => {
 	let res;
 	if( !JS9.isNull(val1) ){
@@ -3797,22 +3802,20 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	// tables are easy: all the previous values should be present
 	sect = hdu.table;
     } else {
+	sect = {};
+	// start with bin from hdu
+	sect.bin = hdu.bin || 1;
 	// images are a bit more difficult
-	// when using a parent, look for bin value relative to the parent ...
+	// hack: if a parent file was used to make this image,
+	// calculate binning from its LTM/TLV parameters
 	if( from === "parentFile" &&
 	    this.raw.header && JS9.notNull(this.raw.header.LTM1_1) ){
-		binval1 = 1;
-		binval2 = this.raw.header.LTM1_1;
-	} else {
-	    binval1 = hdu.bin || 1;
-	    binval2 = 1;
+	    sect.bin  = 1 / Math.abs(this.raw.header.LTM1_1);
 	}
 	// get image center from raw data
 	ipos = {x: this.raw.width / 2, y: this.raw.height / 2};
 	// convert to physical (file) coords
 	lpos = this.imageToLogicalPos(ipos);
-	sect = {};
-	sect.bin  = Math.floor((binval1 / binval2) + 0.5);
 	// sect.xcen = Math.floor(lpos.x + 0.5);
 	// sect.ycen = Math.floor(lpos.y + 0.5);
 	sect.xcen = Math.floor(lpos.x + 0.5*(sect.bin-1));
@@ -3839,16 +3842,10 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	case "*":
 	case "x":
 	case "X":
-	    opts.bin = tbin * parseInt(opts.bin.slice(1), 10);
+	    opts.bin = tbin * parseFloat(opts.bin.slice(1));
 	    break;
 	case "/":
-	    opts.bin = tbin / parseInt(opts.bin.slice(1), 10);
-	    break;
-	case "+":
-	    opts.bin = tbin + parseInt(opts.bin.slice(1), 10);
-	    break;
-	case "-":
-	    opts.bin = tbin - parseInt(opts.bin.slice(1), 10);
+	    opts.bin = tbin / parseFloat(opts.bin.slice(1));
 	    break;
 	case "i":
 	case "I":
@@ -3860,7 +3857,7 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    break;
 	default:
 	    if( JS9.isNumber(opts.bin) ){
-		opts.bin = parseInt(opts.bin, 10);
+		opts.bin = parseFloat(opts.bin);
 	    } else {
 		JS9.error(`invalid bin for displaySection: ${opts.bin}`);
 	    }
@@ -3889,9 +3886,16 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	if( opts.bin.match(/[as]$/) ){
 	    opts.binMode = opts.bin.slice(-1);
 	}
-	opts.bin = parseInt(opts.bin, 10);
+	opts.bin = parseFloat(opts.bin);
     }
-    opts.bin  = Math.max(1, opts.bin || 1);
+    // sanity check: we need a bin
+    if( !opts.bin ){
+	opts.bin = 1;
+    }
+    // sanity check: fractional bin must be 1/n for images
+    if( this.imtab === "image" && opts.bin > 0 && opts.bin < 1 ){
+	opts.bin = 1.0 / Math.floor((1.0 / opts.bin) + 0.5);
+    }
     // filter
     opts.filter = getval3(opts.filter, sect.filter, "");
     // save the filter, if necessary

@@ -138,12 +138,12 @@ def binTest(j, file=None):
     if file:
         closeImage(j)
         loadImage(j, file, '{"scale":"log", "colormap": "heat"}')
-    for i in [2, 4, 8, 4, 2, 1]:
-        if i in (2, 8):
+    for i in [0.5, 2, 4, 2, 1, 0.5]:
+        if i in (0.5, 2):
             xfilter = "pi == pha"
         else:
             xfilter = ""
-        displayMessage(j, 'j.DisplaySection(bin: %d, filter: %s)'
+        displayMessage(j, 'j.DisplaySection(bin: %f, filter: %s)'
                        % (i, xfilter))
         j.DisplaySection({"bin":i, "filter": xfilter})
         waitStatus(j, "DisplaySection")
@@ -485,13 +485,11 @@ def mosaicTest(j, file=None):
     j.DisplayPlugin("panner")
     closeDisplay(j)
 
-def flipAll(j, bins=[]):
+def flipAll(j, rots=[90, -90, 90, -90], flips=["x", "y", "x", "y"], bins=[]):
     """
     flip and rotate in all combinations
     """
     timeout = 1;
-    flips = ["x", "y", "x", "y"]
-    rots = [90, 90, 90, 90, -90, -90, -90, -90]
     for ix in range(len(rots)):
         rot = rots[ix]
         j.SetRot90(rot)
@@ -508,7 +506,7 @@ def flipAll(j, bins=[]):
             sleep(timeout)
             if iy < len(bins):
                 bin = bins[iy]
-                displayMessage(j, 'j.DisplaySection(bin: %d)' % bin);
+                displayMessage(j, 'j.DisplaySection(bin: %f)' % bin);
                 j.DisplaySection({"bin":bin, "xcen":0, "ycen":0})
                 waitStatus(j, "DisplaySection")
                 sleep(timeout)
@@ -524,26 +522,26 @@ def flipRotateTest(j):
     j.AddRegions("FK4; ellipse(03:20:47.200, -37:23:08.221, 2.916667', 1.750000', 322.431400); circle(03:22:25.384, -37:14:17.178, 1.051199')")
     # pylint: disable=line-too-long
     j.AddRegions('physical; ellipse(226.00, 147.00, 28.00, 18.00, 322.4314) {"color":"red"}; circle(58.50, 222.50, 12) {"color":"red"}')
-    flipAll(j)
+    flipAll(j, rots=[90, 0, -90], flips=["x", "y"])
     loadImage(j, 'fits/sipsample.fits', '{"scale":"log", "colormap": "heat", "contrast": 4.84, "bias": 0.48}')
     displayMessage(j, 'j.AddRegions("ellipse; circle")')
     # pylint: disable=line-too-long
     j.AddRegions('FK5; ellipse(13:29:44.577, +47:10:11.644, 36.686718", 21.417932", 81.620827); circle(13:29:52.660, +47:11:42.560, 36.545208")')
     # pylint: disable=line-too-long
     j.AddRegions('physical; circle(149.00, 67.00, 33) {"color":"red"}; ellipse(49.00, 76.00, 33, 20, 81.6208) {"color":"red"}')
-    flipAll(j)
+    flipAll(j, rots=[90, 0, -90], flips=["x", "y"])
     loadImage(j, 'orion/orion_1.fits', {"colormap":"grey"})
     # pylint: disable=line-too-long
     j.AddRegions('physical; ellipse(414.00, 109.00, 53.75, 20.00, 328.8843); box(500.00, 344.00, 22.00, 22.00, 0.0000); circle(245.00, 392.00, 14.00)')
-    flipAll(j)
+    flipAll(j, rots=[90, 0, -90], flips=["x", "y"])
     loadImage(j, 'fits/casa.fits.gz', '{"scale":"log", "colormap": "cool"}')
     displayMessage(j, 'j.LoadRegions("casa/casa.reg")')
     j.LoadRegions("casa/casa.reg")
-    flipAll(j, [1,2,4,2,1,2,4,2,1])
+    flipAll(j, bins=[0.5, 2, 4])
     loadImage(j, 'fits/squares.fits', {"colormap":"grey"})
     # pylint: disable=line-too-long
     j.AddRegions('physical; polygon(438.00, 24.00, 498.00, 24.00, 468.00, 84.00) {"text":"white","textOpts":{"px":466,"py":97}}; box(52.00, 452.00, 60.00, 60.00, 0.0000) {"text":"black","textOpts":{"px":52,"py":470}}; circle(459.00, 462.00, 30.00) {"text":"darkgrey","textOpts":{"px":459,"py":421}}; ellipse(57.00, 43.00, 30.00, 20.00, 0.0000) {"text":"lightgrey","textOpts":{"px":57,"py":77}}')
-    flipAll(j)
+    flipAll(j, rots=[90, 0, -90], flips=["x", "y"])
     sleep()
     closeDisplay(j)
 
@@ -697,7 +695,8 @@ def maskBlendTest(j):
     j.SyncImages(["flip", "pan", "rot90", "zoom"], [maskId])
     displayMessage(j, 'j.DisplayPlugin(JS9Blend)')
     j.DisplayPlugin("JS9Blend")
-    sleep(5)
+    sleep(2)
+    j.DisplayPlugin("JS9Blend")
 
 def maskOverlayTest(j):
     """

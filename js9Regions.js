@@ -43,6 +43,7 @@ const addComment = function(comment, key, val){
 
 // parse region, convert from js9 to ds9
 const parseRegion = function(s){
+    let cmd;
     let json=null;
     let highlite="";
     let comment="";
@@ -52,7 +53,12 @@ const parseRegion = function(s){
     // split on comment (ignore color specifications starting with '#')
     const sarr = s.trim().split(comrexp);
     // this is the region or command
-    const cmd = sarr[0].replace(optsrexp, "").trim();
+    cmd = sarr[0].replace(optsrexp, "").trim();
+    if( cmd.match(/text/) ){
+	cmd = "# " + cmd;
+	cmd = cmd.replace(/, *"(.*)", (.*)\)/, ") text={$1} textangle=$2");
+	cmd = cmd.replace(/, *"(.*)"\)/, ") text={$1}");
+    }
     // look for json opts after the argument list
     const jarr = optsrexp.exec(sarr[0]);
     if( jarr && jarr[0] ){
@@ -78,19 +84,22 @@ const parseRegion = function(s){
 	    }
 	}
     }
-    // convert js9 json t ds9 comments
+    // convert js9 json to ds9 comments
     for(const key in json){
 	if( json.hasOwnProperty(key) ){
 	    switch(key){
 	    case "color":
-		comment = addComment(comment, "color", json[key]);
+		if( json[key]
+		    .match(/black|white|red|green|blue|cyan|magenta|yellow/) ){
+		    comment = addComment(comment, "color", json[key]);
+		}
 		break;
 	    case "strokeDashArray":
 		comment = addComment(comment, "dash", 1);
 		comment = addComment(comment, "dashlist", json[key].join(" "));
 		break;
 	    case "strokeWidth":
-		comment = addComment(comment, "width", json[key]);
+		comment = addComment(comment, "width", Math.floor(json[key]));
 		break;
 	    case "removable":
 		comment = addComment(comment, "delete", !!json[key]);

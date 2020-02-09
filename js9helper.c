@@ -305,7 +305,7 @@ static int FinfoFree(char *fname)
 #define SLEN 33
 
 int parseSection(fitsfile *fptr, int hdutype, char *s,
-		 int *xlims, int *ylims, int *dims, double *cens, int *block,
+		 int *xlims, int *ylims, int *dims, double *cens, double *block,
 		 int *binMode){
   int got=0;
   int status=0;
@@ -318,13 +318,13 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
   /* look for different ways of specifying the section -- order counts! */
   /* specify limits, with and without blocking factor */
   if(sscanf(s,
-     "%32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[0-9as]",
+     "%32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[0-9.dDeEas]",
      s1, s2, s3, s4, s5) == 5){
     tx0 = atof(s1);
     tx1 = atof(s2);
     ty0 = atof(s3);
     ty1 = atof(s4);
-    *block = MAX(1, strtol(s5, &t, 0));
+    *block = strtod(s5, &t);
     if( t && *t && (tolower(*t) == 'a') ){
       *binMode = 1;
     }
@@ -339,13 +339,13 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     *block = 1;
     got = 1;
   } else if(sscanf(s,
-	    "%32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[0-9as]",
+	    "%32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[0-9.dDeEas]",
 	    s1, s2, s3) == 3){
     tx0 = atof(s1);
     tx1 = atof(s2);
     ty0 = tx0;
     ty1 = tx1;
-    *block = MAX(1, strtol(s3, &t, 0));
+    *block = strtod(s3, &t);
     if( t && *t && (tolower(*t) == 'a') ){
       *binMode = 1;
     }
@@ -361,13 +361,13 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     got = 1;
   /* specify dimensions and center, with and without blocking factor */
   } else if(sscanf(s,
-	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9as]",
+	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9.dDeEas]",
 	    s1, s2, s3, s4, s5) == 5){
     dims[0] = atof(s1);
     cens[0] = atof(s2);
     dims[1] = atof(s3);
     cens[1] = atof(s4);
-    *block = MAX(1, strtol(s5, &t, 0));
+    *block = strtod(s5, &t);
     if( t && *t && (tolower(*t) == 'a') ){
       *binMode = 1;
     }
@@ -383,13 +383,13 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     *block = 1;
     got = 2;
   } else if(sscanf(s,
-	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9as]",
+	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9.dDeEas]",
 	    s1, s2, s3) == 3){
     dims[0] = atof(s1);
     cens[0] = atof(s2);
     dims[1] = dims[0];
     cens[1] = cens[0];
-    *block = MAX(1, strtol(s3, &t, 0));
+    *block = strtod(s3, &t);
     if( t && *t && (tolower(*t) == 'a') ){
       *binMode = 1;
     }
@@ -405,13 +405,13 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     got = 2;
   /* specify dimensions, with and without blocking factor */
   } else if(sscanf(s,
-	    "%32[0-9.dDeE] , %32[-0-9.dDeE] , %32[0-9as]",
+	    "%32[0-9.dDeE] , %32[-0-9.dDeE] , %32[0-9.dDeEas]",
 	    s1, s2, s3) == 3){
     dims[0] = atof(s1);
     cens[0] = 0;
     dims[1] = atof(s2);
     cens[1] = 0;
-    *block = MAX(1, strtol(s3, &t, 0));
+    *block = strtod(s3, &t);
     if( t && *t && (tolower(*t) == 'a') ){
       *binMode = 1;
     }
@@ -473,7 +473,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
 
 /* copy image section from input to putput, with binning */
 int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
-		     int *dims, double *cens, int bin, int binMode,
+		     int *dims, double *cens, double bin, int binMode,
 		     char *slice, int *status)
 {
   int i;
@@ -487,7 +487,7 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
   long nelements;
   long naxes[2];
   long fpixel[2] = {1,1};
-  float amin[2];
+  double amin[2];
   buf = getImageToArray(ifptr, dims, cens, bin, binMode, slice, start, end,
 			&bitpix, status);
   if( !buf || *status ){
@@ -572,9 +572,10 @@ static int ProcessCmd(char *cmd, char **args, int narg, int node, int tty)
   Finfo finfo, tfinfo;
 #if HAVE_CFITSIO
   int i, j, binMode;
-  int xlims[2], ylims[2], bin, got, hdutype, hdunum, ncard;
+  int xlims[2], ylims[2], got, hdutype, hdunum, ncard;
   int status=0, tstatus=0;
   int dims[2];
+  double bin;
   double cens[2];
   char extname[FLEN_CARD];
   char *cols[2] = {"X", "Y"};

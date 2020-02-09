@@ -934,14 +934,14 @@ module.exports = xhr;
 	    if( JS9.isNumber(form.ydim.value) ){
 		opts.ydim = Math.floor(parseFloat(form.ydim.value));
 	    }
-	    if( !form.bin.value.match(/^[+-]/) &&
-		JS9.isNumber(form.bin.value) ){
-		opts.bin = Math.floor(parseFloat(form.bin.value));
+	    if( JS9.isNumber(form.bin.value) ){
+		opts.bin = parseFloat(form.bin.value);
 	    } else {
 		opts.bin = form.bin.value;
 	    }
 	    opts.filter = form.filter.value;
 	    opts.separate = $(form.separate).prop("checked");
+	    opts.binMode = $('input[name="binmode"]:checked').val();
 	    im.displaySection(opts);
 	    break;
 	}
@@ -968,7 +968,6 @@ module.exports = xhr;
 
     function getBinParams(div, display) {
 	let im, ipos, lpos, form, hdu, bin;
-	let binval1, binval2;
 	if ( display === undefined ) {
 	    div     = this.div;
 	    display = this.display;
@@ -981,9 +980,10 @@ module.exports = xhr;
 	    if ( im.raw.hdu !== undefined ) {
 		hdu = im.raw.hdu;
 		hdu.bin = hdu.bin || 1;
+		hdu.binMode = hdu.binMode || JS9.globalOpts.binMode || "s";
 		form.rebin.disabled = false;
 	        if ( hdu.table !== undefined ) {
-		    form.bin.value = String(Math.floor(hdu.table.bin));
+		    form.bin.value = String(hdu.table.bin);
 		    form.xcen.value = String(Math.floor(hdu.table.xcen));
 		    form.ycen.value = String(Math.floor(hdu.table.ycen));
 		    form.xdim.value = String(Math.floor(hdu.table.xdim));
@@ -995,18 +995,17 @@ module.exports = xhr;
 		    form.ycen.disabled = false;
 		    form.xdim.disabled = false;
 		    form.ydim.disabled = false;
+		    form.binmode.disabled = false;
 		    form.filter.disabled = false;
 		} else {
-		    // hack: looking for binning value ...
-		    if( im.parentFile && im.raw.header && 
+		    hdu.bin = hdu.bin || 1;
+		    bin = hdu.bin > 0 ? hdu.bin : 1 / Math.abs(hdu.bin);
+		    // hack: if a parent file was used to make this image,
+		    // calculate binning from its LTM/TLV parameters
+		    if( im.parentFile && im.raw.header     && 
 			im.raw.header.LTM1_1 !== undefined ){
-			binval1 = 1;
-			binval2 = Math.abs(im.raw.header.LTM1_1);
-		    } else {
-			binval1 = hdu.bin || 1;
-			binval2 = 1;
+			bin = 1.0 / Math.abs(im.raw.header.LTM1_1);
 		    }
-		    bin = Math.floor((binval1 / binval2) + 0.5);
 		    // get image center from raw data
 		    ipos = {x: im.raw.width / 2, y: im.raw.height / 2};
 		    // convert to physial (file) coords
@@ -1015,7 +1014,7 @@ module.exports = xhr;
 //		    form.ycen.value = String(Math.floor(lpos.y + 0.5));
 		    form.xcen.value = String(Math.floor(lpos.x + 0.5*(bin-1)));
 		    form.ycen.value = String(Math.floor(lpos.y + 0.5*(bin-1)));
-		    form.bin.value = String(bin);
+		    form.bin.value = String(hdu.bin);
 		    form.xdim.value = String(Math.floor(hdu.naxis1 * bin));
 		    form.ydim.value = String(Math.floor(hdu.naxis2 * bin));
 		    if( JS9.globalOpts.enableImageFilter ){
@@ -1028,12 +1027,18 @@ module.exports = xhr;
 		    form.ycen.disabled = false;
 		    form.xdim.disabled = false;
 		    form.ydim.disabled = false;
+		    form.binmode.disabled = false;
 		    if( JS9.globalOpts.enableImageFilter ){
 			form.filter.disabled = false;
 		    } else {
 			form.filter.disabled = true;
 			form.filter.style.backgroundColor="#E0E0E0";
 		    }
+		}
+		if( hdu.binMode === "a" ){
+		    $('input:radio[class="avg-pixels"]').prop('checked',true);
+		} else {
+		    $('input:radio[class="sum-pixels"]').prop('checked',true);
 		}
 	    } else {
 		form.rebin.disabled = true;
@@ -1042,7 +1047,7 @@ module.exports = xhr;
     }
 
     function binningInit() {
-	let binblock;
+	let binblock, binblocked;
 	let that = this;
 	let div = this.div;
 	let display = this.display;
@@ -1057,8 +1062,10 @@ module.exports = xhr;
 
 	if( im.imtab === "image" ){
 	    binblock = "block";
+	    binblocked = "blocked";
 	} else {
 	    binblock = "bin";
+	    binblocked = "binned";
 	}
 
 	if( !win ){
@@ -1086,6 +1093,11 @@ module.exports = xhr;
 			<td><input type=text name=bin value=1 size=10 style="text-align:right;"></td>
 			<td></td>
 			<td>&nbsp(apply ${binblock} factor to ${im.imtab})</td>
+		   </tr>
+	           <tr>	<td><b>mode:</b></td>
+                        <td><input type=radio name=binmode value="s" class="sum-pixels" style="text-align:left;">sum</td>
+                        <td><input type=radio name=binmode value="a" class="avg-pixels" style="text-align:left;">average</td>
+			<td>&nbsp(sum or average ${binblocked} pixels?)</td>
 		   </tr>
 	           <tr>	<td><b>filter:</b></td>
 			<td colspan="2"><textarea name=filter rows="1" cols="22" style="text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
@@ -1134,7 +1146,7 @@ module.exports = xhr;
 
 	    help:     "fitsy/binning.html",
 
-            winDims: [520, 250]
+            winDims: [520, 280]
     });
 }());
 /*
@@ -6213,7 +6225,7 @@ JS9.Menubar.createMenus = function(){
 	if( !window.hasOwnProperty("Jupyter") ){
 	    opt.$menu.position({
 		my:  'left top',
-		at:  'right-5 bottom-5',
+		at:  JS9.globalOpts.menuPosition || "left bottom",
 		of:  opt.$trigger,
 		collision: "fit"
 	    });
@@ -8861,7 +8873,7 @@ JS9.Menubar.createMenus = function(){
 		    items.regcnts.disabled = true;
 		    items.radprof.disabled = true;
 		}
-		if( im.raw.header.NAXIS === 3 ){
+		if( im && im.raw.header.NAXIS === 3 ){
 		    items.cnts3d = xname("3D Counts in Regions");
 		    items.plot3d = xname("3D Plot using Regions");
 		    if( !JS9.globalOpts.internalRegcnts ||

@@ -142,7 +142,7 @@ Module["bz2decompress"] = function(data, filename, canOwn) {
 Module["errchk"] = function(status) {
     var i, c, hptr, bytes;
     var hlen = 82;  // ffgerr returns 80-byte string + null
-    var s="ERROR from cfitsio.js: ";
+    var s="ERROR from astroem/cfitsio: ";
     if( status ){
 	hptr = _malloc(hlen);
 	ccall("ffgerr", null, ["number", "number"], [status, hptr]);
@@ -172,7 +172,7 @@ Module["error"] = function(s, e) {
 // fits object contains fptr
 Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     var i, ofptr, hptr, status, datalen, extnum, extname;
-    var buf, bufptr, buflen, bufptr2, slice, doerr, ctype1;
+    var buf, bufptr, buflen, bufptr2, slice, doerr, ctype1, xbin;
     var filter = null;
     var fptr = fits.fptr;
     var cens = [0, 0];
@@ -185,6 +185,12 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	    return 1;
 	}
 	return 0;
+    };
+    var unbmode = function(x){
+	if( x && (x === 1 || x === 'a') ){
+	    return 'a';
+	}
+	return 's';
     };
     // opts is optional
     opts = opts || {};
@@ -301,9 +307,11 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	    if( bin.match(/[as]$/) ){
 		binMode = bmode(bin.slice(-1));
 	    }
-	    bin = parseInt(bin, 10);
+	    bin = parseFloat(bin);
 	}
-	bin = Math.max(1, bin || 1);
+	if( !bin ){
+	    bin = 1;
+	}
 	try{
 	    ofptr = ccall("filterTableToImage", "number",
             ["number", "string", "number", "number", "number", "number",
@@ -337,9 +345,11 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	}
 	_free(hptr);
 	if( !ctype1 || !ctype1.match(/--HPX/i) ){
-	    // see if we have to average the pixels later on
-	    if( binMode > 0 && opts.bin > 1 ){
-		binFactor = opts.bin * opts.bin;
+	    // see if we have to average the pixels later on:
+	    // the problem is that having binned the events, we reset the bin
+	    // factor to 1 before arrayToImage, so it's averaging gets skipped
+	    if( binMode > 0 && bin > 1 ){
+		binFactor = bin * bin;
 	    }
 	    // if we don't have a HEALPix image, we clear cens and dims
 	    // to extract at center of resulting image (below)
@@ -390,9 +400,12 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	if( bin.match(/[as]$/) ){
 	    binMode = bmode(bin.slice(-1));
 	}
-	bin = parseInt(bin, 10);
+	bin = parseFloat(bin);
     }
-    bin = Math.max(1, bin || 1);
+    // final check on a valid bin
+    if( !bin ){
+	bin = 1;
+    }
     try{
 	bufptr = ccall("getImageToArray", "number",
 	["number", "number", "number", "number", "number", "string", "number",
@@ -405,13 +418,15 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     // return the section values so caller can update LTM/LTV
     // we don't want to update the FITS file itself, since it hasn't changed
     hdu.bin = bin;
+    hdu.binMode = unbmode(binMode);
+    xbin = bin > 0 ? bin : 1 / Math.abs(bin);
     // nb: return start, end arrays are 4 ints wide, we only use the first two
     hdu.x1  = getValue(hptr+24, "i32");
     hdu.y1  = getValue(hptr+28, "i32");
     hdu.x2  = getValue(hptr+40, "i32");
     hdu.y2  = getValue(hptr+44, "i32");
-    hdu.naxis1  = Math.floor((hdu.x2 - hdu.x1) / bin + 1);
-    hdu.naxis2  = Math.floor((hdu.y2 - hdu.y1) / bin + 1);
+    hdu.naxis1  = Math.floor((hdu.x2 - hdu.x1 + 1) / xbin);
+    hdu.naxis2  = Math.floor((hdu.y2 - hdu.y1 + 1) / xbin);
     hdu.bitpix  = getValue(hptr+56, "i32");
     // pass along filter, even if we did not use it
     if( opts.filter ){ hdu.filter = opts.filter; }
@@ -449,6 +464,7 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     }
     // for a binned table, we might have to average the pixel values now,
     // since this was not done in getImageToArray()
+    // (only for bin factors > 1, which summed pixels)
     if( binFactor ){
 	for(i=0; i<datalen; i++){
 	    hdu.image[i] /= binFactor;

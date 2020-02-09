@@ -156,11 +156,11 @@ int main(int argc, char *argv[])
   int domem = 0;
   int dohdr = 0;
   int status = 0;   /*  CFITSIO status value MUST be initialized to zero!  */
-  int bin = 1;
   int binMode = 0;
   int start[NDIM];
   int stop[NDIM];
   int dims[] = {IMDIM, IMDIM};
+  double bin = 1;
   void *buf;
   int idim1, idim2, idim3, bitpix;
   size_t ilen=0;
@@ -180,8 +180,11 @@ int main(int argc, char *argv[])
 #endif
 
   /* process switch arguments */
-  while ((c = getopt(argc, argv, "c:hm")) != -1){
+  while ((c = getopt(argc, argv, "b:c:hm")) != -1){
     switch(c){
+    case 'b':
+      bin  = atof(optarg);
+      break;
     case 'c':
       cube = optarg;
       break;

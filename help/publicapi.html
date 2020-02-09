@@ -721,19 +721,20 @@ display the section:
 <li><b>ycen</b>: y center of the section in file (physical) coords
 <li><b>xdim</b>: x dimension of section to extract before binning
 <li><b>ydim</b>: y dimension of section to extract before binning
-<li><b>bin</b>: integer bin factor or bin directive string
+<li><b>bin</b>: floating bin factor or bin directive string
+<li><b>binMode</b>: "a" to average binned pixels, "s" to sum binned pixels
 <li><b>filter</b>: for tables, row/event filter to apply when extracting section
 <li><b>separate</b>: display as a separate image (default is to refresh the current image)
 <li><b>refresh</b>: display as a refreshed image in a different display (default is to refresh the current image)
 <li><b>ondisplaysection</b>: function to perform after section is displayed
 </ul>
 <p>
-The bin directives are:
+Numeric bin values are floating point numbers. A negative bin value means
+1 / abs(bin), i.e.  bin value of -4 means to bin at 0.25. The string-valued
+bin directives are:
 <ul>
 <li><b>x[n]|X[n]|*[n]</b>: multiply the current bin by n (e.g., "x2")
 <li><b>/[n]</b>: divide the current bin by n (e.g., "/2")
-<li><b>+[n]</b>: add n to the current bin (e.g., "+2")
-<li><b>-[n]</b>: subtract n from the current bin (e.g., "-2")
 <li><b>in|In</b>: multiply the current bin by 2
 <li><b>out|Out</b>: divide the current bin by 2
 <li><b>[n]a</b>: bin by n, averaging the binned pixels
@@ -741,8 +742,9 @@ The bin directives are:
 </ul>
 Note that the <b>JS9.globalOpts.binMode</b> property specifies the
 default action for whether the binned pixels are summed together (if
-binMode is "s") or averaged (if binMode is "a"). This action is overridden
-by the last two bin directives listed above.
+the global binMode is "s") or averaged (if the global binMode is
+"a"). This behavior can be overridden by the <b>binMode</b> option or by
+last two bin directives listed above.
 
 <p>
 All properties are optional: if a property is not specified,
@@ -5265,6 +5267,15 @@ that we can gain a better understanding of what is required in these cases.
 <p>
 The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.
+
+<h5>20200207: remove DisplaySection +N and -N binning options</h5>
+
+<p>
+The DisplaySection() command originally supported "+N" and "-N"
+binning options to change the current bin by "N". With the addition of
+support for fractional binning, these two constructs conflict with the
+use of negative bin values to indicate 1/abs(N) binning.
+
 
 <h5>20200114: Remove experimental LoadAuxFile routine</h5>
 
