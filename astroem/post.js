@@ -345,9 +345,11 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	}
 	_free(hptr);
 	if( !ctype1 || !ctype1.match(/--HPX/i) ){
-	    // see if we have to average the pixels later on
-	    if( binMode > 0 && opts.bin && opts.bin > 0 ){
-		binFactor = opts.bin * opts.bin;
+	    // see if we have to average the pixels later on:
+	    // the problem is that having binned the events, we reset the bin
+	    // factor to 1 before arrayToImage, so it's averaging gets skipped
+	    if( binMode > 0 && bin > 1 ){
+		binFactor = bin * bin;
 	    }
 	    // if we don't have a HEALPix image, we clear cens and dims
 	    // to extract at center of resulting image (below)
