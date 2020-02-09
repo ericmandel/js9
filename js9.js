@@ -3892,8 +3892,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
     if( !opts.bin ){
 	opts.bin = 1;
     }
-    // sanity check: fractional bin must be 1/n
-    if( opts.bin > 0 && opts.bin < 1 ){
+    // sanity check: fractional bin must be 1/n for images
+    if( this.imtab === "image" && opts.bin > 0 && opts.bin < 1 ){
 	opts.bin = 1.0 / Math.floor((1.0 / opts.bin) + 0.5);
     }
     // filter
