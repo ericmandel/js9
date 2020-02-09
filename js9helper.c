@@ -1,5 +1,5 @@
 /*
- *	Copyright (c) 2012-2018 Smithsonian Astrophysical Observatory
+ *	Copyright (c) 2012-2020 Smithsonian Astrophysical Observatory
  */
 
 #include "js9helper.h"
@@ -318,7 +318,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
   /* look for different ways of specifying the section -- order counts! */
   /* specify limits, with and without blocking factor */
   if(sscanf(s,
-     "%32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[0-9.dDeEas]",
+     "%32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[-0-9.dDeEas]",
      s1, s2, s3, s4, s5) == 5){
     tx0 = atof(s1);
     tx1 = atof(s2);
@@ -339,7 +339,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     *block = 1;
     got = 1;
   } else if(sscanf(s,
-	    "%32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[0-9.dDeEas]",
+	    "%32[-0-9.dDeE] : %32[-0-9.dDeE] , %32[-0-9.dDeEas]",
 	    s1, s2, s3) == 3){
     tx0 = atof(s1);
     tx1 = atof(s2);
@@ -361,7 +361,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     got = 1;
   /* specify dimensions and center, with and without blocking factor */
   } else if(sscanf(s,
-	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9.dDeEas]",
+	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[-0-9.dDeEas]",
 	    s1, s2, s3, s4, s5) == 5){
     dims[0] = atof(s1);
     cens[0] = atof(s2);
@@ -383,7 +383,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     *block = 1;
     got = 2;
   } else if(sscanf(s,
-	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[0-9.dDeEas]",
+	    "%32[0-9.dDeE] @ %32[-0-9.dDeE] , %32[-0-9.dDeEas]",
 	    s1, s2, s3) == 3){
     dims[0] = atof(s1);
     cens[0] = atof(s2);
@@ -405,7 +405,7 @@ int parseSection(fitsfile *fptr, int hdutype, char *s,
     got = 2;
   /* specify dimensions, with and without blocking factor */
   } else if(sscanf(s,
-	    "%32[0-9.dDeE] , %32[-0-9.dDeE] , %32[0-9.dDeEas]",
+	    "%32[0-9.dDeE] , %32[-0-9.dDeE] , %32[-0-9.dDeEas]",
 	    s1, s2, s3) == 3){
     dims[0] = atof(s1);
     cens[0] = 0;
@@ -488,6 +488,14 @@ int copyImageSection(fitsfile *ifptr, fitsfile *ofptr,
   long naxes[2];
   long fpixel[2] = {1,1};
   double amin[2];
+  // get binning parameter
+  // negative bin => 1/abs(bin)
+  if( bin == 0 ){
+    bin = 1.0;
+  } else if( bin < 0 ){
+    bin = 1.0 / fabs(bin);
+  }
+  // get array
   buf = getImageToArray(ifptr, dims, cens, bin, binMode, slice, start, end,
 			&bitpix, status);
   if( !buf || *status ){

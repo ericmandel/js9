@@ -19,6 +19,7 @@
 #if FITS2PNG
 #include <png.h>
 #endif
+#include <math.h>
 
 #if HAVE_CONFIG_H
 #include <conf.h>
