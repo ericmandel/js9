@@ -1958,11 +1958,15 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	}
 	if( header.CRPIX1 !== undefined ){
 	    // cfitsio-style: see cfitsio/histo.c
-	    header.CRPIX1 = (header.CRPIX1 - x1) / bin + 0.5;
+	    // header.CRPIX1 = (header.CRPIX1 - x1) / bin + 0.5;
+	    // zhtools-style: see zhtools/src/images/imblock
+	    header.CRPIX1 = (header.CRPIX1 - x1 - 0.5) / bin + 0.5;
 	}
 	if( header.CRPIX2 !== undefined ){
 	    // cfitsio-style: see cfitsio/histo.c
-	    header.CRPIX2 = (header.CRPIX2 - y1) / bin + 0.5;
+	    // header.CRPIX2 = (header.CRPIX2 - y1) / bin + 0.5;
+	    // zhtools-style: see zhtools/src/images/imblock
+	    header.CRPIX2 = (header.CRPIX2 - y1 - 0.5) / bin + 0.5;
 	}
 	if( header.CDELT1 !== undefined ){
 	    header.CDELT1 = header.CDELT1 * bin;
