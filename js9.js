@@ -1915,10 +1915,8 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
     // if an original file header has LTM/LTV keywords, save them now,
     // so we can go back to file coords at any time
     if( !oraw && !this.parentFile && !this.parent ){
-	if( header.LTV1 !== undefined   ||
-	    header.LTV2 !== undefined   ||
-	    header.LTM1_1 !== undefined ||
-	    header.LTM2_2 !== undefined ){
+	if( header.LTV1 !== undefined   || header.LTV2 !== undefined   ||
+	    header.LTM1_1 !== undefined || header.LTM2_2 !== undefined ){
 	    this.parent = {};
 	    this.parent.raw = {header: $.extend(true, {}, header)};
 	    // initialize LCS for this parent header
@@ -1934,58 +1932,30 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	(hdu.x1 !== undefined  && hdu.x1 !== 1)  ||
 	(hdu.y1 !== undefined  && hdu.y1 !== 1)  ||
 	(hdu.bin === undefined || hdu.bin !== 1) ){
-	// bin factor is optional
-	if( hdu.bin ){
-	    bin = hdu.bin > 0 ? hdu.bin : 1 / Math.abs(hdu.bin);
-	} else {
-	    bin = 1;
-	}
-	if( hdu.x1 !== undefined ){
-	    x1 = hdu.x1;
-	} else {
-	    x1 = 0;
-	}
-	if( hdu.y1 !== undefined ){
-	    y1 = hdu.y1;
-	} else {
-	    y1 = 0;
-	}
-	if( header.NAXIS1 !== undefined ){
-	    header.NAXIS1 /= bin;
-	}
-	if( header.NAXIS2 !== undefined ){
-	    header.NAXIS2 /= bin;
-	}
-	if( header.CRPIX1 !== undefined ){
+	x1 = JS9.defNull(hdu.x1, 1);
+	y1 = JS9.defNull(hdu.y1, 1);
+	bin = hdu.bin || 1;
+	if( bin < 0 ){ bin = 1.0 / Math.abs(bin); }
+	if( JS9.notNull(header.NAXIS1) ){ header.NAXIS1 /= bin;	}
+	if( JS9.notNull(header.NAXIS2) ){ header.NAXIS2 /= bin;	}
+	if( JS9.notNull(header.CRPIX1) ){
 	    // cfitsio-style: see cfitsio/histo.c
 	    // header.CRPIX1 = (header.CRPIX1 - x1) / bin + 0.5;
 	    // zhtools-style: see zhtools/src/images/imblock
 	    header.CRPIX1 = (header.CRPIX1 - x1 - 0.5) / bin + 0.5;
 	}
-	if( header.CRPIX2 !== undefined ){
+	if( JS9.notNull(header.CRPIX2) ){
 	    // cfitsio-style: see cfitsio/histo.c
 	    // header.CRPIX2 = (header.CRPIX2 - y1) / bin + 0.5;
 	    // zhtools-style: see zhtools/src/images/imblock
 	    header.CRPIX2 = (header.CRPIX2 - y1 - 0.5) / bin + 0.5;
 	}
-	if( header.CDELT1 !== undefined ){
-	    header.CDELT1 = header.CDELT1 * bin;
-	}
-	if( header.CDELT2 !== undefined ){
-	    header.CDELT2 = header.CDELT2 * bin;
-	}
-	if( header.CD1_1 !== undefined ){
-	    header.CD1_1 = header.CD1_1 * bin;
-	}
-	if( header.CD1_2 !== undefined ){
-	    header.CD1_2 = header.CD1_2 * bin;
-	}
-	if( header.CD2_1 !== undefined ){
-	    header.CD2_1 = header.CD2_1 * bin;
-	}
-	if( header.CD2_2 !== undefined ){
-	    header.CD2_2 = header.CD2_2 * bin;
-	}
+	if( JS9.notNull(header.CDELT1) ){ header.CDELT1 *= bin; }
+	if( JS9.notNull(header.CDELT2) ){ header.CDELT2 *= bin; }
+	if( JS9.notNull(header.CD1_1) ){  header.CD1_1  *= bin; }
+	if( JS9.notNull(header.CD1_2) ){  header.CD1_2  *= bin; }
+	if( JS9.notNull(header.CD2_1) ){  header.CD2_1  *= bin; }
+	if( JS9.notNull(header.CD2_2) ){  header.CD2_2  *= bin; }
 	header.LTM1_1 = JS9.defNull(header.LTM1_1, 1.0);
 	header.LTM1_1 = header.LTM1_1 / bin;
 	header.LTM2_1 = header.LTM2_1 || 0.0;
