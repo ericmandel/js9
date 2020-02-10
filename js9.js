@@ -1939,16 +1939,20 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	if( JS9.notNull(header.NAXIS1) ){ header.NAXIS1 /= bin;	}
 	if( JS9.notNull(header.NAXIS2) ){ header.NAXIS2 /= bin;	}
 	if( JS9.notNull(header.CRPIX1) ){
+	    // funtools-style: see funtools/funcopy.c/_FunCopy2ImageHeader
+	    header.CRPIX1 = (header.CRPIX1 + 1.0 - x1 - 0.5) / bin + 0.5;
 	    // cfitsio-style: see cfitsio/histo.c
 	    // header.CRPIX1 = (header.CRPIX1 - x1) / bin + 0.5;
 	    // zhtools-style: see zhtools/src/images/imblock
-	    header.CRPIX1 = (header.CRPIX1 - x1 - 0.5) / bin + 0.5;
+	    // header.CRPIX1 = (header.CRPIX1 - x1 - 0.5) / bin + 0.5;
 	}
 	if( JS9.notNull(header.CRPIX2) ){
+	    // funtools-style: see funtools/funcopy.c/_FunCopy2ImageHeader
+	    header.CRPIX2 = (header.CRPIX2 + 1.0 - y1 - 0.5) / bin + 0.5;
 	    // cfitsio-style: see cfitsio/histo.c
 	    // header.CRPIX2 = (header.CRPIX2 - y1) / bin + 0.5;
 	    // zhtools-style: see zhtools/src/images/imblock
-	    header.CRPIX2 = (header.CRPIX2 - y1 - 0.5) / bin + 0.5;
+	    // header.CRPIX2 = (header.CRPIX2 - y1 - 0.5) / bin + 0.5;
 	}
 	if( JS9.notNull(header.CDELT1) ){ header.CDELT1 *= bin; }
 	if( JS9.notNull(header.CDELT2) ){ header.CDELT2 *= bin; }
@@ -1965,9 +1969,9 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	header.LTM2_2 = JS9.defNull(header.LTM2_2, 1.0);
 	header.LTM2_2 = header.LTM2_2 / bin;
 	header.LTV1 = header.LTV1 || 0;
-	header.LTV1 = (header.LTV1 - x1) / bin + 0.5;
+	header.LTV1 = (header.LTV1 - x1 - 0.5) / bin + 0.5;
 	header.LTV2 = header.LTV2 || 0;
-	header.LTV2 = (header.LTV2 - y1) / bin + 0.5;
+	header.LTV2 = (header.LTV2 - y1 - 0.5) / bin + 0.5;
     }
     // add header param to tell LCS system to use CROTA2 to modify LTM
     // needed because Montage does not know about LTM

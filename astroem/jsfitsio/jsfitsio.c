@@ -263,22 +263,22 @@ void updateWCS(fitsfile *fptr, fitsfile *ofptr,
     fits_read_key(fptr, TDOUBLE, "CRPIX1", &dval, comment, &status);
     if( status == 0 ){
       // funtools-style: see funtools/funcopy.c/_FunCopy2ImageHeader
-      // dval = (dval + 1.0 - x1 - 0.5) / bin + 0.5;
+      dval = (dval + 1.0 - x1 - 0.5) / bin + 0.5;
       // cfitsio-style: see cfitsio/histo.c
       // dval = (dval - x1) / bin + 0.5;
       // zhtools-style: see zhtools/src/images/imblock
-      dval = (dval - x1 - 0.5) / bin + 0.5;
+      // dval = (dval - x1 - 0.5) / bin + 0.5;
       fits_update_key(ofptr, TDOUBLE, "CRPIX1", &dval, comment, &status);
     }
     dval = 0.0; *comment = '\0'; status = 0;
     fits_read_key(fptr, TDOUBLE, "CRPIX2", &dval, comment, &status);
     if( status == 0 ){
       // funtools-style: see funtools/funcopy.c/_FunCopy2ImageHeader
-      // dval = (dval + 1.0 - y1 - 0.5) / bin + 0.5;
+      dval = (dval + 1.0 - y1 - 0.5) / bin + 0.5;
       // cfitsio-style: see cfitsio/histo.c
       // dval = (dval - y1) / bin + 0.5;
       // zhtools-style: see zhtools/src/images/imblock
-      dval = (dval - y1 - 0.5) / bin + 0.5;
+      // dval = (dval - y1 - 0.5) / bin + 0.5;
       fits_update_key(ofptr, TDOUBLE, "CRPIX2", &dval, comment, &status);
     }
     dval = 0.0; *comment = '\0'; status = 0;
@@ -340,20 +340,10 @@ void updateWCS(fitsfile *fptr, fitsfile *ofptr,
     fits_update_key(ofptr, TDOUBLE, "LTM2_2", &dval, comment, &status);
     dval = 0.0; *comment = '\0'; status = 0;
     fits_read_key(fptr, TDOUBLE, "LTV1", &dval, comment, &status);
-    // funtools-style: see funtools/funcopy.c/_FunCopy2ImageHeader
-    // dval = (dval + 1.0 - x1 - 0.5) / bin + 0.5; status = 0;
-    // cfitsio-style: see cfitsio/histo.c
-    // dval = (dval - x1) / bin + 0.5; status = 0;
-    // zhtools-style: see zhtools/src/images/imblock
     dval = (dval - x1 - 0.5) / bin + 0.5; status = 0;
     fits_update_key(ofptr, TDOUBLE, "LTV1", &dval, comment, &status);
     dval = 0.0; *comment = '\0'; status = 0;
     fits_read_key(fptr, TDOUBLE, "LTV2", &dval, comment, &status);
-    // funtools-style: see funtools/funcopy.c/_FunCopy2ImageHeader
-    // dval = (dval + 1.0 - y1 - 0.5) / bin + 0.5; status = 0;
-    // cfitsio-style: see cfitsio/histo.c
-    // dval = (dval - y1) / bin + 0.5; status = 0;
-    // zhtools-style: see zhtools/src/images/imblock
     dval = (dval - y1 - 0.5) / bin + 0.5; status = 0;
     fits_update_key(ofptr, TDOUBLE, "LTV2", &dval, comment, &status);
   }
