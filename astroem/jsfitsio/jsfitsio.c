@@ -340,11 +340,11 @@ void updateWCS(fitsfile *fptr, fitsfile *ofptr,
     fits_update_key(ofptr, TDOUBLE, "LTM2_2", &dval, comment, &status);
     dval = 0.0; *comment = '\0'; status = 0;
     fits_read_key(fptr, TDOUBLE, "LTV1", &dval, comment, &status);
-    dval = (dval - x1 - 0.5) / bin + 0.5; status = 0;
+    dval = (dval - x1) / bin + 0.5; status = 0;
     fits_update_key(ofptr, TDOUBLE, "LTV1", &dval, comment, &status);
     dval = 0.0; *comment = '\0'; status = 0;
     fits_read_key(fptr, TDOUBLE, "LTV2", &dval, comment, &status);
-    dval = (dval - y1 - 0.5) / bin + 0.5; status = 0;
+    dval = (dval - y1) / bin + 0.5; status = 0;
     fits_update_key(ofptr, TDOUBLE, "LTV2", &dval, comment, &status);
   }
 }

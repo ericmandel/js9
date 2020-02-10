@@ -1969,9 +1969,9 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	header.LTM2_2 = JS9.defNull(header.LTM2_2, 1.0);
 	header.LTM2_2 = header.LTM2_2 / bin;
 	header.LTV1 = header.LTV1 || 0;
-	header.LTV1 = (header.LTV1 - x1 - 0.5) / bin + 0.5;
+	header.LTV1 = (header.LTV1 - x1) / bin + 0.5;
 	header.LTV2 = header.LTV2 || 0;
-	header.LTV2 = (header.LTV2 - y1 - 0.5) / bin + 0.5;
+	header.LTV2 = (header.LTV2 - y1) / bin + 0.5;
     }
     // add header param to tell LCS system to use CROTA2 to modify LTM
     // needed because Montage does not know about LTM
