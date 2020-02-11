@@ -138,7 +138,7 @@ js9Electron.cmds = js9Electron.argv.cmds;
 js9Electron.cmdfile = js9Electron.argv.cmdfile;
 js9Electron.doHelper = isTrue(js9Electron.argv.helper, true);
 js9Electron.debug = isTrue(js9Electron.argv.debug, false);
-js9Electron.merge = js9Electron.argv.merge.replace(/\\/g,"");
+js9Electron.merge = js9Electron.argv.merge;
 js9Electron.node = isTrue(js9Electron.argv.node, false);
 js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || process.env.JS9_WEBPAGE || js9Electron.defpage;
 js9Electron.title = js9Electron.argv.title;
@@ -242,6 +242,7 @@ function createWindow() {
     });
     // set up merging, if necessary
     if( js9Electron.merge ){
+	js9Electron.merge = js9Electron.merge.replace(/\\/g,"")
 	try{ js9Electron.mergeStat = fs.statSync(js9Electron.merge); }
 	catch(e){
 	    dialog.showErrorBox("Error",
