@@ -406,6 +406,11 @@ def cubeTest(j, file=None):
         imdata2 = j.GetImageData(False)
         if imdata["width"] != imdata2["width"] or imdata["height"] != imdata2["height"]:
             raise ValueError("wrong image cube dimensions [%d,%d] [%d,%d]" % (imdata["width"], imdata["height"], imdata2["width"], imdata2["height"]))
+        displayMessage(j,
+                       "    id: %s type: %s width: %d height: %d bitpix: %d"
+                       % (imdata2["id"], imdata2["imtab"],
+                          imdata2["width"], imdata2["height"],
+                          imdata2["bitpix"]))
     sleep()
 
 def analysisTest(j, file=None):
@@ -442,6 +447,11 @@ def extTest(j, file=None):
         imdata2 = j.GetImageData(False)
         if imdata["width"] != imdata2["width"] or imdata["height"] != imdata2["height"]:
             raise ValueError("wrong image extdimensions [%d,%d] [%d,%d]" % (imdata["width"], imdata["height"], imdata2["width"], imdata2["height"]))
+        displayMessage(j,
+                       "    id: %s type: %s width: %d height: %d bitpix: %d"
+                       % (imdata2["id"], imdata2["imtab"],
+                          imdata2["width"], imdata2["height"],
+                          imdata2["bitpix"]))
     sleep()
 
 def xmmProxyTest(j):
