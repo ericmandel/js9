@@ -468,7 +468,9 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
     fpixel[iaxis0] = (int)(xcen - (sdim1/2.0) + 1);
     fpixel[iaxis1] = (int)(ycen - (sdim2/2.0) + 1);
     lpixel[iaxis0] = (int)(xcen + (sdim1/2.0));
+    if( sdim1 % 2 == 1 ){ lpixel[iaxis0] += 1; }
     lpixel[iaxis1] = (int)(ycen + (sdim2/2.0));
+    if( sdim2 % 2 == 1 ){ lpixel[iaxis1] += 1; }
   } else {
     // read entire input image
     fpixel[iaxis0] = 1;
