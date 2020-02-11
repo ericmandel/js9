@@ -226,9 +226,12 @@ function createWindow() {
     app.allowRendererProcessReuse = false;
     // set dock icon for Mac
     if( process.platform === "darwin" ){
-	if( fs.existsSync(js9Electron.icon) ){
-	    try{ app.dock.setIcon(js9Electron.icon); }
-	    catch(e){ /* empty */ }
+	if( js9Electron.icon ){
+	    js9Electron.icon = js9Electron.icon.replace(/\\/g,"");
+	    if( fs.existsSync(js9Electron.icon) ){
+		try{ app.dock.setIcon(js9Electron.icon); }
+		catch(e){ /* empty */ }
+	    }
 	}
     }
     // create the browser window
