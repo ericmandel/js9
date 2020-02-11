@@ -397,11 +397,15 @@ def cubeTest(j, file=None):
     if file:
         closeImage(j)
         loadImage(j, file, '{"scale":"log","colormap":"viridis"}')
+        imdata = j.GetImageData(False)
     for i in range(2, 6):
         sleep()
         displayMessage(j, 'j.DisplaySlice(%d)' % i)
         j.DisplaySlice(i)
         waitStatus(j, "DisplaySection")
+        imdata2 = j.GetImageData(False)
+        if imdata["width"] != imdata2["width"] or imdata["height"] != imdata2["height"]:
+            raise ValueError("wrong image cube dimensions [%d,%d] [%d,%d]" % (imdata["width"], imdata["height"], imdata2["width"], imdata2["height"]))
     sleep()
 
 def analysisTest(j, file=None):
@@ -429,11 +433,15 @@ def extTest(j, file=None):
     if file:
         closeImage(j)
         loadImage(j, file, '{"scale":"linear","colormap":"viridis"}')
+        imdata = j.GetImageData(False)
     for i in range(3, 5):
         sleep()
         displayMessage(j, 'j.DisplayExtension(%d)' % i)
         j.DisplayExtension(i)
         waitStatus(j, "DisplaySection")
+        imdata2 = j.GetImageData(False)
+        if imdata["width"] != imdata2["width"] or imdata["height"] != imdata2["height"]:
+            raise ValueError("wrong image extdimensions [%d,%d] [%d,%d]" % (imdata["width"], imdata["height"], imdata2["width"], imdata2["height"]))
     sleep()
 
 def xmmProxyTest(j):
@@ -745,7 +753,6 @@ def smokeTests():
     blurTest(j)
     panTest(j)
     gridTest(j)
-    xmmProxyTest(j)
     cubeTest(j, "fits/jupiter_cube.fits")
     analysisTest(j)
     extTest(j, "fits/nicmos.fits")
@@ -755,6 +762,7 @@ def smokeTests():
     maskOverlayTest(j);
     blendTest(j)
     resizeSeparateTest(j)
+    xmmProxyTest(j)
     j.close()
     sys.exit()
 
