@@ -138,6 +138,7 @@ js9Electron.cmds = js9Electron.argv.cmds;
 js9Electron.cmdfile = js9Electron.argv.cmdfile;
 js9Electron.doHelper = isTrue(js9Electron.argv.helper, true);
 js9Electron.debug = isTrue(js9Electron.argv.debug, false);
+js9Electron.icon = js9Electron.argv.icon || path.join(__dirname, "/images/js9logo/png/js9logo_64.png");
 js9Electron.merge = js9Electron.argv.merge;
 js9Electron.node = isTrue(js9Electron.argv.node, false);
 js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || process.env.JS9_WEBPAGE || js9Electron.defpage;
@@ -204,7 +205,7 @@ function initWillDownload() {
 
 // create a new window for a JS9 web page
 function createWindow() {
-    let f, s, cmd, icon, todir;
+    let f, s, cmd, todir;
     let ncmd = 0;
     let xcmds = "";
     const getval = (s) => {
@@ -225,9 +226,8 @@ function createWindow() {
     app.allowRendererProcessReuse = false;
     // set dock icon for Mac
     if( process.platform === "darwin" ){
-	icon = path.join(__dirname, "/images/js9logo/png/js9logo_64.png");
-	if( fs.existsSync(icon) ){
-	    try{ app.dock.setIcon(icon); }
+	if( fs.existsSync(js9Electron.icon) ){
+	    try{ app.dock.setIcon(js9Electron.icon); }
 	    catch(e){ /* empty */ }
 	}
     }
