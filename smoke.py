@@ -772,8 +772,12 @@ def smokeTests():
     maskOverlayTest(j);
     blendTest(j)
     resizeSeparateTest(j)
+    j.BlendDisplay(False)
+    closeDisplay(j)
     xmmProxyTest(j)
+    sleep(2)
     j.close()
+    sleep(2)
     sys.exit()
 
 if __name__ == '__main__':
