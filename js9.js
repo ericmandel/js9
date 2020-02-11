@@ -258,6 +258,7 @@ JS9.globalOpts = {
     menuBar: ["file", "edit", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
     menubarStyle: "classic",                          // mac or classic
     menuPosition: "left bottom",                      // where menus pop up
+    menuSelected: "check",                            // selected option icon
     userMenus: false,                                 // add user menus?
     userMenuDivider: "&nbsp;&nbsp;&nbsp;",            // divide before user menu
     imagesFileSubmenu: 5,        // how many images trigger a submenu?

@@ -6437,7 +6437,7 @@ JS9.Menubar.createMenus = function(){
 		    }
 		    iobj[name] = xname(name);
 		    if( tdisp.image && (tdisp.image.id === im.id) ){
-			iobj[name].icon = "sun";
+			iobj[name].icon = JS9.globalOpts.menuSelected;
 		    }
 		}
 	    }
@@ -6725,14 +6725,14 @@ JS9.Menubar.createMenus = function(){
 		    name = cdisp.id;
 		    items.supermenu.items[`super_${name}`] = xname(name);
 		    if( this.selectedDisplay === cdisp ){
-			items.supermenu.items[`super_${name}`].icon = "sun";
+			items.supermenu.items[`super_${name}`].icon = JS9.globalOpts.menuSelected;
 			m++;
 		    }
 		}
 		name = "all displays";
 		items.supermenu.items.super_all = xname(name);
 		if( !m ){
-		    items.supermenu.items.super_all.icon = "sun";
+		    items.supermenu.items.super_all.icon = JS9.globalOpts.menuSelected;
 		}
 	    }
 	    items[`sep${n++}`] = "------";
@@ -7261,7 +7261,7 @@ JS9.Menubar.createMenus = function(){
 			lastxclass = plugin.xclass;
 			items[pname] = xname(plugin.opts.menuItem);
 			if( pinst && (pinst.status === "active") ){
-			    items[pname].icon = "sun";
+			    items[pname].icon = JS9.globalOpts.menuSelected;
 			}
 		    }
 		}
@@ -7285,42 +7285,42 @@ JS9.Menubar.createMenus = function(){
 	    if( !JS9.hasOwnProperty("Info") ){
 		items.vdisps.items.valpos.disabled = true;
 	    } else if( tdisp.image && tdisp.image.params.valpos ){
-		items.vdisps.items.valpos.icon = "sun";
+		items.vdisps.items.valpos.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.vdisps.items.toggleLayers = xname("active shape layers");
 	    if( tim && !tim.toggleLayers ){
-		items.vdisps.items.toggleLayers.icon = "sun";
+		items.vdisps.items.toggleLayers.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.vdisps.items.xhair = xname("crosshair for this image");
 	    // disable if we don't have info plugin
 	    if( !JS9.hasOwnProperty("Crosshair") || !tim ){
 		items.vdisps.items.xhair.disabled = true;
 	    } else if( tim && tim.params.crosshair ){
-		items.vdisps.items.xhair.icon = "sun";
+		items.vdisps.items.xhair.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.vdisps.items.xhairwcs = xname("match wcs crosshairs");
 	    // disable if we don't have info plugin
 	    if( !JS9.hasOwnProperty("Crosshair") ){
 		items.vdisps.items.xhairwcs.disabled = true;
 	    } else if( JS9.globalOpts.wcsCrosshair ){
-		items.vdisps.items.xhairwcs.icon = "sun";
+		items.vdisps.items.xhairwcs.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.vdisps.items.toolbar = xname("toolbar tooltips");
 	    // disable if we don't have toolbar plugin
 	    if( !JS9.hasOwnProperty("Toolbar") ){
 		items.vdisps.items.toolbar.disabled = true;
 	    } else if( JS9.GetToolbar("showTooltips") ){
-		items.vdisps.items.toolbar.icon = "sun";
+		items.vdisps.items.toolbar.icon = JS9.globalOpts.menuSelected;
 	    }
 	    if( !JS9.allinone ){
 		items.vdisps.items.logo = xname("js9 logo");
 		if( JS9.globalOpts.logoDisplay ){
-		    items.vdisps.items.logo.icon = "sun";
+		    items.vdisps.items.logo.icon = JS9.globalOpts.menuSelected;
 		}
 	    }
 	    items.vdisps.items.inherit = xname("new images inherit current params");
 	    if( tdisp.image && tdisp.image.params.inherit ){
-		items.vdisps.items.inherit.icon = "sun";
+		items.vdisps.items.inherit.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.vdisps.items.rawlayer = {
 		name: "raw data sources ...",
@@ -7336,7 +7336,7 @@ JS9.Menubar.createMenus = function(){
 			name: tim.raws[i].id
 		    };
 		    if( tim.raw === tim.raws[i] ){
-			items.vdisps.items.rawlayer.items[key].icon = "sun";
+			items.vdisps.items.rawlayer.items[key].icon = JS9.globalOpts.menuSelected;
 		    }
 		}
 		items.vdisps.items.rawlayer.items[`sep${n++}`] = "------";
@@ -7541,7 +7541,7 @@ JS9.Menubar.createMenus = function(){
 		name2 = `zoom 1/${zoomp}`;
 		items[name] = xname(name2);
 		if( tim && (tim.rgb.sect.zoom === zoom) ){
-		    items[name].icon = "sun";
+		    items[name].icon = JS9.globalOpts.menuSelected;
 		}
 	    }
 	    for(i=0; i<=JS9.imageOpts.topZooms; i++){
@@ -7550,7 +7550,7 @@ JS9.Menubar.createMenus = function(){
 		name2 = `zoom ${zoom}`;
 		items[name] = xname(name2);
 		if( tim && (tim.rgb.sect.zoom === zoom) ){
-		    items[name].icon = "sun";
+		    items[name].icon = JS9.globalOpts.menuSelected;
 		}
 	    }
 	    items.morezooms = {
@@ -7569,7 +7569,7 @@ JS9.Menubar.createMenus = function(){
 		name2 = `zoom 1/${zoomp}`;
 		items.morezooms.items[name] = xname(name2);
 		if( tim && (tim.rgb.sect.zoom === zoom) ){
-		    items.morezooms.items[name].icon = "sun";
+		    items.morezooms.items[name].icon = JS9.globalOpts.menuSelected;
 		}
 	    }
 	    for(i=JS9.imageOpts.topZooms+1; i<=JS9.imageOpts.zooms; i++){
@@ -7578,7 +7578,7 @@ JS9.Menubar.createMenus = function(){
 		name2 = `zoom ${zoom}`;
 		items.morezooms.items[name] = xname(name2);
 		if( tim && (tim.rgb.sect.zoom === zoom) ){
-		    items.morezooms.items[name].icon = "sun";
+		    items.morezooms.items[name].icon = JS9.globalOpts.menuSelected;
 		}
 	    }
 	    items.zoom = {
@@ -7677,7 +7677,7 @@ JS9.Menubar.createMenus = function(){
 			lastxclass = plugin.xclass;
 			items[pname] = xname(plugin.opts.menuItem);
 			if( pinst && (pinst.status === "active") ){
-			    items[pname].icon = "sun";
+			    items[pname].icon = JS9.globalOpts.menuSelected;
 			}
 		    }
 		}
@@ -7832,7 +7832,7 @@ JS9.Menubar.createMenus = function(){
 		s2 = s1;
 		items[s1] = xname(s2);
 		if( tdisp.image && (tdisp.image.params.scale === s1) ){
-		    items[s1].icon = "sun";
+		    items[s1].icon = JS9.globalOpts.menuSelected;
 		}
 	    }
 	    items[`sep${n++}`] = "------";
@@ -7865,7 +7865,7 @@ JS9.Menubar.createMenus = function(){
 			lastxclass = plugin.xclass;
 			items[pname] = xname(plugin.opts.menuItem);
 			if( pinst && (pinst.status === "active") ){
-			    items[pname].icon = "sun";
+			    items[pname].icon = JS9.globalOpts.menuSelected;
 			}
 		    }
 		}
@@ -8010,7 +8010,7 @@ JS9.Menubar.createMenus = function(){
 		s2 = s1;
 		items[s1] = xname(s2);
 		if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
-		    items[s1].icon = "sun";
+		    items[s1].icon = JS9.globalOpts.menuSelected;
 		}
 	    }
 	    items.morecmaps = {
@@ -8028,7 +8028,7 @@ JS9.Menubar.createMenus = function(){
 		    s2 = s1;
 		    items.morecmaps.items[s1] = xname(s2);
 		    if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
-			items.morecmaps.items[s1].icon = "sun";
+			items.morecmaps.items[s1].icon = JS9.globalOpts.menuSelected;
 		    }
                 }
 	    }
@@ -8064,11 +8064,11 @@ JS9.Menubar.createMenus = function(){
 	    items[`sep${n++}`] = "------";
 	    items.invert = xname("invert");
 	    if( tdisp.image && tdisp.image.params.invert ){
-		items.invert.icon = "sun";
+		items.invert.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.rgb = xname("rgb mode");
 	    if( JS9.globalOpts.rgb.active ){
-		items.rgb.icon = "sun";
+		items.rgb.icon = JS9.globalOpts.menuSelected;
 	    }
 	    return {
 		callback: (key) => {
@@ -8347,10 +8347,10 @@ JS9.Menubar.createMenus = function(){
 		}
 	    };
 	    if( tim && tim.params.listonchange ){
-		items.onchange.items.listonchange.icon = "sun";
+		items.onchange.items.listonchange.icon = JS9.globalOpts.menuSelected;
 	    }
 	    if( tim && tim.params.xeqonchange ){
-		items.onchange.items.xeqonchange.icon = "sun";
+		items.onchange.items.xeqonchange.icon = JS9.globalOpts.menuSelected;
 	    }
 	    if( tim && (JS9.images.length > 1) ){
 		for(i=0; i<JS9.images.length; i++){
@@ -8560,7 +8560,7 @@ JS9.Menubar.createMenus = function(){
 		s2 = s1;
 		items[s1] = xname(s2);
 		if( tim && (tim.params.wcssys === s1) ){
-		    items[s1].icon = "sun";
+		    items[s1].icon = JS9.globalOpts.menuSelected;
 		    got++;
 		}
 	    }
@@ -8571,7 +8571,7 @@ JS9.Menubar.createMenus = function(){
 		} else {
 		    s1 = "image";
 		}
-		items[s1].icon = "sun";
+		items[s1].icon = JS9.globalOpts.menuSelected;
 	    }
 	    items[`sep${n++}`] = "------";
 	    items.wcsutitle = {
@@ -8588,7 +8588,7 @@ JS9.Menubar.createMenus = function(){
 		s2 = s1;
 		items[s1] = xname(s2);
 		if( tim && (tim.params.wcsunits === s1) ){
-		    items[s1].icon = "sun";
+		    items[s1].icon = JS9.globalOpts.menuSelected;
 		}
 	    }
 	    items[`sep${n++}`] = "------";
@@ -8616,7 +8616,7 @@ JS9.Menubar.createMenus = function(){
 			}
 			items.altwcs.items[s1] = xname(s2);
 			if( tim.raw.wcs === altwcs[key].wcs ){
-			    items.altwcs.items[s1].icon = "sun";
+			    items.altwcs.items[s1].icon = JS9.globalOpts.menuSelected;
 			}
 			nwcs++;
 		    }
@@ -8672,7 +8672,7 @@ JS9.Menubar.createMenus = function(){
 		    name: "display wcs-aligned"
 		};
 		if( tim && (tim.params.wcsalign) ){
-		    items.reproject.items.reproject_wcsalign.icon = "sun";
+		    items.reproject.items.reproject_wcsalign.icon = JS9.globalOpts.menuSelected;
 		}
 	    }
 	    items.reproject.items[`sep${n++}`] = "------";
@@ -8849,7 +8849,7 @@ JS9.Menubar.createMenus = function(){
 			    name: plugin.opts.menuItem
 			};
 			if( pinst && (pinst.status === "active") ){
-			    items[pname].icon = "sun";
+			    items[pname].icon = JS9.globalOpts.menuSelected;
 			}
 			n++;
 		    }
@@ -8868,7 +8868,7 @@ JS9.Menubar.createMenus = function(){
 		if( !im || !im.raw.wcs || im.raw.wcs <=0 ){
 		    items.grid.disabled = true;
 		} else {
-		    if( im.displayCoordGrid() ){ items.grid.icon = "sun"; }
+		    if( im.displayCoordGrid() ){ items.grid.icon = JS9.globalOpts.menuSelected; }
 		}
 		items.regcnts = xname("Counts in Regions");
 		items.radprof = xname("Radial Profile");

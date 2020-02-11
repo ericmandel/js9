@@ -374,8 +374,14 @@ input:focus.JS9CmdIn {
    content: url(images/sun.png);
 }
 
+/* jqueryContextMenu v2.2 */
+.context-menu-icon-check:before {
+   content: url(images/checkmark.svg);
+}
+
 .context-menu-item {
     background-color: #E9E9E9;
+    padding: .2em 2em;
 }
 
 .context-menu-item.context-menu-disabled {
@@ -400,24 +406,6 @@ input:focus.JS9CmdIn {
 .context-menu-input > label > textarea {
   width: 85%;
   height: 3em;
-}
-
-/* jqueryContextMenu pre-v2.2 */
-.pre-v2.2-context-menu-item.icon-sun {
-   background-image: url(images/sun.png);
-}
-
-/* jqueryContextMenu pre-v2.2 */
-.pre-v2.2-context-menu-input > label > span {
-    margin-left: 0px;
-}
-
-/* jqueryContextMenu pre-v2.2 */
-.pre-v2.2-context-menu-submenu:after {
-    content: "\2192";
-    color: black;
-    position: absolute;
-    right: 5px;
 }
 
 /* dhtml window overrides */
