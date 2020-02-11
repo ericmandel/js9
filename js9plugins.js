@@ -6327,9 +6327,9 @@ JS9.Menubar.createMenus = function(){
 				    opt.updateTitle !== false     &&
 				    menu.updateTitle.match(/(both|image)/) ){
 				    if( menu.updateTitle === "both" ){
-					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' name='${opt.name}' alt='${opt.name}' class='JS9MenubarUserImage JS9MenubarUserImageTitle' >` + `&nbsp;&nbsp;${opt.name}</div>`;
+					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' name='${menu.name}' alt='${opt.name}' class='JS9MenubarUserImage JS9MenubarUserImageTitle' >` + `&nbsp;&nbsp;${opt.name}</div>`;
 				    } else if( menu.updateTitle === "image" ){
-					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' name='${opt.name}' alt='${opt.name}' class='JS9MenubarUserImage JS9MenubarUserImageTitle' ></div>`;
+					hstr = `<div style='white-space:nowrap;'><img src='${opt.image}' name='${menu.name}' alt='${opt.name}' class='JS9MenubarUserImage JS9MenubarUserImageTitle' ></div>`;
 				    }
 				    $(kopt.selector).html(hstr);
 				} else if( typeof menu.updateTitle === "function" ){
