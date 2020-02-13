@@ -122,9 +122,17 @@ js9Electron.pdfOpts = {
 js9Electron.contextIsolation = false;    // false: we set window properties
 js9Electron.enableRemoteModule = false;  // see security recommendations
 
-// command line arguments: skip -a and -v
+// skip args passed to electron itself
+js9Electron.startArg = 2;
+for(let i=1; i<process.argv.length; i++){
+    if( process.argv[i] !== "--no-sandbox" ){
+	break;
+    }
+    js9Electron.startArg++;
+}
+// js9 command line arguments: skip -a and -v
 js9Electron.args = [];
-for(let i=2; i< process.argv.length; i++){
+for(let i=js9Electron.startArg; i<process.argv.length; i++){
     if( process.argv[i] !== "-a" && process.argv[i] !== "-v" ){
 	js9Electron.args = process.argv.slice(i);
 	break;
