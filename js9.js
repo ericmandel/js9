@@ -145,7 +145,7 @@ JS9.globalOpts = {
     reproj: {xdim: 4096, ydim: 4096}, // max image size we can reproject
     reprojSwitches: "",         // Montage reproject switches
     binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
-    rebinOnCR: false,           // binning plugin rebins when <cr> is pressed?
+    runOnCR: false,             // Run forms such as binning when <cr> pressed?
     clearImageMemory: "heap",   // rm vfile: always|never|auto|noExt|noCube|size>x Mb heap=>free heap
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?

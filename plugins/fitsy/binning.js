@@ -260,7 +260,7 @@
 	$(div).find(".js9-binning-sep").prop("checked", !!that.sep);
 
 	// set up to rebin when <cr> is pressed, if necessary
-	if( JS9.globalOpts.rebinOnCR ){
+	if( JS9.globalOpts.runOnCR ){
 	    $(div).find(".js9BinningForm").data("enterfunc", "rebin");
 	}
 
