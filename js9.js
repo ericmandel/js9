@@ -145,6 +145,7 @@ JS9.globalOpts = {
     reproj: {xdim: 4096, ydim: 4096}, // max image size we can reproject
     reprojSwitches: "",         // Montage reproject switches
     binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
+    rebinOnCR: false,           // binning plugin rebins when <cr> is pressed?
     clearImageMemory: "heap",   // rm vfile: always|never|auto|noExt|noCube|size>x Mb heap=>free heap
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
@@ -21997,7 +21998,7 @@ JS9.initCommands = function(){
 JS9.initAnalysis = function(){
     // for analysis forms, Enter should not Submit, but allow specification
     // of the name of an element to click
-    $(document).on("keyup keypress", ".js9AnalysisForm", (e) => {
+    $(document).on("keyup keypress", ".js9AnalysisForm, .js9Form", (e) => {
 	const code = e.which || e.keyCode;
 	let id;
 	if( code === 13 ){

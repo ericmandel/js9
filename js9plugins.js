@@ -874,7 +874,7 @@ module.exports = xhr;
     function reBinImage(div, display) {
 	let hdu, opts, npos;
 	let im   = JS9.GetImage({display: display});
-	let form = $(div).find(".binning-form")[0];
+	let form = $(div).find(".js9BinningForm")[0];
 	let rebin = function(im, hdu, display){
 	    let ss;
 	    let rexp = /(\[.*[a-zA-Z0-9_].*\])\[.*\]/;
@@ -949,7 +949,7 @@ module.exports = xhr;
 
     function centerBinImage(xdim, ydim, div, display) {
 	let im   = JS9.GetImage({display: display});
-	let form = $(div).find(".binning-form")[0];
+	let form = $(div).find(".js9BinningForm")[0];
 	let fdims = im.fileDimensions();
 	form.xcen.value = 0;
 	form.ycen.value = 0;
@@ -975,7 +975,7 @@ module.exports = xhr;
 	im   = JS9.GetImage({display: display});
 
 	if ( im ) {
-	    form = $(div).find(".binning-form")[0];
+	    form = $(div).find(".js9BinningForm")[0];
 
 	    if ( im.raw.hdu !== undefined ) {
 		hdu = im.raw.hdu;
@@ -1074,9 +1074,9 @@ module.exports = xhr;
 	    disclose = 'disabled="disabled"';
 	}
 
-	$(div).html(`<form class="binning-form js9Form" style="margin: 0px; padding: 8px; width: 100%; height: 100%">
+	$(div).html(`<form class="js9BinningForm js9Form">
 	    <table style="margin:0px; cellspacing:0; border-collapse:separate; border-spacing:4px 10px;">
-	           <tr>	<td><input type=button class=full-image value="Load full image" style="text-align:right;"></td>
+	           <tr>	<td><input type=button class=js9-binning-full value="Load full image" style="text-align:right;"></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
@@ -1106,27 +1106,30 @@ module.exports = xhr;
 			<td>&nbsp(event/row filter for table)</td>
 		   </tr>
 	           <tr>	<td><b>separate:</b></td>
-                        <td><input type=checkbox name=separate class="sep-image" style="text-align:left;"></td>
+                        <td><input type=checkbox name=separate class="js9-binning-sep" style="text-align:left;"></td>
 			<td></td>
 			<td>&nbsp(display as separate image?)</td>
 		   </tr>
 		   <tr>
-			<td><input type=button name=rebin value="Run" class="rebin-image"></td>
+			<td><input type=button name=rebin value="Run" class="js9-binning-rebin"></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
-                        <td>&nbsp;<input type=button name=close value="Close" class="close-image" ${disclose}'></td>
+                        <td>&nbsp;<input type=button name=close value="Close" class="js9-binning-close" ${disclose}'></td>
 		   </tr>
 	    </table>
 	    </form>`);
 
-	// click doesn't work on localhost on a Mac using Chrome/Safari, but mouseup does ...
-	$(div).find(".full-image").on("mouseup", function ()  { centerBinImage(0, 0, div, display); });
-	$(div).find(".rebin-image").on("mouseup", function () { reBinImage(div, display); });
-	$(div).find(".close-image").on("mouseup", function () { if( win ){ win.close(); } });
-	$(div).find(".sep-image").change(function() { that.sep = $(this).prop("checked"); });
+	// button and checkbox actions
+	$(div).find(".js9-binning-full").on("click", function ()  { centerBinImage(0, 0, div, display); });
+	$(div).find(".js9-binning-rebin").on("click", function () { reBinImage(div, display); });
+	$(div).find(".js9-binning-close").on("click", function () { if( win ){ win.close(); } });
+	$(div).find(".js9-binning-sep").change(function() { that.sep = $(this).prop("checked"); });
+	$(div).find(".js9-binning-sep").prop("checked", !!that.sep);
 
-	// set separate button
-	$(div).find(".sep-image").prop("checked", !!that.sep);
+	// set up to rebin when <cr> is pressed, if necessary
+	if( JS9.globalOpts.rebinOnCR ){
+	    $(div).find(".js9BinningForm").data("enterfunc", "rebin");
+	}
 
 	// get current params
 	if ( im ) {

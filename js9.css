@@ -526,6 +526,14 @@ canvas.surfacePlotCanvas {
     margin: 0px;
 }
 
+/* binning plugin */
+.js9BinningForm {
+    margin: 0px;
+    padding: 8px;
+    width: 100%;
+    height: 100%
+}
+
 /* regularize textarea and input text (e.g. binning.js, contour.js) */
 .js9Form textarea, .js9Form input[type=text]{
     display: block;
