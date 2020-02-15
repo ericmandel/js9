@@ -362,6 +362,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   int ojoff = 0;
   int tstatus = 0;
   int doscale = 0;
+  int dobin = 0;
   void *obuf, *rbuf;
   long totim, totpix, totbytes;
   long naxes[IDIM], fpixel[IDIM], lpixel[IDIM], myfpixel[IDIM], inc[IDIM];
@@ -560,11 +561,15 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   if( (bscale != 1.0) || (bzero != 0.0) ){
     doscale = 1;
   }
+//  if( (bin != 1) && ((binMode == 1) || (binMode == 'a')) ){
+  if( bin != 1 ){
+    dobin = 1;
+  }
   // allocate space for the pixel array
+  // scaled data has to be float
   switch(*bitpix){
     case 8:
-      if( doscale ){
-	// scaled data has to be float
+      if( doscale || dobin ){
 	*bitpix = -32;
 	ttype = TFLOAT;
 	tsize = sizeof(float);
@@ -574,8 +579,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       }
       break;
     case 16:
-      if( doscale ){
-	// scaled data has to be float
+      if( doscale || dobin ){
 	*bitpix = -32;
 	ttype = TFLOAT;
 	tsize = sizeof(float);
@@ -585,8 +589,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       }
       break;
     case -16:
-      if( doscale ){
-	// scaled data has to be float
+      if( doscale || dobin ){
 	*bitpix = -32;
 	ttype = TFLOAT;
 	tsize = sizeof(float);
@@ -596,8 +599,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       }
       break;
     case 32:
-      if( doscale ){
-	// scaled data has to be float
+      if( doscale || dobin ){
 	*bitpix = -32;
 	ttype = TFLOAT;
 	tsize = sizeof(float);
@@ -607,8 +609,7 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       }
       break;
     case 64:
-      if( doscale ){
-	// scaled data has to be float
+      if( doscale || dobin ){
 	*bitpix = -32;
 	ttype = TFLOAT;
 	tsize = sizeof(float);

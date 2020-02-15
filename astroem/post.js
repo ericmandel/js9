@@ -179,7 +179,6 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     var dims = [0, 0];
     var bin = 1;
     var binMode = 0;
-    var binFactor = 0;
     var bmode = function(x){
 	if( x && (x === 1 || x === 'a') ){
 	    return 1;
@@ -345,12 +344,6 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
 	}
 	_free(hptr);
 	if( !ctype1 || !ctype1.match(/--HPX/i) ){
-	    // see if we have to average the pixels later on:
-	    // the problem is that having binned the events, we reset the bin
-	    // factor to 1 before arrayToImage, so it's averaging gets skipped
-	    if( binMode > 0 && bin > 1 ){
-		binFactor = bin * bin;
-	    }
 	    // if we don't have a HEALPix image, we clear cens and dims
 	    // to extract at center of resulting image (below)
 	    delete opts.xcen;
@@ -461,14 +454,6 @@ Module["getFITSImage"] = function(fits, hdu, opts, handler) {
     case -64:
 	hdu.image = new Float64Array(HEAPF64.subarray(bufptr/8, bufptr/8+datalen));
 	break;
-    }
-    // for a binned table, we might have to average the pixel values now,
-    // since this was not done in getImageToArray()
-    // (only for bin factors > 1, which summed pixels)
-    if( binFactor ){
-	for(i=0; i<datalen; i++){
-	    hdu.image[i] /= binFactor;
-	}
     }
     // get section header cards as a string
     hptr = _malloc(20);

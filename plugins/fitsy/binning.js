@@ -184,6 +184,7 @@
     function binningInit() {
 	let binblock, binblocked;
 	let that = this;
+	let html = "";
 	let div = this.div;
 	let display = this.display;
 	let win = this.winHandle;
@@ -207,8 +208,8 @@
 	    disclose = 'disabled="disabled"';
 	}
 
-	$(div).html(`<form class="js9BinningForm js9Form">
-	    <table style="margin:0px; cellspacing:0; border-collapse:separate; border-spacing:4px 10px;">
+	html = `<form class="js9BinningForm js9Form">
+	        <table style="margin:0px; cellspacing:0; border-collapse:separate; border-spacing:4px 10px;">
 	           <tr>	<td><input type=button class=js9-binning-full value="Load full image" style="text-align:right;"></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
@@ -228,13 +229,24 @@
 			<td><input type=text name=bin value=1 size=10 style="text-align:right;"></td>
 			<td></td>
 			<td>&nbsp(apply ${binblock} factor to ${im.imtab})</td>
-		   </tr>
+		   </tr>`;
+
+	if( im.imtab === "image" ){
+	    html += `
 	           <tr>	<td><b>mode:</b></td>
                         <td><input type=radio name=binmode value="s" class="sum-pixels" style="text-align:left;">sum</td>
                         <td><input type=radio name=binmode value="a" class="avg-pixels" style="text-align:left;">average</td>
 			<td>&nbsp(sum or average ${binblocked} pixels?)</td>
-		   </tr>
-	           <tr>	<td><b>filter:</b></td>
+		   </tr>`;
+	} else {
+	    html += `
+	           <tr>	<td><b>mode:</b></td>
+                        <td><input type=checkbox name=xbinmode value="s" class="sum-pixels" style="text-align:left;" checked disabled>sum</td>
+			<td></td>
+			<td>&nbsp(binned tables are always summed)</td>
+		   </tr>`;
+	}
+	html += `  <tr>	<td><b>filter:</b></td>
 			<td colspan="2"><textarea name=filter rows="1" cols="22" style="text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
 			<td>&nbsp(event/row filter for table)</td>
 		   </tr>
@@ -250,7 +262,8 @@
                         <td>&nbsp;<input type=button name=close value="Close" class="js9-binning-close" ${disclose}'></td>
 		   </tr>
 	    </table>
-	    </form>`);
+	    </form>`;
+        $(div).html(html);
 
 	// button and checkbox actions
 	$(div).find(".js9-binning-full").on("click", function ()  { centerBinImage(0, 0, div, display); });
