@@ -561,15 +561,28 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   if( (bscale != 1.0) || (bzero != 0.0) ){
     doscale = 1;
   }
-//  if( (bin != 1) && ((binMode == 1) || (binMode == 'a')) ){
   if( bin != 1 ){
-    dobin = 1;
+    if( (binMode == 0) || (binMode == 's') ){
+      dobin = 's';
+    } else {
+      dobin = 'a';
+    }
   }
   // allocate space for the pixel array
-  // scaled data has to be float
+  // scaled integer data => float
+  // binned sum integer data => int
+  // binned avg integer data => float
   switch(*bitpix){
     case 8:
-      if( doscale || dobin ){
+      if( doscale ){
+	*bitpix = -32;
+	ttype = TFLOAT;
+	tsize = sizeof(float);
+      } else if( dobin == 's' ){
+	*bitpix = 32;
+	ttype = TINT;
+	tsize = sizeof(int);
+      } else if( dobin == 'a' ){
 	*bitpix = -32;
 	ttype = TFLOAT;
 	tsize = sizeof(float);
@@ -579,7 +592,15 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       }
       break;
     case 16:
-      if( doscale || dobin ){
+      if( doscale ){
+	*bitpix = -32;
+	ttype = TFLOAT;
+	tsize = sizeof(float);
+      } else if( dobin == 's' ){
+	*bitpix = 32;
+	ttype = TINT;
+	tsize = sizeof(int);
+      } else if( dobin == 'a' ){
 	*bitpix = -32;
 	ttype = TFLOAT;
 	tsize = sizeof(float);
@@ -589,7 +610,15 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       }
       break;
     case -16:
-      if( doscale || dobin ){
+      if( doscale ){
+	*bitpix = -32;
+	ttype = TFLOAT;
+	tsize = sizeof(float);
+      } else if( dobin == 's' ){
+	*bitpix = 32;
+	ttype = TINT;
+	tsize = sizeof(int);
+      } else if( dobin == 'a' ){
 	*bitpix = -32;
 	ttype = TFLOAT;
 	tsize = sizeof(float);
@@ -599,7 +628,11 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       }
       break;
     case 32:
-      if( doscale || dobin ){
+      if( doscale ){
+	*bitpix = -32;
+	ttype = TFLOAT;
+	tsize = sizeof(float);
+      } else if( dobin == 'a' ){
 	*bitpix = -32;
 	ttype = TFLOAT;
 	tsize = sizeof(float);
@@ -609,7 +642,11 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
       }
       break;
     case 64:
-      if( doscale || dobin ){
+      if( doscale ){
+	*bitpix = -32;
+	ttype = TFLOAT;
+	tsize = sizeof(float);
+      } else if( dobin == 'a' ){
 	*bitpix = -32;
 	ttype = TFLOAT;
 	tsize = sizeof(float);
@@ -774,9 +811,13 @@ void *getImageToArray(fitsfile *fptr, int *dims, double *cens,
   }
 
   // average, if necessary
-  if( (bin > 1) && ((binMode == 1) || (binMode == 'a')) ){
-    bin2 = bin * bin;
-    totpix = (idim1 * idim2 * idim3) / bin2;
+  if( dobin == 'a' ){
+    if( bin >= 1 ){
+      bin2 = bin * bin;
+    } else {
+      bin2 = 1 / (bin * bin);
+    }
+    totpix = totbytes / tsize;
     for(i=0; i<totpix; i++){
       switch(*bitpix){
       case 8:
