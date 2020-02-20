@@ -128,7 +128,7 @@
 		    form.ycen.disabled = false;
 		    form.xdim.disabled = false;
 		    form.ydim.disabled = false;
-		    form.binmode.disabled = false;
+		    // form.binmode.disabled = false;
 		    form.filter.disabled = false;
 		} else {
 		    hdu.bin = hdu.bin || 1;
