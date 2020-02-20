@@ -3,6 +3,7 @@ import time
 import sys
 import json
 import pyjs9
+from astropy.io import fits
 
 def sleep(timeout=1):
     """
@@ -72,6 +73,20 @@ def loadImage(j, im, opts={}):
     displayMessage(j, "j.Load(%s, ...)" % im)
     j.Load(im, opts)
     waitStatus(j)
+
+def fitsioTest(j, file):
+    """
+    test FITS IO routines
+    """
+    tfits = "foo.fits"
+    hdul = fits.open(file)
+    hdul.info()
+    displayMessage(j, "j.SetFITS(hdul, %s)" % tfits)
+    j.SetFITS(hdul, tfits)
+    waitStatus(j)
+    displayMessage(j, 'j.SetColormap("cool")')
+    j.SetColormap("cool")
+    sleep(2)
 
 def pixTest(j, file=None):
     """
@@ -747,6 +762,7 @@ def smokeTests():
     all the tests
     """
     j = init()
+    fitsioTest(j, "fits/casa.fits.gz")
     pixTest(j, "fits/snr.fits")
     headerTest(j)
     binTest(j)
