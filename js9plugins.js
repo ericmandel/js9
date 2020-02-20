@@ -6395,6 +6395,9 @@ JS9.Menubar.createMenus = function(){
 	zIndex: JS9.MENUZINDEX,
 	events: { hide: onhide },
 	position: mypos,
+	// 'click' prevents long menus from executing a random menu option
+	// it has to be put into the first context menu that is registered
+	itemClickEvent: JS9.globalOpts.menuClickEvent || "click",
         build: () => {
 	    let i, m, im, name, s1, arr, cdisp, got, iobj;
 	    let n = 0;
