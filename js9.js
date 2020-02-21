@@ -13647,7 +13647,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	if( pub.imsys !== "image" ){
 	    pub.lcs.radii = [];
 	}
-	pub.imstr = `annulus(${tr(px)}, ${tr(py)}, `;
+	pub.imstr = `annulus(${tr(px)},${tr(py)},`;
 	tstr = `annulus ${pub.x} ${pub.y} `;
 	objs = obj.getObjects();
 	olen = objs.length;
@@ -13659,7 +13659,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    if( i === (olen - 1) ){
 		pub.imstr += ")";
 	    } else {
-		pub.imstr += ", ";
+		pub.imstr += ",";
 	    }
 	    pub.radii.push(radius);
 	    if( pub.imsys !== "image" ){
@@ -13677,7 +13677,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.width = tval1;
 	    pub.lcs.height = tval2;
 	}
-	pub.imstr = `box(${tr(px)}, ${tr(py)}, ${tr(tval1)}, ${tr(tval2)}, ${tr4(pub.angle)})`;
+	pub.imstr = `box(${tr(px)},${tr(py)},${tr(tval1)},${tr(tval2)},${tr4(pub.angle)})`;
 	tstr = `box ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.width} ${pub.y} ${pub.x} ${pub.y} ${pub.x} ${pub.y + pub.height} ${pub.angle * Math.PI / 180.0}`;
 	break;
     case "circle":
@@ -13686,7 +13686,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	if( pub.imsys !== "image" ){
 	    pub.lcs.radius = tval1;
 	}
-	pub.imstr = `circle(${tr(px)}, ${tr(py)}, ${tr(tval1)})`;
+	pub.imstr = `circle(${tr(px)},${tr(py)},${tr(tval1)})`;
 	tstr = `circle ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.radius} ${pub.y}`;
 	break;
     case "ellipse":
@@ -13698,7 +13698,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.r1 = tval1;
 	    pub.lcs.r2 = tval2;
 	}
-	pub.imstr = `ellipse(${tr(px)}, ${tr(py)}, ${tr(tval1)}, ${tr(tval2)}, ${tr4(pub.angle)})`;
+	pub.imstr = `ellipse(${tr(px)},${tr(py)},${tr(tval1)},${tr(tval2)},${tr4(pub.angle)})`;
 	tstr = `ellipse ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.r1} ${pub.y} ${pub.x} ${pub.y} ${pub.x} ${pub.y + pub.r2} ${pub.angle * Math.PI / 180.0}`;
 	break;
     case "point":
@@ -13710,7 +13710,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.width = tval1;
 	    pub.lcs.height = tval2;
 	}
-	pub.imstr = `point(${tr(px)}, ${tr(py)})`;
+	pub.imstr = `point(${tr(px)},${tr(py)})`;
 	tstr = `point ${pub.x} ${pub.y}`;
 	break;
     case "line":
@@ -13723,7 +13723,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	}
 	for(i=0; i<obj.points.length; i++){
 	    if( i > 0 ){
-		pub.imstr += ", ";
+		pub.imstr += ",";
 		tstr += " ";
 	    }
 	    // get current point
@@ -13733,10 +13733,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    npos = JS9.rotatePoint(npos, oangle,
 				   {x: pub.x, y: pub.y});
 	    if( this.params.wcssys === "image" ){
-		pub.imstr += `${tr(npos.x)}, ${tr(npos.y)}`;
+		pub.imstr += `${tr(npos.x)},${tr(npos.y)}`;
 	    } else {
 		const {x, y} = this.imageToLogicalPos(npos);
-		pub.imstr += `${tr(x)}, ${tr(y)}`;
+		pub.imstr += `${tr(x)},${tr(y)}`;
 		pub.lcs.pts.push({x, y});
 	    }
 	    tstr += `${npos.x} ${npos.y}`;
@@ -13760,7 +13760,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.angle = 0;
         break;
     case "text":
-	pub.imstr = `text(${tr(px)}, ${tr(py)}, "${obj.text}", ${tr4(pub.angle)})`;
+	pub.imstr = `text(${tr(px)},${tr(py)},"${obj.text}",${tr4(pub.angle)})`;
 	tstr = `text ${pub.x} ${pub.y} "${obj.text}"` + ` ${pub.angle * Math.PI / 180.0}`;
 	pub.text = obj.text;
 	break;

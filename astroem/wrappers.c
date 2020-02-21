@@ -408,6 +408,7 @@ char *wcsunits(int n, char *s){
 char *reg2wcsstr(int n, char *regstr){
   Info info = getinfo(n);
   char tbuf[SZ_LINE];
+  char tbuf2[SZ_LINE];
   char rbuf1[SZ_LINE];
   char rbuf2[SZ_LINE];
   char *str = NULL;
@@ -460,7 +461,7 @@ char *reg2wcsstr(int n, char *regstr){
 	/* convert to proper units */
 	switch(mywcsunits){
 	case WCS_DEGREES:
-	  snprintf(tbuf, SZ_LINE, "%.6f, %.6f", rval1, rval2);
+	  snprintf(tbuf, SZ_LINE, "%.6f,%.6f", rval1, rval2);
 	  strncat(str, tbuf, SZ_LINE-1);
 	  break;
 	case WCS_SEXAGESIMAL:
@@ -470,11 +471,11 @@ char *reg2wcsstr(int n, char *regstr){
 	    ra2str(rbuf1, SZ_LINE-1, rval1, NDEC);
 	  }
 	  dec2str(rbuf2, SZ_LINE-1, rval2, NDEC);
-	  snprintf(tbuf, SZ_LINE, "%s, %s", rbuf1, rbuf2);
+	  snprintf(tbuf, SZ_LINE, "%s,%s", rbuf1, rbuf2);
 	  strncat(str, tbuf, SZ_LINE-1);
 	  break;
 	default:
-	  snprintf(tbuf, SZ_LINE, "%.6f, %.6f", rval1, rval2);
+	  snprintf(tbuf, SZ_LINE, "%.6f,%.6f", rval1, rval2);
 	  strncat(str, tbuf, SZ_LINE-1);
 	  break;
 	}
@@ -482,6 +483,9 @@ char *reg2wcsstr(int n, char *regstr){
 	if( !strcmp(s, "text") ){
 	  t = tbuf;
 	  *t++ = ',';
+	  while( *s1 && isspace((int)*s1) ){
+	    s1++;
+	  }
 	  while( *s1 && nq < 2 ){
 	    if( *s1 == '"' ){ nq++; }
 	    *t++ = *s1++;
@@ -499,7 +503,7 @@ char *reg2wcsstr(int n, char *regstr){
 	    /* convert to proper units */
 	    switch(mywcsunits){
 	    case WCS_DEGREES:
-	      snprintf(tbuf, SZ_LINE, ", %.6f, %.6f", rval1, rval2);
+	      snprintf(tbuf, SZ_LINE, ",%.6f,%.6f", rval1, rval2);
 	      strncat(str, tbuf, SZ_LINE-1);
 	      break;
 	    case WCS_SEXAGESIMAL:
@@ -509,11 +513,11 @@ char *reg2wcsstr(int n, char *regstr){
 		ra2str(rbuf1, SZ_LINE-1, rval1, NDEC);
 	      }
 	      dec2str(rbuf2, SZ_LINE-1, rval2, NDEC);
-	      snprintf(tbuf, SZ_LINE, ", %s, %s", rbuf1, rbuf2);
+	      snprintf(tbuf, SZ_LINE, ",%s,%s", rbuf1, rbuf2);
 	      strncat(str, tbuf, SZ_LINE-1);
 	      break;
 	    default:
-	      snprintf(tbuf, SZ_LINE, ", %.6f, %.6f", rval1, rval2);
+	      snprintf(tbuf, SZ_LINE, ",%.6f,%.6f", rval1, rval2);
 	      strncat(str, tbuf, SZ_LINE-1);
 	      break;
 	    }
@@ -547,20 +551,20 @@ char *reg2wcsstr(int n, char *regstr){
 	    /* convert to proper units */
 	    switch(mywcsunits){
 	    case WCS_DEGREES:
-	      snprintf(tbuf, SZ_LINE, ", %.6f", sep);
+	      snprintf(tbuf, SZ_LINE, ",%.6f", sep);
 	      strncat(str, tbuf, SZ_LINE-1);
 	      break;
 	    case WCS_SEXAGESIMAL:
 	      if( sep < 1 ){
-		snprintf(tbuf, SZ_LINE, ", %.6f\"", sep * 3600.0);
+		snprintf(tbuf, SZ_LINE, ",%.6f\"", sep * 3600.0);
 		strncat(str, tbuf, SZ_LINE-1);
 	      } else {
-		snprintf(tbuf, SZ_LINE, ", %.6fd", sep);
+		snprintf(tbuf, SZ_LINE, ",%.6fd", sep);
 		strncat(str, tbuf, SZ_LINE-1);
 	      }
 	      break;
 	    default:
-	      snprintf(tbuf, SZ_LINE, ", %.6f", sep);
+	      snprintf(tbuf, SZ_LINE, ",%.6f", sep);
 	      strncat(str, tbuf, SZ_LINE-1);
 	      break;
 	    }
@@ -569,7 +573,7 @@ char *reg2wcsstr(int n, char *regstr){
 	/* output angle, as needed */
 	if( !strcmp(s, "box") || !strcmp(s, "ellipse") || !strcmp(s, "text") ){
 	  while( dval1 < 0 ) dval1 += (2.0 * PI);
-	  snprintf(tbuf, SZ_LINE, ", %.6f", RAD2DEG(dval1));
+	  snprintf(tbuf, SZ_LINE, ",%.6f", RAD2DEG(dval1));
 	  strncat(str, tbuf, SZ_LINE-1);
 	}
 	/* close region */
