@@ -2708,7 +2708,7 @@ JS9.Colorbar.display = function(im){
 	prec = JS9.floatPrecision(Math.min(im.params.scalemin,im.psInverse[0]),
 	     Math.max(im.params.scalemax, im.psInverse[im.psInverse.length-1]));
 	// make labels, with a feeble attempt to avoid duplicates
-	for(j=0; j<3; j++){
+	for(j=0; j<5; j++){
 	    done = true;
 	    // gather array of labels
 	    for(i=0; i<this.ticks; i++){

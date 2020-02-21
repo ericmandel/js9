@@ -6366,9 +6366,8 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
     const sep1 = "\t ";
     const sep2 = "\t\t ";
     const sp = "&nbsp;&nbsp;&nbsp;&nbsp;";
-    const prec = JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
     const tf = (fval) => {
-	return JS9.floatFormattedString(fval, prec, 3);
+	return JS9.floatFormattedString(fval, this.params.precision, 3);
     };
     const tr = (fval, length) => {
 	length = length || 3;
@@ -6783,6 +6782,8 @@ JS9.Image.prototype.setScale = function(...args){
 	    }
 	    break;
 	}
+	this.params.precision =
+	    JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
 	this.displayImage("colors");
     }
     // extended plugins
@@ -7124,6 +7125,8 @@ JS9.Image.prototype.dataminmax = function(dmin, dmax){
     if( remaxscale ){
 	this.params.scalemax = this.raw.dmax;
     }
+    this.params.precision =
+	JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
     // allow chaining
     return this;
 };
@@ -7167,6 +7170,8 @@ JS9.Image.prototype.zscale = function(setvals){
 	this.params.scalemin = this.params.z1;
 	this.params.scalemax = this.params.z2;
     }
+    this.params.precision =
+	JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
     // allow chaining
     return this;
 };
@@ -18632,17 +18637,19 @@ JS9.floatToString = function(fval){
 		   parseFloat(fval.toFixed(JS9.globalOpts.floatPrecision)));
 };
 
-// figure out precision from range of values
+// figure out precision from range of values (used by colorbar)
 // from: /tksao1.0/colorbar/colorbarbase.C
 JS9.floatPrecision = function(fval1, fval2){
     let prec;
     let aa = Math.floor(Math.log10(Math.abs(fval1)));
     let bb = Math.floor(Math.log10(Math.abs(fval2)));
-    if( aa !== bb ){
-      prec = aa > bb ? aa : bb;
-    } else {
-      prec = 1;
-    }
+// not sure why prec is set to 1 in the else clause so ...
+//    if( aa !== bb ){
+//      prec = aa > bb ? aa : bb;
+//    } else {
+//      prec = 1;
+//    }
+    prec = Math.max(aa, bb);
     return prec;
 };
 
