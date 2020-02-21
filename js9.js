@@ -12409,6 +12409,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     if( !opts.restoreid ){
 	delete opts.id;
     }
+    delete opts.restoreid;
     // pre-processing special keys
     if( opts.tags ){
 	if( typeof opts.tags === "string" ){
