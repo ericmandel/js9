@@ -16,11 +16,11 @@ JS9.Panner.SWIDTH =  250;	// width of div
 JS9.Panner.SHEIGHT = 250;	// height of div
 JS9.Panner.VSIZE = 30;
 JS9.Panner.NORTH = {
-    color: "#00FF00", text: "N", fontSize: 12,
+    color: "#00FF00", text: "N", fontSize: 12, fontFamily: "Helvetica",
     strokeWidth: 1, strokeDashArray: [2,1]
 };
 JS9.Panner.EAST  = {
-    color: "#FFFF00",  text: "E", fontSize: 12,
+    color: "#FFFF00",  text: "E", fontSize: 12, fontFamily: "Helvetica",
     strokeWidth: 1, strokeDashArray: [2,1]
 };
 
@@ -395,6 +395,7 @@ JS9.Panner.disp = function(im){
     nobjt = {color: JS9.Panner.NORTH.color,
 	     text: JS9.Panner.NORTH.text,
 	     fontSize: JS9.Panner.NORTH.fontSize,
+	     fontFamily: JS9.Panner.NORTH.fontFamily,
 	     changeable: false,
 	     left: npos2.x, top: npos2.y};
     im.panner.northidt = im.addShapes("panner", "text", nobjt);
@@ -420,6 +421,7 @@ JS9.Panner.disp = function(im){
     eobjt = {color: JS9.Panner.EAST.color,
 	     text: JS9.Panner.EAST.text,
 	     fontSize: JS9.Panner.EAST.fontSize,
+	     fontFamily: JS9.Panner.EAST.fontFamily,
 	     changeable: false,
 	     left: epos2.x, top: epos2.y};
     im.panner.eastidt = im.addShapes("panner", "text", eobjt);
