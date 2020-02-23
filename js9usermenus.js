@@ -111,60 +111,60 @@ JS9.globalOpts.userMenuBar = [
     {
 	"name": "colormap",
 	"title": "myColormaps",
-	"imageTitle": "images/toolbar/dax_images/cmap_viridis.png",
+	"imageTitle": "images/voyager/cmap_viridis.png",
 	"updateTitle": "image",
 	"options": [
 	    {
 		"name": "grey",
-		"image": "images/toolbar/dax_images/cmap_grey.png",
+		"image": "images/voyager/cmap_grey.png",
 		"cmd": "SetColormap",
 		"args": ["grey"]
 	    },
 	    {
 		"name": "cool",
-		"image": "images/toolbar/dax_images/cmap_cool.png",
+		"image": "images/voyager/cmap_cool.png",
 		"cmd": "SetColormap",
 		"args": ["cool"]
 	    },
 	    {
 		"name": "heat",
-		"image": "images/toolbar/dax_images/cmap_heat.png",
+		"image": "images/voyager/cmap_heat.png",
 		"cmd": "SetColormap",
 		"args": ["heat"]
 	    },
 	    {
 		"name": "viridis",
-		"image": "images/toolbar/dax_images/cmap_viridis.png",
+		"image": "images/voyager/cmap_viridis.png",
 		"cmd": "SetColormap",
 		"args": ["viridis"]
 	    },
 	    {
 		"name": "magma",
-		"image": "images/toolbar/dax_images/cmap_magma.png",
+		"image": "images/voyager/cmap_magma.png",
 		"cmd": "SetColormap",
 		"args": ["magma"]
 	    },
 	    {
 		"name": "sls",
-		"image": "images/toolbar/dax_images/cmap_sls.png",
+		"image": "images/voyager/cmap_sls.png",
 		"cmd": "SetColormap",
 		"args": ["sls"]
 	    },
 	    {
 		"name": "red",
-		"image": "images/toolbar/dax_images/cmap_red.png",
+		"image": "images/voyager/cmap_red.png",
 		"cmd": "SetColormap",
 		"args": ["red"]
 	    },
 	    {
 		"name": "green",
-		"image": "images/toolbar/dax_images/cmap_green.png",
+		"image": "images/voyager/cmap_green.png",
 		"cmd": "SetColormap",
 		"args": ["green"]
 	    },
 	    {
 		"name": "blue",
-		"image": "images/toolbar/dax_images/cmap_blue.png",
+		"image": "images/voyager/cmap_blue.png",
 		"cmd": "SetColormap",
 		"args": ["blue"]
 	    },
@@ -173,55 +173,55 @@ JS9.globalOpts.userMenuBar = [
     {
 	"name": "regions",
 	"title": "myRegions",
-	"imageTitle": "images/toolbar/svg/circle.svg",
+	"imageTitle": "images/voyager/circle.svg",
 	"updateTitle": "image",
 	"options": [
 	    {
 		"name": "annulus",
 		"cmd": "AddRegions",
-		"image": "images/toolbar/svg/annulus.svg",
+		"image": "images/voyager/annulus.svg",
 		"args": ["annulus"]
 	    },
 	    {
 		"name": "box",
 		"cmd": "AddRegions",
-		"image": "images/toolbar/svg/box.svg",
+		"image": "images/voyager/box.svg",
 		"args": ["box"]
 	    },
 	    {
 		"name": "circle",
 		"cmd": "AddRegions",
-		"image": "images/toolbar/svg/circle.svg",
+		"image": "images/voyager/circle.svg",
 		"args": ["circle"]
 	    },
 	    {
 		"name": "ellipse",
 		"cmd": "AddRegions",
-		"image": "images/toolbar/svg/ellipse.svg",
+		"image": "images/voyager/ellipse.svg",
 		"args": ["ellipse"]
 	    },
 	    {
 		"name": "line",
 		"cmd": "AddRegions",
-		"image": "images/toolbar/svg/line.svg",
+		"image": "images/voyager/line.svg",
 		"args": ["line"]
 	    },
 	    {
 		"name": "point",
 		"cmd": "AddRegions",
-		"image": "images/toolbar/svg/dot.svg",
+		"image": "images/voyager/dot.svg",
 		"args": ["point"]
 	    },
 	    {
 		"name": "polygon",
 		"cmd": "AddRegions",
-		"image": "images/toolbar/svg/polygon.svg",
+		"image": "images/voyager/polygon.svg",
 		"args": ["polygon"]
 	    },
 	    {
 		"name": "text",
 		"cmd": "AddRegions",
-		"image": "images/toolbar/svg/txt.svg",
+		"image": "images/voyager/txt.svg",
 		"args": ["text"]
 	    }
 	]

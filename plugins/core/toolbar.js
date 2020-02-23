@@ -75,49 +75,49 @@ JS9.Toolbar.tools = [
   {
     "name": "annulus",
     "tip": "annulus region",
-    "image": "images/toolbar/svg/annulus.svg",
+    "image": "images/toolbar/voyager/annulus.svg",
     "cmd": "AddRegions",
     "args": ["annulus"]
   },
   {
     "name": "box",
     "tip": "box region",
-    "image": "images/toolbar/svg/box.svg",
+    "image": "images/toolbar/voyager/box.svg",
     "cmd": "AddRegions",
     "args": ["box"]
   },
   {
     "name": "circle",
     "tip": "circle region",
-    "image": "images/toolbar/svg/circle.svg",
+    "image": "images/toolbar/voyager/circle.svg",
     "cmd": "AddRegions",
     "args": ["circle"]
   },
   {
     "name": "ellipse",
     "tip": "ellipse region",
-    "image": "images/toolbar/svg/ellipse.svg",
+    "image": "images/toolbar/voyager/ellipse.svg",
     "cmd": "AddRegions",
     "args": ["ellipse"]
   },
   {
     "name": "line",
     "tip": "line region",
-    "image": "images/toolbar/svg/line.svg",
+    "image": "images/toolbar/voyager/line.svg",
     "cmd": "AddRegions",
     "args": ["line"]
   },
   {
     "name": "polygon",
     "tip": "polygon region",
-    "image": "images/toolbar/svg/polygon.svg",
+    "image": "images/toolbar/voyager/polygon.svg",
     "cmd": "AddRegions",
     "args": ["polygon"]
   },
   {
     "name": "text",
     "tip": "text region",
-    "image": "images/toolbar/svg/txt.svg",
+    "image": "images/toolbar/voyager/txt.svg",
     "cmd": "AddRegions",
     "args": ["text"]
   },
