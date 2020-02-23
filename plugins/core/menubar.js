@@ -309,6 +309,8 @@ JS9.Menubar.createMenus = function(){
 	itemClickEvent: JS9.globalOpts.menuClickEvent || "click",
         build: () => {
 	    let i, m, im, name, s1, arr, cdisp, got, iobj;
+	    let plugin, pname, pinst;
+	    let lastxclass="";
 	    let n = 0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
@@ -672,8 +674,28 @@ JS9.Menubar.createMenus = function(){
 		items.windowPrint = xname("print window ...");
 		items.windowPDF = xname("save window to pdf");
 	    }
+	    // plugins
+	    for(i=0; i<JS9.plugins.length; i++){
+		plugin = JS9.plugins[i];
+		pname = plugin.name;
+		if( plugin.opts.menuItem && (plugin.opts.menu === "file") ){
+		    pinst = tdisp.pluginInstances[pname];
+		    if( !pinst || pinst.winHandle ){
+			if( plugin.xclass !== lastxclass ){
+			    items["sep" + n] = "------";
+			    n = n + 1;
+			}
+			lastxclass = plugin.xclass;
+			items[pname] = xname(plugin.opts.menuItem);
+			if( pinst && (pinst.status === "active") ){
+			    items[pname].icon = JS9.globalOpts.menuSelected;
+			}
+		    }
+		}
+	    }
 	    return {
                 callback: (key, opt) => {
+		    let uplugin;
 		    JS9.Menubar.getDisplays.call(this, "any", key)
 			.forEach((val) => {
 			let j, s, t, did, kid, unew, uwin, uobj, uarr, uopts;
@@ -946,6 +968,15 @@ JS9.Menubar.createMenus = function(){
 				}
 				return;
 			    }
+			    // maybe it's a plugin
+			    for(j=0; j<JS9.plugins.length; j++){
+				uplugin = JS9.plugins[j];
+				if( uplugin.name === key ){
+				    udisp.displayPlugin(uplugin);
+				    return;
+				}
+			    }
+			    // maybe its an image
 			    for(j=0; j<JS9.images.length; j++){
 				uim = JS9.images[j];
 				kid = key.replace(/ *\((red|green|blue)\)/,"");

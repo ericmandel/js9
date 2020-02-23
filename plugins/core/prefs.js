@@ -940,7 +940,8 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 
 // add preference plugin into JS9
 JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME, JS9.Prefs.init,
-		   {menuItem: "Preferences",
+		   {menu: "file",
+		    menuItem: "Preferences",
 		    help: "help/prefs.html",
 		    winTitle: "User Preferences",
 		    winResize: true,
