@@ -1899,7 +1899,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1, s2, arr;
+	    let i, s1, s2, hstr, arr;
 	    let n = 0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
@@ -1967,7 +1967,12 @@ JS9.Menubar.createMenus = function(){
 	    for(i=0; i<JS9.globalOpts.topColormaps.length; i++){
 		s1 = JS9.globalOpts.topColormaps[i];
 		s2 = s1;
-		items[s1] = xname(s2);
+		if( JS9.globalOpts.menuColormapImages ){
+		    hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='images/voyager/cmap_${s2}.png' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' >` + `&nbsp;&nbsp;${s2}</div>`;
+		    items[s1] = {name: hstr, isHtmlName: true};
+		} else {
+		    items[s1] = xname(s2);
+		}
 		if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
 		    items[s1].icon = JS9.globalOpts.menuSelected;
 		}
@@ -1985,7 +1990,12 @@ JS9.Menubar.createMenus = function(){
 		s1 = JS9.colormaps[i].name;
 		if( !JS9.globalOpts.topColormaps.includes(s1) ){
 		    s2 = s1;
-		    items.morecmaps.items[s1] = xname(s2);
+		    if( JS9.globalOpts.menuColormapImages ){
+			hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='images/voyager/cmap_${s2}.png' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' >` + `&nbsp;&nbsp;${s2}</div>`;
+			items.morecmaps.items[s1] = {name: hstr, isHtmlName: true};
+		    } else {
+			items.morecmaps.items[s1] = xname(s2);
+		    }
 		    if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
 			items.morecmaps.items[s1].icon = JS9.globalOpts.menuSelected;
 		    }
@@ -2109,7 +2119,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1;
+	    let i, s1, reg;
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
 	    const tim = tdisp.image;
 	    const items = {};
@@ -2215,14 +2225,18 @@ JS9.Menubar.createMenus = function(){
 		name: "Regions:",
 		disabled: true
 	    };
-	    items.annulus = xname("annulus");
-	    items.box = xname("box");
-	    items.circle = xname("circle");
-	    items.ellipse = xname("ellipse");
-	    items.line = xname("line");
-	    items.point = xname("point");
-	    items.polygon = xname("polygon");
-	    items.text = xname("text");
+	    if( JS9.globalOpts.menuRegionsImages ){
+		for(i=0; i<JS9.regions.length; i++){
+		    reg = JS9.regions[i];
+		    items[reg] = {name: `<div class='JS9MenubarImage' name='${reg}'><img src='images/voyager/${reg}.svg' name='regions_${reg}' class='JS9MenubarImage JS9MenubarImageOption' >` + `&nbsp;&nbsp;${reg}</div>`,
+				  isHtmlName: true};
+		}
+	    } else {
+		for(i=0; i<JS9.regions.length; i++){
+		    reg = JS9.regions[i];
+		    items[reg] = xname(reg);
+		}
+	    }
 	    items.sep1 = "------";
 	    items.loadRegions  = xname("load");
 	    items.listRegions  = xname("list");

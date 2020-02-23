@@ -1922,17 +1922,39 @@ img.JS9Logo {
     border: 0px solid #d5d5d5;
 }
 
-/* CSS for images loaded as part of the user-defined menubar */
-div.JS9MenubarUserImage{
+/* CSS for images loaded as part of the menubar */
+div.JS9MenubarImage {
     white-space:nowrap;
 }
 
-img.JS9MenubarUserImage{
+img.JS9MenubarImage {
     vertical-align: middle;
     padding: 0px;
     margin:  0px;
-    width:  50px;
+    width:  40px;
     height: 12px;
+}
+
+/* CSS for images loaded as part of the user-defined menubar */
+div.JS9MenubarUserImage {
+    white-space:nowrap;
+}
+
+img.JS9MenubarUserImage {
+    vertical-align: middle;
+    padding: 0px;
+    margin:  0px;
+    height: 12px;
+}
+
+/* all menu option images in the "regions" menu */
+img.JS9MenubarImageOption[name^="color_"]{
+    width:  40px;
+}
+
+/* all menu option images in the "regions" menu */
+img.JS9MenubarImageOption[name^="regions_"]{
+    width:  16px;
 }
 
 /* menu option hint for key-press action */

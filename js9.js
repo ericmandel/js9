@@ -263,6 +263,8 @@ JS9.globalOpts = {
     menuPosition: "right-5 bottom-5",                 // where menus pop up
     menuClickEvent: "mouseup",                        // "click" or "mouseup"
     menuSelected: "check",                            // selected option icon
+    menuColormapImages: true,                         // show pngs in cmap menu?
+    menuRegionsImages: true,                          // show pngs in reg menu?
     userMenus: false,                                 // add user menus?
     userMenuDivider: "&nbsp;&nbsp;&nbsp;",            // divide before user menu
     imagesFileSubmenu: 5,        // how many images trigger a submenu?
@@ -520,6 +522,10 @@ JS9.wcssyss = ["FK4", "FK5", "ICRS", "galactic", "ecliptic", "native",
 
 // list of known wcs units
 JS9.wcsunitss = ["degrees", "sexagesimal", "pixels"];
+
+// list of known regions
+JS9.regions = ["annulus", "box", "circle", "ellipse", "line", "point",
+	       "polygon", "text"];
 
 // known bugs and work-arounds
 JS9.bugs = {};
