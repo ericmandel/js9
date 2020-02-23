@@ -187,7 +187,7 @@ JS9.Menubar.createMenus = function(){
 	if( JS9.notNull(act) && JS9.Menubar.rkeyMap ){
 	    key = JS9.Menubar.rkeyMap[act];
 	    if( key ){
-		hstr = `<span>${name} <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;${key}</span></span>`;
+		hstr = `<span>${name}<span class="JS9MenubarKeyAction">&nbsp;&nbsp;&nbsp;&nbsp;${key}</span></span>`;
 		obj = {name: hstr, isHtmlName: true};
 	    }
 	} else if( xact && JS9.Menubar.rkeyMap ){
@@ -195,7 +195,7 @@ JS9.Menubar.createMenus = function(){
 		if( JS9.Menubar.rkeyMap.hasOwnProperty(tact) && tact === xact ){
 		    key = JS9.Menubar.rkeyMap[tact];
 		    if( key ){
-			hstr = `<span>${name} <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;${key}</span></span>`;
+			hstr = `<span>${name}<span class="JS9MenubarKeyAction">&nbsp;&nbsp;&nbsp;;&nbsp;${key}</span></span>`;
 			obj = {name: hstr, isHtmlName: true};
 		    }
 		}

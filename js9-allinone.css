@@ -1935,6 +1935,12 @@ img.JS9MenubarUserImage{
     height: 12px;
 }
 
+/* menu option hint for key-press action */
+span.JS9MenubarKeyAction{
+    float: right;
+    font: bold 9pt Courier;
+}
+
 div.JS9ConsoleContainer {
     /* absolute pos top/left for positioning, Flanagan's JavaScript, p 357 */
     /* why is this relative?? absolute positions make it tiny!! */
