@@ -75,49 +75,49 @@ JS9.Toolbar.tools = [
   {
     "name": "annulus",
     "tip": "annulus region",
-    "image": "images/toolbar/voyager/annulus.svg",
+    "image": "images/voyager/regions_annulus.svg",
     "cmd": "AddRegions",
     "args": ["annulus"]
   },
   {
     "name": "box",
     "tip": "box region",
-    "image": "images/toolbar/voyager/box.svg",
+    "image": "images/voyager/regions_box.svg",
     "cmd": "AddRegions",
     "args": ["box"]
   },
   {
     "name": "circle",
     "tip": "circle region",
-    "image": "images/toolbar/voyager/circle.svg",
+    "image": "images/voyager/regions_circle.svg",
     "cmd": "AddRegions",
     "args": ["circle"]
   },
   {
     "name": "ellipse",
     "tip": "ellipse region",
-    "image": "images/toolbar/voyager/ellipse.svg",
+    "image": "images/voyager/regions_ellipse.svg",
     "cmd": "AddRegions",
     "args": ["ellipse"]
   },
   {
     "name": "line",
     "tip": "line region",
-    "image": "images/toolbar/voyager/line.svg",
+    "image": "images/voyager/regions_line.svg",
     "cmd": "AddRegions",
     "args": ["line"]
   },
   {
     "name": "polygon",
     "tip": "polygon region",
-    "image": "images/toolbar/voyager/polygon.svg",
+    "image": "images/voyager/regions_polygon.svg",
     "cmd": "AddRegions",
     "args": ["polygon"]
   },
   {
     "name": "text",
     "tip": "text region",
-    "image": "images/toolbar/voyager/txt.svg",
+    "image": "images/voyager/regions_text.svg",
     "cmd": "AddRegions",
     "args": ["text"]
   },
@@ -144,12 +144,14 @@ JS9.Toolbar.tools = [
   },
   {
     "name": "zoom+",
+    "image": "images/voyager/zoom_in.svg",
     "tip": "zoom in",
     "cmd": "SetZoom",
     "args": ["x2"]
   },
   {
     "name": "zoom-",
+    "image": "images/voyager/zoom_out.svg",
     "tip": "zoom out",
     "cmd": "SetZoom",
     "args": ["/2"]
@@ -157,8 +159,16 @@ JS9.Toolbar.tools = [
   {
     "name": "zoom1",
     "tip": "zoom 1",
+    "image": "images/voyager/zoom_1.svg",
     "cmd": "SetZoom",
     "args": [1]
+  },
+  {
+    "name": "zoomtofit",
+    "tip": "zoom to fit",
+    "image": "images/voyager/zoom_tofit.svg",
+    "cmd": "SetZoom",
+    "args": ["toFit"]
   },
   {
     "name": "open",
@@ -349,7 +359,7 @@ JS9.Toolbar.init = function(width, height){
 	}
     }
     // add a break between important tools and the rest
-    // JS9.Toolbar.addTool.call(this, "$break");
+    JS9.Toolbar.addTool.call(this, "$break");
     // add tools not in the globalOpts to the bottom of the list
     for(i=0; i<JS9.Toolbar.tools.length; i++){
 	tool = JS9.Toolbar.tools[i];

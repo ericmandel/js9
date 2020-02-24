@@ -267,7 +267,7 @@ JS9.globalOpts = {
     userMenus: false,                                 // add user menus?
     userMenuDivider: "&nbsp;&nbsp;&nbsp;",            // divide before user menu
     imagesFileSubmenu: 5,        // how many images trigger a submenu?
-    toolBar: ["annulus", "box", "circle", "ellipse", "line", "polygon", "text", "linear", "log", "zoom+", "zoom-", "zoom1"],
+    toolBar: ["annulus", "box", "circle", "ellipse", "line", "polygon", "text", "zoom+", "zoom-", "zoom1", "zoomtofit"],
     syncOps: ["colormap","contrastbias","flip","pan","regions","rot90","scale","wcs","zoom"],                                         // which ops are sync'ed?
     syncReciprocate: true,       // default value for reciprocal sync'ing
     syncWCS: true,               // default value for using WCS to sync
