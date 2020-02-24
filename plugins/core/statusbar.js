@@ -84,9 +84,8 @@ JS9.Statusbar.display = function(im){
 	        .replace(/ __OB__ /g, "[")
 	        .replace(/ __CB__ /g, "]");
 	    // wrap in element containers
-	    s = `<span class='JS9StatusbarItemContainer JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this)'>${s}</span></span>`
-	        .replace(/: */g, ": <span class='JS9StatusbarItemValue'>")
-	        .replace(/; */g, "</span></span>&nbsp;<span class='JS9StatusbarItemContainer JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this)'>")
+	    s = `<span class='JS9StatusbarItemContainer JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this)'>${s}</span>`
+	        .replace(/; */g, "</span>&nbsp;<span class='JS9StatusbarItemContainer JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this)'>")
 	        .replace(/\$img\(([^()]+)\)/g, "<img src='$1' name='$1' class='JS9StatusbarImage JS9StatusbarImageOption'>");
 	}
 	this.statusContainer.html(s);
