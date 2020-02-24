@@ -111,60 +111,60 @@ JS9.globalOpts.userMenuBar = [
     {
 	"name": "colormap",
 	"title": "myColormaps",
-	"imageTitle": "images/voyager/cmap_viridis.png",
+	"imageTitle": "images/voyager/color_viridis.png",
 	"updateTitle": "image",
 	"options": [
 	    {
 		"name": "grey",
-		"image": "images/voyager/cmap_grey.png",
+		"image": "images/voyager/color_grey.png",
 		"cmd": "SetColormap",
 		"args": ["grey"]
 	    },
 	    {
 		"name": "cool",
-		"image": "images/voyager/cmap_cool.png",
+		"image": "images/voyager/color_cool.png",
 		"cmd": "SetColormap",
 		"args": ["cool"]
 	    },
 	    {
 		"name": "heat",
-		"image": "images/voyager/cmap_heat.png",
+		"image": "images/voyager/color_heat.png",
 		"cmd": "SetColormap",
 		"args": ["heat"]
 	    },
 	    {
 		"name": "viridis",
-		"image": "images/voyager/cmap_viridis.png",
+		"image": "images/voyager/color_viridis.png",
 		"cmd": "SetColormap",
 		"args": ["viridis"]
 	    },
 	    {
 		"name": "magma",
-		"image": "images/voyager/cmap_magma.png",
+		"image": "images/voyager/color_magma.png",
 		"cmd": "SetColormap",
 		"args": ["magma"]
 	    },
 	    {
 		"name": "sls",
-		"image": "images/voyager/cmap_sls.png",
+		"image": "images/voyager/color_sls.png",
 		"cmd": "SetColormap",
 		"args": ["sls"]
 	    },
 	    {
 		"name": "red",
-		"image": "images/voyager/cmap_red.png",
+		"image": "images/voyager/color_red.png",
 		"cmd": "SetColormap",
 		"args": ["red"]
 	    },
 	    {
 		"name": "green",
-		"image": "images/voyager/cmap_green.png",
+		"image": "images/voyager/color_green.png",
 		"cmd": "SetColormap",
 		"args": ["green"]
 	    },
 	    {
 		"name": "blue",
-		"image": "images/voyager/cmap_blue.png",
+		"image": "images/voyager/color_blue.png",
 		"cmd": "SetColormap",
 		"args": ["blue"]
 	    },
