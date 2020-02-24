@@ -8319,7 +8319,7 @@ JS9.Menubar.createMenus = function(){
 	    if( JS9.globalOpts.menuRegionsImages ){
 		for(i=0; i<JS9.regions.length; i++){
 		    reg = JS9.regions[i];
-		    items[reg] = {name: `<div class='JS9MenubarImage' name='${reg}'><img src='images/voyager/${reg}.svg' name='regions_${reg}' class='JS9MenubarImage JS9MenubarImageOption' >` + `&nbsp;&nbsp;${reg}</div>`,
+		    items[reg] = {name: `<div class='JS9MenubarImage' name='${reg}'><img src='images/voyager/regions_${reg}.svg' name='regions_${reg}' class='JS9MenubarImage JS9MenubarImageOption' >` + `&nbsp;&nbsp;${reg}</div>`,
 				  isHtmlName: true};
 		}
 	    } else {

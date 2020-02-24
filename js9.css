@@ -146,12 +146,12 @@ img.JS9MenubarUserImage {
     height: 12px;
 }
 
-/* all menu option images in the "regions" menu */
+/* menu option images in the "color" menu */
 img.JS9MenubarImageOption[name^="color_"]{
     width:  40px;
 }
 
-/* all menu option images in the "regions" menu */
+/* menu option images in the "regions" menu */
 img.JS9MenubarImageOption[name^="regions_"]{
     width:  16px;
 }
