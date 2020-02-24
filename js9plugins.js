@@ -8058,7 +8058,7 @@ JS9.Menubar.createMenus = function(){
 	    for(i=0; i<JS9.globalOpts.topColormaps.length; i++){
 		s1 = JS9.globalOpts.topColormaps[i];
 		s2 = s1;
-		if( JS9.globalOpts.menuColormapImages ){
+		if( JS9.globalOpts.menuImages ){
 		    hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='images/voyager/cmap_${s2}.png' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' >` + `&nbsp;&nbsp;${s2}</div>`;
 		    items[s1] = {name: hstr, isHtmlName: true};
 		} else {
@@ -8081,7 +8081,7 @@ JS9.Menubar.createMenus = function(){
 		s1 = JS9.colormaps[i].name;
 		if( !JS9.globalOpts.topColormaps.includes(s1) ){
 		    s2 = s1;
-		    if( JS9.globalOpts.menuColormapImages ){
+		    if( JS9.globalOpts.menuImages ){
 			hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='images/voyager/cmap_${s2}.png' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' >` + `&nbsp;&nbsp;${s2}</div>`;
 			items.morecmaps.items[s1] = {name: hstr, isHtmlName: true};
 		    } else {
@@ -8316,7 +8316,7 @@ JS9.Menubar.createMenus = function(){
 		name: "Regions:",
 		disabled: true
 	    };
-	    if( JS9.globalOpts.menuRegionsImages ){
+	    if( JS9.globalOpts.menuImages ){
 		for(i=0; i<JS9.regions.length; i++){
 		    reg = JS9.regions[i];
 		    items[reg] = {name: `<div class='JS9MenubarImage' name='${reg}'><img src='images/voyager/regions_${reg}.svg' name='regions_${reg}' class='JS9MenubarImage JS9MenubarImageOption' >` + `&nbsp;&nbsp;${reg}</div>`,
