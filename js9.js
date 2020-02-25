@@ -228,10 +228,8 @@ JS9.globalOpts = {
     }, // keyboard actions
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     metaClickPan: true,         // metaKey + click pans to mouse position?
-    // statusBar: ["zoom", "scale", "colormap", "wcssys"],  // status display
-    // statusBar: "zoom: $zoom; scale: $scale/$scaleclipping($scalemin,$scalemax); color: $colormap($contrast,$bias); wcs: $wcssys($wcsunits)",  // status display
     // statusBar: "$mag; $scale($scaleclipping); $img(images/voyager/color_$colormap.png) $colormap; $wcssys",  // status display
-    statusBar: "$mag; $colorbar; $scale($scaleclipping,$scalemin,$scalemax); $wcssys",  // status display
+    statusBar: "$mag; $colorbar; $scale($scaleclipping:$scalemin,$scalemax); $wcssys",  // status display
     toolbarTooltips: false,     // display tooltips on toolbar?
     centerDivs: ["JS9Menubar"], // divs which take part in JS9.Display.center()
     resizeDivs: ["JS9Menubar", "JS9Colorbar", "JS9Toolbar", "JS9Statusbar"], // divs which take part in JS9.Display.resize()

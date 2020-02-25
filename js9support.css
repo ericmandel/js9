@@ -1647,7 +1647,7 @@ div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
     font: normal 12px Arial;
 }
 
-.JS9StatusbarItemContainer {
+.JS9StatusbarItem {
     display:inline-block;
     vertical-align:middle;
     text-align:center;
@@ -1661,7 +1661,7 @@ div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
     padding-left: 2px;
 }
 
-.JS9StatusbarItemContainer[name*="JS9Colorbar"] {
+.JS9StatusbarItem[name*="JS9Colorbar"] {
     margin-top: 0px;
     padding-right: 0px;
     padding-left: 0px;
@@ -1671,7 +1671,7 @@ img.JS9StatusbarImage {
     white-space:nowrap;
 }
 
-img.JS9StatusbarImageOption[name*="zoom_"]{
+img.JS9StatusbarImageItem[name*="zoom_"]{
     height: 12px;
     width:  12px;
 }
