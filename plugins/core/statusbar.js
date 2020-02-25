@@ -11,7 +11,9 @@ JS9.Statusbar = {};
 JS9.Statusbar.CLASS = "JS9";      // class of plugins (1st part of div class)
 JS9.Statusbar.NAME = "Statusbar"; // name of this plugin (2nd part of div class)
 JS9.Statusbar.WIDTH =  512;       // width of light window
-JS9.Statusbar.HEIGHT = 24;        // height of light window
+JS9.Statusbar.HEIGHT = 28;        // height of light window
+JS9.Statusbar.COLORWIDTH =  100;  // width of colorbar, if present
+JS9.Statusbar.COLORHEIGHT = 14;        // height of colorbar, if present
 JS9.Statusbar.BASE = JS9.Statusbar.CLASS + JS9.Statusbar.NAME;
 
 // when an item is clicked, we want to highlight it
@@ -84,11 +86,15 @@ JS9.Statusbar.display = function(im){
 	        .replace(/ __OB__ /g, "[")
 	        .replace(/ __CB__ /g, "]");
 	    // wrap in element containers
-	    s = `<span class='JS9StatusbarItemContainer JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this)'>${s}</span>`
-	        .replace(/; */g, "</span>&nbsp;<span class='JS9StatusbarItemContainer JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this)'>")
-	        .replace(/\$img\(([^()]+)\)/g, "<img src='$1' name='$1' class='JS9StatusbarImage JS9StatusbarImageOption'>");
+	    s = `<div class='JS9StatusbarItemContainer JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this)'>${s}</div>`
+	        .replace(/; */g, "</div>&nbsp;<div class='JS9StatusbarItemContainer JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this)'>")
+	        .replace(/\$img\(([^()]+)\)/g, "<img src='$1' name='$1' class='JS9StatusbarImage JS9StatusbarImageOption JS9StatusbarItemNoHighlight'>")
+	        .replace(/\$colorbar/g, `<div name='JS9Colorbar' class='JS9Colorbar JS9StatusbarItemContainer JS9StatusbarPluginItem' data-width="${this.colorwidth}px" data-height="${this.colorheight}px" data-showTicks="false" ></div>`);
 	}
 	this.statusContainer.html(s);
+	if( JS9.globalOpts.statusBar.match(/\$colorbar/) ){
+	    JS9.AddDivs({display: im});
+	}
     } else {
 	this.statusContainer.html("");
     }
@@ -117,6 +123,8 @@ JS9.Statusbar.init = function(width, height){
     }
     this.divjq.css("height", this.height);
     this.height = parseInt(this.divjq.css("height"), 10);
+    this.colorwidth = parseInt(this.divjq.attr("data-colorbarwidth"), 10) || JS9.Statusbar.COLORWIDTH;
+    this.colorheight = parseInt(this.divjq.attr("data-colorbarheight"), 10) || JS9.Statusbar.COLORHEIGHT;
     // clean plugin container
     this.divjq.html("");
     // status container
@@ -164,13 +172,8 @@ JS9.RegisterPlugin(JS9.Statusbar.CLASS, JS9.Statusbar.NAME, JS9.Statusbar.init,
 		    onimagedisplay: JS9.Statusbar.imagedisplay,
 		    onimageclear: JS9.Statusbar.imageclear,
 		    onimageclose: JS9.Statusbar.imageclear,
-		    onsetcolormap: JS9.Statusbar.imagedisplay,
-		    onsetcontrastbias: JS9.Statusbar.imagedisplay,
-		    onsetpan: JS9.Statusbar.imagedisplay,
-		    onsetscale: JS9.Statusbar.imagedisplay,
 		    onsetwcssys: JS9.Statusbar.imagedisplay,
 		    onsetwcsunits: JS9.Statusbar.imagedisplay,
-		    onsetzoom: JS9.Statusbar.imagedisplay,
 		    help: "help/status.html",
 		    winTitle: "Status",
 		    winDims: [JS9.Statusbar.WIDTH, JS9.Statusbar.HEIGHT]});
