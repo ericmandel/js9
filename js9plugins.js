@@ -12107,8 +12107,8 @@ JS9.Statusbar = {};
 JS9.Statusbar.CLASS = "JS9";      // class of plugins (1st part of div class)
 JS9.Statusbar.NAME = "Statusbar"; // name of this plugin (2nd part of div class)
 JS9.Statusbar.WIDTH =  512;       // width of light window
-JS9.Statusbar.HEIGHT = 30;        // height of light window
-JS9.Statusbar.COLORWIDTH =  120;  // width of colorbar, if present
+JS9.Statusbar.HEIGHT = "auto";        // height of light window
+JS9.Statusbar.COLORWIDTH =  135;  // width of colorbar, if present
 JS9.Statusbar.COLORHEIGHT = 14;   // height of colorbar, if present
 JS9.Statusbar.BASE = JS9.Statusbar.CLASS + JS9.Statusbar.NAME;
 

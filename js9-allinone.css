@@ -1643,8 +1643,6 @@ div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
 }
 .JS9StatusbarContainer {
     background-color: #E9E9E9;
-    overflow: hidden;
-    float: left;
     padding-left: 10px;
     height: 100%;
     font: normal 12px Arial;
@@ -1658,6 +1656,7 @@ div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
     background-color: #E9E9E9;
     color: black;
     margin-top: 5px;
+    margin-bottom: 5px;
     padding-top: 2px;
     padding-bottom: 2px;
     padding-right: 2px;
