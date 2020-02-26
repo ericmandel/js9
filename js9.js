@@ -229,7 +229,7 @@ JS9.globalOpts = {
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     metaClickPan: true,         // metaKey + click pans to mouse position?
     // statusBar: "$mag; $scale($scaleclipping); $img(images/voyager/color_$colormap.png) $colormap; $wcssys",  // status display
-    statusBar: "$colorbar; $mag; $scale($scaleclipping:$scalemin,$scalemax); $wcssys; $image",  // status display
+    statusBar: "$colorbar; $mag; $scale($scalemin,$scalemax); $wcssys; $image0",  // status display
     toolbarTooltips: false,     // display tooltips on toolbar?
     centerDivs: ["JS9Menubar"], // divs which take part in JS9.Display.center()
     resizeDivs: ["JS9Menubar", "JS9Colorbar", "JS9Toolbar", "JS9Statusbar"], // divs which take part in JS9.Display.resize()
@@ -5562,6 +5562,9 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	switch(u[0]){
 	case "id":
 	    r = this.display.divjq.attr("id");
+	    break;
+	case "image0":
+	    r = this.id.replace(/\[.*\]/, "");
 	    break;
 	case "image":
 	case "png":
