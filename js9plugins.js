@@ -12295,7 +12295,7 @@ JS9.Statusbar.dynamic = function(im){
 
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Statusbar.CLASS, JS9.Statusbar.NAME, JS9.Statusbar.init,
-		   {menuItem: "Status",
+		   {menuItem: "Statusbar",
 		    dynamicSelect: true,
 		    ondynamicselect: JS9.Statusbar.dynamic,
 		    onimagedisplay: JS9.Statusbar.imagedisplay,
@@ -12303,8 +12303,8 @@ JS9.RegisterPlugin(JS9.Statusbar.CLASS, JS9.Statusbar.NAME, JS9.Statusbar.init,
 		    onimageclose: JS9.Statusbar.imageclear,
 		    onsetwcssys: JS9.Statusbar.imagedisplay,
 		    onsetwcsunits: JS9.Statusbar.imagedisplay,
-		    help: "help/status.html",
-		    winTitle: "Status",
+		    help: "help/statusbar.html",
+		    winTitle: "Statusbar",
 		    winDims: [JS9.Statusbar.WIDTH, JS9.Statusbar.HEIGHT]});
 /*
  * image sync plugin (September 2, 2018)
