@@ -12161,7 +12161,7 @@ JS9.Statusbar.xeq = function(target, id){
 
 // redraw status on display
 JS9.Statusbar.display = function(im){
-    let i, s, t, oarr, arr, elements;
+    let i, s, t, oarr, arr, elements, index;
     let html = "";
     let delim = /;/;
     if( im && JS9.globalOpts.statusBar ){
@@ -12190,9 +12190,13 @@ JS9.Statusbar.display = function(im){
 	    }
 	    // set statusbar
 	    this.statusContainer.html(html);
-	    // might have to run AddDivs, if we added a plugin
+	    // colorbar plugin: run AddDivs, remove colorbar from resize list
 	    if( JS9.globalOpts.statusBar.match(/\$colorbar/) ){
 		JS9.AddDivs({display: im});
+		index = JS9.globalOpts.resizeDivs.indexOf("JS9Colorbar");
+		if( index >= 0 ){
+		    JS9.globalOpts.resizeDivs.splice(index, 1);
+		}
 	    }
 	    // save the format to detect changes
 	    im.tmp.statusbar = JS9.globalOpts.statusBar;
