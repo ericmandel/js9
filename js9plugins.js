@@ -10739,6 +10739,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "mobject",
 	    "helper": "array of infoBox items to display"
 	},
+	"statusBar": {
+	    "type": "string",
+	    "helper": "format of statusbar display"
+	},
 	"toolBar": {
 	    "type": "mobject",
 	    "helper": "array of toolbar tools to display"
@@ -10961,6 +10965,7 @@ JS9.Prefs.init = function(){
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
 			   lightWinClose: JS9.globalOpts.lightWinClose,
 			   infoBox: JS9.globalOpts.infoBox,
+			   statusBar: JS9.globalOpts.statusBar,
 			   toolBar: JS9.globalOpts.toolBar,
 			   separate: JS9.globalOpts.separate};
 	    break;
@@ -12103,7 +12108,7 @@ JS9.Statusbar.CLASS = "JS9";      // class of plugins (1st part of div class)
 JS9.Statusbar.NAME = "Statusbar"; // name of this plugin (2nd part of div class)
 JS9.Statusbar.WIDTH =  512;       // width of light window
 JS9.Statusbar.HEIGHT = 28;        // height of light window
-JS9.Statusbar.COLORWIDTH =  200;  // width of colorbar, if present
+JS9.Statusbar.COLORWIDTH =  120;  // width of colorbar, if present
 JS9.Statusbar.COLORHEIGHT = 14;   // height of colorbar, if present
 JS9.Statusbar.BASE = JS9.Statusbar.CLASS + JS9.Statusbar.NAME;
 
@@ -12167,11 +12172,11 @@ JS9.Statusbar.display = function(im){
 	    .replace(/ __CP__ /g, ")")
 	    .replace(/ __OB__ /g, "[")
 	    .replace(/ __CB__ /g, "]");
-	if( !im.tmp.statusbar ){
+	if( im.tmp.statusbar !== JS9.globalOpts.statusBar ){
 	    s = `<div class='JS9StatusbarItem JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this)'>${s}</div>`
 		.replace(/; */g, "</div>&nbsp;<div class='JS9StatusbarItem JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this)'>")
 		.replace(/\$img\(([^()]+)\)/g, "<img src='$1' name='$1' class='JS9StatusbarImageItem JS9StatusbarItemNoHighlight'>")
-		.replace(/\$colorbar/g, `<div name='JS9Colorbar' class='JS9Colorbar JS9StatusbarPluginItem' data-width="${this.colorwidth}px" data-height="${this.colorheight}px" data-showTicks="false" ></div>`);
+		.replace(/\$colorbar/g, `<div name='JS9Colorbar' id='${this.id.replace(/Statusbar/, "Colorbar")}' class='JS9Colorbar JS9StatusbarPluginItem' data-width="${this.colorwidth}px" data-height="${this.colorheight}px" data-showTicks="false" ></div>`);
 	    this.statusContainer.html(s);
 	    // give names to each item, based on input format
 	    items = this.divjq.find(`.JS9StatusbarItem`);
@@ -12183,7 +12188,7 @@ JS9.Statusbar.display = function(im){
 	    if( JS9.globalOpts.statusBar.match(/\$colorbar/) ){
 		JS9.AddDivs({display: im});
 	    }
-	    im.tmp.statusbar = this;
+	    im.tmp.statusbar = JS9.globalOpts.statusBar;
 	} else {
 	    items = this.divjq.find(`.JS9StatusbarItem`);
 	    arr = s.split(";");
