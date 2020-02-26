@@ -12207,7 +12207,17 @@ JS9.Statusbar.display = function(im){
 	    // for each element ...
 	    for(i=0; i<elements.length; i++){
 		// that is not a plugin ...
-		if( !arr[i].match(/\$colorbar/) ){
+		if( arr[i].match(/\$colorbar/) ){
+		    $.noop();
+		} else if( arr[i].match(/\$img/) ){
+		    t = arr[i].match(/\$img\((.*)\)/);
+		    if( t && t[1] ){
+			if( t[1].charAt(0) !== "/" ){
+			    t[1] = JS9.InstallDir(t[1]);
+			}
+			$(elements[i]).find("img").attr("src", t[1]);
+		    }
+		} else {
 		    // set new value
 		    $(elements[i]).html(arr[i]);
 		}
