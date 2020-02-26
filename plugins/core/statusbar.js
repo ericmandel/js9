@@ -33,7 +33,7 @@ JS9.Statusbar.xeq = function(target, id){
     s = $(target).attr("name");
     if( s ){
 	// is there a hint about what sort of menu status it contains?
-	arr = s.match(/file|image|edit|view|zoom|scale|color|regions|wcs|analysis/i);
+	arr = s.match(/file|image|edit|view|zoom|scale|color|regions|wcs|analysis|mag/i);
     }
     // bring up a control plugin, if possible
     if( arr && arr[0] ){
@@ -46,7 +46,9 @@ JS9.Statusbar.xeq = function(target, id){
 	    break;
 	case "view":
 	    break;
+	case "mag":
 	case "zoom":
+	    JS9.DisplayPlugin("JS9PanZoom", {display: id});
 	    break;
 	case "scale":
 	    JS9.DisplayPlugin("JS9Scale", {display: id});
