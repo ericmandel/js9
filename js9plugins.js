@@ -12184,7 +12184,7 @@ JS9.Statusbar.display = function(im){
 	    for(i=0; i<arr.length; i++){
 		t = `<div name='__dummy__' class='JS9StatusbarItem JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this, "${this.display.id}")'>${arr[i]}</div>&nbsp;`
 		.replace(/\$img\(([^()]+)\)/g, "<img src='$1' name='$1' class='JS9StatusbarImageItem JS9StatusbarItemNoHighlight'>")
-		.replace(/\$colorbar/g, `<div name='JS9Colorbar' id='${this.id.replace(/Statusbar/, "Colorbar")}' class='JS9Colorbar JS9StatusbarPluginItem' data-width="${this.colorwidth}px" data-height="${this.colorheight}px" data-showTicks="false" ></div>`)
+		.replace(/\$colorbar/g, `<div name='JS9Colorbar' id='${this.id.replace(/Statusbar/, "Colorbar")}' class='JS9Colorbar JS9StatusbarPluginItem' data-width="${this.colorwidth}px" data-height="${this.colorheight}px" data-colorbarHeight="${this.colorheight}px" data-showTicks="false" ></div>`)
 		.replace(/__dummy__/, oarr[i].replace(/\s+/, "_"));
 		html += t;
 	    }
@@ -12252,8 +12252,8 @@ JS9.Statusbar.init = function(width, height){
     }
     this.divjq.css("height", this.height);
     this.height = parseInt(this.divjq.css("height"), 10);
-    this.colorwidth = parseInt(this.divjq.attr("data-colorbarwidth"), 10) || JS9.Statusbar.COLORWIDTH;
-    this.colorheight = parseInt(this.divjq.attr("data-colorbarheight"), 10) || JS9.Statusbar.COLORHEIGHT;
+    this.colorwidth = parseInt(this.divjq.attr("data-colorbarWidth"), 10) || JS9.Statusbar.COLORWIDTH;
+    this.colorheight = parseInt(this.divjq.attr("data-colorbarHeight"), 10) || JS9.Statusbar.COLORHEIGHT;
     // clean plugin container
     this.divjq.html("");
     // status container
