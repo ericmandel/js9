@@ -12,7 +12,7 @@ JS9.Statusbar.CLASS = "JS9";      // class of plugins (1st part of div class)
 JS9.Statusbar.NAME = "Statusbar"; // name of this plugin (2nd part of div class)
 JS9.Statusbar.WIDTH =  512;       // width of light window
 JS9.Statusbar.HEIGHT = 30;        // height of light window
-JS9.Statusbar.COLORWIDTH =  140;  // width of colorbar, if present
+JS9.Statusbar.COLORWIDTH =  120;  // width of colorbar, if present
 JS9.Statusbar.COLORHEIGHT = 14;   // height of colorbar, if present
 JS9.Statusbar.BASE = JS9.Statusbar.CLASS + JS9.Statusbar.NAME;
 
@@ -24,7 +24,7 @@ JS9.Statusbar.setup = function(target){
 };
 
 // try to display a control plugin for a given menu
-JS9.Statusbar.xeq = function(target){
+JS9.Statusbar.xeq = function(target, id){
     let s, arr;
     // unhighlight
     $(target).removeClass("JS9StatusbarItemHighlight");
@@ -33,12 +33,14 @@ JS9.Statusbar.xeq = function(target){
     s = $(target).attr("name");
     if( s ){
 	// is there a hint about what sort of menu status it contains?
-	arr = s.match(/file|edit|view|zoom|scale|color|regions|wcs|analysis/i);
+	arr = s.match(/file|image|edit|view|zoom|scale|color|regions|wcs|analysis/i);
     }
     // bring up a control plugin, if possible
     if( arr && arr[0] ){
 	switch(arr[0]){
 	case "file":
+	case "image":
+	    JS9.DisplayPlugin("FITSBinning", {display: id});
 	    break;
 	case "edit":
 	    break;
@@ -47,7 +49,7 @@ JS9.Statusbar.xeq = function(target){
 	case "zoom":
 	    break;
 	case "scale":
-	    JS9.DisplayPlugin("JS9Scale");
+	    JS9.DisplayPlugin("JS9Scale", {display: id});
 	    break;
 	case "color":
 	    break;
@@ -63,7 +65,9 @@ JS9.Statusbar.xeq = function(target){
 
 // redraw status on display
 JS9.Statusbar.display = function(im){
-    let i, s, arr, items;
+    let i, s, t, oarr, arr, elements;
+    let html = "";
+    let delim = /;/;
     if( im && JS9.globalOpts.statusBar ){
 	// escape brackets and parens before macro expansion, then unescape
 	s = JS9.globalOpts.statusBar
@@ -76,33 +80,41 @@ JS9.Statusbar.display = function(im){
 	    .replace(/ __CP__ /g, ")")
 	    .replace(/ __OB__ /g, "[")
 	    .replace(/ __CB__ /g, "]");
-	if( im.tmp.statusbar !== JS9.globalOpts.statusBar ){
-	    s = `<div class='JS9StatusbarItem JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this)'>${s}</div>`
-		.replace(/; */g, "</div>&nbsp;<div class='JS9StatusbarItem JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this)'>")
-		.replace(/\$img\(([^()]+)\)/g, "<img src='$1' name='$1' class='JS9StatusbarImageItem JS9StatusbarItemNoHighlight'>")
-		.replace(/\$colorbar/g, `<div name='JS9Colorbar' id='${this.id.replace(/Statusbar/, "Colorbar")}' class='JS9Colorbar JS9StatusbarPluginItem' data-width="${this.colorwidth}px" data-height="${this.colorheight}px" data-showTicks="false" ></div>`);
-	    this.statusContainer.html(s);
-	    // give names to each item, based on input format
-	    items = this.divjq.find(`.JS9StatusbarItem`);
-	    arr = JS9.globalOpts.statusBar.split(";");
+	if( JS9.globalOpts.statusBar !== im.tmp.statusbar ){
+	    // original statusbar items
+	    oarr = JS9.globalOpts.statusBar.split(delim);
+	    // current values of items in the status bar
+	    arr = s.split(delim);
 	    for(i=0; i<arr.length; i++){
-		items.eq(i).attr("name", arr[i]);
+		t = `<div name='__dummy__' class='JS9StatusbarItem JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this, "${this.display.id}")'>${arr[i]}</div>&nbsp;`
+		.replace(/\$img\(([^()]+)\)/g, "<img src='$1' name='$1' class='JS9StatusbarImageItem JS9StatusbarItemNoHighlight'>")
+		.replace(/\$colorbar/g, `<div name='JS9Colorbar' id='${this.id.replace(/Statusbar/, "Colorbar")}' class='JS9Colorbar JS9StatusbarPluginItem' data-width="${this.colorwidth}px" data-height="${this.colorheight}px" data-showTicks="false" ></div>`)
+		.replace(/__dummy__/, oarr[i].replace(/\s+/, "_"));
+		html += t;
 	    }
+	    // set statusbar
+	    this.statusContainer.html(html);
 	    // might have to run AddDivs, if we added a plugin
 	    if( JS9.globalOpts.statusBar.match(/\$colorbar/) ){
 		JS9.AddDivs({display: im});
 	    }
+	    // save the format to detect changes
 	    im.tmp.statusbar = JS9.globalOpts.statusBar;
 	} else {
-	    items = this.divjq.find(`.JS9StatusbarItem`);
-	    arr = s.split(";");
-	    for(i=0; i<arr.length; i++){
+	    // elements associated with items in statusbar
+	    elements = this.divjq.find(`.JS9StatusbarItem`);
+	    arr = s.split(delim);
+	    // for each element ...
+	    for(i=0; i<elements.length; i++){
+		// that is not a plugin ...
 		if( !arr[i].match(/\$colorbar/) ){
-		    items.eq(i).html(arr[i]);
+		    // set new value
+		    $(elements[i]).html(arr[i]);
 		}
 	    }
 	}
     } else {
+	// clear statusbar
 	this.statusContainer.html("");
     }
 };
