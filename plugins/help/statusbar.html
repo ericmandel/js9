@@ -42,36 +42,36 @@ API <a href="../../help/publicapi.html#JS9.SetParam">SetParam</a> call for
 more information about image parameters.
 
 <p>
-In addition to image parameters, the following special parameters might be of
-interest:
+In addition to image parameters, the following special parameters are available:
 <ul>
 <li><b>colorbar</b> colorbar plugin without tick marks
-<li><b>image</b>  image name including bracket extension
-<li><b>image0</b> image name without [EVENTS] bracket extension, where necessary
+<li><b>image</b>  image name
+<li><b>image0</b> image name (without [EVENTS] bracket extension, where present)
 <li><b>mag</b> percent magnification (e.g. zoom 2 is "200%")
 <li><b>img(pngfile | jpgfile)</b> display the specified image
 </ul>
-The png/jpg files supplied to the $img macro should be relative to the
+The png/jpg pathnames supplied to the $img macro should be relative to the
 web page, as usual.
 
 <p>
 For example, the current default value for the format string is:
 <pre>
-  $colorbar; $colormap; $mag; $scale($scalemin,$scalemax); $wcssys; $image0
+  $colorbar; $colormap; $mag ($flip,$rot90); $scale ($scalemin,$scalemax); $wcssys; $image0
 </pre>
-meaning to display a colorbar, followed by the colormap name,
-the current magnification, the scale (including scale min and max)
-the wcs system, and the image name (without the bracket extension).
-Note that the colorbar is the real colorbar plugin (with tickmarks turned off)
-and will change dynamically as the colormap or contrast/bias is changed.
+meaning to display a colorbar, followed by the colormap name, the
+current magnification, flip, and rot90, then the scale (including
+scale min and max), the wcs system, and the image name (without the
+[EVENTS] extension, if present).  Note that the colorbar is the real
+JS9Colorbar plugin (with tickmarks turned off) and will change
+dynamically as the colormap or contrast/bias is changed.
 
 Alternatively, this configuration:
 <pre>
   $img(images/voyager/color_$colormap.png) $colormap; $mag; $scale($scalemin,$scalemax); $wcssys; $image
 </pre>
 will display a static image of the current colormap, along with the
-other values. In this case, the image will contain bracket extension
-information.
+other values. In this case, the image filename will include all
+bracket extensions.
 
 <p>
 The following status macros have clickable actions:
@@ -82,6 +82,11 @@ The following status macros have clickable actions:
 </ul>
 Thus, for example, clicking in an area that contains one of the $scale
 macros will toggle the Scale plugin.
+
+<p>
+The status display will wrap onto the next line if necessary, and a scrollbar
+will become available on the right-hand side. Thus, if a long image
+filename is not displayed in the default setup, try the scrollbar ...
 
 <p>
 See
