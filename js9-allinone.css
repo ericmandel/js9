@@ -1655,6 +1655,7 @@ div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
 }
 
 .JS9StatusbarItem {
+    border-radius: 4px;
     display:inline-block;
     vertical-align:middle;
     text-align:center;
@@ -1663,10 +1664,7 @@ div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
     color: black;
     margin-top: 4px;
     margin-bottom: 4px;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    padding-right: 2px;
-    padding-left: 2px;
+    padding: 4px;
     float: left;
 }
 
@@ -1696,6 +1694,10 @@ img.JS9StatusbarImageOption[name*="color_"]{
 
 .JS9StatusbarItemHighlight {
     border: 1px solid #B0B0B0;
+}
+
+.JS9StatusbarItemHighlight2 {
+    border: 1px solid #777777
 }
 
 .JS9StatusbarPluginItem .JS9ColorbarCanvas {

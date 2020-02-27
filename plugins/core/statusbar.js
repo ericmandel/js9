@@ -11,24 +11,35 @@ JS9.Statusbar = {};
 JS9.Statusbar.CLASS = "JS9";      // class of plugins (1st part of div class)
 JS9.Statusbar.NAME = "Statusbar"; // name of this plugin (2nd part of div class)
 JS9.Statusbar.WIDTH =  512;       // width of light window
-JS9.Statusbar.HEIGHT = 30;        // height of light window
+JS9.Statusbar.HEIGHT = 32;        // height of light window
 JS9.Statusbar.COLORWIDTH =  100;  // width of colorbar, if present
 JS9.Statusbar.COLORHEIGHT = 14;   // height of colorbar, if present
 JS9.Statusbar.BASE = JS9.Statusbar.CLASS + JS9.Statusbar.NAME;
 
-// when an item is clicked, we want to highlight it
-JS9.Statusbar.setup = function(target){
-    // unhighlight
-    $(target).removeClass("JS9StatusbarItemNoHighlight");
+// mouse over: highlight a bit
+JS9.Statusbar.mover = function(target){
+    $(target).removeClass("JS9StatusbarItemNoHighlight JS9StatusbarItemHighlight2");
     $(target).addClass("JS9StatusbarItemHighlight");
 };
 
-// try to display a control plugin for a given menu
-JS9.Statusbar.xeq = function(target, id){
-    let s, arr;
-    // unhighlight
-    $(target).removeClass("JS9StatusbarItemHighlight");
+// mouse out: no highlight
+JS9.Statusbar.mout = function(target){
+    $(target).removeClass("JS9StatusbarItemHighlight JS9StatusbarItemHighlight2");
     $(target).addClass("JS9StatusbarItemNoHighlight");
+};
+
+// mouse down: hightlight fully
+JS9.Statusbar.mdown = function(target){
+    // unhighlight
+    $(target).removeClass("JS9StatusbarItemNoHighlight JS9StatusbarItemHighlight");
+    $(target).addClass("JS9StatusbarItemHighlight2");
+};
+
+// mouse up: xeq action, hightlight a bit
+JS9.Statusbar.mup = function(target, id){
+    let s, arr;
+    $(target).removeClass("JS9StatusbarItemNoHighlight JS9StatusbarItemHighlight2");
+    $(target).addClass("JS9StatusbarItemHighlight");
     // look at the html for this element
     s = $(target).attr("name");
     if( s ){
@@ -90,7 +101,7 @@ JS9.Statusbar.display = function(im){
 	    // current values of items in the status bar
 	    arr = s.split(delim);
 	    for(i=0; i<arr.length; i++){
-		t = `<div name='__dummy__' class='JS9StatusbarItem JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this, "${this.display.id}")'>${arr[i]}</div>`
+		t = `<div name='__dummy__' class='JS9StatusbarItem JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.mdown(this)' onmouseup='JS9.Statusbar.mup(this, "${this.display.id}")' onmouseover='JS9.Statusbar.mover(this)' onmouseout='JS9.Statusbar.mout(this)'>${arr[i]}</div>`
 		.replace(/\$img\(([^()]+)\)/g, "<img src='$1' name='$1' class='JS9StatusbarImageItem JS9StatusbarItemNoHighlight'>")
 		.replace(/\$colorbar/g, `<div name='JS9Colorbar' id='${this.id.replace(/Statusbar/, "Colorbar")}' class='JS9Colorbar JS9StatusbarPluginItem' data-width="${this.colorwidth}px" data-height="${this.colorheight}px" data-colorbarHeight="${this.colorheight}px" data-showTicks="false" ></div>`)
 		.replace(/__dummy__/, oarr[i].replace(/\s+/, "_"));
