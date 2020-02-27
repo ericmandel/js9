@@ -1,8 +1,14 @@
+/* overflow scrolling technique: https://stackoverflow.com/questions/9672176/prevent-floated-divs-from-wrapping-to-new-line */
+.JS9Statusbar {
+    overflow: scroll;
+}
+
 .JS9StatusbarContainer {
     background-color: #E9E9E9;
-    padding-left: 10px;
+    padding-left: 4px;
     height: 100%;
     font: normal 12px Arial;
+    overflow: auto;
 }
 
 .JS9StatusbarItem {
@@ -12,12 +18,13 @@
     white-space:nowrap;
     background-color: #E9E9E9;
     color: black;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-top: 4px;
+    margin-bottom: 4px;
     padding-top: 2px;
     padding-bottom: 2px;
     padding-right: 2px;
     padding-left: 2px;
+    float: left;
 }
 
 .JS9StatusbarItem[name*="JS9Colorbar"] {

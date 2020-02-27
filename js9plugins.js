@@ -12107,8 +12107,8 @@ JS9.Statusbar = {};
 JS9.Statusbar.CLASS = "JS9";      // class of plugins (1st part of div class)
 JS9.Statusbar.NAME = "Statusbar"; // name of this plugin (2nd part of div class)
 JS9.Statusbar.WIDTH =  512;       // width of light window
-JS9.Statusbar.HEIGHT = "auto";        // height of light window
-JS9.Statusbar.COLORWIDTH =  135;  // width of colorbar, if present
+JS9.Statusbar.HEIGHT = 30;        // height of light window
+JS9.Statusbar.COLORWIDTH =  100;  // width of colorbar, if present
 JS9.Statusbar.COLORHEIGHT = 14;   // height of colorbar, if present
 JS9.Statusbar.BASE = JS9.Statusbar.CLASS + JS9.Statusbar.NAME;
 
@@ -12129,7 +12129,7 @@ JS9.Statusbar.xeq = function(target, id){
     s = $(target).attr("name");
     if( s ){
 	// is there a hint about what sort of menu status it contains?
-	arr = s.match(/file|image|edit|view|zoom|scale|color|regions|wcs|analysis|mag/i);
+	arr = s.match(/file|image|edit|view|zoom|rot|flip|scale|color|regions|wcs|analysis|mag/i);
     }
     // bring up a control plugin, if possible
     if( arr && arr[0] ){
@@ -12142,6 +12142,8 @@ JS9.Statusbar.xeq = function(target, id){
 	    break;
 	case "view":
 	    break;
+	case "flip":
+	case "rot":
 	case "mag":
 	case "zoom":
 	    JS9.DisplayPlugin("JS9PanZoom", {display: id});
@@ -12184,7 +12186,7 @@ JS9.Statusbar.display = function(im){
 	    // current values of items in the status bar
 	    arr = s.split(delim);
 	    for(i=0; i<arr.length; i++){
-		t = `<div name='__dummy__' class='JS9StatusbarItem JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this, "${this.display.id}")'>${arr[i]}</div>&nbsp;`
+		t = `<div name='__dummy__' class='JS9StatusbarItem JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.setup(this)' onmouseup='JS9.Statusbar.xeq(this, "${this.display.id}")'>${arr[i]}</div>`
 		.replace(/\$img\(([^()]+)\)/g, "<img src='$1' name='$1' class='JS9StatusbarImageItem JS9StatusbarItemNoHighlight'>")
 		.replace(/\$colorbar/g, `<div name='JS9Colorbar' id='${this.id.replace(/Statusbar/, "Colorbar")}' class='JS9Colorbar JS9StatusbarPluginItem' data-width="${this.colorwidth}px" data-height="${this.colorheight}px" data-colorbarHeight="${this.colorheight}px" data-showTicks="false" ></div>`)
 		.replace(/__dummy__/, oarr[i].replace(/\s+/, "_"));
