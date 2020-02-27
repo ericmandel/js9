@@ -229,7 +229,7 @@ JS9.globalOpts = {
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     metaClickPan: true,         // metaKey + click pans to mouse position?
     // statusBar: "$mag; $scale($scaleclipping); $img(images/voyager/color_$colormap.png) $colormap; $wcssys; $image",  // status display
-    statusBar: "$colorbar; $colormap; $mag ($flip,$rot90); $scale ($scalemin,$scalemax); $wcssys; $image0",  // status display
+    statusBar: "$colorbar; $colormap; $mag $fliprot; $scale ($scalemin,$scalemax); $wcssys; $image0",  // status display
     toolbarTooltips: false,     // display tooltips on toolbar?
     centerDivs: ["JS9Menubar"], // divs which take part in JS9.Display.center()
     resizeDivs: ["JS9Menubar", "JS9Colorbar", "JS9Toolbar", "JS9Statusbar"], // divs which take part in JS9.Display.resize()
@@ -5635,12 +5635,24 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    restorewcs(owcssys);
 	    break;
 	case "mag":
-	    // hack for voyager statusbar
+	    // hack for statusbar
 	    if( this.params.zoom ){
 		r = sprintf("%s%", 100 * this.params.zoom);
 	    } else {
 		r = "?";
 	    }
+	    break;
+	case "fliprot":
+	    // hack for statusbar
+	    r = "";
+	    if( this.params.flip !== "none" ){
+		r += this.params.flip;
+	    }
+	    if( this.params.rot90 ){
+		if( r ){ r += ","; }
+		r += `${this.params.rot90}`;
+	    }
+	    if( r ){ r = `(${r})`; }
 	    break;
 	default:
 	    // look for keyword in the serialized opts array
