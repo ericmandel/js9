@@ -82,7 +82,7 @@ JS9.Statusbar.display = function(im){
 	    .replace(/ __CP__ /g, ")")
 	    .replace(/ __OB__ /g, "[")
 	    .replace(/ __CB__ /g, "]");
-	if( JS9.globalOpts.statusBar !== im.tmp.statusbar ){
+	if( this.statusBar !== JS9.globalOpts.statusBar ){
 	    // original statusbar items
 	    oarr = JS9.globalOpts.statusBar.split(delim);
 	    // current values of items in the status bar
@@ -104,8 +104,8 @@ JS9.Statusbar.display = function(im){
 		    JS9.globalOpts.resizeDivs.splice(index, 1);
 		}
 	    }
-	    // save the format to detect changes
-	    im.tmp.statusbar = JS9.globalOpts.statusBar;
+	    // save the format to detect future changes
+	    this.statusBar = JS9.globalOpts.statusBar;
 	} else {
 	    // elements associated with items in statusbar
 	    elements = this.divjq.find(`.JS9StatusbarItem`);
@@ -130,8 +130,16 @@ JS9.Statusbar.display = function(im){
 	    }
 	}
     } else {
-	// clear statusbar
-	this.statusContainer.html("");
+	// clear statusbar but leave it intact
+	if( this.statusBar ){
+	    arr = this.statusBar.split(delim);
+	    elements = this.divjq.find(`.JS9StatusbarItem`);
+	    for(i=0; i<elements.length; i++){
+		if( !arr[i].match(/\$colorbar/) ){
+		    $(elements[i]).html("");
+		}
+	    }
+	}
     }
 };
 
