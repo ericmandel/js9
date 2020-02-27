@@ -51,7 +51,7 @@ extern	int	cdl_debug;
 void cdl_zscale(unsigned char *im, int nx, int ny, int bitpix, float *z1, float *z2, float contrast, int opt_size, int len_stdline);
 int sampleImage(unsigned char *im, int bitpix, float **sample, int nx, int ny, int optimal_size, int len_stdline);
 
-static void subSample(float *a, float *b, int npix, int step);
+static int subSample(float *a, float *b, int npix, int step);
 int fitLine(float *data, int npix, float *zstart, float *zslope, float krej, int ngrow, int maxiter);
 static void flattenData(float *data, float *flat, float *x, int npix, double
 z0, double dz);
@@ -65,7 +65,7 @@ int		rejectPixels(), computeSigma();
 int		sampleImage(), fitLine(), floatCompare();
 
 static void	flattenData();
-static void 	subSample();
+static int 	subSample();
 
 #endif
 
@@ -223,7 +223,7 @@ int	len_stdline;		/* optimal number of pixels per line	*/
 #endif
 {
 	register int i;
-	int ncols, nlines, col_step, line_step, maxpix, line;
+	int ncols, nlines, col_step, line_step, maxpix, line, got;
 	int opt_npix_per_line, npix_per_line, npix = 0;
 	int opt_nlines_in_sample, min_nlines_in_sample, max_nlines_in_sample;
 	float	*op = NULL, *row = NULL;
@@ -306,9 +306,10 @@ int	len_stdline;		/* optimal number of pixels per line	*/
                 break;
             }
 
-	    subSample (row, op, npix_per_line, col_step);
-	    op += npix_per_line;
-	    npix += npix_per_line;
+	    // modified as in DS9 saods9/tksao1.0/frame/fitsdata.C
+	    got = subSample (row, op, npix_per_line, col_step);
+	    op += got;
+	    npix += got;
 	    if (npix > maxpix)
 		break;
 	}
@@ -324,28 +325,36 @@ int	len_stdline;		/* optimal number of pixels per line	*/
 
 #ifdef ANSI_FUNC
 
-static void 
+static int 
 subSample (float *a, float *b, int npix, int step)
 #else
 
-static void
+static int
 subSample (a, b, npix, step)
 float	*a;
 float	*b;
 int	npix, step;
 #endif
 {
-	register int ip, i;
+	register int ip, i, got;
 
-	if (step <= 1)
-	    memmove (b, a, npix);
-	else {
-	    ip = 0;
-	    for (i=0; i < npix; i++) {
-		b[i] = a[ip];
-		ip += step;
-	    }
+	// modified as in DS9 saods9/tksao1.0/frame/fitsdata.C
+	if (step < 1){
+	  step = 1;
 	}
+
+	// modified as in DS9 saods9/tksao1.0/frame/fitsdata.C
+	got = 0;
+	ip = 0;
+	for (i=0; i < npix; i++) {
+	  if( isfinite(a[ip]) ){
+	    b[got++] = a[ip];
+	  }
+
+	  ip += step;
+	}
+
+	return got;
 }
 
 

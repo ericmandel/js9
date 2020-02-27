@@ -1,0 +1,66 @@
+/* overflow scrolling technique: https://stackoverflow.com/questions/9672176/prevent-floated-divs-from-wrapping-to-new-line */
+.JS9Statusbar {
+    overflow: scroll;
+}
+
+.JS9StatusbarContainer {
+    background-color: #E9E9E9;
+    padding-left: 4px;
+    height: 100%;
+    font: normal 12px Arial;
+    overflow: auto;
+}
+
+.JS9StatusbarItem {
+    border-radius: 4px;
+    display:inline-block;
+    vertical-align:middle;
+    text-align:center;
+    white-space:nowrap;
+    background-color: #E9E9E9;
+    color: black;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    padding: 4px;
+    float: left;
+}
+
+.JS9StatusbarItem[name*="JS9Colorbar"] {
+    margin-top: 0px;
+    padding-right: 0px;
+    padding-left: 0px;
+}
+
+img.JS9StatusbarImage {
+    white-space:nowrap;
+}
+
+img.JS9StatusbarImageItem[name*="zoom_"]{
+    height: 12px;
+    width:  12px;
+}
+
+img.JS9StatusbarImageOption[name*="color_"]{
+    height: 12px;
+    width:  100px;
+}
+
+.JS9StatusbarItemNoHighlight {
+    border: 1px solid #E9E9E9;
+}
+
+.JS9StatusbarItemHighlight {
+    border: 1px solid #B0B0B0;
+}
+
+.JS9StatusbarItemHighlight2 {
+    border: 1px solid #777777
+}
+
+.JS9StatusbarPluginItem .JS9ColorbarCanvas {
+    border: 0px solid black;
+}
+
+.JS9StatusbarPluginItem {
+    vertical-align: middle;
+}

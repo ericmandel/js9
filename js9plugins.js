@@ -6089,7 +6089,6 @@ JS9.RegisterPlugin(JS9.Mef.CLASS, JS9.Mef.NAME, JS9.Mef.init,
 		    winResize: true,
 		    winDims: [JS9.Mef.WIDTH, JS9.Mef.HEIGHT]});
 
-
 /*
  * JS9 menubar to manage menubar and its menus
  */
@@ -6278,7 +6277,7 @@ JS9.Menubar.createMenus = function(){
 	if( JS9.notNull(act) && JS9.Menubar.rkeyMap ){
 	    key = JS9.Menubar.rkeyMap[act];
 	    if( key ){
-		hstr = `<span>${name} <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;${key}</span></span>`;
+		hstr = `<span>${name}<span class="JS9MenubarKeyAction">&nbsp;&nbsp;&nbsp;&nbsp;${key}</span></span>`;
 		obj = {name: hstr, isHtmlName: true};
 	    }
 	} else if( xact && JS9.Menubar.rkeyMap ){
@@ -6286,7 +6285,7 @@ JS9.Menubar.createMenus = function(){
 		if( JS9.Menubar.rkeyMap.hasOwnProperty(tact) && tact === xact ){
 		    key = JS9.Menubar.rkeyMap[tact];
 		    if( key ){
-			hstr = `<span>${name} <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;${key}</span></span>`;
+			hstr = `<span>${name}<span class="JS9MenubarKeyAction">&nbsp;&nbsp;&nbsp;;&nbsp;${key}</span></span>`;
 			obj = {name: hstr, isHtmlName: true};
 		    }
 		}
@@ -6400,6 +6399,8 @@ JS9.Menubar.createMenus = function(){
 	itemClickEvent: JS9.globalOpts.menuClickEvent || "click",
         build: () => {
 	    let i, m, im, name, s1, arr, cdisp, got, iobj;
+	    let plugin, pname, pinst;
+	    let lastxclass="";
 	    let n = 0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
@@ -6763,8 +6764,28 @@ JS9.Menubar.createMenus = function(){
 		items.windowPrint = xname("print window ...");
 		items.windowPDF = xname("save window to pdf");
 	    }
+	    // plugins
+	    for(i=0; i<JS9.plugins.length; i++){
+		plugin = JS9.plugins[i];
+		pname = plugin.name;
+		if( plugin.opts.menuItem && (plugin.opts.menu === "file") ){
+		    pinst = tdisp.pluginInstances[pname];
+		    if( !pinst || pinst.winHandle ){
+			if( plugin.xclass !== lastxclass ){
+			    items["sep" + n] = "------";
+			    n = n + 1;
+			}
+			lastxclass = plugin.xclass;
+			items[pname] = xname(plugin.opts.menuItem);
+			if( pinst && (pinst.status === "active") ){
+			    items[pname].icon = JS9.globalOpts.menuSelected;
+			}
+		    }
+		}
+	    }
 	    return {
                 callback: (key, opt) => {
+		    let uplugin;
 		    JS9.Menubar.getDisplays.call(this, "any", key)
 			.forEach((val) => {
 			let j, s, t, did, kid, unew, uwin, uobj, uarr, uopts;
@@ -7037,6 +7058,15 @@ JS9.Menubar.createMenus = function(){
 				}
 				return;
 			    }
+			    // maybe it's a plugin
+			    for(j=0; j<JS9.plugins.length; j++){
+				uplugin = JS9.plugins[j];
+				if( uplugin.name === key ){
+				    udisp.displayPlugin(uplugin);
+				    return;
+				}
+			    }
+			    // maybe its an image
 			    for(j=0; j<JS9.images.length; j++){
 				uim = JS9.images[j];
 				kid = key.replace(/ *\((red|green|blue)\)/,"");
@@ -7959,7 +7989,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1, s2, arr;
+	    let i, s1, s2, hstr, arr;
 	    let n = 0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
@@ -8027,7 +8057,12 @@ JS9.Menubar.createMenus = function(){
 	    for(i=0; i<JS9.globalOpts.topColormaps.length; i++){
 		s1 = JS9.globalOpts.topColormaps[i];
 		s2 = s1;
-		items[s1] = xname(s2);
+		if( JS9.globalOpts.menuImages ){
+		    hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${JS9.InstallDir("images")}/voyager/color_${s2}.png' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="images/empty.svg"' >` + `&nbsp;&nbsp;${s2}</div>`;
+		    items[s1] = {name: hstr, isHtmlName: true};
+		} else {
+		    items[s1] = xname(s2);
+		}
 		if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
 		    items[s1].icon = JS9.globalOpts.menuSelected;
 		}
@@ -8045,7 +8080,12 @@ JS9.Menubar.createMenus = function(){
 		s1 = JS9.colormaps[i].name;
 		if( !JS9.globalOpts.topColormaps.includes(s1) ){
 		    s2 = s1;
-		    items.morecmaps.items[s1] = xname(s2);
+		    if( JS9.globalOpts.menuImages ){
+			hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${JS9.InstallDir("images")}/voyager/color_${s2}.png' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="images/empty.jpg"' >` + `&nbsp;&nbsp;${s2}</div>`;
+			items.morecmaps.items[s1] = {name: hstr, isHtmlName: true};
+		    } else {
+			items.morecmaps.items[s1] = xname(s2);
+		    }
 		    if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
 			items.morecmaps.items[s1].icon = JS9.globalOpts.menuSelected;
 		    }
@@ -8169,7 +8209,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1;
+	    let i, s1, reg;
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
 	    const tim = tdisp.image;
 	    const items = {};
@@ -8275,14 +8315,18 @@ JS9.Menubar.createMenus = function(){
 		name: "Regions:",
 		disabled: true
 	    };
-	    items.annulus = xname("annulus");
-	    items.box = xname("box");
-	    items.circle = xname("circle");
-	    items.ellipse = xname("ellipse");
-	    items.line = xname("line");
-	    items.point = xname("point");
-	    items.polygon = xname("polygon");
-	    items.text = xname("text");
+	    if( JS9.globalOpts.menuImages ){
+		for(i=0; i<JS9.regions.length; i++){
+		    reg = JS9.regions[i];
+		    items[reg] = {name: `<div class='JS9MenubarImage' name='${reg}'><img src='${JS9.InstallDir("images")}/voyager/regions_${reg}.svg' name='regions_${reg}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="images/empty.jpg"' >` + `&nbsp;&nbsp;${reg}</div>`,
+				  isHtmlName: true};
+		}
+	    } else {
+		for(i=0; i<JS9.regions.length; i++){
+		    reg = JS9.regions[i];
+		    items[reg] = xname(reg);
+		}
+	    }
 	    items.sep1 = "------";
 	    items.loadRegions  = xname("load");
 	    items.listRegions  = xname("list");
@@ -10697,6 +10741,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "mobject",
 	    "helper": "array of infoBox items to display"
 	},
+	"statusBar": {
+	    "type": "string",
+	    "helper": "format of statusbar display"
+	},
 	"toolBar": {
 	    "type": "mobject",
 	    "helper": "array of toolbar tools to display"
@@ -10919,6 +10967,7 @@ JS9.Prefs.init = function(){
 			   regionConfigSize: JS9.globalOpts.regionConfigSize,
 			   lightWinClose: JS9.globalOpts.lightWinClose,
 			   infoBox: JS9.globalOpts.infoBox,
+			   statusBar: JS9.globalOpts.statusBar,
 			   toolBar: JS9.globalOpts.toolBar,
 			   separate: JS9.globalOpts.separate};
 	    break;
@@ -11224,7 +11273,8 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 
 // add preference plugin into JS9
 JS9.RegisterPlugin(JS9.Prefs.CLASS, JS9.Prefs.NAME, JS9.Prefs.init,
-		   {menuItem: "Preferences",
+		   {menu: "file",
+		    menuItem: "Preferences",
 		    help: "help/prefs.html",
 		    winTitle: "User Preferences",
 		    winResize: true,
@@ -12047,6 +12097,241 @@ JS9.RegisterPlugin(JS9.Separate.CLASS, JS9.Separate.NAME, JS9.Separate.init,
 		    winDims: [JS9.Separate.WIDTH, JS9.Separate.HEIGHT]});
 
 /*
+ * status plugin (February 20, 2020)
+ */
+
+/*global $, JS9 */
+
+"use strict";
+
+// create our namespace, and specify some meta-information and params
+JS9.Statusbar = {};
+JS9.Statusbar.CLASS = "JS9";      // class of plugins (1st part of div class)
+JS9.Statusbar.NAME = "Statusbar"; // name of this plugin (2nd part of div class)
+JS9.Statusbar.WIDTH =  512;       // width of light window
+JS9.Statusbar.HEIGHT = 32;        // height of light window
+JS9.Statusbar.COLORWIDTH =  100;  // width of colorbar, if present
+JS9.Statusbar.COLORHEIGHT = 14;   // height of colorbar, if present
+JS9.Statusbar.BASE = JS9.Statusbar.CLASS + JS9.Statusbar.NAME;
+
+// mouse over: highlight a bit
+JS9.Statusbar.mover = function(target){
+    $(target).removeClass("JS9StatusbarItemNoHighlight JS9StatusbarItemHighlight2");
+    $(target).addClass("JS9StatusbarItemHighlight");
+};
+
+// mouse out: no highlight
+JS9.Statusbar.mout = function(target){
+    $(target).removeClass("JS9StatusbarItemHighlight JS9StatusbarItemHighlight2");
+    $(target).addClass("JS9StatusbarItemNoHighlight");
+};
+
+// mouse down: hightlight fully
+JS9.Statusbar.mdown = function(target){
+    // unhighlight
+    $(target).removeClass("JS9StatusbarItemNoHighlight JS9StatusbarItemHighlight");
+    $(target).addClass("JS9StatusbarItemHighlight2");
+};
+
+// mouse up: xeq action, hightlight a bit
+JS9.Statusbar.mup = function(target, id){
+    let s, arr;
+    $(target).removeClass("JS9StatusbarItemNoHighlight JS9StatusbarItemHighlight2");
+    $(target).addClass("JS9StatusbarItemHighlight");
+    // look at the html for this element
+    s = $(target).attr("name");
+    if( s ){
+	// is there a hint about what sort of menu status it contains?
+	arr = s.match(/file|image|edit|view|zoom|rot|flip|scale|color|regions|wcs|analysis|mag/i);
+    }
+    // bring up a control plugin, if possible
+    if( arr && arr[0] ){
+	switch(arr[0]){
+	case "file":
+	case "image":
+	    JS9.DisplayPlugin("FITSBinning", {display: id});
+	    break;
+	case "edit":
+	    break;
+	case "view":
+	    break;
+	case "flip":
+	case "rot":
+	case "mag":
+	case "zoom":
+	    JS9.DisplayPlugin("JS9PanZoom", {display: id});
+	    break;
+	case "scale":
+	    JS9.DisplayPlugin("JS9Scale", {display: id});
+	    break;
+	case "color":
+	    break;
+	case "regions":
+	    break;
+	case "wcs":
+	    break;
+	case "analysis":
+	    break;
+	}
+    }
+}
+
+// redraw status on display
+JS9.Statusbar.display = function(im){
+    let i, s, t, oarr, arr, elements, index;
+    let html = "";
+    let delim = /;/;
+    if( im && JS9.globalOpts.statusBar ){
+	// escape brackets and parens before macro expansion, then unescape
+	s = JS9.globalOpts.statusBar
+	    .replace(/\(/g, " __OP__ ")
+	    .replace(/\)/g, " __CP__ ")
+	    .replace(/\[/g, " __OB__ ")
+	    .replace(/\]/g, " __CB__ ");
+	s = im.expandMacro(s)
+	    .replace(/ __OP__ /g, "(")
+	    .replace(/ __CP__ /g, ")")
+	    .replace(/ __OB__ /g, "[")
+	    .replace(/ __CB__ /g, "]");
+	if( this.statusBar !== JS9.globalOpts.statusBar ){
+	    // original statusbar items
+	    oarr = JS9.globalOpts.statusBar.split(delim);
+	    // current values of items in the status bar
+	    arr = s.split(delim);
+	    for(i=0; i<arr.length; i++){
+		t = `<div name='__dummy__' class='JS9StatusbarItem JS9StatusbarItemNoHighlight' onmousedown='JS9.Statusbar.mdown(this)' onmouseup='JS9.Statusbar.mup(this, "${this.display.id}")' onmouseover='JS9.Statusbar.mover(this)' onmouseout='JS9.Statusbar.mout(this)'>${arr[i]}</div>`
+		.replace(/\$img\(([^()]+)\)/g, "<img src='$1' name='$1' class='JS9StatusbarImageItem JS9StatusbarItemNoHighlight'>")
+		.replace(/\$colorbar/g, `<div name='JS9Colorbar' id='${this.id.replace(/Statusbar/, "Colorbar")}' class='JS9Colorbar JS9StatusbarPluginItem' data-width="${this.colorwidth}px" data-height="${this.colorheight}px" data-colorbarHeight="${this.colorheight}px" data-showTicks="false" ></div>`)
+		.replace(/__dummy__/, oarr[i].replace(/\s+/, "_"));
+		html += t;
+	    }
+	    // set statusbar
+	    this.statusContainer.html(html);
+	    // colorbar plugin: run AddDivs, remove colorbar from resize list
+	    if( JS9.globalOpts.statusBar.match(/\$colorbar/) ){
+		JS9.AddDivs({display: im});
+		index = JS9.globalOpts.resizeDivs.indexOf("JS9Colorbar");
+		if( index >= 0 ){
+		    JS9.globalOpts.resizeDivs.splice(index, 1);
+		}
+	    }
+	    // save the format to detect future changes
+	    this.statusBar = JS9.globalOpts.statusBar;
+	} else {
+	    // elements associated with items in statusbar
+	    elements = this.divjq.find(`.JS9StatusbarItem`);
+	    arr = s.split(delim);
+	    // for each element ...
+	    for(i=0; i<elements.length; i++){
+		// that is not a plugin ...
+		if( arr[i].match(/\$colorbar/) ){
+		    $.noop();
+		} else if( arr[i].match(/\$img/) ){
+		    t = arr[i].match(/\$img\((.*)\)/);
+		    if( t && t[1] ){
+			if( t[1].charAt(0) !== "/" ){
+			    t[1] = JS9.InstallDir(t[1]);
+			}
+			$(elements[i]).find("img").attr("src", t[1]);
+		    }
+		} else {
+		    // set new value
+		    $(elements[i]).html(arr[i]);
+		}
+	    }
+	}
+    } else {
+	// clear statusbar but leave it intact
+	if( this.statusBar ){
+	    arr = this.statusBar.split(delim);
+	    elements = this.divjq.find(`.JS9StatusbarItem`);
+	    for(i=0; i<elements.length; i++){
+		if( !arr[i].match(/\$colorbar/) ){
+		    $(elements[i]).html("");
+		}
+	    }
+	}
+    }
+};
+
+// constructor: add HTML elements to the plugin
+// eslint-disable-next-line no-unused-vars
+JS9.Statusbar.init = function(width, height){
+    // on entry, these elements have already been defined:
+    // this.div:      the DOM element representing the div for this plugin
+    // this.divjq:    the jquery object representing the div for this plugin
+    // this.id:       the id of the div (or the plugin name as a default)
+    // this.display:  the display object associated with this plugin
+    // this.dispMode: display mode (for internal use)
+    //
+    // set width and height of plugin itself
+    this.width = this.divjq.attr("data-width");
+    if( !this.width  ){
+	this.width = width || JS9.Statusbar.WIDTH;
+    }
+    this.divjq.css("width", this.width);
+    this.width = parseInt(this.divjq.css("width"), 10);
+    this.height = this.divjq.attr("data-height");
+    if( !this.height  ){
+	this.height = height || JS9.Statusbar.HEIGHT;
+    }
+    this.divjq.css("height", this.height);
+    this.height = parseInt(this.divjq.css("height"), 10);
+    this.colorwidth = parseInt(this.divjq.attr("data-colorbarWidth"), 10) || JS9.Statusbar.COLORWIDTH;
+    this.colorheight = parseInt(this.divjq.attr("data-colorbarHeight"), 10) || JS9.Statusbar.COLORHEIGHT;
+    // clean plugin container
+    this.divjq.html("");
+    // status container
+    this.statusContainer = $("<div>")
+	.addClass(`${JS9.Statusbar.BASE}Container`)
+	.attr("id", `${this.id}Container`)
+        .attr("width", this.width)
+        .attr("height", this.height)
+	.appendTo(this.divjq);
+    // display current status, if necessary
+    if( this.display.image ){
+	JS9.Statusbar.display.call(this, this.display.image);
+    }
+};
+
+// callback when image is (re-)displayed
+JS9.Statusbar.imagedisplay = function(im){
+    if( im ){
+	JS9.Statusbar.display.call(this, im);
+    }
+};
+
+// callback when image is cleared or closed
+// eslint-disable-next-line no-unused-vars
+JS9.Statusbar.imageclear = function(im){
+    JS9.Statusbar.display.call(this, null);
+};
+
+// dynamic change
+JS9.Statusbar.dynamic = function(im){
+    let status;
+    if( im ){
+	status = im.display.pluginInstances.JS9Statusbar;
+	if( status && status.isDynamic ){
+	    JS9.Statusbar.imagedisplay.call(this, im);
+	}
+    }
+};
+
+// add this plugin into JS9
+JS9.RegisterPlugin(JS9.Statusbar.CLASS, JS9.Statusbar.NAME, JS9.Statusbar.init,
+		   {menuItem: "Statusbar",
+		    dynamicSelect: true,
+		    ondynamicselect: JS9.Statusbar.dynamic,
+		    onimagedisplay: JS9.Statusbar.imagedisplay,
+		    onimageclear: JS9.Statusbar.imageclear,
+		    onimageclose: JS9.Statusbar.imageclear,
+		    onsetwcssys: JS9.Statusbar.imagedisplay,
+		    onsetwcsunits: JS9.Statusbar.imagedisplay,
+		    help: "help/statusbar.html",
+		    winTitle: "Statusbar",
+		    winDims: [JS9.Statusbar.WIDTH, JS9.Statusbar.HEIGHT]});
+/*
  * image sync plugin (September 2, 2018)
  * whenever an operation is performed on this image, sync the target images
  */
@@ -12681,49 +12966,49 @@ JS9.Toolbar.tools = [
   {
     "name": "annulus",
     "tip": "annulus region",
-    "image": "images/toolbar/svg/annulus.svg",
+    "image": "images/voyager/regions_annulus.svg",
     "cmd": "AddRegions",
     "args": ["annulus"]
   },
   {
     "name": "box",
     "tip": "box region",
-    "image": "images/toolbar/svg/box.svg",
+    "image": "images/voyager/regions_box.svg",
     "cmd": "AddRegions",
     "args": ["box"]
   },
   {
     "name": "circle",
     "tip": "circle region",
-    "image": "images/toolbar/svg/circle.svg",
+    "image": "images/voyager/regions_circle.svg",
     "cmd": "AddRegions",
     "args": ["circle"]
   },
   {
     "name": "ellipse",
     "tip": "ellipse region",
-    "image": "images/toolbar/svg/ellipse.svg",
+    "image": "images/voyager/regions_ellipse.svg",
     "cmd": "AddRegions",
     "args": ["ellipse"]
   },
   {
     "name": "line",
     "tip": "line region",
-    "image": "images/toolbar/svg/line.svg",
+    "image": "images/voyager/regions_line.svg",
     "cmd": "AddRegions",
     "args": ["line"]
   },
   {
     "name": "polygon",
     "tip": "polygon region",
-    "image": "images/toolbar/svg/polygon.svg",
+    "image": "images/voyager/regions_polygon.svg",
     "cmd": "AddRegions",
     "args": ["polygon"]
   },
   {
     "name": "text",
     "tip": "text region",
-    "image": "images/toolbar/svg/txt.svg",
+    "image": "images/voyager/regions_text.svg",
     "cmd": "AddRegions",
     "args": ["text"]
   },
@@ -12750,12 +13035,14 @@ JS9.Toolbar.tools = [
   },
   {
     "name": "zoom+",
+    "image": "images/voyager/zoom_in.svg",
     "tip": "zoom in",
     "cmd": "SetZoom",
     "args": ["x2"]
   },
   {
     "name": "zoom-",
+    "image": "images/voyager/zoom_out.svg",
     "tip": "zoom out",
     "cmd": "SetZoom",
     "args": ["/2"]
@@ -12763,8 +13050,16 @@ JS9.Toolbar.tools = [
   {
     "name": "zoom1",
     "tip": "zoom 1",
+    "image": "images/voyager/zoom_1.svg",
     "cmd": "SetZoom",
     "args": [1]
+  },
+  {
+    "name": "zoomtofit",
+    "tip": "zoom to fit",
+    "image": "images/voyager/zoom_tofit.svg",
+    "cmd": "SetZoom",
+    "args": ["toFit"]
   },
   {
     "name": "open",
@@ -12955,7 +13250,7 @@ JS9.Toolbar.init = function(width, height){
 	}
     }
     // add a break between important tools and the rest
-    // JS9.Toolbar.addTool.call(this, "$break");
+    JS9.Toolbar.addTool.call(this, "$break");
     // add tools not in the globalOpts to the bottom of the list
     for(i=0; i<JS9.Toolbar.tools.length; i++){
 	tool = JS9.Toolbar.tools[i];

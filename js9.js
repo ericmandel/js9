@@ -228,9 +228,11 @@ JS9.globalOpts = {
     }, // keyboard actions
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     metaClickPan: true,         // metaKey + click pans to mouse position?
+    // statusBar: "$mag; $scale($scaleclipping); $img(images/voyager/color_$colormap.png) $colormap; $wcssys; $image",  // status display
+    statusBar: "$colorbar; $colormap; $mag ($flip,$rot90); $scale ($scalemin,$scalemax); $wcssys; $image0",  // status display
     toolbarTooltips: false,     // display tooltips on toolbar?
     centerDivs: ["JS9Menubar"], // divs which take part in JS9.Display.center()
-    resizeDivs: ["JS9Menubar", "JS9Colorbar", "JS9Toolbar"], // divs which take part in JS9.Display.resize()
+    resizeDivs: ["JS9Menubar", "JS9Colorbar", "JS9Toolbar", "JS9Statusbar"], // divs which take part in JS9.Display.resize()
     pinchWait: 8,		// number of events to wait before testing pinch
     pinchThresh: 6,		// threshold for pinch test
     xeqPlugins: true,		// execute plugin callbacks?
@@ -259,13 +261,14 @@ JS9.globalOpts = {
     menuBar: ["file", "edit", "view", "zoom", "scale", "color", "region", "wcs", "analysis", "help"],
     menubarStyle: "classic",                          // mac or classic
     menuPosition: "right-5 bottom-5",                 // where menus pop up
-    menuClickEvent: "mouseup",                        // "click" or "mouse"
+    menuClickEvent: "mouseup",                        // "click" or "mouseup"
     menuSelected: "check",                            // selected option icon
+    menuImages: true,                                 // show pngs inmenu?
     userMenus: false,                                 // add user menus?
     userMenuDivider: "&nbsp;&nbsp;&nbsp;",            // divide before user menu
     imagesFileSubmenu: 5,        // how many images trigger a submenu?
-    toolBar: ["annulus", "box", "circle", "ellipse", "line", "polygon", "text", "linear", "log", "zoom+", "zoom-", "zoom1"],
-    syncOps: ["colormap","contrastbias","flip","pan","regions","rot90","scale","wcs","zoom"],                                   // which ops are sync'ed?
+    toolBar: ["annulus", "box", "circle", "ellipse", "line", "polygon", "text", "zoom+", "zoom-", "zoom1", "zoomtofit"],
+    syncOps: ["colormap","contrastbias","flip","pan","regions","rot90","scale","wcs","zoom"],                                         // which ops are sync'ed?
     syncReciprocate: true,       // default value for reciprocal sync'ing
     syncWCS: true,               // default value for using WCS to sync
     hiddenPluginDivs: [],        // which static plugin divs start hidden
@@ -519,6 +522,10 @@ JS9.wcssyss = ["FK4", "FK5", "ICRS", "galactic", "ecliptic", "native",
 // list of known wcs units
 JS9.wcsunitss = ["degrees", "sexagesimal", "pixels"];
 
+// list of known regions
+JS9.regions = ["annulus", "box", "circle", "ellipse", "line", "point",
+	       "polygon", "text"];
+
 // known bugs and work-arounds
 JS9.bugs = {};
 // sometimes hiding the menu does not refresh the image properly
@@ -591,6 +598,11 @@ if( window.isElectron ){
 	    throw new Error('For security reasons, Desktop JS9 does not support window.eval()');
 	}
     }
+}
+// allinone file does not have menu image
+if( JS9.allinone ){
+    JS9.globalOpts.menuRegionsImages = false;
+    JS9.globalOpts.menuColormapImages = false;
 }
 
 // ---------------------------------------------------------------------
@@ -5551,6 +5563,9 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	case "id":
 	    r = this.display.divjq.attr("id");
 	    break;
+	case "image0":
+	    r = this.id.replace(/\[EVENTS\]/i, "");
+	    break;
 	case "image":
 	case "png":
 	    r = this.id;
@@ -5619,6 +5634,14 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    r = this.listRegions("all", {mode: 0}).replace(/\s+/g,"");
 	    restorewcs(owcssys);
 	    break;
+	case "mag":
+	    // hack for voyager statusbar
+	    if( this.params.zoom ){
+		r = sprintf("%s%", 100 * this.params.zoom);
+	    } else {
+		r = "?";
+	    }
+	    break;
 	default:
 	    // look for keyword in the serialized opts array
 	    if( opts ){
@@ -5630,6 +5653,43 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 		    }
 		}
 	    }
+            // look for params in the image object
+            if( r === undefined && this.params[t] !== undefined ){
+		// shorten some of the results
+		switch(t){
+		case "wcsunits":
+                    switch(this.params[t]){
+                    case "sexagesimal":
+			r = "hms";
+			break;
+                    case "degrees":
+			r = "deg";
+			break;
+                    default:
+			r = this.params[t];
+			break;
+                    }
+                    break;
+		case "scaleclipping":
+                    switch(this.params[t]){
+                    case "dataminmax":
+			r = "data";
+			break;
+                    default:
+			r = this.params[t];
+			break;
+                    }
+                    break;
+		default:
+                    if( typeof this.params[t] === "number"            &&
+			this.params[t] !== Math.floor(this.params[t]) ){
+			r = this.params[t].toFixed(2);
+                    } else {
+			r = this.params[t];
+                    }
+                    break;
+		}
+            }
 	    // if all else fails, return original macro unexpanded
 	    if( r === undefined ){
 		r = m;
@@ -10035,6 +10095,14 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	    pinst.divjq.attr("data-width", `${String(nwidth)}px`);
 	    // re-init colorbar for this size
 	    JS9.Colorbar.init.call(pinst);
+	}
+    }
+    // change the statusbar width, unless explicitly told not to
+    if( $.inArray("JS9Statusbar", JS9.globalOpts.resizeDivs) >= 0 &&
+	(JS9.isNull(opts.resizeStatusbar) || opts.resizeStatusbar) ){
+	pinst = this.pluginInstances.JS9Statusbar;
+	if( pinst ){
+	    $(`#${this.id}Statusbar`).css("width", nwidth);
 	}
     }
     // change size of shape canvases

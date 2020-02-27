@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head> 
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<link type="text/css" rel="stylesheet" href="../../js9.css">
+<title>Plugin: JS9Statusbar</title>
+</head>
+<body>
+<div class="helpLogo"><img src="../../images/js9logo.png" alt="js9"></div>
+<div class="helpContainer">
+<h3>JS9 Statusbar</h3>
+<p>
+The JS9 Statusbar plugin displays user-configurable status values for
+the currently displayed image such as zoom factor, scale, and/or
+colormap. Configuration is done via
+the <b>JS9.globalOpts.statusbar</b> format string, in which one or
+more clickable status areas are separated by semi-colons. Each status
+area consists of optional text (which can utilize html elements) and
+dollar-sign-delimited "macros" that will be expanded to the
+appropriate value for each image.
+
+<p>
+The macros can represent parameters values stored with each image, of
+which the most important ones are:
+<ul>
+<li><b>colormap</b>
+<li><b>contrast</b>
+<li><b>bias</b>
+<li><b>flip</b>
+<li><b>rot90</b>
+<li><b>scale</b>
+<li><b>scalemin</b>
+<li><b>scalemax</b>
+<li><b>scaleclipping</b>
+<li><b>wcssys</b>
+<li><b>wcsunits</b>
+<li><b>zoom</b>
+</ul>
+See the JS9 Public
+API <a href="../../help/publicapi.html#JS9.SetParam">SetParam</a> call for
+more information about image parameters.
+
+<p>
+In addition to image parameters, the following special parameters might be of
+interest:
+<ul>
+<li><b>colorbar</b> colorbar plugin without tick marks
+<li><b>image</b>  image name including bracket extension
+<li><b>image0</b> image name without [EVENTS] bracket extension, where necessary
+<li><b>mag</b> percent magnification (e.g. zoom 2 is "200%")
+<li><b>img(pngfile | jpgfile)</b> display the specified image
+</ul>
+The png/jpg files supplied to the $img macro should be relative to the
+web page, as usual.
+
+<p>
+For example, the current default value for the format string is:
+<pre>
+  $colorbar; $colormap; $mag; $scale($scalemin,$scalemax); $wcssys; $image0
+</pre>
+meaning to display a colorbar, followed by the colormap name,
+the current magnification, the scale (including scale min and max)
+the wcs system, and the image name (without the bracket extension).
+Note that the colorbar is the real colorbar plugin (with tickmarks turned off)
+and will change dynamically as the colormap or contrast/bias is changed.
+
+Alternatively, this configuration:
+<pre>
+  $img(images/voyager/color_$colormap.png) $colormap; $mag; $scale($scalemin,$scalemax); $wcssys; $image
+</pre>
+will display a static image of the current colormap, along with the
+other values. In this case, the image will contain bracket extension
+information.
+
+<p>
+The following status macros have clickable actions:
+<ul>
+<li><b>image | image0</b>: toggle the Binning plugin
+<li><b>mag | zoom</b>: toggle the Pan/Zoom plugin
+<li><b>scale | scalemin | scalemax</b>: toggle the Scale Controls plugin
+</ul>
+Thus, for example, clicking in an area that contains one of the $scale
+macros will toggle the Scale plugin.
+
+<p>
+See
+<a href="../../help/preferences.html">Configuring JS9 Site Preferences</a> and
+the <a href="./prefs.html">JS9 User Preferences</a> plugin for discussions
+of how to set preferences such as <b>JS9.globalOpts.statusbar</b> on a site-wide
+and an individual basis, respectively.
+
+
+</div>
+</body>
+</html>

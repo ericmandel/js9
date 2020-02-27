@@ -1,4 +1,3 @@
-
 /*
  * JS9 menubar to manage menubar and its menus
  */
@@ -187,7 +186,7 @@ JS9.Menubar.createMenus = function(){
 	if( JS9.notNull(act) && JS9.Menubar.rkeyMap ){
 	    key = JS9.Menubar.rkeyMap[act];
 	    if( key ){
-		hstr = `<span>${name} <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;${key}</span></span>`;
+		hstr = `<span>${name}<span class="JS9MenubarKeyAction">&nbsp;&nbsp;&nbsp;&nbsp;${key}</span></span>`;
 		obj = {name: hstr, isHtmlName: true};
 	    }
 	} else if( xact && JS9.Menubar.rkeyMap ){
@@ -195,7 +194,7 @@ JS9.Menubar.createMenus = function(){
 		if( JS9.Menubar.rkeyMap.hasOwnProperty(tact) && tact === xact ){
 		    key = JS9.Menubar.rkeyMap[tact];
 		    if( key ){
-			hstr = `<span>${name} <span style='float:right;font:bold 10pt Courier;'>&nbsp;&nbsp;&nbsp;${key}</span></span>`;
+			hstr = `<span>${name}<span class="JS9MenubarKeyAction">&nbsp;&nbsp;&nbsp;;&nbsp;${key}</span></span>`;
 			obj = {name: hstr, isHtmlName: true};
 		    }
 		}
@@ -309,6 +308,8 @@ JS9.Menubar.createMenus = function(){
 	itemClickEvent: JS9.globalOpts.menuClickEvent || "click",
         build: () => {
 	    let i, m, im, name, s1, arr, cdisp, got, iobj;
+	    let plugin, pname, pinst;
+	    let lastxclass="";
 	    let n = 0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
@@ -672,8 +673,28 @@ JS9.Menubar.createMenus = function(){
 		items.windowPrint = xname("print window ...");
 		items.windowPDF = xname("save window to pdf");
 	    }
+	    // plugins
+	    for(i=0; i<JS9.plugins.length; i++){
+		plugin = JS9.plugins[i];
+		pname = plugin.name;
+		if( plugin.opts.menuItem && (plugin.opts.menu === "file") ){
+		    pinst = tdisp.pluginInstances[pname];
+		    if( !pinst || pinst.winHandle ){
+			if( plugin.xclass !== lastxclass ){
+			    items["sep" + n] = "------";
+			    n = n + 1;
+			}
+			lastxclass = plugin.xclass;
+			items[pname] = xname(plugin.opts.menuItem);
+			if( pinst && (pinst.status === "active") ){
+			    items[pname].icon = JS9.globalOpts.menuSelected;
+			}
+		    }
+		}
+	    }
 	    return {
                 callback: (key, opt) => {
+		    let uplugin;
 		    JS9.Menubar.getDisplays.call(this, "any", key)
 			.forEach((val) => {
 			let j, s, t, did, kid, unew, uwin, uobj, uarr, uopts;
@@ -946,6 +967,15 @@ JS9.Menubar.createMenus = function(){
 				}
 				return;
 			    }
+			    // maybe it's a plugin
+			    for(j=0; j<JS9.plugins.length; j++){
+				uplugin = JS9.plugins[j];
+				if( uplugin.name === key ){
+				    udisp.displayPlugin(uplugin);
+				    return;
+				}
+			    }
+			    // maybe its an image
 			    for(j=0; j<JS9.images.length; j++){
 				uim = JS9.images[j];
 				kid = key.replace(/ *\((red|green|blue)\)/,"");
@@ -1868,7 +1898,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1, s2, arr;
+	    let i, s1, s2, hstr, arr;
 	    let n = 0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
@@ -1936,7 +1966,12 @@ JS9.Menubar.createMenus = function(){
 	    for(i=0; i<JS9.globalOpts.topColormaps.length; i++){
 		s1 = JS9.globalOpts.topColormaps[i];
 		s2 = s1;
-		items[s1] = xname(s2);
+		if( JS9.globalOpts.menuImages ){
+		    hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${JS9.InstallDir("images")}/voyager/color_${s2}.png' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="images/empty.svg"' >` + `&nbsp;&nbsp;${s2}</div>`;
+		    items[s1] = {name: hstr, isHtmlName: true};
+		} else {
+		    items[s1] = xname(s2);
+		}
 		if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
 		    items[s1].icon = JS9.globalOpts.menuSelected;
 		}
@@ -1954,7 +1989,12 @@ JS9.Menubar.createMenus = function(){
 		s1 = JS9.colormaps[i].name;
 		if( !JS9.globalOpts.topColormaps.includes(s1) ){
 		    s2 = s1;
-		    items.morecmaps.items[s1] = xname(s2);
+		    if( JS9.globalOpts.menuImages ){
+			hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${JS9.InstallDir("images")}/voyager/color_${s2}.png' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="images/empty.jpg"' >` + `&nbsp;&nbsp;${s2}</div>`;
+			items.morecmaps.items[s1] = {name: hstr, isHtmlName: true};
+		    } else {
+			items.morecmaps.items[s1] = xname(s2);
+		    }
 		    if( tdisp.image && (tdisp.image.cmapObj.name === s1) ){
 			items.morecmaps.items[s1].icon = JS9.globalOpts.menuSelected;
 		    }
@@ -2078,7 +2118,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1;
+	    let i, s1, reg;
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
 	    const tim = tdisp.image;
 	    const items = {};
@@ -2184,14 +2224,18 @@ JS9.Menubar.createMenus = function(){
 		name: "Regions:",
 		disabled: true
 	    };
-	    items.annulus = xname("annulus");
-	    items.box = xname("box");
-	    items.circle = xname("circle");
-	    items.ellipse = xname("ellipse");
-	    items.line = xname("line");
-	    items.point = xname("point");
-	    items.polygon = xname("polygon");
-	    items.text = xname("text");
+	    if( JS9.globalOpts.menuImages ){
+		for(i=0; i<JS9.regions.length; i++){
+		    reg = JS9.regions[i];
+		    items[reg] = {name: `<div class='JS9MenubarImage' name='${reg}'><img src='${JS9.InstallDir("images")}/voyager/regions_${reg}.svg' name='regions_${reg}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="images/empty.jpg"' >` + `&nbsp;&nbsp;${reg}</div>`,
+				  isHtmlName: true};
+		}
+	    } else {
+		for(i=0; i<JS9.regions.length; i++){
+		    reg = JS9.regions[i];
+		    items[reg] = xname(reg);
+		}
+	    }
 	    items.sep1 = "------";
 	    items.loadRegions  = xname("load");
 	    items.listRegions  = xname("list");
