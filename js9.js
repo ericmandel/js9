@@ -15017,7 +15017,7 @@ JS9.MouseTouch.Actions["display value/position"] = function(im, ipos, evt){
     // display pixel and wcs values
     if( JS9.globalOpts.internalValPos && im && ipos ){
 	if( (ipos.x > 0) && (ipos.y > 0) &&
-	    (ipos.x < im.raw.width) && (ipos.y < im.raw.height) ){
+	    (ipos.x <= im.raw.width) && (ipos.y <= im.raw.height) ){
 	    im.valpos = im.updateValpos(ipos, true);
 	}
     }
