@@ -142,8 +142,8 @@ JS9.globalOpts = {
     imcmap: "IMCMAP",           // basename of FITS param containing cmaps
     table: {xdim: 4096, ydim: 4096, bin: 1},// image section size to extract from table
     image: {xdim: 4096, ydim: 4096, bin: 1},// image section size (unlimited=0)
-    reproj: {xdim: 4096, ydim: 4096}, // max image size we can reproject
     reprojSwitches: "",         // Montage reproject switches
+    reprojectLimits: false,     // internal: check for reprojection limits?
     binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
     runOnCR: false,             // Run forms such as binning when <cr> pressed?
     clearImageMemory: "heap",   // rm vfile: always|never|auto|noExt|noCube|size>x Mb heap=>free heap
@@ -8150,7 +8150,7 @@ JS9.Image.prototype.shiftData = function(...args){
 // creates a new raw data layer ("rotate")
 // angle is in degrees (since CROTA2 is in degrees)
 JS9.Image.prototype.rotateData = function(...args){
-    let raw, oheader, nheader, arad, sinrot, cosrot;
+    let raw, oheader, nheader, arad, sinrot, cosrot, pos, arr;
     let ocdelt1 = 0.0;
     let ocdelt2 = 0.0;
     let [angle, opts] = args;
@@ -8183,10 +8183,19 @@ JS9.Image.prototype.rotateData = function(...args){
     // old and new header
     oheader = raw.header;
     nheader = $.extend(true, {}, oheader);
-    // restrict size of reprojection to raw data size
-    if( raw.width && raw.height ){
-	nheader.NAXIS1 = raw.width;
-	nheader.NAXIS2 = raw.height;
+    // rotate around current center
+    pos = this.getPan();
+    arr = JS9.pix2wcs(this.raw.wcs, pos.x, pos.y).trim().split(/\s+/);
+    if( arr && arr.length > 1 ){
+	nheader.CRPIX1 = pos.x;
+	nheader.CRPIX2 = pos.y;
+	nheader.CRVAL1 = JS9.saostrtod(arr[0]);
+	if( (String.fromCharCode(JS9.saodtype()) === ":") &&
+	    (this.params.wcssys !== "galactic" )          &&
+	    (this.params.wcssys !== "ecliptic" )          ){
+	    nheader.CRVAL1 *= 15.0;
+	}
+	nheader.CRVAL2 = JS9.saostrtod(arr[1]);
     }
     // normalized values from wcslib
     if( raw.wcsinfo ){
@@ -8325,20 +8334,27 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
 	    // JS9.error("invalid FITS image header");
 	    return;
 	}
+	// restrict size of reprojection
+	wcsheader.NAXIS1 = Math.min(wcsheader.NAXIS1,
+				    JS9.globalOpts.image.xdim);
+	wcsheader.NAXIS2 = Math.min(wcsheader.NAXIS2,
+				    JS9.globalOpts.image.ydim);
 	// convert reprojection header to a string
 	wcsstr = JS9.raw2FITS(wcsheader, {addcr: true});
 	// create vfile text file containing reprojection WCS
 	wvfile = `wcs_${JS9.uniqueID()}.txt`;
 	JS9.vfile(wvfile, wcsstr);
-	// reprojection limits (if reproj lims == 0, use image limits)
-	maxx = JS9.globalOpts.reproj.xdim || JS9.globalOpts.image.xdim;
-	maxy = JS9.globalOpts.reproj.ydim || JS9.globalOpts.image.ydim;
-	// check max image dimension (32-bits/pixels)
-	maxpix = maxx * maxy * 32;
-	// keep within the limits of current memory constraints, or die
-	if((wcsheader.NAXIS1*wcsheader.NAXIS2*Math.abs(wcsheader.BITPIX))    > maxpix ||
-	   (raw.header.NAXIS1*raw.header.NAXIS2*Math.abs(raw.header.BITPIX)) > maxpix ){
-	    JS9.error(`the max reproject size is ${maxx} * ${maxy} * 4 bytes/pixel. You can use the Bin/Filter/Section plugin to extract a section, then save it as FITS and reproject the smaller image.`);
+	// check limits on reprojection, if necessary
+	if( JS9.globalOpts.reprojectLimits ){
+	    // reprojection limits
+	    maxx = JS9.globalOpts.image.xdim;
+	    maxy = JS9.globalOpts.image.ydim;
+	    // check max image dimension
+	    maxpix = JS9.globalOpts.image.xdim * JS9.globalOpts.image.ydim;
+	    // keep within the limits of current memory constraints, or die
+	    if( (raw.header.NAXIS1 * raw.header.NAXIS2) > maxpix ){
+		JS9.error(`the max reproject size is ${maxx} * ${maxy}. You can use the Bin/Filter/Section plugin to extract a section, then save it as FITS and reproject the smaller image.`);
+	    }
 	}
     } else {
 	wvfile = wcsim;
