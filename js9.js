@@ -142,9 +142,10 @@ JS9.globalOpts = {
     imcmap: "IMCMAP",           // basename of FITS param containing cmaps
     table: {xdim: 4096, ydim: 4096, bin: 1},// image section size to extract from table
     image: {xdim: 4096, ydim: 4096, bin: 1},// image section size (unlimited=0)
+    binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
     reprojSwitches: "",         // Montage reproject switches
     reprojectLimits: false,     // internal: check for reprojection limits?
-    binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
+    rotationCenter: "current",  // "current" or "file"
     runOnCR: false,             // Run forms such as binning when <cr> pressed?
     clearImageMemory: "heap",   // rm vfile: always|never|auto|noExt|noCube|size>x Mb heap=>free heap
     helperProtocol: location.protocol, // http: or https:
@@ -8183,19 +8184,22 @@ JS9.Image.prototype.rotateData = function(...args){
     // old and new header
     oheader = raw.header;
     nheader = $.extend(true, {}, oheader);
-    // rotate around current center
-    pos = this.getPan();
-    arr = JS9.pix2wcs(this.raw.wcs, pos.x, pos.y).trim().split(/\s+/);
-    if( arr && arr.length > 1 ){
-	nheader.CRPIX1 = pos.x;
-	nheader.CRPIX2 = pos.y;
-	nheader.CRVAL1 = JS9.saostrtod(arr[0]);
-	if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-	    (this.params.wcssys !== "galactic" )          &&
-	    (this.params.wcssys !== "ecliptic" )          ){
-	    nheader.CRVAL1 *= 15.0;
+    // rotate around current center oe file center (i.e., CRPIX1,2)
+    opts.center = opts.center || JS9.globalOpts.rotationCenter;
+    if( opts.center !== "file" && this.raw.wcs > 0 ){
+	pos = this.getPan();
+	arr = JS9.pix2wcs(this.raw.wcs, pos.x, pos.y).trim().split(/\s+/);
+	if( arr && arr.length > 1 ){
+	    nheader.CRPIX1 = pos.x;
+	    nheader.CRPIX2 = pos.y;
+	    nheader.CRVAL1 = JS9.saostrtod(arr[0]);
+	    if( (String.fromCharCode(JS9.saodtype()) === ":") &&
+		(this.params.wcssys !== "galactic" )          &&
+		(this.params.wcssys !== "ecliptic" )          ){
+		nheader.CRVAL1 *= 15.0;
+	    }
+	    nheader.CRVAL2 = JS9.saostrtod(arr[1]);
 	}
-	nheader.CRVAL2 = JS9.saostrtod(arr[1]);
     }
     // normalized values from wcslib
     if( raw.wcsinfo ){
