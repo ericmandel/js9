@@ -8586,6 +8586,11 @@ JS9.Image.prototype.reprojectData = function(...args){
 	    this.setStatus("reprojectData", "complete");
 	    // might have to re-execute calls in the stash
 	    this.xeqStashCall(this.xeqstash, [opts.stash, "reprojectData"]);
+	    // execute onreproject function
+	    if( typeof opts.onreproject === "function" ){
+		try{ JS9.xeqByName(opts.onreproject, window, this); }
+		catch(e){ JS9.error("in onreproject callback", e, false); }
+	    }
 	};
 	// opts is optional
 	opts = opts || {};
