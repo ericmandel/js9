@@ -4879,6 +4879,9 @@ JS9.Image.prototype.setRot90 = function(...args){
     if( !rot ){
 	return this;
     }
+    if( typeof rot === "string" ){
+	rot = parseFloat(rot);
+    }
     if( !this || !this.raw || !this.raw.header ){
 	JS9.error("invalid image for rot90");
     }
@@ -8184,7 +8187,7 @@ JS9.Image.prototype.rotateData = function(...args){
     // old and new header
     oheader = raw.header;
     nheader = $.extend(true, {}, oheader);
-    // rotate around current center oe file center (i.e., CRPIX1,2)
+    // rotate around current center or file center (i.e., CRPIX1,2)
     opts.center = opts.center || JS9.globalOpts.rotationCenter;
     if( opts.center !== "file" && this.raw.wcs > 0 ){
 	pos = this.getPan();
@@ -18243,10 +18246,11 @@ JS9.getDynamicDisplayOr = JS9.Dysel.getDisplayOr;
 
 // make a copy of the raw data
 // used by setFlip and setRot90
-JS9.getRawCopy = function(oraw) {
+JS9.getRawCopy = function(oraw, bitpix) {
     // make copy
     let nraw = $.extend(true, {}, oraw);
-    switch(oraw.bitpix){
+    nraw.bitpix = bitpix || oraw.bitpix;
+    switch(nraw.bitpix){
     case 8:
 	nraw.data = new Uint8Array(oraw.data);
 	break;
