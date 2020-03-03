@@ -145,7 +145,7 @@ JS9.globalOpts = {
     binMode: "s",               // "s" (sum) or "a" (avg) pixels when binning
     reprojSwitches: "",         // Montage reproject switches
     reprojectLimits: false,     // internal: check for reprojection limits?
-    rotationCenter: "current",  // "current" or "file"
+    rotationCenter: "file",     // "current" display center or "file" (CRPIX1,2)
     runOnCR: false,             // Run forms such as binning when <cr> pressed?
     clearImageMemory: "heap",   // rm vfile: always|never|auto|noExt|noCube|size>x Mb heap=>free heap
     helperProtocol: location.protocol, // http: or https:

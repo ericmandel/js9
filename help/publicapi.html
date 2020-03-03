@@ -2918,10 +2918,17 @@ The <b>JS9.RotateData()</b> routine uses
 <a href="#JS9.ReprojectData"><b>JS9.ReprojectData()</b></a>
 to rotate image data by the specified angle (in degrees). If the string
 "northup" or "northisup" is specified, the rotation angle is set to 0.
-By default, the rotation is performed about the center of the currently
-displayed image. You can rotate about the WCS CRPIX1, CRPIX2 point by passing
-the <b>opts.center</b> property with a value of "file"
-or by setting the <b>JS9.globalOpts.rotationCenter</b> property to "file".
+By default, the rotation is performed about the WCS CRPIX1, CRPIX2 point.
+To rotate about the center of the currently displayed image, pass
+the <b>opts.center</b> property with a value of "current" or (globally)
+set the <b>JS9.globalOpts.rotationCenter</b> property to "current".
+<p>
+Note that this rotation is not accumulative (as is the case with the
+<a href="#JS9.SetRotation"><b>JS9.SetRotation()</b></a> and 
+<a href="#JS9.SetRot90"><b>JS9.SetRot90()</b></a> routines), so
+calling <b>JS9.RotateData()</b> with an angle of 30 degrees followed by
+45 degrees will result in a 45 degree rotation, not a 75 degree
+rotation.
 
 <p>
 The optional opts object is passed directly to the <b>JS9.ReprojectData()</b>
@@ -5271,14 +5278,6 @@ that we can gain a better understanding of what is required in these cases.
 <p>
 The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.
-
-<h5>20200228: change default rotation point for RotateData</h5>
-<p>
-Prior to v3.1, the RotateData() routine rotated around the WCS CRPIX1,CRPIX2
-point. By popular demand, it now rotates around the current center of the
-display. The previous behavior can be specified passing the
-<b>opts.center</b> property with a value of "file"
-or by setting the <b>JS9.globalOpts.rotationCenter</b> property to "file".
 
 <h5>20200207: remove DisplaySection +N and -N binning options</h5>
 
