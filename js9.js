@@ -4663,6 +4663,8 @@ JS9.Image.prototype.setFlip = function(...args){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse flip opts: ${opts}`, e); }
     }
+    // save this routine so it can be reconstituted in a restored session
+    this.xeqStashSave("setFlip", [flip]);
     // copy of input data
     nraw = JS9.getRawCopy(oraw);
     // set flip state
@@ -4931,6 +4933,8 @@ JS9.Image.prototype.setRot90 = function(...args){
     default:
 	break;
     }
+    // save this routine so it can be reconstituted in a restored session
+    this.xeqStashSave("setRot90", [rot]);
     // assign this nraw to the high-level raw data object
     this.raw = nraw;
     // re-init WCS
@@ -8840,9 +8844,10 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	    obj.wcsim = im.wcsim.id;
 	}
 	// remove old display info
-	if( obj.params.display ){
-	    delete obj.params.display;
-	}
+	delete obj.params.display;
+	// remove rot90 and flip, as we will recreate them
+	obj.params.rot90 = 0;
+	obj.params.flip = "none";
 	// we didn't save the crosshair
 	obj.params.crosshair = false;
 	return obj;
@@ -8914,7 +8919,7 @@ JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
     // default context is image
     context = context || "image";
     // stash routine name and args
-    this.xeqstash = this.xeqstash || {};
+    this.xeqstash = this.xeqstash || [];
     // change display or image object to id
     for(i=0; i<args.length; i++){
 	if( typeof args[i] === "object" ){
@@ -8925,46 +8930,65 @@ JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
 	    }
 	}
     }
-    // overwrite a previous stash having the same func, if it exists
-    for(i=0; i<this.xeqstash.length; i++){
-	stash = this.xeqstash[i];
-	if( (stash.func === func) && (stash.context === context) ){
-	    stash.args = args;
-	    return this;
+    // for most funcs: overwrite previous stash having the same func
+    switch(func){
+    case "setRot90":
+    case "setFlip":
+	break;
+    default:
+	for(i=0; i<this.xeqstash.length; i++){
+	    stash = this.xeqstash[i];
+	    if( (stash.func === func) && (stash.context === context) ){
+		stash.args = args;
+		return this;
+	    }
 	}
+	break;
     }
     // add new func to stash
-    this.xeqstash[func] = {args, id, context};
+    this.xeqstash.push({func, args, id, context});
     // allow chaining
     return this;
 };
 
 // call a stashed routine name and args
 JS9.Image.prototype.xeqStashCall = function(xeqstash, exclArr){
-    let key, xeq;
+    let i, key, xeq;
+    const doxeq = (func, xeq) => {
+	let context = xeq.context || "image";
+	try{
+	    switch(context){
+	    case "image":
+		this[func](...xeq.args);
+		break;
+	    case "display":
+		this.display[func](...xeq.args);
+		break;
+	    default:
+		this[func](...xeq.args);
+		break;
+	    }
+	}
+	catch(e){
+	    JS9.error(`error executing stash: ${func}`, e, false);
+	}
+    };
     xeqstash = xeqstash || this.xeqstash;
-    for( key in xeqstash ){
-	if( xeqstash.hasOwnProperty(key) ){
-	    if( $.inArray(key, exclArr) >= 0 ){
-		continue;
-	    }
-	    xeq = xeqstash[key];
-	    xeq.context = xeq.context || "image";
-	    try{
-		switch(xeq.context){
-		case "image":
-		    this[key](...xeq.args);
-		    break;
-		case "display":
-		    this.display[key](...xeq.args);
-		    break;
-		default:
-		    this[key](...xeq.args);
-		    break;
+    if( $.isArray(xeqstash) ){
+	for(i=0; i<xeqstash.length; i++){
+	    xeq = xeqstash[i];
+	    key = xeq.func;
+	    doxeq(key, xeq);
+	}
+    } else {
+	// backward compatibility: pre 3.1 used an object, not an array
+	for( key in xeqstash ){
+	    if( xeqstash.hasOwnProperty(key) ){
+		if( $.inArray(key, exclArr) >= 0 ){
+		    continue;
 		}
-	    }
-	    catch(e){
-		JS9.error(`error executing stash: ${key}`, e, false);
+		xeq = xeqstash[key];
+		doxeq(key, xeq);
 	    }
 	}
     }
