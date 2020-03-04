@@ -8776,25 +8776,25 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 // NB: save is an image method, load is a display method
 JS9.Image.prototype.saveSession = function(file, opts){
     let i, obj, str, blob, layer, dlayer, tobj, key, im, lpos, ipos;
-    const saveim = () => {
+    const saveim = (im) => {
 	// object holding session keys
 	const obj = {};
 	// filename
-	obj.file = this.file;
+	obj.file = im.file;
 	// display size info
-	obj.dwidth = this.display.width;
-	obj.dheight = this.display.height;
+	obj.dwidth = im.display.width;
+	obj.dheight = im.display.height;
 	// image params
-	obj.params = $.extend(true, {}, this.params);
+	obj.params = $.extend(true, {}, im.params);
 	// temp values: explicitly save some of them
 	obj.tmp = {};
-	if( this.tmp.gridStatus === "active" ){
+	if( im.tmp.gridStatus === "active" ){
 	    obj.tmp.gridStatus = "active";
 	}
 	// get center of displayed image in physical coords
-	lpos = this.imageToLogicalPos({x:this.rgb.sect.xcen,
-				       y:this.rgb.sect.ycen});
-	ipos = this.maybePhysicalToImage(lpos);
+	lpos = im.imageToLogicalPos({x:im.rgb.sect.xcen,
+				       y:im.rgb.sect.ycen});
+	ipos = im.maybePhysicalToImage(lpos);
 	if( ipos ){
 	    lpos = ipos;
 	}
@@ -8802,15 +8802,15 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	obj.sect = {};
 	obj.sect.xcen = lpos.x;
 	obj.sect.ycen = lpos.y;
-	obj.sect.xdim = this.raw.width;
-	obj.sect.ydim = this.raw.height;
-	obj.sect.zoom = this.rgb.sect.zoom;
+	obj.sect.xdim = im.raw.width;
+	obj.sect.ydim = im.raw.height;
+	obj.sect.zoom = im.rgb.sect.zoom;
 	// layers
 	obj.layers = [];
-	for( key in this.layers ){
+	for( key in im.layers ){
 	    // save each main layer so it can be reconstituted
-            if( this.layers.hasOwnProperty(key) ){
-		layer = this.layers[key];
+            if( im.layers.hasOwnProperty(key) ){
+		layer = im.layers[key];
 		dlayer = layer.dlayer;
 		// only save layers on main display
 		// don't save crosshair or grid
@@ -8832,12 +8832,12 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	    }
 	}
 	// save blend state
-	obj.blend = this.blend;
+	obj.blend = im.blend;
 	// save routines which must be executed when restoring session
-	obj.xeqstash = this.xeqstash;
+	obj.xeqstash = im.xeqstash;
 	// save wcsim reference, if necessary
-	if( this.wcsim && this.wcsim.id ){
-	    obj.wcsim = this.wcsim.id;
+	if( im.wcsim && im.wcsim.id ){
+	    obj.wcsim = im.wcsim.id;
 	}
 	// remove old display info
 	if( obj.params.display ){
@@ -8875,12 +8875,12 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	for(i=0; i<JS9.images.length; i++){
 	    im = JS9.images[i];
 	    if( im.display.id === this.display.id ){
-		obj.images.push(saveim());
+		obj.images.push(saveim(im));
 	    }
 	}
     } else {
 	// save current image
-	obj.images.push(saveim());
+	obj.images.push(saveim(this));
     }
     // save display parameters
     obj.display = {blendMode: this.display.blendMode};
