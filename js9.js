@@ -8915,7 +8915,7 @@ JS9.Image.prototype.saveSession = function(file, opts){
 // stash a routine name and args
 // the routine will be re-executed when the session is loaded
 JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
-    let i, stash;
+    let i, stash, len;
     // default context is image
     context = context || "image";
     // stash routine name and args
@@ -8933,7 +8933,20 @@ JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
     // for most funcs: overwrite previous stash having the same func
     switch(func){
     case "setRot90":
+	// two rots in the opposite direction cancel one another
+	len = this.xeqstash.length;
+	if( len >= 1 && this.xeqstash[len-1].args[0] === -args[0] ){
+	    this.xeqstash.pop();
+	    return this;
+	}
+	break;
     case "setFlip":
+	// two flips in the same direction cancel one another
+	len = this.xeqstash.length;
+	if( len >= 1 && this.xeqstash[len-1].args[0] === args[0] ){
+	    this.xeqstash.pop();
+	    return this;
+	}
 	break;
     default:
 	for(i=0; i<this.xeqstash.length; i++){
