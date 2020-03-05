@@ -7,3 +7,4 @@ circle(23:23:27.909, +58:48:42.88, 14.756982") {"strokeWidth":1,"strokeDashArray
 polygon(23:23:40.707, +58:47:56.172, 23:23:36.114, +58:47:40.255, 23:23:36.692, +58:48:06.970, 23:23:38.901, +58:48:34.952) {"strokeWidth":2.0121505036619665} # background,include
 text(23:23:08.809, +58:49:57.244, "this is a test")
 text(23:23:15.716, +58:49:54.809, "this is an angled test", 312.248556) {"color":"wheat2"}
+point(350.84373348,58.8349018566)  {"color":"fuchsia", "text":"crpix"}
