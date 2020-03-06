@@ -1881,6 +1881,10 @@ returns:
 <li><b>flip</b>: the current flip state
 </ul>
 Possible returned flip states are: "x", "y", "xy", or "none".
+The state is normalized, so that, for example, two "x" flips are
+replaced by "none". NB: if you have also rotated the image using
+<a href="#JS9.SetRot90"><b>JS9.SetRot90()</b></a>, the total flip and
+rotate state is no longer separable like this (since rotations do not commute).
 
 <h5 id="JS9.SetRot90">Rotate an image by +/- 90 degrees</h5>
 <p>
@@ -1903,7 +1907,11 @@ returns:
 <li><b>rot</b>: current rotation value for this image
 </ul>
 The returned rotation value will be a multiple of 90, depending on how
-many rotations have been executed and in which direction.
+many rotations have been executed and in which direction.  
+NB: if you have also flipped the image using
+<a href="#JS9.SetFlip"><b>JS9.SetFlip()</b></a>, the total flip and
+rotate state is no longer separable like this (since rotations do not commute).
+
 
 <h5 id="JS9.GetParam">Get an image parameter value</h5>
 <p>
@@ -4760,15 +4768,21 @@ that you supply a full path.
 
 <h5 id="JS9.SaveFITS">Save image as a FITS file</h5>
 <p>
-<code class="api">JS9.SaveFITS(filename)</code>
+<code class="api">JS9.SaveFITS(filename, opts)</code>
 <p>
 where:
 <ul>
 <li><b>filename</b>: output file name
+<li><b>opts</b>: optional opts or "display"
 </ul>
 Save the currently displayed image as a FITS file. If filename is not
 specified, the file will be saved as "js9.fits".
-
+<p>
+If a second argument is supplied, it can be the string "display" or an
+object containing the property "source". If "display" or opts.source
+is "display" is passed, the currently displayed image section is
+saved. Otherwise, the full image (or extracted image section, if
+appropriate) is saved.
 <p>
 Don't forget that the file is saved by the browser, in whatever location
 you have set up for downloads.

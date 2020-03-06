@@ -230,7 +230,7 @@ JS9.globalOpts = {
     mousetouchZoom: false,	// use mouse wheel, pinch to zoom?
     metaClickPan: true,         // metaKey + click pans to mouse position?
     // statusBar: "$mag; $scale($scaleclipping); $img(images/voyager/color_$colormap.png) $colormap; $wcssys; $image",  // status display
-    statusBar: "$colorbar; $colormap; $mag $fliprot; $scale ($scalemin,$scalemax); $wcssys; $image0",  // status display
+    statusBar: "$colorbar; $colormap; $mag; $scale ($scalemin,$scalemax); $wcssys; $image0",  // status display
     toolbarTooltips: false,     // display tooltips on toolbar?
     centerDivs: ["JS9Menubar"], // divs which take part in JS9.Display.center()
     resizeDivs: ["JS9Menubar", "JS9Colorbar", "JS9Toolbar", "JS9Statusbar"], // divs which take part in JS9.Display.resize()
@@ -4218,13 +4218,55 @@ JS9.Image.prototype.displaySlice = function(slice, opts, func){
 // convert current image to array
 JS9.Image.prototype.toArray = function(opts){
     let i, j, k, bpe, idx, le, header, npad, arr, buf, _dbuf;
-    const dbuf = this.raw.data.buffer;
+    let dbuf, sect, xlen, blen, datalen, darr;
     // opts is optional
     opts = opts || {};
     // always perform the header keyword fix
     opts.simple = true;
-    // get header
-    header = JS9.raw2FITS(this.raw, opts);
+    // make a copy of the header, in case we have to change it
+    header = $.extend(true, {}, this.raw.header);
+    // are we processing a section of the image?
+    if( JS9.notNull(opts.sect) ){
+	// image section
+	sect = opts.sect;
+	// header parameters that need to change
+	header.NAXIS1 = sect.x1 - sect.x0;
+	header.NAXIS2 = sect.y1 - sect.y0;
+	if( JS9.notNull(header.CRPIX1) ){
+	    header.CRPIX1 = header.CRPIX1 - sect.x0;
+	}
+	if( JS9.notNull(header.CRPIX2) ){
+	    header.CRPIX2 = header.CRPIX2 - sect.y0;
+	}
+	if( JS9.notNull(header.LTV1) ){
+	    header.LTV1 = header.LTV1 - sect.x0;
+	}
+	if( JS9.notNull(header.LTV2) ){
+	    header.LTV2 = header.LTV2 - sect.y0;
+	}
+	// extract image section
+	// length of a date element
+	blen = Math.abs(this.raw.bitpix/8);
+	// length of a row of data
+	xlen = (sect.x1 - sect.x0) * blen;
+	// total data length of the section
+	datalen = xlen * (sect.y1 - sect.y0);
+	// make an array of the required length
+	darr = new ArrayBuffer(datalen);
+	// make a vew that we can work with
+	dbuf = new Uint8Array(darr);
+	// copy the section into the new array, one row at a time
+	for(i=sect.y0, j=0; i<sect.y1; i++, j++){
+	    JS9.memcpy(dbuf.buffer, (j * xlen),
+		       this.raw.data.buffer, (i*this.raw.width+sect.x0) * blen,
+		       xlen);
+	}
+    } else {
+	// save entire data buffer
+	dbuf = this.raw.data.buffer;
+    }
+    // get header as a string
+    header = JS9.raw2FITS({header: header}, opts);
     // append padding to header now
     npad = 2880 - (header.length % 2880);
     if( npad === 2880 ){ npad = 0; }
@@ -5650,18 +5692,6 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 		r = "?";
 	    }
 	    break;
-	case "fliprot":
-	    // hack for statusbar
-	    r = "";
-	    if( this.params.flip !== "none" ){
-		r += this.params.flip;
-	    }
-	    if( this.params.rot90 ){
-		if( r ){ r += ","; }
-		r += `${this.params.rot90}`;
-	    }
-	    if( r ){ r = `(${r})`; }
-	    break;
 	default:
 	    // look for keyword in the serialized opts array
 	    if( opts ){
@@ -6326,8 +6356,8 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 };
 
 // save image as a FITS file
-JS9.Image.prototype.saveFITS = function(fname){
-    let arr, blob;
+JS9.Image.prototype.saveFITS = function(fname, opts){
+    let arr, blob, s, ll, ur, sect;
     if( window.hasOwnProperty("saveAs") ){
 	if( fname ){
 	    fname = fname
@@ -6336,9 +6366,24 @@ JS9.Image.prototype.saveFITS = function(fname){
 	} else {
 	    fname = "js9.fits";
 	}
-	// first convert to array (with two axes)
-	arr = this.toArray({notab: true, twoaxes: true});
-	// then convert array to blob
+	opts = opts || {};
+	if( typeof opts === "string" ){
+	    try{ s = JSON.parse(opts); }
+	    catch(e){ s = null; }
+	    if( s ){ opts = s; }
+	}
+	// what do we save?
+	if( opts === "display" || opts.source === "display" ){
+	    // save currently displayed section
+	    ll = this.displayToImagePos({x:0, y:this.rgb.img.height});
+	    ur = this.displayToImagePos({x:this.rgb.img.width, y:0});
+	    sect = {x0: ll.x, y0: ll.y, x1: ur.x, y1: ur.y};
+	    arr = this.toArray({notab: true, twoaxes: true, sect: sect});
+	} else {
+	    // save entire image: first convert to array (with two axes)
+	    arr = this.toArray({notab: true, twoaxes: true});
+	}
+	// convert array to blob
 	blob = new Blob([arr], {type: "application/octet-binary"});
 	// save to disk
 	saveAs(blob, fname);
@@ -8991,6 +9036,9 @@ JS9.Image.prototype.xeqStashCall = function(xeqstash, exclArr){
 	for(i=0; i<xeqstash.length; i++){
 	    xeq = xeqstash[i];
 	    key = xeq.func;
+	    if( $.inArray(key, exclArr) >= 0 ){
+		continue;
+	    }
 	    doxeq(key, xeq);
 	}
     } else {
@@ -18340,6 +18388,13 @@ JS9.getRawLine = function(oraw, ooff, nraw, noff) {
 	JS9.error(`unknown bitpix value for flip: ${oraw.bitpix}`);
     }
     return [obuf, nbuf];
+};
+
+// https://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
+JS9.memcpy = function(dst, dstOffset, src, srcOffset, length) {
+  var dstU8 = new Uint8Array(dst, dstOffset, length);
+  var srcU8 = new Uint8Array(src, srcOffset, length);
+  dstU8.set(srcU8);
 };
 
 // ---------------------------------------------------------------------

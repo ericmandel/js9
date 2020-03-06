@@ -6546,7 +6546,12 @@ JS9.Menubar.createMenus = function(){
 		name: "save ...",
 		items: {
 		    saveastitle: {
-			name: "choose output format:",
+			name: "save all data as:",
+			disabled: true
+		    },
+		    savefitsentire: xname("FITS"),
+		    saveastitle2: {
+			name: "save displayed data as:",
 			disabled: true
 		    },
 		    savefits: xname("FITS"),
@@ -6948,11 +6953,16 @@ JS9.Menubar.createMenus = function(){
 				  .data("aname", "loadproxy");
 			    break;
 			case "savefits":
+			case "savefitsentire":
 			    if( uim ){
 				s = uim.id.replace(/\.png/i, ".fits")
 				          .replace(/\.gz$/i, "")
 				          .replace(/\[.*\]/,"");
-				uim.saveFITS(s);
+				if( key === "savefits" ){
+				    uim.saveFITS(s, "display");
+				} else {
+				    uim.saveFITS(s);
+				}
 			    }
 			    break;
 			case "savepng":
