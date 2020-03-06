@@ -308,8 +308,8 @@ def regionsTest(j, file=None):
     waitStatus(j, "LoadRegions")
     displayMessage(j, 'j.GetRegions()')
     obj = j.GetRegions()
-    if len(obj) == 7:
-        displayMessage(j, "    found 7 regions")
+    if len(obj) == 8:
+        displayMessage(j, "    found 8 regions")
     else:
         raise ValueError("incorrect number of regions")
     displayMessage(j, 'j.ChangeRegions()')
