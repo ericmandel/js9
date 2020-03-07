@@ -8826,10 +8826,20 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 JS9.Image.prototype.saveSession = function(file, opts){
     let i, obj, str, blob, layer, dlayer, tobj, key, im, lpos, ipos;
     const saveim = (im) => {
+	let regexp;
 	// object holding session keys
 	const obj = {};
 	// filename
-	obj.file = im.file;
+	if( window.currentDir ){
+	    // remove current directory to make it relative
+	    // this allows the session file (and data files) to be moved
+	    // to a machine with a different directory structure, and
+	    // also allows web and desktop sessions to be shared
+	    regexp = new RegExp(`^${window.currentDir}/`);
+	    obj.file = im.file.replace(regexp, "");
+	} else {
+	    obj.file = im.file;
+	}
 	// display size info
 	obj.dwidth = im.display.width;
 	obj.dheight = im.display.height;
