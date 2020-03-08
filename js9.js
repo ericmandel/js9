@@ -10747,7 +10747,7 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	JS9.Load(pname, obj.params, {display: this.id});
     };
     const loadem = (jobj) => {
-	let i, key;
+	let i, key, cmap, xobj;
 	// restore (and remove) globals
 	if( jobj.globalOpts ){
 	    $.extend(true, JS9.globalOpts, jobj.globalOpts);
@@ -10756,7 +10756,14 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	// load colormaps
 	if( jobj.cmaps ){
 	    for(i=0; i<jobj.cmaps.length; i++){
-		JS9.AddColormap(jobj.cmaps[i]);
+		cmap = jobj.cmaps[i];
+		if( !cmap.name ){ continue; }
+		if( $.inArray(cmap.name, JS9.globalOpts.topColormaps) >= 0 ){
+		    xobj = {toplevel: true};
+		} else {
+		    xobj = {toplevel: false};
+		}
+		JS9.AddColormap(cmap, xobj);
 	    }
 	}
 	// load images
