@@ -2000,7 +2000,7 @@ JS9.Menubar.createMenus = function(){
 		if( !JS9.globalOpts.topColormaps.includes(s1) ){
 		    s2 = s1;
 		    if( JS9.globalOpts.menuImages ){
-			hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${JS9.InstallDir("images")}/voyager/color_${s2}.png' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="images/empty.jpg"' >` + `&nbsp;&nbsp;${s2}</div>`;
+			hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${JS9.InstallDir("images")}/voyager/color_${s2}.png' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="images/empty.svg"' >` + `&nbsp;&nbsp;${s2}</div>`;
 			items.morecmaps.items[s1] = {name: hstr, isHtmlName: true};
 		    } else {
 			items.morecmaps.items[s1] = xname(s2);
@@ -2237,7 +2237,7 @@ JS9.Menubar.createMenus = function(){
 	    if( JS9.globalOpts.menuImages ){
 		for(i=0; i<JS9.regions.length; i++){
 		    reg = JS9.regions[i];
-		    items[reg] = {name: `<div class='JS9MenubarImage' name='${reg}'><img src='${JS9.InstallDir("images")}/voyager/regions_${reg}.svg' name='regions_${reg}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="images/empty.jpg"' >` + `&nbsp;&nbsp;${reg}</div>`,
+		    items[reg] = {name: `<div class='JS9MenubarImage' name='${reg}'><img src='${JS9.InstallDir("images")}/voyager/regions_${reg}.svg' name='regions_${reg}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="images/empty.svg"' >` + `&nbsp;&nbsp;${reg}</div>`,
 				  isHtmlName: true};
 		}
 	    } else {
