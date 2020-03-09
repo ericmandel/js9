@@ -265,7 +265,7 @@ JS9.globalOpts = {
     menuPosition: "right-5 bottom-5",                 // where menus pop up
     menuClickEvent: "mouseup",                        // "click" or "mouseup"
     menuSelected: "check",                            // selected option icon
-    menuImages: true,                                 // show pngs inmenu?
+    menuImages: true,                                 // show pngs in menu?
     userMenus: false,                                 // add user menus?
     userMenuDivider: "&nbsp;&nbsp;&nbsp;",            // divide before user menu
     imagesFileSubmenu: 5,        // how many images trigger a submenu?
@@ -600,11 +600,6 @@ if( window.isElectron ){
 	    throw new Error('For security reasons, Desktop JS9 does not support window.eval()');
 	}
     }
-}
-// allinone file does not have menu image
-if( JS9.allinone ){
-    JS9.globalOpts.menuRegionsImages = false;
-    JS9.globalOpts.menuColormapImages = false;
 }
 
 // ---------------------------------------------------------------------
