@@ -11702,6 +11702,7 @@ JS9.Fabric.opts = {
     hasBorders: true,
     transparentCorners: false,
     centeredScaling: true,
+    strokeUniform: true,
     selectable: true,
     // minimizes the jump when first changing the region size
     padding: 0,
@@ -11715,6 +11716,12 @@ JS9.Fabric.opts = {
 // rescale the width of shapes in the shape layers
 JS9.Fabric.rescaleStrokeWidth = function(scale, sw1){
     const tscale = ((this.scaleX + this.scaleY) / 2);
+    // fabric 2+ supports strokeUniform, but not for groups
+    // still, it fixes the different strokeWidth problem for rectangular boxes
+    if( fabric.major_version >= 2                      &&
+	this.params && this.params.shape !== "annulus" ){
+	return;
+    }
     scale = scale || 1;
     scale *= tscale;
     if( !sw1 && this.params ){
