@@ -7954,7 +7954,7 @@ JS9.Image.prototype.imarithData = function(...args){
 	JS9.error("missing arg(s) for image arithmetic");
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("imarithData", args, opts.rawid);
+    this.xeqStashSave("imarithData", args.slice(), opts.rawid);
     // operation: add, sub, mul, div ...
     switch(op){
     case "add":
@@ -8137,7 +8137,7 @@ JS9.Image.prototype.shiftData = function(...args){
     opts.x = x;
     opts.y = y;
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("shiftData", args, opts.rawid);
+    this.xeqStashSave("shiftData", args.slice(), opts.rawid);
     this.rawDataLayer(opts, (oraw, nraw, opts) => {
 	let i, oi, oj, ni, nj, nlen, oU8, nU8, ooff, noff, blankval;
 	const bpp = oraw.data.BYTES_PER_ELEMENT;
@@ -8292,7 +8292,7 @@ JS9.Image.prototype.rotateData = function(...args){
 	nheader.ptype = raw.wcsinfo.ptype;
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("rotateData", args, opts.rawid);
+    this.xeqStashSave("rotateData", args.slice(), opts.rawid);
     // rotate by reprojecting the data
     return this.reprojectData(nheader, opts);
 };
@@ -8602,7 +8602,7 @@ JS9.Image.prototype.reprojectData = function(...args){
     // save this routine so it can be reconstituted in a restored session
     // (unless another xxxData routine is calling us)
     if( !opts.rawid ){
-	this.xeqStashSave("reprojectData", args, "reproject");
+	this.xeqStashSave("reprojectData", args.slice(), "reproject");
     }
     // save stash name
     if( !opts.stash ){
@@ -8700,7 +8700,7 @@ JS9.Image.prototype.filterRGBImage = function(...args){
 	JS9.error(`JS9 image filter '${filter}' not available`);
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("filterRGBImage", args);
+    this.xeqStashSave("filterRGBImage", args.slice());
     // remove filter name arg
     args.shift();
     // add display context and RGB img arg
