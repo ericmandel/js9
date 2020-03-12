@@ -13408,6 +13408,10 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    opts.color = opts.stroke;
 	    opts.stroke = JS9.colorToHex(opts.stroke);
 	}
+	// some shapes don't want centered scaling
+	if( $.inArray(sobj.shape, JS9.Regions.opts.noCenteredScaling) >= 0 ){
+	    opts.centeredScaling = false;
+	}
 	// create the shape
 	switch(sobj.shape){
 	case "annulus":
@@ -15558,6 +15562,8 @@ JS9.Regions.opts = {
     sortOverlapping: true,
     // title for region config dialog box
     title: "Region Configuration",
+    // no centered scaling for these regions
+    noCenteredScaling: ["box", "line"],
     // colors for tags
     // these should be ordered from more specific to less specific
     tagcolors: {
