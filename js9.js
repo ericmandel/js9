@@ -19919,9 +19919,10 @@ JS9.invertMatrix3 = function(xin){
 };
 
 // is this a string representation of a number?
+// https://stackoverflow.com/questions/175739/built-in-way-in-javascript-to-check-if-a-string-is-a-valid-number
+// NB: don't use Number.XXX routines, they don't work .. "2016-5" returns true
 JS9.isNumber = function(s) {
-    const d = Number.parseFloat(s);
-    return !Number.isNaN(d) && Number.isFinite(d);
+    return !isNaN(parseFloat(s)) && isFinite(s);
 };
 
 // check if a variable is neither undefined nor null
