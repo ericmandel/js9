@@ -15818,9 +15818,9 @@ JS9.Regions.initConfigForm = function(obj){
 		    break;
 		default:
 		    if( wcsinfo.cdelt1 !== undefined ){
-			val *= wcsinfo.cdelt1;
+			val *= Math.abs(wcsinfo.cdelt1);
 		    } else if( wcsinfo.cdelt2 !== undefined ){
-			val *= wcsinfo.cdelt2;
+			val *= Math.abs(wcsinfo.cdelt2);
 		    }
 		    break;
 		}
@@ -16432,27 +16432,25 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 		    p1 = obj.pub.pts[0];
 		    p2 = obj.pub.pts[1];
 		    cpos = {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-		    ang = parseFloat(this.tmp.lineangle) || 0;
-		    opts.pts = [];
+		    ang = parseFloat(this.tmp.lineangle)||0;
 		    p1.x = cpos.x - val/2;
 		    p1.y = cpos.y;
 		    p2.x = cpos.x + val/2;
 		    p2.y = cpos.y;
-		    opts.pts[0] = JS9.rotatePoint(p1, ang, cpos);
-		    opts.pts[1] = JS9.rotatePoint(p2, ang, cpos);
+		    opts.pts = [JS9.rotatePoint(p1, ang, cpos),
+				JS9.rotatePoint(p2, ang, cpos)];
 		}
 	    }
 	    break;
 	case "lineangle":
 	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
 		if( JS9.isNumber(val) && val !== this.tmp.lineangle ){
-		    val = parseFloat(val) - parseFloat(this.tmp.lineangle);
+		    ang = parseFloat(val) - parseFloat(this.tmp.lineangle)||0;
 		    p1 = obj.pub.pts[0];
 		    p2 = obj.pub.pts[1];
 		    cpos = {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-		    opts.pts = [];
-		    opts.pts[0] = JS9.rotatePoint(p1, val, cpos);
-		    opts.pts[1] = JS9.rotatePoint(p2, val, cpos);
+		    opts.pts = [JS9.rotatePoint(p1, ang, cpos),
+				JS9.rotatePoint(p2, ang, cpos)];
 		}
 	    }
 	    break;
