@@ -13409,7 +13409,8 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    opts.stroke = JS9.colorToHex(opts.stroke);
 	}
 	// some shapes don't want centered scaling
-	if( $.inArray(sobj.shape, JS9.Regions.opts.noCenteredScaling) >= 0 ){
+	if( layer.opts.noCenteredScaling &&
+	    $.inArray(sobj.shape, layer.opts.noCenteredScaling) >= 0 ){
 	    opts.centeredScaling = false;
 	}
 	// create the shape
@@ -15807,7 +15808,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "linelength":
-	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
+	    if( obj.pub.pts && obj.pub.pts.length === 2 && !obj.angle ){
 		p1 = obj.pub.pts[0];
 		p2 = obj.pub.pts[1];
 		val = fmt(Math.sqrt((p2.x - p1.x) * (p2.x - p1.x) +
@@ -15829,7 +15830,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "lineangle":
-	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
+	    if( obj.pub.pts && obj.pub.pts.length === 2 && !obj.angle ){
 		p1 = obj.pub.pts[0];
 		p2 = obj.pub.pts[1];
 		val = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
@@ -16094,7 +16095,7 @@ JS9.Regions.initConfigForm = function(obj){
 	$(`${form}.textangle`).removeClass("nodisplay");
 	break;
     case "line":
-	if( obj.pub.pts.length == 2 ){
+	if( obj.pub.pts && obj.pub.pts.length === 2 && !obj.angle ){
 	    $(`${form}.linelength`).removeClass("nodisplay");
 	    $(`${form}.lineangle`).removeClass("nodisplay");
 	} else {
@@ -16418,7 +16419,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	    }
 	    break;
 	case "linelength":
-	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
+	    if( obj.pub.pts && obj.pub.pts.length === 2 && !obj.angle ){
 		if( JS9.isNumber(val) && val !== this.tmp.linelength ){
 		    val = parseFloat(val);
 		    switch(this.params.wcssys){
@@ -16464,7 +16465,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	    }
 	    break;
 	case "lineangle":
-	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
+	    if( obj.pub.pts && obj.pub.pts.length === 2 && !obj.angle ){
 		if( JS9.isNumber(val) && val !== this.tmp.lineangle ){
 		    ang = parseFloat(val) - parseFloat(this.tmp.lineangle)||0;
 		    if( opts.pts ){
