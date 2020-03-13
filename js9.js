@@ -16415,7 +16415,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	    break;
 	case "linelength":
 	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
-		if( val !== this.tmp.linelength ){
+		if( JS9.isNumber(val) && val !== this.tmp.linelength ){
 		    val = parseFloat(val);
 		    switch(this.params.wcssys){
 		    case 'image':
@@ -16445,7 +16445,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	    break;
 	case "lineangle":
 	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
-		if( val !== this.tmp.lineangle ){
+		if( JS9.isNumber(val) && val !== this.tmp.lineangle ){
 		    val = parseFloat(val) - parseFloat(this.tmp.lineangle);
 		    p1 = obj.pub.pts[0];
 		    p2 = obj.pub.pts[1];
