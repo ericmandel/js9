@@ -16097,6 +16097,9 @@ JS9.Regions.initConfigForm = function(obj){
 	if( obj.pub.pts.length == 2 ){
 	    $(`${form}.linelength`).removeClass("nodisplay");
 	    $(`${form}.lineangle`).removeClass("nodisplay");
+	} else {
+	    $(`${form}.linelength`).addClass("nodisplay");
+	    $(`${form}.lineangle`).addClass("nodisplay");
 	}
 	break;
     default:
@@ -16429,8 +16432,13 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 			}
 			break;
 		    }
-		    p1 = obj.pub.pts[0];
-		    p2 = obj.pub.pts[1];
+		    if( opts.pts ){
+			p1 = opts.pts[0];
+			p2 = opts.pts[1];
+		    } else {
+			p1 = obj.pub.pts[0];
+			p2 = obj.pub.pts[1];
+		    }
 		    cpos = {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
 		    ang = parseFloat(this.tmp.lineangle)||0;
 		    p1.x = cpos.x - val/2;
@@ -16446,8 +16454,13 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
 		if( JS9.isNumber(val) && val !== this.tmp.lineangle ){
 		    ang = parseFloat(val) - parseFloat(this.tmp.lineangle)||0;
-		    p1 = obj.pub.pts[0];
-		    p2 = obj.pub.pts[1];
+		    if( opts.pts ){
+			p1 = opts.pts[0];
+			p2 = opts.pts[1];
+		    } else {
+			p1 = obj.pub.pts[0];
+			p2 = obj.pub.pts[1];
+		    }
 		    cpos = {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
 		    opts.pts = [JS9.rotatePoint(p1, ang, cpos),
 				JS9.rotatePoint(p2, ang, cpos)];
