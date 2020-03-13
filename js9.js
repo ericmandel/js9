@@ -13724,7 +13724,7 @@ JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
 // primitive to update one shape
 // call using image context
 JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
-    let i, xname, s, scalex, scaley, px, py, v0, v1, tval1, tval2;
+    let i, xname, s, scalex, scaley, px, py, v0, v1, tval1, tval2, angstr;
     let bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius, oangle;
     let opos, dist;
     const pub ={};
@@ -13970,7 +13970,16 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    }
 	}
         if( pub.shape === "line" && JS9.notNull(dist) ){
-	    pub.imstr += `) {"size":${tr(dist)},"units":"pixels"}`;
+	    pub.imstr += `) {"size":${tr(dist)},"units":"pixels"`;
+	    // if only two points, add angle between them
+	    if( pub.pts.length === 2 ){
+		tval1 = Math.atan2(pub.pts[1].y - pub.pts[0].y,
+				   pub.pts[1].x - pub.pts[0].x) * 180 / Math.PI;
+		while( tval1 < 0 ){ tval1 += 360; }
+		angstr = `,"angle":${tr4(tval1)},"aunits":"degrees"`;
+		pub.imstr += angstr;
+	    }
+	    pub.imst += "}";
 	} else {
 	    pub.imstr += ")";
 	}
@@ -14004,6 +14013,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	if( (opts.updateWCS !== false) &&
 	    (opts.updateWCS || layer.opts.updateWCS) ){
 	    pub.wcsstr = JS9.reg2wcs(this.raw.wcs, tstr).replace(/;$/, "");
+	    // add angle to line, if possible
+	    if( pub.shape === "line" && pub.pts.length === 2 && angstr ){
+		pub.wcsstr = pub.wcsstr.replace(/} *$/, angstr + "}");
+	    }
 	    // wcs size args
 	    s = pub.wcsstr.replace(/.*\(/,"").replace(/\).*/,"").split(",");
 	    for(i=0; i<s.length; i++){
@@ -15721,7 +15734,8 @@ JS9.Regions.displayConfigForm = function(shape){
 // initialize the region config form
 // call using image context
 JS9.Regions.initConfigForm = function(obj){
-    let i, s, key, val, el, wcssys, altwcssys, ra, dec, mover, mout;
+    let i, s, key, val, el, wcssys, altwcssys, ra, dec, mover, mout, p1, p2;
+    const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
     const params = obj.params;
     const winid = params.winid;
     const wid = $(winid).attr("id");
@@ -15790,6 +15804,38 @@ JS9.Regions.initConfigForm = function(obj){
 		if( obj.pub.imstr ){
 		    val = obj.pub.imstr.replace(/^.*\(/, "").replace(/\)$/, "");
 		}
+	    }
+	    break;
+	case "linelength":
+	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
+		p1 = obj.pub.pts[0];
+		p2 = obj.pub.pts[1];
+		val = fmt(Math.sqrt((p2.x - p1.x) * (p2.x - p1.x) +
+				    (p2.y - p1.y) * (p2.y - p1.y)));
+		switch(this.params.wcssys){
+		case 'image':
+		case 'physical':
+		    break;
+		default:
+		    if( wcsinfo.cdelt1 !== undefined ){
+			val *= wcsinfo.cdelt1;
+		    } else if( wcsinfo.cdelt2 !== undefined ){
+			val *= wcsinfo.cdelt2;
+		    }
+		    break;
+		}
+		val = fmt(val);
+		this.tmp.linelength = val;
+	    }
+	    break;
+	case "lineangle":
+	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
+		p1 = obj.pub.pts[0];
+		p2 = obj.pub.pts[1];
+		val = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+		while( val < 0 ){ val += 360; }
+		val = fmt(val);
+		this.tmp.lineangle = val;
 	    }
 	    break;
 	case "fontFamily":
@@ -16047,6 +16093,14 @@ JS9.Regions.initConfigForm = function(obj){
     case "text":
 	$(`${form}.textangle`).removeClass("nodisplay");
 	break;
+    case "line":
+	if( obj.pub.pts.length == 2 ){
+	    $(`${form}.linelength`).removeClass("nodisplay");
+	    $(`${form}.lineangle`).removeClass("nodisplay");
+	}
+	break;
+    default:
+	break;
     }
     // save the image for later processing
     $(form).data("im", this);
@@ -16088,7 +16142,7 @@ JS9.Regions.initConfigForm = function(obj){
 // process the config form to change the specified shape
 // call using image context
 JS9.Regions.processConfigForm = function(form, obj, winid, arr){
-    let i, s, key, nkey, val, nval, nopts, altwcssys;
+    let i, s, key, nkey, val, nval, nopts, altwcssys, cpos, p1, p2, ang;
     let bin = 1;
     const alen = arr.length;
     const opts = {};
@@ -16357,6 +16411,49 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "radii":
 	    if( newval(obj, key, val) ){
 		opts[key] = val;
+	    }
+	    break;
+	case "linelength":
+	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
+		if( val !== this.tmp.linelength ){
+		    val = parseFloat(val);
+		    switch(this.params.wcssys){
+		    case 'image':
+		    case 'physical':
+			break;
+		    default:
+			if( wcsinfo.cdelt1 !== undefined ){
+			    val /= wcsinfo.cdelt1;
+			} else if( wcsinfo.cdelt2 !== undefined ){
+			    val /= wcsinfo.cdelt2;
+			}
+			break;
+		    }
+		    p1 = obj.pub.pts[0];
+		    p2 = obj.pub.pts[1];
+		    cpos = {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+		    ang = parseFloat(this.tmp.lineangle) || 0;
+		    opts.pts = [];
+		    p1.x = cpos.x - val/2;
+		    p1.y = cpos.y;
+		    p2.x = cpos.x + val/2;
+		    p2.y = cpos.y;
+		    opts.pts[0] = JS9.rotatePoint(p1, ang, cpos);
+		    opts.pts[1] = JS9.rotatePoint(p2, ang, cpos);
+		}
+	    }
+	    break;
+	case "lineangle":
+	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
+		if( val !== this.tmp.lineangle ){
+		    val = parseFloat(val) - parseFloat(this.tmp.lineangle);
+		    p1 = obj.pub.pts[0];
+		    p2 = obj.pub.pts[1];
+		    cpos = {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+		    opts.pts = [];
+		    opts.pts[0] = JS9.rotatePoint(p1, val, cpos);
+		    opts.pts[1] = JS9.rotatePoint(p2, val, cpos);
+		}
 	    }
 	    break;
 	case "remove":
@@ -22235,7 +22332,7 @@ JS9.initCommands = function(){
 JS9.initAnalysis = function(){
     // for analysis forms, Enter should not Submit, but allow specification
     // of the name of an element to click
-    $(document).on("keyup keypress", ".js9AnalysisForm, .js9Form", (e) => {
+    $(document).on("keypress", ".js9AnalysisForm, .js9Form", (e) => {
 	const code = e.which || e.keyCode;
 	let id;
 	if( code === 13 ){
