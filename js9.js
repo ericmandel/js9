@@ -16145,7 +16145,8 @@ JS9.Regions.initConfigForm = function(obj){
 // process the config form to change the specified shape
 // call using image context
 JS9.Regions.processConfigForm = function(form, obj, winid, arr){
-    let i, s, key, nkey, val, nval, nopts, altwcssys, cpos, p1, p2, ang;
+    let i, s, key, nkey, val, nval, nopts, altwcssys;
+    let cpos, p1, p2, d, x, y, ang;
     let bin = 1;
     const alen = arr.length;
     const opts = {};
@@ -16426,9 +16427,9 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 			break;
 		    default:
 			if( wcsinfo.cdelt1 !== undefined ){
-			    val /= wcsinfo.cdelt1;
+			    val /= Math.abs(wcsinfo.cdelt1);
 			} else if( wcsinfo.cdelt2 !== undefined ){
-			    val /= wcsinfo.cdelt2;
+			    val /= Math.abs(wcsinfo.cdelt2);
 			}
 			break;
 		    }
@@ -16439,14 +16440,26 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 			p1 = obj.pub.pts[0];
 			p2 = obj.pub.pts[1];
 		    }
-		    cpos = {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-		    ang = parseFloat(this.tmp.lineangle)||0;
-		    p1.x = cpos.x - val/2;
-		    p1.y = cpos.y;
-		    p2.x = cpos.x + val/2;
-		    p2.y = cpos.y;
-		    opts.pts = [JS9.rotatePoint(p1, ang, cpos),
-				JS9.rotatePoint(p2, ang, cpos)];
+		    if( $.inArray("line",
+				  JS9.Regions.opts.noCenteredScaling) >= 0 ){
+			// leave p1 fixed
+			// https://math.stackexchange.com/questions/175896/finding-a-point-along-a-line-a-certain-distance-away-from-another-point
+			d = Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) +
+				      (p1.y - p2.y) * (p1.y - p2.y) );
+			x = p1.x - (val * (p1.x - p2.x))/d;
+			y = p1.y - (val * (p1.y - p2.y))/d;
+			opts.pts = [p1, {x, y}];
+		    } else {
+			// leave center fixed
+			cpos = {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+			ang = parseFloat(this.tmp.lineangle)||0;
+			p1.x = cpos.x - val/2;
+			p1.y = cpos.y;
+			p2.x = cpos.x + val/2;
+			p2.y = cpos.y;
+			opts.pts = [JS9.rotatePoint(p1, ang, cpos),
+				    JS9.rotatePoint(p2, ang, cpos)];
+		    }
 		}
 	    }
 	    break;
@@ -16461,9 +16474,16 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 			p1 = obj.pub.pts[0];
 			p2 = obj.pub.pts[1];
 		    }
-		    cpos = {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-		    opts.pts = [JS9.rotatePoint(p1, ang, cpos),
-				JS9.rotatePoint(p2, ang, cpos)];
+		    if( $.inArray("line",
+				  JS9.Regions.opts.noCenteredScaling) >= 0 ){
+			// leave p1 fixed
+			opts.pts = [p1, JS9.rotatePoint(p2, ang, p1)];
+		    } else {
+			// leave center fixed
+			cpos = {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+			opts.pts = [JS9.rotatePoint(p1, ang, cpos),
+				    JS9.rotatePoint(p2, ang, cpos)];
+		    }
 		}
 	    }
 	    break;
