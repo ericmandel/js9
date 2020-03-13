@@ -13977,7 +13977,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 		tval1 = Math.atan2(pub.pts[1].y - pub.pts[0].y,
 				   pub.pts[1].x - pub.pts[0].x) * 180 / Math.PI;
 		while( tval1 < 0 ){ tval1 += 360; }
-		angstr = `,"angle":${tr4(tval1)},"aunits":"degrees"`;
+		angstr = `,"posang":${tr4(tval1)},"posunits":"degrees"`;
 		pub.imstr += angstr;
 	    }
 	    pub.imst += "}";
