@@ -14301,6 +14301,14 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	    }
 	    sobj.opts.strokeWidth = 0;
 	    break;
+	case "line":
+	case "polygon":
+	    // if we are changing the points, reset the fabric angle
+	    // otherwise, it's applied to points which know nothing about it
+	    if( sobj.opts.points && sobj.opts.points.length ){
+		obj.angle = 0;
+	    }
+	    break;
 	}
 	// change the shape
 	obj.set(sobj.opts);
@@ -15808,7 +15816,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "linelength":
-	    if( obj.pub.pts && obj.pub.pts.length === 2 && !obj.angle ){
+	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
 		p1 = obj.pub.pts[0];
 		p2 = obj.pub.pts[1];
 		val = fmt(Math.sqrt((p2.x - p1.x) * (p2.x - p1.x) +
@@ -15830,7 +15838,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "lineangle":
-	    if( obj.pub.pts && obj.pub.pts.length === 2 && !obj.angle ){
+	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
 		p1 = obj.pub.pts[0];
 		p2 = obj.pub.pts[1];
 		val = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
@@ -16095,7 +16103,7 @@ JS9.Regions.initConfigForm = function(obj){
 	$(`${form}.textangle`).removeClass("nodisplay");
 	break;
     case "line":
-	if( obj.pub.pts && obj.pub.pts.length === 2 && !obj.angle ){
+	if( obj.pub.pts && obj.pub.pts.length === 2 ){
 	    $(`${form}.linelength`).removeClass("nodisplay");
 	    $(`${form}.lineangle`).removeClass("nodisplay");
 	} else {
@@ -16419,7 +16427,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	    }
 	    break;
 	case "linelength":
-	    if( obj.pub.pts && obj.pub.pts.length === 2 && !obj.angle ){
+	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
 		if( JS9.isNumber(val) && val !== this.tmp.linelength ){
 		    val = parseFloat(val);
 		    switch(this.params.wcssys){
@@ -16465,7 +16473,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	    }
 	    break;
 	case "lineangle":
-	    if( obj.pub.pts && obj.pub.pts.length === 2 && !obj.angle ){
+	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
 		if( JS9.isNumber(val) && val !== this.tmp.lineangle ){
 		    ang = parseFloat(val) - parseFloat(this.tmp.lineangle)||0;
 		    if( opts.pts ){
