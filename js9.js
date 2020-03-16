@@ -112,6 +112,7 @@ JS9.globalOpts = {
     useWasm: true,		// use WebAssembly if available?
     allowFileWasm: true,        // allow file:// to use wasm?
     winType: "light",		// plugin window: "light" or "new"
+    sortPreloads: true,         // sort preloads into original order after load?
     rgb: {active: false,	// RGB mode
 	  rim: null,
 	  gim: null,
@@ -507,11 +508,11 @@ JS9.plugins = [];		// array of defined plugins
 JS9.preloads = [];		// array of images to preload
 JS9.auxFiles = [];		// array of auxiliary files
 JS9.supermenus = [];		// array containing supermenu instances
+JS9.preloadwaiting = [];	// array of images currently being preloaded
 JS9.publics = {};		// object containing defined public API calls
 JS9.helper = {};		// only one helper per page, please
 JS9.fits = {};			// object holding FITS access routines
 JS9.userOpts = {};		// object to hold localStorage opts
-JS9.preloadwaiting = {};	// object of images currently being preloaded
 
 // misc params
 // list of scales in mkScaledCells
@@ -637,7 +638,7 @@ JS9.Image = function(file, params, func){
     };
     // called with current image context
     const finishUp = (func) => {
-	let i, s, t, topts, tkey;
+	let i, s, topts, tkey, id, pre, waiting, plen, im;
 	const imopts = JS9.globalOpts.imopts;
 	const imcmap = JS9.globalOpts.imcmap;
 	const oalerts = JS9.globalOpts.alerts;
@@ -750,21 +751,61 @@ JS9.Image = function(file, params, func){
 	    try{ JS9.xeqByName(func, window, this); }
 	    catch(e){ JS9.error("in image onload callback", e, false); }
 	}
-	// might also have to call JS9.globalOpts.onpreload func
-	s = this.proxyURL||this.file;
-	t = s.replace(/\[.*\]/, "");
-	if( JS9.preloadwaiting[s] || JS9.preloadwaiting[t]){
-	    delete JS9.preloadwaiting[s];
-	    delete JS9.preloadwaiting[t];
-	    if( !Object.keys(JS9.preloadwaiting).length ){
+	// might need to finish processing of preloads
+	if( JS9.preloadwaiting && JS9.preloadwaiting.length ){
+	    plen = JS9.preloadwaiting.length;
+	    id = this.proxyURL || this.file;
+	    // flag that this preload is loaded
+	    for(i=0, waiting=0; i<plen; i++){
+		pre = JS9.preloadwaiting[i];
+		if( id.match(pre.id) || pre.id.match(id) ){
+		    pre.loaded = true;
+		    pre.im = this;
+		} else {
+		    // are we done preloading
+		    if( pre.loaded === false ){
+			waiting++;
+		    }
+		}
+	    }
+	    // are all preloads loaded?
+	    if( !waiting ){
+		// resort preloads into original order
+		if( JS9.globalOpts.sortPreloads ){
+		    JS9.images.sort( (a, b) => {
+			let ai = 0, bi = 0;
+			for(i=0; i<plen; i++){
+			    pre = JS9.preloadwaiting[i];
+			    if( a.id === pre.im.id ){
+				ai = i;
+			    }
+			    if( b.id === pre.im.id ){
+				bi = i;
+			    }
+			}
+			return ai - bi;
+		    });
+		    // display last image in the load list
+		    im = JS9.preloadwaiting[plen-1].im || this;
+		    im.displayImage();
+		} else {
+		    // not sorting preloads
+		    im = this;
+		}
+		// execute preload callback
 		if( JS9.notNull(JS9.globalOpts.onpreload) ){
 		    try{
-			JS9.xeqByName(JS9.globalOpts.onpreload, window, this);
+			JS9.xeqByName(JS9.globalOpts.onpreload, window, im);
 		    }
 		    catch(e){
 			JS9.error("in onpreload callback", e, false);
 		    }
+		    finally{
+			delete JS9.globalOpts.onpreload;
+		    }
 		}
+		// done with this set of preloads, so re-init
+		JS9.preloadwaiting = [];
 	    }
 	}
 	// also load all of the image extensions?
@@ -23828,7 +23869,9 @@ JS9.mkPublic("Preload", function(...args){
 	    j = i + 1;
 	    if( (j < alen) && (typeof args[j] === "object") ){
 		if( func === JS9.Load || func === JS9.LoadProxy ){
-		    JS9.preloadwaiting[JS9.cleanPath(args[i])] = true;
+		    JS9.preloadwaiting.push(
+			{id: JS9.cleanPath(args[i]), loaded: false}
+		    );
 		}
 		try{
 		    if( dobj ){
@@ -23843,7 +23886,9 @@ JS9.mkPublic("Preload", function(...args){
 		try{ pobj = JSON.parse(args[j]); }
 		catch(e){ pobj = null; }
 		if( func === JS9.Load || func === JS9.LoadProxy ){
-		    JS9.preloadwaiting[JS9.cleanPath(args[i])] = true;
+		    JS9.preloadwaiting.push(
+			{id: JS9.cleanPath(args[i]), loaded: false}
+		    );
 		}
 		try{
 		    if( dobj ){
@@ -23856,7 +23901,9 @@ JS9.mkPublic("Preload", function(...args){
 		i++;
 	    } else {
 		if( func === JS9.Load || func === JS9.LoadProxy ){
-		    JS9.preloadwaiting[JS9.cleanPath(args[i])] = true;
+		    JS9.preloadwaiting.push(
+			{id: JS9.cleanPath(args[i]), loaded: false}
+		    );
 		}
 		try{
 		    if( dobj ){
@@ -23887,7 +23934,10 @@ JS9.mkPublic("Preload", function(...args){
 		func = JS9.Load;
 	    }
 	    if( func === JS9.Load || func === JS9.LoadProxy ){
-		JS9.preloadwaiting[JS9.cleanPath(JS9.preloads[i][0])] = true;
+		JS9.preloadwaiting.push(
+		    {id: JS9.cleanPath(JS9.cleanPath(JS9.preloads[i][0])),
+		     loaded: false}
+		);
 	    }
 	    try{
 		if( JS9.preloads[i][2] ){
