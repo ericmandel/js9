@@ -8824,7 +8824,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 	    this.showShapeLayer(key, true, {local: true});
 	}
     }
-    // move rgb, if necessary
+    // move rgb contribution, if necessary
     if( odisplay.rgb.rim === this ){
 	odisplay.rgb.rim = null;
 	ndisplay.rgb.rim = this;
