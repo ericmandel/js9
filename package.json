@@ -32,6 +32,7 @@
   ],
   "homepage": "https://js9.si.edu",
   "dependencies": {
+    "minimist": "^1.2.5",
     "socket.io": "^2.1.1",
     "uuid": "^3.2.1"
   }
