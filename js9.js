@@ -345,14 +345,6 @@ JS9.gridOpts = {};
 // allows emscripten opts (in Module) to be overridden via js9prefs.js
 JS9.emscriptenOpts = {};
 
-// RGB mode
-JS9.rgb = {
-    active: false,
-    rim: null,
-    gim: null,
-    bim: null
-};
-
 // defaults for blending
 JS9.blendOpts = {
     active: true,
@@ -1167,13 +1159,13 @@ JS9.Image.prototype.closeImage = function(opts){
 	    // remove from RGB mode, if necessary
 	    switch(tim.cmapObj.name){
 	    case "red":
-		JS9.rgb.rim = null;
+		tim.display.rgb.rim = null;
 		break;
 	    case "green":
-		JS9.rgb.gim = null;
+		tim.display.rgb.gim = null;
 		break;
 	    case "blue":
-		JS9.rgb.bim = null;
+		tim.display.rgb.bim = null;
 		break;
 	    }
 	    // cleanup FITS file support, if necessary
@@ -2775,19 +2767,19 @@ JS9.Image.prototype.mkRGBImage = function(){
 	return this;
     }
     // image handles for RGB mode
-    if( JS9.rgb.active &&
-	((this === JS9.rgb.rim) ||
-	 (this === JS9.rgb.gim) ||
-	 (this === JS9.rgb.bim)) ){
+    if( this.display.rgb.active &&
+	((this === this.display.rgb.rim) ||
+	 (this === this.display.rgb.gim) ||
+	 (this === this.display.rgb.bim)) ){
 	dorgb = true;
-	if( JS9.rgb.rim ){
-	    rthis = JS9.rgb.rim;
+	if( this.display.rgb.rim ){
+	    rthis = this.display.rgb.rim;
 	}
-	if( JS9.rgb.gim ){
-	    gthis = JS9.rgb.gim;
+	if( this.display.rgb.gim ){
+	    gthis = this.display.rgb.gim;
 	}
-	if( JS9.rgb.bim ){
-	    bthis = JS9.rgb.bim;
+	if( this.display.rgb.bim ){
+	    bthis = this.display.rgb.bim;
 	}
     }
     ctx = this.display.context;
@@ -2932,7 +2924,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 		gidx = gthis ? gthis.colorData[yLen + xIn] : 0;
 		bidx = bthis ? bthis.colorData[yLen + xIn] : 0;
 		if( JS9.isNull(ridx) || JS9.isNull(gidx) || JS9.isNull(bidx) ){
-		    JS9.rgb.active = false;
+		    this.display.rgb.active = false;
 		    JS9.error("RGB images are incompatible. Turning off RGB mode.", "", false);
 		    this.mkRGBImage();
 		    return this;
@@ -6723,18 +6715,18 @@ JS9.Image.prototype.setColormap = function(...args){
 	    // unset rgb mode, if necessary
 	    switch(this.cmapObj.name){
 	    case "red":
-		if( JS9.rgb.rim === this ){
-		    JS9.rgb.rim = null;
+		if( this.display.rgb.rim === this ){
+		    this.display.rgb.rim = null;
 		}
 		break;
 	    case "green":
-		if( JS9.rgb.gim === this ){
-		    JS9.rgb.gim = null;
+		if( this.display.rgb.gim === this ){
+		    this.display.rgb.gim = null;
 		}
 		break;
 	    case "blue":
-		if( JS9.rgb.bim === this ){
-		    JS9.rgb.bim = null;
+		if( this.display.rgb.bim === this ){
+		    this.display.rgb.bim = null;
 		}
 		break;
 	    }
@@ -6751,13 +6743,13 @@ JS9.Image.prototype.setColormap = function(...args){
 	// set rgb mode, if necessary
 	switch(arg){
 	case "red":
-	    JS9.rgb.rim = this;
+	    this.display.rgb.rim = this;
 	    break;
 	case "green":
-	    JS9.rgb.gim = this;
+	    this.display.rgb.gim = this;
 	    break;
 	case "blue":
-	    JS9.rgb.bim = this;
+	    this.display.rgb.bim = this;
 	    break;
 	default:
 	    break;
@@ -6825,7 +6817,7 @@ JS9.Image.prototype.setColormap = function(...args){
     case 1:
 	switch(arg){
 	case "rgb":
-	    JS9.rgb.active = !JS9.rgb.active;
+	    this.display.rgb.active = !this.display.rgb.active;
 	    break;
 	case "invert":
 	    this.params.invert = !this.params.invert;
@@ -8790,7 +8782,7 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 	    }
 	}
     }
-    // turn of display of layers in new display
+    // turn off display of layers in new display
     // don't want them showing on the new image ...
     if( ndisplay.image ){
 	for( key in ndisplay.layers ){
@@ -8832,10 +8824,23 @@ JS9.Image.prototype.moveToDisplay = function(dname){
 	    this.showShapeLayer(key, true, {local: true});
 	}
     }
-    // ensure proper positions for graphics
-    this.refreshLayers();
+    // move rgb, if necessary
+    if( odisplay.rgb.rim === this ){
+	odisplay.rgb.rim = null;
+	ndisplay.rgb.rim = this;
+    }
+    if( odisplay.rgb.gim === this ){
+	odisplay.rgb.gim = null;
+	ndisplay.rgb.gim = this;
+    }
+    if( odisplay.rgb.bim === this ){
+	odisplay.rgb.bim = null;
+	ndisplay.rgb.bim = this;
+    }
     // old display has no image
     odisplay.image = null;
+    // ensure proper positions for graphics
+    this.refreshLayers();
     // display a different image in old display, if possible
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
@@ -9779,6 +9784,13 @@ JS9.Display = function(el){
     this.id = this.divjq.attr("id");
     // display-specific scratch space
     this.tmp = {};
+    // display RGB mode
+    this.rgb = {
+	active: false,
+	rim: null,
+	gim: null,
+	bim: null
+    };
     // add class
     this.divjq.addClass("JS9");
     // set width and height on div
@@ -23094,7 +23106,7 @@ JS9.mkPublic("SetRGBMode", function(...args){
     mode = obj.argv[0];
     imobj = obj.argv[1];
     if( mode === undefined ){
-	mode =  !JS9.rgb.active;
+	mode =  !obj.display.rgb.active;
     }
     if( imobj ){
 	for(i=0; i<3; i++){
@@ -23113,17 +23125,18 @@ JS9.mkPublic("SetRGBMode", function(...args){
     } else if( mode === "false" ){
 	mode = false;
     }
-    JS9.rgb.active = !!mode;
+    obj.display.rgb.active = !!mode;
     JS9.DisplayImage({display: obj.display});
-    return JS9.rgb.active;
+    return obj.display.rgb.active;
 });
 
 // get RGB mode info
-JS9.mkPublic("GetRGBMode", function(){
-    return {active: JS9.rgb.active,
-	    rid: JS9.rgb.rim? JS9.rgb.rim.id: null,
-	    gid: JS9.rgb.gim? JS9.rgb.gim.id: null,
-	    bid: JS9.rgb.bim? JS9.rgb.bim.id: null};
+JS9.mkPublic("GetRGBMode", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    return {active: obj.display.rgb.active,
+	    rid: obj.display.rgb.rim? obj.display.rgb.rim.id: null,
+	    gid: obj.display.rgb.gim? obj.display.rgb.gim.id: null,
+	    bid: obj.display.rgb.bim? obj.display.rgb.bim.id: null};
 });
 
 // set/clear valpos flag
