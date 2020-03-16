@@ -113,10 +113,6 @@ JS9.globalOpts = {
     allowFileWasm: true,        // allow file:// to use wasm?
     winType: "light",		// plugin window: "light" or "new"
     sortPreloads: true,         // sort preloads into original order after load?
-    rgb: {active: false,	// RGB mode
-	  rim: null,
-	  gim: null,
-	  bim: null},
     defcolor: "#00FF00",	// graphics color when all else fails
     pngisfits: true,		// are PNGs really PNG representation files?
     fits2fits: "never",		// convert to repfile? always|never|size>x Mb
@@ -348,6 +344,14 @@ JS9.crosshairOpts = {};
 JS9.gridOpts = {};
 // allows emscripten opts (in Module) to be overridden via js9prefs.js
 JS9.emscriptenOpts = {};
+
+// RGB mode
+JS9.rgb = {
+    active: false,
+    rim: null,
+    gim: null,
+    bim: null
+};
 
 // defaults for blending
 JS9.blendOpts = {
@@ -1163,13 +1167,13 @@ JS9.Image.prototype.closeImage = function(opts){
 	    // remove from RGB mode, if necessary
 	    switch(tim.cmapObj.name){
 	    case "red":
-		JS9.globalOpts.rgb.rim = null;
+		JS9.rgb.rim = null;
 		break;
 	    case "green":
-		JS9.globalOpts.rgb.gim = null;
+		JS9.rgb.gim = null;
 		break;
 	    case "blue":
-		JS9.globalOpts.rgb.bim = null;
+		JS9.rgb.bim = null;
 		break;
 	    }
 	    // cleanup FITS file support, if necessary
@@ -2771,19 +2775,19 @@ JS9.Image.prototype.mkRGBImage = function(){
 	return this;
     }
     // image handles for RGB mode
-    if( JS9.globalOpts.rgb.active &&
-	((this === JS9.globalOpts.rgb.rim) ||
-	 (this === JS9.globalOpts.rgb.gim) ||
-	 (this === JS9.globalOpts.rgb.bim)) ){
+    if( JS9.rgb.active &&
+	((this === JS9.rgb.rim) ||
+	 (this === JS9.rgb.gim) ||
+	 (this === JS9.rgb.bim)) ){
 	dorgb = true;
-	if( JS9.globalOpts.rgb.rim ){
-	    rthis = JS9.globalOpts.rgb.rim;
+	if( JS9.rgb.rim ){
+	    rthis = JS9.rgb.rim;
 	}
-	if( JS9.globalOpts.rgb.gim ){
-	    gthis = JS9.globalOpts.rgb.gim;
+	if( JS9.rgb.gim ){
+	    gthis = JS9.rgb.gim;
 	}
-	if( JS9.globalOpts.rgb.bim ){
-	    bthis = JS9.globalOpts.rgb.bim;
+	if( JS9.rgb.bim ){
+	    bthis = JS9.rgb.bim;
 	}
     }
     ctx = this.display.context;
@@ -2928,7 +2932,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 		gidx = gthis ? gthis.colorData[yLen + xIn] : 0;
 		bidx = bthis ? bthis.colorData[yLen + xIn] : 0;
 		if( JS9.isNull(ridx) || JS9.isNull(gidx) || JS9.isNull(bidx) ){
-		    JS9.globalOpts.rgb.active = false;
+		    JS9.rgb.active = false;
 		    JS9.error("RGB images are incompatible. Turning off RGB mode.", "", false);
 		    this.mkRGBImage();
 		    return this;
@@ -6719,18 +6723,18 @@ JS9.Image.prototype.setColormap = function(...args){
 	    // unset rgb mode, if necessary
 	    switch(this.cmapObj.name){
 	    case "red":
-		if( JS9.globalOpts.rgb.rim === this ){
-		    JS9.globalOpts.rgb.rim = null;
+		if( JS9.rgb.rim === this ){
+		    JS9.rgb.rim = null;
 		}
 		break;
 	    case "green":
-		if( JS9.globalOpts.rgb.gim === this ){
-		    JS9.globalOpts.rgb.gim = null;
+		if( JS9.rgb.gim === this ){
+		    JS9.rgb.gim = null;
 		}
 		break;
 	    case "blue":
-		if( JS9.globalOpts.rgb.bim === this ){
-		    JS9.globalOpts.rgb.bim = null;
+		if( JS9.rgb.bim === this ){
+		    JS9.rgb.bim = null;
 		}
 		break;
 	    }
@@ -6747,13 +6751,13 @@ JS9.Image.prototype.setColormap = function(...args){
 	// set rgb mode, if necessary
 	switch(arg){
 	case "red":
-	    JS9.globalOpts.rgb.rim = this;
+	    JS9.rgb.rim = this;
 	    break;
 	case "green":
-	    JS9.globalOpts.rgb.gim = this;
+	    JS9.rgb.gim = this;
 	    break;
 	case "blue":
-	    JS9.globalOpts.rgb.bim = this;
+	    JS9.rgb.bim = this;
 	    break;
 	default:
 	    break;
@@ -6821,7 +6825,7 @@ JS9.Image.prototype.setColormap = function(...args){
     case 1:
 	switch(arg){
 	case "rgb":
-	    JS9.globalOpts.rgb.active = !JS9.globalOpts.rgb.active;
+	    JS9.rgb.active = !JS9.rgb.active;
 	    break;
 	case "invert":
 	    this.params.invert = !this.params.invert;
@@ -23090,7 +23094,7 @@ JS9.mkPublic("SetRGBMode", function(...args){
     mode = obj.argv[0];
     imobj = obj.argv[1];
     if( mode === undefined ){
-	mode =  !JS9.globalOpts.rgb.active;
+	mode =  !JS9.rgb.active;
     }
     if( imobj ){
 	for(i=0; i<3; i++){
@@ -23109,17 +23113,17 @@ JS9.mkPublic("SetRGBMode", function(...args){
     } else if( mode === "false" ){
 	mode = false;
     }
-    JS9.globalOpts.rgb.active = !!mode;
+    JS9.rgb.active = !!mode;
     JS9.DisplayImage({display: obj.display});
-    return JS9.globalOpts.rgb.active;
+    return JS9.rgb.active;
 });
 
 // get RGB mode info
 JS9.mkPublic("GetRGBMode", function(){
-    return {active: JS9.globalOpts.rgb.active,
-	    rid: JS9.globalOpts.rgb.rim? JS9.globalOpts.rgb.rim.id: null,
-	    gid: JS9.globalOpts.rgb.gim? JS9.globalOpts.rgb.gim.id: null,
-	    bid: JS9.globalOpts.rgb.bim? JS9.globalOpts.rgb.bim.id: null};
+    return {active: JS9.rgb.active,
+	    rid: JS9.rgb.rim? JS9.rgb.rim.id: null,
+	    gid: JS9.rgb.gim? JS9.rgb.gim.id: null,
+	    bid: JS9.rgb.bim? JS9.rgb.bim.id: null};
 });
 
 // set/clear valpos flag

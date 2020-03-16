@@ -353,14 +353,14 @@ JS9.Menubar.createMenus = function(){
 		im = JS9.images[i];
 		if( im.display === tdisp ){
 		    name = im.id;
-		    if( JS9.globalOpts.rgb.active ){
-			if( im === JS9.globalOpts.rgb.rim){
+		    if( JS9.rgb.active ){
+			if( im === JS9.rgb.rim){
 			    name += " (red)";
 			}
-			if( im === JS9.globalOpts.rgb.gim){
+			if( im === JS9.rgb.gim){
 			    name += " (green)";
 			}
-			if( im === JS9.globalOpts.rgb.bim){
+			if( im === JS9.rgb.bim){
 			    name += " (blue)";
 			}
 		    }
@@ -2045,7 +2045,7 @@ JS9.Menubar.createMenus = function(){
 		items.invert.icon = JS9.globalOpts.menuSelected;
 	    }
 	    items.rgb = xname("rgb mode");
-	    if( JS9.globalOpts.rgb.active ){
+	    if( JS9.rgb.active ){
 		items.rgb.icon = JS9.globalOpts.menuSelected;
 	    }
 	    return {
