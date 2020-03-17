@@ -23101,12 +23101,13 @@ JS9.mkPublic("LoadColormap", function(...args){
 JS9.mkPublic("SetRGBMode", function(...args){
     let i, im, mode, imobj;
     const obj = JS9.parsePublicArgs(args);
+    const disp = JS9.lookupDisplay(obj.display);
     const colors = ["red", "green", "blue"];
     const ids = ["rid", "gid", "bid"];
     mode = obj.argv[0];
     imobj = obj.argv[1];
     if( mode === undefined ){
-	mode =  !obj.display.rgb.active;
+	mode =  !disp.rgb.active;
     }
     if( imobj ){
 	for(i=0; i<3; i++){
@@ -23125,18 +23126,19 @@ JS9.mkPublic("SetRGBMode", function(...args){
     } else if( mode === "false" ){
 	mode = false;
     }
-    obj.display.rgb.active = !!mode;
+    disp.rgb.active = !!mode;
     JS9.DisplayImage({display: obj.display});
-    return obj.display.rgb.active;
+    return disp.rgb.active;
 });
 
 // get RGB mode info
 JS9.mkPublic("GetRGBMode", function(...args){
     const obj = JS9.parsePublicArgs(args);
-    return {active: obj.display.rgb.active,
-	    rid: obj.display.rgb.rim? obj.display.rgb.rim.id: null,
-	    gid: obj.display.rgb.gim? obj.display.rgb.gim.id: null,
-	    bid: obj.display.rgb.bim? obj.display.rgb.bim.id: null};
+    const disp = JS9.lookupDisplay(obj.display);
+    return {active: disp.rgb.active,
+	    rid: disp.rgb.rim ? disp.rgb.rim.id: null,
+	    gid: disp.rgb.gim ? disp.rgb.gim.id: null,
+	    bid: disp.rgb.bim ? disp.rgb.bim.id: null};
 });
 
 // set/clear valpos flag
