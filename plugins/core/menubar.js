@@ -1804,9 +1804,23 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    items[`sep${n++}`] = "------";
-	    items.scalelims = {
-		name: "Data Limits:",
-		disabled: true
+	    items.dlims = {
+		name: "data limits ...",
+		items: {
+		    title: {
+		name: "set data limits to:",
+			disabled: true
+		    },
+		    dataminmax: {
+			name: "data min/max"
+		    },
+		    zscale: {
+			name: "zscale z1/z2"
+		    },
+		    zmax: {
+			name: "zscale z1/data max"
+		    }
+		}
 	    };
 	    items.scalemin = {
 		events: {keyup: keyScale},
