@@ -7899,7 +7899,7 @@ JS9.Menubar.createMenus = function(){
 		name: "data limits ...",
 		items: {
 		    title: {
-		name: "set data limits to:",
+			name: "set data limits to:",
 			disabled: true
 		    },
 		    dataminmax: {
