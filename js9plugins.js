@@ -10347,7 +10347,7 @@ JS9.RegisterPlugin(JS9.PanZoom.CLASS, JS9.PanZoom.NAME,
 		    onsetwcsunits: JS9.PanZoom.reinit,
 		    onimagedisplay: JS9.PanZoom.display,
 		    onimageclose: JS9.PanZoom.close,
-		    help: "help/panzoom.html",
+		    help: "help/zoomcontrols.html",
 		    winTitle: "Pan/Zoom Controls",
 		    winDims: [JS9.PanZoom.WIDTH, JS9.PanZoom.HEIGHT]});
 /*
@@ -11815,7 +11815,7 @@ JS9.RegisterPlugin(JS9.ScaleLimits.CLASS, JS9.ScaleLimits.NAME,
 		    onsetscale: JS9.ScaleLimits.init,
 		    onimagedisplay: JS9.ScaleLimits.display,
 		    onimageclose: JS9.ScaleLimits.close,
-		    help: "help/scalelimits.html",
+		    help: "help/scalecontrols.html",
 		    winTitle: "Scale Controls",
 		    winDims: [JS9.ScaleLimits.WIDTH, JS9.ScaleLimits.HEIGHT]});
 /*

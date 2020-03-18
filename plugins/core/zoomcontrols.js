@@ -425,6 +425,6 @@ JS9.RegisterPlugin(JS9.PanZoom.CLASS, JS9.PanZoom.NAME,
 		    onsetwcsunits: JS9.PanZoom.reinit,
 		    onimagedisplay: JS9.PanZoom.display,
 		    onimageclose: JS9.PanZoom.close,
-		    help: "help/panzoom.html",
+		    help: "help/zoomcontrols.html",
 		    winTitle: "Pan/Zoom Controls",
 		    winDims: [JS9.PanZoom.WIDTH, JS9.PanZoom.HEIGHT]});

@@ -510,6 +510,6 @@ JS9.RegisterPlugin(JS9.ScaleLimits.CLASS, JS9.ScaleLimits.NAME,
 		    onsetscale: JS9.ScaleLimits.init,
 		    onimagedisplay: JS9.ScaleLimits.display,
 		    onimageclose: JS9.ScaleLimits.close,
-		    help: "help/scalelimits.html",
+		    help: "help/scalecontrols.html",
 		    winTitle: "Scale Controls",
 		    winDims: [JS9.ScaleLimits.WIDTH, JS9.ScaleLimits.HEIGHT]});
