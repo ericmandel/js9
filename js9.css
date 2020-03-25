@@ -146,14 +146,24 @@ img.JS9MenubarUserImage {
     height: 12px;
 }
 
-/* menu option images in the "color" menu */
-img.JS9MenubarImageOption[name^="color_"]{
-    width:  40px;
+/* image associated with the colormap title */
+img.JS9MenubarUserImageTitle[name="colormap"]{
+    width:  60px;
 }
 
-/* menu option images in the "regions" menu */
-img.JS9MenubarImageOption[name^="regions_"]{
-    width:  16px;
+/* all menu option images in the colormap menu */
+img.JS9MenubarUserImageOption[name^="colormap"]{
+    width:  60px;
+}
+
+/* image associated with the region title */
+img.JS9MenubarUserImageTitle[name="regions"]{
+    width:  30px;
+}
+
+/* all menu option images in the regions menu */
+img.JS9MenubarUserImageOption[name^="regions"]{
+    width:  20px;
 }
 
 /* menu option hint for key-press action */
