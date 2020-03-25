@@ -3007,6 +3007,9 @@ JS9.Color.xopacity = function(did, id, target){
 		s1 = String(im.params.flooropacity);
 	    } else {
 		s1 = pel.find("[name='opacity']").val();
+		if( !s1 ){
+		    s1 = String(im.params.flooropacity);
+		}
 	    }
 	    s2 = pel.find("[name='opfloor']").val();
 	    if( s1.match(/resetall/) ){
@@ -3028,6 +3031,9 @@ JS9.Color.xopacity = function(did, id, target){
 			s2 = String(im.mask.vopacity || 0);
 		    } else {
 			s2 = pel.find("[name='opacity']").val();
+			if( !s2 ){
+			    s2 = String(im.mask.vopacity || 0);
+			}
 		    }
 		    if( s1 && JS9.isNumber(s2) ){
 			obj.opacity = parseFloat(s2);
@@ -3042,6 +3048,9 @@ JS9.Color.xopacity = function(did, id, target){
 		s1 = String(im.getOpacity().opacity);
 	    } else {
 		s1 = pel.find("[name='opacity']").val();
+		if( !s1 ){
+		    s1 = String(im.getOpacity().opacity);
+		}
 	    }
 	    if( s1.match(/resetall/) ){
 		im.setOpacity("resetall");
@@ -3065,13 +3074,11 @@ JS9.Color.xfrom = function(did, id, target){
     const im = JS9.lookupImage(id, did);
     if( im ){
 	plugin = im.display.pluginInstances.JS9Color;
+	JS9.Color.refrom.call(plugin, im);
+	JS9.Color.reopacity.call(plugin, im);
 	if( plugin.runmenu ){
 	    // as if we clicked run
 	    pel.find("[name='run']").click();
-	} else {
-	    // requires an explicit click on run
-	    JS9.Color.refrom.call(plugin, im);
-	    JS9.Color.reopacity.call(plugin, im);
 	}
     }
     plugin.lastfrom = from;
