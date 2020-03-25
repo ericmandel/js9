@@ -19,7 +19,7 @@ JS9.Color.colorHTML=`<p><div class='JS9ColorLinegroup'>$cmaps1&nbsp;&nbsp;$cmaps
 <p>
 <div class='JS9ColorLinegroup'>$conbibtn&nbsp;&nbsp;$contrast&nbsp;&nbsp;$bias</div>
 <p>
-<div class='JS9ColorLinegroup'>$run&nbsp;&nbsp;$opacity&nbsp;&nbsp;$from&nbsp;&nbsp;$opfloor&nbsp;&nbsp;$opfile&nbsp;&nbsp;$opoverlay&nbsp;&nbsp;$opmask</div>`
+<div class='JS9ColorLinegroup'>$run&nbsp;&nbsp;$opacity&nbsp;&nbsp;$from&nbsp;&nbsp;$opfloor&nbsp;&nbsp;$opopacity&nbsp;&nbsp;$opoverlay&nbsp;&nbsp;$opmask</div>`
 ;
 
 JS9.Color.cmaps1HTML = '<select class="JS9Cmaps1 JS9ColorSelect JS9ColorCol1" name="cmaps1" onchange="JS9.Color.xsetcolor(\'%s\', \'%s\', \'top\', this)">%s</select>';
@@ -44,7 +44,7 @@ JS9.Color.fromHTML = '<select class="JS9ColorFrom JS9ColorSelect JS9ColorCol3" n
 
 JS9.Color.opfloorHTML = '<input type="text" class="JS9ColorOpFloor JS9ColorInput JS9ColorCol4 js9Input" name="opfloor" value="%s" autocapitalize="off" autocorrect="off">';
 
-JS9.Color.opfileHTML = '<select class="JS9ColorOpFile JS9ColorSelect JS9ColorCol4" name="opfile" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'opacity\', this)">%s</select>';
+JS9.Color.opopacityHTML = '<select class="JS9ColorOpOpacity JS9ColorSelect JS9ColorCol4" name="opopacity" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'opacity\', this)">%s</select>';
 
 JS9.Color.opoverlayHTML = '<select class="JS9ColorOpOverlay JS9ColorSelect JS9ColorCol4" name="opoverlay" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'overlay\', this)">%s</select>';
 
@@ -131,7 +131,7 @@ JS9.Color.xopacity = function(did, id, target){
 		obj = {mode: from};
 		if( from === "mask" ){
 		    if( plugin.lastfrom.match(/floor|global/) ){
-			s2 = String(im.mask.opacity || 0);
+			s2 = String(im.mask.vopacity || 0);
 		    } else {
 			s2 = pel.find("[name='opacity']").val();
 		    }
@@ -230,7 +230,7 @@ JS9.Color.refrom = function(im){
 	    pel.find(".JS9ColorOpacity").css("display", "block")
 		.attr("placeholder", "global opacity");
 	    pel.find(".JS9ColorOpFloor").css("display", "none");
-	    pel.find(".JS9ColorOpFile").css("display", "none");
+	    pel.find(".JS9ColorOpOpacity").css("display", "none");
 	    pel.find(".JS9ColorOpOverlay").css("display", "none");
 	    pel.find(".JS9ColorOpMask").css("display", "none");
 	    break;
@@ -239,21 +239,21 @@ JS9.Color.refrom = function(im){
 		.attr("placeholder", "floor opacity");
 	    pel.find(".JS9ColorOpFloor").css("display", "block")
 		.attr("placeholder", "floor value");
-	    pel.find(".JS9ColorOpFile").css("display", "none");
+	    pel.find(".JS9ColorOpOpacity").css("display", "none");
 	    pel.find(".JS9ColorOpOverlay").css("display", "none");
 	    pel.find(".JS9ColorOpMask").css("display", "none");
 	    break;
 	case "opacity":
 	    pel.find(".JS9ColorOpacity").css("display", "none");
 	    pel.find(".JS9ColorOpFloor").css("display", "none");
-	    pel.find(".JS9ColorOpFile").css("display", "block");
+	    pel.find(".JS9ColorOpOpacity").css("display", "block");
 	    pel.find(".JS9ColorOpOverlay").css("display", "none");
 	    pel.find(".JS9ColorOpMask").css("display", "none");
 	    break;
 	case "overlay":
 	    pel.find(".JS9ColorOpacity").css("display", "none");
 	    pel.find(".JS9ColorOpFloor").css("display", "none");
-	    pel.find(".JS9ColorOpFile").css("display", "none");
+	    pel.find(".JS9ColorOpOpacity").css("display", "none");
 	    pel.find(".JS9ColorOpOverlay").css("display", "block");
 	    pel.find(".JS9ColorOpMask").css("display", "none");
 	    break;
@@ -261,7 +261,7 @@ JS9.Color.refrom = function(im){
 	    pel.find(".JS9ColorOpacity").css("display", "block")
 		.attr("placeholder", "non-mask opacity");
 	    pel.find(".JS9ColorOpFloor").css("display", "none");
-	    pel.find(".JS9ColorOpFile").css("display", "none");
+	    pel.find(".JS9ColorOpOpacity").css("display", "none");
 	    pel.find(".JS9ColorOpOverlay").css("display", "none");
 	    pel.find(".JS9ColorOpMask").css("display", "block");
 	    break;
@@ -290,13 +290,10 @@ JS9.Color.reopacity = function(im){
 	    break;
 	case "opacity":
 	case "overlay":
-	    if( !im.mask.active || !im.mask.im ){
-		pel.find("[name='opfile']").val("none");
-	    }
 	    opacity = "";
 	    return;
 	case "mask":
-	    opacity = im.mask.opacity || 0;
+	    opacity = im.mask.vopacity || 0;
 	    break;
 	case "global":
 	default:
@@ -483,8 +480,9 @@ JS9.Color.init = function(opts){
 
 	t = sprintf(JS9.Color.opfloorHTML, getFloorOptions(im));
 	mopts.push({name: "opfloor", value: t});
-	t = sprintf(JS9.Color.opfileHTML, dispid, imid, getFileOptions(im, "opacity"));
-	mopts.push({name: "opfile", value: t});
+
+	t = sprintf(JS9.Color.opopacityHTML, dispid, imid, getFileOptions(im, "opacity"));
+	mopts.push({name: "opopacity", value: t});
 	t = sprintf(JS9.Color.opoverlayHTML, dispid, imid, getFileOptions(im, "overlay"));
 	mopts.push({name: "opoverlay", value: t});
 	t = sprintf(JS9.Color.opmaskHTML, dispid, imid, getFileOptions(im, "mask"));

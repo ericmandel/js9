@@ -354,9 +354,10 @@ JS9.blendOpts = {
 // defaults for masking
 JS9.maskOpts = {
     active: false,
-    mode: "overlay",
-    opacity: 1,
-    value: 0,
+    mode: "overlay",  // "overlay", "mask", "opacity"
+    opacity: 1,       // overlay opacity
+    vopacity: 0,      // mask opacity
+    value: 0,         // mask value
     syncops: ["flip", "pan", "rot90", "zoom"],
     invert: false
 };
@@ -2863,8 +2864,8 @@ JS9.Image.prototype.mkRGBImage = function(){
 	    // mask mode: alpha = mask pixel == 0 ? alpha1 : alpha2
 	    mimmask = true;
 	    // opacity if image value <= mask value
-	    if( JS9.notNull(this.mask.opacity) ){
-		alpha1 = this.mask.opacity * 255;
+	    if( JS9.notNull(this.mask.vopacity) ){
+		alpha1 = this.mask.vopacity * 255;
 	    } else {
 		alpha1 = 0;
 	    }
@@ -3075,7 +3076,7 @@ JS9.Image.prototype.blendImage = function(...args){
 // apply an image mask to an image
 JS9.Image.prototype.maskImage = function(...args){
     let [s, opts] = args;
-    let im;
+    let im, key;
     // return mask info
     if( !args.length ){
 	return this.mask;
@@ -3126,7 +3127,19 @@ JS9.Image.prototype.maskImage = function(...args){
 	    catch(e){ JS9.error(`can't parse JSON in maskImage: ${opts}`, e); }
 	}
 	// add opts to mask object
-	this.mask = $.extend(true, {}, this.mask, opts);
+	for( key in opts ){
+	    if( opts.hasOwnProperty(key) ){
+		switch(key){
+		case "opacity":
+		    // handle opacity specially to avoid name collision
+		    this.mask.vopacity = opts[key];
+		    break;
+		default:
+		    this.mask[key] = opts[key];
+		    break;
+		}
+	    }
+	}
     }
     // keep images in sync, if necessary
     if( im && (!opts || opts.sync !== false) ){
