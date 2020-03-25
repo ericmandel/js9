@@ -2,40 +2,42 @@
     padding: 5px;
 }
 
-.JS9ColorOpFloor {
-    display: none;
+.JS9ColorButton {
+    margin-top: 1px;
+    width: 105px;
 }
 
-.JS9ColorOpFile {
-    display: none;
+.JS9ColorSelect {
+    width: 100px;
+}
+
+.JS9ColorInput {
+    padding: 0px 0px 0px 3px;
+    width: 95px;
 }
 
 .JS9ColorCol1 {
     position: absolute;
     top:   0;
     left:  0;
-    width: 100px;
 }
 
 .JS9ColorCol2 {
     position: absolute;
     top:   0;
     left:  110px;
-    width: 100px;
 }
 
 .JS9ColorCol3 {
     position: absolute;
     top:   0;
     left:  220px;
-    width: 100px;
 }
 
 .JS9ColorCol4 {
     position: absolute;
     top:   0;
     left:  330px;
-    width: 100px;
 }
 
 .JS9ColorLinegroup {
