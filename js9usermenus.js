@@ -173,55 +173,55 @@ JS9.globalOpts.userMenuBar = [
     {
 	"name": "regions",
 	"title": "myRegions",
-	"imageTitle": "images/voyager/circle.svg",
+	"imageTitle": "images/voyager/regions_circle.svg",
 	"updateTitle": "image",
 	"options": [
 	    {
 		"name": "annulus",
 		"cmd": "AddRegions",
-		"image": "images/voyager/annulus.svg",
+		"image": "images/voyager/regions_annulus.svg",
 		"args": ["annulus"]
 	    },
 	    {
 		"name": "box",
 		"cmd": "AddRegions",
-		"image": "images/voyager/box.svg",
+		"image": "images/voyager/regions_box.svg",
 		"args": ["box"]
 	    },
 	    {
 		"name": "circle",
 		"cmd": "AddRegions",
-		"image": "images/voyager/circle.svg",
+		"image": "images/voyager/regions_circle.svg",
 		"args": ["circle"]
 	    },
 	    {
 		"name": "ellipse",
 		"cmd": "AddRegions",
-		"image": "images/voyager/ellipse.svg",
+		"image": "images/voyager/regions_ellipse.svg",
 		"args": ["ellipse"]
 	    },
 	    {
 		"name": "line",
 		"cmd": "AddRegions",
-		"image": "images/voyager/line.svg",
+		"image": "images/voyager/regions_line.svg",
 		"args": ["line"]
 	    },
 	    {
 		"name": "point",
 		"cmd": "AddRegions",
-		"image": "images/voyager/dot.svg",
+		"image": "images/voyager/regions_point.svg",
 		"args": ["point"]
 	    },
 	    {
 		"name": "polygon",
 		"cmd": "AddRegions",
-		"image": "images/voyager/polygon.svg",
+		"image": "images/voyager/regions_polygon.svg",
 		"args": ["polygon"]
 	    },
 	    {
 		"name": "text",
 		"cmd": "AddRegions",
-		"image": "images/voyager/txt.svg",
+		"image": "images/voyager/regions_text.svg",
 		"args": ["text"]
 	    }
 	]
