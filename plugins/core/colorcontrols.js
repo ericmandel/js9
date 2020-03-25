@@ -113,7 +113,7 @@ JS9.Color.xopacity = function(did, id, target){
 		s1 = String(im.params.flooropacity);
 	    } else {
 		s1 = pel.find("[name='opacity']").val();
-		if( !s1 ){
+		if( s1 === undefined ){
 		    s1 = String(im.params.flooropacity);
 		}
 	    }
@@ -137,7 +137,7 @@ JS9.Color.xopacity = function(did, id, target){
 			s2 = String(im.mask.vopacity || 0);
 		    } else {
 			s2 = pel.find("[name='opacity']").val();
-			if( !s2 ){
+			if( s2 === undefined ){
 			    s2 = String(im.mask.vopacity || 0);
 			}
 		    }
@@ -154,7 +154,7 @@ JS9.Color.xopacity = function(did, id, target){
 		s1 = String(im.getOpacity().opacity);
 	    } else {
 		s1 = pel.find("[name='opacity']").val();
-		if( !s1 ){
+		if( s1 === undefined ){
 		    s1 = String(im.getOpacity().opacity);
 		}
 	    }
