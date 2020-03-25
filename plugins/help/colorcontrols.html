@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head> 
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<link type="text/css" rel="stylesheet" href="../../js9.css">
+<title>Plugin: JS9Color</title>
+</head>
+<body>
+<div class="helpLogo"><img src="../../images/js9logo.png" alt="js9"></div>
+<div class="helpContainer">
+<h3>Color Controls</h3>
+
+<p>
+The <b>Color Controls</b> plugin provides a number of ways to set colors
+on an image:
+<ul>
+<li> use the <b>Top cmaps</b> and <b>Other cmaps</b> menus to change
+the colormap
+<li> use the <b>Create cmaps</b> button to toggle the
+<b>Create Colormaps</b> plugin, allowing you to
+create new colormaps
+<li> use the "Image filters" button to toggle the
+<b>Image Filters</b> plugin, allowing you to apply
+image processing techniques directly to the displayed image without
+changing the underlying raw data
+<li> use the <b>Contrast/bias</b> text boxes to change the contrast and bias
+<li> use the <b>Opacity</b> options to set the opacity in various ways
+</ul>
+
+<p>
+Opacity can be set in various ways, depending on the choice of the
+third (<b>from</b>) menu:
+
+<p>
+When <b>default</b> is selected, the opacity of each pixel is set to the
+default value in the first text box (which should be between 0 and 1). The
+default value is also used in the <b>pixels</b> option.
+
+<p>
+When <b>floor &le;</b> is selected, the opacity in the first text box
+is applied to image pixels whose value is less than or equal to the
+specified floor value in the last text box. For image values greater than
+this floor value, the <b>default</b> opacity is applied.
+
+<p>
+When <b>opacity</b> is selected, a menu of <b>opacity image files</b> is
+displayed. These opacity images must have the same dimensions as the
+displayed image. A pixel value in the opacity image specifies the
+opacity of the corresponding image pixel (and therefore should take on
+values between 0 and 1).
+
+<p>
+For <b>mask</b> mode, if the value of a pixel in the image is less than
+or equal to zero, the opacity of the displayed pixel is set to the
+<b>opacity</b> value in the text box. Otherwise, the opacity is set to
+the <b>global</b> opacity. Thus, for example, if the <b>opacity</b> in
+the first text box is set to 0, this mode will display only the image
+pixels with corresponding non-zero mask values, i.e., image pixels
+"covered" by a mask.
+
+<p>
+When <b>overlay</b> is selected, a menu of <b>overlay files</b> is
+displayed. These "overlay mask" images must have the same dimensions
+as the displayed image. If a mask pixel has a non-zero alpha value (in
+its own display frame), its color is blended with the image pixel
+using <b>source-atop</b> composition.  Otherwise, the image pixel
+color alone is used in the display. This is one way you can display a
+mask overlay on top of an image.  A static colormap is usually used in
+conjunction with an overlay mask, since pixel values not explicitly
+assigned a color are transparent.  Note that, when blending a mask and
+image pixel, the global opacity and the individual pixel opacity of
+the mask are multiplied to get each final pixel opacity.
+</div>
+</body>
+</html>

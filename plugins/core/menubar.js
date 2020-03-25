@@ -62,6 +62,20 @@ if( JS9.menuButtonOptsArr ){
     JS9.Menubar.buttonOptsArr = JS9.menuButtonOptsArr;
 }
 
+// avoid repeated errors in the console when we try to laod a missing menu image
+JS9.Menubar.EMPTYIMG = "data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODYuMTIgMTcxLjkyIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6bm9uZTt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPmVtcHR5PC90aXRsZT48cmVjdCBjbGFzcz0iY2xzLTEiIHdpZHRoPSIxODYuMTIiIGhlaWdodD0iMTcxLjkyIi8+PC9zdmc+";       // inline version of images/empty.svg
+
+JS9.Menubar.missing = {};
+
+// return image unless its known to be missing ... then return empty image
+JS9.Menubar.menuImage = function(s){
+    if( JS9.Menubar.missing[s] ){
+	return JS9.Menubar.EMPTYIMG;
+    } else {
+	return JS9.InstallDir("images") + "/voyager/" + s;
+    }
+};
+
 // get displays associated with this menubar, taking supermenus into account
 JS9.Menubar.getDisplays = function(mode, key){
     let i, d, s, disp;
@@ -1922,7 +1936,9 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1, s2, hstr, arr;
+	    let i, s1, s2, hstr, img;
+	    let plugin, pname, pinst;
+	    let lastxclass="";
 	    let n = 0;
 	    const items = {};
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
@@ -1934,31 +1950,10 @@ JS9.Menubar.createMenus = function(){
 		if( obj.bias && !Number.isNaN(obj.bias) ){
 		    im.params.bias = parseFloat(obj.bias);
 		}
-		if( !Number.isNaN(obj.opacity) ){
-		    if( obj.opacity === "" ){
-			im.setOpacity("reset");
-		    } else {
-			im.setOpacity(parseFloat(obj.opacity));
-		    }
-		}
-		if( obj.flooropacity === "" ){
-		    im.setOpacity("resetfloor");
-		} else {
-		    arr = obj.flooropacity.split(/\s+/);
-		    if( arr.length === 1 ){
-			if( arr[0].match(/reset|none/i) ){
-			    im.setOpacity("resetfloor");
-			} else if( !Number.isNaN(arr[0]) ){
-			    arr[0] = parseFloat(arr[0]);
-			    im.setOpacity(arr[0], 0);
-			}
-		    } else if( arr.length === 2 ){
-			if( !Number.isNaN(arr[0]) && !Number.isNaN(arr[1]) ){
-			    arr[0] = parseFloat(arr[0]);
-			    arr[1] = parseFloat(arr[1]);
-			    im.setOpacity(...arr);
-			}
-		    }
+		if( obj.opacity.match(/reset/) || obj.opacity.trim() === "" ){
+		    im.setOpacity("reset");
+		} else if( !Number.isNaN(obj.opacity) ){
+		    im.setOpacity(parseFloat(obj.opacity));
 		}
 		im.displayImage("colors");
 	    };
@@ -1991,7 +1986,8 @@ JS9.Menubar.createMenus = function(){
 		s1 = JS9.globalOpts.topColormaps[i];
 		s2 = s1;
 		if( JS9.globalOpts.menuImages && !JS9.allinone ){
-		    hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${JS9.InstallDir("images")}/voyager/color_${s2}.png' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="${JS9.EMPTYIMG}"' >` + `&nbsp;&nbsp;${s2}</div>`;
+		    img = JS9.Menubar.menuImage(`color_${s2}.png`);
+		    hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${img}' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='JS9.Menubar.missing["color_${s2}.png"]=true; this.src="${JS9.Menubar.EMPTYIMG}"' >` + `&nbsp;&nbsp;${s2}</div>`;
 		    items[s1] = {name: hstr, isHtmlName: true};
 		} else {
 		    items[s1] = xname(s2);
@@ -2014,7 +2010,8 @@ JS9.Menubar.createMenus = function(){
 		if( !JS9.globalOpts.topColormaps.includes(s1) ){
 		    s2 = s1;
 		    if( JS9.globalOpts.menuImages && !JS9.allinone ){
-			hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${JS9.InstallDir("images")}/voyager/color_${s2}.png' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="${JS9.EMPTYIMG}"' >` + `&nbsp;&nbsp;${s2}</div>`;
+			img = JS9.Menubar.menuImage(`color_${s2}.png`);
+			hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${img}' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='JS9.Menubar.missing["color_${s2}.png"]=true; this.src="${JS9.Menubar.EMPTYIMG}"' >` + `&nbsp;&nbsp;${s2}</div>`;
 			items.morecmaps.items[s1] = {name: hstr, isHtmlName: true};
 		    } else {
 			items.morecmaps.items[s1] = xname(s2);
@@ -2044,12 +2041,6 @@ JS9.Menubar.createMenus = function(){
 		name: "opacity:",
 		type: "text"
 	    };
-	    items.flooropacity = {
-		events: {keyup: keyColor},
-		name: "floor value & opacity:",
-		type: "text"
-	    };
-	    items.resetall = xname("reset opacity & floor");
 	    items[`sep${n++}`] = "------";
 	    items.loadcmap = xname("load ...");
 	    items.savecmap = xname("save");
@@ -2062,8 +2053,29 @@ JS9.Menubar.createMenus = function(){
 	    if( tdisp.rgb.active ){
 		items.rgb.icon = JS9.globalOpts.menuSelected;
 	    }
+	    items[`sep${n++}`] = "------";
+	    // plugins
+	    for(i=0; i<JS9.plugins.length; i++){
+		plugin = JS9.plugins[i];
+		pname = plugin.name;
+		if( plugin.opts.menuItem && (plugin.opts.menu === "color") ){
+		    pinst = tdisp.pluginInstances[pname];
+		    if( !pinst || pinst.winHandle ){
+			if( plugin.xclass !== lastxclass ){
+			    // items["sep" + n] = "------";
+			    n = n + 1;
+			}
+			lastxclass = plugin.xclass;
+			items[pname] = xname(plugin.opts.menuItem);
+			if( pinst && (pinst.status === "active") ){
+			    items[pname].icon = JS9.globalOpts.menuSelected;
+			}
+		    }
+		}
+	    }
 	    return {
 		callback: (key) => {
+		    let ii, uplugin;
 		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
 			const udisp = val;
 			const uim = udisp.image;
@@ -2081,12 +2093,16 @@ JS9.Menubar.createMenus = function(){
 			case "imfilter":
 			    JS9.DisplayPlugin("JS9Filters", {display: udisp});
 			    break;
-			case "resetall":
-			    if( uim ){
-				uim.setOpacity("resetall");
-			    }
-			    break;
 			default:
+			    // maybe it's a plugin
+			    for(ii=0; ii<JS9.plugins.length; ii++){
+				uplugin = JS9.plugins[ii];
+				if( uplugin.name === key ){
+				    udisp.displayPlugin(uplugin);
+				    return;
+				}
+			    }
+			    // set the colormap
 			    if( uim ){
 				uim.setColormap(key);
 			    }
@@ -2102,12 +2118,6 @@ JS9.Menubar.createMenus = function(){
 			    obj.contrast = String(uim.params.contrast);
 			    obj.bias = String(uim.params.bias);
 			    obj.opacity = String(uim.params.opacity);
-			    if( JS9.notNull(uim.params.floorvalue)    &&
-				JS9.notNull(uim.params.flooropacity) ){
-				obj.flooropacity = `${uim.params.floorvalue} ${uim.params.flooropacity}`;
-			    } else {
-				obj.flooropacity = "none";
-			    }
 			    obj.sigma = String(uim.params.sigma);
 			}
 			$.contextMenu.setInputValues(opt, obj);
@@ -2142,7 +2152,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1, reg;
+	    let i, s1, reg, img;
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
 	    const tim = tdisp.image;
 	    const items = {};
@@ -2251,7 +2261,8 @@ JS9.Menubar.createMenus = function(){
 	    if( JS9.globalOpts.menuImages && !JS9.allinone ){
 		for(i=0; i<JS9.regions.length; i++){
 		    reg = JS9.regions[i];
-		    items[reg] = {name: `<div class='JS9MenubarImage' name='${reg}'><img src='${JS9.InstallDir("images")}/voyager/regions_${reg}.svg' name='regions_${reg}' class='JS9MenubarImage JS9MenubarImageOption' onerror='this.src="${JS9.EMPTYIMG}"' >` + `&nbsp;&nbsp;${reg}</div>`,
+		    img = JS9.Menubar.menuImage(`regions_${reg}.svg`);
+		    items[reg] = {name: `<div class='JS9MenubarImage' name='${reg}'><img src='${img}' name='regions_${reg}' class='JS9MenubarImage JS9MenubarImageOption' onerror='JS9.Menubar.missing["regions_${reg}.svg"]=true; this.src="${JS9.Menubar.EMPTYIMG}"' >` + `&nbsp;&nbsp;${reg}</div>`,
 				  isHtmlName: true};
 		}
 	    } else {

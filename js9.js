@@ -69,7 +69,6 @@ JS9.CHROMEFILEWARNING = true;	// whether to alert chrome users about file URI
 JS9.CLIPBOARDERROR = "the local clipboard (which only holds data copied from within JS9) does not contain any content. Were you trying to paste something copied outside JS9?";
 JS9.CLIPBOARDERROR2 = "the local clipboard (which only holds data copied from within JS9) does not contain any regions";
 JS9.URLEXP = /^(https?|ftp):\/\//; // url to determine a web page
-JS9.EMPTYIMG = "data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODYuMTIgMTcxLjkyIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6bm9uZTt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPmVtcHR5PC90aXRsZT48cmVjdCBjbGFzcz0iY2xzLTEiIHdpZHRoPSIxODYuMTIiIGhlaWdodD0iMTcxLjkyIi8+PC9zdmc+";       // inline version of images/empty.svg
 
 // https://hacks.mozilla.org/2013/04/detecting-touch-its-the-why-not-the-how/
 JS9.TOUCHSUPPORTED = ( window.hasOwnProperty("ontouchstart") ||
@@ -144,7 +143,7 @@ JS9.globalOpts = {
     reprojSwitches: "",         // Montage reproject switches
     reprojectLimits: false,     // internal: check for reprojection limits?
     rotationCenter: "file",     // "current" display center or "file" (CRPIX1,2)
-    runOnCR: false,             // Run forms such as binning when <cr> pressed?
+    runOnCR: true,              // Run forms such as binning when <cr> pressed?
     clearImageMemory: "heap",   // rm vfile: always|never|auto|noExt|noCube|size>x Mb heap=>free heap
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
@@ -639,10 +638,12 @@ JS9.Image = function(file, params, func){
 	const imcmap = JS9.globalOpts.imcmap;
 	const oalerts = JS9.globalOpts.alerts;
 	const rregexp = /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
-	// clear previous messages
-	this.display.clearMessage();
 	// add to list of images
 	JS9.images.push(this);
+	// clear previous messages
+	this.display.clearMessage();
+	// display image, 2D graphics, etc.
+	this.displayImage("all", localOpts);
 	// notify the helper
 	this.notifyHelper();
 	// show regions layer
@@ -979,8 +980,6 @@ JS9.Image = function(file, params, func){
 		}
 		// store png data in an offscreen canvas
 		this.mkOffScreenCanvas();
-		// display image, 2D graphics, etc.
-		this.displayImage("all", localOpts);
 		// finish up
 		finishUp(func);
 	    }).on("error", () => {
@@ -991,8 +990,6 @@ JS9.Image = function(file, params, func){
 	    // set src to download the display file
 	    this.png.image.src = this.rgbFile;
 	} else {
-	    // display image, 2D graphics, etc.
-	    this.displayImage("all", localOpts);
 	    // finish up
 	    finishUp(func);
 	}
@@ -1026,8 +1023,6 @@ JS9.Image = function(file, params, func){
 	    mkscale(localOpts);
 	    // set up initial section
 	    this.mkSection();
-	    // display image, 2D graphics, etc.
-	    this.displayImage("all", localOpts);
 	    // finish up
 	    finishUp(func);
 	    // debugging
@@ -2753,6 +2748,7 @@ JS9.Image.prototype.mkRGBImage = function(){
     let idx, odx, odxmax, ridx, gidx, bidx, mim, mimg;
     let yLen, zx, zy, zyLen, mopacity, cmopacity, val;
     let alpha, alpha1, alpha2, alphafloor, alphafloorvalue, curalpha;
+    let domask = false;
     let doalphafloor = false;
     let rthis = null;
     let gthis = null;
@@ -2859,13 +2855,6 @@ JS9.Image.prototype.mkRGBImage = function(){
     } else {
 	alpha = 255;
     }
-    // flooropacity: image pixels <= floor value use floor opacity
-    // can't do this with rgb mode because we have 3 different data values
-    if( JS9.notNull(this.params.flooropacity) && !dorgb ){
-	alphafloor = this.params.flooropacity * 255;
-	alphafloorvalue = this.params.floorvalue;
-	doalphafloor = true;
-    }
     // mask: a raw array with same dimensions as the raw data array
     // whose values are used to set alpha in the raw image
     if( this.mask.active && this.mask.im ){
@@ -2873,12 +2862,16 @@ JS9.Image.prototype.mkRGBImage = function(){
 	if( this.mask.mode === "mask" ){
 	    // mask mode: alpha = mask pixel == 0 ? alpha1 : alpha2
 	    mimmask = true;
-	    if( JS9.notNull(this.mask.opacity)   &&
-		JS9.notNull(this.params.opacity) ){
+	    // opacity if image value <= mask value
+	    if( JS9.notNull(this.mask.opacity) ){
 		alpha1 = this.mask.opacity * 255;
-		alpha2 = this.params.opacity * 255;
 	    } else {
 		alpha1 = 0;
+	    }
+	    // opacity if image value > mask value
+	    if( JS9.notNull(this.params.opacity) ){
+		alpha2 = this.params.opacity * 255;
+	    } else {
 		alpha2 = 255;
 	    }
 	    // reverse mask alphas, if necessary
@@ -2898,6 +2891,12 @@ JS9.Image.prototype.mkRGBImage = function(){
 		this.mask.opacity = 1;
 	    }
 	}
+    } else if( JS9.notNull(this.params.flooropacity) && !dorgb && !domask ){
+	// flooropacity: image pixels <= floor value use floor opacity
+	// can't do this with rgb mode because we have 3 different data values
+	alphafloor = this.params.flooropacity * 255;
+	alphafloorvalue = this.params.floorvalue;
+	doalphafloor = true;
     }
     // index into scaled data using previously calc'ed data value to get RGB
     // reverse y lines
@@ -2916,6 +2915,7 @@ JS9.Image.prototype.mkRGBImage = function(){
 		    alpha = alpha1;
 		}
 	    } else if( mimopacity ){
+		// opacity mode: masked value is the opacity
 		alpha = mim.raw.data[yLen +xIn] * 255;
 	    }
 	    if( dorgb ){
@@ -6954,7 +6954,11 @@ JS9.Image.prototype.setScale = function(...args){
 // get opacity factor
 JS9.Image.prototype.getOpacity = function(){
     let obj = {};
-    obj.opacity = this.params.opacity || 1;
+    if( JS9.notNull(this.params.opacity) ){
+	obj.opacity = this.params.opacity;
+    } else {
+	obj.opacity = 1;
+    }
     if( JS9.notNull(this.params.flooropacity) ){
 	obj.flooropacity = this.params.flooropacity;
 	obj.floorvalue = this.params.floorvalue;
@@ -7016,6 +7020,14 @@ JS9.Image.prototype.setOpacity = function(...args){
 	    break;
         default:
 	    break;
+	}
+	// if we just set opacity (not reset), it must mean we want to use it,
+	// so turn off opacity masking, if necessary
+	if(  typeof a1 === "number" ||
+	    (typeof a1 === "string" && !a1.match(/reset/)) ){
+	    if( this.mask.active && this.mask.im ){
+		this.mask.active = false;
+	    }
 	}
 	this.displayImage("colors");
     }
@@ -22429,14 +22441,24 @@ JS9.initCommands = function(){
 JS9.initAnalysis = function(){
     // for analysis forms, Enter should not Submit, but allow specification
     // of the name of an element to click
-    $(document).on("keypress", ".js9AnalysisForm, .js9Form", (e) => {
+    $(document).on("keypress", ".js9AnalysisForm, .js9Form, .js9Input", (e) => {
 	const code = e.which || e.keyCode;
-	let id;
+	let id, el;
 	if( code === 13 ){
 	    e.preventDefault();
 	    id = $(e.currentTarget).data("enterfunc");
 	    if( id ){
-		$(e.currentTarget).find(`[name='${id}']`).click();
+		// look at children (keypress in a form)
+		el = $(e.currentTarget).find(`[name='${id}']`);
+		if( el.length ){
+		    el.click();
+		} else {
+		    // look at siblings (keypress on input not in a form)
+		    el = $(e.currentTarget).siblings(`[name='${id}']`);
+		    if( el.length ){
+			el.click();
+		    }
+		}
 	    }
 	    return false;
 	}

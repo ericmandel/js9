@@ -155,7 +155,7 @@ CSSFILES =	css/jquery.contextMenu.css css/dhtmlwindow.css  \
 		css/tabcontent.css css/spectrum.css
 
 PLCSSFILES =	plugins/core/blend.css plugins/core/blink.css \
-		plugins/core/cmaps.css \
+		plugins/core/cmaps.css plugins/core/colorcontrols.css \
 		plugins/core/colorbar.css plugins/core/cube.css \
 		plugins/core/divs.css plugins/core/filters.css \
 		plugins/core/imarith.css plugins/core/keyboard.css \
@@ -176,6 +176,7 @@ PLUGINFILES =	plugins/archive/archive.js \
 		plugins/core/blink.js \
 		plugins/core/cmaps.js \
 		plugins/core/colorbar.js \
+		plugins/core/colorcontrols.js \
 		plugins/core/console.js \
 		plugins/core/cube.js \
 		plugins/core/divs.js \
