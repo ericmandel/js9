@@ -126,9 +126,6 @@ JS9.globalOpts = {
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
     wcsCrosshair: false,	// enable wcs crosshair matching?
-    regionsToClipboard: true,	// copy all region changes to pseudo-clipboard?
-    magnifierRegions: true,	// display regions in magnifier?
-    pannerDirections: true,	// display direction vectors in panner?
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
     ehtimeout: 500,		// connection timeout for Electron connect
@@ -148,7 +145,11 @@ JS9.globalOpts = {
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
     reloadRefreshReg: true,     // reloading regions file removes previous?
+    regionsToClipboard: true,	// copy all region changes to pseudo-clipboard?
+    nextImageMask: false,	// does nextImage() show active image masks?
     panWithinDisplay: false,	// keep panned image within the display?
+    pannerDirections: true,	// display direction vectors in panner?
+    magnifierRegions: true,	// display regions in magnifier?
     svgBorder: true,		// border around the display when saving to svg?
     unremoveReg: 100,           // how many removed regions to save
     resetEmptyShapeId: false,	// reset nshape counter if all shapes removed?
@@ -10654,6 +10655,7 @@ JS9.Display.prototype.separate = function(opts){
 // display the next image from the JS9 images list which is in this display
 JS9.Display.prototype.nextImage = function(inc){
     let idx, curidx, im, dpos, npos;
+    let masks = [];
     inc = inc || 1;
     if( !this.image ){
 	return;
@@ -10665,15 +10667,33 @@ JS9.Display.prototype.nextImage = function(inc){
 	    break;
 	}
     }
+    // make list of image masks for this display
+    if( !JS9.globalOpts.nextImageMask ){
+	for(curidx=0; curidx<JS9.images.length; curidx++){
+	    im = JS9.images[curidx];
+	    if( im.display === this && im.mask.active && im.mask.im ){
+		masks.push(im.mask.im);
+	    }
+	}
+    }
     // look for next image, wrap if necessary
     for(curidx=idx+inc; curidx!==idx; curidx += inc){
+	// wrap forwards
 	if( curidx >= JS9.images.length ){
 	    curidx = 0;
 	}
+	// wrap backwards
 	if( curidx < 0 ){
 	    curidx = JS9.images.length - 1;
 	}
-	if( JS9.images[curidx].display === this ){
+	// found a candidate next image
+	im = JS9.images[curidx];
+	// might need to skip if it's an active image mask
+	if( !JS9.globalOpts.nextImageMask && $.inArray(im, masks) >= 0 ){
+	    continue;
+	}
+	// if the candidate image is in this display, we're done
+	if( im.display === this ){
 	    break;
 	}
     }

@@ -11423,6 +11423,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "reciprocal image sync'ing?"
 	},
+	"nextImageMask": {
+	    "type": "boolean",
+	    "helper": "nextImage() show image masks?"
+	},
 	"panWithinDisplay": {
 	    "type": "boolean",
 	    "helper": "keep panned image within the display?"
@@ -11516,10 +11520,11 @@ JS9.Prefs.init = function(){
 			   dynamicSelect: JS9.globalOpts.dynamicSelect,
 			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
 			   logoDisplay: JS9.globalOpts.logoDisplay,
-			   syncReciprocate: JS9.globalOpts.syncReciprocate,
 			   reloadRefresh: JS9.globalOpts.reloadRefresh,
 			   reloadRefreshReg: JS9.globalOpts.reloadRefreshReg,
 			   regionsToClipboard:JS9.globalOpts.regionsToClipboard,
+			   syncReciprocate: JS9.globalOpts.syncReciprocate,
+			   nextImageMask: JS9.globalOpts.nextImageMask,
 			   panWithinDisplay: JS9.globalOpts.panWithinDisplay,
 			   pannerDirections: JS9.globalOpts.pannerDirections,
 			   magnifierRegions: JS9.globalOpts.magnifierRegions,
