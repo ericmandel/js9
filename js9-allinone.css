@@ -1693,8 +1693,9 @@ div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
     border: 1px black solid;
 }
 /* overflow scrolling technique: https://stackoverflow.com/questions/9672176/prevent-floated-divs-from-wrapping-to-new-line */
+/* this doesn't work on Linux Electron: it puts up arrows that get in the way */
 .JS9Statusbar {
-    overflow: scroll;
+    /* overflow-y: scroll; */
 }
 
 .JS9StatusbarContainer {
