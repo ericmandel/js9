@@ -7189,6 +7189,68 @@ JS9.Image.prototype.setParam = function(param, value){
     return ovalue;
 };
 
+// copy params from one image to another
+JS9.Image.prototype.copyParams = function(params, images){
+    let i, j, im, param, val;
+    // sanity check
+    if( !params ){
+	return;
+    }
+    if( typeof params === "string" && params.charAt(0) === '[' ){
+	try{ params = JSON.parse(params); }
+	catch(e){ JS9.error(`can't parse JSON in copyParams: ${params}`, e); }
+    }
+    if( !$.isArray(params) ){ params = [params]; }
+    // default is all images
+    images = images || JS9.images;
+    if( typeof images === "string" && images.charAt(0) === '[' ){
+	try{ images = JSON.parse(images); }
+	catch(e){ JS9.error(`can't parse JSON in copyParams: ${images}`, e); }
+    }
+    if( !$.isArray(images) ){ images = [images]; }
+    // for each image
+    for(i=0; i<images.length; i++){
+	im = images[i];
+	// im can be an image handle or image id
+	if( typeof im === "string" ){
+	    im = JS9.lookupImage(im);
+	    if( !im ){
+		JS9.error(`unknown image for copyParams`);
+	    }
+	}
+	// but don't do myself
+	if( im === this ){
+	    continue;
+	}
+	// don't redisplay anything
+	im.displayMode = false;
+	try{
+	    // set each param
+	    for(j=0; j<params.length; j++){
+		param = params[j];
+		switch(param){
+		case "contrastbias":
+		    val = this.getParam("contrast");
+		    im.setParam("contrast", val);
+		    val = this.getParam("bias");
+		    im.setParam("bias", val);
+		    break;
+		default:
+		    val = this.getParam(param);
+		    im.setParam(param, val);
+		    break;
+		}
+	    }
+	} catch(e) {
+	    JS9.error(`could not copy params for ${im.id}`);
+	}
+	finally{
+	    // re-enable display
+	    im.displayMode = true;
+	}
+    }
+};
+
 // get status
 JS9.Image.prototype.getStatus = function(status){
     if( JS9.isNull(status) || typeof status !== "string" ){
@@ -22915,6 +22977,7 @@ JS9.mkPublic("SetRot90", "setRot90");
 JS9.mkPublic("GetRot90", "getRot90");
 JS9.mkPublic("GetParam", "getParam");
 JS9.mkPublic("SetParam", "setParam");
+JS9.mkPublic("CopyParams", "copyParams");
 JS9.mkPublic("GetValPos", "updateValpos");
 JS9.mkPublic("ImageToDisplayPos", "imageToDisplayPos");
 JS9.mkPublic("DisplayToImagePos", "displayToImagePos");

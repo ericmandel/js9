@@ -1078,8 +1078,8 @@ Calling sequences:
 <p>
 where:
 <ul>
-<li><b>ops</b>: array of operations on which to sync
-<li><b>images</b>: array of images to sync with this image
+<li><b>ops</b>: operation or array of operations on which to sync
+<li><b>images</b>: image or array of images to sync with this image
 <li><b>opts</b>: options for sync'ing
 </ul>
 Synchronize two or more images, so that when an operation is performed
@@ -1104,9 +1104,9 @@ The operations that can be specified for sync'ing are: "colormap",
 JS9.globalOpts.syncOps is used.
 
 <p>
-Images to synchronize can be specified as an array of image handles or
-image ids. If no array is specified, all currently displayed images
-are sync'ed.
+Images to synchronize can be specified singly or as an array of image
+handles or image ids. If no array is specified, all currently
+displayed images are sync'ed.
 
 <p>
 The optional opts object can contain:
@@ -2018,6 +2018,31 @@ but you can still change and even remove existing regions.
 If param is "enable", the specified value (or array of values) is
 removed to the <b>disable</b> array for this image, thereby enabling core
 functionality. The resulting <b>disable array</b> is returned.
+
+<h5 id="JS9.CopyParams">Copy image parameter(s) to one or more images</h5>
+<p>
+<code class="api">JS9.CopyParams(param, image)</code>
+<p>
+where:
+<ul>
+<li><b>param</b>: name of the parameter or array or parameters to copy
+<li><b>image</b>: target image or array of image to copy to
+</ul>
+<p>
+Copy parameters from the current image to one or more images.
+Any image parameter can be copied, but the most common ones are:
+"colormap", "flip", "pan", "rot90", "scale", "wcs", "zoom", and
+"contrastbias" (i.e., both "contrast" and "bias"). Note that copying a
+parameter results in <a href="#JS9.SetParam"><b>JS9.SetParam()</b></a>
+being called, triggering the corresponding core function if necessary.
+Thus, for example, copying the colormap will change the colormap of the
+target image. See <a href="#JS9.SetParam"><b>JS9.SetParam()</b></a> for
+more details about setting parameters.
+
+<p>
+The target image(s) to copy to can be specified singly or as an array
+of image handles or image ids. If no images are specified, all images
+are used as targets.
 
 <h5 id="JS9.EventToDisplayPos">Get the display coordinates from an event</h5>
 <p>
