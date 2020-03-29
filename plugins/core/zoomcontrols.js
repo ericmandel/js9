@@ -26,9 +26,9 @@ JS9.PanZoom.rotateHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol4" name="
 
 JS9.PanZoom.pantoHTML = '<input type="button" class="JS9PanZoomButton JS9PanZoomCol1" name="panto" value="Pan to &rarr;" onclick="javascript:JS9.PanZoom.xpanto(\'%s\', \'%s\', this)">';
 
-JS9.PanZoom.pos1HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol2" name="pos1" value="%s" autocapitalize="off" autocorrect="off">';
+JS9.PanZoom.pos1HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol2 js9Input" name="pos1" value="%s" autocapitalize="off" autocorrect="off">';
 
-JS9.PanZoom.pos2HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol3" name="pos2" value="%s" autocapitalize="off" autocorrect="off">';
+JS9.PanZoom.pos2HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol3 js9Input" name="pos2" value="%s" autocapitalize="off" autocorrect="off">';
 
 JS9.PanZoom.sysHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol4" name="wcssys" onchange="JS9.PanZoom.xsetwcssys(\'%s\', \'%s\', this)">%s</select>';
 
@@ -123,7 +123,7 @@ JS9.PanZoom.xpanto = function(did, id, target){
 	wcssys = pel.find("[name='wcssys']").val();
 	s1 = pel.find("[name='pos1']").val();
 	s2 = pel.find("[name='pos2']").val();
-	if( JS9.isNumber(s1) && JS9.isNumber(s2) && wcssys ){
+	if( s1 && s2 && wcssys ){
 	    owcssys = im.getWCSSys();
 	    im.setWCSSys(wcssys);
 	    p1 = JS9.saostrtod(s1);
@@ -411,6 +411,15 @@ JS9.PanZoom.init = function(opts){
 	s = "<p><center>Pan/Zoom parameters will appear here.</center>";
     }
     this.panzoomContainer.html(s);
+    if( im ){
+	// init run on cr, if necessary
+	if( JS9.globalOpts.runOnCR ){
+	    this.panzoomContainer.find("[name='pos1']")
+		.data("enterfunc", "panto");
+	    this.panzoomContainer.find("[name='pos2']")
+		.data("enterfunc", "panto");
+	}
+    }
 };
 
 // add this plugin into JS9
