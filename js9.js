@@ -19292,7 +19292,6 @@ JS9.lookupImage = function(id, display){
     for(i=0; i<ilen; i++){
 	im = JS9.images[i];
 	if( (id === im )      || (id === im.id)                          ||
-            (id === im.id0)   || (id === im.id0.replace(/\[.*\]$/, ""))  ||
 	    (id === im.file)  || (id === im.file.replace(/\[.*\]$/, "")) ||
 	    (id === im.file0) || (id === (JS9.TOROOT + im.file))         ||
 	    (im.fitsFile      && (id === im.fitsFile)) ){
