@@ -12773,7 +12773,7 @@ JS9.Statusbar.display = function(im){
 	statusbar = JS9.globalOpts.statusBar;
 	// remove colorbar if colorbar plugin is instantiated
 	pinst = im.display.pluginInstances.JS9Colorbar;
-	if( pinst && pinst.isActive() ){
+	if( pinst && pinst.isActive() && !this.mycolorbar ){
 	    statusbar = statusbar.replace(/\$colorbar;? */, "");
 	}
 	// escape brackets and parens before macro expansion, then unescape
@@ -12804,6 +12804,7 @@ JS9.Statusbar.display = function(im){
 	    // colorbar plugin: run AddDivs, remove colorbar from resize list
 	    if( statusbar.match(/\$colorbar/) ){
 		JS9.AddDivs({display: im});
+		this.mycolorbar = this.display.pluginInstances.JS9Colorbar;
 		index = JS9.globalOpts.resizeDivs.indexOf("JS9Colorbar");
 		if( index >= 0 ){
 		    JS9.globalOpts.resizeDivs.splice(index, 1);
@@ -12819,7 +12820,11 @@ JS9.Statusbar.display = function(im){
 	    for(i=0; i<elements.length; i++){
 		// that is not a plugin ...
 		if( arr[i].match(/\$colorbar/) ){
-		    $.noop();
+		    // dynamic colorbars have to be displayed manually, since
+		    // the colorbar has no way to know the image changed
+		    if( this.mycolorbar && this.isDynamic ){
+			JS9.Colorbar.display.call(this.mycolorbar, im);
+		    }
 		} else if( arr[i].match(/\$img/) ){
 		    t = arr[i].match(/\$img\((.*)\)/);
 		    if( t && t[1] ){
