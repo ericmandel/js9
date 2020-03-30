@@ -80,12 +80,18 @@ JS9.Statusbar.mup = function(target, id){
 
 // redraw status on display
 JS9.Statusbar.display = function(im){
-    let i, s, t, oarr, arr, elements, index;
+    let i, s, t, oarr, arr, elements, index, pinst, statusbar;
     let html = "";
     let delim = /;/;
     if( im && JS9.globalOpts.statusBar ){
+	statusbar = JS9.globalOpts.statusBar;
+	// remove colorbar if colorbar plugin is instantiated
+	pinst = im.display.pluginInstances.JS9Colorbar;
+	if( pinst && pinst.isActive() ){
+	    statusbar = statusbar.replace(/\$colorbar;? */, "");
+	}
 	// escape brackets and parens before macro expansion, then unescape
-	s = JS9.globalOpts.statusBar
+	s = statusbar
 	    .replace(/\(/g, " __OP__ ")
 	    .replace(/\)/g, " __CP__ ")
 	    .replace(/\[/g, " __OB__ ")
@@ -95,9 +101,9 @@ JS9.Statusbar.display = function(im){
 	    .replace(/ __CP__ /g, ")")
 	    .replace(/ __OB__ /g, "[")
 	    .replace(/ __CB__ /g, "]");
-	if( this.statusBar !== JS9.globalOpts.statusBar ){
+	if( this.statusBar !== statusbar ){
 	    // original statusbar items
-	    oarr = JS9.globalOpts.statusBar.split(delim);
+	    oarr = statusbar.split(delim);
 	    // current values of items in the status bar
 	    arr = s.split(delim);
 	    for(i=0; i<arr.length; i++){
@@ -110,7 +116,7 @@ JS9.Statusbar.display = function(im){
 	    // set statusbar
 	    this.statusContainer.html(html);
 	    // colorbar plugin: run AddDivs, remove colorbar from resize list
-	    if( JS9.globalOpts.statusBar.match(/\$colorbar/) ){
+	    if( statusbar.match(/\$colorbar/) ){
 		JS9.AddDivs({display: im});
 		index = JS9.globalOpts.resizeDivs.indexOf("JS9Colorbar");
 		if( index >= 0 ){
@@ -118,7 +124,7 @@ JS9.Statusbar.display = function(im){
 		}
 	    }
 	    // save the format to detect future changes
-	    this.statusBar = JS9.globalOpts.statusBar;
+	    this.statusBar = statusbar;
 	} else {
 	    // elements associated with items in statusbar
 	    elements = this.divjq.find(`.JS9StatusbarItem`);
