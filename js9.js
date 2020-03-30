@@ -7190,12 +7190,14 @@ JS9.Image.prototype.setParam = function(param, value){
 };
 
 // copy params from one image to another
-JS9.Image.prototype.copyParams = function(params, images){
+JS9.Image.prototype.copyParams = function(params, images, opts){
     let i, j, im, param, val;
     // sanity check
     if( !params ){
 	return;
     }
+    // opts is optional
+    opts = opts || {};
     if( typeof params === "string" && params.charAt(0) === '[' ){
 	try{ params = JSON.parse(params); }
 	catch(e){ JS9.error(`can't parse JSON in copyParams: ${params}`, e); }
@@ -7229,6 +7231,14 @@ JS9.Image.prototype.copyParams = function(params, images){
 	    for(j=0; j<params.length; j++){
 		param = params[j];
 		switch(param){
+		case "regions":
+		    this.copyRegions(im);
+		    break;
+		case "shapes":
+		    if( opts.layer ){
+			this.copyShapes(opts.layer, im);
+		    }
+		    break;
 		case "contrastbias":
 		    val = this.getParam("contrast");
 		    im.setParam("contrast", val);
@@ -14626,6 +14636,52 @@ JS9.Fabric.refreshShapes = function(layerName){
     return this;
 };
 
+// copy one or more shapes to another image
+// call using image context
+JS9.Fabric.copyShapes = function(layerName, to, which){
+    let i, im, s, opts;
+    const ims = [];
+    if( typeof to === "object" ){
+	ims.push(to);
+    } else if( to === "all" ){
+	for(i=0; i<JS9.images.length; i++){
+	    if( this !== JS9.images[i] ){
+		ims.push(JS9.images[i]);
+	    }
+	}
+    } else {
+	im = JS9.lookupImage(to);
+	if( im ){
+	    ims.push(im);
+	}
+    }
+    if( !ims.length ){
+	return;
+    }
+    // if no 'which' specified, first look for "selected"
+    if( !which ){
+	s = this.listRegions("selected", {mode: 1}, layerName);
+    }
+    // if no selected regions found, or 'which' was specified, get regions
+    if( !s ){
+	s = this.listRegions(which, {mode: 1}, layerName);
+    }
+    for(i=0; i<ims.length; i++){
+	// use this layer's opts, if possible
+	if( this.display.layers[layerName] ){
+	    opts = this.display.layers[layerName].opts;
+	} else {
+	    // else use reasonable default
+	    opts = JS9.Regions.opts;
+	}
+	// make sure layer exists
+	ims[i].display.newShapeLayer(layerName, opts);
+	// add shapes to layer
+	ims[i].addShapes(layerName, s);
+    }
+    return this;
+};
+
 // add (or remove) a point to a polygon, adapted from:
 // http://stackoverflow.com/questions/14014861/constrain-image-to-a-path-in-kineticjs
 // call using image context
@@ -15167,6 +15223,7 @@ JS9.Fabric.initGraphics = function(){
     JS9.Image.prototype.changeShapes = JS9.Fabric.changeShapes;
     JS9.Image.prototype.removeShapes = JS9.Fabric.removeShapes;
     JS9.Image.prototype.refreshShapes = JS9.Fabric.refreshShapes;
+    JS9.Image.prototype.copyShapes = JS9.Fabric.copyShapes;
     // shape layer methods
     JS9.Image.prototype.getShapeLayer = JS9.Fabric.getShapeLayer;
     JS9.Image.prototype.showShapeLayer = JS9.Fabric.showShapeLayer;
@@ -16952,40 +17009,10 @@ JS9.Regions.listRegions = function(which, opts, layer){
     return regstr;
 };
 
-// copy one or more regions
+// copy one or more regions to another image
 // call using image context
 JS9.Regions.copyRegions = function(to, which){
-    let i, im, s;
-    const ims = [];
-    if( typeof to === "object" ){
-	ims.push(to);
-    } else if( to === "all" ){
-	for(i=0; i<JS9.images.length; i++){
-	    if( this !== JS9.images[i] ){
-		ims.push(JS9.images[i]);
-	    }
-	}
-    } else {
-	im = JS9.lookupImage(to);
-	if( im ){
-	    ims.push(im);
-	}
-    }
-    if( !ims.length ){
-	return;
-    }
-    // if no 'which' specified, first look for "selected" regions
-    if( !which ){
-	s = this.listRegions("selected", {mode: 1});
-    }
-    // if no selected regions found, or 'which' was specified, get regions
-    if( !s ){
-	s = this.listRegions(which, {mode: 1});
-    }
-    for(i=0; i<ims.length; i++){
-	ims[i].addShapes("regions", s);
-    }
-    return this;
+    return this.copyShapes("regions", to, which);
 };
 
 // parse a string containing a subset of DS9/Funtools regions
@@ -22995,6 +23022,7 @@ JS9.mkPublic("AddShapes", "addShapes");
 JS9.mkPublic("RemoveShapes", "removeShapes");
 JS9.mkPublic("GetShapes", "getShapes");
 JS9.mkPublic("ChangeShapes", "changeShapes");
+JS9.mkPublic("CopyShapes", "copyShapes");
 JS9.mkPublic("DisplayCoordGrid", "displayCoordGrid");
 JS9.mkPublic("Print", "print");
 JS9.mkPublic("SavePNG", "savePNG");

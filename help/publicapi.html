@@ -4012,6 +4012,20 @@ If the <b>shapes</b> argument is not specified, it defaults to
 <li><b>parent</b>: a shape that has a child (i.e. has a text child)
 </ul>
 
+<h5 id="JS9.CopyShapes">Copy a shape layer to another image</h5>
+<p>
+<code class="api">JS9.CopyShapes(to, layer)</code>
+<p>
+where:
+<ul>
+<li><b>to</b>: image id to which to copy shapes
+<li><b>layer</b>: shape layer to copy
+</ul>
+Copy the shapes in a shape layer to a different image. If <b>to</b> is
+"all", then the shapes are copied to all images.
+<p>
+All shapes in the shape layer are copied to the new image.
+
 <h5 id="JS9.LoadCatalog">Load an astronomical catalog</h5>
 <p>
 <code class="api">JS9.LoadCatalog(layer, table, opts)</code>
