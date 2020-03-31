@@ -2305,7 +2305,8 @@ input:focus.JS9CmdIn {
 
 /* jqueryContextMenu v2.2 */
 .context-menu-icon-check:before {
-   content: url(images/checkmark.svg);
+/* content: url(images/checkmark.svg); */
+   content: url(data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNzMuMDUgMTYyLjQ4Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6bm9uZTt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPmNoZWNrbWFyazwvdGl0bGU+PHJlY3QgY2xhc3M9ImNscy0xIiB5PSIyNC4xOCIgd2lkdGg9IjE3My4wNSIgaGVpZ2h0PSIxMzguMyIvPjx0ZXh0IHk9IjI0LjE4Ii8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIxNC45OSIgeT0iMzYuNSIgd2lkdGg9IjEzOS4yMiIgaGVpZ2h0PSIxMTAuMzgiLz48dGV4dCB5PSIyNC4xOCIvPjxwYXRoIGQ9Ik02MC40NCw2OC4yNGw0LjI4LTRMNzgsODAuNDRsMjUuOTQtNDgsNC44MiwzTDc4LjgyLDkwLjYzWiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCAyNC4xOCkiLz48L3N2Zz4=);
 }
 
 .context-menu-item {

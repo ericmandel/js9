@@ -72,7 +72,19 @@ JS9.Menubar.menuImage = function(s){
     if( JS9.Menubar.missing[s] ){
 	return JS9.Menubar.EMPTYIMG;
     } else {
-	return JS9.InstallDir("images") + "/voyager/" + s;
+	if( JS9.inline && JS9.inline[s] ){
+	    // inline image is available
+	    return JS9.inline[s];
+	} else if( JS9.allinone ){
+	    // allinone has to return blank
+	    return JS9.Menubar.EMPTYIMG;
+	} else if( s.charAt(0) !== "/" ){
+	    // external image relative to install directory
+	    return JS9.InstallDir(s);
+	} else {
+	    // external image with full pathname
+	    return s;
+	}
     }
 };
 
@@ -1985,8 +1997,8 @@ JS9.Menubar.createMenus = function(){
 	    for(i=0; i<JS9.globalOpts.topColormaps.length; i++){
 		s1 = JS9.globalOpts.topColormaps[i];
 		s2 = s1;
-		if( JS9.globalOpts.menuImages && !JS9.allinone ){
-		    img = JS9.Menubar.menuImage(`color_${s2}.png`);
+		if( JS9.globalOpts.menuImages ){
+		    img = JS9.Menubar.menuImage(`images/voyager/color_${s2}.png`);
 		    hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${img}' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='JS9.Menubar.missing["color_${s2}.png"]=true; this.src="${JS9.Menubar.EMPTYIMG}"' >` + `&nbsp;&nbsp;${s2}</div>`;
 		    items[s1] = {name: hstr, isHtmlName: true};
 		} else {
@@ -2009,8 +2021,8 @@ JS9.Menubar.createMenus = function(){
 		s1 = JS9.colormaps[i].name;
 		if( !JS9.globalOpts.topColormaps.includes(s1) ){
 		    s2 = s1;
-		    if( JS9.globalOpts.menuImages && !JS9.allinone ){
-			img = JS9.Menubar.menuImage(`color_${s2}.png`);
+		    if( JS9.globalOpts.menuImages ){
+			img = JS9.Menubar.menuImage(`images/voyager/color_${s2}.png`);
 			hstr = `<div class='JS9MenubarImage' name='${s2}'><img src='${img}' name='color_${s2}' class='JS9MenubarImage JS9MenubarImageOption' onerror='JS9.Menubar.missing["color_${s2}.png"]=true; this.src="${JS9.Menubar.EMPTYIMG}"' >` + `&nbsp;&nbsp;${s2}</div>`;
 			items.morecmaps.items[s1] = {name: hstr, isHtmlName: true};
 		    } else {
@@ -2258,10 +2270,10 @@ JS9.Menubar.createMenus = function(){
 		name: "Regions:",
 		disabled: true
 	    };
-	    if( JS9.globalOpts.menuImages && !JS9.allinone ){
+	    if( JS9.globalOpts.menuImages ){
 		for(i=0; i<JS9.regions.length; i++){
 		    reg = JS9.regions[i];
-		    img = JS9.Menubar.menuImage(`regions_${reg}.svg`);
+		    img = JS9.Menubar.menuImage(`images/voyager/regions_${reg}.svg`);
 		    items[reg] = {name: `<div class='JS9MenubarImage' name='${reg}'><img src='${img}' name='regions_${reg}' class='JS9MenubarImage JS9MenubarImageOption' onerror='JS9.Menubar.missing["regions_${reg}.svg"]=true; this.src="${JS9.Menubar.EMPTYIMG}"' >` + `&nbsp;&nbsp;${reg}</div>`,
 				  isHtmlName: true};
 		}
