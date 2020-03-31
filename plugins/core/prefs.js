@@ -501,6 +501,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "show tooltips in Toolbar plugin?"
 	},
+	"updateTitlebar": {
+	    "type": "boolean",
+	    "helper": "update titlebar with image id?"
+	},
 	"logoDisplay": {
 	    "type": "boolean",
 	    "helper": "show JS9 logo?"
@@ -629,6 +633,7 @@ JS9.Prefs.init = function(){
 			   fits2fits: JS9.globalOpts.fits2fits,
 			   dynamicSelect: JS9.globalOpts.dynamicSelect,
 			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
+			   updateTitlebar: JS9.globalOpts.updateTitlebar,
 			   logoDisplay: JS9.globalOpts.logoDisplay,
 			   reloadRefresh: JS9.globalOpts.reloadRefresh,
 			   reloadRefreshReg: JS9.globalOpts.reloadRefreshReg,

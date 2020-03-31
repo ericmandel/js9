@@ -230,6 +230,7 @@ JS9.globalOpts = {
     // statusBar: "$mag; $scale($scaleclipping); $img(images/voyager/color_$colormap.png) $colormap; $wcssys; $image",  // status display
     statusBar: "$colorbar; $colormap; $mag; $scale ($scalemin,$scalemax); $wcssys; $image0",  // status display
     toolbarTooltips: false,     // display tooltips on toolbar?
+    updateTitlebar: true,	// update titlebar when image changes?
     centerDivs: ["JS9Menubar"], // divs which take part in JS9.Display.center()
     resizeDivs: ["JS9Menubar", "JS9Colorbar", "JS9Toolbar", "JS9Statusbar"], // divs which take part in JS9.Display.resize()
     pinchWait: 8,		// number of events to wait before testing pinch
@@ -598,6 +599,7 @@ if( window.isElectron ){
 	    throw new Error('For security reasons, Desktop JS9 does not support window.eval()');
 	}
     }
+
 }
 
 // ---------------------------------------------------------------------
@@ -18683,72 +18685,43 @@ JS9.Dysel.imageclose = function(im){
 // public alias for plugin developers
 JS9.getDynamicDisplayOr = JS9.Dysel.getDisplayOr;
 
-// make a copy of the raw data
-// used by setFlip and setRot90
-JS9.getRawCopy = function(oraw, bitpix) {
-    // make copy
-    let nraw = $.extend(true, {}, oraw);
-    nraw.bitpix = bitpix || oraw.bitpix;
-    switch(nraw.bitpix){
-    case 8:
-	nraw.data = new Uint8Array(oraw.data);
-	break;
-    case 16:
-	nraw.data = new Int16Array(oraw.data);
-	break;
-    case -16:
-	nraw.data = new Uint16Array(oraw.data);
-	break;
-    case 32:
-	nraw.data = new Int32Array(oraw.data);
-	break;
-    case -32:
-	nraw.data = new Float32Array(oraw.data);
-	break;
-    case -64:
-	nraw.data = new Float64Array(oraw.data);
-	break;
+// ---------------------------------------------------------------------
+// Titlebar: titlebar updates
+// ---------------------------------------------------------------------
+
+JS9.Titlebar = {};
+JS9.Titlebar.CLASS = "JS9";
+JS9.Titlebar.NAME = "Titlebar";
+
+// plugin init: save initial title
+// eslint-disable-next-line no-unused-vars
+JS9.Titlebar.init = function(opts){
+    if( !JS9.Titlebar.title ){
+	JS9.Titlebar.title = document.title;
     }
-    return nraw;
 };
 
-// extract line from raw data
-// used by setFlip and setRot90
-JS9.getRawLine = function(oraw, ooff, nraw, noff) {
-    let obuf, nbuf;
-    switch(oraw.bitpix){
-    case 8:
-	obuf = new Uint8Array(oraw.data.buffer, ooff, oraw.width);
-	nbuf = new Uint8Array(nraw.data.buffer, noff, oraw.width);
-	break;
-    case 16:
-    case -16:
-	obuf = new Uint16Array(oraw.data.buffer, ooff, oraw.width);
-	nbuf = new Uint16Array(nraw.data.buffer, noff, oraw.width);
-	break;
-    case 32:
-	obuf = new Uint32Array(oraw.data.buffer, ooff, oraw.width);
-	nbuf = new Uint32Array(nraw.data.buffer, noff, oraw.width);
-	break;
-    case -32:
-	obuf = new Float32Array(oraw.data.buffer, ooff, oraw.width);
-	nbuf = new Float32Array(nraw.data.buffer, noff, oraw.width);
-	break;
-    case -64:
-	obuf = new Float64Array(oraw.data.buffer, ooff, oraw.width);
-	nbuf = new Float64Array(nraw.data.buffer, noff, oraw.width);
-	break;
-    default:
-	JS9.error(`unknown bitpix value for flip: ${oraw.bitpix}`);
+// change titlebar when image is loaded
+JS9.Titlebar.imageload = function(im){
+    if( im && JS9.globalOpts.updateTitlebar ){
+	document.title = `${JS9.Titlebar.title}: ${im.id}`;
+	JS9.Titlebar.imid = im.id;
     }
-    return [obuf, nbuf];
 };
 
-// https://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
-JS9.memcpy = function(dst, dstOffset, src, srcOffset, length) {
-  var dstU8 = new Uint8Array(dst, dstOffset, length);
-  var srcU8 = new Uint8Array(src, srcOffset, length);
-  dstU8.set(srcU8);
+// change titlebar when image is displayed
+JS9.Titlebar.imagedisplay = function(im){
+    if( im && im.id !== JS9.Titlebar.imid && JS9.globalOpts.updateTitlebar ){
+	document.title = `${JS9.Titlebar.title}: ${im.id}`;
+	JS9.Titlebar.imid = im.id;
+    }
+};
+
+// change titlebar when image is closed
+JS9.Titlebar.imageclose = function(){
+    if( JS9.globalOpts.updateTitlebar ){
+	document.title = JS9.Titlebar.title;
+    }
 };
 
 // ---------------------------------------------------------------------
@@ -18835,6 +18808,74 @@ if (!Array.prototype.includes) {
     }
   });
 }
+
+// make a copy of the raw data
+// used by setFlip and setRot90
+JS9.getRawCopy = function(oraw, bitpix) {
+    // make copy
+    let nraw = $.extend(true, {}, oraw);
+    nraw.bitpix = bitpix || oraw.bitpix;
+    switch(nraw.bitpix){
+    case 8:
+	nraw.data = new Uint8Array(oraw.data);
+	break;
+    case 16:
+	nraw.data = new Int16Array(oraw.data);
+	break;
+    case -16:
+	nraw.data = new Uint16Array(oraw.data);
+	break;
+    case 32:
+	nraw.data = new Int32Array(oraw.data);
+	break;
+    case -32:
+	nraw.data = new Float32Array(oraw.data);
+	break;
+    case -64:
+	nraw.data = new Float64Array(oraw.data);
+	break;
+    }
+    return nraw;
+};
+
+// extract line from raw data
+// used by setFlip and setRot90
+JS9.getRawLine = function(oraw, ooff, nraw, noff) {
+    let obuf, nbuf;
+    switch(oraw.bitpix){
+    case 8:
+	obuf = new Uint8Array(oraw.data.buffer, ooff, oraw.width);
+	nbuf = new Uint8Array(nraw.data.buffer, noff, oraw.width);
+	break;
+    case 16:
+    case -16:
+	obuf = new Uint16Array(oraw.data.buffer, ooff, oraw.width);
+	nbuf = new Uint16Array(nraw.data.buffer, noff, oraw.width);
+	break;
+    case 32:
+	obuf = new Uint32Array(oraw.data.buffer, ooff, oraw.width);
+	nbuf = new Uint32Array(nraw.data.buffer, noff, oraw.width);
+	break;
+    case -32:
+	obuf = new Float32Array(oraw.data.buffer, ooff, oraw.width);
+	nbuf = new Float32Array(nraw.data.buffer, noff, oraw.width);
+	break;
+    case -64:
+	obuf = new Float64Array(oraw.data.buffer, ooff, oraw.width);
+	nbuf = new Float64Array(nraw.data.buffer, noff, oraw.width);
+	break;
+    default:
+	JS9.error(`unknown bitpix value for flip: ${oraw.bitpix}`);
+    }
+    return [obuf, nbuf];
+};
+
+// https://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
+JS9.memcpy = function(dst, dstOffset, src, srcOffset, length) {
+  var dstU8 = new Uint8Array(dst, dstOffset, length);
+  var srcU8 = new Uint8Array(src, srcOffset, length);
+  dstU8.set(srcU8);
+};
 
 // set explicit focus for IPython/Jupyter support
 JS9.jupyterFocus = function(el, el2){
@@ -22894,7 +22935,12 @@ JS9.init = function(){
 		       {onimageload:   JS9.Dysel.imageload,
 			onimageclose:  JS9.Dysel.imageclose,
 			winDims:       [0, 0]});
-
+    JS9.RegisterPlugin(JS9.Titlebar.CLASS, JS9.Titlebar.NAME,
+		       JS9.Titlebar.init,
+		       { onimageload:  JS9.Titlebar.imageload,
+			 onimagedisplay: JS9.Titlebar.imagedisplay,
+			 onimageclose: JS9.Titlebar.imageclose,
+			 winDims: [0, 0]});
     // find divs associated with each plugin and run the constructor
     JS9.instantiatePlugins();
     // sort plugins
