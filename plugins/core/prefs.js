@@ -537,6 +537,18 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "show regions in magnifier?"
 	},
+	"xeqPlugins": {
+	    "type": "boolean",
+	    "helper": "execute plugin callbacks?"
+	},
+	"extendedPlugins": {
+	    "type": "boolean",
+	    "helper": "execute extended plugins?"
+	},
+	"intensivePlugins": {
+	    "type": "boolean",
+	    "helper": "execute intensive plugins?"
+	},
 	"svgBorder": {
 	    "type": "boolean",
 	    "helper": "add border when exporting SVG?"
@@ -626,6 +638,9 @@ JS9.Prefs.init = function(){
 			   panWithinDisplay: JS9.globalOpts.panWithinDisplay,
 			   pannerDirections: JS9.globalOpts.pannerDirections,
 			   magnifierRegions: JS9.globalOpts.magnifierRegions,
+			   xeqPlugins: JS9.globalOpts.xeqPlugins,
+			   extendedPlugins: JS9.globalOpts.extendedPlugins,
+			   intensivePlugins: JS9.globalOpts.intensivePlugins,
 			   svgBorder: JS9.globalOpts.svgBorder,
 			   topColormaps: JS9.globalOpts.topColormaps,
 			   mouseActions: JS9.globalOpts.mouseActions,
