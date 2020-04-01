@@ -33127,7 +33127,7 @@ init:function(t){
         if( navigator.platform.match(/^Win/) ){
 	    domwindowdata+='DHTML Window <div class="drag-controls"><img src="'+this.imagefiles[0]+'" title="Minimize" /><img src="'+this.imagefiles[1]+'" title="Close" /></div>'
 	} else {
-            domwindowdata+='DHTML Window <div class="drag-controls"><div class="osxButtons"><div class="osxClose"><a class="osxA osxClosebutton" href="#"><span class="osxSpan"><strong title="Close">x</strong></span></a></div><div class="osxMinimize"><a class="osxA osxMinimizebutton" href="#"><span class="osxSpan"><strong title="Minimize">&ndash;</strong></span></a></div></div></div>';
+            domwindowdata+='DHTML Window <div class="drag-controls"><div class="osxButtons"><div class="osxClose"><a class="osxA osxClosebutton" href="#"><span class="osxSpan"><strong title="Close">×</strong></span></a></div><div class="osxMinimize"><a class="osxA osxMinimizebutton" href="#"><span class="osxSpan"><strong title="Minimize">&ndash;</strong></span></a></div></div></div>';
 	}
 	domwindowdata+='</div>'
 	domwindowdata+='<div class="drag-contentarea"></div>'
