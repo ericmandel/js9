@@ -20647,12 +20647,30 @@ CanvasRenderingContext2D.prototype.clear =
     // create a searchbar on a div using: https://markjs.io/
     // routine adapted from: https://jsfiddle.net/julmot/973gdh8g/
 JS9.searchbar = function(el, textid) {
-    let div, text, bar, position;
+    let div, text, bar;
     let srch, next, prev, close;
     let matchcase, matchdiacritics, matchwords, matchwildcards;
     const jel = $(el);
     const currentClass = "current";
     const offsetTop = 50;
+    const search = (value) => {
+	let searchVal = value;
+	text.unmark({
+	    done: function() {
+		text.mark(searchVal, {
+		    caseSensitive: bar.opts.matchcase,
+		    diacritics: bar.opts.diacritics,
+		    accuracy: bar.opts.matchwords ? "exactly" : "partially",
+		    wildcards: bar.opts.matchwildcards ? "enabled" : "disabled",
+		    done: function() {
+			bar.results = text.find("mark");
+			bar.currentIndex = 0;
+			jumpTo();
+		    }
+		});
+	    }
+	});
+    };
     const btnColor = (which) => {
 	const s = which.prop("data-btn");
 	if( bar.opts[s] ){
@@ -20664,18 +20682,19 @@ JS9.searchbar = function(el, textid) {
 	}
     };
     const jumpTo = () => {
-	let cur, diff;
+	let cur, diff, pos;
 	if( bar.results.length ){
 	    cur = bar.results.eq(bar.currentIndex);
 	    bar.results.removeClass(currentClass);
 	    if( cur.length ){
 		cur.addClass(currentClass);
-		diff = cur.offset().top - div.offset().top + div.scrollTop()
+                diff = cur.offset().top - div.offset().top + div.scrollTop();
 		if( diff < 0 ){
-		    div.scrollTop(0);
+		    pos = 0;
+                    div.scrollTop(pos);
 		} else if( diff > div.height() - offsetTop ){
-		    position =  Math.max(0, diff - offsetTop);
-		    div.scrollTop(position);
+                    pos =  Math.max(0, diff - offsetTop);
+                    div.scrollTop(pos);
 		}
 	    }
 	}
@@ -20719,22 +20738,7 @@ JS9.searchbar = function(el, textid) {
 	.addClass("JS9SearchInput")
 	.appendTo(bar);
     srch.on("input", function() {
-	let searchVal = this.value;
-	text.unmark({
-	    done: function() {
-		text.mark(searchVal, {
-		    caseSensitive: bar.opts.matchcase,
-		    diacritics: bar.opts.diacritics,
-		    accuracy: bar.opts.matchwords ? "exactly" : "partially",
-		    wildcards: bar.opts.matchwildcards ? "enabled" : "disabled",
-		    done: function() {
-			bar.results = text.find("mark");
-			bar.currentIndex = 0;
-			jumpTo();
-		    }
-		});
-	    }
-	});
+	search(this.value);
     });
     // find next occurence
     next = $("<button>")
@@ -20770,6 +20774,7 @@ JS9.searchbar = function(el, textid) {
     matchcase.on("click", function() {
 	bar.opts.matchcase = !bar.opts.matchcase;
 	btnColor(matchcase);
+	search(srch.val());
     });
     matchdiacritics = $("<button>")
 	.addClass(`JS9SearchButton JS9SearchButton-${bar.opts.matchdiacritics}`)
@@ -20780,6 +20785,7 @@ JS9.searchbar = function(el, textid) {
     matchdiacritics.on("click", function() {
 	bar.opts.matchdiacritics = !bar.opts.matchdiacritics;
 	btnColor(matchdiacritics);
+	search(srch.val());
     });
     matchwords = $("<button>")
 	.addClass(`JS9SearchButton JS9SearchButton-${bar.opts.matchwords}`)
@@ -20790,6 +20796,7 @@ JS9.searchbar = function(el, textid) {
     matchwords.on("click", function() {
 	bar.opts.matchwords = !bar.opts.matchwords;
 	btnColor(matchwords);
+	search(srch.val());
     });
     matchwildcards = $("<button>")
 	.addClass(`JS9SearchButton JS9SearchButton-${bar.opts.matchwildcards}`)
@@ -20800,6 +20807,7 @@ JS9.searchbar = function(el, textid) {
     matchwildcards.on("click", function() {
 	bar.opts.matchwildcards = !bar.opts.matchwildcards;
 	btnColor(matchwildcards);
+	search(srch.val());
     });
     // close the searchbar
     close = $("<button>")
