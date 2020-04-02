@@ -20682,18 +20682,15 @@ JS9.searchbar = function(el, textid) {
 	}
     };
     const jumpTo = () => {
-	let cur, diff, pos;
+	let cur, pos;
 	if( bar.results.length ){
 	    cur = bar.results.eq(bar.currentIndex);
 	    bar.results.removeClass(currentClass);
 	    if( cur.length ){
 		cur.addClass(currentClass);
-                diff = cur.offset().top - div.offset().top + div.scrollTop();
-		if( diff < 0 ){
-		    pos = 0;
-                    div.scrollTop(pos);
-		} else if( diff > div.height() - offsetTop ){
-                    pos =  Math.max(0, diff - offsetTop);
+		pos = cur.position().top;
+		if( pos < 0 || pos > div.height() ){
+		    pos = pos + div.scrollTop() - offsetTop;
                     div.scrollTop(pos);
 		}
 	    }
