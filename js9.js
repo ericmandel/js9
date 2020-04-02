@@ -20828,6 +20828,7 @@ JS9.searchbar = function(el, textid) {
 	if( JS9.specialKey(evt) && c === 'F' ){
 	    if( bar.css("display") === "none" ){
 		bar.css("display", "block");
+		srch.focus();
 	    } else {
 		text.unmark();
 		srch.val("");
