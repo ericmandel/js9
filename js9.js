@@ -20730,13 +20730,20 @@ JS9.searchbar = function(el, textid) {
 	matchwords: false,
 	matchwildcards: false,
     };
-    // search text box, event fires with each keystroke
+    // search text box
     srch = $("<input type='search'>")
 	.addClass("JS9SearchInput")
 	.appendTo(bar);
+    // event fires with each keystroke
     srch.on("input", function() {
 	search(this.value);
     });
+    // placeholder hints
+    if( bar.opts.matchwildcards ){
+	srch.prop("placeholder", "sea*rch template?");
+    } else {
+	srch.prop("placeholder", "search term(s)");
+    }
     // find next occurence
     next = $("<button>")
 	.addClass("JS9SearchButton")
@@ -20767,45 +20774,50 @@ JS9.searchbar = function(el, textid) {
 	.prop("data-btn", "matchcase")
 	.html("Match Case")
 	.appendTo(bar);
-    btnColor(matchcase);
     matchcase.on("click", function() {
 	bar.opts.matchcase = !bar.opts.matchcase;
 	btnColor(matchcase);
 	search(srch.val());
     });
+    btnColor(matchcase);
     matchdiacritics = $("<button>")
 	.addClass(`JS9SearchButton JS9SearchButton-${bar.opts.matchdiacritics}`)
 	.prop("data-btn", "matchdiacritics")
 	.html("Match Diacritics")
 	.appendTo(bar);
-    btnColor(matchdiacritics);
     matchdiacritics.on("click", function() {
 	bar.opts.matchdiacritics = !bar.opts.matchdiacritics;
 	btnColor(matchdiacritics);
 	search(srch.val());
     });
+    btnColor(matchdiacritics);
     matchwords = $("<button>")
 	.addClass(`JS9SearchButton JS9SearchButton-${bar.opts.matchwords}`)
 	.prop("data-btn", "matchwords")
 	.html("Whole Words")
 	.appendTo(bar);
-    btnColor(matchwords);
     matchwords.on("click", function() {
 	bar.opts.matchwords = !bar.opts.matchwords;
 	btnColor(matchwords);
 	search(srch.val());
     });
+    btnColor(matchwords);
     matchwildcards = $("<button>")
 	.addClass(`JS9SearchButton JS9SearchButton-${bar.opts.matchwildcards}`)
 	.prop("data-btn", "matchwildcards")
 	.html("Wildcards")
 	.appendTo(bar);
-    btnColor(matchwildcards);
     matchwildcards.on("click", function() {
 	bar.opts.matchwildcards = !bar.opts.matchwildcards;
+	if( bar.opts.matchwildcards ){
+	    srch.prop("placeholder", "sea*rch template?");
+	} else {
+	    srch.prop("placeholder", "search term(s)");
+	}
 	btnColor(matchwildcards);
 	search(srch.val());
     });
+    btnColor(matchwildcards);
     // close the searchbar
     close = $("<button>")
 	.addClass("JS9SearchButton")
