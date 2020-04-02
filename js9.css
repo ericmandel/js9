@@ -388,6 +388,51 @@ input:focus.JS9CmdIn {
     right:  -20px;
 }
 
+/* searchbar see: https://markjs.io/ */
+.JS9Searchbar{
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    background: #E9E9E9;
+    padding: 8px;
+    outline: none;
+    display: none;
+}
+
+.JS9SearchInput{
+    width: 132px;
+    margin-left: 4px;
+}
+
+.JS9SearchButton{
+    font: normal 12px Arial;
+    border:  black 2px;
+    border-radius: 4px;
+    padding: 3px 6px 3px 6px;
+    margin-left: 4px;
+    outline: none;
+}
+
+.JS9SearchButton-true{
+    background-color: #D5D5D5;
+    outline: false;
+}
+
+.JS9SearchButton-false{
+    background-color: white;
+    outline: false;
+}
+
+/* searchbar marks, see: https://jsfiddle.net/julmot/973gdh8g/ */
+mark {
+  background: yellow;
+}
+
+mark.current {
+  background: mediumspringgreen;
+}
+
 .JS9Tooltip{
     position: relative;
     z-index: 999;
@@ -454,12 +499,14 @@ input:focus.JS9CmdIn {
 }
 
 .drag-controls {
-    padding: 2px;
+    padding: 6px 2px 2px 2px;
 }
 
 .drag-handle {
     /* height: 25px; */
-    height: 30px;
+    height: 25px;
+    padding-top: 10px;
+    padding-left: 8px;
     text-align: left;
     color: black;
     font-size: 14px;

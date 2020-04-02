@@ -6227,10 +6227,20 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	hstr += "</div>";
 	// populate div or create the light window to hold the text
         if( divid ){
+	    // existing div
 	    divid.html(hstr);
+	    // Electron does not support search so we implement our own ...
+	    if( window.isElectron ){
+		JS9.searchbar(divid[0]);
+	    }
 	} else {
+	    // display light window
 	    winFormat = winFormat || a.textWin;
 	    did = JS9.lightWin(id, "inline", hstr, title, winFormat);
+	    // Electron does not support search so we implement our own ...
+	    if( window.isElectron ){
+		JS9.searchbar(did);
+	    }
 	}
 	break;
     case "plot":
@@ -20632,6 +20642,194 @@ CanvasRenderingContext2D.prototype.clear =
     if (preserveTransform){
       this.restore();
     }
+};
+
+    // create a searchbar on a div using: https://markjs.io/
+    // routine adapted from: https://jsfiddle.net/julmot/973gdh8g/
+JS9.searchbar = function(el, textid) {
+    let div, text, bar, position;
+    let srch, next, prev, close;
+    let matchcase, matchdiacritics, matchwords, matchwildcards;
+    const jel = $(el);
+    const currentClass = "current";
+    const offsetTop = 50;
+    const btnColor = (which) => {
+	const s = which.prop("data-btn");
+	if( bar.opts[s] ){
+	    which.removeClass("JS9SearchButton-false");
+	    which.addClass("JS9SearchButton-true");
+	} else {
+	    which.removeClass("JS9SearchButton-true");
+	    which.addClass("JS9SearchButton-false");
+	}
+    };
+    const jumpTo = () => {
+	let cur, diff;
+	if( bar.results.length ){
+	    cur = bar.results.eq(bar.currentIndex);
+	    bar.results.removeClass(currentClass);
+	    if( cur.length ){
+		cur.addClass(currentClass);
+		diff = cur.offset().top - div.offset().top + div.scrollTop()
+		if( diff < 0 ){
+		    div.scrollTop(0);
+		} else if( diff > div.height() - offsetTop ){
+		    position =  Math.max(0, diff - offsetTop);
+		    div.scrollTop(position);
+		}
+	    }
+	}
+    };
+    textid = textid || ".JS9AnalysisText";
+    // sanity check that we have text
+    if( jel.is(textid) ){
+	text = jel;
+    } else {
+	text = jel.find(textid);
+	if( !text.length ){
+	    return;
+	}
+    }
+    // light window or div?
+    div = jel.find(".drag-contentarea");
+    if( !div.length ){
+	// just a div
+	div = jel;
+    }
+    // does the searchbar already exist?
+    bar = div.find(".JS9Searchbar");
+    if( bar.length ){
+	// make it visiable and return
+	bar.css("display", "block");
+	return;
+    }
+    // make a new searchbar
+    bar = $("<div>")
+	.addClass("JS9Searchbar")
+	.appendTo(div);
+    // add options
+    bar.opts = {
+	matchcase: false,
+	matchdiacritics: false,
+	matchwords: false,
+	matchwildcards: false,
+    };
+    // search text box, event fires with each keystroke
+    srch = $("<input type='search'>")
+	.addClass("JS9SearchInput")
+	.appendTo(bar);
+    srch.on("input", function() {
+	let searchVal = this.value;
+	text.unmark({
+	    done: function() {
+		text.mark(searchVal, {
+		    caseSensitive: bar.opts.matchcase,
+		    diacritics: bar.opts.diacritics,
+		    accuracy: bar.opts.matchwords ? "exactly" : "partially",
+		    wildcards: bar.opts.matchwildcards ? "enabled" : "disabled",
+		    done: function() {
+			bar.results = text.find("mark");
+			bar.currentIndex = 0;
+			jumpTo();
+		    }
+		});
+	    }
+	});
+    });
+    // find next occurence
+    next = $("<button>")
+	.addClass("JS9SearchButton")
+	.prop("data-btn", "next")
+	.html("&darr;")
+	.appendTo(bar);
+    // find previous occurence
+    prev = $("<button>")
+	.addClass("JS9SearchButton")
+	.prop("data-btn", "prev")
+	.html("&uarr;")
+	.appendTo(bar);
+    // event callback for next and prev
+    next.add(prev).on("click", function() {
+	if( bar.results && bar.results.length) {
+	    bar.currentIndex += $(this).is(prev) ? -1 : 1;
+	    if( bar.currentIndex < 0 ){
+		bar.currentIndex = bar.results.length - 1;
+	    }
+	    if( bar.currentIndex > bar.results.length - 1 ){
+		bar.currentIndex = 0;
+	    }
+	    jumpTo();
+	}
+    });
+    matchcase = $("<button>")
+	.addClass(`JS9SearchButton JS9SearchButton-${bar.opts.matchcase}`)
+	.prop("data-btn", "matchcase")
+	.html("Match Case")
+	.appendTo(bar);
+    btnColor(matchcase);
+    matchcase.on("click", function() {
+	bar.opts.matchcase = !bar.opts.matchcase;
+	btnColor(matchcase);
+    });
+    matchdiacritics = $("<button>")
+	.addClass(`JS9SearchButton JS9SearchButton-${bar.opts.matchdiacritics}`)
+	.prop("data-btn", "matchdiacritics")
+	.html("Match Diacritics")
+	.appendTo(bar);
+    btnColor(matchdiacritics);
+    matchdiacritics.on("click", function() {
+	bar.opts.matchdiacritics = !bar.opts.matchdiacritics;
+	btnColor(matchdiacritics);
+    });
+    matchwords = $("<button>")
+	.addClass(`JS9SearchButton JS9SearchButton-${bar.opts.matchwords}`)
+	.prop("data-btn", "matchwords")
+	.html("Whole Words")
+	.appendTo(bar);
+    btnColor(matchwords);
+    matchwords.on("click", function() {
+	bar.opts.matchwords = !bar.opts.matchwords;
+	btnColor(matchwords);
+    });
+    matchwildcards = $("<button>")
+	.addClass(`JS9SearchButton JS9SearchButton-${bar.opts.matchwildcards}`)
+	.prop("data-btn", "matchwildcards")
+	.html("Wildcards")
+	.appendTo(bar);
+    btnColor(matchwildcards);
+    matchwildcards.on("click", function() {
+	bar.opts.matchwildcards = !bar.opts.matchwildcards;
+	btnColor(matchwildcards);
+    });
+    // close the searchbar
+    close = $("<button>")
+	.addClass("JS9SearchButton")
+	.prop("data-btn", "close")
+	.html("Close")
+	.appendTo(bar);
+    close.on("click", function() {
+	text.unmark();
+	srch.val("");
+	bar.css("display", "none");
+    });
+    // no outline on focus
+    div.css("outline", "none");
+    // set tabindex so we can sense keypress
+    div.attr("tabindex", "0");
+    // meta-k will bring up the searchbar
+    div.on("keydown", (evt) => {
+	const code = evt.which || evt.keyCode;
+	const c = String.fromCharCode(code);
+	if( JS9.specialKey(evt) && c === 'F' ){
+	    if( bar.css("display") === "none" ){
+		bar.css("display", "block");
+	    } else {
+		text.unmark();
+		srch.val("");
+		bar.css("display", "none");
+	    }
+	}
+    });
 };
 
 // create a tooltip, with the tip formatted from a string containing
