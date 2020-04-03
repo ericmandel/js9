@@ -7257,6 +7257,12 @@ JS9.Image.prototype.copyParams = function(params, images, opts){
 		    val = this.getParam("bias");
 		    im.setParam("bias", val);
 		    break;
+		case "wcs":
+		    val = this.getParam("wcssys");
+		    im.setParam("wcssys", val);
+		    val = this.getParam("wcsunits");
+		    im.setParam("wcsunits", val);
+		    break;
 		default:
 		    val = this.getParam(param);
 		    im.setParam(param, val);

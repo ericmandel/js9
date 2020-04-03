@@ -2021,23 +2021,33 @@ functionality. The resulting <b>disable array</b> is returned.
 
 <h5 id="JS9.CopyParams">Copy image parameter(s) to one or more images</h5>
 <p>
-<code class="api">JS9.CopyParams(param, image)</code>
+<code class="api">JS9.CopyParams(param, image, opts)</code>
 <p>
 where:
 <ul>
 <li><b>param</b>: name of the parameter or array or parameters to copy
 <li><b>image</b>: target image or array of image to copy to
+<li><b>opts</b>: optional object
 </ul>
 <p>
 Copy parameters from the current image to one or more images.
 Any image parameter can be copied, but the most common ones are:
-"colormap", "flip", "pan", "rot90", "scale", "wcs", "zoom", and
-"contrastbias" (i.e., both "contrast" and "bias"). Note that copying a
-parameter results in <a href="#JS9.SetParam"><b>JS9.SetParam()</b></a>
-being called, triggering the corresponding core function if necessary.
-Thus, for example, copying the colormap will change the colormap of the
-target image. See <a href="#JS9.SetParam"><b>JS9.SetParam()</b></a> for
-more details about setting parameters.
+"colormap", "contrastbias" (i.e., both "contrast" and "bias"),
+"flip", "pan", "rot90", "scale", "wcs" (i.e., both "wcssys" and "wcsunits"),
+and "zoom". Note that copying a parameter results in
+<a href="#JS9.SetParam"><b>JS9.SetParam()</b></a> being called,
+triggering the corresponding core function if necessary.  Thus, for
+example, copying the colormap will change the colormap of the target
+image. See <a href="#JS9.SetParam"><b>JS9.SetParam()</b></a> for more
+details about setting parameters.
+
+<p>
+As a convenience, you can also copy "regions", which calls the
+<a href="#JS9.CopyRegions"><b>JS9.CopyRegions()</b></a> routine.
+Finally, you can also copy "shapes", which calls the
+<a href="#JS9.CopyShapes"><b>JS9.CopyShapes()</b></a> routine.
+In the latter case, you will need to pass the shape layer name in the
+<b>layer</b> property of the opts argument.
 
 <p>
 The target image(s) to copy to can be specified singly or as an array
