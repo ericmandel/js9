@@ -1099,9 +1099,8 @@ displays one or more regions, these will be created in the target images.
 
 <p>
 The operations that can be specified for sync'ing are: "colormap",
-"flip", "pan", "regions", "rot90", "scale", "wcs", "zoom", and
-"contrastbias".  If no array is specified, the default array in
-JS9.globalOpts.syncOps is used.
+"contrastbias", "flip", "pan", "regions", "rot90", "scale", "wcs", "zoom".
+If no array is specified, the default array in JS9.globalOpts.syncOps is used.
 
 <p>
 Images to synchronize can be specified singly or as an array of image
@@ -1169,8 +1168,8 @@ where:
 Unsynchronize previously sync'ed images.
 
 <p>
-The operations that can be specified for unsync'ing are:
-"colormap", "pan", "regions", "scale", "wcs", "zoom", and "contrastbias".
+The operations that can be specified for unsync'ing are: "colormap",
+"contrastbias", "flip", "pan", "regions", "rot90", "scale", "wcs", "zoom".
 If no array is specified, the default array in JS9.globalOpts.syncOps is
 used. Thus, you can turn off sync'ing for specified operations, while leaving
 others to be sync'ed.
