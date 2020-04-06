@@ -329,7 +329,7 @@ JS9.Blink.imagedisplay = function(im){
     JS9.Blink.activeImage.call(this, im);
 };
 
-// callback when image is displayed
+// callback when image is closed
 JS9.Blink.imageclose = function(im){
     JS9.Blink.removeImage.call(this, im);
 };
