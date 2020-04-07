@@ -13048,6 +13048,7 @@ JS9.Sync.xsync = function(did, target){
 	// sync images, if necessary
 	if( ims.length && ops.length ){
 	    im.syncImages(ops, ims);
+	    JS9.Sync.setCheckboxes(im);
 	}
     }
 };
@@ -13063,6 +13064,7 @@ JS9.Sync.xonce = function(did, target){
 	// copy params, if necessary
 	if( ims.length && ops.length ){
 	    im.copyParams(ops, ims);
+	    JS9.Sync.setCheckboxes(im);
 	}
     }
 };
@@ -13078,6 +13080,7 @@ JS9.Sync.xunsync = function(did, target){
 	// unsync images, if necessary
 	if( ims.length && ops.length ){
 	    im.unsyncImages(ops, ims);
+	    JS9.Sync.setCheckboxes(im);
 	}
     }
 };
@@ -13086,6 +13089,46 @@ JS9.Sync.xunsync = function(did, target){
 JS9.Sync.imid = function(im){
     const id = `${im.display.id}_${im.id}`;
     return `${id.replace(/[^A-Za-z0-9_]/g, "_")}SyncImage`;
+};
+
+// set checkbox for sync'ed options
+JS9.Sync.setCheckboxes = function(im){
+    let i, j, id, op, syncops, pinst;
+    // sanity check
+    if( !im ){
+	return
+    }
+    // get current instance of this plugin
+    pinst = im.display.pluginInstances.JS9Sync;
+    // first turn all checkboxes off
+    pinst.syncContainer.find(".JS9SyncOpCheck").prop("checked", false);
+    pinst.syncContainer.find(".JS9SyncImCheck").prop("checked", false);
+    // then turn on currently syn'ed options
+    syncops = JS9.globalOpts.syncOps;
+    // for each sync'ed op in this image ...
+    for(i=0; i<syncops.length; i++){
+	// get the op
+	op = syncops[i];
+	if( $.isArray(im.syncs[op]) ){
+	    // turn on the checkbox associated with this op
+	    pinst.syncContainer
+		.find(".JS9SyncOpCheck")
+		.filter(`[name=${op}]`)
+		.prop("checked", true);
+	    // for each file associated with the sync'ed op
+	    for(j=0; j<im.syncs[op].length; j++){
+		if( JS9.isImage(im.syncs[op][j]) ){
+		    // jquery doesn't like brackets in names
+		    id = im.syncs[op][j].id.replace(/\[.*\]/, "");
+		    // turn on the checkbox associated with this file
+		    pinst.syncContainer
+			.find(".JS9SyncImCheck")
+			.filter(`[name^=${id}]`)
+			.prop("checked", true);
+		}
+	    }
+	}
+    }
 };
 
 // add a sync op to the list of available ops
@@ -13248,6 +13291,10 @@ JS9.Sync.init = function(){
 	.attr("id", `${dispid}Footer`)
 	.html(s)
 	.appendTo(this.syncContainer);
+    // initialize sync values for this image
+    if( this.display.image && this.display.image.syncs ){
+	JS9.Sync.setCheckboxes(this.display.image);
+    }
 };
 
 // callback when dynamic selection is made
