@@ -507,6 +507,7 @@ JS9.Menubar.createMenus = function(){
 	    if( !tim ){
 		items.separates.disabled = true;
 	    }
+	    items.sync = xname("sync/unsync ...");
 	    items.syncs = {
 		name: "sync ...",
 		items: {
@@ -945,6 +946,9 @@ JS9.Menubar.createMenus = function(){
 				}
 				udisp.gather();
 			    }
+			    break;
+			case "sync":
+			    JS9.DisplayPlugin("JS9Sync", {display: udisp});
 			    break;
 			default:
 			    // maybe its a supermenu request

@@ -5753,7 +5753,7 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 		}
 	    }
             // look for params in the image object
-            if( r === undefined && this.params[t] !== undefined ){
+            if( r === undefined && this && this.params[t] !== undefined ){
 		// shorten some of the results
 		switch(t){
 		case "wcsunits":
@@ -7256,6 +7256,10 @@ JS9.Image.prototype.copyParams = function(params, images, opts){
 		    im.setParam("contrast", val);
 		    val = this.getParam("bias");
 		    im.setParam("bias", val);
+		    break;
+		case "pan":
+		    val = this.getPan(); 
+		    im.setPan(JS9.pix2pix(this, im, {x: val.ox, y: val.oy}));
 		    break;
 		case "wcs":
 		    val = this.getParam("wcssys");

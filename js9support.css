@@ -1626,54 +1626,6 @@ div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
     margin-bottom: 0px;
     border: 1px solid transparent;
 }
-.JS9PanZoomContainer {
-    padding: 5px;
-}
-
-.JS9PanZoomCol1 {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 80px;
-}
-
-.JS9PanZoomCol2 {
-    position: absolute;
-    top: 0;
-    left:  100px;
-    width: 80px;
-}
-
-.JS9PanZoomCol3 {
-    position: absolute;
-    top: 0;
-    left:  200px;
-    width: 80px;
-}
-
-.JS9PanZoomCol4 {
-    position: absolute;
-    top: 0;
-    left:  300px;
-    width: 80px;
-}
-
-.JS9PanZoomCol5 {
-    position: absolute;
-    top: 0;
-    left:  400px;
-    width: 100px;
-}
-
-.JS9PanZoomLinegroup {
-    float: left;
-    position: relative;
-    top: 0px;
-    left: 0px;
-    width: 95%;
-    padding: 5px;
-    margin: 5px;
-}
 .JS9ScaleContainer {
     padding: 5px;
 }
@@ -1691,6 +1643,60 @@ div.JS9MouseTouchHeader, div.JS9MouseTouchFooter {
 .JS9ScalePlot {
     border: 1px black solid;
 }
+div.JS9SeparateContainer {
+    padding: 2px;
+}
+
+div.JS9SeparateImage {
+    margin: 5px;
+    background: #E9E9E9;
+    overflow: auto;
+}
+
+div.JS9SeparateImageInactive {
+    padding: 10px;
+    border: 1px solid black;
+}
+
+div.JS9SeparateImageActive {
+    padding: 9px;
+    border: 2px solid #00F000;
+}
+
+div.JS9SeparateHeader {
+    border: 0px solid black;
+    background: #E9E9E9;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+}
+
+input.separateButton1 {
+    position: relative;
+    width: 120px;
+    left: 10px;
+}
+
+input.separateButton2 {
+    position: relative;
+    width: 90px;
+    left: 30px;
+}
+
+select.separateLayoutSelect {
+   margin-right: 5px;
+}
+
+#separateFile {
+    float: right;
+}
+
+#separateNoFile {
+    margin-left: 15px;
+}
+
 /* overflow scrolling technique: https://stackoverflow.com/questions/9672176/prevent-floated-divs-from-wrapping-to-new-line */
 /* this doesn't work on Linux Electron: it puts up arrows that get in the way */
 .JS9Statusbar {
@@ -1758,28 +1764,14 @@ img.JS9StatusbarImageOption[name*="color_"]{
 .JS9StatusbarPluginItem {
     vertical-align: middle;
 }
-div.JS9SeparateContainer {
+div.JS9SyncContainer {
     padding: 2px;
 }
 
-div.JS9SeparateImage {
-    margin: 5px;
-    background: #E9E9E9;
-    overflow: auto;
-}
-
-div.JS9SeparateImageInactive {
-    padding: 10px;
-    border: 1px solid black;
-}
-
-div.JS9SeparateImageActive {
-    padding: 9px;
-    border: 2px solid #00F000;
-}
-
-div.JS9SeparateHeader {
-    border: 0px solid black;
+div.JS9SyncHeader {
+    position: relative;
+    left: 0px;
+    top: 0px;
     background: #E9E9E9;
     padding: 0px;
     margin-left: 15px;
@@ -1788,30 +1780,89 @@ div.JS9SeparateHeader {
     margin-bottom: 0px;
 }
 
-input.separateButton1 {
+div.JS9SyncOpContainer {
     position: relative;
-    width: 120px;
-    left: 10px;
+    left: 0px;
+    top: 0px;
 }
 
-input.separateButton2 {
+div.JS9SyncOpRow {
     position: relative;
-    width: 90px;
-    left: 30px;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 24px;
 }
 
-select.separateLayoutSelect {
-   margin-right: 5px;
+span.JS9SyncOp {
+    background: #E9E9E9;
+    overflow: auto;
+    display: relative;
+    top: 0px;
+    /* calcualted in the code */
+    /* left: 0px; */
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
 }
 
-#separateFile {
-    float: right;
+div.JS9SyncText {
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 10px;
+    white-space: nowrap;
 }
 
-#separateNoFile {
+input.JS9SyncActiveCheck {
+    margin-left: 0px;
+}
+
+div.JS9SyncButtons {
+    margin-left: 0px;
+    margin-top: 30px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+}
+
+span.JS9SyncButton {
+    margin-right: 15px;
+}
+
+div.JS9SyncImageContainer {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    overflow: auto;
+}
+
+div.JS9SyncImageRow {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    background: #E9E9E9;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+    overflow: auto;
+    white-space: nowrap;
+}
+
+div.JS9SyncFooter {
+    border: 0px solid black;
+    background: #E9E9E9;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 15px;
+}
+
+span.JS9SyncNoFile {
     margin-left: 15px;
 }
-
 .JS9ToolbarContainer{
     border-style: solid;
     border-color: black;
@@ -1888,3 +1939,51 @@ select.separateLayoutSelect {
 }
 
 
+.JS9PanZoomContainer {
+    padding: 5px;
+}
+
+.JS9PanZoomCol1 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80px;
+}
+
+.JS9PanZoomCol2 {
+    position: absolute;
+    top: 0;
+    left:  100px;
+    width: 80px;
+}
+
+.JS9PanZoomCol3 {
+    position: absolute;
+    top: 0;
+    left:  200px;
+    width: 80px;
+}
+
+.JS9PanZoomCol4 {
+    position: absolute;
+    top: 0;
+    left:  300px;
+    width: 80px;
+}
+
+.JS9PanZoomCol5 {
+    position: absolute;
+    top: 0;
+    left:  400px;
+    width: 100px;
+}
+
+.JS9PanZoomLinegroup {
+    float: left;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 95%;
+    padding: 5px;
+    margin: 5px;
+}
