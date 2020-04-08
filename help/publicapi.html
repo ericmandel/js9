@@ -1098,9 +1098,19 @@ command is executed immediately. If the current image already
 displays one or more regions, these will be created in the target images.
 
 <p>
-The operations that can be specified for sync'ing are: "colormap",
-"contrastbias", "flip", "pan", "regions", "rot90", "scale", "wcs", "zoom".
+The operations that can be specified for sync'ing are:
+"alignment", "colormap", "contrastbias" (i.e., both "contrast" and "bias"),
+"flip", "pan", "regions", "rot90", "scale", "wcs" (i.e., both "wcssys" and
+"wcsunits"), and "zoom".
 If no array is specified, the default array in JS9.globalOpts.syncOps is used.
+
+<p>
+Regions calls the
+<a href="#JS9.CopyRegions"><b>JS9.CopyRegions()</b></a> routine.
+Alignment calls
+<a href="#JS9.AlignPanZoom"><b>JS9.AlignPanZoom()</b></a> in order to
+keep the pixel size and displayed center position constant between the
+sync'ed images. It assumes no rotation between the two images.
 
 <p>
 Images to synchronize can be specified singly or as an array of image
@@ -1168,8 +1178,10 @@ where:
 Unsynchronize previously sync'ed images.
 
 <p>
-The operations that can be specified for unsync'ing are: "colormap",
-"contrastbias", "flip", "pan", "regions", "rot90", "scale", "wcs", "zoom".
+The operations that can be specified for unsync'ing are:
+"alignment", "colormap", "contrastbias" (i.e., both "contrast" and "bias"),
+"flip", "pan", "regions", "rot90", "scale", "wcs" (i.e., both "wcssys" and
+"wcsunits"), and "zoom".
 If no array is specified, the default array in JS9.globalOpts.syncOps is
 used. Thus, you can turn off sync'ing for specified operations, while leaving
 others to be sync'ed.
@@ -2031,7 +2043,7 @@ where:
 <p>
 Copy parameters from the current image to one or more images.
 Any image parameter can be copied, but the most common ones are:
-"colormap", "contrastbias" (i.e., both "contrast" and "bias"),
+"alignment", "colormap", "contrastbias" (i.e., both "contrast" and "bias"),
 "flip", "pan", "rot90", "scale", "wcs" (i.e., both "wcssys" and "wcsunits"),
 and "zoom". Note that copying a parameter results in
 <a href="#JS9.SetParam"><b>JS9.SetParam()</b></a> being called,
@@ -2041,8 +2053,12 @@ image. See <a href="#JS9.SetParam"><b>JS9.SetParam()</b></a> for more
 details about setting parameters.
 
 <p>
-As a convenience, you can also copy "regions", which calls the
+Regions calls the
 <a href="#JS9.CopyRegions"><b>JS9.CopyRegions()</b></a> routine.
+Alignment calls
+<a href="#JS9.AlignPanZoom"><b>JS9.AlignPanZoom()</b></a> in order to
+keep the pixel size and displayed center position constant between the
+sync'ed images. It assumes no rotation between the two images.
 Finally, you can also copy "shapes", which calls the
 <a href="#JS9.CopyShapes"><b>JS9.CopyShapes()</b></a> routine.
 In the latter case, you will need to pass the shape layer name in the

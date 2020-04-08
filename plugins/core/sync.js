@@ -11,7 +11,7 @@ JS9.Sync = {};
 JS9.Sync.CLASS = "JS9";     // class of plugins (1st part of div class)
 JS9.Sync.NAME = "Sync";     // name of this plugin (2nd part of div class)
 JS9.Sync.WIDTH =  512;	    // width of light window
-JS9.Sync.HEIGHT = 335;	    // height of light window
+JS9.Sync.HEIGHT = 370;	    // height of light window
 JS9.Sync.BASE = JS9.Sync.CLASS + JS9.Sync.NAME;  // CSS base class name
 
 JS9.Sync.HEADER = "<div class='JS9SyncText'><br><b>%s:</b></div>";
@@ -310,7 +310,7 @@ JS9.Sync.init = function(){
     for(j=0; j<nrow; j++){
 	html = `<div class="${JS9.Sync.BASE}OpRow" id="${this.id}SyncOpRow">`;
 	for(i=0; i<JS9.Sync.NCOL; i++){
-	    idx = i * JS9.Sync.NCOL + j;
+	    idx = i * nrow + j;
 	    if( syncops[idx] ){
 		op = syncops[idx];
 		html += JS9.Sync.addOp.call(this, op, i);
@@ -586,6 +586,9 @@ JS9.Sync.xeqSync = function(arr){
 	    }
 	    try{
 		switch(obj.xop){
+		case "alignment":
+		    xim.alignPanZoom(this);
+		    break;
 		case "colormap":
 		    xim.setColormap(this.params.colormap);
 		    break;
@@ -775,23 +778,30 @@ JS9.Sync.xeqSync = function(arr){
 // sync images, if necessary
 // inner routine called by JS9.xeqPlugins callbacks
 // called in image context
-JS9.Sync.maybeSync = function(op, arg){
-    let i, ims;
+JS9.Sync.maybeSync = function(ops, arg){
+    let i, j, ims, op;
     const arr = [];
     // sanity check
     if( !JS9.Sync.ready || !this.syncs || this.tmp.syncRunning ){
 	return;
     }
+    if( !$.isArray(ops) ){
+	ops = [ops];
+    }
     // do we need to sync images for this operation?
-    if( this.syncs && this.syncs.active &&
-	$.isArray(this.syncs[op]) && this.syncs[op].length ){
-	// setup sync of all target images
-	ims = this.syncs[op];
-	for(i=0; i<ims.length; i++){
-	    arr.push({xim: ims[i], xop: op, xarg: arg});
+    if( this.syncs && this.syncs.active ){
+	for(j=0; j<ops.length; j++){
+	    op = ops[j];
+	    if( $.isArray(this.syncs[op]) && this.syncs[op].length ){
+		// setup sync of all target images
+		ims = this.syncs[op];
+		for(i=0; i<ims.length; i++){
+		    arr.push({xim: ims[i], xop: op, xarg: arg});
+		}
+		// sync target images
+		JS9.Sync.xeqSync.call(this, arr);
+	    }
 	}
-	// sync target images
-	JS9.Sync.xeqSync.call(this, arr);
     }
 };
 
@@ -811,19 +821,19 @@ JS9.Sync.changecontrastbias = function(im){
 // onsetflip
 JS9.Sync.setflip = function(im){
     if( !im ){ return; }
-    JS9.Sync.maybeSync.call(im, "flip");
+    JS9.Sync.maybeSync.call(im, ["flip","alignment"]);
 };
 
 // onsetpan
 JS9.Sync.setpan = function(im){
     if( !im ){ return; }
-    JS9.Sync.maybeSync.call(im, "pan");
+    JS9.Sync.maybeSync.call(im, ["pan","alignment"]);
 };
 
 // onsetrot90
 JS9.Sync.setrot90 = function(im){
     if( !im ){ return; }
-    JS9.Sync.maybeSync.call(im, "rot90");
+    JS9.Sync.maybeSync.call(im, ["rot90","alignment"]);
 };
 
 // onregionschange
@@ -853,7 +863,7 @@ JS9.Sync.setwcsunits = function(im){
 // onsetzoom
 JS9.Sync.setzoom = function(im){
     if( !im ){ return; }
-    JS9.Sync.maybeSync.call(im, "zoom");
+    JS9.Sync.maybeSync.call(im, ["zoom","alignment"]);
 };
 
 // callback when an image is loaded
