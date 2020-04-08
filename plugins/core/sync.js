@@ -905,5 +905,6 @@ JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
 		    onimagedisplay:  JS9.Sync.imagedisplay,
 		    onimageload:     JS9.Sync.mageload,
 		    onimageclose:    JS9.Sync.imageclose,
-		    winTitle: "Sync Images",
+		    help:            "help/sync.html",
+		    winTitle:        "Sync Images",
 		    winDims: [JS9.Sync.WIDTH, JS9.Sync.HEIGHT]});
