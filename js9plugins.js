@@ -13788,7 +13788,7 @@ JS9.RegisterPlugin(JS9.SyncUI.CLASS, JS9.SyncUI.NAME, JS9.SyncUI.init,
 		    onimagedisplay:  JS9.SyncUI.imagedisplay,
 		    onimageload:     JS9.SyncUI.mageload,
 		    onimageclose:    JS9.SyncUI.imageclose,
-		    help:            "help/sync.html",
+		    help:            "help/syncui.html",
 		    winTitle:        "Sync Images",
 		    winDims: [JS9.SyncUI.WIDTH, JS9.SyncUI.HEIGHT]});
 /*
