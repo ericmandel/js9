@@ -13133,13 +13133,25 @@ JS9.Sync.setCheckboxes = function(im){
 
 // add a sync op to the list of available ops
 JS9.Sync.addOp = function(op, ncol){
-    let s, left, top;
+    let s, left, top, opname;
     const opts = [];
     const cls = `${JS9.Sync.BASE}Op`;
+    // pre-processing
+    switch(op){
+    case "contrastbias":
+	opname = "contrast/bias";
+	break;
+    case "wcs":
+	opname = "wcs sys/units";
+	break;
+    default:
+	opname = op;
+	break;
+    }
     // value to pass to the macro expander
     opts.push({name: "op", value: op});
     opts.push({name: "opactive", value: sprintf(JS9.Sync.opactiveHTML, op)});
-    opts.push({name: "opname", value: sprintf(JS9.Sync.opnameHTML, op)});
+    opts.push({name: "opname", value: sprintf(JS9.Sync.opnameHTML, opname)});
     // create the html for this op
     s = JS9.Image.prototype.expandMacro.call(null, JS9.Sync.opHTML, opts);
     this.syncOpDivs++;
