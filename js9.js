@@ -7236,20 +7236,17 @@ JS9.Image.prototype.copyParams = function(params, images, opts){
 	if( im === this ){
 	    continue;
 	}
-	// don't redisplay anything
-	im.displayMode = false;
+	// don't redisplay if this image is not being displayed already
+	if( im !== im.display.image ){
+	    im.displayMode = false;
+	}
 	try{
 	    // set each param
 	    for(j=0; j<params.length; j++){
 		param = params[j];
 		switch(param){
-		case "regions":
-		    this.copyRegions(im);
-		    break;
-		case "shapes":
-		    if( opts.layer ){
-			this.copyShapes(opts.layer, im);
-		    }
+		case "alignment":
+		    im.alignPanZoom(this);
 		    break;
 		case "contrastbias":
 		    val = this.getParam("contrast");
@@ -7260,6 +7257,14 @@ JS9.Image.prototype.copyParams = function(params, images, opts){
 		case "pan":
 		    val = this.getPan(); 
 		    im.setPan(JS9.pix2pix(this, im, {x: val.ox, y: val.oy}));
+		    break;
+		case "regions":
+		    this.copyRegions(im);
+		    break;
+		case "shapes":
+		    if( opts.layer ){
+			this.copyShapes(opts.layer, im);
+		    }
 		    break;
 		case "wcs":
 		    val = this.getParam("wcssys");
@@ -7277,8 +7282,10 @@ JS9.Image.prototype.copyParams = function(params, images, opts){
 	    JS9.error(`could not copy params for ${im.id}`);
 	}
 	finally{
-	    // re-enable display
-	    im.displayMode = true;
+	    // re-enable display, if necessary
+	    if( im !== im.display.image ){
+		im.displayMode = true;
+	    }
 	}
     }
 };
@@ -21844,6 +21851,9 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
     instance.name = plugin.name;
     // routine to tell if this instance active
     instance.isActive = function(cbname){
+	if( this.plugin.opts.alwaysActive ){
+	    return true;
+	}
 	if( this.status !== "active" ){
 	    return false;
 	}

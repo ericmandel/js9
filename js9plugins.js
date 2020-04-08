@@ -13096,13 +13096,9 @@ JS9.Sync.init = function(){
     // this.display:  the display object associated with this plugin
     // this.dispMode: display mode (for internal use)
     //
-    // create container to hold image container and header
-    // initialize params
-    if( this.idx === undefined ){
-	this.idx = 0;
-    }
-    if( this.rate === undefined ){
-	this.rate = JS9.Sync.rate;
+    // sanity check since we are always active
+    if( !this.divjq || !this.divjq.is(":visible") ){
+	return;
     }
     // clean main container
     this.divjq.html("");
@@ -13761,6 +13757,7 @@ JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
 		    onimagedisplay:  JS9.Sync.imagedisplay,
 		    onimageload:     JS9.Sync.mageload,
 		    onimageclose:    JS9.Sync.imageclose,
+		    alwaysActive:    true,
 		    help:            "help/sync.html",
 		    winTitle:        "Sync Images",
 		    winDims: [JS9.Sync.WIDTH, JS9.Sync.HEIGHT]});
