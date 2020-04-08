@@ -144,7 +144,7 @@ JS9.Sync.setCheckboxes = function(im){
 	    // turn on the checkbox associated with this op
 	    pinst.syncContainer
 		.find(".JS9SyncOpCheck")
-		.filter(`[name=${op}]`)
+		.filter(`[name='${op}']`)
 		.prop("checked", true);
 	    // for each file associated with the sync'ed op
 	    for(j=0; j<im.syncs[op].length; j++){
@@ -154,7 +154,7 @@ JS9.Sync.setCheckboxes = function(im){
 		    // turn on the checkbox associated with this file
 		    pinst.syncContainer
 			.find(".JS9SyncImCheck")
-			.filter(`[name^=${id}]`)
+			.filter(`[name^='${id}']`)
 			.prop("checked", true);
 		}
 	    }
