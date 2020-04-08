@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head> 
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<link type="text/css" rel="stylesheet" href="../../js9.css">
+<title>Plugin: JS9Sync</title>
+</head>
+<body>
+<div class="helpLogo"><img src="../../images/js9logo.png" alt="js9"></div>
+<div class="helpContainer">
+<h3>JS9 Sync Images</h3>
+
+<p>
+Synchronize two or more images, so that when an operation is performed
+on one image, it also is performed on the other(s). For example, when
+the colormap or scale is changed on an image, it also is changed on
+the sync'ed images. Or, when a region is created, moved, resized, or
+removed on an image, the same happens on the sync'ed images. You also
+can synchronize once only.
+
+<p>
+The plugin displays a list of images that can be sync'ed with the
+current image, as well as a list of operations that can be sync'ed,
+including "colormap", "contrast/bias", "flip", "pan", "regions",
+"rot90", "scale", "wcs sys/units", and "zoom". Choose one or more
+images to sync and one or more operations for sync'ing and then
+click <b>Sync Repeatedly"</b> or <b>Sync Once</b>. The first routine
+calls <b>JS9.SyncImages()</b> while the second calls <b>JS9.CopyParams()</b>
+to perform repeated or single synchronizing, respectively. You also can
+<b>Unsync</b> operations that previously had been set up for repeated
+synchronization.
+
+<p>
+Upon initialization, the displayed images and ops checkboxes will show
+both images and operations sync'ed with the currently displayed
+image. When you execute a new repeated synchronization, the displayed
+checkboxes will be updated appropriately.  Note that if you
+synchronize once only, the display will not reflect this one-time
+action (but will continue to reflect repeated synchronizations, if
+any). This makes it clear which images and ops are repeatedly sync'ed
+and thus makes it easier to unsync operations.
+</div>
+</body>
+</html>
