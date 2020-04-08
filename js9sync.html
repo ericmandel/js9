@@ -9,8 +9,8 @@
   <link type="text/css" rel="stylesheet" href="js9support.css">
   <link type="text/css" rel="stylesheet" href="js9.css">
   <script type="text/javascript" src="js9prefs.js"></script>
-  <script type="text/javascript" src="js9support.min.js"></script>
-  <script type="text/javascript" src="js9.min.js"></script>
+  <script type="text/javascript" src="js9support.js"></script>
+  <script type="text/javascript" src="js9.js"></script>
   <script type="text/javascript" src="js9plugins.js"></script>
   <title>JS9 sync</title>
   <style type="text/css">
@@ -38,12 +38,14 @@
     <b>JS9 Sync: synchronize operations between two or more images</b>
     </font></center>
     <p>
-    You can use the <b>File->sync images ...</b> menu option to
-    synchronize two or more images, so that when an operation is
-    performed on one image (e.g. change of <b>colormap, contrast/bias,
-    pan, regions, scale, wcs, zoom</b>), it also is performed on the
-    other image(s). First, choose the operations that you want to
-    sync. Then choose the images that should be kept in sync.
+    You can use the <b>View -> Sync Images</b> plugin to synchronize
+    two or more images, so that when an operation is performed on one
+    image (e.g. change of <b>colormap, contrast/bias, pan, regions,
+    scale, wcs, zoom</b>), it also is performed on the other image(s).
+    First choose the images that should be kept in sync.  The choose
+    the operations that you want to sync. Click <b>Sync Repeatedly</b>
+    to keep these images in sync. You can also sync once only by clicking
+    <b>Sync Once</b>.
     <p>
     By default, synchronization is <b>reciprocated</b>: a change in any
     image causes the others to be synchronized. Synchronization can be
@@ -234,9 +236,9 @@
                 bim0.setPan({px: 4018, py: 4000});
                 bim0.addShapes("regions",
                     'FK5; box(06:16:22.055, -21:22:24.017, 40", 30")');
-              }, 250);
+              }, 1000);
               window.setTimeout(function(){
-	          xinit();
+//	          xinit();
 	      }, 1000);
           }}, {display: "bim2_JS9"});
         }}, {display: "bim1_JS9"});

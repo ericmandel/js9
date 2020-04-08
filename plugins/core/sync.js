@@ -779,8 +779,7 @@ JS9.Sync.xeqSync = function(arr){
 // inner routine called by JS9.xeqPlugins callbacks
 // called in image context
 JS9.Sync.maybeSync = function(ops, arg){
-    let i, j, ims, op;
-    const arr = [];
+    let i, j, ims, op, arr;
     // sanity check
     if( !JS9.Sync.ready || !this.syncs || this.tmp.syncRunning ){
 	return;
@@ -795,6 +794,7 @@ JS9.Sync.maybeSync = function(ops, arg){
 	    if( $.isArray(this.syncs[op]) && this.syncs[op].length ){
 		// setup sync of all target images
 		ims = this.syncs[op];
+		arr = [];
 		for(i=0; i<ims.length; i++){
 		    arr.push({xim: ims[i], xop: op, xarg: arg});
 		}
