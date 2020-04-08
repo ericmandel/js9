@@ -7138,85 +7138,6 @@ JS9.Menubar.createMenus = function(){
 	    if( !tim ){
 		items.separates.disabled = true;
 	    }
-	    items.sync = xname("sync/unsync ...");
-	    items.syncs = {
-		name: "sync ...",
-		items: {
-		    syncstitle: {
-			name: "sync/unsync images:",
-			disabled: true
-		    }
-		}
-	    };
-	    items.syncs.items.sync = {
-		name: "sync images ...",
-		items: { }
-	    };
-	    items.syncs.items.unsync = {
-		name: "unsync images ...",
-		items: { }
-	    };
-	    if( tim ){
-		// sync target images to this image
-		items.syncs.items.sync.disabled = false;
-		items.syncs.items.sync.items.sync_opstitle = {
-		    name: "op(s) which trigger syncing:",
-		    disabled: true
-		};
-		items.syncs.items.sync.items.syncops = {
-		    value: JS9.globalOpts.syncOps,
-		    type: "textarea"
-		};
-		items.syncs.items.sync.items.syncreciprocate = {
-		    name: "reciprocal syncing",
-		    selected: JS9.globalOpts.syncReciprocate,
-		    type: "checkbox"
-		};
-		items.syncs.items.sync.items.syncwcs = {
-		    name: "sync using wcs",
-		    selected: JS9.globalOpts.syncWCS,
-		    type: "checkbox"
-		};
-		items.syncs.items.sync.items[`sep${n++}`] = "------";
-		items.syncs.items.sync.items.title = {name: "image(s) to keep in sync:",
-					  disabled: true};
-		for(i=0; i<JS9.images.length; i++){
-		    if( tim !== JS9.images[i]    	     ){
-			s1 = `sync_${JS9.images[i].id}`;
-			items.syncs.items.sync.items[s1] = xname(JS9.images[i].id);
-		    }
-		}
-		items.syncs.items.sync.items.sync_allimages = xname("all images");
-		// unsync target images to this image
-		items.syncs.items.unsync.disabled = false;
-		items.syncs.items.unsync.items.unsync_opstitle = {
-		    name: "op(s) to unsync:",
-		    disabled: true
-		};
-		items.syncs.items.unsync.items.unsyncops = {
-		    value: JS9.globalOpts.syncOps,
-		    type: "textarea"
-		};
-		items.syncs.items.unsync.items.unsyncreciprocate = {
-		    name: "unsync reciprocals",
-		    selected: JS9.globalOpts.syncReciprocate,
-		    type: "checkbox"
-		};
-		items.syncs.items.unsync.items[`sep${n++}`] = "------";
-		items.syncs.items.unsync.items.title = {name: "image(s) to unsync:",
-					    disabled: true};
-		for(i=0; i<JS9.images.length; i++){
-		    if( tim !== JS9.images[i]    	     ){
-			s1 = `unsync_${JS9.images[i].id}`;
-			items.syncs.items.unsync.items[s1] = xname(JS9.images[i].id);
-		    }
-		}
-		items.syncs.items.unsync.items.unsync_allimages = xname("all images");
-	    } else {
-		items.syncs.disabled = true;
-		items.syncs.items.sync.disabled = true;
-		items.syncs.items.unsync.disabled = true;
-	    }
 	    items.closes = {
 		name: "close ...",
 		items: {
@@ -7356,11 +7277,12 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    return {
+		// eslint-disable-next-line no-unused-vars
                 callback: (key, opt) => {
 		    let uplugin;
 		    JS9.Menubar.getDisplays.call(this, "any", key)
 			.forEach((val) => {
-			let j, s, t, did, kid, unew, uwin, uobj, uarr, uopts;
+			let j, s, t, did, kid, unew, uwin;
 			const udisp = val;
 			let uim = udisp.image;
 			// make sure display is still valid
@@ -7578,9 +7500,6 @@ JS9.Menubar.createMenus = function(){
 				udisp.gather();
 			    }
 			    break;
-			case "sync":
-			    JS9.DisplayPlugin("JS9Sync", {display: udisp});
-			    break;
 			default:
 			    // maybe its a supermenu request
 			    if( key.match(/^super_/) ){
@@ -7602,39 +7521,6 @@ JS9.Menubar.createMenus = function(){
                                                    "light");
 				} else {
 				    uim.moveToDisplay(unew);
-				}
-				return;
-			    }
-			    if( uim && key.match(/^sync_/) ){
-				uobj = $.contextMenu.getInputValues(opt);
-				if( uobj.syncops ){
-				    uarr = uobj.syncops.trim().split(",");
-				} else {
-				    uarr = null;
-				}
-				uopts = {reciprocate: uobj.syncreciprocate,
-					 syncwcs: uobj.syncwcs};
-				unew = key.replace(/^sync_/,"");
-				if( unew === "allimages" ){
-				    uim.syncImages(uarr, null, uopts);
-				} else {
-				    uim.syncImages(uarr, [unew], uopts);
-				}
-				return;
-			    }
-			    if( uim && key.match(/^unsync_/) ){
-				uobj = $.contextMenu.getInputValues(opt);
-				if( uobj.unsyncops ){
-				    uarr = uobj.unsyncops.trim().split(",");
-				} else {
-				    uarr = null;
-				}
-				uopts = {reciprocate: uobj.syncreciprocate};
-				unew = key.replace(/^unsync_/,"");
-				if( unew === "allimages" ){
-				    uim.unsyncImages(uarr, null, uopts);
-				} else {
-				    uim.unsyncImages(uarr, [unew], uopts);
 				}
 				return;
 			    }
@@ -13861,7 +13747,8 @@ JS9.mkPublic("UnsyncImages", "unsyncImages");
 
 // register the plugin
 JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
-		   {onsetcolormap:   JS9.Sync.setcolormap,
+		   {menuItem:        "Sync Images",
+		    onsetcolormap:   JS9.Sync.setcolormap,
 		    onsetflip:       JS9.Sync.setflip,
 		    onsetpan:        JS9.Sync.setpan,
 		    onregionschange: JS9.Sync.regionschange,
@@ -13874,7 +13761,8 @@ JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
 		    onimagedisplay:  JS9.Sync.imagedisplay,
 		    onimageload:     JS9.Sync.mageload,
 		    onimageclose:    JS9.Sync.imageclose,
-		    winTitle: "Sync Images",
+		    help:            "help/sync.html",
+		    winTitle:        "Sync Images",
 		    winDims: [JS9.Sync.WIDTH, JS9.Sync.HEIGHT]});
 /*
  * toolbar plugin (February 6, 2018)

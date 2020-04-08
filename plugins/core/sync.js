@@ -892,7 +892,8 @@ JS9.mkPublic("UnsyncImages", "unsyncImages");
 
 // register the plugin
 JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
-		   {onsetcolormap:   JS9.Sync.setcolormap,
+		   {menuItem:        "Sync Images",
+		    onsetcolormap:   JS9.Sync.setcolormap,
 		    onsetflip:       JS9.Sync.setflip,
 		    onsetpan:        JS9.Sync.setpan,
 		    onregionschange: JS9.Sync.regionschange,
