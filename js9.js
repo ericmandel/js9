@@ -21851,9 +21851,6 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
     instance.name = plugin.name;
     // routine to tell if this instance active
     instance.isActive = function(cbname){
-	if( this.plugin.opts.alwaysActive ){
-	    return true;
-	}
 	if( this.status !== "active" ){
 	    return false;
 	}

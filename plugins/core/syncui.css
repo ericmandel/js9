@@ -1,0 +1,99 @@
+div.JS9SyncUIContainer {
+    padding: 2px;
+}
+
+div.JS9SyncUIHeader {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    background: #E9E9E9;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+}
+
+div.JS9SyncUIOpContainer {
+    position: relative;
+    left: 0px;
+    top: 0px;
+}
+
+div.JS9SyncUIOpRow {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 24px;
+}
+
+span.JS9SyncUIOp {
+    background: #E9E9E9;
+    overflow: auto;
+    display: relative;
+    top: 0px;
+    /* calcualted in the code */
+    /* left: 0px; */
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+}
+
+div.JS9SyncUIText {
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 10px;
+    white-space: nowrap;
+}
+
+input.JS9SyncUIActiveCheck {
+    margin-left: 0px;
+}
+
+div.JS9SyncUIButtons {
+    margin-left: 0px;
+    margin-top: 30px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+}
+
+span.JS9SyncUIButton {
+    margin-right: 15px;
+}
+
+div.JS9SyncUIImageContainer {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    overflow: auto;
+}
+
+div.JS9SyncUIImageRow {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    background: #E9E9E9;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+    overflow: auto;
+    white-space: nowrap;
+}
+
+div.JS9SyncUIFooter {
+    border: 0px solid black;
+    background: #E9E9E9;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 15px;
+}
+
+span.JS9SyncUINoFile {
+    margin-left: 15px;
+}

@@ -1764,11 +1764,11 @@ img.JS9StatusbarImageOption[name*="color_"]{
 .JS9StatusbarPluginItem {
     vertical-align: middle;
 }
-div.JS9SyncContainer {
+div.JS9SyncUIContainer {
     padding: 2px;
 }
 
-div.JS9SyncHeader {
+div.JS9SyncUIHeader {
     position: relative;
     left: 0px;
     top: 0px;
@@ -1780,13 +1780,13 @@ div.JS9SyncHeader {
     margin-bottom: 0px;
 }
 
-div.JS9SyncOpContainer {
+div.JS9SyncUIOpContainer {
     position: relative;
     left: 0px;
     top: 0px;
 }
 
-div.JS9SyncOpRow {
+div.JS9SyncUIOpRow {
     position: relative;
     left: 0px;
     top: 0px;
@@ -1794,7 +1794,7 @@ div.JS9SyncOpRow {
     height: 24px;
 }
 
-span.JS9SyncOp {
+span.JS9SyncUIOp {
     background: #E9E9E9;
     overflow: auto;
     display: relative;
@@ -1807,7 +1807,7 @@ span.JS9SyncOp {
     margin-bottom: 0px;
 }
 
-div.JS9SyncText {
+div.JS9SyncUIText {
     margin-left: 15px;
     margin-top: 5px;
     margin-right: 5px;
@@ -1815,29 +1815,29 @@ div.JS9SyncText {
     white-space: nowrap;
 }
 
-input.JS9SyncActiveCheck {
+input.JS9SyncUIActiveCheck {
     margin-left: 0px;
 }
 
-div.JS9SyncButtons {
+div.JS9SyncUIButtons {
     margin-left: 0px;
     margin-top: 30px;
     margin-right: 0px;
     margin-bottom: 0px;
 }
 
-span.JS9SyncButton {
+span.JS9SyncUIButton {
     margin-right: 15px;
 }
 
-div.JS9SyncImageContainer {
+div.JS9SyncUIImageContainer {
     position: relative;
     left: 0px;
     top: 0px;
     overflow: auto;
 }
 
-div.JS9SyncImageRow {
+div.JS9SyncUIImageRow {
     position: relative;
     left: 0px;
     top: 0px;
@@ -1850,7 +1850,7 @@ div.JS9SyncImageRow {
     white-space: nowrap;
 }
 
-div.JS9SyncFooter {
+div.JS9SyncUIFooter {
     border: 0px solid black;
     background: #E9E9E9;
     padding: 0px;
@@ -1860,7 +1860,7 @@ div.JS9SyncFooter {
     margin-bottom: 15px;
 }
 
-span.JS9SyncNoFile {
+span.JS9SyncUINoFile {
     margin-left: 15px;
 }
 .JS9ToolbarContainer{

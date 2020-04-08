@@ -3,349 +3,13 @@
  * whenever an operation is performed on this image, sync the target images
  */
 
-/*global JS9, $, sprintf */
+/*global JS9, $ */
 
 "use strict";
 
 JS9.Sync = {};
 JS9.Sync.CLASS = "JS9";     // class of plugins (1st part of div class)
 JS9.Sync.NAME = "Sync";     // name of this plugin (2nd part of div class)
-JS9.Sync.WIDTH =  512;	    // width of light window
-JS9.Sync.HEIGHT = 370;	    // height of light window
-JS9.Sync.BASE = JS9.Sync.CLASS + JS9.Sync.NAME;  // CSS base class name
-
-JS9.Sync.HEADER = "<div class='JS9SyncText'><br><b>%s:</b></div>";
-JS9.Sync.NCOL = 3;	    // number of columns in the ops display
-JS9.Sync.COLWIDTH = 175;    // width of each ops column
-
-JS9.Sync.headerHTML="Synchronize two or more images, so that when an operation is performed on one image, it also is performed on the other(s). Or sync once only.";
-
-JS9.Sync.opHTML="$opactive&nbsp;&nbsp;$opname";
-
-JS9.Sync.opactiveHTML='<input class="JS9SyncOpCheck" type="checkbox" name="%s" value="active"">';
-
-JS9.Sync.opnameHTML='<b>%s</b>';
-
-JS9.Sync.imageHTML="$imactive&nbsp;&nbsp;$imfile";
-
-JS9.Sync.imactiveHTML='<input class="JS9SyncImCheck" type="checkbox" name="%s" value="active">';
-
-JS9.Sync.imfileHTML='<b>%s</b>';
-
-JS9.Sync.nofileHTML='<p><span class="JS9SyncNoFile">[Images will appear here as they are loaded]</span>';
-
-JS9.Sync.footerHTML='<div class="JS9SyncButtons" <p>$sync&nbsp;&nbsp;&nbsp;&nbsp;$once&nbsp;&nbsp;&nbsp;&nbsp;$unsync</div>';
-
-JS9.Sync.syncHTML='<span class="JS9SyncButton"><input type="button" class="JS9SyncButton" id="active" name="sync" value="Sync Repeatedly" onclick="javascript:JS9.Sync.xsync(\'%s\', this)"></span>';
-
-JS9.Sync.onceHTML='<span class="JS9SyncButton"><input type="button" class="JS9SyncButton" id="active" name="once" value="Sync Once" onclick="javascript:JS9.Sync.xonce(\'%s\', this)"></span>';
-
-JS9.Sync.unsyncHTML='<span class="JS9SyncButton"><input type="button" class="JS9SyncButton" id="active" name="unsync" value="Unsync" onclick="javascript:JS9.Sync.xunsync(\'%s\', this)"></span>';
-
-
-JS9.Sync.getImsOps = function(el){
-    const container = el.closest(".JS9SyncContainer");
-    const ops = [];
-    const ims = [];
-    if( container.length ){
-	// gather all selected images
-	container.find(".JS9SyncImCheck").each((index, element) => {
-	    let name = $(element).prop("name");
-	    let checked = $(element).prop("checked");
-	    if( checked ){
-		ims.push(name);
-	    }
-	});
-	// gather all selected ops
-	container.find(".JS9SyncOpCheck").each((index, element) => {
-	    let name = $(element).prop("name");
-	    let checked = $(element).prop("checked");
-	    if( checked ){
-		ops.push(name);
-	    }
-	});
-    }
-    return {ims, ops};
-};
-
-// sync
-JS9.Sync.xsync = function(did, target){
-    let im;
-    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(did));
-    if( display.image ){
-	im = display.image;
-	// get ims and opts
-	const {ims, ops} = JS9.Sync.getImsOps($(target));
-	// sync images, if necessary
-	if( ims.length && ops.length ){
-	    im.syncImages(ops, ims);
-	    JS9.Sync.setCheckboxes(im);
-	}
-    }
-};
-
-// sync once
-JS9.Sync.xonce = function(did, target){
-    let im;
-    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(did));
-    if( display.image ){
-	im = display.image;
-	// get ims and opts
-	const {ims, ops} = JS9.Sync.getImsOps($(target));
-	// copy params, if necessary
-	if( ims.length && ops.length ){
-	    im.copyParams(ops, ims);
-	    JS9.Sync.setCheckboxes(im);
-	}
-    }
-};
-
-// unsync
-JS9.Sync.xunsync = function(did, target){
-    let im;
-    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(did));
-    if( display.image ){
-	im = display.image;
-	// get ims and opts
-	const {ims, ops} = JS9.Sync.getImsOps($(target));
-	// unsync images, if necessary
-	if( ims.length && ops.length ){
-	    im.unsyncImages(ops, ims);
-	    JS9.Sync.setCheckboxes(im);
-	}
-    }
-};
-
-// get a SyncImage id based on the file image id
-JS9.Sync.imid = function(im){
-    const id = `${im.display.id}_${im.id}`;
-    return `${id.replace(/[^A-Za-z0-9_]/g, "_")}SyncImage`;
-};
-
-// set checkbox for sync'ed options
-JS9.Sync.setCheckboxes = function(im){
-    let i, j, id, op, syncops, pinst;
-    // sanity check
-    if( !im ){
-	return
-    }
-    // get current instance of this plugin
-    pinst = im.display.pluginInstances.JS9Sync;
-    // first turn all checkboxes off
-    pinst.syncContainer.find(".JS9SyncOpCheck").prop("checked", false);
-    pinst.syncContainer.find(".JS9SyncImCheck").prop("checked", false);
-    // then turn on currently syn'ed options
-    syncops = JS9.globalOpts.syncOps;
-    // for each sync'ed op in this image ...
-    for(i=0; i<syncops.length; i++){
-	// get the op
-	op = syncops[i];
-	if( $.isArray(im.syncs[op]) ){
-	    // turn on the checkbox associated with this op
-	    pinst.syncContainer
-		.find(".JS9SyncOpCheck")
-		.filter(`[name='${op}']`)
-		.prop("checked", true);
-	    // for each file associated with the sync'ed op
-	    for(j=0; j<im.syncs[op].length; j++){
-		if( JS9.isImage(im.syncs[op][j]) ){
-		    // jquery doesn't like brackets in names
-		    id = im.syncs[op][j].id.replace(/\[.*\]/, "");
-		    // turn on the checkbox associated with this file
-		    pinst.syncContainer
-			.find(".JS9SyncImCheck")
-			.filter(`[name^='${id}']`)
-			.prop("checked", true);
-		}
-	    }
-	}
-    }
-};
-
-// add a sync op to the list of available ops
-JS9.Sync.addOp = function(op, ncol){
-    let s, left, top, opname;
-    const opts = [];
-    const cls = `${JS9.Sync.BASE}Op`;
-    // pre-processing
-    switch(op){
-    case "contrastbias":
-	opname = "contrast/bias";
-	break;
-    case "wcs":
-	opname = "wcs sys/units";
-	break;
-    default:
-	opname = op;
-	break;
-    }
-    // value to pass to the macro expander
-    opts.push({name: "op", value: op});
-    opts.push({name: "opactive", value: sprintf(JS9.Sync.opactiveHTML, op)});
-    opts.push({name: "opname", value: sprintf(JS9.Sync.opnameHTML, opname)});
-    // create the html for this op
-    s = JS9.Image.prototype.expandMacro.call(null, JS9.Sync.opHTML, opts);
-    this.syncOpDivs++;
-    // add op to the op container at the specified column
-    left = ncol * JS9.Sync.COLWIDTH;
-    top = 0;
-    return `<span class="JS9SyncOp" style="position:absolute; left:${left}px; top:${top}px" id="${cls}">${s}</span>`;
-};
-
-// add an image to the list of available images
-JS9.Sync.addImage = function(im){
-    let s, id, imid;
-    const opts = [];
-    const cls = `${JS9.Sync.BASE}ImageRow`;
-    if( !im ){
-	return;
-    }
-    // convenience variables
-    imid = im.id;
-    // unique id
-    id = JS9.Sync.imid(im);
-    // value to pass to the macro expander
-    opts.push({name: "imid", value: im.id});
-    opts.push({name: "imactive", value: sprintf(JS9.Sync.imactiveHTML, imid)});
-    opts.push({name: "imfile", value: sprintf(JS9.Sync.imfileHTML, imid)});
-    // create the html for this image
-    s = im.expandMacro(JS9.Sync.imageHTML, opts);
-    // one more div in the stack
-    this.syncImageDivs++;
-    // return image html to add to the image container
-    return `<div class="${cls}" id="${id}">${s}</div>`;
-};
-
-// remove an image from the list of available images
-JS9.Sync.removeImage = function(im){
-    let id;
-    if( im ){
-	id = JS9.Sync.imid(im);
-	$(`#${id}`).remove();
-	this.syncImageDivs--;
-	if( !this.syncImageDivs ){
-	    this.syncImageContainer.html("");
-	}
-	return true;
-    }
-    return false;
-};
-
-// constructor: add HTML elements to the plugin
-JS9.Sync.init = function(){
-    let i, j, s, im, op, dispid, imhead, opts, nrow, idx, syncops, html;
-    // on entry, these elements have already been defined:
-    // this.div:      the DOM element representing the div for this plugin
-    // this.divjq:    the jquery object representing the div for this plugin
-    // this.id:       the id ofthe div (or the plugin name as a default)
-    // this.display:  the display object associated with this plugin
-    // this.dispMode: display mode (for internal use)
-    //
-    // sanity check since we are always active
-    if( !this.divjq || !this.divjq.is(":visible") ){
-	return;
-    }
-    // clean main container
-    this.divjq.html("");
-    // no images/divs loaded yet
-    this.syncOpDivs = 0;
-    this.syncImageDivs = 0;
-    // allow scrolling on the plugin
-    this.divjq.addClass("JS9PluginScrolling");
-    // convenience variables
-    dispid = this.display.id;
-    if( this.display.image ){
-	this.lastim = this.display.image;
-	imhead = sprintf(JS9.Sync.HEADER,
-			 `Images that can be synced with ${this.lastim.id}`);
-    } else {
-	this.lastim = null;
-	imhead = sprintf(JS9.Sync.HEADER,
-			 `Images that can be synced`);
-    }
-    // main container
-    this.syncContainer = $("<div>")
-	.addClass(`${JS9.Sync.BASE}Container`)
-	.attr("id", `${this.id}SyncContainer`)
-        .css("overflow", "auto")
-	.appendTo(this.divjq);
-    s = JS9.Image.prototype.expandMacro.call(null, JS9.Sync.headerHTML);
-    // header
-    this.syncHeader = $("<div>")
-	.addClass(`${JS9.Sync.BASE}Header`)
-	.attr("id", `${dispid}Header`)
-	.html(s)
-	.appendTo(this.syncContainer);
-    // container to hold images
-    this.syncImageContainer = $("<div>")
-	.addClass(`${JS9.Sync.BASE}ImageContainer`)
-	.attr("id", `${this.id}SyncImageContainer`)
-	.html(imhead)
-	.appendTo(this.syncContainer);
-    // add images
-    html = "";
-    for(i=0; i<JS9.images.length; i++){
-	im = JS9.images[i];
-	if( im !== this.display.image ){
-	    html += JS9.Sync.addImage.call(this, im);
-	}
-    }
-    html = html || JS9.Sync.nofileHTML;
-    this.syncImageContainer.append(html);
-    // add sync operations
-    // NB: this double loop originally was written such that each div and span
-    // was added to the DOM separately ... but not all of the spans actually
-    // were added properly. This stackoverflow page:
-    // https://stackoverflow.com/questions/1539841/wait-until-previous-append-is-complete
-    // give the hint to generate one long html string and add all the spans
-    // at once, which seems to work properly.
-    // container to hold ops
-    this.syncOpContainer = $("<div>")
-	.addClass(`${JS9.Sync.BASE}OpContainer`)
-	.attr("id", `${this.id}SyncOpContainer`)
-        .html(sprintf(JS9.Sync.HEADER, "Operations that can be synced"))
-	.appendTo(this.syncContainer);
-    syncops = JS9.globalOpts.syncOps;
-    nrow = Math.floor((syncops.length + JS9.Sync.NCOL - 1) / JS9.Sync.NCOL);
-    for(j=0; j<nrow; j++){
-	html = `<div class="${JS9.Sync.BASE}OpRow" id="${this.id}SyncOpRow">`;
-	for(i=0; i<JS9.Sync.NCOL; i++){
-	    idx = i * nrow + j;
-	    if( syncops[idx] ){
-		op = syncops[idx];
-		html += JS9.Sync.addOp.call(this, op, i);
-	    }
-	}
-	html += "</div>";
-	this.syncOpContainer.append(html);
-    }
-    opts = [];
-    opts.push({name: "sync", value: sprintf(JS9.Sync.syncHTML, dispid)});
-    opts.push({name: "once", value: sprintf(JS9.Sync.onceHTML, dispid)});
-    opts.push({name: "unsync", value: sprintf(JS9.Sync.unsyncHTML, dispid)});
-    s = JS9.Image.prototype.expandMacro.call(null, JS9.Sync.footerHTML, opts);
-    // footer
-    this.syncFooter = $("<div>")
-	.addClass(`${JS9.Sync.BASE}Footer`)
-	.attr("id", `${dispid}Footer`)
-	.html(s)
-	.appendTo(this.syncContainer);
-    // initialize sync values for this image
-    if( this.display.image && this.display.image.syncs ){
-	JS9.Sync.setCheckboxes(this.display.image);
-    }
-};
-
-// callback when dynamic selection is made
-JS9.Sync.dysel = function(){
-    const odisplay = JS9.getDynamicDisplayOr("previous");
-    // turn off sync for previously selected display
-    if( odisplay ){
-	JS9.Sync.stop(odisplay);
-    }
-    // re-init the plugin
-    JS9.Sync.init.call(this);
-};
 
 // process ops input to [un]sync
 // called in image context
@@ -805,6 +469,11 @@ JS9.Sync.maybeSync = function(ops, arg){
     }
 };
 
+// called when plugin is intialized on a display
+JS9.Sync.init = function(){
+    return this;
+};
+
 // callbacks which can be synchronized:
 // onsetcolormap
 JS9.Sync.setcolormap = function(im){
@@ -866,28 +535,14 @@ JS9.Sync.setzoom = function(im){
     JS9.Sync.maybeSync.call(im, ["zoom","alignment"]);
 };
 
-// callback when an image is loaded
-JS9.Sync.imageload = function(im){
-    if( !im ){ return; }
-    JS9.Sync.init.call(this);
-};
-
-// callback when an image is displayed
-JS9.Sync.imagedisplay = function(im){
-    if( im && im !== this.lastim ){
-	JS9.Sync.init.call(this);
-    }
-};
-
 // clean up an image when its closed
-JS9.Sync.imageclose = function(im){
+JS9.Sync.closeimage = function(im){
     let i;
     if( !im ){ return; }
     // remove this image from all other image sync lists
     for(i=0; i<JS9.images.length; i++){
 	JS9.Sync.unsync.call(JS9.images[i], null, [im]);
     }
-    JS9.Sync.init.call(this);
 };
 
 // add to image prototype and create public API
@@ -898,8 +553,7 @@ JS9.mkPublic("UnsyncImages", "unsyncImages");
 
 // register the plugin
 JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
-		   {menuItem:        "Sync Images",
-		    onsetcolormap:   JS9.Sync.setcolormap,
+		   {onsetcolormap:   JS9.Sync.setcolormap,
 		    onsetflip:       JS9.Sync.setflip,
 		    onsetpan:        JS9.Sync.setpan,
 		    onregionschange: JS9.Sync.regionschange,
@@ -909,10 +563,5 @@ JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
 		    onsetwcsunits:   JS9.Sync.setwcsunits,
 		    onsetzoom:       JS9.Sync.setzoom,
 		    onchangecontrastbias: JS9.Sync.changecontrastbias,
-		    onimagedisplay:  JS9.Sync.imagedisplay,
-		    onimageload:     JS9.Sync.mageload,
-		    onimageclose:    JS9.Sync.imageclose,
-		    alwaysActive:    true,
-		    help:            "help/sync.html",
-		    winTitle:        "Sync Images",
-		    winDims: [JS9.Sync.WIDTH, JS9.Sync.HEIGHT]});
+		    onimageclose:    JS9.Sync.closeimage,
+		    winDims: [0, 0]});
