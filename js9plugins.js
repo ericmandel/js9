@@ -13436,7 +13436,7 @@ JS9.SyncUI = {};
 JS9.SyncUI.CLASS = "JS9";     // class of plugins (1st part of div class)
 JS9.SyncUI.NAME = "SyncUI";   // name of this plugin (2nd part of div class)
 JS9.SyncUI.WIDTH =  512;      // width of light window
-JS9.SyncUI.HEIGHT = 400;      // height of light window
+JS9.SyncUI.HEIGHT = 430;      // height of light window
 JS9.SyncUI.BASE = JS9.SyncUI.CLASS + JS9.SyncUI.NAME;  // CSS base class name
 
 JS9.SyncUI.HEADER = "<div class='JS9SyncUIText'><br><b>%s:</b></div>";
