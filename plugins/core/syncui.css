@@ -32,9 +32,9 @@ span.JS9SyncUIOp {
     background: #E9E9E9;
     overflow: auto;
     display: relative;
+    /* calculated in the code */
     top: 0px;
-    /* calcualted in the code */
-    /* left: 0px; */
+    left: 0px;
     margin-left: 15px;
     margin-top: 5px;
     margin-right: 5px;
@@ -88,13 +88,23 @@ div.JS9SyncUIOptsContainer {
     position: relative;
     left: 0px;
     top: 0px;
-    overflow: auto;
 }
 
 div.JS9SyncUIOptsRow {
-    border: 0px solid black;
+    position: relative;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 24px;
+}
+
+span.JS9SyncUIOpts {
     background: #E9E9E9;
-    padding: 0px;
+    overflow: auto;
+    display: relative;
+    /* calculated in the code */
+    top: 0px;
+    left: 0px;
     margin-left: 15px;
     margin-top: 5px;
     margin-right: 5px;

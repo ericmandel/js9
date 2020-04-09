@@ -12975,9 +12975,9 @@ JS9.Sync.sync = function(...args){
     }
     // use wcs for syncing
     if( JS9.notNull(opts.syncwcs) ){
-	this.params.syncwcs = opts.syncwcs;
+	this.tmp.syncwcs = opts.syncwcs;
     } else {
-	this.params.syncwcs = JS9.globalOpts.syncWCS;
+	this.tmp.syncwcs = JS9.globalOpts.syncWCS;
     }
     // sync target image, if necessary
     if( !JS9.Sync.reciprocating ){
@@ -13127,7 +13127,7 @@ JS9.Sync.xeqSync = function(arr){
 		    break;
 		case "pan":
 		    pos = this.getPan();
-		    if( this.params.syncwcs && this.raw.wcs > 0 ){
+		    if( this.tmp.syncwcs && this.raw.wcs > 0 ){
 			wcscen = JS9.pix2wcs(this.raw.wcs, pos.ox, pos.oy);
 			xim.setPan({wcs: wcscen});
 		    } else {
@@ -13464,9 +13464,11 @@ JS9.SyncUI.imfileHTML='<b>%s</b>';
 
 JS9.SyncUI.nofileHTML='<p><span class="JS9SyncUINoFile">[Images will appear here as they are loaded]</span>';
 
-JS9.SyncUI.optsHTML='<div class="JS9SyncUIOptsRow">$reciprocate</div>';
+JS9.SyncUI.optsHTML='<div class="JS9SyncUIOptsRow">$reciprocate&nbsp;&nbsp;$syncwcs</div>';
 
-JS9.SyncUI.recipHTML='<input class="JS9SyncUIOptsCheck" type="checkbox" name="%s" value="active" onchange="javascript:JS9.SyncUI.xrecip(\'%s\', this)">&nbsp;&nbsp;<b>%s</b>';
+JS9.SyncUI.reciprocalHTML='<span class="JS9SyncUIOpts" style="position:absolute; left:%spx; top:0px"><input class="JS9SyncUIOptsCheck" type="checkbox" name="%s" value="active" onchange="javascript:JS9.SyncUI.xrecip(\'%s\', this)">&nbsp;&nbsp;<b>%s</b></span>';
+
+JS9.SyncUI.syncwcsHTML='<span class="JS9SyncUIOpts" style="position:absolute; left:%spx; top:0px"><input class="JS9SyncUIOptsCheck" type="checkbox" name="%s" value="active" onchange="javascript:JS9.SyncUI.xsyncwcs(\'%s\', this)">&nbsp;&nbsp;<b>%s</b></span>';
 
 JS9.SyncUI.footerHTML='<div class="JS9SyncUIButtons" <p>$sync&nbsp;&nbsp;&nbsp;&nbsp;$once&nbsp;&nbsp;&nbsp;&nbsp;$unsync</div>';
 
@@ -13566,6 +13568,15 @@ JS9.SyncUI.xrecip = function(did, target){
     }
 };
 
+JS9.SyncUI.xsyncwcs = function(did, target){
+    let pinst;
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(did));
+    if( display ){
+	pinst = display.pluginInstances.JS9SyncUI;
+	pinst.syncWCS = $(target).is(':checked');
+    }
+};
+
 // get a SyncImage id based on the file image id
 JS9.SyncUI.imid = function(im){
     const id = `${im.display.id}_${im.id}`;
@@ -13618,6 +13629,10 @@ JS9.SyncUI.setCheckboxes = function(im){
 	.find(".JS9SyncUIOptsCheck")
 	.filter(`[name="reciprocate"]`)
 	.prop("checked", pinst.syncReciprocate);
+    pinst.syncContainer
+	.find(".JS9SyncUIOptsCheck")
+	.filter(`[name="syncwcs"]`)
+	.prop("checked", pinst.syncWCS);
 };
 
 // add a sync op to the list of available ops
@@ -13714,6 +13729,10 @@ JS9.SyncUI.init = function(){
     if( JS9.isNull(this.syncReciprocate) ){
 	this.syncReciprocate = JS9.globalOpts.syncReciprocate;
     }
+    // init syncwcs
+    if( JS9.isNull(this.syncWCS) ){
+	this.syncWCS = JS9.globalOpts.syncWCS;
+    }
     // convenience variables
     dispid = this.display.id;
     if( this.display.image ){
@@ -13790,11 +13809,11 @@ JS9.SyncUI.init = function(){
 	.html(ophead)
 	.appendTo(this.syncContainer);
     opts = [];
-    opts.push({name: "reciprocate", value: sprintf(JS9.SyncUI.recipHTML, "reciprocate", dispid, "reciprocal sync")});
+    opts.push({name: "reciprocate", value: sprintf(JS9.SyncUI.reciprocalHTML, JS9.SyncUI.COLWIDTH * 0, "reciprocate", dispid, "reciprocal sync")});
+    opts.push({name: "syncwcs", value: sprintf(JS9.SyncUI.syncwcsHTML, JS9.SyncUI.COLWIDTH * 1, "syncwcs", dispid, "sync using wcs")});
     s = JS9.Image.prototype.expandMacro.call(null, JS9.SyncUI.optsHTML, opts);
     // footer
     this.syncOpts = $("<div>")
-	.addClass(`${JS9.SyncUI.BASE}Opts`)
 	.attr("id", `${dispid}Opts`)
 	.html(s)
 	.appendTo(this.syncOptsContainer);

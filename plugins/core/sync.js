@@ -115,9 +115,9 @@ JS9.Sync.sync = function(...args){
     }
     // use wcs for syncing
     if( JS9.notNull(opts.syncwcs) ){
-	this.params.syncwcs = opts.syncwcs;
+	this.tmp.syncwcs = opts.syncwcs;
     } else {
-	this.params.syncwcs = JS9.globalOpts.syncWCS;
+	this.tmp.syncwcs = JS9.globalOpts.syncWCS;
     }
     // sync target image, if necessary
     if( !JS9.Sync.reciprocating ){
@@ -267,7 +267,7 @@ JS9.Sync.xeqSync = function(arr){
 		    break;
 		case "pan":
 		    pos = this.getPan();
-		    if( this.params.syncwcs && this.raw.wcs > 0 ){
+		    if( this.tmp.syncwcs && this.raw.wcs > 0 ){
 			wcscen = JS9.pix2wcs(this.raw.wcs, pos.ox, pos.oy);
 			xim.setPan({wcs: wcscen});
 		    } else {
