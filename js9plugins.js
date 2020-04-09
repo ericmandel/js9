@@ -11339,6 +11339,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "reciprocal image sync'ing?"
 	},
+	"syncWCS": {
+	    "type": "boolean",
+	    "helper": "sync using wcs (e.g. pan)?"
+	},
 	"nextImageMask": {
 	    "type": "boolean",
 	    "helper": "nextImage() show image masks?"
@@ -11452,6 +11456,7 @@ JS9.Prefs.init = function(){
 			   reloadRefresh: JS9.globalOpts.reloadRefresh,
 			   reloadRefreshReg: JS9.globalOpts.reloadRefreshReg,
 			   regionsToClipboard:JS9.globalOpts.regionsToClipboard,
+			   syncWCS: JS9.globalOpts.syncWCS,
 			   syncReciprocate: JS9.globalOpts.syncReciprocate,
 			   nextImageMask: JS9.globalOpts.nextImageMask,
 			   panWithinDisplay: JS9.globalOpts.panWithinDisplay,
@@ -11758,6 +11763,14 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	            obj[key] = val;
 		    source.data[key] = val;
 		    break;
+		case "syncWCS":
+		    // set new option value
+	            obj[key] = val;
+		    // reset the current image's internal params as well
+		    if( display && display.image ){
+			display.image.setParam(key, val);
+		    }
+	            break;
 		default:
 	            // set new option value
 	            obj[key] = val;
