@@ -20256,7 +20256,7 @@ JS9.pix2pix = function(im1, im2, obj){
     let s, ra, dec, x, y, nx, ny;
     const epsilon = 0.5;
     // sanity check
-    if( !im1 || !im2 || !im1.raw.wcs || !im2.raw.wcs ){
+    if( !im1 || !im2 || im1.raw.wcs <= 0 || im2.raw.wcs <= 0 ){
 	return obj;
     }
     // convenience variables
