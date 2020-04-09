@@ -436,7 +436,10 @@ JS9.Sync.xeqSync = function(arr){
 	}
     }
     catch(e){ /* empty */ }
-    finally{ delete this.tmp.syncRunning; }
+    finally{
+	this.displayImage();
+	delete this.tmp.syncRunning;
+    }
 };
 
 // sync images, if necessary

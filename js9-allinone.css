@@ -1851,6 +1851,23 @@ div.JS9SyncUIImageRow {
     white-space: nowrap;
 }
 
+div.JS9SyncUIOptsContainer {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    overflow: auto;
+}
+
+div.JS9SyncUIOptsRow {
+    border: 0px solid black;
+    background: #E9E9E9;
+    padding: 0px;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 0px;
+}
+
 div.JS9SyncUIFooter {
     border: 0px solid black;
     background: #E9E9E9;

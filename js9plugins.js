@@ -13291,7 +13291,10 @@ JS9.Sync.xeqSync = function(arr){
 	}
     }
     catch(e){ /* empty */ }
-    finally{ delete this.tmp.syncRunning; }
+    finally{
+	this.displayImage();
+	delete this.tmp.syncRunning;
+    }
 };
 
 // sync images, if necessary
@@ -13433,7 +13436,7 @@ JS9.SyncUI = {};
 JS9.SyncUI.CLASS = "JS9";     // class of plugins (1st part of div class)
 JS9.SyncUI.NAME = "SyncUI";   // name of this plugin (2nd part of div class)
 JS9.SyncUI.WIDTH =  512;      // width of light window
-JS9.SyncUI.HEIGHT = 370;      // height of light window
+JS9.SyncUI.HEIGHT = 400;      // height of light window
 JS9.SyncUI.BASE = JS9.SyncUI.CLASS + JS9.SyncUI.NAME;  // CSS base class name
 
 JS9.SyncUI.HEADER = "<div class='JS9SyncUIText'><br><b>%s:</b></div>";
@@ -13456,6 +13459,10 @@ JS9.SyncUI.imfileHTML='<b>%s</b>';
 
 JS9.SyncUI.nofileHTML='<p><span class="JS9SyncUINoFile">[Images will appear here as they are loaded]</span>';
 
+JS9.SyncUI.optsHTML='<div class="JS9SyncUIOptsRow">$reciprocate</div>';
+
+JS9.SyncUI.recipHTML='<input class="JS9SyncUIOptsCheck" type="checkbox" name="%s" value="active" onchange="javascript:JS9.SyncUI.xrecip(\'%s\', this)"><b>%s</b>';
+
 JS9.SyncUI.footerHTML='<div class="JS9SyncUIButtons" <p>$sync&nbsp;&nbsp;&nbsp;&nbsp;$once&nbsp;&nbsp;&nbsp;&nbsp;$unsync</div>';
 
 JS9.SyncUI.syncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9SyncUIButton" id="active" name="sync" value="Sync Repeatedly" onclick="javascript:JS9.SyncUI.xsync(\'%s\', this)"></span>';
@@ -13465,10 +13472,11 @@ JS9.SyncUI.onceHTML='<span class="JS9SyncUIButton"><input type="button" class="J
 JS9.SyncUI.unsyncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9SyncUIButton" id="active" name="unsync" value="Unsync" onclick="javascript:JS9.SyncUI.xunsync(\'%s\', this)"></span>';
 
 
-JS9.SyncUI.getImsOps = function(el){
+JS9.SyncUI.getImsOpsOpts = function(el){
     const container = el.closest(".JS9SyncUIContainer");
     const ops = [];
     const ims = [];
+    const opts = {};
     if( container.length ){
 	// gather all selected images
 	container.find(".JS9SyncUIImCheck").each((index, element) => {
@@ -13486,8 +13494,14 @@ JS9.SyncUI.getImsOps = function(el){
 		ops.push(name);
 	    }
 	});
+	// get opts
+	container.find(".JS9SyncUIOptsCheck").each((index, element) => {
+	    let name = $(element).prop("name");
+	    let checked = $(element).prop("checked");
+	    opts[name] = checked;
+	});
     }
-    return {ims, ops};
+    return {ims, ops, opts};
 };
 
 // sync
@@ -13497,12 +13511,12 @@ JS9.SyncUI.xsync = function(did, target){
     if( display.image ){
 	im = display.image;
 	// get ims and opts
-	const {ims, ops} = JS9.SyncUI.getImsOps($(target));
+	const {ims, ops, opts} = JS9.SyncUI.getImsOpsOpts($(target));
 	// sync images, if necessary
 	if( ims.length && ops.length ){
-	    im.syncImages(ops, ims);
-	    JS9.SyncUI.setCheckboxes(im);
+	    im.syncImages(ops, ims, opts);
 	}
+	JS9.SyncUI.setCheckboxes(im);
     }
 };
 
@@ -13513,7 +13527,7 @@ JS9.SyncUI.xonce = function(did, target){
     if( display.image ){
 	im = display.image;
 	// get ims and opts
-	const {ims, ops} = JS9.SyncUI.getImsOps($(target));
+	const {ims, ops} = JS9.SyncUI.getImsOpsOpts($(target));
 	// copy params, if necessary
 	if( ims.length && ops.length ){
 	    im.copyParams(ops, ims);
@@ -13529,12 +13543,21 @@ JS9.SyncUI.xunsync = function(did, target){
     if( display.image ){
 	im = display.image;
 	// get ims and opts
-	const {ims, ops} = JS9.SyncUI.getImsOps($(target));
+	const {ims, ops, opts} = JS9.SyncUI.getImsOpsOpts($(target));
 	// unsync images, if necessary
 	if( ims.length && ops.length ){
-	    im.unsyncImages(ops, ims);
-	    JS9.SyncUI.setCheckboxes(im);
+	    im.unsyncImages(ops, ims, opts);
 	}
+	JS9.SyncUI.setCheckboxes(im);
+    }
+};
+
+JS9.SyncUI.xrecip = function(did, target){
+    let pinst;
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(did));
+    if( display ){
+	pinst = display.pluginInstances.JS9SyncUI;
+	pinst.syncReciprocate = $(target).is(':checked');
     }
 };
 
@@ -13556,32 +13579,40 @@ JS9.SyncUI.setCheckboxes = function(im){
     // first turn all checkboxes off
     pinst.syncContainer.find(".JS9SyncUIOpCheck").prop("checked", false);
     pinst.syncContainer.find(".JS9SyncUIImCheck").prop("checked", false);
+    pinst.syncContainer.find(".JS9SyncUIOptsCheck").prop("checked", false);
     // then turn on currently syn'ed options
     syncops = JS9.globalOpts.syncOps;
     // for each sync'ed op in this image ...
-    for(i=0; i<syncops.length; i++){
-	// get the op
-	op = syncops[i];
-	if( $.isArray(im.syncs[op]) ){
-	    // turn on the checkbox associated with this op
-	    pinst.syncContainer
-		.find(".JS9SyncUIOpCheck")
-		.filter(`[name='${op}']`)
-		.prop("checked", true);
-	    // for each file associated with the sync'ed op
-	    for(j=0; j<im.syncs[op].length; j++){
-		if( JS9.isImage(im.syncs[op][j]) ){
-		    // jquery doesn't like brackets in names
-		    id = im.syncs[op][j].id.replace(/\[.*\]/, "");
-		    // turn on the checkbox associated with this file
-		    pinst.syncContainer
-			.find(".JS9SyncUIImCheck")
-			.filter(`[name^='${id}']`)
-			.prop("checked", true);
+    if( im.syncs ){
+	for(i=0; i<syncops.length; i++){
+	    // get the op
+	    op = syncops[i];
+	    if( $.isArray(im.syncs[op]) ){
+		// turn on the checkbox associated with this op
+		pinst.syncContainer
+		    .find(".JS9SyncUIOpCheck")
+		    .filter(`[name='${op}']`)
+		    .prop("checked", true);
+		// for each file associated with the sync'ed op
+		for(j=0; j<im.syncs[op].length; j++){
+		    if( JS9.isImage(im.syncs[op][j]) ){
+			// jquery doesn't like brackets in names
+			id = im.syncs[op][j].id.replace(/\[.*\]/, "");
+			// turn on the checkbox associated with this file
+			pinst.syncContainer
+			    .find(".JS9SyncUIImCheck")
+			    .filter(`[name^='${id}']`)
+			    .prop("checked", true);
+		    }
 		}
 	    }
 	}
     }
+    // options
+    pinst.syncContainer
+	.find(".JS9SyncUIOptsCheck")
+	.filter(`[name="reciprocate"]`)
+	.prop("checked", pinst.syncReciprocate);
 };
 
 // add a sync op to the list of available ops
@@ -13655,7 +13686,7 @@ JS9.SyncUI.removeImage = function(im){
 
 // constructor: add HTML elements to the plugin
 JS9.SyncUI.init = function(){
-    let i, j, s, im, op, dispid, imhead, opts, nrow, idx, syncops, html;
+    let i, j, s, im, op, dispid, imhead, ophead, opts, nrow, idx, syncops, html;
     // on entry, these elements have already been defined:
     // this.div:      the DOM element representing the div for this plugin
     // this.divjq:    the jquery object representing the div for this plugin
@@ -13674,6 +13705,10 @@ JS9.SyncUI.init = function(){
     this.syncImageDivs = 0;
     // allow scrolling on the plugin
     this.divjq.addClass("JS9PluginScrolling");
+    // init reciprocate
+    if( JS9.isNull(this.syncReciprocate) ){
+	this.syncReciprocate = JS9.globalOpts.syncReciprocate;
+    }
     // convenience variables
     dispid = this.display.id;
     if( this.display.image ){
@@ -13741,6 +13776,24 @@ JS9.SyncUI.init = function(){
 	html += "</div>";
 	this.syncOpContainer.append(html);
     }
+    // options
+    // container to hold images
+    ophead = sprintf(JS9.SyncUI.HEADER, `Sync options`);
+    this.syncOptsContainer = $("<div>")
+	.addClass(`${JS9.SyncUI.BASE}OptsContainer`)
+	.attr("id", `${this.id}SyncOptsContainer`)
+	.html(ophead)
+	.appendTo(this.syncContainer);
+    opts = [];
+    opts.push({name: "reciprocate", value: sprintf(JS9.SyncUI.recipHTML, "reciprocate", dispid, "reciprocal sync")});
+    s = JS9.Image.prototype.expandMacro.call(null, JS9.SyncUI.optsHTML, opts);
+    // footer
+    this.syncOpts = $("<div>")
+	.addClass(`${JS9.SyncUI.BASE}Opts`)
+	.attr("id", `${dispid}Opts`)
+	.html(s)
+	.appendTo(this.syncOptsContainer);
+    // footer containing run buttons
     opts = [];
     opts.push({name: "sync", value: sprintf(JS9.SyncUI.syncHTML, dispid)});
     opts.push({name: "once", value: sprintf(JS9.SyncUI.onceHTML, dispid)});
@@ -13753,7 +13806,7 @@ JS9.SyncUI.init = function(){
 	.html(s)
 	.appendTo(this.syncContainer);
     // initialize sync values for this image
-    if( this.display.image && this.display.image.syncs ){
+    if( this.display.image ){
 	JS9.SyncUI.setCheckboxes(this.display.image);
     }
 };
