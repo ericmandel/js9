@@ -13461,7 +13461,7 @@ JS9.SyncUI.nofileHTML='<p><span class="JS9SyncUINoFile">[Images will appear here
 
 JS9.SyncUI.optsHTML='<div class="JS9SyncUIOptsRow">$reciprocate</div>';
 
-JS9.SyncUI.recipHTML='<input class="JS9SyncUIOptsCheck" type="checkbox" name="%s" value="active" onchange="javascript:JS9.SyncUI.xrecip(\'%s\', this)"><b>%s</b>';
+JS9.SyncUI.recipHTML='<input class="JS9SyncUIOptsCheck" type="checkbox" name="%s" value="active" onchange="javascript:JS9.SyncUI.xrecip(\'%s\', this)">&nbsp;&nbsp;<b>%s</b>';
 
 JS9.SyncUI.footerHTML='<div class="JS9SyncUIButtons" <p>$sync&nbsp;&nbsp;&nbsp;&nbsp;$once&nbsp;&nbsp;&nbsp;&nbsp;$unsync</div>';
 
