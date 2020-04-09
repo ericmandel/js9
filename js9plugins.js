@@ -11763,14 +11763,6 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	            obj[key] = val;
 		    source.data[key] = val;
 		    break;
-		case "syncWCS":
-		    // set new option value
-	            obj[key] = val;
-		    // reset the current image's internal params as well
-		    if( display && display.image ){
-			display.image.setParam(key, val);
-		    }
-	            break;
 		default:
 	            // set new option value
 	            obj[key] = val;
