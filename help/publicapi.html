@@ -1850,21 +1850,31 @@ this via the <b>Global</b> tab of the <b>Preferences</b> plugin.
 
 <h5 id="JS9.AlignPanZoom">Align pan and zoom of the current image to a target image</h5>
 <p>
-<code class="api">JS9.AlignPanZoom(im)</code>
+<code class="api">JS9.AlignPanZoom(im, opts)</code>
 <p>
 where:
 <ul>
 <li><b>im</b>: target image containing the WCS used to perform the alignment
+<li><b>opts</b>: optional object
 </ul>
 <p>
 This routine changes the pan and zoom of the current image to match a
-target image, assuming both have WCS info available. The image is
-panned to the RA, Dec at the center of the target image's display. The
-zoom is also matched. The pixel size (as specified by the FITS CDELT1
-parameter) will be taken into account when zooming, but not the image
-rotation or flip. This routine is faster than
+target image. By default, it is assumed that both have WCS info
+available. The image is panned to the RA, Dec at the center of the
+target image's display. The zoom is also matched. The pixel size (as
+specified by the FITS CDELT1 parameter) will be taken into account
+when zooming, but not the image rotation or flip. This routine is
+faster than
 <b><a href="#JS9.ReprojectData">JS9.ReprojectData()</a></b>
 for aligning reasonably similar images.
+
+<p>
+For specialized needs, you can set the <b>syncwcs</b> property to false in
+the opts object so that WCS will not be used in the alignment. Instead,
+the image will be panned to the target's current center (in image coordinates)
+and the image zoom will be set to the target's zoom. Obviously, this assumes
+identical image dimensions and pixel sizes. It can be useful when working with
+lab data and simulations.
 
 <p>
 No attempt is make to keep the images aligned after the call. This

@@ -4606,7 +4606,7 @@ JS9.Image.prototype.setZoom = function(zval){
 // not taken into account: flips and rotations
 // eslint-disable-next-line no-unused-vars
 JS9.Image.prototype.alignPanZoom = function(im, opts){
-    let tim, icen, iwcsinfo, izoom, wcsinfo;
+    let tim, icen, iwcsinfo, izoom, wcsinfo, syncwcs;
     // sanity check
     if( !im ){ return; }
     // is im a string containing an image name?
@@ -4621,16 +4621,30 @@ JS9.Image.prototype.alignPanZoom = function(im, opts){
     }
     // opts is optional (not used ... yet)
     opts = opts || {};
-    wcsinfo  = this.raw.wcsinfo || {cdelt1: 1};
-    iwcsinfo = im.raw.wcsinfo   || {cdelt1: 1};
     // get center of target image
     icen = im.getPan();
-    // pan this image to center of target
-    this.setPan(JS9.pix2pix(im, this, {x: icen.ox, y: icen.oy}));
     // get zoom of target image
     izoom = im.rgb.sect.zoom || 1;
-    // adjust zoom of this image taking, into account pixel size, target zoom
-    this.setZoom(izoom * wcsinfo.cdelt1 / iwcsinfo.cdelt1);
+    // use wcs to align?
+    if( JS9.notNull(opts.syncwcs) ){
+	syncwcs = opts.syncwcs;
+    } else {
+	syncwcs = JS9.globalOpts.syncWCS;
+    }
+    // do wcs or non-wcs alignment
+    if( syncwcs ){
+	wcsinfo  = this.raw.wcsinfo || {cdelt1: 1};
+	iwcsinfo = im.raw.wcsinfo   || {cdelt1: 1};
+	// pan this image to center of target
+	this.setPan(JS9.pix2pix(im, this, {x: icen.ox, y: icen.oy}));
+	// adjust zoom of this image, taking account of pixel size, target zoom
+	this.setZoom(izoom * wcsinfo.cdelt1 / iwcsinfo.cdelt1);
+    } else {
+	// pan this image to center of target
+	this.setPan({x: icen.ox, y: icen.oy});
+	// adjust zoom of this image to target zoom
+	this.setZoom(izoom);
+    }
     // allow chaining
     return this;
 };
