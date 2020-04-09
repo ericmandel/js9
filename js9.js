@@ -7218,6 +7218,7 @@ JS9.Image.prototype.setParam = function(param, value){
 // copy params from one image to another
 JS9.Image.prototype.copyParams = function(params, images, opts){
     let i, j, im, param, val;
+    let xims = [];
     // sanity check
     if( !params ){
 	return;
@@ -7250,9 +7251,11 @@ JS9.Image.prototype.copyParams = function(params, images, opts){
 	if( im === this ){
 	    continue;
 	}
-	// don't redisplay if this image is not being displayed already
+	// save the currently displayed image
 	if( im !== im.display.image ){
-	    im.displayMode = false;
+	    if( $.inArray(im.display.image, xims) < 0 ){
+		xims.push(im.display.image);
+	    }
 	}
 	try{
 	    // set each param
@@ -7296,9 +7299,11 @@ JS9.Image.prototype.copyParams = function(params, images, opts){
 	    JS9.error(`could not copy params for ${im.id}`);
 	}
 	finally{
-	    // re-enable display, if necessary
-	    if( im !== im.display.image ){
-		im.displayMode = true;
+	    // re-display image(s),  necessary
+	    if( xims.length ){
+		for(i=0; i<xims.length; i++){
+		    xims[i].displayImage();
+		}
 	    }
 	}
     }
