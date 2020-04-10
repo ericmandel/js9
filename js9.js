@@ -3145,7 +3145,8 @@ JS9.Image.prototype.maskImage = function(...args){
 	}
     }
     // keep images in sync, if necessary
-    if( im && (!opts || opts.sync !== false) ){
+    if( im && (!opts || opts.sync !== false)  &&
+	typeof this.syncImages === "function" ){
 	this.syncImages(this.mask.syncops, [im]);
     }
     // redisplay with the new mask
