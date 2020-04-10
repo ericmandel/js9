@@ -698,6 +698,9 @@ errcheck:	FORCE
 		@(egrep '[^x]error|warning|ld:|collect2:|make:' foo | \
 		  egrep -v "^lex.*but not used"; true)
 
+electron-cache:	FORCE
+		@(rm -rf "$$HOME/Library/Application Support/Electron/Cache")
+
 valgrind:	FORCE
 		@(echo "see: https://developer.mozilla.org/en-US/docs/Mozilla/Testing/Valgrind"; echo "for Macs: valgrind --dsymutil=yes --show-mismatched-frees=no --leak-check=yes --track-origins=yes [prog] [args]";)
 
