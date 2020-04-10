@@ -12532,14 +12532,17 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 		    });
 		    canvas.calcOffset();
 		}
-		// refresh and redisplay this layer
-		if( this.layers[layerName].opts.panzoom ){
-		    this.binning.obin = this.binning.bin;
-		    this.rgb.sect.ozoom = this.rgb.sect.zoom;
-		    this.refreshShapes(layerName);
-		} else {
-		    canvas.renderAll();
-		}
+// this breaks the ability to copy regions to an image not currently displayed
+// it delays adding the regions during refresh, so that no regions exist when
+// the copy goes to process its delayed regions (4/10/2020)
+//		// refresh and redisplay this layer
+//		if( this.layers[layerName].opts.panzoom ){
+//		    this.binning.obin = this.binning.bin;
+//		    this.rgb.sect.ozoom = this.rgb.sect.zoom;
+//		    this.refreshShapes(layerName);
+//		} else {
+//		    canvas.renderAll();
+//		}
 		layer.zindex = Math.abs(layer.zindex);
 		dlayer.divjq.css("z-index", layer.zindex);
 		// unselect selected objects in lower-zindex groups
@@ -16897,9 +16900,13 @@ JS9.Regions.listRegions = function(which, opts, layer){
 		    continue;
 		}
 	    }
-	    // skip data if export is turned off explicitly
+	    // skip id when saving to a file
+	    if( key === "id" && opts.file ){
+		continue;
+	    }
+	    // sometimes skip data when saving to a file
 	    if( key === "data" && typeof params.data === "object" &&
-		params.data.doexport === false ){
+		params.data.doexport === false && opts.file ){
 		continue;
 	    }
 	    // strokeWidth can be changed as part of zooming,
@@ -17473,6 +17480,14 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     if( !this.layers[layer] ){
 	JS9.error(`can't find layer for saveRegions: ${layer}`);
     }
+    // construct final output file name, if necessary
+    if( !fname ){
+	if( layer && layer !== "regions" ){
+	    fname = `js9_${layer}.${type}`;
+	} else {
+	    fname = `js9.${type}`;
+	}
+    }
     // generate the specified output
     switch(type){
     case "svg":
@@ -17504,7 +17519,7 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	// convert layer to region string
 	try{
 	    header = "# Region file format: JS9 version 1.0";
-	    regstr = this.listRegions(which, {mode: 1}, layer);
+	    regstr = this.listRegions(which, {mode: 1, file: fname}, layer);
 	    s = `${header}\n${regstr.replace(/; */g, "\n")}\n`;
 	}
 	catch(e){ JS9.error(`can't convert layer to region: ${layer}`);	}
@@ -17512,14 +17527,6 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     }
     // create the blob
     blob = new Blob([s], {type: "text/plain;charset=utf-8"});
-    // construct output file name
-    if( !fname ){
-	if( layer && layer !== "regions" ){
-	    fname = `js9_${layer}.${type}`;
-	} else {
-	    fname = `js9.${type}`;
-	}
-    }
     // save blob
     if( window.hasOwnProperty("saveAs") ){
 	saveAs(blob, fname);
