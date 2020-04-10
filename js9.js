@@ -3398,13 +3398,20 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	// mark this image as being in this display
 	this.display.image = this;
 	// now this is the displayed image, we can add delayed shapes
-	if( this.delayedShapes && this.delayedShapes.length ){
-	    while( this.delayedShapes.length ){
-		obj = this.delayedShapes.shift();
+	while( this.delayedShapes && this.delayedShapes.length ){
+	    this.tmp.syncRunning = true;
+	    obj = this.delayedShapes.shift();
+	    switch(obj.mode){
+	    case "add":
 		this.addShapes(obj.layer, obj.shape, obj.opts);
+		break;
+	    case "change":
+		this.changeShapes(obj.layer, obj.shape, obj.opts);
+		break;
 	    }
-	    delete this.delayedShapes;
+	    delete this.tmp.syncRunning;
 	}
+	delete this.delayedShapes;
     }
     // post-processing
     // plugin callbacks
@@ -13535,7 +13542,8 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     // delay adding the region, if this image is not the one being displayed
     if( this.display.image !== this ){
 	this.delayedShapes = this.delayedShapes || [];
-	this.delayedShapes.push({layer: layerName, shape: shape, opts: myopts});
+	this.delayedShapes.push({layer: layerName, shape: shape,
+				 mode: "add", opts: myopts});
 	return;
     }
     layer = this.getShapeLayer(layerName);
@@ -14459,6 +14467,13 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse shape opts: ${opts}`, e); }
+    }
+    // delay changing the region, if this image is not the one being displayed
+    if( this.display.image !== this ){
+	this.delayedShapes = this.delayedShapes || [];
+	this.delayedShapes.push({layer: layerName, shape: shape,
+				 mode: "change", opts: opts});
+	return;
     }
     canvas = layer.canvas;
     // is image zoom part of scale?
