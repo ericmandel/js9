@@ -136,11 +136,11 @@
     var xims2 = [ximages[1]]
     function xinit(){
       JS9.Load(ximages[0], {onload: function(xim0){
-        xim0.setColormap.apply(xim0, xcmaps[0]);
+        xim0.setColormap(...xcmaps[0]);
         JS9.Load(ximages[1], {onload: function(xim1){
-          xim1.setColormap.apply(xim1, xcmaps[1]);
+          xim1.setColormap(...xcmaps[1]);
           JS9.Load(ximages[2], {bin: 2, onload: function(xim2){
-              xim2.setColormap.apply(xim2, xcmaps[2]);
+              xim2.setColormap(...xcmaps[2]);
               // wait so last image has time to get analysis tasks from helper
               window.setTimeout(function(){
                 // sync first image with the others
@@ -221,11 +221,11 @@
     }
     function binit(){
       JS9.Load(bimages[0], {onload: function(bim0){
-        bim0.setColormap.apply(bim0, bcmaps[0]);
+        bim0.setColormap(...bcmaps[0]);
         JS9.Load(bimages[1], {onload: function(bim1){
-          bim1.setColormap.apply(bim1, bcmaps[1]);
+          bim1.setColormap(...bcmaps[1]);
           JS9.Load(bimages[2], {onload: function(bim2){
-              bim2.setColormap.apply(bim2, bcmaps[2]);
+              bim2.setColormap(...bcmaps[2]);
               // wait so last image has time to get analysis tasks from helper
               window.setTimeout(function(){
                 // sync first image with the others
