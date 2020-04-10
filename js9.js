@@ -19406,16 +19406,21 @@ JS9.centroidPolygon = function(points){
 
 // return the image object for the specified image object, name, or filename
 JS9.lookupImage = function(id, display){
-    let i, im, did;
+    let i, im, did, fp;
     const ilen= JS9.images.length;
     // sanity check
     if( !id ){
 	return null;
     }
+    // desktop can have full path in file property, so check that as well
+    if( window.isElectron && window.currentDir ){
+	fp = `${window.currentDir}/${id}`;
+    }
     for(i=0; i<ilen; i++){
 	im = JS9.images[i];
 	if( (id === im )      || (id === im.id)                          ||
 	    (id === im.file)  || (id === im.file.replace(/\[.*\]$/, "")) ||
+	    (fp === im.file)  || (fp === im.file.replace(/\[.*\]$/, "")) ||
 	    (id === im.file0) || (id === (JS9.TOROOT + im.file))         ||
 	    (im.fitsFile      && (id === im.fitsFile)) ){
 	    // make sure the display still exists (light windows disappear)
