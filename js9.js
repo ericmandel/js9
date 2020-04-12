@@ -13917,6 +13917,10 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 		} else if( id === obj.params.file ){
 		    // origin filename
 		    cb.call(this, obj, ginfo);
+		} else if( typeof obj.params.data === "object" &&
+			   id === obj.params.data.syncid       ){
+		    // sync id (see sync plugin)
+		    cb.call(this, obj, ginfo);
 		} else if( id === "child" && obj.params.parent ){
 		    // all
 		    cb.call(this, obj, ginfo);
@@ -13925,17 +13929,15 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 			   obj.params.children.length ){
 		    // all
 		    cb.call(this, obj, ginfo);
-		} else {
+		} else if( obj.params.tags ){
 		    // tags
-		    if( obj.params.tags){
-			for(i=0; i<obj.params.tags.length; i++){
-			    tag = obj.params.tags[i];
-			    if( id.match(/^\/.*\/$/) &&
-				tag.match(new RegExp(id.slice(1,-1)))){
-				cb.call(this, obj, ginfo);
-			    } else if( id === tag ){
-				cb.call(this, obj, ginfo);
-			    }
+		    for(i=0; i<obj.params.tags.length; i++){
+			tag = obj.params.tags[i];
+			if( id.match(/^\/.*\/$/) &&
+			    tag.match(new RegExp(id.slice(1,-1)))){
+			    cb.call(this, obj, ginfo);
+			} else if( id === tag ){
+			    cb.call(this, obj, ginfo);
 			}
 		    }
 		}

@@ -349,7 +349,7 @@ JS9.Sync.xeqSync = function(arr){
 				// if this region is sync'ed remove it
 				if( xdata.syncid === myid ){
 				    // remove region from the target
-				    xim.removeShapes("regions", xarr[k].id);
+				    xim.removeShapes("regions", myid);
 				}
 			    }
 			    break;
@@ -384,8 +384,7 @@ JS9.Sync.xeqSync = function(arr){
 				if( !xdata || !xdata.syncid ){ continue; }
 				if( xdata.syncid === myid ){
 				    // apply changes to target region
-				    xim.changeShapes("regions",
-						     xarr[k].id, myobj);
+				    xim.changeShapes("regions", myid, myobj);
 				}
 			    }
 			    break;
@@ -511,7 +510,14 @@ JS9.Sync.setrot90 = function(im){
 // onregionschange
 JS9.Sync.regionschange = function(im, xreg){
     if( !im ){ return; }
-    JS9.Sync.maybeSync.call(im, "regions", xreg);
+    switch(xreg.mode){
+    case "select":
+    case "unselect":
+	break;
+    default:
+	JS9.Sync.maybeSync.call(im, "regions", xreg);
+	break;
+    }
 };
 
 // onsetscale
