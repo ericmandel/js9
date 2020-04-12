@@ -237,9 +237,9 @@ JS9.Sync.xeqSync = function(arr){
 	// do alignment last: it changes the meaning of the current image
 	for(i=0; i<arr.length; i++){
 	    obj = arr[i];
-	    if( obj.xop === "alignment" ){
+	    if( obj.xop === "regions" ){
 		arr.splice(i, 1);
-		arr.push(obj);
+		arr.unshift(obj);
 	    }
 	}
 	// process all operations
