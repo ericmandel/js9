@@ -234,7 +234,7 @@ JS9.Sync.xeqSync = function(arr){
     this.tmp.syncRunning = true;
     // sync all target images with this operation (but swallow errors)
     try{
-	// do alignment last: it changes the meaning of the current image
+	// do regions first to avoid problems with changes to the current image
 	for(i=0; i<arr.length; i++){
 	    obj = arr[i];
 	    if( obj.xop === "regions" ){
