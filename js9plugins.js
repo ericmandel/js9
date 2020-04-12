@@ -13094,6 +13094,15 @@ JS9.Sync.xeqSync = function(arr){
     this.tmp.syncRunning = true;
     // sync all target images with this operation (but swallow errors)
     try{
+	// do alignment last: it changes the meaning of the current image
+	for(i=0; i<arr.length; i++){
+	    obj = arr[i];
+	    if( obj.xop === "alignment" ){
+		arr.splice(i, 1);
+		arr.push(obj);
+	    }
+	}
+	// process all operations
 	for(i=0; i<arr.length; i++){
 	    obj = arr[i];
 	    xim = obj.xim;

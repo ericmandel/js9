@@ -7238,6 +7238,12 @@ JS9.Image.prototype.copyParams = function(params, images, opts){
 	catch(e){ JS9.error(`can't parse JSON in copyParams: ${params}`, e); }
     }
     if( !$.isArray(params) ){ params = [params]; }
+    // do alignment last: it changes the meaning of the current image
+    i = $.inArray("alignment", params);
+    if( i >= 0 ){
+	params.splice(i, 1);
+	params.push("alignment");
+    }
     // default is all images
     images = images || JS9.images;
     if( typeof images === "string" && images.charAt(0) === '[' ){
