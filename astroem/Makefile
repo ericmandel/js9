@@ -13,15 +13,18 @@ INSTALLDIR =	../js
 # astroem: emscripten-compiled bitcode for astronomical libraries
 ASTROEM =	$$HOME/astroem
 
+# use emscripten ports, rather than our own
+# https://github.com/emscripten-ports
+EMPORTS	=	-s USE_ZLIB=1 -s USE_BZIP2=1
+
 # emcc compiler flags
 # NB: -O2 is the recommended optimization (not -O3, as of 1/27/2015)
 # can't use mem file: we don't know where the mem file will resides
 # EMFLAGS = 	-g --memory-init-file 0
-# EMFLAGS = 	-DEM -g --memory-init-file 0
 # debugging
-# EMFLAGS	= -DEM --memory-init-file 0 -s ASSERTIONS=1
+# EMFLAGS	= --memory-init-file 0 -s ASSERTIONS=1
 # debugging with symbols
-# EMFLAGS	= -DEM -O0 --memory-init-file 0  -s ASSERTIONS=1 -s SAFE_HEAP=1
+# EMFLAGS	= -O0 --memory-init-file 0  -s ASSERTIONS=1 -s SAFE_HEAP=1
 # production
 EMFLAGS		= -O3 --memory-init-file 0
 
@@ -30,7 +33,7 @@ EMFLAGS		= -O3 --memory-init-file 0
 # support zscale up to 4096 * 4096 * 4-byte images
 # EMOPTS =	-s TOTAL_MEMORY=67108864
 # cfitsio requires memory growth
-EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1
+EMOPTS =	-s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 $(EMPORTS)
 # javascript instead of wasm:
 NOWASMOPTS =	-s WASM=0
 # wasm support:
@@ -108,7 +111,9 @@ PKGOBJS =	$(JOBJS) $(MOBJS) $(UOBJS) $(ZOBJS) $(ZSOBJS)
 PKGDIRS =	$(JSFITSIO) $(MONTAGE) $(ZSCALE) $(ZEXTRA)
 
 LIBS =		lib/libcfitsio.a lib/libregions.a lib/libwcs.a lib/libutil.a \
-		lib/libem.a lib/libz.a lib/libbz2.a
+		lib/libem.a
+#		use Emscripten ports instead of our own
+#		lib/libem.a lib/libz.a lib/libbz2.a
 
 # combine into EMCC command
 EMCC =		emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMINCS) $(EMEXTRAS)
