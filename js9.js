@@ -10563,7 +10563,7 @@ JS9.Display.prototype.center = function(){
 
 // gather images from other displays into this display
 JS9.Display.prototype.gather = function(opts){
-    let i, arr, uim;
+    let i, arr, uim, el;
     // opts are optional
     opts = opts || {};
     // opts can be an object or json
@@ -10580,7 +10580,11 @@ JS9.Display.prototype.gather = function(opts){
 	    uim = arr[i];
 	}
 	if( uim && uim.display !== this ){
+	    // save possible grid item element
+	    el = uim.display.divjq.closest(".JS9GridItem");
 	    uim.moveToDisplay(this);
+	    // remove grid item element from DOM
+	    if( el.length > 0 ){ el.remove(); }
 	}
     }
     // extended plugins
@@ -10593,7 +10597,7 @@ JS9.Display.prototype.gather = function(opts){
 
 // separate images in this display into new displays
 JS9.Display.prototype.separate = function(opts){
-    let arr, d0, d1;
+    let arr, d0, d1, el;
     let nsep = 0;
     let row = 0;
     let col = 0;
@@ -10611,14 +10615,29 @@ JS9.Display.prototype.separate = function(opts){
     const SIZE_FUDGE = JS9.bugs.webkit_resize ? JS9.RESIZEFUDGE : 0;
     const COLORBAR_FUDGE = 7;
     const DHTML_HEIGHT = 30 + 13; // height of dhtml lightwin extras;
-    const initopts = (fromID, opts) => {
+    const initopts = (display, fromID, opts) => {
 	// sanity check
 	if( !fromID ){
-	    JS9.error("can't init seapration ops: no from id");
+	    JS9.error("can't init separation ops: no 'from' id");
 	}
 	sep.layout = opts.layout || JS9.globalOpts.separate.layout || "auto";
 	sep.leftMargin = opts.leftMargin || sepopts.leftMargin || 0;
 	sep.topMargin  = opts.topMargin  || sepopts.topMargin  || 0;
+	// check if we want to do a grid ... and if we can
+	if( sep.layout === "auto"                                  &&
+	    display.divjq.closest(".JS9GridContainer").length > 0  ){
+	    sep.layout = "grid";
+	}
+	if( sep.layout === "grid" ){
+	    if( CSS.supports("display", "grid") ){
+		el = display.divjq.closest(".JS9GridContainer");
+		if( el.length > 0 ){
+		    sep.container = el;
+		}
+	    } else {
+		sep.layout = "auto";
+	    }
+	}
 	switch(sep.layout){
 	case "auto":
 	    col = 1;
@@ -10696,7 +10715,7 @@ JS9.Display.prototype.separate = function(opts){
 				sep.js9.width()-SIZE_FUDGE,
 				sep.js9.height()-SIZE_FUDGE);
 		if( sep.statusbar.isactive ){
-		    html += sprintf(statusStr, toID, sep.js9.width());
+		    html += sprintf(statusStr, toID, sep.js9.width()-SIZE_FUDGE);
 		} else if( sep.colorbar.isactive ){
 		    html += sprintf(colorStr, toID, sep.js9.width());
 		}
@@ -10738,7 +10757,7 @@ JS9.Display.prototype.separate = function(opts){
 		// leave the first one in place
 		if( d0 === undefined ){
 		    d0 = im.display.id;
-		    initopts(d0, opts);
+		    initopts(im.display, d0, opts);
 		    separateim(arr);
 		} else {
 		    // create a new window for this image
@@ -10749,6 +10768,27 @@ JS9.Display.prototype.separate = function(opts){
 			d1 = `${d0.replace(rexp, "")}_sep${JS9.uniqueID()}`;
 		    }
 		    saveims[d1] = im;
+		    xopts = getopts(d0, d1);
+		    // replace id, if idbase was supplied in opts
+		    if( id ){
+			xopts.id = id;
+		    }
+		    if( sep.layout === "grid" ){
+			// a div hold the html for this separated display,
+			// and is appended to grid container
+			$("<div>")
+			    .prop("id", xopts.id + "GridItem")
+			    .addClass("JS9GridItem")
+			    .append($(xopts.html))
+			    .appendTo(sep.container);
+			// create the new JS9 display, with associated plugins
+			JS9.AddDivs(xopts.id);
+			// move this image
+			saveims[xopts.id].moveToDisplay(xopts.id);
+			// process next image
+			separateim(arr);
+		    } else {
+	            // create a light wndow
 		    // code to run when new window exists
 		    $("#dhtmlwindowholder").arrive(`#${d1}`, {onceOnly: true},
 			(el) => {
@@ -10761,14 +10801,10 @@ JS9.Display.prototype.separate = function(opts){
 				separateim(arr);
 			    }, 0);
 			});
-		    xopts = getopts(d0, d1);
-		    // replace id, if idbase was supplied in opts
-		    if( id ){
-			xopts.id = id;
-		    }
 		    // load new window, code above gets run when window exists
 		    JS9.LoadWindow(null, {id: xopts.id}, "light",
 				   xopts.html, xopts.winopts);
+		    }
 		}
 	    } else {
 		// this image is in a different display, so process next image
