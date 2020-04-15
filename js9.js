@@ -10606,6 +10606,7 @@ JS9.Display.prototype.separate = function(opts){
     const toolStr = "<div class='JS9Toolbar' id='%sToolbar' data-width=%s></div>";
     const js9Str = "<div class='JS9' id='%s' data-width=%s data-height=%s></div>";
     const colorStr = "<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' data-width=%s></div></div>";
+    const statusStr = "<div class='JS9Statusbar' id='%sStatusbar' data-width=%s></div>";
     const winoptsStr = "width=%s,height=%s,top=%s,left=%s,resize=1,scolling=1";
     const SIZE_FUDGE = JS9.bugs.webkit_resize ? JS9.RESIZEFUDGE : 0;
     const COLORBAR_FUDGE = 7;
@@ -10647,8 +10648,12 @@ JS9.Display.prototype.separate = function(opts){
 	if( sep.toolbar.length > 0 ){
 	    sep.toolbar.isactive = sep.toolbar.closest(".JS9PluginContainer").css("visibility") === "visible";
 	}
+	sep.statusbar = $(`#${fromID}Statusbar`);
+	if( sep.statusbar.length > 0 ){
+	    sep.statusbar.isactive = sep.statusbar.closest(".JS9PluginContainer").css("visibility") === "visible";
+	}
 	sep.colorbar = $(`#${fromID}Colorbar`);
-	if( sep.colorbar.length > 0 ){
+	if( sep.colorbar.length > 0 && !sep.statusbar.length ){
 	    sep.colorbar.isactive = sep.colorbar.closest(".JS9PluginContainer").css("visibility") === "visible";
 	}
 	if( sep.js9.length > 0 ){
@@ -10665,7 +10670,10 @@ JS9.Display.prototype.separate = function(opts){
 		sep.height += sep.toolbar.height();
 		sep.top -= sep.toolbar.height();
 	    }
-	    if( sep.colorbar.isactive ){
+	    if( sep.statusbar.isactive ){
+		sep.height += sep.statusbar.height();
+		sep.top -= sep.statusbar.height();
+	    } else if( sep.colorbar.isactive ){
 		sep.height += sep.colorbar.height();
 		sep.top -= sep.colorbar.height();
 		sep.top += COLORBAR_FUDGE;
@@ -10687,7 +10695,9 @@ JS9.Display.prototype.separate = function(opts){
 				toID,
 				sep.js9.width()-SIZE_FUDGE,
 				sep.js9.height()-SIZE_FUDGE);
-		if( sep.colorbar.isactive ){
+		if( sep.statusbar.isactive ){
+		    html += sprintf(statusStr, toID, sep.js9.width());
+		} else if( sep.colorbar.isactive ){
 		    html += sprintf(colorStr, toID, sep.js9.width());
 		}
 	    }
@@ -23943,7 +23953,8 @@ JS9.mkPublic("LoadWindow", function(...args){
 	html += `<div class='JS9' id='${id}'></div>`;
 	// colorbar
 	if( !display                                         ||
-	    ($(`#${opts.clone}Colorbar`).length > 0         &&
+	    ($(`#${opts.clone}Colorbar`).length > 0          &&
+	     $(`#${opts.clone}Statusbar`).length ===0        &&
 	     !display.pluginInstances.JS9Colorbar.isDynamic) ){
 	    if( display && display.pluginInstances.JS9Colorbar ){
 		s = `data-showTicks='${display.pluginInstances.JS9Colorbar.showTicks}'`;
@@ -23957,6 +23968,13 @@ JS9.mkPublic("LoadWindow", function(...args){
 	    }
 	} else if( winopts ){
 	    wheight -= 44;
+	}
+	if( !display                                         ||
+	    ($(`#${opts.clone}Statusbar`).length > 0         &&
+	     !display.pluginInstances.JS9Statusbar.isDynamic) ){
+	    html += `<div class='JS9Statusbar' id='${id}Statusbar'></div>`;
+	} else if( winopts ){
+	    wheight -= 40;
 	}
 	if( winopts ){
 	    if( JS9.Dysel.retrievePlugins().length ){
