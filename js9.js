@@ -10612,7 +10612,6 @@ JS9.Display.prototype.separate = function(opts){
     const colorStr = "<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' data-width=%s></div></div>";
     const statusStr = "<div class='JS9Statusbar' id='%sStatusbar' data-width=%s></div>";
     const winoptsStr = "width=%s,height=%s,top=%s,left=%s,resize=1,scolling=1";
-    const SIZE_FUDGE = JS9.bugs.webkit_resize ? JS9.RESIZEFUDGE : 0;
     const COLORBAR_FUDGE = 7;
     const DHTML_HEIGHT = 30 + 13; // height of dhtml lightwin extras;
     const initopts = (display, fromID, opts) => {
@@ -10710,12 +10709,9 @@ JS9.Display.prototype.separate = function(opts){
 		if( sep.toolbar.isactive ){
 		    html += sprintf(toolStr, toID, sep.js9.width());
 		}
-		html += sprintf(js9Str,
-				toID,
-				sep.js9.width()-SIZE_FUDGE,
-				sep.js9.height()-SIZE_FUDGE);
+		html += sprintf(js9Str, toID, sep.js9.width(),sep.js9.height());
 		if( sep.statusbar.isactive ){
-		    html += sprintf(statusStr, toID, sep.js9.width()-SIZE_FUDGE);
+		    html += sprintf(statusStr, toID, sep.js9.width());
 		} else if( sep.colorbar.isactive ){
 		    html += sprintf(colorStr, toID, sep.js9.width());
 		}
