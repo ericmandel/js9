@@ -333,7 +333,7 @@ JS9.Menubar.createMenus = function(){
 	// it has to be put into the first context menu that is registered
 	itemClickEvent: JS9.globalOpts.menuClickEvent || "click",
         build: () => {
-	    let i, m, im, name, s1, arr, cdisp, got, iobj;
+	    let i, m, im, name, s1, arr, cdisp, got, iobj, cel;
 	    let plugin, pname, pinst;
 	    let lastxclass="";
 	    let n = 0;
@@ -502,10 +502,16 @@ JS9.Menubar.createMenus = function(){
 		items: {
 		}
 	    };
-	    items.separates.items.separate = xname("separate these images");
-	    items.separates.items.gather = xname("gather all images here");
-	    if( !tim ){
+	    if( !JS9.images.length ){
 		items.separates.disabled = true;
+	    }
+	    items.separates.items.separate = xname("separate these images");
+	    if( !tim ){
+		items.separates.items.separate.disabled = true;
+	    }
+	    items.separates.items.gather = xname("gather all images here");
+	    if( tim && JS9.images.length === 1 ){
+		items.separates.items.gather.disabled = true;
 	    }
 	    items.closes = {
 		name: "close ...",
@@ -617,6 +623,16 @@ JS9.Menubar.createMenus = function(){
 		    items.supermenu.items.super_all.icon = JS9.globalOpts.menuSelected;
 		}
 	    }
+	    items.removedisplay = xname("remove this display");
+	    cel = tdisp.divjq.closest(".JS9GridContainer");
+	    if( !tim                                                      ||
+		tdisp.winid                                               ||
+		(cel.length > 0  && cel.find(".JS9GridItem").length > 1)  ){
+		items.removedisplay = xname("remove this display");
+		items.removedisplay.disabled = false;
+	    } else {
+		items.removedisplay.disabled = true;
+	    }
 	    items[`sep${n++}`] = "------";
 	    items.print = xname("print ...");
 	    if( !tim ){
@@ -693,6 +709,12 @@ JS9.Menubar.createMenus = function(){
 			case "removeproxy":
 			    if( uim ){
 				uim.removeProxyFile();
+			    }
+			    break;
+			case "removedisplay":
+			    if( udisp ){
+				// remove this display
+				JS9.RemoveDisplay(udisp.id);
 			    }
 			    break;
 			case "savecurrent":

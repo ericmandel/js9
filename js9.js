@@ -25412,6 +25412,41 @@ JS9.mkPublic("CenterDisplay", function(...args) {
     return;
 });
 
+// close all images and remove this display (lightwin or grid only)
+JS9.mkPublic("RemoveDisplay", function(...args) {
+    let idx, cel, el;
+    const obj = JS9.parsePublicArgs(args);
+    const display = JS9.lookupDisplay(obj.argv[0] || obj.display);
+    if( !display ){
+	JS9.error("invalid display for remove");
+    }
+    idx = $.inArray(display, JS9.displays);
+    if( idx >= 0 ){
+	cel = display.divjq.closest(".JS9GridContainer");
+	el = display.divjq.closest(".JS9GridItem");
+	if( cel.length > 0 && el.length > 0 ){
+	    if( cel.find(".JS9GridItem").length > 1 ){
+		// close all images
+		JS9.CloseDisplay(display.id);
+		// remove DOM element from grid
+		el.remove();
+		JS9.displays.splice(idx, 1);
+	    } else {
+		JS9.error(`can't remove last display in grid: ${display.id}`);
+	    }
+	} else if( display.winid && display.winid.close ){
+	    // close all images
+	    JS9.CloseDisplay(display.id);
+	    // close light window
+	    display.winid.close();
+	} else {
+	    JS9.error("can only remove displays within a grid or lightwins");
+	}
+    } else {
+	JS9.error(`can't find display in display list: ${display.id}`);
+    }
+});
+
 // save a session (current image, images in current display, or all images)
 JS9.mkPublic("SaveSession", function(...args){
     let fname, display, disp, arg1, arg2;

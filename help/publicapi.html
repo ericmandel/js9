@@ -32,11 +32,11 @@ The JS9 Public API provides a JavaScript programming interface for
 interacting with JS9. Obviously, all of JS9 JavaScript code is
 available to you within a web page, but the public API is designed to
 stable and well-documented for users and web designers. It also will
-provide the basis for planned language bindings (python, perhaps C/Fortran).
+provide the basis for planned language bindings (Python, perhaps C/Fortran.)
 <p>
 In general, the public API routines act on the current image being
 displayed in the default JS9 display (i.e., the HTML div element that
-defines the JS9 display). Since most web pages will have only a single
+defines the JS9 display.) Since most web pages will have only a single
 JS9 display, this behavior is usually what you want. It parallels
 DS9's behavior in which XPA commands act on the currently displayed
 image. For example, to change the colormap of the current image, use:
@@ -53,7 +53,7 @@ a single <b>display</b> property:
     {display: [display_id]}
 </pre>
 where [display_id] is the id of the target JS9 display (i.e. the id of
-the HTML div element). For example, if two JS9 displays with ids "JS9"
+the HTML div element.) For example, if two JS9 displays with ids "JS9"
 and "myJS9", respectively, are present on a single web page, you can
 set the colormap of the second one this way:
 <pre>
@@ -227,11 +227,11 @@ except that <b>opts</b> can contain:
 If no id is specified, a unique id is generated.
 <li><b>clone</b>: the id of a display to clone:
 the menubar and colorbar will be created if and only if they are
-present in the cloned display (for light window creation only).
+present in the cloned display (for light window creation only.)
 </ul>
 <p>
 The <b>type</b> argument determines whether to create a light-weight
-window ("light", which is the default) or a new, separate window ("new").
+window ("light", which is the default) or a new, separate window ("new".)
 <p>
 By default, the created window will contain a Menubar above a JS9
 Display area and a Colorbar below:
@@ -276,7 +276,7 @@ JS9 back-end helper as a proxy server.
 <p>
 For security reasons, JavaScript contained in one web page can
 access data in another web page only if both web pages have the
-same origin (i.e., basically coming from the same host).  This
+same origin (i.e., basically coming from the same host.)  This
 policy is called the 
 <a href="https://en.wikipedia.org/wiki/Same-origin_policy" target="_blank">
 Same Origin Policy</a>. This means that JS9 cannot load a image files
@@ -468,7 +468,7 @@ returns:
 </ul>
 <p>
 The <b>JS9.LookupImage()</b> routine takes a string id as input and
-returns the image handle of the image having that id (or null). The id
+returns the image handle of the image having that id (or null.) The id
 is the same as is found in the <b>File</b> menu list of displayed images.
 This routine is similar to the standard
 <a href="#JS9.GetImage"><b>JS9.GetImage()</b></a>
@@ -526,7 +526,7 @@ of <b>dflag</b>. If <b>dflag</b> is the boolean value true, an HTML5
 typed array is returned. In JavaScript, typed arrays are more
 efficient than ordinary JavaScript arrays, and, in this case, the
 returned data is actually just reference to the real JS9 image data
-(so be careful about changing values).
+(so be careful about changing values.)
 <p>
 If <b>dflag</b> is the string "array", a JavaScript array is returned.
 This is not a reference to the real data and will utilize
@@ -536,7 +536,7 @@ If <b>dflag</b> is the string "base64", a base64-encoded string is
 returned.  Early on, this seems to be the fastest method of
 transferring data via socket.io an external process such as
 Python. Currently, the "array" method should generally be used (this
-is now the default for the pyjs9 interface to Python).
+is now the default for the pyjs9 interface to Python.)
 
 <p>
 The <b>file</b> value can be a FITS file or a representation PNG file. The
@@ -591,7 +591,7 @@ where:
 </ul>
 The display steps are: "colors" (remake color data when cmap has changed),
 "scaled" (rescale data values), "primary" (convert scaled data values
-to color values), and "display" (write color values to the web page).
+to color values), and "display" (write color values to the web page.)
 <p>
 The default step is "primary", which displays the image without recalculating
 color data, scaled data, etc. This generally is what you want, unless you have
@@ -635,14 +635,14 @@ an external program rewrites the image file, and the new data are then
 used to refresh the display. Note that the specified file becomes the
 current image file and will be used for subsequent server-based
 analysis request as well as refreshImage() calls with a null input
-argument (see next paragraph).
+argument (see next paragraph.)
 <p>
 If the <b>input</b> argument is null, the current image file is
 reloaded, assuming its file path (or URL) is known. For security
 reasons, browsers do not expose the path of files loaded via <i>Drag
 and Drop</i> or <i>Open Local File</i>. On a local web page, you can
 safely use the <b>File -> set this image file's path</b> menu option
-to enter the image path here for subsequent reloading (or analysis).
+to enter the image path here for subsequent reloading (or analysis.)
 <p>
 When passing an object as <b>input</b>, the required <b>image</b>
 property containing the image data can be a javascript array or a
@@ -713,7 +713,7 @@ where:
 </ul>
 This routine allows you to extract and display a section of FITS file.
 If the first argument is the text string "full", the full image is
-displayed (assuming there is sufficient memory available).  Otherwise
+displayed (assuming there is sufficient memory available.)  Otherwise
 the opts object contains properties specifying how to generate and
 display the section:
 <ul>
@@ -743,7 +743,7 @@ bin directives are:
 Note that the <b>JS9.globalOpts.binMode</b> property specifies the
 default action for whether the binned pixels are summed together (if
 the global binMode is "s") or averaged (if the global binMode is
-"a"). This behavior can be overridden by the <b>binMode</b> option or by
+"a".) This behavior can be overridden by the <b>binMode</b> option or by
 last two bin directives listed above.
 
 <p>
@@ -1093,7 +1093,7 @@ When the JS9.SyncImages() call is invoked, the current image is
 configured to synchronize the specified images.  In addition, if
 the <b>reciprocate</b> property is set in the opts object (see below),
 the other images are also configured to synchronize one another (as
-well as the current image). Once configuration is complete, a sync
+well as the current image.) Once configuration is complete, a sync
 command is executed immediately. If the current image already
 displays one or more regions, these will be created in the target images.
 
@@ -1369,7 +1369,7 @@ The <b>color</b> parameter must match one of the colors specified when the
 static colormap was created. The <b>min</b> and <b>max</b> properties replace
 the originally specified min and max values. Specifying a number between 0
 and 1 (inclusive) will change the opacity, while specifying a number greater
-than 1 will change the alpha (i.e., opacity * 255). Specifying <b>true</b> or
+than 1 will change the alpha (i.e., opacity * 255.) Specifying <b>true</b> or
 <b>false</b> will set or unset the <b>active</b> flag for that color, i.e.
 it will turn on or off use of that color. When turned off, the pixels in that
 range will be transparent. For example:
@@ -1460,7 +1460,7 @@ interpolated between the vertices.  For example, consider the following:
 </pre>
 In the red (blue) colormap, the red (blue) array contains two
 vertices, whose color ranges from no intensity (0) to full intensity
-(1) over the whole range of the colormap (0 to 1). The same holds true
+(1) over the whole range of the colormap (0 to 1.) The same holds true
 for the purple colormap, except that both red and blue change from zero
 to full intensity.
 <p>
@@ -1484,7 +1484,7 @@ the string "Infinity".) If an image pixel value is not within any
 range, it is assigned the color specified
 by <b>JS9.imageOpts.nocolor</b>. By default, this is black with an
 opacity of 0, so nothing is displayed at all (you'll probably see the
-default grey background of the JS9 display element). Static colormaps
+default grey background of the JS9 display element.) Static colormaps
 are mostly used as image masks. See
 <a href="#JS9.MaskImage"><b>JS9.MaskImage()</b></a> for more information.
 
@@ -1830,7 +1830,7 @@ For example:
 </pre>
 will set the pan position to the specified RA and Dec using the ICRS
 system. Note that the WCS string above is returned by the <b>Edit</b>
-menu's "copy wcs pos" option (i.e., the "/" keystroke).
+menu's "copy wcs pos" option (i.e., the "/" keystroke.)
 
 <p>
 Finally, if you pass the string "mouse" as the sole argument, the
@@ -1905,7 +1905,7 @@ Possible returned flip states are: "x", "y", "xy", or "none".
 The state is normalized, so that, for example, two "x" flips are
 replaced by "none". NB: if you have also rotated the image using
 <a href="#JS9.SetRot90"><b>JS9.SetRot90()</b></a>, the total flip and
-rotate state is no longer separable like this (since rotations do not commute).
+rotate state is no longer separable like this (since rotations do not commute.)
 
 <h5 id="JS9.SetRot90">Rotate an image by +/- 90 degrees</h5>
 <p>
@@ -1931,7 +1931,7 @@ The returned rotation value will be a multiple of 90, depending on how
 many rotations have been executed and in which direction.  
 NB: if you have also flipped the image using
 <a href="#JS9.SetFlip"><b>JS9.SetFlip()</b></a>, the total flip and
-rotate state is no longer separable like this (since rotations do not commute).
+rotate state is no longer separable like this (since rotations do not commute.)
 
 
 <h5 id="JS9.GetParam">Get an image parameter value</h5>
@@ -2094,7 +2094,7 @@ coordinate values
 </ul>
 If you define your own event callbacks, you can use this routine to convert
 the event position to a display position, which can then be used to get the
-image position (see below).
+image position (see below.)
 
 <h5 id="JS9.DIsplayToImagePos">Get the image coordinates from the display coordinates</h5>
 <p>
@@ -2146,14 +2146,14 @@ returns:
 coordinate values
 </ul>
 Logical coordinate systems include: "physical" (defined by LTM/LTV keywords in a
-FITS header), "detector" (DTM/DTV keywords), and "amplifier" (ATM/ATV keywords).
+FITS header), "detector" (DTM/DTV keywords), and "amplifier" (ATM/ATV keywords.)
 Physical coordinates are the most common. In the world of X-ray astronomy, they
 refer to the "zoom 1" coordinates of the data file.
 
 <p>
 This routine will convert from logical to image coordinates. By default, the
 current logical coordinate system is used. You can specify a different logical
-coordinate system (assuming the appropriate keywords have been defined).
+coordinate system (assuming the appropriate keywords have been defined.)
 
 <h5 id="JS9.ImageToLogicalPos">Get the logical coordinates from the image coordinates</h5>
 <p>
@@ -2170,13 +2170,13 @@ returns:
 coordinate values
 </ul>
 Logical coordinate systems include: "physical" (defined by LTM/LTV keywords in a
-FITS header), "detector" (DTM/DTV keywords), and "amplifier" (ATM/ATV keywords).
+FITS header), "detector" (DTM/DTV keywords), and "amplifier" (ATM/ATV keywords.)
 Physical coordinates are the most common. In the world of X-ray astronomy, they
 refer to the "zoom 1" coordinates of the data file.
 <p>
 This routine will convert from image to logical coordinates. By default, the
 current logical coordinate system is used. You can specify a different logical
-coordinate system (assuming the appropriate keywords have been defined).
+coordinate system (assuming the appropriate keywords have been defined.)
 
 <h5 id="JS9.GetValPos">Get value/position information</h5>
 <p>
@@ -2282,7 +2282,7 @@ where:
 Set the current WCS, in cases where alternate WCS's are available. The
 alternate WCS convention is described in the standard paper by Greisen
 and Callebretta <i>Representations of world coordinates in FITS</i>
-(A&A 395, 1061–1075 (2002)). If a FITS file contains alternate WCS
+(A&A 395, 1061–1075 (2002).) If a FITS file contains alternate WCS
 info, you can switch to an alternate using this routine or using
 the <b>File->alternate wcs</b> menu option.
 <p>
@@ -2398,7 +2398,7 @@ where:
 <li><b>text</b>: text to display
 </ul>
 The text string is displayed in the "info" area (usually occupied by the
-valpos display) or the "region" area (where regions are displayed). The
+valpos display) or the "region" area (where regions are displayed.) The
 empty string will clear the previous message.
 
 <h5 id="JS9.DisplayCoordGrid">Display a WCS-based coordinate grid</h5>
@@ -2644,7 +2644,7 @@ Analysis menu. The displayed source and background regions are passed
 to the server for processing. Because this version runs the desktop
 program, it runs on the original file and does no binning to reduce
 the image size (which, by the way, could lengthen the processing
-time). But the server-side task also can be useful for
+time.) But the server-side task also can be useful for
 <a href="./repfile.html">large file support</a>, which involves
 displaying a small representation file associated with a much larger
 parent file stored on the server. In this case, you often want to run
@@ -2664,7 +2664,7 @@ The <b>JS9.RadialProfile()</b> routine
 uses <a href="#JS9.CountsInRegions"><b>JS9.CountsInRegions()</b></a>
 to produce a radial profile plot. The source region argument should
 be an annulus region (or, when using "$sregions", the displayed source
-region should be an annulus). The background region can be any
+region should be an annulus.) The background region can be any
 region(s), the same as for the counts routine.
 
 <p>
@@ -2701,7 +2701,7 @@ setting
 the image pixel values, and then making this layer the current
 one. The original raw data (with id "raw0") will be maintained in
 separate layer, so you can switch between layers (also using this
-routine).
+routine.)
 
 <p>
 To create a new raw data layer (or edit an existing layer), call the
@@ -2713,7 +2713,7 @@ name) and a function. The layer opts object can have the following properties:
 <li><b>from</b>: descriptive string describing origin of this raw data (def: "func")
 </ul>
 Alternative, you can pass the id of the raw data layer as a string and
-use the defaults for the other properties (which usually is sufficient).
+use the defaults for the other properties (which usually is sufficient.)
 
 <p>
 The pixel modifying function should have the following calling sequence:
@@ -2727,7 +2727,7 @@ where:
 <li><b>opts</b>: the original opts object along with any params you add to it
 </ul>
 The function should return <b>true</b> is you want to switch to the new layer
-and display it, or <b>false</b> to discard the new layer (in case of an error).
+and display it, or <b>false</b> to discard the new layer (in case of an error.)
 
 <p>
 Note that the <b>nraw</b> object will contain the raw data for this
@@ -2840,7 +2840,7 @@ between the corresponding pixels in the two images. For example:
 </pre>
 will make a new data layer of the currently displayed image, where
 each pixel is the larger value from that image and the foo.fits image
-(which can be in any display).
+(which can be in any display.)
 
 <p>
 This routine creates a new raw data layer called "imarith" containing
@@ -2865,7 +2865,7 @@ layer, allowing you to start afresh.
 The bitpix value of the new "imarith" layer is chosen as follows:
 <ul>
 <li> for operations between two images, bitpix the "larger" of the two
-images (where float is "larger" than int).
+images (where float is "larger" than int.)
 <li> for operations between an image and a constant, bitpix of -32
 (single float) is chosen unless the image itself has bitpix of -64, in
 which case the double float bitpix is chosen.
@@ -2965,7 +2965,7 @@ Reprojection is an intensive process which can take a considerable
 amount of memory and processing time. It also (at least currently)
 requires that the full reprojected image be displayed (so that the
 reprojected image can be properly aligned with the WCS image used in
-making the reprojection).  We therefore restrict the WCS image size to
+making the reprojection.)  We therefore restrict the WCS image size to
 be less than or equal to JS9.globalOpts.image.xdim by
 JS9.globalOpts.image.ydim. If the WCS image exceeds this size, an
 error is thrown.
@@ -2984,7 +2984,7 @@ where:
 </ul>
 The <b>JS9.RotateData()</b> routine uses
 <a href="#JS9.ReprojectData"><b>JS9.ReprojectData()</b></a>
-to rotate image data by the specified angle (in degrees). If the string
+to rotate image data by the specified angle (in degrees.) If the string
 "northup" or "northisup" is specified, the rotation angle is set to 0.
 By default, the rotation is performed about the WCS CRPIX1, CRPIX2 point.
 To rotate about the center of the currently displayed image, pass
@@ -3488,7 +3488,7 @@ The opts object can contain the parameters
 described in the
 <a href="#JS9.AddRegions"><b>JS9.AddRegions()</b></a>
 section. However, you cannot (yet)
-change the shape itself (e.g., from "box" to "circle"). See js9onchange.html
+change the shape itself (e.g., from "box" to "circle".) See js9onchange.html
 for examples of how to use this routine.
 
 <h5 id="JS9.CopyRegions">Copy one or more regions to another image</h5>
@@ -3556,7 +3556,7 @@ regions are removed.
 <p>
 If you accidentally remove one or more regions, you can use restore
 them using this call. JS9 maintains a stack of removed regions (of
-size <b>JS9.globalOpts.unremoveReg</b>, current default is 100). Each
+size <b>JS9.globalOpts.unremoveReg</b>, current default is 100.) Each
 time one or more regions is removed, they are stored as a single entry
 on this stack. The <b>UnremoveRegions</b> call pops the last entry off
 the stack and calls <b>AddRegions</b>.
@@ -3588,7 +3588,7 @@ If the <b>layer</b> argument is not specified, it defaults to
 "regions", i.e.,  the usual regions layer. You can specify a different
 layer, e.g., if you want to save a catalog layer as a region file
 (since <a href="#JS9.SaveCatalog"><b>JS9.SaveCatalog()</b></a>
-will save the data in table format instead of as regions).
+will save the data in table format instead of as regions.)
 
 <p>
 The <b>layer</b> argument can also be an object or a JSON-formatted string
@@ -3887,7 +3887,7 @@ layer must be visible.
 <p>
 This routine forms the basis for the <b>Shape Layer</b> plugin, which
 provides a graphical way to make a layer active (by moving it to the
-top of the layer stack).
+top of the layer stack.)
 
 <h5 id="JS9.AddShapes">Add one or more shapes to the specified layer</h5>
 <p>
@@ -4029,7 +4029,7 @@ Change one or more shapes. The opts object can contain the parameters
 described in the
 <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
 section. However, you cannot (yet)
-change the shape itself (e.g., from "box" to "circle").
+change the shape itself (e.g., from "box" to "circle".)
 
 <p>
 If the <b>shapes</b> argument is not specified, it defaults to
@@ -4132,7 +4132,7 @@ The second argument is either a blob or a string containing the table
 data described above. Blobs are the result of loading a local file
 into the browser (e.g., the <b>load catalog</b> menu option), while
 strings result from a remote XHR call (e.g., the <b>Archives and
-Catalogs</b> plugin).  Alternatively, the second string argument can
+Catalogs</b> plugin.)  Alternatively, the second string argument can
 be a file name or URL to load. File names are distinguished from
 strings containing a table in that the latter must contain at least one
 tab.
@@ -4231,7 +4231,7 @@ you have set up for downloads.
 If the <b>which</b> argument is not specified, the catalog associated
 with the current active layer will be saved. In either case, the
 layer to save must actually be a catalog created from a tab-delimited
-file (or URL) of catalog objects (not, for example, the regions layer).
+file (or URL) of catalog objects (not, for example, the regions layer.)
 
 <p><hr>
   
@@ -4338,7 +4338,7 @@ whether this task is available for the current image
 <li><b>hidden:</b> if true, the analysis task is not shown in the Analysis menu
 </ul>
 Not every property listed above will be present in every task definition
-(e.g., <b>purl</b> is only present when there is a parameter form).
+(e.g., <b>purl</b> is only present when there is a parameter form.)
 Also note that hidden tasks are not returned by this call.
 
 <h5 id="JS9.RunAnalysis">Run a server-side analysis task</h5>
@@ -4379,7 +4379,7 @@ where:
 Typically, you would check stderr string first and issue an error
 message if there is an error. Otherwise, the stdout string can be
 processed based on the return type (rtype) property of the output
-(e.g., "text" or "plot"). For plotting, you can use <b>flot</b>
+(e.g., "text" or "plot".) For plotting, you can use <b>flot</b>
 functionality already loaded into JS9, or you can use your own chosen
 plotting package.
 <p>
@@ -4453,7 +4453,7 @@ These Montage programs have been compiled into JS9 using
 Because the browser environment is memory-limited, there are some
 restrictions on generating mosaics in JS9. The FITS files must be
 well-behaved, i.e., they must have WCS projections which can be
-approximated by tangent-plane projections (TAN, SIN, ZEA, STG, ARC).
+approximated by tangent-plane projections (TAN, SIN, ZEA, STG, ARC.)
 This precludes creating mosaics from images covering large portions of
 the sky. For large sky areas, please use Montage itself on your desktop
 to create a mosaic. A simplified js9mosaic script is included in
@@ -4488,7 +4488,7 @@ Montage processes the images. The "reduce" technique either runs
 internal JS9 image sectioning code (to produce smaller internal
 images, each of which are reprojected and added together) or runs the
 Montage mShrinkHdr code (which reprojects the full images into smaller
-files). The former seems to be faster than the latter in most
+files.) The former seems to be faster than the latter in most
 cases. The "verbose" parameter will display output on the JavaScript
 console to let you know that the CreateMosaic() call is running properly.
 
@@ -4496,7 +4496,7 @@ console to let you know that the CreateMosaic() call is running properly.
 The resulting mosaic will be loaded into the specified JS9 display as
 a separate image. Because the mosaic is separate from the original
 image(s), you can view each of the latter individually (or view each
-image extension of a single image using the <b>Extensions</b> plugin).
+image extension of a single image using the <b>Extensions</b> plugin.)
 Internal analysis can be performed on the mosaic (e.g., ImExam functions)
 but, of course, no external analysis tasks will be available.
 
@@ -4519,7 +4519,7 @@ the first available display is returned.
 <p>
 If <b>dname</b> is specified but does not exist, an error is thrown unless
 the <b>mustExist</b> parameter is explicitly set to false (i.e., the default
-is that the id must exist).
+is that the id must exist.)
 
 <h5 id="JS9.ResizeDisplay">Resize the JS9 Display</h5>
 <p>
@@ -4536,7 +4536,7 @@ You can resize the JS9 display by supplying new width and
 height parameters. The div on the web page will be resized and the
 image will be re-centered in the new display. If the display size has
 been increased, more of the image will be displayed as needed (up to
-the new size of the display). For example, if the original display was
+the new size of the display.) For example, if the original display was
 512x512 and you increase it to 1024x1024, a 1024x1024 image will now
 be displayed in its entirety.
 
@@ -4641,11 +4641,13 @@ You also can supply an opts object containing the properties:
 <li><b>topMargin</b>: margin in pixels between vertically separated images
 <li><b>idbase</b>: base string for ids of separated displays
 </ul>
-The "horizontal" layout will generate a single row of images. The
-"vertical" layout will generate a single column of images.  The "auto"
-option will layout the images in one or more rows. Each row will
-contain one or more images such that at least one-half of the right-most
-image is visible in the browser without the need for horizontal scrolling.
+By default, the new displays are all placed in light windows, whose
+positions can be adjusted on the screen as needed.  The "horizontal"
+layout will generate a single row of images. The "vertical" layout
+will generate a single column of images.  The "auto" option will
+layout the images in one or more rows. Each row will contain one or
+more images such that at least one-half of the right-most image is
+visible in the browser without the need for horizontal scrolling.
 <p>
 Note that you can supply the opts object without supplying the display
 parameter, e.g:
@@ -4656,11 +4658,48 @@ will separate images from the default "JS9" display in a horizontal layout.
 <p>
 By default, the ids of the successive JS9 displays will consist of
 the original display id, followed by the string "_sep", followed by an
-increasing integer (not necessarily starting at 1). If you pass
+increasing integer (not necessarily starting at 1.) If you pass
 the <b>idbase</b> property in the opts object, the id of each successive
 display will be the specified base id followed by an increasing integer
 that does start from 1. In the latter case, it is your responsibility to
 ensure that the new ids to not conflict with existing ids.
+
+<p>
+Instead of light windows to hold the new displays, you can also use the
+<a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout" target="_blank">CSS Grid Layout</a> to automatically position the new displays in
+ordinary div elements. To do this, the layout is set to "auto" and the initial
+display (along with its menubar, colorbar, statusbar) is wrapped in two divs:
+<ul>
+<li> an outer div of class <b>JS9GridContainer</b>
+<li> an inner div of class <b>JS9GridItem</b>
+</ul>
+If a browser supports CSS Grid Layout (most do as of 2017), a grid layout
+will be used. Otherwise, light windows will be used. For example:
+<pre>
+    &lt;div class="JS9GridContainer"&gt;
+    &lt;div class="JS9GridItem"&gt;
+        &lt;div class="JS9Menubar" id="JS9Menubar"&gt;&lt;/div&gt;
+        &lt;div class="JS9" id="JS9"&gt;&lt;/div&gt;
+        &lt;div class="JS9Statusbar"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;/div&gt;
+</pre>
+The outer <b>JS9GridContainer</b> div is associated with the CSS
+Grid container (i.e. its <b>display</b> property is set to <b>grid</b>.)
+The inner <b>JS9GridItem</b> div delineates the contents of the "item" that
+will added to the container when the displays are separated.
+
+<p>
+You can tailor the layout by adding Grid Layout CSS directives to
+<b>JS9GridContainer</b>. In particular, style elements such as
+<b>grid-template-columns</b> and <b>grid-gap</b> are applied to this div:
+<pre>
+      div.JS9GridContainer {
+	  grid-template-columns: repeat(3, 1fr);
+	  grid-gap: 10px;
+      }
+</pre>
+See <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout" target="_blank">CSS Grid Layout</a> for more information about CSS Grids.
 
 <h5 id="JS9.CenterDisplay">Scroll the JS9 display to the center of the viewport</h5>
 <p>
@@ -4737,6 +4776,25 @@ and specify the template as the first argument:
   JS9.CloseDisplay(".*mask.fits.gz");
 </pre>
 
+<h5 id="JS9.RemoveDisplay">Close all images in a display and remove the display</h5>
+<p>
+<code class="api">JS9.RemoveDisplay(dname)</code>
+<p>
+where:
+<ul>
+<li><b>dname</b>: name of JS9 display to remove
+</ul>
+This routine will close all images in the specified display and then
+remove the display. It is available for displays contained in
+light windows and for displays contained in JS9 Grid Containers. When
+removing the display inside a light window, the light window is
+immediately closed without a confirmation dialog box (unlike a light
+window being closed via its <b>close</b> button.) For a display inside
+a JS9 Grid Container, the display is removed from the DOM, so that it
+no longer is part of the grid layout. Note, however, that you cannot
+remove all displays from a grid container: at least one display must be
+left in the container.
+
 <p><hr>
   
 <h4 id="misc">Miscellaneous</h4>
@@ -4752,7 +4810,7 @@ where:
 <p>
 Print the currently displayed image. A new window is displayed
 containing the image, along with regions and other graphical layers
-(the 2D graphics having been converted to a re-scalable format).  The
+(the 2D graphics having been converted to a re-scalable format.)  The
 standard Print dialog box also is displayed and can be used to print
 this new window.  Dismiss both windows when you are finished.
 
@@ -4872,7 +4930,7 @@ where:
 </ul>
 Save the currently displayed image as a PNG file. If filename is not
 specified, the file will be saved as "js9.png". The image is saved
-along with the graphical overlays (regions, etc.).
+along with the graphical overlays (regions, etc..)
 
 <p>
 The opts object can specify the following properties:
@@ -4912,7 +4970,7 @@ where:
 </ul>
 Save the currently displayed image as a JPEG file. If filename is not
 specified, the file will be saved as "js9.jpeg". The image is saved
-along with the graphical overlays (regions, etc.).
+along with the graphical overlays (regions, etc..)
 
 <p>
 The opts object can specify the following properties:
@@ -4940,7 +4998,7 @@ parameter:
 
 <p>
 If encoder quality parameter is not specified, a suitable default is
-used. On FireFox (at least), this default values is 0.95 (I think).
+used. On FireFox (at least), this default values is 0.95 (I think.)
 
 <p>
 Don't forget that the file is saved by the browser, in whatever location
@@ -4985,8 +5043,8 @@ where:
 <li><b>name</b>: name of a help file or url of a web site to display
 </ul>
 The help file names are the property names in JS9.helpOpts (e.g., "user" for
-the user page, "install" for the install page, etc.). Alternatively, you can
-specify an arbitrary URL to display (just because).
+the user page, "install" for the install page, etc.) Alternatively, you can
+specify an arbitrary URL to display (just because.)
 
 <h5 id="JS9.DisplayPlugin">Display plugin in a light window</h5>
 <p>
