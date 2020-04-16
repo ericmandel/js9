@@ -67,6 +67,7 @@ JS9.Statusbar.mup = function(target, id){
 	    JS9.DisplayPlugin("JS9Scale", {display: id});
 	    break;
 	case "color":
+	    JS9.DisplayPlugin("JS9Color", {display: id});
 	    break;
 	case "regions":
 	    break;
