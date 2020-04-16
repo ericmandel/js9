@@ -7254,15 +7254,11 @@ JS9.Menubar.createMenus = function(){
 		    items.supermenu.items.super_all.icon = JS9.globalOpts.menuSelected;
 		}
 	    }
-	    items.removedisplay = xname("remove this display");
 	    cel = tdisp.divjq.closest(".JS9GridContainer");
 	    if( !tim                                                      ||
 		tdisp.winid                                               ||
 		(cel.length > 0  && cel.find(".JS9GridItem").length > 1)  ){
 		items.removedisplay = xname("remove this display");
-		items.removedisplay.disabled = false;
-	    } else {
-		items.removedisplay.disabled = true;
 	    }
 	    items[`sep${n++}`] = "------";
 	    items.print = xname("print ...");
