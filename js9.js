@@ -10563,7 +10563,7 @@ JS9.Display.prototype.center = function(){
 
 // gather images from other displays into this display
 JS9.Display.prototype.gather = function(opts){
-    let i, arr, uim, el;
+    let i, j, arr, uim, odisp, el;
     // opts are optional
     opts = opts || {};
     // opts can be an object or json
@@ -10580,11 +10580,19 @@ JS9.Display.prototype.gather = function(opts){
 	    uim = arr[i];
 	}
 	if( uim && uim.display !== this ){
-	    // save possible grid item element
-	    el = uim.display.divjq.closest(".JS9GridItem");
+	    // save possible grid item ...
+	    odisp = uim.display;
+	    el = odisp.divjq.closest(".JS9GridItem");
+	    // move to this display
 	    uim.moveToDisplay(this);
-	    // remove grid item element from DOM
-	    if( el.length > 0 ){ el.remove(); }
+	    // remove grid item
+	    if( el.length > 0 ){
+		j = $.inArray(odisp, JS9.displays);
+		if( j >= 0 ){
+		    JS9.displays.splice(j, 1);
+		}
+		el.remove();
+	    }
 	}
     }
     // extended plugins
