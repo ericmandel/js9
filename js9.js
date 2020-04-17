@@ -166,7 +166,6 @@ JS9.globalOpts = {
     resize: true,		// allow resize of display?
     resizeHandle: true,		// add resize handle to display?
     resizeRedisplay: true,	// redisplay image while resizing?
-    cloneNewDisplay: true,      // clone size of display, when possible?
     logoDisplay: false,         // show JS9 logo on each display?
     lightWinClose: "ask",	// ask, close, move images when closing lightwin
     fallbackDisplay: true,	// displayMessage fallback to display window?
@@ -23988,7 +23987,7 @@ JS9.mkPublic("LoadWindow", function(...args){
         html = "<hr class='hline0'>";
 	// menubar
 	if( !display                                        ||
-	    ($(`#${opts.clone}Menubar`).length > 0         &&
+	    ($(`#${opts.clone}Menubar`).length > 0          &&
 	     !display.pluginInstances.JS9Menubar.isDynamic) ){
 	    html += `<div class='JS9Menubar' id='${id}Menubar'></div>`;
 	} else if( winopts ){
