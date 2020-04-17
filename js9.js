@@ -58,7 +58,7 @@ JS9.TIMEOUT = 250;              // millisec before assuming light window is up
 JS9.SPINOUT = 250;		// millisec before assuming spinner is up
 JS9.SUPERMENU = /^SUPERMENU_/;  // base of supermenu id
 JS9.RESIZEDIST = 20;		// size of rectangle defining resize handle
-JS9.RESIZEFUDGE = 5;            // fudge for webkit resize problems
+JS9.RESIZEFUDGE = 0;            // fudge for webkit resize problems
 JS9.RAWID0 = "raw0";		// default raw id
 JS9.RAWIDX = "alt";		// default "alternate" raw id
 JS9.IDFMT = "  (%s)";           // format for light window id
@@ -10617,7 +10617,7 @@ JS9.Display.prototype.separate = function(opts){
     const toolStr = "<div class='JS9Toolbar' id='%sToolbar' data-width=%s></div>";
     const js9Str = "<div class='JS9' id='%s' data-width=%s data-height=%s></div>";
     const colorStr = "<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' data-width=%s></div></div>";
-    const statusStr = "<div class='JS9Statusbar' id='%sStatusbar' data-width=%s></div>";
+    const statusStr = "<div style='margin-top: 2px;'><div class='JS9Statusbar' id='%sStatusbar' data-width=%s></div></div>";
     const winoptsStr = "width=%s,height=%s,top=%s,left=%s,resize=1,scolling=1";
     const COLORBAR_FUDGE = 7;
     const DHTML_HEIGHT = 30 + 13; // height of dhtml lightwin extras;
