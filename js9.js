@@ -58,7 +58,7 @@ JS9.TIMEOUT = 250;              // millisec before assuming light window is up
 JS9.SPINOUT = 250;		// millisec before assuming spinner is up
 JS9.SUPERMENU = /^SUPERMENU_/;  // base of supermenu id
 JS9.RESIZEDIST = 20;		// size of rectangle defining resize handle
-JS9.RESIZEFUDGE = 0;            // fudge for webkit resize problems
+JS9.RESIZEFUDGE = 2;            // fudge for webkit resize problems
 JS9.RAWID0 = "raw0";		// default raw id
 JS9.RAWIDX = "alt";		// default "alternate" raw id
 JS9.IDFMT = "  (%s)";           // format for light window id
@@ -10683,8 +10683,8 @@ JS9.Display.prototype.separate = function(opts){
 	}
 	if( sep.js9.length > 0 ){
 	    // hack: height of the dhtml drag handle and status area
-	    sep.width = sep.js9.width();
-	    sep.height = sep.js9.height();
+	    sep.width = sep.js9.width() - JS9.RESIZEFUDGE;
+	    sep.height = sep.js9.height() - JS9.RESIZEFUDGE;
 	    sep.top = sep.js9.offset().top - $(window).scrollTop();
 	    sep.left = sep.js9.offset().left - $(document).scrollLeft();
 	    if( sep.menubar.isactive ){
