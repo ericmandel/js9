@@ -10758,10 +10758,15 @@ JS9.Display.prototype.separate = function(opts){
 	    if( im && im.display === this ){
 		// display this image so it's the current one we move
 		im.displayImage("all");
-		// leave the first one in place
+		// init params
 		if( d0 === undefined ){
 		    d0 = im.display.id;
 		    initopts(im.display, d0, opts);
+		    // if leave first image in place is false, decrement
+		    // nsep so it gets separated on the next iteration
+		    if( opts.firstinplace === false ){
+			nsep--;
+		    }
 		    separateim(arr);
 		} else {
 		    // create a new window for this image

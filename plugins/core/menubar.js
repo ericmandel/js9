@@ -477,6 +477,22 @@ JS9.Menubar.createMenus = function(){
 	    } else {
 		items.moveto.disabled = true;
 	    }
+	    items.separates = {
+		name: "separate ...",
+		items: {
+		}
+	    };
+	    if( !JS9.images.length ){
+		items.separates.disabled = true;
+	    }
+	    items.separates.items.separate = xname("separate these images");
+	    if( !tim ){
+		items.separates.items.separate.disabled = true;
+	    }
+	    items.separates.items.gather = xname("gather all images here");
+	    if( tim && JS9.images.length === 1 ){
+		items.separates.items.gather.disabled = true;
+	    }
 	    items.saveas = {
 		name: "save ...",
 		items: {
@@ -496,22 +512,6 @@ JS9.Menubar.createMenus = function(){
 	    };
 	    if( !tim ){
 		items.saveas.disabled = true;
-	    }
-	    items.separates = {
-		name: "separate ...",
-		items: {
-		}
-	    };
-	    if( !JS9.images.length ){
-		items.separates.disabled = true;
-	    }
-	    items.separates.items.separate = xname("separate these images");
-	    if( !tim ){
-		items.separates.items.separate.disabled = true;
-	    }
-	    items.separates.items.gather = xname("gather all images here");
-	    if( tim && JS9.images.length === 1 ){
-		items.separates.items.gather.disabled = true;
 	    }
 	    items.closes = {
 		name: "close ...",
@@ -663,7 +663,7 @@ JS9.Menubar.createMenus = function(){
 		    let uplugin;
 		    JS9.Menubar.getDisplays.call(this, "any", key)
 			.forEach((val) => {
-			let j, s, t, did, kid, unew, uwin;
+			let j, s, t, did, kid, unew;
 			const udisp = val;
 			let uim = udisp.image;
 			// make sure display is still valid
@@ -898,15 +898,11 @@ JS9.Menubar.createMenus = function(){
 			    if( key.match(/^moveto_/) ){
 				unew = key.replace(/^moveto_/,"");
 				if( unew === "newdisp" ){
-				    uwin = `JS9_light${JS9.uniqueID()}`;
-			            $("#dhtmlwindowholder").arrive(`#${uwin}`,
-                                    {onceOnly: true}, () => {
-					uim.moveToDisplay(uwin);
-				    });
-				    JS9.LoadWindow(null,
-                                                   {id: uwin, clone: udisp.id},
-                                                   "light");
+				    // separate the current image
+				    udisp.separate({images:[uim],
+						    firstinplace:false});
 				} else {
+				    // move current image to specified display
 				    uim.moveToDisplay(unew);
 				}
 				return;
