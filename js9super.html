@@ -18,8 +18,9 @@
         margin-bottom: 30px;
       }
       /* override defaults in js9.css */
+      /* NB: min should match the width of the js9 display */
       div.JS9GridContainer {
-	  grid-template-columns: repeat(3, 1fr);
+	  grid-template-columns: repeat(auto-fit, minmax(300px,1fr));
 	  grid-gap: 10px;
       }
   </style>
