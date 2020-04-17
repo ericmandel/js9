@@ -27,8 +27,9 @@ div.JS9Panner, div.JS9Magnifier, div.JS9Menubar, div.JS9Console, div.JS9Info {
 /* grid container used in separateDisplay() */
 div.JS9GridContainer {
     display: grid;
-    /* NB: grid parameters should be overridden by web designers! */
-    grid-template-columns: repeat(auto-fill, 1fr);
+    /* NB: these grid parameters should be overridden by web page designers! */
+    /* https://css-tricks.com/auto-sizing-columns-css-grid-auto-fill-vs-auto-fit */
+    grid-template-columns: repeat(auto-fit, 1fr);
     grid-gap: 10px;
 }
 
