@@ -146,8 +146,10 @@ the image is too large)
 <li><b>selected cutouts</b> selected region(s) are used to define the center and size of new image section(s); note that image sections are always rectangles and region angles are ignored
 <li><b>display pageid</b>, a unique ID for this page that can be used to communicate externally with a JS9 instance when multiple JS9 instances are running (js9 --pageid [pageid])
 </ul>
-<li><b>move ...</b> move the current image to a new display
-(choose from a list of existing displays or a new light window)
+<li><b>move ...</b> move the current image to an existing displays or
+a new display. (The new display will either be a in a light window or
+a CSS grid, depending on how the web page is constructed.)
+
 <li><b>save ...</b>the currently displayed image data. You can save
 the currently loaded image (or the currently loaded image section, if
 an image section was extracted) in standard FITS image format.  Or you
@@ -161,7 +163,9 @@ following formats:
 
 <li><b>separate ...</b> separate/gather two or more images
 <ul>
-<li><b>separate these images</b> move each image in this display to a new display
+<li><b>separate these images</b> move each image in this display to a
+new display.  (The new display will either be a in a light window or a
+CSS grid, depending on how the web page is constructed.)
 <li><b>gather all images here</b> move all images from other displays to this display
 </ul>
 
