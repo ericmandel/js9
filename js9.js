@@ -10621,6 +10621,7 @@ JS9.Display.prototype.separate = function(opts){
     const colorStr = "<div style='margin-top: 2px;'><div class='JS9Colorbar' id='%sColorbar' data-width=%s></div></div>";
     const statusStr = "<div style='margin-top: 2px;'><div class='JS9Statusbar' id='%sStatusbar' data-width=%s></div></div>";
     const winoptsStr = "width=%s,height=%s,top=%s,left=%s,resize=1,scolling=1";
+    const LIT_FUDGE = 5;
     const COLORBAR_FUDGE = 7;
     const DHTML_HEIGHT = 30 + 13; // height of dhtml lightwin extras;
     const initopts = (display, fromID, opts) => {
@@ -10685,9 +10686,9 @@ JS9.Display.prototype.separate = function(opts){
 	}
 	if( sep.js9.length > 0 ){
 	    // hack: height of the dhtml drag handle and status area
-	    sep.width = sep.js9.width() - JS9.RESIZEFUDGE;
-	    sep.height = sep.js9.height() - JS9.RESIZEFUDGE;
-	    sep.top = sep.js9.offset().top - $(window).scrollTop() - JS9.RESIZEFUDGE;
+	    sep.width = sep.js9.width();
+	    sep.height = sep.js9.height();
+	    sep.top = sep.js9.offset().top - $(window).scrollTop() - LIT_FUDGE;
 	    sep.left = sep.js9.offset().left - $(document).scrollLeft();
 	    if( sep.menubar.isactive ){
 		sep.height += sep.menubar.height();
