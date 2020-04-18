@@ -10687,7 +10687,7 @@ JS9.Display.prototype.separate = function(opts){
 	    // hack: height of the dhtml drag handle and status area
 	    sep.width = sep.js9.width() - JS9.RESIZEFUDGE;
 	    sep.height = sep.js9.height() - JS9.RESIZEFUDGE;
-	    sep.top = sep.js9.offset().top - $(window).scrollTop();
+	    sep.top = sep.js9.offset().top - $(window).scrollTop() - JS9.RESIZEFUDGE;
 	    sep.left = sep.js9.offset().left - $(document).scrollLeft();
 	    if( sep.menubar.isactive ){
 		sep.height += sep.menubar.height();
