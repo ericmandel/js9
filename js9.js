@@ -537,7 +537,9 @@ if( (JS9.BROWSER[0] === "Firefox") && JS9.BROWSER[2].search(/Linux/) >=0 ){
     JS9.bugs.firefox_linux = true;
 }
 // webkit resize is not quite up to par
-if( (JS9.BROWSER[0] === "Chrome") || (JS9.BROWSER[0] === "Safari") ){
+// if( (JS9.BROWSER[0] === "Chrome") || (JS9.BROWSER[0] === "Safari") ){
+// only safari seems to need the extra border (4/18/20)
+if( (JS9.BROWSER[0] === "Safari") ){
     JS9.bugs.webkit_resize = true;
 }
 // chrome does not deal with ".gz" file templates, but other browsers do
