@@ -121,7 +121,7 @@ memory management within JS9 (at the expense of speed).
 <p>
 The 64-bit Chrome can make use of 2Gb of memory.
 
-<li><b>All platforms using Chrome (March 27, 2014 : resolved)</b>
+<li><b>All platforms using Chrome and Firefox (April 23, 2020 : resolved)</b>
 <p>
 One of the simplest ways to use JS9 locally is by means of the file://
 URL scheme, e.g., point your browser to file:///home/me/js9/js9basics.html.
@@ -142,6 +142,14 @@ On a Mac:
 <pre>
     open /Applications/Google\ Chrome.app --args --allow-file-access-from-files
 </pre>
+It also does not work on Firefox starting with version 68. See:
+<pre>
+https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSRequestNotHttp
+</pre>
+for details. The workaround (as discussed in that security page) is to
+turn off the <b>privacy.file_unique_origin</b> preference in
+<b>about:config</b>.
+<p>
 
 <li><b>All platforms (May 20, 2013: resolved)</b>
 <p>
@@ -160,7 +168,7 @@ further processing commands).
 
 </ol>
 
-<h5>Last updated: July 9, 2019</h5>
+<h5>Last updated: April 23, 2020</h5>
 </div>
 
 </body>
