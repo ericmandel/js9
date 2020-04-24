@@ -318,6 +318,17 @@ To override default image parameters, pass the image opts argument:
     JS9.LoadProxy("http://hea-www.cfa.harvard.edu/~eric/coma.fits", {scale:"linear", colormap:"sls"});'
 </pre>
 <p>
+By default, the retrieved file is given a filename based on the base of
+the URL. When a gzip'ed file is retrieved, the filename is taken from
+the original ungzip'ed file, with a .gz extension added. As an
+alternative, you can specify the name of the output file using the <b>ofile</b>
+property.
+<pre>
+    JS9.LoadProxy("http://nxsadev.esac.esa.int/nxsa-sl/servlet/data-action-aio?obsno=0801931101&name=OEXPMP&level=MT_PPS&extension=FTZ",
+                  {ofile: "MP_P0801931101EPX000OEXPMP8000.FIT.gz"})
+</pre>
+
+<p>
 If an onload callback function is specified in opts, it will be called
 after the image is loaded:
 <pre>

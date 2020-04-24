@@ -24257,7 +24257,7 @@ JS9.mkPublic("LoadWindow", function(...args){
 
 // load a link using back-end server as a proxy
 JS9.mkPublic("LoadProxy", function(...args){
-    let f, disp, url, opts;
+    let f, disp, url, opts, oname;
     const obj = JS9.parsePublicArgs(args);
     url = obj.argv[0];
     opts = obj.argv[1];
@@ -24287,16 +24287,22 @@ JS9.mkPublic("LoadProxy", function(...args){
     if( typeof opts === "object" ){
 	// make a copy so we can modify it
 	opts = $.extend(true, {}, opts);
-    } else if( opts && typeof opts === "string" ){
+    } else if( typeof opts === "string" ){
 	// convert json to object
 	try{ opts = JSON.parse(opts); }
 	catch(e){ opts = {}; }
+    }
+    // opts is optional
+    opts = opts || {};
+    // output filename specified?
+    if( opts.ofile ){
+	oname = opts.ofile;
+	delete opts.ofile;
     } else {
-	// init as an empty object
-	opts = {};
+	oname = "";
     }
     JS9.waiting(true, disp);
-    JS9.Send('loadproxy', {'cmd': `js9Xeq loadproxy ${url}`}, (r) => {
+    JS9.Send('loadproxy', {'cmd': `js9Xeq loadproxy ${url} ${oname}`}, (r) => {
         let robj;
 	// return type can be string or object
 	if( typeof r === "object" ){

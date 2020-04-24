@@ -340,7 +340,11 @@ loadproxy)
     # make sure we are not over quota
     quotacheck
     URL=`echo $1 | sed 's/__ampersand__/\&/g'`
-    OFILE=`basename "$URL" | sed 's/\?.*//g;s/  *//g;s/%[0-9A-Fa-f][0-9A-Fa-f]//g'`
+    if [ x"$2" != x ]; then
+      OFILE="$2"
+    else
+      OFILE=`basename "$URL" | sed 's/\?.*//g;s/  *//g;s/%[0-9A-Fa-f][0-9A-Fa-f]//g'`
+    fi
     # hack for google drive
     if [ x"$OFILE" = xuc ]; then
       OFILE="google_"$RANDOM".fits"
@@ -379,14 +383,17 @@ loadproxy)
       # look for a compressed file (and add .gz extension, if necessary)
       f=`echo $s | sed -n 's/.*gzip compressed data, was "\([^"]*\)".*/\1/gp'`
       if [ x"$f" != x ]; then
-	ext="${f##*.}"
-        if [ x"$ext" = xgz ]; then
-          NFILE="$f"
-        else
-          NFILE="$f".gz
-        fi
-        if [ x"$NFILE" != x"$OFILE" ]; then
-          mv $OFILE $NFILE && OFILE="$NFILE"
+        # change ofile to original file + .gz (unless ofile was specified)
+	if [ x"$2" = x ]; then
+	  ext="${f##*.}"
+          if [ x"$ext" = xgz ]; then
+            NFILE="$f"
+          else
+            NFILE="$f".gz
+          fi
+          if [ x"$NFILE" != x"$OFILE" ]; then
+            mv $OFILE $NFILE && OFILE="$NFILE"
+          fi
         fi
       else
 	# better be a known image file type
