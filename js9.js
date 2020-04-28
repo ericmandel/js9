@@ -17586,6 +17586,8 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	    type = opts.type ;
 	}
     }
+    // make sure we have an opts
+    opts = opts || {};
     // last chance ... use defaults
     layer = layer || "regions";
     type =  type  || "reg";
@@ -17632,7 +17634,9 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	// convert layer to region string
 	try{
 	    header = "# Region file format: JS9 version 1.0";
-	    regstr = this.listRegions(which, {mode: 1, file: fname}, layer);
+	    opts.mode = 1;
+	    opts.file = fname;
+	    regstr = this.listRegions(which, opts, layer);
 	    s = `${header}\n${regstr.replace(/; */g, "\n")}\n`;
 	}
 	catch(e){ JS9.error(`can't convert layer to region: ${layer}`);	}
