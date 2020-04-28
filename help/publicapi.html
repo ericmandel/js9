@@ -3465,6 +3465,21 @@ in standard regions format, using semi-colon delimiters:
 <pre>
     JS9.GetRegions("all", {format: "text"})
     "ICRS; box(23:23:40.340, +58:47:04.059, 29.513978\", 29.513974\", 0.000000) # background,include; ellipse(23:23:28.069, +58:48:40.540, 14.756998\", 15.756998\") # source,include"
+<p>
+You also can pass <b>wcssys</b> and <b>wcsunits</b> in opts to return the wcs information in the desired format:
+<pre>
+</pre>
+    JS9.GetRegions("all", {format: "text"})
+    "ICRS; circle(23:23:35.300,+58:50:03.600,13.999997")"
+
+    JS9.GetRegions("all", {format: "text", wcsunits: "degrees"})
+    "ICRS; circle(350.897083,58.834333,0.003889)"
+
+    JS9.GetRegions("all", {format: "text", wcssys: "FK4", wcsunits: "degrees"})
+    "FK4; circle(350.330969,58.559785,0.003889)"
+
+    JS9.GetRegions("all", {format: "text", wcsunits: "pixels"})
+    "physical; circle(3893.94,4091.92,28.46)"
 </pre>
 
 <h5 id="JS9.ChangeRegions">Change one or more regions</h5>

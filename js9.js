@@ -276,6 +276,7 @@ JS9.globalOpts = {
     wcsUnits: {FK4:"sexagesimal", FK5:"sexagesimal", ICRS:"sexagesimal",
 	       galactic:"degrees", ecliptic:"degrees", linear:"degrees",
 	       physical:"pixels", image:"pixels"}, // def units for wcs sys
+    wcsSetUpdatesDef: true,          // does setWCSUnits() update the default?
     regionTemplates: ".reg",         // templates for local region file input
     sessionTemplates: ".ses,.js9ses",// templates for local session file input
     colormapTemplates: ".cmap",      // templates for local colormap file input
@@ -4439,7 +4440,7 @@ JS9.Image.prototype.setPan = function(...args){
 		owcssys = this.getWCSSys();
 		txeq = JS9.globalOpts.xeqPlugins;
 		JS9.globalOpts.xeqPlugins = false;
-		this.setWCSSys(obj.wcssys);
+		this.setWCSSys(obj.wcssys, false);
 	    }
 	    // convert wcs supplied as strings
 	    if( typeof obj.ra === "string" ){
@@ -4460,7 +4461,7 @@ JS9.Image.prototype.setPan = function(...args){
 	    pany = parseFloat(arr[1]);
 	    // restore original wcssys
 	    if( owcssys ){
-		this.setWCSSys(owcssys);
+		this.setWCSSys(owcssys, false);
 		JS9.globalOpts.xeqPlugins = txeq;
 	    }
 	}
@@ -5270,11 +5271,15 @@ JS9.Image.prototype.getWCSSys = function(){
 };
 
 // set the WCS sys for this image
-JS9.Image.prototype.setWCSSys = function(wcssys){
+JS9.Image.prototype.setWCSSys = function(wcssys, updatedef){
     let s, u;
     // is this core service disabled?
     if( $.inArray("wcs", this.params.disable) >= 0 ){
 	return;
+    }
+    // do we update the default?
+    if( JS9.isNull(updatedef) ){
+	updatedef = JS9.globalOpts.wcsSetUpdatesDef;
     }
     if( wcssys === "image" ){
 	this.params.wcssys = "image";
@@ -5283,7 +5288,9 @@ JS9.Image.prototype.setWCSSys = function(wcssys){
     } else if( wcssys === "physical" ){
 	this.params.wcssys = "physical";
 	this.params.wcsunits = "pixels";
-	JS9.globalOpts.wcsUnits.physical = "pixels";
+	if( updatedef ){
+	    JS9.globalOpts.wcsUnits.physical = "pixels";
+	}
     } else if( this.raw.wcs && (this.raw.wcs > 0) ){
 	// native: original wcs from file
 	if( wcssys === "native" ){
@@ -5297,7 +5304,7 @@ JS9.Image.prototype.setWCSSys = function(wcssys){
 	    // get units associated with this wcs system
 	    u = JS9.globalOpts.wcsUnits[this.params.wcssys] || "sexagesimal";
 	    // set the units
-	    this.setWCSUnits(u);
+	    this.setWCSUnits(u, updatedef);
 	}
     }
     // extended plugins
@@ -5462,28 +5469,37 @@ JS9.Image.prototype.getWCSUnits = function(){
 };
 
 // set the WCS units for this image
-JS9.Image.prototype.setWCSUnits = function(wcsunits){
+JS9.Image.prototype.setWCSUnits = function(wcsunits, updatedef){
     let s, ws;
     // is this core service disabled?
     if( $.inArray("wcs", this.params.disable) >= 0 ){
 	return;
+    }
+    // do we update the default?
+    if( JS9.isNull(updatedef) ){
+	updatedef = JS9.globalOpts.wcsSetUpdatesDef;
     }
     if( wcsunits === "pixels" ){
 	if( this.params.wcssys !== "image" ){
 	    this.params.wcssys = "physical";
 	}
 	this.params.wcsunits = "pixels";
-	JS9.globalOpts.wcsUnits[this.params.wcssys] = "pixels";
+	if( updatedef ){
+	    JS9.globalOpts.wcsUnits[this.params.wcssys] = "pixels";
+	}
     } else if( this.raw.wcs && (this.raw.wcs > 0) ){
 	if( (this.params.wcssys === "image")    ||
 	    (this.params.wcssys === "physical") ){
 	    ws = JS9.imageOpts.wcssys;
-	    this.setWCSSys(this.raw.wcs, ws);
+	    this.setWCSSys(ws);
 	}
 	s = JS9.wcsunits(this.raw.wcs, wcsunits);
 	if( s ){
 	    this.params.wcsunits = s.trim();
-	    JS9.globalOpts.wcsUnits[this.params.wcssys] = this.params.wcsunits;
+	    if( updatedef ){
+		JS9.globalOpts.wcsUnits[this.params.wcssys] =
+		    this.params.wcsunits;
+	    }
 	}
     }
     // extended plugins
@@ -9561,7 +9577,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 	wcssys = "ICRS";
     }
     // set wcssys for this catalog
-    this.setWCSSys(wcssys);
+    this.setWCSSys(wcssys, false);
     // convert each catalog object in the table into a JS9 shape
     for(i=0, j=0; i<data.length; i++){
 	ra = data[i][xcol];
@@ -9597,7 +9613,7 @@ JS9.Image.prototype.starbaseToShapes = function(starbase, opts){
 	}
     }
     // restore original wcs
-    this.setWCSSys(owcssys);
+    this.setWCSSys(owcssys, false);
     return regs;
 };
 
@@ -9734,7 +9750,7 @@ JS9.Image.prototype.wcs2wcs = function(from, to, ra, dec){
 	dec = v0.dval;
     }
     // temporarily set the wcs to what we are converting from
-    nwcs = this.setWCSSys(from).getWCSSys();
+    nwcs = this.setWCSSys(from, false).getWCSSys();
     // make sure change was successful
     if( from !== "native" ){
 	if( nwcs !== from ){
@@ -9746,14 +9762,14 @@ JS9.Image.prototype.wcs2wcs = function(from, to, ra, dec){
     x = parseFloat(arr[0]);
     y = parseFloat(arr[1]);
     // set wcs back to the target wcs
-    this.setWCSSys(to);
+    this.setWCSSys(to, false);
     // convert image pixels from input ra, dec into target wcs
-    this.setWCSUnits("degrees");
+    this.setWCSUnits("degrees", false);
     s = JS9.pix2wcs(this.raw.wcs, x, y).trim();
     // reset wcs to original
-    this.setWCSUnits(ounits);
+    this.setWCSUnits(ounits, false);
     if( owcssys !== to ){
-	this.setWCSSys(owcssys);
+	this.setWCSSys(owcssys, false);
     }
     // return result
     return s;
@@ -13016,13 +13032,13 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    owcssys = this.getWCSSys();
 	    txeq = JS9.globalOpts.xeqPlugins;
 	    JS9.globalOpts.xeqPlugins = false;
-	    this.setWCSSys(opts.wcssys);
+	    this.setWCSSys(opts.wcssys, false);
 	} else if( opts._wcssys ){
 	    // local override from parseRegions
 	    owcssys = this.getWCSSys();
 	    txeq = JS9.globalOpts.xeqPlugins;
 	    JS9.globalOpts.xeqPlugins = false;
-	    this.setWCSSys(opts._wcssys);
+	    this.setWCSSys(opts._wcssys, false);
 	    // no longer needed or wanted
 	    delete opts._wcssys;
 	}
@@ -13042,7 +13058,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	arr = JS9.wcs2pix(this.raw.wcs, opts.ra, opts.dec).trim().split(/ +/);
 	// restore original wcssys
 	if( owcssys ){
-	    this.setWCSSys(owcssys);
+	    this.setWCSSys(owcssys, false);
 	    JS9.globalOpts.xeqPlugins = txeq;
 	}
 	// convert to display coords
@@ -13226,7 +13242,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 		owcssys = this.getWCSSys();
 		txeq = JS9.globalOpts.xeqPlugins;
 		JS9.globalOpts.xeqPlugins = false;
-		this.setWCSSys(opts.wcssys);
+		this.setWCSSys(opts.wcssys, false);
 	    }
 	    for(i=0; i<opts.wcspts.length; i++){
 		// convert to image coords
@@ -13237,7 +13253,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    }
 	    // restore original wcssys
 	    if( owcssys ){
-		this.setWCSSys(owcssys);
+		this.setWCSSys(owcssys, false);
 		JS9.globalOpts.xeqPlugins = txeq;
 	    }
 	}
@@ -14501,7 +14517,8 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
     }
     // return regions in text format, if necessary
     if( layerName === "regions" && opts.format === "text" ){
-	return this.listRegions(shape, {mode: opts.mode || 1});
+	opts.mode = opts.mode || 1;
+	return this.listRegions(shape, opts);
     }
     // process the specified shapes
     this.selectShapes(layerName, shape, (obj) => {
@@ -14750,9 +14767,9 @@ JS9.Fabric.refreshShapes = function(layerName){
     // temporarily change wcs system to be independent of image coords
     owcssys = this.getWCSSys();
     if( this.raw.wcs && (this.raw.wcs > 0) ){
-	this.setWCSSys("native");
+	this.setWCSSys("native", false);
     } else {
-	this.setWCSSys("physical");
+	this.setWCSSys("physical", false);
     }
     // get current regions (i.e., before update to current configuration)
     regstr = this.listRegions("all", {mode: 1, saveid: true}, layerName);
@@ -14763,7 +14780,7 @@ JS9.Fabric.refreshShapes = function(layerName){
 	this.addShapes(layerName, regstr, {restoreid: true});
     }
     // restore changes
-    this.setWCSSys(owcssys);
+    this.setWCSSys(owcssys, false);
     JS9.globalOpts.xeqPlugins = txeq;
     return this;
 };
@@ -16937,6 +16954,7 @@ JS9.Regions.pasteFromClipboard = function(curpos){
 // list one or more regions
 JS9.Regions.listRegions = function(which, opts, layer){
     let i, region, rlen, key, obj, tagjoin, tagstr, iestr, mode;
+    let txeq, owcsunits, owcssys;
     let regstr="";
     let lasttype="none";
     let dotags = false;
@@ -17055,6 +17073,22 @@ JS9.Regions.listRegions = function(which, opts, layer){
     if( JS9.isNull(layer) ){
 	layer = "regions";
     }
+    // set user-specified wcs, if necessary
+    if( opts.wcssys || opts.wcsunits ){
+	txeq = JS9.globalOpts.xeqPlugins;
+	JS9.globalOpts.xeqPlugins = false;
+	if( opts.wcssys ){
+	    owcssys = this.getWCSSys();
+	    this.setWCSSys(opts.wcssys, false);
+	}
+	if( opts.wcsunits ){
+	    owcsunits = this.getWCSUnits();
+	    this.setWCSUnits(opts.wcsunits, false);
+	}
+	// update wcs values
+	this.updateShapes(layer, which, "update");
+	JS9.globalOpts.xeqPlugins = txeq;
+    }
     // get specified regions into an array
     pubs = this.getShapes(layer, which, {includeObj: true});
     // loop through shapes
@@ -17136,6 +17170,20 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	if( tagstr ){
 	    regstr += tagstr;
 	}
+    }
+    // restore original wcs, if necessary
+    if( owcssys || owcsunits ){
+	txeq = JS9.globalOpts.xeqPlugins;
+	JS9.globalOpts.xeqPlugins = false;
+	if( owcssys ){
+	    this.setWCSSys(owcssys, false);
+	}
+	if( owcsunits ){
+	    this.setWCSUnits(owcsunits, false);
+	}
+	// restore wcs values
+	this.updateShapes(layer, which, "update");
+	JS9.globalOpts.xeqPlugins = txeq;
     }
     // display the region string, if necessary
     if( mode > 1 ){
@@ -17488,7 +17536,7 @@ JS9.Regions.parseRegions = function(s, opts){
 		    // reset the wcs system
 		    txeq = JS9.globalOpts.xeqPlugins;
 		    JS9.globalOpts.xeqPlugins = false;
-		    this.setWCSSys(robj.cmd);
+		    this.setWCSSys(robj.cmd, false);
 		    JS9.globalOpts.xeqPlugins = txeq;
 		    // get new wcssys
 		    wcssys = this.getWCSSys();
@@ -17503,7 +17551,7 @@ JS9.Regions.parseRegions = function(s, opts){
     // restore original wcs
     txeq = JS9.globalOpts.xeqPlugins;
     JS9.globalOpts.xeqPlugins = false;
-    this.setWCSSys(owcssys);
+    this.setWCSSys(owcssys, false);
     this.setWCSUnits(owcsunits);
     JS9.globalOpts.xeqPlugins = txeq;
     // return the generated object
