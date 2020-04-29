@@ -3460,27 +3460,40 @@ Note the need to integerize the x and y values: JavaScript arrays are
 objects and so floating point array indices do not get truncated
 automatically as in C. They will return null values.
 <p>
-In opts.format is set to "text", the regions are returned as a string
-in standard regions format, using semi-colon delimiters:
+In opts <b>format</b> property is set to "text", the regions are
+returned as a string in standard regions format, using semi-colon
+delimiters:
 <pre>
     JS9.GetRegions("all", {format: "text"})
-    "ICRS; box(23:23:40.340, +58:47:04.059, 29.513978\", 29.513974\", 0.000000) # background,include; ellipse(23:23:28.069, +58:48:40.540, 14.756998\", 15.756998\") # source,include"
+    ICRS; box(23:23:40.3, +58:47:04.05, 29.5\", 29.5\", 0.0) # background,include; ellipse(23:23:28.06, +58:48:40.5, 14.7\", 15.7\") # source,include
 <p>
-You also can pass <b>wcssys</b> and <b>wcsunits</b> in opts to return the wcs information in the desired format:
+You can pass <b>wcssys</b> and <b>wcsunits</b> in opts to return the wcs information in the desired format:
 <pre>
 </pre>
     JS9.GetRegions("all", {format: "text"})
-    "ICRS; circle(23:23:35.300,+58:50:03.600,13.999997")"
+    ICRS; circle(23:23:35.300,+58:50:03.600,14&#34;)
 
     JS9.GetRegions("all", {format: "text", wcsunits: "degrees"})
-    "ICRS; circle(350.897083,58.834333,0.003889)"
+    ICRS; circle(350.897083,58.834333,0.003889)
 
     JS9.GetRegions("all", {format: "text", wcssys: "FK4", wcsunits: "degrees"})
-    "FK4; circle(350.330969,58.559785,0.003889)"
+    FK4; circle(350.330969,58.559785,0.003889)
 
     JS9.GetRegions("all", {format: "text", wcsunits: "pixels"})
-    "physical; circle(3893.94,4091.92,28.46)"
+    physical; circle(3893.94,4091.92,28.46)
 </pre>
+
+<p>
+If opts <b>format</b> property is set to "csv", the regions are
+returned as a comma-separated value list, using new-line delimiters:
+<pre>
+    JS9.GetRegions("all", {format: "csv"})
+    circle,23:23:27.909,+58:48:42.880,14&#34;
+    box,23:23:35.486,+58:50:03.146,40.001278,14&#34;,20.000000
+</pre>
+<p>
+Note that the region's wcs keyword is not passed by default. You can
+force its inclusion by setting the <b>includewcs</b> property to true.
 
 <h5 id="JS9.ChangeRegions">Change one or more regions</h5>
 <p>
@@ -3621,19 +3634,34 @@ The <b>layer</b> argument can also be an object or a JSON-formatted string
 containing these properties:
 <ul>
 <li><b>layer</b>: the name of the layer
-<li><b>type</b>: output type: <b>reg</b> or <b>svg</b>
+<li><b>format</b>: output format: <b>reg</b>, <b>csv</b>, or <b>svg</b>
+<li><b>type</b>: backward compatible alias for <b>format</b> (deprecated)
 <li><b>wcssys</b>: wcs system to use (ICRS, FK5, galactic, physical, etc.)
 <li><b>wcsunits</b>: units for wcs output (sexagesimal, degrees, pixels)
+<li><b>includewcs</b>: for csv files, include wcs keyword(s) in output
 </ul>
-If the <b>type</b> is <b>svg</b>, an SVG/XML file will be saved
+If the <b>format</b> is <b>svg</b>, an SVG/XML file will be saved
 instead of the standard astronomical regions file. This SVG file can
 be imported into programs such as Photoshop for further processing.
 
 <p>
-Note that if the output type is set to <b>svg</b>, the default
-filename will be "js9.svg" instead of "js9.reg". Similarly, if a
-filename is specified that ends in ".svg", the type will be set
-to <b>svg</b>.
+If the <b>format</b> is <b>csv</b>, a text file will be saved with
+the regions output as comma separated values:
+<pre>
+    JS9.SaveRegions("foo", "all", {"format":"csv", "wcsunits":"degrees"})
+
+    circle,350.866288,58.811911,0.004099
+    box,350.897858,58.834207,0.011111,0.005556,20.000000
+</pre>
+Note that the region's wcs keyword is not passed by default in order
+to make processing easier. You can force its inclusion by setting
+the <b>includewcs</b> property to true.
+
+<p>
+If the output format is set to <b>svg (or csv)</b>, the default filename
+will be "js9.svg" ("js9.csv") instead of "js9.reg". Similarly, if a
+filename is specified that ends in ".svg" (or ".csv"), the format will be
+set to <b>svg (csv)</b>.
 
 <h5 id="JS9.ToggleRegionTags">Toggle region tags from the current image</h5>
 <p>

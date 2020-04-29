@@ -69,6 +69,7 @@ JS9.CHROMEFILEWARNING = true;	// whether to alert chrome users about file URI
 JS9.CLIPBOARDERROR = "the local clipboard (which only holds data copied from within JS9) does not contain any content. Were you trying to paste something copied outside JS9?";
 JS9.CLIPBOARDERROR2 = "the local clipboard (which only holds data copied from within JS9) does not contain any regions";
 JS9.URLEXP = /^(https?|ftp):\/\//; // url to determine a web page
+JS9.WCSEXP = /^(fk4|fk5|icrs|galactic|ecliptic|image|physical|linear)$/;
 
 // https://hacks.mozilla.org/2013/04/detecting-touch-its-the-why-not-the-how/
 JS9.TOUCHSUPPORTED = ( window.hasOwnProperty("ontouchstart") ||
@@ -14506,6 +14507,7 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 // return one or more regions
 // call using image context
 JS9.Fabric.getShapes = function(layerName, shape, opts){
+    let i, s, t, arr;
     let myshape = {};
     const shapes = [];
     // opts is optional
@@ -14516,9 +14518,25 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 	catch(e){ JS9.error(`can't parse getShapes opts: ${opts}`, e); }
     }
     // return regions in text format, if necessary
-    if( layerName === "regions" && opts.format === "text" ){
+    if( layerName === "regions" &&
+	(opts.format === "text" || opts.format === "csv") ){
 	opts.mode = opts.mode || 1;
-	return this.listRegions(shape, opts);
+	s = this.listRegions(shape, opts);
+	if( opts.format === "csv" ){
+	    arr = s.split(";");
+	    for(i=0, s=""; i<arr.length; i++){
+		if( !arr[i] ){ continue; }
+		if( arr[i].toLowerCase().match(JS9.WCSEXP) ){
+		    if( opts.includewcs ){
+			s += `${arr[i].trim()}\n`;
+		    }
+		} else {
+		    t = arr[i].replace(/\(/, ",").replace(/\).*/, "").trim();
+		    s += `${t}\n`;
+		}
+	    }
+	}
+	return s;
     }
     // process the specified shapes
     this.selectShapes(layerName, shape, (obj) => {
@@ -17560,12 +17578,12 @@ JS9.Regions.parseRegions = function(s, opts){
 
 // save regions to a file
 JS9.Regions.saveRegions = function(fname, which, layer){
-    let header, regstr, s, type, blob, opts, arr, rid;
+    let i, s, t, header, regstr, format, blob, opts, arr, rid;
     // see if default type is implicit in the output file
     if( fname ){
 	arr = fname.match(/\.([^.]*)$/);
-	if( arr && arr.length >= 2 && (arr[1] === "reg" || arr[1] === "svg") ){
-	    type = arr[1];
+	if( arr && arr[1] && arr[1].match(/^(reg|svg|csv)$/) ){
+	    format = arr[1];
 	}
     }
     // layer can be a layer name or an object describing layer, output type
@@ -17579,18 +17597,24 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     }
     // see if parameters are in the opts object
     if( opts ){
+	// layer name
 	if( JS9.notNull(opts.layer) ){
 	    layer = opts.layer;
 	}
+	// old style 'type' property is now ...
 	if( JS9.notNull(opts.type) ){
-	    type = opts.type ;
+	    format = opts.type ;
+	}
+	// ... format
+	if( JS9.notNull(opts.format) ){
+	    format = opts.format ;
 	}
     }
     // make sure we have an opts
     opts = opts || {};
     // last chance ... use defaults
     layer = layer || "regions";
-    type =  type  || "reg";
+    format =  format  || "reg";
     // and make a sanity check
     if( !this.layers[layer] ){
 	JS9.error(`can't find layer for saveRegions: ${layer}`);
@@ -17598,13 +17622,13 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     // construct final output file name, if necessary
     if( !fname ){
 	if( layer && layer !== "regions" ){
-	    fname = `js9_${layer}.${type}`;
+	    fname = `js9_${layer}.${format}`;
 	} else {
-	    fname = `js9.${type}`;
+	    fname = `js9.${format}`;
 	}
     }
     // generate the specified output
-    switch(type){
+    switch(format){
     case "svg":
 	// convert layer to svg
 	try{
@@ -17628,6 +17652,27 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	    }
 	}
 	catch(e){ JS9.error(`can't convert layer to SVG: ${layer}`);}
+	break;
+    case  "csv":
+	// convert layer to region string
+	try{
+	    opts.mode = 1;
+	    opts.file = fname;
+	    regstr = this.listRegions(which, opts, layer);
+	    arr = regstr.split(";");
+	    for(i=0, s=""; i<arr.length; i++){
+		if( !arr[i] ){ continue; }
+		if( arr[i].toLowerCase().match(JS9.WCSEXP) ){
+		    if( opts.includewcs ){
+			s += `${arr[i].trim()}\n`;
+		    }
+		} else {
+		    t = arr[i].replace(/\(/, ",").replace(/\).*/, "").trim();
+		    s += `${t}\n`;
+		}
+	    }
+	}
+	catch(e){ JS9.error(`can't convert layer to region: ${layer}`);	}
 	break;
     case "reg":
     default:
