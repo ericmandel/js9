@@ -116,13 +116,16 @@
 		hdu.binMode = hdu.binMode || JS9.globalOpts.binMode || "s";
 		form.rebin.disabled = false;
 	        if ( hdu.table !== undefined ) {
+		    // get current center
+		    ipos = im.getPan();
+		    // convert to physial (file) coords
+		    lpos = im.imageToLogicalPos({x: ipos.ox, y: ipos.oy});
+		    form.xcen.value = String(Math.floor(lpos.x + 0.5));
+		    form.ycen.value = String(Math.floor(lpos.y + 0.5));
 		    form.bin.value = String(hdu.table.bin);
-		    form.xcen.value = String(Math.floor(hdu.table.xcen));
-		    form.ycen.value = String(Math.floor(hdu.table.ycen));
 		    form.xdim.value = String(Math.floor(hdu.table.xdim));
 		    form.ydim.value = String(Math.floor(hdu.table.ydim));
 		    form.filter.value = hdu.table.filter || "";
-
 		    form.bin.disabled = false;
 		    form.xcen.disabled = false;
 		    form.ycen.disabled = false;
