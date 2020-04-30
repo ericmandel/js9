@@ -248,6 +248,7 @@
 #define fits_copy_hdu       ffcopy
 #define fits_copy_file      ffcpfl
 #define fits_copy_header    ffcphd
+#define fits_copy_hdutab    ffcpht
 #define fits_copy_data      ffcpdt
 #define fits_write_hdu      ffwrhdu
 
@@ -616,5 +617,9 @@
 #define fits_init_https         ffihtps
 #define fits_cleanup_https      ffchtps
 #define fits_verbose_https      ffvhtps
+
+#define fits_show_download_progress  ffshdwn
+#define fits_get_timeout        ffgtmo
+#define fits_set_timeout        ffstmo
 
 #endif
