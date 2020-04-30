@@ -6585,7 +6585,7 @@ JS9.Image.prototype.saveJPEG = function(fname, opts){
 // update (and display) pixel and wcs values (connected to info plugin)
 JS9.Image.prototype.updateValpos = function(ipos, disp){
     let val, vstr, vstr1, vstr2, vstr3, val3, i, c, p, s;
-    let cd1, cd2, v1, v2, units, sect, bin;
+    let cd1, cd2, v1, v2, units, sect;
     let obj = null;
     const sep1 = "\t ";
     const sep2 = "\t\t ";
@@ -6719,11 +6719,10 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 		    }
 		}
 		sect = this.rgb.sect;
-		bin = this.binning.bin;
 		v1 = ((sect.x1 - sect.x0) * cd1).toFixed(0);
 		v2 = ((sect.y1 - sect.y0) * cd2).toFixed(0);
 		obj.wcsfov = `${v1}${units} × ${v2}${units}`;
-		v1 = tr(cd1 * bin / sect.zoom, 3);
+		v1 = tr(cd1 / sect.zoom, 3);
 		obj.wcspix = `${v1}${units}/pix`;
 		obj.wcsfovpix = `${obj.wcsfov}  (${obj.wcspix})`;
 		s = JS9.pix2wcs(this.raw.wcs,
