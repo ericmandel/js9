@@ -8829,20 +8829,31 @@ JS9.Menubar.createMenus = function(){
 	    items.sep1 = "------";
 	    items.loadRegions  = xname("load");
 	    items.listRegions  = xname("list");
-	    if( fabric.major_version > 1 ){
-		items.selectRegions = xname("select");
-	    }
 	    items.saveas  = {
 		name: "save ...",
-		items: {
-		    saveastitle: {
-			name: "choose output format:",
-			disabled: true
-		    },
-		    saveas_reg: xname("regions"),
-		    saveas_svg: xname("SVG")
-		}
+		items: {}
 	    };
+	    items.saveas.items.saveastitle = {
+		name: "regions format, wcs:",
+		disabled: true
+	    };
+	    for(i=0; i<JS9.wcssyss.length; i++){
+		s1 = JS9.wcssyss[i];
+		items.saveas.items[`saveas_${s1}`] = xname(s1);
+	    }
+	    items.saveas.items.saveas_current = xname("current");
+	    items.saveas.items.sep = "------";
+	    items.saveas.items.saveas_csvtitle = {
+		name: "csv format, wcs:",
+		disabled: true
+	    };
+	    for(i=0; i<JS9.wcssyss.length; i++){
+		s1 = JS9.wcssyss[i];
+		items.saveas.items[`saveas_csv_${s1}`] = xname(s1);
+	    }
+	    items.saveas.items.saveas_csv_current = xname("current");
+	    items.saveas.items.sep2 = "------";
+	    items.saveas.items.saveas_svg = xname("svg format");
 	    items.copyto  = {
 		name: "copy to ...",
 		items: {
@@ -8852,9 +8863,11 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    };
-
 	    items.removeRegions  = xname("remove");
 	    items.sep2 = "------";
+	    if( fabric.major_version > 1 ){
+		items.selectRegions = xname("select");
+	    }
 	    items.selectops = {
 		name: "selected regions ...",
 		items: {
@@ -9018,19 +9031,41 @@ JS9.Menubar.createMenus = function(){
 				uim.params.listonchange = !uim.params.listonchange;
 				break;
 			    default:
-				// maybe it's a copyto request
+				// maybe it's a saveas request
 				if( key.match(/^saveas_/) ){
 				    uid = key.replace(/^saveas_/,"");
-				    uname = `js9.${uid}`;
-				    uopts = {type: uid};
+				    if( uid === "svg" ){
+					uname = "js9.svg";
+					uopts = {format:uid};
+				    } else if( uid.match(/^csv_/) ){
+					uname = "js9.csv";
+					uid = uid.replace(/^csv_/,"");
+					if( uid === "current" ){
+					    uopts = {format:"csv",
+						     includewcs:true};
+					} else {
+					    uopts = {format:"csv",
+						     includewcs:true,
+						     wcssys:uid};
+					}
+				    } else {
+					uname = "js9.reg";
+					if( uid === "current" ){
+					    uopts = {format:"reg"};
+					} else {
+					    uopts = {format:"reg", wcssys:uid};
+					}
+				    }
 				    uim.saveRegions(uname, "all", uopts);
 				    return;
 				}
+				// maybe it's a copyto request
 				if( key.match(/^copyto_/) ){
 				    uid = key.replace(/^copyto_/,"");
 				    uim.copyRegions(uid);
 				    return;
 				}
+				// maybe it's a copy selected to request
 				if( key.match(/^copyselto_/) ){
 				    uid = key.replace(/^copyselto_/,"");
 				    uim.copyRegions(uid, "selected");
