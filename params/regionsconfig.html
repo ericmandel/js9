@@ -376,7 +376,7 @@ const im = form.data('im');
 const shape = form.data('shape');
 const winid = form.data('winid');
 let arr2 = arr.concat($(`#${form.attr('id')} input[type=checkbox]:not(:checked)`).map((i, e) => {return {'name': e.name, 'value': 'false'};}).get());
-JS9.Regions.processConfigForm.call(im, form, shape, winid, arr2);
+im.processRegionsForm(form, shape, winid, arr2);
 return false;">
 </span>
 <span class="col_R col_R2l">

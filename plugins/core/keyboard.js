@@ -193,8 +193,11 @@ JS9.Keyboard.Actions["edit selected region"] = function(im, ipos, evt){
     }
     layer = im.layers.regions;
     if( layer ){
-	target = layer.canvas.getActiveObject();
-	JS9.Regions.displayConfigForm.call(im, target);
+	target = layer.canvas.getActiveObjects();
+	if( target && target.length ){
+	    // just display the first one
+	    im.displayRegionsForm(target[0]);
+	}
     }
 };
 

@@ -14382,7 +14382,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // update dialog box, if necessary
     if( obj.params.winid ){
 	if( $(obj.params.winid).is(":visible") ){
-	    JS9.Regions.initConfigForm.call(this, obj);
+	    this.initRegionsForm(obj);
 	} else {
 	    obj.params.winid = null;
 	}
@@ -16002,7 +16002,7 @@ JS9.Regions.opts = {
 	}
 	if( dblclick ){
 	    if( !target.params.winid && target.params.changeable !== false ){
-		JS9.Regions.displayConfigForm.call(im, target);
+		im.displayRegionsForm(target);
 	    }
 	    return;
 	}
@@ -16062,6 +16062,9 @@ JS9.Regions.init = function(layerName){
     JS9.Image.prototype.editRegionTags = JS9.Regions.editRegionTags;
     JS9.Image.prototype.toggleRegionTags = JS9.Regions.toggleRegionTags;
     JS9.Image.prototype.unremoveRegions = JS9.Regions.unremoveRegions;
+    JS9.Image.prototype.initRegionsForm = JS9.Regions.initConfigForm;
+    JS9.Image.prototype.displayRegionsForm = JS9.Regions.displayConfigForm;
+    JS9.Image.prototype.processRegionsForm = JS9.Regions.processConfigForm;
     // init the display shape layer
     dlayer = this.display.newShapeLayer(layerName, JS9.Regions.opts);
     // mouse up: list regions, if necessary
@@ -16115,7 +16118,7 @@ JS9.Regions.displayConfigForm = function(shape){
     $("#dhtmlwindowholder")
 	.arrive("#regionsConfigForm", {onceOnly: true}, () => {
 	    if( shape.pub ){
-		JS9.Regions.initConfigForm.call(im, shape);
+		im.initRegionsForm(shape);
 	    }
 	});
     if( JS9.allinone ){
@@ -16914,7 +16917,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
     }
     // change the shape
     this.changeShapes(obj.pub.layer, obj, opts);
-    JS9.Regions.initConfigForm.call(this, obj, winid);
+    this.initRegionsForm(obj, winid);
 };
 
 // paste a region from clipboard

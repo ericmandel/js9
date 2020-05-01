@@ -5321,8 +5321,11 @@ JS9.Keyboard.Actions["edit selected region"] = function(im, ipos, evt){
     }
     layer = im.layers.regions;
     if( layer ){
-	target = layer.canvas.getActiveObject();
-	JS9.Regions.displayConfigForm.call(im, target);
+	target = layer.canvas.getActiveObjects();
+	if( target && target.length ){
+	    // just display the first one
+	    im.displayRegionsForm(target[0]);
+	}
     }
 };
 
@@ -7629,9 +7632,11 @@ JS9.Menubar.createMenus = function(){
 			    if( uim ){
 				ulayer = uim.layers.regions;
 				if( ulayer ){
-				    utarget = ulayer.canvas.getActiveObject();
-				    JS9.Regions.displayConfigForm.call(uim,
-								       utarget);
+				    utarget = ulayer.canvas.getActiveObjects();
+				    if( utarget && utarget.length ){
+					// just display the first one
+					uim.displayRegionsForm(utarget[0]);
+				    }
 				}
 			    }
 			    break;
@@ -8984,9 +8989,11 @@ JS9.Menubar.createMenus = function(){
 			    case "configSelReg":
 				ulayer = uim.layers.regions;
 				if( ulayer ){
-				    utarget = ulayer.canvas.getActiveObject();
-				    JS9.Regions.displayConfigForm.call(uim,
-								       utarget);
+				    utarget = ulayer.canvas.getActiveObjects();
+				    if( utarget && utarget.length ){
+					// just display the first one
+					uim.displayRegionsForm(utarget[0]);
+				    }
 				}
 				break;
 			    case "saveSelReg":
