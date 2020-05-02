@@ -2404,12 +2404,9 @@ JS9.Menubar.createMenus = function(){
 					uname = "js9.csv";
 					uid = uid.replace(/^csv_/,"");
 					if( uid === "current" ){
-					    uopts = {format:"csv",
-						     includewcs:true};
+					    uopts = {format:"csv"};
 					} else {
-					    uopts = {format:"csv",
-						     includewcs:true,
-						     wcssys:uid};
+					    uopts = {format:"csv", wcssys:uid};
 					}
 				    } else {
 					uname = "js9.reg";

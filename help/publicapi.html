@@ -3492,8 +3492,9 @@ returned as a comma-separated value list, using new-line delimiters:
     box,23:23:35.486,+58:50:03.146,40.001278,14&#34;,20.000000
 </pre>
 <p>
-Note that the region's wcs keyword is not passed by default. You can
-force its inclusion by setting the <b>includewcs</b> property to true.
+By default, the region's wcs keyword is passed based on the value of
+the <b>globalOpts.csvIncludeWCS</b> property.  You can override this
+value by setting the <b>includewcs</b> property.
 
 <h5 id="JS9.ChangeRegions">Change one or more regions</h5>
 <p>

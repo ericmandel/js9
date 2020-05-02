@@ -127,6 +127,7 @@ JS9.globalOpts = {
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
     wcsCrosshair: false,	// enable wcs crosshair matching?
+    csvIncludeWCS: true,	// does GetRegions(csv) include the wcs info?
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
     ehtimeout: 500,		// connection timeout for Electron connect
@@ -14526,6 +14527,7 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 	    for(i=0, s=""; i<arr.length; i++){
 		if( !arr[i] ){ continue; }
 		if( arr[i].toLowerCase().match(JS9.WCSEXP) ){
+		    // when getting csv, only include wcs info if asked
 		    if( opts.includewcs ){
 			s += `${arr[i].trim()}\n`;
 		    }
@@ -17660,6 +17662,10 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	try{
 	    opts.mode = 1;
 	    opts.file = fname;
+	    // when saving csv, we might want to include the wcs info
+	    if( JS9.isNull(opts.includewcs) ){
+		opts.includewcs = JS9.globalOpts.csvIncludeWCS;
+	    }
 	    regstr = this.listRegions(which, opts, layer);
 	    arr = regstr.split(";");
 	    for(i=0, s=""; i<arr.length; i++){
