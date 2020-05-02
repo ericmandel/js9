@@ -2228,19 +2228,19 @@ JS9.Menubar.createMenus = function(){
 	    };
 	    items.removeRegions  = xname("remove");
 	    items.sep2 = "------";
-	    if( fabric.major_version > 1 ){
-		items.selectRegions = xname("select");
-	    }
 	    items.selectops = {
-		name: "selected regions ...",
+		name: "selected ...",
 		items: {
-		    selopstitle:{
-			name:"actions on selected:",
+		    selopstitle: {
+			name: "actions on selected:",
 			disabled: true
+		    },
+		    selectRegions: {
+			name: "select all",
+			disabled: fabric.major_version < 2 ? true : false
 		    },
 		    configSelReg: xname("edit"),
 		    listSelReg: xname("list"),
-		    backSelReg: xname("to back"),
 		    saveSelReg: xname("save"),
 		    copySelReg: {
 			name: "copy to ...",
@@ -2272,6 +2272,7 @@ JS9.Menubar.createMenus = function(){
 			name: "tag:",
 			type: "text"
 		    },
+		    backSelReg: xname("push to back"),
 		    sbSelReg: xname("toggle: src/bkgd"),
 		    ieSelReg: xname("toggle: incl/excl")
 		} 
