@@ -53,7 +53,8 @@ JS9.LIGHTWIN = "dhtml";		// light window type: choice of dhtml
 JS9.ANTIALIAS = false;		// use anti-aliasing?
 JS9.SCALEIREG = true;		// scale interactive regions by zoom factor?
 JS9.NOMOVE = 3;			// number of pixels before we recognize movement
-JS9.DBLCLICK = 300;		// millisec for double-click
+JS9.DBLCLICK0 = 5;		// < millisec => same event
+JS9.DBLCLICK = 300;		// < millisec => double-click
 JS9.TIMEOUT = 250;              // millisec before assuming light window is up
 JS9.SPINOUT = 250;		// millisec before assuming spinner is up
 JS9.SUPERMENU = /^SUPERMENU_/;  // base of supermenu id
@@ -19418,10 +19419,15 @@ JS9.lightWin = function(id, type, s, title, opts){
 	// allow double-click or double-tap to close ...
 	// ... the close button is unresponsive on the ipad/iphone
         $(`#${id} .${JS9.lightOpts.dhtml.dragBar}`)
-	    .on("mouseup touchend", (e) => {
+	    .on("dblclick", () => {
+		rval.close();
+	    })
+	    .on("touchend", (e) => {
 		const curtime = (new Date()).getTime();
 		const lasttime = $(e.currentTarget).data("lasttime");
-		if( lasttime && (curtime - lasttime) < JS9.DBLCLICK ){
+		if( lasttime                             &&
+		    (curtime - lasttime) > JS9.DBLCLICK0 &&
+		    (curtime - lasttime) < JS9.DBLCLICK  ){
 		    rval.close();
 		}
 		$(e.currentTarget).data("lasttime", curtime);
