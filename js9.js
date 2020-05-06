@@ -84,7 +84,7 @@ JS9.BROWSER = (function(){
   const tem= ua.match(/version\/([.\d]+)/i);
   let M = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
   if(M && tem !== null){ M[2]= tem[1]; }
-  M= M? [M[1], M[2], P]: [N, navigator.appVersion,'-?', P];
+  M= M? [M[1], M[2], P]: [N, navigator.appVersion,"-?", P];
   M.push(/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(ua));
   return M;
 }());
@@ -10575,7 +10575,7 @@ JS9.Display.prototype.center = function(){
     else {
 	hoffset = elHOffset;
     }
-    $('html, body').animate({scrollTop: voffset, scrollLeft: hoffset}, speed);
+    $("html, body").animate({scrollTop: voffset, scrollLeft: hoffset}, speed);
     // allow chaining
     return this;
 };
@@ -11139,8 +11139,8 @@ JS9.Display.prototype.clearMessage = function(which){
 JS9.Display.prototype.createMosaic = function(ims, opts){
     let i, im, bin, carr;
     const im0 = this.image;
-    const line1 = '|                                                    fname|';
-    const line2 = '|                                                     char|';
+    const line1 = "|                                                    fname|";
+    const line2 = "|                                                     char|";
     // remove temp files
     const cleanup = () => {
 	let i;
@@ -11663,7 +11663,7 @@ JS9.Helper.prototype.connect = function(type){
 			JS9.log(`JS9 helper: disconnect: ${reason}`);
 		    }
 		    // https://github.com/socketio/socket.io-client/blob/master/docs/API.md#event-disconnect
-		    if( reason === 'io server disconnect' ){
+		    if( reason === "io server disconnect" ){
 			// the disconnection was initiated by the server,
 			// you need to reconnect manually
 			if( JS9.DEBUG > 1 ){
@@ -12083,10 +12083,23 @@ fabric.Object.prototype.rescaleEvenly = JS9.Fabric.rescaleEvenly;
 JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
     let id, dlayer;
     const display = this;
+    const seldialog = (setmode) => {
+	// sanity check
+	if( !this.image ){ return; }
+	// update multiselect dialog box for this image, if necessary
+	$("form[id='regionsConfigForm']").each((index, element) => {
+	    const multi = $(element).data("multi");
+	    const winid = $(element).data("winid");
+	    const im = $(element).data("im");
+	    if(  multi && winid && im === this.image ){
+		im.initRegionsForm(null, {winid, multi, setmode});
+	    }
+	});
+    }
     const seloff = (dlayer, obj) => {
 	// reset currently selected
 	dlayer.params.sel = null;
-	// also reset current layer in the image
+	// reset currently selected layer
 	if( dlayer.display.image ){
 	    dlayer.display.image.layer = null;
 	}
@@ -12100,10 +12113,10 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 		dlayer.canvas.renderAll();
 		break;
 	    }
-	}
-	// plugin callbacks
-	if( obj && dlayer.display.image ){
-	    dlayer.display.image.updateShapes(layerName, obj, "unselect");
+	    // region updates
+	    if( dlayer.display.image && obj.type !== "activeSelection" ){
+		dlayer.display.image.updateShapes(layerName, obj, "unselect");
+	    }
 	}
     };
     const selmultioff = (dlayer, activeObject, s) => {
@@ -12113,11 +12126,19 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    obj = activeObjects[i];
 	    seloff(dlayer, obj);
 	}
+	// redraw everything
+	dlayer.canvas.renderAll();
+	// update multi-select dialog
+	seldialog(false);
     };
     const selon = (dlayer, obj) => {
 	// turn off previous selection, if necessary
 	if( dlayer.params.sel && obj.params && (dlayer.params.sel !== obj) ){
 	    seloff(dlayer, dlayer.params.sel);
+	}
+	// set currently selected layer
+	if( dlayer.display.image ){
+	    dlayer.display.image.layer = layerName;
 	}
 	// new selection processing
 	if( obj ){
@@ -12135,14 +12156,12 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    } else if( obj.params ){
 		dlayer.params.sel = obj;
 	    }
-	}
-	// and currently selected layer
-	if( dlayer.display.image ){
-	    dlayer.display.image.layer = layerName;
-	}
-	// plugin callbacks
-	if( obj && dlayer.display.image ){
-	    dlayer.display.image.updateShapes(layerName, obj, "select");
+	    // region updates
+	    if( dlayer.display.image && obj.type !== "activeSelection" ){
+		dlayer.display.image.updateShapes(layerName, obj, "select");
+	    }
+	    // update multi-select dialog
+	    seldialog(true);
 	}
     };
     const selmultion = (dlayer, activeObject, s) => {
@@ -12178,7 +12197,10 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 		dlayer.display.image.updateShapes(layerName, obj, "select");
 	    }
 	}
+	// redraw everything
 	dlayer.canvas.renderAll();
+	// update multi-select dialog
+	seldialog(true);
     };
     // sanity check
     if( !display || !layerName ){
@@ -12435,7 +12457,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	});
     }
     // object modified
-    dlayer.canvas.on('object:modified', (opts) => {
+    dlayer.canvas.on("object:modified", (opts) => {
 	let o, i, olen, myWidth, myHeight;
 	const objs = [];
 	// sanity check
@@ -12493,7 +12515,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	}
     });
     // object scaled: reset stroke width
-    dlayer.canvas.on('object:scaling', (opts) => {
+    dlayer.canvas.on("object:scaling", (opts) => {
 	let o;
 	// sanity check
 	if( !opts.target ){ return; }
@@ -12502,14 +12524,14 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	o.rescaleBorder();
 	JS9.Fabric.updateChildren(dlayer, o, "scaling");
     });
-    dlayer.canvas.on('object:moving', (opts) => {
+    dlayer.canvas.on("object:moving", (opts) => {
 	let o;
 	// sanity check
 	if( !opts.target ){ return; }
 	o = opts.target;
 	JS9.Fabric.updateChildren(dlayer, o, "moving");
     });
-    dlayer.canvas.on('object:rotating', (opts) => {
+    dlayer.canvas.on("object:rotating", (opts) => {
 	let o;
 	// sanity check
 	if( !opts.target ){ return; }
@@ -12524,7 +12546,7 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    selon(dlayer, opts.target);
 	});
 	// selection cleared
-	dlayer.canvas.on('before:selection:cleared', (opts) => {
+	dlayer.canvas.on("before:selection:cleared", (opts) => {
 	    // sanity check
 	    if( !opts.target ){ return; }
 	    seloff(dlayer, opts.target);
@@ -12540,16 +12562,16 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	// add anchors to polygon
 	dlayer.canvas.on("selection:updated", (opts) => {
 	    const activeObject = dlayer.canvas.getActiveObject();
-	    if( activeObject.type === 'activeSelection' ){
+	    if( activeObject.type === "activeSelection" ){
 		selmultion(dlayer, activeObject, opts);
 	    } else {
 		selon(dlayer, activeObject);
 	    }
 	});
 	// selection cleared
-	dlayer.canvas.on('before:selection:cleared', (opts) => {
+	dlayer.canvas.on("before:selection:cleared", (opts) => {
 	    const activeObject = dlayer.canvas.getActiveObject();
-	    if( activeObject.type === 'activeSelection' ){
+	    if( activeObject.type === "activeSelection" ){
 		selmultioff(dlayer, activeObject, opts);
 	    } else {
 		seloff(dlayer, activeObject);
@@ -13891,7 +13913,7 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 	group = canvas.getActiveGroup();
     } else {
 	ao = canvas.getActiveObject();
-	if( ao && ao.type === 'activeSelection' ){
+	if( ao && ao.type === "activeSelection" ){
 	    group = ao;
 	} else {
 	    group = null;
@@ -15011,7 +15033,7 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	const anchor = obj.target;
 	const poly = anchor.polyparams.polygon;
 	const pt = anchor.polyparams.point;
-	const points = poly.get('points');
+	const points = poly.get("points");
 	const im = dlayer.display.image;
 	// if pt was deleted, stop the callback
 	if( pt === undefined ){
@@ -15091,7 +15113,7 @@ JS9.Fabric.addPolygonAnchors = function(dlayer, obj){
 	    hasBorders: false,
 	    selectable: true,
 	    fill: obj.get("stroke"),
-	    hoverCursor: 'pointer',
+	    hoverCursor: "pointer",
 	    width: JS9.Fabric.opts.cornerSize + 2,
 	    height: JS9.Fabric.opts.cornerSize + 2,
 	    padding: 2
@@ -16109,39 +16131,76 @@ JS9.Regions.init = function(layerName){
 };
 
 // display the region config form
-JS9.Regions.displayConfigForm = function(shape){
-    let s;
-    const im = this;
-    const title = JS9.Regions.opts.title;
+// call using image context
+JS9.Regions.displayConfigForm = function(shape, opts){
+    let s, winid, multi;
+    let got = 0;
+    let title = JS9.Regions.opts.title;
     // sanity check
-    if( !shape ){
+    if( !this ){
 	return;
+    }
+    // opts is optional
+    opts = opts || {};
+    // multiple selections?
+    multi = opts.multi;
+    // if there are no regions involved, make this a multi-select edit
+    if( !shape ){
+	// need at least one shape to edit
+	if( !this.getShapes("regions").length ){
+	    return;
+	}
+	multi = true;
+    }
+    // change title to reflect multi-select, if necessary
+    if( multi ){
+	// if a multi selet form already exists, just update it
+	$("form[id='regionsConfigForm']").each((index, element) => {
+	    const multi = $(element).data("multi");
+	    const winid = $(element).data("winid");
+	    const im = $(element).data("im");
+	    if(  multi && winid && im === this ){
+		im.initRegionsForm(null, {winid, multi});
+		got++;
+	    }
+	});
+	// adjust title
+	title = `Multi-${title.replace(/^R/, "r")}`;
+	// all done if we reinit'ed an existing window
+	if( got ){ return; }
     }
     // call this once window is loaded
     $("#dhtmlwindowholder")
 	.arrive("#regionsConfigForm", {onceOnly: true}, () => {
-	    if( shape.pub ){
-		im.initRegionsForm(shape);
-	    }
+	    this.initRegionsForm(shape, {multi, winid});
 	});
+    // get config html
     if( JS9.allinone ){
 	s = JS9.allinone.regionsConfigHTML;
-	shape.params.winid = im.displayAnalysis("regions", s, {title});
     } else {
 	s = JS9.InstallDir(JS9.Regions.opts.configURL);
-	shape.params.winid = im.displayAnalysis("regions", s, {title});
+    }
+    // bring up display window
+    winid = this.displayAnalysis("regions", s, {title});
+    // save winid, if possible
+    if( shape ){
+	shape.params.winid = winid;
     }
 };
 
 // initialize the region config form
 // call using image context
-JS9.Regions.initConfigForm = function(obj){
+JS9.Regions.initConfigForm = function(obj, opts){
     let i, s, key, val, el, wcssys, altwcssys, ra, dec, mover, mout, p1, p2;
+    let winid, wid, form;
+    let multi = false;
+    let title = JS9.Regions.opts.title;
     const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
-    const params = obj.params;
-    const winid = params.winid;
-    const wid = $(winid).attr("id");
-    const form = `#${wid} #regionsConfigForm `;
+    const defobj = {
+	type: "multi",
+	pub: {shape: "multi"},
+	params: {}
+    };
     const fmt= (val) => {
 	if( val === undefined ){
 	    return undefined;
@@ -16157,13 +16216,47 @@ JS9.Regions.initConfigForm = function(obj){
 	t = s.replace(/\n/g, "\\n");
 	return t;
     };
+    // fake obj: this just makes the checks easier, so we don't have to add
+    // if( obj ... ) everywhere
+    if( !obj ){
+	obj = defobj;
+    }
+    // opts is optional
+    opts = opts || {};
+    // where to we get winid?
+    if( obj.params.winid ){
+	winid = obj.params.winid;
+    } else if( opts.winid ){
+	winid = opts.winid;
+    }
+    // window id is required
+    if( !winid ){
+	return;
+    }
+    // find the form, based on winid
+    wid = $(winid).attr("id");
+    form = `#${wid} #regionsConfigForm `;
+    // valid form is required
+    if( !$(form).length ){
+	return;
+    }
+    // if the form is already a multi-select form, keep it that way
+    if( $(form).data("multi") ){
+	multi = true;
+    } else {
+	multi = opts.multi;
+    }
+    // dialog box title
+    if( multi ){
+	title = `Multi-${title.replace(/^R/, "r")}`;
+    }
     // get alternate wcssys, if necessary
     altwcssys = $(form).data("wcssys");
     // remove the nodisplay class from shape's div
     $(`${form}.${obj.pub.shape}`).each((index, element) => {
 	$(element).removeClass("nodisplay");
     });
-    // fill in the values from the shape object
+    // fill in form values based on current values in the shape object
     $(`${form}.val`).each((index, element) => {
 	val = "";
 	key = $(element).attr("name");
@@ -16171,8 +16264,7 @@ JS9.Regions.initConfigForm = function(obj){
 	switch(key){
 	case "x":
 	case "y":
-	    if( obj.pub.lcs      !== undefined &&
-		obj.pub.lcs[key] !== undefined ){
+	    if( obj.pub.lcs && obj.pub.lcs[key] !== undefined ){
 		val = fmt(obj.pub.lcs[key]);
 	    } else if( obj.pub[key] !== undefined ){
 		val = fmt(obj.pub[key]);
@@ -16201,11 +16293,9 @@ JS9.Regions.initConfigForm = function(obj){
 		    }
 		    val += `${p.x.toFixed(2)}, ${p.y.toFixed(2)}`;
 		});
-	    } else {
+	    } else if( obj.pub.imstr ){
 		// use the flat points list instead of the pts object array
-		if( obj.pub.imstr ){
-		    val = obj.pub.imstr.replace(/^.*\(/, "").replace(/\)$/, "");
-		}
+		val = obj.pub.imstr.replace(/^.*\(/, "").replace(/\)$/, "");
 	    }
 	    break;
 	case "linelength":
@@ -16215,15 +16305,12 @@ JS9.Regions.initConfigForm = function(obj){
 		val = fmt(Math.sqrt((p2.x - p1.x) * (p2.x - p1.x) +
 				    (p2.y - p1.y) * (p2.y - p1.y)));
 		switch(this.params.wcssys){
-		case 'image':
-		case 'physical':
+		case "image":
+		case "physical":
 		    break;
 		default:
-		    if( wcsinfo.cdelt1 !== undefined ){
-			val *= Math.abs(wcsinfo.cdelt1);
-		    } else if( wcsinfo.cdelt2 !== undefined ){
-			val *= Math.abs(wcsinfo.cdelt2);
-		    }
+		    val *= Math.abs(wcsinfo.cdelt1);
+		    val *= Math.abs(wcsinfo.cdelt2);
 		    break;
 		}
 		val = fmt(val);
@@ -16261,7 +16348,9 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "strokeWidth":
-	    val = obj.params.sw1;
+	    if( obj.params.sw1 ){
+		val = obj.params.sw1;
+	    }
 	    break;
 	case "strokeDashes":
 	    if( obj.strokeDashArray ){
@@ -16269,8 +16358,6 @@ JS9.Regions.initConfigForm = function(obj){
 		if( val.match(/NaN/) ){
 		    val = "";
 		}
-	    } else {
-		val = "";
 	    }
 	    break;
 	case "regstr":
@@ -16284,21 +16371,23 @@ JS9.Regions.initConfigForm = function(obj){
 	    break;
 	case "xpos":
 	    switch(this.params.wcssys){
-	    case 'image':
-		val = sprintf('%.1f', obj.pub.x);
+	    case "image":
+		if( obj.pub.x !== undefined ){
+		    val = sprintf("%.1f", obj.pub.x);
+		}
 		break;
-	    case 'physical':
+	    case "physical":
 		if( obj.pub.lcs ){
-		    val = sprintf('%.1f', obj.pub.lcs.x);
-		} else {
-		    val = sprintf('%.1f', obj.pub.x);
+		    val = sprintf("%.1f", obj.pub.lcs.x);
+		} else if( obj.pub.x !== undefined ){
+		    val = sprintf("%.1f", obj.pub.x);
 		}
 		break;
 	    default:
 		if( obj.pub.ra !== undefined ){
-		    val = sprintf('%.6f', obj.pub.ra);
-		} else {
-		    val = sprintf('%.1f', obj.pub.x);
+		    val = sprintf("%.6f", obj.pub.ra);
+		} else if( obj.pub.x !== undefined ){
+		    val = sprintf("%.1f", obj.pub.x);
 		}
 		break;
 	    }
@@ -16307,21 +16396,23 @@ JS9.Regions.initConfigForm = function(obj){
 	    break;
 	case "ypos":
 	    switch(this.params.wcssys){
-	    case 'image':
-		val = sprintf('%.1f', obj.pub.y);
+	    case "image":
+		if( obj.pub.y !== undefined ){
+		    val = sprintf("%.1f", obj.pub.y);
+		}
 		break;
-	    case 'physical':
+	    case "physical":
 		if( obj.pub.lcs ){
-		    val = sprintf('%.1f', obj.pub.lcs.y);
-		} else {
-		    val = sprintf('%.1f', obj.pub.y);
+		    val = sprintf("%.1f", obj.pub.lcs.y);
+		} else if( obj.pub.y !== undefined ){
+		    val = sprintf("%.1f", obj.pub.y);
 		}
 		break;
 	    default:
 		if( obj.pub.dec !== undefined ){
-		    val = sprintf('%.6f', obj.pub.dec);
-		} else {
-		    val = sprintf('%.1f', obj.pub.y);
+		    val = sprintf("%.6f", obj.pub.dec);
+		} else if( obj.pub.y !== undefined ){
+		    val = sprintf("%.1f", obj.pub.y);
 		}
 		break;
 	    }
@@ -16334,20 +16425,20 @@ JS9.Regions.initConfigForm = function(obj){
 	case "width":
 	case "r1":
 	    switch(this.params.wcssys){
-	    case 'image':
+	    case "image":
 		if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
 		}
 		break;
-	    case 'physical':
-		if( obj.pub.lcs[key] !== undefined ){
+	    case "physical":
+		if( obj.pub.lcs && obj.pub.lcs[key] !== undefined ){
 		    val = fmt(obj.pub.lcs[key]);
 		}
 		break;
 	    default:
 		if( obj.pub.wcssizestr ){
 		    val = fmt(obj.pub.wcssizestr[0]);
-		} else {
+		} else if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
 		}
 		break;
@@ -16356,20 +16447,20 @@ JS9.Regions.initConfigForm = function(obj){
 	case "height":
 	case "r2":
 	    switch(this.params.wcssys){
-	    case 'image':
+	    case "image":
 		if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
 		}
 		break;
-	    case 'physical':
-		if( obj.pub.lcs[key] !== undefined ){
+	    case "physical":
+		if( obj.pub.lcs && obj.pub.lcs[key] !== undefined ){
 		    val = fmt(obj.pub.lcs[key]);
 		}
 		break;
 	    default:
 		if( obj.pub.wcssizestr ){
 		    val = fmt(obj.pub.wcssizestr[1]);
-		} else {
+		} else if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
 		}
 		break;
@@ -16378,13 +16469,13 @@ JS9.Regions.initConfigForm = function(obj){
 	case "wcssys":
 	    // add all wcs sys options
 	    el = $(form).find(`[name='${key}']`);
-	    if( !el.find('option').length ){
+	    if( !el.find("option").length ){
 		for(i=0; i<JS9.wcssyss.length; i++){
 		    wcssys = JS9.wcssyss[i];
 		    el.append(`<option>${wcssys}</option>`);
 		}
 	    }
-	    el.find('option').each((index, element) => {
+	    el.find("option").each((index, element) => {
 		if( this.params.wcssys === element.value ){
 		    val = element.value;
 		}
@@ -16393,7 +16484,7 @@ JS9.Regions.initConfigForm = function(obj){
 	case "altwcssys":
 	    // add all wcs sys options
 	    el = $(form).find(`[name='${key}']`);
-	    if( !el.find('option').length ){
+	    if( !el.find("option").length ){
 		for(i=0; i<JS9.wcssyss.length; i++){
 		    wcssys = JS9.wcssyss[i];
 		    if( (wcssys === "image") || (wcssys === "physical") ){
@@ -16404,7 +16495,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    val = $(form).data("wcssys");
 	    if( !val ){
-		el.find('option').each((index, element) => {
+		el.find("option").each((index, element) => {
 		    if( this.params.wcssys === element.value ){
 			val = element.value;
 		    }
@@ -16417,7 +16508,7 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "childtext":
-	    if( obj.params.children.length > 0 ){
+	    if( obj.params.children && obj.params.children.length > 0 ){
 		val = replaceNewline(obj.params.children[0].obj.text);
 	    }
 	    break;
@@ -16427,7 +16518,14 @@ JS9.Regions.initConfigForm = function(obj){
 	    }
 	    break;
 	case "id":
-	    val = obj.pub.id;
+	    if( obj.pub.id !== undefined ){
+		val = obj.pub.id;
+	    }
+	    break;
+	case "tags":
+	    if( obj.pub[key] !== undefined ){
+		val = fmt(obj.pub[key]);
+	    }
 	    break;
 	default:
 	    if( obj.pub[key] !== undefined ){
@@ -16437,10 +16535,12 @@ JS9.Regions.initConfigForm = function(obj){
 	}
 	$(element).val(val);
     });
-    if( !this.raw.wcs || this.raw.wcs < 0 ){
+    // display or hide options
+    if( multi || !this.raw.wcs || this.raw.wcs < 0 ){
 	$(form).find("[name='wcssys']").hide();
     }
-    if( (this.params.wcssys === "image")    ||
+    if( multi                          ||
+	(this.params.wcssys === "image")    ||
 	(this.params.wcssys === "physical") ||
 	(!this.raw.wcs || this.raw.wcs<0)   ){
 	$(form).find("[name='altwcssys']").hide();
@@ -16454,65 +16554,81 @@ JS9.Regions.initConfigForm = function(obj){
 	}
     }
     // edit-able parameters
-    // $(form + ".edit").removeClass("nodisplay");
     // child text display for shapes, editable if no existing children yet
-    if( obj.type !== "text" ){
+    if( obj.type !== "text" && obj.params.children ){
 	$(`${form}.childtext`).removeClass("nodisplay");
 	$(`${form}[name='childtext']`)
-	    .prop("readonly", params.children.length > 0);
+	    .prop("readonly", obj.params.children.length > 0);
     }
     // checkboxes
-    if( params.listonchange === undefined ){
-	params.listonchange = false;
+    if( obj.params.listonchange === undefined ){
+	obj.params.listonchange = false;
     }
-    if( params.listonchange ){
+    if( obj.params.listonchange ){
 	$(`${form}[name='listonchange']`).prop("checked", true);
     } else {
 	$(`${form}[name='listonchange']`).prop("checked", false);
     }
-    if( (params.changeable === undefined)  &&
-	(params.fixinplace !== undefined)  ){
-	params.changeable = !params.fixinplace;
+    if( (obj.params.changeable === undefined)  &&
+	(obj.params.fixinplace !== undefined)  ){
+	obj.params.changeable = !obj.params.fixinplace;
     }
-    if( params.changeable === undefined ){
-	params.changeable = true;
+    if( obj.params.changeable === undefined ){
+	obj.params.changeable = true;
     }
-    if( params.changeable ){
+    if( obj.params.changeable ){
 	$(`${form}[name='changeable']`).prop("checked", true);
     } else {
 	$(`${form}[name='changeable']`).prop("checked", false);
     }
-    // grey-out read-only text
-    $(form).find('input:text[readonly]')
-	.css("border-color", "A5A5A5")
-	.css("background", "#E9E9E9");
     // shape specific processing
-    switch(obj.pub.shape){
-    case "box":
-    case "ellipse":
-	$(`${form}.angle`).removeClass("nodisplay");
-	break;
-    case "text":
-	$(`${form}.textangle`).removeClass("nodisplay");
-	break;
-    case "line":
-	if( obj.pub.pts && obj.pub.pts.length === 2 ){
-	    $(`${form}.linelength`).removeClass("nodisplay");
-	    $(`${form}.lineangle`).removeClass("nodisplay");
+    if( multi ){
+	$(form).find(".regid").hide();
+	$(form).find(".edit").hide();
+	$(form).find(".childtext").hide();
+	$(form).find(".multi").removeClass("nodisplay");
+	if( opts.setmode === false ){
+	    $(form).find(`[name='multitext']`).val("");
 	} else {
-	    $(`${form}.linelength`).addClass("nodisplay");
-	    $(`${form}.lineangle`).addClass("nodisplay");
+	    s = this.listRegions("selected", {mode: 1})
+		.replace(/ *{[^;#]*}/g, "")
+		.replace(/ *; */g, "\n");
+	    $(form).find(`[name='multitext']`).val(s);
 	}
-	break;
-    default:
-	break;
+    } else {
+	// grey-out read-only text
+	$(form).find("input:text[readonly]")
+	    .css("border-color", "A5A5A5")
+	    .css("background", "#E9E9E9");
+	switch(obj.pub.shape){
+	case "box":
+	case "ellipse":
+	    $(`${form}.angle`).removeClass("nodisplay");
+	    break;
+	case "text":
+	    $(`${form}.textangle`).removeClass("nodisplay");
+	    break;
+	case "line":
+	    if( obj.pub.pts && obj.pub.pts.length === 2 ){
+		$(`${form}.linelength`).removeClass("nodisplay");
+		$(`${form}.lineangle`).removeClass("nodisplay");
+	    } else {
+		$(`${form}.linelength`).addClass("nodisplay");
+		$(`${form}.lineangle`).addClass("nodisplay");
+	    }
+	    break;
+	default:
+	    break;
+	}
     }
-    // save the image for later processing
+    // save image for later processing
     $(form).data("im", this);
-    // save the shape object for later processing
+    // save shape object for later processing
     $(form).data("shape", obj);
     // save the window id for later processing
     $(form).data("winid", winid);
+    // save multi state for later processing
+    $(form).data("multi", multi);
     // add tooltip callbacks (not mobile: ios buttons stop working!)
     if( !$(form).data("tooltipInit") ){
 	$(form).data("tooltipInit", true);
@@ -16524,21 +16640,19 @@ JS9.Regions.initConfigForm = function(obj){
 	    mout = "mouseout";
 	}
 	$(".col_R").on(mover, (e) => {
-	    let title;
 	    const target = e.currentTarget;
 	    const tooltip = $(target).find("input").data("tooltip");
 	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
 	    if( tooltip && el.length ){
 		// change title: see dhtmlwindow.js load() @line 130
-		title = `${JS9.Regions.opts.title}: ${tooltip}`;
-		$(el)[0].childNodes[0].nodeValue = title;
+		$(el)[0].childNodes[0].nodeValue = `${title}: ${tooltip}`;
 	    }
 	});
 	$(".col_R").on(mout, (e) => {
 	    const target = e.currentTarget;
 	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
 	    if( el.length ){
-		$(el)[0].childNodes[0].nodeValue = JS9.Regions.opts.title;
+		$(el)[0].childNodes[0].nodeValue = title;
 	    }
 	});
     }
@@ -16546,10 +16660,15 @@ JS9.Regions.initConfigForm = function(obj){
 
 // process the config form to change the specified shape
 // call using image context
-JS9.Regions.processConfigForm = function(form, obj, winid, arr){
-    let i, s, key, nkey, val, nval, nopts, altwcssys;
+JS9.Regions.processConfigForm = function(form, obj, arr){
+    let i, s, key, nkey, val, nval, nopts, altwcssys, multi, layer;
     let cpos, p1, p2, d, x, y, ang;
     let bin = 1;
+    const defobj = {
+	type: "multi",
+	pub: {shape: "multi"},
+	params: {}
+    };
     const alen = arr.length;
     const opts = {};
     const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
@@ -16563,6 +16682,9 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	return(String(val));
     };
     const fmtcheck= (val1, val2) => {
+	if( multi ){
+	    return true;
+	}
 	if( val1 === undefined ){
 	    return false;
 	}
@@ -16574,44 +16696,48 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	    return val === "selected";
 	}
 	if( key === "childtext" ){
-	    if( obj.params.children.length > 0 ){
+	    if( obj.params.children && obj.params.children.length > 0 ){
 		return false;
 	    }
 	    return val !== "";
 	}
 	if( key === "strokeDashes" ){
-	    return JSON.stringify(obj.strokeDashArray) !== JSON.stringify(val);
+	    if( obj.strokeDashArray){
+		return JSON.stringify(obj.strokeDashArray) !==
+		       JSON.stringify(val);
+	    }
+	    return val !== "";
 	}
-	if( (key !== "tags") && (val === "") ){
+	if( key !== "tags" && val === "" ){
 	    return false;
 	}
-	if( (key === "misc") && (val !== "") ){
+	if( key === "misc" && val !== "" ){
 	    return true;
 	}
-	if( (key === "angle") ){
+	if( key === "angle" ){
 	    return obj.angle !== -parseFloat(val);
 	}
-	if( (key === "ix") ){
+	if( key === "ix" ){
 	    return fmtcheck(obj.pub.x, JS9.saostrtod(val));
 	}
-	if( (key === "iy") ){
+	if( key === "iy" ){
 	    return fmtcheck(obj.pub.y, JS9.saostrtod(val));
 	}
-	if( (key === "px") ){
+	if( key === "px" && obj.pub.lcs ){
 	    return fmtcheck(obj.pub.lcs.x, JS9.saostrtod(val));
 	}
-	if( (key === "py") ){
+	if( key === "py" && obj.pub.lcs ){
 	    return fmtcheck(obj.pub.lcs.y, JS9.saostrtod(val));
 	}
-	if( (key === "ra") ){
+	if( key === "ra" && obj.pub.wcsposstr ){
 	    return fmtcheck(JS9.saostrtod(obj.pub.wcsposstr[0]),
 			    JS9.saostrtod(val));
 	}
-	if( (key === "dec") ){
+	if( key === "dec" && obj.pub.wcsposstr ){
 	    return fmtcheck(JS9.saostrtod(obj.pub.wcsposstr[1]),
 			    JS9.saostrtod(val));
 	}
-	if( obj.pub.lcs[key] !== undefined ){
+	if( obj.pub.lcs && obj.pub.lcs[key] !== undefined ){
 	    if( fmtcheck(obj.pub.lcs[key], val) ){
 		return true;
 	    }
@@ -16653,17 +16779,26 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	bin = Math.sqrt(Math.pow(this.lcs.physical.forward[0][0],2) +
 		        Math.pow(this.lcs.physical.forward[0][1],2));
     }
+    // fake obj: this just makes the checks easier, so we don't have to add
+    // if( obj ... ) everywhere
+    if( !obj ){
+	obj = defobj;
+    }
+    // multi selection or single region
+    multi = $(form).data("multi");
+    // layer or regions
+    layer = obj.pub.layer || "regions";
     // process array of keyword/values
     for(i=0; i<alen; i++){
 	key = arr[i].name;
 	val = arr[i].value;
-	// pos keys have to be converted to correct type of position
+	// pos keys: convert to correct type of position before switch statment
 	if( key === "xpos" || key === "ypos" ){
 	    switch(this.params.wcssys){
-	    case 'image':
+	    case "image":
 		key = `i${key.charAt(0)}`;
 		break;
-	    case 'physical':
+	    case "physical":
 		key = `p${key.charAt(0)}`;
 		break;
 	    default:
@@ -16711,7 +16846,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "ix":
 	    if( newval(obj, key, val) ){
 		opts.x = getval(val);
-		if( opts.y === undefined ){
+		if( opts.y === undefined && obj.pub.y !== undefined ){
 		    opts.y = obj.pub.y;
 		}
 	    }
@@ -16719,7 +16854,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "iy":
 	    if( newval(obj, key, val) ){
 		opts.y = getval(val);
-		if( opts.x === undefined ){
+		if( opts.x === undefined && obj.pub.x !== undefined ){
 		    opts.x = obj.pub.x;
 		}
 	    }
@@ -16727,7 +16862,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "px":
 	    if( newval(obj, key, val) ){
 		opts.px = getval(val);
-		if( opts.py === undefined ){
+		if( opts.py === undefined && obj.pub.lcs ){
 		    opts.py = obj.pub.lcs.y;
 		}
 	    }
@@ -16735,7 +16870,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "py":
 	    if( newval(obj, key, val) ){
 		opts.py = getval(val);
-		if( opts.px === undefined ){
+		if( opts.px === undefined && obj.pub.lcs ){
 		    opts.px = obj.pub.lcs.x;
 		}
 	    }
@@ -16743,7 +16878,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "ra":
 	    if( newval(obj, key, val) ){
 		opts.ra = val;
-		if( opts.dec === undefined ){
+		if( opts.dec === undefined && obj.pub.wcsposstr ){
 		    opts.dec = obj.pub.wcsposstr[1];
 		}
 	    }
@@ -16751,7 +16886,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "dec":
 	    if( newval(obj, key, val) ){
 		opts.dec = val;
-		if( opts.ra === undefined ){
+		if( opts.ra === undefined && obj.pub.wcsposstr ){
 		    opts.ra = obj.pub.wcsposstr[0];
 		}
 	    }
@@ -16763,12 +16898,12 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "width":
 	case "r1":
 	    switch(this.params.wcssys){
-	    case 'image':
+	    case "image":
 		if( newval(obj, key, val) ){
 		    opts[key] = getval(val);
 		}
 		break;
-	    case 'physical':
+	    case "physical":
 		if( newval(obj, key, val) ){
 		    opts[key] = getval(val) * bin;
 		}
@@ -16790,12 +16925,12 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	case "height":
 	case "r2":
 	    switch(this.params.wcssys){
-	    case 'image':
+	    case "image":
 		if( newval(obj, key, val) ){
 		    opts[key] = getval(val);
 		}
 		break;
-	    case 'physical':
+	    case "physical":
 		if( newval(obj, key, val) ){
 		    opts[key] = getval(val) * bin;
 		}
@@ -16824,8 +16959,8 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 		if( JS9.isNumber(val) && val !== this.tmp.linelength ){
 		    val = parseFloat(val);
 		    switch(this.params.wcssys){
-		    case 'image':
-		    case 'physical':
+		    case "image":
+		    case "physical":
 			break;
 		    default:
 			if( wcsinfo.cdelt1 !== undefined ){
@@ -16891,7 +17026,11 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	    break;
 	case "remove":
 	    if( newval(obj, key, val) ){
-		opts[key] = obj.pub.id;
+		if( multi ){
+		    opts[key] = "selected";
+		} else if( obj.pub.id !== undefined ){
+		    opts[key] = obj.pub.id;
+		}
 	    }
 	    break;
 	case "misc":
@@ -16907,6 +17046,7 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	    break;
 	}
     }
+    // ra, dec
     if( opts.ra && opts.dec ){
 	// get alternate wcssys, if necessary
 	altwcssys = $(form).data("wcssys");
@@ -16919,8 +17059,12 @@ JS9.Regions.processConfigForm = function(form, obj, winid, arr){
 	}
     }
     // change the shape
-    this.changeShapes(obj.pub.layer, obj, opts);
-    this.initRegionsForm(obj, winid);
+    if( multi ){
+	this.changeShapes(layer, "selected", opts);
+    } else {
+	this.changeShapes(layer, obj, opts);
+    }
+    this.initRegionsForm(obj, {multi});
 };
 
 // paste a region from clipboard
@@ -17000,7 +17144,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
 		continue;
 	    }
 	    // ignore empty stroke dash array
-	    if( key === "strokeDashArray" ){
+	    if( key === "strokeDashArray" && obj.strokeDashArray ){
 		s = obj.strokeDashArray.join("");
 		if( (s === "") || s.match(/NaN/) ){
 		    continue;
@@ -17491,13 +17635,13 @@ JS9.Regions.parseRegions = function(s, opts){
 		}
 		// region args are optional
 		switch(robj.cmd){
-		case 'annulus':
+		case "annulus":
 		    obj.radii = [];
 		    for(j=2; j<alen; j++){
 			obj.radii.push(getilen(robj.args[j], 1));
 		    }
 		    break;
-		case 'box':
+		case "box":
 		    if( alen >= 3 ){
 			obj.width = getilen(robj.args[2], 1);
 		    }
@@ -17508,12 +17652,12 @@ JS9.Regions.parseRegions = function(s, opts){
 			obj.angle = getang(robj.args[4]);
 		    }
 		    break;
-		case 'circle':
+		case "circle":
 		    if( alen >= 3 ){
 			obj.radius = getilen(robj.args[2], 1);
 		    }
 		    break;
-		case 'ellipse':
+		case "ellipse":
 		    if( alen >= 3 ){
 			obj.r1 = getilen(robj.args[2], 1);
 		    }
@@ -17524,8 +17668,8 @@ JS9.Regions.parseRegions = function(s, opts){
 			obj.angle = getang(robj.args[4]);
 		    }
 		    break;
-		case 'line':
-		case 'polygon':
+		case "line":
+		case "polygon":
 		    obj.pts = [];
 		    for(j=0, k=0; j<alen; j+=2, k++){
 			pos = getipos(robj.args[j], robj.args[j+1]);
@@ -17534,9 +17678,9 @@ JS9.Regions.parseRegions = function(s, opts){
 		    delete obj.x;
 		    delete obj.y;
 		    break;
-		case 'point':
+		case "point":
 		    break;
-		case 'text':
+		case "text":
 		    if( alen >= 3 ){
 			obj.text = getstr(robj.args[2]);
 		    }
@@ -17667,7 +17811,9 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	    if( JS9.isNull(opts.includewcs) ){
 		opts.includewcs = JS9.globalOpts.csvIncludeWCS;
 	    }
+	    // list of regions
 	    regstr = this.listRegions(which, opts, layer);
+	    // convert to csv
 	    arr = regstr.split(";");
 	    for(i=0, s=""; i<arr.length; i++){
 		if( !arr[i] ){ continue; }
@@ -17690,8 +17836,19 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	    header = "# Region file format: JS9 version 1.0";
 	    opts.mode = 1;
 	    opts.file = fname;
+	    // list of regions
 	    regstr = this.listRegions(which, opts, layer);
-	    s = `${header}\n${regstr.replace(/; */g, "\n")}\n`;
+	    // remove json, if ncessary
+	    if( opts.includejson === false ){
+		regstr = regstr.replace(/ *{[^;#]*}/g, "");
+	    }
+	    // remove comments, if necessary
+	    if( opts.includecomments === false ){
+		regstr = regstr.replace(/ *#[^;]*/g, "");
+		s = `${regstr.replace(/; */g, "\n")}\n`;
+	    } else {
+		s = `${header}\n${regstr.replace(/; */g, "\n")}\n`;
+	    }
 	}
 	catch(e){ JS9.error(`can't convert layer to region: ${layer}`);	}
 	break;
@@ -19007,7 +19164,7 @@ Math.sinh = Math.sinh || function(x) {
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes
 // From https://github.com/kevlatus/polyfill-array-includes/blob/master/array-includes.js
 if (!Array.prototype.includes) {
-  Object.defineProperty(Array.prototype, 'includes', {
+  Object.defineProperty(Array.prototype, "includes", {
     value: function (searchElement, fromIndex) {
 
       // 1. Let O be ? ToObject(this value).
@@ -19037,7 +19194,7 @@ if (!Array.prototype.includes) {
       var k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
 
       function sameValueZero(x, y) {
-        return x === y || (typeof x === 'number' && typeof y === 'number' && isNaN(x) && isNaN(y));
+        return x === y || (typeof x === "number" && typeof y === "number" && isNaN(x) && isNaN(y));
       }
 
       // 7. Repeat, while k < len
@@ -19720,9 +19877,9 @@ JS9.lookupVfile = function(vfile){
 // https://stackoverflow.com/questions/21294/dynamically-load-a-javascript-file
 JS9.loadScript = function(url, func, error){
     // adding the script tag to the head as suggested before
-    const head = document.getElementsByTagName('head')[0];
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
+    const head = document.getElementsByTagName("head")[0];
+    const script = document.createElement("script");
+    script.type = "text/javascript";
     // callback
     if( func ){
 	script.onload = func;
@@ -19764,12 +19921,12 @@ JS9.fetchURL = function(name, url, opts, handler) {
     // change $JS9_DIR back to install dir
     nurl = nurl.replace(/^\${JS9_DIR}\//,JS9.INSTALLDIR);
     // set up connection
-    xhr.open('GET', nurl, true);
+    xhr.open("GET", nurl, true);
     // and parameters
     if( opts.responseType ){
 	xhr.responseType = opts.responseType;
     } else {
-	xhr.responseType = 'blob';
+	xhr.responseType = "blob";
     }
     if( JS9.globalOpts.xtimeout ){
 	xhr.timeout = JS9.globalOpts.xtimeout;
@@ -19942,8 +20099,8 @@ JS9.handleImageFile = function(file, options, handler){
 	img.onload = () => {
 	    let x, y, brightness, header;
 	    let i = 0;
-	    const canvas = document.createElement('canvas');
-	    const ctx    = canvas.getContext('2d');
+	    const canvas = document.createElement("canvas");
+	    const ctx    = canvas.getContext("2d");
 	    const h      = img.height;
 	    const w      = img.width;
 	    canvas.width  = w;
@@ -20324,27 +20481,27 @@ JS9.log = function(...args) {
 JS9.eventToCharStr = function(evt){
     let c, s;
     const _specialKeys = {
-	'37': 'leftArrow',
-	'38': 'upArrow',
-	'39': 'rightArrow',
-	'40': 'downArrow',
-	 '8': 'delete',
-	'46': 'delete'
+	"37": "leftArrow",
+	"38": "upArrow",
+	"39": "rightArrow",
+	"40": "downArrow",
+	 "8": "delete",
+	"46": "delete"
     };
     const _to_ascii = {
-        '188': '44',
-        '109': '45',
-        '190': '46',
-        '191': '47',
-        '192': '96',
-        '220': '92',
-        '222': '39',
-        '221': '93',
-        '219': '91',
-        '173': '45',
-        '187': '61', //IE Key codes
-        '186': '59', //IE Key codes
-        '189': '45'  //IE Key codes
+        "188": "44",
+        "109": "45",
+        "190": "46",
+        "191": "47",
+        "192": "96",
+        "220": "92",
+        "222": "39",
+        "221": "93",
+        "219": "91",
+        "173": "45",
+        "187": "61", //IE Key codes
+        "186": "59", //IE Key codes
+        "189": "45"  //IE Key codes
     };
     const _shiftUps = {
         "96": "~",
@@ -21077,7 +21234,7 @@ JS9.searchbar = function(el, textid) {
     div.on("keydown", (evt) => {
 	const code = evt.which || evt.keyCode;
 	const c = String.fromCharCode(code);
-	if( JS9.specialKey(evt) && c === 'F' ){
+	if( JS9.specialKey(evt) && c === "F" ){
 	    if( bar.css("display") === "none" ){
 		bar.css("display", "block");
 		srch.focus();
@@ -21346,7 +21503,7 @@ JS9.Starbase = function(s, opts){
 		break;
 	    }
 	}
-	this.data[j] = data[line].split('\t');
+	this.data[j] = data[line].split("\t");
 	for(i=0; i<this.data[j].length; i++){
 	    cobj = this.convFuncs[i](this.data[j][i]);
 	    this.data[j][i] = cobj.val;
@@ -21371,7 +21528,7 @@ JS9.colorToHex = function(color){
 	return "";
     }
     c = color.toLowerCase();
-    if( typeof colors[c] !== 'undefined' ){
+    if( typeof colors[c] !== "undefined" ){
         return colors[c];
     }
     arr = color.match(/rgb\((\d+)[,\s]+(\d+)[,\s]+(\d+)\)/i);
@@ -22310,7 +22467,7 @@ JS9.initEmscripten = function(){
     // load astroem, based on whether we have native WebAssembly or not
     opts = {responseType: "arraybuffer", allowCache: true};
     if( JS9.globalOpts.useWasm          &&
-	typeof WebAssembly === 'object' &&
+	typeof WebAssembly === "object" &&
 	(location.protocol !== "file:"  || JS9.globalOpts.allowFileWasm) ){
 	// use site-specified file if available, else default file
 	JS9.globalOpts.astroemWasm =
@@ -22740,7 +22897,7 @@ JS9.initCommands = function(){
 	    for(i=0; i<alen; i++){
 		obj = null;
 		j = i + 1;
-		if( (j < alen) && args[j].startsWith('{') ){
+		if( (j < alen) && args[j].startsWith("{") ){
 		    try{ obj = JSON.parse(args[j]); }
 		    catch(e){ obj = null; }
 		}
@@ -22810,7 +22967,7 @@ JS9.initCommands = function(){
 	    for(i=0; i<alen; i++){
 		obj = null;
 		j = i + 1;
-		if( (j < alen) && args[j].startsWith('{') ){
+		if( (j < alen) && args[j].startsWith("{") ){
 		    try{ obj = JSON.parse(args[j]); }
 		    catch(e){ obj = null; }
 		}
@@ -24236,7 +24393,7 @@ JS9.mkPublic("LoadWindow", function(...args){
 		    el = $("#lightWinCloseForm").find("#lightWinCloseSel");
 		    for(i=0; i<JS9.displays.length; i++){
 			if( JS9.displays[i].id !== id ){
-			    el.append($('<option>', {
+			    el.append($("<option>", {
 				value: JS9.displays[i].id,
 				text:  JS9.displays[i].id
 			    }));
@@ -24322,7 +24479,7 @@ JS9.mkPublic("LoadWindow", function(...args){
         // get our own file's header for css and js files
         // if page is generated on the server side, hardwire ...
         // if JS9 is not installed, hardwire ...
-        head = document.getElementsByTagName('head')[0].innerHTML;
+        head = document.getElementsByTagName("head")[0].innerHTML;
 	// remove load of astroem[w].js, so it will be loaded during init
 	head = head.replace(/src=['"].*astroemw?\.js['"]/, "");
         // but why doesn't the returned header contain the js9 js file??
@@ -24384,12 +24541,12 @@ JS9.mkPublic("LoadProxy", function(...args){
     url = url.trim();
     if( url.match(/dropbox\.com/) ){
 	// http://stackoverflow.com/questions/20757891/cross-origin-image-load-from-cross-enabled-site-is-denied
-	url = url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+	url = url.replace("www.dropbox.com", "dl.dropboxusercontent.com");
 	// https://blogs.dropbox.com/developers/2013/08/programmatically-download-content-from-share-links/
 	url = `${url.replace('?dl=0', '')}?raw=1`;
     } else if( url.match(/drive\.google\.com/) ){
 	url=url.replace(/\/file\/d\/(\w+)\/\w+\?usp=sharing/,
-			'/uc?export=download&id=$1');
+			"/uc?export=download&id=$1");
     }
     if( obj.display ){
 	disp = JS9.lookupDisplay(obj.display);
@@ -24413,7 +24570,7 @@ JS9.mkPublic("LoadProxy", function(...args){
 	oname = "";
     }
     JS9.waiting(true, disp);
-    JS9.Send('loadproxy', {'cmd': `js9Xeq loadproxy ${url} ${oname}`}, (r) => {
+    JS9.Send("loadproxy", {"cmd": `js9Xeq loadproxy ${url} ${oname}`}, (r) => {
         let robj;
 	// return type can be string or object
 	if( typeof r === "object" ){
@@ -24448,7 +24605,7 @@ JS9.mkPublic("LoadProxy", function(...args){
 	    // load new file
 	    JS9.Load(f, opts, {display: obj.display});
 	} else {
-	    JS9.error('internal error: no return from load proxy command');
+	    JS9.error("internal error: no return from load proxy command");
 	}
     });
 });
@@ -24529,7 +24686,7 @@ JS9.mkPublic("Preload", function(...args){
 		pobj = $.extend(true, {}, args[j]);
 		JS9.preloads.push([args[i], pobj, dobj]);
 		i++;
-	    } else if( (j < alen) && args[j].startsWith('{') ){
+	    } else if( (j < alen) && args[j].startsWith("{") ){
 		try{ pobj = JSON.parse(args[j]); }
 		catch(e){ pobj = null; }
 		JS9.preloads.push([args[i], pobj, dobj]);
@@ -24570,7 +24727,7 @@ JS9.mkPublic("Preload", function(...args){
 		}
 		catch(e){ emsg = `${emsg} ${args[i]}`;}
 		i++;
-	    } else if( (j < alen) && args[j].startsWith('{') ){
+	    } else if( (j < alen) && args[j].startsWith("{") ){
 		try{ pobj = JSON.parse(args[j]); }
 		catch(e){ pobj = null; }
 		if( func === JS9.Load || func === JS9.LoadProxy ){
@@ -24874,7 +25031,7 @@ JS9.mkPublic("SaveColormap", function(...args) {
 	    // convert to json
 	    s = JSON.stringify(cobj);
 	    // then convert json to blob
-	    blob = new Blob([s], {type: 'text/plain'});
+	    blob = new Blob([s], {type: "text/plain"});
 	    // save to disk
 	    saveAs(blob, fname);
 	}

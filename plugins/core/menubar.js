@@ -971,7 +971,7 @@ JS9.Menubar.createMenus = function(){
 	    return {
 		callback: (key) => {
 		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
-		        let s, ulayer, utarget;
+		        let s, ulayer, uao;
 			const udisp = val;
 			const uim = udisp.image;
 			// make sure display is still valid
@@ -995,10 +995,15 @@ JS9.Menubar.createMenus = function(){
 			    if( uim ){
 				ulayer = uim.layers.regions;
 				if( ulayer ){
-				    utarget = ulayer.canvas.getActiveObjects();
-				    if( utarget && utarget.length ){
+				    uao = ulayer.canvas.getActiveObjects();
+				    if( uao && uao.length ){
 					// just display the first one
-					uim.displayRegionsForm(utarget[0]);
+					uim.displayRegionsForm(uao[0],
+				            {multi: uao.length > 1});
+				    } else {
+					// no regions: use multi edit
+					uim.displayRegionsForm(null,
+				             {multi: true});
 				    }
 				}
 			    }
@@ -2315,7 +2320,7 @@ JS9.Menubar.createMenus = function(){
 	    return {
 		callback: (key) => {
 		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
-			let uid, ulayer, utarget, uname, uopts;
+			let uid, ulayer, uao, uname, uopts;
 			const udisp = val;
 			const uim = udisp.image;
 			// make sure display is still valid
@@ -2366,10 +2371,16 @@ JS9.Menubar.createMenus = function(){
 			    case "configSelReg":
 				ulayer = uim.layers.regions;
 				if( ulayer ){
-				    utarget = ulayer.canvas.getActiveObjects();
-				    if( utarget && utarget.length ){
+				    uao = ulayer.canvas.getActiveObjects();
+				    if( uao && uao.length ){
 					// just display the first one
-					uim.displayRegionsForm(utarget[0]);
+					uim.displayRegionsForm(uao[0],
+				            {multi: uao.length > 1});
+				    } else {
+					// no regions: use multi edit
+					uim.displayRegionsForm(null,
+				             {multi: true});
+
 				    }
 				}
 				break;

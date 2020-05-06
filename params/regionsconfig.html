@@ -21,6 +21,16 @@
     margin: 0 0 5px 0;
 }
 
+.rlinegroup2 {
+    float: left;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 90%;
+    height: 72px;
+    padding: 0;
+    margin: 0 0 5px 0;
+}
 
 .col_R {
     font-family: Helvetica, sans-serif;
@@ -46,6 +56,13 @@
     top: 0;
     left:  80px;
     width: 332px;
+}
+
+.col_R2LL {
+    position: absolute;
+    top: 0;
+    left:  80px;
+    width: 470px;
 }
 
 .col_R3 {
@@ -126,6 +143,21 @@
     font-size: 10px;
 }
 
+.textarea_R2 {
+    width: 332px;
+    height: 64px;
+    padding: 2px;
+    resize: none;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: scroll;
+    border-width: 0px;
+    box-sizing:border-box;
+    webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    font-size: 12px;
+}
+
 .text_R {
     box-sizing:border-box;
     webkit-box-sizing: border-box;
@@ -148,6 +180,7 @@
 
 <form id="regionsConfigForm" name="regionsConfigForm" class="js9AnalysisForm" action="" data-enterfunc="Apply">
 
+<div class="regid">
 <div class="rlinegroup">
 <span class="col_R col_R1">
 Reg:&nbsp;<input type="text" class="val text_R0" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off" data-tooltip="region id can be used in selection">
@@ -204,6 +237,18 @@ return false;">
 </select>
 </span>
 
+</div>
+</div>
+
+<div class="multi nodisplay">
+<div class="rlinegroup2">
+<span class="col_R col_R1">
+Selected:&nbsp;
+</span>
+<span class="col_R col_R2LL">
+<textarea class="val textarea_R2" name="multitext" value="" autocapitalize="off" autocorrect="off" data-tooltip="current selection" readonly></textarea>
+</span>
+</div>
 </div>
 
 <div class="edit">
@@ -292,6 +337,7 @@ return false;">
 </div>
 </div>
 
+<div class="style">
 <div class="rlinegroup">
 <span class="col_R col_R1">
 Style:
@@ -305,6 +351,7 @@ Style:
 <span class="col_R col_R4">
 <input type="text" class="val text_R" name="strokeDashes" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke dash/line pattern, e.g. 3 1">
 </span>
+</div>
 </div>
 
 <div class="nodisplay text">
@@ -376,7 +423,7 @@ const im = form.data('im');
 const shape = form.data('shape');
 const winid = form.data('winid');
 let arr2 = arr.concat($(`#${form.attr('id')} input[type=checkbox]:not(:checked)`).map((i, e) => {return {'name': e.name, 'value': 'false'};}).get());
-im.processRegionsForm(form, shape, winid, arr2);
+im.processRegionsForm(form, shape, arr2);
 return false;">
 </span>
 <span class="col_R col_R2l">

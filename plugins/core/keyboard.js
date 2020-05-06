@@ -186,17 +186,20 @@ JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["edit selected region"] = function(im, ipos, evt){
-    let layer, target;
+    let layer, ao;
     // sanity check
     if( !im ){
 	return;
     }
     layer = im.layers.regions;
     if( layer ){
-	target = layer.canvas.getActiveObjects();
-	if( target && target.length ){
-	    // just display the first one
-	    im.displayRegionsForm(target[0]);
+	ao = layer.canvas.getActiveObjects();
+	if( ao && ao.length ){
+	    // display the first one, flag multi as needed
+	    im.displayRegionsForm(ao[0], {multi: ao.length > 1});
+	} else {
+	    // no regions: use multi edit
+	    im.displayRegionsForm(null, {multi: true});
 	}
     }
 };
