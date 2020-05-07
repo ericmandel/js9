@@ -128,7 +128,9 @@ JS9.globalOpts = {
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
     wcsCrosshair: false,	// enable wcs crosshair matching?
-    csvIncludeWCS: true,	// does GetRegions(csv) include the wcs info?
+    csvIncludeWCS: true,	// does Get/SaveRegions(csv) include wcs info?
+    regIncludeJSON: true,	// does SaveRegions(reg) include the json info?
+    regIncludeComments: true,	// does SaveRegions(reg) include the comments?
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
     ehtimeout: 500,		// connection timeout for Electron connect
@@ -17327,7 +17329,9 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    regstr += (sepstr + iestr + region.imstr);
 	}
 	// odd modes output the exports
-	if( ((mode % 2) === 1) && (Object.keys(exports).length > 0) ){
+	if( opts.includejson !== false        &&
+	    ((mode % 2) === 1)                &&
+	    (Object.keys(exports).length > 0) ){
 	    // line region: remove size/distance info
 	    if( region.shape === "line" ){
 		regstr = regstr.replace(/ *{[^{}]*}$/,"");
@@ -17337,6 +17341,10 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	if( tagstr ){
 	    regstr += tagstr;
 	}
+    }
+    // remove comments, if necessary
+    if( opts.includecomments === false ){
+	regstr = regstr.replace(/ *#[^;]*/g, "");
     }
     // restore original wcs, if necessary
     if( owcssys || owcsunits ){
@@ -17836,18 +17844,21 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	    header = "# Region file format: JS9 version 1.0";
 	    opts.mode = 1;
 	    opts.file = fname;
-	    // list of regions
-	    regstr = this.listRegions(which, opts, layer);
-	    // remove json, if ncessary
-	    if( opts.includejson === false ){
-		regstr = regstr.replace(/ *{[^;#]*}/g, "");
+	    // when saving reg, we might want to exclude the json object
+	    if( JS9.isNull(opts.includejson) ){
+		opts.includejson = JS9.globalOpts.regIncludeJSON;
 	    }
-	    // remove comments, if necessary
-	    if( opts.includecomments === false ){
-		regstr = regstr.replace(/ *#[^;]*/g, "");
-		s = `${regstr.replace(/; */g, "\n")}\n`;
+	    // when saving reg, we might want to exclude the comments
+	    if( JS9.isNull(opts.includecomments) ){
+		opts.includecomments = JS9.globalOpts.regIncludeComments;
+	    }
+	    // list of regions
+	    regstr = this.listRegions(which, opts, layer).replace(/; */g, "\n");
+	    // add header, if necessary
+	    if( opts.includecomments !== false ){
+		s = `${header}\n${regstr}\n`;
 	    } else {
-		s = `${header}\n${regstr.replace(/; */g, "\n")}\n`;
+		s = `${regstr}\n`;
 	    }
 	}
 	catch(e){ JS9.error(`can't convert layer to region: ${layer}`);	}

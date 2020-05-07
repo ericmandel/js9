@@ -3466,9 +3466,15 @@ delimiters:
 <pre>
     JS9.GetRegions("all", {format: "text"})
     ICRS; box(23:23:40.3, +58:47:04.05, 29.5\", 29.5\", 0.0) # background,include; ellipse(23:23:28.06, +58:48:40.5, 14.7\", 15.7\") # source,include
+<pre>
+By default, the region's json object and comments are passed based on
+the value of the <b>globalOpts.regIncludeJSON</b>
+and <b>globalOpts.regIncludeComments</b> properties, respectively.
+You can override this value by setting the <b>includejson</b>
+and <b>includecomments</b> properties in opts.
+
 <p>
 You can pass <b>wcssys</b> and <b>wcsunits</b> in opts to return the wcs information in the desired format:
-<pre>
 </pre>
     JS9.GetRegions("all", {format: "text"})
     ICRS; circle(23:23:35.300,+58:50:03.600,14&#34;)
@@ -3494,7 +3500,7 @@ returned as a comma-separated value list, using new-line delimiters:
 <p>
 By default, the region's wcs keyword is passed based on the value of
 the <b>globalOpts.csvIncludeWCS</b> property.  You can override this
-value by setting the <b>includewcs</b> property.
+value by setting the <b>includewcs</b> property in opts.
 
 <h5 id="JS9.ChangeRegions">Change one or more regions</h5>
 <p>
@@ -3611,7 +3617,7 @@ where:
 <li><b>which</b>: which regions to save (default is "all")
 <li><b>layer</b>: which layer to save (default is "regions")
 </ul>
-Save the current regions for the displayed image as a JS9 regions file. If
+Save the current regions for the displayed image as a JS9 regions text file. If
 filename is not specified, the file will be saved as "js9.reg".
 
 <p>
@@ -3639,6 +3645,8 @@ containing these properties:
 <li><b>type</b>: backward compatible alias for <b>format</b> (deprecated)
 <li><b>wcssys</b>: wcs system to use (ICRS, FK5, galactic, physical, etc.)
 <li><b>wcsunits</b>: units for wcs output (sexagesimal, degrees, pixels)
+<li><b>includejson</b>: for reg files, include JSON object in output
+<li><b>includecomments</b>: for reg files, include comments in output
 <li><b>includewcs</b>: for csv files, include wcs keyword(s) in output
 </ul>
 If the <b>format</b> is <b>svg</b>, an SVG/XML file will be saved
