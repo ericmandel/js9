@@ -16167,7 +16167,7 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 	    }
 	});
 	// adjust title
-	title = `Multi-${title.replace(/^R/, "r")}`;
+	title = title.replace(/Region/, "Selected Regions");
 	// all done if we reinit'ed an existing window
 	if( got ){ return; }
     }
@@ -16250,7 +16250,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
     }
     // dialog box title
     if( multi ){
-	title = `Multi-${title.replace(/^R/, "r")}`;
+	title = title.replace(/Region/, "Selected Regions");
     }
     // get alternate wcssys, if necessary
     altwcssys = $(form).data("wcssys");
@@ -16592,8 +16592,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	if( opts.setmode === false ){
 	    $(form).find(`[name='multitext']`).val("");
 	} else {
-	    s = this.listRegions("selected", {mode: 1})
-		.replace(/ *{[^;#]*}/g, "")
+	    s = this.listRegions("selected", {mode: 1,
+					      includejson: false,
+					      includecomments: false})
 		.replace(/ *; */g, "\n");
 	    $(form).find(`[name='multitext']`).val(s);
 	}
@@ -16643,7 +16644,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	}
 	$(".col_R").on(mover, (e) => {
 	    const target = e.currentTarget;
-	    const tooltip = $(target).find("input").data("tooltip");
+	    const tooltip = $(target).find("input, textarea").data("tooltip");
 	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
 	    if( tooltip && el.length ){
 		// change title: see dhtmlwindow.js load() @line 130
