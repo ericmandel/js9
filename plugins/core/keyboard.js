@@ -193,12 +193,12 @@ JS9.Keyboard.Actions["edit selected region"] = function(im, ipos, evt){
     }
     layer = im.layers.regions;
     if( layer ){
-	ao = layer.canvas.getActiveObjects();
-	if( ao && ao.length ){
-	    // display the first one, flag multi as needed
-	    im.displayRegionsForm(ao[0], {multi: ao.length > 1});
+	ao = layer.canvas.getActiveObject();
+	if( ao && ao.type !== "activeSelection" ){
+	    // no active selection, edit this region
+	    im.displayRegionsForm(ao);
 	} else {
-	    // no regions: use multi edit
+	    // active selection or no regions: multi
 	    im.displayRegionsForm(null, {multi: true});
 	}
     }

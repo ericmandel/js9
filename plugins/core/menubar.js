@@ -995,15 +995,14 @@ JS9.Menubar.createMenus = function(){
 			    if( uim ){
 				ulayer = uim.layers.regions;
 				if( ulayer ){
-				    uao = ulayer.canvas.getActiveObjects();
-				    if( uao && uao.length ){
-					// just display the first one
-					uim.displayRegionsForm(uao[0],
-				            {multi: uao.length > 1});
+				    uao = ulayer.canvas.getActiveObject();
+				    if( uao && uao.type !== "activeSelection" ){
+					// no active selection, edit this region
+					uim.displayRegionsForm(uao);
 				    } else {
-					// no regions: use multi edit
+					// active selection or no regions: multi
 					uim.displayRegionsForm(null,
-				             {multi: true});
+							       {multi: true});
 				    }
 				}
 			    }
@@ -2371,16 +2370,14 @@ JS9.Menubar.createMenus = function(){
 			    case "configSelReg":
 				ulayer = uim.layers.regions;
 				if( ulayer ){
-				    uao = ulayer.canvas.getActiveObjects();
-				    if( uao && uao.length ){
-					// just display the first one
-					uim.displayRegionsForm(uao[0],
-				            {multi: uao.length > 1});
+				    uao = ulayer.canvas.getActiveObject();
+				    if( uao && uao.type !== "activeSelection" ){
+					// no active selection, edit this region
+					uim.displayRegionsForm(uao);
 				    } else {
-					// no regions: use multi edit
+					// active selection or no regions: multi
 					uim.displayRegionsForm(null,
-				             {multi: true});
-
+							       {multi: true});
 				    }
 				}
 				break;

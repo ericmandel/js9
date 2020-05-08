@@ -394,7 +394,7 @@ JS9.lightOpts = {
 	lcloseWin:"width=512px,height=190px,center=1,resize=1,scrolling=1",
 	paramWin: "width=830px,height=235px,center=1,resize=1,scrolling=1",
 	regWin0:  "width=600px,height=72px,center=1,resize=1,scrolling=1",
-	regWin:   "width=600px,height=235px,center=1,resize=1,scrolling=1",
+	regWin:   "width=600px,height=270px,center=1,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,center=1,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,center=1,resize=1,scrolling=1"
     },
@@ -13538,6 +13538,12 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "rtn":
 	case "_wcssys":
 	case "file":
+	case "savefile":
+	case "savewhich":
+	case "saveformat":
+	case "savewcs":
+	case "changeable":
+	case "listonchange":
 	    return false;
 	case "text":
 	    if( opts.shape === "text" ){
@@ -16162,7 +16168,7 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 	    const winid = $(element).data("winid");
 	    const im = $(element).data("im");
 	    if(  multi && winid && im === this ){
-		im.initRegionsForm(null, {winid, multi});
+		im.initRegionsForm(null, {multi, winid});
 		got++;
 	    }
 	});
@@ -16174,7 +16180,8 @@ JS9.Regions.displayConfigForm = function(shape, opts){
     // call this once window is loaded
     $("#dhtmlwindowholder")
 	.arrive("#regionsConfigForm", {onceOnly: true}, () => {
-	    this.initRegionsForm(shape, {multi, winid});
+	    const firsttime = true;
+	    this.initRegionsForm(shape, {multi, winid, firsttime});
 	});
     // get config html
     if( JS9.allinone ){
@@ -16237,6 +16244,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
     }
     // find the form, based on winid
     wid = $(winid).attr("id");
+    // leave trailing space!
     form = `#${wid} #regionsConfigForm `;
     // valid form is required
     if( !$(form).length ){
@@ -16469,6 +16477,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    }
 	    break;
 	case "wcssys":
+	case "savewcs":
 	    // add all wcs sys options
 	    el = $(form).find(`[name='${key}']`);
 	    if( !el.find("option").length ){
@@ -16520,7 +16529,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    }
 	    break;
 	case "id":
-	    if( obj.pub.id !== undefined ){
+	    if( multi ){
+		val = "selected";
+	    } else if( obj.pub.id !== undefined ){
 		val = obj.pub.id;
 	    }
 	    break;
@@ -16528,6 +16539,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    if( obj.pub[key] !== undefined ){
 		val = fmt(obj.pub[key]);
 	    }
+	    break;
+	case "savefile":
+	    val = "js9.reg";
 	    break;
 	default:
 	    if( obj.pub[key] !== undefined ){
@@ -16541,7 +16555,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
     if( multi || !this.raw.wcs || this.raw.wcs < 0 ){
 	$(form).find("[name='wcssys']").hide();
     }
-    if( multi                          ||
+    if( multi                               ||
 	(this.params.wcssys === "image")    ||
 	(this.params.wcssys === "physical") ||
 	(!this.raw.wcs || this.raw.wcs<0)   ){
@@ -16561,6 +16575,14 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	$(`${form}.childtext`).removeClass("nodisplay");
 	$(`${form}[name='childtext']`)
 	    .prop("readonly", obj.params.children.length > 0);
+    }
+    // init options, if necessary
+    if( opts.firsttime ){
+	$(`${form}[id='savereg']`).prop("checked", true);
+	$(`${form}[id='savecur']`).prop("checked", true);
+	$(`${form}[id='includejson']`).prop("checked", JS9.globalOpts.regIncludeJSON);
+	$(`${form}[id='includecomments']`).prop("checked", JS9.globalOpts.regIncludeComments);
+	$(`${form}[id='includewcs']`).prop("checked", JS9.globalOpts.csvIncludeWCS);
     }
     // checkboxes
     if( obj.params.listonchange === undefined ){

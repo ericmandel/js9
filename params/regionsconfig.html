@@ -79,13 +79,6 @@
     width: 77px;
 }
 
-.col_R4L {
-    position: absolute;
-    top: 0;
-    left:  250px;
-    width: 162px;
-}
-
 .col_R5 {
     position: absolute;
     top: 0;
@@ -124,15 +117,29 @@
 .col_R3l {
     position: absolute;
     top: 0;
-    left:  180px;
+    left:  165px;
     width: 100px;
+}
+
+.col_R3L {
+    position: absolute;
+    top: 0;
+    left:  165px;
+    width: 300px;
 }
 
 .col_R4l {
     position: absolute;
     top: 0;
-    left:  300px;
+    left:  265px;
     width: 120px;
+}
+
+.col_R4L {
+    position: absolute;
+    top: 0;
+    left:  250px;
+    width: 162px;
 }
 
 .text_R0 {
@@ -146,7 +153,7 @@
 .textarea_R2 {
     width: 332px;
     height: 64px;
-    padding: 2px;
+    padding-left: 4px;
     resize: none;
     white-space: pre;
     overflow-wrap: normal;
@@ -159,6 +166,7 @@
 }
 
 .text_R {
+    padding-left: 4px;
     box-sizing:border-box;
     webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -381,7 +389,6 @@ Font:
 <input type="text" class="val text_R" name="fontWeight" value="" autocapitalize="off" autocorrect="off" data-tooltip="font weight, e.g. normal, bold, 900">
 </span>
 </div>
-
 </div>
 
 <div class="nodisplay childtext">
@@ -415,6 +422,129 @@ Misc:
 
 <div class="rlinegroup">
 <span class="col_R col_R1">
+<input name="Save" type="button" class="button" value="Save"
+onclick="
+const form = $(this).closest('form');
+const im = form.data('im');
+const fname = form.find(`[name='savefile']`).val();
+const which = form.find(`input[name='savewhich']:checked`).val();
+const id = which.match(/all/) ? 'all' : form.find(`[name='id']`).val();
+const format = form.find(`input[name='saveformat']:checked`).val();
+const wcssys = form.find(`[name='savewcs']`).children('option:selected').val();
+let opts = {};
+if( im ){
+  opts.wcssys = wcssys;
+  opts.format = format;
+  switch(format){
+  case 'reg':
+    opts.includejson = form.find(`[name='includejson']`).is(':checked');
+    opts.includecomments = form.find(`[name='includecomments']`).is(':checked');
+    break;
+  case 'csv':
+    opts.includewcs = form.find(`[name='includewcs']`).attr('checked'); 
+    break;
+  case 'svg':
+  default:
+    break;
+  }
+  im.saveRegions(fname, id, opts);
+}
+return false;">
+</span>
+<span class="col_R col_R2">
+<input type="text" class="val text_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="file name">
+</span>
+
+<span class="col_R col_R3L">
+<input type="radio" id="savecur" name="savewhich" value="cur">
+<label for="savecur">cur</label>
+<input type="radio" id="saveall" name="savewhich" value="all">
+<label for="saveall">all</label>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<input type="radio" id="savereg" name="saveformat" value="reg"
+onclick="
+const form = $(this).closest('form');
+const fname = form.find(`[name='savefile']`);
+fname.val(fname.val().replace(/\.[^.]*$/, '.reg'));
+form.find('.xtrareg').addClass('nodisplay');
+form.find('.xtracsv').addClass('nodisplay');
+">
+<label for="savereg">reg</label>
+<input type="radio" id="savecsv" name="saveformat" value="csv"
+onclick="
+const form = $(this).closest('form');
+const fname = form.find(`[name='savefile']`);
+fname.val(fname.val().replace(/\.[^.]*$/, '.csv'));
+form.find('.xtrareg').addClass('nodisplay');
+form.find('.xtracsv').addClass('nodisplay');
+">
+<label for="savecsv">csv</label>
+<input type="radio" id="savesvg" name="saveformat" value="svg"
+onclick="
+const form = $(this).closest('form');
+const fname = form.find(`[name='savefile']`);
+fname.val(fname.val().replace(/\.[^.]*$/, '.svg'));
+form.find('.xtrareg').addClass('nodisplay');
+form.find('.xtracsv').addClass('nodisplay');
+">
+<label for="savesvg">svg</label>
+</span>
+
+<span class="col_R col_R6">
+<input type="button" id="savemore" name="savemore" value="..."
+onclick="
+const form = $(this).closest('form');
+const format = form.find(`input[name='saveformat']:checked`).val();
+switch(format){
+  case 'reg':
+    if( form.find('.xtrareg').is(':visible') ){
+        form.find('.xtrareg').addClass('nodisplay');
+    } else {
+        form.find('.xtrareg').removeClass('nodisplay');
+    }
+    form.find('.xtracsv').addClass('nodisplay');
+    break;
+  case 'csv':
+    form.find('.xtrareg').addClass('nodisplay');
+    if( form.find('.xtracsv').is(':visible') ){
+        form.find('.xtracsv').addClass('nodisplay');
+    } else {
+        form.find('.xtracsv').removeClass('nodisplay');
+    }
+    break;
+  case 'svg':
+    form.find('.xtrareg').addClass('nodisplay');
+    form.find('.xtracsv').addClass('nodisplay');
+    break;
+  default:
+    break;
+}
+">
+</span>
+
+<span class="col_R col_R7">
+<select name="savewcs" class="val select_R"></select>
+</span>
+</div>
+
+<div class="nodisplay xtrareg">
+<div class="rlinegroup">
+<span class="col_R col_R3L">
+<input type="checkbox" id="includejson" name="includejson" value="includejson">json
+<input type="checkbox" id="includecomments" name="includecomments" value="includecomments">comments
+</div>
+</div>
+
+<div class="nodisplay xtracsv">
+<div class="rlinegroup">
+<span class="col_R col_R3L">
+<input type="checkbox" id="includewcs" name="includewcs" value="includewcs">wcs
+</span>
+</div>
+</div>
+
+<div class="rlinegroup">
+<span class="col_R col_R1">
 <input name="Apply" type="button" class="button" value="Apply"
 onclick="
 const form = $(this).closest('form');
@@ -430,12 +560,12 @@ return false;">
 <input type="checkbox" name="remove" value="selected" data-tooltip="Remove region requires clicking Apply">Remove
 </span>
 <span class="col_R col_R3l">
-<input type="checkbox" name="changeable" value="true" data-tooltip="toggle Changeable requires clicking Apply">Changeable
+<input type="checkbox" name="changeable" value="true" data-tooltip="toggle Changeable requires clicking Apply">Can change
 </span>
 <span class="col_R col_R4l">
-<input type="checkbox" name="listonchange" value="true" data-tooltip="toggle List on Change requires clicking Apply">List on Change
+<input type="checkbox" name="listonchange" value="true" data-tooltip="toggle List on Change requires clicking Apply">List on change
 </span>
-<span class="col_R col_R6">
+<span class="col_R col_R7">
 <input name="Close" type="button" class="button" value="Close"
 onclick="
 const form = $(this).closest('form');
@@ -446,7 +576,6 @@ winid.close();
 return false;">
 </span>
 </div>
-
 </form>
 </body>
 </html>
