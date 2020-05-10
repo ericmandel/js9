@@ -131,6 +131,7 @@ JS9.globalOpts = {
     csvIncludeWCS: true,	// does Get/SaveRegions(csv) include wcs info?
     regIncludeJSON: true,	// does SaveRegions(reg) include the json info?
     regIncludeComments: true,	// does SaveRegions(reg) include the comments?
+    regArrowCrosshair: true,	// does move with arrow keys display crosshair?
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
     ehtimeout: 500,		// connection timeout for Electron connect
