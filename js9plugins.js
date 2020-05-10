@@ -5183,13 +5183,17 @@ JS9.Keyboard.arrowKey = function(im, evt, inc, active){
     if( JS9.hasOwnProperty("Magnifier") ){
 	JS9.Magnifier.display(im, im.ipos);
     }
-    if( JS9.hasOwnProperty("Crosshair") && !active ){
-	if( !im.clickInRegion ){
-	    im.tmp.arrowCrosshair = true;
-	    im.tmp.arrowCrosshairVisible = true;
+    if( JS9.hasOwnProperty("Crosshair") ){
+	im.tmp.arrowCrosshair = true;
+	im.tmp.arrowCrosshairVisible = true;
+	if( active ){
+	    if( active.pub ){
+		JS9.Crosshair.display(im, active.pub, evt);
+	    }
+	} else {
 	    JS9.Crosshair.display(im, im.ipos, evt);
-	    delete im.tmp.arrowCrosshair;
 	}
+	delete im.tmp.arrowCrosshair;
     }
 };
 
