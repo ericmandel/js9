@@ -17177,7 +17177,7 @@ JS9.Regions.pasteFromClipboard = function(curpos){
 // list one or more regions
 JS9.Regions.listRegions = function(which, opts, layer){
     let i, region, rlen, key, obj, tagjoin, tagstr, iestr, mode;
-    let txeq, owcsunits, owcssys;
+    let txeq, owcsunits, owcssys, wcssys;
     let regstr="";
     let lasttype="none";
     let dotags = false;
@@ -17186,7 +17186,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
     const sepstr="; ";
     const tagcolors = [];
     const getExports = (obj, region) => {
-	let i, s, key, child;
+	let i, s, key, child, ra, dec;
 	const nexports = {};
 	const params = obj.params;
 	const children = params.children;
@@ -17261,8 +17261,23 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    if( child.params.parent.moved || child.params.hasTextOpts ){
 		// wcs, then physical coords are preferred ...
 		if( child.pub.ra && child.pub.dec ){
-		    nexports.textOpts.ra  = child.pub.ra;
-		    nexports.textOpts.dec = child.pub.dec;
+		    // convert child ra, dec to target wcs, if necessary
+		    if( owcssys && wcssys && owcssys !== wcssys ){
+			s = this.wcs2wcs(owcssys, wcssys,
+					 child.pub.ra, child.pub.dec);
+			s = s.trim().split(/\s+/);
+			ra = JS9.saostrtod(s[0]);
+			if( String.fromCharCode(JS9.saodtype() === ":")    &&
+			    wcssys !== "galactic" && wcssys !== "ecliptic" ){
+			    ra *= 15.0;
+			}
+			dec = JS9.saostrtod(s[1]);
+		    } else {
+			ra = child.pub.ra;
+			dec = child.pub.dec;
+		    }
+		    nexports.textOpts.ra  = ra;
+		    nexports.textOpts.dec = dec;
 		} else if( child.pub.lcs ){
 		    nexports.textOpts.px = child.pub.lcs.x;
 		    nexports.textOpts.py = child.pub.lcs.y;
@@ -17307,6 +17322,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	if( opts.wcssys ){
 	    owcssys = this.getWCSSys();
 	    this.setWCSSys(opts.wcssys, false);
+	    wcssys = this.getWCSSys();
 	}
 	if( opts.wcsunits ){
 	    owcsunits = this.getWCSUnits();
