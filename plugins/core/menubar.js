@@ -2,7 +2,7 @@
  * JS9 menubar to manage menubar and its menus
  */
 
-/*global $, JS9, sprintf, fabric */
+/*global $, JS9, sprintf */
 
 "use strict";
 
@@ -2147,35 +2147,6 @@ JS9.Menubar.createMenus = function(){
 		    }
 		}
 	    };
-	    const keyRegions = (e) => {
-		JS9.Menubar.getDisplays.call(this).forEach((val) => {
-		    let id;
-		    const obj = $.contextMenu.getInputValues(e.data);
-		    const keycode = e.which || e.keyCode;
-		    const vdisp = val;
-		    const vim = vdisp.image;
-		    // make sure display is still valid
-		    if( $.inArray(vdisp, JS9.displays) < 0 ){
-			return;
-		    }
-		    if( e && e.target && e.target.name ){
-			id = e.target.name.split("-").reverse()[0];
-		    }
-		    switch( keycode ){
-		    case 9:
-		    case 13:
-			if( vim && id ){
-			    editRegions(vim, obj, id);
-			}
-			break;
-		    default:
-			if( vim && id ){
-			    vim.tmp[`editingReg${id}`] = true;
-			}
-			break;
-		    }
-		});
-	    };
 	    items.regiontitle = {
 		name: "Regions:",
 		disabled: true
@@ -2232,55 +2203,8 @@ JS9.Menubar.createMenus = function(){
 	    };
 	    items.removeRegions  = xname("remove");
 	    items.sep2 = "------";
-	    items.selectops = {
-		name: "selected ...",
-		items: {
-		    selopstitle: {
-			name: "actions on selected:",
-			disabled: true
-		    },
-		    selectRegions: {
-			name: "select all",
-			disabled: fabric.major_version < 2 ? true : false
-		    },
-		    configSelReg: xname("edit"),
-		    listSelReg: xname("list"),
-		    saveSelReg: xname("save"),
-		    copySelReg: {
-			name: "copy to ...",
-			items: {
-			    copyseltotitle: {
-				name: "choose image:",
-				disabled: true
-			    }
-			}
-		    },
-		    removeSelReg: xname("remove"),
-		    regcolor: {
-			events: {keyup: keyRegions},
-			name: "color:",
-			type: "text"
-		    },
-		    regstrokeWidth: {
-			events: {keyup: keyRegions},
-			name: "width:",
-			type: "text"
-		    },
-		    regstrokeDashArray: {
-			events: {keyup: keyRegions},
-			name: "dash:",
-			type: "text"
-		    },
-		    regtags: {
-			events: {keyup: keyRegions},
-			name: "tag:",
-			type: "text"
-		    },
-		    backSelReg: xname("push to back"),
-		    sbSelReg: xname("toggle: src/bkgd"),
-		    ieSelReg: xname("toggle: incl/excl")
-		} 
-	    };
+	    items.selectRegions = xname("select all");
+	    items.selectedRegions = xname("selected ...");
 	    items.sep3 = "------";
 	    items.onchange = {
 		name: "onchange ...",
@@ -2300,17 +2224,12 @@ JS9.Menubar.createMenus = function(){
 		    if( tim !== JS9.images[i] ){
 			s1 = `copyto_${JS9.images[i].id}`;
 			items.copyto.items[s1] = xname(JS9.images[i].id);
-			s1 = `copyselto_${JS9.images[i].id}`;
-			items.selectops.items.copySelReg.items[s1] =
-			    xname(JS9.images[i].id);
 		    }
 		}
 		items.copyto.items.copyto_all = xname("all images");
 		items.copyto.disabled = false;
-		items.selectops.items.copySelReg.disabled = false;
 	    } else {
 		items.copyto.disabled = true;
-		items.selectops.items.copySelReg.disabled = true;
 	    }
 	    // disable if we don't have info plugin
 	    if( !JS9.hasOwnProperty("Info") ){
@@ -2334,40 +2253,16 @@ JS9.Menubar.createMenus = function(){
 			    case "listRegions":
 				uim.listRegions("all", {mode: 2});
 				break;
+			    case "removeRegions":
+				uim.removeShapes("regions", "all");
+				udisp.clearMessage("regions");
+				break;
 			    case "selectRegions":
 				if( JS9.hasOwnProperty("Keyboard") ){
 				    JS9.Keyboard.Actions["select all regions"](uim, uim.ipos);
 				}
 				break;
-			    case "removeRegions":
-				uim.removeShapes("regions", "all");
-				udisp.clearMessage("regions");
-				break;
-			    case "srcSelReg":
-				uim.editRegionTags("selected",
-						   "source", "background");
-				break;
-			    case "bkgSelReg":
-				uim.editRegionTags("selected",
-						   "background", "source");
-				break;
-			    case "incSelReg":
-				uim.editRegionTags("selected",
-						   "include", "exclude");
-				break;
-			    case "exclSelReg":
-				uim.editRegionTags("selected",
-						   "exclude", "include");
-				break;
-			    case "sbSelReg":
-				uim.toggleRegionTags("selected",
-						     "source", "background");
-				break;
-			    case "ieSelReg":
-				uim.toggleRegionTags("selected",
-						     "exclude", "include");
-				break;
-			    case "configSelReg":
+			    case "selectedRegions":
 				ulayer = uim.layers.regions;
 				if( ulayer ){
 				    uao = ulayer.canvas.getActiveObject();
@@ -2380,21 +2275,6 @@ JS9.Menubar.createMenus = function(){
 							       {multi: true});
 				    }
 				}
-				break;
-			    case "saveSelReg":
-				uim.saveRegions("js9.reg", "selected");
-				break;
-			    case "listSelReg":
-				uim.listRegions("selected", {mode: 2});
-				break;
-			    case "backSelReg":
-				if( JS9.hasOwnProperty("Keyboard") ){
-				    JS9.Keyboard.Actions["send selected region to back"](uim, uim.ipos);
-				}
-				break;
-			    case "removeSelReg":
-				uim.removeShapes("regions", "selected");
-				udisp.clearMessage("regions");
 				break;
 			    case "xeqonchange":
 				uim.params.xeqonchange = !uim.params.xeqonchange;
@@ -2432,12 +2312,6 @@ JS9.Menubar.createMenus = function(){
 				if( key.match(/^copyto_/) ){
 				    uid = key.replace(/^copyto_/,"");
 				    uim.copyRegions(uid);
-				    return;
-				}
-				// maybe it's a copy selected to request
-				if( key.match(/^copyselto_/) ){
-				    uid = key.replace(/^copyselto_/,"");
-				    uim.copyRegions(uid, "selected");
 				    return;
 				}
 				// otherwise it's new region
