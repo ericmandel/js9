@@ -5172,6 +5172,7 @@ JS9.Keyboard.addAction = function(container, cname, aname){
 
 // common code for arrow key processing
 JS9.Keyboard.arrowKey = function(im, evt, inc, active){
+    let cpos;
     // change display and image position, redisplay magnifier
     im.pos.x += inc.x;
     im.pos.y += inc.y;
@@ -5188,7 +5189,13 @@ JS9.Keyboard.arrowKey = function(im, evt, inc, active){
 	im.tmp.arrowCrosshairVisible = true;
 	if( active ){
 	    if( active.pub ){
-		JS9.Crosshair.display(im, active.pub, evt);
+		if(  active.pub.shape === "polygon"              &&
+		     active.pub.pts && active.pub.pts.length > 1 ){
+		    cpos = JS9.centroidPolygon(active.pub.pts);
+		} else {
+		    cpos = {x: active.pub.x, y: active.pub.y};
+		}
+		JS9.Crosshair.display(im, cpos, evt);
 	    }
 	} else {
 	    JS9.Crosshair.display(im, im.ipos, evt);

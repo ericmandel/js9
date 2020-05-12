@@ -19759,14 +19759,13 @@ JS9.centerPolygon = function(points){
 // calculate centroid for a polygon
 // wont work for self-intersecting polygons but it's all I do right now!
 // adapted from: http://en.wikipedia.org/wiki/Centroid
-JS9.centroidPolygon = function(points){
+JS9.centroidPolygon = function(points, doaverage){
     let i, plen, factor, area, cx, cy;
     let parta = 0;
     let partx = 0;
     let party = 0;
     let totx = 0;
     let toty = 0;
-    const doaverage=true;
     const pts = [];
     // sanity check
     if( !points || !points.length ){
