@@ -13541,6 +13541,8 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "dy":
 	case "px":
 	case "py":
+	case "ra":
+	case "dec":
 	case "shape":
 	case "parent":
 	case "rtn":
@@ -13552,6 +13554,7 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "savewcs":
 	case "changeable":
 	case "listonchange":
+	case "multitext":
 	    return false;
 	case "text":
 	    if( opts.shape === "text" ){
@@ -16765,13 +16768,24 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	if( key === "py" && obj.pub.lcs ){
 	    return fmtcheck(obj.pub.lcs.y, JS9.saostrtod(val));
 	}
-	if( key === "ra" && obj.pub.wcsposstr ){
-	    return fmtcheck(JS9.saostrtod(obj.pub.wcsposstr[0]),
-			    JS9.saostrtod(val));
+	if( key === "ra" ){
+	    if( obj.pub.wcsedit.wcsposstr ){
+		return fmtcheck(JS9.saostrtod(obj.pub.wcsedit.wcsposstr[0]),
+				JS9.saostrtod(val));
+	    } else if( obj.pub.wcsposstr ){
+		return fmtcheck(JS9.saostrtod(obj.pub.wcsposstr[0]),
+				JS9.saostrtod(val));
+	    }
+	    return false;
 	}
-	if( key === "dec" && obj.pub.wcsposstr ){
-	    return fmtcheck(JS9.saostrtod(obj.pub.wcsposstr[1]),
-			    JS9.saostrtod(val));
+	if( key === "dec" ){
+	    if( obj.pub.wcsedit.wcsposstr ){
+		return fmtcheck(JS9.saostrtod(obj.pub.wcsedit.wcsposstr[1]),
+				JS9.saostrtod(val));
+	    } else if( obj.pub.wcsposstr ){
+		return fmtcheck(JS9.saostrtod(obj.pub.wcsposstr[1]),
+				JS9.saostrtod(val));
+	    }
 	}
 	if( obj.pub.lcs && obj.pub.lcs[key] !== undefined ){
 	    if( fmtcheck(obj.pub.lcs[key], val) ){
@@ -16917,16 +16931,27 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	case "ra":
 	    if( newval(obj, key, val) ){
 		opts.ra = val;
-		if( opts.dec === undefined && obj.pub.wcsposstr ){
-		    opts.dec = obj.pub.wcsposstr[1];
+		if( opts.dec === undefined ){
+		    if( obj.pub.wcsedit.wcsposstr ){
+			opts.dec = obj.pub.wcsedit.wcsposstr[1];
+		    } else if( obj.pub.wcsposstr ){
+			opts.dec = obj.pub.wcsposstr[1];
+		    }
 		}
 	    }
 	    break;
 	case "dec":
 	    if( newval(obj, key, val) ){
 		opts.dec = val;
-		if( opts.ra === undefined && obj.pub.wcsposstr ){
-		    opts.ra = obj.pub.wcsposstr[0];
+		if( opts.ra === undefined ){
+		    if( obj.pub.wcsedit.wcsposstr ){
+			opts.ra = obj.pub.wcsedit.wcsposstr[0];
+		    } else if( obj.pub.wcsposstr ){
+			opts.ra = obj.pub.wcsposstr[0];
+		    }
+		}
+		if( opts.wcssys === undefined ){
+		    opts.wcssys = wcssys;
 		}
 	    }
 	    break;
@@ -16949,7 +16974,9 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		break;
 	    default:
 		nval = JS9.strtoscaled(val);
-		if( nval.dtype === "." ){
+		if( nval.dtype === "."    &&
+		    wcssys !== "galactic" &&
+		    wcssys !== "ecliptic" ){
 		    val = nval.dval;
 		} else {
 		    val = Math.abs(nval.dval / wcsinfo.cdelt1);
@@ -16976,7 +17003,9 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		break;
 	    default:
 		nval = JS9.strtoscaled(val);
-		if( nval.dtype === "." ){
+		if( nval.dtype === "."    &&
+		    wcssys !== "galactic" &&
+		    wcssys !== "ecliptic" ){
 		    val = nval.dval;
 		} else {
 		    val = Math.abs(nval.dval / wcsinfo.cdelt2);
