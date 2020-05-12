@@ -203,11 +203,18 @@ Reg:&nbsp;<input type="text" class="val text_R0" name="id" value="" readonly="re
 onclick="
 const form = $(this).closest('form');
 const im = form.data('im');
-let s, reg;
+let s, reg, obj, wcssys;
 if( im ){
   reg = im.getShapes('regions', 'selected')[0];
   if( reg ){
-    switch(im.params.wcssys){
+    if( reg.wcsedit ){
+      obj = reg.wcsedit;
+      wcssys = reg.wcsedit.wcssys;
+    } else {
+      obj = reg;
+      wcssys = im.params.wcssys;
+    }
+    switch(wcssys){
     case 'image':
         s = sprintf('%.1f %.1f', reg.x, reg.y);
         break;
@@ -219,8 +226,8 @@ if( im ){
 	}
         break;
     default:
-        if( reg.ra !== undefined && reg.dec !== undefined ){
-            s = sprintf('%.6f %.6f', reg.ra, reg.dec);
+        if( obj.ra !== undefined && obj.dec !== undefined ){
+            s = sprintf('%.6f %.6f', obj.ra, obj.dec);
         } else {
             s = sprintf('%.1f %.1f', reg.x, reg.y);
         }
@@ -235,11 +242,12 @@ return false;">
 <span class="col_R col_R7">
 <select name="wcssys" class="val select_R" onchange="
 const form = $(this).closest('form');
-const wcs =  $(this).val();
 const im = form.data('im');
-if( im && wcs ){
-  im.setWCSSys(wcs);
-  im.updateShapes('regions', 'all', 'wcs');
+const wcssys =  $(this).val();
+const shape = form.data('shape');
+if( im && wcssys && shape && shape.params ){
+  shape.params.wcsedit.wcssys = wcssys;
+  im.updateShapes('regions', shape, 'wcsedit');
 }
 return false;">
 </select>
@@ -324,23 +332,6 @@ Edit:
 <input type="text" class="val text_R" name="angle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle of text in degrees">
 </span>
 </div>
-
-<span class="col_R col_R7">
-<select name="altwcssys" class="val select_R" onchange="
-const form = $(this).closest('form');
-const wcssys =  $(this).val();
-const im = form.data('im');
-if( im && wcssys ){
-    if( wcssys === im.params.wcssys ){
-        form.removeData('wcssys');
-    } else {
-        form.data('wcssys', wcssys);
-    }
-    im.updateShapes('regions', 'all', 'wcs');
-}
-return false;">
-</select>
-</span>
 
 </div>
 </div>

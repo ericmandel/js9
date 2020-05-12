@@ -9353,9 +9353,11 @@ JS9.Menubar.createMenus = function(){
 			    if( JS9.wcssyss.join("@").search(rexp) >=0 ){
 				uim.setWCSSys(key);
 				uim.updateShapes("regions", "all", "wcs");
+				uim.updateMultiDialogs(true);
 			    } else if( JS9.wcsunitss.join("@").search(rexp)>=0){
 				uim.setWCSUnits(key);
 				uim.updateShapes("regions", "all", "wcs");
+				uim.updateMultiDialogs(true);
 			    } else {
 				JS9.error(`unknown wcs sys/units: ${key}`);
 			    }
