@@ -441,8 +441,7 @@ if( im ){
 return false;">
 </span>
 <span class="col_R col_R2">
-<input type="text" class="val text_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="file name" 
-onchange="
+<input type="text" class="val text_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="file name" onchange="
 const form = $(this).closest('form');
 $(form).data('savefile', $(this).val());
 ">
@@ -516,7 +515,12 @@ switch(format){
 </span>
 
 <span class="col_R col_R7">
-<select name="savewcs" class="val select_R"></select>
+<select name="savewcs" class="val select_R" onchange="
+const form = $(this).closest('form');
+const wcssys =  $(this).val();
+$(form).data('savewcs', wcssys);
+return false;"
+></select>
 </span>
 </div>
 

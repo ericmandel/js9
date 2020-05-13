@@ -16254,7 +16254,8 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 // initialize the region config form
 // call using image context
 JS9.Regions.initConfigForm = function(obj, opts){
-    let i, s, key, val, el, wcssys, mover, mout, p1, p2, winid, wid, form;
+    let i, s, key, val, el, wcssys, twcssys, mover, mout, p1, p2;
+    let winid, wid, form;
     let multi = false;
     let title = JS9.Regions.opts.title;
     const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
@@ -16535,8 +16536,13 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		    el.append(`<option>${JS9.wcssyss[i]}</option>`);
 		}
 	    }
+	    if( key === "savewcs" ){
+		twcssys = $(form).data("savewcs") || wcssys;
+	    } else {
+		twcssys = wcssys;
+	    }
 	    el.find("option").each((index, element) => {
-		if( wcssys === element.value ){
+		if( twcssys === element.value ){
 		    val = element.value;
 		}
 	    });
