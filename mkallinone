@@ -22,9 +22,9 @@ echo 'JS9.allinone.restore = "data:image/gif;base64,R0lGODlhEAAOAKIAAAAAAGNjY3t7
 
 echo 'JS9.allinone.resize = "data:image/gif;base64,R0lGODlhDQANAPcAAISChNTSzPz+/AB8AGlwyB+ZWgCAeQB8AGL/GBz/5wD/EgD/AABtAACZABWAAAB8AAnaAACi6AA+EgB3AACYZwJRBAAa1wAAdwC+VAOU5wDUEgB3AKAtmOW01RLU1AB3d+nExOUDA4FAQHwAAAAghAAAAAEAAAAAAFbuAAAEAAAgAAAAAKgSxOQAARIAtgACAW4AAQAAAAAAAAAAAMierOUC5xIAEgAAABgB9u4AGpAA13wAWnDExAUDA5FAQHwAAP8whP+AAP9FAP8AAG3uAAUEAJEgAHwAAIUAxOcAAYEAtnwAAQAAxAAAAxUAQAAAAGBQMAMWgAAARQAAABABAAIAAB4AAAAAALjQbWEHRRUARQAAAAAAkAAAHAAATwAAAH5IcAAyHAAVT8AAAAAApAAA7AAAEgAAAP+kXP/m8v8SEv8AAP+YMP/VgP/URf93AADEIAAD8gBAEgAAAAAgAAAAAAAAAAAAAADuMAAEgBUgRQAAANYCYB4AngAAgAAAfNj8EOXm/xISFQAAAJ/8AOvmAIESAHwAAEqCB+PPAIHVAHx3AEDkAOXmAE8SAAAAALjEAGEB8AEAFQAAAGwFAAAAAAAAAAAAABTWAOUeABIAAAAAADTwAADmAAASAMAAAPiFAPcrABKDAAB8ABgAaO4AnpAAgHwAfHAA/wUA/5EA/3wA//8AYP8Anv8AgP8AfG0AFAUBAJEAAHwAAErpFPQrAICDAHx8AAAUXADn8BUSEgAAAADE/wAr/wCD/wB8/7gAAGEAABUAAAAAAAAQHAH/6AAVEgAAAAA0DgBkzwCDSwB8AFf//PT/54D/Enz/AAAYW+fo4hISTgAAALhtMGFk6BWDEgB8AJi4NFHvZBpOgwAAfAAQsOcZ6BJPEgAAAAAA6ucB/xIA/wAAfwAUnADn6AASEgAAAAEAEAAB/wAAFQAAABCINOdkZBKDgwB8fP8BEP8A//8AFf8AAPgA1uUAHhIAAAAAAAEzAAC5AADUAAB3AECYfvA6VRIzRwAAACH5BAEAAAEALAAAAAANAA0ARwg4AAMIHEhQoACCAgAACJBw4cGCBhUyhEixYsSFBRsylLjRoUSNFjdaBAlRY8KMHzle7CjSZMqFAQEAOw==";' >> ${ALLIN1}.js
 
-echo "JS9.allinone.regionsConfigHTML = \"`cat params/regionsconfig.html | sed '1,/<body>/d;/<\/body>/,$d' | sed 's/"/\\\\"/g' | tr -d '\n'`\";" >> ${ALLIN1}.js
+echo "JS9.allinone.regionsConfigHTML = \"`cat params/regionsconfig.html | sed '1,/^$/d;/<\/head>/,/<body>/d;/<\/body>/,$d' | sed 's/"/\\\\"/g' | tr -d '\n'`\";" >> ${ALLIN1}.js
 
-echo "JS9.allinone.plotConfigHTML = \"`cat params/plotconfig.html | sed '1,/<body>/d;/<\/body>/,$d' | sed 's/"/\\\\"/g' | tr -d '\n'`\";" >> ${ALLIN1}.js
+echo "JS9.allinone.plotConfigHTML = \"`cat params/plotconfig.html | sed '1,/^$/d;/<\/head>/,/<body>/d;/<\/body>/,$d' | sed 's/"/\\\\"/g' | tr -d '\n'`\";" >> ${ALLIN1}.js
 
 echo "JS9.allinone.loadCorsHTML = \"`cat params/loadcors.html | sed '1,/<body>/d;/<\/body>/,$d' | sed 's/"/\\\\"/g' | tr -d '\n'`\";" >> ${ALLIN1}.js
 
