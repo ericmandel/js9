@@ -16569,7 +16569,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    }
 	    break;
 	case "savefile":
-	    val = "js9.reg";
+	    val = $(form).data("savefile") || "js9.reg";
 	    break;
 	default:
 	    if( obj.pub[key] !== undefined ){
