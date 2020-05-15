@@ -115,7 +115,9 @@ if( im ){
 return false;">
 </span>
 <span class="rsavecol_R rsavecol_R2">
-<input type="text" class="val rsavetext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="file name" onchange="
+<input type="text" class="val rsavetext_R" name="savefile" value="" autocapitalize="off" autocorrect="off"
+data-tooltip="file name"
+onchange="
 const form = $(this).closest('form');
 $(form).data('savefile', $(this).val());
 ">
@@ -123,7 +125,8 @@ $(form).data('savefile', $(this).val());
 
 <span class="rsavecol_R3">
 <span class="rsavecol_R">
-<input type="radio" id="saveselected" name="savewhich" value="selected"  data-tooltip="selected or all">
+<input type="radio" id="saveselected" name="savewhich" value="selected"
+data-tooltip="selected or all">
 <label for="savecur">sel</label>
 <input type="radio" id="savecur" name="savewhich" value="all">
 <label for="saveall">all</label>
@@ -163,6 +166,7 @@ form.find('.xtracsv').addClass('nodisplay');
 
 <span class="rsavecol_R rsavecol_R6">
 <input type="button" id="savemore" name="savemore" value="..."
+data-tooltip="additional (but less used) options"
 onclick="
 const form = $(this).closest('form');
 const format = form.find(`input[name='saveformat']:checked`).val();
