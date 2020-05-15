@@ -23,40 +23,40 @@
     margin: 0 0 5px 0;
 }
 
-.col_P {
+.plotcol_P {
     font-family: Helvetica, sans-serif;
     font-size: 10pt;
 }
 
-.col_P1 {
+.plotcol_P1 {
     position: absolute;
     top: 0;
     left: 0;
     width: 60px;
 }
 
-.col_P2 {
+.plotcol_P2 {
     position: absolute;
     top: 0;
     left:  90px;
     width: 60px;
 }
 
-.col_P3 {
+.plotcol_P3 {
     position: absolute;
     top: 0;
     left:  160px;
     width: 80px;
 }
 
-.col_P4 {
+.plotcol_P4 {
     position: absolute;
     top: 0;
     left:  250px;
     width: 80px;
 }
 
-.col_Close {
+.plotcol_Close {
     position: absolute;
     top: 0;
     right:  0px;
@@ -71,16 +71,16 @@
 
 <div class="xaxis">
 <div class="plinegroup">
-<span class="col_P col_P1">
+<span class="plotcol_P plotcol_P1">
 x axis:
 </span>
-<span class="col_P col_P2">
+<span class="plotcol_P plotcol_P2">
 <input type="text" class="val text_R" name="xscale" value="" autocapitalize="off" autocorrect="off" data-tooltip="linear or log scaling">
 </span>
-<span class="col_P col_P3">
+<span class="plotcol_P plotcol_P3">
 <input type="text" class="val text_R" name="xmin" value="" autocapitalize="off" autocorrect="off"  data-tooltip="min range (blank for data min)">
 </span>
-<span class="col_P col_P4">
+<span class="plotcol_P plotcol_P4">
 <input type="text" class="val text_R" name="xmax" value="" autocapitalize="off" autocorrect="off"  data-tooltip="max range (blank for data max)">
 </span>
 </div>
@@ -88,23 +88,23 @@ x axis:
 
 <div class="yaxis">
 <div class="plinegroup">
-<span class="col_P col_P1">
+<span class="plotcol_P plotcol_P1">
 y axis:
 </span>
-<span class="col_P col_P2">
+<span class="plotcol_P plotcol_P2">
 <input type="text" class="val text_R" name="yscale" value="" autocapitalize="off" autocorrect="off" data-tooltip="linear or log scaling">
 </span>
-<span class="col_P col_P3">
+<span class="plotcol_P plotcol_P3">
 <input type="text" class="val text_R" name="ymin" value="" autocapitalize="off" autocorrect="off"  data-tooltip="min range (blank for data min)">
 </span>
-<span class="col_P col_P4">
+<span class="plotcol_P plotcol_P4">
 <input type="text" class="val text_R" name="ymax" value="" autocapitalize="off" autocorrect="off"  data-tooltip="max range (blank for data max)">
 </span>
 </div>
 </div>
 
 <div class="plinegroup">
-<span class="col_P col_P1">
+<span class="plotcol_P plotcol_P1">
 <input name="Apply" type="button" class="button" value="Apply"
 onclick="
 const form = $(this).closest('form');
@@ -116,7 +116,7 @@ let arr2 = arr.concat($(`#${form.attr('id')} input[type=checkbox]:not(:checked)`
 JS9.Plot.processConfigForm.call(im, form, plot, pobj, arr2);
 return false;">
 </span>
-<span class="col_P col_Close">
+<span class="plotcol_P plotcol_Close">
 <input name="Close" type="button" class="button" value="Close"
 onclick="
 const form = $(this).closest('form');

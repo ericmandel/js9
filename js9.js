@@ -394,7 +394,7 @@ JS9.lightOpts = {
 	dpathWin: "width=830px,height=175px,center=1,resize=1,scrolling=1",
 	lcloseWin:"width=512px,height=190px,center=1,resize=1,scrolling=1",
 	paramWin: "width=830px,height=235px,center=1,resize=1,scrolling=1",
-	regWin0:  "width=600px,height=72px,center=1,resize=1,scrolling=1",
+	regWin0:  "width=600px,height=75px,center=1,resize=1,scrolling=1",
 	regWin:   "width=600px,height=270px,center=1,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,center=1,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,center=1,resize=1,scrolling=1"
@@ -14088,7 +14088,7 @@ JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
 // call using image context
 JS9.Fabric.updateMultiDialogs = function(setmode){
     // update multiselect dialog box for this image, if necessary
-    $("form[id='regionsConfigForm']").each((index, element) => {
+    $("form[class='regionsConfigForm']").each((index, element) => {
 	const multi = $(element).data("multi");
 	const winid = $(element).data("winid");
 	const im = $(element).data("im");
@@ -16054,10 +16054,12 @@ JS9.Regions.opts = {
     aradius2: 8,
     // region configuration url
     configURL: "./params/regionsconfig.html",
+    // region save url
+    saveURL: "./params/regionssave.html",
     // should overlapping shapes be sorted (smallest on top)?
     sortOverlapping: true,
     // title for region config dialog box
-    title: "Region Configuration",
+    title: "Edit region",
     // no centered scaling for these regions
     noCenteredScaling: ["box", "line"],
     // colors for tags
@@ -16195,59 +16197,74 @@ JS9.Regions.init = function(layerName){
 // display the region config form
 // call using image context
 JS9.Regions.displayConfigForm = function(shape, opts){
-    let s, winid, multi;
+    let s, winformat;
     let got = 0;
     let title = JS9.Regions.opts.title;
     // sanity check
-    if( !this ){
-	return;
-    }
+    if( !this ){ return; }
     // opts is optional
     opts = opts || {};
-    // multiple selections?
-    multi = opts.multi;
     // if there are no regions involved, make this a multi-select edit
     if( !shape ){
 	// need at least one shape to edit
 	if( !this.getShapes("regions").length ){
 	    return;
 	}
-	multi = true;
     }
-    // change title to reflect multi-select, if necessary
-    if( multi ){
-	// if a multi selet form already exists, just update it
-	$("form[id='regionsConfigForm']").each((index, element) => {
+    // which type of dialog box?
+    opts.type = opts.type || "config";
+    switch(opts.type){
+    case "save":
+	if( JS9.allinone ){
+	    s = JS9.allinone.regionsSaveHTML;
+	} else {
+	    s = JS9.InstallDir(JS9.Regions.opts.saveURL);
+	}
+	// adjust title
+	title = "Save regions";
+	// adjust size of window
+	winformat = JS9.lightOpts.dhtml.regWin0;
+	break;
+    case "config":
+    default:
+	if( JS9.allinone ){
+	    s = JS9.allinone.regionsConfigHTML;
+	} else {
+	    s = JS9.InstallDir(JS9.Regions.opts.configURL);
+	}
+	if( !shape ){
+	    opts.multi = true;
+	}
+	break;
+    }
+    // if a multi select form already exists, just update it
+    if( opts.multi ){
+	$("form[class='regionsConfigForm']").each((index, element) => {
 	    const multi = $(element).data("multi");
 	    const winid = $(element).data("winid");
 	    const im = $(element).data("im");
-	    if(  multi && winid && im === this ){
-		im.initRegionsForm(null, {multi, winid});
+	    if( multi && winid && im === this ){
+		opts.winid = winid;
+		im.initRegionsForm(null, opts);
 		got++;
 	    }
 	});
-	// adjust title
-	title = title.replace(/Region/, "Selected Regions");
+	// change title to reflect multi-select, if necessary
+	title = title.replace(/regions?/, "selected regions");
 	// all done if we reinit'ed an existing window
 	if( got ){ return; }
     }
     // call this once window is loaded
     $("#dhtmlwindowholder")
-	.arrive("#regionsConfigForm", {onceOnly: true}, () => {
-	    const firsttime = true;
-	    this.initRegionsForm(shape, {multi, winid, firsttime});
+	.arrive(".regionsConfigForm", {onceOnly: true}, () => {
+	    opts.firsttime = true;
+	    this.initRegionsForm(shape, opts);
 	});
-    // get config html
-    if( JS9.allinone ){
-	s = JS9.allinone.regionsConfigHTML;
-    } else {
-	s = JS9.InstallDir(JS9.Regions.opts.configURL);
-    }
     // bring up display window
-    winid = this.displayAnalysis("regions", s, {title});
+    opts.winid = this.displayAnalysis("regions", s, {title, winformat});
     // save winid, if possible
     if( shape ){
-	shape.params.winid = winid;
+	shape.params.winid = opts.winid;
     }
 };
 
@@ -16255,9 +16272,8 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 // call using image context
 JS9.Regions.initConfigForm = function(obj, opts){
     let i, s, key, val, el, wcssys, twcssys, mover, mout, p1, p2;
-    let winid, wid, form;
+    let winid, wid, form, otitle;
     let multi = false;
-    let title = JS9.Regions.opts.title;
     const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
     const defobj = {
 	type: "multi",
@@ -16302,7 +16318,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
     // find the form, based on winid
     wid = $(winid).attr("id");
     // leave trailing space!
-    form = `#${wid} #regionsConfigForm `;
+    form = `#${wid} .regionsConfigForm `;
     // valid form is required
     if( !$(form).length ){
 	return;
@@ -16312,10 +16328,6 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	multi = true;
     } else {
 	multi = opts.multi;
-    }
-    // dialog box title
-    if( multi ){
-	title = title.replace(/Region/, "Selected Regions");
     }
     // remove the nodisplay class from shape's div
     $(`${form}.${obj.pub.shape}`).each((index, element) => {
@@ -16575,7 +16587,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    }
 	    break;
 	case "savefile":
-	    val = $(form).data("savefile") || "js9.reg";
+	    val = $(form).data("savefile") || this.tmp.regsavefile || "js9.reg";
 	    break;
 	default:
 	    if( obj.pub[key] !== undefined ){
@@ -16684,20 +16696,22 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    mover = "mouseover";
 	    mout = "mouseout";
 	}
-	$(".col_R").on(mover, (e) => {
+	$(".rconfigcol_R, .rsavecol_R").on(mover, (e) => {
 	    const target = e.currentTarget;
-	    const tooltip = $(target).find("input, textarea").data("tooltip");
+	    const tooltip = $(target).find("input, textarea, span").data("tooltip");
 	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
 	    if( tooltip && el.length ){
 		// change title: see dhtmlwindow.js load() @line 130
-		$(el)[0].childNodes[0].nodeValue = `${title}: ${tooltip}`;
+		otitle = $(el)[0].childNodes[0].nodeValue.replace(/:.*/,"");
+		$(el)[0].childNodes[0].nodeValue = `${otitle}: ${tooltip}`;
 	    }
 	});
-	$(".col_R").on(mout, (e) => {
+	$(".rconfigcol_R, .rsavecol_R").on(mout, (e) => {
 	    const target = e.currentTarget;
 	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
 	    if( el.length ){
-		$(el)[0].childNodes[0].nodeValue = title;
+		otitle = $(el)[0].childNodes[0].nodeValue.replace(/:.*/,"");
+		$(el)[0].childNodes[0].nodeValue = otitle;
 	    }
 	});
     }
@@ -17958,6 +17972,9 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     } else {
 	JS9.error("no saveAs() available to save region file");
     }
+    // save filename so we can use it in a save dialog box
+    this.tmp.regsavefile = fname;
+    // return the filename
     return fname;
 };
 
@@ -18266,7 +18283,7 @@ JS9.Plot.initConfigForm = function(plot, pobj){
 	    mover = "mouseover";
 	    mout = "mouseout";
 	}
-	$(".col_P").on(mover, (e) => {
+	$(".plotcol_P").on(mover, (e) => {
 	    let title;
 	    const target = e.currentTarget;
 	    const tooltip = $(target).find("input").data("tooltip");
@@ -18277,7 +18294,7 @@ JS9.Plot.initConfigForm = function(plot, pobj){
 		$(el)[0].childNodes[0].nodeValue = title;
 	    }
 	});
-	$(".col_P").on(mout, (e) => {
+	$(".plotcol_P").on(mout, (e) => {
 	    const target = e.currentTarget;
 	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
 	    if( el.length ){

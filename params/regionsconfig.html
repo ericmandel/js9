@@ -12,7 +12,7 @@
     overflow: hidden;
 }
 
-.rlinegroup {
+.rconfiglinegroup {
     float: left;
     position: relative;
     top: 0px;
@@ -23,7 +23,7 @@
     margin: 0 0 5px 0;
 }
 
-.rlinegroup2 {
+.rconfiglinegroup2 {
     float: left;
     position: relative;
     top: 0px;
@@ -34,117 +34,117 @@
     margin: 0 0 5px 0;
 }
 
-.col_R {
+.rconfigcol_R {
     font-family: Helvetica, sans-serif;
     font-size: 10pt;
 }
 
-.col_R1 {
+.rconfigcol_R1 {
     position: absolute;
     top: 0;
     left: 0;
     width: 75px;
 }
 
-.col_R2 {
+.rconfigcol_R2 {
     position: absolute;
     top: 0;
     left:  80px;
     width: 77px;
 }
 
-.col_R2L {
+.rconfigcol_R2L {
     position: absolute;
     top: 0;
     left:  80px;
     width: 332px;
 }
 
-.col_R2LL {
+.rconfigcol_R2LL {
     position: absolute;
     top: 0;
     left:  80px;
     width: 470px;
 }
 
-.col_R3 {
+.rconfigcol_R3 {
     position: absolute;
     top: 0;
     left:  165px;
     width: 77px;
 }
 
-.col_R4 {
+.rconfigcol_R4 {
     position: absolute;
     top: 0;
     left:  250px;
     width: 77px;
 }
 
-.col_R5 {
+.rconfigcol_R5 {
     position: absolute;
     top: 0;
     left:  335px;
     width: 77px;
 }
 
-.col_R5L {
+.rconfigcol_R5L {
     position: absolute;
     top: 0;
     left:  410px;
     width: 300px;
 }
 
-.col_R6 {
+.rconfigcol_R6 {
     position: absolute;
     top: 0;
     left:  420px;
     width: 50px;
 }
 
-.col_R7 {
+.rconfigcol_R7 {
     position: absolute;
     top: 0;
     left:  480px;
     width: 50px;
 }
 
-.col_R2l {
+.rconfigcol_R2l {
     position: absolute;
     top: 0;
     left:  80px;
     width: 100px;
 }
 
-.col_R3l {
+.rconfigcol_R3l {
     position: absolute;
     top: 0;
     left:  165px;
     width: 100px;
 }
 
-.col_R3L {
+.rconfigcol_R3L {
     position: absolute;
     top: 0;
     left:  165px;
     width: 300px;
 }
 
-.col_R4l {
+.rconfigcol_R4l {
     position: absolute;
     top: 0;
     left:  265px;
     width: 120px;
 }
 
-.col_R4L {
+.rconfigcol_R4L {
     position: absolute;
     top: 0;
     left:  250px;
     width: 162px;
 }
 
-.text_R0 {
+.rconfigtext_R0 {
     width: 20px;
     box-sizing:border-box;
     webkit-box-sizing: border-box;
@@ -152,7 +152,7 @@
     font-size: 10px;
 }
 
-.textarea_R2 {
+.rconfigtextarea_R2 {
     width: 332px;
     height: 64px;
     padding-left: 4px;
@@ -167,14 +167,16 @@
     font-size: 12px;
 }
 
-.text_R {
+.rconfigtext_R {
+    width: 100%;
+    font: normal 12px Arial;
     padding-left: 4px;
     box-sizing:border-box;
     webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
 }
 
-.select_R {
+.rconfigselect_R {
     font-family: Helvetica, sans-serif;
     font-size: 8pt;
 }
@@ -184,19 +186,19 @@
 <!-- mkallinone inline: deletes everything from </head> to <body> -->
 <body>
 
-<form id="regionsConfigForm" name="regionsConfigForm" class="js9AnalysisForm" action="" data-enterfunc="Apply">
+<form id="regionsConfigForm" class="js9AnalysisForm regionsConfigForm" action="" data-enterfunc="Apply">
 
 <div class="regid">
-<div class="rlinegroup">
-<span class="col_R col_R1">
-Reg:&nbsp;<input type="text" class="val text_R0" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off" data-tooltip="region id can be used in selection">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R1">
+Reg:&nbsp;<input type="text" class="val rconfigtext_R0" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off" data-tooltip="region id can be used in selection">
 </span>
 
-<span class="col_R col_R2L">
-<input type="text" class="val text_R" name="regstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off" data-tooltip="region in current global coordinate system">
+<span class="rconfigcol_R rconfigcol_R2L">
+<input type="text" class="val rconfigtext_R" name="regstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off" data-tooltip="region in current global coordinate system">
 </span>
 
-<span class="col_R col_R6">
+<span class="rconfigcol_R rconfigcol_R6">
 <input name="copy" type="button" class="button" value="Copy"
 onclick="
 const form = $(this).closest('form');
@@ -237,8 +239,8 @@ if( im ){
 return false;">
 </span>
 
-<span class="col_R col_R7">
-<select name="wcssys" class="val select_R" onchange="
+<span class="rconfigcol_R rconfigcol_R7">
+<select name="wcssys" class="val rconfigselect_R" onchange="
 const form = $(this).closest('form');
 const im = form.data('im');
 const wcssys =  $(this).val();
@@ -255,79 +257,79 @@ return false;">
 </div>
 
 <div class="multi nodisplay">
-<div class="rlinegroup2">
-<span class="col_R col_R1">
+<div class="rconfiglinegroup2">
+<span class="rconfigcol_R rconfigcol_R1">
 Selected:&nbsp;
 </span>
-<span class="col_R col_R2LL">
-<textarea class="val textarea_R2" name="multitext" value="" autocapitalize="off" autocorrect="off" data-tooltip="currently selected regions" readonly></textarea>
+<span class="rconfigcol_R rconfigcol_R2LL">
+<textarea class="val rconfigtextarea_R2" name="multitext" value="" autocapitalize="off" autocorrect="off" data-tooltip="currently selected regions" readonly></textarea>
 </span>
 </div>
 </div>
 
 <div class="edit">
-<div class="rlinegroup">
-<span class="col_R col_R1">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R1">
 Edit:
 </span>
-<span class="col_R col_R2">
-<input type="text" class="val text_R" name="xpos" value="" autocapitalize="off" autocorrect="off" data-tooltip="x position in units of degrees (wcs) or pixels (no wcs)">
+<span class="rconfigcol_R rconfigcol_R2">
+<input type="text" class="val rconfigtext_R" name="xpos" value="" autocapitalize="off" autocorrect="off" data-tooltip="x position in units of degrees (wcs) or pixels (no wcs)">
 </span>
-<span class="col_R col_R3">
-<input type="text" class="val text_R" name="ypos" value="" autocapitalize="off" autocorrect="off"  data-tooltip="y position in units of degrees (wcs) or pixels (no wcs)">
+<span class="rconfigcol_R rconfigcol_R3">
+<input type="text" class="val rconfigtext_R" name="ypos" value="" autocapitalize="off" autocorrect="off"  data-tooltip="y position in units of degrees (wcs) or pixels (no wcs)">
 </span>
 
 <div class="nodisplay annulus">
-<span class="col_R col_R4L">
-<input type="text" class="val text_R" id="radii" name="radii" value="" autocapitalize="off" autocorrect="off" data-tooltip="radii in units of degrees (wcs) or pixels (no wcs)">
+<span class="rconfigcol_R rconfigcol_R4L">
+<input type="text" class="val rconfigtext_R" id="radii" name="radii" value="" autocapitalize="off" autocorrect="off" data-tooltip="radii in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
 
 <div class="nodisplay box">
-<span class="col_R col_R4">
-<input type="text" class="val text_R" name="width" value="" autocapitalize="off" autocorrect="off" data-tooltip="width in units of degrees (wcs) or pixels (no wcs)">
+<span class="rconfigcol_R rconfigcol_R4">
+<input type="text" class="val rconfigtext_R" name="width" value="" autocapitalize="off" autocorrect="off" data-tooltip="width in units of degrees (wcs) or pixels (no wcs)">
 </span>
-<span class="col_R col_R5">
-<input type="text" class="val text_R" name="height" value="" autocapitalize="off" autocorrect="off" data-tooltip="height in units of degrees (wcs) or pixels (no wcs)">
+<span class="rconfigcol_R rconfigcol_R5">
+<input type="text" class="val rconfigtext_R" name="height" value="" autocapitalize="off" autocorrect="off" data-tooltip="height in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
 
 <div class="nodisplay circle">
-<span class="col_R col_R4">
-<input type="text" class="val text_R" name="radius" value="" autocapitalize="off" autocorrect="off" data-tooltip="radius in units of degrees (wcs) or pixels (no wcs)">
+<span class="rconfigcol_R rconfigcol_R4">
+<input type="text" class="val rconfigtext_R" name="radius" value="" autocapitalize="off" autocorrect="off" data-tooltip="radius in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
 
 <div class="nodisplay ellipse">
-<span class="col_R col_R4">
-<input type="text" class="val text_R" name="r1" value="" autocapitalize="off" autocorrect="off" data-tooltip="r1 in units of degrees (wcs) or pixels (no wcs)">
+<span class="rconfigcol_R rconfigcol_R4">
+<input type="text" class="val rconfigtext_R" name="r1" value="" autocapitalize="off" autocorrect="off" data-tooltip="r1 in units of degrees (wcs) or pixels (no wcs)">
 </span>
-<span class="col_R col_R5">
-<input type="text" class="val text_R" name="r2" value="" autocapitalize="off" autocorrect="off" data-tooltip="r2 in units of degrees (wcs) or pixels (no wcs)">
+<span class="rconfigcol_R rconfigcol_R5">
+<input type="text" class="val rconfigtext_R" name="r2" value="" autocapitalize="off" autocorrect="off" data-tooltip="r2 in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
 
 <div class="nodisplay linelength">
-<span class="col_R col_R4">
-<input type="text" class="val text_R" name="linelength" value="" autocapitalize="off" autocorrect="off" data-tooltip="line length in units of degrees (wcs) or pixels (no wcs)">
+<span class="rconfigcol_R rconfigcol_R4">
+<input type="text" class="val rconfigtext_R" name="linelength" value="" autocapitalize="off" autocorrect="off" data-tooltip="line length in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
 
 <div class="nodisplay lineangle">
-<span class="col_R col_R5">
-<input type="text" class="val text_R" name="lineangle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle in degrees">
+<span class="rconfigcol_R rconfigcol_R5">
+<input type="text" class="val rconfigtext_R" name="lineangle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle in degrees">
 </span>
 </div>
 
 <div class="nodisplay angle">
-<span class="col_R col_R6">
-<input type="text" class="val text_R" name="angle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle in degrees">
+<span class="rconfigcol_R rconfigcol_R6">
+<input type="text" class="val rconfigtext_R" name="angle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle in degrees">
 </span>
 </div>
 
 <div class="nodisplay textangle">
-<span class="col_R col_R4">
-<input type="text" class="val text_R" name="angle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle of text in degrees">
+<span class="rconfigcol_R rconfigcol_R4">
+<input type="text" class="val rconfigtext_R" name="angle" value="" autocapitalize="off" autocorrect="off" data-tooltip="angle of text in degrees">
 </span>
 </div>
 
@@ -335,82 +337,82 @@ Edit:
 </div>
 
 <div class="style">
-<div class="rlinegroup">
-<span class="col_R col_R1">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R1">
 Style:
 </span>
-<span class="col_R col_R2">
-<input type="text" class="val text_R" name="color" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke color name or #rrggbb hex value">
+<span class="rconfigcol_R rconfigcol_R2">
+<input type="text" class="val rconfigtext_R" name="color" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke color name or #rrggbb hex value">
 </span>
-<span class="col_R col_R3">
-<input type="text" class="val text_R" name="strokeWidth" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke width in pixels">
+<span class="rconfigcol_R rconfigcol_R3">
+<input type="text" class="val rconfigtext_R" name="strokeWidth" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke width in pixels">
 </span>
-<span class="col_R col_R4">
-<input type="text" class="val text_R" name="strokeDashes" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke dash/line pattern, e.g. 3 1">
+<span class="rconfigcol_R rconfigcol_R4">
+<input type="text" class="val rconfigtext_R" name="strokeDashes" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke dash/line pattern, e.g. 3 1">
 </span>
 </div>
 </div>
 
 <div class="nodisplay text">
-<div class="rlinegroup">
-<span class="col_R col_R1">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R1">
 Text:
 </span>
-<span class="col_R col_R2L">
-<input type="text" class="val text_R" name="text" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to associate with a parent region">
+<span class="rconfigcol_R rconfigcol_R2L">
+<input type="text" class="val rconfigtext_R" name="text" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to associate with a parent region">
 </span>
 </div>
 
-<div class="rlinegroup">
-<span class="col_R col_R1">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R1">
 Font:
 </span>
-<span class="col_R col_R2">
-<input type="text" class="val text_R" name="fontFamily" value="" autocapitalize="off" autocorrect="off" data-tooltip="font family, e.g. Helvetica">
+<span class="rconfigcol_R rconfigcol_R2">
+<input type="text" class="val rconfigtext_R" name="fontFamily" value="" autocapitalize="off" autocorrect="off" data-tooltip="font family, e.g. Helvetica">
 </span>
-<span class="col_R col_R3">
-<input type="text" class="val text_R" name="fontSize" value="" autocapitalize="off" autocorrect="off" data-tooltip="font size in units of pt, e.g. 12">
+<span class="rconfigcol_R rconfigcol_R3">
+<input type="text" class="val rconfigtext_R" name="fontSize" value="" autocapitalize="off" autocorrect="off" data-tooltip="font size in units of pt, e.g. 12">
 </span>
-<span class="col_R col_R4">
-<input type="text" class="val text_R" name="fontStyle" value="" autocapitalize="off" autocorrect="off" data-tooltip="font style, e.g. italic, normal, oblique">
+<span class="rconfigcol_R rconfigcol_R4">
+<input type="text" class="val rconfigtext_R" name="fontStyle" value="" autocapitalize="off" autocorrect="off" data-tooltip="font style, e.g. italic, normal, oblique">
 </span>
-<span class="col_R col_R5">
-<input type="text" class="val text_R" name="fontWeight" value="" autocapitalize="off" autocorrect="off" data-tooltip="font weight, e.g. normal, bold, 900">
+<span class="rconfigcol_R rconfigcol_R5">
+<input type="text" class="val rconfigtext_R" name="fontWeight" value="" autocapitalize="off" autocorrect="off" data-tooltip="font weight, e.g. normal, bold, 900">
 </span>
 </div>
 </div>
 
 <div class="nodisplay childtext">
-<div class="rlinegroup">
-<span class="col_R col_R1">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R1">
 Text:
 </span>
-<span class="col_R col_R2L">
-<input type="text" class="val text_R" name="childtext" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to display (edit via the associated child region)">
+<span class="rconfigcol_R rconfigcol_R2L">
+<input type="text" class="val rconfigtext_R" name="childtext" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to display (edit via the associated child region)">
 </span>
 </div>
 </div>
 
-<div class="rlinegroup">
-<span class="col_R col_R1">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R1">
 Tags:
 </span>
-<span class="col_R col_R2L">
-<input type="text" class="val text_R" name="tags" value="" autocapitalize="off" autocorrect="off" data-tooltip="comma-separated list of tags">
+<span class="rconfigcol_R rconfigcol_R2L">
+<input type="text" class="val rconfigtext_R" name="tags" value="" autocapitalize="off" autocorrect="off" data-tooltip="comma-separated list of tags">
 </span>
 </div>
 
-<div class="rlinegroup">
-<span class="col_R col_R1">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R1">
 Misc:
 </span>
-<span class="col_R col_R2L">
-<input type="text" class="val text_R" name="misc" value="" autocapitalize="off" autocorrect="off" data-tooltip="misc fabric.js properties, in JSON format">
+<span class="rconfigcol_R rconfigcol_R2L">
+<input type="text" class="val rconfigtext_R" name="misc" value="" autocapitalize="off" autocorrect="off" data-tooltip="misc fabric.js properties, in JSON format">
 </span>
 </div>
 
-<div class="rlinegroup">
-<span class="col_R col_R1">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R1">
 <input name="Save" type="button" class="button" value="Save"
 onclick="
 const form = $(this).closest('form');
@@ -430,7 +432,7 @@ if( im ){
     opts.includecomments = form.find(`[name='includecomments']`).is(':checked');
     break;
   case 'csv':
-    opts.includewcs = form.find(`[name='includewcs']`).attr('checked'); 
+    opts.includewcs = form.find(`[name='includewcs']`).is(':checked');
     break;
   case 'svg':
   default:
@@ -440,20 +442,24 @@ if( im ){
 }
 return false;">
 </span>
-<span class="col_R col_R2">
-<input type="text" class="val text_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="file name" onchange="
+<span class="rconfigcol_R rconfigcol_R2">
+<input type="text" class="val rconfigtext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="file name" onchange="
 const form = $(this).closest('form');
 $(form).data('savefile', $(this).val());
 ">
 </span>
 
-<span class="col_R col_R3L">
-<input type="radio" id="savecur" name="savewhich" value="cur">
+<span class="rconfigcol_R3L">
+<span class="rconfigcol_R">
+<input type="radio" id="savecur" name="savewhich" value="cur"   data-tooltip="what to save: current region or all regions">
 <label for="savecur">cur</label>
 <input type="radio" id="saveall" name="savewhich" value="all">
 <label for="saveall">all</label>
+</span>
 &nbsp;&nbsp;&nbsp;&nbsp;
+<span class="rconfigcol_R">
 <input type="radio" id="savereg" name="saveformat" value="reg"
+data-tooltip="format: text region, comma-separated value, svg"
 onclick="
 const form = $(this).closest('form');
 const fname = form.find(`[name='savefile']`);
@@ -481,8 +487,9 @@ form.find('.xtracsv').addClass('nodisplay');
 ">
 <label for="savesvg">svg</label>
 </span>
+</span>
 
-<span class="col_R col_R6">
+<span class="rconfigcol_R rconfigcol_R6">
 <input type="button" id="savemore" name="savemore" value="..."
 onclick="
 const form = $(this).closest('form');
@@ -514,8 +521,8 @@ switch(format){
 ">
 </span>
 
-<span class="col_R col_R7">
-<select name="savewcs" class="val select_R" onchange="
+<span class="rconfigcol_R rconfigcol_R7">
+<select name="savewcs" class="val rconfigselect_R" onchange="
 const form = $(this).closest('form');
 const wcssys =  $(this).val();
 $(form).data('savewcs', wcssys);
@@ -525,8 +532,8 @@ return false;"
 </div>
 
 <div class="nodisplay xtrareg">
-<div class="rlinegroup">
-<span class="col_R col_R3L">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R3L">
 <input type="checkbox" id="includejson" name="includejson" value="includejson">json
 <input type="checkbox" id="includecomments" name="includecomments" value="includecomments">comments
 </span>
@@ -534,15 +541,15 @@ return false;"
 </div>
 
 <div class="nodisplay xtracsv">
-<div class="rlinegroup">
-<span class="col_R col_R3L">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R3L">
 <input type="checkbox" id="includewcs" name="includewcs" value="includewcs">wcs
 </span>
 </div>
 </div>
 
-<div class="rlinegroup">
-<span class="col_R col_R1">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R1">
 <input name="Apply" type="button" class="button" value="Apply"
 onclick="
 const form = $(this).closest('form');
@@ -554,16 +561,16 @@ let arr2 = arr.concat($(`#${form.attr('id')} input[type=checkbox]:not(:checked)`
 im.processRegionsForm(form, shape, arr2);
 return false;">
 </span>
-<span class="col_R col_R2l">
+<span class="rconfigcol_R rconfigcol_R2l">
 <input type="checkbox" name="remove" value="selected" data-tooltip="Remove region requires clicking Apply">Remove
 </span>
-<span class="col_R col_R3l">
+<span class="rconfigcol_R rconfigcol_R3l">
 <input type="checkbox" name="changeable" value="true" data-tooltip="toggle Changeable requires clicking Apply">Can change
 </span>
-<span class="col_R col_R4l">
+<span class="rconfigcol_R rconfigcol_R4l">
 <input type="checkbox" name="listonchange" value="true" data-tooltip="toggle List on Change requires clicking Apply">List on change
 </span>
-<span class="col_R col_R7">
+<span class="rconfigcol_R rconfigcol_R7">
 <input name="Close" type="button" class="button" value="Close"
 onclick="
 const form = $(this).closest('form');
@@ -574,6 +581,7 @@ winid.close();
 return false;">
 </span>
 </div>
+
 </form>
 </body>
 <!-- mkallinone inline: delete everything from </body> to the end -->

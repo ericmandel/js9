@@ -1,0 +1,234 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<title>Save a Region</title>
+<!-- mkallinone inline: delete everything up to the first blank line -->
+
+<style type="text/css">
+.js9AnalysisForm {
+    border: 0px;
+    overflow: hidden;
+}
+
+.rsavelinegroup {
+    float: left;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 24px;
+    padding: 0;
+    margin: 0 0 5px 0;
+}
+
+.rsavecol_R {
+    font-family: Helvetica, sans-serif;
+    font-size: 10pt;
+}
+
+.rsavecol_R1 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 75px;
+}
+
+.rsavecol_R2 {
+    position: absolute;
+    top: 0;
+    left:  80px;
+    width: 77px;
+}
+
+.rsavecol_R3 {
+    position: absolute;
+    top: 0;
+    left:  165px;
+    width: 300px;
+}
+
+.rsavecol_R6 {
+    position: absolute;
+    top: 0;
+    left:  420px;
+    width: 50px;
+}
+
+.rsavecol_R7 {
+    position: absolute;
+    top: 0;
+    left:  480px;
+    width: 50px;
+}
+
+.rsavetext_R {
+    width: 100%;
+    font: normal 12px Arial;
+    padding-left: 4px;
+    box-sizing:border-box;
+    webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+}
+
+.rsaveselect_R {
+    font-family: Helvetica, sans-serif;
+    font-size: 8pt;
+}
+</style>
+
+</head>
+<!-- mkallinone inline: deletes everything from </head> to <body> -->
+<body>
+
+<form id="regionsSaveForm" class="js9AnalysisForm regionsConfigForm" action="" data-enterfunc="Apply">
+
+<div class="rsavelinegroup">
+<span class="rsavecol_R rsavecol_R1">
+<input name="Save" type="button" class="button" value="Save"
+onclick="
+const form = $(this).closest('form');
+const im = form.data('im');
+const fname = form.find(`[name='savefile']`).val();
+const which = form.find(`input[name='savewhich']:checked`).val();
+const format = form.find(`input[name='saveformat']:checked`).val();
+const wcssys = form.find(`[name='savewcs']`).children('option:selected').val();
+let opts = {};
+if( im ){
+  opts.wcssys = wcssys;
+  opts.format = format;
+  switch(format){
+  case 'reg':
+    opts.includejson = form.find(`[name='includejson']`).is(':checked');
+    opts.includecomments = form.find(`[name='includecomments']`).is(':checked');
+    break;
+  case 'csv':
+    opts.includewcs = form.find(`[name='includewcs']`).is(':checked');
+    break;
+  case 'svg':
+  default:
+    break;
+  }
+  im.saveRegions(fname, which, opts);
+}
+return false;">
+</span>
+<span class="rsavecol_R rsavecol_R2">
+<input type="text" class="val rsavetext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="file name" onchange="
+const form = $(this).closest('form');
+$(form).data('savefile', $(this).val());
+">
+</span>
+
+<span class="rsavecol_R3">
+<span class="rsavecol_R">
+<input type="radio" id="saveselected" name="savewhich" value="selected"  data-tooltip="selected or all">
+<label for="savecur">sel</label>
+<input type="radio" id="savecur" name="savewhich" value="all">
+<label for="saveall">all</label>
+</span>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<span class="rsavecol_R">
+<input type="radio" id="savereg" name="saveformat" value="reg"
+data-tooltip="as text regions, comma-separated values, or svg object"
+onclick="
+const form = $(this).closest('form');
+const fname = form.find(`[name='savefile']`);
+fname.val(fname.val().replace(/\.[^.]*$/, '.reg'));
+form.find('.xtrareg').addClass('nodisplay');
+form.find('.xtracsv').addClass('nodisplay');
+">
+<label for="savereg">reg</label>
+<input type="radio" id="savecsv" name="saveformat" value="csv"
+onclick="
+const form = $(this).closest('form');
+const fname = form.find(`[name='savefile']`);
+fname.val(fname.val().replace(/\.[^.]*$/, '.csv'));
+form.find('.xtrareg').addClass('nodisplay');
+form.find('.xtracsv').addClass('nodisplay');
+">
+<label for="savecsv">csv</label>
+<input type="radio" id="savesvg" name="saveformat" value="svg"
+onclick="
+const form = $(this).closest('form');
+const fname = form.find(`[name='savefile']`);
+fname.val(fname.val().replace(/\.[^.]*$/, '.svg'));
+form.find('.xtrareg').addClass('nodisplay');
+form.find('.xtracsv').addClass('nodisplay');
+">
+<label for="savesvg">svg</label>
+</span>
+</span>
+
+<span class="rsavecol_R rsavecol_R6">
+<input type="button" id="savemore" name="savemore" value="..."
+onclick="
+const form = $(this).closest('form');
+const format = form.find(`input[name='saveformat']:checked`).val();
+switch(format){
+  case 'reg':
+    if( form.find('.xtrareg').is(':visible') ){
+        form.find('.xtrareg').addClass('nodisplay');
+    } else {
+        form.find('.xtrareg').removeClass('nodisplay');
+    }
+    form.find('.xtracsv').addClass('nodisplay');
+    break;
+  case 'csv':
+    form.find('.xtrareg').addClass('nodisplay');
+    if( form.find('.xtracsv').is(':visible') ){
+        form.find('.xtracsv').addClass('nodisplay');
+    } else {
+        form.find('.xtracsv').removeClass('nodisplay');
+console.log('removed class: %s', form.find('.xtracsv').is(':visible'));
+    }
+    break;
+  case 'svg':
+    form.find('.xtrareg').addClass('nodisplay');
+    form.find('.xtracsv').addClass('nodisplay');
+    break;
+  default:
+    break;
+}
+">
+</span>
+
+<span class="rsavecol_R rsavecol_R7">
+<select name="savewcs" class="val rsaveselect_R" onchange="
+const form = $(this).closest('form');
+const wcssys =  $(this).val();
+$(form).data('savewcs', wcssys);
+return false;"
+></select>
+</span>
+</div>
+
+<div class="rsavelinegroup">
+<div class="nodisplay xtrareg">
+<span class="rsavecol_R rsavecol_R3">
+<input type="checkbox" id="includejson" name="includejson" value="includejson">json
+<input type="checkbox" id="includecomments" name="includecomments" value="includecomments">comments
+</span>
+</div>
+<div class="nodisplay xtracsv">
+<span class="rsavecol_R rsavecol_R3">
+<input type="checkbox" id="includewcs" name="includewcs" value="includewcs">wcs
+</span>
+</div>
+<span class="rsavecol_R rsavecol_R7">
+<input name="Close" type="button" class="button" value="Close"
+onclick="
+const form = $(this).closest('form');
+const shape = form.data('shape');
+const winid = form.data('winid');
+shape.params.winid = null;
+winid.close();
+return false;">
+</span>
+</div>
+
+</form>
+</body>
+<!-- mkallinone inline: delete everything from </body> to the end -->
+</html>

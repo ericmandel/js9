@@ -8818,31 +8818,7 @@ JS9.Menubar.createMenus = function(){
 	    items.sep1 = "------";
 	    items.loadRegions  = xname("load");
 	    items.listRegions  = xname("list");
-	    items.saveas  = {
-		name: "save ...",
-		items: {}
-	    };
-	    items.saveas.items.saveastitle = {
-		name: "regions format, wcs:",
-		disabled: true
-	    };
-	    for(i=0; i<JS9.wcssyss.length; i++){
-		s1 = JS9.wcssyss[i];
-		items.saveas.items[`saveas_${s1}`] = xname(s1);
-	    }
-	    items.saveas.items.saveas_current = xname("current");
-	    items.saveas.items.sep = "------";
-	    items.saveas.items.saveas_csvtitle = {
-		name: "csv format, wcs:",
-		disabled: true
-	    };
-	    for(i=0; i<JS9.wcssyss.length; i++){
-		s1 = JS9.wcssyss[i];
-		items.saveas.items[`saveas_csv_${s1}`] = xname(s1);
-	    }
-	    items.saveas.items.saveas_csv_current = xname("current");
-	    items.saveas.items.sep2 = "------";
-	    items.saveas.items.saveas_svg = xname("svg format");
+	    items.saveRegions  = xname("save ...");
 	    items.copyto  = {
 		name: "copy to ...",
 		items: {
@@ -8889,7 +8865,7 @@ JS9.Menubar.createMenus = function(){
 	    return {
 		callback: (key) => {
 		    JS9.Menubar.getDisplays.call(this).forEach((val) => {
-			let uid, ulayer, uao, uname, uopts;
+			let uid, ulayer, uao, uopts;
 			const udisp = val;
 			const uim = udisp.image;
 			// make sure display is still valid
@@ -8907,6 +8883,18 @@ JS9.Menubar.createMenus = function(){
 			    case "removeRegions":
 				uim.removeShapes("regions", "all");
 				udisp.clearMessage("regions");
+				break;
+			    case "saveRegions":
+				ulayer = uim.layers.regions;
+				if( ulayer ){
+				    uao = ulayer.canvas.getActiveObject();
+				    uopts = {type: "save"};
+				    if( uao && uao.type !== "activeSelection" ){
+					uim.displayRegionsForm(uao, uopts);
+				    } else {
+					uim.displayRegionsForm(null, uopts);
+				    }
+				}
 				break;
 			    case "selectRegions":
 				if( JS9.hasOwnProperty("Keyboard") ){
@@ -8934,31 +8922,6 @@ JS9.Menubar.createMenus = function(){
 				uim.params.listonchange = !uim.params.listonchange;
 				break;
 			    default:
-				// maybe it's a saveas request
-				if( key.match(/^saveas_/) ){
-				    uid = key.replace(/^saveas_/,"");
-				    if( uid === "svg" ){
-					uname = "js9.svg";
-					uopts = {format:uid};
-				    } else if( uid.match(/^csv_/) ){
-					uname = "js9.csv";
-					uid = uid.replace(/^csv_/,"");
-					if( uid === "current" ){
-					    uopts = {format:"csv"};
-					} else {
-					    uopts = {format:"csv", wcssys:uid};
-					}
-				    } else {
-					uname = "js9.reg";
-					if( uid === "current" ){
-					    uopts = {format:"reg"};
-					} else {
-					    uopts = {format:"reg", wcssys:uid};
-					}
-				    }
-				    uim.saveRegions(uname, "all", uopts);
-				    return;
-				}
 				// maybe it's a copyto request
 				if( key.match(/^copyto_/) ){
 				    uid = key.replace(/^copyto_/,"");
