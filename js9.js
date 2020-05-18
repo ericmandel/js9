@@ -295,6 +295,14 @@ JS9.globalOpts = {
     debug: 0		             // debug level
 };
 
+// favorites are used in dialog boxes and control boxes
+JS9.favorites = {
+    scales: ["linear", "log", "histeq"],
+    colormaps: ["cool", "heat", "viridis", "magma"],
+    regions: ["annulus", "box", "circle", "ellipse"],
+    wcs: ["FK5", "ICRS", "galactic", "image", "physical"]
+};
+
 // desktop (i.e. Electron.js) defaults
 // always wrap access in if( window.isElectron ){}
 JS9.desktopOpts = {
@@ -395,7 +403,7 @@ JS9.lightOpts = {
 	lcloseWin:"width=512px,height=190px,center=1,resize=1,scrolling=1",
 	paramWin: "width=830px,height=235px,center=1,resize=1,scrolling=1",
 	regWin0:  "width=600px,height=75px,center=1,resize=1,scrolling=1",
-	regWin:   "width=600px,height=270px,center=1,resize=1,scrolling=1",
+	regWin:   "width=600px,height=275px,center=1,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,center=1,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,center=1,resize=1,scrolling=1"
     },
@@ -16271,7 +16279,7 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 // initialize the region config form
 // call using image context
 JS9.Regions.initConfigForm = function(obj, opts){
-    let i, s, key, val, el, wcssys, twcssys, mover, mout, p1, p2;
+    let i, s, key, val, el, el2, wcssys, twcssys, mover, mout, p1, p2;
     let winid, wid, form, otitle;
     let multi = false;
     const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
@@ -16604,17 +16612,58 @@ JS9.Regions.initConfigForm = function(obj, opts){
     // edit-able parameters
     // child text display for shapes, editable if no existing children yet
     if( obj.type !== "text" && obj.params.children ){
-	$(`${form}.childtext`).removeClass("nodisplay");
+	$(`${form}.childtext`)
+	    .removeClass("nodisplay");
 	$(`${form}[name='childtext']`)
 	    .prop("readonly", obj.params.children.length > 0);
     }
     // init options, if necessary
     if( opts.firsttime ){
-	$(`${form}[id='savereg']`).prop("checked", true);
-	$(`${form}[id='savecur']`).prop("checked", true);
-	$(`${form}[id='includejson']`).prop("checked", JS9.globalOpts.regIncludeJSON);
-	$(`${form}[id='includecomments']`).prop("checked", JS9.globalOpts.regIncludeComments);
-	$(`${form}[id='includewcs']`).prop("checked", JS9.globalOpts.csvIncludeWCS);
+	$(`${form}[id='savereg']`)
+	    .prop("checked", true);
+	$(`${form}[id='savecur']`)
+	    .prop("checked", true);
+	$(`${form}[id='includejson']`)
+	    .prop("checked", JS9.globalOpts.regIncludeJSON);
+	$(`${form}[id='includecomments']`)
+	    .prop("checked", JS9.globalOpts.regIncludeComments);
+	$(`${form}[id='includewcs']`)
+	    .prop("checked", JS9.globalOpts.csvIncludeWCS);
+	// add wcs button options
+	if( JS9.favorites.wcs && JS9.favorites.wcs.length ){
+	    // display wcs buttons
+	    el = $(form).find(".rwcsbuttons").removeClass("nodisplay");
+	    // add buttons to button container, if necessary
+	    el2 = el.find(".rwcsbuttoncontainer");
+	    if( el2.length && !el2.find(".rwcsbutton").length ){
+		// try to make nice formatting
+		if( JS9.favorites.wcs.length >= 6 ){
+		    el2.addClass("rconfigcol_R2LL");
+		} else {
+		    el2.addClass("rconfigcol_R3LL");
+		}
+		// add radio buttons for each favorite wcs
+		for(i=0; i<JS9.favorites.wcs.length; i++){
+		    s = JS9.favorites.wcs[i];
+		    el2.append(`<span class='rwcsbutton'>
+                                <input type='radio'
+                                       id='rwcsbutton_${s}'
+                                       name='rwcsbutton'
+                                       class='rwcsradio rconfigradio'
+                                       value='${s}'
+                                       onclick='
+                                           $(this).closest("form")
+                                           .find("[name=savewcs]")
+                                           .val("${s}")
+                                           .trigger("change");'>
+                                <label for='rwcsbutton_${s}'>${s}</label>
+                                </span>`);
+		}
+		// init the radio buttons
+		$(form).find('.rwcsbuttons').find(`[value='${wcssys}']`)
+		    .prop('checked', true);
+	    }
+	}
     }
     // checkboxes
     if( obj.params.listonchange === undefined ){

@@ -34,6 +34,10 @@
     margin: 0 0 5px 0;
 }
 
+.rconfigradio {
+  margin-right: 1px;
+}
+
 .rconfigcol_R {
     font-family: Helvetica, sans-serif;
     font-size: 10pt;
@@ -130,10 +134,17 @@
     width: 300px;
 }
 
+.rconfigcol_R3LL {
+    position: absolute;
+    top: 0;
+    left:  165px;
+    width: 400px;
+}
+
 .rconfigcol_R4l {
     position: absolute;
     top: 0;
-    left:  265px;
+    left:  250px;
     width: 120px;
 }
 
@@ -451,15 +462,16 @@ $(form).data('savefile', $(this).val());
 
 <span class="rconfigcol_R3L">
 <span class="rconfigcol_R">
-<input type="radio" id="savecur" name="savewhich" value="cur"
+<input type="radio" class="rconfiginput" id="savecur" name="savewhich" value="cur"
 data-tooltip="save current or all">
 <label for="savecur">cur</label>
-<input type="radio" id="saveall" name="savewhich" value="all">
+<input type="radio" class="rconfiginput" id="saveall" name="savewhich" value="all">
 <label for="saveall">all</label>
 </span>
+
 &nbsp;&nbsp;&nbsp;&nbsp;
 <span class="rconfigcol_R">
-<input type="radio" id="savereg" name="saveformat" value="reg"
+<input type="radio" class="rconfiginput" id="savereg" name="saveformat" value="reg"
 data-tooltip="save as text regions, comma-separated values, or svg object"
 onclick="
 const form = $(this).closest('form');
@@ -469,7 +481,7 @@ form.find('.xtrareg').addClass('nodisplay');
 form.find('.xtracsv').addClass('nodisplay');
 ">
 <label for="savereg">reg</label>
-<input type="radio" id="savecsv" name="saveformat" value="csv"
+<input type="radio" class="rconfiginput" id="savecsv" name="saveformat" value="csv"
 onclick="
 const form = $(this).closest('form');
 const fname = form.find(`[name='savefile']`);
@@ -478,7 +490,7 @@ form.find('.xtrareg').addClass('nodisplay');
 form.find('.xtracsv').addClass('nodisplay');
 ">
 <label for="savecsv">csv</label>
-<input type="radio" id="savesvg" name="saveformat" value="svg"
+<input type="radio" class="rconfiginput" id="savesvg" name="saveformat" value="svg"
 onclick="
 const form = $(this).closest('form');
 const fname = form.find(`[name='savefile']`);
@@ -525,19 +537,34 @@ switch(format){
 
 <span class="rconfigcol_R rconfigcol_R7">
 <select name="savewcs" class="val rconfigselect_R" onchange="
+let el;
 const form = $(this).closest('form');
 const wcssys =  $(this).val();
 $(form).data('savewcs', wcssys);
+el = $(form).find('.rwcsbuttons').find(`[value='${wcssys}']`);
+if( el.length > 0 ){
+    el.prop('checked', true);
+} else {
+    $(form).find('.rwcsradio').prop('checked', false);
+}
 return false;"
 ></select>
 </span>
 </div>
 
+<div class="nodisplay rwcsbuttons">
+<div class="rconfiglinegroup">
+<!-- NB: column determined during init, based on number of wcs buttons -->
+<span class="rwcsbuttoncontainer rconfigcol_R">
+</span>
+</div>
+</div>
+
 <div class="nodisplay xtrareg">
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R3L">
-<input type="checkbox" id="includejson" name="includejson" value="includejson">json
-<input type="checkbox" id="includecomments" name="includecomments" value="includecomments">comments
+<input type="checkbox"  class="rconfigcheckbox" id="includejson" name="includejson" value="includejson">json
+<input type="checkbox" class="rconfigcheckbox" id="includecomments" name="includecomments" value="includecomments">comments
 </span>
 </div>
 </div>
@@ -545,7 +572,7 @@ return false;"
 <div class="nodisplay xtracsv">
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R3L">
-<input type="checkbox" id="includewcs" name="includewcs" value="includewcs">wcs
+<input type="checkbox" class="rconfigcheckbox" id="includewcs" name="includewcs" value="includewcs">wcs
 </span>
 </div>
 </div>
@@ -564,13 +591,13 @@ im.processRegionsForm(form, shape, arr2);
 return false;">
 </span>
 <span class="rconfigcol_R rconfigcol_R2l">
-<input type="checkbox" name="remove" value="selected" data-tooltip="Remove requires clicking Apply">Remove
+<input type="checkbox" class="rconfigcheckbox"" name="remove" value="selected" data-tooltip="Remove requires clicking Apply">Remove
 </span>
 <span class="rconfigcol_R rconfigcol_R3l">
-<input type="checkbox" name="changeable" value="true" data-tooltip="toggle Changeable requires clicking Apply">Can change
+<input type="checkbox" class="rconfigcheckbox" name="changeable" value="true" data-tooltip="toggle Change requires clicking Apply">Change
 </span>
 <span class="rconfigcol_R rconfigcol_R4l">
-<input type="checkbox" name="listonchange" value="true" data-tooltip="toggle List on Change requires clicking Apply">List on change
+<input type="checkbox" class="rconfigcheckbox" name="listonchange" value="true" data-tooltip="toggle List on Change requires clicking Apply">List on change
 </span>
 <span class="rconfigcol_R rconfigcol_R7">
 <input name="Close" type="button" class="button" value="Close"
