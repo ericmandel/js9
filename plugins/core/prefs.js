@@ -475,7 +475,7 @@ JS9.Prefs.globalsSchema = {
 	},
 	"lightWinClose": {
 	    "type": "string",
-	    "helper": "ask, close, move images when closing lightwin"
+	    "helper": "ask,close,move when closing lightwin"
 	},
 	"fits2fits": {
 	    "type": "string",
@@ -519,7 +519,7 @@ JS9.Prefs.globalsSchema = {
 	},
 	"regionsToClipboard": {
 	    "type": "boolean",
-	    "helper": "copy region mods to pseudo-clipboard?"
+	    "helper": "region mods to pseudo-clipboard?"
 	},
 	"syncReciprocate": {
 	    "type": "boolean",
@@ -644,59 +644,10 @@ JS9.Prefs.init = function(){
 			   clear: JS9.globalOpts.clearImageMemory};
 	    break;
 	case "catalogs":
-	    source.data = {ras: JS9.globalOpts.catalogs.ras,
-			   decs: JS9.globalOpts.catalogs.decs,
-			   wcssys: JS9.globalOpts.catalogs.wcssys,
-			   shape: JS9.globalOpts.catalogs.shape,
-			   color: JS9.globalOpts.catalogs.color,
-			   width: JS9.globalOpts.catalogs.width,
-			   height: JS9.globalOpts.catalogs.height,
-			   radius: JS9.globalOpts.catalogs.radius,
-			   r1: JS9.globalOpts.catalogs.r1,
-			   r2: JS9.globalOpts.catalogs.r2,
-			   tooltip: JS9.globalOpts.catalogs.tooltip,
-			   skip: JS9.globalOpts.catalogs.skip};
+	    source.data = JS9.globalOpts.catalogs;
 	    break;
 	case "globals":
-	    source.data = {fits2png: JS9.globalOpts.fits2png,
-			   fits2fits: JS9.globalOpts.fits2fits,
-			   dynamicSelect: JS9.globalOpts.dynamicSelect,
-			   toolbarTooltips: JS9.globalOpts.toolbarTooltips,
-			   updateTitlebar: JS9.globalOpts.updateTitlebar,
-			   logoDisplay: JS9.globalOpts.logoDisplay,
-			   reloadRefresh: JS9.globalOpts.reloadRefresh,
-			   reloadRefreshReg: JS9.globalOpts.reloadRefreshReg,
-			   regionsToClipboard:JS9.globalOpts.regionsToClipboard,
-			   syncWCS: JS9.globalOpts.syncWCS,
-			   syncReciprocate: JS9.globalOpts.syncReciprocate,
-			   nextImageMask: JS9.globalOpts.nextImageMask,
-			   panWithinDisplay: JS9.globalOpts.panWithinDisplay,
-			   pannerDirections: JS9.globalOpts.pannerDirections,
-			   magnifierRegions: JS9.globalOpts.magnifierRegions,
-			   xeqPlugins: JS9.globalOpts.xeqPlugins,
-			   extendedPlugins: JS9.globalOpts.extendedPlugins,
-			   intensivePlugins: JS9.globalOpts.intensivePlugins,
-			   svgBorder: JS9.globalOpts.svgBorder,
-			   topColormaps: JS9.globalOpts.topColormaps,
-			   mouseActions: JS9.globalOpts.mouseActions,
-			   touchActions: JS9.globalOpts.touchActions,
-			   keyboardActions: JS9.globalOpts.keyboardActions,
-			   centerDivs: JS9.globalOpts.centerDivs,
-			   resizeDivs: JS9.globalOpts.resizeDivs,
-			   plot3d: JS9.globalOpts.plot3d,
-			   syncOps: JS9.globalOpts.syncOps,
-			   wcsUnits: JS9.globalOpts.wcsUnits,
-			   metaClickPan: JS9.globalOpts.metaClickPan,
-			   mousetouchZoom: JS9.globalOpts.mousetouchZoom,
-			   copyWcsPosFormat: JS9.globalOpts.copyWcsPosFormat,
-			   fallbackDisplay: JS9.globalOpts.fallbackDisplay,
-			   regionDisplay: JS9.globalOpts.regionDisplay,
-			   regionConfigSize: JS9.globalOpts.regionConfigSize,
-			   lightWinClose: JS9.globalOpts.lightWinClose,
-			   infoBox: JS9.globalOpts.infoBox,
-			   statusBar: JS9.globalOpts.statusBar,
-			   toolBar: JS9.globalOpts.toolBar,
-			   separate: JS9.globalOpts.separate};
+	    source.data = JS9.globalOpts;
 	    break;
 	case "favorites":
 	    source.data = JS9.favorites;
