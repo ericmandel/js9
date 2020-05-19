@@ -301,7 +301,7 @@ JS9.favorites = {
     colormaps: ["cool", "heat", "viridis", "magma"],
     regions: ["annulus", "box", "circle", "ellipse"],
     wcs: ["FK5", "ICRS", "galactic", "image", "physical"]
-//  format can specify display string (via colon-separated string or array):
+//  you can specify a display string using a colon-separated string or array:
 //  wcs: ["FK5:fk5", ["ICRS","icrs"], "galactic", "image", "physical"]
 };
 
