@@ -23,6 +23,10 @@
     margin: 0 0 5px 0;
 }
 
+.rsaveradio {
+  margin-right: 1px;
+}
+
 .rsavecol_R {
     font-family: Helvetica, sans-serif;
     font-size: 10pt;
@@ -42,11 +46,25 @@
     width: 77px;
 }
 
+.rsavecol_R2LL {
+    position: absolute;
+    top: 0;
+    left:  80px;
+    width: 470px;
+}
+
 .rsavecol_R3 {
     position: absolute;
     top: 0;
     left:  165px;
     width: 300px;
+}
+
+.rsavecol_R3LL {
+    position: absolute;
+    top: 0;
+    left:  165px;
+    width: 400px;
 }
 
 .rsavecol_R6 {
@@ -200,12 +218,27 @@ console.log('removed class: %s', form.find('.xtracsv').is(':visible'));
 
 <span class="rsavecol_R rsavecol_R7">
 <select name="savewcs" class="val rsaveselect_R" onchange="
+let el;
 const form = $(this).closest('form');
 const wcssys =  $(this).val();
 $(form).data('savewcs', wcssys);
+el = $(form).find('.rwcsbuttons').find(`[value='${wcssys}']`);
+if( el.length > 0 ){
+    el.prop('checked', true);
+} else {
+    $(form).find('.rwcsradio').prop('checked', false);
+}
 return false;"
 ></select>
 </span>
+</div>
+
+<div class="nodisplay rwcsbuttons">
+<div class="rsavelinegroup">
+<!-- NB: column determined during init, based on number of wcs buttons -->
+<span class="rwcsbuttoncontainer rsavecol_R">
+</span>
+</div>
 </div>
 
 <div class="rsavelinegroup">

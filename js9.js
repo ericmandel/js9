@@ -16640,9 +16640,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    if( el2.length && !el2.find(".rwcsbutton").length ){
 		// try to make nice formatting
 		if( JS9.favorites.wcs.length >= 6 ){
-		    el2.addClass("rconfigcol_R2LL");
+		    el2.addClass("rconfigcol_R2LL rsavecol_R2LL");
 		} else {
-		    el2.addClass("rconfigcol_R3LL");
+		    el2.addClass("rconfigcol_R3LL rsavecol_R3LL");
 		}
 		// add radio buttons for each favorite wcs
 		for(i=0; i<JS9.favorites.wcs.length; i++){
@@ -16660,7 +16660,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
                                 <input type='radio'
                                        id='rwcsbutton_${s}'
                                        name='rwcsbutton'
-                                       class='rwcsradio rconfigradio'
+                                       class='rwcsradio rconfigradio rsaveradio'
                                        value='${s}'
                                        onclick='
                                            $(this).closest("form")
