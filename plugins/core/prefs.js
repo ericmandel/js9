@@ -564,6 +564,30 @@ JS9.Prefs.globalsSchema = {
     }
 };
 
+// favorites schema for the page
+JS9.Prefs.favoritesSchema = {
+    "title": "Favorites Preferences",
+    "description": "Favorites for all JS9 displays",
+    "properties": {
+	"scales": {
+	    "type": "mobject",
+	    "helper": "array of favorite scales"
+	},
+	"colormaps": {
+	    "type": "mobject",
+	    "helper": "array of favorite colormaps"
+	},
+	"regions": {
+	    "type": "mobject",
+	    "helper": "array of favorite regions"
+	},
+	"wcs": {
+	    "type": "mobject",
+	    "helper": "array of favorite wcs systems"
+	}
+    }
+};
+
 // source object for preferences
 JS9.Prefs.sources = [
     {name: "globals",  schema: JS9.Prefs.globalsSchema},
@@ -571,7 +595,8 @@ JS9.Prefs.sources = [
     {name: "fits",     schema: JS9.Prefs.fitsSchema},
     {name: "regions",  schema: JS9.Prefs.regionsSchema},
     {name: "grid",     schema: JS9.Prefs.gridSchema},
-    {name: "catalogs", schema: JS9.Prefs.catalogsSchema}
+    {name: "catalogs", schema: JS9.Prefs.catalogsSchema},
+    {name: "favorites", schema: JS9.Prefs.favoritesSchema}
 ];
 
 // init preference plugin
@@ -673,7 +698,11 @@ JS9.Prefs.init = function(){
 			   toolBar: JS9.globalOpts.toolBar,
 			   separate: JS9.globalOpts.separate};
 	    break;
+	case "favorites":
+	    source.data = JS9.favorites;
+	    break;
 	default:
+	    JS9.error(`unknown source for preferences: ${source.name}`);
 	    break;
 	}
 	html += `<div id='${id}Div' class='tabcontent'>`;
@@ -825,6 +854,12 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
     case "globals":
 	obj = JS9.globalOpts;
 	break;
+    case "favorites":
+	obj = JS9.favorites;
+	break;
+    default:
+	JS9.error(`unknown source for preferences: ${source.name}`);
+	break;
     }
     for(i=0; i<len; i++){
 	key = arr[i].name;
@@ -955,6 +990,10 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 		    source.data[key] = val;
 		    break;
 		}
+		break;
+	    case "favorites":
+		// set new option value
+	        obj[key] = val;
 		break;
 	    default:
 		// set new option value
