@@ -301,6 +301,8 @@ JS9.favorites = {
     colormaps: ["cool", "heat", "viridis", "magma"],
     regions: ["annulus", "box", "circle", "ellipse"],
     wcs: ["FK5", "ICRS", "galactic", "image", "physical"]
+//  format can specify display string (via colon-separated string or array):
+//  wcs: ["FK5:fk5", ["ICRS","icrs"], "galactic", "image", "physical"]
 };
 
 // desktop (i.e. Electron.js) defaults
@@ -16279,8 +16281,8 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 // initialize the region config form
 // call using image context
 JS9.Regions.initConfigForm = function(obj, opts){
-    let i, s, key, val, el, el2, wcssys, twcssys, mover, mout, p1, p2;
-    let winid, wid, form, otitle;
+    let i, s, s2, key, val, el, el2, wcssys, twcssys, mover, mout, p1, p2;
+    let winid, wid, form, otitle, fav, arr;
     let multi = false;
     const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
     const defobj = {
@@ -16644,7 +16646,16 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		// add radio buttons for each favorite wcs
 		for(i=0; i<JS9.favorites.wcs.length; i++){
-		    s = JS9.favorites.wcs[i];
+		    fav = JS9.favorites.wcs[i];
+		    if( typeof fav === "string" ){
+			// format: "wcs:displayedname"
+			arr = fav.split(":");
+		    } else {
+			// format: ["wcs", "displayedname"]
+			arr = fav;
+		    }
+		    s =  arr[0];
+		    s2 = arr[1] || s;
 		    el2.append(`<span class='rwcsbutton'>
                                 <input type='radio'
                                        id='rwcsbutton_${s}'
@@ -16656,7 +16667,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
                                            .find("[name=savewcs]")
                                            .val("${s}")
                                            .trigger("change");'>
-                                <label for='rwcsbutton_${s}'>${s}</label>
+                                <label for='rwcsbutton_${s}'>${s2}</label>
                                 </span>`);
 		}
 		// init the radio buttons
