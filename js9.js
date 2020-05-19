@@ -173,7 +173,7 @@ JS9.globalOpts = {
     resizeHandle: true,		// add resize handle to display?
     resizeRedisplay: true,	// redisplay image while resizing?
     logoDisplay: false,         // show JS9 logo on each display?
-    lightWinPos: "left=0,top=0",// "center=1" for center positioning
+    lightWinPos: "center=1",	// "left=n,top=m" offset from left,top of window
     lightWinClose: "ask",	// ask, close, move images when closing lightwin
     fallbackDisplay: true,	// displayMessage fallback to display window?
     regionDisplay: "lightwin",	// "lightwin" or "display"
