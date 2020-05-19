@@ -767,7 +767,7 @@ JS9.Menubar.createMenus = function(){
 				    uim.displayAnalysis("text",
 						   JS9.hdus2Str(uim.hdus),
 						   {title: `FITS HDUs: ${uim.id}`,
-						    winformat: "width=800px,height=200px,center=1,resize=1,scrolling=1"});
+						    winformat: "width=800px,height=200px,resize=1,scrolling=1"});
 				} else {
 				    JS9.error(`no FITS header for ${uim.id}`);
 				}

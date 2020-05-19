@@ -173,6 +173,7 @@ JS9.globalOpts = {
     resizeHandle: true,		// add resize handle to display?
     resizeRedisplay: true,	// redisplay image while resizing?
     logoDisplay: false,         // show JS9 logo on each display?
+    lightWinPos: "left=0,top=0",// "center=1" for center positioning
     lightWinClose: "ask",	// ask, close, move images when closing lightwin
     fallbackDisplay: true,	// displayMessage fallback to display window?
     regionDisplay: "lightwin",	// "lightwin" or "display"
@@ -397,17 +398,17 @@ JS9.lightOpts = {
 	top:      ".dhtmlwindow",
 	drag:     ".drag-contentarea",
 	dragBar:  "drag-handle",
-	format:   "width=%spx,height=%spx,center=1,resize=%s,scrolling=0",
-	textWin:  "width=830px,height=400px,center=1,resize=1,scrolling=1",
+	format:   "width=%spx,height=%spx,resize=%s,scrolling=0",
+	textWin:  "width=830px,height=400px,resize=1,scrolling=1",
 	// NB: dimensions are tied to .JS9Plot CSS params
-	plotWin:  "width=830px,height=420px,center=1,resize=1,scrolling=1",
-	dpathWin: "width=830px,height=175px,center=1,resize=1,scrolling=1",
-	lcloseWin:"width=512px,height=190px,center=1,resize=1,scrolling=1",
-	paramWin: "width=830px,height=235px,center=1,resize=1,scrolling=1",
-	regWin0:  "width=600px,height=75px,center=1,resize=1,scrolling=1",
-	regWin:   "width=600px,height=275px,center=1,resize=1,scrolling=1",
-	imageWin: "width=512px,height=598px,center=1,resize=1,scrolling=1",
-	lineWin:  "width=400px,height=60px,center=1,resize=1,scrolling=1"
+	plotWin:  "width=830px,height=420px,resize=1,scrolling=1",
+	dpathWin: "width=830px,height=175px,resize=1,scrolling=1",
+	lcloseWin:"width=512px,height=190px,resize=1,scrolling=1",
+	paramWin: "width=830px,height=235px,resize=1,scrolling=1",
+	regWin0:  "width=600px,height=75px,resize=1,scrolling=1",
+	regWin:   "width=600px,height=275px,resize=1,scrolling=1",
+	imageWin: "width=512px,height=598px,resize=1,scrolling=1",
+	lineWin:  "width=400px,height=60px,resize=1,scrolling=1"
     },
     lcloseURL: "params/lightclose.html"
 };
@@ -6234,7 +6235,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
     const a = JS9.lightOpts[JS9.LIGHTWIN];
     const flotConfig = () => {
 	let s;
-	let winformat = "width=368px,height=110px,center=1,resize=1,scrolling=1";
+	let winformat = "width=368px,height=110px,resize=1,scrolling=1";
 	const title = JS9.Plot.opts.title;
 	// sanity check
 	if( !divjq || !plot ){
@@ -19736,11 +19737,19 @@ JS9.msgHandler =  function(msg, cb){
 
 // create a light window
 // someday we might want other options ...
-JS9.lightWin = function(id, type, s, title, opts){
+JS9.lightWin = function(id, type, s, title, winformat){
     let rval;
+    // winformat is optional
+    winformat = winformat || "";
+    // create the light window
     switch(JS9.LIGHTWIN){
     case "dhtml":
-	rval = dhtmlwindow.open(id, type, s, title, opts);
+	// if no positioning, add the default
+	if( !winformat.match(/(left|top|center)=/) ){
+	    if( winformat ){ winformat = winformat + ","; }
+	    winformat = winformat + `${JS9.globalOpts.lightWinPos}`;
+	}
+	rval = dhtmlwindow.open(id, type, s, title, winformat);
 	// override dhtml to add ios scroll capability
 	if(  /iPad|iPhone|iPod/.test(navigator.platform) ){
 	    $(`#${id} ${JS9.lightOpts.dhtml.drag}`)
