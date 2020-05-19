@@ -912,19 +912,16 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	            obj[key] = val;
 		    // re-init toolbar
 		    JS9.SetToolbar("init");
-		    source.data[key] = val;
 		    break;
  	        case "toolbarTooltips":
 	            // set new option value
 	            obj[key] = val;
-		    source.data[key] = val;
 		    break;
  	        case "logoDisplay":
 	            // set new option value
 	            obj[key] = val;
 		    // re-init toolbar
 		    JS9.SetToolbar("init");
-		    source.data[key] = val;
 		    s = val ? "block" : "none";
 		    for(j=0; j<JS9.displays.length; j++){
 			JS9.displays[j].iconjq.css("display", s);
@@ -933,12 +930,10 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 		case "separate":
 	            // set new option value
 	            obj[key] = val;
-		    source.data[key] = val;
 		    break;
 		default:
 	            // set new option value
 	            obj[key] = val;
-		    source.data[key] = val;
 		    break;
 		}
 		break;
