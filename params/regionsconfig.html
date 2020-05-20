@@ -57,6 +57,20 @@
     width: 77px;
 }
 
+.rconfigcol_R2b {
+    position: absolute;
+    top: 0;
+    left:  80px;
+    width: 60px;
+}
+
+.rconfigcol_R2l {
+    position: absolute;
+    top: 0;
+    left:  80px;
+    width: 100px;
+}
+
 .rconfigcol_R2L {
     position: absolute;
     top: 0;
@@ -78,46 +92,18 @@
     width: 77px;
 }
 
-.rconfigcol_R4 {
+.rconfigcol_R3b {
     position: absolute;
     top: 0;
-    left:  250px;
-    width: 77px;
+    left:  145px;
+    width: 60px;
 }
 
-.rconfigcol_R5 {
+.rconfigcol_R3bl {
     position: absolute;
     top: 0;
-    left:  335px;
-    width: 77px;
-}
-
-.rconfigcol_R5L {
-    position: absolute;
-    top: 0;
-    left:  410px;
-    width: 300px;
-}
-
-.rconfigcol_R6 {
-    position: absolute;
-    top: 0;
-    left:  420px;
-    width: 50px;
-}
-
-.rconfigcol_R7 {
-    position: absolute;
-    top: 0;
-    left:  480px;
-    width: 50px;
-}
-
-.rconfigcol_R2l {
-    position: absolute;
-    top: 0;
-    left:  80px;
-    width: 100px;
+    left:  145px;
+    width: 80px;
 }
 
 .rconfigcol_R3l {
@@ -141,6 +127,20 @@
     width: 400px;
 }
 
+.rconfigcol_R4 {
+    position: absolute;
+    top: 0;
+    left:  250px;
+    width: 77px;
+}
+
+.rconfigcol_R4b {
+    position: absolute;
+    top: 0;
+    left:  210px;
+    width: 60px;
+}
+
 .rconfigcol_R4l {
     position: absolute;
     top: 0;
@@ -153,6 +153,62 @@
     top: 0;
     left:  250px;
     width: 162px;
+}
+
+.rconfigcol_R5 {
+    position: absolute;
+    top: 0;
+    left:  335px;
+    width: 77px;
+}
+
+.rconfigcol_R5b {
+    position: absolute;
+    top: 0;
+    left:  275px;
+    width: 60px;
+}
+
+.rconfigcol_R5L {
+    position: absolute;
+    top: 0;
+    left:  410px;
+    width: 300px;
+}
+
+.rconfigcol_R6 {
+    position: absolute;
+    top: 0;
+    left:  420px;
+    width: 50px;
+}
+
+.rconfigcol_R6b {
+    position: absolute;
+    top: 0;
+    left:  340px;
+    width: 60px;
+}
+
+.rconfigcol_R7 {
+    position: absolute;
+    top: 0;
+    left:  480px;
+    width: 50px;
+}
+
+.rconfigcol_R7b {
+    position: absolute;
+    top: 0;
+    left:  405px;
+    width: 60px;
+}
+
+.rconfigcol_R8b {
+    position: absolute;
+    top: 0;
+    left:  470px;
+    width: 60px;
 }
 
 .rconfigtext_R0 {
@@ -202,7 +258,7 @@
 <div class="regid">
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
-Reg:&nbsp;<input type="text" class="val rconfigtext_R0" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off" data-tooltip="region id can be used in selection">
+reg:&nbsp;<input type="text" class="val rconfigtext_R0" name="id" value="" readonly="readonly" autocapitalize="off" autocorrect="off" data-tooltip="region id can be used in selection">
 </span>
 
 <span class="rconfigcol_R rconfigcol_R2L">
@@ -270,10 +326,10 @@ return false;">
 <div class="multi nodisplay">
 <div class="rconfiglinegroup2">
 <span class="rconfigcol_R rconfigcol_R1">
-Selected:&nbsp;
+selected:&nbsp;
 </span>
 <span class="rconfigcol_R rconfigcol_R2LL">
-<textarea class="val rconfigtextarea_R2" name="multitext" value="" autocapitalize="off" autocorrect="off" data-tooltip="currently selected regions" readonly></textarea>
+<textarea class="val rconfigtextarea_R2" name="multitext" autocapitalize="off" autocorrect="off" data-tooltip="currently selected regions" rows="4" cols="80" readonly></textarea>
 </span>
 </div>
 </div>
@@ -281,7 +337,7 @@ Selected:&nbsp;
 <div class="edit">
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
-Edit:
+edit:
 </span>
 <span class="rconfigcol_R rconfigcol_R2">
 <input type="text" class="val rconfigtext_R" name="xpos" value="" autocapitalize="off" autocorrect="off" data-tooltip="x position in units of degrees (wcs) or pixels (no wcs)">
@@ -350,7 +406,7 @@ Edit:
 <div class="style">
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
-Style:
+style:
 </span>
 <span class="rconfigcol_R rconfigcol_R2">
 <input type="text" class="val rconfigtext_R" name="color" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke color name or #rrggbb hex value">
@@ -367,7 +423,7 @@ Style:
 <div class="nodisplay text">
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
-Text:
+text:
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
 <input type="text" class="val rconfigtext_R" name="text" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to associate with a parent region">
@@ -376,7 +432,7 @@ Text:
 
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
-Font:
+font:
 </span>
 <span class="rconfigcol_R rconfigcol_R2">
 <input type="text" class="val rconfigtext_R" name="fontFamily" value="" autocapitalize="off" autocorrect="off" data-tooltip="font family, e.g. Helvetica">
@@ -396,7 +452,7 @@ Font:
 <div class="nodisplay childtext">
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
-Text:
+text:
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
 <input type="text" class="val rconfigtext_R" name="childtext" value="" autocapitalize="off" autocorrect="off" data-tooltip="text to display (edit via the associated child region)">
@@ -406,7 +462,7 @@ Text:
 
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
-Tags:
+tags:
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
 <input type="text" class="val rconfigtext_R" name="tags" value="" autocapitalize="off" autocorrect="off" data-tooltip="comma-separated list of tags">
@@ -415,7 +471,7 @@ Tags:
 
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
-Misc:
+misc:
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
 <input type="text" class="val rconfigtext_R" name="misc" value="" autocapitalize="off" autocorrect="off" data-tooltip="misc fabric.js properties, in JSON format">
@@ -449,39 +505,49 @@ if( im ){
   default:
     break;
   }
+  form.data('savefile', fname);
   im.saveRegions(fname, id, opts);
 }
 return false;">
 </span>
-<span class="rconfigcol_R rconfigcol_R2">
+<span class="rconfigcol_R rconfigcol_R2L">
 <input type="text" class="val rconfigtext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name" onchange="
 const form = $(this).closest('form');
 $(form).data('savefile', $(this).val());
 ">
 </span>
+<span class="rconfigcol_R rconfigcol_R7">
+<input type="button" id="savebrowse" name="savebrowse" value="Browse" data-tooltip="browse"
+onclick="
+const form = $(this).closest('form');
+">
+</span>
+</div>
 
-<span class="rconfigcol_R3L">
-<span class="rconfigcol_R">
-<input type="radio" class="rconfiginput" id="savecur" name="savewhich" value="cur"
-data-tooltip="save current or all">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R2b">
+<input type="radio" class="rconfiginput" id="savecur" name="savewhich" value="cur" data-tooltip="save current region">
 <label for="savecur">cur</label>
-<input type="radio" class="rconfiginput" id="saveall" name="savewhich" value="all">
+</span>
+<span class="rconfigcol_R rconfigcol_R3b">
+<input type="radio" class="rconfiginput" id="saveall" name="savewhich" value="all" data-tooltip="save all regions">
 <label for="saveall">all</label>
 </span>
-
-&nbsp;&nbsp;&nbsp;&nbsp;
-<span class="rconfigcol_R">
-<input type="radio" class="rconfiginput" id="savereg" name="saveformat" value="reg"
-data-tooltip="save as text regions, comma-separated values, or svg object"
+<span class="rconfigcol_R rconfigcol_R5b">
+<input type="radio" class="rconfiginput" id="savereg" name="saveformat" value="reg" data-tooltip="save as text regions"
 onclick="
 const form = $(this).closest('form');
 const fname = form.find(`[name='savefile']`);
 fname.val(fname.val().replace(/\.[^.]*$/, '.reg'));
+form.data('savefile', fname.val());
 form.find('.xtrareg').addClass('nodisplay');
 form.find('.xtracsv').addClass('nodisplay');
 ">
 <label for="savereg">reg</label>
-<input type="radio" class="rconfiginput" id="savecsv" name="saveformat" value="csv"
+</span>
+
+<span class="rconfigcol_R rconfigcol_R6b">
+<input type="radio" class="rconfiginput" id="savecsv" name="saveformat" value="csv" data-tooltip="save as comma-separated values"
 onclick="
 const form = $(this).closest('form');
 const fname = form.find(`[name='savefile']`);
@@ -490,7 +556,9 @@ form.find('.xtrareg').addClass('nodisplay');
 form.find('.xtracsv').addClass('nodisplay');
 ">
 <label for="savecsv">csv</label>
-<input type="radio" class="rconfiginput" id="savesvg" name="saveformat" value="svg"
+</span>
+<span class="rconfigcol_R rconfigcol_R7b">
+<input type="radio" class="rconfiginput" id="savesvg" name="saveformat" value="svg" data-tooltip="save as svg object"
 onclick="
 const form = $(this).closest('form');
 const fname = form.find(`[name='savefile']`);
@@ -500,9 +568,8 @@ form.find('.xtracsv').addClass('nodisplay');
 ">
 <label for="savesvg">svg</label>
 </span>
-</span>
 
-<span class="rconfigcol_R rconfigcol_R6">
+<span class="rconfigcol_R rconfigcol_R7">
 <input type="button" id="savemore" name="savemore" value="..."
 data-tooltip="additional (but less frequently used) save options"
 onclick="
@@ -534,7 +601,32 @@ switch(format){
 }
 ">
 </span>
+</div>
 
+<div class="nodisplay xtrareg">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R2b">
+<input type="checkbox"  class="rconfigcheckbox" id="includejson" name="includejson" value="includejson" data-tooltip="include properties in json object">json
+</span>
+<span class="rconfigcol_R rconfigcol_R3bl">
+<input type="checkbox" class="rconfigcheckbox" id="includecomments" name="includecomments" value="includecomments" data-tooltip="include comments">comments
+</span>
+</div>
+</div>
+
+<div class="nodisplay xtracsv">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R2b">
+<input type="checkbox" class="rconfigcheckbox" id="includewcs" name="includewcs" value="includewcs" data-tooltip="include wcs keyword"
+>wcs
+</span>
+</div>
+</div>
+
+<div class="nodisplay rwcsbuttons">
+<div class="rconfiglinegroup">
+<span class="rwcsbuttoncontainer rconfigcol_R">
+</span>
 <span class="rconfigcol_R rconfigcol_R7">
 <select name="savewcs" class="val rconfigselect_R" onchange="
 let el;
@@ -549,30 +641,6 @@ if( el.length > 0 ){
 }
 return false;"
 ></select>
-</span>
-</div>
-
-<div class="nodisplay rwcsbuttons">
-<div class="rconfiglinegroup">
-<!-- NB: column determined during init, based on number of wcs buttons -->
-<span class="rwcsbuttoncontainer rconfigcol_R">
-</span>
-</div>
-</div>
-
-<div class="nodisplay xtrareg">
-<div class="rconfiglinegroup">
-<span class="rconfigcol_R rconfigcol_R3L">
-<input type="checkbox"  class="rconfigcheckbox" id="includejson" name="includejson" value="includejson">json
-<input type="checkbox" class="rconfigcheckbox" id="includecomments" name="includecomments" value="includecomments">comments
-</span>
-</div>
-</div>
-
-<div class="nodisplay xtracsv">
-<div class="rconfiglinegroup">
-<span class="rconfigcol_R rconfigcol_R3L">
-<input type="checkbox" class="rconfigcheckbox" id="includewcs" name="includewcs" value="includewcs">wcs
 </span>
 </div>
 </div>
@@ -591,7 +659,7 @@ im.processRegionsForm(form, shape, arr2);
 return false;">
 </span>
 <span class="rconfigcol_R rconfigcol_R2l">
-<input type="checkbox" class="rconfigcheckbox"" name="remove" value="selected" data-tooltip="Remove requires clicking Apply">Remove
+<input type="checkbox" class="rconfigcheckbox" name="remove" value="selected" data-tooltip="Remove requires clicking Apply">Remove
 </span>
 <span class="rconfigcol_R rconfigcol_R3l">
 <input type="checkbox" class="rconfigcheckbox" name="changeable" value="true" data-tooltip="toggle Change requires clicking Apply">Change

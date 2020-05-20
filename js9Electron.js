@@ -155,7 +155,7 @@ js9Electron.tmp = js9Electron.argv.tmp || process.env.JS9_TMPDIR || "/tmp";
 js9Electron.renameid = js9Electron.argv.renameid;
 js9Electron.width = js9Electron.argv.width || 1024;
 js9Electron.height = js9Electron.argv.height  || 768;
-js9Electron.savedir = js9Electron.argv.savedir;
+js9Electron.savedir = js9Electron.argv.savedir || ".";
 
 // the list of files to load
 js9Electron.files = js9Electron.argv._;
@@ -183,8 +183,9 @@ function initWillDownload() {
     if( !js9Electron.willDownload && js9Electron.savedir ){
 	// eslint-disable-next-line no-unused-vars
 	js9Electron.win.webContents.session.on('will-download', (event, item, webContents) => {
-	    const fname = item.getFilename();
-	    const pname = `${js9Electron.savedir}/${fname||js9Electron.defsave}`;
+	    const fname = item.getFilename() || js9Electron.defsave;
+	    const dirname = js9Electron.savedir;
+	    const pname = `${dirname}/${fname}`;
 	    // Set the save path, making Electron not to prompt a save dialog.
 	    item.setSavePath(pname);
 	    item.on('updated', (event, state) => {

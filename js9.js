@@ -301,9 +301,9 @@ JS9.favorites = {
     scales: ["linear", "log", "histeq"],
     colormaps: ["cool", "heat", "viridis", "magma"],
     regions: ["annulus", "box", "circle", "ellipse"],
-    wcs: ["FK5", "ICRS", "galactic", "image", "physical"]
+    wcs: ["FK5:fk5", "ICRS:icrs", "galactic:gal", "physical:phys", "image"]
 //  you can specify a display string using a colon-separated string or array:
-//  wcs: ["FK5:fk5", ["ICRS","icrs"], "galactic", "image", "physical"]
+//  wcs: ["FK5:fk5", ["ICRS","icrs"], "galactic", "physical", "image"]
 };
 
 // desktop (i.e. Electron.js) defaults
@@ -406,7 +406,8 @@ JS9.lightOpts = {
 	lcloseWin:"width=512px,height=190px,resize=1,scrolling=1",
 	paramWin: "width=830px,height=235px,resize=1,scrolling=1",
 	regWin0:  "width=600px,height=75px,resize=1,scrolling=1",
-	regWin:   "width=600px,height=275px,resize=1,scrolling=1",
+	regWin1:  "width=600px,height=200px,resize=1,scrolling=1",
+	regWin:   "width=600px,height=325px,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,resize=1,scrolling=1"
     },
@@ -534,8 +535,8 @@ JS9.userOpts = {};		// object to hold localStorage opts
 JS9.scales = ["linear", "log", "histeq", "power", "sqrt", "squared", "asinh", "sinh"];
 
 // list of known wcs systems
-JS9.wcssyss = ["FK4", "FK5", "ICRS", "galactic", "ecliptic", "native",
-	       "image", "physical"];
+JS9.wcssyss = ["FK4", "FK5", "ICRS", "galactic", "ecliptic",
+	       "physical", "image", "native"];
 
 // list of known wcs units
 JS9.wcsunitss = ["degrees", "sexagesimal", "pixels"];
@@ -6505,7 +6506,7 @@ JS9.Image.prototype.saveFITS = function(fname, opts){
 	// convert array to blob
 	blob = new Blob([arr], {type: "application/octet-binary"});
 	// save to disk
-	saveAs(blob, fname);
+	JS9.saveAs(blob, fname);
     } else {
 	JS9.error("no saveAs() available to save FITS file");
     }
@@ -6576,7 +6577,7 @@ JS9.Image.prototype.saveIMG = function(fname, type, opts){
 	    }
 	}
 	img.toBlob( (blob) => {
-	    saveAs(blob, fname);
+	    JS9.saveAs(blob, fname);
 	}, type, quality);
     } else {
 	JS9.error("no saveAs() available for saving image");
@@ -9213,7 +9214,7 @@ JS9.Image.prototype.saveSession = function(file, opts){
     catch(e){ JS9.error("can't create json file for save session", e); }
     blob = new Blob([str], {type: "application/json"});
     // save it
-    saveAs(blob, file);
+    JS9.saveAs(blob, file);
     // done waiting
     JS9.waiting(false);
     // return file name
@@ -9750,7 +9751,7 @@ JS9.Image.prototype.saveCatalog = function(fname, which){
 	fname += ".cat";
     }
     if( window.hasOwnProperty("saveAs") ){
-	saveAs(blob, fname);
+	JS9.saveAs(blob, fname);
     } else {
 	JS9.error("no saveAs() available to save catalog");
     }
@@ -16234,7 +16235,7 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 	// adjust title
 	title = "Save regions";
 	// adjust size of window
-	winformat = JS9.lightOpts.dhtml.regWin0;
+	winformat = JS9.lightOpts.dhtml.regWin1;
 	break;
     case "config":
     default:
@@ -16282,8 +16283,8 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 // initialize the region config form
 // call using image context
 JS9.Regions.initConfigForm = function(obj, opts){
-    let i, s, s2, key, val, el, el2, wcssys, twcssys, mover, mout, p1, p2;
-    let winid, wid, form, otitle, fav, arr;
+    let i, key, val, el, el2, wcssys, twcssys, mover, mout, p1, p2;
+    let s, s2, s3, s4, winid, wid, form, otitle, fav, arr;
     let multi = false;
     const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
     const defobj = {
@@ -16598,7 +16599,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    }
 	    break;
 	case "savefile":
-	    val = $(form).data("savefile") || this.tmp.regsavefile || "js9.reg";
+	    val = $(form).data("savefile") || "js9.reg";
 	    break;
 	default:
 	    if( obj.pub[key] !== undefined ){
@@ -16632,6 +16633,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    .prop("checked", JS9.globalOpts.regIncludeComments);
 	$(`${form}[id='includewcs']`)
 	    .prop("checked", JS9.globalOpts.csvIncludeWCS);
+	if( opts.type === "save" ){
+	    $(form).find(`input[name='saveformat']:checked`).trigger("click");
+	}
 	// add wcs button options
 	if( JS9.favorites.wcs && JS9.favorites.wcs.length ){
 	    // display wcs buttons
@@ -16639,12 +16643,6 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    // add buttons to button container, if necessary
 	    el2 = el.find(".rwcsbuttoncontainer");
 	    if( el2.length && !el2.find(".rwcsbutton").length ){
-		// try to make nice formatting
-		if( JS9.favorites.wcs.length >= 6 ){
-		    el2.addClass("rconfigcol_R2LL rsavecol_R2LL");
-		} else {
-		    el2.addClass("rconfigcol_R3LL rsavecol_R3LL");
-		}
 		// add radio buttons for each favorite wcs
 		for(i=0; i<JS9.favorites.wcs.length; i++){
 		    fav = JS9.favorites.wcs[i];
@@ -16657,12 +16655,20 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		    }
 		    s =  arr[0];
 		    s2 = arr[1] || s;
-		    el2.append(`<span class='rwcsbutton'>
+		    if( opts.type === "save" ){
+			s3 = `rsavecol_R${i+2}`;
+			s4 = "rsaveradio";
+		    } else {
+			s3 = `rconfigcol_R${i+2}b`;
+			s4 = "rconfigradio";
+		    }
+		    el2.append(`<span class='rconfigcol_R rwcsbutton ${s3}'>
                                 <input type='radio'
                                        id='rwcsbutton_${s}'
                                        name='rwcsbutton'
-                                       class='rwcsradio rconfigradio rsaveradio'
+                                       class='rwcsradio ${s4}}'
                                        value='${s}'
+                                       data-tooltip='save using ${s} wcs'
                                        onclick='
                                            $(this).closest("form")
                                            .find("[name=savewcs]")
@@ -16759,8 +16765,12 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	}
 	$(".rconfigcol_R, .rsavecol_R").on(mover, (e) => {
 	    const target = e.currentTarget;
-	    const tooltip = $(target).find("input, textarea, span").data("tooltip");
-	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
+	    const tooltip = $(target)
+		  .find("input, textarea, span")
+		  .data("tooltip");
+	    const el = $(target)
+		  .closest(".dhtmlwindow")
+		  .find(".drag-handle");
 	    if( tooltip && el.length ){
 		// change title: see dhtmlwindow.js load() @line 130
 		otitle = $(el)[0].childNodes[0].nodeValue.replace(/:.*/,"");
@@ -17411,7 +17421,6 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	}
 	// update wcs values
 	this.updateShapes(layer, which, "update");
-	JS9.globalOpts.xeqPlugins = txeq;
     }
     // get specified regions into an array
     pubs = this.getShapes(layer, which, {includeObj: true});
@@ -17507,8 +17516,6 @@ JS9.Regions.listRegions = function(which, opts, layer){
     }
     // restore original wcs, if necessary
     if( owcssys || owcsunits ){
-	txeq = JS9.globalOpts.xeqPlugins;
-	JS9.globalOpts.xeqPlugins = false;
 	if( owcssys ){
 	    this.setWCSSys(owcssys, false);
 	}
@@ -18029,12 +18036,10 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     blob = new Blob([s], {type: "text/plain;charset=utf-8"});
     // save blob
     if( window.hasOwnProperty("saveAs") ){
-	saveAs(blob, fname);
+	JS9.saveAs(blob, fname);
     } else {
 	JS9.error("no saveAs() available to save region file");
     }
-    // save filename so we can use it in a save dialog box
-    this.tmp.regsavefile = fname;
     // return the filename
     return fname;
 };
@@ -20165,6 +20170,33 @@ JS9.fetchURL = function(name, url, opts, handler) {
     try{ xhr.send(); }
     catch(e){ JS9.error(`request to load ${url} failed`, e); }
 };
+
+// JS9 wrapper around saveAs:
+// deal with pathnames in Electron desktop app
+JS9.saveAs = function(blob, pathname){
+    let dirmatch, dirname, basename;
+    if( window.isElectron && window.electronIPC ){
+	dirmatch = pathname.match(/.*\//);
+	// if a directory was specified ...
+	if( dirmatch && dirmatch[0] ){
+	    // ... change save directory in Electron before save
+	    dirname = dirmatch[0];
+	    JS9.SaveDir(dirname);
+	}
+	// get basename
+	basename = pathname.split('/').reverse()[0];
+	// wait a bit for ipc to finish, then save
+	window.setTimeout(() => {
+	    // save basename in current save directory
+	    try{ saveAs(blob, basename); }
+	    catch(e){ JS9.error("could not saveAs", e); }
+	}, JS9.TIMEOUT);
+    } else {
+	// non-Electron (or no path): just save filename
+	try{ saveAs(blob, pathname); }
+	catch(e){ JS9.error("could not saveAs", e); }
+    }
+}
 
 // configure or return the fits library
 JS9.fitsLibrary = function(s){
@@ -25215,7 +25247,7 @@ JS9.mkPublic("SaveColormap", function(...args) {
 	    // then convert json to blob
 	    blob = new Blob([s], {type: "text/plain"});
 	    // save to disk
-	    saveAs(blob, fname);
+	    JS9.saveAs(blob, fname);
 	}
     } else {
 	JS9.error("no saveAs() available to save colormap");
