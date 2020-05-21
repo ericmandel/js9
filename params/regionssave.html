@@ -131,7 +131,7 @@ const form = $(this).closest('form');
 const im = form.data('im');
 const fname = form.find(`[name='savefile']`).val();
 const which = form.find(`input[name='savewhich']:checked`).val();
-const id = which.match(/all/) ? 'all' : form.find(`[name='id']`).val();
+const id = which.match(/all/) ? 'all' : 'selected';
 const format = form.find(`input[name='saveformat']:checked`).val();
 const wcssys = form.find(`[name='savewcs']`).children('option:selected').val();
 let opts = {};
@@ -156,15 +156,53 @@ if( im ){
 return false;">
 </span>
 <span class="rsavecol_R rsavecol_R2L">
-<input type="text" class="val rsavetext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name" onchange="
-const form = $(this).closest('form');
-$(form).data('savefile', $(this).val());
-">
-</span>
-<span class="rsavecol_R rsavecol_R8">
-<input type="button" id="savebrowse" name="savebrowse" value="Browse" data-tooltip="browse"
-onclick="
-const form = $(this).closest('form');
+<input type="text" class="val rsavetext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name"
+onchange="
+let ext, form, fname;
+form = $(this).closest('form');
+fname = $(this).val();
+if( fname ){
+  $(form).data('savefile', fname);
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'reg':
+    form.find(`input[name='saveformat'][id='savereg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'csv':
+    form.find(`input[name='saveformat'][id='savecsv']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'svg':
+    form.find(`input[name='saveformat'][id='savesvg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  }
+}
+"
+onkeypress="
+let ext, form, fname;
+if( event.keyCode !== 13 ){ return; }
+form = $(this).closest('form');
+fname = $(this).val();
+if( fname ){
+  $(form).data('savefile', fname);
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'reg':
+    form.find(`input[name='saveformat'][id='savereg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'csv':
+    form.find(`input[name='saveformat'][id='savecsv']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'svg':
+    form.find(`input[name='saveformat'][id='savesvg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  }
+}
 ">
 </span>
 </div>
@@ -174,8 +212,8 @@ const form = $(this).closest('form');
 which:
 </span>
 <span class="rsavecol_R rsavecol_R2">
-<input type="radio" class="rsaveinput" id="savecur" name="savewhich" value="cur" data-tooltip="save current region">
-<label for="savecur">cur</label>
+<input type="radio" class="rsaveinput" id="savecur" name="savewhich" value="sel" data-tooltip="save selected regions">
+<label for="savecur">sel</label>
 </span>
 <span class="rsavecol_R rsavecol_R3">
 <input type="radio" class="rsaveinput" id="saveall" name="savewhich" value="all" data-tooltip="save all regions">
@@ -190,36 +228,57 @@ format:
 <span class="rsavecol_R rsavecol_R2">
 <input type="radio" class="rsaveinput" id="savereg" name="saveformat" value="reg" data-tooltip="save as text regions"
 onclick="
+let ext;
 const form = $(this).closest('form');
-const fname = form.find(`[name='savefile']`);
-fname.val(fname.val().replace(/\.[^.]*$/, '.reg'));
+const savefile = form.find(`[name='savefile']`);
+const fname = savefile.val();
 form.find('.xtrareg').removeClass('nodisplay');
 form.find('.xtracsv').addClass('nodisplay');
 form.find('.xtrasvg').addClass('nodisplay');
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  if( ext === 'csv' || ext === 'svg' ){
+    savefile.val(fname.replace(/\.[^.]*$/, '.reg'));
+  }
+}
 ">
 <label for="savereg">reg</label>
 </span>
 <span class="rsavecol_R rsavecol_R3">
 <input type="radio" class="rsaveinput" id="savecsv" name="saveformat" value="csv" data-tooltip="save as comma-separated values"
 onclick="
+let ext;
 const form = $(this).closest('form');
-const fname = form.find(`[name='savefile']`);
-fname.val(fname.val().replace(/\.[^.]*$/, '.csv'));
+const savefile = form.find(`[name='savefile']`);
+const fname = savefile.val();
 form.find('.xtrareg').addClass('nodisplay');
 form.find('.xtracsv').removeClass('nodisplay');
 form.find('.xtrasvg').addClass('nodisplay');
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  if( ext === 'reg' || ext === 'svg' ){
+    savefile.val(fname.replace(/\.[^.]*$/, '.csv'));
+  }
+}
 ">
 <label for="savecsv">csv</label>
 </span>
 <span class="rsavecol_R rsavecol_R4">
 <input type="radio" class="rsaveinput" id="savesvg" name="saveformat" value="svg" data-tooltip="save as svg object"
 onclick="
+let ext;
 const form = $(this).closest('form');
-const fname = form.find(`[name='savefile']`);
-fname.val(fname.val().replace(/\.[^.]*$/, '.svg'));
+const savefile = form.find(`[name='savefile']`);
+const fname = savefile.val();
 form.find('.xtrareg').addClass('nodisplay');
 form.find('.xtracsv').addClass('nodisplay');
 form.find('.xtrasvg').removeClass('nodisplay');
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  if( ext === 'reg' || ext === 'csv' ){
+    savefile.val(fname.replace(/\.[^.]*$/, '.svg'));
+  }
+}
 ">
 <label for="savesvg">svg</label>
 </span>
@@ -278,8 +337,8 @@ if( el.length > 0 ){
 } else {
     $(form).find('.rwcsradio').prop('checked', false);
 }
-return false;"
-></select>
+return false;">
+</select>
 </span>
 </div>
 </div>
@@ -296,7 +355,6 @@ winid.close();
 return false;">
 </span>
 </div>
-
 </form>
 </body>
 <!-- mkallinone inline: delete everything from </body> to the end -->

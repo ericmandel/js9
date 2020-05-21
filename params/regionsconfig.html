@@ -323,7 +323,7 @@ return false;">
 </div>
 </div>
 
-<div class="multi nodisplay">
+<div class="nodisplay multi">
 <div class="rconfiglinegroup2">
 <span class="rconfigcol_R rconfigcol_R1">
 selected:&nbsp;
@@ -511,15 +511,53 @@ if( im ){
 return false;">
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
-<input type="text" class="val rconfigtext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name" onchange="
-const form = $(this).closest('form');
-$(form).data('savefile', $(this).val());
-">
-</span>
-<span class="rconfigcol_R rconfigcol_R7">
-<input type="button" id="savebrowse" name="savebrowse" value="Browse" data-tooltip="browse"
-onclick="
-const form = $(this).closest('form');
+<input type="text" class="val rconfigtext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name"
+onchange="
+let ext, form, fname;
+form = $(this).closest('form');
+fname = $(this).val();
+if( fname ){
+  $(form).data('savefile', fname);
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'reg':
+    form.find(`input[name='saveformat'][id='savereg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'csv':
+    form.find(`input[name='saveformat'][id='savecsv']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'svg':
+    form.find(`input[name='saveformat'][id='savesvg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  }
+}
+"
+onkeypress="
+let ext, form, fname;
+if( event.keyCode !== 13 ){ return; }
+form = $(this).closest('form');
+fname = $(this).val();
+if( fname ){
+  $(form).data('savefile', fname);
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'reg':
+    form.find(`input[name='saveformat'][id='savereg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'csv':
+    form.find(`input[name='saveformat'][id='savecsv']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'svg':
+    form.find(`input[name='saveformat'][id='savesvg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  }
+}
 ">
 </span>
 </div>
@@ -536,12 +574,21 @@ const form = $(this).closest('form');
 <span class="rconfigcol_R rconfigcol_R5b">
 <input type="radio" class="rconfiginput" id="savereg" name="saveformat" value="reg" data-tooltip="save as text regions"
 onclick="
+let ext;
 const form = $(this).closest('form');
-const fname = form.find(`[name='savefile']`);
-fname.val(fname.val().replace(/\.[^.]*$/, '.reg'));
-form.data('savefile', fname.val());
-form.find('.xtrareg').addClass('nodisplay');
-form.find('.xtracsv').addClass('nodisplay');
+const savefile = form.find(`[name='savefile']`);
+const fname = savefile.val();
+if( form.find('.xtrareg').is(':visible') ||
+    form.find('.xtracsv').is(':visible') ){
+  form.find('.xtrareg').removeClass('nodisplay');
+  form.find('.xtracsv').addClass('nodisplay');
+}
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  if( ext === 'csv' || ext === 'svg' ){
+    savefile.val(fname.replace(/\.[^.]*$/, '.reg'));
+  }
+}
 ">
 <label for="savereg">reg</label>
 </span>
@@ -549,22 +596,39 @@ form.find('.xtracsv').addClass('nodisplay');
 <span class="rconfigcol_R rconfigcol_R6b">
 <input type="radio" class="rconfiginput" id="savecsv" name="saveformat" value="csv" data-tooltip="save as comma-separated values"
 onclick="
+let ext;
 const form = $(this).closest('form');
-const fname = form.find(`[name='savefile']`);
-fname.val(fname.val().replace(/\.[^.]*$/, '.csv'));
-form.find('.xtrareg').addClass('nodisplay');
-form.find('.xtracsv').addClass('nodisplay');
+const savefile = form.find(`[name='savefile']`);
+const fname = savefile.val();
+if( form.find('.xtrareg').is(':visible') ||
+    form.find('.xtracsv').is(':visible') ){
+  form.find('.xtrareg').addClass('nodisplay');
+  form.find('.xtracsv').removeClass('nodisplay');
+}
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  if( ext === 'reg' || ext === 'svg' ){
+    savefile.val(fname.replace(/\.[^.]*$/, '.csv'));
+  }
+}
 ">
 <label for="savecsv">csv</label>
 </span>
 <span class="rconfigcol_R rconfigcol_R7b">
 <input type="radio" class="rconfiginput" id="savesvg" name="saveformat" value="svg" data-tooltip="save as svg object"
 onclick="
+let ext;
 const form = $(this).closest('form');
-const fname = form.find(`[name='savefile']`);
-fname.val(fname.val().replace(/\.[^.]*$/, '.svg'));
+const savefile = form.find(`[name='savefile']`);
+const fname = savefile.val();
 form.find('.xtrareg').addClass('nodisplay');
 form.find('.xtracsv').addClass('nodisplay');
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  if( ext === 'reg' || ext === 'csv' ){
+    savefile.val(fname.replace(/\.[^.]*$/, '.svg'));
+  }
+}
 ">
 <label for="savesvg">svg</label>
 </span>
@@ -599,7 +663,7 @@ switch(format){
   default:
     break;
 }
-">
+return false;">
 </span>
 </div>
 
@@ -639,8 +703,8 @@ if( el.length > 0 ){
 } else {
     $(form).find('.rwcsradio').prop('checked', false);
 }
-return false;"
-></select>
+return false;">
+</select>
 </span>
 </div>
 </div>

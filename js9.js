@@ -16599,7 +16599,12 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    }
 	    break;
 	case "savefile":
-	    val = $(form).data("savefile") || "js9.reg";
+	    val = $(form).data("savefile")   ||
+		  this.tmp.saveregionsFile   ||
+		  "js9.reg";
+	    if( window.isElectron && window.currentDir && !val.match(/.*\//) ){
+		val = `${window.currentDir}/${val}`;
+	    }
 	    break;
 	default:
 	    if( obj.pub[key] !== undefined ){
@@ -18040,6 +18045,8 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     } else {
 	JS9.error("no saveAs() available to save region file");
     }
+    // save file name
+    this.tmp.saveregionsFile = fname;
     // return the filename
     return fname;
 };
@@ -20181,6 +20188,10 @@ JS9.saveAs = function(blob, pathname){
 	if( dirmatch && dirmatch[0] ){
 	    // ... change save directory in Electron before save
 	    dirname = dirmatch[0];
+	    JS9.SaveDir(dirname);
+	} else if( window.currentDir ){
+	    // ... else show current directory
+	    dirname = window.currentDir;
 	    JS9.SaveDir(dirname);
 	}
 	// get basename
