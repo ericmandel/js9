@@ -16630,8 +16630,13 @@ JS9.Regions.initConfigForm = function(obj, opts){
     if( opts.firsttime ){
 	$(`${form}[id='savereg']`)
 	    .prop("checked", true);
-	$(`${form}[id='savecur']`)
-	    .prop("checked", true);
+	if( opts.type === "save" ){
+	    $(`${form}[id='saveall']`)
+		.prop("checked", true);
+	} else {
+	    $(`${form}[id='savecur']`)
+		.prop("checked", true);
+	}
 	$(`${form}[id='includejson']`)
 	    .prop("checked", JS9.globalOpts.regIncludeJSON);
 	$(`${form}[id='includecomments']`)
