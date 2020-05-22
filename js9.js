@@ -10174,10 +10174,7 @@ JS9.Display.prototype.addFileDialog = function(funcName, template){
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
     // recommends opacity over visibility, but it breaks the menubar in ios
     jdiv = $("<div>")
-	.css("visibility", "hidden")
-	.css("position", "relative")
-	.css("top", -50)
-	.css("left", -50)
+	.addClass("JS9Hidden")
 	.appendTo(this.divjq);
     // inner file input element
     jinput = $("<input>")
@@ -16633,9 +16630,15 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	if( opts.type === "save" ){
 	    $(`${form}[id='saveall']`)
 		.prop("checked", true);
+	    if( window.isElectron ){
+		$(form).find(".rsavebrowse").removeClass("nodisplay");
+	    }
 	} else {
 	    $(`${form}[id='savecur']`)
 		.prop("checked", true);
+	    if( window.isElectron ){
+		$(form).find(".rconfigbrowse").removeClass("nodisplay");
+	    }
 	}
 	$(`${form}[id='includejson']`)
 	    .prop("checked", JS9.globalOpts.regIncludeJSON);
@@ -16643,8 +16646,17 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    .prop("checked", JS9.globalOpts.regIncludeComments);
 	$(`${form}[id='includewcs']`)
 	    .prop("checked", JS9.globalOpts.csvIncludeWCS);
+	// triggering the savefile will cause format to be updated
+	$(form).find(`input[name='savefile']`).trigger("change");
+	// for save: click the save format to display it
 	if( opts.type === "save" ){
 	    $(form).find(`input[name='saveformat']:checked`).trigger("click");
+	}
+	// multi "cur" works off selected, not current, regions
+	if( multi ){
+	    $(form).find("label[for='savecur']").text("sel");
+	    $(form).find("input[id='savecur']")
+		.data("tooltip", "save selected regions");
 	}
 	// add wcs button options
 	if( JS9.favorites.wcs && JS9.favorites.wcs.length ){

@@ -205,6 +205,31 @@ if( fname ){
 }
 ">
 </span>
+<div class="nodisplay rsavebrowse">
+<span class="rsavecol_R rsavecol_R8">
+<input name="Browse" type="button" class="button" value="Browse" data-tooltip="browse files"
+onclick="
+  const form = $(this).closest('form');
+  const browse = form.find(`[name='browsefile']`);
+  browse.click();
+  return false;
+">
+</span>
+</div>
+<div class=" JS9Hidden rsavebrowse">
+<input type="file" class="val rsavefile_R" id="browsefile" name="browsefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="browse files"
+onchange="
+let form, savefile, fname;
+if( this.files.length  ){
+  form = $(this).closest('form');
+  fname =  this.files[0].path || this.files[0].name;
+  if( fname ){
+    savefile = form.find(`[name='savefile']`);
+    savefile.val(fname).trigger('change');
+  }
+}
+">
+</div>
 </div>
 
 <div class="rsavelinegroup">

@@ -118,6 +118,13 @@ div.JS9MenubarContainer-flat, div.JS9MenubarContainer-border {
     background-color: lightblue;
 }
 
+div.JS9Hidden {
+    visibility: hidden;
+    position: relative;
+    top: -50;
+    left: -50;
+}
+
 div.JS9Logo {
     position: absolute;
     right: 10px;
