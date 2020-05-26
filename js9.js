@@ -9260,7 +9260,9 @@ JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
     default:
 	for(i=0; i<this.xeqstash.length; i++){
 	    stash = this.xeqstash[i];
-	    if( (stash.func === func) && (stash.context === context) ){
+	    if( stash &&
+		stash.func === func &&
+		stash.context === context ){
 		stash.args = args;
 		return this;
 	    }
