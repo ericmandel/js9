@@ -136,25 +136,25 @@
 	var div = this.div;
 
 	div.innerHTML = '<form class="JS9Archive-form">\
-	    <select class="service-menu"></select>\
-	    <select class="server-menu"></select>\
-	    <select class="source-menu"></select>\
-	    <span style="float: right;"><input type=button value="Set RA/Dec" class="get-ra-dec">&nbsp;&nbsp;<input type=button value="Retrieve Data" class="service-go"></span>	\
+	    <select class="service-menu JS9Select"></select>\
+	    <select class="server-menu JS9Select"></select>\
+	    <select class="source-menu JS9Select"></select>\
+	    <span style="float: right;"><input type=button value="Set RA/Dec" class="get-ra-dec JS9Button2">&nbsp;&nbsp;<input type=button value="Retrieve Data" class="service-go JS9Button2"></span>	\
 	    <p>											\
 												\
 	    <table width="98%">									\
-	    <tr><td> Object: </td> <td> <input type=text name=object size=12> </td>		\
+	    <tr><td> object: </td> <td> <input type=text name=object size=12> </td>		\
 		<td></td>									\
 		<td></td>									\
 		<td>&nbsp;&nbsp;</td>								\
-		<td> <input type=checkbox name=gzip> Use Compression</td>			\
+		<td> <input type=checkbox name=gzip> compression</td>			\
 	    </tr>										\
 	    <tr><td> RA:  	</td><td>	<input type=text name=ra	size=12> </td>	\
 		<td> Dec: 	</td><td>	<input type=text name=dec	size=12> </td>	\
 		<td></td>									\
-		<td> <input type=checkbox name=CORS checked> Use CORS Proxy</td>		\
-	    <tr><td> Width: </td><td>	<input type=text name=width	size=12 value=15> </td>	\
-		<td> Height: </td><td>	<input type=text name=height	size=12 value=15> </td>	\
+		<td> <input type=checkbox name=CORS checked> CORS proxy</td>		\
+	    <tr><td> width: </td><td>	<input type=text name=width	size=12 value=15> </td>	\
+		<td> height: </td><td>	<input type=text name=height	size=12 value=15> </td>	\
 	    </tr>										\
 	    </table>										\
 	    <div class="js9archive-controls"></div>								\
@@ -539,7 +539,7 @@ var ImageService = require("./image-service");
 //		    values.name   = imageName(values);
 //	    }
 //
-//	    , picker: "<input type=button value='pick' class='picker'>"
+//	    , picker: "<input type=button value='pick' class='picker JS9Button2'>"
 //	    , controls: "<tr>><td>Series</td>   <td><input type=text size=10 name=series></td>		\n\
 //	    		      <td>Plate No</td> <td><input type=text size=10 name=plate></td>           \n\
 //	    		      <td>Class</td>    <td><input type=text size=10 name=class></td></tr>      \n\
