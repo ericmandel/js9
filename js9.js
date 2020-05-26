@@ -14097,7 +14097,7 @@ JS9.Fabric.updateShapes = function(layerName, shape, mode, opts){
 // call using image context
 JS9.Fabric.updateMultiDialogs = function(setmode){
     // update multiselect dialog box for this image, if necessary
-    $("form[class='regionsConfigForm']").each((index, element) => {
+    $("form[class*='regionsConfigForm']").each((index, element) => {
 	const multi = $(element).data("multi");
 	const winid = $(element).data("winid");
 	const im = $(element).data("im");
