@@ -6622,7 +6622,7 @@ JS9.Mef.init = function(opts){
     s = `<div class='${JS9.Mef.BASE}Header'><span><b>Click on a FITS HDU extension to display it:</b></span>`;
     // add the checkbox for displaying each extension separately
     sid = JS9.Mef.imid(im, "Separate");
-    s += `&nbsp;&nbsp;<span><input type="checkbox" id="${sid}" name="separate" value="separate" onclick="javascript:JS9.Mef.xseparate('${this.display.id}', this)"><b>&nbsp;as a separate image</b></span><span style="float: right"><input type="button" id="${sid}" name="all" value="Display all images" onclick="javascript:JS9.Mef.xall('${this.display.id}', this)"></span></div>`;
+    s += `&nbsp;&nbsp;<span><input type="checkbox" id="${sid}" name="separate" value="separate" onclick="javascript:JS9.Mef.xseparate('${this.display.id}', this)"><b>&nbsp;as a separate image</b></span><span style="float: right"><input type="button" class="JS9Button2" id="${sid}" name="all" value="Display all images" onclick="javascript:JS9.Mef.xall('${this.display.id}', this)"></span></div>`;
     this.mefContainer.html(s);
     // add a formatted string for each extension
     for(i=0; i<im.hdus.length; i++){
