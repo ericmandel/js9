@@ -3241,7 +3241,8 @@ calling the equivalent Shape routine with "region" as the first argument.
 Note that the
 <b><a href="#JS9.GetRegions">JS9.GetRegions()</a>,
 <a href="#JS9.ChangeRegions">JS9.ChangeRegions()</a>,
-<a href="#JS9.RemoveRegions">JS9.RemoveRegions()</a></b> calls
+<a href="#JS9.RemoveRegions">JS9.RemoveRegions()</a></b>,
+<a href="#JS9.ListRegions">JS9.ListRegions()</a></b> calls
 all take a regions specification as the second argument, which can be
 any of the following (in order of precedence):
 <ul>
@@ -3501,6 +3502,55 @@ returned as a comma-separated value list, using new-line delimiters:
 By default, the region's wcs keyword is passed based on the value of
 the <b>globalOpts.csvIncludeWCS</b> property.  You can override this
 value by setting the <b>includewcs</b> property in opts.
+
+<h5 id="JS9.ListRegions">List one or more regions</h5>
+<p>
+<code class="api">rstr = JS9.ListRegions(regions, opts)</code>
+<p>
+where:
+<ul>
+<li><b>regions</b>: which regions to list
+<li><b>opts</b>: optional object
+</ul>
+returns:
+<ul>
+<li><b>rstr</b>: region string
+</ul>
+<p>
+List (and return) the specified regions. By default, a light window is
+displayed listing all regions (i.e., as if the <b>list</b> option of the
+<b>Regions</b> menu had been selected.) You can also list "selected" regions
+or use any of the standard regions specifications (see introduction to the
+<a href="#regions">Regions routines</a> above.)
+<p>
+The <b>opts</b> object supports the following properties:
+<ul>
+<li><b>mode</b>: display/return mode (1,2,3)
+<li><b>wcssys</b>: wcs system to use (ICRS, FK5, galactic, physical, etc.)
+<li><b>wcsunits</b>: units for wcs output (sexagesimal, degrees, pixels)
+<li><b>includejson</b>: include JSON object
+<li><b>includecomments</b>: include comments
+<li><b>layer</b>: which layer to display (default is "regions" layer)
+</ul>
+The mode property accepts the following values:
+<ul>
+<li><b>1</b>: no display, return full region string including json and comments
+<li><b>2</b>: display and return shortened region string (no json or comments)
+<li><b>3</b>: display and return full region string (including json and comments)
+</ul>
+
+<h5 id="JS9.EditRegions">Edit one or more selected regions</h5>
+<p>
+<code class="api">JS9.EditRegions()</code>
+<p>
+Edit one or more selected regions using an Edit dialog box. If a
+single region has been selected by clicking that region, all of its
+properties can be edited via the displayed dialog box. If a group of
+regions has been selected using Meta-mousemove to highlight one or
+more regions, then properties such as color, stroke width, dash
+pattern, and tags can be edited for all of the selected regions using
+the displayed dialog box. In the latter case, use shift-click to add
+additional regions to the edit group.
 
 <h5 id="JS9.ChangeRegions">Change one or more regions</h5>
 <p>

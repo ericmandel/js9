@@ -25631,6 +25631,40 @@ JS9.mkPublic("GetRegions", function(...args){
     return null;
 });
 
+// list regions
+JS9.mkPublic("ListRegions", function(...args){
+    let region, opts;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    if( im ){
+	region = obj.argv[0] || "all";
+	opts = obj.argv[1] || {mode: 2};
+	return im.listRegions(region, opts, opts.layer);
+    }
+    return null;
+});
+
+// edit currently selected region or multi-selected regions
+JS9.mkPublic("EditRegions", function(...args){
+    let layer, ao;
+    const obj = JS9.parsePublicArgs(args);
+    const im = JS9.getImage(obj.display);
+    if( im ){
+	layer = im.layers.regions;
+	if( layer ){
+	    ao = layer.canvas.getActiveObject();
+	    if( ao && ao.type !== "activeSelection" ){
+		// no active selection, edit this region
+		im.displayRegionsForm(ao);
+	    } else {
+		// active selection or no regions: multi
+		im.displayRegionsForm(null, {multi: true});
+	    }
+	}
+    }
+    return null;
+});
+
 // change one or more regions
 JS9.mkPublic("ChangeRegions", function(...args){
     const obj = JS9.parsePublicArgs(args);
