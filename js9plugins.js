@@ -3703,27 +3703,27 @@ JS9.Cube.rangeHTML='<span class="JS9CubeRangeLine">1<input type="range" min="1" 
 
 JS9.Cube.valueHTML='<input type="text" class="JS9CubeValue" min="1" max="%s" value="%s" onchange="JS9.Cube.xvalue(\'%s\', \'%s\', this)" size="4">';
 
-JS9.Cube.firstHTML='<input type="button" class=JS9CubeBtn" value="First" onclick="JS9.Cube.xfirst(\'%s\', \'%s\', this)">';
+JS9.Cube.firstHTML='<input type="button" class="JS9CubeBtn JS9Button2" value="First" onclick="JS9.Cube.xfirst(\'%s\', \'%s\', this)">';
 
-JS9.Cube.nextHTML='<input type="button" class=JS9CubeBtn" value="Next" onclick="JS9.Cube.xnext(\'%s\', \'%s\', this)">';
+JS9.Cube.nextHTML='<input type="button" class="JS9CubeBtn JS9Button2" value="Next" onclick="JS9.Cube.xnext(\'%s\', \'%s\', this)">';
 
-JS9.Cube.prevHTML='<input type="button" class=JS9CubeBtn" value="Prev" onclick="JS9.Cube.xprev(\'%s\',\'%s\', this)">';
+JS9.Cube.prevHTML='<input type="button" class="JS9CubeBtn JS9Button2" value="Prev" onclick="JS9.Cube.xprev(\'%s\',\'%s\', this)">';
 
-JS9.Cube.lastHTML='<input type="button" class=JS9CubeBtn" value="Last" onclick="JS9.Cube.xlast(\'%s\', \'%s\', this)">';
+JS9.Cube.lastHTML='<input type="button" class="JS9CubeBtn JS9Button2" value="Last" onclick="JS9.Cube.xlast(\'%s\', \'%s\', this)">';
 
-JS9.Cube.blinkHTML='<input type="button" class=JS9CubeBtn" value="Blink" onclick="JS9.Cube.xstart(\'%s\', \'%s\', this)">';
+JS9.Cube.blinkHTML='<input type="button" class="JS9CubeBtn JS9Button2" value="Blink" onclick="JS9.Cube.xstart(\'%s\', \'%s\', this)">';
 
-JS9.Cube.stopHTML='<input type="button" class=JS9CubeBtn" value="Stop" onclick="JS9.Cube.xstop(\'%s\', \'%s\', this)">';
+JS9.Cube.stopHTML='<input type="button" class="JS9CubeBtn JS9Button2" value="Stop" onclick="JS9.Cube.xstop(\'%s\', \'%s\', this)">';
 
 JS9.Cube.extnameHTML='<span class="JS9CubeRangeLine">%s</span>';
 
-JS9.Cube.orderHTML='<select class="JS9CubeOrder" onchange="JS9.Cube.xorder(\'%s\', \'%s\', this)"><option value="$slice:*:*">$slice : * : *</option><option value="*:$slice:*">* : $slice : *</option><option value="*:*:$slice">* : * : $slice</option></select>';
+JS9.Cube.orderHTML='<select class="JS9CubeOrder JS9Select" onchange="JS9.Cube.xorder(\'%s\', \'%s\', this)"><option value="$slice:*:*">$slice : * : *</option><option value="*:$slice:*">* : $slice : *</option><option value="*:*:$slice">* : * : $slice</option></select>';
 
-JS9.Cube.rateHTML='<select class="JS9CubeRate" onchange="JS9.Cube.xrate(\'%s\', \'%s\', this)"><option selected disabled>Rate</option><option value=".1">0.1 sec</option><option value=".25">0.25 sec</option><option value=".5">0.5 sec</option><option value="1" default>1 sec</option><option value="2">2 sec</option><option value="5">5 sec</option></select>';
+JS9.Cube.rateHTML='<select class="JS9CubeRate JS9Select" onchange="JS9.Cube.xrate(\'%s\', \'%s\', this)"><option selected disabled>Rate</option><option value=".1">0.1 sec</option><option value=".25">0.25 sec</option><option value=".5">0.5 sec</option><option value="1" default>1 sec</option><option value="2">2 sec</option><option value="5">5 sec</option></select>';
 
 JS9.Cube.header2HTML='Or load each slice separately into JS9:';
 
-JS9.Cube.loadHTML='<input type="button" class=JS9CubeBtn" value="Load All" onclick="JS9.Cube.loadall(\'%s\',\'%s\', this)">';
+JS9.Cube.loadHTML='<input type="button" class="JS9CubeBtn JS9Button2" value="Load All" onclick="JS9.Cube.loadall(\'%s\',\'%s\', this)">';
 
 JS9.Cube.doSlice = function(im, slice, elarr){
     let i, s;
