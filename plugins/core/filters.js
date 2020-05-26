@@ -11,7 +11,7 @@ JS9.Filters = {};
 JS9.Filters.CLASS = "JS9";       // class of plugins
 JS9.Filters.NAME = "Filters";    // name of this plugin
 JS9.Filters.WIDTH = 325;         // width of light window
-JS9.Filters.HEIGHT = 470;        // height of light window
+JS9.Filters.HEIGHT = 520;        // height of light window
 JS9.Filters.BASE = JS9.Filters.CLASS + JS9.Filters.NAME;
 
 // image filters with no args
@@ -42,7 +42,7 @@ JS9.Filters.argfilters = {
 
 JS9.Filters.headerHTML=`
 <center>
-<div class="JS9FiltersLine">
+<div class="JS9FiltersLineheader">
 <span class="JS9FiltersHeader">
 Image Filters:<br>
 click for default settings or use the sliders
@@ -52,27 +52,22 @@ click for default settings or use the sliders
 `;
 
 JS9.Filters.noargfilterHTML=`
-<div class="JS9FiltersLine">
 <span class="JS9FiltersName JS9FiltersCol1">
-<input type="button" name="%sbutton" value="%s" class="JS9FiltersButton" onclick="JS9.Filters.xfilter(this, '%s', '%s', '%s', %s)"></span>
-</div>
+<input type="button" name="%sbutton" value="%s" class="JS9Button2 JS9FiltersButton" onclick="JS9.Filters.xfilter(this, '%s', '%s', '%s', %s)"></span>
 `;
 
 JS9.Filters.argfilterHTML=`
-<div class="JS9FiltersLine">
 <span class="JS9FiltersName JS9FiltersCol1">
-<input type="button" name="%sbutton" value="%s" class="JS9FiltersButton" onclick="JS9.Filters.xfilter(this, '%s', '%s', '%s', %s)"></span>
+<input type="button" name="%sbutton" value="%s" class="JS9Button2 JS9FiltersButton" onclick="JS9.Filters.xfilter(this, '%s', '%s', '%s', %s)"></span>
 <span class="JS9FiltersRange JS9FiltersCol2"><input type="range" min="%s" max="%s" step="%s" value="%s" name="%s" class="JS9FiltersRange" onchange="JS9.Filters.xgenfilter('%s', '%s', '%s', this)"></span>
 <span class="JS9FiltersRangeVal">
 <input type="text" name="%sval" class="JS9FiltersValue JS9FiltersCol3" min="0" max="100" value="0" onchange="JS9.Filters.xgenval('%s', '%s', '%s', this)"></span>
-</div>
 `;
 
 JS9.Filters.undoHTML=`
-<div class="JS9FiltersLine">
 <span class="JS9FiltersUndo JS9FiltersCol1">
-<input type="button" id="undo" name="undo" value="undo" class="JS9FiltersUndoButton" onclick="JS9.Filters.xundo(this, '%s', '%s')"></span>
-</div>`;
+<input type="button" id="undo" name="undo" value="undo" class="JS9FiltersUndoButton JS9Button2" onclick="JS9.Filters.xundo(this, '%s', '%s')"></span>
+`;
 
 // update gui filter param value
 JS9.Filters.updateval = function(target, filter, val){
@@ -266,6 +261,8 @@ JS9.Filters.init = function(opts){
 	imid = im.id;
 	dispid = im.display.id;
 	mopts = [];
+	// add space before the filters
+	html += `<div class='JS9FiltersLinegroup'>&nbsp;</div>`;
 	// add the arg filters
 	for( key in JS9.Filters.argfilters ){
 	    if( JS9.Filters.argfilters.hasOwnProperty(key) ){
@@ -281,7 +278,7 @@ JS9.Filters.init = function(opts){
 					   key, 
 					   dispid, imid, key)});
 		// add this line to the main html spec
-		html += `<p><div class='JS9FiltersLinegroup'>$${key}</div>`;
+		html += `<div class='JS9FiltersLinegroup'>$${key}</div>`;
 	    }
 	}
 	// add the noarg filterfs
@@ -297,11 +294,13 @@ JS9.Filters.init = function(opts){
 					   key, 
 					   dispid, imid, key)});
 		// add this line to the main html spec
-		html += `<p><div class='JS9FiltersLinegroup'>$${key}</div>`;
+		html += `<div class='JS9FiltersLinegroup'>$${key}</div>`;
 	    }
 	}
+	// add space before the undo
+	html += `<div class='JS9FiltersLinegroup'>&nbsp;</div>`;
 	// add undo to the main html spec
-	html += `<p><div class='JS9FiltersLinegroup'>$undo</div>`;
+	html += `<div class='JS9FiltersLinegroup'>$undo</div>`;
 	t = sprintf(JS9.Filters.undoHTML, dispid, imid);
 	mopts.push({name: "undo", value: t});
 	// expand macros to generate html

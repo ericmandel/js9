@@ -1388,7 +1388,18 @@ span.JS9NoDivs {
     padding: 5px;
 }
 
-.JS9FiltersLine {
+.JS9FiltersLineheader {
+}
+
+.JS9FiltersLinegroup {
+    float: left;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 95%;
+    height: 20px;
+    padding: 0px;
+    margin: 1px;
 }
 
 .JS9FiltersHeader {
@@ -1407,6 +1418,7 @@ span.JS9NoDivs {
     margin: 2px;
     width: 80px;
     float: left;
+    outline: none;
 }
 
 .JS9FiltersUndoButton {
@@ -1417,6 +1429,7 @@ span.JS9NoDivs {
     margin-left: 2px;
     width: 80px;
     float: left;
+    outline: none;
 }
 
 .JS9FiltersValue {
@@ -1444,17 +1457,6 @@ span.JS9NoDivs {
     left:  250px;
     width: 40px;
 }
-
-.JS9FiltersLinegroup {
-    float: left;
-    position: relative;
-    top: 0px;
-    left: 0px;
-    width: 95%;
-    padding: 5px;
-    margin: 5px;
-}
-
 div.JS9ImarithLinegroup {
     float: left;
     position: relative;
