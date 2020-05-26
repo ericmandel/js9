@@ -2255,10 +2255,11 @@ div.JS9Progress {
     display: none;
 }
 
+/* used by menubar, panner, magnifier */
 .JS9Button, .JS9Button-classic {
     font: normal 12px Arial;
     background: #F6F6F6;
-    border:  black 2px;
+    border:  0px solid grey;
     border-radius: 4px;
     padding: 3px 6px 3px 6px;
     /* back off left margin or else Linux menubar Help button wraps ... */
@@ -2322,6 +2323,25 @@ div.JS9Progress {
   border-color: #27496d;
   color: #27496d;
 }/* the commands inside a console */
+
+/* for buttons inside dialog boxes and plugins */
+.JS9Button2 {
+    font: normal 12px Arial;
+    background: white;
+    border: 1px solid grey;
+    border-radius: 4px;
+    padding: 2px 4px 2px 4px;
+    margin: 0px;
+}
+
+/* for menus inside dialog boxes and plugins */
+.JS9Select {
+    font: normal 12px Arial;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: grey;
+    border-style: solid;
+}
 
 .JS9Highlight {
   border-top: solid 0px #00FF00;

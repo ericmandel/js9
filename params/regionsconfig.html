@@ -103,7 +103,7 @@
     position: absolute;
     top: 0;
     left:  145px;
-    width: 80px;
+    width: 85px;
 }
 
 .rconfigcol_R3l {
@@ -216,7 +216,8 @@
     box-sizing:border-box;
     webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
-    font-size: 10px;
+    font-size: 12px;
+    border-width: 0px;
 }
 
 .rconfigtextarea_R2 {
@@ -242,11 +243,6 @@
     webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
 }
-
-.rconfigselect_R {
-    font-family: Helvetica, sans-serif;
-    font-size: 8pt;
-}
 </style>
 
 </head>
@@ -266,7 +262,7 @@ reg:&nbsp;<input type="text" class="val rconfigtext_R0" name="id" value="" reado
 </span>
 
 <span class="rconfigcol_R rconfigcol_R6">
-<input name="copy" type="button" class="button" value="Copy"
+<input name="copy" type="button" class="JS9Button2" value="Copy"
 onclick="
 const form = $(this).closest('form');
 const im = form.data('im');
@@ -307,7 +303,7 @@ return false;">
 </span>
 
 <span class="rconfigcol_R rconfigcol_R7">
-<select name="wcssys" class="val rconfigselect_R" onchange="
+<select name="wcssys" class="val JS9Select" onchange="
 const form = $(this).closest('form');
 const im = form.data('im');
 const wcssys =  $(this).val();
@@ -480,7 +476,7 @@ misc:
 
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
-<input name="Save" type="button" class="button" value="Save"
+<input name="Save" type="button" class="JS9Button2" value="Save"
 onclick="
 const form = $(this).closest('form');
 const im = form.data('im');
@@ -562,7 +558,7 @@ if( fname ){
 </span>
 <div class="nodisplay rconfigbrowse">
 <span class="rconfigcol_R rconfigcol_R7">
-<input name="Browse" type="button" class="button" value="Browse" data-tooltip="browse files"
+<input name="Browse" type="button" class="JS9Button2" value="Browse" data-tooltip="browse files"
 onclick="
   const form = $(this).closest('form');
   const browse = form.find(`[name='browsefile']`);
@@ -659,7 +655,7 @@ if( fname ){
 </span>
 
 <span class="rconfigcol_R rconfigcol_R7">
-<input type="button" id="savemore" name="savemore" value="..."
+<input type="button" class="JS9Button2" id="savemore" name="savemore" value="More ..."
 data-tooltip="additional (but less frequently used) save options"
 onclick="
 const form = $(this).closest('form');
@@ -717,7 +713,7 @@ return false;">
 <span class="rwcsbuttoncontainer rconfigcol_R">
 </span>
 <span class="rconfigcol_R rconfigcol_R7">
-<select name="savewcs" class="val rconfigselect_R" onchange="
+<select name="savewcs" class="val JS9Select" onchange="
 let el;
 const form = $(this).closest('form');
 const wcssys =  $(this).val();
@@ -736,7 +732,7 @@ return false;">
 
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
-<input name="Apply" type="button" class="button" value="Apply"
+<input name="Apply" type="button" class="JS9Button2" value="Apply"
 onclick="
 const form = $(this).closest('form');
 const arr = $(':input:visible', form).serializeArray();
@@ -757,7 +753,7 @@ return false;">
 <input type="checkbox" class="rconfigcheckbox" name="listonchange" value="true" data-tooltip="toggle List on Change requires clicking Apply">List on change
 </span>
 <span class="rconfigcol_R rconfigcol_R7">
-<input name="Close" type="button" class="button" value="Close"
+<input name="Close" type="button" class="JS9Button2" value="Close"
 onclick="
 const form = $(this).closest('form');
 const shape = form.data('shape');

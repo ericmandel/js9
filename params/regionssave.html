@@ -110,11 +110,6 @@
     webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
 }
-
-.rsaveselect_R {
-    font-family: Helvetica, sans-serif;
-    font-size: 8pt;
-}
 </style>
 
 </head>
@@ -125,7 +120,7 @@
 
 <div class="rsavelinegroup">
 <span class="rsavecol_R rsavecol_R1">
-<input name="Save" type="button" class="button" value="Save"
+<input name="Save" type="button" class="JS9Button2" value="Save"
 onclick="
 const form = $(this).closest('form');
 const im = form.data('im');
@@ -207,7 +202,7 @@ if( fname ){
 </span>
 <div class="nodisplay rsavebrowse">
 <span class="rsavecol_R rsavecol_R8">
-<input name="Browse" type="button" class="button" value="Browse" data-tooltip="browse files"
+<input name="Browse" type="button" class="JS9Button2" value="Browse" data-tooltip="browse files"
 onclick="
   const form = $(this).closest('form');
   const browse = form.find(`[name='browsefile']`);
@@ -351,7 +346,7 @@ wcs:
 <!-- entries will be filled in by initConfigForm() -->
 </span>
 <span class="rsavecol_R rsavecol_R8">
-<select name="savewcs" class="val rsaveselect_R" onchange="
+<select name="savewcs" class="val JS9Select" onchange="
 let el;
 const form = $(this).closest('form');
 const wcssys =  $(this).val();
@@ -370,7 +365,7 @@ return false;">
 
 <div class="rsavelinegroup">
 <span class="rsavecol_R rsavecol_R8">
-<input name="Close" type="button" class="button" value="Close"
+<input name="Close" type="button" class="JS9Button2" value="Close"
 onclick="
 const form = $(this).closest('form');
 const shape = form.data('shape');
