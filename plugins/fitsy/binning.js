@@ -239,7 +239,7 @@
 	           <tr>	<td><b>mode:</b></td>
                         <td><input type=radio name=binmode value="s" class="sum-pixels" style="text-align:left;">sum</td>
                         <td><input type=radio name=binmode value="a" class="avg-pixels" style="text-align:left;">average</td>
-			<td>&nbsp(sum or average ${binblocked} pixels?)</td>
+			<td>&nbsp(sum or avg ${binblocked} pixels?)</td>
 		   </tr>`;
 	} else {
 	    html += `

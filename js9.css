@@ -618,23 +618,26 @@ canvas.surfacePlotCanvas {
     background: transparent;
     border: none;
     width: 50px;
+    border: 0px solid transparent;
 }
 
 .js9InfoTable .input1{
     width: 115px;
+    border: 0px solid transparent;
 }
 
 .js9InfoTable .input2{
     width: 240px;
     font-size: 12px;
     font-family: monospace;
+    border: 0px solid transparent;
 }
 
 .js9InfoTable textarea{
     overflow-x: hidden;
     padding: 2px 0px 1px 2px;
     margin: 0px;
-    border: none;
+    border: 0px solid transparent;
 }
 
 .js9InfoTable .text2{
@@ -657,7 +660,7 @@ canvas.surfacePlotCanvas {
 }
 
 /* regularize textarea and input text (e.g. binning.js, contour.js) */
-.js9Form textarea, .js9Form input[type=text]{
+.JS9Text, .JS9TextArea, .js9Form textarea, .js9Form input[type=text]{
     display: block;
     margin: 0px;
     box-sizing: border-box;
