@@ -143,18 +143,18 @@
 	    <p>											\
 												\
 	    <table width="98%">									\
-	    <tr><td> <b>object</b>: </td> <td> <input type=text name=object size=12> </td>		\
+	    <tr><td> object: </td> <td> <input type=text name=object size=12> </td>		\
 		<td></td>									\
 		<td></td>									\
 		<td>&nbsp;&nbsp;</td>								\
 		<td> <input type=checkbox name=gzip> compression</td>			\
 	    </tr>										\
-	    <tr><td> <b>RA</b>:  	</td><td>	<input type=text name=ra	size=12> </td>	\
-		<td> <b>Dec</b>: 	</td><td>	<input type=text name=dec	size=12> </td>	\
+	    <tr><td> RA:  	</td><td>	<input type=text name=ra	size=12> </td>	\
+		<td> Dec: 	</td><td>	<input type=text name=dec	size=12> </td>	\
 		<td></td>									\
 		<td> <input type=checkbox name=CORS checked> CORS proxy</td>		\
-	    <tr><td> <b>width</b>: </td><td>	<input type=text name=width	size=12 value=15> </td>	\
-		<td> <b>height</b>: </td><td>	<input type=text name=height	size=12 value=15> </td>	\
+	    <tr><td> width: </td><td>	<input type=text name=width	size=12 value=15> </td>	\
+		<td> height: </td><td>	<input type=text name=height	size=12 value=15> </td>	\
 	    </tr>										\
 	    </table>										\
 	    <div class="js9archive-controls"></div>								\
@@ -199,7 +199,7 @@
 
 	    menuItem: "Archives & Catalogs",
 	    winTitle: "Archives & Catalogs",
-	    winDims: [625, 175],
+	    winDims: [610, 175],
 
 	    help:	"archive/archive.html"
     });
@@ -1085,17 +1085,17 @@ module.exports = xhr;
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 		   </tr>
-	           <tr>	<td><b>center:</b></td>
+	           <tr>	<td>center:</td>
 			<td><input type=text name=xcen size=10 style="text-align:right;"></td>
 			<td><input type=text name=ycen size=10 style="text-align:right;"></td>
 			<td>&nbsp(center position of section)</td>
 		   </tr>
-	           <tr>	<td><b>size:</b></td>
+	           <tr>	<td>size:</td>
 			<td><input type=text name=xdim size=10 style="text-align:right;"></td>
 			<td><input type=text name=ydim size=10 style="text-align:right;"></td>
 			<td>&nbsp(width, height of section)</td>
 		   </tr>
-                   <tr>	<td><b>${binblock}:</b></td>
+                   <tr>	<td>${binblock}:</td>
 			<td><input type=text name=bin value=1 size=10 style="text-align:right;"></td>
 			<td></td>
 			<td>&nbsp(apply ${binblock} factor to ${im.imtab})</td>
@@ -1103,24 +1103,24 @@ module.exports = xhr;
 
 	if( im.imtab === "image" ){
 	    html += `
-	           <tr>	<td><b>mode:</b></td>
+	           <tr>	<td>mode:</td>
                         <td><input type=radio name=binmode value="s" class="sum-pixels" style="text-align:left;">sum</td>
                         <td><input type=radio name=binmode value="a" class="avg-pixels" style="text-align:left;">average</td>
 			<td>&nbsp(sum or avg ${binblocked} pixels?)</td>
 		   </tr>`;
 	} else {
 	    html += `
-	           <tr>	<td><b>mode:</b></td>
+	           <tr>	<td>mode:</td>
                         <td><input type=checkbox name=xbinmode value="s" class="sum-pixels" style="text-align:left;" checked disabled>sum</td>
 			<td></td>
 			<td>&nbsp(binned tables are always summed)</td>
 		   </tr>`;
 	}
-	html += `  <tr>	<td><b>filter:</b></td>
+	html += `  <tr>	<td>filter:</td>
 			<td colspan="2"><textarea name=filter rows="1" cols="22" style="text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
 			<td>&nbsp(event/row filter for table)</td>
 		   </tr>
-	           <tr>	<td><b>separate:</b></td>
+	           <tr>	<td>separate:</td>
                         <td><input type=checkbox name=separate class="js9-binning-sep" style="text-align:left;"></td>
 			<td></td>
 			<td>&nbsp(display as separate image?)</td>
@@ -19795,21 +19795,21 @@ if (typeof exports !== "undefined") {
 	var div = this.div;
 
 	div.innerHTML = '<form class="contour-form js9Form">							\
-	    <table style="border-collapse: separate; border-spacing: 10px 5px;"><tr>	<td><b>num:</b></td>	\
+	    <table style="border-collapse: separate; border-spacing: 10px 5px;"><tr>	<td>num:</td>	\
 			<td><input type=text name=nlevel value=5 size="10" style="text-align:right;"></td>				\
 			<td><input type=button value="Draw contours" class="drw-contour JS9Button2"></td></tr>	\
-	           <tr>	<td><b>min:</b></td>									\
+	           <tr>	<td>min:</td>									\
 			<td><input type=text name=min size="10" style="text-align:right;"></td>					\
 			<td><input type=button value="Reset min/max" class="get-min-max JS9Button2"></td></tr>	\
-	           <tr>	<td><b>max:</b></td>									\
+	           <tr>	<td>max:</td>									\
 			<td><input type=text name=max size="10" style="text-align:right;"></td></tr>				\
-	           <tr>	<td valign=top><b>levels:</b></td>							\
+	           <tr>	<td valign=top>levels:</td>							\
 	    		<td rowspan=5><textarea rows=12 cols="10" name=level class="contour-levels" style="text-align:right;">	\
 			    </textarea>									\
 			<td valign=top><input type=button value="Make levels" class="make-levels JS9Button2"></td>	\
 		   </tr>										\
 		   <tr><td></td><td valign=top>								\
-				<b>binning:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				\
+				binning:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				\
 				<select id=binning name=binpix class=JS9Select>				\
 				<option>none</option>							\
 				<option>2</option>							\
@@ -19824,7 +19824,7 @@ if (typeof exports !== "undefined") {
 			</td>										\
 		   </tr>										\
 		   <tr><td></td><td valign=top>								\
-				<b>smoothing:</b>&nbsp;							\
+				smoothing:&nbsp;							\
 				<select id=smooth name=smopix class=JS9Select>				\
 				<option>none</option>							\
 				<option value=0.75 selected>3</option>					\
@@ -19835,7 +19835,7 @@ if (typeof exports !== "undefined") {
 			</td>										\
 		   </tr>										\
 		   <tr><td></td><td valign=top>								\
-				<b>quality:</b>&nbsp;							\
+				quality:&nbsp;							\
 				<input type=radio name=quality value=faster checked>faster		\
 				<input type=radio name=quality value=better>better			\
 			</td>										\

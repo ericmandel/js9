@@ -16593,6 +16593,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    } else if( obj.pub.id !== undefined ){
 		val = obj.pub.id;
 	    }
+	    // this is a span, so we have to set the text explicitly
+	    // (could use html() as well)
+	    $(element).text(val);
 	    break;
 	case "tags":
 	    if( obj.pub[key] !== undefined ){
