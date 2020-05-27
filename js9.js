@@ -7933,7 +7933,9 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 		    }
 		    // reset imtab
 		    this.imtab = this.raw.imtab || this.imtab;
-		    // set data min and max
+		    // set data min and max, ensuring a rescale
+		    this.params.scalemin = undefined;
+		    this.params.scalemax = undefined;
 		    this.dataminmax();
 		    // reset section
 		    this.mkSection();
