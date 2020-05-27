@@ -333,6 +333,7 @@ div.JS9Progress {
     border-width: 1px;
     border-color: grey;
     border-style: solid;
+    outline: none;
 }
 
 .JS9Select:hover {
