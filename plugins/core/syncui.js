@@ -42,11 +42,11 @@ JS9.SyncUI.syncwcsHTML='<span class="JS9SyncUIOpts" style="position:absolute; le
 
 JS9.SyncUI.footerHTML='<div class="JS9SyncUIButtons" <p>$sync&nbsp;&nbsp;&nbsp;&nbsp;$once&nbsp;&nbsp;&nbsp;&nbsp;$unsync</div>';
 
-JS9.SyncUI.syncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9SyncUIButton" id="active" name="sync" value="Sync Repeatedly" onclick="javascript:JS9.SyncUI.xsync(\'%s\', this)"></span>';
+JS9.SyncUI.syncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9Button2 JS9SyncUIButton" id="active" name="sync" value="Sync Repeatedly" onclick="javascript:JS9.SyncUI.xsync(\'%s\', this)"></span>';
 
-JS9.SyncUI.onceHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9SyncUIButton" id="active" name="once" value="Sync Once" onclick="javascript:JS9.SyncUI.xonce(\'%s\', this)"></span>';
+JS9.SyncUI.onceHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9Button2 JS9SyncUIButton" id="active" name="once" value="Sync Once" onclick="javascript:JS9.SyncUI.xonce(\'%s\', this)"></span>';
 
-JS9.SyncUI.unsyncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9SyncUIButton" id="active" name="unsync" value="Unsync" onclick="javascript:JS9.SyncUI.xunsync(\'%s\', this)"></span>';
+JS9.SyncUI.unsyncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9Button2 JS9SyncUIButton" id="active" name="unsync" value="Unsync" onclick="javascript:JS9.SyncUI.xunsync(\'%s\', this)"></span>';
 
 
 JS9.SyncUI.getImsOpsOpts = function(el){

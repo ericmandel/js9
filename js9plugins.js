@@ -5926,7 +5926,7 @@ JS9.Layers.nolayersHTML='<p><span class="JS9NoLayers">[Layers will appear here a
 
 JS9.Layers.visibleHTML='<input class="JS9LayersVisibleCheck" type="checkbox" id="visible" name="visible" value="visible" onclick="javascript:JS9.Layers.xvisible(\'%s\', \'%s\', \'%s\', this)">visible';
 
-JS9.Layers.saveBothHTML='<select class="JS9LayersSaveBothSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="catalog">catalog</option><option value="regions">regions</option><option value="svg">svg</option></select>';
+JS9.Layers.saveBothHTML='<select class="JS9Select JS9LayersSaveBothSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="catalog">catalog</option><option value="regions">regions</option><option value="svg">svg</option></select>';
 
 JS9.Layers.saveRegionsHTML='<select class="JS9LayersSaveSelect" onfocus="this.selectedIndex=0;" onchange="JS9.Layers.xsave(\'%s\', \'%s\', \'%s\', this)"><option selected disabled>save as ...</option><option value="regions">regions</option><option value="svg">svg</option></select>';
 
@@ -13390,11 +13390,11 @@ JS9.SyncUI.syncwcsHTML='<span class="JS9SyncUIOpts" style="position:absolute; le
 
 JS9.SyncUI.footerHTML='<div class="JS9SyncUIButtons" <p>$sync&nbsp;&nbsp;&nbsp;&nbsp;$once&nbsp;&nbsp;&nbsp;&nbsp;$unsync</div>';
 
-JS9.SyncUI.syncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9SyncUIButton" id="active" name="sync" value="Sync Repeatedly" onclick="javascript:JS9.SyncUI.xsync(\'%s\', this)"></span>';
+JS9.SyncUI.syncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9Button2 JS9SyncUIButton" id="active" name="sync" value="Sync Repeatedly" onclick="javascript:JS9.SyncUI.xsync(\'%s\', this)"></span>';
 
-JS9.SyncUI.onceHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9SyncUIButton" id="active" name="once" value="Sync Once" onclick="javascript:JS9.SyncUI.xonce(\'%s\', this)"></span>';
+JS9.SyncUI.onceHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9Button2 JS9SyncUIButton" id="active" name="once" value="Sync Once" onclick="javascript:JS9.SyncUI.xonce(\'%s\', this)"></span>';
 
-JS9.SyncUI.unsyncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9SyncUIButton" id="active" name="unsync" value="Unsync" onclick="javascript:JS9.SyncUI.xunsync(\'%s\', this)"></span>';
+JS9.SyncUI.unsyncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9Button2 JS9SyncUIButton" id="active" name="unsync" value="Unsync" onclick="javascript:JS9.SyncUI.xunsync(\'%s\', this)"></span>';
 
 
 JS9.SyncUI.getImsOpsOpts = function(el){
