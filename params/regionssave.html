@@ -147,8 +147,8 @@ if( im ){
   }
   form.data('savefile', fname);
   im.saveRegions(fname, id, opts);
-}
-return false;">
+}"
+>
 </span>
 <span class="rsavecol_R rsavecol_R2L">
 <input type="text" class="val JS9Text rsavetext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name"
@@ -206,9 +206,8 @@ if( fname ){
 onclick="
   const form = $(this).closest('form');
   const browse = form.find(`[name='browsefile']`);
-  browse.click();
-  return false;
-">
+  browse.click();"
+>
 </span>
 </div>
 <div class=" JS9Hidden rsavebrowse">
@@ -356,8 +355,8 @@ if( el.length > 0 ){
     el.prop('checked', true);
 } else {
     $(form).find('.rwcsradio').prop('checked', false);
-}
-return false;">
+}"
+>
 </select>
 </span>
 </div>
@@ -371,8 +370,8 @@ const form = $(this).closest('form');
 const shape = form.data('shape');
 const winid = form.data('winid');
 shape.params.winid = null;
-winid.close();
-return false;">
+winid.close();"
+>
 </span>
 </div>
 </form>

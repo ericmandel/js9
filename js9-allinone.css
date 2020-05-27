@@ -2334,6 +2334,15 @@ div.JS9Progress {
     border-radius: 4px;
     padding: 2px 4px 2px 4px;
     margin: 0px;
+    outline: none
+}
+
+.JS9Button2:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.JS9Button2:active{
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
 /* for menus inside dialog boxes and plugins */
@@ -2343,6 +2352,10 @@ div.JS9Progress {
     border-width: 1px;
     border-color: grey;
     border-style: solid;
+}
+
+.JS9Select:hover {
+    background-color:rgba(0, 0, 0, 0.1);
 }
 
 .JS9Highlight {

@@ -298,8 +298,8 @@ if( im ){
     }
     JS9.CopyToClipboard(s);
   }
-}
-return false;">
+}"
+>
 </span>
 
 <span class="rconfigcol_R rconfigcol_R7">
@@ -311,8 +311,8 @@ const shape = form.data('shape');
 if( im && wcssys && shape && shape.params ){
   shape.params.wcsedit.wcssys = wcssys;
   im.updateShapes('regions', shape, 'wcsedit');
-}
-return false;">
+}"
+>
 </select>
 </span>
 
@@ -503,8 +503,8 @@ if( im ){
   }
   form.data('savefile', fname);
   im.saveRegions(fname, id, opts);
-}
-return false;">
+}"
+>
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
 <input type="text" class="val JS9Text rconfigtext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name"
@@ -562,9 +562,8 @@ if( fname ){
 onclick="
   const form = $(this).closest('form');
   const browse = form.find(`[name='browsefile']`);
-  browse.click();
-  return false;
-">
+  browse.click();"
+>
 </span>
 </div>
 <div class="JS9Hidden rconfigbrowse">
@@ -683,8 +682,8 @@ switch(format){
     break;
   default:
     break;
-}
-return false;">
+}"
+>
 </span>
 </div>
 
@@ -723,8 +722,8 @@ if( el.length > 0 ){
     el.prop('checked', true);
 } else {
     $(form).find('.rwcsradio').prop('checked', false);
-}
-return false;">
+}"
+>
 </select>
 </span>
 </div>
@@ -740,8 +739,8 @@ const im = form.data('im');
 const shape = form.data('shape');
 const winid = form.data('winid');
 let arr2 = arr.concat($(`#${form.attr('id')} input[type=checkbox]:not(:checked)`).map((i, e) => {return {'name': e.name, 'value': 'false'};}).get());
-im.processRegionsForm(form, shape, arr2);
-return false;">
+im.processRegionsForm(form, shape, arr2);"
+>
 </span>
 <span class="rconfigcol_R rconfigcol_R2l">
 <input type="checkbox" class="rconfigcheckbox" name="remove" value="selected" data-tooltip="Remove requires clicking Apply">Remove
@@ -759,8 +758,8 @@ const form = $(this).closest('form');
 const shape = form.data('shape');
 const winid = form.data('winid');
 shape.params.winid = null;
-winid.close();
-return false;">
+winid.close();"
+>
 </span>
 </div>
 
