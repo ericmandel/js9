@@ -49,7 +49,7 @@
 
 	
 	var a = 1;
-	var b = 0;
+	// var b = 0;
 	var c = sigma;
 	var d = 0;
 
@@ -57,7 +57,7 @@
 
 	for ( i = 0; i < 10; i++ ) {
 	    kern[i] = a * Math.pow(2.71828, - i*i / (2*c*c)) + d;
-	};
+	}
 
 	var i, j, k;
 
@@ -69,7 +69,7 @@
 	kern.length = i-1;					// Clip
 
 	var nerk = imexam.typed.clone(kern);
-	var kern = kern.reverse();
+	kern = kern.reverse();
 
 	for ( i = 1; i < nerk.length; i++ ) {
 	    kern[kern.length] = nerk[i];			// Dup
@@ -183,10 +183,11 @@ var Conrec = (function() {
 
   var reverseList = function(list) {
     var pp = list.head;
+    var temp;
 
     while (pp) {
       // swap prev/next pointers
-      var temp = pp.next;
+      temp = pp.next;
       pp.next = pp.prev;
       pp.prev = temp;
 
@@ -195,7 +196,7 @@ var Conrec = (function() {
     }
 
     // swap head/tail pointers
-    var temp = list.head;
+    temp = list.head;
     list.head = list.tail;
     list.tail = temp;
   }
@@ -220,6 +221,7 @@ var Conrec = (function() {
     --this.count;
   }
   ContourBuilder.prototype.addSegment = function(a, b) {
+    var pp;
     var ss = this.s;
     var ma = null;
     var mb = null;
@@ -279,7 +281,7 @@ var Conrec = (function() {
       break;
 
       case 1:   // a matched, b did not - thus b extends sequence ma
-        var pp = {p: b};
+        pp = {p: b};
 
         if (prependA) {
           pp.next = ma.head;
@@ -295,7 +297,7 @@ var Conrec = (function() {
       break;
 
       case 2:   // b matched, a did not - thus a extends sequence mb
-        var pp = {p: a};
+        pp = {p: a};
 
         if (prependB) {
           pp.next = mb.head;
@@ -314,7 +316,7 @@ var Conrec = (function() {
         // if the sequences are the same, do nothing, as we are simply closing this path (could set a flag)
 
         if (ma === mb) {
-          var pp = {p: ma.tail.p, next: ma.head, prev: null};
+          pp = {p: ma.tail.p, next: ma.head, prev: null};
           ma.head.prev = pp;
           ma.head = pp;
           ma.closed = true;
@@ -830,8 +832,8 @@ if (typeof exports !== "undefined") {
 	var data = imexam.ndops.ndarray(im.raw.data, [im.raw.height, im.raw.width]);
 
 	var levelString = form.level.value;
-	var binning	= $(form).find("#binning").val();;
-	var smooth	= $(form).find("#smooth").val();;
+	var binning	= $(form).find("#binning").val();
+	var smooth	= $(form).find("#smooth").val();
 	var quality	= $(form).find("input[type=radio]:checked").val();
 
 
@@ -852,11 +854,11 @@ if (typeof exports !== "undefined") {
 	JS9.waiting(true);
 	setTimeout(function() {
 	    try {
-		var fudge = 0
+		// var fudge = 0
 
-		if ( binning > 1 ) {
-		    fudge = 1;
-		}
+		// if ( binning > 1 ) {
+		//    fudge = 1;
+		// }
 
 		if ( quality === "better" ) {
 		    var c      = new conrec.Conrec();
@@ -954,20 +956,20 @@ if (typeof exports !== "undefined") {
 	div.innerHTML = '<form class="contour-form js9Form">							\
 	    <table style="border-collapse: separate; border-spacing: 10px 5px;"><tr>	<td><b>num:</b></td>	\
 			<td><input type=text name=nlevel value=5 size="10" style="text-align:right;"></td>				\
-		       	<td><input type=button value="Draw contours" class="drw-contour"></td></tr>	\
+			<td><input type=button value="Draw contours" class="drw-contour JS9Button2"></td></tr>	\
 	           <tr>	<td><b>min:</b></td>									\
 			<td><input type=text name=min size="10" style="text-align:right;"></td>					\
-		       	<td><input type=button value="Reset min/max" class="get-min-max"></td></tr>	\
+			<td><input type=button value="Reset min/max" class="get-min-max JS9Button2"></td></tr>	\
 	           <tr>	<td><b>max:</b></td>									\
 			<td><input type=text name=max size="10" style="text-align:right;"></td></tr>				\
 	           <tr>	<td valign=top><b>levels:</b></td>							\
 	    		<td rowspan=5><textarea rows=12 cols="10" name=level class="contour-levels" style="text-align:right;">	\
 			    </textarea>									\
-		       	<td valign=top><input type=button value="Make levels" class="make-levels"></td>	\
+			<td valign=top><input type=button value="Make levels" class="make-levels JS9Button2"></td>	\
 		   </tr>										\
 		   <tr><td></td><td valign=top>								\
 				<b>binning:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				\
-				<select id=binning name=binpix>						\
+				<select id=binning name=binpix class=JS9Select>				\
 				<option>none</option>							\
 				<option>2</option>							\
 				<option>3</option>							\
@@ -981,8 +983,8 @@ if (typeof exports !== "undefined") {
 			</td>										\
 		   </tr>										\
 		   <tr><td></td><td valign=top>								\
-				<b>smoothing:</b>&nbsp;								\
-				<select id=smooth name=smopix>						\
+				<b>smoothing:</b>&nbsp;							\
+				<select id=smooth name=smopix class=JS9Select>				\
 				<option>none</option>							\
 				<option value=0.75 selected>3</option>					\
 				<option value=1.00>5</option>						\
