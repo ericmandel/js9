@@ -684,6 +684,11 @@ canvas.surfacePlotCanvas {
     border: 1px solid white;
 }
 
+/* read-only reportedly fixed in FF 78, but until then ... */
+.JS9Text:-moz-read-only {
+    border: 1px solid white;
+}
+
 /* js9Analysis forms (e.g. parameter dialog boxes) */
 .js9AnalysisForm {
     border: 1px solid grey;
