@@ -213,7 +213,7 @@
 
 	html = `<form class="js9BinningForm js9Form">
 	        <table style="margin:0px; cellspacing:0; border-collapse:separate; border-spacing:4px 10px;">
-	           <tr>	<td><input type=button class=js9-binning-full value="Load full image" style="text-align:right;"></td>
+	           <tr>	<td><input type=button class="js9-binning-full JS9Button2" value="Load full image" style="text-align:right;"></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
@@ -259,10 +259,10 @@
 			<td>&nbsp(display as separate image?)</td>
 		   </tr>
 		   <tr>
-			<td><input type=button name=rebin value="Run" class="js9-binning-rebin"></td>
+			<td><input type=button name=rebin value="Run" class="js9-binning-rebin JS9Button2"></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
-                        <td>&nbsp;<input type=button name=close value="Close" class="js9-binning-close" ${disclose}'></td>
+                        <td>&nbsp;<input type=button name=close value="Close" class="js9-binning-close JS9Button2" ${disclose}'></td>
 		   </tr>
 	    </table>
 	    </form>`;

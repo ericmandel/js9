@@ -10,8 +10,8 @@
 
 
     var projToolbar = "                                	\
-		<div style='float: right;'>		\
-                 <select  class='proj_menu'>		\
+		<div style='float:right; margin:10px'>  \
+                 <select class='proj_menu JS9Select'>	\
                         <option>sum</option>            \
                         <option>avg</option>            \
                         <option>med</option>            \
@@ -36,9 +36,11 @@
 
             proj = imexam.ndops.proj(imexam.getRegionData(im, xreg), this.plugin.opts.xyproj);
 
+	    // eslint-disable-next-line no-unused-vars
 	    $(menx).change(function (event) {
 		    projUpdate(undefined, { div: div, proj: proj, menu: menx, chek: chek });
 		});
+	    // eslint-disable-next-line no-unused-vars
 	    $(chek).change(function (event) {
 		    projUpdate(undefined, { div: div, proj: proj, menu: menx, chek: chek });
 		});
