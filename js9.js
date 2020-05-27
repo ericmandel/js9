@@ -16001,7 +16001,7 @@ JS9.MouseTouch.init = function(){
 	});
     }
     // add the footer, containing buttons
-    s = sprintf("<p><div class='%s'>use mouse wheel or pinch to zoom:&nbsp;&nbsp;<input type='checkbox' value='1' onclick='javascript:JS9.MouseTouch.mousetouchzoom(\"%s\", this);'></div>", `${JS9.MouseTouch.BASE}Footer`, this.display.id);
+    s = sprintf("<p><div class='%s'>use mouse wheel or pinch to zoom:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type='checkbox' value='1' onclick='javascript:JS9.MouseTouch.mousetouchzoom(\"%s\", this);'></div>", `${JS9.MouseTouch.BASE}Footer`, this.display.id);
     this.mousetouchFootContainer = $("<span style='float: left'>")
 	.addClass(`${JS9.MouseTouch.BASE}Container`)
 	.attr("id", `${this.id}MouseTouchFootContainer`)
