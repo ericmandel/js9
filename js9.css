@@ -134,7 +134,7 @@ div.JS9Logo {
 img.JS9Logo {
     width: 80;
     height: 40;
-    border: 0px solid #d5d5d5;
+    border: none;
 }
 
 /* CSS for images loaded as part of the menubar */
@@ -242,7 +242,7 @@ div.JS9Progress {
 .JS9Button, .JS9Button-classic {
     font: normal 12px Arial;
     background: #F6F6F6;
-    border:  0px solid grey;
+    border: none;
     border-radius: 4px;
     padding: 3px 6px 3px 6px;
     /* back off left margin or else Linux menubar Help button wraps ... */
@@ -291,7 +291,7 @@ div.JS9Progress {
 .JS9Button-border {
   color: #6496c8;
   background: #fff;
-  border: solid 2px #6496c8;
+  border: 2px solid #6496c8;
   padding: 3px 6px 3px 6px;
   margin: 6px 4px 6px 4px;
   outline: none;
@@ -347,7 +347,7 @@ div.JS9Progress {
 }
 
 .JS9CmdForm {
-    border: 0px;
+    border: none;
     padding: 1px;
     font-size: 12px;
     font-family: monospace;
@@ -364,7 +364,7 @@ div.JS9Progress {
 }
 
 .JS9CmdIn, .JS9CmdOut {
-    border: 0px;
+    border: none;
     padding-top: 0px;
     padding-left: 4px;
     margin-left: 2px;
@@ -380,7 +380,7 @@ input:focus.JS9CmdIn {
 }
 
 .JS9CmdError {
-    border: 0px;
+    border: none;
     padding-top: 2px;
     padding-left: 4px;
     margin-left: 2px;
@@ -391,7 +391,7 @@ input:focus.JS9CmdIn {
 }
 
 .JS9CmdWarning {
-    border: 0px;
+    border: none;
     padding-top: 2px;
     padding-left: 4px;
     margin-left: 2px;
@@ -402,7 +402,7 @@ input:focus.JS9CmdIn {
 }
 
 .JS9CmdInfo {
-    border: 0px;
+    border: none;
     padding-top: 2px;
     padding-left: 4px;
     margin-left: 4px;
@@ -456,7 +456,7 @@ input:focus.JS9CmdIn {
 
 .JS9SearchButton{
     font: normal 12px Arial;
-    border:  black 2px;
+    border: 2px solid black;
     border-radius: 4px;
     padding: 3px 6px 3px 6px;
     margin-left: 8px;
@@ -487,7 +487,7 @@ mark.current {
     z-index: 999;
     background: #E9E9E9;
     padding: 10px;
-    border: 0px;
+    border: none;
     font-family: Helvetica, sans-serif;
     font-size: 10pt;
     display: none;
@@ -629,28 +629,27 @@ canvas.surfacePlotCanvas {
 
 .js9InfoTable .column0{
     background: transparent;
-    border: none;
     width: 50px;
-    border: 0px solid transparent;
+    border: none;
 }
 
 .js9InfoTable .input1{
     width: 115px;
-    border: 0px solid transparent;
+    border: none;
 }
 
 .js9InfoTable .input2{
     width: 240px;
     font-size: 12px;
     font-family: monospace;
-    border: 0px solid transparent;
+    border: none;
 }
 
 .js9InfoTable textarea{
     overflow-x: hidden;
     padding: 2px 0px 1px 2px;
     margin: 0px;
-    border: 0px solid transparent;
+    border: none;
 }
 
 .js9InfoTable .text2{
@@ -677,13 +676,17 @@ canvas.surfacePlotCanvas {
     display: block;
     margin: 0px;
     box-sizing: border-box;
-    border: 0px solid transparent;
+    border: none;
     padding: 2px;
+}
+
+.JS9Text:read-only {
+    border: 1px solid white;
 }
 
 /* js9Analysis forms (e.g. parameter dialog boxes) */
 .js9AnalysisForm {
-    border: solid grey 1px;
+    border: 1px solid grey;
     margin: 8px;
     padding: 8px;
     background: #E9E9E9;
@@ -817,19 +820,19 @@ canvas.surfacePlotCanvas {
 .hline0 {
     display: block;
     height: 1px;
-    border: 0;
+    border: none;
     border-top: 1px solid black;
     margin: 0;
     padding: 0;
 }
 
 .js9archive-control {
-    border: transparent 1px;
+    border: none;
     padding: 2px;
 } 
 
 .js9HelpText {
-    border: solid grey 1px;
+    border: 1px solid grey;
     margin: 8px;
     padding: 8px;
     background: #E9E9E9;
