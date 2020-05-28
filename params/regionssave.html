@@ -36,70 +36,91 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 75px;
+    width: 100px;
 }
 
 .rsavecol_R2 {
     position: absolute;
     top: 0;
-    left:  80px;
-    width: 62px;
+    left:  100px;
+    width: 80px;
 }
 
 .rsavecol_R2L {
     position: absolute;
     top: 0;
-    left:  80px;
-    width: 332px;
+    left:  100px;
+    width: 160px;
+}
+
+.rsavecol_R2LL {
+    position: absolute;
+    top: 0;
+    left:  100px;
+    width: 320px;
 }
 
 .rsavecol_R3 {
     position: absolute;
     top: 0;
-    left:  145px;
-    width: 62px;
+    left:  180px;
+    width: 80px;
 }
 
 .rsavecol_R3L {
     position: absolute;
     top: 0;
-    left:  145px;
-    width: 120px;
+    left:  180px;
+    width: 160px;
 }
 
 .rsavecol_R4 {
     position: absolute;
     top: 0;
-    left:  210px;
-    width: 62px;
+    left:  260px;
+    width: 80px;
+}
+
+.rsavecol_R4L {
+    position: absolute;
+    top: 0;
+    left:  260px;
+    width: 160px;
 }
 
 .rsavecol_R5 {
     position: absolute;
     top: 0;
-    left:  275px;
-    width: 62px;
+    left:  340px;
+    width: 80px;
+}
+
+.rsavecol_R5L {
+    position: absolute;
+    top: 0;
+    left:  340px;
+    width: 160px;
 }
 
 .rsavecol_R6 {
     position: absolute;
     top: 0;
-    left:  340px;
-    width: 62px;
+    left:  420px;
+    width: 80px;
 }
 
 .rsavecol_R7 {
     position: absolute;
     top: 0;
-    left:  405px;
-    width: 62px;
+    left:  500px;
+    width: 80px;
 }
 
-.rsavecol_R8 {
+.rsavecol_R7L {
     position: absolute;
     top: 0;
-    left:  470px;
-    width: 62px;
+    left:  500px;
+    width: 160px;
 }
 
 .rsavetext_R {
@@ -118,39 +139,145 @@
 
 <form id="regionsSaveForm" class="js9AnalysisForm regionsConfigForm" action="" data-enterfunc="Apply">
 
+<div class="nodisplay rwcsbuttons">
 <div class="rsavelinegroup">
 <span class="rsavecol_R rsavecol_R1">
-<input name="Save" type="button" class="JS9RunButton" value="Save"
-onclick="
+Coordinates:
+</span>
+<span class="rsavecol_R rwcsbuttoncontainer">
+<!-- entries will be filled in by initConfigForm() -->
+</span>
+<span class="rsavecol_R rsavecol_R7">
+<select name="savewcs" class="val JS9Select" onchange="
+let el;
 const form = $(this).closest('form');
-const im = form.data('im');
-const fname = form.find(`[name='savefile']`).val();
-const which = form.find(`input[name='savewhich']:checked`).val();
-const id = which.match(/all/) ? 'all' : 'selected';
-const format = form.find(`input[name='saveformat']:checked`).val();
-const wcssys = form.find(`[name='savewcs']`).children('option:selected').val();
-let opts = {};
-if( im ){
-  opts.wcssys = wcssys;
-  opts.format = format;
-  switch(format){
-  case 'reg':
-    opts.includejson = form.find(`[name='includejson']`).is(':checked');
-    opts.includecomments = form.find(`[name='includecomments']`).is(':checked');
-    break;
-  case 'csv':
-    opts.includewcs = form.find(`[name='includewcs']`).is(':checked');
-    break;
-  case 'svg':
-  default:
-    break;
-  }
-  form.data('savefile', fname);
-  im.saveRegions(fname, id, opts);
+const wcssys =  $(this).val();
+$(form).data('savewcs', wcssys);
+el = $(form).find('.rwcsbuttons').find(`[value='${wcssys}']`);
+if( el.length > 0 ){
+    el.prop('checked', true);
+} else {
+    $(form).find('.rwcsradio').prop('checked', false);
 }"
 >
+</select>
+</span>
+</div>
+</div>
+
+<div class="rsavelinegroup">
+<span class="rsavecol_R rsavecol_R1">
+Format:
+</span>
+<span class="rsavecol_R rsavecol_R2">
+<input type="radio" class="rsaveinput" id="savereg" name="saveformat" value="reg" data-tooltip="save as text regions"
+onclick="
+let ext;
+const form = $(this).closest('form');
+const savefile = form.find(`[name='savefile']`);
+const fname = savefile.val();
+form.find('.xtrareg').removeClass('nodisplay');
+form.find('.xtracsv').addClass('nodisplay');
+form.find('.xtrasvg').addClass('nodisplay');
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  if( ext === 'csv' || ext === 'svg' ){
+    savefile.val(fname.replace(/\.[^.]*$/, '.reg'));
+  }
+}
+">
+<label for="savereg">reg</label>
+</span>
+<span class="rsavecol_R rsavecol_R3">
+<input type="radio" class="rsaveinput" id="savecsv" name="saveformat" value="csv" data-tooltip="save as comma-separated values"
+onclick="
+let ext;
+const form = $(this).closest('form');
+const savefile = form.find(`[name='savefile']`);
+const fname = savefile.val();
+form.find('.xtrareg').addClass('nodisplay');
+form.find('.xtracsv').removeClass('nodisplay');
+form.find('.xtrasvg').addClass('nodisplay');
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  if( ext === 'reg' || ext === 'svg' ){
+    savefile.val(fname.replace(/\.[^.]*$/, '.csv'));
+  }
+}
+">
+<label for="savecsv">csv</label>
+</span>
+<span class="rsavecol_R rsavecol_R4">
+<input type="radio" class="rsaveinput" id="savesvg" name="saveformat" value="SVG" data-tooltip="save as SVG object"
+onclick="
+let ext;
+const form = $(this).closest('form');
+const savefile = form.find(`[name='savefile']`);
+const fname = savefile.val();
+form.find('.xtrareg').addClass('nodisplay');
+form.find('.xtracsv').addClass('nodisplay');
+form.find('.xtrasvg').removeClass('nodisplay');
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  if( ext === 'reg' || ext === 'csv' ){
+    savefile.val(fname.replace(/\.[^.]*$/, '.svg'));
+  }
+}
+">
+<label for="savesvg">SVG</label>
+</span>
+</div>
+
+<div class="nodisplay xtrareg">
+<div class="rsavelinegroup">
+<span class="rsavecol_R rsavecol_R1">
+Options:
 </span>
 <span class="rsavecol_R rsavecol_R2L">
+<input type="checkbox"  class="rsavecheckbox" id="includejson" name="includejson" value="save JSON object" data-tooltip="save json object with secondary properties">save JSON object
+</span>
+<span class="rsavecol_R rsavecol_R4L">
+<input type="checkbox" class="rsavecheckbox" id="includecomments" name="includecomments" value="save comments" data-tooltip="save comments">save comments
+</span>
+</div>
+</div>
+
+<div class="rsavelinegroup">
+<span class="rsavecol_R rsavecol_R1">
+Save:
+</span>
+<span class="rsavecol_R rsavecol_R2">
+<input type="radio" class="rsaveinput" id="saveall" name="savewhich" value="all" data-tooltip="save all regions">
+<label for="saveall">all</label>
+</span>
+<span class="rsavecol_R rsavecol_R3L">
+<input type="radio" class="rsaveinput" id="savesel" name="savewhich" value="sel" data-tooltip="save selected regions">
+<label for="savecur">selected</label>
+</span>
+</div>
+
+<div class="nodisplay xtracsv">
+<div class="rsavelinegroup">
+<span class="rsavecol_R rsavecol_R1">
+include:
+</span>
+<span class="rsavecol_R rsavecol_R2">
+<input type="checkbox" class="rsavecheckbox" id="includewcs" name="includewcs" value="includewcs" data-tooltip="include wcs keyword">wcs
+</span>
+</div>
+</div>
+
+<div class="nodisplay xtrasvg">
+<div class="rsavelinegroup">
+<span class="rsavecol_R rsavecol_R2LL">
+&nbsp;
+</span>
+</div>
+</div>
+
+
+<div class="rsavelinegroup">
+<span class="rsavecol_R rsavecol_R2LL">
 <input type="text" class="val JS9Text rsavetext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name"
 onchange="
 let ext, form, fname;
@@ -201,8 +328,8 @@ if( fname ){
 ">
 </span>
 <div class="nodisplay rsavebrowse">
-<span class="rsavecol_R rsavecol_R8">
-<input name="Browse" type="button" class="JS9Button2" value="Browse" data-tooltip="browse files"
+<span class="rsavecol_R rsavecol_R1">
+<input name="Browse" type="button" class="JS9Button2" value="..." data-tooltip="browse files"
 onclick="
   const form = $(this).closest('form');
   const browse = form.find(`[name='browsefile']`);
@@ -224,147 +351,10 @@ if( this.files.length  ){
 }
 ">
 </div>
-</div>
 
-<div class="rsavelinegroup">
-<span class="rsavecol_R rsavecol_R1">
-which:
-</span>
-<span class="rsavecol_R rsavecol_R2">
-<input type="radio" class="rsaveinput" id="saveall" name="savewhich" value="all" data-tooltip="save all regions">
-<label for="saveall">all</label>
-</span>
-<span class="rsavecol_R rsavecol_R3">
-<input type="radio" class="rsaveinput" id="savesel" name="savewhich" value="sel" data-tooltip="save selected regions">
-<label for="savecur">sel</label>
-</span>
-</div>
 
-<div class="rsavelinegroup">
-<span class="rsavecol_R rsavecol_R1">
-format:
-</span>
-<span class="rsavecol_R rsavecol_R2">
-<input type="radio" class="rsaveinput" id="savereg" name="saveformat" value="reg" data-tooltip="save as text regions"
-onclick="
-let ext;
-const form = $(this).closest('form');
-const savefile = form.find(`[name='savefile']`);
-const fname = savefile.val();
-form.find('.xtrareg').removeClass('nodisplay');
-form.find('.xtracsv').addClass('nodisplay');
-form.find('.xtrasvg').addClass('nodisplay');
-if( fname ){
-  ext = fname.split('.').pop().toLowerCase();
-  if( ext === 'csv' || ext === 'svg' ){
-    savefile.val(fname.replace(/\.[^.]*$/, '.reg'));
-  }
-}
-">
-<label for="savereg">reg</label>
-</span>
-<span class="rsavecol_R rsavecol_R3">
-<input type="radio" class="rsaveinput" id="savecsv" name="saveformat" value="csv" data-tooltip="save as comma-separated values"
-onclick="
-let ext;
-const form = $(this).closest('form');
-const savefile = form.find(`[name='savefile']`);
-const fname = savefile.val();
-form.find('.xtrareg').addClass('nodisplay');
-form.find('.xtracsv').removeClass('nodisplay');
-form.find('.xtrasvg').addClass('nodisplay');
-if( fname ){
-  ext = fname.split('.').pop().toLowerCase();
-  if( ext === 'reg' || ext === 'svg' ){
-    savefile.val(fname.replace(/\.[^.]*$/, '.csv'));
-  }
-}
-">
-<label for="savecsv">csv</label>
-</span>
-<span class="rsavecol_R rsavecol_R4">
-<input type="radio" class="rsaveinput" id="savesvg" name="saveformat" value="svg" data-tooltip="save as svg object"
-onclick="
-let ext;
-const form = $(this).closest('form');
-const savefile = form.find(`[name='savefile']`);
-const fname = savefile.val();
-form.find('.xtrareg').addClass('nodisplay');
-form.find('.xtracsv').addClass('nodisplay');
-form.find('.xtrasvg').removeClass('nodisplay');
-if( fname ){
-  ext = fname.split('.').pop().toLowerCase();
-  if( ext === 'reg' || ext === 'csv' ){
-    savefile.val(fname.replace(/\.[^.]*$/, '.svg'));
-  }
-}
-">
-<label for="savesvg">svg</label>
-</span>
-</div>
-
-<div class="nodisplay xtrareg">
-<div class="rsavelinegroup">
-<span class="rsavecol_R rsavecol_R1">
-include:
-</span>
-<span class="rsavecol_R rsavecol_R2">
-<input type="checkbox"  class="rsavecheckbox" id="includejson" name="includejson" value="includejson" data-tooltip="include properties in json object">json
-</span>
-<span class="rsavecol_R rsavecol_R3L">
-<input type="checkbox" class="rsavecheckbox" id="includecomments" name="includecomments" value="includecomments" data-tooltip="include comments">comments
-</span>
-</div>
-</div>
-
-<div class="nodisplay xtracsv">
-<div class="rsavelinegroup">
-<span class="rsavecol_R rsavecol_R1">
-include:
-</span>
-<span class="rsavecol_R rsavecol_R2">
-<input type="checkbox" class="rsavecheckbox" id="includewcs" name="includewcs" value="includewcs" data-tooltip="include wcs keyword">wcs
-</span>
-</div>
-</div>
-
-<div class="nodisplay xtrasvg">
-<div class="rsavelinegroup">
-<span class="rsavecol_R rsavecol_R2L">
-&nbsp;
-</span>
-</div>
-</div>
-
-<div class="nodisplay rwcsbuttons">
-<div class="rsavelinegroup">
-<span class="rsavecol_R rsavecol_R1">
-wcs:
-</span>
-<span class="rsavecol_R rwcsbuttoncontainer">
-<!-- entries will be filled in by initConfigForm() -->
-</span>
-<span class="rsavecol_R rsavecol_R8">
-<select name="savewcs" class="val JS9Select" onchange="
-let el;
-const form = $(this).closest('form');
-const wcssys =  $(this).val();
-$(form).data('savewcs', wcssys);
-el = $(form).find('.rwcsbuttons').find(`[value='${wcssys}']`);
-if( el.length > 0 ){
-    el.prop('checked', true);
-} else {
-    $(form).find('.rwcsradio').prop('checked', false);
-}"
->
-</select>
-</span>
-</div>
-</div>
-
-<div class="rsavelinegroup">
-<span class="rsavecol_R rsavecol_R8">
-<input name="Close" type="button" class="JS9Button2" value="Close"
+<span class="rsavecol_R rsavecol_R7L">
+<input name="Close" type="button" class="JS9Button2" value="Cancel"
 onclick="
 const form = $(this).closest('form');
 const shape = form.data('shape');
@@ -372,7 +362,38 @@ const winid = form.data('winid');
 shape.params.winid = null;
 winid.close();"
 >
+&nbsp;
+<input name="Save" type="button" class="JS9RunButton" value="Save"
+onclick="
+const form = $(this).closest('form');
+const im = form.data('im');
+const fname = form.find(`[name='savefile']`).val();
+const which = form.find(`input[name='savewhich']:checked`).val();
+const id = which.match(/all/) ? 'all' : 'selected';
+const format = form.find(`input[name='saveformat']:checked`).val();
+const wcssys = form.find(`[name='savewcs']`).children('option:selected').val();
+let opts = {};
+if( im ){
+  opts.wcssys = wcssys;
+  opts.format = format;
+  switch(format){
+  case 'reg':
+    opts.includejson = form.find(`[name='includejson']`).is(':checked');
+    opts.includecomments = form.find(`[name='includecomments']`).is(':checked');
+    break;
+  case 'csv':
+    opts.includewcs = form.find(`[name='includewcs']`).is(':checked');
+    break;
+  case 'svg':
+  default:
+    break;
+  }
+  form.data('savefile', fname);
+  im.saveRegions(fname, id, opts);
+}"
+>
 </span>
+
 </div>
 </form>
 </body>

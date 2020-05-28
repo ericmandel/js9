@@ -301,7 +301,7 @@ JS9.favorites = {
     scales: ["linear", "log", "histeq"],
     colormaps: ["cool", "heat", "viridis", "magma"],
     regions: ["annulus", "box", "circle", "ellipse"],
-    wcs: ["FK5:fk5", "ICRS:icrs", "galactic:gal", "physical:phys", "image"]
+    wcs: ["FK5", "ICRS", "galactic:Galactic", "physical", "image"]
 //  you can specify a display string using a colon-separated string or array:
 //  wcs: ["FK5:fk5", ["ICRS","icrs"], "galactic", "physical", "image"]
 };
@@ -405,9 +405,9 @@ JS9.lightOpts = {
 	dpathWin: "width=830px,height=175px,resize=1,scrolling=1",
 	lcloseWin:"width=512px,height=190px,resize=1,scrolling=1",
 	paramWin: "width=830px,height=235px,resize=1,scrolling=1",
-	regWin0:  "width=600px,height=75px,resize=1,scrolling=1",
-	regWin1:  "width=600px,height=200px,resize=1,scrolling=1",
-	regWin:   "width=600px,height=325px,resize=1,scrolling=1",
+	regWin0:  "width=630px,height=75px,resize=1,scrolling=1",
+	regWin1:  "width=630px,height=200px,resize=1,scrolling=1",
+	regWin:   "width=630px,height=325px,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,resize=1,scrolling=1"
     },
