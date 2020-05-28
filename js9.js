@@ -405,9 +405,9 @@ JS9.lightOpts = {
 	dpathWin: "width=830px,height=175px,resize=1,scrolling=1",
 	lcloseWin:"width=512px,height=190px,resize=1,scrolling=1",
 	paramWin: "width=830px,height=235px,resize=1,scrolling=1",
-	regWin0:  "width=630px,height=75px,resize=1,scrolling=1",
-	regWin1:  "width=630px,height=200px,resize=1,scrolling=1",
-	regWin:   "width=630px,height=325px,resize=1,scrolling=1",
+	regWin0:  "width=640px,height=75px,resize=1,scrolling=1",
+	regWin1:  "width=640px,height=200px,resize=1,scrolling=1",
+	regWin:   "width=640px,height=400px,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,resize=1,scrolling=1"
     },
@@ -16641,7 +16641,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		$(form).find(".rsavebrowse").removeClass("nodisplay");
 	    }
 	} else {
-	    $(`${form}[id='savecur']`)
+	    $(`${form}[id='savesel']`)
 		.prop("checked", true);
 	    if( window.isElectron ){
 		$(form).find(".rconfigbrowse").removeClass("nodisplay");
@@ -16688,7 +16688,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 			s3 = `rsavecol_R${i+2}`;
 			s4 = "rsaveradio";
 		    } else {
-			s3 = `rconfigcol_R${i+2}b`;
+			s3 = `rconfigcol_R${i+2}`;
 			s4 = "rconfigradio";
 		    }
 		    el2.append(`<span class='rconfigcol_R rwcsbutton ${s3}'>
