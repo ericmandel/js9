@@ -2358,6 +2358,7 @@ div.JS9Progress {
 }
 
 .JS9RunButton:hover {
+    /* lightened using https://pinetools.com/lighten-color */
     background-color: rgba(108,166,252,1);
 }
 
