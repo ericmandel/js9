@@ -25696,7 +25696,11 @@ JS9.mkPublic("SaveRegions", function(...args){
     let which = obj.argv[1];
     let layer = obj.argv[2];
     if( im ){
-	return im.saveRegions(file, which, layer);
+	if( obj.argv.length === 1 && file === "dialogbox" ){
+	    im.displayRegionsForm(null, {type: "save"});
+	} else {
+	    return im.saveRegions(file, which, layer);
+	}
     }
     return null;
 });

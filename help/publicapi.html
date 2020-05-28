@@ -3667,8 +3667,11 @@ where:
 <li><b>which</b>: which regions to save (default is "all")
 <li><b>layer</b>: which layer to save (default is "regions")
 </ul>
-Save the current regions for the displayed image as a JS9 regions text file. If
-filename is not specified, the file will be saved as "js9.reg".
+Save the current regions for the displayed image as a JS9 regions text
+file. If filename is not specified, the file will be saved as
+"js9.reg". If the string "dialogbox" is passed in the filename and no
+other arguments are specified, the Save Regions dialogbox is displayed
+instead of actually saving regions to a file.
 
 <p>
 Don't forget that the file is saved by the browser, in whatever location
