@@ -310,12 +310,13 @@ div.JS9Progress {
 /* for buttons inside dialog boxes and plugins */
 .JS9Button2 {
     font: normal 12px Arial;
+    color: black;
     background: white;
     border: 1px solid grey;
     border-radius: 4px;
     padding: 2px 4px 2px 4px;
     margin: 0px;
-    outline: none
+    outline: none;
 }
 
 .JS9Button2:hover {
@@ -324,6 +325,25 @@ div.JS9Progress {
 
 .JS9Button2:active{
     background-color: rgba(0, 0, 0, 0.3);
+}
+
+.JS9RunButton {
+    font: normal 12px Arial;
+    color: white;
+    background-color: rgba(49,136,251,1);
+    border: none;
+    border-radius: 4px;
+    padding: 2px 4px 2px 4px;
+    margin: 0px;
+    outline: none;
+}
+
+.JS9RunButton:hover {
+    background-color: rgba(108,166,252,1);
+}
+
+.JS9RunButton:active {
+    background-color: rgba(158,196,253,1);
 }
 
 /* for menus inside dialog boxes and plugins */
