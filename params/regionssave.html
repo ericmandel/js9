@@ -223,10 +223,10 @@ if( fname ){
 Options:
 </span>
 <span class="rsavecol_R rsavecol_R2L">
-<input type="checkbox"  class="rsavecheckbox" id="includejson" name="includejson" value="save JSON object" data-tooltip="save json object with secondary properties">save JSON object
+<input type="checkbox"  class="rsavecheckbox" id="includejson" name="includejson" value="save JSON object" data-tooltip="save json object with secondary properties" onclick="JS9.globalOpts.regIncludeJSON = $(this).is(':checked');">save JSON object
 </span>
 <span class="rsavecol_R rsavecol_R4L">
-<input type="checkbox" class="rsavecheckbox" id="includecomments" name="includecomments" value="save comments" data-tooltip="save comments">save comments
+<input type="checkbox" class="rsavecheckbox" id="includecomments" name="includecomments" value="save comments" data-tooltip="save comments" onclick="JS9.globalOpts.regIncludeComments = $(this).is(':checked');">save comments
 </span>
 </div>
 </div>
@@ -248,10 +248,10 @@ Save:
 <div class="nodisplay xtracsv">
 <div class="rsavelinegroup">
 <span class="rsavecol_R rsavecol_R1">
-include:
-</span>
+Include:
+/span>
 <span class="rsavecol_R rsavecol_R2">
-<input type="checkbox" class="rsavecheckbox" id="includewcs" name="includewcs" value="includewcs" data-tooltip="include wcs keyword">wcs
+<input type="checkbox" class="rsavecheckbox" id="includewcs" name="includewcs" value="includewcs" data-tooltip="include wcs keyword" onclick="JS9.globalOpts.csvIncludeWCS = $(this).is(':checked');">wcs
 </span>
 </div>
 </div>
