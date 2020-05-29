@@ -200,10 +200,10 @@
 	}
 
 	if( im.imtab === "image" ){
-	    binblock = "block";
+	    binblock = "Block";
 	    binblocked = "blocked";
 	} else {
-	    binblock = "bin";
+	    binblock = "Bin";
 	    binblocked = "binned";
 	}
 
@@ -218,12 +218,12 @@
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 		   </tr>
-	           <tr>	<td>center:</td>
+	           <tr>	<td>Center:</td>
 			<td><input type=text name=xcen size=10 style="text-align:right;"></td>
 			<td><input type=text name=ycen size=10 style="text-align:right;"></td>
 			<td>&nbsp(center position of section)</td>
 		   </tr>
-	           <tr>	<td>size:</td>
+	           <tr>	<td>Size:</td>
 			<td><input type=text name=xdim size=10 style="text-align:right;"></td>
 			<td><input type=text name=ydim size=10 style="text-align:right;"></td>
 			<td>&nbsp(width, height of section)</td>
@@ -236,24 +236,24 @@
 
 	if( im.imtab === "image" ){
 	    html += `
-	           <tr>	<td>mode:</td>
+	           <tr>	<td>Mode:</td>
                         <td><input type=radio name=binmode value="s" class="sum-pixels" style="text-align:left;">sum</td>
                         <td><input type=radio name=binmode value="a" class="avg-pixels" style="text-align:left;">average</td>
 			<td>&nbsp(sum or avg ${binblocked} pixels?)</td>
 		   </tr>`;
 	} else {
 	    html += `
-	           <tr>	<td>mode:</td>
+	           <tr>	<td>Mode:</td>
                         <td><input type=checkbox name=xbinmode value="s" class="sum-pixels" style="text-align:left;" checked disabled>sum</td>
 			<td></td>
-			<td>&nbsp(binned tables are always summed)</td>
+			<td>&nbsp(binned tables are summed)</td>
 		   </tr>`;
 	}
-	html += `  <tr>	<td>filter:</td>
+	html += `  <tr>	<td>Filter:</td>
 			<td colspan="2"><textarea name=filter rows="1" cols="22" style="text-align:left;" autocapitalize="off" autocorrect="off"></textarea></td>
 			<td>&nbsp(event/row filter for table)</td>
 		   </tr>
-	           <tr>	<td>separate:</td>
+	           <tr>	<td>Separate:</td>
                         <td><input type=checkbox name=separate class="js9-binning-sep" style="text-align:left;"></td>
 			<td></td>
 			<td>&nbsp(display as separate image?)</td>
