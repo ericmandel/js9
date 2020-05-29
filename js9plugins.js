@@ -1098,7 +1098,7 @@ module.exports = xhr;
                    <tr>	<td>${binblock}:</td>
 			<td><input type=text name=bin value=1 size=10 style="text-align:right;"></td>
 			<td></td>
-			<td>&nbsp(apply ${binblock} factor to ${im.imtab})</td>
+			<td>&nbsp(apply ${binblock.toLowerCase()} factor to ${im.imtab})</td>
 		   </tr>`;
 
 	if( im.imtab === "image" ){
