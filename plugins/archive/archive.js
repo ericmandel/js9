@@ -143,7 +143,7 @@
 	    <p>											\
 												\
 	    <table width="98%">									\
-	    <tr><td> object: </td> <td> <input type=text name=object size=12> </td>		\
+	    <tr><td> Object: </td> <td> <input type=text name=object size=12> </td>		\
 		<td></td>									\
 		<td></td>									\
 		<td>&nbsp;&nbsp;</td>								\
@@ -153,8 +153,8 @@
 		<td> Dec: 	</td><td>	<input type=text name=dec	size=12> </td>	\
 		<td></td>									\
 		<td> <input type=checkbox name=CORS checked> CORS proxy</td>		\
-	    <tr><td> width: </td><td>	<input type=text name=width	size=12 value=15> </td>	\
-		<td> height: </td><td>	<input type=text name=height	size=12 value=15> </td>	\
+	    <tr><td> Width: </td><td>	<input type=text name=width	size=12 value=15> </td>	\
+		<td> Height: </td><td>	<input type=text name=height	size=12 value=15> </td>	\
 	    </tr>										\
 	    </table>										\
 	    <div class="js9archive-controls"></div>								\
