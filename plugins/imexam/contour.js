@@ -954,21 +954,21 @@ if (typeof exports !== "undefined") {
 	var div = this.div;
 
 	div.innerHTML = '<form class="contour-form js9Form">							\
-	    <table style="border-collapse: separate; border-spacing: 10px 5px;"><tr>	<td>num:</td>	\
+	    <table style="border-collapse: separate; border-spacing: 10px 5px;"><tr>	<td>Num:</td>	\
 			<td><input type=text name=nlevel value=5 size="10" style="text-align:right;"></td>				\
 			<td><input type=button value="Draw contours" class="drw-contour JS9Button2"></td></tr>	\
-	           <tr>	<td>min:</td>									\
+	           <tr>	<td>Min:</td>									\
 			<td><input type=text name=min size="10" style="text-align:right;"></td>					\
 			<td><input type=button value="Reset min/max" class="get-min-max JS9Button2"></td></tr>	\
-	           <tr>	<td>max:</td>									\
+	           <tr>	<td>Max:</td>									\
 			<td><input type=text name=max size="10" style="text-align:right;"></td></tr>				\
-	           <tr>	<td valign=top>levels:</td>							\
+	           <tr>	<td valign=top>Levels:</td>							\
 	    		<td rowspan=5><textarea rows=12 cols="10" name=level class="contour-levels" style="text-align:right;">	\
 			    </textarea>									\
 			<td valign=top><input type=button value="Make levels" class="make-levels JS9Button2"></td>	\
 		   </tr>										\
 		   <tr><td></td><td valign=top>								\
-				binning:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				\
+				Binning:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				\
 				<select id=binning name=binpix class=JS9Select>				\
 				<option>none</option>							\
 				<option>2</option>							\
@@ -983,7 +983,7 @@ if (typeof exports !== "undefined") {
 			</td>										\
 		   </tr>										\
 		   <tr><td></td><td valign=top>								\
-				smoothing:&nbsp;							\
+				Smoothing:&nbsp;							\
 				<select id=smooth name=smopix class=JS9Select>				\
 				<option>none</option>							\
 				<option value=0.75 selected>3</option>					\
@@ -994,7 +994,7 @@ if (typeof exports !== "undefined") {
 			</td>										\
 		   </tr>										\
 		   <tr><td></td><td valign=top>								\
-				quality:&nbsp;							\
+				Quality:&nbsp;								\
 				<input type=radio name=quality value=faster checked>faster		\
 				<input type=radio name=quality value=better>better			\
 			</td>										\
@@ -1027,7 +1027,7 @@ if (typeof exports !== "undefined") {
 
 	    toolbarSeparate: true,
 
-            winDims: [370, 300],
+            winDims: [400, 300],
     });
 }());
 
