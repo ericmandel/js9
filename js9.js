@@ -134,6 +134,8 @@ JS9.globalOpts = {
     regArrowCrosshair: true,	// does move with arrow keys display crosshair?
     regSaveWCS: "",		// def wcs for saving regions
     regSaveFormat: "reg",	// def format for saving regions (reg,cvs,svg)
+    regSaveWhich1: "all",	// def 'which' for saving regions (all,selected)
+    regSaveWhich2: "selected",	// def 'which' for saving in configure dialog
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
     ehtimeout: 500,		// connection timeout for Electron connect
@@ -16634,16 +16636,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
     }
     // init options, if necessary
     if( opts.firsttime ){
-	if( opts.type === "save" ){
-	    $(`${form}[id='saveall']`).prop("checked", true);
-	    if( window.isElectron ){
-		$(form).find(".rsavebrowse").removeClass("nodisplay");
-	    }
-	} else {
-	    $(`${form}[id='savesel']`).prop("checked", true);
-	    if( window.isElectron ){
-		$(form).find(".rconfigbrowse").removeClass("nodisplay");
-	    }
+	if( window.isElectron ){
+	    $(form).find(".rsavebrowse").removeClass("nodisplay");
 	}
 	// multi "cur" works off selected, not current, regions
 	if( multi ){
@@ -16728,19 +16722,31 @@ JS9.Regions.initConfigForm = function(obj, opts){
     $(`${form}[id='includewcs']`)
 	.prop("checked", JS9.globalOpts.csvIncludeWCS);
     // unset all save format radio buttons
-    $(form).find(`input[name='saveformat']`).prop("checked", false);
+    $(form).find(`input[name='saveformat']`)
+	.prop("checked", false);
     // set save format based on global value
     $(form).find(`input[value='${JS9.globalOpts.regSaveFormat}']`)
 	.trigger("click");
     // unset all save wcs radio buttons
-    $(form).find(`input[name='rwcsbutton']`).prop("checked", false);
+    $(form).find(`input[name='rwcsbutton']`)
+	.prop("checked", false);
     // set save wcs based on global value
     $(form).find(`input[value='${JS9.globalOpts.regSaveWCS||wcssys}']`)
 	.trigger("click");
+    // set which regions get saved
+    if( opts.type === "save" ){
+	s = `save${JS9.globalOpts.regSaveWhich1}`;
+    } else {
+	s = `save${JS9.globalOpts.regSaveWhich2}`;
+    }
+    $(`${form}[id='${s}']`)
+	.prop("checked", true);
     // triggering the savefile will cause format to be updated
-    $(form).find(`input[name='savefile']`).trigger("change");
+    $(form).find(`input[name='savefile']`)
+	.trigger("change");
     // move caret to end of savefile for long filenames
-    $(form).find(`input[name='savefile']`).focus().caretToEnd();
+    $(form).find(`input[name='savefile']`)
+	.focus().caretToEnd();
     // shape specific processing
     if( multi ){
 	$(form).find(".regid").hide();

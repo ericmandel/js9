@@ -123,7 +123,7 @@
 <!-- mkallinone inline: deletes everything from </head> to <body> -->
 <body>
 
-<form id="regionsSaveForm" class="js9AnalysisForm regionsConfigForm" action="" data-enterfunc="Apply">
+<form id="regionsSaveForm" class="js9AnalysisForm regionsConfigForm regionsSaveForm" action="" data-enterfunc="Apply">
 <!-- start: regions save html to be added to regions config -->
 <div class="nodisplay rwcsbuttons">
 <div class="rsavelinegroup">
@@ -236,11 +236,21 @@ Options:
 Save:
 </span>
 <span class="rsavecol_R rsavecol_R2">
-<input type="radio" class="rsaveinput" id="saveall" name="savewhich" value="all" data-tooltip="save all regions">
+<input type="radio" class="rsaveinput" id="saveall" name="savewhich" value="all" data-tooltip="save all regions"
+onclick="
+const form = $(this).closest('form');
+let n = form.hasClass('regionsSaveForm') ? 1 : 2;
+JS9.globalOpts[`regSaveWhich${n}`] = $(this).val();
+">
 <label for="saveall">all</label>
 </span>
 <span class="rsavecol_R rsavecol_R3L">
-<input type="radio" class="rsaveinput" id="savesel" name="savewhich" value="sel" data-tooltip="save selected regions">
+<input type="radio" class="rsaveinput" id="saveselected" name="savewhich" value="selected" data-tooltip="save selected regions"
+onclick="
+const form = $(this).closest('form');
+let n = form.hasClass('regionsSaveForm') ? 1 : 2;
+JS9.globalOpts[`regSaveWhich${n}`] = $(this).val();
+">
 <label for="savesel">selected</label>
 </span>
 </div>

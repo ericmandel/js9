@@ -531,11 +531,21 @@ Options:
 Save:
 </span>
 <span class="rconfigcol_R rconfigcol_R2">
-<input type="radio" class="rconfiginput" id="saveall" name="savewhich" value="all" data-tooltip="save all regions">
+<input type="radio" class="rconfiginput" id="saveall" name="savewhich" value="all" data-tooltip="save all regions"
+onclick="
+const form = $(this).closest('form');
+let n = form.hasClass('regionsSaveForm') ? 1 : 2;
+JS9.globalOpts[`regSaveWhich${n}`] = $(this).val();
+">
 <label for="saveall">all</label>
 </span>
 <span class="rconfigcol_R rconfigcol_R3L">
-<input type="radio" class="rconfiginput" id="savesel" name="savewhich" value="sel" data-tooltip="save selected regions">
+<input type="radio" class="rconfiginput" id="saveselected" name="savewhich" value="selected" data-tooltip="save selected regions"
+onclick="
+const form = $(this).closest('form');
+let n = form.hasClass('regionsSaveForm') ? 1 : 2;
+JS9.globalOpts[`regSaveWhich${n}`] = $(this).val();
+">
 <label for="savesel">selected</label>
 </span>
 </div>
