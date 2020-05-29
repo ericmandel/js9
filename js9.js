@@ -132,6 +132,8 @@ JS9.globalOpts = {
     regIncludeJSON: true,	// does SaveRegions(reg) include the json info?
     regIncludeComments: true,	// does SaveRegions(reg) include the comments?
     regArrowCrosshair: true,	// does move with arrow keys display crosshair?
+    regSaveWCS: "",		// def wcs for saving regions
+    regSaveFormat: "reg",	// def format for saving regions (reg,cvs,svg)
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
     ehtimeout: 500,		// connection timeout for Electron connect
@@ -16562,7 +16564,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 	    }
 	    if( key === "savewcs" ){
-		twcssys = $(form).data("savewcs") || wcssys;
+		twcssys = JS9.globalOpts.regSaveWCS || wcssys;
 	    } else {
 		twcssys = wcssys;
 	    }
@@ -16632,36 +16634,21 @@ JS9.Regions.initConfigForm = function(obj, opts){
     }
     // init options, if necessary
     if( opts.firsttime ){
-	$(`${form}[id='savereg']`)
-	    .prop("checked", true);
 	if( opts.type === "save" ){
-	    $(`${form}[id='saveall']`)
-		.prop("checked", true);
+	    $(`${form}[id='saveall']`).prop("checked", true);
 	    if( window.isElectron ){
 		$(form).find(".rsavebrowse").removeClass("nodisplay");
 	    }
 	} else {
-	    $(`${form}[id='savesel']`)
-		.prop("checked", true);
+	    $(`${form}[id='savesel']`).prop("checked", true);
 	    if( window.isElectron ){
 		$(form).find(".rconfigbrowse").removeClass("nodisplay");
 	    }
 	}
-	$(`${form}[id='includejson']`)
-	    .prop("checked", JS9.globalOpts.regIncludeJSON);
-	$(`${form}[id='includecomments']`)
-	    .prop("checked", JS9.globalOpts.regIncludeComments);
-	$(`${form}[id='includewcs']`)
-	    .prop("checked", JS9.globalOpts.csvIncludeWCS);
-	// triggering the savefile will cause format to be updated
-	$(form).find(`input[name='savefile']`).trigger("change");
-	// for save: click the save format to display it
-	if( opts.type === "save" ){
-	    $(form).find(`input[name='saveformat']:checked`).trigger("click");
-	}
 	// multi "cur" works off selected, not current, regions
 	if( multi ){
-	    $(form).find("label[for='savecur']").text("sel");
+	    $(form).find("label[for='savecur']")
+		.text("sel");
 	    $(form).find("input[id='savecur']")
 		.data("tooltip", "save selected regions");
 	}
@@ -16733,6 +16720,27 @@ JS9.Regions.initConfigForm = function(obj, opts){
     } else {
 	$(`${form}[name='changeable']`).prop("checked", false);
     }
+    // save regions processing
+    $(`${form}[id='includejson']`)
+	.prop("checked", JS9.globalOpts.regIncludeJSON);
+    $(`${form}[id='includecomments']`)
+	.prop("checked", JS9.globalOpts.regIncludeComments);
+    $(`${form}[id='includewcs']`)
+	.prop("checked", JS9.globalOpts.csvIncludeWCS);
+    // unset all save format radio buttons
+    $(form).find(`input[name='saveformat']`).prop("checked", false);
+    // set save format based on global value
+    $(form).find(`input[value='${JS9.globalOpts.regSaveFormat}']`)
+	.trigger("click");
+    // unset all save wcs radio buttons
+    $(form).find(`input[name='rwcsbutton']`).prop("checked", false);
+    // set save wcs based on global value
+    $(form).find(`input[value='${JS9.globalOpts.regSaveWCS||wcssys}']`)
+	.trigger("click");
+    // triggering the savefile will cause format to be updated
+    $(form).find(`input[name='savefile']`).trigger("change");
+    // move caret to end of savefile for long filenames
+    $(form).find(`input[name='savefile']`).focus().caretToEnd();
     // shape specific processing
     if( multi ){
 	$(form).find(".regid").hide();
@@ -16774,8 +16782,6 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    break;
 	}
     }
-    // move caret to end of savefile for long filenames
-    $(form).find(`input[name='savefile']`).focus().caretToEnd();
     // save image for later processing
     $(form).data("im", this);
     // save shape object for later processing

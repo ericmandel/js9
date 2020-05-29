@@ -138,7 +138,7 @@ Coordinates:
 let el;
 const form = $(this).closest('form');
 const wcssys =  $(this).val();
-$(form).data('savewcs', wcssys);
+JS9.globalOpts.regSaveWCS = wcssys;
 el = $(form).find('.rwcsbuttons').find(`[value='${wcssys}']`);
 if( el.length > 0 ){
     el.prop('checked', true);
@@ -162,6 +162,7 @@ let ext;
 const form = $(this).closest('form');
 const savefile = form.find(`[name='savefile']`);
 const fname = savefile.val();
+JS9.globalOpts.regSaveFormat = $(this).val();
 form.find('.xtrareg').removeClass('nodisplay');
 form.find('.xtracsv').addClass('nodisplay');
 form.find('.xtrasvg').addClass('nodisplay');
@@ -181,6 +182,7 @@ let ext;
 const form = $(this).closest('form');
 const savefile = form.find(`[name='savefile']`);
 const fname = savefile.val();
+JS9.globalOpts.regSaveFormat = $(this).val();
 form.find('.xtrareg').addClass('nodisplay');
 form.find('.xtracsv').removeClass('nodisplay');
 form.find('.xtrasvg').addClass('nodisplay');
@@ -194,12 +196,13 @@ if( fname ){
 <label for="savecsv">csv</label>
 </span>
 <span class="rsavecol_R rsavecol_R4">
-<input type="radio" class="rsaveinput" id="savesvg" name="saveformat" value="SVG" data-tooltip="save as SVG object"
+<input type="radio" class="rsaveinput" id="savesvg" name="saveformat" value="svg" data-tooltip="save as SVG object"
 onclick="
 let ext;
 const form = $(this).closest('form');
 const savefile = form.find(`[name='savefile']`);
 const fname = savefile.val();
+JS9.globalOpts.regSaveFormat = $(this).val();
 form.find('.xtrareg').addClass('nodisplay');
 form.find('.xtracsv').addClass('nodisplay');
 form.find('.xtrasvg').removeClass('nodisplay');
