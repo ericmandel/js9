@@ -15524,14 +15524,14 @@ JS9.MouseTouch.HEIGHT = 220;	    // height of light window
 JS9.MouseTouch.BASE = JS9.MouseTouch.CLASS + JS9.MouseTouch.NAME;
 
 JS9.MouseTouch.mouseText = [];
-JS9.MouseTouch.mouseText[0] = "move mouse, no buttons pressed:";
-JS9.MouseTouch.mouseText[1] = "move mouse, primary button pressed:";
-JS9.MouseTouch.mouseText[2] = "move mouse, secondary button pressed:";
+JS9.MouseTouch.mouseText[0] = "Move mouse, no buttons pressed:";
+JS9.MouseTouch.mouseText[1] = "Move mouse, primary button pressed:";
+JS9.MouseTouch.mouseText[2] = "Move mouse, secondary button pressed:";
 
 JS9.MouseTouch.touchText = [];
-JS9.MouseTouch.touchText[0] = "touch move, with one finger:";
-JS9.MouseTouch.touchText[1] = "touch move, with two fingers:";
-JS9.MouseTouch.touchText[2] = "touch move, with three fingers:";
+JS9.MouseTouch.touchText[0] = "Touch move, with one finger:";
+JS9.MouseTouch.touchText[1] = "Touch move, with two fingers:";
+JS9.MouseTouch.touchText[2] = "Touch move, with three fingers:";
 
 JS9.MouseTouch.textHTML="<div style='float: left'>%s</div>";
 
@@ -16005,7 +16005,7 @@ JS9.MouseTouch.init = function(){
 	});
     }
     // add the footer, containing buttons
-    s = sprintf("<p><div class='%s'>use mouse wheel or pinch to zoom:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type='checkbox' value='1' onclick='javascript:JS9.MouseTouch.mousetouchzoom(\"%s\", this);'></div>", `${JS9.MouseTouch.BASE}Footer`, this.display.id);
+    s = sprintf("<p><div class='%s'>Use mouse wheel or pinch to zoom:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type='checkbox' value='1' onclick='javascript:JS9.MouseTouch.mousetouchzoom(\"%s\", this);'></div>", `${JS9.MouseTouch.BASE}Footer`, this.display.id);
     this.mousetouchFootContainer = $("<span style='float: left'>")
 	.addClass(`${JS9.MouseTouch.BASE}Container`)
 	.attr("id", `${this.id}MouseTouchFootContainer`)
