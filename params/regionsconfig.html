@@ -416,11 +416,10 @@ im.processRegionsForm(form, shape, arr2);"
 >
 </span>
 </div>
-
 <p>
 <hr>
 <p>
-
+<!-- start: regions save html -->
 <div class="nodisplay rwcsbuttons">
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
@@ -557,7 +556,6 @@ include:
 </div>
 </div>
 
-
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R2L">
 <input type="text" class="val JS9Text rconfigtext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name"
@@ -566,6 +564,7 @@ let ext, form, fname;
 form = $(this).closest('form');
 fname = $(this).val();
 if( fname ){
+  $(this).focus().caretToEnd();
   $(form).data('savefile', fname);
   ext = fname.split('.').pop().toLowerCase();
   switch(ext){
@@ -675,7 +674,7 @@ if( im ){
 >
 </span>
 </div>
-
+<!-- end:   regions save html -->
 </form>
 </body>
 <!-- mkallinone inline: delete everything from </body> to the end -->

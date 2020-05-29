@@ -16774,6 +16774,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    break;
 	}
     }
+    // move caret to end of savefile for long filenames
+    $(form).find(`input[name='savefile']`).focus().caretToEnd();
     // save image for later processing
     $(form).data("im", this);
     // save shape object for later processing
@@ -21957,6 +21959,10 @@ JS9.dirname = function(f){
     }
     return f.match(/.*\//)[0];
 };
+
+// ---------------------------------------------------------------------
+// end of Utilities
+// ---------------------------------------------------------------------
 
 // ---------------------------------------------------------------------
 // global event handlers

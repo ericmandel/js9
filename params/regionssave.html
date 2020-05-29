@@ -50,14 +50,7 @@
     position: absolute;
     top: 0;
     left:  100px;
-    width: 160px;
-}
-
-.rsavecol_R2LL {
-    position: absolute;
-    top: 0;
-    left:  100px;
-    width: 320px;
+    width: 300px;
 }
 
 .rsavecol_R3 {
@@ -131,7 +124,7 @@
 <body>
 
 <form id="regionsSaveForm" class="js9AnalysisForm regionsConfigForm" action="" data-enterfunc="Apply">
-
+<!-- start: regions save html to be added to regions config -->
 <div class="nodisplay rwcsbuttons">
 <div class="rsavelinegroup">
 <span class="rsavecol_R rsavecol_R1">
@@ -262,20 +255,21 @@ include:
 
 <div class="nodisplay xtrasvg">
 <div class="rsavelinegroup">
-<span class="rsavecol_R rsavecol_R2LL">
+<span class="rsavecol_R rsavecol_R2L">
 &nbsp;
 </span>
 </div>
 </div>
 
 <div class="rsavelinegroup">
-<span class="rsavecol_R rsavecol_R2LL">
+<span class="rsavecol_R rsavecol_R2L">
 <input type="text" class="val JS9Text rsavetext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name"
 onchange="
 let ext, form, fname;
 form = $(this).closest('form');
 fname = $(this).val();
 if( fname ){
+  $(this).focus().caretToEnd();
   $(form).data('savefile', fname);
   ext = fname.split('.').pop().toLowerCase();
   switch(ext){
@@ -385,7 +379,7 @@ if( im ){
 >
 </span>
 </div>
-
+<!-- end: regions save html to be added to regions config -->
 </form>
 </body>
 <!-- mkallinone inline: delete everything from </body> to the end -->
