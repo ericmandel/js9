@@ -16595,11 +16595,10 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    if( multi ){
 		val = "selected";
 	    } else if( obj.pub.id !== undefined ){
-		val = obj.pub.id;
+		val = String(obj.pub.id);
+		// set width of text input to be width of string
+		$(element).css("width", `${val.length}ch`);
 	    }
-	    // this is a span, so we have to set the text explicitly
-	    // (could use html() as well)
-	    $(element).text(val);
 	    break;
 	case "tags":
 	    if( obj.pub[key] !== undefined ){

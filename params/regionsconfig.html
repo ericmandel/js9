@@ -153,6 +153,14 @@
     webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
 }
+
+.rconfigtext_regid {
+    font: normal 12px Arial;
+    padding: 0px;
+    margin: 0px;
+    text-align: right;
+    outline: none;
+}
 </style>
 
 </head>
@@ -164,11 +172,11 @@
 <div class="regid">
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
-Region&nbsp;<span class="val rconfigtext_R0" name="id" data-tooltip="region id (can be used in selection)"></span>:
+Region&nbsp;<input type="text" class="val rconfigtext_regid rconfigtext_R0" name="id" value="" data-tooltip="region id (can be used in selection)" readonly="readonly">:
 </span>
 
 <span class="rconfigcol_R rconfigcol_R2L">
-<input type="text" class="val JS9Text rconfigtext_R" name="regstr" value="" readonly="readonly" autocapitalize="off" autocorrect="off" data-tooltip="region in current global coordinate system">
+<input type="text" class="val JS9Text rconfigtext_R" name="regstr" value="" autocapitalize="off" autocorrect="off" data-tooltip="region in current global coordinate system" readonly="readonly">
 </span>
 
 <span class="rconfigcol_R rconfigcol_R6">
@@ -235,7 +243,7 @@ if( im && wcssys && shape && shape.params ){
 Selected:&nbsp;
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
-<textarea class="val JS9TextArea rconfigtextarea_R2" name="multitext" autocapitalize="off" autocorrect="off" data-tooltip="currently selected regions" rows="4" cols="80" readonly></textarea>
+<textarea class="val JS9TextArea rconfigtextarea_R2" name="multitext" autocapitalize="off" autocorrect="off" data-tooltip="currently selected regions" rows="4" cols="80" readonly="readonly"></textarea>
 </span>
 </div>
 </div>
