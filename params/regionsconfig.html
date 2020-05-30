@@ -662,7 +662,7 @@ const form = $(this).closest('form');
 const im = form.data('im');
 const fname = form.find(`[name='savefile']`).val();
 const which = form.find(`input[name='savewhich']:checked`).val();
-const id = which.match(/all/) ? 'all' : 'selected';
+const id = which.match(/all/) ? 'all' : (form.find(`[name='id']`).val() || 'selected');
 const format = form.find(`input[name='saveformat']:checked`).val();
 const wcssys = form.find(`[name='savewcs']`).children('option:selected').val();
 let opts = {};
