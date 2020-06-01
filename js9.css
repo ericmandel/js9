@@ -327,11 +327,6 @@ div.JS9Progress {
     background-color: #ebebeb;
 }
 
-/* expand button is slightly different from Button2 */
-.JS9ExpandButton {
-    font-weight: bold;
-}
-
 .JS9RunButton {
     font: normal 12px Arial;
     color: white;
