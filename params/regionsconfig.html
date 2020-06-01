@@ -403,7 +403,7 @@ Misc:
 <input type="checkbox" class="rconfigcheckbox" name="listonchange" value="true" data-tooltip="toggle List on Change requires clicking Apply">List on change
 </span>
 <span class="rconfigcol_R rconfigcol_R7L">
-<input name="Close" type="button" class="JS9Button2" value="Close"
+<input name="Close" type="button" class="JS9Button2" value="Cancel"
 onclick="
 const form = $(this).closest('form');
 const shape = form.data('shape');
@@ -655,7 +655,7 @@ if( this.files.length  ){
 </div>
 
 <span class="rconfigcol_R rconfigcol_R7L">
-<input name="Close" type="button" class="JS9Button2" value="Close"
+<input name="Close" type="button" class="JS9Button2" value="Cancel"
 onclick="
 const form = $(this).closest('form');
 const shape = form.data('shape');
@@ -667,6 +667,8 @@ winid.close();"
 <input name="Save" type="button" class="JS9RunButton" value="Save"
 onclick="
 const form = $(this).closest('form');
+const shape = form.data('shape');
+const winid = form.data('winid');
 const im = form.data('im');
 const fname = form.find(`[name='savefile']`).val();
 const which = form.find(`input[name='savewhich']:checked`).val();
@@ -691,6 +693,12 @@ if( im ){
   }
   form.data('savefile', fname);
   im.saveRegions(fname, id, opts);
+  if( typeof shape === 'object' && shape.params ){
+    shape.params.winid = null;
+  }
+  if( typeof winid === 'object' ){
+    winid.close();
+  }
 }"
 >
 </span>
