@@ -402,6 +402,8 @@ Misc:
 <span class="rconfigcol_R rconfigcol_R4L">
 <input type="checkbox" class="rconfigcheckbox" name="listonchange" value="true" data-tooltip="toggle List on Change requires clicking Apply">List on change
 </span>
+</div>
+<div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R7L">
 <input name="Close" type="button" class="JS9Button2" value="Cancel"
 onclick="
@@ -428,6 +430,84 @@ im.processRegionsForm(form, shape, arr2);"
 <hr>
 </div>
 <!-- start: regions save html -->
+<div class="rconfiglinegroup">
+<div class="nodisplay rconfigbrowse">
+<span class="rconfigcol_R rconfigcol_R1">
+<input name="Browse" type="button" class="JS9Button2" value="..." data-tooltip="browse files"
+onclick="
+  const form = $(this).closest('form');
+  const browse = form.find(`[name='browsefile']`);
+  browse.click();"
+>
+</span>
+</div>
+<div class=" JS9Hidden rconfigbrowse">
+<input type="file" class="val rconfigfile_R" id="browsefile" name="browsefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="browse files"
+onchange="
+let form, savefile, fname;
+if( this.files.length  ){
+  form = $(this).closest('form');
+  fname =  this.files[0].path || this.files[0].name;
+  if( fname ){
+    savefile = form.find(`[name='savefile']`);
+    savefile.val(fname).trigger('change');
+  }
+}
+">
+</div>
+<span class="rconfigcol_R rconfigcol_R2L">
+<input type="text" class="val JS9Text rconfigtext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name"
+onchange="
+let ext, form, fname;
+form = $(this).closest('form');
+fname = $(this).val();
+if( fname ){
+  $(this).focus().caretToEnd();
+  $(form).data('savefile', fname);
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'reg':
+    form.find(`input[name='saveformat'][id='savereg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'csv':
+    form.find(`input[name='saveformat'][id='savecsv']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'svg':
+    form.find(`input[name='saveformat'][id='savesvg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  }
+}
+"
+onkeypress="
+let ext, form, fname;
+if( event.keyCode !== 13 ){ return; }
+form = $(this).closest('form');
+fname = $(this).val();
+if( fname ){
+  $(form).data('savefile', fname);
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'reg':
+    form.find(`input[name='saveformat'][id='savereg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'csv':
+    form.find(`input[name='saveformat'][id='savecsv']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'svg':
+    form.find(`input[name='saveformat'][id='savesvg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  }
+}
+">
+</span>
+</div>
+
 <div class="nodisplay rwcsbuttons">
 <div class="rconfiglinegroup">
 <span class="rconfigcol_R rconfigcol_R1">
@@ -578,82 +658,6 @@ JS9.globalOpts[`regSaveWhich${n}`] = $(this).val();
 </div>
 
 <div class="rconfiglinegroup">
-<span class="rconfigcol_R rconfigcol_R2L">
-<input type="text" class="val JS9Text rconfigtext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name"
-onchange="
-let ext, form, fname;
-form = $(this).closest('form');
-fname = $(this).val();
-if( fname ){
-  $(this).focus().caretToEnd();
-  $(form).data('savefile', fname);
-  ext = fname.split('.').pop().toLowerCase();
-  switch(ext){
-  case 'reg':
-    form.find(`input[name='saveformat'][id='savereg']`)
-        .prop('checked', true).trigger('click');
-    break;
-  case 'csv':
-    form.find(`input[name='saveformat'][id='savecsv']`)
-        .prop('checked', true).trigger('click');
-    break;
-  case 'svg':
-    form.find(`input[name='saveformat'][id='savesvg']`)
-        .prop('checked', true).trigger('click');
-    break;
-  }
-}
-"
-onkeypress="
-let ext, form, fname;
-if( event.keyCode !== 13 ){ return; }
-form = $(this).closest('form');
-fname = $(this).val();
-if( fname ){
-  $(form).data('savefile', fname);
-  ext = fname.split('.').pop().toLowerCase();
-  switch(ext){
-  case 'reg':
-    form.find(`input[name='saveformat'][id='savereg']`)
-        .prop('checked', true).trigger('click');
-    break;
-  case 'csv':
-    form.find(`input[name='saveformat'][id='savecsv']`)
-        .prop('checked', true).trigger('click');
-    break;
-  case 'svg':
-    form.find(`input[name='saveformat'][id='savesvg']`)
-        .prop('checked', true).trigger('click');
-    break;
-  }
-}
-">
-</span>
-<div class="nodisplay rconfigbrowse">
-<span class="rconfigcol_R rconfigcol_R1">
-<input name="Browse" type="button" class="JS9Button2" value="..." data-tooltip="browse files"
-onclick="
-  const form = $(this).closest('form');
-  const browse = form.find(`[name='browsefile']`);
-  browse.click();"
->
-</span>
-</div>
-<div class=" JS9Hidden rconfigbrowse">
-<input type="file" class="val rconfigfile_R" id="browsefile" name="browsefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="browse files"
-onchange="
-let form, savefile, fname;
-if( this.files.length  ){
-  form = $(this).closest('form');
-  fname =  this.files[0].path || this.files[0].name;
-  if( fname ){
-    savefile = form.find(`[name='savefile']`);
-    savefile.val(fname).trigger('change');
-  }
-}
-">
-</div>
-
 <span class="rconfigcol_R rconfigcol_R7L">
 <input name="Close" type="button" class="JS9Button2" value="Cancel"
 onclick="
