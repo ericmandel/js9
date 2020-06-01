@@ -16742,9 +16742,6 @@ JS9.Regions.initConfigForm = function(obj, opts){
     }
     $(`${form}[id='${s}']`)
 	.prop("checked", true);
-    // triggering the savefile will cause format to be updated
-    $(form).find(`input[name='savefile']`)
-	.trigger("change");
     // move caret to end of savefile for long filenames
     $(form).find(`input[name='savefile']`)
 	.focus().caretToEnd();
