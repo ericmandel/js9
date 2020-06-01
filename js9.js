@@ -16635,8 +16635,10 @@ JS9.Regions.initConfigForm = function(obj, opts){
     }
     // init options, if necessary
     if( opts.firsttime ){
+	// desktop: display file browser
 	if( window.isElectron ){
-	    $(form).find(".rsavebrowse").removeClass("nodisplay");
+	    $(form).find(".rsavebrowse, .rconfigbrowse")
+		.removeClass("nodisplay");
 	}
 	// multi "cur" works off selected, not current, regions
 	if( multi ){
