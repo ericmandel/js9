@@ -69,7 +69,7 @@
     position: absolute;
     top: 0;
     left:  100px;
-    width: 400px;
+    width: 390px;
 }
 
 .rconfigcol_R3 {
@@ -438,16 +438,6 @@ im.processRegionsForm(form, shape, arr2);"
 </div>
 <!-- start: regions save html -->
 <div class="rconfiglinegroup">
-<div class="nodisplay rconfigbrowse">
-<span class="rconfigcol_R rconfigcol_R1">
-<input name="Browse" type="button" class="JS9Button2" value="..." data-tooltip="browse files"
-onclick="
-  const form = $(this).closest('form');
-  const browse = form.find(`[name='browsefile']`);
-  browse.click();"
->
-</span>
-</div>
 <div class=" JS9Hidden rconfigbrowse">
 <input type="file" class="val rconfigfile_R" id="browsefile" name="browsefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="browse files"
 onchange="
@@ -462,6 +452,9 @@ if( this.files.length  ){
 }
 ">
 </div>
+<span class="rconfigcol_R rconfigcol_R1">
+Filename:
+</span>
 <span class="rconfigcol_R rconfigcol_R2LL">
 <input type="text" class="val JS9Text rconfigtext_R" name="savefile" value="" autocapitalize="off" autocorrect="off" data-tooltip="save file name"
 onchange="
@@ -513,6 +506,17 @@ if( fname ){
 }
 ">
 </span>
+&nbsp;&nbsp;
+<div class="nodisplay rconfigbrowse">
+<span class="rconfigcol_R rconfigcol_R7">
+<input name="Browse" type="button" class=" JS9ExpandButton JS9Button2" value="&#8744;" data-tooltip="browse files"
+onclick="
+  const form = $(this).closest('form');
+  const browse = form.find(`[name='browsefile']`);
+  browse.click();"
+>
+</span>
+</div>
 </div>
 
 <div class="nodisplay rwcsbuttons">
