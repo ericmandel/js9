@@ -411,7 +411,7 @@ JS9.lightOpts = {
 	paramWin: "width=830px,height=235px,resize=1,scrolling=1",
 	regWin0:  "width=640px,height=75px,resize=1,scrolling=1",
 	regWin1:  "width=640px,height=200px,resize=1,scrolling=1",
-	regWin:   "width=640px,height=455px,resize=1,scrolling=1",
+	regWin:   "width=640px,height=460px,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,resize=1,scrolling=1"
     },
