@@ -16725,13 +16725,13 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	.prop("checked", false);
     // set save format based on global value
     $(form).find(`input[value='${JS9.globalOpts.regSaveFormat}']`)
-	.trigger("click");
+	.prop("checked", true);
     // unset all save wcs radio buttons
     $(form).find(`input[name='rwcsbutton']`)
 	.prop("checked", false);
     // set save wcs based on global value
     $(form).find(`input[value='${JS9.globalOpts.regSaveWCS||wcssys}']`)
-	.trigger("click");
+	.prop("checked", true);
     // set which regions get saved
     if( opts.type === "save" ){
 	s = `save${JS9.globalOpts.regSaveWhich1}`;
