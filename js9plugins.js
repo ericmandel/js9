@@ -13425,13 +13425,15 @@ JS9.SyncUI.reciprocalHTML='<span class="JS9SyncUIOpts" style="position:absolute;
 
 JS9.SyncUI.syncwcsHTML='<span class="JS9SyncUIOpts" style="position:absolute; left:%spx; top:0px"><input class="JS9SyncUIOptsCheck" type="checkbox" name="%s" value="active" onchange="javascript:JS9.SyncUI.xsyncwcs(\'%s\', this)">&nbsp;&nbsp;<b>%s</b></span>';
 
-JS9.SyncUI.footerHTML='<div class="JS9SyncUIButtons" <p>$sync&nbsp;&nbsp;&nbsp;&nbsp;$once&nbsp;&nbsp;&nbsp;&nbsp;$unsync</div>';
+JS9.SyncUI.footerHTML='<div class="JS9SyncUIButtons" <p><span style="float:right;">$cancel&nbsp;&nbsp;$sync&nbsp;&nbsp;&nbsp;&nbsp;$once&nbsp;&nbsp;&nbsp;&nbsp;$unsync</span></div>';
 
-JS9.SyncUI.syncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9Button2 JS9SyncUIButton" id="active" name="sync" value="Sync Repeatedly" onclick="javascript:JS9.SyncUI.xsync(\'%s\', this)"></span>';
+JS9.SyncUI.cancelHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9Button2 JS9SyncUIButton" id="active" name="sync" value="Cancel" onclick="javascript:JS9.SyncUI.xcancel(\'%s\', this)" %s></span>';
 
-JS9.SyncUI.onceHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9Button2 JS9SyncUIButton" id="active" name="once" value="Sync Once" onclick="javascript:JS9.SyncUI.xonce(\'%s\', this)"></span>';
+JS9.SyncUI.syncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9RunButton JS9SyncUIButton" id="active" name="sync" value="Sync Repeatedly" onclick="javascript:JS9.SyncUI.xsync(\'%s\', this)"></span>';
 
-JS9.SyncUI.unsyncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9Button2 JS9SyncUIButton" id="active" name="unsync" value="Unsync" onclick="javascript:JS9.SyncUI.xunsync(\'%s\', this)"></span>';
+JS9.SyncUI.onceHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9RunButton JS9SyncUIButton" id="active" name="once" value="Sync Once" onclick="javascript:JS9.SyncUI.xonce(\'%s\', this)"></span>';
+
+JS9.SyncUI.unsyncHTML='<span class="JS9SyncUIButton"><input type="button" class="JS9RunButton JS9SyncUIButton" id="active" name="unsync" value="Unsync" onclick="javascript:JS9.SyncUI.xunsync(\'%s\', this)"></span>';
 
 
 JS9.SyncUI.getImsOpsOpts = function(el){
@@ -13464,6 +13466,19 @@ JS9.SyncUI.getImsOpsOpts = function(el){
 	});
     }
     return {ims, ops, opts};
+};
+
+// cancel
+// eslint-disable-next-line no-unused-vars
+JS9.SyncUI.xcancel = function(did, target){
+    let plugin;
+    const display = JS9.getDynamicDisplayOr(JS9.lookupDisplay(did));
+    if( display ){
+	plugin = display.pluginInstances.JS9SyncUI;
+	if( plugin && plugin.winHandle ){
+	    plugin.winHandle.close();
+	}
+    }
 };
 
 // sync
@@ -13774,6 +13789,8 @@ JS9.SyncUI.init = function(){
 	.appendTo(this.syncOptsContainer);
     // footer containing run buttons
     opts = [];
+    opts.push({name: "cancel", value: sprintf(JS9.SyncUI.cancelHTML, dispid,
+	       this.winHandle ? "" : 'style="display:none;"')});
     opts.push({name: "sync", value: sprintf(JS9.SyncUI.syncHTML, dispid)});
     opts.push({name: "once", value: sprintf(JS9.SyncUI.onceHTML, dispid)});
     opts.push({name: "unsync", value: sprintf(JS9.SyncUI.unsyncHTML, dispid)});
