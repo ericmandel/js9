@@ -2349,7 +2349,7 @@ div.JS9Progress {
 .JS9RunButton {
     font: normal 12px Arial;
     color: white;
-    background-color: rgba(49,136,251,1);
+    background-color: #3188fb;
     border: none;
     border-radius: 4px;
     padding: 2px 4px 2px 4px;
@@ -2358,12 +2358,12 @@ div.JS9Progress {
 }
 
 .JS9RunButton:hover {
-    /* lightened using https://pinetools.com/lighten-color */
-    color: #d5d5d5;
+    /* darkened using https://pinetools.com/darken-color */
+    background-color: #0468eb;
 }
 
 .JS9RunButton:active {
-    color: black;
+    background-color: #034db0;
 }
 
 /* for menus inside dialog boxes and plugins */

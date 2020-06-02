@@ -132,34 +132,49 @@
     }
 
     function archInit() {
-
 	var div = this.div;
+	var win = this.winHandle;
+	var disclose = win ? "" : 'style="display:none;"';
 
-	div.innerHTML = '<form class="JS9Archive-form">\
-	    <select class="service-menu JS9Select"></select>\
-	    <select class="server-menu JS9Select"></select>\
-	    <select class="source-menu JS9Select"></select>\
-	    <span style="float: right;"><input type=button value="Set RA/Dec" class="get-ra-dec JS9Button2">&nbsp;&nbsp;<input type=button value="Retrieve Data" class="service-go JS9Button2"></span>	\
-	    <p>											\
-												\
-	    <table width="98%">									\
-	    <tr><td> Object: </td> <td> <input type=text name=object size=12> </td>		\
-		<td></td>									\
-		<td></td>									\
-		<td>&nbsp;&nbsp;</td>								\
-		<td> <input type=checkbox name=gzip> compression</td>			\
-	    </tr>										\
-	    <tr><td> RA:  	</td><td>	<input type=text name=ra	size=12> </td>	\
-		<td> Dec: 	</td><td>	<input type=text name=dec	size=12> </td>	\
-		<td></td>									\
-		<td> <input type=checkbox name=CORS checked> CORS proxy</td>		\
-	    <tr><td> Width: </td><td>	<input type=text name=width	size=12 value=15> </td>	\
-		<td> Height: </td><td>	<input type=text name=height	size=12 value=15> </td>	\
-	    </tr>										\
-	    </table>										\
-	    <div class="js9archive-controls"></div>								\
-	    <p><span class=status></span>							\
-	    </form>';
+	div.innerHTML = `<form class="JS9Archive-form">
+            <p>
+	    <select class="service-menu JS9Select"></select>
+	    <select class="server-menu JS9Select"></select>
+	    <select class="source-menu JS9Select"></select>
+	    <p>
+	    <table width="98%">
+	    <tr><td>RA:  	</td><td>	<input type=text name=ra	size=12> </td>
+		<td>Dec: 	</td><td>	<input type=text name=dec	size=12> </td>
+		<td><input type=button value="Set RA/Dec" class="get-ra-dec JS9Button2"> </td>
+	    <tr><td>Width: </td><td>	<input type=text name=width	size=12 value=15> </td>
+		<td>Height: </td><td>	<input type=text name=height	size=12 value=15> </td>
+                <td>
+                    <input type=checkbox name=CORS checked>CORS
+		    <input type=checkbox name=gzip> compress
+                </td>
+	    </tr>
+	    <tr><td>Object: </td> <td> <input type=text name=object size=12> </td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+            </tr>
+            <tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+            </tr>
+            <tr>
+		<td colspan="4"><span class=status></td>
+	        <td>
+                    <input type=button value="Cancel" class="service-cancel JS9Button2" ${disclose}>
+                    &nbsp;
+                    <input type=button value="Get Data" class="service-go JS9RunButton">
+                </td>
+            </tr>
+	    </table>
+	    </form>`;
 
 	var mtyp = $(div).find(".service-menu");
 	var msrv = $(div).find(".server-menu");
@@ -170,8 +185,9 @@
 
 	var display = this.display;
 
-	$(div).find(".service-go").on("mouseup", function () { serviceGo(div, display); });
-	$(div).find(".get-ra-dec").on("mouseup", function () { getRADec (div, display); });
+	$(div).find(".service-cancel").on("mouseup", function() { if( win ){ win.close(); } });
+	$(div).find(".service-go").on("mouseup", function() { serviceGo(div, display); });
+	$(div).find(".get-ra-dec").on("mouseup", function() { getRADec (div, display); });
 	
 	var imgmenu = [];
 	$.each(Remote.Services, function(i, service) {
@@ -199,7 +215,7 @@
 
 	    menuItem: "Archives & Catalogs",
 	    winTitle: "Archives & Catalogs",
-	    winDims: [610, 175],
+	    winDims: [610, 210],
 
 	    help:	"archive/archive.html"
     });

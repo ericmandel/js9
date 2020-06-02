@@ -191,7 +191,7 @@
 	let div = this.div;
 	let display = this.display;
 	let win = this.winHandle;
-	let disclose = "";
+	let disclose = win ? "" : 'style="display:none;"';
 	let im  = JS9.GetImage({display: this.display});
 
 	if( !im || (im && !im.raw.hdu) ){
@@ -205,10 +205,6 @@
 	} else {
 	    binblock = "Bin";
 	    binblocked = "binned";
-	}
-
-	if( !win ){
-	    disclose = 'disabled="disabled"';
 	}
 
 	html = `<form class="js9BinningForm js9Form">
@@ -259,10 +255,14 @@
 			<td>&nbsp(display as separate image?)</td>
 		   </tr>
 		   <tr>
-			<td><input type=button name=rebin value="Run" class="js9-binning-rebin JS9Button2"></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
-                        <td>&nbsp;<input type=button name=close value="Close" class="js9-binning-close JS9Button2" ${disclose}'></td>
+			<td>&nbsp;</td>
+                        <td>
+                            <input type=button name=close value="Cancel" class="js9-binning-close JS9Button2" ${disclose}'>
+                            &nbsp;
+			    <input type=button name=rebin value="Get Data" class="js9-binning-rebin JS9RunButton">
+                        </td>
 		   </tr>
 	    </table>
 	    </form>`;
