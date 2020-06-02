@@ -111,7 +111,8 @@ JS9.globalOpts = {
     requireFits2Fits: false,    // throw error if fits2fits can't be run?
     quietReturn: false,         // should API return empty string or "OK"?
     useWasm: true,		// use WebAssembly if available?
-    allowFileWasm: true,        // allow file:// to use wasm?
+    allowFileWasm: true,	// allow file:// to use wasm?
+    clickToFocus: true,		// how to change focus on the display
     winType: "light",		// plugin window: "light" or "new"
     sortPreloads: true,         // sort preloads into original order after load?
     defcolor: "#00FF00",	// graphics color when all else fails
@@ -411,7 +412,7 @@ JS9.lightOpts = {
 	paramWin: "width=830px,height=235px,resize=1,scrolling=1",
 	regWin0:  "width=640px,height=75px,resize=1,scrolling=1",
 	regWin1:  "width=640px,height=200px,resize=1,scrolling=1",
-	regWin:   "width=640px,height=460px,resize=1,scrolling=1",
+	regWin:   "width=640px,height=470px,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,resize=1,scrolling=1",
 	lineWin:  "width=400px,height=60px,resize=1,scrolling=1"
     },
@@ -16740,11 +16741,10 @@ JS9.Regions.initConfigForm = function(obj, opts){
     } else {
 	s = `save${JS9.globalOpts.regSaveWhich2}`;
     }
-    $(`${form}[id='${s}']`)
-	.prop("checked", true);
-    // move caret to end of savefile for long filenames
-    $(form).find(`input[name='savefile']`)
-	.focus().caretToEnd();
+    $(`${form}[id='${s}']`).prop("checked", true);
+    // triggering the savefile will cause format to be updated
+    // and focus to be set
+    $(form).find(`input[name='savefile']`).trigger("change");
     // shape specific processing
     if( multi ){
 	$(form).find(".regid").hide();
@@ -16794,16 +16794,23 @@ JS9.Regions.initConfigForm = function(obj, opts){
     $(form).data("winid", winid);
     // save multi state for later processing
     $(form).data("multi", multi);
+    // even triggers
+    if( JS9.BROWSER[3] ){
+	mover = "touchstart";
+	mout = "touchend";
+    } else {
+	mover = "mouseover";
+	mout = "mouseout";
+    }
+    // for save form, focus on filename
+    if( opts.type === "save" ){
+	$(form).on(mover, () => {
+	    $(form).find(`input[name='savefile']`).focus();
+	});
+    }
     // add tooltip callbacks (not mobile: ios buttons stop working!)
     if( !$(form).data("tooltipInit") ){
 	$(form).data("tooltipInit", true);
-	if( JS9.BROWSER[3] ){
-	    mover = "touchstart";
-	    mout = "touchend";
-	} else {
-	    mover = "mouseover";
-	    mout = "mouseout";
-	}
 	$(".rconfigcol_R, .rsavecol_R").on(mover, (e) => {
 	    const target = e.currentTarget;
 	    const tooltip = $(target)
@@ -21982,9 +21989,15 @@ JS9.dirname = function(f){
 JS9.mouseDownCB = function(evt){
     const display = evt.data;
     const im = display.image;
+    const x = $(document).scrollLeft(), y = $(document).scrollTop();
     // sanity checks
     if( !im ){
 	return;
+    }
+    // set focus, if necessary, but undo any scrolling
+    if( JS9.globalOpts.clickToFocus ){
+	im.display.displayConjq.focus();
+	window.scrollTo(x, y);
     }
     // get element offset
     if( evt.target ){
@@ -22237,9 +22250,11 @@ JS9.mouseOverCB = function(evt){
     if( !im ){
 	return;
     }
-    // set focus, but undo any scrolling
-    im.display.displayConjq.focus();
-    window.scrollTo(x, y);
+    // set focus, if necessary, but undo any scrolling
+    if( !JS9.globalOpts.clickToFocus ){
+	im.display.displayConjq.focus();
+	window.scrollTo(x, y);
+    }
     // change cursor
     // document.body.style.cursor = "crosshair";
     // plugin callbacks
@@ -22265,7 +22280,9 @@ JS9.mouseOutCB = function(evt){
 	return;
     }
     // unset focus
-    im.display.displayConjq.blur();
+    if( !JS9.globalOpts.clickToFocus ){
+	im.display.displayConjq.blur();
+    }
     // if processing a region, update it now
     // (in case the mouseup happens outside the display)
     if( im.clickInRegion && im.clickInLayer ){

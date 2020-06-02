@@ -497,6 +497,10 @@ JS9.Prefs.globalsSchema = {
 	    "type": "boolean",
 	    "helper": "scroll/pinch to zoom?"
 	},
+	"clickToFocus": {
+	    "type": "boolean",
+	    "helper": "click display to focus?"
+	},
 	"toolbarTooltips": {
 	    "type": "boolean",
 	    "helper": "show tooltips in Toolbar plugin?"
