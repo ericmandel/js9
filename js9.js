@@ -410,7 +410,7 @@ JS9.lightOpts = {
 	dpathWin: "width=830px,height=175px,resize=1,scrolling=1",
 	lcloseWin:"width=512px,height=190px,resize=1,scrolling=1",
 	paramWin: "width=830px,height=235px,resize=1,scrolling=1",
-	regWin0:  "width=640px,height=75px,resize=1,scrolling=1",
+	regWin0:  "width=640px,height=130px,resize=1,scrolling=1",
 	regWin1:  "width=640px,height=200px,resize=1,scrolling=1",
 	regWin:   "width=640px,height=470px,resize=1,scrolling=1",
 	imageWin: "width=512px,height=598px,resize=1,scrolling=1",

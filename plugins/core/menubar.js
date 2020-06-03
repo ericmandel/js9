@@ -2165,8 +2165,8 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    items.sep1 = "------";
-	    items.loadRegions  = xname("load");
 	    items.listRegions  = xname("list");
+	    items.loadRegions  = xname("load ...");
 	    items.saveRegions  = xname("save ...");
 	    items.copyto  = {
 		name: "copy to ...",
