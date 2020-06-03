@@ -4801,7 +4801,7 @@ JS9.Info.opts = {
 	object: '<tr><td><input type="text" class="column0" value="object" readonly="readonly"></td><td colspan="2"><input type="text" name="object" class="input2" value="" readonly="readonly"></td></tr>',
 	wcscen: '<tr><td><input type="text" class="column0" value="center" readonly="readonly"></td><td colspan="2"><input type="text" name="wcscen" class="input2" value="" readonly="readonly"></td></tr>',
 	wcsfov: '<tr><td><input type="text" class="column0" value="fov" readonly="readonly"></td><td colspan="2"><input type="text" name="wcsfovpix" class="input2" value="" readonly="readonly"></td></tr>',
-	value: '<tr><td><input type="text" class="column0" value="value" readonly="readonly"></td><td colspan="2"><input type="text" name="val3" class="input2" value="" readonly="readonly"></td></tr>',
+	value: '<tr><td><input type="text" class="column0" value="value" readonly="readonly"></td><td colspan="2"><input type="text" name="val" class="input2" value="" readonly="readonly"></td></tr>',
 	impos: '<tr><td><input type="text" class="column0" value="image" readonly="readonly"></td><td colspan="2"><input type="text" name="ipos" class="input2" value="" readonly="readonly"></td></tr>',
 	physpos: '<tr><td><input type="text" class="column0" value="physical" readonly="readonly"></td><td colspan="2"><input type="text" name="ppos" class="input2" value="" readonly="readonly"></td></tr>',
 	wcspos: '<tr><td><input type="text" class="column0" value="wcs" name="wcssys" readonly="readonly"></td><td colspan="2"><input type="text" name="wcspos" class="input2" value="" readonly="readonly"></td></tr>',
