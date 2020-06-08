@@ -525,15 +525,16 @@ if( url && dispid ){
 </div>
 <p>
 <div class="remotedoc nodisplay">
-
-<b>Remote files using a proxy server:</b> Links from servers that don't support
+<b>Remote files via proxy server:</b> Links from servers without
 <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing"
-target="_blank">Cross-Origin Resource Sharing</a> can't be displayed
-directly by JS9. However, JS9 web sites can act as a proxy, retrieving
-and storing the data file temporarily, so that JS9 can display it.
+target="_blank">Cross-Origin Resource Sharing</a>  support
+(e.g., <a href="https://www.cfa.harvard.edu/archive/chandra/search" target="_blank" rel="noopener noreferrer">the Unofficial Chandra Archive</a>)
+won't display directly in JS9, but JS9 servers can be set up to retrieve
+and display these files (proxy button above will be live.)
 
 <p>
-<b>Remote files using a CORS server:</b> Links from servers that support <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing" target="_blank"> Cross-Origin Resource Sharing</a> can be displayed directly by JS9. Dropbox public links are one example of these CORS-enabled URLs.
+<b>Remote files using a CORS server:</b> Links from servers that support <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing" target="_blank"> 
+Cross-Origin Resource Sharing</a> (e.g., Dropbox public links) can be displayed directly by JS9.
 </div>
 
 </form>
