@@ -287,7 +287,7 @@ JS9.globalOpts = {
     syncWCS: true,               // default value for using WCS to sync
     hiddenPluginDivs: [],        // which static plugin divs start hidden
     separate: {layout: "auto", leftMargin: 10, topMargin: 10}, // separate a display
-    imageTemplates: ".fits,.fts,.png,.jpg,.jpeg,.fz,.ftz", // templates for local images
+    imageTemplates: ".fits,.fts,.png,.jpg,.jpeg,.fz,.ftz,.gz", // templates for local images
     wcsUnits: {FK4:"sexagesimal", FK5:"sexagesimal", ICRS:"sexagesimal",
 	       galactic:"degrees", ecliptic:"degrees", linear:"degrees",
 	       physical:"pixels", image:"pixels"}, // def units for wcs sys
@@ -571,9 +571,10 @@ if( (JS9.BROWSER[0] === "Safari") ){
     JS9.bugs.webkit_resize = true;
 }
 // chrome does not deal with ".gz" file templates, but other browsers do
-if( JS9.BROWSER[0] !== "Chrome" ){
-    JS9.globalOpts.imageTemplates += ",.gz";
-}
+// seems to be fixed: 6/8/2020
+//if( JS9.BROWSER[0] !== "Chrome" ){
+//    JS9.globalOpts.imageTemplates += ",.gz";
+//}
 // chrome has a more stringent memory limit than other browsers
 // 1/20/2019
 // unnecessary with the 32-bit float version of mProjectPP
