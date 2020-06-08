@@ -232,7 +232,9 @@ function createWindow() {
 	return d;
     }
     // avoid v8.0 deprecation warning
-    app.allowRendererProcessReuse = false;
+    if( process.versions.electron.split(".")[0] < 9 ){
+	app.allowRendererProcessReuse = false;
+    }
     // set dock icon for Mac
     if( process.platform === "darwin" ){
 	if( js9Electron.icon ){
