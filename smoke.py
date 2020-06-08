@@ -199,7 +199,7 @@ def loadWindowTest(j, xfrom, xto):
                  {"id": xto, "clone": xfrom},
                  "light",
                  "",
-                 "width=512px,height=598px,resize=1,scrolling=1")
+                 "width=512px,height=598px,left=10,top=10,resize=1,scrolling=1")
     sleep()
     displayMessage(j, 'j.MoveToDisplay("%s")' % xto)
     j.MoveToDisplay(xto)

@@ -23,18 +23,18 @@ FITS file below:
 onclick="
 const arr = $('#proxyURLForm').serializeArray();
 const form = $(this).closest('form');
-const dhtml = form.closest('.dhtmlwindow')[0];
-const dispid = $(dhtml).data('dispid');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const dispid = $(win).data('dispid');
 const url = arr[0].value;
 JS9.LoadProxy(url, null, {display: dispid});
-dhtml.close();
+win.close();
 return false;
 ">
 <input id="close" name="Close" type="button" class="button" value="Close" 
 onclick="
 const form = $(this).closest('form');
-const dhtml = form.closest('.dhtmlwindow')[0];
-dhtml.close();
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+win.close();
 return false;" style="float: right;">
 </form>
 

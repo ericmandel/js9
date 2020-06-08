@@ -4,6 +4,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 <title>When Closing a Light Window</title>
+<style type="text/css">
+.buttondiv {
+    display: flex;
+    justify-content: flex-end;
+}
+</style>
 </head>
 <body>
 <form id="lightWinCloseForm" name="lightWinCloseForm" class="js9AnalysisForm js9Form" action="">
@@ -11,7 +17,7 @@
 <p>
 <div>
   <input type="radio" id="move" name="dispose" value="move" checked>
-  <label for="move">move the image(s) to&nbsp;&nbsp;<select id='lightWinCloseSel'></select></label>
+  <label for="move">move the image(s) to&nbsp;&nbsp;<select class="JS9Select" id='lightWinCloseSel'></select></label>
 </div>
 <div>
   <input type="radio" id="close" name="dispose" value="close">
@@ -23,19 +29,27 @@
   <label for="default">don't ask again</label>
 </div>
 <p>
-<input type="button" id="OK" name="OK" class="button" value="OK"
+<div class="buttondiv">
+<input id="cancel" name="Cancel" type="button" class="button JS9Button2" value="Cancel"
+onclick="
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+win.close();
+return false;">
+&nbsp;
+<input type="button" id="OK" name="OK" class="button JS9RunButton" value="OK"
 onclick="
     let i, j, obj, im, defval;
     const ims = [];
     const arr = $('#lightWinCloseForm').serializeArray();
     const form = $(this).closest('form');
-    const dhtml = form.closest('.dhtmlwindow')[0];
-    const dispid = $(dhtml).data('dispid');
-    const winid = $(dhtml).data('winid');
+    const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+    const dispid = $(win).data('dispid');
+    const winid = $(win).data('winid');
     const todisp = form.find('#lightWinCloseSel').val();
     if( !arr || !arr.length ){
         winid.close();
-        dhtml.close();
+        win.close();
         return false;
     }
     for(i=0; i<JS9.images.length; i++){
@@ -77,15 +91,10 @@ onclick="
 	}
     }
     winid.close();
-    dhtml.close();
+    win.close();
     return false;
 ">
-<input id="cancel" name="Cancel" type="button" class="button" value="Cancel"
-onclick="
-const form = $(this).closest('form');
-const dhtml = form.closest('.dhtmlwindow')[0];
-dhtml.close();
-return false;" style="float: right;">
+</div>
 </form>
 
 </body>

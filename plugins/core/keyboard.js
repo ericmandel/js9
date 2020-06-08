@@ -96,7 +96,11 @@ JS9.Keyboard.Actions = {};
 
 // eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["open local file"] = function(im, ipos, evt){
-    JS9.OpenFileMenu({display: evt.data});
+    if( window.isElectron && typeof evt.data === "object" ){
+	evt.data.displayLoadForm();
+    } else {
+	JS9.OpenFileMenu({display: evt.data});
+    }
 };
 
 // eslint-disable-next-line no-unused-vars

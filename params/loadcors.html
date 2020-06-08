@@ -19,8 +19,8 @@ Dropbox allows you to share files using public links that can be given to others
 onclick="
 const arr = $('#sharedURLForm').serializeArray();
 const form = $(this).closest('form');
-const dhtml = form.closest('.dhtmlwindow')[0];
-const dispid = $(dhtml).data('dispid');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const dispid = $(win).data('dispid');
 let url = arr[0].value;
 if( url.match(/dropbox\.com/) ){
   // http://stackoverflow.com/questions/20757891/cross-origin-image-load-from-cross-enabled-site-is-denied
@@ -32,14 +32,14 @@ if( url.match(/dropbox\.com/) ){
   JS9.error('Google Drive does not support CORS');
 }
 JS9.Load(url, {display: dispid});
-dhtml.close();
+win.close();
 return false;">
 
 <input id="close" name="Close" type="button" class="button" value="Close" 
 onclick="
 const form = $(this).closest('form');
-const dhtml = form.closest('.dhtmlwindow')[0];
-dhtml.close();
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+win.close();
 return false;" style="float: right;">
 </form>
 

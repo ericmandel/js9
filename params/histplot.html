@@ -57,13 +57,13 @@ Normalize by bin size?
 </div>
 
 <p>
-<input id="run" name="run" type="button" class="button" value="Run" onclick="return JS9.SubmitAnalysis(this);">
+<input id="run" name="run" type="button" class="button JS9RunButton" value="Run" onclick="return JS9.SubmitAnalysis(this);">
 
-<input id="close" name="Close" type="button" class="button" value="Close" 
+<input id="close" name="Close" type="button" class="button JS9Button2" value="Cancel" 
 onclick="
 const form = $(this).closest('form');
-const dhtml = form.closest('.dhtmlwindow')[0];
-dhtml.close();
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+win.close();
 return false;" style="float: right;">
 
 </form>

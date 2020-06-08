@@ -28,6 +28,8 @@ echo "JS9.allinone.regionsSaveHTML = \"`cat params/regionssave.html | sed '1,/^$
 
 echo "JS9.allinone.plotConfigHTML = \"`cat params/plotconfig.html | sed '1,/^$/d;/<\/head>/,/<body>/d;/<\/body>/,$d' | sed 's/"/\\\\"/g' | tr -d '\n'`\";" >> ${ALLIN1}.js
 
+echo "JS9.allinone.loadHTML = \"`cat params/load.html | sed '1,/^$/d;/<\/head>/,/<body>/d;/<\/body>/,$d' | sed 's/"/\\\\"/g' | tr -d '\n'`\";" >> ${ALLIN1}.js
+
 echo "JS9.allinone.loadCorsHTML = \"`cat params/loadcors.html | sed '1,/<body>/d;/<\/body>/,$d' | sed 's/"/\\\\"/g' | tr -d '\n'`\";" >> ${ALLIN1}.js
 
 echo "JS9.allinone.lightCloseHTML = \"`cat params/lightclose.html | sed '1,/<body>/d;/<\/body>/,$d' | sed 's/"/\\\\"/g' | tr -d '\n'`\";" >> ${ALLIN1}.js

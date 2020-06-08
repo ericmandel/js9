@@ -1,0 +1,542 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<title>Open Images and Other Files</title>
+<!-- mkallinone inline: delete everything up to the first blank line -->
+
+<style type="text/css">
+.js9AnalysisForm {
+    border: 0px;
+    overflow: hidden;
+}
+
+.loadlinegroup {
+    float: left;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 24px;
+    padding: 0;
+    margin: 0 0 5px 0;
+}
+
+.loadcol_R {
+    font-family: Helvetica, sans-serif;
+    font-size: 10pt;
+}
+
+.loadcol_R1 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100px;
+}
+
+.loadcol_R2 {
+    position: absolute;
+    top: 0;
+    left:  100px;
+    width: 80px;
+}
+
+.loadcol_R2L {
+    position: absolute;
+    top: 0;
+    left:  100px;
+    width: 300px;
+}
+
+.loadcol_R2LL {
+    position: absolute;
+    top: 0;
+    left:  100px;
+    width: 390px;
+}
+
+.loadcol_R3 {
+    position: absolute;
+    top: 0;
+    left:  180px;
+    width: 80px;
+}
+
+.loadcol_R3L {
+    position: absolute;
+    top: 0;
+    left:  180px;
+    width: 160px;
+}
+
+.loadcol_R4 {
+    position: absolute;
+    top: 0;
+    left:  260px;
+    width: 80px;
+}
+
+.loadcol_R4L {
+    position: absolute;
+    top: 0;
+    left:  260px;
+    width: 160px;
+}
+
+.loadcol_R5 {
+    position: absolute;
+    top: 0;
+    left:  340px;
+    width: 80px;
+}
+
+.loadcol_R6 {
+    position: absolute;
+    top: 0;
+    left:  420px;
+    width: 80px;
+}
+
+.loadcol_R7 {
+    position: absolute;
+    top: 0;
+    left:  500px;
+    width: 80px;
+}
+
+.loadcol_R7L {
+    position: absolute;
+    top: 0;
+    left:  500px;
+    width: 160px;
+}
+
+.loadtext_R {
+    width: 100%;
+    font: normal 12px Arial;
+    padding-left: 4px;
+    box-sizing:border-box;
+    webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+}
+</style>
+
+</head>
+<!-- mkallinone inline: deletes everything from </head> to <body> -->
+<body>
+
+<form id="loadForm" class="js9AnalysisForm loadForm" action="">
+
+<div class="localfile nodisplay">
+<div class="loadlinegroup">
+<b>Open a local image or auxiliary file:</b>
+</div>
+
+<div class="loadlinegroup">
+<div class="JS9Hidden loadbrowse">
+<input type="file" class="val loadfile_R" id="browseload" name="browseload" value="" autocapitalize="off" autocorrect="off" multiple="true"
+onchange="
+let i, form, localfile, fname;
+if( this.files.length  ){
+  fname = '';
+  for(i=0; i<this.files.length; i++){
+    if( fname ) fname += '; ';
+    fname += this.files[i].path || this.files[i].name;
+  }
+  form = $(this).closest('form');
+  if( fname ){
+    localfile = form.find(`[name='localfile']`);
+    localfile.val(fname).trigger('change');
+  }
+}
+">
+</div>
+<span class="loadcol_R loadcol_R1">
+Filename:
+</span>
+<span class="loadcol_R loadcol_R2LL">
+<input type="text" class="val JS9Text loadtext_R" name="localfile" value="" autocapitalize="off" autocorrect="off"
+onchange="
+let ext, fname, display;
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const dispid = $(win).data('dispid');
+fname = $(this).val();
+if( fname ){
+  $(this).focus().caretToEnd();
+  display = JS9.lookupDisplay(dispid);
+  if( display ){ display.tmp.localfile = fname; }
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'cat':
+    form.find(`input[name='loadformat'][id='loadcat']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'cmap':
+    form.find(`input[name='loadformat'][id='loadcmap']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'reg':
+    form.find(`input[name='loadformat'][id='loadreg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'ses':
+    form.find(`input[name='loadformat'][id='loadses']`)
+        .prop('checked', true).trigger('click');
+    break;
+  default:
+    form.find(`input[name='loadformat'][id='loadimg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  }
+}
+"
+onkeypress="
+let ext, fname;
+if( event.keyCode !== 13 ){ return; }
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const dispid = $(win).data('dispid');
+fname = $(this).val();
+if( fname ){
+  display = JS9.lookupDisplay(dispid);
+  if( display ){ display.tmp.localfile = fname; }
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'cat':
+    form.find(`input[name='loadformat'][id='loadcat']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'cmap':
+    form.find(`input[name='loadformat'][id='loadcmap']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'reg':
+    form.find(`input[name='loadformat'][id='loadreg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  case 'ses':
+    form.find(`input[name='loadformat'][id='loadses']`)
+        .prop('checked', true).trigger('click');
+    break;
+  default:
+    form.find(`input[name='loadformat'][id='loadimg']`)
+        .prop('checked', true).trigger('click');
+    break;
+  }
+}
+">
+</span>
+&nbsp;&nbsp;
+<div class="loadbrowse">
+<span class="loadcol_R loadcol_R7">
+<input name="Browse" type="button" class="JS9Button2" value="..."
+onclick="
+  const form = $(this).closest('form');
+  const browse = form.find(`[name='browseload']`);
+  browse.click();"
+>
+</span>
+</div>
+</div>
+
+<div class="loadlinegroup">
+<span class="loadcol_R loadcol_R1">
+Format:
+</span>
+<span class="loadcol_R loadcol_R2">
+<input type="radio" class="loadinput" id="loadimg" name="loadformat" value="image"
+onclick="
+let ext;
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const localfile = form.find(`[name='localfile']`);
+const fname = localfile.val();
+JS9.globalOpts.localLoadFormat = 'image';
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'cat':
+  case 'cmap':
+  case 'reg':
+  case 'ses':
+    localfile.val(fname.replace(/\.[^.]*$/, '.fits'));
+    break;
+  default:
+    break;
+  }
+}
+">
+<label for="loadimg">image</label>
+</span>
+<span class="loadcol_R loadcol_R3">
+<input type="radio" class="loadinput" id="loadcat" name="loadformat" value="cat"
+onclick="
+let ext;
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const localfile = form.find(`[name='localfile']`);
+const fname = localfile.val();
+JS9.globalOpts.localLoadFormat = 'catalog';
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'cat':
+    return;
+  default:
+    localfile.val(fname.replace(/\.[^.]*$/, '.cat'));
+    break;
+  }
+}
+">
+<label for="loadcat">catalog</label>
+</span>
+<span class="loadcol_R loadcol_R4">
+<input type="radio" class="loadinput" id="loadcmap" name="loadformat" value="cmap"
+onclick="
+let ext;
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const localfile = form.find(`[name='localfile']`);
+const fname = localfile.val();
+JS9.globalOpts.localLoadFormat = 'colormap';
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'cmap':
+    return;
+  default:
+    localfile.val(fname.replace(/\.[^.]*$/, '.cmap'));
+    break;
+  }
+}
+">
+<label for="loadcmap">cmap</label>
+</span>
+<span class="loadcol_R loadcol_R5">
+<input type="radio" class="loadinput" id="loadreg" name="loadformat" value="reg"
+onclick="
+let ext;
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const localfile = form.find(`[name='localfile']`);
+const fname = localfile.val();
+JS9.globalOpts.localLoadFormat = 'regions';
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'reg':
+    return;
+  default:
+    localfile.val(fname.replace(/\.[^.]*$/, '.reg'));
+    break;
+  }
+}
+">
+<label for="loadreg">region</label>
+</span>
+<span class="loadcol_R loadcol_R6">
+<input type="radio" class="loadinput" id="loadses" name="loadformat" value="ses"
+onclick="
+let ext;
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const localfile = form.find(`[name='localfile']`);
+const fname = localfile.val();
+JS9.globalOpts.localLoadFormat = 'session';
+if( fname ){
+  ext = fname.split('.').pop().toLowerCase();
+  switch(ext){
+  case 'ses':
+    return;
+  default:
+    localfile.val(fname.replace(/\.[^.]*$/, '.ses'));
+    break;
+  }
+}
+">
+<label for="loadreg">session</label>
+</span>
+</div>
+
+<div class="loadlinegroup">
+<span class="loadcol_R loadcol_R7L">
+<input name="Close" type="button" class="JS9Button2" value="Cancel"
+onclick="
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+win.close();
+">
+&nbsp;
+<input name="Open" type="button" class="JS9RunButton" value="Open"
+onclick="
+let i, fname, arr;
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const dispid = $(win).data('dispid');
+const fnames = form.find(`[name='localfile']`).val();
+const format = form.find(`input[name='loadformat']:checked`).val();
+let opts;
+if( fnames && dispid ){
+  arr = fnames.split(';');
+  for(i=0; i<arr.length; i++){
+    fname = arr[i].trim();
+    switch(format){
+    case 'cat': 
+      JS9.LoadCatalog('', fname, {display: dispid});
+      break;
+    case 'cmap':
+      JS9.LoadColormap(fname, {display: dispid});
+      break;
+    case 'reg':
+      JS9.LoadRegions(fname, {display: dispid});
+      break;
+    case 'ses':
+      JS9.LoadSession(fname, {display: dispid});
+      break;
+    default:
+      opts = {localAccess: true};
+      JS9.waiting(true, dispid);
+      JS9.Load(fname, opts, {display: dispid});
+      break;
+    }
+  }
+  win.close();
+}
+">
+</span>
+</div>
+
+<div class="loadlinegroup">
+<hr>
+</div>
+</div>
+
+<div class="remotefile nodisplay">
+<div class="loadlinegroup">
+<b>Retrieve and open a remote image:</b>
+</div>
+
+<div class="loadlinegroup">
+<span class="loadcol_R loadcol_R1">
+URL:
+</span>
+<span class="loadcol_R loadcol_R2LL">
+<input type="text" class="val JS9Text loadtext_R" name="remotefile" value="" autocapitalize="off" autocorrect="off"
+onchange="
+let ext, url, display;
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const dispid = $(win).data('dispid');
+url = $(this).val();
+if( url ){
+  $(this).focus().caretToEnd();
+  display = JS9.lookupDisplay(dispid);
+  if( display ){ display.tmp.remotefile = url; }
+}
+"
+onkeypress="
+let ext, url, display;
+if( event.keyCode !== 13 ){ return; }
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const dispid = $(win).data('dispid');
+url = $(this).val();
+if( url ){
+  display = JS9.lookupDisplay(dispid);
+  if( display ){ display.tmp.remotefile = url; }
+}
+">
+</span>
+</div>
+
+<div class="loadlinegroup">
+<span class="loadcol_R loadcol_R1">
+Method:
+</span>
+<span class="loadcol_R loadcol_R2L">
+<input type="radio" class="loadinput" id="loadproxy" name="loadmethod" value="proxy"
+onclick="
+  JS9.globalOpts.remoteLoadMethod = 'proxy';
+">
+<label for="loadimg">proxy server</label>
+</span>
+
+<span class="loadcol_R loadcol_R4L">
+<input type="radio" class="loadinput" id="loadcors" name="loadmethod" value="cors"
+onclick="
+  JS9.globalOpts.remoteLoadMethod = 'cors';
+">
+<label for="loadimg">CORS server</label>
+</span>
+</div>
+
+<div class="loadlinegroup">
+<span class="loadcol_R loadcol_R7L">
+<input name="Close" type="button" class="JS9Button2" value="Cancel"
+onclick="
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+win.close();
+">
+&nbsp;
+<input name="Open" type="button" class="JS9RunButton" value="Open"
+onclick="
+const form = $(this).closest('form');
+const win = form.closest(JS9.lightOpts[JS9.LIGHTWIN].top)[0];
+const dispid = $(win).data('dispid');
+const method = form.find(`input[name='loadmethod']:checked`).val();
+let url = form.find(`[name='remotefile']`).val();
+if( url && dispid ){
+    switch(method){
+    case 'proxy':
+        JS9.LoadProxy(url, null, {display: dispid});
+        break;
+    case 'cors':
+        if( url.match(/dropbox\.com/) ){
+            // http://stackoverflow.com/questions/20757891/cross-origin-image-load-from-cross-enabled-site-is-denied
+            url = url.replace('www.dropbox.com', 'dl.dropboxusercontent.com')
+            // https://blogs.dropbox.com/developers/2013/08/programmatically-download-content-from-share-links/
+            url = url.replace('?dl=0', '').trim() + '?raw=1';
+        } else if( url.match(/drive\.google\.com/) ){
+            url=url.replace(/\/file\/d\/(\w+)\/\w+\?usp=sharing/, '/uc?export=download&amp;id=$1').trim();
+            JS9.error('Google Drive does not support CORS');
+        }
+        JS9.Load(url, {display: dispid});
+      break;
+  default:
+      break;
+  }
+  win.close();
+}
+">
+</span>
+</div>
+</div>
+
+<div class="loadlinegroup">
+<hr>
+</div>
+
+<div class="localdoc nodisplay">
+<p>
+<b>Local files:</b> JS9 can load FITS files, jpeg or png images, catalogs, colormaps, region files, and session files. 
+</div>
+<p>
+<div class="remotedoc nodisplay">
+
+<b>Remote files using a proxy server:</b> Links from servers that don't support
+<a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing"
+target="_blank">Cross-Origin Resource Sharing</a> can't be displayed
+directly by JS9. However, JS9 web sites can act as a proxy, retrieving
+and storing the data file temporarily, so that JS9 can display it.
+
+<p>
+<b>Remote files using a CORS server:</b> Links from servers that support <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing" target="_blank"> Cross-Origin Resource Sharing</a> can be displayed directly by JS9. Dropbox public links are one example of these CORS-enabled URLs.
+</div>
+
+</form>
+</body>
+<!-- mkallinone inline: delete everything from </body> to the end -->
+</html>

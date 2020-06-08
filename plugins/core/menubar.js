@@ -28,7 +28,8 @@ JS9.Menubar.buttonOptsArr = [{name: "file", label: "File"},
 
 // map correspondance between menu items and keyboard actions
 JS9.Menubar.keyMap = {
-    "local file ...": "open local file",
+    "open ...": "open local file",
+    "open local ...": "open local file",
     "toggle: src/bkgd": "toggle selected region: source/background",
     "crosshair for this image": "toggle crosshair",
     "toggle: incl/excl": "toggle selected region: include/exclude",
@@ -404,30 +405,16 @@ JS9.Menubar.createMenus = function(){
 		    disabled: true
 		};
 	    }
-	    items.opens = {
-		name: "open ...",
-		items: {
-		    openstitle: {
-			name: "open:",
-			disabled: true
-		    }
+	    if( window.isElectron ){
+		items.openboth  = xname("open ...");
+	    } else {
+		items.openlocal = xname("open local ...");
+		items.openremote = xname("open remote ...");
+		if( !window.hasOwnProperty("Jupyter") ){
+		    items.openremote.disabled = false;
+		} else {
+		    items.openremote.disabled = true;
 		}
-	    };
-	    items.opens.items.open = xname("local file ...");
-	    items.opens.items.loadproxy = xname("url via proxy ...");
-	    if( !JS9.allinone			 &&
-		JS9.globalOpts.helperType !== "none" &&
-		JS9.globalOpts.workDir      	 &&
-		JS9.globalOpts.loadProxy    	 ){
-		items.opens.items.loadproxy.disabled = false;
-	    } else {
-		items.opens.items.loadproxy.disabled = true;
-	    }
-	    items.opens.items.loadcors = xname("url via CORS ...");
-	    if( !window.hasOwnProperty("Jupyter") ){
-		items.opens.items.loadcors.disabled = false;
-	    } else {
-		items.opens.items.loadcors.disabled = true;
 	    }
 	    items.disps = {
 		name: "display ...",
@@ -663,7 +650,7 @@ JS9.Menubar.createMenus = function(){
 		    let uplugin;
 		    JS9.Menubar.getDisplays.call(this, "any", key)
 			.forEach((val) => {
-			let j, s, t, did, kid, unew;
+			let j, s, t, kid, unew;
 			const udisp = val;
 			let uim = udisp.image;
 			// make sure display is still valid
@@ -797,36 +784,20 @@ JS9.Menubar.createMenus = function(){
 					 "inline", s, t,
 					 JS9.lightOpts[JS9.LIGHTWIN].lineWin);
 			    break;
-			case "open":
-			    JS9.OpenFileMenu({display: udisp});
-			    break;
-			case "loadcors":
-			    if( JS9.allinone ){
-				did = JS9.Image.prototype.displayAnalysis.call(
-				      null,
-				      "textline",
-				      JS9.allinone.loadCorsHTML,
-				      {title: "Open a shared CORS link"});
-			    } else {
-				did = JS9.Image.prototype.displayAnalysis.call(
-				      null,
-				      "textline",
-				      JS9.InstallDir(JS9.globalOpts.corsURL),
-				      {title: "Open a shared CORS link"});
+			case "openboth":
+			    if( udisp ){
+				udisp.displayLoadForm();
 			    }
-			    // save display id
-			    $(did).data("dispid", udisp.id);
 			    break;
-			case "loadproxy":
-			    // load param url to run analysis task
-			    // param url is relative to js9 install dir
-			    did = JS9.Image.prototype.displayAnalysis.call(null,
-				     "textline",
-				     JS9.InstallDir(JS9.globalOpts.proxyURL),
-				     {title: "Open a link via server proxy"});
-			    // save info for running the task
-			    $(did).data("dispid", udisp.id)
-				  .data("aname", "loadproxy");
+			case "openlocal":
+			    if( udisp ){
+				JS9.OpenFileMenu({display: udisp});
+			    }
+			    break;
+			case "openremote":
+			    if( udisp ){
+				udisp.displayLoadForm({remote: true});
+			    }
 			    break;
 			case "savefits":
 			case "savefitsentire":
@@ -2811,26 +2782,28 @@ JS9.Menubar.createMenus = function(){
 				break;
 			    case "dpath":
 				// call this once window is loaded
-			        $("#dhtmlwindowholder").arrive("#dataPathForm",
-							       {onceOnly: true}, () => {
-								   $('#dataPath').val(JS9.globalOpts.dataPath);
-							       });
+			        $(JS9.lightOpts[JS9.LIGHTWIN].topid)
+				    .arrive("#dataPathForm",
+					    {onceOnly: true}, () => {
+						$('#dataPath').val(JS9.globalOpts.dataPath);
+					    });
 				did = uim.displayAnalysis("textline",
-							  JS9.InstallDir(JS9.analOpts.dpathURL),
-							  {title: "Data path for analysis"});
+					  JS9.InstallDir(JS9.analOpts.dpathURL),
+					  {title: "Data path for analysis"});
 				// save display id
 				$(did).data("dispid", udisp.id);
 				$(did).data("imid", uim.id);
 				break;
 			    case "fpath":
 				// call this once window is loaded
-			        $("#dhtmlwindowholder").arrive("#filePathForm",
-							       {onceOnly: true}, () => {
-								   $('#filePath').val(uim.file);
-							       });
+			        $(JS9.lightOpts[JS9.LIGHTWIN].topid)
+				    .arrive("#filePathForm",
+					    {onceOnly: true}, () => {
+						$('#filePath').val(uim.file);
+					    });
 				did = uim.displayAnalysis("textline",
-							  JS9.InstallDir(JS9.analOpts.fpathURL),
-							  {title: "File path for this image"});
+					  JS9.InstallDir(JS9.analOpts.fpathURL),
+					  {title: "File path for this image"});
 				// save display id
 				$(did).data("dispid", udisp.id);
 				$(did).data("imid", uim.id);

@@ -129,6 +129,8 @@ JS9.globalOpts = {
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
     wcsCrosshair: false,	// enable wcs crosshair matching?
+    localLoadFormat: "image",	// current format when loading local files
+    remoteLoadMethod: "proxy",	// proxy or cors when loading remote file
     csvIncludeWCS: true,	// does Get/SaveRegions(csv) include wcs info?
     regIncludeJSON: true,	// does SaveRegions(reg) include the json info?
     regIncludeComments: true,	// does SaveRegions(reg) include the comments?
@@ -165,6 +167,7 @@ JS9.globalOpts = {
     unremoveReg: 100,           // how many removed regions to save
     resetEmptyShapeId: false,	// reset nshape counter if all shapes removed?
     maxMemory: 2000000000,	// max heap memory to allocate for a fits image
+    loadURL: "params/load.html",// location of param html file
     corsURL: "params/loadcors.html",       // location of param html file
     proxyURL: "params/loadproxy.html",     // location of param html file
     loadProxy: false,           // do we allow proxy load requests to server?
@@ -401,6 +404,7 @@ JS9.lightOpts = {
     nclick: 0,
     dhtml: {
 	top:      ".dhtmlwindow",
+	topid:    "#dhtmlwindowholder",
 	drag:     ".drag-contentarea",
 	dragBar:  "drag-handle",
 	format:   "width=%spx,height=%spx,resize=%s,scrolling=0",
@@ -6248,7 +6252,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    return;
 	}
 	// call this once window is loaded
-	$("#dhtmlwindowholder")
+	$(JS9.lightOpts[JS9.LIGHTWIN].topid)
 	    .arrive("#plotConfigForm", {onceOnly: true}, () => {
 		JS9.Plot.initConfigForm.call(this, plot, pobj);
 	    });
@@ -10165,6 +10169,8 @@ JS9.Display = function(el){
     this.addFileDialog("LoadCatalog", JS9.globalOpts.catalogTemplates);
     // add to list of displays
     JS9.displays.push(this);
+    // set focus
+    this.displayConjq.focus();
     // debugging
     if( JS9.DEBUG ){
 	JS9.log("JS9 display:  %s", this.id);
@@ -10388,6 +10394,74 @@ JS9.Display.prototype.displayPlugin = function(plugin){
 	JS9.error("external window support for plugins not yet implemented");
 	break;
     }
+};
+
+//  display the general file-loading form for this display
+JS9.Display.prototype.displayLoadForm = function(opts){
+    let html, did;
+    const format = JS9.globalOpts.localLoadFormat;
+    const method = JS9.globalOpts.remoteLoadMethod;
+    const doproxy = !JS9.allinone && JS9.globalOpts.helperType !== "none" &&
+		     JS9.globalOpts.workDir && JS9.globalOpts.loadProxy;
+    // opts is optional, defaults to displaying local and remote
+    opts = opts || {local:true, remote:true};
+    // options for creating window
+    if( JS9.isNull(opts.title) ){
+	opts.title = "";
+	if( opts.local ){
+	    opts.title = "Open ";
+	}
+	if( opts.remote ){
+	    if( opts.title ){
+		opts.title += "or ";
+	    }
+	    opts.title += "Retrieve ";
+	}
+	opts.title += "an Image ";
+	if( opts.local ){
+	    opts.title += "or Auxiliary File";
+	}
+    }
+    opts.winformat = opts.winformat ||
+	             "width=640px,height=300px,resize=1,scrolling=1";
+    // from where do we get the html?
+    if( JS9.allinone ){
+	html = JS9.allinone.loadHTML;
+    } else {
+	html = JS9.InstallDir(JS9.globalOpts.loadURL);
+    }
+    // call this once window is loaded to init form values
+    $(JS9.lightOpts[JS9.LIGHTWIN].topid)
+	.arrive(".loadForm", {onceOnly: true}, (el) => {
+	    const localfile  = $(el).data("localfile")  || this.tmp.localfile;
+	    const remotefile = $(el).data("remotefile") || this.tmp.remotefile;
+	    if( opts.local ){
+		$(did).find(".localfile").removeClass("nodisplay");
+		$(did).find(".localdoc").removeClass("nodisplay");
+		if( localfile ){
+		    $(did).find(`input[name="localfile"]`).val(localfile);
+		}
+		$(did).find(`input[value=${format}]`).click();
+	    }
+	    if( opts.remote ){
+		$(did).find(".remotefile").removeClass("nodisplay");
+		$(did).find(".remotedoc").removeClass("nodisplay");
+		if( remotefile ){
+		    $(did).find(`input[name="remotefile"]`).val(remotefile);
+		}
+		if( doproxy ){
+		    $(did).find(`input[value=${method}]`).click();
+		} else {
+		    $(did).find(`input[value="cors"]`).click();
+		    $(did).find(`input[value="proxy"]`).prop("disabled", true);
+		}
+
+	    }
+	});
+    // create the window
+    did = JS9.Image.prototype.displayAnalysis.call(null, "params", html, opts);
+    // save display id
+    $(did).data("dispid", this.id);
 };
 
 //  resize a display
@@ -10854,17 +10928,17 @@ JS9.Display.prototype.separate = function(opts){
 		    } else {
 	            // create a light wndow
 		    // code to run when new window exists
-		    $("#dhtmlwindowholder").arrive(`#${d1}`, {onceOnly: true},
-			(el) => {
-			    id = $(el).attr("id");
-			    // FF (at least) needs this 0ms delay
-			    window.setTimeout(() => {
-				// move this image
-				saveims[id].moveToDisplay(id);
-				// process next image
-				separateim(arr);
-			    }, 0);
-			});
+		    $(JS9.lightOpts[JS9.LIGHTWIN].topid)
+			    .arrive(`#${d1}`, {onceOnly: true}, (el) => {
+				id = $(el).attr("id");
+				// FF (at least) needs this 0ms delay
+				window.setTimeout(() => {
+				    // move this image
+				    saveims[id].moveToDisplay(id);
+				    // process next image
+				    separateim(arr);
+				}, 0);
+			    });
 		    // load new window, code above gets run when window exists
 		    JS9.LoadWindow(null, {id: xopts.id}, "light",
 				   xopts.html, xopts.winopts);
@@ -16241,7 +16315,7 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 	// adjust title
 	title = "Save regions";
 	// adjust size of window
-	winformat = JS9.lightOpts.dhtml.regWin1;
+	winformat = JS9.lightOpts[JS9.LIGHTWIN].regWin1;
 	break;
     case "config":
     default:
@@ -16273,7 +16347,7 @@ JS9.Regions.displayConfigForm = function(shape, opts){
 	if( got ){ return; }
     }
     // call this once window is loaded
-    $("#dhtmlwindowholder")
+    $(JS9.lightOpts[JS9.LIGHTWIN].topid)
 	.arrive(".regionsConfigForm", {onceOnly: true}, () => {
 	    opts.firsttime = true;
 	    this.initRegionsForm(shape, opts);
@@ -16817,8 +16891,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		  .find("input, textarea, span")
 		  .data("tooltip");
 	    const el = $(target)
-		  .closest(".dhtmlwindow")
-		  .find(".drag-handle");
+		  .closest(JS9.lightOpts[JS9.LIGHTWIN].top)
+		  .find(JS9.lightOpts[JS9.LIGHTWIN].dragBar);
 	    if( tooltip && el.length ){
 		// change title: see dhtmlwindow.js load() @line 130
 		otitle = $(el)[0].childNodes[0].nodeValue.replace(/:.*/,"");
@@ -16827,7 +16901,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	});
 	$(".rconfigcol_R, .rsavecol_R").on(mout, (e) => {
 	    const target = e.currentTarget;
-	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
+	    const el = $(target)
+		  .closest(JS9.lightOpts[JS9.LIGHTWIN].top)
+		  .find(JS9.lightOpts[JS9.LIGHTWIN].dragBar);
 	    if( el.length ){
 		otitle = $(el)[0].childNodes[0].nodeValue.replace(/:.*/,"");
 		$(el)[0].childNodes[0].nodeValue = otitle;
@@ -18403,7 +18479,9 @@ JS9.Plot.initConfigForm = function(plot, pobj){
 	    let title;
 	    const target = e.currentTarget;
 	    const tooltip = $(target).find("input").data("tooltip");
-	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
+	    const el = $(target)
+		  .closest(JS9.lightOpts[JS9.LIGHTWIN].top)
+		  .find(JS9.lightOpts[JS9.LIGHTWIN].dragBar);
 	    if( tooltip && el.length ){
 		// change title: see dhtmlwindow.js load() @line 130
 		title = `${JS9.Plot.opts.title}: ${tooltip}`;
@@ -18412,7 +18490,9 @@ JS9.Plot.initConfigForm = function(plot, pobj){
 	});
 	$(".plotcol_P").on(mout, (e) => {
 	    const target = e.currentTarget;
-	    const el = $(target).closest(".dhtmlwindow").find(".drag-handle");
+	    const el = $(target)
+		  .closest(JS9.lightOpts[JS9.LIGHTWIN].top)
+		  .find(JS9.lightOpts[JS9.LIGHTWIN].dragBar);
 	    if( el.length ){
 		$(el)[0].childNodes[0].nodeValue = JS9.Plot.opts.title;
 	    }
@@ -19807,13 +19887,13 @@ JS9.lightWin = function(id, type, s, title, winformat){
 	rval = dhtmlwindow.open(id, type, s, title, winformat);
 	// override dhtml to add ios scroll capability
 	if(  /iPad|iPhone|iPod/.test(navigator.platform) ){
-	    $(`#${id} ${JS9.lightOpts.dhtml.drag}`)
+	    $(`#${id} ${JS9.lightOpts[JS9.LIGHTWIN].drag}`)
 		.css("-webkit-overflow-scrolling", "touch")
 		.css("overflow-y", "scroll");
 	}
 	// allow double-click or double-tap to close ...
 	// ... the close button is unresponsive on the ipad/iphone
-        $(`#${id} .${JS9.lightOpts.dhtml.dragBar}`)
+        $(`#${id} .${JS9.lightOpts[JS9.LIGHTWIN].dragBar}`)
 	    .on("dblclick", () => {
 		rval.close();
 	    })
@@ -19829,7 +19909,7 @@ JS9.lightWin = function(id, type, s, title, winformat){
 	    });
 	// if ios user failed to close the window via the close button,
 	// give a hint (once per session only!)
-        $(`#${id} .${JS9.lightOpts.dhtml.dragBar}`)
+        $(`#${id} .${JS9.lightOpts[JS9.LIGHTWIN].dragBar}`)
 	    .on("touchend", () => {
 		// skip check if we are dragging
 		if( !dhtmlwindow.distancex  && !dhtmlwindow.distancey ){
@@ -21372,7 +21452,7 @@ JS9.searchbar = function(el, textid) {
 	}
     }
     // light window or div?
-    div = jel.find(".drag-contentarea");
+    div = jel.find(JS9.lightOpts[JS9.LIGHTWIN].drag);
     if( !div.length ){
 	// just a div
 	div = jel;
@@ -23609,9 +23689,10 @@ JS9.init = function(){
 	}
 	// once a window is loaded, set jupyter focus, if necessary
 	if( window.hasOwnProperty("Jupyter") ){
-	   $("#dhtmlwindowholder").arrive("input", (el) => {
-	       JS9.jupyterFocus($(el).parent());
-	   });
+	   $(JS9.lightOpts[JS9.LIGHTWIN].topid)
+		.arrive("input", (el) => {
+		    JS9.jupyterFocus($(el).parent());
+		});
 	}
     }
     // use plotly if loaded separately, otherwise use internal flot
@@ -24668,7 +24749,7 @@ JS9.mkPublic("LoadWindow", function(...args){
 		wtype = "ajax";
 		wurl = JS9.InstallDir(JS9.lightOpts.lcloseURL);
 	    }
-	    $("#dhtmlwindowholder")
+	    $(JS9.lightOpts[JS9.LIGHTWIN].topid)
 		.arrive("#lightWinCloseForm", {onceOnly: true}, () => {
 		    let i, el;
 		    // on arrival, add JS9 displays to 'move' part of form
@@ -26301,7 +26382,7 @@ JS9.mkPublic("DisplayPlugin", function(...args){
 //  display a help page (or a general url, actually)
 JS9.mkPublic("DisplayHelp", function(hname){
     let id, title, url, help;
-    const opts = JS9.lightOpts.dhtml.textWin;
+    const opts = JS9.lightOpts[JS9.LIGHTWIN].textWin;
     const type = "iframe";
     // sanity check
     if( !hname ){ return; }
@@ -26327,7 +26408,7 @@ JS9.mkPublic("LightWindow", function(...args){
     let type    = obj.argv[1] || "inline";
     let content = obj.argv[2];
     let title   = obj.argv[3] || "JS9 light window";
-    let opts    = obj.argv[4] || JS9.lightOpts.dhtml.textWin;
+    let opts    = obj.argv[4] || JS9.lightOpts[JS9.LIGHTWIN].textWin;
     if( !content ){
 	JS9.error("no content specified for LightWindow");
     }

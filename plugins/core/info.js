@@ -220,7 +220,7 @@ JS9.Info.display = function(type, message, target, force){
 		area = el.find(".JS9Message");
 	    } else if( message ) {
 		// start a light window and recurse to display the message
-		$("#dhtmlwindowholder").arrive(`#${rid}`,
+		$(JS9.lightOpts[JS9.LIGHTWIN].topid).arrive(`#${rid}`,
 	        { fireOnAttributesModification: true },
 	        () => {
 		    JS9.Info.display.call(this, type, message, target, force);
