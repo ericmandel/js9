@@ -28,7 +28,7 @@ definition file. The following sample analysis definition files will
 be found in the <b>analysis-plugins</b> directory by default:
 <ul>
 <li><b>fits2png.json: </b>the command line for converting FITS to PNG files
-<li><b>js9Analysis-fits.json: </b> generic FITS tasks (e.g. display header)
+<li><b>js9Analysis-fits.json: </b> generic FITS tasks (e.g., display header)
 <li><b>js9Analysis-funtools.json: </b> funtools-based analysis tasks
 </ul>
 If you plan to allow dynamic conversion of FITS files to PNG
@@ -152,7 +152,7 @@ of the parent.
 <p>
 The three regions macros return region info in the current wcs
 system. To specify an alternate wcs system, append "physical",
-"image", or "wcs" in parentheses, e.g. $regions(physical).
+"image", or "wcs" in parentheses, e.g., $regions(physical).
 <p>
 For example, to run the funcnts program, specifying the original FITS
 file as well as source and background regions, use:
@@ -301,7 +301,7 @@ where:
 <li><b>stderr:</b> a string containing the standard error from the task
 <li><b>errcode:</b> error code value from the task or 0
 <li><b>aobj:</b> the analysis object from the js9Analysis.json file, containing
-     the <b>rtype</b> (e.g. "text" or "plot") property
+     the <b>rtype</b> (e.g., "text" or "plot") property
 </ul>
 Typically, you would check the errcode and/or stderr string first and
 issue an error message if there is an error. Otherwise, the stdout
@@ -330,7 +330,7 @@ permission to temporary retrieve files via the web server (e.g.,
 loading a remote file via the <b>LoadProxy()</b> command into a
 temporary directory, so that JS9 can subsequently load it via the web
 server). This restriction can be relaxed when using the file:// URI,
-although some browsers on some operating systems (e.g. Firefox on
+although some browsers on some operating systems (e.g., Firefox on
 Linux) prevent you from loading files outside the web page domain even
 with the file:// URI.
 
@@ -348,7 +348,7 @@ tasks will be started in the work sub-directory.
 For Node.js-base helpers, the work directory is removed when the web
 page is unloaded. This can be changed by setting <b>rmWorkDir</b> to
 false in the preference file. For CGI-based helpers, you must remove
-the work directory manually (e.g. using a cron job that checks for
+the work directory manually (e.g., using a cron job that checks for
 time-last-accessed of work directories).
 
 <p>

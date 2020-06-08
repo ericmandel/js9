@@ -50,14 +50,14 @@ add switches to the configure command line. The most important switches are:
 <pre>
 --with-helper=[type]    type of helper: nodejs (for Node.js) , get (for CGI)
 --prefix=[path]         location to install the non-web programs and scripts
---with-cfitsio=[path]   cfitsio location for building js9helper, e.g. /usr/local
+--with-cfitsio=[path]   cfitsio location for building js9helper, e.g., /usr/local
 </pre>
 Other less-used switches are:
 <pre>
---with-cgidir=[path]     cgi install directory e.g. /var/www/public_html/cgi-bin
---with-cgiurl=[url]      cgi url relative to the web root, e.g. ./cgi-bin/js9
+--with-cgidir=[path]     cgi install directory e.g., /var/www/public_html/cgi-bin
+--with-cgiurl=[url]      cgi url relative to the web root, e.g.. ./cgi-bin/js9
 --with-cgixpath=[dirs]   directories to add to cgi path
---with-png=[path]        directory containing lib/png to build tpos, e.g. /usr/local
+--with-png=[path]        directory containing lib/png to build tpos, e.g., /usr/local
 </pre>
 
 <p>
@@ -71,7 +71,7 @@ and is available from NASA/HEASARC at the Goddard Space Flight Center:
     https://heasarc.gsfc.nasa.gov/fitsio/fitsio.html
 </pre>
 To tell configure where cfitsio libraries are located, use the
---with-cfitsio=[dir] switch, e.g. --with-cfitsio=/usr/local will find
+--with-cfitsio=[dir] switch, e.g., --with-cfitsio=/usr/local will find
 the cfitsio libraries in /usr/local/lib and include files in
 /usr/local/include.  If cfitsio is not used in the build, the js9helper will
 still support server-side analysis, but will not support representation files.
@@ -203,7 +203,7 @@ default is 2718, but you can change this to any open port.
 For example, some institutions do not allow non-standard ports to be
 open on public-facing hosts.  In such a case, the Node.js-based helper
 can change its port to a standard port allowed by that institution
-(e.g. 8080 or 8000). This can be done by simply changing
+(e.g., 8080 or 8000). This can be done by simply changing
 the <b>helperPort</b> property in js9prefs.js (for the client) and
 js9Prefs.json (for the helper).
 
@@ -291,7 +291,7 @@ already installed on your system, it is available at:
 <pre>
     http://www.libpng.org/pub/png/libpng.html
 </pre>
-Of course, Linux users can install libpng in the "usual way", e.g. for CentOS:
+Of course, Linux users can install libpng in the "usual way", e.g., for CentOS:
 <pre>
     sudo yum install libpng-devel
 </pre>
