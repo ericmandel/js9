@@ -426,7 +426,7 @@ install-scripts: $(SCRIPTS) $(SCRIPTS2)
 		fi; \
 	    done; \
 	    echo "resetting js9 script to default after install ..."; \
-	    $(CP) js9.in js9 && chmod +x js9; \
+	    make scriptclean; \
 	  else \
 	    echo "nothing to install for 'scripts' (no helper configured)"; \
 	  fi;)
@@ -642,7 +642,11 @@ clean:		FORCE
 			plugins/*~ plugins/*/*~ \
 			util/*.o util/*~ js9Tests/*~ \
 			autom4te.cache a.out.dSYM tmp/*; \
-			cd astroem && $(MAKE) clean;)
+		        $(MAKE) scriptclean; \
+			cd astroem && $(MAKE) clean)
+
+scriptclean:	FORCE
+		@($(CP) js9.in js9 && chmod +x js9)
 
 distclean:	clean
 		$(RM) Makefile config.status config.cache config.log \
