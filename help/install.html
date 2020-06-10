@@ -301,6 +301,11 @@ and then build the JS9 system using the <b>make</b> command:
 <pre>
    make
 </pre>
+Minor note: the cloned js9 script will be modified by the build to
+include knowledge of the source and install directories. This change
+allows you to to run using the installed code instead of the source
+code. But since this modification will prevent subsequent "git pull"
+calls from completing, it will be reset by install or clean.
 
 <h3>Finalize Your Site Preferences</h3>
 <p>
