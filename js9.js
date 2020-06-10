@@ -23831,6 +23831,10 @@ JS9.init = function(){
 	// load emscripten, which will trigger init FITS later
 	JS9.initEmscripten();
     }
+    // desktop js9 gets helper from command line via the environment
+    if( window.isElectron && window.electronHelper ){
+	JS9.globalOpts.helperType = "nodejs";
+    }
     // initialize helper support
     JS9.helper = new JS9.Helper();
     // add handler for postMessage events

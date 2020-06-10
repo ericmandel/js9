@@ -178,6 +178,9 @@ if( js9Electron.node                             &&
 }
 js9Electron.page = js9Electron.page.replace(/\\/g,"");
 
+// passed to JS9 in preload so we can bypass default 'false' in js9prefs.js
+process.env.JS9_ELECTRONHELPER = String(js9Electron.doHelper);
+
 // setup on-will-download callbacks to save files without a dialog box
 function initWillDownload() {
     if( !js9Electron.willDownload && js9Electron.savedir ){
