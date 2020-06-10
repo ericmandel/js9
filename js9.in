@@ -117,7 +117,7 @@ usage(){
   printf "  notes:\n"
   printf "    Make sure the relative paths to the js9 files in your web page are correct!"
   printf "\n"
-  if [ x`uname -s` = xDarwin ]; then
+  if [ x"$OS" = xDarwin ]; then
     printf "\n    When using Desktop JS9 with Electron.app, you can codesign it to avoid"
     printf "\n    repeated requests by macOS to allow incoming connections:\n"
     printf "\n      sudo codesign --force --deep --sign - /pathto/Electron.app/Contents/MacOS/Electron/\n\n"
