@@ -553,7 +553,8 @@ install-sao:	install-gzip saoprefs install-webcgi install-js9tests
 		  if [ -d js9debugextras ]; then \
 		    echo "installing js9debugextras"; \
 		    tar cf - js9debugextras | (cd $(WEBDIR); tar xf -); \
-		  fi)
+		  fi; \
+		  $(CP) js9.in js9)
 
 install-js9tests:FORCE
 		@(echo "installing js9tests ..."; \
