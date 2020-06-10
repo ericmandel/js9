@@ -425,6 +425,8 @@ install-scripts: $(SCRIPTS) $(SCRIPTS2)
 		    $(INSTALL_PROGRAM) $$i $(BIN_INSTALL_DIR)/$$i ; \
 		fi; \
 	    done; \
+	    echo "resetting js9 script to default after install ..."; \
+	    $(CP) js9.in js9 && chmod +x js9; \
 	  else \
 	    echo "nothing to install for 'scripts' (no helper configured)"; \
 	  fi;)
@@ -553,8 +555,7 @@ install-sao:	install-gzip saoprefs install-webcgi install-js9tests
 		  if [ -d js9debugextras ]; then \
 		    echo "installing js9debugextras"; \
 		    tar cf - js9debugextras | (cd $(WEBDIR); tar xf -); \
-		  fi; \
-		  $(CP) js9.in js9)
+		  fi)
 
 install-js9tests:FORCE
 		@(echo "installing js9tests ..."; \
