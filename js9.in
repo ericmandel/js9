@@ -115,8 +115,13 @@ usage(){
   printf "    JS9_WEBPAGE              # url or path of web page to use (app or browser)\n"
   printf " \n"
   printf "  notes:\n"
-  printf "    make sure the relative paths to the js9 files in your web page are correct!"
+  printf "    Make sure the relative paths to the js9 files in your web page are correct!"
   printf "\n"
+  if [ x`uname -s` = xDarwin ]; then
+    printf "\n    When using Desktop JS9 with Electron.app, you can codesign it to avoid"
+    printf "\n    repeated requests by macOS to allow incoming connections:\n"
+    printf "\n      sudo codesign --force --deep --sign - /pathto/Electron.app/Contents/MacOS/Electron/\n\n"
+  fi
 }
 
 # look for Node.js program (for messaging, but not for app)
