@@ -30,8 +30,8 @@ else
   XFILE="$BFILE"
 fi
 # is the containing directory a link?
-BDIR="$( dirname ${XFILE} )"
-LDIR="$( readlink $BDIR )"
+BDIR="$( dirname "${XFILE}" )"
+LDIR="$( readlink "$BDIR" )"
 if [ x"$LDIR" != x ]; then
   XDIR="$LDIR"
 else
