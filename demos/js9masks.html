@@ -57,12 +57,12 @@
     <table cellspacing="30">
     <tr valign="top">
     <td>
-    <button onclick='JS9.Load("fits/casa_opacitymask.fits.gz", {scale:"log"});'>Load CAS-A opacity mask</button>
+    <button onclick='JS9.Load("data/fits/casa_opacitymask.fits.gz", {scale:"log"});'>Load CAS-A opacity mask</button>
     &nbsp;&nbsp;
-   <button onclick='JS9.Load("fits/casa.fits.gz", {scale:"log", colormap:"cool"});'>Load CAS-A image</button>
+   <button onclick='JS9.Load("data/fits/casa.fits.gz", {scale:"log", colormap:"cool"});'>Load CAS-A image</button>
     </td>
     <td>
-     <button onclick='JS9.Load("fits/lsst1.fits", {scale:"log", contrast: 5, bias: 0.25}, {display: "myJS9"});'>Load LSST test image</button> 
+     <button onclick='JS9.Load("data/fits/lsst1.fits", {scale:"log", contrast: 5, bias: 0.25}, {display: "myJS9"});'>Load LSST test image</button> 
     &nbsp;&nbsp;
     <button type="button" onclick='JS9.DisplayExtension(2, {colormap: "mask", separate: true}, {display: "myJS9"});'>Display section #2</button>
     </td>

@@ -61,23 +61,23 @@
 
     <script type="text/javascript">
       var files = [
-        "fits/casa.fits.gz",
-        "fits/snr.fits[events][pi==pha]",
-        "fits/m13.fits",
-        "fits/3c273.fits.gz",
-        "fits/3c58.fits.gz",
-        "fits/ngc1316.fits",
-        "fits/ngkper.fits.gz",
+        "data/fits/casa.fits.gz",
+        "data/fits/snr.fits[events][pi==pha]",
+        "data/fits/m13.fits",
+        "data/fits/3c273.fits.gz",
+        "data/fits/3c58.fits.gz",
+        "data/fits/ngc1316.fits",
+        "data/fits/ngkper.fits.gz",
         "http://hea-www.cfa.harvard.edu/~eric/coma.fits.gz"
       ];
       var opts = [
-        {parentFile:"fits/casa.fits", scale:"log",colormap:"cool"},
+        {parentFile:"data/fits/casa.fits", scale:"log",colormap:"cool"},
         '{"scale": "log"}',
         {scale: "linear", colormap: "sls"},
-        {parentFile:"fits/3c273.fits",colormap:"viridis",scale:"log"},
-        {parentFile:"fits/3c58.fits",scale:"log"},
+        {parentFile:"data/fits/3c273.fits",colormap:"viridis",scale:"log"},
+        {parentFile:"data/fits/3c58.fits",scale:"log"},
         {scale:"linear"},
-        {parentFile:"ngkper.fits", zoom: "toFit", scale: "log"},
+        {parentFile:"data/fits/ngkper.fits", zoom: "toFit", scale: "log"},
         '{"scale":"linear", "colormap":"heat"}'
       ];
       function init(){

@@ -52,33 +52,33 @@
     Always use fits2fits to<br>
     make a rep file:
     <ul>
-    <li> <a href='javascript:JS9.Load("fits/d1000.fits", { fits2fits:"always", colormap:"heat"});'>1000x1000 image</a>
-    <li> <a href='javascript:JS9.Load("fits/nicmos.fits", {fits2fits:true});'>Multi-extension file</a>
-    <li> <a href='javascript:JS9.Load("fits/jupiter_cube.fits", {fits2fits:"always"});'>Jupiter Cube data</a>
-    <li> <a href='javascript:JS9.Load("fits/casa.fits[events][energy=3000:7000]", {fits2fits:"always",scale:"log",colormap:"cool",xcen:3888,ycen:4098,xdim:700,ydim:600,bin:2});'>Chandra Cas-A table</a>
-    <li> <a href='javascript:JS9.Load("large/f814w.fits.gz", {fits2fits:"always",colormap:"grey",scale:"log",xcen:5294,ycen:6662,xdim:4096,ydim:4096,bin:8,onload:function(im){im.setScale(0,100); im.setColormap(6.56,0.04);}});'>Hubble image (300Mb)</a>
+    <li> <a href='javascript:JS9.Load("data/fits/d1000.fits", { fits2fits:"always", colormap:"heat"});'>1000x1000 image</a>
+    <li> <a href='javascript:JS9.Load("data/fits/nicmos.fits", {fits2fits:true});'>Multi-extension file</a>
+    <li> <a href='javascript:JS9.Load("data/fits/jupiter_cube.fits", {fits2fits:"always"});'>Jupiter Cube data</a>
+    <li> <a href='javascript:JS9.Load("data/fits/casa.fits[events][energy=3000:7000]", {fits2fits:"always",scale:"log",colormap:"cool",xcen:3888,ycen:4098,xdim:700,ydim:600,bin:2});'>Chandra Cas-A table</a>
+    <li> <a href='javascript:JS9.Load("data/large/f814w.fits.gz", {fits2fits:"always",colormap:"grey",scale:"log",xcen:5294,ycen:6662,xdim:4096,ydim:4096,bin:8,onload:function(im){im.setScale(0,100); im.setColormap(6.56,0.04);}});'>Hubble image (300Mb)</a>
     </ul>
     </td>
     <td>
     Never use fits2fits,<br>
     original file in memory:
     <ul>
-    <li> <a href='javascript:JS9.Load("fits/i1000.fits", { fits2fits:"never", colormap:"cool"});'>1000x1000 image</a>
-    <li> <a href='javascript:JS9.Load("fits/nicmos.fits", {fits2fits:false});'>Multi-extension file</a>
-    <li> <a href='javascript:JS9.Load("fits/jupiter_cube.fits", {fits2fits:"never"});'>Jupiter Cube data</a>
-    <li> <a href='javascript:JS9.Load("fits/casa.fits[events][energy=3000:7000]", {fits2fits:"never",scale:"log",colormap:"cool",xcen:3888,ycen:4098,xdim:700,ydim:600,bin:2});'>Chandra Cas-A table</a>
-    <li> <a href='javascript:JS9.Load("large/f814w.fits.gz", {fits2fits:"never",colormap:"grey",scale:"log",xcen:5294,ycen:6662,xdim:4096,ydim:4096,bin:8,onload:function(im){im.setScale(0,100); im.setColormap(6.56,0.04);}});'>Hubble image (300Mb)</a>
+    <li> <a href='javascript:JS9.Load("data/fits/i1000.fits", { fits2fits:"never", colormap:"cool"});'>1000x1000 image</a>
+    <li> <a href='javascript:JS9.Load("data/fits/nicmos.fits", {fits2fits:false});'>Multi-extension file</a>
+    <li> <a href='javascript:JS9.Load("data/fits/jupiter_cube.fits", {fits2fits:"never"});'>Jupiter Cube data</a>
+    <li> <a href='javascript:JS9.Load("data/fits/casa.fits[events][energy=3000:7000]", {fits2fits:"never",scale:"log",colormap:"cool",xcen:3888,ycen:4098,xdim:700,ydim:600,bin:2});'>Chandra Cas-A table</a>
+    <li> <a href='javascript:JS9.Load("data/large/f814w.fits.gz", {fits2fits:"never",colormap:"grey",scale:"log",xcen:5294,ycen:6662,xdim:4096,ydim:4096,bin:8,onload:function(im){im.setScale(0,100); im.setColormap(6.56,0.04);}});'>Hubble image (300Mb)</a>
     </ul>
     </td>
     <td>
     fits2fits based on size,<br>
     rep file if size > 100Mb:
     <ul>
-    <li> <a href='javascript:JS9.Load("large/pn_101_clean.fits", {fits2fits:"size>100", colormap:"heat"});'>XMM table (50Mb)</a>
-    <li> <a href='javascript:JS9.Load("large/pn_201_clean.fits", {fits2fits:"size>100", colormap:"cool"});'>XMM table (101Mb)</a>
-    <li> <a href='javascript:JS9.Load("large/f814w_bin24.fits.gz", {fits2fits:"size>100", colormap:"grey", scale:"log", parentFile:"large/f814w.fits.gz", onload:function(im){im.setScale(0,100); im.setColormap(6.56,0.04);}});'>small Hubble w/parentFile</a>
-    <li> <a href='javascript:JS9.Load("fits/casa.fits[events][energy=3000:7000]", {fits2fits:"size>100", scale:"log",colormap:"cool",xcen:3888,ycen:4098,xdim:700,ydim:600,bin:2});'>Chandra Cas-A (30Mb)</a>
-    <li> <a href='javascript:JS9.Load("large/f814w.fits.gz", {fits2fits:"size>100",colormap:"grey",scale:"log",xcen:5294,ycen:6662,xdim:4096,ydim:4096,bin:8,onload:function(im){im.setScale(0,100); im.setColormap(6.56,0.04);}});'>Hubble image (300Mb)</a>
+    <li> <a href='javascript:JS9.Load("data/large/pn_101_clean.fits", {fits2fits:"size>100", colormap:"heat"});'>XMM table (50Mb)</a>
+    <li> <a href='javascript:JS9.Load("data/large/pn_201_clean.fits", {fits2fits:"size>100", colormap:"cool"});'>XMM table (101Mb)</a>
+    <li> <a href='javascript:JS9.Load("data/large/f814w_bin24.fits.gz", {fits2fits:"size>100", colormap:"grey", scale:"log", parentFile:"large/f814w.fits.gz", onload:function(im){im.setScale(0,100); im.setColormap(6.56,0.04);}});'>small Hubble w/parentFile</a>
+    <li> <a href='javascript:JS9.Load("data/fits/casa.fits[events][energy=3000:7000]", {fits2fits:"size>100", scale:"log",colormap:"cool",xcen:3888,ycen:4098,xdim:700,ydim:600,bin:2});'>Chandra Cas-A (30Mb)</a>
+    <li> <a href='javascript:JS9.Load("data/large/f814w.fits.gz", {fits2fits:"size>100",colormap:"grey",scale:"log",xcen:5294,ycen:6662,xdim:4096,ydim:4096,bin:8,onload:function(im){im.setScale(0,100); im.setColormap(6.56,0.04);}});'>Hubble image (300Mb)</a>
     </ul>
     </td>
     </tr>

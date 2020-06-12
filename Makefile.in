@@ -493,6 +493,9 @@ spell:		FORCE
 			aspell -c $$f; \
 		  done)
 
+js9helper:	FORCE
+		@(build-scripts/nnode)
+
 smoke:		FORCE
 		@(X=`js9 cmap`; 					\
 	          echo "$$X" | egrep "^ERROR:" 1>/dev/null 2>&1;	\
@@ -502,7 +505,8 @@ smoke:		FORCE
 		  fi;							\
 		  python3 tests/smoke.py)
 
-view-readme:	FORCE
+
+viewreadme:	FORCE
 		@(grip)
 
 clean:		FORCE
@@ -516,7 +520,8 @@ clean:		FORCE
 			doc/*~ notes/*~ test/*~ help/*~ help/*.bak \
 			analysis-wrappers/*~ analysis-plugins/*~ \
 			plugins/*~ plugins/*/*~ \
-			autom4te.cache a.out.dSYM tmp/*; \
+			autom4te.cache a.out.dSYM \
+			demos/debug*.html demos/*~; \
 		        $(MAKE) scriptclean; \
 			cd src && $(MAKE) clean && cd ..; \
 			cd astroem && $(MAKE) clean && cd ..)

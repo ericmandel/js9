@@ -35,7 +35,7 @@
     // on an ipad, the click handler reload the page!
     var click='ontouchstart' in document.documentElement?'touchstart': 'click';
     function init(){
-        JS9.Preload("fits/casa.fits.gz", {parentFile: "fits/casa.fits", scale: "log", colormap: "cool", onload: function(){JS9.DisplayPlugin('JS9Layers')}});
+        JS9.Preload("data/fits/casa.fits.gz", {parentFile: "data/fits/casa.fits", scale: "log", colormap: "cool", onload: function(){JS9.DisplayPlugin('JS9Layers')}});
         $("#display").on("change", function(evt){
           try{doit("display", this.value);}
           finally{$("#display").prop('selectedIndex', 0);

@@ -82,7 +82,7 @@ a single display:
           for(i=0; i<images.length; i++){
               opts = {colormap: cmaps[i], scale: scales[i],
                       contrast: contrasts[i], bias: biases[i]};
-              JS9.Preload("blend/"+images[i], opts);
+              JS9.Preload("data/blend/"+images[i], opts);
           }
       }
       $(document).ready(function(){
