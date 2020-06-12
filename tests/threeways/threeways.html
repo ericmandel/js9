@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="../../favicon.ico">
+  <link type="text/css" rel="stylesheet" href="../../js9support.css">
+  <link type="text/css" rel="stylesheet" href="../../js9.css">
+  <script type="text/javascript" src="../../js9prefs.js"></script>
+  <script type="text/javascript" src="../../js9support.js"></script>
+  <script type="text/javascript" src="../../js9.js"></script>
+  <script type="text/javascript" src="../../js9plugins.js"></script>
+  <script type="text/javascript" src="threeways.js"></script>
+  <style type="text/css">
+      h1 {
+          margin-bottom: 0px;
+          padding-bottom: 0px;
+      }
+      #message {
+          width: 512px;
+          font-weight: bold;
+          font-size: 32px;
+          padding: 6px;
+          margin: 0px;
+          outline: none;
+          overflow-y:auto;
+      }
+      #centerdiv {
+          position: absolute;
+          margin: auto;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          width: 512px;
+          height: 600px;
+      }
+  </style>
+  <title>JS9</title>
+</head>
+<body>
+    <center><h1>JS9: astronomical image display everywhere</h1></center>
+    <div id="centerdiv">
+    <div id="message"></div>
+    <p>
+    <div class="JS9Menubar" id="JS9Menubar"></div>
+    <div class="JS9" id="JS9"></div>
+    <div style="margin-top: 2px;">
+    <div class="JS9Colorbar" id="JS9Colorbar"></div>
+    </div>
+    <p>
+    <button type="button" onclick="dostop()">Stop</button>
+    </div>
+
+    <script type="text/javascript">
+    $(document).ready(function(){
+        JS9.imageOpts.valpos = false;
+        $("#centerdiv").draggable({
+            handle: "#JS9Menubar"
+        });
+        demoFuncs[tot++] = function() {
+            var i;
+            message("close images and begin again");
+            for(i=0; i<JS9.images.length; i++){
+                window.setTimeout(function(){
+                    JS9.CloseImage({display: js9id});
+                }, 100);
+            }
+            window.setTimeout(function(){
+	        if( demoFuncs[n] && !stop ){
+	            demoFuncs[n++]();
+	        }
+            }, to);
+        };
+        demoFuncs[tot++] = function() {
+            threeways();
+        };
+        threeways();
+    });
+    </script>
+<p>
+</body>
+</html>

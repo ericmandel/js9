@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.ico">
+  <link type="text/css" rel="stylesheet" href="../js9support.css">
+  <link type="text/css" rel="stylesheet" href="../js9.css">
+  <script type="text/javascript" src="../js9prefs.js"></script>
+  <script type="text/javascript" src="../js9support.js"></script>
+  <script type="text/javascript" src="../js9.js"></script>
+  <script type="text/javascript" src="../js9plugins.js"></script>
+  <title>JS9 leak test 1</title>
+</head>
+<body>
+    <center><h2>JS9 MEM LEAK TEST: RUN IN JS9 DIRECTORY</h2></center>
+    <p>
+    Look for memory leaks in Emscripten heap when running refreshImage() and
+    displaySection(). Suggested procedure for Firefox:
+    <ul>
+    <li> bring up Developer Tools (opt-cmd-k), click Memory tab
+    <li> set Record call stacks, View: Aggregate, Group By: Inverted Call Stack
+    <li> reload this page, take Memory snapshot: astroem.js is largest at 67Mb
+    <li> click Console tab and execute:
+    <li> &nbsp;&nbsp;doit1(N)   to load images N times
+    <li> &nbsp;&nbsp;doit1()    to load images until var stop is set to 1
+    <li> each new Memory snapshot: astroem.js should still be largest at 67Mb
+    </ul>
+
+    <p>
+    <table cellspacing="15">
+    <tr valign="top">
+    <td>
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    <div style="margin-top: 2px;">
+    <div class="JS9Colorbar"></div>
+    </div>
+    </td>
+    <td>
+    <table cellspacing="15">
+    <tr valign="top">
+    <td>
+    <div class="JS9Menubar" id="x1_JS9Menubar" data-width="200"></div>
+    <div class="JS9" id="x1_JS9" data-width="200" data-height="200"></div>
+    <div style="margin-top: 2px;">
+    <div class="JS9Colorbar" id="x1_JS9Colorbar" data-width="200"></div>
+    </div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="x2_JS9Menubar" data-width="200"></div>
+    <div class="JS9" id="x2_JS9" data-width="200" data-height="200"></div>
+    <div style="margin-top: 2px;">
+    <div class="JS9Colorbar" id="x2_JS9Colorbar" data-width="200"></div>
+    </div>
+    </td>
+    </tr>
+    <tr valign="top">
+    <td>
+    <div class="JS9Menubar" id="x3_JS9Menubar" data-width="200"></div>
+    <div class="JS9" id="x3_JS9" data-width="200" data-height="200"></div>
+    <div style="margin-top: 2px;">
+    <div class="JS9Colorbar" id="x3_JS9Colorbar" data-width="200"></div>
+    </div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="x4_JS9Menubar" data-width="200"></div>
+    <div class="JS9" id="x4_JS9" data-width="200" data-height="200"></div>
+    <div style="margin-top: 2px;">
+    <div class="JS9Colorbar" id="x4_JS9Colorbar" data-width="200"></div>
+    </div>
+    </td>
+    </tr>
+    </table>
+    </td>
+    </tr>
+    </table>
+
+    <script type="text/javascript">
+      // leak test of refreshImage and displaySection()
+      var imoff = 0;
+      var stop = false;
+      var niter = 0;
+      var maxiter = 0;
+      var timeout = 1000;
+      var urls = ["fits/casa.fits.gz", "fits/3c273.fits.gz"]
+      function refresh1(url, display_id, ref1_x, ref1_y, ref2_x, ref2_y, ref3_x, ref3_y, tx, ty){
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.responseType = 'blob';
+        xhr.onload = function(e) {
+          if (this.status === 200) {
+            var img = this.response;
+            JS9.RefreshImage(img, {onrefresh: function(xim){
+                xim.displaySection({xcen:ref1_x, ycen:ref1_y, xdim:50, ydim:50,
+                    refresh:"x1_JS9", ondisplaysection: function(){
+                    JS9.SetZoom(4, {display:"x1_JS9"});
+                }});
+
+                xim.displaySection({xcen:ref2_x, ycen:ref2_y, xdim:50, ydim:50,
+                    refresh:"x2_JS9", ondisplaysection: function(){
+                    JS9.SetZoom(4, {display:"x2_JS9"});
+                }});
+
+                xim.displaySection({xcen:ref3_x, ycen:ref3_y, xdim:50, ydim:50,
+                    refresh:"x3_JS9", ondisplaysection: function(){
+                    JS9.SetZoom(4, {display:"x3_JS9"});
+                }});
+
+                xim.displaySection({
+                    xcen: tx, ycen: ty, xdim: 50, ydim: 50,
+                    refresh: "x4_JS9", ondisplaysection: function () {
+                        JS9.SetZoom(4, {display: "x4_JS9"});
+                    }
+                });}});
+          }
+        };
+        xhr.send();
+      }
+      function doit1(mymax){
+	  if( mymax ){
+	      niter = 0;
+	      maxiter = mymax;
+	  }
+	  if( stop ){ return; }
+	  window.setTimeout(function(){
+	      niter = niter + 1;
+	      if( maxiter > 0 && niter > maxiter ){ return; }
+	      refresh1(urls[niter % 2], "JS9", imoff + 256, imoff + 256, imoff + 768, imoff + 256, imoff + 768, imoff + 256, imoff, imoff);
+	      doit1();
+	  }, timeout)
+
+      }
+
+      // leak test of JS9.Load and closeImage
+      var files = ["./fits/3c273.fits.gz", "./fits/3c58.fits.gz", "./fits/b10.fits", "./fits/casa.fits.gz", "./fits/cenx3.fits.gz", "./fits/d1000.fits", "./fits/dot.fits", "./fits/f1000.fits", "./fits/i1.fits", "./fits/i100.fits", "./fits/i1000.fits", "./fits/jupiter_cube.fits", "./fits/line512.fits", "./fits/m13.fits", "./fits/ngc1316.fits", "./fits/ngkper.fits.gz", "./fits/nicmos.fits", "./fits/s100.fits", "./fits/snr.fits.gz"];
+      function loadit2(niter){
+	  if( niter >= files.length ){
+	      return;
+	  }
+	  console.log("load: %s", files[niter]);
+	  JS9.Load(files[niter], {onload: function(myim){
+	      var i, im;
+	      for(i=0; i<JS9.images.length; i++){
+		  im = JS9.images[i];
+		  if( im !== myim ){
+		      console.log("close: %s", im.id);
+		      im.closeImage();
+		  }
+	      }
+	      loadit2(niter+1);
+	  }});
+      }
+      function doit2(){
+	  loadit2(0);
+      }
+    </script>
+</body>
+</html>

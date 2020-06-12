@@ -1,0 +1,73 @@
+#!/bin/bash
+#set -x
+
+JS9_SRCDIR=$(pwd)
+if [ x"$1" != x ]; then
+  case "$1" in
+  -q*)
+  DOQUICK=1
+  ./mkhelper nodejs
+  ;;
+
+  *)
+  JS9_INSTALLDIR="$1"
+  ;;
+  esac
+fi
+
+# js9: message script
+# input is from same directory as this script
+# output is in current directory
+BFILE="${BASH_SOURCE[0]}"
+BDIR="$( dirname "${BFILE}" )"
+IMSGSCR="${BDIR}/js9.in"
+OMSGSCR="js9"
+
+echo "Generating $OMSGSCR script for JS9 messaging and desktop use ..."
+X="s#^ *JS9_SRCDIR=\".*\"#export JS9_SRCDIR=\"$JS9_SRCDIR\"#"
+X="$X;s#^ *JS9_INSTALLDIR=\".*\"#export JS9_INSTALLDIR=\"$JS9_INSTALLDIR\"#"
+sed "$X" < $IMSGSCR > $OMSGSCR
+chmod +x $OMSGSCR
+
+if [ x"$DOQUICK" = x1 ]; then
+# look for Electron program (for messaging or for app)
+    OS=`uname -s`
+    case $OS in
+      Linux)  TRY="electron"
+	  command -v "$TRY" 1>/dev/null 2>&1
+	  if [ $? = 0 ]; then
+	      ELECTRON_EXE="$TRY"
+	  fi
+      ;;
+      Darwin) TRY="${JS9_ELECTRON_APP}"
+	  command -v "$TRY" 1>/dev/null 2>&1
+	  if [ $? = 0 ]; then
+	      ELECTRON_EXE="$TRY"
+	  else
+	      TRY="${HOME}/Applications/Electron.app/Contents/MacOS/Electron"
+	      command -v "$TRY" 1>/dev/null 2>&1
+	      if [ $? = 0 ]; then
+		  ELECTRON_EXE="$TRY"
+	      else
+		  TRY="/Applications/Electron.app/Contents/MacOS/Electron"
+		  command -v "$TRY" 1>/dev/null 2>&1
+		  if [ $? = 0 ]; then
+		      ELECTRON_EXE="$TRY"
+		  fi
+	      fi
+	  fi
+      ;;
+    esac
+    # make tmp directory, in case js9 is run from here
+    if [ ! -r tmp ]; then
+        mkdir -p tmp
+    fi
+    # give user a hint about 
+    if [ x$ELECTRON_EXE != x -a x"$OS" = xDarwin ]; then
+      printf "\nWhen using Electron.app with JS9, you will want to codesign it:\n"
+      printf "\nsudo codesign --force --deep --sign - $ELECTRON_EXE/\n"
+      printf "\nThis will avoid the repeated request to allow incoming connections.\n\n"
+    fi
+fi
+
+exit 0

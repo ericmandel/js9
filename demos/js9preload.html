@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="../favicon.ico">
+  <link type="text/css" rel="stylesheet" href="../js9support.css">
+  <link type="text/css" rel="stylesheet" href="../js9.css">
+  <script type="text/javascript" src="../js9prefs.js"></script>
+  <script type="text/javascript" src="../js9support.min.js"></script>
+  <script type="text/javascript" src="../js9.min.js"></script>
+  <script type="text/javascript" src="../js9plugins.js"></script>
+  <style type="text/css">
+      div.JS9GridHeader {
+	  display: grid;
+	  grid-template-columns: 1fr 2fr;
+	  grid-gap: 10px;
+      }
+      div.JS9GridContainer {
+	  grid-template-columns: repeat(3, 1fr);
+	  grid-gap: 10px;
+      }
+  </style>
+  <title>JS9 preload</title>
+</head>
+<body>
+    <center><font size="+1">
+    <b>JS9 Demo: preloading images into JS9</b>
+    </font></center>
+    
+    <p>
+    <div class="JS9GridHeader">
+      <div>
+      Load two images with one JS9.Preload() call:
+      </div>
+      <div>
+      Load images into alternating displays by calling JS9.Preload() repeatedly in a loop:
+      </div>
+    </div>
+    <p>
+
+    <div class="JS9GridContainer">
+    <div class="JS9GridItem">
+    <div class="JS9Menubar" id="my0_JS9Menubar" data-width="300px"></div>
+    <div class="JS9" id="my0_JS9" data-width="300px" data-height="300px"></div>
+    <div class="JS9Statusbar" id="my0_JS9Statusbar" data-width="300px"></div>
+    </div>
+    <div class="JS9GridItem">
+    <div class="JS9Menubar" id="my1_JS9Menubar" data-width="300px"></div>
+    <div class="JS9" id="my1_JS9" data-width="300px" data-height="300px"></div>
+    <div class="JS9Statusbar" id="my1_JS9Statusbar" data-width="300px"></div>
+    </div>
+    <div class="JS9GridItem">
+    <div class="JS9Menubar" id="my2_JS9Menubar" data-width="300px"></div>
+    <div class="JS9" id="my2_JS9" data-width="300px" data-height="300px"></div>
+    <div class="JS9Statusbar" id="my2_JS9Statusbar" data-width="300px"></div>
+    </div>
+    </div>
+
+    <script type="text/javascript">
+      var files = [
+        "fits/casa.fits.gz",
+        "fits/snr.fits[events][pi==pha]",
+        "fits/m13.fits",
+        "fits/3c273.fits.gz",
+        "fits/3c58.fits.gz",
+        "fits/ngc1316.fits",
+        "fits/ngkper.fits.gz",
+        "http://hea-www.cfa.harvard.edu/~eric/coma.fits.gz"
+      ];
+      var opts = [
+        {parentFile:"fits/casa.fits", scale:"log",colormap:"cool"},
+        '{"scale": "log"}',
+        {scale: "linear", colormap: "sls"},
+        {parentFile:"fits/3c273.fits",colormap:"viridis",scale:"log"},
+        {parentFile:"fits/3c58.fits",scale:"log"},
+        {scale:"linear"},
+        {parentFile:"ngkper.fits", zoom: "toFit", scale: "log"},
+        '{"scale":"linear", "colormap":"heat"}'
+      ];
+      function init(){
+          var i, s;
+          // set wcs display to degrees
+          JS9.imageOpts.wcsunits = "degrees";
+          // one call to load files into display 0:
+          JS9.Preload(files[0], opts[0], files[1], opts[1]);
+          // a loop of calls to load files into alternating displays:
+          for(i=2; i<files.length; i++){
+              s = "my" + String(i%2+1) + "_JS9";
+              JS9.Preload(files[i], opts[i], {display: s});
+          }
+      }
+      $(document).ready(function(){
+        init();
+      });
+    </script>
+<p>
+<h4>JS9 Demos:</h4>
+<b>web page configuration:</b>
+<ul class="js9demo">
+<li><a href='js9basics.html'>the basics</a>
+<li><a href='js9sizes.html'>setting the size of the JS9 display</a>
+<li><a href='js9menustyles.html'>menubar styles</a>
+<li><a href='js9bespoke.html'>web page control</a>
+<li><a href='js9preload.html'>preloading images into JS9</a>
+</ul>
+<b>multiple displays:</b>
+<ul class="js9demo">
+<li><a href='js9multi.html'>multiple instances of JS9</a> 
+<li><a href='js9super.html'>control multiple displays with one menu</a>
+<li><a href='js9create.html'>creating a JS9 instance dynamically</a> 
+<li><a href='js9sync.html'>syncing images in multiple displays</a> 
+</ul>
+<b>plugins:</b>
+<ul class="js9demo">
+<li><a href='js9plugins.html'>adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>the imexam plugin</a> 
+<li><a href='js9panzoom.html'>pan and zoom</a> 
+<li><a href='js9cat.html'>overlaying catalogs</a>
+<li><a href='js9dysel.html'>dynamic selection of displays</a> 
+</ul>
+<b>colors:</b>
+<ul class="js9demo">
+<li><a href='js9blend.html'>image blending</a> 
+<li><a href='js9rgb.html'>RGB composite images</a> 
+<li><a href='js9cmaps.html'>creating new colormaps</a>
+<li><a href='js9masks.html'>masks and opacity</a>
+</ul>
+<b>data analysis:</b>
+<ul class="js9demo">
+<li><a href='js9analysis.html'>remote data analysis</a> 
+<li><a href='js9onchange.html'>running tasks when a region changes</a>
+</ul>
+<b>FITS support:</b>
+<ul class="js9demo">
+<li><a href='js9bitpix.html'>displaying different FITS datatypes</a> 
+<li><a href='js9large.html'>support for large FITS files</a>
+</ul>
+<b>not often needed:</b>
+<ul class="js9demo">
+<li><a href='js9allinone.html'>using the all-in-one files</a> 
+<li><a href='js9pngvsfits.html'>PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>

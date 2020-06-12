@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="../favicon.ico">
+  <link type="text/css" rel="stylesheet" href="../js9support.css">
+  <link type="text/css" rel="stylesheet" href="../js9.css">
+  <script type="text/javascript" src="../js9prefs.js"></script>
+  <script type="text/javascript" src="../js9support.min.js"></script>
+  <script type="text/javascript" src="../js9.min.js"></script>
+  <script type="text/javascript" src="../js9plugins.js"></script>
+  <title>JS9 cmaps</title>
+</head>
+<body>
+    <p>
+    <center><font size="+1">
+    <b>JS9 Demo: creating new colormaps</b>
+    </font></center>
+    <table>
+    <tr>
+    <td style="vertical-align:top">
+    <ul>
+      <li> Choose "File:separate:separate these images" to make four separate displays.
+      <li> Choose to create 3 or more slices of the color wheel and 3 colormaps.
+      <li> Click next to the chandra, galex, spitzer images to assign new colormaps.
+      <li> Click the colored rectangle to display the color picker.
+      <li> Choose different base colors and see how the three colormaps change.
+      <li> For three slices, the colormaps will be spaced around the whole
+      color wheel.
+      <li> For six slices, the colormaps will be spaced around the half the colorwheel.
+    </ul>
+    </td>
+    <td style="vertical-align:top">
+    <ul>
+      <li> In the fourth display, choose "View:colormaps" to bring up a new colormaps plugin.
+      <li> Click the button to the left of the hst image.
+      <li> Click the colored rectangle to switch the color picker to this plugin.
+      <li> Choose a base color and see how only this colormap changes.
+      <li> Switch between plugins by clicking the appropriate colored rectangle.
+    </ul>
+    </td>
+    </tr>
+    </table>
+
+    <div class="JS9Cmaps" id="JS9Cmaps"></div>
+    <p>
+    <div class="JS9Menubar" id="JS9Menubar" data-width="325"></div>
+    <div class="JS9" id="JS9" data-width="325" data-height="240"></div>
+    <div style="margin-top: 2px;">
+    <div class="JS9Colorbar" id="JS9Colorbar" data-width="325"></div>
+    </div>
+    <script type="text/javascript">
+      var nload = 0;
+      var imdir = "blend/";
+      var images = ["chandra.fits", "galex.fits", "spitzer.fits", "hst.fits"];
+      var contrasts =  [7.2, 4.2, 4.2, 6.3];
+      var biases =  [0.07, 0.73, 0.5, 0.37];
+      var scales = ["log", "log", "log", "log"];
+      var cmaps =  ["red", "green", "blue", "heat"];
+
+      function rp(i){
+	  var im = JS9.lookupImage(images[i]);
+	  var cmap = cmaps[i];
+	  var contrast = contrasts[i];
+	  var bias = biases[i];
+	  if( !im ){
+	      return;
+	  }
+	  if( i === JS9.images.length ){
+	      return;
+	  }
+	  if( i === 0 ){
+	      im.setColormap(cmap, contrast, bias);
+	      rp(i+1);
+	  } else {
+	      im.reprojectData("chandra.fits", {onrefresh: function(xim){
+		  xim.setColormap(cmap, contrast, bias);
+		  rp(i+1);
+	      }});
+	  }
+      }
+
+      function ld(im){
+          var i;
+          nload++;
+          if( nload === images.length ){
+              rp(0);
+          }
+      }
+
+      function init(){
+          var i, s, opts;
+          JS9.imageOpts.valpos = false;
+          for(i=0; i<images.length; i++){
+              opts = {scale: scales[i], onload: ld};
+              JS9.Preload(imdir+images[i], opts);
+          }
+      }
+
+      $(document).on("JS9:ready", function(){
+          init();
+      });
+    </script>
+<p>
+<h4>JS9 Demos:</h4>
+<b>web page configuration:</b>
+<ul class="js9demo">
+<li><a href='js9basics.html'>the basics</a>
+<li><a href='js9sizes.html'>setting the size of the JS9 display</a>
+<li><a href='js9menustyles.html'>menubar styles</a>
+<li><a href='js9bespoke.html'>web page control</a>
+<li><a href='js9preload.html'>preloading images into JS9</a>
+</ul>
+<b>multiple displays:</b>
+<ul class="js9demo">
+<li><a href='js9multi.html'>multiple instances of JS9</a> 
+<li><a href='js9super.html'>control multiple displays with one menu</a>
+<li><a href='js9create.html'>creating a JS9 instance dynamically</a> 
+<li><a href='js9sync.html'>syncing images in multiple displays</a> 
+</ul>
+<b>plugins:</b>
+<ul class="js9demo">
+<li><a href='js9plugins.html'>adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>the imexam plugin</a> 
+<li><a href='js9panzoom.html'>pan and zoom</a> 
+<li><a href='js9cat.html'>overlaying catalogs</a>
+<li><a href='js9dysel.html'>dynamic selection of displays</a> 
+</ul>
+<b>colors:</b>
+<ul class="js9demo">
+<li><a href='js9blend.html'>image blending</a> 
+<li><a href='js9rgb.html'>RGB composite images</a> 
+<li><a href='js9cmaps.html'>creating new colormaps</a>
+<li><a href='js9masks.html'>masks and opacity</a>
+</ul>
+<b>data analysis:</b>
+<ul class="js9demo">
+<li><a href='js9analysis.html'>remote data analysis</a> 
+<li><a href='js9onchange.html'>running tasks when a region changes</a>
+</ul>
+<b>FITS support:</b>
+<ul class="js9demo">
+<li><a href='js9bitpix.html'>displaying different FITS datatypes</a> 
+<li><a href='js9large.html'>support for large FITS files</a>
+</ul>
+<b>not often needed:</b>
+<ul class="js9demo">
+<li><a href='js9allinone.html'>using the all-in-one files</a> 
+<li><a href='js9pngvsfits.html'>PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>

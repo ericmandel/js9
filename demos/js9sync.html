@@ -1,0 +1,300 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="../favicon.ico">
+  <link type="text/css" rel="stylesheet" href="../js9support.css">
+  <link type="text/css" rel="stylesheet" href="../js9.css">
+  <script type="text/javascript" src="../js9prefs.js"></script>
+  <script type="text/javascript" src="../js9support.min.js"></script>
+  <script type="text/javascript" src="../js9.min.js"></script>
+  <script type="text/javascript" src="../js9plugins.js"></script>
+  <title>JS9 sync</title>
+  <style type="text/css">
+      .ImExamRegionStats {
+        background: #E9E9E9;
+        border: black solid 1px
+        padding: 0px;
+        margin:  0px;
+        width: 410px;
+        height: 200px;
+        overflow: auto;
+      }
+      .myAnalysisResults {
+        background: #E9E9E9;
+        border: black solid 1px
+        padding: 0px;
+        margin:  0px;
+        width: 400px;
+        height: 200px;
+      }
+  </style>
+</head>
+<body>
+    <center><font size="+1">
+    <b>JS9 Sync: synchronize operations between two or more images</b>
+    </font></center>
+    <p>
+    You can use the <b>View -> Sync Images</b> plugin to synchronize
+    two or more images, so that when an operation is performed on one
+    image (e.g. change of <b>colormap, contrast/bias, pan, regions,
+    scale, wcs, zoom</b>), it also is performed on the other image(s).
+    First choose the images that should be kept in sync.  The choose
+    the operations that you want to sync. Click <b>Sync Repeatedly</b>
+    to keep these images in sync. You can also sync once only by clicking
+    <b>Sync Once</b>.
+    <p>
+    By default, synchronization is <b>reciprocated</b>: a change in any
+    image causes the others to be synchronized. Synchronization can be
+    configured one direction only by unchecking the <b>reciprocate</b>
+    option. For advanced use, the
+    <a href="./help/publicapi.html#JS9.SyncImages" target="_blank">JS9.SyncImages()</a>
+    and
+    <a href="./help/publicapi.html#JS9.UnsyncImages" target="_blank">JS9.UnsyncImages()</a>
+    public API calls are available programmatically or from the command line.
+
+    <p>
+    <center><font size="+1"><b>Synchronizing different images</b></font></center>
+    <p>
+    This demo displays Chandra, Galex, Spitzer images of the
+    colliding galaxies NGC 2207 and IC 2163, synchronized on region
+    operations. The region screen sizes differ because the
+    image scales differ, but their wcs sizes are identical. Move
+    a region around to see updated region stats for all three.  (You
+    can, of course, use
+    <b>WCS:reproject</b> to display the same scale and orientation.)
+    <p>
+    <table cellpadding="2px">
+    <tr>
+    <td>
+    <div class="JS9Menubar" id="bim0_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="bim0_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="bim0_JS9Colorbar" data-width="400"></div>
+    <div class="ImExamRegionStats" data-js9id="bim0_JS9" data-width="400"></div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="bim1_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="bim1_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="bim1_JS9Colorbar" data-width="400"></div>
+    <div class="ImExamRegionStats" data-js9id="bim1_JS9" data-width="400"></div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="bim2_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="bim2_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="bim2_JS9Colorbar" data-width="400"></div>
+    <div class="ImExamRegionStats" data-js9id="bim2_JS9" data-width="400"></div>
+    </td>
+    </tr>
+    </table>
+
+    <p>
+    <center><font size="+1"><b>Synchronizing views of the same image</b></font></center>
+    <p>
+    <p>
+    This demo displays three energy cuts of the Chandra Kes 75
+    supernova remnant. The first two images are sync'ed to changes in
+    all operations (colormap, contrast/bias, etc.) The third binned image is
+    sync'ed to all ops except zoom. Change a region to see all the energy plots
+    get updated, or change the colormap, contrast/bias, scale, etc.
+    <table cellpadding="2px">
+    <tr>
+    <td>
+    <div class="JS9Menubar" id="xim0_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="xim0_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="xim0_JS9Colorbar" data-width="400"></div>
+    <div class="myAnalysisResults" id="xim0_Plot"></div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="xim1_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="xim1_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="xim1_JS9Colorbar" data-width="400"></div>
+    <div class="myAnalysisResults" id="xim1_Plot"></div>
+    </td>
+    <td>
+    <div class="JS9Menubar" id="xim2_JS9Menubar" data-width="400"></div>
+    <div class="JS9" id="xim2_JS9"  data-width="400"  data-height="400"></div>
+    <div class="JS9Colorbar" id="xim2_JS9Colorbar" data-width="400"></div>
+    <div class="myAnalysisResults" id="xim2_Plot"></div>
+    </td>
+    </tr>
+    </table>
+
+    <script type="text/javascript">
+    JS9.Regions.opts.onchange = runMyAnalysis;
+    var ximages = [
+      "kes75/kes75_500_1500.fits",
+      "kes75/kes75_1500_2500.fits",
+      "kes75/kes75_2500_8000.fits"
+    ];
+    var xcmaps = [["cool",4.0,0.09],["heat",5.9,0.14],["viridis",5.875,0.083]];
+    var xops1 = ["colormap","contrastbias","pan","regions","scale","wcs"];
+    var xims1 = [ximages[1], ximages[2]]
+    var xops2 = ["zoom"];
+    var xims2 = [ximages[1]]
+    function xinit(){
+      JS9.Load(ximages[0], {onload: function(xim0){
+        xim0.setColormap(...xcmaps[0]);
+        JS9.Load(ximages[1], {onload: function(xim1){
+          xim1.setColormap(...xcmaps[1]);
+          JS9.Load(ximages[2], {bin: 2, onload: function(xim2){
+              xim2.setColormap(...xcmaps[2]);
+              // wait so last image has time to get analysis tasks from helper
+              window.setTimeout(function(){
+                // sync first image with the others
+                JS9.SyncImages(xops1, xims1, {display: "xim0_JS9"});
+                JS9.SyncImages(xops2, xims2, {display: "xim0_JS9"});
+                // change these in the first image, they will be sync'ed
+                xim0.setScale("log");
+                xim0.setPan({px: 4018, py: 4000});
+                xim0.addShapes("regions", "physical;circle(4018,4000,40)");
+              }, 1000);
+          }}, {display: "xim2_JS9"});
+        }}, {display: "xim1_JS9"});
+      }}, {display: "xim0_JS9"});
+    }
+
+    var bimages = [
+      "blend/chandra.fits",
+      "blend/galex.fits",
+      "blend/spitzer.fits"
+    ];
+    var bcmaps = [["cool",4.0,0.09],["heat",3.18,0.21],["viridis",2.63,0.62]];
+    var bops1 = ["regions","scale","wcs"];
+    var bims1 = [bimages[1], bimages[2]]
+    var bops2 = ["regions", "scale"];
+    var bims2 = [bimages[1]]
+    function runMyAnalysis(xim, xreg){
+        if( xim && xim.id.match(/^kes/) ){
+            xim.runAnalysis("energyplot", null, dispMyAnalysis);
+        }
+    }
+    function dispMyAnalysis(stdout, stderr, errcode, a){
+      var plot = this.tmp.plot;
+      var nid = this.display.id.replace(/_.*/, "_Name");
+      var ndiv = $("#" + nid);
+      var rid = this.display.id.replace(/_.*/, "_Plot");
+      var rdiv = $("#" + rid);
+      if( !rdiv ){
+        alert("the analysis results area is missing on this web page");
+      }
+      else if( stderr ){
+        alert(stderr);
+      } else {
+        ndiv.html("<center>"+ this.id + ":<\/center>");
+        // remove previous contents
+        rdiv.empty();
+        // process return type
+        switch(a.rtype){
+        case "text":
+          // text can just get shoved into the div
+          rdiv.html("<pre>" + stdout + "<\/pre>");
+          break;
+        case "plot":
+          // plot can make use of the already-loaded flot routines
+          // (JS9.plotOpts is defined in js9.js)
+          try{ 
+	    // retrieve plot object (should contain a data object)
+	    pobj = JSON.parse(stdout);
+            if( pobj && pobj.data ){
+              // destroy previous plot, or else some bindings will remain
+              if( plot ){
+                plot.destroy();
+                plot = null;
+              }
+              // erase explanatory text
+              rdiv.innerHTML = "";
+    	      // plot the data
+	      plot = $.plot(rdiv, [pobj], JS9.plotOpts);
+	    } else {
+              alert("no analysis data returned");
+            }
+          }
+	  catch(e){
+	    alert("can't plot data: "+e+" "+stdout)
+          };
+          break;
+        }
+      }
+    }
+    function binit(){
+      JS9.Load(bimages[0], {onload: function(bim0){
+        bim0.setColormap(...bcmaps[0]);
+        JS9.Load(bimages[1], {onload: function(bim1){
+          bim1.setColormap(...bcmaps[1]);
+          JS9.Load(bimages[2], {onload: function(bim2){
+              bim2.setColormap(...bcmaps[2]);
+              // wait so last image has time to get analysis tasks from helper
+              window.setTimeout(function(){
+                // sync first image with the others
+                JS9.SyncImages(bops1, bims1, {display: "bim0_JS9"});
+                JS9.SyncImages(bops2, bims2, {display: "bim0_JS9"});
+                // change these in the first image, they will be sync'ed
+                bim0.setScale("log");
+                bim0.setPan({px: 4018, py: 4000});
+                bim0.addShapes("regions",
+                    'FK5; box(06:16:22.055, -21:22:24.017, 40", 30")');
+              }, 250);
+              window.setTimeout(function(){
+	          xinit();
+	      }, 1000);
+          }}, {display: "bim2_JS9"});
+        }}, {display: "bim1_JS9"});
+      }}, {display: "bim0_JS9"});
+    }
+    $(document).on("JS9:ready", function(){
+      binit();
+    });
+    </script>
+<p>
+<h4>JS9 Demos:</h4>
+<b>web page configuration:</b>
+<ul class="js9demo">
+<li><a href='js9basics.html'>the basics</a>
+<li><a href='js9sizes.html'>setting the size of the JS9 display</a>
+<li><a href='js9menustyles.html'>menubar styles</a>
+<li><a href='js9bespoke.html'>web page control</a>
+<li><a href='js9preload.html'>preloading images into JS9</a>
+</ul>
+<b>multiple displays:</b>
+<ul class="js9demo">
+<li><a href='js9multi.html'>multiple instances of JS9</a> 
+<li><a href='js9super.html'>control multiple displays with one menu</a>
+<li><a href='js9create.html'>creating a JS9 instance dynamically</a> 
+<li><a href='js9sync.html'>syncing images in multiple displays</a> 
+</ul>
+<b>plugins:</b>
+<ul class="js9demo">
+<li><a href='js9plugins.html'>adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>the imexam plugin</a> 
+<li><a href='js9panzoom.html'>pan and zoom</a> 
+<li><a href='js9cat.html'>overlaying catalogs</a>
+<li><a href='js9dysel.html'>dynamic selection of displays</a> 
+</ul>
+<b>colors:</b>
+<ul class="js9demo">
+<li><a href='js9blend.html'>image blending</a> 
+<li><a href='js9rgb.html'>RGB composite images</a> 
+<li><a href='js9cmaps.html'>creating new colormaps</a>
+<li><a href='js9masks.html'>masks and opacity</a>
+</ul>
+<b>data analysis:</b>
+<ul class="js9demo">
+<li><a href='js9analysis.html'>remote data analysis</a> 
+<li><a href='js9onchange.html'>running tasks when a region changes</a>
+</ul>
+<b>FITS support:</b>
+<ul class="js9demo">
+<li><a href='js9bitpix.html'>displaying different FITS datatypes</a> 
+<li><a href='js9large.html'>support for large FITS files</a>
+</ul>
+<b>not often needed:</b>
+<ul class="js9demo">
+<li><a href='js9allinone.html'>using the all-in-one files</a> 
+<li><a href='js9pngvsfits.html'>PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>
+

@@ -1,5 +1,5 @@
 #	This file is an input file used by the GNU "autoconf" program to
-#	generate the file "configure", which is run during XPA installation
+#	generate the file "configure", which is run during JS9 installation
 #	to configure the system for the local environment.
 AC_INIT(js9, 3.0, eric@cfa.harvard.edu, js9)
 
@@ -32,7 +32,10 @@ AC_SUBST(USEHELPER)
 # if no back-end, we don't need a compiler, etc.
 if [ test x"$USEHELPER" = xyes ]; then
 
-AC_CONFIG_SRCDIR(./tpos.c)
+AC_CONFIG_SRCDIR(./src/js9helper.c)
+
+AC_CONFIG_AUX_DIR(./build-scripts)
+
 AC_CANONICAL_HOST
 
 AC_PROG_CC
@@ -325,9 +328,10 @@ else
 fi
 AC_SUBST(SAODIR)
 
-AC_CONFIG_FILES(Makefile)
+# generate Makefiles
+AC_CONFIG_FILES(Makefile src/Makefile)
 
 # generate pkg-config meta-data file
-AC_CONFIG_FILES(js9helper.pc)
+AC_CONFIG_FILES(src/js9helper.pc)
 
 AC_OUTPUT

@@ -1,0 +1,237 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="../favicon.ico">
+  <link type="text/css" rel="stylesheet" href="../js9support.css">
+  <link type="text/css" rel="stylesheet" href="../js9.css">
+  <script type="text/javascript" src="../js9prefs.js"></script>
+  <script type="text/javascript" src="../js9support.min.js"></script>
+  <script type="text/javascript" src="../js9.min.js"></script>
+  <script type="text/javascript" src="../js9plugins.js"></script>
+  <style type="text/css">
+      .colA {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 10px;
+      }
+      .colB {
+	position: absolute;
+	top: 0;
+	left: 20px;
+	width: 130px;
+      }
+      .colC {
+	position: absolute;
+	top: 0;
+	left: 150px;
+	width: 500px;
+      }
+  </style>
+  <title>JS9 create</title>
+</head>
+<body onload="myLoadInit()">
+    <script type="text/javascript">
+    var loadtype;
+    var ndiv = 0;
+    var nwin=1;
+    var lastid;
+    function myLoadInit() {
+        loadtype = "standard";
+        $(".loadLabel").html("");
+        $("#standardLabel").html("<font size='+1'>*<\/font>");
+        $("#standardButton").on("click", function(evt){
+          loadtype = "standard";
+          $(".loadLabel").html("");
+          $("#standardLabel").html("<font size='+1'>*<\/font>");
+        });
+        $("#divButton").on("click", function(evt){
+          loadtype = "div";
+          $(".loadLabel").html("");
+          $("#divLabel").html("<font size='+1'>*<\/font>");
+        });
+        $("#lightButton").on("click", function(evt){
+          loadtype = "light";
+          $(".loadLabel").html("");
+          $("#lightLabel").html("<font size='+1'>*<\/font>");
+        });
+        $("#newButton").on("click", function(evt){
+          loadtype = "new";
+          $(".loadLabel").html("");
+          $("#newLabel").html("<font size='+1'>*<\/font>");
+        });
+    }
+    // create js9 instance, if necessary, and load image
+    function myLoad(file, opts){
+      var id, did, head, body, html, doc;
+      var myopts = opts || {};
+      switch(loadtype){
+        // regular old div in this page: JS9 must be installed on this page
+        case "standard":
+          // just the standard load
+          JS9.Load(file, myopts, {display: "standard"});
+          break;
+        // lightweight window in this page
+        case "light":
+          myopts.id = "mylight" + nwin++;
+          lastid = JS9.LoadWindow(file, myopts, "light");
+          break;
+        // completely new window
+        case "new":
+          myopts.id = "mynew" + nwin++;
+          lastid = JS9.LoadWindow(file, myopts, "new");
+          break;
+        case "div":
+          // make a reasonably unique id for the JS9 divs
+          id = "divJS9_" + ndiv++;
+          // make up the html with the unique id
+          html = sprintf("<p><div class='JS9Menubar' id='%sMenubar'><\/div><div class='JS9' id='%s'><\/div>", id, id);
+	  // append to end of page
+	  $(html).appendTo($("body"));
+          // create the new JS9 display, with associated plugins
+          JS9.AddDivs(id);
+          // just a standard load to that display
+          JS9.Load(file, myopts, {display: id});
+    	  break;
+        default:
+          alert("unknown load type: "+loadtype);
+      }
+    }
+    </script>
+    <center><font size="+1">
+    <b>JS9 Demo: creating a JS9 instance dynamically</b>
+    </font></center>
+    <p>
+    Choose a method of creating a JS9 instance:
+    <div class="linegroup">
+    <span class="colA">
+    <label class="loadLabel" id="standardLabel"></label>
+    </span>
+    <span class="colB">
+    <button id="standardButton">Standard Div</button> 
+    </span>
+    <span class="colC">
+    display image in the existing visible canvas below
+    </span>
+    </div>
+
+    <p>
+    <div class="linegroup">
+    <span class="colA">
+    <label class="loadLabel" id="lightLabel"></label>
+    </span>
+    <span class="colB">
+    <button id="lightButton">Light Window</button> 
+    </span>
+    <span class="colC">
+    display image in a dynamically created light-weight window
+    </span>
+    </div>
+
+    <div class="linegroup">
+    <span class="colA">
+    <label class="loadLabel" id="newLabel"></label>
+    </span>
+    <span class="colB">
+    <button id="newButton">New Window</button> 
+    </span>
+    <span class="colC">
+    display image in a dynamically created new window
+    </span>
+    </div>
+
+    <p>
+    <div class="linegroup">
+    <span class="colA">
+    <label class="loadLabel" id="divLabel"></label>
+    </span>
+    <span class="colB">
+    <button id="divButton">Append Div</button> 
+    </span>
+    <span class="colC">
+    display image in a new div, which is appended to the page
+    </span>
+    </div>
+
+    <p>
+    Choose an image to load using the current method:
+    <table cellspacing="10">
+    <tr valign="top">
+    <td>
+    PNG files (converted from FITS):
+    <ul> <li> <a href='javascript:myLoad("png/casa.png");'>CAS-A (Chandra)</a>
+    <li> <a href='javascript:myLoad("png/snr.png", {colormap:"heat"});'>CTB 109 (Einstein)</a>
+    <li> <a href='javascript:myLoad("png/m13.png", {scale:"linear", colormap:"sls"});'>m13 (via SkyView)</a>
+    <li> <a href='javascript:myLoad("png/i1000.png", {scale:"linear", colormap:"grey"});'>i1000 (v=x*1000+y)</a>
+    </ul>
+    </td>
+    <td>
+    FITS files:
+    <ul>
+    <li> <a href='javascript:myLoad("fits/3c273.fits");'>3c273 (Chandra)</a>
+    <li> <a href='javascript:myLoad("fits/ngkper.fits");'>gkper (Chandra)</a>
+    <li> <a href='javascript:myLoad("fits/3c58.fits");'>3c58 (Chandra)</a>
+    <li> <a href='javascript:myLoad("fits/ngc1316.fits", {scale:"linear"});'>ngc1316 (AIPS)</a>
+    </ul>
+    </td>
+    </tr>
+    <tr valign="top">
+    <td colspan="2">
+    <div class="JS9Menubar" id="standardMenubar"></div>
+    <div class="JS9" id="standard"></div>
+    </td>
+    </tr>
+    </table>
+<p>
+<h4>JS9 Demos:</h4>
+<b>web page configuration:</b>
+<ul class="js9demo">
+<li><a href='js9basics.html'>the basics</a>
+<li><a href='js9sizes.html'>setting the size of the JS9 display</a>
+<li><a href='js9menustyles.html'>menubar styles</a>
+<li><a href='js9bespoke.html'>web page control</a>
+<li><a href='js9preload.html'>preloading images into JS9</a>
+</ul>
+<b>multiple displays:</b>
+<ul class="js9demo">
+<li><a href='js9multi.html'>multiple instances of JS9</a> 
+<li><a href='js9super.html'>control multiple displays with one menu</a>
+<li><a href='js9create.html'>creating a JS9 instance dynamically</a> 
+<li><a href='js9sync.html'>syncing images in multiple displays</a> 
+</ul>
+<b>plugins:</b>
+<ul class="js9demo">
+<li><a href='js9plugins.html'>adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>the imexam plugin</a> 
+<li><a href='js9panzoom.html'>pan and zoom</a> 
+<li><a href='js9cat.html'>overlaying catalogs</a>
+<li><a href='js9dysel.html'>dynamic selection of displays</a> 
+</ul>
+<b>colors:</b>
+<ul class="js9demo">
+<li><a href='js9blend.html'>image blending</a> 
+<li><a href='js9rgb.html'>RGB composite images</a> 
+<li><a href='js9cmaps.html'>creating new colormaps</a>
+<li><a href='js9masks.html'>masks and opacity</a>
+</ul>
+<b>data analysis:</b>
+<ul class="js9demo">
+<li><a href='js9analysis.html'>remote data analysis</a> 
+<li><a href='js9onchange.html'>running tasks when a region changes</a>
+</ul>
+<b>FITS support:</b>
+<ul class="js9demo">
+<li><a href='js9bitpix.html'>displaying different FITS datatypes</a> 
+<li><a href='js9large.html'>support for large FITS files</a>
+</ul>
+<b>not often needed:</b>
+<ul class="js9demo">
+<li><a href='js9allinone.html'>using the all-in-one files</a> 
+<li><a href='js9pngvsfits.html'>PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>
