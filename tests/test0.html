@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="../favicon.ico">
+  <link type="text/css" rel="stylesheet" href="../js9support.css">
+  <link type="text/css" rel="stylesheet" href="../js9.css">
+  <script type="text/javascript" src="../js9prefs.js"></script>
+  <script type="text/javascript" src="../js9support.js"></script>
+  <script type="text/javascript" src="../js9.js"></script>
+  <script type="text/javascript" src="../js9plugins.js"></script>
+  <title>JS9 debug1</title>
+</head>
+<body>
+    <table cellspacing="20">
+    <tr>
+    <td style="vertical-align:top">
+    <div class="js9div">
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    <div style="margin-top: 2px;">
+    <div class="JS9Colorbar"></div><p>
+    </div>
+    </div>
+    </td>
+    <td style="vertical-align:top">
+    <table>
+    <tr>
+    <td>
+    <div class="JS9Magnifier"></div>
+    </td>
+    <td>
+    <div class="JS9Panner"></div>
+    </td>
+    </tr>
+    </table>
+    <p>
+    <div class="FITSBinning" data-js9id="JS9"></div>
+    </td>
+    </tr>
+    </table>
+
+    <script type="text/javascript">
+    function doit(){
+      JS9.SetZoom(32);
+      JS9.LoadRegions("data/tests/test0.phys.reg");
+      JS9.LoadRegions("data/tests/test0.wcs.reg");
+    }
+    $(document).on("JS9:ready", function(){
+      JS9.imageOpts.wcsunits = "degrees";
+      JS9.imageOpts.ltvbug = true;
+	JS9.Preload("data/tests/test.fits.gz",
+        {scale:"log", xdim:4096, ydim:4096, bin:8, zoom:32, onload:doit},
+        // dmcopy acisfJ1718247m402943_001N020_evt3.fits.gz'[bin x=1:8192:8,y=1:8192:8]' b8.fits
+        "data/tests/b8.fits.gz", {scale:"log", colormap:"viridis", zoom:32, onload:doit},
+        // fcopy acisfJ1718247m402943_001N020_evt3.fits.gz'[bin x=1:8192:8,y=1:8192:8]' f8.fits
+        "data/tests/f8.fits.gz", {scale:"log", colormap:"magma", zoom:32, onload:doit},
+        // funimage acisfJ1718247m402943_001N020_evt3.fits.gz'[*,*,8]' x8.fits
+        "data/tests/x8.fits.gz", {scale:"log", colormap:"heat", zoom:32, onload:doit});
+    });
+    </script>
+</body>
+</html>
