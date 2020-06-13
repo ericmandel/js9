@@ -13764,6 +13764,11 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 				 mode: "add", opts: myopts});
 	return;
     }
+    // remove old regions, if necessary
+    if( JS9.globalOpts.reloadRefreshReg && myopts.file ){
+	try{ this.removeShapes("regions", myopts.file); }
+	catch(e){ /* empty */ }
+    }
     layer = this.getShapeLayer(layerName);
     // sanity check
     if( !layer || !layer.show ){
@@ -25870,11 +25875,6 @@ JS9.mkPublic("LoadRegions", function(...args){
     const im = JS9.getImage(obj.display);
     const addregions = (reg, ropts) => {
 	if( ropts && ropts.display !== undefined ){ delete ropts.display; }
-	// remove old regions, if necessary
-	if( JS9.globalOpts.reloadRefreshReg && ropts.file ){
-	    try{ im.removeShapes("regions", ropts.file); }
-	    catch(e){ /* empty */ }
-	}
 	// add the regions
 	im.addShapes("regions", reg, ropts);
 	// set status
