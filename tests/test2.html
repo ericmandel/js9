@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="../favicon.ico">
+  <link type="text/css" rel="stylesheet" href="../js9support.css">
+  <link type="text/css" rel="stylesheet" href="../js9.css">
+  <script type="text/javascript" src="../js9prefs.js"></script>
+  <script type="text/javascript" src="../js9support.js"></script>
+  <script type="text/javascript" src="../js9.js"></script>
+  <script type="text/javascript" src="../js9plugins.js"></script>
+  <title>JS9 test 2</title>
+</head>
+<body>
+    <table cellspacing="20">
+    <tr>
+    <td style="vertical-align:top">
+    <div class="js9div">
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    <div style="margin-top: 2px;">
+    <div class="JS9Colorbar"></div><p>
+    </div>
+    </div>
+    </td>
+    <td style="vertical-align:top">
+    <table>
+    <tr>
+    <td>
+    <div class="JS9Magnifier"></div>
+    </td>
+    <td>
+    <div class="JS9Panner"></div>
+    </td>
+    </tr>
+    </table>
+    <p>
+    <div class="FITSBinning" data-js9id="JS9"></div>
+    </td>
+    </tr>
+    </table>
+
+    <script type="text/javascript">
+    $(document).on("JS9:ready", function(){
+	let i;
+	// physical and wcs regions
+	const s = `physical; polygon(4090.43, 4090.46, 4097.44, 4090.46, 4099.42, 4097.46, 4090.95, 4099.46) '{"color":"red"}'; fk5; polygon(4:37:12.533,+0:46:03.441,4:37:12.303,+0:46:03.441,4:37:12.238,+0:46:06.885,4:37:12.516,+0:46:07.869)`
+        JS9.imageOpts.wcsunits = "degrees";
+        for(i=1; i<=4; i++){
+            JS9.Preload(`data/tests/test${i}.fits`,
+	                {scale:"log", colormap:"viridis", zoom:16, regions:s});
+        }
+    });
+    </script>
+</body>
+</html>

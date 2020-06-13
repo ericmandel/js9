@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="../favicon.ico">
+  <link type="text/css" rel="stylesheet" href="../js9support.css">
+  <link type="text/css" rel="stylesheet" href="../js9.css">
+  <script type="text/javascript" src="../js9prefs.js"></script>
+  <script type="text/javascript" src="../js9support.js"></script>
+  <script type="text/javascript" src="../js9.js"></script>
+  <script type="text/javascript" src="../js9plugins.js"></script>
+  <title>JS9 test 4</title>
+</head>
+<body>
+    <table cellspacing="20">
+    <tr>
+    <td style="vertical-align:top">
+    <div class="js9div">
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    <div style="margin-top: 2px;">
+    <div class="JS9Colorbar"></div><p>
+    </div>
+    </div>
+    </td>
+    <td style="vertical-align:top">
+
+    <table>
+    <tr>
+    <td>
+    <div class="JS9Magnifier"></div>
+    </td>
+    <td>
+    <div class="JS9Panner"></div>
+    </td>
+    </tr>
+    </table>
+
+    <p>
+    <div class="FITSBinning" data-js9id="JS9"></div>
+    </td>
+    </tr>
+    </table>
+
+    <script type="text/javascript">
+    $(document).on("JS9:ready", function(){
+	JS9.imageOpts.wcsunits = "degrees";
+	const s = `physical; circle(4109,4133,2); box(4109,4133,6,6); image; ellipse(514,517,.75,.5) {"color":"red"}`;
+	JS9.Preload("data/tests/b8.fits.gz",
+                    {scale:"log", colormap:"viridis", zoom:16, regions:s});
+    });
+    </script>
+<p>
+JS9 Demos:
+<ul>
+<li><a href='js9basics.html'>JS9 Demo: the basics</a>
+<li><a href='js9bespoke.html'>JS9 Demo: web page control of JS9</a>
+<li><a href='js9sizes.html'>JS9 Demo: setting the size of the JS9 display</a>
+<li><a href='js9super.html'>JS9 Demo: control multiple JS9 displays</a>
+<li><a href='js9large.html'>JS9 Demo: support for large FITS files</a>
+<li><a href='js9plugins.html'>JS9 Demo: adding plugins to JS9</a> 
+<li><a href='js9imexam.html'>JS9 Demo: the imexam plugin for JS9</a> 
+<li><a href='js9blend.html'>JS9 Demo: image blending</a> 
+<li><a href='js9cat.html'>JS9 Demo: overlaying catalogs</a>
+<li><a href='js9panzoom.html'>JS9 Demo: pan and zoom</a> 
+<li><a href='js9rgb.html'>JS9 Demo: RGB composite images</a> 
+<li><a href='js9multi.html'>JS9 Demo: independent instances of JS9</a> 
+<li><a href='js9analysis.html'>JS9 Demo: remote data analysis</a> 
+<li><a href='js9onchange.html'>JS9 Demo: running tasks when a region changes</a>
+<li><a href='js9create.html'>JS9 Demo: creating a JS9 instance dynamically</a> 
+<li><a href='js9preload.html'>JS9 Demo: preloading images into JS9</a>
+<li><a href='js9bitpix.html'>JS9 Demo: displaying different FITS datatypes</a> 
+<li><a href='js9allinone.html'>JS9 Demo: using the all-in-one files</a> 
+<li><a href='js9pngvsfits.html'>JS9 Demo: PNG representation files vs FITS files</a> 
+</ul>
+</body>
+</html>

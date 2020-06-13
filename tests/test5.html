@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link type="image/x-icon" rel="shortcut icon" href="../favicon.ico">
+  <link type="text/css" rel="stylesheet" href="../js9support.css">
+  <link type="text/css" rel="stylesheet" href="../js9.css">
+  <script type="text/javascript" src="../js9prefs.js"></script>
+  <script type="text/javascript" src="../js9support.js"></script>
+  <script type="text/javascript" src="../js9.js"></script>
+  <script type="text/javascript" src="../js9plugins.js"></script>
+  <title>JS9 test 5: zoom out and check region positions</title>
+</head>
+<body>
+    <table cellspacing="20">
+    <tr>
+    <td style="vertical-align:top">
+    <div class="js9div">
+    <div class="JS9Menubar"></div>
+    <div class="JS9"></div>
+    <div style="margin-top: 2px;">
+    <div class="JS9Colorbar"></div><p>
+    </div>
+    </div>
+    </td>
+    <td style="vertical-align:top">
+    <table>
+    <tr>
+    <td>
+    <div class="JS9Magnifier"></div>
+    </td>
+    <td>
+    <div class="JS9Panner"></div>
+    </td>
+    </tr>
+    </table>
+    <p>
+    <div class="FITSBinning" data-js9id="JS9"></div>
+    </td>
+    </tr>
+    </table>
+
+    <script type="text/javascript">
+    function doit(){
+	const s = `FK5; polygon(259.470599, -40.701947, 259.538995, -40.742149, 259.451700, -40.773877); circle(259.597156, -40.493153, 22.632000"); box(259.296603, -40.392299, 1.902322', 1.902352', 0.000000); ellipse(259.918748, -40.512540, 1.967940', 55.222600", 17.438537); circle(259.747012, -40.231896, 29.999577")`;
+	JS9.SetZoom(32);
+	JS9.SetPan(34, 34);
+	JS9.AddRegions(s);
+    }
+    $(document).on("JS9:ready", function(){
+	JS9.imageOpts.wcsunits = "degrees";
+	JS9.Preload("data/tests/test.fits.gz",
+		    {scale:"log", colormap:"viridis",
+		     xdim:4096, ydim:4096, bin:64, onload: doit});
+    });
+    </script>
+</body>
+</html>

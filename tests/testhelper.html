@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <style type="text/css">
+    #log{
+      width: 600px;
+      height: 150px;
+      background: #E9E9E9;
+      padding: 10px;
+    }
+  </style>
+  <title>helper test</title>
+</head>
+<body>
+<div id="log">
+</div>
+<script type="text/javascript">
+    let url  = `${document.location.origin}:2718`;
+//  let url  = `https://js9.si.edu:2718`;
+    let sockurl  = `${url}/socket.io/socket.io.js`;
+    let socket;
+    function xlog(s){
+	let html = $("#log").html();
+        html += `<br>${s}`;
+        $("#log").html(html);
+    };
+    function failedHelper(jqXHR, textStatus, errorThrown){
+        textStatus = textStatus || "timeout";
+        if( !errorThrown || errorThrown === "timeout" ){
+    	    errorThrown = "or connection refused";
+        }
+        if( errorThrown === textStatus  ){
+    	    textStatus = "";
+        }
+        if( errorThrown === "error" ){
+    	    errorThrown = "is the helper running?";
+        }
+        xlog(`helper connect error: ${textStatus} (${errorThrown})`);
+    };
+    function connectHelper(){
+        // connect to helper
+        xlog(`trying to retrieve: ${sockurl} ...`)
+        $.ajax({
+            url: sockurl,
+            dataType: "script",
+            timeout: 10000,
+            success: () => {
+		const sockopts = {
+		    reconnection: true,
+		    reconnectionDelay: 1000,
+		    reconnectionDelayMax : 1000,
+		    reconnectionAttempts: 3,
+		    timeout: 10000000
+		};
+                // if there is no io object, we didn't really succeed
+                // can happen, for example, in the Jupyter environment
+                if( typeof io === "undefined" ){
+                    failedHelper(null, "socket io object is undefined", null);
+                    return;
+                } else {
+		    xlog(`success retrieving ${sockurl}!!`);
+		    xlog(`now connecting to ${url} ...`);
+		}
+                // connect to the helper
+                socket = io.connect(url, sockopts);
+                // on-event processing
+                socket.on("connect", () => {
+                    xlog("helper connected!!!");
+		    xlog("sending test message to helper (should return 'OK')");
+		    socket.emit("alive", null, (s) => {xlog(s)})
+                });
+                socket.on("connect_error", () => {
+                    xlog("helper connect error");
+                });
+                socket.on("connect_timeout", () => {
+                    xlog("helper connect timeout");
+                });
+            },
+            error: (jqXHR, textStatus, errorThrown) => {
+                failedHelper(jqXHR, textStatus, errorThrown);
+            }
+        });
+    };
+    $(document).ready(() => {
+        connectHelper();
+    });
+</script>
+</body>
+</html>

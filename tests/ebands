@@ -1,0 +1,44 @@
+#!/bin/bash
+# set -x
+
+js9 -a &
+sleep 2
+
+# Chandra event file of Kes75 SNR
+file="../data/kes75/kes75_evt2.fits.gz"
+
+# Chandra energy filters
+filter[1]="energy=500:1500"
+filter[2]="energy=1500:2500"
+filter[3]="energy=2500:8000"
+
+# colormaps
+cmap[1]="red"
+cmap[2]="green"
+cmap[3]="blue"
+
+# load x-ray binary table
+echo "loading Chandra event file: $file"
+js9load $file
+# turn blending off (since default is on)
+js9 BlendImage false
+
+# process each of the event filters
+for i in {1..3}; do
+  # process new filter
+  echo "processing filter: ${filter[$i]}"
+  # generate image section using event filter into a separately displayed image
+  js9 DisplaySection '{"filter":"'${filter[$i]}'","separate":true}'
+  # it actually takes a bit of time
+  sleep 3
+  j=`expr $i + 1`
+  # the new file with have a <n> string appended to its id
+  id="kes75_evt2.fits.gz[EVENTS]<$j>"
+  # set image scale and assign one of the RGB colormaps
+  js9 SetScale "log"            '{"display":"'$id'"}'
+  js9 SetColormap "${cmap[$i]}" '{"display":"'$id'"}'
+done
+
+# blend all the images
+echo "blend all images"
+js9 BlendDisplay true

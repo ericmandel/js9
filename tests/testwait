@@ -1,0 +1,68 @@
+#!/bin/bash
+# set -x
+
+if [ x$1 != x ]; then
+  cmd="$1";
+else
+    echo "usage: $0 [CreateMosaic | DisplaySection | LoadCatalog | LoadRegions | RotateData | RunAnalysis]"
+    exit 0
+fi
+
+error() {
+    echo "$1" | egrep ERROR 1>/dev/null 2>&1
+    if [ $? = 0 ]; then
+      echo "$*"
+    else
+      echo "ERROR: $*"
+    fi
+    exit 1
+}
+
+case $cmd in
+    CreateMosaic)
+      file="../data/mosaic/megacam.fits"
+      args="current"
+    ;;
+
+    DisplaySection)
+      file="data/fits/casa.fits"
+      args="full"
+    ;;
+
+    LoadCatalog)
+      file="data/fits/casa.fits"
+      args="mycat casa/casa.cat"
+    ;;
+
+    LoadRegions)
+      file="data/fits/casa.fits"
+      args="casa/casa.reg"
+    ;;
+
+    RotateData)
+      file="data/fits/casa.fits"
+      args="45"
+    ;;
+
+    RunAnalysis)
+      file="data/fits/casa.fits"
+      args="counts"
+    ;;
+
+    *)
+      error "unknown cmd: $cmd"
+    ;;
+esac
+
+echo "loading $file ..."
+x=$(./js9load -v $file 2>&1)
+echo "$x" | egrep ERROR 1>/dev/null 2>&1
+if [ $? = 0 ]; then
+  error $x
+else
+  echo $x
+fi
+
+echo "run: $cmd"
+js9 -v $cmd $args
+js9wait -v $cmd $file
