@@ -121,8 +121,22 @@ PREFFILES =	js9Prefs.json js9prefs.js
 MFILES =	Makefile Makefile.in configure configure.ac \
 		js9 js9load js9wait js9Helper-default.cgi README.md
 
-RMFILES =	analysis-plugins/imageSection.json
+# clean up from previous versions
+RMFILES =	analysis-plugins/imageSection.json \
+		js9allinone.html js9analysis.html js9basics.html \
+		js9bespoke.html js9bitpix.html js9blend.html \
+		js9cat.html js9cmaps.html js9create.html \
+		js9dysel.html js9imexam.html js9large.html \
+		js9masks.html js9menustyles.html js9multi.html \
+		js9onchange.html js9panzoom.html js9plugins.html \
+		js9pngvsfits.html js9preload.html js9rgb.html \
+		js9sizes.html js9super.html js9sync.html \
+		js9_center.html js9_center_top.html js9cookie.html \
+		js9debug.html js9memleak.html js9iframe.html \
+		js9usermenus.js js9usermenus.css js9debugextras \
+		js9Test.html js9Test.js js9Tests fitsy.js fitsy.min.js
 
+# sao: files that we gzip to make transfer faster
 GZFILES =	js9.js js9.min.js js9support.js js9support.min.js \
 		js9plugins.js js9-allinone.js \
 		astroem.js astroemw.js astroemw.wasm
@@ -377,7 +391,7 @@ install-webfiles:	FORCE
 	    for i in $(RMFILES); do\
 	        if [ -r $(WEBDIR)/$$i ]; then \
 	            echo "removing $$i file ..."; \
-	            rm -f $(WEBDIR)/$$i; \
+	            rm -rf $(WEBDIR)/$$i; \
 	        fi; \
 	    done; \
         else \
@@ -457,6 +471,8 @@ install-sao:	install-gzip saoprefs install-webcgi install-demos install-tests
 		fi; \
 	    done; \
 	  fi; \
+	  echo "create temp directory"; \
+	  mkdir -p $(WEBDIR)/tmp; \
 	  echo "installing SAO prefs"; \
 	  $(CP) js9Prefs-sao.json $(WEBDIR)/js9Prefs.json; \
 	  $(CP) js9prefs-sao.js $(WEBDIR)/js9prefs.js)
