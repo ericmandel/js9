@@ -13764,8 +13764,8 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 				 mode: "add", opts: myopts});
 	return;
     }
-    // remove old regions, if necessary
-    if( JS9.globalOpts.reloadRefreshReg && myopts.file ){
+    // remove old regions, if necessary (ie we are reloading the file)
+    if( myopts.file && JS9.globalOpts.reloadRefreshReg ){
 	try{ this.removeShapes("regions", myopts.file); }
 	catch(e){ /* empty */ }
     }
