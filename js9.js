@@ -35,7 +35,7 @@ JS9.DEFID = "JS9";		// default JS9 display id
 JS9.WIDTH = 512;	        // width of js9 canvas
 JS9.HEIGHT = 512;		// height of js9 canvas
 JS9.ANON = "Anonymous";		// name to use for images with no name
-JS9.PREFSFILE = "js9Prefs.json";// prefs file to load
+JS9.PREFSFILE = false;          // prefs file to load
 JS9.WORKERFILE = "js9worker.js";// js9 web worker file to load
 JS9.ZINDEX = 0;			// z-index of image canvas: on bottom of js9
 JS9.SHAPEZINDEX = 4;		// base z-index of shape layers layers
@@ -21730,26 +21730,20 @@ JS9.mergePrefs = function(obj){
 JS9.loadPrefs = function(url, doerr) {
     // load site/user preferences synchronously
     $.ajax({
-      url: url,
-      cache: false,
-      dataType: "json",
-      mimeType: "application/json",
-      async: false,
-      success: (obj) => {
-	  JS9.mergePrefs(obj);
-      },
-      error: (jqXHR, textStatus, errorThrown) => {
-	  if( doerr ){
-	      if( JS9.CHROMEFILEWARNING &&
-		  (JS9.BROWSER[0] === "Chrome") && (document.domain === "") &&
-		  (errorThrown && errorThrown.message && errorThrown.message.match(/Failed to execute 'send' on 'XMLHttpRequest'/)) ){
-		  alert("When using the file:// URI, Chrome must be run with the --allow-file-access-from-files switch to permit JS9 to access the preference file (and data files).");
-		  JS9.CHROMEFILEWARNING = false;
-	      } else {
-		  JS9.log("JS9 prefs file not available: %s", url);
-	      }
-	  }
-      }
+	url: url,
+	cache: false,
+	dataType: "json",
+	mimeType: "application/json",
+	async: false,
+	success: (obj) => {
+	    JS9.mergePrefs(obj);
+	},
+	// eslint-disable-next-line no-unused-vars
+	error: (jqXHR, textStatus, errorThrown) => {
+	    if( doerr ){
+		JS9.log("JS9 prefs file not available: %s", url);
+	    }
+	}
     });
 };
 
@@ -23715,7 +23709,7 @@ JS9.init = function(){
 	// (set this to false in the page to avoid loading a prefs file)
 	if( JS9.PREFSFILE ){
 	    // load site preferences, if possible
-	    JS9.loadPrefs(JS9.InstallDir(JS9.PREFSFILE), 1);
+	    JS9.loadPrefs(JS9.InstallDir(JS9.PREFSFILE), 0);
 	    // load page preferences, if possible
 	    JS9.loadPrefs(JS9.PREFSFILE, 0);
 	}
