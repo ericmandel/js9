@@ -39,20 +39,20 @@
     Color Controls</a> plugin.
     <p>
     Left demo: Load the opacity mask image, then the Chandra file.
-    Change <b>default</b> to <b>mask</b> in the Color <b>mode</b> menu,
-    then choose the mask file and change the opacity value to 0.5 or
-    0.25.  Or change <b>mask</b> mode to <b>opacity</b> to assign
-    opacity directly from the mask values. You can also
-    choose <b>floor</b> in the <b>mode</b> menu and change the floor
-    opacity (no image mask used in this case) and/or the <b>global</b>
-    opacity.
+    Change <b>default</b> to <b>mask</b> in the Color <b>mode</b> menu
+    (3rd column in bottom row of Color plugin), then choose the mask
+    file and change the opacity value to, say, 0.25 or 0.5. Or
+    change <b>mask</b> mode to <b>opacity</b> to assign opacity
+    directly from the mask values. You can also choose <b>floor</b> in
+    the Color <b>mode</b> menu and set the floor opacity and/or
+    the <b>global</b> opacity directly.
     <p>
     Right demo: Load the LSST test file, then click to display
     extension #2 of that file separately. Note the use of a
     user-defined static colormap to assign colors to different areas
-    of the extension. Switch back to the test file, then
-    choose <b>overlay</b> in the Color <b>mode</b> menu, and choose
-    extension #2 as the overlay.
+    of the extension. Switch back to the test file, then choose
+    <b>overlay</b> in the Color <b>mode</b> menu (3rd column in
+    bottom row of Color plugin), and choose extension #2 as the overlay.
     <p>
     <table cellspacing="30">
     <tr valign="top">
@@ -70,22 +70,22 @@
     <tr valign="top">
     <td>
     <div class="JS9Menubar" data-width="512px"></div>
+    <div style="margin-top: 2px; margin-bottom: 2px">
+    <div class="JS9Color" data-width="512px"></div>
+    </div>
     <div class="JS9" data-width="512px" data-height="512px"></div>
     <div style="margin-top: 2px;">
     <div class="JS9Statusbar" data-width="512px"></div>
     </div>
-    <div style="margin-top: 2px;">
-    <div class="JS9Color" data-width="512px"></div>
-    </div>
     </td>
     <td>
     <div class="JS9Menubar" id="myJS9Menubar" data-width="512px"></div>
+    <div style="margin-top: 2px; margin-bottom: 2px">
+    <div class="JS9Color" id="myJS9Color" data-width="512px"></div>
+    </div>
     <div class="JS9" id="myJS9" data-width="512px" data-height="512px"></div>
     <div style="margin-top: 2px;">
     <div class="JS9Statusbar" id="myJS9Statusbar" data-width="512px"></div>
-    </div>
-    <div style="margin-top: 2px;">
-    <div class="JS9Color" id="myJS9Color" data-width="512px"></div>
     </div>
     </td>
     </tr>
