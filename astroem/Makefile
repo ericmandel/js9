@@ -59,7 +59,7 @@ OBJS = 		$(SRCS:%.c=%.o)
 # wrapper for cfitsio
 JSFITSIO =	./jsfitsio
 JSRCS =  	$(JSFITSIO)/jsfitsio.c $(JSFITSIO)/healpix.c \
-		$(JSFITSIO)/listhdu.c ../js9helper.c
+		$(JSFITSIO)/listhdu.c js9helper.c
 JOBJS = 	$(JSRCS:%.c=%.o)
 
 # montage (re-project)
