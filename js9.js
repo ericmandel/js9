@@ -20623,6 +20623,9 @@ JS9.fits2RepFile = function(display, file, opts, xtype, func){
 	    case "fits2png":
 		// last line is the file name (ignore what comes before)
 		nfile = robj.stdout.replace(/\n*$/, "").split("\n").pop();
+		if( nfile.charAt(0) !== "/" ){
+		    nfile = JS9.InstallDir(nfile);
+		}
 		next = nfile.split(".").pop().toLowerCase();
 		// is it a png file?
 		if( next === "png" ){
