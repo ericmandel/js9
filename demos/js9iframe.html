@@ -1,0 +1,250 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge" >
+  <link type="image/x-icon" rel="shortcut icon" href="../favicon.ico">
+  <script type="text/javascript" src="../js9PostMessage.js"></script>
+  <style type="text/css">
+      body {
+        background: lightgreen;
+      }
+      table {
+        margin: 0 auto; /* or margin: 0 auto 0 auto */
+      }
+      .container{
+        position: relative;
+        display: -webkit-flex;
+        display: flex;
+        margin: 15px;
+      }
+      .left {
+        padding-left: 15px;
+        align-items: stretch;
+      }
+      .center {
+        margin-left: auto;
+        margin-right: auto;
+        align-items: stretch;
+      }
+      .right {
+        align-items: stretch;
+      }
+      .overlay {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+      }
+      .iframe {
+        border: 0px;
+      }
+      #intro {
+        padding: 5px;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      #ttop {
+        position: relative;
+        top: 0px;
+        z-index: 2;
+      }
+      #tbot {
+        position: relative;
+        top: 640px;
+        z-index: 2;
+      }
+  </style>
+  <title>JS9 in an iframe</title>
+</head>
+<body onload="pminit()">
+    <script type="text/javascript">
+      var pm;
+      var cbs = [];
+      var pmTarget = "https://js9.si.edu";
+      var pmEl = "js9iframe";
+      function pminit(){
+          if( window.hasOwnProperty("JS9PM") ){
+              console.log("using JS9PM ...");
+              pm = JS9PM.init(pmEl, pmTarget);
+          } else {
+              console.log("using raw postMessage ...");
+              pm = window.document.getElementById(pmEl).contentWindow;
+              window.addEventListener("message", function(ev){
+                  var msg;
+                  var data = ev.data;
+                  if( typeof data === "string" ){
+                      // json string passed (we hope)
+                      try{ msg = JSON.parse(data); }
+                      catch(e){ alert("ERROR: can't parse msg: "+data, e); }
+                  } else if( typeof data === "object" ){
+                      // object was passed directly
+                      msg = data;
+                  } else {
+                      alert("ERROR: invalid return msg from postMessage");
+                  }
+                  if( cbs[msg.cmd] && msg.res ){
+                      cbs[msg.cmd](msg.res);
+                      delete cbs[msg.cmd];
+                  }
+              });
+          }
+      }
+      function pmsend(cmd, args, cb){
+          var pargs = [];
+          if( window.hasOwnProperty("JS9PM") ){
+              pargs.push(pm);
+              pargs.push(cmd);
+              pargs.push(args);
+              if( cb ){
+                pargs.push(cb);
+              }
+              JS9PM.send.apply(null, pargs);
+          } else {
+              if( cb ){
+                  cbs[cmd] = cb;
+              }
+              pm.postMessage({cmd: cmd, args: args}, pmTarget);
+          }
+      }
+      function pmcb(s){
+          var i, t="";
+          if( typeof s === "object" && s[0] && s[0].wcsstr ){
+              for(i=0; i<s.length; i++){
+                t += s[i].wcsstr + "\n";
+              }
+              alert(t);
+          } else {
+              alert(JSON.stringify(s));
+          }
+      }
+    </script>
+    <center><font size="+1"><b>JS9 Demo: JS9 in an iframe</b></font></center>
+    <div id="intro">
+    <p>
+    If your web site is configured to allow postMessages, you can load
+    JS9 into an iframe and send it any JS9 Public API routine using
+    the js9PostMessage.js module:
+    <pre>
+    &lt;script type="text/javascript" src="js9PostMessage.js"&gt;&lt;/script&gt;
+
+    var pm = JS9PM.init("js9iframe", "https://js9.si.edu");
+    JS9PM.send(pm, "SetColormap", "cool");
+    JS9PM.send(pm, "GetColormap", function(o){alert(JSON.stringify(o))});
+    </pre>
+    <p>
+    When running analysis tools, you have two options:
+    <ul>
+    <li> if you call "RunAnalysis", the results are returned in an object
+    <li> if you call "analysis", the results are displayed in the iframe
+    </ul>
+    This can be seen in the examples below. The "FITS header" and
+    "counts" analysis tasks both return the results in an object,
+    which is displayed via alert().<br>The object contains
+    an <b>rtype</b> property which will be "text" or "plot", and
+    an <b>rdata</b> property to hold the returned data.  The
+    "energyplot" and "histplot" tasks <br>display their results in light
+    windows in the iframe, as if you had run these tasks from the Analysis menu.
+
+    <p>
+    Without js9PostMessage.js, you can send a postMessage directly,
+    passing an object with a <b>cmd</b> property (API call name) and an <b>args</b> property (array of call args):
+    <pre>
+    var pm = window.document.getElementById("js9iframe").contentWindow;
+    pm.postMessage({cmd: "SetColormap", args: ["red"]}, "https://js9.si.edu");
+    </pre>
+    <p>
+    Caveat: dealing with light windows is an issue. In this example,
+    light windows can move left and right because the iframe is in
+    an overlay that uses a transparent background.
+    </div>
+
+<div class="container">
+
+<div class="left">
+<b>The Solitary Reaper, William Wordsworth</b><p>
+<font size="-1">
+Behold her, single in the field,<br>Yon solitary Highland Lass!<br>Reaping and singing by herself;<br>Stop here, or gently pass!<br>Alone she cuts and binds the grain,<br>And sings a melancholy strain;<br>O listen! for the Vale profound<br>Is overflowing with the sound.<br><br>No Nightingale did ever chaunt<br>More welcome notes to weary bands<br>Of travellers in some shady haunt,<br>Among Arabian sands:<br>A voice so thrilling ne'er was heard<br>In spring-time from the Cuckoo-bird,<br>Breaking the silence of the seas<br>Among the farthest Hebrides.<br><br>Will no one tell me what she sings?—<br>Perhaps the plaintive numbers flow<br>For old, unhappy, far-off things,<br>And battles long ago:<br>Or is it some more humble lay,<br>Familiar matter of to-day?<br>Some natural sorrow, loss, or pain,<br>That has been, and may be again?<br><br>Whate'er the theme, the Maiden sang<br>As if her song could have no ending;<br>I saw her singing at her work,<br>And o'er the sickle bending;—<br>I listened, motionless and still;<br>And, as I mounted up the hill,<br>The music in my heart I bore,<br>Long after it was heard no more.<br><br>
+</font>
+</div>
+
+<div class="center">
+  <table id="ttop" cellspacing="5">
+    <tr>
+    <td><b>Load an image:</b></td>
+    <td><input type="button" value="casa.fits.gz" onclick="javascript:pmsend('Load', ['data/casa.fits.gz']);"></td>
+    <td><input type="button" value="snr.fits" onclick="javascript:pmsend('Load', ['data/snr.fits']);"></td>
+    <td><input type="button" value="coma.fits (via proxy)" onclick="javascript:pmsend('LoadProxy', ['https://hea-www.cfa.harvard.edu/~eric/coma.fits.gz', {scale: 'linear'}]);"></td>
+    </tr>
+  </table>
+
+  <table id="tbot" cellspacing="5">
+    <tr>
+    <td><b>Pick a colormap:</b></td>
+    <td><input type="button" value="cool" onclick="javascript:pmsend('SetColormap', ['cool']);"></td>
+    <td><input type="button" value="heat" onclick="javascript:pmsend('SetColormap', ['heat']);"></td>
+    <td><input type="button" value="grey" onclick="javascript:pmsend('SetColormap', ['grey']);"></td>
+    <td><input type="button" value="viridis" onclick="javascript:pmsend('SetColormap', ['viridis']);"></td>
+    </tr>
+
+    <tr>
+    <td><b>Pick a scale:</b></td>
+    <td><input type="button" value="linear" onclick="javascript:pmsend('SetScale', ['linear']);"></td>
+    <td><input type="button" value="log" onclick="javascript:pmsend('SetScale', ['log']);"></td>
+    <td><input type="button" value="asinh" onclick="javascript:pmsend('SetScale', ['asinh']);"></td>
+    <td><input type="button" value="histeq" onclick="javascript:pmsend('SetScale', ['histeq']);"></td>
+    </tr>
+
+    <tr>
+    <td><b>Pick a zoom:</b></td>
+    <td><input type="button" value="zoom 1/2" onclick="javascript:pmsend('SetZoom', [0.5]);"></td>
+    <td><input type="button" value="zoom 1" onclick="javascript:pmsend('SetZoom', [1]);"></td>
+    <td><input type="button" value="zoom 2" onclick="javascript:pmsend('SetZoom', [2]);"></td>
+    <td><input type="button" value="zoom 4" onclick="javascript:pmsend('SetZoom', [4]);"></td>
+    </tr>
+
+    <tr>
+    <td><b>Add a region:</b></td>
+    <td><input type="button" value="circle" onclick="javascript:pmsend('AddRegions', ['circle']);"></td>
+    <td><input type="button" value="box" onclick="javascript:pmsend('AddRegions', ['box']);"></td>
+    <td><input type="button" value="ellipse" onclick="javascript:pmsend('AddRegions', ['ellipse']);"></td>
+    <td><input type="button" value="polygon" onclick="javascript:pmsend('AddRegions', ['polygon']);"></td>
+    </tr>
+
+    <tr>
+    <td><b>Run analysis:</b></td>
+    <td><input type="button" value="FITS header" onclick="javascript:pmsend('RunAnalysis', ['fitshead'], pmcb);"></td>
+    <td><input type="button" value="counts" onclick="javascript:pmsend('RunAnalysis', ['counts'], pmcb);"></td>
+    <td><input type="button" value="spectrum" onclick="javascript:pmsend('analysis', ['energyplot']);"></td>
+    <td><input type="button" value="histplot" onclick="javascript:pmsend('analysis', ['histplot']);"></td>
+    </tr>
+
+    <tr>
+    <td><b>Get Info:</b></td>
+    <td><input type="button" value="colormap" onclick="javascript:pmsend('GetColormap', [''], pmcb);"></td>
+    <td><input type="button" value="scale" onclick="javascript:pmsend('GetScale', [''], pmcb);"></td>
+    <td><input type="button" value="zoom" onclick="javascript:pmsend('GetZoom', [''], pmcb);"></td>
+    <td><input type="button" value="regions" onclick="javascript:pmsend('GetRegions', [''], pmcb);"></td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    </tr>
+  </table>
+</div>
+
+<div class="overlay">
+<iframe class="iframe" id="js9iframe" src="https://js9.si.edu/js9/demos/js9_postmessage.html" height="640" width="100%"></iframe>
+</div>
+
+<div class="right">
+<b>Dover Beach, Mathew Arnold</b><p>
+<font size="-1">
+The sea is calm tonight.<br>The tide is full, the moon lies fair <br>Upon the straits; on the French coast the light <br>Gleams and is gone; the cliffs of England stand, <br>Glimmering and vast, out in the tranquil bay. <br>Come to the window, sweet is the night-air! <br>Only, from the long line of spray <br>Where the sea meets the moon-blanched land, <br>Listen! you hear the grating roar <br>Of pebbles which the waves draw back, and fling, <br>At their return, up the high strand, <br>Begin, and cease, and then again begin, <br>With tremulous cadence slow, and bring <br>The eternal note of sadness in. <br><br>Sophocles long ago <br>Heard it on the &AElig;gean, and it brought <br>Into his mind the turbid ebb and flow <br>Of human misery; we <br>Find also in the sound a thought, <br>Hearing it by this distant northern sea. <br><br>The Sea of Faith <br>Was once, too, at the full, and round earth&#8217;s shore <br>Lay like the folds of a bright girdle furled. <br>But now I only hear <br>Its melancholy, long, withdrawing roar, <br>Retreating, to the breath <br>Of the night-wind, down the vast edges drear <br>And naked shingles of the world. <br><br>Ah, love, let us be true <br>To one another! for the world, which seems <br>To lie before us like a land of dreams, <br>So various, so beautiful, so new, <br>Hath really neither joy, nor love, nor light, <br>Nor certitude, nor peace, nor help for pain; <br>And we are here as on a darkling plain <br>Swept with confused alarms of struggle and flight, <br>Where ignorant armies clash by night.<br>
+</font>
+</div>
+
+</div>
+
+</body>
+</html>
