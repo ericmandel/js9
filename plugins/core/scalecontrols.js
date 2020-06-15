@@ -62,11 +62,11 @@ JS9.ScaleLimits.scalelimsHTML="<div class='JS9ScaleLinegroup'>$header</div><div 
 
 JS9.ScaleLimits.headerHTML='Set clipping limits via the Data Limits menu, or by selecting part of the Pixel Distribution plot, or by changing the Low and/or High limit.';
 
-JS9.ScaleLimits.scalesHTML='<select class="JS9ScaleSelect" onchange="JS9.ScaleLimits.xsetscale(\'%s\', \'%s\', this)">%s</select>';
+JS9.ScaleLimits.scalesHTML='<select class="JS9Select JS9ScaleSelect" onchange="JS9.ScaleLimits.xsetscale(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.ScaleLimits.limitsHTML='<select class="JS9ScaleSelect" onchange="JS9.ScaleLimits.xsetlims(\'%s\', \'%s\', this)"><option selected disabled>Data Limits</option><option value="dataminmax">data min/max</option><option value="zscale_z1_z2">zscale z1/z2</option><option value="zscale_z1_datamax">zscale z1/max</option></select>';
+JS9.ScaleLimits.limitsHTML='<select class="JS9Select JS9ScaleSelect" onchange="JS9.ScaleLimits.xsetlims(\'%s\', \'%s\', this)"><option selected disabled>Data Limits</option><option value="dataminmax">data min/max</option><option value="zscale_z1_z2">zscale z1/z2</option><option value="zscale_z1_datamax">zscale z1/max</option></select>';
 
-JS9.ScaleLimits.axesHTML='<select class="JS9ScaleSelect" onchange="JS9.ScaleLimits.xaxes(\'%s\', \'%s\', this)"><option selected disabled>Plot Axes</option><option disabled>x axis:</option><option value="xlinear">linear</option><option value="xlog">log</option><option disabled>y axis:</option><option value="ylinear">linear</option><option value="ylog">log</option></select>';
+JS9.ScaleLimits.axesHTML='<select class="JS9Select JS9ScaleSelect" onchange="JS9.ScaleLimits.xaxes(\'%s\', \'%s\', this)"><option selected disabled>Plot Axes</option><option disabled>x axis:</option><option value="xlinear">linear</option><option value="xlog">log</option><option disabled>y axis:</option><option value="ylinear">linear</option><option value="ylog">log</option></select>';
 
 JS9.ScaleLimits.plotHTML='<div><center>Pixel Distribution: %s</center></div><div class="JS9ScalePlot" style="width:%spx;height:%spx"></div>';
 

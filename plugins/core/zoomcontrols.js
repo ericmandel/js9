@@ -16,23 +16,23 @@ JS9.PanZoom.BASE = JS9.PanZoom.CLASS + JS9.PanZoom.NAME;
 
 JS9.PanZoom.panzoomHTML="<p><div class='JS9PanZoomLinegroup'>$pan&nbsp;&nbsp;$zoom&nbsp;&nbsp;$flip&nbsp;&nbsp;$rotate</div><p><div class='JS9PanZoomLinegroup'>$panto $pos1 $pos2 $wcssys $wcsunits</div>";
 
-JS9.PanZoom.panHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol1" name="pan" onchange="JS9.PanZoom.xsetpan(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.panHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol1" name="pan" onchange="JS9.PanZoom.xsetpan(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.zoomHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol2" name="zoom" onchange="JS9.PanZoom.xsetzoom(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.zoomHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol2" name="zoom" onchange="JS9.PanZoom.xsetzoom(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.flipHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol3" name="flip" onchange="JS9.PanZoom.xsetflip(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.flipHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol3" name="flip" onchange="JS9.PanZoom.xsetflip(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.rotateHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol4" name="rotate" onchange="JS9.PanZoom.xsetrotate(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.rotateHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol4" name="rotate" onchange="JS9.PanZoom.xsetrotate(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.pantoHTML = '<input type="button" class="JS9PanZoomButton JS9PanZoomCol1" name="panto" value="Pan to &rarr;" onclick="javascript:JS9.PanZoom.xpanto(\'%s\', \'%s\', this)">';
+JS9.PanZoom.pantoHTML = '<input type="button" class="JS9Button2 JS9PanZoomButton JS9PanZoomCol1" name="panto" value="Pan to &rarr;" onclick="javascript:JS9.PanZoom.xpanto(\'%s\', \'%s\', this)">';
 
 JS9.PanZoom.pos1HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol2 js9Input" name="pos1" value="%s" autocapitalize="off" autocorrect="off">';
 
 JS9.PanZoom.pos2HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol3 js9Input" name="pos2" value="%s" autocapitalize="off" autocorrect="off">';
 
-JS9.PanZoom.sysHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol4" name="wcssys" onchange="JS9.PanZoom.xsetwcssys(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.sysHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol4" name="wcssys" onchange="JS9.PanZoom.xsetwcssys(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.unitsHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol5" name="wcsunits" onchange="JS9.PanZoom.xsetwcsunits(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.unitsHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol5" name="wcsunits" onchange="JS9.PanZoom.xsetwcsunits(\'%s\', \'%s\', this)">%s</select>';
 
 // change pan via menu
 JS9.PanZoom.xsetpan = function(did, id, target){

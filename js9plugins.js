@@ -2935,33 +2935,33 @@ JS9.Color.colorHTML=`<p><div class='JS9ColorLinegroup'>$cmaps1&nbsp;&nbsp;$cmaps
 <div class='JS9ColorLinegroup'>$run&nbsp;&nbsp;$opacity&nbsp;&nbsp;$from&nbsp;&nbsp;$opfloor&nbsp;&nbsp;$opopacity&nbsp;&nbsp;$opoverlay&nbsp;&nbsp;$opmask</div>`
 ;
 
-JS9.Color.cmaps1HTML = '<select class="JS9Cmaps1 JS9ColorSelect JS9ColorCol1" name="cmaps1" onchange="JS9.Color.xsetcolor(\'%s\', \'%s\', \'top\', this)">%s</select>';
+JS9.Color.cmaps1HTML = '<select class="JS9Select JS9Cmaps1 JS9ColorSelect JS9ColorCol1" name="cmaps1" onchange="JS9.Color.xsetcolor(\'%s\', \'%s\', \'top\', this)">%s</select>';
 
-JS9.Color.cmaps2HTML = '<select class="JS9Cmaps2 JS9ColorSelect JS9ColorCol2" name="cmaps2" onchange="JS9.Color.xsetcolor(\'%s\', \'%s\', \'other\', this)">%s</select>';
+JS9.Color.cmaps2HTML = '<select class="JS9Select JS9Cmaps2 JS9ColorSelect JS9ColorCol2" name="cmaps2" onchange="JS9.Color.xsetcolor(\'%s\', \'%s\', \'other\', this)">%s</select>';
 
-JS9.Color.cmapsHTML = '<input type="button" class="JS9ColorCmaps JS9ColorButton JS9ColorCol3" name="cmaps" value="Create cmaps" onclick="javascript:JS9.DisplayPlugin(\'JS9Cmaps\', {\'display\': \'%s\'})">';
+JS9.Color.cmapsHTML = '<input type="button" class="JS9Button2 JS9ColorCmaps JS9ColorButton JS9ColorCol3" name="cmaps" value="Create cmaps" onclick="javascript:JS9.DisplayPlugin(\'JS9Cmaps\', {\'display\': \'%s\'})">';
 
-JS9.Color.filtersHTML = '<input type="button" class="JS9ColorFilters JS9ColorButton JS9ColorCol4" name="filters" value="Image filters" onclick="javascript:JS9.DisplayPlugin(\'JS9Filters\', {\'display\': \'%s\'})">';
+JS9.Color.filtersHTML = '<input type="button" class="JS9Button2 JS9ColorFilters JS9ColorButton JS9ColorCol4" name="filters" value="Image filters" onclick="javascript:JS9.DisplayPlugin(\'JS9Filters\', {\'display\': \'%s\'})">';
 
-JS9.Color.conbibtnHTML = '<input type="button" class="JS9ColorConBiBtn JS9ColorButton JS9ColorCol1" name="conbibtn" value="Contrast/bias &rarr;" onclick="javascript:JS9.Color.xconbi(\'%s\', \'%s\', this)">';
+JS9.Color.conbibtnHTML = '<input type="button" class="JS9Button2 JS9ColorConBiBtn JS9ColorButton JS9ColorCol1" name="conbibtn" value="Contrast/bias &rarr;" onclick="javascript:JS9.Color.xconbi(\'%s\', \'%s\', this)">';
 
 JS9.Color.contrastHTML = '<input type="text" class="JS9ColorContrast JS9ColorInput JS9ColorCol2 js9Input" name="contrast" value="%s" autocapitalize="off" autocorrect="off" placeholder="contrast">';
 
 JS9.Color.biasHTML = '<input type="text" class="JS9ColorBias JS9ColorInput JS9ColorCol3 js9Input" name="bias" value="%s" autocapitalize="off" autocorrect="off" placeholder="bias">';
 
-JS9.Color.runHTML = '<input type="button" class="JS9ColorRun JS9ColorButton JS9ColorCol1" name="run" value="Opacity &rarr;" onclick="javascript:JS9.Color.xopacity(\'%s\', \'%s\', this)">';
+JS9.Color.runHTML = '<input type="button" class="JS9Button2 JS9ColorRun JS9ColorButton JS9ColorCol1" name="run" value="Opacity &rarr;" onclick="javascript:JS9.Color.xopacity(\'%s\', \'%s\', this)">';
 
 JS9.Color.opacityHTML = '<input type="text" class="JS9ColorOpacity JS9ColorInput JS9ColorCol2 js9Input" name="opacity" value="" autocapitalize="off" autocorrect="off">';
 
-JS9.Color.fromHTML = '<select class="JS9ColorFrom JS9ColorSelect JS9ColorCol3" name="from" onchange="JS9.Color.xfrom(\'%s\', \'%s\', this)">%s</select>';
+JS9.Color.fromHTML = '<select class="JS9Select JS9ColorFrom JS9ColorSelect JS9ColorCol3" name="from" onchange="JS9.Color.xfrom(\'%s\', \'%s\', this)">%s</select>';
 
 JS9.Color.opfloorHTML = '<input type="text" class="JS9ColorOpFloor JS9ColorInput JS9ColorCol4 js9Input" name="opfloor" value="%s" autocapitalize="off" autocorrect="off">';
 
-JS9.Color.opopacityHTML = '<select class="JS9ColorOpOpacity JS9ColorSelect JS9ColorCol4" name="opopacity" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'opacity\', this)">%s</select>';
+JS9.Color.opopacityHTML = '<select class="JS9Select JS9ColorOpOpacity JS9ColorSelect JS9ColorCol4" name="opopacity" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'opacity\', this)">%s</select>';
 
-JS9.Color.opoverlayHTML = '<select class="JS9ColorOpOverlay JS9ColorSelect JS9ColorCol4" name="opoverlay" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'overlay\', this)">%s</select>';
+JS9.Color.opoverlayHTML = '<select class="JS9Select JS9ColorOpOverlay JS9ColorSelect JS9ColorCol4" name="opoverlay" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'overlay\', this)">%s</select>';
 
-JS9.Color.opmaskHTML = '<select class="JS9ColorOpMask JS9ColorSelect JS9ColorCol4" name="opmask" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'mask\', this)">%s</select>';
+JS9.Color.opmaskHTML = '<select class="JS9Select JS9ColorOpMask JS9ColorSelect JS9ColorCol4" name="opmask" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'mask\', this)">%s</select>';
 
 JS9.Color.fmt = function(val, n){
     val = val + 0.5 * Math.pow(10,-(n+1));
@@ -10318,23 +10318,23 @@ JS9.PanZoom.BASE = JS9.PanZoom.CLASS + JS9.PanZoom.NAME;
 
 JS9.PanZoom.panzoomHTML="<p><div class='JS9PanZoomLinegroup'>$pan&nbsp;&nbsp;$zoom&nbsp;&nbsp;$flip&nbsp;&nbsp;$rotate</div><p><div class='JS9PanZoomLinegroup'>$panto $pos1 $pos2 $wcssys $wcsunits</div>";
 
-JS9.PanZoom.panHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol1" name="pan" onchange="JS9.PanZoom.xsetpan(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.panHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol1" name="pan" onchange="JS9.PanZoom.xsetpan(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.zoomHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol2" name="zoom" onchange="JS9.PanZoom.xsetzoom(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.zoomHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol2" name="zoom" onchange="JS9.PanZoom.xsetzoom(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.flipHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol3" name="flip" onchange="JS9.PanZoom.xsetflip(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.flipHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol3" name="flip" onchange="JS9.PanZoom.xsetflip(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.rotateHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol4" name="rotate" onchange="JS9.PanZoom.xsetrotate(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.rotateHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol4" name="rotate" onchange="JS9.PanZoom.xsetrotate(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.pantoHTML = '<input type="button" class="JS9PanZoomButton JS9PanZoomCol1" name="panto" value="Pan to &rarr;" onclick="javascript:JS9.PanZoom.xpanto(\'%s\', \'%s\', this)">';
+JS9.PanZoom.pantoHTML = '<input type="button" class="JS9Button2 JS9PanZoomButton JS9PanZoomCol1" name="panto" value="Pan to &rarr;" onclick="javascript:JS9.PanZoom.xpanto(\'%s\', \'%s\', this)">';
 
 JS9.PanZoom.pos1HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol2 js9Input" name="pos1" value="%s" autocapitalize="off" autocorrect="off">';
 
 JS9.PanZoom.pos2HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol3 js9Input" name="pos2" value="%s" autocapitalize="off" autocorrect="off">';
 
-JS9.PanZoom.sysHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol4" name="wcssys" onchange="JS9.PanZoom.xsetwcssys(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.sysHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol4" name="wcssys" onchange="JS9.PanZoom.xsetwcssys(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.unitsHTML = '<select class="JS9PanZoomSelect JS9PanZoomCol5" name="wcsunits" onchange="JS9.PanZoom.xsetwcsunits(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.unitsHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol5" name="wcsunits" onchange="JS9.PanZoom.xsetwcsunits(\'%s\', \'%s\', this)">%s</select>';
 
 // change pan via menu
 JS9.PanZoom.xsetpan = function(did, id, target){
@@ -11775,11 +11775,11 @@ JS9.ScaleLimits.scalelimsHTML="<div class='JS9ScaleLinegroup'>$header</div><div 
 
 JS9.ScaleLimits.headerHTML='Set clipping limits via the Data Limits menu, or by selecting part of the Pixel Distribution plot, or by changing the Low and/or High limit.';
 
-JS9.ScaleLimits.scalesHTML='<select class="JS9ScaleSelect" onchange="JS9.ScaleLimits.xsetscale(\'%s\', \'%s\', this)">%s</select>';
+JS9.ScaleLimits.scalesHTML='<select class="JS9Select JS9ScaleSelect" onchange="JS9.ScaleLimits.xsetscale(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.ScaleLimits.limitsHTML='<select class="JS9ScaleSelect" onchange="JS9.ScaleLimits.xsetlims(\'%s\', \'%s\', this)"><option selected disabled>Data Limits</option><option value="dataminmax">data min/max</option><option value="zscale_z1_z2">zscale z1/z2</option><option value="zscale_z1_datamax">zscale z1/max</option></select>';
+JS9.ScaleLimits.limitsHTML='<select class="JS9Select JS9ScaleSelect" onchange="JS9.ScaleLimits.xsetlims(\'%s\', \'%s\', this)"><option selected disabled>Data Limits</option><option value="dataminmax">data min/max</option><option value="zscale_z1_z2">zscale z1/z2</option><option value="zscale_z1_datamax">zscale z1/max</option></select>';
 
-JS9.ScaleLimits.axesHTML='<select class="JS9ScaleSelect" onchange="JS9.ScaleLimits.xaxes(\'%s\', \'%s\', this)"><option selected disabled>Plot Axes</option><option disabled>x axis:</option><option value="xlinear">linear</option><option value="xlog">log</option><option disabled>y axis:</option><option value="ylinear">linear</option><option value="ylog">log</option></select>';
+JS9.ScaleLimits.axesHTML='<select class="JS9Select JS9ScaleSelect" onchange="JS9.ScaleLimits.xaxes(\'%s\', \'%s\', this)"><option selected disabled>Plot Axes</option><option disabled>x axis:</option><option value="xlinear">linear</option><option value="xlog">log</option><option disabled>y axis:</option><option value="ylinear">linear</option><option value="ylog">log</option></select>';
 
 JS9.ScaleLimits.plotHTML='<div><center>Pixel Distribution: %s</center></div><div class="JS9ScalePlot" style="width:%spx;height:%spx"></div>';
 

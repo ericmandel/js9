@@ -22,33 +22,33 @@ JS9.Color.colorHTML=`<p><div class='JS9ColorLinegroup'>$cmaps1&nbsp;&nbsp;$cmaps
 <div class='JS9ColorLinegroup'>$run&nbsp;&nbsp;$opacity&nbsp;&nbsp;$from&nbsp;&nbsp;$opfloor&nbsp;&nbsp;$opopacity&nbsp;&nbsp;$opoverlay&nbsp;&nbsp;$opmask</div>`
 ;
 
-JS9.Color.cmaps1HTML = '<select class="JS9Cmaps1 JS9ColorSelect JS9ColorCol1" name="cmaps1" onchange="JS9.Color.xsetcolor(\'%s\', \'%s\', \'top\', this)">%s</select>';
+JS9.Color.cmaps1HTML = '<select class="JS9Select JS9Cmaps1 JS9ColorSelect JS9ColorCol1" name="cmaps1" onchange="JS9.Color.xsetcolor(\'%s\', \'%s\', \'top\', this)">%s</select>';
 
-JS9.Color.cmaps2HTML = '<select class="JS9Cmaps2 JS9ColorSelect JS9ColorCol2" name="cmaps2" onchange="JS9.Color.xsetcolor(\'%s\', \'%s\', \'other\', this)">%s</select>';
+JS9.Color.cmaps2HTML = '<select class="JS9Select JS9Cmaps2 JS9ColorSelect JS9ColorCol2" name="cmaps2" onchange="JS9.Color.xsetcolor(\'%s\', \'%s\', \'other\', this)">%s</select>';
 
-JS9.Color.cmapsHTML = '<input type="button" class="JS9ColorCmaps JS9ColorButton JS9ColorCol3" name="cmaps" value="Create cmaps" onclick="javascript:JS9.DisplayPlugin(\'JS9Cmaps\', {\'display\': \'%s\'})">';
+JS9.Color.cmapsHTML = '<input type="button" class="JS9Button2 JS9ColorCmaps JS9ColorButton JS9ColorCol3" name="cmaps" value="Create cmaps" onclick="javascript:JS9.DisplayPlugin(\'JS9Cmaps\', {\'display\': \'%s\'})">';
 
-JS9.Color.filtersHTML = '<input type="button" class="JS9ColorFilters JS9ColorButton JS9ColorCol4" name="filters" value="Image filters" onclick="javascript:JS9.DisplayPlugin(\'JS9Filters\', {\'display\': \'%s\'})">';
+JS9.Color.filtersHTML = '<input type="button" class="JS9Button2 JS9ColorFilters JS9ColorButton JS9ColorCol4" name="filters" value="Image filters" onclick="javascript:JS9.DisplayPlugin(\'JS9Filters\', {\'display\': \'%s\'})">';
 
-JS9.Color.conbibtnHTML = '<input type="button" class="JS9ColorConBiBtn JS9ColorButton JS9ColorCol1" name="conbibtn" value="Contrast/bias &rarr;" onclick="javascript:JS9.Color.xconbi(\'%s\', \'%s\', this)">';
+JS9.Color.conbibtnHTML = '<input type="button" class="JS9Button2 JS9ColorConBiBtn JS9ColorButton JS9ColorCol1" name="conbibtn" value="Contrast/bias &rarr;" onclick="javascript:JS9.Color.xconbi(\'%s\', \'%s\', this)">';
 
 JS9.Color.contrastHTML = '<input type="text" class="JS9ColorContrast JS9ColorInput JS9ColorCol2 js9Input" name="contrast" value="%s" autocapitalize="off" autocorrect="off" placeholder="contrast">';
 
 JS9.Color.biasHTML = '<input type="text" class="JS9ColorBias JS9ColorInput JS9ColorCol3 js9Input" name="bias" value="%s" autocapitalize="off" autocorrect="off" placeholder="bias">';
 
-JS9.Color.runHTML = '<input type="button" class="JS9ColorRun JS9ColorButton JS9ColorCol1" name="run" value="Opacity &rarr;" onclick="javascript:JS9.Color.xopacity(\'%s\', \'%s\', this)">';
+JS9.Color.runHTML = '<input type="button" class="JS9Button2 JS9ColorRun JS9ColorButton JS9ColorCol1" name="run" value="Opacity &rarr;" onclick="javascript:JS9.Color.xopacity(\'%s\', \'%s\', this)">';
 
 JS9.Color.opacityHTML = '<input type="text" class="JS9ColorOpacity JS9ColorInput JS9ColorCol2 js9Input" name="opacity" value="" autocapitalize="off" autocorrect="off">';
 
-JS9.Color.fromHTML = '<select class="JS9ColorFrom JS9ColorSelect JS9ColorCol3" name="from" onchange="JS9.Color.xfrom(\'%s\', \'%s\', this)">%s</select>';
+JS9.Color.fromHTML = '<select class="JS9Select JS9ColorFrom JS9ColorSelect JS9ColorCol3" name="from" onchange="JS9.Color.xfrom(\'%s\', \'%s\', this)">%s</select>';
 
 JS9.Color.opfloorHTML = '<input type="text" class="JS9ColorOpFloor JS9ColorInput JS9ColorCol4 js9Input" name="opfloor" value="%s" autocapitalize="off" autocorrect="off">';
 
-JS9.Color.opopacityHTML = '<select class="JS9ColorOpOpacity JS9ColorSelect JS9ColorCol4" name="opopacity" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'opacity\', this)">%s</select>';
+JS9.Color.opopacityHTML = '<select class="JS9Select JS9ColorOpOpacity JS9ColorSelect JS9ColorCol4" name="opopacity" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'opacity\', this)">%s</select>';
 
-JS9.Color.opoverlayHTML = '<select class="JS9ColorOpOverlay JS9ColorSelect JS9ColorCol4" name="opoverlay" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'overlay\', this)">%s</select>';
+JS9.Color.opoverlayHTML = '<select class="JS9Select JS9ColorOpOverlay JS9ColorSelect JS9ColorCol4" name="opoverlay" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'overlay\', this)">%s</select>';
 
-JS9.Color.opmaskHTML = '<select class="JS9ColorOpMask JS9ColorSelect JS9ColorCol4" name="opmask" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'mask\', this)">%s</select>';
+JS9.Color.opmaskHTML = '<select class="JS9Select JS9ColorOpMask JS9ColorSelect JS9ColorCol4" name="opmask" onchange="JS9.Color.xsetfile(\'%s\', \'%s\', \'mask\', this)">%s</select>';
 
 JS9.Color.fmt = function(val, n){
     val = val + 0.5 * Math.pow(10,-(n+1));
