@@ -528,10 +528,10 @@ viewreadme:	FORCE
 clean:		FORCE
 		@($(RM) *.a *.so *.dylib *.o *.exe core core.* errs *pure* \
 			foo* *~ \#* TAGS *.E a.out errors \
-			config.status config.cache config.log \
 			$(UTILLIB) $(ALLPROGS) $(TESTPROGS) $(CGIFILES) \
 			gmon.out *.pg *.bak  \
 			*js9Prefs.json-orig *js9prefs.js-orig \
+			config.info config.log ltest \
 			js/*~ params/*~ \
 			doc/*~ notes/*~ test/*~ help/*~ help/*.bak \
 			analysis-wrappers/*~ analysis-plugins/*~ \
