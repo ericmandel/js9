@@ -34,7 +34,7 @@ if [ test x"$USEHELPER" = xyes ]; then
 
 AC_CONFIG_SRCDIR(./src/js9helper.c)
 
-AC_CONFIG_AUX_DIR(./build-scripts)
+AC_CONFIG_AUX_DIR(./build)
 
 AC_CANONICAL_HOST
 

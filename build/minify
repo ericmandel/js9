@@ -8,6 +8,6 @@ fi
 while [ x"$1" != x ]; do
   IFILE="$1"
   OFILE=`echo $IFILE | sed 's/\.js$/\.min\.js/'`
-  java -jar build-scripts/closure-compiler/compiler.jar --js $IFILE --js_output_file $OFILE
+  java -jar build/closure-compiler/compiler.jar --js $IFILE --js_output_file $OFILE
   shift
 done

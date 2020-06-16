@@ -78,7 +78,7 @@ SHELL =			/bin/sh
 # better to use the install-sh script that comes with the distribution,
 # which is slower but guaranteed to work.
 
-INSTALL = 		@srcdir@/../build-scripts/install-sh -c
+INSTALL = 		@srcdir@/../build/install-sh -c
 INSTALL_PROGRAM =	${INSTALL}
 INSTALL_DATA =		${INSTALL} -m 644
 
@@ -109,7 +109,7 @@ DEPEND_SW = 	${CFLAGS} -I. ${AC_FLAGS}
 HELPER =	@HELPER@
 USEHELPER =	@USEHELPER@
 
-# do we build and use tpos?
+# do we use tpos?
 USEFITS2PNG =	@USEFITS2PNG@
 
 # which library

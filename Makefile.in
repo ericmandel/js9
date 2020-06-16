@@ -13,7 +13,7 @@ DDISTNAME =		${PACKAGE}-data
 
 DISTDIR	=		../export
 FTPDIR	=		../ftp
-BSCR	=		build-scripts
+BSCR	=		build
 SCR	=		scripts
 ALLIN1	=	 	js9-allinone
 
@@ -67,7 +67,7 @@ SHELL =			/bin/sh
 # better to use the install-sh script that comes with the distribution,
 # which is slower but guaranteed to work.
 
-INSTALL = 		@srcdir@/build-scripts/install-sh -c
+INSTALL = 		@srcdir@/build/install-sh -c
 INSTALL_PROGRAM =	${INSTALL}
 INSTALL_DATA =		${INSTALL} -m 644
 
@@ -102,7 +102,7 @@ WEBDIRS	=	plugins params js css font images
 
 BEDIRS =	node_modules analysis-plugins analysis-wrappers
 
-OTHERDIRS =	astroem src scripts build-scripts demos tests
+OTHERDIRS =	astroem src scripts build demos tests
 
 WEBFILES =	js9.js js9.min.js js9worker.js \
 		js9support.js js9support.min.js js9support.css js9plugins.js \
@@ -246,7 +246,7 @@ helper:		FORCE
 
 js9min:		FORCE
 		@(echo "remaking js9.min.js ..."; \
-		  touch js9.js; build-scripts/minify js9.js; \
+		  touch js9.js; build/minify js9.js; \
 		  echo "remaking all in one ..."; \
 		  $(BSCR)/mkallinone $(ALLIN1) $(VERSION))
 
@@ -510,7 +510,7 @@ spell:		FORCE
 		  done)
 
 js9helper:	FORCE
-		@(build-scripts/nnode)
+		@(build/nnode)
 
 smoke:		FORCE
 		@(X=`js9 cmap`; 					\
@@ -543,7 +543,7 @@ clean:		FORCE
 			cd astroem && $(MAKE) clean && cd ..)
 
 scriptclean:	FORCE
-		@($(CP) build-scripts/js9.in js9 && chmod +x js9)
+		@($(CP) build/js9.in js9 && chmod +x js9)
 
 distclean:	clean
 		$(RM) Makefile config.status config.cache config.log \
