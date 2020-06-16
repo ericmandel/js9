@@ -107,11 +107,10 @@ OTHERDIRS =	astroem src scripts build demos tests
 WEBFILES =	js9.js js9.min.js js9worker.js \
 		js9support.js js9support.min.js js9support.css js9plugins.js \
 		js9support.txt js9.css $(ALLIN1).js $(ALLIN1).css \
-		js9Msg.js js9PostMessage.js js9Helper.js \
+		js9Msg.js js9PostMessage.js js9Helper.js js9Regions.js \
 		js9Electron.js js9ElectronPreload.js js9ElectronMainMenu.js \
-		js9Regions.js \
 		astroem.js astroemw.js astroemw.wasm \
-		favicon.ico index.html js9.html
+		favicon.ico js9.html
 
 WEBHELP	=	help
 
@@ -495,7 +494,8 @@ release:	clean gitprefs
 		export COPYFILE_DISABLE=true; \
 		tar cf - \
 			$(WEBDIRS) $(BEDIRS) $(OTHERDIRS) \
-			$(WEBFILES) $(WEBHELP) $(PREFFILES) $(MFILES) |\
+			$(WEBFILES) $(WEBHELP) $(PREFFILES) \
+			$(SAOFILES) $(MFILES) |\
 		(cd $(DISTDIR)/$(DISTNAME) && tar xf -); \
 		cd $(DISTDIR) ; \
 		tar cf - $(DISTNAME) | gzip -c > $(DISTNAME).tgz; \
