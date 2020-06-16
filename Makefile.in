@@ -330,7 +330,8 @@ install-scripts: $(SCRIPTS) $(SCRIPTS2)
 	    do \
 		if [ -f $$i ] ; then \
 		    echo "installing $$i" ; \
-		    $(INSTALL_PROGRAM) $$i $(BIN_INSTALL_DIR)/$$i ; \
+		    j=`basename $$i`; \
+		    $(INSTALL_PROGRAM) $$i $(BIN_INSTALL_DIR)/$$j ; \
 		fi; \
 	    done; \
 	    echo "Resetting js9 script to default after install ..."; \
