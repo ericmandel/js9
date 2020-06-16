@@ -61,7 +61,7 @@ fi
 OPREFS=js9Prefs-cgi.json
 
 # js9Prefs.cgi: CGI helper script
-ICGISCR="js9Helper-default.cgi"
+ICGISCR="build/js9Helper-default.cgi"
 OCGISCR="js9Helper.cgi"
 
 # temp

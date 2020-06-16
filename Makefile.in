@@ -110,7 +110,6 @@ WEBFILES =	js9.js js9.min.js js9worker.js \
 		js9Msg.js js9PostMessage.js js9Helper.js \
 		js9Electron.js js9ElectronPreload.js js9ElectronMainMenu.js \
 		js9Regions.js \
-		js9Prefs-default.json js9prefs-default.js \
 		astroem.js astroemw.js astroemw.wasm \
 		favicon.ico index.html js9.html
 
@@ -119,10 +118,11 @@ WEBHELP	=	help
 PREFFILES =	js9Prefs.json js9prefs.js
 
 MFILES =	Makefile Makefile.in configure configure.ac \
-		js9 js9load js9wait js9Helper-default.cgi README.md
+		js9 js9load js9wait README.md
 
 # clean up from previous versions
 RMFILES =	analysis-plugins/imageSection.json \
+		js9Prefs-default.json js9prefs-default.js \
 		js9allinone.html js9analysis.html js9basics.html \
 		js9bespoke.html js9bitpix.html js9blend.html \
 		js9cat.html js9cmaps.html js9create.html \
@@ -270,8 +270,8 @@ js9support:	FORCE
 
 prefs:		FORCE
 		@(echo "copying default preferences to js9Prefs.json"; \
-		  cp -p js9Prefs-default.json js9Prefs.json; \
-		  cp -p js9prefs-default.js js9prefs.js;)
+		  cp -p build/js9Prefs-default.json js9Prefs.json; \
+		  cp -p build/js9prefs-default.js js9prefs.js;)
 
 saoprefs:	FORCE
 		@(echo "editing js9Prefs for SAO installations ..."; \
