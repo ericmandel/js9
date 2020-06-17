@@ -12715,10 +12715,18 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
     opts = opts || {};
     canvas = layer.canvas;
     dlayer = this.display.layers[layerName];
+    // no args: return show mode
+    if( JS9.isNull(mode) ){
+	return layer.show;
+    }
     if( mode ){
 	// restore and show layer
 	if( !opts.local ){
 	    layer.show = true;
+	    // for non-internal show/hide, exit if we are not displaying image
+	    if( this !== this.display.image ){
+		return;
+	    }
 	}
 	// restore selection property
 	if( layer.show ){
@@ -12781,6 +12789,13 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
 	// plugin callbacks
 	this.xeqPlugins("shape", "onshapelayershow", layerName);
     } else {
+	// for non-internal show/hide, exit if we are not displaying image
+	if( !opts.local ){
+	    if( this !== this.display.image ){
+		layer.show = false;
+		return;
+	    }
+	}
 	// save and hide layer
 	if( layer.show ){
 	    // can't use forEachObject, which loops in ascending order,
