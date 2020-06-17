@@ -13053,8 +13053,6 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     if( opts.remove ){
 	return {remove: opts.remove};
     }
-    // initialize
-    nparams.tags = [];
     // remove dangerous options (e.g., passed in JS9.GetRegions() object)
     parent = opts.parent || (obj && obj.params && obj.params.parent);
     delete opts.parent;
@@ -13062,6 +13060,8 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	delete opts.id;
     }
     delete opts.restoreid;
+    // initialize tags
+    nparams.tags = [];
     // pre-processing special keys
     if( opts.tags ){
 	if( typeof opts.tags === "string" ){
@@ -14775,6 +14775,9 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	if( opts.radii ){
 	    obj.params.radii = [];
 	}
+	if( opts.tags ){
+	    obj.params.tags = [];
+	}
 	bopts = $.extend(true, {}, obj.params, opts);
 	// parse options and generate new obj and params
 	sobj = JS9.Fabric._parseShapeOptions.call(this, layerName, bopts, obj);
@@ -16246,7 +16249,7 @@ JS9.Regions.init = function(layerName){
     JS9.Image.prototype.saveRegions = JS9.Regions.saveRegions;
     JS9.Image.prototype.listRegions = JS9.Regions.listRegions;
     JS9.Image.prototype.copyRegions = JS9.Regions.copyRegions;
-    JS9.Image.prototype.editRegionTags = JS9.Regions.editRegionTags;
+    JS9.Image.prototype.changeRegionTags = JS9.Regions.changeRegionTags;
     JS9.Image.prototype.toggleRegionTags = JS9.Regions.toggleRegionTags;
     JS9.Image.prototype.unremoveRegions = JS9.Regions.unremoveRegions;
     JS9.Image.prototype.initRegionsForm = JS9.Regions.initConfigForm;
@@ -18176,58 +18179,6 @@ JS9.Regions.saveRegions = function(fname, which, layer){
     return fname;
 };
 
-// change region tags, e.g. set source, delete background
-// e.g. im.changeRegionTags("selected", "source", "background");
-// call using image context
-JS9.Regions.editRegionTags = function(which, add1, rem1){
-    let i, j, s, tags;
-    const ntags = [];
-    s = this.getShapes("regions", which);
-    if( s.length ){
-	for(i=0; i<s.length; i++){
-	    tags = s[i].tags;
-	    // add the new tag
-	    ntags.push(add1);
-	    for(j=0; j<tags.length; j++){
-		// copy other tags, except the one we want to remove
-		if( tags[j] !== rem1 ){
-		    ntags.push(tags[j]);
-		}
-	    }
-	}
-	this.changeShapes("regions", which, {tags: ntags});
-    }
-};
-
-// toggle region tags, e.g. source <-> background, include <-> exclude
-// e.g. im.toggleRegionTags("selected", "source", "background");
-// call using image context
-JS9.Regions.toggleRegionTags = function(which, x1, x2){
-    let i, j, s, tags, xnew;
-    s = this.getShapes("regions", which);
-    if( s.length ){
-	for(i=0; i<s.length; i++){
-	    tags = s[i].tags;
-	    xnew = "";
-	    for(j=0; j<tags.length; j++){
-		// switch tags
-		if( tags[j] === x1 ){
-		    tags[j] = x2;
-		    xnew = x2;
-		    break;
-		} else if( tags[j] === x2 ){
-		    tags[j] = x1;
-		    xnew = x1;
-		    break;
-		}
-	    }
-	}
-	if( xnew ){
-	    this.changeShapes("regions", which, {tags});
-	}
-    }
-};
-
 // unremove previously removed regions
 JS9.Regions.unremoveRegions = function(){
     const s = this.regstack.pop();
@@ -18236,7 +18187,71 @@ JS9.Regions.unremoveRegions = function(){
     }
     return null;
 };
-// 
+
+// change region tags, e.g. set source, delete background
+// e.g. im.changeRegionTags("selected", "source", "background");
+// call using image context
+JS9.Regions.changeRegionTags = function(which, addtags, remtags){
+    let i, j, s, ctags, tags;
+    which = which || "all";
+    addtags = addtags || [];
+    remtags = remtags || [];
+    if( !$.isArray(addtags) ){
+	addtags = addtags.split(",").map(i=>i.trim());
+    }
+    if( !$.isArray(remtags) ){
+	remtags = remtags.split(",").map(i=>i.trim());
+    }
+    s = this.getShapes("regions", which);
+    // for each shape ...
+    for(i=0; i<s.length; i++){
+	// current tags for this shape
+	ctags = s[i].tags;
+	// new tags for this shape
+	tags = [];
+	// add new tags, unless they already exist
+	for(j=0; j<addtags.length; j++){
+	    if( $.inArray(addtags[j], ctags) < 0 ){
+		tags.push(addtags[j]);
+	    }
+	}
+	// copy current tags, except the one we want to remove
+	for(j=0; j<ctags.length; j++){
+	    if( $.inArray(ctags[j], remtags) < 0 ){
+		tags.push(ctags[j]);
+	    }
+	}
+	this.changeShapes("regions", s[i].id, {tags});
+    }
+};
+
+// toggle region tags, e.g. source <-> background, include <-> exclude
+// e.g. im.toggleRegionTags("selected", "source", "background");
+// call using image context
+JS9.Regions.toggleRegionTags = function(which, x1, x2){
+    let i, j, s, tags, xnew;
+    which = which || "all";
+    s = this.getShapes("regions", which);
+    for(i=0; i<s.length; i++){
+	tags = s[i].tags;
+	xnew = "";
+	for(j=0; j<tags.length; j++){
+	    // switch tags
+	    if( tags[j] === x1 ){
+		tags[j] = x2;
+		xnew = x2;
+		break;
+	    } else if( tags[j] === x2 ){
+		tags[j] = x1;
+		xnew = x1;
+		break;
+	    }
+	}
+	if( xnew ){
+	    this.changeShapes("regions", s[i].id, {tags});
+	}
+    }
+};
 
 // ---------------------------------------------------------------------
 // plotting utilities
@@ -25827,15 +25842,15 @@ JS9.mkPublic("SaveRegions", function(...args){
 });
 
 // edit region tags, e.g. add source, remove background
-// e.g. JS9.EditRegionTags("selected", "source", "background");
-JS9.mkPublic("EditRegionTags", function(...args){
+// e.g. JS9.ChangeRegionTags("selected", "source", "background");
+JS9.mkPublic("ChangeRegionTags", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
     let which = obj.argv[0];
     let add1  = obj.argv[1];
     let rem1  = obj.argv[2];
     if( im ){
-	return im.editRegionTags(which, add1, rem1);
+	return im.changeRegionTags(which, add1, rem1);
     }
     return null;
 });

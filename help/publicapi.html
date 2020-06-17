@@ -3725,25 +3725,49 @@ will be "js9.svg" ("js9.csv") instead of "js9.reg". Similarly, if a
 filename is specified that ends in ".svg" (or ".csv"), the format will be
 set to <b>svg (csv)</b>.
 
-<h5 id="JS9.ToggleRegionTags">Toggle region tags from the current image</h5>
+<h5 id="JS9.ChangeRegionTags">Change region tags for the specified image(s)</h5>
+<p>
+<code class="api">JS9.ChangeRegionTags(which, addreg, removereg)</code>
+<p>
+where:
+<ul>
+<li><b>which</b>: which regions to process (default is "all")
+<li><b>addreg</b>: array or comma-delimited string listing regions to add
+<li><b>removereg</b>: array or comma-delimited string listing regions to remove
+</ul>
+While region tags can be changed wholesale using the
+<a href="#JS9.ChangeRegions"><b>JS9.ChangeRegions()</b></a> routine,
+this routine allows you to add and/or remove specific tags. The first
+argument specifies which regions to change. The second argument is a
+list of tags to add, while the third argument is a list of tags to
+remove. In each case, the tags argument can be an array of tag strings
+or a single string containing a comma-separated list of tags:
+<pre>
+    JS9.ChangeRegionTags("selected", ["foo1", "foo2"], ["goo1", "goo2"]);
+    JS9.ChangeRegionTags("selected", "foo1,foo2", "goo1,goo2");
+</pre>
+Each of the above routines adds two "foo" tags and removes two "goo"
+tags from the selected region(s).
+
+<h5 id="JS9.ToggleRegionTags">Toggle two region tags for the specified image(s)</h5>
 <p>
 <code class="api">JS9.ToggleRegionTags(which, t1, t2)</code>
 <p>
 where:
 <ul>
 <li><b>which</b>: which regions to process (default is "all")
-<li><b>t1</b>: tag#1
-<li><b>t2</b>: tag#2
+<li><b>t1</b>: tag #1 to toggle
+<li><b>t2</b>: tag #2 to toggle
 </ul>
-While region tags can be changed using the
-<a href="#JS9.ChangeRegions"><b>JS9.ChangeRegions()</b></a> routine, a
-bespoke user interface might want to toggle between a <b>source</b>
+While region tags can be changed wholesale using the
+<a href="#JS9.ChangeRegions"><b>JS9.ChangeRegions()</b></a> routine,
+this routine allows you to toggle between two tags, e.g., a <b>source</b>
 region and <b>background</b> region, or between <b>include</b> and
-<b>exclude</b>. This convenience routine will do that. For example:
+<b>exclude</b>. For example:
 <pre>
     JS9.ToggleRegionTags("selected", "source", "background");
 </pre>
-will change a <b>background</b> region into a <b>source/</b> region
+will change a <b>background</b> region into a <b>source</b> region
 or vice-versa, depending on the state of the region, while:
 <pre>
     JS9.ToggleRegionTags("selected", "include", "exclude");
