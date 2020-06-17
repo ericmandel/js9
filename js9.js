@@ -19736,7 +19736,7 @@ JS9.progress = function(arg1, arg2){
 
 // msg coming from socket.io or postMessage
 JS9.msgHandler =  function(msg, cb){
-    let s, obj, tdisp, res, dobj;
+    let i, s, obj, tdisp, res, dobj;
     let args = [];
     const cmd = msg.cmd;
     const id = msg.id;
@@ -19744,7 +19744,7 @@ JS9.msgHandler =  function(msg, cb){
     const rstr = JS9.globalOpts.quietReturn ? "" : "OK";
     const getDisplayObject = (id, args) => {
 	if( id ){
-	    // bash send a string, not an object
+	    // bash sends a string, not an object
 	    if( args.length > 0 ){
 		s = args[args.length-1];
 		if( typeof s === "string" ){
@@ -19780,6 +19780,12 @@ JS9.msgHandler =  function(msg, cb){
 	// check for non-array first arg
 	if( !$.isArray(msg.args) ){
 	    msg.args = [msg.args];
+	}
+	// change empty quoted strings to empty strings
+	for(i=0; i<msg.args.length; i++){
+	    if( msg.args[i] === "''" || msg.args[i] === '""' ){
+		msg.args[i] = "";
+	    }
 	}
 	// deep copy of arg array
 	args = $.extend(true, [], msg.args);
