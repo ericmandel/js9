@@ -12719,7 +12719,7 @@ JS9.Fabric.showShapeLayer = function(layerName, mode, opts){
     if( JS9.isNull(mode) ){
 	return layer.show;
     }
-    if( mode ){
+    if( mode === true || mode === "true" ){
 	// restore and show layer
 	if( !opts.local ){
 	    layer.show = true;
