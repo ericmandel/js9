@@ -10366,7 +10366,7 @@ JS9.PanZoom.flipHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol3
 
 JS9.PanZoom.rot90HTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol4" name="rot90" onchange="JS9.PanZoom.xsetrot90(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.rotateHTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol5 js9Input" name="rotate" autocapitalize="off" autocorrect="off" onkeydown="JS9.PanZoom.xsetrot(\'%s\', \'%s\', this)" value="%s" placeholder="angle(deg)/reset">';
+JS9.PanZoom.rotateHTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol5 js9Input" name="rotate" autocapitalize="off" autocorrect="off" onkeydown="JS9.PanZoom.xsetrot(\'%s\', \'%s\', this, event)" value="%s" placeholder="angle(deg)/reset">';
 
 JS9.PanZoom.pantoHTML = '<input type="button" class="JS9Button2 JS9PanZoomButton JS9PanZoomCol1" name="panto" value="Pan to &rarr;" onclick="javascript:JS9.PanZoom.xpanto(\'%s\', \'%s\', this)">';
 
@@ -10462,22 +10462,28 @@ JS9.PanZoom.xsetrot90 = function(did, id, target){
 	    break;
 	}
     }
+    return false;
 };
 
 // change rotation by degrees via text box
-JS9.PanZoom.xsetrot = function(did, id, target){
+JS9.PanZoom.xsetrot = function(did, id, target, evt){
     let rot, pinst;
     const im = JS9.lookupImage(id, did);
     if( im ){
-	if( event.keyCode !== 13 ){ return; }
+	if( evt.keyCode !== 13 ){ return; }
 	rot = $(target).val().trim();
 	if( rot ){
 	    pinst = im.display.pluginInstances.JS9PanZoom;
-	    if( pinst ){ pinst.rot = rot; }
+	    // do this before setting rotation
+	    if( pinst ){
+		pinst.rot = rot;
+	    }
 	    im.setRot(rot);
+	    // do this after setting rotation
+	    if( pinst ){
+		pinst.divjq.find(`input[name="rotate"]`).focus().caretToEnd();
+	    }
 	}
-	// this does not work, why??
-	// $(target).focus();
     }
 };
 
@@ -10675,9 +10681,13 @@ JS9.PanZoom.init = function(opts){
 	return res;
     };
     const getRotOptions = (im) => {
-	let res;
+	let res = 0;
 	if( im ){
-	    res = this.rot || im.getRot() || "0";
+	    if( this.rot && this.rot !== "reset" ){
+		res = this.rot;
+	    } else {
+		res = im.getRot() || "0";
+	    }
 	}
 	return res;
     };
