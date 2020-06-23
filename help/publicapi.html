@@ -2030,6 +2030,7 @@ set in this way are:
 <li><b>bias</b>: calls JS9.SetColormap()
 <li><b>flip</b>: calls JS9.SetFlip()
 <li><b>rot90</b>: calls JS9.SetRot90()
+<li><b>rot</b>: calls JS9.SetRotation()
 <li><b>scale</b>: calls JS9.SetScale()
 <li><b>scalemin</b>: calls JS9.SetScale()
 <li><b>scalemax</b>: calls JS9.SetScale()
@@ -2081,11 +2082,12 @@ where:
 <li><b>opts</b>: optional object
 </ul>
 <p>
-Copy parameters from the current image to one or more images.
-Any image parameter can be copied, but the most common ones are:
-"alignment", "colormap", "contrastbias" (i.e., both "contrast" and "bias"),
-"flip", "pan", "rot90", "scale", "wcs" (i.e., both "wcssys" and "wcsunits"),
-and "zoom". Note that copying a parameter results in
+Copy parameters from the current image to one or more images.  Any
+image parameter can be copied, but the most common ones are:
+"alignment", "colormap", "contrastbias" (i.e., both "contrast" and
+"bias"), "flip", "pan", "rot90", "rot", "scale", "wcs" (i.e., both
+"wcssys" and "wcsunits"), and "zoom". Note that copying a parameter
+results in
 <a href="#JS9.SetParam"><b>JS9.SetParam()</b></a> being called,
 triggering the corresponding core function if necessary.  Thus, for
 example, copying the colormap will change the colormap of the target
