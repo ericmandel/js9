@@ -112,6 +112,7 @@ JS9.globalOpts = {
     quietReturn: false,         // should API return empty string or "OK"?
     useWasm: true,		// use WebAssembly if available?
     allowFileWasm: true,	// allow file:// to use wasm?
+    transforms: ["flip", "rot90", "rot"], // order for processing transforms
     clickToFocus: true,		// how to change focus on the display
     winType: "light",		// plugin window: "light" or "new"
     sortPreloads: true,         // sort preloads into original order after load?
@@ -1075,6 +1076,7 @@ JS9.Image = function(file, params, func){
 	break;
     default:
 	JS9.error(`unknown specification type for Load: ${typeof file}`);
+	break;
     }
 };
 
@@ -1785,6 +1787,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
 	break;
     default:
 	JS9.error(`unsupported bitpix in PNG file: ${this.raw.bitpix}`);
+	break;
     }
     // set data min and max
     this.dataminmax();
@@ -4706,7 +4709,7 @@ JS9.Image.prototype.getTransform = function(){
 
 // set transform (basis for setFlip, setRot90, setRotation)
 JS9.Image.prototype.setTransform = function(...args){
-    let a, sina, cosa, m3, transform;
+    let a, i, sina, cosa, m3, transform;
     let angle = 0;
     let scale = 1;
     let [arg1] = args;
@@ -4723,42 +4726,54 @@ JS9.Image.prototype.setTransform = function(...args){
     }
     // start with the identity matrix
     transform = [[1,0,0], [0,1,0], [0,0,1]];
-    // add flip
-    switch(this.params.flip){
-    case "x":
-	m3 = [[-1, 0, 0], [0, 1, 0], [0, 0, 1]];
-	transform = JS9.matrixMultiply(transform, m3);
-	scale = -1;
-	break;
-    case "y":
-	m3 = [[1, 0, 0], [0, -1, 0], [0, 0, 1]];
-	transform = JS9.matrixMultiply(transform, m3);
-	scale = -1;
-	break;
-    case "xy":
-	m3 = [[-1, 0, 0], [0, -1, 0], [0, 0, 1]];
-	transform = JS9.matrixMultiply(transform, m3);
-	break;
-    default:
-	break;
-    }
-    // add rot90 rotation
-    if( JS9.notNull(this.params.rot90) ){
-	a = this.params.rot90 * Math.PI / 180.0;
-	cosa = Math.cos(a);
-	sina = Math.sin(a);
-	m3 = [[cosa, -sina, 0], [sina, cosa, 0], [0, 0, 1]];
-	transform = JS9.matrixMultiply(transform, m3);
-	angle += this.params.rot90;
-    }
-    // add arbitrary rotation
-    if( JS9.notNull(this.params.rot) ){
-	a = this.params.rot * Math.PI / 180.0;
-	cosa = Math.cos(a);
-	sina = Math.sin(a);
-	m3 = [[cosa, -sina, 0], [sina, cosa, 0], [0, 0, 1]];
-	transform = JS9.matrixMultiply(transform, m3);
-	angle += this.params.rot;
+    // for each transform ...
+    for(i=0; i<JS9.globalOpts.transforms.length; i++){
+	// ... add this transform to the transformation matrix, if necessary
+	switch(JS9.globalOpts.transforms[i]){
+	case "flip":
+	    // flip
+	    switch(this.params.flip){
+	    case "x":
+		m3 = [[-1, 0, 0], [0, 1, 0], [0, 0, 1]];
+		transform = JS9.matrixMultiply(transform, m3);
+		scale = -1;
+		break;
+	    case "y":
+		m3 = [[1, 0, 0], [0, -1, 0], [0, 0, 1]];
+		transform = JS9.matrixMultiply(transform, m3);
+		scale = -1;
+		break;
+	    case "xy":
+		m3 = [[-1, 0, 0], [0, -1, 0], [0, 0, 1]];
+		transform = JS9.matrixMultiply(transform, m3);
+		break;
+	    default:
+		break;
+	    }
+	    break;
+	case "rot90":
+	    // rot90 rotation
+	    if( JS9.notNull(this.params.rot90) ){
+		a = this.params.rot90 * Math.PI / 180.0;
+		cosa = Math.cos(a);
+		sina = Math.sin(a);
+		m3 = [[cosa, -sina, 0], [sina, cosa, 0], [0, 0, 1]];
+		transform = JS9.matrixMultiply(transform, m3);
+		angle += this.params.rot90;
+	    }
+	    break;
+	case "rot":
+	    // arbitrary rotation
+	    if( JS9.notNull(this.params.rot) ){
+		a = this.params.rot * Math.PI / 180.0;
+		cosa = Math.cos(a);
+		sina = Math.sin(a);
+		m3 = [[cosa, -sina, 0], [sina, cosa, 0], [0, 0, 1]];
+		transform = JS9.matrixMultiply(transform, m3);
+		angle += this.params.rot;
+	    }
+	    break;
+	}
     }
     // new transform
     this.params.transform = transform;
@@ -4833,12 +4848,12 @@ JS9.Image.prototype.setFlip = function(...args){
 };
 
 // get rotatation state
-JS9.Image.prototype.getRot = function(){
+JS9.Image.prototype.getRotation = function(){
     return this.params.rot;
 };
 
 // rotate image by multiples of 90 degrees
-JS9.Image.prototype.setRot = function(...args){
+JS9.Image.prototype.setRotation = function(...args){
     let [rot, opts] = args;
     const normRot = (rot) => {
 	rot += this.params.rot||0;
@@ -4853,16 +4868,16 @@ JS9.Image.prototype.setRot = function(...args){
     // reset
     if( rot === "reset" ){
 	this.params.rot = 0;
-	return this.setRot(0);
+	return this.setRotation(0);
     }
     if( typeof rot === "string" ){
 	rot = parseFloat(rot);
     }
     if( !JS9.isNumber(rot) ){
-	JS9.error(`invalid rotation for setRot: ${rot}`);
+	JS9.error(`invalid rotation for setRotation: ${rot}`);
     }
     if( !this || !this.raw || !this.raw.header ){
-	JS9.error("invalid image for setRot");
+	JS9.error("invalid image for setRotation");
     }
     // opts is optional
     opts = opts || {};
@@ -4872,7 +4887,7 @@ JS9.Image.prototype.setRot = function(...args){
 	catch(e){ JS9.error(`can't parse rot opts: ${opts}`, e); }
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("setRot", [rot]);
+    this.xeqStashSave("setRotation", [rot]);
     // save normalized value
     this.params.rot = normRot(rot);
     // update the transform
@@ -4883,7 +4898,7 @@ JS9.Image.prototype.setRot = function(...args){
     this.refreshLayers();
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
-	this.xeqPlugins("image", "onsetrot");
+	this.xeqPlugins("image", "onsetrotation");
     }
     // allow chaining
     return this;
@@ -4990,7 +5005,7 @@ JS9.Image.prototype.reFlipRot = function(){
 	}
     }
     if( rot ){
-	this.setRot(rot);
+	this.setRotation(rot);
     }
     // allow chaining
     return this;
@@ -6115,7 +6130,7 @@ JS9.Image.prototype.runAnalysis = function(name, opts, func){
 		break;
 	    default:
 		JS9.error(`unknown analysis result type: ${a.rtype}`);
-	    break;
+		break;
 	    }
 	}
 	// set status
@@ -9781,6 +9796,7 @@ JS9.Colormap = function(...args){
 	break;
     default:
 	JS9.error("colormap requires a colormap name and 1 or 3 array args");
+	break;
     }
     // flag whether this was a core or user-defined colormap
     if( !JS9.inited ){
@@ -9868,6 +9884,7 @@ JS9.Colormap.prototype.mkColorCell = function(ii){
 	break;
     default:
 	JS9.error("unknown colormap type");
+	break;
     }
     // return the news
     return rgb;
@@ -19767,6 +19784,7 @@ JS9.msgHandler =  function(msg, cb){
 	    break;
 	default:
 	    res = `ERROR: unknown cmd type for '${cmd}'`;
+	    break;
 	}
     } else {
 	if( !obj ){
@@ -23968,8 +23986,8 @@ JS9.mkPublic("GetOpacity", "getOpacity");
 JS9.mkPublic("SetOpacity", "setOpacity");
 JS9.mkPublic("SetFlip", "setFlip");
 JS9.mkPublic("GetFlip", "getFlip");
-JS9.mkPublic("SetRot", "setRot");
-JS9.mkPublic("GetRot", "getRot");
+JS9.mkPublic("SetRotation", "setRotation");
+JS9.mkPublic("GetRotation", "getRotation");
 JS9.mkPublic("SetRot90", "setRot90");
 JS9.mkPublic("GetRot90", "getRot90");
 JS9.mkPublic("GetParam", "getParam");

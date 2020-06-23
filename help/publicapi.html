@@ -1917,9 +1917,9 @@ Possible returned flip states are: "x", "y", "xy", or "none".
 The state is normalized, so that, for example, two "x" flips are
 replaced by "none".
 
-<h5 id="JS9.SetRot">Rotate an image by a specified number of degrees</h5>
+<h5 id="JS9.SetRotation">Rotate an image by a specified number of degrees</h5>
 <p>
-<code class="api">JS9.SetRot(rot)</code>
+<code class="api">JS9.SetRotation(rot)</code>
 <p>
 where:
 <ul>
@@ -1930,9 +1930,9 @@ Since this operation is applied to the entire display canvas instead
 of the image, image parameters such as the WCS are not affected. Note
 that you might have to reset the pan position after rotating.
 
-<h5 id="JS9.GetRot">Get rotate state of an image</h5>
+<h5 id="JS9.GetRotation">Get rotate state of an image</h5>
 <p>
-<code class="api">rot = JS9.GetRot()</code>
+<code class="api">rot = JS9.GetRotation()</code>
 <p>
 returns:
 <ul>
@@ -5598,7 +5598,7 @@ inconsistent with other routines: e.g. image processing routines
 only change the displayed data, while explicit raw data routines such as
 <a href="#JS9.ReprojectData">JS9.ReprojectData</a> change the underlying
 image in accordance with the rules for manipulating raw data. We therefore
-re-implemented these routines (and added <a href="#JS9.SetRot">JS9.SetRot</a>)
+re-implemented these routines (and added <a href="#JS9.SetRotation">JS9.SetRotation</a>)
 so that they change the orientation of the canvas, rather than the
 underlying image data.  This implies that the WCS headers are no longer
 changed by flipping and rotating.
