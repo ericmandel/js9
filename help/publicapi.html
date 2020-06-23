@@ -1900,9 +1900,10 @@ where:
 <ul>
 <li><b>flip</b>: "x", "y"
 </ul>
-Flip an image around the specified axis. The WCS header parameters will be
-updated appropriately. Note that you might have to reset the pan position
-after flipping.
+Flip an image around the specified axis.
+Since this operation is applied to the entire display canvas instead
+of the image, image parameters such as the WCS are not affected. Note
+that you might have to reset the pan position after rotating.
 
 <h5 id="JS9.GetFlip">Get flip state of an image</h5>
 <p>
@@ -1914,21 +1915,43 @@ returns:
 </ul>
 Possible returned flip states are: "x", "y", "xy", or "none".
 The state is normalized, so that, for example, two "x" flips are
-replaced by "none". NB: if you have also rotated the image using
-<a href="#JS9.SetRot90"><b>JS9.SetRot90()</b></a>, the total flip and
-rotate state is no longer separable like this (since rotations do not commute.)
+replaced by "none".
 
-<h5 id="JS9.SetRot90">Rotate an image by +/- 90 degrees</h5>
+<h5 id="JS9.SetRot">Rotate an image by a specified number of degrees</h5>
 <p>
-<code class="api">JS9.SetRot90(flip)</code>
+<code class="api">JS9.SetRot(rot)</code>
 <p>
 where:
 <ul>
-<li><b>rot</b>: a multiple of 90 degrees +/-90)
+<li><b>rot</b>:  rotation in degrees
 </ul>
-Rotate an image by a multiple of 90 degrees. The WCS header
-parameters will be updated appropriately. Note that you might
-have to reset the pan position after rotating.
+Rotate an image the specified number of degrees.
+Since this operation is applied to the entire display canvas instead
+of the image, image parameters such as the WCS are not affected. Note
+that you might have to reset the pan position after rotating.
+
+<h5 id="JS9.GetRot">Get rotate state of an image</h5>
+<p>
+<code class="api">rot = JS9.GetRot()</code>
+<p>
+returns:
+<ul>
+<li><b>rot</b>: current rotation value for this image
+</ul>
+Return the current rotation.
+
+<h5 id="JS9.SetRot90">Rotate an image by +/- 90 degrees</h5>
+<p>
+<code class="api">JS9.SetRot90(rot90)</code>
+<p>
+where:
+<ul>
+<li><b>rot90</b>: a multiple of 90 degrees (+/-90)
+</ul>
+Rotate an image by a multiple of 90 degrees.
+Since this operation is applied to the entire display canvas instead
+of the image, image parameters such as the WCS are not affected. Note
+that you might have to reset the pan position after rotating.
 
 <h5 id="JS9.GetRot90">Get rotate state of an image</h5>
 <p>
@@ -1940,10 +1963,6 @@ returns:
 </ul>
 The returned rotation value will be a multiple of 90, depending on how
 many rotations have been executed and in which direction.  
-NB: if you have also flipped the image using
-<a href="#JS9.SetFlip"><b>JS9.SetFlip()</b></a>, the total flip and
-rotate state is no longer separable like this (since rotations do not commute.)
-
 
 <h5 id="JS9.GetParam">Get an image parameter value</h5>
 <p>
@@ -5570,6 +5589,19 @@ that we can gain a better understanding of what is required in these cases.
 <p>
 The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.
+
+<h5>20200623: SetFlip and SetRot90 no longer manipulate the image data</h5>
+The original implementation of <a href="#JS9.SetFlip">JS9.SetFlip</a>
+and <a href="#JS9.SetRot90">JS9.SetRot90</a> manipulated the
+underlying image data, changing the WCS as needed. This behavior was
+inconsistent with other routines: e.g. image processing routines
+only change the displayed data, while explicit raw data routines such as
+<a href="#JS9.ReprojectData">JS9.ReprojectData</a> change the underlying
+image in accordance with the rules for manipulating raw data. We therefore
+re-implemented these routines (and added <a href="#JS9.SetRot">JS9.SetRot</a>)
+so that they change the orientation of the canvas, rather than the
+underlying image data.  This implies that the WCS headers are no longer
+changed by flipping and rotating.
 
 <h5>20200207: remove DisplaySection +N and -N binning options</h5>
 

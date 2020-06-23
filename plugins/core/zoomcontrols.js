@@ -14,7 +14,7 @@ JS9.PanZoom.WIDTH = 530;        // width of light window
 JS9.PanZoom.HEIGHT = 110;       // height of light window
 JS9.PanZoom.BASE = JS9.PanZoom.CLASS + JS9.PanZoom.NAME;
 
-JS9.PanZoom.panzoomHTML="<p><div class='JS9PanZoomLinegroup'>$pan&nbsp;&nbsp;$zoom&nbsp;&nbsp;$flip&nbsp;&nbsp;$rotate</div><p><div class='JS9PanZoomLinegroup'>$panto $pos1 $pos2 $wcssys $wcsunits</div>";
+JS9.PanZoom.panzoomHTML="<p><div class='JS9PanZoomLinegroup'>$pan&nbsp;&nbsp;$zoom&nbsp;&nbsp;$flip&nbsp;&nbsp;$rot90&nbsp;&nbsp;$rotate</div><p><div class='JS9PanZoomLinegroup'>$panto $pos1 $pos2 $wcssys $wcsunits</div>";
 
 JS9.PanZoom.panHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol1" name="pan" onchange="JS9.PanZoom.xsetpan(\'%s\', \'%s\', this)">%s</select>';
 
@@ -22,13 +22,15 @@ JS9.PanZoom.zoomHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol2
 
 JS9.PanZoom.flipHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol3" name="flip" onchange="JS9.PanZoom.xsetflip(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.rotateHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol4" name="rotate" onchange="JS9.PanZoom.xsetrotate(\'%s\', \'%s\', this)">%s</select>';
+JS9.PanZoom.rot90HTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol4" name="rot90" onchange="JS9.PanZoom.xsetrot90(\'%s\', \'%s\', this)">%s</select>';
+
+JS9.PanZoom.rotateHTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol5 js9Input" name="rotate" autocapitalize="off" autocorrect="off" onkeydown="JS9.PanZoom.xsetrot(\'%s\', \'%s\', this)" value="%s" placeholder="angle(deg)/reset">';
 
 JS9.PanZoom.pantoHTML = '<input type="button" class="JS9Button2 JS9PanZoomButton JS9PanZoomCol1" name="panto" value="Pan to &rarr;" onclick="javascript:JS9.PanZoom.xpanto(\'%s\', \'%s\', this)">';
 
-JS9.PanZoom.pos1HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol2 js9Input" name="pos1" value="%s" autocapitalize="off" autocorrect="off">';
+JS9.PanZoom.pos1HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol2 js9Input" name="pos1" value="%s" autocapitalize="off" autocorrect="off" placeholder="x position">';
 
-JS9.PanZoom.pos2HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol3 js9Input" name="pos2" value="%s" autocapitalize="off" autocorrect="off">';
+JS9.PanZoom.pos2HTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol3 js9Input" name="pos2" value="%s" autocapitalize="off" autocorrect="off" placeholder="y position">';
 
 JS9.PanZoom.sysHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol4" name="wcssys" onchange="JS9.PanZoom.xsetwcssys(\'%s\', \'%s\', this)">%s</select>';
 
@@ -91,6 +93,9 @@ JS9.PanZoom.xsetflip = function(did, id, target){
 	case "around y axis":
 	    im.setFlip("y");
 	    break;
+	case "reset":
+	    im.setFlip("reset");
+	    break;
 	default:
 	    break;
 	}
@@ -98,7 +103,7 @@ JS9.PanZoom.xsetflip = function(did, id, target){
 };
 
 // change rotation by 90 degrees via menu
-JS9.PanZoom.xsetrotate = function(did, id, target){
+JS9.PanZoom.xsetrot90 = function(did, id, target){
     const im = JS9.lookupImage(id, did);
     if( im ){
 	switch(target.value){
@@ -108,9 +113,29 @@ JS9.PanZoom.xsetrotate = function(did, id, target){
 	case "90 right":
 	    im.setRot90(-90);
 	    break;
+	case "reset":
+	    im.setRot90("reset");
+	    break;
 	default:
 	    break;
 	}
+    }
+};
+
+// change rotation by degrees via text box
+JS9.PanZoom.xsetrot = function(did, id, target){
+    let rot, pinst;
+    const im = JS9.lookupImage(id, did);
+    if( im ){
+	if( event.keyCode !== 13 ){ return; }
+	rot = $(target).val().trim();
+	if( rot ){
+	    pinst = im.display.pluginInstances.JS9PanZoom;
+	    if( pinst ){ pinst.rot = rot; }
+	    im.setRot(rot);
+	}
+	// this does not work, why??
+	// $(target).focus();
     }
 };
 
@@ -297,12 +322,21 @@ JS9.PanZoom.init = function(opts){
 	let res = "<option selected disabled>Flip</option>";
 	res += `<option>around x axis</option>`;
 	res += `<option>around y axis</option>`;
+	res += `<option>reset</option>`;
 	return res;
     };
-    const getRotateOptions = () => {
+    const getRot90Options = () => {
 	let res = "<option selected disabled>Rotate</option>";
 	res += `<option>90 left</option>`;
 	res += `<option>90 right</option>`;
+	res += `<option>reset</option>`;
+	return res;
+    };
+    const getRotOptions = (im) => {
+	let res;
+	if( im ){
+	    res = this.rot || im.getRot() || "0";
+	}
 	return res;
     };
     const getSysOptions = (im) => {
@@ -393,7 +427,9 @@ JS9.PanZoom.init = function(opts){
 	mopts.push({name: "zoom", value: t});
 	t = sprintf(JS9.PanZoom.flipHTML, dispid, imid, getFlipOptions());
 	mopts.push({name: "flip", value: t});
-	t = sprintf(JS9.PanZoom.rotateHTML, dispid, imid, getRotateOptions());
+	t = sprintf(JS9.PanZoom.rot90HTML, dispid, imid, getRot90Options());
+	mopts.push({name: "rot90", value: t});
+	t = sprintf(JS9.PanZoom.rotateHTML, dispid, imid, getRotOptions(im));
 	mopts.push({name: "rotate", value: t});
 	t = sprintf(JS9.PanZoom.pantoHTML, dispid, imid);
 	mopts.push({name: "panto", value: t});

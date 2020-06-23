@@ -118,10 +118,10 @@ PLUGIN.mouseout = function(im, ipos, evt){
 
 // callback when key is pressed
 // eslint-disable-next-line no-unused-vars
-PLUGIN.keypress = function(im, ipos, evt){
+PLUGIN.keydown = function(im, ipos, evt){
     var charCode = evt.which || evt.keyCode;
-    var charStr = String.fromCharCode(charCode);
-    var t = sprintf("keyPress: %s -> %s", charCode, charStr);
+    var charStr = JS9.eventToCharStr(evt);
+    var t = sprintf("keydown: %s -> %s", charCode, charStr);
     this.message(t, 2);
 };
 
@@ -272,7 +272,7 @@ JS9.RegisterPlugin(PLUGIN.CLASS, PLUGIN.NAME, PLUGIN.init,
 		    onmousemove: PLUGIN.mousemove,
 		    onmouseover: PLUGIN.mouseover,
 		    onmouseout: PLUGIN.mouseout,
-		    onkeypress: PLUGIN.keypress,
+		    onkeydown: PLUGIN.keydown,
 		    onregionsmove: PLUGIN.regionsmove,
 		    onregionschange: PLUGIN.regionschange,
 		    onimageload: PLUGIN.imageload,

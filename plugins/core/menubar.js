@@ -1377,8 +1377,16 @@ JS9.Menubar.createMenus = function(){
 	    const tim = tdisp.image;
 	    const editZoom = (im, obj) => {
 		delete tdisp.tmp.editingMenu;
+		// allow numbers or strings
 		if( !Number.isNaN(obj.zoom) ){
 		    im.setZoom(obj.zoom);
+		}
+	    };
+	    const editRotate = (im, obj) => {
+		delete tdisp.tmp.editingMenu2;
+		// allow numbers or strings
+		if( !Number.isNaN(obj.rotate) ){
+		    im.setRot(obj.rotate);
 		}
 	    };
 	    const keyZoom = (e) => {
@@ -1400,6 +1408,29 @@ JS9.Menubar.createMenus = function(){
 			break;
 		    default:
 			vdisp.tmp.editingMenu = true;
+			break;
+		    }
+		});
+	    };
+	    const keyRotate = (e) => {
+		JS9.Menubar.getDisplays.call(this).forEach((val) => {
+		    const obj = $.contextMenu.getInputValues(e.data);
+		    const keycode = e.which || e.keyCode;
+		    const vdisp = val;
+		    const vim = vdisp.image;
+		    // make sure display is still valid
+		    if( $.inArray(vdisp, JS9.displays) < 0 ){
+			return;
+		    }
+		    switch( keycode ){
+		    case 9:
+		    case 13:
+			if( vim ){
+			    editRotate(vim, obj);
+			}
+			break;
+		    default:
+			vdisp.tmp.editingMenu2 = true;
 			break;
 		    }
 		});
@@ -1537,6 +1568,11 @@ JS9.Menubar.createMenus = function(){
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.rot90_270.disabled = true;
 	    }
+	    items.rotate = {
+		events: {keyup: keyRotate},
+		name: "rotation angle:",
+		type: "text"
+	    };
 	    items[`sep${n++}`] = "------";
 	    // plugins
 	    for(i=0; i<JS9.plugins.length; i++){
@@ -1623,8 +1659,8 @@ JS9.Menubar.createMenus = function(){
 			const uim = udisp.image;
 			const obj = {};
 			if( uim  ){
-			    obj.zoom =
-				String(uim.rgb.sect.zoom);
+			    obj.zoom = String(uim.rgb.sect.zoom);
+			    obj.rotate = String(uim.params.rot||0);
 			}
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
@@ -1638,6 +1674,10 @@ JS9.Menubar.createMenus = function(){
 			    if( udisp.tmp.editingMenu ){
 				obj = $.contextMenu.getInputValues(opt);
 				editZoom(uim, obj);
+			    }
+			    if( udisp.tmp.editingMenu2 ){
+				obj = $.contextMenu.getInputValues(opt);
+				editRotate(uim, obj);
 			    }
 			}
 		    }

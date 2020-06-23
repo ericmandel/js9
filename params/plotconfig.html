@@ -38,8 +38,8 @@
 .plotcol_P2 {
     position: absolute;
     top: 0;
-    left:  90px;
-    width: 60px;
+    left:  70px;
+    width: 80px;
 }
 
 .plotcol_P3 {
@@ -104,8 +104,16 @@ y axis:
 </div>
 
 <div class="plinegroup">
-<span class="plotcol_P plotcol_P1">
-<input name="Apply" type="button" class="button" value="Apply"
+<span class="plotcol_P plotcol_Close">
+<input name="Close" type="button" class="JS9Button2 button" value="Cancel"
+onclick="
+const form = $(this).closest('form');
+const plot = form.data('plot');
+const winid = plot.winid;
+winid.close();
+return false;">
+&nbsp;
+<input name="Apply" type="button" class="JS9RunButton button" value="Apply"
 onclick="
 const form = $(this).closest('form');
 const arr = $(':input:visible', form).serializeArray();
@@ -114,15 +122,6 @@ const plot = form.data('plot');
 const pobj = form.data('pobj');
 let arr2 = arr.concat($(`#${form.attr('id')} input[type=checkbox]:not(:checked)`).map((i, e) => {return {'name': e.name, 'value': 'false'};}).get());
 JS9.Plot.processConfigForm.call(im, form, plot, pobj, arr2);
-return false;">
-</span>
-<span class="plotcol_P plotcol_Close">
-<input name="Close" type="button" class="button" value="Close"
-onclick="
-const form = $(this).closest('form');
-const plot = form.data('plot');
-const winid = plot.winid;
-winid.close();
 return false;">
 </span>
 </div>

@@ -403,10 +403,10 @@ JS9.analOpts = {
 JS9.lightOpts = {
     nclick: 0,
     dhtml: {
-	top:      ".dhtmlwindow",
 	topid:    "#dhtmlwindowholder",
+	top:      ".dhtmlwindow",
 	drag:     ".drag-contentarea",
-	dragBar:  "drag-handle",
+	dragBar:  ".drag-handle",
 	format:   "width=%spx,height=%spx,resize=%s,scrolling=0",
 	textWin:  "width=830px,height=400px,resize=1,scrolling=1",
 	// NB: dimensions are tied to .JS9Plot CSS params
@@ -3226,6 +3226,7 @@ JS9.Image.prototype.calcDisplayOffsets = function(dowcs){
 
 // primitive to put image data on screen
 JS9.Image.prototype.putImage = function(opts){
+    let m, w2, h2;
     const rgb = this.rgb;
     const display = this.display;
     const ctx = display.context;
@@ -3258,21 +3259,28 @@ JS9.Image.prototype.putImage = function(opts){
     }
     // get display offsets
     this.calcDisplayOffsets(true);
-    // draw the image into the context
-    if( JS9.notNull(opts.opacity) || JS9.notNull(opts.blend) ){
-	// one component of a blended image
-	ctx.save();
-	if( opts.opacity !== undefined ){
-	    ctx.globalAlpha = opts.opacity;
-	}
-	if( opts.blend !== undefined ){
-	    ctx.globalCompositeOperation = opts.blend;
-	}
-	ctx.drawImage(img2canvas(rgb.img), this.ix, this.iy);
-	ctx.restore();
-    } else {
-	ctx.putImageData(rgb.img, this.ix, this.iy);
+    // save context
+    ctx.save();
+    // do we need to apply blend mode parameters
+    if( opts.opacity !== undefined ){ ctx.globalAlpha = opts.opacity; }
+    if( opts.blend !== undefined ){ ctx.globalCompositeOperation = opts.blend; }
+    // do we need to apply the canvas transform?
+    if( this.params.transform ){
+	// this is the transform matrix
+	w2 = this.display.width / 2;
+	h2 = this.display.height / 2;
+	m = this.params.transform;
+	// translate origin to center of display
+	ctx.translate(w2, h2);
+	// set new transform
+	ctx.transform(m[0][0], m[0][1], m[1][0], m[1][1], m[2][0], m[2][1]);
+	// translate back to 0, 0
+	ctx.translate(-w2, -h2);
     }
+    // display image
+    ctx.drawImage(img2canvas(rgb.img), this.ix, this.iy);
+    // restore original context
+    ctx.restore();
     // allow chaining
     return this;
 };
@@ -3539,8 +3547,8 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
     }
     // display new image data with old section
     this.displayImage("colors", opts);
-    // redo flip and rot90
-    this.reFlipRot90();
+    // redo flip and rot
+    this.reFlipRot();
     // notify the helper
     this.notifyHelper();
     // update shape layers if necessary
@@ -3782,8 +3790,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 	    if( oreg && topts.refreshRegions !== false ){
 		nim.addShapes("regions", oreg, {restoreid: true});
 	    }
-	    // redo flip and rot90
-	    this.reFlipRot90();
+	    // redo flip and rot
+	    this.reFlipRot();
 	    // set status of new image
 	    nim.setStatus("displaySection", "complete");
 	} else if( typeof topts.refresh === "string" ){
@@ -3834,8 +3842,8 @@ JS9.Image.prototype.displaySection = function(opts, func) {
 		if( oreg ){
 		    nim.addShapes("regions", oreg, {restoreid: true});
 		}
-		// redo flip and rot90
-		this.reFlipRot90();
+		// redo flip and rot
+		this.reFlipRot();
 	    }
 	} else {
 	    // this is the default behavior for displaySection:
@@ -4691,16 +4699,85 @@ JS9.Image.prototype.alignPanZoom = function(im, opts){
     return this;
 };
 
+// get transform
+JS9.Image.prototype.getTransform = function(){
+    return this.params.transform;
+};
+
+// set transform (basis for setFlip, setRot90, setRotation)
+JS9.Image.prototype.setTransform = function(...args){
+    let a, sina, cosa, m3, transform;
+    let angle = 0;
+    let scale = 1;
+    let [arg1] = args;
+    if( !this || !this.raw || !this.raw.header ){
+	JS9.error("invalid image for setTransform");
+    }
+    // reset -> we're done
+    if( arg1 === "reset" ){
+	delete this.params.transform;
+	delete this.params.transformInverse;
+	delete this.params.transformAngle;
+	delete this.params.transformScale;
+	return;
+    }
+    // start with the identity matrix
+    transform = [[1,0,0], [0,1,0], [0,0,1]];
+    // add flip
+    switch(this.params.flip){
+    case "x":
+	m3 = [[-1, 0, 0], [0, 1, 0], [0, 0, 1]];
+	transform = JS9.matrixMultiply(transform, m3);
+	scale = -1;
+	break;
+    case "y":
+	m3 = [[1, 0, 0], [0, -1, 0], [0, 0, 1]];
+	transform = JS9.matrixMultiply(transform, m3);
+	scale = -1;
+	break;
+    case "xy":
+	m3 = [[-1, 0, 0], [0, -1, 0], [0, 0, 1]];
+	transform = JS9.matrixMultiply(transform, m3);
+	break;
+    default:
+	break;
+    }
+    // add rot90 rotation
+    if( JS9.notNull(this.params.rot90) ){
+	a = this.params.rot90 * Math.PI / 180.0;
+	cosa = Math.cos(a);
+	sina = Math.sin(a);
+	m3 = [[cosa, -sina, 0], [sina, cosa, 0], [0, 0, 1]];
+	transform = JS9.matrixMultiply(transform, m3);
+	angle += this.params.rot90;
+    }
+    // add arbitrary rotation
+    if( JS9.notNull(this.params.rot) ){
+	a = this.params.rot * Math.PI / 180.0;
+	cosa = Math.cos(a);
+	sina = Math.sin(a);
+	m3 = [[cosa, -sina, 0], [sina, cosa, 0], [0, 0, 1]];
+	transform = JS9.matrixMultiply(transform, m3);
+	angle += this.params.rot;
+    }
+    // new transform
+    this.params.transform = transform;
+    this.params.transformInverse = JS9.invertMatrix3(transform);
+    // these get applied to each region angle
+    this.params.transformAngle = scale * angle;
+    this.params.transformScale = scale;
+    // allow chaining
+    return this;
+}
+
 // get flip state
 JS9.Image.prototype.getFlip = function(){
     return this.params.flip;
 };
 
-// flip image along an axis
+// flip image along an axis using canvas transform
 JS9.Image.prototype.setFlip = function(...args){
-    let nraw;
     let [flip, opts] = args;
-    const oraw = this.raw;
     const calcFlip = (flip) => {
 	let i, arr;
 	let nx = 0;
@@ -4721,122 +4798,28 @@ JS9.Image.prototype.setFlip = function(...args){
 	if( ny % 2 === 1 ){ nflip += "y"; }
 	return nflip || "none";
     }
-    const flipX = (oraw, nraw) => {
-	let oj, nj, ooff, noff, obuf, nbuf;
-	const bpp = oraw.data.BYTES_PER_ELEMENT;
-	for(oj=0; oj<oraw.height; oj++){
-	    nj = oj;
-	    ooff = oj * oraw.width * bpp;
-	    noff = nj * oraw.width * bpp;
-	    [obuf, nbuf] = JS9.getRawLine(oraw, ooff, nraw, noff);
-	    nbuf.set(obuf);
-	    nbuf.reverse();
-	}
-    };
-    const flipY = (oraw, nraw) => {
-	let oj, nj, ooff, noff, obuf, nbuf;
-	const bpp = oraw.data.BYTES_PER_ELEMENT;
-	for(oj=0; oj<oraw.height; oj++){
-	    nj = oraw.height - oj - 1;
-	    ooff = oj * oraw.width * bpp;
-	    noff = nj * oraw.width * bpp;
-	    [obuf, nbuf] = JS9.getRawLine(oraw, ooff, nraw, noff);
-	    nbuf.set(obuf);
-	}
-    };
-    const updateFlipHeader = (oraw, nraw, flip) => {
-	const oheader = oraw.header;
-	const nheader = nraw.header;
-	switch(flip){
-	case "x":
-	    if( JS9.notNull(oheader.CRPIX1) ){
-		nheader.CRPIX1 = oheader.NAXIS1 - oheader.CRPIX1 + 1;
-	    }
-	    if( JS9.notNull(oheader.CDELT1) ){
-		nheader.CDELT1 = - oheader.CDELT1;
-	    }
-	    if( JS9.notNull(oheader.CD1_1) ){
-		nheader.CD1_1 = - oheader.CD1_1;
-	    }
-	    if( JS9.notNull(oheader.CD2_1) ){
-		nheader.CD2_1 = - oheader.CD2_1;
-	    }
-	    nheader.LTV1 = oheader.NAXIS1 - (oheader.LTV1||0) + 1;
-	    nheader.LTV2 = (oheader.LTV2||0);
-	    nheader.LTM1_1 = - JS9.defNull(oheader.LTM1_1, 1);
-	    nheader.LTM1_2 = JS9.defNull(oheader.LTM1_2, 0);
-	    nheader.LTM2_1 = - JS9.defNull(oheader.LTM2_1, 0);
-	    nheader.LTM2_2 = JS9.defNull(oheader.LTM2_2, 1);
-	    break;
-	case "y":
-	    if( JS9.notNull(oheader.CRPIX2) ){
-		nheader.CRPIX2 = oheader.NAXIS2 - oheader.CRPIX2 + 1;
-	    }
-	    if( JS9.notNull(oheader.CDELT2) ){
-		nheader.CDELT2 = - oheader.CDELT2;
-	    }
-	    if( JS9.notNull(oheader.CD1_2) ){
-		nheader.CD1_2 = - oheader.CD1_2;
-	    }
-	    if( JS9.notNull(oheader.CD2_2) ){
-		nheader.CD2_2 = - oheader.CD2_2;
-	    }
-	    nheader.LTV1 = (oheader.LTV1||0);
-	    nheader.LTV2 = oheader.NAXIS2 - (oheader.LTV2||0) + 1;
-	    nheader.LTM1_1 = JS9.defNull(oheader.LTM1_1, 1);
-	    nheader.LTM1_2 = - JS9.defNull(oheader.LTM1_2, 0);
-	    nheader.LTM2_1 = JS9.defNull(oheader.LTM2_1, 0);
-	    nheader.LTM2_2 = - JS9.defNull(oheader.LTM2_2, 1);
-	    break;
-	default:
-	    break;
-	}
-    };
     // sanity checks
-    if( flip === "none" ){
+    if( JS9.isNull(flip) ){
 	return this;
     }
-    if( !this || !this.raw || !this.raw.header ){
-	JS9.error("invalid image for flip");
-    }
-    // no support for updating WCS in HEALPix images ...
-    if( this.raw.header.CTYPE1 && this.raw.header.CTYPE1.match(/HPX/) ){
-	JS9.error("support for flipping HEALPix is not yet available");
+    // reset
+    if( flip === "reset" ){
+	this.params.flip = "none";
+	return this.setFlip(0);
     }
     // opts is optional
     opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error(`can't parse flip opts: ${opts}`, e); }
+	catch(e){ JS9.error(`can't parse setFlip opts: ${opts}`, e); }
     }
     // save this routine so it can be reconstituted in a restored session
     this.xeqStashSave("setFlip", [flip]);
-    // copy of input data
-    nraw = JS9.getRawCopy(oraw);
-    // set flip state
-    switch(flip.toLowerCase()){
-    case "x":
-	flipX(oraw, nraw);
-	updateFlipHeader(oraw, nraw, flip);
-	this.params.flip = calcFlip(flip);
-	break;
-    case "y":
-	flipY(oraw, nraw);
-	updateFlipHeader(oraw, nraw, flip);
-	this.params.flip = calcFlip(flip);
-	break;
-    default:
-	break;
-    }
-    // assign this nraw to the high-level raw data object
-    this.raw = nraw;
-    // re-init WCS
-    this.initWCS();
-    // re-init the logical coordinate system
-    this.initLCS();
-    // reset pan
-    this.setPan();
+    // save normalized value
+    this.params.flip = calcFlip(flip);
+    // update the transform
+    this.setTransform();
     // redisplay using these data
     this.displayImage("all", opts);
     // refresh shape layers
@@ -4849,16 +4832,71 @@ JS9.Image.prototype.setFlip = function(...args){
     return this;
 };
 
+// get rotatation state
+JS9.Image.prototype.getRot = function(){
+    return this.params.rot;
+};
+
+// rotate image by multiples of 90 degrees
+JS9.Image.prototype.setRot = function(...args){
+    let [rot, opts] = args;
+    const normRot = (rot) => {
+	rot += this.params.rot||0;
+	while( rot < 0 ){ rot += 360; }
+	while( rot >= 360 ){ rot -= 360; }
+	return rot;
+    }
+    // sanity checks
+    if( JS9.isNull(rot) ){
+	return this;
+    }
+    // reset
+    if( rot === "reset" ){
+	this.params.rot = 0;
+	return this.setRot(0);
+    }
+    if( typeof rot === "string" ){
+	rot = parseFloat(rot);
+    }
+    if( !JS9.isNumber(rot) ){
+	JS9.error(`invalid rotation for setRot: ${rot}`);
+    }
+    if( !this || !this.raw || !this.raw.header ){
+	JS9.error("invalid image for setRot");
+    }
+    // opts is optional
+    opts = opts || {};
+    // opts can be an object or json
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error(`can't parse rot opts: ${opts}`, e); }
+    }
+    // save this routine so it can be reconstituted in a restored session
+    this.xeqStashSave("setRot", [rot]);
+    // save normalized value
+    this.params.rot = normRot(rot);
+    // update the transform
+    this.setTransform();
+    // redisplay using these data
+    this.displayImage("all", opts);
+    // refresh shape layers
+    this.refreshLayers();
+    // extended plugins
+    if( JS9.globalOpts.extendedPlugins ){
+	this.xeqPlugins("image", "onsetrot");
+    }
+    // allow chaining
+    return this;
+};
+
 // get 90-degree rotatation state
 JS9.Image.prototype.getRot90 = function(){
     return this.params.rot90;
 };
 
-// rotate image by multiples of 90 degrees
+// rotate image by multiples of 90 degrees using canvas transform
 JS9.Image.prototype.setRot90 = function(...args){
-    let nraw;
     let [rot, opts] = args;
-    const oraw = this.raw;
     const normRot = (rot) => {
 	rot += this.params.rot90||0;
 	while( rot < 0 ){ rot += 360; }
@@ -4868,185 +4906,33 @@ JS9.Image.prototype.setRot90 = function(...args){
 	}
 	return rot;
     }
-    const rot90 = (oraw, nraw) => {
-	let oi, oj, olptr, noff;
-	const obuf = oraw.data;
-	const nbuf = nraw.data;
-	nraw.width = oraw.height;
-	nraw.height = oraw.width;
-	for(oj=0; oj<oraw.height; oj++){
-	    olptr = oj * oraw.width;
-	    noff = nraw.width - 1 - oj;
-	    for(oi=0; oi<oraw.width; oi++){
-		nbuf[oi * nraw.width + noff] = obuf[olptr + oi];
-	    }
-	}
-    };
-    // eslint-disable-next-line no-unused-vars
-    const rot180 = (oraw, nraw) => {
-	let oj, nj, ooff, noff, obuf, nbuf;
-	const bpp = oraw.data.BYTES_PER_ELEMENT;
-	for(oj=0; oj<oraw.height; oj++){
-	    nj = oraw.height - oj - 1;
-	    ooff = oj * oraw.width * bpp;
-	    noff = nj * oraw.width * bpp;
-	    [obuf, nbuf] = JS9.getRawLine(oraw, ooff, nraw, noff);
-	    nbuf.set(obuf);
-	    nbuf.reverse();
-	}
-    }
-    const rot270 = (oraw, nraw) => {
-	let oi, oj, olptr, oh;
-	const obuf = oraw.data;
-	const nbuf = nraw.data;
-	nraw.width = oraw.height;
-	nraw.height = oraw.width;
-	oh = nraw.height - 1;
-	for(oj=0; oj<oraw.height; oj++){
-	    olptr = oj * oraw.width;
-	    for(oi=0; oi<oraw.width; oi++){
-		nbuf[(oh - oi) * nraw.width + oj] = obuf[olptr + oi];
-	    }
-	}
-    };
-    const rotateFITSHeader = (oraw, nraw, angle) => {
-	let arad, sinrot, cosrot;
-	let cd1_1, cd1_2, cd2_1, cd2_2;
-	const oheader = oraw.header;
-	const nheader = nraw.header;
-	// use CD matrix if present, otherwise use CROTA2
-	if( JS9.notNull(oheader.CD1_1)  ){
-	    arad = -(angle * Math.PI / 180.0);
-	    sinrot = Math.sin(arad);
-	    cosrot = Math.cos(arad);
-	    cd1_1 = JS9.defNull(oheader.CD1_1, 1);
-	    cd1_2 = JS9.defNull(oheader.CD1_2, 0);
-	    cd2_1 = JS9.defNull(oheader.CD2_1, 0);
-	    cd2_2 = JS9.defNull(oheader.CD2_2, 1);
-	    nheader.CD1_1 =  cd1_1 * cosrot  + cd1_2 * sinrot;
-	    nheader.CD1_2 =  cd1_1 * -sinrot + cd1_2 * cosrot;
-	    nheader.CD2_1 =  cd2_1 * cosrot  + cd2_2 * sinrot;
-	    nheader.CD2_2 =  cd2_1 * -sinrot + cd2_2 * cosrot;
-	    if( Math.abs(nheader.CD1_1) < 1e-15 ){ nheader.CD1_1 = 0; }
-	    if( Math.abs(nheader.CD1_2) < 1e-15 ){ nheader.CD1_2 = 0; }
-	    if( Math.abs(nheader.CD2_1) < 1e-15 ){ nheader.CD2_1 = 0; }
-	    if( Math.abs(nheader.CD2_2) < 1e-15 ){ nheader.CD2_2 = 0; }
-	} else if( JS9.notNull(oheader.CRPIX1) ){
-	    // this sign reversal is the result of a long conversation with
-	    // J Mink, in which she verified the confused state of WCS when
-	    // flipping images, including sign problems ... 10/2/2019
-	    // (I think there might be a bug in her code, since the reversal
-	    // only is needed if no CD matrix is present, while she believes
-	    // this is due to an ambiguity in the spec.)
-	    // NB: astroem/wrappers/wcsinfo also messes with the sign!
-	    if( this.raw.wcsinfo ){
-		if( (this.raw.wcsinfo.cdelt1 < 0  &&
-		     this.raw.wcsinfo.cdelt2 < 0) ||
-		    (this.raw.wcsinfo.cdelt1 > 0  &&
-		     this.raw.wcsinfo.cdelt2 > 0) ){
-		    if( normRot(angle) % 180 ){ angle = -angle; }
-		}
-	    } else if( (this.params.flip === "x" || this.params.flip === "y") ){
-		if( normRot(angle) % 180 ){ angle = -angle; }
-	    }
-	    // add file rotation into angle
-	    if( oraw.wcsinfo ){
-		angle += (oraw.wcsinfo.crot || 0);
-	    } else {
-		angle += (oheader.CROTA2 || 0);
-	    }
-	    nheader.CROTA2 = angle;
-	    if( JS9.notNull(oheader.CDELT1) ){
-		nheader.CDELT1 = oheader.CDELT1
-	    }
-	    if( JS9.notNull(oheader.CDELT2) ){
-		nheader.CDELT2 = oheader.CDELT2;
-	    }
-	}
-    };
-    const rotateLCSHeader = (oraw, nraw, angle) => {
-	let arad, sinrot, cosrot;
-	let ltm1_1, ltm1_2, ltm2_1, ltm2_2;
-	const oheader = oraw.header;
-	const nheader = nraw.header;
-	arad = -(angle * Math.PI / 180.0);
-	sinrot = Math.sin(arad);
-	cosrot = Math.cos(arad);
-	ltm1_1 = JS9.defNull(oheader.LTM1_1, 1);
-	ltm1_2 = JS9.defNull(oheader.LTM1_2, 0);
-	ltm2_1 = JS9.defNull(oheader.LTM2_1, 0);
-	ltm2_2 = JS9.defNull(oheader.LTM2_2, 1);
-	nheader.LTM1_1 =  ltm1_1 * cosrot  + ltm1_2 * sinrot;
-	nheader.LTM1_2 =  ltm1_1 * -sinrot + ltm1_2 * cosrot;
-	nheader.LTM2_1 =  ltm2_1 * cosrot  + ltm2_2 * sinrot;
-	nheader.LTM2_2 =  ltm2_1 * -sinrot + ltm2_2 * cosrot;
-	if( Math.abs(nheader.LTM1_1) < 1e-15 ){ nheader.LTM1_1 = 0; }
-	if( Math.abs(nheader.LTM1_2) < 1e-15 ){ nheader.LTM1_2 = 0; }
-	if( Math.abs(nheader.LTM2_1) < 1e-15 ){ nheader.LTM2_1 = 0; }
-	if( Math.abs(nheader.LTM2_2) < 1e-15 ){ nheader.LTM2_2 = 0; }
-    };
-    const updateRotHeader = (oraw, nraw, rot) => {
-	const oheader = oraw.header;
-	const nheader = nraw.header;
-	let angle = rot;
-	switch(rot){
-	case 0:
-	    nraw.header = oraw.header;
-	    break;
-	case 90:
-	case -270:
-	    nheader.NAXIS1 = oheader.NAXIS2;
-	    nheader.NAXIS2 = oheader.NAXIS1;
-	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
-		nheader.CRPIX1 = nheader.NAXIS1 - oheader.CRPIX2 + 1;
-		nheader.CRPIX2 = oheader.CRPIX1;
-		rotateFITSHeader(oraw, nraw, angle);
-	    }
-	    nheader.LTV1 = nheader.NAXIS1 - (oheader.LTV2||0) + 1;
-	    nheader.LTV2 = (oheader.LTV1||0);
-	    rotateLCSHeader(oraw, nraw, angle);
-	    break;
-	case 270:
-	case -90:
-	    nheader.NAXIS1 = oheader.NAXIS2;
-	    nheader.NAXIS2 = oheader.NAXIS1;
-	    if( JS9.notNull(oheader.CRPIX1) && JS9.notNull(oheader.CRPIX2) ){
-		nheader.CRPIX1 = oheader.CRPIX2;
-		nheader.CRPIX2 = nheader.NAXIS2 - oheader.CRPIX1 + 1;
-		rotateFITSHeader(oraw, nraw, angle);
-	    }
-	    nheader.LTV1 = (oheader.LTV2||0);
-	    nheader.LTV2 = oheader.NAXIS1 - (oheader.LTV1||0) + 1;
-	    rotateLCSHeader(oraw, nraw, angle);
-	    break;
-	default:
-	    JS9.error(`unknown rot90 type: ${this.params.rot90}`);
-	    break;
-	}
-    };
     // sanity checks
-    if( !rot ){
+    if( JS9.isNull(rot) ){
 	return this;
+    }
+    // reset
+    if( rot === "reset" ){
+	this.params.rot90 = 0;
+	return this.setRot90(0);
     }
     if( typeof rot === "string" ){
 	rot = parseFloat(rot);
     }
     if( !this || !this.raw || !this.raw.header ){
-	JS9.error("invalid image for rot90");
-    }
-    // no support for updating WCS in HEALPix images ...
-    if( this.raw.header.CTYPE1 && this.raw.header.CTYPE1.match(/HPX/) ){
-	JS9.error("support for rotating HEALPix is not yet available");
+	JS9.error("invalid image for setRot90");
     }
     // opts is optional
     opts = opts || {};
     // opts can be an object or json
     if( typeof opts === "string" ){
 	try{ opts = JSON.parse(opts); }
-	catch(e){ JS9.error(`can't parse rot90 opts: ${opts}`, e); }
+	catch(e){ JS9.error(`can't parse setRot90 opts: ${opts}`, e); }
     }
     // only 90 degree rotations
     switch(rot){
+    case 0:
+	rot = 0;
+	break;
     case 1:
 	rot = 90;
 	break;
@@ -5058,38 +4944,15 @@ JS9.Image.prototype.setRot90 = function(...args){
     case -90:
 	break;
     default:
-	JS9.error(`invalid rot90 value: ${rot} (use: +/1, +/90)`);
-	break;
-    }
-    // copy of input data
-    nraw = JS9.getRawCopy(oraw);
-    // set rot state
-    switch(rot){
-    case 0:
-	break;
-    case 90:
-	rot90(oraw, nraw);
-	updateRotHeader(oraw, nraw, 90);
-	this.params.rot90 = normRot(90);
-	break;
-    case -90:
-	rot270(oraw, nraw);
-	updateRotHeader(oraw, nraw, -90);
-	this.params.rot90 = normRot(-90);
-	break;
-    default:
+	JS9.error(`invalid setRot90 rotation value: ${rot} (use: +/1, +/90)`);
 	break;
     }
     // save this routine so it can be reconstituted in a restored session
     this.xeqStashSave("setRot90", [rot]);
-    // assign this nraw to the high-level raw data object
-    this.raw = nraw;
-    // re-init WCS
-    this.initWCS();
-    // re-init the logical coordinate system
-    this.initLCS();
-    // reset pan
-    this.setPan();
+    // save normalized value
+    this.params.rot90 = normRot(rot);
+    // update the transform
+    this.setTransform();
     // redisplay using these data
     this.displayImage("all", opts);
     // refresh shape layers
@@ -5104,10 +4967,11 @@ JS9.Image.prototype.setRot90 = function(...args){
 
 // redo the current flip and rot90 in cases where the underyling data changed
 // (e.g. displaySection, refreshImage)
-JS9.Image.prototype.reFlipRot90 = function(){
+JS9.Image.prototype.reFlipRot = function(){
     let i, flips, nrot;
     let flip = this.params.flip;
-    let rot = this.params.rot90;
+    let rot90 = this.params.rot90;
+    let rot = this.params.rot;
     if( flip !== "none" ){
 	this.params.flip = "none";
 	flips = flip.split("");
@@ -5117,13 +4981,16 @@ JS9.Image.prototype.reFlipRot90 = function(){
 	    }
 	}
     }
-    if( rot ){
+    if( rot90 ){
 	this.params.rot90 = 0;
-	nrot = rot % 90;
-	rot = rot / 90;
+	nrot = Math.floor(Math.abs(rot90) / 90);
+	rot = Math.sign(rot90);
 	for(i=0; i<nrot; i++){
 	    this.setRot90(rot);
 	}
+    }
+    if( rot ){
+	this.setRot(rot);
     }
     // allow chaining
     return this;
@@ -5266,23 +5133,44 @@ JS9.Image.prototype.logicalToImagePos = function(lpos, lcs){
 
 // return 1-indexed image coords for specified 0-indexed display position
 JS9.Image.prototype.displayToImagePos = function(dpos){
-    let x, y;
+    let x, y, t, ox, oy, dx, dy;
     const sect = this.rgb.sect;
-    const iheight = this.rgb.img.height;
+    const hh = this.rgb.img.height;
+    const w2 = this.display.width / 2;
+    const h2 = this.display.height / 2;
+    if( this.params.transformInverse ){
+	t = this.params.transformInverse;
+	ox = dpos.x - w2;
+	oy = dpos.y - h2;
+	dx = ox * t[0][0] + oy * t[1][0] + w2;
+	dy = ox * t[0][1] + oy * t[1][1] + h2;
+    } else {
+	dx = dpos.x;
+	dy = dpos.y;
+    }
     // see funtools/funcopy.c/_FunCopy2ImageHeader
-    x = (dpos.x - this.ix + 0.5) / sect.zoom + sect.x0 + 0.5;
-    y = (iheight - (dpos.y - this.iy + 0.5)) / sect.zoom + sect.y0 + 0.5;
+    x = (dx - this.ix + 0.5) / sect.zoom + sect.x0 + 0.5;
+    y = (hh - (dy - this.iy + 0.5)) / sect.zoom + sect.y0 + 0.5;
     return {x, y};
 };
 
 // return 0-indexed display coords for specified 1-indexed image position
 JS9.Image.prototype.imageToDisplayPos = function(ipos){
-    let x, y;
+    let x, y, t, ox, oy;
     const sect = this.rgb.sect;
-    const iheight = this.rgb.img.height;
+    const hh = this.rgb.img.height;
+    const w2 = this.display.width / 2;
+    const h2 = this.display.height / 2;
     // see funtools/funcopy.c/_FunCopy2ImageHeader
     x = (((ipos.x - 0.5) - sect.x0) * sect.zoom) + this.ix - 0.5;
-    y = (sect.y0 - (ipos.y - 0.5)) * sect.zoom + iheight + this.iy - 0.5;
+    y = (sect.y0 - (ipos.y - 0.5)) * sect.zoom + hh + this.iy - 0.5;
+    if( this.params.transform ){
+	t = this.params.transform;
+	ox = x - w2;
+	oy = y - h2;
+	x = ox * t[0][0] + oy * t[1][0] + w2;
+	y = ox * t[0][1] + oy * t[1][1] + h2;
+    }
     return {x, y};
 };
 
@@ -6422,12 +6310,11 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 		}
 		break;
 	    }
-	    // add keypress handlers
+	    // add key handlers
 	    divjq.css("outline", "none");
 	    divjq.attr("tabindex", 0);
-	    divjq.on("keypress", (evt) => {
-		const charCode = evt.which || evt.keyCode;
-		const c = String.fromCharCode(charCode);
+	    divjq.on("keydown", (evt) => {
+		const c = JS9.eventToCharStr(evt);
 		switch(c){
 		case "c":
 		    flotConfig();
@@ -8112,8 +7999,8 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 	this.refreshLayers();
 	// redisplay using these data
 	this.displayImage("all", opts);
-	// redo flip and rot90
-	this.reFlipRot90();
+	// redo flip and rot
+	this.reFlipRot();
     }
     return true;
 };
@@ -9372,8 +9259,9 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
                     }
 		    catch(e){ pinst.errLog(xname, e); }
 		    break;
+		case "keydown":
 		case "keypress":
-		    // used for: onkeypress, onkeydown
+		    // used for: onkeydown, onkeypress (deprecated)
 		    // xval: evt
 		    evt = xval.originalEvent || xval;
 		    try{
@@ -13118,24 +13006,12 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 			opts.angle += tval1;
 		    }
 		}
-		// add file flip
-		// this sign reversal is the result of a long conversation with
-		// J Mink, in which she verified the confused state of WCS when
-		// flipping images, including sign problems ... 10/2/2019
-		// (I think there might be a bug in her code, since the reversal
-		// only is needed if no CD matrix is present, while she believes
-		// this is due to an ambiguity in the spec.)
-		// NB: astroem/wrappers/wcsinfo also messes with the sign!
-		if( this.raw.wcsinfo ){
-		    if( (this.raw.wcsinfo.cdelt1 < 0  &&
-			 this.raw.wcsinfo.cdelt2 < 0) ||
-			(this.raw.wcsinfo.cdelt1 > 0  &&
-			 this.raw.wcsinfo.cdelt2 > 0) ){
-			opts.angle = - opts.angle;
-		    }
-		} else if( this.getFlip() === "x" || this.getFlip() === "y" ){
-		    // check for current flip
-		    opts.angle = -opts.angle;
+		// take transform angle into account
+		if( JS9.notNull(this.params.transformAngle) ){
+		    opts.angle += this.params.transformAngle;
+		}
+		if( JS9.notNull(this.params.transformScale) ){
+		    opts.angle *= this.params.transformScale;
 		}
 		break;
 	    default:
@@ -14357,24 +14233,12 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	case "box":
 	case "ellipse":
 	case "text":
-	    // remove file flip
-	    // this sign reversal is the result of a long conversation with
-	    // J Mink, in which she verified the confused state of WCS when
-	    // flipping images, including sign problems ... 10/2/2019
-	    // (I think there might be a bug in her code, since the reversal
-	    // only is needed if no CD matrix is present, while she believes
-	    // this is due to an ambiguity in the spec.)
-	    // NB: astroem/wrappers/wcsinfo also messes with the sign!
-	    if( this.raw.wcsinfo ){
-		if( (this.raw.wcsinfo.cdelt1 < 0  &&
-		     this.raw.wcsinfo.cdelt2 < 0) ||
-		    (this.raw.wcsinfo.cdelt1 > 0  &&
-		     this.raw.wcsinfo.cdelt2 > 0) ){
-		    pub.angle = - pub.angle;
-		}
-	    } else if( this.getFlip() === "x" || this.getFlip() === "y" ){
-		// check for current flip
-		pub.angle = - pub.angle;
+	    // take transform angle into account
+	    if( JS9.notNull(this.params.transformScale) ){
+		pub.angle /= this.params.transformScale;
+	    }
+	    if( JS9.notNull(this.params.transformAngle) ){
+		pub.angle -= this.params.transformAngle;
 	    }
 	    // remove file rotation
 	    if( this.raw.wcsinfo ){
@@ -14500,11 +14364,12 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 		tstr += " ";
 	    }
 	    // get current point
-	    npos = {x: pub.x + obj.points[i].x * scalex,
-		    y: pub.y - obj.points[i].y * scaley};
+	    npos = this.displayToImagePos(
+		{x: obj.left + obj.points[i].x * obj.scaleX,
+		 y: obj.top  + obj.points[i].y * obj.scaleY}
+	    );
 	    // add rotation
-	    npos = JS9.rotatePoint(npos, oangle,
-				   {x: pub.x, y: pub.y});
+	    npos = JS9.rotatePoint(npos, oangle, {x: pub.x, y: pub.y});
 	    if( this.params.wcssys === "image" ){
 		pub.imstr += `${tr(npos.x)},${tr(npos.y)}`;
 	    } else {
@@ -15861,6 +15726,15 @@ JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
     dy = ((im.pos0.y - im.pos.y) / sect.zoom);
     // pan the image (but avoid a redisplay, if we haven't moved much)
     if( Math.abs(dx) >= 1 || Math.abs(dy) >= 1 ){
+	// flips will change the pan direction
+	if( im.params.flip === "x" ){
+	    dx = -dx;
+	} else if( im.params.flip === "y" ){
+	    dy = -dy;
+	} else if( im.params.flip === "xy" ){
+	    dx = -dx;
+	    dy = -dy;
+	}
 	im.setPan(sect.xcen + dx, sect.ycen - dy);
 	// reset initial position
 	im.pos0 = im.pos;
@@ -16842,7 +16716,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
     $(`${form}[id='${s}']`).prop("checked", true);
     // triggering the savefile will cause format to be updated
     // and focus to be set
-    $(form).find(`input[name='savefile']`).trigger("change");
+    if( opts.type === "save" ){
+	$(form).find(`input[name='savefile']`).trigger("change");
+    }
     // shape specific processing
     if( multi ){
 	$(form).find(".regid").hide();
@@ -19935,7 +19811,7 @@ JS9.lightWin = function(id, type, s, title, winformat){
 	}
 	// allow double-click or double-tap to close ...
 	// ... the close button is unresponsive on the ipad/iphone
-        $(`#${id} .${JS9.lightOpts[JS9.LIGHTWIN].dragBar}`)
+        $(`#${id} ${JS9.lightOpts[JS9.LIGHTWIN].dragBar}`)
 	    .on("dblclick", () => {
 		rval.close();
 	    })
@@ -19951,7 +19827,7 @@ JS9.lightWin = function(id, type, s, title, winformat){
 	    });
 	// if ios user failed to close the window via the close button,
 	// give a hint (once per session only!)
-        $(`#${id} .${JS9.lightOpts[JS9.LIGHTWIN].dragBar}`)
+        $(`#${id} ${JS9.lightOpts[JS9.LIGHTWIN].dragBar}`)
 	    .on("touchend", () => {
 		// skip check if we are dragging
 		if( !dhtmlwindow.distancex  && !dhtmlwindow.distancey ){
@@ -21056,6 +20932,26 @@ JS9.rotatePoint = function(point, angle, cen)
     };
 };
 
+// multiply two matrices
+// https://stackoverflow.com/questions/27205018/multiply-2-matrices-in-javascript
+JS9.matrixMultiply = function(a, b){
+    let r, c, i, m;
+    const aNumRows = a.length, aNumCols = a[0].length;
+    // eslint-disable-next-line no-unused-vars
+    const bNumRows = b.length, bNumCols = b[0].length;
+    m = new Array(aNumRows);  // initialize array of rows
+    for(r = 0; r < aNumRows; ++r){
+	m[r] = new Array(bNumCols); // initialize the current row
+	for(c = 0; c < bNumCols; ++c){
+	    m[r][c] = 0;             // initialize the current cell
+	    for(i = 0; i < aNumCols; ++i){
+		m[r][c] += a[r][i] * b[i][c];
+	    }
+	}
+    }
+    return m;
+};
+
 // invert a 3x3 matrix
 JS9.invertMatrix3 = function(xin){
     let i, j, det_1;
@@ -21621,7 +21517,7 @@ JS9.searchbar = function(el, textid) {
     });
     // no outline on focus
     div.css("outline", "none");
-    // set tabindex so we can sense keypress
+    // set tabindex so we can sense keyboard events
     div.attr("tabindex", "0");
     // meta-k will bring up the searchbar
     div.on("keydown", (evt) => {
@@ -22462,7 +22358,7 @@ JS9.keyDownCB = function(evt){
     }
     if( im ){
 	// plugin callbacks
-	im.xeqPlugins("keypress", "onkeydown", evt);
+	im.xeqPlugins("keydown", "onkeydown", evt);
     }
 };
 
@@ -22472,7 +22368,7 @@ JS9.keyUpCB = function(evt){
     const im = display.image;
     if( im ){
 	// plugin callbacks
-	im.xeqPlugins("keypress", "onkeyup", evt);
+	im.xeqPlugins("keydown", "onkeyup", evt);
     }
 };
 
@@ -22712,7 +22608,7 @@ JS9.instantiatePlugin = function(el, plugin, winhandle, args){
 	// add the toolbar to the container, if necessary
 	if( divjq.data("toolbarseparate") !== false ){
 	    if( plugin.opts.toolbarSeparate || divjq.data("toolbarseparate") ){
-		ndiv = `<div class='${JS9.lightOpts[JS9.LIGHTWIN].dragBar}'>`;
+		ndiv = `<div class='${JS9.lightOpts[JS9.LIGHTWIN].dragBar.substr(1)}'>`;
 		$(ndiv).insertBefore(instance.divjq);
 	    }
 	}
@@ -23632,12 +23528,12 @@ JS9.initAnalysis = function(){
 	    e.preventDefault();
 	    id = $(e.currentTarget).data("enterfunc");
 	    if( id ){
-		// look at children (keypress in a form)
+		// look at children (key event in a form)
 		el = $(e.currentTarget).find(`[name='${id}']`);
 		if( el.length ){
 		    el.click();
 		} else {
-		    // look at siblings (keypress on input not in a form)
+		    // look at siblings (key event on input not in a form)
 		    el = $(e.currentTarget).siblings(`[name='${id}']`);
 		    if( el.length ){
 			el.click();
@@ -24072,6 +23968,8 @@ JS9.mkPublic("GetOpacity", "getOpacity");
 JS9.mkPublic("SetOpacity", "setOpacity");
 JS9.mkPublic("SetFlip", "setFlip");
 JS9.mkPublic("GetFlip", "getFlip");
+JS9.mkPublic("SetRot", "setRot");
+JS9.mkPublic("GetRot", "getRot");
 JS9.mkPublic("SetRot90", "setRot90");
 JS9.mkPublic("GetRot90", "getRot90");
 JS9.mkPublic("GetParam", "getParam");

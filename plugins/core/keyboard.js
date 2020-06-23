@@ -695,7 +695,7 @@ JS9.Keyboard.action = function(im, ipos, evt, action){
 	JS9.Keyboard.Actions[action](im, ipos, evt);
 	// extended plugins
 	if( im && JS9.globalOpts.extendedPlugins ){
-	    im.xeqPlugins("keypress", "onkeyboardaction", evt);
+	    im.xeqPlugins("keydown", "onkeyboardaction", evt);
 	}
     }
 };

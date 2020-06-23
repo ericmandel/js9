@@ -192,7 +192,7 @@ if( fname ){
   }
 }
 "
-onkeypress="
+onkeydown="
 let ext, fname;
 if( event.keyCode !== 13 ){ return; }
 const form = $(this).closest('form');
@@ -436,7 +436,7 @@ if( url ){
   if( display ){ display.tmp.remotefile = url; }
 }
 "
-onkeypress="
+onkeydown="
 let ext, url, display;
 if( event.keyCode !== 13 ){ return; }
 const form = $(this).closest('form');

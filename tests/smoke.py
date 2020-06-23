@@ -308,10 +308,10 @@ def regionsTest(j, file=None):
     waitStatus(j, "LoadRegions")
     displayMessage(j, 'j.GetRegions()')
     obj = j.GetRegions()
-    if len(obj) == 8:
-        displayMessage(j, "    found 8 regions")
+    if len(obj) == 13:
+        displayMessage(j, "    found 13 regions")
     else:
-        raise ValueError("incorrect number of regions")
+        raise ValueError("incorrect number of regions (%d)" % len(obj))
     displayMessage(j, 'j.ChangeRegions()')
     j.ChangeRegions("text", {"color": "cyan"})
     sleep()
@@ -479,17 +479,17 @@ def xmmProxyTest(j):
     displayMessage(j, "load xmm archive via proxy ...")
     j.LoadProxy(xmmurl,
                 {"colormap":"red", "scale":"log",
-                 "scalemin": 0, "contrast": 9.2, "bias": 0.047});
+                 "scalemin": 0, "contrast": 9.2, "bias": 0.047})
     waitStatus(j)
     displayMessage(j, 'j.DisplaySlice(2)')
     j.DisplaySlice(2,
                    {"separate": True, "colormap":"green", "scale":"log",
-                    "scalemin": 0, "contrast": 9.2, "bias": 0.047});
+                    "scalemin": 0, "contrast": 9.2, "bias": 0.047})
     sleep()
     displayMessage(j, 'j.DisplaySlice(3)')
     j.DisplaySlice(3,
                    {"separate": True, "colormap":"blue", "scale":"log",
-                    "scalemin": 0, "contrast": 9.2, "bias": 0.047});
+                    "scalemin": 0, "contrast": 9.2, "bias": 0.047})
     sleep()
     displayMessage(j, 'j.SetRGBMode(True)')
     j.SetRGBMode(True)
@@ -518,28 +518,31 @@ def mosaicTest(j, file=None):
     j.DisplayPlugin("panner")
     closeDisplay(j)
 
-def flipAll(j, rots=[90, -90, 90, -90], flips=["x", "y", "x", "y"], bins=[]):
+def flipAll(j, rots=[90, 10, -90, 15], flips=["x", "y", "x", "y"], bins=[]):
     """
     flip and rotate in all combinations
     """
-    timeout = 1;
+    timeout = 1
     for ix in range(len(rots)):
         rot = rots[ix]
-        j.SetRot90(rot)
-        xrot = j.GetRot90();
-        xflip = j.GetFlip();
-        displayMessage(j, 'j.SetRot90: %s %d' % (xflip, xrot))
+        if rot % 90 == 0:
+            j.SetRot90(rot)
+            xrot = j.GetRot90()
+            displayMessage(j, 'j.SetRot90: %d' % (xrot))
+        else:
+            j.SetRot(rot)
+            xrot = j.GetRot()
+            displayMessage(j, 'j.SetRot: %d' % (xrot))
         sleep(timeout)
         for iy in range(len(flips)):
             flip = flips[iy]
             j.SetFlip(flip)
-            xrot = j.GetRot90();
-            xflip = j.GetFlip();
-            displayMessage(j, 'j.SetFlip: %s %d' % (xflip, xrot))
+            xflip = j.GetFlip()
+            displayMessage(j, 'j.SetFlip: %s' % (xflip))
             sleep(timeout)
             if iy < len(bins):
                 bin = bins[iy]
-                displayMessage(j, 'j.DisplaySection(bin: %f)' % bin);
+                displayMessage(j, 'j.DisplaySection(bin: %f)' % bin)
                 j.DisplaySection({"bin":bin, "xcen":0, "ycen":0})
                 waitStatus(j, "DisplaySection")
                 sleep(timeout)
@@ -555,18 +558,18 @@ def flipRotateTest(j):
     j.AddRegions("FK4; ellipse(03:20:47.200, -37:23:08.221, 2.916667', 1.750000', 322.431400); circle(03:22:25.384, -37:14:17.178, 1.051199')")
     # pylint: disable=line-too-long
     j.AddRegions('physical; ellipse(226.00, 147.00, 28.00, 18.00, 322.4314) {"color":"red"}; circle(58.50, 222.50, 12) {"color":"red"}')
-    flipAll(j, rots=[90, 0, -90], flips=["x", "y"])
+    flipAll(j, rots=[90, 15, -90, -100], flips=["x", "y"])
     loadImage(j, 'data/fits/sipsample.fits', '{"scale":"log", "colormap": "heat", "contrast": 4.84, "bias": 0.48}')
     displayMessage(j, 'j.AddRegions("ellipse; circle")')
     # pylint: disable=line-too-long
     j.AddRegions('FK5; ellipse(13:29:44.577, +47:10:11.644, 36.686718", 21.417932", 81.620827); circle(13:29:52.660, +47:11:42.560, 36.545208")')
     # pylint: disable=line-too-long
     j.AddRegions('physical; circle(149.00, 67.00, 33) {"color":"red"}; ellipse(49.00, 76.00, 33, 20, 81.6208) {"color":"red"}')
-    flipAll(j, rots=[90, 0, -90], flips=["x", "y"])
+    flipAll(j, rots=[10, 90, -10, -90], flips=["x", "y"])
     loadImage(j, 'data/orion/orion_1.fits', {"colormap":"grey"})
     # pylint: disable=line-too-long
     j.AddRegions('physical; ellipse(414.00, 109.00, 53.75, 20.00, 328.8843); box(500.00, 344.00, 22.00, 22.00, 0.0000); circle(245.00, 392.00, 14.00)')
-    flipAll(j, rots=[90, 0, -90], flips=["x", "y"])
+    flipAll(j, rots=[12, 51, 90, -90], flips=["x", "y"])
     loadImage(j, 'data/fits/casa.fits.gz', '{"scale":"log", "colormap": "cool"}')
     displayMessage(j, 'j.LoadRegions("data/casa/casa.reg")')
     j.LoadRegions("data/casa/casa.reg")
@@ -574,7 +577,7 @@ def flipRotateTest(j):
     loadImage(j, 'data/fits/squares.fits', {"colormap":"grey"})
     # pylint: disable=line-too-long
     j.AddRegions('physical; polygon(438.00, 24.00, 498.00, 24.00, 468.00, 84.00) {"text":"white","textOpts":{"px":466,"py":97}}; box(52.00, 452.00, 60.00, 60.00, 0.0000) {"text":"black","textOpts":{"px":52,"py":470}}; circle(459.00, 462.00, 30.00) {"text":"darkgrey","textOpts":{"px":459,"py":421}}; ellipse(57.00, 43.00, 30.00, 20.00, 0.0000) {"text":"lightgrey","textOpts":{"px":57,"py":77}}')
-    flipAll(j, rots=[90, 0, -90], flips=["x", "y"])
+    flipAll(j, rots=[90, 95, -90, -95], flips=["x", "y"])
     sleep()
     closeDisplay(j)
 
@@ -694,7 +697,7 @@ def staticColormapTest(j):
     add colormaps
     """
     if j:
-        j.AddColormap("mask", [["#ff000080", 1, 31], ["cyan", 32, 32], ["rgba(0,255,0,0.5)", 37, 99], ["blue", 100, "Infinity"]]);
+        j.AddColormap("mask", [["#ff000080", 1, 31], ["cyan", 32, 32], ["rgba(0,255,0,0.5)", 37, 99], ["blue", 100, "Infinity"]])
 
 def maskBlendTest(j):
     """
@@ -718,7 +721,7 @@ def maskBlendTest(j):
     waitStatus(j, "DisplayExtension")
     # set some nice image params
     displayMessage(j, 'j.SetScale("log")')
-    j.SetScale("log");
+    j.SetScale("log")
     displayMessage(j, 'j.SetColormap("grey")')
     j.SetColormap("grey", 6.37, 0.3)
     # blend the two images
@@ -742,19 +745,19 @@ def maskOverlayTest(j):
     j.BlendDisplay(False)
     loadImage(j, imageFile, '{"scale":"log"}')
     displayMessage(j, 'j.SetColormap("grey")')
-    j.SetColormap("grey", 5.57, 0.28);
+    j.SetColormap("grey", 5.57, 0.28)
     displayMessage(j, 'j.Displayextension(2)')
-    j.DisplayExtension(2, {"separate": True});
+    j.DisplayExtension(2, {"separate": True})
     displayMessage(j, "waiting for DisplayExtension ...")
-    waitStatus(j, "DisplayExtension");
+    waitStatus(j, "DisplayExtension")
     displayMessage(j, 'j.SetColormap("mask")')
-    j.SetColormap("mask");
+    j.SetColormap("mask")
     displayMessage(j, 'j.DisplayImage()')
-    j.DisplayImage({"display": imageId});
+    j.DisplayImage({"display": imageId})
     displayMessage(j, 'j.MaskImage()')
-    j.MaskImage(maskId, '{"mode":"overlay"}');
+    j.MaskImage(maskId, '{"mode":"overlay"}')
     displayMessage(j, 'j.SyncImages()')
-    j.SyncImages(["flip", "pan", "rot90", "zoom"], [maskId]);
+    j.SyncImages(["flip", "pan", "rot90", "zoom"], [maskId])
     sleep(5)
 
 def smokeTests():
@@ -784,8 +787,8 @@ def smokeTests():
     extTest(j, "data/fits/nicmos.fits")
     mosaicTest(j, "data/fits/mosaicimage.fits")
     staticColormapTest(j)
-    maskBlendTest(j);
-    maskOverlayTest(j);
+    maskBlendTest(j)
+    maskOverlayTest(j)
     blendTest(j)
     resizeSeparateTest(j)
     j.BlendDisplay(False)
