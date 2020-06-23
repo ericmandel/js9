@@ -7076,12 +7076,15 @@ JS9.Image.prototype.setParam = function(param, value){
 	    this.setScale(value.scale, value.scalemin, value.scalemax);
 	}
 	if( value.flip ){
+	    this.setFlip("reset");
 	    this.setFlip(value.flip);
 	}
 	if( value.rot90 ){
+	    this.setRot90("reset");
 	    this.setRot90(value.rot90);
 	}
 	if( value.rot ){
+	    this.setRotation("reset");
 	    this.setRotation(value.rot);
 	}
 	if( value.invert ){
@@ -7142,12 +7145,15 @@ JS9.Image.prototype.setParam = function(param, value){
 	this.setColormap(obj.colormap, obj.contrast, value);
 	break;
     case "flip":
+	this.setFlip("reset");
 	this.setFlip(value);
 	break;
     case "rot90":
+	this.setRot90("reset");
 	this.setRot90(value);
 	break;
     case "rot":
+	this.setRotation("reset");
 	this.setRotation(value);
 	break;
     case "scale":
