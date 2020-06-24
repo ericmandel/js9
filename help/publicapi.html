@@ -1109,11 +1109,11 @@ command is executed immediately. If the current image already
 displays one or more regions, these will be created in the target images.
 
 <p>
-The operations that can be specified for sync'ing are:
-"alignment", "colormap", "contrastbias" (i.e., both "contrast" and "bias"),
-"flip", "pan", "regions", "rot90", "scale", "wcs" (i.e., both "wcssys" and
-"wcsunits"), and "zoom".
-If no array is specified, the default array in JS9.globalOpts.syncOps is used.
+The operations that can be specified for sync'ing are: "alignment",
+"colormap", "contrastbias" (i.e., both "contrast" and "bias"), "flip",
+"pan", "regions", "rot90", "rotate", "scale", "wcs" (i.e., both
+"wcssys" and "wcsunits"), and "zoom".  If no array is specified, the
+default array in JS9.globalOpts.syncOps is used.
 
 <p>
 Regions calls the
@@ -1191,7 +1191,7 @@ Unsynchronize previously sync'ed images.
 <p>
 The operations that can be specified for unsync'ing are:
 "alignment", "colormap", "contrastbias" (i.e., both "contrast" and "bias"),
-"flip", "pan", "regions", "rot90", "scale", "wcs" (i.e., both "wcssys" and
+"flip", "pan", "regions", "rot90", "rotate", "scale", "wcs" (i.e., both "wcssys" and
 "wcsunits"), and "zoom".
 If no array is specified, the default array in JS9.globalOpts.syncOps is
 used. Thus, you can turn off sync'ing for specified operations, while leaving
@@ -2085,7 +2085,7 @@ where:
 Copy parameters from the current image to one or more images.  Any
 image parameter can be copied, but the most common ones are:
 "alignment", "colormap", "contrastbias" (i.e., both "contrast" and
-"bias"), "flip", "pan", "rot90", "rot", "scale", "wcs" (i.e., both
+"bias"), "flip", "pan", "rot90", "rotate", "scale", "wcs" (i.e., both
 "wcssys" and "wcsunits"), and "zoom". Note that copying a parameter
 results in
 <a href="#JS9.SetParam"><b>JS9.SetParam()</b></a> being called,

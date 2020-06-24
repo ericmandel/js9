@@ -1660,7 +1660,7 @@ JS9.Menubar.createMenus = function(){
 			const obj = {};
 			if( uim  ){
 			    obj.zoom = String(uim.rgb.sect.zoom);
-			    obj.rotate = String(uim.params.rot||0);
+			    obj.rotate = String(uim.params.rotate||0);
 			}
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");

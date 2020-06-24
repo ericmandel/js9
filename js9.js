@@ -4764,13 +4764,13 @@ JS9.Image.prototype.setTransform = function(...args){
 	    break;
 	case "rot":
 	    // arbitrary rotation
-	    if( JS9.notNull(this.params.rot) ){
-		a = this.params.rot * Math.PI / 180.0;
+	    if( JS9.notNull(this.params.rotate) ){
+		a = this.params.rotate * Math.PI / 180.0;
 		cosa = Math.cos(a);
 		sina = Math.sin(a);
 		m3 = [[cosa, -sina, 0], [sina, cosa, 0], [0, 0, 1]];
 		transform = JS9.matrixMultiply(transform, m3);
-		angle += this.params.rot;
+		angle += this.params.rotate;
 	    }
 	    break;
 	}
@@ -4849,14 +4849,14 @@ JS9.Image.prototype.setFlip = function(...args){
 
 // get rotatation state
 JS9.Image.prototype.getRotation = function(){
-    return this.params.rot;
+    return this.params.rotate;
 };
 
 // rotate image by multiples of 90 degrees
 JS9.Image.prototype.setRotation = function(...args){
     let [rot, opts] = args;
     const normRot = (rot) => {
-	rot += this.params.rot||0;
+	rot += this.params.rotate||0;
 	while( rot < 0 ){ rot += 360; }
 	while( rot >= 360 ){ rot -= 360; }
 	return rot;
@@ -4867,7 +4867,7 @@ JS9.Image.prototype.setRotation = function(...args){
     }
     // reset
     if( rot === "reset" ){
-	this.params.rot = 0;
+	this.params.rotate = 0;
 	return this.setRotation(0);
     }
     if( typeof rot === "string" ){
@@ -4889,7 +4889,7 @@ JS9.Image.prototype.setRotation = function(...args){
     // save this routine so it can be reconstituted in a restored session
     this.xeqStashSave("setRotation", [rot]);
     // save normalized value
-    this.params.rot = normRot(rot);
+    this.params.rotate = normRot(rot);
     // update the transform
     this.setTransform();
     // redisplay using these data
@@ -4986,7 +4986,7 @@ JS9.Image.prototype.reFlipRot = function(){
     let i, flips, nrot;
     let flip = this.params.flip;
     let rot90 = this.params.rot90;
-    let rot = this.params.rot;
+    let rot = this.params.rotate;
     if( flip !== "none" ){
 	this.params.flip = "none";
 	flips = flip.split("");
@@ -7083,9 +7083,9 @@ JS9.Image.prototype.setParam = function(param, value){
 	    this.setRot90("reset");
 	    this.setRot90(value.rot90);
 	}
-	if( value.rot ){
+	if( value.rotate ){
 	    this.setRotation("reset");
-	    this.setRotation(value.rot);
+	    this.setRotation(value.rotate);
 	}
 	if( value.invert ){
 	    this.params.invert = value.invert;
@@ -7152,7 +7152,7 @@ JS9.Image.prototype.setParam = function(param, value){
 	this.setRot90("reset");
 	this.setRot90(value);
 	break;
-    case "rot":
+    case "rotate":
 	this.setRotation("reset");
 	this.setRotation(value);
 	break;
