@@ -136,7 +136,7 @@ JS9.PanZoom.xsetrot = function(did, id, target, evt){
 	    if( pinst ){
 		pinst.rot = rot;
 	    }
-	    im.setRotation(rot);
+	    im.setRotate(rot);
 	    // do this after setting rotation
 	    if( pinst ){
 		pinst.divjq.find(`input[name="rotate"]`).focus().caretToEnd();
@@ -344,7 +344,7 @@ JS9.PanZoom.init = function(opts){
 	    if( this.rot && this.rot !== "reset" ){
 		res = this.rot;
 	    } else {
-		res = im.getRotation() || "0";
+		res = im.getRotate() || "0";
 	    }
 	}
 	return res;

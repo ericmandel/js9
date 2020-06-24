@@ -1917,9 +1917,9 @@ Possible returned flip states are: "x", "y", "xy", or "none".
 The state is normalized, so that, for example, two "x" flips are
 replaced by "none".
 
-<h5 id="JS9.SetRotation">Rotate an image by a specified number of degrees</h5>
+<h5 id="JS9.SetRotate">Rotate an image by a specified number of degrees</h5>
 <p>
-<code class="api">JS9.SetRotation(rot)</code>
+<code class="api">JS9.SetRotate(rot)</code>
 <p>
 where:
 <ul>
@@ -1930,9 +1930,9 @@ Since this operation is applied to the entire display canvas instead
 of the image, image parameters such as the WCS are not affected. Note
 that you might have to reset the pan position after rotating.
 
-<h5 id="JS9.GetRotation">Get rotate state of an image</h5>
+<h5 id="JS9.GetRotate">Get rotate state of an image</h5>
 <p>
-<code class="api">rot = JS9.GetRotation()</code>
+<code class="api">rot = JS9.GetRotate()</code>
 <p>
 returns:
 <ul>
@@ -2030,7 +2030,7 @@ set in this way are:
 <li><b>bias</b>: calls JS9.SetColormap()
 <li><b>flip</b>: calls JS9.SetFlip()
 <li><b>rot90</b>: calls JS9.SetRot90()
-<li><b>rot</b>: calls JS9.SetRotation()
+<li><b>rot</b>: calls JS9.SetRotate()
 <li><b>scale</b>: calls JS9.SetScale()
 <li><b>scalemin</b>: calls JS9.SetScale()
 <li><b>scalemax</b>: calls JS9.SetScale()
@@ -3024,7 +3024,7 @@ the <b>opts.center</b> property with a value of "current" or (globally)
 set the <b>JS9.globalOpts.rotationCenter</b> property to "current".
 <p>
 Note that this rotation is not accumulative (as is the case with the
-<a href="#JS9.SetRotation"><b>JS9.SetRotation()</b></a> and 
+<a href="#JS9.SetRotate"><b>JS9.SetRotate()</b></a> and 
 <a href="#JS9.SetRot90"><b>JS9.SetRot90()</b></a> routines), so
 calling <b>JS9.RotateData()</b> with an angle of 30 degrees followed by
 45 degrees will result in a 45 degree rotation, not a 75 degree
@@ -5600,7 +5600,7 @@ inconsistent with other routines: e.g. image processing routines
 only change the displayed data, while explicit raw data routines such as
 <a href="#JS9.ReprojectData">JS9.ReprojectData</a> change the underlying
 image in accordance with the rules for manipulating raw data. We therefore
-re-implemented these routines (and added <a href="#JS9.SetRotation">JS9.SetRotation</a>)
+re-implemented these routines (and added <a href="#JS9.SetRotate">JS9.SetRotate</a>)
 so that they change the orientation of the canvas, rather than the
 underlying image data.  This implies that the WCS headers are no longer
 changed by flipping and rotating.

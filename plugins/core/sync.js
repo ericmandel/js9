@@ -416,6 +416,11 @@ JS9.Sync.xeqSync = function(arr){
 			}
 		    }
 		    break;
+		case "rotate":
+		    if( this.params.rotate != xim.params.rotate ){
+			xim.setRotate(this.params.rotate - xim.params.rotate);
+		    }
+		    break;
 		case "scale":
 		    xim.setScale(this.params.scale);
 		    break;
@@ -516,6 +521,12 @@ JS9.Sync.setrot90 = function(im){
     JS9.Sync.maybeSync.call(im, ["rot90","alignment"]);
 };
 
+// onsetrotate
+JS9.Sync.setrotate = function(im){
+    if( !im ){ return; }
+    JS9.Sync.maybeSync.call(im, ["rotate","alignment"]);
+};
+
 // onregionschange
 JS9.Sync.regionschange = function(im, xreg){
     if( !im ){ return; }
@@ -576,6 +587,7 @@ JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
 		    onsetpan:        JS9.Sync.setpan,
 		    onregionschange: JS9.Sync.regionschange,
 		    onsetrot90:      JS9.Sync.setrot90,
+		    onsetrotate:     JS9.Sync.setrotate,
 		    onsetscale:      JS9.Sync.setscale,
 		    onsetwcssys:     JS9.Sync.setwcssys,
 		    onsetwcsunits:   JS9.Sync.setwcsunits,

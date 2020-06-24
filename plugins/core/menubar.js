@@ -1386,7 +1386,7 @@ JS9.Menubar.createMenus = function(){
 		delete tdisp.tmp.editingMenu2;
 		// allow numbers or strings
 		if( !Number.isNaN(obj.rotate) ){
-		    im.setRotation(obj.rotate);
+		    im.setRotate(obj.rotate);
 		}
 	    };
 	    const keyZoom = (e) => {

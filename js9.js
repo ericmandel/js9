@@ -4707,7 +4707,7 @@ JS9.Image.prototype.getTransform = function(){
     return this.params.transform;
 };
 
-// set transform (basis for setFlip, setRot90, setRotation)
+// set transform (basis for setFlip, setRot90, setRotate)
 JS9.Image.prototype.setTransform = function(...args){
     let a, i, sina, cosa, m3, transform;
     let angle = 0;
@@ -4848,12 +4848,12 @@ JS9.Image.prototype.setFlip = function(...args){
 };
 
 // get rotatation state
-JS9.Image.prototype.getRotation = function(){
+JS9.Image.prototype.getRotate = function(){
     return this.params.rotate;
 };
 
 // rotate image by multiples of 90 degrees
-JS9.Image.prototype.setRotation = function(...args){
+JS9.Image.prototype.setRotate = function(...args){
     let [rot, opts] = args;
     const normRot = (rot) => {
 	rot += this.params.rotate||0;
@@ -4868,16 +4868,16 @@ JS9.Image.prototype.setRotation = function(...args){
     // reset
     if( rot === "reset" ){
 	this.params.rotate = 0;
-	return this.setRotation(0);
+	return this.setRotate(0);
     }
     if( typeof rot === "string" ){
 	rot = parseFloat(rot);
     }
     if( !JS9.isNumber(rot) ){
-	JS9.error(`invalid rotation for setRotation: ${rot}`);
+	JS9.error(`invalid rotation for setRotate: ${rot}`);
     }
     if( !this || !this.raw || !this.raw.header ){
-	JS9.error("invalid image for setRotation");
+	JS9.error("invalid image for setRotate");
     }
     // opts is optional
     opts = opts || {};
@@ -4887,7 +4887,7 @@ JS9.Image.prototype.setRotation = function(...args){
 	catch(e){ JS9.error(`can't parse rot opts: ${opts}`, e); }
     }
     // save this routine so it can be reconstituted in a restored session
-    this.xeqStashSave("setRotation", [rot]);
+    this.xeqStashSave("setRotate", [rot]);
     // save normalized value
     this.params.rotate = normRot(rot);
     // update the transform
@@ -4898,7 +4898,7 @@ JS9.Image.prototype.setRotation = function(...args){
     this.refreshLayers();
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
-	this.xeqPlugins("image", "onsetrotation");
+	this.xeqPlugins("image", "onsetrotate");
     }
     // allow chaining
     return this;
@@ -5005,7 +5005,7 @@ JS9.Image.prototype.reFlipRot = function(){
 	}
     }
     if( rot ){
-	this.setRotation(rot);
+	this.setRotate(rot);
     }
     // allow chaining
     return this;
@@ -7084,8 +7084,8 @@ JS9.Image.prototype.setParam = function(param, value){
 	    this.setRot90(value.rot90);
 	}
 	if( value.rotate ){
-	    this.setRotation("reset");
-	    this.setRotation(value.rotate);
+	    this.setRotate("reset");
+	    this.setRotate(value.rotate);
 	}
 	if( value.invert ){
 	    this.params.invert = value.invert;
@@ -7153,8 +7153,8 @@ JS9.Image.prototype.setParam = function(param, value){
 	this.setRot90(value);
 	break;
     case "rotate":
-	this.setRotation("reset");
-	this.setRotation(value);
+	this.setRotate("reset");
+	this.setRotate(value);
 	break;
     case "scale":
 	this.setScale(value);
@@ -23998,8 +23998,8 @@ JS9.mkPublic("GetOpacity", "getOpacity");
 JS9.mkPublic("SetOpacity", "setOpacity");
 JS9.mkPublic("SetFlip", "setFlip");
 JS9.mkPublic("GetFlip", "getFlip");
-JS9.mkPublic("SetRotation", "setRotation");
-JS9.mkPublic("GetRotation", "getRotation");
+JS9.mkPublic("SetRotate", "setRotate");
+JS9.mkPublic("GetRotate", "getRotate");
 JS9.mkPublic("SetRot90", "setRot90");
 JS9.mkPublic("GetRot90", "getRot90");
 JS9.mkPublic("GetParam", "getParam");

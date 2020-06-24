@@ -8073,7 +8073,7 @@ JS9.Menubar.createMenus = function(){
 		delete tdisp.tmp.editingMenu2;
 		// allow numbers or strings
 		if( !Number.isNaN(obj.rotate) ){
-		    im.setRotation(obj.rotate);
+		    im.setRotate(obj.rotate);
 		}
 	    };
 	    const keyZoom = (e) => {
@@ -10478,7 +10478,7 @@ JS9.PanZoom.xsetrot = function(did, id, target, evt){
 	    if( pinst ){
 		pinst.rot = rot;
 	    }
-	    im.setRotation(rot);
+	    im.setRotate(rot);
 	    // do this after setting rotation
 	    if( pinst ){
 		pinst.divjq.find(`input[name="rotate"]`).focus().caretToEnd();
@@ -10686,7 +10686,7 @@ JS9.PanZoom.init = function(opts){
 	    if( this.rot && this.rot !== "reset" ){
 		res = this.rot;
 	    } else {
-		res = im.getRotation() || "0";
+		res = im.getRotate() || "0";
 	    }
 	}
 	return res;
@@ -13279,6 +13279,11 @@ JS9.Sync.xeqSync = function(arr){
 			}
 		    }
 		    break;
+		case "rotate":
+		    if( this.params.rotate != xim.params.rotate ){
+			xim.setRotate(this.params.rotate - xim.params.rotate);
+		    }
+		    break;
 		case "scale":
 		    xim.setScale(this.params.scale);
 		    break;
@@ -13379,6 +13384,12 @@ JS9.Sync.setrot90 = function(im){
     JS9.Sync.maybeSync.call(im, ["rot90","alignment"]);
 };
 
+// onsetrotate
+JS9.Sync.setrotate = function(im){
+    if( !im ){ return; }
+    JS9.Sync.maybeSync.call(im, ["rotate","alignment"]);
+};
+
 // onregionschange
 JS9.Sync.regionschange = function(im, xreg){
     if( !im ){ return; }
@@ -13439,6 +13450,7 @@ JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
 		    onsetpan:        JS9.Sync.setpan,
 		    onregionschange: JS9.Sync.regionschange,
 		    onsetrot90:      JS9.Sync.setrot90,
+		    onsetrotate:     JS9.Sync.setrotate,
 		    onsetscale:      JS9.Sync.setscale,
 		    onsetwcssys:     JS9.Sync.setwcssys,
 		    onsetwcsunits:   JS9.Sync.setwcsunits,
