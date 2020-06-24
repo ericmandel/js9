@@ -283,7 +283,7 @@ JS9.globalOpts = {
     userMenuDivider: "&nbsp;&nbsp;&nbsp;",            // divide before user menu
     imagesFileSubmenu: 5,        // how many images trigger a submenu?
     toolBar: ["annulus", "box", "circle", "ellipse", "line", "polygon", "text", "zoom+", "zoom-", "zoom1", "zoomtofit"],
-    syncOps: ["alignment","colormap","contrastbias","flip","pan","regions","rot90","scale","wcs","zoom"],                                         // which ops are sync'ed?
+    syncOps: ["alignment","colormap","contrastbias","flip","pan","regions","rotate", "rot90","scale","wcs","zoom"],                                         // which ops are sync'ed?
     syncReciprocate: true,       // default value for reciprocal sync'ing
     syncWCS: true,               // default value for using WCS to sync
     hiddenPluginDivs: [],        // which static plugin divs start hidden
@@ -336,6 +336,7 @@ JS9.imageOpts = {
     scalemax: Number.NaN,               // default scale max is undefined
     flip: "none",                       // default flip state
     rot90: 0,	                        // default 90 deg rotation state
+    rotate: 0,	                        // default rotation state
     zscalecontrast: 0.25,		// default from ds9
     zscalesamples: 600,			// default from ds9
     zscaleline: 120,			// default from ds9

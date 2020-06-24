@@ -450,7 +450,7 @@ JS9.SyncUI.imageclose = function(im){
 JS9.RegisterPlugin(JS9.SyncUI.CLASS, JS9.SyncUI.NAME, JS9.SyncUI.init,
 		   {menuItem:        "Sync Images",
 		    onimagedisplay:  JS9.SyncUI.imagedisplay,
-		    onimageload:     JS9.SyncUI.mageload,
+		    onimageload:     JS9.SyncUI.imageload,
 		    onimageclose:    JS9.SyncUI.imageclose,
 		    help:            "help/syncui.html",
 		    winTitle:        "Sync Images",

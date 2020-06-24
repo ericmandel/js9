@@ -198,7 +198,7 @@ JS9.Sync.unsync = function(ops, ims, opts){
 // perform a sync action on target images using params from originating image
 // called in image context
 JS9.Sync.xeqSync = function(arr){
-    let i, j, k, obj, pos, wcscen, xim, xarr, xobj, xdata, key;
+    let i, j, k, obj, pos, wcscen, xim, xarr, xobj, xdata, key, diff;
     let mydata, myobj, myid, rarr, rstr, args, nflip;
     let displays = {};
     const oval = JS9.globalOpts.xeqPlugins;
@@ -402,7 +402,8 @@ JS9.Sync.xeqSync = function(arr){
 		    break;
 		case "rot90":
 		    if( this.params.rot90 != xim.params.rot90 ){
-			switch( this.params.rot90 - xim.params.rot90 ){
+			diff = (this.params.rot90 - xim.params.rot90) || 0;
+			switch(diff){
 			case   90:
 			case -270:
 			    xim.setRot90(90);
@@ -418,7 +419,8 @@ JS9.Sync.xeqSync = function(arr){
 		    break;
 		case "rotate":
 		    if( this.params.rotate != xim.params.rotate ){
-			xim.setRotate(this.params.rotate - xim.params.rotate);
+			diff = (this.params.rotate - xim.params.rotate) || 0;
+			xim.setRotate(diff);
 		    }
 		    break;
 		case "scale":
