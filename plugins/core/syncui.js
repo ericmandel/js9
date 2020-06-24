@@ -422,6 +422,12 @@ JS9.SyncUI.init = function(){
     }
 };
 
+// callback when plugin is redisplayed
+// eslint-disable-next-line no-unused-vars
+JS9.SyncUI.reinit = function(im){
+    JS9.SyncUI.init.call(this);
+};
+
 // callback when an image is loaded
 JS9.SyncUI.imageload = function(im){
     if( !im ){ return; }
@@ -449,6 +455,7 @@ JS9.SyncUI.imageclose = function(im){
 // register the plugin
 JS9.RegisterPlugin(JS9.SyncUI.CLASS, JS9.SyncUI.NAME, JS9.SyncUI.init,
 		   {menuItem:        "Sync Images",
+		    onplugindisplay: JS9.SyncUI.reinit,
 		    onimagedisplay:  JS9.SyncUI.imagedisplay,
 		    onimageload:     JS9.SyncUI.imageload,
 		    onimageclose:    JS9.SyncUI.imageclose,
