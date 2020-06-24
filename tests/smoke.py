@@ -530,9 +530,9 @@ def flipAll(j, rots=[90, 10, -90, 15], flips=["x", "y", "x", "y"], bins=[]):
             xrot = j.GetRot90()
             displayMessage(j, 'j.SetRot90: %d' % (xrot))
         else:
-            j.SetRot(rot)
-            xrot = j.GetRot()
-            displayMessage(j, 'j.SetRot: %d' % (xrot))
+            j.SetRotate(rot)
+            xrot = j.GetRotate()
+            displayMessage(j, 'j.SetRotate: %d' % (xrot))
         sleep(timeout)
         for iy in range(len(flips)):
             flip = flips[iy]
