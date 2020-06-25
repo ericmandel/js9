@@ -78,15 +78,18 @@ JS9.TOUCHSUPPORTED = ( window.hasOwnProperty("ontouchstart") ||
 		      (navigator.msMaxTouchPoints > 0));
 // modified from:
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
+// https://stackoverflow.com/questions/58019463/how-to-detect-device-name-in-safari-on-ios-13-while-it-doesnt-show-the-correct
 JS9.BROWSER = (function(){
-  const P= navigator.platform;
-  const N= navigator.appName, ua= navigator.userAgent;
-  const tem= ua.match(/version\/([.\d]+)/i);
-  let M = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
-  if(M && tem !== null){ M[2]= tem[1]; }
-  M= M? [M[1], M[2], P]: [N, navigator.appVersion,"-?", P];
-  M.push(/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(ua));
-  return M;
+    const P = navigator.platform;
+    const N = navigator.appName;
+    const ua = navigator.userAgent;
+    const tem = ua.match(/version\/([.\d]+)/i);
+    let M = ua.match(/(opera|chrome|safari|firefox)\/?\s*(\.?\d+(\.\d+)*)/i);
+    if( M && tem !== null ){ M[2] = tem[1]; }
+    M = M? [M[1], M[2], P]: [N, navigator.appVersion,"-?", P];
+    M.push(/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(ua) ||
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+    return M;
 }());
 // convenience to allow plugins to deal with HiDPI ratio blurring
 // http://stackoverflow.com/questions/15661339/how-do-i-fix-blurry-text-in-my-html5-canvas
@@ -572,25 +575,15 @@ if( (JS9.BROWSER[0] === "Firefox") && JS9.BROWSER[2].search(/Linux/) >=0 ){
 if( (JS9.BROWSER[0] === "Safari") ){
     JS9.bugs.webkit_resize = true;
 }
-// chrome does not deal with ".gz" file templates, but other browsers do
-// seems to be fixed: 6/8/2020
-//if( JS9.BROWSER[0] !== "Chrome" ){
-//    JS9.globalOpts.imageTemplates += ",.gz";
-//}
-// chrome has a more stringent memory limit than other browsers
-// 1/20/2019
-// unnecessary with the 32-bit float version of mProjectPP
-// if( (JS9.BROWSER[0] === "Chrome") ){
-//     JS9.globalOpts.reproj = {xdim: 3800, ydim: 3800};
-// }
 // wasm broken in ios 11.2.2, 11.2.5 and on, fixed in 11.3beta1 (1/22/2018)
 // see: https://github.com/kripken/emscripten/issues/6042
-if(  /iPad|iPhone|iPod/.test(navigator.platform) &&
-     /11_2_(?:[2-9])/.test(navigator.userAgent)    ){
+if( /iPad|iPhone|iPod/.test(navigator.platform) &&
+    /11_2_(?:[2-9])/.test(navigator.userAgent)  ){
     JS9.globalOpts.useWasm = false;
 }
-// iOS has severe memory limits (05/2017)
+// iOS and presumably android has severe memory limits (05/2017)
 // also force user to turn on crosshair, since it works with one finger
+// also, iOS requires wider region dialog boxes to fit the buttons
 if( JS9.BROWSER[3] ){
     JS9.globalOpts.maxMemory = Math.min(JS9.globalOpts.maxMemory, 350000000);
     JS9.globalOpts.table.xdim = 2048;
@@ -599,6 +592,9 @@ if( JS9.BROWSER[3] ){
     JS9.globalOpts.image.ydim = 2048;
     JS9.imageOpts.crosshair = false;
     JS9.globalOpts.reproj = {xdim: 2048, ydim: 2048};
+    JS9.lightOpts.dhtml.regWin0="width=660px,height=130px,resize=1,scrolling=1";
+    JS9.lightOpts.dhtml.regWin1="width=660px,height=200px,resize=1,scrolling=1";
+    JS9.lightOpts.dhtml.regWin="width=660px,height=470px,resize=1,scrolling=1";
 }
 // Jupyter doesn't seem to be able to load wasm (7/4/2018)
 if( window.hasOwnProperty("Jupyter") ){
