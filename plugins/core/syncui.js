@@ -352,7 +352,7 @@ JS9.SyncUI.init = function(){
     html = "";
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
-	if( im !== this.display.image ){
+	if( im !== this.display.image && im.getStatus("close") !== "closing" ){
 	    html += JS9.SyncUI.addImage.call(this, im);
 	}
     }

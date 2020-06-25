@@ -1141,6 +1141,8 @@ JS9.Image.prototype.closeImage = function(opts){
 	try{ opts = JSON.parse(opts); }
 	catch(e){ JS9.error(`can't parse closeImage opts: ${opts}`, e); }
     }
+    // set close status to "closing"
+    this.setStatus("close", "closing");
     // if this image is the wcs reference image for another image, clear it
     for(i=0; i<ilen; i++){
 	if( JS9.images[i].wcsim === this ){
@@ -7292,6 +7294,8 @@ JS9.Image.prototype.getStatus = function(status){
 	return undefined;
     }
     switch(status.toLowerCase()){
+    case "close":
+	return this.status.close;
     case "displaysection":
     case "displayextension":
 	return this.status.displaySection;

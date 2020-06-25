@@ -13429,13 +13429,32 @@ JS9.Sync.setzoom = function(im){
     JS9.Sync.maybeSync.call(im, ["zoom","alignment"]);
 };
 
+// re-init other syncUI interfaces when an image is loaded here
+JS9.Sync.loadimage = function(im){
+    let i, pinst;
+    if( !im ){ return; }
+    for(i=0; i<JS9.displays.length; i++){
+	pinst = JS9.displays[i].pluginInstances.JS9SyncUI;
+	if( pinst && pinst.isActive() ){
+	    JS9.SyncUI.init.call(pinst);
+	}
+    }
+};
+
 // clean up an image when its closed
+// re-init other syncUI interfaces when an image is closed here
 JS9.Sync.closeimage = function(im){
-    let i;
+    let i, pinst;
     if( !im ){ return; }
     // remove this image from all other image sync lists
     for(i=0; i<JS9.images.length; i++){
 	JS9.Sync.unsync.call(JS9.images[i], null, [im]);
+    }
+    for(i=0; i<JS9.displays.length; i++){
+	pinst = JS9.displays[i].pluginInstances.JS9SyncUI;
+	if( pinst && pinst.isActive() ){
+	    JS9.SyncUI.init.call(pinst);
+	}
     }
 };
 
@@ -13458,6 +13477,7 @@ JS9.RegisterPlugin(JS9.Sync.CLASS, JS9.Sync.NAME, JS9.Sync.init,
 		    onsetwcsunits:   JS9.Sync.setwcsunits,
 		    onsetzoom:       JS9.Sync.setzoom,
 		    onchangecontrastbias: JS9.Sync.changecontrastbias,
+		    onimageload:     JS9.Sync.loadimage,
 		    onimageclose:    JS9.Sync.closeimage,
 		    winDims: [0, 0]});
 /*
@@ -13814,7 +13834,7 @@ JS9.SyncUI.init = function(){
     html = "";
     for(i=0; i<JS9.images.length; i++){
 	im = JS9.images[i];
-	if( im !== this.display.image ){
+	if( im !== this.display.image && im.getStatus("close") !== "closing" ){
 	    html += JS9.SyncUI.addImage.call(this, im);
 	}
     }
