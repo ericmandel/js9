@@ -10366,7 +10366,7 @@ JS9.PanZoom.flipHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol3
 
 JS9.PanZoom.rot90HTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol4" name="rot90" onchange="JS9.PanZoom.xsetrot90(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.rotateHTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol5 js9Input" name="rotate" autocapitalize="off" autocorrect="off" onkeydown="JS9.PanZoom.xsetrot(\'%s\', \'%s\', this, event)" value="%s" placeholder="angle(deg)/reset">';
+JS9.PanZoom.rotateHTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol5 js9Input" name="rotate" autocapitalize="off" autocorrect="off" onkeydown="JS9.PanZoom.xsetrot(\'%s\', \'%s\', this, event)" value="%s" placeholder="abs angle (deg)">';
 
 JS9.PanZoom.pantoHTML = '<input type="button" class="JS9Button2 JS9PanZoomButton JS9PanZoomCol1" name="panto" value="Pan to &rarr;" onclick="javascript:JS9.PanZoom.xpanto(\'%s\', \'%s\', this)">';
 
@@ -10683,7 +10683,8 @@ JS9.PanZoom.init = function(opts){
     const getRotOptions = (im) => {
 	let res = 0;
 	if( im ){
-	    if( this.rot && this.rot !== "reset" ){
+	    if( JS9.globalOpts.rotateRelative &&
+		this.rot && this.rot !== "reset" ){
 		res = this.rot;
 	    } else {
 		res = im.getRotate() || "0";

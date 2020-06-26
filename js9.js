@@ -115,7 +115,8 @@ JS9.globalOpts = {
     quietReturn: false,         // should API return empty string or "OK"?
     useWasm: true,		// use WebAssembly if available?
     allowFileWasm: true,	// allow file:// to use wasm?
-    transforms: ["flip", "rot90", "rot"], // order for processing transforms
+    transforms: ["flip", "rot90", "rotate"], // order for processing transforms
+    rotateRelative: false,	// is setRotate() relative or absolute?
     clickToFocus: true,		// how to change focus on the display
     winType: "light",		// plugin window: "light" or "new"
     sortPreloads: true,         // sort preloads into original order after load?
@@ -4761,7 +4762,7 @@ JS9.Image.prototype.setTransform = function(...args){
 		angle += this.params.rot90;
 	    }
 	    break;
-	case "rot":
+	case "rotate":
 	    // arbitrary rotation
 	    if( JS9.notNull(this.params.rotate) ){
 		a = this.params.rotate * Math.PI / 180.0;
@@ -4855,7 +4856,9 @@ JS9.Image.prototype.getRotate = function(){
 JS9.Image.prototype.setRotate = function(...args){
     let [rot, opts] = args;
     const normRot = (rot) => {
-	rot += this.params.rotate||0;
+	if( JS9.globalOpts.rotateRelative ){
+	    rot += this.params.rotate||0;
+	}
 	while( rot < 0 ){ rot += 360; }
 	while( rot >= 360 ){ rot -= 360; }
 	return rot;
