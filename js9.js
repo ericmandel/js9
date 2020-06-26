@@ -13569,7 +13569,6 @@ JS9.Fabric._exportShapeOptions = function(opts){
 	case "savewhich":
 	case "saveformat":
 	case "savewcs":
-	case "changeable":
 	case "listonchange":
 	case "multitext":
 	    return false;
