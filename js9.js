@@ -4686,12 +4686,15 @@ JS9.Image.prototype.alignPanZoom = function(im, opts){
     }
     // do wcs or non-wcs alignment
     if( syncwcs ){
-	wcsinfo  = this.raw.wcsinfo || {cdelt1: 1};
-	iwcsinfo = im.raw.wcsinfo   || {cdelt1: 1};
+	wcsinfo  = this.raw.wcsinfo || {cdelt1: 1, crot: 0};
+	iwcsinfo = im.raw.wcsinfo   || {cdelt1: 1, crot: 0};
 	// pan this image to center of target
 	this.setPan(JS9.pix2pix(im, this, {x: icen.ox, y: icen.oy}));
 	// adjust zoom of this image, taking account of pixel size, target zoom
 	this.setZoom(izoom * wcsinfo.cdelt1 / iwcsinfo.cdelt1);
+	// adjust rotation of this image
+	this.setRotate(iwcsinfo.crot - wcsinfo.crot);
+
     } else {
 	// pan this image to center of target
 	this.setPan({x: icen.ox, y: icen.oy});
@@ -22850,6 +22853,7 @@ JS9.initFITS = function(){
 	JS9.wcsunits = Astroem.wcsunits;
 	JS9.pix2wcs = Astroem.pix2wcs;
 	JS9.wcs2pix = Astroem.wcs2pix;
+	JS9.wcsdist = Astroem.wcsdist;
 	JS9.reg2wcs = Astroem.reg2wcs;
 	JS9.saostrtod = Astroem.saostrtod;
 	JS9.saodtostr = Astroem.saodtostr;
