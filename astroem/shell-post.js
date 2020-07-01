@@ -11,7 +11,6 @@ var Astroem = {
       wcsunits:  Module.cwrap('wcsunits', 'string', ['number', 'string']),
       pix2wcs: Module.cwrap('pix2wcsstr', 'string', ['number', 'number', 'number']),
       wcs2pix: Module.cwrap('wcs2pixstr', 'string', ['number', 'number', 'number']),
-      wcsdist: Module.cwrap('wcsdist', 'number', ['number', 'number']),
       reg2wcs: Module.cwrap('reg2wcsstr', 'string', ['number', 'string']),
       saostrtod: Module.cwrap('saostrtod', 'number', ['string']),
       saodtype:  Module.cwrap('saodtype', 'number'),
