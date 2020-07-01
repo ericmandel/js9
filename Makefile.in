@@ -102,7 +102,7 @@ WEBDIRS	=	plugins params js css font images
 
 BEDIRS =	node_modules analysis-plugins analysis-wrappers
 
-OTHERDIRS =	astroem src scripts build demos tests
+OTHERDIRS =	astroem src scripts build demos tests sao
 
 WEBFILES =	js9.js js9.min.js js9worker.js \
 		js9support.js js9support.min.js js9support.css js9plugins.js \
@@ -140,7 +140,9 @@ GZFILES =	js9.js js9.min.js js9support.js js9support.min.js \
 		js9plugins.js js9-allinone.js \
 		astroem.js astroemw.js astroemw.wasm
 
-SAOFILES =	index.html
+SAOFILES =	sao/index.html
+
+SAOWEBFILES =	sao/js9Prefs.json sao/js9prefs.js
 
 CSSFILES =	css/jquery.contextMenu.css css/dhtmlwindow.css  \
 		css/tabcontent.css css/spectrum.css
@@ -274,11 +276,11 @@ prefs:		FORCE
 
 saoprefs:	FORCE
 		@(echo "editing js9Prefs for SAO installations ..."; \
-		sed -f $(BSCR)/saoprefs.sed < js9Prefs.json >js9Prefs-sao.json;\
-		sed -f  $(BSCR)/saoprefs.sed < js9prefs.js  >js9prefs-sao.js;\
+		sed -f $(BSCR)/saoprefs.sed < js9Prefs.json > sao/js9Prefs.json;\
+		sed -f  $(BSCR)/saoprefs.sed < js9prefs.js  > sao/js9prefs.js;\
 		echo "editing helper file for SAO installations ..."; \
 		$(BSCR)/mkhelper "$(HELPER)" \
-		"$(CGIDIR)" "$(CGIURL)" "$(CGIXPATH)" js9Prefs-sao.json;)
+		"$(CGIDIR)" "$(CGIURL)" "$(CGIXPATH)" sao/js9Prefs.json;)
 
 js9:		FORCE
 		@(if [ x"$(USEHELPER)" = x"yes" ]; then \
@@ -467,25 +469,31 @@ install-sao:	install-gzip saoprefs install-webcgi install-demos install-tests
 	    do \
 		if [ -f $$i ] ; then \
 		    echo "installing file: $$i" ; \
-	            $(CP) $$i $(SAODIR)/.; \
+		    j=`basename $$i`; \
+	            $(CP) $$i $(SAODIR)/$$j; \
+		fi; \
+	    done; \
+	    for i in $(SAOWEBFILES) ; \
+	    do \
+		if [ -f $$i ] ; then \
+		    echo "installing file: $$i" ; \
+		    j=`basename $$i`; \
+	            $(CP) $$i $(WEBDIR)/$$j; \
 		fi; \
 	    done; \
 	  fi; \
 	  echo "create temp directory"; \
-	  mkdir -p $(WEBDIR)/tmp; \
-	  echo "installing SAO prefs"; \
-	  $(CP) js9Prefs-sao.json $(WEBDIR)/js9Prefs.json; \
-	  $(CP) js9prefs-sao.js $(WEBDIR)/js9prefs.js)
+	  mkdir -p $(WEBDIR)/tmp;)
 
 allinone:	FORCE
 		@($(BSCR)/mkallinone $(ALLIN1) $(VERSION))
 
 gitprefs:	FORCE
 		@(if [ -d .git ]; then \
-                     git checkout -- js9Prefs-sao.json; \
 		     git checkout -- js9Prefs.json; \
-                     git checkout -- js9prefs-sao.js; \
 		     git checkout -- js9prefs.js; \
+                     git checkout -- sao/js9Prefs.json; \
+                     git checkout -- sao/js9prefs.js; \
 		  fi;)
 
 release:	clean gitprefs
@@ -495,7 +503,7 @@ release:	clean gitprefs
 		tar cf - \
 			$(WEBDIRS) $(BEDIRS) $(OTHERDIRS) \
 			$(WEBFILES) $(WEBHELP) $(PREFFILES) \
-			$(SAOFILES) $(MFILES) |\
+			$(MFILES) |\
 		(cd $(DISTDIR)/$(DISTNAME) && tar xf -); \
 		cd $(DISTDIR) ; \
 		tar cf - $(DISTNAME) | gzip -c > $(DISTNAME).tgz; \
@@ -505,7 +513,7 @@ release-data:	FORCE
 		tar cf - data | gzip -c > $(DISTDIR)/$(DDISTNAME).tgz;
 
 spell:		FORCE
-		@(for f in index.html $(WEBHELP)/*.html; do \
+		@(for f in $(SAOFILES) $(WEBHELP)/*.html; do \
 			echo "spellcheck $$f ..."; \
 			aspell -c $$f; \
 		  done)
