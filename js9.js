@@ -22853,7 +22853,6 @@ JS9.initFITS = function(){
 	JS9.wcsunits = Astroem.wcsunits;
 	JS9.pix2wcs = Astroem.pix2wcs;
 	JS9.wcs2pix = Astroem.wcs2pix;
-	JS9.wcsdist = Astroem.wcsdist;
 	JS9.reg2wcs = Astroem.reg2wcs;
 	JS9.saostrtod = Astroem.saostrtod;
 	JS9.saodtostr = Astroem.saodtostr;
