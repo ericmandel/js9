@@ -17540,7 +17540,13 @@ JS9.Regions.listRegions = function(which, opts, layer){
 		if( lasttype !== "none" ){
 		    regstr += sepstr;
 		}
-		regstr += this.params.wcssys;
+		// use region wcs sys, if possible
+		// (current wcssys might be different!)
+		if( region.wcssys ){
+		    regstr += region.wcssys;
+		} else {
+		    regstr += this.params.wcssys;
+		}
 		lasttype = "wcs";
 	    }
 	    regstr += (sepstr + iestr + region.wcsstr);
@@ -17758,9 +17764,11 @@ JS9.Regions.parseRegions = function(s, opts){
 	let vt, sarr, ox, oy;
 	const v1 = JS9.strtoscaled(ix);
 	const v2 = JS9.strtoscaled(iy);
-	// local override of wcs if we used sexagesimal units or appended d,r
+	// local override of wcs if:
+	// a. we are not currently using wcs
+	// b. we used sexagesimal units or appended d,r
 	if( ((v1.dtype.match(unrexp)) || (v2.dtype.match(unrexp))) &&
-	    !owcssys.match(imrexp) ){
+	    !iswcs && !owcssys.match(imrexp) ){
 	    liswcs = true;
 	    wcssys = owcssys;
 	}
@@ -17792,8 +17800,10 @@ JS9.Regions.parseRegions = function(s, opts){
 	let cstr, iscale;
 	const v = JS9.strtoscaled(len);
 	const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
-	// local override of wcs if we used sexagesimal units or appended d,r
-	if( v.dtype.match(unrexp) && !owcssys.match(imrexp) ){
+	// local override of wcs if:
+	// a. we are not currently using wcs
+	// b. we used sexagesimal units or appended d,r
+	if( v.dtype.match(unrexp) && !iswcs && !owcssys.match(imrexp) ){
 	    liswcs = true;
 	    wcssys = owcssys;
 	}
