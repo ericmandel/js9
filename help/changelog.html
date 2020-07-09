@@ -13,6 +13,10 @@
 
 <h3> Public Release 3.1 (TBD)</h3>
 <ul>
+<li> add support for rotating to North Is Up in current wcssys in SetRotate("northisup")
+<li> add north is up rotation to Zoom menu and zoomcontrols dialog
+<li> rotate/flip panner image as displayed image rotates/flips
+<li> N/E marker now tracks current wcssys, not file's wcssys
 <li> JS9.SetFlip(), JS9.SetRot90() use transform instead of changing image data
 <li> add JS9.SetRotation(), JS9.GetRotation() to rotate image by arbitrary angle
 <li> add JS9.ChangeRegionTags() public routine to add/remove region tags
@@ -59,7 +63,7 @@
 <li> fix bug when sortable GUI changed the image stack with multiple displays
 <li> fix annulus radii text box in regions config
 <li> update jquery to v3.5.0
-<li> update emscripten to v1.39.12
+<li> update emscripten to v1.39.19
 <li> update ResizeSensor to v1.2.2
 <li> update fabric.js to v3.6.2 and enable strokeUniform
 <li> update cfitsio to v3.48 (via astroem repository)
