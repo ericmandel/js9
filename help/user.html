@@ -347,16 +347,18 @@ similar.
 <p>
 The Zoom menu also supports <b>image flip</b> around the x or y axes,
 <b>image rotation</b> by +/- 90 degrees or by an arbitrary
-angle. Flipping and rotation are performed on the displayed pixels (so
-no change is made to the WCS). The rotation is much faster than the
-more general WCS-based rotation/reprojection in the <b>WCS</b>
-menu. Note that arbitrary rotation is performed in terms of an
-absolute angle: if you rotate by 20 degrees and then do it again,
-there is no change. Also, setting the rotation to 0 sets the angle to 0.
-Flipping and rot90, however, are relative to the current state of the
-display. This differs from DS9, where the actions are linked to the x
-and y axes. Thus, flipping by x twice will return you to the original
-orientation, whereas flipping a second time does nothing in DS9.
+angle. There also is an option to rotate the image so that north is up
+in the current coordinate system. Flipping and rotation are performed
+on the displayed pixels (so no change is made to the WCS). The
+rotation is much faster than the more general WCS-based
+rotation/reprojection in the <b>WCS</b> menu. Note that arbitrary
+rotation is performed in terms of an absolute angle: if you rotate by
+20 degrees and then do it again, there is no change. Also, setting the
+rotation to 0 sets the angle to 0.  Flipping and rot90, however, are
+relative to the current state of the display. This differs from DS9,
+where the actions are linked to the x and y axes. Thus, flipping by x
+twice will return you to the original orientation, whereas flipping a
+second time does nothing in DS9.
 
 <li><p><b>Scale:</b> Each scale option specifies a different scaling
 algorithm to use when converting image pixel values to RGB

@@ -145,11 +145,12 @@ JS9.Panner.create = function(im){
     let i, j, ii, jj, kk;
     let ioff, ooff;
     let width, height;
-    let pos, ix, iy;
+    let pos, ix, iy, temp;
     let dlayer;
-    // sanity check
-    if( !im || !im.raw || !im.display.pluginInstances.JS9Panner ){
-	return;
+    // sanity checks
+    if( !im || !im.raw || !im.colorData ||
+	!im.display.pluginInstances.JS9Panner ){
+	return null;
     }
     // add panner object to image, if necessary
     if( !im.panner ){
@@ -252,7 +253,7 @@ JS9.Panner.create = function(im){
     dlayer = this.display.newShapeLayer("panner", JS9.Panner.opts, this.divjq);
     // add a callback to pan when the panning rectangle is moved
     dlayer.canvas.on("object:modified", (opts) => {
-	let im, disp;
+	let im, disp, panDisp;
 	disp = JS9.getDynamicDisplayOr(this.display);
 	if( disp && disp.image ){
 	    im = disp.image;
@@ -260,7 +261,36 @@ JS9.Panner.create = function(im){
 	    im = this.display.image;
 	}
 	if( im ){
+	    panDisp = im.display.pluginInstances.JS9Panner;
 	    pos = opts.target.getCenterPoint();
+	    // rotations will change the pan direction
+	    if( im.params.rot90 === 90 ){
+		temp = pos.x;
+		pos.x = panDisp.height - pos.y;
+		pos.y = temp;
+	    } else if( im.params.rot90 === 180 ){
+		pos.x = panDisp.width - pos.x;
+		pos.y = panDisp.height - pos.y;
+	    } else if( im.params.rot90 === -90 ){
+		temp = panDisp.width - pos.x;
+		pos.x = pos.y;
+		pos.y = temp;
+	    }
+	    // flips will change the pan position
+	    if( im.params.flip === "x" ){
+		pos.x = panDisp.width - pos.x;
+	    } else if( im.params.flip === "y" ){
+		pos.y = panDisp.height - pos.y;
+	    } else if( im.params.flip === "xy" ){
+		pos.x = panDisp.width - pos.x;
+		pos.y = panDisp.height - pos.y;
+	    }
+	    // rotations will change the pan position
+	    if( im.params.rotate ){
+		pos = JS9.rotatePoint(pos,
+				      im.params.rotate,
+				      {x:panDisp.width/2, y:panDisp.height/2});
+	    }
 	    ix = ((pos.x - im.panner.ix) *
 		  im.panner.xblock / im.panner.zoom) + im.panner.x0;
 	    iy = ((dlayer.canvas.height - (pos.y + im.panner.iy)) *
@@ -268,12 +298,12 @@ JS9.Panner.create = function(im){
 	    // pan the image
 	    try{
 		// avoid triggering a re-pan
-		im.display.pluginInstances.JS9Panner.status = "inactive";
+		panDisp.status = "inactive";
 		// pan image
 		im.setPan(ix, iy);
 	    }
 	    catch(e){JS9.log("couldn't pan image", e);}
-	    finally{im.display.pluginInstances.JS9Panner.status = "active";}
+	    finally{panDisp.status = "active";}
 	}
     });
     return im;
@@ -282,24 +312,48 @@ JS9.Panner.create = function(im){
 // display the image on the panner canvas
 JS9.Panner.disp = function(im){
     let panDisp, panner, sect, tblkx, tblky;
-    let obj, nx, ny, nwidth, nheight, cenx, ceny;
+    let obj, nx, ny, nwidth, nheight, cenx, ceny, pos;
     let npos1, npos2, nobj, nobjt;
     let epos1, epos2, eobj, eobjt;
+    let angle, xflip, yflip, wcsinfo, w2, h2, m, ctx, temp;
     const FUDGE = 1;
+    const img2canvas = (im, img) => {
+	let octx, ocanvas;
+	let panner = im.display.pluginInstances.JS9Panner;
+	let dowhen = true;
+	if( dowhen ){
+	    ocanvas = document.createElement("canvas");
+	    octx = ocanvas.getContext("2d");
+	    ocanvas.width= img.width;
+	    ocanvas.height = img.height;
+	    // turn off anti-aliasing
+	    if( !JS9.ANTIALIAS ){
+		octx.imageSmoothingEnabled = false;
+	    }
+	    octx.putImageData(img, 0, 0);
+	    panner.offscreenRGB = {canvas: ocanvas, context: octx};
+	}
+	return panner.offscreenRGB.canvas;
+    };
     // sanity check
-    // only display if we have a panner present
-    if( !im || !im.display.pluginInstances.JS9Panner ||
-       (im.display.pluginInstances.JS9Panner.status !== "active") ){
+    // only display if we have an image and panner present
+    if( !im                                                       ||
+	!im.display.pluginInstances.JS9Panner                     ||
+	im.display.pluginInstances.JS9Panner.status !== "active"  ){
 	return;
     }
     // always remake make panner image (might be zooming, for example)
-    JS9.Panner.create.call(this, im);
+    if( !JS9.Panner.create.call(this, im) ){
+	return;
+    }
     // convenience variables
+    wcsinfo  = im.raw.wcsinfo || {cdelt1: 1, cdelt2: 1, crot: 0};
     panner = im.panner;
     panDisp = im.display.pluginInstances.JS9Panner;
     sect = im.rgb.sect;
     cenx = panDisp.width/2;
     ceny = panDisp.height/2;
+    ctx = panDisp.context;
     // we're done if there is no panner image
     if( !panner.img ){
 	return;
@@ -312,10 +366,27 @@ JS9.Panner.disp = function(im){
         panner.iy = Math.floor((panDisp.canvas.height - panner.img.height)/2);
     }
     // clear first
-    // panDisp.context.clear();
     JS9.Panner.clear.call(this, im);
+    // save context
+    ctx.save();
+    // do we need to apply the canvas transform?
+    if( im.params.transform ){
+	// this is the transform matrix
+	m = im.params.transform;
+	// translate origin to center of display
+	w2 = panner.img.width / 2;
+	h2 = panner.img.height / 2;
+	ctx.translate(w2, h2);
+	// set new transform
+	ctx.transform(m[0][0], m[0][1], m[1][0], m[1][1], m[2][0], m[2][1]);
+	// translate back to 0, 0
+	ctx.translate(-w2, -h2);
+    }
     // draw the image into the context
-    panDisp.context.putImageData(panner.img, panner.ix, panner.iy);
+    // ctx.putImageData(panner.img, panner.ix, panner.iy);
+    ctx.drawImage(img2canvas(im, panner.img), panner.ix, panner.iy);
+    // restore original context
+    ctx.restore();
     // display panner rectangle
     // convenience variables
     tblkx = panner.zoom / panner.xblock;
@@ -353,6 +424,37 @@ JS9.Panner.disp = function(im){
 	nwidth = panDisp.width + 10;
 	nheight = panDisp.height + 10;
     }
+    // rotations will change the pan direction
+    if( im.params.rot90 === 90 ){
+	temp = nx;
+	nx = panDisp.height - ny;
+	ny = temp;
+    } else if( im.params.rot90 === 180 ){
+	nx = panDisp.width - nx;
+	ny = panDisp.height - ny;
+    } else if( im.params.rot90 === -90 ){
+	temp = panDisp.width - nx;
+	nx = ny;
+	ny = temp;
+    }
+    // flips will change the pan position
+    if( im.params.flip === "x" ){
+	nx = panDisp.width - nx;
+    } else if( im.params.flip === "y" ){
+	ny = panDisp.height - ny;
+    } else if( im.params.flip === "xy" ){
+	nx = panDisp.width - nx;
+	ny = panDisp.height - ny;
+    }
+    // rotations will change the pan position
+    if( im.params.rotate ){
+	pos = JS9.rotatePoint({x: nx, y: ny},
+			      - im.params.rotate,
+			      {x:panDisp.width/2, y:panDisp.height/2});
+	nx = pos.x;
+	ny = pos.y;
+    }
+    // object containing position and size parameters:
     obj = {left: nx, top: ny, width: nwidth, height: nheight};
     // create the box
     if( !im.panner.boxid ){
@@ -373,16 +475,43 @@ JS9.Panner.disp = function(im){
     if( !JS9.globalOpts.pannerDirections || !im.raw.wcs || im.raw.wcs <= 0 ){
 	return im;
     }
+    // get north is up info
+    nobj = im.getNorthIsUp();
+    // angle
+    angle = nobj.angle;
+    // take existing rotation into account
+    if( JS9.notNull(im.params.rot90) ){
+	angle -= im.params.rot90;
+    }
+    // take existing rotation into account
+    if( JS9.notNull(im.params.rotate) ){
+	angle -= im.params.rotate;
+    }
+    // flip
+    xflip = nobj.xflip ? -1 : 1;
+    yflip = nobj.yflip ? -1 : 1;
+    switch(im.params.flip){
+    case "x":
+	xflip *= -1;
+	break;
+    case "y":
+	yflip *= -1;
+	break;
+    case "xy":
+	xflip *= -1;
+	yflip *= -1;
+	break;
+    default:
+	break;
+    }
     // this is the line pointing north
     npos1 = {x: cenx, y: ceny};
-    if( im.raw.wcsinfo && im.raw.wcsinfo.cdelt2 && im.raw.wcsinfo.cdelt2 >= 0 ){
-	npos2 = {x: cenx, y: ceny - JS9.Panner.VSIZE};
+    if( wcsinfo.cdelt2 >= 0 ){
+	npos2 = {x: cenx, y: ceny - JS9.Panner.VSIZE * yflip};
     } else {
-	npos2 = {x: cenx, y: ceny + JS9.Panner.VSIZE};
+	npos2 = {x: cenx, y: ceny + JS9.Panner.VSIZE * yflip};
     }
-    if( im.raw.wcsinfo && im.raw.wcsinfo.crot ){
-	npos2 = JS9.rotatePoint(npos2, -im.raw.wcsinfo.crot, npos1);
-    }
+    npos2 = JS9.rotatePoint(npos2, angle, npos1);
     nobj = {color: JS9.Panner.NORTH.color,
 	    strokeWidth: JS9.Panner.NORTH.strokeWidth,
 	    strokeDashArray: JS9.Panner.NORTH.strokeDashArray,
@@ -401,14 +530,12 @@ JS9.Panner.disp = function(im){
     im.panner.northidt = im.addShapes("panner", "text", nobjt);
     // this is the line pointing east
     epos1 = {x: cenx, y: ceny};
-    if( im.raw.wcsinfo && im.raw.wcsinfo.cdelt1 && im.raw.wcsinfo.cdelt1 < 0 ){
-	epos2 = {x: cenx - JS9.Panner.VSIZE, y: ceny};
+    if( wcsinfo.cdelt1 < 0 ){
+	epos2 = {x: cenx - JS9.Panner.VSIZE * xflip, y: ceny};
     } else {
-	epos2 = {x: cenx + JS9.Panner.VSIZE, y: ceny};
+	epos2 = {x: cenx + JS9.Panner.VSIZE * xflip, y: ceny};
     }
-    if( im.raw.wcsinfo && im.raw.wcsinfo.crot ){
-	epos2 = JS9.rotatePoint(epos2, -im.raw.wcsinfo.crot, epos1);
-    }
+    epos2 = JS9.rotatePoint(epos2, angle, epos1);
     eobj = {color: JS9.Panner.EAST.color,
 	    strokeWidth: JS9.Panner.EAST.strokeWidth,
 	    strokeDashArray: JS9.Panner.EAST.strokeDashArray,
@@ -484,6 +611,7 @@ JS9.Panner.clear = function(im){
 	    panner.context.clear();
 	    im.removeShapes("panner", "all");
 	    im.panner.boxid = null;
+	    // im.panner.offscreenRGB = null;
 	}
 	return im;
     }
@@ -501,6 +629,7 @@ JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
 		    onimageclose: JS9.Panner.clear,
 		    onimageclear: JS9.Panner.clear,
 		    onupdateprefs: JS9.Panner.disp,
+		    onsetwcssys: JS9.Panner.disp,
 		    winTitle: "Panner",
 		    winDims: [JS9.Panner.WIDTH,  JS9.Panner.HEIGHT],
 		    divArgs: [JS9.Panner.SWIDTH, JS9.Panner.SHEIGHT]});

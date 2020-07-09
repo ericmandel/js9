@@ -107,8 +107,6 @@ JS9.Magnifier.init = function(width, height){
     // turn off anti-aliasing
     if( !JS9.ANTIALIAS ){
 	this.context.imageSmoothingEnabled = false;
-	this.context.webkitImageSmoothingEnabled = false;
-	this.context.msImageSmoothingEnabled = false;
     }
     // add container with canvas to the high-level div
     this.containerjq = $("<div>")

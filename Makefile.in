@@ -525,7 +525,7 @@ smoke:		FORCE
 		@(X=`js9 cmap`; 					\
 	          echo "$$X" | egrep "^ERROR:" 1>/dev/null 2>&1;	\
 		  if [ $$? = 0 ]; then					\
-			js9 -a & 					\
+			js9 -a --webpage tests/smoke.html --width 1060 --height 670 & \
 			sleep 3;					\
 		  fi;							\
 		  python3 tests/smoke.py)

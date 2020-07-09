@@ -26,8 +26,17 @@ button to pan the image.
 <p>
 The plugin also offers menus to pan, zoom, flip, and rotate the image
 by 90 degree increments, along with a text box to rotate by an
-arbitrary angle in degrees.  Rotation is cumulative: to undo rotation,
-enter the string <b>reset</b>.
+arbitrary angle in degrees.  Note that arbitrary rotation is performed
+in terms of an absolute angle: if you rotate by 20 degrees and then do
+it again, there is no change. Also, setting the rotation to 0 sets the
+angle to 0.  Flipping and rot90, however, are relative to the current
+state of the display.
+
+<p>
+The <b>Flip</b> menu's <b>reset</b> option unsets x and/or y
+flips. The <b>Rotate</b> menu's <b>reset</b> option resets both the rot90 and
+rotation angle, as does specifying <b>reset</b> in the rotation text box.
+The <b>Rotate</b> menu's <b>reset flip/rot90/rotate</b> option resets flip, rot90, and rotate.
 </div>
 </body>
 </html>

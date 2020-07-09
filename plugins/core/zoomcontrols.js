@@ -24,7 +24,7 @@ JS9.PanZoom.flipHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol3
 
 JS9.PanZoom.rot90HTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol4" name="rot90" onchange="JS9.PanZoom.xsetrot90(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.rotateHTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol5 js9Input" name="rotate" autocapitalize="off" autocorrect="off" onkeydown="JS9.PanZoom.xsetrot(\'%s\', \'%s\', this, event)" value="%s" placeholder="abs angle (deg)">';
+JS9.PanZoom.rotateHTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol5 js9Input" name="rotate" autocapitalize="off" autocorrect="off" onkeydown="JS9.PanZoom.xsetrot(\'%s\', \'%s\', this, event)" value="%s" placeholder="angle or reset">';
 
 JS9.PanZoom.pantoHTML = '<input type="button" class="JS9Button2 JS9PanZoomButton JS9PanZoomCol1" name="panto" value="Pan to &rarr;" onclick="javascript:JS9.PanZoom.xpanto(\'%s\', \'%s\', this)">';
 
@@ -87,10 +87,10 @@ JS9.PanZoom.xsetflip = function(did, id, target){
     const im = JS9.lookupImage(id, did);
     if( im ){
 	switch(target.value){
-	case "around x axis":
+	case "x axis":
 	    im.setFlip("x");
 	    break;
-	case "around y axis":
+	case "y axis":
 	    im.setFlip("y");
 	    break;
 	case "reset":
@@ -113,8 +113,18 @@ JS9.PanZoom.xsetrot90 = function(did, id, target){
 	case "90 right":
 	    im.setRot90(-90);
 	    break;
-	case "reset":
+	case "reset rotate":
 	    im.setRot90("reset");
+	    im.setRotate("reset");
+	    break;
+	case "align: north is up":
+	    im.setRot90("reset");
+	    im.setRotate("northisup");
+	    break;
+	case "reset flip/rot90/rotate":
+	    im.setFlip("reset");
+	    im.setRot90("reset");
+	    im.setRotate("reset");
 	    break;
 	default:
 	    break;
@@ -131,6 +141,11 @@ JS9.PanZoom.xsetrot = function(did, id, target, evt){
 	if( evt.keyCode !== 13 ){ return; }
 	rot = $(target).val().trim();
 	if( rot ){
+	    if( rot === "reset" ){
+		im.setRotate("reset");
+		im.setRot90("reset");
+		return;
+	    }
 	    pinst = im.display.pluginInstances.JS9PanZoom;
 	    // do this before setting rotation
 	    if( pinst ){
@@ -326,8 +341,8 @@ JS9.PanZoom.init = function(opts){
     };
     const getFlipOptions = () => {
 	let res = "<option selected disabled>Flip</option>";
-	res += `<option>around x axis</option>`;
-	res += `<option>around y axis</option>`;
+	res += `<option>x axis</option>`;
+	res += `<option>y axis</option>`;
 	res += `<option>reset</option>`;
 	return res;
     };
@@ -335,7 +350,10 @@ JS9.PanZoom.init = function(opts){
 	let res = "<option selected disabled>Rotate</option>";
 	res += `<option>90 left</option>`;
 	res += `<option>90 right</option>`;
-	res += `<option>reset</option>`;
+	res += `<option>reset rotate</option>`;
+	res += `<option disabled>─────</option>`;
+	res += `<option>align: north is up</option>`;
+	res += `<option>reset flip/rot90/rotate</option>`;
 	return res;
     };
     const getRotOptions = (im) => {
@@ -352,7 +370,7 @@ JS9.PanZoom.init = function(opts){
     };
     const getSysOptions = (im) => {
 	let i, sys;
-	let res = "<option selected disabled>WCS Systems:</option>";
+	let res = "<option selected disabled>WCS Systems</option>";
 	const wcssys = im.tmp.wcssysPanZoom || im.getWCSSys();
 	if( im ){
 	    if( im.raw.wcs && im.raw.wcs > 0 ){
@@ -372,7 +390,7 @@ JS9.PanZoom.init = function(opts){
     };
     const getUnitsOptions = (im) => {
 	let i, units;
-	let res = "<option selected disabled>WCS Units:</option>";
+	let res = "<option selected disabled>WCS Units</option>";
 	const wcsunits = im.tmp.wcsunitsPanZoom || im.getWCSUnits();
 	if( im ){
 	    if( im.raw.wcs && im.raw.wcs > 0 ){

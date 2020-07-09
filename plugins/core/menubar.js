@@ -1547,11 +1547,11 @@ JS9.Menubar.createMenus = function(){
 		name: "Flip:",
 		disabled: true
 	    };
-	    items.flipX = xname("around x axis");
+	    items.flipX = xname("x axis");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.flipX.disabled = true;
 	    }
-	    items.flipY = xname("around y axis");
+	    items.flipY = xname("y axis");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.flipY.disabled = true;
 	    }
@@ -1573,6 +1573,13 @@ JS9.Menubar.createMenus = function(){
 		name: "rotation angle:",
 		type: "text"
 	    };
+	    items[`sep${n++}`] = "------";
+	    items.northisup = xname("align: north is up");
+	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ||
+		!tim.raw.wcs || tim.raw.wcs <= 0){
+		items.northisup.disabled = true;
+	    }
+	    items.resetall = xname("reset flip/rot90/rotate");
 	    items[`sep${n++}`] = "------";
 	    // plugins
 	    for(i=0; i<JS9.plugins.length; i++){
@@ -1633,6 +1640,15 @@ JS9.Menubar.createMenus = function(){
 			    case "rot90_270":
 				uim.setRot90(-90);
 				break;
+			    case "northisup":
+				uim.setRot90("reset");
+				uim.setRotate("northisup");
+				break;
+			    case "resetall":
+				uim.setFlip("reset");
+				uim.setRot90("reset");
+				uim.setRotate("reset");
+				break;
 			    default:
 				// maybe it's a plugin
 				for(ii=0; ii<JS9.plugins.length; ii++){
@@ -1659,8 +1675,10 @@ JS9.Menubar.createMenus = function(){
 			const uim = udisp.image;
 			const obj = {};
 			if( uim  ){
-			    obj.zoom = String(uim.rgb.sect.zoom);
-			    obj.rotate = String(uim.params.rotate||0);
+			    obj.zoom =
+				JS9.floatToString(uim.rgb.sect.zoom);
+			    obj.rotate =
+				JS9.floatToString(uim.params.rotate||0);
 			}
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
@@ -2048,10 +2066,14 @@ JS9.Menubar.createMenus = function(){
 			const uim = udisp.image;
 			const obj = {};
 			if( uim  ){
-			    obj.contrast = String(uim.params.contrast);
-			    obj.bias = String(uim.params.bias);
-			    obj.opacity = String(uim.params.opacity);
-			    obj.sigma = String(uim.params.sigma);
+			    obj.contrast =
+				JS9.floatToString(uim.params.contrast);
+			    obj.bias =
+				JS9.floatToString(uim.params.bias);
+			    obj.opacity =
+				JS9.floatToString(uim.params.opacity);
+			    obj.sigma =
+				JS9.floatToString(uim.params.sigma);
 			}
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
@@ -2884,7 +2906,7 @@ JS9.Menubar.createMenus = function(){
 			const uim = udisp.image;
 			const obj = {};
 			if( uim  ){
-			    obj.sigma = String(uim.params.sigma);
+			    obj.sigma = JS9.floatToString(uim.params.sigma);
 			}
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");

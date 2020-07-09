@@ -1272,9 +1272,6 @@ JS9.Image.prototype.mkOffScreenCanvas = function(){
     // turn off anti-aliasing
     if( !JS9.ANTIALIAS ){
 	this.offscreen.context.imageSmoothingEnabled = false;
-	// this.offscreen.context.mozImageSmoothingEnabled = false;
-	this.offscreen.context.webkitImageSmoothingEnabled = false;
-	this.offscreen.context.msImageSmoothingEnabled = false;
     }
     // draw the png to the offscreen canvas
     this.offscreen.context.drawImage(this.png.image, 0, 0);
@@ -3244,9 +3241,6 @@ JS9.Image.prototype.putImage = function(opts){
 	    // turn off anti-aliasing
 	    if( !JS9.ANTIALIAS ){
 		octx.imageSmoothingEnabled = false;
-		// octx.mozImageSmoothingEnabled = false;
-		octx.webkitImageSmoothingEnabled = false;
-		octx.msImageSmoothingEnabled = false;
 	    }
 	    octx.putImageData(img, 0, 0);
 	    this.offscreenRGB = {canvas: ocanvas, context: octx};
@@ -3270,10 +3264,10 @@ JS9.Image.prototype.putImage = function(opts){
     // do we need to apply the canvas transform?
     if( this.params.transform ){
 	// this is the transform matrix
-	w2 = this.display.width / 2;
-	h2 = this.display.height / 2;
 	m = this.params.transform;
 	// translate origin to center of display
+	w2 = this.display.width / 2;
+	h2 = this.display.height / 2;
 	ctx.translate(w2, h2);
 	// set new transform
 	ctx.transform(m[0][0], m[0][1], m[1][0], m[1][1], m[2][0], m[2][1]);
@@ -4705,6 +4699,79 @@ JS9.Image.prototype.alignPanZoom = function(im, opts){
     return this;
 };
 
+
+// get paramerters for north is up, for given wcssys
+JS9.Image.prototype.getNorthIsUp = function(wcssys){
+    let txeq, cx, cy, arr, ra, dec, wcsinfo;
+    let nobj = {};
+    // ra, dec coords (degrees) of north poles for galactic, ecliptic
+    let pole = {
+	// galactic north pole in degrees
+	// https://astronomy.swin.edu.au/cosmos/N/North+Galactic+Pole
+	galactic: {
+	    ra: JS9.saostrtod("12h51m26.00s") * 15,
+	    dec: JS9.saostrtod("27d7m42.0s"),
+	    wcssys: "FK5"
+	},
+	// ecliptic north pole in degrees
+	// https://en.wikipedia.org/wiki/Orbital_pole
+	ecliptic: {
+	    ra: JS9.saostrtod("18h0m0.0s") * 15,
+	    dec: JS9.saostrtod("66d33m38.55s"),
+	    wcssys: "ICRS"
+	}
+    };
+    // wcsinfo
+    wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1, crot: 0};
+    // default is current wcssys
+    if( !wcssys ){
+	wcssys = this.getWCSSys();
+    }
+    // init angle requirements
+    nobj.angle = 0;
+    // set flip requirements
+    if( wcsinfo.cdelt1 > 0 ){ nobj.flip = "x"; }
+    if( wcsinfo.cdelt2 < 0 ){ nobj.flip = (nobj.flip|| "") + "y"; }
+    // only galactic and ecliptic use the algorithm below, others are trivial
+    switch(wcssys){
+    case "galactic":
+    case "ecliptic":
+	break;
+    default:
+	if( wcsinfo.crot ){
+	    nobj.angle = -wcsinfo.crot;
+	}
+	return nobj;
+    }
+    // algorithm for galactic and ecliptic ... from AV (via trello)
+    // turn off plugin callbacks
+    txeq = JS9.globalOpts.xeqPlugins;
+    JS9.globalOpts.xeqPlugins = false;
+    // set wcssys to be the same wcssys the north pole coords are in
+    this.setWCSSys(pole[wcssys].wcssys, false);
+    // get center of image in that coord system
+    cx = this.raw.width/2;
+    cy = this.raw.height/2;
+    arr = JS9.pix2wcs(this.raw.wcs, cx, cy).trim().split(/\s+/);
+    // convert strings to float (degrees)
+    ra = JS9.saostrtod(arr[0]);
+    // ra hours to degrees, if necessary
+    if( (String.fromCharCode(JS9.saodtype()) === ":") ){ ra *= 15.0; }
+    dec = JS9.saostrtod(arr[1]);
+    // angular distance between north pole and image center
+    nobj.angle = JS9.angdist(ra, dec, pole[wcssys].ra, pole[wcssys].dec);
+    // remove any header-based rotation
+    if( JS9.notNull(this.raw.wcsinfo.crot) ){
+	nobj.angle -= this.raw.wcsinfo.crot;
+    }
+    // reset to the current coord system
+    this.setWCSSys(wcssys, false);
+    // restore plugin callbacks
+    JS9.globalOpts.xeqPlugins = txeq;
+    // return info
+    return nobj;
+};
+
 // get transform
 JS9.Image.prototype.getTransform = function(){
     return this.params.transform;
@@ -4855,8 +4922,9 @@ JS9.Image.prototype.getRotate = function(){
     return this.params.rotate;
 };
 
-// rotate image by multiples of 90 degrees
+// rotate image by specified angle
 JS9.Image.prototype.setRotate = function(...args){
+    let nobj;
     let [rot, opts] = args;
     const normRot = (rot) => {
 	if( JS9.globalOpts.rotateRelative ){
@@ -4874,6 +4942,12 @@ JS9.Image.prototype.setRotate = function(...args){
     if( rot === "reset" ){
 	this.params.rotate = 0;
 	return this.setRotate(0);
+    }
+    // north is up in current wcs system: calculate rotation angle
+    if( typeof rot === "string" && rot.match(/north/i) ){
+	nobj = this.getNorthIsUp();
+	rot = nobj.angle;
+	if( JS9.notNull(nobj.flip) ){ this.setParam("flip", nobj.flip); }
     }
     if( typeof rot === "string" ){
 	rot = parseFloat(rot);
@@ -10014,8 +10088,6 @@ JS9.Display = function(el){
     // turn off anti-aliasing
     if( !JS9.ANTIALIAS ){
 	this.context.imageSmoothingEnabled = false;
-	this.context.webkitImageSmoothingEnabled = false;
-	this.context.msImageSmoothingEnabled = false;
     }
     // add the display tooltip
     this.tooltip = $("<div>")
@@ -15750,7 +15822,7 @@ JS9.MouseTouch.Actions["wheel zoom"] = function(im, evt){
 // pan the image
 // eslint-disable-next-line no-unused-vars
 JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
-    let dx, dy, sect;
+    let dx, dy, temp, sect, pos;
     // sanity check
     if( !im ){
 	return;
@@ -15770,7 +15842,27 @@ JS9.MouseTouch.Actions["pan the image"] = function(im, ipos, evt){
 	    dx = -dx;
 	    dy = -dy;
 	}
-	im.setPan(sect.xcen + dx, sect.ycen - dy);
+	// rotations will change the pan direction
+	if( im.params.rot90 === 90 ){
+	    temp = dx;
+	    dx = -dy;
+	    dy = temp;
+	} else if( im.params.rot90 === 180 ){
+	    dx = -dx;
+	    dy = -dy;
+	} else if( im.params.rot90 === -90 ){
+	    temp = dx;
+	    dx = dy;
+	    dy = -temp;
+	}
+	pos = {x: sect.xcen + dx, y: sect.ycen - dy};
+	// rotations will change the pan position
+	if( im.params.rotate ){
+	    pos = JS9.rotatePoint(pos,
+				  -im.params.rotate,
+				  {x: sect.xcen, y: sect.ycen});
+	}
+	im.setPan(pos);
 	// reset initial position
 	im.pos0 = im.pos;
     }
@@ -19922,8 +20014,14 @@ JS9.strace = function(e){
 // try to make a nice string from a float
 // ints remain ints, floats get truncated at 6 significant digits
 JS9.floatToString = function(fval){
-    return sprintf("%g",
-		   parseFloat(fval.toFixed(JS9.globalOpts.floatPrecision)));
+    if( typeof fval === "number" ){
+	return sprintf("%g",
+		       parseFloat(fval.toFixed(JS9.globalOpts.floatPrecision)));
+    } else if( typeof fval === "string" ){
+	return fval;
+    } else {
+	return String(fval);
+    }
 };
 
 // figure out precision from range of values (used by colorbar)
@@ -20961,6 +21059,48 @@ JS9.pix2pix = function(im1, im2, obj){
     if( Math.abs(ny - y) < epsilon ){ ny = y; }
     // return image pixels
     return {x: nx, y: ny};
+};
+
+// calculate angular distance, based on P.T. Wallaces's slalib routines,
+// which were acquired from him via email 6/29/2020, converted to javascript
+// could also use newer routines from www.iausofa.org, but ...
+// input values are in degrees
+JS9.angdist = function(ra1, dec1, ra2, dec2){
+    let a, b, dist;
+    const slaDcs2c = (a, b) => {
+	let v = [];
+	let cosb = Math.cos ( b );
+	v[0] = Math.cos ( a ) * cosb;
+	v[1] = Math.sin ( a ) * cosb;
+	v[2] = Math.sin ( b );
+	return v;
+    };
+    // modified from P.T. Wallace (acquired via email 6/29/2020)
+    const slaDpav = (v1, v2) => {
+	let x0, y0, z0, w, x1, y1, z1, s, c;
+	/* Unit vector to point 1. */
+	x0 = v1 [ 0 ];
+	y0 = v1 [ 1 ];
+	z0 = v1 [ 2 ];
+	w = Math.sqrt ( x0 * x0 + y0 * y0 + z0 * z0 );
+	if( w != 0.0 ) { x0 /= w; y0 /= w; z0 /= w; }
+	/* Vector to point 2. */
+	x1 = v2 [ 0 ];
+	y1 = v2 [ 1 ];
+	z1 = v2 [ 2 ];
+	/* Position angle. */
+	s = y1 * x0 - x1 * y0;
+	c = z1 * ( x0 * x0 + y0 * y0 ) - z0 * ( x1 * x0 + y1 * y0 );
+	return ( s != 0.0 || c != 0.0 ) ? Math.atan2 ( s, c ) : 0.0;
+    };
+    const d2r = (x) => { return x * Math.PI / 180; };
+    const r2d = (x) => { return x * 180 / Math.PI; };
+    a = slaDcs2c(d2r(ra1), d2r(dec1));
+    b = slaDcs2c(d2r(ra2), d2r(dec2));
+    dist = slaDpav(a, b);
+    // negation required to be in line with our conventions
+    dist = -dist;
+    return r2d(dist);
 };
 
 // http://stackoverflow.com/questions/13695317/rotate-a-point-around-another-point

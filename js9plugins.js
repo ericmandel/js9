@@ -6325,8 +6325,6 @@ JS9.Magnifier.init = function(width, height){
     // turn off anti-aliasing
     if( !JS9.ANTIALIAS ){
 	this.context.imageSmoothingEnabled = false;
-	this.context.webkitImageSmoothingEnabled = false;
-	this.context.msImageSmoothingEnabled = false;
     }
     // add container with canvas to the high-level div
     this.containerjq = $("<div>")
@@ -8234,11 +8232,11 @@ JS9.Menubar.createMenus = function(){
 		name: "Flip:",
 		disabled: true
 	    };
-	    items.flipX = xname("around x axis");
+	    items.flipX = xname("x axis");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.flipX.disabled = true;
 	    }
-	    items.flipY = xname("around y axis");
+	    items.flipY = xname("y axis");
 	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ){
 		items.flipY.disabled = true;
 	    }
@@ -8260,6 +8258,13 @@ JS9.Menubar.createMenus = function(){
 		name: "rotation angle:",
 		type: "text"
 	    };
+	    items[`sep${n++}`] = "------";
+	    items.northisup = xname("align: north is up");
+	    if( !tim || !tim.raw || !tim.raw.hdu || !tim.raw.hdu.fits ||
+		!tim.raw.wcs || tim.raw.wcs <= 0){
+		items.northisup.disabled = true;
+	    }
+	    items.resetall = xname("reset flip/rot90/rotate");
 	    items[`sep${n++}`] = "------";
 	    // plugins
 	    for(i=0; i<JS9.plugins.length; i++){
@@ -8320,6 +8325,15 @@ JS9.Menubar.createMenus = function(){
 			    case "rot90_270":
 				uim.setRot90(-90);
 				break;
+			    case "northisup":
+				uim.setRot90("reset");
+				uim.setRotate("northisup");
+				break;
+			    case "resetall":
+				uim.setFlip("reset");
+				uim.setRot90("reset");
+				uim.setRotate("reset");
+				break;
 			    default:
 				// maybe it's a plugin
 				for(ii=0; ii<JS9.plugins.length; ii++){
@@ -8346,8 +8360,10 @@ JS9.Menubar.createMenus = function(){
 			const uim = udisp.image;
 			const obj = {};
 			if( uim  ){
-			    obj.zoom = String(uim.rgb.sect.zoom);
-			    obj.rotate = String(uim.params.rotate||0);
+			    obj.zoom =
+				JS9.floatToString(uim.rgb.sect.zoom);
+			    obj.rotate =
+				JS9.floatToString(uim.params.rotate||0);
 			}
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
@@ -8735,10 +8751,14 @@ JS9.Menubar.createMenus = function(){
 			const uim = udisp.image;
 			const obj = {};
 			if( uim  ){
-			    obj.contrast = String(uim.params.contrast);
-			    obj.bias = String(uim.params.bias);
-			    obj.opacity = String(uim.params.opacity);
-			    obj.sigma = String(uim.params.sigma);
+			    obj.contrast =
+				JS9.floatToString(uim.params.contrast);
+			    obj.bias =
+				JS9.floatToString(uim.params.bias);
+			    obj.opacity =
+				JS9.floatToString(uim.params.opacity);
+			    obj.sigma =
+				JS9.floatToString(uim.params.sigma);
 			}
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
@@ -9571,7 +9591,7 @@ JS9.Menubar.createMenus = function(){
 			const uim = udisp.image;
 			const obj = {};
 			if( uim  ){
-			    obj.sigma = String(uim.params.sigma);
+			    obj.sigma = JS9.floatToString(uim.params.sigma);
 			}
 			$.contextMenu.setInputValues(opt, obj);
 			JS9.jupyterFocus(".context-menu-item");
@@ -9981,11 +10001,12 @@ JS9.Panner.create = function(im){
     let i, j, ii, jj, kk;
     let ioff, ooff;
     let width, height;
-    let pos, ix, iy;
+    let pos, ix, iy, temp;
     let dlayer;
-    // sanity check
-    if( !im || !im.raw || !im.display.pluginInstances.JS9Panner ){
-	return;
+    // sanity checks
+    if( !im || !im.raw || !im.colorData ||
+	!im.display.pluginInstances.JS9Panner ){
+	return null;
     }
     // add panner object to image, if necessary
     if( !im.panner ){
@@ -10088,7 +10109,7 @@ JS9.Panner.create = function(im){
     dlayer = this.display.newShapeLayer("panner", JS9.Panner.opts, this.divjq);
     // add a callback to pan when the panning rectangle is moved
     dlayer.canvas.on("object:modified", (opts) => {
-	let im, disp;
+	let im, disp, panDisp;
 	disp = JS9.getDynamicDisplayOr(this.display);
 	if( disp && disp.image ){
 	    im = disp.image;
@@ -10096,7 +10117,36 @@ JS9.Panner.create = function(im){
 	    im = this.display.image;
 	}
 	if( im ){
+	    panDisp = im.display.pluginInstances.JS9Panner;
 	    pos = opts.target.getCenterPoint();
+	    // rotations will change the pan direction
+	    if( im.params.rot90 === 90 ){
+		temp = pos.x;
+		pos.x = panDisp.height - pos.y;
+		pos.y = temp;
+	    } else if( im.params.rot90 === 180 ){
+		pos.x = panDisp.width - pos.x;
+		pos.y = panDisp.height - pos.y;
+	    } else if( im.params.rot90 === -90 ){
+		temp = panDisp.width - pos.x;
+		pos.x = pos.y;
+		pos.y = temp;
+	    }
+	    // flips will change the pan position
+	    if( im.params.flip === "x" ){
+		pos.x = panDisp.width - pos.x;
+	    } else if( im.params.flip === "y" ){
+		pos.y = panDisp.height - pos.y;
+	    } else if( im.params.flip === "xy" ){
+		pos.x = panDisp.width - pos.x;
+		pos.y = panDisp.height - pos.y;
+	    }
+	    // rotations will change the pan position
+	    if( im.params.rotate ){
+		pos = JS9.rotatePoint(pos,
+				      im.params.rotate,
+				      {x:panDisp.width/2, y:panDisp.height/2});
+	    }
 	    ix = ((pos.x - im.panner.ix) *
 		  im.panner.xblock / im.panner.zoom) + im.panner.x0;
 	    iy = ((dlayer.canvas.height - (pos.y + im.panner.iy)) *
@@ -10104,12 +10154,12 @@ JS9.Panner.create = function(im){
 	    // pan the image
 	    try{
 		// avoid triggering a re-pan
-		im.display.pluginInstances.JS9Panner.status = "inactive";
+		panDisp.status = "inactive";
 		// pan image
 		im.setPan(ix, iy);
 	    }
 	    catch(e){JS9.log("couldn't pan image", e);}
-	    finally{im.display.pluginInstances.JS9Panner.status = "active";}
+	    finally{panDisp.status = "active";}
 	}
     });
     return im;
@@ -10118,24 +10168,48 @@ JS9.Panner.create = function(im){
 // display the image on the panner canvas
 JS9.Panner.disp = function(im){
     let panDisp, panner, sect, tblkx, tblky;
-    let obj, nx, ny, nwidth, nheight, cenx, ceny;
+    let obj, nx, ny, nwidth, nheight, cenx, ceny, pos;
     let npos1, npos2, nobj, nobjt;
     let epos1, epos2, eobj, eobjt;
+    let angle, xflip, yflip, wcsinfo, w2, h2, m, ctx, temp;
     const FUDGE = 1;
+    const img2canvas = (im, img) => {
+	let octx, ocanvas;
+	let panner = im.display.pluginInstances.JS9Panner;
+	let dowhen = true;
+	if( dowhen ){
+	    ocanvas = document.createElement("canvas");
+	    octx = ocanvas.getContext("2d");
+	    ocanvas.width= img.width;
+	    ocanvas.height = img.height;
+	    // turn off anti-aliasing
+	    if( !JS9.ANTIALIAS ){
+		octx.imageSmoothingEnabled = false;
+	    }
+	    octx.putImageData(img, 0, 0);
+	    panner.offscreenRGB = {canvas: ocanvas, context: octx};
+	}
+	return panner.offscreenRGB.canvas;
+    };
     // sanity check
-    // only display if we have a panner present
-    if( !im || !im.display.pluginInstances.JS9Panner ||
-       (im.display.pluginInstances.JS9Panner.status !== "active") ){
+    // only display if we have an image and panner present
+    if( !im                                                       ||
+	!im.display.pluginInstances.JS9Panner                     ||
+	im.display.pluginInstances.JS9Panner.status !== "active"  ){
 	return;
     }
     // always remake make panner image (might be zooming, for example)
-    JS9.Panner.create.call(this, im);
+    if( !JS9.Panner.create.call(this, im) ){
+	return;
+    }
     // convenience variables
+    wcsinfo  = im.raw.wcsinfo || {cdelt1: 1, cdelt2: 1, crot: 0};
     panner = im.panner;
     panDisp = im.display.pluginInstances.JS9Panner;
     sect = im.rgb.sect;
     cenx = panDisp.width/2;
     ceny = panDisp.height/2;
+    ctx = panDisp.context;
     // we're done if there is no panner image
     if( !panner.img ){
 	return;
@@ -10148,10 +10222,27 @@ JS9.Panner.disp = function(im){
         panner.iy = Math.floor((panDisp.canvas.height - panner.img.height)/2);
     }
     // clear first
-    // panDisp.context.clear();
     JS9.Panner.clear.call(this, im);
+    // save context
+    ctx.save();
+    // do we need to apply the canvas transform?
+    if( im.params.transform ){
+	// this is the transform matrix
+	m = im.params.transform;
+	// translate origin to center of display
+	w2 = panner.img.width / 2;
+	h2 = panner.img.height / 2;
+	ctx.translate(w2, h2);
+	// set new transform
+	ctx.transform(m[0][0], m[0][1], m[1][0], m[1][1], m[2][0], m[2][1]);
+	// translate back to 0, 0
+	ctx.translate(-w2, -h2);
+    }
     // draw the image into the context
-    panDisp.context.putImageData(panner.img, panner.ix, panner.iy);
+    // ctx.putImageData(panner.img, panner.ix, panner.iy);
+    ctx.drawImage(img2canvas(im, panner.img), panner.ix, panner.iy);
+    // restore original context
+    ctx.restore();
     // display panner rectangle
     // convenience variables
     tblkx = panner.zoom / panner.xblock;
@@ -10189,6 +10280,37 @@ JS9.Panner.disp = function(im){
 	nwidth = panDisp.width + 10;
 	nheight = panDisp.height + 10;
     }
+    // rotations will change the pan direction
+    if( im.params.rot90 === 90 ){
+	temp = nx;
+	nx = panDisp.height - ny;
+	ny = temp;
+    } else if( im.params.rot90 === 180 ){
+	nx = panDisp.width - nx;
+	ny = panDisp.height - ny;
+    } else if( im.params.rot90 === -90 ){
+	temp = panDisp.width - nx;
+	nx = ny;
+	ny = temp;
+    }
+    // flips will change the pan position
+    if( im.params.flip === "x" ){
+	nx = panDisp.width - nx;
+    } else if( im.params.flip === "y" ){
+	ny = panDisp.height - ny;
+    } else if( im.params.flip === "xy" ){
+	nx = panDisp.width - nx;
+	ny = panDisp.height - ny;
+    }
+    // rotations will change the pan position
+    if( im.params.rotate ){
+	pos = JS9.rotatePoint({x: nx, y: ny},
+			      - im.params.rotate,
+			      {x:panDisp.width/2, y:panDisp.height/2});
+	nx = pos.x;
+	ny = pos.y;
+    }
+    // object containing position and size parameters:
     obj = {left: nx, top: ny, width: nwidth, height: nheight};
     // create the box
     if( !im.panner.boxid ){
@@ -10209,16 +10331,43 @@ JS9.Panner.disp = function(im){
     if( !JS9.globalOpts.pannerDirections || !im.raw.wcs || im.raw.wcs <= 0 ){
 	return im;
     }
+    // get north is up info
+    nobj = im.getNorthIsUp();
+    // angle
+    angle = nobj.angle;
+    // take existing rotation into account
+    if( JS9.notNull(im.params.rot90) ){
+	angle -= im.params.rot90;
+    }
+    // take existing rotation into account
+    if( JS9.notNull(im.params.rotate) ){
+	angle -= im.params.rotate;
+    }
+    // flip
+    xflip = nobj.xflip ? -1 : 1;
+    yflip = nobj.yflip ? -1 : 1;
+    switch(im.params.flip){
+    case "x":
+	xflip *= -1;
+	break;
+    case "y":
+	yflip *= -1;
+	break;
+    case "xy":
+	xflip *= -1;
+	yflip *= -1;
+	break;
+    default:
+	break;
+    }
     // this is the line pointing north
     npos1 = {x: cenx, y: ceny};
-    if( im.raw.wcsinfo && im.raw.wcsinfo.cdelt2 && im.raw.wcsinfo.cdelt2 >= 0 ){
-	npos2 = {x: cenx, y: ceny - JS9.Panner.VSIZE};
+    if( wcsinfo.cdelt2 >= 0 ){
+	npos2 = {x: cenx, y: ceny - JS9.Panner.VSIZE * yflip};
     } else {
-	npos2 = {x: cenx, y: ceny + JS9.Panner.VSIZE};
+	npos2 = {x: cenx, y: ceny + JS9.Panner.VSIZE * yflip};
     }
-    if( im.raw.wcsinfo && im.raw.wcsinfo.crot ){
-	npos2 = JS9.rotatePoint(npos2, -im.raw.wcsinfo.crot, npos1);
-    }
+    npos2 = JS9.rotatePoint(npos2, angle, npos1);
     nobj = {color: JS9.Panner.NORTH.color,
 	    strokeWidth: JS9.Panner.NORTH.strokeWidth,
 	    strokeDashArray: JS9.Panner.NORTH.strokeDashArray,
@@ -10237,14 +10386,12 @@ JS9.Panner.disp = function(im){
     im.panner.northidt = im.addShapes("panner", "text", nobjt);
     // this is the line pointing east
     epos1 = {x: cenx, y: ceny};
-    if( im.raw.wcsinfo && im.raw.wcsinfo.cdelt1 && im.raw.wcsinfo.cdelt1 < 0 ){
-	epos2 = {x: cenx - JS9.Panner.VSIZE, y: ceny};
+    if( wcsinfo.cdelt1 < 0 ){
+	epos2 = {x: cenx - JS9.Panner.VSIZE * xflip, y: ceny};
     } else {
-	epos2 = {x: cenx + JS9.Panner.VSIZE, y: ceny};
+	epos2 = {x: cenx + JS9.Panner.VSIZE * xflip, y: ceny};
     }
-    if( im.raw.wcsinfo && im.raw.wcsinfo.crot ){
-	epos2 = JS9.rotatePoint(epos2, -im.raw.wcsinfo.crot, epos1);
-    }
+    epos2 = JS9.rotatePoint(epos2, angle, epos1);
     eobj = {color: JS9.Panner.EAST.color,
 	    strokeWidth: JS9.Panner.EAST.strokeWidth,
 	    strokeDashArray: JS9.Panner.EAST.strokeDashArray,
@@ -10320,6 +10467,7 @@ JS9.Panner.clear = function(im){
 	    panner.context.clear();
 	    im.removeShapes("panner", "all");
 	    im.panner.boxid = null;
+	    // im.panner.offscreenRGB = null;
 	}
 	return im;
     }
@@ -10337,6 +10485,7 @@ JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
 		    onimageclose: JS9.Panner.clear,
 		    onimageclear: JS9.Panner.clear,
 		    onupdateprefs: JS9.Panner.disp,
+		    onsetwcssys: JS9.Panner.disp,
 		    winTitle: "Panner",
 		    winDims: [JS9.Panner.WIDTH,  JS9.Panner.HEIGHT],
 		    divArgs: [JS9.Panner.SWIDTH, JS9.Panner.SHEIGHT]});
@@ -10366,7 +10515,7 @@ JS9.PanZoom.flipHTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol3
 
 JS9.PanZoom.rot90HTML = '<select class="JS9Select JS9PanZoomSelect JS9PanZoomCol4" name="rot90" onchange="JS9.PanZoom.xsetrot90(\'%s\', \'%s\', this)">%s</select>';
 
-JS9.PanZoom.rotateHTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol5 js9Input" name="rotate" autocapitalize="off" autocorrect="off" onkeydown="JS9.PanZoom.xsetrot(\'%s\', \'%s\', this, event)" value="%s" placeholder="abs angle (deg)">';
+JS9.PanZoom.rotateHTML = '<input type="text" class="JS9PanZoomInput JS9PanZoomCol5 js9Input" name="rotate" autocapitalize="off" autocorrect="off" onkeydown="JS9.PanZoom.xsetrot(\'%s\', \'%s\', this, event)" value="%s" placeholder="angle or reset">';
 
 JS9.PanZoom.pantoHTML = '<input type="button" class="JS9Button2 JS9PanZoomButton JS9PanZoomCol1" name="panto" value="Pan to &rarr;" onclick="javascript:JS9.PanZoom.xpanto(\'%s\', \'%s\', this)">';
 
@@ -10429,10 +10578,10 @@ JS9.PanZoom.xsetflip = function(did, id, target){
     const im = JS9.lookupImage(id, did);
     if( im ){
 	switch(target.value){
-	case "around x axis":
+	case "x axis":
 	    im.setFlip("x");
 	    break;
-	case "around y axis":
+	case "y axis":
 	    im.setFlip("y");
 	    break;
 	case "reset":
@@ -10455,8 +10604,18 @@ JS9.PanZoom.xsetrot90 = function(did, id, target){
 	case "90 right":
 	    im.setRot90(-90);
 	    break;
-	case "reset":
+	case "reset rotate":
 	    im.setRot90("reset");
+	    im.setRotate("reset");
+	    break;
+	case "align: north is up":
+	    im.setRot90("reset");
+	    im.setRotate("northisup");
+	    break;
+	case "reset flip/rot90/rotate":
+	    im.setFlip("reset");
+	    im.setRot90("reset");
+	    im.setRotate("reset");
 	    break;
 	default:
 	    break;
@@ -10473,6 +10632,11 @@ JS9.PanZoom.xsetrot = function(did, id, target, evt){
 	if( evt.keyCode !== 13 ){ return; }
 	rot = $(target).val().trim();
 	if( rot ){
+	    if( rot === "reset" ){
+		im.setRotate("reset");
+		im.setRot90("reset");
+		return;
+	    }
 	    pinst = im.display.pluginInstances.JS9PanZoom;
 	    // do this before setting rotation
 	    if( pinst ){
@@ -10668,8 +10832,8 @@ JS9.PanZoom.init = function(opts){
     };
     const getFlipOptions = () => {
 	let res = "<option selected disabled>Flip</option>";
-	res += `<option>around x axis</option>`;
-	res += `<option>around y axis</option>`;
+	res += `<option>x axis</option>`;
+	res += `<option>y axis</option>`;
 	res += `<option>reset</option>`;
 	return res;
     };
@@ -10677,7 +10841,10 @@ JS9.PanZoom.init = function(opts){
 	let res = "<option selected disabled>Rotate</option>";
 	res += `<option>90 left</option>`;
 	res += `<option>90 right</option>`;
-	res += `<option>reset</option>`;
+	res += `<option>reset rotate</option>`;
+	res += `<option disabled>─────</option>`;
+	res += `<option>align: north is up</option>`;
+	res += `<option>reset flip/rot90/rotate</option>`;
 	return res;
     };
     const getRotOptions = (im) => {
@@ -10694,7 +10861,7 @@ JS9.PanZoom.init = function(opts){
     };
     const getSysOptions = (im) => {
 	let i, sys;
-	let res = "<option selected disabled>WCS Systems:</option>";
+	let res = "<option selected disabled>WCS Systems</option>";
 	const wcssys = im.tmp.wcssysPanZoom || im.getWCSSys();
 	if( im ){
 	    if( im.raw.wcs && im.raw.wcs > 0 ){
@@ -10714,7 +10881,7 @@ JS9.PanZoom.init = function(opts){
     };
     const getUnitsOptions = (im) => {
 	let i, units;
-	let res = "<option selected disabled>WCS Units:</option>";
+	let res = "<option selected disabled>WCS Units</option>";
 	const wcsunits = im.tmp.wcsunitsPanZoom || im.getWCSUnits();
 	if( im ){
 	    if( im.raw.wcs && im.raw.wcs > 0 ){
