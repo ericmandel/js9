@@ -5,7 +5,7 @@
 JS9: astronomical image display everywhere
 ==========================================
 
-![JS9](js9Readme.png)
+![JS9](images/js9Readme.png)
 
 What does it do?
 ----------------

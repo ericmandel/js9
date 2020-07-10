@@ -7427,67 +7427,76 @@ JS9.Image.prototype.setStatus = function(id, status){
 };
 
 // re-calculate data min and max (and set scale params, if necessary)
+//
+// Important note 7/10/2020:
+// Chrome was taking either 35ms ... or 7+ seconds to find the min/max on a
+// 2048x2048 int image (casa.fits in js9debug.html). The slowdown was random.
+// We optimized the loop in this way:
+//   1. assign data[i] to val instead of accessing data[i] more than once
+//   2. use direct min/max compare instead of Math.min() and Math.max
+//   3. use local params instead of this.raw, this.params, this.raw.data
+// These changes appear to have helped but the underlying cause is unknown.
 JS9.Image.prototype.dataminmax = function(dmin, dmax){
-    let i, blankval;
-    let reminscale = Number.isNaN(this.params.scalemin) ||
-                     (this.params.scalemin === undefined);
-    let remaxscale = Number.isNaN(this.params.scalemax) ||
-                     (this.params.scalemax === undefined);
+    let i, raw, params, data, val, blankval, reminscale, remaxscale;
+    // convenience variables
+    raw = this.raw;
+    params = this.params;
+    data = this.raw.data;
+    // rescale?
+    reminscale = Number.isNaN(params.scalemin) || JS9.isNull(params.scalemin);
+    remaxscale = Number.isNaN(params.scalemax) || JS9.isNull(params.scalemax);
     // might have to redo scaling if it's tied to current data min or max
-    if( this.params.scaleclipping === "dataminmax" ){
-	if( (this.raw.dmin === this.params.scalemin) ||
-	    (this.raw.dmin === undefined)            ){
+    if( params.scaleclipping === "dataminmax" ){
+	if( (raw.dmin === params.scalemin) || JS9.isNull(raw.dmin) ){
 	    reminscale = true;
 	}
-	if( (this.raw.dmax === this.params.scalemax) ||
-	    (this.raw.dmax === undefined)            ){
+	if( (raw.dmax === params.scalemax) || JS9.isNull(raw.dmax) ){
 	    remaxscale = true;
 	}
     }
     // used supplied values, if possible
-    if( dmin !== undefined && dmax !== undefined ){
-	this.raw.dmin = dmin;
-	this.raw.dmax = dmax;
+    if( JS9.notNull(dmin) && JS9.notNull(dmax) ){
+	raw.dmin = dmin;
+	raw.dmax = dmax;
     } else {
 	// re-calculate data min and max values
-	this.raw.dmin = Number.MAX_VALUE;
-	this.raw.dmax = Number.MIN_VALUE;
+	raw.dmin = Number.MAX_VALUE;
+	raw.dmax = Number.MIN_VALUE;
 	// get data min and max, ignoring type-dependent blank values
-	if( this.raw.bitpix > 0 ){
+	if( raw.bitpix > 0 ){
 	    // integer data: BLANK header value specifies data value to ignore
-	    if( this.raw.header.BLANK !== undefined ){
-		blankval = this.raw.header.BLANK;
-		for(i=0; i<this.raw.data.length; i++) {
-		    if( this.raw.data[i] !== blankval ){
-			this.raw.dmin=Math.min(this.raw.dmin, this.raw.data[i]);
-			this.raw.dmax=Math.max(this.raw.dmax, this.raw.data[i]);
+	    if( raw.header.BLANK !== undefined ){
+		blankval = raw.header.BLANK;
+		for(i=0; i<data.length; i++) {
+		    val = data[i];
+		    if( val !== blankval ){
+			if( val < raw.dmin ){ raw.dmin = val; }
+			if( val > raw.dmax ){ raw.dmax = val; }
 		    }
 		}
 	    } else {
-		for(i=0; i<this.raw.data.length; i++) {
-		    this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
-		    this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
+		for(i=0; i<data.length; i++) {
+		    val = data[i];
+		    if( val < raw.dmin ){ raw.dmin = val; }
+		    if( val > raw.dmax ){ raw.dmax = val; }
 		}
 	    }
 	} else {
 	    // float data: ignore NaN
-	    for(i=0; i<this.raw.data.length; i++) {
-		if( !Number.isNaN(this.raw.data[i]) ){
-		    this.raw.dmin = Math.min(this.raw.dmin, this.raw.data[i]);
-		    this.raw.dmax = Math.max(this.raw.dmax, this.raw.data[i]);
+	    for(i=0; i<data.length; i++) {
+		val = data[i];
+		if( !Number.isNaN(val) ){
+		    if( val < raw.dmin ){ raw.dmin = val; }
+		    if( val > raw.dmax ){ raw.dmax = val; }
 		}
 	    }
 	}
     }
     // re-set scaling values, if necessary
-    if( reminscale ){
-	this.params.scalemin = this.raw.dmin;
-    }
-    if( remaxscale ){
-	this.params.scalemax = this.raw.dmax;
-    }
-    this.params.precision =
-	JS9.floatPrecision(this.params.scalemin, this.params.scalemax);
+    if( reminscale ){ params.scalemin = raw.dmin; }
+    if( remaxscale ){ params.scalemax = raw.dmax; }
+    // set new precision
+    params.precision = JS9.floatPrecision(params.scalemin, params.scalemax);
     // allow chaining
     return this;
 };
