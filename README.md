@@ -17,8 +17,8 @@ What does it do?
   - server-side and local analysis using the JS9 public API
   - control JS9 using scripts from the Linux shell or Python
   - runs on Macs, Linux, Windows, iPads, iPhones, ...
-  - runs as a Desktop app, in all modern browsers, mobile apps are coming ...
-  - utilizes WebAssembly, if present (FITS processing at near native speed!)
+  - runs as a Desktop app in all modern browsers
+  - utilizes WebAssembly (FITS processing at near native speed!)
 
 How can I try it out?
 ---------------------
@@ -35,12 +35,12 @@ release downloads.
 To install or not to install ...
 --------------------------------
 
-For many users, there is no need to install: simply use the [JS9 web
+For many users, there is no need to install JS9: simply use the [JS9 web
 site](https://js9.si.edu) to display your data. You can even upload your
 FITS files to the web site and run our server-side analysis.
 
 Installing JS9 allows you to create your own web pages, tailor site
-parameters, and add your own local and server analysis tasks. Grab the
+parameters, and add your own local and server-based analysis tasks. Grab the
 latest version from [JS9 on GitHub](https://github.com/ericmandel/js9):
 
     git clone https://github.com/ericmandel/js9
@@ -52,11 +52,8 @@ Load a local page into your browser:
 (NB: Chrome needs to run with the --allow-file-access-from-files switch to use
 the file URI.)
 
-For Desktop use, install [Electron.js](http://electron.atom.io) and generate *js9* script:
-
-    ./mkjs9 -q
-
-Use the *js9* script to start the Desktop app and load an image:
+For Desktop use, install [Electron.js](https://www.electronjs.org/)
+and use the *js9* script to start the Desktop app and load an image:
 
     js9 -a ~/data/m13.fits
 
@@ -89,7 +86,7 @@ What about scripting?
 The *js9* script allows you to control a JS9 web page from the Linux
 command line using the JS9 Public API (scripting requires installation of
 JS9 and either [node.js](https://nodejs.org/) or
-[Electron.js](http://electron.atom.io)):
+[Electron.js](https://www.electronjs.org/)):
 
     js9 Load chandra.fits '{"scale":"log","colormap":"red","contrast":5.78,"bias":0.15}'
     js9 Load spitzer.fits '{"scale":"log","colormap":"blue","contrast":6.3,"bias":0.54}'
