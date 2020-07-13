@@ -2457,7 +2457,7 @@ JS9.Image.prototype.mkSection = function(...args){
 // create colormap index array from data values and specified data min/max
 // from: tksao1.0/frame/frametruecolor.C
 JS9.Image.prototype.mkColorData = function(){
-    let i, dd;
+    let i, dd, idata, odata;
     const ss = JS9.SCALESIZE;
     const length = ss - 1;
     const dmin = this.params.scalemin;
@@ -2473,15 +2473,22 @@ JS9.Image.prototype.mkColorData = function(){
     if( !this.colorData || this.colorData.length < dlen ){
 	this.colorData = new Int32Array(dlen);
     }
+    // Important note 7/13/2020:
+    // Chrome 83.0.4103.116 was taking either 4ms ... or 2+ seconds to do
+    // this loop on a 2048x2048 int image (casa.fits in js9debug.html).
+    // Replacing this.raw.data and this.colorData with local variables seems
+    // to fix this slowdown. omg ...
+    idata = this.raw.data;
+    odata = this.colorData;
     // for each raw value, calculate lookup offset into scaled array
     for(i=0; i<dlen; i++){
-	dd = this.raw.data[i];
+	dd = idata[i];
 	if( dd <= dmin ){
-	    this.colorData[i] = 0;
+	    odata[i] = 0;
 	} else if( dd >= dmax ){
-	    this.colorData[i] = ss - 1;
+	    odata[i] = ss - 1;
 	} else {
-	    this.colorData[i] = Math.floor(((dd - dmin) * dval) + 0.5);
+	    odata[i] = Math.floor(((dd - dmin) * dval) + 0.5);
 	}
     }
     // allow chaining
