@@ -6949,10 +6949,7 @@ JS9.Image.prototype.setColormap = function(...args){
     }
     this.displayImage("colors");
     // hack: delete filterRGBImage from stash to avoid restore during reproject
-    // also added to "change contrast/bias" routine, can't this be generalized?
-    if( this.xeqstash && this.xeqstash.filterRGBImage ){
-	delete this.xeqstash.filterRGBImage;
-    }
+    this.xeqStashDiscard("filterRGBImage");
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
 	this.xeqPlugins("image", "onsetcolormap");
@@ -7880,9 +7877,9 @@ JS9.Image.prototype.plot3d = function(src, bkg, opts){
 // or:
 //   im.rawDataLayer(id, "remove") -- remove raw data later with specified id
 // or:
-//   im.rawDataLayer() -- return name of th current layer
+//   im.rawDataLayer() -- return name of the current layer
 JS9.Image.prototype.rawDataLayer = function(...args){
-    let i, j, id, mode, raw, oraw, nraw, rawid, cur, nlen, carr, im, key;
+    let i, j, id, mode, raw, oraw, nraw, rawid, cur, nlen, carr, im;
     let [opts, func] = args;
     // no arg => return name of current raw
     if( !args.length ){
@@ -7932,14 +7929,8 @@ JS9.Image.prototype.rawDataLayer = function(...args){
 			// remove stash calls for this id from other images
 			for(j=0; j<JS9.images.length; j++){
 			    im = JS9.images[j];
-			    if( im.xeqstash ){
-				for( key in im.xeqstash ){
-				    if( im.xeqstash.hasOwnProperty(key) ){
-					if( im.xeqstash[key].id === id ){
-					    delete im.xeqstash[key];
-					}
-				    }
-				}
+			    if( im && im.xeqstash ){
+				im.xeqStashDiscard(id);
 			    }
 			}
 			// remove layer
@@ -9267,7 +9258,9 @@ JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
     case "setRot90":
 	// two rots in the opposite direction cancel one another
 	len = this.xeqstash.length;
-	if( len >= 1 && this.xeqstash[len-1].args[0] === -args[0] ){
+	if( len >= 1                                  &&
+	    this.xeqstash[len-1]                      &&
+	    this.xeqstash[len-1].args[0] === -args[0] ){
 	    this.xeqstash.pop();
 	    return this;
 	}
@@ -9275,7 +9268,9 @@ JS9.Image.prototype.xeqStashSave = function(func, args, id, context){
     case "setFlip":
 	// two flips in the same direction cancel one another
 	len = this.xeqstash.length;
-	if( len >= 1 && this.xeqstash[len-1].args[0] === args[0] ){
+	if( len >= 1                                 &&
+	    this.xeqstash[len-1]                     &&
+	    this.xeqstash[len-1].args[0] === args[0] ){
 	    this.xeqstash.pop();
 	    return this;
 	}
@@ -9341,6 +9336,23 @@ JS9.Image.prototype.xeqStashCall = function(xeqstash, exclArr){
 		doxeq(key, xeq);
 	    }
 	}
+    }
+};
+
+// remove a stash routine
+JS9.Image.prototype.xeqStashDiscard = function(id){
+    let i;
+    // sanity check
+    if( !this.xeqstash ){ return; }
+    // pre 3.1 used an object, not an array
+    if( $.isArray(this.xeqstash) ){
+	for(i=0; i<this.xeqstash.length; i++){
+	    if( this.xeqstash[i].id === id ){
+		this.xeqstash.splice(i,1);
+	    }
+	}
+    } else if( this.xeqstash[id] ){
+	delete this.xeqstash[id];
     }
 };
 
@@ -15795,10 +15807,7 @@ JS9.MouseTouch.Actions["change contrast/bias"] = function(im, ipos, evt){
 	im.displayImage("scaled", {blendMode: false});
     }
     // hack: delete filterRGBImage from stash to avoid restore during reproject
-    // also added to setColormap routine, can't this be generalized?
-    if( im.xeqstash && im.xeqstash.filterRGBImage ){
-	delete im.xeqstash.filterRGBImage;
-    }
+    im.xeqStashDiscard("filterRGBImage");
     // extended plugins
     if( JS9.globalOpts.extendedPlugins ){
 	im.xeqPlugins("image", "onchangecontrastbias");
