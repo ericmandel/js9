@@ -9342,19 +9342,25 @@ JS9.Image.prototype.xeqStashCall = function(xeqstash, exclArr){
 };
 
 // remove a stash routine
-JS9.Image.prototype.xeqStashDiscard = function(id){
-    let i;
+JS9.Image.prototype.xeqStashDiscard = function(xid){
+    let i, key;
     // sanity check
     if( !this.xeqstash ){ return; }
-    // pre 3.1 used an object, not an array
     if( $.isArray(this.xeqstash) ){
 	for(i=0; i<this.xeqstash.length; i++){
-	    if( this.xeqstash[i].id === id ){
+	    if( xid === this.xeqstash[i].func || xid === this.xeqstash[i].id ){
 		this.xeqstash.splice(i,1);
 	    }
 	}
-    } else if( this.xeqstash[id] ){
-	delete this.xeqstash[id];
+    } else {
+	// pre 3.1 used an object
+	for( key in this.xeqstash ){
+	    if( this.xeqstash.hasOwnProperty(key) ){
+		if( xid === key || xid === this.xeqstash[key].id ){
+		    delete this.xeqstash[key];
+		}
+	    }
+	}
     }
 };
 
