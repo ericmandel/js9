@@ -14301,6 +14301,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     pub.layer = layerName;
     pub.color = obj.color || obj.stroke;
     pub.tags = obj.params.tags;
+    pub.sticky = obj.params.sticky;
     if( obj.params.parent ){
 	pub.parent = obj.params.parent.obj.params.id;
     } else {
@@ -14640,7 +14641,8 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
     // process the specified shapes
     this.selectShapes(layerName, shape, (obj, ginfo) => {
 	let i, child, parent;
-	if( obj.params.removable !== false || opts.overrideRemovable ){
+	if( (obj.params.removable !== false || opts.overrideRemovable) &&
+	    (!obj.params.sticky || opts.sticky !== false)  	       ){
 	    JS9.Fabric._updateShape.call(this, layerName, obj, ginfo, "remove");
 	    // clear any dialog box
 	    if( obj.params.winid ){
@@ -14978,11 +14980,13 @@ JS9.Fabric.refreshShapes = function(layerName){
     }
     // get current regions (i.e., before update to current configuration)
     regstr = this.listRegions("all", {mode: 1,
+				      sticky: false,
 				      savewcsedit: true,
 				      saveid: true}, layerName);
     if( regstr ){
 	// remove current regions (including unremovable ones)
-	this.removeShapes(layerName, "all", {overrideRemovable: true});
+	this.removeShapes(layerName, "all", {overrideRemovable: true,
+					     sticky: false});
 	// add back regions in current configuration
 	this.addShapes(layerName, regstr, {restoreid: true});
     }
@@ -16831,6 +16835,11 @@ JS9.Regions.initConfigForm = function(obj, opts){
     } else {
 	$(`${form}[name='changeable']`).prop("checked", false);
     }
+    if( obj.params.sticky ){
+	$(`${form}[name='sticky']`).prop("checked", true);
+    } else {
+	$(`${form}[name='sticky']`).prop("checked", false);
+    }
     // save regions processing
     $(`${form}[id='includejson']`)
 	.prop("checked", JS9.globalOpts.regIncludeJSON);
@@ -16978,7 +16987,7 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	}
 	return(String(val));
     };
-    const fmtcheck= (val1, val2) => {
+    const fmtcheck = (val1, val2) => {
 	if( multi ){
 	    return true;
 	}
@@ -17044,6 +17053,9 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		return fmtcheck(JS9.saostrtod(obj.pub.wcsposstr[1]),
 				JS9.saostrtod(val));
 	    }
+	}
+	if( key === "sticky" ){
+	    return fmtcheck(obj.pub.sticky||false, val);
 	}
 	if( obj.pub.lcs && obj.pub.lcs[key] !== undefined ){
 	    if( fmtcheck(obj.pub.lcs[key], val) ){
@@ -17616,6 +17628,11 @@ JS9.Regions.listRegions = function(which, opts, layer){
     for(i=0; i<rlen; i++){
 	region = pubs[i];
 	obj = region.obj;
+	// don't list sticky regions, if specified
+	if( opts.sticky === false && region.sticky ){
+	    continue;
+	}
+	// init tags
 	tagjoin = region.tags.join(",");
 	if( tagjoin.includes("exclude") ){
 	    iestr = "-";
