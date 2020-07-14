@@ -8957,6 +8957,8 @@ JS9.Image.prototype.filterRGBImage = function(...args){
     // try to run the filter to generate a new RGB image
     try{ JS9.ImageFilters[filter](...args); }
     catch(e){ JS9.error(`JS9 image filter '${filter}' failed`, e); }
+    // we changed colors, the offsreen RGB image is invalid
+    this.offscreenRGB = null;
     // display new RGB image
     this.displayImage("display");
     // extended plugins

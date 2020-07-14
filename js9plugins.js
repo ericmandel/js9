@@ -4376,6 +4376,7 @@ JS9.Filters.xundo = function(target, did, id){
 	if( pinst.stack && pinst.stack.length ){
 	    obj = pinst.stack.pop();
 	    im.rgb.img.data.set(obj.data);
+	    im.offscreenRGB = null;
 	    im.displayImage("display");
 	    JS9.Filters.updateval(target, obj.filter, 0);
 	}
