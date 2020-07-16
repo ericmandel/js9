@@ -2597,8 +2597,9 @@ For example:
     # regions tagged with the "foo" tag
     JS9.CountsInRegions('foo');
 </pre>
-Note that if you pass a region selector and no regions are returned, the
-routine will throw an error.
+Note that if you pass a region selector and no regions are returned,
+the routine will throw an error. Also note that, in this context, text
+and cross regions not valid regions (and are ignored).
 
 <p>
 In keeping with how desktop regcnts works, if no argument or null or a
@@ -2705,10 +2706,11 @@ where:
 </ul>
 The <b>JS9.RadialProfile()</b> routine
 uses <a href="#JS9.CountsInRegions"><b>JS9.CountsInRegions()</b></a>
-to produce a radial profile plot. The source region argument should
-be an annulus region (or, when using "$sregions", the displayed source
+to produce a radial profile plot. The source region argument should be
+an annulus region (or, when using "$sregions", the displayed source
 region should be an annulus.) The background region can be any
-region(s), the same as for the counts routine.
+region(s) (except text or cross regions), the same as for the counts
+routine.
 
 <p>
 The third argument allows you to specify options to the counts routine,
@@ -3305,11 +3307,11 @@ returns:
 <li><b>id</b>: id of last region created
 </ul>
 The <b>rarr</b> argument can be a region shape ("annulus", "box",
-"circle", "ellipse", "point", "polygon", "text"), a single region
+"circle", "cross", "ellipse", "point", "polygon", "text"), a single region
 object, or an array of region objects. Region objects contain one or
 more properties, of which the most important are:
 <ul>
-<li><b>shape</b>: "annulus", "box", "circle", "ellipse", "point", "polygon", "text" <b>[REQUIRED]</b>
+<li><b>shape</b>: "annulus", "box", "circle", "cross", "ellipse", "point", "polygon", "text" <b>[REQUIRED]</b>
 <li><b>x</b>: image x position
 <li><b>y</b>: image y position
 <li><b>px</b>: physical x position
@@ -3322,14 +3324,14 @@ more properties, of which the most important are:
 <li><b>dy</b>: increment from current image y position
 <li><b>tags</b>: comma-separated list of tag strings or array of tag strings
 <li><b>radii</b>: array of radii for annulus region
-<li><b>width</b>: width for box region
-<li><b>height</b>: height for box region
+<li><b>width</b>: width for box or cross region
+<li><b>height</b>: height for box or cross region
 <li><b>radius</b>: radius value for circle region
 <li><b>r1</b>:  x radius for ellipse region (misnomer noted)
 <li><b>r2</b>:  y radius for ellipse region (misnomer noted)
 <li><b>pts</b>: array of objects containing x and y positions for polygons
 <li><b>points</b>: array of objects containing x and y offsets from the center for polygons
-<li><b>angle</b>: angle in degrees for box and ellipse regions
+<li><b>angle</b>: angle in degrees for box, ellipse, cross regions
 <li><b>color</b>: region color (string name or #rrggbb syntax)
 <li><b>text</b>: text associated with text region or for a child region of this region
 <li><b>data</b>: this property can be an object, string, number,
@@ -3449,20 +3451,20 @@ Each returned region object contains the following properties:
 <ul>
 <li><b>id</b>: numeric region id (assigned by JS9 automatically)
 <li><b>mode</b>: "add", "remove", "select", "update"
-<li><b>shape</b>: region shape ("annulus", "box", "circle", "ellipse",
+<li><b>shape</b>: region shape ("annulus", "box", "circle", "cross", "ellipse",
 "point", "polygon", "text")
 <li><b>tags</b>: comma delimited list of region tags (e.g., "source", "include")
 <li><b>color</b>: region color
 <li><b>x,y</b>: image coordinates of region
 <li><b>radii</b>: array of radii for annulus region
-<li><b>width</b>: width for box region
-<li><b>height</b>: height for box region
+<li><b>width</b>: width for box or cross region
+<li><b>height</b>: height for box or cross region
 <li><b>radius</b>: radius value for circle region
 <li><b>r1</b>:  x radius for ellipse region (misnomer noted)
 <li><b>r2</b>:  y radius for ellipse region (misnomer noted)
 <li><b>pts</b>: array of objects containing x and y positions, for polygons
 <li><b>points</b>: array of objects containing x and y offsets from the specified center, for polygons
-<li><b>angle</b>: angle in degrees for box and ellipse regions
+<li><b>angle</b>: angle in degrees for box, ellipse, cross regions
 <li><b>ra</b>: RA of center in degrees
 <li><b>dec</b>: Dec of center in degrees
 <li><b>wcsstr</b>: region string in WCS coordinates
@@ -4082,25 +4084,25 @@ returns:
 <li><b>id</b>: id of last shape created
 </ul>
 The <b>sarr</b> argument can be a shape ("annulus", "box",
-"circle", "ellipse", "point", "polygon", "text"), a single shape
+"circle", "cross", "ellipse", "point", "polygon", "text"), a single shape
 object, or an array of shape objects. Shape objects contain one or
 more properties, of which the most important are:
 <ul>
-<li><b>shape</b>: "annulus", "box", "circle", "ellipse", "point", "polygon", "text" <b>[REQUIRED]</b>
+<li><b>shape</b>: "annulus", "box", "circle", "cross", "ellipse", "point", "polygon", "text" <b>[REQUIRED]</b>
 <li><b>x</b>: image x position
 <li><b>y</b>: image y position
 <li><b>dx</b>: increment from current image x position
 <li><b>dy</b>: increment from current image y position
 <li><b>tags</b>: comma-separated list of tag strings or array of tag strings
 <li><b>radii</b>: array of radii for annulus shape
-<li><b>width</b>: width for box shape
-<li><b>height</b>: height for box shape
+<li><b>width</b>: width for box or cross shape
+<li><b>height</b>: height for box or cross shape
 <li><b>radius</b>: radius value for circle shape
 <li><b>r1</b>:  x radius for ellipse shape (misnomer noted)
 <li><b>r2</b>:  y radius for ellipse shape (misnomer noted)
 <li><b>pts</b>: array of objects containing x and y positions, for polygons
 <li><b>points</b>: array of objects containing x and y offsets from the specified center, for polygons
-<li><b>angle</b>: angle in degrees for box and ellipse shapes
+<li><b>angle</b>: angle in degrees for box, ellipse, cross shapes
 <li><b>color</b>: shape color (string name or #rrggbb syntax)
 <li><b>text</b>: text associated with text shape
 <li><b>data</b>: this property can be an object, string, number,
@@ -4179,17 +4181,17 @@ Each returned shape object contains the following properties:
 <ul>
 <li><b>id</b>: numeric region id (assigned by JS9 automatically)
 <li><b>mode</b>: "add", "remove", or "change"
-<li><b>shape</b>: region shape ("annulus", "box", "circle", "ellipse",
+<li><b>shape</b>: region shape ("annulus", "box", "circle", "cross", "ellipse",
 "point", "polygon", "text")
 <li><b>tags</b>: comma delimited list of region tags (e.g., "source", "include")
 <li><b>color</b>: region color
 <li><b>x,y</b>: image coordinates of region
-<li><b>size</b>: object containing width and height for box region
+<li><b>size</b>: object containing width and height for box, cross region
 <li><b>radius</b>: radius value for circle region
 <li><b>radii</b>: array of radii for annulus region
 <li><b>eradius</b>: object containing x and y radii for ellipse regions
 <li><b>pts</b>: array of objects containing x and y positions, for polygons
-<li><b>angle</b>: angle in degrees for box and ellipse regions
+<li><b>angle</b>: angle in degrees for box, ellipse, cross regions
 <li><b>data</b>: data property passed in options object when this shape was created.
 </ul>
 

@@ -557,7 +557,7 @@ JS9.wcssyss = ["FK4", "FK5", "ICRS", "galactic", "ecliptic",
 JS9.wcsunitss = ["degrees", "sexagesimal", "pixels"];
 
 // list of known regions
-JS9.regions = ["annulus", "box", "circle", "ellipse", "line", "point",
+JS9.regions = ["annulus", "box", "circle", "cross", "ellipse", "line", "point",
 	       "polygon", "text"];
 
 // known bugs and work-arounds
@@ -3681,6 +3681,10 @@ JS9.Image.prototype.displaySection = function(opts, func) {
             xdim  = xreg.radius*2;
             ydim = xreg.radius*2;
             break;
+	case "cross":
+            xdim  = xreg.width;
+            ydim = xreg.height;
+	    break;
 	case "ellipse":
             xdim  = xreg.r1*2;
             ydim = xreg.r2*2;
@@ -12125,6 +12129,7 @@ JS9.WebWorker.prototype.terminate = function(){
 // quick way to separate fabric versions
 fabric.major_version = parseFloat(fabric.version.split(".")[0]);
 fabric.minor_version = parseFloat(fabric.version.split(".")[1]);
+fabric.patch_version = parseFloat(fabric.version.split(".")[2]);
 
 // fabric sub-object to hold fabric routines
 JS9.Fabric = {};
@@ -12169,10 +12174,17 @@ JS9.Fabric.opts = {
 // rescale the width of shapes in the shape layers
 JS9.Fabric.rescaleStrokeWidth = function(scale, sw1){
     const tscale = ((this.scaleX + this.scaleY) / 2);
+    // fabric 3.6.3+ supports strokeUniform, including for groups
+    if( fabric.major_version >= 4    ||
+	(fabric.major_version === 3  &&
+	 fabric.minor_version === 6  &&
+	 fabric.patch_version >=  3) ){
+	return;
+    }
     // fabric 2+ supports strokeUniform, but not for groups
     // still, it fixes the different strokeWidth problem for rectangular boxes
-    if( fabric.major_version >= 2                      &&
-	this.params && this.params.shape !== "annulus" ){
+    if( fabric.major_version >= 2 && this.params &&
+	this.params.shape !== "annulus" && this.params.shape !== "cross" ){
 	return;
     }
     scale = scale || 1;
@@ -13130,6 +13142,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	if( !parent ){
 	    switch(opts.shape){
 	    case "box":
+	    case "cross":
 	    case "ellipse":
 	    case "text":
 		// add file rotation
@@ -13314,6 +13327,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	}
 	break;
     case "box":
+    case "cross":
 	// we can scale menu-created regions to be reasonably sized
 	if( opts.ireg && JS9.SCALEIREG ){
 	    if( JS9.notNull(opts.width) ){
@@ -13775,9 +13789,9 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 // call using image context
 JS9.Fabric.addShapes = function(layerName, shape, myopts){
     let i, sobj, sarr, ns, s, bopts, opts, layer, canvas, dlayer;
-    let zoom, ttop, tleft;
+    let zoom, ttop, tleft, tangle, w2, h2;
     let params = {};
-    let rarr = [];
+    let rarr = [], parr = [];
     const objs = [];
     // is this core service disabled?
     if( $.inArray("regions", this.params.disable) >= 0 &&
@@ -13939,6 +13953,29 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    // save shape
 	    params.shape = "circle";
 	    s = new fabric.Circle(opts);
+	    break;
+	case "cross":
+	    // save shape
+	    params.shape = "cross";
+	    // save group position
+	    ttop = opts.top;
+	    tleft = opts.left;
+	    tangle = opts.angle;
+	    w2 = opts.width/2;
+	    h2 = opts.height/2;
+	    parr = [];
+	    opts.left = 0;
+	    opts.top = 0;
+	    opts.angle = 0;
+	    opts.points = [{x: -w2, y: 0}, {x:  w2, y: 0}]
+	    parr.push(new fabric.Polyline(opts.points, opts));
+	    opts.points = [{x: 0, y: -h2}, {x:  0, y: h2}]
+	    parr.push(new fabric.Polyline(opts.points, opts));
+	    // a cross is two lines at the specified position
+	    opts.top = ttop;
+	    opts.left = tleft;
+	    opts.angle = tangle;
+	    s = new fabric.Group(parr, opts);
 	    break;
 	case "ellipse":
 	    // save shape
@@ -14274,6 +14311,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 		obj.wcssizestr = [s[s.length-1]];
 		break;
 	    case "box":
+	    case "cross":
 		obj.wcssizestr = [s[2], s[3]];
 		break;
 	    case "circle":
@@ -14375,6 +14413,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     if( !pub.parent ){
 	switch(pub.shape){
 	case "box":
+	case "cross":
 	case "ellipse":
 	case "text":
 	    // take transform angle into account
@@ -14449,7 +14488,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	}
 	break;
     case "box":
-	pub.shape = "box";
+    case "cross":
 	pub.width = obj.width * scalex;
 	pub.height = obj.height * scaley;
 	tval1 = pub.width * bin;
@@ -14458,8 +14497,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    pub.lcs.width = tval1;
 	    pub.lcs.height = tval2;
 	}
-	pub.imstr = `box(${tr(px)},${tr(py)},${tr(tval1)},${tr(tval2)},${tr4(pub.angle)})`;
-	tstr = `box ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.width} ${pub.y} ${pub.x} ${pub.y} ${pub.x} ${pub.y + pub.height} ${pub.angle * Math.PI / 180.0}`;
+	pub.imstr = `${pub.shape}(${tr(px)},${tr(py)},${tr(tval1)},${tr(tval2)},${tr4(pub.angle)})`;
+	tstr = `${pub.shape} ${pub.x} ${pub.y} ${pub.x} ${pub.y} ${pub.x + pub.width} ${pub.y} ${pub.x} ${pub.y} ${pub.x} ${pub.y + pub.height} ${pub.angle * Math.PI / 180.0}`;
 	break;
     case "circle":
 	pub.radius = obj.radius * scalex;
@@ -14761,8 +14800,9 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 // change the specified shape(s)
 // call using image context
 JS9.Fabric.changeShapes = function(layerName, shape, opts){
-    let i, s, sobj, bopts, layer, canvas, ao, rlen, color, maxr, zoom, exports;
-    const orad = [];
+    let i, s, sobj, bopts, layer, canvas, ao, rlen, maxr, zoom, exports;
+    let topts, xopts;
+    const orad = [], cpts = [];
     layer = this.getShapeLayer(layerName);
     // sanity check
     if( !layer ){
@@ -14874,7 +14914,6 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	switch(obj.params.shape){
 	case "annulus":
 	    if( opts.radii && opts.radii.length ){
-		color = obj.get("stroke");
 		// remove existing annuli
 		// can't remove inside the forEachObject loop
 		obj.forEachObject( (tobj) => { orad.push(tobj); });
@@ -14884,12 +14923,14 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 		    obj.remove(orad[i]);
 		    canvas.remove(orad[i]);
 		}
-		// generate new annuli
+		// generate new annuli, applying changes
 		rlen = obj.params.radii.length;
 		maxr = 0;
+		topts = $.extend(true, {}, opts);
+		topts.stroke = topts.stroke || obj.get("stroke");
 		for(i=0; i<rlen; i++){
-		    s = new fabric.Circle({radius: obj.params.radii[i],
-					   stroke: color});
+		    topts.radius = obj.params.radii[i];
+		    s = new fabric.Circle(topts);
 		    maxr = Math.max(maxr, obj.params.radii[i]);
 		    obj.add(s);
 		}
@@ -14916,6 +14957,34 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 		obj.scaleX = zoom;
 		obj.scaleY = zoom;
 	    }
+	    break;
+	case "cross":
+	    topts = $.extend(true, {}, opts);
+	    topts.stroke = topts.stroke || obj.get("stroke");
+	    // change width to two points making up the first line
+	    if( topts.width ){
+		obj.scaleX = zoom;
+		cpts[0] = [{x: -topts.width/2, y: 0},
+			   {x:  topts.width/2, y: 0}];
+		delete topts.width;
+	    }
+	    // change height to two points making up the second line
+	    if( topts.height ){
+		obj.scaleY = zoom;
+		cpts[1] = [{x: 0, y: -topts.height/2},
+			   {x: 0, y: topts.height/2}];
+		delete topts.height;
+	    }
+	    // angle gets incorporated into the group
+	    if( topts.angle ){
+		delete topts.angle;
+	    }
+	    // apply changes to each line of the cross
+	    obj.forEachObject((tobj, idx) => {
+		xopts = $.extend(true, {}, topts);
+		if( cpts[idx] ){ xopts.points = cpts[idx]; }
+		tobj.set(xopts);
+	    });
 	    break;
 	case "ellipse":
 	    if( opts.r1 ){
@@ -16910,6 +16979,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    .css("background", "#E9E9E9");
 	switch(obj.pub.shape){
 	case "box":
+	case "cross":
 	case "ellipse":
 	    $(`${form}.angle`).removeClass("nodisplay");
 	    break;
@@ -17416,7 +17486,7 @@ JS9.Regions.pasteFromClipboard = function(curpos){
     let i, s, nobj, xpos, ypos, oval;
     let objs = [];
     let xcen = 0, ycen = 0;
-    const rregexp = /(annulus|box|circle|ellipse|line|polygon|point|text) *\(/;
+    const rregexp = /(annulus|box|circle|cross|ellipse|line|polygon|point|text) *\(/;
     // sanity check
     if( !this ){ return; }
     // get string from clipboard
@@ -17753,7 +17823,7 @@ JS9.Regions.parseRegions = function(s, opts){
     let i, j, k, lines, obj, robj, txeq;
     let owcssys, owcsunits, wcssys, iswcs, liswcs, pos, alen;
     const regions = [];
-    const regrexp = /^-?(annulus|box|circle|ellipse|line|polygon|point|text)$/;
+    const regrexp = /^-?(annulus|box|circle|cross|ellipse|line|polygon|point|text)$/;
     const wcsrexp = /^(fk4|fk5|icrs|galactic|ecliptic|image|physical|linear)$/;
     const imrexp = /^(image|physical)$/;
     const unrexp = /[dr:]/;
@@ -18029,6 +18099,7 @@ JS9.Regions.parseRegions = function(s, opts){
 		    }
 		    break;
 		case "box":
+		case "cross":
 		    if( alen >= 3 ){
 			obj.width = getilen(robj.args[2], 1);
 		    }

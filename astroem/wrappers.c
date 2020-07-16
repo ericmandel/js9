@@ -571,7 +571,8 @@ char *reg2wcsstr(int n, char *regstr){
 	  }
 	}
 	/* output angle, as needed */
-	if( !strcmp(s, "box") || !strcmp(s, "ellipse") || !strcmp(s, "text") ){
+	if( !strcmp(s, "box")     || !strcmp(s, "cross") ||
+	    !strcmp(s, "ellipse") || !strcmp(s, "text")  ){
 	  while( dval1 < 0 ) dval1 += (2.0 * PI);
 	  snprintf(tbuf, SZ_LINE, ",%.6f", RAD2DEG(dval1));
 	  strncat(str, tbuf, SZ_LINE-1);
