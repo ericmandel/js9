@@ -5496,7 +5496,7 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits, updatedef){
 	updatedef = JS9.globalOpts.wcsSetUpdatesDef;
     }
     if( wcsunits === "pixels" ){
-	if( this.params.wcssys !== "image" ){
+	if( JS9.isWCS(this.params.wcssys) ){
 	    this.params.wcssys = "physical";
 	}
 	this.params.wcsunits = "pixels";
@@ -5504,8 +5504,7 @@ JS9.Image.prototype.setWCSUnits = function(wcsunits, updatedef){
 	    JS9.globalOpts.wcsUnits[this.params.wcssys] = "pixels";
 	}
     } else if( this.raw.wcs && (this.raw.wcs > 0) ){
-	if( (this.params.wcssys === "image")    ||
-	    (this.params.wcssys === "physical") ){
+	if( JS9.notWCS(this.params.wcssys) ){
 	    ws = JS9.imageOpts.wcssys;
 	    this.setWCSSys(ws);
 	}
@@ -5665,7 +5664,7 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    if( wcssys ){
 		switch(wcssys){
 		case "wcs":
-		    if( (owcs === "physical") || (owcs === "image") ){
+		    if( JS9.notWCS(owcs) ){
 			this.params.wcssys = this.params.wcssys0;
 		    }
 		    break;
@@ -6701,9 +6700,7 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	    obj.object += ")";
 	}
 	// add wcs, if necessary
-	if( (this.raw.wcs > 0) &&
-	    (this.params.wcssys !== "image") &&
-	    (this.params.wcssys !== "physical") ){
+	if( (this.raw.wcs > 0) && JS9.isWCS(this.params.wcssys) ){
 	    s = JS9.pix2wcs(this.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
 	    vstr3 =  `${s[0]} ${s[1]} (${s[2]||"wcs"})`;
 	    vstr = vstr1 + sp + vstr3 + sp + vstr2;
@@ -14261,7 +14258,7 @@ JS9.Fabric.updateMultiDialogs = function(setmode){
 JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     let i, xname, s, scalex, scaley, px, py, tval1, tval2, angstr;
     let bin, zoom, tstr, dpos, gpos, ipos, npos, objs, olen, radius, oangle;
-    let opos, dist, txeq, owcssys;
+    let opos, dist, txeq, owcssys, imforce;
     const pub ={};
     const layer = this.layers[layerName];
     const tr  = (x) => { return x.toFixed(2); };
@@ -14377,8 +14374,17 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     pub.y = ipos.y;
     // logical position
     pub.lcs = this.imageToLogicalPos(ipos);
+    // why is this so complicated?
+    if( mode === "wcsedit" && obj.params.wcsedit ){
+	if( obj.params.wcsedit.wcssys === "image" ){
+	    imforce = "image";
+	} else 	if( obj.params.wcsedit.wcssys === "physical" ){
+	    imforce = "physical";
+	}
+    }
     // wcs system and some convenience variables
-    if( this.params.wcssys === "image" ){
+    if( imforce === "image"                                        ||
+	(this.params.wcssys === "image" && imforce !== "physical") ){
 	pub.imsys = "image";
 	px = pub.x;
 	py = pub.y;
@@ -14594,8 +14600,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    txeq = JS9.globalOpts.xeqPlugins;
 	    JS9.globalOpts.xeqPlugins = false;
 	    owcssys = this.getWCSSys();
-	    if( obj.params.wcsedit.wcssys === "image"    ||
-		obj.params.wcsedit.wcssys === "physical" ){
+	    if( JS9.notWCS(obj.params.wcsedit.wcssys) ){
 		pub.wcsedit = $.extend(true, {}, obj.params.wcsedit);
 	    } else {
 		this.setWCSSys(obj.params.wcsedit.wcssys, false);
@@ -16561,9 +16566,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    break;
 	case "radii":
 	    if( obj.pub.radii ){
-		if( wcssys === "image"      ||
-		    wcssys === "physical"   ||
-		    !obj.pub.wcsedit.wcsstr ){
+		if( JS9.notWCS(wcssys) || !obj.pub.wcsedit.wcsstr ){
 		    val = obj.pub.imstr
 			.replace(/^annulus\(/,"").replace(/\)$/,"")
 			.split(",").slice(2).join(",");
@@ -16650,9 +16653,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    }
 	    break;
 	case "regstr":
-	    if( wcssys === "image"      ||
-		wcssys === "physical"   ||
-		!obj.pub.wcsedit.wcsstr ){
+	    if( JS9.notWCS(wcssys) || !obj.pub.wcsedit.wcsstr ){
 		val = `${obj.pub.imsys};${obj.pub.imstr}`;
 	    } else {
 		val = `${obj.pub.wcsedit.wcssys};${obj.pub.wcsedit.wcsstr}`;
@@ -17734,9 +17735,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    tagstr = ` # ${tagjoin}`;
 	}
 	// use wcs string, if available
-	if( region.wcsstr &&
-	    (this.params.wcssys !== "image") &&
-	    (this.params.wcssys !== "physical") ){
+	if( region.wcsstr && JS9.isWCS(this.params.wcssys) ){
 	    if( lasttype !== "wcs" ){
 		if( lasttype !== "none" ){
 		    regstr += sepstr;
@@ -18045,7 +18044,7 @@ JS9.Regions.parseRegions = function(s, opts){
     // this is the default wcs for regions
     wcssys = "physical";
     // do we have a real wcs?
-    iswcs = (wcssys !== "image" && wcssys !== "physical");
+    iswcs = JS9.isWCS(wcssys);
     // get individual "lines" (new-line or semi-colon separated)
     lines = s.split(seprexp);
     // for each region or cmd
@@ -18155,7 +18154,7 @@ JS9.Regions.parseRegions = function(s, opts){
 		    // get new wcssys
 		    wcssys = this.getWCSSys();
 		    // is this a real wcs?
-		    iswcs = (wcssys !== "image" && wcssys !== "physical");
+		    iswcs = JS9.isWCS(wcssys);
 		} else if( robj.cmd === "remove" || robj.cmd === "delete" ){
 		    regions.push({remove: true});
 		}
@@ -21312,6 +21311,16 @@ JS9.isNull = function(s) {
 // use a default if a variable is either undefined or null
 JS9.defNull = function(s, def) {
     return JS9.notNull(s) ? s : def;
+};
+
+// check if a wcs system is a world coordinate system (fk5, etc)
+JS9.isWCS = function(s){
+    return s !== "image" && s !== "physical";
+};
+
+// check if a wcs system is not a world coordinate system (fk5, etc)
+JS9.notWCS = function(s){
+    return s === "image" || s === "physical";
 };
 
 // parse a FITS card and return name and value
