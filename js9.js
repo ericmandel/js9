@@ -2446,8 +2446,6 @@ JS9.Image.prototype.mkSection = function(...args){
 		    sect.zoom);
 	JS9.error(s);
     }
-    // we changed section, so the offscreen RGB image is invalid
-    this.offscreenRGB = null;
     // put zoom back into params
     this.params.zoom = sect.zoom;
     // allow chaining
@@ -3239,19 +3237,19 @@ JS9.Image.prototype.putImage = function(opts){
     const ctx = display.context;
     // called in image context
     const img2canvas = (img) => {
-	let octx, ocanvas;
+	let context, canvas;
 	if( !this.offscreenRGB ){
-	    ocanvas = document.createElement("canvas");
-	    octx = ocanvas.getContext("2d");
-	    ocanvas.width= img.width;
-	    ocanvas.height = img.height;
+	    canvas = document.createElement("canvas");
+	    context = canvas.getContext("2d");
 	    // turn off anti-aliasing
 	    if( !JS9.ANTIALIAS ){
-		octx.imageSmoothingEnabled = false;
+		context.imageSmoothingEnabled = false;
 	    }
-	    octx.putImageData(img, 0, 0);
-	    this.offscreenRGB = {canvas: ocanvas, context: octx};
+	    this.offscreenRGB = {canvas, context};
 	}
+	this.offscreenRGB.canvas.width= img.width;
+	this.offscreenRGB.canvas.height = img.height;
+	this.offscreenRGB.context.putImageData(img, 0, 0);
 	return this.offscreenRGB.canvas;
     };
     // opts is optional
@@ -3379,8 +3377,6 @@ JS9.Image.prototype.displayImage = function(imode, opts){
     if( mode.colors ){
 	// populate the colorData array (offsets into scaled colorcell data)
 	this.mkColorData();
-	// if we changed colors, the offsreen RGB image is invalid
-	this.offscreenRGB = null;
     }
     // generated scaled cells
     if( mode.scaled ){
@@ -3388,20 +3384,15 @@ JS9.Image.prototype.displayImage = function(imode, opts){
 	this.mkColorCells();
 	// generated scaled cells from color cells
 	this.mkScaledCells();
-	// if we changed scale, the offsreen RGB image is invalid
-	this.offscreenRGB = null;
     }
     // generate RGB image from scaled cells
     if( mode.rgb ){
 	// make the RGB image
 	this.mkRGBImage();
-	// if we changed the rgb image, the offscreen RGB image is invalid
-	this.offscreenRGB = null;
 	if( nblend ){
 	    for(i=blends.length-1; i>=0; i--){
 		im = blends[i];
 		im.mkRGBImage();
-		im.offscreenRGB = null;
 	    }
 	}
     }
@@ -8961,8 +8952,6 @@ JS9.Image.prototype.filterRGBImage = function(...args){
     // try to run the filter to generate a new RGB image
     try{ JS9.ImageFilters[filter](...args); }
     catch(e){ JS9.error(`JS9 image filter '${filter}' failed`, e); }
-    // we changed colors, the offsreen RGB image is invalid
-    this.offscreenRGB = null;
     // display new RGB image
     this.displayImage("display");
     // extended plugins

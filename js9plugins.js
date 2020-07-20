@@ -4376,7 +4376,6 @@ JS9.Filters.xundo = function(target, did, id){
 	if( pinst.stack && pinst.stack.length ){
 	    obj = pinst.stack.pop();
 	    im.rgb.img.data.set(obj.data);
-	    im.offscreenRGB = null;
 	    im.displayImage("display");
 	    JS9.Filters.updateval(target, obj.filter, 0);
 	}
@@ -10005,7 +10004,8 @@ JS9.Panner.create = function(im){
     let pos, ix, iy, temp;
     let dlayer;
     // sanity checks
-    if( !im || !im.raw || !im.colorData ||
+    if( !im || !im.raw                        ||
+	(!im.rgbFile && !im.colorData)        ||
 	!im.display.pluginInstances.JS9Panner ){
 	return null;
     }
@@ -10175,21 +10175,20 @@ JS9.Panner.disp = function(im){
     let angle, xflip, yflip, wcsinfo, w2, h2, m, ctx, temp;
     const FUDGE = 1;
     const img2canvas = (im, img) => {
-	let octx, ocanvas;
+	let context, canvas;
 	let panner = im.display.pluginInstances.JS9Panner;
-	let dowhen = true;
-	if( dowhen ){
-	    ocanvas = document.createElement("canvas");
-	    octx = ocanvas.getContext("2d");
-	    ocanvas.width= img.width;
-	    ocanvas.height = img.height;
+	if( !panner.offscreenRGB ){
+	    canvas = document.createElement("canvas");
+	    context = canvas.getContext("2d");
 	    // turn off anti-aliasing
 	    if( !JS9.ANTIALIAS ){
-		octx.imageSmoothingEnabled = false;
+		context.imageSmoothingEnabled = false;
 	    }
-	    octx.putImageData(img, 0, 0);
-	    panner.offscreenRGB = {canvas: ocanvas, context: octx};
+	    panner.offscreenRGB = {canvas, context};
 	}
+	panner.offscreenRGB.canvas.width= img.width;
+	panner.offscreenRGB.canvas.height = img.height;
+	panner.offscreenRGB.context.putImageData(img, 0, 0);
 	return panner.offscreenRGB.canvas;
     };
     // sanity check
@@ -10468,7 +10467,6 @@ JS9.Panner.clear = function(im){
 	    panner.context.clear();
 	    im.removeShapes("panner", "all");
 	    im.panner.boxid = null;
-	    // im.panner.offscreenRGB = null;
 	}
 	return im;
     }
