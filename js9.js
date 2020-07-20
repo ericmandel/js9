@@ -1100,7 +1100,7 @@ JS9.Image.prototype.getImageData = function(dflag){
 	} else if( dflag === "base64" ){
 	    // NB: this seems to be the fastest method for IPC!
 	    data = atob64(this.raw.data);
-	} else if( dflag && (dflag !== "false") ) {
+	} else if( dflag && (dflag !== "false") ){
 	    // use this for javascript programming on the web page itself
 	    data = this.raw.data;
 	}
@@ -1495,7 +1495,7 @@ JS9.Image.prototype.mkRawDataFromPNG = function(){
     // offscreen image data
     offscreen = this.offscreen.img.data;
     // gather up the json header (until we hit a null, skipping bogus values)
-    for(idx=0, i=0; idx<offscreen.length; idx++) {
+    for(idx=0, i=0; idx<offscreen.length; idx++){
 	// null is the end of the string
 	if( offscreen[idx] === 0 ){
 	    break;
@@ -2565,7 +2565,7 @@ JS9.Image.prototype.mkScaledCells = function(){
 	    hex = hex.slice(1);
 	}
 	hex = hex.toUpperCase();
-	for(i=0, k=0; i<6; i+=2, k++) {
+	for(i=0, k=0; i<6; i+=2, k++){
 	    int1 = hex_alphabets.indexOf(hex.charAt(i));
 	    int2 = hex_alphabets.indexOf(hex.charAt(i+1));
 	    value[k] = (int1 * 16) + int2;
@@ -2853,10 +2853,10 @@ JS9.Image.prototype.mkRGBImage = function(){
 		for(xIn=0, xOut=0; xIn<rgbimg.width; xIn++, xOut++){
 		    idx = (yLen + xIn) * 4;
 		    xOutIdx = xOut * sect.zoom;
-		    for(yZoom=0; yZoom<sect.zoom; yZoom++) {
+		    for(yZoom=0; yZoom<sect.zoom; yZoom++){
 			zy = Math.floor(yOutIdx + yZoom);
 			zyLen = zy * sect.width;
-			for(xZoom=0; xZoom<sect.zoom; xZoom++) {
+			for(xZoom=0; xZoom<sect.zoom; xZoom++){
 			    zx = Math.floor(xOutIdx + xZoom);
 			    odx = (zyLen + zx) * 4;
 			    img.data[odx]   = rgbimg.data[idx];
@@ -2979,11 +2979,11 @@ JS9.Image.prototype.mkRGBImage = function(){
 		curalpha = alphafloor;
 	    }
 	    xOutIdx = xOut * zinc;
-	    for(yZoom=0; yZoom<sect.zoom; yZoom++) {
+	    for(yZoom=0; yZoom<sect.zoom; yZoom++){
 		// ceil avoids non-integer zoom cross-hair artifacts ...
 		zy = Math.ceil(yOutIdx + yZoom);
 		zyLen = zy * sect.width;
-		for(xZoom=0; xZoom<sect.zoom; xZoom++) {
+		for(xZoom=0; xZoom<sect.zoom; xZoom++){
 		    // ceil avoids non-integer zoom cross-hair artifacts ...
 		    zx = Math.ceil(xOutIdx + xZoom);
 		    // final index into output buffer
@@ -3570,7 +3570,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 // fileDimensions: get dimensions of "original" file
 // this is the hackiest routine in the JS9 module
 // why is it so hard???
-JS9.Image.prototype.fileDimensions = function() {
+JS9.Image.prototype.fileDimensions = function(){
     let xdim, ydim;
     if( this.parent && this.parent.raw.header.XTENSION !== "BINTABLE" ){
 	if( this.parent.raw.header.TABDIM1 ){
@@ -3622,7 +3622,7 @@ JS9.Image.prototype.maybePhysicalToImage = function(pos){
 };
 
 // extract and display a section of an image, with table filtering
-JS9.Image.prototype.displaySection = function(opts, func) {
+JS9.Image.prototype.displaySection = function(opts, func){
     let oproxy, hdu, from, obj, oreg, nim, topts;
     let ipos, lpos, npos, tbin, arr, sect;
     const getval3 = (val1, val2, val3) => {
@@ -7346,7 +7346,7 @@ JS9.Image.prototype.copyParams = function(params, images, opts){
 		    break;
 		}
 	    }
-	} catch(e) {
+	} catch(e){
 	    JS9.error(`could not copy params for ${im.id}`);
 	}
 	finally{
@@ -7463,7 +7463,7 @@ JS9.Image.prototype.dataminmax = function(dmin, dmax){
 	    // integer data: BLANK header value specifies data value to ignore
 	    if( raw.header.BLANK !== undefined ){
 		blankval = raw.header.BLANK;
-		for(i=0; i<data.length; i++) {
+		for(i=0; i<data.length; i++){
 		    val = data[i];
 		    if( val !== blankval ){
 			if( val < raw.dmin ){ raw.dmin = val; }
@@ -7471,7 +7471,7 @@ JS9.Image.prototype.dataminmax = function(dmin, dmax){
 		    }
 		}
 	    } else {
-		for(i=0; i<data.length; i++) {
+		for(i=0; i<data.length; i++){
 		    val = data[i];
 		    if( val < raw.dmin ){ raw.dmin = val; }
 		    if( val > raw.dmax ){ raw.dmax = val; }
@@ -7479,7 +7479,7 @@ JS9.Image.prototype.dataminmax = function(dmin, dmax){
 	    }
 	} else {
 	    // float data: ignore NaN
-	    for(i=0; i<data.length; i++) {
+	    for(i=0; i<data.length; i++){
 		val = data[i];
 		if( !Number.isNaN(val) ){
 		    if( val < raw.dmin ){ raw.dmin = val; }
@@ -8747,7 +8747,7 @@ JS9.Image.prototype.reproject = function(wcsim, opts){
     try{
 	// name of (unneeded) area file
 	n = ovfile.lastIndexOf(".");
-	if( n >= 0 ) {
+	if( n >= 0 ){
 	    avfile = `${ovfile.substring(0, n)}_area${ovfile.substring(n)}`;
 	}
 	// optional command line args
@@ -13252,11 +13252,11 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	}
     }
     // relative movement requires opts left/top or an existing object
-    if( opts.dx ){
-	nopts.left += opts.dx;
+    if( opts.deltax ){
+	nopts.left += opts.deltax;
     }
-    if( opts.dy ){
-	nopts.top -= opts.dy;
+    if( opts.deltay ){
+	nopts.top -= opts.deltay;
     }
     // shape-specific processing
     switch(opts.shape){
@@ -13487,8 +13487,8 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    case "y":
 	    case "px":
 	    case "py":
-	    case "dx":
-	    case "dy":
+	    case "deltax":
+	    case "deltay":
 	    case "ra":
 	    case "dec":
 	    case "pts":
@@ -16291,7 +16291,7 @@ JS9.Regions.opts = {
 	defcolor:           "#00FF00"
     },
     // mouse down processing
-    onmousedown(im, xreg, evt, target) {
+    onmousedown(im, xreg, evt, target){
 	let curtime, dblclick, poly;
 	// look for double click
 	// fabric dblclick support is broken (loses position during scroll)
@@ -16329,7 +16329,7 @@ JS9.Regions.opts = {
 	}
     },
     // mouse up processing
-    onmouseup() {
+    onmouseup(){
 	let i;
 	let objs = [];
 	// one active object
@@ -19403,7 +19403,7 @@ JS9.Grid.init = function(opts){
 JS9.Image.prototype.displayCoordGrid = JS9.Grid.display;
 
 // check if an object is an image handle
-JS9.isImage = function(s) {
+JS9.isImage = function(s){
     if( typeof s === "object"   &&
 	JS9.notNull(s.id)       &&
 	JS9.notNull(s.raw)      &&
@@ -19602,7 +19602,7 @@ JS9.Titlebar.imageclose = function(){
 // ---------------------------------------------------------------------
 
 // sigh ... why do we need this polyfill??? (chrome pre-38)
-Math.log10 = Math.log10 || function(x) {
+Math.log10 = Math.log10 || function(x){
   return Math.log(x) / Math.LN10;
 };
 
@@ -19616,22 +19616,22 @@ if( typeof Object.create !== "function" ){
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/asinh
-Math.asinh = Math.asinh || function(x) {
-  if (x === -Infinity) {
+Math.asinh = Math.asinh || function(x){
+  if (x === -Infinity){
     return x;
   }
   return Math.log(x + Math.sqrt(x * x + 1));
 };
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sinh
-Math.sinh = Math.sinh || function(x) {
+Math.sinh = Math.sinh || function(x){
   return (Math.exp(x) - Math.exp(-x)) / 2;
 };
 
 // polyfill for ES2017 Array.prototype.includes from:
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes
 // From https://github.com/kevlatus/polyfill-array-includes/blob/master/array-includes.js
-if (!Array.prototype.includes) {
+if (!Array.prototype.includes){
   Object.defineProperty(Array.prototype, "includes", {
     value: function (searchElement, fromIndex) {
 
@@ -19684,7 +19684,7 @@ if (!Array.prototype.includes) {
 
 // make a copy of the raw data
 // used by setFlip and setRot90
-JS9.getRawCopy = function(oraw, bitpix) {
+JS9.getRawCopy = function(oraw, bitpix){
     // make copy
     let nraw = $.extend(true, {}, oraw);
     nraw.bitpix = bitpix || oraw.bitpix;
@@ -19713,7 +19713,7 @@ JS9.getRawCopy = function(oraw, bitpix) {
 
 // extract line from raw data
 // used by setFlip and setRot90
-JS9.getRawLine = function(oraw, ooff, nraw, noff) {
+JS9.getRawLine = function(oraw, ooff, nraw, noff){
     let obuf, nbuf;
     switch(oraw.bitpix){
     case 8:
@@ -19744,7 +19744,7 @@ JS9.getRawLine = function(oraw, ooff, nraw, noff) {
 };
 
 // https://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
-JS9.memcpy = function(dst, dstOffset, src, srcOffset, length) {
+JS9.memcpy = function(dst, dstOffset, src, srcOffset, length){
   var dstU8 = new Uint8Array(dst, dstOffset, length);
   var srcU8 = new Uint8Array(src, srcOffset, length);
   dstU8.set(srcU8);
@@ -19796,7 +19796,7 @@ JS9.getImageID = function(imid, dispid, myim){
 // return a unique value for ids
 JS9.uniqueID = (function(){
     let id = 1; // initial value
-    return function() {
+    return function(){
         return id++;
     };
 }());
@@ -20383,7 +20383,7 @@ JS9.loadScript = function(url, func, error){
 
 // fetch a file URL (as a blob) and process it
 // (as of 2/2015: can't use $.ajax to retrieve a blob: use low-level xhr)
-JS9.fetchURL = function(name, url, opts, handler) {
+JS9.fetchURL = function(name, url, opts, handler){
     let nurl;
     const xhr = new XMLHttpRequest();
     // opts is optional
@@ -20451,7 +20451,7 @@ JS9.fetchURL = function(name, url, opts, handler) {
 			handler(xhr.response, opts);
 		    }
 		}
-	    } else if( xhr.status === 404 ) {
+	    } else if( xhr.status === 404 ){
 		JS9.error(`could not find ${url}`);
 	    } else {
 		JS9.error(`can't load: ${url} ${xhr.statusText} ${xhr.status}`);
@@ -20990,7 +20990,7 @@ JS9.error = function(...args){
 };
 
 // log to console
-JS9.log = function(...args) {
+JS9.log = function(...args){
     if( (window.console !== undefined) && (window.console.log !== undefined) ){
 	// eslint-disable-next-line no-console
         console.log(...args);
@@ -21294,22 +21294,22 @@ JS9.invertMatrix3 = function(xin){
 // is this a string representation of a number?
 // https://stackoverflow.com/questions/175739/built-in-way-in-javascript-to-check-if-a-string-is-a-valid-number
 // NB: don't use Number.XXX routines, they don't work .. "2016-5" returns true
-JS9.isNumber = function(s) {
+JS9.isNumber = function(s){
     return !isNaN(parseFloat(s)) && isFinite(s);
 };
 
 // check if a variable is neither undefined nor null
-JS9.notNull = function(s) {
+JS9.notNull = function(s){
     return s !== undefined && s !== null;
 };
 
 // check if a variable is either undefined or null
-JS9.isNull = function(s) {
+JS9.isNull = function(s){
     return s === undefined || s === null;
 };
 
 // use a default if a variable is either undefined or null
-JS9.defNull = function(s, def) {
+JS9.defNull = function(s, def){
     return JS9.notNull(s) ? s : def;
 };
 
@@ -21637,7 +21637,7 @@ CanvasRenderingContext2D.prototype.clear =
 
     // create a searchbar on a div using: https://markjs.io/
     // routine adapted from: https://jsfiddle.net/julmot/973gdh8g/
-JS9.searchbar = function(el, textid) {
+JS9.searchbar = function(el, textid){
     let div, text, bar;
     let srch, next, prev, close;
     let matchcase, matchdiacritics, matchwords, matchwildcards;
@@ -21647,13 +21647,13 @@ JS9.searchbar = function(el, textid) {
     const search = (value) => {
 	let searchVal = value;
 	text.unmark({
-	    done: function() {
+	    done: function(){
 		text.mark(searchVal, {
 		    caseSensitive: bar.opts.matchcase,
 		    diacritics: bar.opts.diacritics,
 		    accuracy: bar.opts.matchwords ? "exactly" : "partially",
 		    wildcards: bar.opts.matchwildcards ? "enabled" : "disabled",
-		    done: function() {
+		    done: function(){
 			bar.results = text.find("mark");
 			bar.currentIndex = 0;
 			jumpTo();
@@ -21726,7 +21726,7 @@ JS9.searchbar = function(el, textid) {
 	.addClass("JS9SearchInput")
 	.appendTo(bar);
     // event fires with each keystroke
-    srch.on("input", function() {
+    srch.on("input", function(){
 	search(this.value);
     });
     // placeholder hints
@@ -21866,7 +21866,7 @@ JS9.tooltip = function(x, y, fmt, im, xreg, evt){
 	    default:
 		return m;
 	    }
-	    for(i=1; i<arr.length; i++) {
+	    for(i=1; i<arr.length; i++){
 		v = val[arr[i]];
 		if( JS9.isNumber(v) ){
 		    val = v.toFixed(6);
@@ -21899,7 +21899,7 @@ JS9.tooltip = function(x, y, fmt, im, xreg, evt){
 
 // http://stackoverflow.com/questions/359788/how-to-execute-a-javascript-function-when-i-have-its-name-as-a-string
 // our modification will execute a real func or a funcName
-JS9.xeqByName = function(...args) {
+JS9.xeqByName = function(...args){
     let i, namespaces, func;
     let [funcName, context] = args;
     let xargs = args.slice(2);
@@ -21910,7 +21910,7 @@ JS9.xeqByName = function(...args) {
     case "string":
 	namespaces = funcName.split(".");
 	func = namespaces.pop();
-	for(i = 0; i < namespaces.length; i++) {
+	for(i = 0; i < namespaces.length; i++){
             context = context[namespaces[i]];
 	}
 	return context[func](...xargs);
@@ -21926,7 +21926,7 @@ JS9.varByName = function(funcName, context){
     context = context || JS9;
     namespaces = funcName.split(".");
     vname = namespaces.pop();
-    for(i=0; i<namespaces.length; i++) {
+    for(i=0; i<namespaces.length; i++){
 	context = context[namespaces[i]];
 	if( !context ){
 	    return null;
@@ -21967,7 +21967,7 @@ JS9.mergePrefs = function(obj){
 };
 
 // load a prefs file and merge preferences into global JS9 object
-JS9.loadPrefs = function(url, doerr) {
+JS9.loadPrefs = function(url, doerr){
     // load site/user preferences synchronously
     $.ajax({
 	url: url,
@@ -21988,7 +21988,7 @@ JS9.loadPrefs = function(url, doerr) {
 };
 
 // is this object a typed array?
-JS9.isTypedArray = function(obj) {
+JS9.isTypedArray = function(obj){
     let type;
     const types = {
         "[object Int8Array]": true,
@@ -24227,7 +24227,7 @@ JS9.parsePublicArgs = function(args){
 JS9.mkPublic = function(name, s){
     if( typeof s === "string" ){
 	if( JS9.Image.prototype[s] ){
-	    JS9[name] = function(...args) {
+	    JS9[name] = function(...args){
 		let got;
 		const {display, argv} = JS9.parsePublicArgs(args);
 		const im = JS9.getImage(display);
@@ -24590,7 +24590,7 @@ JS9.mkPublic("SetImageInherit", function(...args){
     return got;
 });
 
-JS9.mkPublic("GetImageInherit", function(...args) {
+JS9.mkPublic("GetImageInherit", function(...args){
     let got = null;
     const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
@@ -25520,7 +25520,7 @@ JS9.mkPublic("CopyToClipboard", function(text, im){
 		window.prompt("copy to clipboard: Ctrl+C", text);
 	    }
 	}
-    } catch (err) {
+    } catch (err){
 	msg = "ERROR";
     }
     document.body.removeChild(textArea);
@@ -25538,7 +25538,7 @@ JS9.mkPublic("CopyFromClipboard", function(){
 });
 
 // bring up the file dialog box and open selected FITS file(s)
-JS9.mkPublic("OpenFileMenu", function(...args) {
+JS9.mkPublic("OpenFileMenu", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
     if( display ){
@@ -25547,7 +25547,7 @@ JS9.mkPublic("OpenFileMenu", function(...args) {
 });
 
 // bring up the file dialog box and open selected region files(s)
-JS9.mkPublic("OpenRegionsMenu", function(...args) {
+JS9.mkPublic("OpenRegionsMenu", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
     if( display ){
@@ -25556,7 +25556,7 @@ JS9.mkPublic("OpenRegionsMenu", function(...args) {
 });
 
 // bring up the file dialog box and load selected session files(s)
-JS9.mkPublic("OpenSessionMenu", function(...args) {
+JS9.mkPublic("OpenSessionMenu", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
     if( display ){
@@ -25565,7 +25565,7 @@ JS9.mkPublic("OpenSessionMenu", function(...args) {
 });
 
 // bring up the file dialog box and open selected catalog file
-JS9.mkPublic("OpenCatalogsMenu", function(...args) {
+JS9.mkPublic("OpenCatalogsMenu", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
     if( display ){
@@ -25574,7 +25574,7 @@ JS9.mkPublic("OpenCatalogsMenu", function(...args) {
 });
 
 // bring up the file dialog box and load selected colormap file(s)
-JS9.mkPublic("OpenColormapMenu", function(...args) {
+JS9.mkPublic("OpenColormapMenu", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
     if( display ){
@@ -25583,7 +25583,7 @@ JS9.mkPublic("OpenColormapMenu", function(...args) {
 });
 
 // save a colormap to disk
-JS9.mkPublic("SaveColormap", function(...args) {
+JS9.mkPublic("SaveColormap", function(...args){
     let fname, im, cobj, s, blob, arg1, arg2;
     const obj = JS9.parsePublicArgs(args);
     const convertjson = (arg1) => {
@@ -26095,7 +26095,7 @@ JS9.mkPublic("ToggleRegionTags", function(...args){
 
 // unremove previously removed regions
 // eslint-disable-next-line no-unused-vars
-JS9.mkPublic("UnremoveRegions", function(...args) {
+JS9.mkPublic("UnremoveRegions", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const im = JS9.getImage(obj.display);
     if( im ){
@@ -26176,7 +26176,7 @@ JS9.mkPublic("InstallDir", function(dir){
 });
 
 // add new display divs and/or new plugins
-JS9.mkPublic("AddDivs", function(...args) {
+JS9.mkPublic("AddDivs", function(...args){
     let i, j, div, dexist, id;
     const obj = JS9.parsePublicArgs(args);
     // process all divs
@@ -26223,7 +26223,7 @@ JS9.mkPublic("InstantiatePlugins", function(){
 });
 
 // change the size of a display
-JS9.mkPublic("ResizeDisplay", function(...args) {
+JS9.mkPublic("ResizeDisplay", function(...args){
     let got, display;
     const obj = JS9.parsePublicArgs(args);
     // special handling of first string arg:
@@ -26249,7 +26249,7 @@ JS9.mkPublic("ResizeDisplay", function(...args) {
 });
 
 // select (or de-select) a display as the current display
-JS9.mkPublic("SelectDisplay", function(...args) {
+JS9.mkPublic("SelectDisplay", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.argv[0] || obj.display);
     if( !display ){
@@ -26325,7 +26325,7 @@ JS9.mkPublic("SeparateDisplay", function(...args){
 });
 
 // center the image in a display
-JS9.mkPublic("CenterDisplay", function(...args) {
+JS9.mkPublic("CenterDisplay", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.argv[0] || obj.display);
     if( !display ){
@@ -26336,7 +26336,7 @@ JS9.mkPublic("CenterDisplay", function(...args) {
 });
 
 // close all images and remove this display (lightwin or grid only)
-JS9.mkPublic("RemoveDisplay", function(...args) {
+JS9.mkPublic("RemoveDisplay", function(...args){
     let idx, cel, el;
     const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.argv[0] || obj.display);
@@ -26589,7 +26589,7 @@ JS9.mkPublic("LoadCatalog", function(...args){
 });
 
 // create an image mosaic
-JS9.mkPublic("CreateMosaic", function(...args) {
+JS9.mkPublic("CreateMosaic", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const display = JS9.lookupDisplay(obj.display);
     let ims = obj.argv[0];

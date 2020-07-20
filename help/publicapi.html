@@ -3320,8 +3320,8 @@ more properties, of which the most important are:
 <li><b>dec</b>: Dec in degrees
 <li><b>wcs</b>: sexagesimal WCS string with optional WCS system
 <li><b>lcs</b>: object containing logical x, y and sys (e.g., "physical")
-<li><b>dx</b>: increment from current image x position
-<li><b>dy</b>: increment from current image y position
+<li><b>deltax</b>: increment from current image x position
+<li><b>deltay</b>: increment from current image y position
 <li><b>tags</b>: comma-separated list of tag strings or array of tag strings
 <li><b>radii</b>: array of radii for annulus region
 <li><b>width</b>: width for box or cross region
@@ -4091,8 +4091,8 @@ more properties, of which the most important are:
 <li><b>shape</b>: "annulus", "box", "circle", "cross", "ellipse", "point", "polygon", "text" <b>[REQUIRED]</b>
 <li><b>x</b>: image x position
 <li><b>y</b>: image y position
-<li><b>dx</b>: increment from current image x position
-<li><b>dy</b>: increment from current image y position
+<li><b>deltax</b>: increment from current image x position
+<li><b>deltay</b>: increment from current image y position
 <li><b>tags</b>: comma-separated list of tag strings or array of tag strings
 <li><b>radii</b>: array of radii for annulus shape
 <li><b>width</b>: width for box or cross shape
@@ -5601,6 +5601,14 @@ that we can gain a better understanding of what is required in these cases.
   
 <h4 id="history">API Change History</h4>
   
+<p>
+<h5>20200720: ChangeRegions: dx, dy properties renamed to deltax, deltay</h5>
+
+The <b>dx, dy</b> properties of <a href="#JS9.ChangeRegions">
+JS9.ChangeRegions</a> allowed you to specify a delta to add to the current
+image position. For consistency, these properties were renamed to
+<b>deltax, deltay</b> respectively.
+
 <p>
 The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.
