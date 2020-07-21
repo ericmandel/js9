@@ -173,9 +173,7 @@ JS9.PanZoom.xpanto = function(did, id, target){
 	    owcssys = im.getWCSSys();
 	    im.setWCSSys(wcssys);
 	    p1 = JS9.saostrtod(s1);
-	    if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-		(wcssys !== "galactic" )          	      &&
-		(wcssys !== "ecliptic" )          	      ){
+	    if( JS9.isHMS(wcssys) ){
 		p1 *= 15.0;
 	    }
 	    p2 = JS9.saostrtod(s2);

@@ -3503,9 +3503,7 @@ JS9.Image.prototype.refreshImage = function(obj, opts){
 			    this.rgb.sect.xcen, this.rgb.sect.ycen);
 	    arr = s.trim().split(/\s+/);
 	    ora = JS9.saostrtod(arr[0]);
-	    if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-		(this.params.wcssys !== "galactic" )          &&
-		(this.params.wcssys !== "ecliptic" )          ){
+	    if( JS9.isHMS(this.params.wcssys) ){
 		ora *= 15.0;
 	    }
 	    odec = JS9.saostrtod(arr[1]);
@@ -4484,9 +4482,7 @@ JS9.Image.prototype.setPan = function(...args){
 	    // convert wcs supplied as strings
 	    if( typeof obj.ra === "string" ){
 		obj.ra = JS9.saostrtod(obj.ra);
-		if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-		    (this.params.wcssys !== "galactic" )          &&
-		    (this.params.wcssys !== "ecliptic" )          ){
+		if( JS9.isHMS(this.params.wcssys) ){
 		    obj.ra *= 15.0;
 		}
 	    }
@@ -4758,7 +4754,7 @@ JS9.Image.prototype.getNorthIsUp = function(wcssys){
     // convert strings to float (degrees)
     ra = JS9.saostrtod(arr[0]);
     // ra hours to degrees, if necessary
-    if( (String.fromCharCode(JS9.saodtype()) === ":") ){ ra *= 15.0; }
+    if( JS9.isHMS() ){ ra *= 15.0; }
     dec = JS9.saostrtod(arr[1]);
     // angular distance between north pole and image center
     nobj.angle = JS9.angdist(ra, dec, pole[wcssys].ra, pole[wcssys].dec);
@@ -8482,9 +8478,7 @@ JS9.Image.prototype.rotateData = function(...args){
 	    nheader.CRPIX1 = pos.x;
 	    nheader.CRPIX2 = pos.y;
 	    nheader.CRVAL1 = JS9.saostrtod(arr[0]);
-	    if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-		(this.params.wcssys !== "galactic" )          &&
-		(this.params.wcssys !== "ecliptic" )          ){
+	    if( JS9.isHMS(this.params.wcssys) ){
 		nheader.CRVAL1 *= 15.0;
 	    }
 	    nheader.CRVAL2 = JS9.saostrtod(arr[1]);
@@ -9806,8 +9800,7 @@ JS9.Image.prototype.wcs2wcs = function(from, to, ra, dec){
     //  convert ra, dec from string input to float degrees, if necessary
     if( typeof ra === "string" ){
 	v0 = JS9.strtoscaled(ra);
-	if( (v0.dtype === ":") &&
-	    (from !== "galactic") && (from !== "ecliptic") ){
+	if( JS9.isHMS(from, v0.dtype) ){
 	    v0.dval *= 15.0;
 	}
 	ra = v0.dval;
@@ -13206,9 +13199,7 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	// convert wcs supplied as strings
 	if( typeof opts.ra === "string" ){
 	    opts.ra = JS9.saostrtod(opts.ra);
-	    if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-		(this.params.wcssys !== "galactic" )     &&
-		(this.params.wcssys !== "ecliptic" )     ){
+	    if( JS9.isHMS(this.params.wcssys) ){
 		opts.ra *= 15.0;
 	    }
 	}
@@ -14271,8 +14262,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	obj.decstr = s[1];
 	obj.wcssys = s[2];
 	v0 = JS9.strtoscaled(s[0]);
-	if( (v0.dtype === ":") &&
-	    (s[2] !== "galactic") && (s[2] !== "ecliptic") ){
+	if( JS9.isHMS(s[2], v0.dtype) ){
 	    v0.dval *= 15.0;
 	}
 	v1 = JS9.strtoscaled(s[1]);
@@ -14313,9 +14303,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 		obj.wcspts = [];
 		for(i=0; i<s.length; i+=2){
 		    v0 = JS9.strtoscaled(s[i]);
-		    if( (v0.dtype === ":") &&
-			(obj.wcssys !== "galactic") &&
-			(obj.wcssys !== "ecliptic") ){
+		    if( JS9.isHMS(obj.wcssys, v0.dtype) ){
 			v0.dval *= 15.0;
 		    }
 		    v1 = JS9.strtoscaled(s[i+1]);
@@ -17614,8 +17602,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
 					 child.pub.ra, child.pub.dec);
 			s = s.trim().split(/\s+/);
 			ra = JS9.saostrtod(s[0]);
-			if( String.fromCharCode(JS9.saodtype() === ":")    &&
-			    wcssys !== "galactic" && wcssys !== "ecliptic" ){
+			if( JS9.isHMS(wcssys) ){
 			    ra *= 15.0;
 			}
 			dec = JS9.saostrtod(s[1]);
@@ -17974,8 +17961,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	}
 	if( iswcs || liswcs ){
 	    // arg1 coords are hms, but ecliptic, galactic are deg
-	    if( (v1.dtype === ":" ) &&
-		(wcssys !== "galactic")  && (wcssys !== "ecliptic") ){
+	    if( JS9.isHMS(wcssys, v1.dtype) ){
 		v1.dval *= 15.0;
 	    }
 	    // convert to degrees, if necessary
@@ -18849,9 +18835,7 @@ JS9.Crosshair.display = function(im, ipos, evt){
 	// get wcs coords of current mouse position
 	arr = JS9.pix2wcs(im.raw.wcs, ipos.x, ipos.y).trim().split(/\s+/);
 	ra = JS9.saostrtod(arr[0]);
-	if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-	    (im.params.wcssys !== "galactic" )     &&
-	    (im.params.wcssys !== "ecliptic" )     ){
+	if( JS9.isHMS(im.params.wcssys) ){
 	    ra *= 15.0;
 	}
 	dec = JS9.saostrtod(arr[1]);
@@ -21153,9 +21137,7 @@ JS9.pix2pix = function(im1, im2, obj){
     // convert image pixels to ra, dec in source image
     s = JS9.pix2wcs(im1.raw.wcs, x, y).trim().split(/\s+/);
     ra = JS9.saostrtod(s[0]);
-    if( (String.fromCharCode(JS9.saodtype()) === ":") &&
-	(im1.params.wcssys !== "galactic" )           &&
-	(im1.params.wcssys !== "ecliptic" )           ){
+    if( JS9.isHMS(im1.params.wcssys) ){
 	ra *= 15.0;
     }
     dec = JS9.saostrtod(s[1]);
@@ -21321,6 +21303,14 @@ JS9.isWCS = function(s){
 // check if a wcs system is not a world coordinate system (fk5, etc)
 JS9.notWCS = function(s){
     return s === "image" || s === "physical";
+};
+
+// was last parsed string in units of hours/min/sec (using specified wcssys)?
+JS9.isHMS = function(wcssys, dtype){
+    dtype = dtype || String.fromCharCode(JS9.saodtype());
+    return (dtype === ":" || dtype === "h") &&
+	    wcssys !== "galactic"           &&
+	    wcssys !== "ecliptic";
 };
 
 // parse a FITS card and return name and value
