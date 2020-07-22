@@ -5602,16 +5602,16 @@ that we can gain a better understanding of what is required in these cases.
 <h4 id="history">API Change History</h4>
   
 <p>
+The JS9 Public API is meant to be stable and well-documented. If we are
+forced to make an incompatible change to the API, it will be documented here.
+
+<p>
 <h5>20200720: ChangeRegions: dx, dy properties renamed to deltax, deltay</h5>
 
 The <b>dx, dy</b> properties of <a href="#JS9.ChangeRegions">
 JS9.ChangeRegions</a> allowed you to specify a delta to add to the current
 image position. For consistency, these properties were renamed to
 <b>deltax, deltay</b> respectively.
-
-<p>
-The JS9 Public API is meant to be stable and well-documented. If we are
-forced to make an incompatible change to the API, it will be documented here.
 
 <h5>20200623: SetFlip and SetRot90 no longer manipulate the image data</h5>
 The original implementation of <a href="#JS9.SetFlip">JS9.SetFlip</a>
