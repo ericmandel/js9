@@ -14565,7 +14565,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 		angstr = `,"posang":${tr4(tval1)},"posunits":"degrees"`;
 		pub.imstr += angstr;
 	    }
-	    pub.imst += "}";
+	    pub.imstr += "}";
 	} else {
 	    pub.imstr += ")";
 	}
