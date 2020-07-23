@@ -15039,15 +15039,19 @@ JS9.Fabric.refreshShapes = function(layerName){
     if( !layerName ){
 	return;
     }
-    // temporarily turn off plugin execution
-    txeq = JS9.globalOpts.xeqPlugins;
-    JS9.globalOpts.xeqPlugins = false;
     // temporarily change wcs system to be independent of image coords
+    // (in case we copied regions from one image to another)
     owcssys = this.getWCSSys();
-    if( this.raw.wcs && (this.raw.wcs > 0) ){
-	this.setWCSSys("native", false);
-    } else {
-	this.setWCSSys("physical", false);
+    if( owcssys === "image" ){
+	// temporarily turn off plugin execution
+	txeq = JS9.globalOpts.xeqPlugins;
+	JS9.globalOpts.xeqPlugins = false;
+	// get a wcs sys independent of image coords
+	if( this.raw.wcs && (this.raw.wcs > 0) ){
+	    this.setWCSSys("native", false);
+	} else {
+	    this.setWCSSys("physical", false);
+	}
     }
     // get current regions (i.e., before update to current configuration)
     regstr = this.listRegions("all", {mode: 1,
@@ -15061,9 +15065,14 @@ JS9.Fabric.refreshShapes = function(layerName){
 	// add back regions in current configuration
 	this.addShapes(layerName, regstr, {restoreid: true});
     }
-    // restore changes
-    this.setWCSSys(owcssys, false);
-    JS9.globalOpts.xeqPlugins = txeq;
+    // restore wcs system, if necessary
+    if( owcssys === "image" ){
+	this.setWCSSys(owcssys, false);
+	// update shapes to use the original coord system
+	this.updateShapes(layerName, "all", "refresh");
+	// restore plugin execution
+	JS9.globalOpts.xeqPlugins = txeq;
+    }
     return this;
 };
 
