@@ -17727,7 +17727,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	if( opts.saveid ){
 	    exports.id = region.id;
 	}
-	if( opts.savewcsconfig && region.wcsconfig     &&
+	if( opts.savewcsconfig && region.wcsconfig   &&
 	    Object.keys(region.wcsconfig).length > 0 ){
 	    exports.wcsconfig = $.extend(true, {}, region.wcsconfig);
 	}
