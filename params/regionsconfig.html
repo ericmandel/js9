@@ -195,9 +195,9 @@ let s, reg, obj, wcssys;
 if( im ){
   reg = im.getShapes('regions', 'selected')[0];
   if( reg ){
-    if( reg.wcsedit ){
-      obj = reg.wcsedit;
-      wcssys = reg.wcsedit.wcssys;
+    if( reg.wcsconfig ){
+      obj = reg.wcsconfig;
+      wcssys = reg.wcsconfig.wcssys;
     } else {
       obj = reg;
       wcssys = im.params.wcssys;
@@ -234,8 +234,8 @@ const im = form.data('im');
 const wcssys =  $(this).val();
 const shape = form.data('shape');
 if( im && wcssys && shape && shape.params ){
-  shape.params.wcsedit.wcssys = wcssys;
-  im.updateShapes('regions', shape, 'wcsedit');
+  shape.params.wcsconfig.wcssys = wcssys;
+  im.updateShapes('regions', shape, 'wcsconfig');
 }"
 >
 </select>

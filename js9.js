@@ -3775,7 +3775,7 @@ JS9.Image.prototype.displaySection = function(opts, func){
 	    }
 	    // save current regions (before displaying new image)
 	    oreg = this.listRegions("all", {mode: 1,
-					    savewcsedit: true,
+					    savewcsconfig: true,
 					    saveid: true});
 	    // func to perform when image is loaded
 	    func = topts.ondisplaysection || topts.onrefresh || func;
@@ -3827,7 +3827,7 @@ JS9.Image.prototype.displaySection = function(opts, func){
 		}
 		// save current regions (before displaying new image)
 		oreg = this.listRegions("all", {mode: 1,
-						savewcsedit: true,
+						savewcsconfig: true,
 						saveid: true});
 		// func to perform when image is loaded
 		func = topts.ondisplaysection || topts.onrefresh || func;
@@ -13877,8 +13877,8 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	    params.id = ++layer.nshape;
 	}
 	// wcssys for editing this shape
-	if( params.wcsedit === undefined ){
-	    params.wcsedit = {wcssys: this.getWCSSys()};
+	if( params.wcsconfig === undefined ){
+	    params.wcsconfig = {wcssys: this.getWCSSys()};
 	}
 	// get array of option names to export when saving regions
 	params.exports = JS9.Fabric._exportShapeOptions.call(this, myopts)
@@ -14363,10 +14363,10 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // logical position
     pub.lcs = this.imageToLogicalPos(ipos);
     // why is this so complicated?
-    if( mode === "wcsedit" && obj.params.wcsedit ){
-	if( obj.params.wcsedit.wcssys === "image" ){
+    if( mode === "wcsconfig" && obj.params.wcsconfig ){
+	if( obj.params.wcsconfig.wcssys === "image" ){
 	    imforce = "image";
-	} else 	if( obj.params.wcsedit.wcssys === "physical" ){
+	} else 	if( obj.params.wcsconfig.wcssys === "physical" ){
 	    imforce = "physical";
 	}
     }
@@ -14536,7 +14536,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    );
 	    // add rotation
 	    npos = JS9.rotatePoint(npos, oangle, {x: pub.x, y: pub.y});
-	    if( this.params.wcssys === "image" ){
+	    if( pub.imsys === "image" ){
 		pub.imstr += `${tr(npos.x)},${tr(npos.y)}`;
 	    } else {
 		const {x, y} = this.imageToLogicalPos(npos);
@@ -14584,17 +14584,17 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     if( this.raw.wcs && (this.raw.wcs > 0) ){
 	updatewcs(this.raw.wcs, layer, pub, tstr, angstr, opts,
 		  pub);
-	if( obj.params.wcsedit && obj.params.wcsedit.wcssys ){
+	if( obj.params.wcsconfig && obj.params.wcsconfig.wcssys ){
 	    txeq = JS9.globalOpts.xeqPlugins;
 	    JS9.globalOpts.xeqPlugins = false;
 	    owcssys = this.getWCSSys();
-	    if( JS9.notWCS(obj.params.wcsedit.wcssys) ){
-		pub.wcsedit = $.extend(true, {}, obj.params.wcsedit);
+	    if( JS9.notWCS(obj.params.wcsconfig.wcssys) ){
+		pub.wcsconfig = $.extend(true, {}, obj.params.wcsconfig);
 	    } else {
-		this.setWCSSys(obj.params.wcsedit.wcssys, false);
+		this.setWCSSys(obj.params.wcsconfig.wcssys, false);
 		updatewcs(this.raw.wcs, layer, pub, tstr, angstr, opts,
-			  obj.params.wcsedit);
-		pub.wcsedit = $.extend(true, {}, obj.params.wcsedit);
+			  obj.params.wcsconfig);
+		pub.wcsconfig = $.extend(true, {}, obj.params.wcsconfig);
 	    }
 	    this.setWCSSys(owcssys, false);
 	    JS9.globalOpts.xeqPlugins = txeq;
@@ -15056,7 +15056,7 @@ JS9.Fabric.refreshShapes = function(layerName){
     // get current regions (i.e., before update to current configuration)
     regstr = this.listRegions("all", {mode: 1,
 				      sticky: false,
-				      savewcsedit: true,
+				      savewcsconfig: true,
 				      saveid: true}, layerName);
     if( regstr ){
 	// remove current regions (including unremovable ones)
@@ -16491,7 +16491,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
     const wcsinfo = this.raw.wcsinfo || {cdelt1: 1, cdelt2: 1};
     const defobj = {
 	type: "multi",
-	pub: {shape: "multi", wcsedit: {}},
+	pub: {shape: "multi", wcsconfig: {}},
 	params: {}
     };
     const fmt= (val) => {
@@ -16510,8 +16510,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	return t;
     };
     // which wcssys do we use? edit version, if available
-    if( obj && obj.pub && obj.pub.wcsedit && obj.pub.wcsedit.wcssys  ){
-	wcssys = obj.pub.wcsedit.wcssys;
+    if( obj && obj.pub && obj.pub.wcsconfig && obj.pub.wcsconfig.wcssys  ){
+	wcssys = obj.pub.wcsconfig.wcssys;
     } else {
 	wcssys = this.params.wcssys;
 	// fake obj: makes the checks easier, avoid if( obj ... ) everywhere
@@ -16563,12 +16563,12 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    break;
 	case "radii":
 	    if( obj.pub.radii ){
-		if( JS9.notWCS(wcssys) || !obj.pub.wcsedit.wcsstr ){
+		if( JS9.notWCS(wcssys) || !obj.pub.wcsconfig.wcsstr ){
 		    val = obj.pub.imstr
 			.replace(/^annulus\(/,"").replace(/\)$/,"")
 			.split(",").slice(2).join(",");
 		} else {
-		    val = obj.pub.wcsedit.wcsstr
+		    val = obj.pub.wcsconfig.wcsstr
 			.replace(/^annulus\(/,"").replace(/\)$/,"")
 			.split(",").slice(2).join(",");
 		}
@@ -16650,10 +16650,10 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    }
 	    break;
 	case "regstr":
-	    if( JS9.notWCS(wcssys) || !obj.pub.wcsedit.wcsstr ){
+	    if( JS9.notWCS(wcssys) || !obj.pub.wcsconfig.wcsstr ){
 		val = `${obj.pub.imsys};${obj.pub.imstr}`;
 	    } else {
-		val = `${obj.pub.wcsedit.wcssys};${obj.pub.wcsedit.wcsstr}`;
+		val = `${obj.pub.wcsconfig.wcssys};${obj.pub.wcsconfig.wcsstr}`;
 	    }
 	    break;
 	case "xpos":
@@ -16671,8 +16671,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		break;
 	    default:
-		if( obj.pub.wcsedit.ra !== undefined ){
-		    val = sprintf("%.6f", obj.pub.wcsedit.ra);
+		if( obj.pub.wcsconfig.ra !== undefined ){
+		    val = sprintf("%.6f", obj.pub.wcsconfig.ra);
 		} else if( obj.pub.x !== undefined ){
 		    val = sprintf("%.1f", obj.pub.x);
 		}
@@ -16694,8 +16694,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		break;
 	    default:
-		if( obj.pub.wcsedit.dec !== undefined ){
-		    val = sprintf("%.6f", obj.pub.wcsedit.dec);
+		if( obj.pub.wcsconfig.dec !== undefined ){
+		    val = sprintf("%.6f", obj.pub.wcsconfig.dec);
 		} else if( obj.pub.y !== undefined ){
 		    val = sprintf("%.1f", obj.pub.y);
 		}
@@ -16719,8 +16719,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		break;
 	    default:
-		if( obj.pub.wcsedit.wcssizestr !== undefined ){
-		    val = fmt(obj.pub.wcsedit.wcssizestr[0]);
+		if( obj.pub.wcsconfig.wcssizestr !== undefined ){
+		    val = fmt(obj.pub.wcsconfig.wcssizestr[0]);
 		} else if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
 		}
@@ -16741,8 +16741,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		}
 		break;
 	    default:
-		if( obj.pub.wcsedit.wcssizestr !== undefined ){
-		    val = fmt(obj.pub.wcsedit.wcssizestr[1]);
+		if( obj.pub.wcsconfig.wcssizestr !== undefined ){
+		    val = fmt(obj.pub.wcsconfig.wcssizestr[1]);
 		} else if( obj.pub[key] !== undefined ){
 		    val = fmt(obj.pub[key]);
 		}
@@ -17110,8 +17110,8 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    return fmtcheck(obj.pub.lcs.y, JS9.saostrtod(val));
 	}
 	if( key === "ra" ){
-	    if( obj.pub.wcsedit.wcsposstr ){
-		return fmtcheck(JS9.saostrtod(obj.pub.wcsedit.wcsposstr[0]),
+	    if( obj.pub.wcsconfig.wcsposstr ){
+		return fmtcheck(JS9.saostrtod(obj.pub.wcsconfig.wcsposstr[0]),
 				JS9.saostrtod(val));
 	    } else if( obj.pub.wcsposstr ){
 		return fmtcheck(JS9.saostrtod(obj.pub.wcsposstr[0]),
@@ -17120,8 +17120,8 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    return false;
 	}
 	if( key === "dec" ){
-	    if( obj.pub.wcsedit.wcsposstr ){
-		return fmtcheck(JS9.saostrtod(obj.pub.wcsedit.wcsposstr[1]),
+	    if( obj.pub.wcsconfig.wcsposstr ){
+		return fmtcheck(JS9.saostrtod(obj.pub.wcsconfig.wcsposstr[1]),
 				JS9.saostrtod(val));
 	    } else if( obj.pub.wcsposstr ){
 		return fmtcheck(JS9.saostrtod(obj.pub.wcsposstr[1]),
@@ -17174,8 +17174,8 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		        Math.pow(this.lcs.physical.forward[0][1],2));
     }
     // which wcssys do we use? edit version, if available
-    if( obj && obj.pub && obj.pub.wcsedit && obj.pub.wcsedit.wcssys  ){
-	wcssys = obj.pub.wcsedit.wcssys;
+    if( obj && obj.pub && obj.pub.wcsconfig && obj.pub.wcsconfig.wcssys  ){
+	wcssys = obj.pub.wcsconfig.wcssys;
     } else {
 	wcssys = this.params.wcssys;
 	// fake obj: makes the checks easier, avoid if( obj ... ) everywhere
@@ -17276,8 +17276,8 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    if( newval(obj, key, val) ){
 		opts.ra = val;
 		if( opts.dec === undefined ){
-		    if( obj.pub.wcsedit.wcsposstr ){
-			opts.dec = obj.pub.wcsedit.wcsposstr[1];
+		    if( obj.pub.wcsconfig.wcsposstr ){
+			opts.dec = obj.pub.wcsconfig.wcsposstr[1];
 		    } else if( obj.pub.wcsposstr ){
 			opts.dec = obj.pub.wcsposstr[1];
 		    }
@@ -17288,8 +17288,8 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    if( newval(obj, key, val) ){
 		opts.dec = val;
 		if( opts.ra === undefined ){
-		    if( obj.pub.wcsedit.wcsposstr ){
-			opts.ra = obj.pub.wcsedit.wcsposstr[0];
+		    if( obj.pub.wcsconfig.wcsposstr ){
+			opts.ra = obj.pub.wcsconfig.wcsposstr[0];
 		    } else if( obj.pub.wcsposstr ){
 			opts.ra = obj.pub.wcsposstr[0];
 		    }
@@ -17554,8 +17554,8 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    if( key === "id" && opts.file ){
 		continue;
 	    }
-	    // skip wcsedit when saving to a file
-	    if( key === "wcsedit" && opts.file ){
+	    // skip wcsconfig when saving to a file
+	    if( key === "wcsconfig" && opts.file ){
 		continue;
 	    }
 	    // sometimes skip data when saving to a file
@@ -17718,9 +17718,9 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	if( opts.saveid ){
 	    exports.id = region.id;
 	}
-	if( opts.savewcsedit && region.wcsedit     &&
-	    Object.keys(region.wcsedit).length > 0 ){
-	    exports.wcsedit = $.extend(true, {}, region.wcsedit);
+	if( opts.savewcsconfig && region.wcsconfig     &&
+	    Object.keys(region.wcsconfig).length > 0 ){
+	    exports.wcsconfig = $.extend(true, {}, region.wcsconfig);
 	}
 	// add color, if necessary
 	if( region.color && !tagcolors.includes(region.color) ){
@@ -18058,7 +18058,7 @@ JS9.Regions.parseRegions = function(s, opts){
 		// save the shape
 		obj.shape = robj.cmd;
 		// save the current wcssys for editing
-		obj.wcsedit = obj.wcsedit || {wcssys};
+		obj.wcsconfig = obj.wcsconfig || {wcssys};
 		// args are not required!
 		if( alen >= 2 ){
 		    // get image position
