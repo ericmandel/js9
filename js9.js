@@ -10988,53 +10988,62 @@ JS9.Display.prototype.separate = function(opts){
 
 // display the next image from the JS9 images list which is in this display
 JS9.Display.prototype.nextImage = function(inc){
-    let idx, curidx, im, dpos, npos;
+    let i, idx, nidx, im, dpos, npos;
+    let ims = [];
     let masks = [];
     inc = inc || 1;
     if( !this.image ){
-	return;
+	return this;
     }
     dpos = this.image.pos;
-    // get index into images array for the displayed image
-    for(idx=0; idx<JS9.images.length; idx++){
-	if( this.image === JS9.images[idx] ){
-	    break;
-	}
-    }
     // make list of image masks for this display
     if( !JS9.globalOpts.nextImageMask ){
-	for(curidx=0; curidx<JS9.images.length; curidx++){
-	    im = JS9.images[curidx];
+	for(i=0; i<JS9.images.length; i++){
+	    im = JS9.images[i];
 	    if( im.display === this && im.mask.active && im.mask.im ){
 		masks.push(im.mask.im);
 	    }
 	}
     }
-    // look for next image, wrap if necessary
-    for(curidx=idx+inc; curidx!==idx; curidx += inc){
-	// wrap forwards
-	if( curidx >= JS9.images.length ){
-	    curidx = 0;
+    // make a list of the images in this display
+    // skipping masks, if necessary
+    for(i=0; i<JS9.images.length; i++){
+	im = JS9.images[i];
+	// only images in this display
+	if( im.display !== this ){
+	    continue;
 	}
-	// wrap backwards
-	if( curidx < 0 ){
-	    curidx = JS9.images.length - 1;
-	}
-	// found a candidate next image
-	im = JS9.images[curidx];
-	// might need to skip if it's an active image mask
+	// only images that are not masks, if necessary
 	if( !JS9.globalOpts.nextImageMask && $.inArray(im, masks) >= 0 ){
 	    continue;
 	}
-	// if the candidate image is in this display, we're done
-	if( im.display === this ){
+	// candidate image
+	ims.push(im);
+    }
+    // if there is only one image, we're done
+    if( ims.length <= 1 ){
+	return this;
+    }
+    // get index into images array for the currently displayed image
+    for(idx=0; idx<ims.length; idx++){
+	if( this.image === ims[idx] ){
 	    break;
 	}
     }
+    // get index of next image
+    nidx = idx + inc;
+    // wrap if necessary
+    while( nidx >= ims.length ){
+	nidx -= ims.length;
+    }
+    // wrap if necessary
+    while( nidx < 0 ){
+	nidx += ims.length;
+    }
     // display if we are not back to where we started
-    if( idx !== curidx ){
+    if( idx !== nidx ){
 	// display image, 2D graphics, etc.
-	im = JS9.images[curidx];
+	im = ims[nidx];
 	im.displayImage("all");
 	im.refreshLayers();
 	im.display.clearMessage();
@@ -24330,6 +24339,18 @@ JS9.mkPublic("LookupImage", function(...args){
 JS9.mkPublic("LookupDisplay", function(...args){
     const obj = JS9.parsePublicArgs(args);
     return JS9.lookupDisplay(obj.argv[0]||obj.display, obj.argv[1]);
+});
+
+// display next (or prev) image in a given display
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("DisplayNextImage", function(...args){
+    let n, display;
+    const obj = JS9.parsePublicArgs(args);
+    display = JS9.lookupDisplay(obj.display);
+    if( display ){
+	n = parseFloat(obj.argv[0]) || 1;
+	return display.nextImage(n);
+    }
 });
 
 // rename a display:
