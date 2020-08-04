@@ -3280,16 +3280,18 @@ Note that the
 all take a regions specification as the second argument, which can be
 any of the following (in order of precedence):
 <ul>
-<li><b>"selected"</b>: the selected region (or all regions in selected group)
-<li><b>"all"</b>: all regions, but not including child text regions (default)
-<li><b>"All"</b>: all regions, including child text regions
+<li><b>selected</b>: the selected region (or all regions in selected group)
+<li><b>all</b>: all regions, but not including child text regions (default)
+<li><b>All</b>: all regions, including child text regions
 <li><b>[id]</b>: a specific region id returned by
   <a href="#JS9.AddRegions"><b>JS9.AddRegions()</b></a>
 <li><b>[color]</b>: all regions having the specified color (e.g., "red")
 <li><b>[shape]</b>: all regions having the specified shape (e.g., "circle")
-<li><b>"child"</b>: a child region (i.e. text child of another region)
-<li><b>"parent"</b>: a region that has a child (i.e. has a text child)
+<li><b>child</b>: a child region (i.e. text child of another region)
+<li><b>parent</b>: a region that has a child (i.e. has a text child)
 <li><b>[tag]</b>: all regions containing the specified tag (e.g., "source")
+<li><b>dcoords</b>: a region that preserves display coordinates
+<li><b>nodcoords</b>: a region that does not preserve display coordinates
 </ul>
 Thus, it is possible to act on multiple regions at the same time.
 
@@ -3346,7 +3348,6 @@ Other available properties include:
 <li><b>rotatable</b>: if false, region cannot be rotated
 <li><b>removable</b>: if false, region cannot be removed
 <li><b>selectable</b>: if false, region can't be selected (no GUI-based changes)
-<li><b>sticky</b>: if true, region doesn't change during pan, zoom, rotate, flip
 <li><b>lockMovementX</b>: if true, region cannot be moved in the x direction
 <li><b>lockMovementY</b>: if true, region cannot be moved in the y direction
 <li><b>lockRotation</b>: if true, region cannot be rotated
@@ -3354,6 +3355,8 @@ Other available properties include:
 <li><b>fontSize</b>: font parameter for text region
 <li><b>fontStyle</b>: font parameter for text region
 <li><b>fontWeight</b>: font parameter for text region
+<li><b>sticky</b>: if true, region doesn't change during pan, zoom, rotate, flip
+<li><b>preservedcoords</b>: if true, the region is sticky, and display coordinates are preserved during save and copy operations (see below for more info)
 </ul>
 Deprecated properties:
 <ul>
@@ -3390,6 +3393,17 @@ Here are some examples of ways to create regions:
     # Note that the WCS string is returned by the Edit menu's "copy wcs pos"
     # option (i.e., the "/" keystroke.)
     JS9.AddRegions("circle", {wcs: "23:23:28.895 +58:49:43.50 ICRS"});
+
+    # example 10: create a region by supplying display (screen) coordinates
+    image
+    text(d250, d100, "Using Display Coordinates")
+
+    # example 11: create a region by supplying display (screen) coordinates
+    # preserve the display coordinate when saving, copying
+    # and don't move the region when panning, zooming
+    image
+    text(d250, d100, "Using and Preserving Display Coordinates:") {"preservedcoords": true}
+
 </pre>
 In sum, you can specify a region using:
 <ul>
@@ -3414,6 +3428,43 @@ relative to the original region as the latter is moved, resized,
 etc. You also can double-click on the text child to bring up its
 configuration dialog box and change its color, font, size, text string,
 etc.
+
+<p>
+Examples 10 and 11 show several features of regions that might be
+useful for marking images with text and shapes that are tied to the
+display rather than the image. When using the image coordinate system,
+you can prefix the image positions with 'd' or 'D' to indicate that
+they should be interpreted as display (also called "screen")
+coordinates instead of image coordinates. The origin of the display is
+in the upper left corner (image coordinates are in the lower left). By
+default, a region specified with display coordinates is no different
+from other regions: the region will change its screen position during
+zoom and pan operations to stay aligned on the image, and its position
+will be saved using the current coordinate system. That is, by default, 
+display coordinate are only used in the initial placement of the region.
+
+<p>
+To preserve the region's display position during zoom and pan operations
+and while saving regions, set the <b>preservedcoords</b> property
+to <b>true</b> in the opts object. In this case, the region
+is no longer a canonical astronomical region of interest, but is more
+like a mark on the screen. By default, it will not be listed by the
+<b>Regions list</b> menu option, nor will it be saved by default (although
+you can set the <b>save dcoords regions</b> to <b>true</b> in the regions
+save dialog box, or set <b>savedcoords</b> to <b>true</b> in the opts
+property of the
+<a href="#JS9.SaveRegions"><b>JS9.SaveRegions()</b></a> routine.)
+It also will not be passed to back-end server analysis routines that
+specify <b>$regions, $sregions, $bregions</b> in their command line.
+However, it will be copied from one image to another when using the
+<a href="#JS9.CopyRegions"><b>JS9.CopyRegions()</b></a> routine.
+These behaviors are parameterized in the JS9.globalOpts object:
+<ul>
+<li><b>regListDCoords:</b>  list preserved display coords? (def: false)
+<li><b>regSaveDCoords:</b> save preserved display coords?  (def: false)
+<li><b>regExpandDCoords:</b> pass preserved display coords? to analysis (def: false)
+<li><b>regCopyDCoords:</b> copy preserved display coords? (def: true)
+</ul>
 
 <h5 id="JS9.GetRegions">Get information about one or more regions</h5>
 <p>
@@ -3880,6 +3931,8 @@ be any of the following (in order of precedence):
 <li><b>/[regexp]/</b>: shapes with a tag matching the specified regexp
 <li><b>child</b>: a child shape (i.e. text child of another shape)
 <li><b>parent</b>: a shape that has a child (i.e. has a text child)
+<li><b>dcoords</b>: a shape that preserves display coordinates
+<li><b>nodcoords</b>: a shape that does not preserve display coordinates
 
 </ul>
 Thus, it is possible to act on multiple shapes at the same time.

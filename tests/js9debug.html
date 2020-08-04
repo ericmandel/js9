@@ -257,14 +257,19 @@
                      contrast: 5.625, bias: 0.1,
                      scaleclipping: "user", scalemin: 1, scalemax: 15,
 	             onload: function(im){
-		       JS9.SetZoom(2,{display: "myJS9"});
-		       JS9.LoadSession("data/casa/casa.fits.ses",
-				       {onsessionload: function(im2){
-					   setTimeout(function(){
-					       im2.displayCoordGrid(false);
-					   }, 500);
-				       }},
-                                       {display:"myJS9"});}
+			 JS9.SetZoom(2,{display: "myJS9"});
+			 JS9.AddRegions({shape: "box",
+					 dx: 21, dy: 18,
+					 width: 30, height: 18,
+					 color: "cyan", raw: true},
+					{display:"myJS9"});
+			 JS9.LoadSession("data/casa/casa.fits.ses",
+					 {onsessionload: function(im2){
+					     setTimeout(function(){
+						 im2.displayCoordGrid(false);
+					     }, 500);
+					 }},
+					 {display:"myJS9"});}
                     },
                     {display: "myJS9"});
         $("#display").on("change", function(evt){

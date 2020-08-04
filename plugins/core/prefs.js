@@ -485,10 +485,6 @@ JS9.Prefs.globalsSchema = {
 	    "type": "string",
 	    "helper": "select display: click, move, false"
 	},
-	"fits2png": {
-	    "type": "boolean",
-	    "helper": "convert FITS to PNG rep files?"
-	},
 	"metaClickPan": {
 	    "type": "boolean",
 	    "helper": "meta-click pans to mouse position?"
@@ -500,6 +496,14 @@ JS9.Prefs.globalsSchema = {
 	"clickToFocus": {
 	    "type": "boolean",
 	    "helper": "click display to focus?"
+	},
+	"valposDCoords": {
+	    "type": "boolean",
+	    "helper": "valpos shows display coords?"
+	},
+	"regListDCoords": {
+	    "type": "boolean",
+	    "helper": "list regions preserving dcoords? "
 	},
 	"toolbarTooltips": {
 	    "type": "boolean",
@@ -564,6 +568,10 @@ JS9.Prefs.globalsSchema = {
 	"svgBorder": {
 	    "type": "boolean",
 	    "helper": "add border when exporting SVG?"
+	},
+	"fits2png": {
+	    "type": "boolean",
+	    "helper": "convert FITS to PNG rep files?"
 	}
     }
 };

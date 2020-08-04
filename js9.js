@@ -130,6 +130,7 @@ JS9.globalOpts = {
     alerts: true,		// set to false to turn off alerts
     valposTarget: null,         // target element for valpos updates
     valposWidth: "medium",      // small, medium, large
+    valposDCoords: false,	// show display coords in valpos?
     internalValPos: true,	// a fancy info plugin can turns this off
     internalContrastBias: true,	// a fancy colorbar plugin can turns this off
     containContrastBias: false, // contrast/bias only when mouse is in display?
@@ -139,6 +140,10 @@ JS9.globalOpts = {
     csvIncludeWCS: true,	// does Get/SaveRegions(csv) include wcs info?
     regIncludeJSON: true,	// does SaveRegions(reg) include the json info?
     regIncludeComments: true,	// does SaveRegions(reg) include the comments?
+    regListDCoords: false,	// ListRegions(reg) list preserved disp coords?
+    regSaveDCoords: false,	// SaveRegions(reg) save preserved disp coords?
+    regExpandDCoords: false,	// ExpandMacro(reg) use preserved disp coords?
+    regCopyDCoords: true,	// CopyRegions(reg) copy preserved disp coords?
     regArrowCrosshair: true,	// does move with arrow keys display crosshair?
     regSaveWCS: "",		// def wcs for saving regions
     regSaveFormat: "reg",	// def format for saving regions (reg,cvs,svg)
@@ -768,10 +773,6 @@ JS9.Image = function(file, params, func){
 	JS9.globalOpts.alerts = oalerts;
 	// plugin callbacks
 	this.xeqPlugins("image", "onimageload");
-	// update shapes?
-	if( this.updateshapes ){
-	    this.updateShapes("regions", "all", "update");
-	}
 	// load is complete
 	this.setStatus("load","complete");
 	// done loading, reset wait cursor
@@ -969,8 +970,6 @@ JS9.Image = function(file, params, func){
     this.blend = $.extend(true, {}, JS9.blendOpts);
     // initial mask mode
     this.mask = $.extend(true, {}, JS9.maskOpts);
-    // temp flag determines if we should update shapes at end of this call
-    this.updateshapes = false;
     // request for an empty image object ends here
     if( !file ){
 	return;
@@ -3775,6 +3774,7 @@ JS9.Image.prototype.displaySection = function(opts, func){
 	    }
 	    // save current regions (before displaying new image)
 	    oreg = this.listRegions("all", {mode: 1,
+					    includedcoords: true,
 					    savewcsconfig: true,
 					    saveid: true});
 	    // func to perform when image is loaded
@@ -3827,6 +3827,7 @@ JS9.Image.prototype.displaySection = function(opts, func){
 		}
 		// save current regions (before displaying new image)
 		oreg = this.listRegions("all", {mode: 1,
+						includedcoords: true,
 						savewcsconfig: true,
 						saveid: true});
 		// func to perform when image is loaded
@@ -5770,17 +5771,23 @@ JS9.Image.prototype.expandMacro = function(s, opts){
 	    break;
 	case "sregions":
 	    owcssys = savewcs(u[1]);
-	    r = this.listRegions("source", {mode: 0}).replace(/\s+/g,"");
+	    r = this.listRegions("source",
+		{mode:0, includedcoords:JS9.globalOpts.regExpandDCoords})
+		.replace(/\s+/g,"");
 	    restorewcs(owcssys);
 	    break;
 	case "bregions":
 	    owcssys = savewcs(u[1]);
-	    r = this.listRegions("background", {mode: 0}).replace(/\s+/g,"");
+	    r = this.listRegions("background",
+		{mode:0, includedcoords:JS9.globalOpts.regExpandDCoords})
+		.replace(/\s+/g,"");
 	    restorewcs(owcssys);
 	    break;
 	case "regions":
 	    owcssys = savewcs(u[1]);
-	    r = this.listRegions("all", {mode: 0}).replace(/\s+/g,"");
+	    r = this.listRegions("all",
+		{mode:0, includedcoords:JS9.globalOpts.regExpandDCoords})
+		.replace(/\s+/g,"");
 	    restorewcs(owcssys);
 	    break;
 	case "mag":
@@ -6593,7 +6600,7 @@ JS9.Image.prototype.saveJPEG = function(fname, opts){
 
 // update (and display) pixel and wcs values (connected to info plugin)
 JS9.Image.prototype.updateValpos = function(ipos, disp){
-    let val, vstr, vstr1, vstr2, vstr3, val3, i, c, p, s;
+    let val, vstr, vstr1, vstr2, vstr3, val3, i, c, d, p, s;
     let cd1, cd2, v1, v2, units, sect;
     let obj = null;
     const sep1 = "\t ";
@@ -6639,6 +6646,9 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	i = {x: ipos.x, y: ipos.y, sys: "image"};
 	// get logical coordinates
 	p = this.imageToLogicalPos(ipos);
+	// get display coordinates
+	d = this.imageToDisplayPos(ipos);
+	d.sys = "display";
 	// get pixel coordinates in current logical coordinate system;
 	if( this.params.wcssys === "image" ){
 	    c = i;
@@ -6668,12 +6678,17 @@ JS9.Image.prototype.updateValpos = function(ipos, disp){
 	// create the valpos string
 	vstr1 = val3;
 	vstr2 =  `${tr(c.x, 3)} ${tr(c.y, 3)} (${c.sys})`;
+	if( JS9.globalOpts.valposDCoords && c.sys === "image" ){
+	    vstr2 += `${sp}${tr(d.x, 3)} ${tr(d.y, 3)} (${d.sys})`;
+	}
 	vstr = vstr1 + sp + vstr2;
 	// object containing all information
 	obj = {ix: i.x, iy: i.y, ipos: tr(i.x, 2) + sep2 + tr(i.y, 2),
 	       isys: "image",
 	       px: p.x, py: p.y, ppos: tr(p.x, 2) + sep2 + tr(p.y, 2),
 	       psys: "physical",
+	       dx: d.x, dy: d.y, dpos: tr(d.x, 2) + sep2 + tr(d.y, 2),
+	       dsys: "display",
 	       cx: c.x, cy: c.y, cpos: tr(c.x, 2) + sep2 + tr(c.y, 2),
 	       csys: c.sys,
 	       ra: "", dec: "", wcspos: "", wcssys: "",
@@ -13038,7 +13053,7 @@ JS9.Fabric.activeShapeLayer = function(s){
 // process options, separating into fabric opts and params
 // call using image context
 JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
-    let i, j, tval1, tags, pos, cpos, len, zoom, owcssys, txeq;
+    let i, j, tval1, tags, pos, cpos, len, zoom, owcssys, txeq, pt;
     let key, shape, radinc, nrad, radius, tf, arr, parent;
     const nopts = {}, nparams = {};
     const YFUDGE = 1;
@@ -13090,12 +13105,6 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	        tagcolors.defcolor || JS9.globalOpts.defcolor || "#000000";
 	return color;
     };
-    // is image zoom part of scale?
-    if( this.display.layers[layerName].dtype === "main" ){
-	zoom = this.rgb.sect.zoom;
-    } else {
-	zoom = 1;
-    }
     // remove means nothing else matters
     if( opts.remove ){
 	return {remove: opts.remove};
@@ -13164,6 +13173,11 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    }
 	}
 	nopts.angle = -opts.angle;
+    }
+    //  dx and dy are display coords
+    if( (opts.dx !== undefined) && (opts.dy !== undefined) ){
+	nopts.left = opts.dx;
+	nopts.top = opts.dy;
     }
     //  x and y are image coords, convert to display coords
     if( (opts.x !== undefined) && (opts.y !== undefined) ){
@@ -13257,6 +13271,13 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
     }
     if( opts.deltay ){
 	nopts.top -= opts.deltay;
+    }
+    // set scaling based on zoom factor
+    if( this.display.layers[layerName].dtype === "main" &&
+	!opts.preservedcoords ){
+	zoom = this.rgb.sect.zoom;
+    } else {
+	zoom = 1;
     }
     // shape-specific processing
     switch(opts.shape){
@@ -13436,11 +13457,21 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	    // convert all points from image pos to display pos
 	    len = opts.pts.length;
 	    for(i=0; i<len; i++){
-		opts.pts[i] = this.imageToDisplayPos(opts.pts[i]);
+		pt = opts.pts[i];
+		if( JS9.notNull(pt.x) && JS9.notNull(pt.y) ){
+		    opts.pts[i] = this.imageToDisplayPos(opts.pts[i]);
+		} else if( JS9.notNull(pt.dx) && JS9.notNull(pt.dy) ){
+		    opts.pts[i].x = pt.dx;
+		    delete opts.pts[i].dx;
+		    opts.pts[i].y = pt.dy;
+		    delete opts.pts[i].dy;
+		}
 	    }
 	    // centroid of polygon from display points
 	    if( opts.left && opts.top ){
 		cpos = {x: opts.left, y: opts.top};
+	    } else if( opts.dx && opts.dx ){
+		cpos = {x: opts.dx, y: opts.dy};
 	    } else {
 		// get center point of polygon bounding box
 		cpos = JS9.centerPolygon(opts.pts);
@@ -13460,9 +13491,9 @@ JS9.Fabric._parseShapeOptions = function(layerName, opts, obj){
 	// ... don't even think of changing it to opts (again)!
 	} else if( !obj || !obj.points || !obj.points.length ){
 	    if( opts.shape === "polygon" && opts. polypoints ){
-		opts.points = opts.polypoints;
+		opts.points = opts.points || opts.polypoints;
 	    } else if( opts.shape === "line" && opts. linepoints ){
-		opts.points = opts.linepoints;
+		opts.points = opts.points || opts.linepoints;
 	    }
 	}
 	// we can scale menu-created regions to be reasonably sized
@@ -13774,7 +13805,7 @@ JS9.Fabric._handleChildText = function(layerName, s, opts){
 // add shapes to a layer
 // call using image context
 JS9.Fabric.addShapes = function(layerName, shape, myopts){
-    let i, sobj, sarr, ns, s, bopts, opts, layer, canvas, dlayer;
+    let i, sobj, sarr, carr, ns, s, bopts, opts, layer, canvas, dlayer;
     let zoom, ttop, tleft, tangle, w2, h2;
     let params = {};
     let rarr = [], parr = [];
@@ -13809,12 +13840,6 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	return;
     }
     canvas = layer.canvas;
-    // is image zoom part of scale?
-    if( this.display.layers[layerName].dtype === "main" ){
-	zoom = this.rgb.sect.zoom;
-    } else {
-	zoom = 1;
-    }
     // figure out the first arg
     if( typeof shape === "string" ){
 	// look for a region string
@@ -13859,9 +13884,24 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
     // baseline opts
     bopts = $.extend(true, {}, JS9.Fabric.opts, layer.opts, myopts);
     // process each shape object
-    for(ns=0; ns < sarr.length; ns++){
+    for(ns=0; ns<sarr.length; ns++){
+	carr = sarr[ns];
+	// are we preserving display coords
+	if( carr.preservedcoords === true ){
+	    // sanity check
+	    if( (JS9.isNull(carr.dx) || JS9.isNull(carr.dy))        &&
+		($.isArray(carr.pts) && JS9.isNull(carr.pts[0].dx)) ){
+		JS9.error("preservedcoords requires positions in display coords");
+	    }
+	    // dcoord shapes are sticky
+	    carr.sticky = true;
+	    // save the object keys that were specified
+	    carr.preservedcoords = Object.keys(carr)
+	    // make 'image' the configured wcs
+	    carr.wcsconfig = {wcssys: "image"};
+	}
 	// combine baseline opts with this shapes's opts
-	opts = $.extend(true, {}, bopts, sarr[ns]);
+	opts = $.extend(true, {}, bopts, carr);
 	// parse options and generate opts and params objects
 	sobj = JS9.Fabric._parseShapeOptions.call(this, layerName, opts);
 	// remove means remove specified shapes or all shapes
@@ -13891,7 +13931,7 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	}
 	// get array of option names to export when saving regions
 	params.exports = JS9.Fabric._exportShapeOptions.call(this, myopts)
-	         .concat(JS9.Fabric._exportShapeOptions.call(this, sarr[ns]));
+	         .concat(JS9.Fabric._exportShapeOptions.call(this, carr));
 	// no parents or children yet
 	params.parent = null;
 	params.children = [];
@@ -14026,6 +14066,12 @@ JS9.Fabric.addShapes = function(layerName, shape, myopts){
 	// s.set("params", params);
 	s.params = params;
 	// set scaling based on zoom factor
+	if( this.display.layers[layerName].dtype === "main" &&
+	    !s.params.preservedcoords ){
+	    zoom = this.rgb.sect.zoom;
+	} else {
+	    zoom = 1;
+	}
 	if( layer.opts.panzoom ){
 	    switch(params.shape){
 	    case "point":
@@ -14205,6 +14251,12 @@ JS9.Fabric.selectShapes = function(layerName, id, cb){
 		} else if( id === "child" && obj.params.parent ){
 		    // all
 		    cb.call(this, obj, ginfo);
+		} else if( id === "dcoords" && obj.params.preservedcoords ){
+		    // all
+		    cb.call(this, obj, ginfo);
+		} else if( id === "nodcoords" && !obj.params.preservedcoords ){
+		    // all
+		    cb.call(this, obj, ginfo);
 		} else if( id === "parent"            &&
 			   obj.params.children        &&
 			   obj.params.children.length ){
@@ -14261,6 +14313,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     let opos, dist, txeq, owcssys, imforce;
     const pub ={};
     const layer = this.layers[layerName];
+    const moderexp = /^(child||export|unexport|move|mouseout)$/;
     const tr  = (x) => { return x.toFixed(2); };
     const tr4 = (x) => { return x.toFixed(4); };
     const updatewcs = (wcs, layer, pub, regstr, angstr, opts, obj) => {
@@ -14329,8 +14382,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     ginfo = ginfo || {};
     opts = opts || {};
     mode = mode || "update";
-    // is image zoom part of scale?
-    if( this.display.layers[layerName].dtype === "main" ){
+    // set scaling based on zoom factor
+    if( this.display.layers[layerName].dtype === "main" &&
+	!obj.params.preservedcoords ){
 	zoom = this.rgb.sect.zoom;
     } else {
 	zoom = 1;
@@ -14343,6 +14397,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     pub.color = obj.color || obj.stroke;
     pub.tags = obj.params.tags;
     pub.sticky = obj.params.sticky;
+    pub.preservedcoords = obj.params.preservedcoords;
     if( obj.params.parent ){
 	pub.parent = obj.params.parent.obj.params.id;
     } else {
@@ -14365,6 +14420,9 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    dpos = JS9.rotatePoint(dpos, ginfo.group.angle, gpos);
 	}
     }
+    // display position
+    pub.dx = dpos.x;
+    pub.dy = dpos.y;
     // image position
     ipos = this.displayToImagePos(dpos);
     pub.x = ipos.x;
@@ -14372,7 +14430,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // logical position
     pub.lcs = this.imageToLogicalPos(ipos);
     // why is this so complicated?
-    if( mode === "wcsconfig" && obj.params.wcsconfig ){
+    if( mode !== "export" && obj.params.wcsconfig ){
 	if( obj.params.wcsconfig.wcssys === "image" ){
 	    imforce = "image";
 	} else 	if( obj.params.wcsconfig.wcssys === "physical" ){
@@ -14626,8 +14684,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	return pub;
     }
     // callbacks for regions (but not child regions or some modes)
-    if( !obj.params.parent && (mode !== "child")    &&
-	(mode !== "move")  && (mode !== "mouseout") ){
+    if( !obj.params.parent && !mode.match(moderexp) ){
 	// when xeqonchange is set
 	if( this.params.xeqonchange && layer.show && layer.opts.onchange ){
 	    try{
@@ -14659,7 +14716,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	}
 	if( JS9.notNull(i) ){
 	    // ignore any problems
-	    try{ s = this.listRegions(i, {mode: 1}); }
+	    try{ s = this.listRegions(i, {mode: 1, includedcoords: true}); }
 	    catch(e){ s = null; }
 	    if( s ){ JS9.clipboard = s; }
 	}
@@ -14672,6 +14729,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 // eslint-disable-next-line no-unused-vars
 JS9.Fabric.removeShapes = function(layerName, shape, opts){
     let i, layer, canvas;
+    const lopts = {mode: 1, includedcoords: true};
     const arr = [];
     layer = this.getShapeLayer(layerName);
     // sanity check
@@ -14683,7 +14741,7 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
     opts = opts || {};
     // save regions for unremove?
     if( layerName === "regions" && JS9.globalOpts.unremoveReg ){
-	this.regstack.push(this.listRegions(shape, {mode: 1}, layerName));
+	this.regstack.push(this.listRegions(shape, lopts, layerName));
 	if( this.regstack.length > JS9.globalOpts.unremoveReg ){
 	    this.regstack = this.regstack.slice(0,JS9.globalOpts.unremoveReg);
 	}
@@ -14816,16 +14874,17 @@ JS9.Fabric.changeShapes = function(layerName, shape, opts){
 	return;
     }
     canvas = layer.canvas;
-    // is image zoom part of scale?
-    if( this.display.layers[layerName].dtype === "main" ){
-	zoom = this.rgb.sect.zoom;
-    } else {
-	zoom = 1;
-    }
     // active object
     ao = canvas.getActiveObject();
     // process the specified shapes
     this.selectShapes(layerName, shape, (obj, ginfo) => {
+	// set scaling based on zoom factor
+	if( this.display.layers[layerName].dtype === "main" &&
+	    !obj.params.preservedcoords                     ){
+	    zoom = this.rgb.sect.zoom;
+	} else {
+	    zoom = 1;
+	}
 	// combine the objects parameters with the new options
 	// clearing some of the old ones first
 	if( opts.radii ){
@@ -15109,11 +15168,15 @@ JS9.Fabric.copyShapes = function(layerName, to, which){
     }
     // if no 'which' specified, first look for "selected"
     if( !which ){
-	s = this.listRegions("selected", {mode: 1}, layerName);
+	s = this.listRegions("selected",
+			     {mode: 1, includedcoords: JS9.globalOpts.regCopyDCoords},
+			     layerName);
     }
     // if no selected regions found, or 'which' was specified, get regions
     if( !s ){
-	s = this.listRegions(which, {mode: 1}, layerName);
+	s = this.listRegions(which,
+			     {mode: 1, includedcoords: JS9.globalOpts.regCopyDCoords},
+			     layerName);
     }
     for(i=0; i<ims.length; i++){
 	// use this layer's opts, if possible
@@ -16481,6 +16544,7 @@ JS9.Regions.displayConfigForm = function(shape, opts){
     $(JS9.lightOpts[JS9.LIGHTWIN].topid)
 	.arrive(".regionsConfigForm", {onceOnly: true}, () => {
 	    opts.firsttime = true;
+	    this.updateShapes("regions", shape, "wcsconfig");
 	    this.initRegionsForm(shape, opts);
 	});
     // bring up display window
@@ -16668,7 +16732,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	case "xpos":
 	    switch(wcssys){
 	    case "image":
-		if( obj.pub.x !== undefined ){
+		if( obj.pub.preservedcoords && obj.pub.dx !== undefined ){
+		    val = sprintf("d%.1f", obj.pub.dx);
+		} else if( obj.pub.x !== undefined ){
 		    val = sprintf("%.1f", obj.pub.x);
 		}
 		break;
@@ -16691,7 +16757,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	case "ypos":
 	    switch(wcssys){
 	    case "image":
-		if( obj.pub.y !== undefined ){
+		if( obj.pub.preservedcoords && obj.pub.dy !== undefined ){
+		    val = sprintf("d%.1f", obj.pub.dy);
+		} else if( obj.pub.y !== undefined ){
 		    val = sprintf("%.1f", obj.pub.y);
 		}
 		break;
@@ -16927,6 +16995,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	.prop("checked", JS9.globalOpts.regIncludeJSON);
     $(`${form}[id='includecomments']`)
 	.prop("checked", JS9.globalOpts.regIncludeComments);
+    $(`${form}[id='savedcoords']`)
+	.prop("checked", JS9.globalOpts.regSaveDCoords);
     $(`${form}[id='includewcs']`)
 	.prop("checked", JS9.globalOpts.csvIncludeWCS);
     // unset all save format radio buttons
@@ -16995,6 +17065,11 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    break;
 	}
     }
+    // save options
+    $(`${form}.xtrareg`).addClass("nodisplay");
+    $(`${form}.xtracsv`).addClass("nodisplay");
+    $(`${form}.xtrasvg`).addClass("nodisplay");
+    $(`${form}.xtra${JS9.globalOpts.regSaveFormat}`).removeClass("nodisplay");
     // save image for later processing
     $(form).data("im", this);
     // save shape object for later processing
@@ -17107,10 +17182,20 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    return obj.angle !== -parseFloat(val);
 	}
 	if( key === "ix" ){
-	    return fmtcheck(obj.pub.x, JS9.saostrtod(val));
+	    if( obj.pub.preservedcoords             &&
+		val.charAt(0).toLowerCase() === "d" ){
+		return fmtcheck(obj.pub.dx, JS9.saostrtod(val.substring(1)));
+	    } else {
+		return fmtcheck(obj.pub.x, JS9.saostrtod(val));
+	    }
 	}
 	if( key === "iy" ){
-	    return fmtcheck(obj.pub.y, JS9.saostrtod(val));
+	    if( obj.pub.preservedcoords             &&
+		val.charAt(0).toLowerCase() === "d" ){
+		return fmtcheck(obj.pub.dy, JS9.saostrtod(val.substring(1)));
+	    } else {
+		return fmtcheck(obj.pub.y, JS9.saostrtod(val));
+	    }
 	}
 	if( key === "px" && obj.pub.lcs ){
 	    return fmtcheck(obj.pub.lcs.x, JS9.saostrtod(val));
@@ -17251,17 +17336,33 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    break;
 	case "ix":
 	    if( newval(obj, key, val) ){
-		opts.x = getval(val);
-		if( opts.y === undefined && obj.pub.y !== undefined ){
-		    opts.y = obj.pub.y;
+		if( obj.pub.preservedcoords             &&
+		    val.charAt(0).toLowerCase() === "d" ){
+		    opts.dx = getval(val.substring(1));
+		    if( opts.dy === undefined && obj.pub.dy !== undefined ){
+			opts.dy = obj.pub.dy;
+		    }
+		} else {
+		    opts.x = getval(val);
+		    if( opts.y === undefined && obj.pub.y !== undefined ){
+			opts.y = obj.pub.y;
+		    }
 		}
 	    }
 	    break;
 	case "iy":
 	    if( newval(obj, key, val) ){
-		opts.y = getval(val);
-		if( opts.x === undefined && obj.pub.x !== undefined ){
-		    opts.x = obj.pub.x;
+		if( obj.pub.preservedcoords             &&
+		    val.charAt(0).toLowerCase() === "d" ){
+		    opts.dy = getval(val.substring(1));
+		    if( opts.dx === undefined && obj.pub.dx !== undefined ){
+			opts.dx = obj.pub.dx;
+		    }
+		} else {
+		    opts.y = getval(val);
+		    if( opts.x === undefined && obj.pub.x !== undefined ){
+			opts.x = obj.pub.x;
+		    }
 		}
 	    }
 	    break;
@@ -17529,13 +17630,14 @@ JS9.Regions.pasteFromClipboard = function(curpos){
 
 // list one or more regions
 JS9.Regions.listRegions = function(which, opts, layer){
-    let i, region, rlen, key, obj, tagjoin, tagstr, iestr, mode;
+    let i, j, region, rlen, key, obj, tagjoin, tagstr, iestr, mode, val, got;
     let txeq, owcsunits, owcssys, wcssys;
     let regstr="";
     let lasttype="none";
     let dotags = false;
     let pubs = [];
     let exports = {};
+    let preservedcoords = [];
     const sepstr="; ";
     const tagcolors = [];
     const getExports = (obj, region) => {
@@ -17681,7 +17783,11 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    this.setWCSUnits(opts.wcsunits, false);
 	}
 	// update wcs values
-	this.updateShapes(layer, which, "update");
+	this.updateShapes(layer, which, "export");
+    }
+    // include dcoord shapes?
+    if( JS9.isNull(opts.includedcoords) ){
+	opts.includedcoords = JS9.globalOpts.regListDCoords;
     }
     // get specified regions into an array
     pubs = this.getShapes(layer, which, {includeObj: true});
@@ -17710,8 +17816,102 @@ JS9.Regions.listRegions = function(which, opts, layer){
     for(i=0; i<rlen; i++){
 	region = pubs[i];
 	obj = region.obj;
+	preservedcoords = [];
 	// don't list sticky regions, if specified
-	if( opts.sticky === false && region.sticky ){
+	// used by refresh to avoid changing sticky regions
+	if( region.sticky && opts.sticky === false ){
+	    continue;
+	}
+	// don't list regions where we are preserving dcoords, if specified
+	if( region.preservedcoords && !opts.includedcoords ){
+	    continue;
+	}
+	// preserving dcoords get handled specially
+	if( $.isArray(obj.params.preservedcoords) ){
+	    // make array of raw values to output
+	    for(j=0; j<obj.params.preservedcoords.length; j++){
+		key = obj.params.preservedcoords[j];
+		switch(key){
+		case "pts":
+		    if( $.inArray("dx", preservedcoords) < 0 ){
+			preservedcoords.push("dx");
+		    }
+		    if( $.inArray("dy", preservedcoords) < 0 ){
+			preservedcoords.push("dy");
+		    }
+		    if( $.inArray("points", preservedcoords) < 0 ){
+			preservedcoords.push("points");
+		    }
+		    break;
+		default:
+		    preservedcoords.push(key);
+		    break;
+		}
+	    }
+	    if( lasttype !== "none" ){
+		regstr += sepstr;
+	    }
+	    if( lasttype !== "image" ){
+		regstr += "image";
+		regstr += sepstr;
+	    }
+	    regstr += `${region.shape}({`;
+	    // return values originally passed when creating regions
+	    for(j=0, got=0; j<preservedcoords.length; j++){
+		key = preservedcoords[j];
+		// skip keys added during processing
+		if( key === "shape" ){ continue; }
+		if( key === "sticky" ){ continue; }
+		if( key === "wcsconfig" ){ continue; }
+		// convert pts to points, along with dx, dy
+		if( key === "pts" ){
+		    key = "dx";
+		    obj.params.preservedcoords.push("dy");
+		    obj.params.preservedcoords.push("points");
+		}
+		// convert raw array to original boolean
+		if( key === "preservedcoords" ){
+		    val = true;
+		} else if( JS9.notNull(region[key]) ){
+		    val = region[key];
+		} else if( JS9.notNull(obj[key]) ){
+		    val = obj[key];
+		} else {
+		    switch(key){
+		    case "dx":
+			val = obj.left;
+			break;
+		    case "dy":
+			val = obj.top;
+			break;
+		    case "color":
+			val = obj.stroke;
+			break;
+		    default:
+			val = null;
+			break;
+		    }
+		}
+		// format the value
+		if( val ){
+		    if( got++ > 0 ){ regstr += ","; }
+		    regstr += `"${key}":`;
+		    switch(typeof val){
+		    case "string":
+			regstr += `"${val}"`;
+			break;
+		    case "object":
+			try{ regstr += JSON.stringify(val); }
+			catch(e){ JS9.error(`can't parse: ${val}`, e); }
+			break;
+		    default:
+			regstr += `${val}`;
+			break;
+		    }
+		}
+	    }
+	    regstr += `})`;
+	    lasttype = "image";
 	    continue;
 	}
 	// init tags
@@ -17793,7 +17993,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    this.setWCSUnits(owcsunits, false);
 	}
 	// restore wcs values
-	this.updateShapes(layer, which, "update");
+	this.updateShapes(layer, which, "export");
 	JS9.globalOpts.xeqPlugins = txeq;
     }
     // display the region string, if necessary
@@ -17930,7 +18130,7 @@ JS9.Regions.parseRegions = function(s, opts){
 	if( tarr && tarr[0] ){
 	    // convert to object
 	    try{ tobj.opts = JSON.parse(tarr[0].trim()); }
-	    catch(e){ tobj.opts = {}; }
+	    catch(e){ JS9.error(`can't parse opts: ${tarr[0]}`, e); }
 	}
 	// look for comments
 	tobj.comment = t[1];
@@ -17947,8 +18147,11 @@ JS9.Regions.parseRegions = function(s, opts){
 	}
 	// separate the region args into an array
 	tarr = parrexp.exec(s);
-	if( tarr && tarr[1] ){
-	    // arg without json opts
+	if( tarr && tarr[0].match(optsrexp) ){
+	    // no region args, all properties passed in json
+	    tobj.args = [];
+	} else if( tarr && tarr[1] ){
+	    // region args, without json opts
 	    tobj.args = tarr[1].split(argsrexp);
 	}
 	// look for - sign signifying an exclude region
@@ -17964,14 +18167,22 @@ JS9.Regions.parseRegions = function(s, opts){
 	}
 	return tobj;
     };
-    // get image position using delim type to ascertain input units
     const getipos = (ix, iy) => {
-	let vt, sarr, ox, oy;
-	const v1 = JS9.strtoscaled(ix);
-	const v2 = JS9.strtoscaled(iy);
+	let vt, sarr, v1, v2;
+	let obj = {};
+	// special handling for display coords
+	if( ix.charAt(0).toLowerCase() === "d" &&
+	    iy.charAt(0).toLowerCase() === "d" ){
+	    obj.dx = parseFloat(ix.substring(1));
+	    obj.dy = parseFloat(iy.substring(1));
+	    return obj;
+	}
+	// convert strings to numbers, along with unit delimiters
+	v1 = JS9.strtoscaled(ix);
+	v2 = JS9.strtoscaled(iy);
 	// local override of wcs if:
-	// a. we are not currently using wcs
-	// b. we used sexagesimal units or appended d,r
+	// a. we used sexagesimal units or appended d,r
+	// b. we are not currently using wcs
 	if( ((v1.dtype.match(unrexp)) || (v2.dtype.match(unrexp))) &&
 	    !iswcs && !owcssys.match(imrexp) ){
 	    liswcs = true;
@@ -17987,17 +18198,19 @@ JS9.Regions.parseRegions = function(s, opts){
 	    if( v2.dtype === "r" ){ v2.dval = v2.dval * 180 / Math.PI; }
 	    // get image coordinates
 	    sarr = JS9.wcs2pix(this.raw.wcs, v1.dval, v2.dval).split(/ +/);
-	    ox = parseFloat(sarr[0]);
-	    oy = parseFloat(sarr[1]);
+	    obj.x = parseFloat(sarr[0]);
+	    obj.y = parseFloat(sarr[1]);
+	    return obj;
 	} else if( wcssys === "physical" ){
 	    vt = this.logicalToImagePos({x: v1.dval, y: v2.dval});
-	    ox = vt.x;
-	    oy = vt.y;
-	} else {
-	    ox = v1.dval;
-	    oy = v2.dval;
+	    obj.x = vt.x;
+	    obj.y = vt.y;
+	    return obj;
 	}
-	return [ox, oy];
+	// image coords
+	obj.x = v1.dval;
+	obj.y = v2.dval;
+	return obj;
     };
     // get image length
     const getilen = (len, which) => {
@@ -18069,11 +18282,11 @@ JS9.Regions.parseRegions = function(s, opts){
 		// save the current wcssys for editing
 		obj.wcsconfig = obj.wcsconfig || {wcssys};
 		// args are not required!
-		if( alen >= 2 ){
+		if( alen >= 2               &&
+		    obj.shape !== "line"    &&
+		    obj.shape !== "polygon" ){
 		    // get image position
-		    pos = getipos(robj.args[0], robj.args[1]);
-		    obj.x = pos[0];
-		    obj.y = pos[1];
+		    $.extend(obj, getipos(robj.args[0], robj.args[1]));
 		}
 		// if textOpts has ra, dec, save the wcssys, it may be
 		// different by the time textOpts gets processed
@@ -18085,9 +18298,11 @@ JS9.Regions.parseRegions = function(s, opts){
 		// region args are optional
 		switch(robj.cmd){
 		case "annulus":
-		    obj.radii = [];
-		    for(j=2; j<alen; j++){
-			obj.radii.push(getilen(robj.args[j], 1));
+		    if( alen > 0 ){
+			obj.radii = [];
+			for(j=2; j<alen; j++){
+			    obj.radii.push(getilen(robj.args[j], 1));
+			}
 		    }
 		    break;
 		case "box":
@@ -18120,13 +18335,17 @@ JS9.Regions.parseRegions = function(s, opts){
 		    break;
 		case "line":
 		case "polygon":
-		    obj.pts = [];
-		    for(j=0, k=0; j<alen; j+=2, k++){
-			pos = getipos(robj.args[j], robj.args[j+1]);
-			obj.pts[k] = {x: pos[0], y: pos[1]};
+		    if( alen > 0 ){
+			obj.pts = [];
+			for(j=0, k=0; j<alen; j+=2, k++){
+			    pos = getipos(robj.args[j], robj.args[j+1]);
+			    if( JS9.notNull(pos.dx) && JS9.notNull(pos.dy) ){
+				obj.pts[k] = {dx: pos.dx, dy: pos.dy};
+			    } else {
+				obj.pts[k] = {x: pos.x, y: pos.y};
+			    }
+			}
 		    }
-		    delete obj.x;
-		    delete obj.y;
 		    break;
 		case "point":
 		    break;
@@ -18261,6 +18480,10 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	    if( JS9.isNull(opts.includewcs) ){
 		opts.includewcs = JS9.globalOpts.csvIncludeWCS;
 	    }
+	    // when saving reg, we might want to exclude the dcoord shapes
+	    if( JS9.isNull(opts.savedcoords) ){
+		opts.includedcoords = JS9.globalOpts.regSaveDCoords;
+	    }
 	    // list of regions
 	    regstr = this.listRegions(which, opts, layer);
 	    // convert to csv
@@ -18293,6 +18516,10 @@ JS9.Regions.saveRegions = function(fname, which, layer){
 	    // when saving reg, we might want to exclude the comments
 	    if( JS9.isNull(opts.includecomments) ){
 		opts.includecomments = JS9.globalOpts.regIncludeComments;
+	    }
+	    // when saving reg, we might want to exclude the dcoord shapes
+	    if( JS9.isNull(opts.savedcoords) ){
+		opts.includedcoords = JS9.globalOpts.regSaveDCoords;
 	    }
 	    // list of regions
 	    regstr = this.listRegions(which, opts, layer).replace(/; */g, "\n");
@@ -22409,7 +22636,7 @@ JS9.mouseUpCB = function(evt){
     if( JS9.hasOwnProperty("MouseTouch") ){
 	JS9.MouseTouch.action(im, evt, "stop");
     }
-    // inside a region, update region string
+    // in a region, update region string since we probably just modified it
     if( im.clickInRegion && im.clickInLayer ){
 	if( isclick ){
 	    if( fabric.major_version === 1 ){
@@ -22417,7 +22644,7 @@ JS9.mouseUpCB = function(evt){
 		im.updateShapes(im.clickInLayer, "selected", "select");
 	    }
 	} else {
-	    im.updateShapes(im.clickInLayer, "selected", "update");
+	    im.updateShapes(im.clickInLayer, "selected", "mouseup");
 	}
     }
     // plugin callbacks
@@ -22611,7 +22838,7 @@ JS9.mouseOutCB = function(evt){
     if( !JS9.globalOpts.clickToFocus ){
 	im.display.displayConjq.blur();
     }
-    // if processing a region, update it now
+    // if processing (moving, resizing) a region, update it now
     // (in case the mouseup happens outside the display)
     if( im.clickInRegion && im.clickInLayer ){
 	im.updateShapes(im.clickInLayer, "selected", "mouseout");
@@ -23856,352 +24083,6 @@ JS9.initAnalysis = function(){
 	    return false;
 	}
     });
-};
-
-
-// ---------------------------------------------------------------------
-// the init routine to start up JS9
-// ---------------------------------------------------------------------
-
-JS9.init = function(){
-    let uopts;
-    // sanity check: need HTML5 canvas and JSON
-    if( !window.HTMLCanvasElement || !JSON ){
-	JS9.error("your browser does not support JS9 (no HTML5 canvas and/or JSON). Please try a modern version of Firefox, Chrome, Safari, Opera, or Edge.");
-    }
-    // get relative location of installed js9.css file
-    // which tells us where JS9 installed files (and the helper) are located
-    //
-    // allow specification of installdir in js9prefs.js
-    // check this manually: it's happening before processing the prefs
-    if( window.hasOwnProperty("JS9Prefs") && typeof JS9Prefs === "object" ){
-	if( JS9Prefs.globalOpts && JS9Prefs.globalOpts.installDir ){
-	    JS9.INSTALLDIR = JS9Prefs.globalOpts.installDir;
-	}
-    }
-    if( !JS9.INSTALLDIR ){
-	try{
-	    // process all links which end in 'js9.css'
-	    $('link[href$="js9.css"]').each((index, element) => {
-		const h = $(element).attr("href");
-		if( h ){
-		    // must really end in 'js9.css'
-		    if( h.split("/").reverse()[0] === "js9.css" ){
-			// set install dir to its directory
-			JS9.INSTALLDIR = h.replace(/js9\.css$/, "");
-		    }
-		}
-	    });
-	} catch(e){
-	    JS9.INSTALLDIR = "";
-	}
-	if( JS9.INSTALLDIR ){
-	    JS9.INSTALLDIR = JS9.cleanPath(JS9.INSTALLDIR);
-	}
-    }
-    if( JS9.INSTALLDIR && JS9.INSTALLDIR.slice(-1) !== "/" ){
-	// make sure there is a trailing slash
-	JS9.INSTALLDIR += "/";
-    }
-    JS9.TOROOT = JS9.INSTALLDIR.replace(/([^/.])+/g, "..");
-    // if the js9 inline object exists, add it the JS9 object
-    if( window.hasOwnProperty("JS9Inline") && typeof JS9Inline === "object" ){
-	JS9.inline = $.extend(true, {}, JS9Inline);
-    }
-    // set up the dynamic drive html window
-    if( JS9.LIGHTWIN === "dhtml" ){
-	// Creation of dhtmlwindowholder was done by a document.write in
-	// dhtmlwindow.js. We removed it from dhtmlwindow.js file because it
-	// interfered with the jquery search for js9.css above. Oh boy ...
-	// But it has to be somewhere!
-	$("<div>")
-	    .attr("id", "dhtmlwindowholder")
-	    .appendTo($(document.body))
-	    .append("<span style='display:none'>.</span>");
-	// allow in-line specification of images for all-in-one configuration
-	if( JS9.inline ){
-	    dhtmlwindow.imagefiles = [JS9.inline["images/min.gif"],
-				      JS9.inline["images/close.gif"],
-				      JS9.inline["images/restore.gif"],
-				      JS9.inline["images/resize.gif"]];
-	} else if( JS9.allinone ){
-	    dhtmlwindow.imagefiles = [JS9.allinone.min,
-				      JS9.allinone.close,
-				      JS9.allinone.restore,
-				      JS9.allinone.resize];
-	} else {
-	    dhtmlwindow.imagefiles=[JS9.InstallDir("images/min.gif"),
-				    JS9.InstallDir("images/close.gif"),
-				    JS9.InstallDir("images/restore.gif"),
-				    JS9.InstallDir("images/resize.gif")];
-	}
-	// once a window is loaded, set jupyter focus, if necessary
-	if( window.hasOwnProperty("Jupyter") ){
-	   $(JS9.lightOpts[JS9.LIGHTWIN].topid)
-		.arrive("input", (el) => {
-		    JS9.jupyterFocus($(el).parent());
-		});
-	}
-    }
-    // use plotly if loaded separately, otherwise use internal flot
-    JS9.globalOpts.plotLibrary = JS9.globalOpts.plotLibrary || "flot";
-    if( (JS9.globalOpts.plotLibrary === "plotly") &&
-	!window.hasOwnProperty("Plotly") ){
-	JS9.globalOpts.plotLibrary = "flot";
-    }
-    // if js9 prefs were defined/loaded explicitly, merge properties
-    if( window.hasOwnProperty("JS9Prefs") && typeof JS9Prefs === "object" ){
-	JS9.mergePrefs(JS9Prefs);
-    } else {
-	// look for and load json pref files
-	// (set this to false in the page to avoid loading a prefs file)
-	if( JS9.PREFSFILE ){
-	    // load site preferences, if possible
-	    JS9.loadPrefs(JS9.InstallDir(JS9.PREFSFILE), 0);
-	    // load page preferences, if possible
-	    JS9.loadPrefs(JS9.PREFSFILE, 0);
-	}
-    }
-    // if JS9 prefs have regionOpts, transfer them to Regions.opts
-    if( JS9.hasOwnProperty("Regions") ){
-	$.extend(true, JS9.Regions.opts, JS9.regionOpts);
-    }
-    delete JS9.regionOpts;
-    // if JS9 prefs have catalogOpts, transfer them to Catalogs.opts
-    if( JS9.hasOwnProperty("Catalogs") ){
-	$.extend(true, JS9.Catalogs.opts, JS9.catalogOpts);
-    }
-    delete JS9.catalogOpts;
-    // if JS9 prefs have crosshairOpts, transfer them to Crosshair.opts
-    if( JS9.hasOwnProperty("Crosshair") ){
-	$.extend(true, JS9.Crosshair.opts, JS9.crosshairOpts);
-    }
-    delete JS9.crosshairOpts;
-    // if JS9 prefs have gridOpts, transfer them to Grid.opts
-    if( JS9.hasOwnProperty("Grid") ){
-	$.extend(true, JS9.Grid.opts, JS9.gridOpts);
-    }
-    delete JS9.gridOpts;
-    // if JS9 prefs have emscriptenOpts, transfer them to Module
-    if( JS9.hasOwnProperty("Module") ){
-	$.extend(true, Module, JS9.emscriptenOpts);
-    }
-    delete JS9.emscriptenOpts;
-    // regularize resize params
-    if( !JS9.globalOpts.resize ){
-	JS9.globalOpts.resizeHandle = false;
-    }
-    // backward compatibility (we moved this property 7/2018)
-    if( JS9.analOpts.prependJS9Dir !== undefined ){
-	JS9.globalOpts.prependJS9Dir = JS9.analOpts.prependJS9Dir;
-	delete JS9.analOpts.prependJS9Dir;
-    }
-    // backward compatibility (we moved this property 7/2018)
-    if( JS9.analOpts.dataDir !== undefined ){
-	JS9.globalOpts.dataDir = JS9.analOpts.dataDir;
-	delete JS9.analOpts.dataDir;
-    }
-    // turn off resize on mobile platforms
-    if( JS9.BROWSER[3] ){
-	JS9.globalOpts.resizeHandle = false;
-    }
-    // replace with global opts with user opts, if necessary
-    if( window.hasOwnProperty("localStorage") && JS9.globalOpts.localStorage ){
-	try{ uopts = localStorage.getItem("globals"); }
-	catch(e){ uopts = null; }
-	if( uopts ){
-	    try{ JS9.userOpts.displays = JSON.parse(uopts); }
-	    catch(ignore){ /* empty */ }
-	    if( JS9.userOpts.displays ){
-		$.extend(true, JS9.globalOpts, JS9.userOpts.displays);
-	    }
-	}
-	try{ uopts = localStorage.getItem("images"); }
-	catch(e){ uopts = null; }
-	if( uopts ){
-	    try{ JS9.userOpts.images = JSON.parse(uopts); }
-	    catch(ignore){ /* empty */ }
-	    if( JS9.userOpts.images ){
-		$.extend(true, JS9.imageOpts, JS9.userOpts.images);
-	    }
-	}
-	// this gets replaced below
-	try{ uopts = localStorage.getItem("fits"); }
-	catch(e){ uopts = null; }
-	if( uopts ){
-	    try{ JS9.userOpts.fits = JSON.parse(uopts); }
-	    catch(ignore){ /* empty */ }
-	}
-	try{ uopts = localStorage.getItem("regions"); }
-	catch(e){ uopts = null; }
-	if( uopts ){
-	    try{ JS9.userOpts.regions = JSON.parse(uopts); }
-	    catch(ignore){ /* empty */ }
-	    if( JS9.userOpts.regions ){
-		$.extend(true, JS9.Regions.opts, JS9.userOpts.regions);
-	    }
-	}
-	try{ uopts = localStorage.getItem("grid"); }
-	catch(e){ uopts = null; }
-	if( uopts ){
-	    try{ JS9.userOpts.images = JSON.parse(uopts); }
-	    catch(ignore){ /* empty */ }
-	    if( JS9.userOpts.images ){
-		$.extend(true, JS9.Grid.opts, JS9.userOpts.images);
-	    }
-	}
-	try{ uopts = localStorage.getItem("catalog"); }
-	catch(e){ uopts = null; }
-	if( uopts ){
-	    try{ JS9.userOpts.images = JSON.parse(uopts); }
-	    catch(ignore){ /* empty */ }
-	    if( JS9.userOpts.images ){
-		$.extend(true, JS9.Catalogs.Opts, JS9.userOpts.images);
-	    }
-	}
-    }
-    // set debug flag
-    JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
-    // init main display(s)
-    $("div.JS9").each((index, element) => {
-	JS9.checkNew(new JS9.Display($(element)));
-    });
-    // load web worker
-    if( window.Worker && !JS9.allinone){
-	try{ JS9.worker = new JS9.WebWorker(JS9.InstallDir(JS9.WORKERFILE)); }
-	catch(e){ /* empty */ }
-    }
-    // for allinone files, emscripten is already loaded so init FITS now
-    if( JS9.allinone ){
-	JS9.initFITS();
-    } else {
-	// load emscripten, which will trigger init FITS later
-	JS9.initEmscripten();
-    }
-    // desktop js9 gets helper from command line via the environment
-    if( window.isElectron && window.electronHelper ){
-	JS9.globalOpts.helperType = "nodejs";
-    }
-    // initialize helper support
-    JS9.helper = new JS9.Helper();
-    // add handler for postMessage events
-    window.addEventListener("message", (ev) => {
-	let s, msg;
-	// For Chrome, origin property is in the ev.originalEvent object
-	let origin = ev.origin || ev.originalEvent.origin;
-	const data = ev.data;
-	if( origin === "null" ){
-	    origin = "unknown";
-	}
-	// if postMessage handling is disabled, just (log and) return
-	if( !JS9.globalOpts.postMessage ){
-	    if( JS9.DEBUG ){
-		s = `JS9 ignoring postMessage, origin: ${origin}`;
-		if( typeof data === "string" ){
-		    s += ` data: ${data}`;
-		} else if( typeof data === "object" ){
-		    s += ` obj: ${JSON.stringify(Object.keys(data))}`;
-		} else {
-		    s += ` typeof: ${typeof data}`;
-		}
-		JS9.log(s);
-	    }
-	    return;
-	}
-	if( typeof data === "string" ){
-	    // json string passed (we hope)
-	    try{ msg = JSON.parse(data); }
-	    catch(e){ JS9.error(`can't parse msg: ${data}`, e); }
-	} else if( typeof data === "object" ){
-	    // object was passed directly
-	    msg = data;
-	} else {
-	    JS9.error("invalid msg from postMessage");
-	}
-	// call the msg handler for JS9 API calls
-	JS9.msgHandler(msg, (stdout, stderr, errcode, a) => {
-	    let res;
-            a = a || {};
-	    res = {name: a.name, rtype: a.rtype, rdata: stdout,
-		   stdout: stdout, stderr: stderr, errcode: errcode};
-	    parent.postMessage({cmd: msg.cmd, res: res}, "*");
-	});
-    }, false);
-    // initialize image filters
-    if( window.hasOwnProperty("ImageFilters") ){
-	JS9.ImageFilters = ImageFilters;
-    }
-    // initialize colormaps
-    JS9.initColormaps();
-    // initialize console commands
-    JS9.initCommands();
-    // init analysis
-    JS9.initAnalysis();
-    // register essential plugins
-    JS9.RegisterPlugin(JS9.MouseTouch.CLASS, JS9.MouseTouch.NAME,
-		       JS9.MouseTouch.init,
-		       {menuItem: "Mouse/Touch",
-			onplugindisplay: JS9.MouseTouch.init,
-			help: "help/mousetouch.html",
-			winTitle: "Mouse/Touch Actions",
-			winResize: true,
-			winDims: [JS9.MouseTouch.WIDTH,JS9.MouseTouch.HEIGHT]});
-    JS9.RegisterPlugin(JS9.Regions.CLASS, JS9.Regions.NAME,
-		       JS9.Regions.init,
-		       {divArgs: ["regions"],
-			winDims: [0, 0]});
-    JS9.RegisterPlugin(JS9.Crosshair.CLASS, JS9.Crosshair.NAME,
-		       JS9.Crosshair.init,
-		       {onmousemove: JS9.Crosshair.display,
-			onkeyboardaction: JS9.Crosshair.keyaction,
-			onkeyup: JS9.Crosshair.keyup,
-			onimageload: JS9.Crosshair.create,
-			winDims: [0, 0]});
-    JS9.RegisterPlugin(JS9.Grid.CLASS, JS9.Grid.NAME,
-		       JS9.Grid.init,
-		       {onsetpan:      JS9.Grid.regrid,
-			onsetzoom:     JS9.Grid.regrid,
-			onsetwcssys:   JS9.Grid.regrid,
-			onsetwcsunits: JS9.Grid.regrid,
-			onimageload:   JS9.Grid.regrid,
-			onupdateprefs: JS9.Grid.regrid,
-			winDims:       [0, 0]});
-    JS9.RegisterPlugin(JS9.Dysel.CLASS, JS9.Dysel.NAME,
-		       JS9.Dysel.init,
-		       {onimageload:   JS9.Dysel.imageload,
-			onimageclose:  JS9.Dysel.imageclose,
-			winDims:       [0, 0]});
-    JS9.RegisterPlugin(JS9.Titlebar.CLASS, JS9.Titlebar.NAME,
-		       JS9.Titlebar.init,
-		       { onimageload:  JS9.Titlebar.imageload,
-			 onimagedisplay: JS9.Titlebar.imagedisplay,
-			 onimageclose: JS9.Titlebar.imageclose,
-			 winDims: [0, 0]});
-    // find divs associated with each plugin and run the constructor
-    JS9.instantiatePlugins();
-    // sort plugins
-    JS9.plugins.sort( (a,b) => {
-	const t1 = a.opts.menuItem;
-	const t2 = b.opts.menuItem;
-	if( !t1 ){
-	    return 1;
-	}
-	if( !t2 ){
-	    return -1;
-	}
-	if( t1 < t2 ){
-	    return -1;
-	}
-	if( t1 > t2 ){
-	    return 1;
-	}
-	return 0;
-    });
-    // scroll to top
-    $(document).scrollTop(0);
-    // signal JS9 init is complete
-    JS9.inited = true;
-    $(document).trigger("JS9:init");
 };
 
 // ---------------------------------------------------------------------
@@ -26732,7 +26613,354 @@ JS9.mkPublic("SaveDir", function(...args){
 	JS9.error("SaveDir is only available for the JS9 desktop app");
     }
 });
-// end of Public Interface
+// ---------------------------------------------------------------------
+// end of JS9 Public Interface
+// ---------------------------------------------------------------------
+
+// ---------------------------------------------------------------------
+// the init routine to start up JS9
+// ---------------------------------------------------------------------
+
+JS9.init = function(){
+    let uopts;
+    // sanity check: need HTML5 canvas and JSON
+    if( !window.HTMLCanvasElement || !JSON ){
+	JS9.error("your browser does not support JS9 (no HTML5 canvas and/or JSON). Please try a modern version of Firefox, Chrome, Safari, Opera, or Edge.");
+    }
+    // get relative location of installed js9.css file
+    // which tells us where JS9 installed files (and the helper) are located
+    //
+    // allow specification of installdir in js9prefs.js
+    // check this manually: it's happening before processing the prefs
+    if( window.hasOwnProperty("JS9Prefs") && typeof JS9Prefs === "object" ){
+	if( JS9Prefs.globalOpts && JS9Prefs.globalOpts.installDir ){
+	    JS9.INSTALLDIR = JS9Prefs.globalOpts.installDir;
+	}
+    }
+    if( !JS9.INSTALLDIR ){
+	try{
+	    // process all links which end in 'js9.css'
+	    $('link[href$="js9.css"]').each((index, element) => {
+		const h = $(element).attr("href");
+		if( h ){
+		    // must really end in 'js9.css'
+		    if( h.split("/").reverse()[0] === "js9.css" ){
+			// set install dir to its directory
+			JS9.INSTALLDIR = h.replace(/js9\.css$/, "");
+		    }
+		}
+	    });
+	} catch(e){
+	    JS9.INSTALLDIR = "";
+	}
+	if( JS9.INSTALLDIR ){
+	    JS9.INSTALLDIR = JS9.cleanPath(JS9.INSTALLDIR);
+	}
+    }
+    if( JS9.INSTALLDIR && JS9.INSTALLDIR.slice(-1) !== "/" ){
+	// make sure there is a trailing slash
+	JS9.INSTALLDIR += "/";
+    }
+    JS9.TOROOT = JS9.INSTALLDIR.replace(/([^/.])+/g, "..");
+    // if the js9 inline object exists, add it the JS9 object
+    if( window.hasOwnProperty("JS9Inline") && typeof JS9Inline === "object" ){
+	JS9.inline = $.extend(true, {}, JS9Inline);
+    }
+    // set up the dynamic drive html window
+    if( JS9.LIGHTWIN === "dhtml" ){
+	// Creation of dhtmlwindowholder was done by a document.write in
+	// dhtmlwindow.js. We removed it from dhtmlwindow.js file because it
+	// interfered with the jquery search for js9.css above. Oh boy ...
+	// But it has to be somewhere!
+	$("<div>")
+	    .attr("id", "dhtmlwindowholder")
+	    .appendTo($(document.body))
+	    .append("<span style='display:none'>.</span>");
+	// allow in-line specification of images for all-in-one configuration
+	if( JS9.inline ){
+	    dhtmlwindow.imagefiles = [JS9.inline["images/min.gif"],
+				      JS9.inline["images/close.gif"],
+				      JS9.inline["images/restore.gif"],
+				      JS9.inline["images/resize.gif"]];
+	} else if( JS9.allinone ){
+	    dhtmlwindow.imagefiles = [JS9.allinone.min,
+				      JS9.allinone.close,
+				      JS9.allinone.restore,
+				      JS9.allinone.resize];
+	} else {
+	    dhtmlwindow.imagefiles=[JS9.InstallDir("images/min.gif"),
+				    JS9.InstallDir("images/close.gif"),
+				    JS9.InstallDir("images/restore.gif"),
+				    JS9.InstallDir("images/resize.gif")];
+	}
+	// once a window is loaded, set jupyter focus, if necessary
+	if( window.hasOwnProperty("Jupyter") ){
+	   $(JS9.lightOpts[JS9.LIGHTWIN].topid)
+		.arrive("input", (el) => {
+		    JS9.jupyterFocus($(el).parent());
+		});
+	}
+    }
+    // use plotly if loaded separately, otherwise use internal flot
+    JS9.globalOpts.plotLibrary = JS9.globalOpts.plotLibrary || "flot";
+    if( (JS9.globalOpts.plotLibrary === "plotly") &&
+	!window.hasOwnProperty("Plotly") ){
+	JS9.globalOpts.plotLibrary = "flot";
+    }
+    // if js9 prefs were defined/loaded explicitly, merge properties
+    if( window.hasOwnProperty("JS9Prefs") && typeof JS9Prefs === "object" ){
+	JS9.mergePrefs(JS9Prefs);
+    } else {
+	// look for and load json pref files
+	// (set this to false in the page to avoid loading a prefs file)
+	if( JS9.PREFSFILE ){
+	    // load site preferences, if possible
+	    JS9.loadPrefs(JS9.InstallDir(JS9.PREFSFILE), 0);
+	    // load page preferences, if possible
+	    JS9.loadPrefs(JS9.PREFSFILE, 0);
+	}
+    }
+    // if JS9 prefs have regionOpts, transfer them to Regions.opts
+    if( JS9.hasOwnProperty("Regions") ){
+	$.extend(true, JS9.Regions.opts, JS9.regionOpts);
+    }
+    delete JS9.regionOpts;
+    // if JS9 prefs have catalogOpts, transfer them to Catalogs.opts
+    if( JS9.hasOwnProperty("Catalogs") ){
+	$.extend(true, JS9.Catalogs.opts, JS9.catalogOpts);
+    }
+    delete JS9.catalogOpts;
+    // if JS9 prefs have crosshairOpts, transfer them to Crosshair.opts
+    if( JS9.hasOwnProperty("Crosshair") ){
+	$.extend(true, JS9.Crosshair.opts, JS9.crosshairOpts);
+    }
+    delete JS9.crosshairOpts;
+    // if JS9 prefs have gridOpts, transfer them to Grid.opts
+    if( JS9.hasOwnProperty("Grid") ){
+	$.extend(true, JS9.Grid.opts, JS9.gridOpts);
+    }
+    delete JS9.gridOpts;
+    // if JS9 prefs have emscriptenOpts, transfer them to Module
+    if( JS9.hasOwnProperty("Module") ){
+	$.extend(true, Module, JS9.emscriptenOpts);
+    }
+    delete JS9.emscriptenOpts;
+    // regularize resize params
+    if( !JS9.globalOpts.resize ){
+	JS9.globalOpts.resizeHandle = false;
+    }
+    // backward compatibility (we moved this property 7/2018)
+    if( JS9.analOpts.prependJS9Dir !== undefined ){
+	JS9.globalOpts.prependJS9Dir = JS9.analOpts.prependJS9Dir;
+	delete JS9.analOpts.prependJS9Dir;
+    }
+    // backward compatibility (we moved this property 7/2018)
+    if( JS9.analOpts.dataDir !== undefined ){
+	JS9.globalOpts.dataDir = JS9.analOpts.dataDir;
+	delete JS9.analOpts.dataDir;
+    }
+    // turn off resize on mobile platforms
+    if( JS9.BROWSER[3] ){
+	JS9.globalOpts.resizeHandle = false;
+    }
+    // replace with global opts with user opts, if necessary
+    if( window.hasOwnProperty("localStorage") && JS9.globalOpts.localStorage ){
+	try{ uopts = localStorage.getItem("globals"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.displays = JSON.parse(uopts); }
+	    catch(ignore){ /* empty */ }
+	    if( JS9.userOpts.displays ){
+		$.extend(true, JS9.globalOpts, JS9.userOpts.displays);
+	    }
+	}
+	try{ uopts = localStorage.getItem("images"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.images = JSON.parse(uopts); }
+	    catch(ignore){ /* empty */ }
+	    if( JS9.userOpts.images ){
+		$.extend(true, JS9.imageOpts, JS9.userOpts.images);
+	    }
+	}
+	// this gets replaced below
+	try{ uopts = localStorage.getItem("fits"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.fits = JSON.parse(uopts); }
+	    catch(ignore){ /* empty */ }
+	}
+	try{ uopts = localStorage.getItem("regions"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.regions = JSON.parse(uopts); }
+	    catch(ignore){ /* empty */ }
+	    if( JS9.userOpts.regions ){
+		$.extend(true, JS9.Regions.opts, JS9.userOpts.regions);
+	    }
+	}
+	try{ uopts = localStorage.getItem("grid"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.images = JSON.parse(uopts); }
+	    catch(ignore){ /* empty */ }
+	    if( JS9.userOpts.images ){
+		$.extend(true, JS9.Grid.opts, JS9.userOpts.images);
+	    }
+	}
+	try{ uopts = localStorage.getItem("catalog"); }
+	catch(e){ uopts = null; }
+	if( uopts ){
+	    try{ JS9.userOpts.images = JSON.parse(uopts); }
+	    catch(ignore){ /* empty */ }
+	    if( JS9.userOpts.images ){
+		$.extend(true, JS9.Catalogs.Opts, JS9.userOpts.images);
+	    }
+	}
+    }
+    // set debug flag
+    JS9.DEBUG = JS9.DEBUG || JS9.globalOpts.debug || 0;
+    // init main display(s)
+    $("div.JS9").each((index, element) => {
+	JS9.checkNew(new JS9.Display($(element)));
+    });
+    // load web worker
+    if( window.Worker && !JS9.allinone){
+	try{ JS9.worker = new JS9.WebWorker(JS9.InstallDir(JS9.WORKERFILE)); }
+	catch(e){ /* empty */ }
+    }
+    // for allinone files, emscripten is already loaded so init FITS now
+    if( JS9.allinone ){
+	JS9.initFITS();
+    } else {
+	// load emscripten, which will trigger init FITS later
+	JS9.initEmscripten();
+    }
+    // desktop js9 gets helper from command line via the environment
+    if( window.isElectron && window.electronHelper ){
+	JS9.globalOpts.helperType = "nodejs";
+    }
+    // initialize helper support
+    JS9.helper = new JS9.Helper();
+    // add handler for postMessage events
+    window.addEventListener("message", (ev) => {
+	let s, msg;
+	// For Chrome, origin property is in the ev.originalEvent object
+	let origin = ev.origin || ev.originalEvent.origin;
+	const data = ev.data;
+	if( origin === "null" ){
+	    origin = "unknown";
+	}
+	// if postMessage handling is disabled, just (log and) return
+	if( !JS9.globalOpts.postMessage ){
+	    if( JS9.DEBUG ){
+		s = `JS9 ignoring postMessage, origin: ${origin}`;
+		if( typeof data === "string" ){
+		    s += ` data: ${data}`;
+		} else if( typeof data === "object" ){
+		    s += ` obj: ${JSON.stringify(Object.keys(data))}`;
+		} else {
+		    s += ` typeof: ${typeof data}`;
+		}
+		JS9.log(s);
+	    }
+	    return;
+	}
+	if( typeof data === "string" ){
+	    // json string passed (we hope)
+	    try{ msg = JSON.parse(data); }
+	    catch(e){ JS9.error(`can't parse msg: ${data}`, e); }
+	} else if( typeof data === "object" ){
+	    // object was passed directly
+	    msg = data;
+	} else {
+	    JS9.error("invalid msg from postMessage");
+	}
+	// call the msg handler for JS9 API calls
+	JS9.msgHandler(msg, (stdout, stderr, errcode, a) => {
+	    let res;
+            a = a || {};
+	    res = {name: a.name, rtype: a.rtype, rdata: stdout,
+		   stdout: stdout, stderr: stderr, errcode: errcode};
+	    parent.postMessage({cmd: msg.cmd, res: res}, "*");
+	});
+    }, false);
+    // initialize image filters
+    if( window.hasOwnProperty("ImageFilters") ){
+	JS9.ImageFilters = ImageFilters;
+    }
+    // initialize colormaps
+    JS9.initColormaps();
+    // initialize console commands
+    JS9.initCommands();
+    // init analysis
+    JS9.initAnalysis();
+    // register essential plugins
+    JS9.RegisterPlugin(JS9.MouseTouch.CLASS, JS9.MouseTouch.NAME,
+		       JS9.MouseTouch.init,
+		       {menuItem: "Mouse/Touch",
+			onplugindisplay: JS9.MouseTouch.init,
+			help: "help/mousetouch.html",
+			winTitle: "Mouse/Touch Actions",
+			winResize: true,
+			winDims: [JS9.MouseTouch.WIDTH,JS9.MouseTouch.HEIGHT]});
+    JS9.RegisterPlugin(JS9.Regions.CLASS, JS9.Regions.NAME,
+		       JS9.Regions.init,
+		       {divArgs: ["regions"],
+			winDims: [0, 0]});
+    JS9.RegisterPlugin(JS9.Crosshair.CLASS, JS9.Crosshair.NAME,
+		       JS9.Crosshair.init,
+		       {onmousemove: JS9.Crosshair.display,
+			onkeyboardaction: JS9.Crosshair.keyaction,
+			onkeyup: JS9.Crosshair.keyup,
+			onimageload: JS9.Crosshair.create,
+			winDims: [0, 0]});
+    JS9.RegisterPlugin(JS9.Grid.CLASS, JS9.Grid.NAME,
+		       JS9.Grid.init,
+		       {onsetpan:      JS9.Grid.regrid,
+			onsetzoom:     JS9.Grid.regrid,
+			onsetwcssys:   JS9.Grid.regrid,
+			onsetwcsunits: JS9.Grid.regrid,
+			onimageload:   JS9.Grid.regrid,
+			onupdateprefs: JS9.Grid.regrid,
+			winDims:       [0, 0]});
+    JS9.RegisterPlugin(JS9.Dysel.CLASS, JS9.Dysel.NAME,
+		       JS9.Dysel.init,
+		       {onimageload:   JS9.Dysel.imageload,
+			onimageclose:  JS9.Dysel.imageclose,
+			winDims:       [0, 0]});
+    JS9.RegisterPlugin(JS9.Titlebar.CLASS, JS9.Titlebar.NAME,
+		       JS9.Titlebar.init,
+		       { onimageload:  JS9.Titlebar.imageload,
+			 onimagedisplay: JS9.Titlebar.imagedisplay,
+			 onimageclose: JS9.Titlebar.imageclose,
+			 winDims: [0, 0]});
+    // find divs associated with each plugin and run the constructor
+    JS9.instantiatePlugins();
+    // sort plugins
+    JS9.plugins.sort( (a,b) => {
+	const t1 = a.opts.menuItem;
+	const t2 = b.opts.menuItem;
+	if( !t1 ){
+	    return 1;
+	}
+	if( !t2 ){
+	    return -1;
+	}
+	if( t1 < t2 ){
+	    return -1;
+	}
+	if( t1 > t2 ){
+	    return 1;
+	}
+	return 0;
+    });
+    // scroll to top
+    $(document).scrollTop(0);
+    // signal JS9 init is complete
+    JS9.inited = true;
+    $(document).trigger("JS9:init");
+};
 
 // return namespace
 return JS9;

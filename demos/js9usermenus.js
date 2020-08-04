@@ -32,6 +32,9 @@
  * <div class="JS9Menubar" data-style="mac" data-usermenus="true"></div>
  *
  */
+
+/*global JS9, sprintf */
+
 JS9.globalOpts.userMenuBar = [
     {
 	"name": "zoom",
@@ -61,6 +64,7 @@ JS9.globalOpts.userMenuBar = [
     {
 	"name": "scale",
 	"title": "myScales",
+	// eslint-disable-next-line no-unused-vars
 	"updateTitle": (im, menuName, optionName) => {
 	    let obj;
 	    // if no image is loaded, just return main name
@@ -223,9 +227,41 @@ JS9.globalOpts.userMenuBar = [
 		"cmd": "AddRegions",
 		"image": "../images/voyager/regions_text.svg",
 		"args": ["text"]
+	    },
+	    {
+		"name": "guides",
+		"cmd": "AddRegions",
+		"args": (disp, im) => {
+		    let x = disp.width / 2;
+		    let y = disp.height / 2;
+		    let w = im.raw.width / 2;
+		    let method = 0;
+		    switch(method){
+		    case 0:
+			// easy for C coders: sprintf, prepend 'd' to pos vals:
+			return [sprintf('image; line(d%s,d%s,d%s,d%s) {"preservedcoords":true}; line(d%s,d%s,d%s,d%s) {"color":"red","preservedcoords":true}', 0, y + 114, w, y + 114, 0, y - 121, w, y - 121)];
+		    case 1:
+			// canonical method: return array of shape objects
+			return [[
+			    {shape: "line",
+			     dx: x, dy: x-121,
+			     points: [{x: -w, y: 0},{x: w, y: 0}],
+			     color: "red",
+			     preservedcoords: true},
+			    {shape: "line",
+			     dx: x, dy: y+114,
+			     points: [{x: -w, y: 0},{x: w, y: 0}],
+			     preservedcoords: true}
+			]];
+		    case 2:
+			// alternate method: return string with properties:
+			return [`line({"dx":${x},"dy":${y+114},"points":[{"x":${-w},"y":0},{"x":${w},"y":0}],"preservedcoords":true}); line({"dx":${x},"dy":${y-121},"points":[{"x":${-w},"y":0},{"x":${w},"y":0}],"preservedcoords":true, "color":"red"})`];
+		    default:
+			break;
+		    }
+		}
 	    }
 	]
     },
 
 ];
-

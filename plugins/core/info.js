@@ -24,6 +24,7 @@ JS9.Info.opts = {
 	wcsfov: '<tr><td><input type="text" class="column0" value="fov" readonly="readonly"></td><td colspan="2"><input type="text" name="wcsfovpix" class="input2" value="" readonly="readonly"></td></tr>',
 	value: '<tr><td><input type="text" class="column0" value="value" readonly="readonly"></td><td colspan="2"><input type="text" name="val" class="input2" value="" readonly="readonly"></td></tr>',
 	impos: '<tr><td><input type="text" class="column0" value="image" readonly="readonly"></td><td colspan="2"><input type="text" name="ipos" class="input2" value="" readonly="readonly"></td></tr>',
+	disppos: '<tr><td><input type="text" class="column0" value="display" readonly="readonly"></td><td colspan="2"><input type="text" name="dpos" class="input2" value="" readonly="readonly"></td></tr>',
 	physpos: '<tr><td><input type="text" class="column0" value="physical" readonly="readonly"></td><td colspan="2"><input type="text" name="ppos" class="input2" value="" readonly="readonly"></td></tr>',
 	wcspos: '<tr><td><input type="text" class="column0" value="wcs" name="wcssys" readonly="readonly"></td><td colspan="2"><input type="text" name="wcspos" class="input2" value="" readonly="readonly"></td></tr>',
 	 regions: '<tr><td><input type="text" class="column0" value="regions" readonly="readonly"></td><td colspan="2"><textarea class="text2" name="regions" rows="4" value="" readonly="readonly"></textarea></td></tr>',

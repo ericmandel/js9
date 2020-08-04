@@ -114,6 +114,13 @@
     width: 80px;
 }
 
+.rconfigcol_R6L {
+    position: absolute;
+    top: 0;
+    left:  420px;
+    width: 180px;
+}
+
 .rconfigcol_R7 {
     position: absolute;
     top: 0;
@@ -277,7 +284,7 @@ Edit:
 <span class="rconfigcol_R rconfigcol_R4">
 <input type="text" class="val JS9Text rconfigtext_R" name="width" value="" autocapitalize="off" autocorrect="off" data-tooltip="width in units of degrees (wcs) or pixels (no wcs)">
 </span>
-<span class="rconfigcol_R rconfigcol_R5">
+<span class="rconfigcol_R rconfigcol_R6">
 <input type="text" class="val JS9Text rconfigtext_R" name="height" value="" autocapitalize="off" autocorrect="off" data-tooltip="height in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
@@ -631,6 +638,9 @@ Options:
 <span class="rconfigcol_R rconfigcol_R4L">
 <input type="checkbox" class="rconfigcheckbox" id="includecomments" name="includecomments" value="save comments" data-tooltip="save comments" onclick="JS9.globalOpts.regIncludeComments = $(this).is(':checked');">save comments
 </span>
+<span class="rconfigcol_R rconfigcol_R6L">
+<input type="checkbox" class="rconfigcheckbox" id="savedcoords" name="savedcoords" value="save dcoords" data-tooltip="save regions preserving display coords" onclick="JS9.globalOpts.regSaveDCoords = $(this).is(':checked');">save dcoord regions
+</span>
 </div>
 </div>
 
@@ -707,6 +717,7 @@ if( im ){
   case 'reg':
     opts.includejson = form.find(`[name='includejson']`).is(':checked');
     opts.includecomments = form.find(`[name='includecomments']`).is(':checked');
+    opts.savedcoords = form.find(`[name='savedcoords']`).is(':checked');
     break;
   case 'csv':
     opts.includewcs = form.find(`[name='includewcs']`).is(':checked');

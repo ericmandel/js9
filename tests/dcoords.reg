@@ -1,0 +1,23 @@
+# Region file format: JS9 version 1.0
+image
+
+text(d250, d100, "Using and Preserving Display Coordinates:") {"color":"yellow", "preservedcoords": true}
+text(d250, d120, "yellow regions preserve display coords and will not move with pan/zoom") {"color":"yellow", "preservedcoords": true}
+text(d250, d140, "green regions will move with pan/zoom") {"color":"#00FF00"}
+
+circle({"dx":206, "dy":306, "radius":20, "color":"yellow", "preservedcoords":true})
+circle(D306, d306, 20) {"color":"#00FF00"}
+circle(D306, d306, 20) {"color":"yellow", "preservedcoords":true}
+
+box({"dx":21, "dy":18, "width":30, "height": 18, "color":"yellow", "preservedcoords":true})
+
+line({"dx":256,"dy":256,"points":[{"x":-256,"y":0},{"x":256,"y":0}], "color":"yellow", "preservedcoords":true})
+line(D256, D0, d256, d512) {"color": "#00FF00"}
+
+polygon(D0,D350,d50,d400,D100,d350,d50,d300) {"color":"yellow", "preservedcoords":true}
+polygon(D206,D350,d256,d400,D306,d350,d256,d300) {"color":"yellow", "preservedcoords":true}
+polygon({"pts":[{"dx":306,"dy":350},{"dx":356,"dy":400},{"dx":406,"dy":350},{"dx":356,"dy":300}],"color":"#00FF00", "strokeWidth":1})
+polygon({"pts":[{"dx":306,"dy":350},{"dx":356,"dy":400},{"dx":406,"dy":350},{"dx":356,"dy":300}],"color":"yellow", "preservedcoords":true})
+
+
+

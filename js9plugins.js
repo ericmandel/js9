@@ -4803,6 +4803,7 @@ JS9.Info.opts = {
 	wcsfov: '<tr><td><input type="text" class="column0" value="fov" readonly="readonly"></td><td colspan="2"><input type="text" name="wcsfovpix" class="input2" value="" readonly="readonly"></td></tr>',
 	value: '<tr><td><input type="text" class="column0" value="value" readonly="readonly"></td><td colspan="2"><input type="text" name="val" class="input2" value="" readonly="readonly"></td></tr>',
 	impos: '<tr><td><input type="text" class="column0" value="image" readonly="readonly"></td><td colspan="2"><input type="text" name="ipos" class="input2" value="" readonly="readonly"></td></tr>',
+	disppos: '<tr><td><input type="text" class="column0" value="display" readonly="readonly"></td><td colspan="2"><input type="text" name="dpos" class="input2" value="" readonly="readonly"></td></tr>',
 	physpos: '<tr><td><input type="text" class="column0" value="physical" readonly="readonly"></td><td colspan="2"><input type="text" name="ppos" class="input2" value="" readonly="readonly"></td></tr>',
 	wcspos: '<tr><td><input type="text" class="column0" value="wcs" name="wcssys" readonly="readonly"></td><td colspan="2"><input type="text" name="wcspos" class="input2" value="" readonly="readonly"></td></tr>',
 	 regions: '<tr><td><input type="text" class="column0" value="regions" readonly="readonly"></td><td colspan="2"><textarea class="text2" name="regions" rows="4" value="" readonly="readonly"></textarea></td></tr>',
@@ -6953,8 +6954,14 @@ JS9.Menubar.createMenus = function(){
 				continue;
 			    }
 			    if( typeof JS9.publics[opt.cmd] === "function" ){
-				// clone the array and any objects it contains
-				args = JSON.parse(JSON.stringify(opt.args||[]));
+				if( typeof opt.args === "function" ){
+				    // execute function to get array
+				    args = opt.args(udisp, udisp.image);
+				} else {
+				    // clone array and any objects it contains
+				    args =
+				    JSON.parse(JSON.stringify(opt.args||[]));
+				}
 				args.push({display: udisp});
 				JS9.publics[opt.cmd](...args);
 				// update the menu title
@@ -7841,11 +7848,18 @@ JS9.Menubar.createMenus = function(){
 		}
 	    };
 	    items.vdisps.items.valpos = xname("value/position");
+	    items.vdisps.items.valposdisp = xname("display coords in val/pos");
 	    // disable if we don't have info plugin
 	    if( !JS9.hasOwnProperty("Info") ){
 		items.vdisps.items.valpos.disabled = true;
-	    } else if( tdisp.image && tdisp.image.params.valpos ){
-		items.vdisps.items.valpos.icon = JS9.globalOpts.menuSelected;
+		items.vdisps.items.valposdisp.disabled = true;
+	    } else if( tdisp.image ){
+		if( tdisp.image.params.valpos ){
+		    items.vdisps.items.valpos.icon = JS9.globalOpts.menuSelected;
+		}
+		if( JS9.globalOpts.valposDCoords ){
+		    items.vdisps.items.valposdisp.icon = JS9.globalOpts.menuSelected;
+		}
 	    }
 	    items.vdisps.items.toggleLayers = xname("active shape layers");
 	    if( tim && !tim.toggleLayers ){
@@ -7944,6 +7958,10 @@ JS9.Menubar.createMenus = function(){
 			    if( uim ){
 				uim.toggleValpos();
 			    }
+			    break;
+			case "valposdisp":
+			    JS9.globalOpts.valposDCoords =
+				!JS9.globalOpts.valposDCoords;
 			    break;
 			case "xhair":
 			    if( uim ){
@@ -11477,10 +11495,6 @@ JS9.Prefs.globalsSchema = {
 	    "type": "string",
 	    "helper": "select display: click, move, false"
 	},
-	"fits2png": {
-	    "type": "boolean",
-	    "helper": "convert FITS to PNG rep files?"
-	},
 	"metaClickPan": {
 	    "type": "boolean",
 	    "helper": "meta-click pans to mouse position?"
@@ -11492,6 +11506,14 @@ JS9.Prefs.globalsSchema = {
 	"clickToFocus": {
 	    "type": "boolean",
 	    "helper": "click display to focus?"
+	},
+	"valposDCoords": {
+	    "type": "boolean",
+	    "helper": "valpos shows display coords?"
+	},
+	"regListDCoords": {
+	    "type": "boolean",
+	    "helper": "list regions preserving dcoords? "
 	},
 	"toolbarTooltips": {
 	    "type": "boolean",
@@ -11556,6 +11578,10 @@ JS9.Prefs.globalsSchema = {
 	"svgBorder": {
 	    "type": "boolean",
 	    "helper": "add border when exporting SVG?"
+	},
+	"fits2png": {
+	    "type": "boolean",
+	    "helper": "convert FITS to PNG rep files?"
 	}
     }
 };

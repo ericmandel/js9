@@ -268,8 +268,14 @@ JS9.Menubar.createMenus = function(){
 				continue;
 			    }
 			    if( typeof JS9.publics[opt.cmd] === "function" ){
-				// clone the array and any objects it contains
-				args = JSON.parse(JSON.stringify(opt.args||[]));
+				if( typeof opt.args === "function" ){
+				    // execute function to get array
+				    args = opt.args(udisp, udisp.image);
+				} else {
+				    // clone array and any objects it contains
+				    args =
+				    JSON.parse(JSON.stringify(opt.args||[]));
+				}
 				args.push({display: udisp});
 				JS9.publics[opt.cmd](...args);
 				// update the menu title
@@ -1156,11 +1162,18 @@ JS9.Menubar.createMenus = function(){
 		}
 	    };
 	    items.vdisps.items.valpos = xname("value/position");
+	    items.vdisps.items.valposdisp = xname("display coords in val/pos");
 	    // disable if we don't have info plugin
 	    if( !JS9.hasOwnProperty("Info") ){
 		items.vdisps.items.valpos.disabled = true;
-	    } else if( tdisp.image && tdisp.image.params.valpos ){
-		items.vdisps.items.valpos.icon = JS9.globalOpts.menuSelected;
+		items.vdisps.items.valposdisp.disabled = true;
+	    } else if( tdisp.image ){
+		if( tdisp.image.params.valpos ){
+		    items.vdisps.items.valpos.icon = JS9.globalOpts.menuSelected;
+		}
+		if( JS9.globalOpts.valposDCoords ){
+		    items.vdisps.items.valposdisp.icon = JS9.globalOpts.menuSelected;
+		}
 	    }
 	    items.vdisps.items.toggleLayers = xname("active shape layers");
 	    if( tim && !tim.toggleLayers ){
@@ -1259,6 +1272,10 @@ JS9.Menubar.createMenus = function(){
 			    if( uim ){
 				uim.toggleValpos();
 			    }
+			    break;
+			case "valposdisp":
+			    JS9.globalOpts.valposDCoords =
+				!JS9.globalOpts.valposDCoords;
 			    break;
 			case "xhair":
 			    if( uim ){

@@ -146,6 +146,34 @@ def headerTest(j, file=None):
     displayMessage(j, "    found %d cards" % len(header))
     sleep()
 
+
+def dispCoordsTest(j, file=None):
+    if file:
+        closeImage(j)
+        loadImage(j, file, '{"scale":"linear","colormap":"cool"}')
+    displayMessage(j, 'j.LoadRegions("tests/dcoords.reg")')
+    j.LoadRegions("tests/dcoords.reg")
+    waitStatus(j, "LoadRegions")
+    displayMessage(j, 'j.GetRegions()')
+    obj = j.GetRegions()
+    if len(obj) == 13:
+        displayMessage(j, "    found 13 regions")
+    else:
+        raise ValueError("incorrect number of regions (%d)" % len(obj))
+    sleep(2)
+
+def zoomTest(j, file=None):
+    """
+    bin an image (binary table)
+    """
+    if file:
+        closeImage(j)
+        loadImage(j, file, '{"scale":"log", "colormap": "heat"}')
+    for i in [0.5, 2, 4, 2, 1, 0.5]:
+        displayMessage(j, 'j.SetZoom(zoom: %f)' % (i))
+        j.SetZoom(i)
+        sleep()
+
 def binTest(j, file=None):
     """
     bin an image (binary table)
@@ -768,6 +796,8 @@ def smokeTests():
     fitsioTest(j, "data/fits/casa.fits.gz")
     pixTest(j, "data/fits/snr.fits")
     headerTest(j)
+    dispCoordsTest(j)
+    zoomTest(j)
     binTest(j)
     rotateTest(j)
     loadWindowTest(j, "JS9", "myJS9")
