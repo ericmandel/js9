@@ -149,6 +149,8 @@ JS9.globalOpts = {
     regSaveFormat: "reg",	// def format for saving regions (reg,cvs,svg)
     regSaveWhich1: "all",	// def 'which' for saving regions (all,selected)
     regSaveWhich2: "selected",	// def 'which' for saving in configure dialog
+    regMenuCreate: true,       // menu select a region creates it immediately>
+    regMenuSelection: "circle", // region selected during last menu select
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
     ehtimeout: 500,		// connection timeout for Electron connect
@@ -168,7 +170,7 @@ JS9.globalOpts = {
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
     reloadRefreshReg: true,     // reloading regions file removes previous?
-    regionsToClipboard: true,	// copy all region changes to pseudo-clipboard?
+    regionsToClipboard: false,	// copy all region changes to pseudo-clipboard?
     nextImageMask: false,	// does nextImage() show active image masks?
     panWithinDisplay: false,	// keep panned image within the display?
     pannerDirections: true,	// display direction vectors in panner?
@@ -207,6 +209,7 @@ JS9.globalOpts = {
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     keyboardActions: {
+	a: "add last region selected in Regions menu",
 	b: "toggle selected region: source/background",
 	c: "toggle crosshair",
 	d: "send selected region to back",
@@ -223,7 +226,6 @@ JS9.globalOpts = {
 	"M-o": "open local file",
         P: "paste regions from local clipboard",
         p: "paste regions to current position",
-	u: "undo remove of region(s)",
 	"M-,": "toggle preferences plugin",
 	"M-p": "toggle preferences plugin",
 	r: "copy selected region to clipboard",
@@ -231,6 +233,7 @@ JS9.globalOpts = {
 	s: "select region",
 	S: "select all regions",
 	"M-s": "toggle shape layers plugin",
+	u: "undo remove of region(s)",
 	x: "flip image around x axis",
 	y: "flip image around y axis",
         "9": "rotate image by 90 degrees",
@@ -14705,8 +14708,6 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
     // copy to clipboard, if necessary
     if( layerName === "regions" && JS9.globalOpts.regionsToClipboard ){
 	switch(mode){
-	case "add":
-	case "select":
 	case "update":
 	    i = pub.parent || pub.id;
 	    break;

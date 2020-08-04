@@ -5381,6 +5381,19 @@ JS9.Keyboard.Actions["edit selected region"] = function(im, ipos, evt){
 };
 
 // eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["add last region selected in Regions menu"] = function(im, ipos, evt){
+    let opts = {ireg: true};
+    let key = JS9.globalOpts.regMenuSelected || "circle";
+    // sanity check
+    if( !im ){
+	return;
+    }
+    opts.x = ipos.x;
+    opts.y = ipos.y;
+    return im.addShapes("regions", key, opts);
+};
+
+// eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["toggle selected region: source/background"] = function(im, ipos, evt){
     // sanity check
     if( !im ){
@@ -8810,7 +8823,7 @@ JS9.Menubar.createMenus = function(){
 	events: { hide: onhide },
 	position: mypos,
         build: () => {
-	    let i, s1, reg, img;
+	    let i, s1, reg, img, key;
 	    const tdisp = JS9.Menubar.getDisplays.call(this)[0];
 	    const tim = tdisp.image;
 	    const items = {};
@@ -8901,6 +8914,23 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    items.sep1 = "------";
+	    items.createRegions = xname("menu adds region @ center");
+	    if( JS9.globalOpts.regMenuCreate ){
+		items.createRegions.icon = JS9.globalOpts.menuSelected;
+	    }
+	    for( key in JS9.globalOpts.keyboardActions ){
+		if( JS9.globalOpts.keyboardActions.hasOwnProperty(key) ){
+		    if( JS9.globalOpts.keyboardActions[key] ===
+			"add last region selected in Regions menu" ){
+			items.notCreateRegions = {
+			    name: `('${key}' adds region @ mouse)`,
+			    disabled: true,
+			};
+		    }
+		}
+	    }
+	    
+	    items.sep1a = "------";
 	    items.listRegions  = xname("list");
 	    items.loadRegions  = xname("load ...");
 	    items.saveRegions  = xname("save ...");
@@ -8965,6 +8995,10 @@ JS9.Menubar.createMenus = function(){
 			    case "listRegions":
 				uim.listRegions("all", {mode: 2});
 				break;
+			    case "createRegions":
+				JS9.globalOpts.regMenuCreate =
+				    !JS9.globalOpts.regMenuCreate;
+				break;
 			    case "removeRegions":
 				uim.removeShapes("regions", "all");
 				udisp.clearMessage("regions");
@@ -9014,7 +9048,10 @@ JS9.Menubar.createMenus = function(){
 				    return;
 				}
 				// otherwise it's new region
-				uim.addShapes("regions", key, {ireg: true});
+				JS9.globalOpts.regMenuSelected = key;
+				if( JS9.globalOpts.regMenuCreate ){
+				    uim.addShapes("regions", key, {ireg: true});
+				}
 				break;
 			    }
 			}
@@ -9146,7 +9183,7 @@ JS9.Menubar.createMenus = function(){
 		items.altwcs.disabled = true;
 	    } else {
 		altwcs = tim.raw.altwcs;
-		for(key in altwcs ){
+		for( key in altwcs ){
 		    if( altwcs.hasOwnProperty(key) ){
 			s1 = `altwcs_${key}`;
 			if( altwcs[key].header.WCSNAME ){

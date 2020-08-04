@@ -220,6 +220,19 @@ JS9.Keyboard.Actions["edit selected region"] = function(im, ipos, evt){
 };
 
 // eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["add last region selected in Regions menu"] = function(im, ipos, evt){
+    let opts = {ireg: true};
+    let key = JS9.globalOpts.regMenuSelected || "circle";
+    // sanity check
+    if( !im ){
+	return;
+    }
+    opts.x = ipos.x;
+    opts.y = ipos.y;
+    return im.addShapes("regions", key, opts);
+};
+
+// eslint-disable-next-line no-unused-vars
 JS9.Keyboard.Actions["toggle selected region: source/background"] = function(im, ipos, evt){
     // sanity check
     if( !im ){
