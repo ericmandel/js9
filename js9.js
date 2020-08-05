@@ -111,6 +111,7 @@ JS9.globalOpts = {
     helperPort: 2718,		// default port for node.js helper
     requireHelper: false,       // throw error if helper is not available?
     allinoneHelper: false,      // allow allinone to use helper?
+    processQueryParams: true,   // process query parameters from url?
     requireFits2Fits: false,    // throw error if fits2fits can't be run?
     quietReturn: false,         // should API return empty string or "OK"?
     useWasm: true,		// use WebAssembly if available?
@@ -26623,7 +26624,7 @@ JS9.mkPublic("SaveDir", function(...args){
 // ---------------------------------------------------------------------
 
 JS9.init = function(){
-    let uopts;
+    let uopts, url, ufile, dopts;
     // sanity check: need HTML5 canvas and JSON
     if( !window.HTMLCanvasElement || !JSON ){
 	JS9.error("your browser does not support JS9 (no HTML5 canvas and/or JSON). Please try a modern version of Firefox, Chrome, Safari, Opera, or Edge.");
@@ -26962,6 +26963,34 @@ JS9.init = function(){
 	}
 	return 0;
     });
+    // check web page url for file to load, if necessary
+    if( JS9.globalOpts.processQueryParams ){
+	url = new URL(window.location);
+	if( url && url.searchParams ){
+	    uopts = {};
+	    for (const [key, value] of url.searchParams){
+		switch(key){
+		case "url":
+		case "file":
+		    ufile = value;
+		    break;
+		case "display":
+		    dopts = {display: value};
+		    break;
+		default:
+		    uopts[key] = value;
+		    break;
+		}
+	    }
+	    if( ufile ){
+		if( dopts ){
+		    JS9.Preload(ufile, uopts, dopts);
+		} else {
+		    JS9.Preload(ufile, uopts);
+		}
+	    }
+	}
+    }
     // scroll to top
     $(document).scrollTop(0);
     // signal JS9 init is complete
