@@ -151,6 +151,7 @@ JS9.globalOpts = {
     regSaveWhich2: "selected",	// def 'which' for saving in configure dialog
     regMenuCreate: true,       // menu select a region creates it immediately>
     regMenuSelection: "circle", // region selected during last menu select
+    regToClipboard: false,	// copy all region changes to pseudo-clipboard?
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
     ehtimeout: 500,		// connection timeout for Electron connect
@@ -170,7 +171,6 @@ JS9.globalOpts = {
     helperProtocol: location.protocol, // http: or https:
     reloadRefresh: false,       // reload an image will refresh (or redisplay)?
     reloadRefreshReg: true,     // reloading regions file removes previous?
-    regionsToClipboard: false,	// copy all region changes to pseudo-clipboard?
     nextImageMask: false,	// does nextImage() show active image masks?
     panWithinDisplay: false,	// keep panned image within the display?
     pannerDirections: true,	// display direction vectors in panner?
@@ -14706,7 +14706,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	this.xeqPlugins("shape", xname, pub);
     }
     // copy to clipboard, if necessary
-    if( layerName === "regions" && JS9.globalOpts.regionsToClipboard ){
+    if( layerName === "regions" && JS9.globalOpts.regToClipboard ){
 	switch(mode){
 	case "update":
 	    i = pub.parent || pub.id;
@@ -17596,8 +17596,8 @@ JS9.Regions.pasteFromClipboard = function(curpos){
     // see if we have region(s)
     if( s.match(rregexp) ){
 	// we don't update the clipboard for these operations
-	oval = JS9.globalOpts.regionsToClipboard;
-	JS9.globalOpts.regionsToClipboard = false;
+	oval = JS9.globalOpts.regToClipboard;
+	JS9.globalOpts.regToClipboard = false;
 	// add regions (don't update clipboard)
 	objs = this.addShapes("regions", s, {rtn: "objs"});
 	// place regions in the position specified by the mouse, if necessary
@@ -17618,7 +17618,7 @@ JS9.Regions.pasteFromClipboard = function(curpos){
 		this.changeShapes("regions", objs[i].pub.id, {x: xpos, y:ypos});
 	    }
 	}
-	JS9.globalOpts.regionsToClipboard = oval;
+	JS9.globalOpts.regToClipboard = oval;
     } else {
 	JS9.error(JS9.CLIPBOARDERROR2);
     }
@@ -26759,6 +26759,12 @@ JS9.init = function(){
     if( JS9.analOpts.dataDir !== undefined ){
 	JS9.globalOpts.dataDir = JS9.analOpts.dataDir;
 	delete JS9.analOpts.dataDir;
+    }
+    // backward compatibility (we renamed this property 8/2020)
+    if( JS9.globalOpts.regionsToClipboard !== undefined &&
+	JS9.globalOpts.regToClipboard === undefined     ){
+	JS9.globalOpts.regToClipboard = JS9.globalOpts.regionsToClipboard;
+	delete JS9.globalOpts.regionsToClipboard;
     }
     // turn off resize on mobile platforms
     if( JS9.BROWSER[3] ){
