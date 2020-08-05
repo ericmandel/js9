@@ -5381,7 +5381,7 @@ JS9.Keyboard.Actions["edit selected region"] = function(im, ipos, evt){
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["add last region selected in Regions menu"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["add last region selected in regions menu"] = function(im, ipos, evt){
     let opts = {ireg: true};
     let key = JS9.globalOpts.regMenuSelected || "circle";
     // sanity check
@@ -8921,7 +8921,7 @@ JS9.Menubar.createMenus = function(){
 	    for( key in JS9.globalOpts.keyboardActions ){
 		if( JS9.globalOpts.keyboardActions.hasOwnProperty(key) ){
 		    if( JS9.globalOpts.keyboardActions[key] ===
-			"add last region selected in Regions menu" ){
+			"add last region selected in regions menu" ){
 			items.notCreateRegions = {
 			    name: `('${key}' adds region @ mouse)`,
 			    disabled: true,

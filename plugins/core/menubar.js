@@ -2222,7 +2222,7 @@ JS9.Menubar.createMenus = function(){
 	    for( key in JS9.globalOpts.keyboardActions ){
 		if( JS9.globalOpts.keyboardActions.hasOwnProperty(key) ){
 		    if( JS9.globalOpts.keyboardActions[key] ===
-			"add last region selected in Regions menu" ){
+			"add last region selected in regions menu" ){
 			items.notCreateRegions = {
 			    name: `('${key}' adds region @ mouse)`,
 			    disabled: true,

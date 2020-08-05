@@ -209,7 +209,7 @@ JS9.globalOpts = {
     mouseActions: ["display value/position", "change contrast/bias", "pan the image"],// 0,1,2 mousepress
     touchActions: ["display value/position", "change contrast/bias", "pan the image"],// 1,2,3 fingers
     keyboardActions: {
-	a: "add last region selected in Regions menu",
+	a: "add last region selected in regions menu",
 	b: "toggle selected region: source/background",
 	c: "toggle crosshair",
 	d: "send selected region to back",
