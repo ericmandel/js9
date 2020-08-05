@@ -28,6 +28,11 @@ Go to [JS9 web site](https://js9.si.edu) and drag a
 
     https://js9.si.edu
 
+You can even specify a remote FITS file and associated image display parameters
+as part of the URL:
+
+    https://js9.si.edu/js9/js9.html?url=https://hea-www.cfa.harvard.edu/~eric/coma.fits.gz&colormap=cool
+
 The JS9 web site also contains on-line documentation, demos, and
 release downloads.
 
