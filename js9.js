@@ -8390,8 +8390,8 @@ JS9.Image.prototype.shiftData = function(...args){
 	catch(e){ JS9.error(`can't parse shift opts: ${opts}`, e); }
     }
     opts.rawid = opts.rawid || "shift";
-    opts.x = x;
-    opts.y = y;
+    opts.x = parseFloat(x);
+    opts.y = parseFloat(y);
     // save this routine so it can be reconstituted in a restored session
     this.xeqStashSave("shiftData", args.slice(), opts.rawid);
     this.rawDataLayer(opts, (oraw, nraw, opts) => {
@@ -23660,7 +23660,12 @@ JS9.initCommands = function(){
 	help: "get list of available commmands",
 	get() {
 	    let i, cmd;
-	    let msg = "<table>";
+	    let s1 = "Or execute JS9 public access routines (spaceless args, please):";
+	    let s2 = "SetColormap heat";
+	    let s3 = "GetColormap";
+	    let s4 = '{"colormap":"heat","contrast":3.75,"bias":0.736328125}';
+	    let s5 = 'AddRegions circle(23:23:27.9,+58:48:42.8,3") {"color":"cyan"}';
+	    let msg = "<table class='JS9CmdHelp'>";
 	    for(i=0; i<JS9.commands.length; i++){
 		cmd = JS9.commands[i];
 		msg += `<tr><td>${cmd.name}</td><td>${cmd.help}`;
@@ -23673,6 +23678,13 @@ JS9.initCommands = function(){
 		}
 		msg += "</td></tr>";
 	    }
+	    msg += `<tr><td colspan="2">&nbsp;</td></tr>`;
+	    msg += `<tr><td colspan="2">${s1}</td></tr>`;
+	    msg += `<tr><td colspan="2">&nbsp;</td></tr>`;
+	    msg += `<tr><td colspan="2">${s2}</td></tr>`;
+	    msg += `<tr><td colspan="2">${s3}</td></tr>`;
+	    msg += `<tr><td colspan="2">${s4}</td></tr>`;
+	    msg += `<tr><td colspan="2">${s5}</td></tr>`;
 	    msg += "</table>";
 	    return msg;
 	}
@@ -23689,7 +23701,7 @@ JS9.initCommands = function(){
     }));
     JS9.checkNew(new JS9.Command({
 	name: "image",
-	help: "get name of currently loaded image or display specified image",
+	help: "get name of current image or display specified image",
 	get() {
 	    const im = this.image;
 	    if( im ){
@@ -23792,7 +23804,7 @@ JS9.initCommands = function(){
     }));
     JS9.checkNew(new JS9.Command({
 	name: "refresh",
-	help: "refresh current image using specified file (def: use last file)",
+	help: "refresh image using specified file (def: use last file)",
 	set(args) {
 	    let i, j, obj;
 	    const alen = args.length;
@@ -23842,7 +23854,7 @@ JS9.initCommands = function(){
 	name:   "regions",
 	alias:  "reg",
 	alias2: "region",
-	help: "add region to current image or list all regions",
+	help: "add or list region(s)",
 	get() {
 	    const im = this.image;
 	    if( im ){

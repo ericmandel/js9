@@ -12,18 +12,16 @@ JS9.Console = {};
 JS9.Console.CLASS = "JS9";      // class of plugins (1st part of div class)
 JS9.Console.NAME = "Console";	// name of this plugin (2nd part of div class)
 JS9.Console.WIDTH =  512;	// width of light window
-JS9.Console.HEIGHT = 180;	// height of light window
+JS9.Console.HEIGHT = 300;	// height of light window
 
 // html used by the console plugin
 JS9.Console.HTML =
-"<form name='form' onsubmit='return false;' class='JS9CmdForm' action=''>" +
 "<table class='JS9CmdTable'>" +
 "<tr class='JS9Tr'>"+
 "<td><div id='JS9CmdPrompt' class='JS9CmdPrompt'>@@PR@@</div></td>" +
 "<td class='JS9CmdTd'><input type='text' class='JS9CmdIn' autocapitalize='off' autocorrect='off' autocomplete='off' value='' /></td>" +
 "</tr>" +
-"</table>" +
-"</form>";
+"</table>";
 
 JS9.Console.init = function(width, height){
     // mark as valid
@@ -32,7 +30,6 @@ JS9.Console.init = function(width, height){
     this.hist = [];
     this.histpos = 0;
     this.histtemp = 0;
-    this.histused = false;
     // add ability to handle events to this div
     // this.divjq.attr("tabindex", "0");
     // add container into the div
@@ -85,9 +82,9 @@ JS9.Console.inp = function(){
     // and prevent Apple ipads from autocapitalizing, etc.
     el = this.consoleConjq.find(".JS9CmdIn:last");
     el.focus()
-      .attr("autocapitalize", "off")
-      .attr("autocorrect", "off")
-      .attr("autocomplete", "off");
+	.attr("autocapitalize", "off")
+	.attr("autocorrect", "off")
+	.attr("autocomplete", "off");
     JS9.jupyterFocus(el.parent());
     // allow chaining
     return this;
@@ -95,7 +92,7 @@ JS9.Console.inp = function(){
 
 // output results
 // called with plugin object as this
-JS9.Console.out = function(s,c){
+JS9.Console.out = function(s, c){
     // message type
     switch(c.toLowerCase()){
     case "error":
@@ -135,11 +132,10 @@ JS9.Console.xeq = function(){
 	args.push(tokens[i]);
     }
     // save history, if necessary
-    if( !this.histused ){
-	this.hist[this.hist.length] = cmdstring;
+    if( !this.hist.length || cmdstring !== this.hist[this.hist.length-1] ){
+	this.hist.push(cmdstring);
     }
     this.histpos = this.hist.length;
-    this.histused = false;
     // lookup and xeq, if possible
     try{
 	obj = JS9.lookupCommand(cmd);
@@ -160,6 +156,24 @@ JS9.Console.xeq = function(){
 		msg = `unknown cmd type for '${cmd}'`;
 		JS9.error(msg);
 		break;
+	    }
+	} else if( JS9.publics[cmd] ){
+	    args.push({display: this.display});
+	    msg = JS9.publics[cmd](...args) || "";
+	    if( typeof msg === "object" ){
+		if( msg instanceof JS9.Display || msg instanceof JS9.Image ){
+		    msg = "";
+		} else {
+		    try{ msg = JSON.stringify(msg); }
+		    catch(e) { msg = ""; }
+		}
+	    }
+	    if( typeof msg === "string" && msg !== "OK" ){
+		if( msg.match(/^ERROR:/) ){
+		    JS9.error(msg);
+		} else {
+		    JS9.Console.out.call(this, msg, "ok");
+		}
 	    }
 	} else {
 	    msg = `unknown command '${cmd}'`;
@@ -215,16 +229,8 @@ JS9.Console.keyDownCB = function(evt){
 	}
 	if( obj.hist[obj.histpos] ){
 	    v.val(obj.hist[obj.histpos]);
-	    // mark history as being used
-	    if( obj.histpos !== obj.hist.length){
-		obj.histused = true;
-	    } else {
-		// except for the current input line
-		obj.histused = false;
-	    }
 	} else {
 	    v.val(obj.histtemp);
-	    obj.histused = false;
 	}
     }
     // xeq command when new-line is pressed and re-init

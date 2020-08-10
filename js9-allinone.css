@@ -2388,21 +2388,13 @@ div.JS9Progress {
   border-left: solid 0px #00FF00;
 }
 
-.JS9CmdForm {
-    border: none;
-    padding: 1px;
-    font-size: 12px;
-    font-family: monospace;
-    width:100%;
-}
-
 .JS9CmdTable {
     vertical-align:top;
-    width:100%;
+    width: 100%;
 }
 
 .JS9CmdTd  {
-    width:100%;
+    width: 100%;
 }
 
 .JS9CmdIn, .JS9CmdOut {
@@ -2410,10 +2402,11 @@ div.JS9Progress {
     padding-top: 0px;
     padding-left: 4px;
     margin-left: 2px;
-    font-size: 12px;
+    font-size: 14px;
     font-family: monospace;
     width:97%;
     background: #E9E9E9;
+    overflow: auto;
 }
 
 /* get rid of blue border for input in Safari, Chrome */
@@ -2426,9 +2419,9 @@ input:focus.JS9CmdIn {
     padding-top: 2px;
     padding-left: 4px;
     margin-left: 2px;
-    font-size: 12px;
+    font-size: 14px;
     font-family: monospace;
-    width:100%;
+    width: 100%;
     color: red;
 }
 
@@ -2437,9 +2430,9 @@ input:focus.JS9CmdIn {
     padding-top: 2px;
     padding-left: 4px;
     margin-left: 2px;
-    font-size: 12px;
+    font-size: 14px;
     font-family: monospace;
-    width:100%;
+    width: 100%;
     color: yellow;
 }
 
@@ -2448,15 +2441,27 @@ input:focus.JS9CmdIn {
     padding-top: 2px;
     padding-left: 4px;
     margin-left: 4px;
+    font-size: 14px;
+    font-family: monospace;
+    width: 100%;
+    color: #3333FF;
+}
+
+.JS9CmdHelp {
+    border: none;
+    padding-top: 2px;
+    padding-left: 4px;
+    margin-left: 4px;
     font-size: 12px;
     font-family: monospace;
-    width:100%;
+    width: 100%;
+    height: 100%;
     color: #3333FF;
 }
 
 .JS9CmdPrompt { 
     color: #777;
-    font-size: 12px;
+    font-size: 14px;
     font-family: monospace;
     white-space:nowrap;
 }
