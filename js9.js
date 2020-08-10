@@ -23632,6 +23632,58 @@ JS9.initCommands = function(){
 	}
     }));
     JS9.checkNew(new JS9.Command({
+	name: "global",
+	help: "set/get a JS9.globalOpts parameter",
+	set(args) {
+	    let val, key;
+	    if( args.length == 1 ){
+		val = JS9.globalOpts[args[0]];
+		if( JS9.notNull(val) ){
+                    switch( typeof val ){
+		    case "boolean":
+			return val ? "true" : "false";
+		    case "number":
+			return String(val);
+		    case "string":
+			return val;
+		    case "object":
+			return JSON.stringify(val);
+		    default:
+			return "";
+                    }
+		}
+	    } else if( args.length == 2 ){
+		key = args[0];
+		if( JS9.notNull(JS9.globalOpts[key]) ){
+                    switch( typeof JS9.globalOpts[key] ){
+		    case "boolean":
+			val = args[1].match(/true/i) ? true : false;
+			JS9.globalOpts[key] = val;
+			break;
+		    case "number":
+			val = parseFloat(args[1]);
+			JS9.globalOpts[key] = val;
+			break;
+		    case "string":
+			JS9.globalOpts[key] = val;
+			break;
+		    case "object":
+			try{
+			    val = JSON.parse(args[1]);
+			}
+			catch(e){
+			    JS9.error(`invalid JSON for global cmd: ${args[1]}`);
+			}
+			JS9.globalOpts[key] = val;
+			break;
+		    default:
+			break;
+                    }
+		}
+	    }
+	}
+    }));
+    JS9.checkNew(new JS9.Command({
 	name: "grid",
 	help: "set/get coordinate grid for current image",
 	get() {
@@ -23691,7 +23743,7 @@ JS9.initCommands = function(){
     }));
     JS9.checkNew(new JS9.Command({
 	name: "helper",
-	help: "get/set helper connection",
+	help: "set/get helper connection",
 	get() {
 	    return JS9.helper.connectinfo();
 	},
@@ -23877,7 +23929,7 @@ JS9.initCommands = function(){
     }));
     JS9.checkNew(new JS9.Command({
 	name: "resize",
-	help: "get/set display size for current image",
+	help: "set/get display size for current image",
 	get() {
 	    let display;
 	    const im = this.image;
