@@ -23652,27 +23652,26 @@ JS9.initCommands = function(){
 			return "";
                     }
 		}
-	    } else if( args.length == 2 ){
+	    } else if( args.length >= 2 ){
 		key = args[0];
-		if( JS9.notNull(JS9.globalOpts[key]) ){
-                    switch( typeof JS9.globalOpts[key] ){
+		val = args[1];
+		if( typeof key === "string" && typeof val === "string" ){
+		    switch( typeof JS9.globalOpts[key] ){
 		    case "boolean":
-			val = args[1].match(/true/i) ? true : false;
-			JS9.globalOpts[key] = val;
+			JS9.globalOpts[key] = val.match(/true/i) ? true : false;
 			break;
 		    case "number":
-			val = parseFloat(args[1]);
-			JS9.globalOpts[key] = val;
+			JS9.globalOpts[key] = parseFloat(val);
 			break;
 		    case "string":
 			JS9.globalOpts[key] = val;
 			break;
 		    case "object":
 			try{
-			    val = JSON.parse(args[1]);
+			    val = JSON.parse(val);
 			}
 			catch(e){
-			    JS9.error(`invalid JSON for global cmd: ${args[1]}`);
+			    JS9.error(`invalid JSON for global cmd: ${val}`);
 			}
 			JS9.globalOpts[key] = val;
 			break;
@@ -23712,7 +23711,7 @@ JS9.initCommands = function(){
 	help: "get list of available commmands",
 	get() {
 	    let i, cmd;
-	    let s1 = "Or execute JS9 public access routines (spaceless args, please):";
+	    let s1 = "Or execute JS9 public access routines (use spaceless args, please):";
 	    let s2 = "SetColormap heat";
 	    let s3 = "GetColormap";
 	    let s4 = '{"colormap":"heat","contrast":3.75,"bias":0.736328125}';
