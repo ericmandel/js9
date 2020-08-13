@@ -2648,10 +2648,16 @@ mark.current {
     background-color: #808080;
 }
 
-.indentmenu ul li a.selected{
+.indentmenu ul li a.selected {
     padding-top: 5px; /* don't shift text down 1px */
     padding-bottom: 5px;
     background: #696969;
+}
+
+/* spectrum colorpicker */
+.sp-replacer {
+    padding: 2px;
+    border: solid 0px transparent;
 }
 
 /* 3d surface plot bug */
@@ -2734,6 +2740,10 @@ canvas.surfacePlotCanvas {
 /* read-only reportedly fixed in FF 78, but until then ... */
 .JS9Text:-moz-read-only {
     border: 1px solid white;
+}
+
+.JS9Text::placeholder {
+    opacity: 0.4;
 }
 
 /* js9Analysis forms (e.g. parameter dialog boxes) */

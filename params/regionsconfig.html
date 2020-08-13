@@ -51,12 +51,27 @@
     width: 100px;
 }
 
+.rconfigcol_R2S {
+    position: absolute;
+    top: 0;
+    left:  100px;
+    width: 52px;
+}
+
+.rconfigcol_R2S2 {
+    position: absolute;
+    top: 0;
+    left:  154px;
+    width: 20px;
+}
+
 .rconfigcol_R2 {
     position: absolute;
     top: 0;
     left:  100px;
     width: 77px;
 }
+
 
 .rconfigcol_R2L {
     position: absolute;
@@ -70,6 +85,20 @@
     top: 0;
     left:  100px;
     width: 390px;
+}
+
+.rconfigcol_R3S {
+    position: absolute;
+    top: 0;
+    left:  180px;
+    width: 22px;
+}
+
+.rconfigcol_R3S2 {
+    position: absolute;
+    top: 0;
+    left:  204px;
+    width: 53px;
 }
 
 .rconfigcol_R3 {
@@ -90,7 +119,7 @@
     position: absolute;
     top: 0;
     left:  260px;
-    width: 80px;
+    width: 77px;
 }
 
 .rconfigcol_R4L {
@@ -104,7 +133,7 @@
     position: absolute;
     top: 0;
     left:  340px;
-    width: 80px;
+    width: 77px;
 }
 
 .rconfigcol_R6 {
@@ -145,7 +174,7 @@
 }
 
 .rconfigtextarea_R2 {
-    width: 332px;
+    width: 300px;
     height: 64px;
     padding-left: 4px;
     resize: none;
@@ -168,6 +197,24 @@
     -moz-box-sizing: border-box;
 }
 
+.rconfigtext_R1{
+    width: 60px;
+    font: normal 12px Arial;
+    padding-left: 2px;
+    box-sizing:border-box;
+    webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+}
+
+.rconfigtext_R2{
+    width: 32px;
+    font: normal 12px Arial;
+    padding-left: 2px;
+    box-sizing:border-box;
+    webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+}
+
 .rconfigtext_regid {
     font: normal 12px Arial;
     padding: 0px;
@@ -175,6 +222,15 @@
     text-align: right;
     outline: none;
 }
+
+.rconfigcolor {
+    height: 18px;
+    width: 18px;
+    padding: 0px;
+    margin: 0px;
+    vertical-align: middle;
+}
+
 </style>
 
 </head>
@@ -252,6 +308,25 @@ if( im && wcssys && shape && shape.params ){
 </div>
 
 <div class="nodisplay multi">
+<div class="rconfiglinegroup">
+<span class="rconfigcol_R rconfigcol_R1">
+Selection:&nbsp;
+</span>
+<span class="rconfigcol_R rconfigcol_R2L">
+<input type="text" class="val JS9Text rconfigtext_R" name="selectfilter" value="" autocapitalize="off" autocorrect="off" placeholder="select criteria" data-tooltip="multi-selection criteria">
+<!--
+onchange="
+const form = $(this).closest('form');
+const im = form.data('im');
+const filter = $(this).val();
+if( im && filter ){
+  $(form).data('selectfilter', filter);
+  im.groupShapes('regions', filter);
+}
+"
+-->
+</span>
+</div>
 <div class="rconfiglinegroup2">
 <span class="rconfigcol_R rconfigcol_R1">
 Selected:&nbsp;
@@ -284,7 +359,7 @@ Edit:
 <span class="rconfigcol_R rconfigcol_R4">
 <input type="text" class="val JS9Text rconfigtext_R" name="width" value="" autocapitalize="off" autocorrect="off" data-tooltip="width in units of degrees (wcs) or pixels (no wcs)">
 </span>
-<span class="rconfigcol_R rconfigcol_R6">
+<span class="rconfigcol_R rconfigcol_R5">
 <input type="text" class="val JS9Text rconfigtext_R" name="height" value="" autocapitalize="off" autocorrect="off" data-tooltip="height in units of degrees (wcs) or pixels (no wcs)">
 </span>
 </div>
@@ -345,15 +420,59 @@ Edit:
 <span class="rconfigcol_R rconfigcol_R1">
 Style:
 </span>
-<span class="rconfigcol_R rconfigcol_R2">
-<input type="text" class="val JS9Text rconfigtext_R" name="color" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke color name or #rrggbb hex value">
+<span class="rconfigcol_R rconfigcol_R2LL">
+<input type="color" class="val rconfigcolor" name="colorPicker" value="#ffffff"
+oninput="
+let form, color;
+form = $(this).closest('form');
+color = $(this).val();
+form.find(`input[name='color']`).val(color);
+">
+<input type="text" class="val rconfigtext_R1" name="color" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke color name or #rrggbb hex value">
+&nbsp;&nbsp;
+<select name="strokeMenu" class="val JS9Select" onchange="
+const form = $(this).closest('form');
+const swidth =  $(this).val();
+if( JS9.isNumber(swidth) ){
+  form.find(`input[name='strokeWidth']`).val(swidth);
+  $(this).prop('selectedIndex', 0);
+}
+"
+>
+<option value="" disabled=disabled>width</option>
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+<option value="7">7</option>
+<option value="8">8</option>
+</select>
+<input type="text" class="val rconfigtext_R2" name="strokeWidth" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke width in pixels">
+&nbsp;&nbsp;
+<select name="dashesMenu" class="val JS9Select" onchange="
+const form = $(this).closest('form');
+const dashes =  $(this).val();
+form.find(`input[name='strokeDashes']`).val(dashes);
+$(this).prop('selectedIndex', 0);
+"
+>
+<option value="" disabled=disabled>dashes</option>
+<option value="1 0">solid</option>
+<option value="3 3">3 3</option>
+<option value="3 2">3 2</option>
+<option value="3 1">3 1</option>
+<option value="2 3">2 3</option>
+<option value="2 2">2 2</option>
+<option value="2 1">2 1</option>
+<option value="1 3">1 3</option>
+<option value="1 2">1 2</option>
+<option value="1 1">1 1</option>
+</select>
+<input type="text" class="val rconfigtext_R2" name="strokeDashes" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke dash/line pattern, e.g. 3 1">
 </span>
-<span class="rconfigcol_R rconfigcol_R3">
-<input type="text" class="val JS9Text rconfigtext_R" name="strokeWidth" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke width in pixels">
-</span>
-<span class="rconfigcol_R rconfigcol_R4">
-<input type="text" class="val JS9Text rconfigtext_R" name="strokeDashes" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke dash/line pattern, e.g. 3 1">
-</span>
+
 </div>
 </div>
 
@@ -402,7 +521,7 @@ text:
 Tags:
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
-<input type="text" class="val JS9Text rconfigtext_R" name="tags" value="" autocapitalize="off" autocorrect="off" data-tooltip="comma-separated list of tags">
+<input type="text" class="val JS9Text rconfigtext_R" name="tags" value="" autocapitalize="off" autocorrect="off" placeholder="comma-separated tags" data-tooltip="comma-separated list of tags">
 </span>
 </div>
 
@@ -411,7 +530,7 @@ Tags:
 Misc:
 </span>
 <span class="rconfigcol_R rconfigcol_R2L">
-<input type="text" class="val JS9Text rconfigtext_R" name="misc" value="" autocapitalize="off" autocorrect="off" data-tooltip="misc fabric.js properties, in JSON format">
+<input type="text" class="val JS9Text rconfigtext_R" name="misc" value="" autocapitalize="off" autocorrect="off" placeholder="misc fabric.js properties, in JSON format" data-tooltip="misc fabric.js properties, in JSON format">
 </span>
 </div>
 
