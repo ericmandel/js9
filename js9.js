@@ -14271,6 +14271,11 @@ JS9.Fabric._selectShapes = function(layerName, id, cb){
 			   obj.params.children.length ){
 		    // all
 		    cb.call(this, obj, ginfo);
+		} else if( $.inArray(id, JS9.wcssyss) >= 0    &&
+			   obj.params.wcsconfig               &&
+			   obj.params.wcsconfig.wcssys === id ){
+		    // original wcs
+		    cb.call(this, obj, ginfo);
 		} else if( obj.params.tags ){
 		    // tags
 		    for(i=0; i<obj.params.tags.length; i++){
@@ -16756,14 +16761,25 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		val = obj.getFontWeight();
 	    }
 	    break;
+	case "colorPicker":
+	    if( obj.pub.color !== undefined ){
+		val = JS9.colorToHex(obj.pub.color);
+	    } else {
+		val = $(form).data("colorpicker") || JS9.globalOpts.defcolor;
+	    }
+	    break;
+	case "color":
+	    if( obj.pub.color !== undefined ){
+		val = fmt(obj.pub.color);
+	    } else if( $(form).data("colorpicker") ){
+		val = $(form).data("colorpicker");
+	    }
+	    break;
 	case "strokeWidth":
 	    if( obj.params.sw1 ){
 		val = obj.params.sw1;
-	    }
-	    break;
-	case "colorPicker":
-	    if( obj.stroke !== undefined ){
-		val = JS9.colorToHex(obj.stroke);
+	    } else {
+		val = $(form).data("strokewidth") || "";
 	    }
 	    break;
 	case "strokeDashes":
@@ -16772,6 +16788,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		if( val.match(/NaN/) ){
 		    val = "";
 		}
+	    } else {
+		val = $(form).data("strokedashes") || "";
 	    }
 	    break;
 	case "regstr":
@@ -17027,8 +17045,9 @@ JS9.Regions.initConfigForm = function(obj, opts){
 			 preferredFormat: "hex6"});
 	    // when the color is changed via the colorpicker
 	    el.on('move.spectrum', (evt, tinycolor) => {
-		$(form).find(`input[name='color']`)
-		      .val(tinycolor.toHexString());
+		let color = tinycolor.toHexString();
+		$(form).find("input[name='color']").val(color);
+		$(form).data("colorpicker", color);
 	    });
          }
     }
@@ -17392,14 +17411,25 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		}
 	    }
 	    break;
+	case "selectfilter":
+	    if( val ){
+		$(form).data('selectfilter', val);
+		this.selectShapes(layer, val);
+	    }
+	    break;
 	case "strokeDashes":
 	    nval = val.trim().split(/\s+/);
-	    if( newval(obj, key, nval) ){
+	    if( (multi && val) || newval(obj, key, nval) ){
 		if( nval.length === 0 ){
 		    opts.strokeDashArray = [];
 		} else {
 		    opts.strokeDashArray = nval.map( s => parseInt(s, 10) );
 		}
+	    }
+	    break;
+	case "strokeWidth":
+	    if( (multi && val) || newval(obj, key, nval) ){
+		opts[key] = getval(val);
 	    }
 	    break;
 	case "childtext":
@@ -17634,12 +17664,6 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    if( val.trim() ){
 		try{ nopts = JSON.parse(val); $.extend(opts, nopts); }
 		catch(e){ JS9.error(`invalid json: ${val}`);}
-	    }
-	    break;
-	case "selectfilter":
-	    if( val ){
-		$(form).data('selectfilter', val);
-		this.selectShapes(layer, val);
 	    }
 	    break;
 	default:

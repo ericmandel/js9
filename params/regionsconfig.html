@@ -421,20 +421,21 @@ Edit:
 Style:
 </span>
 <span class="rconfigcol_R rconfigcol_R2LL">
-<input type="color" class="val rconfigcolor" name="colorPicker" value="#ffffff"
-oninput="
+<input type="color" class="val rconfigcolor" name="colorPicker" value="#ffffff" oninput="
 let form, color;
 form = $(this).closest('form');
 color = $(this).val();
 form.find(`input[name='color']`).val(color);
+form.data('colorpicker', color);
 ">
 <input type="text" class="val rconfigtext_R1" name="color" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke color name or #rrggbb hex value">
 &nbsp;&nbsp;
 <select name="strokeMenu" class="val JS9Select" onchange="
 const form = $(this).closest('form');
 const swidth =  $(this).val();
-if( JS9.isNumber(swidth) ){
+if( swidth ){
   form.find(`input[name='strokeWidth']`).val(swidth);
+  form.data('strokewidth', swidth);
   $(this).prop('selectedIndex', 0);
 }
 "
@@ -455,6 +456,7 @@ if( JS9.isNumber(swidth) ){
 const form = $(this).closest('form');
 const dashes =  $(this).val();
 form.find(`input[name='strokeDashes']`).val(dashes);
+form.data('strokedashes', dashes);
 $(this).prop('selectedIndex', 0);
 "
 >
