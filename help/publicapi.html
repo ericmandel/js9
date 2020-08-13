@@ -2583,6 +2583,7 @@ using any of the following:
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
+<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
 <li><b>[tag]</b>:  regions having the specified tag
 <li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
 <li><b>child</b>: a child region (i.e. text child of another region)
@@ -3289,6 +3290,7 @@ any of the following (in order of precedence):
 <li><b>[shape]</b>: all regions having the specified shape (e.g., "circle")
 <li><b>child</b>: a child region (i.e. text child of another region)
 <li><b>parent</b>: a region that has a child (i.e. has a text child)
+<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
 <li><b>[tag]</b>: all regions containing the specified tag (e.g., "source")
 <li><b>dcoords</b>: a region that preserves display coordinates
 <li><b>nodcoords</b>: a region that does not preserve display coordinates
@@ -3489,6 +3491,7 @@ can specify regions using any of the following:
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
+<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
 <li><b>[tag]</b>:  regions having the specified tag
 <li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
 <li><b>child</b>: a child region (i.e. text child of another region)
@@ -3656,6 +3659,7 @@ can specify a region selector using any of the following:
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
+<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
 <li><b>[tag]</b>:  regions having the specified tag
 <li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
 <li><b>child</b>: a child region (i.e. text child of another region)
@@ -3693,6 +3697,7 @@ can specify a region selector using any of the following:
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
+<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
 <li><b>[tag]</b>:  regions having the specified tag
 <li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
 <li><b>child</b>: a child region (i.e. text child of another region)
@@ -3719,6 +3724,7 @@ using any of the following:
 <li><b>selected</b>: the selected region (or regions in a selected group)
 <li><b>[color]</b>: regions of the specified color
 <li><b>[shape]</b>: regions of the specified shape
+<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
 <li><b>[tag]</b>:  regions having the specified tag
 <li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
 <li><b>child</b>: a child region (i.e. text child of another region)
@@ -3834,6 +3840,44 @@ or a single string containing a comma-separated list of tags:
 Each of the above routines adds two "foo" tags and removes two "goo"
 tags from the selected region(s).
 
+<h5 id="JS9.SelectRegions">Group Regions into a Selection</h5>
+<p>
+<code class="api">JS9.SelectRegions(regions)</code>
+<p>
+where:
+<ul>
+<li><b>regions</b>: which regions to select
+</ul>
+JS9 has a rich mouse-based interface for selecting regions: a single
+region is selected by clicking on it. A number of regions can be
+gathered into a group selection by pressing the left mouse button and
+dragging the mouse over the desired regions. To add to an
+already-existing selection, shift-click the mouse on a region.
+
+<p>
+This routine allows you to create a group selection programmatically by
+specifying which regions make up the selection.
+
+<p>
+If the <b>regions</b> argument is not specified, it defaults to
+"all". You can specify a selector using any of the following:
+<ul>
+<li><b>all</b>: all regions not including child text regions
+<li><b>All</b>: all regions including child text regions
+<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddRegions"><b>JS9.AddRegions()</b></a>
+<li><b>selected</b>: the selected region (or regions in a selected group)
+<li><b>[color]</b>: regions of the specified color
+<li><b>[shape]</b>: regions of the specified shape
+<li><b>[wcs]</b>:  regions whose initial wcs matches the specified wcs
+<li><b>[tag]</b>:  regions having the specified tag
+<li><b>/[regexp]/</b>: regions with a tag matching the specified regexp
+<li><b>child</b>: a child region (i.e. text child of another region)
+<li><b>parent</b>: a region that has a child (i.e. has a text child)
+</ul>
+
+<p>
+The result of the call will be a selected group which can be moved as one unit.
+
 <h5 id="JS9.ToggleRegionTags">Toggle two region tags for the specified image(s)</h5>
 <p>
 <code class="api">JS9.ToggleRegionTags(which, t1, t2)</code>
@@ -3927,6 +3971,7 @@ be any of the following (in order of precedence):
 <li><b>selected</b>: the selected shape (or shapes in a selected group)
 <li><b>[color]</b>: shapes of the specified color
 <li><b>[shape]</b>: shapes of the specified shape
+<li><b>[wcs]</b>:  shapes whose initial wcs matches the specified wcs
 <li><b>[tag]</b>:  shapes having the specified tag
 <li><b>/[regexp]/</b>: shapes with a tag matching the specified regexp
 <li><b>child</b>: a child shape (i.e. text child of another shape)
@@ -4204,6 +4249,7 @@ selector using any of the following:
 <li><b>selected</b>: the selected shape (or shapes in a selected group)
 <li><b>[color]</b>: shapes of the specified color
 <li><b>[shape]</b>: shapes of the specified shape
+<li><b>[wcs]</b>:  shapes whose initial wcs matches the specified wcs
 <li><b>[tag]</b>:  shapes having the specified tag
 <li><b>/[regexp]/</b>: shapes with a tag matching the specified regexp
 <li><b>child</b>: a child shape (i.e. text child of another shape)
@@ -4274,6 +4320,7 @@ If the <b>shapes</b> argument is not specified, it defaults to
 <li><b>selected</b>: the selected shape (or shapes in a selected group)
 <li><b>[color]</b>: shapes of the specified color
 <li><b>[shape]</b>: shapes of the specified shape
+<li><b>[wcs]</b>:  shapes whose initial wcs matches the specified wcs
 <li><b>[tag]</b>:  shapes having the specified tag
 <li><b>/[regexp]/</b>: shapes with a tag matching the specified regexp
 <li><b>child</b>: a child shape (i.e. text child of another shape)
@@ -4293,6 +4340,45 @@ Copy the shapes in a shape layer to a different image. If <b>to</b> is
 "all", then the shapes are copied to all images.
 <p>
 All shapes in the shape layer are copied to the new image.
+
+<h5 id="JS9.SelectShapes">Group Shapes into a Selection</h5>
+<p>
+<code class="api">JS9.SelectShapes(layer, shapes)</code>
+<p>
+where:
+<ul>
+<li><b>layer</b>: shape layer
+<li><b>shapes</b>: which shapes to select
+</ul>
+JS9 has a rich mouse-based interface for selecting shapes: a single
+shape is selected by clicking on it. A number of shapes can be
+gathered into a group selection by pressing the left mouse button and
+dragging the mouse over the desired shapes. To add to an
+already-existing selection, shift-click the mouse on a shape.
+
+<p>
+This routine allows you to create a group selection programmatically by
+specifying which shapes make up the selection.
+
+<p>
+If the <b>shapes</b> argument is not specified, it defaults to
+"all". You can specify a selector using any of the following:
+<ul>
+<li><b>all</b>: all shapes not including child text shapes
+<li><b>All</b>: all shapes including child text shapes
+<li><b>[id]</b>: a specific region id returned by <a href="#JS9.AddShapes"><b>JS9.AddShapes()</b></a>
+<li><b>selected</b>: the selected shape (or shapes in a selected group)
+<li><b>[color]</b>: shapes of the specified color
+<li><b>[shape]</b>: shapes of the specified shape
+<li><b>[wcs]</b>:  shapes whose initial wcs matches the specified wcs
+<li><b>[tag]</b>:  shapes having the specified tag
+<li><b>/[regexp]/</b>: shapes with a tag matching the specified regexp
+<li><b>child</b>: a child shape (i.e. text child of another shape)
+<li><b>parent</b>: a shape that has a child (i.e. has a text child)
+</ul>
+
+<p>
+The result of the call will be a selected group which can be moved as one unit.
 
 <h5 id="JS9.LoadCatalog">Load an astronomical catalog</h5>
 <p>
