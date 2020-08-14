@@ -262,6 +262,7 @@ JS9.Magnifier.clear = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Magnifier.CLASS, JS9.Magnifier.NAME, JS9.Magnifier.init,
 		   {menuItem: "Magnifier",
+		    help: "help/magnifier.html",
 		    dynamicSelect: true,
 		    toolbarSeparate: false,
 		    toolbarHTML: JS9.Magnifier.HTML,

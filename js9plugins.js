@@ -6501,6 +6501,7 @@ JS9.Magnifier.clear = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Magnifier.CLASS, JS9.Magnifier.NAME, JS9.Magnifier.init,
 		   {menuItem: "Magnifier",
+		    help: "help/magnifier.html",
 		    dynamicSelect: true,
 		    toolbarSeparate: false,
 		    toolbarHTML: JS9.Magnifier.HTML,
@@ -10535,6 +10536,7 @@ JS9.Panner.clear = function(im){
 // add this plugin into JS9
 JS9.RegisterPlugin(JS9.Panner.CLASS, JS9.Panner.NAME, JS9.Panner.init,
 		   {menuItem: "Panner",
+		    help: "help/panner.html",
 		    dynamicSelect: true,
 		    toolbarSeparate: false,
 		    toolbarHTML: JS9.Panner.HTML,
