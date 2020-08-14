@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head> 
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<link type="text/css" rel="stylesheet" href="../../js9.css">
+<title>Plugin: JS9Console</title>
+</head>
+<body>
+<div class="helpLogo"><img src="../../images/js9logo.png" alt="js9"></div>
+<div class="helpContainer">
+<h3>JS9 Console</h3>
+
+<p>
+The Console plugin provides a mechanism for executing JS9 functions by
+typing commands instead of using the graphical interface or
+external messaging. A number of shortcut commands have been defined, including:
+<pre>
+    analysis    list/run analysis for current image (run)
+    colormap    set/get colormap for current image (cmap)
+    colormaps   get list of available colormaps (cmaps)
+    global      set/get a JS9.globalOpts parameter
+    grid        set/get coordinate grid for current image
+    help        get list of available commands
+    helper      set/get helper connection
+    image       get name of current image or display specified image
+    images      get list of currently loaded images
+    load        load image(s)
+    pan         set/get pan location for current image
+    pix2wcs     get image pixel value for specified wcs position
+    print       print image window
+    refresh     refresh image using specified file (def: use last file)
+    regcnts     counts in regions for current image
+    regions     add or list region(s) (reg, region)
+    resize      set/get display size for current image
+    scale       set/get scaling for current image
+    scales      get list of available scales
+    section     display section of current image
+    status      get status for specified (or current) image
+    url         display a url
+    wcssys      set/get wcs system for current image
+    wcsu        set/get wcs units used for current image
+    wcssystems  get list of available wcs systems
+    wcsunits    get list of available wcs units
+    wcs2pix     get wcs position for specified image pixel
+    zoom        set/get zoom for current image
+</pre>
+where aliases are in parentheses.For example:
+<pre>
+    js9> cmap heat
+
+    js9> cmap
+    heat 1 0.5
+</pre>
+The real value of the Console plugin lies in the fact that you can execute
+any public access routine. For example:
+<pre>
+    js9> SetColormap heat
+
+    js9> GetColormap
+    {"colormap":"heat","contrast":3.75,"bias":0.736328125}
+
+    js9> AddRegions circle(23:23:27.9,+58:48:42.8,3&quot;) {"color":"cyan"}
+</pre>
+The major constraint is that all arguments must be spaceless, e.g. you
+cannot put spaces into a region specification.
+
+<p>
+The Console plugin thus provides a simple way of executing routines for
+which there is no graphical interface. For example, you can execute
+JS9.ShiftData() directly in the Console:
+<pre>
+    js9> ShiftData -10 10
+</pre>
+
+<p>
+Note that the up and down arrow keys provide a simple history mechanism
+for the Console plugin.
+
+</div>
+</body>
+</html>

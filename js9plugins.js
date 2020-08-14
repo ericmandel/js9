@@ -3698,6 +3698,7 @@ JS9.Console.keyDownCB = function(evt){
 
 JS9.RegisterPlugin("JS9", "Console", JS9.Console.init,
 		   {menuItem: "Console",
+		    help: "help/console.html",
 		    winTitle: "Console",
 		    winResize: true,
 		    winDims: [JS9.Console.WIDTH, JS9.Console.HEIGHT]});
