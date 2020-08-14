@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head> 
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<link type="text/css" rel="stylesheet" href="../../js9.css">
+<title>Plugin: JS9Info</title>
+</head>
+<body>
+<div class="helpLogo"><img src="../../images/js9logo.png" alt="js9"></div>
+<div class="helpContainer">
+<h3>JS9 Info Box</h3>
+
+<p>
+Each JS9 window usually has a <b>value/position</b> display in the upper
+left, which shows the pixel value at the current mouse position, along
+with position information (WCS and/or image, depending on the
+current coordinate system.) The Info Box plugin will display this information
+and more in a separate window.
+
+<p>
+The information displayed in the Info Box depends on the values
+contained in the <b>JS9.globalOpts.infoBox</b> property, an array
+which looks something like this:
+
+<pre>
+    infoBox: ["file", "object", "wcsfov", "wcscen", "wcspos",
+              "impos", "physpos", "value", "regions", "progress"]
+</pre>
+The entries listed above tell the Info Box plugin to display the following
+information:
+<ul>
+<li><b>file</b>: file name
+<li><b>object</b>: object name, taken from FITS header
+<li><b>wcsfov</b>: wcs field of view
+<li><b>wcscen</b>: wcs center of image
+<li><b>wcspos</b>: current position in wcs coordinates
+<li><b>impos</b>: current position in image coordinates
+<li><b>physpos</b>: current position in physical (file) coordinates
+<li><b>value</b>: pixel value
+<li><b>regions</b>: regions, if these are not displayed in a separate window
+<li><b>progress</b>: progress bar, when used
+</ul>
+Currently, the other option(s) for display are:
+<ul>
+<li><b>dispos</b>: current position in display coordinates
+</ul>
+You can change the list of displayed values at run-time using the
+<b>Preferences</b> plugin or, for site-wide configuration, by
+changing the value in the <b>js9prefs.js</b> file.
+</div>
+</body>
+</html>

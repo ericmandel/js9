@@ -5157,6 +5157,7 @@ JS9.mkPublic("DisplayMessage", function(...args){
 // add this plugin into JS9
 JS9.RegisterPlugin("JS9", "Info", JS9.Info.init,
 		   {menuItem: "InfoBox",
+		    help: "help/info.html",
 		    dynamicSelect: true,
 		    onplugindisplay: JS9.Info.pluginDisplay,
 		    onpluginclose: JS9.Info.pluginClose,
