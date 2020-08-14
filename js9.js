@@ -150,8 +150,8 @@ JS9.globalOpts = {
     regSaveFormat: "reg",	// def format for saving regions (reg,cvs,svg)
     regSaveWhich1: "all",	// def 'which' for saving regions (all,selected)
     regSaveWhich2: "selected",	// def 'which' for saving in configure dialog
-    regMenuCreate: true,       // menu select a region creates it immediately>
-    regMenuSelection: "circle", // region selected during last menu select
+    regMenuCreate: true,	// menu select a region creates it immediately>
+    regMenuSelection: "circle",	// region selected during last menu select
     regToClipboard: false,	// copy all region changes to pseudo-clipboard?
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
