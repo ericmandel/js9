@@ -16989,6 +16989,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 		.text("sel");
 	    $(form).find("input[id='savecur']")
 		.data("tooltip", "save selected regions");
+	} else {
+	    $(form).find(".checkboxes").removeClass("nodisplay");
 	}
 	// add wcs button options
 	if( JS9.favorites.wcs && JS9.favorites.wcs.length ){
@@ -17264,7 +17266,19 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 		return JSON.stringify(obj.strokeDashArray) !==
 		       JSON.stringify(val);
 	    }
-	    return val !== "";
+	    if( $.isArray(val) ){
+		switch(val.length){
+		case 0:
+		    return false;
+		case 1:
+		    return val[0] !== "";
+		case 2:
+		default:
+		    return val[0] !== "" && val[1] !== "";
+		}
+	    } else {
+		return val !== "";
+	    }
 	}
 	if( key !== "tags" && val === "" ){
 	    return false;
@@ -17317,7 +17331,16 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    }
 	}
 	if( key === "sticky" ){
-	    return fmtcheck(obj.pub.sticky||false, val);
+	    if( multi ){
+		return false;
+	    } else {
+		return fmtcheck(obj.pub.sticky||false, val);
+	    }
+	}
+	if( key === "listonchange" ){
+	    if( multi ){
+		return false;
+	    }
 	}
 	if( obj.pub.lcs && obj.pub.lcs[key] !== undefined ){
 	    if( fmtcheck(obj.pub.lcs[key], val) ){
@@ -17404,6 +17427,18 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    }
 	}
 	switch(key){
+	// these are never passed on
+	case "multitext":
+	case "colorPicker":
+	case "savefile":
+	case "rwcsbutton":
+	case "savewcs":
+	case "saveformat":
+	case "includejson":
+	case "includecomments":
+	case "savewhich":
+	case "savedcoords":
+	    break;
 	case "text":
 	    if( obj.type === "text" ){
 		if( newval(obj, key, val) ){
@@ -17428,9 +17463,19 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    }
 	    break;
 	case "strokeWidth":
-	    if( (multi && val) || newval(obj, key, nval) ){
+	    if( (multi && val) || (!multi && newval(obj, key, nval)) ){
 		opts[key] = getval(val);
 	    }
+	    break;
+	case "tags":
+	    if( multi ){
+		if( val ){
+		    opts[key] = getval(val);
+		}
+	    } else if( newval(obj, key, val) ){
+		opts[key] = getval(val);
+	    }
+
 	    break;
 	case "childtext":
 	    if( obj.type !== "text" ){
@@ -17673,13 +17718,15 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	    break;
 	}
     }
-    // change the shape
-    if( multi ){
-	this.changeShapes(layer, "selected", opts);
-    } else {
-	this.changeShapes(layer, obj, opts);
+    // change the shape(s), if necessary
+    if( Object.keys(opts).length > 0 ){
+	if( multi ){
+	    this.changeShapes(layer, "selected", opts);
+	} else {
+	    this.changeShapes(layer, obj, opts);
+	}
+	this.initRegionsForm(obj, {multi});
     }
-    this.initRegionsForm(obj, {multi});
 };
 
 // paste a region from clipboard
