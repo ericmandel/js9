@@ -17470,7 +17470,11 @@ JS9.Regions.processConfigForm = function(form, obj, arr){
 	case "tags":
 	    if( multi ){
 		if( val ){
-		    opts[key] = getval(val);
+		    if( val === '""' || val === "''" ){
+			opts[key] = "";
+		    } else {
+			opts[key] = getval(val);
+		    }
 		}
 	    } else if( newval(obj, key, val) ){
 		opts[key] = getval(val);
