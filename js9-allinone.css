@@ -463,7 +463,7 @@ padding: 3px 7px;
 margin-right: 3px;
 border: 1px solid #778;
 color: #2d2b2b;
-background: white url(shade.gif) top left repeat-x;
+background: white url(images/shade.gif) top left repeat-x;
 }
 
 .shadetabs li a:visited{
@@ -481,7 +481,7 @@ top: 1px;
 }
 
 .shadetabs li a.selected{ /*selected main tab style */
-background-image: url(shadeactive.gif);
+background-image: url(images/shadeactive.gif);
 border-bottom-color: white;
 }
 
@@ -571,7 +571,7 @@ padding: 0;
 float: left;
 /* width: 80%; width of menu*/
 border-top: 1px solid navy; /*navy border*/
-background: black url(indentbg.gif) center center repeat-x;
+background: black url(images/indentbg.gif) center center repeat-x;
 }
 
 .indentmenu ul li{
@@ -594,7 +594,7 @@ color: white;
 color: white !important;
 padding-top: 6px; /*shift text down 1px*/
 padding-bottom: 4px;
-background: black url(indentbg2.gif) center center repeat-x;
+background: black url(images/indentbg2.gif) center center repeat-x;
 }
 
 
@@ -613,7 +613,8 @@ display:none;
 .tabcontent {
 display:block !important;
 }
-}/***
+}
+/***
 Spectrum Colorpicker v1.8.0
 https://github.com/bgrins/spectrum
 Author: Brian Grinstead
