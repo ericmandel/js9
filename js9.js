@@ -153,6 +153,8 @@ JS9.globalOpts = {
     regMenuCreate: true,	// menu select a region creates it immediately>
     regMenuSelection: "circle",	// region selected during last menu select
     regToClipboard: false,	// copy all region changes to pseudo-clipboard?
+    regDisplay: "lightwin",	// "lightwin" or "display"
+    reConfigSize: "medium",	// "small", "medium"
     htimeout:  10000,		// connection timeout for the helper connect
     lhtimeout: 10000,		// connection timeout for local helper connect
     ehtimeout: 500,		// connection timeout for Electron connect
@@ -197,8 +199,6 @@ JS9.globalOpts = {
     lightWinPos: "center=1",	// "left=n,top=m" offset from left,top of window
     lightWinClose: "ask",	// ask, close, move images when closing lightwin
     fallbackDisplay: true,	// displayMessage fallback to display window?
-    regionDisplay: "lightwin",	// "lightwin" or "display"
-    regionConfigSize: "medium", // "small", "medium"
     refreshDragDrop: true,	// refresh on drag/drag and open file?
     reduceMosaic: "js9",        // "js9" or "shrink" ("js9" seems to be faster)
     internalRegcnts: true,      // make internal regcnts analysis available?
@@ -6459,7 +6459,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    if( type === "params" ){
 		winFormat = winFormat || a.paramWin;
 	    } else if( type === "regions" ){
-		if( JS9.globalOpts.regionConfigSize === "small" ){
+		if( JS9.globalOpts.regConfigSize === "small" ){
 		    winFormat = winFormat || a.regWin0;
 		} else {
 		    winFormat = winFormat || a.regWin;
@@ -27001,6 +27001,18 @@ JS9.init = function(){
 	JS9.globalOpts.regToClipboard === undefined     ){
 	JS9.globalOpts.regToClipboard = JS9.globalOpts.regionsToClipboard;
 	delete JS9.globalOpts.regionsToClipboard;
+    }
+    // backward compatibility (we renamed this property 8/2020)
+    if( JS9.globalOpts.regionDisplay !== undefined  &&
+	JS9.globalOpts.regDisplay === undefined     ){
+	JS9.globalOpts.regDisplay = JS9.globalOpts.regionDisplay;
+	delete JS9.globalOpts.regionDisplay;
+    }
+    // backward compatibility (we renamed this property 8/2020)
+    if( JS9.globalOpts.regionConfigSize !== undefined  &&
+	JS9.globalOpts.regConfigSize === undefined     ){
+	JS9.globalOpts.regConfigSize = JS9.globalOpts.regionConfigSize;
+	delete JS9.globalOpts.regionConfigSize;
     }
     // turn off resize on mobile platforms
     if( JS9.BROWSER[3] ){

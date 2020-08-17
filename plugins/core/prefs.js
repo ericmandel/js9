@@ -465,11 +465,11 @@ JS9.Prefs.globalsSchema = {
 	    "type": "string",
 	    "helper": "can messages fallback to display win?"
 	},
-	"regionDisplay": {
+	"regDisplay": {
 	    "type": "string",
 	    "helper": "show regions in 'lightwin' or 'display'"
 	},
-	"regionConfigSize": {
+	"regConfigSize": {
 	    "type": "string",
 	    "helper": "size of region dialog: small, medium"
 	},

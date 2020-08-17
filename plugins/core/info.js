@@ -61,7 +61,7 @@ JS9.Info.init = function(){
 	    continue;
 	}
 	if( key.match(/^regions/)                       &&
-	    JS9.globalOpts.regionDisplay === "lightwin" ){
+	    JS9.globalOpts.regDisplay === "lightwin" ){
 	    continue;
 	}
 	// add html for this line of the display
@@ -84,7 +84,7 @@ JS9.Info.init = function(){
     this.height = this.divjq.attr("data-height");
     if( !this.height ){
 	this.height = JS9.Info.HEIGHT;
-	if( JS9.globalOpts.regionDisplay !== "lightwin" ){
+	if( JS9.globalOpts.regDisplay !== "lightwin" ){
 	    this.height += JS9.Info.REGHEIGHT;
 	}
     }
@@ -177,7 +177,7 @@ JS9.Info.display = function(type, message, target, force){
     // plugin-based display: fill in html form
     // (except if this is regions info and we are displaying in a lightwin)
     if( tobj === info &&
-	(type !== "regions" || JS9.globalOpts.regionDisplay !== "lightwin") ){
+	(type !== "regions" || JS9.globalOpts.regDisplay !== "lightwin") ){
 	switch( typeof message ){
 	case "string":
 	    jel = info.jq.find(`[name='${type}']`);
@@ -212,7 +212,7 @@ JS9.Info.display = function(type, message, target, force){
     switch(type){
     case "regions":
 	// display regions in a light window?
-	if( JS9.globalOpts.regionDisplay === "lightwin" ){
+	if( JS9.globalOpts.regDisplay === "lightwin" ){
 	    rid = `${disp.id}_regions`;
 	    el = $(`#${rid}`);
 	    // does window exist (and is not closed)?
