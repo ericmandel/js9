@@ -200,7 +200,7 @@ JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["edit selected region"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["edit selected region(s)"] = function(im, ipos, evt){
     let layer, ao;
     // sanity check
     if( !im ){
@@ -510,7 +510,19 @@ JS9.Keyboard.Actions["send selected region to back"] = function(im, ipos, evt){
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["copy selected region to clipboard"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["copy region(s) to clipboard"] = function(im, ipos, evt){
+    let s;
+    // sanity check
+    if( !im ){ return; }
+    // get selected or all region(s)
+    s = im.listRegions(null, {mode: 1});
+    // copy to clipboard
+    JS9.CopyToClipboard(s, im);
+    return s;
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["copy selected region(s) to clipboard"] = function(im, ipos, evt){
     let s;
     // sanity check
     if( !im ){ return; }

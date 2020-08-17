@@ -5369,7 +5369,7 @@ JS9.Keyboard.Actions["copy value and position to clipboard"] = function(im, ipos
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["edit selected region"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["edit selected region(s)"] = function(im, ipos, evt){
     let layer, ao;
     // sanity check
     if( !im ){
@@ -5679,7 +5679,19 @@ JS9.Keyboard.Actions["send selected region to back"] = function(im, ipos, evt){
 };
 
 // eslint-disable-next-line no-unused-vars
-JS9.Keyboard.Actions["copy selected region to clipboard"] = function(im, ipos, evt){
+JS9.Keyboard.Actions["copy region(s) to clipboard"] = function(im, ipos, evt){
+    let s;
+    // sanity check
+    if( !im ){ return; }
+    // get selected or all region(s)
+    s = im.listRegions(null, {mode: 1});
+    // copy to clipboard
+    JS9.CopyToClipboard(s, im);
+    return s;
+};
+
+// eslint-disable-next-line no-unused-vars
+JS9.Keyboard.Actions["copy selected region(s) to clipboard"] = function(im, ipos, evt){
     let s;
     // sanity check
     if( !im ){ return; }
@@ -6750,15 +6762,12 @@ JS9.Menubar.keyMap = {
     "Mouse/Touch": "toggle mouse/touch plugin",
     "Preferences": "toggle preferences plugin",
     "Shape Layers": "toggle shape layers plugin",
-    "edit selected": "edit selected region",
-    "copy selected": "copy selected region to clipboard",
-    "edit": "edit selected region",
-    "to back": "send selected region to back",
-    "copy": "copy selected region to clipboard",
-    "copy all": "copy all regions to clipboard",
-    "paste to region pos": "paste regions from local clipboard",
+    "copy": "copy region(s) to clipboard",
+    "edit": "edit selected region(s)",
     "paste to current pos": "paste regions to current position",
+    "paste to original pos": "paste regions from local clipboard",
     "undo remove": "undo remove of region(s)",
+    "to back": "send selected region to back",
     "copy wcs pos": "copy wcs position to clipboard",
     "copy value/pos": "copy value and position to clipboard",
     "zoom 1": "reset zoom",
@@ -7640,11 +7649,10 @@ JS9.Menubar.createMenus = function(){
 		name: "Regions:",
 		disabled: true
 	    };
-	    items.configSelReg = xname("edit selected");
-	    items.copySelReg = xname("copy selected");
-	    items.copyAllReg = xname("copy all");
-	    items.pasteReg = xname("paste to region pos");
+	    items.configReg = xname("edit");
+	    items.copyReg = xname("copy");
 	    items.pastePos = xname("paste to current pos");
+	    items.pasteReg = xname("paste to original pos");
 	    items.undoRemove = xname("undo remove");
 	    items[`sep${n++}`] = "------";
 	    items.edittitle2 = {
@@ -7664,19 +7672,7 @@ JS9.Menubar.createMenus = function(){
 			    return;
 			}
 			switch(key){
-			case "copyAllReg":
-			    if( uim ){
-				s = uim.listRegions("all", {mode: 1});
-				JS9.CopyToClipboard(s);
-			    }
-			    break;
-			case "copySelReg":
-			    if( uim ){
-				s = uim.listRegions("selected", {mode: 1});
-				JS9.CopyToClipboard(s);
-			    }
-			    break;
-			case "configSelReg":
+			case "configReg":
 			    if( uim ){
 				ulayer = uim.layers.regions;
 				if( ulayer ){
@@ -7690,6 +7686,12 @@ JS9.Menubar.createMenus = function(){
 							       {multi: true});
 				    }
 				}
+			    }
+			    break;
+			case "copyReg":
+			    if( uim ){
+				s = uim.listRegions(null, {mode: 1});
+				JS9.CopyToClipboard(s);
 			    }
 			    break;
 			case "pasteReg":
@@ -9002,14 +9004,14 @@ JS9.Menubar.createMenus = function(){
 				JS9.OpenRegionsMenu({display: udisp});
 				break;
 			    case "listRegions":
-				uim.listRegions("all", {mode: 2});
+				uim.listRegions(null, {mode: 2});
 				break;
 			    case "createRegions":
 				JS9.globalOpts.regMenuCreate =
 				    !JS9.globalOpts.regMenuCreate;
 				break;
 			    case "removeRegions":
-				uim.removeShapes("regions", "all");
+				uim.removeShapes("regions", null);
 				udisp.clearMessage("regions");
 				break;
 			    case "saveRegions":

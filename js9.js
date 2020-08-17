@@ -215,7 +215,7 @@ JS9.globalOpts = {
 	c: "toggle crosshair",
 	d: "send selected region to back",
 	e: "toggle selected region: include/exclude",
-	"M-e": "edit selected region",
+	"M-e": "edit selected region(s)",
 	i: "refresh image",
 	I: "display full image",
 	"M-i": "display selected cutouts",
@@ -229,8 +229,7 @@ JS9.globalOpts = {
         p: "paste regions to current position",
 	"M-,": "toggle preferences plugin",
 	"M-p": "toggle preferences plugin",
-	r: "copy selected region to clipboard",
-	R: "copy all regions to clipboard",
+	r: "copy region(s) to clipboard",
 	s: "select region",
 	S: "select all regions",
 	"M-s": "toggle shape layers plugin",
@@ -14797,6 +14796,14 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 	    this.regstack = this.regstack.slice(0,JS9.globalOpts.unremoveReg);
 	}
     }
+    //  default value for 'shape' can be 'selected' or 'all'
+    if( !shape ){
+	if( canvas.getActiveObject() ){
+	    shape = "selected";
+	} else {
+	    shape = "all";
+	}
+    }
     // process the specified shapes
     this._selectShapes(layerName, shape, (obj, ginfo) => {
 	let i, child, parent;
@@ -15197,8 +15204,13 @@ JS9.Fabric.refreshShapes = function(layerName){
 // copy one or more shapes to another image
 // call using image context
 JS9.Fabric.copyShapes = function(layerName, to, which){
-    let i, im, s, opts;
+    let i, im, s, opts, layer;
     const ims = [];
+    layer = this.getShapeLayer(layerName);
+    // sanity check
+    if( !layer ){
+	return;
+    }
     if( typeof to === "object" ){
 	ims.push(to);
     } else if( to === "all" ){
@@ -15217,17 +15229,17 @@ JS9.Fabric.copyShapes = function(layerName, to, which){
 	return;
     }
     // if no 'which' specified, first look for "selected"
+    //  default value for 'which' can be 'selected' or 'all'
     if( !which ){
-	s = this.listRegions("selected",
-			     {mode: 1, includedcoords: JS9.globalOpts.regCopyDCoords},
-			     layerName);
+	if( layer.canvas.getActiveObject() ){
+	    which = "selected";
+	} else {
+	    which = "all";
+	}
     }
-    // if no selected regions found, or 'which' was specified, get regions
-    if( !s ){
-	s = this.listRegions(which,
-			     {mode: 1, includedcoords: JS9.globalOpts.regCopyDCoords},
-			     layerName);
-    }
+    // get shapes
+    s = this.listRegions(which,
+	{mode: 1, includedcoords: JS9.globalOpts.regCopyDCoords}, layerName);
     for(i=0; i<ims.length; i++){
 	// use this layer's opts, if possible
 	if( this.display.layers[layerName] ){
@@ -17785,9 +17797,9 @@ JS9.Regions.pasteFromClipboard = function(curpos){
 // ---------------------------------------------------------------------------
 
 // list one or more regions
-JS9.Regions.listRegions = function(which, opts, layer){
+JS9.Regions.listRegions = function(which, opts, layerName){
     let i, j, region, rlen, key, obj, tagjoin, tagstr, iestr, mode, val, got;
-    let txeq, owcsunits, owcssys, wcssys;
+    let txeq, owcsunits, owcssys, wcssys, layer;
     let regstr="";
     let lasttype="none";
     let dotags = false;
@@ -17922,8 +17934,19 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	mode = 3;
     }
     // default is to list the regions layer
-    if( JS9.isNull(layer) ){
-	layer = "regions";
+    layerName = layerName || "regions";
+    layer = this.getShapeLayer(layerName);
+    // sanity check
+    if( !layer ){
+	return;
+    }
+    //  default value for 'which' can be 'selected' or 'all'
+    if( !which ){
+	if( layer.canvas.getActiveObject() ){
+	    which = "selected";
+	} else {
+	    which = "all";
+	}
     }
     // set user-specified wcs, if necessary
     if( opts.wcssys || opts.wcsunits ){
@@ -17939,14 +17962,14 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    this.setWCSUnits(opts.wcsunits, false);
 	}
 	// update wcs values
-	this.updateShapes(layer, which, "export");
+	this.updateShapes(layerName, which, "export");
     }
     // include dcoord shapes?
     if( JS9.isNull(opts.includedcoords) ){
 	opts.includedcoords = JS9.globalOpts.regListDCoords;
     }
     // get specified regions into an array
-    pubs = this.getShapes(layer, which, {includeObj: true});
+    pubs = this.getShapes(layerName, which, {includeObj: true});
     // loop through shapes
     rlen = pubs.length;
     // display tags if at least one is not standard "source,include"
@@ -18149,7 +18172,7 @@ JS9.Regions.listRegions = function(which, opts, layer){
 	    this.setWCSUnits(owcsunits, false);
 	}
 	// restore wcs values
-	this.updateShapes(layer, which, "export");
+	this.updateShapes(layerName, which, "export");
 	JS9.globalOpts.xeqPlugins = txeq;
     }
     // display the region string, if necessary

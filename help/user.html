@@ -221,24 +221,18 @@ via its <b>close</b> button.)
 <li><p><b>Edit:</b> allows you to copy and paste regions, positions,
 and pixel values to/from the clipboard:
 <ul>
-<li><b>edit selected</b> display selected region's configuration window
-(if multiple regions are selected, only one is displayed ... for now)
-<li><b>copy selected</b> copy the selected region to the system
-clipboard, so that you can transfer it to other JS9 displays or to
-programs outside of JS9
-<li><b>copy all</b> copy all regions to the system clipboard,
-so that you can transfer them to other JS9 displays or programs
-outside of JS9
-<li><b>paste to region pos</b> paste previously copied region(s),
-usually to another JS9 display. For security reasons, web pages are
-not permitted to read the system clipboard, so the paste command reads
-an internal variable filled from the previous JS9 copy. Thus, you
-cannot paste data copied from outside JS9. Some day ...
+<li><b>edit</b> if a single region is selected, display its edit window;
+if multiple regions or no regions are selected, display the multi-region window;
+<li><b>copy</b> copy selected region(s) (or all regions, of none are
+selected) to the system clipboard, so that you can transfer to other
+JS9 displays or to programs outside of JS9
 <li><b>paste to current pos</b> paste previously copied region(s) to
 the current mouse (or arrow key) position in a JS9 display. Usually
-you would use the keyboard shortcut (currently capital 'P') for this
+you would use the keyboard shortcut (currently 'p') for this
 sort of pasting, but you also can use the meta key to freeze the mouse
 position and then use this menu option
+<li><b>paste to original pos</b> paste previously copied region(s) to
+their original region position(s), usually in another JS9 display.
 <li><b>undo remove</b> restore the last removed region (or set of removed regions, if more than one was removed in a single operation)
 <li><b>copy wcs pos</b> copy the current WCS position to the system clipboard
 <li><b>copy value/pos</b> copy the current pixel value and WCS position to the system clipboard
