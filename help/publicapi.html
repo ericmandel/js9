@@ -3482,8 +3482,10 @@ returns:
 <li><b>rarr</b>: array of region objects (or text if opts.format is "text")
 </ul>
 <p>
-If the <b>regions</b> argument is not specified, it defaults to "all". You
-can specify regions using any of the following:
+Get information about one or more regions.
+If the <b>regions</b> argument is not specified, it defaults to
+"selected" if there are selected regions, otherwise "all".
+You can specify regions using any of the following:
 <ul>
 <li><b>all</b>: all regions not including child text regions
 <li><b>All</b>: all regions including child text regions
@@ -3650,8 +3652,9 @@ where:
 <li><b>opts</b>: object containing options to change in each region
 </ul>
 Change one or more regions. 
-If the <b>regions</b> argument is not specified, it defaults to "all". You
-can specify a region selector using any of the following:
+If the <b>regions</b> argument is not specified, it defaults to
+"selected" if there are selected regions, otherwise "all".
+You can specify a region selector using any of the following:
 <ul>
 <li><b>all</b>: all regions not including child text regions
 <li><b>All</b>: all regions including child text regions
@@ -3688,8 +3691,9 @@ where:
 Copy regions to a different image. If <b>to</b> is "all", then the regions are
 copied to all images.
 <p>
-If the <b>regions</b> argument is not specified, it defaults to "all". You
-can specify a region selector using any of the following:
+If the <b>regions</b> argument is not specified, it defaults to
+"selected" if there are selected regions, otherwise "all".
+You can specify a region selector using any of the following:
 <ul>
 <li><b>all</b>: all regions not including child text regions
 <li><b>All</b>: all regions including child text regions
@@ -3714,9 +3718,10 @@ where:
 <ul>
 <li><b>regions</b>: which regions to remove
 </ul>
-The selected regions are removed. If the <b>regions</b> argument is
-not specified, it defaults to "all". You can specify a region selector
-using any of the following:
+The selected regions are removed.
+If the <b>regions</b> argument is not specified, it defaults to
+"selected" if there are selected regions, otherwise "all".
+You can specify a region selector using any of the following:
 <ul>
 <li><b>all</b>: all regions not including child text regions
 <li><b>All</b>: all regions including child text regions
@@ -3860,7 +3865,8 @@ specifying which regions make up the selection.
 
 <p>
 If the <b>regions</b> argument is not specified, it defaults to
-"all". You can specify a selector using any of the following:
+"selected" if there are selected regions, otherwise "all".
+You can specify a selector using any of the following:
 <ul>
 <li><b>all</b>: all regions not including child text regions
 <li><b>All</b>: all regions including child text regions
@@ -5758,6 +5764,15 @@ The JS9 Public API is meant to be stable and well-documented. If we are
 forced to make an incompatible change to the API, it will be documented here.
 
 <p>
+<h5>20200815: ChangeRegions, CopyRegions, GetRegions, RemoveRegions, SelectRegions, : default region changed</h5>
+If the <b>regions</b> argument is not specified, it now defaults to
+"selected" if there are selected regions, otherwise "all". Previously it only
+default to "all". You can revert to the previous behavior by changing the
+JS9.globalOpts.regWhichDefault from "auto" to "all". (Note: unless you are
+writing a GUI, you almost certainly should be specifying the regions explicitly
+for these calls).
+
+<p>
 <h5>20200720: ChangeRegions: dx, dy properties renamed to deltax, deltay</h5>
 
 The <b>dx, dy</b> properties of <a href="#JS9.ChangeRegions">
@@ -5851,7 +5866,7 @@ See js9onchange.html for an example of using this callback function.
 
 <p><hr><p>
 
-<h5>Last updated: February 3, 2020</h5>
+<h5>Last updated: August 17, 2020</h5>
 </div>
 
 </body>

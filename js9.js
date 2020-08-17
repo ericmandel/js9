@@ -139,6 +139,7 @@ JS9.globalOpts = {
     localLoadFormat: "image",	// current format when loading local files
     remoteLoadMethod: "proxy",	// proxy or cors when loading remote file
     csvIncludeWCS: true,	// does Get/SaveRegions(csv) include wcs info?
+    regWhichDefault: "auto",	// "auto" => selected or all, "all" is all
     regIncludeJSON: true,	// does SaveRegions(reg) include the json info?
     regIncludeComments: true,	// does SaveRegions(reg) include the comments?
     regListDCoords: false,	// ListRegions(reg) list preserved disp coords?
@@ -12266,7 +12267,9 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    case "polyline":
 	    case "polygon":
 		JS9.Fabric.removePolygonAnchors(dlayer, obj);
-		dlayer.canvas.renderAll();
+		// renderAll() throws an error, might be related to:
+		// http://fabricjs.com/v2-breaking-changes-2
+		// dlayer.canvas.renderAll();
 		break;
 	    }
 	    // region updates
@@ -12284,9 +12287,8 @@ JS9.Fabric.newShapeLayer = function(layerName, layerOpts, divjq){
 	    seloff(dlayer, obj);
 	}
 	// redraw everything
-	// renderAll() throws an error, might be related to breaking changes:
+	// renderAll() throws an error, might be related to:
 	// http://fabricjs.com/v2-breaking-changes-2
-	// but I don't know ...
 	// dlayer.canvas.renderAll();
 	// update multi-select dialog
 	seldialog(opts.e ? -1 : 0);
@@ -14131,8 +14133,6 @@ JS9.Fabric._selectShapes = function(layerName, id, cb){
     if( !this.layers || !layerName || !this.layers[layerName] ){
 	return null;
     }
-    // no id means "all"
-    id = id || "all";
     // if id is a positive int in string format, convert it to it now
     // so we can process it as a region id coming from the command line
     if( (typeof id === "string") && /^[1-9]\d*$/.test(id) ){
@@ -14149,6 +14149,15 @@ JS9.Fabric._selectShapes = function(layerName, id, cb){
 	    group = ao;
 	} else {
 	    group = null;
+	}
+    }
+    // no id usually means "selected" if there are selected regions, else all
+    // (can be turned off by a global for backward compatibility)
+    if( !id ){
+	if( ao && JS9.globalOpts.regWhichDefault === "auto" ){
+	    id = "selected";
+	} else {
+	    id = "all";
 	}
     }
     // but an active group does not mean selected regions are inside it
@@ -14796,14 +14805,6 @@ JS9.Fabric.removeShapes = function(layerName, shape, opts){
 	    this.regstack = this.regstack.slice(0,JS9.globalOpts.unremoveReg);
 	}
     }
-    //  default value for 'shape' can be 'selected' or 'all'
-    if( !shape ){
-	if( canvas.getActiveObject() ){
-	    shape = "selected";
-	} else {
-	    shape = "all";
-	}
-    }
     // process the specified shapes
     this._selectShapes(layerName, shape, (obj, ginfo) => {
 	let i, child, parent;
@@ -15228,16 +15229,7 @@ JS9.Fabric.copyShapes = function(layerName, to, which){
     if( !ims.length ){
 	return;
     }
-    // if no 'which' specified, first look for "selected"
-    //  default value for 'which' can be 'selected' or 'all'
-    if( !which ){
-	if( layer.canvas.getActiveObject() ){
-	    which = "selected";
-	} else {
-	    which = "all";
-	}
-    }
-    // get shapes
+    // list shapes
     s = this.listRegions(which,
 	{mode: 1, includedcoords: JS9.globalOpts.regCopyDCoords}, layerName);
     for(i=0; i<ims.length; i++){
@@ -17939,14 +17931,6 @@ JS9.Regions.listRegions = function(which, opts, layerName){
     // sanity check
     if( !layer ){
 	return;
-    }
-    //  default value for 'which' can be 'selected' or 'all'
-    if( !which ){
-	if( layer.canvas.getActiveObject() ){
-	    which = "selected";
-	} else {
-	    which = "all";
-	}
     }
     // set user-specified wcs, if necessary
     if( opts.wcssys || opts.wcsunits ){
@@ -26183,9 +26167,6 @@ JS9.mkPublic("ChangeRegions", function(...args){
     let region = obj.argv[0];
     let opts = obj.argv[1];
     if( im ){
-	if( !region ){
-	    JS9.error("no regions specified for ChangeRegions");
-	}
 	im.changeShapes("regions", region, opts);
     }
     return null;
@@ -26218,9 +26199,6 @@ JS9.mkPublic("SelectRegions", function(...args){
     region = obj.argv[0];
     opts = obj.argv[1];
     if( im ){
-	if( !region ){
-	    JS9.error("no region specified for SelectRegions");
-	}
 	return im.selectShapes("regions", region, opts);
     }
     return null;
