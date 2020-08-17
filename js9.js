@@ -306,7 +306,7 @@ JS9.globalOpts = {
 	       galactic:"degrees", ecliptic:"degrees", linear:"degrees",
 	       physical:"pixels", image:"pixels"}, // def units for wcs sys
     wcsSetUpdatesDef: true,          // does setWCSUnits() update the default?
-    regionTemplates: ".reg",         // templates for local region file input
+    regTemplates: ".reg",	     // templates for local region file input
     sessionTemplates: ".ses,.js9ses",// templates for local session file input
     colormapTemplates: ".cmap",      // templates for local colormap file input
     catalogTemplates: ".cat,.tab",   // templates for local catalog file input
@@ -10201,7 +10201,7 @@ JS9.Display = function(el){
     // add local file open support
     this.addFileDialog("Load", JS9.globalOpts.imageTemplates);
     this.addFileDialog("RefreshImage", JS9.globalOpts.imageTemplates);
-    this.addFileDialog("LoadRegions", JS9.globalOpts.regionTemplates);
+    this.addFileDialog("LoadRegions", JS9.globalOpts.regTemplates);
     this.addFileDialog("LoadSession", JS9.globalOpts.sessionTemplates);
     this.addFileDialog("LoadColormap", JS9.globalOpts.colormapTemplates);
     this.addFileDialog("LoadCatalog", JS9.globalOpts.catalogTemplates);
@@ -27013,6 +27013,12 @@ JS9.init = function(){
 	JS9.globalOpts.regConfigSize === undefined     ){
 	JS9.globalOpts.regConfigSize = JS9.globalOpts.regionConfigSize;
 	delete JS9.globalOpts.regionConfigSize;
+    }
+    // backward compatibility (we renamed this property 8/2020)
+    if( JS9.globalOpts.regionTemplates !== undefined  &&
+	JS9.globalOpts.regTemplates === undefined     ){
+	JS9.globalOpts.regTemplates = JS9.globalOpts.regionTemplates;
+	delete JS9.globalOpts.regionTemplates;
     }
     // turn off resize on mobile platforms
     if( JS9.BROWSER[3] ){
