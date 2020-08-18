@@ -14,28 +14,24 @@
   <script type="text/javascript" src="js9.min.js"></script>
   <script type="text/javascript" src="js9plugins.js"></script>
   <style type="text/css">
-      #centerdiv {
-          position: absolute;
-          margin: auto;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          width: 512px;
-          height: 512px;
+      #div {
+          position: relative;
+          top:  25px;
+          left: 25px;
       }
   </style>
   <title>JS9</title>
 </head>
 <body>
-    <div id="centerdiv">
+    <div id="div">
     <div class="JS9Menubar"></div>
+    <div class="JS9Toolbar"></div>
     <div class="JS9"></div>
     <div style="margin-top: 2px;"><div class="JS9Statusbar"></div></div>
     </div>
     <script type="text/javascript">
       $(document).ready(function(){
-          $("#centerdiv").draggable({
+          $("#div").draggable({
             handle: "#JS9Menubar",
             opacity: 0.35
           });
