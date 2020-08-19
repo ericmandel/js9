@@ -122,6 +122,7 @@ js9Electron.pdfOpts = {
 js9Electron.contextIsolation = true;           // see security recommendations
 js9Electron.enableRemoteModule = false;        // see security recommendations
 js9Electron.worldSafeExecuteJavaScript = true; // see security recommendations
+js9Electron.nativeWindowOpen = true;           // can't get proxy to work ...
 
 // skip args passed to electron itself
 js9Electron.startArg = 2;
@@ -255,6 +256,7 @@ function createWindow() {
 			 contextIsolation: js9Electron.contextIsolation,
 			 enableRemoteModule: js9Electron.enableRemoteModule,
 			 worldSafeExecuteJavaScript: js9Electron.worldSafeExecuteJavaScript,
+			 nativeWindowOpen: js9Electron.nativeWindowOpen,
 			 preload: js9Electron.preload},
 	width: js9Electron.width,
 	height: js9Electron.height

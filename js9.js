@@ -15741,11 +15741,6 @@ JS9.Fabric.print = function(opts){
     }
     // finish up
     html += "</body></html>";
-    // are we in Electron?
-    // https://github.com/electron/electron/issues/2288
-    if( window.electron ){
-	initialURL = "data:text/html,<html><body><script>window.addEventListener('message', (ev) => {document.documentElement.innerHTML=ev.data; window.setTimeout(() => {window.print()}, 250);},false)</script><p>waiting for image ...</body></html>";
-    }
     // make a new window containing the initial URL
     win = window.open(initialURL, this.id, winopts);
     if( !win ){
@@ -15760,12 +15755,7 @@ JS9.Fabric.print = function(opts){
 	win.document.write(html);
         // must close!
 	win.document.close();
-    } else if( win.postMessage ){
-	// send html to the window with which to reconfigure itself
-	window.setTimeout(() => {
-	    win.postMessage(html, "*");
-	}, JS9.TIMEOUT);
-    } else {
+     } else {
 	JS9.error("no method available for drawing image into print window");
     }
 };
