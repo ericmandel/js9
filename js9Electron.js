@@ -334,6 +334,8 @@ function createWindow() {
 	});
     }
     cmd = "if( typeof JS9 !== 'object' || typeof JS9.Image !== 'function'  ){alert('JS9 was not loaded properly. Please check the paths to the JS9 css and js files in your web page header and try again.');}";
+    // see: https://github.com/electron/electron/issues/23722
+    cmd += ";0";
     js9Electron.win.webContents.executeJavaScript(cmd);
     // processing when document is ready
     cmd = "$(document).ready(() => {";
@@ -438,7 +440,9 @@ function createWindow() {
 	ncmd++;
     }
     if( ncmd ){
-	cmd += '});';
+	cmd += '})';
+	// see: https://github.com/electron/electron/issues/23722
+	cmd += ";0";
 	js9Electron.win.webContents.executeJavaScript(cmd);
     }
 
