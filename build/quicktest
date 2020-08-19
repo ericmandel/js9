@@ -9,6 +9,7 @@ fi
 if [ $? = 0 ]; then
   pgrep -f js9Helper.js >/dev/null || build/nnode
   ./js9 -v -b &
+  sleep 3
   if [ x$FILE != x ]; then
       ./js9load $FILE
       ./js9 SetScale log
