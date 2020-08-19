@@ -408,7 +408,7 @@ JS9.Menubar.createMenus = function(){
 		    disabled: true
 		};
 	    }
-	    if( window.isElectron ){
+	    if( window.electron ){
 		items.openboth  = xname("open ...");
 	    } else {
 		items.openlocal = xname("open local ...");
@@ -577,10 +577,10 @@ JS9.Menubar.createMenus = function(){
 	    };
 	    items.windows.items.lite = xname("light window");
 	    items.windows.items.xnew = xname("separate window");
-	    if( window.isElectron ){
+	    if( window.electron ){
 		items.windows.items.xnew.disabled = true;
 	    }
-	    if( window.isElectron && window.electronIPC ){
+	    if( window.electron ){
 		items.electronHelper = xname("connect to JS9 helper");
 		if(  JS9.helper.connected ){
 		    items.electronHelper.disabled = true;
@@ -624,7 +624,7 @@ JS9.Menubar.createMenus = function(){
 	    if( !tim ){
 		items.print.disabled = true;
 	    }
-	    if( window.isElectron && window.electronIPC ){
+	    if( window.electron ){
 		items.windowPrint = xname("print window ...");
 		items.windowPDF = xname("save window to pdf");
 	    }
@@ -771,9 +771,10 @@ JS9.Menubar.createMenus = function(){
 			    break;
 			case "electronHelper":
 			    // Electron.js: send message to main
-			    if( window.isElectron && window.electronIPC ){
-				try{ window.electronIPC.send("msg",
-							     "startHelper"); }
+			    if( window.electron ){
+				try{
+				    window.electron.sendMsg("startHelper");
+				}
 				catch(e){ /* empty */ }
 			    }
 			    break;
@@ -838,12 +839,12 @@ JS9.Menubar.createMenus = function(){
 			    }
 			    break;
 			case "windowPrint":
-			    if( window.isElectron && window.electronIPC ){
+			    if( window.electron ){
 				JS9.WindowPrint();
 			    }
 			    break;
 			case "windowPDF":
-			    if( window.isElectron && window.electronIPC ){
+			    if( window.electron ){
 				JS9.WindowToPDF();
 			    }
 			    break;

@@ -329,7 +329,7 @@ JS9.favorites = {
 };
 
 // desktop (i.e. Electron.js) defaults
-// always wrap access in if( window.isElectron ){}
+// always wrap access in if( window.electron ){}
 JS9.desktopOpts = {
     currentPath: true,              // files relative to current dir?
     sessionPath: true               // session files relative to session file?
@@ -611,14 +611,10 @@ if( window.hasOwnProperty("Jupyter") ){
     JS9.globalOpts.useWasm = false;
 }
 // JS9 desktop app using Electron.js
-if( window.isElectron ){
+if( window.electron ){
     // turn on wasm if Electron.js supports a recent version of Chromium
     if( JS9.BROWSER[0] === "Chrome" && parseFloat(JS9.BROWSER[1]) >= 66 ){
 	JS9.globalOpts.allowFileWasm = true;
-    }
-    // Electron.js < v5.0.0 SEGVs when clicking colorpicker exit (1/26/2019)
-    if( !window.electronVersion || parseInt(window.electronVersion, 10) < 5 ){
-	JS9.globalOpts.internalColorPicker = false;
     }
     // do we have Node integrated? (same check as in Emscripten/src/shell.js)
     JS9.hasNode = typeof process === "object" && typeof require === "function";
@@ -627,7 +623,7 @@ if( window.isElectron ){
 	JS9.localMount = require("os").hostname() || "localAccess";
     }
     // if multiple instances are running, turn off localStorage
-    if( window.multiElectron ){
+    if( window.electron && window.electron.multiElectron ){
 	JS9.globalOpts.localStorage = false;
     }
     // once recommended by Electron, they removed this by 8.0.0
@@ -6294,7 +6290,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    // existing div
 	    divid.html(hstr);
 	    // Electron does not support search so we implement our own ...
-	    if( window.isElectron ){
+	    if( window.electron ){
 		JS9.searchbar(divid[0]);
 	    }
 	} else {
@@ -6302,7 +6298,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    winFormat = winFormat || a.textWin;
 	    did = JS9.lightWin(id, "inline", hstr, title, winFormat);
 	    // Electron does not support search so we implement our own ...
-	    if( window.isElectron ){
+	    if( window.electron ){
 		JS9.searchbar(did);
 	    }
 	}
@@ -9096,12 +9092,12 @@ JS9.Image.prototype.saveSession = function(file, opts){
 	// object holding session keys
 	const obj = {};
 	// filename
-	if( window.currentDir ){
+	if( window.electron ){
 	    // remove current directory to make it relative
 	    // this allows the session file (and data files) to be moved
 	    // to a machine with a different directory structure, and
 	    // also allows web and desktop sessions to be shared
-	    regexp = new RegExp(`^${window.currentDir}/`);
+	    regexp = new RegExp(`^${window.electron.currentDir}/`);
 	    obj.file = im.file.replace(regexp, "");
 	} else {
 	    obj.file = im.file;
@@ -11196,7 +11192,7 @@ JS9.Display.prototype.loadSession = function(file, opts){
 	    delete obj.sect;
 	}
 	// desktop only: are session file paths relative to the session path?
-	if( window.isElectron               &&
+	if( window.electron                 &&
 	    JS9.desktopOpts.sessionPath     &&
 	    opts.sessionPath                &&
 	    obj.file.charAt(0) !== "/"      &&
@@ -11921,7 +11917,7 @@ JS9.Helper.prototype.connect = function(type){
 	// ignore port on url, add our own
 	this.url = `${this.url.replace(/:[0-9][0-9]*$/, "")}:${JS9.globalOpts.helperPort}`;
 	// the url of the socket.io.js file
-	if( window.multiElectron ){
+	if( window.electron && window.electron.multiElectron ){
 	    // the slim version avoids the 4-second delay compiling the code
 	    // see help/knownissues.html
 	    this.sockurl  = `${this.url}/socket.io/socket.io.slim.js`;
@@ -11930,7 +11926,7 @@ JS9.Helper.prototype.connect = function(type){
 	    this.sockurl  = `${this.url}/socket.io/socket.io.js`;
 	}
 	// make sure helper is running and then connect
-	if( window.isElectron ){
+	if( window.electron ){
 	    this.aliveurl = `${this.url}/alive`;
 	    waitForHelper(this.aliveurl, this.sockurl, tries);
 	} else {
@@ -15747,7 +15743,7 @@ JS9.Fabric.print = function(opts){
     html += "</body></html>";
     // are we in Electron?
     // https://github.com/electron/electron/issues/2288
-    if( window.isElectron ){
+    if( window.electron ){
 	initialURL = "data:text/html,<html><body><script>window.addEventListener('message', (ev) => {document.documentElement.innerHTML=ev.data; window.setTimeout(() => {window.print()}, 250);},false)</script><p>waiting for image ...</body></html>";
     }
     // make a new window containing the initial URL
@@ -16953,8 +16949,8 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	    val = $(form).data("savefile")   ||
 		  this.tmp.saveregionsFile   ||
 		  "js9.reg";
-	    if( window.isElectron && window.currentDir && !val.match(/.*\//) ){
-		val = `${window.currentDir}/${val}`;
+	    if( window.electron && !val.match(/.*\//) ){
+		val = `${window.electron.currentDir}/${val}`;
 	    }
 	    break;
 	case "selectfilter":
@@ -16983,7 +16979,7 @@ JS9.Regions.initConfigForm = function(obj, opts){
     // init options, if necessary
     if( opts.firsttime ){
 	// desktop: display file browser
-	if( window.isElectron ){
+	if( window.electron ){
 	    $(form).find(".rsavebrowse, .rconfigbrowse")
 		.removeClass("nodisplay");
 	}
@@ -19961,7 +19957,7 @@ JS9.Titlebar.init = function(opts){
 // change titlebar when image is loaded
 JS9.Titlebar.imageload = function(im){
     if( im && JS9.globalOpts.updateTitlebar ){
-	if( window.isElectron ){
+	if( window.electron ){
 	    JS9.Titlebar.imid = im.fitsFile || im.file || im.id;
 	} else {
 	    JS9.Titlebar.imid = im.id;
@@ -19973,7 +19969,7 @@ JS9.Titlebar.imageload = function(im){
 // change titlebar when image is displayed
 JS9.Titlebar.imagedisplay = function(im){
     if( im && im.id !== JS9.Titlebar.imid && JS9.globalOpts.updateTitlebar ){
-	if( window.isElectron ){
+	if( window.electron ){
 	    JS9.Titlebar.imid = im.fitsFile || im.file || im.id;
 	} else {
 	    JS9.Titlebar.imid = im.id;
@@ -20648,8 +20644,8 @@ JS9.lookupImage = function(id, display){
 	return null;
     }
     // desktop can have full path in file property, so check that as well
-    if( window.isElectron && window.currentDir ){
-	fp = `${window.currentDir}/${id}`;
+    if( window.electron ){
+	fp = `${window.electron.currentDir}/${id}`;
     }
     for(i=0; i<ilen; i++){
 	im = JS9.images[i];
@@ -20868,16 +20864,16 @@ JS9.fetchURL = function(name, url, opts, handler){
 // deal with pathnames in Electron desktop app
 JS9.saveAs = function(blob, pathname){
     let dirmatch, dirname, basename;
-    if( window.isElectron && window.electronIPC ){
+    if( window.electron ){
 	dirmatch = pathname.match(/.*\//);
 	// if a directory was specified ...
 	if( dirmatch && dirmatch[0] ){
 	    // ... change save directory in Electron before save
 	    dirname = dirmatch[0];
 	    JS9.SaveDir(dirname);
-	} else if( window.currentDir ){
+	} else if( window.electron ){
 	    // ... else show current directory
-	    dirname = window.currentDir;
+	    dirname = window.electron.currentDir;
 	    JS9.SaveDir(dirname);
 	}
 	// get basename
@@ -22642,8 +22638,7 @@ JS9.cleanPath = function(s){
 // desktop only, to make pathname relative to where js9 was started
 JS9.fixPath = function(f, opts){
     opts = opts || {};
-    if( window.isElectron           &&
-	window.currentDir           &&
+    if( window.electron             &&
 	JS9.desktopOpts.currentPath &&
 	opts.fixpath !== false      &&
 	!f.match(JS9.URLEXP)        ){
@@ -22654,7 +22649,7 @@ JS9.fixPath = function(f, opts){
 	} else if( f.match(/^\${JS9_PAGEDIR}\//) ){
 	    f = f.replace(/^\${JS9_PAGEDIR}\//, "");
 	} else if( f.charAt(0) !== "/" ){
-	    f = `${window.currentDir}/${f}`;
+	    f = `${window.electron.currentDir}/${f}`;
 	}
     }
     return f;
@@ -25235,7 +25230,7 @@ JS9.mkPublic("LoadWindow", function(...args){
 	}
         html += `>${body}</body></html>\n`;
         // open the new window
-	if( window.isElectron ){
+	if( window.electron ){
 	    initialURL = "data:text/html,<html><body><script>window.addEventListener('message', (ev) => {document.documentElement.innerHTML=ev.data</script><p></body></html>";
 	}
         win = window.open(initialURL, id, winopts);
@@ -26803,9 +26798,9 @@ JS9.mkPublic("WindowPrint", function(...args){
     if( obj.argv[0] ){
 	opts.opts = obj.argv[0];
     }
-    if( window.isElectron && window.electronIPC ){
+    if( window.electron ){
 	window.setTimeout(() => {
-	    try{ window.electronIPC.send("msg", opts); }
+	    try{ window.electron.sendMsg(opts); }
 	    catch(e){ JS9.error("could not print window", e); }
 	}, JS9.TIMEOUT);
     } else {
@@ -26822,9 +26817,9 @@ JS9.mkPublic("WindowToPDF", function(...args){
     if( obj.argv[1] ){
 	opts.opts = obj.argv[1];
     }
-    if( window.isElectron && window.electronIPC ){
+    if( window.electron ){
 	window.setTimeout(() => {
-	    try{ window.electronIPC.send("msg", opts); }
+	    try{ window.electron.sendMsg(opts); }
 	    catch(e){ JS9.error("could not create window pdf", e); }
 	}, JS9.TIMEOUT);
     } else {
@@ -26842,9 +26837,9 @@ JS9.mkPublic("SaveDir", function(...args){
     } else {
 	JS9.error("SaveDir requires a directory name");
     }
-    if( window.isElectron && window.electronIPC ){
+    if( window.electron ){
 	window.setTimeout(() => {
-	    try{ window.electronIPC.send("msg", opts); }
+	    try{ window.electron.sendMsg(opts); }
 	    catch(e){ JS9.error("could not set save directory", e); }
 	}, JS9.TIMEOUT);
     } else {
@@ -27099,7 +27094,7 @@ JS9.init = function(){
 	JS9.initEmscripten();
     }
     // desktop js9 gets helper from command line via the environment
-    if( window.isElectron && window.electronHelper ){
+    if( window.electron ){
 	JS9.globalOpts.helperType = "nodejs";
     }
     // initialize helper support
@@ -27277,7 +27272,7 @@ $(document).ready(() => {
 	JS9.initFITS();
 	// if Node.js is available (i.e., if enabled in the Electron app),
 	// try to mount the local file system
-	if( window.isElectron && JS9.hasNode ){
+	if( window.electron && JS9.hasNode ){
 	    try{
 		// mount local file system or clear mount point
 		if( !JS9.vmount("/", JS9.localMount) ){
