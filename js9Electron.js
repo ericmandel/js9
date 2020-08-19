@@ -556,26 +556,17 @@ ipcMain.on('msg', (event, arg) => {
 	    case "pdf":
 		file = obj.filename || "js9.pdf";
 		opts = Object.assign(js9Electron.pdfOpts, obj.opts);
-		try{
-		    win.webContents.printToPDF(opts, (e, data) => {
+		win.webContents.printToPDF(opts).then(data => {
+		    fs.writeFile(file, data, (e) => {
 			if( e ){
 			    dialog.showErrorBox("ERROR in WindowToPDF: ",
 						e.message);
 			    return;
 			}
-			fs.writeFile(file, data, (e) => {
-			    if( e ){
-				dialog.showErrorBox("ERROR in WindowToPDF: ",
-						    e.message);
-				return;
-			    }
-			});
 		    });
-		}
-		catch(e){
-		    dialog.showErrorBox("ERROR in WindowToPDF", e.message);
-		}
-
+		}).catch( e => {
+		    dialog.showErrorBox("ERROR in WindowToPDF: ", e.message);
+		});
 		break;
 	    default:
 		break;
