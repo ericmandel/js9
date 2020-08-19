@@ -15688,7 +15688,8 @@ JS9.resetPolygonCenter = function(poly){
 // Print support
 // call using image context
 JS9.Fabric.print = function(opts){
-    let html, key, win, dataURL, divstr, pinst, layer, initialURL;
+    let html, key, win, dataURL, divstr, pinst, layer;
+    let winurl = "";
     let yoff = 0;
     let xoff = 0;
     const divtmpl = "<div style='position:absolute; left:%spx; top:%spx'>";
@@ -15741,8 +15742,12 @@ JS9.Fabric.print = function(opts){
     }
     // finish up
     html += "</body></html>";
-    // make a new window containing the initial URL
-    win = window.open(initialURL, this.id, winopts);
+    // this is needed since v9 ... why???
+    if( window.electron ){
+	winurl = "data:text/html," + html;
+    }
+    // make a new window containing a blank URL
+    win = window.open(winurl, this.id, winopts);
     if( !win ){
 	JS9.error("could not create print window (check your pop-up blockers)");
 	return;
