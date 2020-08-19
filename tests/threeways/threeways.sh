@@ -2,7 +2,7 @@
 # set -x
 
 # blend image directory relative to web page
-BLDIR="./blend"
+BLDIR="../../data/blend"
 
 DOADDON=false
 TIMEOUT=1
@@ -21,8 +21,7 @@ while [ x"$1" != x ]; do
     -i) shift
 	XARGS="$XARGS --id $1"
         shift;;
-    -j) BLDIR="./js9/blend"
-	TIMEOUT=0
+    -j)	TIMEOUT=0
 	XARGS="$XARGS -h https://js9.si.edu"
 	shift;;
     -t) shift

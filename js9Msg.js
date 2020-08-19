@@ -51,9 +51,10 @@ let tries = 20;
 let timeout0 = Math.floor(timeout / tries);
 const args = process.argv.slice(2);
 const istty = process.stdin.isTTY  || false;
+const msgdir = path.dirname(process.env.JS9_MSGSCRIPT||"");
 const srcdir = process.env.JS9_SRCDIR;
 const installdir = process.env.JS9_INSTALLDIR;
-const defpage = "/js9.html";
+const defpage = "js9.html";
 const prog = "js9";
 const sockopts = {
     reconnection: false,
@@ -179,20 +180,22 @@ JS9Msg.prototype.findWebpage = function(){
 	if( process.env.JS9_WEBPAGE ){
 	    webpage = process.env.JS9_WEBPAGE;
 	}
-	if( !webpage && installdir ){
-	    webpage = installdir + defpage;
+	if( !webpage && msgdir && msgdir !== "NONE" ){
+	    webpage = `${msgdir}/${defpage}`;
 	    fs.access(webpage, fs.R_OK, (err) => {
-		if( err ){
-		    webpage = null;
-		}
+		if( err ){ webpage = null; }
 	    });
 	}
-	if( !webpage && srcdir ){
-	    webpage = srcdir + defpage;
+	if( !webpage && installdir && installdir !== "NONE" ){
+	    webpage = `${installdir}/${defpage}`;
 	    fs.access(webpage, fs.R_OK, (err) => {
-		if( err ){
-		    webpage = null;
-		}
+		if( err ){ webpage = null; }
+	    });
+	}
+	if( !webpage && srcdir && srcdir !== "NONE" ){
+	    webpage = `${srcdir}/${defpage}`;
+	    fs.access(webpage, fs.R_OK, (err) => {
+		if( err ){ webpage = null; }
 	    });
 	}
 	if( !webpage && (srcdir || installdir) ){
@@ -375,11 +378,7 @@ while( !done ){
 	  browser = args.shift();
 	  break;
       default:
-	  if( process.env.JS9_BROWSER ){
-	      browser = process.env.JS9_BROWSER;
-	  } else {
-	      error("no browser specified");
-	  }
+	  browser = process.env.JS9_BROWSER || "chrome";
       }
       break;
     case '--help':

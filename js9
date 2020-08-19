@@ -199,15 +199,6 @@ if [ x$ALLFILES = xtrue ]; then
   if [ x"$ELECTRON_EXE" != x ]; then
     # start the app
     DOAPP=true
-  elif [ x"$NODE_EXE" != x ]; then
-    # add -b switch to start a browser
-    if [ x$JS9_BROWSER = x ]; then
-      case $OS in
-        Darwin) JS9_BROWSER="safari" ;;
-        *)      JS9_BROWSER="chrome" ;;
-      esac
-    fi
-    ARGS="-b $JS9_BROWSER"
   fi
 else
   # otherwise look for script-level parameters
@@ -227,7 +218,7 @@ if [ x$DOAPP = xtrue ]; then
   if [ x"$ELECTRON_EXE" != x ]; then
     JS9_XEQ="$ELECTRON_EXE"
   else
-    error "js9 -a requires Electron.js"
+    error "desktop js9 requires Electron.js (https://www.electronjs.org)"
   fi
   MSGSCRIPT="js9Electron.js"
 else
@@ -237,7 +228,7 @@ else
     elif [ x"$ELECTRON_EXE" != x ]; then
       JS9_XEQ="$ELECTRON_EXE"
     else
-      error "js9 scripting requires either Node.js or Electron.js"
+      error "js9 scripting requires Node.js (https://nodejs.org) or Electron.js (https://www.electronjs.org)"
     fi
   fi
   if [ x$DOREG = xtrue ]; then
@@ -259,6 +250,16 @@ elif [ -r "${JS9_SRCDIR}/${MSGSCRIPT}" ]; then
 else
   error "ERROR: can't find ${MSGSCRIPT} (install JS9, or set \$JS9_SRCDIR )"
 fi
+export JS9_MSGSCRIPT
+
+# make sure we have a browser defined
+if [ x$JS9_BROWSER = x ]; then
+    case $OS in
+        Darwin) JS9_BROWSER="safari" ;;
+        *)      JS9_BROWSER="chrome" ;;
+    esac
+fi
+export JS9_BROWSER
 
 # run node or Electron with the msg script
 if [ x$DOVERIFY = xtrue ]; then

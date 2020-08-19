@@ -4,7 +4,7 @@
   "description": "astronomical image display everywhere",
   "main": "js9.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "build/quicktest build/i800400.fits.gz"
   },
   "repository": {
     "type": "git",
