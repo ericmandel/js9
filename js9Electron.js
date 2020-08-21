@@ -102,6 +102,16 @@ js9Electron.helperpage = path.join(__dirname, "js9Helper.js");
 // default name for saved file
 js9Electron.defsave = "js9.save";
 
+// browser window defaults
+js9Electron.webOpts = {
+    nodeIntegration: true,  // https://github.com/electron/electron/issues/23506
+    contextIsolation: true, // see security recommendations ... but see below
+    enableRemoteModule: false,        // see security recommendations
+    worldSafeExecuteJavaScript: true, // see security recommendations
+    nativeWindowOpen: true,           // can't get BrowserWindow one to work ...
+    preload: js9Electron.preload
+};
+
 // pdf options
 js9Electron.printOpts = {
     silent: false,
@@ -117,12 +127,6 @@ js9Electron.pdfOpts = {
     printSelectionOnly: false,
     landscape: false
 };
-
-// browser window defaults
-js9Electron.contextIsolation = true;           // see security recommendations
-js9Electron.enableRemoteModule = false;        // see security recommendations
-js9Electron.worldSafeExecuteJavaScript = true; // see security recommendations
-js9Electron.nativeWindowOpen = true;           // can't get proxy to work ...
 
 // skip args passed to electron itself
 js9Electron.startArg = 2;
@@ -149,8 +153,8 @@ js9Electron.cmdfile = js9Electron.argv.cmdfile;
 js9Electron.doHelper = isTrue(js9Electron.argv.helper, true);
 js9Electron.debug = isTrue(js9Electron.argv.debug, false);
 js9Electron.icon = js9Electron.argv.icon || path.join(__dirname, "/images/js9logo/png/js9logo_64.png");
+js9Electron.hostfs = isTrue(js9Electron.argv.hostfs, false);
 js9Electron.merge = js9Electron.argv.merge;
-js9Electron.node = isTrue(js9Electron.argv.node, false);
 js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || process.env.JS9_WEBPAGE || js9Electron.defpage;
 js9Electron.title = js9Electron.argv.title;
 js9Electron.tmp = js9Electron.argv.tmp || process.env.JS9_TMPDIR || "/tmp";
@@ -162,6 +166,21 @@ js9Electron.savedir = js9Electron.argv.savedir || ".";
 // the list of files to load
 js9Electron.files = js9Electron.argv._;
 
+//  remove backquotes
+js9Electron.page = js9Electron.page.replace(/\\/g,"");
+
+// passed to JS9 in preload so we can bypass default 'false' in js9prefs.js
+process.env.JS9_ELECTRONHELPER = String(js9Electron.doHelper);
+
+// hostfs: turn off contextIsolation so we can have Node for Emscripten
+// the env variable is passed to preload
+if( js9Electron.hostfs ){
+    js9Electron.webOpts.contextIsolation = false;
+    process.env.JS9_HOSTFS = require("os").hostname() || "hostFS";
+} else {
+    process.env.JS9_HOSTFS = "";
+}
+
 // security checks: https://electronjs.org/docs/tutorial/security
 // security check: disallow http except locally
 if( js9Electron.page.match(/^http:\/\//) &&
@@ -171,17 +190,13 @@ if( js9Electron.page.match(/^http:\/\//) &&
     process.exit();
 }
 // security check: disallow node integration with non-local web pages
-if( js9Electron.node                             &&
-    js9Electron.page.match(/^(https?|ftp):\/\//) &&
-    !js9Electron.page.match(/localhost/)         ){
+if( !js9Electron.webOpts.contextIsolation &&
+    js9Electron.page.match(/^(https?|ftp):\/\//)      &&
+    !js9Electron.page.match(/localhost/)              ){
     dialog.showErrorBox("Security Error",
-			"don't enable node with a non-local web page");
+		"can't visit a non-local web page with hostfs enabled");
     process.exit();
 }
-js9Electron.page = js9Electron.page.replace(/\\/g,"");
-
-// passed to JS9 in preload so we can bypass default 'false' in js9prefs.js
-process.env.JS9_ELECTRONHELPER = String(js9Electron.doHelper);
 
 // setup on-will-download callbacks to save files without a dialog box
 function initWillDownload() {
@@ -252,12 +267,7 @@ function createWindow() {
     }
     // create the browser window
     js9Electron.win = new BrowserWindow({
-	webPreferences: {nodeIntegration: js9Electron.node,
-			 contextIsolation: js9Electron.contextIsolation,
-			 enableRemoteModule: js9Electron.enableRemoteModule,
-			 worldSafeExecuteJavaScript: js9Electron.worldSafeExecuteJavaScript,
-			 nativeWindowOpen: js9Electron.nativeWindowOpen,
-			 preload: js9Electron.preload},
+	webPreferences: js9Electron.webOpts,
 	width: js9Electron.width,
 	height: js9Electron.height
     });

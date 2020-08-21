@@ -10,7 +10,7 @@
  *
  */
 
-/*global JS9Prefs, JS9Inline, $, jQuery, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, require, tinycolor */
+/*global JS9Prefs, JS9Inline, $, jQuery, fabric, io, CanvasRenderingContext2D, sprintf, Blob, ArrayBuffer, Uint8Array, Uint16Array, Int8Array, Int16Array, Int32Array, Float32Array, Float64Array, DataView, FileReader, Fitsy, Astroem, dhtmlwindow, saveAs, Spinner, ResizeSensor, Jupyter, gaussBlur, ImageFilters, Plotly, tinycolor */
 
 "use strict";
 
@@ -616,14 +616,12 @@ if( window.electron ){
     if( JS9.BROWSER[0] === "Chrome" && parseFloat(JS9.BROWSER[1]) >= 66 ){
 	JS9.globalOpts.allowFileWasm = true;
     }
-    // do we have Node integrated? (same check as in Emscripten/src/shell.js)
-    JS9.hasNode = typeof process === "object" && typeof require === "function";
-    // mount point for local file system, based on hostname
-    if( JS9.hasNode ){
-	JS9.localMount = require("os").hostname() || "localAccess";
+    // Emscripten mount point for local file system, based on hostname
+    if( window.electron.hostFS ){
+	JS9.hostFS = window.electron.hostFS;
     }
     // if multiple instances are running, turn off localStorage
-    if( window.electron && window.electron.multiElectron ){
+    if( window.electron.multiElectron ){
 	JS9.globalOpts.localStorage = false;
     }
     // once recommended by Electron, they removed this by 8.0.0
@@ -20974,8 +20972,8 @@ JS9.handleFITSFile = function(file, opts, handler){
 // cleanup FITS file by deleting vfile, etc
 JS9.cleanupFITSFile = function(raw, mode){
     let rexp;
-    if( JS9.localMount ){
-	rexp = new RegExp(`^${JS9.localMount}`);
+    if( JS9.hostFS ){
+	rexp = new RegExp(`^${JS9.hostFS}`);
     }
     if( JS9.fits.cleanupFITSFile && raw && raw.hdu && raw.hdu.fits ){
 	// don't delete real local file
@@ -22654,7 +22652,7 @@ JS9.fixPath = function(f, opts){
 JS9.localAccess = function(file){
     let tfile, text;
     // only if local access is turned on and we have a local disk mounted
-    if( !file || !JS9.globalOpts.localAccess || !JS9.localMount ){
+    if( !file || !JS9.globalOpts.localAccess || !JS9.hostFS ){
 	return null;
     }
     // get file without bracket extension
@@ -22662,7 +22660,7 @@ JS9.localAccess = function(file){
     // and file extension
     text = `.${tfile.split(".").pop().toLowerCase()}`;
     // this is the candidate virtual file
-    tfile = `${JS9.localMount}/${tfile}`;
+    tfile = `${JS9.hostFS}/${tfile}`;
     // check for existence
     // note to myself: cfitsio uncompresses .gz files into memory, so
     // there is no benefit to having ".gz" in the localTemplates list.
@@ -27267,16 +27265,16 @@ $(document).ready(() => {
 	JS9.initFITS();
 	// if Node.js is available (i.e., if enabled in the Electron app),
 	// try to mount the local file system
-	if( window.electron && JS9.hasNode ){
+	if( window.electron && JS9.hostFS ){
 	    try{
 		// mount local file system or clear mount point
-		if( !JS9.vmount("/", JS9.localMount) ){
-		    delete JS9.localMount;
+		if( !JS9.vmount("/", JS9.hostFS) ){
+		    delete JS9.hostFS;
 		}
 	    }
 	    catch(e){
 		// no mount point for local file system
-		delete JS9.localMount;
+		delete JS9.hostFS;
 	    }
 	}
 	if( JS9.helper.ready && JS9.inited ){
