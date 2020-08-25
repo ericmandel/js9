@@ -104,9 +104,10 @@ js9Electron.defsave = "js9.save";
 
 // browser window defaults
 js9Electron.webOpts = {
-    nodeIntegration: true,  // https://github.com/electron/electron/issues/23506
-    contextIsolation: true, // see security recommendations ... but see below
+    nodeIntegration: false,  // turn on for emscripten NODEFS support (hostfs)
+    contextIsolation: true,  // but see below, v10.0.0 breaks wasm compilation
     enableRemoteModule: false,        // see security recommendations
+    allowRendererProcessReuse: true,  // https://github.com/electron/electron/issues/18397
     worldSafeExecuteJavaScript: true, // see security recommendations
     nativeWindowOpen: true,           // can't get BrowserWindow one to work ...
     preload: js9Electron.preload
@@ -172,14 +173,18 @@ js9Electron.page = js9Electron.page.replace(/\\/g,"");
 // passed to JS9 in preload so we can bypass default 'false' in js9prefs.js
 process.env.JS9_ELECTRONHELPER = String(js9Electron.doHelper);
 
-// hostfs: turn off contextIsolation so we can have Node for Emscripten
 // the env variable is passed to preload
 if( js9Electron.hostfs ){
-    js9Electron.webOpts.contextIsolation = false;
+    js9Electron.webOpts.nodeIntegration = true;
     process.env.JS9_HOSTFS = require("os").hostname() || "hostFS";
 } else {
+    js9Electron.webOpts.nodeIntegration = false;
     process.env.JS9_HOSTFS = "";
 }
+
+// contextIsolation breaks wasm in v10.0.0
+js9Electron.webOpts.contextIsolation = false;
+process.env.JS9_CONTEXTISOLATION = "false";
 
 // security checks: https://electronjs.org/docs/tutorial/security
 // security check: disallow http except locally
@@ -189,8 +194,8 @@ if( js9Electron.page.match(/^http:\/\//) &&
 			"http protocol is disabled: use https");
     process.exit();
 }
-// security check: disallow node integration with non-local web pages
-if( !js9Electron.webOpts.contextIsolation &&
+// security check: disallow enabling host access with non-local web pages
+if( js9Electron.hostfs                                &&
     js9Electron.page.match(/^(https?|ftp):\/\//)      &&
     !js9Electron.page.match(/localhost/)              ){
     dialog.showErrorBox("Security Error",

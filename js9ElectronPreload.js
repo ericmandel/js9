@@ -1,6 +1,8 @@
 /* global require process */
 
-if( process.env.JS9_HOSTFS ){
+// context isolation must be explicitly turned on because ...
+// ... in 10.0.0, context isolation breaks wasm, so its turned off ...
+if( process.env.JS9_CONTEXTISOLATION !== "true" ){
 
     window.electron = {
 	// electron version
@@ -19,7 +21,7 @@ if( process.env.JS9_HOSTFS ){
 
 } else {
 
-// context isolation will soon be mandatory ... and requires contextBridge
+// context isolation will soon be the default ... and requires contextBridge
 // https://www.electronjs.org/docs/tutorial/context-isolation
 const { contextBridge } = require('electron');
 
