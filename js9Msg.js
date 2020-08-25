@@ -29,7 +29,7 @@ const sockio = require("socket.io-client"),
 
 // internal variables
 let s, msg;
-let host = "";
+let host = os.hostname() || "localhost";
 let browser = "";
 let content = "";
 let webpage = "";
@@ -477,15 +477,16 @@ if( !browser && ((args.length === 0) || (args[0] === "")) ){
 // kind of dumb: we want to convert the host name to an ip address, but the
 // dns.lookup call is asynchronous, so we have to wrap all of the important
 // code in its return func. wish we had a synchronous call!
+// 8/25/2020: don't even send the browserip to the helper, its not reliable
 dns.lookup(host, 4, (err, address, family) => {
     let i;
     if( err ){
 	throw err;
     }
     if( address ){
-	msg.browserip = address;
+	// msg.browserip = address;
 	if( verify ){
-	    console.log('host ip: %s [%s]', msg.browserip, family);
+	    console.log('host ip: %s [%s]', address, family);
 	}
     }
     // debugging
