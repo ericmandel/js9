@@ -20871,11 +20871,7 @@ JS9.saveAs = function(blob, pathname){
 	if( dirmatch && dirmatch[0] ){
 	    // ... change save directory in Electron before save
 	    dirname = dirmatch[0];
-	    JS9.SaveDir(dirname);
-	} else if( window.electron ){
-	    // ... else show current directory
-	    dirname = window.electron.currentDir;
-	    JS9.SaveDir(dirname);
+	    JS9.SaveDir(dirname, {onceOnly: true});
 	}
 	// get basename
 	basename = pathname.split('/').reverse()[0];
@@ -26833,8 +26829,9 @@ JS9.mkPublic("WindowToPDF", function(...args){
 JS9.mkPublic("SaveDir", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const opts = {cmd: "savedir"};
-    if( obj.argv[0] ){
-	opts.opts = obj.argv[0];
+    if( obj.argv[0] !== undefined ){
+	opts.dirname = obj.argv[0];
+	if( obj.argv[1] ){ opts.opts = obj.argv[1]; }
     } else {
 	JS9.error("SaveDir requires a directory name");
     }

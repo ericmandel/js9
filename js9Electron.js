@@ -162,7 +162,7 @@ js9Electron.tmp = js9Electron.argv.tmp || process.env.JS9_TMPDIR || "/tmp";
 js9Electron.renameid = js9Electron.argv.renameid;
 js9Electron.width = js9Electron.argv.width || 1024;
 js9Electron.height = js9Electron.argv.height  || 768;
-js9Electron.savedir = js9Electron.argv.savedir || ".";
+js9Electron.savedir = js9Electron.argv.savedir;
 
 // the list of files to load
 js9Electron.files = js9Electron.argv._;
@@ -172,6 +172,9 @@ js9Electron.page = js9Electron.page.replace(/\\/g,"");
 
 // passed to JS9 in preload so we can bypass default 'false' in js9prefs.js
 process.env.JS9_ELECTRONHELPER = String(js9Electron.doHelper);
+
+// no dialog box if savedir was specified
+js9Electron.savedialog = js9Electron.savedir ? false : true;
 
 // the env variable is passed to preload
 if( js9Electron.hostfs ){
@@ -205,36 +208,44 @@ if( js9Electron.hostfs                                &&
 
 // setup on-will-download callbacks to save files without a dialog box
 function initWillDownload() {
-    if( !js9Electron.willDownload && js9Electron.savedir ){
-	// eslint-disable-next-line no-unused-vars
-	js9Electron.win.webContents.session.on('will-download', (event, item, webContents) => {
-	    const fname = item.getFilename() || js9Electron.defsave;
-	    const dirname = js9Electron.savedir;
-	    const pname = `${dirname}/${fname}`;
-	    // Set the save path, making Electron not to prompt a save dialog.
+    // eslint-disable-next-line no-unused-vars
+    js9Electron.win.webContents.session.on('will-download', (event, item, webContents) => {
+	const fname = item.getFilename() || js9Electron.defsave;
+	const dirname = (js9Electron.savedir || process.cwd() || ".");
+	const pname = `${dirname}/${fname}`;
+	// do we need a dialog box?
+	if( js9Electron.savedialog ){
+	    // dialog options: seed the default path
+	    item.setSaveDialogOptions({defaultPath: pname});
+	} else {
+	    // set save path: Electron will not to prompt a save dialog
 	    item.setSavePath(pname);
-	    item.on('updated', (event, state) => {
-		if (state === 'interrupted') {
+	    // reset save path, if necessary
+	    if( js9Electron.savedirOnce !== undefined ){
+		js9Electron.savedir = js9Electron.savedirOnce;
+		js9Electron.savedialog = js9Electron.savedir ? false : true;
+		delete js9Electron.savedirOnce;
+	    }
+	}
+	item.on('updated', (event, state) => {
+	    if (state === 'interrupted') {
+		// eslint-disable-next-line no-console
+		console.log(`Save interrupted: ${pname}`);
+	    } else if (state === 'progressing') {
+		if (item.isPaused()) {
 		    // eslint-disable-next-line no-console
-		    console.log(`Save interrupted: ${pname}`);
-		} else if (state === 'progressing') {
-		    if (item.isPaused()) {
-			// eslint-disable-next-line no-console
-			console.log(`Save paused: ${pname}`);
-		    }
+		    console.log(`Save paused: ${pname}`);
 		}
-	    });
-	    item.once('done', (event, state) => {
-		if (state !== 'completed') {
-		    // eslint-disable-next-line no-console
-		    dialog.showErrorBox("Error saving file",
-					`${pname} [${state}]`);
-		}
-	    });
+	    }
 	});
-	// only need to do once
-	js9Electron.willDownload = true;
-    }
+	item.once('done', (event, state) => {
+	    if( state !== 'completed' && state !== "cancelled" ){
+		// eslint-disable-next-line no-console
+		dialog.showErrorBox("Error saving file",
+				    `${pname} [${state}]`);
+	    }
+	});
+    });
 }
 
 // create a new window for a JS9 web page
@@ -340,10 +351,8 @@ function createWindow() {
     }
     // load the web page
     js9Electron.win.loadURL(js9Electron.page);
-    // download to a specfied directory (without using a dialog box)?
-    if( js9Electron.savedir ){
-	initWillDownload();
-    }
+    // init download support
+    initWillDownload();
     // open the DevTools, if necessary
     if( js9Electron.debug ){
 	// hack to avoid console spam:
@@ -538,7 +547,7 @@ app.on('activate', () => {
 });
 
 // process messages from js9
-ipcMain.on('msg', (event, arg) => {
+ipcMain.on("msg", (event, arg) => {
     var obj, file, opts;
     var win = js9Electron.win;
     switch(arg){
@@ -556,10 +565,11 @@ ipcMain.on('msg', (event, arg) => {
 	if( typeof obj === "object" ){
 	    switch(obj.cmd){
 	    case "savedir":
-		if( obj.opts ){
-		    js9Electron.savedir = obj.opts;
-		    initWillDownload();
+		if( obj.opts && obj.opts.onceOnly ){
+		    js9Electron.savedirOnce = js9Electron.savedir || "";
 		}
+		js9Electron.savedir = obj.dirname;
+		js9Electron.savedialog = js9Electron.savedir ? false : true;
 		break;
 	    case "print":
 		opts = Object.assign(js9Electron.printOpts, obj.opts);
