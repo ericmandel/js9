@@ -16628,8 +16628,12 @@ JS9.Regions.initConfigForm = function(obj, opts){
 	return t;
     };
     // which wcssys do we use? edit version, if available
-    if( obj && obj.pub && obj.pub.wcsconfig && obj.pub.wcsconfig.wcssys  ){
-	wcssys = obj.pub.wcsconfig.wcssys;
+    if( obj && obj.pub ){
+	if( obj.pub.wcsconfig && obj.pub.wcsconfig.wcssys  ){
+	    wcssys = obj.pub.wcsconfig.wcssys;
+	} else {
+	    wcssys = this.params.wcssys;
+	}
     } else {
 	wcssys = this.params.wcssys;
 	// fake obj: makes the checks easier, avoid if( obj ... ) everywhere
