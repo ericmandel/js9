@@ -129,7 +129,12 @@ JS9.Console.xeq = function(){
     cmd = tokens[0];
     // create args array
     for(i=1; i<tokens.length; i++){
-	args.push(tokens[i]);
+	// handle pseudo-null strings specially
+	if( tokens[i].match(/^"\s*"$/) || tokens[i].match(/^'\s*'$/) ){
+	    args.push("");
+	} else {
+	    args.push(tokens[i]);
+	}
     }
     // save history, if necessary
     if( !this.hist.length || cmdstring !== this.hist[this.hist.length-1] ){
