@@ -26792,10 +26792,10 @@ JS9.mkPublic("LightWindow", function(...args){
 JS9.mkPublic("WindowPrint", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const opts = {cmd: "print"};
-    if( obj.argv[0] ){
-	opts.opts = obj.argv[0];
-    }
     if( window.electron ){
+	if( obj.argv[0] ){
+	    opts.opts = obj.argv[0];
+	}
 	window.setTimeout(() => {
 	    try{ window.electron.sendMsg(opts); }
 	    catch(e){ JS9.error("could not print window", e); }
@@ -26810,11 +26810,11 @@ JS9.mkPublic("WindowPrint", function(...args){
 JS9.mkPublic("WindowToPDF", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const opts = {cmd: "pdf"};
-    opts.filename = obj.argv[0] || "js9.pdf";
-    if( obj.argv[1] ){
-	opts.opts = obj.argv[1];
-    }
     if( window.electron ){
+	opts.filename = obj.argv[0] || "js9.pdf";
+	if( obj.argv[1] ){
+	    opts.opts = obj.argv[1];
+	}
 	window.setTimeout(() => {
 	    try{ window.electron.sendMsg(opts); }
 	    catch(e){ JS9.error("could not create window pdf", e); }
@@ -26829,13 +26829,13 @@ JS9.mkPublic("WindowToPDF", function(...args){
 JS9.mkPublic("SaveDir", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const opts = {cmd: "savedir"};
-    if( obj.argv[0] !== undefined ){
-	opts.dirname = obj.argv[0];
-	if( obj.argv[1] ){ opts.opts = obj.argv[1]; }
-    } else {
-	JS9.error("SaveDir requires a directory name");
-    }
     if( window.electron ){
+	if( obj.argv[0] !== undefined ){
+	    opts.dirname = obj.argv[0];
+	    if( obj.argv[1] ){ opts.opts = obj.argv[1]; }
+	} else {
+	    JS9.error("SaveDir requires a directory name");
+	}
 	window.setTimeout(() => {
 	    try{ window.electron.sendMsg(opts); }
 	    catch(e){ JS9.error("could not set save directory", e); }
@@ -26844,6 +26844,7 @@ JS9.mkPublic("SaveDir", function(...args){
 	JS9.error("SaveDir is only available for the JS9 desktop app");
     }
 });
+
 // ---------------------------------------------------------------------
 // end of JS9 Public Interface
 // ---------------------------------------------------------------------
