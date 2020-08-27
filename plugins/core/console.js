@@ -120,7 +120,7 @@ JS9.Console.out = function(s, c){
 JS9.Console.xeq = function(){
     let i, cmd, obj, msg;
     const cmdstring = this.consoleConjq.find(".JS9CmdIn:last").val();
-    const tokens = cmdstring.replace(/ {2,}/g, " ").split(" ");
+    const tokens = cmdstring.trim().split(/\s+/);
     const args = [];
     // skip blank lines
     if( !tokens[0] ){
