@@ -29,6 +29,15 @@ CF="--config-cache"
 echo "configure for: " $name
 
 case $name in
+  app|js9app)
+  ./configure 	$CF							\
+		--with-helper="socket.io"				\
+		--with-cfitsio=$HOME					\
+		--prefix=$HOME/js9app/src				\
+		--with-webdir=$HOME/js9app/src				\
+		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
+  ;;
+
   baba|baba.local|baba-nodejs)
   ./configure 	$CF							\
 		--with-helper="socket.io"				\
