@@ -64,6 +64,8 @@
     }
 
     function getRADec(div, display) {
+	var owcssys, txeq;
+
 	function status(text) {
 	    $(div).find(".status").html(text);
 	}
@@ -87,6 +89,13 @@
 	} else {
 	    var im = JS9.GetImage({display: display});
 
+	    owcssys = im.getWCSSys();
+	    if( owcssys === "image" || owcssys === "physical" ){
+		txeq = JS9.globalOpts.xeqPlugins;
+		JS9.globalOpts.xeqPlugins = false;
+		im.setWCSSys("native", false);
+	    }
+
 	    var coords = JS9.pix2wcs(im.raw.wcs, im.raw.header.NAXIS1/2, im.raw.header.NAXIS2/2).split(/ +/);
 
 	    var c0     = JS9.PixToWCS(im.raw.header.NAXIS1/2+1, im.raw.header.NAXIS2/2+1, {display: im});
@@ -104,6 +113,11 @@
 	    c2 = JS9.PixToWCS(im.raw.header.NAXIS1/2+1, im.raw.header.NAXIS2+1, {display: im});
 
 	    form.height.value = Math.floor(Math.abs((c1.dec-c2.dec)*60)*10)/10;
+
+	    if( owcssys === "image" || owcssys === "physical" ){
+		im.setWCSSys(owcssys, false);
+		JS9.globalOpts.xeqPlugins = txeq;
+	    }
 	}
     }
 
