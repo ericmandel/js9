@@ -5,7 +5,7 @@
   "main": "js9.js",
   "scripts": {
     "start": "build/quicktest",
-    "test":  "build/quicktest build/i800400.fits.gz"
+    "test": "build/quicktest build/i800400.fits.gz"
   },
   "repository": {
     "type": "git",
@@ -37,6 +37,6 @@
     "ps-node": "^0.1.0",
     "rimraf": "^1.0.0",
     "socket.io": "^2.1.1",
-    "uuid": "^3.2.1"
+    "uuid": "^3.4.0"
   }
 }
