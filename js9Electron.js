@@ -167,6 +167,19 @@ js9Electron.savedir = js9Electron.argv.savedir;
 // the list of files to load
 js9Electron.files = js9Electron.argv._;
 
+// are we in an app or run from the js9 script (where JS9_MSGSRIPT is defined)?
+// if we are in an app, add the accompanying bin directory to the path
+if( !process.env.JS9_MSGSCRIPT ){
+    js9Electron.appbin = path.join(__dirname, 'bin');
+    if( fs.existsSync(js9Electron.appbin) ){
+	// add app bin directory to path
+	process.env.PATH += `:${js9Electron.appbin}`;
+    } else {
+	// shouldn't happen
+	delete js9Electron.appbin;
+    }
+}
+
 //  remove backquotes
 js9Electron.page = js9Electron.page.replace(/\\/g,"");
 
