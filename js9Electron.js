@@ -28,6 +28,7 @@ const dialog = electron.dialog;
 // shell support
 const shell = electron.shell;
 
+const os = require('os');
 const path = require('path');
 const fs = require('fs');
 const proc = require('child_process');
@@ -168,9 +169,10 @@ js9Electron.savedir = js9Electron.argv.savedir;
 js9Electron.files = js9Electron.argv._;
 
 // are we in an app or run from the js9 script (where JS9_MSGSRIPT is defined)?
-// if we are in an app, add the accompanying bin directory to the path
+// if we are in an app, add the host-specific bin directory to the path
 if( !process.env.JS9_MSGSCRIPT ){
-    js9Electron.appbin = path.join(__dirname, 'bin');
+    js9Electron.appbin = path.join(__dirname,
+				   `${os.platform()}-${os.arch()}/bin`);
     if( fs.existsSync(js9Electron.appbin) ){
 	// add app bin directory to path
 	process.env.PATH += `:${js9Electron.appbin}`;
