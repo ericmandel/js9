@@ -6,7 +6,7 @@
  * Organization: Harvard Smithsonian Center for Astrophysics, Cambridge MA
  * Contact: saord@cfa.harvard.edu
  *
- * Copyright (c) 2012 - 2019 Smithsonian Astrophysical Observatory
+ * Copyright (c) 2012 - 2020 Smithsonian Astrophysical Observatory
  *
  *
  */
