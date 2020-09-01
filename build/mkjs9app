@@ -1,6 +1,9 @@
 #!/bin/bash
 # set -x
 
+printf "\nThis is the old mkjs9app script. Please run the script in js9app/build,\nwhich utilizes electron-forge. See: https://github.com/ericmandel/js9app.\n\n"
+exit 1
+
 PLATFORM=`uname -s`
 PKG="package.json"
 CDIR=`pwd`

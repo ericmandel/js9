@@ -564,9 +564,6 @@ Makefile:	Makefile.in
 astroem:	FORCE
 		@(make clean; cd astroem && make && make install && make clean)
 
-js9app:		FORCE
-		@(cd .. && rm -rf js9.app && cd js9 && $(BSCR)/mkjs9app)
-
 errcheck:	FORCE
 		@(egrep '[^x]error|warning|ld:|collect2:|make:' foo | \
 		  egrep -v "^lex.*but not used"; true)
