@@ -23,7 +23,7 @@ const sockio = require("socket.io-client"),
       fs = require('fs'),
       path = require('path'),
       dns = require('dns'),
-      opn = require('opn'),
+      open = require('open'),
       timers = require('timers'),
       readline = require("readline");
 
@@ -242,7 +242,7 @@ JS9Msg.prototype.startBrowser = function(){
     if( verify ){
 	console.log("starting webpage: %s in browser: %s", webpage, browser);
     }
-    return opn(webpage, opts);
+    return open(webpage, opts);
 };
 
 // send: send message, display results (and maybe exit)

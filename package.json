@@ -21,19 +21,20 @@
   "bugs": {
     "url": "https://github.com/ericmandel/js9/issues"
   },
+  "homepage": "https://js9.si.edu",
   "bundledDependencies": [
     "connected-domain",
     "minimist",
-    "uuid",
-    "opn",
+    "open",
     "ps-node",
     "rimraf",
     "socket.io",
-    "table-parser"
+    "table-parser",
+    "uuid"
   ],
-  "homepage": "https://js9.si.edu",
   "dependencies": {
     "minimist": "^1.2.5",
+    "open": "^7.2.1",
     "ps-node": "^0.1.0",
     "rimraf": "^1.0.0",
     "socket.io": "^2.1.1",
