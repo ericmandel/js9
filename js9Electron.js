@@ -181,13 +181,15 @@ if( !process.env.JS9_MSGSCRIPT ){
 	// add app bin directory to path
 	process.env.PATH += `:${js9Electron.appbin}`;
     } else {
-	// shouldn't happen
+	// shouldn't happen, but its not an app
 	delete js9Electron.appbin;
 	js9Electron.isApp = false;
 	process.env.JS9_APP = "false";
     }
 } else {
+    // not an app
     js9Electron.isApp = false;
+    process.env.JS9_APP = "false";
 }
 
 // app: try to change current directory if we're in /
