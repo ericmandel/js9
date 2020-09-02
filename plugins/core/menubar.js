@@ -627,6 +627,9 @@ JS9.Menubar.createMenus = function(){
 	    if( window.electron ){
 		items.windowPrint = xname("print window ...");
 		items.windowPDF = xname("save window to pdf");
+		if( window.electron.app ){
+		    items.saveScript = xname("save messaging script");
+		}
 	    }
 	    // plugins
 	    for(i=0; i<JS9.plugins.length; i++){
@@ -846,6 +849,11 @@ JS9.Menubar.createMenus = function(){
 			case "windowPDF":
 			    if( window.electron ){
 				JS9.WindowToPDF();
+			    }
+			    break;
+			case "saveScript":
+			    if( window.electron && window.electron.app ){
+				JS9.SaveScript();
 			    }
 			    break;
 			case "separate":

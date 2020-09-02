@@ -26824,6 +26824,22 @@ JS9.mkPublic("WindowToPDF", function(...args){
     }
 });
 
+// save js9 messaging script (Desktop JS9 only)
+// eslint-disable-next-line no-unused-vars
+JS9.mkPublic("SaveScript", function(...args){
+    const obj = JS9.parsePublicArgs(args);
+    const opts = {cmd: "script"};
+    if( window.electron ){
+	opts.filename = obj.argv[0] || "js9msg";
+	window.setTimeout(() => {
+	    try{ window.electron.sendMsg(opts); }
+	    catch(e){ JS9.error("could not create messaging script", e); }
+	}, JS9.TIMEOUT);
+    } else {
+	JS9.error("SaveScript is only available for the JS9 desktop app");
+    }
+});
+
 // set save directory (Desktop JS9 only)
 // eslint-disable-next-line no-unused-vars
 JS9.mkPublic("SaveDir", function(...args){

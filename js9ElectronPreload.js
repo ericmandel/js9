@@ -11,6 +11,8 @@ if( process.env.JS9_CONTEXTISOLATION !== "true" ){
 	currentDir: process.cwd(),
 	// flag if we are using a helper
 	helper: process.env.JS9_ELECTRONHELPER === "true" ? true : false,
+	// flag if we are in an app
+	app: process.env.JS9_APP === "true" ? true : false,
 	// allow communication back to the renderer
 	sendMsg: (opts) => require("electron").ipcRenderer.send("msg", opts),
 	// host file system mount
@@ -34,6 +36,8 @@ contextBridge.exposeInMainWorld(
 	currentDir: process.cwd(),
 	// flag if we are using a helper
 	helper: process.env.JS9_ELECTRONHELPER === "true" ? true : false,
+	// flag if we are in an app
+	app: process.env.JS9_APP === "true" ? true : false,
 	// allow communication back to the renderer
 	sendMsg: (opts) => require("electron").ipcRenderer.send("msg", opts),
 	// host file system mount

@@ -172,13 +172,32 @@ js9Electron.files = js9Electron.argv._;
 // if we are in an app, add the host-specific bin directory to the path
 if( !process.env.JS9_MSGSCRIPT ){
     js9Electron.appbin = path.join(__dirname,
-				   `${os.platform()}-${os.arch()}/bin`);
+				   `${os.platform()}-${os.arch()}`,
+				   "bin");
     if( fs.existsSync(js9Electron.appbin) ){
+	// truly an app
+	js9Electron.isApp = true;
+	process.env.JS9_APP = "true";
 	// add app bin directory to path
 	process.env.PATH += `:${js9Electron.appbin}`;
     } else {
 	// shouldn't happen
 	delete js9Electron.appbin;
+	js9Electron.isApp = false;
+	process.env.JS9_APP = "false";
+    }
+} else {
+    js9Electron.isApp = false;
+}
+
+// app: try to change current directory if we're in /
+if( js9Electron.isApp && process.cwd() === "/" ){
+    if( process.env.JS9_HOME ){
+	try{ process.chdir(process.env.JS9_HOME); }
+	catch(e){ /* empty */ }
+    } else if( process.env.HOME ){
+	try{ process.chdir(process.env.HOME); }
+	catch(e){ /* empty */ }
     }
 }
 
@@ -227,7 +246,7 @@ function initWillDownload() {
     js9Electron.win.webContents.session.on('will-download', (event, item, webContents) => {
 	const fname = item.getFilename() || js9Electron.defsave;
 	const dirname = (js9Electron.savedir || process.cwd() || ".");
-	const pname = `${dirname}/${fname}`;
+	const pname = path.join(dirname, fname);
 	// do we need a dialog box?
 	if( js9Electron.savedialog ){
 	    // dialog options: seed the default path
@@ -357,7 +376,7 @@ function createWindow() {
     if( !js9Electron.page.includes("://") ){
 	if( !path.isAbsolute(js9Electron.page) ){
 	    if( process.env.PWD ){
-		js9Electron.page = `${process.env.PWD}/${js9Electron.page}`;
+		js9Electron.page = path.join(process.env.PWD, js9Electron.page);
 	    } else {
 		js9Electron.page = path.relative(__dirname, js9Electron.page);
 	    }
@@ -414,7 +433,7 @@ function createWindow() {
 	// relative data paths must be relative to js9Electron.js script
 	if( !file.match(/^(https?|ftp):\/\//) && !path.isAbsolute(file) ){
 	    if( process.env.PWD ){
-		file = `${process.env.PWD}/${file}`;
+		file = path.join(process.env.PWD, file);
 	    } else {
 		file = path.relative(__dirname, file);
 	    }
@@ -563,7 +582,7 @@ app.on('activate', () => {
 
 // process messages from js9
 ipcMain.on("msg", (event, arg) => {
-    var obj, file, opts;
+    var s, obj, opts;
     var win = js9Electron.win;
     switch(arg){
     case "startHelper":
@@ -602,9 +621,9 @@ ipcMain.on("msg", (event, arg) => {
 		}
 		break;
 	    case "pdf":
-		file = obj.filename || "js9.pdf";
 		opts = Object.assign(js9Electron.pdfOpts, obj.opts);
 		win.webContents.printToPDF(opts).then(data => {
+		    let file = obj.filename || "js9.pdf";
 		    fs.writeFile(file, data, (e) => {
 			if( e ){
 			    dialog.showErrorBox("ERROR in WindowToPDF: ",
@@ -615,6 +634,37 @@ ipcMain.on("msg", (event, arg) => {
 		}).catch( e => {
 		    dialog.showErrorBox("ERROR in WindowToPDF: ", e.message);
 		});
+		break;
+	    case "script":
+		if( js9Electron.appbin ){
+		    s = path.join(js9Electron.appbin, "js9");
+		    fs.readFile(s, "utf-8", (err, data) => {
+			let dir, file;
+			if( err ){
+			    dialog.showErrorBox("ERROR in SaveScript: ",
+						err.message);
+			    return;
+			}
+			dir = js9Electron.savedir || process.cwd() || ".";
+			file = path.join(dir, obj.filename || "js9msg");
+			data = data
+			    .replace(/JS9_SRCDIR=".*"/, `JS9_SRCDIR="${__dirname}"`)
+			    .replace(/JS9_INSTALLDIR=".*"/, `JS9_INSTALLDIR="${__dirname}"`);
+			fs.writeFile(file, data, (err) => {
+			    if( err ){
+				dialog.showErrorBox("ERROR in SaveScript: ",
+						    err.message);
+				return;
+			    }
+			    fs.chmod(file, 0o755, (err) => {
+				if( err ){
+				    dialog.showErrorBox("ERROR in SaveScript: ",
+							err.message);
+				}
+			    });
+			});
+		    });
+		}
 		break;
 	    default:
 		break;
