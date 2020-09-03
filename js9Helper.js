@@ -17,6 +17,7 @@
 
 // load required modules
 const http = require('http'),
+      os = require('os'),
       path = require('path'),
       https = require('https'),
       Server = require('socket.io'),
@@ -340,6 +341,10 @@ const loadPreferences = function(prefs){
 	// initialize the wrapper path, if necessary
 	if( !globalOpts.analysisWrapPath){
 	    globalOpts.analysisWrapPath = globalOpts.analysisWrappers;
+	}
+	// use system tmp directory for workDir, if necessary
+	if( globalOpts.workDir === "$tmp" ){
+	    globalOpts.workDir = os.tmpdir();
 	}
     }
 };
