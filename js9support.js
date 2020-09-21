@@ -66886,7 +66886,7 @@ module.exports = ZStream;
 },{}]},{},[1])
 (1)
 });(function (global, factory) {
-  if (typeof define === "function" && define.amd) {
+  if (typeof define === "function" && define.amd && typeof Jupyter === "undefined") {
     define([], factory);
   } else if (typeof exports !== "undefined") {
     factory();
