@@ -48,15 +48,73 @@ function isTrue(s, d){
     return !!JSON.parse(String(s).toLowerCase());
 }
 
+// load preference file, if possible
+const loadPreferences = function(prefs){
+    let s, obj, tobj, opt, otype, jtype, val;
+    if( fs.existsSync(prefs) ){
+	s = fs.readFileSync(prefs, "utf-8");
+    } else if( typeof prefs === "string" ){
+	s = `{"cmdlineOpts": ${prefs}}`;
+    }
+    if( s ){
+	try{ obj = JSON.parse(s.toString()); }
+	catch(e){
+	    dialog.showErrorBox("JSON Error", `can't parse ${prefs}: ${s}`);
+	}
+	// look for top-level objects
+	for( tobj in obj ){
+	    if( obj.hasOwnProperty(tobj) && typeof obj[tobj] === "object" ){
+		// process each property of this object
+		for( opt in obj[tobj] ){
+		    if( obj[tobj].hasOwnProperty(opt) ){
+			val = obj[tobj][opt];
+			otype = typeof val;
+			jtype = typeof js9Electron[tobj][opt];
+			if( (jtype === otype) || (jtype === "undefined") ){
+			    switch(otype){
+			    case "number":
+				js9Electron[tobj][opt] = val;
+				break;
+			    case "boolean":
+				js9Electron[tobj][opt] = val;
+				break;
+			    case "string":
+				switch(tobj){
+				case "cmdLineOpts":
+				    switch(opt){
+				    case "icon":
+					if( !path.isAbsolute(val) ){
+					    val = path.join(__dirname, val);
+					}
+					break;
+				    }
+				    break;
+				}
+				js9Electron[tobj][opt] = val;
+				break;
+			    case "object":
+				js9Electron[tobj][opt] = val;
+				break;
+			    default:
+				break;
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+};
+
 // start up a JS9 helper, if possible and necessary
 function startHelper(mode){
     var domerge = () => {
 	try{
 	    proc.exec(`js9 merge "${js9Electron.merge}"`);
 	}
-	catch(e){ 
-	    dialog.showErrorBox("Error",
-	    `can't merge: ${js9Electron.merge}`, e.message);
+	catch(e){
+	    dialog.showErrorBox("Error merging helper",
+				`can't merge: ${js9Electron.merge}`);
 	}
     };
     // start up the helper first, if necessary
@@ -130,6 +188,19 @@ js9Electron.pdfOpts = {
     landscape: false
 };
 
+// command line defaults
+js9Electron.cmdlineOpts = {
+    id: "JS9",
+    doHelper: true,
+    debug: false,
+    icon: path.join(__dirname, "/images/js9logo/png/js9logo_64.png"),
+    hostfs: false,
+    page: process.env.JS9_WEBPAGE || js9Electron.defpage,
+    tmp: process.env.JS9_TMPDIR || "/tmp",
+    width: 1024,
+    height: 768
+};
+
 // skip args passed to electron itself
 js9Electron.startArg = 2;
 for(let i=1; i<process.argv.length; i++){
@@ -148,22 +219,40 @@ for(let i=js9Electron.startArg; i<process.argv.length; i++){
 }
 js9Electron.argv = require('minimist')(js9Electron.args, {stopEarly:true});
 
+// maybe override defaults using json file
+// (this is where the Mac app gets its configuration)
+js9Electron.prefsFile = path.join(__dirname, "js9Electron.json");
+if( fs.existsSync(js9Electron.prefsFile) ){
+    loadPreferences(js9Electron.prefsFile);
+} else {
+    delete js9Electron.prefsFile;
+}
+// also look in current directory, if we are running from a script
+if( process.env.PWD && process.env.JS9_MSGSCRIPT ){
+    js9Electron.prefsFile2 = path.join(process.env.PWD, "js9Electron.json");
+    if( fs.existsSync(js9Electron.prefsFile2) ){
+	loadPreferences(js9Electron.prefsFile2);
+    } else {
+	delete js9Electron.prefsFile2;
+    }
+}
+
 // command line switch options
-js9Electron.id = js9Electron.argv.i || js9Electron.argv.id || "JS9";
-js9Electron.cmds = js9Electron.argv.cmds;
-js9Electron.cmdfile = js9Electron.argv.cmdfile;
-js9Electron.doHelper = isTrue(js9Electron.argv.helper, true);
-js9Electron.debug = isTrue(js9Electron.argv.debug, false);
-js9Electron.icon = js9Electron.argv.icon || path.join(__dirname, "/images/js9logo/png/js9logo_64.png");
-js9Electron.hostfs = isTrue(js9Electron.argv.hostfs, false);
-js9Electron.merge = js9Electron.argv.merge;
-js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || process.env.JS9_WEBPAGE || js9Electron.defpage;
-js9Electron.title = js9Electron.argv.title;
-js9Electron.tmp = js9Electron.argv.tmp || process.env.JS9_TMPDIR || "/tmp";
-js9Electron.renameid = js9Electron.argv.renameid;
-js9Electron.width = js9Electron.argv.width || 1024;
-js9Electron.height = js9Electron.argv.height  || 768;
-js9Electron.savedir = js9Electron.argv.savedir;
+js9Electron.id = js9Electron.argv.i || js9Electron.argv.id || js9Electron.cmdlineOpts.id;
+js9Electron.cmds = js9Electron.argv.cmds || js9Electron.cmdlineOpts.cmds;
+js9Electron.cmdfile = js9Electron.argv.cmdfile || js9Electron.cmdlineOpts.cmdfile;
+js9Electron.doHelper = isTrue(js9Electron.argv.helper, js9Electron.cmdlineOpts.doHelper);
+js9Electron.debug = isTrue(js9Electron.argv.debug, js9Electron.cmdlineOpts.debug);
+js9Electron.icon = js9Electron.argv.icon || js9Electron.cmdlineOpts.icon;
+js9Electron.hostfs = isTrue(js9Electron.argv.hostfs, js9Electron.cmdlineOpts.hostfs);
+js9Electron.merge = js9Electron.argv.merge|| js9Electron.cmdlineOpts.merge;
+js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || js9Electron.cmdlineOpts.page;
+js9Electron.title = js9Electron.argv.title|| js9Electron.cmdlineOpts.title;
+js9Electron.tmp = js9Electron.argv.tmp || js9Electron.cmdlineOpts.tmp;
+js9Electron.renameid = js9Electron.argv.renameid|| js9Electron.cmdlineOpts.renameid;
+js9Electron.width = js9Electron.argv.width || js9Electron.cmdlineOpts.width;
+js9Electron.height = js9Electron.argv.height  || js9Electron.cmdlineOpts.height;
+js9Electron.savedir = js9Electron.argv.savedir || js9Electron.cmdlineOpts.savedir;
 
 // the list of files to load
 js9Electron.files = js9Electron.argv._;
@@ -238,7 +327,7 @@ if( js9Electron.hostfs                                &&
     js9Electron.page.match(/^(https?|ftp):\/\//)      &&
     !js9Electron.page.match(/localhost/)              ){
     dialog.showErrorBox("Security Error",
-		"can't visit a non-local web page with hostfs enabled");
+			"can't visit a non-local web page with hostfs enabled");
     process.exit();
 }
 
@@ -277,8 +366,7 @@ function initWillDownload() {
 	item.once('done', (event, state) => {
 	    if( state !== 'completed' && state !== "cancelled" ){
 		// eslint-disable-next-line no-console
-		dialog.showErrorBox("Error saving file",
-				    `${pname} [${state}]`);
+		dialog.showErrorBox("Error saving file", `${pname} [${state}]`);
 	    }
 	});
     });
@@ -328,8 +416,8 @@ function createWindow() {
 	js9Electron.merge = js9Electron.merge.replace(/\\/g,"")
 	try{ js9Electron.mergeStat = fs.statSync(js9Electron.merge); }
 	catch(e){
-	    dialog.showErrorBox("Error",
-	    `can't find merge file or directory: ${js9Electron.merge}`);
+	    dialog.showErrorBox("Error on merge",
+				`can't find merge file or dir: ${js9Electron.merge}`);
 	    process.exit();
 	}
 	if( !js9Electron.mergeStat.isDirectory() ){
@@ -339,7 +427,7 @@ function createWindow() {
 	    js9Electron.merge = path.dirname(js9Electron.merge);
 	    try{ js9Electron.mergeStat = fs.statSync(js9Electron.merge); }
 	    catch(e){
-		dialog.showErrorBox("Error",
+		dialog.showErrorBox("Error on merge",
 		`can't find merge directory: ${js9Electron.merge}`);
 		process.exit();
 	    }
@@ -377,11 +465,16 @@ function createWindow() {
     // final checks on the web page
     if( !js9Electron.page.includes("://") ){
 	if( !path.isAbsolute(js9Electron.page) ){
-	    if( process.env.PWD ){
+	    if( process.env.PWD && process.env.JS9_MSGSCRIPT ){
 		js9Electron.page = path.join(process.env.PWD, js9Electron.page);
 	    } else {
-		js9Electron.page = path.relative(__dirname, js9Electron.page);
+		js9Electron.page = path.join(__dirname, js9Electron.page);
 	    }
+	}
+	if( !fs.existsSync(js9Electron.page) ){
+	    dialog.showErrorBox("JS9 init error",
+			`can't find webpage ${js9Electron.page}`);
+	    process.exit();
 	}
 	js9Electron.page = `file://${js9Electron.page}`;
     }
@@ -448,7 +541,7 @@ function createWindow() {
 		    i++;
 		    try{ jobj = JSON.parse(s); }
 		    catch(e){
-			dialog.showErrorBox("ERROR parsing JSON opts: ",
+			dialog.showErrorBox("ERROR parsing JSON opts",
 					    e.message);
 		    }
 		} else if( s.charAt(0) === "-" ){
@@ -458,7 +551,8 @@ function createWindow() {
 			obj[s] = getval(js9Electron.files[i+1]);
 			i++;
 		    } else {
-			dialog.showErrorBox(`ERROR missing arg after ${s}`);
+			dialog.showErrorBox("ERROR loading file",
+					    `missing arg after ${s}`);
 		    }
 		} else {
 		    done = true;
@@ -595,7 +689,7 @@ ipcMain.on("msg", (event, arg) => {
 	if( typeof obj === "string" ){
 	    try{ obj = JSON.parse(obj); }
 	    catch(e){
-		dialog.showErrorBox("ERROR parsing JSON opts: ", e.message);
+		dialog.showErrorBox("ERROR parsing JSON opts", e.message);
 	    }
 	}
 	if( typeof obj === "object" ){
@@ -628,13 +722,13 @@ ipcMain.on("msg", (event, arg) => {
 		    let file = obj.filename || "js9.pdf";
 		    fs.writeFile(file, data, (e) => {
 			if( e ){
-			    dialog.showErrorBox("ERROR in WindowToPDF: ",
+			    dialog.showErrorBox("ERROR in WindowToPDF",
 						e.message);
 			    return;
 			}
 		    });
 		}).catch( e => {
-		    dialog.showErrorBox("ERROR in WindowToPDF: ", e.message);
+		    dialog.showErrorBox("ERROR in WindowToPDF", e.message);
 		});
 		break;
 	    case "script":
@@ -643,7 +737,7 @@ ipcMain.on("msg", (event, arg) => {
 		    fs.readFile(s, "utf-8", (err, data) => {
 			let dir, file;
 			if( err ){
-			    dialog.showErrorBox("ERROR in SaveScript: ",
+			    dialog.showErrorBox("ERROR in SaveScript",
 						err.message);
 			    return;
 			}
@@ -654,13 +748,13 @@ ipcMain.on("msg", (event, arg) => {
 			    .replace(/JS9_INSTALLDIR=".*"/, `JS9_INSTALLDIR="${__dirname}"`);
 			fs.writeFile(file, data, (err) => {
 			    if( err ){
-				dialog.showErrorBox("ERROR in SaveScript: ",
+				dialog.showErrorBox("ERROR in SaveScript",
 						    err.message);
 				return;
 			    }
 			    fs.chmod(file, 0o755, (err) => {
 				if( err ){
-				    dialog.showErrorBox("ERROR in SaveScript: ",
+				    dialog.showErrorBox("ERROR in SaveScript",
 							err.message);
 				}
 			    });
