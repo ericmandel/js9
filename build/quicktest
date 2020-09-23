@@ -8,6 +8,7 @@ fi
 
 if [ $? = 0 ]; then
   pgrep -f js9Helper.js >/dev/null || build/nnode
+  printf "\nNB: if Chrome is your default browser, you probably need to exit Chrome,\nso that it can be re-started with the correct switches for this quicktest.\n\n"
   ./js9 -v -b &
   sleep 3
   if [ x$FILE != x ]; then
