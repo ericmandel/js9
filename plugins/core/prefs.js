@@ -600,6 +600,38 @@ JS9.Prefs.favoritesSchema = {
     }
 };
 
+// cmdline scheme for apps only
+JS9.Prefs.cmdlineSchema = {
+    "title": "App Command-line Preferences",
+    "description": "App command line preferences will take effect on restart",
+    "properties": {
+	"id": {
+	    type: "string",
+	    "helper": ""
+	},
+	"debug": {
+	    type: "boolean",
+	    "helper": "display Chrome debugger at startup?"
+	},
+	"hostfs": {
+	    type: "boolean",
+	    "helper": "utilize host file system?"
+	},
+	"webpage": {
+	    type: "string",
+	    "helper": "web page to display"
+	},
+	"width": {
+	    type: "number",
+	    "helper": "width of desktop window"
+	},
+	"height": {
+	    type: "number",
+	    "helper": "height of desktop window"
+	}
+    }
+};
+
 // source object for preferences
 JS9.Prefs.sources = [
     {name: "globals",  schema: JS9.Prefs.globalsSchema},
@@ -608,7 +640,8 @@ JS9.Prefs.sources = [
     {name: "regions",  schema: JS9.Prefs.regionsSchema},
     {name: "grid",     schema: JS9.Prefs.gridSchema},
     {name: "catalogs", schema: JS9.Prefs.catalogsSchema},
-    {name: "favorites", schema: JS9.Prefs.favoritesSchema}
+    {name: "favorites", schema: JS9.Prefs.favoritesSchema},
+    {name: "cmdline",  schema: JS9.Prefs.cmdlineSchema}
 ];
 
 // init preference plugin
@@ -623,6 +656,10 @@ JS9.Prefs.init = function(){
     // create a tab for each source
     for(i=0; i<sources.length; i++){
 	source = sources[i];
+	// cmdline is only for apps that have command line opts
+	if( source.name === "cmdline" && !JS9.cmdlineOpts ){
+	    continue;
+	}
 	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
 	html += `  <li><a href='#' rel='${id}Div'>${source.name}</a></li>\n`;
     }
@@ -631,6 +668,10 @@ JS9.Prefs.init = function(){
     // create each param form (displayed by clicking each tab)
     for(i=0; i<sources.length; i++){
 	source = sources[i];
+	// cmdline is only for apps that have command line opts
+	if( source.name === "cmdline" && !JS9.cmdlineOpts ){
+	    continue;
+	}
 	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
 	// source-specific pre-processing
 	switch( source.name ){
@@ -663,6 +704,9 @@ JS9.Prefs.init = function(){
 	    break;
 	case "favorites":
 	    source.data = JS9.favorites;
+	    break;
+	case "cmdline":
+	    source.data = JS9.cmdlineOpts;
 	    break;
 	default:
 	    JS9.error(`unknown source for preferences: ${source.name}`);
@@ -704,7 +748,9 @@ JS9.Prefs.init = function(){
 		}
 	    }
 	}
-	html += `<input id='${this.id}_applyPrefs' name='Apply' type='button' class='button' value='Apply' onclick='JS9.Prefs.applyForm.call(this);' style='margin: 8px'>`;
+	if( !JS9.cmdlineOpts ){
+	    html += `<input id='${this.id}_applyPrefs' name='Apply' type='button' class='button' value='Apply' onclick='JS9.Prefs.applyForm.call(this);' style='margin: 8px'>`;
+	}
 	// manage stored preferences
 	if( window.hasOwnProperty("localStorage") &&
 	    JS9.globalOpts.localStorage           ){
@@ -757,7 +803,23 @@ JS9.Prefs.applyForm = function(){
 JS9.Prefs.saveForm = function(){
     const form = $(this).closest("form");
     const source = form.data("source");
+    const opts = {cmd: "cmdline", mode: "save"};
     JS9.Prefs.applyForm.call(this);
+    // cmdline handled specially
+    if( source.name === "cmdline" ){
+	if( window.electron ){
+	    window.setTimeout(() => {
+		try{
+		    opts.cmdlineOpts = JS9.cmdlineOpts;
+		    window.electron.sendMsg(opts);
+		}
+		catch(e){ JS9.error("could not save cmdline form", e); }
+	    }, JS9.TIMEOUT);
+	} else {
+	    JS9.error("cmdLine save is only available for the JS9 desktop app");
+	}
+	return false;
+    }
     try{ localStorage.setItem(source.name, JSON.stringify(source.data,null,2));
 	 JS9.userOpts[source.name] = localStorage.getItem(source.name); }
     catch(e){ JS9.error(`could not save prefs: ${source.name}`); }
@@ -769,12 +831,22 @@ JS9.Prefs.showForm = function(){
     let s, t;
     const form = $(this).closest("form");
     const source = form.data("source");
-    try{ s = localStorage.getItem(source.name); }
-    catch(e){ /* empty */ }
-    if( s && (s !== "null") ){
-	t = `<pre>${s}</pre>`;
+    // cmdline handled specially
+    if( source.name === "cmdline" ){
+	if( JS9.cmdlineOpts ){
+	    s = JSON.stringify(JS9.cmdlineOpts, null, 4);
+	    t = `<pre>${s}</pre>`;
+	} else {
+	    t = `<p><center>No saved prefs: %{source.name}</center>`;
+	}
     } else {
-	t = `<p><center>No saved prefs: %{source.name}</center>`;
+	try{ s = localStorage.getItem(source.name); }
+	catch(e){ /* empty */ }
+	if( s && (s !== "null") ){
+	    t = `<pre>${s}</pre>`;
+	} else {
+	    t = `<p><center>No saved prefs: %{source.name}</center>`;
+	}
     }
     JS9.lightWin(`savedPrefs${JS9.uniqueID()}`, "inline", t, 
 		 `Saved prefs: ${source.name}`, 
@@ -786,6 +858,19 @@ JS9.Prefs.showForm = function(){
 JS9.Prefs.deleteForm = function(){
     const form = $(this).closest("form");
     const source = form.data("source");
+    const opts = {cmd: "cmdline", mode: "remove"};
+    // cmdline handled specially
+    if( source.name === "cmdline" ){
+	if( window.electron ){
+	    window.setTimeout(() => {
+		try{ window.electron.sendMsg(opts); }
+		catch(e){ JS9.error("could not save cmdline form", e); }
+	    }, JS9.TIMEOUT);
+	} else {
+	    JS9.error("cmdLine save is only available for the JS9 desktop app");
+	}
+	return false;
+    }
     try{ localStorage.removeItem(source.name);
 	delete JS9.userOpts[source.name]; }
     catch(e){ /* empty */ }
@@ -819,6 +904,9 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 	break;
     case "favorites":
 	obj = JS9.favorites;
+	break;
+    case "cmdline":
+	obj = JS9.cmdlineOpts;
 	break;
     default:
 	JS9.error(`unknown source for preferences: ${source.name}`);
@@ -950,6 +1038,10 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 		}
 		break;
 	    case "favorites":
+		// set new option value
+	        obj[key] = val;
+		break;
+	    case "cmdline":
 		// set new option value
 	        obj[key] = val;
 		break;

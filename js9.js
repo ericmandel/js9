@@ -631,7 +631,11 @@ if( window.electron ){
 	    throw new Error('For security reasons, Desktop JS9 does not support window.eval()');
 	}
     }
-
+    // cmdlineOpts are opts used by the app to specify the command line
+    if( window.electron.cmdlineOpts ){
+	try{ JS9.cmdlineOpts = JSON.parse(window.electron.cmdlineOpts); }
+	catch(e){ delete JS9.cmdlineOpts; }
+    }
 }
 
 // ---------------------------------------------------------------------

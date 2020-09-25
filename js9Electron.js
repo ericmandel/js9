@@ -61,9 +61,14 @@ const loadPreferences = function(prefs){
 	catch(e){
 	    dialog.showErrorBox("JSON Error", `can't parse ${prefs}: ${s}`);
 	}
+	// save prefs in file before merge
+	js9Electron.prefs = obj;
 	// look for top-level objects
 	for( tobj in obj ){
-	    if( obj.hasOwnProperty(tobj) && typeof obj[tobj] === "object" ){
+	    if( obj.hasOwnProperty(tobj)              &&
+		typeof obj[tobj] === "object"         &&
+		js9Electron.hasOwnProperty(tobj)      &&
+		typeof js9Electron[tobj] === "object" ){
 		// process each property of this object
 		for( opt in obj[tobj] ){
 		    if( obj[tobj].hasOwnProperty(opt) ){
@@ -79,17 +84,6 @@ const loadPreferences = function(prefs){
 				js9Electron[tobj][opt] = val;
 				break;
 			    case "string":
-				switch(tobj){
-				case "cmdLineOpts":
-				    switch(opt){
-				    case "icon":
-					if( !path.isAbsolute(val) ){
-					    val = path.join(__dirname, val);
-					}
-					break;
-				    }
-				    break;
-				}
 				js9Electron[tobj][opt] = val;
 				break;
 			    case "object":
@@ -149,188 +143,6 @@ function startHelper(mode){
     }
 }
 
-// default web page
-js9Electron.defpage = `file://${path.join(__dirname, 'js9.html')}`;
-
-// preload page contains initialization values needed before loading JS9
-js9Electron.preload = path.join(__dirname, "js9ElectronPreload.js");
-
-// helper page
-js9Electron.helperpage = path.join(__dirname, "js9Helper.js");
-
-// default name for saved file
-js9Electron.defsave = "js9.save";
-
-// browser window defaults
-js9Electron.webOpts = {
-    nodeIntegration: false,  // turn on for emscripten NODEFS support (hostfs)
-    contextIsolation: true,  // but see below, v10.0.0 breaks wasm compilation
-    enableRemoteModule: false,        // see security recommendations
-    allowRendererProcessReuse: true,  // https://github.com/electron/electron/issues/18397
-    worldSafeExecuteJavaScript: true, // see security recommendations
-    nativeWindowOpen: true,           // can't get BrowserWindow one to work ...
-    preload: js9Electron.preload
-};
-
-// pdf options
-js9Electron.printOpts = {
-    silent: false,
-    printBackground: true,
-    deviceName: ""
-};
-
-// print options
-js9Electron.pdfOpts = {
-    marginsType: 0,
-    pageSize: "A3",
-    printBackground: true,
-    printSelectionOnly: false,
-    landscape: false
-};
-
-// command line defaults
-js9Electron.cmdlineOpts = {
-    id: "JS9",
-    doHelper: true,
-    debug: false,
-    icon: path.join(__dirname, "/images/js9logo/png/js9logo_64.png"),
-    hostfs: false,
-    page: process.env.JS9_WEBPAGE || js9Electron.defpage,
-    tmp: process.env.JS9_TMPDIR || "/tmp",
-    width: 1024,
-    height: 768
-};
-
-// skip args passed to electron itself
-js9Electron.startArg = 2;
-for(let i=1; i<process.argv.length; i++){
-    if( process.argv[i] !== "--no-sandbox" ){
-	break;
-    }
-    js9Electron.startArg++;
-}
-// js9 command line arguments: skip -a and -v
-js9Electron.args = [];
-for(let i=js9Electron.startArg; i<process.argv.length; i++){
-    if( process.argv[i] !== "-a" && process.argv[i] !== "-v" ){
-	js9Electron.args = process.argv.slice(i);
-	break;
-    }
-}
-js9Electron.argv = require('minimist')(js9Electron.args, {stopEarly:true});
-
-// maybe override defaults using json file
-// (this is where the Mac app gets its configuration)
-js9Electron.prefsFile = path.join(__dirname, "js9Electron.json");
-if( fs.existsSync(js9Electron.prefsFile) ){
-    loadPreferences(js9Electron.prefsFile);
-} else {
-    delete js9Electron.prefsFile;
-}
-// also look in current directory, if we are running from a script
-if( process.env.PWD && process.env.JS9_MSGSCRIPT ){
-    js9Electron.prefsFile2 = path.join(process.env.PWD, "js9Electron.json");
-    if( fs.existsSync(js9Electron.prefsFile2) ){
-	loadPreferences(js9Electron.prefsFile2);
-    } else {
-	delete js9Electron.prefsFile2;
-    }
-}
-
-// command line switch options
-js9Electron.id = js9Electron.argv.i || js9Electron.argv.id || js9Electron.cmdlineOpts.id;
-js9Electron.cmds = js9Electron.argv.cmds || js9Electron.cmdlineOpts.cmds;
-js9Electron.cmdfile = js9Electron.argv.cmdfile || js9Electron.cmdlineOpts.cmdfile;
-js9Electron.doHelper = isTrue(js9Electron.argv.helper, js9Electron.cmdlineOpts.doHelper);
-js9Electron.debug = isTrue(js9Electron.argv.debug, js9Electron.cmdlineOpts.debug);
-js9Electron.icon = js9Electron.argv.icon || js9Electron.cmdlineOpts.icon;
-js9Electron.hostfs = isTrue(js9Electron.argv.hostfs, js9Electron.cmdlineOpts.hostfs);
-js9Electron.merge = js9Electron.argv.merge|| js9Electron.cmdlineOpts.merge;
-js9Electron.page = js9Electron.argv.w || js9Electron.argv.webpage || js9Electron.cmdlineOpts.page;
-js9Electron.title = js9Electron.argv.title|| js9Electron.cmdlineOpts.title;
-js9Electron.tmp = js9Electron.argv.tmp || js9Electron.cmdlineOpts.tmp;
-js9Electron.renameid = js9Electron.argv.renameid|| js9Electron.cmdlineOpts.renameid;
-js9Electron.width = js9Electron.argv.width || js9Electron.cmdlineOpts.width;
-js9Electron.height = js9Electron.argv.height  || js9Electron.cmdlineOpts.height;
-js9Electron.savedir = js9Electron.argv.savedir || js9Electron.cmdlineOpts.savedir;
-
-// the list of files to load
-js9Electron.files = js9Electron.argv._;
-
-// are we in an app or run from the js9 script (where JS9_MSGSRIPT is defined)?
-// if we are in an app, add the host-specific bin directory to the path
-if( !process.env.JS9_MSGSCRIPT ){
-    js9Electron.appbin = path.join(__dirname,
-				   `${os.platform()}-${os.arch()}`,
-				   "bin");
-    if( fs.existsSync(js9Electron.appbin) ){
-	// truly an app
-	js9Electron.isApp = true;
-	process.env.JS9_APP = "true";
-	// add app bin directory to path
-	process.env.PATH += `:${js9Electron.appbin}`;
-    } else {
-	// shouldn't happen, but its not an app
-	delete js9Electron.appbin;
-	js9Electron.isApp = false;
-	process.env.JS9_APP = "false";
-    }
-} else {
-    // not an app
-    js9Electron.isApp = false;
-    process.env.JS9_APP = "false";
-}
-
-// app: try to change current directory if we're in /
-if( js9Electron.isApp && process.cwd() === "/" ){
-    if( process.env.JS9_HOME ){
-	try{ process.chdir(process.env.JS9_HOME); }
-	catch(e){ /* empty */ }
-    } else if( process.env.HOME ){
-	try{ process.chdir(process.env.HOME); }
-	catch(e){ /* empty */ }
-    }
-}
-
-//  remove backquotes
-js9Electron.page = js9Electron.page.replace(/\\/g,"");
-
-// passed to JS9 in preload so we can bypass default 'false' in js9prefs.js
-process.env.JS9_ELECTRONHELPER = String(js9Electron.doHelper);
-
-// no dialog box if savedir was specified
-js9Electron.savedialog = js9Electron.savedir ? false : true;
-
-// the env variable is passed to preload
-if( js9Electron.hostfs ){
-    js9Electron.webOpts.nodeIntegration = true;
-    process.env.JS9_HOSTFS = require("os").hostname() || "hostFS";
-} else {
-    js9Electron.webOpts.nodeIntegration = false;
-    process.env.JS9_HOSTFS = "";
-}
-
-// contextIsolation breaks wasm in v10.0.0
-js9Electron.webOpts.contextIsolation = false;
-process.env.JS9_CONTEXTISOLATION = "false";
-
-// security checks: https://electronjs.org/docs/tutorial/security
-// security check: disallow http except locally
-if( js9Electron.page.match(/^http:\/\//) &&
-    !js9Electron.page.match(/localhost/) ){
-    dialog.showErrorBox("Security Error",
-			"http protocol is disabled: use https");
-    process.exit();
-}
-// security check: disallow enabling host access with non-local web pages
-if( js9Electron.hostfs                                &&
-    js9Electron.page.match(/^(https?|ftp):\/\//)      &&
-    !js9Electron.page.match(/localhost/)              ){
-    dialog.showErrorBox("Security Error",
-			"can't visit a non-local web page with hostfs enabled");
-    process.exit();
-}
-
 // setup on-will-download callbacks to save files without a dialog box
 function initWillDownload() {
     // eslint-disable-next-line no-unused-vars
@@ -377,6 +189,7 @@ function createWindow() {
     let f, s, cmd, todir;
     let ncmd = 0;
     let xcmds = "";
+    let webpage = js9Electron.webpage;
     const getval = (s) => {
 	let d;
 	if( s === "true" ){
@@ -398,9 +211,12 @@ function createWindow() {
     // set dock icon for Mac
     if( process.platform === "darwin" ){
 	if( js9Electron.icon ){
-	    js9Electron.icon = js9Electron.icon.replace(/\\/g,"");
-	    if( fs.existsSync(js9Electron.icon) ){
-		try{ app.dock.setIcon(js9Electron.icon); }
+	    s = js9Electron.icon;
+	    if( !path.isAbsolute(s) ){
+		s = path.join(__dirname, s);
+	    }
+	    if( fs.existsSync(s) ){
+		try{ app.dock.setIcon(s); }
 		catch(e){ /* empty */ }
 	    }
 	}
@@ -413,7 +229,6 @@ function createWindow() {
     });
     // set up merging, if necessary
     if( js9Electron.merge ){
-	js9Electron.merge = js9Electron.merge.replace(/\\/g,"")
 	try{ js9Electron.mergeStat = fs.statSync(js9Electron.merge); }
 	catch(e){
 	    dialog.showErrorBox("Error on merge",
@@ -457,29 +272,28 @@ function createWindow() {
 	    // save name of the merged webpage for deletion
 	    js9Electron.mergePage = f;
 	    // new page containing js9 files from our install
-	    js9Electron.page = `file://${f}`;
+	    webpage = `file://${f}`;
 	}
 	// pass the merge dir to the helper in a prefs environment variable
 	process.env.JS9_HELPER_PREFS = 	`{"merge":"${js9Electron.merge}"}`;
     }
     // final checks on the web page
-    if( !js9Electron.page.includes("://") ){
-	if( !path.isAbsolute(js9Electron.page) ){
+    if( !webpage.includes("://") ){
+	if( !path.isAbsolute(webpage) ){
 	    if( process.env.PWD && process.env.JS9_MSGSCRIPT ){
-		js9Electron.page = path.join(process.env.PWD, js9Electron.page);
+		webpage = path.join(process.env.PWD, webpage);
 	    } else {
-		js9Electron.page = path.join(__dirname, js9Electron.page);
+		webpage = path.join(__dirname, webpage);
 	    }
 	}
-	if( !fs.existsSync(js9Electron.page) ){
-	    dialog.showErrorBox("JS9 init error",
-			`can't find webpage ${js9Electron.page}`);
+	if( !fs.existsSync(webpage) ){
+	    dialog.showErrorBox("JS9 error", `can't find webpage ${webpage}`);
 	    process.exit();
 	}
-	js9Electron.page = `file://${js9Electron.page}`;
+	webpage = `file://${webpage}`;
     }
     // load the web page
-    js9Electron.win.loadURL(js9Electron.page);
+    js9Electron.win.loadURL(webpage);
     // init download support
     initWillDownload();
     // open the DevTools, if necessary
@@ -498,12 +312,10 @@ function createWindow() {
     cmd = "$(document).ready(() => {";
     // rename default id to title
     if( js9Electron.title ){
-	js9Electron.title = js9Electron.title.replace(/\\/g,"");
 	cmd += `JS9.RenameDisplay('${js9Electron.title}');`;
     }
     // rename other ids
     if( js9Electron.renameid ){
-	js9Electron.renameid = js9Electron.renameid.replace(/\\/g,"");
 	const arr1 = js9Electron.renameid.split(",");
 	for(let i=0; i<arr1.length; i++){
 	    const arr2 = arr1[i].split(":");
@@ -617,9 +429,199 @@ function createWindow() {
     });
 }
 
+// default web page
+js9Electron.defpage = "js9.html";
+
+// preload page contains initialization values needed before loading JS9
+js9Electron.preload = path.join(__dirname, "js9ElectronPreload.js");
+
+// helper page
+js9Electron.helperpage = path.join(__dirname, "js9Helper.js");
+
+// default name for saved file
+js9Electron.defsave = "js9.save";
+
+// browser window defaults
+js9Electron.webOpts = {
+    nodeIntegration: false,  // turn on for emscripten NODEFS support (hostfs)
+    contextIsolation: true,  // but see below, v10.0.0 breaks wasm compilation
+    enableRemoteModule: false,        // see security recommendations
+    allowRendererProcessReuse: true,  // https://github.com/electron/electron/issues/18397
+    worldSafeExecuteJavaScript: true, // see security recommendations
+    nativeWindowOpen: true,           // can't get BrowserWindow one to work ...
+    preload: js9Electron.preload
+};
+
+// pdf options
+js9Electron.printOpts = {
+    silent: false,
+    printBackground: true,
+    deviceName: ""
+};
+
+// print options
+js9Electron.pdfOpts = {
+    marginsType: 0,
+    pageSize: "A3",
+    printBackground: true,
+    printSelectionOnly: false,
+    landscape: false
+};
+
+// command line defaults
+js9Electron.cmdlineOpts = {
+    id: "JS9",
+    doHelper: true,
+    debug: false,
+    icon: "/images/js9logo/png/js9logo_64.png",
+    hostfs: false,
+    webpage: process.env.JS9_WEBPAGE || js9Electron.defpage,
+    tmp: process.env.JS9_TMPDIR || "/tmp",
+    width: 1024,
+    height: 768
+};
+
+// skip args passed to electron itself
+js9Electron.startArg = 2;
+for(let i=1; i<process.argv.length; i++){
+    if( process.argv[i] !== "--no-sandbox" ){
+	break;
+    }
+    js9Electron.startArg++;
+}
+// js9 command line arguments: skip -a and -v
+js9Electron.args = [];
+for(let i=js9Electron.startArg; i<process.argv.length; i++){
+    if( process.argv[i] !== "-a" && process.argv[i] !== "-v" ){
+	js9Electron.args = process.argv.slice(i);
+	break;
+    }
+}
+js9Electron.argv = require('minimist')(js9Electron.args, {stopEarly:true});
+
+// maybe override defaults using json file
+// (this is where the Mac app gets its configuration)
+js9Electron.prefsFile = path.join(__dirname, "js9Electron.json");
+if( fs.existsSync(js9Electron.prefsFile) ){
+    loadPreferences(js9Electron.prefsFile);
+}
+
+// command line switch options
+js9Electron.cmds = js9Electron.argv.cmds || js9Electron.cmdlineOpts.cmds;
+js9Electron.cmdfile = js9Electron.argv.cmdfile || js9Electron.cmdlineOpts.cmdfile;
+js9Electron.doHelper = isTrue(js9Electron.argv.helper, js9Electron.cmdlineOpts.doHelper);
+js9Electron.debug = isTrue(js9Electron.argv.debug, js9Electron.cmdlineOpts.debug);
+js9Electron.icon = js9Electron.argv.icon || js9Electron.cmdlineOpts.icon;
+js9Electron.hostfs = isTrue(js9Electron.argv.hostfs, js9Electron.cmdlineOpts.hostfs);
+js9Electron.merge = js9Electron.argv.merge|| js9Electron.cmdlineOpts.merge;
+js9Electron.webpage = js9Electron.argv.w || js9Electron.argv.webpage || js9Electron.cmdlineOpts.webpage;
+js9Electron.title = js9Electron.argv.title|| js9Electron.cmdlineOpts.title;
+js9Electron.tmp = js9Electron.argv.tmp || js9Electron.cmdlineOpts.tmp;
+js9Electron.renameid = js9Electron.argv.renameid|| js9Electron.cmdlineOpts.renameid;
+js9Electron.width = js9Electron.argv.width || js9Electron.cmdlineOpts.width;
+js9Electron.height = js9Electron.argv.height  || js9Electron.cmdlineOpts.height;
+js9Electron.savedir = js9Electron.argv.savedir || js9Electron.cmdlineOpts.savedir;
+
+// the list of files to load
+js9Electron.files = js9Electron.argv._;
+
+//  remove backquotes from files passed via js9 script
+if( js9Electron.webpage ){
+    js9Electron.webpage = js9Electron.webpage.replace(/\\/g,"");
+}
+if( js9Electron.icon ){
+    js9Electron.icon = js9Electron.icon.replace(/\\/g,"");
+}
+if( js9Electron.merge ){
+    js9Electron.merge = js9Electron.merge.replace(/\\/g,"")
+}
+if( js9Electron.renameid ){
+    js9Electron.renameid = js9Electron.renameid.replace(/\\/g,"");
+}
+if( js9Electron.title ){
+    js9Electron.title = js9Electron.title.replace(/\\/g,"");
+}
+
+// no dialog box if savedir was specified
+js9Electron.savedialog = js9Electron.savedir ? false : true;
+
+// use of host file system passed to js9 via preload
+if( js9Electron.hostfs ){
+    js9Electron.webOpts.nodeIntegration = true;
+    process.env.JS9_HOSTFS = require("os").hostname() || "hostFS";
+} else {
+    js9Electron.webOpts.nodeIntegration = false;
+    process.env.JS9_HOSTFS = "";
+}
+
+// pass to JS9 via preload so we can bypass default 'false' in js9prefs.js
+process.env.JS9_ELECTRONHELPER = String(js9Electron.doHelper);
+
+// contextIsolation breaks wasm in v10.0.0
+js9Electron.webOpts.contextIsolation = false;
+process.env.JS9_CONTEXTISOLATION = "false";
+
+// are we in an app (i.e. Voyager) or run from js9 script?
+// if we are in an app, add the host-specific bin directory to the path
+if( !process.env.JS9_MSGSCRIPT ){
+    js9Electron.appbin = path.join(__dirname,
+				   `${os.platform()}-${os.arch()}`,
+				   "bin");
+    // make sure its really got the right structure for an app
+    if( fs.existsSync(js9Electron.appbin) ){
+	// truly an app
+	js9Electron.isApp = true;
+	process.env.JS9_APP = "true";
+	// add app bin directory to path
+	process.env.PATH += `:${js9Electron.appbin}`;
+    } else {
+	// shouldn't happen, but its not an app
+	delete js9Electron.appbin;
+	js9Electron.isApp = false;
+	process.env.JS9_APP = "false";
+    }
+} else {
+    // not an app
+    js9Electron.isApp = false;
+    process.env.JS9_APP = "false";
+}
+
+// app initialization
+if(  js9Electron.isApp ){
+    // pass to JS9 via preload to edit cmdline props in the prefs plugin
+    process.env.JS9_CMDLINEOPTS = JSON.stringify(js9Electron.cmdlineOpts);
+    // try to change current directory if we're in / (where macOS puts us)
+    if( process.cwd() === "/" ){
+	if( process.env.JS9_HOME ){
+	    try{ process.chdir(process.env.JS9_HOME); }
+	    catch(e){ /* empty */ }
+	} else if( process.env.HOME ){
+	    try{ process.chdir(process.env.HOME); }
+	    catch(e){ /* empty */ }
+	}
+    }
+}
+
+// security checks: https://electronjs.org/docs/tutorial/security
+// security check: disallow http except locally
+if( js9Electron.webpage.match(/^http:\/\//) &&
+    !js9Electron.webpage.match(/localhost/) ){
+    dialog.showErrorBox("Security Error",
+			"http protocol is disabled: use https");
+    process.exit();
+}
+// security check: disallow enabling host access with non-local web pages
+if( js9Electron.hostfs                                &&
+    js9Electron.webpage.match(/^(https?|ftp):\/\//)   &&
+    !js9Electron.webpage.match(/localhost/)           ){
+    dialog.showErrorBox("Security Error",
+			"can't visit a non-local web page with hostfs enabled");
+    process.exit();
+}
+
 // start helper, if necessary
-if( !js9Electron.page.match(/^(https?|ftp):\/\//) ||
-    js9Electron.page.match(/localhost/)           ){
+if( !js9Electron.webpage.match(/^(https?|ftp):\/\//) ||
+    js9Electron.webpage.match(/localhost/)           ){
     startHelper();
 }
 
@@ -760,6 +762,35 @@ ipcMain.on("msg", (event, arg) => {
 			    });
 			});
 		    });
+		}
+		break;
+	    case "cmdline":
+		switch(obj.mode){
+		case "save":
+		    // merge cmdlineOpts with prefs, if necessary
+		    if( js9Electron.prefs ){
+			// deep copy of prefs object
+			s = JSON.parse(JSON.stringify(js9Electron.prefs));
+			// overwrite cmdline object
+			s.cmdlineOpts = obj.cmdlineOpts;
+		    } else {
+			// just cmdline object
+			s = {cmdlineOpts: obj.cmdlineOpts};
+		    }
+		    // nicely formatted object
+		    s = JSON.stringify(s, null, 4);
+		    // save to file
+		    fs.writeFile(js9Electron.prefsFile, s, (err) => {
+			if( err ){
+			    dialog.showErrorBox(`ERROR saving ${js9Electron.prefsFile}`, err.message);
+			    return;
+			}
+		    });
+		    break;
+		case "remove":
+		    try{ fs.unlinkSync(js9Electron.prefsFile); }
+		    catch(e){ /* empty */ }
+		    break;
 		}
 		break;
 	    default:

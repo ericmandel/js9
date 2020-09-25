@@ -66886,6 +66886,7 @@ module.exports = ZStream;
 },{}]},{},[1])
 (1)
 });(function (global, factory) {
+  // Jupyter check added by EGM 9/21/20 so that Jupyter Notebooks work properly
   if (typeof define === "function" && define.amd && typeof Jupyter === "undefined") {
     define([], factory);
   } else if (typeof exports !== "undefined") {

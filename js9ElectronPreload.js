@@ -17,6 +17,8 @@ if( process.env.JS9_CONTEXTISOLATION !== "true" ){
 	sendMsg: (opts) => require("electron").ipcRenderer.send("msg", opts),
 	// host file system mount
 	hostFS: process.env.JS9_HOSTFS || "",
+	// cmdline opts
+	cmdlineOpts: process.env.JS9_CMDLINEOPTS || "",
 	// whether multiple instances of the app are running
 	multiElectron: process.env.JS9_MULTIELECTRON === "true" ? true : false
     };
@@ -42,6 +44,8 @@ contextBridge.exposeInMainWorld(
 	sendMsg: (opts) => require("electron").ipcRenderer.send("msg", opts),
 	// host file system mount
 	hostFS: process.env.JS9_HOSTFS || "",
+	// cmdline opts
+	cmdlineOpts: process.env.JS9_CMDLINEOPTS || "",
 	// whether multiple instances of the app are running
 	multiElectron: process.env.JS9_MULTIELECTRON === "true" ? true : false
     });
