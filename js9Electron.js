@@ -470,7 +470,6 @@ js9Electron.pdfOpts = {
 
 // command line defaults
 js9Electron.cmdlineOpts = {
-    id: "JS9",
     doHelper: true,
     debug: false,
     icon: "/images/js9logo/png/js9logo_64.png",
