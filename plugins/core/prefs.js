@@ -605,18 +605,6 @@ JS9.Prefs.cmdlineSchema = {
     "title": "App Command-line Preferences",
     "description": "App command line preferences will take effect on restart",
     "properties": {
-	"id": {
-	    type: "string",
-	    "helper": ""
-	},
-	"debug": {
-	    type: "boolean",
-	    "helper": "display Chrome debugger at startup?"
-	},
-	"hostfs": {
-	    type: "boolean",
-	    "helper": "utilize host file system?"
-	},
 	"webpage": {
 	    type: "string",
 	    "helper": "web page to display"
@@ -628,6 +616,14 @@ JS9.Prefs.cmdlineSchema = {
 	"height": {
 	    type: "number",
 	    "helper": "height of desktop window"
+	},
+	"hostfs": {
+	    type: "boolean",
+	    "helper": "utilize host file system?"
+	},
+	"debug": {
+	    type: "boolean",
+	    "helper": "display Chrome debugger at startup?"
 	}
     }
 };
