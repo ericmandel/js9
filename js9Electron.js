@@ -482,17 +482,19 @@ js9Electron.cmdlineOpts = {
 };
 
 // skip args passed to electron itself
-js9Electron.startArg = 2;
-for(let i=1; i<process.argv.length; i++){
-    if( process.argv[i] !== "--no-sandbox" ){
-	break;
-    }
+js9Electron.startArg = 1;
+// when started from a script, this file is passed as arg[1]
+if( typeof process.argv[js9Electron.startArg] === "string"       &&
+    process.argv[js9Electron.startArg].match(/js9Electron\.js$/) ){
     js9Electron.startArg++;
 }
-// js9 command line arguments: skip -a and -v
+// js9 command line arguments: skip --no-sandbox, -a, -v args
 js9Electron.args = [];
 for(let i=js9Electron.startArg; i<process.argv.length; i++){
-    if( process.argv[i] !== "-a" && process.argv[i] !== "-v" ){
+    if( process.argv[i] !== "--no-sandbox"  &&
+	process.argv[i] !== "-a"            &&
+	process.argv[i] !== "-v"            &&
+	process.argv[i] !== "-av"           ){
 	js9Electron.args = process.argv.slice(i);
 	break;
     }
