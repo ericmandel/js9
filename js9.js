@@ -197,6 +197,7 @@ JS9.globalOpts = {
     resizeHandle: true,		// add resize handle to display?
     resizeRedisplay: true,	// redisplay image while resizing?
     logoDisplay: false,         // show JS9 logo on each display?
+    logo: "images/js9logo.png", // show JS9 logo on each display?
     lightWinPos: "center=1",	// "left=n,top=m" offset from left,top of window
     lightWinClose: "ask",	// ask, close, move images when closing lightwin
     fallbackDisplay: true,	// displayMessage fallback to display window?
@@ -10092,7 +10093,7 @@ JS9.Display = function(el){
 	    .appendTo(this.divjq);
 	this.iconimgjs = $("<img>")
 	    .addClass("JS9Logo")
-	    .attr("src", JS9.InstallDir("images/js9logo.png"))
+	    .attr("src", JS9.InstallDir(JS9.globalOpts.logo))
 	    .attr("alt", "js9")
 	    .attr("title", "js9")
 	    .appendTo(this.iconjq);
