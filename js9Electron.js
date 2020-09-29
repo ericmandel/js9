@@ -210,22 +210,17 @@ function createWindow() {
     }
     // set dock icon for Mac
     if( process.platform === "darwin" ){
-	if( js9Electron.icon ){
-	    s = js9Electron.icon;
-	    if( !path.isAbsolute(s) ){
-		s = path.join(__dirname, s);
-	    }
-	    if( fs.existsSync(s) ){
-		try{ app.dock.setIcon(s); }
-		catch(e){ /* empty */ }
-	    }
+	if( js9Electron.icon && fs.existsSync(js9Electron.icon) ){
+	    try{ app.dock.setIcon(js9Electron.icon); }
+	    catch(e){ /* empty */ }
 	}
     }
     // create the browser window
     js9Electron.win = new BrowserWindow({
 	webPreferences: js9Electron.webOpts,
 	width: js9Electron.width,
-	height: js9Electron.height
+	height: js9Electron.height,
+	icon: js9Electron.icon
     });
     // set up merging, if necessary
     if( js9Electron.merge ){
@@ -472,7 +467,7 @@ js9Electron.pdfOpts = {
 js9Electron.cmdlineOpts = {
     doHelper: true,
     debug: false,
-    icon: "/images/js9logo/png/js9logo_64.png",
+    icon: "images/js9logo/png/js9logo_64.png",
     hostfs: false,
     webpage: process.env.JS9_WEBPAGE || js9Electron.defpage,
     tmp: process.env.JS9_TMPDIR || "/tmp",
@@ -532,6 +527,9 @@ if( js9Electron.webpage ){
 }
 if( js9Electron.icon ){
     js9Electron.icon = js9Electron.icon.replace(/\\/g,"");
+    if( !path.isAbsolute(js9Electron.icon) ){
+	js9Electron.icon = path.join(__dirname, js9Electron.icon);
+    }
 }
 if( js9Electron.merge ){
     js9Electron.merge = js9Electron.merge.replace(/\\/g,"")
