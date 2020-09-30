@@ -22804,7 +22804,8 @@ JS9.mouseUpCB = function(evt){
 		im.updateShapes(im.clickInLayer, "selected", "select");
 	    }
 	} else {
-	    im.updateShapes(im.clickInLayer, "selected", "mouseup");
+	    // tell plugins that this region has been updated (e.g. sync)
+	    im.updateShapes(im.clickInLayer, "selected", "update");
 	}
     }
     // plugin callbacks
