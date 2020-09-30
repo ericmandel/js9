@@ -6,6 +6,7 @@ ASTROEMJS	=	astroem.js
 # files for wasm support:
 ASTROEMWJS	=	astroemw.js
 ASTROEMWASM	=	astroemw.wasm
+ASTROEMLIB	=	libastroem.a
 
 # where is output file is installed
 INSTALLDIR =	../js
@@ -44,7 +45,7 @@ WASMOPTS =	-s WASM=1
 # debugging
 # WASMOPTS =	-s WASM=1 -s SAFE_HEAP=1 -s ASSERTIONS=1
 
-EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_initwcs', '_freewcs', '_wcsinfo', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_saodtostr', '_saodtype', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek',  '_BZ2_bzopen', '_BZ2_bzread', '_BZ2_bzwrite', '_BZ2_bzclose', '_openFITSFile', '_openFITSMem', '_getImageToArray', '_filterTableToImage', '_getHeaderToString', '_closeFITSFile', '_maxFITSMemory', '_ffgerr', '_ffgisz', '_ffmahd', '_ffghdn','_ffmnhd', '_ffghdt', '_ffgky', '_fffree', '_listhdu', '_tanhdr', '_reproject', '_madd', '_imgtbl', '_makehdr', '_shrinkhdr', '_imsection', '_imannulusi', '_imboxi', '_imcirclei', '_imellipsei', '_imfieldi', '_imlinei', '_impiei', '_imqtpiei', '_impointi', '_impandai', '_imnannulusi', '_imnboxi', '_imnellipsei', '_imnpiei', '_impolygoni', '_imvannulusi', '_imvboxi', '_imvellipsei', '_imvpiei', '_imvpointi', '_imannulus', '_imbox', '_imcircle', '_imellipse', '_imfield', '_imline', '_impie', '_imqtpie', '_impoint', '_impanda', '_imnannulus', '_imnbox', '_imnellipse', '_imnpie', '_impolygon', '_imvannulus', '_imvbox', '_imvellipse', '_imvpie', '_imvpoint', '_regcnts', '_vls', '_vcat']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap', 'writeArrayToMemory']"
+EMEXPORTS =	-s EXPORTED_FUNCTIONS="['_malloc', '_free', '_initwcs', '_freewcs', '_wcsinfo', '_pix2wcsstr', '_wcs2pixstr', '_reg2wcsstr', '_wcssys', '_wcsunits', '_saostrtod', '_saodtostr', '_saodtype', '_zscale', '_gzopen', '_gzread', '_gzwrite', '_gzclose', '_gzseek',  '_BZ2_bzopen', '_BZ2_bzread', '_BZ2_bzwrite', '_BZ2_bzclose', '_openFITSFile', '_openFITSMem', '_getImageToArray', '_filterTableToImage', '_getHeaderToString', '_closeFITSFile', '_maxFITSMemory', '_ffgerr', '_ffgisz', '_ffmahd', '_ffghdn','_ffmnhd', '_ffghdt', '_ffgky', '_fffree', '_listhdu', '_tanhdr', '_reproject', '_madd', '_imgtbl', '_makehdr', '_shrinkhdr', '_imsection', '_imannulusi', '_imboxi', '_imcirclei', '_imellipsei', '_imfieldi', '_imlinei', '_impiei', '_imqtpiei', '_impointi', '_impandai', '_imnannulusi', '_imnboxi', '_imnellipsei', '_imnpiei', '_impolygoni', '_imvannulusi', '_imvboxi', '_imvellipsei', '_imvpiei', '_imvpointi', '_imannulus', '_imbox', '_imcircle', '_imellipse', '_imfield', '_imline', '_impie', '_imqtpie', '_impoint', '_impanda', '_imnannulus', '_imnbox', '_imnellipse', '_imnpie', '_impolygon', '_imvannulus', '_imvbox', '_imvellipse', '_imvpie', '_imvpoint', '_regcnts', '_vls', '_vcat']" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'cwrap', 'writeArrayToMemory']"
 
 # include directories
 EMINCS =	-I./include
@@ -124,23 +125,29 @@ EMCC =		emcc $(EMFLAGS) $(EMOPTS) $(EMEXPORTS) $(EMINCS) $(EMEXTRAS)
 # flags to generate all emcc objects (i.e. so default rule for $(CC) runs emcc)
 CC =		emcc $(EMFLAGS) -I./include -I$(JSFITSIO) -I$(ZSCALE) -D'exit(n)=em_exit(n)'
 
-all:		$(ASTROEMJS) $(ASTROEMWJS)
+all:		$(ASTROEMLIB) $(ASTROEMJS) $(ASTROEMWJS)
 
-astroem.bc:	$(OBJS) $(PKGOBJS) $(LIBS)
-		$(EMCC) -o $@ $+
+# 2.0.2 breaks this technique: it generates an executable instead of bitcode
+# astroem.bc:	$(OBJS) $(PKGOBJS) $(LIBS)
+# 		$(EMCC) -r -o $@ $+
 
-$(ASTROEMJS):	astroem.bc pre.js post.js shell-pre.js shell-post.js Makefile
+# replacement technique: make a library using emar:
+# https://github.com/emscripten-core/emscripten/issues/12382
+$(ASTROEMLIB):	$(OBJS) $(PKGOBJS)
+		emar rcs $@ $?
+
+$(ASTROEMJS):	$(ASTROEMLIB) pre.js post.js shell-pre.js shell-post.js Makefile
 		@(echo "generating raw $(ASTROEMJS) ..."; \
-		$(EMCC) $(NOWASMOPTS) astroem.bc -o $(ASTROEMJS); \
+		$(EMCC) $(NOWASMOPTS) $(ASTROEMLIB) $(LIBS) -o $(ASTROEMJS); \
 		echo "adding shell wrapper to generate $(ASTROEMJS) ..."; \
 		cat shell-pre.js > full_$(ASTROEMJS); \
 		cat $(ASTROEMJS) >> full_$(ASTROEMJS); \
 		cat shell-post.js >> full_$(ASTROEMJS); \
 		mv full_$(ASTROEMJS) $(ASTROEMJS);)
 
-$(ASTROEMWJS):	astroem.bc pre.js post.js shell-pre.js shell-post.js Makefile
+$(ASTROEMWJS):	$(ASTROEMLIB) pre.js post.js shell-pre.js shell-post.js Makefile
 		@(echo "generating raw $(ASTROEMWJS) ..."; \
-		$(EMCC) $(WASMOPTS) astroem.bc -o $(ASTROEMWJS); \
+		$(EMCC) $(WASMOPTS) $(ASTROEMLIB) $(LIBS) -o $(ASTROEMWJS); \
 		echo "adding shell wrapper to generate $(ASTROEMWJS) ..."; \
 		cat shell-pre.js > full_$(ASTROEMWJS); \
 		cat $(ASTROEMWJS) >> full_$(ASTROEMWJS); \
@@ -171,7 +178,7 @@ astroem:	FORCE
 
 clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#*  \
-		astroem.* astroemw.*; \
+		astroem.* astroemw.* libastroem.a; \
 		for d in $(PKGDIRS); do \
 		  rm -rf $$d/*{.a,.o,~}; \
 		done;)
