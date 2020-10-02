@@ -218,7 +218,7 @@ JS9.Menubar.createMenus = function(){
 		if( JS9.Menubar.rkeyMap.hasOwnProperty(tact) && tact === xact ){
 		    key = JS9.Menubar.rkeyMap[tact];
 		    if( key ){
-			hstr = `<span>${name}<span class="JS9MenubarKeyAction">&nbsp;&nbsp;&nbsp;;&nbsp;${key}</span></span>`;
+			hstr = `<span>${name}<span class="JS9MenubarKeyAction">&nbsp;&nbsp;&nbsp;&nbsp;${key}</span></span>`;
 			obj = {name: hstr, isHtmlName: true};
 		    }
 		}
