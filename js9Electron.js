@@ -21,6 +21,8 @@ const electron = require('electron');
 const app = electron.app;
 // module to create native browser window
 const BrowserWindow = electron.BrowserWindow;
+// screen size
+const screen = electron.screen;
 // module to control ipc
 const ipcMain = electron.ipcMain;
 // dialog support
@@ -214,6 +216,13 @@ function createWindow() {
 	    try{ app.dock.setIcon(js9Electron.icon); }
 	    catch(e){ /* empty */ }
 	}
+    }
+    // adjust window width and height to fit screen size, if necessary
+    if( js9Electron.width === "toFit" ){
+	js9Electron.width = screen.getPrimaryDisplay().workAreaSize.width;
+    }
+    if( js9Electron.height === "toFit" ){
+	js9Electron.height = screen.getPrimaryDisplay().workAreaSize.height;
     }
     // create the browser window
     js9Electron.win = new BrowserWindow({
