@@ -218,10 +218,10 @@ function createWindow() {
 	}
     }
     // adjust window width and height to fit screen size, if necessary
-    if( js9Electron.width === "toFit" ){
+    if( js9Electron.width <= 0 ){
 	js9Electron.width = screen.getPrimaryDisplay().workAreaSize.width;
     }
-    if( js9Electron.height === "toFit" ){
+    if( js9Electron.height <= 0 ){
 	js9Electron.height = screen.getPrimaryDisplay().workAreaSize.height;
     }
     // create the browser window
