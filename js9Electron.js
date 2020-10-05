@@ -188,7 +188,7 @@ function initWillDownload() {
 
 // create a new window for a JS9 web page
 function createWindow() {
-    let f, s, cmd, todir;
+    let f, s, cmd, todir, twebpage;
     let ncmd = 0;
     let xcmds = "";
     let webpage = js9Electron.webpage;
@@ -287,12 +287,21 @@ function createWindow() {
     // final checks on the web page
     if( !webpage.includes("://") ){
 	if( !path.isAbsolute(webpage) ){
+	    // inside a script, look for web page in current directory first
 	    if( process.env.PWD && process.env.JS9_MSGSCRIPT ){
-		webpage = path.join(process.env.PWD, webpage);
-	    } else {
+		twebpage = path.join(process.env.PWD, webpage);
+		if( fs.existsSync(twebpage) ){
+		    webpage = twebpage;
+		} else {
+		    twebpage = null;
+		}
+	    }
+	    if( webpage !== twebpage ){
+		// look for web page in install directory
 		webpage = path.join(__dirname, webpage);
 	    }
 	}
+	// at this point, web page should exist
 	if( !fs.existsSync(webpage) ){
 	    dialog.showErrorBox("JS9 error", `can't find webpage ${webpage}`);
 	    process.exit();
