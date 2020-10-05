@@ -192,6 +192,7 @@ function createWindow() {
     let ncmd = 0;
     let xcmds = "";
     let webpage = js9Electron.webpage;
+    const { width, height } = screen.getPrimaryDisplay().workAreaSize;
     const getval = (s) => {
 	let d;
 	if( s === "true" ){
@@ -219,10 +220,12 @@ function createWindow() {
     }
     // adjust window width and height to fit screen size, if necessary
     if( js9Electron.width <= 0 ){
-	js9Electron.width = screen.getPrimaryDisplay().workAreaSize.width;
+	js9Electron.width = width;
+	process.env.JS9_WIDTH = js9Electron.width;
     }
     if( js9Electron.height <= 0 ){
-	js9Electron.height = screen.getPrimaryDisplay().workAreaSize.height;
+	js9Electron.height = height;
+	process.env.JS9_HEIGHT = js9Electron.height;
     }
     // create the browser window
     js9Electron.win = new BrowserWindow({

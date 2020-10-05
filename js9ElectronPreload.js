@@ -20,7 +20,11 @@ if( process.env.JS9_CONTEXTISOLATION !== "true" ){
 	// cmdline opts
 	cmdlineOpts: process.env.JS9_CMDLINEOPTS || "",
 	// whether multiple instances of the app are running
-	multiElectron: process.env.JS9_MULTIELECTRON === "true" ? true : false
+	multiElectron: process.env.JS9_MULTIELECTRON === "true" ? true : false,
+	// whether js9 should attempt to resize itself
+	resize: (process.env.JS9_WIDTH || process.env.JS9_HEIGHT) ?
+	    {width: process.env.JS9_WIDTH, height: process.env.JS9_HEIGHT} :
+	    false
     };
 
 } else {
@@ -47,7 +51,11 @@ contextBridge.exposeInMainWorld(
 	// cmdline opts
 	cmdlineOpts: process.env.JS9_CMDLINEOPTS || "",
 	// whether multiple instances of the app are running
-	multiElectron: process.env.JS9_MULTIELECTRON === "true" ? true : false
+	multiElectron: process.env.JS9_MULTIELECTRON === "true" ? true : false,
+	// whether js9 should attempt to resize itself
+	resize: (process.env.JS9_WIDTH || process.env.JS9_HEIGHT) ?
+	    {width: process.env.JS9_WIDTH, height: process.env.JS9_HEIGHT} :
+	    false
     });
 
 }
