@@ -3,7 +3,7 @@
 // set Astroem object with important properties and wrapped calls
 // eslint-disable-next-line no-unused-vars
 var Astroem = {
-      initwcs:  Module.cwrap('initwcs', 'number', ['string', 'number']),
+      initwcs:  Module.cwrap('initwcs', 'number', ['number', 'number']),
       freewcs:  Module.cwrap('freewcs', 'number', ['number']),
       listhdu:  Module.cwrap('listhdu', 'string', ['string', 'string']),
       wcsinfo:  Module.cwrap('wcsinfo', 'string', ['number']),
@@ -24,6 +24,7 @@ var Astroem = {
       vheap: Module["HEAPU8"],
       vmalloc: Module["_malloc"],
       vmemcpy: Module["writeArrayToMemory"],
+      vstrcpy: Module["writeAsciiToMemory"],
       vfree: Module["_free"],
       gzopen: Module.cwrap('gzopen', 'number', ['string', 'string']),
       gzread: Module.cwrap('gzread', 'number', ['number', 'number', 'number']),

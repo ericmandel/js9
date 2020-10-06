@@ -307,6 +307,7 @@ JS9.globalOpts = {
 	       galactic:"degrees", ecliptic:"degrees", linear:"degrees",
 	       physical:"pixels", image:"pixels"}, // def units for wcs sys
     wcsSetUpdatesDef: true,          // does setWCSUnits() update the default?
+    wcsHlength: 256000,		     // hlength passed to astroem wcsninit()
     regTemplates: ".reg",	     // templates for local region file input
     sessionTemplates: ".ses,.js9ses",// templates for local session file input
     colormapTemplates: ".cmap",      // templates for local colormap file input
@@ -5336,7 +5337,8 @@ JS9.Image.prototype.setWCSSys = function(wcssys, updatedef){
 
 // init wcs
 JS9.Image.prototype.initWCS = function(header){
-    let alt, key, varr, s;
+    let alt, key, varr, s, bufsize, buf;
+    const hlen = JS9.globalOpts.wcsHlength;
     const awcs = /(WCSNAME|WCSAXES|CRVAL[0-9]|CRPIX[0-9]|PC[0-9]_[0-9]|CDELT[0-9]|CD[0-9]_[0-9]|CTYPE[0-9]|CUNIT[0-9]|CRVAL[0-9]|PV[0-9]_[0-9]|PS[0-9]_[0-9]|RADESYS|LONPOLE|LATPOLE)([A-Z])/;
     if( !this.raw.header ){
 	return this;
@@ -5380,7 +5382,20 @@ JS9.Image.prototype.initWCS = function(header){
 	// loop through alt wcs objects
 	if( this.raw.altwcs.hasOwnProperty(key) ){
 	    s = JS9.raw2FITS(this.raw.altwcs[key].header);
-	    this.raw.altwcs[key].wcs = JS9.initwcs(s);
+	    // too large headers blow Emscripten's stack space
+	    // this.raw.altwcs[key].wcs = JS9.initwcs(s, hlen);
+	    // so we have to copy the header to the heap:
+	    // allocate space for the string in the emscripten heap
+	    bufsize = s.length + 1;
+	    try{ buf = JS9.vmalloc(bufsize); }
+	    catch(e){ JS9.error(`can't malloc for wcsinit: ${bufsize}`, e); }
+	    // copy the string to the heap
+	    try{ JS9.vstrcpy(s, buf); }
+	    catch(e){ JS9.error(`can't copy for wcsinit: ${bufsize}`, e); }
+	    // call the wcsinit routine, passing the heap pointer
+	    this.raw.altwcs[key].wcs = JS9.initwcs(buf, hlen);
+	    // free heap space
+	    JS9.vfree(buf);
 	    // get info about the wcs
 	    if( this.raw.altwcs[key].wcs > 0 ){
 		try{ this.raw.altwcs[key].wcsinfo =
@@ -23504,6 +23519,7 @@ JS9.initFITS = function(){
 	JS9.vfree = Astroem.vfree;
 	JS9.vheap = Astroem.vheap;
 	JS9.vmemcpy = Astroem.vmemcpy;
+	JS9.vstrcpy = Astroem.vstrcpy;
 	JS9.vfile = Astroem.vfile;
 	JS9.vread = Astroem.vread;
 	JS9.vunlink = Astroem.vunlink;
