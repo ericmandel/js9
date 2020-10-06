@@ -108,6 +108,7 @@ JS9.globalOpts.userMenuBar = [
 		"name": "Scales...",
 		"cmd": "DisplayPlugin",
 		"updateTitle": false,
+		"requireImage": false,
 		"args": ["JS9Scale"]
 	    }
 	]
@@ -172,6 +173,20 @@ JS9.globalOpts.userMenuBar = [
 		"cmd": "SetColormap",
 		"args": ["blue"]
 	    },
+	    {
+		"name": "Generate colormaps ...",
+		"updateTitle": false,
+		"requireImage": false,
+		"cmd": "DisplayPlugin",
+		"args": ["JS9Cmaps"]
+	    },
+	    {
+		"name": "Image filters ...",
+		"updateTitle": false,
+		"requireImage": false,
+		"cmd": "DisplayPlugin",
+		"args": ["JS9Filters"]
+	    }
 	]
     },
     {
@@ -262,6 +277,5 @@ JS9.globalOpts.userMenuBar = [
 		}
 	    }
 	]
-    },
-
+    }
 ];

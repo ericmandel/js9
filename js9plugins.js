@@ -7003,6 +7003,10 @@ JS9.Menubar.createMenus = function(){
 			    if( key !== opt.name ){
 				continue;
 			    }
+			    // most commands require an image to be displayed
+			    if( opt.requireImage !== false && !udisp.image ){
+				continue;
+			    }
 			    if( typeof JS9.publics[opt.cmd] === "function" ){
 				if( typeof opt.args === "function" ){
 				    // execute function to get array
