@@ -51,7 +51,7 @@ function isTrue(s, d){
 }
 
 // load preference file, if possible
-const loadPreferences = function(prefs){
+function loadPreferences(prefs){
     let s, obj, tobj, opt, otype, jtype, val;
     if( fs.existsSync(prefs) ){
 	s = fs.readFileSync(prefs, "utf-8");
@@ -100,7 +100,36 @@ const loadPreferences = function(prefs){
 	    }
 	}
     }
-};
+}
+
+// save (usually cmdline) preferences in a js9Electron.json prefs file
+function savePreferences(obj){
+    let s, key;
+    // merge pref object with Electron prefs from json file, if necessary
+    if( js9Electron.prefs ){
+	// deep copy of prefs object
+	s = JSON.parse(JSON.stringify(js9Electron.prefs));
+	// overwrite cmdline object properties
+	for( key in obj ){
+	    if( obj.hasOwnProperty(key) && s.cmdlineOpts.hasOwnProperty(key) ){
+		s.cmdlineOpts[key] = obj[key];
+	    }
+	}
+    } else {
+	// just cmdline object
+	s = {cmdlineOpts: obj};
+    }
+    // nicely formatted object
+    s = JSON.stringify(s, null, 4);
+    // save to file
+    fs.writeFile(js9Electron.prefsFile, s, (err) => {
+	if( err ){
+	    dialog.showErrorBox(`ERROR saving ${js9Electron.prefsFile}`,
+				err.message);
+	    return;
+	}
+    });
+}
 
 // start up a JS9 helper, if possible and necessary
 function startHelper(mode){
@@ -436,7 +465,23 @@ function createWindow() {
     try{ require('./js9ElectronMainMenu'); }
     catch(e){ /* empty */ }
 
-    // emitted when the window is closed
+    // emitted when the window is about to be closed
+    js9Electron.win.on('close', () => {
+	let obj;
+	// app: save preferences
+	if( js9Electron.isApp ){
+	    obj = js9Electron.win.getBounds();
+	    try{ savePreferences(obj); }
+	    catch(e){ /* empty */ }
+	}
+	// remove generated page if we merged
+	if( typeof js9Electron.mergePage === "string" ){
+	    try{ fs.unlinkSync(js9Electron.mergePage); }
+	    catch(e){ /* empty */ }
+	}
+    });
+
+    // emitted when the window has been closed
     js9Electron.win.on('closed', () => {
 	// Dereference the window object, usually you would store windows
 	// in an array if your app supports multi windows, this is the time
@@ -662,11 +707,6 @@ app.on('ready', () => {
 
 // quit when all windows are closed
 app.on('window-all-closed', () => {
-    // remove generated page if we merged
-    if( typeof js9Electron.mergePage === "string" ){
-	try{ fs.unlinkSync(js9Electron.mergePage); }
-	catch(e){ /* empty */ }
-    }
     // quit the app
     app.quit();
 });
@@ -787,25 +827,7 @@ ipcMain.on("msg", (event, arg) => {
 	    case "cmdline":
 		switch(obj.mode){
 		case "save":
-		    // merge cmdlineOpts with prefs, if necessary
-		    if( js9Electron.prefs ){
-			// deep copy of prefs object
-			s = JSON.parse(JSON.stringify(js9Electron.prefs));
-			// overwrite cmdline object
-			s.cmdlineOpts = obj.cmdlineOpts;
-		    } else {
-			// just cmdline object
-			s = {cmdlineOpts: obj.cmdlineOpts};
-		    }
-		    // nicely formatted object
-		    s = JSON.stringify(s, null, 4);
-		    // save to file
-		    fs.writeFile(js9Electron.prefsFile, s, (err) => {
-			if( err ){
-			    dialog.showErrorBox(`ERROR saving ${js9Electron.prefsFile}`, err.message);
-			    return;
-			}
-		    });
+		    savePreferences(obj.cmdlineOpts);
 		    break;
 		case "remove":
 		    try{ fs.unlinkSync(js9Electron.prefsFile); }
