@@ -13054,10 +13054,12 @@ JS9.Statusbar.mup = function(target, id){
 }
 
 // redraw status on display
-JS9.Statusbar.display = function(im){
+JS9.Statusbar.display = function(im, opts){
     let i, s, t, oarr, arr, elements, index, pinst, statusbar;
     let html = "";
     let delim = /;/;
+    // opts is optional
+    opts = opts || {};
     if( im && JS9.globalOpts.statusBar ){
 	statusbar = JS9.globalOpts.statusBar;
 	// remove colorbar if colorbar plugin is instantiated
@@ -13076,7 +13078,7 @@ JS9.Statusbar.display = function(im){
 	    .replace(/ __CP__ /g, ")")
 	    .replace(/ __OB__ /g, "[")
 	    .replace(/ __CB__ /g, "]");
-	if( this.statusBar !== statusbar ){
+	if( this.statusBar !== statusbar || opts.reinit ){
 	    // original statusbar items
 	    oarr = statusbar.split(delim);
 	    // current values of items in the status bar
@@ -13165,8 +13167,12 @@ JS9.Statusbar.init = function(width, height){
     }
     this.divjq.css("height", this.height);
     this.height = parseInt(this.divjq.css("height"), 10);
-    this.colorwidth = parseInt(this.divjq.attr("data-colorbarWidth"), 10) || JS9.Statusbar.COLORWIDTH;
-    this.colorheight = parseInt(this.divjq.attr("data-colorbarHeight"), 10) || JS9.Statusbar.COLORHEIGHT;
+    // colorbar width stretches with statusbar
+    this.colorwidth = parseInt(this.divjq.attr("data-colorbarWidth"), 10) ||
+	Math.max(this.width - 512 + JS9.Statusbar.COLORWIDTH,
+		 JS9.Statusbar.COLORWIDTH);
+    this.colorheight = parseInt(this.divjq.attr("data-colorbarHeight"), 10) ||
+	JS9.Statusbar.COLORHEIGHT;
     // clean plugin container
     this.divjq.html("");
     // status container

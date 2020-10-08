@@ -10518,7 +10518,7 @@ JS9.Display.prototype.displayLoadForm = function(opts){
 
 //  resize a display
 JS9.Display.prototype.resize = function(width, height, opts){
-    let i, div, im, key, layer, nwidth, nheight, nleft, ntop, pinst;
+    let i, div, im, key, layer, nwidth, nheight, nleft, ntop, pinst, owidth;
     const repos = (o) => {
 	o.left += nleft;
 	o.top  += ntop;
@@ -10582,6 +10582,8 @@ JS9.Display.prototype.resize = function(width, height, opts){
     nheight = height;
     nleft = (nwidth - this.width) / 2;
     ntop = (nheight - this.height) / 2;
+    // save old width for statusbar calculation
+    owidth = this.width;
     // change display parameters
     this.width = nwidth;
     this.height = nheight;
@@ -10631,6 +10633,13 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	pinst = this.pluginInstances.JS9Statusbar;
 	if( pinst ){
 	    $(`#${this.id}Statusbar`).css("width", nwidth);
+	    // resize colorbar, if necessary
+	    if( pinst.statusBar.match(/\$colorbar/) &&
+		opts.resizeStatusbarColorbar !== false ){
+		pinst.colorwidth = Math.max(pinst.colorwidth + width - owidth,
+					    JS9.Statusbar.COLORWIDTH);
+		JS9.Statusbar.display.call(pinst, this.image, {reinit: true});
+	    }
 	}
     }
     // change size of shape canvases
