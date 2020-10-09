@@ -250,10 +250,13 @@ function createWindow() {
     // adjust window width and height to fit screen size, if necessary
     if( js9Electron.width <= 0 ){
 	js9Electron.width = width;
-	process.env.JS9_WIDTH = js9Electron.width;
     }
     if( js9Electron.height <= 0 ){
 	js9Electron.height = height;
+    }
+    // if width and/or height not explicitly specified, pass along resize info
+    if( js9Electron.resize ){
+	process.env.JS9_WIDTH = js9Electron.width;
 	process.env.JS9_HEIGHT = js9Electron.height;
     }
     // create the browser window
@@ -468,8 +471,8 @@ function createWindow() {
     // emitted when the window is about to be closed
     js9Electron.win.on('close', () => {
 	let obj;
-	// app: save preferences
-	if( js9Electron.isApp ){
+	// app: save preferences unless prefs were set inside JS9
+	if( js9Electron.isApp && js9Electron.closeprefs !== false ){
 	    obj = js9Electron.win.getBounds();
 	    try{ savePreferences(obj); }
 	    catch(e){ /* empty */ }
@@ -579,9 +582,10 @@ js9Electron.merge = js9Electron.argv.merge|| js9Electron.cmdlineOpts.merge;
 js9Electron.webpage = js9Electron.argv.w || js9Electron.argv.webpage || js9Electron.cmdlineOpts.webpage;
 js9Electron.title = js9Electron.argv.title|| js9Electron.cmdlineOpts.title;
 js9Electron.tmp = js9Electron.argv.tmp || js9Electron.cmdlineOpts.tmp;
-js9Electron.renameid = js9Electron.argv.renameid|| js9Electron.cmdlineOpts.renameid;
+js9Electron.renameid = js9Electron.argv.renameid || js9Electron.cmdlineOpts.renameid;
+js9Electron.resize = js9Electron.argv.width === undefined && js9Electron.argv.height === undefined;
 js9Electron.width = js9Electron.argv.width || js9Electron.cmdlineOpts.width;
-js9Electron.height = js9Electron.argv.height  || js9Electron.cmdlineOpts.height;
+js9Electron.height = js9Electron.argv.height || js9Electron.cmdlineOpts.height;
 js9Electron.savedir = js9Electron.argv.savedir || js9Electron.cmdlineOpts.savedir;
 
 // the list of files to load
@@ -827,9 +831,11 @@ ipcMain.on("msg", (event, arg) => {
 	    case "cmdline":
 		switch(obj.mode){
 		case "save":
+		    js9Electron.closeprefs = false;
 		    savePreferences(obj.cmdlineOpts);
 		    break;
 		case "remove":
+		    delete js9Electron.closeprefs;
 		    try{ fs.unlinkSync(js9Electron.prefsFile); }
 		    catch(e){ /* empty */ }
 		    break;
