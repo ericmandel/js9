@@ -250,9 +250,11 @@ function createWindow() {
     // adjust window width and height to fit screen size, if necessary
     if( js9Electron.width <= 0 ){
 	js9Electron.width = width;
+	js9Electron.resize = true;
     }
     if( js9Electron.height <= 0 ){
 	js9Electron.height = height;
+	js9Electron.resize = true;
     }
     // if width and/or height not explicitly specified, pass along resize info
     if( js9Electron.resize ){
@@ -584,8 +586,8 @@ js9Electron.title = js9Electron.argv.title|| js9Electron.cmdlineOpts.title;
 js9Electron.tmp = js9Electron.argv.tmp || js9Electron.cmdlineOpts.tmp;
 js9Electron.renameid = js9Electron.argv.renameid || js9Electron.cmdlineOpts.renameid;
 js9Electron.resize = js9Electron.argv.width === undefined && js9Electron.argv.height === undefined;
-js9Electron.width = js9Electron.argv.width || js9Electron.cmdlineOpts.width;
-js9Electron.height = js9Electron.argv.height || js9Electron.cmdlineOpts.height;
+js9Electron.width = js9Electron.argv.width !== undefined ? js9Electron.argv.width : js9Electron.cmdlineOpts.width;
+js9Electron.height = js9Electron.argv.height !== undefined ? js9Electron.argv.height : js9Electron.cmdlineOpts.height;
 js9Electron.savedir = js9Electron.argv.savedir || js9Electron.cmdlineOpts.savedir;
 
 // the list of files to load
