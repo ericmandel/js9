@@ -195,8 +195,7 @@ JS9.Statusbar.init = function(width, height){
     this.height = parseInt(this.divjq.css("height"), 10);
     // colorbar width stretches with statusbar
     this.colorwidth = parseInt(this.divjq.attr("data-colorbarWidth"), 10) ||
-	Math.max(this.width - 512 + JS9.Statusbar.COLORWIDTH,
-		 JS9.Statusbar.COLORWIDTH);
+	JS9.Statusbar.COLORWIDTH + Math.max(this.display.width - 512, 0);
     this.colorheight = parseInt(this.divjq.attr("data-colorbarHeight"), 10) ||
 	JS9.Statusbar.COLORHEIGHT;
     // clean plugin container

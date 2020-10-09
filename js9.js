@@ -10634,7 +10634,8 @@ JS9.Display.prototype.resize = function(width, height, opts){
 	if( pinst ){
 	    $(`#${this.id}Statusbar`).css("width", nwidth);
 	    // resize colorbar, if necessary
-	    if( pinst.statusBar.match(/\$colorbar/) &&
+	    if( pinst.statusBar &&
+		pinst.statusBar.match(/\$colorbar/) &&
 		opts.resizeStatusbarColorbar !== false ){
 		pinst.colorwidth = Math.max(pinst.colorwidth + width - owidth,
 					    JS9.Statusbar.COLORWIDTH);
