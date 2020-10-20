@@ -600,10 +600,10 @@ JS9.Prefs.favoritesSchema = {
     }
 };
 
-// cmdline scheme for apps only
-JS9.Prefs.cmdlineSchema = {
-    "title": "App Command-line Preferences",
-    "description": "App command line preferences will take effect on restart",
+// scheme for desktop apps only
+JS9.Prefs.desktopSchema = {
+    "title": "Desktop App Preferences",
+    "description": "Desktop app preferences will take effect on restart",
     "properties": {
 	"webpage": {
 	    type: "string",
@@ -637,7 +637,7 @@ JS9.Prefs.sources = [
     {name: "grid",     schema: JS9.Prefs.gridSchema},
     {name: "catalogs", schema: JS9.Prefs.catalogsSchema},
     {name: "favorites", schema: JS9.Prefs.favoritesSchema},
-    {name: "cmdline",  schema: JS9.Prefs.cmdlineSchema}
+    {name: "desktop",  schema: JS9.Prefs.desktopSchema}
 ];
 
 // init preference plugin
@@ -652,8 +652,8 @@ JS9.Prefs.init = function(){
     // create a tab for each source
     for(i=0; i<sources.length; i++){
 	source = sources[i];
-	// cmdline is only for apps that have command line opts
-	if( source.name === "cmdline" && !JS9.cmdlineOpts ){
+	// desktop is only for apps that have command line opts
+	if( source.name === "desktop" && !JS9.cmdlineOpts ){
 	    continue;
 	}
 	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
@@ -664,8 +664,8 @@ JS9.Prefs.init = function(){
     // create each param form (displayed by clicking each tab)
     for(i=0; i<sources.length; i++){
 	source = sources[i];
-	// cmdline is only for apps that have command line opts
-	if( source.name === "cmdline" && !JS9.cmdlineOpts ){
+	// desktop is only for apps that have command line opts
+	if( source.name === "desktop" && !JS9.cmdlineOpts ){
 	    continue;
 	}
 	id = this.id + JS9.Prefs.CLASS + JS9.Prefs.NAME + source.name;
@@ -701,7 +701,7 @@ JS9.Prefs.init = function(){
 	case "favorites":
 	    source.data = JS9.favorites;
 	    break;
-	case "cmdline":
+	case "desktop":
 	    source.data = JS9.cmdlineOpts;
 	    break;
 	default:
@@ -799,20 +799,20 @@ JS9.Prefs.applyForm = function(){
 JS9.Prefs.saveForm = function(){
     const form = $(this).closest("form");
     const source = form.data("source");
-    const opts = {cmd: "cmdline", mode: "save"};
+    const opts = {cmd: "desktop", mode: "save"};
     JS9.Prefs.applyForm.call(this);
-    // cmdline handled specially
-    if( source.name === "cmdline" ){
+    // desktop handled specially
+    if( source.name === "desktop" ){
 	if( window.electron ){
 	    window.setTimeout(() => {
 		try{
 		    opts.cmdlineOpts = JS9.cmdlineOpts;
 		    window.electron.sendMsg(opts);
 		}
-		catch(e){ JS9.error("could not save cmdline form", e); }
+		catch(e){ JS9.error("could not save desktop form", e); }
 	    }, JS9.TIMEOUT);
 	} else {
-	    JS9.error("cmdLine save is only available for the JS9 desktop app");
+	    JS9.error("desktop save is only available for the JS9 desktop app");
 	}
 	return false;
     }
@@ -827,8 +827,8 @@ JS9.Prefs.showForm = function(){
     let s, t;
     const form = $(this).closest("form");
     const source = form.data("source");
-    // cmdline handled specially
-    if( source.name === "cmdline" ){
+    // desktop handled specially
+    if( source.name === "desktop" ){
 	if( JS9.cmdlineOpts ){
 	    s = JSON.stringify(JS9.cmdlineOpts, null, 4);
 	    t = `<pre>${s}</pre>`;
@@ -854,16 +854,16 @@ JS9.Prefs.showForm = function(){
 JS9.Prefs.deleteForm = function(){
     const form = $(this).closest("form");
     const source = form.data("source");
-    const opts = {cmd: "cmdline", mode: "remove"};
-    // cmdline handled specially
-    if( source.name === "cmdline" ){
+    const opts = {cmd: "desktop", mode: "remove"};
+    // desktop handled specially
+    if( source.name === "desktop" ){
 	if( window.electron ){
 	    window.setTimeout(() => {
 		try{ window.electron.sendMsg(opts); }
-		catch(e){ JS9.error("could not save cmdline form", e); }
+		catch(e){ JS9.error("could not save desktop form", e); }
 	    }, JS9.TIMEOUT);
 	} else {
-	    JS9.error("cmdLine save is only available for the JS9 desktop app");
+	    JS9.error("desktop save is only available for the JS9 desktop app");
 	}
 	return false;
     }
@@ -901,7 +901,7 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
     case "favorites":
 	obj = JS9.favorites;
 	break;
-    case "cmdline":
+    case "desktop":
 	obj = JS9.cmdlineOpts;
 	break;
     default:
@@ -1037,7 +1037,7 @@ JS9.Prefs.processForm = function(source, arr, display, winid){
 		// set new option value
 	        obj[key] = val;
 		break;
-	    case "cmdline":
+	    case "desktop":
 		// set new option value
 	        obj[key] = val;
 		break;

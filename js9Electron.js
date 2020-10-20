@@ -105,6 +105,7 @@ function loadPreferences(prefs){
 // save (usually cmdline) preferences in a js9Electron.json prefs file
 function savePreferences(obj){
     let s, key;
+    const { width, height } = screen.getPrimaryDisplay().workAreaSize;
     // merge pref object with Electron prefs from json file, if necessary
     if( js9Electron.prefs ){
 	// deep copy of prefs object
@@ -119,12 +120,22 @@ function savePreferences(obj){
 	// just cmdline object
 	s = {cmdlineOpts: obj};
     }
+    // revert width and height to 0, if possible
+    if( s.cmdlineOpts ){
+	// why are getBounds() and workAreaSize always off by 1??
+	if( Math.abs(s.cmdlineOpts.width - width) <= 1 ){
+	    s.cmdlineOpts.width = 0;
+	}
+	if( Math.abs(s.cmdlineOpts.height - height) <= 1 ){
+	    s.cmdlineOpts.height = 0;
+	}
+    }
     // nicely formatted object
     s = JSON.stringify(s, null, 4);
     // save to file
-    fs.writeFile(js9Electron.prefsFile, s, (err) => {
+    fs.writeFile(js9Electron.userPrefs, s, (err) => {
 	if( err ){
-	    dialog.showErrorBox(`ERROR saving ${js9Electron.prefsFile}`,
+	    dialog.showErrorBox(`ERROR saving ${js9Electron.userPrefs}`,
 				err.message);
 	    return;
 	}
@@ -571,11 +582,17 @@ for(let i=js9Electron.startArg; i<process.argv.length; i++){
 }
 js9Electron.argv = require('minimist')(js9Electron.args, {stopEarly:true});
 
-// maybe override defaults using json file
-// (this is where the Mac app gets its configuration)
-js9Electron.prefsFile = path.join(__dirname, "js9Electron.json");
-if( fs.existsSync(js9Electron.prefsFile) ){
-    loadPreferences(js9Electron.prefsFile);
+// maybe override defaults using app prefs file
+// (this is where the Mac app gets its default configuration)
+js9Electron.appPrefs = path.join(__dirname, "js9Electron.json");
+if( fs.existsSync(js9Electron.appPrefs) ){
+    loadPreferences(js9Electron.appPrefs);
+}
+// maybe override defaults using user prefs file
+// (this is where the Mac app stores user-specified configuration)
+js9Electron.userPrefs = path.join(app.getPath("userData"), "js9Electron.json");
+if( fs.existsSync(js9Electron.userPrefs) ){
+    loadPreferences(js9Electron.userPrefs);
 }
 
 // command line switch options
@@ -835,7 +852,7 @@ ipcMain.on("msg", (event, arg) => {
 		    });
 		}
 		break;
-	    case "cmdline":
+	    case "desktop":
 		switch(obj.mode){
 		case "save":
 		    js9Electron.closeprefs = false;
@@ -843,7 +860,7 @@ ipcMain.on("msg", (event, arg) => {
 		    break;
 		case "remove":
 		    delete js9Electron.closeprefs;
-		    try{ fs.unlinkSync(js9Electron.prefsFile); }
+		    try{ fs.unlinkSync(js9Electron.userPrefs); }
 		    catch(e){ /* empty */ }
 		    break;
 		}
