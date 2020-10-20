@@ -162,6 +162,7 @@ case $OS in
 	  command -v "$TRY" 1>/dev/null 2>&1
 	  if [ $? = 0 ]; then
 	      # https://github.com/electron/electron/issues/17972
+	      # (but see end of discussion, its unclear whether this is needed)
 	      ELECTRON_EXE="$TRY --no-sandbox"
 	  fi
   ;;
