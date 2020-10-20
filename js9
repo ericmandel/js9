@@ -161,10 +161,8 @@ case $OS in
   Linux)  TRY="electron"
 	  command -v "$TRY" 1>/dev/null 2>&1
 	  if [ $? = 0 ]; then
-#	      this appears to be fixed in v10 ...
-#	      # https://github.com/electron/electron/issues/17972
-#	      ELECTRON_EXE="$TRY --no-sandbox"
-	      ELECTRON_EXE="$TRY"
+	      # https://github.com/electron/electron/issues/17972
+	      ELECTRON_EXE="$TRY --no-sandbox"
 	  fi
   ;;
   Darwin) TRIES="${JS9_ELECTRON_APP} ${HOME}/Applications/Electron.app/Contents/MacOS/Electron /Applications/Electron.app/Contents/MacOS/Electron /usr/local/lib/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
