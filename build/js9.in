@@ -182,6 +182,12 @@ if [ $# = 1 -a "$1" = "--help" ]; then
   usage
   exit 0
 fi
+# js9msg (exported by desktop app): no args => display help and exit
+# (since we can't really start up the app)
+if [ $# = 0 -a x`basename $XFILE` = "xjs9msg" ]; then
+  usage
+  exit 0
+fi
 
 # check if all args (if any) are files
 if [ $# -ge 0 ]; then

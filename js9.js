@@ -26856,12 +26856,12 @@ JS9.mkPublic("WindowToPDF", function(...args){
     }
 });
 
-// save js9 messaging script (Desktop JS9 only)
+// save js9 messaging script (Desktop JS9 app only)
 // eslint-disable-next-line no-unused-vars
 JS9.mkPublic("SaveScript", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const opts = {cmd: "script"};
-    if( window.electron ){
+    if( window.electron && window.electron.app ){
 	opts.filename = obj.argv[0] || "js9msg";
 	window.setTimeout(() => {
 	    try{ window.electron.sendMsg(opts); }
