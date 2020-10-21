@@ -9796,7 +9796,7 @@ JS9.Menubar.createMenus = function(){
 		}
 	    }
 	    items[`sep${n++}`] = "------";
-	    items.about = xname("about JS9");
+	    items.about = xname("About");
 	    return {
 		callback: (key) => {
 		    switch(key){
