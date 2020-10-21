@@ -826,9 +826,9 @@ ipcMain.on("msg", (event, arg) => {
 		    s = path.join(js9Electron.appbin, "js9");
 		    fs.readFile(s, "utf-8", (err, data) => {
 			let dir, file;
+			let s = "Error saving messaging script";
 			if( err ){
-			    dialog.showErrorBox("ERROR in SaveScript",
-						err.message);
+			    dialog.showErrorBox(s, err.message);
 			    return;
 			}
 			dir = js9Electron.savedir || process.cwd() || ".";
@@ -836,18 +836,31 @@ ipcMain.on("msg", (event, arg) => {
 			data = data
 			    .replace(/JS9_SRCDIR=".*"/, `JS9_SRCDIR="${__dirname}"`)
 			    .replace(/JS9_INSTALLDIR=".*"/, `JS9_INSTALLDIR="${__dirname}"`);
-			fs.writeFile(file, data, (err) => {
-			    if( err ){
-				dialog.showErrorBox("ERROR in SaveScript",
-						    err.message);
-				return;
+
+			// dialog box to place script
+			dialog.showSaveDialog({
+			    title: "Save messaging script",
+			    defaultPath: file,
+			    buttonLabel: "Save"
+			}).then(file => {
+			    if (!file.canceled) {
+				file = file.filePath.toString();
+				fs.writeFile(file, data, (err) => {
+				    if( err ){
+					dialog.showErrorBox(s, err.message);
+					return;
+				    }
+				    fs.chmod(file, 0o755, (err) => {
+					if( err ){
+					    dialog.showErrorBox(s, err.message);
+					    return;
+					}
+				    });
+				});
 			    }
-			    fs.chmod(file, 0o755, (err) => {
-				if( err ){
-				    dialog.showErrorBox("ERROR in SaveScript",
-							err.message);
-				}
-			    });
+			}).catch(err => {
+			    dialog.showErrorBox(s, err.message);
+			    return;
 			});
 		    });
 		}
