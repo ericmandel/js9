@@ -557,6 +557,11 @@ js9Electron.cmdlineOpts = {
     height: 768
 };
 
+// export options
+js9Electron.exportOpts = {
+    script: "js9msg"
+};
+
 js9Electron.startArg = 1;
 // skip args passed to Electron itself
 // skip --no-sandbox
@@ -832,7 +837,7 @@ ipcMain.on("msg", (event, arg) => {
 			    return;
 			}
 			dir = js9Electron.savedir || process.cwd() || ".";
-			file = path.join(dir, obj.filename || "js9msg");
+			file = path.join(dir, obj.filename || js9Electron.exportOpts.script);
 			data = data
 			    .replace(/JS9_SRCDIR=".*"/, `JS9_SRCDIR="${__dirname}"`)
 			    .replace(/JS9_INSTALLDIR=".*"/, `JS9_INSTALLDIR="${__dirname}"`);

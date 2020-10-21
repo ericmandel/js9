@@ -7371,7 +7371,7 @@ JS9.Menubar.createMenus = function(){
 		items.windowPrint = xname("print window ...");
 		items.windowPDF = xname("save window to pdf");
 		if( window.electron.app ){
-		    items.saveScript = xname("save messaging script");
+		    items.saveScript = xname("export messaging script");
 		}
 	    }
 	    // plugins

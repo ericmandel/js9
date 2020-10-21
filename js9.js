@@ -26863,7 +26863,7 @@ JS9.mkPublic("SaveScript", function(...args){
     const obj = JS9.parsePublicArgs(args);
     const opts = {cmd: "script"};
     if( window.electron && window.electron.app ){
-	opts.filename = obj.argv[0] || "js9msg";
+	opts.filename = obj.argv[0] || "";
 	window.setTimeout(() => {
 	    try{ window.electron.sendMsg(opts); }
 	    catch(e){ JS9.error("could not create messaging script", e); }
