@@ -3062,7 +3062,7 @@ JS9.Menubar.createMenus = function(){
 		callback: (key) => {
 		    switch(key){
 		    case "about":
-			alert(`JS9 ${JS9.VERSION}: astronomical image display everywhere\nEric Mandel, Alexey Vikhlinin\ncontact: emandel@cfa.harvard.edu\n${JS9.COPYRIGHT}`);
+			alert(JS9.ABOUT);
 			break;
 		    default:
 			JS9.DisplayHelp(key);
