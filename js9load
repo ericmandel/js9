@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # set -x
 
 # in case the user has changed the js9 script, try to figure out the right one
