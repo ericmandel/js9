@@ -120,7 +120,7 @@ if [ $? = 0 ]; then
     if [ x"$DODEBUG" != xtrue ]; then
         XARGS="-q"
     fi
-    X=$(wget $XARGS -O- -T $TIMEOUT "$URL")
+    wget $XARGS -O- -T $TIMEOUT "$URL"
 else
     hash curl 1>/dev/null 2>&1
     if [ $? = 0 ]; then
@@ -129,15 +129,9 @@ else
 	else
             XARGS="-s"
         fi
-        X=$(curl $XARGS --connect-timeout $TIMEOUT "$URL")
+        curl $XARGS --connect-timeout $TIMEOUT "$URL"
     else
         error "$0 requires either wget or curl"
     fi
 fi
-if [ x"$X" = xnull ]; then
-  X=""
-fi
-if [ x"$X" = x -a x"$CMD" = "xtargets" ]; then
-  X="0"
-fi
-echo "$X"
+printf "\n"
