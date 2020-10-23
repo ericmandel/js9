@@ -559,7 +559,8 @@ js9Electron.cmdlineOpts = {
 
 // export options
 js9Electron.exportOpts = {
-    script: "js9msg"
+    inputScript: "js9msg",
+    outputScript: "js9msg"
 };
 
 js9Electron.startArg = 1;
@@ -828,7 +829,7 @@ ipcMain.on("msg", (event, arg) => {
 		break;
 	    case "script":
 		if( js9Electron.appbin ){
-		    s = path.join(js9Electron.appbin, "js9");
+		    s = path.join(js9Electron.appbin, js9Electron.exportOpts.inputScript);
 		    fs.readFile(s, "utf-8", (err, data) => {
 			let dir, file;
 			let s = "Error saving messaging script";
@@ -837,7 +838,7 @@ ipcMain.on("msg", (event, arg) => {
 			    return;
 			}
 			dir = js9Electron.savedir || process.cwd() || ".";
-			file = path.join(dir, obj.filename || js9Electron.exportOpts.script);
+			file = path.join(dir, obj.filename || js9Electron.exportOpts.outputScript);
 			data = data
 			    .replace(/JS9_SRCDIR=".*"/, `JS9_SRCDIR="${__dirname}"`)
 			    .replace(/JS9_INSTALLDIR=".*"/, `JS9_INSTALLDIR="${__dirname}"`);

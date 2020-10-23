@@ -216,7 +216,7 @@ INCLUDES =	js9helper.h
 SCRIPTS =	scripts/funhist2flot scripts/funcnts2flot scripts/fits2png \
 		scripts/js9mosaic
 
-SCRIPTS2 =	js9 js9load js9wait
+SCRIPTS2 =	js9 js9msg js9load js9wait
 
 UTILLIB	=	libutil.a
 
