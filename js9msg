@@ -14,8 +14,9 @@ TIMEOUT=3
 usage(){
   XEQ=`basename $0`
   printf "$XEQ: send a command to JS9 (using wget or curl)\n\n"
-  printf "  %s [switches] [cmd] [arg1] [arg2] ... [argn]\n" $XEQ
-  printf " \n"
+  printf "  call:\n"
+  printf "    %s [switches] [cmd] [arg1] [arg2] ... [argn]\n" $XEQ
+  printf "\n"
   printf "  switches:\n"
   printf "    -d|--debug                # output debugging info\n"
   printf "    -h|--host| [host]         # helper host (def: $HOST)\n"
@@ -23,7 +24,14 @@ usage(){
   printf "    -i|--id [id]              # client id (def: $ID)\n"
   printf "    -p|--port| [port]         # port number (def: $PORT)\n"
   printf "    -t|--timeout              # timeout for connect (def: $TIMEOUT)\n"
-  printf " \n"
+  printf "\n  examples:\n"
+  printf "    # load foo.fits, setting colormap and scale\n"
+  printf "    %s Load foo.fits '{\"colormap\":\"heat\", \"scale\":\"log\"}'\n" $XEQ
+  printf "    # get the colormap of the currently loaded image\n"
+  printf "    %s GetColormap\n" $XEQ
+  printf "    # set the colormap of the image loaded into %s\n" $JS9HOST
+  printf "    %s -H SetColormap viridis\n" $XEQ
+  printf "\n"
 }
 
 error() {
