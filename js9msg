@@ -124,8 +124,10 @@ if [ $? = 0 ]; then
 else
     hash curl 1>/dev/null 2>&1
     if [ $? = 0 ]; then
-        if [ x"$DODEBUG" != xtrue ]; then
+        if [ x"$DODEBUG" = xtrue ]; then
             XARGS="-v"
+	else
+            XARGS="-s"
         fi
         X=$(curl $XARGS --connect-timeout $TIMEOUT "$URL")
     else
