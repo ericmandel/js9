@@ -9,7 +9,7 @@ ID=JS9
 HOST=localhost
 JS9HOST="https://js9.si.edu"
 PORT=2718
-TIMEOUT=3
+TIMEOUT=180
 
 usage(){
   XEQ=`basename $0`
