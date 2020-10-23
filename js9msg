@@ -1,0 +1,133 @@
+#!/bin/bash
+#set -x
+
+# js9msg: send a command to JS9 using wget or curl
+# node is not required, which makes the js9 app self-contained
+
+# default variables
+ID=JS9
+HOST=localhost
+JS9HOST="https://js9.si.edu"
+PORT=2718
+TIMEOUT=3
+
+usage(){
+  XEQ=`basename $0`
+  printf "$XEQ: send a command to JS9 (using wget or curl)\n\n"
+  printf "  %s [switches] [cmd] [arg1] [arg2] ... [argn]\n" $XEQ
+  printf " \n"
+  printf "  switches:\n"
+  printf "    -d|--debug                # output debugging info\n"
+  printf "    -h|--host| [host]         # helper host (def: $HOST)\n"
+  printf "    -H                        # connect to main JS9 web site\n"
+  printf "    -i|--id [id]              # client id (def: $ID)\n"
+  printf "    -p|--port| [port]         # port number (def: $PORT)\n"
+  printf "    -t|--timeout              # timeout for connect (def: $TIMEOUT)\n"
+  printf " \n"
+}
+
+error() {
+  echo "ERROR: $1" 1>&2
+  exit 1
+}
+
+
+# https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
+rawurlencode() {
+  local string="${1}"
+  local strlen=${#string}
+  local encoded=""
+  local pos c o
+
+  for (( pos=0 ; pos<strlen ; pos++ )); do
+     c=${string:$pos:1}
+     case "$c" in
+        [-_.~a-zA-Z0-9] ) o="${c}" ;;
+        * )               printf -v o '%%%02x' "'$c"
+     esac
+     encoded+="${o}"
+  done
+  echo "${encoded}"    # You can either set a return variable (FASTER) 
+  REPLY="${encoded}"   #+or echo the result (EASIER)... or both... :p
+}
+
+while [ x"$1" != x ]; do
+    case $1 in
+    -d|--debug) shift
+        DODEBUG=true
+	;;
+
+    -i|--id) shift
+        ID="$1"
+	shift;;
+
+    -h|--host) shift
+        HOST="$1"
+        shift;;
+
+    -H) shift
+        HOST="$JS9HOST"
+        ;;
+
+    -p|--port) shift
+        PORT="$1"
+        shift;;
+
+    -t|--timeout) shift
+        TIMEOUT="$1"
+        shift;;
+
+     *) break;;
+    esac
+done
+
+# arg1: cmd
+if [ x"$1" = x ]; then
+  usage
+  exit 0
+else
+  CMD="$1"
+  shift
+fi
+
+# arg2 ... argn: arguments
+ARGS=""
+while [ x"$1" != x ]; do
+    ARG=$(echo $1 | sed 's/"/\\"/g')
+    if [ x"$ARGS" = x ]; then
+      ARGS="\"$ARG\""
+    else
+      ARGS="${ARGS},\"$ARG\""
+    fi
+    shift
+done
+
+# general form of message sent to JS9:
+QUERY='{"id":"'$ID'","cmd":"'$CMD'","args":['$ARGS']}'
+# encode the query
+URL=$HOST:$PORT/msg?$( rawurlencode "$QUERY" )
+
+hash wget 1>/dev/null 2>&1
+if [ $? = 0 ]; then
+    if [ x"$DODEBUG" != xtrue ]; then
+        XARGS="-q"
+    fi
+    X=$(wget $XARGS -O- -T $TIMEOUT "$URL")
+else
+    hash curl 1>/dev/null 2>&1
+    if [ $? = 0 ]; then
+        if [ x"$DODEBUG" != xtrue ]; then
+            XARGS="-v"
+        fi
+        X=$(curl $XARGS --connect-timeout $TIMEOUT "$URL")
+    else
+        error "$0 requires either wget or curl"
+    fi
+fi
+if [ x"$X" = xnull ]; then
+  X=""
+fi
+if [ x"$X" = x -a x"$CMD" = "xtargets" ]; then
+  X="0"
+fi
+echo "$X"
