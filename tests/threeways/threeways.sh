@@ -55,8 +55,8 @@ dowait (){
 }
 
 xjs9 (){
-  echo "    js9 $*" >&2
-  js9 $XARGS $*
+  echo "    ${XJS9:-js9msg} $*" >&2
+  ${XJS9:-js9msg} $XARGS $*
 }
 
 xjs9load (){
