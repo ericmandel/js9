@@ -61,7 +61,7 @@ case $host_os in
 esac
 
 # host-based suffix to look for libraries suffix
-OSSUFFIX=`echo $host | sed 's#-unknown##'`
+OSSUFFIX=`echo $host | sed 's#-[^-]*##'`
 
 AC_PROG_RANLIB
 
@@ -187,17 +187,29 @@ if test x"$havelib" = x1 ; then
       CFITSIOINC=$CFITSIOBASE/include
       AC_MSG_RESULT(yes ($CFITSIOBASE))
   else
-    AC_MSG_RESULT(no)
+      AC_CHECK_LIB(cfitsio, ffopen, have_cfitsio=yes, have_cfitsio=no)
+      if test "$have_cfitsio" = yes; then
+        CFITSIOLIB="__def__"
+        CFITSIOINC="__def__"
+      fi
   fi
 else
   AC_MSG_RESULT(no)
 fi
 # make up the final switches
 if test x$CFITSIOINC != x; then
-  CFITSIOINC="-I$CFITSIOINC -DHAVE_CFITSIO"
+  if test x$CFITSIOINC != x__def__; then
+    CFITSIOINC="-I$CFITSIOINC -DHAVE_CFITSIO"
+  else
+    CFITSIOINC="-DHAVE_CFITSIO"
+  fi
 fi
 if test x$CFITSIOLIB != x; then
-  CFITSIOLIB="-L $CFITSIOLIB -lcfitsio"
+  if test x$CFITSIOLIB != x__def__; then
+    CFITSIOLIB="-L $CFITSIOLIB -lcfitsio"
+  else
+    CFITSIOLIB="-lcfitsio"
+  fi
   # cfitsio 3.440 probably requires the curl library in the link line!
   # might also require bz2 library ...
   AC_CHECK_LIB(curl, curl_easy_init, CFITSIOLIB="$CFITSIOLIB -lcurl")

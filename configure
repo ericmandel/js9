@@ -3283,7 +3283,7 @@ case $host_os in
 esac
 
 # host-based suffix to look for libraries suffix
-OSSUFFIX=`echo $host | sed 's#-unknown##'`
+OSSUFFIX=`echo $host | sed 's#-[^-]*##'`
 
 if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
@@ -4157,8 +4157,52 @@ $as_echo "yes ($CFITSIOBASE)" >&6; }
       { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes ($CFITSIOBASE)" >&5
 $as_echo "yes ($CFITSIOBASE)" >&6; }
   else
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ffopen in -lcfitsio" >&5
+$as_echo_n "checking for ffopen in -lcfitsio... " >&6; }
+if ${ac_cv_lib_cfitsio_ffopen+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lcfitsio  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char ffopen ();
+int
+main ()
+{
+return ffopen ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_cfitsio_ffopen=yes
+else
+  ac_cv_lib_cfitsio_ffopen=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_cfitsio_ffopen" >&5
+$as_echo "$ac_cv_lib_cfitsio_ffopen" >&6; }
+if test "x$ac_cv_lib_cfitsio_ffopen" = xyes; then :
+  have_cfitsio=yes
+else
+  have_cfitsio=no
+fi
+
+      if test "$have_cfitsio" = yes; then
+        CFITSIOLIB="__def__"
+        CFITSIOINC="__def__"
+      fi
   fi
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
@@ -4166,10 +4210,18 @@ $as_echo "no" >&6; }
 fi
 # make up the final switches
 if test x$CFITSIOINC != x; then
-  CFITSIOINC="-I$CFITSIOINC -DHAVE_CFITSIO"
+  if test x$CFITSIOINC != x__def__; then
+    CFITSIOINC="-I$CFITSIOINC -DHAVE_CFITSIO"
+  else
+    CFITSIOINC="-DHAVE_CFITSIO"
+  fi
 fi
 if test x$CFITSIOLIB != x; then
-  CFITSIOLIB="-L $CFITSIOLIB -lcfitsio"
+  if test x$CFITSIOLIB != x__def__; then
+    CFITSIOLIB="-L $CFITSIOLIB -lcfitsio"
+  else
+    CFITSIOLIB="-lcfitsio"
+  fi
   # cfitsio 3.440 probably requires the curl library in the link line!
   # might also require bz2 library ...
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for curl_easy_init in -lcurl" >&5
