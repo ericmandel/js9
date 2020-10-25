@@ -48,6 +48,16 @@ case $name in
 		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
   ;;
 
+  engle)
+  ./configure 	$CF							\
+		--with-helper="socket.io"				\
+		--prefix=$HOME						\
+		--with-webdir=$HOME/Sites/js9				\
+		--with-cfitsio						\
+		--with-saodir=$HOME/Sites				\
+		CC=gcc CFLAGS="$CFLAGS $GCCFLAGS" $*
+  ;;
+
   baba-cgi)
   ./configure 	$CF							\
 		--with-helper="get"					\
