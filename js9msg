@@ -140,4 +140,3 @@ else
         error "$0 requires either wget or curl"
     fi
 fi
-printf "\n"
