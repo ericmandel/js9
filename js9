@@ -180,11 +180,11 @@ if [ $# -ge 0 ]; then
     esac
   done
 fi
-
 # if all args are files, its the app
 if [ x$ALLFILES != xfalse ]; then
   DOAPP=true
 fi
+
 # we might be able to use js9msg (wget or curl), which is faster
 if [ x"$JS9_TO_JS9MSG" != xfalse ]; then
   command -v js9msg 1>/dev/null 2>&1
@@ -200,7 +200,6 @@ if [ x"$JS9_TO_JS9MSG" != xfalse ]; then
 fi
 
 # Node or Electron will be used ...
-
 # look for Node.js program (for messaging, but not for app)
 command -v node 1>/dev/null 2>&1
 if [ $? = 0 ]; then
