@@ -167,12 +167,12 @@ fi
 if [ $# -ge 0 ]; then
   for arg in "$@"; do
     case $arg in
-      -a) DOAPP=true;         JS9_TO_JS9MSG=false; ALLFILES=false;;
+      -a|-av|-va) DOAPP=true; JS9_TO_JS9MSG=false; ALLFILES=false;;
       -b) DOBROWSER=true;     JS9_TO_JS9MSG=false; ALLFILES=false;;
       -p|--pipe) DOPIPE=true; JS9_TO_JS9MSG=false; ALLFILES=false;;
       -r) DOREG=true;         JS9_TO_JS9MSG=false; ALLFILES=false;;
-      -s) set --; ALLFILES=false;;
-      -v|--verify) DOVERIFY=true; ALLFILES=false;;
+      -s) set --;                                  ALLFILES=fanlse;;
+      -v|--verify) DOVERIFY=true;                  ALLFILES=false;;
       *) f=`echo $arg | sed 's/\[.*\]//'`
          if [[ ! "$f" =~ ^https?:// && ! -r "$f" ]]; then
            ALLFILES=false
