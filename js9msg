@@ -64,8 +64,7 @@ rawurlencode() {
 while [ x"$1" != x ]; do
     case $1 in
     -d|--debug) shift
-        DODEBUG=true
-	;;
+        DODEBUG=true;;
     -i|--id) shift
         ID="$1"
 	shift;;
@@ -73,8 +72,7 @@ while [ x"$1" != x ]; do
         HELPER="$1"
         shift;;
     -m|--multi) shift
-        MULTI=',"multi":true'
-        ;;
+        MULTI=',"multi":true';;
     --pageid) shift
         PAGEID=',"pageid":"'$1'"'
         shift;;
@@ -82,11 +80,9 @@ while [ x"$1" != x ]; do
         TIMEOUT="$1"
         shift;;
     -v|--verbose) shift
-        DODEBUG=true
-	;;
+        DODEBUG=true;;
     -W) shift
-        HELPER="$JS9WEBSITE"
-        ;;
+        HELPER="$JS9WEBSITE";;
      *) break;;
     esac
 done
@@ -115,7 +111,7 @@ done
 # general form of message sent to JS9:
 QUERY='{"id":"'$ID'","cmd":"'$CMD'","args":['$ARGS']'${MULTI}${PAGEID}'}'
 
-# get host (add port if necessary)
+# get target host (add port if necessary)
 HOST=$HELPER
 echo $HOST | egrep ':[0-9][0-9]*$' 1>/dev/null 2>&1
 if [ $? = 1 ]; then
@@ -125,14 +121,14 @@ fi
 # encode the query
 URL=$HOST/msg?$( rawurlencode "$QUERY" )
 
-hash wget 1>/dev/null 2>&1
+command -v wget 1>/dev/null 2>&1
 if [ $? = 0 ]; then
     if [ x"$DODEBUG" != xtrue ]; then
         XARGS="-q"
     fi
     wget $XARGS -O- -T $TIMEOUT "$URL"
 else
-    hash curl 1>/dev/null 2>&1
+    command -v curl 1>/dev/null 2>&1
     if [ $? = 0 ]; then
         if [ x"$DODEBUG" = xtrue ]; then
             XARGS="-v"
