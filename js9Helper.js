@@ -1283,6 +1283,7 @@ const httpHandler = function(req, res){
     };
     // call-back func returning info to the client
     const cbfunc = (s) => {
+	s = s || "";
 	switch(typeof s){
 	case "string":
 	    break;
@@ -1292,6 +1293,11 @@ const httpHandler = function(req, res){
 	default:
 	    s = String(s);
 	    break;
+	}
+	if( typeof s === "string"         &&
+	    s.length >= 1                 &&
+	    s.charAt(s.length-1) !== "\n" ){
+	    s += "\n";
 	}
 	res.writeHead(200, {"Content-Type": "text/plain"});
 	res.write(s);
