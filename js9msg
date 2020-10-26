@@ -5,11 +5,11 @@
 # node is not required, which makes the js9 app self-contained
 
 # default variables
+HELPER=localhost
 ID=JS9
-HOST=localhost
-JS9HOST="https://js9.si.edu"
+JS9WEBSITE="https://js9.si.edu:2718"
 PORT=2718
-TIMEOUT=180
+TIMEOUT=600
 
 usage(){
   XEQ=`basename $0`
@@ -18,19 +18,21 @@ usage(){
   printf "    %s [switches] [cmd] [arg1] [arg2] ... [argn]\n" $XEQ
   printf "\n"
   printf "  switches:\n"
-  printf "    -d|--debug                # output debugging info\n"
-  printf "    -h|--host| [host]         # helper host (def: $HOST)\n"
-  printf "    -H                        # connect to main JS9 web site\n"
-  printf "    -i|--id [id]              # client id (def: $ID)\n"
-  printf "    -p|--port| [port]         # port number (def: $PORT)\n"
-  printf "    -t|--timeout              # timeout for connect (def: $TIMEOUT)\n"
+  printf "    -d|--debug                 # output debugging info\n"
+  printf "    -h|--helper|--host| [host] # helper host (def: $HELPER)\n"
+  printf "    -i|--id [id]               # client id (def: $ID)\n"
+  printf "    -m|--multi]                # send to multiple clients\n"
+  printf "    --pageid [id]              # send to unique pageid\n"
+  printf "    -t|--timeout               # connect timeout (def: $TIMEOUT)\n"
+  printf "    -v|--verbose               # output debugging info\n"
+  printf "    -W                         # connect to main JS9 web site\n"
   printf "\n  examples:\n"
   printf "    # load foo.fits, setting colormap and scale\n"
   printf "    %s Load foo.fits '{\"colormap\":\"heat\", \"scale\":\"log\"}'\n" $XEQ
   printf "    # get the colormap of the currently loaded image\n"
   printf "    %s GetColormap\n" $XEQ
-  printf "    # set the colormap of the image loaded into %s\n" $JS9HOST
-  printf "    %s -H SetColormap viridis\n" $XEQ
+  printf "    # set the colormap of the image loaded into %s\n" $JS9WEBSITE
+  printf "    %s -W SetColormap viridis\n" $XEQ
   printf "\n"
 }
 
@@ -64,27 +66,27 @@ while [ x"$1" != x ]; do
     -d|--debug) shift
         DODEBUG=true
 	;;
-
     -i|--id) shift
         ID="$1"
 	shift;;
-
-    -h|--host) shift
-        HOST="$1"
+    -h|--helper|--host) shift
+        HELPER="$1"
         shift;;
-
-    -H) shift
-        HOST="$JS9HOST"
+    -m|--multi) shift
+        MULTI=',"multi":true'
         ;;
-
-    -p|--port) shift
-        PORT="$1"
+    --pageid) shift
+        PAGEID=',"pageid":"'$1'"'
         shift;;
-
     -t|--timeout) shift
         TIMEOUT="$1"
         shift;;
-
+    -v|--verbose) shift
+        DODEBUG=true
+	;;
+    -W) shift
+        HELPER="$JS9WEBSITE"
+        ;;
      *) break;;
     esac
 done
@@ -111,9 +113,17 @@ while [ x"$1" != x ]; do
 done
 
 # general form of message sent to JS9:
-QUERY='{"id":"'$ID'","cmd":"'$CMD'","args":['$ARGS']}'
+QUERY='{"id":"'$ID'","cmd":"'$CMD'","args":['$ARGS']'${MULTI}${PAGEID}'}'
+
+# get host (add port if necessary)
+HOST=$HELPER
+echo $HOST | egrep ':[0-9][0-9]*$' 1>/dev/null 2>&1
+if [ $? = 1 ]; then
+  HOST="$HOST:$PORT"
+fi
+
 # encode the query
-URL=$HOST:$PORT/msg?$( rawurlencode "$QUERY" )
+URL=$HOST/msg?$( rawurlencode "$QUERY" )
 
 hash wget 1>/dev/null 2>&1
 if [ $? = 0 ]; then
