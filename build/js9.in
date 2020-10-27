@@ -151,6 +151,56 @@ usage(){
   fi
 }
 
+# quick check for --help
+if [ $# = 1 -a "$1" = "--help" ]; then
+  usage
+  exit 0
+fi
+# js9msg (exported by desktop app): no args => display help and exit
+# (since we can't really start up the app)
+if [ $# = 0 -a x`basename $XFILE` != "xjs9" ]; then
+  usage
+  exit 0
+fi
+
+# argument preprocessing
+if [ $# -ge 0 ]; then
+  for arg in "$@"; do
+    case $arg in
+      -a|-av|-va) DOAPP=true; JS9_TO_JS9MSG=false; ALLFILES=false;;
+      -b) DOBROWSER=true;     JS9_TO_JS9MSG=false; ALLFILES=false;;
+      -p|--pipe) DOPIPE=true; JS9_TO_JS9MSG=false; ALLFILES=false;;
+      -r) DOREG=true;         JS9_TO_JS9MSG=false; ALLFILES=false;;
+      -s) set --;                                  ALLFILES=fanlse;;
+      -v|--verify) DOVERIFY=true;                  ALLFILES=false;;
+      *) f=`echo $arg | sed 's/\[.*\]//'`
+         if [[ ! "$f" =~ ^https?:// && ! -r "$f" ]]; then
+           ALLFILES=false
+         fi;;
+    esac
+  done
+fi
+
+# if all args are files, its the app
+if [ x$ALLFILES != xfalse ]; then
+  DOAPP=true
+fi
+# we might be able to use js9msg (wget or curl), which is faster
+if [ x"$JS9_TO_JS9MSG" != xfalse ]; then
+  command -v js9msg 1>/dev/null 2>&1
+  if [ $? = 0 ]; then
+    command -v wget curl 1>/dev/null 2>&1
+    if [ $? = 0 ]; then
+      if [ x$DOVERIFY = xtrue ]; then
+        echo "exec'ing: js9msg $*"
+      fi
+      exec js9msg $*
+    fi
+  fi
+fi
+
+# Node or Electron will be used ...
+
 # look for Node.js program (for messaging, but not for app)
 command -v node 1>/dev/null 2>&1
 if [ $? = 0 ]; then
@@ -176,49 +226,6 @@ case $OS in
 	  done
   ;;
 esac
-
-# quick check for --help
-if [ $# = 1 -a "$1" = "--help" ]; then
-  usage
-  exit 0
-fi
-# js9msg (exported by desktop app): no args => display help and exit
-# (since we can't really start up the app)
-if [ $# = 0 -a x`basename $XFILE` != "xjs9" ]; then
-  usage
-  exit 0
-fi
-
-# check if all args (if any) are files
-if [ $# -ge 0 ]; then
-  ALLFILES=true
-  for file in "$@"
-    do
-    f=`echo $file | sed 's/\[.*\]//'`
-    if [[ ! "$f" =~ ^https?:// && ! -r "$f" ]]; then
-      ALLFILES=false
-    fi
-  done
-fi
-
-# if all args are files, we would like to start up the app or the browser
-if [ x$ALLFILES = xtrue ]; then
-  if [ x"$ELECTRON_EXE" != x ]; then
-    # start the app
-    DOAPP=true
-  fi
-else
-  # otherwise look for script-level parameters
-  while getopts ":arsv" opt; do
-    case $opt in
-      a) DOAPP=true ;;
-      r) DOREG=true ;;
-      s) set -- ;;
-      v) DOVERIFY=true ;;
-      *) break ;;
-    esac
-  done
-fi
 
 # use Electron or use Node, depending on the mode we are in
 if [ x$DOAPP = xtrue ]; then

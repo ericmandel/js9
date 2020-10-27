@@ -1283,18 +1283,26 @@ const httpHandler = function(req, res){
     };
     // call-back func returning info to the client
     const cbfunc = (s) => {
+	let t;
+	s = s || "";
 	switch(typeof s){
 	case "string":
+	    t = s;
 	    break;
 	case "object":
-	    s = JSON.stringify(s);
+	    try{ t = JSON.stringify(s); }
+	    catch(e){ t = ""; }
 	    break;
 	default:
-	    s = String(s);
+	    t = String(s);
 	    break;
 	}
+	// add newline to non-null return string, if necessary
+	if( t.length >= 1 && t.charAt(t.length-1) !== "\n" ){
+	    t += "\n";
+	}
 	res.writeHead(200, {"Content-Type": "text/plain"});
-	res.write(s);
+	res.write(t);
 	res.end();
     };
     // generate object and run the cmd

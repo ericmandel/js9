@@ -272,14 +272,23 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
 	}
 	// display results
         if( s ){
-	    // take a stab at converting objects to json
-	    if( typeof s === "object" ){
-		try{ t = JSON.stringify(s); }
-		catch(e){ t = s; }
-	    } else {
+	    switch(typeof s){
+	    case "string":
 		t = s;
+		break;
+	    case "object":
+		try{ t = JSON.stringify(s); }
+		catch(e){ t = ""; }
+		break;
+	    default:
+		t = String(s);
+		break;
 	    }
-	    console.log(t);
+	    // add newline to non-null return string, if necessary
+	    if( t.length >= 1 && t.charAt(t.length-1) !== "\n" ){
+		t += "\n";
+	    }
+	    process.stdout.write(t);
 	}
 	// post-processing
 	switch(postproc){
