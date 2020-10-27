@@ -2072,7 +2072,7 @@ JS9.Image.prototype.mkRawDataFromHDU = function(obj, opts){
 	this.file = hdu.filename;
 	this.id = null;
     }
-    this.file = this.file || (JS9.ANON + JS9.uniqueID());
+    this.file = JS9.cleanPath(this.file) || (JS9.ANON + JS9.uniqueID());
     // save original file in case we add an extension
     this.file0 = this.file;
     // look for an id
@@ -20194,7 +20194,7 @@ JS9.getImageID = function(imid, dispid, myim){
     const imlen = JS9.images.length;
     const rexp = /.*<([0-9][0-9]*)>$/;
     const rexp2 = /<[0-9][0-9]*>/;
-    imid = imid.replace(rexp2, "");
+    imid = JS9.cleanPath(imid.replace(rexp2, ""), "id");
     for(i=0; i<imlen; i++){
 	im = JS9.images[i];
 	if( im.display.id === dispid ){
@@ -22655,10 +22655,17 @@ JS9.strtoscaled = function(s){
 };
 
 // clean file path
-JS9.cleanPath = function(s){
-    if( !s ){
-	return "";
+JS9.cleanPath = function(s, what){
+    let t;
+    // vulnerability hints culled from https://html5sec.org/
+    const xssreg = /(<(animation|form|math|maction|svg|script|video)\s|<\?xml|javascript:|on.*=|on.*&equals;|alert\(|alert&lpar;)|window\./i;
+    if( !s ){ return ""; }
+    // check for xss vulnerabilities (but not within cfitsio brackets)
+    t = s.replace(/\[.*\]/, "");
+    if( t.match(xssreg) ){
+	JS9.error(`${what||"filename"} is susceptible to XSS attack: ${t}`);
     }
+    // remove unnecessary /./ etc
     return s.trim().replace(/\/\.\//, "/").replace(/^\.\//, "");
 };
 
