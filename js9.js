@@ -24813,7 +24813,7 @@ JS9.mkPublic("Load", function(...args){
     if( file instanceof Blob ){
 	if( file.path || file.name ){
 	    // new file (or, for Electron.js desktop, the path, which is better)
-	    opts.filename = file.path || file.name;
+	    opts.filename = JS9.cleanPath(file.path || file.name);
 	    // does this image already exist?
 	    if( typeof opts.refresh === "object" ){
 		im = opts.refresh;
