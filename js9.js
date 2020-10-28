@@ -22663,6 +22663,9 @@ JS9.cleanPath = function(s, what){
     // check for xss vulnerabilities (but not within cfitsio brackets)
     t = s.replace(/\[.*\]/, "");
     if( t.match(xssreg) ){
+	// we're under attack: turn on alerts no matter what
+	JS9.globalOpts.alerts = true;
+	// warn user they are under attack!
 	JS9.error(`${what||"filename"} is susceptible to XSS attack: ${t}`);
     }
     // remove unnecessary /./ etc
