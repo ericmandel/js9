@@ -539,6 +539,11 @@ JS9.helpOpts = {
 	heading: "JS9Help",
 	type: "help", url:"knownissues.html",
 	title: "Known Issues"
+    },
+    security: {
+	heading: "JS9Help",
+	type: "help", url:"securityissues.html",
+	title: "Security Issues"
     }
 };
 

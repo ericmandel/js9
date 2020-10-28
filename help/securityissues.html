@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<link type="text/css" rel="stylesheet" href="../js9.css">
+<title>JS9 Security Issues</title>
+</head>
+<body>
+<div class="helpLogo"><img src="../images/js9logo.png" alt="js9"></div>
+<div class="helpContainer">
+<center><h3>JS9 Security Issues</h3></center>
+
+<b>Unresolved Issues:</b>
+<p>
+None
+<p>
+
+<b>Resolved Issues:</b>
+
+<ol>
+
+<li><b>All platforms (October 28, 2020 : resolved)</b>
+<p>
+A carefully crafted FITS filename could be used by an attacker to execute
+arbitrary Javascript. If, for example, the following FITS file is loaded into
+JS9:
+<pre>
+    JS9.Load("&lt;svg onmouseover=alert(1)&gt;.fits")
+</pre>
+then moving the mouse over the Statusbar plugin (where the image id is
+displayed) will result in the alert being triggered. Similarly,
+setting the id explicitly:
+<pre>
+    JS9.Load("foo.fits", {"id": "&lt;svg onmouseover=alert(1)&gt;.fits"})
+</pre>
+will trigger the alert. This vulnerability is present in any plugin
+displaying the image id or filename (e.g., the Blend and Blink plugins).
+<p>
+As of v3.2 (and the GitHub repository as of 10/28/2020), a check is
+performed to sense dangerous strings in filenames and ids, and throw an error.
+Patched versions of js9.js and js9.min.js for v3.1 are available:
+<ul>
+<li><a href="https://js9.si.edu/downloads/js9-3.1.1.js" target="_blank" rel="noopener noreferrer">js9.js v3.1 with xss fix</a>
+<li><a href="https://js9.si.edu/downloads/js9-3.1.1.min.js" target="_blank" rel="noopener noreferrer">js9.min.js v3.1 with xss fix</a>
+</ul>
+<p>
+Thanks to Marwan Ali albahar (Umm Alqura University) for reporting this issue.
+
+</ol>
+
+<h5>Last updated: October 28, 2020</h5>
+</div>
+
+</body>
+</html>
