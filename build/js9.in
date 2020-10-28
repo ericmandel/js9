@@ -167,12 +167,13 @@ fi
 if [ $# -ge 0 ]; then
   for arg in "$@"; do
     case $arg in
-      -a|-av|-va) DOAPP=true; JS9_TO_JS9MSG=false; ALLFILES=false;;
-      -b) DOBROWSER=true;     JS9_TO_JS9MSG=false; ALLFILES=false;;
-      -p|--pipe) DOPIPE=true; JS9_TO_JS9MSG=false; ALLFILES=false;;
-      -r) DOREG=true;         JS9_TO_JS9MSG=false; ALLFILES=false;;
-      -s) set --;                                  ALLFILES=fanlse;;
-      -v|--verify) DOVERIFY=true;                  ALLFILES=false;;
+      -a) DOAPP=true;                    JS9_TO_JS9MSG=false; ALLFILES=false;;
+      -b) DOBROWSER=true;                JS9_TO_JS9MSG=false; ALLFILES=false;;
+      -|-p|--pipe) DOPIPE=true;          JS9_TO_JS9MSG=false; ALLFILES=false;;
+      -r) DOREG=true;                    JS9_TO_JS9MSG=false; ALLFILES=false;;
+      -av|-va) DOAPP=true;DOVERIFY=true; JS9_TO_JS9MSG=false; ALLFILES=false;;
+      -s) set --;;
+      -v|--verify) DOVERIFY=true;;
       *) f=`echo $arg | sed 's/\[.*\]//'`
          if [[ ! "$f" =~ ^https?:// && ! -r "$f" ]]; then
            ALLFILES=false
@@ -180,12 +181,13 @@ if [ $# -ge 0 ]; then
     esac
   done
 fi
-
 # if all args are files, its the app
 if [ x$ALLFILES != xfalse ]; then
   DOAPP=true
+  JS9_TO_JS9MSG=false
 fi
-# we might be able to use js9msg (wget or curl), which is faster
+
+# see if we can use js9msg (wget or curl), which is faster
 if [ x"$JS9_TO_JS9MSG" != xfalse ]; then
   command -v js9msg 1>/dev/null 2>&1
   if [ $? = 0 ]; then
