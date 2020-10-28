@@ -271,7 +271,7 @@ JS9Msg.prototype.send = function(socket, rl, postproc) {
 	    break;
 	}
 	// display results
-        if( s ){
+        if( s !== undefined && s !== null ){
 	    switch(typeof s){
 	    case "string":
 		t = s;

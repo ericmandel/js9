@@ -1284,7 +1284,7 @@ const httpHandler = function(req, res){
     // call-back func returning info to the client
     const cbfunc = (s) => {
 	let t;
-	s = s || "";
+	if( s === undefined || s === null ){ s = ""; }
 	switch(typeof s){
 	case "string":
 	    t = s;
