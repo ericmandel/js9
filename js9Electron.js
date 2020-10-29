@@ -248,7 +248,7 @@ function createWindow() {
 	return d;
     }
     // avoid v8.0 deprecation warning
-    if( process.versions.electron.split(".")[0] < 9 ){
+    if( js9Electron.versions[0] < 9 ){
 	app.allowRendererProcessReuse = false;
     }
     // set dock icon for Mac
@@ -506,6 +506,11 @@ function createWindow() {
     });
 }
 
+// Electron version in an array of ints, so we can work around bugs ...
+js9Electron.versions = process.versions.electron
+    .split(".")
+    .map(x => parseInt(x,10));
+
 // default web page
 js9Electron.defpage = "js9.html";
 
@@ -656,9 +661,17 @@ if( js9Electron.hostfs ){
 // pass to JS9 via preload so we can bypass default 'false' in js9prefs.js
 process.env.JS9_ELECTRONHELPER = String(js9Electron.doHelper);
 
-// contextIsolation breaks wasm in v10.0.0
-js9Electron.webOpts.contextIsolation = false;
-process.env.JS9_CONTEXTISOLATION = "false";
+// contextIsolation breaks wasm in v10.0.0, fixed in 10.1.5 and later
+if( js9Electron.versions[0] >= 11   ||
+   (js9Electron.versions[0] === 10  &&
+   (js9Electron.versions[1] > 1     ||
+   (js9Electron.versions[1] === 1   && js9Electron.versions[2] >= 5))) ){
+    process.env.JS9_CONTEXTISOLATION = String(js9Electron.webOpts.contextIsolation)
+} else {
+    // turn off context isolation in broken versions
+    js9Electron.webOpts.contextIsolation = false;
+    process.env.JS9_CONTEXTISOLATION = "false";
+}
 
 // are we in an app (i.e. Voyager) or run from js9 script?
 // if we are in an app, add the host-specific bin directory to the path
