@@ -652,6 +652,7 @@ js9Electron.savedialog = js9Electron.savedir ? false : true;
 // use of host file system passed to js9 via preload
 if( js9Electron.hostfs ){
     js9Electron.webOpts.nodeIntegration = true;
+    js9Electron.webOpts.contextIsolation = false;
     process.env.JS9_HOSTFS = require("os").hostname() || "hostFS";
 } else {
     js9Electron.webOpts.nodeIntegration = false;
