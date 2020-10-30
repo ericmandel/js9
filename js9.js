@@ -23909,7 +23909,7 @@ JS9.initCommands = function(){
     }));
     JS9.checkNew(new JS9.Command({
 	name: "help",
-	help: "get list of available commmands",
+	help: "get list of available commands",
 	get() {
 	    let i, cmd;
 	    let s1 = "Or execute JS9 public access routines (use spaceless args, please):";
