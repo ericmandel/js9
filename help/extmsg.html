@@ -12,32 +12,15 @@
 <center><h3>External Communication with JS9</h3></center>
 
 <p>
-The JS9 <b>Analysis menu</b> provides flexible support for running a
-macro-expanded external analysis command on the web server and
-displaying results in the browser. But there are other scenarios in which
-it might be desirable for an external process to communicate with the
-JS9 client:
-
-<ul>
-<li> JS9 might be part of an analysis system
-(i.e. instead of the analysis being incorporated into the Analysis
-menu). An analysis task might want to query JS9 for its regions.
-<li> A web site might offer "live" tutorials in which JS9 in the
-browser is manipulated automatically from the server.
-<li> A web site might wish to modify a JS9 client's user interface based
-on the level of expertise of a given user.
-<li> A user running JS9 locally might want to interact with her JS9 client from within a local analysis script.
-<li> A remote user might want to interact with her JS9 client in a similar way.
-</ul>
-
-<p>
-If you have installed the Node.js-based server-side helper (or
-Electron.js for the Desktop JS9 app), this sort of external
-communication is supported by the <b>js9 script</b> and its
-underlying <b>js9Msg.js</b> module. The script runs Node.js (or
-Electron.js) with js9Msg.js as its first argument.
-(See <a href="./helper.html">Installing a Server-side Helper</a> for
-more more information about server-side helpers.)
+External communication with a JS9 display is supported by the <b>js9</b>
+script, which is supplied with the JS9 source code. Alternatively,
+if you have installed a pre-built JS9 app (<b>js9app</b> or <b>Voyager</b>),
+you can export a messaging script using the 
+<b>File->export messaging script</b> menu option. The script will be called
+<b>js9msg</b> for <b>js9app</b> and <b>vger</b> for <b>Voyager</b>.
+Note that it is not strictly necessary to install Node.js or
+Electron.js to send external messages: the js9 script utilizes <b>wget</b>
+or <b>curl</b> under the hood.
 
 <p>
 To display the js9 script options, type:
@@ -67,30 +50,31 @@ The console commands include:
   analysis	list/run analysis for current image (run)
   colormap	set/get colormap for current image (cmap)
   colormaps	get list of available colormaps (cmaps)
-  grid	        set/get coordinate grid for current image
-  help	        get list of available commands
-  helper	get/set helper connection
-  image	        get name of currently loaded image or display specified image
+  global	set/get a JS9.globalOpts parameter
+  grid		set/get coordinate grid for current image
+  help		get list of available commands
+  helper	set/get helper connection
+  image		get name of current image or display specified image
   images	get list of currently loaded images
-  load	        load image(s)
-  pan	        set/get pan location for current image
+  load		load image(s)
+  pan		set/get pan location for current image
   pix2wcs	get image pixel value for specified wcs position
-  print	        print image window
-  refresh	refresh current image using specified file (def: use last file)
+  print		print image window
+  refresh	refresh image using specified file (def: use last file)
   regcnts	counts in regions for current image
-  regions	add region to current image or list all regions (reg, region)
-  resize	get/set display size for current image
-  scale	        set/get scaling for current image
+  regions	add or list region(s) (reg, region)
+  resize	set/get display size for current image
+  scale		set/get scaling for current image
   scales	get list of available scales
   section	display section of current image
   status	get status for specified (or current) image
-  url	        display a url
+  url		display a url
   wcssys	set/get wcs system for current image
-  wcsu	        set/get wcs units used for current image
+  wcsu		set/get wcs units used for current image
   wcssystems	get list of available wcs systems
   wcsunits	get list of available wcs units
   wcs2pix	get wcs position for specified image pixel
-  zoom	        set/get zoom for current image
+  zoom		set/get zoom for current image
 </pre>
 
 <p>
@@ -178,57 +162,13 @@ The default wait time is 10 seconds, but is configurable on
 the command line.
 
 <p>
-If the "-" or "--pipe" argument is supplied, js9 will read commands from
-stdin. You can send multiple commands to the script's standard input
-(comments and blank lines are ignored):
-<pre>
-  sh> cat test.cmds
-  # colormap
-  cmap heat
-  # scale
-  scale log
-  # regions using image coords
-  region circle {"x":588, "y":590, "radius":30, "tags":"source"}
-  region circle {"x":390, "y":430, "radius":50, "tags":"background"}
-  sh> cat test.cmds | js9 -
-</pre>
-<p>
-DS9/Funtools region syntax can also be used for regions:
-<pre>
-  sh> cat test2.cmds
-  cmap heat
-  scale log
-  wcssys fk5
-  region box(23:23:35.236,+58:50:00.95,39.352",20.1679",24.0163)
-  region ellipse(23:23:33.323,+58:47:41.50,29.6394",11.0139",25.7599)
-  region polygon(23:23:19.379,+58:49:30.02,23:23:17.270,+58:49:40.93,23:23:14.834,+58:49:38.59,23:23:17.974,+58:49:13.64) {"tags": "background"}
-  sh> cat test2.cmds | js9 -
-</pre>
-<p>
-Finally, the <b>-</b> (or <b>--pipe</b>) switch also allows you to specify a
-string on the JS9 command line that will prefix all lines read from
-stdin. This allows you to send a regions file to JS9:
-<pre>
-  sh> cat ds9.reg
-  # Region file format: DS9 version 4.1
-  global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
-  fk5
-  box(23:23:35.236,+58:50:00.95,39.352",20.1679",24.0163)
-  ellipse(23:23:33.323,+58:47:41.50,29.6394",11.0139",25.7599)
-  polygon(23:23:19.379,+58:49:30.02,23:23:17.270,+58:49:40.93,23:23:14.834,+58:49:38.59,23:23:17.974,+58:49:13.64) # background
-  sh> cat ds9.reg | js9 - region
-</pre>
-Without the <b>-</b> ("dash") argument, standard input will not be read and
-the "region" command will be executed to return current regions.
-
-<p>
-The <b>js9 script</b> can talk to a JS9 instance if the script is run from:
+The <b>js9</b> script can talk to a JS9 instance if the script is run from:
 <ul>
 <li> the local host running the web service and back-end helper
 <li> the same host that is running the target browser, regardless of
 where the helper resides
 </ul>
-Note that the <b>js9 script</b> on one host cannot communicate with a
+Note that the <b>js9</b> script on one host cannot communicate with a
 target browser on another host (unless the first host is the helper host).
 <p>
 If a JS9 instance is connected to a helper on a remote host, you can
@@ -269,12 +209,64 @@ instances on a page connected to a remote helper this way:
 </pre>
 
 <p>
+NB: The following options are available with the canonical js9 script,
+but not with the script that is exported from a pre-built JS9 app using
+the <b>File->export messaging script</b> menu option. These options
+require you to have installed the Node.js or Electron.js, since they call
+js9Msg.js under the hood.
+
+<p>
+If the <b>-p</b> or <b>--pipe</b> switch is supplied, the script will read
+commands from stdin. You can send multiple commands to the script's
+standard input (comments and blank lines are ignored):
+<pre>
+  sh> cat test.cmds
+  # colormap
+  cmap heat
+  # scale
+  scale log
+  # regions using image coords
+  region circle {"x":588, "y":590, "radius":30, "tags":"source"}
+  region circle {"x":390, "y":430, "radius":50, "tags":"background"}
+  sh> cat test.cmds | js9 -
+</pre>
+<p>
+DS9/Funtools region syntax can also be used for regions:
+<pre>
+  sh> cat test2.cmds
+  cmap heat
+  scale log
+  wcssys fk5
+  region box(23:23:35.236,+58:50:00.95,39.352",20.1679",24.0163)
+  region ellipse(23:23:33.323,+58:47:41.50,29.6394",11.0139",25.7599)
+  region polygon(23:23:19.379,+58:49:30.02,23:23:17.270,+58:49:40.93,23:23:14.834,+58:49:38.59,23:23:17.974,+58:49:13.64) {"tags": "background"}
+  sh> cat test2.cmds | js9 -
+</pre>
+
+<p>
+The <b>-p</b> or <b>--pipe</b> switch also allows you to specify a
+string on the JS9 command line that will prefix all lines read from
+stdin. This allows you to send a regions file to JS9:
+<pre>
+  sh> cat ds9.reg
+  # Region file format: DS9 version 4.1
+  global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
+  fk5
+  box(23:23:35.236,+58:50:00.95,39.352",20.1679",24.0163)
+  ellipse(23:23:33.323,+58:47:41.50,29.6394",11.0139",25.7599)
+  polygon(23:23:19.379,+58:49:30.02,23:23:17.270,+58:49:40.93,23:23:14.834,+58:49:38.59,23:23:17.974,+58:49:13.64) # background
+  sh> cat ds9.reg | js9 - region
+</pre>
+Without the <b>-</b> ("dash") argument, standard input will not be read and
+the "region" command will be executed to return current regions.
+
+<p>
 Ordinarily, the js9 script talks to a displayed JS9 web page. It also can be
 used to start the JS9 Desktop app and load an image into the app's web page.
 The JS9 Desktop app simply requires that you install Electron.js, which is
 available here:
 <pre>
-  http://electron.atom.io/
+  https://www.electronjs.org/
 </pre>
 Once this is done, use the <b>-a</b> switch to specify the app startup and
 the <b>-w or --webpage</b> switch to specify a web page (default is a
@@ -336,13 +328,11 @@ messages to a JS9 web page using wget or curl. This is possible
 because the JS9 helper also listens for HTTP connections. The syntax
 for HTTP-based commands is analogous to the scripting syntax, if
 somewhat more primitive: you pass a JSON-formatted string to the
-helper in a GET or POST request, as show below. (Note that accessing a
-secure web page using wget requires the --no-check-certificate flag, a
-problem not restricted to JS9):
+helper in a GET or POST request, as show below.
 <pre>
   export MYHOST="https://js9.si.edu:2718"
   export ID="JS9"
-  export WARGS="-q -O- --no-check-certificate"
+  export WARGS="-q -O-"
   # GET request, using public api:
   wget $WARGS $MYHOST'/msg?{"id": "'$ID'", "cmd": "GetColormap"}'
   wget $WARGS $MYHOST'/msg?{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}'
@@ -357,7 +347,7 @@ problem not restricted to JS9):
   wget $WARGS --post-data='{"id": "'$ID'", "cmd": "RunAnalysis", "args": ["counts"]}' $MYHOST/msg
 </pre>
 
-<h5>Last updated: April 15, 2019</h5>
+<h5>Last updated: October 30, 2020</h5>
 </div>
 
 </body>

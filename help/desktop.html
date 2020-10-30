@@ -13,9 +13,9 @@
 
 <p>
 JS9 can be used as a desktop replacement for
-<a href="http://ds9.si.edu">SAOimage DS9</a>: you can
-load images into the app's web page (or your own custom web page) and
-use the full power of JS9, including external messaging.
+<a href="http://ds9.si.edu">SAOimage DS9</a>: you can load images into
+the app's configurable web page (or your own custom web page) and use
+the full power of JS9, including external messaging.
 
 <p>
 Advantages of using JS9 on the desktop include:
@@ -42,22 +42,56 @@ Advantages of using DS9 include:
 <li> support for VO/SAMP
 </ul>
 
-<h3>Installing for Desktop Use</h3>
+<h3>Installing a Pre-built Desktop App</h3>
+
+Pre-built desktop apps for Linux (for Ubuntu 20.04 and compatible
+systems) and Mac (for Catalina 10.15.x) are available on the 
+<a href="https://js9.si.edu" target="_blank">main JS9 web site</a>:
+
+<ul>
+<li><b>js9app</b>: offers a basic user interface
+<li><b>Voyager</b>: offers an advanced user interface patterned after the Mac
+</ul>
 
 <p>
-Desktop JS9 is based on <a href="http://electron.atom.io">Electron.js</a>,
-a widely-used framework for creating native applications with web
-technologies like JavaScript, HTML, and CSS. Install Electron.js by
-visiting the release page: <a href="http://electron.atom.io/releases/">
-http://electron.atom.io/releases</a> and downloading the latest available
-stable release for your platform. On a Mac, the Electron.app should be
-installed in the /Applications or ~/Applications folder. On Linux, the
-electron program should be placed in your PATH. Note that Electron.js
-for Linux requires a relatively recent version of Linux: Ubuntu 12.04,
-Fedora 21, Debian 8, CentOS 7 (not CentOS 6). Note that Electron.js also
-is available for Windows, so desktop JS9 should also run on that OS,
-although we have not done any work in this direction. If you get desktop JS9
-running under Windows, please let us know!
+For Linux, download and unzip the zip file to create a directory
+called &lt;app&gt;-linux-x64 containing a number of files, including a
+<b>Voyager</b> or <b>js9app</b> executable. Put this directory in your
+Linux PATH (or use a link to the executable) and run the program. For
+Mac, download the zip file and unzip it into your /Applications or
+~/Applications directory to create a Mac application, which you can
+start by double-clicking or by using the <b>open</b> command.
+
+<p>
+Once the app is started, you can drag and drop a FITS file to display
+it (or use the <b>File->open</b> menu option, etc).
+The <b>File->export messaging script</b> menu option will bring up a dialog
+box to create a script (called <b>js9msg</b> for <b>js9app</b> and
+<b>vger</b> for <b>Voyager</b>) that you can use to control the app
+externally (see <a href="extmsg.html">External Communication with JS9</a>
+for details.)
+
+<h3>Installing Electron.js for a Fully Configurable Desktop App</h3>
+
+<p>
+The pre-build apps described above are built using
+<a href="https://www.electronjs.org/">Electron.js</a>, a widely-used
+framework for creating native applications with web technologies like
+JavaScript, HTML, and CSS. You can easily configure your own JS9 app
+(giving you complete control over the display web page, server-side
+analysis, etc.) by installing Electron.js.
+
+<p>
+Install Electron.js by visiting the Electron.js release page:
+<a href="https://github.com/electron/electron/releases">
+https://github.com/electron/electron/releases</a> to download the
+latest available stable (not beta) release for your platform. On a
+Mac, the Electron.app should be installed in the /Applications or
+~/Applications folder. On Linux, the electron program should be placed
+in your PATH. Electron.js also is available for Windows,
+so desktop JS9 should also run on that OS, although we have not done
+any work in this direction. If you get desktop JS9 running under
+Windows, please let us know!
 
 <p>
 Once the Electron.js is installed, you can build JS9 as usual, taking
@@ -66,34 +100,19 @@ to actually install Node.js: desktop JS9 has its helper integrated into
 Electron.js already.
 
 <p>
-Moreover, if you are not planning to utilize server-side analysis tasks
-or large file support, you can skip the standard build and simply generate
-the JS9 quick-start files:
-<pre>
-  ./mkjs9 -q
-  Editing js9Prefs.json for Node.js helper ...
-  Editing js9prefs.js for Node.js helper ...
-  Generating js9 script for JS9 messaging and desktop use ...
-
-  If you plan to use Electron.app with JS9, consider codesign'ing it:
-
-  sudo codesign --force --deep --sign - /Applications/Electron.app/Contents/MacOS/Electron/
-
-  This will avoid repeated requests to allow incoming connections.
-</pre>
-The mkjs9 script will create a js9prefs.js file (for the browser) and
-a js9Prefs.json file (for the JS9 helper), which you can edit to add
-preferred JS9 properties, as well as a js9 script to start the JS9
-app. On a Mac, you probably will want to codesign the Electron.app
-application to avoid repeated requests about incoming connections (see
-example above).
+If you are not planning to utilize server-side analysis tasks or large
+file support, you can even skip the standard build: edit the supplied
+js9prefs.js file (for the browser) and a js9Prefs.json file (for the
+JS9 helper) to add your preferred JS9 properties, and use the supplied
+js9 script to start the desktop.
 
 <p>
-NB: if you are running cpu-intensive scripts that communicate with the
-Electron-based JS9 app, we recommend that you install Node.js as well
-as Electron.js, and start up the JS9 helper instead of using the built-in
-helper support in the Electron-based app. The startup will be considerably
-faster when using the Node helper.
+Note for macOS users: if you plan to use Electron.app with JS9 on a Mac,
+consider codesign'ing the Electron.js app:
+<pre>
+  sudo codesign --force --deep --sign - /Applications/Electron.app/Contents/MacOS/Electron
+</pre>
+to avoid repeated requests to allow incoming connections.
 
 <h3>Running JS9 on the Desktop</h3>
 
@@ -455,13 +474,13 @@ That said, there are two good reasons for turning on host file system access:
 </ul>
 
 <p>
-When enabled, the JS9 app will (subject to the boolean value of
-the <b>JS9.globalOpts.localAccess</b> property) mount the local file
-system inside the web page and access FITS files directly, instead of
-fetching and storing them in browser memory. This can speed up the
-load/display time considerably, while minimizing the use of a browser
-memory. The list of file extensions which are accessed directly in
-this way is specified by the
+When access to the host file system is enabled, the JS9 app will
+(subject to the boolean value of the <b>JS9.globalOpts.localAccess</b>
+property) mount the local file system inside the web page and access
+FITS files directly, instead of fetching and storing them in browser
+memory. This can speed up the load/display time considerably, while
+minimizing the use of a browser memory. The list of file extensions
+which are accessed directly in this way is specified by the
 <b>JS9.globalOpts.localTemplates</b> property, which defaults
 to <b>.fits</b> and <b>.fts</b>. Note that bzip'ed (.bz2) and gzip'ed
 (.gz) files are not accessed directly: the former are not supported by
@@ -477,8 +496,8 @@ example, the following script will load the Chandra image of the Kes
 find the total number of counts in each image, and write the results
 to a log file, using the Node.js 'fs' module.
 <pre>
-  # enable node support and run the script in the command file 
-  js9 -a --node true --cmdfile ecnts.js
+  # enable host file system support and run the script in the command file 
+  js9 -a --hostfs true --cmdfile ecnts.js
 
   // where ecnts.js contains the following Javascript:
   var fs;
@@ -486,16 +505,16 @@ to a log file, using the Node.js 'fs' module.
       fs = require("fs");
   }
   catch(e){
-      JS9.error("Node.js 'fs' module is unavailable. Did you enable node?");
+      JS9.error("Node.js 'fs' module is unavailable. Did you enable hostfs?");
   }
   JS9.Load("kes75/kes75_evt2.fits.gz", {onload: function(im){
-      var i;
-      var s = "";
-      var got = 0;
+      let i;
+      let s = "";
+      let got = 0;
       // energy filters
-      var f = ["energy=500:1500", "energy=1500:2500", "energy=2500:8000"];
+      const f = ["energy=500:1500", "energy=1500:2500", "energy=2500:8000"];
       // get counts in regions as each image is displayed
-      var getcnts = function(i){
+      const getcnts = function(i){
     	return function(xim){
   	    s += xim.countsInRegions();
   	    got++;
@@ -556,7 +575,7 @@ Electron.js security</a> for more information.
 You should update your copy of Electron.js periodically to ensure that you
 have the latest security fixes in place.
 
-<h5>Last updated: August 24, 2020</h5>
+<h5>Last updated: October 30, 2020</h5>
 </div>
 
 </body>
