@@ -60,7 +60,11 @@ called &lt;app&gt;-linux-x64 containing a number of files, including a
 Linux PATH (or use a link to the executable) and run the program. For
 Mac, download the zip file and unzip it into your /Applications or
 ~/Applications directory to create a Mac application, which you can
-start by double-clicking or by using the <b>open</b> command.
+start by double-clicking or by using the <b>open</b> command:
+<pre>
+  # open Mac app, load FITS file and region file, set colormap and scale
+  open /Applications/Voyager.app --args ~/data/casa.fits --regions ~/data/casa.reg --colormap viridis --scale log
+</pre>
 
 <p>
 Once the app is started, you can drag and drop a FITS file to display
