@@ -530,6 +530,9 @@ smoke:		FORCE
 		  fi;							\
 		  python3 tests/smoke.py)
 
+smoke2:		FORCE
+		@(js9 -a -v --hostfs true --cmdfile tests/ecnts.js;     \
+		  rm -i countsInRegions.log);
 
 viewreadme:	FORCE
 		@(grip)

@@ -7,21 +7,26 @@ catch(e){
     JS9.error("Node.js 'fs' module is unavailable. Did you enable hostfs?");
 }
 
-JS9.Load("data/kes75/kes75_evt2.fits.gz", {onload: function(im){
+JS9.Load("data/kes75/kes75_evt2.fits.gz", {scale: "log", onload: function(im){
     let i;
     let s = "";
     let got = 0;
     // energy filters
+    const cmaps = ["red", "green", "blue"];
     const f = ["energy=500:1500", "energy=1500:2500", "energy=2500:8000"];
     // get counts in regions as each image is displayed
     const getcnts = function(i){
   	return function(xim){
+	    xim.setScale("log")
+	    xim.setColormap(cmaps[got]);
   	    s += xim.countsInRegions();
   	    got++;
   	    if( got === 3 ){
+		xim.setColormap("rgb")
                 // write the results to a log file
   		fs.writeFile("countsInRegions.log", s, function(err) {
 		    if( err ) { JS9.error(err); }
+		    process.stdout.write(`\ncountsInRegions.log:\n\n${s}\n`);;
   		}); 
   	    }
     	};
