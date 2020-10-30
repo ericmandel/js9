@@ -531,7 +531,10 @@ smoke:		FORCE
 		  python3 tests/smoke.py)
 
 smoke2:		FORCE
-		@(js9 -a -v --hostfs true --cmdfile tests/ecnts.js;     \
+		@(echo "testing js9 shell scripting ...";               \
+		  tests/ebands;                                         \
+		  echo "testing hostfs support ...";                    \
+		  js9 -a -v --hostfs true --cmdfile tests/ecnts.js;     \
 		  rm -i countsInRegions.log);
 
 viewreadme:	FORCE
