@@ -18,7 +18,10 @@ JS9.Sync.getOps = function(ops){
     const xops = [];
     //  default from above ...
     ops = ops || JS9.globalOpts.syncOps;
-    if( !$.isArray(ops) ){ ops = [ops]; }
+    if( !$.isArray(ops) ){
+	try{ ops = JSON.parse(ops); }
+	catch(e){ ops = [ops]; }
+    }
     for(i=0, j=0; i<ops.length; i++){
 	op = ops[i];
 	switch(op){
@@ -41,7 +44,10 @@ JS9.Sync.getIms = function(ims){
     let i, j, xim;
     const xims = [];
     ims = ims || JS9.images;
-    if( !$.isArray(ims) ){ ims = [ims]; }
+    if( !$.isArray(ims) ){
+	try{ ims = JSON.parse(ims); }
+	catch(e){ ims = [ims]; }
+    }
     for(i=0, j=0; i<ims.length; i++){
 	// if image ids were passed, look up corresponding image objects
 	if( typeof ims[i] === "string" ){
@@ -68,6 +74,10 @@ JS9.Sync.sync = function(...args){
     this.syncs = this.syncs || {active: true};
     // opts is optional
     opts = opts || {reciprocate: JS9.globalOpts.syncReciprocate};
+    if( typeof opts === "string" ){
+	try{ opts = JSON.parse(opts); }
+	catch(e){ JS9.error(`can't parse sync opts: ${opts}`, e); }
+    }
     // 1 boolean arg: turn on/off sync'ing
     if( args.length === 1 && typeof ops === "boolean" ){
 	this.syncs.active = ops;
