@@ -535,7 +535,7 @@ smoke2:		FORCE
 		  tests/ebands;                                         \
 		  echo "testing hostfs support ...";                    \
 		  js9 -a -v --hostfs true --cmdfile tests/ecnts.js;     \
-		  rm -i countsInRegions.log);
+		  rm -f countsInRegions.log);
 
 viewreadme:	FORCE
 		@(grip)
