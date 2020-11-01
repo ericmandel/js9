@@ -197,7 +197,7 @@ if [ x"$JS9_TO_JS9MSG" != xfalse ]; then
       if [ x$DOVERIFY = xtrue ]; then
         echo "exec'ing: js9msg $*"
       fi
-      exec js9msg $*
+      exec js9msg "$@"
     fi
   fi
 fi

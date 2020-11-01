@@ -59,7 +59,7 @@ js9 AddRegions 'ICRS;circle(18:46:24.95,-02:58:29.552,7.38")'
 sleep 2
 
 echo "sync images (colormap, regions)"
-js9 SyncImages '["colormap","regions"]'
+js9 SyncImages '["colormap", "regions"]'
 
 echo "set colormap to viridis in first image"
 js9 SetColormap viridis 4.4 0.078
