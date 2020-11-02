@@ -50,28 +50,27 @@ systems) and Mac (for Catalina 10.15.x) are available on the
 
 <ul>
 <li><b>js9app</b>: offers a basic user interface
-<li><b>Voyager</b>: offers an advanced user interface patterned after the Mac
+<li><b>Voyager</b>: coming soon ... offers an advanced user interface patterned after the Mac
 </ul>
 
 <p>
 For Linux, download and unzip the zip file to create a directory
 called &lt;app&gt;-linux-x64 containing a number of files, including a
-<b>Voyager</b> or <b>js9app</b> executable. Put this directory in your
-Linux PATH (or use a link to the executable) and run the program. For
-Mac, download the zip file and unzip it into your /Applications or
-~/Applications directory to create a Mac application, which you can
-start by double-clicking or by using the <b>open</b> command:
+<b>js9app</b> executable. Put this directory in your Linux PATH (or
+use a link to the executable) and run the program. For Mac, download
+the zip file and unzip it into your /Applications or ~/Applications
+directory to create a Mac application, which you can start by
+double-clicking or by using the <b>open</b> command:
 <pre>
   # open Mac app, load FITS file and region file, set colormap and scale
-  open /Applications/Voyager.app --args ~/data/casa.fits --regions ~/data/casa.reg --colormap viridis --scale log
+  open /Applications/js9.app --args ~/data/casa.fits --regions ~/data/casa.reg --colormap viridis --scale log
 </pre>
 
 <p>
 Once the app is started, you can drag and drop a FITS file to display
 it (or use the <b>File->open</b> menu option, etc).
 The <b>File->export messaging script</b> menu option will bring up a dialog
-box to create a script (called <b>js9msg</b> for <b>js9app</b> and
-<b>vger</b> for <b>Voyager</b>) that you can use to control the app
+box to create a script called <b>js9msg</b> that you can use to control the app
 externally (see <a href="extmsg.html">External Communication with JS9</a>
 for details.)
 
