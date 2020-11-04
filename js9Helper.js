@@ -171,7 +171,9 @@ const getTargets = function(io, socket, msg){
     // authentication func
     const authenticate = (myip, clip) => {
 	// if I'm localhost, I can send to anyone
-	if( (myip === "127.0.0.1") || (myip === "::ffff:127.0.0.1") ){
+	if( (myip === "127.0.0.1")        ||
+	    (myip === "::ffff:127.0.0.1") ||
+	    (myip === "::1")              ){
 	    return true;
 	}
 	// I can send to myself, if we configured that way
