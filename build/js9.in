@@ -173,6 +173,7 @@ if [ $# -ge 0 ]; then
       -|-p|--pipe) DOPIPE=true;          JS9_TO_JS9MSG=false; ALLFILES=false;;
       -r) DOREG=true;                    JS9_TO_JS9MSG=false; ALLFILES=false;;
       -av|-va) DOAPP=true;DOVERIFY=true; JS9_TO_JS9MSG=false; ALLFILES=false;;
+      -h|--host|--helper) DOHOST=true;   JS9_TO_JS9MSG=false; ALLFILES=false;;
       -s) set --;;
       -v|--verify) DOVERIFY=true;;
       *) f=`echo $arg | sed 's/\[.*\]//'`
