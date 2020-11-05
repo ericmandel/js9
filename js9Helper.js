@@ -71,7 +71,7 @@ const globalOpts = {
     textEncoding:     "ascii",     // encoding for returned stdout from exec
     rmWorkDir:        true,        // remove workdir on disconnect?
     rmWorkDelay:      15000,       // delay before removing workdir
-    remoteMsgs:       1 // 0 => none, 1 => samehost, 2 => all
+    remoteMsgs:       1 // 0 => local, 1 => same, 2 => local->all 3 => all->all
 };
 // globalOpts that might need to have paths relative to __dirname
 const globalRelatives = ["analysisPlugins",
@@ -170,18 +170,30 @@ const getTargets = function(io, socket, msg){
     const clients = getClients(io, socket);
     // authentication func
     const authenticate = (myip, clip) => {
-	// if I'm localhost, I can send to anyone
-	if( (myip === "127.0.0.1")        ||
-	    (myip === "::ffff:127.0.0.1") ||
-	    (myip === "::1")              ){
+	// localhost to localhost is always allowed
+	if( ((myip === "127.0.0.1")         ||
+	     (myip === "::ffff:127.0.0.1")  ||
+	     (myip === "::1"))              &&
+	    ((clip === "127.0.0.1")         ||
+	     (clip === "::ffff:127.0.0.1")  ||
+	     (clip === "::1"))              &&
+	    (globalOpts.remoteMsgs >= 0)    ){
 	    return true;
 	}
 	// I can send to myself, if we configured that way
-	if( (myip === clip) && (globalOpts.remoteMsgs > 0) ){
+	if( (myip === clip)                 &&
+	    (globalOpts.remoteMsgs >= 1)    ){
+	    return true;
+	}
+	// allow localhost to send to everyone else
+	if( ((myip === "127.0.0.1")         ||
+	     (myip === "::ffff:127.0.0.1")  ||
+	     (myip === "::1"))              &&
+	    globalOpts.remoteMsgs >= 2      ){
 	    return true;
 	}
 	// security risk: anyone can send to anyone
-	if( globalOpts.remoteMsgs > 1 ){
+	if( globalOpts.remoteMsgs >= 3 ){
 	    return true;
 	}
 	// can't send to anyone
