@@ -5,7 +5,7 @@
   <!-- web page for main JS9 web site: https://js9.si.edu -->
   <meta name="publisher" content="Center for Astrophysics">
   <meta name="language" content="en">
-  <meta name="date" content="2020-09-08">
+  <meta name="date" content="2020-11-06">
   <meta name="author" content="Eric Mandel, CfA">
   <meta name="keywords" content="Harvard Smithsonian Astrophysics high-energy chandra x-ray astronomy visualization DS9 JS9 telescope observatory research">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -476,6 +476,9 @@
     <div id="status" class="tabcontent mytabcontent">
       <b>Recent Public Releases:</b>
       <p>
+      <b>Release 3.2 (11/06/20)</b> mainly changes to support the
+      upcoming desktop Voyager app, but also a few bug fixes.
+      <p>
       <b>Release 3.1 (09/08/20)</b> a lot of attention to the little things
       (especially regions, image flip/rotate, UI tweaks and uniformity)
       <p>
@@ -498,14 +501,6 @@
       images, separate/gather images, mosaic images, user-defined and
       Mac-style menus, browser-based counts in regions, coordinate grids.
       <p>
-      <b>Release 2.1 (05/10/18)</b> adds a graphical toolbar plugin, the
-      ability to separate and gather displays, load colormaps, create
-      light windows, and many improvements/fixes for binning and regions.
-      <p>
-      <b>Release 2.0 (09/27/17)</b> use WebAssembly where possible to
-      approach native processing speed, upgrade web site (https://js9.si.edu),
-      many aesthetic improvements.
-      <p>
       For more details, see the <a href="js9/help/changelog.html" target="_blank">ChangeLog</a>.
       <p>
       JS9 is distributed under the terms of The MIT License.
@@ -513,21 +508,11 @@
     <div id="get" class="tabcontent mytabcontent">
       The <b>JS9 current release</b> tar file is available here:
       <ul>
-      <li><a href="downloads/js9-3.1.tgz">js9 v3.1 tar file</a>
+      <li><a href="downloads/js9-3.2.tgz">js9 v3.2 tar file</a>
       </ul>
       Simply untar to display FITS images with all basic JS9 functionality.
       <a href="js9/help/install.html" target="_blank">Install JS9</a>
       to add functionality, such as server-side analysis.
-      <p>
-      On 10/27/20, an
-      <a href="js9/help/securityissues.html" target="_blank">
-      XSS vulnerability in the handling of filenames</a>
-      was reported by Marwan Ali albahar. This has been fixed in GitHub
-      for v3.2. Patches for v3.1 js9.js and js9.min.js are here:
-      <ul>
-      <li><a href="downloads/js9-3.1.1.js">js9.js v3.1 with xss fix</a>
-      <li><a href="downloads/js9-3.1.1.min.js">js9.min.js v3.1 with xss fix</a>
-      </ul>
       <p>
       To run the demo pages, download the <b>data</b> tar file here:
       <ul>
@@ -544,11 +529,14 @@
     git pull
       </pre>
       <p>
-      For Mac Catalina users, a <b>pre-built desktop app</b> is available:
+      For Mac (Catalina) and Linux (Ubuntu 20.04) users,
+      <b>pre-built desktop apps</b> are available:
       <ul>
-      <li><a href="downloads/js9-3.1.0.pkg">js9 v3.1 pkg file (macOS)</a>
+      <li><a href="downloads/js9-darwin-x64-3.2.0.zip">js9 v3.2 zip (macOS)</a>
+      <li><a href="downloads/js9-linux-x64-3.2.0.zip">js9 v3.2 zip (Linux)</a>
       </ul>
-      Pre-builts lack some configurability, but will suffice for most users.
+      Pre-built apps lack some configurability, but their ease of
+      installation and use will make most users happy.
       <p>
       In addition, the <b>pyjs9 Python interface</b> is available on GitHub:
       <ul>
