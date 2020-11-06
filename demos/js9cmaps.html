@@ -12,6 +12,14 @@
   <script type="text/javascript" src="../js9support.min.js"></script>
   <script type="text/javascript" src="../js9.min.js"></script>
   <script type="text/javascript" src="../js9plugins.js"></script>
+  <style type="text/css">
+      /* override defaults in js9.css */
+      /* NB: min should match the width of the js9 display */
+      div.JS9GridContainer {
+	  grid-template-columns: repeat(auto-fit, minmax(300px,1fr));
+	  grid-gap: 10px;
+      }
+  </style>
   <title>JS9 cmaps</title>
 </head>
 <body>
@@ -23,8 +31,8 @@
     <tr>
     <td style="vertical-align:top">
     <ul>
-      <li> Choose "File:separate:separate these images" to make four separate displays.
-      <li> Choose to create 3 or more slices of the color wheel and 3 colormaps.
+      <li> Choose "File:separate:separate these images" to make three separate displays.
+      <li> Choose to create three or more slices of the color wheel and three colormaps.
       <li> Click next to the chandra, galex, spitzer images to assign new colormaps.
       <li> Click the colored rectangle to display the color picker.
       <li> Choose different base colors and see how the three colormaps change.
@@ -33,33 +41,28 @@
       <li> For six slices, the colormaps will be spaced around the half the colorwheel.
     </ul>
     </td>
-    <td style="vertical-align:top">
-    <ul>
-      <li> In the fourth display, choose "View:colormaps" to bring up a new colormaps plugin.
-      <li> Click the button to the left of the hst image.
-      <li> Click the colored rectangle to switch the color picker to this plugin.
-      <li> Choose a base color and see how only this colormap changes.
-      <li> Switch between plugins by clicking the appropriate colored rectangle.
-    </ul>
-    </td>
     </tr>
     </table>
 
     <div class="JS9Cmaps" id="JS9Cmaps"></div>
     <p>
+    <div class="JS9GridContainer">
+    <div class="JS9GridItem">
     <div class="JS9Menubar" id="JS9Menubar" data-width="325"></div>
     <div class="JS9" id="JS9" data-width="325" data-height="240"></div>
     <div style="margin-top: 2px;">
-    <div class="JS9Colorbar" id="JS9Colorbar" data-width="325"></div>
+    <div class="JS9Statusbar" id="JS9Statusbar" data-width="325"></div>
+    </div>
+    </div>
     </div>
     <script type="text/javascript">
       var nload = 0;
       var imdir = "data/blend/";
-      var images = ["chandra.fits", "galex.fits", "spitzer.fits", "hst.fits"];
-      var contrasts =  [7.2, 4.2, 4.2, 6.3];
-      var biases =  [0.07, 0.73, 0.5, 0.37];
-      var scales = ["log", "log", "log", "log"];
-      var cmaps =  ["red", "green", "blue", "heat"];
+      var images = ["chandra.fits", "galex.fits", "spitzer.fits"];
+      var contrasts =  [7.2, 4.2, 4.2];
+      var biases =  [0.07, 0.73, 0.5];
+      var scales = ["log", "log", "log"];
+      var cmaps =  ["red", "green", "blue"];
 
       function rp(i){
 	  var im = JS9.lookupImage(images[i]);
