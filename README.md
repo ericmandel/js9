@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4019782.svg)](https://doi.org/10.5281/zenodo.4019782)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4252893.svg)](https://doi.org/10.5281/zenodo.4252893)
 
 [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/espadrine.svg?style=social&label=Follow%20%40astrosoftware)](https://twitter.com/astrosoftware)
 
@@ -114,6 +114,8 @@ JS9 is distributed under the terms of The MIT License.
 
 What's the release history?
 ---------------------------
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4252893.svg)](https://doi.org/10.5281/zenodo.4252893) __v3.2.0__ &nbsp; (11/06/2020)
+
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4019782.svg)](https://doi.org/10.5281/zenodo.4019782) __v3.1.0__ &nbsp; (09/08/2020)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3598590.svg)](https://doi.org/10.5281/zenodo.3598590) __v3.0.0__ &nbsp; (01/06/2020)
@@ -131,18 +133,6 @@ What's the release history?
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1116902.svg)](https://doi.org/10.5281/zenodo.1116902) __v2.0.2__ &nbsp; (12/15/2017)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.999343.svg)](https://doi.org/10.5281/zenodo.999343)&nbsp; __v2.0.1__ &nbsp; &nbsp;(09/29/2017)
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.998178.svg)](https://doi.org/10.5281/zenodo.998178)&nbsp; __v2.0.0__ &nbsp; (09/27/2017)
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.834742.svg)](https://doi.org/10.5281/zenodo.834742)&nbsp; __v1.12.0__ &nbsp; (07/25/2017)
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.235865.svg)](https://doi.org/10.5281/zenodo.235865)&nbsp; __v1.11.0__ &nbsp; (1/9/2017)
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.160117.svg)](https://doi.org/10.5281/zenodo.160117)&nbsp; __v1.10.0__&nbsp; (10/11/2016)
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.158950.svg)](https://doi.org/10.5281/zenodo.158950)&nbsp; __v1.9.0__ &nbsp; (6/8/2016)
-
-
 
 Who's responsible?
 ------------------
