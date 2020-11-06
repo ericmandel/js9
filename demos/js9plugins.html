@@ -15,40 +15,41 @@
   <script type="text/javascript" src="../js9plugins.js"></script>
   <script type="text/javascript" src="../plugins/plugintest.js"></script>
   <title>JS9 plugins</title>
+  <style type="text/css">
+    .PLUGINtest {
+	overflow: auto;
+    }
+  </style>
 </head>
 <body>
     <center><font size="+1">
     <b>JS9 Plugins: browser-based analysis using JS9 plugins</b>
     </font></center>
     <p>
-    You can add browser-based analysis to a JS9 Web page by writing a
-    JS9 Plugin module, consisting of a constructor function that gets called
-    for each div of the plugin class, and one or more event callbacks to
-    process the desired events. The <b>this</b> context of the constructor
-    is seeded with a few properties, the most important of which is the
-    <b>div</b> property specifying the DOM element of the containing div.
-    Add your GUI (in the form of HTML elements) to this div and use events to
-    control the action.  A plugin is registered using the 
-    <b>JS9.RegisterPlugin()</b> public routine.
+    You can add browser-based analysis to a JS9 webpage by writing a
+    JS9 Plugin module, consisting of a constructor function that gets
+    called for each div of the plugin class, and one or more event
+    callbacks to process the desired events. A plugin is registered
+    using the <b>JS9.RegisterPlugin()</b> public routine. See
+    plugins/plugintest.js for the example plugin code.
     <p>
-    If the Web page does not contain a div for this plugin class and if the
-    registration routine is passed a viewMenu property specifying a menu name,
-    the plugin will be added to the View menu. In the examples below, the
-    The first two examples define their own static divs for pluginTest.
-    The last instance of JS9 uses the View menu to bring up pluginTest in a
-    light window. 
+    If the webpage does not contain a div for this plugin class, the
+    plugin will be added to one of the menus (depending on the value
+    of the viewMenu property passed in the registration routine).  In
+    the examples below, the first instance of JS9 defines its own
+    static divs for pluginTest.  The second instance of JS9 uses the
+    View menu to bring up pluginTest in a light window.
     <p>
-    See plugins/plugintest.js for the example plugin code.
     <table cellspacing="30">
 
     <tr valign="top">
     <td>
     <div class="JS9Menubar" id="JS9Menubar"></div>
-    <div class="JS9" id="JS9"></div>
+    <div class="JS9" id="JS9" data-height="360px"></div>
     </td>
     <td>
-      An example of a Plugin div element already defined to hold the
-      Plugin message divs, which will be created by the Plugin constructor.
+      An example of a plugin div element already defined on the
+      webpage to hold the Plugin messages.
     <ul>
     <li> <a href='javascript:JS9.Load("data/fits/casa.fits.gz", {scale:"log", parentFile:"data/fits/casa.fits"});'>CAS-A (Chandra)</a>
     <li> <a href='javascript:JS9.Load("data/fits/snr.fits", {scale:"log", colormap:"heat"});'>CTB 109 (Einstein)</a>
@@ -64,34 +65,12 @@
 
     <tr valign="top">
     <td>
-    <div class="JS9Menubar" id="myJS9Menubar"></div>
-    <div class="JS9" id="myJS9"></div>
-    </td>
-    <td>
-      An example of a Plugin div element already defined to hold the
-      Plugin message divs, which will be created by the Plugin constructor.
-    <ul>
-    <li> <a href='javascript:JS9.Load("data/fits/casa.fits.gz", {scale:"log", parentFile:"data/fits/casa.fits"}, {display: "myJS9"});'>CAS-A (Chandra)</a>
-    <li> <a href='javascript:JS9.Load("data/fits/snr.fits", {scale:"log", colormap:"heat"}, {display: "myJS9"});'>CTB 109 (Einstein)</a>
-    <li> <a href='javascript:JS9.Load("data/fits/m13.fits", {scale:"linear", colormap:"sls"}, {display: "myJS9"});'>m13 (via SkyView)</a>
-    <li> <a href='javascript:JS9.Load("data/fits/i1000.fits", {scale:"linear", colormap:"grey"}, {display: "myJS9"});'>i1000 (v=x*1000+y)</a>
-    </ul>
-    Load an image, then move the mouse, or create and manipulate a
-    region, or press a key to see callbacks fire in the blue display region:
-    <p>
-    <div class="PLUGINtest" data-js9id="myJS9">
-    </div>
-    </td>
-    </tr>
-
-    <tr valign="top">
-    <td>
     <div class="JS9Menubar" id="otherJS9Menubar"></div>
-    <div class="JS9" id="otherJS9"></div>
+    <div class="JS9" id="otherJS9" data-height="360px"></div>
     </td>
     <td>
-      In this example, no Plugin div element has been defined on the page.
-      It therefore will be offered in the View menu as a light window.
+      Here, no static plugin div element has been defined on the webpage.
+      Instead, it can be displayed from the View menu as a light window.
     <ul>
     <li> <a href='javascript:JS9.Load("data/fits/casa.fits.gz", {scale:"log", parentFile:"data/fits/casa.fits"}, {display: "otherJS9"});'>CAS-A (Chandra)</a>
     <li> <a href='javascript:JS9.Load("data/fits/snr.fits", {scale:"log", colormap:"heat"}, {display: "otherJS9"});'>CTB 109 (Einstein)</a>
