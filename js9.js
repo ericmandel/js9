@@ -110,6 +110,7 @@ JS9.PIXEL_RATIO = (function(){
 JS9.globalOpts = {
     helperType: "none",		// one of: sock.io, get, post, none
     helperPort: 2718,		// default port for node.js helper
+    socketioVersion: 3,		// use version 2 or 3 when connecting?
     requireHelper: false,       // throw error if helper is not available?
     allinoneHelper: false,      // allow allinone to use helper?
     processQueryParams: true,   // process query parameters from url?
@@ -6470,7 +6471,7 @@ JS9.Image.prototype.displayAnalysis = function(type, s, opts){
 	    } else {
 		$.ajax({
 		    url: s,
-		    cache: false,
+		    cache: false,  // required for v3 socket.io
 		    dataType: "text",
 		    success: (data) => { divid.html(data); }
 		});
@@ -11756,6 +11757,7 @@ JS9.Helper.prototype.connectinfo = function(){
 
 // connect to back-end helper
 JS9.Helper.prototype.connect = function(type){
+    let sockbase, sockfile;
     const tries = JS9.globalOpts.ehretries;
     const delay = JS9.globalOpts.ehtimeout;
     const failedHelper = (jqXHR, textStatus, errorThrown) => {
@@ -11787,6 +11789,7 @@ JS9.Helper.prototype.connect = function(type){
 	    url: url,
 	    dataType: "script",
 	    timeout: JS9.globalOpts.htimeout,
+	    cache: true,
 	    success: () => {
 		const sockopts = {
 		    reconnection: true,
@@ -11795,6 +11798,9 @@ JS9.Helper.prototype.connect = function(type){
 		    reconnectionAttempts: 100,
 		    timeout: JS9.globalOpts.htimeout
 		};
+		if( JS9.globalOpts.socketioVersion === 3 ){
+		    sockopts.path = `/socket.io-3/`;
+		}
 		// if there is no io object, we didn't really succeed
 		// can happen, for example, in the Jupyter environment
 		if( typeof io === "undefined" ){
@@ -11950,15 +11956,30 @@ JS9.Helper.prototype.connect = function(type){
 	}
 	// ignore port on url, add our own
 	this.url = `${this.url.replace(/:[0-9][0-9]*$/, "")}:${JS9.globalOpts.helperPort}`;
-	// the url of the socket.io.js file
-	if( window.electron && window.electron.multiElectron ){
+	// which version of socket.io?
+	if( JS9.globalOpts.socketioVersion === 2 ){
+	    // socket.io file
+	    sockbase = "socket.io";
 	    // the slim version avoids the 4-second delay compiling the code
-	    // see help/knownissues.html
-	    this.sockurl  = `${this.url}/socket.io/socket.io.slim.js`;
+	    // (this is fixed in v3)
+	    if( window.electron && window.electron.multiElectron ){
+		sockfile  = "socket.io.slim.js";
+	    } else {
+		// use the canonical version
+		sockfile  = "socket.io.js";
+	    }
 	} else {
-	    // use the canonical version
-	    this.sockurl  = `${this.url}/socket.io/socket.io.js`;
+	    // v3 is available as of 11/2020
+	    sockbase = `socket.io-${JS9.globalOpts.socketioVersion}`;
+	    // use min version for production, as per migration docs
+	    if( JS9.DEBUG <= 2 ){
+		sockfile  = "socket.io.min.js";
+	    } else {
+		sockfile  = "socket.io.js";
+	    }
 	}
+	// full url of the socket.io.js file
+	this.sockurl  = `${this.url}/${sockbase}/${sockfile}`;
 	// make sure helper is running and then connect
 	if( window.electron ){
 	    this.aliveurl = `${this.url}/alive`;

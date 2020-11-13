@@ -18,18 +18,18 @@
 "use strict";
 
 // load required modules
-const sockio = require("socket.io-client"),
-      os = require('os'),
+const os = require('os'),
       fs = require('fs'),
       path = require('path'),
-      dns = require('dns'),
-      open = require('open'),
       timers = require('timers'),
-      readline = require("readline");
+      readline = require("readline"),
+      open = require('open');
 
 // internal variables
-let s, msg;
-let host = os.hostname() || "localhost";
+let s, msg, client, server;
+let sbase = "socket.io";
+let cbase = "socket.io-client";
+let version = 2;
 let browser = "";
 let content = "";
 let webpage = "";
@@ -239,9 +239,7 @@ JS9Msg.prototype.startBrowser = function(){
 	    opts.app.push(switches);
 	}
     }
-    if( verify ){
-	console.log("starting webpage: %s in browser: %s", webpage, browser);
-    }
+    if( verify ){ console.log("webpage, browser: %s, %s", webpage, browser); }
     return open(webpage, opts);
 };
 
@@ -449,6 +447,10 @@ while( !done ){
       args.shift();
       verify = true;
       break;
+    case '--version':
+      args.shift();
+      version = parseInt(args.shift(), 10);
+      break;
     default:
       done = true;
       break;
@@ -470,9 +472,7 @@ if( !helperURL ){
 
 // if no command, set up server mode
 if( !browser && ((args.length === 0) || (args[0] === "")) ){
-    if( verify ){
-	console.log("setting up server mode ...");
-    }
+    if( verify ){ console.log("setting up server mode ..."); }
     // create readline interface
     rl = readline.createInterface({
 	terminal: istty,
@@ -483,100 +483,90 @@ if( !browser && ((args.length === 0) || (args[0] === "")) ){
     doserver = true;
 }
 
-// kind of dumb: we want to convert the host name to an ip address, but the
-// dns.lookup call is asynchronous, so we have to wrap all of the important
-// code in its return func. wish we had a synchronous call!
-// 8/25/2020: don't even send the browserip to the helper, its not reliable
-dns.lookup(host, 4, (err, address, family) => {
-    let i;
-    if( err ){
-	throw err;
-    }
-    if( address ){
-	// msg.browserip = address;
-	if( verify ){
-	    console.log('host ip: %s [%s]', address, family);
-	}
-    }
-    // debugging
-    if( verify ){
-	console.log("connecting to: %s (%s)", helperURL, msg.browserip);
-    }
-    // finally! connect to helper
-    socket = sockio.connect(helperURL, sockopts);
-    // check for connect errors
-    socket.on("connect_failed", () => {
-	error(`connect failed: ${helperURL}`);
-    });
-    socket.on("connect_error", () => {
-	error(`connect failed: ${helperURL}`);
-    });
-    // and send the message
-    socket.on("connect", () => {
-	if( doserver ){
-	    if( verify ){
-		console.log("entering server mode ...");
-	    }
-  	    msg.server(socket, rl);
-	} else {
-	    // find default web page, if necessary
-	    msg.findWebpage();
-	    // if we start up a web browser, we'll wait for it to connect
-	    if( webpage ){
-		// see if we already have a connection we can use
-		msg.setArgs(["targets"]);
-		socket.emit("msg", msg, (targets) => {
-		    // no connection: start up webpage in browser
-		    if( !targets ){
+// final socket.io configuration bases on version
+if( version === 3 ){
+    server = `${sbase}-3`;
+    client = `${cbase}-3`;
+} else {
+    server = sbase;
+    client = cbase;
+}
+sockopts.path = `/${server}/`;
+
+// debugging
+if( verify ){ console.log("connecting to: %s (%s)", helperURL, client); }
+// connect to the helper using the specified version of the socket.io client
+socket = require(client).connect(helperURL, sockopts);
+// check for connect errors
+socket.on("connect_failed", () => {
+    error(`connect failed: ${helperURL}`);
+});
+socket.on("connect_error", () => {
+    error(`connect failed: ${helperURL}`);
+});
+// on connect, process the message
+socket.on("connect", () => {
+    if( doserver ){
+	if( verify ){ console.log("entering server mode ..."); }
+  	msg.server(socket, rl);
+    } else {
+	// find default web page, if necessary
+	msg.findWebpage();
+	// if we start up a web browser, we'll wait for it to connect
+	if( webpage ){
+	    // see if we already have a connection we can use
+	    msg.setArgs(["targets"]);
+	    socket.emit("msg", msg, (targets) => {
+		// no connection: start up webpage in browser
+		if( !targets ){
+		    // eslint-disable-next-line no-unused-vars
+		    msg.startBrowser().then((result) => {
+			// wait for page to load and then send
+			msg.waitSend(tries);
 			// eslint-disable-next-line no-unused-vars
-			msg.startBrowser().then((result) => {
-			    // wait for page to load and then send
-			    msg.waitSend(tries);
-			    // eslint-disable-next-line no-unused-vars
-			}, (err) => {
-			    error(`can't start up browser: ${browser}`);
-			});
-		    } else {
-			// browser is ready: all args are files to be loaded
-			for(i=0; i<args.length; i++){
-			    // use absolute paths
-			    args[i] = path.resolve(args[i]);
-			}
-			// prefix with the load argument
-			args.unshift("load");
-			// set arguments
-			msg.setArgs(args);
-			// target found: send message and display results
-			msg.send(socket, null, "exit");
-		    }
-		});
-	    } else {
-		// package msg (cmd and args)
-		msg.setArgs(args);
-		if( verify ){
-		    console.log("%s: %s", msg.cmd, JSON.stringify(msg.args));
-		}
-		if( dopipe ){
-		    process.stdin.resume();
-		    process.stdin.on("data", (buf) => {
-			content += buf.toString();
-		    });
-		    process.stdin.on("end", () => {
-			// push the contents of stdin onto the arg array
-			// msg.args.push(content);
-			if( msg.args.length > 0 ){
-			    msg.args[msg.args.length-1] += `\n${content}`;
-			} else {
-			    msg.args[0] = content;
-			}
-			// send message and display results
-			msg.send(socket, null, "exit");
+		    }, (err) => {
+			error(`can't start up browser: ${browser}`);
 		    });
 		} else {
-		    // send message and display results
+		    // browser is ready: all args are files to be loaded
+		    for(let i=0; i<args.length; i++){
+			// use absolute paths
+			args[i] = path.resolve(args[i]);
+		    }
+		    // prefix with the load argument
+		    args.unshift("load");
+		    // set arguments
+		    msg.setArgs(args);
+		    // target found: send message and display results
 		    msg.send(socket, null, "exit");
 		}
+	    });
+	} else {
+	    // package msg (cmd and args)
+	    msg.setArgs(args);
+	    if( verify ){
+		console.log("%s: %s", msg.cmd, JSON.stringify(msg.args));
+	    }
+	    if( dopipe ){
+		process.stdin.resume();
+		process.stdin.on("data", (buf) => {
+		    content += buf.toString();
+		});
+		process.stdin.on("end", () => {
+		    // push the contents of stdin onto the arg array
+		    // msg.args.push(content);
+		    if( msg.args.length > 0 ){
+			msg.args[msg.args.length-1] += `\n${content}`;
+		    } else {
+			msg.args[0] = content;
+		    }
+		    // send message and display results
+		    msg.send(socket, null, "exit");
+		});
+	    } else {
+		// send message and display results
+		msg.send(socket, null, "exit");
 	    }
 	}
-    });
+    }
 });

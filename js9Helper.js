@@ -20,7 +20,6 @@ const http = require('http'),
       os = require('os'),
       path = require('path'),
       https = require('https'),
-      Server = require('socket.io'),
       url = require('url'),
       qs = require('querystring'),
       cproc = require("child_process"),
@@ -29,7 +28,7 @@ const http = require('http'),
       rmdir = require('rimraf');
 
 // internal variables
-let i, app, io, secure;
+let i, app, io2, io3, secure;
 let fits2png = {};
 let fits2fits = {};
 let quotacheck = {};
@@ -44,6 +43,15 @@ const securefile = path.join(installDir, "js9Secure.json");
 const js9Queue = {};
 const rmQueue = {};
 const merges = {};
+
+// v2 installed using:
+// npm i socket.io@2
+const server2 = "socket.io";
+
+// v3 installed using:
+// npm i socket.io-3@npm:socket.io@3
+// npm i socket.io-client-3@npm:socket.io-client@3
+const server3 = "socket.io-3";
 
 // secure options ... change as necessary in securefile
 const secureOpts = {
@@ -83,7 +91,7 @@ const globalRelatives = ["analysisPlugins",
 //
 
 // get ip address and port of the current socket or http connection
-const getHost = function(io, req){
+const getHost = function(req){
     // socket.io
     if( req.handshake ){
 	return req.client.conn.remoteAddress;
@@ -95,31 +103,35 @@ const getHost = function(io, req){
 };
 
 // http://stackoverflow.com/questions/6563885/socket-io-how-do-i-get-a-list-of-connected-sockets-clients
-const findClientsSocket = function(io, namespace, roomId){
-    let id, index;
+// v3 update: https://socket.io/docs/v3/migrating-from-2-x-to-3-0/#API-change
+// is it v2 or v3? emperically, for v3 the connected property is undefined
+const getClients = function(io){
+    let id, ioarr;
     const res = [];
-    const ns = io.of(namespace ||"/");    // the default namespace is "/"
-    if(ns){
-        for(id in ns.connected){
-	    if( ns.connected.hasOwnProperty(id) ){
-		if(roomId){
-                    index = ns.connected[id].rooms.indexOf(roomId) ;
-                    if(index !== -1){
-			res.push(ns.connected[id]);
-                    }
-		} else {
-                    res.push(ns.connected[id]);
-		}
-	    }
-        }
+    if( io ){
+	ioarr = [io];
+    } else {
+	ioarr = [io2, io3];
     }
+    // check for conected targets connected (default: using v2 or v3)
+    ioarr.forEach((io) => {
+	const v2 = io.of("/").connected;
+	const v3 = io.of("/").sockets;
+	if( v2 ){
+	    // v2 protocol
+            for( id in v2 ){
+		if( v2.hasOwnProperty(id) ){
+                    res.push(v2[id]);
+		}
+            }
+	} else if( v3 ){
+	    // v3 protocol
+	    v3.forEach((value) => {
+		res.push(value);
+	    })
+	}
+    });
     return res;
-};
-
-// get list of all clients currently connected
-// eslint-disable-next-line no-unused-vars
-const getClients = function(io, socket){
-    return findClientsSocket(io);
 };
 
 // utilities
@@ -160,14 +172,15 @@ const cerr = function(){
 };
 
 // getTargets: identify target(s) for an external msg for a given ip
-const getTargets = function(io, socket, msg){
+// returns: array of validated targets
+const getTargets = function(socket, msg){
     let i, j, c, clip, displays;
     const browserip = msg.browserip || "*";
     const targets = [];
     // ip associated with this socket
-    const myip = getHost(io, socket);
+    const myip = getHost(socket);
     // list of all clients connected on this socket
-    const clients = getClients(io, socket);
+    const clients = getClients();
     // authentication func
     const authenticate = (myip, clip) => {
 	// localhost to localhost is always allowed
@@ -208,7 +221,7 @@ const getTargets = function(io, socket, msg){
 	    continue;
 	}
 	// client ip
-	clip = getHost(io, c);
+	clip = getHost(c);
 	if( !authenticate(myip, clip) ){
 	    continue;
 	}
@@ -236,9 +249,9 @@ const getTargets = function(io, socket, msg){
 const connectWorker = function(io, socket, pageid){
     let i, c, clip;
     // ip associated with this socket
-    const myip = getHost(io, socket);
+    const myip = getHost(socket);
     // list of all clients connected on this socket
-    const clients = getClients(io, socket);
+    const clients = getClients();
     // sanity check
     if( !pageid ){
 	return null;
@@ -250,7 +263,7 @@ const connectWorker = function(io, socket, pageid){
 	// check for client with same pageid
 	if( c.js9 && (c.js9.pageid === pageid) ){
 	    // get client ip
-	    clip = getHost(io, c);
+	    clip = getHost(c);
 	    // ip of worker and client must match!
 	    if( myip === clip ){
 		return c;
@@ -682,10 +695,10 @@ const getFileSize = function(file){
 
 // execCmd: exec a analysis wrapper routine to run a command
 // this is the default callback for server-side analysis tasks
-const execCmd = function(io, socket, obj, cbfunc) {
+const execCmd = function(socket, obj, cbfunc) {
     let cmd, argstr, args, maxbuf, child, s;
     let myworkdir = null;
-    const myip = getHost(io, socket);
+    const myip = getHost(socket);
     const myid = obj.id;
     const myrtype = obj.rtype || "binary";
     const myenv = process.env;
@@ -848,7 +861,7 @@ const execCmd = function(io, socket, obj, cbfunc) {
 };
 
 // sendAnalysis: send list of analysis routines to browser
-const sendAnalysisTasks = function(io, socket, obj, cbfunc) {
+const sendAnalysisTasks = function(obj, cbfunc) {
     let s;
     if( analysis && analysis.str.length ){
 	s = `[${analysis.str.join(",")}]`;
@@ -858,7 +871,7 @@ const sendAnalysisTasks = function(io, socket, obj, cbfunc) {
 
 // pageReady: wait for a Web browser to load a JS9 page and connect
 // used by js9Msg.js to start up a Web browser before executing commands
-const pageReady = function(io, socket, obj, cbfunc, tries){
+const pageReady = function(socket, obj, cbfunc, tries){
     let i, targets;
     const timeout = obj.timeout || 500;
     const maxtries = obj.tries || 10;
@@ -868,7 +881,7 @@ const pageReady = function(io, socket, obj, cbfunc, tries){
     };
     setTimeout(() => {
 	// look for targets
-	targets = getTargets(io, socket, obj);
+	targets = getTargets(socket, obj);
 	// if we have at least one ...
 	if( (targets.length === 1) || obj.multi ){
 	    // send command to JS9 instance(s)
@@ -880,7 +893,7 @@ const pageReady = function(io, socket, obj, cbfunc, tries){
 	    if( !targets.length ){
 		if( tries < maxtries ){
 		    // no, try again
-		    pageReady(io, socket, obj, cbfunc, tries+1);
+		    pageReady(socket, obj, cbfunc, tries+1);
 		} else {
 		    // yes, it's an error
 		    if( cbfunc ){
@@ -899,14 +912,14 @@ const pageReady = function(io, socket, obj, cbfunc, tries){
 
 // sendMsg: send a message to the browser
 // this is the default callback for external communication with JS9
-const sendMsg = function(io, socket, obj, cbfunc) {
+const sendMsg = function(socket, obj, cbfunc) {
     let s, i, myip, targets;
     // callback func
     const myfunc = (s) => {
 	if( cbfunc ){ cbfunc(s); }
     };
     // get list of targets to send to
-    targets = getTargets(io, socket, obj);
+    targets = getTargets(socket, obj);
     // commands not going to a browser
     switch(obj.cmd){
     case "alive":
@@ -914,7 +927,7 @@ const sendMsg = function(io, socket, obj, cbfunc) {
 	return;
     case "merge":
 	// local connections only
-	myip = getHost(io, socket);
+	myip = getHost(socket);
 	if( (myip === "127.0.0.1") || (myip === "::ffff:127.0.0.1") ){
 	    myfunc(mergeDirectory(obj.args[0]));
 	} else {
@@ -927,7 +940,7 @@ const sendMsg = function(io, socket, obj, cbfunc) {
 	myfunc(targets.length);
 	return;
     case "getAnalysis":
-	sendAnalysisTasks(io, socket, obj, cbfunc);
+	sendAnalysisTasks(obj, cbfunc);
 	return;
     case "addDisplay":
     case "renameDisplay":
@@ -949,7 +962,7 @@ const sendMsg = function(io, socket, obj, cbfunc) {
     } else {
 	// no targets: wait for the page to get ready?
 	if( !targets.length && obj.pageReady ){
-	    pageReady(io, socket, obj, cbfunc, 0);
+	    pageReady(socket, obj, cbfunc, 0);
 	    return;
 	}
 	// it's an error
@@ -963,21 +976,29 @@ const sendMsg = function(io, socket, obj, cbfunc) {
 // protocol handlers
 //
 
+const socketioHandler2 = function(socket) {
+    socketioHandler(socket, io2);
+};
+
+const socketioHandler3 = function(socket) {
+    socketioHandler(socket, io3);
+};
+
 // socketio handler: field socket.io requests
-const socketioHandler = function(socket) {
+const socketioHandler = function(socket, io) {
     let i, j, m, a;
     // func outside loop needed to make jslint happy
     const xfunc = (obj, cbfunc) => {
 	if( !obj ){return;}
 	// exec the analysis task (via a wrapper func)
-	execCmd(io, socket, obj, cbfunc);
+	execCmd(socket, obj, cbfunc);
     };
     // on disconnect: display a console message
     // returns: N/A
     // for other implementations, this is needed if you want to:
     //   show disconnects in the log
     socket.on("disconnect", (reason) => {
-	const myhost = getHost(io, socket);
+	const myhost = getHost(socket);
 	// only process disconnect for displays (not js9 msgs or workers)
 	if( socket.js9 && socket.js9.displays && !socket.js9worker ){
             clog("disconnect: %s (%s) [%s]",
@@ -1002,7 +1023,7 @@ const socketioHandler = function(socket) {
     //   support sending external messages to JS9 (i.e., via js9 script)
     socket.on("initialize", (obj, cbfunc) => {
 	let basedir, aworkdir, jpath;
-	const myhost = getHost(io, socket);
+	const myhost = getHost(socket);
 	if( !obj ){return;}
 	socket.js9 = {};
 	socket.js9.displays = obj.displays;
@@ -1018,6 +1039,8 @@ const socketioHandler = function(socket) {
 	js9Queue[socket.js9.pageid] = socket.js9;
 	socket.js9.aworkDir = null;
 	socket.js9.rworkDir = null;
+	// save version of socket.io used in this connection
+	socket.js9.version = io.of("/").connected ? 2 : 3;
 	// create top-level workDir, if necessary
 	// Electron.js might not be in the default location
 	basedir = globalOpts.workDir;
@@ -1049,7 +1072,8 @@ const socketioHandler = function(socket) {
 	// can we find the helper program?
 	jpath = !!getFilePath(globalOpts.cmd, process.env.PATH, process.env);
 	// log results
-        clog("connect: %s (%s)", myhost, socket.js9.displays);
+        clog("connect v%s: %s (%s) [v%s]",
+	     socket.js9.version, myhost, socket.js9.displays);
 	if( cbfunc ){ cbfunc({pageid: socket.js9.pageid, js9helper: jpath, dataPathModify: globalOpts.dataPathModify}); }
     });
     // on display: add a display to the display list
@@ -1101,7 +1125,7 @@ const socketioHandler = function(socket) {
     // add new analysis tasks from sources external to the installed code
     socket.on("merge", (obj, cbfunc) => {
 	let s;
-	const myip = getHost(io, socket);
+	const myip = getHost(socket);
 	// local connections only
 	if( (myip === "127.0.0.1") || (myip === "::ffff:127.0.0.1") ){
 	    if( !obj || !obj.directory ){return;}
@@ -1124,7 +1148,7 @@ const socketioHandler = function(socket) {
 	    // make up js9helper command
 	    obj.cmd = `${globalOpts.cmd} -i ${obj.image}`;
 	    // exec the command
-	    execCmd(io, socket, obj, cbfunc);
+	    execCmd(socket, obj, cbfunc);
 	}
     });
     // on getAnalysis: get analysis task definitions
@@ -1133,7 +1157,7 @@ const socketioHandler = function(socket) {
     //   support default server-side analysis (i.e. exec a wrapper script)
     socket.on("getAnalysis", (obj, cbfunc) => {
 	if( !obj ){return;}
-	sendAnalysisTasks(io, socket, obj, cbfunc);
+	sendAnalysisTasks(obj, cbfunc);
     });
     // on runAnalysis: run an analysis task
     // returns: object w/ errcode, stderr (error string), stdout (results)
@@ -1143,7 +1167,7 @@ const socketioHandler = function(socket) {
     socket.on("runAnalysis", (obj, cbfunc) => {
 	if( !obj ){return;}
 	// exec the analysis task (via a wrapper func)
-	execCmd(io, socket, obj, cbfunc);
+	execCmd(socket, obj, cbfunc);
     });
     // NB: instead of runAnalysis, now we use a handler for each separate task
     // returns: object w/ errcode, stderr (error string), stdout (results)
@@ -1211,7 +1235,7 @@ const socketioHandler = function(socket) {
         }
 	obj.cmd = `${obj.cmd} ${obj.fits} ${obj.sect}`;
 	// exec the conversion task (via a wrapper func)
-	execCmd(io, socket, obj, cbfunc);
+	execCmd(socket, obj, cbfunc);
     });
     // on fits2png: convert raw fits to png
     // returns: object w/ errcode, stderr (error string), stdout (results)
@@ -1225,7 +1249,7 @@ const socketioHandler = function(socket) {
 	    // don't use a workdir
 	    obj.useWorkDir = false;
 	    // exec the conversion task (via a wrapper func)
-	    execCmd(io, socket, obj, cbfunc);
+	    execCmd(socket, obj, cbfunc);
 	}
     });
     // on quotacheck: check whether temp directory is set up and under quota
@@ -1250,7 +1274,7 @@ const socketioHandler = function(socket) {
     //   support sending external messages to JS9 (i.e., via js9 script)
     socket.on("msg", (obj, cbfunc) => {
 	if( !obj ){return;}
-	sendMsg(io, socket, obj, cbfunc);
+	sendMsg(socket, obj, cbfunc);
     });
 //    // an example of site-specific in-line messsages
 //    if( process.env.NODEJS_FOO ){
@@ -1288,7 +1312,7 @@ const socketioHandler = function(socket) {
 // wget -q -O- --post-data='{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}' $MYHOST/msg
 // wget -q -O- --post-data='{"id": "'$ID'", "cmd": "RunAnalysis", "args": ["counts"]}' $MYHOST/msg
 const httpHandler = function(req, res){
-    let cmd, gobj, s, jstr;
+    let cmd, gobj, s, jstr, io;
     let body = "";
     // return error into to browser
     const htmlerr = (s) => {
@@ -1338,6 +1362,12 @@ const httpHandler = function(req, res){
 	}
 	// check for id and set default
 	obj.id = obj.id || "JS9";
+	// try to determine whether to use io2 or io3
+	if( io3 && getTargets(req, obj).length ){
+	    io = io3;
+	} else {
+	    io = io2;
+	}
 	// process the command
 	switch(cmd){
 	case "alive":
@@ -1356,7 +1386,7 @@ const httpHandler = function(req, res){
 	    break;
 	case "msg":
 	    // send a command from an external source to a JS9 browser
-	    sendMsg(io, req, obj, cbfunc);
+	    sendMsg(req, obj, cbfunc);
 	    break;
 	default:
 	    // plugin messages: NB needs authentication!
@@ -1522,11 +1552,16 @@ if( secure ){
 // never timeout, analysis requests can be very long
 app.setTimeout(0);
 
-// and connect with the socket.io server
-io = new Server(app, globalOpts.helperOpts);
-
+// connect with the http server (v2 and v3)
 // for each socket.io connection, receive and process custom events
-io.on("connection", socketioHandler);
+if( server2 ){
+    io2 = require(server2)(app);
+    io2.on("connection", socketioHandler2);
+}
+if( server3 ){
+    io3 = require(server3)(app, {path:`/${server3}/`, cors:{origin: true}});
+    io3.on("connection", socketioHandler3);
+}
 
 // start listening on the helper port
 app.listen(globalOpts.helperPort, globalOpts.helperHost);
@@ -1561,7 +1596,7 @@ process.on("uncaughtException", (e) => {
 // clean up on exit
 process.on("exit", () => {
     let i, client;
-    const clients = getClients(io);
+    const clients = getClients();
     // remove client work dirs, if necessary
     if( globalOpts.rmWorkDir ){
 	for(i=0; i<clients.length; i++){
@@ -1575,5 +1610,7 @@ process.on("exit", () => {
 
 // in case we are called as a module
 module.exports.globalOpts = globalOpts;
-module.exports.io = io;
+module.exports.io = io2;
+module.exports.io2 = io2;
+module.exports.io3 = io3;
 module.exports.app = app;
