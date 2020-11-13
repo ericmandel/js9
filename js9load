@@ -102,6 +102,9 @@ while [ $DONE = false ]; do
       fi
       DONE=true
       continue;;
+    ERROR*)
+      echo "$GOT (from JS9, please check pathname)"
+      error "could not load: $PATHNAME";;
   esac
 done
 
