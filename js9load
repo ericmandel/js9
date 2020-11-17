@@ -35,6 +35,7 @@ error() {
 DONE=false
 VERBOSE=false
 TRIES=10
+ETRIES=3
 SLEEP=1
 
 while [ x"$1" != x ]; do
@@ -103,8 +104,21 @@ while [ $DONE = false ]; do
       DONE=true
       continue;;
     ERROR*)
-      echo "$GOT (from JS9, please check pathname)"
-      error "could not load: $PATHNAME";;
+      # look for race condition if js9 display is not ready
+      echo "$GOT" | egrep "can't find JS9 display with id" 1>/dev/null 2>&1
+      if [ $? = 0 ] ; then
+        ETRIES=`echo "$ETRIES - 1" | bc`
+        if [ $ETRIES -le 0 ]; then
+          error "timeout awaiting display, or missing file: $PATHNAME"
+        fi
+        sleep $SLEEP
+        if [ x$VERBOSE = xtrue ] ; then
+          echo "waiting for display [$ETRIES] ..."
+        fi
+      else
+        error "$GOT; could not load: $PATHNAME"
+      fi
+      continue;;
   esac
 done
 
