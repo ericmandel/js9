@@ -14921,8 +14921,10 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 	catch(e){ JS9.error(`can't parse getShapes opts: ${opts}`, e); }
     }
     // return regions in text format, if necessary
-    if( layerName === "regions" &&
-	(opts.format === "text" || opts.format === "csv") ){
+    if( layerName === "regions"     &&
+	(opts.format === "text"     ||
+	 opts.format === "csv"      ||
+	 opts.format === "regions") ){
 	opts.mode = opts.mode || 1;
 	s = this.listRegions(shape, opts);
 	if( opts.format === "csv" ){
@@ -14939,6 +14941,8 @@ JS9.Fabric.getShapes = function(layerName, shape, opts){
 		    s += `${t}\n`;
 		}
 	    }
+	} else if( opts.format === "regions" ){
+	    s = s.replace(/ *; */g, "\n");
 	}
 	return s;
     }

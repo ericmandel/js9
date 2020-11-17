@@ -3581,17 +3581,26 @@ You can pass <b>wcssys</b> and <b>wcsunits</b> in opts to return the wcs informa
 </pre>
 
 <p>
+If opts <b>format</b> property is set to "regions", the regions are
+returned as a new-line separated list, similar to the output of
+<a href="#JS9.SaveRegions"><b>JS9.SaveRegions()</b></a>.
+By default, this will include the wcs keyword:
+<pre>
+    JS9.GetRegions("all", {format: "regions"})
+    ICRS
+    circle(23:23:27.909,+58:48:42.880,14&#34)
+    box(23:23:35.486,+58:50:03.146,40.001278,14&#34;,20.000000)
+</pre>
+<p>
 If opts <b>format</b> property is set to "csv", the regions are
-returned as a comma-separated value list, using new-line delimiters:
+returned as a comma-separated value list, using new-line delimiters.
+By default, this will not include the wcs keyword:
 <pre>
     JS9.GetRegions("all", {format: "csv"})
     circle,23:23:27.909,+58:48:42.880,14&#34;
     box,23:23:35.486,+58:50:03.146,40.001278,14&#34;,20.000000
 </pre>
 <p>
-By default, the region's wcs keyword is passed based on the value of
-the <b>globalOpts.csvIncludeWCS</b> property.  You can override this
-value by setting the <b>includewcs</b> property in opts.
 
 <h5 id="JS9.ListRegions">List one or more regions</h5>
 <p>
