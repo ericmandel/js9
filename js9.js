@@ -14517,6 +14517,7 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	pub.child = null;
     }
     dpos = obj.getCenterPoint();
+    gpos = {x: 0, y: 0};
     if( ginfo.group ){
 	// in a group, the display pos is relative to group pos,
 	// so we need to add them together
@@ -14705,8 +14706,8 @@ JS9.Fabric._updateShape = function(layerName, obj, ginfo, mode, opts){
 	    }
 	    // get current point
 	    npos = this.displayToImagePos(
-		{x: obj.left + obj.points[i].x * obj.scaleX,
-		 y: obj.top  + obj.points[i].y * obj.scaleY}
+		{x: gpos.x + obj.left + obj.points[i].x * obj.scaleX,
+		 y: gpos.y + obj.top  + obj.points[i].y * obj.scaleY}
 	    );
 	    // add rotation
 	    npos = JS9.rotatePoint(npos, oangle, {x: pub.x, y: pub.y});
