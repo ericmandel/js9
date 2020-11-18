@@ -423,19 +423,23 @@ Style:
 <span class="rconfigcol_R rconfigcol_R2LL">
 <input type="color" class="val rconfigcolor" name="colorPicker" value="#ffffff" oninput="
 let form, color;
+const e = $.Event('keypress');
+e.which = 13;
 form = $(this).closest('form');
 color = $(this).val();
-form.find(`input[name='color']`).val(color);
 form.data('colorpicker', color);
+form.find(`input[name='color']`).val(color).trigger(e);
 ">
 <input type="text" class="val rconfigtext_R1" name="color" value="" autocapitalize="off" autocorrect="off" data-tooltip="stroke color name or #rrggbb hex value">
 &nbsp;&nbsp;
 <select name="strokeMenu" class="val JS9Select" onchange="
 const form = $(this).closest('form');
 const swidth =  $(this).val();
+const e = $.Event('keypress');
+e.which = 13;
 if( swidth ){
-  form.find(`input[name='strokeWidth']`).val(swidth);
   form.data('strokewidth', swidth);
+  form.find(`input[name='strokeWidth']`).val(swidth).trigger(e);
   $(this).prop('selectedIndex', 0);
 }
 "
@@ -455,8 +459,10 @@ if( swidth ){
 <select name="dashesMenu" class="val JS9Select" onchange="
 const form = $(this).closest('form');
 const dashes =  $(this).val();
-form.find(`input[name='strokeDashes']`).val(dashes);
+const e = $.Event('keypress');
+e.which = 13;
 form.data('strokedashes', dashes);
+form.find(`input[name='strokeDashes']`).val(dashes).trigger(e);
 $(this).prop('selectedIndex', 0);
 "
 >
