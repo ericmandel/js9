@@ -1072,7 +1072,7 @@ const socketioHandler = function(socket, io) {
 	// can we find the helper program?
 	jpath = !!getFilePath(globalOpts.cmd, process.env.PATH, process.env);
 	// log results
-        clog("connect v%s: %s (%s) [v%s]",
+        clog("connect v%s: %s (%s) %s",
 	     socket.js9.version, myhost, socket.js9.displays);
 	if( cbfunc ){ cbfunc({pageid: socket.js9.pageid, js9helper: jpath, dataPathModify: globalOpts.dataPathModify}); }
     });
