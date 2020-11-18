@@ -833,7 +833,7 @@ JS9.Prefs.showForm = function(){
 	    s = JSON.stringify(JS9.cmdlineOpts, null, 4);
 	    t = `<pre>${s}</pre>`;
 	} else {
-	    t = `<p><center>No saved prefs: %{source.name}</center>`;
+	    t = `<p><center>No saved prefs: ${source.name}</center>`;
 	}
     } else {
 	try{ s = localStorage.getItem(source.name); }
@@ -841,7 +841,7 @@ JS9.Prefs.showForm = function(){
 	if( s && (s !== "null") ){
 	    t = `<pre>${s}</pre>`;
 	} else {
-	    t = `<p><center>No saved prefs: %{source.name}</center>`;
+	    t = `<p><center>No saved prefs: ${source.name}</center>`;
 	}
     }
     JS9.lightWin(`savedPrefs${JS9.uniqueID()}`, "inline", t, 
