@@ -38,9 +38,6 @@ helper: in addition to analysis tasks, Node-js-based helper also supports:
 <li><a href="./python.html">pyjs9 messaging</a> between the Python and JS9
 <li>large-file support via the use of <a href="./repfile.html">representation files</a>
 </ul>
-Note that Node v6.4.0 (released 2016-08-16, and no longer actually
-supported by the Node team) or later is required, since the JS9 helper
-uses standard ES6 features.
 
 <h3>Add Switches to Configure the Server-side Helper</h3>
 <p>
@@ -223,13 +220,30 @@ tl;dnr: a variation of the following httpd.conf configuration should
 work for most Apache web servers:
 <pre>
 RewriteEngine On
+
+RewriteCond %{REQUEST_URI}  ^/socket.io-3          [NC]
+RewriteCond %{QUERY_STRING} transport=websocket    [NC]
+RewriteRule /(.*)           ws://localhost:2718/$1 [P,L]
+ProxyPass        /socket.io-3 http://localhost:2718/socket.io-3
+ProxyPassReverse /socket.io-3 http://localhost:2718/socket.io-3
+
 RewriteCond %{REQUEST_URI}  ^/socket.io            [NC]
 RewriteCond %{QUERY_STRING} transport=websocket    [NC]
-RewriteRule /(.*)           ws://otherhost:2718/$1 [P,L]
+RewriteRule /(.*)           ws://localhost:2718/$1 [P,L]
+ProxyPass        /socket.io http://localhost:2718/socket.io
+ProxyPassReverse /socket.io http://localhost:2718/socket.io
 
-ProxyPass        /socket.io http://otherhost:2718/socket.io
-ProxyPassReverse /socket.io http://otherhost:2718/socket.io
+RewriteCond %{REQUEST_URI}  ^/msg                    [NC]
+RewriteRule /(.*)           http://localhost:2718/$1 [P,L]
+
+ProxyPass        /msg       http://localhost:2718/msg
+ProxyPassReverse /msg       http://localhost:2718/msg
 </pre>
+Note that there are two groups of ProxyPass commands dealing with
+socket.io, since we support both version 2 and version 3 of the
+socket.io protocol. The optional ProxyPass of msg allows you to send
+commands using wget or curl to the helper.
+
 <p>
 NB: when configuring a proxy, you should set the "helperPort" in
 js9prefs.js to 80 (or whatever port your web server listens on) so
