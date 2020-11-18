@@ -25718,11 +25718,10 @@ JS9.mkPublic("CopyToClipboard", function(text, im){
 	msg = "ERROR";
     }
     document.body.removeChild(textArea);
-    // required to detatch keydown from textArea
+    // refocus on display
     // otherwise, the next keydown has no effect
     if( im && im.display ){
-	im.display.divjq.trigger("mouseout");
-	im.display.divjq.trigger("mouseenter");
+	im.display.displayConjq.focus();
     }
     return msg;
 });
