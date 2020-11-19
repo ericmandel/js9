@@ -275,8 +275,8 @@ prefs:		FORCE
 		  cp -p build/js9prefs-default.js js9prefs.js;)
 
 saoprefs:	FORCE
-		@(VER=`node --version | awk -F. '{print $$1}' | awk -Fv '{print $$2}'`; \
-		if [ $$VER -lt 12 ]; then \
+		@(VER=`node --version | tr -d v | awk -F. '{print $$1 * 100 + $$2}'`; \
+		if [ $$VER -lt 1016 ]; then \
 		    echo "editing js9Prefs for SAO installations (v2) ..."; \
 		    sed -f $(BSCR)/saoprefs.sed < js9Prefs.json > sao/js9Prefs.json;\
 		    sed -f  $(BSCR)/saoprefs.sed < js9prefs.js  > sao/js9prefs.js;\
