@@ -54,9 +54,11 @@ these objects is given below:
 <li><p><b>JS9.globalOpts:</b> this JavaScript object contains global
 information, including parameters concerned with the back-end services
 used by JS9. Currently, it allows you to specify the <b>helperPort</b>
-on which to connect. Note that this same preference file is read the
-Node-based js9Helper, so changing the helper port in this file will
-change both the client and server.
+on which to connect. It also allows you to specify
+the <b>socketioVersion</b> to use for communication between your JS9
+display and the JS9 helper.  For most systems, the latest version of
+socket.io (version 3, as of 11/2020) is correct, but systems running
+versions of Node.js less than v12 should use socket.io version 2.
 
 <p>
 <li><p><b>JS9.imageOpts:</b> This JavaScript object contains initial
@@ -101,7 +103,7 @@ var JS9Prefs = {
 }
 </pre>
 See Emscripten's
-<a href="https://kripken.github.io/emscripten-site/docs/api_reference/module.html#creating-the-module-object">Module Object</a>
+<a href="https://emscripten.org/docs/api_reference/module.html#creating-the-module-object" target="_blank">Module Object</a>
 documentation for more information, and please let us know if you have problems.
 
 </ol>
@@ -110,7 +112,7 @@ used to set some internal variables. The <b>JS9.DEBUG</b> parameter is an
 example, as shown in the default preference file. Ordinarily, users
 need not be concerned with these variables.
 
-<h5>Last updated: May 15, 2018</h5>
+<h5>Last updated: November 18, 2020</h5>
 </div>
 
 </body>

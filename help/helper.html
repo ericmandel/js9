@@ -29,10 +29,11 @@ additional switches to the configure command described in
 
 <p>
 JS9 supports two mechanisms for server-side analysis: you can run a
-separate Node.js-based server to process requests using WebSockets, or
-use CGI calls to your own web server.  The Node.js server-side helper
-is the recommended method: it is faster and more flexible than the CGI
-helper: in addition to analysis tasks, Node-js-based helper also supports:
+separate Node.js-based server to process requests
+using <b>socket.io</b>, or use CGI calls to your own web server.  The
+Node.js server-side helper is the recommended method: it is faster and
+more flexible than the CGI helper: in addition to analysis tasks,
+Node-js-based helper also supports:
 <ul>
 <li><a href="./extmsg.html">command-line messaging</a> between the shell and JS9
 <li><a href="./python.html">pyjs9 messaging</a> between the Python and JS9
@@ -136,13 +137,12 @@ internet port to the outside world.
 
 Node is available at:
 <pre>
-    http://nodejs.org/
+    https://nodejs.org/
 </pre>
-Please install Node.js version 6 or above (some versions of Linux
-come with version 4, which will not work). Once installed, you must
-start the server-side helper from the JS9 web install directory,
-i.e. the location where you installed (among other things) js9.js and
-the node_modules directory:
+Please install the most up-to-date version of Node.js available.  Once
+installed, you must start the server-side JS9 helper from the JS9 web
+install directory, i.e. the location where you installed (among other
+things) js9.js and the node_modules directory:
 <pre>
     # in the bash shell:
     node js9Helper.js 1>~/logs/js9node.log 2>&1 &
@@ -162,6 +162,16 @@ grep, and echo.
 <p>
 For security reasons, the log file should be created outside the web
 server directory structure.
+
+<p>
+Communication between the JS9 helper and the browser (or desktop)
+utilizes the <b>socket.io</b> protocol and library
+(see <a href="https://socket.io/" target="_blank">socket.io</a> for
+more information).  The <b>globalOpts.socketioVersion</b> property of
+js9prefs.js allows you to choose the version of socket.io to use. For
+most systems, the latest version of socket.io (version 3 as of
+11/2020) is correct, but systems running versions of Node.js less than
+v12 should use socket.io version 2.
 
 <p>
 If you are running in a secure environment (i.e. your web pages use
@@ -191,10 +201,11 @@ and keep that user's password safe!
 <h3>Setting up a proxy for the Node.js-based  helper</h3>
 
 <p>
-Clients will automatically connect to the Node.js helper when an image
-is loaded into JS9. The server-side helper listens on a port specified
-in the js9Prefs.json file by the <b>globalOpts.helperPort</b> value. The
-default is 2718, but you can change this to any open port.
+Clients will automatically connect to the Node.js-based JS9 helper
+when an image is loaded into JS9. The server-side helper listens on a
+port specified in the js9Prefs.json file by
+the <b>globalOpts.helperPort</b> value. The default is 2718, but you
+can change this to any open port.
 
 <p>
 For example, some institutions do not allow non-standard ports to be
@@ -209,11 +220,11 @@ But sometimes even this is not permitted: instead, the Node.js helper is
 required to run as a non-public server.  For this situation, you can
 set up a proxy to pass TCP packets from a public-facing host to the
 helper running on a non-public host. The issues surrounding
-proxying the helper's underlying <a href="https://socket.io/">socket.io</a>
+proxying the helper's underlying <a href="https://socket.io/" target="_blank">socket.io</a>
 library are discussed in detail in this
-<a href="https://github.com/socketio/socket.io/issues/1696">issue</a>
+<a href="https://github.com/socketio/socket.io/issues/1696" target="_blank">issue</a>
 and in this
-<a href="https://stackoverflow.com/questions/36472920/apache-proxy-configuration-for-socket-io-project-not-in-root">stackoverflow discussion</a>.
+<a href="https://stackoverflow.com/questions/36472920/apache-proxy-configuration-for-socket-io-project-not-in-root" target="_blank">stackoverflow discussion</a>.
 
 <p>
 tl;dnr: a variation of the following httpd.conf configuration should
@@ -315,7 +326,7 @@ Any relatively modern version of the png library should suffice
 In any case, to build tpos, you must tell configure where to look for
 the png libraries and include files using the <b>--with-png=[dir]</b> switch.]
 
-<h5>Last updated: August 3, 2018</h5>
+<h5>Last updated: November 18, 2020</h5>
 </div>
 
 </body>
