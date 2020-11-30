@@ -98,8 +98,12 @@ const getHost = function(req){
     }
     // http server
     // http://stackoverflow.com/questions/19266329/node-js-get-clients-ip
-    return (req.headers['x-forwarded-for'] || '').split(',')[0] ||
+    if( req.headers ){
+	return (req.headers['x-forwarded-for'] || '').split(',')[0] ||
             req.connection.remoteAddress;
+    } else {
+        req.connection.remoteAddress;
+    }
 };
 
 // http://stackoverflow.com/questions/6563885/socket-io-how-do-i-get-a-list-of-connected-sockets-clients
