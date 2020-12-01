@@ -98,12 +98,8 @@ const getHost = function(req){
     }
     // http server
     // http://stackoverflow.com/questions/19266329/node-js-get-clients-ip
-    if( req.headers ){
-	return (req.headers['x-forwarded-for'] || '').split(',')[0] ||
+    return (req.headers['x-forwarded-for'] || '').split(',')[0] ||
             req.connection.remoteAddress;
-    } else {
-        req.connection.remoteAddress;
-    }
 };
 
 // http://stackoverflow.com/questions/6563885/socket-io-how-do-i-get-a-list-of-connected-sockets-clients
@@ -250,7 +246,7 @@ const getTargets = function(socket, msg){
 };
 
 // connectWorker: identify main socket for this worker
-const connectWorker = function(io, socket, pageid){
+const connectWorker = function(socket, pageid){
     let i, c, clip;
     // ip associated with this socket
     const myip = getHost(socket);
@@ -1109,7 +1105,7 @@ const socketioHandler = function(socket, io) {
     socket.on("worker", (obj, cbfunc) => {
 	let main;
 	obj = obj || {};
-	main = connectWorker(io, socket, obj.pageid);
+	main = connectWorker(socket, obj.pageid);
 	if( main ){
 	    // connect worker to main
 	    socket.js9 = main.js9;
@@ -1268,7 +1264,7 @@ const socketioHandler = function(socket, io) {
 	    obj.cmd = quotacheck[0].action;
 	    obj.rtype = quotacheck[0].rtype;
 	    // exec the task (via a wrapper func)
-	    execCmd(io, socket, obj, cbfunc);
+	    execCmd(socket, obj, cbfunc);
 	}
     });
     // on msg: send a command from an external source to a JS9 browser
@@ -1294,7 +1290,7 @@ const socketioHandler = function(socket, io) {
     // add plugins
     for(i=0; i<plugins.length; i++){
 	if( plugins[i].sockio ){
-	    try{ plugins[i].sockio(io, socket); }
+	    try{ plugins[i].sockio(socket); }
 	    catch(e){ cerr("can't add %s", plugins[i].name); }
 	}
     }
@@ -1316,7 +1312,7 @@ const socketioHandler = function(socket, io) {
 // wget -q -O- --post-data='{"id": "'$ID'", "cmd": "SetColormap", "args": ["red"]}' $MYHOST/msg
 // wget -q -O- --post-data='{"id": "'$ID'", "cmd": "RunAnalysis", "args": ["counts"]}' $MYHOST/msg
 const httpHandler = function(req, res){
-    let cmd, gobj, s, jstr, io;
+    let cmd, gobj, s, jstr;
     let body = "";
     // return error into to browser
     const htmlerr = (s) => {
@@ -1366,12 +1362,6 @@ const httpHandler = function(req, res){
 	}
 	// check for id and set default
 	obj.id = obj.id || "JS9";
-	// try to determine whether to use io2 or io3
-	if( io3 && getTargets(req, obj).length ){
-	    io = io3;
-	} else {
-	    io = io2;
-	}
 	// process the command
 	switch(cmd){
 	case "alive":
@@ -1397,14 +1387,14 @@ const httpHandler = function(req, res){
 	    for(j=0; j<plugins.length; j++){
 		// simple plugin: name is the same as the plugin filename
 		if( plugins[j].http && (cmd === plugins[j].name) ){
-		    plugins[j].http(io, req, obj, cbfunc);
+		    plugins[j].http(req, obj, cbfunc);
 		    return;
 		}
 		if( plugins[j].httpList ){
 		    // list of plugins, each with their own name
 		    for(i=0; i<plugins[j].httpList.length; i++){
 			if( cmd === plugins[j].httpList[i].name ){
-			    plugins[j].httpList[i].func(io, req, obj, cbfunc);
+			    plugins[j].httpList[i].func(req, obj, cbfunc);
 			    return;
 			}
 		    }
