@@ -1276,17 +1276,15 @@ const socketioHandler = function(socket, io) {
 	if( !obj ){return;}
 	sendMsg(socket, obj, cbfunc);
     });
-//    // an example of site-specific in-line messsages
-//    if( process.env.NODEJS_FOO ){
-//	// After defining a foo message, you can do this in javascript:
-//	// JS9.Send("FOO:foo",{keys:{"x":1,"y":2}}, (r) => {dofunc(r)});
-//	socket.on("FOO:foo", (obj, cbfunc) => {
-//	    const s = `foo: ${JSON.stringify(obj.keys)}`;
-//	    // analysis tasks should return an object containing one or more:
-//	    // error (error code), stdout (string result), stderr (error msg)
-//	    if( cbfunc ){ cbfunc({stdout: s}); }
-//	});
-//    }
+//  // an example of a site-specific in-line messsage:
+//  socket.on("FOO:foo", (obj, cbfunc) => {
+//    const s = `foo: ${JSON.stringify(obj.keys)}`;
+//    // analysis tasks should return an object containing one or more:
+//    // error (error code), stdout (string result), stderr (error msg)
+//    if( cbfunc ){ cbfunc({stdout: s}); }
+//  });
+//  // After defining the foo message, you can do this in javascript:
+//  // JS9.Send("FOO:foo",{keys:{"x":1,"y":2}}, (r) => {console.log(r)});
     // add plugins
     for(i=0; i<plugins.length; i++){
 	if( plugins[i].sockio ){
