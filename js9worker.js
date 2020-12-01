@@ -17,8 +17,8 @@ let socket = null;
 let socketActive = false;
 let socketImported = false;
 let connected = false;
+let socksuffix = "/socket.io/socket.io.js";
 const timeout = 10000;
-const socksuffix = "/socket.io/socket.io.js";
 // this uploads large data sets on my slow (70kb/sec) DSL line without a hang
 const emitMax = 409600;
 
@@ -31,12 +31,17 @@ if (!Uint8Array.prototype.slice) {
     });
 }
 
-function initSocketIO(sockurl, pageid, id){
-    const sockscript = sockurl + socksuffix;
+function initSocketIO(sockurl, sockver, pageid, id){
+    let sockscript;
     const sockopts = {
 	reconnection: false,
 	timeout
     };
+    if( sockver !== 2 ){
+	sockopts.path = `/socket.io-${sockver}/`;
+	socksuffix = sockopts.path + "socket.io.min.js";
+    }
+    sockscript = sockurl + socksuffix;
     // import socketio scripts
     if( !socketImported ){
 	importScripts(sockscript);
@@ -59,7 +64,7 @@ function initSocketIO(sockurl, pageid, id){
 		connected = true;
 		self.postMessage({id: id, cmd: "initsocketio", result: "OK"});
 	    } else {
-		res = `couldn't connect worker to server with pageid: ${pageid}`;
+		res = `couldn't connect worker to server (pageid ${pageid})`;
 		self.postMessage({id: id, cmd: "error", result: res});
 	    }
 	});
@@ -122,7 +127,7 @@ self.onmessage = function(e){
     };
     switch(obj.cmd){
     case "initsocketio":
-	initSocketIO(args[0], args[1], obj.id);
+	initSocketIO(args[0], args[1], args[2], obj.id);
 	break;
     case "uploadFITS":
 	if( connected ){

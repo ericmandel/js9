@@ -22,6 +22,11 @@ cmap[3]="blue"
 echo "loading Chandra event file: $file"
 js9load $file '{"scale":"log"}'
 
+# test upload
+js9 UploadFITSFile
+
+sleep 5
+
 # turn blending off (since default is on)
 js9 BlendImage false
 
@@ -67,7 +72,9 @@ js9 SetColormap viridis 4.4 0.078
 echo "change region position in first image"
 js9 ChangeRegions all '{"deltax":62,"deltay":20}'
 
-echo -n "press <cr> when done ... "
-read answer
+sleep 5
+
+# echo -n "press <cr> when done ... "
+# read answer
 echo killing $XPID ...
 pkill -TERM -P $XPID

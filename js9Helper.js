@@ -121,13 +121,17 @@ const getClients = function(io){
 	    // v2 protocol
             for( id in v2 ){
 		if( v2.hasOwnProperty(id) ){
-                    res.push(v2[id]);
+		    if( !v2[id].js9worker ){
+			res.push(v2[id]);
+		    }
 		}
             }
 	} else if( v3 ){
 	    // v3 protocol
 	    v3.forEach((value) => {
-		res.push(value);
+		if( !value.js9worker ){
+		    res.push(value);
+		}
 	    })
 	}
     });

@@ -11798,8 +11798,8 @@ JS9.Helper.prototype.connect = function(type){
 		    reconnectionAttempts: 100,
 		    timeout: JS9.globalOpts.htimeout
 		};
-		if( JS9.globalOpts.socketioVersion === 3 ){
-		    sockopts.path = `/socket.io-3/`;
+		if( this.sockver !== 2 ){
+		    sockopts.path = `/socket.io-${this.sockver}/`;
 		}
 		// if there is no io object, we didn't really succeed
 		// can happen, for example, in the Jupyter environment
@@ -11924,6 +11924,8 @@ JS9.Helper.prototype.connect = function(type){
     } else {
 	this.url = `${JS9.globalOpts.helperProtocol}localhost`;
     }
+    // save version of socketio
+    this.sockver = JS9.globalOpts.socketioVersion;
     // save base of url
     this.baseurl = this.url;
     // try to establish connection, based on connection type
@@ -11957,7 +11959,7 @@ JS9.Helper.prototype.connect = function(type){
 	// ignore port on url, add our own
 	this.url = `${this.url.replace(/:[0-9][0-9]*$/, "")}:${JS9.globalOpts.helperPort}`;
 	// which version of socket.io?
-	if( JS9.globalOpts.socketioVersion === 2 ){
+	if( this.sockver === 2 ){
 	    // socket.io file
 	    sockbase = "socket.io";
 	    // the slim version avoids the 4-second delay compiling the code
@@ -11970,7 +11972,7 @@ JS9.Helper.prototype.connect = function(type){
 	    }
 	} else {
 	    // v3 is available as of 11/2020
-	    sockbase = `socket.io-${JS9.globalOpts.socketioVersion}`;
+	    sockbase = `socket.io-${this.sockver}`;
 	    // use min version for production, as per migration docs
 	    if( JS9.DEBUG <= 2 ){
 		sockfile  = "socket.io.min.js";
@@ -12087,6 +12089,7 @@ JS9.WebWorker = function(url){
 // handle (known) messages from web worker
 JS9.WebWorker.prototype.msgHandler = function(msg){
     let i, handler;
+    const h = JS9.helper;
     const obj = msg.data;
     switch(obj.cmd){
     case "progress":
@@ -12122,8 +12125,7 @@ JS9.WebWorker.prototype.msgHandler = function(msg){
     case "disconnect":
 	JS9.waiting(false);
 	if( obj.result ){
-	    JS9.worker.postMessage("initsocketio",
-				   [JS9.helper.url, JS9.helper.pageid],
+	    JS9.worker.postMessage("initsocketio", [h.url, h.sockver, h.pageid],
 				   () => { JS9.error(obj.result); });
 	} else {
 	    if( JS9.DEBUG > 1 ){
@@ -12160,7 +12162,8 @@ JS9.WebWorker.prototype.postMessage = function(cmd, args, func, xfer){
 JS9.WebWorker.prototype.socketio = function(handler){
     const h = JS9.helper;
     if( !JS9.worker.sockinit ){
-	JS9.worker.postMessage("initsocketio", [h.url, h.pageid], (s) => {
+	JS9.worker.postMessage("initsocketio",
+			       [h.url, h.sockver, h.pageid], (s) => {
 	    if( s === "OK" ){
 		if( handler ){
 		    handler();
