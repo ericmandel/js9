@@ -9465,8 +9465,8 @@ JS9.Image.prototype.xeqPlugins = function(xtype, xname, xval){
 // upload virtual file to proxy server
 JS9.Image.prototype.uploadFITSFile = function(){
     let vfile, vdata;
-    const uploadCB = (r) => {
-	delete this.tmp.upload;
+    const upcb = (r) => {
+	delete JS9.worker.uploadActive;
 	window.setTimeout(() => { JS9.progress(false); }, 1000);
 	if( r.stderr ){
 	    JS9.error(r.stderr);
@@ -9496,7 +9496,7 @@ JS9.Image.prototype.uploadFITSFile = function(){
 	return;
     }
     // only one upload at a time
-    if( this.tmp.upload ){
+    if( JS9.worker.uploadActive ){
 	JS9.error("only one upload allowed at a time");
     }
     // this is the file to upload
@@ -9509,10 +9509,9 @@ JS9.Image.prototype.uploadFITSFile = function(){
 	}
 	vdata = JS9.vread(vfile, "binary");
 	JS9.worker.socketio(() => {
-	    this.tmp.upload = true;
+	    JS9.worker.uploadActive = true;
 	    JS9.progress(true, this.display);
-	    JS9.worker.postMessage("uploadFITS",
-				   [vfile, vdata], uploadCB, [vdata.buffer]);
+	    JS9.worker.send("uploadFITS", [vfile, vdata], upcb, [vdata.buffer]);
 	});
     });
     return this;
@@ -12118,22 +12117,37 @@ JS9.WebWorker.prototype.msgHandler = function(msg){
 	break;
     case "connect_error":
     case "connect_timeout":
+	delete JS9.worker.uploadActive;
+	JS9.progress(false);
 	if( JS9.DEBUG > 1 ){
 	    JS9.log(`JS9 worker socketio: ${obj.cmd}`);
 	}
 	break;
     case "disconnect":
-	JS9.waiting(false);
+	delete JS9.worker.uploadActive;
+	JS9.progress(false);
 	if( obj.result ){
-	    JS9.worker.postMessage("initsocketio", [h.url, h.sockver, h.pageid],
-				   () => { JS9.error(obj.result); });
+	    // need a slight delay here
+	    window.setTimeout(() => {
+		JS9.worker.send("initsocketio",
+				[h.url, h.sockver, h.pageid],
+				() => {
+				    if( obj.alert ){
+					alert(obj.result);
+				    } else if(  JS9.DEBUG > 1 ){
+					JS9.log(obj.result);
+				    }
+		       });
+	    }, JS9.TIMEOUT);
 	} else {
 	    if( JS9.DEBUG > 1 ){
-		JS9.log("JS9 worker socketio: disconnect");
+		JS9.log("JS9 worker socket was disconnected");
 	    }
 	}
 	break;
     case "error":
+	delete JS9.worker.uploadActive;
+	JS9.progress(false);
 	JS9.error(obj.result||"in web worker");
 	break;
     default:
@@ -12142,7 +12156,7 @@ JS9.WebWorker.prototype.msgHandler = function(msg){
 };
 
 // send a message to a web worker
-JS9.WebWorker.prototype.postMessage = function(cmd, args, func, xfer){
+JS9.WebWorker.prototype.send = function(cmd, args, func, xfer){
     const id = cmd + JS9.uniqueID();
     const obj = {id, cmd, args};
     // push context
@@ -12161,22 +12175,13 @@ JS9.WebWorker.prototype.postMessage = function(cmd, args, func, xfer){
 // initialize worker socketio connection, then call handler
 JS9.WebWorker.prototype.socketio = function(handler){
     const h = JS9.helper;
-    if( !JS9.worker.sockinit ){
-	JS9.worker.postMessage("initsocketio",
-			       [h.url, h.sockver, h.pageid], (s) => {
-	    if( s === "OK" ){
-		if( handler ){
-		    handler();
-		}
-	    } else {
-		JS9.error(`can't init  socket.io for JS9 worker: ${s}`);
-	    }
-	});
-    } else {
-	if( handler ){
-	    handler();
+    JS9.worker.send("initsocketio", [h.url, h.sockver, h.pageid], (s) => {
+	if( s === "OK" ){
+	    if( handler ){ handler(); }
+	} else {
+	    JS9.error(`can't init socket.io for JS9 worker: ${s}`);
 	}
-    }
+    });
 };
 
 // terminate a web worker

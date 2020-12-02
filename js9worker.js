@@ -35,8 +35,14 @@ function initSocketIO(sockurl, sockver, pageid, id){
     let sockscript;
     const sockopts = {
 	reconnection: false,
-	timeout
+	timeout: timeout
     };
+    // if already connected, just say so and return;
+    if( connected ){
+	self.postMessage({id: id, cmd: "initsocketio", result: "OK"});
+	return;
+    }
+    // configure path and script based on version of socketio
     if( sockver !== 2 ){
 	sockopts.path = `/socket.io-${sockver}/`;
 	socksuffix = sockopts.path + "socket.io.min.js";
@@ -46,45 +52,45 @@ function initSocketIO(sockurl, sockver, pageid, id){
     if( !socketImported ){
 	importScripts(sockscript);
 	socketImported = true;
-    } else {
-	// close off previous socket connection, if necessary
-	if( socket ){
-	    try{socket.disconnect();}
-	    catch(e){ /* empty */ }
-	    socket = null;
-	}
+    }
+    // close off previous socket connection, if necessary
+    if( socket ){
+	try{socket.disconnect();}
+	catch(e){ /* empty */ }
+	socket = null;
     }
     // connect to the helper
     socket = io.connect(sockurl, sockopts);
     // on-event processing
     socket.on("connect", () => {
 	socket.emit("worker", {pageid: pageid}, (s) => {
-	    let res;
 	    if( s === "OK" ){
 		connected = true;
-		self.postMessage({id: id, cmd: "initsocketio", result: "OK"});
-	    } else {
-		res = `couldn't connect worker to server (pageid ${pageid})`;
-		self.postMessage({id: id, cmd: "error", result: res});
 	    }
+	    self.postMessage({id: id, cmd: "initsocketio", result: s});
 	});
     });
     socket.on("connect_error", () => {
-	self.postMessage({id: id, cmd: "connect_error", result: ""});
 	connected = false;
+	socketActive = false;
+	self.postMessage({id: id, cmd: "connect_error", result: ""});
     });
     socket.on("connect_timeout", () => {
-	self.postMessage({id: id, cmd: "connect_timeout", result: ""});
 	connected = false;
+	socketActive = false;
+	self.postMessage({id: id, cmd: "connect_timeout", result: ""});
     });
     socket.on("disconnect", () => {
-	let res = "";
-	if( socketActive ){
-	    res = `JS9 was disconnected from the remote server while ${socketActive}. This likely is due to the server timing out, indicating either that too much data is being sent, or that your connection speed is too slow.`;
-	    socketActive = false;
-	}
-	self.postMessage({id: id, cmd: "disconnect", result: res});
+	const obj = {id: id, cmd: "disconnect"};
 	connected = false;
+	if( socketActive ){
+	    obj.alert = true;
+	    obj.result = "The JS9 helper connection was unexpectedly disconnected (probably on the server side). Please try again.";
+	} else if( connected ){
+	    obj.result = "JS9 worker socket was disconnected";
+	}
+	socketActive = false;
+	self.postMessage(obj);
     });
 }
 
@@ -132,7 +138,7 @@ self.onmessage = function(e){
     case "uploadFITS":
 	if( connected ){
 	    fname = args[0];
-	    socketActive = "uploading the FITS file";
+	    socketActive = true;
 	    socket.emit('uploadfits',
             {'cmd': `js9Xeq uploadfits ${fname}`, 'stdin': true},
             (r) => {
@@ -145,11 +151,12 @@ self.onmessage = function(e){
 	    len = data.byteLength;
 	    uploadFITS(fname, data, len, 0, len);
 	} else {
-	    res = "worker not connected to remote server";
+	    res = "worker not connected to remote server: try reloading page";
 	    self.postMessage({id: obj.id, cmd: "error", result: res});
 	}
 	break;
     default:
+	socketActive = false;
 	res = `unknown web worker command: ${obj.cmd}`;
 	self.postMessage({id: obj.id, cmd: "error", result: res});
 	break;

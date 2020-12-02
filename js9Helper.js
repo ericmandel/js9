@@ -1107,7 +1107,7 @@ const socketioHandler = function(socket, io) {
 	if( cbfunc ){ cbfunc(socket.js9.pageid); }
     });
     socket.on("worker", (obj, cbfunc) => {
-	let main;
+	let main, s;
 	obj = obj || {};
 	main = connectWorker(socket, obj.pageid);
 	if( main ){
@@ -1115,10 +1115,11 @@ const socketioHandler = function(socket, io) {
 	    socket.js9 = main.js9;
 	    // signal this is a worker
 	    socket.js9worker = true;
-	    if( cbfunc ){ cbfunc("OK"); }
+	    s = "OK";
 	} else {
-	    if( cbfunc ){ cbfunc("ERROR"); }
+	    s = `ERROR: can't find main connection for worker: ${obj.pageid}`;
 	}
+	if( cbfunc ){ cbfunc(s); }
     });
     // on alive: return "OK" to signal a valid connection
     socket.on("alive", (obj, cbfunc) => {
