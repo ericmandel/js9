@@ -58,6 +58,7 @@ JS9.DBLCLICK0 = 5;		// < millisec => same event
 JS9.DBLCLICK = 300;		// < millisec => double-click
 JS9.TIMEOUT = 250;              // millisec before assuming light window is up
 JS9.SPINOUT = 250;		// millisec before assuming spinner is up
+JS9.WORKEROUT = 2000;           // millisec before restarting worker socket
 JS9.SUPERMENU = /^SUPERMENU_/;  // base of supermenu id
 JS9.RESIZEDIST = 20;		// size of rectangle defining resize handle
 JS9.RESIZEFUDGE = 5;            // fudge for webkit resize problems
@@ -12095,13 +12096,15 @@ JS9.WebWorker.prototype.msgHandler = function(msg){
 	JS9.progress(obj.result.value, obj.result.max);
 	break;
     case "initsocketio":
-	this.sockinit = true;
-	for(i=0; i<this.handlers.length; i++){
-	    handler = this.handlers[i];
-	    if( handler.id === obj.id ){
-		handler.func(obj.result);
-		this.handlers.splice(i, 1);
-		break;
+	if( obj.result === "OK" ){
+	    this.sockinit = true;
+	    for(i=0; i<this.handlers.length; i++){
+		handler = this.handlers[i];
+		if( handler.id === obj.id ){
+		    handler.func(obj.result);
+		    this.handlers.splice(i, 1);
+		    break;
+		}
 	    }
 	}
 	break;
@@ -12126,24 +12129,18 @@ JS9.WebWorker.prototype.msgHandler = function(msg){
     case "disconnect":
 	delete JS9.worker.uploadActive;
 	JS9.progress(false);
-	if( obj.result ){
-	    // need a slight delay here
-	    window.setTimeout(() => {
-		JS9.worker.send("initsocketio",
-				[h.url, h.sockver, h.pageid],
-				() => {
-				    if( obj.alert ){
-					alert(obj.result);
-				    } else if(  JS9.DEBUG > 1 ){
-					JS9.log(obj.result);
-				    }
-		       });
-	    }, JS9.TIMEOUT);
-	} else {
-	    if( JS9.DEBUG > 1 ){
-		JS9.log("JS9 worker socket was disconnected");
-	    }
-	}
+	obj.result = obj.result || "JS9 worker socket was disconnected";
+	// need a slight delay here, not sure why
+	window.setTimeout(() => {
+	    JS9.worker.send("initsocketio", [h.url, h.sockver, h.pageid],
+			    () => {
+				if( obj.alert ){
+				    alert(obj.result);
+				} else if(  JS9.DEBUG > 1 ){
+				    JS9.log(obj.result);
+				}
+			    });
+	}, JS9.WORKEROUT);
 	break;
     case "error":
 	delete JS9.worker.uploadActive;

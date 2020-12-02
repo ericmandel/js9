@@ -85,7 +85,7 @@ function initSocketIO(sockurl, sockver, pageid, id){
 	connected = false;
 	if( socketActive ){
 	    obj.alert = true;
-	    obj.result = "The JS9 helper connection was unexpectedly disconnected (probably on the server side). Please try again.";
+	    obj.result = "The JS9 helper connection was unexpectedly severed (probably on the server side). Please try again.";
 	} else if( connected ){
 	    obj.result = "JS9 worker socket was disconnected";
 	}
